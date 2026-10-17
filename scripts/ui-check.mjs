@@ -400,6 +400,15 @@ async function checkOne(browser, scr, [w, h]) {
       await scr.act(page);
       await sleep(700);
     }
+    // Ölçüm animasyon ortasına denk gelmesin: sonlu animasyonlar bitiş karesine, sonsuzlar durdurulur.
+    // (Aksi halde kontrast, rozetin belirme ya da basış parlamasının o anki karesine bağlı kalır.)
+    await page.evaluate(() => {
+      for (const a of document.getAnimations()) {
+        const iterations = a.effect?.getTiming().iterations;
+        if (iterations === Number.POSITIVE_INFINITY) a.pause();
+        else a.finish();
+      }
+    });
     await page.screenshot({ path: join(OUT, `${scr.name}-${w}x${h}.png`) });
     const { issues, texts } = await page.evaluate(inPageAudit);
     for (const [kind, msg] of issues) failures.push(`[${kind}] ${msg}`);
