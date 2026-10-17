@@ -1,0 +1,525 @@
+/* ---- Çapraz Ateş ---- */
+.ca {
+  --ca-red: var(--red);
+}
+.ca__head {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: clamp(8px, 3dvh, 28px);
+  min-height: 62px;
+  text-align: center;
+}
+.ca__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(20px, 6.6vw, var(--fs-32));
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ca__title--locked {
+  color: var(--tc, var(--text));
+  text-shadow: 0 0 14px color-mix(in srgb, var(--tc, var(--red)) 55%, transparent);
+  animation: ca-title-in 320ms var(--ease) both;
+}
+@keyframes ca-title-in {
+  from {
+    transform: scale(1.18);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.ca__stage {
+  flex: 1;
+  min-height: 0;
+  container-type: size;
+  display: grid;
+  place-items: center;
+}
+
+/* ---- Nişan alma ızgarası ---- */
+.ca__grid {
+  --gap: 10px;
+  --cols: var(--cols-tall);
+  --rows: var(--rows-tall);
+  --ca-av: clamp(
+    44px,
+    min(
+      calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols) - 16px),
+      calc(100cqh / var(--rows) - 44px)
+    ),
+    120px
+  );
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: var(--gap);
+  width: 100%;
+  justify-items: center;
+  align-content: center;
+}
+.ca__cell {
+  position: relative;
+  width: 100%;
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 2px 6px;
+  border-radius: var(--r-sm);
+  background: none;
+  border: 0;
+  color: var(--text);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 80ms var(--ease);
+}
+.ca__slot {
+  position: relative;
+  width: 100%;
+}
+/* Gezinen nişangâh düğmenin dışında, portrenin üstünde durur (düğmeye taşma yapmaz, dokunmayı engellemez). */
+.ca__sightbox {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: var(--ca-av);
+  height: var(--ca-av);
+  margin-left: calc(var(--ca-av) / -2);
+  pointer-events: none;
+  z-index: 1;
+}
+.ca__cell:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.ca__cell:disabled {
+  cursor: default;
+}
+.ca__cell[data-off="1"] {
+  opacity: 0.4;
+}
+.ca__portrait {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--ca-av);
+  height: var(--ca-av);
+}
+.ca__name {
+  position: relative;
+  z-index: 2;
+  max-width: 100%;
+  font-size: var(--fs-15);
+  font-weight: 600;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #d5daf6;
+}
+.ca__cell[data-locked="1"] .ca__name {
+  color: var(--text);
+}
+
+/* İnce lazer nişangâhı: portre çevresinde yavaşça gezinir. */
+.ca__sight {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 138%;
+  height: 138%;
+  margin: -69% 0 0 -69%;
+  color: color-mix(in srgb, var(--cyan) 85%, transparent);
+  pointer-events: none;
+  animation: ca-drift var(--dur, 8s) ease-in-out var(--delay, 0s) infinite;
+  will-change: transform;
+}
+.ca__sight-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 3px currentColor);
+}
+@keyframes ca-drift {
+  0%,
+  100% {
+    transform: translate(calc(var(--flip, 1) * -9%), -7%);
+  }
+  25% {
+    transform: translate(calc(var(--flip, 1) * 8%), -9%);
+  }
+  50% {
+    transform: translate(calc(var(--flip, 1) * 9%), 8%);
+  }
+  75% {
+    transform: translate(calc(var(--flip, 1) * -7%), 9%);
+  }
+}
+/* Kilit: yalnız kendi ekranında; nişangâh ortaya oturur, kırmızıya döner ve döner. */
+.ca__slot[data-locked="1"] .ca__sight {
+  color: var(--red);
+  animation: ca-lock 380ms var(--ease) both;
+}
+.ca__slot[data-locked="1"] .ca__sight-svg {
+  animation: ca-spin 6s linear 380ms infinite;
+  filter: drop-shadow(0 0 5px var(--red));
+}
+@keyframes ca-lock {
+  from {
+    transform: translate(calc(var(--flip, 1) * -9%), -7%) scale(1.5) rotate(-80deg);
+    opacity: 0.5;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes ca-spin {
+  to {
+    transform: rotate(90deg);
+  }
+}
+.ca__slot[data-off="1"] .ca__sight,
+.ca__slot[data-idle="1"] .ca__sight {
+  opacity: 0.7;
+}
+
+.ca__hint {
+  flex: none;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: var(--fs-15);
+  line-height: 1.3;
+  margin: 4px 0 6px;
+  min-height: 20px;
+}
+
+/* ---- Açılış: ateş izleri ---- */
+.ca__head--reveal {
+  min-height: 74px;
+  gap: 2px;
+}
+.ca__score {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(40px, 13vw, 56px);
+  line-height: 1;
+  animation: ca-pop 420ms var(--ease) var(--at, 1300ms) both;
+}
+.ca__score[data-o="free"] {
+  color: var(--lime);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--lime) 55%, transparent);
+}
+.ca__score[data-o="hit"] {
+  color: var(--red);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--red) 55%, transparent);
+}
+.ca__score[data-o="clash"],
+.ca__score[data-o="idle"] {
+  color: var(--text);
+}
+.ca__verdict {
+  font-size: var(--fs-15);
+  font-weight: 600;
+  color: #d5daf6;
+  animation: ca-fade 300ms var(--ease) var(--at, 1300ms) both;
+}
+@keyframes ca-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes ca-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.ca__arena {
+  --ca-rav: clamp(40px, 18cqw, 80px);
+  position: relative;
+  width: min(100cqw, 100cqh);
+  aspect-ratio: 1;
+  container-type: size;
+}
+.ca__lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.ca__lines line {
+  stroke: currentColor;
+  stroke-linecap: butt;
+  fill: none;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: ca-draw var(--beam-ms, 520ms) cubic-bezier(0.5, 0, 0.9, 0.6) var(--d, 0ms) both;
+}
+.ca__beam {
+  stroke-width: 0.9;
+}
+.ca__glow {
+  stroke-width: 2.8;
+  opacity: 0.28;
+}
+@keyframes ca-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.ca__node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: var(--ca-rav);
+  height: var(--ca-rav);
+}
+.ca__node[data-me="1"] .av {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+  border-radius: 50%;
+}
+.ca__rname {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: max(32cqw, 66px);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  line-height: 1.2;
+  color: #e4e8ff;
+  background: rgba(5, 8, 26, 0.86);
+  padding: 1px 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ca__chip {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  min-width: 30px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+  line-height: 1.2;
+  text-align: center;
+  background: #05081a;
+  border: 2px solid currentColor;
+  animation: ca-pop 420ms var(--ease) var(--chip-at, 1300ms) both;
+}
+.ca__chip[data-s="up"] {
+  color: var(--lime);
+}
+.ca__chip[data-s="down"] {
+  color: #ff6b85;
+}
+.ca__chip[data-s="zero"] {
+  color: #c9cff0;
+}
+
+/* Çarpışma patlaması (karşılıklı hedeflerin ortasında) */
+.ca__burst,
+.ca__impact {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.ca__burst::before,
+.ca__burst::after,
+.ca__impact::before {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+}
+.ca__burst::before {
+  width: 22cqw;
+  height: 22cqw;
+  background: radial-gradient(circle, #fff 0 14%, var(--amber) 15% 34%, rgb(255 194 59 / 0) 66%);
+  animation: ca-burst 560ms var(--ease) var(--d, 600ms) both;
+}
+.ca__burst::after {
+  width: 26cqw;
+  height: 26cqw;
+  border: 2px solid var(--amber);
+  animation: ca-burst-ring 640ms ease-out var(--d, 600ms) both;
+}
+.ca__impact::before {
+  width: 18cqw;
+  height: 18cqw;
+  border: 3px solid var(--red);
+  box-shadow: 0 0 14px var(--red);
+  animation: ca-burst-ring 560ms ease-out var(--d, 600ms) both;
+}
+@keyframes ca-burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.1);
+    opacity: 1;
+  }
+  45% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0.55;
+  }
+}
+@keyframes ca-burst-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* ---- Anlatım görseli ---- */
+.caart {
+  display: flex;
+  align-items: center;
+  width: min(100%, 300px);
+}
+.caart__p {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.caart__sight {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 138%;
+  height: 138%;
+  margin: -69% 0 0 -69%;
+  color: var(--red);
+  animation: ca-drift 5s ease-in-out infinite;
+}
+.caart__line {
+  position: relative;
+  flex: 1;
+  height: 2px;
+  min-width: 18px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--magenta), rgb(255 43 214 / 0.15));
+  box-shadow: 0 0 8px rgb(255 43 214 / 0.6);
+}
+.caart__line--r {
+  background: linear-gradient(270deg, var(--cyan), rgb(46 242 255 / 0.15));
+  box-shadow: 0 0 8px rgb(46 242 255 / 0.6);
+}
+.caart__line::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px #fff;
+  animation: caart-shot 1.8s ease-in infinite;
+}
+.caart__line--r::after {
+  left: auto;
+  right: 0;
+  animation-name: caart-shot-r;
+  animation-delay: 0.9s;
+}
+@keyframes caart-shot {
+  0%,
+  100% {
+    transform: translateX(0);
+    opacity: 0.9;
+  }
+  85% {
+    transform: translateX(calc(100% * 0 + 40px));
+    opacity: 0.9;
+  }
+  95% {
+    opacity: 0;
+  }
+}
+@keyframes caart-shot-r {
+  0%,
+  100% {
+    transform: translateX(0);
+    opacity: 0.9;
+  }
+  85% {
+    transform: translateX(-40px);
+    opacity: 0.9;
+  }
+  95% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca__sight {
+    animation: none;
+    transform: translate(calc(var(--flip, 1) * -6%), -5%);
+  }
+  .ca__slot[data-locked="1"] .ca__sight {
+    transform: none;
+  }
+  .caart__sight {
+    animation: none;
+  }
+}
+
+@media (max-height: 460px) {
+  .ca__grid {
+    --cols: var(--cols-wide);
+    --rows: var(--rows-wide);
+  }
+  .ca__hint {
+    display: none;
+  }
+  .ca__head {
+    min-height: 52px;
+    margin-top: 4px;
+    justify-content: center;
+  }
+  .ca__head .overline {
+    display: none;
+  }
+}

@@ -103,6 +103,9 @@ export async function create(nickname: string): Promise<Client> {
   const c = await Client.connect();
   c.send({ type: "createRoom", nickname });
   await until(() => c.updates.length > 0, "oda kuruldu");
+  // Oyun kataloğu büyüdükçe testler değişmesin: varsayılan seçim (tüm oyunlar) yerine Butona Bas.
+  c.send({ type: "setGames", gameIds: ["butona-bas"] });
+  await until(() => c.room.gameIds.length === 1 && c.room.gameIds[0] === "butona-bas", "oyun seçimi");
   return c;
 }
 

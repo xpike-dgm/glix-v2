@@ -277,11 +277,11 @@ describe("zarif kapanış (drain)", () => {
     const drain = k.srv.drain().then(() => {
       drained = true;
     });
-    // maç 45 sn + sonuç 7 sn sonra "final"de bekler (host lobiye dönmedi): süre dolana dek drain sürer
-    k.clock.advance(100_000);
+    // Maç sürerken drain çözülmez; maç ve sonuç ekranı bittiğinde ya da 120 sn dolunca çözülür.
+    k.clock.advance(30_000);
     await sync();
     expect(drained).toBe(false);
-    k.clock.advance(21_000);
+    k.clock.advance(91_000);
     await drain;
     expect(drained).toBe(true);
   });
