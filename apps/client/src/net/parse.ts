@@ -98,7 +98,8 @@ function parseMatch(v: unknown): MatchSnapshot | null {
     readyIds: v.readyIds,
     phaseStartedAt: v.phaseStartedAt,
     phaseEndsAt: ends,
-    view: v.view,
+    publicView: v.publicView ?? null,
+    view: v.view ?? null,
     result,
   };
 }

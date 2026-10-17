@@ -129,7 +129,7 @@ export async function startPlaying(cs: Client[]): Promise<{ startedAt: number }>
   await until(() => host.room.phase === "countdown", "countdown");
   k.clock.advance(3000);
   await until(() => host.room.phase === "playing", "playing");
-  const view = host.room.match?.view as { startedAt: number };
+  const view = host.room.match?.publicView as { startedAt: number };
   return { startedAt: view.startedAt };
 }
 

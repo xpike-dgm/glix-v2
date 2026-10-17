@@ -14,11 +14,15 @@ interface FakeView {
   all?: Record<string, string>;
   spectatorCopy?: string;
 }
+interface FakePublic {
+  count: number;
+  codes?: Record<string, string>;
+}
 
 /** Her oyuncunun gizli bir kodu var. `leak`: kodların kime sızacağı. */
 function fakeGame(
-  leak: "none" | "players" | "spectator",
-): GameDefinition<FakeState, { kind: "guess" }, FakeView> {
+  leak: "none" | "players" | "spectator" | "public",
+): GameDefinition<FakeState, { kind: "guess" }, FakeView, FakePublic> {
   return {
     id: "sahte",
     name: "Sahte",
@@ -47,6 +51,7 @@ function fakeGame(
           ? { rejected: "ended" }
           : { ...s, count: s.count + 1 },
     tick: (s) => s,
+    publicView: (s) => (leak === "public" ? { count: s.count, codes: s.codes } : { count: s.count }),
     view: (s, id) => {
       const view: FakeView = { mine: id === null ? null : (s.codes[id] ?? null) };
       if (leak === "players") view.all = s.codes;
@@ -87,6 +92,17 @@ describe("sızıntı denetimi kendini kanıtlar", () => {
   it("yalnız izleyiciye sızan değer de yakalanır", () => {
     const game = fakeGame("spectator");
     expect(() => checkGameInvariants(game, bot, { seed: 3, playerCount: 2 })).toThrow(/leak/);
+  });
+
+  it("publicView üzerinden sızan değer yakalanır", () => {
+    const game = fakeGame("public");
+    const state = game.setup(["a", "b"], {
+      now: 0,
+      rng: { next: () => 0, int: () => 1, shuffle: (x) => [...x] },
+    });
+    const found = findLeaks(game, state, ["a", "b"], 0);
+    expect(found.some((f) => f.code === "leak" && f.message.includes("publicView"))).toBe(true);
+    expect(() => checkGameInvariants(game, bot, { seed: 5, playerCount: 2 })).toThrow(/leak/);
   });
 
   it("çok kısa gizli değer reddedilir", () => {

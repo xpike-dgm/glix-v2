@@ -4,7 +4,7 @@ import { Client, create, k, press, setupRoom, startPlaying, sync, until, useServ
 
 useServer({ drainTimeoutMs: 120_000 });
 
-type Mode = "none" | "setup" | "parseAction" | "reduce" | "tick" | "view" | "result";
+type Mode = "none" | "setup" | "parseAction" | "reduce" | "tick" | "view" | "publicView" | "result";
 let mode: Mode = "none";
 
 function maybeThrow(at: Mode): void {
@@ -34,6 +34,10 @@ const boom: AnyGame = {
   tick(state) {
     maybeThrow("tick");
     return state;
+  },
+  publicView(state) {
+    maybeThrow("publicView");
+    return { n: state.n };
   },
   view(state) {
     maybeThrow("view");
@@ -107,7 +111,7 @@ async function playUntil(cs: Client[], games: string[], phase: "playing" | "brie
 }
 
 describe("oyun hatası: maç zarifçe iptal edilir", () => {
-  for (const at of ["setup", "tick", "view", "reduce", "parseAction"] as const) {
+  for (const at of ["setup", "tick", "view", "publicView", "reduce", "parseAction"] as const) {
     it(`${at} hata fırlatırsa oda lobiye döner, diğer oda sürer`, async () => {
       // Diğer oda: gerçek Butona Bas
       const others = await setupRoom(["X", "Y"]);

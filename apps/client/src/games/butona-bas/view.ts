@@ -1,4 +1,4 @@
-import type { ButonaBasView, ButonaBasWindowResult } from "@glix/engine";
+import type { ButonaBasPublicView, ButonaBasView, ButonaBasWindowResult } from "@glix/engine";
 import { parseNumberRecord } from "../../net/parse.js";
 
 type Rec = Record<string, unknown>;
@@ -12,13 +12,15 @@ function parseWindow(v: unknown): ButonaBasWindowResult | null {
   return { index: v.index, pressers: v.pressers as string[], outcome: v.outcome };
 }
 
-/** Sunucudan gelen `view` bilinmez; Butona Bas görünümü olarak doğrulanır. */
-export function parseButonaBasView(v: unknown): ButonaBasView | null {
+/** Ekranın okuduğu birleşik görünüm: ortak (`publicView`) + kişiye özel (`view`). */
+export type ButonaBasScreenView = ButonaBasPublicView & ButonaBasView;
+
+/** Sunucudan gelen `publicView` bilinmez; Butona Bas ortak görünümü olarak doğrulanır. */
+export function parseButonaBasPublicView(v: unknown): ButonaBasPublicView | null {
   if (!isRec(v)) return null;
   if (!isNum(v.startedAt) || !isNum(v.endsAt) || !isNum(v.windowMs)) return null;
-  if (v.myScore !== null && !isNum(v.myScore)) return null;
   const scores = parseNumberRecord(v.scores);
-  if (!scores || typeof v.pressedThisWindow !== "boolean" || !Array.isArray(v.recent)) return null;
+  if (!scores || !Array.isArray(v.recent)) return null;
   const recent: ButonaBasWindowResult[] = [];
   for (const r of v.recent) {
     const w = parseWindow(r);
@@ -29,11 +31,24 @@ export function parseButonaBasView(v: unknown): ButonaBasView | null {
     startedAt: v.startedAt,
     endsAt: v.endsAt,
     windowMs: v.windowMs > 0 ? v.windowMs : 300,
-    myScore: v.myScore,
     scores,
-    pressedThisWindow: v.pressedThisWindow,
     recent,
   };
+}
+
+/** Sunucudan gelen `view` bilinmez; Butona Bas kişisel görünümü olarak doğrulanır. */
+export function parseButonaBasPrivateView(v: unknown): ButonaBasView | null {
+  if (!isRec(v)) return null;
+  if (v.myScore !== null && !isNum(v.myScore)) return null;
+  if (typeof v.pressedThisWindow !== "boolean") return null;
+  return { myScore: v.myScore, pressedThisWindow: v.pressedThisWindow };
+}
+
+/** İki görünüm de geçerliyse birleşik görünümü verir. */
+export function parseButonaBasView(publicView: unknown, view: unknown): ButonaBasScreenView | null {
+  const pub = parseButonaBasPublicView(publicView);
+  const priv = parseButonaBasPrivateView(view);
+  return pub && priv ? { ...pub, ...priv } : null;
 }
 
 /** `lastSeen`'den yeni pencereler (eski → yeni). `lastSeen` null ise hepsi görülmüş sayılır. */

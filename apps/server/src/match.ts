@@ -296,11 +296,16 @@ function applyActionUnsafe(rt: Runtime, room: Room, playerId: string, payload: u
   return { ok: true };
 }
 
-/** Maçın herkese ortak görünen kısmı (oyuncuya özel `view` hariç). */
-export function sharedMatchSnapshot(room: Room): Omit<MatchSnapshot, "view"> | null {
+/** Maçın herkese ortak görünen kısmı (`publicView` dahil; oyuncuya özel `view` hariç). Oda başına bir kez hesaplanır. */
+export function sharedMatchSnapshot(rt: Runtime, room: Room): Omit<MatchSnapshot, "view"> | null {
   const match = room.match;
   if (!match) return null;
   const game = currentGame(match);
+  let publicView: unknown = null;
+  if (match.rng && (room.phase === "playing" || room.phase === "results")) {
+    const ctx = ctxFor(rt, match);
+    publicView = guard("publicView", () => game.publicView(match.state, ctx));
+  }
   return {
     round: match.index,
     total: match.games.length,
@@ -312,6 +317,7 @@ export function sharedMatchSnapshot(room: Room): Omit<MatchSnapshot, "view"> | n
     readyIds: [...match.readyIds],
     phaseStartedAt: match.phaseStartedAt,
     phaseEndsAt: match.phaseEndsAt,
+    publicView,
     result: room.phase === "results" || room.phase === "final" ? match.result : null,
   };
 }

@@ -329,6 +329,7 @@ describe("maç akışı", () => {
       gameName: "Butona Bas",
       orientation: "portrait",
       readyIds: [],
+      publicView: null,
       view: null,
       result: null,
     });
@@ -423,9 +424,10 @@ describe("maç akışı", () => {
     await press(b);
     at(1500);
     await sync();
-    let v = a.room.match?.view as { scores: Record<string, number>; myScore: number; recent: unknown[] };
+    let v = a.room.match?.publicView as { scores: Record<string, number>; recent: unknown[] };
+    const aView = a.room.match?.view as { myScore: number };
     expect(v.scores).toEqual({ [a.session.playerId]: -1, [b.session.playerId]: 0 });
-    expect(v.myScore).toBe(-1);
+    expect(aView.myScore).toBe(-1);
     expect(v.recent).toHaveLength(4);
     const bView = b.room.match?.view as { myScore: number };
     expect(bView.myScore).toBe(0);
@@ -446,7 +448,7 @@ describe("maç akışı", () => {
     expect(result?.awards).toEqual({ [b.session.playerId]: 2, [a.session.playerId]: 1 });
     expect(a.room.players.map((p) => p.score)).toEqual([1, 2]);
     expect(b.room.match?.phaseEndsAt).toBe((b.room.match?.phaseStartedAt ?? 0) + 7_000);
-    v = a.room.match?.view as typeof v;
+    v = a.room.match?.publicView as typeof v;
     expect(v.scores[b.session.playerId]).toBe(0);
 
     // Sonuç ekranı 7 sn sürer, sonra final.

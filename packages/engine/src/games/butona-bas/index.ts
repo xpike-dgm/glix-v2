@@ -3,6 +3,7 @@ import {
   BUTONA_BAS_DURATION_MS,
   BUTONA_BAS_WINDOW_MS,
   type ButonaBasAction,
+  type ButonaBasPublicView,
   type ButonaBasView,
   type ButonaBasWindowResult,
 } from "./types.js";
@@ -77,74 +78,84 @@ export function butonaBasAwards(scores: Record<string, number>): Record<string, 
   return awards;
 }
 
-export const butonaBas: GameDefinition<ButonaBasState, ButonaBasAction, ButonaBasView> = {
-  id: "butona-bas",
-  name: "Butona Bas",
-  minPlayers: 2,
-  maxPlayers: 8,
-  orientation: "portrait",
-  briefing: {
-    goal: "Arkadaşlarınla aynı anda bas!",
-    steps: ["Aynı anda basarsanız herkes +1", "Tek başına basarsan −1", "45 saniye boyunca ritmi yakalayın"],
-  },
+export const butonaBas: GameDefinition<ButonaBasState, ButonaBasAction, ButonaBasView, ButonaBasPublicView> =
+  {
+    id: "butona-bas",
+    name: "Butona Bas",
+    minPlayers: 2,
+    maxPlayers: 8,
+    orientation: "portrait",
+    briefing: {
+      goal: "Arkadaşlarınla aynı anda bas!",
+      steps: [
+        "Aynı anda basarsanız herkes +1",
+        "Tek başına basarsan −1",
+        "45 saniye boyunca ritmi yakalayın",
+      ],
+    },
 
-  parseAction(raw: unknown): ButonaBasAction | null {
-    if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
-    const keys = Object.keys(raw);
-    if (keys.length !== 1 || (raw as Record<string, unknown>).kind !== "press") return null;
-    return { kind: "press" };
-  },
+    parseAction(raw: unknown): ButonaBasAction | null {
+      if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
+      const keys = Object.keys(raw);
+      if (keys.length !== 1 || (raw as Record<string, unknown>).kind !== "press") return null;
+      return { kind: "press" };
+    },
 
-  setup(players: readonly string[], ctx: GameContext): ButonaBasState {
-    const scores: Record<string, number> = {};
-    for (const id of players) scores[id] = 0;
-    return {
-      players: [...players],
-      startedAt: ctx.now,
-      endsAt: ctx.now + BUTONA_BAS_DURATION_MS,
-      pending: {},
-      scores,
-      recent: [],
-    };
-  },
+    setup(players: readonly string[], ctx: GameContext): ButonaBasState {
+      const scores: Record<string, number> = {};
+      for (const id of players) scores[id] = 0;
+      return {
+        players: [...players],
+        startedAt: ctx.now,
+        endsAt: ctx.now + BUTONA_BAS_DURATION_MS,
+        pending: {},
+        scores,
+        recent: [],
+      };
+    },
 
-  reduce(state, playerId, _action, ctx): ButonaBasState | Rejected {
-    if (!state.players.includes(playerId)) return { rejected: "not_participant" };
-    if (ctx.now >= state.endsAt) return { rejected: "ended" };
-    if (ctx.now < state.startedAt) return { rejected: "not_started" };
-    const index = windowIndex(state, ctx.now);
-    const current = state.pending[index];
-    if (current?.includes(playerId)) return state;
-    return { ...state, pending: { ...state.pending, [index]: [...(current ?? []), playerId] } };
-  },
+    reduce(state, playerId, _action, ctx): ButonaBasState | Rejected {
+      if (!state.players.includes(playerId)) return { rejected: "not_participant" };
+      if (ctx.now >= state.endsAt) return { rejected: "ended" };
+      if (ctx.now < state.startedAt) return { rejected: "not_started" };
+      const index = windowIndex(state, ctx.now);
+      const current = state.pending[index];
+      if (current?.includes(playerId)) return state;
+      return { ...state, pending: { ...state.pending, [index]: [...(current ?? []), playerId] } };
+    },
 
-  tick(state, ctx): ButonaBasState {
-    return settle(state, closedWindowCount(state, ctx.now));
-  },
+    tick(state, ctx): ButonaBasState {
+      return settle(state, closedWindowCount(state, ctx.now));
+    },
 
-  view(state, playerId, ctx): ButonaBasView {
-    const open = ctx.now < state.endsAt ? state.pending[windowIndex(state, ctx.now)] : undefined;
-    return {
-      startedAt: state.startedAt,
-      endsAt: state.endsAt,
-      windowMs: BUTONA_BAS_WINDOW_MS,
-      myScore: playerId === null ? null : (state.scores[playerId] ?? 0),
-      scores: { ...state.scores },
-      pressedThisWindow: playerId !== null && (open?.includes(playerId) ?? false),
-      recent: state.recent.map((w) => ({ ...w, pressers: [...w.pressers] })),
-    };
-  },
+    publicView(state): ButonaBasPublicView {
+      return {
+        startedAt: state.startedAt,
+        endsAt: state.endsAt,
+        windowMs: BUTONA_BAS_WINDOW_MS,
+        scores: { ...state.scores },
+        recent: state.recent.map((w) => ({ ...w, pressers: [...w.pressers] })),
+      };
+    },
 
-  isFinished(state, ctx): boolean {
-    return ctx.now >= state.endsAt;
-  },
+    view(state, playerId, ctx): ButonaBasView {
+      const open = ctx.now < state.endsAt ? state.pending[windowIndex(state, ctx.now)] : undefined;
+      return {
+        myScore: playerId === null ? null : (state.scores[playerId] ?? 0),
+        pressedThisWindow: playerId !== null && (open?.includes(playerId) ?? false),
+      };
+    },
 
-  secrets() {
-    return [];
-  },
+    isFinished(state, ctx): boolean {
+      return ctx.now >= state.endsAt;
+    },
 
-  result(state) {
-    const settled = settle(state, Number.POSITIVE_INFINITY);
-    return { miniScores: { ...settled.scores }, awards: butonaBasAwards(settled.scores) };
-  },
-};
+    secrets() {
+      return [];
+    },
+
+    result(state) {
+      const settled = settle(state, Number.POSITIVE_INFINITY);
+      return { miniScores: { ...settled.scores }, awards: butonaBasAwards(settled.scores) };
+    },
+  };

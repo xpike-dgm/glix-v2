@@ -35,6 +35,10 @@ export class InvariantViolation extends Error {
 
 const fresh = (now: number) => ({ now, rng: createRng(12345) });
 
+function leaksValue(json: string, value: string): boolean {
+  return json.includes(value) || json.includes(JSON.stringify(value).slice(1, -1));
+}
+
 /** Gizli değerlerin hak sahibi olmayanların (ve izleyicinin) görünümüne sızıp sızmadığını arar. */
 export function findLeaks(
   game: AnyGame,
@@ -45,6 +49,12 @@ export function findLeaks(
   const found: { code: "leak" | "short-secret" | "view-throws"; message: string }[] = [];
   const finished = game.isFinished(state, fresh(now));
   const views = new Map<string | null, string>();
+  let publicJson = "";
+  try {
+    publicJson = JSON.stringify(game.publicView(state, fresh(now))) ?? "";
+  } catch (e) {
+    found.push({ code: "view-throws", message: `publicView hata fırlattı: ${String(e)}` });
+  }
   for (const p of [...players, null]) {
     try {
       views.set(p, JSON.stringify(game.view(state, p, fresh(now))) ?? "");
@@ -61,9 +71,12 @@ export function findLeaks(
       continue;
     }
     if (finished && entry.ownerIds.length === 0) continue;
+    if (leaksValue(publicJson, entry.value)) {
+      found.push({ code: "leak", message: `"${entry.label}" herkese açık görünüme (publicView) sızdı` });
+    }
     for (const [viewer, json] of views) {
       if (viewer !== null && entry.ownerIds.includes(viewer)) continue;
-      if (json.includes(entry.value) || json.includes(JSON.stringify(entry.value).slice(1, -1))) {
+      if (leaksValue(json, entry.value)) {
         found.push({
           code: "leak",
           message: `"${entry.label}" ${viewer === null ? "izleyici" : viewer} görünümüne sızdı`,
@@ -111,6 +124,7 @@ export function makeStepChecker(game: AnyGame, players: readonly string[]) {
     }
     twice(`${where} isFinished`, info.now, (ctx) => game.isFinished(info.state, ctx));
     twice(`${where} secrets`, info.now, () => game.secrets(info.state));
+    twice(`${where} publicView`, info.now, (ctx) => game.publicView(info.state, ctx));
     for (const p of [...players, null]) {
       twice(`${where} view(${p})`, info.now, (ctx) => game.view(info.state, p, ctx));
     }

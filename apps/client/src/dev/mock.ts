@@ -11,7 +11,12 @@ import type {
   RoomPhase,
   RoomSnapshot,
 } from "@glix/engine";
-import { BUTONA_BAS_DURATION_MS, type ButonaBasView, type ButonaBasWindowResult } from "@glix/engine";
+import {
+  BUTONA_BAS_DURATION_MS,
+  type ButonaBasPublicView,
+  type ButonaBasView,
+  type ButonaBasWindowResult,
+} from "@glix/engine";
 import { useMockSender } from "../net/client.js";
 import { applySnapshot, setState } from "../net/store.js";
 
@@ -39,6 +44,7 @@ export function startMock(kind: string, params: URLSearchParams): void {
   let phaseStartedAt = Date.now();
   let phaseEndsAt: number | null = null;
   let result: MatchSnapshot["result"] = null;
+  let publicView: unknown = null;
   let view: unknown = null;
   let playStart = Date.now();
   let windows: ButonaBasWindowResult[] = [];
@@ -72,6 +78,7 @@ export function startMock(kind: string, params: URLSearchParams): void {
           readyIds,
           phaseStartedAt,
           phaseEndsAt,
+          publicView,
           view,
           result,
         };
@@ -92,20 +99,20 @@ export function startMock(kind: string, params: URLSearchParams): void {
     applySnapshot(snapshot);
   };
 
-  const buildView = (): ButonaBasView => ({
+  const buildPublicView = (): ButonaBasPublicView => ({
     startedAt: playStart,
     endsAt: playStart + BUTONA_BAS_DURATION_MS,
     windowMs: 300,
-    myScore: mini[SELF] ?? 0,
     scores: { ...mini },
-    pressedThisWindow: false,
     recent: windows.slice(-8),
   });
+  const buildView = (): ButonaBasView => ({ myScore: mini[SELF] ?? 0, pressedThisWindow: false });
 
   const addWindow = (pressers: string[]): void => {
     const outcome: "match" | "solo" = pressers.length >= 2 ? "match" : "solo";
     windows = [...windows, { index: windowIndex++, pressers, outcome }].slice(-8);
     for (const id of pressers) mini[id] = (mini[id] ?? 0) + (outcome === "match" ? 1 : -1);
+    publicView = buildPublicView();
     view = buildView();
     publish();
   };
@@ -127,6 +134,7 @@ export function startMock(kind: string, params: URLSearchParams): void {
     mini = { p0: 4, p1: 5, p2: 3, p3: 1, p4: 0 };
     windows = [];
     windowIndex = 0;
+    publicView = buildPublicView();
     view = buildView();
     publish();
     later(botWindow, 400);

@@ -16,6 +16,7 @@ export function matchSnap(extra: Partial<MatchSnapshot> = {}): MatchSnapshot {
     readyIds: [],
     phaseStartedAt: 0,
     phaseEndsAt: null,
+    publicView: null,
     view: null,
     result: null,
     ...extra,

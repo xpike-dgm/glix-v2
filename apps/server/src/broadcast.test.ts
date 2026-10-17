@@ -1,5 +1,5 @@
-import { applyMerge, type RoomSnapshot } from "@glix/engine";
-import { describe, expect, it } from "vitest";
+import { applyMerge, GAMES, type RoomSnapshot } from "@glix/engine";
+import { describe, expect, it, vi } from "vitest";
 import { createManualClock } from "./clock.js";
 import { applyAction, beginMatch, markReady, runTick, stepMatch } from "./match.js";
 import { createRoom, createRuntime } from "./rooms.js";
@@ -166,5 +166,62 @@ describe("yayın: gereksiz mesaj ve yama zinciri", () => {
     t.rt.broadcaster.flush(t.room);
     for (const c of [...t.conns, late])
       expect(c.view.snapshot?.players.find((p) => p.id === "p0")?.score).toBe(2);
+  });
+});
+
+describe("yayın: publicView oda başına bir kez", () => {
+  it("flush başına publicView bir kez hesaplanır (bağlantı sayısından bağımsız)", () => {
+    const t = setup(5);
+    startPlaying(t);
+    const game = GAMES["butona-bas"];
+    if (!game) throw new Error("oyun yok");
+    const spy = vi.spyOn(game, "publicView");
+    try {
+      for (let i = 0; i < 3; i++) {
+        t.clock.advance(60);
+        applyAction(t.rt, t.room, `p${i}`, { kind: "press" });
+        t.rt.broadcaster.flush(t.room);
+      }
+      expect(spy).toHaveBeenCalledTimes(3);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("yalnız bir oyuncunun özel görünümü değişince yalnız ona mesaj gider; herkese açık görünüm değişmez", () => {
+    const t = setup(4);
+    startPlaying(t);
+    const before = t.conns.map((c) => c.raw.length);
+    t.clock.advance(60);
+    applyAction(t.rt, t.room, "p2", { kind: "press" });
+    t.rt.broadcaster.flush(t.room);
+    t.conns.forEach((c, i) => {
+      expect(c.raw.length).toBe((before[i] ?? 0) + (i === 2 ? 1 : 0));
+    });
+    const msg = JSON.parse(t.conns[2]?.raw.at(-1) ?? "") as {
+      patch: { match?: Record<string, unknown> };
+    };
+    expect(Object.keys(msg.patch.match ?? {})).toEqual(["view"]);
+  });
+
+  it("herkese açık görünüm değişince her bağlantı ortak yamayı alır, özel görünüm yamaya girmez", () => {
+    const t = setup(3);
+    startPlaying(t);
+    t.clock.advance(100);
+    applyAction(t.rt, t.room, "p0", { kind: "press" });
+    applyAction(t.rt, t.room, "p1", { kind: "press" });
+    t.rt.broadcaster.flush(t.room);
+    const before = t.conns.map((c) => c.raw.length);
+    t.clock.advance(400);
+    runTick(t.rt);
+    t.rt.broadcaster.flush(t.room);
+    t.conns.forEach((c, i) => {
+      expect(c.raw.length).toBe((before[i] ?? 0) + 1);
+      const m = JSON.parse(c.raw.at(-1) ?? "") as { patch: { match: Record<string, unknown> } };
+      expect(m.patch.match).toHaveProperty("publicView");
+    });
+    const first = t.conns[0]?.view.snapshot?.match?.publicView as { scores: Record<string, number> };
+    expect(first.scores).toEqual({ p0: 1, p1: 1, p2: 0 });
+    for (const c of t.conns) expect(c.view.snapshot?.match?.publicView).toEqual(first);
   });
 });

@@ -90,7 +90,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
 
   /** Ortak içeriği yeniler; öncekinden farklıysa sürümü artırıp farkı saklar. */
   function refreshShared(rt: Runtime, room: Room): { cache: SharedCache; content: Shared } {
-    const content = sharedContent(rt, room, sharedMatchSnapshot(room));
+    const content = sharedContent(rt, room, sharedMatchSnapshot(rt, room));
     let cache = caches.get(room);
     if (!cache) {
       cache = { ver: 0, content: null, patch: null };

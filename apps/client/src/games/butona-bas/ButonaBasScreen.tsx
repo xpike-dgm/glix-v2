@@ -18,7 +18,7 @@ interface Float {
 }
 
 export default function ButonaBasScreen(props: GameScreenProps) {
-  const view = createMemo(() => parseButonaBasView(props.match.view));
+  const view = createMemo(() => parseButonaBasView(props.match.publicView, props.match.view));
   const score = () => {
     const v = view();
     if (!v) return 0;

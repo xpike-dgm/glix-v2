@@ -11,7 +11,7 @@ const load = (p) => import(pathToFileURL(resolve(ROOT, p)).href);
 const { createManualClock } = await load("apps/server/dist/clock.js");
 const { createRuntime, createRoom } = await load("apps/server/dist/rooms.js");
 const { beginMatch, markReady, stepMatch, applyAction, runTick } = await load("apps/server/dist/match.js");
-const { applyMerge } = await load("packages/engine/dist/index.js");
+const { applyMerge, GAMES } = await load("packages/engine/dist/index.js");
 
 const env = (k, d) => Number(process.env[k] ?? d);
 const ROOMS = env("ROOMS", 200);
@@ -83,6 +83,16 @@ runTick(rt);
 for (const { room } of rooms) rt.broadcaster.flush(room);
 if (rooms[0].room.phase !== "playing") throw new Error(`oyun başlamadı: ${rooms[0].room.phase}`);
 
+// publicView oda başına bir kez hesaplanmalı: çağrı sayacı (eski sürümde publicView yoksa sayılmaz)
+let publicViewCalls = 0;
+const game = GAMES["butona-bas"];
+if (typeof game.publicView === "function") {
+  const orig = game.publicView.bind(game);
+  game.publicView = (...a) => {
+    publicViewCalls++;
+    return orig(...a);
+  };
+}
 messages = 0;
 bytes = 0;
 const t0 = performance.now();
@@ -98,10 +108,18 @@ const ms = performance.now() - t0;
 // son durum: her bağlantının aynası sunucunun gönderdiği son snapshot ile tutarlı mı
 for (const p of rooms[0].room.players.values())
   if (p.conn.mirror?.selfId !== p.id) throw new Error("ayna bozuk");
+// ayna denetimi: aynı odadaki herkesin publicView'ı birebir aynı (bölünmüş sürümde)
+{
+  const mirrors = [...rooms[0].room.players.values()].map((p) =>
+    JSON.stringify(p.conn.mirror?.match?.publicView ?? null),
+  );
+  if (new Set(mirrors).size !== 1) throw new Error("aynı odadaki publicView'lar farklı");
+}
 const sec = (STEPS * STEP_MS) / 1000;
 const flushes = ROOMS * STEPS;
 console.log(
   `rooms=${ROOMS}x${PLAYERS} steps=${STEPS}x${STEP_MS}ms  cpu/oda-adımı=${((ms * 1000) / flushes).toFixed(1)} µs  ` +
     `toplam=${ms.toFixed(0)} ms (${((ms / (sec * 1000)) * 100).toFixed(0)}% tek çekirdek)  ` +
-    `mesaj/sn=${Math.round(messages / sec)}  bayt/sn=${Math.round(bytes / sec)}`,
+    `mesaj/sn=${Math.round(messages / sec)}  bayt/sn=${Math.round(bytes / sec)}  ` +
+    `publicView/oda-adımı=${(publicViewCalls / flushes).toFixed(2)}`,
 );

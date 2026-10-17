@@ -195,9 +195,21 @@ describe("butona-bas görünüm", () => {
     const spectator = butonaBas.view(s, null, ctx(T0 + 20));
     expect(spectator.myScore).toBeNull();
     expect(spectator.pressedThisWindow).toBe(false);
-    expect(spectator.windowMs).toBe(300);
-    expect(spectator.endsAt - spectator.startedAt).toBe(45_000);
     expect(JSON.stringify(spectator)).not.toContain("pending");
+  });
+  it("herkese açık görünüm herkes için aynıdır ve kişisel alan içermez", () => {
+    let s = start();
+    s = press(s, "a", 10);
+    const pub = butonaBas.publicView(s, ctx(T0 + 20));
+    expect(pub.windowMs).toBe(300);
+    expect(pub.endsAt - pub.startedAt).toBe(45_000);
+    expect(pub.scores).toEqual({ a: 0, b: 0, c: 0 });
+    expect(Object.keys(pub).sort()).toEqual(["endsAt", "recent", "scores", "startedAt", "windowMs"]);
+    expect(Object.keys(butonaBas.view(s, "a", ctx(T0 + 20))).sort()).toEqual([
+      "myScore",
+      "pressedThisWindow",
+    ]);
+    expect(JSON.stringify(pub)).not.toContain("pending");
   });
   it("pencere değişince pressedThisWindow sıfırlanır", () => {
     let s = start();
@@ -209,7 +221,7 @@ describe("butona-bas görünüm", () => {
     s = press(s, "a", 10);
     s = press(s, "b", 20);
     s = settleAt(s, 300);
-    const v = butonaBas.view(s, "a", ctx(T0 + 400));
+    const v = butonaBas.publicView(s, ctx(T0 + 400));
     v.scores.a = 99;
     v.recent[0]?.pressers.push("z");
     expect(s.scores.a).toBe(1);
