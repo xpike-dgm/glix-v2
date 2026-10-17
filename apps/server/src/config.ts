@@ -7,6 +7,8 @@ export interface Config {
   clientDir: string;
   allowedOrigins: string[] | null;
   revision: string;
+  /** SIGTERM sonrası maçların bitmesi için en çok beklenecek süre (ms). */
+  drainTimeoutMs: number;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -19,7 +21,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   let allowedOrigins: string[] | null = null;
   if (origins.length > 0) allowedOrigins = origins;
   else if (env.NODE_ENV === "production") allowedOrigins = [];
+  const drainTimeoutMs = Number(env.DRAIN_TIMEOUT_MS ?? 600_000);
+  if (!Number.isFinite(drainTimeoutMs) || drainTimeoutMs < 0) throw new Error("DRAIN_TIMEOUT_MS geçersiz");
   return {
+    drainTimeoutMs,
     host: env.HOST || "0.0.0.0",
     port,
     clientDir: env.CLIENT_DIR || resolve(fileURLToPath(new URL("../../client/dist", import.meta.url))),

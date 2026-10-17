@@ -3,7 +3,17 @@ import { resolveWsUrl } from "../wsUrl.js";
 import { offsetFromPong } from "./clock.js";
 import { parseServerMessage } from "./parse.js";
 import { KEYS, readStored, removeStored, writeStored } from "./storage.js";
-import { addClockSample, applySnapshot, clearRoom, goHome, setState, state, toast } from "./store.js";
+import {
+  addClockSample,
+  applyPatchMessage,
+  applySnapshot,
+  clearRoom,
+  goHome,
+  setState,
+  state,
+  syncReconnected,
+  toast,
+} from "./store.js";
 
 const BACKOFF_MS = [500, 1000, 2000, 4000, 5000];
 const PING_EVERY_MS = 5000;
@@ -17,7 +27,12 @@ const SHOWN_ERRORS = new Set([
   "already_in_room",
   "not_enough_players",
   "invalid_games",
+  "draining",
+  "game_failed",
 ]);
+
+/** Sunucu güncelleme için yeniden başladı (WebSocket kapanış kodu 1012). */
+const SERVICE_RESTART = 1012;
 
 let ws: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
@@ -27,6 +42,7 @@ let stopped = true;
 let lastHeard = 0;
 let seq = 0;
 let pending: ClientMessage | null = null;
+let restartedByServer = false;
 let mockSender: ((msg: ClientMessage) => void) | null = null;
 
 /** Geliştirme önizlemesi: mesajlar sahte sunucuya gider. */
@@ -75,17 +91,22 @@ function onMessage(raw: string): void {
   switch (msg.type) {
     case "welcome": {
       attempt = 0;
+      syncReconnected();
       setState({ conn: "open", everOpen: true, failedAttempts: 0 });
       startPings();
       const token = readStored(KEYS.token);
       if (token) rawSend({ type: "resume", token });
-      else flushPending();
+      else {
+        restartedByServer = false;
+        flushPending();
+      }
       break;
     }
     case "pong":
       addClockSample(offsetFromPong(msg.t, Date.now(), msg.serverTime));
       break;
     case "session":
+      restartedByServer = false;
       writeStored(KEYS.token, msg.token);
       if (state.snapshot && state.snapshot.code !== msg.roomCode) setState("snapshot", null);
       setState({
@@ -97,6 +118,9 @@ function onMessage(raw: string): void {
       applySnapshot(msg.snapshot);
       setState({ busy: false, notFoundCode: null });
       pending = null;
+      break;
+    case "patch":
+      if (applyPatchMessage(msg)) rawSend({ type: "resync" });
       break;
     case "actionAck":
       break;
@@ -118,7 +142,9 @@ function handleError(code: string, message: string): void {
     removeStored(KEYS.token);
     clearRoom();
     goHome();
-    toast("Bu oda artık yok. Yeni bir oda kurabilirsin.");
+    if (restartedByServer) toast("Oyun güncellendi, yeni oda kurabilirsin.");
+    else toast("Bu oda artık yok. Yeni bir oda kurabilirsin.");
+    restartedByServer = false;
     flushPending();
     return;
   }
@@ -147,8 +173,9 @@ function open(): void {
   lastHeard = Date.now();
   sock.onopen = () => rawSend({ type: "hello", clientVersion: APP_VERSION });
   sock.onmessage = (ev) => onMessage(String(ev.data));
-  sock.onclose = () => {
+  sock.onclose = (ev) => {
     if (ws !== sock) return;
+    if (ev.code === SERVICE_RESTART) restartedByServer = true;
     clearInterval(pingTimer);
     ws = null;
     if (stopped) return;

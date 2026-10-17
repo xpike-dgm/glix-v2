@@ -40,6 +40,17 @@ describe("sunucu mesajı doğrulama", () => {
       reason: "r",
     });
   });
+  it("patch mesajını doğrular", () => {
+    expect(parseServerMessage(wire({ type: "patch", baseRev: 1, rev: 2, patch: { a: 1 } }))).toEqual({
+      type: "patch",
+      baseRev: 1,
+      rev: 2,
+      patch: { a: 1 },
+    });
+    expect(parseServerMessage(wire({ type: "patch", baseRev: "1", rev: 2, patch: {} }))).toBeNull();
+    expect(parseServerMessage(wire({ type: "patch", baseRev: 1, rev: 2, patch: [] }))).toBeNull();
+    expect(parseServerMessage(wire({ type: "patch", baseRev: 1, rev: 2 }))).toBeNull();
+  });
   it("JSON olmayan ya da bilinmeyen türü reddeder", () => {
     expect(parseServerMessage("{")).toBeNull();
     expect(parseServerMessage("[]")).toBeNull();

@@ -71,4 +71,13 @@ sızıntı testi otomatik kırılır. Sunucu oyun bilmez; durum her yayında bir
 - [ ] Kapı: 3 gerçek telefonla oyun (kullanıcı)
 - Sonraya: sonuç listesinde puan sütunu hizası
 
+### A2 — sürüyor
+- [x] Sözleşmeler: `secrets()`, `GameLog`, `patch`/`resync`, `game_failed`/`draining` hata kodları
+- [x] `@glix/engine/testing`: bot simülatörü, 8 değişmez (sızıntı dahil), sızıntı meta-testi, replay, fuzz
+- [x] Merge-patch senkron: Butona Bas 8 oyuncuda oyuncu başına 827 KB → 166 KB
+- [x] Oda bazlı hata izolasyonu + `game_failed` günlüğü (GameLog ile), `/health` metrikleri
+- [x] Drain ile kesintisiz güncelleme; deploy.sh önce derler, süren maçları bekler (`--force` ile atlanır)
+- [ ] Yük testi (VDS, 200 oda × 8 bot)
+- [ ] Güvenlik incelemesi
+
 **Dağıtım:** VDS'te `/srv/glix/deploy.sh <ref>` (varsayılan `main`). Geri alma: eski SHA ile aynı komut.

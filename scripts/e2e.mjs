@@ -53,7 +53,7 @@ function grepDist(dir, needle, hits = []) {
 }
 
 async function startServer(port) {
-  const env = { ...ENV, PORT: String(port), HOST: "127.0.0.1", CLIENT_DIR };
+  const env = { ...ENV, PORT: String(port), HOST: "127.0.0.1", CLIENT_DIR, DRAIN_TIMEOUT_MS: "4000" };
   delete env.NODE_ENV;
   const child = spawn("node", ["apps/server/dist/index.js"], {
     cwd: ROOT,
@@ -78,8 +78,17 @@ async function startServer(port) {
 
 const errors = [];
 const pages = new Set();
+// Sayfaların aldığı WebSocket karelerinden: tam room ve patch sayıları (senkron yaması şeffaf çalışmalı).
+const frames = { room: 0, patch: 0 };
 function watch(label, page) {
   pages.add(page);
+  page.on("websocket", (ws) => {
+    ws.on("framereceived", (f) => {
+      const text = typeof f.payload === "string" ? f.payload : "";
+      if (text.startsWith('{"type":"patch"')) frames.patch += 1;
+      else if (text.startsWith('{"type":"room"')) frames.room += 1;
+    });
+  });
   page.on("console", (m) => {
     if (m.type() === "error") errors.push(`[${label}] console: ${m.text()}`);
   });
@@ -405,21 +414,38 @@ async function main() {
     for (const p of [A, B2, C]) assert((await myScore(p)) === 0, "yeni maçta skor 0 olmalı");
     log("lobiye dönüş ve sıfırlanmış skor tamam");
 
-    // 11) Sunucu yeniden başlar: oda kapandı bildirimi, bağlantı örtüsü, sonra örtü kalkar ve yeni oda kurulabilir
+    // Senkron: oyun boyunca en az bir patch mesajı alınmış olmalı (ve arayüz zaten doğru çalıştı)
+    log("WebSocket kareleri", frames);
+    assert(frames.patch > 0, "hiç patch mesajı alınmadı");
+    assert(frames.room > 0, "hiç tam room mesajı alınmadı");
+
+    // 11) Sunucu güncellenir (SIGTERM): drain -> /health 503, maç sürer; süre dolunca 1012 ile kapanır,
+    // istemci yeniden bağlanır, oda bellekte olmadığı için "Oyun güncellendi" der ve yeni oda kurulabilir.
     const exited = new Promise((r) => server.child.once("exit", r));
     server.child.kill("SIGTERM");
+    let drainHealth = null;
+    for (let i = 0; i < 30 && !drainHealth; i++) {
+      const r = await fetch(`${base}/health`).catch(() => null);
+      if (r && r.status === 503) drainHealth = await r.json();
+      else await sleep(100);
+    }
+    assert(drainHealth?.draining === true, "drain sırasında /health 503 ve draining:true olmalı");
+    assert(
+      drainHealth.activeMatches >= 1,
+      `drain sırasında maç sürüyor olmalı: ${JSON.stringify(drainHealth)}`,
+    );
     await exited;
-    await A.getByText("Oda kapandı").waitFor(OPT);
     await A.getByText("Tekrar bağlanıyor").waitFor(OPT);
     await shot(A, "17-reconnecting");
-    errors.length = 0; // sunucu bilerek öldürüldü: bu süredeki bağlantı hataları beklenen
+    errors.length = 0; // sunucu bilerek durduruldu: bu süredeki bağlantı hataları beklenen
     server = await startServer(port);
+    await A.getByText("Oyun güncellendi, yeni oda kurabilirsin.").waitFor({ timeout: 30_000 });
     await A.getByText("Tekrar bağlanıyor").waitFor({ state: "hidden", timeout: 30_000 });
     await btn(A, /oda kur/i).click();
     await A.locator(".roomcode").waitFor(OPT);
     assert((await lobbyCode(A)) !== code, "yeni sunucuda yeni oda kurulmalı");
     await shot(A, "18-new-room-after-restart");
-    log("sunucu yeniden başlatma: örtü ve yeni oda tamam");
+    log("sunucu güncelleme (drain, 1012, resume mesajı) ve yeni oda tamam");
     await sleep(500);
 
     assert(errors.length === 0, `tarayıcı hataları:\n${errors.join("\n")}`);

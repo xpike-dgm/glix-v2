@@ -3,6 +3,7 @@ import { GAMES, getCatalog, MAX_NICKNAME_LENGTH, MAX_PLAYERS, ROOM_CODE_LENGTH }
 import { createBroadcaster } from "./broadcast.js";
 import { type Clock, systemClock } from "./clock.js";
 import { clearMatch } from "./match.js";
+import { createMetrics } from "./metrics.js";
 import { type Connection, isConnected, type Player, type Room, type Runtime } from "./runtime.js";
 
 export const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -13,6 +14,9 @@ export const HOST_GRACE_MS = 20_000;
 export function createRuntime(clock: Clock = systemClock): Runtime {
   const rt: Runtime = {
     clock,
+    draining: false,
+    metrics: createMetrics(),
+    recentLogs: [],
     rooms: new Map(),
     tokens: new Map(),
     active: new Set(),
@@ -196,15 +200,30 @@ export function deleteRoom(rt: Runtime, room: Room): void {
   rt.rooms.delete(room.code);
 }
 
-/** Tüm zamanlayıcıları iptal eder (sunucu kapanırken). */
-export function disposeRuntime(rt: Runtime): void {
+/**
+ * Tüm zamanlayıcıları iptal eder (sunucu kapanırken). `notify` false ise oyunculara "oda kapandı"
+ * bildirilmez: soketler 1012 ile kapanır ve istemci resume dener (güncelleme yeniden başlatması).
+ */
+export function disposeRuntime(rt: Runtime, notify = true): void {
   for (const room of [...rt.rooms.values()]) {
     for (const p of room.players.values()) {
       if (p.graceCancel) p.graceCancel();
       p.graceCancel = null;
+      if (!notify && p.conn) {
+        p.conn.player = null;
+        p.conn = null;
+      }
     }
     deleteRoom(rt, room);
   }
+}
+
+/** Maçı olan (briefing..final) oda sayısı. */
+export function countActiveMatches(rt: Runtime): number {
+  let n = 0;
+  // Final ekranındaki oda bitmiş sayılır; güncellemeyi bekletmez.
+  for (const room of rt.rooms.values()) if (room.phase !== "lobby" && room.phase !== "final") n += 1;
+  return n;
 }
 
 export function countPlayers(rt: Runtime): number {

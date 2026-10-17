@@ -1,139 +1,19 @@
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join as pathJoin } from "node:path";
-import type { RoomSnapshot, ServerMessage } from "@glix/engine";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { WebSocket } from "ws";
-import { createManualClock, type ManualClock } from "./clock.js";
-import { type RunningServer, startServer } from "./server.js";
+import { describe, expect, it } from "vitest";
+import {
+  Client,
+  create,
+  join,
+  k,
+  press,
+  setupRoom,
+  sleep,
+  startPlaying,
+  sync,
+  until,
+  useServer,
+} from "./testkit.js";
 
-const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-
-let clock: ManualClock;
-let srv: RunningServer;
-const clients: Client[] = [];
-
-class Client {
-  readonly msgs: ServerMessage[] = [];
-  closeCode: number | null = null;
-  private constructor(readonly ws: WebSocket) {
-    ws.on("message", (d) => this.msgs.push(JSON.parse(d.toString()) as ServerMessage));
-    ws.on("close", (code) => {
-      this.closeCode = code;
-    });
-  }
-  static async connect(): Promise<Client> {
-    const ws = new WebSocket(`ws://127.0.0.1:${srv.port}/ws`);
-    await new Promise<void>((resolve, reject) => {
-      ws.once("open", () => resolve());
-      ws.once("error", reject);
-    });
-    const c = new Client(ws);
-    clients.push(c);
-    return c;
-  }
-  send(obj: unknown): void {
-    this.ws.send(typeof obj === "string" ? obj : JSON.stringify(obj));
-  }
-  of<T extends ServerMessage["type"]>(type: T): Extract<ServerMessage, { type: T }>[] {
-    return this.msgs.filter((m): m is Extract<ServerMessage, { type: T }> => m.type === type);
-  }
-  /** En son oda görüntüsü. */
-  get room(): RoomSnapshot {
-    const last = this.of("room").at(-1);
-    if (!last) throw new Error("oda görüntüsü yok");
-    return last.snapshot;
-  }
-  get session() {
-    const s = this.of("session").at(-1);
-    if (!s) throw new Error("oturum yok");
-    return s;
-  }
-  get lastError() {
-    return this.of("error").at(-1);
-  }
-  mark(): number {
-    return this.msgs.length;
-  }
-  since(mark: number): ServerMessage[] {
-    return this.msgs.slice(mark);
-  }
-}
-
-/** Mesajların işlenmesi için gerçek zaman tanır, sahte saati ilerletip yayınları boşaltır. */
-async function sync(): Promise<void> {
-  await sleep(15);
-  clock.advance(60);
-  await sleep(15);
-}
-
-async function until(pred: () => boolean, label = "koşul"): Promise<void> {
-  for (let i = 0; i < 100; i++) {
-    if (pred()) return;
-    await sync();
-  }
-  throw new Error(`zaman aşımı: ${label}`);
-}
-
-async function create(nickname: string): Promise<Client> {
-  const c = await Client.connect();
-  c.send({ type: "createRoom", nickname });
-  await until(() => c.of("room").length > 0, "oda kuruldu");
-  return c;
-}
-
-async function join(code: string, nickname: string): Promise<Client> {
-  const c = await Client.connect();
-  c.send({ type: "joinRoom", code, nickname });
-  await until(() => c.of("room").length > 0 || c.of("error").length > 0, "katılım");
-  return c;
-}
-
-async function setupRoom(names: string[]): Promise<Client[]> {
-  const host = await create(names[0] ?? "A");
-  const out = [host];
-  for (const n of names.slice(1)) out.push(await join(host.session.roomCode, n));
-  await sync();
-  return out;
-}
-
-async function startPlaying(cs: Client[]): Promise<{ startedAt: number }> {
-  const host = cs[0] as Client;
-  host.send({ type: "startMatch" });
-  await until(() => host.room.phase === "briefing", "briefing");
-  for (const c of cs) c.send({ type: "ready" });
-  await until(() => host.room.phase === "countdown", "countdown");
-  clock.advance(3000);
-  await until(() => host.room.phase === "playing", "playing");
-  const view = host.room.match?.view as { startedAt: number };
-  return { startedAt: view.startedAt };
-}
-
-let seq = 0;
-async function press(c: Client): Promise<void> {
-  const n = ++seq;
-  c.send({ type: "action", seq: n, payload: { kind: "press" } });
-  for (let i = 0; i < 100 && !c.of("actionAck").some((a) => a.seq === n); i++) await sleep(5);
-  const ack = c.of("actionAck").find((a) => a.seq === n);
-  if (!ack?.ok) throw new Error(`basış reddedildi: ${ack?.reason}`);
-}
-
-beforeEach(async () => {
-  clock = createManualClock();
-  srv = await startServer({
-    host: "127.0.0.1",
-    port: 0,
-    clientDir: mkdtempSync(pathJoin(tmpdir(), "glix-flow-")),
-    allowedOrigins: null,
-    revision: "t",
-    clock,
-  });
-});
-
-afterEach(async () => {
-  for (const c of clients.splice(0)) c.ws.terminate();
-  await srv.close();
-});
+useServer();
 
 describe("oda kurma ve katılma", () => {
   it("oda kurar: oturum, host, avatar, katalog", async () => {
@@ -211,15 +91,15 @@ describe("oda kurma ve katılma", () => {
 
   it("/health oda ve oyuncu sayısını bildirir; boş oda 120 sn sonra silinir", async () => {
     const cs = await setupRoom(["A", "B"]);
-    const health = async () => (await (await fetch(`http://127.0.0.1:${srv.port}/health`)).json()) as never;
+    const health = async () => (await (await fetch(`http://127.0.0.1:${k.srv.port}/health`)).json()) as never;
     expect(await health()).toMatchObject({ rooms: 1, players: 2 });
     cs[0]?.send({ type: "leaveRoom" });
     cs[1]?.send({ type: "leaveRoom" });
     await sync();
     expect(await health()).toMatchObject({ rooms: 1, players: 0 });
-    clock.advance(119_000);
+    k.clock.advance(119_000);
     expect(await health()).toMatchObject({ rooms: 1 });
-    clock.advance(2_000);
+    k.clock.advance(2_000);
     expect(await health()).toMatchObject({ rooms: 0, players: 0 });
   });
 });
@@ -267,13 +147,13 @@ describe("host, kick, ayrılma", () => {
     const [a, b] = (await setupRoom(["A", "B"])) as [Client, Client];
     a.ws.terminate();
     await until(() => b.room.players[0]?.connected === false);
-    clock.advance(19_000);
+    k.clock.advance(19_000);
     await sync();
     expect(b.room.hostId).toBe(a.session.playerId);
     const a2 = await Client.connect();
     a2.send({ type: "resume", token: a.session.token });
-    await until(() => a2.of("room").length > 0);
-    clock.advance(30_000);
+    await until(() => a2.updates.length > 0);
+    k.clock.advance(30_000);
     await sync();
     expect(a2.room.hostId).toBe(a.session.playerId);
     expect(b.room.hostId).toBe(a.session.playerId);
@@ -286,11 +166,11 @@ describe("host, kick, ayrılma", () => {
     a.ws.terminate();
     await until(() => c.room.players.find((p) => p.nickname === "A")?.connected === false);
     expect(c.room.hostId).toBe(a.session.playerId);
-    clock.advance(20_000);
+    k.clock.advance(20_000);
     await until(() => c.room.hostId === c.session.playerId);
     const a2 = await Client.connect();
     a2.send({ type: "resume", token: a.session.token });
-    await until(() => a2.of("room").length > 0);
+    await until(() => a2.updates.length > 0);
     await sync();
     expect(a2.room.hostId).toBe(c.session.playerId);
     expect(a2.room.selfId).toBe(a.session.playerId);
@@ -317,7 +197,7 @@ describe("host, kick, ayrılma", () => {
     await until(() => a.of("error").length > 0);
     expect(a.lastError?.code).toBe("invalid_games");
     a.send({ type: "setGames", gameIds: ["butona-bas"] });
-    await until(() => a.of("room").length > 0);
+    await until(() => a.updates.length > 0);
     expect(b.room.gameIds).toEqual(["butona-bas"]);
   });
 });
@@ -331,7 +211,7 @@ describe("yeniden bağlanma", () => {
     expect(b2.session).toMatchObject({ playerId: b.session.playerId, roomCode: b.session.roomCode });
     await until(() => b.closeCode !== null);
     expect(b.closeCode).toBe(4001);
-    await until(() => b2.of("room").length > 0);
+    await until(() => b2.updates.length > 0);
     expect(b2.room.selfId).toBe(b.session.playerId);
     // Eski soketin kapanması oyuncuyu koparmış saymaz.
     await sync();
@@ -342,13 +222,13 @@ describe("yeniden bağlanma", () => {
     const [a, b] = (await setupRoom(["A", "B"])) as [Client, Client];
     b.ws.terminate();
     await until(() => a.room.players[1]?.connected === false);
-    clock.advance(119_000);
+    k.clock.advance(119_000);
     const b2 = await Client.connect();
     b2.send({ type: "resume", token: b.session.token });
-    await until(() => b2.of("room").length > 0);
+    await until(() => b2.updates.length > 0);
     await until(() => a.room.players[1]?.connected === true);
     // Zamanlayıcı iptal edildi: süre dolsa da çıkarılmaz.
-    clock.advance(10_000);
+    k.clock.advance(10_000);
     await sync();
     expect(a.room.players).toHaveLength(2);
   });
@@ -357,7 +237,7 @@ describe("yeniden bağlanma", () => {
     const [a, b] = (await setupRoom(["A", "B"])) as [Client, Client];
     b.ws.terminate();
     await until(() => a.room.players[1]?.connected === false);
-    clock.advance(121_000);
+    k.clock.advance(121_000);
     await until(() => a.room.players.length === 1);
     const b2 = await Client.connect();
     b2.send({ type: "resume", token: b.session.token });
@@ -386,7 +266,7 @@ describe("hız sınırı ve geçersiz mesaj", () => {
     const c = await Client.connect();
     for (let i = 0; i < 30; i++) c.send({ type: "ping", t: i });
     await until(() => c.of("pong").length >= 30);
-    clock.advance(1000);
+    k.clock.advance(1000);
     for (let i = 0; i < 20; i++) c.send({ type: "ping", t: i });
     await until(() => c.of("pong").length >= 50);
     expect(c.of("error")).toHaveLength(0);
@@ -466,10 +346,10 @@ describe("maç akışı", () => {
     await until(() => a.room.phase === "countdown");
     expect((a.room.match?.phaseEndsAt ?? 0) - (a.room.match?.phaseStartedAt ?? 0)).toBe(3_000);
     expect(a.of("actionAck").find((x) => x.seq === 1)).toMatchObject({ ok: false, reason: "wrong_phase" });
-    clock.advance(2_700);
+    k.clock.advance(2_700);
     await sync();
     expect(a.room.phase).toBe("countdown");
-    clock.advance(300);
+    k.clock.advance(300);
     await until(() => a.room.phase === "playing");
   });
 
@@ -477,10 +357,10 @@ describe("maç akışı", () => {
     const [a] = (await setupRoom(["A", "B"])) as [Client, Client];
     a.send({ type: "startMatch" });
     await until(() => a.room.phase === "briefing");
-    clock.advance(39_800);
+    k.clock.advance(39_800);
     await sync();
     expect(a.room.phase).toBe("briefing");
-    clock.advance(500);
+    k.clock.advance(500);
     await until(() => a.room.phase === "countdown");
   });
 
@@ -504,7 +384,7 @@ describe("maç akışı", () => {
     expect(a.room.match?.participants).toEqual([a.session.playerId, b.session.playerId]);
     const c2 = await Client.connect();
     c2.send({ type: "resume", token: c.session.token });
-    await until(() => c2.of("room").length > 0);
+    await until(() => c2.updates.length > 0);
     const view = c2.room.match?.view as { myScore: number | null };
     expect(view.myScore).toBeNull();
     c2.send({ type: "action", seq: 1, payload: { kind: "press" } });
@@ -515,7 +395,7 @@ describe("maç akışı", () => {
   it("tam maç: eşleşme, tek basış, ödüller, final, lobiye dönüş", async () => {
     const [a, b] = (await setupRoom(["A", "B"])) as [Client, Client];
     const { startedAt } = await startPlaying([a, b]);
-    const at = (offset: number) => clock.advance(startedAt + offset - clock.now());
+    const at = (offset: number) => k.clock.advance(startedAt + offset - k.clock.now());
 
     // Geçersiz eylemler
     a.send({ type: "action", seq: 900, payload: { kind: "bilinmeyen" } });
@@ -570,10 +450,10 @@ describe("maç akışı", () => {
     expect(v.scores[b.session.playerId]).toBe(0);
 
     // Sonuç ekranı 7 sn sürer, sonra final.
-    clock.advance(6_800);
+    k.clock.advance(6_800);
     await sync();
     expect(a.room.phase).toBe("results");
-    clock.advance(400);
+    k.clock.advance(400);
     await until(() => a.room.phase === "final");
     expect(a.room.match?.result).not.toBeNull();
     expect(a.room.players.map((p) => p.score)).toEqual([1, 2]);
@@ -594,7 +474,7 @@ describe("maç akışı", () => {
     await startPlaying([a, b, c]);
     c.ws.terminate();
     await until(() => a.room.players[2]?.connected === false);
-    clock.advance(121_000);
+    k.clock.advance(121_000);
     await until(() => a.room.players.length === 2);
     // 121 sn içinde oyun (45 sn) ve sonuç ekranı (7 sn) de tamamlanmış olur.
     await until(() => a.room.phase === "final");
@@ -625,12 +505,12 @@ describe("maç akışı", () => {
       a.send({ type: "action", seq: 1000 + i, payload: { kind: "press" } });
     }
     await sleep(40);
-    clock.advance(60);
+    k.clock.advance(60);
     await sleep(40);
-    const snaps = b.since(mark).filter((m) => m.type === "room");
+    const snaps = b.since(mark).filter((m) => m.type === "room" || m.type === "patch");
     expect(snaps.length).toBeLessThanOrEqual(1);
     // rev yalnız artar
-    const revs = b.of("room").map((m) => m.snapshot.rev);
+    const revs = b.updates.map((m) => m.snapshot.rev);
     expect([...revs].sort((x, y) => x - y)).toEqual(revs);
   });
 

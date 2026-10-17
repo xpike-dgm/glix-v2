@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
-# Sunucuda root olarak çalışır: deploy.sh [git-ref]  (varsayılan: main)
+# Sunucuda root olarak çalışır: deploy.sh [--force] [git-ref]  (varsayılan: main)
+# Çalışan maç varsa bitmesini bekler (10 sn aralıkla, en çok 10 dk); --force beklemeden devam eder.
 set -euo pipefail
 
-REF="${1:-main}"
+FORCE=0
+REF=main
+for arg in "$@"; do
+  case "$arg" in
+    --force) FORCE=1 ;;
+    *) REF="$arg" ;;
+  esac
+done
 REPO_URL="${GLIX_REPO_URL:-https://github.com/xpike-dgm/glix-v2}"
 BASE=/srv/glix
 MIRROR="$BASE/repo.git"
@@ -40,6 +48,34 @@ fi
 COMPOSE=(docker compose -f "$BASE/current/deploy/docker-compose.yml" -p glix)
 if [ -f "$BASE/current/deploy/.env" ]; then
   COMPOSE+=(--env-file "$BASE/current/deploy/.env")
+fi
+
+# İmajı önce derle; böylece maçlar bitince yalnız konteyner değişimi kalır.
+GIT_SHA="$SHA" "${COMPOSE[@]}" build
+
+# Çalışan maçları öldürmemek için: /health activeMatches > 0 ise bekle.
+active_matches() {
+  # 503 (drain) gövdesi de okunur; sunucu yoksa ya da alan yoksa 0.
+  local n
+  n="$(curl -sS --max-time 5 http://127.0.0.1:3900/health 2>/dev/null | grep -o '"activeMatches":[0-9]*' | head -n1 | cut -d: -f2 || true)"
+  echo "${n:-0}"
+}
+
+if [ "$FORCE" -ne 1 ]; then
+  waited=0
+  while :; do
+    n="$(active_matches)"
+    if [ "$n" -le 0 ]; then
+      break
+    fi
+    if [ "$waited" -ge 600 ]; then
+      echo "10 dk beklendi, $n maç hâlâ sürüyor; sunucu drain ile yeniden başlatılacak."
+      break
+    fi
+    echo "Çalışan maç: $n. Bitmesi bekleniyor (${waited}/600 sn)..."
+    sleep 10
+    waited=$((waited + 10))
+  done
 fi
 
 GIT_SHA="$SHA" "${COMPOSE[@]}" up -d --build

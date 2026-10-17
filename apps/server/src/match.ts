@@ -4,12 +4,14 @@ import {
   createRng,
   GAMES,
   type GameContext,
+  GameRecorder,
   type GameResult,
   isRejected,
   type MatchSnapshot,
   type Rng,
 } from "@glix/engine";
 import { log } from "./log.js";
+import { errorMessage } from "./messages.js";
 import type { Player, Room, Runtime } from "./runtime.js";
 import { isConnected } from "./runtime.js";
 
@@ -17,6 +19,8 @@ export const TICK_MS = 100;
 export const BRIEFING_TIMEOUT_MS = 40_000;
 export const COUNTDOWN_MS = 3_000;
 export const RESULTS_MS = 7_000;
+/** Bellekte tutulan son oyun kaydı sayısı (docs/PROTOKOL.md "Maç kaydı"). */
+export const RECENT_LOGS = 20;
 
 export interface Match {
   games: AnyGame[];
@@ -32,6 +36,57 @@ export interface Match {
   state: unknown;
   rng: Rng | null;
   result: GameResult | null;
+  /** Geçerli oyunun kaydı (playing aşamasında dolu). */
+  recorder: GameRecorder | null;
+}
+
+/** Bir oyun fonksiyonu hata fırlattı; `fn` hangisi olduğunu söyler (setup, reduce, tick, view, result...). */
+export class GameFault extends Error {
+  constructor(
+    readonly fn: string,
+    readonly original: unknown,
+  ) {
+    super(`oyun fonksiyonu hata verdi: ${fn}`);
+  }
+}
+
+function guard<T>(fn: string, call: () => T): T {
+  try {
+    return call();
+  } catch (cause) {
+    throw new GameFault(fn, cause);
+  }
+}
+
+/**
+ * Bir odadaki oyun hata verince maçı zarifçe bitirir: günlüğe yapılandırılmış kayıt, oyunculara hata
+ * mesajı, oda lobiye döner (genel skorlar korunur). Diğer odalar etkilenmez.
+ */
+export function abortMatch(rt: Runtime, room: Room, err: unknown): void {
+  const fault = err instanceof GameFault ? err : new GameFault("engine", err);
+  const match = room.match;
+  const gameId = match?.games[match.index]?.id ?? null;
+  const cause = fault.original;
+  let gameLog: unknown = null;
+  try {
+    gameLog = match?.recorder?.finish(rt.clock.now()) ?? null;
+  } catch {
+    // kayıt alınamadı; hata yine de günlüğe yazılır
+  }
+  log.error("game_failed", {
+    roomCode: room.code,
+    gameId,
+    fn: fault.fn,
+    phase: room.phase,
+    error: cause instanceof Error ? cause.message : String(cause),
+    stack: cause instanceof Error ? cause.stack : undefined,
+    gameLog,
+  });
+  for (const player of room.players.values()) {
+    player.conn?.send(errorMessage("game_failed"));
+  }
+  clearMatch(rt, room);
+  rt.broadcaster.markDirty(room);
 }
 
 export function currentGame(match: Match): AnyGame {
@@ -51,6 +106,7 @@ function enterBriefing(rt: Runtime, room: Room, match: Match): void {
   match.state = null;
   match.rng = null;
   match.result = null;
+  match.recorder = null;
   match.phaseStartedAt = now;
   match.phaseEndsAt = now + BRIEFING_TIMEOUT_MS;
   room.phase = "briefing";
@@ -71,6 +127,7 @@ export function beginMatch(rt: Runtime, room: Room): void {
     state: null,
     rng: null,
     result: null,
+    recorder: null,
   };
   room.match = match;
   enterBriefing(rt, room, match);
@@ -95,8 +152,12 @@ function ctxFor(rt: Runtime, match: Match): GameContext {
 
 function startPlaying(rt: Runtime, room: Room, match: Match): void {
   const now = rt.clock.now();
-  match.rng = createRng(randomInt(0, 2 ** 32));
-  match.state = currentGame(match).setup(match.participants, { now, rng: match.rng });
+  const seed = randomInt(0, 2 ** 32);
+  const game = currentGame(match);
+  match.rng = createRng(seed);
+  const rng = match.rng;
+  match.recorder = new GameRecorder(game.id, seed, match.participants, now);
+  match.state = guard("setup", () => game.setup(match.participants, { now, rng }));
   match.phaseStartedAt = now;
   match.phaseEndsAt = null;
   room.phase = "playing";
@@ -104,7 +165,8 @@ function startPlaying(rt: Runtime, room: Room, match: Match): void {
 
 function finishGame(rt: Runtime, room: Room, match: Match): void {
   const now = rt.clock.now();
-  const result = currentGame(match).result(match.state);
+  const result = guard("result", () => currentGame(match).result(match.state));
+  archiveLog(rt, match);
   for (const [id, points] of Object.entries(result.awards)) {
     const player = room.players.get(id);
     if (player) player.score += points;
@@ -113,6 +175,17 @@ function finishGame(rt: Runtime, room: Room, match: Match): void {
   match.phaseStartedAt = now;
   match.phaseEndsAt = now + RESULTS_MS;
   room.phase = "results";
+}
+
+/** Biten oyunun kaydını son-N listesine ekler. */
+function archiveLog(rt: Runtime, match: Match): void {
+  try {
+    if (!match.recorder) return;
+    rt.recentLogs.push(match.recorder.finish(rt.clock.now()));
+    if (rt.recentLogs.length > RECENT_LOGS) rt.recentLogs.splice(0, rt.recentLogs.length - RECENT_LOGS);
+  } catch (err) {
+    log.warn("recorder_failed", { error: String(err) });
+  }
 }
 
 function nextGameOrFinal(rt: Runtime, room: Room, match: Match): void {
@@ -127,8 +200,19 @@ function nextGameOrFinal(rt: Runtime, room: Room, match: Match): void {
   rt.active.delete(room);
 }
 
-/** Süreye bağlı ilerlemeyi işler. Görünür bir şey değiştiyse odayı yayına işaretler. */
+/**
+ * Süreye bağlı ilerlemeyi işler. Görünür bir şey değiştiyse odayı yayına işaretler.
+ * Oyun fonksiyonu (veya adım) hata verirse yalnız bu odanın maçı iptal edilir.
+ */
 export function stepMatch(rt: Runtime, room: Room): void {
+  try {
+    stepMatchUnsafe(rt, room);
+  } catch (err) {
+    abortMatch(rt, room, err);
+  }
+}
+
+function stepMatchUnsafe(rt: Runtime, room: Room): void {
   const match = room.match;
   if (!match) return;
   const now = rt.clock.now();
@@ -156,10 +240,10 @@ export function stepMatch(rt: Runtime, room: Room): void {
     case "playing": {
       const game = currentGame(match);
       const ctx = ctxFor(rt, match);
-      const next = game.tick(match.state, ctx);
+      const next = guard("tick", () => game.tick(match.state, ctx));
       const changed = next !== match.state;
       match.state = next;
-      if (game.isFinished(match.state, ctx)) {
+      if (guard("isFinished", () => game.isFinished(match.state, ctx))) {
         finishGame(rt, room, match);
         rt.broadcaster.markDirty(room);
       } else if (changed) {
@@ -182,14 +266,29 @@ export function stepMatch(rt: Runtime, room: Room): void {
 export type ActionOutcome = { ok: true } | { ok: false; reason: string };
 
 export function applyAction(rt: Runtime, room: Room, playerId: string, payload: unknown): ActionOutcome {
+  try {
+    return applyActionUnsafe(rt, room, playerId, payload);
+  } catch (err) {
+    abortMatch(rt, room, err);
+    return { ok: false, reason: "wrong_phase" };
+  }
+}
+
+function applyActionUnsafe(rt: Runtime, room: Room, playerId: string, payload: unknown): ActionOutcome {
   const match = room.match;
   if (!match || room.phase !== "playing") return { ok: false, reason: "wrong_phase" };
   if (!match.participants.includes(playerId)) return { ok: false, reason: "not_participant" };
   const game = currentGame(match);
-  const action = game.parseAction(payload);
+  const action = guard("parseAction", () => game.parseAction(payload));
   if (action === null) return { ok: false, reason: "invalid_action" };
-  const next = game.reduce(match.state, playerId, action, ctxFor(rt, match));
+  const ctx = ctxFor(rt, match);
+  const next = guard("reduce", () => game.reduce(match.state, playerId, action, ctx));
   if (isRejected(next)) return { ok: false, reason: next.rejected };
+  try {
+    match.recorder?.record(ctx.now, playerId, payload);
+  } catch (err) {
+    log.warn("recorder_failed", { room: room.code, error: String(err) });
+  }
   if (next !== match.state) {
     match.state = next;
     rt.broadcaster.markDirty(room);
@@ -222,7 +321,9 @@ export function matchViewFor(rt: Runtime, room: Room, playerId: string): unknown
   const match = room.match;
   if (!match?.rng || (room.phase !== "playing" && room.phase !== "results")) return null;
   const who = match.participants.includes(playerId) ? playerId : null;
-  return currentGame(match).view(match.state, who, ctxFor(rt, match));
+  const game = currentGame(match);
+  const ctx = ctxFor(rt, match);
+  return guard("view", () => game.view(match.state, who, ctx));
 }
 
 export function runTick(rt: Runtime): void {
@@ -230,7 +331,8 @@ export function runTick(rt: Runtime): void {
     try {
       stepMatch(rt, room);
     } catch (err) {
-      log.error("tick_failed", { room: room.code, error: String(err) });
+      // abortMatch'in kendisi de hata verirse diğer odalar yine de ilerler.
+      log.error("tick_failed", { roomCode: room.code, error: String(err) });
     }
   }
 }

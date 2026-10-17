@@ -34,6 +34,8 @@ const ERROR_CODES: readonly ErrorCode[] = [
   "not_enough_players",
   "wrong_phase",
   "not_participant",
+  "game_failed",
+  "draining",
 ];
 const LEFT: readonly LeftReason[] = ["left", "kicked", "closed"];
 
@@ -163,6 +165,10 @@ export function parseServerMessage(raw: string): ServerMessage | null {
     case "room": {
       const snapshot = parseSnapshot(data.snapshot);
       return snapshot ? { type: "room", snapshot } : null;
+    }
+    case "patch": {
+      if (!isNum(data.baseRev) || !isNum(data.rev) || !isRec(data.patch)) return null;
+      return { type: "patch", baseRev: data.baseRev, rev: data.rev, patch: data.patch };
     }
     case "actionAck": {
       if (!isNum(data.seq) || !isBool(data.ok)) return null;

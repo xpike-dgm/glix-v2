@@ -52,6 +52,10 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         fail(conn, "already_in_room");
         return;
       }
+      if (rt.draining) {
+        fail(conn, "draining");
+        return;
+      }
       const room = createRoom(rt);
       addPlayer(rt, room, msg.nickname, conn);
       sendSession(conn);
@@ -61,6 +65,10 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
     case "joinRoom": {
       if (conn.player) {
         fail(conn, "already_in_room");
+        return;
+      }
+      if (rt.draining) {
+        fail(conn, "draining");
         return;
       }
       const room = rt.rooms.get(msg.code);
@@ -99,12 +107,21 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       if (player.room.hostId === player.id) clearHostGrace(player.room);
       player.conn = conn;
       conn.player = player;
+      conn.lastSent = null;
       if (old && old !== conn) {
         old.player = null;
         old.close(4001, "Başka bir cihazdan bağlanıldı");
       }
       sendSession(conn);
       rt.broadcaster.markDirty(player.room);
+      return;
+    }
+    case "resync": {
+      if (!conn.player) {
+        fail(conn, "not_in_room");
+        return;
+      }
+      rt.broadcaster.resync(conn.player.room, conn.player);
       return;
     }
     case "leaveRoom": {

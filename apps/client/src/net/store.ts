@@ -1,8 +1,8 @@
 import type { PlayerInfo, RoomSnapshot } from "@glix/engine";
-import { createStore, reconcile } from "solid-js/store";
+import { createStore, reconcile, unwrap } from "solid-js/store";
 import { median, pushSample } from "./clock.js";
-import { shouldAccept } from "./snapshot.js";
 import { KEYS, readStored, writeStored } from "./storage.js";
+import { initialSync, onPatch, onReconnect, onRoom, type SyncState, type SyncStep } from "./sync.js";
 
 export type ConnStatus = "connecting" | "open" | "closed";
 export type Nav = "home" | "join";
@@ -67,10 +67,34 @@ export function addClockSample(offset: number): void {
   setState({ clockSamples: samples, clockOffset: median(samples) });
 }
 
+let sync: SyncState = initialSync;
+
+function commit(step: SyncStep): SyncStep {
+  sync = step.state;
+  if (step.accepted) setState("snapshot", reconcile(step.accepted, { key: "id" }));
+  return step;
+}
+
+/** Elimizdeki snapshot ile senkron durumunu hizalar (oda temizlenince ya da dışarıdan yazılınca). */
+function currentSync(): SyncState {
+  const raw = state.snapshot ? unwrap(state.snapshot) : null;
+  if (sync.snapshot !== raw) sync = { snapshot: raw, awaitingFull: sync.awaitingFull };
+  return sync;
+}
+
+/** Tam `room` mesajı. Kabul edildiyse true. */
 export function applySnapshot(snapshot: RoomSnapshot): boolean {
-  if (!shouldAccept(state.snapshot, snapshot)) return false;
-  setState("snapshot", reconcile(snapshot, { key: "id" }));
-  return true;
+  return commit(onRoom(currentSync(), snapshot)).accepted !== null;
+}
+
+/** `patch` mesajı. Dönen değer true ise çağıran sunucuya `resync` göndermelidir. */
+export function applyPatchMessage(msg: Parameters<typeof onPatch>[1]): boolean {
+  return commit(onPatch(currentSync(), msg)).sendResync;
+}
+
+/** Yeni soket açıldı. */
+export function syncReconnected(): void {
+  sync = onReconnect(currentSync());
 }
 
 let toastId = 0;
@@ -91,6 +115,7 @@ export function goHome(): void {
 }
 
 export function clearRoom(): void {
+  sync = initialSync;
   setState({ session: null, snapshot: null, busy: false });
 }
 

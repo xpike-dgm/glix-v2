@@ -10,6 +10,8 @@ services:
       - "127.0.0.1:3900:3900"
     environment:
       ALLOWED_ORIGINS: ${GLIX_ALLOWED_ORIGINS}
+      # SIGTERM sonrası maçların bitmesi için en çok bekleme (10 dk); stop_grace_period bundan uzun olmalı.
+      DRAIN_TIMEOUT_MS: "600000"
     mem_limit: 512m
     cpus: 2
     pids_limit: 256
@@ -22,7 +24,7 @@ services:
       - ALL
     restart: unless-stopped
     init: true
-    stop_grace_period: 15s
+    stop_grace_period: 11m
     logging:
       driver: json-file
       options:

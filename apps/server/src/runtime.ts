@@ -1,11 +1,19 @@
-import type { GameInfo, RoomPhase, ServerMessage } from "@glix/engine";
+import type { GameInfo, GameLog, RoomPhase, RoomSnapshot, ServerMessage } from "@glix/engine";
 import type { Broadcaster } from "./broadcast.js";
 import type { Cancel, Clock } from "./clock.js";
 import type { Match } from "./match.js";
+import type { Metrics } from "./metrics.js";
 
 /** Bir WebSocket bağlantısının sunucudaki temsili. Oda/oyuncu bağı oturum açılınca dolar. */
 export interface Connection {
   send(msg: ServerMessage): void;
+  /** Önceden kodlanmış JSON metnini gönderir (yayın yolu: boyut karşılaştırması zaten kodlar). */
+  sendRaw(text: string): void;
+  /**
+   * Bu bağlantıya en son gönderilen tam snapshot; sonraki `patch` bunun üzerinden hesaplanır.
+   * null ise sıradaki yayın tam `room` olur (giriş, resume, resync).
+   */
+  lastSent: RoomSnapshot | null;
   close(code: number, reason: string): void;
   player: Player | null;
 }
@@ -42,6 +50,11 @@ export interface Room {
 export interface Runtime {
   clock: Clock;
   rooms: Map<string, Room>;
+  /** SIGTERM sonrası: yeni oda kurulmaz/katılınmaz, mevcut maçlar sürer. */
+  draining: boolean;
+  metrics: Metrics;
+  /** Son biten/çöken oyunların kayıtları (en yeni sonda, en çok RECENT_LOGS). */
+  recentLogs: GameLog[];
   /** Oturum belirteci -> oyuncu. */
   tokens: Map<string, Player>;
   /** Etkin maçı olan odalar (tick yalnız bunlar için çalışır). */

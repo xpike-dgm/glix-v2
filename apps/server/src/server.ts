@@ -1,5 +1,5 @@
 import { createServer, type Server } from "node:http";
-import { APP_VERSION, PROTOCOL_VERSION, parseClientMessage, type ServerMessage } from "@glix/engine";
+import { APP_VERSION, PROTOCOL_VERSION, parseClientMessage } from "@glix/engine";
 import { type WebSocket, WebSocketServer } from "ws";
 import { type Clock, systemClock } from "./clock.js";
 import { handleClose, handleMessage } from "./handlers.js";
@@ -7,7 +7,7 @@ import { log } from "./log.js";
 import { runTick, TICK_MS } from "./match.js";
 import { errorMessage } from "./messages.js";
 import { TokenBucket } from "./ratelimit.js";
-import { countPlayers, createRuntime, disposeRuntime } from "./rooms.js";
+import { countActiveMatches, countPlayers, createRuntime, disposeRuntime } from "./rooms.js";
 import type { Connection } from "./runtime.js";
 import { serveStatic } from "./static.js";
 
@@ -22,16 +22,20 @@ export interface ServerOptions {
   revision: string;
   /** Zaman kaynağı (testlerde sahte saat). Varsayılan: sistem saati. */
   clock?: Clock;
+  /** Drain süresi sınırı (ms). Varsayılan 10 dk. */
+  drainTimeoutMs?: number;
 }
 
 export interface RunningServer {
   server: Server;
   port: number;
-  close(): Promise<void>;
-}
-
-function send(ws: WebSocket, msg: ServerMessage): void {
-  if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg));
+  /**
+   * Drain kipine girer: yeni oda/katılım reddedilir, mevcut maçlar sürer. Maçı olan oda kalmayınca ya da
+   * süre dolunca çözülür (soketleri kapatmaz; ardından `close(1012)` çağrılır).
+   */
+  drain(): Promise<void>;
+  /** Soketleri `code` ile kapatır (1012: servis yeniden başlıyor). */
+  close(code?: number): Promise<void>;
 }
 
 export async function startServer(opts: ServerOptions): Promise<RunningServer> {
@@ -42,10 +46,22 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
 
   let stopTicking = false;
   let cancelTick: () => void = () => {};
+  let drainDone: (() => void) | null = null;
+  let cancelDrainTimeout: () => void = () => {};
+  const finishDrain = (): void => {
+    if (!drainDone) return;
+    const done = drainDone;
+    drainDone = null;
+    cancelDrainTimeout();
+    done();
+  };
   const scheduleTick = (): void => {
     cancelTick = clock.setTimeout(() => {
       if (stopTicking) return;
+      const t0 = performance.now();
       runTick(rt);
+      rt.metrics.recordTick(performance.now() - t0);
+      if (rt.draining && countActiveMatches(rt) === 0) finishDrain();
       scheduleTick();
     }, TICK_MS);
   };
@@ -54,16 +70,24 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const server = createServer((req, res) => {
     const path = (req.url ?? "/").split("?")[0];
     if (path === "/health") {
-      res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+      res.writeHead(rt.draining ? 503 : 200, {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      });
       res.end(
         JSON.stringify({
-          ok: true,
+          ok: !rt.draining,
+          draining: rt.draining,
           version: APP_VERSION,
           revision: opts.revision,
           protocolVersion: PROTOCOL_VERSION,
           uptimeSeconds: Math.floor((Date.now() - startedAt) / 1000),
           rooms: rt.rooms.size,
           players: countPlayers(rt),
+          activeMatches: countActiveMatches(rt),
+          tickMsP95: Math.round(rt.metrics.tickMsP95() * 100) / 100,
+          bytesOutPerSec: Math.round(rt.metrics.bytesOutPerSec(clock.now())),
+          memoryRssMb: Math.round(process.memoryUsage().rss / 1048576),
         }),
       );
       return;
@@ -97,9 +121,16 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
 
   wss.on("connection", (ws) => {
     sockets.add(ws);
+    const sendRaw = (text: string): void => {
+      if (ws.readyState !== ws.OPEN) return;
+      rt.metrics.recordBytes(Buffer.byteLength(text), clock.now());
+      ws.send(text);
+    };
     const conn: Connection = {
       player: null,
-      send: (msg) => send(ws, msg),
+      lastSent: null,
+      sendRaw,
+      send: (msg) => sendRaw(JSON.stringify(msg)),
       close: (code, reason) => ws.close(code, reason),
     };
     const bucket = new TokenBucket(clock);
@@ -143,12 +174,26 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   return {
     server,
     port,
-    close: () =>
+    drain: () => {
+      rt.draining = true;
+      if (countActiveMatches(rt) === 0) return Promise.resolve();
+      return new Promise<void>((resolve) => {
+        drainDone = resolve;
+        cancelDrainTimeout = clock.setTimeout(() => {
+          log.warn("drain_timeout", { activeMatches: countActiveMatches(rt) });
+          finishDrain();
+        }, opts.drainTimeoutMs ?? 600_000);
+      });
+    },
+    close: (code = 1001) =>
       new Promise<void>((resolve) => {
         stopTicking = true;
         cancelTick();
-        disposeRuntime(rt);
-        for (const ws of sockets) ws.close(1001, "Sunucu kapanıyor");
+        finishDrain();
+        // 1012: oyuncular "oda kapandı" görmez; istemci resume dener ve güncelleme mesajını gösterir.
+        disposeRuntime(rt, code !== 1012);
+        for (const ws of sockets)
+          ws.close(code, code === 1012 ? "Sunucu yeniden başlıyor" : "Sunucu kapanıyor");
         wss.close();
         server.close(() => resolve());
         server.closeIdleConnections();

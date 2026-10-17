@@ -46,7 +46,9 @@ export type ErrorCode =
   | "invalid_games"
   | "not_enough_players"
   | "wrong_phase"
-  | "not_participant";
+  | "not_participant"
+  | "game_failed"
+  | "draining";
 
 export type RoomPhase = "lobby" | "briefing" | "countdown" | "playing" | "results" | "final";
 
@@ -211,6 +213,7 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return { type: "action", seq, payload: data.payload };
     }
     case "leaveRoom":
+    case "resync":
     case "startMatch":
     case "ready":
     case "returnToLobby": {
