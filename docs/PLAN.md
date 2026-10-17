@@ -50,11 +50,15 @@ sızıntı testi otomatik kırılır. Sunucu oyun bilmez; durum her yayında bir
 
 ## Aşama günlüğü
 
-### A0
-- [ ] Monorepo iskeleti (pnpm, turbo, biome, vitest, TS)
-- [ ] Sunucu: `/health`, `/ws` merhaba, statik istemci servisi
-- [ ] İstemci: Solid + Pixi "merhaba" sahnesi
-- [ ] Dockerfile + compose (512 MB / 2 CPU limit, yalnız 127.0.0.1)
-- [ ] GitHub Actions CI
-- [ ] VDS: `glix` kullanıcısı, `/srv/glix`, Caddy bloğu (yedekli), deploy betiği
-- [ ] Önizleme adresi doğrulandı
+### A0 — tamamlandı (2026-10-17, `bb2666e`)
+- [x] Monorepo iskeleti (pnpm 10, turbo, biome, vitest, TS)
+- [x] Sunucu: `/health` (revision dahil), `/ws` merhaba, statik istemci servisi, origin kontrolü
+- [x] İstemci: Solid + Pixi "merhaba" sahnesi (Pixi tembel yüklenir)
+- [x] Dockerfile + compose (512 MB / 2 CPU, read-only, cap_drop ALL, yalnız 127.0.0.1:3900)
+- [x] GitHub Actions CI (ilk koşu yeşil)
+- [x] VDS: `glix` kullanıcısı, `/srv/glix/{repo.git,releases,shared,current}`, Caddy bloğu
+      (yedek: `/etc/caddy/Caddyfile.pre-glix-v2-20261017T023000Z`), `/srv/glix/deploy.sh`
+- [x] Önizleme doğrulandı: HTTPS, `/health`, index, asset önbellek + zstd, 404, ws welcome,
+      yabancı origin 403. Konteyner ~14 MB RAM. Diğer siteler etkilenmedi.
+
+**Dağıtım:** VDS'te `/srv/glix/deploy.sh <ref>` (varsayılan `main`). Geri alma: eski SHA ile aynı komut.
