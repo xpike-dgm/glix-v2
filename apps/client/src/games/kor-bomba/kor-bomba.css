@@ -1,0 +1,405 @@
+/* Kör Bomba: neon masa, kablolar ve bomba. Sahne `.gframe__body` içinde (container: stage) tüm alanı doldurur. */
+.kb {
+  --seat: clamp(40px, min(15cqh, 9cqw), 64px);
+  --bomb: clamp(80px, 27cqh, 132px);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.kb__felt {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 62%;
+  height: 58%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 3px solid var(--cyan);
+  background: radial-gradient(closest-side, #1b3185 0%, #0b1438 88%);
+  box-shadow:
+    0 0 28px rgba(46, 242, 255, 0.4),
+    inset 0 0 36px rgba(46, 242, 255, 0.28);
+}
+.kb__felt::after {
+  content: "";
+  position: absolute;
+  inset: 9% 8%;
+  border-radius: 50%;
+  border: 1.5px solid rgba(139, 92, 255, 0.55);
+}
+.kb__cables {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.kb__cable {
+  stroke: rgba(139, 92, 255, 0.55);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  transition:
+    stroke 200ms,
+    stroke-width 200ms;
+}
+.kb__cable--holder {
+  stroke: rgba(255, 59, 92, 0.75);
+}
+.kb__cable--on {
+  stroke: var(--amber);
+  stroke-width: 5;
+}
+.kb__hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: var(--violet);
+  box-shadow: 0 0 14px var(--violet);
+}
+
+/* koltuklar */
+.kb__seat {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  min-width: 64px;
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+button.kb__seat {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.kb__name {
+  max-width: 96px;
+  padding: 1px 9px;
+  border-radius: 99px;
+  background: rgba(5, 8, 26, 0.78);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kb__seat:has(.av__self) .kb__name {
+  margin-top: 8px;
+}
+.kb__seat .av {
+  transition: transform 140ms var(--ease);
+}
+.kb__seat[data-holder="1"] .av__disc {
+  box-shadow: 0 0 22px var(--red);
+}
+.kb__seat[data-holder="1"] .av {
+  transform: scale(1.12);
+}
+.kb__seat[data-white="1"] .av__img {
+  filter: brightness(0) invert(1);
+}
+.kb__seat[data-white="1"] .av__disc {
+  border-color: #fff;
+  background: #2b3361;
+  box-shadow: 0 0 30px #fff;
+  animation: kb-flash 520ms var(--ease) both;
+}
+.kb__seat[data-tap="1"] .av__disc {
+  animation: kb-invite 1.4s ease-in-out infinite;
+}
+.kb__seat[data-tap="1"]:active .av {
+  transform: scale(0.92);
+}
+.kb__seat[data-tap="1"]:active .av__disc {
+  border-color: var(--text);
+  box-shadow: 0 0 26px var(--text);
+}
+@keyframes kb-invite {
+  0%,
+  100% {
+    box-shadow: 0 0 6px color-mix(in srgb, var(--c) 40%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--c);
+  }
+}
+@keyframes kb-flash {
+  0% {
+    background: #fff;
+    transform: scale(1.3);
+  }
+  100% {
+    background: #2b3361;
+    transform: scale(1);
+  }
+}
+
+/* bomba */
+.kb__bomb {
+  position: absolute;
+  z-index: 3;
+  width: var(--bomb);
+  height: var(--bomb);
+  margin: calc(var(--bomb) / -2) 0 0 calc(var(--bomb) / -2);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transition:
+    left 380ms var(--ease),
+    top 380ms var(--ease);
+}
+.kb__bomb::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -7%;
+  width: 16%;
+  height: 12%;
+  transform: translateX(-50%);
+  border-radius: 3px;
+  background: #3a3f63;
+}
+.kb__bomb::after {
+  content: "";
+  position: absolute;
+  inset: -4%;
+  border-radius: 50%;
+  border: 3px solid var(--red);
+  opacity: 0;
+  animation: kb-ring 1.3s ease-out infinite;
+}
+.kb__bomb[data-skin="core"] {
+  background: radial-gradient(circle at 36% 30%, #20212c 0%, #07070c 55%, #000 100%);
+  box-shadow:
+    0 0 0 3px #3a0c18,
+    0 0 44px rgba(255, 59, 92, 0.75),
+    inset 0 0 26px rgba(255, 59, 92, 0.4);
+  animation: kb-throb 1.3s ease-in-out infinite;
+}
+.kb__bomb[data-skin="glow"] {
+  background: radial-gradient(circle at 36% 30%, #fff3bd 0%, #ffc23b 42%, #ff7a1a 100%);
+  box-shadow:
+    0 0 0 3px rgba(255, 194, 59, 0.35),
+    0 0 40px rgba(255, 194, 59, 0.7);
+}
+.kb__bomb[data-skin="glow"]::after {
+  border-color: var(--amber);
+}
+.kb[data-urgent="1"] .kb__bomb[data-skin="glow"] {
+  background: radial-gradient(circle at 36% 30%, #ffd0d8 0%, #ff6b82 45%, #ff3b5c 100%);
+  box-shadow:
+    0 0 0 3px rgba(255, 59, 92, 0.4),
+    0 0 44px rgba(255, 59, 92, 0.85);
+  animation: kb-throb 0.55s ease-in-out infinite;
+}
+.kb[data-urgent="1"] .kb__bomb::after {
+  animation-duration: 0.55s;
+  border-color: var(--red);
+}
+.kb__time {
+  position: relative;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: calc(var(--bomb) * 0.31);
+  line-height: 1;
+  color: #1c0f00;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.kb[data-urgent="1"] .kb__time {
+  color: #2b0008;
+}
+@keyframes kb-throb {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+@keyframes kb-ring {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+/* pas: kablo boyunca akan ışık */
+.kb__spark {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border-radius: 50%;
+  background: #fff7d0;
+  box-shadow:
+    0 0 14px 5px var(--amber),
+    0 0 30px 10px rgba(255, 194, 59, 0.5);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* eklenen süre: sarı kıvılcım */
+.kb__bonuses {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+}
+.kb__bonus {
+  position: absolute;
+  left: 0;
+  top: calc(var(--bomb) * -0.55);
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(22px, 9cqh, 36px);
+  color: var(--amber);
+  text-shadow: 0 0 14px rgba(255, 194, 59, 0.85);
+  white-space: nowrap;
+  animation: kb-bonus 1000ms var(--ease) both;
+}
+@keyframes kb-bonus {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0.6);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -34px) scale(1);
+  }
+}
+
+/* holder: PAS VER */
+.kb__cta {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 33%;
+  translate: -50% -50%;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(24px, 10cqh, 46px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--text);
+  text-shadow: 0 0 18px var(--red);
+  pointer-events: none;
+  animation: kb-throb 1.3s ease-in-out infinite;
+}
+
+/* patlama */
+.kb[data-blast="1"] {
+  animation: kb-shake 420ms linear both;
+}
+.kb__blast {
+  position: absolute;
+  z-index: 3;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.kb__blast i {
+  position: absolute;
+  left: calc(var(--bomb) * -0.5);
+  top: calc(var(--bomb) * -0.5);
+  width: var(--bomb);
+  height: var(--bomb);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff 0%, rgba(255, 220, 140, 0.9) 45%, rgba(255, 59, 92, 0) 100%);
+  animation: kb-burst 700ms var(--ease) both;
+}
+.kb__blast i + i {
+  background: none;
+  border: 4px solid #fff;
+  animation-delay: 80ms;
+}
+@keyframes kb-burst {
+  0% {
+    transform: scale(0.3);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+@keyframes kb-shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  15% {
+    transform: translate(-7px, 4px);
+  }
+  35% {
+    transform: translate(6px, -5px);
+  }
+  55% {
+    transform: translate(-4px, -3px);
+  }
+  75% {
+    transform: translate(3px, 3px);
+  }
+}
+
+/* anlatım görseli: ayrılan alana sığacak kadar küçülür */
+.kbart {
+  height: min(90px, 100cqh);
+  width: auto;
+  max-width: 100%;
+}
+.kbart__ring {
+  transform-origin: 80px 56px;
+  animation: kb-ring 1.3s ease-out infinite;
+}
+.kbart__dot {
+  transform-origin: 80px 56px;
+  animation: kb-throb 1.3s ease-in-out infinite;
+}
+
+/* biome-ignore-start lint/complexity/noImportantStyles: hareketi azaltma tercihi animasyonu ezmeli */
+@media (prefers-reduced-motion: reduce) {
+  .kb[data-blast="1"],
+  .kb__bomb,
+  .kb__bomb::after,
+  .kb__cta,
+  .kb__seat[data-tap="1"] .av__disc,
+  .kbart__ring,
+  .kbart__dot {
+    animation: none !important;
+  }
+  .kb__bomb {
+    transition: none;
+  }
+  .kb__bomb::after {
+    opacity: 0.45;
+  }
+}
+/* biome-ignore-end lint/complexity/noImportantStyles: aralık sonu */
