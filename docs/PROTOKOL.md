@@ -34,6 +34,9 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `left` | `reason: "left" \| "kicked" \| "closed"` |
 | `error` | `code`, `message` (Türkçe, oyuncuya gösterilebilir) |
 
+**Görünümler:** `match.publicView` odadaki herkes için aynıdır (oda başına bir kez hesaplanır ve
+farklanır); `match.view` yalnız o oyuncuya özeldir. Gizli bilgi yalnız `view`'da, yalnız hak sahibine gider.
+
 **Yama kuralı:** Sunucu her bağlantıya son gönderdiği snapshot'ı tutar ve yalnız farkı yollar.
 İstemci `baseRev` kendi `rev`'ine eşitse yamayı uygular, değilse yamayı atıp `resync` gönderir.
 Fark tam snapshot'tan büyükse sunucu doğrudan `room` gönderir. Hiçbir görünür alan değişmediyse mesaj

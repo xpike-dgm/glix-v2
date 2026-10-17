@@ -12,16 +12,21 @@ export interface ButonaBasWindowResult {
   outcome: "match" | "solo";
 }
 
-export interface ButonaBasView {
+/** Herkese açık görünüm (oda başına bir kez hesaplanır). */
+export interface ButonaBasPublicView {
   startedAt: number;
   endsAt: number;
   windowMs: number;
-  /** İzleyicide null. */
-  myScore: number | null;
-  /** Canlı mini oyun puanları (herkese açık). */
+  /** Canlı mini oyun puanları. */
   scores: Record<string, number>;
-  /** Bu oyuncu açık pencerede bastı mı. */
-  pressedThisWindow: boolean;
   /** Son kapanan, en az bir basış olan pencereler; en yenisi sonda, en fazla 8. */
   recent: ButonaBasWindowResult[];
+}
+
+/** Kişiye özel görünüm. */
+export interface ButonaBasView {
+  /** İzleyicide null. */
+  myScore: number | null;
+  /** Bu oyuncu açık pencerede bastı mı. */
+  pressedThisWindow: boolean;
 }

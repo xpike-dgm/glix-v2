@@ -85,6 +85,8 @@ export interface MatchSnapshot {
   readyIds: string[];
   phaseStartedAt: number;
   phaseEndsAt: number | null;
+  /** Oyunun herkese açık görünümü (playing/results); odadaki herkes için aynı. */
+  publicView: unknown;
   /** Oyunun bu oyuncuya özel görünümü (playing/results); izleyicide izleyici görünümü. */
   view: unknown;
   /** results ve final aşamasında dolu. */

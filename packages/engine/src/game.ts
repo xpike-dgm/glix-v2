@@ -29,9 +29,9 @@ export interface GameResult {
 
 /**
  * Bir mini oyun saf fonksiyonlardan oluşur. Durum değiştirilmez; her çağrı yeni durum döner.
- * İstemciye yalnız `view` çıktısı gider: gizli bilgi yalnız hak sahibinin görünümüne konur.
+ * İstemciye yalnız `publicView` ve `view` çıktısı gider: gizli bilgi yalnız hak sahibinin `view`'ına konur.
  */
-export interface GameDefinition<State, Action, View> {
+export interface GameDefinition<State, Action, View, PublicView = unknown> {
   id: string;
   name: string;
   minPlayers: number;
@@ -48,13 +48,21 @@ export interface GameDefinition<State, Action, View> {
   reduce(state: State, playerId: string, action: Action, ctx: GameContext): State | Rejected;
   /** Zamana bağlı ilerleme; sunucu düzenli aralıklarla çağırır. Değişiklik yoksa aynı nesneyi döner. */
   tick(state: State, ctx: GameContext): State;
-  /** playerId null ise izleyici görünümü. */
+  /**
+   * Herkese açık görünüm: odadaki herkes (izleyici dahil) için aynıdır ve oda başına bir kez hesaplanır.
+   * Gizli bilgi içeremez. Herkesin gördüğü her şey (skorlar, süreler, açık olaylar) buraya konur.
+   */
+  publicView(state: State, ctx: GameContext): PublicView;
+  /**
+   * Kişiye özel görünüm: yalnız bu oyuncunun bilmesi gerekenler (kendi gizli bilgisi, kendi durumu).
+   * Herkese açık görünümde olanı tekrar etmez. playerId null ise izleyicinin özel görünümü.
+   */
   view(state: State, playerId: string | null, ctx: GameContext): View;
   isFinished(state: State, ctx: GameContext): boolean;
   result(state: State): GameResult;
   /**
-   * Durumdaki gizli bilgiler. Sızıntı testi, `ownerIds` dışındaki her oyuncunun (ve izleyicinin)
-   * `view` çıktısında `value`'nun geçmediğini doğrular. Gizli bilgisi olmayan oyun boş dizi döner.
+   * Durumdaki gizli bilgiler. Sızıntı testi, `publicView` çıktısında ve `ownerIds` dışındaki her oyuncunun
+   * (ve izleyicinin) `view` çıktısında `value`'nun geçmediğini doğrular. Gizli bilgisi olmayan oyun boş dizi döner.
    */
   secrets(state: State): readonly SecretEntry[];
 }
@@ -82,4 +90,4 @@ export interface GameLog {
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: kayıt defteri farklı tipte oyunları birlikte tutar.
-export type AnyGame = GameDefinition<any, any, any>;
+export type AnyGame = GameDefinition<any, any, any, any>;
