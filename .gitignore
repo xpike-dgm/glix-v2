@@ -9,3 +9,4 @@ coverage
 
 # Otomatik üretilen tasarım denetimi görüntüleri (CI artifact olarak saklanır)
 docs/qa/a3/*.png
+docs/qa/a1-real/*.png
