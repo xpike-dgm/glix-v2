@@ -27,6 +27,8 @@ export interface GameEntry {
   Screen: Component<GameScreenProps>;
   /** Anlatım ekranındaki küçük canlı görsel. */
   Art: Component;
+  /** Sonuç ekranının üstüne giren oyuna özel kısa açılış (ör. bilgisiz oyuncunun maskesi düşer). */
+  Reveal?: Component<GameScreenProps>;
   /** Yatay oyunlar: yan şerit (süre çubuğu, puan, avatarlar) için görünümden özet çıkarır. */
   hud?: (match: MatchSnapshot, selfId: string) => HudInfo | null;
 }
@@ -52,6 +54,11 @@ const registry: Record<string, GameEntry> = {
   "capraz-ates": {
     Screen: lazy(() => import("./capraz-ates/CaprazAtesScreen.js")),
     Art: lazy(() => import("./capraz-ates/BriefingArt.js")),
+  },
+  "karalama-defteri": {
+    Screen: lazy(() => import("./karalama-defteri/KaralamaDefteriScreen.js")),
+    Art: lazy(() => import("./karalama-defteri/BriefingArt.js")),
+    Reveal: lazy(() => import("./karalama-defteri/Reveal.js")),
   },
 };
 

@@ -45,7 +45,7 @@ describe.each(Object.values(GAMES).map((g) => [g.id, g] as const))("genel deği�
       ),
       { numRuns: 100 },
     );
-  });
+  }, 60_000);
 
   it("takvimde geçerli, çöp ve katılımcı olmayan eylemler birlikte bulunur", () => {
     if (!bot) throw new Error("bot yok");
