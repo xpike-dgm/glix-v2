@@ -16,6 +16,8 @@ export interface ServerLimits {
   maxSockets: number;
   maxSocketsPerIp: number;
   maxRooms: number;
+  /** IP başına art arda kurulabilecek oda sayısı (sonrası 6 sn'de 1). */
+  roomCreateBurst: number;
   /** Odaya girmemiş soket bu sürede (ms) kapatılır (kod 4000). */
   idleUnjoinedMs: number;
   /** Ters vekil (Caddy) arkasında `X-Forwarded-For` son girdisine güvenilir. */
@@ -26,6 +28,7 @@ export const DEFAULT_LIMITS: ServerLimits = {
   maxSockets: 3000,
   maxSocketsPerIp: 40,
   maxRooms: 1000,
+  roomCreateBurst: 10,
   idleUnjoinedMs: 60_000,
   trustProxy: false,
 };
@@ -56,6 +59,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       maxSockets: positiveInt(env, "MAX_SOCKETS", DEFAULT_LIMITS.maxSockets),
       maxSocketsPerIp: positiveInt(env, "MAX_SOCKETS_PER_IP", DEFAULT_LIMITS.maxSocketsPerIp),
       maxRooms: positiveInt(env, "MAX_ROOMS", DEFAULT_LIMITS.maxRooms),
+      roomCreateBurst: positiveInt(env, "ROOM_CREATE_BURST", DEFAULT_LIMITS.roomCreateBurst),
       idleUnjoinedMs: positiveInt(env, "IDLE_UNJOINED_MS", DEFAULT_LIMITS.idleUnjoinedMs),
       trustProxy: trust === "1" || trust === "true",
     },

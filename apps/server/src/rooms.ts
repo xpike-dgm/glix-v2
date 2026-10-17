@@ -12,12 +12,12 @@ export const GRACE_MS = 120_000;
 export const EMPTY_ROOM_MS = 120_000;
 export const HOST_GRACE_MS = 20_000;
 
-export function createRuntime(clock: Clock = systemClock, maxRooms = 1000): Runtime {
+export function createRuntime(clock: Clock = systemClock, maxRooms = 1000, roomCreateBurst = 10): Runtime {
   const rt: Runtime = {
     clock,
     draining: false,
     maxRooms,
-    ipLimiter: new IpLimiter(clock),
+    ipLimiter: new IpLimiter(clock, roomCreateBurst),
     metrics: createMetrics(),
     recentLogs: [],
     rooms: new Map(),

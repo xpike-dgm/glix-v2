@@ -64,7 +64,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const sockets = new Set<WebSocket>();
   const clock = opts.clock ?? systemClock;
   const limits: ServerLimits = { ...DEFAULT_LIMITS, ...opts.limits };
-  const rt = createRuntime(clock, limits.maxRooms);
+  const rt = createRuntime(clock, limits.maxRooms, limits.roomCreateBurst);
   const perIp = new Map<string, number>();
   const aliveSockets = new WeakMap<WebSocket, boolean>();
 

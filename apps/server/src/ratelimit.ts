@@ -45,14 +45,17 @@ export class TokenBucket {
 export class IpLimiter {
   private readonly entries = new Map<string, { create: TokenBucket; joinFail: TokenBucket }>();
 
-  constructor(private readonly clock: Clock) {}
+  constructor(
+    private readonly clock: Clock,
+    private readonly createBurst = 10,
+  ) {}
 
   private entry(ip: string): { create: TokenBucket; joinFail: TokenBucket } {
     let e = this.entries.get(ip);
     if (!e) {
-      // Oda kurma: 10 ani, 6 sn'de 1. Başarısız katılma: 20 ani, 3 sn'de 1.
+      // Oda kurma: `createBurst` ani (varsayılan 10), 6 sn'de 1. Başarısız katılma: 20 ani, 3 sn'de 1.
       e = {
-        create: new TokenBucket(this.clock, 10, 1 / 6),
+        create: new TokenBucket(this.clock, this.createBurst, 1 / 6),
         joinFail: new TokenBucket(this.clock, 20, 1 / 3),
       };
       this.entries.set(ip, e);
