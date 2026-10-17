@@ -271,3 +271,30 @@ describe("registry", () => {
     expect(butonaBas.briefing.steps.length).toBeLessThanOrEqual(3);
   });
 });
+
+describe("butona-bas bot takvimi", () => {
+  it("hem eşleşme hem tek başına basış üretir", async () => {
+    const { BOTS, buildActions, buildTicks, runSimulation } = await import("../../testing/index.js");
+    const bot = BOTS["butona-bas"];
+    if (!bot) throw new Error("bot yok");
+    let positive = 0;
+    let negative = 0;
+    for (let seed = 1; seed <= 20; seed++) {
+      const players = ["p1", "p2", "p3", "p4"];
+      const out = runSimulation(butonaBas, {
+        seed,
+        players,
+        startedAt: T0,
+        actions: buildActions(bot, seed, players, T0),
+        ticks: buildTicks(seed, "irregular", T0, bot.durationMs),
+        durationMs: bot.durationMs,
+      });
+      for (const v of Object.values(out.result.miniScores)) {
+        if (v > 0) positive++;
+        if (v < 0) negative++;
+      }
+    }
+    expect(positive).toBeGreaterThan(0);
+    expect(negative).toBeGreaterThan(0);
+  });
+});

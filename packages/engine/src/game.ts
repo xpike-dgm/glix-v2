@@ -41,6 +41,10 @@ export interface GameDefinition<State, Action, View> {
   /** Ağdan gelen ham eylemi doğrular; geçersizse null. */
   parseAction(raw: unknown): Action | null;
   setup(players: readonly string[], ctx: GameContext): State;
+  /**
+   * Oyunun bitiş anından sonra (`isFinished` tick ile henüz fark edilmemiş olsa bile) gelen eylemi
+   * reddetmek zorundadır; aksi halde sonuç tick zamanlamasına bağlı kalır.
+   */
   reduce(state: State, playerId: string, action: Action, ctx: GameContext): State | Rejected;
   /** Zamana bağlı ilerleme; sunucu düzenli aralıklarla çağırır. Değişiklik yoksa aynı nesneyi döner. */
   tick(state: State, ctx: GameContext): State;
