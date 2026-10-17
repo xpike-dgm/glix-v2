@@ -1,0 +1,346 @@
+import { createEffect, createMemo, createSignal, For, onCleanup, Show, untrack } from "solid-js";
+import { hapticMatch, hapticSolo, hapticTap, hapticTick } from "../../fx/haptics.js";
+import { fail, match as matchSound, solo as soloSound, tap, tick, unlockAudio } from "../../fx/sound.js";
+import { sendAction } from "../../net/client.js";
+import { serverNow } from "../../net/store.js";
+import { Avatar } from "../../ui/Avatar.js";
+import { look } from "../../ui/avatars.js";
+import { ProgressBar } from "../../ui/ProgressBar.js";
+import { Screen } from "../../ui/Screen.js";
+import { SoundToggle } from "../../ui/SoundToggle.js";
+import type { GameScreenProps } from "../registry.js";
+import "./capraz-ates.css";
+import { Sight } from "./Sight.js";
+import {
+  gridColumns,
+  type Outcome,
+  outcomeOf,
+  parseCaprazAtesView,
+  ringPosition,
+  tracersOf,
+} from "./view.js";
+
+const LOCK_RED = "#FF3B5C";
+/** Ateş izi çizimi ve çarpışma, puan etiketleri (ms). */
+const BEAM_MS = 520;
+const BEAM_STEP_MS = 110;
+const CHIP_AT_MS = 1300;
+
+const VERDICT: Record<Outcome, { score: string; text: string }> = {
+  hit: { score: "−1", text: "Seni hedef aldılar" },
+  free: { score: "+1", text: "Kimse seni seçmedi" },
+  clash: { score: "0", text: "Mermiler çarpıştı" },
+  idle: { score: "0", text: "Ateş etmedin, seçilmedin" },
+};
+
+const chipText = (n: number): string => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "0");
+
+export default function CaprazAtesScreen(props: GameScreenProps) {
+  const view = createMemo(() => parseCaprazAtesView(props.match.publicView, props.match.view));
+  const reveal = () => view()?.reveal ?? null;
+  const crew = createMemo(() =>
+    props.match.participants.flatMap((id) => {
+      const p = props.players.find((q) => q.id === id);
+      return p ? [p] : [];
+    }),
+  );
+  const others = () => crew().filter((p) => p.id !== props.selfId);
+  const closed = () => {
+    const v = view();
+    return !v || props.now() >= v.endsAt;
+  };
+
+  // Seçim: sunucu onaylayana kadar yerel (iyimser) gösterilir; reddedilirse eski haline döner.
+  const [pending, setPending] = createSignal<string | null>(null);
+  let pendingTimer: ReturnType<typeof setTimeout> | undefined;
+  onCleanup(() => clearTimeout(pendingTimer));
+  const mine = (): string | null => pending() ?? view()?.myTarget ?? null;
+  createEffect(() => {
+    const confirmed = view()?.myTarget ?? null;
+    if (untrack(pending) !== null && confirmed === untrack(pending)) setPending(null);
+  });
+
+  const choose = (id: string, connected: boolean): void => {
+    if (props.spectator || closed() || !connected) return;
+    unlockAudio();
+    tap();
+    hapticTap();
+    if (mine() === id) return;
+    setPending(id);
+    clearTimeout(pendingTimer);
+    pendingTimer = setTimeout(() => {
+      if (pending() !== null) {
+        setPending(null);
+        fail();
+      }
+    }, 1600);
+    sendAction({ kind: "target", target: id });
+  };
+
+  const targetPlayer = () => {
+    const id = mine();
+    return id === null ? null : (crew().find((p) => p.id === id) ?? null);
+  };
+
+  // Açılış: kısa bir tık, kendi sonucun için gecikmeli ses ve titreşim.
+  let announced = false;
+  const timers = new Set<ReturnType<typeof setTimeout>>();
+  onCleanup(() => {
+    for (const t of timers) clearTimeout(t);
+  });
+  createEffect(() => {
+    const r = reveal();
+    if (!r || announced) return;
+    announced = true;
+    untrack(() => {
+      tick();
+      hapticTick();
+      if (props.spectator) return;
+      const outcome = outcomeOf(r, props.selfId);
+      const t = setTimeout(() => {
+        timers.delete(t);
+        if (outcome === "free") {
+          matchSound();
+          hapticMatch();
+        } else if (outcome === "hit") {
+          soloSound();
+          hapticSolo();
+        } else if (outcome === "clash") {
+          tap();
+          hapticTap();
+        }
+      }, CHIP_AT_MS);
+      timers.add(t);
+    });
+  });
+
+  const bar = () => {
+    const v = view();
+    if (!v) return { from: 0, to: 1 };
+    return v.reveal ? { from: v.endsAt, to: v.finishAt } : { from: v.startedAt, to: v.endsAt };
+  };
+
+  const spectatorList = () => (props.spectator ? crew() : others());
+  const gridVars = () => {
+    const n = spectatorList().length;
+    const tall = gridColumns(n);
+    const wide = gridColumns(n, true);
+    return {
+      "--cols-tall": tall,
+      "--rows-tall": Math.ceil(n / tall),
+      "--cols-wide": wide,
+      "--rows-wide": Math.ceil(n / wide),
+    };
+  };
+
+  return (
+    <Screen class="game ca">
+      <header class="game__top">
+        <Show when={view()} fallback={<div class="pbar" />}>
+          <ProgressBar startedAt={bar().from} endsAt={bar().to} now={serverNow} urgency={!reveal()} />
+        </Show>
+        <div class="game__tools">
+          <SoundToggle />
+        </div>
+      </header>
+
+      <Show
+        when={reveal()}
+        fallback={
+          <>
+            <div class="ca__head">
+              <span class="overline">{props.spectator ? "Gizli nişan" : "Gizli hedefin"}</span>
+              <Show
+                when={targetPlayer()}
+                fallback={
+                  <span class="ca__title">
+                    {props.spectator ? "Herkes nişan alıyor" : "Kimi vuracaksın?"}
+                  </span>
+                }
+              >
+                {(p) => (
+                  <span class="ca__title ca__title--locked" style={{ "--tc": look(p().avatar).color }}>
+                    {p().nickname}
+                  </span>
+                )}
+              </Show>
+            </div>
+
+            <div class="ca__stage">
+              <div class="ca__grid" style={gridVars()}>
+                <For each={spectatorList()}>
+                  {(p, i) => {
+                    const locked = () => mine() === p.id;
+                    return (
+                      <div
+                        class="ca__slot"
+                        data-locked={locked() ? "1" : undefined}
+                        data-off={p.connected ? undefined : "1"}
+                        data-idle={props.spectator || closed() ? "1" : undefined}
+                        style={{
+                          "--dur": `${7.5 + ((i() * 1.3) % 4)}s`,
+                          "--delay": `${-((i() * 1.7) % 6)}s`,
+                          "--flip": i() % 2 === 0 ? 1 : -1,
+                        }}
+                      >
+                        <button
+                          type="button"
+                          class="ca__cell"
+                          data-locked={locked() ? "1" : undefined}
+                          data-off={p.connected ? undefined : "1"}
+                          disabled={props.spectator || closed() || !p.connected}
+                          aria-pressed={locked()}
+                          aria-label={`${p.nickname} hedef al`}
+                          onClick={() => choose(p.id, p.connected)}
+                        >
+                          <span class="ca__portrait">
+                            <Avatar
+                              index={p.avatar}
+                              size="var(--ca-av)"
+                              connected={p.connected}
+                              ring={locked() ? LOCK_RED : undefined}
+                            />
+                          </span>
+                          <span class="ca__name">{p.nickname}</span>
+                        </button>
+                        <span class="ca__sightbox" aria-hidden="true">
+                          <span class="ca__sight">
+                            <Sight />
+                          </span>
+                        </span>
+                      </div>
+                    );
+                  }}
+                </For>
+              </div>
+            </div>
+
+            <p class="ca__hint" role="status">
+              {props.spectator
+                ? "Hedefler süre bitince açılır"
+                : closed()
+                  ? "Hedefler açılıyor…"
+                  : mine() === null
+                    ? "Seçmezsen boşa sıkmış olursun"
+                    : "Süre bitene kadar değiştirebilirsin"}
+            </p>
+          </>
+        }
+      >
+        {(r) => {
+          const nodes = () =>
+            crew().map((p, i) => ({ p, pos: ringPosition(i, crew().length), color: look(p.avatar).color }));
+          const at = (id: string) => nodes().find((n) => n.p.id === id);
+          const beams = () =>
+            tracersOf(
+              r(),
+              crew().map((p) => p.id),
+            ).flatMap((t, idx) => {
+              const a = at(t.from);
+              const b = at(t.to);
+              if (!a || !b) return [];
+              const dx = b.pos.x - a.pos.x;
+              const dy = b.pos.y - a.pos.y;
+              const len = Math.hypot(dx, dy) || 1;
+              const ux = dx / len;
+              const uy = dy / len;
+              const gap = 10;
+              const x1 = a.pos.x + ux * gap;
+              const y1 = a.pos.y + uy * gap;
+              const x2 = t.mutual ? (a.pos.x + b.pos.x) / 2 : b.pos.x - ux * gap;
+              const y2 = t.mutual ? (a.pos.y + b.pos.y) / 2 : b.pos.y - uy * gap;
+              return [{ ...t, x1, y1, x2, y2, color: a.color, delay: idx * BEAM_STEP_MS }];
+            });
+          const lastDelay = () => Math.max(0, ...beams().map((b) => b.delay));
+          const bursts = () =>
+            r().mutual.flatMap(([x, y]) => {
+              const a = at(x);
+              const b = at(y);
+              if (!a || !b) return [];
+              return [{ x: (a.pos.x + b.pos.x) / 2, y: (a.pos.y + b.pos.y) / 2 }];
+            });
+          const impacts = () =>
+            beams()
+              .filter((b) => !b.mutual)
+              .map((b) => ({ ...b, pos: at(b.to)?.pos ?? { x: 50, y: 50 } }));
+          const verdict = () => VERDICT[outcomeOf(r(), props.selfId)];
+          return (
+            <>
+              <div class="ca__head ca__head--reveal" style={{ "--at": `${CHIP_AT_MS}ms` }}>
+                <Show when={!props.spectator} fallback={<span class="ca__title">Hedefler açıldı</span>}>
+                  <span class="ca__score" data-o={outcomeOf(r(), props.selfId)}>
+                    {verdict().score}
+                  </span>
+                  <span class="ca__verdict">{verdict().text}</span>
+                </Show>
+              </div>
+
+              <div class="ca__stage">
+                <div
+                  class="ca__arena"
+                  style={{ "--beam-ms": `${BEAM_MS}ms`, "--chip-at": `${CHIP_AT_MS + lastDelay() / 2}ms` }}
+                >
+                  <svg class="ca__lines" viewBox="0 0 100 100" aria-hidden="true">
+                    <For each={beams()}>
+                      {(b) => (
+                        <g style={{ color: b.color, "--d": `${b.delay}ms` }}>
+                          <line class="ca__glow" x1={b.x1} y1={b.y1} x2={b.x2} y2={b.y2} pathLength="1" />
+                          <line class="ca__beam" x1={b.x1} y1={b.y1} x2={b.x2} y2={b.y2} pathLength="1" />
+                        </g>
+                      )}
+                    </For>
+                  </svg>
+
+                  <For each={bursts()}>
+                    {(b) => (
+                      <i
+                        class="ca__burst"
+                        aria-hidden="true"
+                        style={{ left: `${b.x}%`, top: `${b.y}%`, "--d": `${BEAM_MS + lastDelay() / 2}ms` }}
+                      />
+                    )}
+                  </For>
+                  <For each={impacts()}>
+                    {(b) => (
+                      <i
+                        class="ca__impact"
+                        aria-hidden="true"
+                        style={{
+                          left: `${b.pos.x}%`,
+                          top: `${b.pos.y}%`,
+                          "--d": `${b.delay + BEAM_MS}ms`,
+                        }}
+                      />
+                    )}
+                  </For>
+
+                  <For each={nodes()}>
+                    {(n) => {
+                      const score = () => r().scores[n.p.id] ?? 0;
+                      return (
+                        <div
+                          class="ca__node"
+                          data-me={n.p.id === props.selfId ? "1" : undefined}
+                          style={{ left: `${n.pos.x}%`, top: `${n.pos.y}%` }}
+                        >
+                          <Avatar index={n.p.avatar} size="var(--ca-rav)" connected={n.p.connected} />
+                          <span class="ca__rname">{n.p.nickname}</span>
+                          <span class="ca__chip" data-s={score() > 0 ? "up" : score() < 0 ? "down" : "zero"}>
+                            {chipText(score())}
+                          </span>
+                        </div>
+                      );
+                    }}
+                  </For>
+                </div>
+              </div>
+              <p class="ca__hint" role="status">
+                Puanlar genel skora eklenir
+              </p>
+            </>
+          );
+        }}
+      </Show>
+    </Screen>
+  );
+}

@@ -49,6 +49,10 @@ const registry: Record<string, GameEntry> = {
     Screen: lazy(() => import("./zaman-bombasi-hafizasi/ZamanBombasiScreen.js")),
     Art: lazy(() => import("./zaman-bombasi-hafizasi/BriefingArt.js")),
   },
+  "capraz-ates": {
+    Screen: lazy(() => import("./capraz-ates/CaprazAtesScreen.js")),
+    Art: lazy(() => import("./capraz-ates/BriefingArt.js")),
+  },
 };
 
 // Yalnız geliştirme: yatay çerçeveyi gerçek yatay oyunlar gelmeden denemek için yer tutucu sahne.

@@ -33,6 +33,8 @@ export function App() {
         void import("./dev/mockCagrisim.js").then((m) => m.startCagrisimMock(mock, params));
       } else if (mock.startsWith("zaman-")) {
         void import("./dev/mockZamanBombasi.js").then((m) => m.startZamanBombasiMock(mock, params));
+      } else if (mock.startsWith("capraz-")) {
+        void import("./dev/mockCapraz.js").then((m) => m.startCaprazMock(mock, params));
       } else if (/^(landscape|briefing-ready|spectator-)/.test(mock)) {
         void import("./dev/mockShell.js").then((m) => m.startShellMock(mock, params));
       } else {
