@@ -1,6 +1,7 @@
 import { createServer, type Server } from "node:http";
 import { APP_VERSION, type GameLog, PROTOCOL_VERSION, parseClientMessage } from "@glix/engine";
 import { type WebSocket, WebSocketServer } from "ws";
+import { CLIENT_ERROR_PATH, handleClientError } from "./clientError.js";
 import { resolveClientIp } from "./clientIp.js";
 import { type Clock, systemClock } from "./clock.js";
 import { DEFAULT_LIMITS, type ServerLimits } from "./config.js";
@@ -12,6 +13,7 @@ import { TokenBucket } from "./ratelimit.js";
 import { countActiveMatches, countPlayers, createRuntime, disposeRuntime } from "./rooms.js";
 import type { Connection } from "./runtime.js";
 import { serveStatic } from "./static.js";
+import { createStats, PURGE_EVERY_MS } from "./statsStore.js";
 
 /** Bu kadar geçersiz mesajdan sonra bağlantı kapatılır. */
 export const MAX_INVALID_MESSAGES = 5;
@@ -47,6 +49,8 @@ export interface ServerOptions {
   defaultGameIds?: readonly string[] | undefined;
   /** Rastgele oyun seçiminde kullanılan 0..max-1 rastgele tamsayı (testlerde sabitlenir). Varsayılan: crypto. */
   randomInt?: (max: number) => number;
+  /** İstatistik SQLite yolu (":memory:" olabilir). Verilmezse/null ise istatistik kapalıdır. */
+  statsDb?: string | null;
 }
 
 export interface RunningServer {
@@ -70,12 +74,23 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const sockets = new Set<WebSocket>();
   const clock = opts.clock ?? systemClock;
   const limits: ServerLimits = { ...DEFAULT_LIMITS, ...opts.limits };
+  const stats = createStats(opts.statsDb);
+  stats.purge(clock.now());
+  let cancelPurge: () => void = () => {};
+  const schedulePurge = (): void => {
+    cancelPurge = clock.setTimeout(() => {
+      if (stopTicking) return;
+      stats.purge(clock.now());
+      schedulePurge();
+    }, PURGE_EVERY_MS);
+  };
   const rt = createRuntime(
     clock,
     limits.maxRooms,
     limits.roomCreateBurst,
     opts.defaultGameIds,
     opts.randomInt,
+    stats,
   );
   const perIp = new Map<string, number>();
   const aliveSockets = new WeakMap<WebSocket, boolean>();
@@ -126,6 +141,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     }, opts.heartbeatMs ?? HEARTBEAT_MS);
   };
   scheduleHeartbeat();
+  schedulePurge();
 
   const server = createServer((req, res) => {
     const path = (req.url ?? "/").split("?")[0];
@@ -150,6 +166,14 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
           memoryRssMb: Math.round(process.memoryUsage().rss / 1048576),
         }),
       );
+      return;
+    }
+    if (path === CLIENT_ERROR_PATH) {
+      handleClientError(req, res, {
+        allowedOrigins: opts.allowedOrigins,
+        limiter: rt.ipLimiter,
+        ip: resolveClientIp(req.socket.remoteAddress, req.headers["x-forwarded-for"], limits.trustProxy),
+      });
       return;
     }
     serveStatic(req, res, opts.clientDir).catch((err: unknown) => {
@@ -304,12 +328,14 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         stopTicking = true;
         cancelTick();
         cancelHeartbeat();
+        cancelPurge();
         finishDrain();
         // 1012: oyuncular "oda kapandı" görmez; istemci resume dener ve güncelleme mesajını gösterir.
         disposeRuntime(rt, code !== 1012);
         for (const ws of sockets)
           ws.close(code, code === 1012 ? "Sunucu yeniden başlıyor" : "Sunucu kapanıyor");
         wss.close();
+        stats.close();
         server.close(() => resolve());
         server.closeIdleConnections();
         setTimeout(() => server.closeAllConnections(), 2000).unref();

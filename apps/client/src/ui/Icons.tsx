@@ -82,3 +82,8 @@ export const EyeIcon = (p: P) => (
     <circle cx="12" cy="12" r="2.8" />
   </svg>
 );
+export const StarIcon = (p: P) => (
+  <svg {...base(p)} stroke-width={2} stroke-linejoin="round">
+    <path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8L12 3.2z" />
+  </svg>
+);

@@ -5,6 +5,7 @@ import { hapticFinal } from "../fx/haptics.js";
 import { fanfare } from "../fx/sound.js";
 import { returnToLobby } from "../net/client.js";
 import { Avatar } from "../ui/Avatar.js";
+import { FeedbackRow } from "../ui/FeedbackRow.js";
 import { CrownIcon } from "../ui/Icons.js";
 import { LeaveButton } from "../ui/LeaveButton.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
@@ -119,6 +120,7 @@ export function Final(props: { snap: RoomSnapshot }) {
       </ul>
 
       <footer class="final__foot">
+        <FeedbackRow />
         <Show when={isHost()} fallback={<p class="waiting">Host seni lobiye alacak</p>}>
           <PrimaryButton onClick={() => returnToLobby()}>Lobiye dön</PrimaryButton>
         </Show>

@@ -10,6 +10,8 @@ export interface Config {
   /** SIGTERM sonrası maçların bitmesi için en çok beklenecek süre (ms). */
   drainTimeoutMs: number;
   limits: ServerLimits;
+  /** İstatistik SQLite yolu; null ise istatistik kapalı. */
+  statsDb: string | null;
 }
 
 export interface ServerLimits {
@@ -69,5 +71,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     clientDir: env.CLIENT_DIR || resolve(fileURLToPath(new URL("../../client/dist", import.meta.url))),
     allowedOrigins,
     revision: env.GIT_SHA || "dev",
+    statsDb: env.STATS_DB || (env.NODE_ENV === "production" ? "/data/glix.db" : null),
   };
 }

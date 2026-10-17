@@ -2,10 +2,11 @@ import { randomBytes, randomInt } from "node:crypto";
 import { getCatalog, MAX_NICKNAME_LENGTH, MAX_PLAYERS, ROOM_CODE_LENGTH } from "@glix/engine";
 import { createBroadcaster } from "./broadcast.js";
 import { type Clock, systemClock } from "./clock.js";
-import { clearMatch, recordPresence } from "./match.js";
+import { clearMatch, endMatchStats, recordPresence } from "./match.js";
 import { createMetrics } from "./metrics.js";
 import { IpLimiter } from "./ratelimit.js";
 import { type Connection, isConnected, type Player, type Room, type Runtime } from "./runtime.js";
+import { noopStats, type StatsStore } from "./statsStore.js";
 
 export const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const GRACE_MS = 120_000;
@@ -19,6 +20,7 @@ export function createRuntime(
   roomCreateBurst = 10,
   defaultGameIds?: readonly string[],
   pickInt: (max: number) => number = randomInt,
+  stats: StatsStore = noopStats,
 ): Runtime {
   const rt: Runtime = {
     clock,
@@ -26,6 +28,7 @@ export function createRuntime(
     maxRooms,
     ipLimiter: new IpLimiter(clock, roomCreateBurst),
     metrics: createMetrics(),
+    stats,
     recentLogs: [],
     rooms: new Map(),
     tokens: new Map(),
@@ -195,6 +198,8 @@ export function markDisconnected(rt: Runtime, player: Player): void {
 }
 
 export function deleteRoom(rt: Runtime, room: Room): void {
+  // Sunucu kapanırken / oda silinirken süren maç yarıda kalmış sayılır.
+  if (room.match) endMatchStats(rt, room.match, "aborted");
   rt.broadcaster.cancel(room);
   clearHostGrace(room);
   if (room.deleteCancel) {

@@ -16,10 +16,13 @@ RUN corepack pnpm --filter @glix/server deploy --legacy --prod /out/server
 
 FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS runtime
 ARG GIT_SHA=dev
-ENV NODE_ENV=production HOST=0.0.0.0 PORT=3900 CLIENT_DIR=/app/client GIT_SHA=${GIT_SHA}
+ENV NODE_ENV=production HOST=0.0.0.0 PORT=3900 STATS_DB=/data/glix.db CLIENT_DIR=/app/client GIT_SHA=${GIT_SHA}
 WORKDIR /app/server
 COPY --from=build --chown=node:node /out/server/ ./
 COPY --from=build --chown=node:node /repo/apps/client/dist /app/client
+# İstatistik veritabanı için yazılabilir dizin (adlandırılmış birim /data'ya bağlanır; boş birim bu sahipliği devralır).
+RUN mkdir -p /data && chown node:node /data
+VOLUME ["/data"]
 USER node
 EXPOSE 3900
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

@@ -44,6 +44,7 @@ export class TokenBucket {
 /** IP başına kovalar: oda kurma ve başarısız katılma. Bağlantı kopsa da sınır korunur. */
 export class IpLimiter {
   private readonly entries = new Map<string, { create: TokenBucket; joinFail: TokenBucket }>();
+  private readonly reports = new Map<string, TokenBucket>();
 
   constructor(
     private readonly clock: Clock,
@@ -76,9 +77,20 @@ export class IpLimiter {
     this.entry(ip).joinFail.take();
   }
 
+  /** İstemci hata bildirimi: IP başına dakikada `perMinute`. */
+  takeReport(ip: string, perMinute = 10): boolean {
+    let b = this.reports.get(ip);
+    if (!b) {
+      b = new TokenBucket(this.clock, perMinute, perMinute / 60);
+      this.reports.set(ip, b);
+    }
+    return b.take();
+  }
+
   /** Tamamen dolmuş (boşta) kayıtları siler; bellek sınırlı kalır. */
   prune(): void {
     for (const [ip, e] of this.entries) if (e.create.isFull() && e.joinFail.isFull()) this.entries.delete(ip);
+    for (const [ip, b] of this.reports) if (b.isFull()) this.reports.delete(ip);
   }
 
   size(): number {

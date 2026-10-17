@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseClientMessage } from "./protocol.js";
+import { MAX_FEEDBACK_TEXT, parseClientMessage } from "./protocol.js";
 
 describe("parseClientMessage", () => {
   it("hello kabul eder", () => {
@@ -99,6 +99,30 @@ describe("parseClientMessage: oda mesajları", () => {
     }
     expect(parseClientMessage(j({ type: "setRandom", count: 3, extra: 1 }))).toBeNull();
     expect(parseClientMessage(j({ type: "setRandom" }))).toBeNull();
+  });
+  it("feedback puan ve metni doğrular", () => {
+    expect(parseClientMessage(j({ type: "feedback", rating: 5 }))).toEqual({ type: "feedback", rating: 5 });
+    expect(parseClientMessage(j({ type: "feedback", rating: 3, text: "  güzel\u0000 oyun\n " }))).toEqual({
+      type: "feedback",
+      rating: 3,
+      text: "güzel oyun",
+    });
+    expect(parseClientMessage(j({ type: "feedback", rating: 1, text: "   " }))).toEqual({
+      type: "feedback",
+      rating: 1,
+    });
+    expect(
+      parseClientMessage(j({ type: "feedback", rating: 2, text: "a".repeat(MAX_FEEDBACK_TEXT) })),
+    ).not.toBeNull();
+    expect(
+      parseClientMessage(j({ type: "feedback", rating: 2, text: "a".repeat(MAX_FEEDBACK_TEXT + 1) })),
+    ).toBeNull();
+    for (const rating of [0, 6, 2.5, "3", null, undefined, Number.NaN]) {
+      expect(parseClientMessage(j({ type: "feedback", rating }))).toBeNull();
+    }
+    expect(parseClientMessage(j({ type: "feedback", rating: 3, text: 5 }))).toBeNull();
+    expect(parseClientMessage(j({ type: "feedback", rating: 3, extra: 1 }))).toBeNull();
+    expect(parseClientMessage(j({ type: "feedback" }))).toBeNull();
   });
   it("argümansız mesajlar yalnız type ile kabul edilir", () => {
     for (const type of ["leaveRoom", "startMatch", "ready", "returnToLobby", "resync"]) {

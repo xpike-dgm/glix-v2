@@ -262,6 +262,12 @@ export const setGames = (gameIds: string[]): boolean => rawSend({ type: "setGame
 export const startMatch = (): boolean => rawSend({ type: "startMatch" });
 export const sendReady = (): boolean => rawSend({ type: "ready" });
 export const returnToLobby = (): boolean => rawSend({ type: "returnToLobby" });
+export const sendFeedback = (rating: number, text: string): boolean => {
+  const clean = text.trim();
+  const base = { type: "feedback", rating } as { type: "feedback"; rating: 1 | 2 | 3 | 4 | 5; text?: string };
+  if (clean) base.text = clean;
+  return rawSend(base);
+};
 export const sendAction = (payload: unknown): boolean => rawSend({ type: "action", seq: ++seq, payload });
 
 export type { RoomSnapshot };
