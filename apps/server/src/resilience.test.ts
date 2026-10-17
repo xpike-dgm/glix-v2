@@ -272,6 +272,9 @@ describe("zarif kapanış (drain)", () => {
 
   it("drain süresi dolunca maç bitmemiş olsa da çözülür", async () => {
     const cs = await setupRoom(["A", "B"]);
+    // İki tur: 100 sn sonra hâlâ ikinci oyun sürer (final'deki oda drain'i bekletmez).
+    cs[0]?.send({ type: "setGames", gameIds: ["butona-bas", "cagrisim-agi"] });
+    await sync();
     await startPlaying(cs);
     let drained = false;
     const drain = k.srv.drain().then(() => {

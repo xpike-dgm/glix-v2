@@ -117,6 +117,8 @@ export async function setupRoom(names: string[]): Promise<Client[]> {
   const host = await create(names[0] ?? "A");
   const out = [host];
   for (const n of names.slice(1)) out.push(await join(host.session.roomCode, n));
+  // Oda varsayılanı tüm oyunlardır; mevcut akış testleri Butona Bas ile çalışır.
+  host.send({ type: "setGames", gameIds: ["butona-bas"] });
   await sync();
   return out;
 }

@@ -27,7 +27,7 @@ describe("oda kurma ve katılma", () => {
       { id: s.playerId, nickname: "Ayşe", avatar: 0, connected: true, score: 0 },
     ]);
     expect(room.catalog.map((g) => g.id)).toContain("butona-bas");
-    expect(room.gameIds).toEqual(["butona-bas"]);
+    expect(room.gameIds).toContain("butona-bas");
     expect(room.match).toBeNull();
   });
 

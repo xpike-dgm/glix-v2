@@ -1,5 +1,6 @@
 export * from "./game.js";
 export * from "./games/butona-bas/index.js";
+export * from "./games/cagrisim-agi/index.js";
 export * from "./games/index.js";
 export * from "./mergePatch.js";
 export * from "./protocol.js";
