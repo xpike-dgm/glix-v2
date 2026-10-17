@@ -28,7 +28,9 @@ describe("Zaman Bombası Hafızası: gerçek oda akışı", () => {
     k.clock.advance(3000);
     await until(() => host.room.phase === "playing", "playing");
 
-    const pub = () => host.room.match?.publicView as ZamanBombasiPublicView;
+    // Gözlemci: sonda bağlantısı kesilecek oyuncu (o0) host olabilir; okumalar o0 dışından yapılır.
+    let viewer: Client = host;
+    const pub = () => viewer.room.match?.publicView as ZamanBombasiPublicView;
     const byId = new Map(cs.map((c) => [c.session.playerId, c]));
     const goTo = (t: number) => k.clock.advance(Math.max(0, t - k.clock.now()));
 
@@ -37,6 +39,7 @@ describe("Zaman Bombası Hafızası: gerçek oda akışı", () => {
     expect(pub().order).toHaveLength(3);
     const [o0, o1, o2] = pub().order as [string, string, string];
     expect(pub().active).toBe(o0);
+    viewer = cs.find((c) => c.session.playerId !== o0) as Client;
 
     // Oynatma/hazırlık evresinde basış reddedilir.
     expect((await act(byId.get(o0) as Client, "mavi")).reason).toBe("not_input_yet");
@@ -74,21 +77,21 @@ describe("Zaman Bombası Hafızası: gerçek oda akışı", () => {
     expect(pub().active).toBe(o0);
     expect(pub().last).toMatchObject({ kind: "fail", player: o2, expected: seqNow[0] });
     expect(byId.get(o2)?.room.match?.view).toMatchObject({ isOut: true, myTurn: false });
-    expect(host.room.phase).toBe("playing");
+    expect(viewer.room.phase).toBe("playing");
 
     // Sıra 4: o0 hiç basmaz (bağlantısı koparmış gibi); süre dolunca elenir ve oyun biter (⌈3/2⌉ = 2).
     byId.get(o0)?.ws.terminate();
     await sync();
     goTo(pub().deadline - 200);
     await sync();
-    expect(host.room.phase).toBe("playing");
+    expect(viewer.room.phase).toBe("playing");
     goTo(pub().deadline + 50);
-    await until(() => host.room.phase === "results", "sonuçlar");
+    await until(() => viewer.room.phase === "results", "sonuçlar");
 
-    const result = host.room.match?.result;
+    const result = viewer.room.match?.result;
     expect(result?.miniScores).toEqual({ [o0]: 0, [o1]: 2, [o2]: -1 });
     expect(result?.awards).toEqual({ [o0]: 0, [o1]: 2, [o2]: -1 });
-    const scoreOf = (id: string) => host.room.players.find((p) => p.id === id)?.score;
+    const scoreOf = (id: string) => viewer.room.players.find((p) => p.id === id)?.score;
     expect([scoreOf(o0), scoreOf(o1), scoreOf(o2)]).toEqual([0, 2, -1]);
 
     // Sonuç ekranında da (izleyiciler dahil) oyun eylemi kabul edilmez.

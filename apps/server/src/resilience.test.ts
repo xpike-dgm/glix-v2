@@ -280,7 +280,6 @@ describe("zarif kapanış (drain)", () => {
     const drain = k.srv.drain().then(() => {
       drained = true;
     });
-    // maç (45 sn) sürerken drain bekler; süre (120 sn) dolunca maç bitmemiş olsa da çözülür
     // Maç sürerken drain çözülmez; maç ve sonuç ekranı bittiğinde ya da 120 sn dolunca çözülür.
     k.clock.advance(30_000);
     await sync();

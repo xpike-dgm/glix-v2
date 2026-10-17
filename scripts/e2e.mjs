@@ -260,11 +260,23 @@ async function main() {
     const clip = await A.evaluate(() => navigator.clipboard.readText());
     assert(clip === `${base}/?oda=${code}`, `panodaki bağlantı yanlış: ${clip}`);
 
-    // Minigame akordeonu açılır, tek seçili oyun kapatılamaz
+    // Minigame akordeonu: oda tüm oyunlarla açılır; host yalnız Butona Bas'ı bırakır, son oyun kapatılamaz
     await btn(A, /minigame seçimi/i).click();
     const card = A.locator(".gcard", { hasText: "Butona Bas" });
     await card.waitFor(OPT);
     await shot(A, "05b-lobby-games");
+    for (;;) {
+      const others = A.locator('.gcard[aria-pressed="true"]').filter({ hasNotText: "Butona Bas" });
+      if ((await others.count()) === 0) break;
+      const before = await A.locator('.gcard[aria-pressed="true"]').count();
+      await others.first().click();
+      await A.waitForFunction(
+        (n) => document.querySelectorAll('.gcard[aria-pressed="true"]').length === n - 1,
+        before,
+        OPT,
+      );
+    }
+    assert((await card.getAttribute("aria-pressed")) === "true", "Butona Bas seçili kalmalı");
     await card.click();
     await A.getByText("En az bir oyun seçili olmalı").waitFor(OPT);
     assert((await card.getAttribute("aria-pressed")) === "true", "son oyun seçili kalmalı");
