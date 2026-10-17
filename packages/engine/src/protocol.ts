@@ -19,6 +19,8 @@ export type ClientMessage =
   | { type: "leaveRoom" }
   | { type: "kick"; playerId: string }
   | { type: "setGames"; gameIds: string[] }
+  /** Rastgele mod: maç başında uygun oyunlar arasından `count` tanesi seçilir (1..katalog). */
+  | { type: "setRandom"; count: number }
   | { type: "startMatch" }
   | { type: "ready" }
   | { type: "action"; seq: number; payload: unknown }
@@ -102,8 +104,10 @@ export interface RoomSnapshot {
   selfId: string;
   phase: RoomPhase;
   players: PlayerInfo[];
-  /** Host'un seçtiği oyunlar (sıralı). */
+  /** Host'un seçtiği oyunlar (sıralı). Rastgele modda lobide boştur; maç başında seçilenler gelir. */
   gameIds: string[];
+  /** Oyun seçim modu. Yeni oda: rastgele 5. */
+  selection: { mode: "manual" } | { mode: "random"; count: number };
   /** Sunucudaki tüm oyunlar (Minigame Seçimi için). */
   catalog: GameInfo[];
   match: MatchSnapshot | null;

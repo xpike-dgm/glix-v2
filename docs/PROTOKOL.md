@@ -14,7 +14,8 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `resume` | `token` | yeniden bağlanma; başarısızsa `error{code:"resume_failed"}` |
 | `leaveRoom` | — | |
 | `kick` | `playerId` | yalnız host, yalnız lobide |
-| `setGames` | `gameIds` | yalnız host, yalnız lobide; boş olamaz, tekrar yok |
+| `setGames` | `gameIds` | yalnız host, yalnız lobide; boş olamaz, tekrar yok; modu `manual` yapar |
+| `setRandom` | `count` | yalnız host, yalnız lobide; 1..katalog boyu; modu `random` yapar |
 | `startMatch` | — | yalnız host; bağlı oyuncu sayısı tüm seçili oyunların min'ini karşılamalı |
 | `ready` | — | yalnız `briefing` aşamasında |
 | `action` | `seq`, `payload` | yalnız `playing`; `seq` istemci sayacı, `actionAck` ile döner |
@@ -49,6 +50,14 @@ Her oyun için `GameLog` (tohum, katılımcılar, zaman damgalı kabul edilen ey
 Aynı tohum ve eylemlerle `replay` aynı `GameResult`'u üretmek zorundadır; `tick` çağrı zamanlaması sonucu
 değiştiremez. Son 20 oyunun kaydı bellekte tutulur; bir oyun fonksiyonu hata fırlatırsa o oyunun kaydı
 sunucu günlüğüne yazılır.
+
+## Oyun seçimi
+
+- `RoomSnapshot.selection`: `{mode:"manual"}` ya da `{mode:"random", count}`. Yeni oda `{mode:"random", count:5}` ile açılır.
+- Rastgele modda `startMatch` anında, bağlı oyuncu sayısının `minPlayers..maxPlayers` aralığına uyan oyunlar arasından
+  tekrarsız, rastgele sırayla `count` oyun seçilir; uygun oyun `count`'tan azsa hepsi oynanır; hiç uygun oyun yoksa
+  `not_enough_players`. Seçilen liste maçın `gameIds`'idir.
+- El ile modda `startMatch`, bağlı oyuncu sayısının seçili oyunların hepsine uymasını ister (değişmedi).
 
 ## Maç akışı (sunucu)
 
