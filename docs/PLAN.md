@@ -77,7 +77,12 @@ sızıntı testi otomatik kırılır. Sunucu oyun bilmez; durum her yayında bir
 - [x] Merge-patch senkron: Butona Bas 8 oyuncuda oyuncu başına 827 KB → 166 KB
 - [x] Oda bazlı hata izolasyonu + `game_failed` günlüğü (GameLog ile), `/health` metrikleri
 - [x] Drain ile kesintisiz güncelleme; deploy.sh önce derler, süren maçları bekler (`--force` ile atlanır)
-- [ ] Yük testi (VDS, 200 oda × 8 bot)
-- [ ] Güvenlik incelemesi
+- [x] Güvenlik incelemesi (kritik/yüksek yok) + sertleştirme: geri basınç, heartbeat, soket/oda/IP sınırları,
+      oda kodu tahmin sınırı, 8 KiB mesaj, takma ad karakter filtresi, CSP/çerçeve başlıkları, deploy.sh symlink
+      koruması, imaj digest sabitleme; Caddy'de HSTS ve `/health` dışa kapalı
+- [x] Yük testi aracı (`pnpm load`); büyük koşular yalnız 127.0.0.1'e açık ayrı test konteynerine (yayın ayarları değişmez)
+- [ ] Yük testi kapısı: VDS (2 CPU sınırlı konteyner) — 20 oda p95 2 ms; 100 oda p95 49,8 ms (sınırda geçti);
+      200 oda p95 137 ms, 28 oda bağlanamadı (KALDI). Darboğaz: yayın başına oyuncu başına tam fark hesabı → iyileştirme sürüyor
+- Not: sslip.io adlarında DNS çözümlemesi zaman zaman 4+ sn sürüyor (sunucu yanıtı 0,02 sn). Gerçek alan adı A7'den önce alınmalı.
 
 **Dağıtım:** VDS'te `/srv/glix/deploy.sh <ref>` (varsayılan `main`). Geri alma: eski SHA ile aynı komut.
