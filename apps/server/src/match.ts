@@ -285,7 +285,7 @@ function applyActionUnsafe(rt: Runtime, room: Room, playerId: string, payload: u
   const next = guard("reduce", () => game.reduce(match.state, playerId, action, ctx));
   if (isRejected(next)) return { ok: false, reason: next.rejected };
   try {
-    match.recorder?.record(ctx.now, playerId, payload);
+    match.recorder?.record(ctx.now, playerId, action);
   } catch (err) {
     log.warn("recorder_failed", { room: room.code, error: String(err) });
   }

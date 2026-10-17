@@ -28,11 +28,14 @@ const SHOWN_ERRORS = new Set([
   "not_enough_players",
   "invalid_games",
   "draining",
+  "server_busy",
   "game_failed",
 ]);
 
 /** Sunucu güncelleme için yeniden başladı (WebSocket kapanış kodu 1012). */
 const SERVICE_RESTART = 1012;
+/** Sunucu odaya girmeyen boştaki bağlantıyı kapattı (WebSocket kapanış kodu 4000). */
+const IDLE_CLOSE = 4000;
 
 let ws: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
@@ -179,6 +182,12 @@ function open(): void {
     clearInterval(pingTimer);
     ws = null;
     if (stopped) return;
+    if (ev.code === IDLE_CLOSE) {
+      // Menüde beklerken: uyarı gösterme, ilk eylemde ya da sekme öne gelince yeniden bağlan.
+      clearTimeout(reconnectTimer);
+      setState({ conn: "idle" });
+      return;
+    }
     setState({ conn: "closed", failedAttempts: state.failedAttempts + 1 });
     scheduleReconnect();
   };
@@ -222,6 +231,11 @@ export function startNet(): () => void {
 function intent(msg: ClientMessage): void {
   setState("busy", true);
   pending = msg;
+  if (state.conn === "idle" && !ws) {
+    attempt = 0;
+    open();
+    return;
+  }
   flushPending();
 }
 

@@ -1,13 +1,18 @@
 import { type AnyGame, type GameLog, type GameResult, isRejected } from "./game.js";
 import { createRng } from "./rng.js";
 
+/** Bir oyunda kaydedilecek en çok eylem; aşılırsa kayıt durur ve `truncated` işaretlenir. */
+export const MAX_RECORDED_ACTIONS = 20_000;
+
 /**
  * Sunucunun maç kaydı tutma yolu: oyun başlarken `new GameRecorder(gameId, seed, players, startedAt)`,
- * `parseAction`'ın kabul ettiği ham eylem `reduce` tarafından da kabul edilince (Rejected değilse)
- * `record(t, playerId, rawAction)`, oyun bitince `finish(endedAt)`. Kaydedilen eylem, ağdan gelen
- * doğrulanmış ham eylemdir; `replay` onu yeniden `parseAction` ile işler.
+ * `parseAction`'ın ürettiği eylem `reduce` tarafından da kabul edilince (Rejected değilse)
+ * `record(t, playerId, parsedAction)`, oyun bitince `finish(endedAt)`. Kaydedilen, ağdan gelen ham
+ * veri değil `parseAction` çıktısıdır (bellek şişirmeyi önler); `replay` onu yeniden `parseAction`
+ * ile işler, bu yüzden `parseAction` kendi çıktısını değiştirmeden kabul etmelidir (idempotent).
  */
 export class GameRecorder {
+  private truncated = false;
   private readonly actions: GameLog["actions"] = [];
   private readonly players: string[];
 
@@ -22,6 +27,11 @@ export class GameRecorder {
 
   record(t: number, playerId: string, action: unknown): void {
     const last = this.actions[this.actions.length - 1];
+    if (this.truncated) return;
+    if (this.actions.length >= MAX_RECORDED_ACTIONS) {
+      this.truncated = true;
+      return;
+    }
     if (last && t < last.t) throw new Error("GameRecorder: eylemler zaman sıralı olmalı");
     this.actions.push({ t, playerId, action });
   }
@@ -34,6 +44,7 @@ export class GameRecorder {
       startedAt: this.startedAt,
       actions: this.actions.map((a) => ({ ...a })),
       endedAt,
+      ...(this.truncated ? { truncated: true } : {}),
     };
   }
 }
@@ -44,6 +55,7 @@ export class GameRecorder {
  */
 export function replay(game: AnyGame, log: GameLog): GameResult {
   if (game.id !== log.gameId) throw new Error(`replay: oyun uyuşmuyor (${game.id} / ${log.gameId})`);
+  if (log.truncated) throw new Error("replay: kayıt eksik (eylem sınırı aşıldı)");
   const rng = createRng(log.seed);
   let state = game.setup(log.players, { now: log.startedAt, rng });
   for (const entry of log.actions) {

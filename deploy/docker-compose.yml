@@ -12,6 +12,8 @@ services:
       ALLOWED_ORIGINS: ${GLIX_ALLOWED_ORIGINS}
       # SIGTERM sonrası maçların bitmesi için en çok bekleme (10 dk); stop_grace_period bundan uzun olmalı.
       DRAIN_TIMEOUT_MS: "600000"
+      # Caddy arkasında: X-Forwarded-For son girdisi gerçek istemci IP'sidir (oran sınırları için).
+      TRUST_PROXY: "1"
     mem_limit: 512m
     cpus: 2
     pids_limit: 256

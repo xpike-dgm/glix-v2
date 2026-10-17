@@ -114,4 +114,25 @@ describe("parseClientMessage: oda mesajları", () => {
     expect(parseClientMessage(j({ type: "action", payload: 1 }))).toBeNull();
     expect(parseClientMessage(j({ type: "action", seq: 1, payload: 1, x: 1 }))).toBeNull();
   });
+
+  it("takma ad: görünmez/yön karakterleri, birleştirici yığını ve harfsiz adlar reddedilir", () => {
+    const nick = (nickname: string) => parseClientMessage(j({ type: "createRoom", nickname }));
+    for (const bad of [
+      "Ali\u202Eevil", // RLO
+      "A\u200Bli", // sıfır genişlik
+      "A\u200Dli", // ZWJ
+      "\u2028Ali", // satır ayırıcı
+      "Ali\u2029",
+      "A\uE000li", // özel kullanım
+      "A\uD800li", // yetim vekil
+      "\u{1F600}", // yalnız emoji
+      "\u{1F600}\u{1F389}",
+      "---",
+      "   ",
+      "a\u0301\u0302\u0303", // 3 ardışık işaret
+    ])
+      expect(nick(bad), JSON.stringify(bad)).toBeNull();
+    for (const ok of ["Ali", "ŞİŞE", "ığdır", "Çağrı 7", "42", "Ali \u{1F600}", "a\u0301\u0302", "i\u0307"])
+      expect(nick(ok), JSON.stringify(ok)).not.toBeNull();
+  });
 });

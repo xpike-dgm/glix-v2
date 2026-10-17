@@ -1,7 +1,9 @@
 import { createServer, type Server } from "node:http";
 import { APP_VERSION, PROTOCOL_VERSION, parseClientMessage } from "@glix/engine";
 import { type WebSocket, WebSocketServer } from "ws";
+import { resolveClientIp } from "./clientIp.js";
 import { type Clock, systemClock } from "./clock.js";
+import { DEFAULT_LIMITS, type ServerLimits } from "./config.js";
 import { handleClose, handleMessage } from "./handlers.js";
 import { log } from "./log.js";
 import { runTick, TICK_MS } from "./match.js";
@@ -13,6 +15,19 @@ import { serveStatic } from "./static.js";
 
 /** Bu kadar geçersiz mesajdan sonra bağlantı kapatılır. */
 export const MAX_INVALID_MESSAGES = 5;
+/** Üst üste bu kadar `rate_limited` yanıtından sonra bağlantı kapatılır. */
+export const MAX_RATE_LIMIT_STREAK = 100;
+/** Gelen mesajın en büyük bayt boyutu (ws `maxPayload` ile aynı). */
+export const MAX_PAYLOAD_BYTES = 8 * 1024;
+/** Giden tamponu bu kadar şişen (okumayan) soket koparılır. */
+export const MAX_BUFFERED_BYTES = 1_000_000;
+export const HEARTBEAT_MS = 20_000;
+export const IDLE_CLOSE_CODE = 4000;
+
+function byteLength(data: Buffer | ArrayBuffer | Buffer[]): number {
+  if (Array.isArray(data)) return data.reduce((n, b) => n + b.length, 0);
+  return data instanceof ArrayBuffer ? data.byteLength : data.length;
+}
 
 export interface ServerOptions {
   host: string;
@@ -24,11 +39,17 @@ export interface ServerOptions {
   clock?: Clock;
   /** Drain süresi sınırı (ms). Varsayılan 10 dk. */
   drainTimeoutMs?: number;
+  /** Sınırlar; verilmeyenler `DEFAULT_LIMITS`. */
+  limits?: Partial<ServerLimits>;
+  /** Kalp atışı aralığı (ms). Varsayılan 20 sn; sahte saatle atlamalı testler büyük değer verir. */
+  heartbeatMs?: number;
 }
 
 export interface RunningServer {
   server: Server;
   port: number;
+  /** Açık WebSocket'ler (yalnız testler için). */
+  sockets: ReadonlySet<WebSocket>;
   /**
    * Drain kipine girer: yeni oda/katılım reddedilir, mevcut maçlar sürer. Maçı olan oda kalmayınca ya da
    * süre dolunca çözülür (soketleri kapatmaz; ardından `close(1012)` çağrılır).
@@ -42,7 +63,10 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const startedAt = Date.now();
   const sockets = new Set<WebSocket>();
   const clock = opts.clock ?? systemClock;
-  const rt = createRuntime(clock);
+  const limits: ServerLimits = { ...DEFAULT_LIMITS, ...opts.limits };
+  const rt = createRuntime(clock, limits.maxRooms);
+  const perIp = new Map<string, number>();
+  const aliveSockets = new WeakMap<WebSocket, boolean>();
 
   let stopTicking = false;
   let cancelTick: () => void = () => {};
@@ -66,6 +90,30 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     }, TICK_MS);
   };
   scheduleTick();
+
+  // Kalp atışı: her turda ping; bir önceki tura pong gelmediyse soket koparılır (normal kapanış yolu: grace).
+  let cancelHeartbeat: () => void = () => {};
+  const scheduleHeartbeat = (): void => {
+    cancelHeartbeat = clock.setTimeout(() => {
+      if (stopTicking) return;
+      for (const ws of sockets) {
+        if (aliveSockets.get(ws) === false) {
+          log.warn("heartbeat_timeout");
+          ws.terminate();
+          continue;
+        }
+        aliveSockets.set(ws, false);
+        try {
+          ws.ping();
+        } catch {
+          ws.terminate();
+        }
+      }
+      rt.ipLimiter.prune();
+      scheduleHeartbeat();
+    }, opts.heartbeatMs ?? HEARTBEAT_MS);
+  };
+  scheduleHeartbeat();
 
   const server = createServer((req, res) => {
     const path = (req.url ?? "/").split("?")[0];
@@ -99,7 +147,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     });
   });
 
-  const wss = new WebSocketServer({ noServer: true, maxPayload: 64 * 1024 });
+  const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_PAYLOAD_BYTES });
 
   server.on("upgrade", (req, socket, head) => {
     const path = (req.url ?? "").split("?")[0];
@@ -116,44 +164,95 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         return;
       }
     }
-    wss.handleUpgrade(req, socket, head, (ws) => wss.emit("connection", ws, req));
+    const ip = resolveClientIp(req.socket.remoteAddress, req.headers["x-forwarded-for"], limits.trustProxy);
+    if (sockets.size >= limits.maxSockets) {
+      socket.write("HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\nRetry-After: 10\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+    if ((perIp.get(ip) ?? 0) >= limits.maxSocketsPerIp) {
+      socket.write("HTTP/1.1 429 Too Many Requests\r\nConnection: close\r\nRetry-After: 10\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+    wss.handleUpgrade(req, socket, head, (ws) => wss.emit("connection", ws, { ip }));
   });
 
-  wss.on("connection", (ws) => {
+  wss.on("connection", (ws: WebSocket, info: { ip: string }) => {
+    const ip = info.ip;
     sockets.add(ws);
+    perIp.set(ip, (perIp.get(ip) ?? 0) + 1);
+    aliveSockets.set(ws, true);
+    ws.on("pong", () => aliveSockets.set(ws, true));
     const sendRaw = (text: string): void => {
       if (ws.readyState !== ws.OPEN) return;
+      if (ws.bufferedAmount > MAX_BUFFERED_BYTES) {
+        // Okumayan istemci sunucu belleğini şişirmesin: koparılır, oyuncu normal kopma (grace) yolunu izler.
+        log.warn("slow_consumer", { bufferedAmount: ws.bufferedAmount });
+        ws.terminate();
+        return;
+      }
       rt.metrics.recordBytes(Buffer.byteLength(text), clock.now());
       ws.send(text);
     };
+    let limitedThisMessage = false;
+    let rateLimitStreak = 0;
     const conn: Connection = {
       player: null,
       lastSent: null,
+      ip,
+      failedJoins: 0,
       sendRaw,
-      send: (msg) => sendRaw(JSON.stringify(msg)),
+      send: (msg) => {
+        if (msg.type === "error" && msg.code === "rate_limited") limitedThisMessage = true;
+        sendRaw(JSON.stringify(msg));
+      },
       close: (code, reason) => ws.close(code, reason),
     };
     const bucket = new TokenBucket(clock);
     let invalid = 0;
+    // Odaya girmeyen soketler boşuna yer tutmasın: süre dolunca hâlâ odasızsa kapatılır (4000).
+    let cancelIdle: () => void = () => {};
+    const armIdle = (): void => {
+      cancelIdle = clock.setTimeout(() => {
+        if (ws.readyState !== ws.OPEN) return;
+        if (conn.player) armIdle();
+        else ws.close(IDLE_CLOSE_CODE, "Uzun süre işlem yapılmadı");
+      }, limits.idleUnjoinedMs);
+    };
+    armIdle();
     ws.on("close", () => {
+      cancelIdle();
       sockets.delete(ws);
+      const left = (perIp.get(ip) ?? 1) - 1;
+      if (left <= 0) perIp.delete(ip);
+      else perIp.set(ip, left);
       handleClose(rt, conn);
     });
     ws.on("error", (err) => log.warn("ws_error", { error: String(err) }));
     ws.on("message", (data, isBinary) => {
       if (!bucket.take()) {
         conn.send(errorMessage("rate_limited"));
+        rateLimitStreak += 1;
+        if (rateLimitStreak >= MAX_RATE_LIMIT_STREAK) ws.close(1008, "Çok hızlı mesaj gönderiyorsun");
         return;
       }
-      const msg = isBinary ? null : parseClientMessage(data.toString());
+      // Bayt boyutu `toString()` öncesi denetlenir (ws maxPayload ikinci savunma hattı).
+      const msg =
+        isBinary || byteLength(data) > MAX_PAYLOAD_BYTES ? null : parseClientMessage(data.toString());
       if (!msg) {
         conn.send(errorMessage("invalid_message"));
         invalid += 1;
         if (invalid >= MAX_INVALID_MESSAGES) ws.close(1008, "Çok sayıda geçersiz mesaj");
         return;
       }
+      limitedThisMessage = false;
       try {
         handleMessage(rt, conn, msg);
+        if (limitedThisMessage) {
+          rateLimitStreak += 1;
+          if (rateLimitStreak >= MAX_RATE_LIMIT_STREAK) ws.close(1008, "Çok hızlı istek gönderiyorsun");
+        } else rateLimitStreak = 0;
       } catch (err) {
         log.error("handler_failed", { type: msg.type, error: String(err) });
         conn.send(errorMessage("invalid_message", "Beklenmeyen bir sorun oluştu."));
@@ -174,6 +273,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   return {
     server,
     port,
+    sockets,
     drain: () => {
       rt.draining = true;
       if (countActiveMatches(rt) === 0) return Promise.resolve();
@@ -189,6 +289,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       new Promise<void>((resolve) => {
         stopTicking = true;
         cancelTick();
+        cancelHeartbeat();
         finishDrain();
         // 1012: oyuncular "oda kapandı" görmez; istemci resume dener ve güncelleme mesajını gösterir.
         disposeRuntime(rt, code !== 1012);

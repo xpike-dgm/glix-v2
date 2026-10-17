@@ -11,6 +11,9 @@ import { errorMessage } from "./messages.js";
 import { addPlayer, clearHostGrace, createRoom, markDisconnected, removePlayer } from "./rooms.js";
 import { type Connection, isConnected, type Room, type Runtime } from "./runtime.js";
 
+/** Bir soketten bu kadar başarısız oda kodu denemesinden sonra bağlantı kapatılır. */
+export const MAX_FAILED_JOINS = 10;
+
 function fail(conn: Connection, code: ErrorCode, text?: string): void {
   conn.send(errorMessage(code, text));
 }
@@ -56,6 +59,14 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         fail(conn, "draining");
         return;
       }
+      if (!rt.ipLimiter.takeCreate(conn.ip)) {
+        fail(conn, "rate_limited");
+        return;
+      }
+      if (rt.rooms.size >= rt.maxRooms) {
+        fail(conn, "server_busy");
+        return;
+      }
       const room = createRoom(rt);
       addPlayer(rt, room, msg.nickname, conn);
       sendSession(conn);
@@ -71,11 +82,22 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         fail(conn, "draining");
         return;
       }
-      const room = rt.rooms.get(msg.code);
-      if (!room) {
-        fail(conn, "room_not_found");
+      // Kod tahminine karşı: IP başına başarısız katılma kovası boşsa aramadan reddedilir.
+      if (!rt.ipLimiter.canTryJoin(conn.ip)) {
+        fail(conn, "rate_limited");
         return;
       }
+      const room = rt.rooms.get(msg.code);
+      if (!room) {
+        rt.ipLimiter.recordFailedJoin(conn.ip);
+        conn.failedJoins += 1;
+        fail(conn, "room_not_found");
+        if (conn.failedJoins >= MAX_FAILED_JOINS) conn.close(1008, "Çok sayıda hatalı oda kodu");
+        return;
+      }
+      // Karar: room_full ve match_in_progress, room_not_found'dan ayrı kalır. Bunlar kodun doğru olduğunu
+      // ele verir, ama 5 karakterli kod uzayı (32^5) + yukarıdaki soket/IP sınırları tahmini pratikte
+      // imkânsız kılar; arkadaşına "oda dolu" ile "oda yok" ayrımını göstermek kullanıcı deneyimi için daha değerli.
       if (room.phase !== "lobby") {
         fail(conn, "match_in_progress");
         return;

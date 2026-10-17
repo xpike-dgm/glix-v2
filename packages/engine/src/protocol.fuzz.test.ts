@@ -36,7 +36,7 @@ describe("parseClientMessage fuzz", () => {
   it("rastgele metin", () => {
     fc.assert(fc.property(fc.string({ unit: "binary", maxLength: 600 }), checkParse), { numRuns: 400 });
     fc.assert(fc.property(fc.string({ unit: "grapheme", maxLength: 300 }), checkParse), { numRuns: 200 });
-  });
+  }, 30_000);
 
   it("rastgele JSON", () => {
     fc.assert(

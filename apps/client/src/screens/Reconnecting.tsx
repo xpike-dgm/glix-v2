@@ -3,7 +3,8 @@ import { state } from "../net/store.js";
 
 /** Bağlantı koptuğunda yarı saydam örtü; dönünce kendiliğinden kalkar. */
 export function Reconnecting() {
-  const visible = () => state.conn !== "open" && (state.everOpen || state.failedAttempts >= 2);
+  const visible = () =>
+    (state.conn === "connecting" || state.conn === "closed") && (state.everOpen || state.failedAttempts >= 2);
   return (
     <Show when={visible()}>
       <div class="overlay" role="alert">

@@ -4,6 +4,7 @@ import { createBroadcaster } from "./broadcast.js";
 import { type Clock, systemClock } from "./clock.js";
 import { clearMatch } from "./match.js";
 import { createMetrics } from "./metrics.js";
+import { IpLimiter } from "./ratelimit.js";
 import { type Connection, isConnected, type Player, type Room, type Runtime } from "./runtime.js";
 
 export const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -11,10 +12,12 @@ export const GRACE_MS = 120_000;
 export const EMPTY_ROOM_MS = 120_000;
 export const HOST_GRACE_MS = 20_000;
 
-export function createRuntime(clock: Clock = systemClock): Runtime {
+export function createRuntime(clock: Clock = systemClock, maxRooms = 1000): Runtime {
   const rt: Runtime = {
     clock,
     draining: false,
+    maxRooms,
+    ipLimiter: new IpLimiter(clock),
     metrics: createMetrics(),
     recentLogs: [],
     rooms: new Map(),

@@ -36,6 +36,7 @@ const ERROR_CODES: readonly ErrorCode[] = [
   "not_participant",
   "game_failed",
   "draining",
+  "server_busy",
 ];
 const LEFT: readonly LeftReason[] = ["left", "kicked", "closed"];
 

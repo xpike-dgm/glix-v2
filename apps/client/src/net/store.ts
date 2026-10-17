@@ -4,7 +4,8 @@ import { median, pushSample } from "./clock.js";
 import { KEYS, readStored, writeStored } from "./storage.js";
 import { initialSync, onPatch, onReconnect, onRoom, type SyncState, type SyncStep } from "./sync.js";
 
-export type ConnStatus = "connecting" | "open" | "closed";
+/** `idle`: sunucu odasız boştaki bağlantıyı kapattı; ilk eylemde sessizce yeniden açılır. */
+export type ConnStatus = "connecting" | "open" | "closed" | "idle";
 export type Nav = "home" | "join";
 export type ToastKind = "info" | "success" | "error";
 

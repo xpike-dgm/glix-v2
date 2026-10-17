@@ -17,6 +17,9 @@ importers:
       turbo:
         specifier: 2.11.9
         version: 2.11.9
+      ws:
+        specifier: ^8.22.0
+        version: 8.22.0
 
   apps/client:
     dependencies:

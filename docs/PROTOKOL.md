@@ -9,7 +9,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 |---|---|---|
 | `hello` | `clientVersion` | bağlantı açılınca ilk mesaj |
 | `ping` | `t` | saat farkı ölçümü |
-| `createRoom` | `nickname` | 1–16 karakter, kırpılır |
+| `createRoom` | `nickname` | 1–16 karakter, kırpılır; biçim/yön/görünmez karakter (`Cf`,`Zl`,`Zp`,`Co`,`Cs`) yasak, en çok 2 ardışık birleştirici işaret, en az bir harf/rakam (yalnız emoji reddedilir) |
 | `joinRoom` | `code`, `nickname` | 5 karakter, büyük harfe çevrilir |
 | `resume` | `token` | yeniden bağlanma; başarısızsa `error{code:"resume_failed"}` |
 | `leaveRoom` | — | |
@@ -66,4 +66,12 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
 
 `invalid_message`, `rate_limited`, `nickname_invalid`, `room_not_found`, `room_full`, `match_in_progress`,
 `resume_failed`, `not_host`, `not_in_room`, `already_in_room`, `invalid_games`, `not_enough_players`,
-`wrong_phase`, `not_participant`.
+`wrong_phase`, `not_participant`, `game_failed`, `draining`, `server_busy`.
+
+## Sınırlar (sunucu)
+
+- Mesaj en çok 8 KiB; giden tampon 1 MB'ı aşan (okumayan) soket koparılır. Sunucu 20 sn'de bir ping atar, pong gelmeyen soket koparılır.
+- `MAX_SOCKETS`=3000, `MAX_SOCKETS_PER_IP`=40, `MAX_ROOMS`=1000 (`server_busy`); IP başına oda kurma: 10 ani, 6 sn'de 1.
+- 60 sn odaya girmeyen soket 4000 ile kapanır. Soket başına 10 yanlış oda kodunda ve üst üste 100 `rate_limited`'de 1008 ile kapanır; IP başına yanlış kod kovası 20 ani, 3 sn'de 1.
+- `TRUST_PROXY=1` iken loopback/özel adresten gelen isteklerde `X-Forwarded-For` son girdisi istemci IP'sidir.
+- Maç kaydı en çok 20 000 eylem tutar; aşılırsa `truncated` olur ve `replay` reddeder.

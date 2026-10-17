@@ -17,6 +17,7 @@ export const ERROR_TEXT: Record<ErrorCode, string> = {
   not_participant: "Bu oyunda yer almıyorsun.",
   game_failed: "Oyunda bir sorun çıktı. Lobiye döndün, puanların korundu.",
   draining: "Güncelleme yapılıyor, birazdan tekrar dene.",
+  server_busy: "Sunucu şu an çok yoğun, birazdan tekrar dene.",
 };
 
 export function errorMessage(code: ErrorCode, text?: string): ServerMessage {

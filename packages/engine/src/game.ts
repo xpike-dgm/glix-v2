@@ -77,6 +77,8 @@ export interface GameLog {
   /** Zaman sıralı; yalnız kabul edilen eylemler. */
   actions: { t: number; playerId: string; action: unknown }[];
   endedAt: number;
+  /** Eylem sınırı aşıldığı için kayıt eksik: `replay` bu kaydı reddeder. */
+  truncated?: boolean;
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: kayıt defteri farklı tipte oyunları birlikte tutar.

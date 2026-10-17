@@ -1,7 +1,7 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { butonaBas } from "./games/butona-bas/index.js";
-import { GameRecorder, replay } from "./replay.js";
+import { GameRecorder, MAX_RECORDED_ACTIONS, replay } from "./replay.js";
 import { BOTS, buildActions, buildTicks, runSimulation } from "./testing/index.js";
 
 describe("replay ve GameRecorder", () => {
@@ -19,6 +19,16 @@ describe("replay ve GameRecorder", () => {
       endedAt: 200,
     });
     expect(() => rec.record(10, "a", {})).toThrow();
+  });
+
+  it("eylem sınırında kaydı durdurur, truncated işaretler; replay reddeder", () => {
+    const rec = new GameRecorder("butona-bas", 1, ["a", "b"], 0);
+    for (let i = 0; i < MAX_RECORDED_ACTIONS + 5; i++) rec.record(i, "a", { kind: "press" });
+    const log = rec.finish(MAX_RECORDED_ACTIONS + 10);
+    expect(log.actions).toHaveLength(MAX_RECORDED_ACTIONS);
+    expect(log.truncated).toBe(true);
+    expect(() => replay(butonaBas, log)).toThrow(/eksik/);
+    expect(new GameRecorder("butona-bas", 1, ["a"], 0).finish(1)).not.toHaveProperty("truncated");
   });
 
   it("yanlış oyun veya bozuk kayıt fırlatır", () => {

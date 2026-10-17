@@ -25,8 +25,18 @@ const TYPES: Record<string, string> = {
   ".map": "application/json; charset=utf-8",
 };
 
+/** Tüm statik yanıtlara eklenen güvenlik başlıkları (CSP: yalnız aynı kaynak; Pixi/Vite satır içi betik gerektirmez). */
+export const SECURITY_HEADERS: Record<string, string> = {
+  "Content-Security-Policy":
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "no-referrer",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+};
+
 function notFound(res: ServerResponse): void {
-  res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+  res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8", ...SECURITY_HEADERS });
   res.end("Bulunamadı");
 }
 
@@ -50,7 +60,7 @@ export async function serveStatic(
   clientDir: string,
 ): Promise<void> {
   if (req.method !== "GET" && req.method !== "HEAD") {
-    res.writeHead(405, { Allow: "GET, HEAD" });
+    res.writeHead(405, { Allow: "GET, HEAD", ...SECURITY_HEADERS });
     res.end();
     return;
   }
@@ -96,7 +106,7 @@ export async function serveStatic(
     "Content-Type": TYPES[extname(file).toLowerCase()] ?? "application/octet-stream",
     "Content-Length": info.size,
     "Cache-Control": isShell ? "no-cache" : cacheControl(servedPath),
-    "X-Content-Type-Options": "nosniff",
+    ...SECURITY_HEADERS,
   };
   res.writeHead(200, headers);
   if (req.method === "HEAD") {

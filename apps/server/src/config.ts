@@ -9,6 +9,33 @@ export interface Config {
   revision: string;
   /** SIGTERM sonrası maçların bitmesi için en çok beklenecek süre (ms). */
   drainTimeoutMs: number;
+  limits: ServerLimits;
+}
+
+export interface ServerLimits {
+  maxSockets: number;
+  maxSocketsPerIp: number;
+  maxRooms: number;
+  /** Odaya girmemiş soket bu sürede (ms) kapatılır (kod 4000). */
+  idleUnjoinedMs: number;
+  /** Ters vekil (Caddy) arkasında `X-Forwarded-For` son girdisine güvenilir. */
+  trustProxy: boolean;
+}
+
+export const DEFAULT_LIMITS: ServerLimits = {
+  maxSockets: 3000,
+  maxSocketsPerIp: 40,
+  maxRooms: 1000,
+  idleUnjoinedMs: 60_000,
+  trustProxy: false,
+};
+
+function positiveInt(env: NodeJS.ProcessEnv, name: string, fallback: number): number {
+  const raw = env[name];
+  if (raw === undefined || raw === "") return fallback;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1) throw new Error(`${name} geçersiz`);
+  return n;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -23,7 +50,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   else if (env.NODE_ENV === "production") allowedOrigins = [];
   const drainTimeoutMs = Number(env.DRAIN_TIMEOUT_MS ?? 600_000);
   if (!Number.isFinite(drainTimeoutMs) || drainTimeoutMs < 0) throw new Error("DRAIN_TIMEOUT_MS geçersiz");
+  const trust = (env.TRUST_PROXY ?? "").toLowerCase();
   return {
+    limits: {
+      maxSockets: positiveInt(env, "MAX_SOCKETS", DEFAULT_LIMITS.maxSockets),
+      maxSocketsPerIp: positiveInt(env, "MAX_SOCKETS_PER_IP", DEFAULT_LIMITS.maxSocketsPerIp),
+      maxRooms: positiveInt(env, "MAX_ROOMS", DEFAULT_LIMITS.maxRooms),
+      idleUnjoinedMs: positiveInt(env, "IDLE_UNJOINED_MS", DEFAULT_LIMITS.idleUnjoinedMs),
+      trustProxy: trust === "1" || trust === "true",
+    },
     drainTimeoutMs,
     host: env.HOST || "0.0.0.0",
     port,

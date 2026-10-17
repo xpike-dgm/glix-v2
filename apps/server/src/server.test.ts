@@ -51,6 +51,17 @@ describe("http", () => {
     });
     expect(typeof (body as { uptimeSeconds: number }).uptimeSeconds).toBe("number");
   });
+  it("güvenlik başlıkları (CSP dahil) hem sayfada hem varlıkta", async () => {
+    for (const p of ["/", "/assets/app.js", "/yok.js"]) {
+      const res = await fetch(`http://${base}${p}`);
+      expect(res.headers.get("content-security-policy")).toContain("default-src 'self'");
+      expect(res.headers.get("content-security-policy")).toContain("frame-ancestors 'none'");
+      expect(res.headers.get("x-frame-options")).toBe("DENY");
+      expect(res.headers.get("referrer-policy")).toBe("no-referrer");
+      expect(res.headers.get("permissions-policy")).toContain("camera=()");
+      expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+    }
+  });
   it("index ve SPA geri dönüşü", async () => {
     for (const p of ["/", "/oda/ABCD"]) {
       const res = await fetch(`http://${base}${p}`);

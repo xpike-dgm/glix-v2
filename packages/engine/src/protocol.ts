@@ -48,7 +48,8 @@ export type ErrorCode =
   | "wrong_phase"
   | "not_participant"
   | "game_failed"
-  | "draining";
+  | "draining"
+  | "server_busy";
 
 export type RoomPhase = "lobby" | "briefing" | "countdown" | "playing" | "results" | "final";
 
@@ -129,6 +130,11 @@ function hasExactKeys(obj: Record<string, unknown>, keys: readonly string[]): bo
 }
 
 const CONTROL_CHARS = /\p{Cc}/u;
+/** Görünmez/yön değiştiren biçim karakterleri (RLO, sıfır genişlik, ZWJ), satır/paragraf ayırıcı, özel kullanım, yetim vekil. */
+const FORBIDDEN_CHARS = /[\p{Cf}\p{Zl}\p{Zp}\p{Co}\p{Cs}]/u;
+/** Zalgo benzeri yığılmayı önler: en çok 2 ardışık birleştirici işaret. */
+const MARK_STACK = /\p{M}{3,}/u;
+const LETTER_OR_DIGIT = /[\p{L}\p{N}]/u;
 const WHITESPACE_RUN = /\s+/gu;
 const CODE_PATTERN = /^[A-Z0-9]{5}$/;
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
@@ -136,7 +142,9 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
 /** Takma adı temizler (kırp, iç boşlukları tek boşluğa indir). Geçersizse null. */
 export function normalizeNickname(value: unknown): string | null {
   if (typeof value !== "string" || value.length > 256 || CONTROL_CHARS.test(value)) return null;
+  if (FORBIDDEN_CHARS.test(value)) return null;
   const clean = value.replace(WHITESPACE_RUN, " ").trim();
+  if (MARK_STACK.test(clean) || !LETTER_OR_DIGIT.test(clean)) return null;
   const length = Array.from(clean).length;
   if (length < 1 || length > MAX_NICKNAME_LENGTH) return null;
   return clean;

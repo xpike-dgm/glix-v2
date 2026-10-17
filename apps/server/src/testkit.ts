@@ -152,6 +152,8 @@ export function useServer(extra: Partial<ServerOptions> = {}): void {
       allowedOrigins: null,
       revision: "t",
       clock: k.clock,
+      // Sahte saat atlamalı testlerde pong'a zaman kalmaz; kalp atışı yalnızca ilgili testlerde açılır.
+      heartbeatMs: 1_000_000_000,
       ...extra,
     });
   });

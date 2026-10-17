@@ -8,6 +8,7 @@ REF=main
 for arg in "$@"; do
   case "$arg" in
     --force) FORCE=1 ;;
+    -*) echo "Geçersiz seçenek/ref: $arg" >&2; exit 2 ;;
     *) REF="$arg" ;;
   esac
 done
@@ -29,20 +30,32 @@ echo "Sürüm: $REF -> $SHA"
 
 RELEASE="$RELEASES/$SHA"
 if [ ! -d "$RELEASE" ]; then
-  mkdir -p "$RELEASE"
-  if ! git -C "$MIRROR" archive "$SHA" | tar -x -C "$RELEASE"; then
-    rm -rf "$RELEASE"
+  # Önce geçici dizine aç, doğrula, sonra tek adımda yerine taşı (yarım sürüm kalmaz).
+  rm -rf "$RELEASE.tmp"
+  mkdir -p "$RELEASE.tmp"
+  if ! git -C "$MIRROR" archive "$SHA" | tar --no-same-owner --no-same-permissions -x -C "$RELEASE.tmp"; then
+    rm -rf "$RELEASE.tmp"
     echo "Arşiv açılamadı" >&2
     exit 1
   fi
+  # Sembolik bağ içeren sürüm reddedilir (root olarak yazarken bağ izleme saldırısını önler).
+  if [ -n "$(find "$RELEASE.tmp" -type l -print -quit)" ]; then
+    find "$RELEASE.tmp" -type l >&2
+    rm -rf "$RELEASE.tmp"
+    echo "Sürüm sembolik bağ içeriyor; iptal edildi" >&2
+    exit 1
+  fi
+  mv -T "$RELEASE.tmp" "$RELEASE"
 fi
+rm -f "$RELEASE/REVISION"
 echo "$SHA" > "$RELEASE/REVISION"
 
 ln -sfn "$RELEASE" "$BASE/current.new"
 mv -T "$BASE/current.new" "$BASE/current"
 
 if [ -f "$BASE/shared/.env" ]; then
-  cp "$BASE/shared/.env" "$BASE/current/deploy/.env"
+  rm -f "$BASE/current/deploy/.env"
+  cp --no-dereference "$BASE/shared/.env" "$BASE/current/deploy/.env"
 fi
 
 COMPOSE=(docker compose -f "$BASE/current/deploy/docker-compose.yml" -p glix)

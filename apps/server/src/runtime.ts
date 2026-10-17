@@ -3,6 +3,7 @@ import type { Broadcaster } from "./broadcast.js";
 import type { Cancel, Clock } from "./clock.js";
 import type { Match } from "./match.js";
 import type { Metrics } from "./metrics.js";
+import type { IpLimiter } from "./ratelimit.js";
 
 /** Bir WebSocket bağlantısının sunucudaki temsili. Oda/oyuncu bağı oturum açılınca dolar. */
 export interface Connection {
@@ -16,6 +17,10 @@ export interface Connection {
   lastSent: RoomSnapshot | null;
   close(code: number, reason: string): void;
   player: Player | null;
+  /** Çözümlenmiş istemci IP'si (oran sınırları için). */
+  ip: string;
+  /** Bu bağlantıdaki başarısız (`room_not_found`) katılma sayısı. */
+  failedJoins: number;
 }
 
 export interface Player {
@@ -52,6 +57,9 @@ export interface Runtime {
   rooms: Map<string, Room>;
   /** SIGTERM sonrası: yeni oda kurulmaz/katılınmaz, mevcut maçlar sürer. */
   draining: boolean;
+  /** Aynı anda en çok oda sayısı. */
+  maxRooms: number;
+  ipLimiter: IpLimiter;
   metrics: Metrics;
   /** Son biten/çöken oyunların kayıtları (en yeni sonda, en çok RECENT_LOGS). */
   recentLogs: GameLog[];
