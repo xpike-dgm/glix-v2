@@ -1,6 +1,7 @@
 import { render } from "solid-js/web";
 import { App } from "./App.js";
 import { installAudioUnlock } from "./fx/sound.js";
+import { initPwa } from "./pwa/pwa.js";
 import "./fonts.js";
 import "./styles/tokens.css";
 import "./styles/base.css";
@@ -10,6 +11,7 @@ import "./styles/game.css";
 import "./styles/frame.css";
 
 installAudioUnlock();
+initPwa();
 
 const root = document.getElementById("root");
 if (root) render(() => <App />, root);

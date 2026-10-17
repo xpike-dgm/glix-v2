@@ -1,7 +1,10 @@
-import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { mountBackdrop } from "../backdrop/hero.js";
 import { createRoom } from "../net/client.js";
 import { setNickname, setState, state } from "../net/store.js";
+import { InstallHint } from "../pwa/InstallHint.js";
+import { isOfflineHome } from "../pwa/offline.js";
+import { isOnline } from "../pwa/pwa.js";
 import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
@@ -27,6 +30,9 @@ export function Home() {
   let bg: HTMLDivElement | undefined;
   const [sheet, setSheet] = createSignal<Sheet>(null);
   const [after, setAfter] = createSignal<After>(null);
+  const offline = createMemo(() =>
+    isOfflineHome({ online: isOnline(), conn: state.conn, failedAttempts: state.failedAttempts }),
+  );
 
   onMount(() => {
     if (!bg || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -113,10 +119,17 @@ export function Home() {
       </div>
 
       <div class="home__actions">
-        <PrimaryButton onClick={create} busy={state.busy}>
+        <Show when={offline()} fallback={<InstallHint />}>
+          <p class="offline" role="status">
+            İnternet bağlantısı yok — bağlanınca oyuna katılabilirsin
+          </p>
+        </Show>
+        <PrimaryButton onClick={create} busy={state.busy} disabled={offline()}>
           Oda kur
         </PrimaryButton>
-        <GhostButton onClick={join}>Odaya katıl</GhostButton>
+        <GhostButton onClick={join} disabled={offline()}>
+          Odaya katıl
+        </GhostButton>
         <GhostButton size="small" onClick={() => setSheet("how")}>
           Nasıl oynanır?
         </GhostButton>

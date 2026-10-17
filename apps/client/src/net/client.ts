@@ -211,15 +211,23 @@ function onVisible(): void {
   }
 }
 
+function onOnline(): void {
+  if (stopped || (ws && ws.readyState !== WebSocket.CLOSED)) return;
+  attempt = 0;
+  open();
+}
+
 /** Bağlantıyı başlatır; durdurma işlevi döner. */
 export function startNet(): () => void {
   stopped = false;
   attempt = 0;
   open();
   document.addEventListener("visibilitychange", onVisible);
+  window.addEventListener("online", onOnline);
   return () => {
     stopped = true;
     document.removeEventListener("visibilitychange", onVisible);
+    window.removeEventListener("online", onOnline);
     clearTimeout(reconnectTimer);
     clearInterval(pingTimer);
     ws?.close();

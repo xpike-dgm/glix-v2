@@ -14,6 +14,8 @@
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "e2e": "node scripts/e2e.mjs",
+    "pwa:check": "node scripts/pwa-check.mjs",
+    "icons": "node scripts/gen-icons.mjs --screenshots",
     "load": "node scripts/load.mjs",
     "ui:check": "node scripts/ui-check.mjs",
     "perf:check": "node scripts/perf-check.mjs"
