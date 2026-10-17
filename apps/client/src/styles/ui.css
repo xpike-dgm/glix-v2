@@ -554,3 +554,78 @@
 .sheet:focus {
   outline: none;
 }
+
+/* ---- PWA: güncelleme bildirimi, kurulum ipucu, çevrimdışı durumu ---- */
+.update {
+  position: fixed;
+  top: max(64px, calc(var(--safe-top) + 52px));
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 4px 18px;
+  border-radius: 999px;
+  background: var(--bg-2);
+  border: 1px solid rgba(46, 242, 255, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  font-size: var(--fs-15);
+  font-weight: 600;
+  white-space: nowrap;
+  animation: toast-in var(--t-mid) var(--ease) both;
+}
+.update__btn,
+.install__btn {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--cyan);
+  color: var(--bg-0);
+  font-weight: 800;
+  font-size: var(--fs-15);
+}
+.install {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 2px 2px 14px;
+  border-radius: 16px;
+  background: rgba(18, 26, 69, 0.72);
+  border: 1px solid var(--line);
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.install__text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
+}
+.install__icon {
+  display: inline-block;
+  vertical-align: -4px;
+  color: var(--cyan);
+}
+.install__x {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+}
+.offline {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 194, 59, 0.1);
+  border: 1px solid rgba(255, 194, 59, 0.45);
+  color: var(--text);
+  font-size: var(--fs-15);
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.35;
+}

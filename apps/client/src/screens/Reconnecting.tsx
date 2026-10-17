@@ -3,8 +3,12 @@ import { state } from "../net/store.js";
 
 /** Bağlantı koptuğunda yarı saydam örtü; dönünce kendiliğinden kalkar. */
 export function Reconnecting() {
+  // Odasız ana sayfada örtü yerine "internet yok" durumu görünür (Home).
+  const onHome = () => !state.snapshot && state.nav === "home" && state.notFoundCode === null;
   const visible = () =>
-    (state.conn === "connecting" || state.conn === "closed") && (state.everOpen || state.failedAttempts >= 2);
+    (state.conn === "connecting" || state.conn === "closed") &&
+    (state.everOpen || state.failedAttempts >= 2) &&
+    !onHome();
   return (
     <Show when={visible()}>
       <div class="overlay" role="alert">

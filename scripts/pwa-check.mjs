@@ -1,0 +1,288 @@
+// PWA denetimi: DERLENMİŞ istemci gerçek sunucuyla sunulur (e2e gibi). Doğrulananlar: manifest geçerli ve bağlı,
+// simgeler yüklenir, hizmet çalışanı kaydolur ve sayfayı denetler, çevrimdışı yenilemede ana sayfa "internet yok"
+// durumuyla açılır, /ws ve /health önbellekten sunulmaz, yeni sürüm bildirimi ve yenileme akışı çalışır.
+// Önce `pnpm build`. Kullanım: `pnpm pwa:check`.
+import { spawn } from "node:child_process";
+import { appendFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { createServer } from "node:net";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { chromium } from "playwright-core";
+
+const ENV = process.env;
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const DIST = join(ROOT, "apps/client/dist");
+const SHOTS = join(ROOT, "docs/qa/pwa");
+const T0 = Date.now();
+const log = (...a) => console.log(`[pwa +${((Date.now() - T0) / 1000).toFixed(1)}s]`, ...a);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function assert(cond, msg) {
+  if (!cond) throw new Error(`BAŞARISIZ: ${msg}`);
+}
+const OPT = { timeout: 15_000 };
+
+function freePort() {
+  return new Promise((res, rej) => {
+    const s = createServer();
+    s.once("error", rej);
+    s.listen(0, "127.0.0.1", () => {
+      const { port } = s.address();
+      s.close(() => res(port));
+    });
+  });
+}
+
+function chromiumPath() {
+  if (ENV.CHROMIUM_PATH) return ENV.CHROMIUM_PATH;
+  const base = ENV.PLAYWRIGHT_BROWSERS_PATH || "/opt/pw-browsers";
+  if (!existsSync(base)) return undefined;
+  const dir = readdirSync(base)
+    .filter((d) => /^chromium-\d+$/.test(d))
+    .sort()
+    .pop();
+  const p = dir && join(base, dir, "chrome-linux/chrome");
+  return p && existsSync(p) ? p : undefined;
+}
+
+async function startServer(port, clientDir) {
+  const env = {
+    ...ENV,
+    PORT: String(port),
+    HOST: "127.0.0.1",
+    CLIENT_DIR: clientDir,
+    DRAIN_TIMEOUT_MS: "2000",
+  };
+  delete env.NODE_ENV;
+  const child = spawn("node", ["apps/server/dist/index.js"], {
+    cwd: ROOT,
+    env,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let out = "";
+  child.stdout.on("data", (d) => (out += d));
+  child.stderr.on("data", (d) => (out += d));
+  for (let i = 0; i < 100; i++) {
+    if (child.exitCode !== null) throw new Error(`sunucu kapandı:\n${out}`);
+    try {
+      if ((await fetch(`http://127.0.0.1:${port}/health`)).ok) return child;
+    } catch {
+      // henüz açılmadı
+    }
+    await sleep(100);
+  }
+  child.kill();
+  throw new Error(`sunucu açılmadı:\n${out}`);
+}
+
+const controlled = (page) => page.evaluate(() => navigator.serviceWorker.controller !== null);
+
+async function main() {
+  mkdirSync(SHOTS, { recursive: true });
+  assert(existsSync(join(DIST, "sw.js")), "istemci derlenmemiş ya da sw.js yok: önce `pnpm build`");
+  // Güncelleme denemesi sw.js'i değiştirir; derlenmiş klasöre dokunmamak için kopya üzerinde çalışılır.
+  const dir = mkdtempSync(join(tmpdir(), "glix-pwa-"));
+  cpSync(DIST, dir, { recursive: true });
+  const port = await freePort();
+  const server = await startServer(port, dir);
+  const base = `http://127.0.0.1:${port}`;
+  const browser = await chromium.launch({ executablePath: chromiumPath(), args: ["--no-sandbox"] });
+  const errors = [];
+  try {
+    const ctx = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      deviceScaleFactor: 2,
+      isMobile: true,
+      hasTouch: true,
+    });
+    const page = await ctx.newPage();
+    page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+    page.on("console", (m) => {
+      // Çevrimdışı denemelerde WebSocket/ağ hataları beklenir; yalnız beklenmeyenler sayılır.
+      if (m.type() === "error" && !/WebSocket|net::ERR|Failed to load resource/.test(m.text()))
+        errors.push(`console: ${m.text()}`);
+    });
+
+    // 1) Manifest ve başlık etiketleri
+    await page.goto(base, { waitUntil: "load" });
+    await page.locator(".wordmark").waitFor(OPT);
+    const head = await page.evaluate(() => {
+      const meta = (n) => document.querySelector(`meta[name="${n}"]`)?.getAttribute("content") ?? null;
+      return {
+        manifest: document.querySelector('link[rel="manifest"]')?.getAttribute("href") ?? null,
+        touch: document.querySelector('link[rel="apple-touch-icon"]')?.getAttribute("href") ?? null,
+        theme: meta("theme-color"),
+        capable: meta("apple-mobile-web-app-capable"),
+        status: meta("apple-mobile-web-app-status-bar-style"),
+      };
+    });
+    assert(head.manifest === "/manifest.webmanifest", `manifest bağlantısı yok: ${head.manifest}`);
+    assert(head.touch === "/icons/apple-touch-icon.png", "apple-touch-icon yok");
+    assert(head.theme === "#05081a", `theme-color: ${head.theme}`);
+    assert(head.capable === "yes" && head.status === "black-translucent", "iOS meta etiketleri eksik");
+    const mres = await fetch(`${base}${head.manifest}`);
+    assert(mres.ok && /manifest\+json/.test(mres.headers.get("content-type") ?? ""), "manifest türü yanlış");
+    const m = await mres.json();
+    assert(m.name === "GLIX" && m.short_name === "GLIX", "manifest adı");
+    assert(m.display === "standalone" && m.display_override?.[0] === "fullscreen", "manifest display");
+    assert(m.start_url === "/" && m.scope === "/" && m.id === "/", "manifest start_url/scope/id");
+    assert(
+      m.orientation === "any" && m.lang === "tr" && m.categories?.includes("games"),
+      "manifest alanları",
+    );
+    assert(m.theme_color === "#05081a" && m.background_color === "#05081a", "manifest renkleri");
+    const purposes = m.icons.map((i) => `${i.sizes}:${i.purpose}`);
+    for (const need of ["192x192:any", "512x512:any", "512x512:maskable"])
+      assert(purposes.includes(need), `simge eksik: ${need}`);
+    assert(
+      m.screenshots.some((s) => s.form_factor === "narrow") &&
+        m.screenshots.some((s) => s.form_factor === "wide"),
+      "ekran görüntüleri",
+    );
+    log("manifest geçerli");
+
+    // 2) Simgeler ve ekran görüntüleri gerçekten yüklenir, boyutları bildirilenle uyuşur
+    for (const item of [
+      ...m.icons,
+      ...m.screenshots,
+      { src: head.touch, sizes: "180x180", type: "image/png" },
+    ]) {
+      const r = await fetch(new URL(item.src, base));
+      assert(r.ok && (r.headers.get("content-type") ?? "").startsWith(item.type), `yüklenmedi: ${item.src}`);
+      if (item.type !== "image/png") continue;
+      const dims = await page.evaluate(
+        (u) =>
+          new Promise((ok, no) => {
+            const img = new Image();
+            img.onload = () => ok(`${img.naturalWidth}x${img.naturalHeight}`);
+            img.onerror = () => no(new Error("görsel çözülemedi"));
+            img.src = u;
+          }),
+        item.src,
+      );
+      assert(dims === item.sizes, `${item.src} boyutu ${dims}, bildirilen ${item.sizes}`);
+    }
+    log("simgeler ve ekran görüntüleri yükleniyor");
+
+    // 3) Sunucu başlıkları
+    const sw = await fetch(`${base}/sw.js`);
+    assert(sw.ok && sw.headers.get("cache-control") === "no-cache", "sw.js Cache-Control: no-cache olmalı");
+    assert(
+      /worker-src 'self'/.test(sw.headers.get("content-security-policy") ?? ""),
+      "CSP worker-src 'self' yok",
+    );
+
+    // 4) Hizmet çalışanı kaydolur, yenilemeden sonra sayfayı denetler
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.reload({ waitUntil: "load" });
+    await page.locator(".wordmark").waitFor(OPT);
+    assert(await controlled(page), "yenilemeden sonra sayfa hizmet çalışanı tarafından denetlenmiyor");
+    log("hizmet çalışanı sayfayı denetliyor");
+
+    // 5) /ws ve /health önbelleğe girmez
+    const cached = await page.evaluate(async () => {
+      const urls = [];
+      for (const name of await caches.keys())
+        for (const req of await (await caches.open(name)).keys()) urls.push(req.url);
+      return urls;
+    });
+    assert(
+      cached.some((u) => /\/index\.html(\?|$)/.test(u)),
+      "kabuk (index.html) önbellekte değil",
+    );
+    assert(
+      cached.some((u) => /\/assets\/index-.*\.js$/.test(u)),
+      "giriş betiği önbellekte değil",
+    );
+    assert(
+      cached.some((u) => /\/icons\/icon-192\.png(\?|$)/.test(u)),
+      "simgeler önbellekte değil",
+    );
+    assert(!cached.some((u) => /\/(ws|health|api)(\/|$|\?)/.test(u)), "ağ uçları önbelleğe girmiş");
+    const health = await page.evaluate(async () => {
+      const r = await fetch("/health", { cache: "no-store" });
+      return { ok: r.ok, body: await r.text(), cached: (await caches.match("/health")) !== undefined };
+    });
+    assert(health.ok && health.body.includes("ok") && !health.cached, "/health önbellekten sunuluyor");
+    log("/ws, /health ve /api önbellekte yok", `(önbellek: ${cached.length} kayıt)`);
+
+    // 6) Çevrimdışı: yenileme sonrası ana sayfa "internet yok" durumuyla açılır
+    await ctx.setOffline(true);
+    await page.reload({ waitUntil: "load" });
+    await page.locator(".wordmark").waitFor(OPT);
+    const note = page.locator(".offline");
+    await note.waitFor(OPT);
+    assert(
+      (await note.innerText()).includes("İnternet bağlantısı yok — bağlanınca oyuna katılabilirsin"),
+      "çevrimdışı metni",
+    );
+    assert(await page.getByRole("button", { name: /oda kur/i }).isDisabled(), "ODA KUR devre dışı olmalı");
+    assert(
+      await page.getByRole("button", { name: /odaya katıl/i }).isDisabled(),
+      "ODAYA KATIL devre dışı olmalı",
+    );
+    assert(
+      (await page.locator(".overlay").count()) === 0,
+      "çevrimdışıyken yeniden bağlanma örtüsü görünmemeli",
+    );
+    const offHealth = await page.evaluate(() =>
+      fetch("/health").then(
+        () => "ok",
+        () => "hata",
+      ),
+    );
+    assert(offHealth === "hata", "çevrimdışıyken /health yanıt veriyor (önbellekten sunulmuş olabilir)");
+    await sleep(500);
+    await page.screenshot({ path: join(SHOTS, "offline-home.png") });
+    log("çevrimdışı ana sayfa tamam");
+
+    // SPA yolu da kabuğa düşer
+    await page.goto(`${base}/baska/yol`, { waitUntil: "load" });
+    await page.locator(".wordmark").waitFor(OPT);
+    log("çevrimdışı SPA yolu kabuğa düştü");
+
+    // 7) Bağlantı gelince durum kalkar ve düğmeler açılır
+    await ctx.setOffline(false);
+    await page.locator(".offline").waitFor({ state: "detached", timeout: 20_000 });
+    await page.getByRole("button", { name: /oda kur/i }).waitFor(OPT);
+    assert(
+      await page.getByRole("button", { name: /oda kur/i }).isEnabled(),
+      "bağlantı gelince ODA KUR açılmalı",
+    );
+    log("bağlantı dönünce ana sayfa etkin");
+
+    // 8) Güncelleme akışı: yeni sw.js yayınlanınca bildirim çıkar, Yenile yeni sürümü etkinleştirir
+    await page.goto(base, { waitUntil: "load" });
+    await page.locator(".wordmark").waitFor(OPT);
+    assert((await page.locator(".update").count()) === 0, "güncelleme yokken bildirim görünüyor");
+    appendFileSync(join(dir, "sw.js"), `\n// yeni sürüm ${Date.now()}\n`);
+    await page.evaluate(async () => {
+      const reg = await navigator.serviceWorker.getRegistration();
+      await reg?.update();
+    });
+    const toast = page.locator(".update");
+    await toast.waitFor(OPT);
+    assert((await toast.innerText()).includes("Yeni sürüm hazır"), "güncelleme metni");
+    await page.screenshot({ path: join(SHOTS, "update-toast.png") });
+    await Promise.all([
+      page.waitForEvent("load", OPT),
+      toast.getByRole("button", { name: "Yenile" }).click(),
+    ]);
+    await page.locator(".wordmark").waitFor(OPT);
+    assert(await controlled(page), "yenileme sonrası denetim yok");
+    assert((await page.locator(".update").count()) === 0, "yenileme sonrası bildirim kalmamalı");
+    log("güncelleme bildirimi ve yenileme çalışıyor");
+
+    assert(errors.length === 0, `beklenmeyen hatalar:\n${errors.join("\n")}`);
+    log("TAMAM");
+  } finally {
+    await browser.close();
+    server.kill();
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+main().catch((e) => {
+  console.error(e.message);
+  process.exit(1);
+});

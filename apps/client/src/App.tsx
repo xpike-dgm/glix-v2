@@ -2,6 +2,7 @@ import { createMemo, Match, onCleanup, onMount, Switch } from "solid-js";
 import { startNet } from "./net/client.js";
 import { normalizeCode } from "./net/code.js";
 import { setState, state } from "./net/store.js";
+import { UpdateToast } from "./pwa/UpdateToast.js";
 import { Briefing } from "./screens/Briefing.js";
 import { Countdown } from "./screens/Countdown.js";
 import { Final } from "./screens/Final.js";
@@ -94,6 +95,7 @@ export function App() {
       </Switch>
       <Reconnecting />
       <Toasts />
+      <UpdateToast screen={screen()} />
     </div>
   );
 }

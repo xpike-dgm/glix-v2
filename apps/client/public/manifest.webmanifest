@@ -1,0 +1,27 @@
+{
+  "id": "/",
+  "name": "GLIX",
+  "short_name": "GLIX",
+  "description": "Arkadaşlarınla telefondan oynanan gerçek zamanlı parti oyunu. Oda kur, kodu paylaş, minigamelerde yarış.",
+  "lang": "tr",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "theme_color": "#05081a",
+  "background_color": "#05081a",
+  "categories": ["games"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "screenshots": [
+    { "src": "/screenshots/ana-sayfa.png", "sizes": "540x1170", "type": "image/png", "form_factor": "narrow", "label": "Ana sayfa" },
+    { "src": "/screenshots/lobi.png", "sizes": "540x1170", "type": "image/png", "form_factor": "narrow", "label": "Lobi: arkadaşlarını bekle" },
+    { "src": "/screenshots/ana-sayfa-yatay.png", "sizes": "1280x720", "type": "image/png", "form_factor": "wide", "label": "Ana sayfa (yatay)" }
+  ]
+}

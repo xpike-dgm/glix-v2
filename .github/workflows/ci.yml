@@ -28,6 +28,8 @@ jobs:
         run: pnpm ui:check
       - name: Uçtan uca oyun testi
         run: pnpm e2e
+      - name: PWA denetimi
+        run: pnpm pwa:check
       - name: Ekran görüntüleri
         if: always()
         uses: actions/upload-artifact@v4
@@ -36,6 +38,7 @@ jobs:
           path: |
             docs/qa/a3/*.png
             docs/qa/a1-real/*.png
+            docs/qa/pwa/*.png
           retention-days: 14
           if-no-files-found: ignore
       - run: docker build -f deploy/Dockerfile --build-arg GIT_SHA=${{ github.sha }} .
