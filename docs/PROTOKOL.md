@@ -21,6 +21,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `action` | `seq`, `payload` | yalnız `playing`; `seq` istemci sayacı, `actionAck` ile döner |
 | `returnToLobby` | — | yalnız host, yalnız `final` |
 | `resync` | — | yama uygulanamadığında tam `room` snapshot ister |
+| `feedback` | `rating` (1–5), `text?` (≤ 300) | yalnız `final`; maç başına bir kez; cevap `actionAck` değil, sessizce kaydedilir |
 
 ## Sunucu → istemci
 
@@ -89,3 +90,16 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
 - 60 sn odaya girmeyen soket 4000 ile kapanır. Soket başına 10 yanlış oda kodunda ve üst üste 100 `rate_limited`'de 1008 ile kapanır; IP başına yanlış kod kovası 20 ani, 3 sn'de 1.
 - `TRUST_PROXY=1` iken loopback/özel adresten gelen isteklerde `X-Forwarded-For` son girdisi istemci IP'sidir.
 - Maç kaydı en çok 20 000 eylem tutar; aşılırsa `truncated` olur ve `replay` reddeder.
+
+## Telemetri, istatistik, geri bildirim (A5)
+
+Amaç: beta oyun gecelerinden öğrenmek. Kişisel veri tutulmaz: takma ad, IP, oturum anahtarı, cevap/çizim içeriği yok.
+
+- **İstemci hataları:** `POST /api/client-error` gövde JSON `{message, stack?, url?, version, ua?}`, en fazla 4 KB,
+  IP başına dakikada 10. Sunucu yapılandırılmış günlüğe `client_error` olarak yazar (IP yazılmaz); yanıt 204.
+- **İstatistik (SQLite, `/data/glix.db`, 90 gün saklanır):**
+  - `matches(id, started_at, ended_at, player_count, selection_mode, game_count, completed)`
+  - `game_plays(match_id, game_id, player_count, started_at, duration_ms, outcome)` — outcome: `finished`|`aborted`|`failed`
+  - `feedback(match_id, rating, text, created_at)`
+- **Okuma:** yalnız sunucu içinden `node dist/stats.js` ile özet (oyun başına oynanma, ortalama süre, ortalama puan,
+  son geri bildirim metinleri). Dışarıya uç nokta açılmaz.

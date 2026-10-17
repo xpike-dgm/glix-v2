@@ -26,7 +26,11 @@ export type ClientMessage =
   | { type: "action"; seq: number; payload: unknown }
   | { type: "returnToLobby" }
   /** İstemci elindeki snapshot'a yama uygulayamadığında tam snapshot ister. */
-  | { type: "resync" };
+  | { type: "resync" }
+  /** Maç sonu geri bildirimi: yalnız `final` aşamasında, maç başına oyuncu başına bir kez. */
+  | { type: "feedback"; rating: 1 | 2 | 3 | 4 | 5; text?: string };
+
+export const MAX_FEEDBACK_TEXT = 300;
 
 /**
  * JSON Merge Patch (RFC 7386): nesne alanları birleşir, `null` alanı siler,
