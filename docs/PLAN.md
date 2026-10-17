@@ -61,4 +61,14 @@ sızıntı testi otomatik kırılır. Sunucu oyun bilmez; durum her yayında bir
 - [x] Önizleme doğrulandı: HTTPS, `/health`, index, asset önbellek + zstd, 404, ws welcome,
       yabancı origin 403. Konteyner ~14 MB RAM. Diğer siteler etkilenmedi.
 
+### A1 — yayında, telefon testi bekleniyor (2026-10-17)
+- [x] Sözleşmeler: `docs/PROTOKOL.md`, `docs/TASARIM.md`, `game.ts`, Butona Bas görünüm tipi
+- [x] Motor: protokol ayrıştırıcı, Butona Bas (kural §6, ödüller eski `createRankAwards` ile aynı), kayıt defteri
+- [x] Sunucu: oda/maç/yayın modülleri, enjekte edilebilir saat, Hazırım kapısı, host kick, resume,
+      host için 20 sn bekleme, yayın birleştirme, hız sınırı
+- [x] İstemci: tasarım sistemi + tüm ekranlar, ses, titreşim, yeniden bağlanma örtüsü, dev mock
+- [x] `pnpm e2e`: 3 mobil Chromium ile gerçek tam maç (~80 sn)
+- [ ] Kapı: 3 gerçek telefonla oyun (kullanıcı)
+- Sonraya: sonuç listesinde puan sütunu hizası
+
 **Dağıtım:** VDS'te `/srv/glix/deploy.sh <ref>` (varsayılan `main`). Geri alma: eski SHA ile aynı komut.

@@ -237,7 +237,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 10px;
+  margin-top: clamp(10px, 7dvh, 72px);
 }
 .game__num {
   font-family: var(--font-display);
@@ -247,13 +247,50 @@
   display: inline-block;
 }
 .game__stage {
+  --btn: min(88vw, 50dvh, 400px);
   position: relative;
   flex: 1;
   min-height: 0;
   display: grid;
   place-items: center;
+  /* Buton alt-orta (başparmak) bölgesine kayar. */
+  padding-top: clamp(0px, 7dvh, 72px);
+}
+.game__rings {
+  grid-area: 1 / 1;
+  position: relative;
+  width: var(--btn);
+  height: var(--btn);
+  pointer-events: none;
+}
+.game__rings i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 2px solid var(--cyan);
+  transform: translate(-50%, -50%);
+}
+.game__rings i:nth-child(1) {
+  width: 122%;
+  height: 122%;
+  opacity: 0.16;
+}
+.game__rings i:nth-child(2) {
+  width: 146%;
+  height: 146%;
+  opacity: 0.1;
+}
+.game__rings i:nth-child(3) {
+  width: 174%;
+  height: 174%;
+  opacity: 0.05;
+}
+.game__stage .arcade {
+  grid-area: 1 / 1;
 }
 .floats {
+  grid-area: 1 / 1;
   position: absolute;
   inset: 0;
   display: grid;
@@ -317,7 +354,22 @@
   outline-offset: 2px;
   border-radius: 50%;
 }
+@media (max-height: 700px) and (orientation: portrait) {
+  .game__score {
+    margin-top: 8px;
+  }
+  .game__stage {
+    padding-top: 0;
+  }
+}
 @media (orientation: landscape) and (max-height: 520px) {
+  .game__stage {
+    --btn: min(88vw, 44dvh, 380px);
+    padding-top: 0;
+  }
+  .game__rings {
+    display: none;
+  }
   .arcade {
     --size: var(--arcade-size, min(88vw, 44dvh, 380px));
   }

@@ -263,17 +263,44 @@ describe("host, kick, ayrılma", () => {
     expect(b.room.players.map((p) => p.nickname)).toEqual(["B", "C"]);
   });
 
-  it("host bağlantısı kopunca host devredilir ve geri gelince geri alınmaz", async () => {
+  it("host kopunca 20 sn beklenir; dönerse host kalır", async () => {
+    const [a, b] = (await setupRoom(["A", "B"])) as [Client, Client];
+    a.ws.terminate();
+    await until(() => b.room.players[0]?.connected === false);
+    clock.advance(19_000);
+    await sync();
+    expect(b.room.hostId).toBe(a.session.playerId);
+    const a2 = await Client.connect();
+    a2.send({ type: "resume", token: a.session.token });
+    await until(() => a2.of("room").length > 0);
+    clock.advance(30_000);
+    await sync();
+    expect(a2.room.hostId).toBe(a.session.playerId);
+    expect(b.room.hostId).toBe(a.session.playerId);
+  });
+
+  it("host 20 sn dönmezse en eski bağlı oyuncuya geçer; eski host geri almaz", async () => {
     const [a, b, c] = (await setupRoom(["A", "B", "C"])) as [Client, Client, Client];
     b.ws.terminate();
-    await until(() => a.room.players.find((p) => p.nickname === "B")?.connected === false);
+    await until(() => c.room.players.find((p) => p.nickname === "B")?.connected === false);
     a.ws.terminate();
+    await until(() => c.room.players.find((p) => p.nickname === "A")?.connected === false);
+    expect(c.room.hostId).toBe(a.session.playerId);
+    clock.advance(20_000);
     await until(() => c.room.hostId === c.session.playerId);
     const a2 = await Client.connect();
     a2.send({ type: "resume", token: a.session.token });
     await until(() => a2.of("room").length > 0);
+    await sync();
     expect(a2.room.hostId).toBe(c.session.playerId);
     expect(a2.room.selfId).toBe(a.session.playerId);
+  });
+
+  it("host leaveRoom yapınca devir hemen olur ve bekleyen zamanlayıcı kalmaz", async () => {
+    const [a, b] = (await setupRoom(["A", "B"])) as [Client, Client];
+    a.send({ type: "leaveRoom" });
+    await until(() => b.room.hostId === b.session.playerId);
+    expect(b.room.players).toHaveLength(1);
   });
 
   it("host olmayan setGames/startMatch yapamaz", async () => {

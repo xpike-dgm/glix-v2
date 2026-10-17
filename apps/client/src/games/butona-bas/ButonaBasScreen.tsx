@@ -168,6 +168,11 @@ export default function ButonaBasScreen(props: GameScreenProps) {
       </div>
 
       <div class="game__stage">
+        <div class="game__rings" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </div>
         <ArcadeButton
           pressed={pressed()}
           waves={waves()}

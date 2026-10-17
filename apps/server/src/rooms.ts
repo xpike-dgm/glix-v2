@@ -8,6 +8,7 @@ import { type Connection, isConnected, type Player, type Room, type Runtime } fr
 export const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const GRACE_MS = 120_000;
 export const EMPTY_ROOM_MS = 120_000;
+export const HOST_GRACE_MS = 20_000;
 
 export function createRuntime(clock: Clock = systemClock): Runtime {
   const rt: Runtime = {
@@ -67,6 +68,7 @@ export function createRoom(rt: Runtime): Room {
     lastFlushAt: Number.NEGATIVE_INFINITY,
     flushCancel: null,
     deleteCancel: null,
+    hostGraceCancel: null,
   };
   rt.rooms.set(room.code, room);
   return room;
@@ -104,8 +106,17 @@ function oldest(players: Iterable<Player>): Player | undefined {
   return best;
 }
 
+/** Bekleyen host devri zamanlayıcısını iptal eder. */
+export function clearHostGrace(room: Room): void {
+  if (room.hostGraceCancel) {
+    room.hostGraceCancel();
+    room.hostGraceCancel = null;
+  }
+}
+
 /** Host gittiyse en eski bağlı oyuncuya (yoksa en eski oyuncuya) devreder. */
 export function transferHost(room: Room): void {
+  clearHostGrace(room);
   const players = [...room.players.values()];
   const next = oldest(players.filter(isConnected)) ?? oldest(players);
   if (next) room.hostId = next.id;
@@ -144,7 +155,17 @@ export function markDisconnected(rt: Runtime, player: Player): void {
   const room = player.room;
   if (room.players.get(player.id) !== player) return;
   player.conn = null;
-  if (room.hostId === player.id) transferHost(room);
+  if (room.hostId === player.id) {
+    // Host hemen değişmez: 20 sn içinde dönerse host olarak kalır.
+    clearHostGrace(room);
+    room.hostGraceCancel = rt.clock.setTimeout(() => {
+      room.hostGraceCancel = null;
+      if (room.hostId === player.id && !isConnected(player)) {
+        transferHost(room);
+        rt.broadcaster.markDirty(room);
+      }
+    }, HOST_GRACE_MS);
+  }
   if (player.graceCancel) player.graceCancel();
   player.graceCancel = rt.clock.setTimeout(() => {
     player.graceCancel = null;
@@ -155,6 +176,7 @@ export function markDisconnected(rt: Runtime, player: Player): void {
 
 export function deleteRoom(rt: Runtime, room: Room): void {
   rt.broadcaster.cancel(room);
+  clearHostGrace(room);
   if (room.deleteCancel) {
     room.deleteCancel();
     room.deleteCancel = null;

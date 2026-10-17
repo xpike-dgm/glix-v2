@@ -44,7 +44,9 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
 - **results:** `GameResult` gösterilir; `awards` genel skora eklenmiş olarak gelir.
 - **final:** Genel skor sıralaması. Host `returnToLobby` ile lobiye döner, skorlar sıfırlanır.
 - Maç sırasında yeni oyuncu katılamaz (`error{code:"match_in_progress"}`); `resume` her zaman çalışır.
-- Bağlantı kopan oyuncu 120 sn içinde dönmezse odadan çıkarılır. Host koparsa host bağlı en eski oyuncuya geçer.
+- Bağlantı kopan oyuncu 120 sn içinde dönmezse odadan çıkarılır. Host koparsa 20 sn beklenir; bu sürede dönerse host olarak kalır.
+  20 sn dolunca host bağlı en eski oyuncuya geçer (eski host dönünce geri almaz). Host kendi isteğiyle
+  `leaveRoom` yaparsa devir hemen olur.
 - Oda boş kalırsa 120 sn sonra silinir.
 
 ## Hata kodları

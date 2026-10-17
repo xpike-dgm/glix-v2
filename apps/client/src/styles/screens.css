@@ -124,6 +124,17 @@
   box-shadow: 0 0 14px rgba(182, 255, 59, 0.55);
   min-width: 44px;
   text-align: center;
+  animation: award-in 260ms var(--ease) both;
+}
+@keyframes award-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 .award[data-done="1"] {
   animation: pop-big 320ms var(--ease);
@@ -144,7 +155,9 @@
   align-items: center;
   justify-content: center;
   gap: 18px;
-  background: rgba(5, 8, 26, 0.8);
+  background: rgba(5, 8, 26, 0.94);
+  text-align: center;
+  padding: 24px;
   animation: fade-in var(--t-fast) ease both;
 }
 .ring {
@@ -708,6 +721,55 @@
 }
 .podium__col[data-rank="1"] .podium__score {
   color: var(--amber);
+}
+.podium {
+  position: relative;
+}
+.podium::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: 120%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 194, 59, 0.12), transparent);
+  pointer-events: none;
+  z-index: -1;
+}
+/* Uzun telefonlar: podyum daha büyük ve boşlukta ortalı. */
+@media (min-height: 760px) and (orientation: portrait) {
+  .podium {
+    --pod-big: clamp(104px, 31vw, 136px);
+    --pod-small: clamp(80px, 24vw, 104px);
+    gap: 10px;
+    margin-top: 0;
+  }
+  .podium__col {
+    max-width: 156px;
+  }
+  .podium__badge {
+    height: 40px;
+    margin-bottom: 10px;
+  }
+  .podium__name {
+    margin-top: 16px;
+    font-size: var(--fs-18);
+  }
+  .podium__score {
+    font-size: 32px;
+  }
+  .podium__block {
+    height: 132px;
+    font-size: 32px;
+  }
+  .podium__col[data-pos="1"] .podium__block {
+    height: 92px;
+  }
+  .podium__col[data-pos="2"] .podium__block {
+    height: 64px;
+  }
 }
 .results__body {
   flex: 1;

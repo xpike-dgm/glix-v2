@@ -7,3 +7,7 @@
 .env
 deploy/.env
 *.log
+docs/qa
+docs/**/*.png
+scripts
+**/.vitest-cache

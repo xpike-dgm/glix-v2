@@ -275,13 +275,15 @@ async function main() {
     await btn(D, /oda kur/i).waitFor(OPT);
     await ctxD.close();
 
-    // 4) Lobide yenileme: odada kalmalı (host değil B yeniler; host yenilerse sunucu kuralı gereği host el değiştirir)
-    await B.reload();
-    await B.locator(".roomcode").waitFor(OPT);
-    assert((await lobbyCode(B)) === code, "yenilemeden sonra oda değişti");
-    await B.waitForFunction(() => document.querySelectorAll("button.seat").length === 3, null, OPT);
-    assert(!(await btn(B, /oda kur/i).count()), "yenilemeden sonra ana sayfa görünmemeli");
-    log("lobide yenileme: oda korunuyor");
+    // 4) Lobide yenileme: host (A) yeniler; 20 sn bekleme süresi içinde döndüğü için host kalır
+    await A.reload();
+    await A.locator(".roomcode").waitFor(OPT);
+    assert((await lobbyCode(A)) === code, "yenilemeden sonra oda değişti");
+    await A.waitForFunction(() => document.querySelectorAll("button.seat").length === 3, null, OPT);
+    assert(!(await btn(A, /oda kur/i).count()), "yenilemeden sonra ana sayfa görünmemeli");
+    await btn(A, /^başlat$/i).waitFor(OPT);
+    assert(!(await btn(B, /^başlat$/i).count()), "B host olmamalı");
+    log("lobide host yenileme: oda ve host korunuyor");
 
     // 5) A, C'yi çıkarır
     await A.locator("button.seat", { hasText: "Cem" }).click();

@@ -1,6 +1,6 @@
-import { createSignal, onCleanup, onMount } from "solid-js";
+import { createSignal, onCleanup, onMount, Show } from "solid-js";
 
-/** "+N" rozeti: 0'dan N'e sayarak artar. */
+/** "+N" rozeti: sayım başlayıp değer 0'ın üstüne çıkınca belirir (asla "+0" göstermez), sonra N'e dek artar. */
 export function CountUp(props: { to: number; delay?: number; duration?: number }) {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const [v, setV] = createSignal(reduced ? props.to : 0);
@@ -25,8 +25,10 @@ export function CountUp(props: { to: number; delay?: number; duration?: number }
     });
   });
   return (
-    <span class="award" data-done={done() ? "1" : undefined}>
-      +{v()}
-    </span>
+    <Show when={v() > 0}>
+      <span class="award" data-done={done() ? "1" : undefined}>
+        +{v()}
+      </span>
+    </Show>
   );
 }

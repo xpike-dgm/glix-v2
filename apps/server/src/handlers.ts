@@ -8,7 +8,7 @@ import {
 } from "@glix/engine";
 import { applyAction, beginMatch, clearMatch, markReady, requiredPlayers, stepMatch } from "./match.js";
 import { errorMessage } from "./messages.js";
-import { addPlayer, createRoom, markDisconnected, removePlayer } from "./rooms.js";
+import { addPlayer, clearHostGrace, createRoom, markDisconnected, removePlayer } from "./rooms.js";
 import { type Connection, isConnected, type Room, type Runtime } from "./runtime.js";
 
 function fail(conn: Connection, code: ErrorCode, text?: string): void {
@@ -96,6 +96,7 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         player.graceCancel();
         player.graceCancel = null;
       }
+      if (player.room.hostId === player.id) clearHostGrace(player.room);
       player.conn = conn;
       conn.player = player;
       if (old && old !== conn) {

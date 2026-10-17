@@ -35,6 +35,8 @@ export interface Room {
   lastFlushAt: number;
   flushCancel: Cancel | null;
   deleteCancel: Cancel | null;
+  /** Host koptuğunda devir öncesi bekleme zamanlayıcısı. */
+  hostGraceCancel: Cancel | null;
 }
 
 export interface Runtime {
