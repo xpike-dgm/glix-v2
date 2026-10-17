@@ -279,9 +279,13 @@ describe("registry", () => {
   it("katalog butona-bas içerir", async () => {
     const { GAMES, getCatalog } = await import("../index.js");
     expect(GAMES["butona-bas"]).toBe(butonaBas);
-    expect(getCatalog()).toEqual([
-      { id: "butona-bas", name: "Butona Bas", minPlayers: 2, maxPlayers: 8, orientation: "portrait" },
-    ]);
+    expect(getCatalog()).toContainEqual({
+      id: "butona-bas",
+      name: "Butona Bas",
+      minPlayers: 2,
+      maxPlayers: 8,
+      orientation: "portrait",
+    });
   });
   it("briefing en fazla 3 madde", () => {
     expect(butonaBas.briefing.steps.length).toBeLessThanOrEqual(3);

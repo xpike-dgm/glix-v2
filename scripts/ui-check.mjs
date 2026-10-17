@@ -73,6 +73,49 @@ const SCREENS = [
   { name: "results-8", q: "mock=results&n=8", settle: 2400 },
   { name: "final-3", q: "mock=final&n=3", settle: 2200 },
   { name: "final-8", q: "mock=final&n=8", settle: 2200 },
+  { name: "kd-briefing", q: "mock=karalama-briefing" },
+  { name: "kd-draw", q: "mock=karalama-draw" },
+  { name: "kd-draw-near", q: "mock=karalama-draw-near" },
+  { name: "kd-draw-ink", q: "mock=karalama-draw-ink" },
+  {
+    name: "kd-draw-pointer",
+    q: "mock=karalama-draw",
+    act: async (p) => {
+      const box = await p.locator(".kd__live").boundingBox();
+      if (!box) throw new Error("tahta yok");
+      const at = (u, v) => [box.x + box.width * u, box.y + box.height * v];
+      await p.mouse.move(...at(0.2, 0.7));
+      await p.mouse.down();
+      for (let i = 0; i <= 24; i++) {
+        await p.mouse.move(...at(0.2 + i * 0.026, 0.7 - Math.sin(i / 3.5) * 0.3 - i * 0.008));
+      }
+      await p.mouse.up();
+      await p.locator(".kd__swatch").nth(1).click();
+      await p.mouse.move(...at(0.2, 0.3));
+      await p.mouse.down();
+      await p.mouse.move(...at(0.5, 0.2), { steps: 8 });
+      await p.mouse.move(...at(0.8, 0.45), { steps: 8 });
+      await p.mouse.up();
+    },
+  },
+  { name: "kd-draw-spectator", q: "mock=karalama-draw-spectator" },
+  { name: "kd-vote-3", q: "mock=karalama-vote&n=3" },
+  { name: "kd-vote-5", q: "mock=karalama-vote" },
+  { name: "kd-vote-8", q: "mock=karalama-vote&n=8" },
+  { name: "kd-vote-voted", q: "mock=karalama-vote-voted" },
+  {
+    name: "kd-vote-tap",
+    q: "mock=karalama-vote",
+    act: async (p) => p.locator(".kd__bar:not(:disabled)").first().click(),
+  },
+  {
+    name: "kd-vote-zoom",
+    q: "mock=karalama-vote",
+    act: async (p) => p.locator(".kd__frame").nth(1).click(),
+  },
+  { name: "kd-vote-spectator", q: "mock=karalama-vote-spectator" },
+  { name: "kd-results-caught", q: "mock=karalama-results&n=5", settle: 2400 },
+  { name: "kd-results-escaped-8", q: "mock=karalama-results-escaped&n=8", settle: 2400 },
   { name: "landscape", q: "mock=landscape", sizes: LANDSCAPE },
   { name: "landscape-8", q: "mock=landscape&n=8", sizes: LANDSCAPE },
   { name: "landscape-spectator", q: "mock=landscape&spectator=1", sizes: LANDSCAPE },

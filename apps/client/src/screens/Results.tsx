@@ -1,7 +1,9 @@
 import type { MatchSnapshot, RoomSnapshot } from "@glix/engine";
-import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { createMemo, createSignal, For, onCleanup, onMount, Show, Suspense } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import { hapticResult } from "../fx/haptics.js";
 import { roundResult } from "../fx/sound.js";
+import { gameEntry } from "../games/registry.js";
 import { createServerNow } from "../net/time.js";
 import { Avatar } from "../ui/Avatar.js";
 import { ProgressBar } from "../ui/ProgressBar.js";
@@ -46,6 +48,20 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
         </p>
         <h1 class="display h-title">{props.match.gameName}</h1>
       </header>
+
+      <Show when={gameEntry(props.match.gameId)?.Reveal}>
+        {(reveal) => (
+          <Suspense>
+            <Dynamic
+              component={reveal()}
+              match={props.match}
+              selfId={props.snap.selfId}
+              players={props.snap.players}
+              now={now}
+            />
+          </Suspense>
+        )}
+      </Show>
 
       <div class="results__body">
         <div class="podium">

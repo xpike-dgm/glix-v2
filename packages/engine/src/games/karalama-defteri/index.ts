@@ -1,0 +1,319 @@
+import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
+import {
+  KARALAMA_COLORS,
+  KARALAMA_DRAW_MS,
+  KARALAMA_ERASER_INDEX,
+  KARALAMA_GRID,
+  KARALAMA_MAX_DRAW_ACTIONS,
+  KARALAMA_MAX_POINTS,
+  KARALAMA_MAX_STROKES,
+  KARALAMA_MAX_TOTAL_POINTS,
+  KARALAMA_MIN_POINTS,
+  KARALAMA_VOTE_MS,
+  type KaralamaAction,
+  type KaralamaColor,
+  type KaralamaPen,
+  type KaralamaPhase,
+  type KaralamaPublicView,
+  type KaralamaReveal,
+  type KaralamaSize,
+  type KaralamaStroke,
+  type KaralamaView,
+} from "./types.js";
+import { DRAWING_PAIRS, type DrawingPair } from "./words.js";
+
+export * from "./types.js";
+
+/** Kelime uzunluğu (kod noktası): sızıntı denetimi için gizli değer en az 3 karakter olmalıdır. */
+const MIN_WORD_LENGTH = 3;
+
+/**
+ * Oynanabilir çiftler: iki kelime de en az 3 karakter ve biri ötekinin içinde geçmez
+ * (aksi halde bir oyuncunun kelimesi ötekinin görünümünde "sızmış" sayılırdı ve ipucu olurdu).
+ */
+export const KARALAMA_PAIRS: readonly DrawingPair[] = DRAWING_PAIRS.filter((p) => {
+  const main = p.main.toLocaleLowerCase("tr");
+  const near = p.near.toLocaleLowerCase("tr");
+  return (
+    [...p.main].length >= MIN_WORD_LENGTH &&
+    [...p.near].length >= MIN_WORD_LENGTH &&
+    !main.includes(near) &&
+    !near.includes(main)
+  );
+});
+
+interface PlayerDrawing {
+  /** Bir sonraki darbe numarası (hiç azalmaz). */
+  next: number;
+  /** Duran darbeler: numara (metin) -> sıkıştırılmış darbe. */
+  strokes: Record<string, KaralamaStroke>;
+  /** Duran darbelerdeki toplam nokta. */
+  points: number;
+  /** Kabul edilen toplam çizim eylemi. */
+  actions: number;
+}
+
+export interface KaralamaState {
+  players: string[];
+  startedAt: number;
+  drawEndsAt: number;
+  voteEndsAt: number;
+  outsider: string;
+  mainWord: string;
+  nearWord: string;
+  drawings: Record<string, PlayerDrawing>;
+  /** Oy veren -> hedef (son oy geçerli). */
+  votes: Record<string, string>;
+  /**
+   * Görünür aşama; yalnız `tick` ilerletir (böylece aşama geçişi yayına yansır). "done": kelimeler ve bilgisiz
+   * oyuncu açıldı. Eylemlerin kabulü bundan değil doğrudan `ctx.now`'dan karar verir (tick takvimine bağlı değil).
+   */
+  stage: KaralamaPhase;
+}
+
+const PEN_IDS: readonly string[] = [...KARALAMA_COLORS, "eraser"];
+const MAX_ID_LENGTH = 64;
+
+function isPlainObject(raw: unknown): raw is Record<string, unknown> {
+  return typeof raw === "object" && raw !== null && !Array.isArray(raw);
+}
+
+function hasExactKeys(obj: Record<string, unknown>, keys: readonly string[]): boolean {
+  const own = Object.keys(obj);
+  return own.length === keys.length && keys.every((k) => Object.hasOwn(obj, k));
+}
+
+function parsePoints(raw: unknown): number[] | null {
+  if (!Array.isArray(raw)) return null;
+  const n = raw.length;
+  if (n % 2 !== 0 || n < KARALAMA_MIN_POINTS * 2 || n > KARALAMA_MAX_POINTS * 2) return null;
+  const out: number[] = new Array<number>(n);
+  for (let i = 0; i < n; i++) {
+    const v: unknown = raw[i];
+    if (typeof v !== "number" || !Number.isInteger(v) || v < 0 || v > KARALAMA_GRID) return null;
+    out[i] = v;
+  }
+  return out;
+}
+
+/** Oyuncu başına skor: bilgisiz oyuncu tek başına en çok oyu aldıysa diğer herkes +1, aksi halde bilgisiz +1. */
+export function karalamaScores(
+  players: readonly string[],
+  outsider: string,
+  votes: Record<string, string>,
+): { scores: Record<string, number>; tally: Record<string, number>; caught: boolean } {
+  const tally: Record<string, number> = {};
+  for (const id of players) tally[id] = 0;
+  for (const [voter, target] of Object.entries(votes)) {
+    if (voter === target || !players.includes(voter) || !players.includes(target)) continue;
+    tally[target] = (tally[target] ?? 0) + 1;
+  }
+  const outsiderVotes = tally[outsider] ?? 0;
+  const caught =
+    outsiderVotes > 0 && players.every((id) => id === outsider || (tally[id] ?? 0) < outsiderVotes);
+  const scores: Record<string, number> = {};
+  for (const id of players) scores[id] = caught ? (id === outsider ? 0 : 1) : id === outsider ? 1 : 0;
+  return { scores, tally, caught };
+}
+
+function drawingOf(state: KaralamaState, playerId: string): PlayerDrawing {
+  return state.drawings[playerId] ?? { next: 0, strokes: {}, points: 0, actions: 0 };
+}
+
+function withDrawing(state: KaralamaState, playerId: string, drawing: PlayerDrawing): KaralamaState {
+  return { ...state, drawings: { ...state.drawings, [playerId]: drawing } };
+}
+
+export const karalamaDefteri: GameDefinition<
+  KaralamaState,
+  KaralamaAction,
+  KaralamaView,
+  KaralamaPublicView
+> = {
+  id: "karalama-defteri",
+  name: "Karalama Defteri",
+  minPlayers: 3,
+  maxPlayers: 8,
+  orientation: "portrait",
+  briefing: {
+    goal: "Çizimlere bakıp kelimeyi bilmeyeni bul!",
+    steps: [
+      "Çoğunluk aynı kelimeyi görür, biri yakın kelimeyi",
+      "Kelimeni çiz, süre bitene kadar düzenle",
+      "Çizimler açılınca kelimeyi bilmeyene oy ver",
+    ],
+  },
+
+  parseAction(raw: unknown): KaralamaAction | null {
+    if (!isPlainObject(raw)) return null;
+    switch (raw.kind) {
+      case "undo":
+        return hasExactKeys(raw, ["kind"]) ? { kind: "undo" } : null;
+      case "clear":
+        return hasExactKeys(raw, ["kind"]) ? { kind: "clear" } : null;
+      case "vote": {
+        if (!hasExactKeys(raw, ["kind", "target"])) return null;
+        const target = raw.target;
+        if (typeof target !== "string" || target.length === 0 || target.length > MAX_ID_LENGTH) return null;
+        return { kind: "vote", target };
+      }
+      case "stroke": {
+        if (!hasExactKeys(raw, ["kind", "color", "size", "points"])) return null;
+        const color = raw.color;
+        if (typeof color !== "string" || !PEN_IDS.includes(color)) return null;
+        const size = raw.size;
+        if (size !== 1 && size !== 2 && size !== 3) return null;
+        const points = parsePoints(raw.points);
+        if (points === null) return null;
+        return { kind: "stroke", color: color as KaralamaPen, size: size as KaralamaSize, points };
+      }
+      default:
+        return null;
+    }
+  },
+
+  setup(players: readonly string[], ctx: GameContext): KaralamaState {
+    const pool = KARALAMA_PAIRS;
+    const pair = pool[ctx.rng.int(pool.length)] as DrawingPair;
+    const outsider = players[ctx.rng.int(players.length)] as string;
+    return {
+      players: [...players],
+      startedAt: ctx.now,
+      drawEndsAt: ctx.now + KARALAMA_DRAW_MS,
+      voteEndsAt: ctx.now + KARALAMA_DRAW_MS + KARALAMA_VOTE_MS,
+      outsider,
+      mainWord: pair.main,
+      nearWord: pair.near,
+      drawings: {},
+      votes: {},
+      stage: "draw",
+    };
+  },
+
+  reduce(state, playerId, action, ctx): KaralamaState | Rejected {
+    if (!state.players.includes(playerId)) return { rejected: "not_participant" };
+    if (ctx.now < state.startedAt) return { rejected: "not_started" };
+    if (ctx.now >= state.voteEndsAt || state.stage === "done") return { rejected: "ended" };
+    const drawing = ctx.now < state.drawEndsAt;
+
+    if (action.kind === "vote") {
+      if (drawing) return { rejected: "wrong_phase" };
+      if (action.target === playerId) return { rejected: "self_vote" };
+      if (!state.players.includes(action.target)) return { rejected: "bad_target" };
+      if (!ctx.connected.includes(action.target)) return { rejected: "not_connected" };
+      if (state.votes[playerId] === action.target) return state;
+      return { ...state, votes: { ...state.votes, [playerId]: action.target } };
+    }
+
+    if (!drawing) return { rejected: "wrong_phase" };
+    const mine = drawingOf(state, playerId);
+    if (mine.actions >= KARALAMA_MAX_DRAW_ACTIONS) return { rejected: "too_many_actions" };
+
+    if (action.kind === "stroke") {
+      if (Object.keys(mine.strokes).length >= KARALAMA_MAX_STROKES) return { rejected: "too_many_strokes" };
+      const pointCount = action.points.length / 2;
+      if (mine.points + pointCount > KARALAMA_MAX_TOTAL_POINTS) return { rejected: "too_many_points" };
+      const colorIndex =
+        action.color === "eraser"
+          ? KARALAMA_ERASER_INDEX
+          : KARALAMA_COLORS.indexOf(action.color as KaralamaColor);
+      const packed: KaralamaStroke = [colorIndex, action.size, ...action.points];
+      return withDrawing(state, playerId, {
+        next: mine.next + 1,
+        strokes: { ...mine.strokes, [String(mine.next)]: packed },
+        points: mine.points + pointCount,
+        actions: mine.actions + 1,
+      });
+    }
+
+    const keys = Object.keys(mine.strokes);
+    if (keys.length === 0) return { rejected: "empty" };
+    if (action.kind === "undo") {
+      const lastKey = keys[keys.length - 1] as string;
+      const last = mine.strokes[lastKey] as KaralamaStroke;
+      const rest = { ...mine.strokes };
+      delete rest[lastKey];
+      return withDrawing(state, playerId, {
+        ...mine,
+        strokes: rest,
+        points: mine.points - (last.length - 2) / 2,
+        actions: mine.actions + 1,
+      });
+    }
+    return withDrawing(state, playerId, { ...mine, strokes: {}, points: 0, actions: mine.actions + 1 });
+  },
+
+  tick(state, ctx): KaralamaState {
+    if (state.stage === "done") return state;
+    if (ctx.now >= state.voteEndsAt) return { ...state, stage: "done" };
+    if (state.stage === "draw" && ctx.now >= state.drawEndsAt) return { ...state, stage: "vote" };
+    return state;
+  },
+
+  publicView(state): KaralamaPublicView {
+    const phase = state.stage;
+    let drawings: Record<string, KaralamaStroke[]> | null = null;
+    if (phase !== "draw") {
+      drawings = {};
+      for (const id of state.players) drawings[id] = Object.values(drawingOf(state, id).strokes);
+    }
+    let reveal: KaralamaReveal | null = null;
+    if (phase === "done") {
+      const { tally, caught } = karalamaScores(state.players, state.outsider, state.votes);
+      reveal = {
+        outsider: state.outsider,
+        mainWord: state.mainWord,
+        nearWord: state.nearWord,
+        votes: { ...state.votes },
+        tally,
+        caught,
+      };
+    }
+    return {
+      phase,
+      drawEndsAt: state.drawEndsAt,
+      voteEndsAt: state.voteEndsAt,
+      players: [...state.players],
+      drawings,
+      voted: state.players.filter((id) => state.votes[id] !== undefined),
+      reveal,
+    };
+  },
+
+  view(state, playerId): KaralamaView {
+    if (playerId === null || !state.players.includes(playerId)) {
+      return { word: null, near: false, strokes: {}, pointsLeft: 0, myVote: null };
+    }
+    const mine = drawingOf(state, playerId);
+    const drawing = state.stage === "draw";
+    const isOutsider = playerId === state.outsider;
+    return {
+      word: isOutsider ? state.nearWord : state.mainWord,
+      near: isOutsider,
+      strokes: drawing ? { ...mine.strokes } : {},
+      pointsLeft: drawing ? KARALAMA_MAX_TOTAL_POINTS - mine.points : 0,
+      myVote: state.votes[playerId] ?? null,
+    };
+  },
+
+  isFinished(state, ctx): boolean {
+    return ctx.now >= state.voteEndsAt;
+  },
+
+  secrets(state): readonly SecretEntry[] {
+    if (state.stage === "done") return [];
+    return [
+      {
+        ownerIds: state.players.filter((id) => id !== state.outsider),
+        value: state.mainWord,
+        label: "ana kelime",
+      },
+      { ownerIds: [state.outsider], value: state.nearWord, label: "yakın kelime" },
+    ];
+  },
+
+  result(state) {
+    const { scores } = karalamaScores(state.players, state.outsider, state.votes);
+    return { miniScores: { ...scores }, awards: { ...scores } };
+  },
+};
