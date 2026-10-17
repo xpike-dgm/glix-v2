@@ -12,7 +12,12 @@ export const GRACE_MS = 120_000;
 export const EMPTY_ROOM_MS = 120_000;
 export const HOST_GRACE_MS = 20_000;
 
-export function createRuntime(clock: Clock = systemClock, maxRooms = 1000, roomCreateBurst = 10): Runtime {
+export function createRuntime(
+  clock: Clock = systemClock,
+  maxRooms = 1000,
+  roomCreateBurst = 10,
+  defaultGameIds: readonly string[] = Object.keys(GAMES),
+): Runtime {
   const rt: Runtime = {
     clock,
     draining: false,
@@ -25,6 +30,7 @@ export function createRuntime(clock: Clock = systemClock, maxRooms = 1000, roomC
     active: new Set(),
     broadcaster: createBroadcaster(clock, () => rt),
     catalog: getCatalog(),
+    defaultGameIds: [...defaultGameIds],
   };
   return rt;
 }
@@ -68,7 +74,7 @@ export function createRoom(rt: Runtime): Room {
     hostId: "",
     players: new Map(),
     phase: "lobby",
-    gameIds: Object.keys(GAMES),
+    gameIds: [...rt.defaultGameIds],
     match: null,
     rev: 0,
     nextJoinOrder: 0,
