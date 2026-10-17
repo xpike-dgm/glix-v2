@@ -1,0 +1,30 @@
+services:
+  glix:
+    image: glix-v2:latest
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        GIT_SHA: ${GIT_SHA:-dev}
+    ports:
+      - "127.0.0.1:3900:3900"
+    environment:
+      ALLOWED_ORIGINS: ${GLIX_ALLOWED_ORIGINS}
+    mem_limit: 512m
+    cpus: 2
+    pids_limit: 256
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"

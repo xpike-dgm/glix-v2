@@ -1,0 +1,4 @@
+glix.212.38.88.237.sslip.io {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3900
+}
