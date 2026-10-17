@@ -3,16 +3,21 @@ import { GameRecorder } from "../replay.js";
 import { createRng, type Rng } from "../rng.js";
 import { deepFreeze } from "./deep.js";
 
-export interface BotContext {
-  playerId: string;
-  players: readonly string[];
-  /** Oyun başından beri geçen ms. */
-  elapsed: number;
-  durationMs: number;
-}
-
-/** Geçerli (parseAction'ın kabul edeceği) bir ham eylem üretir. Duruma bakmaz: kayıt tekrarlanabilir kalır. */
-export type ActionGenerator = (rng: Rng, ctx: BotContext) => unknown;
+/**
+ * Bot eylem üreticisi: geçerli (parseAction'ın kabul edeceği) ham eylem üretir.
+ * Eylemin verildiği andaki görünümler ve bağlı katılımcılar (katılım sırasıyla) iletilir; hedef seçen bir oyun
+ * botu hedefi `connected` içinden seçmelidir (kendisi hariç: `connected.filter((id) => id !== playerId)`).
+ * Yalnız verilen argümanlara ve `rng`'ye bakmalıdır; böylece kayıt tekrarlanabilir kalır. Görünümler eylem
+ * anındaki (o ana kadar tick'lenmiş) durumdan hesaplanır, tick takvimine bağlı değildir. Katılımcı olmayan
+ * (outsider) için `privateView` izleyici görünümüdür.
+ */
+export type ActionGenerator = (
+  rng: Rng,
+  playerId: string,
+  publicView: unknown,
+  privateView: unknown,
+  connected: readonly string[],
+) => unknown;
 
 export interface GameBot {
   /** Oyunun bildirilen süresi; simülasyon bu süre + pay içinde bitmek zorundadır. */
@@ -27,7 +32,10 @@ export type EventKind = "valid" | "garbage" | "outsider" | "outsiderGarbage";
 export interface ScheduledAction {
   t: number;
   playerId: string;
+  /** `make` yoksa gönderilecek ham eylem. */
   raw: unknown;
+  /** Geçerli eylemlerde ham eylem, eylem anında bot üreticisiyle üretilir (seed ile sabit rng). */
+  make?: (views: { publicView: unknown; privateView: unknown; connected: readonly string[] }) => unknown;
   kind: EventKind;
 }
 
@@ -92,19 +100,16 @@ export function buildActions(
   const span = bot.durationMs + slackMs;
   const jitters = bot.burstJitterMs ?? [40, 150, 400];
   const out: ScheduledAction[] = [];
-  const ctxFor = (playerId: string, elapsed: number): BotContext => ({
-    playerId,
-    players,
-    elapsed,
-    durationMs: bot.durationMs,
-  });
-  const valid = (playerId: string, elapsed: number, kind: EventKind) =>
+  const valid = (playerId: string, elapsed: number, kind: EventKind) => {
+    const genSeed = rng.int(2 ** 30);
     out.push({
       t: startedAt + elapsed,
       playerId,
-      raw: bot.generate(rng, ctxFor(playerId, elapsed)),
+      raw: undefined,
+      make: (v) => bot.generate(createRng(genSeed), playerId, v.publicView, v.privateView, v.connected),
       kind,
     });
+  };
 
   const bursts = 3 + rng.int(40);
   for (let b = 0; b < bursts; b++) {
@@ -163,9 +168,60 @@ export function buildTicks(
   return ticks;
 }
 
+export interface PresenceEvent {
+  t: number;
+  playerId: string;
+  connected: boolean;
+}
+
+export const DEFAULT_DISCONNECT_PROBABILITY = 0.3;
+
+/**
+ * Rastgele kopma/dönüş takvimi (tohumdan, tick takvimine bağlı değil). Her oyuncu için en çok 3 kopma;
+ * `probability` bir oyuncunun kopma dönemi yaşama olasılığıdır. Herkes aynı anda kopuk kalamaz: bağlı sayısını
+ * sıfıra indirecek kopma atılır. Durumu değiştirmeyen olaylar elenir; t > startedAt.
+ */
+export function buildPresence(
+  seed: number,
+  players: readonly string[],
+  startedAt: number,
+  durationMs: number,
+  probability = DEFAULT_DISCONNECT_PROBABILITY,
+): PresenceEvent[] {
+  if (probability <= 0) return [];
+  const rng = createRng((seed ^ 0x9e3779b1) >>> 0);
+  const span = durationMs + DEFAULT_SLACK_MS;
+  const raw: PresenceEvent[] = [];
+  for (const playerId of players) {
+    if (rng.next() >= probability) continue;
+    let t = startedAt + 1 + rng.int(span);
+    const episodes = 1 + rng.int(3);
+    for (let i = 0; i < episodes; i++) {
+      raw.push({ t, playerId, connected: false });
+      if (rng.next() < 0.1) break; // bir daha dönmez
+      t += 1 + rng.int(4_000);
+      raw.push({ t, playerId, connected: true });
+      t += 1 + rng.int(4_000);
+    }
+  }
+  raw.sort((a, b) => a.t - b.t);
+  const online = new Set(players);
+  const out: PresenceEvent[] = [];
+  for (const e of raw) {
+    if (e.connected === online.has(e.playerId)) continue;
+    if (!e.connected && online.size <= 1) continue;
+    if (e.connected) online.add(e.playerId);
+    else online.delete(e.playerId);
+    out.push(e);
+  }
+  return out;
+}
+
 export interface StepInfo {
-  label: "setup" | "action" | "tick" | "finish-tick";
+  label: "setup" | "action" | "tick" | "presence" | "finish-tick";
   now: number;
+  /** Adım anında bağlı katılımcılar. */
+  connected: readonly string[];
   /** Adımdan önceki durum (setup'ta null). */
   prev: unknown;
   /** Adımdan sonraki durum. */
@@ -182,6 +238,12 @@ export interface RunOptions {
   startedAt: number;
   actions: readonly ScheduledAction[];
   ticks: readonly number[];
+  /**
+   * Bağlantı değişimleri. Verilmezse `disconnectProbability` ile tohumdan üretilir (varsayılan
+   * DEFAULT_DISCONNECT_PROBABILITY; 0 = kopma yok). Aynı anda presence, tick ve eylem varsa sıra: presence, tick, eylem.
+   */
+  presence?: readonly PresenceEvent[];
+  disconnectProbability?: number;
   durationMs: number;
   slackMs?: number;
   maxSteps?: number;
@@ -201,7 +263,9 @@ export interface RunOutput {
   log: GameLog;
 }
 
-type Item = { t: number; order: number; action: ScheduledAction | null };
+type Item =
+  | { t: number; order: -1; presence: PresenceEvent }
+  | { t: number; order: 0 | 1; presence?: undefined; action: ScheduledAction | null };
 
 /** Oyunu sunucu gibi sürer: kabul edilen eylemleri kaydeder, `isFinished` olunca son tick ve `result`. */
 export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
@@ -212,7 +276,10 @@ export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
   const deadline = startedAt + opts.durationMs + slack;
   const f = <T>(v: T): T => (freeze ? deepFreeze(v) : v);
 
+  const presence =
+    opts.presence ?? buildPresence(seed, players, startedAt, opts.durationMs, opts.disconnectProbability);
   const items: Item[] = [];
+  for (const p of presence) items.push({ t: p.t, order: -1, presence: p });
   for (const t of opts.ticks) items.push({ t, order: 0, action: null });
   for (const a of opts.actions) items.push({ t: a.t, order: 1, action: a });
   items.sort((a, b) => a.t - b.t || a.order - b.order);
@@ -220,7 +287,10 @@ export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
   const rng = createRng(seed);
   const recorder = new GameRecorder(game.id, seed, players, startedAt);
   const roster = f([...players]);
-  let state: unknown = f(game.setup(roster, { now: startedAt, rng }));
+  const online = new Set(players);
+  let connected: readonly string[] = f([...players]);
+  const ctxAt = (now: number) => ({ now, rng, connected });
+  let state: unknown = f(game.setup(roster, ctxAt(startedAt)));
   let steps = 1;
   let accepted = 0;
   let rejected = 0;
@@ -228,6 +298,7 @@ export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
   opts.onStep?.({
     label: "setup",
     now: startedAt,
+    connected,
     prev: null,
     state,
     event: null,
@@ -237,9 +308,18 @@ export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
 
   const finish = (now: number): RunOutput => {
     const prev = state;
-    state = f(game.tick(state, { now, rng }));
+    state = f(game.tick(state, ctxAt(now)));
     steps++;
-    opts.onStep?.({ label: "finish-tick", now, prev, state, event: null, reduced: null, parsed: null });
+    opts.onStep?.({
+      label: "finish-tick",
+      now,
+      connected,
+      prev,
+      state,
+      event: null,
+      reduced: null,
+      parsed: null,
+    });
     return {
       result: game.result(state),
       state,
@@ -252,35 +332,64 @@ export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
     };
   };
 
-  if (game.isFinished(state, { now: startedAt, rng })) return finish(startedAt);
+  if (game.isFinished(state, ctxAt(startedAt))) return finish(startedAt);
 
   for (const item of items) {
     if (steps++ > maxSteps) throw new SimulationError(`adım sınırı aşıldı (${maxSteps}); oyun bitmiyor`);
     const now = item.t;
     const prev = state;
+    if (item.order === -1) {
+      const p = item.presence;
+      if (p.connected) online.add(p.playerId);
+      else online.delete(p.playerId);
+      connected = f(players.filter((id) => online.has(id)));
+      recorder.presence(now, p.playerId, p.connected);
+      opts.onStep?.({
+        label: "presence",
+        now,
+        connected,
+        prev,
+        state,
+        event: null,
+        reduced: null,
+        parsed: null,
+      });
+      continue;
+    }
     if (item.action === null) {
-      state = f(game.tick(state, { now, rng }));
-      opts.onStep?.({ label: "tick", now, prev, state, event: null, reduced: null, parsed: null });
+      state = f(game.tick(state, ctxAt(now)));
+      opts.onStep?.({ label: "tick", now, connected, prev, state, event: null, reduced: null, parsed: null });
     } else {
       const event = item.action;
-      const parsed = game.parseAction(event.raw);
+      let raw = event.raw;
+      if (event.make) {
+        // Görünümler eylem anına tick'lenmiş (saf) durumdan; tick takvimine bağlı olmasın.
+        const at = game.tick(state, ctxAt(now));
+        const who = players.includes(event.playerId) ? event.playerId : null;
+        raw = event.make({
+          publicView: game.publicView(at, ctxAt(now)),
+          privateView: game.view(at, who, ctxAt(now)),
+          connected,
+        });
+      }
+      const parsed = game.parseAction(raw);
       let reduced: unknown = null;
       if (parsed === null) {
         unparsed++;
       } else {
         f(parsed);
-        reduced = game.reduce(state, event.playerId, parsed, { now, rng });
+        reduced = game.reduce(state, event.playerId, parsed, ctxAt(now));
         if (isRejected(reduced)) {
           rejected++;
         } else {
           accepted++;
           state = f(reduced);
-          recorder.record(now, event.playerId, event.raw);
+          recorder.record(now, event.playerId, raw);
         }
       }
-      opts.onStep?.({ label: "action", now, prev, state, event, reduced, parsed });
+      opts.onStep?.({ label: "action", now, connected, prev, state, event, reduced, parsed });
     }
-    if (game.isFinished(state, { now, rng })) return finish(now);
+    if (game.isFinished(state, ctxAt(now))) return finish(now);
   }
   throw new SimulationError(
     `oyun süre + pay içinde (${opts.durationMs + slack} ms, son an ${deadline}) bitmedi: ${game.id}`,

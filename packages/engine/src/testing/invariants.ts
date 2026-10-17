@@ -1,8 +1,10 @@
 import { type AnyGame, type GameResult, isRejected } from "../game.js";
+import { replay } from "../replay.js";
 import { createRng } from "../rng.js";
 import { deepClone, deepEqual } from "./deep.js";
 import {
   buildActions,
+  buildPresence,
   buildTicks,
   DEFAULT_SLACK_MS,
   DEFAULT_START,
@@ -33,7 +35,7 @@ export class InvariantViolation extends Error {
   }
 }
 
-const fresh = (now: number) => ({ now, rng: createRng(12345) });
+const fresh = (now: number, connected: readonly string[]) => ({ now, rng: createRng(12345), connected });
 
 function leaksValue(json: string, value: string): boolean {
   return json.includes(value) || json.includes(JSON.stringify(value).slice(1, -1));
@@ -45,19 +47,20 @@ export function findLeaks(
   state: unknown,
   players: readonly string[],
   now: number,
+  connected: readonly string[] = players,
 ): { code: "leak" | "short-secret" | "view-throws"; message: string }[] {
   const found: { code: "leak" | "short-secret" | "view-throws"; message: string }[] = [];
-  const finished = game.isFinished(state, fresh(now));
+  const finished = game.isFinished(state, fresh(now, connected));
   const views = new Map<string | null, string>();
   let publicJson = "";
   try {
-    publicJson = JSON.stringify(game.publicView(state, fresh(now))) ?? "";
+    publicJson = JSON.stringify(game.publicView(state, fresh(now, connected))) ?? "";
   } catch (e) {
     found.push({ code: "view-throws", message: `publicView hata fırlattı: ${String(e)}` });
   }
   for (const p of [...players, null]) {
     try {
-      views.set(p, JSON.stringify(game.view(state, p, fresh(now))) ?? "");
+      views.set(p, JSON.stringify(game.view(state, p, fresh(now, connected))) ?? "");
     } catch (e) {
       found.push({
         code: "view-throws",
@@ -90,10 +93,11 @@ export function findLeaks(
 function twice<T>(
   label: string,
   now: number,
-  fn: (ctx: { now: number; rng: ReturnType<typeof createRng> }) => T,
+  connected: readonly string[],
+  fn: (ctx: { now: number; rng: ReturnType<typeof createRng>; connected: readonly string[] }) => T,
 ): T {
-  const a = fn(fresh(now));
-  const b = fn(fresh(now));
+  const a = fn(fresh(now, connected));
+  const b = fn(fresh(now, connected));
   if (!deepEqual(a, b)) throw new InvariantViolation("impure", `${label}: aynı girdi farklı çıktı verdi`);
   return a;
 }
@@ -115,20 +119,30 @@ export function makeStepChecker(game: AnyGame, players: readonly string[]) {
       }
     }
     if (info.label === "action" && info.parsed !== null && info.prev !== null) {
-      const again = game.reduce(info.prev, info.event?.playerId ?? "", info.parsed, fresh(info.now));
-      const again2 = game.reduce(info.prev, info.event?.playerId ?? "", info.parsed, fresh(info.now));
+      const again = game.reduce(
+        info.prev,
+        info.event?.playerId ?? "",
+        info.parsed,
+        fresh(info.now, info.connected),
+      );
+      const again2 = game.reduce(
+        info.prev,
+        info.event?.playerId ?? "",
+        info.parsed,
+        fresh(info.now, info.connected),
+      );
       if (!deepEqual(again, again2)) throw new InvariantViolation("impure", `${where}: reduce saf değil`);
     }
     if (info.label === "tick" || info.label === "finish-tick") {
-      twice(`${where} tick`, info.now, (ctx) => game.tick(info.prev, ctx));
+      twice(`${where} tick`, info.now, info.connected, (ctx) => game.tick(info.prev, ctx));
     }
-    twice(`${where} isFinished`, info.now, (ctx) => game.isFinished(info.state, ctx));
-    twice(`${where} secrets`, info.now, () => game.secrets(info.state));
-    twice(`${where} publicView`, info.now, (ctx) => game.publicView(info.state, ctx));
+    twice(`${where} isFinished`, info.now, info.connected, (ctx) => game.isFinished(info.state, ctx));
+    twice(`${where} secrets`, info.now, info.connected, () => game.secrets(info.state));
+    twice(`${where} publicView`, info.now, info.connected, (ctx) => game.publicView(info.state, ctx));
     for (const p of [...players, null]) {
-      twice(`${where} view(${p})`, info.now, (ctx) => game.view(info.state, p, ctx));
+      twice(`${where} view(${p})`, info.now, info.connected, (ctx) => game.view(info.state, p, ctx));
     }
-    const leaks = findLeaks(game, info.state, players, info.now);
+    const leaks = findLeaks(game, info.state, players, info.now, info.connected);
     const first = leaks[0];
     if (first) throw new InvariantViolation(first.code, `${where}: ${first.message}`);
     const after = deepClone(info.state);
@@ -161,6 +175,8 @@ export interface InvariantOptions {
   seed: number;
   playerCount: number;
   slackMs?: number;
+  /** Oyuncu başına kopma dönemi olasılığı (varsayılan DEFAULT_DISCONNECT_PROBABILITY). */
+  disconnectProbability?: number;
 }
 
 export interface InvariantReport {
@@ -175,7 +191,16 @@ export function checkGameInvariants(game: AnyGame, bot: GameBot, opts: Invariant
   const players = Array.from({ length: count }, (_, i) => `p${i + 1}`);
   const startedAt = DEFAULT_START + (opts.seed % 100_000);
   const actions = buildActions(bot, opts.seed, players, startedAt, slackMs);
-  const base = { seed: opts.seed, players, startedAt, actions, durationMs: bot.durationMs, slackMs };
+  const base = {
+    seed: opts.seed,
+    players,
+    startedAt,
+    actions,
+    durationMs: bot.durationMs,
+    slackMs,
+    // Tüm koşulların aynı presence takvimini kullanması tick-bağımsızlığı karşılaştırmasını anlamlı kılar.
+    presence: buildPresence(opts.seed, players, startedAt, bot.durationMs, opts.disconnectProbability),
+  };
   const ticks = (mode: "irregular" | "dense" | "sparse") =>
     buildTicks(opts.seed, mode, startedAt, bot.durationMs, slackMs);
 
@@ -186,7 +211,7 @@ export function checkGameInvariants(game: AnyGame, bot: GameBot, opts: Invariant
     onStep: makeStepChecker(game, players),
   });
   checkResult(primary.result, players, game.id);
-  twice("result", primary.endedAt, () => game.result(primary.state));
+  twice("result", primary.endedAt, players, () => game.result(primary.state));
 
   // (d) belirlilik.
   const again = runSimulation(game, { ...base, ticks: ticks("irregular"), freeze: false });
@@ -202,6 +227,14 @@ export function checkGameInvariants(game: AnyGame, bot: GameBot, opts: Invariant
         `${game.id}: "${mode}" tick takvimi farklı sonuç verdi: ${JSON.stringify(other.result)} ≠ ${JSON.stringify(primary.result)}`,
       );
     }
+  }
+  // (b) kayıt (presence dahil) tekrar oynatılınca aynı sonucu verir.
+  const replayed = replay(game, primary.log);
+  if (!deepEqual(replayed, primary.result)) {
+    throw new InvariantViolation(
+      "replay-mismatch",
+      `${game.id}: replay farklı sonuç verdi: ${JSON.stringify(replayed)} ≠ ${JSON.stringify(primary.result)}`,
+    );
   }
   return { primary, players };
 }

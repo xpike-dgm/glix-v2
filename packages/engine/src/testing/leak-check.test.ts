@@ -76,6 +76,7 @@ describe("sızıntı denetimi kendini kanıtlar", () => {
     const state = game.setup(["a", "b"], {
       now: 0,
       rng: { next: () => 0, int: () => 1, shuffle: (x) => [...x] },
+      connected: ["a", "b"],
     });
     const found = findLeaks(game, state, ["a", "b"], 0);
     expect(found.some((f) => f.code === "leak")).toBe(true);
@@ -99,6 +100,7 @@ describe("sızıntı denetimi kendini kanıtlar", () => {
     const state = game.setup(["a", "b"], {
       now: 0,
       rng: { next: () => 0, int: () => 1, shuffle: (x) => [...x] },
+      connected: ["a", "b"],
     });
     const found = findLeaks(game, state, ["a", "b"], 0);
     expect(found.some((f) => f.code === "leak" && f.message.includes("publicView"))).toBe(true);
@@ -110,6 +112,7 @@ describe("sızıntı denetimi kendini kanıtlar", () => {
     const state = game.setup(["a", "b"], {
       now: 0,
       rng: { next: () => 0, int: () => 1, shuffle: (x) => [...x] },
+      connected: ["a", "b"],
     });
     expect(findLeaks(game, state, ["a", "b"], 0)[0]?.code).toBe("short-secret");
     expect(
@@ -118,7 +121,7 @@ describe("sızıntı denetimi kendini kanıtlar", () => {
           state,
           "zzz",
           { kind: "guess" },
-          { now: 0, rng: { next: () => 0, int: () => 0, shuffle: (x) => [...x] } },
+          { now: 0, rng: { next: () => 0, int: () => 0, shuffle: (x) => [...x] }, connected: ["a", "b"] },
         ),
       ),
     ).toBe(true);

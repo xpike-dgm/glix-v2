@@ -1,5 +1,5 @@
 import { createServer, type Server } from "node:http";
-import { APP_VERSION, PROTOCOL_VERSION, parseClientMessage } from "@glix/engine";
+import { APP_VERSION, type GameLog, PROTOCOL_VERSION, parseClientMessage } from "@glix/engine";
 import { type WebSocket, WebSocketServer } from "ws";
 import { resolveClientIp } from "./clientIp.js";
 import { type Clock, systemClock } from "./clock.js";
@@ -50,6 +50,8 @@ export interface RunningServer {
   port: number;
   /** Açık WebSocket'ler (yalnız testler için). */
   sockets: ReadonlySet<WebSocket>;
+  /** Son biten oyunların kayıtları (yalnız testler için). */
+  recentLogs: readonly GameLog[];
   /**
    * Drain kipine girer: yeni oda/katılım reddedilir, mevcut maçlar sürer. Maçı olan oda kalmayınca ya da
    * süre dolunca çözülür (soketleri kapatmaz; ardından `close(1012)` çağrılır).
@@ -275,6 +277,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     server,
     port,
     sockets,
+    recentLogs: rt.recentLogs,
     drain: () => {
       rt.draining = true;
       if (countActiveMatches(rt) === 0) return Promise.resolve();

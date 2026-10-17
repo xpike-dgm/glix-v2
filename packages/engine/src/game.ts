@@ -51,7 +51,10 @@ export interface GameDefinition<State, Action, View, PublicView = unknown> {
    * reddetmek zorundadır; aksi halde sonuç tick zamanlamasına bağlı kalır.
    */
   reduce(state: State, playerId: string, action: Action, ctx: GameContext): State | Rejected;
-  /** Zamana bağlı ilerleme; sunucu düzenli aralıklarla çağırır. Değişiklik yoksa aynı nesneyi döner. */
+  /**
+   * Zamana bağlı ilerleme; sunucu düzenli aralıklarla çağırır. Değişiklik yoksa aynı nesneyi döner.
+   * `ctx.connected`'a bakmaz (yalnız `setup` ve `reduce` bakabilir); böylece kayıttan tekrar oynatma birebir aynı kalır.
+   */
   tick(state: State, ctx: GameContext): State;
   /**
    * Herkese açık görünüm: odadaki herkes (izleyici dahil) için aynıdır ve oda başına bir kez hesaplanır.

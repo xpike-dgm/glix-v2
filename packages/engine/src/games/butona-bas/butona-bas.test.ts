@@ -5,7 +5,11 @@ import { type ButonaBasState, butonaBas, butonaBasAwards } from "./index.js";
 import { BUTONA_BAS_DURATION_MS } from "./types.js";
 
 const T0 = 1_000_000;
-const ctx = (now: number) => ({ now, rng: createRng(1) });
+const ctx = (now: number, connected: readonly string[] = ["a", "b", "c"]) => ({
+  now,
+  rng: createRng(1),
+  connected,
+});
 const start = (players = ["a", "b", "c"]): ButonaBasState => butonaBas.setup(players, ctx(T0));
 
 function press(state: ButonaBasState, id: string, at: number): ButonaBasState {

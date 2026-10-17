@@ -145,9 +145,31 @@ export function markReady(room: Room, playerId: string): void {
   room.match?.readyIds.add(playerId);
 }
 
-function ctxFor(rt: Runtime, match: Match): GameContext {
+/** Katılımcılardan şu an canlı bağlantısı olanlar (katılımcı sırasıyla). */
+function connectedParticipants(room: Room, match: Match): string[] {
+  return match.participants.filter((id) => {
+    const player = room.players.get(id);
+    return player !== undefined && isConnected(player);
+  });
+}
+
+function ctxFor(rt: Runtime, room: Room, match: Match): GameContext {
   if (!match.rng) throw new Error("rng yok");
-  return { now: rt.clock.now(), rng: match.rng };
+  return { now: rt.clock.now(), rng: match.rng, connected: connectedParticipants(room, match) };
+}
+
+/**
+ * Oyun sırasında bir katılımcının bağlantı durumu değişti: kayıt, sonraki tick/eylemden önce tutulur.
+ * Bağlantı durumu zaten `player.conn` ile değişmiş olmalıdır.
+ */
+export function recordPresence(rt: Runtime, room: Room, playerId: string, connected: boolean): void {
+  const match = room.match;
+  if (!match?.recorder || room.phase !== "playing" || !match.participants.includes(playerId)) return;
+  try {
+    match.recorder.presence(rt.clock.now(), playerId, connected);
+  } catch (err) {
+    log.warn("recorder_failed", { room: room.code, error: String(err) });
+  }
 }
 
 function startPlaying(rt: Runtime, room: Room, match: Match): void {
@@ -157,7 +179,12 @@ function startPlaying(rt: Runtime, room: Room, match: Match): void {
   match.rng = createRng(seed);
   const rng = match.rng;
   match.recorder = new GameRecorder(game.id, seed, match.participants, now);
-  match.state = guard("setup", () => game.setup(match.participants, { now, rng }));
+  // Briefing sırasında kopanlar başlangıçta bağlı değildir.
+  const connected = connectedParticipants(room, match);
+  for (const id of match.participants) {
+    if (!connected.includes(id)) match.recorder.presence(now, id, false);
+  }
+  match.state = guard("setup", () => game.setup(match.participants, { now, rng, connected }));
   match.phaseStartedAt = now;
   match.phaseEndsAt = null;
   room.phase = "playing";
@@ -239,7 +266,7 @@ function stepMatchUnsafe(rt: Runtime, room: Room): void {
     }
     case "playing": {
       const game = currentGame(match);
-      const ctx = ctxFor(rt, match);
+      const ctx = ctxFor(rt, room, match);
       const next = guard("tick", () => game.tick(match.state, ctx));
       const changed = next !== match.state;
       match.state = next;
@@ -281,7 +308,7 @@ function applyActionUnsafe(rt: Runtime, room: Room, playerId: string, payload: u
   const game = currentGame(match);
   const action = guard("parseAction", () => game.parseAction(payload));
   if (action === null) return { ok: false, reason: "invalid_action" };
-  const ctx = ctxFor(rt, match);
+  const ctx = ctxFor(rt, room, match);
   const next = guard("reduce", () => game.reduce(match.state, playerId, action, ctx));
   if (isRejected(next)) return { ok: false, reason: next.rejected };
   try {
@@ -303,7 +330,7 @@ export function sharedMatchSnapshot(rt: Runtime, room: Room): Omit<MatchSnapshot
   const game = currentGame(match);
   let publicView: unknown = null;
   if (match.rng && (room.phase === "playing" || room.phase === "results")) {
-    const ctx = ctxFor(rt, match);
+    const ctx = ctxFor(rt, room, match);
     publicView = guard("publicView", () => game.publicView(match.state, ctx));
   }
   return {
@@ -328,7 +355,7 @@ export function matchViewFor(rt: Runtime, room: Room, playerId: string): unknown
   if (!match?.rng || (room.phase !== "playing" && room.phase !== "results")) return null;
   const who = match.participants.includes(playerId) ? playerId : null;
   const game = currentGame(match);
-  const ctx = ctxFor(rt, match);
+  const ctx = ctxFor(rt, room, match);
   return guard("view", () => game.view(match.state, who, ctx));
 }
 

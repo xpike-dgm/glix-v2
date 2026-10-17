@@ -17,6 +17,7 @@ describe("replay ve GameRecorder", () => {
       startedAt: 100,
       actions: [{ t: 150, playerId: "a", action: { kind: "press" } }],
       endedAt: 200,
+      presence: [],
     });
     expect(() => rec.record(10, "a", {})).toThrow();
   });
@@ -60,5 +61,77 @@ describe("replay ve GameRecorder", () => {
       }),
       { numRuns: 40 },
     );
+  });
+});
+
+describe("presence", () => {
+  // Bağlı listesini her tick'te ve eylemde durumda biriktiren deneme oyunu.
+  const probe = {
+    ...butonaBas,
+    id: "butona-bas",
+    setup: (_p: readonly string[], ctx: { now: number; connected: readonly string[] }) => ({
+      trail: [`setup:${ctx.connected.join(",")}`],
+      end: ctx.now + 1_000,
+    }),
+    reduce: (
+      s: { trail: string[]; end: number },
+      id: string,
+      _a: unknown,
+      ctx: { connected: readonly string[] },
+    ) => ({
+      ...s,
+      trail: [...s.trail, `${id}:${ctx.connected.join(",")}`],
+    }),
+    tick: (s: unknown) => s,
+    parseAction: () => ({}),
+    isFinished: () => false,
+    result: (s: { trail: string[] }) => ({
+      miniScores: Object.fromEntries(s.trail.map((t, i) => [`${i}:${t}`, i])),
+      awards: {},
+    }),
+  };
+
+  it("replay bağlı listesini presence'tan kurar (aynı anda presence önce)", () => {
+    const rec = new GameRecorder("butona-bas", 1, ["a", "b", "c"], 100);
+    rec.presence(100, "c", false);
+    rec.record(150, "a", {});
+    rec.presence(200, "b", false);
+    rec.presence(200, "c", true);
+    rec.record(200, "a", {});
+    rec.presence(300, "b", true);
+    const log = rec.finish(400);
+    expect(log.presence).toHaveLength(4);
+    // biome-ignore lint/suspicious/noExplicitAny: deneme oyunu
+    const res = replay(probe as any, log);
+    expect(Object.keys(res.miniScores)).toEqual(["0:setup:a,b", "1:a:a,b", "2:a:a,c"]);
+    expect(() => rec.presence(10, "a", false)).toThrow();
+  });
+
+  it("simülasyon: kopmalar üretilir, herkes aynı anda kopuk kalmaz ve replay eşleşir", () => {
+    const bot = BOTS["butona-bas"];
+    if (!bot) throw new Error("bot yok");
+    let events = 0;
+    for (let seed = 1; seed <= 30; seed++) {
+      const players = ["p1", "p2", "p3"];
+      const startedAt = 7_000;
+      const out = runSimulation(butonaBas, {
+        seed,
+        players,
+        startedAt,
+        actions: buildActions(bot, seed, players, startedAt),
+        ticks: buildTicks(seed, "irregular", startedAt, bot.durationMs),
+        durationMs: bot.durationMs,
+        disconnectProbability: 0.8,
+      });
+      const online = new Set(players);
+      for (const p of out.log.presence) {
+        events++;
+        if (p.connected) online.add(p.playerId);
+        else online.delete(p.playerId);
+        expect(online.size).toBeGreaterThan(0);
+      }
+      expect(replay(butonaBas, out.log)).toEqual(out.result);
+    }
+    expect(events).toBeGreaterThan(0);
   });
 });

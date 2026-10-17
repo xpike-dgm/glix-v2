@@ -2,7 +2,7 @@ import { randomBytes, randomInt } from "node:crypto";
 import { GAMES, getCatalog, MAX_NICKNAME_LENGTH, MAX_PLAYERS, ROOM_CODE_LENGTH } from "@glix/engine";
 import { createBroadcaster } from "./broadcast.js";
 import { type Clock, systemClock } from "./clock.js";
-import { clearMatch } from "./match.js";
+import { clearMatch, recordPresence } from "./match.js";
 import { createMetrics } from "./metrics.js";
 import { IpLimiter } from "./ratelimit.js";
 import { type Connection, isConnected, type Player, type Room, type Runtime } from "./runtime.js";
@@ -140,6 +140,7 @@ export function removePlayer(rt: Runtime, room: Room, player: Player): void {
   if (player.conn) {
     player.conn.player = null;
     player.conn = null;
+    recordPresence(rt, room, player.id, false);
   }
   if (room.hostId === player.id) transferHost(room);
   if (room.players.size === 0) {
@@ -161,7 +162,9 @@ function scheduleEmptyDelete(rt: Runtime, room: Room): void {
 export function markDisconnected(rt: Runtime, player: Player): void {
   const room = player.room;
   if (room.players.get(player.id) !== player) return;
+  const wasConnected = player.conn !== null;
   player.conn = null;
+  if (wasConnected) recordPresence(rt, room, player.id, false);
   if (room.hostId === player.id) {
     // Host hemen değişmez: 20 sn içinde dönerse host olarak kalır.
     clearHostGrace(room);

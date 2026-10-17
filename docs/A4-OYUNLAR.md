@@ -7,7 +7,8 @@ Her oyun `packages/engine/src/games/<id>/` (types.ts, index.ts, bots.ts, words.t
 ## Ortak kurallar
 - `publicView` herkes için aynıdır; gizli bilgi yalnız hak sahibinin `view`'ında. Her gizli değer `secrets()` ile bildirilir.
 - Oyun bitişinden sonra gelen eylem reddedilir. Süreler sunucu saatiyle (`ctx.now`).
-- `ctx.connected`: hedef seçilen eylemlerde hedef bağlı bir katılımcı olmalıdır (aksi `rejected`).
+- `ctx.connected`: hedef seçilen eylemlerde hedef bağlı bir katılımcı olmalıdır (aksi `rejected`). `tick`
+  `connected`'a bakmaz (`setup` ve `reduce` bakabilir); bağlantısı kopan oyuncunun sırası/süresi zaman aşımıyla çözülür.
 - Serbest metin için teknik üst sınır 60 karakter (protokol mesajı 4 KB ile sınırlı); kural "sınır yok" diyorsa bile bu teknik sınırdır.
 
 ## Kararlar
