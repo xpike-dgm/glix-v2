@@ -108,6 +108,29 @@ const SCREENS = [
   { name: "results-8", q: "mock=results&n=8", settle: 2400 },
   { name: "final-3", q: "mock=final&n=3", settle: 2200 },
   { name: "final-8", q: "mock=final&n=8", settle: 2200 },
+  { name: "zaman-briefing", q: "mock=zaman-briefing" },
+  { name: "zaman-playback", q: "mock=zaman-playback" },
+  { name: "zaman-mine", q: "mock=zaman-mine" },
+  { name: "zaman-mine-8", q: "mock=zaman-mine&n=8" },
+  { name: "zaman-other", q: "mock=zaman-other" },
+  { name: "zaman-ok", q: "mock=zaman-ok" },
+  { name: "zaman-fail", q: "mock=zaman-fail" },
+  { name: "zaman-timeout", q: "mock=zaman-timeout&n=8" },
+  { name: "zaman-eliminated", q: "mock=zaman-eliminated" },
+  { name: "zaman-spectator", q: "mock=zaman-spectator" },
+  { name: "zaman-results", q: "mock=zaman-results&n=6", settle: 2400 },
+  {
+    name: "zaman-press",
+    q: "mock=zaman-mine",
+    act: async (p) => {
+      const box = await p.locator(".zpad[data-c='mavi']").boundingBox();
+      if (!box) throw new Error("mavi tuş yok");
+      await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await p.mouse.down();
+      await sleep(120);
+    },
+    after: async (p) => p.mouse.up(),
+  },
   { name: "landscape", q: "mock=landscape", sizes: LANDSCAPE },
   { name: "landscape-8", q: "mock=landscape&n=8", sizes: LANDSCAPE },
   { name: "landscape-spectator", q: "mock=landscape&spectator=1", sizes: LANDSCAPE },

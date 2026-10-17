@@ -1,0 +1,560 @@
+/* Zaman Bombası Hafızası: koyu hafıza paneli, yükseltilmiş dört tuş, geri sayım halkası. */
+.zgame {
+  --zc-yesil: #1fd470;
+  --zc-kirmizi: #ff3b5c;
+  --zc-sari: #ffc23b;
+  --zc-mavi: #3b7bff;
+}
+.zgame__top,
+.zgame .zgame__top {
+  position: relative;
+  flex: none;
+  height: 0;
+}
+.zgame .game__tools {
+  top: 0;
+}
+
+/* ---- Durum başlığı ---- */
+.zstatus {
+  flex: none;
+  min-height: 78px;
+  margin-top: clamp(6px, 3dvh, 28px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  padding: 0 44px;
+}
+.zstatus__title {
+  margin: 0;
+  font-size: clamp(20px, 6.4vw, 26px);
+  line-height: 1.15;
+  color: var(--text);
+  transition: color 160ms;
+}
+.zstatus__sub {
+  margin: 0;
+  font-size: var(--fs-15);
+  line-height: 1.3;
+  color: var(--text-dim);
+}
+.zstatus[data-tone="cyan"] .zstatus__title {
+  color: var(--cyan);
+  text-shadow: 0 0 18px rgba(46, 242, 255, 0.55);
+}
+.zstatus[data-tone="lime"] .zstatus__title {
+  color: var(--lime);
+  text-shadow: 0 0 18px rgba(182, 255, 59, 0.5);
+}
+.zstatus[data-tone="red"] .zstatus__title {
+  color: var(--red);
+  text-shadow: 0 0 18px rgba(255, 59, 92, 0.5);
+}
+
+/* ---- Dizi izi: kaç renk, nereye geldin ---- */
+.ztrack {
+  flex: none;
+  height: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 10px;
+}
+.ztrack__dot {
+  flex: 0 1 14px;
+  min-width: 5px;
+  height: 8px;
+  border-radius: 99px;
+  background: rgba(140, 160, 255, 0.18);
+  transition:
+    background 120ms,
+    transform 120ms,
+    box-shadow 120ms;
+}
+.ztrack__dot[data-s="on"] {
+  background: rgba(46, 242, 255, 0.55);
+}
+.ztrack__dot[data-s="now"] {
+  background: var(--cyan);
+  transform: scaleY(1.5);
+  box-shadow: 0 0 10px var(--cyan);
+}
+.ztrack__dot[data-s="ok"] {
+  background: var(--lime);
+  box-shadow: 0 0 10px rgba(182, 255, 59, 0.7);
+}
+
+/* ---- Hafıza paneli ---- */
+.zpanel {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px 12px;
+  padding: 12px 12px 8px;
+  border-radius: 28px;
+  background: radial-gradient(120% 90% at 50% 0%, #11184a 0%, #070a24 60%, #04061a 100%);
+  border: 1px solid rgba(140, 160, 255, 0.22);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6);
+}
+.zpanel[data-active="1"] {
+  border-color: rgba(46, 242, 255, 0.55);
+}
+
+/* ---- Tuşlar ---- */
+.zpad {
+  --pad: var(--zc-yesil);
+  position: relative;
+  display: block;
+  min-height: 0;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 22px;
+  color: rgba(255, 255, 255, 0.92);
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+.zpad:disabled {
+  cursor: default;
+}
+.zpad[data-c="yesil"] {
+  --pad: var(--zc-yesil);
+}
+.zpad[data-c="kirmizi"] {
+  --pad: var(--zc-kirmizi);
+}
+.zpad[data-c="sari"] {
+  --pad: var(--zc-sari);
+  color: rgba(40, 26, 0, 0.9);
+}
+.zpad[data-c="mavi"] {
+  --pad: var(--zc-mavi);
+}
+.zpad__side {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--pad) 42%, #04061a);
+  transform: translateY(8px);
+}
+.zpad__face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--pad) 78%, #fff) 0%,
+    var(--pad) 42%,
+    color-mix(in srgb, var(--pad) 74%, #000) 100%
+  );
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -12px 20px rgba(0, 0, 0, 0.28);
+  transition:
+    transform 70ms var(--ease),
+    box-shadow 90ms;
+  will-change: transform;
+}
+/* Sönük / hazır / yanık: koyu örtünün opaklığıyla (ucuz, birleştirici katmanda). */
+.zpad__face::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #05081a;
+  opacity: 0.6;
+  transition: opacity 80ms;
+  pointer-events: none;
+}
+.zpad__face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(70% 60% at 50% 38%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0) 70%);
+  opacity: 0;
+  transition: opacity 80ms;
+  pointer-events: none;
+}
+.zpad[data-state="ready"] .zpad__face::before {
+  opacity: 0.08;
+}
+.zpad[data-state="lit"] .zpad__face::before {
+  opacity: 0;
+}
+.zpad[data-state="lit"] .zpad__face::after {
+  opacity: 0.55;
+}
+.zpad[data-state="lit"] .zpad__face {
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.6),
+    0 0 34px 6px color-mix(in srgb, var(--pad) 75%, transparent);
+}
+.zpad__sym {
+  position: relative;
+  z-index: 1;
+  width: 46%;
+  max-width: 92px;
+  height: auto;
+  aspect-ratio: 1;
+  opacity: 0.88;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.25));
+}
+.zpad[data-state="dim"] .zpad__sym {
+  opacity: 0.55;
+}
+.zpad[data-pressed="1"] .zpad__face {
+  transform: translateY(6px);
+}
+.zpad[data-pressed="1"] .zpad__side {
+  opacity: 0.4;
+}
+.zpad:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 3px;
+}
+
+/* ---- Orta göbek: geri sayım halkası ---- */
+.zhub {
+  position: absolute;
+  left: 50%;
+  top: calc(50% - 4px);
+  width: clamp(64px, 23vw, 92px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #060922;
+  box-shadow:
+    0 0 0 5px #060922,
+    0 4px 14px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  color: #c9cff0;
+}
+.zhub__ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.zhub__track {
+  fill: none;
+  stroke: rgba(140, 160, 255, 0.2);
+  stroke-width: 7;
+}
+.zhub__fill {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 7;
+  stroke-linecap: round;
+  opacity: 0;
+}
+.zhub[data-live="1"] .zhub__fill {
+  opacity: 1;
+}
+.zhub[data-tone="amber"] .zhub__fill {
+  stroke: var(--amber);
+}
+.zhub[data-tone="red"] .zhub__fill {
+  stroke: var(--red);
+}
+.zhub__bomb {
+  width: 52%;
+  height: 52%;
+}
+.zhub__num {
+  position: relative;
+  font-size: clamp(24px, 8vw, 32px);
+  line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.zhub[data-tone="red"] .zhub__num {
+  color: var(--red);
+}
+
+/* ---- Çatlak ---- */
+.zcrack {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(1.04);
+  transition:
+    opacity 140ms,
+    transform 220ms var(--ease);
+  filter: drop-shadow(0 0 6px rgba(255, 59, 92, 0.9));
+}
+.zcrack path {
+  fill: none;
+  stroke: #ff7a92;
+  stroke-width: 3.2;
+  stroke-linejoin: bevel;
+  stroke-linecap: round;
+}
+.zpanel__flash {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 59, 92, 0.55), rgba(255, 59, 92, 0.18));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 600ms ease-out;
+}
+.zpanel[data-cracked="1"] .zcrack {
+  opacity: 1;
+  transform: none;
+}
+.zpanel[data-cracked="1"] .zpanel__flash {
+  opacity: 1;
+  transition-duration: 120ms;
+  animation: zflash 700ms ease-out forwards;
+}
+.zpanel[data-cracked="1"] {
+  border-color: rgba(255, 59, 92, 0.7);
+}
+@keyframes zflash {
+  to {
+    opacity: 0.22;
+  }
+}
+
+/* ---- Avatar şeridi: sıra, aktif, elenen ---- */
+.zstrip {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 0 2px;
+}
+.zs {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.zs .av {
+  transition: transform 180ms var(--ease);
+}
+.zs[data-active="1"] .av {
+  transform: translateY(-5px) scale(1.14);
+}
+.zs[data-active="1"] .av__disc {
+  border-color: var(--cyan);
+  box-shadow: 0 0 16px var(--cyan);
+}
+.zs[data-out="1"] .av {
+  opacity: 0.38;
+  filter: grayscale(1);
+}
+.zs[data-out="1"]::after {
+  content: "×";
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1;
+  color: #fff;
+  background: var(--red);
+  box-shadow: 0 0 0 2px var(--bg-0);
+}
+.zs__score {
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: #c9cff0;
+  line-height: 1;
+  background: rgba(5, 8, 26, 0.88);
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+.zs[data-me="1"] .zs__score {
+  color: var(--text);
+  box-shadow: 0 0 0 1.5px var(--text);
+}
+.zs[data-out="1"] .zs__score {
+  color: #9aa2d0;
+}
+
+@media (max-height: 700px) and (orientation: portrait) {
+  .zstatus {
+    min-height: 62px;
+    margin-top: 4px;
+  }
+  .ztrack {
+    margin-bottom: 6px;
+  }
+  .zpanel {
+    gap: 10px;
+    padding: 10px 10px 6px;
+    border-radius: 24px;
+  }
+  .zstrip {
+    padding-top: 10px;
+  }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .zstatus {
+    min-height: 44px;
+    margin-top: 0;
+  }
+  .zstatus__sub {
+    display: none;
+  }
+  .ztrack {
+    margin-bottom: 4px;
+  }
+  .zpanel {
+    gap: 8px;
+    padding: 8px 8px 4px;
+    border-radius: 20px;
+  }
+  .zpad {
+    margin-bottom: 6px;
+    border-radius: 16px;
+  }
+  .zpad__side {
+    transform: translateY(6px);
+  }
+  .zstrip {
+    padding-top: 8px;
+  }
+  .zhub {
+    width: 56px;
+  }
+  .zhub__num {
+    font-size: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zpanel[data-cracked="1"] .zpanel__flash {
+    animation: none;
+    opacity: 0.18;
+  }
+}
+
+/* ---- Anlatım görseli ---- */
+.zbart {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px 8px 12px;
+  width: min(70cqw, 80cqh, 190px);
+  aspect-ratio: 1;
+  border-radius: 22px;
+  background: radial-gradient(120% 90% at 50% 0%, #11184a 0%, #070a24 70%);
+  border: 1px solid rgba(140, 160, 255, 0.22);
+}
+.zbart__pad {
+  position: relative;
+  border-radius: 14px;
+  background: var(--p);
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--p) 40%, #04061a);
+  margin-bottom: 4px;
+}
+.zbart__pad::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #05081a;
+  opacity: 0.6;
+  animation: zb-dim 3.6s ease-in-out infinite;
+  animation-delay: var(--d);
+}
+.zbart__pad::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 3px solid var(--lime);
+  opacity: 0;
+  animation: zb-tap 3.6s ease-in-out infinite;
+  animation-delay: var(--e);
+}
+@keyframes zb-dim {
+  0%,
+  4% {
+    opacity: 0.6;
+  }
+  8%,
+  16% {
+    opacity: 0;
+  }
+  22%,
+  100% {
+    opacity: 0.6;
+  }
+}
+@keyframes zb-tap {
+  0%,
+  58% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  64% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  80%,
+  100% {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+}
+@container (max-height: 120px) {
+  .zbart {
+    width: min(70cqw, 90cqh);
+    gap: 5px;
+    padding: 5px 5px 8px;
+    border-radius: 14px;
+  }
+}
+@container (max-height: 70px) {
+  .zbart {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .zbart__pad::before {
+    animation: none;
+    opacity: 0.25;
+  }
+  .zbart__pad::after {
+    animation: none;
+  }
+}
+.zbart__pad--idle::before,
+.zbart__pad--idle::after {
+  animation: none;
+}
+.zbart__pad--idle::after {
+  display: none;
+}
