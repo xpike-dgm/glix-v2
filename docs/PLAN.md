@@ -109,4 +109,15 @@ sızıntı testi otomatik kırılır. Sunucu oyun bilmez; durum her yayında bir
 - [ ] Gerçek telefonlarda oyun gecesi (A5)
 - Eksik özellik: lobide "rastgele N oyun" seçimi (kural formu genel çerçeve) — A5'e
 
+### A5 — beta hazır, oyun gecesi bekleniyor (`bc8a290`)
+- [x] Rastgele oyun seçimi (oda "Rastgele · 5" açılır), Çağrışım ödülü sıralamaya göre (sahip kararları)
+- [x] PWA: simge seti, manifest, service worker (kabuk çevrimdışı), güncelleme bildirimi (maç içinde ertelenir),
+      çevrimdışı ana sayfa, ana ekrana ekle ipucu; `pnpm pwa:check` CI'da
+- [x] İstemci hata kaydı (`/api/client-error`, IP'siz günlük), anonim SQLite istatistik (90 gün), maç sonu geri bildirim;
+      VDS'te `docker exec glix-glix-1 node dist/stats.js`; `/data` adlı birimde
+- [x] `ui:check` artık rAF'ı da dondurur (kararsız kontrast ölçümleri kapandı)
+- [x] Oyun gecesi kontrol listesi: `docs/OYUN-GECESI.md`
+- [ ] Gerçek telefonlarla oyun gecesi + geri bildirimlerin işlenmesi (kapı)
+- [ ] Gerçek alan adı (sslip.io DNS yavaşlığı)
+
 **Dağıtım:** VDS'te `/srv/glix/deploy.sh <ref>` (varsayılan `main`). Geri alma: eski SHA ile aynı komut.
