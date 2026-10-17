@@ -41,6 +41,10 @@ const registry: Record<string, GameEntry> = {
     Screen: lazy(() => import("./kor-bomba/KorBombaScreen.js")),
     Art: lazy(() => import("./kor-bomba/BriefingArt.js")),
   },
+  "cagrisim-agi": {
+    Screen: lazy(() => import("./cagrisim-agi/CagrisimAgiScreen.js")),
+    Art: lazy(() => import("./cagrisim-agi/BriefingArt.js")),
+  },
 };
 
 // Yalnız geliştirme: yatay çerçeveyi gerçek yatay oyunlar gelmeden denemek için yer tutucu sahne.

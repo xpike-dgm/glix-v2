@@ -69,6 +69,41 @@ const SCREENS = [
     after: async (p) => p.mouse.up(),
   },
   { name: "spectator-playing", q: "mock=spectator-playing" },
+  // Çağrışım Ağı: klavye açıkken görünen alan küçülür (390x520, 360x300).
+  { name: "cagrisim-briefing", q: "mock=cagrisim-briefing" },
+  { name: "cagrisim-answer", q: "mock=cagrisim" },
+  {
+    name: "cagrisim-typed",
+    q: "mock=cagrisim",
+    act: async (p) => p.locator(".aform__field").fill("deniz kenarı"),
+  },
+  {
+    name: "cagrisim-keyboard",
+    q: "mock=cagrisim",
+    sizes: [
+      [390, 520],
+      [360, 300],
+      [320, 280],
+    ],
+    act: async (p) => p.locator(".aform__field").fill("deniz kenarı"),
+  },
+  {
+    name: "cagrisim-sent",
+    q: "mock=cagrisim",
+    act: async (p) => {
+      await p.locator(".aform__field").fill("mavi");
+      await p.locator(".aform .pbtn").click();
+    },
+    settle: 800,
+  },
+  { name: "cagrisim-locked", q: "mock=cagrisim-locked" },
+  { name: "cagrisim-spectator", q: "mock=cagrisim-spectator" },
+  { name: "cagrisim-reveal-5", q: "mock=cagrisim-reveal&n=5", settle: 2400 },
+  { name: "cagrisim-reveal-8", q: "mock=cagrisim-reveal&n=8", settle: 2400 },
+  { name: "cagrisim-reveal-2", q: "mock=cagrisim-reveal&n=2", settle: 2400 },
+  { name: "cagrisim-reveal-single", q: "mock=cagrisim-reveal-single&n=7", settle: 2400 },
+  { name: "cagrisim-reveal-silent", q: "mock=cagrisim-reveal-silent&n=8", settle: 2400 },
+  { name: "cagrisim-reveal-spectator", q: "mock=cagrisim-reveal-spectator", settle: 2400 },
   { name: "results-3", q: "mock=results&n=3", settle: 2400 },
   { name: "results-8", q: "mock=results&n=8", settle: 2400 },
   { name: "final-3", q: "mock=final&n=3", settle: 2200 },
