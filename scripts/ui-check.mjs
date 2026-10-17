@@ -563,12 +563,15 @@ async function checkOne(browser, scr, [w, h]) {
     // Ölçüm animasyon ortasına denk gelmesin: sonlu animasyonlar bitiş karesine, sonsuzlar durdurulur.
     // (Aksi halde kontrast, rozetin belirme ya da basış parlamasının o anki karesine bağlı kalır.)
     await page.evaluate(() => {
+      // JS ile süren animasyonlar (Pixi arka planı, geri sayım, sayaçlar) da durur: yeni kare istenmez.
+      window.requestAnimationFrame = () => 0;
       for (const a of document.getAnimations()) {
         const iterations = a.effect?.getTiming().iterations;
         if (iterations === Number.POSITIVE_INFINITY) a.pause();
         else a.finish();
       }
     });
+    await sleep(150); // istenmiş son kare çizilsin
     await page.screenshot({ path: join(OUT, `${scr.name}-${w}x${h}.png`) });
     const { issues, texts } = await page.evaluate(inPageAudit);
     for (const [kind, msg] of issues) failures.push(`[${kind}] ${msg}`);
