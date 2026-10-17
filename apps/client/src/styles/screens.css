@@ -1169,6 +1169,12 @@
 .brief__turn svg {
   color: var(--cyan);
 }
+@media (orientation: landscape) and (max-height: 520px) {
+  .brief__turn {
+    margin-top: 4px;
+    padding: 2px 12px 2px 8px;
+  }
+}
 .watch {
   min-height: 64px;
   display: flex;

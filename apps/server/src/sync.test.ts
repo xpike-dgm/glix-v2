@@ -73,7 +73,7 @@ describe("yama senkronu", () => {
   });
 
   it("null'a dönen alan (maç -> lobi) tam room ile gider, istemci tutarlı kalır", async () => {
-    const [a, b] = (await setupRoom(["A", "B"])) as [Client, Client];
+    const [a, b] = (await setupRoom(["A", "B"], ["butona-bas"])) as [Client, Client];
     await startPlaying([a, b]);
     // maçı bitir: 45 sn
     k.clock.advance(45_000);

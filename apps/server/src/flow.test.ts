@@ -27,7 +27,7 @@ describe("oda kurma ve katılma", () => {
       { id: s.playerId, nickname: "Ayşe", avatar: 0, connected: true, score: 0 },
     ]);
     expect(room.catalog.map((g) => g.id)).toContain("butona-bas");
-    expect(room.gameIds).toEqual(["butona-bas"]);
+    expect(room.gameIds).toContain("butona-bas");
     expect(room.match).toBeNull();
   });
 
@@ -197,7 +197,7 @@ describe("host, kick, ayrılma", () => {
     await until(() => a.of("error").length > 0);
     expect(a.lastError?.code).toBe("invalid_games");
     a.send({ type: "setGames", gameIds: ["butona-bas"] });
-    await until(() => a.updates.length > 0);
+    await until(() => b.room.gameIds.length === 1, "oyun seçimi");
     expect(b.room.gameIds).toEqual(["butona-bas"]);
   });
 });
@@ -317,7 +317,7 @@ describe("maç akışı", () => {
   });
 
   it("briefing: herkes hazır olunca 3 sn geri sayım, sonra oyun", async () => {
-    const cs = (await setupRoom(["A", "B"])) as [Client, Client];
+    const cs = (await setupRoom(["A", "B"], ["butona-bas"])) as [Client, Client];
     const [a, b] = cs;
     a.send({ type: "startMatch" });
     await until(() => a.room.phase === "briefing");
@@ -394,7 +394,7 @@ describe("maç akışı", () => {
   });
 
   it("tam maç: eşleşme, tek basış, ödüller, final, lobiye dönüş", async () => {
-    const [a, b] = (await setupRoom(["A", "B"])) as [Client, Client];
+    const [a, b] = (await setupRoom(["A", "B"], ["butona-bas"])) as [Client, Client];
     const { startedAt } = await startPlaying([a, b]);
     const at = (offset: number) => k.clock.advance(startedAt + offset - k.clock.now());
 
@@ -472,7 +472,7 @@ describe("maç akışı", () => {
   });
 
   it("yeni oyuncu lobiye dönünce katılabilir; çıkarılmış oyuncu geri gelmez", async () => {
-    const [a, b, c] = (await setupRoom(["A", "B", "C"])) as [Client, Client, Client];
+    const [a, b, c] = (await setupRoom(["A", "B", "C"], ["butona-bas"])) as [Client, Client, Client];
     await startPlaying([a, b, c]);
     c.ws.terminate();
     await until(() => a.room.players[2]?.connected === false);

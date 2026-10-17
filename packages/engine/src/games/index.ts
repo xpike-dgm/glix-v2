@@ -1,9 +1,11 @@
 import type { AnyGame } from "../game.js";
 import type { GameInfo } from "../protocol.js";
 import { butonaBas } from "./butona-bas/index.js";
+import { korBomba } from "./kor-bomba/index.js";
 
 export const GAMES: Record<string, AnyGame> = {
   [butonaBas.id]: butonaBas,
+  [korBomba.id]: korBomba,
 };
 
 export function getCatalog(): GameInfo[] {

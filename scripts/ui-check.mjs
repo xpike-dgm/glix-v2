@@ -76,6 +76,15 @@ const SCREENS = [
   { name: "landscape", q: "mock=landscape", sizes: LANDSCAPE },
   { name: "landscape-8", q: "mock=landscape&n=8", sizes: LANDSCAPE },
   { name: "landscape-spectator", q: "mock=landscape&spectator=1", sizes: LANDSCAPE },
+  { name: "kor-bomba-briefing", q: "mock=kor-bomba-briefing" },
+  { name: "kor-bomba-holder", q: "mock=kor-bomba-holder", sizes: LANDSCAPE },
+  { name: "kor-bomba-holder-8", q: "mock=kor-bomba-holder&n=8", sizes: LANDSCAPE },
+  { name: "kor-bomba-watch", q: "mock=kor-bomba-watch", sizes: LANDSCAPE },
+  { name: "kor-bomba-watch-8", q: "mock=kor-bomba-watch&n=8", sizes: LANDSCAPE },
+  { name: "kor-bomba-urgent", q: "mock=kor-bomba-urgent", sizes: LANDSCAPE },
+  { name: "kor-bomba-blast", q: "mock=kor-bomba-blast", sizes: LANDSCAPE },
+  { name: "kor-bomba-spectator", q: "mock=kor-bomba-spectator", sizes: LANDSCAPE },
+  { name: "kor-bomba-rotate", q: "mock=kor-bomba-watch", sizes: PORTRAIT, settle: 2000 },
   { name: "landscape-rotate", q: "mock=landscape", sizes: PORTRAIT, settle: 2000 },
 ];
 

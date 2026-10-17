@@ -37,6 +37,10 @@ const registry: Record<string, GameEntry> = {
     Screen: lazy(() => import("./butona-bas/ButonaBasScreen.js")),
     Art: lazy(() => import("./butona-bas/BriefingArt.js")),
   },
+  "kor-bomba": {
+    Screen: lazy(() => import("./kor-bomba/KorBombaScreen.js")),
+    Art: lazy(() => import("./kor-bomba/BriefingArt.js")),
+  },
 };
 
 // Yalnız geliştirme: yatay çerçeveyi gerçek yatay oyunlar gelmeden denemek için yer tutucu sahne.

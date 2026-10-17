@@ -113,10 +113,15 @@ export async function join(code: string, nickname: string): Promise<Client> {
   return c;
 }
 
-export async function setupRoom(names: string[]): Promise<Client[]> {
+/** `games` verilirse host oyun seçimini buna indirger (varsayılan: kayıt defterindeki tüm oyunlar). */
+export async function setupRoom(names: string[], games?: string[]): Promise<Client[]> {
   const host = await create(names[0] ?? "A");
   const out = [host];
   for (const n of names.slice(1)) out.push(await join(host.session.roomCode, n));
+  if (games) {
+    host.send({ type: "setGames", gameIds: games });
+    await until(() => host.room.gameIds.length === games.length, "oyun seçimi");
+  }
   await sync();
   return out;
 }
