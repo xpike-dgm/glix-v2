@@ -63,7 +63,8 @@ describe("cagrisim-agi kuralları", () => {
     s = answer(s, "d", "karanlık");
     const r = cagrisimAgi.result(s);
     expect(r.miniScores).toEqual({ a: 3, b: 3, c: 3, d: 0 });
-    expect(r.awards).toEqual(r.miniScores);
+    // Genel skor: eşit liderler +1, grup kuramayan 0.
+    expect(r.awards).toEqual({ a: 1, b: 1, c: 1 });
   });
 
   it("iki ayrı grup birlikte puanlanır; gruplar büyükten küçüğe sıralanır", () => {
@@ -75,6 +76,8 @@ describe("cagrisim-agi kuralları", () => {
     s = answer(s, "e", "mavi");
     s = answer(s, "f", "yeşil");
     expect(cagrisimAgi.result(s).miniScores).toEqual({ a: 3, b: 2, c: 3, d: 2, e: 3, f: 0 });
+    // Eşit liderler (3) +1; ikinci sıradakiler ödül almaz (lider eşitliğinde yalnız liderler).
+    expect(cagrisimAgi.result(s).awards).toEqual({ a: 1, c: 1, e: 1 });
     const reveal = groupAnswers(s.players, s.answers);
     expect(reveal.groups.map((g) => [g.text, g.members])).toEqual([
       ["mavi", ["a", "c", "e"]],
@@ -95,7 +98,7 @@ describe("cagrisim-agi kuralları", () => {
   it("kimse cevap vermezse herkes 0", () => {
     const s = tickAt(start(), CAGRISIM_TOTAL_MS);
     expect(cagrisimAgi.result(s).miniScores).toEqual({ a: 0, b: 0, c: 0, d: 0 });
-    expect(cagrisimAgi.result(s).awards).toEqual({ a: 0, b: 0, c: 0, d: 0 });
+    expect(cagrisimAgi.result(s).awards).toEqual({});
   });
 
   it("iki kişilik oyunda aynı cevap iki oyuncuya 2 puan verir", () => {
@@ -275,7 +278,7 @@ describe("cagrisim-agi kuralları", () => {
       disconnectProbability: 0,
     });
     expect(out.result.miniScores).toEqual({ p1: 2, p2: 2, p3: 0 });
-    expect(out.result.awards).toEqual(out.result.miniScores);
+    expect(out.result.awards).toEqual({ p1: 1, p2: 1 });
     expect(replay(cagrisimAgi, out.log)).toEqual(out.result);
   });
 });

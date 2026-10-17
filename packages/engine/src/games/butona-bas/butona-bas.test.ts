@@ -318,3 +318,13 @@ describe("butona-bas bot takvimi", () => {
     expect(negative).toBeGreaterThan(0);
   });
 });
+
+describe("rankAwards (ortak)", () => {
+  it("positiveOnly: kimse puan almadıysa ödül yok; 0 puanlılar sıralamaya girmez", async () => {
+    const { rankAwards } = await import("../scoring.js");
+    expect(rankAwards({ a: 0, b: 0 })).toEqual({ a: 1, b: 1 });
+    expect(rankAwards({ a: 0, b: 0 }, { positiveOnly: true })).toEqual({});
+    expect(rankAwards({ a: 4, b: 2, c: 0 }, { positiveOnly: true })).toEqual({ a: 2, b: 1 });
+    expect(rankAwards({ a: 4, b: 0, c: 0 }, { positiveOnly: true })).toEqual({ a: 2 });
+  });
+});

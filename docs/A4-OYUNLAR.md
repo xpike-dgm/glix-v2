@@ -6,7 +6,9 @@ Her oyun `packages/engine/src/games/<id>/` (types.ts, index.ts, bots.ts, words.t
 
 ## Ortak kurallar
 - `publicView` herkes için aynıdır; gizli bilgi yalnız hak sahibinin `view`'ında. Her gizli değer `secrets()` ile bildirilir.
-- Oyun bitişinden sonra gelen eylem reddedilir. Süreler sunucu saatiyle (`ctx.now`).
+- Oyun bitişinden sonra gelen eylem reddedilir. Oyun içi kısa açılış/animasyon pencereleri
+  (Çapraz Ateş +7 sn, Açgözlülük +5 sn, Çağrışım +6 sn, Kör Bomba +2 sn) sahip onayıyla kalır; kural süresi ve puan değişmez.
+- Zaman Bombası puanlaması birikimli kalır (sahip onayı). Süreler sunucu saatiyle (`ctx.now`).
 - `ctx.connected`: hedef seçilen eylemlerde hedef bağlı bir katılımcı olmalıdır (aksi `rejected`). `tick`
   `connected`'a bakmaz (`setup` ve `reduce` bakabilir); bağlantısı kopan oyuncunun sırası/süresi zaman aşımıyla çözülür.
 - Serbest metin için teknik üst sınır 60 karakter (protokol mesajı 4 KB ile sınırlı); kural "sınır yok" diyorsa bile bu teknik sınırdır.
@@ -22,7 +24,8 @@ Her oyun `packages/engine/src/games/<id>/` (types.ts, index.ts, bots.ts, words.t
 - **Çağrışım Ağı** (2–8, 30 sn): ana kelime havuzdan rastgele; tek cevap, gönderildikten sonra değiştirilemez; boş cevap
   reddedilir. Normalizasyon: Türkçe küçük harf (`toLocaleLowerCase("tr")`), baş/son boşluk kırp, iç boşlukları teke indir.
   Grup = aynı normalleştirilmiş cevap ≥ 2 kişi; her üye grup büyüklüğü kadar puan. Cevaplar süre bitene kadar gizli.
-  Cevap vermeyen 0.
+  Cevap vermeyen 0. **Genel skor (sahip kararı):** mini puan sıralamasına göre tek lider +2, sıradaki +1; liderler
+  eşitse yalnız liderler +1; mini puanı 0 olan (grup kuramayan) ödül almaz.
 - **Karalama Defteri** (3–8): çizim 75 sn, oylama 20 sn. Rastgele 1 bilgisiz oyuncu; kelime havuzu (ana, yakın) çiftleri.
   Herkes yalnız kendi kelimesini görür (secret: ana kelime bilgisize, yakın kelime diğerlerine gizli; kimin bilgisiz
   olduğu herkese gizli). Çizim fırça darbeleriyle gönderilir: her darbe ayrı eylem (renk 6'dan biri ya da silgi, kalınlık

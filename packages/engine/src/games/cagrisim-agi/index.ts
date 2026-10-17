@@ -1,4 +1,5 @@
 import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
+import { rankAwards } from "../scoring.js";
 import {
   CAGRISIM_ANSWER_MS,
   CAGRISIM_MAX_LENGTH,
@@ -161,6 +162,7 @@ export const cagrisimAgi: GameDefinition<
     const miniScores: Record<string, number> = {};
     for (const id of state.players) miniScores[id] = 0;
     for (const g of groups) for (const id of g.members) miniScores[id] = g.points;
-    return { miniScores, awards: { ...miniScores } };
+    // Genel skora aktarım (sahip kararı): sıralamaya göre +2/+1; grup kuramayan (0 puan) ödül alamaz.
+    return { miniScores, awards: rankAwards(miniScores, { positiveOnly: true }) };
   },
 };

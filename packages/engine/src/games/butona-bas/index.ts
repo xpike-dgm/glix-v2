@@ -1,4 +1,5 @@
 import type { GameContext, GameDefinition, Rejected } from "../../game.js";
+import { rankAwards } from "../scoring.js";
 import {
   BUTONA_BAS_DURATION_MS,
   BUTONA_BAS_WINDOW_MS,
@@ -57,25 +58,9 @@ function settle(state: ButonaBasState, closedCount: number): ButonaBasState {
   return { ...state, pending, scores, recent };
 }
 
-/** Eski sürümdeki createRankAwards ile aynı: tek lider +2 ve sıradaki puanı paylaşanların hepsi +1; lider eşitse liderler +1. */
+/** Butona Bas aktarımı: sıralama ödülü (0 puanlı eşit liderler dahil). */
 export function butonaBasAwards(scores: Record<string, number>): Record<string, number> {
-  const entries = Object.entries(scores);
-  if (entries.length === 0) return {};
-  const top = Math.max(...entries.map(([, s]) => s));
-  const leaders = entries.filter(([, s]) => s === top).map(([id]) => id);
-  const awards: Record<string, number> = {};
-  if (leaders.length > 1) {
-    for (const id of leaders) awards[id] = 1;
-    return awards;
-  }
-  const leader = leaders[0];
-  if (leader === undefined) return awards;
-  awards[leader] = 2;
-  const below = entries.filter(([, s]) => s < top).map(([, s]) => s);
-  if (below.length === 0) return awards;
-  const next = Math.max(...below);
-  for (const [id, s] of entries) if (s === next) awards[id] = 1;
-  return awards;
+  return rankAwards(scores);
 }
 
 export const butonaBas: GameDefinition<ButonaBasState, ButonaBasAction, ButonaBasView, ButonaBasPublicView> =
