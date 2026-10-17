@@ -30,6 +30,9 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `session` | `token`, `playerId`, `roomCode` — istemci `localStorage`'a yazar |
 | `room` | `snapshot: RoomSnapshot` — odaya girişte, resume ve `resync` sonrası (tam) |
 | `patch` | `baseRev`, `rev`, `patch` — sonraki değişimler, JSON Merge Patch (RFC 7386) |
+| `actionAck` | `seq`, `ok`, `reason?` |
+| `left` | `reason: "left" \| "kicked" \| "closed"` |
+| `error` | `code`, `message` (Türkçe, oyuncuya gösterilebilir) |
 
 **Yama kuralı:** Sunucu her bağlantıya son gönderdiği snapshot'ı tutar ve yalnız farkı yollar.
 İstemci `baseRev` kendi `rev`'ine eşitse yamayı uygular, değilse yamayı atıp `resync` gönderir.
@@ -41,9 +44,6 @@ Her oyun için `GameLog` (tohum, katılımcılar, zaman damgalı kabul edilen ey
 Aynı tohum ve eylemlerle `replay` aynı `GameResult`'u üretmek zorundadır; `tick` çağrı zamanlaması sonucu
 değiştiremez. Son 20 oyunun kaydı bellekte tutulur; bir oyun fonksiyonu hata fırlatırsa o oyunun kaydı
 sunucu günlüğüne yazılır.
-| `actionAck` | `seq`, `ok`, `reason?` |
-| `left` | `reason: "left" \| "kicked" \| "closed"` |
-| `error` | `code`, `message` (Türkçe, oyuncuya gösterilebilir) |
 
 ## Maç akışı (sunucu)
 
