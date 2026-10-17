@@ -363,8 +363,12 @@
 .gs__score {
   font-size: var(--fs-13);
   font-weight: 700;
-  color: #b4bbe0;
+  color: #c9cff0;
   line-height: 1;
+  /* Koyu zemin: basış parlaması arkaya düşse de kontrast korunur. */
+  background: rgba(5, 8, 26, 0.88);
+  padding: 2px 6px;
+  border-radius: 999px;
 }
 .gs[data-me="1"] .gs__score {
   color: var(--text);
