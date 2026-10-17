@@ -27,7 +27,11 @@ export function App() {
 
     const mock = import.meta.env.DEV ? params.get("mock") : null;
     if (mock) {
-      void import("./dev/mock.js").then((m) => m.startMock(mock, params));
+      if (/^(landscape|briefing-ready|spectator-)/.test(mock)) {
+        void import("./dev/mockShell.js").then((m) => m.startShellMock(mock, params));
+      } else {
+        void import("./dev/mock.js").then((m) => m.startMock(mock, params));
+      }
       return;
     }
     onCleanup(startNet());

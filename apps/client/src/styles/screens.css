@@ -592,7 +592,7 @@
   color: var(--cyan);
 }
 .count__num[data-n="2"] {
-  color: var(--violet);
+  color: #a98bff;
 }
 .count__num[data-n="1"] {
   color: var(--magenta);
@@ -700,7 +700,7 @@
   font-size: var(--fs-24);
   border-top: 2px solid var(--amber);
   background: linear-gradient(180deg, rgba(255, 194, 59, 0.5), rgba(255, 194, 59, 0.04));
-  color: var(--amber);
+  color: var(--text);
   height: 88px;
 }
 .podium__col[data-pos="1"] .podium__block {
@@ -711,12 +711,12 @@
 }
 .podium__col[data-rank="2"] .podium__block {
   border-color: #c9d2ff;
-  color: #c9d2ff;
+  color: var(--text);
   background: linear-gradient(180deg, rgba(201, 210, 255, 0.34), rgba(201, 210, 255, 0.03));
 }
 .podium__col[data-rank="3"] .podium__block {
   border-color: var(--orange, #ff8a3b);
-  color: #ff8a3b;
+  color: var(--text);
   background: linear-gradient(180deg, rgba(255, 138, 59, 0.34), rgba(255, 138, 59, 0.03));
 }
 .podium__col[data-rank="1"] .podium__score {
@@ -838,19 +838,25 @@
   background: var(--text);
   color: var(--bg-0);
 }
+/* Puan sütunu: sağa hizalı, sabit genişlik, tabular rakam; tüm satırlarda aynı x. */
 .row__score {
+  flex: none;
+  width: 48px;
+  text-align: right;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--fs-18);
-  min-width: 28px;
-  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 .row__score--big {
+  width: 60px;
   font-weight: 800;
   font-size: var(--fs-24);
 }
 .row__award {
-  min-width: 52px;
+  flex: none;
+  width: 56px;
   display: flex;
   justify-content: flex-end;
 }
@@ -1142,5 +1148,85 @@
 @media (orientation: landscape) and (max-height: 520px), (max-height: 600px) {
   .crew {
     display: none;
+  }
+}
+
+/* ---- Briefing: yatay oyun ipucu, izleyici ---- */
+.brief__turn {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 6px 14px 6px 10px;
+  border-radius: 99px;
+  font-size: var(--fs-15);
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(46, 242, 255, 0.1);
+  border: 1px solid rgba(46, 242, 255, 0.4);
+}
+.brief__turn svg {
+  color: var(--cyan);
+}
+.watch {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 8px 16px;
+  border-radius: var(--r-btn);
+  border: 1.5px dashed rgba(139, 92, 255, 0.55);
+  background: rgba(139, 92, 255, 0.1);
+  color: #c3b0ff;
+}
+.watch__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+  line-height: 1.25;
+}
+.watch__text b {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-15);
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+
+/* Final: 7–8 oyuncuda kazanan biraz küçülür, tüm sıralama tek ekrana sığar. */
+.final--dense {
+  --win-av: clamp(76px, min(26vw, 12dvh), 120px);
+}
+.final--dense .winner__avatars {
+  padding-top: 28px;
+}
+.final--dense .rows--final {
+  margin-top: 10px;
+}
+.final--dense .row {
+  min-height: 48px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+/* Dar telefonlar (320 px): sıralama satırları sıkılaşır, isimler kırpılmaz. */
+@media (max-width: 359px) {
+  .row {
+    gap: 8px;
+    padding: 6px 10px;
+  }
+  .row__score {
+    width: 40px;
+  }
+  .row__score--big {
+    width: 48px;
+  }
+  .row__award {
+    width: 48px;
   }
 }

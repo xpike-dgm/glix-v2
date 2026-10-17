@@ -6,3 +6,6 @@ coverage
 .env
 .DS_Store
 *.tsbuildinfo
+
+# Otomatik üretilen tasarım denetimi görüntüleri (CI artifact olarak saklanır)
+docs/qa/a3/*.png

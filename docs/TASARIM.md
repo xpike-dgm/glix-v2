@@ -135,3 +135,20 @@ tek kalma alçalan "bzzt", geri sayım bip, sonuç fanfarı. Sağ üstte ses aç
 - Yatay telefonda içerik ortada en fazla 480 px sütun, arka plan tüm ekranı doldurur.
 - İlk yükleme (gzip) ana JS < 120 kB; Pixi yalnız gerektiğinde yüklenir.
 - Tüm dokunma hedefleri ≥ 48 px. Kontrast metin için ≥ 4.5:1.
+
+## 6. Oyun çerçevesi, izleyici, ses (A3)
+
+- **GameFrame** (`ui/GameFrame.tsx`): oyun yönünü `MatchSnapshot.orientation` belirler. Dikey oyun: en çok 480 px
+  ortalı sütun, sol üstte çık düğmesi. Yatay oyun: sahne tüm alanı (güvenli alanlar hariç) doldurur; solda 104 px'lik
+  yan şerit (çık, dikey süre çubuğu, kendi puanın, avatarlar+puan, ses) sahneye binmez. Telefon dikeyse tam ekran
+  "Telefonunu yan çevir" örtüsü çıkar (atlama yok; çık/ses düğmeleri örtünün köşelerinde çalışır). Mümkünse
+  `screen.orientation.lock("landscape")` denenir. Yatay oyunlar kayıt defterinde `hud(match, selfId)` ile şerit
+  verisini verir. Geliştirmede `?mock=landscape` yer tutucu "Neon Masa" sahnesini açar.
+- **İzleyici** (`participants` içinde değilsen): üstte "İzliyorsun — sonraki oyuna katılacaksın" şeridi, oyun
+  `inert` (dokunulmaz, hafif soluk), anlatımda HAZIRIM yerine "Bu turu izleyeceksin". Oyun ekranları
+  `GameScreenProps.spectator` ile kendi eylemlerini gizleyebilir.
+- **Ses** tek ana ses düzeyi (`setVolume`, kalıcı) ve kalıcı sessiz tercihiyle; bağlam ilk dokunuşta açılır.
+  Olaylar: dokunma, hazırım, geri sayım tıkı, başla, eşleşme (+), tek kalma (−), tur sonucu, final, hata.
+  Titreşim aynı olaylara eşlenir; `prefers-reduced-motion`'da süreler yarıya iner.
+- **Denetim:** `pnpm ui:check` her ekranı 5 telefon boyutunda gezer (taşma, kırpılan metin, >= 48 px hedef,
+  üst üste binme, kontrast, konsol hatası); görüntüler `docs/qa/a3/`. Büyük yazıda (>= 24 px) kontrast 3:1.

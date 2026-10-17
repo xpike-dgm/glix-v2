@@ -1,3 +1,8 @@
+/** Az çekirdekli / az belekli cihazlarda parçacık sayısı düşer. */
+const lowEnd = (): boolean =>
+  (navigator.hardwareConcurrency ?? 8) <= 4 ||
+  ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8) <= 4;
+
 const COLORS = [0x2ef2ff, 0xff2bd6, 0x8b5cff, 0x2ef2ff, 0xb6ff3b];
 
 /**
@@ -13,7 +18,8 @@ export async function mountBackdrop(host: HTMLElement): Promise<() => void> {
     antialias: false,
     preference: "webgl",
     powerPreference: "low-power",
-    resolution: Math.min(window.devicePixelRatio || 1, 2),
+    // Bulanık noktalar ve ince çizgiler için 1,5x yeter; 3x ekranlarda dolgu maliyeti 4 kat azalır.
+    resolution: Math.min(window.devicePixelRatio || 1, 1.5),
     autoDensity: true,
   });
   app.ticker.maxFPS = 30;
@@ -28,7 +34,7 @@ export async function mountBackdrop(host: HTMLElement): Promise<() => void> {
   const texture = app.renderer.generateTexture(dot);
   dot.destroy();
 
-  const parts = Array.from({ length: 34 }, (_, i) => {
+  const parts = Array.from({ length: lowEnd() ? 20 : 34 }, (_, i) => {
     const s = new Sprite(texture);
     s.anchor.set(0.5);
     s.tint = COLORS[i % COLORS.length] ?? 0x2ef2ff;

@@ -14,7 +14,9 @@
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "e2e": "node scripts/e2e.mjs",
-    "load": "node scripts/load.mjs"
+    "load": "node scripts/load.mjs",
+    "ui:check": "node scripts/ui-check.mjs",
+    "perf:check": "node scripts/perf-check.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

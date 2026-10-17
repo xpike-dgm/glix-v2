@@ -1,6 +1,6 @@
 import type { MatchSnapshot } from "@glix/engine";
 import { createEffect, createMemo, on, onMount, Show } from "solid-js";
-import { hapticTap } from "../fx/haptics.js";
+import { hapticGo, hapticTick } from "../fx/haptics.js";
 import { go, tick } from "../fx/sound.js";
 import { createServerNow } from "../net/time.js";
 import { Screen } from "../ui/Screen.js";
@@ -20,14 +20,24 @@ export function Countdown(props: { match: MatchSnapshot }) {
         if (prev === undefined) return;
         if (v < prev) {
           tick();
-          hapticTap();
+          hapticTick();
         }
       },
       { defer: true },
     ),
   );
   const over = () => props.match.phaseEndsAt !== null && now() >= props.match.phaseEndsAt;
-  createEffect(on(over, (o) => o && go(), { defer: true }));
+  createEffect(
+    on(
+      over,
+      (o) => {
+        if (!o) return;
+        go();
+        hapticGo();
+      },
+      { defer: true },
+    ),
+  );
 
   return (
     <Screen class="countdown">

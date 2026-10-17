@@ -38,3 +38,8 @@ export function podiumOrder<T>(top: readonly T[]): T[] {
   if (third === undefined) return [second, first];
   return [second, first, third];
 }
+
+/** Puan metni: eksi için gerçek eksi işareti (−), sütunlarda hizalı görünsün. */
+export function formatScore(n: number): string {
+  return n < 0 ? `\u2212${Math.abs(n)}` : String(n);
+}

@@ -90,4 +90,10 @@ sızıntı testi otomatik kırılır. Sunucu oyun bilmez; durum her yayında bir
 - Açık soru: 100 odalık bir koşuda her odadan bir bot aynı anda koptu; tekrarında (günlük tutularak) görülmedi.
 - Not: sslip.io adlarında DNS çözümlemesi zaman zaman 4+ sn sürüyor (sunucu yanıtı 0,02 sn). Gerçek alan adı A7'den önce alınmalı.
 
+### A3 — tasarım sistemi tamamlanıyor
+- [x] GameFrame (dikey/yatay), yan çevir örtüsü, yer tutucu yatay sahne (`?mock=landscape`), izleyici durumu
+- [x] Ses/titreşim olay seti, ana ses düzeyi, iOS ses kilidi; aria-live, odak halkaları, sheet odak tuzağı
+- [x] `pnpm ui:check` (114 denetim: taşma/kırpma/hedef/örtüşme/kontrast/konsol) ve `pnpm perf:check`; bkz. `docs/qa/a3/`
+- [ ] Gerçek telefonda 60 fps doğrulaması (kullanıcı)
+
 **Dağıtım:** VDS'te `/srv/glix/deploy.sh <ref>` (varsayılan `main`). Geri alma: eski SHA ile aynı komut.

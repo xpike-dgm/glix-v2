@@ -1,3 +1,7 @@
+const lowEnd = (): boolean =>
+  (navigator.hardwareConcurrency ?? 8) <= 4 ||
+  ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8) <= 4;
+
 const COLORS = [0x2ef2ff, 0xff2bd6, 0xffc23b, 0xb6ff3b, 0x8b5cff, 0xff8a3b, 0x2bffa8, 0x3b7bff];
 
 /** 2 sn'lik Pixi konfetisi; bitince kendini yok eder. Pixi tembel yüklenir. Durdurma işlevi döner. */
@@ -10,14 +14,14 @@ export async function playConfetti(host: HTMLElement): Promise<() => void> {
     backgroundAlpha: 0,
     antialias: false,
     preference: "webgl",
-    resolution: Math.min(window.devicePixelRatio || 1, 2),
+    resolution: Math.min(window.devicePixelRatio || 1, 1.5),
     autoDensity: true,
   });
   host.appendChild(app.canvas);
   const w = app.screen.width;
   const h = app.screen.height;
 
-  const bits = Array.from({ length: 130 }, (_, i) => {
+  const bits = Array.from({ length: lowEnd() ? 80 : 130 }, (_, i) => {
     const g = new Graphics();
     const bw = 6 + Math.random() * 6;
     g.rect(-bw / 2, -bw / 4, bw, bw / 2).fill(COLORS[i % COLORS.length] ?? 0xffffff);

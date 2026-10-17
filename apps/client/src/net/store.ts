@@ -1,5 +1,7 @@
 import type { PlayerInfo, RoomSnapshot } from "@glix/engine";
 import { createStore, reconcile, unwrap } from "solid-js/store";
+import { hapticError } from "../fx/haptics.js";
+import { fail } from "../fx/sound.js";
 import { median, pushSample } from "./clock.js";
 import { KEYS, readStored, writeStored } from "./storage.js";
 import { initialSync, onPatch, onReconnect, onRoom, type SyncState, type SyncStep } from "./sync.js";
@@ -101,6 +103,10 @@ export function syncReconnected(): void {
 let toastId = 0;
 export function toast(text: string, kind: ToastKind = "info"): void {
   const id = ++toastId;
+  if (kind === "error") {
+    fail();
+    hapticError();
+  }
   setState("toasts", (t) => [...t.slice(-2), { id, text, kind }]);
   setTimeout(() => setState("toasts", (t) => t.filter((x) => x.id !== id)), 2500);
 }

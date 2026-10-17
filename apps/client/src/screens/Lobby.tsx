@@ -7,10 +7,10 @@ import { Avatar } from "../ui/Avatar.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
 import { GhostButton } from "../ui/GhostButton.js";
 import { CheckIcon, ChevronIcon, PlusIcon, ShareIcon } from "../ui/Icons.js";
+import { LeaveButton } from "../ui/LeaveButton.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
-import { LeaveButton } from "./LeaveButton.js";
 
 async function share(code: string): Promise<void> {
   const url = inviteLink(location.origin, code);
@@ -84,7 +84,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
         </button>
       </div>
 
-      <div class="lobby__scroll" ref={scroller}>
+      <div class="lobby__scroll" data-scroll ref={scroller}>
         <div class="seats">
           <For each={seats()}>
             {(p, i) => (

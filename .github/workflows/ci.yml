@@ -20,4 +20,22 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - name: Chromium kur
+        run: |
+          pnpm exec playwright-core install --with-deps chromium
+          echo "CHROMIUM_PATH=$(find ~/.cache/ms-playwright -type f -name chrome -path '*/chromium-*' | head -1)" >> "$GITHUB_ENV"
+      - name: Tasarım denetimi
+        run: pnpm ui:check
+      - name: Uçtan uca oyun testi
+        run: pnpm e2e
+      - name: Ekran görüntüleri
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-screenshots
+          path: |
+            docs/qa/a3/*.png
+            docs/qa/a1-real/*.png
+          retention-days: 14
+          if-no-files-found: ignore
       - run: docker build -f deploy/Dockerfile --build-arg GIT_SHA=${{ github.sha }} .

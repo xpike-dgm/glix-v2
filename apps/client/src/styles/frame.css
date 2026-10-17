@@ -1,0 +1,388 @@
+/* ---- Oyun çerçevesi (GameFrame): dikey sütun / yatay sahne + yan şerit ---- */
+.gframe {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.gframe__main {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.gframe__body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.gframe__game {
+  position: absolute;
+  inset: 0;
+}
+/* Şerit zaten güvenli üst alanı karşıladı; oyun ekranı bir kez daha eklemesin. */
+.gframe[data-spectator] .gframe__body {
+  --safe-top: 0px;
+}
+
+/* dikey oyun: çık düğmesi, oyunun kendi ses düğmesiyle aynı hizada */
+.gframe__chrome {
+  position: absolute;
+  inset: 0 0 auto 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 3;
+}
+.gframe__row {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  justify-content: space-between;
+  padding: calc(max(16px, var(--safe-top)) + 12px) max(var(--gutter), var(--safe-right)) 0
+    max(var(--gutter), var(--safe-left));
+}
+.gframe__row > * {
+  pointer-events: auto;
+}
+.gframe__row .icon-btn:first-child {
+  margin-left: -10px;
+}
+.gframe__row .icon-btn:last-child {
+  margin-right: -10px;
+}
+
+/* yatay oyun: sahne güvenli alan dahil tüm alanı doldurur */
+.gframe[data-o="landscape"] {
+  flex-direction: row;
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+.gframe[data-o="landscape"] .gframe__body {
+  container-type: size;
+  container-name: stage;
+}
+.gframe[data-turn="1"] .gframe__game {
+  visibility: hidden;
+}
+
+/* izleyici şeridi */
+.ribbon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: calc(var(--safe-top) + 6px) var(--gutter) 6px;
+  text-align: center;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text);
+  background: linear-gradient(180deg, rgba(139, 92, 255, 0.28), rgba(139, 92, 255, 0.1));
+  border-bottom: 1px solid rgba(139, 92, 255, 0.45);
+}
+.ribbon svg {
+  flex: none;
+  color: #c3b0ff;
+}
+.gframe[data-o="landscape"] .ribbon {
+  padding-top: 6px;
+}
+
+/* yan şerit */
+.rail {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  width: 104px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 20px 6px 10px;
+  border-right: 1px solid var(--line);
+  background: linear-gradient(90deg, rgba(5, 8, 26, 0.72), rgba(5, 8, 26, 0.3));
+}
+.rail__mid {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.rail__score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.rail__score .overline {
+  letter-spacing: 0.1em;
+}
+.rail__num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-32);
+  line-height: 1.05;
+}
+.rail__crew {
+  display: grid;
+  grid-template-columns: repeat(2, 30px);
+  gap: 10px 14px;
+  padding: 0 6px 6px 0;
+}
+.hudav {
+  position: relative;
+  width: 30px;
+  height: 30px;
+}
+.hudav__score {
+  position: absolute;
+  right: -9px;
+  bottom: -7px;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  text-align: center;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  line-height: 17px;
+  color: var(--text);
+  background: var(--bg-0);
+  border: 1px solid rgba(160, 175, 255, 0.3);
+}
+.hudav[data-me="1"] .av {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+.rail__time {
+  position: absolute;
+  right: 7px;
+  top: 12px;
+  bottom: 12px;
+  height: auto;
+}
+.pbar--v {
+  width: 6px;
+}
+.pbar--v .pbar__fill {
+  transform-origin: center bottom;
+  background: linear-gradient(0deg, var(--cyan), color-mix(in srgb, var(--cyan), #fff 30%));
+}
+.pbar--v .pbar__fill[data-tone="amber"] {
+  background: var(--amber);
+}
+.pbar--v .pbar__fill[data-tone="red"] {
+  background: var(--red);
+}
+
+/* ---- "Telefonunu yan çevir" ---- */
+.rot {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  padding: max(16px, var(--safe-top)) max(var(--gutter), var(--safe-right)) max(16px, var(--safe-bottom))
+    max(var(--gutter), var(--safe-left));
+  background:
+    radial-gradient(80% 50% at 50% 38%, rgba(139, 92, 255, 0.3), transparent 72%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-0));
+  animation: fade-in var(--t-mid) ease both;
+}
+.rot__top {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 -10px;
+}
+.rot__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding-bottom: 8dvh;
+}
+.rot__art {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 8px;
+}
+.rot__glow {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(46, 242, 255, 0.28), transparent);
+}
+.rot__arc {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: rot-hint 3.2s ease-in-out infinite;
+}
+.rot__phone {
+  position: relative;
+  width: 96px;
+  height: 168px;
+  filter: drop-shadow(0 0 14px rgba(46, 242, 255, 0.5));
+  animation: rot-turn 3.2s cubic-bezier(0.6, 0, 0.25, 1) infinite;
+}
+.rot__title {
+  font-size: clamp(22px, 7vw, 30px);
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.rot__text {
+  max-width: 18em;
+}
+@keyframes rot-turn {
+  0%,
+  16% {
+    transform: rotate(0);
+  }
+  46%,
+  74% {
+    transform: rotate(90deg);
+  }
+  100% {
+    transform: rotate(0);
+  }
+}
+@keyframes rot-hint {
+  0%,
+  10% {
+    opacity: 0.2;
+  }
+  30%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
+  }
+}
+/* biome-ignore-start lint/complexity/noImportantStyles: hareketi azaltma tercihi animasyonu ezmeli */
+@media (prefers-reduced-motion: reduce) {
+  .rot__phone {
+    animation: none !important;
+    transform: rotate(90deg);
+  }
+  .rot__arc {
+    animation: none !important;
+    opacity: 1;
+  }
+}
+/* biome-ignore-end lint/complexity/noImportantStyles: aralık sonu */
+@media (orientation: portrait) and (max-height: 600px) {
+  .rot__art {
+    transform: scale(0.72);
+    margin: -34px 0;
+  }
+}
+
+/* ---- Yer tutucu yatay sahne (yalnız geliştirme) ---- */
+.ytable {
+  --seat: clamp(36px, min(15cqh, 9cqw), 64px);
+  position: absolute;
+  inset: 0;
+  container-type: size;
+}
+.ytable__felt {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 60%;
+  height: 56%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 3px solid var(--cyan);
+  background: radial-gradient(closest-side, #1b3185 0%, #0b1438 88%);
+  box-shadow:
+    0 0 28px rgba(46, 242, 255, 0.4),
+    inset 0 0 36px rgba(46, 242, 255, 0.28);
+}
+.ytable__felt::after {
+  content: "";
+  position: absolute;
+  inset: 9% 8%;
+  border-radius: 50%;
+  border: 1.5px solid rgba(139, 92, 255, 0.55);
+}
+.ytable__mark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  z-index: 1;
+}
+.ytable__logo {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(20px, 9cqh, 40px);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  padding: 0 0.05em;
+  background: linear-gradient(100deg, var(--cyan), var(--violet) 55%, var(--magenta));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.ytable__sub {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #bcc3e8;
+}
+.ytable__seat {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.ytable__name {
+  max-width: 96px;
+  padding: 1px 9px;
+  border-radius: 99px;
+  background: rgba(5, 8, 26, 0.72);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ytable__seat:has(.av__self) .ytable__name {
+  margin-top: 8px;
+}
+
+/* izleyici: oyun sakinleşir, dokunulmaz; oyunun kendi çık/ses düğmeleri yerine çerçevenin ki çalışır */
+.gframe[data-spectator] .gframe__game {
+  filter: saturate(0.7) brightness(0.88);
+}
+.gframe[data-spectator] .gframe__game .icon-btn {
+  visibility: hidden;
+}

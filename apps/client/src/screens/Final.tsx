@@ -1,15 +1,16 @@
 import type { RoomSnapshot } from "@glix/engine";
-import { createMemo, For, onCleanup, onMount, Show } from "solid-js";
+import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { playConfetti } from "../fx/confetti.js";
+import { hapticFinal } from "../fx/haptics.js";
 import { fanfare } from "../fx/sound.js";
 import { returnToLobby } from "../net/client.js";
 import { Avatar } from "../ui/Avatar.js";
 import { CrownIcon } from "../ui/Icons.js";
+import { LeaveButton } from "../ui/LeaveButton.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
-import { LeaveButton } from "./LeaveButton.js";
-import { rankPlayers, winnersOf } from "./ranking.js";
+import { formatScore, rankPlayers, winnersOf } from "./ranking.js";
 
 export function Final(props: { snap: RoomSnapshot }) {
   let confetti: HTMLDivElement | undefined;
@@ -18,8 +19,20 @@ export function Final(props: { snap: RoomSnapshot }) {
   const isHost = () => props.snap.hostId === props.snap.selfId;
   const tie = () => winners().length > 1;
 
+  const [announce, setAnnounce] = createSignal("");
+  const spoken = (): string => {
+    const names = winners()
+      .map((w) => w.player.nickname)
+      .join(" ve ");
+    const me = ranked().find((r) => r.player.id === props.snap.selfId);
+    return `Final. ${tie() ? "Berabere" : "Kazanan"} ${names}, ${formatScore(winners()[0]?.score ?? 0)} puan.${me ? ` Senin sıran ${me.rank}.` : ""}`;
+  };
+
   onMount(() => {
     fanfare();
+    hapticFinal();
+    const t = setTimeout(() => setAnnounce(spoken()), 250);
+    onCleanup(() => clearTimeout(t));
     if (!confetti) return;
     let stop: (() => void) | undefined;
     let gone = false;
@@ -38,8 +51,11 @@ export function Final(props: { snap: RoomSnapshot }) {
   });
 
   return (
-    <Screen class="final">
+    <Screen class={ranked().length >= 7 ? "final final--dense" : "final"}>
       <div class="confetti" ref={confetti} aria-hidden="true" />
+      <p class="sr-only" role="status" aria-live="polite">
+        {announce()}
+      </p>
       <header class="topbar">
         <LeaveButton />
         <SoundToggle />
@@ -55,7 +71,9 @@ export function Final(props: { snap: RoomSnapshot }) {
               <div class="winner__one">
                 <Avatar
                   index={w.player.avatar}
-                  size={tie() ? "clamp(64px, 22vw, 96px)" : "clamp(96px, min(38vw, 22dvh), 168px)"}
+                  size={
+                    tie() ? "clamp(64px, 22vw, 96px)" : "var(--win-av, clamp(96px, min(38vw, 22dvh), 168px))"
+                  }
                   connected={w.player.connected}
                 />
                 <span class="winner__crown">
@@ -74,11 +92,11 @@ export function Final(props: { snap: RoomSnapshot }) {
           </h1>
         </Show>
         <p class="winner__score rise" style={{ "--i": 3 }}>
-          {winners()[0]?.score ?? 0} puan
+          {formatScore(winners()[0]?.score ?? 0)} puan
         </p>
       </div>
 
-      <ul class="rows rows--final">
+      <ul class="rows rows--final" data-scroll>
         <For each={ranked()}>
           {(r, i) => (
             <li
@@ -94,7 +112,7 @@ export function Final(props: { snap: RoomSnapshot }) {
                   <em class="row__me">Sen</em>
                 </Show>
               </span>
-              <span class="row__score row__score--big">{r.score}</span>
+              <span class="row__score row__score--big">{formatScore(r.score)}</span>
             </li>
           )}
         </For>

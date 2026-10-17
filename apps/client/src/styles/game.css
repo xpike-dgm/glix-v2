@@ -5,6 +5,8 @@
   width: var(--size);
   height: var(--size);
   flex: none;
+  /* Büyük bulanık gölgeler yavaş telefonda her karede yeniden boyanmasın: kendi katmanı olsun. */
+  will-change: transform;
 }
 .arcade__hit {
   position: absolute;
@@ -63,6 +65,7 @@
   background: #7d0d28;
   transform: translateY(calc(var(--size) * 0.055));
   box-shadow: 0 calc(var(--size) * 0.015) 0 #3d0413;
+  will-change: transform;
 }
 .arcade__cap {
   position: absolute;
@@ -70,17 +73,30 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 26%, #ff98a9 0%, #ff4d6b 30%, #e0204a 62%, #a30e30 100%);
+  background: radial-gradient(circle at 50% 26%, #ff7a92 0%, #ef2f57 30%, #cd1844 62%, #a30e30 100%);
   box-shadow:
     inset 0 calc(var(--size) * -0.04) calc(var(--size) * 0.06) rgba(90, 0, 20, 0.55),
     inset 0 calc(var(--size) * 0.012) calc(var(--size) * 0.02) rgba(255, 255, 255, 0.5);
-  transition:
-    transform 70ms var(--ease),
-    filter 70ms;
+  transition: transform 70ms var(--ease);
+  will-change: transform;
+}
+/* Basınca parlama: filtre yerine beyaz örtünün opaklığı (yalnız birleştirici katmanda iş görür). */
+.arcade__cap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  transition: opacity 70ms;
+  pointer-events: none;
+  will-change: opacity;
 }
 .arcade[data-pressed="1"] .arcade__cap {
   transform: translateY(calc(var(--size) * 0.055));
-  filter: brightness(1.14) saturate(1.1);
+}
+.arcade[data-pressed="1"] .arcade__cap::after {
+  opacity: 0.14;
 }
 .arcade[data-pressed="1"] .arcade__side {
   opacity: 0;
@@ -129,15 +145,19 @@
   border: calc(var(--size) * 0.022) solid rgba(255, 255, 255, 0.92);
   animation: wave var(--wave-ms, 300ms) ease-out forwards;
 }
+/* Büyük halka maliyetli: 1,32x'te sönsün, aynı anda en çok iki halka görünsün. */
 @keyframes wave {
   from {
     transform: scale(0.92);
     opacity: 0.95;
   }
   to {
-    transform: scale(1.5);
+    transform: scale(1.32);
     opacity: 0;
   }
+}
+.arcade__waves .arcade__wave:not(:nth-last-child(-n + 2)) {
+  display: none;
 }
 .arcade.arcade--demo .arcade__cap {
   animation: demo-press 1.8s ease-in-out infinite;
@@ -343,7 +363,7 @@
 .gs__score {
   font-size: var(--fs-13);
   font-weight: 700;
-  color: var(--text-dim);
+  color: #b4bbe0;
   line-height: 1;
 }
 .gs[data-me="1"] .gs__score {

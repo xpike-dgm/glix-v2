@@ -1,10 +1,12 @@
 import type { MatchSnapshot, RoomSnapshot } from "@glix/engine";
 import { createSignal, For, Show, Suspense } from "solid-js";
 import { Dynamic } from "solid-js/web";
+import { hapticReady } from "../fx/haptics.js";
+import { ready as readySound } from "../fx/sound.js";
 import { gameEntry } from "../games/registry.js";
 import { sendReady } from "../net/client.js";
 import { Avatar } from "../ui/Avatar.js";
-import { CheckIcon } from "../ui/Icons.js";
+import { CheckIcon, EyeIcon, RotateIcon } from "../ui/Icons.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
 
@@ -26,6 +28,12 @@ export function Briefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
       <h1 class="display brief__name rise" style={{ "--i": 1 }}>
         {match().gameName}
       </h1>
+      <Show when={match().orientation === "landscape"}>
+        <p class="brief__turn rise" style={{ "--i": 2 }}>
+          <RotateIcon size={20} />
+          <span>Bu oyunu yatay oynayacaksın</span>
+        </p>
+      </Show>
 
       <div class="brief__art rise" style={{ "--i": 2 }}>
         <Suspense>
@@ -62,12 +70,25 @@ export function Briefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
             )}
           </For>
         </div>
-        <Show when={participant()} fallback={<p class="waiting">Bu oyunu izliyorsun</p>}>
+        <Show
+          when={participant()}
+          fallback={
+            <div class="watch" role="status">
+              <EyeIcon size={24} />
+              <span class="watch__text">
+                <b>Bu turu izleyeceksin</b>
+                <span>Sonraki oyuna katılacaksın</span>
+              </span>
+            </div>
+          }
+        >
           <PrimaryButton
             variant={ready() ? "done" : "cyan"}
             disabled={ready()}
             onClick={() => {
               setSent(true);
+              readySound();
+              hapticReady();
               sendReady();
             }}
           >

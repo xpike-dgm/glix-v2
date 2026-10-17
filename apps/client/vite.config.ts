@@ -10,5 +10,7 @@ export default defineConfig({
       "/health": "http://localhost:3900",
     },
   },
+  // Pixi tembel yüklenir; geliştirme sunucusu ilk açılışta yeniden paketleyip sayfayı yenilemesin.
+  optimizeDeps: { include: ["pixi.js"] },
   build: { target: "es2022" },
 });

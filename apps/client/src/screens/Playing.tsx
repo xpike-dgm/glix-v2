@@ -1,14 +1,20 @@
 import type { MatchSnapshot, RoomSnapshot } from "@glix/engine";
-import { Show, Suspense } from "solid-js";
+import { createMemo, Show, Suspense } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { gameEntry } from "../games/registry.js";
 import { createServerNow } from "../net/time.js";
+import { GameFrame } from "../ui/GameFrame.js";
 import { Screen } from "../ui/Screen.js";
 
-/** Oyun ekranını kayıt defterinden bulur; bilinmeyen oyun için sakin bir yer tutucu gösterir. */
+/**
+ * Oyun ekranını kayıt defterinden bulur ve oyun çerçevesine (dikey sütun / yatay sahne, izleyici şeridi,
+ * "yan çevir" örtüsü) koyar. Bilinmeyen oyun için sakin bir yer tutucu gösterir.
+ */
 export function Playing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
   const now = createServerNow(100);
   const entry = () => gameEntry(props.match.gameId);
+  const spectator = () => !props.match.participants.includes(props.snap.selfId);
+  const hud = createMemo(() => entry()?.hud?.(props.match, props.snap.selfId) ?? null);
   return (
     <Show
       when={entry()}
@@ -25,23 +31,35 @@ export function Playing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
       }
     >
       {(e) => (
-        <Suspense
-          fallback={
-            <Screen>
-              <div class="center-stack">
-                <span class="loader" aria-hidden="true" />
-              </div>
-            </Screen>
-          }
+        <GameFrame
+          orientation={props.match.orientation}
+          spectator={spectator()}
+          gameName={props.match.gameName}
+          selfId={props.snap.selfId}
+          players={props.snap.players}
+          participants={props.match.participants}
+          hud={hud()}
+          now={now}
         >
-          <Dynamic
-            component={e().Screen}
-            match={props.match}
-            selfId={props.snap.selfId}
-            players={props.snap.players}
-            now={now}
-          />
-        </Suspense>
+          <Suspense
+            fallback={
+              <Screen>
+                <div class="center-stack">
+                  <span class="loader" aria-hidden="true" />
+                </div>
+              </Screen>
+            }
+          >
+            <Dynamic
+              component={e().Screen}
+              match={props.match}
+              selfId={props.snap.selfId}
+              players={props.snap.players}
+              now={now}
+              spectator={spectator()}
+            />
+          </Suspense>
+        </GameFrame>
       )}
     </Show>
   );

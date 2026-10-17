@@ -22,6 +22,8 @@ export default function ButonaBasScreen(props: GameScreenProps) {
   const score = () => {
     const v = view();
     if (!v) return 0;
+    // İzleyicinin kendi puanı yok: o an en yüksek puanı göster.
+    if (props.spectator) return Math.max(0, ...Object.values(v.scores));
     return v.myScore ?? v.scores[props.selfId] ?? 0;
   };
   const strip = () => props.players.filter((p) => props.match.participants.includes(p.id));
@@ -161,7 +163,7 @@ export default function ButonaBasScreen(props: GameScreenProps) {
       </header>
 
       <div class="game__score">
-        <span class="overline">Puanın</span>
+        <span class="overline">{props.spectator ? "En yüksek puan" : "Puanın"}</span>
         <span class="game__num" ref={scoreEl}>
           {score()}
         </span>

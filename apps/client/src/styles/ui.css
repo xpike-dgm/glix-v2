@@ -31,10 +31,12 @@
   margin-bottom: 4px;
 }
 .pbtn--danger {
-  --face: var(--red);
-  --edge: #a3173a;
+  /* Beyaz yazı için koyulaştırılmış kırmızı (kontrast >= 4.5:1). */
+  --face: #d01a40;
+  --edge: #8a0f2a;
   --glow: rgba(255, 59, 92, 0.38);
   color: #fff;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--face), #fff 14%) 0%, var(--face) 46%);
 }
 .pbtn--done {
   --face: var(--lime);
@@ -529,4 +531,26 @@
 
 .av--wait {
   opacity: 0.5;
+}
+
+/* BottomSheet başlık satırı + kapat */
+.sheet__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: -4px;
+}
+.sheet__head .sheet__title {
+  flex: 1;
+  min-width: 0;
+  padding-top: 8px;
+  overflow-wrap: anywhere;
+}
+.sheet__close {
+  flex: none;
+  margin-right: -10px;
+}
+.sheet:focus {
+  outline: none;
 }

@@ -65,3 +65,15 @@ export const SoundOffIcon = (p: P) => (
     <path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4zM16 9.5l5 5M21 9.5l-5 5" />
   </svg>
 );
+export const RotateIcon = (p: P) => (
+  <svg {...base(p)}>
+    <rect x="7" y="2.5" width="10" height="19" rx="2.5" transform="rotate(-90 12 12)" />
+    <path d="M19 5.5a8 8 0 00-5-2M19 5.5V2M19 5.5h-3.5" />
+  </svg>
+);
+export const EyeIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+    <circle cx="12" cy="12" r="2.8" />
+  </svg>
+);

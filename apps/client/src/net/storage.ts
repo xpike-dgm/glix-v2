@@ -1,5 +1,10 @@
 /** localStorage her yerde kapalı olabilir; hepsi sessizce düşer. */
-export const KEYS = { token: "glix.token", nickname: "glix.nick", muted: "glix.muted" } as const;
+export const KEYS = {
+  token: "glix.token",
+  nickname: "glix.nick",
+  muted: "glix.muted",
+  volume: "glix.volume",
+} as const;
 
 export function readStored(key: string): string | null {
   try {

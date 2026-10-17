@@ -1,9 +1,9 @@
 import { createSignal } from "solid-js";
 import { leaveRoom } from "../net/client.js";
-import { BottomSheet } from "../ui/BottomSheet.js";
-import { GhostButton } from "../ui/GhostButton.js";
-import { ExitIcon } from "../ui/Icons.js";
-import { PrimaryButton } from "../ui/PrimaryButton.js";
+import { BottomSheet } from "./BottomSheet.js";
+import { GhostButton } from "./GhostButton.js";
+import { ExitIcon } from "./Icons.js";
+import { PrimaryButton } from "./PrimaryButton.js";
 
 /** Sol üst çıkış simgesi + onay sayfası. */
 export function LeaveButton() {
