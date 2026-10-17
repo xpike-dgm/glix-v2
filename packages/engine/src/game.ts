@@ -4,6 +4,11 @@ import type { Rng } from "./rng.js";
 export interface GameContext {
   now: number;
   rng: Rng;
+  /**
+   * Şu an bağlı katılımcılar (sıralı, katılım sırasıyla). Bağlantısı kopan oyuncu katılımcı olmaya devam eder;
+   * oyun kuralı gerektiriyorsa (ör. pas hedefi, sıra) bunu dikkate alır. Değişimler `GameLog.presence`'a yazılır.
+   */
+  connected: readonly string[];
 }
 
 export interface Rejected {
@@ -85,6 +90,8 @@ export interface GameLog {
   /** Zaman sıralı; yalnız kabul edilen eylemler. */
   actions: { t: number; playerId: string; action: unknown }[];
   endedAt: number;
+  /** Bağlantı değişimleri (zaman sıralı); `replay` her eylem ve tick öncesi bağlı listesini buna göre kurar. */
+  presence: { t: number; playerId: string; connected: boolean }[];
   /** Eylem sınırı aşıldığı için kayıt eksik: `replay` bu kaydı reddeder. */
   truncated?: boolean;
 }
