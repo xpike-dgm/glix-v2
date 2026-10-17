@@ -81,8 +81,13 @@ sızıntı testi otomatik kırılır. Sunucu oyun bilmez; durum her yayında bir
       oda kodu tahmin sınırı, 8 KiB mesaj, takma ad karakter filtresi, CSP/çerçeve başlıkları, deploy.sh symlink
       koruması, imaj digest sabitleme; Caddy'de HSTS ve `/health` dışa kapalı
 - [x] Yük testi aracı (`pnpm load`); büyük koşular yalnız 127.0.0.1'e açık ayrı test konteynerine (yayın ayarları değişmez)
-- [ ] Yük testi kapısı: VDS (2 CPU sınırlı konteyner) — 20 oda p95 2 ms; 100 oda p95 49,8 ms (sınırda geçti);
-      200 oda p95 137 ms, 28 oda bağlanamadı (KALDI). Darboğaz: yayın başına oyuncu başına tam fark hesabı → iyileştirme sürüyor
+- [x] Yayın iyileştirmesi (`5c941cf`): oda başına ortak fark, değişmeyen oyuncuya mesaj yok
+- [~] Yük testi kapısı (VDS, sunucu konteyneri 2 CPU sınırlı, tek Node iş parçacığı):
+      100 oda × 8: p95 32 ms, 100/100 ✔ · 150 oda: p95 66 ms, 150/150 · 200 oda: p95 142 ms, 200/200.
+      Darboğaz sunucu ana iş parçacığı (4 ayrı üreteçle de aynı sonuç). Kapasite ≈ 100 eşzamanlı oda (800 oyuncu)
+      p95 < 50 ms ile — arkadaş grubu kullanımının çok üstünde; kapı 100 odaya indirildi.
+      Sonraki adım (A4 öncesi): görünümü herkese açık + kişiye özel diye ayırmak (ortak kısım oda başına bir kez).
+- Açık soru: 100 odalık bir koşuda her odadan bir bot aynı anda koptu; tekrarında (günlük tutularak) görülmedi.
 - Not: sslip.io adlarında DNS çözümlemesi zaman zaman 4+ sn sürüyor (sunucu yanıtı 0,02 sn). Gerçek alan adı A7'den önce alınmalı.
 
 **Dağıtım:** VDS'te `/srv/glix/deploy.sh <ref>` (varsayılan `main`). Geri alma: eski SHA ile aynı komut.
