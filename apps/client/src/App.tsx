@@ -37,6 +37,8 @@ export function App() {
         void import("./dev/mockCapraz.js").then((m) => m.startCaprazMock(mock, params));
       } else if (mock.startsWith("karalama-")) {
         void import("./dev/mockKaralama.js").then((m) => m.startKaralamaMock(mock, params));
+      } else if (mock.startsWith("acgozluluk-")) {
+        void import("./dev/mockAcgozluluk.js").then((m) => m.startAcgozlulukMock(mock, params));
       } else if (/^(landscape|briefing-ready|spectator-)/.test(mock)) {
         void import("./dev/mockShell.js").then((m) => m.startShellMock(mock, params));
       } else {
