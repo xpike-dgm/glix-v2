@@ -112,6 +112,21 @@ function enterBriefing(rt: Runtime, room: Room, match: Match): void {
   room.phase = "briefing";
 }
 
+/** Bağlı oyuncu sayısına uyan oyunlar arasından tekrarsız, rastgele sırayla en çok `count` tane seçer. */
+export function pickRandomGames(rt: Runtime, connected: number, count: number): string[] {
+  const pool = Object.values(GAMES)
+    .filter((g) => g.minPlayers <= connected && connected <= g.maxPlayers)
+    .map((g) => g.id);
+  // Fisher-Yates
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = rt.randomInt(i + 1);
+    const a = pool[i] as string;
+    pool[i] = pool[j] as string;
+    pool[j] = a;
+  }
+  return pool.slice(0, count);
+}
+
 /** Maçı başlatır. Ön koşullar (host, lobi, oyuncu sayısı) çağıran tarafından denetlenir. */
 export function beginMatch(rt: Runtime, room: Room): void {
   const games = room.gameIds.map((id) => GAMES[id]).filter((g): g is AnyGame => g !== undefined);
@@ -138,6 +153,7 @@ export function beginMatch(rt: Runtime, room: Room): void {
 export function clearMatch(rt: Runtime, room: Room): void {
   room.match = null;
   room.phase = "lobby";
+  if (room.selection.mode === "random") room.gameIds = [];
   rt.active.delete(room);
 }
 

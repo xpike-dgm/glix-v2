@@ -10,6 +10,18 @@ describe("sunucu mesajı doğrulama", () => {
     expect(m?.type).toBe("room");
     if (m?.type === "room") expect(m.snapshot.match?.gameId).toBe("butona-bas");
   });
+  it("oyun seçim modunu doğrular", () => {
+    const parse = (selection: unknown) =>
+      parseServerMessage(wire({ type: "room", snapshot: { ...snapshot(), selection } }));
+    expect(parse({ mode: "manual" })?.type).toBe("room");
+    const random = parse({ mode: "random", count: 5 });
+    if (random?.type === "room") expect(random.snapshot.selection).toEqual({ mode: "random", count: 5 });
+    else throw new Error("rastgele mod kabul edilmedi");
+    for (const bad of [undefined, null, "random", {}, { mode: "x" }, { mode: "random" }]) {
+      expect(parse(bad)).toBeNull();
+    }
+    for (const count of [0, 1.5, "5", 65, null]) expect(parse({ mode: "random", count })).toBeNull();
+  });
   it("bozuk snapshot'ı reddeder", () => {
     expect(parseServerMessage(wire({ type: "room", snapshot: { ...snapshot(), phase: "x" } }))).toBeNull();
     expect(

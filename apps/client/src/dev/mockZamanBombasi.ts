@@ -208,6 +208,7 @@ export function startZamanBombasiMock(kind: string, params: URLSearchParams): vo
     phase,
     players,
     gameIds: [zamanBombasiHafizasi.id],
+    selection: { mode: "manual" },
     catalog: CATALOG,
     match,
   };

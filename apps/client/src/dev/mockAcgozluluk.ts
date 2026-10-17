@@ -113,6 +113,7 @@ export function startAcgozlulukMock(kind: string, params: URLSearchParams): void
       phase,
       players,
       gameIds: [INFO.id],
+      selection: { mode: "manual" },
       catalog: [INFO],
       match,
     };

@@ -90,6 +90,16 @@ describe("parseClientMessage: oda mesajları", () => {
     }
     expect(parseClientMessage(j({ type: "setGames", gameIds: many.slice(0, 24) }))).not.toBeNull();
   });
+  it("setRandom count 1..64 güvenli tamsayı ister", () => {
+    expect(parseClientMessage(j({ type: "setRandom", count: 5 }))).toEqual({ type: "setRandom", count: 5 });
+    expect(parseClientMessage(j({ type: "setRandom", count: 1 }))).not.toBeNull();
+    expect(parseClientMessage(j({ type: "setRandom", count: 64 }))).not.toBeNull();
+    for (const count of [0, -1, 65, 1.5, "5", null, Number.NaN, 2 ** 53, undefined]) {
+      expect(parseClientMessage(j({ type: "setRandom", count }))).toBeNull();
+    }
+    expect(parseClientMessage(j({ type: "setRandom", count: 3, extra: 1 }))).toBeNull();
+    expect(parseClientMessage(j({ type: "setRandom" }))).toBeNull();
+  });
   it("argümansız mesajlar yalnız type ile kabul edilir", () => {
     for (const type of ["leaveRoom", "startMatch", "ready", "returnToLobby", "resync"]) {
       expect(parseClientMessage(j({ type }))).toEqual({ type });

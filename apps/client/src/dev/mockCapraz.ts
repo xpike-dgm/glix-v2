@@ -88,6 +88,7 @@ export function startCaprazMock(kind: string, params: URLSearchParams): void {
       phase,
       players,
       gameIds: [info.id],
+      selection: { mode: "manual" },
       catalog: [
         {
           id: info.id,

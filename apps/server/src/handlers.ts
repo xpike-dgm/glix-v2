@@ -11,6 +11,7 @@ import {
   beginMatch,
   clearMatch,
   markReady,
+  pickRandomGames,
   recordPresence,
   requiredPlayers,
   stepMatch,
@@ -193,6 +194,19 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         return;
       }
       room.gameIds = [...msg.gameIds];
+      room.selection = { mode: "manual" };
+      rt.broadcaster.markDirty(room);
+      return;
+    }
+    case "setRandom": {
+      const room = requireHost(conn);
+      if (!room) return;
+      if (room.phase !== "lobby") {
+        fail(conn, "wrong_phase");
+        return;
+      }
+      room.selection = { mode: "random", count: Math.min(msg.count, rt.catalog.length) };
+      room.gameIds = [];
       rt.broadcaster.markDirty(room);
       return;
     }
@@ -201,6 +215,18 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       if (!room) return;
       if (room.phase !== "lobby") {
         fail(conn, "wrong_phase");
+        return;
+      }
+      if (room.selection.mode === "random") {
+        const connectedCount = [...room.players.values()].filter(isConnected).length;
+        const picked = pickRandomGames(rt, connectedCount, room.selection.count);
+        if (picked.length === 0) {
+          fail(conn, "not_enough_players", "Bu oyuncu sayısıyla oynanabilecek oyun yok.");
+          return;
+        }
+        room.gameIds = picked;
+        beginMatch(rt, room);
+        rt.broadcaster.markDirty(room);
         return;
       }
       if (room.gameIds.length === 0 || !room.gameIds.every((id) => Object.hasOwn(GAMES, id))) {

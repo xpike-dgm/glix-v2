@@ -257,6 +257,7 @@ export function leaveRoom(): void {
 }
 
 export const kick = (playerId: string): boolean => rawSend({ type: "kick", playerId });
+export const setRandom = (count: number): boolean => rawSend({ type: "setRandom", count });
 export const setGames = (gameIds: string[]): boolean => rawSend({ type: "setGames", gameIds });
 export const startMatch = (): boolean => rawSend({ type: "startMatch" });
 export const sendReady = (): boolean => rawSend({ type: "ready" });

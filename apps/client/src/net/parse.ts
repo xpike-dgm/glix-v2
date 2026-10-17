@@ -104,6 +104,14 @@ function parseMatch(v: unknown): MatchSnapshot | null {
   };
 }
 
+function parseSelection(v: unknown): RoomSnapshot["selection"] | null {
+  if (!isRec(v)) return null;
+  if (v.mode === "manual") return { mode: "manual" };
+  if (v.mode === "random" && isNum(v.count) && Number.isInteger(v.count) && v.count >= 1 && v.count <= 64)
+    return { mode: "random", count: v.count };
+  return null;
+}
+
 export function parseSnapshot(v: unknown): RoomSnapshot | null {
   if (!isRec(v)) return null;
   if (!isNum(v.rev) || !isNum(v.serverNow) || !isStr(v.code) || !isStr(v.hostId) || !isStr(v.selfId))
@@ -117,6 +125,8 @@ export function parseSnapshot(v: unknown): RoomSnapshot | null {
     if (!pp) return null;
     players.push(pp);
   }
+  const selection = parseSelection(v.selection);
+  if (!selection) return null;
   const catalog: GameInfo[] = [];
   for (const g of v.catalog) {
     const gg = parseGameInfo(g);
@@ -137,6 +147,7 @@ export function parseSnapshot(v: unknown): RoomSnapshot | null {
     phase,
     players,
     gameIds: v.gameIds,
+    selection,
     catalog,
     match,
   };

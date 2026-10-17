@@ -104,6 +104,7 @@ describe("yama senkronu", () => {
       phase: "lobby",
       players: [],
       gameIds: [],
+      selection: { mode: "random", count: 5 },
       catalog: [],
       match: null,
     } as RoomSnapshot;

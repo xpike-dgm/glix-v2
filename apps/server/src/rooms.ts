@@ -1,5 +1,5 @@
 import { randomBytes, randomInt } from "node:crypto";
-import { GAMES, getCatalog, MAX_NICKNAME_LENGTH, MAX_PLAYERS, ROOM_CODE_LENGTH } from "@glix/engine";
+import { getCatalog, MAX_NICKNAME_LENGTH, MAX_PLAYERS, ROOM_CODE_LENGTH } from "@glix/engine";
 import { createBroadcaster } from "./broadcast.js";
 import { type Clock, systemClock } from "./clock.js";
 import { clearMatch, recordPresence } from "./match.js";
@@ -11,12 +11,14 @@ export const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const GRACE_MS = 120_000;
 export const EMPTY_ROOM_MS = 120_000;
 export const HOST_GRACE_MS = 20_000;
+export const DEFAULT_RANDOM_COUNT = 5;
 
 export function createRuntime(
   clock: Clock = systemClock,
   maxRooms = 1000,
   roomCreateBurst = 10,
-  defaultGameIds: readonly string[] = Object.keys(GAMES),
+  defaultGameIds?: readonly string[],
+  pickInt: (max: number) => number = randomInt,
 ): Runtime {
   const rt: Runtime = {
     clock,
@@ -30,7 +32,8 @@ export function createRuntime(
     active: new Set(),
     broadcaster: createBroadcaster(clock, () => rt),
     catalog: getCatalog(),
-    defaultGameIds: [...defaultGameIds],
+    defaultGameIds: defaultGameIds ? [...defaultGameIds] : null,
+    randomInt: pickInt,
   };
   return rt;
 }
@@ -74,7 +77,8 @@ export function createRoom(rt: Runtime): Room {
     hostId: "",
     players: new Map(),
     phase: "lobby",
-    gameIds: [...rt.defaultGameIds],
+    gameIds: rt.defaultGameIds ? [...rt.defaultGameIds] : [],
+    selection: rt.defaultGameIds ? { mode: "manual" } : { mode: "random", count: DEFAULT_RANDOM_COUNT },
     match: null,
     rev: 0,
     nextJoinOrder: 0,

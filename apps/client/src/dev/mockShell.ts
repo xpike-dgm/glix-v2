@@ -119,6 +119,7 @@ export function startShellMock(kind: string, params: URLSearchParams): void {
     phase,
     players,
     gameIds: [game.id],
+    selection: { mode: "manual" },
     catalog: CATALOG,
     match,
   };

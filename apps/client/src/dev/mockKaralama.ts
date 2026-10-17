@@ -226,6 +226,7 @@ export function startKaralamaMock(kind: string, params: URLSearchParams): void {
       phase,
       players,
       gameIds: [GAME_ID],
+      selection: { mode: "manual" },
       catalog: CATALOG,
       match: {
         round: 0,

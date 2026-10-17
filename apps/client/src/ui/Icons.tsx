@@ -30,6 +30,11 @@ export const PlusIcon = (p: P) => (
     <path d="M12 5v14M5 12h14" />
   </svg>
 );
+export const MinusIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M5 12h14" />
+  </svg>
+);
 export const ShareIcon = (p: P) => (
   <svg {...base(p)}>
     <path d="M12 15V3M7.5 7.5L12 3l4.5 4.5M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />

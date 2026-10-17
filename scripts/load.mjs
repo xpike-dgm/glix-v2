@@ -341,6 +341,8 @@ class Room {
       ) {
         this.started++;
         this.phase = "running";
+        // Odalar rastgele modda açılır; yük ölçümü hep Butona Bas ile yapılır.
+        host.send({ type: "setGames", gameIds: ["butona-bas"] });
         host.send({ type: "startMatch" });
       }
     } else if (s.phase === "final") {

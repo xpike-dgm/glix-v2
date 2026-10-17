@@ -152,6 +152,7 @@ export function startCagrisimMock(kind: string, params: URLSearchParams): void {
       phase,
       players,
       gameIds: ["cagrisim-agi"],
+      selection: { mode: "manual" },
       catalog: CATALOG,
       match: match(),
     };

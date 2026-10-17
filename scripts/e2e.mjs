@@ -260,8 +260,23 @@ async function main() {
     const clip = await A.evaluate(() => navigator.clipboard.readText());
     assert(clip === `${base}/?oda=${code}`, `panodaki bağlantı yanlış: ${clip}`);
 
-    // Minigame akordeonu: oda tüm oyunlarla açılır; host yalnız Butona Bas'ı bırakır, son oyun kapatılamaz
+    // Minigame akordeonu: oda rastgele 5 ile açılır; host "Ben seçeyim"e geçip yalnız Butona Bas'ı bırakır,
+    // son oyun kapatılamaz
+    const head = A.locator(".games__head");
+    assert(
+      (await head.locator(".games__count").innerText()).trim() === "Rastgele · 5",
+      "akordeon başlığı 'Rastgele · 5' göstermeli",
+    );
     await btn(A, /minigame seçimi/i).click();
+    await A.locator(".seg__opt", { hasText: "Rastgele" }).waitFor(OPT);
+    await shot(A, "05a-lobby-random");
+    assert(
+      !(await C.locator(".seg__opt", { hasText: "Ben seçeyim" })
+        .isEnabled()
+        .catch(() => false)),
+      "host olmayan seçim biçimini değiştirememeli",
+    );
+    await A.locator(".seg__opt", { hasText: "Ben seçeyim" }).click();
     const card = A.locator(".gcard", { hasText: "Butona Bas" });
     await card.waitFor(OPT);
     await shot(A, "05b-lobby-games");
@@ -280,6 +295,10 @@ async function main() {
     await card.click();
     await A.getByText("En az bir oyun seçili olmalı").waitFor(OPT);
     assert((await card.getAttribute("aria-pressed")) === "true", "son oyun seçili kalmalı");
+    assert(
+      (await head.locator(".games__count").innerText()).trim() === "1 oyun",
+      "el ile modda başlık '1 oyun' göstermeli",
+    );
     await btn(A, /minigame seçimi/i).click();
 
     // Olmayan oda: nazik mesaj + ANA SAYFA

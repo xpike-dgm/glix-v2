@@ -45,7 +45,8 @@ const SCREENS = [
   { name: "reconnect", q: "mock=reconnect" },
   { name: "lobby-2", q: "mock=lobby&n=2" },
   { name: "lobby-8", q: "mock=lobby&n=8" },
-  { name: "lobby-games", q: "mock=lobby", act: clickText("Minigame Seçimi") },
+  { name: "lobby-random", q: "mock=lobby", settle: 1000, act: clickText("Minigame Seçimi") },
+  { name: "lobby-manual", q: "mock=lobby&sel=manual", settle: 1000, act: clickText("Minigame Seçimi") },
   {
     name: "lobby-kick",
     q: "mock=lobby",

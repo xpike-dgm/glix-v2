@@ -33,6 +33,7 @@ export function snapshot(phase: RoomPhase = "lobby", extra: Partial<RoomSnapshot
     phase,
     players: [player("a"), player("b", 1)],
     gameIds: ["butona-bas"],
+    selection: { mode: "manual" },
     catalog: [
       { id: "butona-bas", name: "Butona Bas", minPlayers: 2, maxPlayers: 8, orientation: "portrait" },
     ],

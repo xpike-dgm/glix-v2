@@ -43,8 +43,10 @@ export interface ServerOptions {
   limits?: Partial<ServerLimits>;
   /** Kalp atışı aralığı (ms). Varsayılan 20 sn; sahte saatle atlamalı testler büyük değer verir. */
   heartbeatMs?: number;
-  /** Yeni odaların varsayılan oyun seçimi. Varsayılan: kayıtlı tüm oyunlar. */
-  defaultGameIds?: readonly string[];
+  /** Yeni odaların varsayılan oyun seçimi. Verilmezse yeni odalar rastgele modda (5 oyun) açılır; verilirse bu oyunlarla manuel mod. */
+  defaultGameIds?: readonly string[] | undefined;
+  /** Rastgele oyun seçiminde kullanılan 0..max-1 rastgele tamsayı (testlerde sabitlenir). Varsayılan: crypto. */
+  randomInt?: (max: number) => number;
 }
 
 export interface RunningServer {
@@ -68,7 +70,13 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const sockets = new Set<WebSocket>();
   const clock = opts.clock ?? systemClock;
   const limits: ServerLimits = { ...DEFAULT_LIMITS, ...opts.limits };
-  const rt = createRuntime(clock, limits.maxRooms, limits.roomCreateBurst, opts.defaultGameIds);
+  const rt = createRuntime(
+    clock,
+    limits.maxRooms,
+    limits.roomCreateBurst,
+    opts.defaultGameIds,
+    opts.randomInt,
+  );
   const perIp = new Map<string, number>();
   const aliveSockets = new WeakMap<WebSocket, boolean>();
 

@@ -108,6 +108,7 @@ export function startKorBombaMock(kind: string, params: URLSearchParams): void {
       phase,
       players,
       gameIds: [GAME.id],
+      selection: { mode: "manual" },
       catalog: [GAME],
       match,
     };

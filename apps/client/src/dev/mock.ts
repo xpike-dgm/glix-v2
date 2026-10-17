@@ -26,6 +26,10 @@ const SELF = "p0";
 const CATALOG: GameInfo[] = [
   { id: "butona-bas", name: "Butona Bas", minPlayers: 2, maxPlayers: 8, orientation: "portrait" },
   { id: "hafiza", name: "Hafıza Kapışması", minPlayers: 3, maxPlayers: 8, orientation: "portrait" },
+  { id: "kor-bomba", name: "Kör Bomba", minPlayers: 2, maxPlayers: 8, orientation: "portrait" },
+  { id: "cagrisim-agi", name: "Çağrışım Ağı", minPlayers: 2, maxPlayers: 8, orientation: "portrait" },
+  { id: "capraz-ates", name: "Çapraz Ateş", minPlayers: 3, maxPlayers: 8, orientation: "landscape" },
+  { id: "karalama-defteri", name: "Karalama Defteri", minPlayers: 3, maxPlayers: 8, orientation: "portrait" },
 ];
 
 export function startMock(kind: string, params: URLSearchParams): void {
@@ -38,7 +42,10 @@ export function startMock(kind: string, params: URLSearchParams): void {
     score: 0,
   }));
   let rev = 1;
-  let gameIds = ["butona-bas"];
+  // Varsayılan oda rastgele 5; `&sel=manual` el ile modda açar.
+  let selection: RoomSnapshot["selection"] =
+    params.get("sel") === "manual" ? { mode: "manual" } : { mode: "random", count: 5 };
+  let gameIds = selection.mode === "manual" ? ["butona-bas"] : [];
   let phase: RoomPhase = "lobby";
   let readyIds: string[] = [];
   let phaseStartedAt = Date.now();
@@ -93,6 +100,7 @@ export function startMock(kind: string, params: URLSearchParams): void {
       phase,
       players,
       gameIds,
+      selection,
       catalog: CATALOG,
       match: match(),
     };
@@ -181,6 +189,12 @@ export function startMock(kind: string, params: URLSearchParams): void {
     switch (msg.type) {
       case "setGames":
         gameIds = msg.gameIds;
+        selection = { mode: "manual" };
+        publish();
+        break;
+      case "setRandom":
+        selection = { mode: "random", count: Math.min(msg.count, CATALOG.length) };
+        gameIds = [];
         publish();
         break;
       case "kick":

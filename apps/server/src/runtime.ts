@@ -43,7 +43,9 @@ export interface Room {
   hostId: string;
   players: Map<string, Player>;
   phase: RoomPhase;
+  /** Manuel modda seçili oyunlar; rastgele modda lobide boş, maçta seçilenler. */
   gameIds: string[];
+  selection: RoomSnapshot["selection"];
   match: Match | null;
   rev: number;
   nextJoinOrder: number;
@@ -71,8 +73,10 @@ export interface Runtime {
   active: Set<Room>;
   broadcaster: Broadcaster;
   catalog: GameInfo[];
-  /** Yeni odanın varsayılan oyun seçimi. */
-  defaultGameIds: string[];
+  /** Yeni odanın varsayılan oyun seçimi; null ise rastgele 5. */
+  defaultGameIds: string[] | null;
+  /** 0..max-1 arası rastgele tamsayı (testlerde değiştirilebilir; varsayılan crypto). */
+  randomInt: (max: number) => number;
 }
 
 export function isConnected(player: Player): boolean {

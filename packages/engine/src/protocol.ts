@@ -220,6 +220,12 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       }
       return { type: "setGames", gameIds: out };
     }
+    case "setRandom": {
+      if (!hasExactKeys(data, ["type", "count"])) return null;
+      const count = data.count;
+      if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 1 || count > 64) return null;
+      return { type: "setRandom", count };
+    }
     case "action": {
       if (!hasExactKeys(data, ["type", "seq", "payload"])) return null;
       const seq = data.seq;

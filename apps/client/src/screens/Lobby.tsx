@@ -1,12 +1,12 @@
 import { MAX_PLAYERS, type PlayerInfo, type RoomSnapshot } from "@glix/engine";
 import { createMemo, createSignal, For, Show } from "solid-js";
-import { kick, setGames, startMatch } from "../net/client.js";
+import { kick, setGames, setRandom, startMatch } from "../net/client.js";
 import { inviteLink } from "../net/code.js";
 import { toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
 import { GhostButton } from "../ui/GhostButton.js";
-import { CheckIcon, ChevronIcon, PlusIcon, ShareIcon } from "../ui/Icons.js";
+import { CheckIcon, ChevronIcon, MinusIcon, PlusIcon, ShareIcon } from "../ui/Icons.js";
 import { LeaveButton } from "../ui/LeaveButton.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
@@ -46,10 +46,42 @@ export function Lobby(props: { snap: RoomSnapshot }) {
   const selected = () => snap().catalog.filter((g) => snap().gameIds.includes(g.id));
   const connected = () => snap().players.filter((p) => p.connected).length;
   const need = () => selected().reduce((m, g) => Math.max(m, g.minPlayers), 2);
+  const sel = () => snap().selection;
+  const randomCount = (): number => {
+    const s = sel();
+    return s.mode === "random" ? Math.min(s.count, snap().catalog.length) : 0;
+  };
+  const eligible = () =>
+    snap().catalog.filter((g) => g.minPlayers <= connected() && connected() <= g.maxPlayers);
+  const lastCount = { n: 5 };
+  const headCount = (): string =>
+    sel().mode === "random" ? `Rastgele · ${randomCount()}` : `${selected().length} oyun`;
   const blocker = (): string | undefined => {
+    if (sel().mode === "random") {
+      return eligible().length === 0 ? "Bu oyuncu sayısıyla oynanabilecek oyun yok" : undefined;
+    }
     if (selected().length === 0) return "En az bir oyun seç";
     if (connected() < need()) return `En az ${need()} oyuncu gerekli`;
     return undefined;
+  };
+
+  const chooseRandom = (): void => {
+    if (!isHost() || sel().mode === "random") return;
+    setRandom(Math.min(lastCount.n, snap().catalog.length));
+  };
+  const chooseManual = (): void => {
+    if (!isHost() || sel().mode === "manual") return;
+    lastCount.n = randomCount();
+    const fit = eligible().map((g) => g.id);
+    const first = snap().catalog[0]?.id;
+    setGames(fit.length > 0 ? fit : first ? [first] : []);
+  };
+  const step = (delta: number): void => {
+    if (!isHost()) return;
+    const next = Math.min(snap().catalog.length, Math.max(1, randomCount() + delta));
+    if (next === randomCount()) return;
+    lastCount.n = next;
+    setRandom(next);
   };
 
   const toggleGame = (id: string): void => {
@@ -139,42 +171,103 @@ export function Lobby(props: { snap: RoomSnapshot }) {
               const next = !open();
               setOpen(next);
               if (next)
-                setTimeout(() => scroller?.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" }), 120);
+                setTimeout(() => scroller?.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" }), 340);
             }}
           >
             <span class="games__title">Minigame Seçimi</span>
-            <span class="games__count">{selected().length} oyun</span>
+            <span class="games__count">{headCount()}</span>
             <ChevronIcon size={22} class="games__chev" />
           </button>
           <div class="games__panel">
             <div class="games__inner">
-              <For each={snap().catalog}>
-                {(g) => {
-                  const on = () => snap().gameIds.includes(g.id);
-                  return (
-                    <button
-                      type="button"
-                      class="gcard"
-                      data-on={on() ? "1" : undefined}
-                      disabled={!isHost()}
-                      aria-pressed={on()}
-                      onClick={() => toggleGame(g.id)}
-                    >
-                      <span class="gcard__text">
-                        <span class="gcard__name">{g.name}</span>
-                        <span class="gcard__tag">
-                          {g.minPlayers}–{g.maxPlayers} oyuncu
+              <div class="seg">
+                <button
+                  type="button"
+                  class="seg__opt"
+                  aria-pressed={sel().mode === "random"}
+                  data-on={sel().mode === "random" ? "1" : undefined}
+                  disabled={!isHost()}
+                  onClick={chooseRandom}
+                >
+                  Rastgele
+                </button>
+                <button
+                  type="button"
+                  class="seg__opt"
+                  aria-pressed={sel().mode === "manual"}
+                  data-on={sel().mode === "manual" ? "1" : undefined}
+                  disabled={!isHost()}
+                  onClick={chooseManual}
+                >
+                  Ben seçeyim
+                </button>
+              </div>
+              <Show when={sel().mode === "random"}>
+                <div class="rnd">
+                  <div class="rnd__step">
+                    <Show when={isHost()}>
+                      <button
+                        type="button"
+                        class="rnd__btn"
+                        aria-label="Oyun sayısını azalt"
+                        disabled={randomCount() <= 1}
+                        onClick={() => step(-1)}
+                      >
+                        <MinusIcon size={26} />
+                      </button>
+                    </Show>
+                    <span class="rnd__num" aria-live="polite">
+                      {randomCount()}
+                    </span>
+                    <Show when={isHost()}>
+                      <button
+                        type="button"
+                        class="rnd__btn"
+                        aria-label="Oyun sayısını artır"
+                        disabled={randomCount() >= snap().catalog.length}
+                        onClick={() => step(1)}
+                      >
+                        <PlusIcon size={26} />
+                      </button>
+                    </Show>
+                  </div>
+                  <p class="rnd__hint">Başlarken oyuncu sayısına uygun {randomCount()} oyun seçilir</p>
+                  <Show when={eligible().length < randomCount()}>
+                    <p class="rnd__hint rnd__hint--warn">
+                      Şu an {eligible().length === 0 ? "uygun oyun yok" : `${eligible().length} oyun uygun`}
+                    </p>
+                  </Show>
+                </div>
+              </Show>
+              <Show when={sel().mode === "manual"}>
+                <For each={snap().catalog}>
+                  {(g) => {
+                    const on = () => snap().gameIds.includes(g.id);
+                    return (
+                      <button
+                        type="button"
+                        class="gcard"
+                        data-on={on() ? "1" : undefined}
+                        disabled={!isHost()}
+                        aria-pressed={on()}
+                        onClick={() => toggleGame(g.id)}
+                      >
+                        <span class="gcard__text">
+                          <span class="gcard__name">{g.name}</span>
+                          <span class="gcard__tag">
+                            {g.minPlayers}–{g.maxPlayers} oyuncu
+                          </span>
                         </span>
-                      </span>
-                      <span class="gcard__check">
-                        <Show when={on()}>
-                          <CheckIcon size={16} />
-                        </Show>
-                      </span>
-                    </button>
-                  );
-                }}
-              </For>
+                        <span class="gcard__check">
+                          <Show when={on()}>
+                            <CheckIcon size={16} />
+                          </Show>
+                        </span>
+                      </button>
+                    );
+                  }}
+                </For>
+              </Show>
             </div>
           </div>
         </section>
