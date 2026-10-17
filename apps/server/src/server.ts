@@ -200,6 +200,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     const conn: Connection = {
       player: null,
       lastSent: null,
+      sentVer: -1,
       ip,
       failedJoins: 0,
       sendRaw,

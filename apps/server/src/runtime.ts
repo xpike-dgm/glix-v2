@@ -15,6 +15,8 @@ export interface Connection {
    * null ise sıradaki yayın tam `room` olur (giriş, resume, resync).
    */
   lastSent: RoomSnapshot | null;
+  /** `lastSent`'in dayandığı ortak oda sürümü (broadcast.ts); hızlı yama yolu yalnız güncel sürümde çalışır. */
+  sentVer: number;
   close(code: number, reason: string): void;
   player: Player | null;
   /** Çözümlenmiş istemci IP'si (oran sınırları için). */

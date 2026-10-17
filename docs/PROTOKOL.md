@@ -36,7 +36,9 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 
 **Yama kuralı:** Sunucu her bağlantıya son gönderdiği snapshot'ı tutar ve yalnız farkı yollar.
 İstemci `baseRev` kendi `rev`'ine eşitse yamayı uygular, değilse yamayı atıp `resync` gönderir.
-Fark tam snapshot'tan büyükse sunucu doğrudan `room` gönderir. `serverNow` her mesajda değişir.
+Fark tam snapshot'tan büyükse sunucu doğrudan `room` gönderir. Hiçbir görünür alan değişmediyse mesaj
+gönderilmez; `rev` ve `serverNow` yalnız gönderilen mesajlarda ilerler (istemci saati ping/pong ile eşler,
+`serverNow`'a ihtiyaç duymaz).
 
 ## Maç kaydı
 
