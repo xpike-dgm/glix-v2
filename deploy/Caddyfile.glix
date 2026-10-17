@@ -1,4 +1,8 @@
 glix.212.38.88.237.sslip.io {
 	encode zstd gzip
+	header Strict-Transport-Security "max-age=31536000"
+	# Sağlık uç noktası yalnız sunucunun kendisinden (deploy.sh 127.0.0.1:3900'ü doğrudan kullanır).
+	@health path /health
+	respond @health 404
 	reverse_proxy 127.0.0.1:3900
 }
