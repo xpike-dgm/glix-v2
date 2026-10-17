@@ -12,10 +12,12 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "build": "turbo run build",
-    "dev": "turbo run dev --parallel"
+    "dev": "turbo run dev --parallel",
+    "e2e": "node scripts/e2e.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
+    "playwright-core": "1.56.1",
     "turbo": "2.11.9"
   }
 }

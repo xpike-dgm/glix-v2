@@ -1,0 +1,150 @@
+import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { mountBackdrop } from "../backdrop/hero.js";
+import { createRoom } from "../net/client.js";
+import { setNickname, setState, state } from "../net/store.js";
+import { Avatar } from "../ui/Avatar.js";
+import { avatarFromName } from "../ui/avatars.js";
+import { BottomSheet } from "../ui/BottomSheet.js";
+import { GhostButton } from "../ui/GhostButton.js";
+import { PrimaryButton } from "../ui/PrimaryButton.js";
+import { Screen } from "../ui/Screen.js";
+import { SoundToggle } from "../ui/SoundToggle.js";
+import { NicknameSheet } from "./NicknameSheet.js";
+
+/** Ana sayfadaki karakter grubu: [avatar sırası, boy]. */
+const CREW: readonly (readonly [number, number])[] = [
+  [7, 50],
+  [1, 60],
+  [0, 74],
+  [3, 60],
+  [5, 50],
+];
+
+type Sheet = "nick" | "how" | null;
+type After = "create" | "join" | null;
+
+export function Home() {
+  let bg: HTMLDivElement | undefined;
+  const [sheet, setSheet] = createSignal<Sheet>(null);
+  const [after, setAfter] = createSignal<After>(null);
+
+  onMount(() => {
+    if (!bg || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let dispose: (() => void) | undefined;
+    let gone = false;
+    mountBackdrop(bg)
+      .then((d) => {
+        if (gone) {
+          d();
+          return;
+        }
+        dispose = d;
+        document.documentElement.dataset.pixi = "1";
+      })
+      .catch(() => {
+        // Pixi açılamazsa CSS zemini kalır
+      });
+    onCleanup(() => {
+      gone = true;
+      delete document.documentElement.dataset.pixi;
+      dispose?.();
+    });
+  });
+
+  const create = (): void => {
+    if (!state.nickname) {
+      setAfter("create");
+      setSheet("nick");
+      return;
+    }
+    createRoom(state.nickname);
+  };
+  const join = (): void => {
+    if (!state.nickname) {
+      setAfter("join");
+      setSheet("nick");
+      return;
+    }
+    setState("nav", "join");
+  };
+  const nickDone = (name: string): void => {
+    setNickname(name);
+    setSheet(null);
+    const next = after();
+    setAfter(null);
+    if (next === "create") createRoom(name);
+    else if (next === "join") setState("nav", "join");
+  };
+
+  return (
+    <Screen class="home">
+      <div class="home__bg" ref={bg} aria-hidden="true" />
+      <header class="topbar">
+        <Show when={state.nickname} fallback={<span />}>
+          <button
+            type="button"
+            class="chip"
+            onClick={() => {
+              setAfter(null);
+              setSheet("nick");
+            }}
+          >
+            <Avatar index={avatarFromName(state.nickname)} size={32} />
+            <span class="chip__name">{state.nickname}</span>
+          </button>
+        </Show>
+        <SoundToggle />
+      </header>
+
+      <div class="home__hero">
+        <h1 class="wordmark" aria-label="GLIX">
+          GLIX
+        </h1>
+        <p class="tagline">Arkadaşlarınla telefondan parti oyunu</p>
+        <div class="crew" aria-hidden="true">
+          <For each={CREW}>
+            {([avatar, size], i) => (
+              <div class="crew__one" style={{ "--i": i() }}>
+                <Avatar index={avatar} size={size} />
+              </div>
+            )}
+          </For>
+        </div>
+      </div>
+
+      <div class="home__actions">
+        <PrimaryButton onClick={create} busy={state.busy}>
+          Oda kur
+        </PrimaryButton>
+        <GhostButton onClick={join}>Odaya katıl</GhostButton>
+        <GhostButton size="small" onClick={() => setSheet("how")}>
+          Nasıl oynanır?
+        </GhostButton>
+      </div>
+
+      <NicknameSheet
+        open={sheet() === "nick"}
+        initial={state.nickname}
+        onClose={() => setSheet(null)}
+        onDone={nickDone}
+      />
+      <BottomSheet open={sheet() === "how"} onClose={() => setSheet(null)} title="Nasıl oynanır?">
+        <ol class="how">
+          <li>
+            <b>1</b>
+            <span>Oda kur ve kodu arkadaşlarınla paylaş.</span>
+          </li>
+          <li>
+            <b>2</b>
+            <span>Herkes kendi telefonundan katılır. Minigameleri sen seç.</span>
+          </li>
+          <li>
+            <b>3</b>
+            <span>Her oyunda puan topla. En çok puanı alan kazanır.</span>
+          </li>
+        </ol>
+        <PrimaryButton onClick={() => setSheet(null)}>Anladım</PrimaryButton>
+      </BottomSheet>
+    </Screen>
+  );
+}

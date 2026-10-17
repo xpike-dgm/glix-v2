@@ -111,8 +111,29 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
-function hasOnlyKeys(obj: Record<string, unknown>, keys: readonly string[]): boolean {
-  return Object.keys(obj).every((k) => keys.includes(k));
+function hasExactKeys(obj: Record<string, unknown>, keys: readonly string[]): boolean {
+  const own = Object.keys(obj);
+  return own.length === keys.length && keys.every((k) => own.includes(k));
+}
+
+const CONTROL_CHARS = /\p{Cc}/u;
+const WHITESPACE_RUN = /\s+/gu;
+const CODE_PATTERN = /^[A-Z0-9]{5}$/;
+const TOKEN_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
+
+/** Takma adı temizler (kırp, iç boşlukları tek boşluğa indir). Geçersizse null. */
+export function normalizeNickname(value: unknown): string | null {
+  if (typeof value !== "string" || value.length > 256 || CONTROL_CHARS.test(value)) return null;
+  const clean = value.replace(WHITESPACE_RUN, " ").trim();
+  const length = Array.from(clean).length;
+  if (length < 1 || length > MAX_NICKNAME_LENGTH) return null;
+  return clean;
+}
+
+function parseCode(value: unknown): string | null {
+  if (typeof value !== "string" || value.length !== ROOM_CODE_LENGTH) return null;
+  const code = value.toUpperCase();
+  return CODE_PATTERN.test(code) ? code : null;
 }
 
 /** Ağdan gelen ham metni doğrular; geçersizse null döner. */
@@ -127,16 +148,64 @@ export function parseClientMessage(raw: string): ClientMessage | null {
   if (!isRecord(data)) return null;
   switch (data.type) {
     case "hello": {
-      if (!hasOnlyKeys(data, ["type", "clientVersion"])) return null;
+      if (!hasExactKeys(data, ["type", "clientVersion"])) return null;
       const v = data.clientVersion;
       if (typeof v !== "string" || v.length === 0 || v.length > 64) return null;
       return { type: "hello", clientVersion: v };
     }
     case "ping": {
-      if (!hasOnlyKeys(data, ["type", "t"])) return null;
+      if (!hasExactKeys(data, ["type", "t"])) return null;
       const t = data.t;
       if (typeof t !== "number" || !Number.isFinite(t)) return null;
       return { type: "ping", t };
+    }
+    case "createRoom": {
+      if (!hasExactKeys(data, ["type", "nickname"])) return null;
+      const nickname = normalizeNickname(data.nickname);
+      return nickname === null ? null : { type: "createRoom", nickname };
+    }
+    case "joinRoom": {
+      if (!hasExactKeys(data, ["type", "code", "nickname"])) return null;
+      const code = parseCode(data.code);
+      const nickname = normalizeNickname(data.nickname);
+      if (code === null || nickname === null) return null;
+      return { type: "joinRoom", code, nickname };
+    }
+    case "resume": {
+      if (!hasExactKeys(data, ["type", "token"])) return null;
+      const token = data.token;
+      if (typeof token !== "string" || !TOKEN_PATTERN.test(token)) return null;
+      return { type: "resume", token };
+    }
+    case "kick": {
+      if (!hasExactKeys(data, ["type", "playerId"])) return null;
+      const id = data.playerId;
+      if (typeof id !== "string" || id.length === 0 || id.length > 64) return null;
+      return { type: "kick", playerId: id };
+    }
+    case "setGames": {
+      if (!hasExactKeys(data, ["type", "gameIds"])) return null;
+      const ids = data.gameIds;
+      if (!Array.isArray(ids) || ids.length < 1 || ids.length > 24) return null;
+      const out: string[] = [];
+      for (const id of ids) {
+        if (typeof id !== "string" || id.length === 0 || id.length > 64 || out.includes(id)) return null;
+        out.push(id);
+      }
+      return { type: "setGames", gameIds: out };
+    }
+    case "action": {
+      if (!hasExactKeys(data, ["type", "seq", "payload"])) return null;
+      const seq = data.seq;
+      if (typeof seq !== "number" || !Number.isSafeInteger(seq) || seq < 0) return null;
+      return { type: "action", seq, payload: data.payload };
+    }
+    case "leaveRoom":
+    case "startMatch":
+    case "ready":
+    case "returnToLobby": {
+      if (!hasExactKeys(data, ["type"])) return null;
+      return { type: data.type };
     }
     default:
       return null;

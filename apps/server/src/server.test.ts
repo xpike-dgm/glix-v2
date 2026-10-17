@@ -41,7 +41,14 @@ function exchange(url: string, payload: string, headers?: Record<string, string>
 describe("http", () => {
   it("/health", async () => {
     const body = await (await fetch(`http://${base}/health`)).json();
-    expect(body).toMatchObject({ ok: true, version: "0.0.1", protocolVersion: 1, revision: "testrev" });
+    expect(body).toMatchObject({
+      ok: true,
+      version: "0.1.0",
+      protocolVersion: 2,
+      rooms: 0,
+      players: 0,
+      revision: "testrev",
+    });
     expect(typeof (body as { uptimeSeconds: number }).uptimeSeconds).toBe("number");
   });
   it("index ve SPA geri dönüşü", async () => {
@@ -79,8 +86,8 @@ describe("ws", () => {
   it("hello -> welcome", async () => {
     expect(await exchange(`ws://${base}/ws`, '{"type":"hello","clientVersion":"0.0.1"}')).toEqual({
       type: "welcome",
-      protocolVersion: 1,
-      serverVersion: "0.0.1",
+      protocolVersion: 2,
+      serverVersion: "0.1.0",
     });
   });
   it("ping -> pong", async () => {

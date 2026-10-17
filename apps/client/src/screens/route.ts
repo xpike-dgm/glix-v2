@@ -1,0 +1,34 @@
+import type { RoomSnapshot } from "@glix/engine";
+
+export type ScreenId =
+  | "home"
+  | "join"
+  | "notfound"
+  | "lobby"
+  | "briefing"
+  | "countdown"
+  | "playing"
+  | "results"
+  | "final";
+
+export interface RouteInput {
+  snapshot: RoomSnapshot | null;
+  nav: "home" | "join";
+  notFound: boolean;
+}
+
+/** Ekran yalnız store'dan türetilir: oturum yok → ana sayfa/katıl; varsa snapshot.phase. */
+export function selectScreen({ snapshot, nav, notFound }: RouteInput): ScreenId {
+  if (!snapshot) return notFound ? "notfound" : nav;
+  switch (snapshot.phase) {
+    case "lobby":
+      return "lobby";
+    case "final":
+      return "final";
+    case "briefing":
+    case "countdown":
+    case "playing":
+    case "results":
+      return snapshot.match ? snapshot.phase : "lobby";
+  }
+}

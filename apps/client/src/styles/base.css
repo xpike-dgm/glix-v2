@@ -1,0 +1,162 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg-0);
+  color: var(--text);
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+  overflow: hidden;
+}
+#root {
+  position: fixed;
+  inset: 0;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+button {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+button:disabled {
+  cursor: default;
+}
+img {
+  -webkit-user-drag: none;
+}
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}
+input {
+  font: inherit;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* ---- Sahne zemini ---- */
+.stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(90% 55% at 50% -5%, rgba(139, 92, 255, 0.22), transparent 70%),
+    radial-gradient(120% 80% at 50% 0%, var(--bg-1) 0%, var(--bg-0) 78%);
+}
+.stage::after {
+  content: "";
+  position: absolute;
+  left: -20%;
+  right: -20%;
+  bottom: 0;
+  height: 36%;
+  background:
+    repeating-linear-gradient(90deg, rgba(139, 92, 255, 0.22) 0 1px, transparent 1px 44px),
+    repeating-linear-gradient(0deg, rgba(139, 92, 255, 0.22) 0 1px, transparent 1px 34px);
+  transform: perspective(260px) rotateX(58deg);
+  transform-origin: 50% 100%;
+  -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 92%);
+  mask-image: linear-gradient(to top, #000 0%, transparent 92%);
+  opacity: 0.8;
+  pointer-events: none;
+}
+html[data-pixi="1"] .stage::after {
+  opacity: 0;
+}
+
+/* ---- Ekran ---- */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  padding: max(16px, var(--safe-top)) max(var(--gutter), var(--safe-right)) max(16px, var(--safe-bottom))
+    max(var(--gutter), var(--safe-left));
+  animation: screen-in var(--t-mid) var(--ease) both;
+}
+.screen--bleed {
+  padding-left: max(0px, var(--safe-left));
+  padding-right: max(0px, var(--safe-right));
+}
+.col {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise var(--t-slow) var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.overline {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+/* biome-ignore-start lint/complexity/noImportantStyles: hareketi azaltma tercihi her animasyonu ezmeli */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+/* biome-ignore-end lint/complexity/noImportantStyles: aralık sonu */
