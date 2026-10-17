@@ -71,6 +71,8 @@ export interface Runtime {
   active: Set<Room>;
   broadcaster: Broadcaster;
   catalog: GameInfo[];
+  /** Yeni odanın varsayılan oyun seçimi. */
+  defaultGameIds: string[];
 }
 
 export function isConnected(player: Player): boolean {

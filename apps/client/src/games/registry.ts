@@ -33,6 +33,10 @@ export interface GameEntry {
 
 /** Yeni oyun: buraya gameId ile bir giriş eklemek yeterli. */
 const registry: Record<string, GameEntry> = {
+  "acgozluluk-limiti": {
+    Screen: lazy(() => import("./acgozluluk-limiti/AcgozlulukLimitiScreen.js")),
+    Art: lazy(() => import("./acgozluluk-limiti/BriefingArt.js")),
+  },
   "butona-bas": {
     Screen: lazy(() => import("./butona-bas/ButonaBasScreen.js")),
     Art: lazy(() => import("./butona-bas/BriefingArt.js")),

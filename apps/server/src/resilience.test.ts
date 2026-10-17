@@ -272,12 +272,15 @@ describe("zarif kapanış (drain)", () => {
 
   it("drain süresi dolunca maç bitmemiş olsa da çözülür", async () => {
     const cs = await setupRoom(["A", "B"]);
+    // Varsayılan seçim test sunucusunda yalnız Butona Bas; maç 100 sn içinde bitmesin diye Butona Bas ve bitmeyen sahte oyun seçilir.
+    cs[0]?.send({ type: "setGames", gameIds: ["butona-bas", "test-boom"] });
+    await sync();
     await startPlaying(cs);
     let drained = false;
     const drain = k.srv.drain().then(() => {
       drained = true;
     });
-    // maç 45 sn + sonuç 7 sn sonra "final"de bekler (host lobiye dönmedi): süre dolana dek drain sürer
+    // ikinci oyun bitmez; süre dolana dek drain sürer (host lobiye dönmedi): süre dolana dek drain sürer
     k.clock.advance(100_000);
     await sync();
     expect(drained).toBe(false);
