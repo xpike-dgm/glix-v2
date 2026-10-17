@@ -154,6 +154,8 @@ export function useServer(extra: Partial<ServerOptions> = {}): void {
       clock: k.clock,
       // Sahte saat atlamalı testlerde pong'a zaman kalmaz; kalp atışı yalnızca ilgili testlerde açılır.
       heartbeatMs: 1_000_000_000,
+      // Mevcut akış testleri tek oyun (Butona Bas) varsayar; kayıt defterine oyun eklemek onları bozmasın.
+      defaultGameIds: ["butona-bas"],
       ...extra,
     });
   });

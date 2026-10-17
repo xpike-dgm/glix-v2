@@ -95,7 +95,7 @@ export function installAudioUnlock(target: Window = window): () => void {
   };
 }
 
-interface Tone {
+export interface Tone {
   freq: number;
   dur: number;
   at?: number;
@@ -104,7 +104,7 @@ interface Tone {
   gain?: number;
 }
 
-function play(tones: Tone[]): void {
+export function play(tones: Tone[]): void {
   if (muted()) return;
   // Bağlamı yalnız kullanıcı jesti açar (`unlockAudio`); jestten önce çalmak boşuna uyarı üretir.
   const c = ctx;
