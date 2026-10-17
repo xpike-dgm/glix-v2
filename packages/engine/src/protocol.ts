@@ -166,6 +166,16 @@ function parseCode(value: unknown): string | null {
   return CODE_PATTERN.test(code) ? code : null;
 }
 
+/** Geri bildirim metnini temizler: denetim karakterleri atılır, kırpılır. Çok uzunsa ya da metin değilse null. */
+export function sanitizeFeedbackText(value: unknown): string | null {
+  if (typeof value !== "string" || value.length > MAX_FEEDBACK_TEXT * 4) return null;
+  const clean = value
+    .replace(/[\p{Cc}\p{Zl}\p{Zp}]+/gu, " ")
+    .replace(/\s+/gu, " ")
+    .trim();
+  return Array.from(clean).length > MAX_FEEDBACK_TEXT ? null : clean;
+}
+
 /** Ağdan gelen ham metni doğrular; geçersizse null döner. */
 export function parseClientMessage(raw: string): ClientMessage | null {
   if (typeof raw !== "string" || raw.length > MAX_MESSAGE_LENGTH) return null;
@@ -235,6 +245,17 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       const seq = data.seq;
       if (typeof seq !== "number" || !Number.isSafeInteger(seq) || seq < 0) return null;
       return { type: "action", seq, payload: data.payload };
+    }
+    case "feedback": {
+      const keys = Object.keys(data);
+      if (!keys.every((k) => k === "type" || k === "rating" || k === "text")) return null;
+      const rating = data.rating;
+      if (typeof rating !== "number" || !Number.isInteger(rating) || rating < 1 || rating > 5) return null;
+      if (!Object.hasOwn(data, "text")) return { type: "feedback", rating: rating as 1 | 2 | 3 | 4 | 5 };
+      const text = sanitizeFeedbackText(data.text);
+      if (text === null) return null;
+      const r = rating as 1 | 2 | 3 | 4 | 5;
+      return text === "" ? { type: "feedback", rating: r } : { type: "feedback", rating: r, text };
     }
     case "leaveRoom":
     case "resync":

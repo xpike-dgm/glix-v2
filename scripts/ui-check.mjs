@@ -126,6 +126,23 @@ const SCREENS = [
   { name: "results-8", q: "mock=results&n=8", settle: 2400 },
   { name: "final-3", q: "mock=final&n=3", settle: 2200 },
   { name: "final-8", q: "mock=final&n=8", settle: 2200 },
+  {
+    name: "final-feedback-open",
+    q: "mock=final&n=8",
+    settle: 2200,
+    act: async (p) => p.getByRole("button", { name: "4 yıldız" }).click(),
+  },
+  {
+    name: "final-feedback-sent",
+    q: "mock=final&n=3",
+    settle: 2200,
+    act: async (p) => {
+      await p.getByRole("button", { name: "5 yıldız" }).click();
+      await p.locator(".fb__input").fill("Çok eğlenceliydi");
+      await p.locator(".fb__send").click();
+      await p.getByText("Teşekkürler!").waitFor();
+    },
+  },
   { name: "zaman-briefing", q: "mock=zaman-briefing" },
   { name: "zaman-playback", q: "mock=zaman-playback" },
   { name: "zaman-mine", q: "mock=zaman-mine" },

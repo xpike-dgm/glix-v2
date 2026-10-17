@@ -15,10 +15,23 @@
 
 ## Dosyalar
 
-- `Dockerfile`, `docker-compose.yml` — imaj ve çalışma sınırları (512 MB, 2 CPU, salt okunur).
+- `Dockerfile`, `docker-compose.yml` — imaj, çalışma sınırları (512 MB, 2 CPU, salt okunur) ve `glix-data` birimi.
 - `.env.example` — `/srv/glix/shared/.env` için örnek (`GLIX_ALLOWED_ORIGINS`).
 - `Caddyfile.glix` — Caddy'ye eklenecek blok.
 - `deploy.sh` — sunucu dağıtım betiği.
+
+## İstatistik ve geri bildirim
+
+- Anonim istatistik (maç/oyun sayıları, süreler, final geri bildirimi) SQLite dosyasına yazılır: `STATS_DB=/data/glix.db`.
+  Takma ad, kimlik, IP, belirteç, cevap ya da çizim saklanmaz; 90 günden eski satırlar açılışta ve günlük silinir.
+- `/data`, `glix-data` adlı Docker birimidir (konteyner başka yerde salt okunurdur). Dockerfile `/data`'yı `node` kullanıcısına
+  verir; birim ilk oluşturulduğunda bu sahipliği devralır. Birim `docker compose down` ile silinmez; `down -v` siler.
+- Özet (son 30 gün, Türkçe): `docker exec glix-glix-1 node dist/stats.js`
+- Yedek: `docker run --rm -v glix_glix-data:/data -v "$PWD":/b alpine tar czf /b/glix-data.tgz -C /data .`
+- İstemci hataları `POST /api/client-error` ile gelir ve günlükte `client_error` olarak görünür
+  (`docker logs glix-glix-1 | grep client_error`). IP yazılmaz.
+- Node 22'de `node:sqlite` deneysel uyarısı sunucuda yükleme anında bastırılır; `dist/stats.js` aynı şekilde sessizdir.
+- Sorun olursa `stats_error` günlüğü görünür; istatistik hataları maçı etkilemez, veritabanı açılamazsa sunucu istatistiksiz başlar.
 
 ## Geri alma
 

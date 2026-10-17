@@ -13,6 +13,7 @@ import { Playing } from "./screens/Playing.js";
 import { Reconnecting } from "./screens/Reconnecting.js";
 import { Results } from "./screens/Results.js";
 import { selectScreen } from "./screens/route.js";
+import { installErrorReporting } from "./telemetry/errors.js";
 import { Toasts } from "./ui/Toast.js";
 
 export function App() {
@@ -21,6 +22,7 @@ export function App() {
   );
 
   onMount(() => {
+    installErrorReporting();
     const params = new URLSearchParams(window.location.search);
     const code = normalizeCode(params.get("oda") ?? "");
     if (code) setState({ nav: "join", joinCode: code });

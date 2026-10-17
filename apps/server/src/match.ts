@@ -38,6 +38,14 @@ export interface Match {
   result: GameResult | null;
   /** Geçerli oyunun kaydı (playing aşamasında dolu). */
   recorder: GameRecorder | null;
+  /** İstatistik deposundaki maç kimliği (devre dışıysa null). Kişisel veri içermez. */
+  statsId: number | null;
+  /** Geçerli oyunun başladığı an (playing'e girerken); istatistik süresi için. */
+  gameStartedAt: number | null;
+  /** Maçın istatistik kaydı kapatıldı mı (tamamlandı ya da yarıda kaldı). */
+  statsEnded: boolean;
+  /** Final'de geri bildirim vermiş oyuncular (maç başına bir kez). */
+  feedbackBy: Set<string>;
 }
 
 /** Bir oyun fonksiyonu hata fırlattı; `fn` hangisi olduğunu söyler (setup, reduce, tick, view, result...). */
@@ -85,7 +93,7 @@ export function abortMatch(rt: Runtime, room: Room, err: unknown): void {
   for (const player of room.players.values()) {
     player.conn?.send(errorMessage("game_failed"));
   }
-  clearMatch(rt, room);
+  clearMatch(rt, room, "failed");
   rt.broadcaster.markDirty(room);
 }
 
@@ -107,6 +115,7 @@ function enterBriefing(rt: Runtime, room: Room, match: Match): void {
   match.rng = null;
   match.result = null;
   match.recorder = null;
+  match.gameStartedAt = null;
   match.phaseStartedAt = now;
   match.phaseEndsAt = now + BRIEFING_TIMEOUT_MS;
   room.phase = "briefing";
@@ -143,14 +152,43 @@ export function beginMatch(rt: Runtime, room: Room): void {
     rng: null,
     result: null,
     recorder: null,
+    statsId: rt.stats.matchStarted(rt.clock.now(), {
+      playerCount: participants.length,
+      selectionMode: room.selection.mode,
+      gameCount: games.length,
+    }),
+    gameStartedAt: null,
+    statsEnded: false,
+    feedbackBy: new Set(),
   };
   room.match = match;
   enterBriefing(rt, room, match);
   rt.active.add(room);
 }
 
+/**
+ * İstatistik: maç yarıda kalırsa (herkes çıktı, sunucu kapandı, oyun çöktü) süren oyun ve maç kapatılır.
+ * Zaten kapanmışsa (final) hiçbir şey yapmaz.
+ */
+export function endMatchStats(rt: Runtime, match: Match, outcome: "aborted" | "failed" | "completed"): void {
+  if (match.statsEnded) return;
+  match.statsEnded = true;
+  const now = rt.clock.now();
+  if (outcome !== "completed" && match.gameStartedAt !== null) {
+    rt.stats.gamePlayed(match.statsId, {
+      gameId: currentGame(match).id,
+      playerCount: match.participants.length,
+      startedAt: match.gameStartedAt,
+      durationMs: now - match.gameStartedAt,
+      outcome,
+    });
+  }
+  rt.stats.matchEnded(match.statsId, now, outcome === "completed");
+}
+
 /** Maçı bırakıp lobiye döner (skorlara dokunmaz). */
-export function clearMatch(rt: Runtime, room: Room): void {
+export function clearMatch(rt: Runtime, room: Room, outcome: "aborted" | "failed" = "aborted"): void {
+  if (room.match) endMatchStats(rt, room.match, outcome);
   room.match = null;
   room.phase = "lobby";
   if (room.selection.mode === "random") room.gameIds = [];
@@ -192,6 +230,7 @@ function startPlaying(rt: Runtime, room: Room, match: Match): void {
   const now = rt.clock.now();
   const seed = randomInt(0, 2 ** 32);
   const game = currentGame(match);
+  match.gameStartedAt = now;
   match.rng = createRng(seed);
   const rng = match.rng;
   match.recorder = new GameRecorder(game.id, seed, match.participants, now);
@@ -210,6 +249,16 @@ function finishGame(rt: Runtime, room: Room, match: Match): void {
   const now = rt.clock.now();
   const result = guard("result", () => currentGame(match).result(match.state));
   archiveLog(rt, match);
+  if (match.gameStartedAt !== null) {
+    rt.stats.gamePlayed(match.statsId, {
+      gameId: currentGame(match).id,
+      playerCount: match.participants.length,
+      startedAt: match.gameStartedAt,
+      durationMs: now - match.gameStartedAt,
+      outcome: "finished",
+    });
+    match.gameStartedAt = null;
+  }
   for (const [id, points] of Object.entries(result.awards)) {
     const player = room.players.get(id);
     if (player) player.score += points;
@@ -240,6 +289,7 @@ function nextGameOrFinal(rt: Runtime, room: Room, match: Match): void {
   match.phaseStartedAt = rt.clock.now();
   match.phaseEndsAt = null;
   room.phase = "final";
+  endMatchStats(rt, match, "completed");
   rt.active.delete(room);
 }
 

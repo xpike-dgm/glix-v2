@@ -270,6 +270,20 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       );
       return;
     }
+    case "feedback": {
+      const room = requireRoom(conn);
+      if (!room || !conn.player) return;
+      const match = room.match;
+      if (room.phase !== "final" || !match) {
+        fail(conn, "wrong_phase");
+        return;
+      }
+      // Maç başına oyuncu başına bir kez; sonrakiler sessizce yok sayılır.
+      if (match.feedbackBy.has(conn.player.id)) return;
+      match.feedbackBy.add(conn.player.id);
+      rt.stats.feedback(match.statsId, rt.clock.now(), msg.rating, msg.text ?? null);
+      return;
+    }
     case "returnToLobby": {
       const room = requireHost(conn);
       if (!room) return;

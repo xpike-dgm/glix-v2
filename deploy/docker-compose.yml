@@ -14,6 +14,10 @@ services:
       DRAIN_TIMEOUT_MS: "600000"
       # Caddy arkasında: X-Forwarded-For son girdisi gerçek istemci IP'sidir (oran sınırları için).
       TRUST_PROXY: "1"
+      # Anonim istatistik ve geri bildirim (SQLite); 90 gün saklanır.
+      STATS_DB: /data/glix.db
+    volumes:
+      - glix-data:/data
     mem_limit: 512m
     cpus: 2
     pids_limit: 256
@@ -32,3 +36,6 @@ services:
       options:
         max-size: 10m
         max-file: "3"
+
+volumes:
+  glix-data:

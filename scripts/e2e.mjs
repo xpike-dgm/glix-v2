@@ -1,8 +1,9 @@
 // Uçtan uca tarayıcı testi: gerçek sunucu + gerçek arayüz, 3 telefon bağlamı.
 // Önce `pnpm build` çalıştırılmış olmalı. Kullanım: `pnpm e2e`.
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { createServer } from "node:net";
+import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
@@ -11,6 +12,7 @@ const ENV = process.env;
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SHOTS = join(ROOT, "docs/qa/a1-real");
 const CLIENT_DIR = join(ROOT, "apps/client/dist");
+const STATS_DB = join(mkdtempSync(join(tmpdir(), "glix-e2e-")), "glix.db");
 const T0 = Date.now();
 
 const log = (...a) => console.log(`[e2e +${((Date.now() - T0) / 1000).toFixed(1)}s]`, ...a);
@@ -53,7 +55,14 @@ function grepDist(dir, needle, hits = []) {
 }
 
 async function startServer(port) {
-  const env = { ...ENV, PORT: String(port), HOST: "127.0.0.1", CLIENT_DIR, DRAIN_TIMEOUT_MS: "4000" };
+  const env = {
+    ...ENV,
+    PORT: String(port),
+    HOST: "127.0.0.1",
+    CLIENT_DIR,
+    DRAIN_TIMEOUT_MS: "4000",
+    STATS_DB,
+  };
   delete env.NODE_ENV;
   const child = spawn("node", ["apps/server/dist/index.js"], {
     cwd: ROOT,
@@ -430,6 +439,22 @@ async function main() {
       "final skorları",
       finalScores.map((s) => s.trim()),
     );
+    // Geri bildirim: A beş yıldız verir, "Teşekkürler!" görür; LOBİYE DÖN görünür kalır.
+    await A.getByRole("button", { name: "5 yıldız" }).click();
+    await btn(A, /gönder/i).click();
+    await A.getByText("Teşekkürler!").waitFor(OPT);
+    assert(await btn(A, /lobiye dön/i).isVisible(), "geri bildirimden sonra LOBİYE DÖN görünmeli");
+    await shot(A, "15b-final-feedback");
+    {
+      // Sunucu geri bildirimi ve tamamlanan maçı kaydetmiş olmalı.
+      const { DatabaseSync } = await import("node:sqlite");
+      const db = new DatabaseSync(STATS_DB, { readOnly: true });
+      const fb = db.prepare("SELECT rating FROM feedback").all();
+      const done = db.prepare("SELECT completed FROM matches").all();
+      db.close();
+      assert(fb.length === 1 && fb[0].rating === 5, `geri bildirim kaydı: ${JSON.stringify(fb)}`);
+      assert(done.length >= 1 && done[0].completed === 1, `maç kaydı: ${JSON.stringify(done)}`);
+    }
     await btn(A, /lobiye dön/i).click();
     for (const p of [A, B2, C]) {
       await p.locator(".roomcode").waitFor(OPT);

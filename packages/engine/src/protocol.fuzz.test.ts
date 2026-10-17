@@ -60,6 +60,7 @@ describe("parseClientMessage fuzz", () => {
       "leaveRoom",
       "returnToLobby",
       "action",
+      "feedback",
     ];
     fc.assert(
       fc.property(fc.constantFrom(...types), hostileObject, (type, rest) => {

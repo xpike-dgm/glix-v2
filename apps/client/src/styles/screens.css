@@ -1325,3 +1325,150 @@
     width: 48px;
   }
 }
+
+/* ---- Final: geri bildirim satırı ---- */
+.fb {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 10px;
+}
+.fb__stars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.fb__stars {
+  flex-wrap: wrap;
+}
+.fb__label {
+  flex: 0 0 100%;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-15);
+  color: var(--text-dim);
+}
+.fb__chip {
+  flex: none;
+  min-width: 56px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1.5px solid rgba(255, 194, 59, 0.5);
+  border-radius: 14px;
+  background: rgba(255, 194, 59, 0.1);
+  color: var(--amber);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+  cursor: pointer;
+}
+.fb__chip svg {
+  fill: currentColor;
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .fb__label {
+    display: none;
+  }
+}
+.fb__star {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: rgba(142, 151, 199, 0.55);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 100ms,
+    color 100ms;
+}
+.fb__star:active {
+  transform: scale(0.88);
+}
+.fb__star[data-on] {
+  color: var(--amber);
+}
+.fb__star[data-on] svg {
+  fill: currentColor;
+}
+.fb__form {
+  display: flex;
+  gap: 8px;
+}
+.fb__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 48px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(160, 175, 255, 0.34);
+  background: rgba(5, 8, 26, 0.6);
+  color: var(--text);
+  padding: 0 12px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  outline: none;
+}
+.fb__input:focus {
+  border-color: var(--cyan);
+}
+.fb__input::placeholder {
+  color: rgba(142, 151, 199, 0.55);
+}
+.fb__send {
+  flex: none;
+  height: 48px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--cyan);
+  color: #04122a;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.fb__thanks {
+  margin: 0;
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-18);
+  color: var(--amber);
+}
+
+/* Yatay telefon: geri bildirim satırına yer açmak için kazanan görseli küçülür. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .final {
+    --win-av: 64px;
+  }
+  .final .winner__avatars {
+    padding-top: 18px;
+  }
+}
+
+/* Alçak dikey ekran (ör. 320x568): kazanan görseli küçülür, sıralama ile geri bildirim birlikte sığar. */
+@media (orientation: portrait) and (max-height: 640px) {
+  .final {
+    --win-av: 72px;
+  }
+  .final .winner__avatars {
+    padding-top: 20px;
+  }
+  .final .winner__name {
+    margin-top: 4px;
+  }
+}

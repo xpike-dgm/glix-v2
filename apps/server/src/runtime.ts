@@ -4,6 +4,7 @@ import type { Cancel, Clock } from "./clock.js";
 import type { Match } from "./match.js";
 import type { Metrics } from "./metrics.js";
 import type { IpLimiter } from "./ratelimit.js";
+import type { StatsStore } from "./statsStore.js";
 
 /** Bir WebSocket bağlantısının sunucudaki temsili. Oda/oyuncu bağı oturum açılınca dolar. */
 export interface Connection {
@@ -65,6 +66,8 @@ export interface Runtime {
   maxRooms: number;
   ipLimiter: IpLimiter;
   metrics: Metrics;
+  /** Anonim istatistik deposu (devre dışıysa hiçbir şey yapmaz). */
+  stats: StatsStore;
   /** Son biten/çöken oyunların kayıtları (en yeni sonda, en çok RECENT_LOGS). */
   recentLogs: GameLog[];
   /** Oturum belirteci -> oyuncu. */
