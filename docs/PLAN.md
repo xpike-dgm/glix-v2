@@ -99,4 +99,14 @@ sızıntı testi otomatik kırılır. Sunucu oyun bilmez; durum her yayında bir
 - [x] CI'a eklendi: Chromium kurulumu + `ui:check` + `e2e`, ekran görüntüleri artifact (repoya girmez)
 - [ ] Gerçek telefonda 60 fps doğrulaması (kullanıcı); 4× CPU yavaşlatmada oyun ekranında ara sıra tek kare takılma kalıyor
 
+### A4 — 7 oyun yayında (`6c44e64`)
+- [x] Çerçeve: `ctx.connected`, maç kaydında bağlantı olayları, bot simülasyonunda rastgele kopmalar
+- [x] Kelime havuzları: Çağrışım 321 kelime, Karalama 165 çift (gözden geçirildi)
+- [x] Açgözlülük Limiti, Çapraz Ateş, Çağrışım Ağı, Karalama Defteri, Kör Bomba (yatay), Zaman Bombası Hafızası:
+      her biri kural senaryo testleri + bot/sızıntı/kopma değişmezleri + gerçek protokol sunucu testi + ekranlar
+- [x] Birleşik doğrulama: e2e, `ui:check` 449/449; kararsız Zaman sunucu testi düzeltildi
+- [ ] Sahibin onayı bekleyen kural yorumları (aşağı)
+- [ ] Gerçek telefonlarda oyun gecesi (A5)
+- Eksik özellik: lobide "rastgele N oyun" seçimi (kural formu genel çerçeve) — A5'e
+
 **Dağıtım:** VDS'te `/srv/glix/deploy.sh <ref>` (varsayılan `main`). Geri alma: eski SHA ile aynı komut.
