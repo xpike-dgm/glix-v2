@@ -139,6 +139,10 @@ export const butonaBas: GameDefinition<ButonaBasState, ButonaBasAction, ButonaBa
     return ctx.now >= state.endsAt;
   },
 
+  secrets() {
+    return [];
+  },
+
   result(state) {
     const settled = settle(state, Number.POSITIVE_INFINITY);
     return { miniScores: { ...settled.scores }, awards: butonaBasAwards(settled.scores) };

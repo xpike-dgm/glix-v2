@@ -19,6 +19,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `ready` | — | yalnız `briefing` aşamasında |
 | `action` | `seq`, `payload` | yalnız `playing`; `seq` istemci sayacı, `actionAck` ile döner |
 | `returnToLobby` | — | yalnız host, yalnız `final` |
+| `resync` | — | yama uygulanamadığında tam `room` snapshot ister |
 
 ## Sunucu → istemci
 
@@ -27,7 +28,19 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `welcome` | `protocolVersion`, `serverVersion` |
 | `pong` | `t`, `serverTime` |
 | `session` | `token`, `playerId`, `roomCode` — istemci `localStorage`'a yazar |
-| `room` | `snapshot: RoomSnapshot` — her durum değişiminde, oyuncu başına |
+| `room` | `snapshot: RoomSnapshot` — odaya girişte, resume ve `resync` sonrası (tam) |
+| `patch` | `baseRev`, `rev`, `patch` — sonraki değişimler, JSON Merge Patch (RFC 7386) |
+
+**Yama kuralı:** Sunucu her bağlantıya son gönderdiği snapshot'ı tutar ve yalnız farkı yollar.
+İstemci `baseRev` kendi `rev`'ine eşitse yamayı uygular, değilse yamayı atıp `resync` gönderir.
+Fark tam snapshot'tan büyükse sunucu doğrudan `room` gönderir. `serverNow` her mesajda değişir.
+
+## Maç kaydı
+
+Her oyun için `GameLog` (tohum, katılımcılar, zaman damgalı kabul edilen eylemler) bellekte tutulur.
+Aynı tohum ve eylemlerle `replay` aynı `GameResult`'u üretmek zorundadır; `tick` çağrı zamanlaması sonucu
+değiştiremez. Son 20 oyunun kaydı bellekte tutulur; bir oyun fonksiyonu hata fırlatırsa o oyunun kaydı
+sunucu günlüğüne yazılır.
 | `actionAck` | `seq`, `ok`, `reason?` |
 | `left` | `reason: "left" \| "kicked" \| "closed"` |
 | `error` | `code`, `message` (Türkçe, oyuncuya gösterilebilir) |

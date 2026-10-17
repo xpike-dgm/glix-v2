@@ -48,6 +48,31 @@ export interface GameDefinition<State, Action, View> {
   view(state: State, playerId: string | null, ctx: GameContext): View;
   isFinished(state: State, ctx: GameContext): boolean;
   result(state: State): GameResult;
+  /**
+   * Durumdaki gizli bilgiler. Sızıntı testi, `ownerIds` dışındaki her oyuncunun (ve izleyicinin)
+   * `view` çıktısında `value`'nun geçmediğini doğrular. Gizli bilgisi olmayan oyun boş dizi döner.
+   */
+  secrets(state: State): readonly SecretEntry[];
+}
+
+export interface SecretEntry {
+  /** Bu bilgiyi görmeye hakkı olan oyuncular (boş: kimse, oyun bitene kadar). */
+  ownerIds: readonly string[];
+  /** Görünümde metin olarak aranacak değer; en az 3 karakter, ayırt edici olmalı. */
+  value: string;
+  /** Hata mesajı için kısa açıklama. */
+  label: string;
+}
+
+/** Bir oyunun deterministik tekrar oynatılması için kayıt. */
+export interface GameLog {
+  gameId: string;
+  seed: number;
+  players: string[];
+  startedAt: number;
+  /** Zaman sıralı; yalnız kabul edilen eylemler. */
+  actions: { t: number; playerId: string; action: unknown }[];
+  endedAt: number;
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: kayıt defteri farklı tipte oyunları birlikte tutar.

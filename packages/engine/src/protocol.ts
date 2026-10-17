@@ -22,7 +22,15 @@ export type ClientMessage =
   | { type: "startMatch" }
   | { type: "ready" }
   | { type: "action"; seq: number; payload: unknown }
-  | { type: "returnToLobby" };
+  | { type: "returnToLobby" }
+  /** İstemci elindeki snapshot'a yama uygulayamadığında tam snapshot ister. */
+  | { type: "resync" };
+
+/**
+ * JSON Merge Patch (RFC 7386): nesne alanları birleşir, `null` alanı siler,
+ * diziler ve ilkel değerler bütün olarak değişir.
+ */
+export type MergePatch = { [key: string]: unknown };
 
 export type ErrorCode =
   | "invalid_message"
@@ -103,6 +111,8 @@ export type ServerMessage =
   | { type: "pong"; t: number; serverTime: number }
   | { type: "session"; token: string; playerId: string; roomCode: string }
   | { type: "room"; snapshot: RoomSnapshot }
+  /** `baseRev` istemcinin son snapshot'ı ile aynıysa uygulanır; değilse istemci `resync` gönderir. */
+  | { type: "patch"; baseRev: number; rev: number; patch: MergePatch }
   | { type: "actionAck"; seq: number; ok: boolean; reason?: string }
   | { type: "left"; reason: LeftReason }
   | { type: "error"; code: ErrorCode; message: string };
