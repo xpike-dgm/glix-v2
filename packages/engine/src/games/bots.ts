@@ -7,8 +7,8 @@ import { caprazAtesBot } from "./capraz-ates/bots.js";
 import { gizliHirsizBot } from "./gizli-hirsiz/bots.js";
 import { karalamaDefteriBot } from "./karalama-defteri/bots.js";
 import { korBombaBot } from "./kor-bomba/bots.js";
-import { sonKisiBot } from "./son-kisi/bots.js";
 import { korKronometreBot } from "./kor-kronometre/bots.js";
+import { sonKisiBot } from "./son-kisi/bots.js";
 import { zamanBombasiHafizasiBot } from "./zaman-bombasi-hafizasi/bots.js";
 
 /** Test botları: her oyun için bir kayıt zorunludur (games/invariants.test.ts denetler). */

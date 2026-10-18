@@ -1,16 +1,16 @@
 import type { AnyGame } from "../game.js";
 import type { GameInfo } from "../protocol.js";
-import { butonaBas } from "./butona-bas/index.js";
 import { acgozlulukLimiti } from "./acgozluluk-limiti/index.js";
-import { caprazAtes } from "./capraz-ates/index.js";
+import { asiriYukleme } from "./asiri-yukleme/index.js";
+import { butonaBas } from "./butona-bas/index.js";
 import { cagrisimAgi } from "./cagrisim-agi/index.js";
+import { caprazAtes } from "./capraz-ates/index.js";
+import { gizliHirsiz } from "./gizli-hirsiz/index.js";
 import { karalamaDefteri } from "./karalama-defteri/index.js";
 import { korBomba } from "./kor-bomba/index.js";
-import { zamanBombasiHafizasi } from "./zaman-bombasi-hafizasi/index.js";
-import { gizliHirsiz } from "./gizli-hirsiz/index.js";
 import { korKronometre } from "./kor-kronometre/index.js";
 import { sonKisi } from "./son-kisi/index.js";
-import { asiriYukleme } from "./asiri-yukleme/index.js";
+import { zamanBombasiHafizasi } from "./zaman-bombasi-hafizasi/index.js";
 
 export const GAMES: Record<string, AnyGame> = {
   [butonaBas.id]: butonaBas,
