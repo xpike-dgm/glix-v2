@@ -1,0 +1,84 @@
+import { createMemo, createSignal, For, onCleanup } from "solid-js";
+import { Avatar } from "../../ui/Avatar.js";
+import { look } from "../../ui/avatars.js";
+import { bondPattern, ringPosition } from "./view.js";
+
+export interface CrewMember {
+  id: string;
+  nickname: string;
+  avatar: number;
+  connected: boolean;
+}
+
+interface Props {
+  crew: CrewMember[];
+  selfId: string;
+  /** Pazarlığın bitişi (sunucu saati, ms). */
+  endsAt: number;
+  now: () => number;
+}
+
+/**
+ * Sözlü pazarlık sahnesi: portreler halkada, aralarında geçici neon bağlar ve konuşma izleri belirip söner.
+ * Süs ve zaman göstergesidir; hiçbir söz ya da anlaşma kaydedilmez. Ortada kalan süre görünür.
+ */
+export function Pazarlik(props: Props) {
+  const bonds = createMemo(() => bondPattern(props.crew.length));
+  const pos = (i: number) => ringPosition(i, props.crew.length);
+  const [left, setLeft] = createSignal(Math.max(0, Math.ceil((props.endsAt - props.now()) / 1000)));
+  const timer = setInterval(() => setLeft(Math.max(0, Math.ceil((props.endsAt - props.now()) / 1000))), 250);
+  onCleanup(() => clearInterval(timer));
+  return (
+    <div class="it__stage">
+      <div class="it__arena">
+        <svg class="it__bonds" viewBox="0 0 100 100" aria-hidden="true">
+          <For each={bonds()}>
+            {(b) => {
+              const a = () => pos(b.a);
+              const c = () => pos(b.b);
+              return (
+                <g
+                  style={{
+                    color: look(props.crew[b.a]?.avatar ?? 0).color,
+                    "--d": `${b.delay}s`,
+                    "--dur": `${b.dur}s`,
+                  }}
+                >
+                  <line class="it__bond-glow" x1={a().x} y1={a().y} x2={c().x} y2={c().y} />
+                  <line class="it__bond" x1={a().x} y1={a().y} x2={c().x} y2={c().y} />
+                </g>
+              );
+            }}
+          </For>
+        </svg>
+
+        <div class="it__clock" role="timer" aria-label="Kalan süre">
+          <span class="it__clock-num">{left()}</span>
+          <span class="it__clock-unit">saniye</span>
+        </div>
+
+        <For each={props.crew}>
+          {(m, i) => (
+            <div
+              class="it__node"
+              data-me={m.id === props.selfId ? "1" : undefined}
+              style={{ left: `${pos(i()).x}%`, top: `${pos(i()).y}%` }}
+            >
+              <Avatar index={m.avatar} size="var(--it-av)" connected={m.connected} />
+              <i
+                class="it__bubble"
+                aria-hidden="true"
+                style={{ "--bd": `${(i() * 1.3) % 5}s`, "--flip": i() % 2 === 0 ? 1 : -1 }}
+              >
+                <b />
+                <b />
+                <b />
+              </i>
+              <span class="it__name">{m.nickname}</span>
+            </div>
+          )}
+        </For>
+      </div>
+    </div>
+  );
+}

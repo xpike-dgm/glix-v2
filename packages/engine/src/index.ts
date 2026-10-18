@@ -7,6 +7,7 @@ export * from "./games/capraz-ates/index.js";
 export * from "./games/cizgiyi-gecme/index.js";
 export * from "./games/gizli-hirsiz/index.js";
 export * from "./games/index.js";
+export * from "./games/ittifak/index.js";
 export * from "./games/karalama-defteri/index.js";
 export * from "./games/kor-bomba/index.js";
 export * from "./games/kor-kronometre/index.js";
