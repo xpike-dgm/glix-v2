@@ -26,3 +26,37 @@ Kısa oyun içi açılış penceresi (≤ 7 sn) açılış animasyonu için kull
   normal kapanır. Patlamayanlar tıklama sayısına göre: tek lider +2, sonraki +1; liderler eşitse hepsi +1, +2 yok.
   **Teknik üst sınır 90 sn** (kimse tıklamazsa oda takılmasın): dolarsa patlama olmadan sıralama. Tık başına hız
   sınırı sunucunun genel mesaj sınırıdır.
+
+## Grup 2 — hedef, takas ve gizli seçim
+- **Rus Ruleti** (2–8): başlangıçta herkes hayatta, silah rastgele birinde, risk %16. Sahip 18 sn içinde kendini ya da
+  hayatta olan başka bir **bağlı** oyuncuyu hedefler. Patlama sunucuda `ctx.rng` ile atış anında belirlenir (önceden
+  gizli değer yok). Patlamazsa silah hedefe geçer (kendiyse kalır), risk +10 (en çok %76). Patlarsa hedef elenir,
+  risk %16, silah hayatta kalan rastgele birine. Bitiş: hayatta kalan ≤ başlangıç/2. Süre dolarsa sahip dışındaki
+  rastgele hayatta oyuncuya otomatik atış (tek hayatta kalan sahipse kendine). Her atıştan sonra 2,5 sn açılış
+  penceresi (sonuç animasyonu); sonraki 18 sn pencere bitince başlar. Hayatta kalanlar +1.
+- **Zehirli Kadeh** (2–8): zehirli kadeh sayısı 2–3 → 1, 4–5 → 2, 6–8 → 3; rastgele dağıtılır, **kimse göremez**
+  (sahibi dahil) — yalnız sonuçta açılır. Her oyuncu bir kez takas **başlatabilir** (hedef olmak hak harcamaz);
+  hedef başka bir bağlı katılımcı. Takas anında uygulanır, süreye +5 sn ekler (başlangıç 20 sn). Takas olayları
+  herkese açık (kim kiminle takas etti); kadeh içeriği değil. Sonda temiz kadeh +1.
+- **Gizli Kareler** (2–8): 2–4 oyuncu 3×3, 5–8 oyuncu 4×4. İki aşama, her biri 20 sn; seçim süre bitene kadar
+  değiştirilebilir ve gizli. Aşama sonunda: tek kalan hücredekiler +1 ve devam; çakışanlar elenir; seçim yapmayan
+  pasif → puan almaz ve ikinci aşamaya geçmez. Aşamalar arasında 4 sn açılış penceresi. 1. aşamada herkes aynı
+  kareyi seçtiyse ya da hiç canlı kalmadıysa oyun biter; tek canlı kalırsa o kişi ikinci aşamayı rakipsiz
+  sayılır (+1) ve oyun biter. 2. aşamada yalnız hayatta kalanlar seçer; diğerleri izler.
+- **İttifak** (3–8): 60 sn sözlü pazarlık (uygulamada eylem yok; portreler ve süre), sonra 15 sn gizli oylama.
+  Kendine oy yok; oy süre bitene kadar değiştirilebilir. Oy vermeyenin oyu kendisi dışındaki rastgele bir
+  katılımcıya gider. Alınan her oy +1 genel puan. Oylar ve sayılar sonuç açılana kadar gizli; sonuçta oy akışı
+  (kim kime) herkese açılır.
+- **Rüşvet ve Darbe** (3–8): 20 sn gizli başkanlık oyu (kendine yok, değiştirilebilir; vermeyenin oyu rastgele
+  başka birine). En çok oy alan başkan. Eşitlikte darbe düellosu: eşit adaylar 8 sn içinde gizli taş/kağıt/makas
+  seçer (seçmeyene rastgele), aynı anda açılır, 2,5 sn açılış penceresi. Elde tam iki farklı işaret varsa kazanan
+  işareti verenler devam eder; tek işaret ya da üç işaret varsa el tekrarlanır. Tek aday kalınca başkan. 6 elden
+  sonra hâlâ eşitse sunucu kalanlar arasından rastgele başkan seçer (güvenlik sınırı). Başkan oy sayısı kadar
+  jetonu 25 sn içinde kendisi dışındakilere dağıtır (kişi başı en çok 2; dağıtım süre içinde değiştirilebilir ve
+  gizli). Dağıtılmayan jetonlar sonda sınıra uyularak rastgele dağıtılır. Başkan +1, jetonlar doğrudan genel puan.
+  Seçim sonucu (başkan + aldığı oy sayısı) seçim bitince açılır; oy akışı ve dağıtım sonda.
+- **Gizli Alışveriş** (3–8): 60 kredi, 12 sabit ürün (sıra maç başına karışır), 30 sn. Sepet sunucuda canlı tutulur
+  (her ekleme/çıkarma bir eylem; bütçeyi aşan ya da aynı ürünü ikinci kez ekleyen eylem reddedilir); süre
+  bittiğindeki sepet geçerlidir, boş sepet 0. Ürün değeri = fiyat / alıcı sayısı; sepet değeri toplam
+  (gösterimde iki ondalık, sıralama yuvarlanmamış değerle). En yüksek değer > 0 olan sepet(ler) +1.
+  Sepetler ve alıcı sayıları sonuca kadar gizli.
