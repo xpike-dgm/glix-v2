@@ -12,6 +12,7 @@ import { karalamaDefteri } from "./karalama-defteri/index.js";
 import { korBomba } from "./kor-bomba/index.js";
 import { korKronometre } from "./kor-kronometre/index.js";
 import { ortalamaninYarisi } from "./ortalamanin-yarisi/index.js";
+import { rusvetDarbe } from "./rusvet-darbe/index.js";
 import { sonKisi } from "./son-kisi/index.js";
 import { zamanBombasiHafizasi } from "./zaman-bombasi-hafizasi/index.js";
 
@@ -30,6 +31,7 @@ export const GAMES: Record<string, AnyGame> = {
   [cizgiyiGecme.id]: cizgiyiGecme,
   [asiriYukleme.id]: asiriYukleme,
   [ittifak.id]: ittifak,
+  [rusvetDarbe.id]: rusvetDarbe,
 };
 
 export function getCatalog(): GameInfo[] {
