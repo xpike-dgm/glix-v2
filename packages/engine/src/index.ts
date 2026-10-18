@@ -3,6 +3,7 @@ export * from "./games/acgozluluk-limiti/index.js";
 export * from "./games/butona-bas/index.js";
 export * from "./games/cagrisim-agi/index.js";
 export * from "./games/capraz-ates/index.js";
+export * from "./games/cizgiyi-gecme/index.js";
 export * from "./games/index.js";
 export * from "./games/karalama-defteri/index.js";
 export * from "./games/kor-bomba/index.js";

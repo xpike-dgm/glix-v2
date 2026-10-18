@@ -1,0 +1,141 @@
+import { createMemo, For, Show } from "solid-js";
+import { hapticTap } from "../../fx/haptics.js";
+import { sendAction } from "../../net/client.js";
+import { serverNow } from "../../net/store.js";
+import { Avatar } from "../../ui/Avatar.js";
+import { NumberPicker } from "../../ui/NumberPicker.js";
+import { createChoiceSync } from "../../ui/numberPicker.js";
+import { ProgressBar } from "../../ui/ProgressBar.js";
+import { Screen } from "../../ui/Screen.js";
+import { SoundToggle } from "../../ui/SoundToggle.js";
+import type { GameScreenProps } from "../registry.js";
+import "./cizgiyi-gecme.css";
+import { Sonuc, type SonucEntry } from "./Sonuc.js";
+import { parseCizgiView, ZONE_COUNT, zoneFill, zoneLabel, zoneOf, zonesTopDown } from "./view.js";
+
+export default function CizgiyiGecmeScreen(props: GameScreenProps) {
+  const view = createMemo(() => parseCizgiView(props.match.publicView, props.match.view));
+  const entries = createMemo<SonucEntry[]>(() =>
+    props.match.participants.map((id) => {
+      const p = props.players.find((x) => x.id === id);
+      return {
+        id,
+        avatar: p?.avatar ?? 0,
+        nickname: p?.nickname ?? "Oyuncu",
+        connected: p?.connected ?? true,
+      };
+    }),
+  );
+  const me = () => entries().find((e) => e.id === props.selfId);
+  const reveal = () => view()?.reveal ?? null;
+  const closed = () => {
+    const v = view();
+    return props.spectator === true || !v || props.now() >= v.endsAt || v.reveal !== null;
+  };
+
+  const sync = createChoiceSync({
+    serverValue: () => view()?.myChoice,
+    send: (value) => {
+      sendAction({ kind: "choose", value });
+    },
+    closed,
+  });
+  const mine = (): number | null => sync.value() ?? view()?.myChoice ?? null;
+  const zone = () => zoneOf(mine() ?? 0);
+
+  return (
+    <Screen class="cg">
+      <header class="game__top">
+        <Show when={view()} fallback={<div class="pbar" />}>
+          {(v) => <ProgressBar startedAt={v().startedAt} endsAt={v().endsAt} now={serverNow} urgency />}
+        </Show>
+        <div class="game__tools">
+          <SoundToggle />
+        </div>
+      </header>
+
+      <Show when={view()}>
+        {(v) => (
+          <Show
+            when={reveal()}
+            fallback={
+              <>
+                <div class="cg__hero">
+                  <p class="overline">{props.spectator ? "Herkes gizlice seçiyor" : "Gizli pinin"}</p>
+                  <div class="cg__num" data-set={mine() === null ? undefined : "1"}>
+                    {props.spectator ? "?" : (mine() ?? "?")}
+                  </div>
+                  <p class="cg__sub">
+                    {props.spectator
+                      ? "Sonuç süre bitince açılır"
+                      : mine() === null
+                        ? "Seçmezsen pasif kalırsın"
+                        : `${zoneLabel(zone())} platformundasın`}
+                  </p>
+                </div>
+
+                <div class="cg__tower" aria-hidden="true">
+                  <For each={zonesTopDown()}>
+                    {(z) => (
+                      <div
+                        class="cgrow"
+                        data-on={!props.spectator && mine() !== null && z === zone() ? "1" : undefined}
+                      >
+                        <span class="cgrow__label">{zoneLabel(z)}</span>
+                        <span class="cgrow__bar" />
+                      </div>
+                    )}
+                  </For>
+                  <Show when={!props.spectator}>
+                    <div
+                      class="cgpin"
+                      data-empty={mine() === null ? "1" : undefined}
+                      style={{
+                        "--z": mine() === null ? 0 : zone(),
+                        "--f": mine() === null ? 0.5 : zoneFill(mine() ?? 0),
+                        "--n": ZONE_COUNT,
+                      }}
+                    >
+                      <i class="cgpin__stem" />
+                      <span class="cgpin__head">
+                        <Avatar index={me()?.avatar ?? 0} size={30} />
+                      </span>
+                    </div>
+                  </Show>
+                </div>
+
+                <Show when={!props.spectator}>
+                  <div class="cg__pick">
+                    <NumberPicker
+                      min={0}
+                      max={100}
+                      startAt={50}
+                      value={mine()}
+                      label="Gizli pinin"
+                      disabled={closed()}
+                      onChange={(n, final) => {
+                        if (final) hapticTap();
+                        sync.set(n, final);
+                      }}
+                    />
+                  </div>
+                </Show>
+              </>
+            }
+          >
+            {(r) => (
+              <Sonuc
+                reveal={r()}
+                endsAt={v().endsAt}
+                entries={entries()}
+                selfId={props.selfId}
+                spectator={props.spectator === true}
+                now={props.now}
+              />
+            )}
+          </Show>
+        )}
+      </Show>
+    </Screen>
+  );
+}

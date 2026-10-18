@@ -3,6 +3,7 @@ import { acgozlulukLimitiBot } from "./acgozluluk-limiti/bots.js";
 import { butonaBasBot } from "./butona-bas/bots.js";
 import { cagrisimAgiBot } from "./cagrisim-agi/bots.js";
 import { caprazAtesBot } from "./capraz-ates/bots.js";
+import { cizgiyiGecmeBot } from "./cizgiyi-gecme/bots.js";
 import { karalamaDefteriBot } from "./karalama-defteri/bots.js";
 import { korBombaBot } from "./kor-bomba/bots.js";
 import { ortalamaninYarisiBot } from "./ortalamanin-yarisi/bots.js";
@@ -17,5 +18,6 @@ export const BOTS: Record<string, GameBot> = {
   "zaman-bombasi-hafizasi": zamanBombasiHafizasiBot,
   "capraz-ates": caprazAtesBot,
   "karalama-defteri": karalamaDefteriBot,
+  "cizgiyi-gecme": cizgiyiGecmeBot,
   "ortalamanin-yarisi": ortalamaninYarisiBot,
 };
