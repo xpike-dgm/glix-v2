@@ -6,6 +6,7 @@ export * from "./games/capraz-ates/index.js";
 export * from "./games/index.js";
 export * from "./games/karalama-defteri/index.js";
 export * from "./games/kor-bomba/index.js";
+export * from "./games/kor-kronometre/index.js";
 export * from "./games/zaman-bombasi-hafizasi/index.js";
 export * from "./mergePatch.js";
 export * from "./protocol.js";

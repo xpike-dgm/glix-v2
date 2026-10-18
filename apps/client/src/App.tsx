@@ -32,6 +32,8 @@ export function App() {
     if (mock) {
       if (mock.startsWith("kor-bomba")) {
         void import("./dev/mockKorBomba.js").then((m) => m.startKorBombaMock(mock, params));
+      } else if (mock.startsWith("kor-kronometre")) {
+        void import("./dev/mockKronometre.js").then((m) => m.startKronometreMock(mock, params));
       } else if (mock.startsWith("cagrisim")) {
         void import("./dev/mockCagrisim.js").then((m) => m.startCagrisimMock(mock, params));
       } else if (mock.startsWith("zaman-")) {
