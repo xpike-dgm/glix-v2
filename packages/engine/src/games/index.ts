@@ -5,10 +5,12 @@ import { asiriYukleme } from "./asiri-yukleme/index.js";
 import { butonaBas } from "./butona-bas/index.js";
 import { cagrisimAgi } from "./cagrisim-agi/index.js";
 import { caprazAtes } from "./capraz-ates/index.js";
+import { cizgiyiGecme } from "./cizgiyi-gecme/index.js";
 import { gizliHirsiz } from "./gizli-hirsiz/index.js";
 import { karalamaDefteri } from "./karalama-defteri/index.js";
 import { korBomba } from "./kor-bomba/index.js";
 import { korKronometre } from "./kor-kronometre/index.js";
+import { ortalamaninYarisi } from "./ortalamanin-yarisi/index.js";
 import { sonKisi } from "./son-kisi/index.js";
 import { zamanBombasiHafizasi } from "./zaman-bombasi-hafizasi/index.js";
 
@@ -23,6 +25,8 @@ export const GAMES: Record<string, AnyGame> = {
   [gizliHirsiz.id]: gizliHirsiz,
   [korKronometre.id]: korKronometre,
   [sonKisi.id]: sonKisi,
+  [ortalamaninYarisi.id]: ortalamaninYarisi,
+  [cizgiyiGecme.id]: cizgiyiGecme,
   [asiriYukleme.id]: asiriYukleme,
 };
 

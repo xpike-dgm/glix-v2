@@ -1,0 +1,153 @@
+/* ---- Sayı seçici (ortak): geniş çubuk + ince ayar düğmeleri ---- */
+.npick {
+  --thumb: 44px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.npick__track {
+  position: relative;
+  height: 72px;
+  touch-action: none;
+  cursor: pointer;
+  border-radius: var(--r-btn);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.npick__track:focus-visible {
+  box-shadow: 0 0 0 3px rgba(46, 242, 255, 0.5);
+}
+.npick__rail {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 50%;
+  height: 16px;
+  margin-top: -8px;
+  border-radius: 999px;
+  background: var(--bg-2);
+  border: 2px solid rgba(140, 160, 255, 0.28);
+  box-shadow: inset 0 2px 0 rgba(5, 8, 26, 0.6);
+}
+.npick__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cyan), var(--magenta));
+  transform-origin: left center;
+  transform: scaleX(var(--r, 0));
+  opacity: 0.9;
+}
+.npick__track[data-empty="1"] .npick__fill {
+  opacity: 0;
+}
+.npick__tick {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--t) * 100%);
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: rgba(140, 160, 255, 0.55);
+}
+.npick__tick[data-on="1"] {
+  background: var(--bg-0);
+}
+.npick__thumb {
+  position: absolute;
+  top: 50%;
+  left: calc(24px + (100% - 48px) * var(--r, 0));
+  width: var(--thumb);
+  height: var(--thumb);
+  margin: calc(var(--thumb) / -2) 0 0 calc(var(--thumb) / -2);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, var(--cyan) 55%, #19b6c2);
+  border: 3px solid var(--bg-0);
+  box-shadow:
+    0 0 0 2px var(--cyan),
+    0 0 22px rgba(46, 242, 255, 0.65);
+  transition:
+    transform 90ms var(--ease),
+    box-shadow 90ms;
+}
+.npick__track[data-empty="1"] .npick__thumb {
+  background: radial-gradient(circle at 35% 30%, #4a5390, #1b2358 70%);
+  box-shadow:
+    0 0 0 2px rgba(140, 160, 255, 0.5),
+    0 0 14px rgba(140, 160, 255, 0.25);
+}
+.npick__track[data-active="1"] .npick__thumb {
+  transform: scale(1.25);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 30px rgba(46, 242, 255, 0.9);
+}
+
+.npick__steps {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 8px;
+}
+.npick__step {
+  min-height: 64px;
+  border-radius: var(--r-btn);
+  border: 2px solid rgba(46, 242, 255, 0.45);
+  background: var(--bg-2);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 4px 0 #070b22;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition:
+    transform 70ms var(--ease),
+    box-shadow 70ms;
+}
+.npick__step[data-big="1"] {
+  border-color: rgba(255, 43, 214, 0.5);
+}
+.npick__step:active:not(:disabled) {
+  transform: translateY(3px) scale(0.96);
+  box-shadow: 0 1px 0 #070b22;
+}
+.npick[data-disabled="1"] .npick__track {
+  opacity: 0.5;
+  cursor: default;
+}
+.npick__step:disabled {
+  opacity: 0.5;
+}
+@media (max-height: 600px) {
+  .npick {
+    gap: 6px;
+  }
+  .npick__track {
+    height: 60px;
+  }
+  .npick__step {
+    min-height: 60px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .npick__thumb,
+  .npick__step {
+    transition: none;
+  }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .npick__step {
+    font-size: 16px;
+    min-height: 56px;
+  }
+  .npick__track {
+    height: 56px;
+  }
+}
