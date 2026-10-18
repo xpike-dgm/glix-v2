@@ -60,3 +60,31 @@ Kısa oyun içi açılış penceresi (≤ 7 sn) açılış animasyonu için kull
   bittiğindeki sepet geçerlidir, boş sepet 0. Ürün değeri = fiyat / alıcı sayısı; sepet değeri toplam
   (gösterimde iki ondalık, sıralama yuvarlanmamış değerle). En yüksek değer > 0 olan sepet(ler) +1.
   Sepetler ve alıcı sayıları sonuca kadar gizli.
+
+## Grup 3 — yazı ve sosyal çıkarım
+Ortak: serbest metin girişleri sunucuda temizlenir (denetim/görünmez karakter yok, boşluk sadeleşir, Türkçe büyük
+harf `toLocaleUpperCase("tr-TR")`), karşılaştırma bu biçimle yapılır. Kelime girişleri 1–24 karakter, tek satır.
+- **Yazı Yaz** (3–8): sunucu rastgele 2 yazan seçer; rol yalnız sahibine görünür. Yazma 30 sn: yazan kendi
+  kelimesini, diğerleri `MASUM` yazar (masumun girişinde yalnız `MASUM` kabul edilir; ekran aynı görünür).
+  Sözlü tartışma 60 sn (eylem yok). Tahmin 30 sn: herkes kendisi dışında bir oyuncu + bir kelime seçer/yazar
+  (değiştirilebilir). Kişi doğruysa (seçilen gerçekten yazan; yazan için diğer yazan) +1; kelime yalnız kişi doğruysa
+  ve o yazanın kelimesiyle eşleşirse +1. Kelime yazmamış yazanın kelimesi bilinemez. Tahmin vermeyen 0.
+- **Kendim** (3–8): yazma 30 sn (tek kelime), eşleştirme 30 sn. Kartlar yazılan kelimelerden oluşur, karışık sırada,
+  sahipsiz gösterilir; oyuncu kendi kartını görmez (eşleştiremez). Her kart en çok bir kişiye, her kişi en çok bir
+  karta eşlenir (kendisi hariç); eşleştirmeler değiştirilebilir ve gizli. Doğru +1, yanlış −1, boş 0. Kartı tam bir
+  kişi doğru bulduysa kart sahibine +1 bonus. Genel skor: en yüksek mini puan (> 0) olan(lar) +1.
+- **Sızma** (3–8): ortak kelime + sızma kelimesi çifti havuzdan (yakın anlamlı somut kavramlar). Sızma kendisinin
+  sızma olduğunu bilmez; herkes yalnız "kelimen: …" görür. İpucu aşaması süresiz: ekranda rastgele söyleme sırası
+  (iki tur aynı sıra) ve "Oylamaya geç" düğmesi; bağlı tüm katılımcılar bastığında oylama başlar (yeniden basmak
+  yeniden kontrol eder). Teknik üst sınır 5 dk. Oylama 30 sn, tek oy, kendine serbest, değiştirilebilir, gizli.
+  Sızma tek başına en çok oyu aldıysa yakalanır: diğer herkes +1. Aksi halde (eşitlik, hiç oy yok) sızma +2.
+- **Sözlük Blöfü** (3–8): havuz gerçek, az bilinen Türkçe kelimeler ve **doğru** sözlük anlamlarıyla (yönetici
+  gözden geçirir). Yazma 50 sn (1–100 karakter); yazmayanın kartı olmaz. Seçme 30 sn: gerçek tanım + blöfler
+  karışık; kendi blöfü seçilemez; tek seçim, değiştirilebilir, gizli. Gerçek tanımı seçen +1; blöfü seçilen her
+  seçim için +1. Kart sahipleri sonuca kadar gizli.
+- **Kontrol Paneli Kaosu** (2–8): 4 renk (mavi, yeşil, kırmızı, sarı); her oyuncunun dizilimi farklı permütasyon.
+  Sunucu tek döngülü, kendini hedeflemeyen bir eşleme kurar: her oyuncu bir başka oyuncunun paneline ait ipucunu
+  taşır. İpucu: "N. kablo R1 ve M. kablo R2 ise K'yi kes" — koşul hedef panelde doğrudur ve konum çifti, mümkünse
+  yalnız hedef paneli tanımlayacak şekilde seçilir (yoksa üç konum). İpucu yalnız taşıyıcısının view'ında, yapısal
+  veri olarak (istemci Türkçe cümleye çevirir). Herkes tek kesim yapar, geri alınamaz; kesim sonuca kadar gizli
+  (kendi kesimi kendine açık, doğru/yanlış sonda). 60 sn. Doğru kesen +1, o panelin ipucu taşıyıcısı +1.
