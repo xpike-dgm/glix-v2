@@ -6,6 +6,7 @@ import { cagrisimAgi } from "./cagrisim-agi/index.js";
 import { caprazAtes } from "./capraz-ates/index.js";
 import { karalamaDefteri } from "./karalama-defteri/index.js";
 import { korBomba } from "./kor-bomba/index.js";
+import { ortalamaninYarisi } from "./ortalamanin-yarisi/index.js";
 import { zamanBombasiHafizasi } from "./zaman-bombasi-hafizasi/index.js";
 
 export const GAMES: Record<string, AnyGame> = {
@@ -15,6 +16,7 @@ export const GAMES: Record<string, AnyGame> = {
   [cagrisimAgi.id]: cagrisimAgi,
   [karalamaDefteri.id]: karalamaDefteri,
   [korBomba.id]: korBomba,
+  [ortalamaninYarisi.id]: ortalamaninYarisi,
   [zamanBombasiHafizasi.id]: zamanBombasiHafizasi,
 };
 
