@@ -1,0 +1,160 @@
+import type { GameContext, GameDefinition, Rejected } from "../../game.js";
+import {
+  ALISVERIS_BUDGET,
+  ALISVERIS_CATALOG,
+  ALISVERIS_DURATION_MS,
+  ALISVERIS_SCALE,
+  ALISVERIS_SHOP_MS,
+  type AlisverisAction,
+  type AlisverisPublicView,
+  type AlisverisReveal,
+  type AlisverisView,
+} from "./types.js";
+
+export * from "./types.js";
+
+export interface AlisverisState {
+  players: string[];
+  startedAt: number;
+  endsAt: number;
+  revealEndsAt: number;
+  /** Raf sırası: ürün numaraları. */
+  order: number[];
+  /** Her oyuncunun canlı sepeti; süre bittiğindeki hâli geçerlidir. */
+  baskets: Record<string, number[]>;
+  /** Yalnız sunucunun "durum değişti" sinyali içindir (görünümler `ctx.now`'dan türetilir). */
+  revealed: boolean;
+}
+
+const priceOf = (id: number): number => ALISVERIS_CATALOG[id]?.price ?? 0;
+const costOf = (basket: readonly number[]): number => basket.reduce((s, id) => s + priceOf(id), 0);
+
+/**
+ * Sonuç: ürün değeri = fiyat / alıcı sayısı. Kesirler yüzünden eşitlik hatası olmasın diye değerler 840 ile
+ * çarpılmış tam sayıyla tutulur (1..8 alıcının hepsine tam bölünür). En yüksek değer > 0 olan sepetler +1.
+ */
+export function alisverisSettle(state: AlisverisState): AlisverisReveal {
+  const buyers: Record<string, number> = {};
+  for (const p of ALISVERIS_CATALOG) buyers[String(p.id)] = 0;
+  const baskets: Record<string, number[]> = {};
+  for (const id of state.players) {
+    const b = [...(state.baskets[id] ?? [])].sort((a, c) => a - c);
+    baskets[id] = b;
+    for (const p of b) buyers[String(p)] = (buyers[String(p)] ?? 0) + 1;
+  }
+  const values: Record<string, number> = {};
+  for (const id of state.players) {
+    let v = 0;
+    for (const p of baskets[id] ?? []) v += priceOf(p) * (ALISVERIS_SCALE / (buyers[String(p)] ?? 1));
+    values[id] = v;
+  }
+  const top = Math.max(0, ...Object.values(values));
+  const winners = top > 0 ? state.players.filter((id) => values[id] === top) : [];
+  return { baskets, buyers, values, winners };
+}
+
+export const gizliAlisveris: GameDefinition<
+  AlisverisState,
+  AlisverisAction,
+  AlisverisView,
+  AlisverisPublicView
+> = {
+  id: "gizli-alisveris",
+  name: "Gizli Alışveriş",
+  minPlayers: 3,
+  maxPlayers: 8,
+  orientation: "portrait",
+  briefing: {
+    goal: "60 kredilik bütçenle en değerli sepeti kur!",
+    steps: [
+      "İstediğin ürünleri sepete koy, her üründen bir tane alabilirsin",
+      "Bir ürünü kaç kişi aldıysa değeri o sayıya bölünür",
+      "Sepetler süre bitince açılır; en değerli sepet +1 alır",
+    ],
+  },
+
+  parseAction(raw: unknown): AlisverisAction | null {
+    if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
+    const rec = raw as Record<string, unknown>;
+    if (Object.keys(rec).length !== 2) return null;
+    if (rec.kind !== "add" && rec.kind !== "remove") return null;
+    const product = rec.product;
+    if (typeof product !== "number" || !Number.isInteger(product)) return null;
+    if (product < 0 || product >= ALISVERIS_CATALOG.length) return null;
+    return { kind: rec.kind, product };
+  },
+
+  setup(players: readonly string[], ctx: GameContext): AlisverisState {
+    return {
+      players: [...players],
+      startedAt: ctx.now,
+      endsAt: ctx.now + ALISVERIS_SHOP_MS,
+      revealEndsAt: ctx.now + ALISVERIS_DURATION_MS,
+      order: ctx.rng.shuffle(ALISVERIS_CATALOG.map((p) => p.id)),
+      baskets: {},
+      revealed: false,
+    };
+  },
+
+  reduce(state, playerId, action, ctx): AlisverisState | Rejected {
+    if (!state.players.includes(playerId)) return { rejected: "not_participant" };
+    if (ctx.now >= state.endsAt) return { rejected: "ended" };
+    if (ctx.now < state.startedAt) return { rejected: "not_started" };
+    const basket = state.baskets[playerId] ?? [];
+    if (action.kind === "add") {
+      if (basket.includes(action.product)) return { rejected: "already_in_basket" };
+      if (costOf(basket) + priceOf(action.product) > ALISVERIS_BUDGET) return { rejected: "over_budget" };
+      return { ...state, baskets: { ...state.baskets, [playerId]: [...basket, action.product] } };
+    }
+    if (!basket.includes(action.product)) return { rejected: "not_in_basket" };
+    return {
+      ...state,
+      baskets: { ...state.baskets, [playerId]: basket.filter((p) => p !== action.product) },
+    };
+  },
+
+  tick(state, ctx): AlisverisState {
+    if (state.revealed || ctx.now < state.endsAt) return state;
+    return { ...state, revealed: true };
+  },
+
+  publicView(state, ctx): AlisverisPublicView {
+    return {
+      startedAt: state.startedAt,
+      endsAt: state.endsAt,
+      revealEndsAt: state.revealEndsAt,
+      budget: ALISVERIS_BUDGET,
+      products: state.order.map((id) => ({ ...(ALISVERIS_CATALOG[id] ?? { id, name: "", price: 0 }) })),
+      // Süre dolmadan kimsenin sepeti ve alıcı sayıları yoktur.
+      reveal: ctx.now >= state.endsAt ? alisverisSettle(state) : null,
+    };
+  },
+
+  view(state, playerId): AlisverisView {
+    const basket = playerId === null ? [] : [...(state.baskets[playerId] ?? [])];
+    return { basket, remaining: ALISVERIS_BUDGET - costOf(basket) };
+  },
+
+  isFinished(state, ctx): boolean {
+    return ctx.now >= state.revealEndsAt;
+  },
+
+  /**
+   * Ürün numaraları ve adları herkese açık raf listesinde de bulunur; alt dizgi sızıntı denetimi sepetleri
+   * koruyamaz. Gizlilik yapısal olarak sağlanır ve ayrıca test edilir (gizli-alisveris.test.ts, "gizlilik").
+   */
+  secrets() {
+    return [];
+  },
+
+  result(state) {
+    const { winners, values } = alisverisSettle(state);
+    const awards: Record<string, number> = {};
+    for (const id of state.players) awards[id] = winners.includes(id) ? 1 : 0;
+    // Mini puan: sepet değeri (iki ondalık, yuvarlanmış); sıralama için yuvarlanmamış değer awards ile verilir.
+    const miniScores: Record<string, number> = {};
+    for (const id of state.players)
+      miniScores[id] = Math.round(((values[id] ?? 0) * 100) / ALISVERIS_SCALE) / 100;
+    return { miniScores, awards };
+  },
+};
