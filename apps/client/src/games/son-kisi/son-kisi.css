@@ -1,0 +1,378 @@
+/* ---- Son Kişi: sakin neon koridor, gizli alarm ---- */
+.sk {
+  --hero: min(34vw, 17dvh, 132px);
+}
+.sk__text {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: clamp(10px, 5dvh, 48px);
+  text-align: center;
+}
+.sk__head {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(22px, 7vw, 30px);
+  line-height: 1.15;
+}
+.sk__head[data-on="1"] {
+  color: var(--lime);
+  text-shadow: 0 0 18px rgba(182, 255, 59, 0.5);
+}
+.sk__sub {
+  font-size: var(--fs-15);
+  color: var(--text-dim);
+}
+.sk__stage {
+  --pulse: 2800ms;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin-top: 8px;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: linear-gradient(180deg, #060a20 0%, #0a1030 100%);
+  border: 1.5px solid var(--line);
+}
+.skcor {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.skcor__walls path,
+.skcor__floor path {
+  fill: none;
+  stroke: var(--violet);
+  stroke-width: 1.4;
+  opacity: 0.6;
+}
+.skcor__floor path {
+  stroke: var(--cyan);
+  opacity: 0.28;
+}
+.skcor__door {
+  fill: #05081a;
+  stroke: var(--lime);
+  stroke-width: 2;
+}
+.skcor__light {
+  fill: var(--lime);
+  opacity: 0.25;
+  animation: sk-light var(--pulse) ease-in-out infinite;
+}
+.sk__stage[data-tension="3"] .skcor__door {
+  stroke: var(--red);
+}
+.sk__stage[data-tension="3"] .skcor__light {
+  fill: var(--red);
+}
+@keyframes sk-light {
+  50% {
+    opacity: 0.75;
+  }
+}
+.sk__hero {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  width: var(--hero);
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  transition:
+    transform 700ms var(--ease),
+    opacity 700ms var(--ease);
+}
+.sk__hero .av {
+  position: relative;
+  z-index: 1;
+}
+.sk__shadow {
+  width: 118%;
+  height: 16px;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.75), transparent);
+  animation: sk-shadow var(--pulse) steps(1, end) infinite;
+}
+.sk__stage[data-tension="1"] .sk__shadow {
+  animation-name: sk-shadow-1;
+}
+.sk__stage[data-tension="2"] .sk__shadow,
+.sk__stage[data-tension="3"] .sk__shadow {
+  animation-name: sk-shadow-2;
+}
+/* Titreme yalnız gölgede: düzey arttıkça daha geniş ve daha sık. */
+@keyframes sk-shadow {
+  0%,
+  86%,
+  100% {
+    transform: translateX(0);
+  }
+  90% {
+    transform: translateX(-3px) scaleX(1.04);
+  }
+  95% {
+    transform: translateX(3px);
+  }
+}
+@keyframes sk-shadow-1 {
+  0%,
+  60%,
+  100% {
+    transform: translateX(0);
+  }
+  66% {
+    transform: translateX(-5px) scaleX(1.08);
+  }
+  78% {
+    transform: translateX(5px) scaleX(0.96);
+  }
+  90% {
+    transform: translateX(-3px);
+  }
+}
+@keyframes sk-shadow-2 {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-8px) scaleX(1.14);
+  }
+  40% {
+    transform: translateX(8px) scaleX(0.92);
+  }
+  60% {
+    transform: translateX(-6px) scaleX(1.1);
+  }
+  80% {
+    transform: translateX(6px);
+  }
+}
+/* Kaçan avatar koridorda küçülüp kapıya doğru kaybolur. */
+.sk__stage[data-escaped="1"] .sk__hero {
+  transform: translateX(-50%) translateY(-210%) scale(0.2);
+  opacity: 0;
+}
+.sk__stage[data-escaped="1"] .sk__shadow {
+  animation: none;
+  opacity: 0;
+}
+.sk__crew {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 0 2px;
+  min-height: 56px;
+}
+.sk__mate {
+  transition:
+    opacity 500ms var(--ease),
+    transform 500ms var(--ease),
+    filter 500ms;
+}
+.sk__mate[data-gone="1"] {
+  opacity: 0.2;
+  filter: grayscale(1);
+  transform: translateY(-8px) scale(0.8);
+}
+.sk__foot {
+  flex: none;
+  min-height: 92px;
+  padding-bottom: 6px;
+  display: grid;
+  align-items: end;
+}
+.sk__btn {
+  width: 100%;
+  max-width: 420px;
+  height: 84px;
+  margin: 0 auto 4px;
+  border-radius: 22px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 30px;
+  letter-spacing: 0.1em;
+  color: #1d1300;
+  touch-action: manipulation;
+  user-select: none;
+  background: linear-gradient(180deg, #ffe08a 0%, var(--amber) 46%);
+  box-shadow:
+    0 5px 0 #a8730a,
+    0 8px 32px rgba(255, 194, 59, 0.38);
+  transition:
+    transform 80ms var(--ease),
+    box-shadow 80ms var(--ease),
+    filter 120ms;
+}
+.sk__btn:active:not(:disabled) {
+  transform: translateY(5px) scale(0.985);
+  box-shadow:
+    0 0 0 #a8730a,
+    0 0 36px rgba(255, 194, 59, 0.45);
+  filter: brightness(1.1);
+}
+.sk__btn:disabled {
+  background: #1a2150;
+  color: var(--text-dim);
+  box-shadow: 0 5px 0 #0e1333;
+}
+.sk__btn[data-done="1"]:disabled {
+  background: #1b2d00;
+  color: var(--lime);
+  box-shadow:
+    0 5px 0 #0f1a00,
+    inset 0 0 0 2px rgba(182, 255, 59, 0.5);
+}
+
+/* ---- sonuç açılışı (kompakt şerit) ---- */
+.skr {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 0 0 6px;
+}
+.skr__siren {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 3px solid var(--red);
+  background: radial-gradient(closest-side, rgba(255, 59, 92, 0.5), rgba(255, 59, 92, 0.05));
+  animation: sk-flash 420ms steps(2, end) 3;
+}
+.skr__siren i {
+  width: 22px;
+  height: 22px;
+  border-radius: 50% 50% 4px 4px;
+  background: var(--red);
+  box-shadow: 0 0 16px var(--red);
+}
+.skr[data-none="1"] .skr__siren {
+  animation-iteration-count: 5;
+}
+@keyframes sk-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 59, 92, 0.9);
+  }
+  50% {
+    box-shadow: 0 0 34px 8px rgba(255, 59, 92, 0.7);
+  }
+}
+.skr__txt {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.skr__head {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(16px, 5.2vw, 22px);
+  line-height: 1.15;
+  color: var(--amber);
+  text-shadow: 0 0 16px rgba(255, 194, 59, 0.55);
+}
+.skr[data-none="1"] .skr__head {
+  color: var(--red);
+  text-shadow: 0 0 16px rgba(255, 59, 92, 0.55);
+}
+.skr__crew {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.skr__card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.skr__pts {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+  color: var(--amber);
+}
+.skr__time {
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.skr__note {
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .skr__siren {
+    display: none;
+  }
+}
+
+/* ---- anlatım görseli ---- */
+.skart {
+  width: min(100%, 150px);
+  height: auto;
+  max-height: 100%;
+}
+.skart__runner {
+  animation: sk-run 2.4s ease-in-out infinite;
+  transform-origin: 60px 90px;
+}
+@keyframes sk-run {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  80%,
+  100% {
+    transform: translateY(-42px) scale(0.35);
+    opacity: 0;
+  }
+}
+@container (max-height: 70px) {
+  .skart {
+    display: none;
+  }
+}
+
+@media (max-height: 700px) and (orientation: portrait) {
+  .sk {
+    --hero: min(30vw, 15dvh, 110px);
+  }
+  .sk__text {
+    margin-top: 8px;
+  }
+  .sk__btn {
+    height: 72px;
+  }
+  .sk__foot {
+    min-height: 80px;
+  }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .sk {
+    --hero: min(22dvh, 90px);
+  }
+  .sk__sub {
+    display: none;
+  }
+  .sk__crew {
+    display: none;
+  }
+  .sk__btn {
+    height: 68px;
+    font-size: 26px;
+  }
+  .sk__foot {
+    min-height: 74px;
+  }
+}
