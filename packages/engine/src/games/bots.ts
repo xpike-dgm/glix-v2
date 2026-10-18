@@ -10,8 +10,10 @@ import { karalamaDefteriBot } from "./karalama-defteri/bots.js";
 import { korBombaBot } from "./kor-bomba/bots.js";
 import { korKronometreBot } from "./kor-kronometre/bots.js";
 import { ortalamaninYarisiBot } from "./ortalamanin-yarisi/bots.js";
+import { rusRuletiBot } from "./rus-ruleti/bots.js";
 import { sonKisiBot } from "./son-kisi/bots.js";
 import { zamanBombasiHafizasiBot } from "./zaman-bombasi-hafizasi/bots.js";
+import { zehirliKadehBot } from "./zehirli-kadeh/bots.js";
 
 /** Test botları: her oyun için bir kayıt zorunludur (games/invariants.test.ts denetler). */
 export const BOTS: Record<string, GameBot> = {
@@ -28,4 +30,6 @@ export const BOTS: Record<string, GameBot> = {
   "son-kisi": sonKisiBot,
   "cizgiyi-gecme": cizgiyiGecmeBot,
   "ortalamanin-yarisi": ortalamaninYarisiBot,
+  "rus-ruleti": rusRuletiBot,
+  "zehirli-kadeh": zehirliKadehBot,
 };

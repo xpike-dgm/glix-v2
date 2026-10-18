@@ -32,6 +32,10 @@ export function App() {
     if (mock) {
       if (mock.startsWith("sonkisi-")) {
         void import("./dev/mockSonKisi.js").then((m) => m.startSonKisiMock(mock, params));
+      } else if (mock.startsWith("zehirli-")) {
+        void import("./dev/mockZehirli.js").then((m) => m.startZehirliMock(mock, params));
+      } else if (mock.startsWith("rus-")) {
+        void import("./dev/mockRusRuleti.js").then((m) => m.startRusRuletiMock(mock, params));
       } else if (mock.startsWith("gizli-")) {
         void import("./dev/mockGizliHirsiz.js").then((m) => m.startGizliHirsizMock(mock, params));
       } else if (mock.startsWith("kor-bomba")) {

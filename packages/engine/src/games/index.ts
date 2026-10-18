@@ -11,8 +11,10 @@ import { karalamaDefteri } from "./karalama-defteri/index.js";
 import { korBomba } from "./kor-bomba/index.js";
 import { korKronometre } from "./kor-kronometre/index.js";
 import { ortalamaninYarisi } from "./ortalamanin-yarisi/index.js";
+import { rusRuleti } from "./rus-ruleti/index.js";
 import { sonKisi } from "./son-kisi/index.js";
 import { zamanBombasiHafizasi } from "./zaman-bombasi-hafizasi/index.js";
+import { zehirliKadeh } from "./zehirli-kadeh/index.js";
 
 export const GAMES: Record<string, AnyGame> = {
   [butonaBas.id]: butonaBas,
@@ -28,6 +30,8 @@ export const GAMES: Record<string, AnyGame> = {
   [ortalamaninYarisi.id]: ortalamaninYarisi,
   [cizgiyiGecme.id]: cizgiyiGecme,
   [asiriYukleme.id]: asiriYukleme,
+  [rusRuleti.id]: rusRuleti,
+  [zehirliKadeh.id]: zehirliKadeh,
 };
 
 export function getCatalog(): GameInfo[] {
