@@ -30,7 +30,9 @@ export function App() {
 
     const mock = import.meta.env.DEV ? params.get("mock") : null;
     if (mock) {
-      if (mock.startsWith("kor-bomba")) {
+      if (mock.startsWith("gizli-")) {
+        void import("./dev/mockGizliHirsiz.js").then((m) => m.startGizliHirsizMock(mock, params));
+      } else if (mock.startsWith("kor-bomba")) {
         void import("./dev/mockKorBomba.js").then((m) => m.startKorBombaMock(mock, params));
       } else if (mock.startsWith("cagrisim")) {
         void import("./dev/mockCagrisim.js").then((m) => m.startCagrisimMock(mock, params));

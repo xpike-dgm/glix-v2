@@ -237,6 +237,19 @@ const SCREENS = [
   { name: "kor-bomba-spectator", q: "mock=kor-bomba-spectator", sizes: LANDSCAPE },
   { name: "kor-bomba-rotate", q: "mock=kor-bomba-watch", sizes: PORTRAIT, settle: 2000 },
   { name: "landscape-rotate", q: "mock=landscape", sizes: PORTRAIT, settle: 2000 },
+  { name: "gizli-briefing", q: "mock=gizli-briefing" },
+  { name: "gizli-idle", q: "mock=gizli-idle" },
+  { name: "gizli-pressed", q: "mock=gizli-pressed" },
+  {
+    name: "gizli-tap",
+    q: "mock=gizli-idle",
+    act: async (p) => p.locator(".gh__btn").click(),
+    settle: 700,
+  },
+  { name: "gizli-spectator", q: "mock=gizli-spectator" },
+  { name: "gizli-reveal-solo", q: "mock=gizli-reveal-solo&n=5", settle: 2400 },
+  { name: "gizli-reveal-multi", q: "mock=gizli-reveal-multi&n=8", settle: 2400 },
+  { name: "gizli-reveal-none", q: "mock=gizli-reveal-none&n=3", settle: 2400 },
 ];
 
 function freePort() {

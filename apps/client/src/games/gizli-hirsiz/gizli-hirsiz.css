@@ -1,0 +1,345 @@
+/* ---- Gizli Hırsız: karanlık güvenlik çekirdeği, sessiz parmak izi ---- */
+.gh {
+  --core: min(78vw, 40dvh, 340px);
+}
+.gh__text {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: clamp(10px, 5dvh, 48px);
+  text-align: center;
+}
+.gh__head {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(19px, 6.4vw, 30px);
+  line-height: 1.15;
+  color: var(--text);
+}
+.gh__head[data-on="1"] {
+  color: var(--cyan);
+  text-shadow: 0 0 18px rgba(46, 242, 255, 0.55);
+}
+.gh__sub {
+  font-size: var(--fs-15);
+  color: var(--text-dim);
+}
+.gh__stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+.gh__ripple {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--core);
+  height: var(--core);
+  margin: calc(var(--core) / -2) 0 0 calc(var(--core) / -2);
+  border-radius: 50%;
+  border: 2px solid var(--cyan);
+  opacity: 0;
+  pointer-events: none;
+  animation: gh-ripple 520ms var(--ease) both;
+}
+@keyframes gh-ripple {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+}
+.gh__foot {
+  flex: none;
+  min-height: 92px;
+  padding-bottom: 6px;
+  display: grid;
+  align-items: end;
+}
+.gh__btn {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  height: 84px;
+  margin: 0 auto 4px;
+  border-radius: 22px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 30px;
+  letter-spacing: 0.1em;
+  color: #fff;
+  touch-action: manipulation;
+  user-select: none;
+  background: linear-gradient(180deg, #ff5a78 0%, #d01a40 46%);
+  box-shadow:
+    0 5px 0 #7d0e26,
+    0 8px 32px rgba(255, 59, 92, 0.4);
+  transition:
+    transform 80ms var(--ease),
+    box-shadow 80ms var(--ease),
+    filter 120ms;
+}
+.gh__btn:active:not(:disabled) {
+  transform: translateY(5px) scale(0.985);
+  box-shadow:
+    0 0 0 #7d0e26,
+    0 0 36px rgba(255, 59, 92, 0.45);
+  filter: brightness(1.12);
+}
+.gh__btn:disabled {
+  background: #1a2150;
+  color: var(--text-dim);
+  box-shadow: 0 5px 0 #0e1333;
+}
+.gh__btn[data-done="1"]:disabled {
+  background: #0f2a3a;
+  color: var(--cyan);
+  box-shadow:
+    0 5px 0 #08161f,
+    inset 0 0 0 2px rgba(46, 242, 255, 0.5);
+}
+
+/* ---- çekirdek ---- */
+.ghcore {
+  --ring: rgba(139, 92, 255, 0.55);
+  --glow: var(--cyan);
+  overflow: visible;
+}
+.ghcore__ring {
+  fill: none;
+  stroke: var(--ring);
+  stroke-width: 1.6;
+}
+.ghcore__ring--a {
+  stroke-dasharray: 3 9;
+  transform-origin: 100px 100px;
+  animation: gh-spin 40s linear infinite;
+}
+.ghcore__ring--b {
+  stroke: rgba(46, 242, 255, 0.28);
+}
+.ghcore__ticks path {
+  stroke: rgba(46, 242, 255, 0.4);
+  stroke-width: 2;
+  stroke-linecap: round;
+  fill: none;
+}
+.ghcore__hex {
+  fill: #03050f;
+  stroke: var(--glow);
+  stroke-width: 2.5;
+  opacity: 0.85;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--glow), transparent 55%));
+}
+.ghcore__plate {
+  fill: #0a1030;
+  stroke: rgba(46, 242, 255, 0.35);
+  stroke-width: 1.5;
+  transition: transform 520ms var(--ease);
+}
+.ghcore__lid {
+  opacity: 1;
+}
+.ghcore__eye {
+  fill: var(--glow);
+  opacity: 0.35;
+  animation: gh-pulse 2.6s ease-in-out infinite;
+}
+.ghcore__print {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0;
+  transition: opacity 260ms var(--ease);
+}
+.ghcore[data-state="marked"] .ghcore__print {
+  opacity: 0.9;
+}
+.ghcore[data-state="marked"] .ghcore__eye {
+  opacity: 0;
+}
+.ghcore[data-state="solo"] {
+  --glow: var(--lime);
+  --ring: rgba(182, 255, 59, 0.6);
+}
+.ghcore[data-state="multi"] {
+  --glow: var(--red);
+  --ring: rgba(255, 59, 92, 0.7);
+}
+.ghcore[data-state="none"] {
+  --glow: #5a6396;
+  --ring: rgba(90, 99, 150, 0.5);
+}
+.ghcore[data-state="solo"] .ghcore__eye,
+.ghcore[data-state="multi"] .ghcore__eye {
+  opacity: 1;
+  r: 22;
+}
+.ghcore[data-state="solo"] .ghcore__plate--l,
+.ghcore[data-state="multi"] .ghcore__plate--l {
+  transform: translateX(-34px);
+}
+.ghcore[data-state="solo"] .ghcore__plate--r,
+.ghcore[data-state="multi"] .ghcore__plate--r {
+  transform: translateX(34px);
+}
+.ghcore[data-state="solo"] .ghcore__plate,
+.ghcore[data-state="multi"] .ghcore__plate {
+  opacity: 0;
+}
+.ghcore[data-state="multi"][data-opening="1"] {
+  animation: gh-glitch 520ms steps(2, end) 2;
+}
+.ghcore[data-state="none"] .ghcore__eye {
+  opacity: 0.2;
+}
+@keyframes gh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes gh-pulse {
+  50% {
+    opacity: 0.12;
+  }
+}
+@keyframes gh-glitch {
+  0% {
+    transform: translate(0);
+  }
+  25% {
+    transform: translate(-6px, 2px) skewX(6deg);
+  }
+  50% {
+    transform: translate(5px, -2px) skewX(-5deg);
+  }
+  75% {
+    transform: translate(-3px, 1px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+/* çekirdek boyları (çekirdek kuralından sonra: belirginlik sırası) */
+.gh__stage .ghcore {
+  width: var(--core);
+  height: var(--core);
+}
+.ghr__core .ghcore {
+  width: 68px;
+  height: 68px;
+}
+
+/* ---- sonuç açılışı (sonuç ekranının üstünde kompakt bir şerit) ---- */
+.ghr {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 0 0 6px;
+}
+.ghr__txt {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.ghr__head {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(16px, 5.2vw, 22px);
+  line-height: 1.15;
+}
+.ghr[data-outcome="solo"] .ghr__head {
+  color: var(--lime);
+  text-shadow: 0 0 16px rgba(182, 255, 59, 0.6);
+}
+.ghr[data-outcome="multi"] .ghr__head {
+  color: var(--red);
+  text-shadow: 0 0 16px rgba(255, 59, 92, 0.6);
+}
+.ghr[data-outcome="none"] .ghr__head {
+  color: var(--text-dim);
+}
+.ghr__crew {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ghr__thief {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ghr__pts {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+}
+.ghr[data-outcome="solo"] .ghr__pts {
+  color: var(--lime);
+}
+.ghr[data-outcome="multi"] .ghr__pts {
+  color: var(--red);
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .ghr__core {
+    display: none;
+  }
+}
+
+/* ---- anlatım görseli ---- */
+.ghart {
+  width: min(100%, 150px);
+  height: auto;
+  max-height: 100%;
+}
+.ghart__print {
+  animation: gh-pulse 2.2s ease-in-out infinite;
+}
+@container (max-height: 70px) {
+  .ghart {
+    display: none;
+  }
+}
+
+@media (max-height: 700px) and (orientation: portrait) {
+  .gh {
+    --core: min(70vw, 34dvh, 300px);
+  }
+  .gh__text {
+    margin-top: 8px;
+  }
+  .gh__btn {
+    height: 72px;
+  }
+  .gh__foot {
+    min-height: 80px;
+  }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .gh {
+    --core: min(40dvh, 200px);
+  }
+  .gh__sub {
+    display: none;
+  }
+  .gh__btn {
+    height: 68px;
+    font-size: 26px;
+  }
+  .gh__foot {
+    min-height: 74px;
+  }
+}
