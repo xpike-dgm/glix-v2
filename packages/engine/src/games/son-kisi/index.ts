@@ -23,17 +23,28 @@ export interface SonKisiState {
    * (görünüm süreden hesaplanır); sonuca etkisi yoktur.
    */
   tension: SonKisiTension;
+  /** GİZLİ: gerilim düzeylerinin başladığı mutlak anlar (artan). Hiçbir görünüme girmez. */
+  thresholds: number[];
 }
 
-/** Gerilim düzeyi: geçen/toplam oranına göre 0–3. */
-export function sonKisiTension(startedAt: number, endsAt: number, now: number): SonKisiTension {
-  const total = endsAt - startedAt;
-  if (total <= 0) return 3;
-  const ratio = (now - startedAt) / total;
-  if (ratio >= 0.9) return 3;
-  if (ratio >= 0.75) return 2;
-  if (ratio >= 0.5) return 1;
-  return 0;
+/** Gerilim düzeyi: geçilen gizli eşik sayısı (0–3). */
+export function sonKisiTension(thresholds: readonly number[], now: number): SonKisiTension {
+  let level = 0;
+  for (const t of thresholds) if (now >= t) level++;
+  return Math.min(3, level) as SonKisiTension;
+}
+
+/**
+ * Bitişe göre rastgele, gizli eşikler (mutlak ms): düzey 1 bitişten 5–8 sn, düzey 2 2,5–4,5 sn, düzey 3 0,8–2,2 sn önce.
+ * Başlangıçtan en az 1 sn sonra ve artan sırada; böylece eşik zamanı bitişin deterministik bir işlevi olmaz.
+ */
+function makeThresholds(startedAt: number, endsAt: number, rng: GameContext["rng"]): number[] {
+  const pick = (lo: number, hi: number) => lo + rng.int(hi - lo + 1);
+  const floor = startedAt + 1_000;
+  const t1 = Math.max(floor, endsAt - pick(5_000, 8_000));
+  const t2 = Math.max(t1, floor, endsAt - pick(2_500, 4_500));
+  const t3 = Math.max(t2, floor, endsAt - pick(800, 2_200));
+  return [t1, t2, t3];
 }
 
 /**
@@ -87,10 +98,12 @@ export const sonKisi: GameDefinition<SonKisiState, SonKisiAction, SonKisiView, S
 
   setup(players: readonly string[], ctx: GameContext): SonKisiState {
     const span = SON_KISI_MAX_MS - SON_KISI_MIN_MS + 1;
+    const endsAt = ctx.now + SON_KISI_MIN_MS + ctx.rng.int(span);
     return {
       players: [...players],
       startedAt: ctx.now,
-      endsAt: ctx.now + SON_KISI_MIN_MS + ctx.rng.int(span),
+      endsAt,
+      thresholds: makeThresholds(ctx.now, endsAt, ctx.rng),
       escapes: [],
       tension: 0,
     };
@@ -106,7 +119,7 @@ export const sonKisi: GameDefinition<SonKisiState, SonKisiAction, SonKisiView, S
   },
 
   tick(state, ctx): SonKisiState {
-    const tension = sonKisiTension(state.startedAt, state.endsAt, ctx.now);
+    const tension = sonKisiTension(state.thresholds, ctx.now);
     return tension > state.tension ? { ...state, tension } : state;
   },
 
@@ -115,7 +128,7 @@ export const sonKisi: GameDefinition<SonKisiState, SonKisiAction, SonKisiView, S
     return {
       startedAt: state.startedAt,
       escaped: state.escapes.map((e) => e.id),
-      tension: finished ? 3 : sonKisiTension(state.startedAt, state.endsAt, ctx.now),
+      tension: finished ? 3 : sonKisiTension(state.thresholds, ctx.now),
       finished,
       result: finished ? resultOf(state) : null,
     };
@@ -131,7 +144,14 @@ export const sonKisi: GameDefinition<SonKisiState, SonKisiAction, SonKisiView, S
 
   /** Gizli bitiş zamanı (mutlak ms); bitişe kadar kimsenin görünümünde olamaz. */
   secrets(state) {
-    return [{ ownerIds: [], value: String(state.endsAt), label: "gizli bitiş zamanı" }];
+    return [
+      { ownerIds: [], value: String(state.endsAt), label: "gizli bitiş zamanı" },
+      ...state.thresholds.map((t, i) => ({
+        ownerIds: [] as string[],
+        value: String(t),
+        label: `gizli gerilim eşiği ${i + 1}`,
+      })),
+    ];
   },
 
   result(state) {

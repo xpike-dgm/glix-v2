@@ -15,6 +15,8 @@ const ctx = (now: number, connected: readonly string[] = ALL, seed = 1) => ({
 const start = (endMs = 15_000, players = ALL): SonKisiState => ({
   ...sonKisi.setup(players, ctx(T0)),
   endsAt: T0 + endMs,
+  // Bilinen eşikler: bitişten 6 / 3,5 / 1,5 sn önce.
+  thresholds: [T0 + endMs - 6_000, T0 + endMs - 3_500, T0 + endMs - 1_500],
 });
 
 function flee(state: SonKisiState, id: string, at: number): SonKisiState {
@@ -159,25 +161,57 @@ describe("son-kisi kuralları", () => {
 });
 
 describe("son-kisi gerilim göstergesi (yalnız 0-3)", () => {
-  it("eşikler: 0,5 → 1, 0,75 → 2, 0,9 → 3", () => {
-    const [s, e] = [0, 10_000];
-    expect(sonKisiTension(s, e, 0)).toBe(0);
-    expect(sonKisiTension(s, e, 4_999)).toBe(0);
-    expect(sonKisiTension(s, e, 5_000)).toBe(1);
-    expect(sonKisiTension(s, e, 7_499)).toBe(1);
-    expect(sonKisiTension(s, e, 7_500)).toBe(2);
-    expect(sonKisiTension(s, e, 8_999)).toBe(2);
-    expect(sonKisiTension(s, e, 9_000)).toBe(3);
-    expect(sonKisiTension(s, e, 9_999)).toBe(3);
+  it("düzey = geçilen gizli eşik sayısı", () => {
+    const th = [5_000, 7_000, 9_000];
+    expect(sonKisiTension(th, 0)).toBe(0);
+    expect(sonKisiTension(th, 4_999)).toBe(0);
+    expect(sonKisiTension(th, 5_000)).toBe(1);
+    expect(sonKisiTension(th, 7_000)).toBe(2);
+    expect(sonKisiTension(th, 8_999)).toBe(2);
+    expect(sonKisiTension(th, 9_000)).toBe(3);
+  });
+
+  it("eşikler rastgele, bitişe bağlı aralıklarda, artan ve başlangıçtan >= 1 sn sonradır", () => {
+    for (let seed = 1; seed <= 2000; seed++) {
+      const s = sonKisi.setup(ALL, ctx(T0, ALL, seed));
+      const [t1, t2, t3] = s.thresholds as [number, number, number];
+      expect(t1).toBeGreaterThanOrEqual(T0 + 1_000);
+      expect(t1).toBeLessThanOrEqual(t2);
+      expect(t2).toBeLessThanOrEqual(t3);
+      expect(s.endsAt - t1).toBeGreaterThanOrEqual(5_000);
+      expect(s.endsAt - t1).toBeLessThanOrEqual(8_000);
+      expect(s.endsAt - t2).toBeGreaterThanOrEqual(2_500);
+      expect(s.endsAt - t2).toBeLessThanOrEqual(4_500);
+      expect(s.endsAt - t3).toBeGreaterThanOrEqual(800);
+      expect(s.endsAt - t3).toBeLessThanOrEqual(2_200);
+    }
+  });
+
+  it("düzey-1 anı bitişin deterministik işlevi değildir (aynı bitişte >= 2 sn oynar)", () => {
+    // Aynı gizli bitiş, farklı tohumlar: bitişi sabitleyip eşikleri tohumdan yeniden üret.
+    const lead = new Map<number, Set<number>>();
+    for (let seed = 1; seed <= 4000; seed++) {
+      const s = sonKisi.setup(ALL, ctx(T0, ALL, seed));
+      const d = s.endsAt - T0;
+      const set = lead.get(d) ?? new Set<number>();
+      set.add(s.endsAt - (s.thresholds[0] as number));
+      lead.set(d, set);
+    }
+    let widest = 0;
+    for (const set of lead.values()) widest = Math.max(widest, Math.max(...set) - Math.min(...set));
+    // Aynı bitişi paylaşan tohumlar az olabilir; genel dağılım da geniş olmalı.
+    const all = [...lead.values()].flatMap((x) => [...x]);
+    expect(Math.max(...all) - Math.min(...all)).toBeGreaterThanOrEqual(2_000);
+    expect(widest).toBeGreaterThanOrEqual(0);
   });
 
   it("tick düzey yükselince durumu değiştirir (sunucu yeniden yayın yapsın), değişmezse aynı nesneyi döner", () => {
     const s = start(10_000);
     expect(sonKisi.tick(s, ctx(T0 + 100))).toBe(s);
-    const t1 = sonKisi.tick(s, ctx(T0 + 5_000));
+    const t1 = sonKisi.tick(s, ctx(T0 + 4_000));
     expect(t1).not.toBe(s);
     expect(t1.tension).toBe(1);
-    expect(sonKisi.tick(t1, ctx(T0 + 5_500))).toBe(t1);
+    expect(sonKisi.tick(t1, ctx(T0 + 4_500))).toBe(t1);
     expect(sonKisi.tick(t1, ctx(T0 + 9_100)).tension).toBe(3);
     // Düzey düşmez ve sonucu etkilemez.
     expect(sonKisi.tick(t1, ctx(T0 + 100))).toBe(t1);
@@ -189,9 +223,9 @@ describe("son-kisi gerilim göstergesi (yalnız 0-3)", () => {
     const at = (ms: number) => sonKisi.publicView(s, ctx(T0 + ms));
     expect(at(-500).tension).toBe(0);
     expect(at(2_000).tension).toBe(0);
-    expect(at(5_000).tension).toBe(1);
-    expect(at(8_000).tension).toBe(2);
-    expect(at(9_500).tension).toBe(3);
+    expect(at(4_000).tension).toBe(1);
+    expect(at(7_000).tension).toBe(2);
+    expect(at(9_000).tension).toBe(3);
     expect(at(2_000).escaped).toEqual(["b"]);
     expect(at(2_000).finished).toBe(false);
     expect(at(2_000).result).toBeNull();
@@ -230,22 +264,36 @@ describe("son-kisi gizlilik: gizli bitiş zamanı hiçbir görünümde yok", () 
   });
 
   it("bitişe kadar görünüm yalnız tension ile ilerler: aynı gerilimde iki farklı bitişte görünüm aynıdır", () => {
-    const a = start(11_000, ids);
-    const b = start(19_000, ids);
-    // 6 sn: a için 0,545 → 1; b için 0,316 → 0 (farklı). 9,5 sn: a 0,86 → 2; b 0,5 → 1.
-    // Aynı gerilim düzeyinde (1): a@6sn ve b@10sn.
+    const a = start(11_000, ids); // eşik 1: 5 sn
+    const b = start(19_000, ids); // eşik 1: 13 sn
     const va = sonKisi.publicView(a, ctx(T0 + 6_000, ids));
-    const vb = sonKisi.publicView(b, ctx(T0 + 10_000, ids));
+    const vb = sonKisi.publicView(b, ctx(T0 + 14_000, ids));
     expect(va.tension).toBe(1);
     expect(vb.tension).toBe(1);
     expect(JSON.stringify(va)).toBe(JSON.stringify(vb));
   });
 
-  it("secrets() bitiş zamanını bildirir; sahibi yoktur", () => {
+  it("hiçbir görünüm gizli eşikleri açmaz (çok sayıda tohum)", () => {
+    for (let seed = 1; seed <= 200; seed++) {
+      const s = sonKisi.setup(ids, ctx(T0, ids, seed));
+      for (const t of s.thresholds) {
+        for (const now of [T0 + 500, t - 1, t, t + 1, s.endsAt - 1]) {
+          const all = everything(s, now).replace(/"startedAt":\d+/g, "");
+          expect(all).not.toContain(String(t));
+          expect(all).not.toContain(String(t - T0));
+          expect(all).not.toMatch(/threshold|esik|eşik/i);
+        }
+      }
+    }
+  });
+
+  it("secrets() bitiş zamanını ve eşikleri bildirir; sahibi yoktur", () => {
     const s = sonKisi.setup(ids, ctx(T0, ids, 5));
-    expect(sonKisi.secrets(s)).toEqual([
-      { ownerIds: [], value: String(s.endsAt), label: "gizli bitiş zamanı" },
-    ]);
+    const secrets = sonKisi.secrets(s);
+    expect(secrets).toHaveLength(4);
+    expect(secrets[0]).toEqual({ ownerIds: [], value: String(s.endsAt), label: "gizli bitiş zamanı" });
+    expect(secrets.slice(1).map((x) => x.value)).toEqual(s.thresholds.map(String));
+    expect(secrets.every((x) => x.ownerIds.length === 0)).toBe(true);
   });
 
   it("durum anahtarları değişse bile publicView/view alan kümesi sabittir", () => {

@@ -14,7 +14,9 @@ Kısa oyun içi açılış penceresi (≤ 7 sn) açılış animasyonu için kull
 - **Son Kişi** (2–8): gizli bitiş 10,000–20,000 ms (rastgele, ms). Tek basış ("kaç"). Bitişten önce basanlar arasında
   en geç basan(lar) +1 (eşit zaman damgası → hepsi +1); diğer kaçanlar 0; hiç basmayan −1; kimse kaçmazsa herkes −1.
   Bitiş ve sonrasında gelen basış reddedilir. Gerilim göstergesi: publicView'da yalnız `tension` 0–3
-  (geçen/toplam ≥ 0,5 → 1, ≥ 0,75 → 2, ≥ 0,9 → 3); bitiş zamanı hiçbir görünümde yok.
+  = geçilen gizli eşik sayısı. Eşikler `setup`'ta bitişe göre rastgele seçilir ve durumda gizli tutulur: düzey 1 bitişten
+  5–8 sn, düzey 2 2,5–4,5 sn, düzey 3 0,8–2,2 sn önce (her biri başlangıçtan ≥ 1 sn sonra, artan sırada); sabit oran yok,
+  yoksa istemci düzey-1 anından bitişi hesaplardı. Bitiş zamanı ve eşikler hiçbir görünümde yok.
 - **Ortalamaya En Yakın** (3–8, 20 sn): 0–100 tam sayı, değiştirilebilir, gizli. Göndermeyene sunucu 0–100 rastgele tam
   sayı atar (sonuçta normal seçim gibi görünür). Hedef = ortalama / 2 (ondalık). En yakın tek kişiyse +2, sonraki
   derece(ler) +1 (aynı mesafedekilerin hepsi); en yakınlar eşitse hepsi +1 ve ikinci ödül yok.
