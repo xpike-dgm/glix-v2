@@ -1,6 +1,7 @@
 import type { AnyGame } from "../game.js";
 import type { GameInfo } from "../protocol.js";
 import { acgozlulukLimiti } from "./acgozluluk-limiti/index.js";
+import { asiriYukleme } from "./asiri-yukleme/index.js";
 import { butonaBas } from "./butona-bas/index.js";
 import { cagrisimAgi } from "./cagrisim-agi/index.js";
 import { caprazAtes } from "./capraz-ates/index.js";
@@ -11,6 +12,7 @@ import { zamanBombasiHafizasi } from "./zaman-bombasi-hafizasi/index.js";
 
 export const GAMES: Record<string, AnyGame> = {
   [butonaBas.id]: butonaBas,
+  [asiriYukleme.id]: asiriYukleme,
   [acgozlulukLimiti.id]: acgozlulukLimiti,
   [caprazAtes.id]: caprazAtes,
   [cagrisimAgi.id]: cagrisimAgi,

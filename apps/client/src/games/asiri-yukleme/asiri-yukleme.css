@@ -1,0 +1,345 @@
+/* ---- Aşırı Yükleme ---- */
+.ay .col {
+  gap: 0;
+}
+
+/* Tehlike: ekran kenarı kızarır; sayaç yoktur. */
+.ay__edge {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  box-shadow:
+    inset 0 0 0 4px rgba(255, 59, 92, 0.85),
+    inset 0 0 60px 14px rgba(255, 59, 92, 0.55);
+  transition: opacity 260ms var(--ease);
+}
+.ay__edge[data-on="1"] {
+  opacity: 1;
+  animation: ay-edge 1.4s ease-in-out infinite;
+}
+@keyframes ay-edge {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.ay__stage {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+/* Tüm sahne tıklanır; çekirdek ortada. */
+.ay__hit {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  padding: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  cursor: pointer;
+}
+.ay__hit:disabled {
+  cursor: default;
+}
+.ay__sparks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.ay__spark {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+.ay__hint {
+  flex: none;
+  margin: 8px 0 14px;
+  text-align: center;
+  font-size: var(--fs-18);
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+/* Çekirdek */
+.ay-core {
+  --size: min(78vw, 44dvh, 360px);
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+  display: grid;
+  place-items: center;
+  transition: transform 70ms var(--ease);
+}
+.ay-core[data-pressed="1"] {
+  transform: scale(0.95);
+}
+.ay-core__halo {
+  position: absolute;
+  inset: -8%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(46, 242, 255, 0.4), transparent);
+  transition: background 220ms var(--ease);
+}
+.ay-core__rings {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.ay-core__ring {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 3;
+  transition: stroke 220ms var(--ease);
+}
+.ay-core__ring--outer {
+  stroke-dasharray: 18 10;
+  transform-origin: 100px 100px;
+  animation: ay-spin 14s linear infinite;
+  opacity: 0.75;
+}
+.ay-core__ring--mid {
+  stroke: var(--violet);
+  stroke-dasharray: 40 14;
+  transform-origin: 100px 100px;
+  animation: ay-spin 9s linear infinite reverse;
+}
+.ay-core__ring--inner {
+  stroke: var(--magenta);
+  stroke-width: 2;
+  opacity: 0.8;
+}
+@keyframes ay-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ay-core__orb {
+  width: 54%;
+  height: 54%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 34%, #d8fdff 0%, #2ef2ff 34%, #0a6fd6 82%);
+  box-shadow:
+    0 0 40px rgba(46, 242, 255, 0.75),
+    inset 0 0 22px rgba(255, 255, 255, 0.4);
+  animation: ay-beat 1.8s ease-in-out infinite;
+  transition:
+    background 220ms var(--ease),
+    box-shadow 220ms var(--ease);
+}
+.ay-core__gloss {
+  position: absolute;
+  width: 18%;
+  height: 9%;
+  left: 31%;
+  top: 28%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  transform: rotate(-30deg);
+}
+@keyframes ay-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+.ay-core[data-danger="1"] .ay-core__halo {
+  background: radial-gradient(closest-side, rgba(255, 59, 92, 0.5), transparent);
+}
+.ay-core[data-danger="1"] .ay-core__ring--outer {
+  stroke: var(--red);
+}
+.ay-core[data-danger="1"] .ay-core__orb {
+  background: radial-gradient(circle at 38% 34%, #ffe1e6 0%, #ff3b5c 38%, #9b0f2e 84%);
+  box-shadow:
+    0 0 46px rgba(255, 59, 92, 0.85),
+    inset 0 0 22px rgba(255, 255, 255, 0.35);
+  animation-duration: 0.7s;
+}
+.ay-core[data-boom="1"] .ay-core__orb {
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #fff4d6 50%, #ffc23b 100%);
+  box-shadow:
+    0 0 70px rgba(255, 255, 255, 0.95),
+    0 0 120px rgba(255, 194, 59, 0.7);
+  animation: none;
+}
+.ay-core[data-boom="1"] .ay-core__ring {
+  stroke: var(--amber);
+}
+.ay-core[data-boom="1"] .ay-core__ring--outer,
+.ay-core[data-boom="1"] .ay-core__ring--mid {
+  animation: none;
+}
+
+/* Sonuç */
+.ay__result {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.ay__core-small {
+  flex: none;
+  display: grid;
+  place-items: center;
+  margin-top: clamp(0px, 1.2dvh, 10px);
+}
+.ay__core-small .ay-core {
+  --size: clamp(84px, 16dvh, 130px);
+}
+.ay__head {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 6px;
+}
+.ay__verdict {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(22px, 7vw, 30px);
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.ay__head[data-boom="1"] .ay__verdict {
+  color: var(--red);
+  text-shadow: 0 0 16px rgba(255, 59, 92, 0.5);
+}
+.ay__head[data-boom="0"] .ay__verdict {
+  color: var(--lime);
+  text-shadow: 0 0 16px rgba(182, 255, 59, 0.45);
+}
+.ay__sub {
+  margin: 0;
+  font-size: var(--fs-18);
+  font-weight: 600;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.ay__sub[data-win="1"] {
+  color: var(--lime);
+}
+.ay__sub[data-win="-1"] {
+  color: var(--red);
+}
+.ay__rows {
+  flex: 1 1 0;
+  min-height: 0;
+  list-style: none;
+  margin: clamp(8px, 1.8dvh, 16px) 0 4px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ay__row {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 52px;
+  display: grid;
+  grid-template-columns: var(--ay-av, 36px) 1fr 44px 34px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px;
+  border-radius: var(--r-sm);
+}
+.ay__row[data-me="1"] {
+  background: rgba(46, 242, 255, 0.09);
+  box-shadow: inset 0 0 0 1.5px rgba(46, 242, 255, 0.45);
+}
+.ay__row[data-boom="1"] {
+  background: rgba(255, 59, 92, 0.12);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 59, 92, 0.55);
+}
+.ay__bar {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--line);
+  overflow: hidden;
+}
+.ay__bar i {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: var(--cyan);
+  box-shadow: 0 0 10px rgba(46, 242, 255, 0.6);
+}
+.ay__row[data-boom="1"] .ay__bar i {
+  background: repeating-linear-gradient(45deg, var(--red) 0 8px, #8d1730 8px 16px);
+  box-shadow: 0 0 10px rgba(255, 59, 92, 0.6);
+}
+.ay__clicks {
+  text-align: right;
+  font-size: var(--fs-15);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.ay__pts {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+  text-align: right;
+  color: var(--text-dim);
+}
+.ay__pts[data-pts="2"] {
+  color: var(--lime);
+}
+.ay__pts[data-pts="1"] {
+  color: var(--amber);
+}
+.ay__pts[data-pts="-1"] {
+  color: var(--red);
+}
+
+/* Anlatım görseli */
+.ayart {
+  width: 150px;
+  height: 150px;
+  display: grid;
+  place-items: center;
+}
+.ayart .ay-core {
+  --size: 140px;
+}
+
+/* Üst çubuk yer tutar: tüm sahne tıklanabilir olduğundan simge düğmeleriyle çakışmasın. */
+.ay--play .game__top {
+  min-height: 60px;
+}
+
+/* Kısa ekranlarda (yatay telefon) sonuç listesine yer açmak için küçük çekirdek saklanır. */
+@media (max-height: 560px) {
+  .ay__core-small {
+    display: none;
+  }
+}
+@media (max-height: 460px) {
+  .ay__row {
+    max-height: 36px;
+    grid-template-rows: 1fr;
+  }
+  .ay {
+    --ay-av: 28px;
+  }
+}

@@ -238,6 +238,38 @@ const SCREENS = [
   { name: "kronometre-reveal-second-8", q: "mock=kor-kronometre-reveal&n=8&rank=2", settle: 2200 },
   { name: "kronometre-reveal-lose-8", q: "mock=kor-kronometre-reveal&n=8&rank=6&nopress=1", settle: 2200 },
   { name: "kronometre-reveal-2", q: "mock=kor-kronometre-reveal&n=2&rank=2", settle: 1800 },
+  { name: "asiri-briefing", q: "mock=asiri-yukleme-briefing" },
+  { name: "asiri-playing", q: "mock=asiri-yukleme-playing" },
+  {
+    name: "asiri-tap",
+    q: "mock=asiri-yukleme-playing",
+    settle: 400,
+    act: async (p) => {
+      const box = await p.locator(".ay__hit").boundingBox();
+      if (!box) throw new Error("çekirdek yok");
+      const t0 = Date.now();
+      for (let i = 0; i < 14; i++) {
+        await p.mouse.click(
+          box.x + box.width / 2 + (i % 5) * 14 - 28,
+          box.y + box.height / 2 + (i % 3) * 18 - 18,
+        );
+        await sleep(30);
+      }
+      // 14 hızlı dokunuş: hiçbir tık kaybolmamalı, mesaj hızı 80 ms'de 1'i aşmamalı (sunucu sınırı 20/sn).
+      await sleep(400);
+      const elapsed = Date.now() - t0;
+      const sent = await p.evaluate(() => window.__sent);
+      if (sent?.taps !== 14 || (sent?.messages ?? 99) > elapsed / 80 + 2 || sent.messages >= 14) {
+        throw new Error(`toplu gönderim bozuk: ${JSON.stringify(sent)} (${elapsed} ms)`);
+      }
+    },
+  },
+  { name: "asiri-danger", q: "mock=asiri-yukleme-danger" },
+  { name: "asiri-reveal-boom-5", q: "mock=asiri-yukleme-reveal-boom&n=5", settle: 1800 },
+  { name: "asiri-reveal-boom-me-8", q: "mock=asiri-yukleme-reveal-boom&n=8&me=1", settle: 2200 },
+  { name: "asiri-reveal-safe-8", q: "mock=asiri-yukleme-reveal-safe&n=8", settle: 2200 },
+  { name: "asiri-reveal-2", q: "mock=asiri-yukleme-reveal-boom&n=2", settle: 1800 },
+  { name: "asiri-spectator", q: "mock=asiri-yukleme-spectator" },
   { name: "landscape", q: "mock=landscape", sizes: LANDSCAPE },
   { name: "landscape-8", q: "mock=landscape&n=8", sizes: LANDSCAPE },
   { name: "landscape-spectator", q: "mock=landscape&spectator=1", sizes: LANDSCAPE },
