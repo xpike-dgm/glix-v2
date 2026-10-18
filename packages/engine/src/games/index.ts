@@ -7,6 +7,7 @@ import { caprazAtes } from "./capraz-ates/index.js";
 import { gizliHirsiz } from "./gizli-hirsiz/index.js";
 import { karalamaDefteri } from "./karalama-defteri/index.js";
 import { korBomba } from "./kor-bomba/index.js";
+import { sonKisi } from "./son-kisi/index.js";
 import { zamanBombasiHafizasi } from "./zaman-bombasi-hafizasi/index.js";
 
 export const GAMES: Record<string, AnyGame> = {
@@ -18,6 +19,7 @@ export const GAMES: Record<string, AnyGame> = {
   [korBomba.id]: korBomba,
   [zamanBombasiHafizasi.id]: zamanBombasiHafizasi,
   [gizliHirsiz.id]: gizliHirsiz,
+  [sonKisi.id]: sonKisi,
 };
 
 export function getCatalog(): GameInfo[] {

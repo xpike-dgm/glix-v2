@@ -60,7 +60,7 @@ describe("gizli-hirsiz tam maç", () => {
     k.clock.advance(start + 30_000 - 500 - k.clock.now());
     await sync();
     expect(a.room.phase).toBe("playing");
-    k.clock.advance(k.clock.now() < start + 30_000 ? start + 30_000 - k.clock.now() : 0);
+    k.clock.advance(Math.max(0, start + 30_000 - k.clock.now()));
     expect(await send(c, { kind: "steal" })).toMatchObject({ ok: false });
     await until(() => a.room.phase === "results", "sonuç");
 
@@ -78,7 +78,7 @@ describe("gizli-hirsiz tam maç", () => {
     expect((await send(d, { kind: "steal" })).ok).toBe(true);
     k.clock.advance(5_000);
     expect((await send(b, { kind: "steal" })).ok).toBe(true);
-    k.clock.advance(start + 30_000 - k.clock.now());
+    k.clock.advance(start + 30_600 - k.clock.now());
     await until(() => a.room.phase === "results", "sonuç");
     const expected = Object.fromEntries(
       ids.map((id) => [id, id === b.session.playerId || id === d.session.playerId ? -1 : 0]),
@@ -92,7 +92,7 @@ describe("gizli-hirsiz tam maç", () => {
   it("kimse basmazsa herkes 0 alır", async () => {
     const { cs, ids } = await newMatch();
     const a = cs[0] as Client;
-    k.clock.advance(pub(a).endsAt - k.clock.now());
+    k.clock.advance(pub(a).endsAt + 600 - k.clock.now());
     await until(() => a.room.phase === "results", "sonuç");
     expect(a.room.match?.result?.awards).toEqual(Object.fromEntries(ids.map((id) => [id, 0])));
     expect(pub(a).reveal?.outcome).toBe("none");
