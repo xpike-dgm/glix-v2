@@ -6,14 +6,16 @@ const reveal = {
   scores: { a: 0, b: 0, c: 1, d: 0 },
   mutual: [["a", "b"]],
 };
-const pub = { startedAt: 100, endsAt: 25_100, finishAt: 32_100, reveal: null };
-const priv = { myTarget: null };
+const pub = { startedAt: 100, endsAt: 25_100, finishAt: 32_100, reveal: null, lockedIds: ["a"] };
+const priv = { myTarget: null, locked: false };
 
 describe("Çapraz Ateş görünümü", () => {
   it("süre bitmeden görünümü okur", () => {
-    const v = parseCaprazAtesView(pub, { myTarget: "b" });
+    const v = parseCaprazAtesView(pub, { myTarget: "b", locked: true });
     expect(v?.reveal).toBeNull();
     expect(v?.myTarget).toBe("b");
+    expect(v?.locked).toBe(true);
+    expect(v?.lockedIds).toEqual(["a"]);
   });
   it("açılmış görünümü okur", () => {
     const v = parseCaprazAtesView({ ...pub, reveal }, priv);
@@ -23,6 +25,12 @@ describe("Çapraz Ateş görünümü", () => {
   it("reveal alanı yoksa kapalı sayılır", () => {
     const { reveal: _drop, ...rest } = pub;
     expect(parseCaprazAtesView(rest, priv)?.reveal).toBeNull();
+  });
+  it("kilit alanları eksik ya da bozuksa reddeder", () => {
+    const { lockedIds: _drop, ...rest } = pub;
+    expect(parseCaprazAtesView(rest, priv)).toBeNull();
+    expect(parseCaprazAtesView({ ...pub, lockedIds: [1] }, priv)).toBeNull();
+    expect(parseCaprazAtesView(pub, { myTarget: null })).toBeNull();
   });
   it("bozuk görünümü reddeder", () => {
     expect(parseCaprazAtesView(null, priv)).toBeNull();

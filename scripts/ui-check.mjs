@@ -116,6 +116,13 @@ const SCREENS = [
     q: "mock=capraz-ates",
     act: async (p) => p.locator(".ca__cell:not(:disabled)").nth(1).click(),
   },
+  { name: "capraz-tamam", q: "mock=capraz-tamam" },
+  { name: "capraz-tamam-8", q: "mock=capraz-tamam&n=8" },
+  {
+    name: "capraz-lock-tap",
+    q: "mock=capraz-locked",
+    act: async (p) => p.locator(".tamam .pbtn:not(:disabled)").click(),
+  },
   { name: "capraz-closed", q: "mock=capraz-closed" },
   { name: "capraz-reveal", q: "mock=capraz-reveal", settle: 2800 },
   { name: "capraz-reveal-8", q: "mock=capraz-reveal&n=8", settle: 2800 },

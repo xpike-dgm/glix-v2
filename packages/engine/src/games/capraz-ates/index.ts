@@ -2,6 +2,8 @@ import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import {
   CAPRAZ_ATES_DURATION_MS,
   CAPRAZ_ATES_FIRE_MS,
+  CAPRAZ_ATES_LOCK_GRACE_MS,
+  CAPRAZ_ATES_REVEAL_MS,
   type CaprazAtesAction,
   type CaprazAtesPublicView,
   type CaprazAtesReveal,
@@ -17,6 +19,8 @@ export interface CaprazAtesState {
   finishAt: number;
   /** Oyuncu -> son seçilen hedef (gizli; süre bitene kadar yalnız sahibinin görünümünde). */
   targets: Record<string, string>;
+  /** Hedefini kilitleyenler (kilit sırasıyla). `endsAt`/`finishAt` erken bitişte reduce içinde öne çekilir. */
+  locked: string[];
   /** Hedef süresi dolduğunda tick tarafından işaretlenir; yalnız sunucunun yayın tetiklemesi içindir. */
   fireClosed: boolean;
 }
@@ -81,6 +85,7 @@ export const caprazAtes: GameDefinition<
     if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
     const r = raw as Record<string, unknown>;
     const keys = Object.keys(r);
+    if (r.kind === "lock") return keys.length === 1 ? { kind: "lock" } : null;
     if (keys.length !== 2 || r.kind !== "target") return null;
     const target = r.target;
     if (typeof target !== "string" || target.length === 0 || target.length > 64) return null;
@@ -94,6 +99,7 @@ export const caprazAtes: GameDefinition<
       endsAt: ctx.now + CAPRAZ_ATES_FIRE_MS,
       finishAt: ctx.now + CAPRAZ_ATES_DURATION_MS,
       targets: {},
+      locked: [],
       fireClosed: false,
     };
   },
@@ -102,6 +108,16 @@ export const caprazAtes: GameDefinition<
     if (!state.players.includes(playerId)) return { rejected: "not_participant" };
     if (ctx.now >= state.endsAt) return { rejected: "ended" };
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
+    if (state.locked.includes(playerId)) return { rejected: "locked" };
+    if (action.kind === "lock") {
+      if (targetOf(state.targets, playerId) === null) return { rejected: "nothing_to_lock" };
+      const locked = [...state.locked, playerId];
+      const waiting = state.players.some((id) => ctx.connected.includes(id) && !locked.includes(id));
+      if (waiting) return { ...state, locked };
+      // Bağlı herkes kilitledi: hedef aşaması 1 sn sonra biter.
+      const endsAt = Math.min(state.endsAt, ctx.now + CAPRAZ_ATES_LOCK_GRACE_MS);
+      return { ...state, locked, endsAt, finishAt: endsAt + CAPRAZ_ATES_REVEAL_MS };
+    }
     if (action.target === playerId) return { rejected: "self_target" };
     if (!state.players.includes(action.target)) return { rejected: "unknown_target" };
     if (!ctx.connected.includes(action.target)) return { rejected: "target_offline" };
@@ -121,11 +137,15 @@ export const caprazAtes: GameDefinition<
       endsAt: state.endsAt,
       finishAt: state.finishAt,
       reveal: ctx.now >= state.endsAt ? caprazAtesReveal(state.players, state.targets) : null,
+      lockedIds: [...state.locked],
     };
   },
 
   view(state, playerId): CaprazAtesView {
-    return { myTarget: playerId === null ? null : targetOf(state.targets, playerId) };
+    return {
+      myTarget: playerId === null ? null : targetOf(state.targets, playerId),
+      locked: playerId !== null && state.locked.includes(playerId),
+    };
   },
 
   isFinished(state, ctx): boolean {

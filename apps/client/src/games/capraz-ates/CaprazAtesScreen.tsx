@@ -8,6 +8,7 @@ import { look } from "../../ui/avatars.js";
 import { ProgressBar } from "../../ui/ProgressBar.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
+import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./capraz-ates.css";
 import { Sight } from "./Sight.js";
@@ -45,6 +46,8 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
     }),
   );
   const others = () => crew().filter((p) => p.id !== props.selfId);
+  const lockedIds = () => view()?.lockedIds ?? [];
+  const locked = () => view()?.locked ?? false;
   const closed = () => {
     const v = view();
     return !v || props.now() >= v.endsAt;
@@ -61,7 +64,7 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
   });
 
   const choose = (id: string, connected: boolean): void => {
-    if (props.spectator || closed() || !connected) return;
+    if (props.spectator || closed() || locked() || !connected) return;
     unlockAudio();
     tap();
     hapticTap();
@@ -75,6 +78,11 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
       }
     }, 1600);
     sendAction({ kind: "target", target: id });
+  };
+
+  const lock = (): void => {
+    if (props.spectator || closed() || locked() || mine() === null) return;
+    sendAction({ kind: "lock" });
   };
 
   const targetPlayer = () => {
@@ -170,11 +178,12 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
               <div class="ca__grid" style={gridVars()}>
                 <For each={spectatorList()}>
                   {(p, i) => {
-                    const locked = () => mine() === p.id;
+                    const aimed = () => mine() === p.id;
+                    const ready = () => lockedIds().includes(p.id);
                     return (
                       <div
                         class="ca__slot"
-                        data-locked={locked() ? "1" : undefined}
+                        data-locked={aimed() ? "1" : undefined}
                         data-off={p.connected ? undefined : "1"}
                         data-idle={props.spectator || closed() ? "1" : undefined}
                         style={{
@@ -186,10 +195,10 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
                         <button
                           type="button"
                           class="ca__cell"
-                          data-locked={locked() ? "1" : undefined}
+                          data-locked={aimed() ? "1" : undefined}
                           data-off={p.connected ? undefined : "1"}
-                          disabled={props.spectator || closed() || !p.connected}
-                          aria-pressed={locked()}
+                          disabled={props.spectator || closed() || locked() || !p.connected}
+                          aria-pressed={aimed()}
                           aria-label={`${p.nickname} hedef al`}
                           onClick={() => choose(p.id, p.connected)}
                         >
@@ -198,7 +207,8 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
                               index={p.avatar}
                               size="var(--ca-av)"
                               connected={p.connected}
-                              ring={locked() ? LOCK_RED : undefined}
+                              ring={aimed() ? LOCK_RED : undefined}
+                              ready={ready()}
                             />
                           </span>
                           <span class="ca__name">{p.nickname}</span>
@@ -220,10 +230,20 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
                 ? "Hedefler süre bitince açılır"
                 : closed()
                   ? "Hedefler açılıyor…"
-                  : mine() === null
-                    ? "Seçmezsen boşa sıkmış olursun"
-                    : "Süre bitene kadar değiştirebilirsin"}
+                  : locked()
+                    ? "Hedefin kesinleşti"
+                    : mine() === null
+                      ? "Seçmezsen boşa sıkmış olursun"
+                      : "Değiştirebilir ya da Tamam diyebilirsin"}
             </p>
+            <TamamBar
+              spectator={props.spectator ?? false}
+              locked={locked()}
+              disabled={closed() || mine() === null}
+              ready={lockedIds().length}
+              total={crew().length}
+              onLock={lock}
+            />
           </>
         }
       >
