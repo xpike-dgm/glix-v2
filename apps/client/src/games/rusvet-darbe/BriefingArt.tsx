@@ -9,7 +9,6 @@ export default function BriefingArt() {
         <Avatar index={2} size={36} />
       </div>
       <div class="rdart__mid">
-        <span class="rd__crown rdart__crown">♛</span>
         <Avatar index={1} size={46} />
         <i class="rd__coin rdart__coin rdart__coin--l" />
         <i class="rd__coin rdart__coin rdart__coin--r" />

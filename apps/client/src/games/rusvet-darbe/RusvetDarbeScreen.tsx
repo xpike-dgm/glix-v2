@@ -66,9 +66,7 @@ export default function RusvetDarbeScreen(props: GameScreenProps) {
                 <Show
                   when={chosen()}
                   fallback={
-                    <span class="rd__title">
-                      {spectator() ? "Herkes oy veriyor" : "Kimi başkan yapıyorsun?"}
-                    </span>
+                    <span class="rd__title">{spectator() ? "Herkes oy veriyor" : "Kimi seçiyorsun?"}</span>
                   }
                 >
                   {(p) => (

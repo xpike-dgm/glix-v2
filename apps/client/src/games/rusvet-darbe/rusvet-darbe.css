@@ -325,7 +325,7 @@
   border-radius: 50%;
 }
 .rd__node[data-pres="1"] .av {
-  box-shadow: 0 0 18px var(--amber);
+  filter: drop-shadow(0 0 8px var(--amber));
 }
 .rd__node .rd__name {
   position: absolute;
@@ -338,6 +338,9 @@
   border-radius: 999px;
 }
 .rd__crown--node {
+  padding: 0 4px;
+  border-radius: 999px;
+  background: rgba(5, 8, 26, 0.85);
   position: absolute;
   top: -20px;
   left: 50%;
@@ -396,9 +399,9 @@
   color: var(--magenta);
   border: 2px solid currentColor;
   white-space: nowrap;
-  opacity: 0;
+  transform: scale(0);
   animation:
-    rd-pop 360ms var(--ease) var(--v-at, 1100ms) both,
+    rd-grow 360ms var(--ease) var(--v-at, 1100ms) both,
     rd-fade-out 240ms ease-out var(--v-out, 4500ms) forwards;
 }
 .rd__chip {
@@ -489,6 +492,17 @@
     opacity: 1;
   }
 }
+@keyframes rd-grow {
+  from {
+    transform: scale(0.4);
+  }
+  60% {
+    transform: scale(1.18);
+  }
+  to {
+    transform: none;
+  }
+}
 @keyframes rd-fade-in {
   from {
     opacity: 0;
@@ -510,7 +524,7 @@
   opacity: 0.9;
 }
 .rdart {
-  height: 52px;
+  height: 46px;
   align-items: center;
   gap: 28px;
 }

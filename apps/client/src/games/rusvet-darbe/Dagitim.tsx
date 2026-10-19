@@ -69,9 +69,7 @@ export function Dagitim(props: Props) {
         <>
           <div class="rd__head">
             <span class="overline">Rüşvet zamanı</span>
-            <span class="rd__title">
-              {props.spectator ? "Başkan jeton dağıtıyor" : "Başkan jeton dağıtıyor"}
-            </span>
+            <span class="rd__title">Jetonlar dağıtılıyor</span>
           </div>
           <div class="rd__throne-stage">
             <Show when={president()}>
