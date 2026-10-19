@@ -21,7 +21,10 @@ export function kareCells(size: number): number {
 }
 
 /** Seçim: hücre numarası, soldan sağa satır satır 0..size²-1. */
-export type KarelerAction = { kind: "pick"; cell: number };
+export type KarelerAction = { kind: "pick"; cell: number } | { kind: "lock" };
+
+/** Kilitlenen aşamanın bitişine kalan süre (son dokunuşun animasyonu için, ms). */
+export const KARELER_LOCK_GRACE_MS = 1_000;
 
 /**
  * Bir oyuncunun aşamadaki durumu:
@@ -49,7 +52,7 @@ export interface KareStage2 {
 export interface KarelerPublicView {
   size: number;
   startedAt: number;
-  /** 1. aşama seçim süresinin bitişi; seçimler bu anda açılır. */
+  /** 1. aşama seçim süresinin bitişi (herkes kilitlediyse erken); seçimler bu anda açılır. */
   endsAt: number;
   /** 1. aşama açılmadan veya oyun 1. aşamada bitiyorsa null. */
   stage2: KareStage2 | null;
@@ -61,9 +64,13 @@ export interface KarelerPublicView {
   walkover: string | null;
   /** Şimdiye kadar açılan sonuçlardan kazanılan puanlar (genel skora direkt). 1. aşama açılmadan null. */
   points: Record<string, number> | null;
+  /** Şu an seçim yapılan aşamada "Tamam" diyenler (seçimleri gizli kalır); seçim aşaması dışında boş. */
+  ready: string[];
 }
 
 /** Kişiye özel görünüm: yalnız kendi seçimin (şu an seçim yapılan aşamada). */
 export interface KarelerView {
   myChoice: number | null;
+  /** Bu aşamada seçimini kilitledin mi. */
+  locked: boolean;
 }

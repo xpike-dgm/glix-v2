@@ -20,8 +20,9 @@ const base: KarelerPublicView = {
   finishesAt: null,
   walkover: null,
   points: null,
+  ready: [],
 };
-const priv = { myChoice: 4 };
+const priv = { myChoice: 4, locked: false };
 const reveal1 = {
   choices: { a: 0, b: 0, c: 5, d: null },
   status: { a: "clash", b: "clash", c: "solo", d: "passive" },
@@ -30,8 +31,19 @@ const reveal1 = {
 describe("Gizli Kareler görünümü", () => {
   it("1. aşama seçim görünümünü okur", () => {
     expect(parseKarelerView(base, priv)).toMatchObject({ size: 3, myChoice: 4, stage1: null });
-    expect(parseKarelerView({ ...base, size: 4 }, { myChoice: 15 })?.myChoice).toBe(15);
-    expect(parseKarelerView(base, { myChoice: null })?.myChoice).toBeNull();
+    expect(parseKarelerView({ ...base, size: 4 }, { myChoice: 15, locked: false })?.myChoice).toBe(15);
+    expect(parseKarelerView(base, { myChoice: null, locked: false })?.myChoice).toBeNull();
+  });
+
+  it("kilit bilgisini okur ve bozuğunu reddeder", () => {
+    expect(parseKarelerView({ ...base, ready: ["a", "b"] }, { myChoice: 4, locked: true })).toMatchObject({
+      ready: ["a", "b"],
+      locked: true,
+    });
+    expect(parseKarelerView({ ...base, ready: undefined }, priv)).toBeNull();
+    expect(parseKarelerView({ ...base, ready: [1] }, priv)).toBeNull();
+    expect(parseKarelerView(base, { myChoice: 4 })).toBeNull();
+    expect(parseKarelerView(base, { myChoice: 4, locked: "x" })).toBeNull();
   });
 
   it("açılmış sonucu okur", () => {
@@ -53,9 +65,9 @@ describe("Gizli Kareler görünümü", () => {
     expect(parseKarelerView({ ...base, finishesAt: "x" }, priv)).toBeNull();
     expect(parseKarelerView({ ...base, walkover: 3 }, priv)).toBeNull();
     // Hücre numarası ızgara dışında.
-    expect(parseKarelerView(base, { myChoice: 9 })).toBeNull();
-    expect(parseKarelerView({ ...base, size: 4 }, { myChoice: 16 })).toBeNull();
-    expect(parseKarelerView(base, { myChoice: 1.5 })).toBeNull();
+    expect(parseKarelerView(base, { myChoice: 9, locked: false })).toBeNull();
+    expect(parseKarelerView({ ...base, size: 4 }, { myChoice: 16, locked: false })).toBeNull();
+    expect(parseKarelerView(base, { myChoice: 1.5, locked: false })).toBeNull();
     expect(parseKarelerView(base, {})).toBeNull();
     const bad = (patch: object) => parseKarelerView({ ...base, ...patch }, priv);
     expect(bad({ stage1: { ...reveal1, choices: { ...reveal1.choices, a: 9 } } })).toBeNull();

@@ -293,6 +293,7 @@ describe("gizli-kareler gizlilik", () => {
     expect(Object.keys(p).sort()).toEqual(
       [
         "endsAt",
+        "ready",
         "finishesAt",
         "points",
         "size",
@@ -307,11 +308,11 @@ describe("gizli-kareler gizlilik", () => {
     expect(raw).not.toContain("choices");
     expect(raw).not.toContain("status");
     // Her oyuncu yalnız kendi seçimini görür; izleyici hiçbir şey görmez.
-    expect(priv(s, "p1", S1 - 1)).toEqual({ myChoice: 2 });
-    expect(priv(s, "p3", S1 - 1)).toEqual({ myChoice: 5 });
-    expect(priv(s, "p4", S1 - 1)).toEqual({ myChoice: 7 });
-    expect(priv(s, null, S1 - 1)).toEqual({ myChoice: null });
-    for (const id of ids(4)) expect(Object.keys(priv(s, id, S1 - 1))).toEqual(["myChoice"]);
+    expect(priv(s, "p1", S1 - 1)).toEqual({ myChoice: 2, locked: false });
+    expect(priv(s, "p3", S1 - 1)).toEqual({ myChoice: 5, locked: false });
+    expect(priv(s, "p4", S1 - 1)).toEqual({ myChoice: 7, locked: false });
+    expect(priv(s, null, S1 - 1)).toEqual({ myChoice: null, locked: false });
+    for (const id of ids(4)) expect(Object.keys(priv(s, id, S1 - 1))).toEqual(["myChoice", "locked"]);
   });
 
   it("2. aşama bitmeden 2. aşama seçimleri hiçbir ortak görünümde yoktur; başkasının seçimi başkasına gitmez", () => {
@@ -329,7 +330,7 @@ describe("gizli-kareler gizlilik", () => {
     // Elenmiş oyuncu 2. aşamada başkasının seçimini görmez.
     const s2 = stage1([0, 0, 2, 3]);
     const s3 = stage2(s2, { p3: 5, p4: 6 });
-    expect(priv(s3, "p1", S2_START + 100)).toEqual({ myChoice: null });
+    expect(priv(s3, "p1", S2_START + 100)).toEqual({ myChoice: null, locked: false });
     expect(pub(s3, S2_START + 100).stage2Reveal).toBeNull();
   });
 
@@ -346,5 +347,98 @@ describe("gizli-kareler gizlilik", () => {
     expect(pub(s, KARELER_DURATION_MS).points).toEqual(final(s).awards);
     const w = stage1([3, 3, 5]);
     expect(pub(w, KARELER_DURATION_MS).points).toEqual(final(w).awards);
+  });
+});
+
+describe("gizli-kareler erken bitiş (Tamam)", () => {
+  const lockAt = (s: KarelerState, id: string, at: number, connected: readonly string[] = ids(8)) =>
+    g.reduce(s, id, { kind: "lock" }, ctx(T0 + at, connected));
+  const lock = (s: KarelerState, id: string, at: number, connected?: readonly string[]): KarelerState => {
+    const r = lockAt(s, id, at, connected);
+    if (isRejected(r)) throw new Error(`reddedildi: ${r.rejected}`);
+    return r;
+  };
+  /** Dört oyuncu: p1 ve p2 farklı, p3 ve p4 çakışır. */
+  const picked = () => stage1([0, 1, 2, 2]);
+
+  it("parseAction lock kabul eder, fazladan alanı reddeder", () => {
+    expect(g.parseAction({ kind: "lock" })).toEqual({ kind: "lock" });
+    expect(g.parseAction({ kind: "lock", cell: 1 })).toBeNull();
+  });
+
+  it("(a) herkes kilitleyince 1. aşama 1 sn sonra biter", () => {
+    let s = picked();
+    for (const id of ids(4)) s = lock(s, id, 3_000);
+    expect(pub(s, 3_500).endsAt).toBe(T0 + 4_000);
+    expect(karelerPhase(s, T0 + 3_999)).toBe(0);
+    expect(karelerPhase(s, T0 + 4_000)).toBe(1);
+    expect(pub(s, 3_999).stage1).toBeNull();
+    expect(pub(s, 4_000).stage1?.status.p1).toBe("solo");
+    // 2. aşama erken sonuca göre kayar.
+    expect(pub(s, 4_000).stage2?.startsAt).toBe(T0 + 4_000 + KARELER_BETWEEN_MS);
+    expect(g.isFinished(s, ctx(T0 + 4_000))).toBe(false);
+  });
+
+  it("(a) 2. aşamada da herkes kilitleyince 1 sn sonra biter ve oyun erken sonlanır", () => {
+    let s = picked();
+    for (const id of ids(4)) s = lock(s, id, 3_000);
+    const start2 = 4_000 + KARELER_BETWEEN_MS;
+    s = pick(s, "p1", 5, start2 + 100);
+    s = pick(s, "p2", 6, start2 + 100);
+    s = lock(s, "p1", start2 + 200);
+    // Eleneler 2. aşamada kilitlemez.
+    expect(lockAt(s, "p3", start2 + 200)).toEqual({ rejected: "eliminated" });
+    s = lock(s, "p2", start2 + 300);
+    expect(pub(s, start2 + 400).stage2?.endsAt).toBe(T0 + start2 + 1_300);
+    expect(g.isFinished(s, ctx(T0 + start2 + 1_300 + KARELER_FINAL_MS - 1))).toBe(false);
+    expect(g.isFinished(s, ctx(T0 + start2 + 1_300 + KARELER_FINAL_MS))).toBe(true);
+    expect(final(s).miniScores).toEqual({ p1: 2, p2: 2, p3: 0, p4: 0 });
+  });
+
+  it("(b) bir kişi eksikken aşama bitmez", () => {
+    let s = picked();
+    for (const id of ["p1", "p2", "p3"]) s = lock(s, id, 3_000);
+    expect(pub(s, 3_000).endsAt).toBe(T0 + S1);
+    expect(karelerPhase(s, T0 + 10_000)).toBe(0);
+  });
+
+  it("(c) bağlantısı kopan oyuncu beklenmez", () => {
+    let s = picked();
+    const conn = ["p1", "p2", "p3"];
+    for (const id of conn) s = lock(s, id, 3_000, conn);
+    expect(pub(s, 3_000).endsAt).toBe(T0 + 4_000);
+    // Hiç bağlı katılımcı yoksa kilit bitirmez.
+    const t = lock(picked(), "p1", 3_000, []);
+    expect(pub(t, 3_000).endsAt).toBe(T0 + S1);
+  });
+
+  it("(d) kilitten sonra değişiklik ve ikinci kilit reddedilir; seçimsiz kilit olmaz", () => {
+    let s = picked();
+    s = lock(s, "p1", 3_000);
+    expect(tryPick(s, "p1", 7, 3_100)).toEqual({ rejected: "locked" });
+    expect(lockAt(s, "p1", 3_100)).toEqual({ rejected: "locked" });
+    expect(lockAt(start(4), "p1", 100)).toEqual({ rejected: "nothing_to_lock" });
+    // Herkes kilitledikten sonraki 1 sn içinde yeni eylem kapalıdır.
+    let t = stage1([0, 1, 2, null]);
+    for (const id of ["p1", "p2", "p3"]) t = lock(t, id, 3_000, ["p1", "p2", "p3"]);
+    expect(tryPick(t, "p4", 3, 3_500)).toEqual({ rejected: "closed" });
+    expect(tryPick(t, "p4", 3, 4_000)).toEqual({ rejected: "closed" });
+  });
+
+  it("(e) kilit listesi seçimleri sızdırmaz", () => {
+    let s = picked();
+    s = lock(s, "p1", 3_000);
+    s = lock(s, "p3", 3_000);
+    expect(pub(s, 3_100).ready).toEqual(["p1", "p3"]);
+    expect(JSON.stringify(pub(s, 3_100))).not.toMatch(/choices|"cell"/);
+    expect(priv(s, "p1", 3_100)).toEqual({ myChoice: 0, locked: true });
+    expect(priv(s, "p2", 3_100)).toEqual({ myChoice: 1, locked: false });
+    expect(priv(s, null, 3_100)).toEqual({ myChoice: null, locked: false });
+  });
+
+  it("(f) tick bağlantıya bakmaz: erken bitiş yalnız kayıtlı anla belirlenir", () => {
+    let s = picked();
+    for (const id of ids(4)) s = lock(s, id, 3_000);
+    expect(g.tick(s, ctx(T0 + 5_000, []))).toEqual(g.tick(s, ctx(T0 + 5_000, ids(4))));
   });
 });

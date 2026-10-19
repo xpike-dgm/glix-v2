@@ -8,6 +8,7 @@ import { createChoiceSync } from "../../ui/numberPicker.js";
 import { ProgressBar } from "../../ui/ProgressBar.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
+import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./gizli-kareler.css";
 import { KareSonuc, type SonucEntry } from "./KareSonuc.js";
@@ -28,7 +29,8 @@ interface SecimProps {
 function Secim(props: SecimProps) {
   const cells = () => Array.from({ length: props.v.size * props.v.size }, (_, i) => i);
   const endsAt = () => (props.stage === 1 ? props.v.endsAt : (props.v.stage2?.endsAt ?? props.v.endsAt));
-  const closed = () => !props.canPick || props.now() >= endsAt();
+  const closed = () => !props.canPick || props.v.locked || props.now() >= endsAt();
+  const total = () => (props.stage === 1 ? props.entries.length : (props.v.stage2?.players.length ?? 0));
   const me = () => props.entries.find((e) => e.id === props.selfId);
   const sync = createChoiceSync({
     serverValue: () => props.v.myChoice,
@@ -51,7 +53,8 @@ function Secim(props: SecimProps) {
   const sub = (): string => {
     if (props.spectator) return "Sonuç süre bitince açılır";
     if (!props.canPick) return "Kalanlar 2. aşamada yarışıyor";
-    return mine() === null ? "Seçmezsen pasif kalırsın" : "Süre bitene kadar değiştirebilirsin";
+    if (props.v.locked) return "Seçimin kesinleşti";
+    return mine() === null ? "Seçmezsen pasif kalırsın" : "Tamam'a basana kadar değiştirebilirsin";
   };
 
   return (
@@ -73,7 +76,7 @@ function Secim(props: SecimProps) {
                 class="kcell"
                 data-on={mine() === cell ? "1" : undefined}
                 style={{ "--i": cell }}
-                disabled={!props.canPick}
+                disabled={!props.canPick || props.v.locked}
                 aria-label={cellName(cell, props.v.size)}
                 aria-pressed={mine() === cell}
                 onPointerDown={() => {
@@ -93,6 +96,19 @@ function Secim(props: SecimProps) {
           </For>
         </div>
       </div>
+
+      <Show when={props.canPick || props.spectator}>
+        <TamamBar
+          locked={props.v.locked}
+          ready={props.v.ready.length}
+          total={total()}
+          disabled={mine() === null}
+          spectator={props.spectator}
+          onLock={() => {
+            sendAction({ kind: "lock" });
+          }}
+        />
+      </Show>
 
       <Show when={props.stage === 2 && !props.canPick && racers().length > 0}>
         <div class="kpassive">

@@ -64,6 +64,7 @@ export function parseKarelerPublicView(v: unknown): KarelerPublicView | null {
   }
   if (v.finishesAt !== null && !isNum(v.finishesAt)) return null;
   if (v.walkover !== null && typeof v.walkover !== "string") return null;
+  if (!Array.isArray(v.ready) || !v.ready.every((p) => typeof p === "string")) return null;
   // Sonuç sırası tutarlı olmalı: 1. aşama açılmadan sonrası olamaz.
   if (stage1 === null && (stage2 !== null || stage2Reveal !== null || points !== null)) return null;
   if (stage2Reveal !== null && stage2 === null) return null;
@@ -77,6 +78,7 @@ export function parseKarelerPublicView(v: unknown): KarelerPublicView | null {
     finishesAt: v.finishesAt,
     walkover: v.walkover,
     points,
+    ready: v.ready as string[],
   };
 }
 
@@ -84,7 +86,8 @@ export function parseKarelerPublicView(v: unknown): KarelerPublicView | null {
 export function parseKarelerPrivateView(v: unknown, cells: number): KarelerView | null {
   if (!isRec(v)) return null;
   if (v.myChoice !== null && !isInt(v.myChoice, 0, cells - 1)) return null;
-  return { myChoice: v.myChoice };
+  if (typeof v.locked !== "boolean") return null;
+  return { myChoice: v.myChoice, locked: v.locked };
 }
 
 /** İki görünüm de geçerliyse birleşik görünümü verir. */

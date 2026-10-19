@@ -2,6 +2,7 @@
  * Yalnız geliştirme önizlemesi: Gizli Kareler ekranları (`&n=2..8` oyuncu sayısı).
  *   ?mock=kareler-briefing          anlatım
  *   ?mock=kareler-choosing          1. aşama seçimi; kareler çalışır (`&chosen=0` ile seçimsiz başlar)
+ *   ?mock=kareler-locked            1. aşama: sen "Tamam" dedin, diğerleri bekleniyor
  *   ?mock=kareler-reveal            1. aşama sonucu: çakışma + tek kalanlar, 2. aşama sürüyor
  *   ?mock=kareler-reveal-all        1. aşama: herkes aynı karede, oyun biter
  *   ?mock=kareler-reveal-walkover   1. aşama: tek canlı kaldı, rakipsiz +1
@@ -83,10 +84,19 @@ export function startKarelerMock(kind: string, params: URLSearchParams): void {
       choices2[id] = c;
   }
   // Seçim ekranlarında yalnız kendi seçimin vardır; sunucu gibi davran.
-  if (kind === "kareler-choosing" && myChoice !== null) choices1[SELF] = myChoice;
+  if ((kind === "kareler-choosing" || kind === "kareler-locked") && myChoice !== null)
+    choices1[SELF] = myChoice;
 
+  // "Tamam" diyenler (mock): kilitli ekranda sen ve birkaç kişi.
+  let myLocked = kind === "kareler-locked";
+  const lockedIds = (): string[] => {
+    if (kind === "kareler-locked")
+      return participants.slice(0, Math.max(1, Math.ceil(participants.length / 2)));
+    if (spectator) return participants.slice(1, 3);
+    return myLocked ? [SELF] : [];
+  };
   const state = (): KarelerState => {
-    if (kind === "kareler-choosing" || spectator) {
+    if (kind === "kareler-choosing" || kind === "kareler-locked" || spectator) {
       const own = { ...choices1 };
       delete own[SELF];
       if (!spectator && myChoice !== null) own[SELF] = myChoice;
@@ -99,6 +109,10 @@ export function startKarelerMock(kind: string, params: URLSearchParams): void {
     size: kareSize(participants.length),
     startedAt,
     stage1EndsAt: startedAt + S1,
+    end1At: null,
+    end2At: null,
+    locked1: lockedIds(),
+    locked2: [],
     choices1: c1,
     choices2: c2,
     seen: 0,
@@ -146,7 +160,12 @@ export function startKarelerMock(kind: string, params: URLSearchParams): void {
   useMockSender((msg) => {
     if (msg.type !== "action") return;
     const payload = msg.payload as { kind?: string; cell?: number } | null;
-    if (payload?.kind === "pick" && typeof payload.cell === "number") {
+    if (payload?.kind === "lock" && myChoice !== null) {
+      myLocked = true;
+      applySnapshot(snapshot());
+      return;
+    }
+    if (payload?.kind === "pick" && !myLocked && typeof payload.cell === "number") {
       myChoice = payload.cell;
       applySnapshot(snapshot());
     }

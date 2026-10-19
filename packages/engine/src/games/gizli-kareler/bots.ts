@@ -9,6 +9,7 @@ const sizeOf = (pub: unknown): number => {
 /** Çoğunlukla geçerli bir hücre, bazen ızgara dışı sayı (reddedilmeli); sık sık fikir değiştirir. */
 const generate: ActionGenerator = (rng, _playerId, publicView) => {
   const cells = sizeOf(publicView) ** 2;
+  if (rng.int(10) === 0) return { kind: "lock" };
   if (rng.int(12) === 0) return { kind: "pick", cell: cells + rng.int(4) };
   return { kind: "pick", cell: rng.int(cells) };
 };
