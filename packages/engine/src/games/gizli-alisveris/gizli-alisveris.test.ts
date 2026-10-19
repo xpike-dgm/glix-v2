@@ -255,9 +255,9 @@ describe("gizli-alisveris kuralları", () => {
     expect(formatKredi(1234 * ALISVERIS_SCALE + 420)).toBe("1234,50");
   });
 
-  it("miniScores sepet değeridir (iki ondalık), awards yalnız +1", () => {
+  it("miniScores tam sayıdır ve awards ile aynıdır (sepet değerleri sonuç görünümünde)", () => {
     const res = g.result(shop([[7], [7], [1]]));
-    expect(res.miniScores).toEqual({ p1: 12, p2: 12, p3: 10 });
+    expect(res.miniScores).toEqual({ p1: 1, p2: 1, p3: 0 });
     expect(res.awards).toEqual({ p1: 1, p2: 1, p3: 0 });
   });
 

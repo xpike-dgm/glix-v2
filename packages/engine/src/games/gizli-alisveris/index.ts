@@ -148,13 +148,10 @@ export const gizliAlisveris: GameDefinition<
   },
 
   result(state) {
-    const { winners, values } = alisverisSettle(state);
+    const { winners } = alisverisSettle(state);
+    // Mini puan tam sayı olmak zorundadır; sepet değerleri (kesirli) sonuç görünümünde açılır.
     const awards: Record<string, number> = {};
     for (const id of state.players) awards[id] = winners.includes(id) ? 1 : 0;
-    // Mini puan: sepet değeri (iki ondalık, yuvarlanmış); sıralama için yuvarlanmamış değer awards ile verilir.
-    const miniScores: Record<string, number> = {};
-    for (const id of state.players)
-      miniScores[id] = Math.round(((values[id] ?? 0) * 100) / ALISVERIS_SCALE) / 100;
-    return { miniScores, awards };
+    return { miniScores: { ...awards }, awards };
   },
 };
