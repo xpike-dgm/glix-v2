@@ -6,6 +6,8 @@ export const KOR_KRONOMETRE_DURATION_MS = 18_000;
 export const KOR_KRONOMETRE_TARGET_MS = 10_000;
 /** Basışlar açıldıktan sonra sonucun ekranda kaldığı süre (ms). */
 export const KOR_KRONOMETRE_REVEAL_MS = 6_000;
+/** Herkes bastıysa sonucun açılmasına kalan süre (ms). */
+export const KOR_KRONOMETRE_LOCK_GRACE_MS = 1_000;
 export const KOR_KRONOMETRE_TOTAL_MS = KOR_KRONOMETRE_DURATION_MS + KOR_KRONOMETRE_REVEAL_MS;
 
 export type KorKronometreAction = { kind: "press" };

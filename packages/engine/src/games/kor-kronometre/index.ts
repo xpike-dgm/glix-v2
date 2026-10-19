@@ -1,6 +1,7 @@
 import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import {
   KOR_KRONOMETRE_DURATION_MS,
+  KOR_KRONOMETRE_LOCK_GRACE_MS,
   KOR_KRONOMETRE_REVEAL_MS,
   KOR_KRONOMETRE_TARGET_MS,
   type KorKronometreAction,
@@ -15,6 +16,7 @@ export * from "./types.js";
 export interface KorKronometreState {
   players: string[];
   startedAt: number;
+  /** Basış süresinin bitişi; herkes bastıysa reduce'ta öne çekilir (basış anı + 1 sn). */
   endsAt: number;
   revealEndsAt: number;
   /** Yalnız basanlar: oyuncu → basış anı (oyun başından ms). Basmayan için kayıt yoktur. */
@@ -98,7 +100,11 @@ export const korKronometre: GameDefinition<
     if (ctx.now >= state.endsAt) return { rejected: "ended" };
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
     if (state.presses[playerId] !== undefined) return { rejected: "already_pressed" };
-    return { ...state, presses: { ...state.presses, [playerId]: ctx.now - state.startedAt } };
+    const presses = { ...state.presses, [playerId]: ctx.now - state.startedAt };
+    // Herkes bastıysa sonuç kesindir: bütün katılımcılar (bağlantıdan bağımsız) basınca 1 sn sonra açılır.
+    if (!state.players.every((id) => presses[id] !== undefined)) return { ...state, presses };
+    const endsAt = Math.min(state.endsAt, ctx.now + KOR_KRONOMETRE_LOCK_GRACE_MS);
+    return { ...state, presses, endsAt, revealEndsAt: endsAt + KOR_KRONOMETRE_REVEAL_MS };
   },
 
   tick(state, ctx): KorKronometreState {

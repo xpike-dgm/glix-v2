@@ -205,3 +205,57 @@ describe("kor-kronometre gizlilik", () => {
     expect(json).not.toContain("target");
   });
 });
+
+describe("kor-kronometre erken bitiş (herkes bastı)", () => {
+  const everyone = (at: number): KorKronometreState => {
+    let s = start();
+    for (const [i, id] of ["a", "b", "c"].entries()) s = press(s, id, at + i * 100);
+    return s;
+  };
+
+  it("(a) herkes basınca son basıştan 1 sn sonra açılır; sonuç gösterimi kayar; puanlar aynı", () => {
+    const s = everyone(9_000); // son basış 9 200
+    expect(s.endsAt).toBe(T0 + 10_200);
+    expect(korKronometre.publicView(s, ctx(T0 + 10_199)).reveal).toBeNull();
+    expect(korKronometre.publicView(s, ctx(T0 + 10_200)).reveal).not.toBeNull();
+    expect(korKronometre.isFinished(s, ctx(T0 + 10_200 + KOR_KRONOMETRE_REVEAL_MS - 1))).toBe(false);
+    expect(korKronometre.isFinished(s, ctx(T0 + 10_200 + KOR_KRONOMETRE_REVEAL_MS))).toBe(true);
+    expect(korKronometre.tick(s, ctx(T0 + 10_200)).revealed).toBe(true);
+    // 9 200 en uzak (800), 9 100 ikinci, 9 000 ... hepsi hedefin altında: en yakın c (9 200).
+    expect(korKronometre.result(s).awards).toEqual({ a: 0, b: 1, c: 2 });
+  });
+
+  it("(b) bir kişi eksikken bitmez", () => {
+    let s = start();
+    s = press(s, "a", 5_000);
+    s = press(s, "b", 6_000);
+    expect(s.endsAt).toBe(T0 + KOR_KRONOMETRE_DURATION_MS);
+    expect(korKronometre.publicView(s, ctx(T0 + 12_000)).reveal).toBeNull();
+  });
+
+  it("(c) bağlantıya bakılmaz: kopuk oyuncu da basmadan bitmez (yalnız süre dolar)", () => {
+    let s = start();
+    s = press(s, "a", 5_000);
+    s = press(s, "b", 6_000);
+    expect(korKronometre.tick(s, ctx(T0 + 7_000, ["a", "b"]))).toBe(s);
+    expect(s.endsAt).toBe(T0 + KOR_KRONOMETRE_DURATION_MS);
+  });
+
+  it("(d) herkes bastıktan sonra yeni basış reddedilir", () => {
+    const s = everyone(9_000);
+    expect(rejection(s, "a", 9_500)).toBe("already_pressed");
+    expect(rejection(s, "a", 10_200)).toBe("ended");
+  });
+
+  it("(e) süre dolmadan kim bastığı hiçbir görünümde yoktur", () => {
+    let s = start();
+    s = press(s, "a", 5_000);
+    const p = JSON.stringify(korKronometre.publicView(s, ctx(T0 + 6_000)));
+    expect(p).not.toMatch(/presses|pressed|"a"/);
+  });
+
+  it("(f) tick bağlantıya bakmaz", () => {
+    const s = everyone(9_000);
+    expect(korKronometre.tick(s, ctx(T0 + 11_000, []))).toEqual(korKronometre.tick(s, ctx(T0 + 11_000)));
+  });
+});
