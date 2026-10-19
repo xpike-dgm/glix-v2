@@ -13,12 +13,13 @@ const products = ALISVERIS_CATALOG.map((p) => ({ ...p })).reverse();
 const pub: AlisverisPublicView = {
   startedAt: 1,
   endsAt: 30_001,
+  ready: [],
   revealEndsAt: 38_001,
   budget: 60,
   products,
   reveal: null,
 };
-const priv = { basket: [3, 5], remaining: 25 };
+const priv = { basket: [3, 5], remaining: 25, locked: false };
 const buyers = Object.fromEntries(Array.from({ length: 12 }, (_, i) => [String(i), i === 7 ? 2 : 0]));
 const reveal = {
   baskets: { a: [7], b: [7, 0], c: [] },
@@ -28,6 +29,17 @@ const reveal = {
 };
 
 describe("Gizli Alışveriş görünümü", () => {
+  it("kilit bilgisini okur ve bozuğunu reddeder", () => {
+    expect(parseAlisverisView({ ...pub, ready: ["a"] }, { ...priv, locked: true })).toMatchObject({
+      ready: ["a"],
+      locked: true,
+    });
+    expect(parseAlisverisView({ ...pub, ready: [1] }, priv)).toBeNull();
+    expect(parseAlisverisView({ ...pub, ready: undefined }, priv)).toBeNull();
+    expect(parseAlisverisView(pub, { basket: [], remaining: 60 })).toBeNull();
+    expect(parseAlisverisView(pub, { ...priv, locked: 1 })).toBeNull();
+  });
+
   it("geçerli görünümü okur", () => {
     expect(parseAlisverisView(pub, priv)).toMatchObject({ budget: 60, remaining: 25, basket: [3, 5] });
     expect(parseAlisverisView({ ...pub, reveal }, priv)?.reveal?.winners).toEqual(["b"]);
@@ -42,10 +54,10 @@ describe("Gizli Alışveriş görünümü", () => {
     expect(
       parseAlisverisView({ ...pub, products: products.map((p) => ({ ...p, price: 1.5 })) }, priv),
     ).toBeNull();
-    expect(parseAlisverisView(pub, { basket: [3, 3], remaining: 25 })).toBeNull();
-    expect(parseAlisverisView(pub, { basket: [12], remaining: 25 })).toBeNull();
-    expect(parseAlisverisView(pub, { basket: [], remaining: 61 })).toBeNull();
-    expect(parseAlisverisView(pub, { basket: [], remaining: -1 })).toBeNull();
+    expect(parseAlisverisView(pub, { basket: [3, 3], remaining: 25, locked: false })).toBeNull();
+    expect(parseAlisverisView(pub, { basket: [12], remaining: 25, locked: false })).toBeNull();
+    expect(parseAlisverisView(pub, { basket: [], remaining: 61, locked: false })).toBeNull();
+    expect(parseAlisverisView(pub, { basket: [], remaining: -1, locked: false })).toBeNull();
     const bad = (r: object) => parseAlisverisView({ ...pub, reveal: r }, priv);
     expect(bad({ ...reveal, winners: ["zzz"] })).toBeNull();
     expect(bad({ ...reveal, values: { a: 1, b: 2 } })).toBeNull();

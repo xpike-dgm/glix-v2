@@ -6,6 +6,7 @@ const generate: ActionGenerator = (rng, _playerId, _publicView, privateView) => 
   const basket = (privateView as { basket?: unknown } | null)?.basket;
   const mine = Array.isArray(basket) ? basket.filter((x): x is number => typeof x === "number") : [];
   const roll = rng.int(10);
+  if (rng.int(14) === 0) return { kind: "lock" };
   if (roll === 0) return { kind: "add", product: 12 + rng.int(3) };
   if (roll <= 3 && mine.length > 0) return { kind: "remove", product: mine[rng.int(mine.length)] };
   if (roll === 4) return { kind: "remove", product: rng.int(12) };

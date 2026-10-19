@@ -647,6 +647,11 @@
 .tamam__count[data-quiet="1"] {
   font-size: 13px;
 }
+@media (max-height: 640px) {
+  .tamam__count[data-quiet="1"] {
+    display: none;
+  }
+}
 @media (max-height: 460px) {
   .tamam {
     padding-top: 4px;

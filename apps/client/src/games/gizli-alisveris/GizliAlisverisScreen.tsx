@@ -6,6 +6,7 @@ import { serverNow } from "../../net/store.js";
 import { ProgressBar } from "../../ui/ProgressBar.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
+import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./gizli-alisveris.css";
 import { AlisverisSonuc, type SonucEntry } from "./AlisverisSonuc.js";
@@ -62,7 +63,7 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
   };
   const closed = () => {
     const v = view();
-    return spectator() || !v || props.now() >= v.endsAt || v.reveal !== null;
+    return spectator() || !v || v.locked || props.now() >= v.endsAt || v.reveal !== null;
   };
 
   const toggle = (id: number, price: number): void => {
@@ -107,7 +108,11 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
                   <div class="abudget__row">
                     <div class="abudget__main">
                       <span class="overline">
-                        {spectator() ? "Herkes gizlice alışveriş yapıyor" : "Kalan bütçen"}
+                        {spectator()
+                          ? "Herkes gizlice alışveriş yapıyor"
+                          : v().locked
+                            ? "Sepetin kesinleşti"
+                            : "Kalan bütçen"}
                       </span>
                       <Show when={!spectator()}>
                         <span class="abudget__num">
@@ -135,7 +140,7 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
                   </div>
                 </div>
 
-                <div class="ashelf" data-off={spectator() ? "1" : undefined}>
+                <div class="ashelf" data-off={spectator() || v().locked ? "1" : undefined}>
                   <For each={v().products}>
                     {(p) => {
                       const inCart = () => basket().includes(p.id);
@@ -146,7 +151,7 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
                           class="aitem"
                           data-in={inCart() ? "1" : undefined}
                           data-dear={tooDear() ? "1" : undefined}
-                          disabled={spectator()}
+                          disabled={spectator() || v().locked}
                           aria-pressed={inCart()}
                           aria-label={`${p.name}, ${p.price} kredi`}
                           onPointerDown={() => toggle(p.id, p.price)}
@@ -159,6 +164,16 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
                     }}
                   </For>
                 </div>
+
+                <TamamBar
+                  locked={v().locked}
+                  ready={v().ready.length}
+                  total={entries().length}
+                  spectator={spectator()}
+                  onLock={() => {
+                    sendAction({ kind: "lock" });
+                  }}
+                />
               </>
             }
           >

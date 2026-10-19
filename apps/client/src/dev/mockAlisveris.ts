@@ -2,6 +2,7 @@
  * Yalnız geliştirme önizlemesi: Gizli Alışveriş ekranları (`&n=3..8` oyuncu sayısı).
  *   ?mock=alisveris-briefing   anlatım
  *   ?mock=alisveris-shop       alışveriş; ürünlere dokununca sepet güncellenir (`&empty=1` boş sepetle başlar)
+ *   ?mock=alisveris-locked     sen "Tamam" dedin (sepet dolu), diğerleri bekleniyor
  *   ?mock=alisveris-low        bütçe neredeyse bitmiş
  *   ?mock=alisveris-reveal     sonuç: kepenk, alıcı sayıları, sepet sıralaması
  *   ?mock=alisveris-reveal-tie sonuç: en değerli sepetler eşit
@@ -69,7 +70,15 @@ export function startAlisverisMock(kind: string, params: URLSearchParams): void 
     connected: participants,
   });
   const ctx = () => ({ now: Date.now(), rng: createRng(1), connected: participants });
-  const state = (): AlisverisState => ({ ...base, baskets: { ...baskets } });
+  // "Tamam" diyenler (mock): kilitli ekranda sen ve birkaç kişi; izleyici ekranında birkaç kişi.
+  let myLocked = kind === "alisveris-locked";
+  const lockedIds = (): string[] => {
+    if (kind === "alisveris-locked")
+      return participants.slice(0, Math.max(1, Math.ceil(participants.length / 2)));
+    if (spectator) return participants.slice(1, 3);
+    return myLocked ? [SELF] : [];
+  };
+  const state = (): AlisverisState => ({ ...base, baskets: { ...baskets }, locked: lockedIds() });
 
   const snapshot = (): RoomSnapshot => {
     if (kind === "alisveris-briefing") {
@@ -112,7 +121,13 @@ export function startAlisverisMock(kind: string, params: URLSearchParams): void 
   useMockSender((msg) => {
     if (msg.type !== "action") return;
     const p = msg.payload as { kind?: string; product?: number } | null;
-    if (!p || typeof p.product !== "number" || spectator) return;
+    if (spectator || !p) return;
+    if (p.kind === "lock") {
+      myLocked = true;
+      applySnapshot(snapshot());
+      return;
+    }
+    if (typeof p.product !== "number" || myLocked) return;
     const next = gizliAlisveris.parseAction(p);
     if (!next) return;
     const r = gizliAlisveris.reduce(state(), SELF, next, ctx());

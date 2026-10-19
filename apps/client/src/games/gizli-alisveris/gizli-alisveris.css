@@ -456,19 +456,41 @@ button.aitem:active:not(:disabled) {
   .aitem--res .uart {
     display: none;
   }
+  /* "Tamam" düğmesi yer kaplar: bütçe başlığı ve raf sıkışır */
+  .abudget__row {
+    min-height: 48px;
+  }
+  .abudget__num {
+    font-size: 34px;
+  }
+  .ashelf:not(.ashelf--res) {
+    margin: 6px 0 4px;
+    gap: 6px;
+    grid-auto-rows: minmax(60px, 1fr);
+  }
+  .ashelf:not(.ashelf--res) .aitem {
+    min-height: 60px;
+    padding: 3px 3px;
+  }
+  .ashelf:not(.ashelf--res) .uart {
+    --u: 22px;
+  }
 }
 
 /* Kısa ekran (yatay telefon): dört sütun */
 @media (max-height: 460px) {
   .ashelf {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-auto-rows: minmax(72px, 1fr);
+    grid-auto-rows: minmax(52px, 1fr);
   }
   .abudget__row {
     min-height: 0;
   }
   .abudget__num {
     font-size: 30px;
+  }
+  .ashelf:not(.ashelf--res) .uart {
+    display: none;
   }
   .abudget .overline,
   .ares__head .overline {
@@ -481,8 +503,8 @@ button.aitem:active:not(:disabled) {
     font-size: 24px;
   }
   .aitem {
-    min-height: 66px;
-    padding: 4px 3px;
+    min-height: 52px;
+    padding: 2px 3px;
   }
   .uart {
     --u: 24px;

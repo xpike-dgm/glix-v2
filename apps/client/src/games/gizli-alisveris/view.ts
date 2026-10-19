@@ -67,9 +67,11 @@ export function parseAlisverisPublicView(v: unknown): AlisverisPublicView | null
   const products = parseProducts(v.products);
   const reveal = parseReveal(v.reveal);
   if (!products || reveal === undefined) return null;
+  if (!Array.isArray(v.ready) || !v.ready.every((p) => typeof p === "string")) return null;
   return {
     startedAt: v.startedAt,
     endsAt: v.endsAt,
+    ready: v.ready as string[],
     revealEndsAt: v.revealEndsAt,
     budget: v.budget,
     products,
@@ -80,8 +82,8 @@ export function parseAlisverisPublicView(v: unknown): AlisverisPublicView | null
 export function parseAlisverisPrivateView(v: unknown, budget: number): AlisverisView | null {
   if (!isRec(v)) return null;
   const basket = parseIdList(v.basket);
-  if (!basket || !isInt(v.remaining, 0, budget)) return null;
-  return { basket, remaining: v.remaining };
+  if (!basket || !isInt(v.remaining, 0, budget) || typeof v.locked !== "boolean") return null;
+  return { basket, remaining: v.remaining, locked: v.locked };
 }
 
 export function parseAlisverisView(publicView: unknown, view: unknown): AlisverisScreenView | null {

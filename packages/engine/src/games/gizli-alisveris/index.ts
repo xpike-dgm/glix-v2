@@ -3,6 +3,8 @@ import {
   ALISVERIS_BUDGET,
   ALISVERIS_CATALOG,
   ALISVERIS_DURATION_MS,
+  ALISVERIS_LOCK_GRACE_MS,
+  ALISVERIS_REVEAL_MS,
   ALISVERIS_SCALE,
   ALISVERIS_SHOP_MS,
   type AlisverisAction,
@@ -16,8 +18,13 @@ export * from "./types.js";
 export interface AlisverisState {
   players: string[];
   startedAt: number;
+  /** Alışveriş bitişi; herkes kilitleyince reduce'ta öne çekilir. */
   endsAt: number;
   revealEndsAt: number;
+  /** "Tamam" diyenler (sepeti kesinleşmiş). */
+  locked: string[];
+  /** Herkes kilitlediyse true: bitiş anı `endsAt`'e yazılmıştır, yeni eylem kabul edilmez. */
+  closing: boolean;
   /** Raf sırası: ürün numaraları. */
   order: number[];
   /** Her oyuncunun canlı sepeti; süre bittiğindeki hâli geçerlidir. */
@@ -76,6 +83,7 @@ export const gizliAlisveris: GameDefinition<
   parseAction(raw: unknown): AlisverisAction | null {
     if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
     const rec = raw as Record<string, unknown>;
+    if (rec.kind === "lock") return Object.keys(rec).length === 1 ? { kind: "lock" } : null;
     if (Object.keys(rec).length !== 2) return null;
     if (rec.kind !== "add" && rec.kind !== "remove") return null;
     const product = rec.product;
@@ -91,6 +99,8 @@ export const gizliAlisveris: GameDefinition<
       endsAt: ctx.now + ALISVERIS_SHOP_MS,
       revealEndsAt: ctx.now + ALISVERIS_DURATION_MS,
       order: ctx.rng.shuffle(ALISVERIS_CATALOG.map((p) => p.id)),
+      locked: [],
+      closing: false,
       baskets: {},
       revealed: false,
     };
@@ -100,6 +110,15 @@ export const gizliAlisveris: GameDefinition<
     if (!state.players.includes(playerId)) return { rejected: "not_participant" };
     if (ctx.now >= state.endsAt) return { rejected: "ended" };
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
+    if (state.locked.includes(playerId)) return { rejected: "locked" };
+    if (state.closing) return { rejected: "closed" };
+    if (action.kind === "lock") {
+      const locked = [...state.locked, playerId];
+      const active = state.players.filter((id) => ctx.connected.includes(id));
+      if (active.length === 0 || !active.every((id) => locked.includes(id))) return { ...state, locked };
+      const endsAt = Math.min(state.endsAt, ctx.now + ALISVERIS_LOCK_GRACE_MS);
+      return { ...state, locked, closing: true, endsAt, revealEndsAt: endsAt + ALISVERIS_REVEAL_MS };
+    }
     const basket = state.baskets[playerId] ?? [];
     if (action.kind === "add") {
       if (basket.includes(action.product)) return { rejected: "already_in_basket" };
@@ -123,6 +142,7 @@ export const gizliAlisveris: GameDefinition<
       startedAt: state.startedAt,
       endsAt: state.endsAt,
       revealEndsAt: state.revealEndsAt,
+      ready: [...state.locked],
       budget: ALISVERIS_BUDGET,
       products: state.order.map((id) => ({ ...(ALISVERIS_CATALOG[id] ?? { id, name: "", price: 0 }) })),
       // Süre dolmadan kimsenin sepeti ve alıcı sayıları yoktur.
@@ -132,7 +152,8 @@ export const gizliAlisveris: GameDefinition<
 
   view(state, playerId): AlisverisView {
     const basket = playerId === null ? [] : [...(state.baskets[playerId] ?? [])];
-    return { basket, remaining: ALISVERIS_BUDGET - costOf(basket) };
+    const locked = playerId !== null && state.locked.includes(playerId);
+    return { basket, remaining: ALISVERIS_BUDGET - costOf(basket), locked };
   },
 
   isFinished(state, ctx): boolean {

@@ -33,7 +33,13 @@ export const ALISVERIS_CATALOG: readonly AlisverisProduct[] = [
   { id: 11, name: "Gizli Sandık", price: 36 },
 ];
 
-export type AlisverisAction = { kind: "add"; product: number } | { kind: "remove"; product: number };
+export type AlisverisAction =
+  | { kind: "add"; product: number }
+  | { kind: "remove"; product: number }
+  | { kind: "lock" };
+
+/** Herkes "Tamam" deyince alışverişin bitişine kalan süre (ms). */
+export const ALISVERIS_LOCK_GRACE_MS = 1_000;
 
 /**
  * Ölçekli değeri (değer × 840) iki ondalıkla Türkçe biçimler: 12,50. Yarım yukarı yuvarlanır;
@@ -61,8 +67,10 @@ export interface AlisverisReveal {
 /** Herkese açık görünüm (oda başına bir kez). Sepetler ve alıcı sayıları süre dolana kadar burada yoktur. */
 export interface AlisverisPublicView {
   startedAt: number;
-  /** Alışveriş süresinin bitişi; sepetler bu anda açılır. */
+  /** Alışveriş süresinin bitişi (herkes kilitlediyse erken); sepetler bu anda açılır. */
   endsAt: number;
+  /** "Tamam" diyenler; sepetleri gizli kalır. */
+  ready: string[];
   /** Sonuç ekranının bitişi (oyunun bitişi). */
   revealEndsAt: number;
   budget: number;
@@ -78,4 +86,6 @@ export interface AlisverisView {
   basket: number[];
   /** Kalan bütçe. İzleyici için bütçenin tamamı. */
   remaining: number;
+  /** Sepetini kilitledin mi (boş sepet de kilitlenebilir). */
+  locked: boolean;
 }

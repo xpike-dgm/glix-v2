@@ -79,7 +79,7 @@ describe("gizli-alisveris kuralları", () => {
     ]);
     expect(ALISVERIS_BUDGET).toBe(60);
     const s = start();
-    expect(priv(s, "p1")).toEqual({ basket: [], remaining: 60 });
+    expect(priv(s, "p1")).toEqual({ basket: [], remaining: 60, locked: false });
     expect(g.publicView(s, ctx(T0)).budget).toBe(60);
   });
 
@@ -99,9 +99,9 @@ describe("gizli-alisveris kuralları", () => {
     let s = start();
     s = ok(s, "p1", "add", 3); // 15
     s = ok(s, "p1", "add", 5); // 20
-    expect(priv(s, "p1")).toEqual({ basket: [3, 5], remaining: 25 });
+    expect(priv(s, "p1")).toEqual({ basket: [3, 5], remaining: 25, locked: false });
     s = ok(s, "p1", "remove", 3);
-    expect(priv(s, "p1")).toEqual({ basket: [5], remaining: 40 });
+    expect(priv(s, "p1")).toEqual({ basket: [5], remaining: 40, locked: false });
     s = ok(s, "p1", "add", 3);
     expect(priv(s, "p1").remaining).toBe(25);
   });
@@ -276,7 +276,7 @@ describe("gizli-alisveris gizlilik", () => {
     const p = g.publicView(s, ctx(T0 + END - 1));
     expect(p.reveal).toBeNull();
     expect(Object.keys(p).sort()).toEqual(
-      ["budget", "endsAt", "products", "reveal", "revealEndsAt", "startedAt"].sort(),
+      ["budget", "endsAt", "products", "ready", "reveal", "revealEndsAt", "startedAt"].sort(),
     );
     const raw = JSON.stringify(p);
     for (const k of ["basket", "buyers", "values", "winners"]) expect(raw).not.toContain(k);
@@ -286,11 +286,12 @@ describe("gizli-alisveris gizlilik", () => {
 
   it("her oyuncu yalnız kendi sepetini görür; izleyici hiçbirini", () => {
     const s = shop([[7, 0], [7], [11]]);
-    expect(priv(s, "p1")).toEqual({ basket: [7, 0], remaining: 28 });
-    expect(priv(s, "p2")).toEqual({ basket: [7], remaining: 36 });
-    expect(priv(s, "p3")).toEqual({ basket: [11], remaining: 24 });
-    expect(priv(s, null)).toEqual({ basket: [], remaining: 60 });
-    for (const id of ids(3)) expect(Object.keys(priv(s, id)).sort()).toEqual(["basket", "remaining"]);
+    expect(priv(s, "p1")).toEqual({ basket: [7, 0], remaining: 28, locked: false });
+    expect(priv(s, "p2")).toEqual({ basket: [7], remaining: 36, locked: false });
+    expect(priv(s, "p3")).toEqual({ basket: [11], remaining: 24, locked: false });
+    expect(priv(s, null)).toEqual({ basket: [], remaining: 60, locked: false });
+    for (const id of ids(3))
+      expect(Object.keys(priv(s, id)).sort()).toEqual(["basket", "locked", "remaining"]);
   });
 
   it("süre dolunca sepetler ve alıcı sayıları ortak olur", () => {
@@ -305,5 +306,85 @@ describe("gizli-alisveris gizlilik", () => {
     const b = shop([[7], [11], [0, 1]]);
     expect(priv(a, "p1")).toEqual(priv(b, "p1"));
     expect(g.publicView(a, ctx(T0 + 5_000))).toEqual(g.publicView(b, ctx(T0 + 5_000)));
+  });
+});
+
+describe("gizli-alisveris erken bitiş (Tamam)", () => {
+  const lockAt = (s: AlisverisState, id: string, at: number, connected: readonly string[] = ids(8)) =>
+    g.reduce(s, id, { kind: "lock" }, ctx(T0 + at, 1, connected));
+  const lock = (s: AlisverisState, id: string, at: number, connected?: readonly string[]): AlisverisState => {
+    const r = lockAt(s, id, at, connected);
+    if (isRejected(r)) throw new Error(`reddedildi: ${r.rejected}`);
+    return r;
+  };
+
+  it("parseAction lock kabul eder, fazladan alanı reddeder", () => {
+    expect(g.parseAction({ kind: "lock" })).toEqual({ kind: "lock" });
+    expect(g.parseAction({ kind: "lock", product: 1 })).toBeNull();
+  });
+
+  it("(a) herkes kilitleyince 1 sn sonra açılır; sonuç gösterimi buna göre kayar; boş sepet kilitlenebilir", () => {
+    let s = shop([[0, 1], [2], []]);
+    s = lock(s, "p1", 5_000);
+    s = lock(s, "p2", 6_000);
+    s = lock(s, "p3", 7_000);
+    expect(g.publicView(s, ctx(T0 + 7_500)).endsAt).toBe(T0 + 8_000);
+    expect(g.publicView(s, ctx(T0 + 7_999)).reveal).toBeNull();
+    expect(g.publicView(s, ctx(T0 + 8_000)).reveal).not.toBeNull();
+    expect(g.isFinished(s, ctx(T0 + 8_000 + ALISVERIS_REVEAL_MS - 1))).toBe(false);
+    expect(g.isFinished(s, ctx(T0 + 8_000 + ALISVERIS_REVEAL_MS))).toBe(true);
+    expect(g.tick(s, ctx(T0 + 8_000)).revealed).toBe(true);
+    // Puanlama değişmez: p1 (8+10=18) en değerli.
+    expect(g.result(s).awards).toEqual({ p1: 1, p2: 0, p3: 0 });
+  });
+
+  it("(b) bir kişi eksikken bitmez", () => {
+    let s = shop([[0], [1], [2]]);
+    s = lock(s, "p1", 5_000);
+    s = lock(s, "p2", 5_000);
+    expect(g.publicView(s, ctx(T0 + 5_000)).endsAt).toBe(T0 + END);
+    expect(g.publicView(s, ctx(T0 + 20_000)).reveal).toBeNull();
+  });
+
+  it("(c) bağlantısı kopan oyuncu beklenmez; bağlı kimse yoksa kilit bitirmez", () => {
+    const conn = ["p1", "p2"];
+    let s = shop([[0], [1], [2]]);
+    s = lock(s, "p1", 5_000, conn);
+    s = lock(s, "p2", 5_000, conn);
+    expect(g.publicView(s, ctx(T0 + 5_000)).endsAt).toBe(T0 + 6_000);
+    const t = lock(shop([[0], [1], [2]]), "p1", 5_000, []);
+    expect(g.publicView(t, ctx(T0 + 5_000)).endsAt).toBe(T0 + END);
+  });
+
+  it("(d) kilitten sonra ekleme/çıkarma/ikinci kilit reddedilir; kapanış penceresinde kimse değiştiremez", () => {
+    let s = shop([[0], [1], [2]]);
+    s = lock(s, "p1", 5_000);
+    expect(act(s, "p1", "add", 5, 5_100)).toEqual({ rejected: "locked" });
+    expect(act(s, "p1", "remove", 0, 5_100)).toEqual({ rejected: "locked" });
+    expect(lockAt(s, "p1", 5_100)).toEqual({ rejected: "locked" });
+    const conn = ["p1", "p2"];
+    let t = shop([[0], [1], [2]]);
+    t = lock(t, "p1", 5_000, conn);
+    t = lock(t, "p2", 5_000, conn);
+    expect(act(t, "p3", "add", 5, 5_500)).toEqual({ rejected: "closed" });
+    expect(act(t, "p3", "add", 5, 6_000)).toEqual({ rejected: "ended" });
+  });
+
+  it("(e) kilit listesi sepetleri sızdırmaz", () => {
+    let s = shop([[0, 1], [2], []]);
+    s = lock(s, "p1", 5_000);
+    const pubView = g.publicView(s, ctx(T0 + 5_100));
+    expect(pubView.ready).toEqual(["p1"]);
+    expect(pubView.reveal).toBeNull();
+    expect(JSON.stringify(pubView)).not.toMatch(/baskets|buyers|values/);
+    expect(priv(s, "p1")).toMatchObject({ basket: [0, 1], locked: true });
+    expect(priv(s, "p2")).toMatchObject({ basket: [2], locked: false });
+    expect(priv(s, null)).toMatchObject({ basket: [], locked: false });
+  });
+
+  it("(f) tick bağlantıya bakmaz", () => {
+    let s = shop([[0], [1], [2]]);
+    for (const id of ids(3)) s = lock(s, id, 5_000);
+    expect(g.tick(s, ctx(T0 + 6_000, 1, []))).toEqual(g.tick(s, ctx(T0 + 6_000, 1, ids(3))));
   });
 });
