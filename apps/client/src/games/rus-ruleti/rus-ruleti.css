@@ -57,7 +57,7 @@
   width: var(--ring);
   height: var(--ring);
 }
-.rr__ring svg {
+.rr__ring > svg {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -364,5 +364,15 @@
   }
   .rr__foot {
     min-height: 68px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .rrr__head,
+  .rrr__row--out {
+    display: none;
+  }
+  .rr__sub {
+    display: none;
   }
 }

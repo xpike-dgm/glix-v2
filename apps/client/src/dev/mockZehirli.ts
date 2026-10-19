@@ -40,11 +40,11 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
   const ids = players.map((p) => p.id);
   const spectator = kind === "zehirli-spectator";
   const participants = ids.filter((id) => !(spectator && id === SELF));
-  const now = Date.now();
+  let now = Date.now();
   const briefing = kind === "zehirli-briefing";
   const reveal = kind === "zehirli-reveal";
   const phase: RoomPhase = briefing ? "briefing" : reveal ? "results" : "playing";
-  const startedAt = now - 7_000;
+  let startedAt = now - 7_000;
 
   const holdings: Record<string, number> = Object.fromEntries(ids.map((id, i) => [id, i]));
   let swaps: ZehirliKadehPublicView["swaps"] = [];
@@ -121,4 +121,12 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
   });
   setState("session", { token: "mock", playerId: SELF, roomCode: "KX7QP" });
   publish();
+  // Süre ekranı sabit kalsın: önizleme açık kaldığı sürece zaman damgaları tazelenir.
+  if (!reveal && !briefing) {
+    setInterval(() => {
+      now = Date.now();
+      startedAt = now - 7_000;
+      publish();
+    }, 3_000);
+  }
 }

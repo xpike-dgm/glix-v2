@@ -150,7 +150,11 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
         </p>
       </div>
 
-      <div class="zk__grid" style={{ "--cols": gridColumns(crew().length) }}>
+      <div
+        class="zk__grid"
+        data-cols={gridColumns(crew().length)}
+        style={{ "--cols": gridColumns(crew().length) }}
+      >
         <For each={crew()}>
           {(p) => {
             const mine = () => p.id === props.selfId && !props.spectator;
