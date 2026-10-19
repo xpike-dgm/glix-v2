@@ -130,3 +130,8 @@ sızıntı testi otomatik kırılır. Sunucu oyun bilmez; durum her yayında bir
 - [x] Doğrulama: engine 801, server 155, client 195 test; `ui:check` 1208/1208; e2e; pwa:check
 - [ ] Grup 3: Yazı Yaz, Kendim, Sızma, Sözlük Blöfü, Kontrol Paneli Kaosu (kelime havuzları hazır, sahip onayı bekliyor)
 - [ ] Sahip onayı: Kör Kronometre'de kimse basmazsa herkes +2 (kural metni harfiyen); Aşırı Yükleme'de 0 tık puansız
+
+### Erken bitiş (beta geri bildirimi) — yayında
+- [x] `docs/ERKEN-BITIS.md`: süre üst sınır; bağlı herkes "Tamam" deyince ya da herkes tek hamlesini yapınca aşama 1 sn sonra biter
+- [x] 14 oyunda uygulandı (Zaman Bombası zaten sırayla ilerliyor); ortak `TamamBar`, portrelerde hazır işareti, "n/m hazır"
+- [x] Doğrulama: engine 911, server 155, client 204 test; `ui:check` 1358/1358; e2e; pwa:check
