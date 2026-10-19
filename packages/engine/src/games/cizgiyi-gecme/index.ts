@@ -2,8 +2,10 @@ import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import {
   CIZGI_CHOOSE_MS,
   CIZGI_DURATION_MS,
+  CIZGI_LOCK_GRACE_MS,
   CIZGI_MAX,
   CIZGI_MIN,
+  CIZGI_REVEAL_MS,
   type CizgiAction,
   type CizgiPublicView,
   type CizgiReveal,
@@ -21,6 +23,8 @@ export interface CizgiState {
   revealEndsAt: number;
   /** Yalnız seçim gönderenler; son seçim geçerlidir. Seçmeyen pasiftir. */
   choices: Record<string, number>;
+  /** Seçimini kilitleyenler (kilit sırasıyla). `endsAt`/`revealEndsAt` erken bitişte reduce içinde öne çekilir. */
+  locked: string[];
   /** Görünümler `ctx.now`'dan türetilir; bayrak yalnız "durum değişti" sinyali içindir. */
   revealed: boolean;
 }
@@ -82,6 +86,7 @@ export const cizgiyiGecme: GameDefinition<CizgiState, CizgiAction, CizgiView, Ci
   parseAction(raw: unknown): CizgiAction | null {
     if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
     const rec = raw as Record<string, unknown>;
+    if (rec.kind === "lock") return Object.keys(rec).length === 1 ? { kind: "lock" } : null;
     if (Object.keys(rec).length !== 2 || rec.kind !== "choose") return null;
     const value = rec.value;
     if (typeof value !== "number" || !Number.isInteger(value)) return null;
@@ -96,6 +101,7 @@ export const cizgiyiGecme: GameDefinition<CizgiState, CizgiAction, CizgiView, Ci
       endsAt: ctx.now + CIZGI_CHOOSE_MS,
       revealEndsAt: ctx.now + CIZGI_DURATION_MS,
       choices: {},
+      locked: [],
       revealed: false,
     };
   },
@@ -104,6 +110,16 @@ export const cizgiyiGecme: GameDefinition<CizgiState, CizgiAction, CizgiView, Ci
     if (!state.players.includes(playerId)) return { rejected: "not_participant" };
     if (ctx.now >= state.endsAt) return { rejected: "ended" };
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
+    if (state.locked.includes(playerId)) return { rejected: "locked" };
+    if (action.kind === "lock") {
+      if (state.choices[playerId] === undefined) return { rejected: "nothing_to_lock" };
+      const locked = [...state.locked, playerId];
+      const waiting = state.players.some((id) => ctx.connected.includes(id) && !locked.includes(id));
+      if (waiting) return { ...state, locked };
+      // Bağlı herkes kilitledi: seçim aşaması 1 sn sonra biter.
+      const endsAt = Math.min(state.endsAt, ctx.now + CIZGI_LOCK_GRACE_MS);
+      return { ...state, locked, endsAt, revealEndsAt: endsAt + CIZGI_REVEAL_MS };
+    }
     if (action.value < CIZGI_MIN || action.value > CIZGI_MAX) return { rejected: "out_of_range" };
     if (state.choices[playerId] === action.value) return state;
     return { ...state, choices: { ...state.choices, [playerId]: action.value } };
@@ -121,12 +137,13 @@ export const cizgiyiGecme: GameDefinition<CizgiState, CizgiAction, CizgiView, Ci
       revealEndsAt: state.revealEndsAt,
       // Süre dolmadan kimsenin seçimi ya da durumu yoktur.
       reveal: ctx.now >= state.endsAt ? cizgiSettle(state) : null,
+      lockedIds: [...state.locked],
     };
   },
 
   view(state, playerId): CizgiView {
     const mine = playerId === null ? undefined : state.choices[playerId];
-    return { myChoice: mine ?? null };
+    return { myChoice: mine ?? null, locked: playerId !== null && state.locked.includes(playerId) };
   },
 
   isFinished(state, ctx): boolean {

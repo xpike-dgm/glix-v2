@@ -3,6 +3,7 @@ import { CIZGI_CHOOSE_MS, CIZGI_DURATION_MS } from "./types.js";
 
 /** Çoğunlukla yüksek riskli sayılar (50–99), bazen 100, bazen düşük, nadiren aralık dışı. */
 const generate: ActionGenerator = (rng) => {
+  if (rng.int(12) === 0) return { kind: "lock" };
   const roll = rng.int(12);
   let value: number;
   if (roll === 0) value = 100;

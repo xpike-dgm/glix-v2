@@ -15,7 +15,11 @@ export function cizgiZone(value: number): number {
   return Math.floor(value / 10);
 }
 
-export type CizgiAction = { kind: "choose"; value: number };
+/** Kilit ("Tamam"): seçim kesinleşir; bağlı herkes kilitlerse seçim aşaması 1 sn sonra biter. */
+export type CizgiAction = { kind: "choose"; value: number } | { kind: "lock" };
+
+/** Son kilitten sonra seçimlerin açılmasına kalan süre (ms). */
+export const CIZGI_LOCK_GRACE_MS = 1_000;
 
 /**
  * Bir oyuncunun sonuçtaki durumu:
@@ -45,10 +49,14 @@ export interface CizgiPublicView {
   revealEndsAt: number;
   /** Süre dolmadan null. */
   reveal: CizgiReveal | null;
+  /** Seçimini kilitleyenler (yalnız kimler; seçimin kendisi değil). */
+  lockedIds: string[];
 }
 
 /** Kişiye özel görünüm: yalnız kendi seçimin. */
 export interface CizgiView {
   /** Henüz seçmediysen ya da izleyiciysen null. */
   myChoice: number | null;
+  /** Seçimini kilitledin mi. */
+  locked: boolean;
 }
