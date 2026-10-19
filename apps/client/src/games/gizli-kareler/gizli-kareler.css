@@ -1,0 +1,428 @@
+/* ---- Gizli Kareler ---- */
+.kk {
+  --gold: #ffc23b;
+  --gap: 8px;
+}
+.kk .col {
+  gap: 0;
+}
+
+/* Seçim: başlık */
+.khero {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: clamp(2px, 1.6dvh, 14px);
+  min-height: clamp(76px, 13dvh, 104px);
+}
+.khero__title {
+  margin: 2px 0 0;
+  max-width: 100%;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(22px, 7.4vw, 30px);
+  line-height: 1.2;
+  color: var(--text-dim);
+}
+.khero__title[data-set="1"] {
+  color: var(--text);
+  text-shadow: 0 0 22px rgba(46, 242, 255, 0.55);
+}
+.khero__sub {
+  margin: 4px 0 0;
+  font-size: var(--fs-15);
+  color: var(--text-dim);
+  min-height: 1.4em;
+}
+
+/* Izgara: ekrana göre otomatik yakınlaşır (3×3 büyük, 4×4 biraz küçük) */
+.kstage {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  container-type: size;
+}
+.kgrid {
+  width: min(100cqw, 100cqh, 340px);
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--n), minmax(0, 1fr));
+  gap: var(--gap);
+}
+.kgrid[data-off="1"] {
+  opacity: 0.5;
+}
+.kcell {
+  position: relative;
+  container-type: inline-size;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border-radius: 14px;
+  border: 2px solid rgba(140, 160, 255, 0.28);
+  background: rgba(18, 26, 69, 0.7);
+  color: inherit;
+  --as: 62cqw;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 70ms var(--ease),
+    border-color 120ms var(--ease),
+    box-shadow 120ms var(--ease),
+    background 120ms var(--ease);
+}
+button.kcell {
+  cursor: pointer;
+}
+button.kcell:active:not(:disabled) {
+  transform: scale(0.94);
+  border-color: var(--cyan);
+  box-shadow: 0 0 18px rgba(46, 242, 255, 0.55);
+}
+button.kcell:disabled {
+  cursor: default;
+}
+.kcell[data-on="1"] {
+  border-color: var(--cyan);
+  background: rgba(46, 242, 255, 0.12);
+  box-shadow:
+    0 0 20px rgba(46, 242, 255, 0.55),
+    inset 0 0 14px rgba(46, 242, 255, 0.2);
+}
+.kcell__me {
+  display: grid;
+  place-items: center;
+  animation: k-drop 220ms var(--ease) both;
+}
+.kcell__core {
+  width: 26%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #bff9ff, var(--violet) 70%);
+  box-shadow: 0 0 14px rgba(139, 92, 255, 0.7);
+  opacity: 0.5;
+  animation: k-pulse 2.6s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -170ms);
+}
+@keyframes k-pulse {
+  0%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.75;
+  }
+}
+@keyframes k-drop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.kpassive {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 8px;
+  margin-top: 8px;
+  min-height: 28px;
+}
+.kpassive__label {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.kpassive__who {
+  display: inline-flex;
+  opacity: 0.7;
+}
+.kpassive__who[data-me="1"] {
+  opacity: 1;
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+  border-radius: 50%;
+}
+
+/* Sonuç */
+.kres {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 2px;
+}
+.kres__head {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: clamp(88px, 14dvh, 112px);
+  max-width: 100%;
+}
+.kres__val {
+  max-width: 100%;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(32px, 10.5vw, 44px);
+  line-height: 1.15;
+  animation: k-pop 320ms var(--ease) both;
+}
+.kres__val[data-k="clash"] {
+  color: var(--red);
+  text-shadow: 0 0 22px rgba(255, 59, 92, 0.7);
+}
+.kres__val[data-k="gold"] {
+  color: var(--gold);
+  text-shadow: 0 0 22px rgba(255, 194, 59, 0.7);
+}
+.kres__val[data-k="dim"] {
+  font-size: clamp(24px, 7vw, 30px);
+  color: var(--text-dim);
+}
+.kres__note {
+  min-height: 1.4em;
+  font-size: var(--fs-15);
+  color: #c3caf0;
+}
+@keyframes k-pop {
+  from {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.kcell--res {
+  overflow: hidden;
+  --as: calc(66cqw / var(--cols, 1));
+}
+.kcell--res[data-state="empty"] {
+  opacity: 0.55;
+}
+.kcell__who {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 1), auto);
+  gap: 2px;
+  place-content: center;
+  position: relative;
+  z-index: 1;
+}
+.kwho {
+  display: grid;
+  animation: k-land 340ms var(--ease) calc(var(--i, 0) * 0ms + var(--k) * 70ms - var(--skew, 0ms)) both;
+}
+.kcell--res .kwho {
+  animation-delay: calc(var(--k) * 70ms - var(--skew, 0ms));
+}
+.kwho[data-me="1"] .av {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+  border-radius: 50%;
+}
+@keyframes k-land {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Çakışma: hologram titremesi, avatarlar silinir */
+.kcell--res[data-state="clash"] {
+  animation: k-clash 560ms var(--ease) calc(1100ms - var(--skew, 0ms)) both;
+}
+.kcell--res[data-state="clash"] .av {
+  animation: k-glitch 560ms steps(7, end) calc(1100ms - var(--skew, 0ms)) both;
+}
+@keyframes k-clash {
+  0% {
+    transform: translateX(0);
+  }
+  18% {
+    transform: translateX(-4px);
+  }
+  36% {
+    transform: translateX(4px);
+  }
+  54% {
+    transform: translateX(-2px);
+  }
+  100% {
+    transform: none;
+    border-color: var(--red);
+    background: rgba(255, 59, 92, 0.16);
+    box-shadow:
+      0 0 18px rgba(255, 59, 92, 0.6),
+      inset 0 0 12px rgba(255, 59, 92, 0.22);
+  }
+}
+@keyframes k-glitch {
+  0% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  70% {
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 0.32;
+    filter: grayscale(1);
+  }
+}
+
+/* Tek kalan: altın sütun yükselir */
+.kcell__beam {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  transform-origin: 50% 100%;
+  background: linear-gradient(0deg, rgba(255, 194, 59, 0.6), rgba(255, 194, 59, 0.08));
+  animation: k-beam 640ms var(--ease) calc(2200ms - var(--skew, 0ms)) both;
+}
+.kcell--res[data-state="solo"] {
+  animation: k-solo 400ms var(--ease) calc(2200ms - var(--skew, 0ms)) both;
+}
+@keyframes k-beam {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes k-solo {
+  to {
+    border-color: var(--gold);
+    box-shadow: 0 0 20px rgba(255, 194, 59, 0.7);
+  }
+}
+.kcell__pts {
+  position: absolute;
+  top: 3px;
+  right: 6px;
+  z-index: 2;
+  font-style: normal;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-13);
+  color: var(--gold);
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(5, 8, 26, 0.88);
+  opacity: 0;
+  animation: k-float 700ms var(--ease) calc(2400ms - var(--skew, 0ms)) both;
+}
+@keyframes k-float {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Anlatım görseli */
+.kart {
+  width: auto;
+  height: 100%;
+  max-height: 170px;
+  max-width: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0 12px rgba(255, 194, 59, 0.3));
+}
+.kart__beam {
+  transform-origin: 110px 44px;
+  animation: k-beam 1.6s var(--ease) infinite alternate;
+}
+.kart__core {
+  animation: k-pulse 2.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Kısa ekran (yatay telefon): başlığı sıkıştır */
+@media (max-height: 460px) {
+  .khero {
+    min-height: 0;
+    margin-top: 0;
+  }
+  .khero .overline,
+  .khero__sub,
+  .kres__head .overline {
+    display: none;
+  }
+  .khero__title {
+    font-size: 22px;
+  }
+  .kres__head {
+    min-height: 0;
+  }
+  .kres__val {
+    font-size: 28px;
+  }
+  .kres__note {
+    min-height: 0;
+    font-size: var(--fs-13);
+  }
+  .kk {
+    --gap: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kcell__beam,
+  .kwho,
+  .kcell__pts,
+  .kres__val {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .kcell--res[data-state="clash"] {
+    animation: none;
+    border-color: var(--red);
+    background: rgba(255, 59, 92, 0.16);
+  }
+  .kcell--res[data-state="clash"] .av {
+    animation: none;
+    opacity: 0.35;
+    filter: grayscale(1);
+  }
+  .kcell--res[data-state="solo"] {
+    animation: none;
+    border-color: var(--gold);
+  }
+}

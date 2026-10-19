@@ -5,7 +5,9 @@ import { butonaBasBot } from "./butona-bas/bots.js";
 import { cagrisimAgiBot } from "./cagrisim-agi/bots.js";
 import { caprazAtesBot } from "./capraz-ates/bots.js";
 import { cizgiyiGecmeBot } from "./cizgiyi-gecme/bots.js";
+import { gizliAlisverisBot } from "./gizli-alisveris/bots.js";
 import { gizliHirsizBot } from "./gizli-hirsiz/bots.js";
+import { gizliKarelerBot } from "./gizli-kareler/bots.js";
 import { karalamaDefteriBot } from "./karalama-defteri/bots.js";
 import { korBombaBot } from "./kor-bomba/bots.js";
 import { korKronometreBot } from "./kor-kronometre/bots.js";
@@ -27,6 +29,8 @@ export const BOTS: Record<string, GameBot> = {
   "capraz-ates": caprazAtesBot,
   "karalama-defteri": karalamaDefteriBot,
   "gizli-hirsiz": gizliHirsizBot,
+  "gizli-alisveris": gizliAlisverisBot,
+  "gizli-kareler": gizliKarelerBot,
   "son-kisi": sonKisiBot,
   "cizgiyi-gecme": cizgiyiGecmeBot,
   "ortalamanin-yarisi": ortalamaninYarisiBot,
