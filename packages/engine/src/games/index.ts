@@ -9,11 +9,13 @@ import { cizgiyiGecme } from "./cizgiyi-gecme/index.js";
 import { gizliAlisveris } from "./gizli-alisveris/index.js";
 import { gizliHirsiz } from "./gizli-hirsiz/index.js";
 import { gizliKareler } from "./gizli-kareler/index.js";
+import { ittifak } from "./ittifak/index.js";
 import { karalamaDefteri } from "./karalama-defteri/index.js";
 import { korBomba } from "./kor-bomba/index.js";
 import { korKronometre } from "./kor-kronometre/index.js";
 import { ortalamaninYarisi } from "./ortalamanin-yarisi/index.js";
 import { rusRuleti } from "./rus-ruleti/index.js";
+import { rusvetDarbe } from "./rusvet-darbe/index.js";
 import { sonKisi } from "./son-kisi/index.js";
 import { zamanBombasiHafizasi } from "./zaman-bombasi-hafizasi/index.js";
 import { zehirliKadeh } from "./zehirli-kadeh/index.js";
@@ -27,8 +29,6 @@ export const GAMES: Record<string, AnyGame> = {
   [korBomba.id]: korBomba,
   [zamanBombasiHafizasi.id]: zamanBombasiHafizasi,
   [gizliHirsiz.id]: gizliHirsiz,
-  [gizliAlisveris.id]: gizliAlisveris,
-  [gizliKareler.id]: gizliKareler,
   [korKronometre.id]: korKronometre,
   [sonKisi.id]: sonKisi,
   [ortalamaninYarisi.id]: ortalamaninYarisi,
@@ -36,6 +36,10 @@ export const GAMES: Record<string, AnyGame> = {
   [asiriYukleme.id]: asiriYukleme,
   [rusRuleti.id]: rusRuleti,
   [zehirliKadeh.id]: zehirliKadeh,
+  [gizliKareler.id]: gizliKareler,
+  [ittifak.id]: ittifak,
+  [rusvetDarbe.id]: rusvetDarbe,
+  [gizliAlisveris.id]: gizliAlisveris,
 };
 
 export function getCatalog(): GameInfo[] {

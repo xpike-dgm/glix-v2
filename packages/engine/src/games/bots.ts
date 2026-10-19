@@ -8,11 +8,13 @@ import { cizgiyiGecmeBot } from "./cizgiyi-gecme/bots.js";
 import { gizliAlisverisBot } from "./gizli-alisveris/bots.js";
 import { gizliHirsizBot } from "./gizli-hirsiz/bots.js";
 import { gizliKarelerBot } from "./gizli-kareler/bots.js";
+import { ittifakBot } from "./ittifak/bots.js";
 import { karalamaDefteriBot } from "./karalama-defteri/bots.js";
 import { korBombaBot } from "./kor-bomba/bots.js";
 import { korKronometreBot } from "./kor-kronometre/bots.js";
 import { ortalamaninYarisiBot } from "./ortalamanin-yarisi/bots.js";
 import { rusRuletiBot } from "./rus-ruleti/bots.js";
+import { rusvetDarbeBot } from "./rusvet-darbe/bots.js";
 import { sonKisiBot } from "./son-kisi/bots.js";
 import { zamanBombasiHafizasiBot } from "./zaman-bombasi-hafizasi/bots.js";
 import { zehirliKadehBot } from "./zehirli-kadeh/bots.js";
@@ -36,4 +38,6 @@ export const BOTS: Record<string, GameBot> = {
   "ortalamanin-yarisi": ortalamaninYarisiBot,
   "rus-ruleti": rusRuletiBot,
   "zehirli-kadeh": zehirliKadehBot,
+  ittifak: ittifakBot,
+  "rusvet-darbe": rusvetDarbeBot,
 };

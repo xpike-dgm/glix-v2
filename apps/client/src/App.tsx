@@ -60,6 +60,10 @@ export function App() {
         void import("./dev/mockAlisveris.js").then((m) => m.startAlisverisMock(mock, params));
       } else if (mock.startsWith("kareler-")) {
         void import("./dev/mockKareler.js").then((m) => m.startKarelerMock(mock, params));
+      } else if (mock.startsWith("ittifak-")) {
+        void import("./dev/mockIttifak.js").then((m) => m.startIttifakMock(mock, params));
+      } else if (mock.startsWith("rusvet-")) {
+        void import("./dev/mockRusvet.js").then((m) => m.startRusvetMock(mock, params));
       } else if (mock.startsWith("ortalama-")) {
         void import("./dev/mockOrtalama.js").then((m) => m.startOrtalamaMock(mock, params));
       } else if (/^(landscape|briefing-ready|spectator-)/.test(mock)) {
