@@ -374,7 +374,18 @@ const SCREENS = [
   { name: "zehirli-used", q: "mock=zehirli-used&n=6" },
   { name: "zehirli-spectator", q: "mock=zehirli-spectator&n=5" },
   { name: "zehirli-reveal-6", q: "mock=zehirli-reveal&n=6", settle: 2400 },
-  { name: "zehirli-reveal-poison-8", q: "mock=zehirli-reveal&n=8&poison=1", settle: 2400 },
+  {
+    name: "zehirli-reveal-poison-8",
+    q: "mock=zehirli-reveal&n=8&poison=1",
+    settle: 2400,
+    sizes: [
+      [390, 844],
+      [430, 932],
+      [844, 390],
+      [667, 375],
+    ],
+  },
+  { name: "zehirli-reveal-poison-5", q: "mock=zehirli-reveal&n=5&poison=1", settle: 2400 },
   { name: "zehirli-reveal-2", q: "mock=zehirli-reveal&n=2", settle: 2400 },
 ];
 

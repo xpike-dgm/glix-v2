@@ -110,14 +110,14 @@
 }
 .rr__cap {
   font-size: var(--fs-13);
-  color: var(--text-dim);
+  color: var(--text);
 }
 .rr__stage[data-hit] .rr__ring {
   animation: rr-shake 420ms var(--ease) both;
 }
 .rr__stage[data-hit] .rr__track {
   stroke: rgba(255, 59, 92, 0.7);
-  fill: rgba(255, 59, 92, 0.22);
+  fill: rgba(255, 59, 92, 0.08);
 }
 @keyframes rr-shake {
   0%,
@@ -148,6 +148,7 @@
 }
 .rr__cell {
   position: relative;
+  overflow: hidden;
   min-height: 72px;
   min-width: 0;
   display: flex;
@@ -178,7 +179,7 @@
 .rr__cell[data-picked="1"] {
   border-color: var(--red);
   background: rgba(255, 59, 92, 0.14);
-  box-shadow: 0 0 14px rgba(255, 59, 92, 0.4);
+  box-shadow: inset 0 0 12px rgba(255, 59, 92, 0.4);
 }
 .rr__name {
   max-width: 100%;

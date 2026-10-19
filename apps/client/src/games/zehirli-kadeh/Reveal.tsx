@@ -40,7 +40,7 @@ export default function Reveal(props: GameScreenProps) {
                   class="zkr__cup"
                 />
                 <Show when={person(id)}>
-                  {(p) => <Avatar index={p().avatar} size={26} connected={p().connected} />}
+                  {(p) => <Avatar index={p().avatar} size="var(--zkr-av)" connected={p().connected} />}
                 </Show>
                 <span class="zkr__pts" data-ok={isClean(id) ? "1" : undefined}>
                   {isClean(id) ? "+1" : "0"}
