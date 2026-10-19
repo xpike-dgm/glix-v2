@@ -62,6 +62,8 @@ export function App() {
         void import("./dev/mockKareler.js").then((m) => m.startKarelerMock(mock, params));
       } else if (mock.startsWith("ittifak-")) {
         void import("./dev/mockIttifak.js").then((m) => m.startIttifakMock(mock, params));
+      } else if (mock.startsWith("yazi-")) {
+        void import("./dev/mockYazi.js").then((m) => m.startYaziMock(mock, params));
       } else if (mock.startsWith("rusvet-")) {
         void import("./dev/mockRusvet.js").then((m) => m.startRusvetMock(mock, params));
       } else if (mock.startsWith("ortalama-")) {

@@ -16,6 +16,7 @@ import { ortalamaninYarisiBot } from "./ortalamanin-yarisi/bots.js";
 import { rusRuletiBot } from "./rus-ruleti/bots.js";
 import { rusvetDarbeBot } from "./rusvet-darbe/bots.js";
 import { sonKisiBot } from "./son-kisi/bots.js";
+import { yaziYazBot } from "./yazi-yaz/bots.js";
 import { zamanBombasiHafizasiBot } from "./zaman-bombasi-hafizasi/bots.js";
 import { zehirliKadehBot } from "./zehirli-kadeh/bots.js";
 
@@ -39,5 +40,6 @@ export const BOTS: Record<string, GameBot> = {
   "rus-ruleti": rusRuletiBot,
   "zehirli-kadeh": zehirliKadehBot,
   ittifak: ittifakBot,
+  "yazi-yaz": yaziYazBot,
   "rusvet-darbe": rusvetDarbeBot,
 };

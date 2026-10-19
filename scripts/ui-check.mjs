@@ -427,6 +427,60 @@ const SCREENS = [
   { name: "ittifak-spectator-talk", q: "mock=ittifak-spectator-talk&n=5" },
   { name: "ittifak-spectator-vote", q: "mock=ittifak-spectator-vote&n=5" },
   { name: "ittifak-spectator-reveal", q: "mock=ittifak-spectator-reveal&n=5", settle: 3000 },
+  { name: "yazi-briefing", q: "mock=yazi-briefing" },
+  { name: "yazi-write-innocent", q: "mock=yazi-write&n=5" },
+  { name: "yazi-write-writer", q: "mock=yazi-write&n=5&role=writer" },
+  {
+    name: "yazi-write-typed",
+    q: "mock=yazi-write&n=8",
+    act: async (p) => p.locator(".yy__input").fill("masum"),
+  },
+  {
+    name: "yazi-write-peek",
+    q: "mock=yazi-write&n=5",
+    act: async (p) => {
+      const box = await p.locator(".yy__peek").boundingBox();
+      if (!box) throw new Error("rol düğmesi yok");
+      await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await p.mouse.down();
+    },
+    after: async (p) => p.mouse.up(),
+  },
+  { name: "yazi-write-locked", q: "mock=yazi-write-locked&n=6" },
+  {
+    name: "yazi-write-keyboard",
+    q: "mock=yazi-write&n=5",
+    sizes: [
+      [390, 520],
+      [360, 300],
+      [320, 280],
+    ],
+    act: async (p) => p.locator(".yy__input").fill("masum"),
+  },
+  { name: "yazi-talk-5", q: "mock=yazi-talk&n=5" },
+  { name: "yazi-talk-8", q: "mock=yazi-talk&n=8&role=writer" },
+  { name: "yazi-talk-3", q: "mock=yazi-talk&n=3" },
+  { name: "yazi-talk-locked", q: "mock=yazi-talk-locked&n=6" },
+  { name: "yazi-guess-5", q: "mock=yazi-guess&n=5" },
+  { name: "yazi-guess-8", q: "mock=yazi-guess&n=8&chosen=3" },
+  { name: "yazi-guess-3", q: "mock=yazi-guess&n=3" },
+  {
+    name: "yazi-guess-tap",
+    q: "mock=yazi-guess&n=6",
+    act: async (p) => {
+      await p.locator(".ppick__cell:not(:disabled)").first().click();
+      await p.locator(".yy__input").fill("kedi");
+    },
+  },
+  { name: "yazi-guess-locked", q: "mock=yazi-guess-locked&n=6" },
+  { name: "yazi-reveal-5", q: "mock=yazi-reveal&n=5", settle: 3000 },
+  { name: "yazi-reveal-8", q: "mock=yazi-reveal&n=8", settle: 3000 },
+  { name: "yazi-reveal-3", q: "mock=yazi-reveal&n=3", settle: 3000 },
+  { name: "yazi-reveal-zero", q: "mock=yazi-reveal-zero&n=6", settle: 3000 },
+  { name: "yazi-spectator-write", q: "mock=yazi-spectator-write&n=5" },
+  { name: "yazi-spectator-talk", q: "mock=yazi-spectator-talk&n=5" },
+  { name: "yazi-spectator-guess", q: "mock=yazi-spectator-guess&n=5" },
+  { name: "yazi-spectator-reveal", q: "mock=yazi-spectator-reveal&n=5", settle: 3000 },
   { name: "rusvet-briefing", q: "mock=rusvet-briefing" },
   { name: "rusvet-vote-5", q: "mock=rusvet-vote&n=5" },
   { name: "rusvet-vote-8", q: "mock=rusvet-vote&n=8&chosen=3" },
