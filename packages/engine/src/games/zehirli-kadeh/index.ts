@@ -1,6 +1,7 @@
 import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import {
   ZEHIRLI_KADEH_BASE_MS,
+  ZEHIRLI_KADEH_LOCK_GRACE_MS,
   ZEHIRLI_KADEH_SWAP_BONUS_MS,
   type ZehirliKadehAction,
   type ZehirliKadehPublicView,
@@ -94,11 +95,17 @@ export const zehirliKadeh: GameDefinition<
     const holds = [...state.holds];
     holds[me] = state.holds[them] as number;
     holds[them] = state.holds[me] as number;
+    const swapped = [...state.swapped, playerId];
+    // Herkes takas hakkını kullandıysa sonuç değişemez: bütün katılımcılar (bağlantıdan bağımsız) takas edince
+    // 1 sn sonra biter. Aksi halde her takas süreyi uzatır.
+    const everyone = state.players.every((id) => swapped.includes(id));
     return {
       ...state,
       holds,
-      endsAt: state.endsAt + ZEHIRLI_KADEH_SWAP_BONUS_MS,
-      swapped: [...state.swapped, playerId],
+      endsAt: everyone
+        ? Math.min(state.endsAt + ZEHIRLI_KADEH_SWAP_BONUS_MS, ctx.now + ZEHIRLI_KADEH_LOCK_GRACE_MS)
+        : state.endsAt + ZEHIRLI_KADEH_SWAP_BONUS_MS,
+      swapped,
       swaps: [
         ...state.swaps,
         { seq: state.swaps.length + 1, from: playerId, to: action.target, at: ctx.now },

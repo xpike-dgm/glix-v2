@@ -262,3 +262,61 @@ describe("zehirli-kadeh: eylem doğrulama", () => {
     expect(zehirliKadeh.briefing.steps.length).toBeLessThanOrEqual(3);
   });
 });
+
+describe("zehirli-kadeh: erken bitiş (herkes takas hakkını kullandı)", () => {
+  /** 3 oyuncu: a-b, b-c, c-a takasları. */
+  const everyone = (): ZehirliKadehState => {
+    let s = start(3);
+    s = ok(swap(s, "a", "b", T0 + 2_000));
+    s = ok(swap(s, "b", "c", T0 + 3_000));
+    s = ok(swap(s, "c", "a", T0 + 4_000));
+    return s;
+  };
+
+  it("(a) herkes takas edince son takastan 1 sn sonra biter (uzama yok)", () => {
+    const s = everyone();
+    expect(s.endsAt).toBe(T0 + 5_000);
+    expect(zehirliKadeh.isFinished(s, ctx(T0 + 4_999))).toBe(false);
+    expect(zehirliKadeh.isFinished(s, ctx(T0 + 5_000))).toBe(true);
+    const t = zehirliKadeh.tick(s, ctx(T0 + 5_000));
+    expect(t.ended).toBe(true);
+    expect(zehirliKadeh.publicView(t, ctx(T0 + 5_000)).result).not.toBeNull();
+    // Puanlama aynı: temiz kadeh +1.
+    const scores = zehirliKadeh.result(t).miniScores;
+    expect(Object.values(scores).reduce((x, y) => x + y, 0)).toBe(2);
+  });
+
+  it("(b) bir kişi eksikken bitmez; her takas süreyi 5 sn uzatır", () => {
+    let s = start(3);
+    s = ok(swap(s, "a", "b", T0 + 2_000));
+    s = ok(swap(s, "b", "c", T0 + 3_000));
+    expect(s.endsAt).toBe(T0 + 20_000 + 10_000);
+    expect(zehirliKadeh.isFinished(s, ctx(T0 + 25_000))).toBe(false);
+  });
+
+  it("(c) bağlantıya bakılmaz: kopuk oyuncu takas etmeden bitmez", () => {
+    let s = start(3);
+    s = ok(swap(s, "a", "b", T0 + 2_000));
+    s = ok(swap(s, "b", "a", T0 + 3_000));
+    expect(zehirliKadeh.isFinished(s, ctx(T0 + 4_000, ["a", "b"]))).toBe(false);
+    expect(s.endsAt).toBeGreaterThan(T0 + 20_000);
+  });
+
+  it("(d) herkes takas ettikten sonra yeni takas reddedilir", () => {
+    const s = everyone();
+    expect(reason(swap(s, "a", "b", T0 + 4_500))).toBe("already_swapped");
+    expect(reason(swap(s, "a", "b", T0 + 5_000))).toBe("ended");
+  });
+
+  it("(e) görünüm yalnız kimlerin takas ettiğini ve kadeh numaralarını açar, zehir bilgisi yok", () => {
+    const s = everyone();
+    const json = JSON.stringify(zehirliKadeh.publicView(s, ctx(T0 + 4_500)));
+    expect(json).not.toContain("poisoned");
+    expect(zehirliKadeh.publicView(s, ctx(T0 + 4_500)).result).toBeNull();
+  });
+
+  it("(f) tick bağlantıya bakmaz", () => {
+    const s = everyone();
+    expect(zehirliKadeh.tick(s, ctx(T0 + 6_000, []))).toEqual(zehirliKadeh.tick(s, ctx(T0 + 6_000, IDS)));
+  });
+});

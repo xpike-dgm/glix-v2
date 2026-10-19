@@ -3,6 +3,8 @@
 /** Başlangıç süresi ve her takasın eklediği süre (ms). */
 export const ZEHIRLI_KADEH_BASE_MS = 20_000;
 export const ZEHIRLI_KADEH_SWAP_BONUS_MS = 5_000;
+/** Herkes takas hakkını kullandıysa oyunun bitişine kalan süre (ms). */
+export const ZEHIRLI_KADEH_LOCK_GRACE_MS = 1_000;
 
 /** Oyuncu sayısına göre zehirli kadeh sayısı: 2-3 → 1, 4-5 → 2, 6-8 → 3. */
 export function zehirliKadehPoisonCount(players: number): number {
