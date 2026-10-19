@@ -361,7 +361,11 @@
   }
   .rr__cell {
     min-height: 64px;
-    padding-top: 4px;
+    gap: 1px;
+    padding: 3px 2px 2px;
+  }
+  .rr__sight {
+    inset: -2px;
   }
   .rr__foot {
     min-height: 68px;
