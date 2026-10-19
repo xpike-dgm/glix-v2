@@ -4,6 +4,7 @@ import { fail, tap, unlockAudio } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
 import { PlayerPicker } from "../../ui/PlayerPicker.js";
+import { TamamBar } from "../../ui/TamamBar.js";
 import type { CrewMember } from "./Duello.js";
 import { nextTokenCount, type RusvetScreenView, tokenMap, tokensToAllocations, tokenTotal } from "./view.js";
 
@@ -13,6 +14,8 @@ interface Props {
   selfId: string;
   spectator: boolean;
   onGive: (tokens: { to: string; n: number }[]) => void;
+  /** Başkan "Bitti" dedi. */
+  onDone: () => void;
 }
 
 /** Dağıtım: başkan jetonları gizlice verir; diğerleri başkanın koltuğunu ve jeton sayısını görür. */
@@ -41,7 +44,7 @@ export function Dagitim(props: Props) {
   const remaining = () => budget() - tokenTotal(tokens());
 
   const pick = (id: string): void => {
-    if (!iAmPresident()) return;
+    if (!iAmPresident() || props.view.locked) return;
     const member = props.crew.find((m) => m.id === id);
     if (!member) return;
     unlockAudio();
@@ -93,7 +96,11 @@ export function Dagitim(props: Props) {
             </div>
           </div>
           <p class="rd__hint" role="status">
-            {props.spectator ? "Dağıtım süre bitince açılır" : "Kime kaç jeton gideceği gizli"}
+            {props.view.ready.length > 0
+              ? "Başkan dağıtımı bitirdi"
+              : props.spectator
+                ? "Dağıtım süre bitince açılır"
+                : "Kime kaç jeton gideceği gizli"}
           </p>
         </>
       }
@@ -111,15 +118,27 @@ export function Dagitim(props: Props) {
         counts={tokens()}
         countLabel="jeton"
         ring="#FFC23B"
+        disabled={props.view.locked}
         canPick={(p) => p.connected || (tokens()[p.id] ?? 0) > 0}
         label={(p) => `${p.nickname} adlı oyuncuya jeton ver`}
         onPick={pick}
       />
-      <p class="rd__hint" role="status">
-        {remaining() === 0
-          ? "Hepsini dağıttın, değiştirebilirsin"
-          : "Dokun: +1 jeton (kişi başı en çok 2). Kalanlar rastgele gider"}
-      </p>
+      <TamamBar
+        locked={props.view.locked}
+        ready={props.view.ready.length}
+        total={1}
+        disabled={tokenTotal(tokens()) === 0}
+        label="Bitti"
+        doneLabel="Bitti"
+        onLock={props.onDone}
+      />
+      <Show when={!props.view.locked}>
+        <p class="rd__hint" role="status">
+          {remaining() === 0
+            ? "Hepsini dağıttın, Bitti'ye bas"
+            : "Dokun: +1 jeton (kişi başı en çok 2). Kalanlar rastgele gider"}
+        </p>
+      </Show>
     </Show>
   );
 }

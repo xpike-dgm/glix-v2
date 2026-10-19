@@ -4,6 +4,7 @@ import {
   type Allocation,
   type DuelHand,
   RUSVET_GIVE_MS,
+  RUSVET_LOCK_GRACE_MS,
   RUSVET_MAX_HANDS,
   RUSVET_MAX_PER_PLAYER,
   RUSVET_REVEAL_MS,
@@ -28,7 +29,11 @@ export interface RusvetState {
   /** Rastgele doldurma için `ctx.rng`'den kurulumda alınan tohum (görünümlere girmez). */
   seed: number;
   startedAt: number;
+  /** Oylama bitişi; herkes kilitleyince reduce'ta öne çekilir. */
   voteEndsAt: number;
+  /** Oylamada "Tamam" diyenler; herkes kilitlediyse `voteClosing` olur. */
+  votesLocked: string[];
+  voteClosing: boolean;
   stage: Stage;
   /** Oyuncu -> son verilen başkanlık oyu (gizli). */
   votes: Record<string, string>;
@@ -45,15 +50,22 @@ export interface RusvetState {
   handStartedAt: number;
   signs: Record<string, Sign>;
   handClosed: boolean;
+  /** Herkes işaret verdiyse elin işaret bitişi (reduce'ta yazılır); yoksa null. */
+  handSignEnd: number | null;
   hands: DuelHand[];
   /** Dağıtım: başlangıç, bitiş ve başkanın son dağıtımı (gizli; başkandan başkasına açılmaz). */
   giveStartedAt: number;
   giveEndsAt: number;
+  /** Başkan "Bitti" dediyse true: dağıtım kesinleşmiştir, `giveEndsAt` öne çekilmiştir. */
+  giveLocked: boolean;
   tokens: Record<string, number>;
   /** Dağıtım bitince kurulur: kalan jetonlar rastgele tamamlanmış hâli. */
   finalTokens: Record<string, number> | null;
   finishAt: number | null;
 }
+
+/** Elin işaret bitişi: herkes işaret verdiyse erken. */
+const signEndOf = (s: RusvetState): number => s.handSignEnd ?? s.handStartedAt + RUSVET_SIGN_MS;
 
 const own = <T>(rec: Record<string, T>, id: string): T | undefined =>
   Object.hasOwn(rec, id) ? rec[id] : undefined;
@@ -181,10 +193,11 @@ function advance(state: RusvetState, now: number): RusvetState {
           handStartedAt: s.voteEndsAt,
           signs: {},
           handClosed: false,
+          handSignEnd: null,
         };
       }
     } else if (s.stage === "duel") {
-      const signEnd = s.handStartedAt + RUSVET_SIGN_MS;
+      const signEnd = signEndOf(s);
       const revealEnd = signEnd + RUSVET_SIGN_REVEAL_MS;
       if (!s.handClosed) {
         if (now < signEnd) return s;
@@ -209,6 +222,7 @@ function advance(state: RusvetState, now: number): RusvetState {
             handStartedAt: revealEnd,
             signs: {},
             handClosed: false,
+            handSignEnd: null,
           };
         }
       }
@@ -243,7 +257,7 @@ function span(s: RusvetState): [number, number] {
     case "vote":
       return [s.startedAt, s.voteEndsAt];
     case "duel": {
-      const signEnd = s.handStartedAt + RUSVET_SIGN_MS;
+      const signEnd = signEndOf(s);
       return s.handClosed ? [signEnd, signEnd + RUSVET_SIGN_REVEAL_MS] : [s.handStartedAt, signEnd];
     }
     case "give":
@@ -251,6 +265,14 @@ function span(s: RusvetState): [number, number] {
     default:
       return [s.giveEndsAt, s.finishAt ?? s.giveEndsAt];
   }
+}
+
+/** Aşamadaki hazır oyuncular (yalnız kimler; seçimler değil). */
+function readyOf(s: RusvetState): string[] {
+  if (s.stage === "vote") return [...s.votesLocked];
+  if (s.stage === "duel") return s.candidates.filter((id) => own(s.signs, id) !== undefined);
+  if (s.stage === "give" && s.giveLocked && s.president !== null) return [s.president];
+  return [];
 }
 
 function allocationList(tokens: Record<string, number>, players: readonly string[]): Allocation[] {
@@ -290,6 +312,7 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
       const sign = SIGNS.find((x) => x === r.sign);
       return sign === undefined ? null : { kind: "sign", sign };
     }
+    if (r.kind === "lock") return keys.length === 1 ? { kind: "lock" } : null;
     if (r.kind === "give") {
       if (keys.length !== 2 || !Array.isArray(r.tokens) || r.tokens.length > 8) return null;
       const seen = new Set<string>();
@@ -315,6 +338,8 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
       seed: drawSeed(ctx.rng),
       startedAt: ctx.now,
       voteEndsAt: ctx.now + RUSVET_VOTE_MS,
+      votesLocked: [],
+      voteClosing: false,
       stage: "vote",
       votes: {},
       finalVotes: null,
@@ -326,9 +351,11 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
       handStartedAt: 0,
       signs: {},
       handClosed: false,
+      handSignEnd: null,
       hands: [],
       giveStartedAt: 0,
       giveEndsAt: 0,
+      giveLocked: false,
       tokens: {},
       finalTokens: null,
       finishAt: null,
@@ -341,8 +368,36 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
     const s = advance(state, ctx.now);
     if (s.stage === "reveal") return { rejected: "ended" };
 
+    if (action.kind === "lock") {
+      if (s.stage === "vote") {
+        if (s.votesLocked.includes(playerId)) return { rejected: "locked" };
+        if (s.voteClosing) return { rejected: "closed" };
+        if (own(s.votes, playerId) === undefined) return { rejected: "nothing_to_lock" };
+        const votesLocked = [...s.votesLocked, playerId];
+        const active = s.players.filter((id) => ctx.connected.includes(id));
+        if (active.length === 0 || !active.every((id) => votesLocked.includes(id))) {
+          return { ...s, votesLocked };
+        }
+        return {
+          ...s,
+          votesLocked,
+          voteClosing: true,
+          voteEndsAt: Math.min(s.voteEndsAt, ctx.now + RUSVET_LOCK_GRACE_MS),
+        };
+      }
+      if (s.stage === "give") {
+        if (s.president !== playerId) return { rejected: "not_president" };
+        if (s.giveLocked) return { rejected: "locked" };
+        if (allocationList(s.tokens, s.players).length === 0) return { rejected: "nothing_to_lock" };
+        return { ...s, giveLocked: true, giveEndsAt: Math.min(s.giveEndsAt, ctx.now + RUSVET_LOCK_GRACE_MS) };
+      }
+      return { rejected: "wrong_phase" };
+    }
+
     if (action.kind === "vote") {
       if (s.stage !== "vote") return { rejected: "wrong_phase" };
+      if (s.votesLocked.includes(playerId)) return { rejected: "locked" };
+      if (s.voteClosing) return { rejected: "closed" };
       if (action.target === playerId) return { rejected: "self_target" };
       if (!s.players.includes(action.target)) return { rejected: "unknown_target" };
       if (!ctx.connected.includes(action.target)) return { rejected: "target_offline" };
@@ -351,14 +406,20 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
     }
 
     if (action.kind === "sign") {
-      if (s.stage !== "duel" || s.handClosed) return { rejected: "wrong_phase" };
+      if (s.stage !== "duel") return { rejected: "wrong_phase" };
       if (!s.candidates.includes(playerId)) return { rejected: "not_candidate" };
-      if (own(s.signs, playerId) === action.sign) return s;
-      return { ...s, signs: { ...s.signs, [playerId]: action.sign } };
+      if (s.handClosed) return { rejected: "wrong_phase" };
+      // İşaret tek seferliktir: ilk işaret kesindir.
+      if (own(s.signs, playerId) !== undefined) return { rejected: "locked" };
+      const signs = { ...s.signs, [playerId]: action.sign };
+      // Düellodaki herkes işaret verdiyse açılış hemen başlar (bağlantıya bakılmaz).
+      const all = s.candidates.every((id) => own(signs, id) !== undefined);
+      return all ? { ...s, signs, handSignEnd: Math.min(signEndOf(s), ctx.now) } : { ...s, signs };
     }
 
     if (s.stage !== "give") return { rejected: "wrong_phase" };
     if (s.president !== playerId) return { rejected: "not_president" };
+    if (s.giveLocked) return { rejected: "locked" };
     let total = 0;
     const next: Record<string, number> = {};
     for (const { to, n } of action.tokens) {
@@ -399,14 +460,15 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
       phaseEndsAt: to,
       president: elected ? s.president : null,
       budget: elected ? s.budget : null,
+      ready: readyOf(s),
       duel:
         s.stage === "duel"
           ? {
               hand: s.hand,
               candidates: [...s.candidates],
               signStartedAt: s.handStartedAt,
-              signEndsAt: s.handStartedAt + RUSVET_SIGN_MS,
-              revealEndsAt: s.handStartedAt + RUSVET_SIGN_MS + RUSVET_SIGN_REVEAL_MS,
+              signEndsAt: signEndOf(s),
+              revealEndsAt: signEndOf(s) + RUSVET_SIGN_REVEAL_MS,
               signs: s.handClosed ? { ...s.signs } : null,
               history: s.hands,
             }
@@ -416,7 +478,7 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
   },
 
   view(state, playerId, ctx): RusvetView {
-    const empty: RusvetView = { myVote: null, mySign: null, myTokens: null };
+    const empty: RusvetView = { myVote: null, mySign: null, myTokens: null, locked: false };
     if (playerId === null || !state.players.includes(playerId)) return empty;
     const s = advance(state, ctx.now);
     return {
@@ -426,6 +488,7 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
         s.president === playerId && (s.stage === "give" || s.stage === "reveal")
           ? allocationList(s.finalTokens ?? s.tokens, s.players)
           : null,
+      locked: readyOf(s).includes(playerId),
     };
   },
 

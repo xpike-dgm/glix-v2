@@ -104,6 +104,8 @@ export function parseRusvetPublicView(v: unknown): RusvetPublicView | null {
   if (!isNum(v.startedAt) || !isNum(v.phaseStartedAt) || !isNum(v.phaseEndsAt)) return null;
   if (v.president !== null && v.president !== undefined && !isStr(v.president)) return null;
   if (v.budget !== null && v.budget !== undefined && !isNum(v.budget)) return null;
+  const ready = strArr(v.ready);
+  if (!ready) return null;
   let duel: RusvetDuel | null = null;
   if (v.duel !== null && v.duel !== undefined) {
     duel = parseDuel(v.duel);
@@ -122,6 +124,7 @@ export function parseRusvetPublicView(v: unknown): RusvetPublicView | null {
     phaseEndsAt: v.phaseEndsAt,
     president: v.president ?? null,
     budget: v.budget ?? null,
+    ready,
     duel,
     reveal,
   };
@@ -148,7 +151,8 @@ export function parseRusvetPrivateView(v: unknown): RusvetView | null {
     myTokens = parseAllocations(v.myTokens);
     if (!myTokens) return null;
   }
-  return { myVote: v.myVote, mySign, myTokens };
+  if (typeof v.locked !== "boolean") return null;
+  return { myVote: v.myVote, mySign, myTokens, locked: v.locked };
 }
 
 export function parseRusvetView(publicView: unknown, view: unknown): RusvetScreenView | null {

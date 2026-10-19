@@ -275,14 +275,15 @@ describe("rusvet-darbe düello akışı", () => {
     expect(rej(three, "a", { kind: "give", tokens: [] }, T0 + E + 100)).toBe("wrong_phase");
   });
 
-  it("işaret el bitene kadar değiştirilebilir; sonra reddedilir", () => {
+  it("işaret tek seferliktir: ilk işaret kesindir; el bitince yeni işaret reddedilir", () => {
     let s = duel();
     s = act(s, "a", sign("tas"), T0 + E + 1_000);
-    s = act(s, "a", sign("makas"), T0 + E + 2_000);
-    expect(priv(s, "a", E + 3_000).mySign).toBe("makas");
-    expect(rej(s, "a", sign("tas"), T0 + E + RUSVET_SIGN_MS - 1)).toBe("kabul");
-    expect(rej(s, "a", sign("tas"), T0 + E + RUSVET_SIGN_MS)).toBe("wrong_phase");
-    expect(rej(s, "a", sign("tas"), T0 + E + RUSVET_SIGN_MS + 1_000)).toBe("wrong_phase");
+    expect(rej(s, "a", sign("makas"), T0 + E + 2_000)).toBe("locked");
+    expect(rej(s, "a", sign("tas"), T0 + E + 2_000)).toBe("locked");
+    expect(priv(s, "a", E + 3_000).mySign).toBe("tas");
+    expect(rej(s, "b", sign("tas"), T0 + E + RUSVET_SIGN_MS - 1)).toBe("kabul");
+    expect(rej(s, "b", sign("tas"), T0 + E + RUSVET_SIGN_MS)).toBe("wrong_phase");
+    expect(rej(s, "b", sign("tas"), T0 + E + RUSVET_SIGN_MS + 1_000)).toBe("wrong_phase");
   });
 
   it("işaretler açılış anına kadar gizli; açılışta herkes için aynı anda görünür (yapısal)", () => {
@@ -330,19 +331,24 @@ describe("rusvet-darbe düello akışı", () => {
     );
     s = act(s, "a", sign("tas"), T0 + E + 1_000);
     s = act(s, "b", sign("makas"), T0 + E + 1_000);
-    const during = pub(s, E + RUSVET_SIGN_MS + RUSVET_SIGN_REVEAL_MS - 1);
+    // Herkes işaret verdiği için açılış hemen (E + 1000) başlar; sonuç 2,5 sn sonra uygulanır.
+    const revealEnd = E + 1_000 + RUSVET_SIGN_REVEAL_MS;
+    const during = pub(s, revealEnd - 1);
     expect(during.phase).toBe("duel");
     expect(during.president).toBeNull();
-    const done = pub(s, E + HAND_MS);
+    const done = pub(s, revealEnd);
     expect(done.phase).toBe("give");
     expect(done.president).toBe("a");
     expect(done.budget).toBe(2);
     expect(done.phaseEndsAt - done.phaseStartedAt).toBe(RUSVET_GIVE_MS);
-    expect(done.phaseStartedAt).toBe(T0 + E + HAND_MS);
+    expect(done.phaseStartedAt).toBe(T0 + revealEnd);
   });
 
   it("sonuç çıkmayan el tekrarlanır; sonraki elde yalnız kalan adaylar oynar", () => {
     let s = duel();
+    // Herkes işaretini verince el hemen açılır; sonraki el 2,5 sn sonra başlar.
+    const REVEAL = RUSVET_SIGN_REVEAL_MS;
+    const h2At = E + 500 + REVEAL;
     // El 1: a,b taş; c,d makas -> taş kazanır, a ve b devam.
     for (const [id, sg] of [
       ["a", "tas"],
@@ -351,37 +357,40 @@ describe("rusvet-darbe düello akışı", () => {
       ["d", "makas"],
     ] as const)
       s = act(s, id, sign(sg), T0 + E + 500);
-    const h2 = pub(s, E + HAND_MS);
+    const h2 = pub(s, h2At);
     expect(h2.phase).toBe("duel");
     expect(h2.duel?.hand).toBe(2);
     expect(h2.duel?.candidates).toEqual(["a", "b"]);
     expect(h2.duel?.history).toHaveLength(1);
     expect(h2.duel?.history[0]?.advance).toEqual(["a", "b"]);
     // El 2: ikisi de aynı işaret -> tekrar.
-    s = act(s, "a", sign("kagit"), T0 + E + HAND_MS + 500);
-    s = act(s, "b", sign("kagit"), T0 + E + HAND_MS + 500);
-    expect(rej(s, "c", sign("tas"), T0 + E + HAND_MS + 600)).toBe("not_candidate");
-    const h3 = pub(s, E + 2 * HAND_MS);
+    s = act(s, "a", sign("kagit"), T0 + h2At + 500);
+    s = act(s, "b", sign("kagit"), T0 + h2At + 500);
+    expect(rej(s, "c", sign("tas"), T0 + h2At + 600)).toBe("not_candidate");
+    const h3At = h2At + 500 + REVEAL;
+    const h3 = pub(s, h3At);
     expect(h3.duel?.hand).toBe(3);
     expect(h3.duel?.candidates).toEqual(["a", "b"]);
     expect(h3.duel?.history[1]?.replay).toBe(true);
     expect(h3.duel?.signs).toBeNull();
     // El 3: kâğıt taşı yener.
-    s = act(s, "a", sign("kagit"), T0 + E + 2 * HAND_MS + 500);
-    s = act(s, "b", sign("tas"), T0 + E + 2 * HAND_MS + 500);
-    const fin = pub(s, E + 3 * HAND_MS);
+    s = act(s, "a", sign("kagit"), T0 + h3At + 500);
+    s = act(s, "b", sign("tas"), T0 + h3At + 500);
+    const fin = pub(s, h3At + 500 + REVEAL);
     expect(fin.phase).toBe("give");
     expect(fin.president).toBe("a");
   });
 
   it("6 elden sonra hâlâ eşitse kalanlar arasından rastgele başkan seçilir", () => {
     let s = duel(7);
+    // Her elde herkes 100 ms sonra işaret verir: el hemen açılır, 2,5 sn sonra biter.
+    const FAST = 100 + RUSVET_SIGN_REVEAL_MS;
     for (let h = 0; h < RUSVET_MAX_HANDS; h++) {
-      const base = E + h * HAND_MS;
+      const base = E + h * FAST;
       for (const id of ["a", "b", "c", "d"]) s = act(s, id, sign("tas"), T0 + base + 100);
-      expect(pub(s, base + HAND_MS - 1).phase).toBe("duel");
+      expect(pub(s, base + FAST - 1).phase).toBe("duel");
     }
-    const p = pub(s, E + RUSVET_MAX_HANDS * HAND_MS);
+    const p = pub(s, E + RUSVET_MAX_HANDS * FAST);
     expect(p.phase).toBe("give");
     expect(["a", "b", "c", "d"]).toContain(p.president);
     expect(p.budget).toBe(1);
@@ -391,19 +400,24 @@ describe("rusvet-darbe düello akışı", () => {
     for (let seed = 1; seed <= 40; seed++) {
       let t = duel(seed);
       for (let h = 0; h < RUSVET_MAX_HANDS; h++)
-        for (const id of ["a", "b", "c", "d"]) t = act(t, id, sign("tas"), T0 + E + h * HAND_MS + 100);
-      seen.add(pub(t, E + RUSVET_MAX_HANDS * HAND_MS).president as string);
+        for (const id of ["a", "b", "c", "d"]) t = act(t, id, sign("tas"), T0 + E + h * FAST + 100);
+      seen.add(pub(t, E + RUSVET_MAX_HANDS * FAST).president as string);
     }
     expect(seen.size).toBeGreaterThan(1);
   });
 
   it("düello sonrası 25 sn dağıtım, ardından sonuç süresi; toplam süre sınırı aşılmaz", () => {
+    // Kimse işaret vermezse eller tam süreyle oynanır; oyun her durumda üst sınırda biter.
+    const slow = duel(7);
+    expect(rusvetDarbe.isFinished(slow, ctx(T0 + RUSVET_MAX_DURATION_MS))).toBe(true);
+    // Herkes hemen işaret verirse oyun daha erken biter.
     let s = duel(7);
+    const FAST = 100 + RUSVET_SIGN_REVEAL_MS;
     for (let h = 0; h < RUSVET_MAX_HANDS; h++)
-      for (const id of ["a", "b", "c", "d"]) s = act(s, id, sign("tas"), T0 + E + h * HAND_MS + 100);
-    const end = RUSVET_MAX_DURATION_MS;
-    expect(rusvetDarbe.isFinished(s, ctx(T0 + end - 1))).toBe(false);
-    expect(rusvetDarbe.isFinished(s, ctx(T0 + end))).toBe(true);
+      for (const id of ["a", "b", "c", "d"]) s = act(s, id, sign("tas"), T0 + E + h * FAST + 100);
+    const fastEnd = E + RUSVET_MAX_HANDS * FAST + RUSVET_GIVE_MS + RUSVET_REVEAL_MS;
+    expect(rusvetDarbe.isFinished(s, ctx(T0 + fastEnd - 1))).toBe(false);
+    expect(rusvetDarbe.isFinished(s, ctx(T0 + fastEnd))).toBe(true);
   });
 
   it("açılan eller geçmişte herkese görünür", () => {
@@ -700,12 +714,12 @@ describe("rusvet-darbe gizlilik (kısa kimlikler/işaretler; yapısal kontrol)",
       expect(json).not.toContain('"votes"');
       expect(json).not.toContain('"counts"');
       for (const id of players)
-        expect(Object.keys(priv(s0, id, off)).sort()).toEqual(["mySign", "myTokens", "myVote"]);
+        expect(Object.keys(priv(s0, id, off)).sort()).toEqual(["locked", "mySign", "myTokens", "myVote"]);
       expect(priv(s0, "pa1", off).myVote).toBe("pb2");
       expect(priv(s0, "pb2", off).myVote).toBeNull();
       expect(priv(s0, "pd4", off).myVote).toBeNull();
-      expect(priv(s0, null, off)).toEqual({ myVote: null, mySign: null, myTokens: null });
-      expect(priv(s0, "ghost", off)).toEqual({ myVote: null, mySign: null, myTokens: null });
+      expect(priv(s0, null, off)).toEqual({ myVote: null, mySign: null, myTokens: null, locked: false });
+      expect(priv(s0, "ghost", off)).toEqual({ myVote: null, mySign: null, myTokens: null, locked: false });
     }
   });
 
@@ -790,5 +804,196 @@ describe("rusvet-darbe gizlilik (kısa kimlikler/işaretler; yapısal kontrol)",
 
   it("secrets() boştur (kimlikler ve işaretler kısa; gizlilik yapısal testlerle doğrulanır)", () => {
     expect(rusvetDarbe.secrets(s0)).toEqual([]);
+  });
+});
+
+describe("rusvet-darbe erken bitiş", () => {
+  const E = RUSVET_VOTE_MS;
+  const lock: RusvetAction = { kind: "lock" };
+  const P = ["a", "b", "c"];
+
+  it("parseAction lock kabul eder, fazladan alanı reddeder", () => {
+    expect(rusvetDarbe.parseAction({ kind: "lock" })).toEqual({ kind: "lock" });
+    expect(rusvetDarbe.parseAction({ kind: "lock", target: "a" })).toBeNull();
+  });
+
+  describe("başkanlık oyu: Tamam", () => {
+    const voted = (conn?: readonly string[]) => {
+      let s = start(P);
+      for (const [f, t] of [
+        ["a", "b"],
+        ["b", "a"],
+        ["c", "a"],
+      ] as const)
+        s = act(s, f, { kind: "vote", target: t }, T0 + 1_000, conn);
+      return s;
+    };
+
+    it("(a) herkes kilitleyince oylama 1 sn sonra biter; sonuç aynı", () => {
+      let s = voted();
+      for (const id of P) s = act(s, id, lock, T0 + 5_000);
+      expect(s.voteEndsAt).toBe(T0 + 6_000);
+      expect(pub(s, 5_999).phase).toBe("vote");
+      const p = pub(s, 6_000);
+      expect(p.phase).toBe("give");
+      expect(p.president).toBe("a");
+      expect(p.budget).toBe(2);
+      expect(p.phaseStartedAt).toBe(T0 + 6_000);
+    });
+
+    it("(b) bir kişi eksikken bitmez; oysuz kilitlenemez", () => {
+      let s = voted();
+      s = act(s, "a", lock, T0 + 5_000);
+      s = act(s, "b", lock, T0 + 5_000);
+      expect(s.voteEndsAt).toBe(T0 + E);
+      expect(pub(s, 10_000).phase).toBe("vote");
+      expect(rej(start(P), "a", lock, T0 + 1_000)).toBe("nothing_to_lock");
+    });
+
+    it("(c) bağlantısı kopan oyuncu beklenmez", () => {
+      const conn = ["a", "b"];
+      let s = voted();
+      s = act(s, "a", lock, T0 + 5_000, conn);
+      s = act(s, "b", lock, T0 + 5_000, conn);
+      expect(s.voteEndsAt).toBe(T0 + 6_000);
+    });
+
+    it("(d) kilitten sonra oy değişmez; kapanış penceresinde eylem reddedilir", () => {
+      let s = voted();
+      s = act(s, "a", lock, T0 + 5_000);
+      expect(rej(s, "a", { kind: "vote", target: "c" }, T0 + 5_100)).toBe("locked");
+      expect(rej(s, "a", lock, T0 + 5_100)).toBe("locked");
+      const conn = ["a", "b"];
+      let t = voted();
+      t = act(t, "a", lock, T0 + 5_000, conn);
+      t = act(t, "b", lock, T0 + 5_000, conn);
+      expect(rej(t, "c", { kind: "vote", target: "b" }, T0 + 5_500)).toBe("closed");
+      expect(rej(t, "c", lock, T0 + 5_500)).toBe("closed");
+    });
+
+    it("(e) kilit listesi oyları sızdırmaz", () => {
+      let s = voted();
+      s = act(s, "b", lock, T0 + 5_000);
+      const p = pub(s, 5_100);
+      expect(p.ready).toEqual(["b"]);
+      expect(JSON.stringify(p)).not.toMatch(/votes|counts/);
+      expect(priv(s, "b", 5_100)).toEqual({ myVote: "a", mySign: null, myTokens: null, locked: true });
+      expect(priv(s, "a", 5_100).locked).toBe(false);
+    });
+
+    it("(f) tick bağlantıya bakmaz", () => {
+      let s = voted();
+      for (const id of P) s = act(s, id, lock, T0 + 5_000);
+      expect(rusvetDarbe.tick(s, ctx(T0 + 7_000, []))).toEqual(rusvetDarbe.tick(s, ctx(T0 + 7_000, P)));
+    });
+  });
+
+  describe("düello: herkes işaret verdi", () => {
+    const duel = () => withVotes(["a", "b", "c", "d"], RING4);
+
+    it("(a) herkes işaret verince açılış hemen başlar; (b) biri eksikse beklenir", () => {
+      let s = duel();
+      for (const id of ["a", "b", "c"]) s = act(s, id, sign("tas"), T0 + E + 1_000);
+      expect(pub(s, E + 1_000).duel?.signs).toBeNull();
+      expect(pub(s, E + 1_000).ready).toEqual(["a", "b", "c"]);
+      expect(pub(s, E + 5_000).duel?.signEndsAt).toBe(T0 + E + RUSVET_SIGN_MS);
+      s = act(s, "d", sign("makas"), T0 + E + 2_000);
+      const p = pub(s, E + 2_000);
+      expect(p.duel?.signs).toEqual({ a: "tas", b: "tas", c: "tas", d: "makas" });
+      expect(p.duel?.signEndsAt).toBe(T0 + E + 2_000);
+      expect(p.duel?.revealEndsAt).toBe(T0 + E + 2_000 + RUSVET_SIGN_REVEAL_MS);
+    });
+
+    it("(c) bağlantıya bakılmaz: kopuk aday da işaret vermeden bitmez", () => {
+      let s = duel();
+      for (const id of ["a", "b", "c"]) s = act(s, id, sign("tas"), T0 + E + 1_000, ["a", "b", "c"]);
+      expect(pub(s, E + 3_000).duel?.signs).toBeNull();
+    });
+
+    it("(d) işaret kesin; açılıştan sonra değişmez", () => {
+      let s = duel();
+      for (const id of ["a", "b", "c", "d"]) s = act(s, id, sign("tas"), T0 + E + 1_000);
+      expect(rej(s, "a", sign("makas"), T0 + E + 1_000)).toBe("wrong_phase");
+      expect(rej(s, "a", sign("makas"), T0 + E + 1_500)).toBe("wrong_phase");
+    });
+
+    it("(e) işaretler yalnız açılışta çıkar; kilit listesi içeriği taşımaz", () => {
+      let s = duel();
+      s = act(s, "a", sign("kagit"), T0 + E + 1_000);
+      const p = pub(s, E + 1_100);
+      expect(p.ready).toEqual(["a"]);
+      expect(JSON.stringify(p)).not.toContain("kagit");
+      expect(priv(s, "a", E + 1_100).locked).toBe(true);
+      expect(priv(s, "b", E + 1_100).locked).toBe(false);
+    });
+
+    it("(f) replay: aynı eylem kayıtı tick sıklığından bağımsız aynı sonucu verir", () => {
+      let a = duel();
+      let b = duel();
+      for (const id of ["a", "b", "c", "d"]) {
+        a = act(a, id, sign("tas"), T0 + E + 1_000);
+        b = act(b, id, sign("tas"), T0 + E + 1_000);
+      }
+      for (let t = E; t < E + 20_000; t += 700) a = at(a, t);
+      expect(rusvetDarbe.result(a)).toEqual(rusvetDarbe.result(b));
+      expect(pub(a, E + 20_000)).toEqual(pub(b, E + 20_000));
+    });
+  });
+
+  describe("dağıtım: Bitti", () => {
+    /** a başkan (2 oy), dağıtım başladı. */
+    const giving = () => {
+      let s = start(P);
+      for (const [f, t] of [
+        ["a", "b"],
+        ["b", "a"],
+        ["c", "a"],
+      ] as const)
+        s = act(s, f, { kind: "vote", target: t }, T0 + 1_000);
+      return at(s, E);
+    };
+
+    it("(a) başkan Bitti deyince dağıtım 1 sn sonra biter, sonuç süresi buna göre kayar", () => {
+      let s = giving();
+      s = act(s, "a", give([["c", 1]]), T0 + E + 2_000);
+      s = act(s, "a", lock, T0 + E + 2_000);
+      expect(s.stage).toBe("give");
+      expect(pub(s, E + 2_500).phaseEndsAt).toBe(T0 + E + 3_000);
+      expect(pub(s, E + 2_999).phase).toBe("give");
+      expect(pub(s, E + 3_000).phase).toBe("reveal");
+      expect(rusvetDarbe.isFinished(s, ctx(T0 + E + 3_000 + RUSVET_REVEAL_MS - 1, P))).toBe(false);
+      expect(rusvetDarbe.isFinished(s, ctx(T0 + E + 3_000 + RUSVET_REVEAL_MS, P))).toBe(true);
+      // Puanlama aynı: başkan +1, c verilen 1 jeton + kalan 1 jeton rastgele.
+      const total = Object.values(rusvetDarbe.result(s).miniScores).reduce((x, y) => x + y, 0);
+      expect(total).toBe(3);
+    });
+
+    it("(b) yalnız başkan bitirir; hiç dağıtım yoksa bitiremez", () => {
+      const s = giving();
+      expect(rej(s, "b", lock, T0 + E + 2_000)).toBe("not_president");
+      expect(rej(s, "a", lock, T0 + E + 2_000)).toBe("nothing_to_lock");
+      expect(pub(s, E + 2_000).phaseEndsAt).toBe(T0 + E + RUSVET_GIVE_MS);
+    });
+
+    it("(c)(d) başkan dışındaki bağlantılar bitişi etkilemez; Bitti sonrası dağıtım ve ikinci Bitti reddedilir", () => {
+      let s = giving();
+      s = act(s, "a", give([["c", 1]]), T0 + E + 2_000);
+      s = act(s, "a", lock, T0 + E + 2_000, ["a"]);
+      expect(s.giveEndsAt).toBe(T0 + E + 3_000);
+      expect(rej(s, "a", give([["c", 2]]), T0 + E + 2_500)).toBe("locked");
+      expect(rej(s, "a", lock, T0 + E + 2_500)).toBe("locked");
+    });
+
+    it("(e) yalnız başkanın Bitti dediği görünür; dağıtım içeriği sızmaz", () => {
+      let s = giving();
+      s = act(s, "a", give([["c", 1]]), T0 + E + 2_000);
+      expect(pub(s, E + 2_100).ready).toEqual([]);
+      s = act(s, "a", lock, T0 + E + 2_100);
+      const p = pub(s, E + 2_200);
+      expect(p.ready).toEqual(["a"]);
+      expect(JSON.stringify(p)).not.toMatch(/tokens|"n"/);
+      expect(priv(s, "a", E + 2_200).locked).toBe(true);
+      expect(priv(s, "b", E + 2_200).locked).toBe(false);
+    });
   });
 });

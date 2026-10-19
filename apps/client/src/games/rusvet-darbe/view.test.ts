@@ -16,10 +16,11 @@ const base = {
   phaseEndsAt: 20_001,
   president: null,
   budget: null,
+  ready: [],
   duel: null,
   reveal: null,
 };
-const priv = { myVote: null, mySign: null, myTokens: null };
+const priv = { myVote: null, mySign: null, myTokens: null, locked: false };
 const hand = { candidates: ["a", "b"], signs: { a: "tas", b: "makas" }, advance: ["a"], replay: false };
 const duel = {
   hand: 2,
@@ -53,9 +54,18 @@ describe("Rüşvet ve Darbe görünümü", () => {
     const r = parseRusvetView({ ...base, phase: "reveal", president: "a", budget: 2, reveal }, priv);
     expect(r?.reveal?.scores.b).toBe(2);
   });
+  it("hazır olanları ve kilidi okur, bozuğunu reddeder", () => {
+    const v = parseRusvetView({ ...base, ready: ["a", "c"] }, { ...priv, locked: true });
+    expect(v?.ready).toEqual(["a", "c"]);
+    expect(v?.locked).toBe(true);
+    expect(parseRusvetView({ ...base, ready: [1] }, priv)).toBeNull();
+    expect(parseRusvetView({ ...base, ready: undefined }, priv)).toBeNull();
+    expect(parseRusvetView(base, { myVote: null, mySign: null, myTokens: null })).toBeNull();
+    expect(parseRusvetView(base, { ...priv, locked: "x" })).toBeNull();
+  });
   it("eksik alanları boş sayar", () => {
     const { president: _p, budget: _b, duel: _d, reveal: _r, ...rest } = base;
-    const v = parseRusvetView(rest, { myVote: null });
+    const v = parseRusvetView(rest, { myVote: null, locked: false });
     expect(v?.president).toBeNull();
     expect(v?.mySign).toBeNull();
     expect(v?.myTokens).toBeNull();

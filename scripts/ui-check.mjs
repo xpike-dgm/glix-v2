@@ -413,6 +413,25 @@ const SCREENS = [
       await cells.nth(1).click();
     },
   },
+  { name: "rusvet-vote-locked-5", q: "mock=rusvet-vote-locked&n=5" },
+  { name: "rusvet-vote-locked-8", q: "mock=rusvet-vote-locked&n=8" },
+  { name: "rusvet-duel-locked-5", q: "mock=rusvet-duel-locked&n=5&c=3", settle: 800 },
+  { name: "rusvet-give-locked-5", q: "mock=rusvet-give-locked&n=5&budget=3" },
+  {
+    name: "rusvet-vote-lock-tap",
+    q: "mock=rusvet-vote&n=5&chosen=1",
+    settle: 500,
+    act: async (p) => p.getByRole("button", { name: "Tamam" }).click(),
+  },
+  {
+    name: "rusvet-give-done-tap",
+    q: "mock=rusvet-give&n=6&budget=4",
+    settle: 500,
+    act: async (p) => {
+      await p.locator(".ppick__cell:not(:disabled)").nth(0).click();
+      await p.getByRole("button", { name: "Bitti" }).click();
+    },
+  },
   { name: "rusvet-give-wait", q: "mock=rusvet-give-wait&n=5&budget=3", settle: 800 },
   { name: "rusvet-reveal-5", q: "mock=rusvet-reveal&n=5", settle: 5600 },
   { name: "rusvet-reveal-8", q: "mock=rusvet-reveal&n=8", settle: 5600 },

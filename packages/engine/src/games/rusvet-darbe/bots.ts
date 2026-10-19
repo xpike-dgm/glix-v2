@@ -15,6 +15,7 @@ export const rusvetDarbeBot: GameBot = {
     const pub = (publicView ?? {}) as PubLike;
     const others = connected.filter((id) => id !== playerId);
     const roll = rng.int(100);
+    if (roll >= 94 && pub.phase !== "duel") return { kind: "lock" };
     if (pub.phase === "duel") {
       if (roll < 5) return { kind: "sign", sign: "kagit_" };
       return { kind: "sign", sign: SIGNS[rng.int(SIGNS.length)] };

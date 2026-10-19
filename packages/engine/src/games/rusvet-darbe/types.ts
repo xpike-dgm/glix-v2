@@ -1,6 +1,8 @@
 /** Rüşvet ve Darbe — istemci ile sunucu arasındaki sözleşme. Kurallar: docs/KURALLAR.md §11, docs/A6-OYUNLAR.md. */
 
 export const RUSVET_VOTE_MS = 20_000;
+/** Herkes "Tamam" deyince oylamanın / dağıtımın bitişine kalan süre (ms). */
+export const RUSVET_LOCK_GRACE_MS = 1_000;
 /** Darbe düellosunda bir elin gizli işaret süresi. */
 export const RUSVET_SIGN_MS = 8_000;
 /** İşaretler açıldıktan sonra sonucun gösterildiği süre. */
@@ -34,11 +36,14 @@ export interface Allocation {
  * - vote: başkanlık için kendin dışında bağlı birine gizli oy; süre bitene kadar değiştirilebilir.
  * - sign: darbe düellosunda (yalnız eşit adaylar) elin gizli işareti; el bitene kadar değiştirilebilir.
  * - give: yalnız başkan; jetonların tamamını ya da bir kısmını dağıtır, süre bitene kadar değiştirilebilir.
+ * - lock: oylamada "Tamam" (oy kesinleşir); başkan için dağıtımda "Bitti" (dağıtım kesinleşir).
+ *   Düelloda işaret tek seferliktir: ilk işaret kesindir.
  */
 export type RusvetAction =
   | { kind: "vote"; target: string }
   | { kind: "sign"; sign: Sign }
-  | { kind: "give"; tokens: Allocation[] };
+  | { kind: "give"; tokens: Allocation[] }
+  | { kind: "lock" };
 
 export type RusvetPhase = "vote" | "duel" | "give" | "reveal";
 
@@ -89,6 +94,11 @@ export interface RusvetPublicView {
   president: string | null;
   /** Başkanın dağıtacağı jeton sayısı (aldığı oy sayısı); seçim bitince açılır. */
   budget: number | null;
+  /**
+   * Hazır olanlar (yalnız kimler; seçimleri gizli): oylamada "Tamam" diyenler, düelloda işaretini verenler,
+   * dağıtımda "Bitti" diyen başkan. Diğer aşamalarda boş.
+   */
+  ready: string[];
   duel: RusvetDuel | null;
   reveal: RusvetReveal | null;
 }
@@ -100,4 +110,6 @@ export interface RusvetView {
   mySign: Sign | null;
   /** Yalnız başkan: o ana kadar verdiği jetonlar. */
   myTokens: Allocation[] | null;
+  /** Bulunulan aşamada hazırsın: oy kilitli / işaretin verildi / dağıtım bitti. */
+  locked: boolean;
 }

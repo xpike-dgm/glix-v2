@@ -7,6 +7,7 @@ import { ProgressBar } from "../../ui/ProgressBar.js";
 import { createPendingPick } from "../../ui/playerPicker.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
+import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import { Dagitim } from "./Dagitim.js";
 import { type CrewMember, Duello } from "./Duello.js";
@@ -32,7 +33,7 @@ export default function RusvetDarbeScreen(props: GameScreenProps) {
     send: (id) => {
       sendAction({ kind: "vote", target: id });
     },
-    closed: () => spectator() || !voting(),
+    closed: () => spectator() || !voting() || view()?.locked === true,
   });
   const chosen = () => {
     const id = pick.value();
@@ -80,18 +81,22 @@ export default function RusvetDarbeScreen(props: GameScreenProps) {
                 players={crew()}
                 selfId={props.selfId}
                 selected={pick.value()}
-                disabled={spectator() || !voting()}
+                disabled={spectator() || !voting() || v().locked}
                 ring={SEAL}
+                ready={v().ready}
                 label={(p) => `${p.nickname} adlı oyuncuya başkanlık oyu ver`}
                 onPick={(id) => pick.pick(id)}
               />
-              <p class="rd__hint" role="status">
-                {spectator()
-                  ? "Başkan süre bitince belli olur"
-                  : pick.value() === null
-                    ? "Oy vermezsen rastgele biri seçilir"
-                    : "Süre bitene kadar değiştirebilirsin"}
-              </p>
+              <TamamBar
+                locked={v().locked}
+                ready={v().ready.length}
+                total={crew().length}
+                disabled={pick.value() === null}
+                spectator={spectator()}
+                onLock={() => {
+                  sendAction({ kind: "lock" });
+                }}
+              />
             </Match>
             <Match when={v().phase === "duel"}>
               <Duello
@@ -112,6 +117,9 @@ export default function RusvetDarbeScreen(props: GameScreenProps) {
                 spectator={spectator()}
                 onGive={(tokens) => {
                   sendAction({ kind: "give", tokens });
+                }}
+                onDone={() => {
+                  sendAction({ kind: "lock" });
                 }}
               />
             </Match>

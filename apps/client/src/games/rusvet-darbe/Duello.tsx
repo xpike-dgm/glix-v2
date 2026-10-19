@@ -51,11 +51,11 @@ export function Duello(props: Props) {
     untrack(() => setPending(null));
   });
   const choose = (s: Sign): void => {
-    if (!isCandidate() || shown() !== null) return;
+    // İşaret tek seferliktir: ilk seçim kesindir.
+    if (!isCandidate() || shown() !== null || mine() !== null) return;
     unlockAudio();
     tap();
     hapticTap();
-    if (mine() === s) return;
     setPending(s);
     clearTimeout(timer);
     timer = setTimeout(() => {
@@ -117,7 +117,12 @@ export function Duello(props: Props) {
                   data-status={statusOf(m.id)}
                   style={{ "--tc": look(m.avatar).color, "--i": i() }}
                 >
-                  <Avatar index={m.avatar} size="var(--rd-cav)" connected={m.connected} />
+                  <Avatar
+                    index={m.avatar}
+                    size="var(--rd-cav)"
+                    connected={m.connected}
+                    ready={shown() === null && props.view.ready.includes(m.id)}
+                  />
                   <span class="rd__name">{m.nickname}</span>
                   <span class="rd__card" data-open={shown() ? "1" : undefined}>
                     <span class="rd__card-back">?</span>
@@ -140,7 +145,11 @@ export function Duello(props: Props) {
             when={isCandidate()}
             fallback={
               <p class="rd__hint" role="status">
-                {props.spectator ? "Düello bitince başkan belli olur" : "Eşit kalan adaylar düello yapıyor"}
+                {shown() === null
+                  ? `${props.view.ready.length}/${d().candidates.length} hazır`
+                  : props.spectator
+                    ? "Düello bitince başkan belli olur"
+                    : "Eşit kalan adaylar düello yapıyor"}
               </p>
             }
           >
@@ -151,7 +160,7 @@ export function Duello(props: Props) {
                     type="button"
                     class="rd__sign"
                     data-on={mine() === s ? "1" : undefined}
-                    disabled={shown() !== null}
+                    disabled={shown() !== null || mine() !== null}
                     aria-pressed={mine() === s}
                     onClick={() => choose(s)}
                   >
@@ -165,8 +174,8 @@ export function Duello(props: Props) {
               {shown() !== null
                 ? "Kartlar açıldı"
                 : mine() === null
-                  ? "Seçmezsen rastgele işaret verilir"
-                  : "El bitene kadar değiştirebilirsin"}
+                  ? "İşaretin tek seferlik: dokununca kesinleşir"
+                  : `Diğerleri bekleniyor · ${props.view.ready.length}/${d().candidates.length} hazır`}
             </p>
           </Show>
         </>
