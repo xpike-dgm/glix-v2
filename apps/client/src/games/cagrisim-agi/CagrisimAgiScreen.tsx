@@ -321,14 +321,20 @@ export default function CagrisimAgiScreen(props: GameScreenProps) {
                           <span class="lock__title">Cevabın kilitlendi</span>
                           <span class="lock__answer">{mine()}</span>
                           <span class="lock__wait">
-                            {answeredCount() >= strip().length ? "Herkes yazdı" : "Diğerleri yazıyor…"}
+                            {answeredCount() >= strip().length
+                              ? "Herkes yazdı"
+                              : `Diğerleri bekleniyor · ${answeredCount()}/${strip().length} hazır`}
                           </span>
                         </div>
                       }
                     >
                       <Show
                         when={!props.spectator}
-                        fallback={<p class="ca__watch">Cevaplar süre bitince açılır</p>}
+                        fallback={
+                          <p class="ca__watch">
+                            Cevaplar açılınca görünür · {answeredCount()}/{strip().length} hazır
+                          </p>
+                        }
                       >
                         <form class="aform" onSubmit={submit} autocomplete="off">
                           <input

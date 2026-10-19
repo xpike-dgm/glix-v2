@@ -2,7 +2,9 @@ import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../g
 import { rankAwards } from "../scoring.js";
 import {
   CAGRISIM_ANSWER_MS,
+  CAGRISIM_LOCK_GRACE_MS,
   CAGRISIM_MAX_LENGTH,
+  CAGRISIM_REVEAL_MS,
   CAGRISIM_TOTAL_MS,
   type CagrisimAgiAction,
   type CagrisimAgiPublicView,
@@ -111,7 +113,12 @@ export const cagrisimAgi: GameDefinition<
     const text = action.text.trim();
     if (normalizeAnswer(text) === "") return { rejected: "empty" };
     if (text.length > CAGRISIM_MAX_LENGTH) return { rejected: "too_long" };
-    return { ...state, answers: { ...state.answers, [playerId]: text } };
+    const answers = { ...state.answers, [playerId]: text };
+    const waiting = state.players.some((id) => ctx.connected.includes(id) && !Object.hasOwn(answers, id));
+    if (waiting) return { ...state, answers };
+    // Bağlı herkes cevapladı: cevap aşaması 1 sn sonra biter (cevaplar zaten kesin).
+    const answerEndsAt = Math.min(state.answerEndsAt, ctx.now + CAGRISIM_LOCK_GRACE_MS);
+    return { ...state, answers, answerEndsAt, endsAt: answerEndsAt + CAGRISIM_REVEAL_MS };
   },
 
   tick(state, ctx): CagrisimAgiState {

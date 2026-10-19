@@ -5,7 +5,7 @@ import { createRng } from "../../rng.js";
 import { findLeaks } from "../../testing/invariants.js";
 import { runSimulation } from "../../testing/simulate.js";
 import { type CagrisimAgiState, cagrisimAgi, groupAnswers, normalizeAnswer } from "./index.js";
-import { CAGRISIM_ANSWER_MS, CAGRISIM_TOTAL_MS } from "./types.js";
+import { CAGRISIM_ANSWER_MS, CAGRISIM_REVEAL_MS, CAGRISIM_TOTAL_MS } from "./types.js";
 import { CAGRISIM_WORDS } from "./words.js";
 
 const T0 = 1_000_000;
@@ -280,5 +280,66 @@ describe("cagrisim-agi kuralları", () => {
     expect(out.result.miniScores).toEqual({ p1: 2, p2: 2, p3: 0 });
     expect(out.result.awards).toEqual({ p1: 1, p2: 1 });
     expect(replay(cagrisimAgi, out.log)).toEqual(out.result);
+  });
+});
+
+describe("cagrisim-agi erken bitiş (cevap göndermek kilittir)", () => {
+  const ans = (s: CagrisimAgiState, id: string, text: string, at: number, connected: readonly string[]) => {
+    const r = cagrisimAgi.reduce(s, id, { kind: "answer", text }, ctx(T0 + at, connected));
+    if (isRejected(r)) throw new Error(`reddedildi: ${r.rejected}`);
+    return r;
+  };
+
+  it("(a) herkes cevaplayınca cevap aşaması 1 sn sonra biter", () => {
+    let s = start(["a", "b", "c"]);
+    const all = ["a", "b", "c"];
+    s = ans(s, "a", "deniz", 2_000, all);
+    s = ans(s, "b", "deniz", 3_000, all);
+    s = ans(s, "c", "kum", 4_000, all);
+    expect(s.answerEndsAt).toBe(T0 + 5_000);
+    expect(cagrisimAgi.publicView(tickAt(s, 4_999), ctx(T0 + 4_999)).phase).toBe("answer");
+    const opened = cagrisimAgi.publicView(tickAt(s, 5_000), ctx(T0 + 5_000));
+    expect(opened.phase).toBe("reveal");
+    expect(opened.reveal?.groups[0]?.members).toEqual(["a", "b"]);
+    expect(cagrisimAgi.isFinished(s, ctx(T0 + 4_999 + CAGRISIM_REVEAL_MS))).toBe(false);
+    expect(cagrisimAgi.isFinished(s, ctx(T0 + 5_000 + CAGRISIM_REVEAL_MS))).toBe(true);
+    expect(cagrisimAgi.result(s).miniScores).toEqual({ a: 2, b: 2, c: 0 });
+  });
+
+  it("(b) bir kişi eksikken bitmez", () => {
+    let s = start(["a", "b", "c"]);
+    const all = ["a", "b", "c"];
+    s = ans(ans(s, "a", "x1", 2_000, all), "b", "x2", 3_000, all);
+    expect(s.answerEndsAt).toBe(T0 + CAGRISIM_ANSWER_MS);
+    expect(cagrisimAgi.isFinished(s, ctx(T0 + 10_000))).toBe(false);
+    expect(tickAt(s, 10_000)).toBe(s);
+  });
+
+  it("(c) bağlantısı kopan oyuncu beklenmez", () => {
+    let s = start(["a", "b", "c"]);
+    const online = ["a", "b"];
+    s = ans(s, "a", "ay", 2_000, online);
+    expect(s.answerEndsAt).toBe(T0 + CAGRISIM_ANSWER_MS);
+    s = ans(s, "b", "ay", 3_000, online);
+    expect(s.answerEndsAt).toBe(T0 + 4_000);
+    expect(cagrisimAgi.result(s).miniScores).toEqual({ a: 2, b: 2, c: 0 });
+  });
+
+  it("(d) cevap kesindir: ikinci cevap reddedilir; bitişten sonra da reddedilir", () => {
+    let s = start(["a", "b"]);
+    s = ans(s, "a", "ilk", 2_000, ["a", "b"]);
+    expect(rejection(s, "a", "ikinci", 2_500)).toBe("already_answered");
+    s = ans(s, "b", "bir", 3_000, ["a", "b"]);
+    expect(rejection(s, "a", "yine", 4_000)).toBe("ended");
+  });
+
+  it("(e) cevap bekleme sırasında yalnız kimlerin cevapladığı görünür, metin sızmaz", () => {
+    let s = start(["a", "b", "c"]);
+    s = ans(s, "a", "gizlikelime", 2_000, ["a", "b", "c"]);
+    const pub = JSON.stringify(cagrisimAgi.publicView(s, ctx(T0 + 2_500)));
+    expect(pub).not.toContain("gizlikelime");
+    expect(cagrisimAgi.publicView(s, ctx(T0 + 2_500)).answeredIds).toEqual(["a"]);
+    expect(JSON.stringify(cagrisimAgi.view(s, "b", ctx(T0 + 2_500)))).not.toContain("gizlikelime");
+    expect(findLeaks(cagrisimAgi, s, ["a", "b", "c"], T0 + 2_500)).toEqual([]);
   });
 });

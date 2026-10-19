@@ -44,7 +44,7 @@ describe("Çapraz Ateş: tam oda maçı", () => {
     ] as const) {
       const match = client.room.match;
       if (!match) throw new Error("oyun yok");
-      expect(match.view).toEqual({ myTarget: own });
+      expect(match.view).toEqual({ myTarget: own, locked: false });
       const pub = JSON.stringify(match.publicView);
       expect(pub).not.toContain(ia);
       expect(pub).not.toContain(ib);
