@@ -1,5 +1,6 @@
 import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import {
+  SON_KISI_LOCK_GRACE_MS,
   SON_KISI_MAX_MS,
   SON_KISI_MIN_MS,
   type SonKisiAction,
@@ -14,7 +15,10 @@ export * from "./types.js";
 export interface SonKisiState {
   players: string[];
   startedAt: number;
-  /** GİZLİ: hiçbir görünüme girmez. */
+  /**
+   * GİZLİ: hiçbir görünüme girmez. Herkes kaçtıysa reduce'ta öne çekilir (son kaçış + 1 sn);
+   * bu bilgi de görünümlere girmez.
+   */
   endsAt: number;
   /** Her oyuncunun ilk geçerli kaçışı (sunucu zaman damgası), kaçış sırasıyla. */
   escapes: { id: string; at: number }[];
@@ -115,7 +119,10 @@ export const sonKisi: GameDefinition<SonKisiState, SonKisiAction, SonKisiView, S
     if (ctx.now >= state.endsAt) return { rejected: "ended" };
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
     if (state.escapes.some((e) => e.id === playerId)) return state;
-    return { ...state, escapes: [...state.escapes, { id: playerId, at: ctx.now }] };
+    const escapes = [...state.escapes, { id: playerId, at: ctx.now }];
+    // Herkes kaçtıysa sonuç kesindir (kaçanlar zaten açık): 1 sn sonra biter.
+    if (!state.players.every((id) => escapes.some((e) => e.id === id))) return { ...state, escapes };
+    return { ...state, escapes, endsAt: Math.min(state.endsAt, ctx.now + SON_KISI_LOCK_GRACE_MS) };
   },
 
   tick(state, ctx): SonKisiState {

@@ -4,6 +4,9 @@
 export const SON_KISI_MIN_MS = 10_000;
 export const SON_KISI_MAX_MS = 20_000;
 
+/** Herkes kaçtıysa oyunun bitişine kalan süre (ms). */
+export const SON_KISI_LOCK_GRACE_MS = 1_000;
+
 export type SonKisiAction = { kind: "escape" };
 
 /** Gerilim düzeyi: geçen/toplam ≥ 0,5 → 1, ≥ 0,75 → 2, ≥ 0,9 → 3. Bitiş zamanı hiçbir görünümde yoktur. */

@@ -351,3 +351,60 @@ describe("son-kisi gizlilik: gizli bitiş zamanı hiçbir görünümde yok", () 
     return r;
   }
 });
+
+describe("son-kisi erken bitiş (herkes kaçtı)", () => {
+  const everyone = (): SonKisiState => {
+    let s = start(15_000);
+    for (const [i, id] of ALL.entries()) s = flee(s, id, 4_000 + i * 500);
+    return s;
+  };
+  const rejection = (s: SonKisiState, id: string, at: number): string | null => {
+    const r = sonKisi.reduce(s, id, { kind: "escape" }, ctx(T0 + at));
+    return isRejected(r) ? r.rejected : null;
+  };
+
+  it("(a) herkes kaçınca son kaçıştan 1 sn sonra biter; son kaçan +1 (puanlama aynı)", () => {
+    const s = everyone(); // son kaçış 5 500
+    expect(s.endsAt).toBe(T0 + 6_500);
+    expect(sonKisi.isFinished(s, ctx(T0 + 6_499))).toBe(false);
+    expect(sonKisi.isFinished(s, ctx(T0 + 6_500))).toBe(true);
+    expect(sonKisi.publicView(s, ctx(T0 + 6_500)).result?.scores).toEqual({ a: 0, b: 0, c: 0, d: 1 });
+    expect(sonKisi.result(s).miniScores).toEqual({ a: 0, b: 0, c: 0, d: 1 });
+  });
+
+  it("(b) bir kişi eksikken bitmez", () => {
+    let s = start(15_000);
+    for (const id of ["a", "b", "c"]) s = flee(s, id, 4_000);
+    expect(s.endsAt).toBe(T0 + 15_000);
+    expect(sonKisi.isFinished(s, ctx(T0 + 14_999))).toBe(false);
+  });
+
+  it("(c) bağlantıya bakılmaz: kopuk oyuncu kaçmadan bitmez", () => {
+    let s = start(15_000);
+    for (const id of ["a", "b", "c"]) s = flee(s, id, 4_000);
+    expect(sonKisi.tick(s, ctx(T0 + 5_000, ["a", "b", "c"])).endsAt).toBe(T0 + 15_000);
+  });
+
+  it("(d) herkes kaçtıktan sonra yeni eylem kabul edilmez", () => {
+    const s = everyone();
+    expect(rejection(s, "a", 6_000)).toBeNull(); // tekrar basış yok sayılır
+    expect(rejection(s, "a", 6_500)).toBe("ended");
+  });
+
+  it("(e) erken bitiş zamanı süre dolana kadar hiçbir görünümde yoktur", () => {
+    const s = everyone();
+    for (const at of [4_100, 5_600, 6_499]) {
+      const json = JSON.stringify([
+        sonKisi.publicView(s, ctx(T0 + at)),
+        ...ALL.map((id) => sonKisi.view(s, id, ctx(T0 + at))),
+      ]);
+      expect(json).not.toContain(String(s.endsAt));
+      expect(json).not.toMatch(/endsAt|remaining/);
+    }
+  });
+
+  it("(f) tick bağlantıya bakmaz", () => {
+    const s = everyone();
+    expect(sonKisi.tick(s, ctx(T0 + 7_000, []))).toEqual(sonKisi.tick(s, ctx(T0 + 7_000, ALL)));
+  });
+});
