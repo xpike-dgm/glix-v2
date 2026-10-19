@@ -13,8 +13,10 @@ export interface PickerPlayer {
 
 interface Props {
   players: readonly PickerPlayer[];
-  /** Kendi kimliğin: avatarın görünür ama dokunulmaz. */
+  /** Kendi kimliğin: avatarın görünür ama dokunulmaz (`allowSelf` yoksa). */
   selfId: string;
+  /** Kendini de seçebil (ör. Sızma'da kendine oy serbest). */
+  allowSelf?: boolean | undefined;
   /** Seçili oyuncu (halka ve tik ile işaretlenir). */
   selected?: string | null | undefined;
   /** Tüm ızgara dokunulmaz (süre doldu, izleyici). */
@@ -50,7 +52,8 @@ export function PlayerPicker(props: Props) {
     "--rows-wide": Math.ceil(props.players.length / cols().wide),
   });
   const pickable = (p: PickerPlayer): boolean => {
-    if (props.disabled || p.id === props.selfId) return false;
+    if (props.disabled) return false;
+    if (p.id === props.selfId) return props.allowSelf === true;
     if (props.canPick) return props.canPick(p);
     return p.connected;
   };
@@ -62,12 +65,14 @@ export function PlayerPicker(props: Props) {
             const picked = () => props.selected === p.id;
             const count = () => props.counts?.[p.id] ?? 0;
             const self = () => p.id === props.selfId;
+            const dim = () => self() && props.allowSelf !== true;
             return (
               <button
                 type="button"
                 class="ppick__cell"
                 data-picked={picked() ? "1" : undefined}
-                data-self={self() ? "1" : undefined}
+                data-self={dim() ? "1" : undefined}
+                data-me={self() && props.allowSelf === true ? "1" : undefined}
                 data-off={p.connected ? undefined : "1"}
                 data-idle={props.disabled ? "1" : undefined}
                 disabled={!pickable(p)}
