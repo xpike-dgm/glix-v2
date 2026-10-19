@@ -7,6 +7,7 @@ import { ProgressBar } from "../../ui/ProgressBar.js";
 import { createPendingPick } from "../../ui/playerPicker.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
+import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./ittifak.css";
 import { type CrewMember, Pazarlik } from "./Pazarlik.js";
@@ -25,7 +26,7 @@ export default function IttifakScreen(props: GameScreenProps) {
   );
   // Aşama sunucudan gelir: geçişlerde sunucu yayın yapar (tick durumu değiştirir).
   const phase = () => view()?.phase ?? "talk";
-  const closed = () => props.spectator === true || phase() !== "vote";
+  const closed = () => props.spectator === true || phase() !== "vote" || view()?.locked === true;
 
   const pick = createPendingPick({
     server: () => view()?.myVote ?? null,
@@ -71,10 +72,24 @@ export default function IttifakScreen(props: GameScreenProps) {
                       <span class="overline">Pazarlık zamanı</span>
                       <span class="it__title">Oy iste, söz ver</span>
                     </div>
-                    <Pazarlik crew={crew()} selfId={props.selfId} endsAt={v().talkEndsAt} now={props.now} />
-                    <p class="it__hint" role="status">
-                      {props.spectator ? "Oylama kısa süre sonra başlar" : "Yüz yüze konuş, oylama sonra"}
-                    </p>
+                    <Pazarlik
+                      crew={crew()}
+                      selfId={props.selfId}
+                      endsAt={v().talkEndsAt}
+                      now={props.now}
+                      ready={v().ready}
+                    />
+                    <TamamBar
+                      locked={v().locked}
+                      ready={v().ready.length}
+                      total={crew().length}
+                      spectator={props.spectator === true}
+                      label="Oylamaya geçelim"
+                      doneLabel="Hazırsın"
+                      onLock={() => {
+                        sendAction({ kind: "skip" });
+                      }}
+                    />
                   </>
                 }
               >
@@ -102,15 +117,19 @@ export default function IttifakScreen(props: GameScreenProps) {
                   disabled={closed()}
                   ring={LOCK}
                   label={(p) => `${p.nickname} adlı oyuncuya oy ver`}
+                  ready={v().ready}
                   onPick={(id) => pick.pick(id)}
                 />
-                <p class="it__hint" role="status">
-                  {props.spectator
-                    ? "Oylar süre bitince açılır"
-                    : pick.value() === null
-                      ? "Oy vermezsen rastgele biri seçilir"
-                      : "Süre bitene kadar değiştirebilirsin"}
-                </p>
+                <TamamBar
+                  locked={v().locked}
+                  ready={v().ready.length}
+                  total={crew().length}
+                  disabled={pick.value() === null}
+                  spectator={props.spectator === true}
+                  onLock={() => {
+                    sendAction({ kind: "lock" });
+                  }}
+                />
               </Show>
             }
           >

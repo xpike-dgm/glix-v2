@@ -3,6 +3,8 @@
  *   ?mock=ittifak-briefing        anlatım
  *   ?mock=ittifak-talk            sözlü pazarlık (ortada geri sayım)
  *   ?mock=ittifak-vote            gizli oylama; dokununca oy verilir (`&chosen=1` seçili başlar)
+ *   ?mock=ittifak-talk-locked     pazarlık: sen "Oylamaya geçelim" dedin, diğerleri bekleniyor
+ *   ?mock=ittifak-vote-locked     oylama: sen "Tamam" dedin (oy seçili), diğerleri bekleniyor
  *   ?mock=ittifak-reveal          oy akışı ve alınan oylar
  *   ?mock=ittifak-reveal-zero     sen hiç oy almadın
  *   ?mock=ittifak-spectator-talk | -vote | -reveal   katılımcı değilsin
@@ -54,7 +56,19 @@ export function startIttifakMock(kind: string, params: URLSearchParams): void {
   let readyIds: string[] = [];
   let phaseEndsAt: number | null = null;
   const chosenParam = params.get("chosen");
-  let myVote: string | null = stage === "vote" && chosenParam !== null ? `p${Number(chosenParam)}` : null;
+  let myVote: string | null =
+    stage === "vote" && (chosenParam !== null || kind.includes("locked"))
+      ? `p${Number(chosenParam ?? 1)}`
+      : null;
+  let myLocked = kind.includes("locked");
+  const readyIds2 = (): string[] => {
+    if (stage === "reveal") return [];
+    if (myLocked || spectator) {
+      const others = participants.filter((id) => id !== SELF).slice(0, spectator ? 2 : Math.floor(n / 2) - 1);
+      return spectator ? others : [SELF, ...others];
+    }
+    return [];
+  };
   let rev = 1;
 
   const votes = (): Record<string, string> => {
@@ -79,9 +93,13 @@ export function startIttifakMock(kind: string, params: URLSearchParams): void {
       talkEndsAt: startedAt + ITTIFAK_TALK_MS,
       voteEndsAt: startedAt + ITTIFAK_TALK_MS + ITTIFAK_VOTE_MS,
       finishAt: startedAt + ITTIFAK_DURATION_MS,
+      ready: readyIds2(),
       reveal: stage === "reveal" ? ittifakReveal(participants, votes()) : null,
     },
-    priv: { myVote: spectator ? null : stage === "reveal" ? (votes()[SELF] ?? null) : myVote },
+    priv: {
+      myVote: spectator ? null : stage === "reveal" ? (votes()[SELF] ?? null) : myVote,
+      locked: !spectator && stage !== "reveal" && myLocked,
+    },
   });
   void ITTIFAK_REVEAL_MS;
 
@@ -126,7 +144,12 @@ export function startIttifakMock(kind: string, params: URLSearchParams): void {
   useMockSender((msg) => {
     if (msg.type !== "action") return;
     const payload = msg.payload as { kind?: string; target?: string } | null;
-    if (payload?.kind === "vote" && typeof payload.target === "string") {
+    if (payload?.kind === "skip" || (payload?.kind === "lock" && myVote !== null)) {
+      myLocked = true;
+      applySnapshot(snapshot());
+      return;
+    }
+    if (payload?.kind === "vote" && typeof payload.target === "string" && !myLocked) {
       myVote = payload.target;
       applySnapshot(snapshot());
     }

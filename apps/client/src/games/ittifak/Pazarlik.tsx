@@ -16,6 +16,8 @@ interface Props {
   /** Pazarlığın bitişi (sunucu saati, ms). */
   endsAt: number;
   now: () => number;
+  /** "Oylamaya geçelim" diyenler. */
+  ready?: readonly string[];
 }
 
 /**
@@ -64,7 +66,12 @@ export function Pazarlik(props: Props) {
               data-me={m.id === props.selfId ? "1" : undefined}
               style={{ left: `${pos(i()).x}%`, top: `${pos(i()).y}%` }}
             >
-              <Avatar index={m.avatar} size="var(--it-av)" connected={m.connected} />
+              <Avatar
+                index={m.avatar}
+                size="var(--it-av)"
+                connected={m.connected}
+                ready={props.ready?.includes(m.id) === true}
+              />
               <i
                 class="it__bubble"
                 aria-hidden="true"

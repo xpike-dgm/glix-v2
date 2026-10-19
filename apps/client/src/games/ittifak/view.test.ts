@@ -8,15 +8,21 @@ const pub = {
   talkEndsAt: 60_100,
   voteEndsAt: 75_100,
   finishAt: 83_100,
+  ready: [],
   reveal: null,
 };
-const priv = { myVote: null };
+const priv = { myVote: null, locked: false };
 const reveal = { votes: { a: "b", b: "a", c: "a" }, scores: { a: 2, b: 1, c: 0 } };
 
 describe("İttifak görünümü", () => {
   it("pazarlık ve oylama görünümünü okur", () => {
     expect(parseIttifakView(pub, priv)?.phase).toBe("talk");
-    expect(parseIttifakView({ ...pub, phase: "vote" }, { myVote: "b" })?.myVote).toBe("b");
+    expect(parseIttifakView({ ...pub, phase: "vote" }, { myVote: "b", locked: false })?.myVote).toBe("b");
+  });
+  it("hazır olanları ve kendi kilidini okur", () => {
+    const v = parseIttifakView({ ...pub, ready: ["a", "c"] }, { myVote: "b", locked: true });
+    expect(v?.ready).toEqual(["a", "c"]);
+    expect(v?.locked).toBe(true);
   });
   it("açılmış görünümü okur", () => {
     const v = parseIttifakView({ ...pub, phase: "reveal", reveal }, priv);
@@ -35,7 +41,10 @@ describe("İttifak görünümü", () => {
     expect(parseIttifakView({ ...pub, talkEndsAt: "x" }, priv)).toBeNull();
     expect(parseIttifakView({ ...pub, reveal: { votes: { a: 3 }, scores: {} } }, priv)).toBeNull();
     expect(parseIttifakView({ ...pub, reveal: { votes: {}, scores: { a: "x" } } }, priv)).toBeNull();
-    expect(parseIttifakView(pub, { myVote: 3 })).toBeNull();
+    expect(parseIttifakView(pub, { myVote: 3, locked: false })).toBeNull();
+    expect(parseIttifakView(pub, { myVote: null })).toBeNull();
+    expect(parseIttifakView({ ...pub, ready: [1] }, priv)).toBeNull();
+    expect(parseIttifakView({ ...pub, ready: undefined }, priv)).toBeNull();
   });
   it("oy akışı geçersiz ve kendine giden oyları atar", () => {
     const flows = flowsOf({ votes: { a: "b", b: "b", c: "zzz" }, scores: {} }, ["a", "b", "c"]);

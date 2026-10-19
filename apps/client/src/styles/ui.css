@@ -664,3 +664,9 @@
     display: none;
   }
 }
+
+/* Uzun düğme yazısı ("Oylamaya geçelim") dar ekranda sığsın */
+.pbtn.pbtn--long {
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}

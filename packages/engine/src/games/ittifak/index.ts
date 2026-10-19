@@ -2,6 +2,8 @@ import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import { derivedRng, drawSeed } from "../seeded.js";
 import {
   ITTIFAK_DURATION_MS,
+  ITTIFAK_LOCK_GRACE_MS,
+  ITTIFAK_REVEAL_MS,
   ITTIFAK_TALK_MS,
   ITTIFAK_VOTE_MS,
   type IttifakAction,
@@ -21,6 +23,14 @@ export interface IttifakState {
   talkEndsAt: number;
   voteEndsAt: number;
   finishAt: number;
+  /** Konuşmada "Oylamaya geçelim" diyenler. */
+  skipped: string[];
+  /** Herkes geçmek istediyse true: `talkEndsAt` öne çekilmiştir, yeni eylem kabul edilmez. */
+  talkClosing: boolean;
+  /** Oylamada "Tamam" diyenler (oyları kesinleşmiş). */
+  locked: string[];
+  /** Herkes kilitlediyse true: `voteEndsAt` öne çekilmiştir, yeni eylem kabul edilmez. */
+  voteClosing: boolean;
   /** Oyuncu -> son verilen oy (gizli; oylama bitene kadar yalnız sahibinin görünümünde). */
   votes: Record<string, string>;
   /** Oylama bitince tick/eylem tarafından bir kez kurulur: eksik oylar tamamlanmış hâli. */
@@ -96,6 +106,9 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
   parseAction(raw: unknown): IttifakAction | null {
     if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
     const r = raw as Record<string, unknown>;
+    if (r.kind === "skip" || r.kind === "lock") {
+      return Object.keys(r).length === 1 ? { kind: r.kind } : null;
+    }
     if (Object.keys(r).length !== 2 || r.kind !== "vote") return null;
     const target = r.target;
     if (typeof target !== "string" || target.length === 0 || target.length > 64) return null;
@@ -110,6 +123,10 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
       talkEndsAt: ctx.now + ITTIFAK_TALK_MS,
       voteEndsAt: ctx.now + ITTIFAK_TALK_MS + ITTIFAK_VOTE_MS,
       finishAt: ctx.now + ITTIFAK_DURATION_MS,
+      skipped: [],
+      talkClosing: false,
+      locked: [],
+      voteClosing: false,
       votes: {},
       finalVotes: null,
       voting: false,
@@ -120,7 +137,43 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
     if (!state.players.includes(playerId)) return { rejected: "not_participant" };
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
     if (ctx.now >= state.voteEndsAt) return { rejected: "ended" };
+    if (action.kind === "skip") {
+      if (ctx.now >= state.talkEndsAt) return { rejected: "not_talking" };
+      if (state.talkClosing) return { rejected: "closed" };
+      if (state.skipped.includes(playerId)) return state;
+      const skipped = [...state.skipped, playerId];
+      const active = state.players.filter((id) => ctx.connected.includes(id));
+      if (active.length === 0 || !active.every((id) => skipped.includes(id))) return { ...state, skipped };
+      // Konuşma kısalır; oylama süresi aynı kalır.
+      const talkEndsAt = Math.min(state.talkEndsAt, ctx.now + ITTIFAK_LOCK_GRACE_MS);
+      const voteEndsAt = talkEndsAt + ITTIFAK_VOTE_MS;
+      return {
+        ...state,
+        skipped,
+        talkClosing: true,
+        talkEndsAt,
+        voteEndsAt,
+        finishAt: voteEndsAt + ITTIFAK_REVEAL_MS,
+      };
+    }
     if (ctx.now < state.talkEndsAt) return { rejected: "not_voting_yet" };
+    if (state.locked.includes(playerId)) return { rejected: "locked" };
+    if (state.voteClosing) return { rejected: "closed" };
+    if (action.kind === "lock") {
+      const s = advance(state, ctx.now);
+      if (voteOf(s.votes, playerId) === null) return { rejected: "nothing_to_lock" };
+      const locked = [...s.locked, playerId];
+      const active = s.players.filter((id) => ctx.connected.includes(id));
+      if (active.length === 0 || !active.every((id) => locked.includes(id))) return { ...s, locked };
+      const voteEndsAt = Math.min(s.voteEndsAt, ctx.now + ITTIFAK_LOCK_GRACE_MS);
+      return {
+        ...s,
+        locked,
+        voteClosing: true,
+        voteEndsAt,
+        finishAt: voteEndsAt + ITTIFAK_REVEAL_MS,
+      };
+    }
     if (action.target === playerId) return { rejected: "self_target" };
     if (!state.players.includes(action.target)) return { rejected: "unknown_target" };
     if (!ctx.connected.includes(action.target)) return { rejected: "target_offline" };
@@ -144,15 +197,23 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
       talkEndsAt: state.talkEndsAt,
       voteEndsAt: state.voteEndsAt,
       finishAt: state.finishAt,
+      ready: phase === "talk" ? [...state.skipped] : phase === "vote" ? [...state.locked] : [],
       reveal: phase === "reveal" && s.finalVotes !== null ? ittifakReveal(s.players, s.finalVotes) : null,
     };
   },
 
   view(state, playerId, ctx): IttifakView {
-    if (playerId === null || !state.players.includes(playerId)) return { myVote: null };
+    if (playerId === null || !state.players.includes(playerId)) return { myVote: null, locked: false };
     const s = advance(state, ctx.now);
     const final = s.finalVotes;
-    return { myVote: voteOf(final ?? s.votes, playerId) };
+    const phase = phaseOf(state, ctx.now);
+    const locked =
+      phase === "talk"
+        ? s.skipped.includes(playerId)
+        : phase === "vote"
+          ? s.locked.includes(playerId)
+          : false;
+    return { myVote: voteOf(final ?? s.votes, playerId), locked };
   },
 
   isFinished(state, ctx): boolean {

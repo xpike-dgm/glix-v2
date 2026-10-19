@@ -27,7 +27,11 @@ export function TamamBar(props: Props) {
         <Show
           when={props.locked}
           fallback={
-            <PrimaryButton disabled={props.disabled === true} onClick={props.onLock}>
+            <PrimaryButton
+              disabled={props.disabled === true}
+              onClick={props.onLock}
+              class={(props.label ?? "Tamam").length > 10 ? "pbtn--long" : ""}
+            >
               {props.label ?? "Tamam"}
             </PrimaryButton>
           }

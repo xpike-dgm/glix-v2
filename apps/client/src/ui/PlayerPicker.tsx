@@ -25,6 +25,8 @@ interface Props {
   counts?: Record<string, number> | undefined;
   /** Sayı rozetinin etiketi (ekran okuyucu için). */
   countLabel?: string | undefined;
+  /** "Hazır" işareti taşıyan oyuncular (örn. "Tamam" diyenler). */
+  ready?: readonly string[] | undefined;
   /** Bağlantısı kopuk oyuncu da seçilebilsin mi (ör. bir sayıyı geri almak için). */
   canPick?: ((p: PickerPlayer) => boolean) | undefined;
   /** Düğme etiketi (ekran okuyucu için). */
@@ -79,6 +81,7 @@ export function PlayerPicker(props: Props) {
                     size="var(--pp-av)"
                     connected={p.connected}
                     self={self()}
+                    ready={props.ready?.includes(p.id) === true}
                     ring={picked() ? props.ring : undefined}
                   />
                   <Show when={picked()}>

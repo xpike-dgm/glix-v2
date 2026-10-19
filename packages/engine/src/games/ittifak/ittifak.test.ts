@@ -287,7 +287,7 @@ describe("ittifak gizlilik (oylar kısa kimliklerdir; yapısal kontrol)", () => 
       const p = pub(s, at);
       expect(p.reveal).toBeNull();
       expect(Object.keys(p).sort()).toEqual(
-        ["finishAt", "phase", "players", "reveal", "startedAt", "talkEndsAt", "voteEndsAt"].sort(),
+        ["finishAt", "phase", "players", "ready", "reveal", "startedAt", "talkEndsAt", "voteEndsAt"].sort(),
       );
     }
   });
@@ -295,7 +295,7 @@ describe("ittifak gizlilik (oylar kısa kimliklerdir; yapısal kontrol)", () => 
   it("view yalnız kendi oyunu verir, başkasının oyunu ya da alınan oyu göstermez", () => {
     for (const who of players) {
       const v = priv(s, who, VOTE_AT);
-      expect(Object.keys(v)).toEqual(["myVote"]);
+      expect(Object.keys(v)).toEqual(["myVote", "locked"]);
     }
     expect(priv(s, "pa1", VOTE_AT).myVote).toBe("pb2");
     expect(priv(s, "pd4", VOTE_AT).myVote).toBeNull();
@@ -311,9 +311,9 @@ describe("ittifak gizlilik (oylar kısa kimliklerdir; yapısal kontrol)", () => 
       expect(publicJson).not.toContain('"votes"');
       expect(publicJson).not.toContain('"scores"');
       for (const other of ["z2w", "q3r"]) {
-        expect(JSON.stringify(priv(only, other, at))).toBe('{"myVote":null}');
+        expect(JSON.stringify(priv(only, other, at))).toBe('{"myVote":null,"locked":false}');
       }
-      expect(JSON.stringify(priv(only, null, at))).toBe('{"myVote":null}');
+      expect(JSON.stringify(priv(only, null, at))).toBe('{"myVote":null,"locked":false}');
     }
   });
 
@@ -333,5 +333,170 @@ describe("ittifak ittifakReveal", () => {
   it("oyları skorlara çevirir", () => {
     const r = ittifakReveal(["a", "b", "c"], { a: "b", b: "c", c: "b" });
     expect(r.scores).toEqual({ a: 0, b: 2, c: 1 });
+  });
+});
+
+describe("ittifak erken bitiş", () => {
+  const act = (
+    s: ReturnType<typeof start>,
+    id: string,
+    kind: "skip" | "lock",
+    at: number,
+    connected: readonly string[] = s.players,
+  ) => ittifak.reduce(s, id, { kind }, ctx(at, connected));
+  const ok = (
+    s: ReturnType<typeof start>,
+    id: string,
+    kind: "skip" | "lock",
+    at: number,
+    connected?: readonly string[],
+  ) => {
+    const r = act(s, id, kind, at, connected);
+    if (isRejected(r)) throw new Error(`reddedildi: ${r.rejected}`);
+    return r;
+  };
+  const P = ["a", "b", "c"];
+
+  it("parseAction skip ve lock kabul eder, fazladan alanı reddeder", () => {
+    expect(ittifak.parseAction({ kind: "skip" })).toEqual({ kind: "skip" });
+    expect(ittifak.parseAction({ kind: "lock" })).toEqual({ kind: "lock" });
+    expect(ittifak.parseAction({ kind: "skip", target: "b" })).toBeNull();
+    expect(ittifak.parseAction({ kind: "lock", extra: 1 })).toBeNull();
+  });
+
+  describe("konuşma: Oylamaya geçelim", () => {
+    it("(a) bağlı herkes basınca konuşma 1 sn sonra biter; oylama süresi ve oy akışı kaymış olur", () => {
+      let s = start(P);
+      for (const id of P) s = ok(s, id, "skip", T0 + 10_000);
+      expect(s.talkEndsAt).toBe(T0 + 11_000);
+      expect(pub(s, T0 + 10_999).phase).toBe("talk");
+      expect(pub(s, T0 + 11_000).phase).toBe("vote");
+      expect(pub(s, T0 + 11_000).voteEndsAt).toBe(T0 + 11_000 + ITTIFAK_VOTE_MS);
+      expect(pub(s, T0 + 11_000).finishAt).toBe(T0 + 11_000 + ITTIFAK_VOTE_MS + ITTIFAK_REVEAL_MS);
+      // Oylama kayan zamanda açılır ve kabul eder.
+      expect(ittifak.reduce(s, "a", { kind: "vote", target: "b" }, ctx(T0 + 11_000, P))).not.toHaveProperty(
+        "rejected",
+      );
+    });
+
+    it("(b) bir kişi eksikken bitmez", () => {
+      let s = start(P);
+      s = ok(s, "a", "skip", T0 + 10_000);
+      s = ok(s, "b", "skip", T0 + 10_000);
+      expect(s.talkEndsAt).toBe(T0 + ITTIFAK_TALK_MS);
+      expect(pub(s, T0 + 30_000).phase).toBe("talk");
+    });
+
+    it("(c) bağlantısı kopan oyuncu beklenmez", () => {
+      let s = start(P);
+      const conn = ["a", "b"];
+      s = ok(s, "a", "skip", T0 + 10_000, conn);
+      s = ok(s, "b", "skip", T0 + 10_000, conn);
+      expect(s.talkEndsAt).toBe(T0 + 11_000);
+      expect(ok(start(P), "a", "skip", T0 + 10_000, []).talkEndsAt).toBe(T0 + ITTIFAK_TALK_MS);
+    });
+
+    it("(d) kapanış penceresinde yeni eylem reddedilir; oylama aşamasında skip reddedilir; tekrar basmak zararsız", () => {
+      let s = start(P);
+      const conn = ["a", "b"];
+      s = ok(s, "a", "skip", T0 + 10_000, conn);
+      expect(ok(s, "a", "skip", T0 + 10_100, conn)).toBe(s);
+      s = ok(s, "b", "skip", T0 + 10_000, conn);
+      expect(act(s, "c", "skip", T0 + 10_500)).toEqual({ rejected: "closed" });
+      expect(act(s, "a", "skip", T0 + 11_500)).toEqual({ rejected: "not_talking" });
+      expect(act(start(P), "a", "lock", T0 + 10_000)).toEqual({ rejected: "not_voting_yet" });
+    });
+
+    it("(e) basanlar herkese açık, başka bir şey sızmaz", () => {
+      let s = start(P);
+      s = ok(s, "b", "skip", T0 + 10_000);
+      const p = pub(s, T0 + 10_100);
+      expect(p.ready).toEqual(["b"]);
+      expect(p.reveal).toBeNull();
+      expect(priv(s, "b", T0 + 10_100)).toEqual({ myVote: null, locked: true });
+      expect(priv(s, "a", T0 + 10_100)).toEqual({ myVote: null, locked: false });
+    });
+
+    it("(f) tick bağlantıya bakmaz", () => {
+      let s = start(P);
+      for (const id of P) s = ok(s, id, "skip", T0 + 10_000);
+      expect(ittifak.tick(s, ctx(T0 + 12_000, []))).toEqual(ittifak.tick(s, ctx(T0 + 12_000, P)));
+    });
+  });
+
+  describe("oylama: Tamam", () => {
+    it("(a) herkes kilitleyince oylama 1 sn sonra biter, oylar açılır; puanlama aynı", () => {
+      let s = play(P, [
+        ["a", "b"],
+        ["b", "a"],
+        ["c", "a"],
+      ]);
+      for (const id of P) s = ok(s, id, "lock", VOTE_AT + 2_000);
+      expect(s.voteEndsAt).toBe(VOTE_AT + 3_000);
+      expect(pub(s, VOTE_AT + 2_999).phase).toBe("vote");
+      expect(pub(s, VOTE_AT + 3_000).phase).toBe("reveal");
+      expect(pub(s, VOTE_AT + 3_000).reveal?.scores).toEqual({ a: 2, b: 1, c: 0 });
+      expect(ittifak.isFinished(s, ctx(VOTE_AT + 3_000 + ITTIFAK_REVEAL_MS - 1, P))).toBe(false);
+      expect(ittifak.isFinished(s, ctx(VOTE_AT + 3_000 + ITTIFAK_REVEAL_MS, P))).toBe(true);
+      expect(scores(s)).toEqual({ a: 2, b: 1, c: 0 });
+    });
+
+    it("(b) bir kişi eksikken bitmez; oysuz kilitlenemez", () => {
+      let s = play(P, [
+        ["a", "b"],
+        ["b", "a"],
+        ["c", "a"],
+      ]);
+      s = ok(s, "a", "lock", VOTE_AT + 2_000);
+      s = ok(s, "b", "lock", VOTE_AT + 2_000);
+      expect(s.voteEndsAt).toBe(VOTE_END);
+      expect(act(start(P), "a", "lock", VOTE_AT)).toEqual({ rejected: "nothing_to_lock" });
+    });
+
+    it("(c) bağlantısı kopan oyuncu beklenmez", () => {
+      const conn = ["a", "b"];
+      let s = start(P);
+      s = vote(s, "a", "b", VOTE_AT, conn);
+      s = vote(s, "b", "a", VOTE_AT, conn);
+      s = ok(s, "a", "lock", VOTE_AT + 1_000, conn);
+      s = ok(s, "b", "lock", VOTE_AT + 1_000, conn);
+      expect(s.voteEndsAt).toBe(VOTE_AT + 2_000);
+      // Kopuk c'nin eksik oyu yine rastgele tamamlanır (kural değişmedi).
+      expect(Object.keys(ittifakFillVotes(P, s.seed, s.votes))).toEqual(P);
+    });
+
+    it("(d) kilitten sonra oy değiştirme ve ikinci kilit reddedilir; kapanış penceresinde oy kabul edilmez", () => {
+      let s = play(P, [["a", "b"]]);
+      s = ok(s, "a", "lock", VOTE_AT + 500);
+      expect(act(s, "a", "lock", VOTE_AT + 600)).toEqual({ rejected: "locked" });
+      expect(ittifak.reduce(s, "a", { kind: "vote", target: "c" }, ctx(VOTE_AT + 600, P))).toEqual({
+        rejected: "locked",
+      });
+      const conn = ["a", "b"];
+      let t = start(P);
+      t = vote(t, "a", "b", VOTE_AT, conn);
+      t = vote(t, "b", "a", VOTE_AT, conn);
+      t = ok(t, "a", "lock", VOTE_AT + 500, conn);
+      t = ok(t, "b", "lock", VOTE_AT + 500, conn);
+      expect(ittifak.reduce(t, "c", { kind: "vote", target: "a" }, ctx(VOTE_AT + 800, P))).toEqual({
+        rejected: "closed",
+      });
+      expect(ittifak.reduce(t, "c", { kind: "vote", target: "a" }, ctx(VOTE_AT + 1_500, P))).toEqual({
+        rejected: "ended",
+      });
+    });
+
+    it("(e) kilit listesi oyları sızdırmaz", () => {
+      let s = play(P, [
+        ["a", "b"],
+        ["b", "c"],
+      ]);
+      s = ok(s, "a", "lock", VOTE_AT + 500);
+      const p = pub(s, VOTE_AT + 600);
+      expect(p.ready).toEqual(["a"]);
+      expect(JSON.stringify(p)).not.toMatch(/votes|scores|myVote/);
+      expect(priv(s, "a", VOTE_AT + 600)).toEqual({ myVote: "b", locked: true });
+      expect(priv(s, "b", VOTE_AT + 600)).toEqual({ myVote: "c", locked: false });
+    });
   });
 });

@@ -27,6 +27,7 @@ export function parseIttifakPublicView(v: unknown): IttifakPublicView | null {
   if (!Array.isArray(v.players) || !v.players.every((p) => typeof p === "string")) return null;
   if (typeof v.phase !== "string" || !PHASES.includes(v.phase as IttifakPhase)) return null;
   if (!isNum(v.startedAt) || !isNum(v.talkEndsAt) || !isNum(v.voteEndsAt) || !isNum(v.finishAt)) return null;
+  if (!Array.isArray(v.ready) || !v.ready.every((p) => typeof p === "string")) return null;
   const reveal = v.reveal === null || v.reveal === undefined ? null : parseReveal(v.reveal);
   if (v.reveal !== null && v.reveal !== undefined && reveal === null) return null;
   return {
@@ -36,6 +37,7 @@ export function parseIttifakPublicView(v: unknown): IttifakPublicView | null {
     talkEndsAt: v.talkEndsAt,
     voteEndsAt: v.voteEndsAt,
     finishAt: v.finishAt,
+    ready: [...(v.ready as string[])],
     reveal,
   };
 }
@@ -44,7 +46,8 @@ export function parseIttifakPublicView(v: unknown): IttifakPublicView | null {
 export function parseIttifakPrivateView(v: unknown): IttifakView | null {
   if (!isRec(v)) return null;
   if (v.myVote !== null && typeof v.myVote !== "string") return null;
-  return { myVote: v.myVote };
+  if (typeof v.locked !== "boolean") return null;
+  return { myVote: v.myVote, locked: v.locked };
 }
 
 export function parseIttifakView(publicView: unknown, view: unknown): IttifakScreenView | null {

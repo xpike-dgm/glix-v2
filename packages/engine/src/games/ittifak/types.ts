@@ -8,7 +8,15 @@ export const ITTIFAK_REVEAL_MS = 8_000;
 export const ITTIFAK_DURATION_MS = ITTIFAK_TALK_MS + ITTIFAK_VOTE_MS + ITTIFAK_REVEAL_MS;
 
 /** Kendin dışındaki bağlı bir katılımcıya oy ver; oylama bitene kadar değiştirilebilir (son oy geçerli). */
-export type IttifakAction = { kind: "vote"; target: string };
+export type IttifakAction =
+  | { kind: "vote"; target: string }
+  /** Konuşma aşamasında "Oylamaya geçelim". */
+  | { kind: "skip" }
+  /** Oylamada "Tamam": oyun kesinleşir. */
+  | { kind: "lock" };
+
+/** Herkes hazırsa aşamanın bitişine kalan süre (ms). */
+export const ITTIFAK_LOCK_GRACE_MS = 1_000;
 
 export type IttifakPhase = "talk" | "vote" | "reveal";
 
@@ -27,10 +35,14 @@ export interface IttifakPublicView {
   talkEndsAt: number;
   voteEndsAt: number;
   finishAt: number;
+  /** Bulunulan aşamada hazır olanlar: konuşmada "Oylamaya geçelim" diyenler, oylamada "Tamam" diyenler. */
+  ready: string[];
   reveal: IttifakReveal | null;
 }
 
 /** Kişiye özel görünüm: yalnız kendi oyun. İzleyicide null. */
 export interface IttifakView {
   myVote: string | null;
+  /** Bulunulan aşamada hazır dedin mi (konuşmada atlama, oylamada kilit). */
+  locked: boolean;
 }
