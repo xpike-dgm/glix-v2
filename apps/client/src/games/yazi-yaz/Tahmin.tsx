@@ -6,9 +6,9 @@ import { look } from "../../ui/avatars.js";
 import { PlayerPicker } from "../../ui/PlayerPicker.js";
 import { createPendingPick } from "../../ui/playerPicker.js";
 import { TamamBar } from "../../ui/TamamBar.js";
-import { createWordDraft } from "./draft.js";
+import { WordField } from "../../ui/WordField.js";
+import { createWordDraft } from "../../ui/wordDraft.js";
 import type { YaziYazScreenView } from "./view.js";
-import { WordField } from "./WordField.js";
 import type { Crew } from "./YaziYazScreen.js";
 
 const RING = "#FF2BD6";

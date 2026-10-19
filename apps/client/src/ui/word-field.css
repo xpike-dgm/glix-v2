@@ -1,0 +1,111 @@
+/* ---- Kelime alanı (ortak): neon pano ve düz giriş ---- */
+.wfield {
+  position: relative;
+  width: 100%;
+}
+.wfield__input {
+  width: 100%;
+  min-width: 0;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  outline: none;
+  caret-color: var(--cyan);
+}
+.wfield__input::placeholder {
+  color: rgba(142, 151, 199, 0.45);
+  text-transform: none;
+}
+.wfield--sign {
+  --sc: var(--cyan);
+  padding: 14px 18px;
+  border-radius: 20px;
+  border: 3px solid var(--sc);
+  background:
+    repeating-linear-gradient(0deg, rgba(46, 242, 255, 0.05) 0 2px, transparent 2px 6px),
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--violet) 32%, var(--bg-1)), var(--bg-0) 78%);
+  box-shadow:
+    0 0 22px color-mix(in srgb, var(--sc) 50%, transparent),
+    inset 0 0 20px color-mix(in srgb, var(--sc) 24%, transparent);
+  transition:
+    border-color 160ms,
+    box-shadow 160ms;
+}
+.wfield--sign::before,
+.wfield--sign::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--sc) 60%, var(--bg-0));
+  box-shadow: inset 0 0 0 1.5px var(--bg-0);
+}
+.wfield--sign::before {
+  left: 10px;
+}
+.wfield--sign::after {
+  right: 10px;
+}
+.wfield--sign .wfield__input {
+  background: none;
+  border: 0;
+  height: 64px;
+  padding: 0;
+  text-align: center;
+  font-size: clamp(24px, 8vw, 34px);
+  line-height: 1.2;
+  text-shadow: 0 0 16px color-mix(in srgb, var(--sc) 70%, transparent);
+}
+.wfield--sign:focus-within {
+  --sc: var(--lime);
+}
+.wfield__seal {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  color: var(--lime);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--lime) 70%, transparent));
+}
+.wfield--plain .wfield__input {
+  height: 54px;
+  border-radius: var(--r-btn);
+  border: 1.5px solid rgba(160, 175, 255, 0.34);
+  background: rgba(5, 8, 26, 0.6);
+  padding: 0 16px;
+  font-size: var(--fs-18);
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+.wfield--plain .wfield__input:focus {
+  border-color: var(--wf-accent, var(--magenta));
+}
+.wfield--plain[data-locked="1"] .wfield__input {
+  border-color: var(--lime);
+  padding-right: 40px;
+}
+.wfield--plain .wfield__seal {
+  bottom: 16px;
+}
+.wfield[data-locked="1"] {
+  --sc: var(--lime);
+}
+.wfield[data-locked="1"] .wfield__input {
+  opacity: 1;
+  -webkit-text-fill-color: var(--text);
+}
+
+@media (max-height: 460px) {
+  .wfield--sign {
+    padding: 8px 14px;
+  }
+  .wfield--sign .wfield__input {
+    font-size: 22px;
+    height: 52px;
+  }
+  .wfield--plain .wfield__input {
+    height: 64px;
+  }
+}

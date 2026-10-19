@@ -11,6 +11,7 @@ import { gizliHirsiz } from "./gizli-hirsiz/index.js";
 import { gizliKareler } from "./gizli-kareler/index.js";
 import { ittifak } from "./ittifak/index.js";
 import { karalamaDefteri } from "./karalama-defteri/index.js";
+import { kendim } from "./kendim/index.js";
 import { korBomba } from "./kor-bomba/index.js";
 import { korKronometre } from "./kor-kronometre/index.js";
 import { ortalamaninYarisi } from "./ortalamanin-yarisi/index.js";
@@ -39,6 +40,7 @@ export const GAMES: Record<string, AnyGame> = {
   [zehirliKadeh.id]: zehirliKadeh,
   [gizliKareler.id]: gizliKareler,
   [ittifak.id]: ittifak,
+  [kendim.id]: kendim,
   [yaziYaz.id]: yaziYaz,
   [rusvetDarbe.id]: rusvetDarbe,
   [gizliAlisveris.id]: gizliAlisveris,

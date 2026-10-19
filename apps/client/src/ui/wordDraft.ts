@@ -1,5 +1,5 @@
 import { createSignal, onCleanup, untrack } from "solid-js";
-import { hasWord, typedWord } from "./view.js";
+import { hasWord, typedWord } from "./wordInput.js";
 
 interface Options {
   /** Sunucudaki son değer (yeniden bağlanınca alanı doldurmak için bir kez okunur). */

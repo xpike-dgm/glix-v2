@@ -52,103 +52,6 @@
   justify-content: center;
   gap: 10px;
 }
-.yy__field {
-  position: relative;
-  width: 100%;
-}
-.yy__input {
-  width: 100%;
-  min-width: 0;
-  color: var(--text);
-  font-family: var(--font-display);
-  font-weight: 800;
-  text-transform: uppercase;
-  outline: none;
-  caret-color: var(--cyan);
-}
-.yy__input::placeholder {
-  color: rgba(142, 151, 199, 0.45);
-  text-transform: none;
-}
-.yy__field--sign {
-  --sc: var(--cyan);
-  padding: 14px 18px;
-  border-radius: 20px;
-  border: 3px solid var(--sc);
-  background:
-    repeating-linear-gradient(0deg, rgba(46, 242, 255, 0.05) 0 2px, transparent 2px 6px),
-    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--violet) 32%, var(--bg-1)), var(--bg-0) 78%);
-  box-shadow:
-    0 0 22px color-mix(in srgb, var(--sc) 50%, transparent),
-    inset 0 0 20px color-mix(in srgb, var(--sc) 24%, transparent);
-  transition:
-    border-color 160ms,
-    box-shadow 160ms;
-}
-.yy__field--sign::before,
-.yy__field--sign::after {
-  content: "";
-  position: absolute;
-  top: 10px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--sc) 60%, var(--bg-0));
-  box-shadow: inset 0 0 0 1.5px var(--bg-0);
-}
-.yy__field--sign::before {
-  left: 10px;
-}
-.yy__field--sign::after {
-  right: 10px;
-}
-.yy__field--sign .yy__input {
-  background: none;
-  border: 0;
-  height: 64px;
-  padding: 0;
-  text-align: center;
-  font-size: clamp(24px, 8vw, 34px);
-  line-height: 1.2;
-  text-shadow: 0 0 16px color-mix(in srgb, var(--sc) 70%, transparent);
-}
-.yy__field--sign:focus-within {
-  --sc: var(--lime);
-}
-.yy__seal {
-  position: absolute;
-  right: 12px;
-  bottom: 8px;
-  color: var(--lime);
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--lime) 70%, transparent));
-}
-.yy__field--plain .yy__input {
-  height: 54px;
-  border-radius: var(--r-btn);
-  border: 1.5px solid rgba(160, 175, 255, 0.34);
-  background: rgba(5, 8, 26, 0.6);
-  padding: 0 16px;
-  font-size: var(--fs-18);
-  letter-spacing: 0.02em;
-  text-align: center;
-}
-.yy__field--plain .yy__input:focus {
-  border-color: var(--magenta);
-}
-.yy__field--plain[data-locked="1"] .yy__input {
-  border-color: var(--lime);
-  padding-right: 40px;
-}
-.yy__field--plain .yy__seal {
-  bottom: 16px;
-}
-.yy__field[data-locked="1"] {
-  --sc: var(--lime);
-}
-.yy__field[data-locked="1"] .yy__input {
-  opacity: 1;
-  -webkit-text-fill-color: var(--text);
-}
 .yy__sign {
   width: 100%;
   padding: 22px 18px;
@@ -615,13 +518,6 @@
   .yy__verdict {
     display: none;
   }
-  .yy__field--sign {
-    padding: 8px 14px;
-  }
-  .yy__field--sign .yy__input {
-    font-size: 22px;
-    height: 52px;
-  }
   .yy__mid {
     gap: 6px;
   }
@@ -636,14 +532,11 @@
     align-items: stretch;
     gap: 10px;
   }
-  .yy__foot .yy__field {
+  .yy__foot .wfield {
     flex: 1;
   }
   .yy__foot .tamam {
     flex: 1;
-  }
-  .yy__field--plain .yy__input {
-    height: 64px;
   }
   .yy__signs {
     gap: 6px;

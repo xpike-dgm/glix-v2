@@ -4,10 +4,11 @@ import { ready as readySound } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { TamamBar } from "../../ui/TamamBar.js";
-import { createWordDraft } from "./draft.js";
+import { WordField } from "../../ui/WordField.js";
+import { createWordDraft } from "../../ui/wordDraft.js";
+import { hasWord } from "../../ui/wordInput.js";
 import { RolePeek } from "./RolePeek.js";
-import { hasWord, type YaziYazScreenView } from "./view.js";
-import { WordField } from "./WordField.js";
+import type { YaziYazScreenView } from "./view.js";
 import type { Crew } from "./YaziYazScreen.js";
 
 interface Props {

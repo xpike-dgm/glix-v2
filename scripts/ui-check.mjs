@@ -427,13 +427,48 @@ const SCREENS = [
   { name: "ittifak-spectator-talk", q: "mock=ittifak-spectator-talk&n=5" },
   { name: "ittifak-spectator-vote", q: "mock=ittifak-spectator-vote&n=5" },
   { name: "ittifak-spectator-reveal", q: "mock=ittifak-spectator-reveal&n=5", settle: 3000 },
+  { name: "kendim-briefing", q: "mock=kendim-briefing" },
+  { name: "kendim-write", q: "mock=kendim-write&n=5" },
+  {
+    name: "kendim-write-typed",
+    q: "mock=kendim-write&n=8",
+    act: async (p) => p.locator(".wfield__input").fill("neşeli"),
+  },
+  { name: "kendim-write-locked", q: "mock=kendim-write-locked&n=6" },
+  {
+    name: "kendim-write-keyboard",
+    q: "mock=kendim-write&n=5",
+    sizes: [
+      [390, 520],
+      [360, 300],
+      [320, 280],
+    ],
+    act: async (p) => p.locator(".wfield__input").fill("neşeli"),
+  },
+  { name: "kendim-match-5", q: "mock=kendim-match&n=5" },
+  { name: "kendim-match-8", q: "mock=kendim-match&n=8&paired=3" },
+  { name: "kendim-match-3", q: "mock=kendim-match&n=3" },
+  {
+    name: "kendim-match-sheet",
+    q: "mock=kendim-match&n=8&paired=2",
+    settle: 600,
+    act: async (p) => p.locator(".kd__card").first().click({ force: true }),
+  },
+  { name: "kendim-match-locked", q: "mock=kendim-match-locked&n=6" },
+  { name: "kendim-reveal-5", q: "mock=kendim-reveal&n=5", settle: 3000 },
+  { name: "kendim-reveal-8", q: "mock=kendim-reveal&n=8", settle: 3000 },
+  { name: "kendim-reveal-3", q: "mock=kendim-reveal&n=3", settle: 3000 },
+  { name: "kendim-reveal-negative", q: "mock=kendim-reveal-negative&n=6", settle: 3000 },
+  { name: "kendim-spectator-write", q: "mock=kendim-spectator-write&n=5" },
+  { name: "kendim-spectator-match", q: "mock=kendim-spectator-match&n=5" },
+  { name: "kendim-spectator-reveal", q: "mock=kendim-spectator-reveal&n=5", settle: 3000 },
   { name: "yazi-briefing", q: "mock=yazi-briefing" },
   { name: "yazi-write-innocent", q: "mock=yazi-write&n=5" },
   { name: "yazi-write-writer", q: "mock=yazi-write&n=5&role=writer" },
   {
     name: "yazi-write-typed",
     q: "mock=yazi-write&n=8",
-    act: async (p) => p.locator(".yy__input").fill("masum"),
+    act: async (p) => p.locator(".wfield__input").fill("masum"),
   },
   {
     name: "yazi-write-peek",
@@ -455,7 +490,7 @@ const SCREENS = [
       [360, 300],
       [320, 280],
     ],
-    act: async (p) => p.locator(".yy__input").fill("masum"),
+    act: async (p) => p.locator(".wfield__input").fill("masum"),
   },
   { name: "yazi-talk-5", q: "mock=yazi-talk&n=5" },
   { name: "yazi-talk-8", q: "mock=yazi-talk&n=8&role=writer" },
@@ -469,7 +504,7 @@ const SCREENS = [
     q: "mock=yazi-guess&n=6",
     act: async (p) => {
       await p.locator(".ppick__cell:not(:disabled)").first().click();
-      await p.locator(".yy__input").fill("kedi");
+      await p.locator(".wfield__input").fill("kedi");
     },
   },
   { name: "yazi-guess-locked", q: "mock=yazi-guess-locked&n=6" },

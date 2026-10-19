@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hasWord, outcomeOf, parseYaziYazView, ringPosition, typedWord } from "./view.js";
+import { outcomeOf, parseYaziYazView, ringPosition } from "./view.js";
 
 const pub = {
   players: ["a", "b", "c"],
@@ -57,18 +57,6 @@ describe("Yazı Yaz görünümü", () => {
     expect(
       parseYaziYazView({ ...pub, reveal: { ...reveal, guesses: { a: { target: 3 } } } }, priv),
     ).toBeNull();
-  });
-  it("giriş büyük harfe ve en çok 24 karaktere çevrilir", () => {
-    expect(typedWord("ışık evi")).toBe("IŞIK EVİ");
-    expect(typedWord("iı")).toBe("İI");
-    expect(typedWord("a".repeat(40))).toHaveLength(24);
-    expect(typedWord("a\nb")).toBe("A B");
-  });
-  it("harf ya da rakam olmayan giriş gönderilemez", () => {
-    expect(hasWord("")).toBe(false);
-    expect(hasWord(" !! ")).toBe(false);
-    expect(hasWord("ev")).toBe(true);
-    expect(hasWord("7")).toBe(true);
   });
   it("kendi sonucum: tahmin yok, kelime boş, doğru", () => {
     const r = parseYaziYazView({ ...pub, reveal }, priv)?.reveal;

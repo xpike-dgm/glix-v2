@@ -1,4 +1,5 @@
 import { type JSX, Show, untrack } from "solid-js";
+import "./word-field.css";
 
 interface Props {
   /** Yalnız ilk değer (yeniden bağlanınca alan dolu gelir); sonra alan kendi durumunu tutar. */
@@ -18,10 +19,10 @@ interface Props {
 /** Tek satır kelime alanı; yazılan her şey Türkçe büyük harfe çevrilir (dil işareti `tr`). */
 export function WordField(props: Props) {
   return (
-    <div class={`yy__field yy__field--${props.variant}`} data-locked={props.locked ? "1" : undefined}>
+    <div class={`wfield wfield--${props.variant}`} data-locked={props.locked ? "1" : undefined}>
       <input
         ref={(el) => props.ref?.(el)}
-        class="yy__input"
+        class="wfield__input"
         type="text"
         lang="tr"
         inputmode="text"
@@ -44,7 +45,7 @@ export function WordField(props: Props) {
         }}
       />
       <Show when={props.locked}>
-        <span class="yy__seal" aria-hidden="true">
+        <span class="wfield__seal" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
             <rect x="5" y="11" width="14" height="10" rx="3" fill="currentColor" />
             <path

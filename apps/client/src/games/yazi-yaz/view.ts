@@ -84,18 +84,6 @@ export function parseYaziYazView(publicView: unknown, view: unknown): YaziYazScr
   return pub && priv ? { ...pub, ...priv } : null;
 }
 
-/** Giriş alanında görünen biçim: Türkçe büyük harf, satır sonu/sekme boşluk, en çok 24 karakter. */
-export function typedWord(value: string): string {
-  return Array.from(value.replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]+/gu, " ").toLocaleUpperCase("tr-TR"))
-    .slice(0, 24)
-    .join("");
-}
-
-/** Gönderilebilir mi (en az bir harf ya da rakam). */
-export function hasWord(value: string): boolean {
-  return /[\p{L}\p{N}]/u.test(value);
-}
-
 /** Yuvarlak yerleşim (yüzde): ilk oyuncu üstte, saat yönünde. */
 export function ringPosition(index: number, count: number, radius = 38): { x: number; y: number } {
   const angle = (index / Math.max(1, count)) * Math.PI * 2 - Math.PI / 2;
