@@ -608,7 +608,17 @@ describe("karalama-defteri gizlilik", () => {
   it("YAPISAL: bilgisiz olduğunu gösteren tek alan kendi özel görünümündeki near'dır", () => {
     const s = start();
     const pubKeys = Object.keys(game.publicView(s, ctx(0))).sort();
-    expect(pubKeys).toEqual(["drawEndsAt", "drawings", "phase", "players", "reveal", "voteEndsAt", "voted"]);
+    expect(pubKeys).toEqual([
+      "drawDoneIds",
+      "drawEndsAt",
+      "drawings",
+      "lockedIds",
+      "phase",
+      "players",
+      "reveal",
+      "voteEndsAt",
+      "voted",
+    ]);
     for (const id of ["a", "b", "d"]) expect(game.view(s, id, ctx(0)).near).toBe(false);
     expect(game.view(s, "c", ctx(0)).near).toBe(true);
     expect(JSON.stringify(game.publicView(s, ctx(VOTE_AT)))).not.toMatch(/outsider|bilgisiz/);
@@ -665,12 +675,112 @@ describe("karalama-defteri botu ve simülasyon", () => {
           }
         },
       });
-      expect(out.endedAt - T0).toBeGreaterThanOrEqual(KARALAMA_DURATION_MS);
+      // Botlar bazen kilitler: oyun süre dolmadan erken bitebilir, ama hiçbir zaman toplam süreyi aşmaz.
+      expect(out.endedAt - T0).toBeGreaterThan(0);
+      expect(out.endedAt - T0).toBeLessThanOrEqual(KARALAMA_DURATION_MS + 3_000);
       const total = Object.values(out.result.awards).reduce((a, b) => a + b, 0);
       expect(total === 1 || total === 3).toBe(true); // bilgisiz +1 ya da diğer 3 oyuncu +1
     }
     expect(accepted).toBeGreaterThan(50);
     expect(kinds.has("stroke")).toBe(true);
     expect(kinds.has("vote")).toBe(true);
+  });
+});
+
+describe("karalama-defteri erken bitiş", () => {
+  const lock: KaralamaAction = { kind: "lock" };
+  const drawAll = (s: KaralamaState, at = 1_000): KaralamaState => {
+    let r = s;
+    for (const id of PLAYERS) r = act(r, id, stroke(), at);
+    return r;
+  };
+
+  it("(a) herkes 'Bitti' deyince oylama 1 sn sonra başlar; oylama süresi korunur", () => {
+    let s = drawAll(start());
+    for (const [i, id] of PLAYERS.entries()) s = act(s, id, lock, 2_000 + i * 100);
+    expect(s.drawEndsAt).toBe(T0 + 3_300);
+    expect(s.voteEndsAt - s.drawEndsAt).toBe(KARALAMA_VOTE_MS);
+    expect(game.tick(s, ctx(3_299)).stage).toBe("draw");
+    expect(game.tick(s, ctx(3_300)).stage).toBe("vote");
+    expect(game.publicView(game.tick(s, ctx(3_300)), ctx(3_300)).drawings).not.toBeNull();
+  });
+
+  it("(a) herkes oylamada 'Tamam' deyince oyun 1 sn sonra biter", () => {
+    let s = drawAll(start());
+    s = game.tick(s, ctx(KARALAMA_DRAW_MS));
+    for (const id of PLAYERS) s = act(s, id, vote("a" === id ? "b" : "a"), VOTE_AT);
+    for (const id of PLAYERS) s = act(s, id, lock, VOTE_AT + 2_000);
+    expect(s.voteEndsAt).toBe(T0 + VOTE_AT + 3_000);
+    expect(game.isFinished(s, ctx(VOTE_AT + 2_999))).toBe(false);
+    expect(game.isFinished(s, ctx(VOTE_AT + 3_000))).toBe(true);
+    const done = game.tick(s, ctx(VOTE_AT + 3_000));
+    expect(done.stage).toBe("done");
+    expect(game.publicView(done, ctx(VOTE_AT + 3_000)).reveal).not.toBeNull();
+  });
+
+  it("(b) bir kişi eksikken bitmez", () => {
+    let s = drawAll(start());
+    for (const id of ["a", "b", "c"]) s = act(s, id, lock, 2_000);
+    expect(s.drawEndsAt).toBe(T0 + KARALAMA_DRAW_MS);
+    s = game.tick(s, ctx(KARALAMA_DRAW_MS));
+    for (const id of PLAYERS) s = act(s, id, vote("a" === id ? "b" : "a"), VOTE_AT);
+    for (const id of ["a", "b", "c"]) s = act(s, id, lock, VOTE_AT + 1_000);
+    expect(s.voteEndsAt).toBe(T0 + END_AT);
+    expect(game.isFinished(s, ctx(VOTE_AT + 5_000))).toBe(false);
+  });
+
+  it("(c) bağlantısı kopan oyuncu beklenmez (çizim ve oylama)", () => {
+    const online = ["a", "b", "c"];
+    let s = drawAll(start());
+    for (const id of online) s = act(s, id, lock, 2_000, online);
+    expect(s.drawEndsAt).toBe(T0 + 3_000);
+    s = game.tick(s, ctx(3_000));
+    for (const id of online) s = act(s, id, vote(id === "a" ? "b" : "a"), 4_000, online);
+    for (const id of online) s = act(s, id, lock, 5_000, online);
+    expect(s.voteEndsAt).toBe(T0 + 6_000);
+  });
+
+  it("(d) kilit sonrası değişiklik reddedilir (çizim ve oy)", () => {
+    let s = drawAll(start());
+    s = act(s, "a", lock, 2_000);
+    for (const a of [stroke(), { kind: "undo" } as const, { kind: "clear" } as const, lock]) {
+      expect(reasonOf(s, "a", a, 2_500)).toBe("locked");
+    }
+    expect(Object.keys(game.view(s, "a", ctx(2_500)).strokes)).toHaveLength(1);
+    s = game.tick(s, ctx(KARALAMA_DRAW_MS));
+    s = act(s, "a", vote("b"), VOTE_AT);
+    s = act(s, "a", lock, VOTE_AT + 500);
+    expect(reasonOf(s, "a", vote("c"), VOTE_AT + 600)).toBe("locked");
+    expect(reasonOf(s, "a", lock, VOTE_AT + 600)).toBe("locked");
+    expect(game.view(s, "a", ctx(VOTE_AT + 600))).toMatchObject({ myVote: "b", locked: true });
+  });
+
+  it("çizimsiz 'Bitti' ve oysuz 'Tamam' reddedilir", () => {
+    const s = start();
+    expect(reasonOf(s, "a", lock, 1_000)).toBe("nothing_to_lock");
+    expect(reasonOf(s, "a", lock, VOTE_AT)).toBe("nothing_to_lock");
+  });
+
+  it("(e) kilit listeleri çizimi, oyu ve rolü sızdırmaz", () => {
+    let s = drawAll(start());
+    s = act(s, "c", lock, 2_000);
+    const pubDraw = game.publicView(s, ctx(2_500));
+    expect(pubDraw.drawDoneIds).toEqual(["c"]);
+    expect(pubDraw.drawings).toBeNull();
+    expect(game.view(s, "a", ctx(2_500)).drawDone).toBe(false);
+    expect(game.view(s, "c", ctx(2_500)).drawDone).toBe(true);
+    s = game.tick(s, ctx(KARALAMA_DRAW_MS));
+    s = act(act(s, "a", vote("c"), VOTE_AT), "a", lock, VOTE_AT + 100);
+    const pub = game.publicView(s, ctx(VOTE_AT + 200));
+    expect(pub.lockedIds).toEqual(["a"]);
+    expect(pub.reveal).toBeNull();
+    expect(JSON.stringify(pub)).not.toContain('"c":"');
+    expect(game.view(s, "b", ctx(VOTE_AT + 200))).toMatchObject({ myVote: null, locked: false });
+    expect(findLeaks(game, s, PLAYERS, T0 + VOTE_AT + 200)).toEqual([]);
+  });
+
+  it("parseAction lock yalnız kind ile kabul edilir", () => {
+    expect(game.parseAction({ kind: "lock" })).toEqual({ kind: "lock" });
+    expect(game.parseAction({ kind: "lock", target: "a" })).toBeNull();
   });
 });

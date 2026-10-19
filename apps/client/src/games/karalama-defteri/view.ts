@@ -29,6 +29,10 @@ export interface KaralamaScreenView {
   players: string[];
   drawings: Record<string, ParsedDrawing> | null;
   voted: string[];
+  /** Çizimini "Bitti" ile kesinleştirenler. */
+  drawDoneIds: string[];
+  /** Oyunu "Tamam" ile kesinleştirenler. */
+  lockedIds: string[];
   reveal: KaralamaReveal | null;
   word: string | null;
   near: boolean;
@@ -36,6 +40,8 @@ export interface KaralamaScreenView {
   strokes: KaralamaStroke[];
   pointsLeft: number;
   myVote: string | null;
+  drawDone: boolean;
+  locked: boolean;
 }
 
 const clampCoord = (n: number): number => Math.min(KARALAMA_GRID, Math.max(0, Math.round(n)));
@@ -108,6 +114,7 @@ export function parseKaralamaPublicView(v: unknown): KaralamaPublicParsed | null
   if (phase !== "draw" && phase !== "vote" && phase !== "done") return null;
   if (!isNum(v.drawEndsAt) || !isNum(v.voteEndsAt)) return null;
   if (!isStrArray(v.players) || !isStrArray(v.voted)) return null;
+  if (!isStrArray(v.drawDoneIds) || !isStrArray(v.lockedIds)) return null;
   const drawings = parseDrawings(v.drawings);
   const reveal = parseReveal(v.reveal);
   if (drawings === undefined || reveal === undefined) return null;
@@ -118,6 +125,8 @@ export function parseKaralamaPublicView(v: unknown): KaralamaPublicParsed | null
     players: v.players,
     drawings,
     voted: v.voted,
+    drawDoneIds: v.drawDoneIds,
+    lockedIds: v.lockedIds,
     reveal,
   };
 }
@@ -133,6 +142,7 @@ export function parseKaralamaPrivateView(v: unknown): KaralamaPrivateParsed | nu
   if (typeof v.near !== "boolean") return null;
   if (!isNum(v.pointsLeft)) return null;
   if (v.myVote !== null && typeof v.myVote !== "string") return null;
+  if (typeof v.drawDone !== "boolean" || typeof v.locked !== "boolean") return null;
   if (!isRec(v.strokes)) return null;
   const keyed: { n: number; s: KaralamaStroke }[] = [];
   for (const [k, raw] of Object.entries(v.strokes)) {
@@ -148,6 +158,8 @@ export function parseKaralamaPrivateView(v: unknown): KaralamaPrivateParsed | nu
     strokes: keyed.map((x) => x.s),
     pointsLeft: Math.max(0, v.pointsLeft),
     myVote: v.myVote,
+    drawDone: v.drawDone,
+    locked: v.locked,
   } as KaralamaPrivateParsed;
 }
 

@@ -1,6 +1,7 @@
 /**
  * Yalnız geliştirme önizlemesi: Karalama Defteri'nin her aşaması.
  *   ?mock=karalama-briefing | karalama-draw | karalama-draw-near | karalama-draw-ink | karalama-draw-spectator
+ *   ?mock=karalama-draw-locked | karalama-vote-locked (Bitti / Tamam sonrası bekleme)
  *   ?mock=karalama-vote | karalama-vote-voted | karalama-vote-spectator | karalama-results | karalama-results-escaped
  * `&n=8` oyuncu sayısını değiştirir. Çizim tahtasına gerçekten çizilebilir; oylar yerelde tutulur.
  */
@@ -156,7 +157,12 @@ export function startKaralamaMock(kind: string, params: URLSearchParams): void {
   let strokes: Record<string, KaralamaStroke> = {};
   let nextKey = 0;
   let myVote: string | null = kind.includes("voted") ? "p2" : null;
-  const voted = kind.includes("voted") ? ["p1", "p3"] : [];
+  const lockedKind = kind.includes("locked");
+  if (lockedKind && kind.includes("vote")) myVote = "p2";
+  let drawDone = kind === "karalama-draw-locked";
+  let locked = kind === "karalama-vote-locked";
+  const voted = kind.includes("voted") || (lockedKind && kind.includes("vote")) ? ["p1", "p3"] : [];
+  const others = (): string[] => participants.filter((id) => id !== SELF);
 
   const isVote = kind.includes("vote");
   const isResults = kind.includes("results");
@@ -203,6 +209,14 @@ export function startKaralamaMock(kind: string, params: URLSearchParams): void {
     players: participants,
     drawings: isVote || isResults ? drawings() : null,
     voted: voted.filter((id) => participants.includes(id)),
+    drawDoneIds: [
+      ...(drawDone && !spectator ? [SELF] : []),
+      ...(kind.includes("draw") && (lockedKind || spectator) ? others().filter((_, i) => i % 2 === 0) : []),
+    ],
+    lockedIds: [
+      ...(locked && !spectator ? [SELF] : []),
+      ...(isVote && (lockedKind || spectator) ? others().filter((_, i) => i % 2 === 1) : []),
+    ],
     reveal: isResults ? reveal() : null,
   });
   const view = (): KaralamaView => ({
@@ -211,6 +225,8 @@ export function startKaralamaMock(kind: string, params: URLSearchParams): void {
     strokes: isVote || isResults ? {} : { ...strokes },
     pointsLeft: 6000,
     myVote,
+    drawDone: !spectator && drawDone,
+    locked: !spectator && locked,
   });
 
   const publish = (): void => {
@@ -258,7 +274,14 @@ export function startKaralamaMock(kind: string, params: URLSearchParams): void {
       size?: number;
       points?: number[];
     };
-    if (a.kind === "stroke" && Array.isArray(a.points)) {
+    if (a.kind === "lock") {
+      if (isVote) locked = myVote !== null;
+      else drawDone = Object.keys(strokes).length > 0;
+    } else if (drawDone && (a.kind === "stroke" || a.kind === "undo" || a.kind === "clear")) {
+      return;
+    } else if (locked && a.kind === "vote") {
+      return;
+    } else if (a.kind === "stroke" && Array.isArray(a.points)) {
       const idx =
         a.color === "eraser"
           ? 6

@@ -10,6 +10,7 @@ import { hapticReady, hapticTap, hapticTick } from "../../fx/haptics.js";
 import { tap, tick, unlockAudio } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
 import { serverNow, toast } from "../../net/store.js";
+import { TamamBar } from "../../ui/TamamBar.js";
 import {
   MIN_STEP,
   PEN_COLORS,
@@ -160,7 +161,15 @@ export function DrawBoard(props: Props) {
     reconcileTimer = setTimeout(syncFromServer, 2_400);
   };
 
+  const [sentLock, setSentLock] = createSignal(false);
+  const locked = (): boolean => props.view.drawDone || sentLock();
   const over = (): boolean => props.now() >= props.view.drawEndsAt;
+  const lockDone = (): void => {
+    if (locked() || over() || count() === 0) return;
+    if (!sendAction({ kind: "lock" })) return;
+    setSentLock(true);
+    hapticReady();
+  };
 
   // --- gönderme ---
   const commitPoints = (points: number[], final: boolean): void => {
@@ -248,7 +257,7 @@ export function DrawBoard(props: Props) {
   };
 
   const accepts = (e: PointerEvent): boolean => {
-    if (props.view.drawEndsAt <= props.now()) return false;
+    if (props.view.drawEndsAt <= props.now() || locked()) return false;
     if (e.pointerType === "pen") {
       sawPen = true;
       return true;
@@ -306,7 +315,7 @@ export function DrawBoard(props: Props) {
 
   // --- araçlar ---
   const undo = (): void => {
-    if (local.length === 0 || over()) return;
+    if (local.length === 0 || over() || locked()) return;
     const last = local.pop() as KaralamaStroke;
     localPoints -= (last.length - 2) / 2;
     lastSentAt = serverNow();
@@ -318,7 +327,7 @@ export function DrawBoard(props: Props) {
     scheduleReconcile();
   };
   const clearAll = (): void => {
-    if (local.length === 0 || over()) return;
+    if (local.length === 0 || over() || locked()) return;
     if (!confirmClear()) {
       setConfirmClear(true);
       hapticTap();
@@ -339,12 +348,14 @@ export function DrawBoard(props: Props) {
     scheduleReconcile();
   };
   const choosePen = (i: number): void => {
+    if (locked()) return;
     unlockAudio();
     setPen(i);
     tap();
     hapticTap();
   };
   const chooseSize = (s: 1 | 2 | 3): void => {
+    if (locked()) return;
     unlockAudio();
     setSize(s);
     tap();
@@ -376,59 +387,83 @@ export function DrawBoard(props: Props) {
           />
         </div>
       </div>
-      <div class="kd__tools" role="toolbar" aria-label="Kalem araçları">
-        <For each={PEN_COLORS}>
-          {(c, i) => (
-            <button
-              type="button"
-              class="kd__tool kd__swatch"
-              style={{ "--sw": c }}
-              data-on={pen() === i() ? "1" : undefined}
-              aria-label={PEN_NAMES[i()]}
-              aria-pressed={pen() === i()}
-              onClick={() => choosePen(i())}
-            >
-              <i />
-            </button>
-          )}
-        </For>
-        <button
-          type="button"
-          class="kd__tool"
-          data-on={pen() === ERASER ? "1" : undefined}
-          aria-label="Silgi"
-          aria-pressed={pen() === ERASER}
-          onClick={() => choosePen(ERASER)}
+      <div class="kd__side">
+        <div
+          class="kd__tools"
+          role="toolbar"
+          aria-label="Kalem araçları"
+          data-frozen={locked() ? "1" : undefined}
         >
-          <EraserIcon />
-        </button>
-        <For each={[1, 2, 3] as const}>
-          {(s) => (
-            <button
-              type="button"
-              class="kd__tool kd__size"
-              data-on={size() === s ? "1" : undefined}
-              aria-label={`Kalınlık ${s}`}
-              aria-pressed={size() === s}
-              onClick={() => chooseSize(s)}
-            >
-              <i style={{ width: dot(s), height: dot(s) }} />
-            </button>
-          )}
-        </For>
-        <button type="button" class="kd__tool" aria-label="Geri al" disabled={count() === 0} onClick={undo}>
-          <UndoIcon />
-        </button>
-        <button
-          type="button"
-          class="kd__tool kd__tool--clear"
-          data-on={confirmClear() ? "1" : undefined}
-          aria-label={confirmClear() ? "Silmek için tekrar dokun" : "Temizle"}
-          disabled={count() === 0}
-          onClick={clearAll}
-        >
-          <TrashIcon />
-        </button>
+          <For each={PEN_COLORS}>
+            {(c, i) => (
+              <button
+                type="button"
+                class="kd__tool kd__swatch"
+                style={{ "--sw": c }}
+                data-on={pen() === i() ? "1" : undefined}
+                aria-label={PEN_NAMES[i()]}
+                aria-pressed={pen() === i()}
+                disabled={locked()}
+                onClick={() => choosePen(i())}
+              >
+                <i />
+              </button>
+            )}
+          </For>
+          <button
+            type="button"
+            class="kd__tool"
+            data-on={pen() === ERASER ? "1" : undefined}
+            aria-label="Silgi"
+            aria-pressed={pen() === ERASER}
+            disabled={locked()}
+            onClick={() => choosePen(ERASER)}
+          >
+            <EraserIcon />
+          </button>
+          <For each={[1, 2, 3] as const}>
+            {(s) => (
+              <button
+                type="button"
+                class="kd__tool kd__size"
+                data-on={size() === s ? "1" : undefined}
+                aria-label={`Kalınlık ${s}`}
+                aria-pressed={size() === s}
+                disabled={locked()}
+                onClick={() => chooseSize(s)}
+              >
+                <i style={{ width: dot(s), height: dot(s) }} />
+              </button>
+            )}
+          </For>
+          <button
+            type="button"
+            class="kd__tool"
+            aria-label="Geri al"
+            disabled={count() === 0 || locked()}
+            onClick={undo}
+          >
+            <UndoIcon />
+          </button>
+          <button
+            type="button"
+            class="kd__tool kd__tool--clear"
+            data-on={confirmClear() ? "1" : undefined}
+            aria-label={confirmClear() ? "Silmek için tekrar dokun" : "Temizle"}
+            disabled={count() === 0 || locked()}
+            onClick={clearAll}
+          >
+            <TrashIcon />
+          </button>
+        </div>
+        <TamamBar
+          label="Bitti"
+          locked={locked()}
+          disabled={count() === 0 || over()}
+          ready={props.view.drawDoneIds.length}
+          total={props.view.players.length}
+          onLock={lockDone}
+        />
       </div>
     </>
   );

@@ -29,6 +29,7 @@ function randomStroke(rng: Rng): KaralamaAction {
 /** Çizim süresince darbe (arada geri al / temizle), oylamada bağlı başka bir oyuncuya oy. */
 export const generate: ActionGenerator = (rng, playerId, publicView, _privateView, connected) => {
   const phase = (publicView as { phase?: unknown } | null)?.phase;
+  if (rng.int(25) === 0) return { kind: "lock" };
   if (phase === "vote") {
     const targets = connected.filter((id) => id !== playerId);
     if (targets.length === 0) return { kind: "undo" };

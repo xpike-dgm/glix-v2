@@ -7,6 +7,7 @@ import { sendAction } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { CheckIcon, CloseIcon } from "../../ui/Icons.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
+import { TamamBar } from "../../ui/TamamBar.js";
 import { DrawingCanvas } from "./DrawingCanvas.js";
 import { Header } from "./Header.js";
 import type { KaralamaScreenView } from "./view.js";
@@ -59,7 +60,13 @@ export function VoteWall(props: Props) {
     ),
   );
 
-  const closed = (): boolean => props.spectator || props.now() >= props.view.voteEndsAt;
+  const [sentLock, setSentLock] = createSignal(false);
+  const locked = (): boolean => props.view.locked || sentLock();
+  const closed = (): boolean => props.spectator || locked() || props.now() >= props.view.voteEndsAt;
+  const lockVote = (): void => {
+    if (props.spectator || locked() || picked() === null || props.now() >= props.view.voteEndsAt) return;
+    if (sendAction({ kind: "lock" })) setSentLock(true);
+  };
   const canVote = (p: PlayerInfo): boolean => !closed() && p.id !== props.selfId && p.connected;
   const vote = (p: PlayerInfo): void => {
     if (!canVote(p)) return;
@@ -94,7 +101,8 @@ export function VoteWall(props: Props) {
 
   const hint = (): string => {
     if (props.spectator) return `${votedCount()} / ${n()} oy verdi`;
-    if (picked()) return "Oyun verildi. Süre bitene kadar değiştirebilirsin.";
+    if (locked()) return "Oyun kesinleşti.";
+    if (picked()) return "Oyunu verdin. Değiştirebilir ya da Tamam diyebilirsin.";
     return "Bir çizime dokun, kelimeyi bilmeyene oy ver.";
   };
 
@@ -148,7 +156,12 @@ export function VoteWall(props: Props) {
                 aria-label={p.id === props.selfId ? `${p.nickname} (sen)` : `${p.nickname} kişisine oy ver`}
                 onClick={() => vote(p)}
               >
-                <Avatar index={p.avatar} size={30} connected={p.connected} />
+                <Avatar
+                  index={p.avatar}
+                  size={30}
+                  connected={p.connected}
+                  ring={props.view.lockedIds.includes(p.id) ? "var(--lime)" : undefined}
+                />
                 <span class="kd__name">{p.id === props.selfId ? "Sen" : p.nickname}</span>
                 <Show when={picked() === p.id}>
                   <span class="kd__tick">
@@ -163,6 +176,14 @@ export function VoteWall(props: Props) {
       <p class="kd__hint" role="status">
         {hint()}
       </p>
+      <TamamBar
+        spectator={props.spectator}
+        locked={locked()}
+        disabled={picked() === null || props.now() >= props.view.voteEndsAt}
+        ready={props.view.lockedIds.length}
+        total={n()}
+        onLock={lockVote}
+      />
       <Show when={zoomed()}>
         {(p) => (
           <Zoom
