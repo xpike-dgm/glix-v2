@@ -70,14 +70,14 @@ describe("rüşvet ve darbe: oda içinde tam maç", () => {
     expect(await send(a, { kind: "sign", sign: "tas" })).toBe(true);
     expect(await send(b, { kind: "sign", sign: "makas" })).toBe(true);
     expect(await send(c, { kind: "sign", sign: "tas" })).toBe(true);
-    expect(await send(d, { kind: "sign", sign: "tas" })).toBe(true);
     await sync();
     expect(pub().duel?.signs).toBeNull();
     expect(priv(b)?.mySign).toBe("makas");
     expect(priv(a)?.mySign).toBe("tas");
     expect(JSON.stringify(a.room.match?.publicView)).not.toContain("makas");
 
-    k.clock.advance(8_000);
+    // Son aday da işaret verince (herkes verdi) işaretler hemen açılır; süre dolmasını beklemez.
+    expect(await send(d, { kind: "sign", sign: "tas" })).toBe(true);
     await until(() => pub().duel?.signs !== null, "işaretler açıldı");
     expect(pub().duel?.signs).toEqual({
       [ids[0]]: "tas",
@@ -85,7 +85,7 @@ describe("rüşvet ve darbe: oda içinde tam maç", () => {
       [ids[2]]: "tas",
       [ids[3]]: "tas",
     });
-    expect(await send(a, { kind: "sign", sign: "kagit" })).toBe(false); // geç işaret
+    expect(await send(a, { kind: "sign", sign: "kagit" })).toBe(false); // işaretler açıldı
 
     k.clock.advance(2_500);
     await until(() => pub().duel?.hand === 2, "ikinci el");
@@ -96,7 +96,7 @@ describe("rüşvet ve darbe: oda içinde tam maç", () => {
     expect(await send(a, { kind: "sign", sign: "tas" })).toBe(true);
     expect(await send(c, { kind: "sign", sign: "makas" })).toBe(true);
     expect(await send(d, { kind: "sign", sign: "makas" })).toBe(true);
-    k.clock.advance(10_500);
+    k.clock.advance(2_500);
     await until(() => pub().phase === "give", "dağıtım");
     expect(pub().president).toBe(ids[0]);
     expect(pub().budget).toBe(1);
