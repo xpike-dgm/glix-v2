@@ -2,8 +2,10 @@ import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import {
   ORTALAMA_CHOOSE_MS,
   ORTALAMA_DURATION_MS,
+  ORTALAMA_LOCK_GRACE_MS,
   ORTALAMA_MAX,
   ORTALAMA_MIN,
+  ORTALAMA_REVEAL_MS,
   type OrtalamaAction,
   type OrtalamaPublicView,
   type OrtalamaReveal,
@@ -19,6 +21,8 @@ export interface OrtalamaState {
   revealEndsAt: number;
   /** Yalnız seçim gönderenler; son seçim geçerlidir. */
   choices: Record<string, number>;
+  /** Seçimini kilitleyenler (kilit sırasıyla). `endsAt`/`revealEndsAt` erken bitişte reduce içinde öne çekilir. */
+  locked: string[];
   /**
    * Göndermeyene atanacak sayılar: kurulumda sunucu rastgeleliğiyle çekilir (gizli; süre dolana kadar
    * hiçbir görünümde yok). Önceden çekildiği için sonuç tick zamanlamasına bağlı değildir.
@@ -97,6 +101,7 @@ export const ortalamaninYarisi: GameDefinition<
   parseAction(raw: unknown): OrtalamaAction | null {
     if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
     const rec = raw as Record<string, unknown>;
+    if (rec.kind === "lock") return Object.keys(rec).length === 1 ? { kind: "lock" } : null;
     if (Object.keys(rec).length !== 2 || rec.kind !== "choose") return null;
     const value = rec.value;
     if (typeof value !== "number" || !Number.isInteger(value)) return null;
@@ -113,6 +118,7 @@ export const ortalamaninYarisi: GameDefinition<
       endsAt: ctx.now + ORTALAMA_CHOOSE_MS,
       revealEndsAt: ctx.now + ORTALAMA_DURATION_MS,
       choices: {},
+      locked: [],
       fallback,
       revealed: false,
     };
@@ -122,6 +128,16 @@ export const ortalamaninYarisi: GameDefinition<
     if (!state.players.includes(playerId)) return { rejected: "not_participant" };
     if (ctx.now >= state.endsAt) return { rejected: "ended" };
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
+    if (state.locked.includes(playerId)) return { rejected: "locked" };
+    if (action.kind === "lock") {
+      if (state.choices[playerId] === undefined) return { rejected: "nothing_to_lock" };
+      const locked = [...state.locked, playerId];
+      const waiting = state.players.some((id) => ctx.connected.includes(id) && !locked.includes(id));
+      if (waiting) return { ...state, locked };
+      // Bağlı herkes kilitledi: seçim aşaması 1 sn sonra biter.
+      const endsAt = Math.min(state.endsAt, ctx.now + ORTALAMA_LOCK_GRACE_MS);
+      return { ...state, locked, endsAt, revealEndsAt: endsAt + ORTALAMA_REVEAL_MS };
+    }
     if (action.value < ORTALAMA_MIN || action.value > ORTALAMA_MAX) return { rejected: "out_of_range" };
     if (state.choices[playerId] === action.value) return state;
     return { ...state, choices: { ...state.choices, [playerId]: action.value } };
@@ -139,12 +155,13 @@ export const ortalamaninYarisi: GameDefinition<
       revealEndsAt: state.revealEndsAt,
       // Süre dolmadan kimsenin seçimi, ortalama ya da hedef yoktur.
       reveal: ctx.now >= state.endsAt ? ortalamaSettle(state) : null,
+      lockedIds: [...state.locked],
     };
   },
 
   view(state, playerId): OrtalamaView {
     const mine = playerId === null ? undefined : state.choices[playerId];
-    return { myChoice: mine ?? null };
+    return { myChoice: mine ?? null, locked: playerId !== null && state.locked.includes(playerId) };
   },
 
   isFinished(state, ctx): boolean {

@@ -10,7 +10,11 @@ export const ORTALAMA_DURATION_MS = ORTALAMA_CHOOSE_MS + ORTALAMA_REVEAL_MS;
 export const ORTALAMA_MIN = 0;
 export const ORTALAMA_MAX = 100;
 
-export type OrtalamaAction = { kind: "choose"; value: number };
+/** Kilit ("Tamam"): seçim kesinleşir; bağlı herkes kilitlerse seçim aşaması 1 sn sonra biter. */
+export type OrtalamaAction = { kind: "choose"; value: number } | { kind: "lock" };
+
+/** Son kilitten sonra seçimlerin açılmasına kalan süre (ms). */
+export const ORTALAMA_LOCK_GRACE_MS = 1_000;
 
 /** Süre dolunca herkese açılan sonuç. */
 export interface OrtalamaReveal {
@@ -39,10 +43,14 @@ export interface OrtalamaPublicView {
   revealEndsAt: number;
   /** Süre dolmadan null. */
   reveal: OrtalamaReveal | null;
+  /** Seçimini kilitleyenler (yalnız kimler; seçimin kendisi değil). */
+  lockedIds: string[];
 }
 
 /** Kişiye özel görünüm: yalnız kendi seçimin. */
 export interface OrtalamaView {
   /** Henüz seçmediysen ya da izleyiciysen null. */
   myChoice: number | null;
+  /** Seçimini kilitledin mi. */
+  locked: boolean;
 }

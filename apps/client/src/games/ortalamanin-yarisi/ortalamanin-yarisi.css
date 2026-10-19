@@ -81,6 +81,11 @@
 .ort__pod:nth-child(3n) {
   animation-delay: -1.9s;
 }
+.ort__pod[data-ready="1"] {
+  border-color: var(--lime);
+  color: var(--lime);
+  box-shadow: 0 0 12px rgba(182, 255, 59, 0.5);
+}
 .ort__pod[data-me="1"] {
   border-color: var(--c);
   box-shadow: 0 0 16px var(--c);

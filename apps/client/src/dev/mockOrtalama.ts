@@ -2,6 +2,7 @@
  * Yalnız geliştirme önizlemesi: Ortalamaya En Yakın ekranları (`&n=3..8` oyuncu sayısı).
  *   ?mock=ortalama-briefing          anlatım
  *   ?mock=ortalama-choosing          seçim; sayı seçici çalışır (`&chosen=0` ile seçimsiz başlar)
+ *   ?mock=ortalama-locked            sayın kilitli, diğerleri bekleniyor
  *   ?mock=ortalama-reveal            sonuç: en yakın +2, ikinci +1 (`&me=2` ile hangi oyuncu "sen" olur)
  *   ?mock=ortalama-reveal-tie        sonuç: en yakınlar eşit, herkes +1
  *   ?mock=ortalama-reveal-late       sonuç animasyonu bitmeye yakın (geç açılan ekran)
@@ -48,6 +49,7 @@ export function startOrtalamaMock(kind: string, params: URLSearchParams): void {
   let readyIds: string[] = [];
   let phaseEndsAt: number | null = null;
   let myChoice: number | null = params.get("chosen") === "0" ? null : 30;
+  let locked = kind === "ortalama-locked";
   let rev = 1;
   const revealed = kind.startsWith("ortalama-reveal");
   const late = kind.endsWith("late");
@@ -65,6 +67,7 @@ export function startOrtalamaMock(kind: string, params: URLSearchParams): void {
       endsAt: startedAt + ORTALAMA_CHOOSE_MS,
       revealEndsAt: startedAt + ORTALAMA_DURATION_MS,
       choices,
+      locked: [],
       fallback: {},
       revealed: true,
     });
@@ -76,8 +79,12 @@ export function startOrtalamaMock(kind: string, params: URLSearchParams): void {
       endsAt: startedAt + ORTALAMA_CHOOSE_MS,
       revealEndsAt: startedAt + ORTALAMA_DURATION_MS,
       reveal: revealed ? reveal() : null,
+      lockedIds: [
+        ...(locked && !spectator ? [SELF] : []),
+        ...participants.filter((id, i) => id !== SELF && i % 2 === 1 && (locked || spectator)),
+      ],
     },
-    priv: { myChoice: spectator ? null : myChoice },
+    priv: { myChoice: spectator ? null : myChoice, locked: !spectator && locked },
   });
 
   const snapshot = (): RoomSnapshot => {
@@ -121,7 +128,11 @@ export function startOrtalamaMock(kind: string, params: URLSearchParams): void {
   useMockSender((msg) => {
     if (msg.type !== "action") return;
     const payload = msg.payload as { kind?: string; value?: number } | null;
-    if (payload?.kind === "choose" && typeof payload.value === "number") {
+    if (payload?.kind === "lock" && myChoice !== null) {
+      locked = true;
+      applySnapshot(snapshot());
+    }
+    if (payload?.kind === "choose" && typeof payload.value === "number" && !locked) {
       myChoice = payload.value;
       applySnapshot(snapshot());
     }
