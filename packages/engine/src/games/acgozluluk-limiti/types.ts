@@ -25,7 +25,11 @@ export function acgozlulukLimit(playerCount: number): number {
   return ACGOZLULUK_LIMITS[n] ?? 6;
 }
 
-export type AcgozlulukAction = { kind: "choose"; value: number };
+/** Kilit ("Tamam"): seçim kesinleşir; bağlı herkes kilitlerse seçim aşaması 1 sn sonra biter. */
+export type AcgozlulukAction = { kind: "choose"; value: number } | { kind: "lock" };
+
+/** Son kilitten sonra seçimlerin açılmasına kalan süre (ms). */
+export const ACGOZLULUK_LOCK_GRACE_MS = 1_000;
 
 /** Süre dolunca herkese açılan sonuç. */
 export interface AcgozlulukReveal {
@@ -47,10 +51,14 @@ export interface AcgozlulukPublicView {
   maxChoice: number;
   /** Süre dolmadan null. */
   reveal: AcgozlulukReveal | null;
+  /** Seçimini kilitleyenler (yalnız kimler; seçimin kendisi değil). */
+  lockedIds: string[];
 }
 
 /** Kişiye özel görünüm: yalnız kendi seçimin. */
 export interface AcgozlulukView {
   /** Henüz seçmediysen ya da izleyiciysen null (seçilmemiş 0 sayılır). */
   myChoice: number | null;
+  /** Seçimini kilitledin mi. */
+  locked: boolean;
 }

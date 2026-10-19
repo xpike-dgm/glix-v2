@@ -9,8 +9,16 @@ import {
   tankCapacity,
 } from "./view.js";
 
-const pub = { startedAt: 100, endsAt: 20_100, revealEndsAt: 25_100, limit: 11, maxChoice: 4, reveal: null };
-const priv = { myChoice: 2 };
+const pub = {
+  startedAt: 100,
+  endsAt: 20_100,
+  revealEndsAt: 25_100,
+  limit: 11,
+  maxChoice: 4,
+  reveal: null,
+  lockedIds: ["a"],
+};
+const priv = { myChoice: 2, locked: false };
 const reveal = { choices: { a: 3, b: 2 }, total: 5, over: false };
 
 describe("Açgözlülük Limiti görünümü", () => {
@@ -20,7 +28,11 @@ describe("Açgözlülük Limiti görünümü", () => {
     expect(phaseOf(v)).toBe("choosing");
   });
   it("seçmemiş ve izleyici için myChoice null olabilir", () => {
-    expect(parseAcgozlulukView(pub, { myChoice: null })?.myChoice).toBeNull();
+    expect(parseAcgozlulukView(pub, { myChoice: null, locked: false })?.myChoice).toBeNull();
+  });
+  it("kilit bilgisini okur", () => {
+    const v = parseAcgozlulukView(pub, { myChoice: 2, locked: true });
+    expect(v).toMatchObject({ locked: true, lockedIds: ["a"] });
   });
   it("açılmış sonucu okur", () => {
     const v = parseAcgozlulukView({ ...pub, reveal }, priv);
@@ -41,6 +53,10 @@ describe("Açgözlülük Limiti görünümü", () => {
     expect(parseAcgozlulukView(pub, { myChoice: -1 })).toBeNull();
     expect(parseAcgozlulukView(pub, { myChoice: 2.5 })).toBeNull();
     expect(parseAcgozlulukView(pub, {})).toBeNull();
+    expect(parseAcgozlulukView(pub, { myChoice: 2 })).toBeNull();
+    expect(parseAcgozlulukView({ ...pub, lockedIds: "a" }, priv)).toBeNull();
+    expect(parseAcgozlulukView({ ...pub, lockedIds: [1] }, priv)).toBeNull();
+    expect(parseAcgozlulukView({ ...pub, lockedIds: undefined }, priv)).toBeNull();
   });
   it("hazne ölçekleri: limit çizgisi sabit, en kötü toplam kapasiteye sığar", () => {
     expect(tankCapacity(10)).toBe(15);

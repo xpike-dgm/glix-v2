@@ -629,3 +629,21 @@
   text-align: center;
   line-height: 1.35;
 }
+
+/* ---- TamamBar: seçimi kilitleme ---- */
+.tamam {
+  flex: none;
+  width: 100%;
+  padding-top: 8px;
+}
+.tamam__count {
+  margin: 8px 0 0;
+  min-height: 1.4em;
+  text-align: center;
+  font-size: var(--fs-15);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+.tamam__count[data-quiet="1"] {
+  font-size: 13px;
+}

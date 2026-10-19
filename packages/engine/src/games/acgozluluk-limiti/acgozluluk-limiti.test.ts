@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 import { isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
 import { type AcgozlulukState, acgozlulukLimiti as g } from "./index.js";
-import { ACGOZLULUK_CHOOSE_MS, ACGOZLULUK_DURATION_MS, ACGOZLULUK_LIMITS, acgozlulukLimit } from "./types.js";
+import {
+  ACGOZLULUK_CHOOSE_MS,
+  ACGOZLULUK_DURATION_MS,
+  ACGOZLULUK_LIMITS,
+  ACGOZLULUK_REVEAL_MS,
+  acgozlulukLimit,
+} from "./types.js";
 
 const T0 = 1_000_000;
 const ids = (n: number) => Array.from({ length: n }, (_, i) => `p${i + 1}`);
@@ -211,6 +217,101 @@ describe("acgozluluk-limiti kuralları", () => {
   });
 });
 
+const lock = (state: AcgozlulukState, id: string, at: number, connected: readonly string[] = ids(8)) =>
+  g.reduce(state, id, { kind: "lock" }, ctx(T0 + at, connected));
+const lockOk = (state: AcgozlulukState, id: string, at: number, connected?: readonly string[]) => {
+  const r = lock(state, id, at, connected);
+  if (isRejected(r)) throw new Error(`reddedildi: ${r.rejected}`);
+  return r;
+};
+
+describe("acgozluluk-limiti erken bitiş", () => {
+  it("(a) herkes kilitleyince seçim aşaması 1 sn sonra biter", () => {
+    let s = start(3);
+    for (const id of ids(3)) s = choose(s, id, 1);
+    s = lockOk(s, "p1", 2_000);
+    s = lockOk(s, "p2", 3_000);
+    s = lockOk(s, "p3", 4_000);
+    expect(s.endsAt).toBe(T0 + 5_000);
+    expect(g.publicView(s, ctx(T0 + 4_999)).reveal).toBeNull();
+    expect(g.publicView(s, ctx(T0 + 5_000)).reveal).toMatchObject({ total: 3, over: false });
+    expect(g.isFinished(s, ctx(T0 + 4_999 + ACGOZLULUK_REVEAL_MS))).toBe(false);
+    expect(g.isFinished(s, ctx(T0 + 5_000 + ACGOZLULUK_REVEAL_MS))).toBe(true);
+    expect(g.tick(s, ctx(T0 + 5_000)).revealed).toBe(true);
+    expect(g.result(s).miniScores).toEqual({ p1: 1, p2: 1, p3: 1 });
+  });
+
+  it("(b) bir kişi eksikken bitmez", () => {
+    let s = start(3);
+    for (const id of ids(3)) s = choose(s, id, 1);
+    s = lockOk(lockOk(s, "p1", 2_000), "p2", 3_000);
+    expect(s.endsAt).toBe(T0 + ACGOZLULUK_CHOOSE_MS);
+    expect(g.isFinished(s, ctx(T0 + 10_000))).toBe(false);
+    expect(g.publicView(s, ctx(T0 + 10_000)).reveal).toBeNull();
+  });
+
+  it("(c) bağlantısı kopan oyuncu beklenmez", () => {
+    let s = start(3);
+    const connected = ["p1", "p2"];
+    s = choose(s, "p1", 2);
+    s = choose(s, "p2", 2);
+    s = lockOk(s, "p1", 2_000, connected);
+    expect(s.endsAt).toBe(T0 + 20_000);
+    s = lockOk(s, "p2", 3_000, connected);
+    expect(s.endsAt).toBe(T0 + 4_000);
+    expect(g.result(s).miniScores).toEqual({ p1: 2, p2: 2, p3: 0 });
+  });
+
+  it("bağlı kalan katılımcı yokken tek kilit aşamayı bitirmez", () => {
+    let s = start(3);
+    s = choose(s, "p1", 1);
+    const r = lockOk(s, "p1", 2_000, ["p2", "p3"]);
+    expect(r.endsAt).toBe(T0 + 20_000);
+  });
+
+  it("(d) kilit sonrası değişiklik ve ikinci kilit reddedilir", () => {
+    let s = start(4);
+    s = choose(s, "p1", 2);
+    s = lockOk(s, "p1", 2_000);
+    expect(reject(s, "p1", 3, 3_000)).toEqual({ rejected: "locked" });
+    expect(reject(s, "p1", 2, 3_000)).toEqual({ rejected: "locked" });
+    expect(lock(s, "p1", 3_000)).toEqual({ rejected: "locked" });
+    expect(g.view(s, "p1", ctx(T0 + 3_000)).myChoice).toBe(2);
+  });
+
+  it("seçimi olmayan kilitleyemez; katılımcı olmayan kilitleyemez", () => {
+    const s = start(4);
+    expect(lock(s, "p1", 1_000)).toEqual({ rejected: "nothing_to_lock" });
+    expect(lock(s, "ghost", 1_000)).toEqual({ rejected: "not_participant" });
+  });
+
+  it("erken bitiş sonrası (1 sn bekleme dahil) seçim ve kilit reddedilir", () => {
+    let s = start(3);
+    for (const id of ids(3)) s = choose(s, id, 1);
+    for (const id of ids(3)) s = lockOk(s, id, 2_000);
+    expect(reject(s, "p1", 2, 3_000)).toEqual({ rejected: "ended" });
+    expect(lock(s, "p1", 3_000)).toEqual({ rejected: "ended" });
+  });
+
+  it("(e) kilit listesi seçimleri sızdırmaz", () => {
+    let s = start(4);
+    s = choose(choose(s, "p1", 3), "p2", 4);
+    s = lockOk(s, "p1", 2_000);
+    const pub = g.publicView(s, ctx(T0 + 3_000));
+    expect(pub.lockedIds).toEqual(["p1"]);
+    expect(pub.reveal).toBeNull();
+    expect(JSON.stringify(pub)).not.toContain("choices");
+    expect(g.view(s, "p2", ctx(T0 + 3_000))).toEqual({ myChoice: 4, locked: false });
+    expect(g.view(s, "p1", ctx(T0 + 3_000)).locked).toBe(true);
+    expect(g.view(s, null, ctx(T0 + 3_000))).toEqual({ myChoice: null, locked: false });
+  });
+
+  it("parseAction lock yalnız kind ile kabul edilir", () => {
+    expect(g.parseAction({ kind: "lock" })).toEqual({ kind: "lock" });
+    expect(g.parseAction({ kind: "lock", value: 1 })).toBeNull();
+  });
+});
+
 describe("acgozluluk-limiti gizlilik (yapısal)", () => {
   // Seçimler tek haneli sayılardır; alt dizgi sızıntı denetimi onları koruyamaz (secrets() boş).
   // Bu yüzden görünümlerin yapısı doğrudan denetlenir.
@@ -236,7 +337,7 @@ describe("acgozluluk-limiti gizlilik (yapısal)", () => {
       const pub = g.publicView(s, ctx(T0 + at));
       expect(pub.reveal).toBeNull();
       expect(Object.keys(pub).sort()).toEqual(
-        ["endsAt", "limit", "maxChoice", "reveal", "revealEndsAt", "startedAt"].sort(),
+        ["endsAt", "limit", "lockedIds", "maxChoice", "reveal", "revealEndsAt", "startedAt"].sort(),
       );
       const flat = JSON.stringify(pub);
       for (const id of ids(5)) expect(flat).not.toContain(id);
@@ -251,11 +352,11 @@ describe("acgozluluk-limiti gizlilik (yapısal)", () => {
     let s = start(5);
     s = choose(s, "p1", 5);
     s = choose(s, "p2", 4);
-    expect(g.view(s, "p1", ctx(T0 + 5_000))).toEqual({ myChoice: 5 });
-    expect(g.view(s, "p2", ctx(T0 + 5_000))).toEqual({ myChoice: 4 });
-    expect(g.view(s, "p3", ctx(T0 + 5_000))).toEqual({ myChoice: null });
-    expect(g.view(s, null, ctx(T0 + 5_000))).toEqual({ myChoice: null });
-    expect(g.view(s, "ghost", ctx(T0 + 5_000))).toEqual({ myChoice: null });
+    expect(g.view(s, "p1", ctx(T0 + 5_000))).toEqual({ myChoice: 5, locked: false });
+    expect(g.view(s, "p2", ctx(T0 + 5_000))).toEqual({ myChoice: 4, locked: false });
+    expect(g.view(s, "p3", ctx(T0 + 5_000))).toEqual({ myChoice: null, locked: false });
+    expect(g.view(s, null, ctx(T0 + 5_000))).toEqual({ myChoice: null, locked: false });
+    expect(g.view(s, "ghost", ctx(T0 + 5_000))).toEqual({ myChoice: null, locked: false });
   });
 
   it("bir oyuncunun seçimini değiştirmek başkasının görünümünü değiştirmez", () => {
@@ -271,6 +372,6 @@ describe("acgozluluk-limiti gizlilik (yapısal)", () => {
     const s = choose(choose(start(3), "p1", 1), "p2", 2);
     const at = ctx(T0 + 21_000);
     expect(g.publicView(s, at).reveal?.choices).toEqual({ p1: 1, p2: 2, p3: 0 });
-    expect(g.view(s, "p3", at)).toEqual({ myChoice: null });
+    expect(g.view(s, "p3", at)).toEqual({ myChoice: null, locked: false });
   });
 });

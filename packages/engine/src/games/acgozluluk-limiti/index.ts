@@ -2,6 +2,8 @@ import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import {
   ACGOZLULUK_CHOOSE_MS,
   ACGOZLULUK_DURATION_MS,
+  ACGOZLULUK_LOCK_GRACE_MS,
+  ACGOZLULUK_REVEAL_MS,
   ACGOZLULUK_WIRE_MAX,
   type AcgozlulukAction,
   type AcgozlulukPublicView,
@@ -23,6 +25,8 @@ export interface AcgozlulukState {
   maxChoice: number;
   /** Yalnız seçim gönderenler; son seçim geçerlidir. Gönderilmeyen 0 sayılır. */
   choices: Record<string, number>;
+  /** Seçimini kilitleyenler (kilit sırasıyla). `endsAt`/`revealEndsAt` erken bitişte reduce içinde öne çekilir. */
+  locked: string[];
   /**
    * Seçim süresi doldu mu. Görünümler bundan değil `ctx.now`'dan türetilir; bayrak yalnız sunucunun
    * "durum değişti" sinyalini almasını sağlar (aksi halde seçimlerin açıldığı an kimseye yayınlanmaz).
@@ -64,6 +68,7 @@ export const acgozlulukLimiti: GameDefinition<
   parseAction(raw: unknown): AcgozlulukAction | null {
     if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
     const rec = raw as Record<string, unknown>;
+    if (rec.kind === "lock") return Object.keys(rec).length === 1 ? { kind: "lock" } : null;
     if (Object.keys(rec).length !== 2 || rec.kind !== "choose") return null;
     const value = rec.value;
     if (typeof value !== "number" || !Number.isInteger(value)) return null;
@@ -80,6 +85,7 @@ export const acgozlulukLimiti: GameDefinition<
       limit: acgozlulukLimit(players.length),
       maxChoice: players.length,
       choices: {},
+      locked: [],
       revealed: false,
     };
   },
@@ -88,6 +94,16 @@ export const acgozlulukLimiti: GameDefinition<
     if (!state.players.includes(playerId)) return { rejected: "not_participant" };
     if (ctx.now >= state.endsAt) return { rejected: "ended" };
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
+    if (state.locked.includes(playerId)) return { rejected: "locked" };
+    if (action.kind === "lock") {
+      if (state.choices[playerId] === undefined) return { rejected: "nothing_to_lock" };
+      const locked = [...state.locked, playerId];
+      const waiting = state.players.some((id) => ctx.connected.includes(id) && !locked.includes(id));
+      if (waiting) return { ...state, locked };
+      // Bağlı herkes kilitledi: seçim aşaması 1 sn sonra biter.
+      const endsAt = Math.min(state.endsAt, ctx.now + ACGOZLULUK_LOCK_GRACE_MS);
+      return { ...state, locked, endsAt, revealEndsAt: endsAt + ACGOZLULUK_REVEAL_MS };
+    }
     if (action.value < 0 || action.value > state.maxChoice) return { rejected: "out_of_range" };
     if (state.choices[playerId] === action.value) return state;
     return { ...state, choices: { ...state.choices, [playerId]: action.value } };
@@ -107,12 +123,13 @@ export const acgozlulukLimiti: GameDefinition<
       maxChoice: state.maxChoice,
       // Süre dolmadan kimsenin seçimi ve toplam yoktur.
       reveal: ctx.now >= state.endsAt ? settle(state) : null,
+      lockedIds: [...state.locked],
     };
   },
 
   view(state, playerId): AcgozlulukView {
     const mine = playerId === null ? undefined : state.choices[playerId];
-    return { myChoice: mine ?? null };
+    return { myChoice: mine ?? null, locked: playerId !== null && state.locked.includes(playerId) };
   },
 
   isFinished(state, ctx): boolean {

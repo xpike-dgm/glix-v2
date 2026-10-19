@@ -17,6 +17,8 @@ interface Props {
   /** Açılmış seçimler; null iken hazne kapalıdır. */
   choices: Record<string, number> | null;
   over: boolean;
+  /** Seçimini kilitleyenler: jetonları "hazır" görünür (değer yine gizli). */
+  lockedIds?: readonly string[];
 }
 
 /** Ortak neon hazne: kapalıyken üstü kapalı jetonlar, açılınca herkesin jetonları dolar. */
@@ -48,10 +50,17 @@ export function Tank(props: Props) {
                 {(e) => (
                   <span
                     class="tok"
-                    classList={{ "tok--me": e.id === props.selfId }}
+                    classList={{
+                      "tok--me": e.id === props.selfId,
+                      "tok--ready": props.lockedIds?.includes(e.id) ?? false,
+                    }}
                     style={{ "--c": `var(--p${e.avatar + 1})` }}
                   >
-                    {e.id === props.selfId ? (props.mine ?? "?") : "?"}
+                    {props.lockedIds?.includes(e.id) && e.id !== props.selfId
+                      ? "✓"
+                      : e.id === props.selfId
+                        ? (props.mine ?? "?")
+                        : "?"}
                   </span>
                 )}
               </For>

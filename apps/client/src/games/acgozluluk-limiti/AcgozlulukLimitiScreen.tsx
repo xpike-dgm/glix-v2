@@ -7,6 +7,7 @@ import { Avatar } from "../../ui/Avatar.js";
 import { ProgressBar } from "../../ui/ProgressBar.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
+import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./acgozluluk-limiti.css";
 import { Tank, type TankEntry } from "./Tank.js";
@@ -21,6 +22,8 @@ export default function AcgozlulukLimitiScreen(props: GameScreenProps) {
     })),
   );
   const reveal = () => view()?.reveal ?? null;
+  const lockedIds = () => view()?.lockedIds ?? [];
+  const locked = () => view()?.locked ?? false;
   const closed = () => {
     const v = view();
     return !v || props.now() >= v.endsAt || v.reveal !== null;
@@ -43,13 +46,18 @@ export default function AcgozlulukLimitiScreen(props: GameScreenProps) {
   );
 
   const choose = (value: number): void => {
-    if (props.spectator || closed()) return;
+    if (props.spectator || closed() || locked()) return;
     unlockAudio();
     tap();
     hapticTap();
     if (mine() === value) return;
     setLocal(value);
     sendAction({ kind: "choose", value });
+  };
+
+  const lock = (): void => {
+    if (props.spectator || closed() || locked() || mine() === null) return;
+    sendAction({ kind: "lock" });
   };
 
   // Sonuç açılınca bir kez ses ve titreşim.
@@ -120,6 +128,7 @@ export default function AcgozlulukLimitiScreen(props: GameScreenProps) {
                 mine={mine()}
                 choices={reveal()?.choices ?? null}
                 over={reveal()?.over ?? false}
+                lockedIds={lockedIds()}
               />
             </div>
 
@@ -127,9 +136,27 @@ export default function AcgozlulukLimitiScreen(props: GameScreenProps) {
               when={reveal()}
               fallback={
                 <div class="lim__pick">
-                  <Show when={!props.spectator} fallback={<p class="lim__hint">Herkes gizlice seçiyor…</p>}>
+                  <Show
+                    when={!props.spectator}
+                    fallback={
+                      <>
+                        <p class="lim__hint">Herkes gizlice seçiyor…</p>
+                        <TamamBar
+                          spectator
+                          locked={false}
+                          ready={lockedIds().length}
+                          total={entries().length}
+                          onLock={lock}
+                        />
+                      </>
+                    }
+                  >
                     <p class="lim__hint">
-                      {mine() === null ? "Bir sayı seç" : "Süre bitene kadar değiştirebilirsin"}
+                      {locked()
+                        ? "Seçimin kesinleşti"
+                        : mine() === null
+                          ? "Bir sayı seç"
+                          : "Değiştirebilir ya da Tamam diyebilirsin"}
                     </p>
                     <div class="lim-chips" style={{ "--cols": chipColumns(options().length) }}>
                       <For each={options()}>
@@ -138,7 +165,7 @@ export default function AcgozlulukLimitiScreen(props: GameScreenProps) {
                             type="button"
                             class="lim-chip"
                             aria-pressed={mine() === n}
-                            disabled={closed()}
+                            disabled={closed() || locked()}
                             onPointerDown={(e) => {
                               e.preventDefault();
                               choose(n);
@@ -155,6 +182,13 @@ export default function AcgozlulukLimitiScreen(props: GameScreenProps) {
                         )}
                       </For>
                     </div>
+                    <TamamBar
+                      locked={locked()}
+                      disabled={closed() || mine() === null}
+                      ready={lockedIds().length}
+                      total={entries().length}
+                      onLock={lock}
+                    />
                   </Show>
                 </div>
               }
