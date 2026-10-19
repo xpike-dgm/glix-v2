@@ -12,8 +12,8 @@ import {
   zonesTopDown,
 } from "./view.js";
 
-const pub = { startedAt: 100, endsAt: 30_100, revealEndsAt: 37_100, reveal: null };
-const priv = { myChoice: 42 };
+const pub = { startedAt: 100, endsAt: 30_100, revealEndsAt: 37_100, reveal: null, lockedIds: ["a"] };
+const priv = { myChoice: 42, locked: false };
 const reveal: CizgiReveal = {
   choices: { a: 95, b: 91, c: 72, d: null, e: 30 },
   status: { a: "crashed", b: "crashed", c: "first", d: "none", e: "second" },
@@ -21,9 +21,18 @@ const reveal: CizgiReveal = {
 };
 
 describe("Çizgiyi Geçme görünümü", () => {
+  it("kilit bilgisini okur, bozuksa reddeder", () => {
+    expect(parseCizgiView(pub, { myChoice: 42, locked: true })).toMatchObject({
+      locked: true,
+      lockedIds: ["a"],
+    });
+    expect(parseCizgiView({ ...pub, lockedIds: [1] }, priv)).toBeNull();
+    expect(parseCizgiView({ ...pub, lockedIds: undefined }, priv)).toBeNull();
+    expect(parseCizgiView(pub, { myChoice: 42 })).toBeNull();
+  });
   it("geçerli görünümleri birleştirir", () => {
     expect(parseCizgiView(pub, priv)).toMatchObject({ myChoice: 42, reveal: null });
-    expect(parseCizgiView(pub, { myChoice: null })?.myChoice).toBeNull();
+    expect(parseCizgiView(pub, { myChoice: null, locked: false })?.myChoice).toBeNull();
   });
   it("açılmış sonucu okur", () => {
     expect(parseCizgiView({ ...pub, reveal }, priv)?.reveal).toEqual(reveal);
@@ -53,9 +62,9 @@ describe("Çizgiyi Geçme görünümü", () => {
       parseCizgiView({ ...pub, reveal: { ...reveal, status: { ...reveal.status, a: "none" } } }, priv),
     ).toBeNull();
     expect(parseCizgiView({ ...pub, reveal: { ...reveal, status: { a: "crashed" } } }, priv)).toBeNull();
-    expect(parseCizgiView(pub, { myChoice: -1 })).toBeNull();
-    expect(parseCizgiView(pub, { myChoice: 101 })).toBeNull();
-    expect(parseCizgiView(pub, { myChoice: 4.5 })).toBeNull();
+    expect(parseCizgiView(pub, { myChoice: -1, locked: false })).toBeNull();
+    expect(parseCizgiView(pub, { myChoice: 101, locked: false })).toBeNull();
+    expect(parseCizgiView(pub, { myChoice: 4.5, locked: false })).toBeNull();
     expect(parseCizgiView(pub, {})).toBeNull();
   });
   it("bölgeler: 0–9 … 90–99 ve tek elemanlı 100", () => {

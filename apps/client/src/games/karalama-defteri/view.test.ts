@@ -8,9 +8,19 @@ const pub = {
   players: ["a", "b"],
   drawings: { a: [[0, 2, 0, 0, 10, 10]], b: [] },
   voted: ["a"],
+  drawDoneIds: ["b"],
+  lockedIds: ["a"],
   reveal: null,
 };
-const priv = { word: "elma", near: false, strokes: {}, pointsLeft: 6000, myVote: null };
+const priv = {
+  word: "elma",
+  near: false,
+  strokes: {},
+  pointsLeft: 6000,
+  myVote: null,
+  drawDone: false,
+  locked: false,
+};
 
 describe("Karalama Defteri görünümü", () => {
   it("geçerli görünümleri birleştirir", () => {
@@ -19,6 +29,15 @@ describe("Karalama Defteri görünümü", () => {
     expect(v?.drawings?.a?.strokes).toEqual([[0, 2, 0, 0, 10, 10]]);
     expect(v?.drawings?.b?.strokes).toEqual([]);
     expect(v?.word).toBe("elma");
+  });
+
+  it("kilit alanlarını okur ve bozuksa reddeder", () => {
+    const v = parseKaralamaView(pub, { ...priv, drawDone: true, locked: true });
+    expect(v).toMatchObject({ drawDoneIds: ["b"], lockedIds: ["a"], drawDone: true, locked: true });
+    expect(parseKaralamaPublicView({ ...pub, lockedIds: [1] })).toBeNull();
+    expect(parseKaralamaPublicView({ ...pub, drawDoneIds: undefined })).toBeNull();
+    expect(parseKaralamaPrivateView({ ...priv, locked: "x" })).toBeNull();
+    expect(parseKaralamaPrivateView({ ...priv, drawDone: undefined })).toBeNull();
   });
 
   it("çizim süresince drawings null, kendi darbeler numaraya göre sıralanır", () => {

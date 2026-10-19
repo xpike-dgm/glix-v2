@@ -34,14 +34,21 @@ export function parseOrtalamaPublicView(v: unknown): OrtalamaPublicView | null {
   if (!isNum(v.startedAt) || !isNum(v.endsAt) || !isNum(v.revealEndsAt)) return null;
   const reveal = parseReveal(v.reveal);
   if (reveal === undefined) return null;
-  return { startedAt: v.startedAt, endsAt: v.endsAt, revealEndsAt: v.revealEndsAt, reveal };
+  if (!Array.isArray(v.lockedIds) || v.lockedIds.length > 64) return null;
+  const lockedIds: string[] = [];
+  for (const id of v.lockedIds) {
+    if (typeof id !== "string" || id.length > 64) return null;
+    lockedIds.push(id);
+  }
+  return { startedAt: v.startedAt, endsAt: v.endsAt, revealEndsAt: v.revealEndsAt, reveal, lockedIds };
 }
 
 /** Sunucudan gelen `view` bilinmez; kişisel görünüm olarak doğrulanır. */
 export function parseOrtalamaPrivateView(v: unknown): OrtalamaView | null {
   if (!isRec(v)) return null;
   if (v.myChoice !== null && !isInt(v.myChoice, 0, 100)) return null;
-  return { myChoice: v.myChoice };
+  if (typeof v.locked !== "boolean") return null;
+  return { myChoice: v.myChoice, locked: v.locked };
 }
 
 /** İki görünüm de geçerliyse birleşik görünümü verir. */

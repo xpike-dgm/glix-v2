@@ -2,6 +2,7 @@
  * Yalnız geliştirme önizlemesi: Çizgiyi Geçme ekranları (`&n=2..8` oyuncu sayısı).
  *   ?mock=cizgi-briefing          anlatım
  *   ?mock=cizgi-choosing          seçim; sayı seçici çalışır (`&chosen=0` ile seçimsiz başlar)
+ *   ?mock=cizgi-locked            pinin kilitli, diğerleri bekleniyor
  *   ?mock=cizgi-reveal            sonuç: çarpışma, +2 ve +1 (`&n=` ile oyuncu sayısı)
  *   ?mock=cizgi-reveal-crowd      sonuç: herkes aynı platformda (kimse puan almaz)
  *   ?mock=cizgi-reveal-passive    sonuç: seçmeyenler pasif
@@ -48,6 +49,7 @@ export function startCizgiMock(kind: string, params: URLSearchParams): void {
   let readyIds: string[] = [];
   let phaseEndsAt: number | null = null;
   let myChoice: number | null = params.get("chosen") === "0" ? null : 50;
+  let locked = kind === "cizgi-locked";
   let rev = 1;
   const revealed = kind.startsWith("cizgi-reveal");
   const startedAt = revealed ? now - CIZGI_CHOOSE_MS - 300 : now - 8_000;
@@ -65,6 +67,7 @@ export function startCizgiMock(kind: string, params: URLSearchParams): void {
       endsAt: startedAt + CIZGI_CHOOSE_MS,
       revealEndsAt: startedAt + CIZGI_DURATION_MS,
       choices,
+      locked: [],
       revealed: true,
     });
   };
@@ -75,8 +78,12 @@ export function startCizgiMock(kind: string, params: URLSearchParams): void {
       endsAt: startedAt + CIZGI_CHOOSE_MS,
       revealEndsAt: startedAt + CIZGI_DURATION_MS,
       reveal: revealed ? reveal() : null,
+      lockedIds: [
+        ...(locked && !spectator ? [SELF] : []),
+        ...participants.filter((id, i) => id !== SELF && i % 2 === 1 && (locked || spectator)),
+      ],
     },
-    priv: { myChoice: spectator ? null : myChoice },
+    priv: { myChoice: spectator ? null : myChoice, locked: !spectator && locked },
   });
 
   const snapshot = (): RoomSnapshot => {
@@ -120,7 +127,11 @@ export function startCizgiMock(kind: string, params: URLSearchParams): void {
   useMockSender((msg) => {
     if (msg.type !== "action") return;
     const payload = msg.payload as { kind?: string; value?: number } | null;
-    if (payload?.kind === "choose" && typeof payload.value === "number") {
+    if (payload?.kind === "lock" && myChoice !== null) {
+      locked = true;
+      applySnapshot(snapshot());
+    }
+    if (payload?.kind === "choose" && typeof payload.value === "number" && !locked) {
       myChoice = payload.value;
       applySnapshot(snapshot());
     }

@@ -31,18 +31,24 @@ function parseReveal(v: unknown): CaprazAtesReveal | null {
 export function parseCaprazAtesPublicView(v: unknown): CaprazAtesPublicView | null {
   if (!isRec(v)) return null;
   if (!isNum(v.startedAt) || !isNum(v.endsAt) || !isNum(v.finishAt)) return null;
-  if (v.reveal === null || v.reveal === undefined) {
-    return { startedAt: v.startedAt, endsAt: v.endsAt, finishAt: v.finishAt, reveal: null };
+  if (!Array.isArray(v.lockedIds) || v.lockedIds.length > 64) return null;
+  const lockedIds: string[] = [];
+  for (const id of v.lockedIds) {
+    if (typeof id !== "string" || id.length > 64) return null;
+    lockedIds.push(id);
   }
+  const base = { startedAt: v.startedAt, endsAt: v.endsAt, finishAt: v.finishAt, lockedIds };
+  if (v.reveal === null || v.reveal === undefined) return { ...base, reveal: null };
   const reveal = parseReveal(v.reveal);
-  return reveal ? { startedAt: v.startedAt, endsAt: v.endsAt, finishAt: v.finishAt, reveal } : null;
+  return reveal ? { ...base, reveal } : null;
 }
 
 /** Sunucudan gelen `view` bilinmez; kişisel görünüm olarak doğrulanır. */
 export function parseCaprazAtesPrivateView(v: unknown): CaprazAtesView | null {
   if (!isRec(v)) return null;
   if (v.myTarget !== null && typeof v.myTarget !== "string") return null;
-  return { myTarget: v.myTarget };
+  if (typeof v.locked !== "boolean") return null;
+  return { myTarget: v.myTarget, locked: v.locked };
 }
 
 /** İki görünüm de geçerliyse birleşik görünümü verir. */

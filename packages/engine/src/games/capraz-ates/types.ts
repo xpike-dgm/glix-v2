@@ -7,7 +7,10 @@ export const CAPRAZ_ATES_REVEAL_MS = 7_000;
 export const CAPRAZ_ATES_DURATION_MS = CAPRAZ_ATES_FIRE_MS + CAPRAZ_ATES_REVEAL_MS;
 
 /** Kendin dışındaki bağlı bir katılımcıyı hedefle; süre bitene kadar değiştirilebilir (son seçim geçerli). */
-export type CaprazAtesAction = { kind: "target"; target: string };
+export type CaprazAtesAction = { kind: "target"; target: string } | { kind: "lock" };
+
+/** Son kilitten sonra hedeflerin açılmasına kalan süre (ms). */
+export const CAPRAZ_ATES_LOCK_GRACE_MS = 1_000;
 
 export interface CaprazAtesReveal {
   /** Her katılımcının hedefi; hedef seçmeyen null. */
@@ -26,9 +29,13 @@ export interface CaprazAtesPublicView {
   /** Oyunun bitişi (izlerin gösterimi dahil). */
   finishAt: number;
   reveal: CaprazAtesReveal | null;
+  /** Hedefini kilitleyenler (yalnız kimler; hedefin kendisi değil). */
+  lockedIds: string[];
 }
 
 /** Kişiye özel görünüm: yalnız kendi hedefin. İzleyicide null. */
 export interface CaprazAtesView {
   myTarget: string | null;
+  /** Hedefini kilitledin mi. */
+  locked: boolean;
 }

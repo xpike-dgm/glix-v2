@@ -132,7 +132,7 @@ describe("cizgiyi-gecme kuralları", () => {
     s = choose(s, "p1", 55, 1_000);
     s = choose(s, "p2", 58, 2_000);
     s = choose(s, "p2", 80, 29_999);
-    expect(g.view(s, "p2", ctx(T0 + 29_999))).toEqual({ myChoice: 80 });
+    expect(g.view(s, "p2", ctx(T0 + 29_999))).toEqual({ myChoice: 80, locked: false });
     expect(reveal(s).status).toMatchObject({ p1: "second", p2: "first" });
   });
 
@@ -206,7 +206,7 @@ describe("cizgiyi-gecme gizlilik (yapısal)", () => {
     for (const at of [0, 1, 15_000, 29_999]) {
       const pub = g.publicView(s, ctx(T0 + at));
       expect(pub.reveal).toBeNull();
-      expect(Object.keys(pub).sort()).toEqual(["endsAt", "reveal", "revealEndsAt", "startedAt"]);
+      expect(Object.keys(pub).sort()).toEqual(["endsAt", "lockedIds", "reveal", "revealEndsAt", "startedAt"]);
       const flat = JSON.stringify(pub);
       for (const id of ids(5)) expect(flat).not.toContain(id);
       for (const k of ["choices", "status", "points", "zone", "zones"]) expect(keys(pub)).not.toContain(k);
@@ -219,16 +219,96 @@ describe("cizgiyi-gecme gizlilik (yapısal)", () => {
     s = choose(s, "p1", 77);
     s = choose(s, "p2", 71); // p1 ile aynı bölge: bunu kimse önceden öğrenemez
     for (const at of [0, 5_000, 29_999, 30_000, 36_000]) {
-      expect(g.view(s, "p1", ctx(T0 + at))).toEqual({ myChoice: 77 });
-      expect(g.view(s, "p2", ctx(T0 + at))).toEqual({ myChoice: 71 });
-      expect(g.view(s, "p3", ctx(T0 + at))).toEqual({ myChoice: null });
-      expect(g.view(s, null, ctx(T0 + at))).toEqual({ myChoice: null });
-      expect(g.view(s, "ghost", ctx(T0 + at))).toEqual({ myChoice: null });
+      expect(g.view(s, "p1", ctx(T0 + at))).toEqual({ myChoice: 77, locked: false });
+      expect(g.view(s, "p2", ctx(T0 + at))).toEqual({ myChoice: 71, locked: false });
+      expect(g.view(s, "p3", ctx(T0 + at))).toEqual({ myChoice: null, locked: false });
+      expect(g.view(s, null, ctx(T0 + at))).toEqual({ myChoice: null, locked: false });
+      expect(g.view(s, "ghost", ctx(T0 + at))).toEqual({ myChoice: null, locked: false });
     }
   });
 
   it("süre dolunca seçimler herkese açılır", () => {
     const s = choose(start(3), "p1", 77);
     expect(g.publicView(s, ctx(T0 + CIZGI_CHOOSE_MS)).reveal?.choices.p1).toBe(77);
+  });
+});
+
+describe("cizgiyi-gecme erken bitiş", () => {
+  const lock = (state: CizgiState, id: string, at: number, connected: readonly string[] = ids(8)) =>
+    g.reduce(state, id, { kind: "lock" }, ctx(T0 + at, connected));
+  const lockOk = (state: CizgiState, id: string, at: number, connected?: readonly string[]) => {
+    const r = lock(state, id, at, connected);
+    if (isRejected(r)) throw new Error(`reddedildi: ${r.rejected}`);
+    return r;
+  };
+  const chosen = (n = 3): CizgiState => {
+    let s = start(n);
+    for (const [i, id] of ids(n).entries()) s = choose(s, id, 20 * (i + 1));
+    return s;
+  };
+
+  it("(a) herkes kilitleyince seçim aşaması 1 sn sonra biter, sonuç değişmez", () => {
+    const base = chosen();
+    let s = base;
+    for (const id of ids(3)) s = lockOk(s, id, 4_000);
+    expect(s.endsAt).toBe(T0 + 5_000);
+    expect(g.publicView(s, ctx(T0 + 4_999)).reveal).toBeNull();
+    expect(g.publicView(s, ctx(T0 + 5_000)).reveal?.status).toEqual({
+      p1: "safe",
+      p2: "second",
+      p3: "first",
+    });
+    expect(g.isFinished(s, ctx(T0 + 4_999 + CIZGI_REVEAL_MS))).toBe(false);
+    expect(g.isFinished(s, ctx(T0 + 5_000 + CIZGI_REVEAL_MS))).toBe(true);
+    expect(g.tick(s, ctx(T0 + 5_000)).revealed).toBe(true);
+    expect(g.result(s)).toEqual(g.result(base));
+  });
+
+  it("(b) bir kişi eksikken bitmez", () => {
+    const s = lockOk(lockOk(chosen(), "p1", 2_000), "p2", 3_000);
+    expect(s.endsAt).toBe(T0 + CIZGI_CHOOSE_MS);
+    expect(g.publicView(s, ctx(T0 + 10_000)).reveal).toBeNull();
+    expect(g.isFinished(s, ctx(T0 + 10_000))).toBe(false);
+  });
+
+  it("(c) bağlantısı kopan oyuncu beklenmez", () => {
+    const online = ["p1", "p2"];
+    let s = choose(choose(start(3), "p1", 10), "p2", 50);
+    s = lockOk(s, "p1", 2_000, online);
+    expect(s.endsAt).toBe(T0 + CIZGI_CHOOSE_MS);
+    s = lockOk(s, "p2", 3_000, online);
+    expect(s.endsAt).toBe(T0 + 4_000);
+  });
+
+  it("(d) kilit sonrası değişiklik ve ikinci kilit reddedilir; seçimsiz kilitlenemez", () => {
+    const s = lockOk(chosen(), "p1", 2_000);
+    expect(reject(s, "p1", 99, 2_500)).toEqual({ rejected: "locked" });
+    expect(reject(s, "p1", 20, 2_500)).toEqual({ rejected: "locked" });
+    expect(lock(s, "p1", 2_500)).toEqual({ rejected: "locked" });
+    expect(g.view(s, "p1", ctx(T0 + 2_500))).toEqual({ myChoice: 20, locked: true });
+    expect(lock(start(3), "p1", 1_000)).toEqual({ rejected: "nothing_to_lock" });
+    expect(lock(start(3), "ghost", 1_000)).toEqual({ rejected: "not_participant" });
+  });
+
+  it("erken bitişten sonra (1 sn bekleme dahil) eylem reddedilir", () => {
+    let s = chosen();
+    for (const id of ids(3)) s = lockOk(s, id, 2_000);
+    expect(reject(s, "p1", 5, 3_000)).toEqual({ rejected: "ended" });
+    expect(lock(s, "p1", 3_000)).toEqual({ rejected: "ended" });
+  });
+
+  it("(e) kilit listesi seçimleri sızdırmaz", () => {
+    const s = lockOk(chosen(), "p2", 2_000);
+    const pub = g.publicView(s, ctx(T0 + 2_500));
+    expect(pub.lockedIds).toEqual(["p2"]);
+    expect(pub.reveal).toBeNull();
+    expect(JSON.stringify(pub)).not.toContain("choices");
+    expect(g.view(s, "p1", ctx(T0 + 2_500))).toEqual({ myChoice: 20, locked: false });
+    expect(g.view(s, null, ctx(T0 + 2_500))).toEqual({ myChoice: null, locked: false });
+  });
+
+  it("parseAction lock yalnız kind ile kabul edilir", () => {
+    expect(g.parseAction({ kind: "lock" })).toEqual({ kind: "lock" });
+    expect(g.parseAction({ kind: "lock", value: 3 })).toBeNull();
   });
 });

@@ -4,6 +4,7 @@
  *   ?mock=capraz-briefing    anlatım
  *   ?mock=capraz-ates        hedef seçme (dokununca kilitlenir)
  *   ?mock=capraz-locked      hedef seçilmiş
+ *   ?mock=capraz-tamam      hedefin kilitli, diğerleri bekleniyor
  *   ?mock=capraz-closed      süre doldu, hedefler açılıyor
  *   ?mock=capraz-reveal      hedefler açıldı: izler, çarpışma, puan etiketleri
  *   ?mock=capraz-spectator   katılımcı değilsin (hedef seçme)
@@ -49,8 +50,10 @@ export function startCaprazMock(kind: string, params: URLSearchParams): void {
   const sample = Object.fromEntries(
     Object.entries(SAMPLE).filter(([from, to]) => participants.includes(from) && participants.includes(to)),
   );
-  let myTarget: string | null = kind === "capraz-locked" ? (n > 2 ? "p2" : "p1") : null;
+  let myTarget: string | null =
+    kind === "capraz-locked" || kind === "capraz-tamam" ? (n > 2 ? "p2" : "p1") : null;
   if (revealed) myTarget = sample[SELF] ?? null;
+  let locked = kind === "capraz-tamam";
   let phase: RoomPhase = kind === "capraz-briefing" ? "briefing" : "playing";
   let rev = 1;
   let readyIds: string[] = [];
@@ -60,6 +63,10 @@ export function startCaprazMock(kind: string, params: URLSearchParams): void {
     endsAt,
     finishAt,
     reveal: revealed ? caprazAtesReveal(participants, sample) : null,
+    lockedIds: [
+      ...(locked && !watching ? [SELF] : []),
+      ...participants.filter((id, i) => id !== SELF && i % 2 === 1 && (watching || kind === "capraz-tamam")),
+    ],
   });
 
   const publish = (): void => {
@@ -76,7 +83,8 @@ export function startCaprazMock(kind: string, params: URLSearchParams): void {
       phaseStartedAt: startedAt,
       phaseEndsAt: phase === "briefing" ? now + 40_000 : null,
       publicView: phase === "briefing" ? null : publicView(),
-      view: phase === "briefing" ? null : { myTarget: watching ? null : myTarget },
+      view:
+        phase === "briefing" ? null : { myTarget: watching ? null : myTarget, locked: !watching && locked },
       result: null,
     };
     const snapshot: RoomSnapshot = {
@@ -111,7 +119,16 @@ export function startCaprazMock(kind: string, params: URLSearchParams): void {
     }
     if (msg.type === "action") {
       const payload = msg.payload as { kind?: unknown; target?: unknown };
-      if (payload.kind === "target" && typeof payload.target === "string" && ids.includes(payload.target)) {
+      if (payload.kind === "lock" && myTarget !== null) {
+        locked = true;
+        publish();
+      }
+      if (
+        payload.kind === "target" &&
+        !locked &&
+        typeof payload.target === "string" &&
+        ids.includes(payload.target)
+      ) {
         setTimeout(() => {
           myTarget = payload.target as string;
           publish();

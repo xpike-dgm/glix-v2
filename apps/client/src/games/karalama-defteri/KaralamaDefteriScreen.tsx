@@ -2,6 +2,7 @@
 import { createMemo, Match, Show, Switch } from "solid-js";
 import { Avatar } from "../../ui/Avatar.js";
 import { Screen } from "../../ui/Screen.js";
+import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./karalama.css";
 import { DrawBoard } from "./DrawBoard.js";
@@ -38,9 +39,21 @@ export default function KaralamaDefteriScreen(props: GameScreenProps) {
                 </svg>
                 <div class="kd__crew">
                   {crew().map((p) => (
-                    <Avatar index={p.avatar} size={40} connected={p.connected} />
+                    <Avatar
+                      index={p.avatar}
+                      size={40}
+                      connected={p.connected}
+                      ready={v().drawDoneIds.includes(p.id)}
+                    />
                   ))}
                 </div>
+                <TamamBar
+                  spectator
+                  locked={false}
+                  ready={v().drawDoneIds.length}
+                  total={v().players.length}
+                  onLock={() => undefined}
+                />
               </div>
             </Match>
             <Match when={true}>

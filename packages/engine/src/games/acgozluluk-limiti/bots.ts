@@ -14,6 +14,7 @@ const limitOf = (pub: unknown): number => {
 const generate: ActionGenerator = (rng, _playerId, publicView) => {
   const max = maxOf(publicView);
   const share = limitOf(publicView) / Math.max(1, max);
+  if (rng.int(12) === 0) return { kind: "lock" };
   const roll = rng.int(10);
   let value: number;
   if (roll === 0) value = 0;

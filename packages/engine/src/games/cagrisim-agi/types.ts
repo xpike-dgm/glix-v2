@@ -8,6 +8,10 @@ export const CAGRISIM_TOTAL_MS = CAGRISIM_ANSWER_MS + CAGRISIM_REVEAL_MS;
 /** Teknik üst sınır (karakter); kural "sınır yok" der, bu yalnız ağ mesajını korur. */
 export const CAGRISIM_MAX_LENGTH = 60;
 
+/** Son cevaptan sonra cevapların açılmasına kalan süre (ms). */
+export const CAGRISIM_LOCK_GRACE_MS = 1_000;
+
+/** Gönderilen cevap kesindir (değiştirilemez); ayrı bir kilit eylemi yoktur: cevap göndermek "Tamam"dır. */
 export type CagrisimAgiAction = { kind: "answer"; text: string };
 
 /** Aynı normalleştirilmiş cevabı veren en az iki oyuncu. */

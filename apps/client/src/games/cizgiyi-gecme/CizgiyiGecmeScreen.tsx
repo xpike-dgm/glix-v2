@@ -1,4 +1,4 @@
-import { createMemo, For, Show } from "solid-js";
+import { createMemo, createSignal, For, Show } from "solid-js";
 import { hapticTap } from "../../fx/haptics.js";
 import { sendAction } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
@@ -8,6 +8,7 @@ import { createChoiceSync } from "../../ui/numberPicker.js";
 import { ProgressBar } from "../../ui/ProgressBar.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
+import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./cizgiyi-gecme.css";
 import { Sonuc, type SonucEntry } from "./Sonuc.js";
@@ -28,9 +29,12 @@ export default function CizgiyiGecmeScreen(props: GameScreenProps) {
   );
   const me = () => entries().find((e) => e.id === props.selfId);
   const reveal = () => view()?.reveal ?? null;
+  const [sentLock, setSentLock] = createSignal(false);
+  const lockedIds = () => view()?.lockedIds ?? [];
+  const locked = () => (view()?.locked ?? false) || sentLock();
   const closed = () => {
     const v = view();
-    return props.spectator === true || !v || props.now() >= v.endsAt || v.reveal !== null;
+    return props.spectator === true || !v || locked() || props.now() >= v.endsAt || v.reveal !== null;
   };
 
   const sync = createChoiceSync({
@@ -42,6 +46,15 @@ export default function CizgiyiGecmeScreen(props: GameScreenProps) {
   });
   const mine = (): number | null => sync.value() ?? view()?.myChoice ?? null;
   const zone = () => zoneOf(mine() ?? 0);
+
+  const lock = (): void => {
+    const v = view();
+    const value = mine();
+    if (!v || value === null || closed()) return;
+    // Sürükleme bitmeden basıldıysa en son değer önce gider (iletiler sıralı ulaşır).
+    if (v.myChoice !== value) sendAction({ kind: "choose", value });
+    if (sendAction({ kind: "lock" })) setSentLock(true);
+  };
 
   return (
     <Screen class="cg">
@@ -70,7 +83,9 @@ export default function CizgiyiGecmeScreen(props: GameScreenProps) {
                       ? "Sonuç süre bitince açılır"
                       : mine() === null
                         ? "Seçmezsen pasif kalırsın"
-                        : `${zoneLabel(zone())} platformundasın`}
+                        : locked()
+                          ? `${zoneLabel(zone())} platformunda kesinleştin`
+                          : `${zoneLabel(zone())} platformundasın`}
                   </p>
                 </div>
 
@@ -104,7 +119,20 @@ export default function CizgiyiGecmeScreen(props: GameScreenProps) {
                   </Show>
                 </div>
 
-                <Show when={!props.spectator}>
+                <Show
+                  when={!props.spectator}
+                  fallback={
+                    <div class="cg__pick">
+                      <TamamBar
+                        spectator
+                        locked={false}
+                        ready={lockedIds().length}
+                        total={entries().length}
+                        onLock={lock}
+                      />
+                    </div>
+                  }
+                >
                   <div class="cg__pick">
                     <NumberPicker
                       min={0}
@@ -117,6 +145,13 @@ export default function CizgiyiGecmeScreen(props: GameScreenProps) {
                         if (final) hapticTap();
                         sync.set(n, final);
                       }}
+                    />
+                    <TamamBar
+                      locked={locked()}
+                      disabled={mine() === null || closed()}
+                      ready={lockedIds().length}
+                      total={entries().length}
+                      onLock={lock}
                     />
                   </div>
                 </Show>

@@ -2,6 +2,7 @@
  * Yalnız geliştirme önizlemesi: Açgözlülük Limiti ekranları (`&n=3..8` oyuncu sayısı).
  *   ?mock=acgozluluk-briefing        anlatım
  *   ?mock=acgozluluk-choosing        seçim; sayıya dokununca seçim değişir (`&chosen=0` ile seçimsiz başlar)
+ *   ?mock=acgozluluk-locked         seçimin kilitli, diğerleri bekleniyor (`&n=`)
  *   ?mock=acgozluluk-reveal-ok       seçimler açıldı, limit altında (altın ışık)
  *   ?mock=acgozluluk-reveal-over     seçimler açıldı, limit aşıldı (kırmızı çatlak)
  *   ?mock=acgozluluk-spectator       katılımcı değilsin
@@ -52,6 +53,7 @@ export function startAcgozlulukMock(kind: string, params: URLSearchParams): void
   let phaseEndsAt: number | null = null;
   let startedAt = now - 8_000;
   let myChoice: number | null = params.get("chosen") === "0" ? null : Math.min(count, 2);
+  let locked = kind === "acgozluluk-locked";
   let rev = 1;
 
   // Sahte seçimler: limit altı ya da üstü.
@@ -77,8 +79,11 @@ export function startAcgozlulukMock(kind: string, params: URLSearchParams): void
         limit,
         maxChoice: count,
         reveal: revealed ? reveal(kind.endsWith("over")) : null,
+        lockedIds: spectator
+          ? participants.slice(0, Math.ceil(count / 2))
+          : [...(locked ? [SELF] : []), ...participants.slice(1, Math.max(1, Math.ceil(count / 2) - 1))],
       },
-      priv: { myChoice: spectator ? null : myChoice },
+      priv: { myChoice: spectator ? null : myChoice, locked: !spectator && locked },
     };
   };
 
@@ -123,7 +128,11 @@ export function startAcgozlulukMock(kind: string, params: URLSearchParams): void
   useMockSender((msg) => {
     if (msg.type !== "action") return;
     const payload = msg.payload as { kind?: string; value?: number } | null;
-    if (payload?.kind === "choose" && typeof payload.value === "number") {
+    if (payload?.kind === "lock" && myChoice !== null) {
+      locked = true;
+      applySnapshot(snapshot());
+    }
+    if (payload?.kind === "choose" && typeof payload.value === "number" && !locked) {
       myChoice = payload.value;
       applySnapshot(snapshot());
     }

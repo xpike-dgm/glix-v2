@@ -4,6 +4,7 @@ import {
   KARALAMA_DRAW_MS,
   KARALAMA_ERASER_INDEX,
   KARALAMA_GRID,
+  KARALAMA_LOCK_GRACE_MS,
   KARALAMA_MAX_DRAW_ACTIONS,
   KARALAMA_MAX_POINTS,
   KARALAMA_MAX_STROKES,
@@ -64,6 +65,10 @@ export interface KaralamaState {
   drawings: Record<string, PlayerDrawing>;
   /** Oy veren -> hedef (son oy geçerli). */
   votes: Record<string, string>;
+  /** Çizimini "Bitti" ile kesinleştirenler. `drawEndsAt`/`voteEndsAt` erken bitişte reduce içinde öne çekilir. */
+  drawDone: string[];
+  /** Oyunu "Tamam" ile kesinleştirenler. */
+  locked: string[];
   /**
    * Görünür aşama; yalnız `tick` ilerletir (böylece aşama geçişi yayına yansır). "done": kelimeler ve bilgisiz
    * oyuncu açıldı. Eylemlerin kabulü bundan değil doğrudan `ctx.now`'dan karar verir (tick takvimine bağlı değil).
@@ -147,6 +152,8 @@ export const karalamaDefteri: GameDefinition<
   parseAction(raw: unknown): KaralamaAction | null {
     if (!isPlainObject(raw)) return null;
     switch (raw.kind) {
+      case "lock":
+        return hasExactKeys(raw, ["kind"]) ? { kind: "lock" } : null;
       case "undo":
         return hasExactKeys(raw, ["kind"]) ? { kind: "undo" } : null;
       case "clear":
@@ -186,6 +193,8 @@ export const karalamaDefteri: GameDefinition<
       nearWord: pair.near,
       drawings: {},
       votes: {},
+      drawDone: [],
+      locked: [],
       stage: "draw",
     };
   },
@@ -195,9 +204,31 @@ export const karalamaDefteri: GameDefinition<
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
     if (ctx.now >= state.voteEndsAt || state.stage === "done") return { rejected: "ended" };
     const drawing = ctx.now < state.drawEndsAt;
+    const everyoneIn = (done: readonly string[]): boolean =>
+      !state.players.some((id) => ctx.connected.includes(id) && !done.includes(id));
+
+    if (action.kind === "lock") {
+      if (drawing) {
+        if (state.drawDone.includes(playerId)) return { rejected: "locked" };
+        if (Object.keys(drawingOf(state, playerId).strokes).length === 0)
+          return { rejected: "nothing_to_lock" };
+        const drawDone = [...state.drawDone, playerId];
+        if (!everyoneIn(drawDone)) return { ...state, drawDone };
+        // Bağlı herkes çizimini bitirdi: oylama 1 sn sonra başlar (oylama süresi değişmez).
+        const drawEndsAt = Math.min(state.drawEndsAt, ctx.now + KARALAMA_LOCK_GRACE_MS);
+        return { ...state, drawDone, drawEndsAt, voteEndsAt: drawEndsAt + KARALAMA_VOTE_MS };
+      }
+      if (state.locked.includes(playerId)) return { rejected: "locked" };
+      if (state.votes[playerId] === undefined) return { rejected: "nothing_to_lock" };
+      const locked = [...state.locked, playerId];
+      if (!everyoneIn(locked)) return { ...state, locked };
+      // Bağlı herkes oyunu kesinleştirdi: oylama 1 sn sonra biter.
+      return { ...state, locked, voteEndsAt: Math.min(state.voteEndsAt, ctx.now + KARALAMA_LOCK_GRACE_MS) };
+    }
 
     if (action.kind === "vote") {
       if (drawing) return { rejected: "wrong_phase" };
+      if (state.locked.includes(playerId)) return { rejected: "locked" };
       if (action.target === playerId) return { rejected: "self_vote" };
       if (!state.players.includes(action.target)) return { rejected: "bad_target" };
       if (!ctx.connected.includes(action.target)) return { rejected: "not_connected" };
@@ -206,6 +237,7 @@ export const karalamaDefteri: GameDefinition<
     }
 
     if (!drawing) return { rejected: "wrong_phase" };
+    if (state.drawDone.includes(playerId)) return { rejected: "locked" };
     const mine = drawingOf(state, playerId);
     if (mine.actions >= KARALAMA_MAX_DRAW_ACTIONS) return { rejected: "too_many_actions" };
 
@@ -276,13 +308,23 @@ export const karalamaDefteri: GameDefinition<
       players: [...state.players],
       drawings,
       voted: state.players.filter((id) => state.votes[id] !== undefined),
+      drawDoneIds: [...state.drawDone],
+      lockedIds: [...state.locked],
       reveal,
     };
   },
 
   view(state, playerId): KaralamaView {
     if (playerId === null || !state.players.includes(playerId)) {
-      return { word: null, near: false, strokes: {}, pointsLeft: 0, myVote: null };
+      return {
+        word: null,
+        near: false,
+        strokes: {},
+        pointsLeft: 0,
+        myVote: null,
+        drawDone: false,
+        locked: false,
+      };
     }
     const mine = drawingOf(state, playerId);
     const drawing = state.stage === "draw";
@@ -293,6 +335,8 @@ export const karalamaDefteri: GameDefinition<
       strokes: drawing ? { ...mine.strokes } : {},
       pointsLeft: drawing ? KARALAMA_MAX_TOTAL_POINTS - mine.points : 0,
       myVote: state.votes[playerId] ?? null,
+      drawDone: state.drawDone.includes(playerId),
+      locked: state.locked.includes(playerId),
     };
   },
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
 import { type CaprazAtesState, caprazAtes, caprazAtesReveal } from "./index.js";
-import { CAPRAZ_ATES_DURATION_MS, CAPRAZ_ATES_FIRE_MS } from "./types.js";
+import { CAPRAZ_ATES_DURATION_MS, CAPRAZ_ATES_FIRE_MS, CAPRAZ_ATES_REVEAL_MS } from "./types.js";
 
 const T0 = 1_000_000;
 const ALL = ["a", "b", "c", "d", "e"];
@@ -353,7 +353,7 @@ describe("capraz-ates gizlilik (yapısal)", () => {
 
   it("süre bitmeden publicView yalnız zamanları içerir: hedef, sayı, puan yok", () => {
     const pub = caprazAtes.publicView(s, before);
-    expect(Object.keys(pub).sort()).toEqual(["endsAt", "finishAt", "reveal", "startedAt"]);
+    expect(Object.keys(pub).sort()).toEqual(["endsAt", "finishAt", "lockedIds", "reveal", "startedAt"]);
     expect(pub.reveal).toBeNull();
     const json = JSON.stringify(pub);
     for (const id of players) expect(json).not.toContain(id);
@@ -371,13 +371,13 @@ describe("capraz-ates gizlilik (yapısal)", () => {
   });
 
   it("her özel görünüm yalnız o oyuncunun kendi hedefini içerir", () => {
-    expect(caprazAtes.view(s, "p1", before)).toEqual({ myTarget: "p2" });
-    expect(caprazAtes.view(s, "p2", before)).toEqual({ myTarget: "p3" });
-    expect(caprazAtes.view(s, "p3", before)).toEqual({ myTarget: "p2" });
-    expect(caprazAtes.view(s, "p4", before)).toEqual({ myTarget: null });
+    expect(caprazAtes.view(s, "p1", before)).toEqual({ myTarget: "p2", locked: false });
+    expect(caprazAtes.view(s, "p2", before)).toEqual({ myTarget: "p3", locked: false });
+    expect(caprazAtes.view(s, "p3", before)).toEqual({ myTarget: "p2", locked: false });
+    expect(caprazAtes.view(s, "p4", before)).toEqual({ myTarget: null, locked: false });
     for (const id of players) {
       const v = caprazAtes.view(s, id, before);
-      expect(Object.keys(v)).toEqual(["myTarget"]);
+      expect(Object.keys(v)).toEqual(["myTarget", "locked"]);
     }
   });
 
@@ -392,7 +392,7 @@ describe("capraz-ates gizlilik (yapısal)", () => {
   });
 
   it("izleyicinin görünümü hedef içermez", () => {
-    expect(caprazAtes.view(s, null, before)).toEqual({ myTarget: null });
+    expect(caprazAtes.view(s, null, before)).toEqual({ myTarget: null, locked: false });
   });
 
   it("süre bitince hedefler publicView'da açılır", () => {
@@ -402,5 +402,94 @@ describe("capraz-ates gizlilik (yapısal)", () => {
 
   it("secrets() boş: metin araması kimlikleri koruyamaz, yukarıdaki yapısal testler korur", () => {
     expect(caprazAtes.secrets(s)).toEqual([]);
+  });
+});
+
+describe("capraz-ates erken bitiş", () => {
+  const three = ["a", "b", "c"];
+  const lock = (state: CaprazAtesState, id: string, at: number, connected: readonly string[] = three) =>
+    caprazAtes.reduce(state, id, { kind: "lock" }, ctx(T0 + at, connected));
+  const lockOk = (state: CaprazAtesState, id: string, at: number, connected?: readonly string[]) => {
+    const r = lock(state, id, at, connected);
+    if (isRejected(r)) throw new Error(`reddedildi: ${r.rejected}`);
+    return r;
+  };
+  const aimed = (): CaprazAtesState => {
+    let s = start(three);
+    s = aim(s, "a", "b", 1_000, three);
+    s = aim(s, "b", "c", 1_000, three);
+    return aim(s, "c", "b", 1_000, three);
+  };
+
+  it("(a) herkes kilitleyince hedef aşaması 1 sn sonra biter", () => {
+    let s = aimed();
+    s = lockOk(lockOk(lockOk(s, "a", 2_000), "b", 3_000), "c", 4_000);
+    expect(s.endsAt).toBe(T0 + 5_000);
+    expect(caprazAtes.publicView(s, ctx(T0 + 4_999, three)).reveal).toBeNull();
+    expect(caprazAtes.publicView(s, ctx(T0 + 5_000, three)).reveal?.targets).toEqual({
+      a: "b",
+      b: "c",
+      c: "b",
+    });
+    expect(caprazAtes.isFinished(s, ctx(T0 + 4_999 + CAPRAZ_ATES_REVEAL_MS, three))).toBe(false);
+    expect(caprazAtes.isFinished(s, ctx(T0 + 5_000 + CAPRAZ_ATES_REVEAL_MS, three))).toBe(true);
+    expect(caprazAtes.tick(s, ctx(T0 + 5_000, three)).fireClosed).toBe(true);
+    expect(scoresOf(s)).toEqual({ a: 1, b: 0, c: 0 });
+  });
+
+  it("(b) bir kişi eksikken bitmez", () => {
+    const s = lockOk(lockOk(aimed(), "a", 2_000), "b", 3_000);
+    expect(s.endsAt).toBe(T0 + CAPRAZ_ATES_FIRE_MS);
+    expect(caprazAtes.isFinished(s, ctx(T0 + 10_000, three))).toBe(false);
+    expect(caprazAtes.publicView(s, ctx(T0 + 10_000, three)).reveal).toBeNull();
+  });
+
+  it("(c) bağlantısı kopan oyuncu beklenmez", () => {
+    const connected = ["a", "b"];
+    let s = start(three);
+    s = aim(s, "a", "b", 1_000, connected);
+    s = aim(s, "b", "a", 1_000, connected);
+    s = lockOk(s, "a", 2_000, connected);
+    expect(s.endsAt).toBe(T0 + CAPRAZ_ATES_FIRE_MS);
+    s = lockOk(s, "b", 3_000, connected);
+    expect(s.endsAt).toBe(T0 + 4_000);
+    expect(scoresOf(s)).toEqual({ a: 0, b: 0, c: 0 });
+  });
+
+  it("(d) kilit sonrası hedef değişimi ve ikinci kilit reddedilir", () => {
+    const s = lockOk(aimed(), "a", 2_000);
+    const change = caprazAtes.reduce(s, "a", { kind: "target", target: "c" }, ctx(T0 + 3_000, three));
+    expect(change).toEqual({ rejected: "locked" });
+    expect(caprazAtes.reduce(s, "a", { kind: "target", target: "b" }, ctx(T0 + 3_000, three))).toEqual({
+      rejected: "locked",
+    });
+    expect(lock(s, "a", 3_000)).toEqual({ rejected: "locked" });
+    expect(caprazAtes.view(s, "a", ctx(T0 + 3_000, three))).toEqual({ myTarget: "b", locked: true });
+  });
+
+  it("hedefsiz kilitlenemez; erken bitişten sonra eylem reddedilir", () => {
+    expect(lock(start(three), "a", 1_000)).toEqual({ rejected: "nothing_to_lock" });
+    let s = aimed();
+    for (const id of three) s = lockOk(s, id, 2_000);
+    expect(lock(s, "a", 2_500)).toEqual({ rejected: "locked" });
+    expect(lock(s, "a", 3_000)).toEqual({ rejected: "ended" });
+    const fresh = start(three);
+    expect(lock(fresh, "a", CAPRAZ_ATES_FIRE_MS)).toEqual({ rejected: "ended" });
+  });
+
+  it("(e) kilit listesi hedefleri sızdırmaz", () => {
+    const s = lockOk(aimed(), "a", 2_000);
+    const pub = caprazAtes.publicView(s, ctx(T0 + 3_000, three));
+    expect(pub.lockedIds).toEqual(["a"]);
+    expect(pub.reveal).toBeNull();
+    expect(JSON.stringify(pub)).not.toContain("target");
+    // b'nin görünümü yalnız kendi hedefi; a'nın hedefini taşımaz.
+    expect(JSON.stringify(caprazAtes.view(s, "b", ctx(T0 + 3_000, three)))).not.toContain('"b"');
+    expect(caprazAtes.view(s, null, ctx(T0 + 3_000, three))).toEqual({ myTarget: null, locked: false });
+  });
+
+  it("parseAction lock yalnız kind ile kabul edilir", () => {
+    expect(caprazAtes.parseAction({ kind: "lock" })).toEqual({ kind: "lock" });
+    expect(caprazAtes.parseAction({ kind: "lock", target: "b" })).toBeNull();
   });
 });

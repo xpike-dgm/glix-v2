@@ -25,6 +25,12 @@ export function parseAcgozlulukPublicView(v: unknown): AcgozlulukPublicView | nu
   if (!isInt(v.limit, 1, 1000) || !isInt(v.maxChoice, 1, 64)) return null;
   const reveal = parseReveal(v.reveal);
   if (reveal === undefined) return null;
+  if (!Array.isArray(v.lockedIds) || v.lockedIds.length > 64) return null;
+  const lockedIds: string[] = [];
+  for (const id of v.lockedIds) {
+    if (typeof id !== "string" || id.length > 64) return null;
+    lockedIds.push(id);
+  }
   return {
     startedAt: v.startedAt,
     endsAt: v.endsAt,
@@ -32,6 +38,7 @@ export function parseAcgozlulukPublicView(v: unknown): AcgozlulukPublicView | nu
     limit: v.limit,
     maxChoice: v.maxChoice,
     reveal,
+    lockedIds,
   };
 }
 
@@ -39,7 +46,8 @@ export function parseAcgozlulukPublicView(v: unknown): AcgozlulukPublicView | nu
 export function parseAcgozlulukPrivateView(v: unknown): AcgozlulukView | null {
   if (!isRec(v)) return null;
   if (v.myChoice !== null && !isInt(v.myChoice, 0, 64)) return null;
-  return { myChoice: v.myChoice };
+  if (typeof v.locked !== "boolean") return null;
+  return { myChoice: v.myChoice, locked: v.locked };
 }
 
 /** İki görünüm de geçerliyse birleşik görünümü verir. */

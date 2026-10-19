@@ -71,7 +71,7 @@ describe("ortalamanin-yarisi kuralları", () => {
     s = choose(s, "p1", 80, 1_000);
     s = choose(s, "p1", 10, 5_000);
     s = choose(s, "p1", 30, 19_999);
-    expect(g.view(s, "p1", ctx(T0 + 19_999))).toEqual({ myChoice: 30 });
+    expect(g.view(s, "p1", ctx(T0 + 19_999))).toEqual({ myChoice: 30, locked: false });
     s = choose(s, "p2", 30);
     s = choose(s, "p3", 30);
     expect(reveal(s).choices).toEqual({ p1: 30, p2: 30, p3: 30 });
@@ -257,7 +257,7 @@ describe("ortalamanin-yarisi gizlilik (yapısal)", () => {
     for (const at of [0, 1, 10_000, 19_999]) {
       const pub = g.publicView(s, ctx(T0 + at));
       expect(pub.reveal).toBeNull();
-      expect(Object.keys(pub).sort()).toEqual(["endsAt", "reveal", "revealEndsAt", "startedAt"]);
+      expect(Object.keys(pub).sort()).toEqual(["endsAt", "lockedIds", "reveal", "revealEndsAt", "startedAt"]);
       const flat = JSON.stringify(pub);
       for (const id of ids(5)) expect(flat).not.toContain(id);
       for (const k of ["choices", "mean", "target", "order", "fallback", "distances", "points"]) {
@@ -273,11 +273,11 @@ describe("ortalamanin-yarisi gizlilik (yapısal)", () => {
     s = choose(s, "p1", 77);
     s = choose(s, "p2", 33);
     for (const at of [0, 5_000, 19_999, 20_000, 24_000]) {
-      expect(g.view(s, "p1", ctx(T0 + at))).toEqual({ myChoice: 77 });
-      expect(g.view(s, "p2", ctx(T0 + at))).toEqual({ myChoice: 33 });
-      expect(g.view(s, "p3", ctx(T0 + at))).toEqual({ myChoice: null });
-      expect(g.view(s, null, ctx(T0 + at))).toEqual({ myChoice: null });
-      expect(g.view(s, "ghost", ctx(T0 + at))).toEqual({ myChoice: null });
+      expect(g.view(s, "p1", ctx(T0 + at))).toEqual({ myChoice: 77, locked: false });
+      expect(g.view(s, "p2", ctx(T0 + at))).toEqual({ myChoice: 33, locked: false });
+      expect(g.view(s, "p3", ctx(T0 + at))).toEqual({ myChoice: null, locked: false });
+      expect(g.view(s, null, ctx(T0 + at))).toEqual({ myChoice: null, locked: false });
+      expect(g.view(s, "ghost", ctx(T0 + at))).toEqual({ myChoice: null, locked: false });
     }
   });
 
@@ -285,7 +285,7 @@ describe("ortalamanin-yarisi gizlilik (yapısal)", () => {
     const s = start(4, 13);
     for (const p of [...ids(4), null]) {
       const v = g.view(s, p, ctx(T0 + 19_999));
-      expect(v).toEqual({ myChoice: null });
+      expect(v).toEqual({ myChoice: null, locked: false });
     }
     expect(JSON.stringify(g.publicView(s, ctx(T0 + 19_999)))).not.toContain("fallback");
   });
@@ -295,5 +295,82 @@ describe("ortalamanin-yarisi gizlilik (yapısal)", () => {
     s = choose(s, "p1", 77);
     const r = g.publicView(s, ctx(T0 + ORTALAMA_CHOOSE_MS)).reveal;
     expect(r?.choices.p1).toBe(77);
+  });
+});
+
+describe("ortalamanin-yarisi erken bitiş", () => {
+  const lock = (state: OrtalamaState, id: string, at: number, connected: readonly string[] = ids(8)) =>
+    g.reduce(state, id, { kind: "lock" }, ctx(T0 + at, 1, connected));
+  const lockOk = (state: OrtalamaState, id: string, at: number, connected?: readonly string[]) => {
+    const r = lock(state, id, at, connected);
+    if (isRejected(r)) throw new Error(`reddedildi: ${r.rejected}`);
+    return r;
+  };
+  const chosen = (n = 3): OrtalamaState => {
+    let s = start(n);
+    for (const [i, id] of ids(n).entries()) s = choose(s, id, 10 * (i + 1));
+    return s;
+  };
+
+  it("(a) herkes kilitleyince seçim aşaması 1 sn sonra biter, sonuç değişmez", () => {
+    const base = chosen();
+    let s = base;
+    for (const id of ids(3)) s = lockOk(s, id, 4_000);
+    expect(s.endsAt).toBe(T0 + 5_000);
+    expect(g.publicView(s, ctx(T0 + 4_999)).reveal).toBeNull();
+    expect(g.publicView(s, ctx(T0 + 5_000)).reveal?.target).toBe(10);
+    expect(g.isFinished(s, ctx(T0 + 4_999 + ORTALAMA_REVEAL_MS))).toBe(false);
+    expect(g.isFinished(s, ctx(T0 + 5_000 + ORTALAMA_REVEAL_MS))).toBe(true);
+    expect(g.tick(s, ctx(T0 + 5_000)).revealed).toBe(true);
+    expect(g.result(s)).toEqual(g.result(base));
+  });
+
+  it("(b) bir kişi eksikken bitmez", () => {
+    const s = lockOk(lockOk(chosen(), "p1", 2_000), "p2", 3_000);
+    expect(s.endsAt).toBe(T0 + ORTALAMA_CHOOSE_MS);
+    expect(g.publicView(s, ctx(T0 + 10_000)).reveal).toBeNull();
+    expect(g.isFinished(s, ctx(T0 + 10_000))).toBe(false);
+  });
+
+  it("(c) bağlantısı kopan oyuncu beklenmez", () => {
+    const online = ["p1", "p2"];
+    let s = start(3);
+    s = choose(choose(s, "p1", 10), "p2", 20);
+    s = lockOk(s, "p1", 2_000, online);
+    expect(s.endsAt).toBe(T0 + ORTALAMA_CHOOSE_MS);
+    s = lockOk(s, "p2", 3_000, online);
+    expect(s.endsAt).toBe(T0 + 4_000);
+  });
+
+  it("(d) kilit sonrası değişiklik ve ikinci kilit reddedilir; seçimsiz kilitlenemez", () => {
+    const s = lockOk(chosen(), "p1", 2_000);
+    expect(reject(s, "p1", 99, 2_500)).toEqual({ rejected: "locked" });
+    expect(reject(s, "p1", 10, 2_500)).toEqual({ rejected: "locked" });
+    expect(lock(s, "p1", 2_500)).toEqual({ rejected: "locked" });
+    expect(g.view(s, "p1", ctx(T0 + 2_500))).toEqual({ myChoice: 10, locked: true });
+    expect(lock(start(3), "p1", 1_000)).toEqual({ rejected: "nothing_to_lock" });
+    expect(lock(start(3), "ghost", 1_000)).toEqual({ rejected: "not_participant" });
+  });
+
+  it("erken bitişten sonra (1 sn bekleme dahil) eylem reddedilir", () => {
+    let s = chosen();
+    for (const id of ids(3)) s = lockOk(s, id, 2_000);
+    expect(reject(s, "p1", 5, 3_000)).toEqual({ rejected: "ended" });
+    expect(lock(s, "p1", 3_000)).toEqual({ rejected: "ended" });
+  });
+
+  it("(e) kilit listesi seçimleri sızdırmaz", () => {
+    const s = lockOk(chosen(), "p2", 2_000);
+    const pub = g.publicView(s, ctx(T0 + 2_500));
+    expect(pub.lockedIds).toEqual(["p2"]);
+    expect(pub.reveal).toBeNull();
+    expect(JSON.stringify(pub)).not.toContain("choices");
+    expect(g.view(s, "p1", ctx(T0 + 2_500))).toEqual({ myChoice: 10, locked: false });
+    expect(g.view(s, null, ctx(T0 + 2_500))).toEqual({ myChoice: null, locked: false });
+  });
+
+  it("parseAction lock yalnız kind ile kabul edilir", () => {
+    expect(g.parseAction({ kind: "lock" })).toEqual({ kind: "lock" });
+    expect(g.parseAction({ kind: "lock", value: 3 })).toBeNull();
   });
 });

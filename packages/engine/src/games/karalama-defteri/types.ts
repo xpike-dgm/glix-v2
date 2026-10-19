@@ -28,7 +28,12 @@ export type KaralamaAction =
   | { kind: "stroke"; color: KaralamaPen; size: KaralamaSize; points: number[] }
   | { kind: "undo" }
   | { kind: "clear" }
-  | { kind: "vote"; target: string };
+  | { kind: "vote"; target: string }
+  /** Çizimde "Bitti", oylamada "Tamam": o aşamadaki seçim kesinleşir (en az bir darbe / bir oy gerekir). */
+  | { kind: "lock" };
+
+/** Son kilitten sonra aşamanın bitmesine kalan süre (ms). */
+export const KARALAMA_LOCK_GRACE_MS = 1_000;
 
 /**
  * Sıkıştırılmış darbe: `[renkDizini (0..5, silgi 6), kalınlık (1..3), x0, y0, x1, y1, …]`.
@@ -60,6 +65,10 @@ export interface KaralamaPublicView {
   drawings: Record<string, KaralamaStroke[]> | null;
   /** Oy kullanmış oyuncular (kime verdikleri gizli). */
   voted: string[];
+  /** Çizimini "Bitti" ile kesinleştirenler (çizim aşaması). */
+  drawDoneIds: string[];
+  /** Oyunu "Tamam" ile kesinleştirenler (oylama aşaması). */
+  lockedIds: string[];
   /** Yalnız oyun bittikten sonra. */
   reveal: KaralamaReveal | null;
 }
@@ -76,4 +85,8 @@ export interface KaralamaView {
   pointsLeft: number;
   /** Verdiğin oy; yoksa null. */
   myVote: string | null;
+  /** Çizimini bitirdin mi. */
+  drawDone: boolean;
+  /** Oyunu kesinleştirdin mi. */
+  locked: boolean;
 }

@@ -3,6 +3,7 @@ import { ORTALAMA_CHOOSE_MS, ORTALAMA_DURATION_MS } from "./types.js";
 
 /** Çoğunlukla 0–40 bandında (gerçekçi tahmin), bazen uçlarda, nadiren aralık dışı sayı seçer. */
 const generate: ActionGenerator = (rng) => {
+  if (rng.int(12) === 0) return { kind: "lock" };
   const roll = rng.int(12);
   let value: number;
   if (roll === 0) value = 0;

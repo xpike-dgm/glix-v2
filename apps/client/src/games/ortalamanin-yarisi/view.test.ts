@@ -10,8 +10,8 @@ import {
   tierOf,
 } from "./view.js";
 
-const pub = { startedAt: 100, endsAt: 20_100, revealEndsAt: 27_100, reveal: null };
-const priv = { myChoice: 42 };
+const pub = { startedAt: 100, endsAt: 20_100, revealEndsAt: 27_100, reveal: null, lockedIds: ["a"] };
+const priv = { myChoice: 42, locked: false };
 const reveal: OrtalamaReveal = {
   choices: { a: 20, b: 30, c: 60 },
   mean: 36.6667,
@@ -29,7 +29,16 @@ describe("Ortalamaya En Yakın görünümü", () => {
     expect(phaseOf(v)).toBe("choosing");
   });
   it("seçmemiş ve izleyici için myChoice null olabilir", () => {
-    expect(parseOrtalamaView(pub, { myChoice: null })?.myChoice).toBeNull();
+    expect(parseOrtalamaView(pub, { myChoice: null, locked: false })?.myChoice).toBeNull();
+  });
+  it("kilit bilgisini okur, bozuksa reddeder", () => {
+    expect(parseOrtalamaView(pub, { myChoice: 42, locked: true })).toMatchObject({
+      locked: true,
+      lockedIds: ["a"],
+    });
+    expect(parseOrtalamaView({ ...pub, lockedIds: [1] }, priv)).toBeNull();
+    expect(parseOrtalamaView({ ...pub, lockedIds: undefined }, priv)).toBeNull();
+    expect(parseOrtalamaView(pub, { myChoice: 42 })).toBeNull();
   });
   it("açılmış sonucu okur", () => {
     const v = parseOrtalamaView({ ...pub, reveal }, priv);
