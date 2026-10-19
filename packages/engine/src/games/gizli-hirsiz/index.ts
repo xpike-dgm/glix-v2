@@ -1,6 +1,7 @@
 import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import {
   GIZLI_HIRSIZ_DURATION_MS,
+  GIZLI_HIRSIZ_LOCK_GRACE_MS,
   type GizliHirsizAction,
   type GizliHirsizPublicView,
   type GizliHirsizReveal,
@@ -12,6 +13,7 @@ export * from "./types.js";
 export interface GizliHirsizState {
   players: string[];
   startedAt: number;
+  /** Bitiş; herkes bastıysa reduce'ta öne çekilir (son basış + 1 sn). */
   endsAt: number;
   /** Her oyuncunun ilk geçerli basışı (sunucu zaman damgası), basış sırasıyla. */
   presses: { id: string; at: number }[];
@@ -79,7 +81,10 @@ export const gizliHirsiz: GameDefinition<
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
     // İlk geçerli basış kaydedilir; sonrakiler yok sayılır (hata değil: gizlilik için aynı cevap).
     if (state.presses.some((p) => p.id === playerId)) return state;
-    return { ...state, presses: [...state.presses, { id: playerId, at: ctx.now }] };
+    const presses = [...state.presses, { id: playerId, at: ctx.now }];
+    // Herkes bastıysa sonuç kesindir (herkes −1): bütün katılımcılar basınca 1 sn sonra biter.
+    if (!state.players.every((id) => presses.some((p) => p.id === id))) return { ...state, presses };
+    return { ...state, presses, endsAt: Math.min(state.endsAt, ctx.now + GIZLI_HIRSIZ_LOCK_GRACE_MS) };
   },
 
   tick(state): GizliHirsizState {

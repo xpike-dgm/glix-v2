@@ -2,6 +2,9 @@
 
 export const GIZLI_HIRSIZ_DURATION_MS = 30_000;
 
+/** Herkes bastıysa oyunun bitişine kalan süre (ms). */
+export const GIZLI_HIRSIZ_LOCK_GRACE_MS = 1_000;
+
 export type GizliHirsizAction = { kind: "steal" };
 
 /** Tur sonunda açılan sonuç: kimin bastığı yalnız burada ortaya çıkar. */

@@ -189,3 +189,55 @@ describe("gizli-hirsiz gizlilik (kim bastığı sona kadar gizli)", () => {
     expect(gizliHirsiz.view(start(ids), null, ctx(T0 + 100, ids))).toEqual({ pressed: false });
   });
 });
+
+describe("gizli-hirsiz erken bitiş (herkes bastı)", () => {
+  const everyone = (): GizliHirsizState => {
+    let s = start();
+    for (const [i, id] of ALL.entries()) s = steal(s, id, 4_000 + i * 100);
+    return s;
+  };
+  const rejection = (s: GizliHirsizState, id: string, at: number): string | null => {
+    const r = gizliHirsiz.reduce(s, id, { kind: "steal" }, ctx(T0 + at));
+    return isRejected(r) ? r.rejected : null;
+  };
+
+  it("(a) herkes basınca son basıştan 1 sn sonra biter; herkes -1", () => {
+    const s = everyone(); // son basış 4 300
+    expect(s.endsAt).toBe(T0 + 5_300);
+    expect(gizliHirsiz.isFinished(s, ctx(T0 + 5_299))).toBe(false);
+    expect(gizliHirsiz.isFinished(s, ctx(T0 + 5_300))).toBe(true);
+    expect(gizliHirsiz.publicView(s, ctx(T0 + 5_299)).reveal).toBeNull();
+    expect(gizliHirsiz.publicView(s, ctx(T0 + 5_300)).reveal?.outcome).toBe("multi");
+    expect(gizliHirsiz.result(s).miniScores).toEqual({ a: -1, b: -1, c: -1, d: -1 });
+  });
+
+  it("(b) bir kişi eksikken bitmez", () => {
+    let s = start();
+    for (const id of ["a", "b", "c"]) s = steal(s, id, 4_000);
+    expect(s.endsAt).toBe(T0 + END);
+    expect(gizliHirsiz.isFinished(s, ctx(T0 + 20_000))).toBe(false);
+  });
+
+  it("(c) bağlantıya bakılmaz: kopuk oyuncu basmadan bitmez", () => {
+    let s = start();
+    for (const id of ["a", "b", "c"]) s = steal(s, id, 4_000);
+    expect(gizliHirsiz.tick(s, ctx(T0 + 10_000, ["a", "b", "c"]))).toBe(s);
+    expect(s.endsAt).toBe(T0 + END);
+  });
+
+  it("(d) herkes bastıktan sonra yeni basış kabul edilmez", () => {
+    const s = everyone();
+    expect(rejection(s, "a", 5_000)).toBeNull(); // tekrar basış yok sayılır (gizlilik için aynı cevap)
+    expect(rejection(s, "a", 5_300)).toBe("ended");
+  });
+
+  it("(e) süre dolmadan kim bastığı hiçbir görünümde yoktur", () => {
+    const s = steal(start(), "a", 4_000);
+    expect(JSON.stringify(gizliHirsiz.publicView(s, ctx(T0 + 5_000)))).not.toMatch(/thieves|presses|"a"/);
+  });
+
+  it("(f) tick bağlantıya bakmaz", () => {
+    const s = everyone();
+    expect(gizliHirsiz.tick(s, ctx(T0 + 8_000, []))).toEqual(gizliHirsiz.tick(s, ctx(T0 + 8_000, ALL)));
+  });
+});
