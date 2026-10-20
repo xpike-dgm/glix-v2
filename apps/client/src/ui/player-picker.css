@@ -133,6 +133,13 @@
   white-space: nowrap;
   color: #d5daf6;
 }
+/* Kendini seçebilen ızgarada "Sen" rozeti adın üstüne binmesin: avatarın sol üst köşesine alınır. */
+.ppick__cell[data-me="1"] .av__self {
+  top: -8px;
+  bottom: auto;
+  left: -4px;
+  transform: none;
+}
 .ppick__cell[data-picked="1"] .ppick__name {
   color: var(--text);
 }

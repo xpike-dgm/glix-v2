@@ -18,7 +18,9 @@ import { korKronometre } from "./kor-kronometre/index.js";
 import { ortalamaninYarisi } from "./ortalamanin-yarisi/index.js";
 import { rusRuleti } from "./rus-ruleti/index.js";
 import { rusvetDarbe } from "./rusvet-darbe/index.js";
+import { sizma } from "./sizma/index.js";
 import { sonKisi } from "./son-kisi/index.js";
+import { sozlukBlofu } from "./sozluk-blofu/index.js";
 import { yaziYaz } from "./yazi-yaz/index.js";
 import { zamanBombasiHafizasi } from "./zaman-bombasi-hafizasi/index.js";
 import { zehirliKadeh } from "./zehirli-kadeh/index.js";
@@ -41,11 +43,13 @@ export const GAMES: Record<string, AnyGame> = {
   [zehirliKadeh.id]: zehirliKadeh,
   [gizliKareler.id]: gizliKareler,
   [ittifak.id]: ittifak,
-  [kendim.id]: kendim,
-  [kontrolPaneliKaosu.id]: kontrolPaneliKaosu,
-  [yaziYaz.id]: yaziYaz,
   [rusvetDarbe.id]: rusvetDarbe,
   [gizliAlisveris.id]: gizliAlisveris,
+  [yaziYaz.id]: yaziYaz,
+  [kendim.id]: kendim,
+  [sizma.id]: sizma,
+  [sozlukBlofu.id]: sozlukBlofu,
+  [kontrolPaneliKaosu.id]: kontrolPaneliKaosu,
 };
 
 export function getCatalog(): GameInfo[] {

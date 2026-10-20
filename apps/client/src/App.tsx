@@ -68,6 +68,10 @@ export function App() {
         void import("./dev/mockKendim.js").then((m) => m.startKendimMock(mock, params));
       } else if (mock.startsWith("yazi-")) {
         void import("./dev/mockYazi.js").then((m) => m.startYaziMock(mock, params));
+      } else if (mock.startsWith("sozluk-")) {
+        void import("./dev/mockSozluk.js").then((m) => m.startSozlukMock(mock, params));
+      } else if (mock.startsWith("sizma-")) {
+        void import("./dev/mockSizma.js").then((m) => m.startSizmaMock(mock, params));
       } else if (mock.startsWith("rusvet-")) {
         void import("./dev/mockRusvet.js").then((m) => m.startRusvetMock(mock, params));
       } else if (mock.startsWith("ortalama-")) {
