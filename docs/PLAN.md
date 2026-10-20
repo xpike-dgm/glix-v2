@@ -122,13 +122,14 @@ sızıntı testi otomatik kırılır. Sunucu oyun bilmez; durum her yayında bir
 
 **Dağıtım:** VDS'te `/srv/glix/deploy.sh <ref>` (varsayılan `main`). Geri alma: eski SHA ile aynı komut.
 
-### A6 — 2 grup yayında (13 oyun yeni, toplam 19)
+### A6 — tamamlandı, 24 oyun yayında
 - [x] Grup 1: Gizli Hırsız, Kör Kronometre, Son Kişi, Ortalamaya En Yakın, Çizgiyi Geçme, Aşırı Yükleme
 - [x] Grup 2: Rus Ruleti, Zehirli Kadeh, Gizli Kareler, Gizli Alışveriş, İttifak, Rüşvet ve Darbe
 - [x] Kural yorumları: `docs/A6-OYUNLAR.md`; her oyun kural senaryo + bot/sızıntı/kopma değişmezleri + sunucu testi + ekranlar
 - [x] İncelemede bulunan: Son Kişi gerilim eşikleri sabit oranlıydı (bitiş zamanı hesaplanabiliyordu) → rastgele, gizli eşikler
 - [x] Doğrulama: engine 801, server 155, client 195 test; `ui:check` 1208/1208; e2e; pwa:check
-- [ ] Grup 3: Yazı Yaz, Kendim, Sızma, Sözlük Blöfü, Kontrol Paneli Kaosu (kelime havuzları hazır, sahip onayı bekliyor)
+- [x] Grup 3: Yazı Yaz, Kendim, Sızma, Sözlük Blöfü, Kontrol Paneli Kaosu (erken bitiş baştan dahil)
+- [x] 24 oyun tamam; doğrulama: engine 1163, server 162, client 242 test; `ui:check` 1836/1837 (kalan: kareler-reveal-8 animasyon anı, tek başına 30/30); e2e; pwa:check
 - [ ] Sahip onayı: Kör Kronometre'de kimse basmazsa herkes +2 (kural metni harfiyen); Aşırı Yükleme'de 0 tık puansız
 
 ### Erken bitiş (beta geri bildirimi) — yayında
