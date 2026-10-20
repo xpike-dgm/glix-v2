@@ -2,7 +2,7 @@
 
 Durum: 24 oyun önizlemede, erken bitiş yayında. Bu belge sonraki büyük işin planıdır; kural değiştiren her madde
 `KURALLAR.md`'ye işlenmeden uygulanmaz (sahip onayı). İş kolları: **U** (UI/UX), **O** (oyun iyileştirmeleri),
-**Y** (yapay zekâ). Altta 6 aşamalı uygulama planı.
+**Y** (yapay zekâ — ayrıntılı plan: `docs/YAPAY-ZEKA.md`; içerik üretimi yapay zekâ ile yapılmaz, sağlayıcı OpenAI'nin ucuz bir modeli). Altta 6 aşamalı uygulama planı.
 
 ---
 
@@ -161,7 +161,7 @@ Ajan düzeni: en çok 2 eşzamanlı ajan, her oyun/özellik sonrası commit.
 ### Aşama 3 — Oyun derinliği (2 hafta)
 - O2–O12 içinden sahibin onayladıkları (öneri sırası: O2 koklama, O3 darbe, O4 söz, O5 çok tur, O6 kronometre, O8).
 - Kalan cilalar (Kontrol görsel ipucu, Kendim sürükle-bırak, Yazı Yaz şüphe göstergesi).
-- Y1 + Y2 içerik fabrikası: tema paketleri ve 500 kelimelik doğrulanmış Sözlük — insan onaylı, havuz olarak yüklenir.
+- Kelime havuzlarının elle genişletilmesi (yapay zekâ ile değil); Sözlük tanımlarının TDK'dan elle doğrulanması.
 - Kapı: değişen her oyunun karne puanı önceki sürümden düşük değil.
 
 ### Aşama 4 — His ve paylaşım (2 hafta)
