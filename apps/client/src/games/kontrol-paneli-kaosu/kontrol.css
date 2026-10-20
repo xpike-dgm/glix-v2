@@ -1,0 +1,498 @@
+/* ---- Kontrol Paneli Kaosu ---- */
+.kp .col {
+  gap: 0;
+}
+.kp__head {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: clamp(6px, 2.4dvh, 22px);
+  min-height: 56px;
+  text-align: center;
+}
+.kp__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(18px, 5.8vw, 28px);
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kp__main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 6px;
+}
+.kp__main > .tamam {
+  margin-top: auto;
+}
+
+/* ---- Kablolar ---- */
+.kp__panel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kp__panel li {
+  display: flex;
+}
+.kp__wire {
+  --wc: var(--cyan);
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  height: var(--wire-h, clamp(48px, 8.4dvh, 60px));
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 66px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px 0 6px;
+  border-radius: 14px;
+  border: 2px solid transparent;
+  background: rgba(10, 16, 48, 0.55);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 80ms var(--ease),
+    border-color 140ms,
+    box-shadow 140ms;
+}
+button.kp__wire:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.kp__wire:disabled {
+  cursor: default;
+}
+.kp__main > .kp__panel {
+  --wire-h: auto;
+  flex: 1;
+  min-height: 0;
+  justify-content: center;
+}
+.kp__main > .kp__panel li {
+  flex: 1;
+  min-height: 48px;
+  max-height: 78px;
+}
+.kp__wire[data-selected="1"] {
+  border-color: var(--wc);
+  box-shadow:
+    0 0 16px color-mix(in srgb, var(--wc) 55%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--wc) 18%, transparent);
+}
+.kp__no {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-18);
+  text-align: center;
+  color: var(--text-dim);
+}
+.kp__channel {
+  position: relative;
+  height: 22px;
+  border-radius: 11px;
+  background: linear-gradient(180deg, #2a3157 0%, #11163a 45%, #1a2147 100%);
+  box-shadow:
+    inset 0 2px 3px rgba(0, 0, 0, 0.6),
+    0 1px 0 rgba(160, 175, 255, 0.18);
+}
+.kp__core {
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  top: 7px;
+  bottom: 7px;
+  border-radius: 4px;
+  background: var(--wc);
+  box-shadow:
+    0 0 8px var(--wc),
+    0 0 2px #fff inset;
+}
+.kp__mini .kp__core {
+  top: 5px;
+  bottom: 5px;
+}
+.kp__wire[data-selected="1"] .kp__core {
+  animation: kp-pulse 900ms ease-in-out infinite;
+}
+@keyframes kp-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px var(--wc),
+      0 0 2px #fff inset;
+  }
+  50% {
+    box-shadow:
+      0 0 18px var(--wc),
+      0 0 3px #fff inset;
+  }
+}
+.kp__name {
+  font-size: var(--fs-15);
+  font-weight: 700;
+  text-transform: capitalize;
+  color: color-mix(in srgb, var(--wc) 55%, var(--text));
+}
+/* Kesik kablo: ortada boşluk ve kıvılcım */
+.kp__wire[data-cut="1"] .kp__core {
+  background: linear-gradient(90deg, var(--wc) 0 40%, transparent 40% 60%, var(--wc) 60% 100%);
+  box-shadow: none;
+  opacity: 0.55;
+  animation: none;
+}
+.kp__wire[data-cut="1"] {
+  border-color: rgba(243, 245, 255, 0.5);
+}
+.kp__spark {
+  --sc: #f3f5ff;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 14%, var(--sc) 30%, transparent 70%);
+  filter: drop-shadow(0 0 6px var(--sc));
+  animation: kp-spark 700ms var(--ease) both;
+}
+.kp__wire[data-verdict="right"] .kp__spark {
+  --sc: var(--lime);
+}
+.kp__wire[data-verdict="right"] {
+  border-color: var(--lime);
+}
+.kp__wire[data-verdict="wrong"] .kp__spark {
+  --sc: var(--red);
+}
+.kp__wire[data-verdict="wrong"] {
+  border-color: var(--red);
+}
+@keyframes kp-spark {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+}
+
+/* ---- İpucu notu ---- */
+.kp__note {
+  flex: none;
+  padding: 10px 14px 12px;
+  border-radius: 14px;
+  border: 1.5px dashed rgba(46, 242, 255, 0.55);
+  background:
+    repeating-linear-gradient(0deg, rgba(46, 242, 255, 0.05) 0 2px, transparent 2px 6px),
+    rgba(10, 16, 48, 0.7);
+  box-shadow: 0 0 14px rgba(46, 242, 255, 0.18);
+}
+.kp__note-tag {
+  display: block;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+.kp__note-text {
+  margin: 6px 0 0;
+  font-size: var(--fs-18);
+  font-weight: 600;
+  line-height: 1.35;
+}
+.kp__idle {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+  font-size: var(--fs-18);
+  text-align: center;
+}
+
+/* ---- Sonuç ---- */
+.kp__head--res {
+  min-height: 74px;
+  gap: 2px;
+}
+.kp__score {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(40px, 13vw, 56px);
+  line-height: 1;
+  color: var(--lime);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--lime) 55%, transparent);
+  animation: kp-pop 420ms var(--ease) 600ms both;
+}
+.kp__score[data-zero="1"] {
+  color: var(--text);
+  text-shadow: none;
+}
+.kp__verdict {
+  font-size: var(--fs-15);
+  font-weight: 600;
+  color: #d5daf6;
+  animation: kp-fade 300ms var(--ease) 600ms both;
+}
+@keyframes kp-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes kp-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.kp__mini {
+  flex: none;
+  margin-top: 4px;
+}
+.kp__mini .kp__panel {
+  --wire-h: 34px;
+  gap: 4px;
+}
+.kp__mini .kp__wire {
+  grid-template-columns: 26px minmax(0, 1fr) 62px;
+  padding: 0 8px 0 4px;
+}
+.kp__mini .kp__channel {
+  height: 18px;
+}
+.kp__mini .kp__no {
+  font-size: var(--fs-15);
+}
+.kp__mini .kp__name {
+  font-size: var(--fs-13);
+}
+.kp__rows {
+  flex: 1;
+  min-height: 0;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+}
+.kp__row {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(10, 16, 48, 0.7);
+  animation: kp-fade 300ms var(--ease) calc(400ms + var(--i, 0) * 70ms) both;
+}
+.kp__row[data-me="1"] {
+  outline: 1.5px solid var(--text);
+}
+.kp__row-name {
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: var(--fs-15);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kp__cutchip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1.5px solid currentColor;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.kp__cutchip[data-ok="1"] {
+  color: var(--lime);
+}
+.kp__cutchip[data-ok="0"] {
+  color: var(--red);
+}
+.kp__cutchip[data-none="1"] {
+  color: var(--text-dim);
+}
+.kp__cutchip span {
+  color: #e4e8ff;
+}
+.kp__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.kp__hint-by {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  opacity: 0.85;
+}
+.kp__pts {
+  flex: none;
+  min-width: 30px;
+  text-align: right;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+  color: var(--lime);
+}
+.kp__pts[data-zero="1"] {
+  color: #c9cff0;
+}
+.kp__legend {
+  flex: none;
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+
+/* ---- Anlatım görseli ---- */
+.kpart {
+  width: min(100%, 240px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.kpart__row {
+  position: relative;
+  height: 20px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #2a3157 0%, #11163a 45%, #1a2147 100%);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.6);
+}
+.kpart__wire {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 7px;
+  bottom: 7px;
+  border-radius: 3px;
+  background: var(--wc);
+  box-shadow: 0 0 8px var(--wc);
+}
+.kpart__wire[data-cut="1"] {
+  background: linear-gradient(90deg, var(--wc) 0 40%, transparent 40% 60%, var(--wc) 60% 100%);
+  box-shadow: none;
+}
+.kpart__spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 14%, var(--lime) 32%, transparent 70%);
+  filter: drop-shadow(0 0 6px var(--lime));
+  animation: kpart-spark 1.8s ease-in-out infinite;
+}
+@keyframes kpart-spark {
+  0%,
+  100% {
+    transform: scale(0.4);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* ---- Alçak (yatay telefon) ekran ---- */
+@media (max-height: 460px) {
+  .kp__head {
+    min-height: 44px;
+    margin-top: 4px;
+    gap: 0;
+  }
+  .kp__head .overline {
+    display: none;
+  }
+  .kp__title {
+    font-size: 18px;
+  }
+  .kp__main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "p n"
+      "p t";
+    gap: 8px 12px;
+    align-content: start;
+  }
+  .kp__main > .kp__panel {
+    grid-area: p;
+    gap: 6px;
+    align-self: start;
+  }
+  .kp__main > .kp__note {
+    grid-area: n;
+    padding: 8px 10px;
+  }
+  .kp__main > .tamam {
+    grid-area: t;
+    align-self: end;
+  }
+  .kp__main > .kp__panel {
+    --wire-h: auto;
+  }
+  .kp__note-text {
+    font-size: var(--fs-15);
+    margin-top: 4px;
+  }
+  .kp__head--res {
+    min-height: 44px;
+  }
+  .kp__score {
+    font-size: 34px;
+  }
+  .kp__verdict,
+  .kp__legend {
+    display: none;
+  }
+  .kp__mini {
+    display: none;
+  }
+}

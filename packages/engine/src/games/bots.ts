@@ -11,6 +11,7 @@ import { gizliKarelerBot } from "./gizli-kareler/bots.js";
 import { ittifakBot } from "./ittifak/bots.js";
 import { karalamaDefteriBot } from "./karalama-defteri/bots.js";
 import { kendimBot } from "./kendim/bots.js";
+import { kontrolPaneliKaosuBot } from "./kontrol-paneli-kaosu/bots.js";
 import { korBombaBot } from "./kor-bomba/bots.js";
 import { korKronometreBot } from "./kor-kronometre/bots.js";
 import { ortalamaninYarisiBot } from "./ortalamanin-yarisi/bots.js";
@@ -42,6 +43,7 @@ export const BOTS: Record<string, GameBot> = {
   "zehirli-kadeh": zehirliKadehBot,
   ittifak: ittifakBot,
   kendim: kendimBot,
+  "kontrol-paneli-kaosu": kontrolPaneliKaosuBot,
   "yazi-yaz": yaziYazBot,
   "rusvet-darbe": rusvetDarbeBot,
 };

@@ -12,6 +12,7 @@ export * from "./games/index.js";
 export * from "./games/ittifak/index.js";
 export * from "./games/karalama-defteri/index.js";
 export * from "./games/kendim/index.js";
+export * from "./games/kontrol-paneli-kaosu/index.js";
 export * from "./games/kor-bomba/index.js";
 export * from "./games/kor-kronometre/index.js";
 export * from "./games/ortalamanin-yarisi/index.js";

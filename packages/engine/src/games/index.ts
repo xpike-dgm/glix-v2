@@ -12,6 +12,7 @@ import { gizliKareler } from "./gizli-kareler/index.js";
 import { ittifak } from "./ittifak/index.js";
 import { karalamaDefteri } from "./karalama-defteri/index.js";
 import { kendim } from "./kendim/index.js";
+import { kontrolPaneliKaosu } from "./kontrol-paneli-kaosu/index.js";
 import { korBomba } from "./kor-bomba/index.js";
 import { korKronometre } from "./kor-kronometre/index.js";
 import { ortalamaninYarisi } from "./ortalamanin-yarisi/index.js";
@@ -41,6 +42,7 @@ export const GAMES: Record<string, AnyGame> = {
   [gizliKareler.id]: gizliKareler,
   [ittifak.id]: ittifak,
   [kendim.id]: kendim,
+  [kontrolPaneliKaosu.id]: kontrolPaneliKaosu,
   [yaziYaz.id]: yaziYaz,
   [rusvetDarbe.id]: rusvetDarbe,
   [gizliAlisveris.id]: gizliAlisveris,
