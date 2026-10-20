@@ -47,7 +47,7 @@ export function Yazma(props: Props) {
 
   return (
     <>
-      <div class="yy__head">
+      <div class="yy__head yy__head--write">
         <span class="overline">Gizli yazı</span>
         <span class="yy__title">{props.spectator ? "Herkes yazıyor" : "Kelimeni yaz"}</span>
       </div>

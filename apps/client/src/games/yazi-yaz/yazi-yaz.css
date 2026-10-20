@@ -197,9 +197,10 @@
   font-size: var(--fs-13);
   font-weight: 600;
   line-height: 1.2;
-  color: #e4e8ff;
-  background: rgba(5, 8, 26, 0.86);
+  color: #fff;
+  background: rgba(5, 8, 26, 0.97);
   padding: 1px 6px;
+  z-index: 2;
   border-radius: 999px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -227,7 +228,7 @@
   font-size: var(--fs-13);
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: #c9cff0;
 }
 .yy__bubble {
   position: absolute;
@@ -407,7 +408,7 @@
 }
 .yy__row-name {
   flex: 1 1 0;
-  min-width: 0;
+  min-width: 44px;
   font-size: var(--fs-15);
   font-weight: 600;
   overflow: hidden;
@@ -440,7 +441,7 @@
   color: var(--red);
 }
 .yy__guess-text {
-  max-width: 78px;
+  max-width: 44px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -466,7 +467,7 @@
   gap: 8px;
 }
 .yyart__sign {
-  padding: 14px 8px;
+  padding: 8px 6px;
   border-radius: 12px;
   border: 2.5px solid var(--cyan);
   font-family: var(--font-display);
@@ -498,8 +499,15 @@
 
 /* ---- Alçak (yatay telefon) ekran ---- */
 @media (max-height: 460px) {
+  .yy__arena {
+    --yy-av: 30px;
+  }
+  .yy__name,
+  .yy__bubble {
+    display: none;
+  }
   .yy__head {
-    min-height: 34px;
+    min-height: 44px;
     margin-top: 4px;
     gap: 0;
   }
@@ -550,7 +558,7 @@
 }
 
 /* Ekran klavyesi açık ve görünen alan çok küçük: yalnız giriş alanı ve düğme kalsın */
-.yy[data-tight="1"] .yy__head,
+.yy[data-tight="1"] .yy__head--write,
 .yy[data-tight="1"] .yy__crew,
 .yy[data-tight="1"] .yy__nudge {
   display: none;

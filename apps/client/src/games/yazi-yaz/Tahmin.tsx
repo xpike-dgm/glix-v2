@@ -55,7 +55,7 @@ export function Tahmin(props: Props) {
         <span class="overline">{props.spectator ? "Tahmin zamanı" : "Tahmin zamanı"}</span>
         <Show
           when={chosen()}
-          fallback={<span class="yy__title">{props.spectator ? "Herkes tahmin ediyor" : "Yazan kim?"}</span>}
+          fallback={<span class="yy__title">{props.spectator ? "Tahmin ediyorlar" : "Yazan kim?"}</span>}
         >
           {(p) => (
             <span class="yy__title yy__title--picked" style={{ "--tc": look(p().avatar).color }}>
