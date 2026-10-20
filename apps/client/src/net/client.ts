@@ -126,6 +126,7 @@ function onMessage(raw: string): void {
       if (applyPatchMessage(msg)) rawSend({ type: "resync" });
       break;
     case "actionAck":
+      settleAck(msg.seq, msg.reason === undefined ? { ok: msg.ok } : { ok: msg.ok, reason: msg.reason });
       break;
     case "left":
       removeStored(KEYS.token);
@@ -277,5 +278,46 @@ export const sendFeedback = (rating: number, text: string): boolean => {
   return rawSend(base);
 };
 export const sendAction = (payload: unknown): boolean => rawSend({ type: "action", seq: ++seq, payload });
+
+/** Sunucunun bir eyleme verdiği yanıt: reddedildiyse nedeni (kısa kod) de gelir. */
+export interface ActionAck {
+  ok: boolean;
+  reason?: string;
+}
+const ACK_TIMEOUT_MS = 4000;
+const ackWaiters = new Map<number, (ack: ActionAck) => void>();
+
+function settleAck(ackSeq: number, ack: ActionAck): void {
+  const waiter = ackWaiters.get(ackSeq);
+  if (!waiter) return;
+  ackWaiters.delete(ackSeq);
+  waiter(ack);
+}
+
+/**
+ * Eylemi gönderir ve sunucunun yanıtını bekler (ör. metin girişinde reddedilme nedenini göstermek için).
+ * Gönderilemezse `offline`, yanıt gelmezse `timeout` nedeniyle `ok: false` döner.
+ */
+export function sendActionAck(payload: unknown): Promise<ActionAck> {
+  const id = seq + 1;
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      ackWaiters.delete(id);
+      resolve({ ok: false, reason: "timeout" });
+    }, ACK_TIMEOUT_MS);
+    ackWaiters.set(id, (ack) => {
+      clearTimeout(timer);
+      resolve(ack);
+    });
+    if (!sendAction(payload)) {
+      clearTimeout(timer);
+      ackWaiters.delete(id);
+      resolve({ ok: false, reason: "offline" });
+    }
+  });
+}
+
+/** Yalnız geliştirme önizlemesi: sahte gönderici bir eyleme yanıt verir. */
+export const mockAck = (ackSeq: number, ack: ActionAck): void => settleAck(ackSeq, ack);
 
 export type { RoomSnapshot };

@@ -514,6 +514,65 @@ const SCREENS = [
   { name: "sizma-spectator-clue", q: "mock=sizma-spectator-clue&n=5" },
   { name: "sizma-spectator-vote", q: "mock=sizma-spectator-vote&n=5" },
   { name: "sizma-spectator-reveal", q: "mock=sizma-spectator-reveal&n=5", settle: 2400 },
+  { name: "sozluk-briefing", q: "mock=sozluk-briefing" },
+  { name: "sozluk-write-5", q: "mock=sozluk-write&n=5" },
+  { name: "sozluk-write-3", q: "mock=sozluk-write&n=3" },
+  { name: "sozluk-write-8", q: "mock=sozluk-write&n=8" },
+  {
+    name: "sozluk-write-typed",
+    q: "mock=sozluk-write&n=5",
+    act: async (p) =>
+      p
+        .locator(".sb__field")
+        .fill("Eski zamanlarda köylerde kullanılan, ağzı geniş, iki kulplu büyük bir toprak çömlek türü"),
+  },
+  {
+    name: "sozluk-write-keyboard",
+    q: "mock=sozluk-write&n=5",
+    sizes: [
+      [390, 520],
+      [360, 300],
+      [320, 280],
+    ],
+    act: async (p) => p.locator(".sb__field").fill("eski bir kayık türü"),
+  },
+  {
+    name: "sozluk-write-same-as-real",
+    q: "mock=sozluk-write&n=5",
+    settle: 800,
+    act: async (p) => {
+      await p.locator(".sb__field").fill("gerçek anlam");
+      await p.getByRole("button", { name: "Gönder" }).click();
+    },
+  },
+  {
+    name: "sozluk-write-sent",
+    q: "mock=sozluk-write&n=5",
+    settle: 800,
+    act: async (p) => {
+      await p.locator(".sb__field").fill("denizcilerin taktığı kalın bir atkı");
+      await p.getByRole("button", { name: "Gönder" }).click();
+    },
+  },
+  { name: "sozluk-write-locked-5", q: "mock=sozluk-write-locked&n=5" },
+  { name: "sozluk-write-locked-8", q: "mock=sozluk-write-locked&n=8" },
+  { name: "sozluk-pick-3", q: "mock=sozluk-pick&n=3" },
+  { name: "sozluk-pick-5", q: "mock=sozluk-pick&n=5" },
+  { name: "sozluk-pick-8", q: "mock=sozluk-pick&n=8&chosen=2" },
+  {
+    name: "sozluk-pick-tap",
+    q: "mock=sozluk-pick&n=6",
+    act: async (p) => p.locator(".sbcard:not(:disabled)").nth(1).click(),
+  },
+  { name: "sozluk-pick-locked-5", q: "mock=sozluk-pick-locked&n=5" },
+  { name: "sozluk-pick-locked-8", q: "mock=sozluk-pick-locked&n=8" },
+  { name: "sozluk-reveal-3", q: "mock=sozluk-reveal&n=3", settle: 3600 },
+  { name: "sozluk-reveal-5", q: "mock=sozluk-reveal&n=5", settle: 3600 },
+  { name: "sozluk-reveal-8", q: "mock=sozluk-reveal&n=8", settle: 3600 },
+  { name: "sozluk-reveal-none-6", q: "mock=sozluk-reveal&n=6&me=none", settle: 3600 },
+  { name: "sozluk-spectator-write", q: "mock=sozluk-spectator-write&n=5" },
+  { name: "sozluk-spectator-pick", q: "mock=sozluk-spectator-pick&n=5" },
+  { name: "sozluk-spectator-reveal", q: "mock=sozluk-spectator-reveal&n=5", settle: 3600 },
   { name: "landscape", q: "mock=landscape", sizes: LANDSCAPE },
   { name: "landscape-8", q: "mock=landscape&n=8", sizes: LANDSCAPE },
   { name: "landscape-spectator", q: "mock=landscape&spectator=1", sizes: LANDSCAPE },
@@ -818,6 +877,8 @@ function inPageAudit() {
       if (r.bottom <= sr.top + 1 || r.top >= sr.bottom - 1) continue;
       if (r.left < -0.5 || r.right > vw + 0.5)
         issues.push(["overflow", `kaydırılan metin yatayda taşıyor: ${desc(el)}`]);
+      // Kaydırma alanının kenarında yarım kalan metin: kutusunun dışı başka öğeyle örtülüdür, kontrast ölçülemez.
+      if (r.top < sr.top - 1 || r.bottom > sr.bottom + 1) continue;
     } else if (!inView(r)) {
       if (!topmost(el, r, true)) continue;
       issues.push([

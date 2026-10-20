@@ -381,17 +381,18 @@
   color: #c9cff0;
 }
 
-/* ---- Anlatım görseli ---- */
+/* ---- Anlatım görseli (kap yüksekliğine göre ölçeklenir) ---- */
 .szart {
+  --u: min(120px, 100cqh);
   position: relative;
-  width: 150px;
-  height: 120px;
+  width: calc(var(--u) * 1.25);
+  height: var(--u);
   display: grid;
   place-items: center;
 }
 .szart__gem {
-  width: 54px;
-  height: 54px;
+  width: calc(var(--u) * 0.45);
+  height: calc(var(--u) * 0.45);
   background: linear-gradient(135deg, var(--cyan), var(--violet));
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
   filter: drop-shadow(0 0 10px rgba(46, 242, 255, 0.7));
@@ -406,8 +407,10 @@
   position: absolute;
   left: 50%;
   top: 50%;
+  width: calc(var(--u) * 0.22);
   color: var(--cyan);
-  transform: rotate(var(--a)) translateY(-52px) rotate(calc(-1 * var(--a))) translate(-50%, -50%);
+  transform: rotate(var(--a)) translateY(calc(var(--u) * -0.42)) rotate(calc(-1 * var(--a)))
+    translate(-50%, -50%);
   opacity: 0.85;
 }
 .szart__m[data-odd="1"] {
@@ -459,6 +462,10 @@
     margin-top: 0;
     height: clamp(70px, 26dvh, 100px);
   }
+  .sz__hint {
+    margin: 2px 0 4px;
+    font-size: var(--fs-13);
+  }
   .sz__mid .sz__hint {
     display: none;
   }
@@ -493,9 +500,5 @@
   .sz__tally {
     flex: 1.3;
     gap: 10px 2px;
-  }
-  .sz__hint {
-    margin: 2px 0 4px;
-    font-size: var(--fs-13);
   }
 }

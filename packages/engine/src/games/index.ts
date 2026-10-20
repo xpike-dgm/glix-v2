@@ -18,6 +18,7 @@ import { rusRuleti } from "./rus-ruleti/index.js";
 import { rusvetDarbe } from "./rusvet-darbe/index.js";
 import { sizma } from "./sizma/index.js";
 import { sonKisi } from "./son-kisi/index.js";
+import { sozlukBlofu } from "./sozluk-blofu/index.js";
 import { zamanBombasiHafizasi } from "./zaman-bombasi-hafizasi/index.js";
 import { zehirliKadeh } from "./zehirli-kadeh/index.js";
 
@@ -42,6 +43,7 @@ export const GAMES: Record<string, AnyGame> = {
   [rusvetDarbe.id]: rusvetDarbe,
   [gizliAlisveris.id]: gizliAlisveris,
   [sizma.id]: sizma,
+  [sozlukBlofu.id]: sozlukBlofu,
 };
 
 export function getCatalog(): GameInfo[] {

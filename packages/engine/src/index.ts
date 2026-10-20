@@ -18,6 +18,7 @@ export * from "./games/rus-ruleti/index.js";
 export * from "./games/rusvet-darbe/index.js";
 export * from "./games/sizma/index.js";
 export * from "./games/son-kisi/index.js";
+export * from "./games/sozluk-blofu/index.js";
 export * from "./games/zaman-bombasi-hafizasi/index.js";
 export * from "./games/zehirli-kadeh/index.js";
 export * from "./mergePatch.js";
