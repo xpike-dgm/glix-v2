@@ -2,6 +2,7 @@ import { createMemo, For, Show } from "solid-js";
 import { Avatar } from "./Avatar.js";
 import { CheckIcon } from "./Icons.js";
 import { pickerColumns } from "./playerPicker.js";
+import { pressable } from "./press.js";
 import "./player-picker.css";
 
 export interface PickerPlayer {
@@ -66,6 +67,10 @@ export function PlayerPicker(props: Props) {
             const count = () => props.counts?.[p.id] ?? 0;
             const self = () => p.id === props.selfId;
             const dim = () => self() && props.allowSelf !== true;
+            // Parmak dokunur dokunmaz etkinleşir; klavye/ekran okuyucu `click` ile.
+            const press = pressable(() => {
+              if (pickable(p)) props.onPick(p.id);
+            });
             return (
               <button
                 type="button"
@@ -78,7 +83,8 @@ export function PlayerPicker(props: Props) {
                 disabled={!pickable(p)}
                 aria-pressed={picked()}
                 aria-label={props.label(p)}
-                onClick={() => props.onPick(p.id)}
+                onPointerDown={press.onPointerDown}
+                onClick={press.onClick}
               >
                 <span class="ppick__portrait">
                   <Avatar

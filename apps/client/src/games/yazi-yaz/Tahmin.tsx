@@ -1,7 +1,7 @@
 import { Show } from "solid-js";
 import { hapticReady } from "../../fx/haptics.js";
 import { ready as readySound } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { type ActionAck, sendActionAck } from "../../net/client.js";
 import { look } from "../../ui/avatars.js";
 import { PlayerPicker } from "../../ui/PlayerPicker.js";
 import { createPendingPick } from "../../ui/playerPicker.js";
@@ -25,29 +25,24 @@ export function Tahmin(props: Props) {
   const closed = () => props.spectator || props.view.locked;
   const pick = createPendingPick({
     server: () => props.view.myGuess.target,
-    send: (id) => {
-      sendAction({ kind: "guessPlayer", target: id });
-    },
+    send: (id) => sendActionAck({ kind: "guessPlayer", target: id }),
     closed,
   });
   const draft = createWordDraft({
     server: () => props.view.myGuess.word,
-    send: (text) => {
-      sendAction({ kind: "guessWord", text });
-    },
+    send: (text) => sendActionAck({ kind: "guessWord", text }),
     allowEmpty: true,
   });
   const chosen = () => {
     const id = pick.value();
     return id === null ? null : (props.crew.find((m) => m.id === id) ?? null);
   };
-  const lock = (): void => {
-    if (closed() || pick.value() === null) return;
+  const lock = (): Promise<ActionAck> | false => {
+    if (closed() || pick.value() === null) return false;
     draft.flush();
-    if (sendAction({ kind: "lock" })) {
-      readySound();
-      hapticReady();
-    }
+    readySound();
+    hapticReady();
+    return sendActionAck({ kind: "lock" });
   };
   return (
     <>

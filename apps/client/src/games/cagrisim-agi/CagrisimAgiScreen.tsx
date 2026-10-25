@@ -11,15 +11,16 @@ import {
   Show,
   untrack,
 } from "solid-js";
-import { hapticMatch, hapticReady, hapticResult, hapticSolo } from "../../fx/haptics.js";
+import { hapticError, hapticMatch, hapticReady, hapticResult, hapticSolo } from "../../fx/haptics.js";
 import {
+  fail,
   match as matchSound,
   ready as readySound,
   roundResult,
   solo as soloSound,
   unlockAudio,
 } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
@@ -225,11 +226,17 @@ export default function CagrisimAgiScreen(props: GameScreenProps) {
     const value = text().trim();
     if (props.spectator || locked() || over() || !canSubmit(value)) return;
     unlockAudio();
-    if (!sendAction({ kind: "answer", text: value })) return;
+    // Cevap hemen mühürlenir; sunucu reddederse yazı alanı geri açılır.
     setSent(value);
     input?.blur();
     readySound();
     hapticReady();
+    void sendActionAck({ kind: "answer", text: value }).then((ack) => {
+      if (ack.ok || ack.reason === "timeout") return;
+      setSent(null);
+      fail();
+      hapticError();
+    });
   };
 
   // Açılışa geçince bir kez tepki: ağ kurduysan eşleşme, tek kaldıysan alçak ses.

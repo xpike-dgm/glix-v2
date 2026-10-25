@@ -1,8 +1,9 @@
 import { createSignal, For, Show } from "solid-js";
 import { hapticReady } from "../../fx/haptics.js";
 import { ready as readySound } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { sendAction, sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
+import type { AckLike } from "../../ui/optimistic.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import { WordField } from "../../ui/WordField.js";
 import { createWordDraft } from "../../ui/wordDraft.js";
@@ -32,17 +33,16 @@ export function Yazma(props: Props) {
   const [nudge, setNudge] = createSignal(false);
   const locked = () => props.view.locked;
 
-  const lock = (): void => {
-    if (props.spectator || locked() || !hasWord(draft.text())) return;
+  const lock = (): AckLike => {
+    if (props.spectator || locked() || !hasWord(draft.text())) return false;
     if (props.view.role === "innocent" && draft.text() !== "MASUM") {
       setNudge(true);
-      return;
+      return false;
     }
     draft.flush();
-    if (sendAction({ kind: "lock" })) {
-      readySound();
-      hapticReady();
-    }
+    readySound();
+    hapticReady();
+    return sendActionAck({ kind: "lock" });
   };
 
   return (

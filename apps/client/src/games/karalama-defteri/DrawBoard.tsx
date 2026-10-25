@@ -8,8 +8,9 @@ import {
 import { createEffect, createSignal, For, type JSX, onCleanup, onMount, untrack } from "solid-js";
 import { hapticReady, hapticTap, hapticTick } from "../../fx/haptics.js";
 import { tap, tick, unlockAudio } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { sendAction, sendActionAck } from "../../net/client.js";
 import { serverNow, toast } from "../../net/store.js";
+import type { AckLike } from "../../ui/optimistic.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import {
   MIN_STEP,
@@ -181,11 +182,15 @@ export function DrawBoard(props: DrawBoardProps) {
   const [sentLock, setSentLock] = createSignal(false);
   const locked = (): boolean => props.done || sentLock();
   const over = (): boolean => props.now() >= props.endsAt;
-  const lockDone = (): void => {
-    if (locked() || over() || count() === 0) return;
-    if (!sendAction({ kind: "lock" })) return;
+  const lockDone = (): AckLike => {
+    if (locked() || over() || count() === 0) return false;
     setSentLock(true);
     hapticReady();
+    const ack = sendActionAck({ kind: "lock" });
+    void ack.then((a) => {
+      if (!a.ok && a.reason !== "timeout") setSentLock(false);
+    });
+    return ack;
   };
 
   // --- gönderme ---

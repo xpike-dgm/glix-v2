@@ -1,11 +1,12 @@
 import { createMemo, createSignal, For, Match, onCleanup, Show, Switch } from "solid-js";
 import { hapticTap } from "../../fx/haptics.js";
 import { tap } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { createChoiceSync } from "../../ui/numberPicker.js";
 import { ProgressBar } from "../../ui/ProgressBar.js";
+import { pressable } from "../../ui/press.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
 import { TamamBar } from "../../ui/TamamBar.js";
@@ -34,9 +35,7 @@ function Secim(props: SecimProps) {
   const me = () => props.entries.find((e) => e.id === props.selfId);
   const sync = createChoiceSync({
     serverValue: () => props.v.myChoice,
-    send: (cell) => {
-      sendAction({ kind: "pick", cell });
-    },
+    send: (cell) => sendActionAck({ kind: "pick", cell }),
     closed,
   });
   const mine = (): number | null => (props.canPick ? (sync.value() ?? props.v.myChoice) : null);
@@ -70,29 +69,33 @@ function Secim(props: SecimProps) {
       <div class="kstage">
         <div class="kgrid" style={{ "--n": props.v.size }} data-off={props.canPick ? undefined : "1"}>
           <For each={cells()}>
-            {(cell) => (
-              <button
-                type="button"
-                class="kcell"
-                data-on={mine() === cell ? "1" : undefined}
-                style={{ "--i": cell }}
-                disabled={!props.canPick || props.v.locked}
-                aria-label={cellName(cell, props.v.size)}
-                aria-pressed={mine() === cell}
-                onPointerDown={() => {
-                  if (closed()) return;
-                  hapticTap();
-                  tap();
-                  sync.set(cell, true);
-                }}
-              >
-                <Show when={mine() === cell} fallback={<i class="kcell__core" />}>
-                  <span class="kcell__me">
-                    <Avatar index={me()?.avatar ?? 0} size="var(--as)" />
-                  </span>
-                </Show>
-              </button>
-            )}
+            {(cell) => {
+              const press = pressable(() => {
+                if (closed()) return;
+                hapticTap();
+                tap();
+                sync.set(cell, true);
+              });
+              return (
+                <button
+                  type="button"
+                  class="kcell"
+                  data-on={mine() === cell ? "1" : undefined}
+                  style={{ "--i": cell }}
+                  disabled={!props.canPick || props.v.locked}
+                  aria-label={cellName(cell, props.v.size)}
+                  aria-pressed={mine() === cell}
+                  onPointerDown={press.onPointerDown}
+                  onClick={press.onClick}
+                >
+                  <Show when={mine() === cell} fallback={<i class="kcell__core" />}>
+                    <span class="kcell__me">
+                      <Avatar index={me()?.avatar ?? 0} size="var(--as)" />
+                    </span>
+                  </Show>
+                </button>
+              );
+            }}
           </For>
         </div>
       </div>
@@ -104,9 +107,7 @@ function Secim(props: SecimProps) {
           total={total()}
           disabled={mine() === null}
           spectator={props.spectator}
-          onLock={() => {
-            sendAction({ kind: "lock" });
-          }}
+          onLock={() => sendActionAck({ kind: "lock" })}
         />
       </Show>
 

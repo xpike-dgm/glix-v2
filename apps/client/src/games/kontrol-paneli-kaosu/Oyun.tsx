@@ -1,8 +1,9 @@
 import type { WireColor } from "@glix/engine";
 import { createSignal, Show } from "solid-js";
 import { hapticReady, hapticTap } from "../../fx/haptics.js";
-import { fail, ready as readySound, tap, unlockAudio } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { ready as readySound, tap, unlockAudio } from "../../fx/sound.js";
+import { sendActionAck } from "../../net/client.js";
+import { type AckLike, createOptimistic } from "../../ui/optimistic.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import { Panel } from "./Panel.js";
 import { clueText, type KontrolScreenView } from "./view.js";
@@ -16,18 +17,19 @@ interface Props {
 /** Oyun: kendi panelin, kabloların altında yalnız sana görünen ipucu notu; bir kablo seç ve KES. */
 export function Oyun(props: Props) {
   const [picked, setPicked] = createSignal<WireColor | null>(null);
-  const cutDone = () => props.view.myCut !== null;
+  // Kesilen kablo dokununca hemen kopar; sunucu onaylar, reddederse geri gelir.
+  const [myCut, setMyCut] = createOptimistic<WireColor | null>(() => props.view.myCut);
+  const cutDone = () => myCut() !== null;
   const closed = () => props.spectator || cutDone();
-  const cut = (): void => {
+  const cut = (): AckLike => {
     const color = picked();
-    if (closed() || color === null) return;
+    if (closed() || color === null) return false;
     unlockAudio();
-    if (sendAction({ kind: "cut", color })) {
-      readySound();
-      hapticReady();
-    } else {
-      fail();
-    }
+    readySound();
+    hapticReady();
+    const ack = sendActionAck({ kind: "cut", color });
+    setMyCut(color, () => ack);
+    return ack;
   };
   return (
     <>
@@ -50,7 +52,7 @@ export function Oyun(props: Props) {
           <Panel
             panel={props.view.panel}
             selected={picked()}
-            cut={props.view.myCut}
+            cut={myCut()}
             disabled={closed()}
             onPick={(c) => {
               unlockAudio();
@@ -71,7 +73,7 @@ export function Oyun(props: Props) {
 
         <TamamBar
           locked={cutDone()}
-          ready={props.view.done.length}
+          ready={props.view.done.length + (cutDone() && props.view.myCut === null ? 1 : 0)}
           total={props.total}
           disabled={picked() === null}
           spectator={props.spectator}

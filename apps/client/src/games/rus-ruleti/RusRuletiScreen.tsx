@@ -6,6 +6,7 @@ import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
 import { ProgressBar } from "../../ui/ProgressBar.js";
+import { pressable } from "../../ui/press.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
 import type { GameScreenProps } from "../registry.js";
@@ -215,6 +216,7 @@ export default function RusRuletiScreen(props: GameScreenProps) {
             const alive = () => isAlive(p.id);
             const aimable = () => canAim() && alive() && (p.id === props.selfId || p.connected);
             const picked = () => sel() === p.id;
+            const press = pressable(() => aim(p.id));
             return (
               <button
                 type="button"
@@ -226,7 +228,8 @@ export default function RusRuletiScreen(props: GameScreenProps) {
                 disabled={!aimable()}
                 aria-pressed={picked()}
                 aria-label={`${nameOf(p.id)} hedef al`}
-                onClick={() => aim(p.id)}
+                onPointerDown={press.onPointerDown}
+                onClick={press.onClick}
               >
                 <span class="rr__portrait">
                   <Avatar
@@ -267,6 +270,7 @@ export default function RusRuletiScreen(props: GameScreenProps) {
           }
         >
           <PrimaryButton
+            instant
             variant="danger"
             disabled={sel() === null || pending()}
             busy={pending()}

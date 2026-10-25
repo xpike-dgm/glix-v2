@@ -1,9 +1,10 @@
 import { createEffect, createMemo, createSignal, For, on, Show } from "solid-js";
 import { hapticMatch, hapticSolo, hapticTap } from "../../fx/haptics.js";
 import { match as matchSound, solo as soloSound, tap, unlockAudio } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { sendAction, sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
+import type { AckLike } from "../../ui/optimistic.js";
 import { ProgressBar } from "../../ui/ProgressBar.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
@@ -55,9 +56,9 @@ export default function AcgozlulukLimitiScreen(props: GameScreenProps) {
     sendAction({ kind: "choose", value });
   };
 
-  const lock = (): void => {
-    if (props.spectator || closed() || locked() || mine() === null) return;
-    sendAction({ kind: "lock" });
+  const lock = (): AckLike => {
+    if (props.spectator || closed() || locked() || mine() === null) return false;
+    return sendActionAck({ kind: "lock" });
   };
 
   // Sonuç açılınca bir kez ses ve titreşim.

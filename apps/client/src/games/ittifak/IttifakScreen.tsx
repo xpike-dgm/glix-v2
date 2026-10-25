@@ -1,5 +1,5 @@
 import { createMemo, Show } from "solid-js";
-import { sendAction } from "../../net/client.js";
+import { sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { look } from "../../ui/avatars.js";
 import { PlayerPicker } from "../../ui/PlayerPicker.js";
@@ -30,9 +30,7 @@ export default function IttifakScreen(props: GameScreenProps) {
 
   const pick = createPendingPick({
     server: () => view()?.myVote ?? null,
-    send: (id) => {
-      sendAction({ kind: "vote", target: id });
-    },
+    send: (id) => sendActionAck({ kind: "vote", target: id }),
     closed,
   });
   const chosen = () => {
@@ -86,9 +84,7 @@ export default function IttifakScreen(props: GameScreenProps) {
                       spectator={props.spectator === true}
                       label="Oylamaya geçelim"
                       doneLabel="Hazırsın"
-                      onLock={() => {
-                        sendAction({ kind: "skip" });
-                      }}
+                      onLock={() => sendActionAck({ kind: "skip" })}
                     />
                   </>
                 }
@@ -126,9 +122,7 @@ export default function IttifakScreen(props: GameScreenProps) {
                   total={crew().length}
                   disabled={pick.value() === null}
                   spectator={props.spectator === true}
-                  onLock={() => {
-                    sendAction({ kind: "lock" });
-                  }}
+                  onLock={() => sendActionAck({ kind: "lock" })}
                 />
               </Show>
             }

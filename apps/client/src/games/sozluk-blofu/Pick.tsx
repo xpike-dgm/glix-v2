@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js";
-import { sendAction } from "../../net/client.js";
+import { sendActionAck } from "../../net/client.js";
 import { CheckIcon } from "../../ui/Icons.js";
 import { createPendingPick } from "../../ui/playerPicker.js";
 import { TamamBar } from "../../ui/TamamBar.js";
@@ -18,9 +18,7 @@ export function Pick(props: Props) {
   const closed = () => props.spectator || props.view.locked;
   const pick = createPendingPick({
     server: () => props.view.myPick,
-    send: (card) => {
-      sendAction({ kind: "pick", card });
-    },
+    send: (card) => sendActionAck({ kind: "pick", card }),
     closed,
   });
   return (
@@ -69,9 +67,7 @@ export function Pick(props: Props) {
         total={props.crew.length}
         disabled={pick.value() === null}
         spectator={props.spectator}
-        onLock={() => {
-          sendAction({ kind: "lock" });
-        }}
+        onLock={() => sendActionAck({ kind: "lock" })}
       />
     </>
   );

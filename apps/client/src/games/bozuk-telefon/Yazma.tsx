@@ -3,8 +3,9 @@ import { BOZUK_TEXT_MAX } from "@glix/engine";
 import { createSignal, For, Show } from "solid-js";
 import { hapticReady } from "../../fx/haptics.js";
 import { ready as readySound } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { sendAction, sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
+import type { AckLike } from "../../ui/optimistic.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import { DrawingCanvas } from "../karalama-defteri/DrawingCanvas.js";
 import type { Crew } from "./BozukTelefonScreen.js";
@@ -27,13 +28,12 @@ export function Yazma(props: Props) {
   const locked = () => props.view.done;
   const total = () => props.crew.length;
 
-  const lock = (): void => {
-    if (props.spectator || locked() || !hasSentence(text())) return;
+  const lock = (): AckLike => {
+    if (props.spectator || locked() || !hasSentence(text())) return false;
     flush();
-    if (sendAction({ kind: "lock" })) {
-      readySound();
-      hapticReady();
-    }
+    readySound();
+    hapticReady();
+    return sendActionAck({ kind: "lock" });
   };
   const prompt = () => props.view.prompt;
   const drawing = (): ParsedDrawing | null => {

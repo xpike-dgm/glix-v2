@@ -1,10 +1,11 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { hapticReady, hapticTap } from "../../fx/haptics.js";
 import { ready as readySound, tap, unlockAudio } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
 import { BottomSheet } from "../../ui/BottomSheet.js";
+import { type AckLike, createOptimistic } from "../../ui/optimistic.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { Crew } from "./KendimScreen.js";
 import { cardOfPlayer, type KendimScreenView, pairOf, wordLen } from "./view.js";
@@ -15,6 +16,11 @@ interface Props {
   selfId: string;
   spectator: boolean;
 }
+
+const samePairs = (a: Record<string, string>, b: Record<string, string>): boolean => {
+  const ka = Object.keys(a);
+  return ka.length === Object.keys(b).length && ka.every((k) => a[k] === b[k]);
+};
 
 /**
  * Eşleştirme: karışık hologram kartlar; bir karta dokun, kimin olduğunu seç. Eşleştirmeler Tamam'a kadar
@@ -27,8 +33,13 @@ export function Eslestirme(props: Props) {
   const candidates = createMemo(() =>
     props.crew.filter((m) => m.id !== props.selfId && props.view.owners.includes(m.id)),
   );
+  // Eşleştirme dokununca hemen görünür; sunucu aynı eşleşmeleri onaylar, reddederse eskiye döner.
+  const [pairs, setPairs] = createOptimistic<Record<string, string>>(() => props.view.myPairs, {
+    equals: samePairs,
+  });
+  const lv = () => ({ cards: props.view.cards, myPairs: pairs() });
   const openCard = () => props.view.cards.find((c) => c.id === open()) ?? null;
-  const paired = () => props.view.cards.filter((c) => pairOf(props.view, c.id) !== null).length;
+  const paired = () => props.view.cards.filter((c) => pairOf(lv(), c.id) !== null).length;
 
   const choose = (target: string | null): void => {
     const card = open();
@@ -36,15 +47,18 @@ export function Eslestirme(props: Props) {
     unlockAudio();
     tap();
     hapticTap();
-    sendAction({ kind: "match", card, target });
+    const next: Record<string, string> = {};
+    for (const [k, who] of Object.entries(pairs())) if (who !== target) next[k] = who;
+    if (target === null) delete next[String(card)];
+    else next[String(card)] = target;
+    setPairs(next, () => sendActionAck({ kind: "match", card, target }));
     setOpen(null);
   };
-  const lock = (): void => {
-    if (closed()) return;
-    if (sendAction({ kind: "lock" })) {
-      readySound();
-      hapticReady();
-    }
+  const lock = (): AckLike => {
+    if (closed()) return false;
+    readySound();
+    hapticReady();
+    return sendActionAck({ kind: "lock" });
   };
 
   return (
@@ -59,7 +73,7 @@ export function Eslestirme(props: Props) {
       <ul class="kd__cards" data-count={props.view.cards.length} data-scroll>
         <For each={props.view.cards}>
           {(card, i) => {
-            const who = () => member(pairOf(props.view, card.id));
+            const who = () => member(pairOf(lv(), card.id));
             return (
               <li style={{ "--i": i() }}>
                 <button
@@ -109,9 +123,9 @@ export function Eslestirme(props: Props) {
         <ul class="kd__who">
           <For each={candidates()}>
             {(m) => {
-              const current = () => pairOf(props.view, open() ?? -1) === m.id;
+              const current = () => pairOf(lv(), open() ?? -1) === m.id;
               const elsewhere = () => {
-                const c = cardOfPlayer(props.view, m.id);
+                const c = cardOfPlayer(lv(), m.id);
                 return c && c.id !== open() ? c.text : null;
               };
               return (
@@ -138,7 +152,7 @@ export function Eslestirme(props: Props) {
         <button
           type="button"
           class="kd__clear"
-          disabled={pairOf(props.view, open() ?? -1) === null}
+          disabled={pairOf(lv(), open() ?? -1) === null}
           onClick={() => choose(null)}
         >
           Boş bırak

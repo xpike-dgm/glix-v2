@@ -1,4 +1,5 @@
 import { Show } from "solid-js";
+import { type AckLike, createOptimistic, toAck } from "./optimistic.js";
 import { PrimaryButton } from "./PrimaryButton.js";
 
 interface Props {
@@ -15,21 +16,36 @@ interface Props {
   label?: string;
   /** Kilitlenince düğmede görünen yazı. */
   doneLabel?: string;
-  onLock: () => void;
+  /** Basınca düğme hemen "Hazırsın"a döner; dönen yanıt reddedilirse geri alınır. */
+  /** `false`: yerelde reddedildi; `sendActionAck` sözü: reddedilirse kilit geri açılır. */
+  onLock: () => AckLike;
 }
 
 /** "Tamam" ile seçimi kesinleştirme: büyük düğme, kilitlenince "Diğerleri bekleniyor · 3/5 hazır". */
 export function TamamBar(props: Props) {
-  const count = () => `${props.ready}/${props.total} hazır`;
+  const [sent, setSent] = createOptimistic<boolean>(() => props.locked);
+  const locked = () => props.locked || sent();
+  // Kendi kilidin sunucu sayımına girene dek sayaç yerelde bir artar.
+  const ready = () => (!props.locked && sent() ? Math.min(props.total, props.ready + 1) : props.ready);
+  const count = () => `${ready()}/${props.total} hazır`;
+  const lock = (): void => {
+    if (locked()) return;
+    const result = props.onLock();
+    // Oyun yerelde reddettiyse (ör. eksik seçim) kilitli görünmez.
+    if (result === false) return;
+    setSent(true, () => toAck(result));
+  };
+
   return (
     <div class="tamam">
       <Show when={!props.spectator} fallback={<p class="tamam__count">{count()}</p>}>
         <Show
-          when={props.locked}
+          when={locked()}
           fallback={
             <PrimaryButton
+              instant
               disabled={props.disabled === true}
-              onClick={props.onLock}
+              onClick={lock}
               class={(props.label ?? "Tamam").length > 10 ? "pbtn--long" : ""}
             >
               {props.label ?? "Tamam"}
@@ -43,7 +59,7 @@ export function TamamBar(props: Props) {
             Diğerleri bekleniyor · {count()}
           </p>
         </Show>
-        <Show when={!props.locked}>
+        <Show when={!locked()}>
           <p class="tamam__count" data-quiet="1">
             {props.total > 0 ? count() : ""}
           </p>

@@ -1,9 +1,10 @@
 import { createEffect, createMemo, createSignal, For, on, Show } from "solid-js";
 import { hapticError, hapticTap } from "../../fx/haptics.js";
 import { fail, tap } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { ProgressBar } from "../../ui/ProgressBar.js";
+import { pressable } from "../../ui/press.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
 import { TamamBar } from "../../ui/TamamBar.js";
@@ -79,7 +80,16 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
     tap();
     setWant((w) => ({ ...w, [id]: !has }));
     setSpent((s) => ({ n: (s?.n ?? 0) + 1, text: has ? `+${price}` : `−${price}` }));
-    sendAction({ kind: has ? "remove" : "add", product: id });
+    void sendActionAck({ kind: has ? "remove" : "add", product: id }).then((ack) => {
+      if (ack.ok || ack.reason === "timeout") return;
+      // Reddedildi: yerel istek geri alınır.
+      setWant((w) => {
+        const { [id]: _drop, ...rest } = w;
+        return rest;
+      });
+      fail();
+      hapticError();
+    });
   };
 
   const ratio = () => {
@@ -145,6 +155,7 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
                     {(p) => {
                       const inCart = () => basket().includes(p.id);
                       const tooDear = () => !inCart() && p.price > remaining();
+                      const press = pressable(() => toggle(p.id, p.price));
                       return (
                         <button
                           type="button"
@@ -154,7 +165,8 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
                           disabled={spectator() || v().locked}
                           aria-pressed={inCart()}
                           aria-label={`${p.name}, ${p.price} kredi`}
-                          onPointerDown={() => toggle(p.id, p.price)}
+                          onPointerDown={press.onPointerDown}
+                          onClick={press.onClick}
                         >
                           <UrunArt id={p.id} name={p.name} />
                           <span class="aitem__name">{p.name}</span>
@@ -170,9 +182,7 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
                   ready={v().ready.length}
                   total={entries().length}
                   spectator={spectator()}
-                  onLock={() => {
-                    sendAction({ kind: "lock" });
-                  }}
+                  onLock={() => sendActionAck({ kind: "lock" })}
                 />
               </>
             }

@@ -1,15 +1,16 @@
 // biome-ignore-all lint/a11y/noSvgWithoutTitle: simgeler dekoratif (aria-hidden)
 import { BOZUK_VOTE_MS, type PlayerInfo } from "@glix/engine";
 import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show } from "solid-js";
-import { hapticMatch, hapticReady, hapticResult, hapticSolo } from "../../fx/haptics.js";
+import { hapticError, hapticMatch, hapticReady, hapticResult, hapticSolo } from "../../fx/haptics.js";
 import {
+  fail,
   match as matchSound,
   ready as readySound,
   roundResult,
   solo as soloSound,
   tick,
 } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { CheckIcon } from "../../ui/Icons.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
@@ -81,11 +82,16 @@ export function Gosteri(props: Props) {
   const confirm = (): void => {
     const i = picked();
     if (i === null || !canVote()) return;
-    if (sendAction({ kind: "vote", step: i })) {
-      setSent(true);
-      readySound();
-      hapticReady();
-    }
+    // Oy hemen mühürlenir; sunucu reddederse seçim geri açılır.
+    setSent(true);
+    readySound();
+    hapticReady();
+    void sendActionAck({ kind: "vote", step: i }).then((ack) => {
+      if (ack.ok || ack.reason === "timeout") return;
+      setSent(false);
+      fail();
+      hapticError();
+    });
   };
 
   // Sesler: her yeni adımda tık; sonuçta sağlam zincir fanfarı.
@@ -274,6 +280,7 @@ export function Gosteri(props: Props) {
             <PrimaryButton
               disabled={voted() || picked() === null}
               variant={voted() ? "done" : "cyan"}
+              instant
               onClick={confirm}
             >
               {voted() ? "OY VERİLDİ" : "EN KOMİK BU"}
