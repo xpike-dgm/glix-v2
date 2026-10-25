@@ -1,6 +1,6 @@
 import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
 import { derivedRng, drawSeed } from "../seeded.js";
-import { sanitizeWord } from "../text.js";
+import { foldKey, sanitizeWord } from "../text.js";
 import {
   KENDIM_LOCK_GRACE_MS,
   KENDIM_MATCH_MS,
@@ -80,7 +80,7 @@ export function kendimCards(state: Pick<KendimState, "players" | "seed" | "texts
 
 /** Doğruluk: eşlediğin oyuncunun kelimesi kartın kelimesiyle aynıysa doğrudur (aynı kelimeyi yazanlar denktir). */
 function isCorrect(state: KendimState, text: string, target: string): boolean {
-  return has(state.texts, target) && state.texts[target] === text;
+  return has(state.texts, target) && foldKey(state.texts[target] ?? "") === foldKey(text);
 }
 
 function buildReveal(state: KendimState): KendimReveal {

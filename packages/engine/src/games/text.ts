@@ -25,3 +25,19 @@ export function sanitizeWord(value: unknown, maxLength = WORD_MAX_LENGTH): strin
   if (length < 1 || length > maxLength) return null;
   return upper;
 }
+
+/**
+ * Klavyeden bağımsız karşılaştırma anahtarı: Türkçe ve İngilizce klavyeyle yazılan aynı kelime eşleşir.
+ * Aksan/nokta işaretleri atılır (ç→c, ş→s, ğ→g, ü→u, ö→o, â→a, İ→i), ı→i, küçük harf, noktalama atılır,
+ * boşluklar teke iner. Yalnız eşitlik için kullanılır; ekranda oyuncunun yazdığı biçim gösterilir.
+ */
+export function foldKey(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[ıI]/g, "i")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, "")
+    .replace(/\s+/gu, " ")
+    .trim();
+}

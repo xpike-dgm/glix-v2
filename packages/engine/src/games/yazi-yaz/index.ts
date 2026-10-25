@@ -1,5 +1,5 @@
 import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
-import { sanitizeWord } from "../text.js";
+import { foldKey, sanitizeWord } from "../text.js";
 import {
   YAZI_YAZ_GUESS_MS,
   YAZI_YAZ_INNOCENT_WORD,
@@ -92,7 +92,7 @@ export function yaziYazJudge(
   const personOk = target !== null && target !== playerId && state.writers.includes(target);
   const real =
     personOk && target !== null && Object.hasOwn(state.texts, target) ? (state.texts[target] ?? "") : "";
-  const wordOk = personOk && real !== "" && word !== "" && word === real;
+  const wordOk = personOk && real !== "" && word !== "" && foldKey(word) === foldKey(real);
   return { target, word, personOk, wordOk };
 }
 

@@ -130,10 +130,10 @@ describe("metin temizliği", () => {
     expect(charCount("İıĞğ")).toBe(4);
   });
 
-  it("karşılaştırma Türkçe büyük harfle, büyük/küçük ve noktalamadan bağımsız", () => {
+  it("karşılaştırma klavyeden, büyük/küçük harften ve noktalamadan bağımsız", () => {
     expect(compareKey("ince ve hafif yağan yağmur")).toBe(compareKey("İNCE VE HAFİF YAĞAN YAĞMUR"));
     expect(compareKey("ısı")).toBe(compareKey("ISI"));
-    expect(compareKey("ısı")).not.toBe(compareKey("isi"));
+    expect(compareKey("ısı")).toBe(compareKey("isi")); // İngilizce klavye ı yazamaz: bilerek eşit
     expect(compareKey("a, b; c.")).toBe(compareKey("A  B   C"));
   });
 

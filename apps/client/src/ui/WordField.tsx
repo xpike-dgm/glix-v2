@@ -28,7 +28,7 @@ export function WordField(props: Props) {
         inputmode="text"
         enterkeyhint="done"
         autocomplete="off"
-        autocapitalize="characters"
+        autocapitalize="none"
         autocorrect="off"
         spellcheck={false}
         maxlength={24}

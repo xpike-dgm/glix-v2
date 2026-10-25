@@ -1,5 +1,6 @@
 import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
 import { rankAwards } from "../scoring.js";
+import { foldKey } from "../text.js";
 import {
   CAGRISIM_ANSWER_MS,
   CAGRISIM_LOCK_GRACE_MS,
@@ -36,7 +37,7 @@ export function normalizeAnswer(text: string): string {
 
 /** Gruplar (≥2 kişi, büyükten küçüğe), tek kalanlar ve susanlar. Oyuncu sırası belirleyicidir. */
 export function groupAnswers(players: readonly string[], answers: Record<string, string>): CagrisimReveal {
-  const byKey = new Map<string, string[]>();
+  const byKey = new Map<string, { text: string; members: string[] }>();
   const silent: string[] = [];
   for (const id of players) {
     const raw = answers[id];
@@ -44,14 +45,14 @@ export function groupAnswers(players: readonly string[], answers: Record<string,
       silent.push(id);
       continue;
     }
-    const key = normalizeAnswer(raw);
-    const list = byKey.get(key);
-    if (list) list.push(id);
-    else byKey.set(key, [id]);
+    const key = foldKey(raw);
+    const entry = byKey.get(key);
+    if (entry) entry.members.push(id);
+    else byKey.set(key, { text: normalizeAnswer(raw), members: [id] });
   }
   const groups: CagrisimGroup[] = [];
   const singles: CagrisimReveal["singles"] = [];
-  for (const [text, members] of byKey) {
+  for (const { text, members } of byKey.values()) {
     if (members.length >= 2) groups.push({ text, members, points: members.length });
     else singles.push({ playerId: members[0] as string, text });
   }
@@ -111,7 +112,7 @@ export const cagrisimAgi: GameDefinition<
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
     if (Object.hasOwn(state.answers, playerId)) return { rejected: "already_answered" };
     const text = action.text.trim();
-    if (normalizeAnswer(text) === "") return { rejected: "empty" };
+    if (foldKey(text) === "") return { rejected: "empty" };
     if (text.length > CAGRISIM_MAX_LENGTH) return { rejected: "too_long" };
     const answers = { ...state.answers, [playerId]: text };
     const waiting = state.players.some((id) => ctx.connected.includes(id) && !Object.hasOwn(answers, id));

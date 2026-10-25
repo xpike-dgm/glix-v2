@@ -1,3 +1,5 @@
+import { foldKey } from "../text.js";
+
 /**
  * Serbest metin temizliği (sunucuda): denetim ve görünmez karakterler atılır, boşluklar sadeleşir.
  * Karşılaştırma Türkçe büyük harfle (`tr-TR`) yapılır.
@@ -36,11 +38,7 @@ export function bluffDisplayForm(raw: string): string {
   return text;
 }
 
-/** Karşılaştırma anahtarı: temizlenmiş, Türkçe büyük harf, noktalama atılmış, boşluk tek. */
+/** Karşılaştırma anahtarı: temizlenmiş metnin klavyeden bağımsız biçimi (bkz. `foldKey`). */
 export function compareKey(text: string): string {
-  return sanitizeText(text)
-    .toLocaleUpperCase("tr-TR")
-    .replace(/[^\p{L}\p{N}\s]/gu, "")
-    .replace(/\s+/gu, " ")
-    .trim();
+  return foldKey(sanitizeText(text));
 }
