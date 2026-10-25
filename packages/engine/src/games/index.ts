@@ -15,6 +15,7 @@ import { kendim } from "./kendim/index.js";
 import { kontrolPaneliKaosu } from "./kontrol-paneli-kaosu/index.js";
 import { korBomba } from "./kor-bomba/index.js";
 import { korKronometre } from "./kor-kronometre/index.js";
+import { lafSokma } from "./laf-sokma/index.js";
 import { ortalamaninYarisi } from "./ortalamanin-yarisi/index.js";
 import { rusRuleti } from "./rus-ruleti/index.js";
 import { rusvetDarbe } from "./rusvet-darbe/index.js";
@@ -50,6 +51,7 @@ export const GAMES: Record<string, AnyGame> = {
   [sizma.id]: sizma,
   [sozlukBlofu.id]: sozlukBlofu,
   [kontrolPaneliKaosu.id]: kontrolPaneliKaosu,
+  [lafSokma.id]: lafSokma,
 };
 
 export function getCatalog(): GameInfo[] {
