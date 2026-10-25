@@ -1,23 +1,26 @@
 import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
 import {
-  KARALAMA_COLORS,
+  addStroke,
+  clearStrokes,
+  type DrawLimits,
+  EMPTY_DRAWING,
+  hasExactKeys,
+  isPlainObject,
+  type PlayerDrawing,
+  parseStrokeFields,
+  undoStroke,
+} from "../drawing.js";
+import {
   KARALAMA_DRAW_MS,
-  KARALAMA_ERASER_INDEX,
-  KARALAMA_GRID,
   KARALAMA_LOCK_GRACE_MS,
   KARALAMA_MAX_DRAW_ACTIONS,
-  KARALAMA_MAX_POINTS,
   KARALAMA_MAX_STROKES,
   KARALAMA_MAX_TOTAL_POINTS,
-  KARALAMA_MIN_POINTS,
   KARALAMA_VOTE_MS,
   type KaralamaAction,
-  type KaralamaColor,
-  type KaralamaPen,
   type KaralamaPhase,
   type KaralamaPublicView,
   type KaralamaReveal,
-  type KaralamaSize,
   type KaralamaStroke,
   type KaralamaView,
 } from "./types.js";
@@ -43,16 +46,11 @@ export const KARALAMA_PAIRS: readonly DrawingPair[] = DRAWING_PAIRS.filter((p) =
   );
 });
 
-interface PlayerDrawing {
-  /** Bir sonraki darbe numarası (hiç azalmaz). */
-  next: number;
-  /** Duran darbeler: numara (metin) -> sıkıştırılmış darbe. */
-  strokes: Record<string, KaralamaStroke>;
-  /** Duran darbelerdeki toplam nokta. */
-  points: number;
-  /** Kabul edilen toplam çizim eylemi. */
-  actions: number;
-}
+const LIMITS: DrawLimits = {
+  maxStrokes: KARALAMA_MAX_STROKES,
+  maxTotalPoints: KARALAMA_MAX_TOTAL_POINTS,
+  maxActions: KARALAMA_MAX_DRAW_ACTIONS,
+};
 
 export interface KaralamaState {
   players: string[];
@@ -76,30 +74,7 @@ export interface KaralamaState {
   stage: KaralamaPhase;
 }
 
-const PEN_IDS: readonly string[] = [...KARALAMA_COLORS, "eraser"];
 const MAX_ID_LENGTH = 64;
-
-function isPlainObject(raw: unknown): raw is Record<string, unknown> {
-  return typeof raw === "object" && raw !== null && !Array.isArray(raw);
-}
-
-function hasExactKeys(obj: Record<string, unknown>, keys: readonly string[]): boolean {
-  const own = Object.keys(obj);
-  return own.length === keys.length && keys.every((k) => Object.hasOwn(obj, k));
-}
-
-function parsePoints(raw: unknown): number[] | null {
-  if (!Array.isArray(raw)) return null;
-  const n = raw.length;
-  if (n % 2 !== 0 || n < KARALAMA_MIN_POINTS * 2 || n > KARALAMA_MAX_POINTS * 2) return null;
-  const out: number[] = new Array<number>(n);
-  for (let i = 0; i < n; i++) {
-    const v: unknown = raw[i];
-    if (typeof v !== "number" || !Number.isInteger(v) || v < 0 || v > KARALAMA_GRID) return null;
-    out[i] = v;
-  }
-  return out;
-}
 
 /** Oyuncu başına skor: bilgisiz oyuncu tek başına en çok oyu aldıysa diğer herkes +1, aksi halde bilgisiz +1. */
 export function karalamaScores(
@@ -122,7 +97,7 @@ export function karalamaScores(
 }
 
 function drawingOf(state: KaralamaState, playerId: string): PlayerDrawing {
-  return state.drawings[playerId] ?? { next: 0, strokes: {}, points: 0, actions: 0 };
+  return state.drawings[playerId] ?? EMPTY_DRAWING;
 }
 
 function withDrawing(state: KaralamaState, playerId: string, drawing: PlayerDrawing): KaralamaState {
@@ -165,14 +140,8 @@ export const karalamaDefteri: GameDefinition<
         return { kind: "vote", target };
       }
       case "stroke": {
-        if (!hasExactKeys(raw, ["kind", "color", "size", "points"])) return null;
-        const color = raw.color;
-        if (typeof color !== "string" || !PEN_IDS.includes(color)) return null;
-        const size = raw.size;
-        if (size !== 1 && size !== 2 && size !== 3) return null;
-        const points = parsePoints(raw.points);
-        if (points === null) return null;
-        return { kind: "stroke", color: color as KaralamaPen, size: size as KaralamaSize, points };
+        const fields = parseStrokeFields(raw);
+        return fields === null ? null : { kind: "stroke", ...fields };
       }
       default:
         return null;
@@ -239,40 +208,13 @@ export const karalamaDefteri: GameDefinition<
     if (!drawing) return { rejected: "wrong_phase" };
     if (state.drawDone.includes(playerId)) return { rejected: "locked" };
     const mine = drawingOf(state, playerId);
-    if (mine.actions >= KARALAMA_MAX_DRAW_ACTIONS) return { rejected: "too_many_actions" };
-
-    if (action.kind === "stroke") {
-      if (Object.keys(mine.strokes).length >= KARALAMA_MAX_STROKES) return { rejected: "too_many_strokes" };
-      const pointCount = action.points.length / 2;
-      if (mine.points + pointCount > KARALAMA_MAX_TOTAL_POINTS) return { rejected: "too_many_points" };
-      const colorIndex =
-        action.color === "eraser"
-          ? KARALAMA_ERASER_INDEX
-          : KARALAMA_COLORS.indexOf(action.color as KaralamaColor);
-      const packed: KaralamaStroke = [colorIndex, action.size, ...action.points];
-      return withDrawing(state, playerId, {
-        next: mine.next + 1,
-        strokes: { ...mine.strokes, [String(mine.next)]: packed },
-        points: mine.points + pointCount,
-        actions: mine.actions + 1,
-      });
-    }
-
-    const keys = Object.keys(mine.strokes);
-    if (keys.length === 0) return { rejected: "empty" };
-    if (action.kind === "undo") {
-      const lastKey = keys[keys.length - 1] as string;
-      const last = mine.strokes[lastKey] as KaralamaStroke;
-      const rest = { ...mine.strokes };
-      delete rest[lastKey];
-      return withDrawing(state, playerId, {
-        ...mine,
-        strokes: rest,
-        points: mine.points - (last.length - 2) / 2,
-        actions: mine.actions + 1,
-      });
-    }
-    return withDrawing(state, playerId, { ...mine, strokes: {}, points: 0, actions: mine.actions + 1 });
+    const out =
+      action.kind === "stroke"
+        ? addStroke(mine, action, LIMITS)
+        : action.kind === "undo"
+          ? undoStroke(mine, LIMITS)
+          : clearStrokes(mine, LIMITS);
+    return "rejected" in out ? { rejected: out.rejected } : withDrawing(state, playerId, out.drawing);
   },
 
   tick(state, ctx): KaralamaState {

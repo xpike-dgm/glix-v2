@@ -27,7 +27,15 @@ export default function KaralamaDefteriScreen(props: GameScreenProps) {
         {(v) => (
           <Switch>
             <Match when={phase() === "draw" && !props.spectator}>
-              <DrawBoard view={v()} now={props.now} />
+              <DrawBoard
+                strokes={v().strokes}
+                endsAt={v().drawEndsAt}
+                done={v().drawDone}
+                readyCount={v().drawDoneIds.length}
+                total={v().players.length}
+                header={<Header view={v()} now={props.now} />}
+                now={props.now}
+              />
             </Match>
             <Match when={phase() === "draw"}>
               <Header view={v()} now={props.now} title="Arkadaşların çiziyor" sound={false} />

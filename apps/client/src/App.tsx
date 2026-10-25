@@ -50,6 +50,10 @@ export function App() {
         void import("./dev/mockZamanBombasi.js").then((m) => m.startZamanBombasiMock(mock, params));
       } else if (mock.startsWith("capraz-")) {
         void import("./dev/mockCapraz.js").then((m) => m.startCaprazMock(mock, params));
+      } else if (mock.startsWith("bozuk-")) {
+        void import("./dev/mockBozuk.js").then((m) => m.startBozukMock(mock, params));
+      } else if (mock.startsWith("kara-")) {
+        void import("./dev/mockBorsa.js").then((m) => m.startBorsaMock(mock, params));
       } else if (mock.startsWith("karalama-")) {
         void import("./dev/mockKaralama.js").then((m) => m.startKaralamaMock(mock, params));
       } else if (mock.startsWith("acgozluluk-")) {

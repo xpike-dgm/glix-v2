@@ -229,6 +229,109 @@ const SCREENS = [
   },
   { name: "kd-results-caught", q: "mock=karalama-results&n=5", settle: 2400 },
   { name: "kd-results-escaped-8", q: "mock=karalama-results-escaped&n=8", settle: 2400 },
+  { name: "bt-briefing", q: "mock=bozuk-briefing" },
+  { name: "bt-write", q: "mock=bozuk-write" },
+  {
+    name: "bt-write-typed",
+    q: "mock=bozuk-write",
+    act: async (p) => p.locator(".bt__input").fill("kedi uzayda pizza yiyor"),
+  },
+  {
+    name: "bt-write-keyboard",
+    q: "mock=bozuk-write-late",
+    sizes: [
+      [390, 520],
+      [360, 300],
+      [320, 280],
+    ],
+    act: async (p) => p.locator(".bt__input").fill("balon çiçeğe çarpıp patladı"),
+  },
+  { name: "bt-write-late", q: "mock=bozuk-write-late" },
+  {
+    name: "bt-write-lock-tap",
+    q: "mock=bozuk-write-late",
+    act: async (p) => {
+      await p.locator(".bt__input").fill("dev kaplumbağa bisiklet sürüyor");
+      await p.locator(".tamam .pbtn:not(:disabled)").click();
+    },
+    settle: 800,
+  },
+  { name: "bt-write-locked", q: "mock=bozuk-write-locked" },
+  { name: "bt-write-spectator", q: "mock=bozuk-write-spectator" },
+  { name: "bt-draw", q: "mock=bozuk-draw" },
+  { name: "bt-draw-blank", q: "mock=bozuk-draw-blank" },
+  { name: "bt-draw-ink", q: "mock=bozuk-draw-ink" },
+  {
+    name: "bt-draw-pointer",
+    q: "mock=bozuk-draw",
+    act: async (p) => {
+      const box = await p.locator(".kd__live").boundingBox();
+      if (!box) throw new Error("tahta yok");
+      const at = (u, v) => [box.x + box.width * u, box.y + box.height * v];
+      await p.mouse.move(...at(0.2, 0.7));
+      await p.mouse.down();
+      for (let i = 0; i <= 24; i++) {
+        await p.mouse.move(...at(0.2 + i * 0.026, 0.7 - Math.sin(i / 3.5) * 0.3 - i * 0.008));
+      }
+      await p.mouse.up();
+    },
+  },
+  { name: "bt-draw-locked", q: "mock=bozuk-draw-locked" },
+  { name: "bt-draw-spectator", q: "mock=bozuk-draw-spectator" },
+  {
+    name: "bt-draw-lock-tap",
+    q: "mock=bozuk-draw-ink",
+    act: async (p) => p.locator(".tamam .pbtn:not(:disabled)").click(),
+  },
+  { name: "bt-show-2", q: "mock=bozuk-show&n=5&shown=2" },
+  { name: "bt-show-4-3p", q: "mock=bozuk-show&n=3&shown=3" },
+  { name: "bt-show-1-8", q: "mock=bozuk-show&n=8&shown=1" },
+  { name: "bt-vote-3", q: "mock=bozuk-vote&n=3" },
+  { name: "bt-vote-5", q: "mock=bozuk-vote&n=5" },
+  { name: "bt-vote-8", q: "mock=bozuk-vote&n=8" },
+  {
+    name: "bt-vote-tap",
+    q: "mock=bozuk-vote&n=5",
+    act: async (p) => p.locator(".bt__card:not(:disabled)").first().click(),
+  },
+  {
+    name: "bt-vote-confirm",
+    q: "mock=bozuk-vote&n=5",
+    act: async (p) => {
+      await p.locator(".bt__card:not(:disabled)").first().click();
+      await p.locator(".pbtn:not(:disabled)").click();
+    },
+    settle: 800,
+  },
+  { name: "bt-vote-voted", q: "mock=bozuk-vote-voted&n=5" },
+  { name: "bt-vote-spectator", q: "mock=bozuk-vote-spectator&n=5" },
+  { name: "bt-result-5", q: "mock=bozuk-result&n=5" },
+  { name: "bt-result-robust-3", q: "mock=bozuk-result-robust&n=3" },
+  { name: "bt-result-robust-8", q: "mock=bozuk-result-robust&n=8" },
+  { name: "bt-result-quiet-6", q: "mock=bozuk-result-quiet&n=6" },
+  { name: "bt-results-5", q: "mock=bozuk-results&n=3", settle: 2400 },
+  { name: "kb-briefing", q: "mock=kara-briefing" },
+  { name: "kb-bid-5", q: "mock=kara-bid" },
+  { name: "kb-bid-8", q: "mock=kara-bid&n=8" },
+  { name: "kb-bid-3", q: "mock=kara-bid&n=3" },
+  { name: "kb-bid-broke", q: "mock=kara-bid-broke" },
+  { name: "kb-bid-sent", q: "mock=kara-bid-sent" },
+  { name: "kb-bid-spectator", q: "mock=kara-bid-spectator" },
+  {
+    name: "kb-bid-tap",
+    q: "mock=kara-bid",
+    settle: 800,
+    act: async (p) => {
+      await p.locator(".npick__step").nth(3).click();
+      await p.locator(".pbtn:not(:disabled)").click();
+    },
+  },
+  { name: "kb-reveal-5", q: "mock=kara-reveal", settle: 900 },
+  { name: "kb-reveal-8", q: "mock=kara-reveal&n=8", settle: 900 },
+  { name: "kb-reveal-me", q: "mock=kara-reveal-me", settle: 900 },
+  { name: "kb-reveal-cursed", q: "mock=kara-reveal-cursed", settle: 900 },
+  { name: "kb-reveal-none", q: "mock=kara-reveal-none&n=3", settle: 900 },
+  { name: "kb-results", q: "mock=kara-results&n=3", settle: 2400 },
   { name: "acgozluluk-briefing", q: "mock=acgozluluk-briefing" },
   { name: "acgozluluk-choosing-3", q: "mock=acgozluluk-choosing&n=3&chosen=0" },
   { name: "acgozluluk-choosing-5", q: "mock=acgozluluk-choosing&n=5" },

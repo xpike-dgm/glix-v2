@@ -1,0 +1,382 @@
+/* ---- Kara Borsa: gizemli kutu, jeton ve gizli teklif ---- */
+.kb__top {
+  flex: none;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 48px;
+  align-items: center;
+  min-height: 56px;
+  margin-top: 12px;
+}
+.kb__center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+.kb__snd {
+  justify-self: end;
+  margin-right: -10px;
+}
+.kb__chip {
+  padding: 1px 10px;
+  border-radius: 999px;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--amber);
+  border: 1px solid rgba(255, 194, 59, 0.55);
+  background: rgba(255, 194, 59, 0.1);
+}
+.kb__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+  text-shadow: 0 0 14px rgba(255, 194, 59, 0.45);
+}
+.kb__time {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+.kb__time .pbar {
+  flex: 1;
+}
+.kb__secs {
+  min-width: 2ch;
+  text-align: right;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-15);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+.kb__stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  container-type: size;
+}
+.kb__crate {
+  flex: 0 1 auto;
+  height: min(46cqh, 150px);
+  width: auto;
+  aspect-ratio: 1;
+  overflow: visible;
+}
+.kb__box {
+  fill: #1a1240;
+  stroke: var(--amber);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 8px rgba(255, 194, 59, 0.55));
+}
+.kb__edge {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.7;
+}
+.kb__q {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px rgba(46, 242, 255, 0.8));
+}
+.kb__lid {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transform-origin: 60px 40px;
+  transform: translateY(-12px) rotate(-8deg);
+}
+.kb__hint {
+  flex: none;
+  max-width: 100%;
+  padding: 10px 16px;
+  border-radius: 18px;
+  border: 2px solid var(--magenta);
+  background: rgba(255, 43, 214, 0.1);
+  box-shadow: 0 0 18px rgba(255, 43, 214, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+.kb__hintlabel {
+  font-size: var(--fs-13);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #ff8bec;
+  text-transform: uppercase;
+}
+.kb__hinttext {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(17px, 5.4vw, 22px);
+  line-height: 1.2;
+}
+.kb__watch {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.kb__wallet {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: var(--fs-15);
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.kb__wallet b {
+  font-family: var(--font-display);
+  font-size: var(--fs-18);
+  color: var(--amber);
+}
+.kb__coin {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe28a, var(--amber) 70%);
+  box-shadow: 0 0 10px rgba(255, 194, 59, 0.6);
+}
+.kb__bidval {
+  flex: none;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-48);
+  line-height: 1.1;
+  color: var(--cyan);
+  text-shadow: 0 0 18px rgba(46, 242, 255, 0.55);
+  font-variant-numeric: tabular-nums;
+}
+.kb__sealed {
+  flex: none;
+  margin: 10px 0;
+  text-align: center;
+  font-weight: 600;
+  color: var(--lime);
+}
+.kb .npick {
+  flex: none;
+}
+.kb .gbtn--small {
+  align-self: center;
+}
+.kb__crew {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 12px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.kb__crew li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.kb__bal {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-13);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+.kb[data-tight] .kb__crate,
+.kb__stage .kb__crate {
+  min-height: 0;
+}
+
+/* açılış */
+.kb__stage--open {
+  gap: 6px;
+}
+.kb__value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.kb__valuelabel {
+  font-size: var(--fs-13);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.kb__valuenum {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-48);
+  line-height: 1.1;
+  color: var(--lime);
+  text-shadow: 0 0 20px rgba(182, 255, 59, 0.6);
+  font-variant-numeric: tabular-nums;
+}
+.kb__value[data-cursed="1"] .kb__valuelabel {
+  color: #ff8aa0;
+}
+.kb__value[data-cursed="1"] .kb__valuenum {
+  color: var(--red);
+  text-shadow: 0 0 20px rgba(255, 59, 92, 0.6);
+}
+.kb__winner {
+  flex: none;
+  margin: 6px 0;
+  text-align: center;
+  font-size: var(--fs-15);
+  font-weight: 600;
+}
+.kb__winner b {
+  font-family: var(--font-display);
+  color: var(--amber);
+}
+.kb__winner[data-none="1"] {
+  color: var(--text-dim);
+}
+.kb__bids {
+  flex: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.kb__bids[data-many="1"] {
+  grid-template-columns: 1fr 1fr;
+}
+.kb__bids li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(140, 160, 255, 0.08);
+  min-width: 0;
+}
+.kb__bids li[data-win="1"] {
+  background: rgba(255, 194, 59, 0.16);
+  box-shadow: inset 0 0 0 2px var(--amber);
+}
+.kb__bidname {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-15);
+  font-weight: 600;
+}
+.kb__bids b {
+  font-family: var(--font-display);
+  font-size: var(--fs-15);
+  font-variant-numeric: tabular-nums;
+}
+.kb__crew--wealth {
+  margin-top: 8px;
+}
+@media (max-height: 640px) {
+  .kb__stage .kb__crate {
+    display: none;
+  }
+  .kb__crew--wealth {
+    display: none;
+  }
+  .kb__bidval {
+    font-size: var(--fs-32);
+  }
+}
+.kb__actions {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+@media (max-width: 360px) {
+  .kb__bids[data-many="1"] .kb__bidname {
+    display: none;
+  }
+}
+@media (max-height: 460px) {
+  .kb__crew,
+  .kb__bidval,
+  .kb__center {
+    display: none;
+  }
+  .kb__top {
+    min-height: 40px;
+    margin-top: 6px;
+  }
+  .kb__actions {
+    flex-direction: row;
+    align-items: center;
+  }
+  .kb__actions .pbtn-wrap {
+    flex: 1;
+  }
+  .kb__wallet {
+    margin-top: 2px;
+  }
+}
+
+/* anlatım görseli */
+.kbart {
+  width: min(70cqw, 90cqh * 1.5, 260px);
+}
+.kbart__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.kbart__box {
+  fill: #1a1240;
+  stroke: var(--amber);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.kbart__edge,
+.kbart__q,
+.kbart__sym {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.kbart__edge {
+  stroke: var(--amber);
+  stroke-width: 3;
+  opacity: 0.7;
+}
+.kbart__q {
+  stroke: var(--cyan);
+  stroke-width: 5;
+}
+.kbart__coin {
+  fill: var(--amber);
+  stroke: #ffe28a;
+  stroke-width: 3;
+}
+.kbart__sym {
+  stroke: #1a1240;
+  stroke-width: 4;
+}
