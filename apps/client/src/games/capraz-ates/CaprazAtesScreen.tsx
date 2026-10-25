@@ -1,10 +1,11 @@
 import { createEffect, createMemo, createSignal, For, onCleanup, Show, untrack } from "solid-js";
 import { hapticMatch, hapticSolo, hapticTap, hapticTick } from "../../fx/haptics.js";
 import { fail, match as matchSound, solo as soloSound, tap, tick, unlockAudio } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { sendAction, sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
+import type { AckLike } from "../../ui/optimistic.js";
 import { ProgressBar } from "../../ui/ProgressBar.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
@@ -80,9 +81,9 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
     sendAction({ kind: "target", target: id });
   };
 
-  const lock = (): void => {
-    if (props.spectator || closed() || locked() || mine() === null) return;
-    sendAction({ kind: "lock" });
+  const lock = (): AckLike => {
+    if (props.spectator || closed() || locked() || mine() === null) return false;
+    return sendActionAck({ kind: "lock" });
   };
 
   const targetPlayer = () => {

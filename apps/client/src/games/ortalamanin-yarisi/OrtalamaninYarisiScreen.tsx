@@ -1,10 +1,11 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { hapticTap } from "../../fx/haptics.js";
-import { sendAction } from "../../net/client.js";
+import { sendAction, sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { look } from "../../ui/avatars.js";
 import { NumberPicker } from "../../ui/NumberPicker.js";
 import { createChoiceSync } from "../../ui/numberPicker.js";
+import type { AckLike } from "../../ui/optimistic.js";
 import { ProgressBar } from "../../ui/ProgressBar.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
@@ -45,13 +46,19 @@ export default function OrtalamaninYarisiScreen(props: GameScreenProps) {
   });
   const mine = (): number | null => sync.value() ?? view()?.myChoice ?? null;
 
-  const lock = (): void => {
+  const lock = (): AckLike => {
     const v = view();
     const value = mine();
-    if (!v || value === null || closed()) return;
+    if (!v || value === null || closed()) return false;
     // Sürükleme bitmeden basıldıysa en son değer önce gider (iletiler sıralı ulaşır).
     if (v.myChoice !== value) sendAction({ kind: "choose", value });
-    if (sendAction({ kind: "lock" })) setSentLock(true);
+    setSentLock(true);
+    const ack = sendActionAck({ kind: "lock" });
+    // Reddedilirse kilit geri açılır.
+    void ack.then((a) => {
+      if (!a.ok && a.reason !== "timeout") setSentLock(false);
+    });
+    return ack;
   };
 
   return (

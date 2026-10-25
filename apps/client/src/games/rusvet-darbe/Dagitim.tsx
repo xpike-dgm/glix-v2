@@ -3,6 +3,7 @@ import { hapticTap } from "../../fx/haptics.js";
 import { fail, tap, unlockAudio } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
+import type { AckLike } from "../../ui/optimistic.js";
 import { PlayerPicker } from "../../ui/PlayerPicker.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { CrewMember } from "./Duello.js";
@@ -15,7 +16,7 @@ interface Props {
   spectator: boolean;
   onGive: (tokens: { to: string; n: number }[]) => void;
   /** Başkan "Bitti" dedi. */
-  onDone: () => void;
+  onDone: () => AckLike;
 }
 
 /** Dağıtım: başkan jetonları gizlice verir; diğerleri başkanın koltuğunu ve jeton sayısını görür. */

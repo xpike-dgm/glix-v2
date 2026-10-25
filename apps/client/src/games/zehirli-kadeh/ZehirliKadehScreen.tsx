@@ -1,9 +1,11 @@
 import { createEffect, createMemo, createSignal, For, on, onCleanup, Show, untrack } from "solid-js";
-import { hapticReady, hapticTap, hapticTick } from "../../fx/haptics.js";
-import { unlockAudio } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { hapticError, hapticReady, hapticTap, hapticTick } from "../../fx/haptics.js";
+import { fail, tap, unlockAudio } from "../../fx/sound.js";
+import { sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { createOptimistic } from "../../ui/optimistic.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
+import { pressable } from "../../ui/press.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
 import type { GameScreenProps } from "../registry.js";
@@ -12,7 +14,6 @@ import { swapSound } from "./sounds.js";
 import "./zehirli-kadeh.css";
 import { clockFractions, cupColor, gridColumns, parseZehirliKadehView, secondsLeft } from "./view.js";
 
-const PENDING_MS = 1800;
 const AMBER = "#FFC23B";
 
 export default function ZehirliKadehScreen(props: GameScreenProps) {
@@ -33,31 +34,50 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
     id === props.selfId ? "Sen" : (crew().find((p) => p.id === id)?.nickname ?? "Oyuncu");
 
   const player = () => !props.spectator && view()?.priv.role === "player";
-  const used = () => view()?.pub.swapped.includes(props.selfId) ?? false;
+  // Takas: dokununca kadehler hemen yer değiştirir; sunucu aynı takası onaylar, reddederse geri döner.
+  const serverSwap = (): string | null =>
+    view()?.pub.swaps.find((w) => w.from === props.selfId)?.to ??
+    (view()?.pub.swapped.includes(props.selfId) ? props.selfId : null);
+  let localSwapDone = false;
+  const [mySwap, setMySwap] = createOptimistic<string | null>(serverSwap, {
+    onReject: () => {
+      localSwapDone = false;
+      setFlash(null);
+      fail();
+      hapticError();
+    },
+  });
+  /** Sunucu henüz onaylamadı: yalnız bu sürede yerel yer değiştirme kadehlere uygulanır. */
+  const swapOverlay = (): string | null => {
+    const t = mySwap();
+    return t !== null && serverSwap() === null ? t : null;
+  };
+  const used = () => (view()?.pub.swapped.includes(props.selfId) ?? false) || mySwap() !== null;
   const closed = () => {
     const v = view();
     return !v || v.pub.ended || clock() >= v.pub.endsAt;
   };
-  const canSwap = () => player() && !used() && !closed() && !pending();
+  const canSwap = () => player() && !used() && !closed();
 
   const [sel, setSel] = createSignal<string | null>(null);
-  const [pending, setPending] = createSignal(false);
-  let pendingTimer: ReturnType<typeof setTimeout> | undefined;
-  onCleanup(() => clearTimeout(pendingTimer));
 
   const pick = (id: string): void => {
     if (!canSwap() || id === props.selfId) return;
     unlockAudio();
+    tap();
     hapticTap();
     setSel(sel() === id ? null : id);
   };
   const doSwap = (): void => {
     const target = sel();
     if (!canSwap() || target === null) return;
-    setPending(true);
-    clearTimeout(pendingTimer);
-    pendingTimer = setTimeout(() => setPending(false), PENDING_MS);
-    sendAction({ kind: "swap", target });
+    localSwapDone = true;
+    swapSound();
+    hapticReady();
+    setSel(null);
+    setFlash({ seq: -1, from: props.selfId, to: target });
+    flashTimer = setTimeout(() => setFlash(null), 1400);
+    setMySwap(target, () => sendActionAck({ kind: "swap", target }));
   };
 
   // Yeni takas: ses ve ışık tüneli; ilk açılışta tekrar çalmaz.
@@ -71,13 +91,17 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
       (count) => {
         const prev = seen;
         seen = count;
-        setPending(false);
         const last = untrack(view)?.pub.swaps[count - 1];
         if (prev === null || !last || count <= prev) return;
         if (last.from === props.selfId) setSel(null);
         setFlash({ seq: last.seq, from: last.from, to: last.to });
         clearTimeout(flashTimer);
         flashTimer = setTimeout(() => setFlash(null), 1400);
+        // Kendi takasımın sesi dokunuşta zaten çalındı.
+        if (last.from === props.selfId && localSwapDone) {
+          localSwapDone = false;
+          return;
+        }
         swapSound();
         if (last.from === props.selfId || last.to === props.selfId) hapticReady();
         else hapticTick();
@@ -158,12 +182,19 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
         <For each={crew()}>
           {(p) => {
             const mine = () => p.id === props.selfId && !props.spectator;
-            const cup = () => view()?.pub.holdings[p.id] ?? 0;
+            const cup = () => {
+              const h = view()?.pub.holdings ?? {};
+              const t = swapOverlay();
+              const id =
+                t !== null && p.id === props.selfId ? t : t !== null && p.id === t ? props.selfId : p.id;
+              return h[id] ?? 0;
+            };
             const swapFx = () => {
               const f = flash();
               return f !== null && (f.from === p.id || f.to === p.id) ? String(f.seq) : undefined;
             };
             const picked = () => sel() === p.id;
+            const press = pressable(() => pick(p.id));
             return (
               <button
                 type="button"
@@ -171,11 +202,14 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
                 data-me={mine() ? "1" : undefined}
                 data-picked={picked() ? "1" : undefined}
                 data-swap={swapFx()}
-                data-used={view()?.pub.swapped.includes(p.id) ? "1" : undefined}
+                data-used={
+                  view()?.pub.swapped.includes(p.id) || (p.id === props.selfId && used()) ? "1" : undefined
+                }
                 disabled={!canSwap() || mine()}
                 aria-pressed={picked()}
                 aria-label={`${nameOf(p.id)} ile takas`}
-                onClick={() => pick(p.id)}
+                onPointerDown={press.onPointerDown}
+                onClick={press.onClick}
               >
                 <Cup color={cupColor(cup())} class="zk__cup" />
                 <span class="zk__who">
@@ -203,8 +237,7 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
           }
         >
           <PrimaryButton
-            disabled={sel() === null || pending()}
-            busy={pending()}
+            disabled={sel() === null}
             reason={sel() === null ? "Takas için bir kadeh seç" : `Takas: ${nameOf(sel() as string)}`}
             onClick={doSwap}
           >

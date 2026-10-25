@@ -3,9 +3,10 @@ import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Sh
 import { Portal } from "solid-js/web";
 import { hapticReady, hapticTap } from "../../fx/haptics.js";
 import { ready, tap, unlockAudio } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { sendAction, sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { CheckIcon, CloseIcon } from "../../ui/Icons.js";
+import type { AckLike } from "../../ui/optimistic.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import { DrawingCanvas } from "./DrawingCanvas.js";
@@ -63,9 +64,15 @@ export function VoteWall(props: Props) {
   const [sentLock, setSentLock] = createSignal(false);
   const locked = (): boolean => props.view.locked || sentLock();
   const closed = (): boolean => props.spectator || locked() || props.now() >= props.view.voteEndsAt;
-  const lockVote = (): void => {
-    if (props.spectator || locked() || picked() === null || props.now() >= props.view.voteEndsAt) return;
-    if (sendAction({ kind: "lock" })) setSentLock(true);
+  const lockVote = (): AckLike => {
+    if (props.spectator || locked() || picked() === null || props.now() >= props.view.voteEndsAt)
+      return false;
+    setSentLock(true);
+    const ack = sendActionAck({ kind: "lock" });
+    void ack.then((a) => {
+      if (!a.ok && a.reason !== "timeout") setSentLock(false);
+    });
+    return ack;
   };
   const canVote = (p: PlayerInfo): boolean => !closed() && p.id !== props.selfId && p.connected;
   const vote = (p: PlayerInfo): void => {

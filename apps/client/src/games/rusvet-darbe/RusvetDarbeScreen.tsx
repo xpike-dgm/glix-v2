@@ -1,5 +1,5 @@
 import { createMemo, Match, Show, Switch } from "solid-js";
-import { sendAction } from "../../net/client.js";
+import { sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { look } from "../../ui/avatars.js";
 import { PlayerPicker } from "../../ui/PlayerPicker.js";
@@ -30,9 +30,7 @@ export default function RusvetDarbeScreen(props: GameScreenProps) {
 
   const pick = createPendingPick({
     server: () => view()?.myVote ?? null,
-    send: (id) => {
-      sendAction({ kind: "vote", target: id });
-    },
+    send: (id) => sendActionAck({ kind: "vote", target: id }),
     closed: () => spectator() || !voting() || view()?.locked === true,
   });
   const chosen = () => {
@@ -93,9 +91,7 @@ export default function RusvetDarbeScreen(props: GameScreenProps) {
                 total={crew().length}
                 disabled={pick.value() === null}
                 spectator={spectator()}
-                onLock={() => {
-                  sendAction({ kind: "lock" });
-                }}
+                onLock={() => sendActionAck({ kind: "lock" })}
               />
             </Match>
             <Match when={v().phase === "duel"}>
@@ -104,9 +100,7 @@ export default function RusvetDarbeScreen(props: GameScreenProps) {
                 crew={crew()}
                 selfId={props.selfId}
                 spectator={spectator()}
-                onSign={(sign) => {
-                  sendAction({ kind: "sign", sign });
-                }}
+                onSign={(sign) => sendActionAck({ kind: "sign", sign })}
               />
             </Match>
             <Match when={v().phase === "give"}>
@@ -115,12 +109,8 @@ export default function RusvetDarbeScreen(props: GameScreenProps) {
                 crew={crew()}
                 selfId={props.selfId}
                 spectator={spectator()}
-                onGive={(tokens) => {
-                  sendAction({ kind: "give", tokens });
-                }}
-                onDone={() => {
-                  sendAction({ kind: "lock" });
-                }}
+                onGive={(tokens) => sendActionAck({ kind: "give", tokens })}
+                onDone={() => sendActionAck({ kind: "lock" })}
               />
             </Match>
             <Match when={v().phase === "reveal" && v().reveal}>

@@ -1,6 +1,6 @@
-import { createEffect, createSignal, onCleanup, untrack } from "solid-js";
 import { hapticTap } from "../fx/haptics.js";
-import { fail, tap, unlockAudio } from "../fx/sound.js";
+import { tap, unlockAudio } from "../fx/sound.js";
+import { type AckLike, createOptimistic, toAck } from "./optimistic.js";
 
 /** Izgara sütun sayısı. Alçak (yatay telefon) ekranda daha geniş, dik ekranda en çok 3 sütun. */
 export function pickerColumns(count: number, short = false): number {
@@ -12,7 +12,8 @@ export function pickerColumns(count: number, short = false): number {
 interface PendingPickOptions {
   /** Sunucunun onayladığı seçim. */
   server: () => string | null | undefined;
-  send: (id: string) => void;
+  /** Seçimi sunucuya gönderir; yanıt (`sendActionAck`) dönerse reddedilmede seçim geri alınır. */
+  send: (id: string) => AckLike;
   /** true iken seçim yapılamaz (süre doldu, izleyici). */
   closed: () => boolean;
   /** Sunucu onaylamazsa yerel seçimin geri alınma süresi (ms). */
@@ -20,33 +21,20 @@ interface PendingPickOptions {
 }
 
 /**
- * Oyuncu seçici için iyimser seçim: dokununca anında gösterilir, sunucu onaylayınca yerel değer düşer;
- * onay gelmezse eski haline döner. Ses ve titreşim burada verilir.
+ * Oyuncu seçici için iyimser seçim: dokununca anında gösterilir (`createOptimistic`), sunucu onaylayınca
+ * yerel değer düşer; reddedilirse ya da onay gelmezse eski haline döner. Ses ve titreşim burada verilir.
  */
 export function createPendingPick(opts: PendingPickOptions) {
-  const [pending, setPending] = createSignal<string | null>(null);
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  onCleanup(() => clearTimeout(timer));
-  createEffect(() => {
-    const confirmed = opts.server() ?? null;
-    if (untrack(pending) !== null && confirmed === untrack(pending)) setPending(null);
+  const [value, setValue] = createOptimistic<string | null>(() => opts.server() ?? null, {
+    ...(opts.timeoutMs !== undefined ? { timeoutMs: opts.timeoutMs } : {}),
   });
-  const value = (): string | null => pending() ?? opts.server() ?? null;
   const pick = (id: string): void => {
     if (opts.closed()) return;
     unlockAudio();
     tap();
     hapticTap();
     if (value() === id) return;
-    setPending(id);
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      if (pending() !== null) {
-        setPending(null);
-        fail();
-      }
-    }, opts.timeoutMs ?? 1600);
-    opts.send(id);
+    setValue(id, () => toAck(opts.send(id)));
   };
   return { value, pick };
 }

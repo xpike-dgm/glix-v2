@@ -1,9 +1,11 @@
 import { createEffect, createMemo, createSignal, For, on, onCleanup, Show, untrack } from "solid-js";
 import { Dynamic } from "solid-js/web";
-import { hapticSolo, hapticTap } from "../../fx/haptics.js";
-import { unlockAudio } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { hapticError, hapticSolo, hapticTap } from "../../fx/haptics.js";
+import { fail, unlockAudio } from "../../fx/sound.js";
+import { sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { createOptimistic } from "../../ui/optimistic.js";
+import { pressable } from "../../ui/press.js";
 import type { GameScreenProps } from "../registry.js";
 import "./kor-bomba.css";
 import { boom, spark, tak } from "./sounds.js";
@@ -41,9 +43,17 @@ export default function KorBombaScreen(props: GameScreenProps) {
   const seatOf = (id: string): SeatPos | undefined => seats().find((s) => s.id === id);
   const playerOf = (id: string) => props.players.find((p) => p.id === id);
 
-  const holderId = () => view()?.pub.holder ?? "";
+  // Pas verince bomba hemen yeni taşıyıcıya gider (sunucu aynı sonucu onaylar; reddedilirse geri döner).
+  const [holderId, setHolder] = createOptimistic<string>(() => view()?.pub.holder ?? "", {
+    onReject: () => {
+      localPass = false;
+      fail();
+      hapticError();
+    },
+  });
   const exploded = () => view()?.pub.exploded ?? false;
-  const iAmHolder = () => !props.spectator && view()?.priv.role === "holder" && !exploded();
+  const iAmHolder = () =>
+    !props.spectator && view()?.priv.role === "holder" && !exploded() && holderId() === props.selfId;
   const left = () => {
     const v = view();
     return v ? remainingMs(v, props.now()) : null;
@@ -61,6 +71,7 @@ export default function KorBombaScreen(props: GameScreenProps) {
   let counter = 0;
   let sparkEl: HTMLDivElement | undefined;
   let lastSeq: number | null = null;
+  let localPass = false;
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const later = (fn: () => void, ms: number): void => {
     const t = setTimeout(() => {
@@ -87,9 +98,13 @@ export default function KorBombaScreen(props: GameScreenProps) {
       lastSeq = pass.seq;
       const from = seatOf(pass.from);
       const to = seatOf(pass.to);
-      tak();
-      if (pass.to === props.selfId && !props.spectator) hapticSolo();
-      else hapticTap();
+      // Kendi pasımın sesi dokunuşta zaten çalındı.
+      if (pass.from === props.selfId && localPass) localPass = false;
+      else {
+        tak();
+        if (pass.to === props.selfId && !props.spectator) hapticSolo();
+        else hapticTap();
+      }
       setLit(pass.to);
       later(() => setLit(null), 520);
       if (from && to && sparkEl && !reducedMotion()) {
@@ -137,7 +152,12 @@ export default function KorBombaScreen(props: GameScreenProps) {
     const target = playerOf(id);
     if (!target || target.connected === false) return;
     unlockAudio();
-    sendAction({ kind: "pass", to: id });
+    tak();
+    hapticTap();
+    localPass = true;
+    setHolder(id, () => sendActionAck({ kind: "pass", to: id }));
+    setLit(id);
+    later(() => setLit(null), 520);
   };
 
   return (
@@ -171,6 +191,7 @@ export default function KorBombaScreen(props: GameScreenProps) {
           const player = () => playerOf(s.id);
           const isHolder = () => holderId() === s.id;
           const isSelf = () => s.id === props.selfId && !props.spectator;
+          const press = pressable(() => pass(s.id));
           const tappable = () => iAmHolder() && !isSelf() && player()?.connected !== false;
           return (
             <Dynamic
@@ -185,7 +206,8 @@ export default function KorBombaScreen(props: GameScreenProps) {
               data-tap={tappable() ? "1" : undefined}
               data-white={blast() && isHolder() ? "1" : undefined}
               style={{ left: `${s.x}%`, top: `${s.y}%` }}
-              onClick={() => pass(s.id)}
+              onPointerDown={press.onPointerDown}
+              onClick={press.onClick}
             >
               <Avatar
                 index={player()?.avatar ?? 0}

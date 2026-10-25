@@ -1,5 +1,5 @@
 import { createMemo, createSignal, For, onCleanup, Show } from "solid-js";
-import { sendAction } from "../../net/client.js";
+import { sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import { RolePeek } from "./RolePeek.js";
@@ -69,9 +69,7 @@ export function Tartisma(props: Props) {
         spectator={props.spectator}
         label="Tahmine geçelim"
         doneLabel="Hazırsın"
-        onLock={() => {
-          sendAction({ kind: "skip" });
-        }}
+        onLock={() => sendActionAck({ kind: "skip" })}
       />
     </>
   );
