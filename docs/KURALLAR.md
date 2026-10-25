@@ -944,6 +944,65 @@ doğru cevaplarla tur uzayabilir.
 
 ---
 
+# C. Yeni oyunlar (A8) — TASLAK, sahip onayıyla kilitlenir
+
+## 26. Bozuk Telefon — `bozuk-telefon`
+
+**Durum: TASLAK**
+
+- Amaç: Bir cümlenin çizim ve tahmin zincirinde nasıl bozulduğunu izleyip gülmek; zinciri sağlam tutmak.
+- Minimum oyuncu: **3**. Maksimum oyuncu: **8**.
+- Her oyuncu bir **zincir** başlatır: ilk adımda kısa bir cümle yazar (en çok 60 karakter, 25 sn).
+- Zincirler her adımda bir sonraki oyuncuya geçer (sabit, karıştırılmış döngü; kimse kendi zincirine dönmeden
+  önce herkesten geçer). Adımlar sırayla **çiz** (60 sn) ve **yaz** (25 sn: gördüğün çizimi tek cümleyle anlat).
+- Adım sayısı: oyuncu sayısı (en çok 6) — 3 oyuncuda 3 adım (yaz→çiz→yaz), 6+ oyuncuda 6 adım.
+- Her adımda oyuncu **yalnız bir önceki adımı** görür; zincirin geri kalanı sonuna kadar gizlidir.
+- Süre dolduğunda: boş çizim "boş tuval", boş yazı "…" olarak zincire geçer. Herkes "Tamam" derse adım erken biter.
+- Gösteri: zincirler tek tek baştan sona açılır (her adım ~3 sn). Her zincirden sonra 10 sn içinde herkes o zincirin
+  **en komik adımına** oy verir (kendi adımına veremez).
+- Puan: en komik adım seçilen her oy için adımın sahibine **+1**. Zincirin ilk cümlesi ile son yazı adımı aynı
+  anlamdaysa (Türkçe normalize edilmiş kelimelerin en az yarısı ortak) o zincirdeki herkes **+1** ("sağlam zincir").
+- Genel skora: mini puanlar doğrudan.
+
+## 27. Laf Sokma Düellosu — `laf-sokma`
+
+**Durum: TASLAK**
+
+- Amaç: Aynı soruya rakibinden daha komik cevap verip oyları toplamak.
+- Minimum oyuncu: **3**. Maksimum oyuncu: **8**.
+- Sistem soru havuzundan (elle hazırlanmış, tonu host seçer: Aile / Arkadaş / Ofis) sorular seçer; her soru tam
+  **iki** oyuncuya verilir ve her oyuncu **iki** soru alır (eşleşmeler kendini tekrar etmeyecek şekilde dağıtılır).
+- Yazma: 60 sn; her cevap en çok 80 karakter. Cevaplar sunucuda temizlenir ve moderasyon filtresinden geçer.
+- Oylama: her soru sırayla gösterilir; iki cevap yan yana, **isimsiz**. Cevabı olmayan iki oyuncu 10 sn içinde
+  birine oy verir (cevap sahipleri oy vermez). Oylar ve cevap sahipleri o soru açılınca görünür.
+- Cevap yazmayan: "Cevap yok" kartı gösterilir, otomatik 0 oy.
+- Puan: bir soruda aldığın oy sayısı kadar **+1**; tüm oyları alırsan (en az 2 oy) ek **+1** ("Laf Ustası").
+- **Final sorusu:** son turda herkes aynı soruya cevap yazar (45 sn); herkes kendisi dışında bir cevaba oy verir;
+  aldığın her oy **+1**.
+- Genel skora: mini puanlar doğrudan.
+
+## 28. Kara Borsa — `kara-borsa`
+
+**Durum: TASLAK**
+
+- Amaç: Gizli değerli kutuları blöf ve ipuçlarıyla doğru fiyata almak; en zengin olmak.
+- Minimum oyuncu: **3**. Maksimum oyuncu: **8**.
+- Herkes **100 jetonla** başlar. **5 tur**; her turda bir gizemli kutu.
+- Kutunun gerçek değeri gizli: 0–60 arası tam sayı, ya da **%15 olasılıkla lanetli** (değer −20).
+- Her turda her oyuncu **yalnız kendine özel bir ipucu** alır (ör. "değeri 30'dan büyük", "çift sayı",
+  "lanetli değil", "değeri 10'un katı değil"). İpucu her zaman doğrudur; sözlü blöf serbesttir.
+- Teklif: 20 sn, gizli, **tek seferlik** (0 ile mevcut jeton arası; 0 = geç). Herkes teklif verince erken biter.
+- En yüksek teklif kutuyu alır ve teklifini öder; eşitlikte önce teklif veren kazanır. Kimse teklif vermezse kutu
+  kimseye gitmez. Teklifler ve kutunun değeri tur sonunda açılır (5 sn).
+- Mini puan: kalan jeton + aldığı kutuların değerleri toplamı.
+- Genel skora: en yüksek **+2**, ikinci **+1**, üçüncü **+1** (eşitlikte aynı derece aynı ödülü alır).
+
+## 29. Kule Ustası — `kule-ustasi`
+
+**Durum: ERTELENDİ** (sahip kararı: diğer üç oyundan sonra; deterministik fizik prototipiyle ele alınacak)
+
+---
+
 ## Kural seti kilitleme kontrol listesi
 
 - Her oyunun kural, süre, puan ve özel durum alanı dolduruldu.
