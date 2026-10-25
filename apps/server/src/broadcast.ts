@@ -4,10 +4,11 @@ import { log } from "./log.js";
 import { abortMatch, GameFault, matchViewFor, sharedMatchSnapshot } from "./match.js";
 import type { Connection, Player, Room, Runtime } from "./runtime.js";
 
-export const BROADCAST_INTERVAL_MS = 50;
+/** Birleştirme penceresi: bir eylemin yayını en çok bu kadar gecikir (tick 100 ms olduğundan tick yayınları zaten seyrek). */
+export const BROADCAST_INTERVAL_MS = 16;
 
 export interface Broadcaster {
-  /** Odanın değiştiğini bildirir; en geç 50 ms içinde tek bir yayın yapılır. */
+  /** Odanın değiştiğini bildirir; en geç BROADCAST_INTERVAL_MS içinde tek bir yayın yapılır. */
   markDirty(room: Room): void;
   /** Bekleyen yayını iptal eder (oda silinirken). */
   cancel(room: Room): void;

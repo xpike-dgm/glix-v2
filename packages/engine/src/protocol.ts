@@ -28,7 +28,34 @@ export type ClientMessage =
   /** İstemci elindeki snapshot'a yama uygulayamadığında tam snapshot ister. */
   | { type: "resync" }
   /** Maç sonu geri bildirimi: yalnız `final` aşamasında, maç başına oyuncu başına bir kez. */
-  | { type: "feedback"; rating: 1 | 2 | 3 | 4 | 5; text?: string };
+  | { type: "feedback"; rating: 1 | 2 | 3 | 4 | 5; text?: string }
+  /** Anonim oyun başı performans özeti: yalnız `results` aşamasında, oyun başına oyuncu başına bir kez. */
+  | ({ type: "perf"; gameId: string } & PerfSample);
+
+/** Bir oyun boyunca istemcide ölçülen gecikme özeti (ms ya da adet; hepsi küçük, negatif olmayan tam sayı). */
+export interface PerfSample {
+  rttMs: number;
+  ackP50: number;
+  ackP95: number;
+  ackN: number;
+  slowTaps: number;
+  tapP95: number;
+  longTasks: number;
+  longTaskMs: number;
+}
+
+/** `perf` alanlarının üst sınırları; aşan mesaj geçersizdir. */
+export const PERF_LIMITS: Readonly<Record<keyof PerfSample, number>> = {
+  rttMs: 60_000,
+  ackP50: 60_000,
+  ackP95: 60_000,
+  ackN: 10_000,
+  slowTaps: 10_000,
+  tapP95: 60_000,
+  longTasks: 10_000,
+  longTaskMs: 600_000,
+};
+export const PERF_KEYS = Object.keys(PERF_LIMITS) as (keyof PerfSample)[];
 
 export const MAX_FEEDBACK_TEXT = 300;
 
@@ -256,6 +283,18 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       if (text === null) return null;
       const r = rating as 1 | 2 | 3 | 4 | 5;
       return text === "" ? { type: "feedback", rating: r } : { type: "feedback", rating: r, text };
+    }
+    case "perf": {
+      if (!hasExactKeys(data, ["type", "gameId", ...PERF_KEYS])) return null;
+      const gameId = data.gameId;
+      if (typeof gameId !== "string" || gameId.length === 0 || gameId.length > 64) return null;
+      const sample = {} as PerfSample;
+      for (const key of PERF_KEYS) {
+        const v = data[key];
+        if (typeof v !== "number" || !Number.isSafeInteger(v) || v < 0 || v > PERF_LIMITS[key]) return null;
+        sample[key] = v;
+      }
+      return { type: "perf", gameId, ...sample };
     }
     case "leaveRoom":
     case "resync":

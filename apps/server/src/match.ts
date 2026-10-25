@@ -46,6 +46,8 @@ export interface Match {
   statsEnded: boolean;
   /** Final'de geri bildirim vermiş oyuncular (maç başına bir kez). */
   feedbackBy: Set<string>;
+  /** Geçerli oyunda performans özeti göndermiş oyuncular (oyun başına bir kez). */
+  perfBy: Set<string>;
 }
 
 /** Bir oyun fonksiyonu hata fırlattı; `fn` hangisi olduğunu söyler (setup, reduce, tick, view, result...). */
@@ -111,6 +113,7 @@ function enterBriefing(rt: Runtime, room: Room, match: Match): void {
   const now = rt.clock.now();
   match.participants = match.startParticipants.filter((id) => room.players.has(id));
   match.readyIds = new Set();
+  match.perfBy = new Set();
   match.state = null;
   match.rng = null;
   match.result = null;
@@ -160,6 +163,7 @@ export function beginMatch(rt: Runtime, room: Room): void {
     gameStartedAt: null,
     statsEnded: false,
     feedbackBy: new Set(),
+    perfBy: new Set(),
   };
   room.match = match;
   enterBriefing(rt, room, match);

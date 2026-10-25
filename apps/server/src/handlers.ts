@@ -10,6 +10,7 @@ import {
   applyAction,
   beginMatch,
   clearMatch,
+  currentGame,
   markReady,
   pickRandomGames,
   recordPresence,
@@ -282,6 +283,17 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       if (match.feedbackBy.has(conn.player.id)) return;
       match.feedbackBy.add(conn.player.id);
       rt.stats.feedback(match.statsId, rt.clock.now(), msg.rating, msg.text ?? null);
+      return;
+    }
+    case "perf": {
+      const room = requireRoom(conn);
+      if (!room || !conn.player) return;
+      const match = room.match;
+      // Sessizce yok sayılır: yanlış aşama, başka oyunun adı, katılımcı olmayan ya da ikinci gönderim.
+      if (room.phase !== "results" || !match || currentGame(match).id !== msg.gameId) return;
+      if (!match.participants.includes(conn.player.id) || match.perfBy.has(conn.player.id)) return;
+      match.perfBy.add(conn.player.id);
+      rt.stats.perf(match.statsId, msg.gameId, rt.clock.now(), msg);
       return;
     }
     case "returnToLobby": {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_FEEDBACK_TEXT, parseClientMessage } from "./protocol.js";
+import { MAX_FEEDBACK_TEXT, PERF_LIMITS, parseClientMessage } from "./protocol.js";
 
 describe("parseClientMessage", () => {
   it("hello kabul eder", () => {
@@ -168,5 +168,45 @@ describe("parseClientMessage: oda mesajları", () => {
       expect(nick(bad), JSON.stringify(bad)).toBeNull();
     for (const ok of ["Ali", "ŞİŞE", "ığdır", "Çağrı 7", "42", "Ali \u{1F600}", "a\u0301\u0302", "i\u0307"])
       expect(nick(ok), JSON.stringify(ok)).not.toBeNull();
+  });
+
+  describe("perf", () => {
+    const ok = {
+      type: "perf",
+      gameId: "butona-bas",
+      rttMs: 40,
+      ackP50: 45,
+      ackP95: 120,
+      ackN: 80,
+      slowTaps: 2,
+      tapP95: 90,
+      longTasks: 1,
+      longTaskMs: 70,
+    };
+    it("geçerli özeti kabul eder", () => {
+      expect(parseClientMessage(j(ok))).toEqual(ok);
+    });
+    it("üst sınırdaki değerleri kabul, bir fazlasını reddeder", () => {
+      for (const [key, max] of Object.entries(PERF_LIMITS)) {
+        expect(parseClientMessage(j({ ...ok, [key]: max }))).not.toBeNull();
+        expect(parseClientMessage(j({ ...ok, [key]: max + 1 }))).toBeNull();
+      }
+    });
+    it("negatif, kesirli, metin ve sonsuz değerleri reddeder", () => {
+      for (const bad of [-1, 1.5, "5", null, Number.NaN, true]) {
+        expect(parseClientMessage(j({ ...ok, ackP95: bad }))).toBeNull();
+      }
+    });
+    it("eksik ve fazla alanı reddeder", () => {
+      const { rttMs: _drop, ...missing } = ok;
+      expect(parseClientMessage(j(missing))).toBeNull();
+      expect(parseClientMessage(j({ ...ok, playerId: "x" }))).toBeNull();
+    });
+    it("gameId 1..64 karakter olmalı", () => {
+      expect(parseClientMessage(j({ ...ok, gameId: "" }))).toBeNull();
+      expect(parseClientMessage(j({ ...ok, gameId: "a".repeat(65) }))).toBeNull();
+      expect(parseClientMessage(j({ ...ok, gameId: "a".repeat(64) }))).not.toBeNull();
+      expect(parseClientMessage(j({ ...ok, gameId: 5 }))).toBeNull();
+    });
   });
 });

@@ -44,6 +44,16 @@ export function summarize(path: string, now = Date.now()): string {
     );
   }
 
+  const perf = all(
+    "SELECT game_id AS id, rtt_ms, ack_p50, ack_p95, slow_taps, long_task_ms FROM perf WHERE created_at >= ?",
+  );
+  out.push("");
+  out.push(
+    "Cihaz performansı (örnek / medyan RTT ms / medyan onay ms / onay p95 ms / örnek başı yavaş dokunma / örnek başı uzun görev ms):",
+  );
+  if (perf.length === 0) out.push("  henüz kayıt yok");
+  out.push(...perfLines(perf));
+
   const f = db
     .prepare("SELECT COUNT(*) AS n, AVG(rating) AS avg FROM feedback WHERE created_at >= ?")
     .get(since) as Row;
@@ -58,4 +68,32 @@ export function summarize(path: string, now = Date.now()): string {
   }
   db.close();
   return out.join("\n");
+}
+
+const median = (xs: number[]): number => {
+  const s = [...xs].sort((a, b) => a - b);
+  return s.length === 0 ? 0 : (s[Math.floor((s.length - 1) / 2)] as number);
+};
+const p95 = (xs: number[]): number => {
+  const s = [...xs].sort((a, b) => a - b);
+  return s.length === 0 ? 0 : (s[Math.min(s.length - 1, Math.ceil(s.length * 0.95) - 1)] as number);
+};
+const mean = (xs: number[]): number => (xs.length === 0 ? 0 : xs.reduce((a, b) => a + b, 0) / xs.length);
+
+/** Oyun başına performans satırları, en kötüsü (onay p95'i yüksek olan) başta. */
+function perfLines(rows: Row[]): string[] {
+  const byGame = new Map<string, Row[]>();
+  for (const r of rows) {
+    const list = byGame.get(String(r.id)) ?? [];
+    list.push(r);
+    byGame.set(String(r.id), list);
+  }
+  const lines = [...byGame.entries()].map(([id, rs]) => {
+    const col = (k: string): number[] => rs.map((r) => num(r[k]));
+    return {
+      worst: p95(col("ack_p95")),
+      text: `  ${id.padEnd(24)} ${String(rs.length).padStart(4)}  ${String(Math.round(median(col("rtt_ms")))).padStart(5)}  ${String(Math.round(median(col("ack_p50")))).padStart(5)}  ${String(Math.round(p95(col("ack_p95")))).padStart(5)}  ${fmt1(mean(col("slow_taps"))).padStart(6)}  ${String(Math.round(mean(col("long_task_ms")))).padStart(6)}`,
+    };
+  });
+  return lines.sort((a, b) => b.worst - a.worst).map((l) => l.text);
 }

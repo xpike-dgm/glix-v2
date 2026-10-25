@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { GAMES } from "@glix/engine";
+import { GAMES, type PerfSample } from "@glix/engine";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createStats, loadSqlite, RETENTION_MS } from "./statsStore.js";
 import { summarize } from "./statsSummary.js";
@@ -85,8 +85,10 @@ describe("istatistik kaydı", () => {
     const tables = rows<{ name: string }>("SELECT name FROM sqlite_master WHERE type='table'").map(
       (t) => t.name,
     );
-    expect(tables).toEqual(expect.arrayContaining(["matches", "game_plays", "feedback", "schema_version"]));
-    expect(rows("SELECT * FROM schema_version")).toEqual([{ version: 1 }]);
+    expect(tables).toEqual(
+      expect.arrayContaining(["matches", "game_plays", "feedback", "perf", "schema_version"]),
+    );
+    expect(rows("SELECT * FROM schema_version")).toEqual([{ version: 1 }, { version: 2 }]);
 
     // Özet Türkçe ve bu verilerden üretilir.
     const text = summarize(dbFile, k.clock.now());
@@ -200,8 +202,15 @@ describe("saklama", () => {
       });
       store.feedback(id, at, 4, "x");
     }
+    for (const [id, at] of [
+      [oldId, old],
+      [freshId, fresh],
+    ] as const) {
+      store.perf(id, "butona-bas", at, { ...SAMPLE });
+    }
     store.purge(now);
     store.close();
+    expect(rows("SELECT match_id FROM perf")).toEqual([{ match_id: freshId }]);
     expect(rows("SELECT id FROM matches")).toEqual([{ id: freshId }]);
     expect(rows("SELECT match_id FROM game_plays")).toEqual([{ match_id: freshId }]);
     expect(rows("SELECT match_id FROM feedback")).toEqual([{ match_id: freshId }]);
@@ -215,5 +224,88 @@ describe("saklama", () => {
     } finally {
       process.stderr.write = orig;
     }
+  });
+});
+
+const SAMPLE: PerfSample = {
+  rttMs: 40,
+  ackP50: 45,
+  ackP95: 120,
+  ackN: 80,
+  slowTaps: 2,
+  tapP95: 90,
+  longTasks: 1,
+  longTaskMs: 70,
+};
+
+describe("performans özeti", () => {
+  useServer({ statsDb: dbFile });
+  const perfMsg = (gameId: string, extra: Partial<PerfSample> = {}) => ({
+    type: "perf",
+    gameId,
+    ...SAMPLE,
+    ...extra,
+  });
+
+  it("yalnız results aşamasında, güncel oyun için, oyuncu başına bir kez kaydedilir", async () => {
+    const cs = await setupRoom(["A", "B"], ["butona-bas"]);
+    const [a, b] = cs as [Client, Client];
+    await startPlaying(cs);
+    a.send(perfMsg("butona-bas")); // playing: yok sayılır
+    await press(a);
+    k.clock.advance(45_100);
+    await until(() => a.room.phase === "results", "sonuç");
+    a.send(perfMsg("baska-oyun")); // yanlış gameId
+    a.send(perfMsg("butona-bas"));
+    a.send(perfMsg("butona-bas", { rttMs: 999 })); // ikinci: yok sayılır
+    b.send(perfMsg("butona-bas", { rttMs: 80 }));
+    b.send({ type: "ping", t: 1 });
+    await until(() => rows("SELECT * FROM perf").length === 2, "perf satırları");
+    await sync();
+    const r = rows<Record<string, number | string>>("SELECT * FROM perf ORDER BY rowid");
+    expect(r).toHaveLength(2);
+    expect(r[0]).toMatchObject({ game_id: "butona-bas", rtt_ms: 40, ack_p50: 45, ack_p95: 120, ack_n: 80 });
+    expect(r[0]).toMatchObject({ slow_taps: 2, tap_p95: 90, long_tasks: 1, long_task_ms: 70 });
+    expect(r[1]).toMatchObject({ rtt_ms: 80 });
+    expect(a.of("error")).toHaveLength(0);
+    expect(JSON.stringify(r)).not.toContain(a.session.playerId);
+
+    // final'de de yok sayılır.
+    k.clock.advance(7_100);
+    await until(() => a.room.phase === "final", "final");
+    a.send(perfMsg("butona-bas"));
+    a.send({ type: "ping", t: 2 });
+    await sync();
+    expect(rows("SELECT * FROM perf")).toHaveLength(2);
+
+    const text = summarize(dbFile, k.clock.now());
+    expect(text).toContain("Cihaz performansı");
+    expect(text).toMatch(/butona-bas\s+2\s+40\s+45\s+120/);
+  });
+
+  it("özet en kötü oyunu başa koyar", () => {
+    const store = createStats(dbFile);
+    const now = 1_000_000_000_000;
+    const id = store.matchStarted(now, { playerCount: 2, selectionMode: "manual", gameCount: 2 });
+    store.perf(id, "iyi-oyun", now, { ...SAMPLE, ackP95: 50 });
+    store.perf(id, "kotu-oyun", now, { ...SAMPLE, ackP95: 900 });
+    store.close();
+    const text = summarize(dbFile, now);
+    expect(text.indexOf("kotu-oyun")).toBeGreaterThan(-1);
+    expect(text.indexOf("kotu-oyun")).toBeLessThan(text.indexOf("iyi-oyun"));
+  });
+});
+
+describe("websocket ayarları", () => {
+  useServer();
+  it("istemci istese de permessage-deflate pazarlanmaz", async () => {
+    const { WebSocket } = await import("ws");
+    const ws = new WebSocket(`ws://127.0.0.1:${k.srv.port}/ws`, { perMessageDeflate: true });
+    await new Promise<void>((res, rej) => {
+      ws.once("open", () => res());
+      ws.once("error", rej);
+    });
+    expect(ws.extensions).toBe("");
+    ws.close();
   });
 });

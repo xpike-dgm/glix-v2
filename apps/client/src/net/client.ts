@@ -1,4 +1,5 @@
 import { APP_VERSION, type ClientMessage, type RoomSnapshot } from "@glix/engine";
+import { installPerfObservers, perf, trackPerf } from "../telemetry/perf.js";
 import { resolveWsUrl } from "../wsUrl.js";
 import { offsetFromPong } from "./clock.js";
 import { parseServerMessage } from "./parse.js";
@@ -107,6 +108,7 @@ function onMessage(raw: string): void {
     }
     case "pong":
       addClockSample(offsetFromPong(msg.t, Date.now(), msg.serverTime));
+      perf.addRtt(Date.now() - msg.t);
       break;
     case "session":
       restartedByServer = false;
@@ -119,13 +121,16 @@ function onMessage(raw: string): void {
       break;
     case "room":
       applySnapshot(msg.snapshot);
+      if (state.snapshot) trackPerf(state.snapshot, rawSend);
       setState({ busy: false, notFoundCode: null });
       pending = null;
       break;
     case "patch":
       if (applyPatchMessage(msg)) rawSend({ type: "resync" });
+      else if (state.snapshot) trackPerf(state.snapshot, rawSend);
       break;
     case "actionAck":
+      perf.actionAcked(msg.seq);
       settleAck(msg.seq, msg.reason === undefined ? { ok: msg.ok } : { ok: msg.ok, reason: msg.reason });
       break;
     case "left":
@@ -222,6 +227,7 @@ function onOnline(): void {
 export function startNet(): () => void {
   stopped = false;
   attempt = 0;
+  installPerfObservers();
   open();
   document.addEventListener("visibilitychange", onVisible);
   window.addEventListener("online", onOnline);
@@ -277,7 +283,12 @@ export const sendFeedback = (rating: number, text: string): boolean => {
   if (clean) base.text = clean;
   return rawSend(base);
 };
-export const sendAction = (payload: unknown): boolean => rawSend({ type: "action", seq: ++seq, payload });
+export const sendAction = (payload: unknown): boolean => {
+  const id = ++seq;
+  const sent = rawSend({ type: "action", seq: id, payload });
+  if (sent && !mockSender) perf.actionSent(id);
+  return sent;
+};
 
 /** Sunucunun bir eyleme verdiği yanıt: reddedildiyse nedeni (kısa kod) de gelir. */
 export interface ActionAck {

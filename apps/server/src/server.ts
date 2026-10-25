@@ -183,7 +183,12 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     });
   });
 
-  const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_PAYLOAD_BYTES });
+  // perMessageDeflate kapalı: küçük JSON mesajlarda sıkıştırma gecikme ve CPU ekler. ws her sokette TCP_NODELAY açar.
+  const wss = new WebSocketServer({
+    noServer: true,
+    maxPayload: MAX_PAYLOAD_BYTES,
+    perMessageDeflate: false,
+  });
 
   server.on("upgrade", (req, socket, head) => {
     const path = (req.url ?? "").split("?")[0];

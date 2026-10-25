@@ -1,6 +1,6 @@
 // GLIX v2 yayın CPU mikro-ölçümü (`pnpm test` parçası değildir). Önce `pnpm build` gerekir.
 // Kullanım: node scripts/bench-broadcast.mjs [ROOMS=200] [PLAYERS=8] [STEPS=600]
-// N oda × 8 bağlantıyı Butona Bas oynarken 50 ms'lik adımlarla yayınlar (sahte saat, gerçek ağ yok);
+// N oda × 8 bağlantıyı Butona Bas oynarken STEP_MS (varsayılan 16 ms, BROADCAST_INTERVAL_MS) adımlarla yayınlar (sahte saat, gerçek ağ yok);
 // oda-yayını başına µs, saniyede mesaj ve bayt (oyun saniyesi başına) basar.
 import { dirname, resolve } from "node:path";
 import { performance } from "node:perf_hooks";
@@ -17,7 +17,7 @@ const env = (k, d) => Number(process.env[k] ?? d);
 const ROOMS = env("ROOMS", 200);
 const PLAYERS = env("PLAYERS", 8);
 const STEPS = env("STEPS", 600);
-const STEP_MS = env("STEP_MS", 50);
+const STEP_MS = env("STEP_MS", 16);
 const PRESSES = env("PRESSES", 1); // oda başına adım başına basış (~oyuncu başı 2,5 Hz)
 
 const clock = createManualClock();
