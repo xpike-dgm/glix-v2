@@ -2,6 +2,7 @@ import type { AnyGame } from "../game.js";
 import type { GameInfo } from "../protocol.js";
 import { acgozlulukLimiti } from "./acgozluluk-limiti/index.js";
 import { asiriYukleme } from "./asiri-yukleme/index.js";
+import { bozukTelefon } from "./bozuk-telefon/index.js";
 import { butonaBas } from "./butona-bas/index.js";
 import { cagrisimAgi } from "./cagrisim-agi/index.js";
 import { caprazAtes } from "./capraz-ates/index.js";
@@ -10,6 +11,7 @@ import { gizliAlisveris } from "./gizli-alisveris/index.js";
 import { gizliHirsiz } from "./gizli-hirsiz/index.js";
 import { gizliKareler } from "./gizli-kareler/index.js";
 import { ittifak } from "./ittifak/index.js";
+import { karaBorsa } from "./kara-borsa/index.js";
 import { karalamaDefteri } from "./karalama-defteri/index.js";
 import { kendim } from "./kendim/index.js";
 import { kontrolPaneliKaosu } from "./kontrol-paneli-kaosu/index.js";
@@ -50,6 +52,8 @@ export const GAMES: Record<string, AnyGame> = {
   [sizma.id]: sizma,
   [sozlukBlofu.id]: sozlukBlofu,
   [kontrolPaneliKaosu.id]: kontrolPaneliKaosu,
+  [bozukTelefon.id]: bozukTelefon,
+  [karaBorsa.id]: karaBorsa,
 };
 
 export function getCatalog(): GameInfo[] {

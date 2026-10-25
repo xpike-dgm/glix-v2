@@ -1,14 +1,25 @@
 /** Karalama Defteri — istemci ile sunucu arasındaki sözleşme. Kurallar: docs/KURALLAR.md §15, docs/A4-OYUNLAR.md. */
 
+import {
+  DRAW_COLORS,
+  DRAW_ERASER_INDEX,
+  DRAW_GRID,
+  DRAW_MAX_POINTS,
+  DRAW_MIN_POINTS,
+  type DrawColor,
+  type DrawPen,
+  type DrawSize,
+  type DrawStroke,
+} from "../drawing.js";
+
 export const KARALAMA_DRAW_MS = 75_000;
 export const KARALAMA_VOTE_MS = 20_000;
 export const KARALAMA_DURATION_MS = KARALAMA_DRAW_MS + KARALAMA_VOTE_MS;
 
-/** Çizim ızgarası: 0..GRID tam sayı, kare. */
-export const KARALAMA_GRID = 1000;
-/** Bir darbedeki nokta sayısı (x,y çifti). */
-export const KARALAMA_MIN_POINTS = 2;
-export const KARALAMA_MAX_POINTS = 120;
+/** Çizim tuvali ortak modülden gelir (games/drawing.ts); Karalama'nın adları geriye dönük uyumlu kalır. */
+export const KARALAMA_GRID = DRAW_GRID;
+export const KARALAMA_MIN_POINTS = DRAW_MIN_POINTS;
+export const KARALAMA_MAX_POINTS = DRAW_MAX_POINTS;
 /** Oyuncu başına aynı anda duran en çok darbe. */
 export const KARALAMA_MAX_STROKES = 400;
 /** Oyuncu başına duran darbelerdeki toplam nokta üst sınırı (oylamadaki açık görünümü sınırlı tutar). */
@@ -16,13 +27,11 @@ export const KARALAMA_MAX_TOTAL_POINTS = 6_000;
 /** Oyuncu başına kabul edilen toplam çizim eylemi (darbe + geri al + temizle); kayıt boyutunu sınırlar. */
 export const KARALAMA_MAX_DRAW_ACTIONS = 1_000;
 
-/** Palet kimlikleri; sıra `KaralamaStroke` içindeki renk dizinidir. */
-export const KARALAMA_COLORS = ["beyaz", "pembe", "sari", "yesil", "mavi", "turuncu"] as const;
-export type KaralamaColor = (typeof KARALAMA_COLORS)[number];
-export type KaralamaPen = KaralamaColor | "eraser";
-export type KaralamaSize = 1 | 2 | 3;
-/** Sıkıştırılmış darbede silgi dizini. */
-export const KARALAMA_ERASER_INDEX = KARALAMA_COLORS.length;
+export const KARALAMA_COLORS = DRAW_COLORS;
+export type KaralamaColor = DrawColor;
+export type KaralamaPen = DrawPen;
+export type KaralamaSize = DrawSize;
+export const KARALAMA_ERASER_INDEX = DRAW_ERASER_INDEX;
 
 export type KaralamaAction =
   | { kind: "stroke"; color: KaralamaPen; size: KaralamaSize; points: number[] }
@@ -38,7 +47,7 @@ export const KARALAMA_LOCK_GRACE_MS = 1_000;
 /**
  * Sıkıştırılmış darbe: `[renkDizini (0..5, silgi 6), kalınlık (1..3), x0, y0, x1, y1, …]`.
  */
-export type KaralamaStroke = number[];
+export type KaralamaStroke = DrawStroke;
 
 export type KaralamaPhase = "draw" | "vote" | "done";
 

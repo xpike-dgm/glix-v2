@@ -37,7 +37,7 @@ const arc = (cx: number, cy: number, rx: number, ry: number, from = 0, to = Math
   });
 
 /** Her oyuncuya farklı, çocuk işi gibi bir karalama. */
-function sketch(i: number): KaralamaStroke[] {
+export function sketch(i: number): KaralamaStroke[] {
   switch (i % 8) {
     case 0:
       return [

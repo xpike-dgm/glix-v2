@@ -5,7 +5,7 @@ import {
   KARALAMA_MAX_TOTAL_POINTS,
   type KaralamaStroke,
 } from "@glix/engine";
-import { createEffect, createSignal, For, onCleanup, onMount, untrack } from "solid-js";
+import { createEffect, createSignal, For, type JSX, onCleanup, onMount, untrack } from "solid-js";
 import { hapticReady, hapticTap, hapticTick } from "../../fx/haptics.js";
 import { tap, tick, unlockAudio } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
@@ -23,16 +23,31 @@ import {
   toGrid,
   toStrokeChunks,
 } from "./draw.js";
-import { Header } from "./Header.js";
-import type { KaralamaScreenView } from "./view.js";
 import { penIdOf } from "./view.js";
 
 /** Bir çizgi bu kadar noktaya ulaşınca (sadeleştirmeden önce) parça parça gönderilir. */
 const FLUSH_AT = 600;
 const ERASER = KARALAMA_COLORS.length;
 
-interface Props {
-  view: KaralamaScreenView;
+/**
+ * Ortak çizim tahtası (Karalama Defteri ve Bozuk Telefon): üst şerit dışarıdan verilir, kotalar ve kilit durumu
+ * çağıran oyunun görünümünden gelir.
+ */
+export interface DrawBoardProps {
+  /** Sunucudaki darbelerim (sıra numarasına göre). */
+  strokes: KaralamaStroke[];
+  /** Çizim süresinin bitişi (sunucu saati). */
+  endsAt: number;
+  /** Çizimi "Bitti" ile kesinleştirdim mi. */
+  done: boolean;
+  /** "Bitti" diyenler / toplam. */
+  readyCount: number;
+  total: number;
+  /** Sunucudaki darbe ve nokta kotaları (dolunca uyarı). */
+  maxStrokes?: number;
+  maxPoints?: number;
+  /** Tahtanın üstündeki şerit (başlık + süre). */
+  header: JSX.Element;
   now: () => number;
 }
 
@@ -84,7 +99,7 @@ const TrashIcon = () => (
 );
 
 /** Çizim tahtası: tek parmakla/kalemle çizim, 6 renk + silgi, 3 kalınlık, geri al, temizle. */
-export function DrawBoard(props: Props) {
+export function DrawBoard(props: DrawBoardProps) {
   let base: HTMLCanvasElement | undefined;
   let live: HTMLCanvasElement | undefined;
   let stage: HTMLDivElement | undefined;
@@ -143,7 +158,7 @@ export function DrawBoard(props: Props) {
 
   // --- sunucuyla uzlaşma: yerel çizim doğru kabul edilir; yalnız uzun süre sessizlikten sonra sunucuya uyulur ---
   const syncFromServer = (): void => {
-    const server = untrack(() => props.view.strokes);
+    const server = untrack(() => props.strokes);
     if (serverNow() - lastSentAt < 2_000 && lastSentAt !== 0) return;
     if (server.length === local.length && lastSentAt !== 0) return;
     if (server.length === local.length && local.length === 0) return;
@@ -153,7 +168,7 @@ export function DrawBoard(props: Props) {
     repaint();
   };
   createEffect(() => {
-    void props.view.strokes;
+    void props.strokes;
     syncFromServer();
   });
   const scheduleReconcile = (): void => {
@@ -161,9 +176,11 @@ export function DrawBoard(props: Props) {
     reconcileTimer = setTimeout(syncFromServer, 2_400);
   };
 
+  const maxStrokes = (): number => props.maxStrokes ?? KARALAMA_MAX_STROKES;
+  const maxPoints = (): number => props.maxPoints ?? KARALAMA_MAX_TOTAL_POINTS;
   const [sentLock, setSentLock] = createSignal(false);
-  const locked = (): boolean => props.view.drawDone || sentLock();
-  const over = (): boolean => props.now() >= props.view.drawEndsAt;
+  const locked = (): boolean => props.done || sentLock();
+  const over = (): boolean => props.now() >= props.endsAt;
   const lockDone = (): void => {
     if (locked() || over() || count() === 0) return;
     if (!sendAction({ kind: "lock" })) return;
@@ -178,7 +195,7 @@ export function DrawBoard(props: Props) {
     const erase = pen() === ERASER;
     for (const chunk of chunks) {
       const n = chunk.length / 2;
-      if (local.length >= KARALAMA_MAX_STROKES || localPoints + n > KARALAMA_MAX_TOTAL_POINTS) {
+      if (local.length >= maxStrokes() || localPoints + n > maxPoints()) {
         toast("Defter doldu: geri al ya da temizle");
         break;
       }
@@ -257,7 +274,7 @@ export function DrawBoard(props: Props) {
   };
 
   const accepts = (e: PointerEvent): boolean => {
-    if (props.view.drawEndsAt <= props.now() || locked()) return false;
+    if (props.endsAt <= props.now() || locked()) return false;
     if (e.pointerType === "pen") {
       sawPen = true;
       return true;
@@ -367,7 +384,7 @@ export function DrawBoard(props: Props) {
 
   return (
     <>
-      <Header view={props.view} now={props.now} />
+      {props.header}
       <div class="kd__stage" ref={stage}>
         <div
           class="kd__board"
@@ -460,8 +477,8 @@ export function DrawBoard(props: Props) {
           label="Bitti"
           locked={locked()}
           disabled={count() === 0 || over()}
-          ready={props.view.drawDoneIds.length}
-          total={props.view.players.length}
+          ready={props.readyCount}
+          total={props.total}
           onLock={lockDone}
         />
       </div>

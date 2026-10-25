@@ -1,6 +1,7 @@
 import type { GameBot } from "../testing/simulate.js";
 import { acgozlulukLimitiBot } from "./acgozluluk-limiti/bots.js";
 import { asiriYuklemeBot } from "./asiri-yukleme/bots.js";
+import { bozukTelefonBot } from "./bozuk-telefon/bots.js";
 import { butonaBasBot } from "./butona-bas/bots.js";
 import { cagrisimAgiBot } from "./cagrisim-agi/bots.js";
 import { caprazAtesBot } from "./capraz-ates/bots.js";
@@ -9,6 +10,7 @@ import { gizliAlisverisBot } from "./gizli-alisveris/bots.js";
 import { gizliHirsizBot } from "./gizli-hirsiz/bots.js";
 import { gizliKarelerBot } from "./gizli-kareler/bots.js";
 import { ittifakBot } from "./ittifak/bots.js";
+import { karaBorsaBot } from "./kara-borsa/bots.js";
 import { karalamaDefteriBot } from "./karalama-defteri/bots.js";
 import { kendimBot } from "./kendim/bots.js";
 import { kontrolPaneliKaosuBot } from "./kontrol-paneli-kaosu/bots.js";
@@ -50,4 +52,6 @@ export const BOTS: Record<string, GameBot> = {
   "rusvet-darbe": rusvetDarbeBot,
   sizma: sizmaBot,
   "sozluk-blofu": sozlukBlofuBot,
+  "bozuk-telefon": bozukTelefonBot,
+  "kara-borsa": karaBorsaBot,
 };
