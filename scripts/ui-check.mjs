@@ -130,6 +130,7 @@ const SCREENS = [
   { name: "capraz-spectator", q: "mock=capraz-spectator" },
   { name: "capraz-spectator-reveal", q: "mock=capraz-spectator-reveal", settle: 2800 },
   { name: "results-3", q: "mock=results&n=3", settle: 2400 },
+  { name: "results-5", q: "mock=results&n=5", settle: 2400 },
   { name: "results-8", q: "mock=results&n=8", settle: 2400 },
   { name: "final-3", q: "mock=final&n=3", settle: 2200 },
   { name: "final-8", q: "mock=final&n=8", settle: 2200 },

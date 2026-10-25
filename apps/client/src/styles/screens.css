@@ -916,6 +916,12 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+.row__nick {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .row__me {
   flex: none;
   font-style: normal;

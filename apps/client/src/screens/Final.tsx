@@ -108,7 +108,7 @@ export function Final(props: { snap: RoomSnapshot }) {
               <span class="row__rank">{r.rank}</span>
               <Avatar index={r.player.avatar} size={40} connected={r.player.connected} />
               <span class="row__name">
-                {r.player.nickname}
+                <span class="row__nick">{r.player.nickname}</span>
                 <Show when={r.player.id === props.snap.selfId}>
                   <em class="row__me">Sen</em>
                 </Show>
