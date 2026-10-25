@@ -43,6 +43,7 @@ export function TamamBar(props: Props) {
           when={locked()}
           fallback={
             <PrimaryButton
+              instant
               disabled={props.disabled === true}
               onClick={lock}
               class={(props.label ?? "Tamam").length > 10 ? "pbtn--long" : ""}

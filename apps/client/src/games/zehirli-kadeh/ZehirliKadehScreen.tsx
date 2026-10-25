@@ -237,6 +237,7 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
           }
         >
           <PrimaryButton
+            instant
             disabled={sel() === null}
             reason={sel() === null ? "Takas için bir kadeh seç" : `Takas: ${nameOf(sel() as string)}`}
             onClick={doSwap}

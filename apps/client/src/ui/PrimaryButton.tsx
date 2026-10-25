@@ -1,6 +1,7 @@
 import { type JSX, Show } from "solid-js";
 import { hapticTap } from "../fx/haptics.js";
 import { tap, unlockAudio } from "../fx/sound.js";
+import { pressable } from "./press.js";
 
 interface Props {
   children: JSX.Element;
@@ -12,10 +13,15 @@ interface Props {
   busy?: boolean;
   type?: "button" | "submit";
   class?: string;
+  /** Oyun içi eylem: parmak değer değmez etkinleşir (`click` klavye için kalır). Form gönderiminde kullanılmaz. */
+  instant?: boolean;
 }
 
 export function PrimaryButton(props: Props) {
   const off = () => props.disabled || props.busy;
+  const press = pressable(() => {
+    if (!off()) props.onClick?.();
+  });
   return (
     <div class="pbtn-wrap">
       <button
@@ -23,13 +29,14 @@ export function PrimaryButton(props: Props) {
         class={`pbtn pbtn--${props.variant ?? "cyan"} ${props.class ?? ""}`}
         disabled={off()}
         data-busy={props.busy ? "1" : undefined}
-        onPointerDown={() => {
+        onPointerDown={(e) => {
           if (off()) return;
           unlockAudio();
           tap();
           hapticTap();
+          if (props.instant) press.onPointerDown(e);
         }}
-        onClick={() => props.onClick?.()}
+        onClick={() => (props.instant ? press.onClick() : props.onClick?.())}
       >
         <span class="pbtn__label">{props.children}</span>
         <Show when={props.busy}>

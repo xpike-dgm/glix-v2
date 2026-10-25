@@ -37,12 +37,11 @@ export function Vote(props: Props) {
     unlockAudio();
     setBusy(true);
     setSent(card);
+    readySound();
+    hapticReady();
     const ack = await sendActionAck({ kind: "vote", card });
     setBusy(false);
-    if (ack.ok || ack.reason === "already_voted") {
-      readySound();
-      hapticReady();
-    } else {
+    if (!(ack.ok || ack.reason === "already_voted")) {
       setSent(null);
       setError("Oyun gitmedi, tekrar dene.");
       fail();

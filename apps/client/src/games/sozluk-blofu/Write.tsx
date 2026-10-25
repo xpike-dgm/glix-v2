@@ -49,16 +49,18 @@ export function Write(props: Props) {
     unlockAudio();
     setBusy(true);
     setError("");
+    // Tanım hemen kilitlenir; sunucu reddederse (ör. gerçek anlama çok benziyor) alan geri açılır.
+    const normalized = value.replace(/\s+/gu, " ").trim();
+    setSent(normalized);
+    field?.blur();
+    readySound();
+    hapticReady();
     const ack = await sendActionAck({ kind: "bluff", text: value });
     setBusy(false);
-    if (ack.ok) {
-      setSent(value.replace(/\s+/gu, " ").trim());
-      field?.blur();
-      readySound();
-      hapticReady();
-    } else if (ack.reason === "already_written") {
-      setSent(value.replace(/\s+/gu, " ").trim());
+    if (ack.ok || ack.reason === "already_written") {
+      setSent(normalized);
     } else {
+      setSent(null);
       setError(bluffErrorText(ack.reason));
       fail();
       hapticError();

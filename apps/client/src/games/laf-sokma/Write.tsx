@@ -1,7 +1,7 @@
 import { createEffect, createMemo, createSignal, For, on, onCleanup, Show } from "solid-js";
 import { hapticError, hapticReady } from "../../fx/haptics.js";
 import { fail, ready as readySound, unlockAudio } from "../../fx/sound.js";
-import { sendActionAck } from "../../net/client.js";
+import { type ActionAck, sendActionAck } from "../../net/client.js";
 import { CheckIcon } from "../../ui/Icons.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import { CrewStrip } from "./Crew.js";
@@ -95,24 +95,28 @@ export function Write(props: Props) {
     );
   };
 
-  const lockIn = async (): Promise<void> => {
-    if (props.spectator || locked() || busy()) return;
+  const lockIn = async (): Promise<ActionAck> => {
+    if (props.spectator || locked() || busy()) return { ok: false, reason: "local" };
     unlockAudio();
     setBusy(true);
+    // Kilit anında görünür (TamamBar); taslaklar ve kilit arka planda gider, hata olursa geri açılır.
+    readySound();
+    hapticReady();
     let ok = true;
     for (const t of tasks()) ok = (await flush(t.id)) && ok;
+    let result: ActionAck = { ok: false, reason: "invalid" };
     if (ok) {
-      const ack = await sendActionAck({ kind: "lock" });
-      if (ack.ok) {
-        readySound();
-        hapticReady();
-      } else if (ack.reason !== "locked") {
-        setError(lafErrorText(ack.reason));
+      result = await sendActionAck({ kind: "lock" });
+      if (!result.ok && result.reason !== "locked") {
+        setError(lafErrorText(result.reason));
         fail();
         hapticError();
+      } else {
+        result = { ok: true };
       }
     }
     setBusy(false);
+    return result;
   };
 
   // Başka bir soruya geçince önceki taslak kaydedilir.
@@ -250,7 +254,7 @@ export function Write(props: Props) {
         total={props.crew.length}
         disabled={!hasAny() || busy()}
         spectator={props.spectator}
-        onLock={() => void lockIn()}
+        onLock={lockIn}
       />
       <CrewStrip crew={props.crew} ready={props.view.ready} label="Hazır olanlar" />
     </>

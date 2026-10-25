@@ -1,12 +1,14 @@
-import { createEffect, createMemo, createSignal, For, onCleanup, Show, untrack } from "solid-js";
+import { createEffect, createMemo, For, onCleanup, Show, untrack } from "solid-js";
 import { hapticMatch, hapticSolo, hapticTap, hapticTick } from "../../fx/haptics.js";
-import { fail, match as matchSound, solo as soloSound, tap, tick, unlockAudio } from "../../fx/sound.js";
-import { sendAction, sendActionAck } from "../../net/client.js";
+import { match as matchSound, solo as soloSound, tap, tick } from "../../fx/sound.js";
+import { sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
 import type { AckLike } from "../../ui/optimistic.js";
 import { ProgressBar } from "../../ui/ProgressBar.js";
+import { createPendingPick } from "../../ui/playerPicker.js";
+import { pressable } from "../../ui/press.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
 import { TamamBar } from "../../ui/TamamBar.js";
@@ -55,30 +57,16 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
   };
 
   // Seçim: sunucu onaylayana kadar yerel (iyimser) gösterilir; reddedilirse eski haline döner.
-  const [pending, setPending] = createSignal<string | null>(null);
-  let pendingTimer: ReturnType<typeof setTimeout> | undefined;
-  onCleanup(() => clearTimeout(pendingTimer));
-  const mine = (): string | null => pending() ?? view()?.myTarget ?? null;
-  createEffect(() => {
-    const confirmed = view()?.myTarget ?? null;
-    if (untrack(pending) !== null && confirmed === untrack(pending)) setPending(null);
+  const pick = createPendingPick({
+    server: () => view()?.myTarget ?? null,
+    send: (target) => sendActionAck({ kind: "target", target }),
+    closed: () => props.spectator === true || closed() || locked(),
   });
+  const mine = (): string | null => pick.value();
 
   const choose = (id: string, connected: boolean): void => {
-    if (props.spectator || closed() || locked() || !connected) return;
-    unlockAudio();
-    tap();
-    hapticTap();
-    if (mine() === id) return;
-    setPending(id);
-    clearTimeout(pendingTimer);
-    pendingTimer = setTimeout(() => {
-      if (pending() !== null) {
-        setPending(null);
-        fail();
-      }
-    }, 1600);
-    sendAction({ kind: "target", target: id });
+    if (!connected) return;
+    pick.pick(id);
   };
 
   const lock = (): AckLike => {
@@ -181,6 +169,7 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
                   {(p, i) => {
                     const aimed = () => mine() === p.id;
                     const ready = () => lockedIds().includes(p.id);
+                    const press = pressable(() => choose(p.id, p.connected));
                     return (
                       <div
                         class="ca__slot"
@@ -201,7 +190,8 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
                           disabled={props.spectator || closed() || locked() || !p.connected}
                           aria-pressed={aimed()}
                           aria-label={`${p.nickname} hedef al`}
-                          onClick={() => choose(p.id, p.connected)}
+                          onPointerDown={press.onPointerDown}
+                          onClick={press.onClick}
                         >
                           <span class="ca__portrait">
                             <Avatar

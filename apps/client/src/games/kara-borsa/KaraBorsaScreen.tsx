@@ -3,7 +3,7 @@ import type { PlayerInfo } from "@glix/engine";
 import { createEffect, createMemo, createSignal, For, on, Show } from "solid-js";
 import { hapticError, hapticMatch, hapticReady, hapticResult } from "../../fx/haptics.js";
 import { fail, match as matchSound, ready as readySound, roundResult } from "../../fx/sound.js";
-import { sendAction } from "../../net/client.js";
+import { sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { GhostButton } from "../../ui/GhostButton.js";
@@ -118,11 +118,16 @@ function Bid(props: {
   );
   const send = (amount: number): void => {
     if (closed() || amount < 0 || amount > coins()) return;
-    if (sendAction({ kind: "bid", amount })) {
-      setSent(amount);
-      readySound();
-      hapticReady();
-    }
+    // Teklif hemen mühürlenir; sunucu reddederse geri açılır.
+    setSent(amount);
+    readySound();
+    hapticReady();
+    void sendActionAck({ kind: "bid", amount }).then((ack) => {
+      if (ack.ok || ack.reason === "timeout") return;
+      setSent(null);
+      fail();
+      hapticError();
+    });
   };
   const broke = () => coins() <= 0;
   return (
@@ -171,6 +176,7 @@ function Bid(props: {
             <div class="kb__actions">
               <PrimaryButton
                 disabled={value() === null || value() === 0 || closed()}
+                instant
                 onClick={() => send(value() ?? 0)}
               >
                 Teklif ver
