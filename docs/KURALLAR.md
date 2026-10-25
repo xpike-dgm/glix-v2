@@ -944,11 +944,11 @@ doğru cevaplarla tur uzayabilir.
 
 ---
 
-# C. Yeni oyunlar (A8) — TASLAK, sahip onayıyla kilitlenir
+# C. Yeni oyunlar (A8)
 
 ## 26. Bozuk Telefon — `bozuk-telefon`
 
-**Durum: TASLAK**
+**Durum: KİLİTLİ** (sahip onayı; uygulama yorumları `docs/A8-OYUNLAR.md`, `docs/A8-LAF-SOKMA.md`)
 
 - Amaç: Bir cümlenin çizim ve tahmin zincirinde nasıl bozulduğunu izleyip gülmek; zinciri sağlam tutmak.
 - Minimum oyuncu: **3**. Maksimum oyuncu: **8**.
@@ -966,7 +966,7 @@ doğru cevaplarla tur uzayabilir.
 
 ## 27. Laf Sokma Düellosu — `laf-sokma`
 
-**Durum: TASLAK**
+**Durum: KİLİTLİ** (sahip onayı; uygulama yorumları `docs/A8-OYUNLAR.md`, `docs/A8-LAF-SOKMA.md`)
 
 - Amaç: Aynı soruya rakibinden daha komik cevap verip oyları toplamak.
 - Minimum oyuncu: **3**. Maksimum oyuncu: **8**.
@@ -983,7 +983,7 @@ doğru cevaplarla tur uzayabilir.
 
 ## 28. Kara Borsa — `kara-borsa`
 
-**Durum: TASLAK**
+**Durum: KİLİTLİ** (sahip onayı; uygulama yorumları `docs/A8-OYUNLAR.md`, `docs/A8-LAF-SOKMA.md`)
 
 - Amaç: Gizli değerli kutuları blöf ve ipuçlarıyla doğru fiyata almak; en zengin olmak.
 - Minimum oyuncu: **3**. Maksimum oyuncu: **8**.
