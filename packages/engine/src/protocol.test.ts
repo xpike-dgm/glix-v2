@@ -84,11 +84,13 @@ describe("parseClientMessage: oda mesajları", () => {
       type: "setGames",
       gameIds: ["a", "b"],
     });
-    const many = Array.from({ length: 25 }, (_, i) => `g${i}`);
+    const many = Array.from({ length: 65 }, (_, i) => `g${i}`);
     for (const gameIds of [[], ["a", "a"], [1], [""], ["a".repeat(65)], many, "a", null]) {
       expect(parseClientMessage(j({ type: "setGames", gameIds }))).toBeNull();
     }
-    expect(parseClientMessage(j({ type: "setGames", gameIds: many.slice(0, 24) }))).not.toBeNull();
+    // Katalog 24'ü aştı (27 oyun): tüm uygun oyunlar tek mesajda seçilebilmeli.
+    expect(parseClientMessage(j({ type: "setGames", gameIds: many.slice(0, 27) }))).not.toBeNull();
+    expect(parseClientMessage(j({ type: "setGames", gameIds: many.slice(0, 64) }))).not.toBeNull();
   });
   it("setRandom count 1..64 güvenli tamsayı ister", () => {
     expect(parseClientMessage(j({ type: "setRandom", count: 5 }))).toEqual({ type: "setRandom", count: 5 });

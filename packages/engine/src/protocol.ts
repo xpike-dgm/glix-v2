@@ -7,6 +7,8 @@ export const MAX_MESSAGE_LENGTH = 4096;
 export const ROOM_CODE_LENGTH = 5;
 export const MAX_PLAYERS = 8;
 export const MAX_NICKNAME_LENGTH = 16;
+/** El ile seçimde en çok oyun (katalogdan büyük olmalı; `setRandom` sınırıyla aynı). */
+export const MAX_SELECTED_GAMES = 64;
 
 // Akış ayrıntıları: docs/PROTOKOL.md
 
@@ -253,7 +255,7 @@ export function parseClientMessage(raw: string): ClientMessage | null {
     case "setGames": {
       if (!hasExactKeys(data, ["type", "gameIds"])) return null;
       const ids = data.gameIds;
-      if (!Array.isArray(ids) || ids.length < 1 || ids.length > 24) return null;
+      if (!Array.isArray(ids) || ids.length < 1 || ids.length > MAX_SELECTED_GAMES) return null;
       const out: string[] = [];
       for (const id of ids) {
         if (typeof id !== "string" || id.length === 0 || id.length > 64 || out.includes(id)) return null;
