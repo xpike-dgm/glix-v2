@@ -16,6 +16,7 @@ import { kendimBot } from "./kendim/bots.js";
 import { kontrolPaneliKaosuBot } from "./kontrol-paneli-kaosu/bots.js";
 import { korBombaBot } from "./kor-bomba/bots.js";
 import { korKronometreBot } from "./kor-kronometre/bots.js";
+import { lafSokmaBot } from "./laf-sokma/bots.js";
 import { ortalamaninYarisiBot } from "./ortalamanin-yarisi/bots.js";
 import { rusRuletiBot } from "./rus-ruleti/bots.js";
 import { rusvetDarbeBot } from "./rusvet-darbe/bots.js";
@@ -54,4 +55,5 @@ export const BOTS: Record<string, GameBot> = {
   "sozluk-blofu": sozlukBlofuBot,
   "bozuk-telefon": bozukTelefonBot,
   "kara-borsa": karaBorsaBot,
+  "laf-sokma": lafSokmaBot,
 };
