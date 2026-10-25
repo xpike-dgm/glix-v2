@@ -1,13 +1,14 @@
-import type {
-  ErrorCode,
-  GameInfo,
-  GameResult,
-  LeftReason,
-  MatchSnapshot,
-  PlayerInfo,
-  RoomPhase,
-  RoomSnapshot,
-  ServerMessage,
+import {
+  CONTENT_TONES,
+  type ErrorCode,
+  type GameInfo,
+  type GameResult,
+  type LeftReason,
+  type MatchSnapshot,
+  type PlayerInfo,
+  type RoomPhase,
+  type RoomSnapshot,
+  type ServerMessage,
 } from "@glix/engine";
 
 type Rec = Record<string, unknown>;
@@ -127,6 +128,8 @@ export function parseSnapshot(v: unknown): RoomSnapshot | null {
   }
   const selection = parseSelection(v.selection);
   if (!selection) return null;
+  const tone = CONTENT_TONES.find((t) => t === v.tone);
+  if (!tone) return null;
   const catalog: GameInfo[] = [];
   for (const g of v.catalog) {
     const gg = parseGameInfo(g);
@@ -148,6 +151,7 @@ export function parseSnapshot(v: unknown): RoomSnapshot | null {
     players,
     gameIds: v.gameIds,
     selection,
+    tone,
     catalog,
     match,
   };

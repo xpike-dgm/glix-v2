@@ -1,7 +1,9 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { isRejected } from "../../game.js";
+import { replay } from "../../replay.js";
 import { createRng } from "../../rng.js";
+import { runSimulation } from "../../testing/simulate.js";
 import {
   createLafSokma,
   LAF_ANSWER_MAX,
@@ -17,6 +19,7 @@ import {
   LAF_WRITE_MS,
   type LafPublicView,
   type LafState,
+  type LafTone,
   type LafView,
   lafAdvance,
   lafAssign,
@@ -35,6 +38,41 @@ const ctx = (now: number, connected: readonly string[] = ALL, seed = 1) => ({
 });
 const start = (players: string[] = ["a", "b", "c", "d"], seed = 1, tone?: "aile" | "arkadas" | "ofis") =>
   (tone ? createLafSokma(tone) : lafSokma).setup(players, ctx(T0, players, seed));
+describe("laf-sokma: oda tonu (ctx.tone)", () => {
+  it("ctx.tone fabrika tonunu geçersiz kılar; verilmezse fabrika tonu kullanılır", () => {
+    for (const tone of LAF_TONES) {
+      const s = lafSokma.setup(["a", "b", "c"], { ...ctx(T0, ["a", "b", "c"], 4), tone });
+      expect(s.tone).toBe(tone);
+      for (const d of s.duels) expect(LAF_PROMPTS[tone]).toContain(d.prompt);
+      expect(LAF_PROMPTS[tone]).toContain(s.finalPrompt);
+    }
+    expect(createLafSokma("ofis").setup(["a", "b", "c"], ctx(T0, ["a", "b", "c"])).tone).toBe("ofis");
+  });
+
+  it("aynı tohum ve tonla kurulum birebir aynıdır; kayıt tonu taşır, replay aynı sonucu verir", () => {
+    const players = ["a", "b", "c", "d"];
+    const run = (tone: LafTone) =>
+      runSimulation(lafSokma, {
+        seed: 11,
+        players,
+        startedAt: T0,
+        actions: [],
+        ticks: [T0 + 1000, T0 + 200_000],
+        durationMs: lafMaxDurationMs(players.length),
+        disconnectProbability: 0,
+        tone,
+      });
+    for (const tone of LAF_TONES) {
+      const out = run(tone);
+      expect((out.state as LafState).tone).toBe(tone);
+      expect(out.log.tone).toBe(tone);
+      expect(replay(lafSokma, JSON.parse(JSON.stringify(out.log)))).toEqual(out.result);
+      expect(run(tone).state).toEqual(out.state);
+    }
+    expect((run("aile").state as LafState).duels).not.toEqual((run("ofis").state as LafState).duels);
+  });
+});
+
 const pub = (s: LafState, at: number) => lafSokma.publicView(s, ctx(at, s.players)) as LafPublicView;
 const priv = (s: LafState, who: string | null, at: number) =>
   lafSokma.view(s, who, ctx(at, s.players)) as LafView;

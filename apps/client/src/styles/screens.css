@@ -475,6 +475,38 @@
     white-space: nowrap;
   }
 }
+.tone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tone__label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.seg--tone {
+  flex: 1;
+  min-width: 0;
+  grid-template-columns: repeat(3, 1fr);
+}
+.seg--tone .seg__opt {
+  padding: 0 4px;
+  font-size: var(--fs-13);
+  white-space: nowrap;
+}
+.brief__tone {
+  align-self: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.brief__tone b {
+  color: var(--cyan);
+}
 .rnd {
   display: flex;
   flex-direction: column;

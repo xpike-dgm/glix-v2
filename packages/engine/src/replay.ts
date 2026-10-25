@@ -1,4 +1,11 @@
-import { type AnyGame, type GameContext, type GameLog, type GameResult, isRejected } from "./game.js";
+import {
+  type AnyGame,
+  type ContentTone,
+  type GameContext,
+  type GameLog,
+  type GameResult,
+  isRejected,
+} from "./game.js";
 import { createRng } from "./rng.js";
 
 /** Bir oyunda kaydedilecek en çok eylem; aşılırsa kayıt durur ve `truncated` işaretlenir. */
@@ -22,6 +29,7 @@ export class GameRecorder {
     private readonly seed: number,
     players: readonly string[],
     private readonly startedAt: number,
+    private readonly tone?: ContentTone,
   ) {
     this.players = [...players];
   }
@@ -58,6 +66,7 @@ export class GameRecorder {
       actions: this.actions.map((a) => ({ ...a })),
       endedAt,
       presence: this.presenceLog.map((p) => ({ ...p })),
+      ...(this.tone !== undefined ? { tone: this.tone } : {}),
       ...(this.truncated ? { truncated: true } : {}),
     };
   }
@@ -85,7 +94,10 @@ export function replay(game: AnyGame, log: GameLog): GameResult {
     }
     return { now, rng, connected: log.players.filter((id) => online.has(id)) };
   };
-  let state = game.setup(log.players, ctxAt(log.startedAt));
+  let state = game.setup(log.players, {
+    ...ctxAt(log.startedAt),
+    ...(log.tone !== undefined ? { tone: log.tone } : {}),
+  });
   for (const entry of log.actions) {
     state = game.tick(state, ctxAt(entry.t));
     const action = game.parseAction(entry.action);

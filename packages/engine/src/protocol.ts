@@ -1,4 +1,4 @@
-import type { GameResult } from "./game.js";
+import { type ContentTone, type GameResult, isContentTone } from "./game.js";
 
 export const PROTOCOL_VERSION = 2;
 export const APP_VERSION = "0.1.0";
@@ -23,6 +23,8 @@ export type ClientMessage =
   | { type: "setGames"; gameIds: string[] }
   /** Rastgele mod: maç başında uygun oyunlar arasından `count` tanesi seçilir (1..katalog). */
   | { type: "setRandom"; count: number }
+  /** İçerik tonu (yalnız host, yalnız lobi). Oyunlar içerik havuzunu buna göre seçer. */
+  | { type: "setTone"; tone: ContentTone }
   | { type: "startMatch" }
   | { type: "ready" }
   | { type: "action"; seq: number; payload: unknown }
@@ -141,6 +143,8 @@ export interface RoomSnapshot {
   gameIds: string[];
   /** Oyun seçim modu. Yeni oda: rastgele 5. */
   selection: { mode: "manual" } | { mode: "random"; count: number };
+  /** Odanın içerik tonu; yeni oda: arkadaş. */
+  tone: ContentTone;
   /** Sunucudaki tüm oyunlar (Minigame Seçimi için). */
   catalog: GameInfo[];
   match: MatchSnapshot | null;
@@ -268,6 +272,10 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       const count = data.count;
       if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 1 || count > 64) return null;
       return { type: "setRandom", count };
+    }
+    case "setTone": {
+      if (!hasExactKeys(data, ["type", "tone"])) return null;
+      return isContentTone(data.tone) ? { type: "setTone", tone: data.tone } : null;
     }
     case "action": {
       if (!hasExactKeys(data, ["type", "seq", "payload"])) return null;

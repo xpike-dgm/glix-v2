@@ -48,6 +48,16 @@ const SCREENS = [
   { name: "lobby-random", q: "mock=lobby", settle: 1000, act: clickText("Minigame Seçimi") },
   { name: "lobby-manual", q: "mock=lobby&sel=manual", settle: 1000, act: clickText("Minigame Seçimi") },
   {
+    name: "lobby-tone-host",
+    q: "mock=lobby",
+    settle: 1000,
+    act: async (p) => {
+      await p.getByText("Minigame Seçimi", { exact: false }).first().click();
+      await p.getByRole("button", { name: "Ofis" }).click();
+    },
+  },
+  { name: "lobby-tone-guest", q: "mock=lobby&guest=1", settle: 1000, act: clickText("Minigame Seçimi") },
+  {
     name: "lobby-kick",
     q: "mock=lobby",
     act: async (p) => p.locator(".seat:not(:disabled)").first().click(),

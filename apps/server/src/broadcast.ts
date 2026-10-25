@@ -85,6 +85,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       })),
       gameIds: [...room.gameIds],
       selection: { ...room.selection },
+      tone: room.tone,
       catalog: rt.catalog,
       match: sharedMatch,
     };

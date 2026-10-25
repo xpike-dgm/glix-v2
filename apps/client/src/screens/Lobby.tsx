@@ -1,6 +1,13 @@
-import { MAX_PLAYERS, type PlayerInfo, type RoomSnapshot } from "@glix/engine";
+import {
+  CONTENT_TONE_LABELS,
+  CONTENT_TONES,
+  type ContentTone,
+  MAX_PLAYERS,
+  type PlayerInfo,
+  type RoomSnapshot,
+} from "@glix/engine";
 import { createMemo, createSignal, For, Show } from "solid-js";
-import { kick, setGames, setRandom, startMatch } from "../net/client.js";
+import { kick, setGames, setRandom, setTone, startMatch } from "../net/client.js";
 import { inviteLink } from "../net/code.js";
 import { toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
@@ -82,6 +89,11 @@ export function Lobby(props: { snap: RoomSnapshot }) {
     if (next === randomCount()) return;
     lastCount.n = next;
     setRandom(next);
+  };
+
+  const chooseTone = (tone: ContentTone): void => {
+    if (!isHost() || snap().tone === tone) return;
+    setTone(tone);
   };
 
   const toggleGame = (id: string): void => {
@@ -201,6 +213,25 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                 >
                   Ben seçeyim
                 </button>
+              </div>
+              <div class="tone">
+                <span class="tone__label">Ton</span>
+                <div class="seg seg--tone">
+                  <For each={CONTENT_TONES}>
+                    {(t) => (
+                      <button
+                        type="button"
+                        class="seg__opt"
+                        aria-pressed={snap().tone === t}
+                        data-on={snap().tone === t ? "1" : undefined}
+                        disabled={!isHost()}
+                        onClick={() => chooseTone(t)}
+                      >
+                        {CONTENT_TONE_LABELS[t]}
+                      </button>
+                    )}
+                  </For>
+                </div>
               </div>
               <Show when={sel().mode === "random"}>
                 <div class="rnd">

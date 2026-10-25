@@ -92,6 +92,16 @@ describe("parseClientMessage: oda mesajları", () => {
     expect(parseClientMessage(j({ type: "setGames", gameIds: many.slice(0, 27) }))).not.toBeNull();
     expect(parseClientMessage(j({ type: "setGames", gameIds: many.slice(0, 64) }))).not.toBeNull();
   });
+  it("setTone yalnız aile/arkadas/ofis kabul eder, tam anahtar kümesiyle", () => {
+    for (const tone of ["aile", "arkadas", "ofis"]) {
+      expect(parseClientMessage(j({ type: "setTone", tone }))).toEqual({ type: "setTone", tone });
+    }
+    for (const tone of ["Aile", "kaba", "", null, 1, undefined, ["ofis"], "__proto__"]) {
+      expect(parseClientMessage(j({ type: "setTone", tone }))).toBeNull();
+    }
+    expect(parseClientMessage(j({ type: "setTone" }))).toBeNull();
+    expect(parseClientMessage(j({ type: "setTone", tone: "ofis", extra: 1 }))).toBeNull();
+  });
   it("setRandom count 1..64 güvenli tamsayı ister", () => {
     expect(parseClientMessage(j({ type: "setRandom", count: 5 }))).toEqual({ type: "setRandom", count: 5 });
     expect(parseClientMessage(j({ type: "setRandom", count: 1 }))).not.toBeNull();

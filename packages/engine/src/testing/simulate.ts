@@ -1,4 +1,4 @@
-import { type AnyGame, type GameLog, type GameResult, isRejected } from "../game.js";
+import { type AnyGame, type ContentTone, type GameLog, type GameResult, isRejected } from "../game.js";
 import { GameRecorder } from "../replay.js";
 import { createRng, type Rng } from "../rng.js";
 import { deepFreeze } from "./deep.js";
@@ -250,6 +250,8 @@ export interface RunOptions {
   /** Durumları derin dondurur (varsayılan true). */
   freeze?: boolean;
   onStep?: (info: StepInfo) => void;
+  /** `setup`a verilen oda tonu (kayda da yazılır). */
+  tone?: ContentTone;
 }
 
 export interface RunOutput {
@@ -285,12 +287,14 @@ export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
   items.sort((a, b) => a.t - b.t || a.order - b.order);
 
   const rng = createRng(seed);
-  const recorder = new GameRecorder(game.id, seed, players, startedAt);
+  const recorder = new GameRecorder(game.id, seed, players, startedAt, opts.tone);
   const roster = f([...players]);
   const online = new Set(players);
   let connected: readonly string[] = f([...players]);
   const ctxAt = (now: number) => ({ now, rng, connected });
-  let state: unknown = f(game.setup(roster, ctxAt(startedAt)));
+  let state: unknown = f(
+    game.setup(roster, { ...ctxAt(startedAt), ...(opts.tone !== undefined ? { tone: opts.tone } : {}) }),
+  );
   let steps = 1;
   let accepted = 0;
   let rejected = 0;

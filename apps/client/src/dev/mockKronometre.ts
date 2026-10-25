@@ -114,6 +114,7 @@ export function startKronometreMock(kind: string, params: URLSearchParams): void
       players,
       gameIds: [INFO.id],
       selection: { mode: "manual" },
+      tone: "arkadas",
       catalog: [INFO],
       match,
     };

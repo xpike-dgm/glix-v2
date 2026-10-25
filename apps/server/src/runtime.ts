@@ -1,4 +1,4 @@
-import type { GameInfo, GameLog, RoomPhase, RoomSnapshot, ServerMessage } from "@glix/engine";
+import type { ContentTone, GameInfo, GameLog, RoomPhase, RoomSnapshot, ServerMessage } from "@glix/engine";
 import type { Broadcaster } from "./broadcast.js";
 import type { Cancel, Clock } from "./clock.js";
 import type { Match } from "./match.js";
@@ -47,6 +47,8 @@ export interface Room {
   /** Manuel modda seçili oyunlar; rastgele modda lobide boş, maçta seçilenler. */
   gameIds: string[];
   selection: RoomSnapshot["selection"];
+  /** İçerik tonu; maç başında oyunların `setup`ına verilir. */
+  tone: ContentTone;
   match: Match | null;
   rev: number;
   nextJoinOrder: number;

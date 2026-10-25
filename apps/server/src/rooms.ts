@@ -1,5 +1,11 @@
 import { randomBytes, randomInt } from "node:crypto";
-import { getCatalog, MAX_NICKNAME_LENGTH, MAX_PLAYERS, ROOM_CODE_LENGTH } from "@glix/engine";
+import {
+  DEFAULT_CONTENT_TONE,
+  getCatalog,
+  MAX_NICKNAME_LENGTH,
+  MAX_PLAYERS,
+  ROOM_CODE_LENGTH,
+} from "@glix/engine";
 import { createBroadcaster } from "./broadcast.js";
 import { type Clock, systemClock } from "./clock.js";
 import { clearMatch, endMatchStats, recordPresence } from "./match.js";
@@ -82,6 +88,7 @@ export function createRoom(rt: Runtime): Room {
     phase: "lobby",
     gameIds: rt.defaultGameIds ? [...rt.defaultGameIds] : [],
     selection: rt.defaultGameIds ? { mode: "manual" } : { mode: "random", count: DEFAULT_RANDOM_COUNT },
+    tone: DEFAULT_CONTENT_TONE,
     match: null,
     rev: 0,
     nextJoinOrder: 0,

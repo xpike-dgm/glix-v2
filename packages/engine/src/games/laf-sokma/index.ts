@@ -365,7 +365,8 @@ export function createLafSokma(
       const list = [...players];
       const seed = drawSeed(ctx.rng);
       const rng = derivedRng(seed, "setup");
-      const pool = rng.shuffle(LAF_PROMPTS[tone]);
+      const roomTone: LafTone = ctx.tone ?? tone;
+      const pool = rng.shuffle(LAF_PROMPTS[roomTone]);
       const pairs = lafAssign(list, rng);
       const duels: LafDuelState[] = pairs.map((authors, i) => ({
         id: `q${i + 1}`,
@@ -375,7 +376,7 @@ export function createLafSokma(
       return {
         players: list,
         seed,
-        tone,
+        tone: roomTone,
         startedAt: ctx.now,
         duels,
         finalPrompt: pool[list.length] as string,

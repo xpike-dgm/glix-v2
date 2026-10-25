@@ -8,18 +8,17 @@
  * - ofis: iş yerinde rahatça sorulabilecek sorular
  */
 
-export const LAF_TONES = ["aile", "arkadas", "ofis"] as const;
-export type LafTone = (typeof LAF_TONES)[number];
+import { CONTENT_TONE_LABELS, CONTENT_TONES, type ContentTone, DEFAULT_CONTENT_TONE } from "../../game.js";
+
+export const LAF_TONES = CONTENT_TONES;
+/** Oda tonuyla aynı küme: host lobide seçer, oyun `ctx.tone`'dan okur. */
+export type LafTone = ContentTone;
 
 /** Host ton seçmediyse kullanılan ton. */
-export const LAF_DEFAULT_TONE: LafTone = "arkadas";
+export const LAF_DEFAULT_TONE: LafTone = DEFAULT_CONTENT_TONE;
 
 /** Ekranda gösterilen ton adları (arayüz metni). */
-export const LAF_TONE_LABELS: Record<LafTone, string> = {
-  aile: "Aile",
-  arkadas: "Arkadaş",
-  ofis: "Ofis",
-};
+export const LAF_TONE_LABELS: Record<LafTone, string> = CONTENT_TONE_LABELS;
 
 export const LAF_PROMPTS_AILE: readonly string[] = [
   "Bir süper kahramanın en gereksiz gücü?",

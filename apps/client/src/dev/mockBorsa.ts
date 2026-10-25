@@ -110,6 +110,7 @@ export function startBorsaMock(kind: string, params: URLSearchParams): void {
       players,
       gameIds: [GAME_ID],
       selection: { mode: "manual" },
+      tone: "arkadas",
       catalog: CATALOG,
       match: {
         round: 0,

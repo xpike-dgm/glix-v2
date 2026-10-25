@@ -5,6 +5,7 @@
  */
 import type {
   ClientMessage,
+  ContentTone,
   GameInfo,
   MatchSnapshot,
   PlayerInfo,
@@ -45,6 +46,7 @@ export function startMock(kind: string, params: URLSearchParams): void {
   // Varsayılan oda rastgele 5; `&sel=manual` el ile modda açar.
   let selection: RoomSnapshot["selection"] =
     params.get("sel") === "manual" ? { mode: "manual" } : { mode: "random", count: 5 };
+  let tone: ContentTone = "arkadas";
   let gameIds = selection.mode === "manual" ? ["butona-bas"] : [];
   let phase: RoomPhase = "lobby";
   let readyIds: string[] = [];
@@ -95,12 +97,13 @@ export function startMock(kind: string, params: URLSearchParams): void {
       rev: ++rev,
       serverNow: Date.now(),
       code: "KX7QP",
-      hostId: SELF,
+      hostId: params.get("guest") === "1" ? "p1" : SELF,
       selfId: SELF,
       phase,
       players,
       gameIds,
       selection,
+      tone,
       catalog: CATALOG,
       match: match(),
     };
@@ -190,6 +193,10 @@ export function startMock(kind: string, params: URLSearchParams): void {
       case "setGames":
         gameIds = msg.gameIds;
         selection = { mode: "manual" };
+        publish();
+        break;
+      case "setTone":
+        tone = msg.tone;
         publish();
         break;
       case "setRandom":

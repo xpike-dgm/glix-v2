@@ -16,6 +16,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `kick` | `playerId` | yalnız host, yalnız lobide |
 | `setGames` | `gameIds` | yalnız host, yalnız lobide; boş olamaz, tekrar yok; modu `manual` yapar |
 | `setRandom` | `count` | yalnız host, yalnız lobide; 1..katalog boyu; modu `random` yapar |
+| `setTone` | `tone` (`aile`\|`arkadas`\|`ofis`) | yalnız host, yalnız lobide; başka değer `invalid_message`, maçta `wrong_phase`, host değilse `not_host`; aynı değer sessizce yok sayılır |
 | `startMatch` | — | yalnız host; bağlı oyuncu sayısı tüm seçili oyunların min'ini karşılamalı |
 | `ready` | — | yalnız `briefing` aşamasında |
 | `action` | `seq`, `payload` | yalnız `playing`; `seq` istemci sayacı, `actionAck` ile döner |
@@ -46,9 +47,17 @@ Fark tam snapshot'tan büyükse sunucu doğrudan `room` gönderir. Hiçbir gör�
 gönderilmez; `rev` ve `serverNow` yalnız gönderilen mesajlarda ilerler (istemci saati ping/pong ile eşler,
 `serverNow`'a ihtiyaç duymaz).
 
+## İçerik tonu
+
+- `RoomSnapshot.tone`: `"aile" | "arkadas" | "ofis"`; yeni oda `"arkadas"`. Oyuna özel değil, odaya özel küçük bir ayardır;
+  içerik havuzu olan oyunlar (şimdilik Laf Sokma) kullanır, diğerleri yok sayar. Maçlar arası lobiye dönünce korunur.
+- Sunucu tonu maç başında (her oyunun `setup`ında) `GameContext.tone` olarak verir; yalnız `setup` okur.
+  Oyun içinde ton değişmez (lobi dışında `setTone` reddedilir).
+- `GameLog.tone` kaydedilir; `replay` `setup`ı aynı tonla çağırır, böylece aynı havuz kurulur.
+
 ## Maç kaydı
 
-Her oyun için `GameLog` (tohum, katılımcılar, zaman damgalı kabul edilen eylemler) bellekte tutulur.
+Her oyun için `GameLog` (tohum, katılımcılar, oda tonu, zaman damgalı kabul edilen eylemler) bellekte tutulur.
 Aynı tohum ve eylemlerle `replay` aynı `GameResult`'u üretmek zorundadır; `tick` çağrı zamanlaması sonucu
 değiştiremez. Son 20 oyunun kaydı bellekte tutulur; bir oyun fonksiyonu hata fırlatırsa o oyunun kaydı
 sunucu günlüğüne yazılır.
