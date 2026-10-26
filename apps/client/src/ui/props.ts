@@ -21,7 +21,7 @@ export type PropPath =
   | `kara-borsa/${"kutu-ahsap" | "kutu-antika" | "kutu-celik" | "kutu-hediye" | "kutu-lanet"}`
   | `kontrol-paneli-kaosu/${"kablo-kirmizi" | "kablo-mavi" | "kablo-sari" | "kablo-yesil" | "kablo-kesik" | "kivilcim"}`
   | `rus-ruleti/${"tabanca" | "tambur"}`
-  | `zehirli-kadeh/${"efekt-temiz" | "efekt-zehir"}`;
+  | `zehirli-kadeh/${"efekt-temiz" | "efekt-zehir" | `kadeh-${string}`}`;
 
 export const propSrc = (p: PropPath): string => `/assets/props/${p}.webp`;
 
@@ -74,7 +74,13 @@ const GAME_PROPS: Record<string, readonly PropPath[]> = {
   "capraz-ates": ["genel/nisangah"],
   "karalama-defteri": ["genel/tuval"],
   "bozuk-telefon": ["genel/tuval"],
-  "zehirli-kadeh": ["zehirli-kadeh/efekt-temiz", "zehirli-kadeh/efekt-zehir"],
+  "zehirli-kadeh": [
+    "zehirli-kadeh/efekt-temiz",
+    "zehirli-kadeh/efekt-zehir",
+    ...["cyan", "magenta", "amber", "lime", "violet", "orange", "emerald", "cobalt"].map(
+      (c): PropPath => `zehirli-kadeh/kadeh-${c}`,
+    ),
+  ],
 };
 
 const started = new Set<string>();

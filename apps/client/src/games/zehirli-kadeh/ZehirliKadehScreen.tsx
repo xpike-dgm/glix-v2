@@ -12,7 +12,7 @@ import type { GameScreenProps } from "../registry.js";
 import { Cup } from "./Cup.js";
 import { swapSound } from "./sounds.js";
 import "./zehirli-kadeh.css";
-import { clockFractions, cupColor, gridColumns, parseZehirliKadehView, secondsLeft } from "./view.js";
+import { clockFractions, gridColumns, parseZehirliKadehView, secondsLeft } from "./view.js";
 
 const AMBER = "#FFC23B";
 
@@ -211,7 +211,7 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
                 onPointerDown={press.onPointerDown}
                 onClick={press.onClick}
               >
-                <Cup color={cupColor(cup())} class="zk__cup" />
+                <Cup cup={cup()} class="zk__cup" />
                 <span class="zk__who">
                   <Avatar
                     index={p.avatar}

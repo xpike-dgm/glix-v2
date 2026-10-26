@@ -5,9 +5,9 @@ import { Cup } from "./Cup.js";
 export default function BriefingArt() {
   return (
     <div class="zkart" aria-hidden="true">
-      <Cup color="#2EF2FF" class="zkart__cup zkart__cup--a" />
+      <Cup cup={0} class="zkart__cup zkart__cup--a" />
       <i class="zkart__tunnel" />
-      <Cup color="#FF2BD6" class="zkart__cup zkart__cup--b" />
+      <Cup cup={1} class="zkart__cup zkart__cup--b" />
     </div>
   );
 }
