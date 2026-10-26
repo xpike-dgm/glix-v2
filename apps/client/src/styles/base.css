@@ -66,6 +66,13 @@ input {
     radial-gradient(90% 55% at 50% -5%, rgba(139, 92, 255, 0.22), transparent 70%),
     radial-gradient(120% 80% at 50% 0%, var(--bg-1) 0%, var(--bg-0) 78%);
 }
+/* `clip` kaydırılabilir alan oluşturmaz: ::after'ın taşan kısmı yüzünden sahne yatayda programatik olarak
+   da (odak, scrollIntoView, tarayıcı) kayamaz; üst çubuk ekran dışına itilmez. `hidden` yedeği yukarıda. */
+@supports (overflow: clip) {
+  .stage {
+    overflow: clip;
+  }
+}
 .stage::after {
   content: "";
   position: absolute;
