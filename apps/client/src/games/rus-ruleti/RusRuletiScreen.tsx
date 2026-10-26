@@ -203,7 +203,7 @@ export default function RusRuletiScreen(props: GameScreenProps) {
             />
           </svg>
           <div class="rr__core">
-            <Revolver class="rr__gunico" />
+            <Revolver class="rr__gunico" part="tambur" />
             <span class="rr__pct">%{view()?.pub.risk ?? 0}</span>
             <span class="rr__cap">patlama riski</span>
           </div>
