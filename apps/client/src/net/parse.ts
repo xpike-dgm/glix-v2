@@ -32,6 +32,7 @@ const ERROR_CODES: readonly ErrorCode[] = [
   "not_in_room",
   "already_in_room",
   "invalid_games",
+  "avatar_taken",
   "not_enough_players",
   "wrong_phase",
   "not_participant",

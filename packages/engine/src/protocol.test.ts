@@ -62,6 +62,29 @@ describe("parseClientMessage: oda mesajları", () => {
     expect(parseClientMessage(j({ type: "joinRoom", code: "ABCDE" }))).toBeNull();
     expect(parseClientMessage(j({ type: "joinRoom", nickname: "Ay" }))).toBeNull();
   });
+  it("chooseAvatar aralığı ve biçimi doğrular", () => {
+    expect(parseClientMessage(j({ type: "chooseAvatar", avatar: 3 }))).toEqual({ type: "chooseAvatar", avatar: 3 });
+    for (const avatar of [-1, 8, 1.5, "2", null, Number.NaN, 1e9]) {
+      expect(parseClientMessage(j({ type: "chooseAvatar", avatar }))).toBeNull();
+    }
+    expect(parseClientMessage(j({ type: "chooseAvatar" }))).toBeNull();
+    expect(parseClientMessage(j({ type: "chooseAvatar", avatar: 1, x: 1 }))).toBeNull();
+  });
+  it("odaya girişte isteğe bağlı avatar ipucu doğrulanır", () => {
+    expect(parseClientMessage(j({ type: "createRoom", nickname: "Ay", avatar: 5 }))).toEqual({
+      type: "createRoom",
+      nickname: "Ay",
+      avatar: 5,
+    });
+    expect(parseClientMessage(j({ type: "joinRoom", code: "ABCDE", nickname: "Ay", avatar: 0 }))).toEqual({
+      type: "joinRoom",
+      code: "ABCDE",
+      nickname: "Ay",
+      avatar: 0,
+    });
+    expect(parseClientMessage(j({ type: "joinRoom", code: "ABCDE", nickname: "Ay", avatar: 8 }))).toBeNull();
+    expect(parseClientMessage(j({ type: "createRoom", nickname: "Ay", avatar: "1" }))).toBeNull();
+  });
   it("resume token biçimini doğrular", () => {
     expect(parseClientMessage(j({ type: "resume", token: "aB3_-x" }))).toEqual({
       type: "resume",

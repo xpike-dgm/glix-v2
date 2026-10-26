@@ -6,6 +6,8 @@ export const APP_VERSION = "0.1.0";
 export const MAX_MESSAGE_LENGTH = 4096;
 export const ROOM_CODE_LENGTH = 5;
 export const MAX_PLAYERS = 8;
+/** Seçilebilir karakter sayısı (avatar 0..AVATAR_COUNT-1); odadaki en çok oyuncu sayısıyla aynıdır. */
+export const AVATAR_COUNT = MAX_PLAYERS;
 export const MAX_NICKNAME_LENGTH = 16;
 /** El ile seçimde en çok oyun (katalogdan büyük olmalı; `setRandom` sınırıyla aynı). */
 export const MAX_SELECTED_GAMES = 64;
@@ -15,8 +17,11 @@ export const MAX_SELECTED_GAMES = 64;
 export type ClientMessage =
   | { type: "hello"; clientVersion: string }
   | { type: "ping"; t: number }
-  | { type: "createRoom"; nickname: string }
-  | { type: "joinRoom"; code: string; nickname: string }
+  /** `avatar`: cihazın hatırladığı karakter; boşsa verilir, doluysa otomatik atanan kalır. */
+  | { type: "createRoom"; nickname: string; avatar?: number }
+  | { type: "joinRoom"; code: string; nickname: string; avatar?: number }
+  /** Lobide karakter değiştir (yalnız lobi; odada benzersiz, ilk gelen alır). */
+  | { type: "chooseAvatar"; avatar: number }
   | { type: "resume"; token: string }
   | { type: "leaveRoom" }
   | { type: "kick"; playerId: string }
@@ -81,6 +86,7 @@ export type ErrorCode =
   | "not_in_room"
   | "already_in_room"
   | "invalid_games"
+  | "avatar_taken"
   | "not_enough_players"
   | "wrong_phase"
   | "not_participant"
@@ -193,6 +199,18 @@ export function normalizeNickname(value: unknown): string | null {
   return clean;
 }
 
+/** Karakter sırası: 0..AVATAR_COUNT-1 tam sayı; değilse null. */
+function parseAvatar(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value >= AVATAR_COUNT) return null;
+  return value;
+}
+
+/** Anahtarlar `required` + isteğe bağlı `avatar` olmalıdır. */
+function hasKeysWithOptionalAvatar(obj: Record<string, unknown>, required: readonly string[]): boolean {
+  const own = Object.keys(obj);
+  return required.every((k) => own.includes(k)) && own.every((k) => required.includes(k) || k === "avatar");
+}
+
 function parseCode(value: unknown): string | null {
   if (typeof value !== "string" || value.length !== ROOM_CODE_LENGTH) return null;
   const code = value.toUpperCase();
@@ -233,16 +251,26 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return { type: "ping", t };
     }
     case "createRoom": {
-      if (!hasExactKeys(data, ["type", "nickname"])) return null;
+      if (!hasKeysWithOptionalAvatar(data, ["type", "nickname"])) return null;
       const nickname = normalizeNickname(data.nickname);
-      return nickname === null ? null : { type: "createRoom", nickname };
+      if (nickname === null) return null;
+      if (!Object.hasOwn(data, "avatar")) return { type: "createRoom", nickname };
+      const avatar = parseAvatar(data.avatar);
+      return avatar === null ? null : { type: "createRoom", nickname, avatar };
     }
     case "joinRoom": {
-      if (!hasExactKeys(data, ["type", "code", "nickname"])) return null;
+      if (!hasKeysWithOptionalAvatar(data, ["type", "code", "nickname"])) return null;
       const code = parseCode(data.code);
       const nickname = normalizeNickname(data.nickname);
       if (code === null || nickname === null) return null;
-      return { type: "joinRoom", code, nickname };
+      if (!Object.hasOwn(data, "avatar")) return { type: "joinRoom", code, nickname };
+      const avatar = parseAvatar(data.avatar);
+      return avatar === null ? null : { type: "joinRoom", code, nickname, avatar };
+    }
+    case "chooseAvatar": {
+      if (!hasExactKeys(data, ["type", "avatar"])) return null;
+      const avatar = parseAvatar(data.avatar);
+      return avatar === null ? null : { type: "chooseAvatar", avatar };
     }
     case "resume": {
       if (!hasExactKeys(data, ["type", "token"])) return null;

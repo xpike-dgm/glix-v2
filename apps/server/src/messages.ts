@@ -12,6 +12,7 @@ export const ERROR_TEXT: Record<ErrorCode, string> = {
   not_in_room: "Bir odada değilsin.",
   already_in_room: "Zaten bir odadasın.",
   invalid_games: "Seçilen oyunlar geçerli değil.",
+  avatar_taken: "Bu karakter alınmış.",
   not_enough_players: "Yeterli oyuncu yok.",
   wrong_phase: "Bunu şu an yapamazsın.",
   not_participant: "Bu oyunda yer almıyorsun.",

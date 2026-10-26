@@ -18,7 +18,14 @@ import {
   stepMatch,
 } from "./match.js";
 import { errorMessage } from "./messages.js";
-import { addPlayer, clearHostGrace, createRoom, markDisconnected, removePlayer } from "./rooms.js";
+import {
+  addPlayer,
+  clearHostGrace,
+  createRoom,
+  isAvatarFree,
+  markDisconnected,
+  removePlayer,
+} from "./rooms.js";
 import { type Connection, isConnected, type Room, type Runtime } from "./runtime.js";
 
 /** Bir soketten bu kadar başarısız oda kodu denemesinden sonra bağlantı kapatılır. */
@@ -78,7 +85,7 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         return;
       }
       const room = createRoom(rt);
-      addPlayer(rt, room, msg.nickname, conn);
+      addPlayer(rt, room, msg.nickname, conn, msg.avatar);
       sendSession(conn);
       rt.broadcaster.markDirty(room);
       return;
@@ -116,7 +123,7 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         fail(conn, "room_full");
         return;
       }
-      addPlayer(rt, room, msg.nickname, conn);
+      addPlayer(rt, room, msg.nickname, conn, msg.avatar);
       sendSession(conn);
       rt.broadcaster.markDirty(room);
       return;
@@ -164,6 +171,24 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       removePlayer(rt, room, player);
       conn.player = null;
       conn.send({ type: "left", reason: "left" });
+      return;
+    }
+    case "chooseAvatar": {
+      const room = requireRoom(conn);
+      if (!room || !conn.player) return;
+      if (room.phase !== "lobby") {
+        fail(conn, "wrong_phase", "Karakter oyun başlayınca değiştirilemez.");
+        return;
+      }
+      const me = conn.player;
+      if (me.avatar === msg.avatar) return;
+      if (!isAvatarFree(room, msg.avatar, me)) {
+        const owner = [...room.players.values()].find((p) => p.avatar === msg.avatar);
+        fail(conn, "avatar_taken", `Bu karakteri ${owner?.nickname ?? "başkası"} aldı.`);
+        return;
+      }
+      me.avatar = msg.avatar;
+      rt.broadcaster.markDirty(room);
       return;
     }
     case "kick": {

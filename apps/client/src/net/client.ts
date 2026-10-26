@@ -28,6 +28,7 @@ const SHOWN_ERRORS = new Set([
   "already_in_room",
   "not_enough_players",
   "invalid_games",
+  "avatar_taken",
   "draining",
   "server_busy",
   "game_failed",

@@ -528,3 +528,67 @@ describe("maç akışı", () => {
     expect(a.room.selfId).not.toBe(b.room.selfId);
   });
 });
+
+describe("karakter seçimi", () => {
+  it("lobide boş karakteri alır, herkes görür", async () => {
+    const [a, b] = await setupRoom(["Ayşe", "Mehmet"]);
+    b?.send({ type: "chooseAvatar", avatar: 5 });
+    await until(() => a?.room.players[1]?.avatar === 5, "avatar");
+    expect(b?.room.players[1]?.avatar).toBe(5);
+    // boşalan karakter başkasına verilebilir
+    a?.send({ type: "chooseAvatar", avatar: 1 });
+    await until(() => b?.room.players[0]?.avatar === 1, "avatar 2");
+  });
+
+  it("dolu karakter reddedilir: ilk gelen alır, diğerine kibar uyarı", async () => {
+    const [a, b] = await setupRoom(["Ayşe", "Mehmet"]);
+    b?.send({ type: "chooseAvatar", avatar: 0 });
+    await until(() => (b?.of("error").length ?? 0) > 0, "hata");
+    expect(b?.lastError).toMatchObject({ code: "avatar_taken", message: "Bu karakteri Ayşe aldı." });
+    expect(a?.room.players.map((p) => p.avatar)).toEqual([0, 1]);
+  });
+
+  it("aynı anda aynı karakteri isteyen ikisinden yalnız biri alır", async () => {
+    const [, b, c] = await setupRoom(["A", "B", "C"]);
+    b?.send({ type: "chooseAvatar", avatar: 6 });
+    c?.send({ type: "chooseAvatar", avatar: 6 });
+    await until(() => (b?.of("error").length ?? 0) + (c?.of("error").length ?? 0) > 0, "çatışma");
+    const owners = b?.room.players.filter((p) => p.avatar === 6) ?? [];
+    expect(owners).toHaveLength(1);
+  });
+
+  it("aralık dışı değer geçersiz mesajdır", async () => {
+    const [a] = await setupRoom(["A"]);
+    a?.send({ type: "chooseAvatar", avatar: 8 });
+    await until(() => (a?.of("error").length ?? 0) > 0, "hata");
+    expect(a?.lastError?.code).toBe("invalid_message");
+  });
+
+  it("maç başlayınca kilitlenir", async () => {
+    const cs = await setupRoom(["A", "B"]);
+    await startPlaying(cs);
+    cs[1]?.send({ type: "chooseAvatar", avatar: 7 });
+    await until(() => (cs[1]?.of("error").length ?? 0) > 0, "hata");
+    expect(cs[1]?.lastError?.code).toBe("wrong_phase");
+    expect(cs[0]?.room.players[1]?.avatar).toBe(1);
+  });
+
+  it("odada değilken reddedilir", async () => {
+    const c = await Client.connect();
+    c.send({ type: "chooseAvatar", avatar: 2 });
+    await until(() => c.of("error").length > 0, "hata");
+    expect(c.lastError?.code).toBe("not_in_room");
+  });
+
+  it("giriş ipucu boşsa verilir, doluysa otomatik atanır", async () => {
+    const host = await create("A");
+    const free = await Client.connect();
+    free.send({ type: "joinRoom", code: host.session.roomCode, nickname: "B", avatar: 4 });
+    await until(() => free.updates.length > 0, "katılım");
+    expect(free.room.players[1]?.avatar).toBe(4);
+    const taken = await Client.connect();
+    taken.send({ type: "joinRoom", code: host.session.roomCode, nickname: "C", avatar: 4 });
+    await until(() => taken.updates.length > 0, "katılım 2");
+    expect(taken.room.players[2]?.avatar).toBe(1);
+  });
+});
