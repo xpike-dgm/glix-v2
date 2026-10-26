@@ -3,6 +3,7 @@ import { startNet } from "./net/client.js";
 import { normalizeCode } from "./net/code.js";
 import { setState, state } from "./net/store.js";
 import { UpdateToast } from "./pwa/UpdateToast.js";
+import { setScreenAwake } from "./pwa/wakeLock.js";
 import { Briefing } from "./screens/Briefing.js";
 import { Countdown } from "./screens/Countdown.js";
 import { Final } from "./screens/Final.js";
@@ -41,6 +42,9 @@ export function App() {
     preloadWorld(m.gameId);
     preloadBriefing(m.gameId);
   });
+
+  // Odadayken ekran uyanık kalır; ana ekranda bırakılır.
+  createEffect(() => setScreenAwake(state.snapshot !== null));
 
   // Yalnız geliştirme: oyun parçası bekleme ekranını önizler.
   const [devLoading, setDevLoading] = createSignal(false);

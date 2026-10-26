@@ -3,6 +3,7 @@ import { installPerfObservers, perf, trackPerf } from "../telemetry/perf.js";
 import { resolveWsUrl } from "../wsUrl.js";
 import { offsetFromPong } from "./clock.js";
 import { parseServerMessage } from "./parse.js";
+import { decideOnReturn, PROBE_TIMEOUT_MS, reconnectNotice } from "./resume.js";
 import { KEYS, readStored, removeStored, writeStored } from "./storage.js";
 import {
   addClockSample,
@@ -47,6 +48,10 @@ let lastHeard = 0;
 let seq = 0;
 let pending: ClientMessage | null = null;
 let restartedByServer = false;
+let hiddenAt: number | null = null;
+let probeTimer: ReturnType<typeof setTimeout> | undefined;
+/** Maç sırasında yeniden bağlanıldı: ilk taze oda görünümü gelince "Tekrar bağlandın" gösterilir. */
+let announceReturn = false;
 let mockSender: ((msg: ClientMessage) => void) | null = null;
 
 /** Geliştirme önizlemesi: mesajlar sahte sunucuya gider. */
@@ -95,6 +100,7 @@ function onMessage(raw: string): void {
   switch (msg.type) {
     case "welcome": {
       attempt = 0;
+      announceReturn = state.everOpen && reconnectNotice(state.snapshot) !== null;
       syncReconnected();
       setState({ conn: "open", everOpen: true, failedAttempts: 0 });
       startPings();
@@ -124,6 +130,11 @@ function onMessage(raw: string): void {
       if (state.snapshot) trackPerf(state.snapshot, rawSend);
       setState({ busy: false, notFoundCode: null });
       pending = null;
+      if (announceReturn) {
+        announceReturn = false;
+        const notice = reconnectNotice(state.snapshot);
+        if (notice) toast(notice);
+      }
       break;
     case "patch":
       if (applyPatchMessage(msg)) rawSend({ type: "resync" });
@@ -134,6 +145,7 @@ function onMessage(raw: string): void {
       settleAck(msg.seq, msg.reason === undefined ? { ok: msg.ok } : { ok: msg.ok, reason: msg.reason });
       break;
     case "left":
+      announceReturn = false;
       removeStored(KEYS.token);
       clearRoom();
       goHome();
@@ -148,6 +160,7 @@ function onMessage(raw: string): void {
 
 function handleError(code: string, message: string): void {
   if (code === "resume_failed") {
+    announceReturn = false;
     removeStored(KEYS.token);
     clearRoom();
     goHome();
@@ -207,14 +220,59 @@ function scheduleReconnect(): void {
   reconnectTimer = setTimeout(open, delay);
 }
 
-function onVisible(): void {
-  if (document.visibilityState !== "visible" || stopped) return;
-  if (!ws || ws.readyState === WebSocket.CLOSED) {
-    attempt = 0;
-    open();
-  } else if (ws.readyState === WebSocket.OPEN) {
-    sendPing();
+/** Soketi bırakıp backoff beklemeden hemen yeniden bağlanır (eski soketin kapanışı yok sayılır). */
+function reconnectNow(): void {
+  clearTimeout(probeTimer);
+  clearTimeout(reconnectTimer);
+  clearInterval(pingTimer);
+  const old = ws;
+  ws = null;
+  if (old) {
+    old.onclose = null;
+    old.onmessage = null;
+    old.onerror = null;
+    try {
+      old.close();
+    } catch {
+      // zaten kapalı
+    }
   }
+  attempt = 0;
+  open();
+}
+
+/** Sekme öne geldi ya da bfcache'ten döndü: soketi denetle, gerekirse beklemeden yeniden bağlan. */
+function onReturn(restored: boolean): void {
+  if (stopped) return;
+  const hiddenMs = hiddenAt === null ? 0 : Date.now() - hiddenAt;
+  hiddenAt = null;
+  const action = decideOnReturn({ readyState: ws ? ws.readyState : null, hiddenMs, restored });
+  if (action === "reconnect") {
+    reconnectNow();
+  } else if (action === "ping") {
+    sendPing();
+  } else if (action === "probe") {
+    // Soket "açık" görünse de ölü olabilir: ping at, kısa sürede ses çıkmazsa at ve yeniden bağlan.
+    const since = Date.now();
+    const sock = ws;
+    sendPing();
+    clearTimeout(probeTimer);
+    probeTimer = setTimeout(() => {
+      if (ws === sock && lastHeard < since) reconnectNow();
+    }, PROBE_TIMEOUT_MS);
+  }
+}
+
+function onVisibility(): void {
+  if (document.visibilityState === "hidden") {
+    hiddenAt = Date.now();
+    return;
+  }
+  onReturn(false);
+}
+
+function onPageShow(ev: PageTransitionEvent): void {
+  if (ev.persisted) onReturn(true);
 }
 
 function onOnline(): void {
@@ -229,13 +287,16 @@ export function startNet(): () => void {
   attempt = 0;
   installPerfObservers();
   open();
-  document.addEventListener("visibilitychange", onVisible);
+  document.addEventListener("visibilitychange", onVisibility);
+  window.addEventListener("pageshow", onPageShow);
   window.addEventListener("online", onOnline);
   return () => {
     stopped = true;
-    document.removeEventListener("visibilitychange", onVisible);
+    document.removeEventListener("visibilitychange", onVisibility);
+    window.removeEventListener("pageshow", onPageShow);
     window.removeEventListener("online", onOnline);
     clearTimeout(reconnectTimer);
+    clearTimeout(probeTimer);
     clearInterval(pingTimer);
     ws?.close();
     ws = null;

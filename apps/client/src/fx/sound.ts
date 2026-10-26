@@ -1,5 +1,6 @@
 import { createSignal } from "solid-js";
 import { KEYS, readStored, writeStored } from "../net/storage.js";
+import { applyAudioSession } from "./audioSession.js";
 
 /**
  * WebAudio ile kod içinde üretilen kısa sesler (dosya yok). Tek ana ses düzeyi (`volume`) ve kalıcı sessiz
@@ -18,6 +19,23 @@ const [volume, setVolumeSignal] = createSignal(readVolume());
 export { muted, volume };
 
 let ctx: AudioContext | null = null;
+const resuming = new WeakSet<object>();
+
+/**
+ * Çalmıyorsa ("suspended" ya da iOS'un "interrupted" durumu) bağlamı sürdürür. Art arda çağrılması
+ * zararsızdır: aynı bağlam için tek bir `resume` havada kalır. true: bir `resume` başlatıldı.
+ */
+export function resumeContext(c: Pick<AudioContext, "state" | "resume">): boolean {
+  if (c.state === "running" || resuming.has(c)) return false;
+  resuming.add(c);
+  const done = (): void => void resuming.delete(c);
+  try {
+    c.resume().then(done, done);
+  } catch {
+    done();
+  }
+  return true;
+}
 let master: GainNode | null = null;
 
 export function toggleMute(): void {
@@ -62,7 +80,8 @@ function audio(): AudioContext | null {
 export function unlockAudio(): void {
   const c = audio();
   if (!c) return;
-  if (c.state !== "running") void c.resume().catch(() => {});
+  if (c.state === "running") return;
+  resumeContext(c);
   try {
     const src = c.createBufferSource();
     src.buffer = c.createBuffer(1, 1, 22050);
@@ -76,17 +95,16 @@ export function unlockAudio(): void {
 /** İlk kullanıcı jestinde sesi açar (dokunma, tuş); açılınca dinleyicileri bırakır. */
 export function installAudioUnlock(target: Window = window): () => void {
   const events = ["pointerdown", "touchend", "keydown"] as const;
-  const onGesture = (): void => {
-    unlockAudio();
-    if (ctx?.state === "running") off();
-  };
+  // Dinleyiciler kalıcıdır: kilit/arka plan sonrası iOS bağlamı yine askıya alır, sonraki dokunuş açar.
+  const onGesture = (): void => unlockAudio();
   const onVisible = (): void => {
     // iOS, uygulama arka plana gidince bağlamı "interrupted" yapar.
-    if (!document.hidden && ctx && ctx.state !== "running") void ctx.resume().catch(() => {});
+    if (!document.hidden && ctx) resumeContext(ctx);
   };
   const off = (): void => {
     for (const e of events) target.removeEventListener(e, onGesture, true);
   };
+  applyAudioSession();
   for (const e of events) target.addEventListener(e, onGesture, { capture: true, passive: true });
   document.addEventListener("visibilitychange", onVisible);
   return () => {
@@ -109,7 +127,7 @@ export function play(tones: Tone[]): void {
   // Bağlamı yalnız kullanıcı jesti açar (`unlockAudio`); jestten önce çalmak boşuna uyarı üretir.
   const c = ctx;
   if (!c || !master) return;
-  if (c.state === "suspended") void c.resume().catch(() => {});
+  resumeContext(c);
   const t0 = c.currentTime;
   for (const t of tones) {
     const start = t0 + (t.at ?? 0);

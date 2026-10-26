@@ -5,6 +5,7 @@ export const KEYS = {
   muted: "glix.muted",
   volume: "glix.volume",
   installHint: "glix.installHint",
+  sessizdeCal: "glix.sessizdeCal",
 } as const;
 
 export function readStored(key: string): string | null {
