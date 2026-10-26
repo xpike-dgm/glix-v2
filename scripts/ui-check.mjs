@@ -98,7 +98,7 @@ const SCREENS = [
   { name: "briefing", q: "mock=briefing" },
   { name: "briefing-ready", q: "mock=briefing-ready" },
   { name: "briefing-spectator", q: "mock=spectator-briefing" },
-  { name: "countdown", q: "mock=countdown", settle: 700, clock: 1700 },
+  { name: "countdown", q: "mock=countdown", settle: 1000, clock: 1700 },
   { name: "playing", q: "mock=playing" },
   {
     name: "playing-press",
