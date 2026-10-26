@@ -24,6 +24,39 @@ Durum: 24 oyun önizlemede, erken bitiş yayında. Bu belge sonraki büyük işi
 - Host olmayanlar için: avatar değiştirme, "hazırım" işareti, avatara dokununca tepki animasyonu.
 - Kabul: 8 oyuncu + oyun şeridi 320×568'de kaydırmasız; QR telefon kamerasıyla okunuyor (gerçek cihaz testi).
 
+#### U2 ek — lobi geri bildirimi (Ekim 2026, tek kişilik oda ekran görüntüsü)
+Gözlem: yalnızken 7 boş "+" dairesi ekranı kaplıyor ve tıklanınca bir şey yapmıyor; alttaki "Bu oyuncu sayısıyla
+oynanabilecek oyun yok" hata gibi okunuyor; oyun/ton ayarları bu durumda görünmüyor; davet tek "Paylaş" düğmesine bağlı.
+Sırayla yapılacak:
+
+**A. Hızlı kazanımlar**
+- [ ] QR ile katılma (yukarıdaki madde; "QR göster" → büyük QR, okutan doğrudan odaya girer).
+- [ ] Oda koduna dokununca kopyalama + "Kopyalandı" bildirimi.
+- [ ] Boş "+" daireleri davet düğmesi olur (dokununca paylaş/QR); en fazla 3 boş daire + "+N yer daha".
+- [ ] Oyuncu sayacı: "1/8 oyuncu · en az 2 gerekli".
+- [ ] Başlat altındaki metin olumlu dile: "Bir arkadaş daha gelince başlayabilirsin" (en küçük oyunun alt sınırına göre).
+
+**B. Yalnızken sıcak ekran**
+- [ ] Tek kişiyken özel yerleşim: büyük "oda boş" maskotu ortada, altında büyük QR ve "Arkadaşlarını çağır"; ikinci kişi gelince normal ızgara.
+- [ ] Katılma anı: avatar kayarak/zıplayarak girer, kısa ses + titreşim.
+
+**C. Bekleme süresini değerli yap**
+- [ ] Oyun seçimi (kartlı liste), ton ve tur ayarları oyuncu sayısından bağımsız baştan görünür; yetersiz sayıdaki oyunlar soluk + "en az N kişi".
+- [ ] Avatara dokun → düzenle: renk, ifade, takma ad.
+- [ ] Emoji tepkileri: lobide herkes emoji atar, avatarın üstünde uçar (hız sınırlı, sunucu doğrular).
+- [ ] "Hazırım" işareti; herkes hazırsa Başlat parlar.
+
+**D. Ev sahibi kontrolleri**
+- [ ] Oyuncuya basılı tut → "Odadan çıkar" / "Ev sahipliğini devret".
+- [ ] Oda kilidi: oyun başlayınca yeni giriş yalnız izleyici olarak (ya da kapalı) — kural KURALLAR.md'ye yazılmadan uygulanmaz.
+
+**E. Görsel**
+- [ ] Lobiye dünya arka planı: tek "lobi salonu" görseli (dikey + yatay), Aşama 4 stilinde ChatGPT ile üretilir.
+- [ ] Seçilen oyunlar alt kısımda küçük kart şeridi: "Bu gece: N oyun".
+
+Kabul (ek): tek kişilik oda 320×568–430×932'de kaydırmasız; boş daireye dokunma davet açar; `ui:check`'e lobi-yalnız,
+lobi-2, lobi-8 durumları eklenir.
+
 ### U3. Anlatım (briefing) 2.0
 - Metin yerine **3 karelik otomatik mini animasyon** (oyun başına `BriefingDemo`), metin altta tek satır.
 - "Biliyorum" düğmesi (oyunu daha önce oynayan anında hazır; cihazda oynanan oyunlar listesi).
