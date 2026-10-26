@@ -4,7 +4,7 @@ import { resolveWsUrl } from "../wsUrl.js";
 import { offsetFromPong } from "./clock.js";
 import { parseServerMessage } from "./parse.js";
 import { decideOnReturn, PROBE_TIMEOUT_MS, reconnectNotice } from "./resume.js";
-import { KEYS, readStored, removeStored, writeStored } from "./storage.js";
+import { KEYS, readAvatarChoice, readStored, removeStored, writeStored } from "./storage.js";
 import {
   addClockSample,
   applyPatchMessage,
@@ -29,6 +29,7 @@ const SHOWN_ERRORS = new Set([
   "already_in_room",
   "not_enough_players",
   "invalid_games",
+  "avatar_taken",
   "draining",
   "server_busy",
   "game_failed",
@@ -317,12 +318,18 @@ function intent(msg: ClientMessage): void {
 
 export function createRoom(nickname: string): void {
   setState("notFoundCode", null);
-  intent({ type: "createRoom", nickname });
+  const avatar = readAvatarChoice();
+  intent(avatar === undefined ? { type: "createRoom", nickname } : { type: "createRoom", nickname, avatar });
 }
 
 export function joinRoom(code: string, nickname: string): void {
   setState({ notFoundCode: null, joinCode: code });
-  intent({ type: "joinRoom", code, nickname });
+  const avatar = readAvatarChoice();
+  intent(
+    avatar === undefined
+      ? { type: "joinRoom", code, nickname }
+      : { type: "joinRoom", code, nickname, avatar },
+  );
 }
 
 export function leaveRoom(): void {
@@ -336,6 +343,16 @@ export const kick = (playerId: string): boolean => rawSend({ type: "kick", playe
 export const setRandom = (count: number): boolean => rawSend({ type: "setRandom", count });
 export const setTone = (tone: ContentTone): boolean => rawSend({ type: "setTone", tone });
 export const setGames = (gameIds: string[]): boolean => rawSend({ type: "setGames", gameIds });
+/**
+ * Lobide karakter seç. Seçim cihazda hatırlanır. Yanıt sunucu görünümüyle gelir; çakışmada sunucu
+ * `avatar_taken` hatası yollar (oyuncuya Türkçe uyarı gösterilir) ve iyimser değer geri alınır.
+ */
+export function chooseAvatar(avatar: number): Promise<ActionAck> {
+  writeStored(KEYS.avatar, String(avatar));
+  return Promise.resolve(
+    rawSend({ type: "chooseAvatar", avatar }) ? { ok: true } : { ok: false, reason: "offline" },
+  );
+}
 export const startMatch = (): boolean => rawSend({ type: "startMatch" });
 export const sendReady = (): boolean => rawSend({ type: "ready" });
 export const returnToLobby = (): boolean => rawSend({ type: "returnToLobby" });

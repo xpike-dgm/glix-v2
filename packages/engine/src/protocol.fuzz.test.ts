@@ -51,6 +51,7 @@ describe("parseClientMessage fuzz", () => {
       "ping",
       "createRoom",
       "joinRoom",
+      "chooseAvatar",
       "resume",
       "kick",
       "setGames",

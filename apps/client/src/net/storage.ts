@@ -6,6 +6,7 @@ export const KEYS = {
   volume: "glix.volume",
   installHint: "glix.installHint",
   sessizdeCal: "glix.sessizdeCal",
+  avatar: "glix.avatar",
 } as const;
 
 export function readStored(key: string): string | null {
@@ -30,4 +31,11 @@ export function removeStored(key: string): void {
   } catch {
     // yok sayılır
   }
+}
+
+/** Cihazın son seçtiği karakter (0–7); yoksa ya da bozuksa undefined. */
+export function readAvatarChoice(): number | undefined {
+  const raw = readStored(KEYS.avatar);
+  if (raw === null || !/^[0-7]$/.test(raw)) return undefined;
+  return Number(raw);
 }

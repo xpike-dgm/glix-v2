@@ -59,6 +59,12 @@ export function generateToken(): string {
   return randomBytes(24).toString("base64url");
 }
 
+/** Bu karakteri odadaki kimse (isteyen dışında) kullanmıyor mu. */
+export function isAvatarFree(room: Room, avatar: number, except?: Player): boolean {
+  for (const p of room.players.values()) if (p !== except && p.avatar === avatar) return false;
+  return true;
+}
+
 export function lowestFreeAvatar(room: Room): number {
   const used = new Set([...room.players.values()].map((p) => p.avatar));
   for (let i = 0; i < MAX_PLAYERS; i++) if (!used.has(i)) return i;
@@ -102,7 +108,13 @@ export function createRoom(rt: Runtime): Room {
 }
 
 /** Odaya oyuncu ekler ve bağlantıya bağlar. İlk oyuncu host olur. */
-export function addPlayer(rt: Runtime, room: Room, nickname: string, conn: Connection): Player {
+export function addPlayer(
+  rt: Runtime,
+  room: Room,
+  nickname: string,
+  conn: Connection,
+  preferredAvatar?: number,
+): Player {
   if (room.deleteCancel) {
     room.deleteCancel();
     room.deleteCancel = null;
@@ -112,7 +124,10 @@ export function addPlayer(rt: Runtime, room: Room, nickname: string, conn: Conne
   const player: Player = {
     id,
     nickname: uniqueNickname(room, nickname),
-    avatar: lowestFreeAvatar(room),
+    avatar:
+      preferredAvatar !== undefined && isAvatarFree(room, preferredAvatar)
+        ? preferredAvatar
+        : lowestFreeAvatar(room),
     token: generateToken(),
     score: 0,
     joinOrder: room.nextJoinOrder++,

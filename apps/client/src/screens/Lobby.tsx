@@ -1,4 +1,5 @@
 import {
+  AVATAR_COUNT,
   CONTENT_TONE_LABELS,
   CONTENT_TONES,
   type ContentTone,
@@ -6,20 +7,25 @@ import {
   type PlayerInfo,
   type RoomSnapshot,
 } from "@glix/engine";
-import { createMemo, createSignal, For, Show } from "solid-js";
-import { kick, setGames, setRandom, setTone, startMatch } from "../net/client.js";
+import { createEffect, createSignal, For, on, onCleanup, Show } from "solid-js";
+import { hapticReady, hapticTap } from "../fx/haptics.js";
+import { ready as readySound, tap as tapSound } from "../fx/sound.js";
+import { chooseAvatar, kick, setGames, setRandom, setTone, startMatch } from "../net/client.js";
 import { inviteLink } from "../net/code.js";
 import { toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
 import { GhostButton } from "../ui/GhostButton.js";
-import { CheckIcon, ChevronIcon, MinusIcon, PlusIcon, ShareIcon } from "../ui/Icons.js";
+import { CheckIcon, ChevronIcon, MinusIcon, PlusIcon, QrIcon, ShareIcon } from "../ui/Icons.js";
 import { LeaveButton } from "../ui/LeaveButton.js";
 import { Mascot } from "../ui/Mascot.js";
+import { createOptimistic } from "../ui/optimistic.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
+import { QrCode } from "../ui/QrCode.js";
 import { Screen } from "../ui/Screen.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
 import { worldAllowed } from "../ui/world.js";
+import { friendsHint, minPlayersNeeded, playerCounter } from "./lobbyHints.js";
 
 async function share(code: string): Promise<void> {
   const url = inviteLink(location.origin, code);
@@ -38,6 +44,38 @@ async function share(code: string): Promise<void> {
     toast(`Arkadaşlarına kodu söyle: ${code}`);
   }
 }
+
+/** Oda kodunu panoya kopyalar; pano yoksa eski yönteme, o da olmazsa kodu ekranda gösterir. */
+async function copyCode(code: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(code);
+    toast("Kopyalandı", "success");
+    return;
+  } catch {
+    // pano kapalı: aşağıdaki yedek yol
+  }
+  try {
+    const box = document.createElement("textarea");
+    box.value = code;
+    box.setAttribute("readonly", "");
+    box.style.position = "fixed";
+    box.style.opacity = "0";
+    document.body.appendChild(box);
+    box.select();
+    const done = document.execCommand("copy");
+    box.remove();
+    if (done) {
+      toast("Kopyalandı", "success");
+      return;
+    }
+  } catch {
+    // desteklenmiyor
+  }
+  toast(`Oda kodu: ${code}`);
+}
+
+/** Boş koltukta en çok kaç daire gösterilir; kalanı "+N yer daha" olur. */
+const MAX_EMPTY_SLOTS = 3;
 
 /** Oyun kartı görseli; yüklenemezse (ya da veri tasarrufunda) boş çerçeve kalır. */
 function GameThumb(props: { id: string }) {
@@ -67,15 +105,60 @@ export function Lobby(props: { snap: RoomSnapshot }) {
   const [open, setOpen] = createSignal(false);
   const [kickTarget, setKickTarget] = createSignal<PlayerInfo | null>(null);
   const [kickOpen, setKickOpen] = createSignal(false);
+  const [inviteOpen, setInviteOpen] = createSignal(false);
+  const [pickOpen, setPickOpen] = createSignal(false);
+  const [freshIds, setFreshIds] = createSignal<ReadonlySet<string>>(new Set());
 
-  const seats = createMemo(() => {
-    const list: (PlayerInfo | null)[] = [...snap().players];
-    while (list.length < MAX_PLAYERS) list.push(null);
-    return list;
+  const me = () => snap().players.find((p) => p.id === snap().selfId);
+  const [myAvatar, setMyAvatar] = createOptimistic(() => me()?.avatar ?? 0, {
+    // Çakışma uyarısını sunucunun hatası zaten gösterir; ayrıca ses/titreşim eklenmez.
+    onReject: () => {},
   });
+  const pick = (n: number): void => {
+    setPickOpen(false);
+    if (n === myAvatar()) return;
+    tapSound();
+    hapticTap();
+    setMyAvatar(n, () => chooseAvatar(n));
+  };
+  const ownerOf = (n: number): PlayerInfo | undefined =>
+    snap().players.find((p) => p.avatar === n && p.id !== snap().selfId);
+  const link = () => inviteLink(location.origin, snap().code);
+
+  // Katılma anı: yeni gelen avatar oynak girer, kısa ses + titreşim. İlk çizimde ve kendimiz için sessiz.
+  let known: Set<string> | null = null;
+  const freshTimers: ReturnType<typeof setTimeout>[] = [];
+  onCleanup(() => {
+    for (const t of freshTimers) clearTimeout(t);
+  });
+  createEffect(
+    on(
+      () => snap().players.map((p) => p.id),
+      (ids) => {
+        const prev = known;
+        known = new Set(ids);
+        if (!prev) return;
+        const joined = ids.filter((id) => !prev.has(id) && id !== snap().selfId);
+        if (joined.length === 0) return;
+        readySound();
+        hapticReady();
+        setFreshIds((cur) => new Set([...cur, ...joined]));
+        freshTimers.push(
+          setTimeout(() => {
+            setFreshIds((cur) => new Set([...cur].filter((id) => !joined.includes(id))));
+          }, 900),
+        );
+      },
+    ),
+  );
+
+  const emptyCount = () => Math.max(0, MAX_PLAYERS - snap().players.length);
+  const shownEmpty = () => Math.min(MAX_EMPTY_SLOTS, emptyCount());
+  const moreEmpty = () => emptyCount() - shownEmpty();
+  const solo = () => snap().players.length < 2;
   const selected = () => snap().catalog.filter((g) => snap().gameIds.includes(g.id));
   const connected = () => snap().players.filter((p) => p.connected).length;
-  const need = () => selected().reduce((m, g) => Math.max(m, g.minPlayers), 2);
+  const need = () => minPlayersNeeded(snap().catalog, sel().mode, selected());
   const sel = () => snap().selection;
   const randomCount = (): number => {
     const s = sel();
@@ -86,12 +169,14 @@ export function Lobby(props: { snap: RoomSnapshot }) {
   const lastCount = { n: 5 };
   const headCount = (): string =>
     sel().mode === "random" ? `Rastgele · ${randomCount()}` : `${selected().length} oyun`;
+  const missing = () => Math.max(0, need() - connected());
   const blocker = (): string | undefined => {
     if (sel().mode === "random") {
-      return eligible().length === 0 ? "Bu oyuncu sayısıyla oynanabilecek oyun yok" : undefined;
+      if (missing() > 0) return friendsHint(missing());
+      return eligible().length === 0 ? "Bu kalabalığa uygun oyun bulunamadı" : undefined;
     }
     if (selected().length === 0) return "En az bir oyun seç";
-    if (connected() < need()) return `En az ${need()} oyuncu gerekli`;
+    if (missing() > 0) return friendsHint(missing());
     return undefined;
   };
 
@@ -134,75 +219,131 @@ export function Lobby(props: { snap: RoomSnapshot }) {
   };
 
   return (
-    <Screen>
+    <Screen class="lobby">
       <header class="topbar">
         <LeaveButton />
         <SoundToggle />
       </header>
 
       <div class="lobby__head rise">
-        <div>
+        <div class="lobby__code">
           <p class="overline">Oda kodu</p>
-          <p class="roomcode">{snap().code}</p>
+          <button
+            type="button"
+            class="roomcode"
+            aria-label={`Oda kodu ${snap().code.split("").join(" ")}, kopyalamak için dokun`}
+            onClick={() => void copyCode(snap().code)}
+          >
+            {snap().code}
+          </button>
         </div>
-        <button type="button" class="share" onClick={() => void share(snap().code)}>
-          <ShareIcon size={22} />
-          <span>Paylaş</span>
-        </button>
+        <Show when={solo() && me()}>
+          <button
+            type="button"
+            class="solo__me"
+            aria-label="Karakterini değiştir"
+            onClick={() => setPickOpen(true)}
+          >
+            <Avatar index={myAvatar()} size={56} host connected />
+          </button>
+        </Show>
+        <Show when={!solo()}>
+          <div class="lobby__invite">
+            <button
+              type="button"
+              class="share share--qr"
+              aria-label="QR göster"
+              onClick={() => setInviteOpen(true)}
+            >
+              <QrIcon size={22} />
+              <span>QR göster</span>
+            </button>
+            <button type="button" class="share" aria-label="Paylaş" onClick={() => void share(snap().code)}>
+              <ShareIcon size={22} />
+              <span>Paylaş</span>
+            </button>
+          </div>
+        </Show>
+        <p class="lobby__count">{playerCounter(snap().players.length, MAX_PLAYERS, need())}</p>
       </div>
 
       <div class="lobby__scroll" data-scroll ref={scroller}>
-        <Show when={snap().players.length < 2}>
-          <div class="alone rise" style={{ "--i": 3 }}>
-            <Mascot pose="oda-bos" size="var(--mascot-sm, 64px)" />
-            <p class="alone__text">Arkadaşların kodu girince burada belirir.</p>
+        <Show when={solo()}>
+          <div class="solo rise" style={{ "--i": 2 }}>
+            <Mascot pose="oda-bos" size="var(--solo-mascot, 120px)" />
+            <button
+              type="button"
+              class="solo__qr"
+              aria-label="QR kodu büyüt"
+              onClick={() => setInviteOpen(true)}
+            >
+              <QrCode text={link()} label="Odaya katılma QR kodu" />
+            </button>
+            <p class="solo__text">Arkadaşların QR'ı okutunca ya da kodu girince burada belirir.</p>
+            <button type="button" class="solo__call" onClick={() => void share(snap().code)}>
+              <ShareIcon size={22} />
+              <span>Arkadaşlarını çağır</span>
+            </button>
           </div>
         </Show>
 
-        <div class="seats">
-          <For each={seats()}>
-            {(p, i) => (
-              <Show
-                when={p}
-                fallback={
-                  <div class="seat seat--empty" style={{ "--i": i() }}>
-                    <div class="seat__empty">
-                      <PlusIcon size="34%" />
-                    </div>
-                    <span class="seat__name seat__name--empty">&nbsp;</span>
+        <Show when={!solo()}>
+          <div class="seats">
+            <For each={snap().players}>
+              {(player, i) => {
+                const mine = () => player.id === snap().selfId;
+                const kickable = () => isHost() && !mine();
+                return (
+                  <button
+                    type="button"
+                    class="seat rise"
+                    classList={{ "seat--self": mine(), "seat--new": freshIds().has(player.id) }}
+                    style={{ "--i": i() }}
+                    disabled={!mine() && !kickable()}
+                    aria-label={mine() ? "Karakterini değiştir" : undefined}
+                    onClick={() => {
+                      if (mine()) {
+                        setPickOpen(true);
+                        return;
+                      }
+                      setKickTarget(player);
+                      setKickOpen(true);
+                    }}
+                  >
+                    <Avatar
+                      index={mine() ? myAvatar() : player.avatar}
+                      size="var(--seat-av, clamp(52px, 17vw, 84px))"
+                      host={player.id === snap().hostId}
+                      connected={player.connected}
+                      self={mine()}
+                      pip
+                    />
+                    <span class="seat__name">{player.nickname}</span>
+                  </button>
+                );
+              }}
+            </For>
+            <For each={Array.from({ length: shownEmpty() }, (_, n) => n)}>
+              {(n) => (
+                <button
+                  type="button"
+                  class="seat seat--empty"
+                  style={{ "--i": snap().players.length + n }}
+                  aria-label="Arkadaş davet et"
+                  onClick={() => setInviteOpen(true)}
+                >
+                  <div class="seat__empty">
+                    <PlusIcon size="34%" />
                   </div>
-                }
-              >
-                {(player) => {
-                  const mine = () => player().id === snap().selfId;
-                  const kickable = () => isHost() && !mine();
-                  return (
-                    <button
-                      type="button"
-                      class="seat rise"
-                      style={{ "--i": i() }}
-                      disabled={!kickable()}
-                      onClick={() => {
-                        setKickTarget(player());
-                        setKickOpen(true);
-                      }}
-                    >
-                      <Avatar
-                        index={player().avatar}
-                        size="var(--seat-av, clamp(64px, 19vw, 88px))"
-                        host={player().id === snap().hostId}
-                        connected={player().connected}
-                        self={mine()}
-                        pip
-                      />
-                      <span class="seat__name">{player().nickname}</span>
-                    </button>
-                  );
-                }}
-              </Show>
-            )}
-          </For>
-        </div>
+                  <span class="seat__name seat__name--empty">&nbsp;</span>
+                </button>
+              )}
+            </For>
+          </div>
+          <Show when={moreEmpty() > 0}>
+            <p class="seats__more">+{moreEmpty()} yer daha</p>
+          </Show>
+        </Show>
 
         <section class="games" data-open={open() ? "1" : undefined}>
           <button
@@ -350,6 +491,49 @@ export function Lobby(props: { snap: RoomSnapshot }) {
           </PrimaryButton>
         </Show>
       </footer>
+
+      <BottomSheet open={inviteOpen()} onClose={() => setInviteOpen(false)} title="Arkadaşlarını çağır">
+        <div class="invite">
+          <div class="invite__qr">
+            <QrCode text={link()} label="Odaya katılma QR kodu" />
+          </div>
+          <div class="invite__side">
+            <p class="sheet__text">Kameranı QR'a tut ya da kodu gir:</p>
+            <button type="button" class="roomcode roomcode--sheet" onClick={() => void copyCode(snap().code)}>
+              {snap().code}
+            </button>
+            <PrimaryButton onClick={() => void share(snap().code)}>Paylaş</PrimaryButton>
+          </div>
+        </div>
+      </BottomSheet>
+
+      <BottomSheet open={pickOpen()} onClose={() => setPickOpen(false)} title="Karakterini seç">
+        <div class="picker">
+          <For each={Array.from({ length: AVATAR_COUNT }, (_, n) => n)}>
+            {(n) => {
+              const owner = () => ownerOf(n);
+              const chosen = () => myAvatar() === n;
+              return (
+                <button
+                  type="button"
+                  class="picker__opt"
+                  classList={{ "picker__opt--taken": owner() !== undefined, "picker__opt--on": chosen() }}
+                  aria-pressed={chosen()}
+                  aria-disabled={owner() !== undefined}
+                  onClick={() => {
+                    const o = owner();
+                    if (o) toast(`Bu karakteri ${o.nickname} aldı`);
+                    else pick(n);
+                  }}
+                >
+                  <Avatar index={n} size="var(--pick-av, 60px)" />
+                  <span class="picker__name">{owner()?.nickname ?? (chosen() ? "Sen" : "Boş")}</span>
+                </button>
+              );
+            }}
+          </For>
+        </div>
+      </BottomSheet>
 
       <BottomSheet
         open={kickOpen()}

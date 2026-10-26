@@ -10,12 +10,13 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `hello` | `clientVersion` | bağlantı açılınca ilk mesaj |
 | `ping` | `t` | saat farkı ölçümü |
 | `createRoom` | `nickname` | 1–16 karakter, kırpılır; biçim/yön/görünmez karakter (`Cf`,`Zl`,`Zp`,`Co`,`Cs`) yasak, en çok 2 ardışık birleştirici işaret, en az bir harf/rakam (yalnız emoji reddedilir) |
-| `joinRoom` | `code`, `nickname` | 5 karakter, büyük harfe çevrilir |
+| `joinRoom` | `code`, `nickname`, isteğe bağlı `avatar` (0–7) | 5 karakter, büyük harfe çevrilir |
 | `resume` | `token` | yeniden bağlanma; başarısızsa `error{code:"resume_failed"}` |
 | `leaveRoom` | — | |
 | `kick` | `playerId` | yalnız host, yalnız lobide |
 | `setGames` | `gameIds` | yalnız host, yalnız lobide; boş olamaz, tekrar yok; modu `manual` yapar |
 | `setRandom` | `count` | yalnız host, yalnız lobide; 1..katalog boyu; modu `random` yapar |
+| `chooseAvatar` | `avatar` (0–7) | yalnız lobide (`wrong_phase`); başkasında olan karakter `avatar_taken` ("Bu karakteri X aldı"), ilk gelen alır; aynı değer sessizce yok sayılır |
 | `setTone` | `tone` (`aile`\|`arkadas`\|`ofis`) | yalnız host, yalnız lobide; başka değer `invalid_message`, maçta `wrong_phase`, host değilse `not_host`; aynı değer sessizce yok sayılır |
 | `startMatch` | — | yalnız host; bağlı oyuncu sayısı tüm seçili oyunların min'ini karşılamalı |
 | `ready` | — | yalnız `briefing` aşamasında |
@@ -90,7 +91,7 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
 ## Hata kodları
 
 `invalid_message`, `rate_limited`, `nickname_invalid`, `room_not_found`, `room_full`, `match_in_progress`,
-`resume_failed`, `not_host`, `not_in_room`, `already_in_room`, `invalid_games`, `not_enough_players`,
+`resume_failed`, `not_host`, `not_in_room`, `already_in_room`, `invalid_games`, `avatar_taken`, `not_enough_players`,
 `wrong_phase`, `not_participant`, `game_failed`, `draining`, `server_busy`.
 
 ## Sınırlar (sunucu)
