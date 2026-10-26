@@ -5,6 +5,7 @@ import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
 import type { AckLike } from "../../ui/optimistic.js";
 import { PlayerPicker } from "../../ui/PlayerPicker.js";
+import { propSrc } from "../../ui/props.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { CrewMember } from "./Duello.js";
 import { nextTokenCount, type RusvetScreenView, tokenMap, tokensToAllocations, tokenTotal } from "./view.js";
@@ -79,9 +80,15 @@ export function Dagitim(props: Props) {
             <Show when={president()}>
               {(p) => (
                 <div class="rd__throne" style={{ "--tc": look(p().avatar).color }}>
-                  <span class="rd__crown" aria-hidden="true">
-                    ♛
-                  </span>
+                  <img
+                    class="rd__seat"
+                    src={propSrc("genel/taht")}
+                    alt=""
+                    aria-hidden="true"
+                    draggable={false}
+                    width="384"
+                    height="384"
+                  />
                   <Avatar index={p().avatar} size="clamp(72px, 26vw, 120px)" connected={p().connected} />
                   <span class="rd__name rd__name--big">{p().nickname}</span>
                   <span class="rd__budget">
