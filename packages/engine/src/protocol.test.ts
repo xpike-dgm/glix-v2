@@ -63,7 +63,10 @@ describe("parseClientMessage: oda mesajları", () => {
     expect(parseClientMessage(j({ type: "joinRoom", nickname: "Ay" }))).toBeNull();
   });
   it("chooseAvatar aralığı ve biçimi doğrular", () => {
-    expect(parseClientMessage(j({ type: "chooseAvatar", avatar: 3 }))).toEqual({ type: "chooseAvatar", avatar: 3 });
+    expect(parseClientMessage(j({ type: "chooseAvatar", avatar: 3 }))).toEqual({
+      type: "chooseAvatar",
+      avatar: 3,
+    });
     for (const avatar of [-1, 8, 1.5, "2", null, Number.NaN, 1e9]) {
       expect(parseClientMessage(j({ type: "chooseAvatar", avatar }))).toBeNull();
     }

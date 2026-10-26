@@ -40,6 +40,11 @@ export const ShareIcon = (p: P) => (
     <path d="M12 15V3M7.5 7.5L12 3l4.5 4.5M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
   </svg>
 );
+export const QrIcon = (p: P) => (
+  <svg {...base(p)} stroke-width={2.2}>
+    <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h3v3h-3zM20 14v6h-6M17 17h3" />
+  </svg>
+);
 export const BackIcon = (p: P) => (
   <svg {...base(p)}>
     <path d="M15 5l-7 7 7 7" />

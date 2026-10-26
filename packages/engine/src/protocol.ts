@@ -201,7 +201,8 @@ export function normalizeNickname(value: unknown): string | null {
 
 /** Karakter sırası: 0..AVATAR_COUNT-1 tam sayı; değilse null. */
 function parseAvatar(value: unknown): number | null {
-  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value >= AVATAR_COUNT) return null;
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value >= AVATAR_COUNT)
+    return null;
   return value;
 }
 

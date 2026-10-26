@@ -204,6 +204,13 @@ export function startMock(kind: string, params: URLSearchParams): void {
         gameIds = [];
         publish();
         break;
+      case "chooseAvatar": {
+        const taken = players.find((p) => p.avatar === msg.avatar && p.id !== SELF);
+        if (taken) break;
+        players = players.map((p) => (p.id === SELF ? { ...p, avatar: msg.avatar } : p));
+        publish();
+        break;
+      }
       case "kick":
         players = players.filter((p) => p.id !== msg.playerId);
         publish();
