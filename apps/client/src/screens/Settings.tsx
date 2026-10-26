@@ -163,11 +163,8 @@ export function Settings() {
   const check = (): void => {
     setChecking(true);
     checkForUpdate()
-      .then((r) => {
-        if (r === "hazir") toast("Yeni sürüm hazır");
-        else if (r === "guncel") toast("Uygulama güncel");
-        else toast("Şu an denetlenemedi");
-      })
+      .then((r) => toast(r === "updating" ? "Yeni sürüm yükleniyor" : "Uygulama güncel"))
+      .catch(() => toast("Şu an denetlenemedi"))
       .finally(() => setChecking(false));
   };
 
