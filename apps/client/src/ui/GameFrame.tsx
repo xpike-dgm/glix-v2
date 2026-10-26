@@ -8,12 +8,14 @@ import { ProgressBar } from "./ProgressBar.js";
 import { RotateOverlay } from "./RotateOverlay.js";
 import { SoundToggle } from "./SoundToggle.js";
 import { createPortrait, lockLandscape } from "./viewport.js";
+import { WorldBackdrop } from "./WorldBackdrop.js";
 
 interface Props {
   orientation: "portrait" | "landscape";
   /** Oyuncu bu oyunu yalnız izliyor. */
   spectator: boolean;
   gameName: string;
+  gameId: string;
   selfId: string;
   players: PlayerInfo[];
   participants: string[];
@@ -107,6 +109,7 @@ export function GameFrame(props: Props) {
       data-spectator={props.spectator ? "1" : undefined}
       data-turn={needsTurn() ? "1" : undefined}
     >
+      <WorldBackdrop gameId={props.gameId} />
       <Show when={landscape() && !needsTurn()}>
         <Rail {...props} />
       </Show>

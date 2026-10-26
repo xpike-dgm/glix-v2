@@ -331,7 +331,7 @@
   padding: 0 10px;
   border-radius: var(--r-sm);
   border: 2px solid rgba(140, 160, 255, 0.18);
-  background: rgba(18, 26, 69, 0.7);
+  background: rgba(14, 20, 56, 0.9);
   animation: ort-row 320ms var(--ease) calc(var(--o) - var(--skew, 0ms)) both;
 }
 .rrow {
@@ -371,7 +371,7 @@
 @keyframes ort-gold {
   to {
     border-color: var(--gold);
-    background: rgba(255, 194, 59, 0.16);
+    background: linear-gradient(rgba(255, 194, 59, 0.16), rgba(255, 194, 59, 0.16)), rgba(14, 20, 56, 0.92);
     box-shadow:
       0 0 20px rgba(255, 194, 59, 0.55),
       inset 0 0 14px rgba(255, 194, 59, 0.12);
@@ -380,7 +380,7 @@
 @keyframes ort-blue {
   to {
     border-color: var(--blue);
-    background: rgba(59, 123, 255, 0.18);
+    background: linear-gradient(rgba(59, 123, 255, 0.18), rgba(59, 123, 255, 0.18)), rgba(14, 20, 56, 0.92);
     box-shadow:
       0 0 20px rgba(59, 123, 255, 0.6),
       inset 0 0 14px rgba(59, 123, 255, 0.14);
@@ -557,10 +557,10 @@
   }
   .rrow[data-tier="gold"] {
     border-color: var(--gold);
-    background: rgba(255, 194, 59, 0.16);
+    background: linear-gradient(rgba(255, 194, 59, 0.16), rgba(255, 194, 59, 0.16)), rgba(14, 20, 56, 0.92);
   }
   .rrow[data-tier="blue"] {
     border-color: var(--blue);
-    background: rgba(59, 123, 255, 0.18);
+    background: linear-gradient(rgba(59, 123, 255, 0.18), rgba(59, 123, 255, 0.18)), rgba(14, 20, 56, 0.92);
   }
 }

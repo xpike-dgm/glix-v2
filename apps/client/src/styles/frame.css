@@ -1,3 +1,45 @@
+/* ---- Oyun dünyası arka planı (anlatım + oyun) ---- */
+.world {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+.world[data-on="1"] {
+  opacity: 1;
+}
+.world__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+.world__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-0) 70%, transparent) 0%,
+    color-mix(in srgb, var(--bg-0) 80%, transparent) 38%,
+    color-mix(in srgb, var(--bg-0) 88%, transparent) 100%
+  );
+}
+/* Dünya görseli üstünde ikincil metin biraz açılır (kontrast). */
+.gframe,
+.briefing {
+  --text-dim: #bcc4ec;
+}
+@media (prefers-reduced-motion: reduce) {
+  .world {
+    transition: none;
+  }
+}
+
 /* ---- Oyun çerçevesi (GameFrame): dikey sütun / yatay sahne + yan şerit ---- */
 .gframe {
   position: absolute;

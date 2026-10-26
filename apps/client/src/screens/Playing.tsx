@@ -36,6 +36,7 @@ export function Playing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
           orientation={props.match.orientation}
           spectator={spectator()}
           gameName={props.match.gameName}
+          gameId={props.match.gameId}
           selfId={props.snap.selfId}
           players={props.snap.players}
           participants={props.match.participants}

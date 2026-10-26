@@ -502,3 +502,10 @@
     gap: 10px 2px;
   }
 }
+
+/* Dünya görseli üstünde sonuç başlığı okunur kalsın. */
+.sz__head--reveal .overline {
+  padding: 1px 12px;
+  border-radius: 999px;
+  background: rgba(5, 8, 26, 0.78);
+}

@@ -19,6 +19,7 @@ import { Loading } from "./ui/Loading.js";
 import { preloadMoods } from "./ui/preloadMoods.js";
 import { preloadProps } from "./ui/props.js";
 import { Toasts } from "./ui/Toast.js";
+import { preloadWorld } from "./ui/world.js";
 
 export function App() {
   const screen = createMemo(() =>
@@ -34,7 +35,9 @@ export function App() {
   // Anlatım başlarken o oyunun nesne görselleri önden indirilir.
   createEffect(() => {
     const m = state.snapshot?.match;
-    if (m) preloadProps(m.gameId);
+    if (!m) return;
+    preloadProps(m.gameId);
+    preloadWorld(m.gameId);
   });
 
   // Yalnız geliştirme: oyun parçası bekleme ekranını önizler.
