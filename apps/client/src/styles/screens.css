@@ -282,9 +282,10 @@
 .lobby__head {
   flex: none;
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 12px;
+  gap: 0 12px;
   margin-top: 4px;
 }
 .roomcode {
@@ -310,7 +311,8 @@
   min-width: 0;
 }
 .lobby__count {
-  margin-top: 2px;
+  flex: 0 0 100%;
+  margin-top: -2px;
   font-size: var(--fs-13);
   color: var(--text-dim);
 }

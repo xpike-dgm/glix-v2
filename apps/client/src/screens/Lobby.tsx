@@ -236,7 +236,6 @@ export function Lobby(props: { snap: RoomSnapshot }) {
           >
             {snap().code}
           </button>
-          <p class="lobby__count">{playerCounter(snap().players.length, MAX_PLAYERS, need())}</p>
         </div>
         <Show when={!solo()}>
           <div class="lobby__invite">
@@ -255,6 +254,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
             </button>
           </div>
         </Show>
+        <p class="lobby__count">{playerCounter(snap().players.length, MAX_PLAYERS, need())}</p>
       </div>
 
       <div class="lobby__scroll" data-scroll ref={scroller}>
