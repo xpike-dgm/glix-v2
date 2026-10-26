@@ -211,7 +211,7 @@ button.aitem:active:not(:disabled) {
 
 /* Ürün simgesi */
 .uart {
-  --u: 38px;
+  --u: clamp(40px, 14vw, 64px);
   width: var(--u);
   height: var(--u);
   object-fit: contain;
