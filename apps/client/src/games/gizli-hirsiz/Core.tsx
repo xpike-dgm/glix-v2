@@ -1,3 +1,4 @@
+import { propSrc } from "../../ui/props.js";
 import "./gizli-hirsiz.css";
 
 export type CoreState = "idle" | "marked" | "solo" | "multi" | "none";
@@ -8,7 +9,7 @@ interface Props {
   opening?: boolean;
 }
 
-/** Karanlık "güvenlik çekirdeği": halkalar, altıgen kapak ve (yalnız kendi ekranında) parmak izi. */
+/** Karanlık "güvenlik çekirdeği": halkalar, kasa kapısı ve (yalnız kendi ekranında) parmak izi. */
 export function Core(props: Props) {
   return (
     <svg
@@ -25,12 +26,15 @@ export function Core(props: Props) {
       <g class="ghcore__ticks">
         <path d="M100 4v14M100 182v14M4 100h14M182 100h14" />
       </g>
-      <polygon class="ghcore__hex" points="100,34 157,67 157,133 100,166 43,133 43,67" />
-      <g class="ghcore__lid">
-        <polygon class="ghcore__plate ghcore__plate--l" points="100,40 100,160 46,129 46,71" />
-        <polygon class="ghcore__plate ghcore__plate--r" points="100,40 154,71 154,129 100,160" />
-      </g>
-      <circle class="ghcore__eye" cx="100" cy="100" r="12" />
+      <image
+        class="ghcore__door"
+        href={propSrc("genel/kasa-kapisi")}
+        x="22"
+        y="22"
+        width="156"
+        height="156"
+        preserveAspectRatio="xMidYMid meet"
+      />
       <g class="ghcore__print">
         <path d="M76 118c0-16 10-28 24-28s24 12 24 28" />
         <path d="M85 121c0-10 6-18 15-18s15 8 15 18" />
