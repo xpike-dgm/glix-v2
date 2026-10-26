@@ -211,31 +211,14 @@ button.aitem:active:not(:disabled) {
 
 /* Ürün simgesi */
 .uart {
-  --u: 30px;
-  display: inline-grid;
-  place-items: center;
+  --u: 38px;
   width: var(--u);
   height: var(--u);
-  background: var(--pc);
-  clip-path: circle(50%);
+  object-fit: contain;
   flex: none;
+  filter: drop-shadow(0 0 6px rgba(46, 242, 255, 0.35));
 }
-.uart[data-shape="1"] {
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
-}
-.uart[data-shape="2"] {
-  clip-path: polygon(50% 4%, 100% 92%, 0 92%);
-}
-.uart[data-shape="3"] {
-  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
-}
-.uart[data-shape="4"] {
-  clip-path: inset(4% round 26%);
-}
-.uart[data-shape="5"] {
-  clip-path: polygon(50% 0, 62% 36%, 100% 38%, 70% 60%, 80% 100%, 50% 76%, 20% 100%, 30% 60%, 0 38%, 38% 36%);
-}
-.uart[data-shape="2"] .uart[data-shape="5"]
+
 /* Sonuç */
 .ares {
   flex: 1 1 0;

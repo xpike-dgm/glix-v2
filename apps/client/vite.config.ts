@@ -49,12 +49,13 @@ export default defineConfig({
           "assets/**/*.{png,webp,jpg,svg}",
           "assets/*latin-*.woff2",
         ],
-        // Ruh hâli, maskot ve rozet görselleri (~1,6 MB) kabuğa girmez; ilk kullanımda çalışma anında önbelleğe alınır.
+        // Ruh hâli, maskot, rozet ve oyun nesnesi görselleri (~3 MB) kabuğa girmez; ilk kullanımda çalışma anında önbelleğe alınır.
         globIgnores: [
           "**/chunks/**",
           "**/assets/avatars/moods/**",
           "**/assets/mascot/**",
           "**/assets/badges/**",
+          "**/assets/props/**",
         ],
         additionalManifestEntries: shellChunks,
         navigateFallback: "/index.html",
@@ -65,11 +66,11 @@ export default defineConfig({
         runtimeCaching: [
           {
             urlPattern: ({ url, sameOrigin }) =>
-              sameOrigin && /^\/assets\/(avatars\/moods|mascot|badges)\//.test(url.pathname),
+              sameOrigin && /^\/assets\/(avatars\/moods|mascot|badges|props)\//.test(url.pathname),
             handler: "CacheFirst",
             options: {
               cacheName: "glix-art",
-              expiration: { maxEntries: 160, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              expiration: { maxEntries: 260, maxAgeSeconds: 60 * 60 * 24 * 90 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },

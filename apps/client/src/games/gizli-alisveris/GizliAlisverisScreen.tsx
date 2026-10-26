@@ -168,7 +168,7 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
                           onPointerDown={press.onPointerDown}
                           onClick={press.onClick}
                         >
-                          <UrunArt id={p.id} name={p.name} />
+                          <UrunArt id={p.id} name={p.name} decorative />
                           <span class="aitem__name">{p.name}</span>
                           <span class="aitem__price">{p.price}</span>
                         </button>

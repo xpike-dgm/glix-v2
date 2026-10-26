@@ -118,7 +118,7 @@ export function AlisverisSonuc(props: Props) {
                     data-open={stage() >= 1 ? "1" : undefined}
                     style={{ "--i": i() }}
                   >
-                    <UrunArt id={p.id} name={p.name} />
+                    <UrunArt id={p.id} name={p.name} decorative />
                     <span class="aitem__name">{p.name}</span>
                     <span class="aitem__price">
                       <Show when={stage() >= 1 && n() > 1} fallback={p.price}>

@@ -65,40 +65,36 @@
 }
 .kb__crate {
   flex: 0 1 auto;
-  height: min(46cqh, 150px);
+  height: min(46cqh, 170px);
   width: auto;
   aspect-ratio: 1;
-  overflow: visible;
+  object-fit: contain;
+  filter: drop-shadow(0 0 14px rgba(255, 194, 59, 0.35));
+  animation: kb-float 2.4s ease-in-out infinite alternate;
 }
-.kb__box {
-  fill: #1a1240;
-  stroke: var(--amber);
-  stroke-width: 3;
-  stroke-linejoin: round;
-  filter: drop-shadow(0 0 8px rgba(255, 194, 59, 0.55));
+.kb__crate[data-open="1"] {
+  animation: kb-pop 520ms var(--ease) both;
 }
-.kb__edge {
-  fill: none;
-  stroke: var(--amber);
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: 0.7;
+@keyframes kb-float {
+  to {
+    transform: translateY(-5px);
+  }
 }
-.kb__q {
-  fill: none;
-  stroke: var(--cyan);
-  stroke-width: 5;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 6px rgba(46, 242, 255, 0.8));
+@keyframes kb-pop {
+  from {
+    transform: scale(0.7) rotate(-6deg);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
 }
-.kb__lid {
-  fill: none;
-  stroke: var(--amber);
-  stroke-width: 3;
-  stroke-linecap: round;
-  transform-origin: 60px 40px;
-  transform: translateY(-12px) rotate(-8deg);
+@media (prefers-reduced-motion: reduce) {
+  .kb__crate,
+  .kb__crate[data-open="1"] {
+    animation: none;
+  }
 }
 .kb__hint {
   flex: none;

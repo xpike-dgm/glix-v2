@@ -4,6 +4,7 @@ import { hapticError, hapticSolo, hapticTap } from "../../fx/haptics.js";
 import { fail, unlockAudio } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { BlastArt, BombArt } from "../../ui/BombArt.js";
 import { createOptimistic } from "../../ui/optimistic.js";
 import { pressable } from "../../ui/press.js";
 import type { GameScreenProps } from "../registry.js";
@@ -224,15 +225,16 @@ export default function KorBombaScreen(props: GameScreenProps) {
 
       <Show when={!blast()}>
         <div class="kb__bomb" data-skin={skin()} style={{ left: `${bomb().x}%`, top: `${bomb().y}%` }}>
-          <Show when={left() !== null}>
-            <span class="kb__time">{formatRemaining(left() ?? 0)}</span>
-          </Show>
+          <BombArt>
+            <Show when={left() !== null}>
+              <span class="kb__time">{formatRemaining(left() ?? 0)}</span>
+            </Show>
+          </BombArt>
         </div>
       </Show>
       <Show when={blast()}>
         <div class="kb__blast" style={{ left: `${bomb().x}%`, top: `${bomb().y}%` }} aria-hidden="true">
-          <i />
-          <i />
+          <BlastArt />
         </div>
       </Show>
 

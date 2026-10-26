@@ -17,6 +17,7 @@ import { selectScreen } from "./screens/route.js";
 import { installErrorReporting } from "./telemetry/errors.js";
 import { Loading } from "./ui/Loading.js";
 import { preloadMoods } from "./ui/preloadMoods.js";
+import { preloadProps } from "./ui/props.js";
 import { Toasts } from "./ui/Toast.js";
 
 export function App() {
@@ -28,6 +29,12 @@ export function App() {
   createEffect(() => {
     const snap = state.snapshot;
     if (snap && snap.phase !== "lobby") preloadMoods(snap.players.map((p) => p.avatar));
+  });
+
+  // Anlatım başlarken o oyunun nesne görselleri önden indirilir.
+  createEffect(() => {
+    const m = state.snapshot?.match;
+    if (m) preloadProps(m.gameId);
   });
 
   // Yalnız geliştirme: oyun parçası bekleme ekranını önizler.
