@@ -152,20 +152,20 @@ Zaten var: dvh yükseklik, safe-area, klavye alanı (visualViewport), iOS "Ana E
   - [x] Titreşim aç/kapa (desteklemeyen cihazda soluk + açıklama); `fx/haptics.ts` ayarı gözetir.
   - [x] Hareketi azalt (Açık / Kapalı / Cihaza göre; tek yardımcı `fx/motion.ts`, CSS `data-motion`), yazı boyutu (Normal / Büyük).
   - [ ] Renk körlüğü dostu mod: ertelendi (oyun başına çalışma ister; ayar `settings/settings.ts` içinde TODO).
-  - [x] Veri tasarrufu: görselleri atla (`worldAllowed()` okur). [ ] "Yalnız Wi-Fi'de indir": U13 ile.
+  - [x] Veri tasarrufu: görselleri atla (`worldAllowed()` okur). [x] "Yalnız Wi-Fi'de indir" (varsayılan açık).
   - [x] Profil: takma ad (motorun `normalizeNickname` doğrulaması), varsayılan karakter salt okunur.
-  - [x] Depolama: kullanılan yer, "Önbelleği temizle". [ ] "Tüm içeriği indir": U13 ile.
+  - [x] Depolama: kullanılan yer, "Önbelleği temizle". [x] "Tüm içeriği indir" (satır içi ilerleme; depolama tahmini yenilenir).
   - [x] Anonim performans ölçümü aç/kapa (gönderimi kapatır).
   - [x] Sürüm bilgisi, "Güncellemeleri denetle" (`checkForUpdate` in `pwa/pwa.ts`).
 - [x] Ayarlar cihazda saklanır; oyun içi üst şerit sessiz düğmesi aynı ayarı okur/yazar.
 
 ### U13. İçeriği önceden indirme (iOS + Android)
 Bugün: uygulama kabuğu önceden indiriliyor; görseller (≈16 MB) ilk görüldüğünde indirilip kalıcı önbellekte tutuluyor.
-- [ ] Ana ekrandan ilk açılışta animasyonlu "Hazırlanıyor" ekranı: tüm görsel ve sesler ilerleme çubuğuyla indirilir.
-- [ ] Link/QR ile odaya katılan misafir **beklemez**: önce küçük kabukla hemen oyuna girer, kalan içerik arka planda iner.
-- [ ] Mobil veride sorar ("Wi-Fi'yi bekle / Şimdi indir"); veri tasarrufu açıksa indirmez.
-- [ ] Güncellemede yalnız değişen dosyalar iner (dosya adında içerik özeti; Workbox bunu destekliyor).
-- [ ] iOS depolama sınırı ve silinmeye karşı: `navigator.storage.persist()` istenir, eksik dosya bir sonraki açılışta tamamlanır.
+- [x] Ana ekrandan ilk açılışta animasyonlu "Hazırlanıyor" ekranı: tüm görsel ve sesler ilerleme çubuğuyla indirilir.
+- [x] Link/QR ile odaya katılan misafir **beklemez**: önce küçük kabukla hemen oyuna girer, kalan içerik arka planda iner.
+- [x] Mobil veride sorar ("Wi-Fi'yi bekle / Şimdi indir"); veri tasarrufu açıksa indirmez.
+- [x] Güncellemede yalnız değişen dosyalar iner (dosya adında içerik özeti; Workbox bunu destekliyor).
+- [x] iOS depolama sınırı ve silinmeye karşı: `navigator.storage.persist()` istenir, eksik dosya bir sonraki açılışta tamamlanır.
 
 ### U14. Güncelleme akışı
 Bugün: yeni sürüm hazır olunca bekliyor (`registerType: prompt`), kullanıcı yenileyince geçiyor.
