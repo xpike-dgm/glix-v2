@@ -291,7 +291,7 @@ async function main() {
     await A.keyboard.press("Escape");
     await A.getByRole("dialog").waitFor({ state: "detached", ...OPT });
     await A.locator(".roomcode").first().click();
-    await A.getByText("Kopyalandı").waitFor(OPT);
+    await A.getByText("Kopyalandı", { exact: true }).waitFor(OPT);
     assert((await A.evaluate(() => navigator.clipboard.readText())) === code, "kod kopyalanmadı");
 
     // Karakter seçimi: B kendi avatarına dokunup boş bir karakter alır; A'da görünür; alınmış olan soluk
