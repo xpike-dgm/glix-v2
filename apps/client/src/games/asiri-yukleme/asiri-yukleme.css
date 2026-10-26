@@ -339,3 +339,11 @@
     --ay-av: 28px;
   }
 }
+
+/* Dünya görseli üstünde sonuç başlığı okunur kalsın. */
+.ay__verdict,
+.ay__sub {
+  padding: 1px 16px;
+  border-radius: 14px;
+  background: rgba(5, 8, 26, 0.8);
+}

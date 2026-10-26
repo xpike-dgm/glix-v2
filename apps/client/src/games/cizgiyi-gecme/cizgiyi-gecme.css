@@ -229,7 +229,7 @@
   gap: 4px;
   padding: 1px 8px 1px 2px;
   border-radius: 999px;
-  background: rgba(5, 8, 26, 0.75);
+  background: rgba(5, 8, 26, 0.9);
   border: 2px solid rgba(140, 160, 255, 0.3);
   animation: cg-chip-in 380ms var(--ease) calc(var(--ri) * 40ms + var(--k) * 70ms - var(--skew, 0ms)) both;
 }
@@ -238,6 +238,7 @@
   outline-offset: 1px;
 }
 .cgchip__n {
+  color: var(--text);
   font-family: var(--font-display);
   font-weight: 800;
   font-size: var(--fs-13);
@@ -279,7 +280,7 @@
   animation: cg-av-dim 520ms ease-out calc(1700ms - var(--skew, 0ms)) both;
 }
 .cgchip[data-status="crashed"] .cgchip__n {
-  color: #b4bcea;
+  color: #d3d9f7;
 }
 @keyframes cg-chip-in {
   from {
