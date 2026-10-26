@@ -8,6 +8,23 @@ dosyaları kontrol eder, sıkıştırır (WebP), adlandırır ve oyunlara yerle�
 
 ---
 
+## Görsel üreten araca (ChatGPT) talimat — önce bunu oku
+
+1. **Erişim:** Dosyalar sahibin VDS sunucusunda. Sunucuya **`dgmcraft_agent_root` SSH bağlantısıyla** bağlan.
+   Bütün çalışma `/srv/glix/gorsel/` klasöründe yapılır.
+2. **Okuma:** Önce bu belgeyi (`/srv/glix/gorsel/OKU-BENI.md`) baştan sona oku. Referans görseller
+   `/srv/glix/gorsel/referans/` altında: `avatarlar/` (karakter stili), `ekranlar/` (oyunların bugünkü ekranları),
+   `secilen/` (onaylanan görseller — varsa her üretimde referans olarak kullan).
+3. **Yazma:** Ürettiğin görselleri yalnız `/srv/glix/gorsel/gelen/asama-<N>/` klasörüne kaydet (dosya adı tablodaki
+   numara + ad, ör. `1.2-kadeh-v2.png`). Aşama bitince aynı klasörde boş bir `TAMAM` dosyası oluştur.
+4. **Sınırlar:** `/srv/glix/gorsel/gelen/` dışında hiçbir dosyayı silme, değiştirme veya oluşturma. Sunucudaki diğer
+   klasörlere, servislere, Docker kapsayıcılarına, `/opt/dgmcraft` ve `/srv/glix/` altındaki diğer dizinlere dokunma;
+   paket kurma, servis yeniden başlatma yapma. Yalnız okuma (referanslar) ve `gelen/` altına yazma.
+5. **Bir aşamayı bitirince dur;** sahip ve yönetici seçimi yapıp `referans/secilen/` klasörünü güncelleyince sonraki
+   aşamaya geç.
+
+---
+
 ## 0. Ortak kurallar (her görselde geçerli)
 
 ### Stil referansı
@@ -28,7 +45,7 @@ blurry, low detail, cluttered composition
 ```
 
 ### Araç: ChatGPT Images 2.5 — kullanım notları
-- **Referans görsel ver:** her istekte ilgili referansı ekle (avatar büstü, `referans/secilen/` altındaki onaylı
+- **Referans görsel ver:** her istekte ilgili referansı (VDS'ten okuyarak) ekle (avatar büstü, `referans/secilen/` altındaki onaylı
   görseller). "Same style as the attached reference" cümlesi tarifin başına konur. Karakter tutarlılığı için en önemli adım.
 - **Doğal cümleyle tarif:** bu modeller etiket listesinden çok açıklayıcı cümleleri iyi izler; tablodaki tarifler bu
   yüzden cümle biçiminde. Stil öneki + tarif + yasaklar tek paragraf hâlinde verilebilir.
