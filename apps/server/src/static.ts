@@ -48,7 +48,15 @@ async function isFile(path: string): Promise<boolean> {
   }
 }
 
-function cacheControl(urlPath: string): string {
+/** Aynı adla yenilenebilen görsel klasörleri (istemcideki `glix-art` deseniyle aynı). */
+const ART_DIR = /^\/assets\/(?:worlds|cards|briefing|props|avatars|mascot|badges|fx|brand)\//;
+
+/**
+ * Derleme çıktısı adında özet taşıdığı için değişmezdir. Görseller aynı adla yenilenebilir: tarayıcı
+ * önbelleği kısa tutulur; kalıcı saklama servis çalışanının (`glix-art`) ve içerik havuzunun işidir.
+ */
+export function cacheControl(urlPath: string): string {
+  if (ART_DIR.test(urlPath)) return "public, max-age=300";
   if (urlPath.startsWith("/assets/")) return "public, max-age=31536000, immutable";
   return "no-cache";
 }

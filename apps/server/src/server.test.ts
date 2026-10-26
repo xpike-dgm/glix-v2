@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
 import { type RunningServer, startServer } from "./server.js";
+import { cacheControl } from "./static.js";
 
 let running: RunningServer;
 let restricted: RunningServer;
@@ -80,6 +81,12 @@ describe("http", () => {
     const res = await fetch(`http://${base}/assets/app.js`);
     expect(res.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
     expect(res.headers.get("content-type")).toContain("javascript");
+  });
+  it("görseller aynı adla yenilenebilir: değişmez önbellek yalnız özetli derleme dosyalarında", () => {
+    expect(cacheControl("/assets/app-Ab12Cd34.js")).toBe("public, max-age=31536000, immutable");
+    expect(cacheControl("/assets/chunks/Lobby-Ab12Cd34.js")).toBe("public, max-age=31536000, immutable");
+    expect(cacheControl("/assets/brand/logo.webp")).toBe("public, max-age=300");
+    expect(cacheControl("/assets/worlds/kor-bomba-portrait.webp")).toBe("public, max-age=300");
   });
   it("olmayan dosya 404, yol aşımı engellenir", async () => {
     expect((await fetch(`http://${base}/missing.png`)).status).toBe(404);
