@@ -1,4 +1,5 @@
 import { createEffect, For, on } from "solid-js";
+import { propSrc } from "../../ui/props.js";
 
 export interface ArcadeFx {
   kind: "match" | "solo";
@@ -18,7 +19,7 @@ interface Props {
   onUp?: () => void;
 }
 
-/** CSS katmanlarından kurulu arcade butonu: metal halka, iç parlama, gömülen kırmızı kubbe. */
+/** Arcade butonu: normal ve basılı görsel üst üste; etiket ve parlama kubbenin üstünde. */
 export function ArcadeButton(props: Props) {
   let root: HTMLDivElement | undefined;
   let flash: HTMLDivElement | undefined;
@@ -78,13 +79,25 @@ export function ArcadeButton(props: Props) {
         tabIndex={props.demo ? -1 : 0}
       >
         <span class="arcade__housing">
-          <span class="arcade__well">
-            <span class="arcade__side" />
-            <span class="arcade__cap">
-              <span class="arcade__gloss" />
-              <span class="arcade__flash" ref={flash} />
-              <span class="arcade__label">{props.label ?? ""}</span>
-            </span>
+          <img
+            class="arcade__img arcade__img--up"
+            src={propSrc("genel/arcade-dugme")}
+            alt=""
+            draggable={false}
+            width="384"
+            height="384"
+          />
+          <img
+            class="arcade__img arcade__img--down"
+            src={propSrc("genel/arcade-dugme-basili")}
+            alt=""
+            draggable={false}
+            width="384"
+            height="384"
+          />
+          <span class="arcade__cap">
+            <span class="arcade__flash" ref={flash} />
+            <span class="arcade__label">{props.label ?? ""}</span>
           </span>
         </span>
       </button>
