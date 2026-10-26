@@ -1,4 +1,4 @@
-# Aşama 2 — Karakterler (48 görsel)
+# Aşama 2 — Karakterler (47 görsel)
 
 Önce `/srv/glix/gorsel/OKU-BENI.md` içindeki "Görsel üreten araca talimat" ve "Ortak kurallar" bölümlerini uygula.
 Stil kilitlendi: **her üretimde** `referans/secilen/` altındaki ilgili görseli referans olarak ver.
@@ -27,8 +27,8 @@ half-body, transparent background, no text."
 Karakterler ve dosya adları (`2.1-<karakter>-<ek>.png`):
 p1-cyan (ok), p2-magenta (kalp), p3-amber (şimşek), p4-lime (çubuklar), p5-violet (dalga), p6-orange (uyarı üçgeni),
 p7-emerald (elmas), p8-cobalt (artı).
-Örnek: `2.1-p3-amber-shock.png`. Not: `2.1-p1-cyan-happy.png` için seçilen stil görselini yeniden üretme, kopyalamak yeterli
-değil — yönetici onu doğrudan kullanır; bu yüzden p1-cyan için yalnız `idle`, `shock`, `out` üret (toplam 31 görsel).
+Örnek: `2.1-p3-amber-shock.png`. p1-cyan `happy` zaten var (seçilen stil görseli); p1-cyan için yalnız `idle`, `shock`,
+`out` üret. Toplam 31 görsel.
 
 ## 2.2 Maskot pozları (6 görsel)
 Referans: `referans/secilen/stil-maskot.png`. Tarif: "The same robot mascot as the reference (same body, colors,
