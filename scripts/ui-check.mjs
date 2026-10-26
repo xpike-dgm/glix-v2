@@ -45,6 +45,7 @@ const SCREENS = [
   { name: "join", q: "mock=join" },
   { name: "notfound", q: "mock=notfound" },
   { name: "reconnect", q: "mock=reconnect" },
+  { name: "update-required", q: "mock=update-required", settle: 900 },
   { name: "lobby-solo", q: "mock=lobby&n=1", settle: 900 },
   {
     name: "lobby-solo-qr",

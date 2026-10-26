@@ -580,30 +580,14 @@
   outline: none;
 }
 
-/* ---- PWA: güncelleme bildirimi, kurulum ipucu, çevrimdışı durumu ---- */
-.update {
+/* ---- PWA: kurulum ipucu, çevrimdışı durumu, zorunlu güncelleme ---- */
+.update-required {
   position: fixed;
-  top: max(64px, calc(var(--safe-top) + 52px));
-  left: 0;
-  right: 0;
-  margin: 0 auto;
-  width: fit-content;
-  max-width: calc(100% - 32px);
-  z-index: 95;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 4px 4px 18px;
-  border-radius: 999px;
-  background: var(--bg-2);
-  border: 1px solid rgba(46, 242, 255, 0.5);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-  font-size: var(--fs-15);
-  font-weight: 600;
-  white-space: nowrap;
-  animation: toast-in var(--t-mid) var(--ease) both;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg-0);
+  overflow-y: auto;
 }
-.update__btn,
 .install__btn {
   min-width: 48px;
   min-height: 48px;

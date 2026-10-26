@@ -578,6 +578,51 @@ async function main() {
       log("gizli→görünür: ölü soket yoklaması, anında yeniden bağlanma ve oda dönüşü tamam");
     }
 
+    // 10c) Uyumsuz sürüm: `welcome` karesindeki protokol değiştirilir; "Güncelleme gerekli" ekranı çıkar,
+    // odaya girilemez ve sunucuya oda kurma/katılma isteği gitmez.
+    {
+      const ctxE = await mk();
+      const E = await ctxE.newPage();
+      watch("E", E);
+      const sentTypes = [];
+      await E.routeWebSocket(/\/ws$/, (route) => {
+        const server = route.connectToServer();
+        route.onMessage((m) => {
+          try {
+            sentTypes.push(JSON.parse(String(m)).type);
+          } catch {
+            // yok say
+          }
+          server.send(m);
+        });
+        server.onMessage((m) => {
+          try {
+            const msg = JSON.parse(String(m));
+            if (msg.type === "welcome") {
+              route.send(JSON.stringify({ ...msg, protocolVersion: msg.protocolVersion + 1 }));
+              return;
+            }
+          } catch {
+            // yok say
+          }
+          route.send(m);
+        });
+      });
+      await E.goto("/");
+      await E.getByRole("heading", { name: "Güncelleme gerekli" }).waitFor(OPT);
+      await E.getByRole("button", { name: "Güncelle" }).waitFor(OPT);
+      assert((await btn(E, /oda kur/i).count()) === 0, "uyumsuz sürümde ODA KUR görünmemeli");
+      assert(!(await E.locator(".roomcode").count()), "uyumsuz sürümde lobiye girilmemeli");
+      await shot(E, "16b-update-required");
+      await sleep(800);
+      assert(
+        !sentTypes.some((t) => t === "createRoom" || t === "joinRoom" || t === "resume"),
+        `uyumsuz sürüm oda isteği gönderdi: ${sentTypes.join(",")}`,
+      );
+      await ctxE.close();
+      log("protokol uyumsuzluğu: Güncelleme gerekli ekranı, oda isteği yok");
+    }
+
     // 11) Sunucu güncellenir (SIGTERM): drain -> /health 503, maç sürer; süre dolunca 1012 ile kapanır,
     // istemci yeniden bağlanır, oda bellekte olmadığı için "Oyun güncellendi" der ve yeni oda kurulabilir.
     const exited = new Promise((r) => server.child.once("exit", r));

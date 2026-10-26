@@ -251,27 +251,29 @@ async function main() {
     );
     log("bağlantı dönünce ana sayfa etkin");
 
-    // 8) Güncelleme akışı: yeni sw.js yayınlanınca bildirim çıkar, Yenile yeni sürümü etkinleştirir
+    // 8) Güncelleme akışı: yeni sw.js yayınlanınca ana sayfada (güvenli an) sormadan uygulanır, sayfa
+    // yenilenir ve bir kez "Yeni sürüm yüklendi" bildirimi çıkar.
     await page.goto(base, { waitUntil: "load" });
     await page.locator(".wordmark").waitFor(OPT);
-    assert((await page.locator(".update").count()) === 0, "güncelleme yokken bildirim görünüyor");
+    assert((await page.locator(".toast").count()) === 0, "güncelleme yokken bildirim görünüyor");
     appendFileSync(join(dir, "sw.js"), `\n// yeni sürüm ${Date.now()}\n`);
-    await page.evaluate(async () => {
-      const reg = await navigator.serviceWorker.getRegistration();
-      await reg?.update();
-    });
-    const toast = page.locator(".update");
-    await toast.waitFor(OPT);
-    assert((await toast.innerText()).includes("Yeni sürüm hazır"), "güncelleme metni");
-    await page.screenshot({ path: join(SHOTS, "update-toast.png") });
     await Promise.all([
       page.waitForEvent("load", OPT),
-      toast.getByRole("button", { name: "Yenile" }).click(),
+      page.evaluate(async () => {
+        const reg = await navigator.serviceWorker.getRegistration();
+        await reg?.update();
+      }),
     ]);
     await page.locator(".wordmark").waitFor(OPT);
+    await page.getByText("Yeni sürüm yüklendi").waitFor(OPT);
+    await page.screenshot({ path: join(SHOTS, "update-toast.png") });
     assert(await controlled(page), "yenileme sonrası denetim yok");
-    assert((await page.locator(".update").count()) === 0, "yenileme sonrası bildirim kalmamalı");
-    log("güncelleme bildirimi ve yenileme çalışıyor");
+    await page.getByText("Yeni sürüm yüklendi").waitFor({ state: "hidden", timeout: 10_000 });
+    await page.reload({ waitUntil: "load" });
+    await page.locator(".wordmark").waitFor(OPT);
+    await sleep(500);
+    assert((await page.getByText("Yeni sürüm yüklendi").count()) === 0, "bildirim yalnız bir kez çıkmalı");
+    log("güvenli anda sessiz güncelleme, tek seferlik bildirim çalışıyor");
 
     assert(errors.length === 0, `beklenmeyen hatalar:\n${errors.join("\n")}`);
     log("TAMAM");

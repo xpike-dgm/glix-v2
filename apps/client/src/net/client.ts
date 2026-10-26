@@ -1,4 +1,6 @@
 import { APP_VERSION, type ClientMessage, type ContentTone, type RoomSnapshot } from "@glix/engine";
+import { noteServerRestart } from "../pwa/pwa.js";
+import { CLIENT_PROTOCOL_VERSION, isProtocolMismatch } from "../pwa/updatePolicy.js";
 import { installPerfObservers, perf, trackPerf } from "../telemetry/perf.js";
 import { resolveWsUrl } from "../wsUrl.js";
 import { offsetFromPong } from "./clock.js";
@@ -53,6 +55,8 @@ let hiddenAt: number | null = null;
 let probeTimer: ReturnType<typeof setTimeout> | undefined;
 /** Maç sırasında yeniden bağlanıldı: ilk taze oda görünümü gelince "Tekrar bağlandın" gösterilir. */
 let announceReturn = false;
+/** İlk `welcome`deki sunucu sürümü; sonraki bağlanmada değiştiyse deploy olmuştur. */
+let knownServerVersion: string | null = null;
 let mockSender: ((msg: ClientMessage) => void) | null = null;
 
 /** Geliştirme önizlemesi: mesajlar sahte sunucuya gider. */
@@ -100,6 +104,17 @@ function onMessage(raw: string): void {
   if (!msg) return;
   switch (msg.type) {
     case "welcome": {
+      const redeployed =
+        restartedByServer || (knownServerVersion !== null && knownServerVersion !== msg.serverVersion);
+      knownServerVersion = msg.serverVersion;
+      setState("serverProtocol", msg.protocolVersion);
+      if (isProtocolMismatch(msg.protocolVersion, CLIENT_PROTOCOL_VERSION)) {
+        // Sunucu başka bir protokol konuşuyor: oda kurma/katılma/devam yok; "Güncelleme gerekli" ekranı çıkar.
+        blockForUpdate();
+        noteServerRestart();
+        break;
+      }
+      if (redeployed) noteServerRestart();
       attempt = 0;
       announceReturn = state.everOpen && reconnectNotice(state.snapshot) !== null;
       syncReconnected();
@@ -156,6 +171,23 @@ function onMessage(raw: string): void {
     case "error":
       handleError(msg.code, msg.message);
       break;
+  }
+}
+
+/** Uyumsuz sürüm: bağlantıyı bırakır, bekleyen isteği atar, yeniden bağlanmayı durdurur. */
+function blockForUpdate(): void {
+  stopped = true;
+  pending = null;
+  clearTimeout(reconnectTimer);
+  clearTimeout(probeTimer);
+  clearInterval(pingTimer);
+  const old = ws;
+  ws = null;
+  setState({ conn: "open", busy: false });
+  try {
+    old?.close();
+  } catch {
+    // zaten kapalı
   }
 }
 
@@ -306,6 +338,7 @@ export function startNet(): () => void {
 
 /** Bağlantı hazırsa gönderir; değilse açılınca gönderilmek üzere bekletir. */
 function intent(msg: ClientMessage): void {
+  if (isProtocolMismatch(state.serverProtocol, CLIENT_PROTOCOL_VERSION)) return;
   setState("busy", true);
   pending = msg;
   if (state.conn === "idle" && !ws) {
