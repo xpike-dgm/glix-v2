@@ -67,6 +67,12 @@ const SCREENS = [
     act: async (p) => p.locator(".seat--self").click(),
   },
   {
+    name: "lobby-picker-solo",
+    q: "mock=lobby&n=1",
+    settle: 600,
+    act: async (p) => p.getByRole("button", { name: "Karakterini değiştir" }).click(),
+  },
+  {
     name: "lobby-picker-8",
     q: "mock=lobby&n=8",
     settle: 600,
@@ -87,7 +93,7 @@ const SCREENS = [
   {
     name: "lobby-kick",
     q: "mock=lobby",
-    act: async (p) => p.locator(".seat:not(:disabled)").first().click(),
+    act: async (p) => p.locator(".seat:not(:disabled):not(.seat--self):not(.seat--empty)").first().click(),
   },
   { name: "briefing", q: "mock=briefing" },
   { name: "briefing-ready", q: "mock=briefing-ready" },

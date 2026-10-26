@@ -237,6 +237,16 @@ export function Lobby(props: { snap: RoomSnapshot }) {
             {snap().code}
           </button>
         </div>
+        <Show when={solo() && me()}>
+          <button
+            type="button"
+            class="solo__me"
+            aria-label="Karakterini değiştir"
+            onClick={() => setPickOpen(true)}
+          >
+            <Avatar index={myAvatar()} size={56} host connected />
+          </button>
+        </Show>
         <Show when={!solo()}>
           <div class="lobby__invite">
             <button

@@ -146,7 +146,7 @@ async function lobbyCode(page) {
 }
 
 async function seatsCount(page) {
-  return page.locator("button.seat").count();
+  return page.locator("button.seat:not(.seat--empty)").count();
 }
 
 async function myScore(page) {
@@ -248,7 +248,11 @@ async function main() {
     await btn(B, /^katıl$/i).click();
     await B.locator(".roomcode").waitFor(OPT);
     assert((await lobbyCode(B)) === code, "B farklı odada");
-    await A.waitForFunction(() => document.querySelectorAll("button.seat").length === 2, null, OPT);
+    await A.waitForFunction(
+      () => document.querySelectorAll("button.seat:not(.seat--empty)").length === 2,
+      null,
+      OPT,
+    );
     await shot(A, "04-lobby-two");
 
     // 3) C: ?oda= bağlantısı
@@ -259,7 +263,11 @@ async function main() {
     await btn(C, /^katıl$/i).click();
     await setNick(C, "Cem");
     await C.locator(".roomcode").waitFor(OPT);
-    await A.waitForFunction(() => document.querySelectorAll("button.seat").length === 3, null, OPT);
+    await A.waitForFunction(
+      () => document.querySelectorAll("button.seat:not(.seat--empty)").length === 3,
+      null,
+      OPT,
+    );
     await shot(A, "05-lobby-three");
     assert(!(await btn(C, /^başlat$/i).count()), "host olmayan BAŞLAT görmemeli");
 
@@ -328,14 +336,18 @@ async function main() {
     await A.reload();
     await A.locator(".roomcode").waitFor(OPT);
     assert((await lobbyCode(A)) === code, "yenilemeden sonra oda değişti");
-    await A.waitForFunction(() => document.querySelectorAll("button.seat").length === 3, null, OPT);
+    await A.waitForFunction(
+      () => document.querySelectorAll("button.seat:not(.seat--empty)").length === 3,
+      null,
+      OPT,
+    );
     assert(!(await btn(A, /oda kur/i).count()), "yenilemeden sonra ana sayfa görünmemeli");
     await btn(A, /^başlat$/i).waitFor(OPT);
     assert(!(await btn(B, /^başlat$/i).count()), "B host olmamalı");
     log("lobide host yenileme: oda ve host korunuyor");
 
     // 5) A, C'yi çıkarır
-    await A.locator("button.seat", { hasText: "Cem" }).click();
+    await A.locator("button.seat:not(.seat--empty)", { hasText: "Cem" }).click();
     const kickSheet = A.getByRole("dialog");
     await kickSheet.waitFor(OPT);
     await shot(A, "06-kick-sheet");
@@ -343,11 +355,19 @@ async function main() {
     await btn(C, /oda kur/i).waitFor(OPT);
     await C.getByText("Odadan çıkarıldın").waitFor(OPT);
     await shot(C, "07-c-kicked");
-    await A.waitForFunction(() => document.querySelectorAll("button.seat").length === 2, null, OPT);
+    await A.waitForFunction(
+      () => document.querySelectorAll("button.seat:not(.seat--empty)").length === 2,
+      null,
+      OPT,
+    );
     // C yeniden katılır (takma ad hatırlanıyor)
     await joinViaUi(C, code, null);
     await C.locator(".roomcode").waitFor(OPT);
-    await A.waitForFunction(() => document.querySelectorAll("button.seat").length === 3, null, OPT);
+    await A.waitForFunction(
+      () => document.querySelectorAll("button.seat:not(.seat--empty)").length === 3,
+      null,
+      OPT,
+    );
     assert((await seatsCount(B)) === 3, "B üç oyuncu görmeli");
     log("çıkarma ve yeniden katılma tamam");
 
@@ -459,7 +479,7 @@ async function main() {
     for (const p of [A, B2, C]) {
       await p.locator(".roomcode").waitFor(OPT);
       assert((await lobbyCode(p)) === code, "lobiye aynı odada dönülmeli");
-      assert((await p.locator("button.seat").count()) === 3, "lobide üç oyuncu olmalı");
+      assert((await p.locator("button.seat:not(.seat--empty)").count()) === 3, "lobide üç oyuncu olmalı");
     }
     await shot(A, "16-lobby-after");
     // Skorlar sıfırlandı: sonraki maçın başında herkes 0

@@ -1901,3 +1901,16 @@
     display: none;
   }
 }
+.solo__me {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 56px;
+  min-height: 56px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  transition: transform 80ms var(--ease);
+}
+.solo__me:active {
+  transform: scale(0.95);
+}
