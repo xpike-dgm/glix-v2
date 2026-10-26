@@ -19,8 +19,8 @@ GLIX'in sıfırdan yeniden yazımı. Eski sürüm: `xpike-dgm/glix` (dokunulmaz,
 | Sunucu | Node 22 + `ws`, sunucu tek otorite |
 | İstemci | SolidJS + PixiJS (oyun sahneleri) + Vite, PWA |
 | Kalıcı veri | SQLite (yalnız istatistik) |
-| Barındırma | VDS 212.38.88.237, Docker Compose, Caddy önünde |
-| Önizleme | `https://glix.212.38.88.237.sslip.io` |
+| Barındırma | VDS 176.96.128.247 (2026-10-26 IP değişti; eski 212.38.88.237), Docker Compose, Caddy önünde |
+| Önizleme | `https://glix.dgmcraft.online` |
 
 ## Mimari ilkesi
 

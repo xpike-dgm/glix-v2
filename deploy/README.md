@@ -1,6 +1,6 @@
 # Dağıtım
 
-Önizleme: https://glix.212.38.88.237.sslip.io (Caddy -> 127.0.0.1:3900 -> Docker).
+Önizleme: https://glix.dgmcraft.online (Caddy -> 127.0.0.1:3900 -> Docker).
 
 ## Akış
 
