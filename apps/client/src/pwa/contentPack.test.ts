@@ -9,6 +9,8 @@ import {
   type PackStore,
   parseManifest,
   pendingWork,
+  pruneChanged,
+  pruneDiff,
   runPack,
 } from "./contentPack.js";
 
@@ -22,6 +24,7 @@ const manifestOf = (...files: PackFile[]): PackManifest => ({ version: "v1", fil
 function fakeStore(initial: Record<string, string> = {}, index: PackIndex = { ...initial }) {
   const cache = new Map(Object.keys(initial).map((p) => [p, "eski"]));
   let saved: PackIndex = { ...index };
+  let seen: PackIndex | null = null;
   const log: string[] = [];
   const store: PackStore = {
     keys: async () => [...cache.keys()],
@@ -37,8 +40,21 @@ function fakeStore(initial: Record<string, string> = {}, index: PackIndex = { ..
     writeIndex: async (i) => {
       saved = { ...i };
     },
+    readSeen: async () => (seen ? { ...seen } : null),
+    writeSeen: async (s) => {
+      seen = { ...s };
+    },
   };
-  return { store, cache, log, index: () => saved };
+  return {
+    store,
+    cache,
+    log,
+    index: () => saved,
+    seen: () => seen,
+    setSeen: (s: PackIndex | null) => {
+      seen = s;
+    },
+  };
 }
 
 const image = (body = "x"): Response => new Response(body, { headers: { "content-type": "image/webp" } });
@@ -269,5 +285,50 @@ describe("runPack", () => {
       },
     });
     expect(peak).toBe(4);
+  });
+});
+
+describe("pruneDiff / pruneChanged", () => {
+  const a = file("a", 1);
+  const b = file("b", 1);
+  const c = file("c", 1);
+
+  it("özeti değişen ve listeden düşen yolları verir; yenileri ve aynıları vermez", () => {
+    const seen = { [a.path]: a.hash, [b.path]: "eski", "/assets/worlds/gitti.webp": "x" };
+    expect(pruneDiff(manifestOf(a, b, c), seen).sort()).toEqual([b.path, "/assets/worlds/gitti.webp"].sort());
+  });
+
+  it("ilk çalıştırmada (kayıt ve dizin yok) hiçbir şey silmez, yalnız kaydeder", async () => {
+    const fx = fakeStore({ [a.path]: "x" }, {});
+    const dropped = await pruneChanged(manifestOf(a, b), fx.store);
+    expect(dropped).toEqual([]);
+    expect(fx.cache.has(a.path)).toBe(true);
+    expect(fx.seen()).toEqual({ [a.path]: a.hash, [b.path]: b.hash });
+  });
+
+  it("değişen kaydı önbellekten ve dizinden siler, başkalarına dokunmaz, indirme yapmaz", async () => {
+    const fx = fakeStore({ [a.path]: a.hash, [b.path]: b.hash });
+    fx.setSeen({ [a.path]: a.hash, [b.path]: b.hash });
+    const changed = { ...b, hash: "yeni" };
+    const dropped = await pruneChanged(manifestOf(a, changed), fx.store);
+    expect(dropped).toEqual([b.path]);
+    expect(fx.cache.has(b.path)).toBe(false);
+    expect(fx.cache.has(a.path)).toBe(true);
+    expect(fx.index()[b.path]).toBeUndefined();
+    expect(fx.log).toEqual([`delete ${b.path}`]);
+    expect(fx.seen()?.[b.path]).toBe("yeni");
+  });
+
+  it("kayıt yokken havuz dizini varsa onu kullanır", async () => {
+    const fx = fakeStore({ [a.path]: a.hash, [b.path]: b.hash });
+    const dropped = await pruneChanged(manifestOf(a, { ...b, hash: "yeni" }), fx.store);
+    expect(dropped).toEqual([b.path]);
+  });
+
+  it("listeden düşen kaydı siler; ikinci çalıştırma bir şey silmez", async () => {
+    const fx = fakeStore({ [a.path]: a.hash, [c.path]: c.hash });
+    fx.setSeen({ [a.path]: a.hash, [c.path]: c.hash });
+    expect(await pruneChanged(manifestOf(a), fx.store)).toEqual([c.path]);
+    expect(await pruneChanged(manifestOf(a), fx.store)).toEqual([]);
   });
 });

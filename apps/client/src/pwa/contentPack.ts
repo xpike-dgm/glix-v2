@@ -58,6 +58,9 @@ export interface PackStore {
   delete(path: string): Promise<void>;
   readIndex(): Promise<PackIndex>;
   writeIndex(index: PackIndex): Promise<void>;
+  /** Son görülen bildirim (yol → özet); hiç yazılmadıysa null. Havuz kullanmayan kullanıcılar için de tutulur. */
+  readSeen(): Promise<PackIndex | null>;
+  writeSeen(seen: PackIndex): Promise<void>;
 }
 
 export interface RunOptions {
@@ -72,6 +75,7 @@ export interface RunOptions {
 export const PACK_CACHE = "glix-art";
 export const MANIFEST_URL = "/asset-manifest.json";
 const INDEX_PATH = "/__pack/index.json";
+const SEEN_PATH = "/__pack/seen.json";
 const ATTEMPTS = 2;
 const INDEX_FLUSH_EVERY = 10;
 
@@ -238,7 +242,9 @@ export function cacheStore(name: string = PACK_CACHE): PackStore {
   return {
     async keys() {
       const cache = await open();
-      return (await cache.keys()).map((r) => new URL(r.url).pathname).filter((p) => p !== INDEX_PATH);
+      return (await cache.keys())
+        .map((r) => new URL(r.url).pathname)
+        .filter((p) => p !== INDEX_PATH && p !== SEEN_PATH);
     },
     async put(path, res) {
       await (await open()).put(path, res);
@@ -260,7 +266,50 @@ export function cacheStore(name: string = PACK_CACHE): PackStore {
         new Response(JSON.stringify(index), { headers: { "content-type": "application/json" } }),
       );
     },
+    async readSeen() {
+      try {
+        const hit = await (await open()).match(SEEN_PATH);
+        return hit ? parseIndex(await hit.json()) : null;
+      } catch {
+        return null;
+      }
+    },
+    async writeSeen(seen) {
+      await (await open()).put(
+        SEEN_PATH,
+        new Response(JSON.stringify(seen), { headers: { "content-type": "application/json" } }),
+      );
+    },
   };
+}
+
+/**
+ * Önceki bildirimde görülüp artık özeti değişen ya da listeden düşen yollar. Önbellekte eski görsel kalmasın diye
+ * silinir (indirme yok; bir sonraki kullanımda çalışma anı taze getirir).
+ */
+export function pruneDiff(manifest: PackManifest, seen: PackIndex): string[] {
+  const now = new Map(manifest.files.map((f) => [f.path, f.hash]));
+  return Object.entries(seen)
+    .filter(([path, hash]) => now.get(path) !== hash)
+    .map(([path]) => path);
+}
+
+/**
+ * Havuz kullanmayan kullanıcıda da eski görsel kalmasın: son görülen bildirimle karşılaştırır, değişen/düşen
+ * kayıtları siler, yeni bildirimi "son görülen" yazar. İlk çalıştırmada (kayıt yok) havuz dizini varsa o,
+ * yoksa hiçbir şey silinmez: mevcut kayıtlar bir kez güvenilir sayılır. Silinen yollar döner.
+ */
+export async function pruneChanged(manifest: PackManifest, store: PackStore): Promise<string[]> {
+  const index = await store.readIndex();
+  const seen = (await store.readSeen()) ?? (Object.keys(index).length > 0 ? index : null);
+  const dropped = seen ? pruneDiff(manifest, seen) : [];
+  for (const path of dropped) {
+    await store.delete(path);
+    delete index[path];
+  }
+  if (dropped.length > 0) await store.writeIndex(index);
+  await store.writeSeen(Object.fromEntries(manifest.files.map((f) => [f.path, f.hash])));
+  return dropped;
 }
 
 /** Bildirimi ağdan okur (her zaman taze); çevrimdışı ya da bozuksa null. */

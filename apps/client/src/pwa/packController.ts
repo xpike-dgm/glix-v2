@@ -11,6 +11,7 @@ import {
   type PackProgress,
   type PackResult,
   pendingFor,
+  pruneChanged,
   requestPersistence,
   runPack,
 } from "./contentPack.js";
@@ -25,6 +26,7 @@ import {
   readNetwork,
 } from "./packPolicy.js";
 import { isOnline } from "./pwa.js";
+import { isSafeScreen } from "./updatePolicy.js";
 
 /**
  * İçerik paketi denetleyicisi: ne zaman, hangi kısıtla indirileceğine karar verir ve ilerlemeyi arayüze verir.
@@ -68,6 +70,8 @@ let startTimer: ReturnType<typeof setTimeout> | undefined;
 let retryTimer: ReturnType<typeof setTimeout> | undefined;
 let backgroundStarted = false;
 let failures = 0;
+/** Bildirim okundu, eski görsel temizliği güvenli ekranı bekliyor. */
+let prunePending = false;
 const MAX_AUTO_FAILURES = 3;
 
 const complete = (): void => {
@@ -97,6 +101,7 @@ async function execute(mode: Want): Promise<PackResult | null> {
   setRunning(true);
   if (screenOpen() && phase() !== "ask") setPhase("downloading");
   void requestPersistence();
+  await prune();
   let result: PackResult | null = null;
   try {
     result = await runPack(manifest, cacheStore(), {
@@ -140,8 +145,20 @@ function start(mode: Want): Promise<PackResult | null> {
   return runPromise;
 }
 
+/** Değişen/düşen görsellerin eski kayıtlarını siler (indirme yok); yalnız güvenli ekranda, bir kez. */
+async function prune(): Promise<void> {
+  if (!prunePending || !manifest || !isSafeScreen(screen)) return;
+  prunePending = false;
+  try {
+    if (await pruneChanged(manifest, cacheStore()).then((d) => d.length > 0)) setStorageEpoch((n) => n + 1);
+  } catch {
+    // önemsiz
+  }
+}
+
 /** Durum her değiştiğinde (ekran, ağ, ayar, çevrimiçi) çağrılır: çalışanı durdurur ya da başlatır. */
 export function evaluate(): void {
+  void prune();
   const ok = manifest !== null && want !== "none" && gateOpen();
   if (controller) {
     // Yanlış kipte çalışan (arka plan, kullanıcı "şimdi indir" dedi) ya da artık izin olmayan indirme durur;
@@ -190,6 +207,8 @@ export async function initContentPack(ctx: LaunchContext): Promise<void> {
   try {
     manifest = await loadManifest();
     if (!manifest) return complete();
+    prunePending = true;
+    await prune();
     const todo = await pendingFor(manifest);
     if (todo.files === 0) {
       writeStored(KEYS.packState, manifest.version);
@@ -261,7 +280,10 @@ export function retryPack(): void {
 
 /** Ayarlar: "Tüm içeriği indir". Biten çalıştırmanın sonucunu verir (bildirim alınamadıysa null). */
 export async function downloadAll(): Promise<PackResult | null> {
-  if (!manifest) manifest = await loadManifest();
+  if (!manifest) {
+    manifest = await loadManifest();
+    prunePending = manifest !== null;
+  }
   if (!manifest) return null;
   blockedUntil = 0;
   failures = 0;

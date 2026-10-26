@@ -15,6 +15,7 @@ beforeAll(async () => {
   writeFileSync(join(dir, "index.html"), "<!doctype html><title>test</title>");
   mkdirSync(join(dir, "assets"));
   writeFileSync(join(dir, "assets", "app.js"), "console.log(1)");
+  writeFileSync(join(dir, "asset-manifest.json"), "{}");
   const common = { host: "127.0.0.1", port: 0, clientDir: dir, revision: "testrev" };
   running = await startServer({ ...common, allowedOrigins: null });
   restricted = await startServer({ ...common, allowedOrigins: ["https://ok.example"] });
@@ -69,6 +70,11 @@ describe("http", () => {
       expect(res.headers.get("cache-control")).toBe("no-cache");
       expect(await res.text()).toContain("<title>test</title>");
     }
+  });
+  it("varlık bildirimi her seferinde doğrulanır", async () => {
+    const res = await fetch(`http://${base}/asset-manifest.json`);
+    expect(res.headers.get("cache-control")).toBe("no-cache");
+    expect(res.headers.get("content-type")).toContain("json");
   });
   it("assets değişmez önbellek", async () => {
     const res = await fetch(`http://${base}/assets/app.js`);

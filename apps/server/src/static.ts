@@ -101,7 +101,9 @@ export async function serveStatic(
   }
 
   const info = await stat(file);
-  const isShell = servedPath.endsWith(".html") || servedPath === "/sw.js";
+  // Kabuk dosyaları ve varlık bildirimi her seferinde doğrulanır (bildirim yeni sürümü fark etmenin tek yolu).
+  const isShell =
+    servedPath.endsWith(".html") || servedPath === "/sw.js" || servedPath === "/asset-manifest.json";
   const headers: Record<string, string | number> = {
     "Content-Type": TYPES[extname(file).toLowerCase()] ?? "application/octet-stream",
     "Content-Length": info.size,

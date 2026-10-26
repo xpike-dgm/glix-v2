@@ -379,7 +379,10 @@ async function main() {
     writeFileSync(join(dir, "asset-manifest.json"), JSON.stringify(manifest));
     await openSettings();
     assert((await runPack()) === 0, "yalnız silme indirme yapmamalı");
-    assert((await artKeys()).length === manifest.files.length + 1, "eski kayıt silinmedi");
+    assert(
+      (await artKeys()).filter((k) => !k.startsWith("/__pack/")).length === manifest.files.length,
+      "eski kayıt silinmedi",
+    );
     log("tek özet değişince 1 dosya indi; listeden düşen silindi");
 
     // 10) Ana ekrandan ilk açılış: "Hazırlanıyor" ekranı indirir ve ana sayfaya geçer; misafir beklemez.
@@ -407,6 +410,66 @@ async function main() {
         log("ana ekran ilk açılışı: Hazırlanıyor → indi → ana sayfa");
       }
       await c2.close();
+    }
+
+    // 11) Havuz kullanmayan (tarayıcı sekmesi) kullanıcı: özeti değişen yolun eski çalışma anı kaydı silinir,
+    // yeniden istenince ağdan taze gelir. Bildirim hiçbir önbelleğe girmez ve her seferinde doğrulanır.
+    {
+      const c3 = await browser.newContext({
+        viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+      });
+      const p3 = await c3.newPage();
+      const cacheHas = (path) =>
+        p3.evaluate(async (u) => (await (await caches.open("glix-art")).match(u)) !== undefined, path);
+      const waitFor = async (fn, what) => {
+        for (let i = 0; i < 100; i++) {
+          if (await fn()) return;
+          await sleep(100);
+        }
+        throw new Error(`BAŞARISIZ: zaman aşımı: ${what}`);
+      };
+      await p3.goto(base, { waitUntil: "load" });
+      await p3.evaluate(() => navigator.serviceWorker.ready);
+      await p3.reload({ waitUntil: "load" });
+      await p3.locator(".wordmark").waitFor(OPT);
+      await waitFor(() => cacheHas("/__pack/seen.json"), "son görülen bildirim yazılmadı");
+      assert((await p3.locator(".pack").count()) === 0, "tarayıcı sekmesinde 'Hazırlanıyor' çıkmamalı");
+      const victim = manifest.files[10];
+      const onDisk = readFileSync(join(DIST, victim.path));
+      await p3.evaluate(async (u) => {
+        await (await caches.open("glix-art")).put(
+          u,
+          new Response("ESKI", { headers: { "content-type": "image/webp" } }),
+        );
+      }, victim.path);
+      const mres2 = await fetch(`${base}/asset-manifest.json`);
+      assert(mres2.headers.get("cache-control") === "no-cache", "asset-manifest.json no-cache olmalı");
+      manifest.files[10] = { ...victim, hash: "yenilendi00000000" };
+      writeFileSync(join(dir, "asset-manifest.json"), JSON.stringify(manifest));
+      await p3.reload({ waitUntil: "load" });
+      await p3.locator(".wordmark").waitFor(OPT);
+      await waitFor(async () => !(await cacheHas(victim.path)), "eski kayıt silinmedi");
+      const fresh = await p3.evaluate(async (u) => {
+        const r = await fetch(u);
+        return { ok: r.ok, len: (await r.arrayBuffer()).byteLength };
+      }, victim.path);
+      assert(fresh.ok && fresh.len === onDisk.length, "yeniden istek ağdan taze gelmedi");
+      const seenNow = await p3.evaluate(
+        async () =>
+          (await (await (await caches.open("glix-art")).match("/__pack/seen.json"))?.json()) ?? null,
+      );
+      assert(seenNow?.[victim.path] === "yenilendi00000000", "son görülen bildirim güncellenmedi");
+      const everywhere = await p3.evaluate(async () => {
+        const urls = [];
+        for (const name of await caches.keys())
+          for (const r of await (await caches.open(name)).keys()) urls.push(r.url);
+        return urls;
+      });
+      assert(!everywhere.some((u) => /asset-manifest\.json/.test(u)), "bildirim bir önbelleğe girmiş");
+      await c3.close();
+      log("havuzsuz kullanıcı: değişen yolun eski kaydı silindi, yeniden istek ağdan taze geldi");
     }
 
     assert(errors.length === 0, `beklenmeyen hatalar:\n${errors.join("\n")}`);
