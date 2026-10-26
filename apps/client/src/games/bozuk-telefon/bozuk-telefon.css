@@ -448,9 +448,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bt__card:not([data-hidden="1"]) {
+  :root:not([data-motion="full"]) .bt__card:not([data-hidden="1"]) {
     animation: none;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .bt__card:not([data-hidden="1"]) {
+  animation: none;
 }
 
 /* alçak ekran: gösteride ızgaraya yer aç */

@@ -59,7 +59,21 @@ export function applyUpdate(): void {
   w.postMessage({ type: "SKIP_WAITING" });
 }
 
+let registration: ServiceWorkerRegistration | null = null;
+
+/** Elle güncelleme denetimi (Ayarlar). "hazir": yeni sürüm indi; "guncel": yeni sürüm yok; "yapilamadi": çevrimdışı ya da hizmet çalışanı yok. */
+export async function checkForUpdate(): Promise<"hazir" | "guncel" | "yapilamadi"> {
+  if (!registration || !navigator.onLine) return "yapilamadi";
+  try {
+    await registration.update();
+  } catch {
+    return "yapilamadi";
+  }
+  return updateWaiting() || registration.waiting !== null ? "hazir" : "guncel";
+}
+
 function track(reg: ServiceWorkerRegistration): void {
+  registration = reg;
   const consider = (w: ServiceWorker | null): void => {
     // İlk kurulumda (denetleyen çalışan yokken) "yeni sürüm" denmez.
     if (w && navigator.serviceWorker.controller) setWaitingWorker(w);

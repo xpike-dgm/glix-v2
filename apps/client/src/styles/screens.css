@@ -398,9 +398,14 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .seat--new {
+  :root:not([data-motion="full"]) .seat--new {
     animation: none;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .seat--new {
+  animation: none;
 }
 .seat {
   display: flex;
@@ -779,9 +784,14 @@
   box-shadow: 0 0 0 3px rgba(46, 242, 255, 0.22);
 }
 @media (prefers-reduced-motion: reduce) {
-  .panels__img {
+  :root:not([data-motion="full"]) .panels__img {
     transition: none;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .panels__img {
+  transition: none;
 }
 .brief__art {
   flex: 1 1 0;

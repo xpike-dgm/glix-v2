@@ -91,10 +91,16 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .kb__crate,
-  .kb__crate[data-open="1"] {
+  :root:not([data-motion="full"]) .kb__crate,
+  :root:not([data-motion="full"]) .kb__crate[data-open="1"] {
     animation: none;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .kb__crate,
+:root[data-motion="reduce"] .kb__crate[data-open="1"] {
+  animation: none;
 }
 .kb__hint {
   flex: none;

@@ -539,28 +539,54 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sc__key,
-  .sc__mean,
-  .sc__beam,
-  .sc__dot,
-  .sc__link,
-  .rrow,
-  .rrow__pts,
-  .ort-res__val,
-  .ort__pod,
-  .ortart__cap,
-  .rrow[data-tier="gold"],
-  .rrow[data-tier="blue"] {
+  :root:not([data-motion="full"]) .sc__key,
+  :root:not([data-motion="full"]) .sc__mean,
+  :root:not([data-motion="full"]) .sc__beam,
+  :root:not([data-motion="full"]) .sc__dot,
+  :root:not([data-motion="full"]) .sc__link,
+  :root:not([data-motion="full"]) .rrow,
+  :root:not([data-motion="full"]) .rrow__pts,
+  :root:not([data-motion="full"]) .ort-res__val,
+  :root:not([data-motion="full"]) .ort__pod,
+  :root:not([data-motion="full"]) .ortart__cap,
+  :root:not([data-motion="full"]) .rrow[data-tier="gold"],
+  :root:not([data-motion="full"]) .rrow[data-tier="blue"] {
     animation: none;
     opacity: 1;
     transform: none;
   }
-  .rrow[data-tier="gold"] {
+  :root:not([data-motion="full"]) .rrow[data-tier="gold"] {
     border-color: var(--gold);
     background: linear-gradient(rgba(255, 194, 59, 0.16), rgba(255, 194, 59, 0.16)), rgba(14, 20, 56, 0.92);
   }
-  .rrow[data-tier="blue"] {
+  :root:not([data-motion="full"]) .rrow[data-tier="blue"] {
     border-color: var(--blue);
     background: linear-gradient(rgba(59, 123, 255, 0.18), rgba(59, 123, 255, 0.18)), rgba(14, 20, 56, 0.92);
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .sc__key,
+:root[data-motion="reduce"] .sc__mean,
+:root[data-motion="reduce"] .sc__beam,
+:root[data-motion="reduce"] .sc__dot,
+:root[data-motion="reduce"] .sc__link,
+:root[data-motion="reduce"] .rrow,
+:root[data-motion="reduce"] .rrow__pts,
+:root[data-motion="reduce"] .ort-res__val,
+:root[data-motion="reduce"] .ort__pod,
+:root[data-motion="reduce"] .ortart__cap,
+:root[data-motion="reduce"] .rrow[data-tier="gold"],
+:root[data-motion="reduce"] .rrow[data-tier="blue"] {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+:root[data-motion="reduce"] .rrow[data-tier="gold"] {
+  border-color: var(--gold);
+  background: linear-gradient(rgba(255, 194, 59, 0.16), rgba(255, 194, 59, 0.16)), rgba(14, 20, 56, 0.92);
+}
+:root[data-motion="reduce"] .rrow[data-tier="blue"] {
+  border-color: var(--blue);
+  background: linear-gradient(rgba(59, 123, 255, 0.18), rgba(59, 123, 255, 0.18)), rgba(14, 20, 56, 0.92);
 }

@@ -150,14 +150,24 @@ html[data-pixi="1"] .stage::after {
 
 /* biome-ignore-start lint/complexity/noImportantStyles: hareketi azaltma tercihi her animasyonu ezmeli */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  :root:not([data-motion="full"]) *,
+  :root:not([data-motion="full"]) *::before,
+  :root:not([data-motion="full"]) *::after {
     animation-duration: 0.001ms !important;
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] *,
+:root[data-motion="reduce"] *::before,
+:root[data-motion="reduce"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
 }
 /* biome-ignore-end lint/complexity/noImportantStyles: aralık sonu */
 

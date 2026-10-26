@@ -247,6 +247,9 @@ export function startMock(kind: string, params: URLSearchParams): void {
     case "join":
       setState({ nav: "join", joinCode: "KX7" });
       break;
+    case "settings":
+      setState({ nav: "settings" });
+      break;
     case "notfound":
       setState({ notFoundCode: "ABCDE" });
       break;
@@ -272,5 +275,6 @@ export function startMock(kind: string, params: URLSearchParams): void {
     default:
       publish();
   }
-  if (kind === "home" || kind === "join" || kind === "notfound") setState("session", null);
+  if (kind === "home" || kind === "join" || kind === "settings" || kind === "notfound")
+    setState("session", null);
 }

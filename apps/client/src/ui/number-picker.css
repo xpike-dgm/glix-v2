@@ -137,10 +137,16 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .npick__thumb,
-  .npick__step {
+  :root:not([data-motion="full"]) .npick__thumb,
+  :root:not([data-motion="full"]) .npick__step {
     transition: none;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .npick__thumb,
+:root[data-motion="reduce"] .npick__step {
+  transition: none;
 }
 @media (orientation: landscape) and (max-height: 520px) {
   .npick__step {

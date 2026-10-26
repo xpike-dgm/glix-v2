@@ -15,6 +15,8 @@ import { Playing } from "./screens/Playing.js";
 import { Reconnecting } from "./screens/Reconnecting.js";
 import { Results } from "./screens/Results.js";
 import { selectScreen } from "./screens/route.js";
+import { Settings } from "./screens/Settings.js";
+import { setTextSize } from "./settings/settings.js";
 import { installErrorReporting } from "./telemetry/errors.js";
 import { preloadBriefing } from "./ui/briefingArt.js";
 import { Loading } from "./ui/Loading.js";
@@ -56,6 +58,8 @@ export function App() {
     if (code) setState({ nav: "join", joinCode: code });
 
     const mock = import.meta.env.DEV ? params.get("mock") : null;
+    // Yalnız geliştirme: arayüz denetimi büyük yazıyı `&text=large` ile açar.
+    if (import.meta.env.DEV && params.get("text") === "large") setTextSize("large");
     if (mock === "loading") {
       setDevLoading(true);
       return;
@@ -134,6 +138,9 @@ export function App() {
         </Match>
         <Match when={screen() === "join"}>
           <Join />
+        </Match>
+        <Match when={screen() === "settings"}>
+          <Settings />
         </Match>
         <Match when={screen() === "notfound"}>
           <NotFound />

@@ -7,6 +7,7 @@ import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
 import type { GameScreenProps } from "../registry.js";
 import "./asiri-yukleme.css";
+import { reducedMotion } from "../../fx/motion.js";
 import { createTapBatcher } from "./batcher.js";
 import { Core } from "./Core.js";
 import { alarm, blast, zap } from "./sounds.js";
@@ -15,14 +16,6 @@ import { barRatio, parseAsiriYuklemeView, resultRows } from "./view.js";
 const SPARK_COLORS = ["#2ef2ff", "#ffffff", "#b6ff3b", "#ff2bd6"];
 const MAX_SPARKS = 24;
 const FX_GAP_MS = 55;
-
-const reducedMotion = (): boolean => {
-  try {
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  } catch {
-    return false;
-  }
-};
 
 export default function AsiriYuklemeScreen(props: GameScreenProps) {
   const view = createMemo(() => parseAsiriYuklemeView(props.match.publicView, props.match.view));

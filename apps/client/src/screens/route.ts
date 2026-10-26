@@ -1,8 +1,10 @@
 import type { RoomSnapshot } from "@glix/engine";
+import type { Nav } from "../net/store.js";
 
 export type ScreenId =
   | "home"
   | "join"
+  | "settings"
   | "notfound"
   | "lobby"
   | "briefing"
@@ -13,7 +15,7 @@ export type ScreenId =
 
 export interface RouteInput {
   snapshot: RoomSnapshot | null;
-  nav: "home" | "join";
+  nav: Nav;
   notFound: boolean;
 }
 

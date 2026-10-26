@@ -1,5 +1,6 @@
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { mountBackdrop } from "../backdrop/hero.js";
+import { reducedMotion } from "../fx/motion.js";
 import { createRoom } from "../net/client.js";
 import { setNickname, setState, state } from "../net/store.js";
 import { InstallHint } from "../pwa/InstallHint.js";
@@ -9,6 +10,7 @@ import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
 import { GhostButton } from "../ui/GhostButton.js";
+import { GearIcon } from "../ui/Icons.js";
 import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
@@ -36,7 +38,7 @@ export function Home() {
   );
 
   onMount(() => {
-    if (!bg || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!bg || reducedMotion()) return;
     let dispose: (() => void) | undefined;
     let gone = false;
     mountBackdrop(bg)
@@ -100,7 +102,17 @@ export function Home() {
             <span class="chip__name">{state.nickname}</span>
           </button>
         </Show>
-        <SoundToggle />
+        <div class="topbar__end">
+          <button
+            type="button"
+            class="icon-btn"
+            aria-label="Ayarlar"
+            onClick={() => setState("nav", "settings")}
+          >
+            <GearIcon size={22} />
+          </button>
+          <SoundToggle />
+        </div>
       </header>
 
       <div class="home__hero">

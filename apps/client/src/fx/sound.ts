@@ -38,11 +38,15 @@ export function resumeContext(c: Pick<AudioContext, "state" | "resume">): boolea
 }
 let master: GainNode | null = null;
 
+export function setMuted(on: boolean): void {
+  setMutedSignal(on);
+  writeStored(KEYS.muted, on ? "1" : "0");
+  if (!on) tap();
+}
+
+/** Üst şerit düğmesi ile Ayarlar aynı durumu okur ve yazar. */
 export function toggleMute(): void {
-  const next = !muted();
-  setMutedSignal(next);
-  writeStored(KEYS.muted, next ? "1" : "0");
-  if (!next) tap();
+  setMuted(!muted());
 }
 
 /** Ana ses düzeyi, 0–1. Kalıcıdır. */

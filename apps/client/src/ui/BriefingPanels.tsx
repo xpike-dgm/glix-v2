@@ -1,4 +1,5 @@
 import { type Accessor, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { reducedMotion } from "../fx/motion.js";
 import { BRIEFING_PANELS, briefingAllowed, briefingSrc } from "./briefingArt.js";
 
 const STEP_MS = 2200;
@@ -17,7 +18,7 @@ export function BriefingPanels(props: {
   const allowed = briefingAllowed();
   const [failed, setFailed] = createSignal(false);
   let timer: ReturnType<typeof setInterval> | undefined;
-  const still = (): boolean => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const still = (): boolean => reducedMotion();
   const advance = (): void => props.onIndex((props.index() + 1) % BRIEFING_PANELS);
   const restart = (): void => {
     if (timer !== undefined) clearInterval(timer);

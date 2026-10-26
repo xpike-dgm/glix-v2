@@ -35,9 +35,14 @@
   --text-dim: #bcc4ec;
 }
 @media (prefers-reduced-motion: reduce) {
-  .world {
+  :root:not([data-motion="full"]) .world {
     transition: none;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .world {
+  transition: none;
 }
 
 /* ---- Oyun çerçevesi (GameFrame): dikey sütun / yatay sahne + yan şerit ---- */
@@ -323,14 +328,24 @@
 }
 /* biome-ignore-start lint/complexity/noImportantStyles: hareketi azaltma tercihi animasyonu ezmeli */
 @media (prefers-reduced-motion: reduce) {
-  .rot__phone {
+  :root:not([data-motion="full"]) .rot__phone {
     animation: none !important;
     transform: rotate(90deg);
   }
-  .rot__arc {
+  :root:not([data-motion="full"]) .rot__arc {
     animation: none !important;
     opacity: 1;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .rot__phone {
+  animation: none !important;
+  transform: rotate(90deg);
+}
+:root[data-motion="reduce"] .rot__arc {
+  animation: none !important;
+  opacity: 1;
 }
 /* biome-ignore-end lint/complexity/noImportantStyles: aralık sonu */
 @media (orientation: portrait) and (max-height: 600px) {

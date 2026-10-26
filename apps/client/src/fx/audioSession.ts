@@ -3,7 +3,7 @@ import { KEYS, readStored, writeStored } from "../net/storage.js";
 /**
  * iPhone sessiz düğmesi (Safari 16.4+ `navigator.audioSession`). Varsayılan: sessiz düğmesine uyulur.
  * Tercih açıksa oyun sesleri sessiz kipte de çalar.
- * TODO(U12): Ayarlar ekranı gelince "Sessiz modda da çal" anahtarı `setPlayInSilent` ile buraya bağlanır.
+ * Ayarlar ekranındaki "Sessiz modda da çal" anahtarı `setPlayInSilent` ile buraya bağlıdır.
  */
 
 export interface AudioSessionHost {

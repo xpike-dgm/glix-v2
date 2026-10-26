@@ -2,6 +2,7 @@ import type { AlisverisProduct, AlisverisReveal } from "@glix/engine";
 import { formatKredi } from "@glix/engine";
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { hapticMatch, hapticResult, hapticSolo, hapticTick } from "../../fx/haptics.js";
+import { reducedMotion } from "../../fx/motion.js";
 import { fanfare, match as matchSound, solo as soloSound, tick } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { UrunArt } from "./Urun.js";
@@ -41,8 +42,7 @@ export function AlisverisSonuc(props: Props) {
   const iWon = () => r().winners.includes(props.selfId);
 
   const skew = Math.max(0, Math.min(8000, props.now() - props.anchor));
-  const reduced =
-    typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+  const reduced = reducedMotion();
   const stageAt = (ms: number): number => (ms < T_SHELF ? 0 : ms < T_RANK ? 1 : 2);
   const [stage, setStage] = createSignal(reduced ? 2 : stageAt(skew));
 

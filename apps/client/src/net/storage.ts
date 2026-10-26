@@ -7,6 +7,11 @@ export const KEYS = {
   installHint: "glix.installHint",
   sessizdeCal: "glix.sessizdeCal",
   avatar: "glix.avatar",
+  haptics: "glix.haptics",
+  motion: "glix.motion",
+  textSize: "glix.textSize",
+  dataSaver: "glix.dataSaver",
+  telemetry: "glix.telemetry",
 } as const;
 
 export function readStored(key: string): string | null {

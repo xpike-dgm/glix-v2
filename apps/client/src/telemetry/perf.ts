@@ -1,5 +1,7 @@
 import { type ClientMessage, PERF_LIMITS, type PerfSample, type RoomSnapshot } from "@glix/engine";
 
+import { telemetry } from "../settings/settings.js";
+
 /** Aynı anda bekleyen en çok bu kadar eylem zamanlanır; fazlası en eskiden başlayarak atılır. */
 export const MAX_PENDING_ACKS = 256;
 /** Ölçülen en çok bu kadar onay gecikmesi tutulur (bir oyun için fazlasıyla yeter). */
@@ -144,7 +146,7 @@ let sentKey: string | null = null;
  * aşamasına geçince özet bir kez gönderilir. Oyuncu katılımcı değilse ya da sinyal yoksa gönderilmez.
  */
 export function trackPerf(snapshot: RoomSnapshot, send: (msg: ClientMessage) => boolean): void {
-  if (!enabled) return;
+  if (!enabled || !telemetry()) return;
   const m = snapshot.match;
   if (!m) {
     playingKey = null;
