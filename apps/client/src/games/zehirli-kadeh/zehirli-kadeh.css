@@ -216,9 +216,14 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .zkcup__fx {
+  :root:not([data-motion="full"]) .zkcup__fx {
     animation: none;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .zkcup__fx {
+  animation: none;
 }
 
 /* Sonuç açılışı */

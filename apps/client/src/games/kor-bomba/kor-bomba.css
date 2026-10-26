@@ -342,20 +342,37 @@ button.kb__seat {
 
 /* biome-ignore-start lint/complexity/noImportantStyles: hareketi azaltma tercihi animasyonu ezmeli */
 @media (prefers-reduced-motion: reduce) {
-  .kb[data-blast="1"],
-  .kb__bomb .bomb,
-  .kb__bomb::after,
-  .kb__cta,
-  .kb__seat[data-tap="1"] .av__disc,
-  .kbart__ring,
-  .kbart__dot {
+  :root:not([data-motion="full"]) .kb[data-blast="1"],
+  :root:not([data-motion="full"]) .kb__bomb .bomb,
+  :root:not([data-motion="full"]) .kb__bomb::after,
+  :root:not([data-motion="full"]) .kb__cta,
+  :root:not([data-motion="full"]) .kb__seat[data-tap="1"] .av__disc,
+  :root:not([data-motion="full"]) .kbart__ring,
+  :root:not([data-motion="full"]) .kbart__dot {
     animation: none !important;
   }
-  .kb__bomb {
+  :root:not([data-motion="full"]) .kb__bomb {
     transition: none;
   }
-  .kb__bomb::after {
+  :root:not([data-motion="full"]) .kb__bomb::after {
     opacity: 0.45;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .kb[data-blast="1"],
+:root[data-motion="reduce"] .kb__bomb .bomb,
+:root[data-motion="reduce"] .kb__bomb::after,
+:root[data-motion="reduce"] .kb__cta,
+:root[data-motion="reduce"] .kb__seat[data-tap="1"] .av__disc,
+:root[data-motion="reduce"] .kbart__ring,
+:root[data-motion="reduce"] .kbart__dot {
+  animation: none !important;
+}
+:root[data-motion="reduce"] .kb__bomb {
+  transition: none;
+}
+:root[data-motion="reduce"] .kb__bomb::after {
+  opacity: 0.45;
 }
 /* biome-ignore-end lint/complexity/noImportantStyles: aralık sonu */

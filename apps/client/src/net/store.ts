@@ -8,7 +8,7 @@ import { initialSync, onPatch, onReconnect, onRoom, type SyncState, type SyncSte
 
 /** `idle`: sunucu odasız boştaki bağlantıyı kapattı; ilk eylemde sessizce yeniden açılır. */
 export type ConnStatus = "connecting" | "open" | "closed" | "idle";
-export type Nav = "home" | "join";
+export type Nav = "home" | "join" | "settings";
 export type ToastKind = "info" | "success" | "error";
 
 export interface Toast {

@@ -475,44 +475,86 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cgchip,
-  .cgchip[data-status="crashed"],
-  .cgchip[data-status="first"],
-  .cgchip[data-status="second"],
-  .cgchip__pts,
-  .cgchip[data-status="first"] .cgchip__pts,
-  .cgchip[data-status="second"] .cgchip__pts,
-  .cgrow[data-crash="1"] .cgrow__bar,
-  .cg-res__val,
-  .cgart__pin--a,
-  .cgart__pin--b {
+  :root:not([data-motion="full"]) .cgchip,
+  :root:not([data-motion="full"]) .cgchip[data-status="crashed"],
+  :root:not([data-motion="full"]) .cgchip[data-status="first"],
+  :root:not([data-motion="full"]) .cgchip[data-status="second"],
+  :root:not([data-motion="full"]) .cgchip__pts,
+  :root:not([data-motion="full"]) .cgchip[data-status="first"] .cgchip__pts,
+  :root:not([data-motion="full"]) .cgchip[data-status="second"] .cgchip__pts,
+  :root:not([data-motion="full"]) .cgrow[data-crash="1"] .cgrow__bar,
+  :root:not([data-motion="full"]) .cg-res__val,
+  :root:not([data-motion="full"]) .cgart__pin--a,
+  :root:not([data-motion="full"]) .cgart__pin--b {
     animation: none;
     opacity: 1;
     transform: none;
   }
-  .cgchip[data-status="crashed"] {
+  :root:not([data-motion="full"]) .cgchip[data-status="crashed"] {
     border-color: var(--red);
     background: rgba(255, 59, 92, 0.14);
   }
-  .cgchip[data-status="crashed"] .av {
+  :root:not([data-motion="full"]) .cgchip[data-status="crashed"] .av {
     animation: none;
     opacity: 0.4;
     filter: grayscale(1);
   }
-  .cgchip[data-status="first"] {
+  :root:not([data-motion="full"]) .cgchip[data-status="first"] {
     border-color: var(--gold);
     background: rgba(255, 194, 59, 0.22);
   }
-  .cgchip[data-status="second"] {
+  :root:not([data-motion="full"]) .cgchip[data-status="second"] {
     border-color: var(--blue);
     background: rgba(59, 123, 255, 0.24);
   }
-  .cgrow[data-crash="1"] .cgrow__bar {
+  :root:not([data-motion="full"]) .cgrow[data-crash="1"] .cgrow__bar {
     border-color: var(--red);
     background: rgba(255, 59, 92, 0.16);
   }
-  .cgpin__head,
-  .cgpin__stem {
+  :root:not([data-motion="full"]) .cgpin__head,
+  :root:not([data-motion="full"]) .cgpin__stem {
     transition: none;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .cgchip,
+:root[data-motion="reduce"] .cgchip[data-status="crashed"],
+:root[data-motion="reduce"] .cgchip[data-status="first"],
+:root[data-motion="reduce"] .cgchip[data-status="second"],
+:root[data-motion="reduce"] .cgchip__pts,
+:root[data-motion="reduce"] .cgchip[data-status="first"] .cgchip__pts,
+:root[data-motion="reduce"] .cgchip[data-status="second"] .cgchip__pts,
+:root[data-motion="reduce"] .cgrow[data-crash="1"] .cgrow__bar,
+:root[data-motion="reduce"] .cg-res__val,
+:root[data-motion="reduce"] .cgart__pin--a,
+:root[data-motion="reduce"] .cgart__pin--b {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+:root[data-motion="reduce"] .cgchip[data-status="crashed"] {
+  border-color: var(--red);
+  background: rgba(255, 59, 92, 0.14);
+}
+:root[data-motion="reduce"] .cgchip[data-status="crashed"] .av {
+  animation: none;
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+:root[data-motion="reduce"] .cgchip[data-status="first"] {
+  border-color: var(--gold);
+  background: rgba(255, 194, 59, 0.22);
+}
+:root[data-motion="reduce"] .cgchip[data-status="second"] {
+  border-color: var(--blue);
+  background: rgba(59, 123, 255, 0.24);
+}
+:root[data-motion="reduce"] .cgrow[data-crash="1"] .cgrow__bar {
+  border-color: var(--red);
+  background: rgba(255, 59, 92, 0.16);
+}
+:root[data-motion="reduce"] .cgpin__head,
+:root[data-motion="reduce"] .cgpin__stem {
+  transition: none;
 }

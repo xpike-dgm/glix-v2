@@ -505,16 +505,28 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ca__sight {
+  :root:not([data-motion="full"]) .ca__sight {
     animation: none;
     transform: translate(calc(var(--flip, 1) * -6%), -5%);
   }
-  .ca__slot[data-locked="1"] .ca__sight {
+  :root:not([data-motion="full"]) .ca__slot[data-locked="1"] .ca__sight {
     transform: none;
   }
-  .caart__sight {
+  :root:not([data-motion="full"]) .caart__sight {
     animation: none;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .ca__sight {
+  animation: none;
+  transform: translate(calc(var(--flip, 1) * -6%), -5%);
+}
+:root[data-motion="reduce"] .ca__slot[data-locked="1"] .ca__sight {
+  transform: none;
+}
+:root[data-motion="reduce"] .caart__sight {
+  animation: none;
 }
 
 @media (max-height: 460px) {

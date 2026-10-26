@@ -1,8 +1,9 @@
 import { createSignal, onCleanup, onMount, Show } from "solid-js";
+import { reducedMotion } from "../fx/motion.js";
 
 /** "+N" rozeti: sayım başlayıp değer 0'ın üstüne çıkınca belirir (asla "+0" göstermez), sonra N'e dek artar. */
 export function CountUp(props: { to: number; delay?: number; duration?: number }) {
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduced = reducedMotion();
   const [v, setV] = createSignal(reduced ? props.to : 0);
   const [done, setDone] = createSignal(reduced);
   onMount(() => {

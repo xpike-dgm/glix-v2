@@ -1,3 +1,5 @@
+import { reducedMotion } from "./motion.js";
+
 const lowEnd = (): boolean =>
   (navigator.hardwareConcurrency ?? 8) <= 4 ||
   ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8) <= 4;
@@ -9,7 +11,7 @@ const COLORS = [0x2ef2ff, 0xff2bd6, 0xffc23b, 0xb6ff3b, 0x8b5cff, 0xff8a3b, 0x2b
 
 /** 2 sn'lik Pixi konfetisi; bitince kendini yok eder. Pixi tembel yüklenir. Durdurma işlevi döner. */
 export async function playConfetti(host: HTMLElement): Promise<() => void> {
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return () => {};
+  if (reducedMotion()) return () => {};
   const { Application, Assets, Graphics, Rectangle, Sprite, Texture } = await import("pixi.js");
   const app = new Application();
   await app.init({

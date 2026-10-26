@@ -1,12 +1,7 @@
-type Pattern = number | readonly number[];
+import { haptics } from "../settings/settings.js";
+import { reducedMotion } from "./motion.js";
 
-function reducedMotion(): boolean {
-  try {
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  } catch {
-    return false;
-  }
-}
+type Pattern = number | readonly number[];
 
 /** Azaltılmış harekette titreşimler yarıya iner (en az 6 ms); aralar aynı kalır. */
 export function shapePattern(pattern: Pattern, reduced: boolean): number[] {
@@ -16,6 +11,7 @@ export function shapePattern(pattern: Pattern, reduced: boolean): number[] {
 }
 
 function vibrate(pattern: Pattern): void {
+  if (!haptics()) return;
   try {
     if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") return;
     // Tarayıcı kullanıcı dokunmadan titreşimi engeller (konsola uyarı yazar).

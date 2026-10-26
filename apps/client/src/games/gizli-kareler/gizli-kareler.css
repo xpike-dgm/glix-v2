@@ -408,26 +408,50 @@ button.kcell:disabled {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kcell__beam,
-  .kwho,
-  .kcell__pts,
-  .kres__val {
+  :root:not([data-motion="full"]) .kcell__beam,
+  :root:not([data-motion="full"]) .kwho,
+  :root:not([data-motion="full"]) .kcell__pts,
+  :root:not([data-motion="full"]) .kres__val {
     animation: none;
     opacity: 1;
     transform: none;
   }
-  .kcell--res[data-state="clash"] {
+  :root:not([data-motion="full"]) .kcell--res[data-state="clash"] {
     animation: none;
     border-color: var(--red);
     background: rgba(255, 59, 92, 0.16);
   }
-  .kcell--res[data-state="clash"] .av {
+  :root:not([data-motion="full"]) .kcell--res[data-state="clash"] .av {
     animation: none;
     opacity: 0.35;
     filter: grayscale(1);
   }
-  .kcell--res[data-state="solo"] {
+  :root:not([data-motion="full"]) .kcell--res[data-state="solo"] {
     animation: none;
     border-color: var(--gold);
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .kcell__beam,
+:root[data-motion="reduce"] .kwho,
+:root[data-motion="reduce"] .kcell__pts,
+:root[data-motion="reduce"] .kres__val {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+:root[data-motion="reduce"] .kcell--res[data-state="clash"] {
+  animation: none;
+  border-color: var(--red);
+  background: rgba(255, 59, 92, 0.16);
+}
+:root[data-motion="reduce"] .kcell--res[data-state="clash"] .av {
+  animation: none;
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+:root[data-motion="reduce"] .kcell--res[data-state="solo"] {
+  animation: none;
+  border-color: var(--gold);
 }

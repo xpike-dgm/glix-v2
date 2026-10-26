@@ -9,6 +9,7 @@ import { createOptimistic } from "../../ui/optimistic.js";
 import { pressable } from "../../ui/press.js";
 import type { GameScreenProps } from "../registry.js";
 import "./kor-bomba.css";
+import { reducedMotion } from "../../fx/motion.js";
 import { boom, spark, tak } from "./sounds.js";
 import {
   formatBonus,
@@ -23,14 +24,6 @@ interface Bonus {
   id: number;
   text: string;
 }
-
-const reducedMotion = (): boolean => {
-  try {
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  } catch {
-    return false;
-  }
-};
 
 /** Bomba, taşıyıcının koltuğuyla masa merkezi arasında, taşıyıcının önünde durur. */
 function bombSpot(seat: SeatPos | undefined): { x: number; y: number } {

@@ -68,8 +68,14 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .bomb__spark,
-  .blast {
+  :root:not([data-motion="full"]) .bomb__spark,
+  :root:not([data-motion="full"]) .blast {
     animation: none;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .bomb__spark,
+:root[data-motion="reduce"] .blast {
+  animation: none;
 }

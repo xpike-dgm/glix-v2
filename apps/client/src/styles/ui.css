@@ -220,13 +220,22 @@
     transform 260ms var(--ease);
 }
 @media (prefers-reduced-motion: reduce) {
-  .av__img[data-covered],
-  .av__mood[data-ready] {
+  :root:not([data-motion="full"]) .av__img[data-covered],
+  :root:not([data-motion="full"]) .av__mood[data-ready] {
     transition: none;
   }
-  .av__mood {
+  :root:not([data-motion="full"]) .av__mood {
     transform: none;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .av__img[data-covered],
+:root[data-motion="reduce"] .av__mood[data-ready] {
+  transition: none;
+}
+:root[data-motion="reduce"] .av__mood {
+  transform: none;
 }
 .av__pip {
   position: absolute;
@@ -699,9 +708,14 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mascot--bob {
+  :root:not([data-motion="full"]) .mascot--bob {
     animation: none;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .mascot--bob {
+  animation: none;
 }
 
 .offline-wrap,

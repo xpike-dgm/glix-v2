@@ -1,6 +1,7 @@
 import type { CizgiReveal } from "@glix/engine";
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { hapticMatch, hapticResult, hapticSolo, hapticTick } from "../../fx/haptics.js";
+import { reducedMotion } from "../../fx/motion.js";
 import { fail, fanfare, match as matchSound, solo as soloSound, tick } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { groupByZone, pointsOf, statusOf, zoneLabel, zonesTopDown } from "./view.js";
@@ -39,8 +40,7 @@ export function Sonuc(props: Props) {
   const myPoints = () => pointsOf(r(), props.selfId);
 
   const skew = Math.max(0, Math.min(6000, props.now() - props.endsAt));
-  const reduced =
-    typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+  const reduced = reducedMotion();
   const stageAt = (ms: number): number => (ms < T_CRASH ? 0 : ms < T_RISE ? 1 : ms < T_FINAL ? 2 : 3);
   const [stage, setStage] = createSignal(reduced ? 3 : stageAt(skew));
 

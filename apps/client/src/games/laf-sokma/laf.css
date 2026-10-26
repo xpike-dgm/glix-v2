@@ -577,16 +577,28 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lf__prompt,
-  .lf__cards > li,
-  .lf__rcard,
-  .lf__me,
-  .lf__master,
-  .lf__locked,
-  .lf__card-tick,
-  .lfart__bubble {
+  :root:not([data-motion="full"]) .lf__prompt,
+  :root:not([data-motion="full"]) .lf__cards > li,
+  :root:not([data-motion="full"]) .lf__rcard,
+  :root:not([data-motion="full"]) .lf__me,
+  :root:not([data-motion="full"]) .lf__master,
+  :root:not([data-motion="full"]) .lf__locked,
+  :root:not([data-motion="full"]) .lf__card-tick,
+  :root:not([data-motion="full"]) .lfart__bubble {
     animation: none;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .lf__prompt,
+:root[data-motion="reduce"] .lf__cards > li,
+:root[data-motion="reduce"] .lf__rcard,
+:root[data-motion="reduce"] .lf__me,
+:root[data-motion="reduce"] .lf__master,
+:root[data-motion="reduce"] .lf__locked,
+:root[data-motion="reduce"] .lf__card-tick,
+:root[data-motion="reduce"] .lfart__bubble {
+  animation: none;
 }
 @media (max-height: 460px) {
   .lf__tag {

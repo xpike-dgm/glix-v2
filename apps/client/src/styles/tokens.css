@@ -58,3 +58,11 @@
 
   color-scheme: dark;
 }
+
+/* Ayarlar > Yazı boyutu: Büyük. Yalnız metin ölçüleri büyür; oyun tuvalleri (Pixi/canvas) piksel olarak kalır. */
+:root[data-text="large"] {
+  --fs-13: 15px;
+  --fs-15: 17px;
+  --fs-18: 20px;
+  --fs-24: 27px;
+}

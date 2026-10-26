@@ -503,7 +503,12 @@ button.aitem:active:not(:disabled) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ashutter {
+  :root:not([data-motion="full"]) .ashutter {
     display: none;
   }
+}
+
+/* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .ashutter {
+  display: none;
 }
