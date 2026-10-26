@@ -1,9 +1,11 @@
-import { Show } from "solid-js";
-import { look } from "./avatars.js";
+import { createEffect, createSignal, on, Show } from "solid-js";
+import { look, type Mood, moodSrc } from "./avatars.js";
 import { CheckIcon, CrownIcon } from "./Icons.js";
 
 interface Props {
   index: number;
+  /** Ruh hâli; verilmezse büst. Görsel yumuşakça değişir. */
+  mood?: Mood | undefined;
   /** px sayısı ya da CSS uzunluğu (örn. clamp(...)). */
   size: number | string;
   host?: boolean;
@@ -22,6 +24,14 @@ interface Props {
 export function Avatar(props: Props) {
   const l = () => look(props.index);
   const big = () => typeof props.size === "string" || props.size >= 56;
+  const src = () => (props.mood ? moodSrc(props.index, props.mood) : null);
+  // Ruh hâli görseli yüklenene kadar büst görünür; yüklenince çapraz geçiş olur.
+  const [loaded, setLoaded] = createSignal<string | null>(null);
+  createEffect(
+    on(src, (s) => {
+      if (s === null) setLoaded(null);
+    }),
+  );
   const small = () => typeof props.size === "string" || props.size >= 40;
   return (
     <div
@@ -33,7 +43,32 @@ export function Avatar(props: Props) {
       }}
     >
       <div class="av__disc">
-        <img class="av__img" src={l().bust} alt="" draggable={false} width="256" height="256" />
+        <img
+          class="av__img"
+          data-covered={src() !== null && loaded() === src() ? "1" : undefined}
+          src={l().bust}
+          alt=""
+          draggable={false}
+          width="256"
+          height="256"
+        />
+        <Show when={src()} keyed>
+          {(url) => (
+            <img
+              class="av__img av__mood"
+              data-ready={loaded() === url ? "1" : undefined}
+              src={url}
+              alt=""
+              draggable={false}
+              width="384"
+              height="384"
+              onLoad={() => setLoaded(url)}
+              ref={(el) => {
+                if (el.complete && el.naturalWidth > 0) queueMicrotask(() => setLoaded(url));
+              }}
+            />
+          )}
+        </Show>
       </div>
       <Show when={big() && props.pip}>
         <img class="av__pip" src={l().pip} alt="" draggable={false} />

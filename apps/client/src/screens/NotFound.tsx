@@ -1,4 +1,5 @@
 import { goHome, state } from "../net/store.js";
+import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
 
@@ -6,8 +7,8 @@ export function NotFound() {
   return (
     <Screen>
       <div class="center-stack">
-        <div class="ghost-seat rise" style={{ "--i": 0 }} aria-hidden="true">
-          ?
+        <div class="rise" style={{ "--i": 0 }}>
+          <Mascot pose="dusunuyor" size="var(--mascot-lg, clamp(96px, 30vw, 150px))" />
         </div>
         <h1 class="display h-title rise" style={{ "--i": 1 }}>
           Oda bulunamadı

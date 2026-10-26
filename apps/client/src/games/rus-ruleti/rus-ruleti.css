@@ -197,7 +197,7 @@
 }
 .rr__cell[data-alive="0"] .rr__portrait {
   filter: grayscale(1);
-  opacity: 0.38;
+  opacity: 0.62;
 }
 .rr__cell[data-alive="0"] .rr__name {
   opacity: 0.55;

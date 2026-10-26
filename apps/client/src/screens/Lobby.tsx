@@ -15,6 +15,7 @@ import { BottomSheet } from "../ui/BottomSheet.js";
 import { GhostButton } from "../ui/GhostButton.js";
 import { CheckIcon, ChevronIcon, MinusIcon, PlusIcon, ShareIcon } from "../ui/Icons.js";
 import { LeaveButton } from "../ui/LeaveButton.js";
+import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
@@ -129,6 +130,13 @@ export function Lobby(props: { snap: RoomSnapshot }) {
       </div>
 
       <div class="lobby__scroll" data-scroll ref={scroller}>
+        <Show when={snap().players.length < 2}>
+          <div class="alone rise" style={{ "--i": 3 }}>
+            <Mascot pose="merhaba" size="var(--mascot-sm, 64px)" />
+            <p class="alone__text">Arkadaşların kodu girince burada belirir.</p>
+          </div>
+        </Show>
+
         <div class="seats">
           <For each={seats()}>
             {(p, i) => (

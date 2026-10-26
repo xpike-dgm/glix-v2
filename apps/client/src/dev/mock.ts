@@ -34,7 +34,7 @@ const CATALOG: GameInfo[] = [
 ];
 
 export function startMock(kind: string, params: URLSearchParams): void {
-  const n = Math.min(8, Math.max(2, Number(params.get("n")) || 5));
+  const n = Math.min(8, Math.max(1, Number(params.get("n")) || 5));
   let players: PlayerInfo[] = Array.from({ length: n }, (_, i) => ({
     id: `p${i}`,
     nickname: NAMES[i] ?? `Oyuncu${i}`,
@@ -169,14 +169,14 @@ export function startMock(kind: string, params: URLSearchParams): void {
     mini = Object.fromEntries(players.map((p, i) => [p.id, scores[i] ?? 0]));
     result = {
       miniScores: mini,
-      awards: Object.fromEntries(players.map((p, i) => [p.id, i === 0 ? 2 : i === 1 ? 1 : 0])),
+      awards: Object.fromEntries(players.map((p, i) => [p.id, i === 0 ? 2 : i === 1 ? 1 : i === 4 ? -1 : 0])),
     };
     publish();
     if (kind === "results") later(toResults, 7000);
   };
   const toFinal = (): void => {
     phase = "final";
-    const totals = [5, 4, 4, 2, 1, 0, 3, 2];
+    const totals = [5, 4, 4, 2, -1, 0, 3, 2];
     players = players.map((p, i) => ({ ...p, score: totals[i] ?? 0 }));
     publish();
   };
@@ -235,6 +235,7 @@ export function startMock(kind: string, params: URLSearchParams): void {
   setState("session", { token: "mock", playerId: SELF, roomCode: "KX7QP" });
   switch (kind) {
     case "home":
+      if (params.get("off") === "1") setState({ conn: "closed", failedAttempts: 2 });
       break;
     case "join":
       setState({ nav: "join", joinCode: "KX7" });

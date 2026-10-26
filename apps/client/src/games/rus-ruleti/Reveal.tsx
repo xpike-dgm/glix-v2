@@ -46,7 +46,7 @@ export default function Reveal(props: GameScreenProps) {
               {(id) => (
                 <li class="rrr__gone">
                   <Show when={person(id)}>
-                    {(p) => <Avatar index={p().avatar} size={30} connected={p().connected} />}
+                    {(p) => <Avatar index={p().avatar} size={30} mood="out" connected={p().connected} />}
                   </Show>
                   <span class="sr-only">{person(id)?.nickname} elendi</span>
                 </li>

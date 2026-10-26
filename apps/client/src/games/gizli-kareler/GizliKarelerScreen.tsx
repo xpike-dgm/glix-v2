@@ -59,6 +59,11 @@ function Secim(props: SecimProps) {
   return (
     <>
       <div class="khero">
+        <Show when={!props.canPick && !props.spectator}>
+          <span class="khero__out">
+            <Avatar index={me()?.avatar ?? 0} size="clamp(40px, 7dvh, 56px)" mood="out" />
+          </span>
+        </Show>
         <p class="overline">{props.stage}. aşama / 2</p>
         <h2 class="khero__title" data-set={mine() === null ? undefined : "1"}>
           {title()}

@@ -311,6 +311,16 @@
   font-size: var(--fs-13);
   color: var(--text-dim);
 }
+.skr__note--miss {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.skr__miss {
+  display: inline-flex;
+  gap: 4px;
+}
 @media (orientation: landscape) and (max-height: 520px) {
   .skr__siren {
     display: none;

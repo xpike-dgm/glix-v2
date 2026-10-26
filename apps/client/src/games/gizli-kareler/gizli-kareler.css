@@ -17,6 +17,10 @@
   margin-top: clamp(2px, 1.6dvh, 14px);
   min-height: clamp(76px, 13dvh, 104px);
 }
+.khero__out {
+  display: block;
+  margin-bottom: 6px;
+}
 .khero__title {
   margin: 2px 0 0;
   max-width: 100%;
@@ -379,6 +383,7 @@ button.kcell:disabled {
     min-height: 0;
     margin-top: 0;
   }
+  .khero__out,
   .khero .overline,
   .khero__sub,
   .kres__head .overline {

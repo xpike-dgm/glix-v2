@@ -9,6 +9,7 @@ import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
 import { GhostButton } from "../ui/GhostButton.js";
+import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
@@ -120,9 +121,12 @@ export function Home() {
 
       <div class="home__actions">
         <Show when={offline()} fallback={<InstallHint />}>
-          <p class="offline" role="status">
-            İnternet bağlantısı yok — bağlanınca oyuna katılabilirsin
-          </p>
+          <div class="offline-wrap">
+            <Mascot pose="bekliyor" size="var(--mascot-sm, 64px)" />
+            <p class="offline" role="status">
+              İnternet bağlantısı yok — bağlanınca oyuna katılabilirsin
+            </p>
+          </div>
         </Show>
         <PrimaryButton onClick={create} busy={state.busy} disabled={offline()}>
           Oda kur

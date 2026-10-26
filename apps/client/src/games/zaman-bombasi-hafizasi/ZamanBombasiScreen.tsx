@@ -432,6 +432,7 @@ export default function ZamanBombasiScreen(props: GameScreenProps) {
                 <Avatar
                   index={p.avatar}
                   size="min(46px, calc((100vw - 40px - 42px) / 8))"
+                  mood={out() ? "out" : undefined}
                   connected={p.connected}
                 />
                 <span class="zs__score">{fmtScore(view()?.scores[p.id] ?? 0)}</span>

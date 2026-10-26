@@ -6,6 +6,7 @@ import { roundResult } from "../fx/sound.js";
 import { gameEntry } from "../games/registry.js";
 import { createServerNow } from "../net/time.js";
 import { Avatar } from "../ui/Avatar.js";
+import type { Mood } from "../ui/avatars.js";
 import { ProgressBar } from "../ui/ProgressBar.js";
 import { Screen } from "../ui/Screen.js";
 import { CountUp } from "./CountUp.js";
@@ -33,6 +34,10 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
     const t = setTimeout(() => setAnnounce(spoken()), 250);
     onCleanup(() => clearTimeout(t));
   });
+
+  /** Podyum: kazanan sevinir, olumsuz ödül alan şaşırır, diğerleri sakin. */
+  const moodOf = (r: { rank: number; player: { id: string } }): Mood =>
+    award(r.player.id) < 0 ? "shock" : r.rank === 1 ? "happy" : "idle";
 
   const podiumAvatar = (rank: number) =>
     rank === 1 ? "var(--pod-big, clamp(76px, 24vw, 104px))" : "var(--pod-small, clamp(60px, 18vw, 76px))";
@@ -81,6 +86,7 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
                 <Avatar
                   index={r.player.avatar}
                   size={podiumAvatar(r.rank)}
+                  mood={moodOf(r)}
                   host={r.player.id === props.snap.hostId}
                   connected={r.player.connected}
                   self={r.player.id === props.snap.selfId}
@@ -100,7 +106,12 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
             {(r, i) => (
               <li class="row rise" style={{ "--i": 4 + i() }}>
                 <span class="row__rank">{r.rank}</span>
-                <Avatar index={r.player.avatar} size={40} connected={r.player.connected} />
+                <Avatar
+                  index={r.player.avatar}
+                  size={40}
+                  mood={award(r.player.id) < 0 ? "shock" : "idle"}
+                  connected={r.player.connected}
+                />
                 <span class="row__name">
                   <span class="row__nick">{r.player.nickname}</span>
                   <Show when={r.player.id === props.snap.selfId}>

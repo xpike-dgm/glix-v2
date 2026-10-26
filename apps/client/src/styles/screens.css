@@ -1015,6 +1015,22 @@
   gap: 6px;
   margin-top: 4px;
 }
+.winner {
+  position: relative;
+}
+.winner__mascot {
+  display: none;
+}
+/* Yalnız uzun dikey ekranda; küçük ekranda sıralamayı sıkıştırmaz. */
+@media (orientation: portrait) and (min-height: 800px) {
+  .winner__mascot {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+  }
+}
 .winner__avatars {
   display: flex;
   justify-content: center;
