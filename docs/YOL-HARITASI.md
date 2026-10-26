@@ -91,6 +91,88 @@ lobi-2, lobi-8 durumları eklenir.
 - Her oyuna `StageView` (yatay, büyük animasyon); sahne varken telefon arayüzü sade kumandaya döner.
 - Tablet/masaüstü: iki sütun (sol oyun, sağ oyuncular/skor).
 
+### U9. iOS uyumu
+Zaten var: dvh yükseklik, safe-area, klavye alanı (visualViewport), iOS "Ana Ekrana Ekle" ipucu, dokunuşla ses açma.
+**App Store / yerel uygulama sarmalı: KARAR YOK** — sahibi "yapalım" diyene kadar gündemde değil.
+
+**1. Oyun sırasında kopma ve kararma (öncelik)**
+- [ ] Ekran Uyanık Tutma (Wake Lock) oyun ve lobi sırasında; sekme geri gelince yeniden alınır.
+- [ ] Arka plandan dönüşte (`visibilitychange`, `pageshow`/bfcache) anında yeniden bağlanma + tek seferde güncel durum; bayat oda görüntüsü yok.
+- [ ] Dönüşte kısa "Tekrar bağlandın — şu an X turundayız" bildirimi.
+
+**2. Ses**
+- [ ] Sessiz düğmesi: Safari `navigator.audioSession` ile "Sessiz modda da çal" seçeneği (Ayarlar'da).
+- [ ] Kilit/arka plan sonrası askıya alınan sesin ilk dokunuşta kendiliğinden açılması + denetimi.
+- [ ] Seslerin önceden ve küçük parçalar hâlinde yüklenmesi (ilk ses gecikmesiz).
+
+**3. Titreşim**
+- [ ] iOS'ta `navigator.vibrate` yok: iOS 18 Safari anahtar (switch) dokunuş yolunun önemli anlarda (bomba, eleme) denenmesi.
+- [ ] Titreşimsiz cihazda telafi: ekran sarsıntısı/parlama biraz güçlenir.
+
+**4. Ana ekrana ekleme**
+- [ ] iPhone açılış görselleri (apple-touch-startup-image, cihaz boyutlarına göre; maskotlu, ChatGPT ile).
+- [ ] Kurulum ipucu ilk oyun bittikten sonra, adımları görselli ("Paylaş → Ana Ekrana Ekle").
+- [ ] Not: eklenmemiş sitelerde iOS 7 gün kullanılmayan veriyi silebilir; ekleme kalıcılık sağlar.
+- [ ] Web bildirimleri (iOS 16.4+, yalnız ana ekrana eklenmişse): "Arkadaşın seni odaya çağırıyor".
+
+**5. Dokunma ve ekran**
+- [ ] Uzun basma menüsü ve metin seçimi tüm oyun alanlarında kapalı (her oyun denetlenir).
+- [ ] Kenar kaydırma / çift dokunma yakınlaştırma oyun ekranlarında kapalı; çizim oyunlarında Safari "geri" hareketi çizimi bozmaz.
+- [ ] Yatay ekranda Dynamic Island/alt çizgi düğmelerin üstüne gelmez (tüm oyunlar).
+- [ ] Tüm yazı kutularında yazı boyutu ≥16px (iOS otomatik yakınlaştırma yok).
+
+**6. Performans**
+- [ ] Düşük Güç Modu (30 fps): zamanlama oyunları kare sayısıyla değil gerçek saatle ölçer — denetim.
+- [ ] Eski iPhone bellek: görsel bellekten temizleme, Pixi bağlamını tek oluşturup yeniden kullanma.
+- [ ] Telemetride iOS ayrı grup: tıklama gecikmesi, kopma sayısı, sayfa yeniden yüklenmesi.
+
+**7. Paylaşma**
+- [ ] Paylaşılan bağlantıya önizleme kartı (Open Graph görseli) — WhatsApp/iMessage'da görsel çıkar.
+- [ ] QR ile katılma (U2-A) iOS kamerasıyla doğrudan açılır.
+
+**8. Test**
+- [ ] `ui:check`'in WebKit (Safari motoru) ile de koşması.
+- [ ] Gerçek iPhone 10 dakikalık kontrol listesi: kilitle-aç, arka plan-dön, sessiz mod, yatay, ana ekrandan açma.
+
+### U10. Lobide karakter seçimi
+- [ ] Lobide karakter seçim ekranı: 8 karakter (mevcut `avatar` 0–7); alınmış olanlar soluk + sahibinin adı.
+- [ ] Sunucu tek otorite: `chooseAvatar` mesajı, odada benzersizlik sunucuda doğrulanır; aynı anda iki kişi aynı karakteri isterse ilk gelen alır, diğerine kibar uyarı.
+- [ ] Giren oyuncuya boş bir karakter otomatik atanır (bugünkü gibi), istediği an değiştirebilir; oyun başlayınca kilitlenir.
+- [ ] Cihaz son seçimi hatırlar; boşsa yeni odada önce onu dener.
+- [ ] Oyunların içinde renkler karaktere bağlı kalır (kadeh, nişangâh vb. zaten avatar rengini kullanıyor).
+
+### U11. Logo
+- [ ] Ana giriş sayfasında yazı yerine GLIX logo görseli (neon, maskotla uyumlu); ChatGPT ile üretim, harflerin kusursuzluğu elle denetlenir.
+- [ ] Aynı logodan: uygulama simgesi, açılış görseli (U9-4), paylaşım önizleme kartı (U9-7).
+- [ ] Logoya hafif giriş animasyonu (azaltılmış hareket tercihinde yok).
+
+### U12. Ana menüde Ayarlar
+- [ ] Ana menüye "Ayarlar" ekranı (bugün yok). İçerik:
+  - Ses: müzik ve efekt ayrı ses düzeyi, "Sessiz modda da çal" (iOS).
+  - Titreşim aç/kapa.
+  - Hareket azaltma, yazı boyutu, renk körlüğü dostu mod.
+  - Veri tasarrufu: görselleri atla / yalnız Wi-Fi'de indir.
+  - Profil: takma ad, varsayılan karakter.
+  - Depolama: indirilen içerik boyutu, "Önbelleği temizle", "Tüm içeriği indir".
+  - Anonim performans ölçümü aç/kapa.
+  - Sürüm bilgisi, "Güncellemeleri denetle".
+- [ ] Ayarlar cihazda saklanır; oyun içi üst şeritten de hızlı ses/titreşim erişimi kalır.
+
+### U13. İçeriği önceden indirme (iOS + Android)
+Bugün: uygulama kabuğu önceden indiriliyor; görseller (≈16 MB) ilk görüldüğünde indirilip kalıcı önbellekte tutuluyor.
+- [ ] Ana ekrandan ilk açılışta animasyonlu "Hazırlanıyor" ekranı: tüm görsel ve sesler ilerleme çubuğuyla indirilir.
+- [ ] Link/QR ile odaya katılan misafir **beklemez**: önce küçük kabukla hemen oyuna girer, kalan içerik arka planda iner.
+- [ ] Mobil veride sorar ("Wi-Fi'yi bekle / Şimdi indir"); veri tasarrufu açıksa indirmez.
+- [ ] Güncellemede yalnız değişen dosyalar iner (dosya adında içerik özeti; Workbox bunu destekliyor).
+- [ ] iOS depolama sınırı ve silinmeye karşı: `navigator.storage.persist()` istenir, eksik dosya bir sonraki açılışta tamamlanır.
+
+### U14. Güncelleme akışı
+Bugün: yeni sürüm hazır olunca bekliyor (`registerType: prompt`), kullanıcı yenileyince geçiyor.
+- [ ] Oyun ortasında asla zorla güncelleme yok; güncelleme yalnız güvenli anda (ana sayfa, lobi, maç arası) uygulanır.
+- [ ] Küçük güncellemeler: güvenli anda sormadan kendiliğinden yenilenir (kısa "Yeni sürüm yüklendi" bildirimi).
+- [ ] Uyumsuz güncellemeler (`protocolVersion` değişti): tam ekran "Güncelleme gerekli → Güncelle"; güncellemeden oyuna girilemez.
+- [ ] Sunucu güncellemesi (deploy) sırasında açık maçlar biter veya sürer (draining), sonra herkes yeni sürüme geçer.
+
 ---
 
 ## O — Oyun iyileştirmeleri iş kolu
