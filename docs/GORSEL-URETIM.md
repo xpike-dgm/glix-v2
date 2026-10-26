@@ -3,7 +3,7 @@
 Kapsam: oyun dünyaları, oyun nesneleri, karakterler, anlatım + oyun kartları, küçük görseller.
 Kapsam dışı (şimdilik): pazarlama/mağaza, sezon/etkinlik.
 
-Görselleri sahip, seçtiği görsel üretim aracıyla üretir; yönetici (Claude) her aşamada tarifleri hazırlar, gelen
+Görselleri sahip **ChatGPT Images 2.5** ile üretir (araç VDS'teki çalışma alanına erişebilir); yönetici (Claude) her aşamada tarifleri hazırlar, gelen
 dosyaları kontrol eder, sıkıştırır (WebP), adlandırır ve oyunlara yerleştirir.
 
 ---
@@ -27,12 +27,27 @@ text, letters, numbers, watermark, logo, signature, real brands, real people, ph
 blurry, low detail, cluttered composition
 ```
 
+### Araç: ChatGPT Images 2.5 — kullanım notları
+- **Referans görsel ver:** her istekte ilgili referansı ekle (avatar büstü, `referans/secilen/` altındaki onaylı
+  görseller). "Same style as the attached reference" cümlesi tarifin başına konur. Karakter tutarlılığı için en önemli adım.
+- **Doğal cümleyle tarif:** bu modeller etiket listesinden çok açıklayıcı cümleleri iyi izler; tablodaki tarifler bu
+  yüzden cümle biçiminde. Stil öneki + tarif + yasaklar tek paragraf hâlinde verilebilir.
+- **Boyutlar:** model kendi oranlarında üretir (genelde kare, dikey 2:3, yatay 3:2). Arka planlar için dikey/yatay
+  en geniş seçeneği kullan; 9:16 / 16:9'a yönetici kırpar ("cover"). Bu yüzden ilgi noktası kenarlara değil merkeze
+  yakın olmalı.
+- **Şeffaf arka plan:** destekleniyorsa "transparent background" seçeneğiyle üret. Desteklenmiyorsa düz, gölgesiz
+  **#00FF00 yeşil** zemin iste; yönetici zemini temizler.
+- **Yazı:** model yazıda iyi olsa da Türkçe karakter riski ve çeviri esnekliği için görsellerde yazı istenmez.
+- **Seri üretim:** aynı türden görselleri (ör. 8 kadeh, 12 ürün) aynı sohbette sırayla üret; ilk onaylanan görseli
+  referans olarak tutup "same lighting, same outline thickness, same camera angle" ile devam et.
+- **Dosya adı:** indirilen dosyayı tablodaki numara + adla kaydet (ör. `3.1-kadeh-1.png`, `4-zehirli-kadeh-dikey.png`).
+
 ### Teknik kurallar
 | Tür | Boyut (üretim) | Arka plan | Teslim | Hedef ağırlık |
 |---|---|---|---|---|
-| Arka plan (dikey) | 1080×1920 | dolu | PNG/JPG | WebP ≤ 300 KB |
-| Arka plan (yatay) | 1920×1080 | dolu | PNG/JPG | WebP ≤ 300 KB |
-| Nesne / ikon | 1024×1024 | **şeffaf** (yoksa düz yeşil #00FF00) | PNG | WebP ≤ 60 KB |
+| Arka plan (dikey) | modelin en büyük dikey oranı (yönetici 9:16 kırpar) | dolu | PNG/JPG | WebP ≤ 300 KB |
+| Arka plan (yatay) | modelin en büyük yatay oranı (yönetici 16:9 kırpar) | dolu | PNG/JPG | WebP ≤ 300 KB |
+| Nesne / ikon | kare (1024) | **şeffaf** (yoksa düz yeşil #00FF00) | PNG | WebP ≤ 60 KB |
 | Avatar / maskot | 1024×1024 | şeffaf | PNG | WebP ≤ 60 KB |
 | Anlatım karesi | 1024×768 | dolu, koyu | PNG/JPG | WebP ≤ 120 KB |
 | Oyun kart kapağı | 1200×675 (16:9) | dolu | PNG/JPG | WebP ≤ 150 KB |
