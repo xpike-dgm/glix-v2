@@ -4,8 +4,8 @@ import solid from "vite-plugin-solid";
 
 /** Girişin (statik) bağımlı olduğu parçalar kabuğun parçasıdır: önbelleğe alınmadan çevrimdışı açılış çalışmaz. */
 const shellChunks: { url: string; revision: string | null }[] = [];
-/** Çevrimdışı ana sayfa ve bağlantı örtüsü maskotu ağsız da görünsün diye yalnız "bekliyor" kabukta. Görsel değişirse revizyon artar. */
-const shellArt = { url: "assets/mascot/bekliyor.webp", revision: "1" };
+/** Çevrimdışı ana sayfa ve bağlantı örtüsü maskotu ağsız da görünsün diye yalnız "baglanti-koptu" kabukta. Görsel değişirse revizyon artar. */
+const shellArt = { url: "assets/mascot/baglanti-koptu.webp", revision: "1" };
 function collectShellChunks(): Plugin {
   return {
     name: "glix-shell-chunks",
@@ -57,6 +57,8 @@ export default defineConfig({
           "**/assets/badges/**",
           "**/assets/props/**",
           "**/assets/worlds/**",
+          "**/assets/cards/**",
+          "**/assets/briefing/**",
         ],
         additionalManifestEntries: shellChunks,
         navigateFallback: "/index.html",
@@ -67,11 +69,12 @@ export default defineConfig({
         runtimeCaching: [
           {
             urlPattern: ({ url, sameOrigin }) =>
-              sameOrigin && /^\/assets\/(avatars\/moods|mascot|badges|props|worlds)\//.test(url.pathname),
+              sameOrigin &&
+              /^\/assets\/(avatars\/moods|mascot|badges|props|worlds|cards|briefing|fx)\//.test(url.pathname),
             handler: "CacheFirst",
             options: {
               cacheName: "glix-art",
-              expiration: { maxEntries: 420, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              expiration: { maxEntries: 540, maxAgeSeconds: 60 * 60 * 24 * 90 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },

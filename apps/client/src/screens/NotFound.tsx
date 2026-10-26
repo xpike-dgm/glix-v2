@@ -8,7 +8,7 @@ export function NotFound() {
     <Screen>
       <div class="center-stack">
         <div class="rise" style={{ "--i": 0 }}>
-          <Mascot pose="dusunuyor" size="var(--mascot-lg, clamp(96px, 30vw, 150px))" />
+          <Mascot pose="oda-bulunamadi" size="var(--mascot-lg, clamp(96px, 30vw, 150px))" />
         </div>
         <h1 class="display h-title rise" style={{ "--i": 1 }}>
           Oda bulunamadı

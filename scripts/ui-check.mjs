@@ -1268,9 +1268,13 @@ async function checkOne(browser, scr, [w, h]) {
     }
     // Oyun dünyası arka planı yüklensin (sonra belirme geçişi aşağıda bitiş karesine alınır).
     await page
-      .waitForFunction(() => [...document.querySelectorAll(".world__img")].every((i) => i.complete), null, {
-        timeout: 8000,
-      })
+      .waitForFunction(
+        () => [...document.querySelectorAll(".world__img, .panels__img")].every((i) => i.complete),
+        null,
+        {
+          timeout: 8000,
+        },
+      )
       .catch(() => {});
     await sleep(100);
     // Ölçüm animasyon ortasına denk gelmesin: sonlu animasyonlar bitiş karesine, sonsuzlar durdurulur.

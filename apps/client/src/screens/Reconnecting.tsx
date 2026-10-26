@@ -13,7 +13,7 @@ export function Reconnecting() {
   return (
     <Show when={visible()}>
       <div class="overlay" role="alert">
-        <Mascot pose="bekliyor" size="var(--mascot-lg, clamp(96px, 30vw, 150px))" />
+        <Mascot pose="baglanti-koptu" size="var(--mascot-lg, clamp(96px, 30vw, 150px))" />
         <svg class="ring" viewBox="0 0 80 80" width="84" height="84" aria-hidden="true">
           <defs>
             <linearGradient id="ringg" x1="0" y1="0" x2="1" y2="1">

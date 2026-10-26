@@ -1,5 +1,16 @@
 interface Props {
-  pose: "varsayilan" | "merhaba" | "dusunuyor" | "saskin" | "kutluyor" | "bekliyor" | "tamir";
+  pose:
+    | "varsayilan"
+    | "merhaba"
+    | "dusunuyor"
+    | "saskin"
+    | "kutluyor"
+    | "bekliyor"
+    | "tamir"
+    | "yukleniyor"
+    | "baglanti-koptu"
+    | "oda-bos"
+    | "oda-bulunamadi";
   /** px sayısı ya da CSS uzunluğu. */
   size: number | string;
   /** Hafif yukarı-aşağı salınım (reduced-motion'da durur). */

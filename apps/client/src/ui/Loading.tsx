@@ -6,7 +6,7 @@ export function Loading() {
   return (
     <Screen>
       <div class="center-stack">
-        <Mascot pose="varsayilan" size="var(--mascot-lg, clamp(96px, 30vw, 150px))" />
+        <Mascot pose="yukleniyor" size="var(--mascot-lg, clamp(96px, 30vw, 150px))" />
         <span class="loader" aria-hidden="true" />
       </div>
     </Screen>

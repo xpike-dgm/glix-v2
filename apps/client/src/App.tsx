@@ -15,6 +15,7 @@ import { Reconnecting } from "./screens/Reconnecting.js";
 import { Results } from "./screens/Results.js";
 import { selectScreen } from "./screens/route.js";
 import { installErrorReporting } from "./telemetry/errors.js";
+import { preloadBriefing } from "./ui/briefingArt.js";
 import { Loading } from "./ui/Loading.js";
 import { preloadMoods } from "./ui/preloadMoods.js";
 import { preloadProps } from "./ui/props.js";
@@ -38,6 +39,7 @@ export function App() {
     if (!m) return;
     preloadProps(m.gameId);
     preloadWorld(m.gameId);
+    preloadBriefing(m.gameId);
   });
 
   // Yalnız geliştirme: oyun parçası bekleme ekranını önizler.

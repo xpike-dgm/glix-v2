@@ -122,7 +122,7 @@ export function Home() {
       <div class="home__actions">
         <Show when={offline()} fallback={<InstallHint />}>
           <div class="offline-wrap">
-            <Mascot pose="bekliyor" size="var(--mascot-sm, 64px)" />
+            <Mascot pose="baglanti-koptu" size="var(--mascot-sm, 64px)" />
             <p class="offline" role="status">
               İnternet bağlantısı yok — bağlanınca oyuna katılabilirsin
             </p>

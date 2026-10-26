@@ -19,6 +19,7 @@ import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
+import { worldAllowed } from "../ui/world.js";
 
 async function share(code: string): Promise<void> {
   const url = inviteLink(location.origin, code);
@@ -36,6 +37,27 @@ async function share(code: string): Promise<void> {
   } catch {
     toast(`Arkadaşlarına kodu söyle: ${code}`);
   }
+}
+
+/** Oyun kartı görseli; yüklenemezse (ya da veri tasarrufunda) boş çerçeve kalır. */
+function GameThumb(props: { id: string }) {
+  const [ok, setOk] = createSignal(worldAllowed());
+  return (
+    <Show when={ok()}>
+      <span class="gcard__art" aria-hidden="true">
+        <img
+          src={`/assets/cards/${props.id}.webp`}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          width="800"
+          height="450"
+          onError={() => setOk(false)}
+        />
+      </span>
+    </Show>
+  );
 }
 
 export function Lobby(props: { snap: RoomSnapshot }) {
@@ -132,7 +154,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
       <div class="lobby__scroll" data-scroll ref={scroller}>
         <Show when={snap().players.length < 2}>
           <div class="alone rise" style={{ "--i": 3 }}>
-            <Mascot pose="merhaba" size="var(--mascot-sm, 64px)" />
+            <Mascot pose="oda-bos" size="var(--mascot-sm, 64px)" />
             <p class="alone__text">Arkadaşların kodu girince burada belirir.</p>
           </div>
         </Show>
@@ -291,6 +313,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                         aria-pressed={on()}
                         onClick={() => toggleGame(g.id)}
                       >
+                        <GameThumb id={g.id} />
                         <span class="gcard__text">
                           <span class="gcard__name">{g.name}</span>
                           <span class="gcard__tag">

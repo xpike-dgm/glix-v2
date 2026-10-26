@@ -6,6 +6,7 @@ import { ready as readySound } from "../fx/sound.js";
 import { gameEntry } from "../games/registry.js";
 import { sendReady } from "../net/client.js";
 import { Avatar } from "../ui/Avatar.js";
+import { BriefingPanels } from "../ui/BriefingPanels.js";
 import { CheckIcon, EyeIcon, RotateIcon } from "../ui/Icons.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
@@ -20,6 +21,7 @@ export function Briefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
   const strip = () => snap().players.filter((p) => match().participants.includes(p.id));
   const isReady = (id: string): boolean => match().readyIds.includes(id) || (id === snap().selfId && sent());
   const art = () => gameEntry(match().gameId)?.Art;
+  const [panel, setPanel] = createSignal(0);
 
   return (
     <>
@@ -38,30 +40,41 @@ export function Briefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
           </p>
         </Show>
 
-        <div class="brief__art rise" style={{ "--i": 2 }}>
-          <Suspense>
-            <Show when={art()}>{(a) => <Dynamic component={a()} />}</Show>
-          </Suspense>
-        </div>
+        <div class="brief__main">
+          <div class="brief__art rise" style={{ "--i": 2 }}>
+            <BriefingPanels
+              gameId={match().gameId}
+              index={panel}
+              onIndex={setPanel}
+              fallback={() => (
+                <Suspense>
+                  <Show when={art()}>{(a) => <Dynamic component={a()} />}</Show>
+                </Suspense>
+              )}
+            />
+          </div>
 
-        <Show when={match().gameId === "laf-sokma"}>
-          <p class="brief__tone rise" style={{ "--i": 3 }}>
-            Ton: <b>{CONTENT_TONE_LABELS[snap().tone]}</b>
-          </p>
-        </Show>
-        <p class="brief__goal rise" style={{ "--i": 3 }}>
-          {match().briefing.goal}
-        </p>
-        <ol class="steps">
-          <For each={match().briefing.steps}>
-            {(step, i) => (
-              <li class="rise" style={{ "--i": 4 + i() }}>
-                <b class="steps__n">{i() + 1}</b>
-                <span>{step}</span>
-              </li>
-            )}
-          </For>
-        </ol>
+          <div class="brief__text">
+            <Show when={match().gameId === "laf-sokma"}>
+              <p class="brief__tone rise" style={{ "--i": 3 }}>
+                Ton: <b>{CONTENT_TONE_LABELS[snap().tone]}</b>
+              </p>
+            </Show>
+            <p class="brief__goal rise" style={{ "--i": 3 }}>
+              {match().briefing.goal}
+            </p>
+            <ol class="steps">
+              <For each={match().briefing.steps}>
+                {(step, i) => (
+                  <li class="rise" style={{ "--i": 4 + i() }} data-on={panel() === i() ? "1" : undefined}>
+                    <b class="steps__n">{i() + 1}</b>
+                    <span>{step}</span>
+                  </li>
+                )}
+              </For>
+            </ol>
+          </div>
+        </div>
 
         <div class="brief__foot">
           <div class="strip">
