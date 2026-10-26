@@ -475,6 +475,58 @@ async function main() {
     assert(frames.patch > 0, "hiç patch mesajı alınmadı");
     assert(frames.room > 0, "hiç tam room mesajı alınmadı");
 
+    // 10b) iOS dönüşü: soket "açık" görünür ama ölüdür (kareler kaybolur); sekme uzun gizli kaldıktan sonra
+    // görünür olunca istemci beklemeden yeniden bağlanır, aynı kimlikle odaya döner ve taze durumu alır.
+    {
+      const ctxD = await mk();
+      const D = await ctxD.newPage();
+      watch("D", D);
+      let deadSocket = 0; // bu sıradaki soket ölü: ne gider ne gelir
+      let sockets = 0;
+      await D.routeWebSocket(/\/ws$/, (route) => {
+        sockets += 1;
+        const mine = sockets;
+        const server = route.connectToServer();
+        route.onMessage((m) => {
+          if (mine !== deadSocket) server.send(m);
+        });
+        server.onMessage((m) => {
+          if (mine !== deadSocket) route.send(m);
+        });
+      });
+      await D.goto("/");
+      await btn(D, /oda kur/i).click();
+      await setNick(D, "Deniz");
+      const dCode = await lobbyCode(D);
+      const socketsBefore = sockets;
+      const roomsBefore = frames.room;
+      deadSocket = sockets;
+      await D.evaluate(() => {
+        Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true });
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      await sleep(6000);
+      const t0 = Date.now();
+      await D.evaluate(() => {
+        Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true });
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      await D.waitForFunction(
+        () => !document.querySelector(".overlay") && !!document.querySelector(".roomcode"),
+        null,
+        OPT,
+      ).catch(() => {});
+      for (let i = 0; i < 100 && sockets === socketsBefore; i++) await sleep(100);
+      assert(sockets > socketsBefore, "ölü soket yoklamayla fark edilip yeniden bağlanmalı");
+      await D.locator(".roomcode").waitFor(OPT);
+      assert((await lobbyCode(D)) === dCode, "yeniden bağlanınca aynı odaya dönülmeli");
+      for (let i = 0; i < 50 && frames.room <= roomsBefore; i++) await sleep(100);
+      assert(frames.room > roomsBefore, "yeniden bağlanınca sunucudan taze oda görünümü gelmeli");
+      assert(Date.now() - t0 < 6000, "yeniden bağlanma backoff beklememeli");
+      await ctxD.close();
+      log("gizli→görünür: ölü soket yoklaması, anında yeniden bağlanma ve oda dönüşü tamam");
+    }
+
     // 11) Sunucu güncellenir (SIGTERM): drain -> /health 503, maç sürer; süre dolunca 1012 ile kapanır,
     // istemci yeniden bağlanır, oda bellekte olmadığı için "Oyun güncellendi" der ve yeni oda kurulabilir.
     const exited = new Promise((r) => server.child.once("exit", r));

@@ -96,14 +96,14 @@ Zaten var: dvh yükseklik, safe-area, klavye alanı (visualViewport), iOS "Ana E
 **App Store / yerel uygulama sarmalı: KARAR YOK** — sahibi "yapalım" diyene kadar gündemde değil.
 
 **1. Oyun sırasında kopma ve kararma (öncelik)**
-- [ ] Ekran Uyanık Tutma (Wake Lock) oyun ve lobi sırasında; sekme geri gelince yeniden alınır.
-- [ ] Arka plandan dönüşte (`visibilitychange`, `pageshow`/bfcache) anında yeniden bağlanma + tek seferde güncel durum; bayat oda görüntüsü yok.
-- [ ] Dönüşte kısa "Tekrar bağlandın — şu an X turundayız" bildirimi.
+- [x] Ekran Uyanık Tutma (Wake Lock) oyun ve lobi sırasında; sekme geri gelince yeniden alınır.
+- [x] Arka plandan dönüşte (`visibilitychange`, `pageshow`/bfcache) anında yeniden bağlanma + tek seferde güncel durum; bayat oda görüntüsü yok.
+- [x] Dönüşte kısa "Tekrar bağlandın — şu an X turundayız" bildirimi.
 
 **2. Ses**
-- [ ] Sessiz düğmesi: Safari `navigator.audioSession` ile "Sessiz modda da çal" seçeneği (Ayarlar'da).
-- [ ] Kilit/arka plan sonrası askıya alınan sesin ilk dokunuşta kendiliğinden açılması + denetimi.
-- [ ] Seslerin önceden ve küçük parçalar hâlinde yüklenmesi (ilk ses gecikmesiz).
+- [ ] Sessiz düğmesi: `navigator.audioSession` tercihi hazır (`fx/audioSession.ts`, `glix.sessizdeCal`); Ayarlar'daki anahtar U12'de.
+- [x] Kilit/arka plan sonrası askıya alınan sesin ilk dokunuşta kendiliğinden açılması + denetimi.
+- [x] Seslerin önceden ve küçük parçalar hâlinde yüklenmesi (ilk ses gecikmesiz).
 
 **3. Titreşim**
 - [ ] iOS'ta `navigator.vibrate` yok: iOS 18 Safari anahtar (switch) dokunuş yolunun önemli anlarda (bomba, eleme) denenmesi.
