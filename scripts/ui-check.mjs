@@ -1269,7 +1269,13 @@ async function checkOne(browser, scr, [w, h]) {
     // Oyun dünyası arka planı yüklensin (sonra belirme geçişi aşağıda bitiş karesine alınır).
     await page
       .waitForFunction(
-        () => [...document.querySelectorAll(".world__img, .panels__img")].every((i) => i.complete),
+        () =>
+          [...document.querySelectorAll(".world__img, .panels__img, .gcard__art img")].every((i) => {
+            if (i.complete) return true;
+            // Tembel kart görselleri yalnız ekrandayken beklenir.
+            const r = i.getBoundingClientRect();
+            return r.bottom < 0 || r.top > window.innerHeight;
+          }),
         null,
         {
           timeout: 8000,
