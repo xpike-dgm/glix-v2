@@ -5,9 +5,11 @@ import { hapticFinal } from "../fx/haptics.js";
 import { fanfare } from "../fx/sound.js";
 import { returnToLobby } from "../net/client.js";
 import { Avatar } from "../ui/Avatar.js";
+import type { Mood } from "../ui/avatars.js";
 import { FeedbackRow } from "../ui/FeedbackRow.js";
 import { CrownIcon } from "../ui/Icons.js";
 import { LeaveButton } from "../ui/LeaveButton.js";
+import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
@@ -17,6 +19,10 @@ export function Final(props: { snap: RoomSnapshot }) {
   let confetti: HTMLDivElement | undefined;
   const ranked = createMemo(() => rankPlayers(props.snap.players, (p) => p.score));
   const winners = () => winnersOf(ranked());
+  const lastRank = () => ranked().at(-1)?.rank ?? 0;
+  /** 1. sıra sevinir; sonuncu yalnız puanı negatifse "out", yoksa sakin. */
+  const rowMood = (rank: number, score: number): Mood =>
+    rank === 1 ? "happy" : rank === lastRank() && ranked().length > 1 && score < 0 ? "out" : "idle";
   const isHost = () => props.snap.hostId === props.snap.selfId;
   const tie = () => winners().length > 1;
 
@@ -63,6 +69,9 @@ export function Final(props: { snap: RoomSnapshot }) {
       </header>
 
       <div class="winner">
+        <span class="winner__mascot" aria-hidden="true">
+          <Mascot pose="kutluyor" size="clamp(72px, 20vw, 96px)" />
+        </span>
         <p class="overline winner__label rise" style={{ "--i": 0 }}>
           {tie() ? "Berabere" : "Kazanan"}
         </p>
@@ -75,6 +84,7 @@ export function Final(props: { snap: RoomSnapshot }) {
                   size={
                     tie() ? "clamp(64px, 22vw, 96px)" : "var(--win-av, clamp(96px, min(38vw, 22dvh), 168px))"
                   }
+                  mood="happy"
                   connected={w.player.connected}
                 />
                 <span class="winner__crown">
@@ -106,7 +116,12 @@ export function Final(props: { snap: RoomSnapshot }) {
               data-me={r.player.id === props.snap.selfId ? "1" : undefined}
             >
               <span class="row__rank">{r.rank}</span>
-              <Avatar index={r.player.avatar} size={40} connected={r.player.connected} />
+              <Avatar
+                index={r.player.avatar}
+                size={40}
+                mood={rowMood(r.rank, r.score)}
+                connected={r.player.connected}
+              />
               <span class="row__name">
                 <span class="row__nick">{r.player.nickname}</span>
                 <Show when={r.player.id === props.snap.selfId}>

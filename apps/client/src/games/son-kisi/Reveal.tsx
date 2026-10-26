@@ -15,6 +15,11 @@ export default function Reveal(props: GameScreenProps) {
       const e = result()?.escapes.find((x) => x.id === id);
       return p && e ? [{ p, ms: e.ms }] : [];
     });
+  const missedPeople = () =>
+    (result()?.missed ?? []).flatMap((id) => {
+      const p = props.players.find((x) => x.id === id);
+      return p ? [p] : [];
+    });
   const missed = () => result()?.missed.length ?? 0;
   onMount(() => {
     const r = result();
@@ -49,7 +54,14 @@ export default function Reveal(props: GameScreenProps) {
               </ul>
             </Show>
             <Show when={last().length > 0 && missed() > 0}>
-              <span class="skr__note">Kaçmayan: −1</span>
+              <span class="skr__note skr__note--miss">
+                Kaçmayan: −1
+                <span class="skr__miss" aria-hidden="true">
+                  <For each={missedPeople().slice(0, 8)}>
+                    {(p) => <Avatar index={p.avatar} size={22} mood="out" connected={p.connected} />}
+                  </For>
+                </span>
+              </span>
             </Show>
           </div>
         </section>

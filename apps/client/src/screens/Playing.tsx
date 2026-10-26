@@ -4,6 +4,7 @@ import { Dynamic } from "solid-js/web";
 import { gameEntry } from "../games/registry.js";
 import { createServerNow } from "../net/time.js";
 import { GameFrame } from "../ui/GameFrame.js";
+import { Loading } from "../ui/Loading.js";
 import { Screen } from "../ui/Screen.js";
 
 /**
@@ -41,15 +42,7 @@ export function Playing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
           hud={hud()}
           now={now}
         >
-          <Suspense
-            fallback={
-              <Screen>
-                <div class="center-stack">
-                  <span class="loader" aria-hidden="true" />
-                </div>
-              </Screen>
-            }
-          >
+          <Suspense fallback={<Loading />}>
             <Dynamic
               component={e().Screen}
               match={props.match}

@@ -1,5 +1,6 @@
 import { Show } from "solid-js";
 import { state } from "../net/store.js";
+import { Mascot } from "../ui/Mascot.js";
 
 /** Bağlantı koptuğunda yarı saydam örtü; dönünce kendiliğinden kalkar. */
 export function Reconnecting() {
@@ -12,6 +13,7 @@ export function Reconnecting() {
   return (
     <Show when={visible()}>
       <div class="overlay" role="alert">
+        <Mascot pose="bekliyor" size="var(--mascot-lg, clamp(96px, 30vw, 150px))" />
         <svg class="ring" viewBox="0 0 80 80" width="84" height="84" aria-hidden="true">
           <defs>
             <linearGradient id="ringg" x1="0" y1="0" x2="1" y2="1">

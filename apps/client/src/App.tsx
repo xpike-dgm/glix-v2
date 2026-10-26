@@ -1,4 +1,4 @@
-import { createMemo, Match, onCleanup, onMount, Switch } from "solid-js";
+import { createEffect, createMemo, createSignal, Match, onCleanup, onMount, Switch } from "solid-js";
 import { startNet } from "./net/client.js";
 import { normalizeCode } from "./net/code.js";
 import { setState, state } from "./net/store.js";
@@ -15,12 +15,23 @@ import { Reconnecting } from "./screens/Reconnecting.js";
 import { Results } from "./screens/Results.js";
 import { selectScreen } from "./screens/route.js";
 import { installErrorReporting } from "./telemetry/errors.js";
+import { Loading } from "./ui/Loading.js";
+import { preloadMoods } from "./ui/preloadMoods.js";
 import { Toasts } from "./ui/Toast.js";
 
 export function App() {
   const screen = createMemo(() =>
     selectScreen({ snapshot: state.snapshot, nav: state.nav, notFound: state.notFoundCode !== null }),
   );
+
+  // Maça girince odadaki oyuncuların ruh hâli görselleri önden yüklenir.
+  createEffect(() => {
+    const snap = state.snapshot;
+    if (snap && snap.phase !== "lobby") preloadMoods(snap.players.map((p) => p.avatar));
+  });
+
+  // Yalnız geliştirme: oyun parçası bekleme ekranını önizler.
+  const [devLoading, setDevLoading] = createSignal(false);
 
   onMount(() => {
     installErrorReporting();
@@ -29,6 +40,10 @@ export function App() {
     if (code) setState({ nav: "join", joinCode: code });
 
     const mock = import.meta.env.DEV ? params.get("mock") : null;
+    if (mock === "loading") {
+      setDevLoading(true);
+      return;
+    }
     if (mock) {
       if (mock.startsWith("sonkisi-")) {
         void import("./dev/mockSonKisi.js").then((m) => m.startSonKisiMock(mock, params));
@@ -95,6 +110,9 @@ export function App() {
   return (
     <div class="stage">
       <Switch>
+        <Match when={devLoading()}>
+          <Loading />
+        </Match>
         <Match when={screen() === "home"}>
           <Home />
         </Match>

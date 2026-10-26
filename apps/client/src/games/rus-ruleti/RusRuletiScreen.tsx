@@ -235,6 +235,7 @@ export default function RusRuletiScreen(props: GameScreenProps) {
                   <Avatar
                     index={p.avatar}
                     size="var(--rr-av)"
+                    mood={alive() ? undefined : "out"}
                     connected={p.connected}
                     ring={picked() ? RED : undefined}
                   />

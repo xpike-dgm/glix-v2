@@ -3,13 +3,16 @@ import { VitePWA } from "vite-plugin-pwa";
 import solid from "vite-plugin-solid";
 
 /** Girişin (statik) bağımlı olduğu parçalar kabuğun parçasıdır: önbelleğe alınmadan çevrimdışı açılış çalışmaz. */
-const shellChunks: { url: string; revision: null }[] = [];
+const shellChunks: { url: string; revision: string | null }[] = [];
+/** Çevrimdışı ana sayfa ve bağlantı örtüsü maskotu ağsız da görünsün diye yalnız "bekliyor" kabukta. Görsel değişirse revizyon artar. */
+const shellArt = { url: "assets/mascot/bekliyor.webp", revision: "1" };
 function collectShellChunks(): Plugin {
   return {
     name: "glix-shell-chunks",
     apply: "build",
     generateBundle(_, bundle) {
       shellChunks.length = 0;
+      shellChunks.push(shellArt);
       const seen = new Set<string>();
       const visit = (name: string): void => {
         const chunk = bundle[name];
@@ -46,7 +49,13 @@ export default defineConfig({
           "assets/**/*.{png,webp,jpg,svg}",
           "assets/*latin-*.woff2",
         ],
-        globIgnores: ["**/chunks/**"],
+        // Ruh hâli, maskot ve rozet görselleri (~1,6 MB) kabuğa girmez; ilk kullanımda çalışma anında önbelleğe alınır.
+        globIgnores: [
+          "**/chunks/**",
+          "**/assets/avatars/moods/**",
+          "**/assets/mascot/**",
+          "**/assets/badges/**",
+        ],
         additionalManifestEntries: shellChunks,
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/ws(\/|$)/, /^\/api\//, /^\/health(\/|$)/],
@@ -54,6 +63,16 @@ export default defineConfig({
         clientsClaim: true,
         skipWaiting: false,
         runtimeCaching: [
+          {
+            urlPattern: ({ url, sameOrigin }) =>
+              sameOrigin && /^\/assets\/(avatars\/moods|mascot|badges)\//.test(url.pathname),
+            handler: "CacheFirst",
+            options: {
+              cacheName: "glix-art",
+              expiration: { maxEntries: 160, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/assets/chunks/"),
             handler: "StaleWhileRevalidate",

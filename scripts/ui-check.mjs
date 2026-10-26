@@ -38,11 +38,14 @@ const clickText = (text) => async (page) => {
 /** name: dosya adı; q: sorgu; act: ek eylem; settle: bekleme (ms); sizes: yalnız bu boyutlarda; clock: sahte saat (ms). */
 const SCREENS = [
   { name: "home", q: "mock=home", settle: 1800 },
+  { name: "home-offline", q: "mock=home&off=1", settle: 1200 },
+  { name: "loading", q: "mock=loading" },
   { name: "home-nickname", q: "mock=home", act: async (p) => p.locator(".chip").click() },
   { name: "home-howto", q: "mock=home", act: clickText("Nasıl oynanır?") },
   { name: "join", q: "mock=join" },
   { name: "notfound", q: "mock=notfound" },
   { name: "reconnect", q: "mock=reconnect" },
+  { name: "lobby-1", q: "mock=lobby&n=1" },
   { name: "lobby-2", q: "mock=lobby&n=2" },
   { name: "lobby-8", q: "mock=lobby&n=8" },
   { name: "lobby-random", q: "mock=lobby", settle: 1000, act: clickText("Minigame Seçimi") },
