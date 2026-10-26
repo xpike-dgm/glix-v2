@@ -118,6 +118,13 @@ seçilenler sonraki aşamaların **referans görseli** olur (araç destekliyorsa
 
 Kapı: sahip 1.1–1.4'ü onaylar → stil öneki ve referans görseller kilitlenir.
 
+**Durum (2026-10-26): TAMAMLANDI.** Seçilenler `referans/secilen/`: `stil-arka-plan-zehirli-kadeh.png` (v2),
+`stil-nesne-kadeh.png` (v3), `stil-avatar-p1-cyan-happy.png` (v2), `stil-maskot.png` (v1). Ayrıntılı Aşama 2 talimatı:
+`docs/gorsel/ASAMA-2.md` (VDS: `/srv/glix/gorsel/ASAMA-2.md`).
+
+**Zehirli Kadeh notu (Aşama 3):** 8 kadeh `stil-nesne-kadeh.png` biçiminden birebir türetilir; süs, parlaklık ve
+dolgunluk aynı, yalnız sıvı rengi oyuncu rengine göre değişir — hiçbir kadeh diğerinden "şüpheli" görünmemeli.
+
 ---
 
 ## Aşama 2 — Karakterler
