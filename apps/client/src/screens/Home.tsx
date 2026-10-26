@@ -117,7 +117,18 @@ export function Home() {
 
       <div class="home__hero">
         <h1 class="wordmark" aria-label="GLIX">
-          GLIX
+          <img
+            class="wordmark__img"
+            src="/assets/brand/logo-512.webp"
+            srcset="/assets/brand/logo-512.webp 512w, /assets/brand/logo.webp 1024w"
+            sizes="(orientation: landscape) and (max-height: 520px) 300px, min(80vw, 420px)"
+            width="1024"
+            height="512"
+            alt=""
+            aria-hidden="true"
+            decoding="async"
+            fetchpriority="high"
+          />
         </h1>
         <p class="tagline">Arkadaşlarınla telefondan parti oyunu</p>
         <div class="crew" aria-hidden="true">

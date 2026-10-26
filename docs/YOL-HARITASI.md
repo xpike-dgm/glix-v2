@@ -142,9 +142,9 @@ Zaten var: dvh yükseklik, safe-area, klavye alanı (visualViewport), iOS "Ana E
 - [ ] Oyunların içinde renkler karaktere bağlı kalır (kadeh, nişangâh vb. zaten avatar rengini kullanıyor).
 
 ### U11. Logo
-- [ ] Ana giriş sayfasında yazı yerine GLIX logo görseli (neon, maskotla uyumlu); ChatGPT ile üretim, harflerin kusursuzluğu elle denetlenir.
-- [ ] Aynı logodan: uygulama simgesi, açılış görseli (U9-4), paylaşım önizleme kartı (U9-7).
-- [ ] Logoya hafif giriş animasyonu (azaltılmış hareket tercihinde yok).
+- [x] Ana giriş sayfasında yazı yerine GLIX logo görseli (neon, maskotla uyumlu); ChatGPT ile üretim, harflerin kusursuzluğu elle denetlenir.
+- [x] Aynı logodan: uygulama simgesi, açılış görseli (U9-4), paylaşım önizleme kartı (U9-7).
+- [x] Logoya hafif giriş animasyonu (azaltılmış hareket tercihinde yok).
 
 ### U12. Ana menüde Ayarlar
 - [x] Ana menüye "Ayarlar" ekranı (dişli simgesi, `screens/Settings.tsx`). İçerik:

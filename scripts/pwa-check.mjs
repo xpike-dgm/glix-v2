@@ -129,6 +129,21 @@ async function main() {
     });
     assert(head.manifest === "/manifest.webmanifest", `manifest bağlantısı yok: ${head.manifest}`);
     assert(head.touch === "/icons/apple-touch-icon.png", "apple-touch-icon yok");
+    const share = await fetch(`${base}/assets/brand/paylasim.jpg`);
+    assert(
+      share.ok && share.headers.get("content-type") === "image/jpeg",
+      "paylaşım kartı sunucudan image/jpeg olarak gelmiyor",
+    );
+    assert(
+      (await page.locator('meta[property="og:image"]').getAttribute("content")) ===
+        "https://glix.dgmcraft.online/assets/brand/paylasim.jpg",
+      "og:image",
+    );
+    assert((await page.locator('link[rel="apple-touch-startup-image"]').count()) === 9, "açılış görselleri");
+    assert(
+      (await page.locator('link[rel="icon"]').getAttribute("href")) === "/icons/favicon-64.png",
+      "favicon bağlantısı",
+    );
     assert(head.theme === "#05081a", `theme-color: ${head.theme}`);
     assert(head.capable === "yes" && head.status === "black-translucent", "iOS meta etiketleri eksik");
     const mres = await fetch(`${base}${head.manifest}`);
@@ -210,6 +225,15 @@ async function main() {
       "simgeler önbellekte değil",
     );
     assert(!cached.some((u) => /\/(ws|health|api)(\/|$|\?)/.test(u)), "ağ uçları önbelleğe girmiş");
+    for (const logo of ["logo-512.webp", "logo.webp"])
+      assert(
+        cached.some((u) => u.endsWith(`/assets/brand/${logo}`)),
+        `ana sayfa logosu kabukta değil: ${logo}`,
+      );
+    assert(
+      !cached.some((u) => /\/assets\/brand\/paylasim\.jpg|\/splash\//.test(u)),
+      "paylaşım kartı/açılış görselleri kabuğa girmiş",
+    );
     const health = await page.evaluate(async () => {
       const r = await fetch("/health", { cache: "no-store" });
       return { ok: r.ok, body: await r.text(), cached: (await caches.match("/health")) !== undefined };
@@ -223,6 +247,10 @@ async function main() {
     await page.locator(".wordmark").waitFor(OPT);
     const note = page.locator(".offline");
     await note.waitFor(OPT);
+    assert(
+      await page.locator(".wordmark img").evaluate((i) => i.complete && i.naturalWidth > 0),
+      "çevrimdışı ana sayfada logo yüklenmedi",
+    );
     assert(
       (await note.innerText()).includes("İnternet bağlantısı yok — bağlanınca oyuna katılabilirsin"),
       "çevrimdışı metni",

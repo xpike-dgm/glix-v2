@@ -394,16 +394,10 @@
   z-index: 1;
 }
 .ytable__logo {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(20px, 9cqh, 40px);
-  line-height: 1;
-  letter-spacing: 0.04em;
-  padding: 0 0.05em;
-  background: linear-gradient(100deg, var(--cyan), var(--violet) 55%, var(--magenta));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  display: block;
+  height: clamp(26px, 13cqh, 56px);
+  width: auto;
+  aspect-ratio: 2 / 1;
 }
 .ytable__sub {
   font-size: var(--fs-13);

@@ -22,7 +22,7 @@ export default function YatayMasaScreen(props: GameScreenProps) {
     <div class="ytable">
       <div class="ytable__felt" aria-hidden="true">
         <div class="ytable__mark">
-          <span class="ytable__logo">GLIX</span>
+          <img class="ytable__logo" src="/assets/brand/logo-512.webp" width="512" height="256" alt="GLIX" />
           <span class="ytable__sub">Masa</span>
         </div>
       </div>

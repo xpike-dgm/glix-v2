@@ -197,18 +197,29 @@
   text-align: center;
 }
 .wordmark {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: min(23vw, 22dvh, 112px);
-  line-height: 1;
-  letter-spacing: 0.02em;
-  padding: 0 0.04em;
-  background: linear-gradient(100deg, var(--cyan) 8%, var(--violet) 52%, var(--magenta) 94%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 0 22px rgba(139, 92, 255, 0.5));
-  animation: rise 520ms var(--ease) both;
+  margin: 0;
+  line-height: 0;
+  /* Oran önceden ayrılır (logo 2:1): görsel yüklenince hiçbir şey kaymaz. */
+  width: min(80vw, 44dvh, 420px);
+  aspect-ratio: 2 / 1;
+  filter: drop-shadow(0 0 22px rgba(139, 92, 255, 0.35));
+  animation: logo-in 640ms var(--ease) both;
+}
+.wordmark__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+@keyframes logo-in {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 .tagline {
   font-size: var(--fs-18);
@@ -1258,7 +1269,7 @@
 /* ---- Yatay telefon ---- */
 @media (orientation: landscape) and (max-height: 520px) {
   .wordmark {
-    font-size: min(20vw, 17dvh, 84px);
+    width: min(32vw, 34dvh, 240px);
   }
   .home__hero {
     gap: 6px;

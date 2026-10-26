@@ -72,7 +72,6 @@ export default defineConfig({
         globPatterns: [
           "index.html",
           "manifest.webmanifest",
-          "favicon.svg",
           "icons/*.png",
           "assets/*.{js,css}",
           "assets/**/*.{png,webp,jpg,svg}",
@@ -88,6 +87,10 @@ export default defineConfig({
           "**/assets/worlds/**",
           "**/assets/cards/**",
           "**/assets/briefing/**",
+          // Paylaşım kartı (≈260 KB) yalnız tarayıcıların/sosyal ağların indirdiği bir dosyadır; kabuğa girmez.
+          "**/assets/brand/paylasim.jpg",
+          // iOS açılış görselleri (iki MB'a kadar) kabuğa girmez; iOS bunları kendisi indirir.
+          "splash/**",
         ],
         additionalManifestEntries: shellChunks,
         navigateFallback: "/index.html",
