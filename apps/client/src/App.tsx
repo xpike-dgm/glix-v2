@@ -2,7 +2,10 @@ import { createEffect, createMemo, createSignal, Match, onCleanup, onMount, Swit
 import { startNet } from "./net/client.js";
 import { normalizeCode } from "./net/code.js";
 import { setState, state } from "./net/store.js";
-import { UpdateToast } from "./pwa/UpdateToast.js";
+import { announceUpdateIfAny } from "./pwa/pwa.js";
+import { UpdateRequired } from "./pwa/UpdateRequired.js";
+import { CLIENT_PROTOCOL_VERSION } from "./pwa/updatePolicy.js";
+import { useUpdateFlow } from "./pwa/useUpdateFlow.js";
 import { setScreenAwake } from "./pwa/wakeLock.js";
 import { Briefing } from "./screens/Briefing.js";
 import { Countdown } from "./screens/Countdown.js";
@@ -28,6 +31,8 @@ export function App() {
     selectScreen({ snapshot: state.snapshot, nav: state.nav, notFound: state.notFoundCode !== null }),
   );
 
+  const update = useUpdateFlow(screen);
+
   // Maça girince odadaki oyuncuların ruh hâli görselleri önden yüklenir.
   createEffect(() => {
     const snap = state.snapshot;
@@ -51,11 +56,16 @@ export function App() {
 
   onMount(() => {
     installErrorReporting();
+    announceUpdateIfAny();
     const params = new URLSearchParams(window.location.search);
     const code = normalizeCode(params.get("oda") ?? "");
     if (code) setState({ nav: "join", joinCode: code });
 
     const mock = import.meta.env.DEV ? params.get("mock") : null;
+    if (mock === "update-required") {
+      setState("serverProtocol", CLIENT_PROTOCOL_VERSION + 1);
+      return;
+    }
     if (mock === "loading") {
       setDevLoading(true);
       return;
@@ -126,6 +136,9 @@ export function App() {
   return (
     <div class="stage">
       <Switch>
+        <Match when={update() === "block-required"}>
+          <UpdateRequired />
+        </Match>
         <Match when={devLoading()}>
           <Loading />
         </Match>
@@ -171,7 +184,6 @@ export function App() {
       </Switch>
       <Reconnecting />
       <Toasts />
-      <UpdateToast screen={screen()} />
     </div>
   );
 }

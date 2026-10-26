@@ -168,10 +168,10 @@ Bugün: uygulama kabuğu önceden indiriliyor; görseller (≈16 MB) ilk görül
 
 ### U14. Güncelleme akışı
 Bugün: yeni sürüm hazır olunca bekliyor (`registerType: prompt`), kullanıcı yenileyince geçiyor.
-- [ ] Oyun ortasında asla zorla güncelleme yok; güncelleme yalnız güvenli anda (ana sayfa, lobi, maç arası) uygulanır.
-- [ ] Küçük güncellemeler: güvenli anda sormadan kendiliğinden yenilenir (kısa "Yeni sürüm yüklendi" bildirimi).
-- [ ] Uyumsuz güncellemeler (`protocolVersion` değişti): tam ekran "Güncelleme gerekli → Güncelle"; güncellemeden oyuna girilemez.
-- [ ] Sunucu güncellemesi (deploy) sırasında açık maçlar biter veya sürer (draining), sonra herkes yeni sürüme geçer.
+- [x] Oyun ortasında asla zorla güncelleme yok; güncelleme yalnız güvenli anda (ana sayfa, lobi, maç arası) uygulanır.
+- [x] Küçük güncellemeler: güvenli anda sormadan kendiliğinden yenilenir (kısa "Yeni sürüm yüklendi" bildirimi).
+- [x] Uyumsuz güncellemeler (`protocolVersion` değişti): tam ekran "Güncelleme gerekli → Güncelle"; güncellemeden oyuna girilemez.
+- [x] Sunucu güncellemesi (deploy) sırasında açık maçlar biter veya sürer (draining), sonra herkes yeni sürüme geçer.
 
 ---
 

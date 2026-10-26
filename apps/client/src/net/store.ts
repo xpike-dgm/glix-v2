@@ -41,6 +41,8 @@ interface AppState {
   busy: boolean;
   /** Katıl ekranındaki kutuları titretmek için artan sayaç. */
   joinShake: number;
+  /** Sunucunun `welcome` ile bildirdiği protokol sürümü; bağlanılana dek null. */
+  serverProtocol: number | null;
 }
 
 export const [state, setState] = createStore<AppState>({
@@ -58,6 +60,7 @@ export const [state, setState] = createStore<AppState>({
   notFoundCode: null,
   busy: false,
   joinShake: 0,
+  serverProtocol: null,
 });
 
 /** Sunucu saati (ms), ping/pong ölçümünün medyanıyla. */
