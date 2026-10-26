@@ -825,3 +825,38 @@
 :root[data-motion="reduce"] .pack__fill {
   animation: none;
 }
+.pack__gap {
+  height: 8px;
+}
+.pack .center-stack {
+  flex: 1 0 auto;
+}
+/* Alçak yatay ekranda maskot gizlenir, başlık küçülür, düğmeler yan yana dizilir: kaydırma gerekmez. */
+@media (max-height: 420px) {
+  .pack__mascot {
+    display: none;
+  }
+  .pack .h-title {
+    font-size: var(--fs-24);
+  }
+  .pack .lead {
+    font-size: var(--fs-15);
+  }
+  .pack .bottom-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+  }
+  .pack__gap {
+    display: none;
+  }
+  .pack .bottom-actions > .pbtn-wrap,
+  .pack .bottom-actions > .gbtn {
+    flex: 1 1 200px;
+  }
+  .pack .bottom-actions > .pack__skip {
+    flex: none;
+  }
+}

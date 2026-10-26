@@ -29,7 +29,7 @@ export function PackScreen() {
     <div class="pack" role="dialog" aria-modal="true" aria-labelledby="pack-title" data-phase={packPhase()}>
       <Screen>
         <div class="center-stack">
-          <div class="rise" style={{ "--i": 0 }}>
+          <div class="pack__mascot rise" style={{ "--i": 0 }}>
             <Mascot pose="yukleniyor" size="var(--mascot-lg, clamp(96px, 30vw, 150px))" />
           </div>
           <Switch>
@@ -83,7 +83,7 @@ export function PackScreen() {
         <div class="bottom-actions">
           <Show when={packPhase() === "ask"}>
             <PrimaryButton onClick={chooseNow}>Şimdi indir</PrimaryButton>
-            <div style={{ height: "8px" }} />
+            <div class="pack__gap" />
             <GhostButton onClick={chooseWifi}>Wi-Fi'yi bekle</GhostButton>
           </Show>
           <Show when={packPhase() === "failed"}>

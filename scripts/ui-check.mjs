@@ -56,6 +56,11 @@ const SCREENS = [
   { name: "notfound", q: "mock=notfound" },
   { name: "reconnect", q: "mock=reconnect" },
   { name: "update-required", q: "mock=update-required", settle: 900 },
+  { name: "hazirlaniyor", q: "mock=hazirlaniyor", settle: 900 },
+  { name: "hazirlaniyor-bos", q: "mock=hazirlaniyor-bos", settle: 900 },
+  { name: "hazirlaniyor-hucresel", q: "mock=hazirlaniyor-hucresel", settle: 900 },
+  { name: "hazirlaniyor-koptu", q: "mock=hazirlaniyor-koptu", settle: 900 },
+  { name: "hazirlaniyor-buyuk-yazi", q: "mock=hazirlaniyor-hucresel&text=large", settle: 900 },
   { name: "lobby-solo", q: "mock=lobby&n=1", settle: 900 },
   {
     name: "lobby-solo-qr",
