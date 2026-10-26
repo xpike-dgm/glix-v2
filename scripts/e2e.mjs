@@ -277,6 +277,37 @@ async function main() {
     const clip = await A.evaluate(() => navigator.clipboard.readText());
     assert(clip === `${base}/?oda=${code}`, `panodaki bağlantı yanlış: ${clip}`);
 
+    // QR sayfası: boş daireye dokununca da açılır; kod kopyalanır
+    await btn(A, /qr göster/i).click();
+    const inviteSheet = A.getByRole("dialog");
+    await inviteSheet.getByRole("img", { name: /qr/i }).waitFor(OPT);
+    await shot(A, "05-qr");
+    await inviteSheet.getByRole("button", { name: /kapat/i }).first().click();
+    await inviteSheet.waitFor({ state: "detached", ...OPT });
+    await btn(A, /arkadaş davet et/i)
+      .first()
+      .click();
+    await A.getByRole("dialog").getByRole("img", { name: /qr/i }).waitFor(OPT);
+    await A.keyboard.press("Escape");
+    await A.getByRole("dialog").waitFor({ state: "detached", ...OPT });
+    await A.locator(".roomcode").first().click();
+    await A.getByText("Kopyalandı").waitFor(OPT);
+    assert((await A.evaluate(() => navigator.clipboard.readText())) === code, "kod kopyalanmadı");
+
+    // Karakter seçimi: B kendi avatarına dokunup boş bir karakter alır; A'da görünür; alınmış olan soluk
+    await btn(B, /karakterini değiştir/i).click();
+    const picker = B.getByRole("dialog");
+    await picker.waitFor(OPT);
+    await shot(B, "05-picker");
+    await picker.locator(".picker__opt:not(.picker__opt--taken):not(.picker__opt--on)").last().click();
+    await picker.waitFor({ state: "detached", ...OPT });
+    await A.waitForFunction(
+      () => document.querySelectorAll("button.seat:not(.seat--empty) .av").length === 3,
+      null,
+      OPT,
+    );
+    assert((await B.evaluate(() => localStorage.getItem("glix.avatar"))) === "7", "karakter hatırlanmadı");
+
     // Minigame akordeonu: oda rastgele 5 ile açılır; host "Ben seçeyim"e geçip yalnız Butona Bas'ı bırakır,
     // son oyun kapatılamaz
     const head = A.locator(".games__head");

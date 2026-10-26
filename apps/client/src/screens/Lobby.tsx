@@ -258,7 +258,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
               <QrIcon size={22} />
               <span>QR göster</span>
             </button>
-            <button type="button" class="share" onClick={() => void share(snap().code)}>
+            <button type="button" class="share" aria-label="Paylaş" onClick={() => void share(snap().code)}>
               <ShareIcon size={22} />
               <span>Paylaş</span>
             </button>
