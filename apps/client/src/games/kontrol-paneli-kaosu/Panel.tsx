@@ -1,7 +1,10 @@
 import type { WireColor } from "@glix/engine";
 import { For, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
+import { propSrc } from "../../ui/props.js";
 import { COLOR_CSS, COLOR_NAME } from "./view.js";
+
+const WIRE_FILE = { blue: "mavi", green: "yesil", red: "kirmizi", yellow: "sari" } as const;
 
 export type CutVerdict = "right" | "wrong";
 
@@ -46,8 +49,29 @@ export function Panel(props: Props) {
                 <span class="kp__no">{i() + 1}</span>
                 <span class="kp__channel">
                   <i class="kp__core" />
+                  <img
+                    class="kp__img"
+                    src={propSrc(
+                      isCut()
+                        ? "kontrol-paneli-kaosu/kablo-kesik"
+                        : `kontrol-paneli-kaosu/kablo-${WIRE_FILE[color]}`,
+                    )}
+                    alt=""
+                    aria-hidden="true"
+                    draggable={false}
+                    width="384"
+                    height="384"
+                  />
                   <Show when={isCut()}>
-                    <b class="kp__spark" />
+                    <img
+                      class="kp__spark"
+                      src={propSrc("kontrol-paneli-kaosu/kivilcim")}
+                      alt=""
+                      aria-hidden="true"
+                      draggable={false}
+                      width="384"
+                      height="384"
+                    />
                   </Show>
                 </span>
                 <span class="kp__name">{COLOR_NAME[color]}</span>

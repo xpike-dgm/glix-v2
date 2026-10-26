@@ -1,6 +1,7 @@
 import { createMemo, createSignal, For, onCleanup } from "solid-js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
+import { propSrc } from "../../ui/props.js";
 import { bondPattern, ringPosition } from "./view.js";
 
 export interface CrewMember {
@@ -55,6 +56,15 @@ export function Pazarlik(props: Props) {
         </svg>
 
         <div class="it__clock" role="timer" aria-label="Kalan süre">
+          <img
+            class="it__shake"
+            src={propSrc("genel/el-sikisma")}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            width="384"
+            height="384"
+          />
           <span class="it__clock-num">{left()}</span>
           <span class="it__clock-unit">saniye</span>
         </div>

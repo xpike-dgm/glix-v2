@@ -5,7 +5,7 @@ import type { GameScreenProps } from "../registry.js";
 import { Cup } from "./Cup.js";
 import { cleanSound, poisonSound } from "./sounds.js";
 import "./zehirli-kadeh.css";
-import { cupColor, parseZehirliKadehPublicView } from "./view.js";
+import { parseZehirliKadehPublicView } from "./view.js";
 
 /** Sonuç açılışı: temiz kadehler altın, zehirliler mor-siyah dumanla. */
 export default function Reveal(props: GameScreenProps) {
@@ -35,7 +35,7 @@ export default function Reveal(props: GameScreenProps) {
             {(id, i) => (
               <li class="zkr__item" style={{ "--i": i() }}>
                 <Cup
-                  color={cupColor(pub()?.holdings[id] ?? 0)}
+                  cup={pub()?.holdings[id] ?? 0}
                   mode={isClean(id) ? "clean" : "poison"}
                   class="zkr__cup"
                 />

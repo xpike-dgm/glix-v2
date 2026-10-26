@@ -273,9 +273,13 @@
 .zhub[data-tone="red"] .zhub__fill {
   stroke: var(--red);
 }
-.zhub__bomb {
-  width: 52%;
-  height: 52%;
+.zhub .zhub__bomb {
+  width: 60%;
+  height: 60%;
+  margin-top: 14%;
+}
+.zhub .zhub__blast {
+  z-index: 1;
 }
 .zhub__num {
   position: relative;

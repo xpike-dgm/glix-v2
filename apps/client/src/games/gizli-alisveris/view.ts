@@ -117,11 +117,6 @@ export function ranking(reveal: AlisverisReveal, order: readonly string[]): stri
     .map((x) => x.id);
 }
 
-/** Ürün görseli için renk/şekil (kimlikten sabit türetilir). */
-const COLORS = ["#2ef2ff", "#ff2bd6", "#ffc23b", "#b6ff3b", "#8b5cff", "#ff8a3b", "#2bffa8", "#3b7bff"];
-export const productColor = (id: number): string => COLORS[id % COLORS.length] ?? "#2ef2ff";
-export const productShape = (id: number): number => id % 6;
-
 /** Kısa ürün adı etiketi için ilk iki harf (Türkçe büyük harf). */
 export function productInitials(name: string): string {
   const words = name.split(/\s+/).filter(Boolean);

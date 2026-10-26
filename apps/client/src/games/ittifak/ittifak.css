@@ -142,6 +142,12 @@
   align-items: center;
   line-height: 1;
 }
+.it__shake {
+  width: clamp(30px, 12cqw, 52px);
+  height: auto;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 0 8px rgba(46, 242, 255, 0.4));
+}
 .it__clock-num {
   font-family: var(--font-display);
   font-weight: 800;

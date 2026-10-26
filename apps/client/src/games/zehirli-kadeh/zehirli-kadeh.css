@@ -182,55 +182,42 @@
   color: var(--text-dim);
 }
 
-/* Kadeh çizimi */
-.zkcup__glass {
-  fill: rgba(255, 255, 255, 0.06);
-  stroke: #cfd6ff;
-  stroke-width: 2.4;
-  stroke-linejoin: round;
+/* Kadeh görseli */
+.zkcup {
+  position: relative;
+  display: inline-block;
+  aspect-ratio: 1;
+  flex: none;
 }
-.zkcup__liquid {
-  fill: var(--cc);
-  opacity: 0.85;
-  filter: drop-shadow(0 0 4px var(--cc));
+.zkcup__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
-.zkcup__shine {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.55);
-  stroke-width: 2;
-  stroke-linecap: round;
+.zkcup__fx {
+  position: absolute;
+  left: 50%;
+  top: 16%;
+  width: 120%;
+  height: 120%;
+  translate: -50% -50%;
+  object-fit: contain;
+  pointer-events: none;
+  animation: zk-fx 2.4s ease-in-out infinite alternate;
 }
-.zkcup__stem {
-  fill: none;
-  stroke: #cfd6ff;
-  stroke-width: 2.6;
-  stroke-linecap: round;
+.zkcup[data-mode="clean"] .zkcup__fx {
+  top: 22%;
 }
-.zkcup[data-mode="clean"] .zkcup__glass {
-  stroke: var(--amber);
-}
-.zkcup[data-mode="clean"] .zkcup__liquid {
-  fill: var(--amber);
-  filter: drop-shadow(0 0 6px var(--amber));
-}
-.zkcup__star {
-  fill: var(--amber);
-}
-.zkcup[data-mode="poison"] .zkcup__glass {
-  stroke: #7a5cc8;
-}
-.zkcup[data-mode="poison"] .zkcup__liquid {
-  fill: #2a1244;
-  filter: drop-shadow(0 0 6px #8b5cff);
-}
-.zkcup__smoke circle {
-  fill: rgba(139, 92, 255, 0.55);
-  animation: zk-smoke 2.4s ease-in-out infinite alternate;
-}
-@keyframes zk-smoke {
+@keyframes zk-fx {
   to {
-    transform: translateY(-3px);
-    opacity: 0.45;
+    transform: translateY(-3px) scale(1.05);
+    opacity: 0.85;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .zkcup__fx {
+    animation: none;
   }
 }
 
@@ -264,6 +251,7 @@
   gap: 8px clamp(3px, 1.6vw, 12px);
 }
 .zkr__item {
+  padding-top: 12px;
   display: grid;
   justify-items: center;
   gap: 2px;
@@ -271,13 +259,13 @@
   animation-delay: calc(var(--i, 0) * 90ms);
 }
 .zkr__cup {
-  width: clamp(22px, 7.6vw, 34px);
+  width: clamp(24px, 8.4vw, 38px);
   height: auto;
 }
 .zkr__pts {
   font-family: var(--font-display);
   font-weight: 800;
-  color: var(--text-dim);
+  color: var(--text);
 }
 .zkr__pts[data-ok="1"] {
   color: var(--amber);

@@ -1,4 +1,3 @@
-// biome-ignore-all lint/a11y/noSvgWithoutTitle: simgeler dekoratif (aria-hidden)
 import type { PlayerInfo } from "@glix/engine";
 import { createEffect, createMemo, createSignal, For, on, Show } from "solid-js";
 import { hapticError, hapticMatch, hapticReady, hapticResult } from "../../fx/haptics.js";
@@ -10,26 +9,34 @@ import { GhostButton } from "../../ui/GhostButton.js";
 import { NumberPicker } from "../../ui/NumberPicker.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
 import { ProgressBar } from "../../ui/ProgressBar.js";
+import { type PropPath, propSrc } from "../../ui/props.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
 import type { GameScreenProps } from "../registry.js";
 import "./kara-borsa.css";
 import { type BorsaScreenView, hintText, parseBorsaView, sortedBids } from "./view.js";
 
-const Crate = (props: { value?: number | null }) => (
-  <svg
-    viewBox="0 0 120 120"
-    class="kb__crate"
-    data-open={props.value != null ? "1" : undefined}
-    aria-hidden="true"
-  >
-    <path d="M14 44l46-22 46 22v46l-46 22-46-22z" class="kb__box" />
-    <path d="M14 44l46 22 46-22M60 66v46" class="kb__edge" />
-    <Show when={props.value == null} fallback={<path d="M30 40l30-14 30 14" class="kb__lid" />}>
-      <path d="M52 36a9 9 0 1116 3c-3 4-8 4-8 11M60 58v1" class="kb__q" />
-    </Show>
-  </svg>
-);
+const BOXES = ["kutu-ahsap", "kutu-celik", "kutu-hediye", "kutu-antika"] as const;
+
+/** Tura göre sabit kutu görseli (değeri ele vermez); lanetli açılışta lanet kutusu. */
+const Crate = (props: { round: number; value?: number | null }) => {
+  const art = (): PropPath => {
+    if (props.value != null && props.value < 0) return "kara-borsa/kutu-lanet";
+    return `kara-borsa/${BOXES[Math.abs(props.round) % BOXES.length] ?? "kutu-ahsap"}`;
+  };
+  return (
+    <img
+      class="kb__crate"
+      data-open={props.value != null ? "1" : undefined}
+      src={propSrc(art())}
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      width="384"
+      height="384"
+    />
+  );
+};
 
 const Coin = () => <span class="kb__coin" aria-hidden="true" />;
 
@@ -133,7 +140,7 @@ function Bid(props: {
   return (
     <>
       <div class="kb__stage">
-        <Crate />
+        <Crate round={props.view.round} />
         <Show when={!props.spectator}>
           <div class="kb__hint">
             <span class="kb__hintlabel">Sana özel ipucu</span>
@@ -241,7 +248,7 @@ function Reveal(props: { view: BorsaScreenView; crew: PlayerInfo[]; selfId: stri
       {(rr) => (
         <>
           <div class="kb__stage kb__stage--open">
-            <Crate value={rr().value} />
+            <Crate round={props.view.round} value={rr().value} />
             <div class="kb__value rise" data-cursed={cursed() ? "1" : undefined}>
               <span class="kb__valuelabel">{cursed() ? "Lanetli kutu" : "Kutunun değeri"}</span>
               <span class="kb__valuenum">{rr().value}</span>

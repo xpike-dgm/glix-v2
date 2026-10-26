@@ -119,38 +119,29 @@
   transform-origin: 100px 100px;
   animation: ay-spin 9s linear infinite reverse;
 }
-.ay-core__ring--inner {
-  stroke: var(--magenta);
-  stroke-width: 2;
-  opacity: 0.8;
-}
 @keyframes ay-spin {
   to {
     transform: rotate(360deg);
   }
 }
 .ay-core__orb {
-  width: 54%;
-  height: 54%;
-  border-radius: 50%;
-  background: radial-gradient(circle at 38% 34%, #d8fdff 0%, #2ef2ff 34%, #0a6fd6 82%);
-  box-shadow:
-    0 0 40px rgba(46, 242, 255, 0.75),
-    inset 0 0 22px rgba(255, 255, 255, 0.4);
+  position: relative;
+  width: 68%;
+  height: 68%;
   animation: ay-beat 1.8s ease-in-out infinite;
-  transition:
-    background 220ms var(--ease),
-    box-shadow 220ms var(--ease);
+  filter: drop-shadow(0 0 22px rgba(46, 242, 255, 0.7));
+  transition: filter 220ms var(--ease);
 }
-.ay-core__gloss {
+.ay-core__img {
   position: absolute;
-  width: 18%;
-  height: 9%;
-  left: 31%;
-  top: 28%;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.55);
-  transform: rotate(-30deg);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 220ms var(--ease);
+}
+.ay-core__img--hot {
+  opacity: 0;
 }
 @keyframes ay-beat {
   0%,
@@ -167,19 +158,24 @@
 .ay-core[data-danger="1"] .ay-core__ring--outer {
   stroke: var(--red);
 }
+.ay-core[data-danger="1"] .ay-core__orb,
+.ay-core[data-boom="1"] .ay-core__orb {
+  filter: drop-shadow(0 0 26px rgba(255, 59, 92, 0.85));
+}
 .ay-core[data-danger="1"] .ay-core__orb {
-  background: radial-gradient(circle at 38% 34%, #ffe1e6 0%, #ff3b5c 38%, #9b0f2e 84%);
-  box-shadow:
-    0 0 46px rgba(255, 59, 92, 0.85),
-    inset 0 0 22px rgba(255, 255, 255, 0.35);
   animation-duration: 0.7s;
 }
+.ay-core[data-danger="1"] .ay-core__img--calm,
+.ay-core[data-boom="1"] .ay-core__img--calm {
+  opacity: 0;
+}
+.ay-core[data-danger="1"] .ay-core__img--hot,
+.ay-core[data-boom="1"] .ay-core__img--hot {
+  opacity: 1;
+}
 .ay-core[data-boom="1"] .ay-core__orb {
-  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #fff4d6 50%, #ffc23b 100%);
-  box-shadow:
-    0 0 70px rgba(255, 255, 255, 0.95),
-    0 0 120px rgba(255, 194, 59, 0.7);
   animation: none;
+  filter: drop-shadow(0 0 40px rgba(255, 194, 59, 0.9));
 }
 .ay-core[data-boom="1"] .ay-core__ring {
   stroke: var(--amber);

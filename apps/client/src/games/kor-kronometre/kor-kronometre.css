@@ -23,42 +23,27 @@
   position: relative;
   width: var(--size);
   height: var(--size);
-  border-radius: 50%;
-  background: radial-gradient(closest-side, #0b1233 0%, #050818 92%);
-  box-shadow:
-    0 0 30px rgba(46, 242, 255, 0.28),
-    inset 0 0 28px rgba(46, 242, 255, 0.1);
-  transition: box-shadow 200ms var(--ease);
 }
-.kk-dial__face {
+.kk-dial__img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  overflow: visible;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px rgba(46, 242, 255, 0.35));
+  transition: filter 200ms var(--ease);
 }
-.kk-dial__ring {
-  fill: none;
-  stroke: var(--cyan);
-  stroke-width: 2.5;
-  transition: stroke 200ms var(--ease);
-}
-.kk-dial__tick {
-  stroke: rgba(142, 151, 199, 0.55);
-  stroke-width: 1.4;
-  stroke-linecap: round;
-}
-.kk-dial__tick[data-major="1"] {
-  stroke: var(--text-dim);
-  stroke-width: 2.6;
-}
-.kk-dial__crown {
-  fill: var(--violet);
-}
+/* Kadranın karanlık yüzü: görselde hafif aşağıda ve ortada. */
 .kk-dial__core {
-  fill: var(--cyan);
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  width: 6%;
+  height: 6%;
+  margin: -3% 0 0 -3%;
+  border-radius: 50%;
+  background: var(--cyan);
   filter: drop-shadow(0 0 7px var(--cyan));
-  transform-origin: 100px 100px;
   animation: kk-core 2.4s ease-in-out infinite;
 }
 @keyframes kk-core {
@@ -75,7 +60,10 @@
 /* Nabız: zamandan bağımsız, sabit döngü. */
 .kk-dial__pulse {
   position: absolute;
-  inset: 22%;
+  left: 29%;
+  top: 35%;
+  width: 42%;
+  height: 42%;
   border-radius: 50%;
   border: 2px solid var(--cyan);
   opacity: 0;
@@ -94,16 +82,11 @@
     opacity: 0;
   }
 }
-.kk-dial[data-locked="1"] {
-  box-shadow:
-    0 0 34px rgba(182, 255, 59, 0.45),
-    inset 0 0 28px rgba(182, 255, 59, 0.14);
-}
-.kk-dial[data-locked="1"] .kk-dial__ring {
-  stroke: var(--lime);
+.kk-dial[data-locked="1"] .kk-dial__img {
+  filter: drop-shadow(0 0 22px rgba(182, 255, 59, 0.6));
 }
 .kk-dial[data-locked="1"] .kk-dial__core {
-  fill: var(--lime);
+  background: var(--lime);
   filter: drop-shadow(0 0 8px var(--lime));
   animation: none;
   transform: scale(1.5);

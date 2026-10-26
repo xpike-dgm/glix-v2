@@ -6,6 +6,7 @@ import { fail, match as matchSound, solo as soloSound, unlockAudio } from "../..
 import { sendAction } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { BlastArt, BombArt } from "../../ui/BombArt.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
 import type { GameScreenProps } from "../registry.js";
@@ -22,29 +23,6 @@ import {
 import "./zaman-bombasi.css";
 
 const fmtScore = (n: number): string => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : "0");
-
-function BombIcon() {
-  return (
-    <svg viewBox="0 0 48 48" class="zhub__bomb" aria-hidden="true">
-      <circle cx="22" cy="28" r="14" fill="currentColor" />
-      <path d="M31 17l5-5" stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none" />
-      <path
-        d="M38 5v6M33 8h10M41 11l2 3M35 11l-2 3"
-        stroke="var(--amber)"
-        stroke-width="2.6"
-        stroke-linecap="round"
-        fill="none"
-      />
-      <path
-        d="M14 24a9 9 0 019-6"
-        stroke="rgba(255,255,255,.45)"
-        stroke-width="3"
-        stroke-linecap="round"
-        fill="none"
-      />
-    </svg>
-  );
-}
 
 const CRACKS = [
   "M52 -2 L47 14 L56 24 L45 38 L55 50 L43 63 L52 76 L46 90 L50 102",
@@ -406,7 +384,14 @@ export default function ZamanBombasiScreen(props: GameScreenProps) {
               stroke-dashoffset={String(C * (1 - (phase() === "input" ? frac() : 0)))}
             />
           </svg>
-          <Show when={phase() === "input"} fallback={<BombIcon />}>
+          <Show
+            when={phase() === "input"}
+            fallback={
+              <Show when={cracked()} fallback={<BombArt class="zhub__bomb" />}>
+                <BlastArt class="zhub__blast" />
+              </Show>
+            }
+          >
             <span class="display zhub__num">{secs()}</span>
           </Show>
         </div>

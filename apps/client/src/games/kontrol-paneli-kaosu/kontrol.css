@@ -102,28 +102,35 @@ button.kp__wire:active:not(:disabled) {
 }
 .kp__channel {
   position: relative;
-  height: 22px;
-  border-radius: 11px;
-  background: linear-gradient(180deg, #2a3157 0%, #11163a 45%, #1a2147 100%);
-  box-shadow:
-    inset 0 2px 3px rgba(0, 0, 0, 0.6),
-    0 1px 0 rgba(160, 175, 255, 0.18);
+  height: 100%;
 }
+/* İnce kablo hattı; ortada kanal görseli bağlantıyı gösterir. */
 .kp__core {
   position: absolute;
-  left: 7px;
-  right: 7px;
-  top: 7px;
-  bottom: 7px;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 8px;
+  margin-top: -4px;
   border-radius: 4px;
   background: var(--wc);
   box-shadow:
     0 0 8px var(--wc),
     0 0 2px #fff inset;
 }
-.kp__mini .kp__core {
-  top: 5px;
-  bottom: 5px;
+.kp__img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 128%;
+  max-width: 100%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.kp__mini .kp__img {
+  height: 118%;
 }
 .kp__wire[data-selected="1"] .kp__core {
   animation: kp-pulse 900ms ease-in-out infinite;
@@ -162,11 +169,12 @@ button.kp__wire:active:not(:disabled) {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 26px;
-  height: 26px;
-  margin: -13px 0 0 -13px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff 0 14%, var(--sc) 30%, transparent 70%);
+  height: 90%;
+  max-width: 100%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  object-fit: contain;
+  pointer-events: none;
   filter: drop-shadow(0 0 6px var(--sc));
   animation: kp-spark 700ms var(--ease) both;
 }
@@ -193,7 +201,7 @@ button.kp__wire:active:not(:disabled) {
   }
   to {
     transform: scale(1);
-    opacity: 0.9;
+    opacity: 0.55;
   }
 }
 
@@ -288,9 +296,6 @@ button.kp__wire:active:not(:disabled) {
 .kp__mini .kp__wire {
   grid-template-columns: 26px minmax(0, 1fr) 62px;
   padding: 0 8px 0 4px;
-}
-.kp__mini .kp__channel {
-  height: 18px;
 }
 .kp__mini .kp__no {
   font-size: var(--fs-15);

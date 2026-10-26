@@ -3,6 +3,7 @@ import { hapticMatch, hapticSolo, hapticTick } from "../../fx/haptics.js";
 import { match as matchSound, solo as soloSound, tick } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
+import { propSrc } from "../../ui/props.js";
 import type { CrewMember } from "./Duello.js";
 import { type RusvetScreenView, ringPosition } from "./view.js";
 
@@ -145,9 +146,15 @@ export function Sonuc(props: Props) {
                 >
                   <Avatar index={n.m.avatar} size="var(--rd-av)" connected={n.m.connected} />
                   <Show when={n.m.id === props.view.president}>
-                    <span class="rd__crown rd__crown--node" aria-hidden="true">
-                      ♛
-                    </span>
+                    <img
+                      class="rd__seat rd__seat--node"
+                      src={propSrc("genel/taht")}
+                      alt=""
+                      aria-hidden="true"
+                      draggable={false}
+                      width="384"
+                      height="384"
+                    />
                   </Show>
                   <span class="rd__name">{n.m.nickname}</span>
                   <span

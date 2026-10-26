@@ -1,0 +1,99 @@
+/** Oyun nesneleri (şeffaf WebP). Yol: /assets/props/<grup>/<ad>.webp */
+export type PropPath =
+  | `bomba/${"govde" | "fitil" | "kivilcim" | "patlama"}`
+  | `genel/${
+      | "arcade-dugme"
+      | "arcade-dugme-basili"
+      | "el-tas"
+      | "el-kagit"
+      | "el-makas"
+      | "el-sikisma"
+      | "enerji-cekirdegi"
+      | "enerji-cekirdegi-asiri"
+      | "kacis-kolu"
+      | "kasa-kapisi"
+      | "kronometre"
+      | "nisangah"
+      | "rusvet-jetonu"
+      | "taht"
+      | "tuval"}`
+  | `gizli-alisveris/${string}`
+  | `kara-borsa/${"kutu-ahsap" | "kutu-antika" | "kutu-celik" | "kutu-hediye" | "kutu-lanet"}`
+  | `kontrol-paneli-kaosu/${"kablo-kirmizi" | "kablo-mavi" | "kablo-sari" | "kablo-yesil" | "kablo-kesik" | "kivilcim"}`
+  | `rus-ruleti/${"tabanca" | "tambur"}`
+  | `zehirli-kadeh/${"efekt-temiz" | "efekt-zehir" | `kadeh-${string}`}`;
+
+export const propSrc = (p: PropPath): string => `/assets/props/${p}.webp`;
+
+/** Gizli Alışveriş ürün kimliği (motor kataloğu sırası) -> dosya adı. */
+export const ALISVERIS_PROP_FILES: readonly string[] = [
+  "hologram-sticker",
+  "enerji-icecegi",
+  "neon-rozet",
+  "retro-kartus",
+  "mini-hoparlor",
+  "arcade-eldiveni",
+  "piksel-kamera",
+  "jet-canta",
+  "kristal-kulaklik",
+  "holo-kask",
+  "mini-drone",
+  "gizli-sandik",
+];
+
+const BOMBA: PropPath[] = ["bomba/govde", "bomba/fitil", "bomba/kivilcim", "bomba/patlama"];
+
+/** Oyun kimliği -> o oyunun nesneleri (anlatım başlarken önden indirilir). */
+const GAME_PROPS: Record<string, readonly PropPath[]> = {
+  "gizli-alisveris": ALISVERIS_PROP_FILES.map((f): PropPath => `gizli-alisveris/${f}`),
+  "kara-borsa": [
+    "kara-borsa/kutu-ahsap",
+    "kara-borsa/kutu-antika",
+    "kara-borsa/kutu-celik",
+    "kara-borsa/kutu-hediye",
+    "kara-borsa/kutu-lanet",
+  ],
+  "kor-bomba": BOMBA,
+  "zaman-bombasi-hafizasi": BOMBA,
+  "rus-ruleti": ["rus-ruleti/tabanca", "rus-ruleti/tambur"],
+  "kontrol-paneli-kaosu": [
+    "kontrol-paneli-kaosu/kablo-kirmizi",
+    "kontrol-paneli-kaosu/kablo-mavi",
+    "kontrol-paneli-kaosu/kablo-sari",
+    "kontrol-paneli-kaosu/kablo-yesil",
+    "kontrol-paneli-kaosu/kablo-kesik",
+    "kontrol-paneli-kaosu/kivilcim",
+  ],
+  "butona-bas": ["genel/arcade-dugme", "genel/arcade-dugme-basili"],
+  "rusvet-darbe": ["genel/taht", "genel/rusvet-jetonu", "genel/el-tas", "genel/el-kagit", "genel/el-makas"],
+  "asiri-yukleme": ["genel/enerji-cekirdegi", "genel/enerji-cekirdegi-asiri"],
+  "kor-kronometre": ["genel/kronometre"],
+  "gizli-hirsiz": ["genel/kasa-kapisi"],
+  "son-kisi": ["genel/kacis-kolu"],
+  ittifak: ["genel/el-sikisma"],
+  "capraz-ates": ["genel/nisangah"],
+  "zehirli-kadeh": [
+    "zehirli-kadeh/efekt-temiz",
+    "zehirli-kadeh/efekt-zehir",
+    ...["cyan", "magenta", "amber", "lime", "violet", "orange", "emerald", "cobalt"].map(
+      (c): PropPath => `zehirli-kadeh/kadeh-${c}`,
+    ),
+  ],
+};
+
+const started = new Set<string>();
+const keep: HTMLImageElement[] = [];
+
+/** Oyunun nesne görsellerini önden indirir; ekranlarda yanıp sönme olmaz. */
+export function preloadProps(gameId: string): void {
+  if (typeof Image === "undefined") return;
+  for (const p of GAME_PROPS[gameId] ?? []) {
+    const src = propSrc(p);
+    if (started.has(src)) continue;
+    started.add(src);
+    const img = new Image();
+    img.decoding = "async";
+    img.src = src;
+    keep.push(img);
+  }
+}

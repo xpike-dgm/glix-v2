@@ -53,25 +53,16 @@
   stroke: var(--cyan);
   opacity: 0.28;
 }
-.skcor__door {
-  fill: #05081a;
-  stroke: var(--lime);
-  stroke-width: 2;
-}
-.skcor__light {
-  fill: var(--lime);
-  opacity: 0.25;
+.skcor__lever {
+  filter: drop-shadow(0 0 6px rgba(182, 255, 59, 0.55));
   animation: sk-light var(--pulse) ease-in-out infinite;
 }
-.sk__stage[data-tension="3"] .skcor__door {
-  stroke: var(--red);
-}
-.sk__stage[data-tension="3"] .skcor__light {
-  fill: var(--red);
+.sk__stage[data-tension="3"] .skcor__lever {
+  filter: drop-shadow(0 0 8px rgba(255, 59, 92, 0.9));
 }
 @keyframes sk-light {
   50% {
-    opacity: 0.75;
+    opacity: 0.7;
   }
 }
 .sk__hero {

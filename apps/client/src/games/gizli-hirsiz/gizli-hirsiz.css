@@ -131,26 +131,13 @@
   stroke-linecap: round;
   fill: none;
 }
-.ghcore__hex {
-  fill: #03050f;
-  stroke: var(--glow);
-  stroke-width: 2.5;
-  opacity: 0.85;
-  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--glow), transparent 55%));
-}
-.ghcore__plate {
-  fill: #0a1030;
-  stroke: rgba(46, 242, 255, 0.35);
-  stroke-width: 1.5;
-  transition: transform 520ms var(--ease);
-}
-.ghcore__lid {
-  opacity: 1;
-}
-.ghcore__eye {
-  fill: var(--glow);
-  opacity: 0.35;
-  animation: gh-pulse 2.6s ease-in-out infinite;
+.ghcore__door {
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--glow), transparent 45%));
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    filter 260ms var(--ease),
+    opacity 260ms var(--ease);
 }
 .ghcore__print {
   fill: none;
@@ -163,8 +150,8 @@
 .ghcore[data-state="marked"] .ghcore__print {
   opacity: 0.9;
 }
-.ghcore[data-state="marked"] .ghcore__eye {
-  opacity: 0;
+.ghcore[data-state="marked"] .ghcore__door {
+  opacity: 0.55;
 }
 .ghcore[data-state="solo"] {
   --glow: var(--lime);
@@ -178,28 +165,27 @@
   --glow: #5a6396;
   --ring: rgba(90, 99, 150, 0.5);
 }
-.ghcore[data-state="solo"] .ghcore__eye,
-.ghcore[data-state="multi"] .ghcore__eye {
-  opacity: 1;
-  r: 22;
+.ghcore[data-state="solo"][data-opening="1"] .ghcore__door,
+.ghcore[data-state="multi"][data-opening="1"] .ghcore__door {
+  animation: gh-door 520ms var(--ease) both;
 }
-.ghcore[data-state="solo"] .ghcore__plate--l,
-.ghcore[data-state="multi"] .ghcore__plate--l {
-  transform: translateX(-34px);
+.ghcore[data-state="none"] .ghcore__door {
+  opacity: 0.5;
+  filter: grayscale(1) drop-shadow(0 0 6px rgba(90, 99, 150, 0.5));
 }
-.ghcore[data-state="solo"] .ghcore__plate--r,
-.ghcore[data-state="multi"] .ghcore__plate--r {
-  transform: translateX(34px);
-}
-.ghcore[data-state="solo"] .ghcore__plate,
-.ghcore[data-state="multi"] .ghcore__plate {
-  opacity: 0;
+@keyframes gh-door {
+  from {
+    transform: scale(0.88);
+  }
+  60% {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1);
+  }
 }
 .ghcore[data-state="multi"][data-opening="1"] {
   animation: gh-glitch 520ms steps(2, end) 2;
-}
-.ghcore[data-state="none"] .ghcore__eye {
-  opacity: 0.2;
 }
 @keyframes gh-spin {
   to {
