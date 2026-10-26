@@ -30,15 +30,15 @@ oynanabilecek oyun yok" hata gibi okunuyor; oyun/ton ayarları bu durumda görü
 Sırayla yapılacak:
 
 **A. Hızlı kazanımlar**
-- [ ] QR ile katılma (yukarıdaki madde; "QR göster" → büyük QR, okutan doğrudan odaya girer).
-- [ ] Oda koduna dokununca kopyalama + "Kopyalandı" bildirimi.
-- [ ] Boş "+" daireleri davet düğmesi olur (dokununca paylaş/QR); en fazla 3 boş daire + "+N yer daha".
-- [ ] Oyuncu sayacı: "1/8 oyuncu · en az 2 gerekli".
-- [ ] Başlat altındaki metin olumlu dile: "Bir arkadaş daha gelince başlayabilirsin" (en küçük oyunun alt sınırına göre).
+- [x] QR ile katılma (yukarıdaki madde; "QR göster" → büyük QR, okutan doğrudan odaya girer).
+- [x] Oda koduna dokununca kopyalama + "Kopyalandı" bildirimi.
+- [x] Boş "+" daireleri davet düğmesi olur (dokununca paylaş/QR); en fazla 3 boş daire + "+N yer daha".
+- [x] Oyuncu sayacı: "1/8 oyuncu · en az 2 gerekli".
+- [x] Başlat altındaki metin olumlu dile: "Bir arkadaş daha gelince başlayabilirsin" (en küçük oyunun alt sınırına göre).
 
 **B. Yalnızken sıcak ekran**
-- [ ] Tek kişiyken özel yerleşim: büyük "oda boş" maskotu ortada, altında büyük QR ve "Arkadaşlarını çağır"; ikinci kişi gelince normal ızgara.
-- [ ] Katılma anı: avatar kayarak/zıplayarak girer, kısa ses + titreşim.
+- [x] Tek kişiyken özel yerleşim: büyük "oda boş" maskotu ortada, altında büyük QR ve "Arkadaşlarını çağır"; ikinci kişi gelince normal ızgara.
+- [x] Katılma anı: avatar kayarak/zıplayarak girer, kısa ses + titreşim.
 
 **C. Bekleme süresini değerli yap**
 - [ ] Oyun seçimi (kartlı liste), ton ve tur ayarları oyuncu sayısından bağımsız baştan görünür; yetersiz sayıdaki oyunlar soluk + "en az N kişi".
@@ -54,8 +54,8 @@ Sırayla yapılacak:
 - [ ] Lobiye dünya arka planı: tek "lobi salonu" görseli (dikey + yatay), Aşama 4 stilinde ChatGPT ile üretilir.
 - [ ] Seçilen oyunlar alt kısımda küçük kart şeridi: "Bu gece: N oyun".
 
-Kabul (ek): tek kişilik oda 320×568–430×932'de kaydırmasız; boş daireye dokunma davet açar; `ui:check`'e lobi-yalnız,
-lobi-2, lobi-8 durumları eklenir.
+Kabul (ek): tek kişilik oda 320×568–430×932'de kaydırmasız; boş daireye dokunma davet açar; `ui:check`'e lobi-solo,
+lobi-2, lobi-8, lobi-qr, lobi-picker durumları eklendi.
 
 ### U3. Anlatım (briefing) 2.0
 - Metin yerine **3 karelik otomatik mini animasyon** (oyun başına `BriefingDemo`), metin altta tek satır.
@@ -135,10 +135,10 @@ Zaten var: dvh yükseklik, safe-area, klavye alanı (visualViewport), iOS "Ana E
 - [ ] Gerçek iPhone 10 dakikalık kontrol listesi: kilitle-aç, arka plan-dön, sessiz mod, yatay, ana ekrandan açma.
 
 ### U10. Lobide karakter seçimi
-- [ ] Lobide karakter seçim ekranı: 8 karakter (mevcut `avatar` 0–7); alınmış olanlar soluk + sahibinin adı.
-- [ ] Sunucu tek otorite: `chooseAvatar` mesajı, odada benzersizlik sunucuda doğrulanır; aynı anda iki kişi aynı karakteri isterse ilk gelen alır, diğerine kibar uyarı.
-- [ ] Giren oyuncuya boş bir karakter otomatik atanır (bugünkü gibi), istediği an değiştirebilir; oyun başlayınca kilitlenir.
-- [ ] Cihaz son seçimi hatırlar; boşsa yeni odada önce onu dener.
+- [x] Lobide karakter seçim ekranı: 8 karakter (mevcut `avatar` 0–7); alınmış olanlar soluk + sahibinin adı.
+- [x] Sunucu tek otorite: `chooseAvatar` mesajı, odada benzersizlik sunucuda doğrulanır; aynı anda iki kişi aynı karakteri isterse ilk gelen alır, diğerine kibar uyarı.
+- [x] Giren oyuncuya boş bir karakter otomatik atanır (bugünkü gibi), istediği an değiştirebilir; oyun başlayınca kilitlenir.
+- [x] Cihaz son seçimi hatırlar; boşsa yeni odada önce onu dener.
 - [ ] Oyunların içinde renkler karaktere bağlı kalır (kadeh, nişangâh vb. zaten avatar rengini kullanıyor).
 
 ### U11. Logo
