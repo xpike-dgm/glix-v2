@@ -1,10 +1,12 @@
 import { APP_VERSION, normalizeNickname } from "@glix/engine";
-import { createSignal, type JSX, onMount, Show } from "solid-js";
+import { createEffect, createSignal, type JSX, on, Show } from "solid-js";
 import { applyAudioSession, getPlayInSilent, setPlayInSilent } from "../fx/audioSession.js";
 import { hapticTap } from "../fx/haptics.js";
 import { muted, setMuted, setVolume, tap, unlockAudio, volume } from "../fx/sound.js";
 import { readAvatarChoice } from "../net/storage.js";
 import { goHome, setNickname, state, toast } from "../net/store.js";
+import { clearPack, downloadAll, packProgress, packRunning, storageEpoch } from "../pwa/packController.js";
+import { fraction, megabytes } from "../pwa/packPolicy.js";
 import { checkForUpdate } from "../pwa/pwa.js";
 import {
   dataSaver,
@@ -17,10 +19,12 @@ import {
   setMotion,
   setTelemetry,
   setTextSize,
+  setWifiOnly,
   TEXT_CHOICES,
   type TextSize,
   telemetry,
   textSize,
+  wifiOnly,
 } from "../settings/settings.js";
 import { formatMegabytes, hasAudioSession, hasVibrate } from "../settings/support.js";
 import { Avatar } from "../ui/Avatar.js";
@@ -136,7 +140,10 @@ export function Settings() {
       .then((e) => setUsed(e.usage ?? null))
       .catch(() => setUsed(null));
   };
-  onMount(refreshUsage);
+  // Açılışta ve her indirme/temizlemeden sonra yeniden okunur.
+  createEffect(on(storageEpoch, refreshUsage));
+  const [packMsg, setPackMsg] = createSignal("");
+  const [packSettled, setPackSettled] = createSignal<number | null>(null);
 
   const onNick = (value: string): void => {
     setNick(value);
@@ -146,6 +153,8 @@ export function Settings() {
 
   const clearCache = (): void => {
     setConfirmClear(false);
+    setPackMsg("");
+    setPackSettled(null);
     const done = (): void => {
       toast("Önbellek temizlendi");
       refreshUsage();
@@ -154,10 +163,28 @@ export function Settings() {
       done();
       return;
     }
-    caches
-      .delete("glix-art")
-      .catch(() => false)
-      .then(done);
+    void clearPack().then(done);
+  };
+
+  const downloadEverything = (): void => {
+    setPackMsg("");
+    setPackSettled(null);
+    void downloadAll().then((r) => {
+      if (r === null || r.failed > 0 || r.aborted) {
+        setPackMsg("İndirilemedi. Bağlantını kontrol edip tekrar dene.");
+        return;
+      }
+      setPackSettled(r.downloaded);
+      setPackMsg(r.downloaded === 0 ? "Her şey zaten indirilmiş" : "Tüm içerik indirildi");
+    });
+  };
+  const packRatio = (): number => {
+    const p = packProgress();
+    return p ? fraction(p.bytes, p.totalBytes) : 0;
+  };
+  const packLine = (): string => {
+    const p = packProgress();
+    return p ? `${megabytes(p.bytes)} / ${megabytes(p.totalBytes)} MB` : "Hazırlanıyor";
   };
 
   const check = (): void => {
@@ -243,6 +270,29 @@ export function Settings() {
             on={dataSaver()}
             onChange={setDataSaver}
           />
+          <Toggle
+            label="Yalnız Wi-Fi'de indir"
+            hint="Mobil veride içerik kendiliğinden inmez"
+            on={wifiOnly()}
+            onChange={setWifiOnly}
+          />
+          <div class="set__row set__row--action">
+            <GhostButton size="small" onClick={downloadEverything} disabled={packRunning()}>
+              Tüm içeriği indir
+            </GhostButton>
+          </div>
+          <Show when={packRunning() || packMsg() !== ""}>
+            <div class="set__row" role="status" data-pack-result={packSettled() ?? undefined}>
+              <Show when={packRunning()} fallback={<span class="set__hint">{packMsg()}</span>}>
+                <span class="set__text">
+                  <span class="set__label">{packLine()}</span>
+                  <span class="set__meter" aria-hidden="true">
+                    <span class="set__meter-fill" style={{ transform: `scaleX(${packRatio()})` }} />
+                  </span>
+                </span>
+              </Show>
+            </div>
+          </Show>
           <Show when={canStore}>
             <div class="set__row">
               <span class="set__label">Kullanılan yer</span>

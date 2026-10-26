@@ -32,9 +32,10 @@ const [textSize, setTextSizeSignal] = createSignal<TextSize>(
   parseChoice(readStored(KEYS.textSize), TEXT_CHOICES, "normal"),
 );
 const [dataSaver, setDataSaverSignal] = createSignal(parseFlag(readStored(KEYS.dataSaver), false));
+const [wifiOnly, setWifiOnlySignal] = createSignal(parseFlag(readStored(KEYS.wifiOnly), true));
 const [telemetry, setTelemetrySignal] = createSignal(parseFlag(readStored(KEYS.telemetry), true));
 
-export { dataSaver, haptics, motion, telemetry, textSize };
+export { dataSaver, haptics, motion, telemetry, textSize, wifiOnly };
 
 /** Kök öğeye yazılan özellikler: CSS yalnız bunlara bakar. */
 export function applyRootSettings(
@@ -68,4 +69,8 @@ export function setDataSaver(on: boolean): void {
 export function setTelemetry(on: boolean): void {
   setTelemetrySignal(on);
   writeStored(KEYS.telemetry, on ? "1" : "0");
+}
+export function setWifiOnly(on: boolean): void {
+  setWifiOnlySignal(on);
+  writeStored(KEYS.wifiOnly, on ? "1" : "0");
 }

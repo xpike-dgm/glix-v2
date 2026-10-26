@@ -199,3 +199,23 @@
 :root[data-text="large"] .seat__name {
   font-size: 15px;
 }
+
+/* içerik indirme: satır içi ilerleme */
+.set__meter {
+  display: block;
+  width: 100%;
+  height: 6px;
+  margin-top: var(--sp-2);
+  border-radius: 3px;
+  background: rgba(140, 160, 255, 0.14);
+  overflow: hidden;
+}
+.set__meter-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  transform-origin: left center;
+  transition: transform 320ms var(--ease);
+}

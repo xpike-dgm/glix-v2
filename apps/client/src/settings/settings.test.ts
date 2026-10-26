@@ -28,6 +28,7 @@ describe("varsayılanlar", () => {
     expect(s.textSize()).toBe("normal");
     expect(s.dataSaver()).toBe(false);
     expect(s.telemetry()).toBe(true);
+    expect(s.wifiOnly()).toBe(true);
   });
 });
 
@@ -39,12 +40,14 @@ describe("kalıcılık", () => {
     a.setTextSize("large");
     a.setDataSaver(true);
     a.setTelemetry(false);
+    a.setWifiOnly(false);
     const b = await fresh(Object.fromEntries(a.storage.data));
     expect(b.haptics()).toBe(false);
     expect(b.motion()).toBe("reduce");
     expect(b.textSize()).toBe("large");
     expect(b.dataSaver()).toBe(true);
     expect(b.telemetry()).toBe(false);
+    expect(b.wifiOnly()).toBe(false);
   });
   it("değişiklik hemen okuyucuya yansır", async () => {
     const s = await fresh();
@@ -61,12 +64,14 @@ describe("bozuk kayıt", () => {
       "glix.textSize": "devasa",
       "glix.dataSaver": "2",
       "glix.telemetry": "",
+      "glix.wifiOnly": "belki",
     });
     expect(s.haptics()).toBe(true);
     expect(s.motion()).toBe("auto");
     expect(s.textSize()).toBe("normal");
     expect(s.dataSaver()).toBe(false);
     expect(s.telemetry()).toBe(true);
+    expect(s.wifiOnly()).toBe(true);
   });
 });
 

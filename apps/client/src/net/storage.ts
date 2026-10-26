@@ -12,6 +12,9 @@ export const KEYS = {
   textSize: "glix.textSize",
   dataSaver: "glix.dataSaver",
   telemetry: "glix.telemetry",
+  wifiOnly: "glix.wifiOnly",
+  /** İçerik paketi: tamamlanan sürüm; "off" = kullanıcı önbelleği temizledi, kendiliğinden indirme yok. */
+  packState: "glix.packState",
 } as const;
 
 export function readStored(key: string): string | null {

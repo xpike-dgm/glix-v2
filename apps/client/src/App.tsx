@@ -1,8 +1,16 @@
-import { createEffect, createMemo, createSignal, Match, onCleanup, onMount, Switch } from "solid-js";
+import { createEffect, createMemo, createSignal, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 import { startNet } from "./net/client.js";
 import { normalizeCode } from "./net/code.js";
 import { setState, state } from "./net/store.js";
-import { announceUpdateIfAny } from "./pwa/pwa.js";
+import { PackScreen } from "./pwa/PackScreen.js";
+import {
+  evaluate,
+  initContentPack,
+  notifyScreen,
+  packScreenOpen,
+  watchNetwork,
+} from "./pwa/packController.js";
+import { announceUpdateIfAny, isOnline } from "./pwa/pwa.js";
 import { UpdateRequired } from "./pwa/UpdateRequired.js";
 import { CLIENT_PROTOCOL_VERSION } from "./pwa/updatePolicy.js";
 import { useUpdateFlow } from "./pwa/useUpdateFlow.js";
@@ -19,7 +27,7 @@ import { Reconnecting } from "./screens/Reconnecting.js";
 import { Results } from "./screens/Results.js";
 import { selectScreen } from "./screens/route.js";
 import { Settings } from "./screens/Settings.js";
-import { setTextSize } from "./settings/settings.js";
+import { dataSaver, setTextSize, wifiOnly } from "./settings/settings.js";
 import { installErrorReporting } from "./telemetry/errors.js";
 import { preloadBriefing } from "./ui/briefingArt.js";
 import { Loading } from "./ui/Loading.js";
@@ -53,6 +61,15 @@ export function App() {
   // Odadayken ekran uyanık kalır; ana ekranda bırakılır.
   createEffect(() => setScreenAwake(state.snapshot !== null));
 
+  // İçerik indirme: ekran ve kısıtlar değişince durdurulur (maç sürerken) ya da sürdürülür.
+  createEffect(() => notifyScreen(screen()));
+  createEffect(() => {
+    dataSaver();
+    wifiOnly();
+    isOnline();
+    evaluate();
+  });
+
   // Yalnız geliştirme: oyun parçası bekleme ekranını önizler.
   const [devLoading, setDevLoading] = createSignal(false);
 
@@ -70,6 +87,10 @@ export function App() {
     }
     // Yalnız geliştirme: arayüz denetimi büyük yazıyı `&text=large` ile açar.
     if (import.meta.env.DEV && params.get("text") === "large") setTextSize("large");
+    if (mock?.startsWith("hazirlaniyor")) {
+      void import("./dev/mockHazirlaniyor.js").then((m) => m.startPackMock(mock));
+      return;
+    }
     if (mock === "loading") {
       setDevLoading(true);
       return;
@@ -134,6 +155,8 @@ export function App() {
       }
       return;
     }
+    watchNetwork();
+    void initContentPack({ guest: code !== "" });
     onCleanup(startNet());
   });
 
@@ -189,6 +212,9 @@ export function App() {
           )}
         </Match>
       </Switch>
+      <Show when={packScreenOpen()}>
+        <PackScreen />
+      </Show>
       <Reconnecting />
       <Toasts />
     </div>

@@ -1,18 +1,46 @@
 import { defineConfig, type Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import solid from "vite-plugin-solid";
+import { ART_PATTERN, buildAssetManifest, fileRevision } from "./assetManifest.mjs";
 
 /** Girişin (statik) bağımlı olduğu parçalar kabuğun parçasıdır: önbelleğe alınmadan çevrimdışı açılış çalışmaz. */
 const shellChunks: { url: string; revision: string | null }[] = [];
-/** Çevrimdışı ana sayfa ve bağlantı örtüsü maskotu ağsız da görünsün diye yalnız "baglanti-koptu" kabukta. Görsel değişirse revizyon artar. */
-const shellArt = { url: "assets/mascot/baglanti-koptu.webp", revision: "1" };
+/**
+ * Ağsız da görünmesi gereken maskotlar kabukta: bağlantı örtüsü ("baglanti-koptu") ve ilk açılış
+ * "Hazırlanıyor" ekranı ("yukleniyor"). Revizyon görselin içerik özetidir; görsel değişince kendiliğinden yenilenir.
+ */
+const SHELL_ART = ["/assets/mascot/baglanti-koptu.webp", "/assets/mascot/yukleniyor.webp"] as const;
+let publicDir = "";
+/** Çalışma anı `glix-art` önbelleğinin (CacheFirst) ve indirme bildiriminin ortak kuralı. */
+const artMatch = ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }): boolean =>
+  sameOrigin && ART_PATTERN.test(url.pathname);
+
+/**
+ * `asset-manifest.json`: istemcinin önceden indirdiği görsellerin yol/boyut/özet listesi. Kabuktaki (precache)
+ * görseller listede yoktur. Kabuk dosyası değildir: her seferinde ağdan okunur, böylece yeni sürüm fark edilir.
+ */
+function emitAssetManifest(): Plugin {
+  return {
+    name: "glix-asset-manifest",
+    apply: "build",
+    configResolved(config) {
+      publicDir = config.publicDir;
+    },
+    generateBundle() {
+      const manifest = buildAssetManifest(publicDir, SHELL_ART);
+      this.emitFile({ type: "asset", fileName: "asset-manifest.json", source: JSON.stringify(manifest) });
+    },
+  };
+}
+
 function collectShellChunks(): Plugin {
   return {
     name: "glix-shell-chunks",
     apply: "build",
     generateBundle(_, bundle) {
       shellChunks.length = 0;
-      shellChunks.push(shellArt);
+      for (const art of SHELL_ART)
+        shellChunks.push({ url: art.slice(1), revision: fileRevision(publicDir, art) });
       const seen = new Set<string>();
       const visit = (name: string): void => {
         const chunk = bundle[name];
@@ -30,6 +58,7 @@ function collectShellChunks(): Plugin {
 export default defineConfig({
   plugins: [
     solid(),
+    emitAssetManifest(),
     collectShellChunks(),
     VitePWA({
       // Kayıt kodu bizde (src/pwa/pwa.ts); manifest public/manifest.webmanifest dosyasında.
@@ -68,13 +97,13 @@ export default defineConfig({
         skipWaiting: false,
         runtimeCaching: [
           {
-            urlPattern: ({ url, sameOrigin }) =>
-              sameOrigin &&
-              /^\/assets\/(avatars\/moods|mascot|badges|props|worlds|cards|briefing|fx)\//.test(url.pathname),
+            urlPattern: artMatch,
             handler: "CacheFirst",
             options: {
+              // Süre/adet sınırı (ExpirationPlugin) bilerek yok: küme sabit ve sınırlı (≈16 MB) ve içeriği
+              // `pwa/contentPack.ts` yönetir (değişeni yeniler, listeden düşeni siler). Sınır olsaydı Workbox
+              // ön indirilen dosyaları sessizce silebilir, 90 gün sonra çevrimdışı görseller kaybolurdu.
               cacheName: "glix-art",
-              expiration: { maxEntries: 540, maxAgeSeconds: 60 * 60 * 24 * 90 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },

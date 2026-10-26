@@ -2,6 +2,7 @@ import { createSignal } from "solid-js";
 import { KEYS, readStored, writeStored } from "../net/storage.js";
 import { toast } from "../net/store.js";
 import { isIosSafari, pickInstallHint } from "./installHint.js";
+import { isStandalone } from "./packPolicy.js";
 import { consumeUpdated, markUpdated } from "./updateFlag.js";
 import { shouldCheckNow } from "./updatePolicy.js";
 
@@ -19,11 +20,6 @@ const [installed, setInstalled] = createSignal(false);
 
 export const updateWaiting = (): boolean => waitingWorker() !== null;
 export const isOnline = online;
-
-function isStandalone(): boolean {
-  const nav = navigator as Navigator & { standalone?: boolean };
-  return window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
-}
 
 /** Ana sayfada gösterilecek kurulum ipucu. */
 export function installHint() {
