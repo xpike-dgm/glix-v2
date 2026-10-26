@@ -194,3 +194,8 @@
   border: 0;
   background: var(--text);
 }
+
+/* Büyük yazıda dar koltuk ızgarası bozulmasın: koltuk adları normal boyda kalır. */
+:root[data-text="large"] .seat__name {
+  font-size: 15px;
+}

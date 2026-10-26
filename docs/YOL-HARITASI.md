@@ -147,16 +147,17 @@ Zaten var: dvh yükseklik, safe-area, klavye alanı (visualViewport), iOS "Ana E
 - [ ] Logoya hafif giriş animasyonu (azaltılmış hareket tercihinde yok).
 
 ### U12. Ana menüde Ayarlar
-- [ ] Ana menüye "Ayarlar" ekranı (bugün yok). İçerik:
-  - Ses: müzik ve efekt ayrı ses düzeyi, "Sessiz modda da çal" (iOS).
-  - Titreşim aç/kapa.
-  - Hareket azaltma, yazı boyutu, renk körlüğü dostu mod.
-  - Veri tasarrufu: görselleri atla / yalnız Wi-Fi'de indir.
-  - Profil: takma ad, varsayılan karakter.
-  - Depolama: indirilen içerik boyutu, "Önbelleği temizle", "Tüm içeriği indir".
-  - Anonim performans ölçümü aç/kapa.
-  - Sürüm bilgisi, "Güncellemeleri denetle".
-- [ ] Ayarlar cihazda saklanır; oyun içi üst şeritten de hızlı ses/titreşim erişimi kalır.
+- [x] Ana menüye "Ayarlar" ekranı (dişli simgesi, `screens/Settings.tsx`). İçerik:
+  - [x] Ses: tek "Ses düzeyi" (ayrı müzik yok), sessize alma, "Sessiz modda da çal" (yalnız `navigator.audioSession` olan cihazda).
+  - [x] Titreşim aç/kapa (desteklemeyen cihazda soluk + açıklama); `fx/haptics.ts` ayarı gözetir.
+  - [x] Hareketi azalt (Açık / Kapalı / Cihaza göre; tek yardımcı `fx/motion.ts`, CSS `data-motion`), yazı boyutu (Normal / Büyük).
+  - [ ] Renk körlüğü dostu mod: ertelendi (oyun başına çalışma ister; ayar `settings/settings.ts` içinde TODO).
+  - [x] Veri tasarrufu: görselleri atla (`worldAllowed()` okur). [ ] "Yalnız Wi-Fi'de indir": U13 ile.
+  - [x] Profil: takma ad (motorun `normalizeNickname` doğrulaması), varsayılan karakter salt okunur.
+  - [x] Depolama: kullanılan yer, "Önbelleği temizle". [ ] "Tüm içeriği indir": U13 ile.
+  - [x] Anonim performans ölçümü aç/kapa (gönderimi kapatır).
+  - [x] Sürüm bilgisi, "Güncellemeleri denetle" (`checkForUpdate` in `pwa/pwa.ts`).
+- [x] Ayarlar cihazda saklanır; oyun içi üst şerit sessiz düğmesi aynı ayarı okur/yazar.
 
 ### U13. İçeriği önceden indirme (iOS + Android)
 Bugün: uygulama kabuğu önceden indiriliyor; görseller (≈16 MB) ilk görüldüğünde indirilip kalıcı önbellekte tutuluyor.

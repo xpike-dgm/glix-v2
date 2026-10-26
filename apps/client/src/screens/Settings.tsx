@@ -183,7 +183,7 @@ export function Settings() {
         <span class="set__spacer" aria-hidden="true" />
       </header>
 
-      <div class="set__body">
+      <div class="set__body" data-scroll>
         <Group title="Ses">
           <Slider
             label="Ses düzeyi"
