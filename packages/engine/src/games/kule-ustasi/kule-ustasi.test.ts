@@ -566,6 +566,24 @@ describe("puanlama", () => {
     expect(r.miniScores[c]).toBe(1);
   });
 
+  it("sonuç, oyuncu başına kusursuz sayısını `stats.perfects` olarak taşır (yalnız sunucu muhasebesi)", () => {
+    let s = start(3);
+    const [a, b, c] = s.order as [string, string, string];
+    s = dropPerfect(s); // a: 1
+    s = dropPerfect(s); // b: 1
+    s = dropPerfect(s); // c: 1
+    s = dropPerfect(s); // a: 2
+    const r = game.result(finishByTime(s));
+    expect(r.stats).toEqual({ [a]: { perfects: 2 }, [b]: { perfects: 1 }, [c]: { perfects: 1 } });
+    // Kural değişmez: puanlar stats olmadan da aynı; saf ve belirleyici.
+    expect(game.result(finishByTime(s))).toEqual(r);
+    expect(game.result(start(3)).stats).toEqual({
+      p1: { perfects: 0 },
+      p2: { perfects: 0 },
+      p3: { perfects: 0 },
+    });
+  });
+
   it("publicView puanları oyun sürerken de aynı formülle gösterir", () => {
     let s = start(3);
     const [a, b, c] = s.order as [string, string, string];

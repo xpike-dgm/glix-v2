@@ -32,6 +32,8 @@ export interface GameRow {
   miniScore: number;
   /** Mini puana göre sıra; eşit puan aynı sırayı paylaşır (1, 1, 3). */
   rank: number;
+  /** Oyunun sonuçtaki sayaçları (ör. `kahin`, `perfects`); yalnız sunucu muhasebesi. Sıfırlar yazılmaz. */
+  stats?: Readonly<Record<string, number>>;
 }
 
 /** Bir maçta hesaplı oyuncunun sonucu (`account_matches` satırı). */
@@ -71,6 +73,10 @@ export interface BadgeStats {
   friendCoplayMax: number;
   /** Son maçların galibiyet bayrakları, en yeni önde (en çok 3). */
   lastWon: boolean[];
+  /** Rus Ruleti'nde Kâhin unvanı kazanılan toplam oyun sayısı (`account_game_stats`, anahtar `kahin`). */
+  kahinGames: number;
+  /** Kule Ustası'nda tek oyundaki en çok kusursuz bırakış (anahtar `perfects`). */
+  maxPerfects: number;
 }
 
 /** Sıralama satırı: hesap ve dönemdeki toplamları (hiç maçı yoksa sıfırlar). */
@@ -121,6 +127,8 @@ export interface AccountExportData {
     rank: number;
     won: boolean;
   }[];
+  /** Oyun sonu sayaçları (rozet muhasebesi). */
+  gameStats: { gameId: string; endedAt: number; key: string; value: number }[];
   matches: { endedAt: number; players: number; games: number; score: number; place: number; won: boolean }[];
   coplay: { username: string; matches: number; lastAt: number }[];
 }
@@ -293,6 +301,16 @@ const MIGRATIONS: readonly string[] = [
    );`,
   // Kullanıcı adı değişikliği: son değişiklik anı (null = hiç değişmedi, hemen serbest).
   `ALTER TABLE accounts ADD COLUMN username_changed_at INTEGER;`,
+  // Oyun sonu sayaçları (rozetler: Kâhin ×10, Kule Ustası): hesap-oyun-anahtar-değer; SUM/MAX ile okunur.
+  // Hesap silinince satırlar da gider.
+  `CREATE TABLE account_game_stats (
+     account_id INTEGER NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+     game_id TEXT NOT NULL,
+     ended_at INTEGER NOT NULL,
+     key TEXT NOT NULL,
+     value INTEGER NOT NULL
+   );
+   CREATE INDEX account_game_stats_account ON account_game_stats (account_id, game_id, key);`,
 ];
 
 function migrate(db: DatabaseSync): void {
@@ -376,6 +394,23 @@ export function createAccounts(path: string): AccountStore {
     `INSERT INTO account_games (account_id, game_id, ended_at, players, mini_score, rank, won)
        SELECT ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM accounts WHERE id = ?)`,
   );
+  const insertGameStat = db.prepare(
+    `INSERT INTO account_game_stats (account_id, game_id, ended_at, key, value)
+       SELECT ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM accounts WHERE id = ?)`,
+  );
+  const statSum = db.prepare(
+    `SELECT COALESCE(SUM(value), 0) AS n FROM account_game_stats
+       WHERE account_id = ? AND game_id = ? AND key = ?`,
+  );
+  const statMax = db.prepare(
+    `SELECT COALESCE(MAX(value), 0) AS n FROM account_game_stats
+       WHERE account_id = ? AND game_id = ? AND key = ?`,
+  );
+  const gameStatDump = db.prepare(
+    `SELECT game_id, ended_at, key, value FROM account_game_stats WHERE account_id = ?
+       ORDER BY ended_at, rowid`,
+  );
+  const dropGameStats = db.prepare("DELETE FROM account_game_stats WHERE account_id = ?");
   const insertMatch = db.prepare(
     `INSERT INTO account_matches (account_id, ended_at, players, games, score, place, won)
        SELECT ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM accounts WHERE id = ?)`,
@@ -530,6 +565,10 @@ export function createAccounts(path: string): AccountStore {
             r.rank === 1 ? 1 : 0,
             r.accountId,
           );
+        for (const r of rows)
+          for (const [key, value] of Object.entries(r.stats ?? {}))
+            if (Number.isSafeInteger(value) && value > 0)
+              insertGameStat.run(r.accountId, r.gameId, endedAt, key, value, r.accountId);
       });
     },
     recordMatch(endedAt, rows, pairs) {
@@ -613,6 +652,8 @@ export function createAccounts(path: string): AccountStore {
         playedGames: (playedGameRows.all(accountId) as { game_id: string }[]).map((r) => r.game_id),
         friendCoplayMax: fc.n,
         lastWon: (lastWonRows.all(accountId) as { won: number }[]).map((r) => r.won === 1),
+        kahinGames: (statSum.get(accountId, "rus-ruleti", "kahin") as { n: number }).n,
+        maxPerfects: (statMax.get(accountId, "kule-ustasi", "perfects") as { n: number }).n,
       };
     },
     earnedBadges(accountId) {
@@ -682,6 +723,7 @@ export function createAccounts(path: string): AccountStore {
     deleteAccountData(accountId) {
       inTransaction(() => {
         dropGames.run(accountId);
+        dropGameStats.run(accountId);
         dropMatches.run(accountId);
         dropBadges.run(accountId);
         dropCoplay.run(accountId, accountId);
@@ -731,6 +773,9 @@ export function createAccounts(path: string): AccountStore {
           rank: r.rank,
           won: r.won === 1,
         })),
+        gameStats: (
+          gameStatDump.all(accountId) as { game_id: string; ended_at: number; key: string; value: number }[]
+        ).map((r) => ({ gameId: r.game_id, endedAt: r.ended_at, key: r.key, value: r.value })),
         matches: (
           matchDump.all(accountId) as {
             ended_at: number;
@@ -766,6 +811,7 @@ export function createAccounts(path: string): AccountStore {
       let removed = false;
       inTransaction(() => {
         dropGames.run(accountId);
+        dropGameStats.run(accountId);
         dropMatches.run(accountId);
         dropBadges.run(accountId);
         dropCoplay.run(accountId, accountId);

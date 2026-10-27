@@ -271,7 +271,10 @@ export const kuleUstasi: GameDefinition<KuleState, KuleAction, KuleView, KulePub
 
   result(state) {
     const scores = scoresOf(state);
-    return { miniScores: { ...scores }, awards: { ...scores } };
+    // Kusursuz bırakış sayısı sunucuda "Kule Ustası" rozeti için tutulur; istemciye gitmez.
+    const stats: Record<string, Record<string, number>> = {};
+    for (const id of state.order) stats[id] = { perfects: state.perfects[id] ?? 0 };
+    return { miniScores: { ...scores }, awards: { ...scores }, stats };
   },
 
   secrets() {

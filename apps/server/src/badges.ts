@@ -130,6 +130,20 @@ export const BADGES: readonly BadgeDef[] = [
     check: (stats) => stats.lastWon.length >= 3 && stats.lastWon.slice(0, 3).every((w) => w),
   },
   {
+    id: "kahin-on",
+    name: "Büyük Kâhin",
+    description: "Rus Ruleti'nde 10 farklı oyunda Kâhin ol.",
+    secret: false,
+    check: (stats) => stats.kahinGames >= 10,
+  },
+  {
+    id: "kule-ustasi",
+    name: "Kule Ustası",
+    description: "Kule Ustası'nda tek oyunda 3 kusursuz bırakış yap.",
+    secret: false,
+    check: (stats) => stats.maxPerfects >= 3,
+  },
+  {
     id: "gece-kusu",
     name: "Gece Kuşu",
     description: "Gece 02:00 ile 05:00 arasında bir maç bitir.",

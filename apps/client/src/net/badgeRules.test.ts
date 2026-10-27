@@ -74,6 +74,8 @@ describe("madalyon", () => {
   it("sayılı rozetler sayı gösterir, diğerleri çizim", () => {
     expect(medalGlyph("yuz-mac")).toEqual({ kind: "number", text: "100" });
     expect(medalGlyph("gece-kusu")).toEqual({ kind: "icon", name: "ay" });
+    expect(medalGlyph("kahin-on")).toEqual({ kind: "icon", name: "goz" });
+    expect(medalGlyph("kule-ustasi")).toEqual({ kind: "icon", name: "kule" });
     expect(medalGlyph("bilinmeyen")).toEqual({ kind: "icon", name: "yildiz" });
   });
   it("özet kazanılan / toplam", () => {

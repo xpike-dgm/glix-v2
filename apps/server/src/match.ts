@@ -341,12 +341,25 @@ function recordGameStats(rt: Runtime, room: Room, match: Match, result: GameResu
       const player = room.players.get(id);
       const score = result.miniScores[id];
       if (!player || player.spectator || score === undefined) continue;
-      entrants.push({ playerId: id, accountId: player.accountId, score });
+      entrants.push({
+        playerId: id,
+        accountId: player.accountId,
+        score,
+        stats: cleanStats(result.stats?.[id]),
+      });
     }
     rt.accountStats.gameFinished(buildGameRecord(currentGame(match).id, now, entrants));
   } catch (err) {
     log.warn("account_stats_failed", { room: room.code, error: String(err) });
   }
+}
+
+/** Sonuç sayaçlarını muhasebe için süzer: kısa ad, sonlu tamsayı >= 1; fazlası atılır. */
+function cleanStats(raw: Readonly<Record<string, number>> | undefined): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [key, value] of Object.entries(raw ?? {}))
+    if (key.length > 0 && key.length <= 32 && Number.isSafeInteger(value) && value > 0) out[key] = value;
+  return out;
 }
 
 function recordMatchStats(rt: Runtime, room: Room, match: Match, now: number): void {
@@ -494,6 +507,14 @@ function applyActionUnsafe(rt: Runtime, room: Room, playerId: string, payload: u
   return { ok: true };
 }
 
+/**
+ * Sonucun istemciye giden hâli: `stats` (rozet muhasebesi) ASLA gönderilmez. Tüm anlık görüntüler
+ * (oyuncu, TV/sahne, izleyici) `sharedMatchSnapshot`'tan geçtiği için tek ayıklama noktası burasıdır.
+ */
+function publicResult(result: GameResult | null): GameResult | null {
+  return result ? { miniScores: result.miniScores, awards: result.awards } : null;
+}
+
 /** Maçın herkese ortak görünen kısmı (`publicView` dahil; oyuncuya özel `view` hariç). Oda başına bir kez hesaplanır. */
 export function sharedMatchSnapshot(rt: Runtime, room: Room): Omit<MatchSnapshot, "view"> | null {
   const match = room.match;
@@ -517,7 +538,7 @@ export function sharedMatchSnapshot(rt: Runtime, room: Room): Omit<MatchSnapshot
     phaseStartedAt: match.phaseStartedAt,
     phaseEndsAt: match.phaseEndsAt,
     publicView,
-    result: room.phase === "results" || room.phase === "final" ? match.result : null,
+    result: room.phase === "results" || room.phase === "final" ? publicResult(match.result) : null,
   };
 }
 

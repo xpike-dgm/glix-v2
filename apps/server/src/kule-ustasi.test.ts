@@ -1,6 +1,6 @@
 import { GAMES, type KulePublicView } from "@glix/engine";
 import { describe, expect, it } from "vitest";
-import { type Client, k, setupRoom, sleep, sync, until, useServer } from "./testkit.js";
+import { Client, k, setupRoom, sleep, sync, until, useServer } from "./testkit.js";
 
 useServer({ randomInt: () => 0 });
 
@@ -137,6 +137,10 @@ describe("Kule Ustası: gerçek oda akışı", () => {
     const pub = () => host.room.match?.publicView as KulePublicView;
     const endsAt = pub().endsAt;
     expect(endsAt - pub().startedAt).toBe(90_000);
+    // TV/sahne bağlantısı da sonucu görür; sayaçlar (`stats`) hiçbirine gitmez.
+    const tv = await Client.connect();
+    tv.send({ type: "joinStage", code: host.session.roomCode });
+    await until(() => tv.updates.length > 0, "sahne katılımı");
     // Saat adım adım ilerler: tek hamlede sarılırsa sonuç ekranı da geçer, maç finale atlar.
     while (host.room.phase === "playing" && k.clock.now() < endsAt + 1000) {
       k.clock.advance(500);
@@ -151,5 +155,12 @@ describe("Kule Ustası: gerçek oda akışı", () => {
       expect(v).toBeLessThanOrEqual(2);
     }
     for (const p of host.room.players) expect(p.score).toBe(scores[p.id]);
+    await sync();
+    expect(tv.room.match?.result?.miniScores).toEqual(scores);
+    for (const c of [...cs, tv]) {
+      expect(c.room.match?.result).not.toHaveProperty("stats");
+      const raw = JSON.stringify(c.msgs);
+      expect(raw).not.toContain('"stats"');
+    }
   });
 });

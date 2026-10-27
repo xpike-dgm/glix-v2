@@ -25,6 +25,18 @@ describe("sıralama ve kayıt kurma", () => {
     ]);
   });
 
+  it("oyun kaydı sonuç sayaçlarını yalnız hesaplı oyuncuya taşır", () => {
+    const rec = buildGameRecord("kule-ustasi", 1000, [
+      { ...e("g", null, 7), stats: { perfects: 5 } },
+      { ...e("a", 11, 4), stats: { perfects: 3 } },
+      e("b", 12, 2),
+    ]);
+    expect(rec.rows.map((r) => [r.accountId, r.stats])).toEqual([
+      [11, { perfects: 3 }],
+      [12, undefined],
+    ]);
+  });
+
   it("oyun kaydı: misafir sıralamaya girer ama satırı yazılmaz", () => {
     const rec = buildGameRecord("kule-ustasi", 1000, [e("g", null, 7), e("a", 11, 4), e("b", 12, 7)]);
     expect(rec.rows).toEqual([

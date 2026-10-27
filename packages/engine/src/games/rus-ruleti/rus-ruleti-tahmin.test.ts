@@ -181,6 +181,24 @@ describe("rus-ruleti tahmini: rozet eşiği", () => {
     for (const id of s.alive) expect(s.correct[id]).toBeUndefined();
   });
 
+  it("sonuç yalnız Kâhin unvanlılara `stats.kahin = 1` yazar; unvan dışında sayaç yok", () => {
+    // a: 1/2 Evet (kâhin); b: 1/3 Evet (değil).
+    const s = {
+      ...playShots(eight(), [
+        { guessA: true, guessB: true, boom: false },
+        { guessA: false, guessB: true, boom: false },
+        { guessA: true, guessB: true, boom: true },
+      ]),
+      over: true,
+    };
+    const r = rusRuleti.result(s);
+    expect(r.stats).toEqual({ a: { kahin: 1 } });
+    expect(Object.keys(r.stats ?? {})).toEqual(rusRuleti.publicView(s, ctx(T0)).result?.kahinler);
+    expect(rusRuleti.result(s)).toEqual(r);
+    // Kural sonucu değişmedi.
+    expect(r.miniScores).toEqual(r.awards);
+  });
+
   it("tahmin puan vermez: ödüller yalnız hayatta kalma", () => {
     const s = {
       ...playShots(eight(), [

@@ -89,6 +89,8 @@ export type MedalGlyph =
         | "simsek"
         | "ay"
         | "parilti"
+        | "goz"
+        | "kule"
         | "soru";
     };
 
@@ -118,6 +120,10 @@ export function medalGlyph(id: string): MedalGlyph {
       return { kind: "icon", name: "simsek" };
     case "gece-kusu":
       return { kind: "icon", name: "ay" };
+    case "kahin-on":
+      return { kind: "icon", name: "goz" };
+    case "kule-ustasi":
+      return { kind: "icon", name: "kule" };
     case "hepsi-bir-arada":
       return { kind: "icon", name: "parilti" };
     default:
@@ -125,7 +131,7 @@ export function medalGlyph(id: string): MedalGlyph {
   }
 }
 
-/** Profildeki özet: "5 / 13 rozet". */
+/** Profildeki özet: "5 / 15 rozet". */
 export function earnedSummary(list: readonly BadgeInfo[]): string {
   return `${list.filter((b) => b.earned).length} / ${list.length} rozet`;
 }
