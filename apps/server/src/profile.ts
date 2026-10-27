@@ -53,7 +53,6 @@ function resolve(req: IncomingMessage, env: ProfileEnv): Outcome {
   if (!account) return { status: 401, code: "login_required", message: "Önce giriş yap." };
   const path = (req.url ?? "").split("?")[0] ?? "";
   const rest = path.slice(PROFILE_PATH.length);
-  let full = true;
   if (rest !== "" && rest !== "/") {
     let name: string;
     try {
@@ -62,17 +61,19 @@ function resolve(req: IncomingMessage, env: ProfileEnv): Outcome {
       return NOT_FOUND;
     }
     const found = USERNAME_PATTERN.test(name) ? env.accounts.findByUsername(name) : null;
-    // Kendi profiline bakmak serbest; başkasınınki arkadaşlık gelene dek bulunmamış sayılır (varlığı sızmaz).
-    if (!found || found.id !== account.id) return NOT_FOUND;
-    full = false;
+    // Kendi profiline ve kabul edilmiş arkadaşlarınınkine bakılır; başkası ya da bilinmeyen hesap aynı 404'ü alır.
+    if (!found || (found.id !== account.id && !env.accounts.areFriends(account.id, found.id)))
+      return NOT_FOUND;
+    const data = env.accounts.profile(found.id, false);
+    return data ? { status: 200, body: profileBody(data, env.gameName, false) } : NOT_FOUND;
   }
-  const data = env.accounts.profile(account.id, full);
-  return data ? { status: 200, body: profileBody(data, env.gameName, full) } : NOT_FOUND;
+  const data = env.accounts.profile(account.id, true);
+  return data ? { status: 200, body: profileBody(data, env.gameName, true) } : NOT_FOUND;
 }
 
 /**
  * `GET /api/profile` (oturumdaki hesabın tam profili) ve `GET /api/profile/<kullanıcı>` (toplamlar, favori oyun,
- * oyun başına sonuçlar). Başkasının profili şimdilik 404: arkadaşlık (H7) gelince arkadaşlara açılacak.
+ * oyun başına sonuçlar). Başkasının profili yalnız kabul edilmiş arkadaşlara açıktır; diğerleri 404 alır.
  */
 export function handleProfile(req: IncomingMessage, res: ServerResponse, env: ProfileEnv): void {
   let out: Outcome;

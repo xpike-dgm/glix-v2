@@ -106,6 +106,35 @@ function handleStageMessage(rt: Runtime, conn: Connection, room: Room, msg: Clie
   }
 }
 
+/**
+ * Odaya oyuncu (maç sürüyorsa izleyici) olarak girer: `joinRoom` ve `joinFriend` ortak yolu.
+ * Karar: room_full ve match_in_progress, room_not_found'dan ayrı kalır. Bunlar kodun doğru olduğunu
+ * ele verir, ama 5 karakterli kod uzayı (32^5) + soket/IP sınırları tahmini pratikte imkânsız kılar;
+ * arkadaşına "oda dolu" ile "oda yok" ayrımını göstermek kullanıcı deneyimi için daha değerli.
+ * Maç sürerken: "Kapalı" ise reddedilir, "İzleyici" ise izleyici olarak girer.
+ */
+function enterRoom(
+  rt: Runtime,
+  conn: Connection,
+  room: Room,
+  nickname: string,
+  avatar: number | undefined,
+): void {
+  const spectator = room.phase !== "lobby";
+  if (spectator && room.joinPolicy === "kapali") {
+    fail(conn, "match_in_progress");
+    return;
+  }
+  // İzleyici de bir yer tutar: oyuncular + izleyiciler en fazla MAX_PLAYERS.
+  if (room.players.size >= MAX_PLAYERS) {
+    fail(conn, "room_full");
+    return;
+  }
+  addPlayer(rt, room, nickname, conn, avatar, spectator);
+  sendSession(conn);
+  rt.broadcaster.markDirty(room);
+}
+
 export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage): void {
   if (conn.stage) {
     handleStageMessage(rt, conn, conn.stage, msg);
@@ -168,23 +197,40 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         if (conn.failedJoins >= MAX_FAILED_JOINS) conn.close(1008, "Çok sayıda hatalı oda kodu");
         return;
       }
-      // Karar: room_full ve match_in_progress, room_not_found'dan ayrı kalır. Bunlar kodun doğru olduğunu
-      // ele verir, ama 5 karakterli kod uzayı (32^5) + yukarıdaki soket/IP sınırları tahmini pratikte
-      // imkânsız kılar; arkadaşına "oda dolu" ile "oda yok" ayrımını göstermek kullanıcı deneyimi için daha değerli.
-      // Maç sürerken: "Kapalı" ise reddedilir, "İzleyici" ise izleyici olarak girer.
-      const spectator = room.phase !== "lobby";
-      if (spectator && room.joinPolicy === "kapali") {
-        fail(conn, "match_in_progress");
+      enterRoom(rt, conn, room, msg.nickname, msg.avatar);
+      return;
+    }
+    case "joinFriend": {
+      if (conn.player) {
+        fail(conn, "already_in_room");
         return;
       }
-      // İzleyici de bir yer tutar: oyuncular + izleyiciler en fazla MAX_PLAYERS.
-      if (room.players.size >= MAX_PLAYERS) {
-        fail(conn, "room_full");
+      if (rt.draining) {
+        fail(conn, "draining");
         return;
       }
-      addPlayer(rt, room, msg.nickname, conn, msg.avatar, spectator);
-      sendSession(conn);
-      rt.broadcaster.markDirty(room);
+      if (!rt.ipLimiter.canTryJoin(conn.ip)) {
+        fail(conn, "rate_limited");
+        return;
+      }
+      // Oda kodu burada çözülür ve istemciye hiç gitmez. Arkadaş değil, odada değil, katılıma kapalı: hepsi aynı hata.
+      const room = conn.account ? rt.social.friendRoom(conn.account.id, msg.username) : null;
+      if (!room) {
+        rt.ipLimiter.recordFailedJoin(conn.ip);
+        fail(conn, "friend_not_found");
+        return;
+      }
+      enterRoom(rt, conn, room, msg.nickname, msg.avatar);
+      return;
+    }
+    case "inviteFriend": {
+      const outcome = rt.social.invite(conn, msg.username);
+      if (outcome === "ok") conn.send({ type: "inviteSent", username: msg.username });
+      else if (outcome === "login_required" || outcome === "not_in_room" || outcome === "wrong_phase")
+        fail(conn, outcome);
+      else if (outcome === "rate_limited")
+        fail(conn, "rate_limited", "Bu arkadaşını biraz önce çağırdın, birazdan tekrar dene.");
+      else fail(conn, "invite_failed");
       return;
     }
     case "joinStage": {
@@ -264,16 +310,19 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       return;
     }
     case "pushSubscribe": {
-      const player = conn.player;
-      if (!player || !rt.push.enabled) return;
+      if (!rt.push.enabled) return;
       if (!isAllowedPushEndpoint(msg.endpoint)) {
         fail(conn, "invalid_message");
         return;
       }
-      player.push = { endpoint: msg.endpoint, p256dh: msg.p256dh, auth: msg.auth };
+      const target = { endpoint: msg.endpoint, p256dh: msg.p256dh, auth: msg.auth };
+      // Hesaplıysa abonelik hesaba da bağlanır: arkadaş daveti, bağlantısı olmayan hesaba bildirim olarak gider.
+      if (conn.account) rt.social.setPush(conn.account.id, target);
+      if (conn.player) conn.player.push = target;
       return;
     }
     case "pushUnsubscribe": {
+      if (conn.account) rt.social.setPush(conn.account.id, null);
       if (conn.player) conn.player.push = null;
       return;
     }

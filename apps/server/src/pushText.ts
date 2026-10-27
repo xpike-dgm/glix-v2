@@ -11,3 +11,16 @@ const TITLES: Record<PushKind, string> = {
 export function pushPayload(kind: PushKind, roomCode: string): string {
   return JSON.stringify({ title: TITLES[kind], body: `Oda ${roomCode}`, tag: `glix-${roomCode}` });
 }
+
+/**
+ * Arkadaş daveti bildirimi. Kullanıcı adı yalnız harf/rakam/alt çizgidir; `url` hizmet çalışanının tıklamada
+ * açtığı adrestir (oda kodu `?oda=` ile gelir, ana sayfa katılma ekranını açar).
+ */
+export function invitePayload(from: string, roomCode: string): string {
+  return JSON.stringify({
+    title: "GLIX daveti",
+    body: `${from} seni GLIX odasına çağırıyor`,
+    tag: `glix-davet-${roomCode}`,
+    url: `/?oda=${roomCode}`,
+  });
+}

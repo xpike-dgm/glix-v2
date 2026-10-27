@@ -13,6 +13,7 @@ import type { Cancel, Clock } from "./clock.js";
 import type { Match } from "./match.js";
 import type { Metrics } from "./metrics.js";
 import type { IpLimiter } from "./ratelimit.js";
+import type { Social } from "./social.js";
 import type { StatsStore } from "./statsStore.js";
 import type { PushGateway, PushTarget } from "./webpush.js";
 
@@ -116,6 +117,8 @@ export interface Runtime {
   accountStats: AccountStatsRecorder;
   /** Web bildirimi göndericisi (VAPID yoksa kapalı). */
   push: PushGateway;
+  /** Arkadaş sistemi (durum, davet); sunucu kurulurken bağlanır, testlerde varsayılan hiçbir şey yapmaz. */
+  social: Social;
   /** Son biten/çöken oyunların kayıtları (en yeni sonda, en çok RECENT_LOGS). */
   recentLogs: GameLog[];
   /** Oturum belirteci -> oyuncu. */

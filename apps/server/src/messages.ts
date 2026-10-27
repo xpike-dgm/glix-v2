@@ -23,6 +23,8 @@ export const ERROR_TEXT: Record<ErrorCode, string> = {
   stage_full: "Bu odada zaten iki TV ekranı var.",
   login_required: "Oda kurmak için giriş yapmalısın.",
   stage_readonly: "TV ekranı oyuna karışamaz.",
+  invite_failed: "Davet gönderilemedi.",
+  friend_not_found: "Arkadaşın şu an katılabileceğin bir odada değil.",
 };
 
 export function errorMessage(code: ErrorCode, text?: string): ServerMessage {
