@@ -473,8 +473,10 @@
   gap: 6px;
   min-width: 0;
 }
-.kd__rname {
+/* Karalama Defteri de `.kd__rname` kullanır; sıra kurallarına bağlı kalmamak için sahip satırına bağlanır. */
+.kd__rowner .kd__rname {
   min-width: 0;
+  font-family: inherit;
   font-size: var(--fs-13);
   font-weight: 600;
   color: #c9cff0;
