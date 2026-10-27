@@ -27,12 +27,21 @@ describe("kor-kronometre tam maç", () => {
     expect(a.room.match?.gameId).toBe("kor-kronometre");
     const at = (ms: number) => k.clock.advance(startedAt + ms - k.clock.now());
 
-    at(9_400);
+    // Hedef her oyunda 7–13 sn arası rastgeledir ve baştan herkese açıktır; süre = hedef + 8 sn.
+    const T = pub(a).targetMs;
+    expect(T % 1000).toBe(0);
+    expect(T).toBeGreaterThanOrEqual(7_000);
+    expect(T).toBeLessThanOrEqual(13_000);
+    expect(pub(d).targetMs).toBe(T);
+    const dur = T + 8_000;
+    expect(pub(a).endsAt - pub(a).startedAt).toBe(dur);
+
+    at(T - 600);
     expect((await send(a, { kind: "press" })).ok).toBe(true); // 600 uzak
     expect(await send(a, { kind: "press" })).toEqual({ ok: false, reason: "already_pressed" });
-    at(10_150);
+    at(T + 150);
     expect((await send(b, { kind: "press" })).ok).toBe(true); // 150 uzak
-    at(12_000);
+    at(T + 2_000);
     expect((await send(c, { kind: "press" })).ok).toBe(true); // 2000 uzak
     expect(await send(c, { kind: "tap" })).toMatchObject({ ok: false });
     await sync();
@@ -43,21 +52,22 @@ describe("kor-kronometre tam maç", () => {
     expect(view(d)).toEqual({ pressed: false });
     for (const x of cs) {
       const json = JSON.stringify(x.msgs);
-      expect(json).not.toContain("9400");
-      expect(json).not.toContain("10150");
+      expect(json).not.toContain(`"ms":${T - 600}`);
+      expect(json).not.toContain(`"ms":${T + 150}`);
     }
 
-    at(17_999);
-    expect((await send(d, { kind: "press" })).ok).toBe(true); // 7999 uzak
-    at(18_000);
+    // D hiç basmaz: sıralamaya girmez, puan almaz.
+    at(dur - 1);
+    expect(pub(a).reveal).toBeNull();
+    at(dur);
     await until(() => pub(a).reveal !== null, "basışlar açıldı");
     expect(await send(b, { kind: "press" })).toMatchObject({ ok: false });
     const rows = pub(a).reveal?.entries ?? [];
-    expect(rows.map((r) => [r.ms, r.points])).toEqual([
-      [10_150, 2],
-      [9_400, 1],
-      [12_000, 0],
-      [17_999, 0],
+    expect(rows.map((r) => [r.ms, r.points, r.rank])).toEqual([
+      [T + 150, 2, 1],
+      [T - 600, 1, 2],
+      [T + 2_000, 0, 3],
+      [null, 0, null],
     ]);
 
     k.clock.advance(6_100);
@@ -73,14 +83,33 @@ describe("kor-kronometre tam maç", () => {
     expect(d.room.players.map((p) => p.score)).toEqual([1, 2, 0, 0]);
   });
 
-  it("kimse basmazsa hepsi 18 sn sayılır ve eşit derece aynı ödülü alır", async () => {
+  it("kimse basmazsa kimse sıralanmaz ve kimse puan almaz", async () => {
     const cs = await setupRoom(["A", "B"], ["kor-kronometre"]);
     const a = cs[0] as Client;
     await startPlaying(cs);
-    k.clock.advance(18_000);
+    const dur = pub(a).endsAt - pub(a).startedAt;
+    expect(dur).toBe(pub(a).targetMs + 8_000);
+    k.clock.advance(dur);
+    await until(() => pub(a).reveal !== null, "açıldı");
+    expect(pub(a).reveal?.entries.every((e) => !e.pressed && e.rank === null)).toBe(true);
+    k.clock.advance(6_100);
+    await until(() => a.room.phase === "results", "sonuç");
+    expect(Object.values(a.room.match?.result?.awards ?? {})).toEqual([0, 0]);
+  });
+
+  it("tek kişi bastıysa yalnız o +2 alır", async () => {
+    const cs = await setupRoom(["A", "B"], ["kor-kronometre"]);
+    const [a, b] = cs as [Client, Client];
+    const { startedAt } = await startPlaying(cs);
+    k.clock.advance(startedAt + 3_000 - k.clock.now());
+    expect((await send(b, { kind: "press" })).ok).toBe(true);
+    k.clock.advance(pub(a).endsAt - k.clock.now());
     await until(() => pub(a).reveal !== null, "açıldı");
     k.clock.advance(6_100);
     await until(() => a.room.phase === "results", "sonuç");
-    expect(Object.values(a.room.match?.result?.awards ?? {})).toEqual([2, 2]);
+    expect(a.room.match?.result?.awards).toEqual({
+      [a.session.playerId]: 0,
+      [b.session.playerId]: 2,
+    });
   });
 });

@@ -62,9 +62,14 @@ export function parseZamanBombasiPublicView(v: unknown): ZamanBombasiPublicView 
     !isNum(v.deadline) ||
     !isNum(v.stepMs) ||
     !isNum(v.playbackIndex) ||
-    !isNum(v.need)
+    !isNum(v.need) ||
+    !isNum(v.startedAt) ||
+    !isNum(v.endsAt) ||
+    !isNum(v.suddenDeathAt) ||
+    typeof v.timeUp !== "boolean"
   )
     return null;
+  if (v.endsAt <= v.startedAt || v.suddenDeathAt < v.startedAt || v.suddenDeathAt > v.endsAt) return null;
   if (v.length < 1 || v.length > 200 || v.stepMs <= 0) return null;
   const sequence = v.sequence === null ? null : colorList(v.sequence);
   if (v.sequence !== null && sequence === null) return null;
@@ -88,6 +93,10 @@ export function parseZamanBombasiPublicView(v: unknown): ZamanBombasiPublicView 
     sequence,
     pressed,
     need: v.need,
+    startedAt: v.startedAt,
+    endsAt: v.endsAt,
+    suddenDeathAt: v.suddenDeathAt,
+    timeUp: v.timeUp,
     last,
   };
 }
@@ -114,10 +123,13 @@ export function parseZamanBombasiView(publicView: unknown, view: unknown): Zaman
 export type ClientPhase = "pause" | "playback" | "input" | "expired" | "over";
 
 export function clientPhase(
-  v: Pick<ZamanBombasiPublicView, "phase" | "turnStart" | "inputStart" | "deadline">,
+  v: Pick<ZamanBombasiPublicView, "phase" | "turnStart" | "inputStart" | "deadline"> &
+    Partial<Pick<ZamanBombasiPublicView, "endsAt">>,
   now: number,
 ): ClientPhase {
   if (v.phase === "over") return "over";
+  // Toplam süre dolduysa giriş bitmiştir (sunucu sırayı cezasız iptal eder).
+  if (v.endsAt !== undefined && now >= v.endsAt && now >= v.inputStart) return "expired";
   if (now < v.turnStart) return "pause";
   if (now < v.inputStart) return "playback";
   if (now < v.deadline) return "input";
@@ -179,4 +191,20 @@ export function statusOf(args: {
   if (phase === "playback") return mine ? "watchMine" : "watch";
   if (!spectator && v.isOut) return "eliminated";
   return mine ? "mine" : "other";
+}
+
+/** Ani ölüm evresinde miyiz (oyun başından 60 sn geçti, toplam süre bitmedi). */
+export function isSuddenDeath(
+  v: Pick<ZamanBombasiPublicView, "suddenDeathAt" | "endsAt">,
+  now: number,
+): boolean {
+  return now > v.suddenDeathAt && now < v.endsAt;
+}
+
+/** Kalan toplam süre "d:ss" (örn. 1:05); yukarı yuvarlanır, negatifte 0:00. */
+export function formatClock(ms: number): string {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }

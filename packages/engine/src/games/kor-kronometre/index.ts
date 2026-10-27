@@ -4,12 +4,12 @@ import {
   KOR_KRONOMETRE_REVEAL_MS,
   KOR_KRONOMETRE_TARGET_MAX_S,
   KOR_KRONOMETRE_TARGET_MIN_S,
-  korKronometreDurationMs,
   type KorKronometreAction,
   type KorKronometreEntry,
   type KorKronometrePublicView,
   type KorKronometreReveal,
   type KorKronometreView,
+  korKronometreDurationMs,
 } from "./types.js";
 
 export * from "./types.js";

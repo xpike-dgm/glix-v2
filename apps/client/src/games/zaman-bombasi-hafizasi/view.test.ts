@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { clientPhase, isNewResult, litIndexAt, litMs, parseZamanBombasiView, statusOf } from "./view.js";
+import {
+  clientPhase,
+  formatClock,
+  isNewResult,
+  isSuddenDeath,
+  litIndexAt,
+  litMs,
+  parseZamanBombasiView,
+  statusOf,
+} from "./view.js";
 
 const pub = {
   order: ["a", "b", "c"],
@@ -17,6 +26,10 @@ const pub = {
   sequence: ["kirmizi", "mavi", "sari"],
   pressed: [],
   need: 2,
+  startedAt: 0,
+  endsAt: 90_000,
+  suddenDeathAt: 60_000,
+  timeUp: false,
   last: { turn: 1, player: "b", kind: "ok", at: 900 },
 };
 const priv = { isOut: false, myTurn: false, turnsAway: 1 };
@@ -58,8 +71,22 @@ describe("Zaman Bombası Hafızası görünümü", () => {
     expect(clientPhase({ ...pub, phase: "over" } as never, 0)).toBe("over");
   });
 
+  it("toplam süre: ani ölüm 60 sn sonrası, bitişte kalkar; saat d:ss biçimlenir", () => {
+    const w = { suddenDeathAt: 60_000, endsAt: 90_000 };
+    expect(isSuddenDeath(w, 60_000)).toBe(false);
+    expect(isSuddenDeath(w, 60_001)).toBe(true);
+    expect(isSuddenDeath(w, 90_000)).toBe(false);
+    expect(formatClock(90_000)).toBe("1:30");
+    expect(formatClock(64_100)).toBe("1:05");
+    expect(formatClock(-5)).toBe("0:00");
+    expect(clientPhase({ ...pub, deadline: 120_000 } as never, 90_000)).toBe("expired");
+    expect(clientPhase({ ...pub, deadline: 120_000 } as never, 89_999)).toBe("input");
+    expect(parseZamanBombasiView({ ...pub, endsAt: 0 }, priv)).toBeNull();
+    expect(parseZamanBombasiView({ ...pub, timeUp: "x" }, priv)).toBeNull();
+  });
+
   it("yanan eleman: kısa dizide uzun, uzun dizide kısa yanar; aralarda söner", () => {
-    expect(litMs(2, 600)).toBeGreaterThan(litMs(8, 600));
+    expect(litMs(2, 350)).toBeGreaterThan(litMs(8, 350));
     const v = pub as never;
     expect(litIndexAt(v, 999)).toBe(-1);
     expect(litIndexAt(v, 1000)).toBe(0);

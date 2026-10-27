@@ -13,14 +13,16 @@ import {
   entryOf,
   formatOffset,
   formatSeconds,
+  formatTarget,
   parseKorKronometreView,
-  TARGET_PERCENT,
+  targetPercent,
   trackPercent,
 } from "./view.js";
 
 export default function KorKronometreScreen(props: GameScreenProps) {
   const view = createMemo(() => parseKorKronometreView(props.match.publicView, props.match.view));
   const reveal = () => view()?.reveal ?? null;
+  const targetMs = () => view()?.targetMs ?? 10_000;
 
   // Dokunuşa anında yanıt: sunucu onayı beklenmeden kadran donar. Basış tek seferdir.
   const [localPressed, setLocalPressed] = createSignal(false);
@@ -82,6 +84,9 @@ export default function KorKronometreScreen(props: GameScreenProps) {
           when={reveal()}
           fallback={
             <>
+              <p class="kk__target-label" role="status">
+                {formatTarget(targetMs())}
+              </p>
               <div class="kk__stage">
                 <Dial locked={pressed()} />
                 <div class="kk__flash" ref={flashEl} aria-hidden="true" />
@@ -118,14 +123,14 @@ export default function KorKronometreScreen(props: GameScreenProps) {
           {(r) => (
             <div class="kk__result">
               <div class="kk__head">
-                <span class="overline">Hedef 10 sn</span>
+                <span class="overline">{formatTarget(targetMs())}</span>
                 <Show when={!props.spectator} fallback={<p class="kk__verdict">Sonuç</p>}>
                   <p class="kk__verdict" data-win={(mine()?.points ?? 0) > 0 ? "1" : "0"}>
                     {(mine()?.points ?? 0) > 0 ? `+${mine()?.points} puan` : "Puan yok"}
                   </p>
                   <p class="kk__sub">
                     {mine()?.pressed
-                      ? `${formatSeconds(mine()?.ms ?? 0)} sn · ${formatOffset(mine()?.ms ?? 0)}`
+                      ? `${formatSeconds(mine()?.ms ?? 0)} sn · ${formatOffset(mine()?.ms ?? 0, targetMs())}`
                       : "Basmadın"}
                   </p>
                 </Show>
@@ -141,16 +146,16 @@ export default function KorKronometreScreen(props: GameScreenProps) {
                     >
                       <Avatar index={avatarOf(e.playerId)} size={36} connected={connectedOf(e.playerId)} />
                       <div class="kk__track" aria-hidden="true">
-                        <i class="kk__target" style={{ left: `${TARGET_PERCENT}%` }} />
-                        <i
-                          class="kk__dot"
-                          data-missed={e.pressed ? undefined : "1"}
-                          style={{ left: `${trackPercent(e.ms)}%` }}
-                        />
+                        <i class="kk__target" style={{ left: `${targetPercent(targetMs())}%` }} />
+                        <Show when={e.ms !== null}>
+                          <i class="kk__dot" style={{ left: `${trackPercent(e.ms ?? 0, targetMs())}%` }} />
+                        </Show>
                       </div>
-                      <span class="kk__time">{e.pressed ? formatSeconds(e.ms) : "–"}</span>
+                      <span class="kk__time" data-missed={e.pressed ? undefined : "1"}>
+                        {e.ms !== null ? formatSeconds(e.ms) : "basmadı"}
+                      </span>
                       <span class="kk__pts" data-pts={e.points}>
-                        {e.points > 0 ? `+${e.points}` : "0"}
+                        {e.pressed ? (e.points > 0 ? `+${e.points}` : "0") : "–"}
                       </span>
                     </li>
                   )}

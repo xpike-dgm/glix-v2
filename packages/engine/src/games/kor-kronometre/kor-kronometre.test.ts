@@ -103,7 +103,14 @@ describe("kor-kronometre kuralları", () => {
     expect(entries.map((e) => e.playerId)).toEqual(["a", "b", "c"]);
     expect(entries[0]).toMatchObject({ playerId: "a", pressed: true, rank: 1, points: 2, distance: 9_000 });
     for (const e of entries.slice(1)) {
-      expect(e).toEqual({ playerId: e.playerId, ms: null, pressed: false, distance: null, rank: null, points: 0 });
+      expect(e).toEqual({
+        playerId: e.playerId,
+        ms: null,
+        pressed: false,
+        distance: null,
+        rank: null,
+        points: 0,
+      });
     }
   });
 
@@ -285,7 +292,9 @@ describe("kor-kronometre gizlilik", () => {
     expect(korKronometre.publicView(s, ctx(T0 + 5_000)).targetMs).toBe(11_000);
     expect(korKronometre.publicView(s, ctx(T0 + 5_000, [], 99)).targetMs).toBe(11_000);
     expect(JSON_OF(korKronometre.view(s, "a", ctx(T0)))).toBe('{"pressed":false}');
-    expect(Object.keys(korKronometre.publicView(s, ctx(T0))).some((k) => /remain|left|kalan/i.test(k))).toBe(false);
+    expect(Object.keys(korKronometre.publicView(s, ctx(T0))).some((k) => /remain|left|kalan/i.test(k))).toBe(
+      false,
+    );
   });
 });
 

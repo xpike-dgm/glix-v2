@@ -1019,6 +1019,8 @@ const SCREENS = [
       await p.getByRole("button", { name: "Kapalı", exact: true }).click();
     },
   },
+  { name: "zaman-sudden", q: "mock=zaman-sudden" },
+  { name: "kronometre-target", q: "mock=kor-kronometre-counting&target=7" },
 ];
 
 function freePort() {

@@ -122,7 +122,8 @@ function eliminate(
 function succeed(s: ZamanBombasiState, at: number): ZamanBombasiState {
   const player = s.order[s.turnIndex] as string;
   // Ani ölüm: yeni dizi kurulduğu an (= bu sıranın bittiği an `at`) oyun başından 60 sn'den fazla geçmişse +2.
-  const growth = at - s.startedAt > ZAMAN_BOMBASI_SUDDEN_DEATH_AFTER_MS ? ZAMAN_BOMBASI_SUDDEN_DEATH_GROWTH : 1;
+  const growth =
+    at - s.startedAt > ZAMAN_BOMBASI_SUDDEN_DEATH_AFTER_MS ? ZAMAN_BOMBASI_SUDDEN_DEATH_GROWTH : 1;
   const sequence = [...s.sequence];
   for (let i = 0; i < growth; i++) sequence.push(drawColor(s.seed, s.draws + i));
   return {

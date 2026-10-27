@@ -7,6 +7,7 @@ import { sendAction } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { BlastArt, BombArt } from "../../ui/BombArt.js";
+import { ProgressBar } from "../../ui/ProgressBar.js";
 import { Screen } from "../../ui/Screen.js";
 import { SoundToggle } from "../../ui/SoundToggle.js";
 import type { GameScreenProps } from "../registry.js";
@@ -14,7 +15,9 @@ import { PADS, PadSymbol, padSound } from "./pads.js";
 import {
   type ClientPhase,
   clientPhase,
+  formatClock,
   isNewResult,
+  isSuddenDeath,
   litMs,
   parseZamanBombasiView,
   type StatusKind,
@@ -35,6 +38,18 @@ const CRACKS = [
 export default function ZamanBombasiScreen(props: GameScreenProps) {
   const view = createMemo(() => parseZamanBombasiView(props.match.publicView, props.match.view));
   const [tick, setTick] = createSignal(0);
+  // Toplam süre göstergesi: saniyede birkaç kez güncellenir (kare kare çizim gerekmez).
+  const [clockNow, setClockNow] = createSignal(serverNow());
+  const clockTimer = setInterval(() => setClockNow(serverNow()), 250);
+  onCleanup(() => clearInterval(clockTimer));
+  const timeLeft = () => {
+    const v = view();
+    return v ? Math.max(0, v.endsAt - clockNow()) : 0;
+  };
+  const sudden = () => {
+    const v = view();
+    return v ? !v.timeUp && v.phase !== "over" && isSuddenDeath(v, clockNow()) : false;
+  };
   const phase = createMemo<ClientPhase>(() => {
     tick();
     const v = view();
@@ -85,7 +100,7 @@ export default function ZamanBombasiScreen(props: GameScreenProps) {
       const at = (target: number, fn: () => void): void => {
         playTimers.push(setTimeout(fn, Math.max(0, target - serverNow())));
       };
-      for (const edge of [v.turnStart, v.inputStart, v.deadline]) {
+      for (const edge of [v.turnStart, v.inputStart, v.deadline, v.endsAt]) {
         if (edge > now) at(edge + 2, () => setTick((n) => n + 1));
       }
       setTick((n) => n + 1);
@@ -269,7 +284,7 @@ export default function ZamanBombasiScreen(props: GameScreenProps) {
       case "eliminated":
         return "Elendin";
       default:
-        return "Oyun bitti";
+        return view()?.timeUp ? "Süre doldu" : "Oyun bitti";
     }
   };
   const sub = (): string => {
@@ -327,6 +342,18 @@ export default function ZamanBombasiScreen(props: GameScreenProps) {
           <SoundToggle />
         </div>
       </header>
+
+      <Show when={view()}>
+        {(v) => (
+          <div class="ztotal" data-sudden={sudden() ? "1" : undefined}>
+            <span class="ztotal__clock">{formatClock(timeLeft())}</span>
+            <ProgressBar class="ztotal__bar" startedAt={v().startedAt} endsAt={v().endsAt} now={serverNow} />
+            <Show when={sudden()}>
+              <span class="ztotal__badge">Ani ölüm</span>
+            </Show>
+          </div>
+        )}
+      </Show>
 
       <div class="zstatus" data-tone={tone()} role="status" aria-live="polite">
         <h2 class="display zstatus__title">{title()}</h2>
