@@ -14,6 +14,7 @@ import "./styles/screens.css";
 import "./styles/game.css";
 import "./styles/frame.css";
 import "./styles/settings.css";
+import "./styles/profile.css";
 import "./styles/colorblind.css";
 
 installAudioUnlock();

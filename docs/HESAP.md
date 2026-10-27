@@ -33,12 +33,26 @@ Mail servisi gelene kadar hesaplar doğrulanmamış açılır; şifre sıfırlam
 - Misafir oyunda her şeyi yapar ama hiçbir şey kaydedilmez; maç sonunda "Rozet ve istatistik için hesap aç" daveti.
 - TV/sahne modu kodla bağlandığı için değişmez.
 
-## İstatistik (yalnız hesaplılar)
-Maç sonunda sunucu her hesaplı oyuncu için yazar:
-- Maç: oynandı, sıra (1., 2., ...), genel skor, oyuncu sayısı.
-- Oyun başına: oynandı, mini skor, birincilik, oyuna özel rekor (ör. Kule'de kusursuz sayısı, Kör Kronometre'de en yakın fark).
-Profil ekranı: toplam maç, galibiyet, galibiyet oranı, en sevilen oyun, oyun başına en iyi sonuçlar, rozetler,
-en çok birlikte oynanan arkadaşlar.
+## İstatistik (yalnız hesaplılar, H5 uygulandı)
+Yalnız hesaplı **oyuncular** için yazılır; misafir ve izleyici (maça katılmayan) hiçbir şey kaydettirmez.
+Yazma oyun akışının dışında, bitişte tek işlemde (küçük toplu yazma) yapılır; hata olursa günlüğe düşer, oyun etkilenmez.
+- **Oyun bitince** (`account_games`): oyun kimliği, oyuncu sayısı, mini skor, mini sıra (mini skora göre; eşit skor aynı sırayı
+  paylaşır: 1, 1, 3; sıralamaya misafirler de girer), `won` = sıra 1. Sonuç ekranında sıralanan oyuncular (mini skoru olanlar) yazılır.
+- **Maç final'e varınca** (`account_matches`): oyuncu sayısı, oyun sayısı, genel skor, yer (genel skora göre, eşitler paylaşır),
+  `won` = yer 1. Yarıda kalan/çöken maçlar maç olarak yazılmaz (biten oyunlar yazılmış olur).
+- **Birlikte oynama** (`account_coplay`): biten her maçta hesaplı oyuncu çiftleri için iki yönlü sayaç artar (misafirler yok).
+- Maç sırasında odadan çıkan oyuncunun kaydı o noktadan sonra yazılmaz (oyuncu kaydı odadan silinmiştir).
+- Rozet ve oyuna özel rekorlar H6'dadır.
+
+### Profil ucu
+`GET /api/profile` (oturum şart; yoksa 401) tam profili döner; ayrıntı `docs/PROTOKOL.md`. `GET /api/profile/<kullanıcı>`
+yalnız toplamlar, favori oyun ve oyun başına sonuçları döner; **şimdilik yalnız kullanıcının kendisi için** çalışır, başkası ve
+bilinmeyen hesap aynı 404'ü alır. Arkadaşlar (H7) gelince arkadaşlara açılacak.
+Profil ekranı (ana sayfada kullanıcı adına dokununca): üyelik tarihi; Maç / Galibiyet / Galibiyet oranı / Favori oyun kutuları;
+oyun listesi (kart görseli, oynama, birincilik, en iyi); son 10 maç; en çok birlikte oynadığın 5 kişi. Yeni hesapta
+"Henüz maç yok — bir oda kur!". Misafire final'de "Rozet ve istatistik için hesap aç" daveti ve Kayıt ol düğmesi çıkar
+(kayıt ekranı oda dışında olduğundan düğme önce odadan çıkmayı onaylatır).
+Rozetler, arkadaş listesi ve sıralama sonraki adımlarda profile eklenecek.
 
 ## Rozetler
 Kalıcı başarımlar, sunucuda maç sonunda değerlendirilir; yeni kazanılanlar sonuç ekranında "Yeni rozet!" olarak görünür.
@@ -65,8 +79,12 @@ istatistikler silinir; anonim tablolar zaten kişisel veri içermez).
 ## Veri modeli (SQLite, yeni göçler)
 `accounts(id, username, username_lc, email, email_verified, pass_hash, google_sub, created_at)`,
 `sessions(id_hash, account_id, created_at, last_seen)`, `email_tokens(kind, token_hash, account_id, expires_at)`,
-`friends(a, b, state, created_at)`, `account_matches(account_id, ended_at, place, score, players)`,
-`account_games(account_id, game_id, ended_at, mini_score, won, record)`, `badges(account_id, badge_id, earned_at)`.
+`friends(a, b, state, created_at)`, `badges(account_id, badge_id, earned_at)`.
+İstatistik tabloları (göç 2, uygulandı; hepsinde `account_id` → `accounts` `ON DELETE CASCADE`):
+`account_games(account_id, game_id, ended_at, players, mini_score, rank, won)`,
+`account_matches(account_id, ended_at, players, games, score, place, won)`,
+`account_coplay(account_id, other_account_id, matches, last_at)` (PK ikisi); `(account_id, ended_at)` dizinleri.
+`deleteAccountData(accountId)` bu üç tablodaki satırları (karşı taraftaki sayaçlar dahil) siler; hesap silme (H10) çağıracak.
 
 ## Sıra
 H1 → H4 → H5 → H7 → H8 → H9 → H6 → H10; H2 ve H3, sahipten anahtarlar gelince araya girer.

@@ -13,7 +13,14 @@ export const CLIENT_PROTOCOL_VERSION: number = PROTOCOL_VERSION;
 export type UpdateDecision = "none" | "apply-now-silently" | "wait-for-safe-moment" | "block-required";
 
 /** Sayfayı yenilemenin oyuncuya zarar vermediği ekranlar: maç dışı ya da maç bitişi. */
-const SAFE_SCREENS: ReadonlySet<ScreenId> = new Set(["home", "settings", "notfound", "lobby", "final"]);
+const SAFE_SCREENS: ReadonlySet<ScreenId> = new Set([
+  "home",
+  "settings",
+  "profile",
+  "notfound",
+  "lobby",
+  "final",
+]);
 
 export const isSafeScreen = (screen: ScreenId): boolean => SAFE_SCREENS.has(screen);
 

@@ -31,6 +31,7 @@ import { Login } from "./screens/Login.js";
 import { NewPassword } from "./screens/NewPassword.js";
 import { NotFound } from "./screens/NotFound.js";
 import { Playing } from "./screens/Playing.js";
+import { Profile } from "./screens/Profile.js";
 import { Reconnecting } from "./screens/Reconnecting.js";
 import { Register } from "./screens/Register.js";
 import { Results } from "./screens/Results.js";
@@ -228,6 +229,9 @@ export function App() {
             </Match>
             <Match when={screen() === "settings"}>
               <Settings />
+            </Match>
+            <Match when={screen() === "profile"}>
+              <Profile />
             </Match>
             <Match when={screen() === "login"}>
               <Login />

@@ -7,6 +7,7 @@ import type {
   RoomSnapshot,
   ServerMessage,
 } from "@glix/engine";
+import type { AccountStatsRecorder } from "./accountStats.js";
 import type { Broadcaster } from "./broadcast.js";
 import type { Cancel, Clock } from "./clock.js";
 import type { Match } from "./match.js";
@@ -111,6 +112,8 @@ export interface Runtime {
   metrics: Metrics;
   /** Anonim istatistik deposu (devre dışıysa hiçbir şey yapmaz). */
   stats: StatsStore;
+  /** Hesaplı oyuncuların maç/oyun sonuçlarını yazar (testlerde değiştirilebilir; varsayılan hiçbir şey yapmaz). */
+  accountStats: AccountStatsRecorder;
   /** Web bildirimi göndericisi (VAPID yoksa kapalı). */
   push: PushGateway;
   /** Son biten/çöken oyunların kayıtları (en yeni sonda, en çok RECENT_LOGS). */

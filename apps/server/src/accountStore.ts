@@ -6,6 +6,9 @@ import { loadSqlite } from "./statsStore.js";
 export const SESSION_TTL_MS = 180 * 24 * 3600 * 1000;
 /** `last_seen` en çok bu aralıkla güncellenir (her WS bağlantısında yazma olmasın). */
 const TOUCH_EVERY_MS = 3600 * 1000;
+/** Profilde gösterilen son maç sayısı ve "en çok birlikte oynadıkların" uzunluğu. */
+export const RECENT_MATCHES = 10;
+export const TOP_COPLAYERS = 5;
 
 export interface Account {
   id: number;
@@ -18,6 +21,40 @@ export interface AccountWithHash extends Account {
 }
 
 export type TokenKind = "verify" | "reset";
+
+/** Bir mini oyunda hesaplı oyuncunun sonucu (`account_games` satırı). */
+export interface GameRow {
+  accountId: number;
+  gameId: string;
+  /** Oyunu oynayan (sıralamaya giren) oyuncu sayısı. */
+  players: number;
+  miniScore: number;
+  /** Mini puana göre sıra; eşit puan aynı sırayı paylaşır (1, 1, 3). */
+  rank: number;
+}
+
+/** Bir maçta hesaplı oyuncunun sonucu (`account_matches` satırı). */
+export interface MatchRow {
+  accountId: number;
+  players: number;
+  games: number;
+  score: number;
+  place: number;
+}
+
+/** Maçta birlikte oynayan hesaplar; her çift için iki yönlü sayaç artar. */
+export type CoplayPair = readonly [accountId: number, otherAccountId: number];
+
+/** Profil ekranının ham verisi (SQL toplamları). Oyun adı yok; ad katalogdan eklenir. */
+export interface ProfileData {
+  username: string;
+  createdAt: number;
+  totals: { matches: number; wins: number; winRate: number; games: number; gameWins: number };
+  favoriteGame: { id: string; plays: number } | null;
+  perGame: { gameId: string; plays: number; wins: number; bestMini: number; avgMini: number }[];
+  recent: { endedAt: number; players: number; place: number; score: number }[];
+  coPlayers: { username: string; matches: number }[];
+}
 
 export type CreateResult = { ok: true; account: Account } | { ok: false; field: "username" | "email" };
 
@@ -69,6 +106,25 @@ export interface AccountStore {
   deleteSession(tokenHash: string): void;
   /** Süresi dolan oturumları siler. */
   purge(now: number): void;
+  /** Kullanıcı adıyla (yalnız kullanıcı adı; e-posta eşleşmez) hesap bulur. */
+  findByUsername(username: string): Account | null;
+  /**
+   * Biten mini oyunun hesaplı oyuncu satırlarını tek işlemde yazar (`won` = sıra 1).
+   * Silinmiş hesabın satırı sessizce atlanır. Hata fırlatabilir; çağıran yutar.
+   */
+  recordGame(endedAt: number, rows: readonly GameRow[]): void;
+  /**
+   * Biten maçın satırlarını ve birlikte oynama sayaçlarını tek işlemde yazar (`won` = yer 1).
+   * Hata fırlatabilir; çağıran yutar.
+   */
+  recordMatch(endedAt: number, rows: readonly MatchRow[], pairs: readonly CoplayPair[]): void;
+  /** Profil toplamları; hesap yoksa null. `recent` ve `coPlayers` yalnız `full` iken doludur. */
+  profile(accountId: number, full: boolean): ProfileData | null;
+  /**
+   * Hesabın istatistik verisini siler (oyun, maç, birlikte oynama; karşı taraftaki sayaçlar dahil).
+   * Hesabın kendisine dokunmaz; hesap silme (H10) bunu çağırır, tablolar ayrıca `ON DELETE CASCADE` taşır.
+   */
+  deleteAccountData(accountId: number): void;
   close(): void;
 }
 
@@ -96,6 +152,35 @@ const MIGRATIONS: readonly string[] = [
      account_id INTEGER NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
      expires_at INTEGER NOT NULL
    );`,
+  // İstatistik (H5): yalnız hesaplı oyuncular. Hesap silinince satırlar da gider.
+  `CREATE TABLE account_games (
+     account_id INTEGER NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+     game_id TEXT NOT NULL,
+     ended_at INTEGER NOT NULL,
+     players INTEGER NOT NULL,
+     mini_score INTEGER NOT NULL,
+     rank INTEGER NOT NULL,
+     won INTEGER NOT NULL
+   );
+   CREATE INDEX account_games_account ON account_games (account_id, ended_at);
+   CREATE TABLE account_matches (
+     account_id INTEGER NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+     ended_at INTEGER NOT NULL,
+     players INTEGER NOT NULL,
+     games INTEGER NOT NULL,
+     score INTEGER NOT NULL,
+     place INTEGER NOT NULL,
+     won INTEGER NOT NULL
+   );
+   CREATE INDEX account_matches_account ON account_matches (account_id, ended_at);
+   CREATE TABLE account_coplay (
+     account_id INTEGER NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+     other_account_id INTEGER NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+     matches INTEGER NOT NULL,
+     last_at INTEGER NOT NULL,
+     PRIMARY KEY (account_id, other_account_id)
+   );
+   CREATE INDEX account_coplay_other ON account_coplay (other_account_id);`,
 ];
 
 function migrate(db: DatabaseSync): void {
@@ -170,8 +255,151 @@ export function createAccounts(path: string): AccountStore {
   const setPass = db.prepare("UPDATE accounts SET pass_hash = ? WHERE id = ?");
   const dropSessions = db.prepare("DELETE FROM sessions WHERE account_id = ?");
   const dropOtherSessions = db.prepare("DELETE FROM sessions WHERE account_id = ? AND id_hash != ?");
+  const byUsernameRow = db.prepare("SELECT id, username, email FROM accounts WHERE username_lc = ?");
+  const insertGame = db.prepare(
+    `INSERT INTO account_games (account_id, game_id, ended_at, players, mini_score, rank, won)
+       SELECT ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM accounts WHERE id = ?)`,
+  );
+  const insertMatch = db.prepare(
+    `INSERT INTO account_matches (account_id, ended_at, players, games, score, place, won)
+       SELECT ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM accounts WHERE id = ?)`,
+  );
+  const bumpCoplay = db.prepare(
+    `INSERT INTO account_coplay (account_id, other_account_id, matches, last_at)
+       SELECT ?, ?, 1, ? WHERE EXISTS (SELECT 1 FROM accounts WHERE id = ?)
+         AND EXISTS (SELECT 1 FROM accounts WHERE id = ?)
+       ON CONFLICT (account_id, other_account_id) DO UPDATE SET matches = matches + 1, last_at = excluded.last_at`,
+  );
+  const accountRow = db.prepare("SELECT username, created_at FROM accounts WHERE id = ?");
+  const matchTotals = db.prepare(
+    "SELECT COUNT(*) AS n, COALESCE(SUM(won), 0) AS wins FROM account_matches WHERE account_id = ?",
+  );
+  const gameTotals = db.prepare(
+    "SELECT COUNT(*) AS n, COALESCE(SUM(won), 0) AS wins FROM account_games WHERE account_id = ?",
+  );
+  const perGameRows = db.prepare(
+    `SELECT game_id, COUNT(*) AS plays, SUM(won) AS wins, MAX(mini_score) AS best, AVG(mini_score) AS avg
+       FROM account_games WHERE account_id = ?
+       GROUP BY game_id ORDER BY plays DESC, MAX(ended_at) DESC, game_id`,
+  );
+  const recentRows = db.prepare(
+    `SELECT ended_at, players, place, score FROM account_matches WHERE account_id = ?
+       ORDER BY ended_at DESC, rowid DESC LIMIT ${RECENT_MATCHES}`,
+  );
+  const coplayRows = db.prepare(
+    `SELECT a.username AS username, c.matches AS matches
+       FROM account_coplay c JOIN accounts a ON a.id = c.other_account_id
+       WHERE c.account_id = ? ORDER BY c.matches DESC, c.last_at DESC, a.username_lc LIMIT ${TOP_COPLAYERS}`,
+  );
+  const dropGames = db.prepare("DELETE FROM account_games WHERE account_id = ?");
+  const dropMatches = db.prepare("DELETE FROM account_matches WHERE account_id = ?");
+  const dropCoplay = db.prepare("DELETE FROM account_coplay WHERE account_id = ? OR other_account_id = ?");
+  /** Tek işlem: ya hepsi yazılır ya hiçbiri. */
+  const inTransaction = (work: () => void): void => {
+    db.exec("BEGIN");
+    try {
+      work();
+      db.exec("COMMIT");
+    } catch (err) {
+      db.exec("ROLLBACK");
+      throw err;
+    }
+  };
   let closed = false;
   return {
+    findByUsername(username) {
+      const row = byUsernameRow.get(username.toLowerCase()) as Account | undefined;
+      return row ? { id: row.id, username: row.username, email: row.email } : null;
+    },
+    recordGame(endedAt, rows) {
+      if (rows.length === 0) return;
+      inTransaction(() => {
+        for (const r of rows)
+          insertGame.run(
+            r.accountId,
+            r.gameId,
+            endedAt,
+            r.players,
+            r.miniScore,
+            r.rank,
+            r.rank === 1 ? 1 : 0,
+            r.accountId,
+          );
+      });
+    },
+    recordMatch(endedAt, rows, pairs) {
+      if (rows.length === 0) return;
+      inTransaction(() => {
+        for (const r of rows)
+          insertMatch.run(
+            r.accountId,
+            endedAt,
+            r.players,
+            r.games,
+            r.score,
+            r.place,
+            r.place === 1 ? 1 : 0,
+            r.accountId,
+          );
+        for (const [a, b] of pairs) {
+          bumpCoplay.run(a, b, endedAt, a, b);
+          bumpCoplay.run(b, a, endedAt, b, a);
+        }
+      });
+    },
+    profile(accountId, full) {
+      const acc = accountRow.get(accountId) as { username: string; created_at: number } | undefined;
+      if (!acc) return null;
+      const m = matchTotals.get(accountId) as { n: number; wins: number };
+      const g = gameTotals.get(accountId) as { n: number; wins: number };
+      const per = (
+        perGameRows.all(accountId) as {
+          game_id: string;
+          plays: number;
+          wins: number;
+          best: number;
+          avg: number;
+        }[]
+      ).map((r) => ({
+        gameId: r.game_id,
+        plays: r.plays,
+        wins: r.wins,
+        bestMini: r.best,
+        avgMini: Math.round(r.avg * 10) / 10,
+      }));
+      const top = per[0];
+      return {
+        username: acc.username,
+        createdAt: acc.created_at,
+        totals: {
+          matches: m.n,
+          wins: m.wins,
+          winRate: m.n > 0 ? Math.round((m.wins / m.n) * 1000) / 1000 : 0,
+          games: g.n,
+          gameWins: g.wins,
+        },
+        favoriteGame: top ? { id: top.gameId, plays: top.plays } : null,
+        perGame: per,
+        recent: full
+          ? (
+              recentRows.all(accountId) as {
+                ended_at: number;
+                players: number;
+                place: number;
+                score: number;
+              }[]
+            ).map((r) => ({ endedAt: r.ended_at, players: r.players, place: r.place, score: r.score }))
+          : [],
+        coPlayers: full ? (coplayRows.all(accountId) as { username: string; matches: number }[]) : [],
+      };
+    },
+    deleteAccountData(accountId) {
+      inTransaction(() => {
+        dropGames.run(accountId);
+        dropMatches.run(accountId);
+        dropCoplay.run(accountId, accountId);
+      });
+    },
     isVerified(accountId) {
       const row = verifiedOf.get(accountId) as { email_verified: number } | undefined;
       return row?.email_verified === 1;

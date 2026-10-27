@@ -192,7 +192,7 @@ katılıp oynar. Giriş: Google ya da kendi hesabı. Sıralama yalnız arkadaşl
 - [x] H2 E-posta: doğrulama ve şifre sıfırlama (Resend HTTPS API; anahtar ve alan adı kayıtları sahipte, yoksa özellik kapalı).
 - [x] H3 Google ile giriş (OAuth; sahibin Google Cloud'da açacağı istemci kimliğiyle).
 - [x] H4 Misafir sınırı: oda kurmak hesap ister; misafir kodla katılır, istatistiği tutulmaz.
-- [ ] H5 İstatistik: yalnız hesaplılar için maç/oyun sonuçları; profil ekranı.
+- [x] H5 İstatistik: yalnız hesaplılar için maç/oyun sonuçları; profil ekranı.
 - [ ] H6 Rozetler: kalıcı başarımlar, maç sonunda "Yeni rozet!".
 - [ ] H7 Arkadaşlar: kullanıcı adıyla istek, kabul/ret, liste, çevrimiçi/lobide durumu.
 - [ ] H8 Lobiye hızlı davet (uygulama içi + web bildirimi) ve arkadaşın lobisine tek dokunuşla katılma.

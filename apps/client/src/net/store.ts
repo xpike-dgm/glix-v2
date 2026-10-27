@@ -12,6 +12,7 @@ export type Nav =
   | "home"
   | "join"
   | "settings"
+  | "profile"
   | "login"
   | "register"
   | "aydinlatma"

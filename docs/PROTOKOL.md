@@ -180,6 +180,17 @@ Hepsi JSON; yanıtlar `Cache-Control: no-store`. Hata gövdesi `{ok:false, code,
 - WS yükseltmesinde çerez okunur ve bağlantı hesaba bağlanır; oyuncu kaydında `accountId` yalnız sunucuda tutulur, hiçbir mesajda yayınlanmaz.
 - Veri: `accounts`, `sessions`, `email_tokens` (`kind` verify|reset, yalnız sha256 özeti, `expires_at`) tabloları; `ACCOUNTS_DB` (varsayılan: `STATS_DB`; ikisi de yoksa bellekte, kalıcı değil). Şifre: scrypt (N=16384, r=8, p=1, 16 bayt tuz), parametreler özetle birlikte saklanır.
 
+## Profil ucu (HTTP, `/api/profile`, H5)
+
+Yalnız `GET`; oturum çerezi şart (yoksa 401 `login_required`); yanıtlar `Cache-Control: no-store`. Hata gövdesi hesap uçlarındaki gibi `{ok:false, code, message}`.
+- `GET /api/profile` → 200 `{ok:true, username, createdAt, totals:{matches, wins, winRate, games, gameWins}, favoriteGame:{id,name,plays}|null,
+  perGame:[{gameId, name, plays, wins, bestMini, avgMini}], recent:[{endedAt, players, place, score}] (son 10 maç, yeniden eskiye),
+  coPlayers:[{username, matches}] (en çok 5)}`. `winRate` 0–1 arası (3 ondalık); `wins`/`gameWins` yer 1 sayısı; `perGame` oynamaya göre azalan;
+  `favoriteGame` en çok oynanan (eşitte en son oynanan); `name` katalogdaki ad (katalogda olmayan eski oyun için "Eski oyun"). Toplamlar SQL toplamlarıyla hesaplanır.
+- `GET /api/profile/<kullanıcı>` → aynı gövde, `recent` ve `coPlayers` **yok**. Şimdilik yalnız oturumdaki hesabın kendi adı için 200; başka ad,
+  bilinmeyen ad ve geçersiz ad 404 `not_found` (hesabın var olup olmadığı sızmaz). Arkadaşlık (H7) gelince arkadaşlara açılacak.
+- Veri: `account_games`, `account_matches`, `account_coplay` (ayrıntı `docs/HESAP.md`). Sunucu bunları oyun/maç bitince tek işlemde yazar (`AccountStatsRecorder`, `Runtime.accountStats`).
+
 ## Sınırlar (sunucu)
 
 - Mesaj en çok 8 KiB; giden tampon 1 MB'ı aşan (okumayan) soket koparılır. Sunucu 20 sn'de bir ping atar, pong gelmeyen soket koparılır.
