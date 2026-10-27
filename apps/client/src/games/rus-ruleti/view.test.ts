@@ -28,7 +28,7 @@ describe("Rus Ruleti görünümü", () => {
   it("son atış ve sonuç boş olabilir; bitişte deadline null", () => {
     const v = parseRusRuletiView(
       { ...pub, last: null, over: true, deadline: null, result: { survivors: ["a"], eliminated: ["b"] } },
-      { role: "out" },
+      { role: "out", turn: 3, prediction: null, lastResult: null },
     );
     expect(v?.pub.last).toBeNull();
     expect(v?.pub.deadline).toBeNull();

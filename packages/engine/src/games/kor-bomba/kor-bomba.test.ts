@@ -261,8 +261,8 @@ describe("kor-bomba gizlilik", () => {
   it("taşıyıcının görünümünde hiçbir süre alanı yok (yapısal)", () => {
     const withBonus = ok(pass(fixed(), "a", "b", T0 + 10));
     const holderView = korBomba.view(withBonus, "b", ctx(T0 + 20));
-    expect(holderView).toEqual({ role: "holder" });
-    expect(Object.keys(holderView)).toEqual(["role"]);
+    expect(holderView).toEqual({ role: "holder", lastResult: null });
+    expect(Object.keys(holderView)).toEqual(["role", "lastResult"]);
     const json = JSON.stringify(holderView);
     expect(json).not.toMatch(/explode|bonus|time|remain|left|ms|At/i);
   });
@@ -287,6 +287,8 @@ describe("kor-bomba gizlilik", () => {
         role: "watcher",
         explodeAt: after.explodeAt,
         lastBonusMs: after.lastBonusMs,
+        prediction: null,
+        lastResult: null,
       });
     }
   });

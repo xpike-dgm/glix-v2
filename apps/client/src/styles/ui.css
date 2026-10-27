@@ -1009,3 +1009,52 @@
     height: 14px;
   }
 }
+
+/* Tahmin satırı (Kör Bomba, Rus Ruleti): kompakt iki düğme, ardından "Tahminin alındı" */
+.prd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+}
+.prd__q {
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+.prd__btns {
+  display: flex;
+  gap: 6px;
+}
+.prd__btn {
+  min-width: 64px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 2px solid var(--cyan);
+  border-radius: 14px;
+  background: rgba(5, 8, 26, 0.82);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-14, 14px);
+  font-weight: 700;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.prd__btn:active {
+  transform: scale(0.95);
+  border-color: var(--text);
+}
+.prd__done {
+  margin: 0;
+  padding: 0 14px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  border-radius: 14px;
+  background: rgba(5, 8, 26, 0.82);
+  border: 2px solid var(--violet);
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--text);
+}

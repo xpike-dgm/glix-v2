@@ -310,6 +310,34 @@
   filter: grayscale(1);
 }
 
+/* O9: "Kâhin" rozeti (yalnız sonuçta, herkese açık) ve elenenin tahmin satırı */
+.rrr__row--kahin {
+  gap: 8px;
+}
+.rrr__kahin {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px 2px 4px;
+  border-radius: 99px;
+  border: 1.5px solid var(--violet);
+  background: rgba(139, 92, 255, 0.18);
+}
+.rrr__rozet {
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-13);
+  color: var(--text);
+}
+.rr__predict {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
 /* Anlatım görseli */
 .rrart {
   position: relative;

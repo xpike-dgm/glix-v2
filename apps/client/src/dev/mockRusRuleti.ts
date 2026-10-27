@@ -9,6 +9,9 @@
  *   ?mock=rus-out           elendin, izliyorsun
  *   ?mock=rus-spectator     katılımcı değilsin
  *   ?mock=rus-reveal        oyun bitti, sonuç
+ *   ?mock=rus-predict       elendin; tahmin satırı (Evet / Hayır)
+ *   ?mock=rus-predicted     elendin; tahmin verildi ("Tahminin alındı")
+ *   ?mock=rus-kahin         oyun bitti; "Kâhin" rozeti sonuç ekranında
  */
 import type {
   GameInfo,
@@ -48,7 +51,8 @@ export function startRusRuletiMock(kind: string, params: URLSearchParams): void 
   const participants = ids.filter((id) => !(spectator && id === SELF));
   const now = Date.now();
   const briefing = kind === "rus-briefing";
-  const reveal = kind === "rus-reveal";
+  const reveal = kind === "rus-reveal" || kind === "rus-kahin";
+  let myGuess: boolean | null = kind === "rus-predicted" ? true : null;
   const phase: RoomPhase = briefing ? "briefing" : reveal ? "results" : "playing";
   const startedAt = now - 30_000;
 
@@ -80,7 +84,7 @@ export function startRusRuletiMock(kind: string, params: URLSearchParams): void 
     risk = 16;
     last = { seq: 4, shooter: "p2", target: SELF, auto: true, exploded: true, risk: 46, at: now };
     open = true;
-  } else if (kind === "rus-out") {
+  } else if (kind === "rus-out" || kind === "rus-predict" || kind === "rus-predicted") {
     eliminated = [SELF];
     holder = "p2";
     risk = 16;
@@ -120,9 +124,20 @@ export function startRusRuletiMock(kind: string, params: URLSearchParams): void 
       openAt: open ? now + 600_000 : now - 4_000,
       deadline: over ? null : now + (open ? 618_000 : 11_000),
       over,
-      result: over ? { survivors: alive, eliminated } : null,
+      result: over
+        ? { survivors: alive, eliminated, kahinler: kind === "rus-kahin" ? eliminated.slice(0, 2) : [] }
+        : null,
     };
-    const role: RusRuletiView["role"] = spectator ? "spectator" : alive.includes(SELF) ? "alive" : "out";
+    const priv: RusRuletiView = spectator
+      ? { role: "spectator" }
+      : alive.includes(SELF)
+        ? { role: "alive" }
+        : {
+            role: "out",
+            turn: last?.seq ?? 0,
+            prediction: myGuess,
+            lastResult: null,
+          };
     const scores = Object.fromEntries(participants.map((id) => [id, alive.includes(id) ? 1 : 0]));
     const match: MatchSnapshot = {
       round: 0,
@@ -137,7 +152,7 @@ export function startRusRuletiMock(kind: string, params: URLSearchParams): void 
       phaseStartedAt: startedAt,
       phaseEndsAt: briefing ? now + 40_000 : reveal ? now + 60_000 : null,
       publicView: briefing ? null : pub,
-      view: briefing ? null : { role },
+      view: briefing ? null : priv,
       result: reveal ? { miniScores: scores, awards: scores } : null,
     };
     const snapshot: RoomSnapshot = {
@@ -162,7 +177,12 @@ export function startRusRuletiMock(kind: string, params: URLSearchParams): void 
   setState({ conn: "open", everOpen: true, nickname: "Cihad" });
   useMockSender((msg) => {
     if (msg.type !== "action") return;
-    const p = msg.payload as { kind?: string; target?: string } | null;
+    const p = msg.payload as { kind?: string; target?: string; explodes?: unknown } | null;
+    if (p?.kind === "predict" && typeof p.explodes === "boolean" && myGuess === null) {
+      myGuess = p.explodes;
+      publish();
+      return;
+    }
     if (p?.kind !== "shoot" || holder !== SELF || typeof p.target !== "string") return;
     last = {
       seq: (last?.seq ?? 0) + 1,

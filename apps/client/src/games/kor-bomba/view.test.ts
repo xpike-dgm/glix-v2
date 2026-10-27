@@ -16,6 +16,7 @@ const pub = {
   lastPass: { seq: 2, from: "b", to: "a" },
   exploded: false,
   explodedAt: null,
+  correctPredictors: [],
 };
 
 describe("Kör Bomba görünümü", () => {
@@ -44,18 +45,23 @@ describe("Kör Bomba görünümü", () => {
   });
 
   it("kişisel görünüm üç rolü tanır", () => {
-    expect(parseKorBombaPrivateView({ role: "holder" })).toEqual({ role: "holder" });
+    expect(parseKorBombaPrivateView({ role: "holder", lastResult: null })).toEqual({
+      role: "holder",
+      lastResult: null,
+    });
     expect(parseKorBombaPrivateView({ role: "spectator" })).toEqual({ role: "spectator" });
     expect(parseKorBombaPrivateView({ role: "watcher", explodeAt: 9, lastBonusMs: null })).toEqual({
       role: "watcher",
       explodeAt: 9,
       lastBonusMs: null,
+      prediction: null,
+      lastResult: null,
     });
   });
 
   it("taşıyıcı görünümündeki fazladan süre alanını taşımaz", () => {
     const v = parseKorBombaPrivateView({ role: "holder", explodeAt: 99 });
-    expect(v).toEqual({ role: "holder" });
+    expect(v).toEqual({ role: "holder", lastResult: null });
     expect(JSON.stringify(v)).not.toContain("99");
   });
 
@@ -74,9 +80,9 @@ describe("Kör Bomba görünümü", () => {
   });
 
   it("birleşik görünüm ikisi de geçerliyse döner", () => {
-    expect(parseKorBombaView(pub, { role: "holder" })?.priv.role).toBe("holder");
+    expect(parseKorBombaView(pub, { role: "holder", lastResult: null })?.priv.role).toBe("holder");
     expect(parseKorBombaView(pub, null)).toBeNull();
-    expect(parseKorBombaView(null, { role: "holder" })).toBeNull();
+    expect(parseKorBombaView(null, { role: "holder", lastResult: null })).toBeNull();
   });
 
   it("kalan süre yalnız izleyen katılımcıda vardır ve negatif olmaz", () => {
@@ -84,7 +90,7 @@ describe("Kör Bomba görünümü", () => {
     if (!watcher) throw new Error("geçerli olmalı");
     expect(remainingMs(watcher, 7_500)).toBe(2_500);
     expect(remainingMs(watcher, 12_000)).toBe(0);
-    const holder = parseKorBombaView(pub, { role: "holder" });
+    const holder = parseKorBombaView(pub, { role: "holder", lastResult: null });
     const spectator = parseKorBombaView(pub, { role: "spectator" });
     if (!holder || !spectator) throw new Error("geçerli olmalı");
     expect(remainingMs(holder, 0)).toBeNull();

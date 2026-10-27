@@ -6,6 +6,10 @@
  *   ?mock=kor-bomba-urgent     son saniyeler
  *   ?mock=kor-bomba-blast      patlama anı
  *   ?mock=kor-bomba-spectator  izleyici
+ *   ?mock=kor-bomba-predict    tahmin satırı (Patlar / Patlamaz); bomba başkasında
+ *   ?mock=kor-bomba-predicted  tahmin verildi ("Tahminin alındı")
+ *   ?mock=kor-bomba-bildi      patlama: "Elif bildi!" ve "Bildin!" bildirimi (sen de bildin)
+ *   ?mock=kor-bomba-bilemedin  patlama: tahmin tutmadı ("Bilemedin")
  * `&n=8` oyuncu sayısını değiştirir.
  */
 import type {
@@ -64,6 +68,16 @@ export function startKorBombaMock(kind: string, params: URLSearchParams): void {
     explodeAt = Date.now() - 400;
   }
   let passes = 2;
+  const resolving = kind === "kor-bomba-bildi" || kind === "kor-bomba-bilemedin";
+  let myGuess: boolean | null = kind === "kor-bomba-predicted" ? true : null;
+  let lastResult: { turn: number; correct: boolean } | null = null;
+  let correctPredictors: string[] = [];
+  if (resolving) {
+    // Taşıyıcı p1; sen "patlar" ya da "patlamaz" dedin, bomba kısa süre sonra patlar.
+    holder = "p1";
+    explodeAt = Date.now() + 1_800;
+    myGuess = kind === "kor-bomba-bildi";
+  }
   let lastPass: KorBombaPublicView["lastPass"] = { seq: 2, from: "p4", to: holder };
   let lastBonusMs: number | null = null;
   const timers: ReturnType<typeof setTimeout>[] = [];
@@ -75,11 +89,18 @@ export function startKorBombaMock(kind: string, params: URLSearchParams): void {
     lastPass,
     exploded,
     explodedAt: exploded ? explodeAt : null,
+    correctPredictors: exploded ? correctPredictors : [],
   });
   const view = (): KorBombaView => {
     if (spectating) return { role: "spectator" };
-    if (holder === SELF && !exploded) return { role: "holder" };
-    return { role: "watcher", explodeAt, lastBonusMs };
+    if (holder === SELF && !exploded) return { role: "holder", lastResult };
+    return {
+      role: "watcher",
+      explodeAt,
+      lastBonusMs,
+      prediction: myGuess === null ? null : { turn: passes, explodes: myGuess },
+      lastResult,
+    };
   };
 
   const phase: RoomPhase = briefing ? "briefing" : "playing";
@@ -143,7 +164,12 @@ export function startKorBombaMock(kind: string, params: URLSearchParams): void {
   setState({ conn: "open", everOpen: true, nickname: "Cihad" });
   useMockSender((msg: ClientMessage) => {
     if (msg.type !== "action") return;
-    const p = msg.payload as { kind?: unknown; to?: unknown };
+    const p = msg.payload as { kind?: unknown; to?: unknown; explodes?: unknown };
+    if (p.kind === "predict" && typeof p.explodes === "boolean" && myGuess === null && holder !== SELF) {
+      myGuess = p.explodes;
+      publish();
+      return;
+    }
     if (p.kind === "pass" && typeof p.to === "string") doPass(SELF, p.to);
   });
   setState("session", { token: "mock", playerId: SELF, roomCode: "KX7QP" });
@@ -156,6 +182,8 @@ export function startKorBombaMock(kind: string, params: URLSearchParams): void {
     if (exploded) return;
     if (Date.now() >= explodeAt) {
       exploded = true;
+      if (myGuess !== null) lastResult = { turn: passes, correct: myGuess };
+      if (kind === "kor-bomba-bildi") correctPredictors = ["p2", SELF];
       publish();
       return;
     }

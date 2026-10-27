@@ -301,6 +301,7 @@ describe("rus-ruleti: bitiş", () => {
     expect(rusRuleti.publicView(s, ctx(s.openAt)).result).toEqual({
       survivors: s.alive,
       eliminated: [v1, v2],
+      kahinler: [],
     });
   });
 });
@@ -484,7 +485,12 @@ describe("rus-ruleti: görünümler", () => {
   it("kişisel görünüm: hayatta, elenmiş, izleyici", () => {
     const s = start(4, { alive: ["a", "b"], eliminated: ["c", "d"], holder: "a" });
     expect(rusRuleti.view(s, "a", ctx(T0))).toEqual({ role: "alive" });
-    expect(rusRuleti.view(s, "c", ctx(T0))).toEqual({ role: "out" });
+    expect(rusRuleti.view(s, "c", ctx(T0))).toEqual({
+      role: "out",
+      turn: 0,
+      prediction: null,
+      lastResult: null,
+    });
     expect(rusRuleti.view(s, null, ctx(T0))).toEqual({ role: "spectator" });
     expect(rusRuleti.view(s, "zz", ctx(T0))).toEqual({ role: "spectator" });
   });
