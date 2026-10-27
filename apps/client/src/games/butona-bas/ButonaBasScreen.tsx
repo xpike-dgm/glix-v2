@@ -1,3 +1,4 @@
+import { butonaBasWindowMs } from "@glix/engine";
 import { createEffect, createMemo, createSignal, For, on, onCleanup, Show, untrack } from "solid-js";
 import { hapticMatch, hapticSolo, hapticTap } from "../../fx/haptics.js";
 import { match as matchSound, solo as soloSound, tap, unlockAudio } from "../../fx/sound.js";
@@ -8,7 +9,7 @@ import { PhaseClock } from "../../ui/PhaseClock.js";
 import { Screen } from "../../ui/Screen.js";
 import type { GameScreenProps } from "../registry.js";
 import { ArcadeButton, type ArcadeFx } from "./ArcadeButton.js";
-import { maxWindowIndex, newWindows, parseButonaBasView } from "./view.js";
+import { maxWindowIndex, newWindows, parseButonaBasView, roundClockAt } from "./view.js";
 
 interface Float {
   id: number;
@@ -26,7 +27,16 @@ export default function ButonaBasScreen(props: GameScreenProps) {
     return v.myScore ?? v.scores[props.selfId] ?? 0;
   };
   const strip = () => props.players.filter((p) => props.match.participants.includes(p.id));
-  const waveMs = () => view()?.windowMs ?? 300;
+  // Tur/ara geçişi yerel saatten türetilir (görünüm yalnız durum değişince gelir).
+  const clock = createMemo(() => {
+    const v = view();
+    return v ? roundClockAt(v.startedAt, v.endsAt, props.now()) : null;
+  });
+  const waveMs = () => clock()?.windowMs ?? view()?.windowMs ?? 300;
+  const rounds = () => view()?.rounds ?? 3;
+  const tightening = () => (clock()?.round ?? 0) > 0;
+  const inGap = () => clock()?.phase === "gap";
+  const prevWindowMs = () => butonaBasWindowMs(Math.max(0, (clock()?.round ?? 1) - 1));
 
   const [pressed, setPressed] = createSignal(false);
   const [waves, setWaves] = createSignal<number[]>([]);
@@ -138,21 +148,38 @@ export default function ButonaBasScreen(props: GameScreenProps) {
     const v = view();
     if (!v) return;
     const t = serverNow();
-    if (t >= v.endsAt) return;
-    const idx = Math.floor((t - v.startedAt) / v.windowMs);
+    const c = roundClockAt(v.startedAt, v.endsAt, t);
+    // Turlar arasındaki ara ve oyun sonrası: basış sunucuda sayılmaz, gönderilmez.
+    if (c.phase !== "play") return;
+    const idx = c.round * 1000 + Math.floor((t - c.phaseStartsAt) / c.windowMs);
     if (idx === lastSentWindow) return;
     lastSentWindow = idx;
     sendAction({ kind: "press" });
   };
 
+  // Ara sırasında da buton kilitli: pencere yalnız tur içinde açıktır.
   const over = () => {
     const v = view();
-    return !v || props.now() >= v.endsAt;
+    return !v || props.now() >= v.endsAt || inGap();
   };
 
   return (
     <Screen class="game">
-      <Show when={view()}>{(v) => <PhaseClock startedAt={v().startedAt} endsAt={v().endsAt} urgency />}</Show>
+      <Show when={clock()}>
+        {(c) => (
+          <PhaseClock startedAt={c().phaseStartsAt} endsAt={c().phaseEndsAt} urgency={c().phase === "play"} />
+        )}
+      </Show>
+
+      <div class="game__round" role="status" data-tight={tightening() ? "1" : undefined}>
+        <span class="game__roundNo">
+          Tur {Math.min(rounds(), (clock()?.round ?? 0) + 1)}/{rounds()}
+        </span>
+        <span class="game__roundWin">
+          {tightening() ? "Pencere daralıyor · " : "Pencere "}
+          {waveMs()} ms
+        </span>
+      </div>
 
       <div class="game__score">
         <span class="overline">{props.spectator ? "En yüksek puan" : "Puanın"}</span>
@@ -180,6 +207,17 @@ export default function ButonaBasScreen(props: GameScreenProps) {
         <div class="floats" aria-hidden="true">
           <For each={floats()}>{(f) => <span class={`float float--${f.kind}`}>{f.text}</span>}</For>
         </div>
+        <Show when={inGap()}>
+          <div class="game__gap" role="status">
+            <span class="overline">
+              Tur {Math.min(rounds(), (clock()?.round ?? 0) + 1)}/{rounds()}
+            </span>
+            <strong class="game__gapTitle">Pencere daralıyor</strong>
+            <span class="game__gapWin">
+              {prevWindowMs()} ms → {waveMs()} ms
+            </span>
+          </div>
+        </Show>
       </div>
 
       <footer class="game__strip">

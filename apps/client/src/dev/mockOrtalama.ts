@@ -7,16 +7,22 @@
  *   ?mock=ortalama-reveal-tie        sonuç: en yakınlar eşit, herkes +1
  *   ?mock=ortalama-reveal-late       sonuç animasyonu bitmeye yakın (geç açılan ekran)
  *   ?mock=ortalama-spectator         katılımcı değilsin
+ *   ?mock=ortalama-choosing&tur=2    2. tur seçimi: ⅔ çarpanı, önceki turun ortalaması ve hedefi görünür (`tur=3`: ¾)
+ *   ?mock=ortalama-reveal&tur=2      2. turun sonucu (ara tur; toplam puan görünür)
+ *   ?mock=ortalama-reveal&tur=3      son tur sonucu: genel skora eklenen puan (3 turun toplamından)
  */
 
 import type { GameInfo, MatchSnapshot, PlayerInfo, RoomPhase, RoomSnapshot } from "@glix/engine";
 import {
+  createRng,
   ORTALAMA_CHOOSE_MS,
-  ORTALAMA_DURATION_MS,
+  ORTALAMA_REVEAL_MS,
+  ORTALAMA_ROUND_REVEAL_MS,
+  ORTALAMA_ROUNDS,
   type OrtalamaPublicView,
+  type OrtalamaState,
   type OrtalamaView,
   ortalamaninYarisi,
-  ortalamaSettle,
 } from "@glix/engine";
 import { useMockSender } from "../net/client.js";
 import { applySnapshot, setState } from "../net/store.js";
@@ -54,39 +60,60 @@ export function startOrtalamaMock(kind: string, params: URLSearchParams): void {
   let rev = 1;
   const revealed = kind.startsWith("ortalama-reveal");
   const late = kind.endsWith("late");
-  const startedAt = revealed ? now - ORTALAMA_CHOOSE_MS - (late ? 4_500 : 300) : now - 6_000;
+  // `&tur=1|2|3`: gösterilen tur. Turun başlangıcı tur sürelerinden (10 sn seçim + 5 sn sonuç; son turda 7 sn) türetilir.
+  const roundNo = Math.min(3, Math.max(1, Number(params.get("tur")) || 1));
+  const roundIdx = roundNo - 1;
+  const roundStart = (r: number): number => r * (ORTALAMA_CHOOSE_MS + ORTALAMA_ROUND_REVEAL_MS);
+  const roundEnd = (r: number): number => roundStart(r) + ORTALAMA_CHOOSE_MS;
+  const roundRevealEnd = (r: number): number =>
+    roundEnd(r) + (r === ORTALAMA_ROUNDS - 1 ? ORTALAMA_REVEAL_MS : ORTALAMA_ROUND_REVEAL_MS);
+  // Oyunun başlangıcı: gösterilen turun seçim bitişinden geriye sayılır.
+  const sinceEnd = revealed ? (late ? 4_500 : 300) : -(ORTALAMA_CHOOSE_MS - 6_000);
+  const startedAt = now - roundEnd(roundIdx) - sinceEnd;
 
-  const reveal = () => {
-    const values = kind.includes("tie") ? TIED : SPREAD;
-    const choices: Record<string, number> = {};
-    participants.forEach((id, i) => {
-      choices[id] = values[i] ?? 50;
-    });
-    return ortalamaSettle({
-      players: participants,
-      startedAt,
-      endsAt: startedAt + ORTALAMA_CHOOSE_MS,
-      revealEndsAt: startedAt + ORTALAMA_DURATION_MS,
-      choices,
-      locked: [],
-      fallback: {},
-      revealed: true,
-    });
+  // Tur başına örnek seçimler: sonuçlar farklı olsun ve toplamda sıralama görünsün.
+  const ROUND_VALUES = [
+    kind.includes("tie") ? TIED : SPREAD,
+    [60, 12, 48, 70, 25, 33, 90, 41],
+    [18, 52, 30, 44, 8, 66, 27, 59],
+  ];
+
+  const stateFor = (r: number): OrtalamaState => {
+    const rounds = Array.from({ length: ORTALAMA_ROUNDS }, (_, k) => ({
+      startAt: startedAt + roundStart(k),
+      endsAt: startedAt + roundEnd(k),
+      revealEndsAt: startedAt + roundRevealEnd(k),
+      choices: {} as Record<string, number>,
+      locked: [] as string[],
+      fallback: {} as Record<string, number>,
+    }));
+    for (let k = 0; k <= r; k++) {
+      const v = ROUND_VALUES[k] ?? SPREAD;
+      const c: Record<string, number> = {};
+      participants.forEach((id, i) => {
+        c[id] = v[i] ?? 50;
+      });
+      const slot = rounds[k];
+      if (slot) slot.choices = c;
+    }
+    return { players: participants, startedAt, rounds, revealed: r + 1, shown: r };
   };
 
-  const build = (): { pub: OrtalamaPublicView; priv: OrtalamaView } => ({
-    pub: {
-      startedAt,
-      endsAt: startedAt + ORTALAMA_CHOOSE_MS,
-      revealEndsAt: startedAt + ORTALAMA_DURATION_MS,
-      reveal: revealed ? reveal() : null,
-      lockedIds: [
-        ...(locked && !spectator ? [SELF] : []),
-        ...participants.filter((id, i) => id !== SELF && i % 2 === 1 && (locked || spectator)),
-      ],
-    },
-    priv: { myChoice: spectator ? null : myChoice, locked: !spectator && locked },
-  });
+  const build = (): { pub: OrtalamaPublicView; priv: OrtalamaView } => {
+    const st = stateFor(roundIdx);
+    const ctxNow = revealed ? startedAt + roundEnd(roundIdx) + 1 : startedAt + roundStart(roundIdx) + 1;
+    const pub = ortalamaninYarisi.publicView(st, { now: ctxNow, rng: createRng(1), connected: [] });
+    return {
+      pub: {
+        ...pub,
+        lockedIds: [
+          ...(locked && !spectator ? [SELF] : []),
+          ...participants.filter((id, i) => id !== SELF && i % 2 === 1 && (locked || spectator)),
+        ],
+      },
+      priv: { myChoice: spectator ? null : myChoice, locked: !spectator && locked },
+    };
+  };
 
   const snapshot = (): RoomSnapshot => {
     if (kind === "ortalama-briefing") {

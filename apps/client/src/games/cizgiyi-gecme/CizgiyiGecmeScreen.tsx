@@ -11,7 +11,7 @@ import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./cizgiyi-gecme.css";
 import { Sonuc, type SonucEntry } from "./Sonuc.js";
-import { parseCizgiView, ZONE_COUNT, zoneFill, zoneLabel, zoneOf, zonesTopDown } from "./view.js";
+import { isDense, parseCizgiView, zoneCount, zoneFill, zoneLabel, zoneOf, zonesTopDown } from "./view.js";
 
 export default function CizgiyiGecmeScreen(props: GameScreenProps) {
   const view = createMemo(() => parseCizgiView(props.match.publicView, props.match.view));
@@ -44,7 +44,8 @@ export default function CizgiyiGecmeScreen(props: GameScreenProps) {
     closed,
   });
   const mine = (): number | null => sync.value() ?? view()?.myChoice ?? null;
-  const zone = () => zoneOf(mine() ?? 0);
+  const width = () => view()?.zoneWidth ?? 10;
+  const zone = () => zoneOf(mine() ?? 0, width());
 
   const lock = (): AckLike => {
     const v = view();
@@ -72,7 +73,10 @@ export default function CizgiyiGecmeScreen(props: GameScreenProps) {
             fallback={
               <>
                 <div class="cg__hero">
-                  <p class="overline">{props.spectator ? "Herkes gizlice seçiyor" : "Gizli pinin"}</p>
+                  <p class="overline">
+                    {props.spectator ? "Herkes gizlice seçiyor" : "Gizli pinin"} · platform genişliği{" "}
+                    {width()}
+                  </p>
                   <div class="cg__num" data-set={mine() === null ? undefined : "1"}>
                     {props.spectator ? "?" : (mine() ?? "?")}
                   </div>
@@ -82,19 +86,20 @@ export default function CizgiyiGecmeScreen(props: GameScreenProps) {
                       : mine() === null
                         ? "Seçmezsen pasif kalırsın"
                         : locked()
-                          ? `${zoneLabel(zone())} platformunda kesinleştin`
-                          : `${zoneLabel(zone())} platformundasın`}
+                          ? `${zoneLabel(zone(), width())} platformunda kesinleştin`
+                          : `${zoneLabel(zone(), width())} platformundasın`}
                   </p>
                 </div>
 
-                <div class="cg__tower" aria-hidden="true">
-                  <For each={zonesTopDown()}>
+                <div class="cg__tower" data-dense={isDense(width()) ? "1" : undefined} aria-hidden="true">
+                  <For each={zonesTopDown(width())}>
                     {(z) => (
                       <div
                         class="cgrow"
                         data-on={!props.spectator && mine() !== null && z === zone() ? "1" : undefined}
+                        data-quiet={isDense(width()) && z % 3 !== 0 ? "1" : undefined}
                       >
-                        <span class="cgrow__label">{zoneLabel(z)}</span>
+                        <span class="cgrow__label">{zoneLabel(z, width())}</span>
                         <span class="cgrow__bar" />
                       </div>
                     )}
@@ -105,8 +110,8 @@ export default function CizgiyiGecmeScreen(props: GameScreenProps) {
                       data-empty={mine() === null ? "1" : undefined}
                       style={{
                         "--z": mine() === null ? 0 : zone(),
-                        "--f": mine() === null ? 0.5 : zoneFill(mine() ?? 0),
-                        "--n": ZONE_COUNT,
+                        "--f": mine() === null ? 0.5 : zoneFill(mine() ?? 0, width()),
+                        "--n": zoneCount(width()),
                       }}
                     >
                       <i class="cgpin__stem" />

@@ -1,11 +1,19 @@
-import type { OrtalamaReveal } from "@glix/engine";
+import { type OrtalamaReveal, ortalamaMultiplier } from "@glix/engine";
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { hapticMatch, hapticResult, hapticSolo, hapticTick } from "../../fx/haptics.js";
 import { reducedMotion } from "../../fx/motion.js";
 import { fanfare, go, match as matchSound, solo as soloSound, tick } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
-import { assignLanes, formatNumber, linePercent, pointsOf, tierOf } from "./view.js";
+import {
+  assignLanes,
+  formatNumber,
+  linePercent,
+  multiplierLabel,
+  pointsOf,
+  targetName,
+  tierOf,
+} from "./view.js";
 
 export interface SonucEntry {
   id: string;
@@ -16,6 +24,14 @@ export interface SonucEntry {
 
 interface Props {
   reveal: OrtalamaReveal;
+  /** Gösterilen tur (1 tabanlı) ve toplam tur sayısı. */
+  round: number;
+  rounds: number;
+  multiplier: { num: number; den: number };
+  /** Bu tur dahil mini puan toplamları. */
+  totals: Record<string, number>;
+  /** Yalnız son turda: genel skora eklenecek puanlar (3 turun toplamından, bir kez). */
+  final: Record<string, number> | null;
   /** Seçim süresinin bitişi: sonuç animasyonu buradan başlar. */
   endsAt: number;
   entries: SonucEntry[];
@@ -32,6 +48,11 @@ export const LINK_STEP = 320;
 
 const LANE_H = 22;
 
+/** Sonraki turun çarpanı (½ → ⅔ → ¾). */
+function nextMultiplier(round: number): { num: number; den: number } {
+  return ortalamaMultiplier(round);
+}
+
 export function Sonuc(props: Props) {
   const r = () => props.reveal;
   const byId = createMemo(() => new Map(props.entries.map((e) => [e.id, e])));
@@ -44,6 +65,9 @@ export function Sonuc(props: Props) {
   );
   const laneCount = () => Math.max(1, ...lanes().map((l) => l + 1));
   const myPoints = () => pointsOf(r(), props.selfId);
+  const isLast = () => props.round >= props.rounds;
+  const myTotal = () => props.totals[props.selfId] ?? 0;
+  const myFinal = () => props.final?.[props.selfId] ?? 0;
   const tFinal = () => T_LINK + order().length * LINK_STEP + 150;
 
   // Animasyon, seçim süresi bittiği andan sayılır (geç açılan ekran kaldığı yerden devam eder).
@@ -87,16 +111,22 @@ export function Sonuc(props: Props) {
     });
   });
 
+  // Son turun sonunda başlık, genel skora eklenen puanı gösterir; önceki turlarda yalnız tur puanı.
+  const headPoints = () => (isLast() ? myFinal() : myPoints());
   const headLabel = () =>
     stage() === 0
-      ? "Sayılar açılıyor"
+      ? `Tur ${props.round}/${props.rounds} · sayılar açılıyor`
       : stage() === 1
         ? "Ortalama"
         : stage() === 2 || props.spectator
-          ? "Hedef · ortalamanın yarısı"
-          : myPoints() > 0
-            ? "Puanın"
-            : "Bu sefer";
+          ? `Hedef · ${targetName(props.multiplier)}`
+          : isLast()
+            ? headPoints() > 0
+              ? "Genel skora eklenen"
+              : "Genel skor"
+            : myPoints() > 0
+              ? "Tur puanın"
+              : "Bu sefer";
   const headValue = () =>
     stage() === 0
       ? "?"
@@ -104,9 +134,15 @@ export function Sonuc(props: Props) {
         ? formatNumber(r().mean)
         : stage() === 2 || props.spectator
           ? formatNumber(r().target)
-          : myPoints() > 0
-            ? `+${myPoints()}`
+          : headPoints() > 0
+            ? `+${headPoints()}`
             : "puan yok";
+  const headSub = () =>
+    stage() < 3 || props.spectator
+      ? ""
+      : isLast()
+        ? `3 turun toplamı: ${myTotal()} puan`
+        : `Toplam: ${myTotal()} puan`;
 
   return (
     <div
@@ -123,10 +159,13 @@ export function Sonuc(props: Props) {
         <span
           class="ort-res__val"
           data-k={stage() === 3 && !props.spectator ? "pts" : "n"}
-          data-pts={myPoints()}
+          data-pts={headPoints()}
         >
           {headValue()}
         </span>
+        <Show when={headSub()}>
+          <span class="ort-res__sub">{headSub()}</span>
+        </Show>
       </div>
 
       <div class="sc" style={{ "--lanes": laneCount() }} aria-hidden="true">
@@ -171,7 +210,9 @@ export function Sonuc(props: Props) {
           <span>0</span>
           <span class="sc__legend">
             <span class="sc__key sc__key--mean">ortalama {formatNumber(r().mean)}</span>
-            <span class="sc__key sc__key--target">hedef {formatNumber(r().target)}</span>
+            <span class="sc__key sc__key--target">
+              hedef {multiplierLabel(props.multiplier)} · {formatNumber(r().target)}
+            </span>
           </span>
           <span>100</span>
         </div>
@@ -210,6 +251,9 @@ export function Sonuc(props: Props) {
           }}
         </For>
       </ol>
+      <Show when={!isLast()}>
+        <p class="ort-res__next">Sonraki tur: hedef {targetName(nextMultiplier(props.round))}</p>
+      </Show>
     </div>
   );
 }

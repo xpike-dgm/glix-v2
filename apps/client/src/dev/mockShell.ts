@@ -77,14 +77,19 @@ export function startShellMock(kind: string, params: URLSearchParams): void {
       phaseEndsAt = now + 40_000;
       break;
     case "spectator-playing": {
+      const t0 = now - 5_000; // 1. turun 5. saniyesi
       const pub: ButonaBasPublicView = {
-        startedAt: phaseStartedAt,
-        endsAt: phaseStartedAt + 45_000,
+        startedAt: t0,
+        endsAt: t0 + 51_000,
+        round: 1,
+        rounds: 3,
+        phase: "play",
         windowMs: 300,
+        phaseEndsAt: t0 + 15_000,
         scores,
         recent: [
-          { index: 40, pressers: ["p1", "p2"], outcome: "match" },
-          { index: 41, pressers: ["p3"], outcome: "solo" },
+          { round: 0, index: 40, pressers: ["p1", "p2"], outcome: "match" },
+          { round: 0, index: 41, pressers: ["p3"], outcome: "solo" },
         ],
       };
       const mine: ButonaBasView = { myScore: null, pressedThisWindow: false };

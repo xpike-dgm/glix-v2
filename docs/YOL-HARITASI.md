@@ -186,14 +186,14 @@ Bugün: yeni sürüm hazır olunca bekliyor (`registerType: prompt`), kullanıc�
 | O2 | Zehirli Kadeh | Her oyuncuya 1 "koklama": seçtiği kadehin durumu yalnız ona açılır | reddedildi |
 | O3 | Rüşvet ve Darbe | Gerçek darbe: pay almayanların ortak darbe oyu, çoğunlukta başkanın +1'i iptal |
 | O4 | İttifak | Pazarlıkta puansız "söz" işaretleri; sonda tutulan/bozulan sözler açılır |
-| O5 | Ortalamaya En Yakın | 3 kısa tur, çarpan her tur değişir (½, ⅔, ¾), önceki ortalama görünür |
+| O5 | Ortalamaya En Yakın | 3 kısa tur, çarpan her tur değişir (½, ⅔, ¾), önceki ortalama görünür | ✓ uygulandı |
 | O6 | Kör Kronometre | Hedef 7–13 sn arası rastgele, başta gösterilir; basmayan sıralamaya girmez | ✓ uygulandı |
-| O7 | Aşırı Yükleme | En az tıklayan da −1 (risksiz pasifliği kırar) — sahip kararı |
-| O8 | Butona Bas | 3 tur, pencere 300→200→120 ms |
+| O7 | Aşırı Yükleme | En az tıklayan da −1 (risksiz pasifliği kırar) — sahip kararı | ✓ uygulandı |
+| O8 | Butona Bas | 3 tur, pencere 300→200→120 ms | ✓ uygulandı |
 | O9 | Kör Bomba / Rus Ruleti | İzleyen tahmini ("patlar mı?") doğru +1 (Rus Ruleti'nde rozet) |
 | O10 | Gizli Kareler | 2. aşamada bir "ödül karesi" (+2) |
 | O11 | Sızma | Sonda "fark ettin mi?" — kendini fark eden sızmaya +1 |
-| O12 | Çizgiyi Geçme | Bölge genişliği oyuncu sayısına göre |
+| O12 | Çizgiyi Geçme | Bölge genişliği oyuncu sayısına göre | ✓ uygulandı |
 
 **Kural değiştirmeyen cilalar (onaysız yapılabilir):**
 - [x] Karalama: renk paleti + kalınlık (zaten vardı: 6 renk + silgi, 3 kalınlık), oylamada çiziliş tekrarı, maç sonu galeri.

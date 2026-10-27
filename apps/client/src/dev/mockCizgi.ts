@@ -16,6 +16,7 @@ import {
   type CizgiView,
   cizgiSettle,
   cizgiyiGecme,
+  cizgiZoneWidth,
 } from "@glix/engine";
 import { useMockSender } from "../net/client.js";
 import { applySnapshot, setState } from "../net/store.js";
@@ -29,8 +30,8 @@ const INFO: GameInfo = {
   maxPlayers: cizgiyiGecme.maxPlayers,
   orientation: "portrait",
 };
-// p0 (sen) 72 ile tek kalır; p1 ve p2 aynı bölgede çarpışır; p3 ikinci.
-const SPREAD: (number | null)[] = [72, 95, 91, 38, 12, 100, 15, null];
+// p0 (sen) 72 ile tek kalır; p1 ve p2 aynı bölgede çarpışır (94 ve 95 her genişlikte aynı bölgede); p3 ikinci.
+const SPREAD: (number | null)[] = [72, 95, 94, 38, 12, 100, 15, null];
 const CROWD: (number | null)[] = [42, 45, 41, 48, 40, 44, 47, 43];
 
 export function startCizgiMock(kind: string, params: URLSearchParams): void {
@@ -76,6 +77,7 @@ export function startCizgiMock(kind: string, params: URLSearchParams): void {
   const build = (): { pub: CizgiPublicView; priv: CizgiView } => ({
     pub: {
       startedAt,
+      zoneWidth: cizgiZoneWidth(n),
       endsAt: startedAt + CIZGI_CHOOSE_MS,
       revealEndsAt: startedAt + CIZGI_DURATION_MS,
       reveal: revealed ? reveal() : null,

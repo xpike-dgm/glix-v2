@@ -380,3 +380,66 @@
     display: none;
   }
 }
+
+/* ---- Butona Bas: tur etiketi ve pencere daralıyor uyarısı ---- */
+.game__round {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: #c9cff0;
+  text-align: center;
+}
+.game__roundNo {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--text);
+}
+.game__round[data-tight="1"] .game__roundWin {
+  color: var(--amber);
+}
+.game__gap {
+  grid-area: 1 / 1;
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  padding: 14px 20px;
+  border-radius: 18px;
+  background: rgba(5, 8, 26, 0.9);
+  border: 2px solid var(--amber);
+  text-align: center;
+  animation: gap-in 260ms var(--ease) both;
+}
+.game__gapTitle {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(20px, 6.4vw, 30px);
+  color: var(--amber);
+  line-height: 1.1;
+}
+.game__gapWin {
+  font-size: var(--fs-15);
+  font-weight: 700;
+  color: var(--text);
+}
+@keyframes gap-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game__gap {
+    animation: none;
+  }
+}

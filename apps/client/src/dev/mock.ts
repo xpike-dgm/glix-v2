@@ -19,6 +19,7 @@ import {
   type ButonaBasView,
   type ButonaBasWindowResult,
 } from "@glix/engine";
+import { roundClockAt } from "../games/butona-bas/view.js";
 import { useMockSender } from "../net/client.js";
 import { emitReaction } from "../net/reactions.js";
 import { applySnapshot, setState } from "../net/store.js";
@@ -131,18 +132,29 @@ export function startMock(kind: string, params: URLSearchParams): void {
     applySnapshot(snapshot);
   };
 
-  const buildPublicView = (): ButonaBasPublicView => ({
-    startedAt: playStart,
-    endsAt: playStart + BUTONA_BAS_DURATION_MS,
-    windowMs: 300,
-    scores: { ...mini },
-    recent: windows.slice(-8),
-  });
+  // `&tur=2|3`: o turun ortasında başlar; `&ara=1`: 1. tur sonrası "Pencere daralıyor" arası (hep aynı karede kalır).
+  const turParam = Number(params.get("tur")) || 1;
+  const frozenGap = params.get("ara") === "1";
+  const buildPublicView = (): ButonaBasPublicView => {
+    const endsAt = playStart + BUTONA_BAS_DURATION_MS;
+    const c = roundClockAt(playStart, endsAt, Date.now());
+    return {
+      startedAt: playStart,
+      endsAt,
+      round: c.round + 1,
+      rounds: 3,
+      phase: c.phase,
+      windowMs: c.windowMs,
+      phaseEndsAt: c.phaseEndsAt,
+      scores: { ...mini },
+      recent: windows.slice(-8),
+    };
+  };
   const buildView = (): ButonaBasView => ({ myScore: mini[SELF] ?? 0, pressedThisWindow: false });
 
   const addWindow = (pressers: string[]): void => {
     const outcome: "match" | "solo" = pressers.length >= 2 ? "match" : "solo";
-    windows = [...windows, { index: windowIndex++, pressers, outcome }].slice(-8);
+    windows = [...windows, { round: 0, index: windowIndex++, pressers, outcome }].slice(-8);
     for (const id of pressers) mini[id] = (mini[id] ?? 0) + (outcome === "match" ? 1 : -1);
     publicView = buildPublicView();
     view = buildView();
@@ -160,7 +172,9 @@ export function startMock(kind: string, params: URLSearchParams): void {
 
   const toPlaying = (): void => {
     phase = "playing";
-    playStart = Date.now() - 14_000;
+    // Varsayılan: 1. turun 5. saniyesi; `&tur=2|3` ilgili turun 5. saniyesi; `&ara=1` aranın başı.
+    const into = frozenGap ? 16_000 : (Math.min(3, Math.max(1, turParam)) - 1) * 18_000 + 5_000;
+    playStart = Date.now() - into;
     phaseStartedAt = playStart;
     phaseEndsAt = null;
     mini = { p0: 4, p1: 5, p2: 3, p3: 1, p4: 0 };
@@ -170,6 +184,18 @@ export function startMock(kind: string, params: URLSearchParams): void {
     view = buildView();
     publish();
     later(botWindow, 400);
+    if (frozenGap) {
+      // Denetim sırasında ara ekranı kaybolmasın: başlangıç anı her 250 ms'de aranın başına çekilir.
+      const hold = (): void => {
+        if (phase !== "playing") return;
+        playStart = Date.now() - 16_000;
+        phaseStartedAt = playStart;
+        publicView = buildPublicView();
+        publish();
+        later(hold, 250);
+      };
+      later(hold, 250);
+    }
   };
   const toCountdown = (): void => {
     phase = "countdown";

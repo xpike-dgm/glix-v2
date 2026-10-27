@@ -1,4 +1,4 @@
-import type { OrtalamaPublicView, OrtalamaReveal, OrtalamaView } from "@glix/engine";
+import type { OrtalamaPublicView, OrtalamaReveal, OrtalamaRoundSummary, OrtalamaView } from "@glix/engine";
 import { parseNumberRecord } from "../../net/parse.js";
 
 type Rec = Record<string, unknown>;
@@ -25,13 +25,42 @@ function parseReveal(v: unknown): OrtalamaReveal | null | undefined {
   return { choices, mean: v.mean, target: v.target, distances, order, ranks, points };
 }
 
+function parseMultiplier(v: unknown): { num: number; den: number } | null {
+  if (!isRec(v) || !isInt(v.num, 1, 9) || !isInt(v.den, 1, 9) || v.num >= v.den) return null;
+  return { num: v.num, den: v.den };
+}
+
+function parseSummary(v: unknown): OrtalamaRoundSummary | null {
+  if (!isRec(v) || !isNum(v.mean) || !isNum(v.target)) return null;
+  const multiplier = parseMultiplier(v.multiplier);
+  return multiplier ? { mean: v.mean, target: v.target, multiplier } : null;
+}
+
 /** Ekranın okuduğu birleşik görünüm: ortak (`publicView`) + kişiye özel (`view`). */
 export type OrtalamaScreenView = OrtalamaPublicView & OrtalamaView;
 
 /** Sunucudan gelen `publicView` bilinmez; Ortalamaya En Yakın ortak görünümü olarak doğrulanır. */
 export function parseOrtalamaPublicView(v: unknown): OrtalamaPublicView | null {
   if (!isRec(v)) return null;
-  if (!isNum(v.startedAt) || !isNum(v.endsAt) || !isNum(v.revealEndsAt)) return null;
+  if (!isNum(v.startedAt) || !isNum(v.roundStartedAt) || !isNum(v.endsAt) || !isNum(v.revealEndsAt))
+    return null;
+  if (!isInt(v.rounds, 1, 9) || !isInt(v.round, 1, v.rounds)) return null;
+  const multiplier = parseMultiplier(v.multiplier);
+  if (!multiplier) return null;
+  if (!Array.isArray(v.previous) || v.previous.length > 8) return null;
+  const previous: OrtalamaRoundSummary[] = [];
+  for (const p of v.previous) {
+    const s = parseSummary(p);
+    if (!s) return null;
+    previous.push(s);
+  }
+  const totals = parseNumberRecord(v.totals);
+  if (!totals) return null;
+  let final: Record<string, number> | null = null;
+  if (v.final !== null) {
+    final = parseNumberRecord(v.final);
+    if (!final) return null;
+  }
   const reveal = parseReveal(v.reveal);
   if (reveal === undefined) return null;
   if (!Array.isArray(v.lockedIds) || v.lockedIds.length > 64) return null;
@@ -40,7 +69,20 @@ export function parseOrtalamaPublicView(v: unknown): OrtalamaPublicView | null {
     if (typeof id !== "string" || id.length > 64) return null;
     lockedIds.push(id);
   }
-  return { startedAt: v.startedAt, endsAt: v.endsAt, revealEndsAt: v.revealEndsAt, reveal, lockedIds };
+  return {
+    startedAt: v.startedAt,
+    roundStartedAt: v.roundStartedAt,
+    endsAt: v.endsAt,
+    revealEndsAt: v.revealEndsAt,
+    round: v.round,
+    rounds: v.rounds,
+    multiplier,
+    previous,
+    totals,
+    reveal,
+    final,
+    lockedIds,
+  };
 }
 
 /** Sunucudan gelen `view` bilinmez; kişisel görünüm olarak doğrulanır. */
@@ -108,4 +150,19 @@ export function tierOf(reveal: OrtalamaReveal, playerId: string): Tier {
   const pts = pointsOf(reveal, playerId);
   if (pts <= 0) return "none";
   return (reveal.ranks[playerId] ?? 99) === 1 ? "gold" : "blue";
+}
+
+const MULTIPLIER_GLYPH: Record<string, string> = { "1/2": "½", "2/3": "⅔", "3/4": "¾" };
+
+/** Çarpanın yazılışı: ½, ⅔, ¾ (bilinmeyen kesir "a/b"). */
+export function multiplierLabel(m: { num: number; den: number }): string {
+  return MULTIPLIER_GLYPH[`${m.num}/${m.den}`] ?? `${m.num}/${m.den}`;
+}
+
+/** Hedefin adı: "ortalamanın yarısı", "ortalamanın üçte ikisi", "ortalamanın dörtte üçü". */
+export function targetName(m: { num: number; den: number }): string {
+  if (m.num === 1 && m.den === 2) return "ortalamanın yarısı";
+  if (m.num === 2 && m.den === 3) return "ortalamanın üçte ikisi";
+  if (m.num === 3 && m.den === 4) return "ortalamanın dörtte üçü";
+  return `ortalamanın ${m.num}/${m.den}'ü`;
 }

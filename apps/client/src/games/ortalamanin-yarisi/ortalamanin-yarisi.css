@@ -53,6 +53,36 @@
   color: var(--text-dim);
   max-width: 28ch;
 }
+.ort__round {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 2px 8px;
+  max-width: 100%;
+}
+.ort__roundNo {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-18);
+  color: var(--text);
+}
+.ort__roundGoal {
+  font-size: var(--fs-15);
+  font-weight: 700;
+  color: var(--gold);
+}
+.ort__prev {
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(140, 160, 255, 0.3);
+  background: rgba(18, 26, 69, 0.7);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: #c9cff0;
+  font-variant-numeric: tabular-nums;
+}
 .ort__pods {
   display: flex;
   flex-wrap: wrap;
@@ -138,6 +168,19 @@
 }
 .ort-res__val[data-k="pts"][data-pts="0"] {
   font-size: clamp(24px, 7vw, 30px);
+  color: var(--text-dim);
+}
+.ort-res__sub {
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: #c9cff0;
+}
+.ort-res__next {
+  flex: none;
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-13);
+  font-weight: 600;
   color: var(--text-dim);
 }
 @keyframes ort-pop {

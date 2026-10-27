@@ -11,9 +11,10 @@ import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./ortalamanin-yarisi.css";
 import { Sonuc, type SonucEntry } from "./Sonuc.js";
-import { parseOrtalamaView } from "./view.js";
+import { formatNumber, multiplierLabel, parseOrtalamaView, targetName } from "./view.js";
 
-export default function OrtalamaninYarisiScreen(props: GameScreenProps) {
+/** Tek turun ekranı: seçim durumu (yerel değer, kilit) her turda sıfırdan kurulur. */
+function RoundScreen(props: GameScreenProps) {
   const view = createMemo(() => parseOrtalamaView(props.match.publicView, props.match.view));
   const entries = createMemo<SonucEntry[]>(() =>
     props.match.participants.map((id) => {
@@ -27,6 +28,11 @@ export default function OrtalamaninYarisiScreen(props: GameScreenProps) {
     }),
   );
   const reveal = () => view()?.reveal ?? null;
+  // 2. turdan itibaren bir önceki turun ortalaması ve hedefi.
+  const prev = () => {
+    const p = view()?.previous ?? [];
+    return p[p.length - 1] ?? null;
+  };
   const [sentLock, setSentLock] = createSignal(false);
   const lockedIds = () => view()?.lockedIds ?? [];
   const locked = () => (view()?.locked ?? false) || sentLock();
@@ -61,7 +67,9 @@ export default function OrtalamaninYarisiScreen(props: GameScreenProps) {
 
   return (
     <Screen class="ort">
-      <Show when={view()}>{(v) => <PhaseClock startedAt={v().startedAt} endsAt={v().endsAt} urgency />}</Show>
+      <Show when={view()}>
+        {(v) => <PhaseClock startedAt={v().roundStartedAt} endsAt={v().endsAt} urgency />}
+      </Show>
 
       <Show when={view()}>
         {(v) => (
@@ -70,6 +78,21 @@ export default function OrtalamaninYarisiScreen(props: GameScreenProps) {
             fallback={
               <>
                 <div class="ort__stage">
+                  <div class="ort__round" role="status">
+                    <b class="ort__roundNo">
+                      Tur {v().round}/{v().rounds}
+                    </b>
+                    <span class="ort__roundGoal">
+                      Hedef: {multiplierLabel(v().multiplier)} · {targetName(v().multiplier)}
+                    </span>
+                  </div>
+                  <Show when={prev()}>
+                    {(p) => (
+                      <p class="ort__prev">
+                        Önceki tur · ortalama {formatNumber(p().mean)} · hedef {formatNumber(p().target)}
+                      </p>
+                    )}
+                  </Show>
                   <p class="overline">{props.spectator ? "Herkes gizlice seçiyor" : "Gizli sayın"}</p>
                   <div class="ort__capsule" data-set={mine() === null ? undefined : "1"}>
                     <span class="ort__big">{props.spectator ? "?" : (mine() ?? "?")}</span>
@@ -141,7 +164,13 @@ export default function OrtalamaninYarisiScreen(props: GameScreenProps) {
           >
             {(r) => (
               <Sonuc
+                // Her turun sonucu kendi animasyonuyla yeniden kurulur.
                 reveal={r()}
+                round={v().round}
+                rounds={v().rounds}
+                multiplier={v().multiplier}
+                totals={v().totals}
+                final={v().final}
                 endsAt={v().endsAt}
                 entries={entries()}
                 selfId={props.selfId}
@@ -153,5 +182,16 @@ export default function OrtalamaninYarisiScreen(props: GameScreenProps) {
         )}
       </Show>
     </Screen>
+  );
+}
+
+/** Tur numarası değişince tur ekranı yeniden kurulur: önceki turun seçimi ve kilidi bir sonrakine taşınmaz. */
+export default function OrtalamaninYarisiScreen(props: GameScreenProps) {
+  const round = createMemo(() => parseOrtalamaView(props.match.publicView, props.match.view)?.round ?? 0);
+  return (
+    <Show when={round() > 0} fallback={<Screen class="ort">{null}</Screen>}>
+      {/* Her tur numarası ayrı bir öğedir: tur değişince ekran yeniden kurulur. */}
+      <For each={[round()]}>{() => <RoundScreen {...props} />}</For>
+    </Show>
   );
 }

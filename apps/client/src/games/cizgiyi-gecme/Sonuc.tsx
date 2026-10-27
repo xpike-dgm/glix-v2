@@ -4,7 +4,7 @@ import { hapticMatch, hapticResult, hapticSolo, hapticTick } from "../../fx/hapt
 import { reducedMotion } from "../../fx/motion.js";
 import { fail, fanfare, match as matchSound, solo as soloSound, tick } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
-import { groupByZone, pointsOf, statusOf, zoneLabel, zonesTopDown } from "./view.js";
+import { groupByZone, isDense, pointsOf, statusOf, zoneLabel, zonesTopDown } from "./view.js";
 
 export interface SonucEntry {
   id: string;
@@ -127,8 +127,8 @@ export function Sonuc(props: Props) {
         </span>
       </div>
 
-      <div class="cg__tower cg__tower--res">
-        <For each={zonesTopDown()}>
+      <div class="cg__tower cg__tower--res" data-dense={isDense(r().zoneWidth) ? "1" : undefined}>
+        <For each={zonesTopDown(r().zoneWidth)}>
           {(z, rowIdx) => {
             const ids = () => groups().get(z) ?? [];
             const crash = () => ids().length >= 2;
@@ -139,7 +139,7 @@ export function Sonuc(props: Props) {
                 data-has={ids().length > 0 ? "1" : undefined}
                 style={{ "--ri": rowIdx(), "--lines": Math.max(1, Math.ceil(ids().length / 3)) }}
               >
-                <span class="cgrow__label">{zoneLabel(z)}</span>
+                <span class="cgrow__label">{zoneLabel(z, r().zoneWidth)}</span>
                 <span class="cgrow__bar">
                   <For each={ids()}>
                     {(id, k) => {

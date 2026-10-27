@@ -4,13 +4,28 @@ import {
   assignLanes,
   formatNumber,
   linePercent,
+  multiplierLabel,
   parseOrtalamaView,
   phaseOf,
   pointsOf,
+  targetName,
   tierOf,
 } from "./view.js";
 
-const pub = { startedAt: 100, endsAt: 20_100, revealEndsAt: 27_100, reveal: null, lockedIds: ["a"] };
+const pub = {
+  startedAt: 100,
+  roundStartedAt: 100,
+  endsAt: 10_100,
+  revealEndsAt: 15_100,
+  round: 1,
+  rounds: 3,
+  multiplier: { num: 1, den: 2 },
+  previous: [],
+  totals: { a: 0, b: 0, c: 0 },
+  reveal: null,
+  final: null,
+  lockedIds: ["a"],
+};
 const priv = { myChoice: 42, locked: false };
 const reveal: OrtalamaReveal = {
   choices: { a: 20, b: 30, c: 60 },
@@ -97,5 +112,38 @@ describe("Ortalamaya En Yakın görünümü", () => {
     expect(tierOf(tie, "a")).toBe("gold");
     expect(tierOf(tie, "b")).toBe("gold");
     expect(tierOf(tie, "c")).toBe("none");
+  });
+  it("tur bilgisi: tur numarası, çarpan, önceki turlar, toplamlar ve genel skor okunur", () => {
+    const round2 = {
+      ...pub,
+      round: 2,
+      multiplier: { num: 2, den: 3 },
+      previous: [{ mean: 40, target: 20, multiplier: { num: 1, den: 2 } }],
+      totals: { a: 2, b: 1, c: 0 },
+    };
+    const v = parseOrtalamaView(round2, priv);
+    expect(v).toMatchObject({ round: 2, rounds: 3, multiplier: { num: 2, den: 3 } });
+    expect(v?.previous).toEqual([{ mean: 40, target: 20, multiplier: { num: 1, den: 2 } }]);
+    expect(v?.totals).toEqual({ a: 2, b: 1, c: 0 });
+    expect(v?.final).toBeNull();
+    const last = parseOrtalamaView({ ...pub, round: 3, final: { a: 2, b: 1, c: 0 }, reveal }, priv);
+    expect(last?.final).toEqual({ a: 2, b: 1, c: 0 });
+  });
+  it("bozuk tur bilgisini reddeder", () => {
+    expect(parseOrtalamaView({ ...pub, round: 0 }, priv)).toBeNull();
+    expect(parseOrtalamaView({ ...pub, round: 4 }, priv)).toBeNull();
+    expect(parseOrtalamaView({ ...pub, multiplier: { num: 3, den: 2 } }, priv)).toBeNull();
+    expect(parseOrtalamaView({ ...pub, multiplier: null }, priv)).toBeNull();
+    expect(parseOrtalamaView({ ...pub, previous: [{ mean: "x" }] }, priv)).toBeNull();
+    expect(parseOrtalamaView({ ...pub, previous: 3 }, priv)).toBeNull();
+    expect(parseOrtalamaView({ ...pub, totals: { a: "x" } }, priv)).toBeNull();
+    expect(parseOrtalamaView({ ...pub, final: { a: "x" } }, priv)).toBeNull();
+    expect(parseOrtalamaView({ ...pub, roundStartedAt: undefined }, priv)).toBeNull();
+  });
+  it("çarpan ve hedef adları Türkçe", () => {
+    expect([1, 2, 3].map((n) => multiplierLabel({ num: n, den: n + 1 }))).toEqual(["½", "⅔", "¾"]);
+    expect(targetName({ num: 1, den: 2 })).toBe("ortalamanın yarısı");
+    expect(targetName({ num: 2, den: 3 })).toBe("ortalamanın üçte ikisi");
+    expect(targetName({ num: 3, den: 4 })).toBe("ortalamanın dörtte üçü");
   });
 });

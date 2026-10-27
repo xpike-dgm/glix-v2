@@ -101,7 +101,7 @@
 .cgpin__head {
   position: absolute;
   left: calc(14px + (100% - 28px) * var(--f));
-  top: calc((10 - var(--z)) / var(--n) * 100%);
+  top: calc((var(--n) - 1 - var(--z)) / var(--n) * 100%);
   height: calc(100% / var(--n));
   display: flex;
   align-items: center;
@@ -123,7 +123,7 @@
   width: 4px;
   margin-left: -2px;
   bottom: 0;
-  top: calc((10.5 - var(--z)) / var(--n) * 100%);
+  top: calc((var(--n) - 0.5 - var(--z)) / var(--n) * 100%);
   border-radius: 2px;
   background: linear-gradient(0deg, rgba(255, 43, 214, 0), var(--cyan));
   box-shadow: 0 0 10px rgba(46, 242, 255, 0.7);
@@ -141,6 +141,35 @@
 .cg__pick {
   flex: none;
   padding-bottom: 4px;
+}
+
+/* Çok platformlu (dar bölge) kule: seçimde satırlar sıkışır, etiketler üçte birinde görünür */
+.cg__tower[data-dense="1"] .cgrow {
+  min-height: 0;
+  padding: 1px 0;
+}
+.cg__tower[data-dense="1"] .cgrow__bar {
+  padding-block: 0;
+}
+.cgrow[data-quiet="1"] .cgrow__label {
+  opacity: 0;
+}
+.cgrow[data-quiet="1"][data-on="1"] .cgrow__label {
+  opacity: 1;
+}
+/* Sonuçta yalnız oyuncu bulunan platformlar kalır; kule içeriğe göre uzar. */
+.cg__tower--res[data-dense="1"] {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.cg__tower--res[data-dense="1"] .cgrow:not([data-has="1"]) {
+  display: none;
+}
+.cg__tower--res[data-dense="1"] .cgrow {
+  flex: none;
+  min-height: calc(22px + (var(--lines, 1) - 1) * 36px);
+  padding: 2px 0;
 }
 
 /* Sonuç başlığı */
