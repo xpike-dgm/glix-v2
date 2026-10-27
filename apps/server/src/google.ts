@@ -105,6 +105,12 @@ export class GoogleFlows {
     return p && p.expires > now ? p : null;
   }
 
+  /** Silinen hesabın Google kimliği ya da e-postasıyla bekleyen kayıtları düşürür (H10). */
+  dropPendingFor(sub: string | null, email: string): void {
+    for (const [token, p] of this.pending)
+      if ((sub !== null && p.sub === sub) || p.email === email) this.pending.delete(token);
+  }
+
   dropPending(token: string): void {
     this.pending.delete(token);
   }

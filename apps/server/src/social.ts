@@ -47,6 +47,8 @@ export interface Social {
   invite(conn: Connection, username: string): InviteOutcome;
   /** Arkadaşın katılınabilir odası; arkadaş değilse, odada değilse ya da katılım kapalıysa null (nedeni ayırt edilmez). */
   friendRoom(accountId: number, username: string): Room | null;
+  /** Hesaba bağlı bildirim aboneliği var mı ("Verimi indir" dökümü için). */
+  hasPush(accountId: number): boolean;
   /** Hesaba bağlı bildirim aboneliği (misafirde işlem yok). `null` siler. */
   setPush(accountId: number, target: PushTarget | null): void;
   /**
@@ -54,6 +56,12 @@ export interface Social {
    * güncellenir; arkadaşlara (istek bekleyenler dahil) listelerini yenilemeleri bildirilir.
    */
   accountRenamed(accountId: number, username: string): void;
+  /**
+   * Hesap silindi (H10): hesabın canlı bağlantıları misafire döner (soket açık kalır, odadaki oyuncu mevcut adıyla
+   * misafir olarak oyunda kalır), bildirim aboneliği ve durum önbelleği silinir; ilişkili hesaplara
+   * (`relatedIds`, silmeden önce toplanır) listelerini yenilemeleri bildirilir.
+   */
+  accountDeleted(accountId: number, relatedIds: readonly number[]): void;
   /** Her sunucu turunda çağrılır; tarama aralığı dolduysa değişen durumları arkadaşlara yayar. */
   tick(now: number): void;
 }
@@ -66,8 +74,10 @@ export const noopSocial: Social = {
   sendTo: () => 0,
   invite: () => "failed",
   friendRoom: () => null,
+  hasPush: () => false,
   setPush: () => undefined,
   accountRenamed: () => undefined,
+  accountDeleted: () => undefined,
   tick: () => undefined,
 };
 
@@ -215,6 +225,7 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
       const { room } = presence(target.id);
       return room && joinable(room) ? room : null;
     },
+    hasPush: (accountId) => pushTargets.has(accountId),
     setPush(accountId, target) {
       if (target === null) {
         pushTargets.delete(accountId);
@@ -241,6 +252,23 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
       const lists = accounts.friendLists(accountId);
       const msg: ServerMessage = { type: "friendsChanged" };
       for (const other of [...lists.friends, ...lists.incoming, ...lists.outgoing]) sendTo(other.id, msg);
+    },
+    accountDeleted(accountId, relatedIds) {
+      // Bağlantılar misafir olur; odadaki oyuncu kaydı adıyla kalır ama hesapla bağı kopar (artık istatistik yazılmaz).
+      for (const conn of byAccount.get(accountId) ?? []) conn.account = null;
+      byAccount.delete(accountId);
+      lastSeen.delete(accountId);
+      pushTargets.delete(accountId);
+      senderBuckets.delete(accountId);
+      for (const key of pairSentAt.keys()) {
+        const [from, to] = key.split(":");
+        if (Number(from) === accountId || Number(to) === accountId) pairSentAt.delete(key);
+      }
+      for (const room of rt.rooms.values())
+        for (const player of room.players.values())
+          if (player.accountId === accountId) player.accountId = null;
+      const msg: ServerMessage = { type: "friendsChanged" };
+      for (const id of relatedIds) sendTo(id, msg);
     },
     tick(now) {
       if (now - lastScan < PRESENCE_SCAN_MS) return;

@@ -12,7 +12,14 @@ import {
   unlockAudio,
   volume,
 } from "../fx/sound.js";
-import { changePassword, logout, resendVerification, startGoogle } from "../net/account.js";
+import {
+  changePassword,
+  downloadMyData,
+  exportBusy,
+  logout,
+  resendVerification,
+  startGoogle,
+} from "../net/account.js";
 import { passwordError } from "../net/accountRules.js";
 import { readAvatarChoice } from "../net/storage.js";
 import { goHome, ownName, setNickname, setState, state, toast } from "../net/store.js";
@@ -49,6 +56,7 @@ import { GhostButton } from "../ui/GhostButton.js";
 import { BackIcon, BellIcon, ChevronRightIcon, InfoIcon, KeyIcon, PhoneIcon, UserIcon } from "../ui/Icons.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
+import { DeleteAccountSheet } from "./DeleteAccountSheet.js";
 import { pageTitle, type SettingsCategory, settingsCategories, visiblePage } from "./settingsPages.js";
 import { UsernameSheet } from "./UsernameSheet.js";
 
@@ -186,6 +194,7 @@ export function Settings() {
   const [confirmClear, setConfirmClear] = createSignal(false);
   const [confirmOut, setConfirmOut] = createSignal(false);
   const [nameOpen, setNameOpen] = createSignal(false);
+  const [deleteOpen, setDeleteOpen] = createSignal(false);
   const categories = createMemo(() =>
     settingsCategories({ loggedIn: state.account !== null, pushVisible: pushMode() !== "hidden" }),
   );
@@ -611,6 +620,27 @@ export function Settings() {
                 </Group>
               )}
             </Show>
+            <Show when={state.account}>
+              <Group title="Verilerim">
+                <div class="set__row">
+                  <span class="set__text">
+                    <span class="set__hint set__hint--wrap">
+                      Hesabında tuttuğumuz her şeyi bir dosya olarak alabilirsin. Hesabı silmek geri alınamaz.
+                    </span>
+                  </span>
+                </div>
+                <div class="set__row set__row--action">
+                  <GhostButton size="small" disabled={exportBusy()} onClick={() => void downloadMyData()}>
+                    {exportBusy() ? "Hazırlanıyor…" : "Verimi indir"}
+                  </GhostButton>
+                </div>
+                <div class="set__row set__row--action">
+                  <GhostButton size="small" variant="danger" onClick={() => setDeleteOpen(true)}>
+                    Hesabımı sil
+                  </GhostButton>
+                </div>
+              </Group>
+            </Show>
           </Match>
           <Match when={page() === "hakkinda"}>
             <Group title="Gizlilik">
@@ -722,6 +752,7 @@ export function Settings() {
       </BottomSheet>
 
       <UsernameSheet open={nameOpen()} onClose={() => setNameOpen(false)} />
+      <DeleteAccountSheet open={deleteOpen()} onClose={() => setDeleteOpen(false)} />
     </Screen>
   );
 }

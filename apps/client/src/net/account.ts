@@ -1,8 +1,18 @@
 import { createSignal } from "solid-js";
+import { isStandalone } from "../pwa/packPolicy.js";
 import { parseAvailableAt } from "./accountRules.js";
 import { reconnectForAccount, sendPushUnsubscribe } from "./client.js";
 import { loadFriends, resetFriends } from "./friends.js";
 import { type GoogleReturn, parseGoogleReturn } from "./googleRules.js";
+import {
+  type DeleteForm,
+  deleteBody,
+  exportDoneText,
+  exportFileName,
+  fileNameFromDisposition,
+  type SaveMethod,
+  saveMethod,
+} from "./kvkkRules.js";
 import { resetLeaderboard } from "./leaderboard.js";
 import { parseMailReturn } from "./mailRules.js";
 import { goHome, setNickname, setState, state, toast } from "./store.js";
@@ -286,5 +296,110 @@ export async function changeUsername(username: string): Promise<AccountReply> {
   if (!account) return { ok: false, message: NETWORK_ERROR };
   setState("account", account);
   setState("usernameAvailableAt", isRecord(r.data) ? parseAvailableAt(r.data.usernameAvailableAt) : null);
+  return { ok: true, message: "" };
+}
+
+// ---- KVKK: verimi indir, hesabımı sil (H10) ---------------------------------------------------------------
+
+const KVKK_BASE = "/api/account/";
+
+/** "Verimi indir" sürerken düğme kilitlenir. */
+const [exportBusy, setExportBusy] = createSignal(false);
+
+export { exportBusy, setExportBusy };
+
+function deviceSaveMethod(): SaveMethod {
+  return saveMethod({
+    userAgent: navigator.userAgent,
+    platform: navigator.platform,
+    maxTouchPoints: navigator.maxTouchPoints,
+    standalone: isStandalone(),
+  });
+}
+
+/** Blob adresini görünmez bir bağlantıyla indirir. */
+function clickDownload(url: string, name: string): void {
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+/**
+ * Hesabın verilerini JSON dosyası olarak indirir (fetch + blob + bağlantı). iOS ana ekran uygulaması indirmeyi
+ * tutmadığı için orada dosya yeni sekmede açılır; sekme, kullanıcı dokunuşu bitmeden (fetch'ten önce) açılır.
+ * Doğrudan bir dokunuş işleyicisinden çağrılmalıdır.
+ */
+export async function downloadMyData(): Promise<void> {
+  if (exportBusy()) return;
+  setExportBusy(true);
+  const method = deviceSaveMethod();
+  const tab = method === "tab" ? window.open("", "_blank") : null;
+  try {
+    const res = await fetch(`${KVKK_BASE}export`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    if (!res.ok) {
+      let message = NETWORK_ERROR;
+      try {
+        const body: unknown = await res.json();
+        if (isRecord(body) && typeof body.message === "string") message = body.message;
+      } catch {
+        // gövde okunamadı
+      }
+      tab?.close();
+      toast(message, "error");
+      return;
+    }
+    const name = fileNameFromDisposition(res.headers.get("Content-Disposition"), exportFileName(Date.now()));
+    const url = URL.createObjectURL(new Blob([await res.blob()], { type: "application/json" }));
+    setTimeout(() => URL.revokeObjectURL(url), 120_000);
+    if (method === "tab") {
+      if (tab) tab.location.href = url;
+      else if (!window.open(url, "_blank")) clickDownload(url, name);
+    } else clickDownload(url, name);
+    toast(exportDoneText(method), "success");
+  } catch {
+    tab?.close();
+    toast(NETWORK_ERROR, "error");
+  } finally {
+    setExportBusy(false);
+  }
+}
+
+/**
+ * Hesabı kalıcı siler. Başarıda oturum ve yerel hesap durumu temizlenir; soket yeniden bağlanır (odadaysan misafir
+ * olarak oyunda kalırsın). Başarısızsa kullanıcıya gösterilecek metin.
+ */
+export async function deleteMyAccount(form: DeleteForm): Promise<AccountReply> {
+  let data: unknown;
+  try {
+    const res = await fetch(`${KVKK_BASE}delete`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(deleteBody(form)),
+    });
+    data = await res.json();
+  } catch {
+    return { ok: false, message: NETWORK_ERROR };
+  }
+  if (!isRecord(data)) return { ok: false, message: NETWORK_ERROR };
+  if (data.ok !== true)
+    return { ok: false, message: typeof data.message === "string" ? data.message : NETWORK_ERROR };
+  sendPushUnsubscribe();
+  resetFriends();
+  resetLeaderboard();
+  setState("account", null);
+  setState("usernameAvailableAt", null);
+  setState("google", "linked", false);
+  setState("mail", { verified: false, hasPassword: false });
+  reconnectForAccount();
   return { ok: true, message: "" };
 }

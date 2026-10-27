@@ -11,6 +11,7 @@ import { DEFAULT_LIMITS, type ServerLimits } from "./config.js";
 import { createFriendsApi, FRIENDS_PATH } from "./friendsApi.js";
 import { createGoogleAuth, type GoogleConfig } from "./google.js";
 import { handleClose, handleMessage } from "./handlers.js";
+import { ACCOUNT_PATH, createAccountApi } from "./kvkk.js";
 import { createLeaderboardApi, LEADERBOARD_PATH } from "./leaderboard.js";
 import { log } from "./log.js";
 import {
@@ -155,6 +156,15 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     clock,
     allowedOrigins: opts.allowedOrigins,
   });
+  const accountApi = createAccountApi({
+    accounts,
+    social: rt.social,
+    google,
+    limiter: rt.ipLimiter,
+    clock,
+    trustProxy: limits.trustProxy,
+    allowedOrigins: opts.allowedOrigins,
+  });
   const leaderboardApi = createLeaderboardApi({
     accounts,
     clock,
@@ -257,6 +267,10 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         mail,
         onRenamed: (id, username) => rt.social.accountRenamed(id, username),
       });
+      return;
+    }
+    if (path.startsWith(ACCOUNT_PATH)) {
+      accountApi(req, res);
       return;
     }
     if (path === FRIENDS_PATH || path.startsWith(`${FRIENDS_PATH}/`)) {
