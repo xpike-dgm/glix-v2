@@ -167,6 +167,7 @@ export function parseSnapshot(v: unknown): RoomSnapshot | null {
     selection,
     tone,
     joinPolicy: JOIN_POLICIES.find((j) => j === v.joinPolicy) ?? DEFAULT_JOIN_POLICY,
+    stageCount: isNum(v.stageCount) ? Math.max(0, Math.floor(v.stageCount)) : 0,
     lobbyReady: v.lobbyReady,
     catalog,
     match,
@@ -195,6 +196,8 @@ export function parseServerMessage(raw: string): ServerMessage | null {
       return isStr(data.token) && isStr(data.playerId) && isStr(data.roomCode)
         ? { type: "session", token: data.token, playerId: data.playerId, roomCode: data.roomCode }
         : null;
+    case "stage":
+      return isStr(data.roomCode) ? { type: "stage", roomCode: data.roomCode } : null;
     case "room": {
       const snapshot = parseSnapshot(data.snapshot);
       return snapshot ? { type: "room", snapshot } : null;

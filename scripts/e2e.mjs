@@ -465,12 +465,42 @@ async function main() {
     assert(!(await btn(B, /^başlat$/i).count()), "B BAŞLAT'ı geri vermeli");
     log("ev sahipliği devri tamam");
 
+    // 5e) TV (sahne): /tv kod girişi → lobi; koltuk tutmaz, oyuncu listesine girmez.
+    const ctxTv = await browser.newContext({
+      viewport: { width: 1920, height: 1080 },
+      locale: "tr-TR",
+      timezoneId: "Europe/Istanbul",
+      baseURL: base,
+    });
+    const TV = await ctxTv.newPage();
+    watch("TV", TV);
+    await TV.goto("/tv");
+    await TV.getByText("TV ekranı", { exact: true }).waitFor(OPT);
+    await TV.getByText("Oda kodunu gir", { exact: true }).waitFor(OPT);
+    await shot(TV, "tv-01-giris");
+    await TV.getByRole("textbox", { name: "Oda kodu" }).pressSequentially(code.toLowerCase(), { delay: 30 });
+    await TV.keyboard.press("Enter");
+    await TV.locator(".tv__bigcode").waitFor(OPT);
+    assert(
+      (await TV.locator(".tv__bigcode-ch").allInnerTexts()).join("") === code,
+      "TV lobisi oda kodunu göstermeli",
+    );
+    await TV.getByRole("img", { name: "Odaya katılma QR kodu" }).waitFor(OPT);
+    await TV.waitForFunction(() => document.querySelectorAll(".tv__prow").length === 3, null, OPT);
+    await shot(TV, "tv-02-lobi");
+    assert((await seatsCount(A)) === 3, "TV koltuk tutmamalı");
+    assert((await seatsCount(B)) === 3, "TV oyuncu listesine girmemeli");
+    log("TV lobide: kod, QR ve 3 oyuncu; koltuk tutmadı");
+
     // 6) Başlat → anlatım
     await btn(A, /^başlat$/i).click();
     // Lobideki "Hazırım" ile karışmasın: önce anlatım ekranı gelsin
     for (const p of [A, B, C]) await p.locator(".brief__name").waitFor(OPT);
     for (const p of [A, B, C]) await btn(p, /hazırım/i).waitFor(OPT);
     await shot(A, "08-briefing");
+    await TV.locator(".tv__brief").waitFor(OPT);
+    await TV.getByText("Butona Bas", { exact: true }).first().waitFor(OPT);
+    await shot(TV, "tv-03-anlatim");
     await btn(B, /hazırım/i).click();
     await btn(C, /hazırım/i).click();
     await sleep(1200);
@@ -483,6 +513,12 @@ async function main() {
     await A.locator(".game__num").waitFor(OPT);
     for (const p of [B, C]) await p.locator(".game__num").waitFor(OPT);
     await shot(A, "11-playing");
+    await TV.locator(".tv__scaled .arcade__hit").waitFor(OPT);
+    assert(
+      await TV.locator(".tv__scaled .gframe__game").evaluate((el) => el.inert),
+      "TV'deki oyun ekranı etkileşime kapalı (izleyici kipi) olmalı",
+    );
+    await shot(TV, "tv-04-oynanis");
     log("oyun başladı");
 
     // 7a) Gerçek dokunuş: C butona bir kez gerçekten dokunur (örtü/hedef sorunu varsa tap başarısız olur)
@@ -535,6 +571,9 @@ async function main() {
     await A.locator(".podium").waitFor({ timeout: 70_000 });
     await sleep(2200); // ödül sayacı bitsin
     await shot(A, "14-results");
+    await TV.locator(".tv__podium").waitFor(OPT);
+    await TV.getByText("Genel sıralama", { exact: true }).waitFor(OPT);
+    await shot(TV, "tv-05-sonuc");
     const awards = (await A.locator(".podium__badge").allInnerTexts()).map((x) => x.trim()).filter(Boolean);
     log("ödül rozetleri", awards);
     assert(
@@ -559,6 +598,9 @@ async function main() {
     assert(Date.now() - devamAt < 2_800, `Devam sonrası final geç geldi: ${Date.now() - devamAt} ms`);
     await sleep(1500);
     await shot(A, "15-final");
+    await TV.locator(".tv__winner").waitFor(OPT);
+    await shot(TV, "tv-06-final");
+    log("TV: anlatım, oyun, sonuç ve final izlendi; maç etkilenmedi");
     assert(await btn(A, /^aynı ekiple yeni maç$/i).isVisible(), "host AYNI EKİPLE YENİ MAÇ görmeli");
     assert(!(await btn(C, /^aynı ekiple yeni maç$/i).count()), "C AYNI EKİPLE YENİ MAÇ görmemeli");
     await C.getByText("Ev sahibi yeni maçı başlatacak", { exact: true }).waitFor(OPT);

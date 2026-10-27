@@ -32,6 +32,8 @@ export interface GameEntry {
   /** Yatay oyunlar: yan şerit (süre çubuğu, puan, avatarlar) için görünümden özet çıkarır. */
   /** Kuralı gereği süresi gizli oyun (Kör Kronometre, Kör Bomba, Son Kişi, Aşırı Yükleme) ya da kendi toplam saatini çizen oyun (Zaman Bombası): kabuk saati çizilmez. */
   noClock?: boolean;
+  /** Büyük ekran (TV) için oyuna özel yatay görünüm; yoksa telefon ekranı izleyici kipinde büyütülerek gösterilir. */
+  StageView?: Component<GameScreenProps>;
   hud?: (match: MatchSnapshot, selfId: string) => HudInfo | null;
 }
 
@@ -84,6 +86,7 @@ const registry: Record<string, GameEntry> = {
     noClock: true,
     Screen: lazy(() => import("./zaman-bombasi-hafizasi/ZamanBombasiScreen.js")),
     Art: lazy(() => import("./zaman-bombasi-hafizasi/BriefingArt.js")),
+    StageView: lazy(() => import("./zaman-bombasi-hafizasi/StageView.js")),
   },
   "capraz-ates": {
     Screen: lazy(() => import("./capraz-ates/CaprazAtesScreen.js")),
@@ -154,6 +157,7 @@ const registry: Record<string, GameEntry> = {
     Screen: lazy(() => import("./karalama-defteri/KaralamaDefteriScreen.js")),
     Art: lazy(() => import("./karalama-defteri/BriefingArt.js")),
     Reveal: lazy(() => import("./karalama-defteri/Reveal.js")),
+    StageView: lazy(() => import("./karalama-defteri/StageView.js")),
   },
 };
 

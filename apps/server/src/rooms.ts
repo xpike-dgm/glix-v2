@@ -92,6 +92,7 @@ export function createRoom(rt: Runtime): Room {
     code: generateCode(rt.rooms),
     hostId: "",
     players: new Map(),
+    stages: new Set(),
     phase: "lobby",
     gameIds: rt.defaultGameIds ? [...rt.defaultGameIds] : [],
     selection: rt.defaultGameIds ? { mode: "manual" } : { mode: "random", count: DEFAULT_RANDOM_COUNT },
@@ -273,6 +274,12 @@ export function deleteRoom(rt: Runtime, room: Room): void {
       player.conn = null;
     }
   }
+  for (const stage of room.stages) {
+    stage.send({ type: "left", reason: "closed" });
+    stage.stage = null;
+    stage.lastSent = null;
+  }
+  room.stages.clear();
   room.players.clear();
   rt.active.delete(room);
   rt.rooms.delete(room.code);

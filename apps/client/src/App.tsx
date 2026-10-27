@@ -37,6 +37,7 @@ import { Loading } from "./ui/Loading.js";
 import { collectGallery } from "./ui/matchGallery.js";
 import { preloadMoods } from "./ui/preloadMoods.js";
 import { preloadProps } from "./ui/props.js";
+import { SidePlayers } from "./ui/SidePlayers.js";
 import { Toasts } from "./ui/Toast.js";
 import { preloadWorld } from "./ui/world.js";
 
@@ -46,6 +47,9 @@ import { preloadWorld } from "./ui/world.js";
  */
 function devReady(started: Promise<unknown>): void {
   void started.finally(() => {
+    // Yalnız geliştirme: `&stage=1` odada TV açıkmış gibi rozeti gösterir.
+    if (import.meta.env.DEV && new URLSearchParams(window.location.search).get("stage") === "1")
+      setState("snapshot", "stageCount", 1);
     // İki mikro görev: Solid'in senkron güncellemesi ve tembel bileşenlerin ilk çizimi bitsin.
     queueMicrotask(() => queueMicrotask(() => document.documentElement.setAttribute("data-ready", "1")));
   });
@@ -57,6 +61,8 @@ export function App() {
   );
 
   const update = useUpdateFlow(screen);
+  /** Tablet/masaüstünde maç sürerken ikinci sütun (oyuncular/puan) açılır; genişlik sınırı CSS'te. */
+  const twoCols = () => ["briefing", "countdown", "playing", "results"].includes(screen());
 
   // Maça girince odadaki oyuncuların ruh hâli görselleri önden yüklenir.
   createEffect(() => {
@@ -192,56 +198,61 @@ export function App() {
 
   return (
     <div class="stage">
-      <Switch>
-        <Match when={update() === "block-required"}>
-          <UpdateRequired />
-        </Match>
-        <Match when={devLoading()}>
-          <Loading />
-        </Match>
-        <Match when={screen() === "home"}>
-          <Home />
-        </Match>
-        <Match when={screen() === "join"}>
-          <Join />
-        </Match>
-        <Match when={screen() === "settings"}>
-          <Settings />
-        </Match>
-        <Match when={screen() === "notfound"}>
-          <NotFound />
-        </Match>
-        <Match when={state.snapshot}>
-          {(snap) => (
-            <Switch>
-              <Match when={screen() === "lobby"}>
-                <Lobby snap={snap()} />
-              </Match>
-              <Match when={screen() === "final"}>
-                <Final snap={snap()} />
-              </Match>
-              <Match when={snap().match}>
-                {(match) => (
-                  <Switch>
-                    <Match when={screen() === "briefing"}>
-                      <Briefing snap={snap()} match={match()} />
-                    </Match>
-                    <Match when={screen() === "countdown"}>
-                      <Countdown match={match()} />
-                    </Match>
-                    <Match when={screen() === "playing"}>
-                      <Playing snap={snap()} match={match()} />
-                    </Match>
-                    <Match when={screen() === "results"}>
-                      <Results snap={snap()} match={match()} />
-                    </Match>
-                  </Switch>
-                )}
-              </Match>
-            </Switch>
-          )}
-        </Match>
-      </Switch>
+      <div class="shell2" data-cols={twoCols() ? "2" : undefined}>
+        <div class="shell2__main">
+          <Switch>
+            <Match when={update() === "block-required"}>
+              <UpdateRequired />
+            </Match>
+            <Match when={devLoading()}>
+              <Loading />
+            </Match>
+            <Match when={screen() === "home"}>
+              <Home />
+            </Match>
+            <Match when={screen() === "join"}>
+              <Join />
+            </Match>
+            <Match when={screen() === "settings"}>
+              <Settings />
+            </Match>
+            <Match when={screen() === "notfound"}>
+              <NotFound />
+            </Match>
+            <Match when={state.snapshot}>
+              {(snap) => (
+                <Switch>
+                  <Match when={screen() === "lobby"}>
+                    <Lobby snap={snap()} />
+                  </Match>
+                  <Match when={screen() === "final"}>
+                    <Final snap={snap()} />
+                  </Match>
+                  <Match when={snap().match}>
+                    {(match) => (
+                      <Switch>
+                        <Match when={screen() === "briefing"}>
+                          <Briefing snap={snap()} match={match()} />
+                        </Match>
+                        <Match when={screen() === "countdown"}>
+                          <Countdown match={match()} />
+                        </Match>
+                        <Match when={screen() === "playing"}>
+                          <Playing snap={snap()} match={match()} />
+                        </Match>
+                        <Match when={screen() === "results"}>
+                          <Results snap={snap()} match={match()} />
+                        </Match>
+                      </Switch>
+                    )}
+                  </Match>
+                </Switch>
+              )}
+            </Match>
+          </Switch>
+        </div>
+        <Show when={twoCols() ? state.snapshot : null}>{(snap) => <SidePlayers snap={snap()} />}</Show>
+      </div>
       <Show when={packScreenOpen()}>
         <PackScreen />
       </Show>

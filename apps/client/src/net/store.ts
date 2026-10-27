@@ -43,6 +43,10 @@ interface AppState {
   joinShake: number;
   /** Sunucunun `welcome` ile bildirdiği protokol sürümü; bağlanılana dek null. */
   serverProtocol: number | null;
+  /** `/tv` sayfası: bu cihaz oyuncu değil, büyük ekran (sahne). */
+  tv: boolean;
+  /** Sahne olarak bağlanılan oda (sunucu `stage` ile onaylayınca dolar). */
+  stage: { roomCode: string } | null;
 }
 
 export const [state, setState] = createStore<AppState>({
@@ -61,6 +65,8 @@ export const [state, setState] = createStore<AppState>({
   busy: false,
   joinShake: 0,
   serverProtocol: null,
+  tv: false,
+  stage: null,
 });
 
 /** Sunucu saati (ms), ping/pong ölçümünün medyanıyla. */
@@ -126,7 +132,7 @@ export function goHome(): void {
 
 export function clearRoom(): void {
   sync = initialSync;
-  setState({ session: null, snapshot: null, busy: false });
+  setState({ session: null, snapshot: null, stage: null, busy: false });
 }
 
 export const selfPlayer = (): PlayerInfo | undefined => {

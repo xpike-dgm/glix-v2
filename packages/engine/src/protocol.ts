@@ -6,6 +6,8 @@ export const APP_VERSION = "0.1.0";
 export const MAX_MESSAGE_LENGTH = 4096;
 export const ROOM_CODE_LENGTH = 5;
 export const MAX_PLAYERS = 8;
+/** Bir odaya aynı anda bağlanabilecek sahne (TV) sayısı; oyuncu sayısına girmez. */
+export const MAX_STAGES = 2;
 /** Seçilebilir karakter sayısı (avatar 0..AVATAR_COUNT-1); odadaki en çok oyuncu sayısıyla aynıdır. */
 export const AVATAR_COUNT = MAX_PLAYERS;
 export const MAX_NICKNAME_LENGTH = 16;
@@ -44,6 +46,11 @@ export type ClientMessage =
   /** `avatar`: cihazın hatırladığı karakter; boşsa verilir, doluysa otomatik atanan kalır. */
   | { type: "createRoom"; nickname: string; avatar?: number }
   | { type: "joinRoom"; code: string; nickname: string; avatar?: number }
+  /**
+   * Sahne (TV) olarak odaya bağlan: koltuk tutmaz, oyuncu listesine girmez, yalnız izler. Oyuncu kimliği almaz;
+   * `publicView` ve `view(durum, null)` görür. `leaveRoom` / `ping` / `hello` / `resync` dışında bir şey gönderemez.
+   */
+  | { type: "joinStage"; code: string }
   /** Lobide karakter değiştir (yalnız lobi; odada benzersiz, ilk gelen alır). */
   | { type: "chooseAvatar"; avatar: number }
   /** Lobide takma ad değiştir (yalnız lobi; odada benzersiz). */
@@ -141,7 +148,9 @@ export type ErrorCode =
   | "not_participant"
   | "game_failed"
   | "draining"
-  | "server_busy";
+  | "server_busy"
+  | "stage_full"
+  | "stage_readonly";
 
 export type RoomPhase = "lobby" | "briefing" | "countdown" | "playing" | "results" | "final";
 
@@ -206,6 +215,8 @@ export interface RoomSnapshot {
   tone: ContentTone;
   /** Maç sürerken gelenlere ne olur; yeni oda: izleyici. */
   joinPolicy: JoinPolicy;
+  /** Odaya bağlı sahne (TV) sayısı; telefonlar "TV'de oynanıyor" rozetini buna göre gösterir. */
+  stageCount: number;
   /** Lobide "Hazırım" diyen (host olmayan) oyuncuların kimlikleri; lobi dışında boştur. */
   lobbyReady: string[];
   /** Sunucudaki tüm oyunlar (Oyunlar bölümü için). */
@@ -219,6 +230,8 @@ export type ServerMessage =
   | { type: "welcome"; protocolVersion: number; serverVersion: string }
   | { type: "pong"; t: number; serverTime: number }
   | { type: "session"; token: string; playerId: string; roomCode: string }
+  /** Sahne bağlantısı kabul edildi (belirteç ve oyuncu kimliği yoktur; yeniden bağlanınca yeniden `joinStage`). */
+  | { type: "stage"; roomCode: string }
   | { type: "room"; snapshot: RoomSnapshot }
   /** `baseRev` istemcinin son snapshot'ı ile aynıysa uygulanır; değilse istemci `resync` gönderir. */
   | { type: "patch"; baseRev: number; rev: number; patch: MergePatch }
@@ -335,6 +348,11 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       if (!Object.hasOwn(data, "avatar")) return { type: "joinRoom", code, nickname };
       const avatar = parseAvatar(data.avatar);
       return avatar === null ? null : { type: "joinRoom", code, nickname, avatar };
+    }
+    case "joinStage": {
+      if (!hasExactKeys(data, ["type", "code"])) return null;
+      const code = parseCode(data.code);
+      return code === null ? null : { type: "joinStage", code };
     }
     case "chooseAvatar": {
       if (!hasExactKeys(data, ["type", "avatar"])) return null;

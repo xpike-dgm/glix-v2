@@ -4,6 +4,7 @@ import { applyHapticsCompensation } from "./fx/haptics.js";
 import { installAudioUnlock } from "./fx/sound.js";
 import { initPwa } from "./pwa/pwa.js";
 import { applyRootSettings } from "./settings/settings.js";
+import { isTvRoute, TvApp } from "./stage/TvApp.js";
 import "./fonts.js";
 import "./styles/tokens.css";
 import "./styles/base.css";
@@ -21,4 +22,15 @@ document.addEventListener("touchstart", () => undefined, { passive: true });
 initPwa();
 
 const root = document.getElementById("root");
-if (root) render(() => <App />, root);
+if (root)
+  render(
+    () =>
+      isTvRoute(window.location) ||
+      (import.meta.env.DEV &&
+        (new URLSearchParams(window.location.search).get("mock") ?? "").startsWith("tv-")) ? (
+        <TvApp />
+      ) : (
+        <App />
+      ),
+    root,
+  );

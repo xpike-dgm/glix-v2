@@ -460,11 +460,13 @@ export function sharedMatchSnapshot(rt: Runtime, room: Room): Omit<MatchSnapshot
  * Oyuncuya özel oyun görünümü. Katılımcı olmayan (izleyici dahil) kimse için oyuncu kimliği oyuna hiç
  * verilmez: `view(state, null)`, yani kimseye bağlı olmayan izleyici görünümü gider.
  */
-export function matchViewFor(rt: Runtime, room: Room, playerId: string): unknown {
+export function matchViewFor(rt: Runtime, room: Room, playerId: string | null): unknown {
   const match = room.match;
   if (!match?.rng || (room.phase !== "playing" && room.phase !== "results")) return null;
   const who =
-    match.participants.includes(playerId) && !room.players.get(playerId)?.spectator ? playerId : null;
+    playerId !== null && match.participants.includes(playerId) && !room.players.get(playerId)?.spectator
+      ? playerId
+      : null;
   const game = currentGame(match);
   const ctx = ctxFor(rt, room, match);
   return guard("view", () => game.view(match.state, who, ctx));

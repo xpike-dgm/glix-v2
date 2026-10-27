@@ -11,6 +11,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `ping` | `t` | saat farkı ölçümü |
 | `createRoom` | `nickname` | 1–16 karakter, kırpılır; biçim/yön/görünmez karakter (`Cf`,`Zl`,`Zp`,`Co`,`Cs`) yasak, en çok 2 ardışık birleştirici işaret, en az bir harf/rakam (yalnız emoji reddedilir) |
 | `joinRoom` | `code`, `nickname`, isteğe bağlı `avatar` (0–7) | 5 karakter, büyük harfe çevrilir |
+| `joinStage` | `code` | **Sahne (TV)** olarak odaya bağlan (bkz. "Sahne (TV) rolü"). `nickname`/`avatar` yok; `room_not_found` / `stage_full` / `draining` / `rate_limited` döner |
 | `resume` | `token` | yeniden bağlanma; başarısızsa `error{code:"resume_failed"}` |
 | `leaveRoom` | — | |
 | `kick` | `playerId` | yalnız host, yalnız lobide (maçta `wrong_phase`); kendini/olmayanı atamaz (`not_in_room`). Atılanın oturum anahtarı silinir; `resume` `resume_failed` döner. Oda koduyla yeniden katılma engellenmez |
@@ -39,6 +40,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `welcome` | `protocolVersion`, `serverVersion` |
 | `pong` | `t`, `serverTime` |
 | `session` | `token`, `playerId`, `roomCode` — istemci `localStorage`'a yazar |
+| `stage` | `roomCode` — `joinStage` kabul edildi. Belirteç ve oyuncu kimliği yoktur; bağlantı kopunca istemci yeniden `joinStage` yollar |
 | `room` | `snapshot: RoomSnapshot` — odaya girişte, resume ve `resync` sonrası (tam) |
 | `patch` | `baseRev`, `rev`, `patch` — sonraki değişimler, JSON Merge Patch (RFC 7386) |
 | `actionAck` | `seq`, `ok`, `reason?` |
@@ -54,6 +56,19 @@ farklanır); `match.view` yalnız o oyuncuya özeldir. Gizli bilgi yalnız `view
 Fark tam snapshot'tan büyükse sunucu doğrudan `room` gönderir. Hiçbir görünür alan değişmediyse mesaj
 gönderilmez; `rev` ve `serverNow` yalnız gönderilen mesajlarda ilerler (istemci saati ping/pong ile eşler,
 `serverNow`'a ihtiyaç duymaz).
+
+## Sahne (TV) rolü
+
+`/tv` sayfası odaya oyuncu olarak değil **sahne** olarak bağlanır (`joinStage`). Güvenlik sınıfı izleyiciyle aynıdır, ek olarak oyuncu bile değildir:
+
+- Koltuk tutmaz, 8 oyuncu sınırına girmez, `players` listesinde hiç görünmez; sayısı `RoomSnapshot.stageCount` ile herkese açıktır
+  (telefon "TV'de oynanıyor" rozeti için). Odada en çok `MAX_STAGES` = 2 sahne olur; fazlası `stage_full`.
+- Oyuncu kimliği almaz: `snapshot.selfId` boş dizgidir; oyunun `setup`/`view` çağrılarına kimliği hiç verilmez.
+  `match.publicView` herkesle aynıdır, `match.view` = `view(durum, null)` (izleyiciyle aynı). `secrets()` değerleri sahneye gitmez.
+- Gönderebildikleri: `hello`, `ping`, `resync`, `leaveRoom` (+ ilk `joinStage`). `action` → `actionAck{ok:false, reason:"not_participant"}`;
+  diğer her mesaj `error{code:"stage_readonly"}`. Sahne host olamaz, hazır/eylem/oy sayımına girmez.
+- Sahne odayı ayakta tutmaz: oyuncular gidip oda silinince sahneye `left{reason:"closed"}` gider. Sahne kopunca sayaç düşer (bekleme süresi yok).
+- Doğrulama: `apps/server/src/sahne.test.ts` (katılım, sınır, yetki, ayrılma) ve `izleyici-gizlilik.test.ts` (27 oyunun hepsinde sahne bağlantıları da denetlenir).
 
 ## Lobi: hazır işareti, emoji, yönetim
 
@@ -123,7 +138,7 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
 
 `invalid_message`, `rate_limited`, `nickname_invalid`, `room_not_found`, `room_full`, `match_in_progress`,
 `resume_failed`, `nickname_taken`, `not_host`, `not_in_room`, `already_in_room`, `invalid_games`, `avatar_taken`, `not_enough_players`,
-`wrong_phase`, `not_participant`, `game_failed`, `draining`, `server_busy`.
+`wrong_phase`, `not_participant`, `game_failed`, `draining`, `server_busy`, `stage_full`, `stage_readonly`.
 
 ## Sınırlar (sunucu)
 

@@ -11,6 +11,7 @@ import { roundLabel } from "./matchPath.js";
 import { RotateOverlay } from "./RotateOverlay.js";
 import { SoundToggle } from "./SoundToggle.js";
 import { ShellContext } from "./shell.js";
+import { TvBadge } from "./TvBadge.js";
 import { createPortrait, lockLandscape } from "./viewport.js";
 import { WorldBackdrop } from "./WorldBackdrop.js";
 
@@ -151,6 +152,7 @@ export function GameFrame(props: Props) {
                 <div class="gbar__title">
                   <span class="gbar__name">{props.gameName}</span>
                   <span class="gbar__round">{roundLabel(props.round, props.total)}</span>
+                  <TvBadge />
                 </div>
                 <div class="gbar__clock">
                   <Show when={!props.noClock}>
