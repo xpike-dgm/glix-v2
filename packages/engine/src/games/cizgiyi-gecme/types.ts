@@ -10,9 +10,39 @@ export const CIZGI_DURATION_MS = CIZGI_CHOOSE_MS + CIZGI_REVEAL_MS;
 export const CIZGI_MIN = 0;
 export const CIZGI_MAX = 100;
 
-/** Bölge numarası: 0–9 → 0, 10–19 → 1, … 90–99 → 9, 100 → 10 (tek elemanlı son bölge). */
-export function cizgiZone(value: number): number {
-  return Math.floor(value / 10);
+/**
+ * Bölge genişliği (O12, docs/KURALLAR.md §18 değişikliği): oyuncu sayısına göre.
+ *
+ * Gerekçe: seçimler 0–100 üzerinde dağılırken bir oyuncunun başkasıyla aynı bölgeye düşme olasılığı oyuncu
+ * sayısından bağımsız olarak kabaca %25'te kalsın (çarpışma anlamlı ama kesin değil). Oyuncu arttıkça çarpışma
+ * ihtimali büyüyeceğinden bölge daralır; az oyuncuda çarpışma neredeyse hiç olmayacağından genişler. 4 oyuncuda
+ * eski değer (10) korunur. Düzgün dağılımda olasılık tablodaki her sayı için %24,5–%26,4 aralığındadır
+ * (cizgiyi-gecme.test.ts bunu denetler).
+ */
+export const CIZGI_ZONE_WIDTH: Readonly<Record<number, number>> = {
+  2: 25,
+  3: 14,
+  4: 10,
+  5: 7,
+  6: 6,
+  7: 5,
+  8: 4,
+};
+
+/** Oyuncu sayısına göre bölge genişliği; tablo dışı sayılar en yakın uca bağlanır (2–8). */
+export function cizgiZoneWidth(playerCount: number): number {
+  const n = Math.min(8, Math.max(2, Math.floor(playerCount)));
+  return CIZGI_ZONE_WIDTH[n] ?? 10;
+}
+
+/** Bölge numarası: `⌊değer ÷ genişlik⌋` (100 son bölgeye düşer; genişlik 5'in katıysa tek başına bir bölgedir). */
+export function cizgiZone(value: number, width = 10): number {
+  return Math.floor(value / width);
+}
+
+/** Bölgenin ilk ve son sayısı (aralık 0–100 ile sınırlı). */
+export function cizgiZoneRange(zone: number, width: number): { from: number; to: number } {
+  return { from: zone * width, to: Math.min(CIZGI_MAX, zone * width + width - 1) };
 }
 
 /** Kilit ("Tamam"): seçim kesinleşir; bağlı herkes kilitlerse seçim aşaması 1 sn sonra biter. */
@@ -33,6 +63,8 @@ export type CizgiStatus = "first" | "second" | "safe" | "crashed" | "none";
 
 /** Süre dolunca herkese açılan sonuç. */
 export interface CizgiReveal {
+  /** Bölge genişliği (sonuçta görünürlük için tekrar). */
+  zoneWidth: number;
   /** Her katılımcının son seçimi; seçmeyen null. */
   choices: Record<string, number | null>;
   status: Record<string, CizgiStatus>;
@@ -43,6 +75,8 @@ export interface CizgiReveal {
 /** Herkese açık görünüm (oda başına bir kez). Seçimler süre dolana kadar burada yoktur. */
 export interface CizgiPublicView {
   startedAt: number;
+  /** Bölge genişliği (oyuncu sayısına göre; herkese açık kural bilgisi). */
+  zoneWidth: number;
   /** Seçim süresinin bitişi; seçimler bu anda açılır. */
   endsAt: number;
   /** Sonuç ekranının bitişi (oyunun bitişi). */

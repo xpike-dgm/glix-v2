@@ -2,7 +2,15 @@ import { describe, expect, it } from "vitest";
 import { isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
 import { type ButonaBasState, butonaBas, butonaBasAwards } from "./index.js";
-import { BUTONA_BAS_DURATION_MS } from "./types.js";
+import {
+  BUTONA_BAS_DURATION_MS,
+  BUTONA_BAS_GAP_MS,
+  BUTONA_BAS_ROUND_MS,
+  BUTONA_BAS_ROUNDS,
+  BUTONA_BAS_WINDOWS_MS,
+  butonaBasRoundOffset,
+  butonaBasWindowMs,
+} from "./types.js";
 
 const T0 = 1_000_000;
 const ctx = (now: number, connected: readonly string[] = ["a", "b", "c"]) => ({
@@ -23,7 +31,7 @@ describe("butona-bas kuralları", () => {
   it("setup süreyi ve sıfır puanları kurar", () => {
     const s = start();
     expect(s.startedAt).toBe(T0);
-    expect(s.endsAt).toBe(T0 + 45_000);
+    expect(s.endsAt).toBe(T0 + 51_000);
     expect(s.scores).toEqual({ a: 0, b: 0, c: 0 });
   });
 
@@ -33,7 +41,7 @@ describe("butona-bas kuralları", () => {
     s = press(s, "b", 290);
     s = settleAt(s, 300);
     expect(s.scores).toEqual({ a: 1, b: 1, c: 0 });
-    expect(s.recent).toEqual([{ index: 0, pressers: ["a", "b"], outcome: "match" }]);
+    expect(s.recent).toEqual([{ round: 0, index: 0, pressers: ["a", "b"], outcome: "match" }]);
   });
 
   it("üç oyuncu eşleşirse üçü de +1", () => {
@@ -104,22 +112,22 @@ describe("butona-bas kuralları", () => {
     expect(settleAt(s, 1_000)).toBe(s);
   });
 
-  it("bitiş sınırı: 44999 ms kabul, 45000 ms ret", () => {
+  it("bitiş sınırı: 50999 ms kabul, 51000 ms ret", () => {
     const s = start();
-    const ok = butonaBas.reduce(s, "a", { kind: "press" }, ctx(T0 + 44_999));
+    const ok = butonaBas.reduce(s, "a", { kind: "press" }, ctx(T0 + 50_999));
     expect(isRejected(ok)).toBe(false);
     const late = butonaBas.reduce(s, "a", { kind: "press" }, ctx(T0 + BUTONA_BAS_DURATION_MS));
     expect(isRejected(late)).toBe(true);
-    expect(isRejected(butonaBas.reduce(s, "a", { kind: "press" }, ctx(T0 + 60_000)))).toBe(true);
+    expect(isRejected(butonaBas.reduce(s, "a", { kind: "press" }, ctx(T0 + 70_000)))).toBe(true);
   });
 
   it("son pencere bitişte puanlanır ve oyun biter", () => {
     let s = start();
-    s = press(s, "a", 44_900);
-    s = press(s, "b", 44_999);
-    expect(butonaBas.isFinished(s, ctx(T0 + 44_999))).toBe(false);
-    expect(butonaBas.isFinished(s, ctx(T0 + 45_000))).toBe(true);
-    s = settleAt(s, 45_000);
+    s = press(s, "a", 50_900);
+    s = press(s, "b", 50_999);
+    expect(butonaBas.isFinished(s, ctx(T0 + 50_999))).toBe(false);
+    expect(butonaBas.isFinished(s, ctx(T0 + 51_000))).toBe(true);
+    s = settleAt(s, 51_000);
     expect(s.scores).toEqual({ a: 1, b: 1, c: 0 });
   });
 
@@ -148,6 +156,7 @@ describe("butona-bas kuralları", () => {
     s = settleAt(s, 12 * 600);
     expect(s.recent).toHaveLength(8);
     expect(s.recent.map((w) => w.index)).toEqual([8, 10, 12, 14, 16, 18, 20, 22]);
+    expect(s.recent.every((w) => w.round === 0)).toBe(true);
   });
 
   it("parseAction yalnız press kabul eder", () => {
@@ -181,7 +190,7 @@ describe("butona-bas ödüller", () => {
     s = press(s, "a", 600);
     s = press(s, "b", 600);
     s = press(s, "c", 1200);
-    s = settleAt(s, 45_000);
+    s = settleAt(s, 51_000);
     const r = butonaBas.result(s);
     expect(r.miniScores).toEqual({ a: 2, b: 2, c: -1 });
     expect(r.awards).toEqual({ a: 1, b: 1 });
@@ -206,9 +215,20 @@ describe("butona-bas görünüm", () => {
     s = press(s, "a", 10);
     const pub = butonaBas.publicView(s, ctx(T0 + 20));
     expect(pub.windowMs).toBe(300);
-    expect(pub.endsAt - pub.startedAt).toBe(45_000);
+    expect(pub.endsAt - pub.startedAt).toBe(51_000);
+    expect([pub.round, pub.rounds, pub.phase]).toEqual([1, 3, "play"]);
     expect(pub.scores).toEqual({ a: 0, b: 0, c: 0 });
-    expect(Object.keys(pub).sort()).toEqual(["endsAt", "recent", "scores", "startedAt", "windowMs"]);
+    expect(Object.keys(pub).sort()).toEqual([
+      "endsAt",
+      "phase",
+      "phaseEndsAt",
+      "recent",
+      "round",
+      "rounds",
+      "scores",
+      "startedAt",
+      "windowMs",
+    ]);
     expect(Object.keys(butonaBas.view(s, "a", ctx(T0 + 20))).sort()).toEqual([
       "myScore",
       "pressedThisWindow",
@@ -239,7 +259,7 @@ describe("butona-bas determinizm", () => {
       const rng = createRng(77);
       let s = start(["a", "b", "c", "d"]);
       const ids = ["a", "b", "c", "d"];
-      for (let t = 0; t < 45_000; t += 50) {
+      for (let t = 0; t < 51_000; t += 50) {
         const id = ids[rng.int(4)] as string;
         if (rng.next() < 0.5) {
           const r = butonaBas.reduce(s, id, { kind: "press" }, ctx(T0 + t));
@@ -247,7 +267,7 @@ describe("butona-bas determinizm", () => {
         }
         s = settleAt(s, t);
       }
-      s = settleAt(s, 45_000);
+      s = settleAt(s, 51_000);
       return butonaBas.result(s);
     };
     expect(run()).toEqual(run());
@@ -267,11 +287,192 @@ describe("butona-bas determinizm", () => {
         s = press(s, id, at);
         if (step > 0) s = settleAt(s, at);
       }
-      for (let t = 0; step > 0 && t <= 45_000; t += step) s = settleAt(s, t);
+      for (let t = 0; step > 0 && t <= 51_000; t += step) s = settleAt(s, t);
       return butonaBas.result(s).miniScores;
     };
     expect(play(100)).toEqual(play(0));
     expect(play(1)).toEqual(play(0));
+  });
+});
+
+describe("butona-bas O8: 3 tur, daralan pencere", () => {
+  const R2 = butonaBasRoundOffset(1); // 18_000
+  const R3 = butonaBasRoundOffset(2); // 36_000
+
+  it("sabitler: 3 tur, pencere 300/200/120, tur 15 sn, ara 3 sn, toplam 51 sn", () => {
+    expect(BUTONA_BAS_ROUNDS).toBe(3);
+    expect([...BUTONA_BAS_WINDOWS_MS]).toEqual([300, 200, 120]);
+    expect([0, 1, 2].map(butonaBasWindowMs)).toEqual([300, 200, 120]);
+    expect(BUTONA_BAS_ROUND_MS).toBe(15_000);
+    expect(BUTONA_BAS_GAP_MS).toBe(3_000);
+    expect(BUTONA_BAS_DURATION_MS).toBe(51_000);
+    expect([R2, R3]).toEqual([18_000, 36_000]);
+  });
+
+  it("2. turda pencere 200 ms: 199 ms aynı pencere, 200 ms sonraki", () => {
+    let same = start();
+    same = press(same, "a", R2);
+    same = press(same, "b", R2 + 199);
+    same = settleAt(same, R2 + 400);
+    expect(same.scores).toEqual({ a: 1, b: 1, c: 0 });
+    let split = start();
+    split = press(split, "a", R2);
+    split = press(split, "b", R2 + 200);
+    split = settleAt(split, R2 + 400);
+    expect(split.scores).toEqual({ a: -1, b: -1, c: 0 });
+    expect(split.recent.map((w) => [w.round, w.index])).toEqual([
+      [1, 0],
+      [1, 1],
+    ]);
+  });
+
+  it("3. turda pencere 120 ms: 119 ms aynı pencere, 120 ms sonraki; 300 ms'lik aralık artık eşleşmez", () => {
+    let same = start();
+    same = press(same, "a", R3);
+    same = press(same, "b", R3 + 119);
+    same = settleAt(same, R3 + 300);
+    expect(same.scores).toEqual({ a: 1, b: 1, c: 0 });
+    let split = start();
+    split = press(split, "a", R3);
+    split = press(split, "b", R3 + 120);
+    split = settleAt(split, R3 + 300);
+    expect(split.scores).toEqual({ a: -1, b: -1, c: 0 });
+    // 1. turda 250 ms arayla basış eşleşirdi (aynı 300 ms pencere); 3. turda eşleşmez.
+    let wide = start();
+    wide = press(wide, "a", R3 + 10);
+    wide = press(wide, "b", R3 + 260);
+    wide = settleAt(wide, R3 + 400);
+    expect(wide.scores).toEqual({ a: -1, b: -1, c: 0 });
+  });
+
+  it("pencereler her turun başından sayılır (tur ortasındaki sapma taşınmaz)", () => {
+    // 2. turun ilk 200 ms'si: oyun başından 18000..18200 (18000 / 200 tam bölünür ama tur başından sayılır).
+    let s = start();
+    s = press(s, "a", R2 + 1);
+    s = press(s, "b", R2 + 199);
+    s = settleAt(s, R2 + 200);
+    expect(s.recent).toEqual([{ round: 1, index: 0, pressers: ["a", "b"], outcome: "match" }]);
+  });
+
+  it("turlar arası ara: basış reddedilir, pencere/ceza oluşmaz", () => {
+    const s = start();
+    for (const at of [15_000, 16_500, 17_999, 33_000, 34_999]) {
+      expect(butonaBas.reduce(s, "a", { kind: "press" }, ctx(T0 + at))).toEqual({ rejected: "between_rounds" });
+    }
+    expect(isRejected(butonaBas.reduce(s, "a", { kind: "press" }, ctx(T0 + 14_999)))).toBe(false);
+    expect(isRejected(butonaBas.reduce(s, "a", { kind: "press" }, ctx(T0 + 18_000)))).toBe(false);
+    expect(isRejected(butonaBas.reduce(s, "a", { kind: "press" }, ctx(T0 + 36_000)))).toBe(false);
+    expect(butonaBas.view(s, "a", ctx(T0 + 16_000)).pressedThisWindow).toBe(false);
+  });
+
+  it("tur son penceresi tur bitince puanlanır", () => {
+    let s = start();
+    s = press(s, "a", 14_900);
+    s = press(s, "b", 14_999);
+    s = settleAt(s, 14_999);
+    expect(s.scores).toEqual({ a: 0, b: 0, c: 0 });
+    s = settleAt(s, 15_000);
+    expect(s.scores).toEqual({ a: 1, b: 1, c: 0 });
+  });
+
+  it("mini puanlar 3 tur boyunca birikir (her tur kendi pencere mantığıyla)", () => {
+    let s = start();
+    // Tur 1: a+b eşleşir (+1 +1). Tur 2: a tek (-1). Tur 3: b+c eşleşir, a tek (-1 sonraki pencerede).
+    s = press(s, "a", 100);
+    s = press(s, "b", 200);
+    s = press(s, "a", R2 + 50);
+    s = press(s, "b", R3 + 10);
+    s = press(s, "c", R3 + 100);
+    s = press(s, "a", R3 + 500);
+    s = settleAt(s, 51_000);
+    expect(s.scores).toEqual({ a: 1 - 1 - 1, b: 2, c: 1 });
+    const res = butonaBas.result(s);
+    expect(res.miniScores).toEqual({ a: -1, b: 2, c: 1 });
+  });
+
+  it("genel skor yalnız sonda, toplama göre bir kez: tek lider +2, ikinci +1", () => {
+    let s = start();
+    for (const [at, ids] of [
+      [100, ["a", "b", "c"]],
+      [R2 + 50, ["a", "b"]],
+      [R3 + 50, ["a"]],
+      [R3 + 500, ["a", "b"]],
+    ] as const) {
+      for (const id of ids) s = press(s, id, at);
+    }
+    s = settleAt(s, 51_000);
+    // a: +1 +1 -1 +1 = 2, b: +1 +1 +1 = 3, c: +1
+    expect(butonaBas.result(s).miniScores).toEqual({ a: 2, b: 3, c: 1 });
+    expect(butonaBas.result(s).awards).toEqual({ b: 2, a: 1 });
+    // Tur sonlarında ara sonuç genel skora yazılmaz: tick yalnız mini puanı değiştirir.
+    const mid = settleAt(start(), 20_000);
+    expect(butonaBas.result(mid).awards).toEqual({ a: 1, b: 1, c: 1 });
+  });
+
+  it("toplamda eşitlik: lider eşitse liderler +1; ikincilik eşitse ikisi de +1", () => {
+    let tie = start();
+    tie = press(tie, "a", 100);
+    tie = press(tie, "b", 100);
+    tie = press(tie, "a", R2 + 50);
+    tie = press(tie, "b", R2 + 50);
+    tie = settleAt(tie, 51_000);
+    expect(butonaBas.result(tie).miniScores).toEqual({ a: 2, b: 2, c: 0 });
+    expect(butonaBas.result(tie).awards).toEqual({ a: 1, b: 1 });
+
+    let second = start(["a", "b", "c", "d"]);
+    for (const id of ["a", "b", "c", "d"]) second = press(second, id, 100);
+    for (const id of ["a", "b", "c"]) second = press(second, id, R2 + 50);
+    for (const id of ["a", "b"]) second = press(second, id, R3 + 50);
+    second = settleAt(second, 51_000);
+    expect(butonaBas.result(second).miniScores).toEqual({ a: 3, b: 3, c: 2, d: 1 });
+    expect(butonaBas.result(second).awards).toEqual({ a: 1, b: 1 });
+    let second2 = start(["a", "b", "c", "d"]);
+    for (const id of ["a", "b", "c", "d"]) second2 = press(second2, id, 100);
+    for (const id of ["a", "b", "c"]) second2 = press(second2, id, R2 + 50);
+    for (const id of ["a", "d"]) second2 = press(second2, id, R3 + 50);
+    second2 = settleAt(second2, 51_000);
+    expect(butonaBas.result(second2).miniScores).toEqual({ a: 3, b: 2, c: 2, d: 2 });
+    expect(butonaBas.result(second2).awards).toEqual({ a: 2, b: 1, c: 1, d: 1 });
+  });
+
+  it("görünüm: tur, evre, pencere ve süre bilgisi", () => {
+    const s = start();
+    const v = (at: number) => butonaBas.publicView(s, ctx(T0 + at));
+    expect(v(0)).toMatchObject({ round: 1, rounds: 3, phase: "play", windowMs: 300, phaseEndsAt: T0 + 15_000 });
+    expect(v(14_999)).toMatchObject({ round: 1, phase: "play", windowMs: 300 });
+    // Ara: yaklaşan tur ve daralan pencere.
+    expect(v(15_000)).toMatchObject({ round: 2, phase: "gap", windowMs: 200, phaseEndsAt: T0 + 18_000 });
+    expect(v(17_999)).toMatchObject({ round: 2, phase: "gap", windowMs: 200 });
+    expect(v(18_000)).toMatchObject({ round: 2, phase: "play", windowMs: 200, phaseEndsAt: T0 + 33_000 });
+    expect(v(33_000)).toMatchObject({ round: 3, phase: "gap", windowMs: 120, phaseEndsAt: T0 + 36_000 });
+    expect(v(36_000)).toMatchObject({ round: 3, phase: "play", windowMs: 120, phaseEndsAt: T0 + 51_000 });
+    expect(v(51_000)).toMatchObject({ round: 3, phase: "over", windowMs: 120 });
+  });
+
+  it("aynı seed ve girdi aynı sonucu verir; tick sıklığı sonucu değiştirmez (3 tur)", () => {
+    const presses: [string, number][] = [
+      ["a", 100],
+      ["b", 250],
+      ["a", R2 + 10],
+      ["c", R2 + 150],
+      ["b", R2 + 210],
+      ["c", R3 + 5],
+      ["a", R3 + 100],
+      ["b", R3 + 4_000],
+      ["c", 50_990],
+    ];
+    const play = (step: number) => {
+      let s = start();
+      for (const [id, at] of presses) {
+        s = press(s, id, at);
+        if (step > 0) s = settleAt(s, at);
+      }
+      for (let t = 0; step > 0 && t <= 51_000; t += step) s = settleAt(s, t);
+      return butonaBas.result(s);
+    };
+    expect(play(0)).toEqual(play(0));
+    expect(play(100)).toEqual(play(0));
+    expect(play(7)).toEqual(play(0));
   });
 });
 

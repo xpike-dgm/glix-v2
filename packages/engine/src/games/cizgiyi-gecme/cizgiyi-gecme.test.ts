@@ -2,7 +2,16 @@ import { describe, expect, it } from "vitest";
 import { isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
 import { type CizgiState, cizgiyiGecme as g } from "./index.js";
-import { CIZGI_CHOOSE_MS, CIZGI_DURATION_MS, CIZGI_REVEAL_MS, cizgiZone } from "./types.js";
+import {
+  CIZGI_CHOOSE_MS,
+  CIZGI_DURATION_MS,
+  CIZGI_MAX,
+  CIZGI_REVEAL_MS,
+  CIZGI_ZONE_WIDTH,
+  cizgiZone,
+  cizgiZoneRange,
+  cizgiZoneWidth,
+} from "./types.js";
 
 const T0 = 1_000_000;
 const ids = (n: number) => Array.from({ length: n }, (_, i) => `p${i + 1}`);
@@ -60,15 +69,69 @@ describe("cizgiyi-gecme kuralları", () => {
     expect(reject(s, "p1", -1, 100)).toEqual({ rejected: "out_of_range" });
   });
 
-  it("bölgeler 0–9, 10–19 … 90–99 ve tek elemanlı 100", () => {
-    expect([0, 9, 10, 19, 20, 89, 90, 99, 100].map(cizgiZone)).toEqual([0, 0, 1, 1, 2, 8, 9, 9, 10]);
-    // 99 ve 100 farklı bölge: ikisi de tek kalır.
-    const { r } = play([99, 100]);
-    expect(r.status).toEqual({ p1: "second", p2: "first" });
-    // 90 ve 99 aynı bölge.
-    expect(play([90, 99]).r.status).toEqual({ p1: "crashed", p2: "crashed" });
-    // 9 ve 10 farklı bölge.
-    expect(play([9, 10]).res.awards).toEqual({ p1: 1, p2: 2 });
+  it("bölge = ⌊sayı ÷ genişlik⌋; 4 oyuncuda eski onluk bölgeler korunur", () => {
+    expect([0, 9, 10, 19, 20, 89, 90, 99, 100].map((v) => cizgiZone(v, 10))).toEqual([
+      0, 0, 1, 1, 2, 8, 9, 9, 10,
+    ]);
+    // 4 oyuncu (genişlik 10): 99 ve 100 farklı bölge, 90–99 aynı bölge, 9 ve 10 farklı bölge.
+    expect(play([99, 100, null, null]).r.status).toMatchObject({ p1: "second", p2: "first" });
+    expect(play([90, 99, null, null]).r.status).toMatchObject({ p1: "crashed", p2: "crashed" });
+    expect(play([9, 10, null, null]).res.awards).toMatchObject({ p1: 1, p2: 2 });
+  });
+
+  it("O12 tablosu: oyuncu sayısı → bölge genişliği (2–8)", () => {
+    const table = [2, 3, 4, 5, 6, 7, 8].map((n) => [n, cizgiZoneWidth(n)]);
+    expect(table).toEqual([
+      [2, 25],
+      [3, 14],
+      [4, 10],
+      [5, 7],
+      [6, 6],
+      [7, 5],
+      [8, 4],
+    ]);
+    expect(CIZGI_ZONE_WIDTH).toEqual({ 2: 25, 3: 14, 4: 10, 5: 7, 6: 6, 7: 5, 8: 4 });
+    // Tablo dışı sayılar uca bağlanır; tablo oyuncu arttıkça daralır.
+    expect([cizgiZoneWidth(1), cizgiZoneWidth(9)]).toEqual([25, 4]);
+    const widths = [2, 3, 4, 5, 6, 7, 8].map(cizgiZoneWidth);
+    for (let i = 1; i < widths.length; i++) expect(widths[i]).toBeLessThan(widths[i - 1] ?? 0);
+  });
+
+  it("O12 denge: düzgün seçimde aynı bölgeye düşme olasılığı her oyuncu sayısında ≈ %25", () => {
+    for (let n = 2; n <= 8; n++) {
+      const w = cizgiZoneWidth(n);
+      const sizes = new Map<number, number>();
+      for (let v = 0; v <= CIZGI_MAX; v++) sizes.set(cizgiZone(v, w), (sizes.get(cizgiZone(v, w)) ?? 0) + 1);
+      let q = 0; // iki bağımsız seçimin aynı bölgede olma olasılığı
+      for (const size of sizes.values()) q += (size / (CIZGI_MAX + 1)) ** 2;
+      const collide = 1 - (1 - q) ** (n - 1);
+      expect(collide).toBeGreaterThan(0.24);
+      expect(collide).toBeLessThan(0.27);
+    }
+  });
+
+  it("O12: bölge aralıkları ve oyuncu sayısına göre çarpışma", () => {
+    expect(cizgiZoneRange(0, 25)).toEqual({ from: 0, to: 24 });
+    expect(cizgiZoneRange(3, 25)).toEqual({ from: 75, to: 99 });
+    expect(cizgiZoneRange(4, 25)).toEqual({ from: 100, to: 100 });
+    expect(cizgiZoneRange(7, 14)).toEqual({ from: 98, to: 100 });
+    // 2 oyuncu (genişlik 25): 60 ve 74 aynı bölgede, 74 ve 75 ayrı.
+    expect(play([60, 74]).r.status).toEqual({ p1: "crashed", p2: "crashed" });
+    expect(play([74, 75]).r.status).toEqual({ p1: "second", p2: "first" });
+    // 8 oyuncu (genişlik 4): 60 ve 63 aynı bölgede, 63 ve 64 ayrı.
+    const eight = (a: number, b: number) => play([a, b, null, null, null, null, null, null]).r;
+    expect(eight(60, 63).status).toMatchObject({ p1: "crashed", p2: "crashed" });
+    expect(eight(63, 64).status).toMatchObject({ p1: "second", p2: "first" });
+    // 3 oyuncu (genişlik 14): 98–100 son bölge.
+    expect(play([98, 100, 5]).r.status).toMatchObject({ p1: "crashed", p2: "crashed", p3: "first" });
+  });
+
+  it("sonuç ve herkese açık görünüm bölge genişliğini taşır (kural bilgisi, gizli değil)", () => {
+    for (const n of [2, 5, 8]) {
+      const s = start(n);
+      expect(g.publicView(s, ctx(T0)).zoneWidth).toBe(cizgiZoneWidth(n));
+      expect(g.publicView(s, ctx(T0 + CIZGI_CHOOSE_MS)).reveal?.zoneWidth).toBe(cizgiZoneWidth(n));
+    }
   });
 
   it("tek kalanlar arasında en yüksek +2, ikinci yüksek +1, diğerleri 0", () => {
@@ -206,11 +269,11 @@ describe("cizgiyi-gecme gizlilik (yapısal)", () => {
     for (const at of [0, 1, 15_000, 29_999]) {
       const pub = g.publicView(s, ctx(T0 + at));
       expect(pub.reveal).toBeNull();
-      expect(Object.keys(pub).sort()).toEqual(["endsAt", "lockedIds", "reveal", "revealEndsAt", "startedAt"]);
+      expect(Object.keys(pub).sort()).toEqual(["endsAt", "lockedIds", "reveal", "revealEndsAt", "startedAt", "zoneWidth"]);
       const flat = JSON.stringify(pub);
       for (const id of ids(5)) expect(flat).not.toContain(id);
       for (const k of ["choices", "status", "points", "zone", "zones"]) expect(keys(pub)).not.toContain(k);
-      expect(numbers(pub)).toEqual([pub.startedAt, pub.endsAt, pub.revealEndsAt]);
+      expect(numbers(pub)).toEqual([pub.startedAt, pub.zoneWidth, pub.endsAt, pub.revealEndsAt]);
     }
   });
 

@@ -40,6 +40,10 @@ export function asiriYuklemeEndAt(state: AsiriYuklemeState): number {
 /**
  * Genel skor: patlayan −1 ve sıralamaya girmez; patlamayanlar tıklama sayısına göre (tek lider +2, sıradaki +1;
  * liderler eşitse hepsi +1, +2 yok). Hiç tıklamayan sıralamaya girmez.
+ *
+ * O7: patlamayanlar arasında en az tıklayan(lar) ayrıca −1 alır (hiç tıklamayan da en az sayılır). Eşitlikte en azı
+ * yapanların hepsi −1 alır; patlamayanların hepsinin sayısı aynıysa kimse almaz. Patlayan bu cezaya girmez, yani
+ * ikinci bir −1 almaz. Ceza sıralama ödülüne eklenir (ikinci sırada +1 alan en az tıklayan net 0 alır).
  */
 export function asiriYuklemePoints(
   players: readonly string[],
@@ -49,8 +53,14 @@ export function asiriYuklemePoints(
   const ranked: Record<string, number> = {};
   for (const id of players) if (id !== exploder) ranked[id] = clicks[id] ?? 0;
   const awards = rankAwards(ranked, { positiveOnly: true });
+  const counts = Object.values(ranked);
+  const fewest = Math.min(...counts);
+  const allEqual = counts.every((c) => c === fewest);
   const points: Record<string, number> = {};
-  for (const id of players) points[id] = id === exploder ? -1 : (awards[id] ?? 0);
+  for (const id of players) {
+    if (id === exploder) points[id] = -1;
+    else points[id] = (awards[id] ?? 0) + (!allEqual && ranked[id] === fewest ? -1 : 0);
+  }
   return points;
 }
 
@@ -81,7 +91,7 @@ export const asiriYukleme: GameDefinition<
     steps: [
       "Ortak çekirdeği hızlıca tıkla; sayılar gizli",
       "Kenarlar kızarınca tehlike başladı; sakın taşırma",
-      "100'ü aşan patlar (−1); diğerlerinde en çok tıklayan +2, ikinci +1",
+      "100'ü aşan patlar (−1); diğerlerinde en çok tıklayan +2, ikinci +1, en az tıklayan −1",
     ],
   },
 

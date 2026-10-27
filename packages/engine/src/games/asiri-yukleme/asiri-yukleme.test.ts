@@ -96,8 +96,9 @@ describe("asiri-yukleme kuralları", () => {
   it("patlayan -1 alır ve sıralamaya girmez; diğerleri tıklamaya göre +2/+1", () => {
     let s = filled(1_000); // a 40, b 35, c 25
     s = tap(s, "a", 2_000); // a patlar (en çok tıklayan ama sıralamada yok)
-    expect(awards(s)).toEqual({ a: -1, b: 2, c: 1 });
-    expect(asiriYukleme.result(finish(s)).miniScores).toEqual({ a: -1, b: 2, c: 1 });
+    // c: ikinci sıra +1 ve en az tıklayan −1 (O7) → net 0.
+    expect(awards(s)).toEqual({ a: -1, b: 2, c: 0 });
+    expect(asiriYukleme.result(finish(s)).miniScores).toEqual({ a: -1, b: 2, c: 0 });
   });
 
   it("patlamayan ilk 100 sonrası tık: sıra sunucu sırasına göre ilk tık patlatır", () => {
@@ -135,13 +136,13 @@ describe("asiri-yukleme kuralları", () => {
     const s = filled(1_000); // a 40, b 35, c 25; pencere 1002+3000
     const end = 1_002 + ASIRI_YUKLEME_DANGER_MS;
     expect(rejection(s, "a", end - 1)).toBeNull(); // pencere içindeki tık kabul edilir (patlatır)
-    expect(awards(s, end)).toEqual({ a: 2, b: 1, c: 0 });
+    expect(awards(s, end)).toEqual({ a: 2, b: 1, c: -1 });
     expect(rejection(s, "a", end)).toBe("ended");
     expect(finish(s, end).exploder).toBeNull();
   });
 
   it("tıklama liderleri eşitse liderlerin hepsi +1, +2 verilmez, ikinci derece yok", () => {
-    expect(asiriYuklemePoints(["a", "b", "c"], { a: 30, b: 30, c: 10 }, null)).toEqual({ a: 1, b: 1, c: 0 });
+    expect(asiriYuklemePoints(["a", "b", "c"], { a: 30, b: 30, c: 10 }, null)).toEqual({ a: 1, b: 1, c: -1 });
   });
 
   it("tek lider varsa ikinci sıra +1; ikinci sırada eşitlik: ikisi de +1", () => {
@@ -149,7 +150,7 @@ describe("asiri-yukleme kuralları", () => {
       a: 2,
       b: 1,
       c: 1,
-      d: 0,
+      d: -1,
     });
   });
 
@@ -158,13 +159,52 @@ describe("asiri-yukleme kuralları", () => {
       a: -1,
       b: 1,
       c: 1,
-      d: 0,
+      d: -1,
     });
   });
 
   it("hiç tıklamayan ödül almaz; kimse tıklamadıysa kimse puan almaz", () => {
-    expect(asiriYuklemePoints(["a", "b", "c"], { a: 4, b: 0, c: 0 }, null)).toEqual({ a: 2, b: 0, c: 0 });
+    expect(asiriYuklemePoints(["a", "b", "c"], { a: 4, b: 0, c: 0 }, null)).toEqual({ a: 2, b: -1, c: -1 });
     expect(asiriYuklemePoints(["a", "b"], { a: 0, b: 0 }, null)).toEqual({ a: 0, b: 0 });
+  });
+
+  describe("O7: en az tıklayan −1", () => {
+    const P = asiriYuklemePoints;
+    it("tek en az tıklayan −1 alır (hiç tıklamayan da en az sayılır)", () => {
+      expect(P(["a", "b", "c"], { a: 30, b: 20, c: 5 }, null)).toEqual({ a: 2, b: 1, c: -1 });
+      expect(P(["a", "b", "c"], { a: 30, b: 20, c: 0 }, null)).toEqual({ a: 2, b: 1, c: -1 });
+    });
+    it("ikinci sırada +1 alan en az tıklayan net 0 alır", () => {
+      expect(P(["a", "b"], { a: 30, b: 5 }, null)).toEqual({ a: 2, b: 0 });
+    });
+    it("en azda eşitlik: eşit en az tıklayanların hepsi −1", () => {
+      expect(P(["a", "b", "c", "d"], { a: 30, b: 20, c: 5, d: 5 }, null)).toEqual({ a: 2, b: 1, c: -1, d: -1 });
+    });
+    it("herkesin sayısı aynıysa kimse bu cezayı almaz", () => {
+      expect(P(["a", "b", "c"], { a: 7, b: 7, c: 7 }, null)).toEqual({ a: 1, b: 1, c: 1 });
+      expect(P(["a", "b", "c"], { a: 0, b: 0, c: 0 }, null)).toEqual({ a: 0, b: 0, c: 0 });
+    });
+    it("patlayan en az tıklasa bile ikinci −1 almaz ve en az hesabına girmez", () => {
+      // c patlatır (3 tık): kalan a 30, b 20 → b en az: +1 −1 = 0; c yalnız kendi −1'i.
+      expect(P(["a", "b", "c"], { a: 30, b: 20, c: 3 }, "c")).toEqual({ a: 2, b: 0, c: -1 });
+      // Kalanlar eşitse (a=b) ceza yok; patlayanın az sayısı kimseyi etkilemez.
+      expect(P(["a", "b", "c"], { a: 20, b: 20, c: 1 }, "c")).toEqual({ a: 1, b: 1, c: -1 });
+    });
+    it("tek patlamayan oyuncu varsa ceza yok", () => {
+      expect(P(["a", "b"], { a: 0, b: 101 }, "b")).toEqual({ a: 0, b: -1 });
+    });
+    it("sonuç ve result() aynı puanları verir; tıklamalar tur sonuna kadar gizli kalır", () => {
+      let s = filled(1_000); // a 40, b 35, c 25
+      const end = 1_002 + ASIRI_YUKLEME_DANGER_MS;
+      expect(asiriYukleme.publicView(s, ctx(T0 + end - 1)).reveal).toBeNull();
+      s = finish(s, end);
+      const rev = asiriYukleme.publicView(s, ctx(T0 + end)).reveal;
+      expect(rev?.points).toEqual({ a: 2, b: 1, c: -1 });
+      expect(asiriYukleme.result(s).awards).toEqual(rev?.points);
+    });
+    it("kurulum bilgilendirmesi en az tıklayanın −1 aldığını söyler", () => {
+      expect(asiriYukleme.briefing.steps.join(" ")).toContain("en az tıklayan −1");
+    });
   });
 
   it("tek katılımcı tıklayıp diğeri patlatırsa: tıklayan +2", () => {
@@ -184,7 +224,7 @@ describe("asiri-yukleme kuralları", () => {
     s = tap(s, "a", 1_000, 5);
     s = tap(s, "b", 2_000, 3);
     s = tap(s, "c", 3_000, 3);
-    expect(awards(s)).toEqual({ a: 2, b: 1, c: 1 });
+    expect(awards(s)).toEqual({ a: 2, b: 0, c: 0 });
     expect(finish(s).exploder).toBeNull();
   });
 
@@ -288,7 +328,7 @@ describe("asiri-yukleme gizlilik", () => {
     expect(asiriYukleme.publicView(s, ctx(T0 + end - 1)).reveal).toBeNull();
     const rev = asiriYukleme.publicView(s, ctx(T0 + end)).reveal;
     expect(rev).toMatchObject({ total: 100, exploder: null, clicks: { a: 40, b: 35, c: 25 } });
-    expect(rev?.points).toEqual({ a: 2, b: 1, c: 0 });
+    expect(rev?.points).toEqual({ a: 2, b: 1, c: -1 });
   });
 
   it("patlama anında sonuç herkese açılır: patlayan, toplam 101, tıklamalar", () => {
@@ -296,7 +336,7 @@ describe("asiri-yukleme gizlilik", () => {
     const rev = asiriYukleme.publicView(s, ctx(T0 + 2_000)).reveal;
     expect(rev).toMatchObject({ total: 101, exploder: "c" });
     expect(rev?.clicks).toEqual({ a: 40, b: 35, c: 26 });
-    expect(rev?.points).toEqual({ a: 2, b: 1, c: -1 });
+    expect(rev?.points).toEqual({ a: 2, b: 0, c: -1 });
   });
 
   it("patlamadan önce patlayanın kimliği hiçbir görünümde yoktur", () => {

@@ -12,6 +12,7 @@ import {
   type CizgiStatus,
   type CizgiView,
   cizgiZone,
+  cizgiZoneWidth,
 } from "./types.js";
 
 export * from "./types.js";
@@ -31,25 +32,26 @@ export interface CizgiState {
 
 /**
  * Puanlama: aynı bölgede ≥ 2 kişi olanların hepsi pasif (0, ceza yok); seçmeyen pasif.
- * Tek kalanlar arasında en yüksek sayı +2, ikinci +1. Tek kalanlar farklı bölgelerde olduğundan
- * sayıları da farklıdır; eşitlik oluşamaz.
+ * Bölge genişliği oyuncu sayısına göre (`cizgiZoneWidth`). Tek kalanlar arasında en yüksek sayı +2, ikinci +1.
+ * Tek kalanlar farklı bölgelerde olduğundan sayıları da farklıdır; eşitlik oluşamaz.
  */
 export function cizgiSettle(state: CizgiState): CizgiReveal {
   const choices: Record<string, number | null> = {};
   const status: Record<string, CizgiStatus> = {};
   const points: Record<string, number> = {};
+  const width = cizgiZoneWidth(state.players.length);
   const perZone = new Map<number, number>();
   for (const id of state.players) {
     const v = state.choices[id];
     choices[id] = v ?? null;
-    if (v !== undefined) perZone.set(cizgiZone(v), (perZone.get(cizgiZone(v)) ?? 0) + 1);
+    if (v !== undefined) perZone.set(cizgiZone(v, width), (perZone.get(cizgiZone(v, width)) ?? 0) + 1);
   }
   const alone: string[] = [];
   for (const id of state.players) {
     const v = state.choices[id];
     points[id] = 0;
     if (v === undefined) status[id] = "none";
-    else if ((perZone.get(cizgiZone(v)) ?? 0) >= 2) status[id] = "crashed";
+    else if ((perZone.get(cizgiZone(v, width)) ?? 0) >= 2) status[id] = "crashed";
     else {
       status[id] = "safe";
       alone.push(id);
@@ -65,7 +67,7 @@ export function cizgiSettle(state: CizgiState): CizgiReveal {
     status[second] = "second";
     points[second] = 1;
   }
-  return { choices, status, points };
+  return { zoneWidth: width, choices, status, points };
 }
 
 export const cizgiyiGecme: GameDefinition<CizgiState, CizgiAction, CizgiView, CizgiPublicView> = {
@@ -78,7 +80,7 @@ export const cizgiyiGecme: GameDefinition<CizgiState, CizgiAction, CizgiView, Ci
     goal: "En yükseğe çık ama kimseyle aynı platformda kalma!",
     steps: [
       "Gizlice 0 ile 100 arasında bir sayı seç",
-      "Aynı onluk bölgeye düşen herkes elenir",
+      "Aynı bölgeye düşen elenir; bölge genişliği oyuncu sayısına göre değişir",
       "Tek kalanların en yükseği +2, ikincisi +1 alır",
     ],
   },
@@ -133,6 +135,7 @@ export const cizgiyiGecme: GameDefinition<CizgiState, CizgiAction, CizgiView, Ci
   publicView(state, ctx): CizgiPublicView {
     return {
       startedAt: state.startedAt,
+      zoneWidth: cizgiZoneWidth(state.players.length),
       endsAt: state.endsAt,
       revealEndsAt: state.revealEndsAt,
       // Süre dolmadan kimsenin seçimi ya da durumu yoktur.

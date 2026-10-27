@@ -222,6 +222,19 @@ tasarladığı alanlar birlikte kilitlenir; kodlama bu kural seti üzerinden yap
   Görsel: Ortada ağır, parlak kırmızı arcade butonu; her basışta 0,3 saniyelik
   halka dalgası görünür, eşleşen avatarlar aynı ritimde parlar.
 
+**Değişiklik (O8, Ekim 2026, sahip onayı) — aşağıdaki cevapların önüne geçer:**
+
+- Oyun **3 turdan** oluşur. Pencere uzunluğu turdan tura daralır: **1. turda 300 ms, 2. turda 200 ms, 3. turda 120 ms.**
+  Ekranda "Tur 1/3" gibi tur numarası ve 2. ile 3. turun başında "Pencere daralıyor" uyarısı görünür.
+- Her tur **15 saniye** sürer (3 tur = toplam 45 saniye oyun süresi, eskisi gibi); turlar arasında 3 saniyelik ara vardır
+  ve ara sırasında basışlar sayılmaz. Pencereler her turun başından itibaren sayılır.
+- Her tur mevcut tur mantığıyla puanlanır: eşleşen pencerede basanların her biri +1, tek başına basan −1, kimse basmazsa
+  değişmez, aynı pencerede tekrar basış tek sayılır. Bu puanlar **mini oyun puanına turlar boyunca toplanır**.
+- **Genel skor yalnız oyun sonunda bir kez**, 3 turun mini toplamına göre ve mevcut dönüşümle verilir (tek lider +2,
+  sonraki sıradaki +1; en yüksek toplam eşitse paylaşanların hepsi +1 ve +2 verilmez). Tur başına genel skor yazılmaz;
+  böylece 3 tur genel skoru şişirmez.
+- Tutorial adım 3: "3 tur oynanır; pencere 300, 200, 120 ms diye daralır."
+
 ## 7. Rus Ruleti — `rus-ruleti`
 
 **Durum: KİLİTLİ**
@@ -505,6 +518,25 @@ arayüz/kodda en yakın +2, ikinci en yakın +1 alır. Eski faz 18 saniyedir.
     ikinci sıra ödülü verilmez; diğer derecelerde eşitlik varsa aynı dereceyi
     paylaşanlar aynı ödülü paylaşır.
 
+**Değişiklik (O5, Ekim 2026, sahip onayı) — aşağıdaki cevapların önüne geçer:**
+
+- Oyun **3 kısa turdan** oluşur. Hedef her turda *o turun ortalaması × çarpan*dır; çarpan sırasıyla **½, ⅔, ¾**
+  (1. tur ortalamanın yarısı, 2. tur üçte ikisi, 3. tur dörtte üçü). Çarpan her turun başında herkese gösterilir.
+  Sayı aralığı (0-100, tam sayı), seçimlerin süre bitene kadar gizli olması ve göndermeyene sunucunun rastgele sayı
+  ataması her tur için aynen geçerlidir (atanan sayı her tur ayrı çekilir).
+- **2. turdan itibaren önceki turun ortalaması ve hedefi** seçim ekranında görünür.
+- **Seçim süresi** her turda **10 saniyedir** (eski 20 saniyenin yarısı; alt sınır 10 saniye). Tur sonucu turlar
+  arasında 5 saniye, son turda 7 saniye ekranda kalır.
+- Her tur mevcut yakınlık mantığıyla puanlanır (en yakın tek ise +2, ikinci yakın +1; en yakınlar eşitse hepsi +1 ve
+  +2 verilmez) ve bu puanlar **mini oyun puanına turlar boyunca toplanır**. Tur başına genel skor yazılmaz.
+- Bu oyunda ayrı bir mini→genel dönüşüm olmadığından **genel skor yalnız oyun sonunda bir kez**, 3 turun mini toplamına
+  göre verilir: en yüksek toplam +2, ikinci +1; en yüksek toplam eşitse paylaşanların hepsi +1 (+2 verilmez); ikinci
+  sırada eşitlik varsa paylaşanların hepsi +1. Negatif kural yoktur. Böylece 3 tur genel skoru şişirmez (en çok +2).
+- **Erken bitiş** her tur için ayrı uygulanır: bağlı herkes kilitlediğinde o turun seçimi 1 saniye sonra kapanır ve
+  sonraki tur erken başlar.
+- Tutorial adım 2: "Hedef her tur değişir: ortalamanın yarısı, üçte ikisi, dörtte üçü." Adım 3: "Turlardaki puanlar
+  toplanır; toplamı en yüksek +2, ikinci +1 alır."
+
 ## 14. Gizli Kareler — `gizli-kareler`
 
 **Durum: KİLİTLİ**
@@ -689,6 +721,20 @@ en yüksek seçim +2, sonraki +1 alır. Eski faz 22 saniyedir.
     oyuncu pasif sayılır ve bölge değerlendirmesine girmez. Aynı bölgedeki
     oyuncuların hiçbiri puan alamaz; ayrı bir negatif puan yoktur.
 
+**Değişiklik (O12, Ekim 2026, sahip onayı) — aşağıdaki cevapların önüne geçer:**
+
+- **Bölge genişliği oyuncu sayısına göre belirlenir.** Bölge, `⌊sayı ÷ genişlik⌋` ile hesaplanır (0-9, 10-19 ... yerine
+  genişliğe göre 0-24, 25-49 ... gibi); sayı aralığı 0-100 aynı kalır, 100 son bölgeye düşer.
+- Tablo (oyuncu sayısı → bölge genişliği): **2 → 25, 3 → 14, 4 → 10, 5 → 7, 6 → 6, 7 → 5, 8 → 4.**
+- Gerekçe: amaç, seçimler dağılırken bir oyuncunun başkasıyla aynı bölgeye düşme olasılığını oyuncu sayısından bağımsız
+  olarak kabaca %25'te tutmaktır (çarpışma anlamlı, ama kesin değil). Oyuncu arttıkça çarpışma ihtimali artacağı için
+  bölge **daraltılır**; az oyuncuda hiç çarpışma olmayacağı için bölge **genişletilir**. 4 oyuncuda genişlik eski
+  değer olan 10'dur.
+- Tek kalanlar arasında en yüksek +2, ikinci +1; aynı bölgedekiler pasif (ceza yok); seçmeyen pasif — hepsi eskisi gibi.
+  Tek turlu oyundur, genel skora aktarım değişmez (puanlar doğrudan genel skora eklenir).
+- Ekranda bölgeler oyuncu sayısına göre çizilir ve bölge aralığı yazılır; tutorial adım 2: "Aynı bölgeye düşme; bölge
+  genişliği oyuncu sayısına göre değişir."
+
 ## 19. Gizli Alışveriş — `gizli-alisveris`
 
 **Durum: KİLİTLİ**
@@ -782,6 +828,17 @@ Eski faz 18 saniyedir.
     patlamayı belirler. Patlayan oyuncu sıralamaya girmez. Patlamayanlar içinde
     tıklama liderleri eşitse liderlerin tamamı +1 alır ve +2 verilmez; ikinci
     sıra yalnızca tek lider olduğunda +1 alır.
+
+**Değişiklik (O7, Ekim 2026, sahip onayı) — aşağıdaki cevapların önüne geçer:**
+
+- Patlamayan oyuncular arasında **en az tıklayan** oyuncu(lar) ayrıca **−1** alır (hiç tıklamayan da en az sayılır).
+  Eşitlikte en az sayıda tıklayanların **hepsi** −1 alır. Patlamayan herkesin tıklama sayısı aynıysa **kimse bu cezayı
+  almaz**.
+- Patlayan oyuncu bu cezaya girmez ve ikinci bir −1 almaz (yalnız kendi −1'ini alır).
+- Bu −1, mevcut puanlara eklenir (örneğin ikinci sırada +1 alan ve aynı zamanda en az tıklayan oyuncu toplamda 0 alır).
+  Tıklamalar eskisi gibi tur sonuna kadar gizlidir; değişiklik yalnız tur sonu puanlamasını etkiler.
+- Tek turlu oyundur ve mini→genel dönüşümü değişmez: puanlar doğrudan genel skora eklenir.
+- Tutorial adım 3: "100'ü aşan son tıkı atan patlar (−1); diğerlerinde en çok tıklayan +2, ikinci +1, en az tıklayan −1."
 
 ## 21. Kontrol Paneli Kaosu — `kontrol-paneli-kaosu`
 

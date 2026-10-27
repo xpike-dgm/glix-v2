@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
-import { ortalamaninYarisi as g, type OrtalamaState } from "./index.js";
-import { ORTALAMA_CHOOSE_MS, ORTALAMA_DURATION_MS, ORTALAMA_REVEAL_MS } from "./types.js";
+import { ortalamaAwards, ortalamaninYarisi as g, type OrtalamaState, ortalamaSettle } from "./index.js";
+import {
+  ORTALAMA_CHOOSE_MS,
+  ORTALAMA_DURATION_MS,
+  ORTALAMA_MULTIPLIERS,
+  ORTALAMA_REVEAL_MS,
+  ORTALAMA_ROUND_REVEAL_MS,
+  ORTALAMA_ROUNDS,
+  ortalamaMultiplier,
+} from "./types.js";
 
 const T0 = 1_000_000;
 const ids = (n: number) => Array.from({ length: n }, (_, i) => `p${i + 1}`);
@@ -25,13 +33,14 @@ const reveal = (s: OrtalamaState) => {
   if (!r) throw new Error("sonuç açılmadı");
   return r;
 };
-/** Herkes seçer; sonuç döner. */
+/** Herkes 1. turda seçer; 1. turun sonucu döner (`res`: o turun puanları; genel skor yalnız oyun sonunda). */
 function play(values: number[]) {
   let s = start(values.length);
   values.forEach((v, i) => {
     s = choose(s, `p${i + 1}`, v);
   });
-  return { s, r: reveal(s), res: g.result(s) };
+  const r = reveal(s);
+  return { s, r, res: { awards: r.points, miniScores: r.points } };
 }
 
 describe("ortalamanin-yarisi kuralları", () => {
@@ -40,12 +49,18 @@ describe("ortalamanin-yarisi kuralları", () => {
     expect(g.briefing.steps.length).toBeLessThanOrEqual(3);
   });
 
-  it("tek aşama: seçim 20 sn, ardından sonuç gösterimi, sonra biter", () => {
+  it("3 tur: her turda seçim 10 sn, ardından sonuç gösterimi; son sonuçtan sonra biter", () => {
     const s = start();
-    expect(ORTALAMA_CHOOSE_MS).toBe(20_000);
-    expect(s.endsAt - s.startedAt).toBe(20_000);
+    expect(ORTALAMA_CHOOSE_MS).toBe(10_000);
+    expect(ORTALAMA_ROUNDS).toBe(3);
     expect(ORTALAMA_REVEAL_MS).toBeLessThanOrEqual(7_000);
-    expect(g.isFinished(s, ctx(T0 + 20_000))).toBe(false);
+    expect(s.rounds).toHaveLength(3);
+    expect(s.rounds.map((x) => x.endsAt - x.startAt)).toEqual([10_000, 10_000, 10_000]);
+    // 10 + 5 | 10 + 5 | 10 + 7 = 47 sn
+    expect(ORTALAMA_DURATION_MS).toBe(47_000);
+    expect(g.isFinished(s, ctx(T0 + 10_000))).toBe(false);
+    expect(g.isFinished(s, ctx(T0 + 15_000))).toBe(false);
+    expect(g.isFinished(s, ctx(T0 + 40_000))).toBe(false);
     expect(g.isFinished(s, ctx(T0 + ORTALAMA_DURATION_MS - 1))).toBe(false);
     expect(g.isFinished(s, ctx(T0 + ORTALAMA_DURATION_MS))).toBe(true);
   });
@@ -70,8 +85,8 @@ describe("ortalamanin-yarisi kuralları", () => {
     let s = start(3);
     s = choose(s, "p1", 80, 1_000);
     s = choose(s, "p1", 10, 5_000);
-    s = choose(s, "p1", 30, 19_999);
-    expect(g.view(s, "p1", ctx(T0 + 19_999))).toEqual({ myChoice: 30, locked: false });
+    s = choose(s, "p1", 30, 9_999);
+    expect(g.view(s, "p1", ctx(T0 + 9_999))).toEqual({ myChoice: 30, locked: false });
     s = choose(s, "p2", 30);
     s = choose(s, "p3", 30);
     expect(reveal(s).choices).toEqual({ p1: 30, p2: 30, p3: 30 });
@@ -213,9 +228,14 @@ describe("ortalamanin-yarisi kuralları", () => {
     expect(g.publicView(again, ctx(T0 + ORTALAMA_CHOOSE_MS, 1, [])).reveal).toEqual(r);
   });
 
-  it("puanlar doğrudan genel skora gider (awards = miniScores)", () => {
-    const { res } = play([20, 30, 60, 50]);
-    expect(res.awards).toEqual(res.miniScores);
+  it("tur puanı mini puana yazılır; genel skor yalnız sonda toplamdan çevrilir", () => {
+    const { s, r } = play([20, 30, 60, 50]);
+    expect(r.points).toEqual({ p1: 2, p2: 1, p3: 0, p4: 0 });
+    const res = g.result(s);
+    // miniScores = 3 turun tur puanları toplamı; awards = toplamın sıralama ödülü.
+    const sum = (id: string) => [0, 1, 2].reduce((a, k) => a + (ortalamaSettle(s, k).points[id] ?? 0), 0);
+    expect(res.miniScores).toEqual({ p1: sum("p1"), p2: sum("p2"), p3: sum("p3"), p4: sum("p4") });
+    expect(res.awards).toEqual(ortalamaAwards(res.miniScores));
   });
 
   it("tick süre dolunca bir kez durum değiştirir, sonra aynı nesneyi döner", () => {
@@ -223,6 +243,7 @@ describe("ortalamanin-yarisi kuralları", () => {
     expect(g.tick(s, ctx(T0 + 5_000))).toBe(s);
     const t = g.tick(s, ctx(T0 + ORTALAMA_CHOOSE_MS));
     expect(t).not.toBe(s);
+    expect(t.revealed).toBe(1);
     expect(g.tick(t, ctx(T0 + ORTALAMA_CHOOSE_MS + 100))).toBe(t);
   });
 
@@ -254,17 +275,40 @@ describe("ortalamanin-yarisi gizlilik (yapısal)", () => {
     s = choose(s, "p1", 77);
     s = choose(s, "p2", 33);
     s = choose(s, "p3", 91);
-    for (const at of [0, 1, 10_000, 19_999]) {
+    for (const at of [0, 1, 5_000, 9_999]) {
       const pub = g.publicView(s, ctx(T0 + at));
       expect(pub.reveal).toBeNull();
-      expect(Object.keys(pub).sort()).toEqual(["endsAt", "lockedIds", "reveal", "revealEndsAt", "startedAt"]);
-      const flat = JSON.stringify(pub);
+      expect(Object.keys(pub).sort()).toEqual([
+        "endsAt",
+        "final",
+        "lockedIds",
+        "multiplier",
+        "previous",
+        "reveal",
+        "revealEndsAt",
+        "round",
+        "roundStartedAt",
+        "rounds",
+        "startedAt",
+        "totals",
+      ]);
+      const flat = JSON.stringify({ ...pub, totals: null });
       for (const id of ids(5)) expect(flat).not.toContain(id);
       for (const k of ["choices", "mean", "target", "order", "fallback", "distances", "points"]) {
         expect(keys(pub)).not.toContain(k);
       }
       // Sayısal alanlar yalnız zaman damgalarıdır.
-      expect(numbers(pub)).toEqual([pub.startedAt, pub.endsAt, pub.revealEndsAt]);
+      expect(pub.previous).toEqual([]);
+      expect(Object.values(pub.totals).every((v) => v === 0)).toBe(true);
+      expect(pub.final).toBeNull();
+      expect(numbers({ ...pub, totals: null, multiplier: null })).toEqual([
+        pub.startedAt,
+        pub.roundStartedAt,
+        pub.endsAt,
+        pub.revealEndsAt,
+        pub.round,
+        pub.rounds,
+      ]);
     }
   });
 
@@ -272,7 +316,7 @@ describe("ortalamanin-yarisi gizlilik (yapısal)", () => {
     let s = start(5, 12);
     s = choose(s, "p1", 77);
     s = choose(s, "p2", 33);
-    for (const at of [0, 5_000, 19_999, 20_000, 24_000]) {
+    for (const at of [0, 5_000, 9_999, 10_000, 14_000]) {
       expect(g.view(s, "p1", ctx(T0 + at))).toEqual({ myChoice: 77, locked: false });
       expect(g.view(s, "p2", ctx(T0 + at))).toEqual({ myChoice: 33, locked: false });
       expect(g.view(s, "p3", ctx(T0 + at))).toEqual({ myChoice: null, locked: false });
@@ -284,10 +328,10 @@ describe("ortalamanin-yarisi gizlilik (yapısal)", () => {
   it("göndermeyenin sunucu atadığı sayı, sonuç açılana kadar hiçbir görünümde yoktur (kendisininkinde bile)", () => {
     const s = start(4, 13);
     for (const p of [...ids(4), null]) {
-      const v = g.view(s, p, ctx(T0 + 19_999));
+      const v = g.view(s, p, ctx(T0 + 9_999));
       expect(v).toEqual({ myChoice: null, locked: false });
     }
-    expect(JSON.stringify(g.publicView(s, ctx(T0 + 19_999)))).not.toContain("fallback");
+    expect(JSON.stringify(g.publicView(s, ctx(T0 + 9_999)))).not.toContain("fallback");
   });
 
   it("süre dolunca seçimler herkese açılır (adil açılış)", () => {
@@ -316,19 +360,20 @@ describe("ortalamanin-yarisi erken bitiş", () => {
     const base = chosen();
     let s = base;
     for (const id of ids(3)) s = lockOk(s, id, 4_000);
-    expect(s.endsAt).toBe(T0 + 5_000);
+    expect(s.rounds[0]?.endsAt).toBe(T0 + 5_000);
     expect(g.publicView(s, ctx(T0 + 4_999)).reveal).toBeNull();
     expect(g.publicView(s, ctx(T0 + 5_000)).reveal?.target).toBe(10);
-    expect(g.isFinished(s, ctx(T0 + 4_999 + ORTALAMA_REVEAL_MS))).toBe(false);
-    expect(g.isFinished(s, ctx(T0 + 5_000 + ORTALAMA_REVEAL_MS))).toBe(true);
-    expect(g.tick(s, ctx(T0 + 5_000)).revealed).toBe(true);
+    // Oyun 1. tur erken bittiği için 4 sn erken biter (sonraki turlar kayar).
+    expect(g.isFinished(s, ctx(T0 + ORTALAMA_DURATION_MS - 5_000 - 1))).toBe(false);
+    expect(g.isFinished(s, ctx(T0 + ORTALAMA_DURATION_MS - 5_000))).toBe(true);
+    expect(g.tick(s, ctx(T0 + 5_000)).revealed).toBe(1);
     expect(g.result(s)).toEqual(g.result(base));
   });
 
   it("(b) bir kişi eksikken bitmez", () => {
     const s = lockOk(lockOk(chosen(), "p1", 2_000), "p2", 3_000);
-    expect(s.endsAt).toBe(T0 + ORTALAMA_CHOOSE_MS);
-    expect(g.publicView(s, ctx(T0 + 10_000)).reveal).toBeNull();
+    expect(s.rounds[0]?.endsAt).toBe(T0 + ORTALAMA_CHOOSE_MS);
+    expect(g.publicView(s, ctx(T0 + 9_999)).reveal).toBeNull();
     expect(g.isFinished(s, ctx(T0 + 10_000))).toBe(false);
   });
 
@@ -337,9 +382,9 @@ describe("ortalamanin-yarisi erken bitiş", () => {
     let s = start(3);
     s = choose(choose(s, "p1", 10), "p2", 20);
     s = lockOk(s, "p1", 2_000, online);
-    expect(s.endsAt).toBe(T0 + ORTALAMA_CHOOSE_MS);
+    expect(s.rounds[0]?.endsAt).toBe(T0 + ORTALAMA_CHOOSE_MS);
     s = lockOk(s, "p2", 3_000, online);
-    expect(s.endsAt).toBe(T0 + 4_000);
+    expect(s.rounds[0]?.endsAt).toBe(T0 + 4_000);
   });
 
   it("(d) kilit sonrası değişiklik ve ikinci kilit reddedilir; seçimsiz kilitlenemez", () => {
@@ -372,5 +417,253 @@ describe("ortalamanin-yarisi erken bitiş", () => {
   it("parseAction lock yalnız kind ile kabul edilir", () => {
     expect(g.parseAction({ kind: "lock" })).toEqual({ kind: "lock" });
     expect(g.parseAction({ kind: "lock", value: 3 })).toBeNull();
+  });
+});
+
+describe("ortalamanin-yarisi O5: 3 tur, değişen çarpan", () => {
+  /** 1. tur başlangıcından itibaren turların seçim bitişleri (erken bitiş yokken). */
+  const R = [0, 15_000, 30_000];
+  const END = (r: number) => (R[r] ?? 0) + ORTALAMA_CHOOSE_MS;
+  const vals = (r: number, values: number[]) => values.map((v, i) => [`p${i + 1}`, v, (R[r] ?? 0) + 1_000] as const);
+  function playAll(rounds: number[][], seed = 1): OrtalamaState {
+    let s = start(rounds[0]?.length ?? 4, seed);
+    rounds.forEach((values, r) => {
+      for (const [id, v, at] of vals(r, values)) s = choose(s, id, v, at);
+    });
+    return s;
+  }
+  const viewAt = (s: OrtalamaState, at: number) => g.publicView(s, ctx(T0 + at));
+
+  it("çarpanlar sırayla ½, ⅔, ¾", () => {
+    expect(ORTALAMA_MULTIPLIERS).toEqual([
+      { num: 1, den: 2 },
+      { num: 2, den: 3 },
+      { num: 3, den: 4 },
+    ]);
+    expect([0, 1, 2].map(ortalamaMultiplier)).toEqual(ORTALAMA_MULTIPLIERS);
+    const s = playAll([[40, 40, 40, 40], [40, 40, 40, 40], [40, 40, 40, 40]]);
+    expect(viewAt(s, END(0)).reveal?.target).toBe(20);
+    expect(viewAt(s, END(1)).reveal?.target).toBeCloseTo(80 / 3, 10);
+    expect(viewAt(s, END(2)).reveal?.target).toBe(30);
+    expect(viewAt(s, END(0)).multiplier).toEqual({ num: 1, den: 2 });
+    expect(viewAt(s, END(1)).multiplier).toEqual({ num: 2, den: 3 });
+    expect(viewAt(s, END(2)).multiplier).toEqual({ num: 3, den: 4 });
+  });
+
+  it("tur sıralaması: seçim 10 sn, sonuç 5 sn; tur numarası ve sonraki tur zamanında başlar", () => {
+    const s = start(4);
+    expect(viewAt(s, 0)).toMatchObject({ round: 1, rounds: 3, reveal: null });
+    expect(viewAt(s, 9_999)).toMatchObject({ round: 1, reveal: null });
+    expect(viewAt(s, 10_000)).toMatchObject({ round: 1 });
+    expect(viewAt(s, 10_000).reveal).not.toBeNull();
+    expect(viewAt(s, 14_999)).toMatchObject({ round: 1 });
+    expect(viewAt(s, 15_000)).toMatchObject({ round: 2, reveal: null, roundStartedAt: T0 + 15_000 });
+    expect(viewAt(s, 25_000).reveal).not.toBeNull();
+    expect(viewAt(s, 30_000)).toMatchObject({ round: 3, reveal: null, endsAt: T0 + 40_000, revealEndsAt: T0 + 47_000 });
+    expect(viewAt(s, 46_999)).toMatchObject({ round: 3 });
+    expect(g.isFinished(s, ctx(T0 + 46_999))).toBe(false);
+    expect(g.isFinished(s, ctx(T0 + 47_000))).toBe(true);
+    expect(ORTALAMA_ROUND_REVEAL_MS).toBe(5_000);
+  });
+
+  it("her turun seçim penceresi 10 sn (eski 20 sn'nin yarısı, alt sınır 10 sn)", () => {
+    const s = start(4);
+    expect(s.rounds.map((r) => r.endsAt - r.startAt)).toEqual([10_000, 10_000, 10_000]);
+    expect(Math.max(10_000, 20_000 / 2)).toBe(ORTALAMA_CHOOSE_MS);
+  });
+
+  it("seçimler turlar arası taşınmaz; her tur boş başlar ve kilit sıfırlanır", () => {
+    let s = start(3);
+    s = choose(s, "p1", 70, 1_000);
+    const lockedSoFar = g.reduce(s, "p1", { kind: "lock" }, ctx(T0 + 2_000));
+    if (isRejected(lockedSoFar)) throw new Error("kilit reddedildi");
+    expect(g.view(lockedSoFar, "p1", ctx(T0 + 2_000))).toEqual({ myChoice: 70, locked: true });
+    expect(g.view(lockedSoFar, "p1", ctx(T0 + 15_000))).toEqual({ myChoice: null, locked: false });
+    expect(viewAt(lockedSoFar, 15_000).lockedIds).toEqual([]);
+    // 2. turda yeniden seçilebilir.
+    const again = choose(lockedSoFar, "p1", 12, 16_000);
+    expect(g.view(again, "p1", ctx(T0 + 16_000))).toEqual({ myChoice: 12, locked: false });
+    expect(viewAt(again, 25_000).reveal?.choices.p1).toBe(12);
+    expect(viewAt(again, 10_000).reveal?.choices.p1).toBe(70);
+  });
+
+  it("sonuç gösterilirken (turlar arası) seçim reddedilir", () => {
+    const s = start(3);
+    expect(reject(s, "p1", 5, 10_000)).toEqual({ rejected: "ended" });
+    expect(reject(s, "p1", 5, 14_999)).toEqual({ rejected: "ended" });
+    expect(isRejected(reject(s, "p1", 5, 15_000))).toBe(false);
+    expect(reject(s, "p1", 5, 25_000)).toEqual({ rejected: "ended" });
+    expect(isRejected(reject(s, "p1", 5, 30_000))).toBe(false);
+    expect(reject(s, "p1", 5, 40_000)).toEqual({ rejected: "ended" });
+    expect(reject(s, "p1", 5, 47_000)).toEqual({ rejected: "ended" });
+  });
+
+  it("2. turdan itibaren önceki turun ortalaması ve hedefi görünür; 1. turda yok", () => {
+    const s = playAll([[10, 20, 30, 40], [50, 50, 50, 50], [0, 0, 0, 0]]);
+    expect(viewAt(s, 5_000).previous).toEqual([]);
+    expect(viewAt(s, 12_000).previous).toEqual([]);
+    const p2 = viewAt(s, 16_000);
+    expect(p2.round).toBe(2);
+    expect(p2.reveal).toBeNull();
+    expect(p2.previous).toEqual([{ mean: 25, target: 12.5, multiplier: { num: 1, den: 2 } }]);
+    const p3 = viewAt(s, 31_000);
+    expect(p3.previous).toHaveLength(2);
+    expect(p3.previous[1]).toMatchObject({ mean: 50 });
+    expect(p3.previous[1]?.target).toBeCloseTo(100 / 3, 10);
+    expect(p3.previous[1]?.multiplier).toEqual({ num: 2, den: 3 });
+    // Önceki tur özeti seçimleri/oyuncuları taşımaz.
+    expect(Object.keys(p2.previous[0] ?? {}).sort()).toEqual(["mean", "multiplier", "target"]);
+  });
+
+  it("tur sonuçları yalnız kendi turunun seçimlerinden hesaplanır (tur başına yakınlık puanı)", () => {
+    const s = playAll([
+      [20, 30, 60, 50], // ort 40, hedef 20 → p1 +2, p2 +1
+      [90, 10, 50, 30], // ort 45, hedef 30 → p4 +2, p3 (20) / p2 (20) eşit ikinci
+      [80, 40, 40, 60], // ort 55, hedef 41,25 → p2,p3 (1,25) eşit en yakın → +1 +1
+    ]);
+    expect(viewAt(s, END(0)).reveal?.points).toEqual({ p1: 2, p2: 1, p3: 0, p4: 0 });
+    const r2 = viewAt(s, END(1)).reveal;
+    expect(r2?.target).toBe(30);
+    expect(r2?.points).toEqual({ p1: 0, p2: 1, p3: 1, p4: 2 });
+    const r3 = viewAt(s, END(2)).reveal;
+    expect(r3?.target).toBe(41.25);
+    expect(r3?.points).toEqual({ p1: 0, p2: 1, p3: 1, p4: 0 });
+  });
+
+  it("mini puanlar turlar boyunca birikir; genel skor yalnız sonda bir kez", () => {
+    const s = playAll([
+      [20, 30, 60, 50],
+      [90, 10, 50, 30],
+      [80, 40, 40, 60],
+    ]);
+    // p1: 2+0+0 = 2, p2: 1+1+1 = 3, p3: 0+1+1 = 2, p4: 0+2+0 = 2
+    expect(viewAt(s, END(0)).totals).toEqual({ p1: 2, p2: 1, p3: 0, p4: 0 });
+    expect(viewAt(s, 16_000).totals).toEqual({ p1: 2, p2: 1, p3: 0, p4: 0 });
+    expect(viewAt(s, END(1)).totals).toEqual({ p1: 2, p2: 2, p3: 1, p4: 2 });
+    expect(viewAt(s, END(2)).totals).toEqual({ p1: 2, p2: 3, p3: 2, p4: 2 });
+    // Genel skor yalnız son turun sonucunda görünür.
+    expect(viewAt(s, END(0)).final).toBeNull();
+    expect(viewAt(s, END(1)).final).toBeNull();
+    expect(viewAt(s, END(2)).final).toEqual({ p1: 1, p2: 2, p3: 1, p4: 1 });
+    const res = g.result(s);
+    expect(res.miniScores).toEqual({ p1: 2, p2: 3, p3: 2, p4: 2 });
+    expect(res.awards).toEqual({ p1: 1, p2: 2, p3: 1, p4: 1 });
+  });
+
+  it("dönüşüm: en yüksek toplam +2, ikinci +1, diğerleri 0", () => {
+    expect(ortalamaAwards({ a: 5, b: 3, c: 1 })).toEqual({ a: 2, b: 1, c: 0 });
+  });
+  it("dönüşüm: ikincilik eşitse eşit olanların hepsi +1", () => {
+    expect(ortalamaAwards({ a: 5, b: 3, c: 3, d: 0 })).toEqual({ a: 2, b: 1, c: 1, d: 0 });
+  });
+  it("dönüşüm: lider eşitse liderlerin hepsi +1, +2 yok, diğerleri 0", () => {
+    expect(ortalamaAwards({ a: 5, b: 5, c: 3 })).toEqual({ a: 1, b: 1, c: 0 });
+    expect(ortalamaAwards({ a: 4, b: 4, c: 4 })).toEqual({ a: 1, b: 1, c: 1 });
+  });
+
+  it("şişme yok: 3 tur boyunca bile genel skor dağılımı tek turluk oyunla aynı (en çok +2 ve +1'ler)", () => {
+    for (let seed = 1; seed <= 25; seed++) {
+      const s = start(5, seed);
+      const total = Object.values(g.result(s).awards);
+      expect(Math.max(...total)).toBeLessThanOrEqual(2);
+      expect(total.reduce((a, b) => a + b, 0)).toBeLessThanOrEqual(5);
+    }
+  });
+
+  it("göndermeyen her tur için ayrı rastgele sayı alır (turlar arası farklı), tur içinde sabit", () => {
+    let differs = 0;
+    for (let seed = 1; seed <= 20; seed++) {
+      const s = start(4, seed);
+      for (const round of s.rounds) {
+        for (const v of Object.values(round.fallback)) {
+          expect(Number.isInteger(v) && v >= 0 && v <= 100).toBe(true);
+        }
+      }
+      if (JSON.stringify(s.rounds[0]?.fallback) !== JSON.stringify(s.rounds[1]?.fallback)) differs++;
+      const first = viewAt(s, END(0)).reveal?.choices;
+      const second = viewAt(s, END(1)).reveal?.choices;
+      expect(Object.keys(first ?? {})).toEqual(ids(4));
+      expect(Object.keys(second ?? {})).toEqual(ids(4));
+    }
+    expect(differs).toBeGreaterThan(15);
+  });
+
+  it("erken bitiş her tur için ayrı: 1. tur erken biterse sonraki turlar öne çekilir", () => {
+    const online = ids(3);
+    let s = start(3);
+    for (const [i, id] of ids(3).entries()) s = choose(s, id, 10 * (i + 1), 1_000);
+    for (const id of ids(3)) {
+      const r = g.reduce(s, id, { kind: "lock" }, ctx(T0 + 3_000, 1, online));
+      if (isRejected(r)) throw new Error(r.rejected);
+      s = r;
+    }
+    // 1. tur 3 sn + 1 sn bekleme = 4 sn'de biter; sonuç 5 sn → 2. tur 9. sn'de başlar (6 sn öne).
+    expect(s.rounds.map((r) => [r.startAt - T0, r.endsAt - T0, r.revealEndsAt - T0])).toEqual([
+      [0, 4_000, 9_000],
+      [9_000, 19_000, 24_000],
+      [24_000, 34_000, 41_000],
+    ]);
+    expect(viewAt(s, 8_999)).toMatchObject({ round: 1 });
+    expect(viewAt(s, 9_000)).toMatchObject({ round: 2, reveal: null });
+    // 2. turda herkes kilitlerse yalnız kendi turu kısalır.
+    for (const [i, id] of ids(3).entries()) {
+      const r = g.reduce(s, id, { kind: "choose", value: 20 + i }, ctx(T0 + 10_000));
+      if (isRejected(r)) throw new Error(r.rejected);
+      s = r;
+    }
+    for (const id of ids(3)) {
+      const r = g.reduce(s, id, { kind: "lock" }, ctx(T0 + 11_000, 1, online));
+      if (isRejected(r)) throw new Error(r.rejected);
+      s = r;
+    }
+    expect(s.rounds[1]?.endsAt).toBe(T0 + 12_000);
+    expect(s.rounds[2]?.startAt).toBe(T0 + 17_000);
+    expect(s.rounds[2]?.revealEndsAt).toBe(T0 + 34_000);
+    expect(g.isFinished(s, ctx(T0 + 33_999))).toBe(false);
+    expect(g.isFinished(s, ctx(T0 + 34_000))).toBe(true);
+  });
+
+  it("bağlantısı kopanı beklemez: bağlı olanlar kilitleyince tur erken biter (yalnız reduce bağlı listesine bakar)", () => {
+    const online = ["p1", "p2"];
+    let s = start(3);
+    s = choose(choose(s, "p1", 10, 1_000), "p2", 20, 1_000);
+    for (const id of online) {
+      const r = g.reduce(s, id, { kind: "lock" }, ctx(T0 + 2_000, 1, online));
+      if (isRejected(r)) throw new Error(r.rejected);
+      s = r;
+    }
+    expect(s.rounds[0]?.endsAt).toBe(T0 + 3_000);
+  });
+
+  it("belirlilik: aynı tohum ve eylemler aynı sonucu ve görünümü verir; tick sıklığı etkilemez", () => {
+    const run = (seed: number, tickStep: number) => {
+      let s = start(5, seed);
+      const rng = createRng(seed + 100);
+      for (let t = 0; t <= ORTALAMA_DURATION_MS; t += 250) {
+        if (rng.int(3) === 0) {
+          const id = `p${1 + rng.int(5)}`;
+          const r = g.reduce(s, id, { kind: "choose", value: rng.int(101) }, ctx(T0 + t, seed));
+          if (!isRejected(r)) s = r;
+        }
+        if (tickStep > 0) s = g.tick(s, ctx(T0 + t, seed));
+      }
+      return { result: g.result(s), views: [5_000, 12_000, 20_000, 33_000, 44_000].map((at) => viewAt(s, at)) };
+    };
+    for (const seed of [1, 2, 3, 99]) {
+      expect(run(seed, 250)).toEqual(run(seed, 250));
+      expect(run(seed, 250).result).toEqual(run(seed, 0).result);
+    }
+    expect(JSON.stringify(run(1, 250).result)).not.toEqual(JSON.stringify(run(2, 250).result));
+  });
+
+  it("gizlilik: gelecek turların rastgele sayıları ve henüz açılmamış turun seçimleri görünümde yok", () => {
+    let s = start(4, 21);
+    s = choose(s, "p1", 77, 16_000);
+    for (const at of [0, 9_999, 15_000, 16_500, 24_999, 30_000, 39_999]) {
+      const pub = JSON.stringify(viewAt(s, at));
+      expect(pub).not.toContain("fallback");
+      expect(pub).not.toContain("choices");
+      expect(g.view(s, "p2", ctx(T0 + at))).toEqual({ myChoice: null, locked: false });
+    }
   });
 });
