@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { GOOGLE_CALLBACK_PATH, type GoogleConfig } from "./google.js";
+import type { MailConfig } from "./mail.js";
 import type { VapidConfig } from "./webpush.js";
 
 export interface Config {
@@ -20,6 +21,8 @@ export interface Config {
   vapid: VapidConfig | null;
   /** Google ile giriş; kimlik, sır ve genel adres yoksa null (düğme gizlenir). */
   google: GoogleConfig | null;
+  /** E-posta (doğrulama, şifre sıfırlama); anahtar, gönderen ve genel adres yoksa null (özellik kapalı). */
+  mail: MailConfig | null;
 }
 
 export interface ServerLimits {
@@ -80,6 +83,23 @@ export function loadGoogle(env: NodeJS.ProcessEnv): GoogleConfig | null {
   return { clientId, clientSecret, redirectUri: `${base.origin}${GOOGLE_CALLBACK_PATH}` };
 }
 
+/**
+ * `GLIX_RESEND_API_KEY` ve `GLIX_MAIL_FROM` ikisi de doluysa ve `GLIX_PUBLIC_URL` geçerliyse e-posta açıktır;
+ * aksi halde null: kayıt çalışır (doğrulanmamış), şifre sıfırlama gizlenir.
+ */
+export function loadMail(env: NodeJS.ProcessEnv): MailConfig | null {
+  const apiKey = env.GLIX_RESEND_API_KEY?.trim() ?? "";
+  const from = env.GLIX_MAIL_FROM?.trim() ?? "";
+  if (!apiKey || !from) return null;
+  try {
+    const base = new URL(env.GLIX_PUBLIC_URL?.trim() ?? "");
+    if (base.protocol !== "https:" && base.protocol !== "http:") return null;
+    return { apiKey, from, publicUrl: base.origin };
+  } catch {
+    return null;
+  }
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const port = Number(env.PORT ?? 3900);
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error("PORT geçersiz");
@@ -111,6 +131,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     revision: env.GIT_SHA || "dev",
     vapid: loadVapid(env),
     google: loadGoogle(env),
+    mail: loadMail(env),
     statsDb,
     accountsDb: env.ACCOUNTS_DB || statsDb,
   };

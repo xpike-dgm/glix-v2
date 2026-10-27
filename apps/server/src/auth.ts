@@ -14,6 +14,7 @@ import {
   suggestUsername,
 } from "./google.js";
 import { log } from "./log.js";
+import { type MailService, resetMessage, verifyMessage } from "./mail.js";
 import type { IpLimiter } from "./ratelimit.js";
 import { SECURITY_HEADERS } from "./static.js";
 
@@ -196,6 +197,8 @@ export interface AuthEnv {
   allowedOrigins: readonly string[] | null;
   /** Google ile giriş; ayarlı değilse null (uçlar kapalı, `me` bunu bildirir). */
   google: GoogleAuth | null;
+  /** E-posta (doğrulama, şifre sıfırlama); ayarlı değilse null. */
+  mail: MailService | null;
 }
 
 function send(
@@ -307,6 +310,9 @@ async function register(req: IncomingMessage, res: ServerResponse, env: AuthEnv)
     else fail(res, 409, "email_taken", "Bu e-posta ile zaten bir hesap var.", "email");
     return;
   }
+  // Kayıttaki ilk e-posta da yeniden gönderim sınırına sayılır.
+  env.mail?.throttle.allow(`verify:${made.account.id}`, env.now, MINUTE_MS, DAY_LIMIT);
+  sendVerification(env, made.account);
   await startSession(res, env, req, made.account);
 }
 
@@ -343,9 +349,133 @@ function me(req: IncomingMessage, res: ServerResponse, env: AuthEnv): void {
     ok: true,
     account: account ? { username: account.username, email: account.email } : null,
     // İstemci Google düğmesini ve "Google hesabını bağla" satırını buna göre gösterir.
-    providers: { google: env.google !== null },
-    linked: { google: account ? env.accounts.hasGoogle(account.id) : false },
+    providers: { google: env.google !== null, mail: env.mail !== null },
+    linked: {
+      google: account ? env.accounts.hasGoogle(account.id) : false,
+      password: account ? env.accounts.passwordHash(account.id) !== null : false,
+    },
+    verified: account ? env.accounts.isVerified(account.id) : false,
   });
+}
+
+// ---- E-posta doğrulama ve şifre sıfırlama -----------------------------------------------------------------
+
+const VERIFY_TTL_MS = 24 * 3600 * 1000;
+const RESET_TTL_MS = 3600 * 1000;
+const MINUTE_MS = 60 * 1000;
+const DAY_LIMIT = 5;
+
+/** Yeni belirteç üretir (ham değer yalnız e-postaya gider), özetini saklar. */
+function issueToken(env: AuthEnv, kind: "verify" | "reset", accountId: number): string {
+  const token = randomBytes(32).toString("base64url");
+  const ttl = kind === "verify" ? VERIFY_TTL_MS : RESET_TTL_MS;
+  env.accounts.createToken(kind, accountId, hashToken(token), env.now + ttl);
+  return token;
+}
+
+/** Doğrulama e-postasını arka planda gönderir; hata kaydı bozmaz. */
+function sendVerification(env: AuthEnv, account: Account): void {
+  const mail = env.mail;
+  if (!mail) return;
+  try {
+    const link = `${mail.publicUrl}${AUTH_PREFIX}verify?t=${issueToken(env, "verify", account.id)}`;
+    void mail.mailer.send(verifyMessage(account.email, link));
+  } catch {
+    log.warn("mail_failed");
+  }
+}
+
+async function verifyLink(req: IncomingMessage, res: ServerResponse, env: AuthEnv): Promise<void> {
+  const bounce = (code: "dogrulandi" | "gecersiz"): void => redirect(res, `/#eposta=${code}`);
+  if (!env.limiter.takeAuth(env.ip)) return bounce("gecersiz");
+  const t = new URL(req.url ?? "", "http://x").searchParams.get("t");
+  if (!t || !TOKEN_PATTERN.test(t)) return bounce("gecersiz");
+  const id = env.accounts.consumeToken("verify", hashToken(t), env.now);
+  if (id === null) return bounce("gecersiz");
+  env.accounts.markVerified(id);
+  bounce("dogrulandi");
+}
+
+async function resendVerification(req: IncomingMessage, res: ServerResponse, env: AuthEnv): Promise<void> {
+  const mail = env.mail;
+  if (!mail) return fail(res, 404, "mail_disabled", "E-posta gönderimi şu an kapalı.");
+  const account = accountFromCookie(env.accounts, req.headers.cookie, env.now);
+  if (!account) return fail(res, 401, "login_required", "Önce giriş yap.");
+  if (env.accounts.isVerified(account.id)) return send(res, 200, { ok: true, verified: true });
+  if (!mail.throttle.allow(`verify:${account.id}`, env.now, MINUTE_MS, DAY_LIMIT))
+    return fail(res, 429, "rate_limited", "Biraz bekleyip tekrar dene.");
+  sendVerification(env, account);
+  send(res, 200, { ok: true, verified: false });
+}
+
+async function resetRequest(req: IncomingMessage, res: ServerResponse, env: AuthEnv): Promise<void> {
+  const mail = env.mail;
+  if (!mail) return fail(res, 404, "mail_disabled", "E-posta gönderimi şu an kapalı.");
+  const data = await readJson(req);
+  const email = isRecord(data) && exactKeys(data, ["email"]) ? normalizeEmail(data.email) : null;
+  if (email === null) return fail(res, 400, "invalid_input", FIELD_TEXT.email, "email");
+  // IP başına günde 20 istek; adres başına dakikada 1 / günde 5. Aşılınca da hesap bilgisi sızmasın diye yanıt aynı.
+  if (!mail.throttle.allow(`reset-ip:${env.ip}`, env.now, 0, 20))
+    return fail(res, 429, "rate_limited", "Çok fazla deneme yaptın, biraz bekleyip tekrar dene.");
+  if (mail.throttle.allow(`reset:${email}`, env.now, MINUTE_MS, DAY_LIMIT)) {
+    // Şifresiz (yalnız Google) hesap da bağlantıyla ilk şifresini belirleyebilir.
+    const account = env.accounts.findByEmail(email);
+    if (account) {
+      try {
+        const link = `${mail.publicUrl}/#sifre-sifirla=${issueToken(env, "reset", account.id)}`;
+        void mail.mailer.send(resetMessage(account.email, link));
+      } catch {
+        log.warn("mail_failed");
+      }
+    }
+  }
+  send(res, 200, { ok: true });
+}
+
+async function resetConfirm(req: IncomingMessage, res: ServerResponse, env: AuthEnv): Promise<void> {
+  const data = await readJson(req);
+  if (!isRecord(data) || !exactKeys(data, ["token", "password"]) || typeof data.token !== "string")
+    return fail(res, 400, "invalid_input", "Geçersiz istek.");
+  if (!validPassword(data.password)) return fail(res, 400, "invalid_input", FIELD_TEXT.password, "password");
+  const expired = (): void =>
+    fail(res, 410, "token_invalid", "Bağlantı geçersiz ya da süresi dolmuş. Yeniden iste.");
+  if (!TOKEN_PATTERN.test(data.token)) return expired();
+  const hash = await hashPassword(data.password);
+  const id = env.accounts.consumeToken("reset", hashToken(data.token), env.now);
+  if (id === null) return expired();
+  // Bağlantı e-postaya ulaşıldığını kanıtlar; tüm oturumlar düşer, kullanıcı yeni oturumla girer.
+  env.accounts.replacePassword(id, hash, null);
+  env.accounts.markVerified(id);
+  const account = env.accounts.findById(id);
+  if (!account) return expired();
+  await startSession(res, env, req, account);
+}
+
+async function changePassword(req: IncomingMessage, res: ServerResponse, env: AuthEnv): Promise<void> {
+  const token = readSessionToken(req.headers.cookie);
+  const account = accountFromCookie(env.accounts, req.headers.cookie, env.now);
+  if (!account || !token) return fail(res, 401, "login_required", "Önce giriş yap.");
+  const data = await readJson(req);
+  if (!isRecord(data) || !exactKeys(data, ["current", "password"]) || typeof data.current !== "string")
+    return fail(res, 400, "invalid_input", "Geçersiz istek.");
+  if (!validPassword(data.password)) return fail(res, 400, "invalid_input", FIELD_TEXT.password, "password");
+  const stored = env.accounts.passwordHash(account.id);
+  if (!stored)
+    return fail(
+      res,
+      409,
+      "no_password",
+      "Hesabında şifre yok. Şifremi unuttum ile bir şifre belirleyebilirsin.",
+    );
+  const key = `pw:${account.id}`;
+  if (!env.limiter.canTryLogin(key))
+    return fail(res, 429, "rate_limited", "Çok fazla deneme yaptın, biraz bekleyip tekrar dene.");
+  if (!(await verifyPassword(data.current, stored))) {
+    env.limiter.recordFailedLogin(key);
+    return fail(res, 401, "bad_credentials", "Mevcut şifre hatalı.", "current");
+  }
+  env.accounts.replacePassword(account.id, await hashPassword(data.password), hashToken(token));
+  send(res, 200, { ok: true });
 }
 
 // ---- Google ile giriş -------------------------------------------------------------------------------------
@@ -472,11 +602,16 @@ export function handleAuth(req: IncomingMessage, res: ServerResponse, env: AuthE
       if (method !== "GET") return fail(res, 405, "method_not_allowed", "Geçersiz istek.");
       return name === "google/start" ? googleStart(req, res, env) : googleCallback(req, res, env);
     }
+    if (name === "verify") {
+      if (method !== "GET") return fail(res, 405, "method_not_allowed", "Geçersiz istek.");
+      return verifyLink(req, res, env);
+    }
     if (name === "me") {
       if (method !== "GET") return fail(res, 405, "method_not_allowed", "Geçersiz istek.");
       return me(req, res, env);
     }
-    if (name !== "register" && name !== "login" && name !== "logout" && name !== "google/complete")
+    const posts = ["register", "login", "logout", "google/complete", "verify/resend", "reset/request"];
+    if (!posts.includes(name) && name !== "reset/confirm" && name !== "password")
       return fail(res, 404, "not_found", "Bulunamadı.");
     if (method !== "POST") return fail(res, 405, "method_not_allowed", "Geçersiz istek.");
     if (!originAllowed(req, env.allowedOrigins)) return fail(res, 403, "forbidden", "İstek reddedildi.");
@@ -486,6 +621,10 @@ export function handleAuth(req: IncomingMessage, res: ServerResponse, env: AuthE
     if (!env.limiter.takeAuth(env.ip))
       return fail(res, 429, "rate_limited", "Çok fazla deneme yaptın, biraz bekleyip tekrar dene.");
     if (name === "google/complete") return googleComplete(req, res, env);
+    if (name === "verify/resend") return resendVerification(req, res, env);
+    if (name === "reset/request") return resetRequest(req, res, env);
+    if (name === "reset/confirm") return resetConfirm(req, res, env);
+    if (name === "password") return changePassword(req, res, env);
     if (name === "register") return register(req, res, env);
     return login(req, res, env);
   };

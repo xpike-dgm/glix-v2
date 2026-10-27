@@ -364,6 +364,13 @@ export function startMock(kind: string, params: URLSearchParams): void {
   setState("session", { token: "mock", playerId: SELF, roomCode: "KX7QP" });
   // `&google=1`: Google ile giriş açık (düğmeler görünür).
   if (params.get("google") === "1") setState("google", { enabled: true, linked: false });
+  // `&mail=1`: e-posta açık (Şifremi unuttum görünür); `&verified=1`: e-posta doğrulanmış; `&pw=0`: şifresiz hesap.
+  if (params.get("mail") === "1")
+    setState("mail", {
+      enabled: true,
+      verified: params.get("verified") === "1",
+      hasPassword: params.get("pw") !== "0",
+    });
   switch (kind) {
     case "home":
       // `&acct=1`: giriş yapmış kullanıcı (Oda kur + çıkış); varsayılan misafir.
@@ -384,6 +391,12 @@ export function startMock(kind: string, params: URLSearchParams): void {
     case "register":
     case "aydinlatma":
       setState({ nav: kind });
+      break;
+    case "unuttum":
+      setState({ nav: "unuttum" });
+      break;
+    case "yeni-sifre":
+      setState({ nav: "yeniSifre" });
       break;
     case "google-ad":
       setGooglePending({ token: "A".repeat(43), suggestion: "kisi_adi" });
@@ -434,6 +447,8 @@ export function startMock(kind: string, params: URLSearchParams): void {
     kind === "login" ||
     kind === "register" ||
     kind === "aydinlatma" ||
+    kind === "unuttum" ||
+    kind === "yeni-sifre" ||
     kind === "google-ad"
   )
     setState("session", null);

@@ -17,6 +17,8 @@ export interface AccountWithHash extends Account {
   passHash: string | null;
 }
 
+export type TokenKind = "verify" | "reset";
+
 export type CreateResult = { ok: true; account: Account } | { ok: false; field: "username" | "email" };
 
 /**
@@ -28,6 +30,7 @@ export interface AccountStore {
   create(username: string, email: string, passHash: string, now: number): CreateResult;
   /** Kullanıcı adı ya da e-posta (küçük harfe çevrilmiş) ile bulur. */
   findByLogin(login: string): AccountWithHash | null;
+  findById(id: number): Account | null;
   /** Google `sub` ile bağlı hesap. */
   findByGoogleSub(sub: string): Account | null;
   /** E-posta (küçük harfe çevrilmiş) ile hesap. */
@@ -43,6 +46,23 @@ export interface AccountStore {
     sub: string,
     now: number,
   ): CreateResult | { ok: false; field: "sub" };
+  /** E-postası doğrulanmış mı. */
+  isVerified(accountId: number): boolean;
+  /** Şifre özeti; Google ile açılıp şifre belirlenmemişse null. */
+  passwordHash(accountId: number): string | null;
+  /** E-postayı doğrulanmış işaretler. */
+  markVerified(accountId: number): void;
+  /**
+   * Tek kullanımlık belirteç kaydeder (yalnız özeti). `reset` türünde hesabın eski sıfırlama belirteçleri silinir.
+   */
+  createToken(kind: TokenKind, accountId: number, tokenHash: string, expiresAt: number): void;
+  /** Geçerli belirteci tek hamlede tüketir; hesabı döner. Yoksa, süresi dolmuşsa ya da kullanılmışsa null. */
+  consumeToken(kind: TokenKind, tokenHash: string, now: number): number | null;
+  /**
+   * Yeni şifre özeti yazar; hesabın sıfırlama belirteçlerini siler ve oturumlarını siler
+   * (`keepSession` verilirse yalnız o oturum kalır).
+   */
+  replacePassword(accountId: number, passHash: string, keepSession: string | null): void;
   createSession(accountId: number, tokenHash: string, now: number): void;
   /** Geçerli oturumun hesabı; süresi dolmuşsa ya da yoksa null. */
   resolveSession(tokenHash: string, now: number): Account | null;
@@ -121,6 +141,7 @@ export function createAccounts(path: string): AccountStore {
   );
   const bySub = db.prepare("SELECT id, username, email FROM accounts WHERE google_sub = ?");
   const byEmailRow = db.prepare("SELECT id, username, email FROM accounts WHERE email = ?");
+  const byId = db.prepare("SELECT id, username, email FROM accounts WHERE id = ?");
   const subOf = db.prepare("SELECT google_sub FROM accounts WHERE id = ?");
   const setSub = db.prepare("UPDATE accounts SET google_sub = ? WHERE id = ? AND google_sub IS NULL");
   const insertGoogle = db.prepare(
@@ -137,8 +158,45 @@ export function createAccounts(path: string): AccountStore {
   const removeSession = db.prepare("DELETE FROM sessions WHERE id_hash = ?");
   const purgeSessions = db.prepare("DELETE FROM sessions WHERE created_at < ?");
   const purgeTokens = db.prepare("DELETE FROM email_tokens WHERE expires_at < ?");
+  const verifiedOf = db.prepare("SELECT email_verified, pass_hash FROM accounts WHERE id = ?");
+  const setVerified = db.prepare("UPDATE accounts SET email_verified = 1 WHERE id = ?");
+  const insertToken = db.prepare(
+    "INSERT INTO email_tokens (kind, token_hash, account_id, expires_at) VALUES (?, ?, ?, ?)",
+  );
+  const dropTokens = db.prepare("DELETE FROM email_tokens WHERE kind = ? AND account_id = ?");
+  const takeToken = db.prepare(
+    "DELETE FROM email_tokens WHERE kind = ? AND token_hash = ? RETURNING account_id, expires_at",
+  );
+  const setPass = db.prepare("UPDATE accounts SET pass_hash = ? WHERE id = ?");
+  const dropSessions = db.prepare("DELETE FROM sessions WHERE account_id = ?");
+  const dropOtherSessions = db.prepare("DELETE FROM sessions WHERE account_id = ? AND id_hash != ?");
   let closed = false;
   return {
+    isVerified(accountId) {
+      const row = verifiedOf.get(accountId) as { email_verified: number } | undefined;
+      return row?.email_verified === 1;
+    },
+    passwordHash(accountId) {
+      const row = verifiedOf.get(accountId) as { pass_hash: string | null } | undefined;
+      return row?.pass_hash ?? null;
+    },
+    markVerified(accountId) {
+      setVerified.run(accountId);
+    },
+    createToken(kind, accountId, tokenHash, expiresAt) {
+      if (kind === "reset") dropTokens.run(kind, accountId);
+      insertToken.run(kind, tokenHash, accountId, expiresAt);
+    },
+    consumeToken(kind, tokenHash, now) {
+      const row = takeToken.get(kind, tokenHash) as { account_id: number; expires_at: number } | undefined;
+      return row && row.expires_at > now ? row.account_id : null;
+    },
+    replacePassword(accountId, passHash, keepSession) {
+      setPass.run(passHash, accountId);
+      dropTokens.run("reset", accountId);
+      if (keepSession === null) dropSessions.run(accountId);
+      else dropOtherSessions.run(accountId, keepSession);
+    },
     create(username, email, passHash, now) {
       const lc = username.toLowerCase();
       if (byUsername.get(lc)) return { ok: false, field: "username" };
@@ -158,6 +216,10 @@ export function createAccounts(path: string): AccountStore {
       const lc = login.toLowerCase();
       const row = byLogin.get(lc, lc) as AccountRow | undefined;
       return row ? { id: row.id, username: row.username, email: row.email, passHash: row.pass_hash } : null;
+    },
+    findById(id) {
+      const row = byId.get(id) as Account | undefined;
+      return row ? { id: row.id, username: row.username, email: row.email } : null;
     },
     findByGoogleSub(sub) {
       const row = bySub.get(sub) as Account | undefined;

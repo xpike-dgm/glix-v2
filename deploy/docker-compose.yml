@@ -24,6 +24,9 @@ services:
       GLIX_GOOGLE_CLIENT_ID: ${GLIX_GOOGLE_CLIENT_ID:-}
       GLIX_GOOGLE_CLIENT_SECRET: ${GLIX_GOOGLE_CLIENT_SECRET:-}
       GLIX_PUBLIC_URL: ${GLIX_PUBLIC_URL:-}
+      # E-posta: doğrulama ve şifre sıfırlama (Resend; boşsa kapalı, sıfırlama gizlenir). Bağlantılar GLIX_PUBLIC_URL ile kurulur.
+      GLIX_RESEND_API_KEY: ${GLIX_RESEND_API_KEY:-}
+      GLIX_MAIL_FROM: ${GLIX_MAIL_FROM:-}
     volumes:
       - glix-data:/data
     mem_limit: 512m
