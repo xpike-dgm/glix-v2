@@ -333,6 +333,16 @@ en yakın oyuncu +1 alır; tek faz 18 saniyedir.
     edilmez. Eşit mesafe olağan dışı biçimde oluşursa aynı dereceyi paylaşanlar
     aynı ödülü alır, sonraki derece atlanır.
 
+**Değişiklik (O6, Ekim 2026, sahip onayı) — aşağıdaki cevapların önüne geçer:**
+
+- Hedef süre her turda **7 ile 13 saniye arasında rastgele bir tam saniye** seçilir ve oyun başında herkese
+  gösterilir ("Hedef: 11 saniye"). Gerçek sayaç yine tamamen gizlidir.
+- Aşama süresi **hedef + 8 saniye**dir (hedef 10 iken eskisi gibi 18 saniye).
+- **Hiç basmayan oyuncu sıralamaya girmez**, puan almaz ve hedefe en yakın sayılamaz (eski "18. saniyede basmış
+  kabul edilir" kuralı kalkar). Ödüller yalnız basanlar arasında dağıtılır: en yakın +2, ikinci en yakın +1.
+  Tek kişi bastıysa yalnız o +2 alır; kimse basmadıysa kimse puan almaz.
+- Tutorial adımı 2: "İçinden hedef süreyi say."
+
 ## 10. Kör Bomba — `kor-bomba`
 
 **Durum: KİLİTLİ**
@@ -943,6 +953,17 @@ doğru cevaplarla tur uzayabilir.
     cevap gelmezse yanlış cevapla aynı sonuç uygulanır. Elenen oyuncu yeniden
     sıraya girmez. Başlangıç oyuncu sayısının yarısı elenince oyun biter; son
     hata sonucu yarı eşiği aşarsa sonuç o hatadan hemen sonra açılır.
+
+**Değişiklik (O1, Ekim 2026, sahip onayı) — aşağıdaki cevapların önüne geçer:**
+
+- **Toplam süre sınırı 90 saniye.** Oyun, başlangıç oyuncularının yarısı elenince ya da 90 saniye dolunca (hangisi
+  önce olursa) biter. Süre dolduğunda giriş yapmakta olan oyuncunun sırası iptal edilir, cezası olmaz. Bitişte
+  puanlama değişmez: elenenler −1, kalanlar +1.
+- **Ani ölüm:** 60. saniyeden sonra her yeni sırada dizi bir yerine **iki** renk uzar.
+- **Dizi gösterimi hızlanır:** her renk yaklaşık 350 ms yanar (önceki daha yavaş gösterim yerine).
+- **Giriş süresi:** `1,5 saniye + dizi uzunluğu × 1 saniye` (önceki `dizi uzunluğu × 3` yerine). Süre içinde cevap
+  gelmezse yanlış cevapla aynı sonuç uygulanır.
+- Ekranda kalan toplam süre görünür; son 30 saniye ("ani ölüm") ayrıca belirtilir.
 
 ## 25. Kusursuz Denge — `kusursuz-denge`
 
