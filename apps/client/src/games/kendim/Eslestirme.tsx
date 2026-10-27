@@ -1,4 +1,5 @@
-import { createMemo, createSignal, For, Show } from "solid-js";
+import { createMemo, createSignal, For, onCleanup, Show } from "solid-js";
+import { Portal } from "solid-js/web";
 import { hapticReady, hapticTap } from "../../fx/haptics.js";
 import { ready as readySound, tap, unlockAudio } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
@@ -7,6 +8,7 @@ import { look } from "../../ui/avatars.js";
 import { BottomSheet } from "../../ui/BottomSheet.js";
 import { type AckLike, createOptimistic } from "../../ui/optimistic.js";
 import { TamamBar } from "../../ui/TamamBar.js";
+import { clampToViewport, type DropTarget, exceedsDragThreshold, hitTest } from "./dragMatch.js";
 import type { Crew } from "./KendimScreen.js";
 import { cardOfPlayer, type KendimScreenView, pairOf, wordLen } from "./view.js";
 
@@ -22,8 +24,16 @@ const samePairs = (a: Record<string, string>, b: Record<string, string>): boolea
   return ka.length === Object.keys(b).length && ka.every((k) => a[k] === b[k]);
 };
 
+interface Drag {
+  card: number;
+  text: string;
+  x: number;
+  y: number;
+  over: string | null;
+}
+
 /**
- * Eşleştirme: karışık hologram kartlar; bir karta dokun, kimin olduğunu seç. Eşleştirmeler Tamam'a kadar
+ * Eşleştirme: karışık hologram kartlar; kartı oyuncunun avatarına sürükle ya da karta dokunup kimin olduğunu seç. Eşleştirmeler Tamam'a kadar
  * değiştirilebilir, boş bırakılan kart 0'dır.
  */
 export function Eslestirme(props: Props) {
@@ -41,9 +51,7 @@ export function Eslestirme(props: Props) {
   const openCard = () => props.view.cards.find((c) => c.id === open()) ?? null;
   const paired = () => props.view.cards.filter((c) => pairOf(lv(), c.id) !== null).length;
 
-  const choose = (target: string | null): void => {
-    const card = open();
-    if (card === null) return;
+  const assign = (card: number, target: string | null): void => {
     unlockAudio();
     tap();
     hapticTap();
@@ -52,7 +60,58 @@ export function Eslestirme(props: Props) {
     if (target === null) delete next[String(card)];
     else next[String(card)] = target;
     setPairs(next, () => sendActionAck({ kind: "match", card, target }));
+  };
+  const choose = (target: string | null): void => {
+    const card = open();
+    if (card === null) return;
+    assign(card, target);
     setOpen(null);
+  };
+
+  // Sürükle-bırak: kart parmakla avatarın üstüne taşınır. Dokunma yolu (alt sayfa) yedek olarak durur.
+  const [drag, setDrag] = createSignal<Drag | null>(null);
+  const trayRefs = new Map<string, HTMLElement>();
+  let session: { card: number; text: string; pointer: number; x: number; y: number; active: boolean } | null =
+    null;
+  let swallowClick = false;
+  let swallowTimer: ReturnType<typeof setTimeout> | undefined;
+  onCleanup(() => clearTimeout(swallowTimer));
+  const targets = (): DropTarget[] =>
+    [...trayRefs].map(([id, el]) => {
+      const r = el.getBoundingClientRect();
+      return { id, left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+    });
+  const moveTo = (e: PointerEvent): void => {
+    if (!session || e.pointerId !== session.pointer) return;
+    if (!session.active) {
+      if (!exceedsDragThreshold(e.clientX - session.x, e.clientY - session.y)) return;
+      session.active = true;
+      unlockAudio();
+      hapticTap();
+    }
+    const p = clampToViewport(e.clientX, e.clientY, window.innerWidth, window.innerHeight);
+    setDrag({
+      card: session.card,
+      text: session.text,
+      x: p.x,
+      y: p.y,
+      over: hitTest(e.clientX, e.clientY, targets()),
+    });
+  };
+  const endDrag = (e: PointerEvent, drop: boolean): void => {
+    if (!session || e.pointerId !== session.pointer) return;
+    const s = session;
+    session = null;
+    if (!s.active) return;
+    const target = drop ? hitTest(e.clientX, e.clientY, targets()) : null;
+    setDrag(null);
+    // Sürüklemeden sonra gelen `click` kısa dokunuş sayılmasın (alt sayfa açılmasın).
+    swallowClick = true;
+    clearTimeout(swallowTimer);
+    swallowTimer = setTimeout(() => {
+      swallowClick = false;
+    }, 120);
+    if (target !== null && pairOf(lv(), s.card) !== target) assign(s.card, target);
   };
   const lock = (): AckLike => {
     if (closed()) return false;
@@ -70,7 +129,12 @@ export function Eslestirme(props: Props) {
         <span class="kd__title">{props.spectator ? "Herkes eşleştiriyor" : "Kim yazdı?"}</span>
       </div>
 
-      <ul class="kd__cards" data-count={props.view.cards.length} data-scroll>
+      <ul
+        class="kd__cards"
+        data-count={props.view.cards.length}
+        data-dragging={drag() ? "1" : undefined}
+        data-scroll
+      >
         <For each={props.view.cards}>
           {(card, i) => {
             const who = () => member(pairOf(lv(), card.id));
@@ -81,10 +145,31 @@ export function Eslestirme(props: Props) {
                   class="kd__card"
                   data-paired={who() ? "1" : undefined}
                   data-idle={closed() ? "1" : undefined}
+                  data-lifted={drag()?.card === card.id ? "1" : undefined}
                   style={{ "--pc": who() ? look(who()?.avatar ?? 0).color : "var(--cyan)" }}
                   disabled={closed()}
                   aria-label={`${card.text} kartı${who() ? `, eşi ${who()?.nickname}` : ", eşi yok"}`}
+                  onPointerDown={(e) => {
+                    if (!e.isPrimary || (e.pointerType === "mouse" && e.button !== 0)) return;
+                    session = {
+                      card: card.id,
+                      text: card.text,
+                      pointer: e.pointerId,
+                      x: e.clientX,
+                      y: e.clientY,
+                      active: false,
+                    };
+                    try {
+                      e.currentTarget.setPointerCapture(e.pointerId);
+                    } catch {
+                      // yakalama desteklenmiyorsa sürükleme pencere düzeyinde izlenemez; dokunma yolu çalışır
+                    }
+                  }}
+                  onPointerMove={moveTo}
+                  onPointerUp={(e) => endDrag(e, true)}
+                  onPointerCancel={(e) => endDrag(e, false)}
                   onClick={() => {
+                    if (swallowClick) return;
                     unlockAudio();
                     tap();
                     hapticTap();
@@ -110,6 +195,38 @@ export function Eslestirme(props: Props) {
         </For>
       </ul>
 
+      <Show when={!closed()}>
+        <div class="kd__tray" data-active={drag() ? "1" : undefined}>
+          <p class="kd__traytip">Kartı oyuncunun üstüne sürükle ya da karta dokun</p>
+          <ul class="kd__drops">
+            <For each={candidates()}>
+              {(m) => {
+                const taken = () => cardOfPlayer(lv(), m.id) !== null;
+                return (
+                  <li
+                    class="kd__drop"
+                    ref={(el) => {
+                      trayRefs.set(m.id, el);
+                      onCleanup(() => trayRefs.delete(m.id));
+                    }}
+                    data-hot={drag()?.over === m.id ? "1" : undefined}
+                    data-taken={taken() ? "1" : undefined}
+                    style={{ "--pc": look(m.avatar).color }}
+                  >
+                    <Avatar
+                      index={m.avatar}
+                      size="var(--kd-dav)"
+                      ring={taken() ? "var(--lime)" : undefined}
+                    />
+                    <span class="kd__drop-name">{m.nickname}</span>
+                  </li>
+                );
+              }}
+            </For>
+          </ul>
+        </div>
+      </Show>
+
       <TamamBar
         locked={props.view.locked}
         ready={props.view.ready.length}
@@ -117,6 +234,20 @@ export function Eslestirme(props: Props) {
         spectator={props.spectator}
         onLock={lock}
       />
+
+      <Show when={drag()}>
+        {(d) => (
+          <Portal>
+            <div
+              class="kd__ghost"
+              aria-hidden="true"
+              style={{ transform: `translate(${d().x}px, ${d().y}px) translate(-50%, -60%)` }}
+            >
+              {d().text}
+            </div>
+          </Portal>
+        )}
+      </Show>
 
       <BottomSheet open={open() !== null} onClose={() => setOpen(null)} title={openCard()?.text ?? ""}>
         <p class="kd__ask">Bu kelime kimin?</p>

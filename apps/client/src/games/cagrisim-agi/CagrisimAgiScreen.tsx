@@ -12,6 +12,7 @@ import {
   untrack,
 } from "solid-js";
 import { hapticError, hapticMatch, hapticReady, hapticResult, hapticSolo } from "../../fx/haptics.js";
+import { createSequence } from "../../fx/sequence.js";
 import {
   fail,
   match as matchSound,
@@ -29,7 +30,7 @@ import { SoundToggle } from "../../ui/SoundToggle.js";
 import type { GameScreenProps } from "../registry.js";
 import "./cagrisim.css";
 import { Hub } from "./Hub.js";
-import { canSubmit, type MyOutcome, outcomeOf, parseCagrisimView } from "./view.js";
+import { canSubmit, type MyOutcome, outcomeOf, parseCagrisimView, revealPlan } from "./view.js";
 
 /** Kümeleri ayıran neon renkler (oyuncu renk dizisiyle aynı palet). */
 const GROUP_COLORS = [
@@ -90,6 +91,8 @@ function Cluster(props: {
   selfId: string;
   compact: boolean;
   tight: boolean;
+  seq: "in" | "out" | undefined;
+  final: boolean;
 }) {
   const color = () => GROUP_COLORS[props.index % GROUP_COLORS.length] ?? "var(--cyan)";
   const members = () =>
@@ -101,7 +104,9 @@ function Cluster(props: {
   return (
     <li
       class="cl"
-      style={{ "--gc": color(), "--i": props.index, "--n": members().length }}
+      style={{ "--gc": color(), "--i": props.seq === undefined ? props.index : 0, "--n": members().length }}
+      data-seq={props.seq}
+      data-final={props.final ? "1" : undefined}
       data-me={props.group.members.includes(props.selfId) ? "1" : undefined}
     >
       <div class="cl__top">
@@ -134,6 +139,13 @@ function Reveal(props: {
   const outcome = (): MyOutcome | null => (props.spectator ? null : outcomeOf(props.reveal, props.selfId));
   const player = (id: string) => props.players.find((p) => p.id === id);
   const dimmed = () => props.reveal.singles.length + props.reveal.silent.length;
+  // Sıralı açılış: tek kalanlar, sonra kümeler küçükten büyüğe; en büyük ağ en son. Süre aşamaya sığar.
+  const plan = createMemo(() => revealPlan(props.reveal));
+  const seq = createSequence({
+    steps: () => plan().steps,
+    startAt: () => props.startedAt,
+    budgetMs: () => props.endsAt - props.startedAt,
+  });
   const compact = () => props.reveal.groups.length >= 3 || dimmed() >= 3;
   const headline = (): { big: string; small: string; tone: "win" | "none" } | null => {
     const o = outcome();
@@ -154,7 +166,7 @@ function Reveal(props: {
         <Hub word={props.word} mini />
         <Show when={headline()}>
           {(h) => (
-            <div class="ca-res__me" data-tone={h().tone}>
+            <div class="ca-res__me" data-tone={h().tone} data-seq={seq.attr(plan().steps - 1)}>
               <span class="ca-res__big">{h().big}</span>
               <span class="ca-res__small">{h().small}</span>
             </div>
@@ -172,12 +184,18 @@ function Reveal(props: {
                 selfId={props.selfId}
                 compact={compact()}
                 tight={props.tight}
+                seq={seq.attr(plan().groupStep[i()] ?? 0)}
+                final={plan().champion === i()}
               />
             )}
           </For>
         </ul>
         <Show when={dimmed() > 0}>
-          <ul class="lone" style={{ "--i": props.reveal.groups.length }}>
+          <ul
+            class="lone"
+            style={{ "--i": props.reveal.groups.length }}
+            data-seq={seq.attr(plan().loneStep ?? 0)}
+          >
             <For each={props.reveal.singles}>
               {(s) => (
                 <li class="lone__it" data-me={s.playerId === props.selfId ? "1" : undefined}>

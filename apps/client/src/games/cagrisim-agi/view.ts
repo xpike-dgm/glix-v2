@@ -109,3 +109,36 @@ export function wordScale(word: string): number {
   const n = Math.max(1, [...word].length);
   return Math.min(22, 68 / (n * 0.9));
 }
+
+export interface RevealPlan {
+  /** `reveal.groups` ile aynı sırada: her kümenin açılış adımı. */
+  groupStep: number[];
+  /** Tek kalanlar/yazmayanlar bloğunun adımı; blok yoksa null. */
+  loneStep: number | null;
+  steps: number;
+  /** En son açılan en büyük kümenin `reveal.groups` içindeki sırası (küme yoksa null). */
+  champion: number | null;
+}
+
+/**
+ * Sıralı açılış (yalnız sunum): önce tek kalanlar, sonra kümeler küçükten büyüğe; en büyük ağ en son açılır.
+ * Eşitlikte puanı yüksek olan, o da eşitse sonraki küme geç gelir. Düzen (sıra) değişmez.
+ */
+export function revealPlan(reveal: CagrisimReveal): RevealPlan {
+  const hasLone = reveal.singles.length + reveal.silent.length > 0;
+  const order = reveal.groups
+    .map((g, i) => ({ g, i }))
+    .sort((a, b) => a.g.members.length - b.g.members.length || a.g.points - b.g.points || a.i - b.i);
+  const base = hasLone ? 1 : 0;
+  const groupStep: number[] = reveal.groups.map(() => 0);
+  order.forEach((x, k) => {
+    groupStep[x.i] = base + k;
+  });
+  const top = order[order.length - 1];
+  return {
+    groupStep,
+    loneStep: hasLone ? 0 : null,
+    steps: base + order.length,
+    champion: top ? top.i : null,
+  };
+}

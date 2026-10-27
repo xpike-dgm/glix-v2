@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canSubmit, outcomeOf, parseCagrisimView, wordScale } from "./view.js";
+import { canSubmit, outcomeOf, parseCagrisimView, revealPlan, wordScale } from "./view.js";
 
 const answerPub = {
   startedAt: 100,
@@ -73,5 +73,31 @@ describe("Çağrışım Ağı görünümü", () => {
     // 12 harflik kelime: genişlik yaklaşık 0,9 em/harf, dairenin %70'ini aşmaz.
     expect(wordScale("A".repeat(12)) * 12 * 0.9).toBeLessThanOrEqual(70);
     expect(wordScale("")).toBe(22);
+  });
+  it("sıralı açılış: önce tek kalanlar, sonra kümeler küçükten büyüğe; en büyük en son", () => {
+    const reveal = {
+      groups: [
+        { text: "mavi", members: ["a", "b", "c"], points: 3 },
+        { text: "tatil", members: ["d", "e"], points: 2 },
+        { text: "kum", members: ["f", "g"], points: 2 },
+      ],
+      singles: [{ playerId: "h", text: "ördek" }],
+      silent: [],
+    };
+    const plan = revealPlan(reveal);
+    expect(plan.loneStep).toBe(0);
+    expect(plan.groupStep).toEqual([3, 1, 2]);
+    expect(plan.steps).toBe(4);
+    expect(plan.champion).toBe(0);
+  });
+  it("sıralı açılış: tek kalan yoksa küme 0'dan başlar; küme yoksa yalnız blok", () => {
+    const plan = revealPlan({
+      groups: [{ text: "a", members: ["x", "y"], points: 2 }],
+      singles: [],
+      silent: [],
+    });
+    expect(plan).toEqual({ groupStep: [0], loneStep: null, steps: 1, champion: 0 });
+    const none = revealPlan({ groups: [], singles: [{ playerId: "x", text: "t" }], silent: ["y"] });
+    expect(none).toEqual({ groupStep: [], loneStep: 0, steps: 1, champion: null });
   });
 });

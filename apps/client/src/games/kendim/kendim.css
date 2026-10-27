@@ -130,7 +130,11 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-  touch-action: manipulation;
+  /* Sürükle-bırak: kart üstünde parmak sayfayı kaydırmaz; kaydırma kartların arasındaki boşluktan sürer */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
   transition:
     transform 80ms var(--ease),
@@ -144,6 +148,105 @@
 }
 .kd__card:disabled {
   cursor: default;
+  touch-action: manipulation;
+}
+.kd__card[data-lifted="1"] {
+  opacity: 0.35;
+  animation: none;
+  transform: scale(0.96);
+}
+.kd__cards[data-dragging="1"] {
+  overflow-y: hidden;
+}
+
+/* Sürükle-bırak: avatar sırası ve parmağı izleyen kart hayaleti */
+.kd {
+  --kd-dav: 40px;
+}
+.kd__tray {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 0 2px;
+}
+.kd__traytip {
+  margin: 0;
+  font-size: var(--fs-13);
+  line-height: 1.2;
+  color: var(--text-dim);
+  text-align: center;
+}
+.kd__drops {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 6px;
+}
+.kd__drop {
+  --pc: var(--cyan);
+  width: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 3px 0 2px;
+  border-radius: 14px;
+  border: 1.5px dashed transparent;
+  transition:
+    transform 120ms var(--ease),
+    background 120ms,
+    border-color 120ms;
+}
+.kd__tray[data-active="1"] .kd__drop {
+  border-color: color-mix(in srgb, var(--pc) 55%, transparent);
+}
+.kd__drop[data-hot="1"] {
+  transform: scale(1.18);
+  border-style: solid;
+  border-color: var(--pc);
+  background: color-mix(in srgb, var(--pc) 22%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--pc) 60%, transparent);
+}
+.kd__drop-name {
+  max-width: 100%;
+  font-size: var(--fs-13);
+  line-height: 1.1;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kd__drop[data-taken="1"] .kd__drop-name {
+  color: var(--text);
+}
+.kd__ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 60;
+  max-width: 46vw;
+  padding: 8px 14px;
+  border-radius: 14px;
+  border: 2px solid var(--cyan);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--cyan) 22%, var(--bg-1)), var(--bg-0));
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    0 0 18px color-mix(in srgb, var(--cyan) 55%, transparent);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-18);
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  touch-action: none;
+  will-change: transform;
 }
 .kd__card[data-idle="1"] {
   opacity: 0.85;
