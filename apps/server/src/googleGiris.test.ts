@@ -186,6 +186,17 @@ describe("Google ile giriş", () => {
     expect(bogus.status).toBe(410);
   });
 
+  it("complete: yasaklı kelimeye takılan kullanıcı adı reddedilir, belirteç korunur (U16 A4)", async () => {
+    k.srv.bannedWords.add("orospu", k.clock.now());
+    const token = hash((await login()).hop).get("google-yeni") ?? "";
+    const banned = await post("google/complete", { token, username: "0r0spu_1" });
+    expect(banned.status).toBe(400);
+    expect(banned.body).toMatchObject({ message: "Bu ad kullanılamaz.", field: "username" });
+    expect(k.srv.accounts.findByUsername("0r0spu_1")).toBeNull();
+    // Belirteç yanmadı: temiz adla tamamlanır.
+    expect((await post("google/complete", { token, username: "Temiz_1" })).status).toBe(200);
+  });
+
   it("belirteç değişimi: code_verifier ve client_secret_post gönderilir", async () => {
     await login();
     expect(tokenCalls).toHaveLength(1);

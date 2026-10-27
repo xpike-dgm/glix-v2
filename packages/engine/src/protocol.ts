@@ -1,4 +1,5 @@
 import { type ContentTone, type GameResult, isContentTone } from "./game.js";
+import { isReportReason, type ReportReason, sanitizeReportNote } from "./moderation/report.js";
 import type { SiteNotice } from "./siteNotice.js";
 
 export const PROTOCOL_VERSION = 2;
@@ -122,6 +123,11 @@ export type ClientMessage =
   | { type: "inviteFriend"; username: string }
   /** Arkadaşın şu anki odasına katıl (kod sunucuda çözülür, hiçbir yerde görünmez); yalnız hesaplı ve odasız bağlantı. */
   | { type: "joinFriend"; username: string; nickname: string; avatar?: number }
+  /**
+   * Aynı odadaki başka bir oyuncuyu yöneticilere bildir (lobi, sonuç, final; hesaplı ya da misafir). `note` ≤200 karakter.
+   * Sonuç: `reportAck` ya da `report_limit` / `report_duplicate` / `not_in_room` hatası. Kimseye bildirim gitmez.
+   */
+  | { type: "report"; playerId: string; reason: ReportReason; note?: string }
   /** Maç sonu geri bildirimi: yalnız `final` aşamasında, maç başına oyuncu başına bir kez. */
   | { type: "feedback"; rating: 1 | 2 | 3 | 4 | 5; text?: string }
   /** Anonim oyun başı performans özeti: yalnız `results` aşamasında, oyun başına oyuncu başına bir kez. */
@@ -199,7 +205,13 @@ export type ErrorCode =
   | "invite_failed"
   | "friend_not_found"
   /** Bakım kipi: yeni oda kurulamaz, yeni maç başlamaz (U16 A3). */
-  | "maintenance";
+  | "maintenance"
+  /** Saatlik bildirim sınırı doldu (U16 A4). */
+  | "report_limit"
+  /** Bu oyuncu bu odada zaten bildirildi (U16 A4). */
+  | "report_duplicate"
+  /** Yönetici seni bu odadan çıkardı; 10 dakika girilemez (U16 A4). */
+  | "room_blocked";
 
 export type RoomPhase = "lobby" | "briefing" | "countdown" | "playing" | "results" | "final";
 
@@ -275,7 +287,11 @@ export interface RoomSnapshot {
   match: MatchSnapshot | null;
 }
 
-export type LeftReason = "left" | "kicked" | "closed";
+/**
+ * `closed`: oda kapandı. U16 A4: `adminClosed` yönetici odayı kapattı, `removed` yönetici seni odadan çıkardı
+ * (eski istemciler bilinmeyen sebepli mesajı yok sayar).
+ */
+export type LeftReason = "left" | "kicked" | "closed" | "adminClosed" | "removed";
 
 export type ServerMessage =
   /**
@@ -313,6 +329,8 @@ export type ServerMessage =
    * mesajı yok sayar; bu yüzden protokol sürümü artmadı.
    */
   | { type: "badgesEarned"; ids: string[] }
+  /** `report` kabul edildi ("Bildirimin alındı. Teşekkürler."). */
+  | { type: "reportAck" }
   | { type: "error"; code: ErrorCode; message: string };
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -494,6 +512,19 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       const seq = data.seq;
       if (typeof seq !== "number" || !Number.isSafeInteger(seq) || seq < 0) return null;
       return { type: "action", seq, payload: data.payload };
+    }
+    case "report": {
+      const keys = Object.keys(data);
+      if (!keys.every((k) => k === "type" || k === "playerId" || k === "reason" || k === "note")) return null;
+      const id = data.playerId;
+      if (typeof id !== "string" || id.length === 0 || id.length > 64) return null;
+      if (!isReportReason(data.reason)) return null;
+      if (!Object.hasOwn(data, "note")) return { type: "report", playerId: id, reason: data.reason };
+      const note = sanitizeReportNote(data.note);
+      if (note === null) return null;
+      return note === ""
+        ? { type: "report", playerId: id, reason: data.reason }
+        : { type: "report", playerId: id, reason: data.reason, note };
     }
     case "feedback": {
       const keys = Object.keys(data);

@@ -41,6 +41,9 @@ import { isAllowedPushEndpoint } from "./webpush.js";
 /** Bir oyuncunun takma adını en sık bu aralıkla değiştirebilir. */
 export const RENAME_MIN_GAP_MS = 1000;
 
+/** Yasaklı kelimeye takılan ad için oyuncuya gösterilen metin. */
+export const NAME_BANNED_TEXT = "Bu ad kullanılamaz.";
+
 /** Bir soketten bu kadar başarısız oda kodu denemesinden sonra bağlantı kapatılır. */
 export const MAX_FAILED_JOINS = 10;
 
@@ -131,6 +134,15 @@ function enterRoom(
   nickname: string,
   avatar: number | undefined,
 ): void {
+  // Yönetici bu odadan çıkardıysa 10 dakika girilemez; ad denetimi misafir takma adına uygulanır (hesapta kullanıcı adı).
+  if (rt.roomKicks.isBlocked(room.code, conn)) {
+    fail(conn, "room_blocked");
+    return;
+  }
+  if (!conn.account && rt.bannedWords.matches(nickname)) {
+    fail(conn, "nickname_invalid", NAME_BANNED_TEXT);
+    return;
+  }
   const spectator = room.phase !== "lobby";
   if (spectator && room.joinPolicy === "kapali") {
     fail(conn, "match_in_progress");
@@ -382,6 +394,10 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         return;
       }
       if (me.nickname === msg.nickname) return;
+      if (rt.bannedWords.matches(msg.nickname)) {
+        fail(conn, "nickname_invalid", NAME_BANNED_TEXT);
+        return;
+      }
       const now = rt.clock.now();
       if (now - me.lastRenameAt < RENAME_MIN_GAP_MS) {
         fail(conn, "rate_limited");
@@ -598,6 +614,29 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
           ? { type: "actionAck", seq: msg.seq, ok: true }
           : { type: "actionAck", seq: msg.seq, ok: false, reason: outcome.reason },
       );
+      return;
+    }
+    case "report": {
+      const room = requireRoom(conn);
+      if (!room || !conn.player) return;
+      const me = conn.player;
+      const target = room.players.get(msg.playerId);
+      if (!target || target === me) {
+        fail(conn, "not_in_room", "Bu oyuncu odada değil.");
+        return;
+      }
+      const outcome = rt.reports.submit({
+        conn,
+        reporter: me,
+        room,
+        target,
+        reason: msg.reason,
+        note: msg.note ?? "",
+      });
+      if (outcome === "ok") conn.send({ type: "reportAck" });
+      else if (outcome === "limit") fail(conn, "report_limit");
+      else if (outcome === "duplicate") fail(conn, "report_duplicate");
+      else fail(conn, "server_busy", "Bildirim şu an gönderilemedi, birazdan tekrar dene.");
       return;
     }
     case "feedback": {

@@ -27,6 +27,8 @@ import { parseFriends } from "../net/friendsRules.js";
 import { freezeProfile } from "../net/profile.js";
 import { parseProfile } from "../net/profileRules.js";
 import { emitReaction } from "../net/reactions.js";
+import { markReportDone } from "../net/report.js";
+import { REPORT_THANKS } from "../net/reportRules.js";
 import { applySnapshot, setState } from "../net/store.js";
 
 const NAMES = ["Cihad", "Elif", "Mert", "Zeynep", "Kaan", "Defne", "Burak", "Ayşe"];
@@ -376,6 +378,10 @@ export function startMock(kind: string, params: URLSearchParams): void {
         break;
       case "react":
         emitReaction(SELF, msg.emoji);
+        break;
+      case "report":
+        // Önizleme: sunucu gibi kabul eder.
+        later(() => markReportDone(REPORT_THANKS), 250);
         break;
       case "kick":
         players = players.filter((p) => p.id !== msg.playerId);

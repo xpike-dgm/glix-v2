@@ -189,7 +189,7 @@ function stepText(step: Step, a: AdminAccountDetail): string {
   }
 }
 
-function Detail(props: { id: number; onClose: () => void; onChanged: () => void; onOtp: () => void }) {
+export function Detail(props: { id: number; onClose: () => void; onChanged: () => void; onOtp: () => void }) {
   const [acc, setAcc] = createSignal<AdminAccountDetail | null>(null);
   const [error, setError] = createSignal<string | null>(null);
   const [done, setDone] = createSignal<string | null>(null);

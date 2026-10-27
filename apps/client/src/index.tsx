@@ -16,6 +16,7 @@ import "./styles/frame.css";
 import "./styles/settings.css";
 import "./styles/profile.css";
 import "./styles/friends.css";
+import "./styles/report.css";
 import "./styles/badges.css";
 import "./styles/leaderboard.css";
 import "./styles/colorblind.css";

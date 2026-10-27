@@ -15,6 +15,7 @@ import {
 } from "./google.js";
 import { log } from "./log.js";
 import { type MailService, resetMessage, verifyMessage } from "./mail.js";
+import type { BannedWords } from "./moderation.js";
 import type { IpLimiter } from "./ratelimit.js";
 import { SECURITY_HEADERS } from "./static.js";
 
@@ -199,6 +200,8 @@ export interface AuthEnv {
   google: GoogleAuth | null;
   /** E-posta (doğrulama, şifre sıfırlama); ayarlı değilse null. */
   mail: MailService | null;
+  /** Yönetici yasaklı kelime listesi (kayıt, ad değiştirme, Google kaydı); verilmezse denetim yok. */
+  bannedWords?: BannedWords;
   /** Kullanıcı adı değişince çalışma zamanını (oda adı, arkadaş listeleri) günceller; testlerde verilmeyebilir. */
   onRenamed?: (accountId: number, username: string) => void;
 }
@@ -221,6 +224,9 @@ export function send(
 function fail(res: ServerResponse, status: number, code: string, message: string, field?: string): void {
   send(res, status, { ok: false, code, message, ...(field ? { field } : {}) });
 }
+
+/** Yasaklı kelimeye takılan kullanıcı adı. */
+const BANNED_NAME_TEXT = "Bu ad kullanılamaz.";
 
 const FIELD_TEXT: Record<ValidationField, string> = {
   username: "Kullanıcı adı 3-20 karakter olmalı; yalnız harf, rakam ve alt çizgi.",
@@ -324,6 +330,10 @@ async function register(req: IncomingMessage, res: ServerResponse, env: AuthEnv)
     fail(res, 400, "invalid_input", FIELD_TEXT[input], input);
     return;
   }
+  if (env.bannedWords?.matches(input.username)) {
+    fail(res, 400, "invalid_input", BANNED_NAME_TEXT, "username");
+    return;
+  }
   const hash = await hashPassword(input.password);
   const made = env.accounts.create(input.username, input.email, hash, env.now);
   if (!made.ok) {
@@ -395,6 +405,8 @@ async function changeUsername(req: IncomingMessage, res: ServerResponse, env: Au
   if (username === null) return fail(res, 400, "invalid_input", FIELD_TEXT.username, "username");
   if (username === account.username)
     return fail(res, 400, "username_same", "Bu zaten kullanıcı adın.", "username");
+  if (env.bannedWords?.matches(username))
+    return fail(res, 400, "invalid_input", BANNED_NAME_TEXT, "username");
   const done = env.accounts.changeUsername(account.id, username, env.now);
   if (!done.ok) {
     if (done.reason === "cooldown") {
@@ -672,6 +684,8 @@ async function googleComplete(req: IncomingMessage, res: ServerResponse, env: Au
   const pending = google.flows.peekPending(input.token, env.now);
   if (!pending)
     return fail(res, 410, "google_expired", "Süre doldu. Google ile girişi baştan dene.", "token");
+  if (env.bannedWords?.matches(input.username))
+    return fail(res, 400, "invalid_input", BANNED_NAME_TEXT, "username");
   const made = env.accounts.createGoogle(input.username, pending.email, pending.sub, env.now);
   if (!made.ok) {
     if (made.field === "username")

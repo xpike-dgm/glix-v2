@@ -211,7 +211,7 @@ gizli bilgileri (rol, cevap) panelde de görünmez; e-posta yalnız tek hesap ar
 - [x] A2 Hesaplar: toplam/yeni kayıt, doğrulama oranı, giriş yöntemi dağılımı; kullanıcı adıyla arama; kullanıcı adını zorla değiştirme; askıya alma/silme; mail gönderim durumu; işlem kaydı.
 - [x] A3 İçerik ve ayarlar: oyunu geçici kapatma / rastgele havuzdan çıkarma, ana sayfa duyuru bandı, herkese web bildirimi.
 - [x] A3 Bakım: yeni maçı durdurup mevcutları bitirme (boşaltma), veritabanı yedeği indirme, son yayınlar.
-- [ ] A4 Moderasyon: oyuncuya "bildir" düğmesi ve inceleme kuyruğu, yasaklı kelime listesi, odayı kapatma, oyuncu atma.
+- [x] A4 Moderasyon: oyuncuya "bildir" düğmesi ve inceleme kuyruğu, yasaklı kelime listesi, odayı kapatma, oyuncu atma.
 - [ ] A4 Kelime ve soru havuzlarını görüntüleme ve düzenleme.
 
 ---

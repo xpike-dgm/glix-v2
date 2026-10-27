@@ -75,6 +75,24 @@ const clickText = (text) => async (page) => {
   await page.getByText(text, { exact: false }).first().click();
 };
 
+/** Bildir: lobide ilk oyuncuya dokun, menüden "Bildir", sebep seç, not yaz. */
+async function bildirLobiForm(page) {
+  await page.locator(".seat:not(.seat--self):not(.seat--empty)").first().click();
+  await page.locator(".sheet").getByRole("button", { name: "Bildir", exact: true }).click();
+  await page.locator(".rep").waitFor();
+  await page.getByRole("button", { name: "Hakaret-küfür" }).click();
+  await page.locator(".rep__note").fill("Sohbette kötü sözler yazdı");
+}
+
+/** Bildir: sonuç/final ekranında "Oyuncuyu bildir", listeden ilk kişi, sebep, not. */
+async function bildirListeForm(page) {
+  await page.getByRole("button", { name: "Oyuncuyu bildir" }).click();
+  await page.locator(".rep__person").first().click();
+  await page.locator(".rep").waitFor();
+  await page.getByRole("button", { name: "Uygunsuz ad" }).click();
+  await page.locator(".rep__note").fill("Adı uygunsuz");
+}
+
 /** name: dosya adı; q: sorgu; act: ek eylem; settle: bekleme (ms); sizes: yalnız bu boyutlarda; clock: sahte saat (ms). */
 const SCREENS = [
   { name: "home", q: "mock=home", settle: 1800 },
@@ -547,6 +565,69 @@ const SCREENS = [
       await p.locator(".fb__input").fill("Çok eğlenceliydi");
       await p.locator(".fb__send").click();
       await p.getByText("Teşekkürler!").waitFor();
+    },
+  },
+  // U16 A4 "Bildir": lobide oyuncu menüsü, form ve onay; sonuç ve final ekranında kişi seçimi.
+  {
+    name: "bildir-lobi-menu",
+    q: "mock=lobby&n=5&guest=1",
+    settle: 600,
+    act: async (p) => p.locator(".seat:not(.seat--self):not(.seat--empty)").first().click(),
+  },
+  {
+    name: "bildir-lobi-menu-ev-sahibi",
+    q: "mock=lobby&n=5",
+    settle: 600,
+    act: async (p) => p.locator(".seat:not(.seat--self):not(.seat--empty)").first().click(),
+  },
+  {
+    name: "bildir-lobi-form",
+    q: "mock=lobby&n=5&guest=1",
+    settle: 600,
+    act: bildirLobiForm,
+  },
+  {
+    name: "bildir-lobi-form-buyuk-yazi",
+    q: "mock=lobby&n=5&guest=1&text=large",
+    settle: 600,
+    act: bildirLobiForm,
+  },
+  {
+    name: "bildir-lobi-gonderildi",
+    q: "mock=lobby&n=5&guest=1",
+    settle: 600,
+    act: async (p) => {
+      await bildirLobiForm(p);
+      await p.locator(".rep .pbtn").click();
+      await p.getByText("Bildirimin alındı. Teşekkürler.").waitFor();
+    },
+  },
+  {
+    name: "bildir-sonuc-secim",
+    q: "mock=results&n=5",
+    settle: 2400,
+    act: async (p) => p.getByRole("button", { name: "Oyuncuyu bildir" }).click(),
+  },
+  {
+    name: "bildir-sonuc-form",
+    q: "mock=results&n=5",
+    settle: 2400,
+    act: bildirListeForm,
+  },
+  {
+    name: "bildir-final-secim",
+    q: "mock=final&n=5",
+    settle: 2200,
+    act: async (p) => p.getByRole("button", { name: "Oyuncuyu bildir" }).click(),
+  },
+  {
+    name: "bildir-final-gonderildi",
+    q: "mock=final&n=5",
+    settle: 2200,
+    act: async (p) => {
+      await bildirListeForm(p);
+      await p.locator(".rep .pbtn").click();
+      await p.getByText("Bildirimin alındı. Teşekkürler.").waitFor();
     },
   },
   { name: "zaman-briefing", q: "mock=zaman-briefing" },

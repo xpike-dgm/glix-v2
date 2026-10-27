@@ -54,8 +54,11 @@ const ERROR_CODES: readonly ErrorCode[] = [
   "invite_failed",
   "friend_not_found",
   "maintenance",
+  "report_limit",
+  "report_duplicate",
+  "room_blocked",
 ];
-const LEFT: readonly LeftReason[] = ["left", "kicked", "closed"];
+const LEFT: readonly LeftReason[] = ["left", "kicked", "closed", "adminClosed", "removed"];
 
 export function parseNumberRecord(v: unknown): Record<string, number> | null {
   if (!isRec(v)) return null;
@@ -249,6 +252,8 @@ export function parseServerMessage(raw: string): ServerMessage | null {
       const reason = LEFT.find((r) => r === data.reason);
       return reason ? { type: "left", reason } : null;
     }
+    case "reportAck":
+      return { type: "reportAck" };
     case "reaction":
       return isStr(data.playerId) && isLobbyEmoji(data.emoji)
         ? { type: "reaction", playerId: data.playerId, emoji: data.emoji }

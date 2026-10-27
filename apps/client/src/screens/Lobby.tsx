@@ -30,6 +30,7 @@ import {
   transferHost,
 } from "../net/client.js";
 import { inviteLink } from "../net/code.js";
+import { openReport } from "../net/reportUi.js";
 import { setNickname, state, toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
@@ -457,14 +458,14 @@ export function Lobby(props: { snap: RoomSnapshot }) {
               <For each={snap().players}>
                 {(player, i) => {
                   const mine = () => player.id === snap().selfId;
-                  const manageable = () => isHost() && !mine();
+                  // Başkasına dokunmak (ev sahibi için basılı tutmak da) oyuncu menüsünü açar: bildir, ev sahibine ayrıca çıkar/devret.
                   const press = createLongPress(
                     () => {
-                      if (manageable()) openHostMenu(player);
+                      if (!mine()) openHostMenu(player);
                     },
                     () => {
                       if (mine()) setPickOpen(true);
-                      else if (manageable()) toast("Basılı tutarak oyuncuyu yönetebilirsin");
+                      else openHostMenu(player);
                     },
                   );
                   return (
@@ -474,15 +475,8 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                       classList={{ "seat--self": mine(), "seat--new": freshIds().has(player.id) }}
                       style={{ "--i": i() }}
                       data-pid={player.id}
-                      disabled={!mine() && !manageable()}
-                      aria-label={
-                        mine()
-                          ? "Karakterini değiştir"
-                          : manageable()
-                            ? `${player.nickname}: yönet (basılı tut)`
-                            : undefined
-                      }
-                      onPointerDown={(e) => manageable() && press.onPointerDown(e)}
+                      aria-label={mine() ? "Karakterini değiştir" : `${player.nickname}: seçenekler`}
+                      onPointerDown={(e) => !mine() && press.onPointerDown(e)}
                       onPointerMove={(e) => press.onPointerMove(e)}
                       onPointerUp={() => press.onPointerEnd()}
                       onPointerCancel={() => press.onPointerEnd()}
@@ -818,11 +812,23 @@ export function Lobby(props: { snap: RoomSnapshot }) {
         >
           <Show when={hostStep() === "menu"}>
             <div class="sheet__actions">
-              <PrimaryButton variant="danger" onClick={() => setHostStep("kick")}>
-                Odadan çıkar
-              </PrimaryButton>
-              <GhostButton size="small" onClick={() => setHostStep("transfer")}>
-                Ev sahipliğini devret
+              <Show when={isHost()}>
+                <PrimaryButton variant="danger" onClick={() => setHostStep("kick")}>
+                  Odadan çıkar
+                </PrimaryButton>
+                <GhostButton size="small" onClick={() => setHostStep("transfer")}>
+                  Ev sahipliğini devret
+                </GhostButton>
+              </Show>
+              <GhostButton
+                size="small"
+                onClick={() => {
+                  const t = hostTarget();
+                  setHostOpen(false);
+                  if (t) openReport(t.id);
+                }}
+              >
+                Bildir
               </GhostButton>
               <GhostButton size="small" onClick={() => setHostOpen(false)}>
                 Vazgeç

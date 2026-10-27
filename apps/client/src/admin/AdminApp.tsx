@@ -6,14 +6,16 @@ import { ContentPanel } from "./ContentPanel.js";
 import { ErrorsPanel } from "./ErrorsPanel.js";
 import { LivePanel } from "./LivePanel.js";
 import { MaintenancePanel } from "./MaintenancePanel.js";
+import { ModerationPanel } from "./ModerationPanel.js";
 import { StatsPanel } from "./StatsPanel.js";
 
-type Tab = "canli" | "istatistik" | "hatalar" | "hesaplar" | "icerik" | "bakim" | "kayit";
+type Tab = "canli" | "istatistik" | "hatalar" | "hesaplar" | "moderasyon" | "icerik" | "bakim" | "kayit";
 const TABS: { id: Tab; label: string }[] = [
   { id: "canli", label: "Canlı durum" },
   { id: "istatistik", label: "Oyun istatistikleri" },
   { id: "hatalar", label: "Hatalar ve performans" },
   { id: "hesaplar", label: "Hesaplar" },
+  { id: "moderasyon", label: "Moderasyon" },
   { id: "icerik", label: "İçerik" },
   { id: "bakim", label: "Bakım" },
   { id: "kayit", label: "İşlem kaydı" },
@@ -227,6 +229,9 @@ export function AdminApp() {
               </Match>
               <Match when={tab() === "hesaplar"}>
                 <AccountsPanel onOtp={() => void check()} />
+              </Match>
+              <Match when={tab() === "moderasyon"}>
+                <ModerationPanel onOtp={() => void check()} />
               </Match>
               <Match when={tab() === "icerik"}>
                 <ContentPanel onOtp={() => void check()} />

@@ -1,0 +1,119 @@
+/* "Bildir" penceresi (oyuncu şikâyeti). Sınıflar `rep` ile başlar. */
+.rep {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rep__who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+}
+.rep__nick {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-18, 18px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rep__change {
+  flex: none;
+  min-height: 48px;
+  padding: 0 12px;
+  color: var(--cyan);
+  font-weight: 700;
+  font-size: var(--fs-15);
+}
+.rep__chips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.rep__chip {
+  min-height: 52px;
+  padding: 0 8px;
+  border-radius: var(--r-btn);
+  border: 1.5px solid var(--line);
+  background: rgba(10, 16, 48, 0.6);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-15);
+}
+.rep__chip[data-on="1"] {
+  background: rgba(46, 242, 255, 0.14);
+  color: var(--cyan);
+  border-color: var(--cyan);
+  box-shadow: inset 0 0 0 1px var(--cyan);
+}
+.rep__label {
+  color: var(--text-dim);
+  font-size: var(--fs-13);
+  font-weight: 600;
+}
+.rep__note {
+  width: 100%;
+  min-height: 84px;
+  resize: none;
+  border-radius: 14px;
+  border: 1.5px solid rgba(160, 175, 255, 0.34);
+  background: rgba(5, 8, 26, 0.6);
+  color: var(--text);
+  padding: 12px 14px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  outline: none;
+}
+.rep__note:focus {
+  border-color: var(--cyan);
+}
+.rep__count {
+  margin: -6px 0 0;
+  color: var(--text-dim);
+  font-size: var(--fs-13);
+  text-align: right;
+}
+.rep__error {
+  margin: 0;
+  color: var(--red, #ff6b81);
+  font-size: var(--fs-15);
+  font-weight: 600;
+}
+.rep__thanks {
+  color: var(--text);
+  font-size: var(--fs-18, 18px);
+  font-weight: 600;
+}
+.rep__people {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rep__person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 6px 12px;
+  border-radius: var(--r-btn);
+  border: 1.5px solid var(--line);
+  background: rgba(10, 16, 48, 0.6);
+  color: var(--text);
+  text-align: left;
+}
+.rep__person:active {
+  background: rgba(140, 160, 255, 0.12);
+}
+/* Sonuç ve final ekranındaki "Oyuncuyu bildir" bağlantısı */
+.rep__link {
+  align-self: center;
+}

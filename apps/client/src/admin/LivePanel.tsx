@@ -12,6 +12,7 @@ import {
   level,
   phaseLabel,
 } from "./format.js";
+import { RoomDrill } from "./RoomDrill.js";
 
 /** Canlı durum 5 sn'de bir yenilenir; sekme gizliyken beklenir. */
 export const LIVE_REFRESH_MS = 5000;
@@ -36,6 +37,8 @@ export function LivePanel(props: { onOtp: () => void }) {
   const [data, setData] = createSignal<AdminLive | null>(null);
   const [error, setError] = createSignal<string | null>(null);
   const [updatedAt, setUpdatedAt] = createSignal(0);
+  /** Oyuncu listesi açık oda (görünen adlar yalnız bu ayrıntıda). */
+  const [drill, setDrill] = createSignal<string | null>(null);
   const [hist, setHist] = createSignal<{ players: number[]; rss: number[]; cpu: number[] }>({
     players: [],
     rss: [],
@@ -157,6 +160,7 @@ export function LivePanel(props: { onOtp: () => void }) {
                       <th class="num">Sahne</th>
                       <th>Oyun</th>
                       <th class="num">Yaş</th>
+                      <th>İşlem</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -175,6 +179,16 @@ export function LivePanel(props: { onOtp: () => void }) {
                           <td class="num">{r.stages}</td>
                           <td>{r.gameId ?? "—"}</td>
                           <td class="num">{fmtDuration(r.ageSec)}</td>
+                          <td>
+                            <button
+                              type="button"
+                              class="adm-btn adm-btn--ghost adm-btn--small"
+                              aria-label={`${r.code} odasının oyuncuları ve işlemleri`}
+                              onClick={() => setDrill(r.code)}
+                            >
+                              Oyuncular
+                            </button>
+                          </td>
                         </tr>
                       )}
                     </For>
@@ -187,7 +201,20 @@ export function LivePanel(props: { onOtp: () => void }) {
                 </p>
               </Show>
             </Show>
-            <p class="adm-muted adm-note">Oyuncu adı ve oyun durumu bu ekranda hiçbir zaman gösterilmez.</p>
+            <Show when={drill()} keyed>
+              {(code) => (
+                <RoomDrill
+                  code={code}
+                  onClose={() => setDrill(null)}
+                  onOtp={props.onOtp}
+                  onChanged={() => void refresh()}
+                />
+              )}
+            </Show>
+            <p class="adm-muted adm-note">
+              Oyuncu adı ve oyun durumu tabloda gösterilmez; adlar yalnız "Oyuncular" ayrıntısında görünür ve
+              her açış işlem kaydına yazılır.
+            </p>
           </>
         )}
       </Show>

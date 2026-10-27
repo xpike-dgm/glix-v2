@@ -6,10 +6,12 @@ import { reducedMotion } from "../fx/motion.js";
 import { roundResult } from "../fx/sound.js";
 import { gameEntry } from "../games/registry.js";
 import { sendContinue } from "../net/client.js";
+import { openReport } from "../net/reportUi.js";
 import { createServerNow } from "../net/time.js";
 import { Avatar } from "../ui/Avatar.js";
 import type { Mood } from "../ui/avatars.js";
 import { EmojiBar, RESULT_EMOJIS } from "../ui/EmojiBar.js";
+import { GhostButton } from "../ui/GhostButton.js";
 import { ProgressBar } from "../ui/ProgressBar.js";
 import { ReactionLayer } from "../ui/ReactionLayer.js";
 import { createReactionSender } from "../ui/reactionSend.js";
@@ -242,6 +244,11 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
             )}
           </For>
         </ul>
+        <Show when={props.snap.players.length > 1}>
+          <GhostButton size="small" class="rep__link" onClick={() => openReport()}>
+            Oyuncuyu bildir
+          </GhostButton>
+        </Show>
       </div>
 
       <Watchers players={watchersOf(props.snap.players)} selfId={props.snap.selfId} />

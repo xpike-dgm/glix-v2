@@ -2,6 +2,7 @@ import { randomInt } from "node:crypto";
 import {
   type AnyGame,
   CONTINUE_GRACE_MS,
+  collectPublicTexts,
   createRng,
   GAMES,
   type GameContext,
@@ -335,6 +336,7 @@ function finishGame(rt: Runtime, room: Room, match: Match): void {
   }
   recordGameStats(rt, room, match, result, now);
   match.result = result;
+  captureEvidence(rt, room, match);
   match.continueIds = new Set();
   match.phaseStartedAt = now;
   match.phaseEndsAt = now + RESULTS_MS;
@@ -384,6 +386,23 @@ function recordMatchStats(rt: Runtime, room: Room, match: Match, now: number): v
     rt.accountStats.matchFinished(buildMatchRecord(match.games.length, now, entrants));
   } catch (err) {
     log.warn("account_stats_failed", { room: room.code, error: String(err) });
+  }
+}
+
+/**
+ * "Bildir" kanıtı: oyun biterken herkese açık görünümden (`publicView`) oyuncuların herkese gösterilmiş metinleri
+ * alınır. Hiçbir şey eklenmeyen oyunlarda önceki oyunun kanıtı silinir (kanıt hep "son oyun"a aittir).
+ * Hata oyun akışını bozmaz.
+ */
+function captureEvidence(rt: Runtime, room: Room, match: Match): void {
+  try {
+    const game = currentGame(match);
+    const view = game.publicView(match.state, ctxFor(rt, room, match));
+    const texts = collectPublicTexts(game.id, view, match.participants);
+    room.evidence = Object.keys(texts).length > 0 ? { gameId: game.id, texts } : null;
+  } catch (err) {
+    room.evidence = null;
+    log.warn("evidence_failed", { room: room.code, error: String(err) });
   }
 }
 

@@ -138,6 +138,15 @@ her görüntüleme `account_view` olarak kaydedilir. Yönetici: kullanıcı adı
 - **Korunma:** `GLIX_ADMIN_ACCOUNT_IDS` içindeki hesaplara bu işlemler yapılamaz.
 - **İşlem kaydı:** `admin_audit` + `target_id`; e-posta, kod ve askı sebebi yazılmaz; 1 yıl, günlük temizlikte silinir.
 
+## Moderasyon (U16 A4, uygulandı)
+Ayrıntı: `docs/ADMIN.md` "Moderasyon". Hesapla ilgili kısımlar:
+- **Yasaklı kelime listesi** (`banned_words`, göç 9; başlangıçta boş, yönetici doldurur): kayıt, kullanıcı adı değiştirme ve Google kaydı "Bu ad kullanılamaz." ile reddeder.
+  Yönetici ad değiştirmesi muaftır; mevcut adlar kendiliğinden değişmez (panelde salt okunur "listeye takılan mevcut hesaplar" sorgusu vardır).
+- **Bildirimler** (`reports`, göç 9): bildiren hesap kimliği (misafirse boş), hedef hesap kimliği (misafirse boş), hedefin bildirim anındaki görünen adı, oda kodu, oyun, sebep, not (≤200),
+  kanıt metinleri (yalnız herkese açık gösterilmiş), durum ve yönetici notu. **180 gün** sonra günlük temizlikte silinir. Hesap silinince ilgili hesap kimliği alanı boşaltılır (kayıt süresi dolana dek ad ile kalır).
+  Bildirilen kişiye ve oda arkadaşlarına bildirim gitmez; bildiren yalnız "Bildirimin alındı. Teşekkürler." görür.
+- Odadan atma engeli ve bildirim hız sınırları bellektedir (veritabanına yazılmaz).
+
 ## Veri modeli (SQLite, yeni göçler)
 `accounts(id, username, username_lc, email, email_verified, pass_hash, google_sub, created_at)`,
 `sessions(id_hash, account_id, created_at, last_seen)`, `email_tokens(kind, token_hash, account_id, expires_at)`,

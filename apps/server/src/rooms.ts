@@ -3,6 +3,7 @@ import {
   DEFAULT_CONTENT_TONE,
   DEFAULT_JOIN_POLICY,
   getCatalog,
+  type LeftReason,
   MAX_NICKNAME_LENGTH,
   MAX_PLAYERS,
   ROOM_CODE_LENGTH,
@@ -12,6 +13,7 @@ import { createBroadcaster } from "./broadcast.js";
 import { type Clock, systemClock } from "./clock.js";
 import { clearMatch, endMatchStats, recordPresence } from "./match.js";
 import { createMetrics } from "./metrics.js";
+import { noBannedWords, noReportDesk, RoomKicks } from "./moderation.js";
 import { IpLimiter } from "./ratelimit.js";
 import { type Connection, isConnected, type Player, type Room, type Runtime } from "./runtime.js";
 import { noopSocial } from "./social.js";
@@ -52,6 +54,9 @@ export function createRuntime(
     catalog: getCatalog(),
     maintenance: false,
     announcement: null,
+    bannedWords: noBannedWords,
+    reports: noReportDesk,
+    roomKicks: new RoomKicks(clock),
     defaultGameIds: defaultGameIds ? [...defaultGameIds] : null,
     randomInt: pickInt,
   };
@@ -121,6 +126,7 @@ export function createRoom(rt: Runtime): Room {
     deleteCancel: null,
     hostGraceCancel: null,
     createdAt: rt.clock.now(),
+    evidence: null,
   };
   rt.rooms.set(room.code, room);
   return room;
@@ -276,7 +282,11 @@ export function markDisconnected(rt: Runtime, player: Player): void {
   rt.broadcaster.markDirty(room);
 }
 
-export function deleteRoom(rt: Runtime, room: Room): void {
+/**
+ * Odayı kapatır. `reason`: oyunculara giden sebep (varsayılan "closed"; yönetici kapatırsa "adminClosed").
+ * Süren maç yarıda kalmış sayılır (hesap istatistiği ve rozet yazılmaz).
+ */
+export function deleteRoom(rt: Runtime, room: Room, reason: LeftReason = "closed"): void {
   // Sunucu kapanırken / oda silinirken süren maç yarıda kalmış sayılır.
   if (room.match) endMatchStats(rt, room.match, "aborted");
   rt.broadcaster.cancel(room);
@@ -291,13 +301,13 @@ export function deleteRoom(rt: Runtime, room: Room): void {
     player.push = null;
     rt.tokens.delete(player.token);
     if (player.conn) {
-      player.conn.send({ type: "left", reason: "closed" });
+      player.conn.send({ type: "left", reason });
       player.conn.player = null;
       player.conn = null;
     }
   }
   for (const stage of room.stages) {
-    stage.send({ type: "left", reason: "closed" });
+    stage.send({ type: "left", reason });
     stage.stage = null;
     stage.lastSent = null;
   }
@@ -305,6 +315,7 @@ export function deleteRoom(rt: Runtime, room: Room): void {
   room.players.clear();
   rt.active.delete(room);
   rt.rooms.delete(room.code);
+  rt.roomKicks.clearRoom(room.code);
 }
 
 /**

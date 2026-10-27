@@ -4,6 +4,7 @@ import {
   type ContentTone,
   type JoinPolicy,
   type LobbyEmoji,
+  type ReportReason,
   type RoomSnapshot,
 } from "@glix/engine";
 import { noteServerRestart } from "../pwa/pwa.js";
@@ -24,6 +25,8 @@ import {
 } from "./friends.js";
 import { parseServerMessage } from "./parse.js";
 import { emitReaction } from "./reactions.js";
+import { beginReport, markReportDone, markReportFailed, reportSending } from "./report.js";
+import { isReportError, REPORT_FAILED, REPORT_THANKS, reportErrorText } from "./reportRules.js";
 import { decideOnReturn, PROBE_TIMEOUT_MS, reconnectNotice } from "./resume.js";
 import { EMPTY_SITE } from "./siteRules.js";
 import { KEYS, readAvatarChoice, readStored, removeStored, writeStored } from "./storage.js";
@@ -61,6 +64,7 @@ const SHOWN_ERRORS = new Set([
   "friend_not_found",
   "invite_failed",
   "maintenance",
+  "room_blocked",
 ]);
 
 /** Sunucu güncelleme için yeniden başladı (WebSocket kapanış kodu 1012). */
@@ -223,14 +227,20 @@ function onMessage(raw: string): void {
       if (state.tv) {
         stageCode = null;
         clearRoom();
-        if (msg.reason === "closed") toast("Oda kapandı");
+        if (msg.reason === "adminClosed") toast("Oda yönetici tarafından kapatıldı.");
+        else if (msg.reason === "closed") toast("Oda kapandı");
         break;
       }
       removeStored(KEYS.token);
       clearRoom();
       goHome();
       if (msg.reason === "kicked") toast("Ev sahibi seni odadan çıkardı", "error");
+      else if (msg.reason === "removed") toast("Odadan çıkarıldın.", "error");
+      else if (msg.reason === "adminClosed") toast("Oda yönetici tarafından kapatıldı.");
       else if (msg.reason === "closed") toast("Oda kapandı");
+      break;
+    case "reportAck":
+      markReportDone(REPORT_THANKS);
       break;
     case "reaction":
       emitReaction(msg.playerId, msg.emoji);
@@ -283,6 +293,11 @@ function blockForUpdate(): void {
 }
 
 function handleError(code: string, message: string): void {
+  // Bildirim sürerken gelen hata sheet içinde gösterilir (toast yerine).
+  if (reportSending() && isReportError(code)) {
+    markReportFailed(reportErrorText(code, message));
+    return;
+  }
   if (state.tv && (code === "room_not_found" || code === "stage_full")) {
     // TV: kod yanlış ya da oda kapanmış; kod giriş ekranına dönülür.
     stageCode = null;
@@ -540,6 +555,16 @@ export const sendPushSubscribe = (sub: { endpoint: string; p256dh: string; auth:
   rawSend({ type: "pushSubscribe", ...sub });
 export const sendPushUnsubscribe = (): boolean => rawSend({ type: "pushUnsubscribe" });
 export const kick = (playerId: string): boolean => rawSend({ type: "kick", playerId });
+/** Oyuncuyu yöneticilere bildirir; sonuç `reportStatus` ile izlenir. Gönderilemezse false. */
+export function sendReport(playerId: string, reason: ReportReason, note: string): boolean {
+  beginReport();
+  const clean = note.trim();
+  const ok = rawSend(
+    clean === "" ? { type: "report", playerId, reason } : { type: "report", playerId, reason, note: clean },
+  );
+  if (!ok) markReportFailed(REPORT_FAILED);
+  return ok;
+}
 export const setRandom = (count: number): boolean => rawSend({ type: "setRandom", count });
 export const setJoinPolicy = (policy: JoinPolicy): boolean => rawSend({ type: "setJoinPolicy", policy });
 export const setTone = (tone: ContentTone): boolean => rawSend({ type: "setTone", tone });
