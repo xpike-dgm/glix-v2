@@ -41,6 +41,21 @@ export default function Reveal(props: GameScreenProps) {
               )}
             </For>
           </ul>
+          <Show when={r().kahinler.length > 0}>
+            <ul class="rrr__row rrr__row--kahin" aria-label="Kâhin rozeti">
+              <For each={r().kahinler}>
+                {(id) => (
+                  <li class="rrr__kahin">
+                    <Show when={person(id)}>
+                      {(p) => <Avatar index={p().avatar} size={30} mood="out" connected={p().connected} />}
+                    </Show>
+                    <span class="rrr__rozet">Kâhin</span>
+                    <span class="sr-only">{person(id)?.nickname} Kâhin rozeti kazandı</span>
+                  </li>
+                )}
+              </For>
+            </ul>
+          </Show>
           <ul class="rrr__row rrr__row--out">
             <For each={r().eliminated}>
               {(id) => (

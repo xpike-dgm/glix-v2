@@ -1,4 +1,10 @@
-import type { RusRuletiPublicView, RusRuletiResult, RusRuletiShot, RusRuletiView } from "@glix/engine";
+import type {
+  RusRuletiPredictionResult,
+  RusRuletiPublicView,
+  RusRuletiResult,
+  RusRuletiShot,
+  RusRuletiView,
+} from "@glix/engine";
 
 type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -32,7 +38,11 @@ function parseShot(v: unknown): RusRuletiShot | null | undefined {
 function parseResult(v: unknown): RusRuletiResult | null | undefined {
   if (v === null) return null;
   if (!isRec(v) || !isStrArr(v.survivors) || !isStrArr(v.eliminated)) return undefined;
-  return { survivors: v.survivors, eliminated: v.eliminated };
+  return {
+    survivors: v.survivors,
+    eliminated: v.eliminated,
+    kahinler: isStrArr(v.kahinler) ? v.kahinler : [],
+  };
 }
 
 /** Sunucudan gelen `publicView` bilinmez; Rus Ruleti ortak görünümü olarak doğrulanır. */
@@ -64,7 +74,16 @@ export function parseRusRuletiPublicView(v: unknown): RusRuletiPublicView | null
 /** Sunucudan gelen `view` bilinmez; kişisel görünüm olarak doğrulanır. */
 export function parseRusRuletiPrivateView(v: unknown): RusRuletiView | null {
   if (!isRec(v)) return null;
-  return v.role === "alive" || v.role === "out" || v.role === "spectator" ? { role: v.role } : null;
+  if (v.role === "alive" || v.role === "spectator") return { role: v.role };
+  if (v.role !== "out" || !isNum(v.turn)) return null;
+  if (v.prediction !== null && typeof v.prediction !== "boolean") return null;
+  let lastResult: RusRuletiPredictionResult | null = null;
+  if (v.lastResult !== null && v.lastResult !== undefined) {
+    const r = v.lastResult;
+    if (!isRec(r) || !isNum(r.turn) || typeof r.correct !== "boolean") return null;
+    lastResult = { turn: r.turn, correct: r.correct };
+  }
+  return { role: "out", turn: v.turn, prediction: v.prediction, lastResult };
 }
 
 export interface RusRuletiScreenView {

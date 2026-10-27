@@ -1219,6 +1219,25 @@ const SCREENS = [
   { name: "final-tepki", q: "mock=final&n=5&emoji=1", settle: 2200 },
   { name: "ayarlar-muzik-efekt", q: "mock=settings", settle: 900 },
   { name: "ayarlar-muzik-efekt-buyuk-yazi", q: "mock=settings&text=large", settle: 900 },
+  // O9: izleyen tahmini (Kör Bomba yatay, Rus Ruleti dikey).
+  { name: "kor-bomba-tahmin", q: "mock=kor-bomba-predict", sizes: LANDSCAPE },
+  { name: "kor-bomba-tahmin-8", q: "mock=kor-bomba-predict&n=8", sizes: LANDSCAPE },
+  { name: "kor-bomba-tahmin-4", q: "mock=kor-bomba-predict&n=4", sizes: LANDSCAPE },
+  { name: "kor-bomba-tahmin-alindi", q: "mock=kor-bomba-predicted&n=8", sizes: LANDSCAPE },
+  {
+    name: "kor-bomba-tahmin-tap",
+    q: "mock=kor-bomba-predict&n=8",
+    sizes: LANDSCAPE,
+    act: clickText("Patlamaz"),
+  },
+  { name: "kor-bomba-bildi", q: "mock=kor-bomba-bildi&n=6", sizes: LANDSCAPE, settle: 3000 },
+  { name: "kor-bomba-bilemedin", q: "mock=kor-bomba-bilemedin&n=6", sizes: LANDSCAPE, settle: 3000 },
+  { name: "rus-tahmin-5", q: "mock=rus-predict&n=5" },
+  { name: "rus-tahmin-8", q: "mock=rus-predict&n=8" },
+  { name: "rus-tahmin-alindi", q: "mock=rus-predicted&n=6" },
+  { name: "rus-tahmin-tap", q: "mock=rus-predict&n=6", act: clickText("Evet") },
+  { name: "rus-kahin-6", q: "mock=rus-kahin&n=6", settle: 2400 },
+  { name: "rus-kahin-8", q: "mock=rus-kahin&n=8", settle: 2400 },
 ];
 
 function freePort() {

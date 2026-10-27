@@ -1,4 +1,10 @@
-import type { KorBombaPass, KorBombaPublicView, KorBombaView } from "@glix/engine";
+import type {
+  KorBombaPass,
+  KorBombaPrediction,
+  KorBombaPredictionResult,
+  KorBombaPublicView,
+  KorBombaView,
+} from "@glix/engine";
 
 type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -8,6 +14,18 @@ const isStr = (v: unknown): v is string => typeof v === "string" && v.length > 0
 function parsePass(v: unknown): KorBombaPass | null {
   if (!isRec(v) || !isNum(v.seq) || !isStr(v.from) || !isStr(v.to)) return null;
   return { seq: v.seq, from: v.from, to: v.to };
+}
+
+function parseResult(v: unknown): KorBombaPredictionResult | null | undefined {
+  if (v === null || v === undefined) return null;
+  if (!isRec(v) || !isNum(v.turn) || typeof v.correct !== "boolean") return undefined;
+  return { turn: v.turn, correct: v.correct };
+}
+
+function parsePrediction(v: unknown): KorBombaPrediction | null | undefined {
+  if (v === null || v === undefined) return null;
+  if (!isRec(v) || !isNum(v.turn) || typeof v.explodes !== "boolean") return undefined;
+  return { turn: v.turn, explodes: v.explodes };
 }
 
 /** Sunucudan gelen `publicView` bilinmez; Kör Bomba ortak görünümü olarak doğrulanır. */
@@ -28,18 +46,25 @@ export function parseKorBombaPublicView(v: unknown): KorBombaPublicView | null {
     lastPass,
     exploded: v.exploded,
     explodedAt: v.explodedAt,
+    correctPredictors: Array.isArray(v.correctPredictors) ? v.correctPredictors.filter(isStr) : [],
   };
 }
 
 /** Sunucudan gelen `view` bilinmez; Kör Bomba kişisel görünümü olarak doğrulanır. */
 export function parseKorBombaPrivateView(v: unknown): KorBombaView | null {
   if (!isRec(v)) return null;
-  if (v.role === "holder") return { role: "holder" };
+  if (v.role === "holder") {
+    const lastResult = parseResult(v.lastResult);
+    return lastResult === undefined ? null : { role: "holder", lastResult };
+  }
   if (v.role === "spectator") return { role: "spectator" };
   if (v.role === "watcher") {
     if (!isNum(v.explodeAt)) return null;
     if (v.lastBonusMs !== null && !isNum(v.lastBonusMs)) return null;
-    return { role: "watcher", explodeAt: v.explodeAt, lastBonusMs: v.lastBonusMs };
+    const prediction = parsePrediction(v.prediction);
+    const lastResult = parseResult(v.lastResult);
+    if (prediction === undefined || lastResult === undefined) return null;
+    return { role: "watcher", explodeAt: v.explodeAt, lastBonusMs: v.lastBonusMs, prediction, lastResult };
   }
   return null;
 }
@@ -89,4 +114,20 @@ export function seatPositions(ids: readonly string[], selfId: string): SeatPos[]
     const a = Math.PI / 2 + (i / n) * Math.PI * 2;
     return { id, x: 50 + 41 * Math.cos(a), y: 50 + 36 * Math.sin(a) };
   });
+}
+
+/** Tahmin satırı yalnız bombayı taşımayan katılımcıya çıkar; süreden bağımsızdır (patlamaya kadar). */
+export function canPredict(view: KorBombaScreenView, selfId: string, spectator: boolean): boolean {
+  return !spectator && !view.pub.exploded && view.pub.holder !== selfId && view.priv.role === "watcher";
+}
+
+/** Kendi tahminim bu elin tahmini ise değeri; yoksa null. */
+export function myPrediction(view: KorBombaScreenView): boolean | null {
+  const p = view.priv.role === "watcher" ? view.priv.prediction : null;
+  return p && p.turn === view.pub.passes ? p.explodes : null;
+}
+
+/** Kendi son çözülen tahmin sonucum. */
+export function myResult(view: KorBombaScreenView): KorBombaPredictionResult | null {
+  return view.priv.role === "spectator" ? null : view.priv.lastResult;
 }

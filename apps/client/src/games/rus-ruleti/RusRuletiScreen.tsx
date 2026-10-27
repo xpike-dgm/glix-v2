@@ -4,6 +4,7 @@ import { unlockAudio } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";
+import { createPredictionToast, PredictRow } from "../../ui/PredictRow.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
 import { pressable } from "../../ui/press.js";
 import { Screen } from "../../ui/Screen.js";
@@ -40,6 +41,15 @@ export default function RusRuletiScreen(props: GameScreenProps) {
   const nameOf = (id: string): string => (id === props.selfId ? "Sen" : (person(id)?.nickname ?? "Oyuncu"));
   const isAlive = (id: string): boolean => view()?.pub.alive.includes(id) ?? false;
 
+  /** Elenen izleyici: her atıştan önce "patlar mı?" tahmini verebilir (puan yok, yalnız Kâhin rozeti). */
+  const outView = () => {
+    const v = view();
+    return v && !props.spectator && !v.pub.over && v.priv.role === "out" ? v.priv : null;
+  };
+  createPredictionToast(() => {
+    const v = view();
+    return v && v.priv.role === "out" ? v.priv.lastResult : null;
+  });
   const imAlive = () => !props.spectator && view()?.priv.role === "alive";
   const iHold = () => imAlive() && view()?.pub.holder === props.selfId;
   const canAim = () => iHold() && stage() === "deciding" && !pending();
@@ -245,12 +255,30 @@ export default function RusRuletiScreen(props: GameScreenProps) {
       </div>
 
       <footer class="rr__foot">
+        <Show when={outView()}>
+          {(out) => (
+            <For each={[out().turn]}>
+              {(turn) => (
+                <PredictRow
+                  class="rr__predict"
+                  question="Patlar mı?"
+                  yesLabel="Evet"
+                  noLabel="Hayır"
+                  turn={turn}
+                  chosen={outView()?.prediction ?? null}
+                />
+              )}
+            </For>
+          )}
+        </Show>
         <Show
           when={iHold() && stage() === "deciding"}
           fallback={
-            <p class="rr__note" role="status">
-              {footerNote()}
-            </p>
+            <Show when={!outView()}>
+              <p class="rr__note" role="status">
+                {footerNote()}
+              </p>
+            </Show>
           }
         >
           <PrimaryButton

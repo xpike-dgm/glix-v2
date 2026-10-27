@@ -6,14 +6,18 @@ import { sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { BlastArt, BombArt } from "../../ui/BombArt.js";
 import { createOptimistic } from "../../ui/optimistic.js";
+import { createPredictionToast, PredictRow } from "../../ui/PredictRow.js";
 import { pressable } from "../../ui/press.js";
 import type { GameScreenProps } from "../registry.js";
 import "./kor-bomba.css";
 import { reducedMotion } from "../../fx/motion.js";
 import { boom, spark, tak } from "./sounds.js";
 import {
+  canPredict,
   formatBonus,
   formatRemaining,
+  myPrediction,
+  myResult,
   parseKorBombaView,
   remainingMs,
   type SeatPos,
@@ -46,6 +50,30 @@ export default function KorBombaScreen(props: GameScreenProps) {
     },
   });
   const exploded = () => view()?.pub.exploded ?? false;
+  const mayPredict = () => {
+    const v = view();
+    return v !== null && canPredict(v, props.selfId, props.spectator === true) && holderId() !== props.selfId;
+  };
+  const currentPrediction = (): boolean | null => {
+    const v = view();
+    return v ? myPrediction(v) : null;
+  };
+  const resolvedMine = () => {
+    const v = view();
+    return v ? myResult(v) : null;
+  };
+  createPredictionToast(resolvedMine);
+  // Patlamada puan alanların adı herkese açılır: "Elif bildi!"
+  const bildi = () => {
+    const names = (view()?.pub.correctPredictors ?? []).flatMap((id) => {
+      const n = playerOf(id)?.nickname;
+      return n ? [id === props.selfId ? "Sen" : n] : [];
+    });
+    if (names.length === 0) return "";
+    return names.length === 1 && names[0] === "Sen"
+      ? "Sen bildin!"
+      : `${names.slice(0, 2).join(" ve ")} bildi!`;
+  };
   const iAmHolder = () =>
     !props.spectator && view()?.priv.role === "holder" && !exploded() && holderId() === props.selfId;
   const left = () => {
@@ -235,6 +263,28 @@ export default function KorBombaScreen(props: GameScreenProps) {
       <div class="kbo__bonuses" style={{ left: `${bomb().x}%`, top: `${bomb().y}%` }} aria-hidden="true">
         <For each={bonuses()}>{(b) => <span class="kbo__bonus">{b.text}</span>}</For>
       </div>
+
+      <Show when={mayPredict()}>
+        {/* Her el için yeniden kurulur; satır süre hakkında hiçbir şey göstermez. */}
+        <For each={[view()?.pub.passes ?? 0]}>
+          {(turn) => (
+            <PredictRow
+              class="kbo__predict"
+              compact
+              question="Bu elde patlar mı?"
+              yesLabel="Patlar"
+              noLabel="Patlamaz"
+              turn={turn}
+              chosen={currentPrediction()}
+            />
+          )}
+        </For>
+      </Show>
+      <Show when={bildi()}>
+        <p class="kbo__bildi" role="status">
+          {bildi()}
+        </p>
+      </Show>
 
       <Show when={iAmHolder()}>
         <div class="kbo__cta" aria-hidden="true">
