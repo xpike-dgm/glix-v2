@@ -57,6 +57,7 @@ function setup(players = 3) {
       lobbyReady: false,
       lastReactAt: Number.NEGATIVE_INFINITY,
       lastRenameAt: Number.NEGATIVE_INFINITY,
+      lastContinueAt: Number.NEGATIVE_INFINITY,
     };
     c.conn.player = player;
     room.players.set(player.id, player);
@@ -161,6 +162,7 @@ describe("yayın: gereksiz mesaj ve yama zinciri", () => {
       lobbyReady: false,
       lastReactAt: Number.NEGATIVE_INFINITY,
       lastRenameAt: Number.NEGATIVE_INFINITY,
+      lastContinueAt: Number.NEGATIVE_INFINITY,
     };
     late.conn.player = player;
     t.room.players.set("p9", player);

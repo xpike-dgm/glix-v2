@@ -82,6 +82,7 @@ export function startCaprazMock(kind: string, params: URLSearchParams): void {
       orientation: "portrait",
       participants,
       readyIds,
+      continueIds: [],
       phaseStartedAt: startedAt,
       phaseEndsAt: phase === "briefing" ? now + 40_000 : null,
       publicView: phase === "briefing" ? null : publicView(),

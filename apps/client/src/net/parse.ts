@@ -109,6 +109,7 @@ function parseMatch(v: unknown): MatchSnapshot | null {
     orientation: o,
     participants: v.participants,
     readyIds: v.readyIds,
+    continueIds: isStrArr(v.continueIds) ? v.continueIds : [],
     phaseStartedAt: v.phaseStartedAt,
     phaseEndsAt: ends,
     publicView: v.publicView ?? null,

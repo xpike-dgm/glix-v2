@@ -14,6 +14,7 @@ export function matchSnap(extra: Partial<MatchSnapshot> = {}): MatchSnapshot {
     orientation: "portrait",
     participants: ["a", "b"],
     readyIds: [],
+    continueIds: [],
     phaseStartedAt: 0,
     phaseEndsAt: null,
     publicView: null,

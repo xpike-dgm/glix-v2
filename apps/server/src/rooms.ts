@@ -141,6 +141,7 @@ export function addPlayer(
     lobbyReady: false,
     lastReactAt: Number.NEGATIVE_INFINITY,
     lastRenameAt: Number.NEGATIVE_INFINITY,
+    lastContinueAt: Number.NEGATIVE_INFINITY,
   };
   room.players.set(id, player);
   rt.tokens.set(player.token, player);

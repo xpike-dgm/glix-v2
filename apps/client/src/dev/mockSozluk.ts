@@ -185,6 +185,7 @@ export function startSozlukMock(kind: string, params: URLSearchParams): void {
       orientation: "portrait",
       participants,
       readyIds,
+      continueIds: [],
       phaseStartedAt: startedAt,
       phaseEndsAt,
       publicView: pub,

@@ -90,6 +90,7 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
       orientation: "portrait",
       participants,
       readyIds: briefing ? ["p1", "p2"] : [],
+      continueIds: [],
       phaseStartedAt: startedAt,
       phaseEndsAt: briefing ? now + 40_000 : reveal ? now + 60_000 : null,
       publicView: briefing ? null : pub,

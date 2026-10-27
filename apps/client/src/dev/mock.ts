@@ -102,6 +102,7 @@ export function startMock(kind: string, params: URLSearchParams): void {
           orientation: "portrait",
           participants: players.filter((p) => !p.spectator).map((p) => p.id),
           readyIds,
+          continueIds: [],
           phaseStartedAt,
           phaseEndsAt,
           publicView,

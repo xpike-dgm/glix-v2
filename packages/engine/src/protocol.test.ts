@@ -163,7 +163,7 @@ describe("parseClientMessage: oda mesajları", () => {
     expect(parseClientMessage(j({ type: "feedback" }))).toBeNull();
   });
   it("argümansız mesajlar yalnız type ile kabul edilir", () => {
-    for (const type of ["leaveRoom", "startMatch", "ready", "returnToLobby", "resync"]) {
+    for (const type of ["leaveRoom", "startMatch", "ready", "continue", "returnToLobby", "resync"]) {
       expect(parseClientMessage(j({ type }))).toEqual({ type });
       expect(parseClientMessage(j({ type, extra: 1 }))).toBeNull();
     }

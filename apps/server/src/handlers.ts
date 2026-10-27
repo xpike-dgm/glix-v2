@@ -5,6 +5,7 @@ import {
   GAMES,
   MAX_PLAYERS,
   PROTOCOL_VERSION,
+  CONTINUE_MIN_GAP_MS,
   REACTION_MIN_GAP_MS,
 } from "@glix/engine";
 import {
@@ -12,6 +13,7 @@ import {
   beginMatch,
   clearMatch,
   currentGame,
+  markContinue,
   markReady,
   pickRandomGames,
   recordPresence,
@@ -380,6 +382,25 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         return;
       }
       markReady(room, conn.player.id);
+      stepMatch(rt, room);
+      rt.broadcaster.markDirty(room);
+      return;
+    }
+    case "continue": {
+      const room = requireRoom(conn);
+      if (!room || !conn.player) return;
+      if (room.phase !== "results" || !room.match) {
+        fail(conn, "wrong_phase");
+        return;
+      }
+      const now = rt.clock.now();
+      if (now - conn.player.lastContinueAt < CONTINUE_MIN_GAP_MS) {
+        fail(conn, "rate_limited");
+        return;
+      }
+      conn.player.lastContinueAt = now;
+      // İzleyici ve katılımcı olmayan sessizce yok sayılır (sayıma girmez, hata yok).
+      if (!markContinue(room, conn.player.id)) return;
       stepMatch(rt, room);
       rt.broadcaster.markDirty(room);
       return;

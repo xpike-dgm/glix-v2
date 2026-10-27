@@ -94,6 +94,7 @@ export function startKorBombaMock(kind: string, params: URLSearchParams): void {
       orientation: "landscape",
       participants,
       readyIds: briefing ? ["p1", "p2"] : [],
+      continueIds: [],
       phaseStartedAt: startedAt,
       phaseEndsAt: briefing ? now + 40_000 : null,
       publicView: publicView(),

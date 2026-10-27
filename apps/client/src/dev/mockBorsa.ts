@@ -124,6 +124,7 @@ export function startBorsaMock(kind: string, params: URLSearchParams): void {
         orientation: "portrait",
         participants,
         readyIds: ["p1", "p2"],
+        continueIds: [],
         phaseStartedAt,
         phaseEndsAt,
         publicView: phase === "briefing" ? null : publicView(),

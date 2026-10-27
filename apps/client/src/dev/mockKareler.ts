@@ -136,6 +136,7 @@ export function startKarelerMock(kind: string, params: URLSearchParams): void {
       orientation: "portrait",
       participants,
       readyIds,
+      continueIds: [],
       phaseStartedAt: startedAt,
       phaseEndsAt,
       publicView: gizliKareler.publicView(st, ctx()),

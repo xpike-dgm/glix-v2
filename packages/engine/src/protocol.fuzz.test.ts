@@ -60,6 +60,7 @@ describe("parseClientMessage fuzz", () => {
       "gameAction",
       "leaveRoom",
       "returnToLobby",
+      "continue",
       "action",
       "feedback",
     ];

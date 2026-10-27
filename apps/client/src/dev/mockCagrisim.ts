@@ -136,6 +136,7 @@ export function startCagrisimMock(kind: string, params: URLSearchParams): void {
     orientation: "portrait",
     participants,
     readyIds,
+    continueIds: [],
     phaseStartedAt: startedAt,
     phaseEndsAt,
     publicView: phase === "playing" ? publicView() : null,

@@ -106,6 +106,7 @@ export function startShellMock(kind: string, params: URLSearchParams): void {
     orientation: game.orientation,
     participants,
     readyIds,
+    continueIds: [],
     phaseStartedAt,
     phaseEndsAt,
     publicView,

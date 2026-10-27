@@ -97,6 +97,7 @@ export function startAlisverisMock(kind: string, params: URLSearchParams): void 
       orientation: "portrait",
       participants,
       readyIds,
+      continueIds: [],
       phaseStartedAt: startedAt,
       phaseEndsAt,
       publicView: gizliAlisveris.publicView(st, ctx()),

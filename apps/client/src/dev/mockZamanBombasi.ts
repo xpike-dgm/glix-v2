@@ -226,6 +226,7 @@ export function startZamanBombasiMock(kind: string, params: URLSearchParams): vo
     orientation: "portrait",
     participants,
     readyIds,
+    continueIds: [],
     phaseStartedAt,
     phaseEndsAt,
     publicView: phase === "playing" ? pub : null,

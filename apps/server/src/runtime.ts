@@ -51,6 +51,8 @@ export interface Player {
   lobbyReady: boolean;
   /** Son emoji tepkisinin sunucu saati (ms); hız sınırı için. */
   lastReactAt: number;
+  /** Son `continue` mesajının sunucu saati (ms); hız sınırı için. */
+  lastContinueAt: number;
   /** Son takma ad değişikliğinin sunucu saati (ms); hız sınırı için. */
   lastRenameAt: number;
 }

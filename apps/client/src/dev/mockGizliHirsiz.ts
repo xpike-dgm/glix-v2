@@ -87,6 +87,7 @@ export function startGizliHirsizMock(kind: string, params: URLSearchParams): voi
       orientation: "portrait",
       participants,
       readyIds: briefing ? ["p1", "p2"] : [],
+      continueIds: [],
       phaseStartedAt: startedAt,
       phaseEndsAt: briefing ? now + 40_000 : results ? now + 60_000 : null,
       publicView: briefing ? null : publicView,

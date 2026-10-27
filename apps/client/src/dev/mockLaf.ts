@@ -211,6 +211,7 @@ export function startLafMock(kind: string, params: URLSearchParams): void {
       orientation: "portrait",
       participants,
       readyIds,
+      continueIds: [],
       phaseStartedAt: state.startedAt,
       phaseEndsAt,
       publicView: lafSokma.publicView(state, ctx),

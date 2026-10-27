@@ -15,6 +15,11 @@ export const MAX_SELECTED_GAMES = 64;
 /** Lobide gönderilebilen sabit emoji kümesi (sunucu bu listeyle doğrular). */
 export const LOBBY_EMOJIS = ["👋", "😂", "🔥", "😱", "👏", "❤️"] as const;
 export type LobbyEmoji = (typeof LOBBY_EMOJIS)[number];
+/** `continue` mesajları arasındaki en kısa süre (aynı oyuncu); daha sıkı gelen `rate_limited` alır. */
+export const CONTINUE_MIN_GAP_MS = 300;
+/** Bağlı herkes "Devam" deyince sonuç aşamasının bitmesine kalan süre (ms). */
+export const CONTINUE_GRACE_MS = 1_000;
+
 /** Aynı oyuncunun iki emoji arasındaki en kısa süre; fazlası sessizce atılır. */
 export const REACTION_MIN_GAP_MS = 700;
 
@@ -61,6 +66,8 @@ export type ClientMessage =
   | { type: "setJoinPolicy"; policy: JoinPolicy }
   | { type: "startMatch" }
   | { type: "ready" }
+  /** `results` aşamasında "Devam": bağlı tüm oyuncular basınca sonuç ekranı 1 sn sonra biter. */
+  | { type: "continue" }
   | { type: "action"; seq: number; payload: unknown }
   | { type: "returnToLobby" }
   /** İstemci elindeki snapshot'a yama uygulayamadığında tam snapshot ister. */
@@ -170,6 +177,8 @@ export interface MatchSnapshot {
   participants: string[];
   /** briefing aşamasında hazır olanlar. */
   readyIds: string[];
+  /** results aşamasında "Devam" diyenler (yalnız kimler; herkese açık). */
+  continueIds: string[];
   phaseStartedAt: number;
   phaseEndsAt: number | null;
   /** Oyunun herkese açık görünümü (playing/results); odadaki herkes için aynı. */
@@ -440,6 +449,7 @@ export function parseClientMessage(raw: string): ClientMessage | null {
     case "resync":
     case "startMatch":
     case "ready":
+    case "continue":
     case "returnToLobby": {
       if (!hasExactKeys(data, ["type"])) return null;
       return { type: data.type };

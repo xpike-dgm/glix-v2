@@ -1,6 +1,7 @@
 import { randomInt } from "node:crypto";
 import {
   type AnyGame,
+  CONTINUE_GRACE_MS,
   createRng,
   GAMES,
   type GameContext,
@@ -31,6 +32,8 @@ export interface Match {
   /** Geçerli oyunun katılımcıları. */
   participants: string[];
   readyIds: Set<string>;
+  /** results aşamasında "Devam" diyenler (her sonuç aşaması başında sıfırlanır). */
+  continueIds: Set<string>;
   phaseStartedAt: number;
   phaseEndsAt: number | null;
   state: unknown;
@@ -152,6 +155,7 @@ export function beginMatch(rt: Runtime, room: Room): void {
     startParticipants: participants,
     participants,
     readyIds: new Set(),
+    continueIds: new Set(),
     phaseStartedAt: 0,
     phaseEndsAt: null,
     state: null,
@@ -210,6 +214,18 @@ export function clearMatch(rt: Runtime, room: Room, outcome: "aborted" | "failed
 
 export function markReady(room: Room, playerId: string): void {
   room.match?.readyIds.add(playerId);
+}
+
+/**
+ * "Devam": results aşamasında oyuncunun onayını kaydeder. Katılımcı olmayan (izleyici) sessizce sayılmaz.
+ * Sonuç true ise onay yeni kaydedildi.
+ */
+export function markContinue(room: Room, playerId: string): boolean {
+  const match = room.match;
+  if (!match || room.phase !== "results" || !match.participants.includes(playerId)) return false;
+  if (match.continueIds.has(playerId)) return false;
+  match.continueIds.add(playerId);
+  return true;
 }
 
 /** Katılımcılardan şu an canlı bağlantısı olanlar (katılımcı sırasıyla). */
@@ -279,6 +295,7 @@ function finishGame(rt: Runtime, room: Room, match: Match): void {
     if (player) player.score += points;
   }
   match.result = result;
+  match.continueIds = new Set();
   match.phaseStartedAt = now;
   match.phaseEndsAt = now + RESULTS_MS;
   room.phase = "results";
@@ -360,6 +377,14 @@ function stepMatchUnsafe(rt: Runtime, room: Room): void {
       return;
     }
     case "results": {
+      // Erken bitiş (docs/ERKEN-BITIS.md): bağlı katılımcıların hepsi "Devam" dediyse 1 sn sonra biter.
+      // Bu bir oyun kuralı değil, sunucunun sonuç ekranı hızıdır; bağlantıya bakmak burada serbesttir.
+      const connected = connectedParticipants(room, match);
+      const everyone = connected.length > 0 && connected.every((id) => match.continueIds.has(id));
+      if (everyone && match.phaseEndsAt !== null && match.phaseEndsAt > now + CONTINUE_GRACE_MS) {
+        match.phaseEndsAt = now + CONTINUE_GRACE_MS;
+        rt.broadcaster.markDirty(room);
+      }
       if (match.phaseEndsAt !== null && now >= match.phaseEndsAt) {
         nextGameOrFinal(rt, room, match);
         rt.broadcaster.markDirty(room);
@@ -423,6 +448,7 @@ export function sharedMatchSnapshot(rt: Runtime, room: Room): Omit<MatchSnapshot
     orientation: game.orientation,
     participants: [...match.participants],
     readyIds: [...match.readyIds],
+    continueIds: room.phase === "results" ? [...match.continueIds] : [],
     phaseStartedAt: match.phaseStartedAt,
     phaseEndsAt: match.phaseEndsAt,
     publicView,

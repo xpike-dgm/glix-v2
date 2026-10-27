@@ -239,6 +239,7 @@ export function startRusvetMock(kind: string, params: URLSearchParams): void {
       orientation: "portrait",
       participants,
       readyIds,
+      continueIds: [],
       phaseStartedAt,
       phaseEndsAt: phaseEndsMatch,
       publicView: pub,
