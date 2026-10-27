@@ -1,5 +1,6 @@
 import { createEffect, createMemo, createSignal, For, on, Show } from "solid-js";
 import { hapticMatch, hapticSolo, hapticTap } from "../../fx/haptics.js";
+import { createOpening } from "../../fx/opening.js";
 import { match as matchSound, solo as soloSound, tap, unlockAudio } from "../../fx/sound.js";
 import { sendAction, sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
@@ -11,6 +12,7 @@ import { SoundToggle } from "../../ui/SoundToggle.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./acgozluluk-limiti.css";
+import { Opening } from "./Opening.js";
 import { Tank, type TankEntry } from "./Tank.js";
 import { chipColumns, parseAcgozlulukView, pointsOf } from "./view.js";
 
@@ -23,6 +25,8 @@ export default function AcgozlulukLimitiScreen(props: GameScreenProps) {
     })),
   );
   const reveal = () => view()?.reveal ?? null;
+  // Aşama başlarken bir kez, dokunulmaz süs sahnesi; girişi beklemez.
+  const opening = createOpening("acgozluluk-limiti", () => view()?.startedAt);
   const lockedIds = () => view()?.lockedIds ?? [];
   const locked = () => view()?.locked ?? false;
   const closed = () => {
@@ -122,6 +126,9 @@ export default function AcgozlulukLimitiScreen(props: GameScreenProps) {
             </div>
 
             <div class="lim__stage">
+              <Show when={opening() && !reveal()}>
+                <Opening />
+              </Show>
               <Tank
                 limit={v().limit}
                 entries={entries()}

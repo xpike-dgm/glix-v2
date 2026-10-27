@@ -5,7 +5,7 @@
  *   ?mock=sozluk-write-locked      yazma: tanımın gönderildi, diğerleri bekleniyor
  *   ?mock=sozluk-pick              kartlardan seçme; dokununca seçilir (`&chosen=1` seçili başlar)
  *   ?mock=sozluk-pick-locked       seçme: sen "Tamam" dedin
- *   ?mock=sozluk-reveal            kartlar açıldı (`&me=none` hiç puan almadın)
+ *   ?mock=sozluk-reveal            kartlar açıldı (`&me=none` hiç puan almadın; `&at=ms` açılışın kaçıncı ms'sinde: sıralı açılışın ortası/sonu)
  *   ?mock=sozluk-spectator-write | -pick | -reveal   katılımcı değilsin
  */
 import type { GameInfo, MatchSnapshot, PlayerInfo, RoomPhase, RoomSnapshot } from "@glix/engine";
@@ -56,11 +56,13 @@ export function startSozlukMock(kind: string, params: URLSearchParams): void {
   const spectator = kind.includes("spectator");
   const participants = players.map((p) => p.id).filter((id) => !(spectator && id === SELF));
   const now = Date.now();
+  // Açılışın kaçıncı ms'sindeyiz; varsayılan: sıralı açılış bitmiş.
+  const revealAt = Number(params.get("at") ?? 8_000);
   const stage = kind.includes("reveal") ? "reveal" : kind.includes("pick") ? "pick" : "write";
   const startedAt =
     stage === "write"
       ? now - 8_000
-      : now - SOZLUK_WRITE_MS - (stage === "pick" ? 6_000 : 300 + SOZLUK_PICK_MS);
+      : now - SOZLUK_WRITE_MS - (stage === "pick" ? 6_000 : revealAt + SOZLUK_PICK_MS);
   const writeEndsAt = startedAt + SOZLUK_WRITE_MS;
   const pickEndsAt = writeEndsAt + SOZLUK_PICK_MS;
   const finishAt = pickEndsAt + SOZLUK_REVEAL_MS;

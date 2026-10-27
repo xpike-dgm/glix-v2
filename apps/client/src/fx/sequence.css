@@ -1,0 +1,38 @@
+/* Sıralı açılış: görünmeyen adımlar yer tutar (düzen sıçramaz), görünen adım kısa bir vuruşla belirir. */
+[data-seq="out"] {
+  visibility: hidden;
+}
+[data-seq="out"],
+[data-seq="out"] * {
+  animation-play-state: paused !important;
+}
+[data-seq="in"] {
+  animation: seq-pop 380ms var(--ease) both !important;
+}
+[data-seq="in"][data-final="1"] {
+  animation: seq-final 720ms var(--ease) both !important;
+}
+@keyframes seq-pop {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes seq-final {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -148,3 +148,33 @@ export function revealCards(
     )
     .map((x) => x.c);
 }
+
+export interface RevealPlan {
+  /** Kart kimliği → açılış adımı (0 ilk). */
+  step: Record<string, number>;
+  /** Toplam adım sayısı. */
+  steps: number;
+  /** En son açılan, en çok kişiyi kandıran sahte kart (kimseyi kandıran yoksa null). */
+  champion: string | null;
+}
+
+/**
+ * Sıralı açılış (yalnız sunum): önce gerçek anlam, sonra sahte tanımlar az kandırandan çok kandırana;
+ * en çok kişiyi kandıran sahte tanım en son açılır. Eşitlikte kart sırası korunur. Yalnız açılışta zaten
+ * herkese giden veriden hesaplanır; hiçbir şeyi erken göstermez.
+ */
+export function revealPlan(cards: readonly RevealCard[]): RevealPlan {
+  const real = cards.filter((c) => c.real);
+  const fakes = cards
+    .map((c, i) => ({ c, i }))
+    .filter((x) => !x.c.real)
+    .sort((a, b) => a.c.pickers.length - b.c.pickers.length || a.i - b.i)
+    .map((x) => x.c);
+  const order = [...real, ...fakes];
+  const step: Record<string, number> = {};
+  order.forEach((c, i) => {
+    step[c.id] = i;
+  });
+  const last = fakes[fakes.length - 1];
+  return { step, steps: order.length, champion: last && last.pickers.length > 0 ? last.id : null };
+}

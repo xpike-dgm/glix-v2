@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bluffErrorText, canSubmitBluff, parseSozlukView, revealCards } from "./view.js";
+import { bluffErrorText, canSubmitBluff, parseSozlukView, revealCards, revealPlan } from "./view.js";
 
 const cards = [
   { id: "k1", text: "bir tür kayık" },
@@ -98,5 +98,28 @@ describe("Sözlük Blöfü görünümü", () => {
     expect(rc[0]).toMatchObject({ real: true, author: null, pickers: ["a"] });
     expect(rc[1]).toMatchObject({ real: false, author: "a", pickers: ["b", "c"] });
     expect(rc[2]?.pickers).toEqual([]);
+  });
+  it("sıralı açılış: önce gerçek, sonra sahteler azdan çoğa; en çok kandıran en son", () => {
+    const five = [
+      { id: "g", text: "gerçek", real: true, author: null, pickers: ["a"] },
+      { id: "x", text: "x", real: false, author: "a", pickers: ["b", "c", "d"] },
+      { id: "y", text: "y", real: false, author: "b", pickers: [] },
+      { id: "z", text: "z", real: false, author: "c", pickers: ["e"] },
+    ];
+    const plan = revealPlan(five);
+    expect(plan.steps).toBe(4);
+    expect(plan.step).toEqual({ g: 0, y: 1, z: 2, x: 3 });
+    expect(plan.champion).toBe("x");
+  });
+  it("sıralı açılış: eşitte kart sırası korunur; kimse kandırılmadıysa şampiyon yok", () => {
+    const tie = [
+      { id: "g", text: "g", real: true, author: null, pickers: [] },
+      { id: "x", text: "x", real: false, author: "a", pickers: [] },
+      { id: "y", text: "y", real: false, author: "b", pickers: [] },
+    ];
+    const plan = revealPlan(tie);
+    expect(plan.step).toEqual({ g: 0, x: 1, y: 2 });
+    expect(plan.champion).toBeNull();
+    expect(revealPlan([]).steps).toBe(0);
   });
 });

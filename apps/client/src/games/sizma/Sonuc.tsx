@@ -1,10 +1,11 @@
-import { createMemo, For, onMount, Show } from "solid-js";
+import { createEffect, createMemo, For, on, onCleanup, Show } from "solid-js";
 import { hapticMatch, hapticSolo } from "../../fx/haptics.js";
+import { createSequence } from "../../fx/sequence.js";
 import { match as matchSound, solo as soloSound } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
 import { Mask } from "./Mask.js";
-import { type CrewMember, outcomeOf, type SizmaScreenView } from "./view.js";
+import { type CrewMember, outcomeOf, type SizmaScreenView, tallyPlan } from "./view.js";
 
 interface Props {
   view: SizmaScreenView;
@@ -34,31 +35,58 @@ export function Sonuc(props: Props) {
     return r.caught ? "Sızmayı yakaladınız" : "Sızma aranızdan kaçtı";
   };
 
-  onMount(() => {
-    if (props.spectator || !reveal()) return;
-    const t = setTimeout(() => {
-      if (outcomeOf(reveal() as NonNullable<ReturnType<typeof reveal>>, props.selfId) === "win") {
-        matchSound();
-        hapticMatch();
-      } else {
-        soloSound();
-        hapticSolo();
-      }
-    }, 500);
-    return () => clearTimeout(t);
+  // Sıralı açılış: oylar azdan çoğa sayılır, en sonda sızmanın maskesi düşer. Süre açılış aşamasına sığar.
+  const plan = createMemo(() =>
+    tallyPlan(
+      props.crew.map((m) => m.id),
+      reveal()?.tally ?? {},
+    ),
+  );
+  const seq = createSequence({
+    steps: () => plan().steps,
+    startAt: () => props.view.voteEndsAt,
+    budgetMs: () => props.view.finishAt - props.view.voteEndsAt,
   });
+  const unmasked = () => seq.shown() > plan().finale;
+
+  // Dizi bitince bir kez: sonuç sesi ve titreşimi.
+  createEffect(
+    on(seq.done, (done, was) => {
+      const r = reveal();
+      if (!done || was || props.spectator || !r) return;
+      const t = setTimeout(() => {
+        if (outcomeOf(r, props.selfId) === "win") {
+          matchSound();
+          hapticMatch();
+        } else {
+          soloSound();
+          hapticSolo();
+        }
+      }, 300);
+      onCleanup(() => clearTimeout(t));
+    }),
+  );
 
   return (
     <Show when={reveal()}>
       {(r) => (
         <div class="sz__rev">
-          <div class="sz__head sz__head--reveal" data-caught={r().caught ? "1" : "0"}>
+          <div
+            class="sz__head sz__head--reveal"
+            data-caught={r().caught ? "1" : "0"}
+            data-seq={seq.attr(plan().finale)}
+          >
             <span class="overline">{r().caught ? "Yakalandı!" : "Kurtuldu!"}</span>
             <span class="sz__verdict">{verdict()}</span>
           </div>
 
           <div class="sz__rbody">
-            <div class="sz__culprit" style={{ "--tc": look(odd()?.avatar ?? 0).color }}>
+            <div
+              class="sz__culprit"
+              style={{ "--tc": look(odd()?.avatar ?? 0).color }}
+              data-seq={seq.attr(plan().finale)}
+              data-final="1"
+            >
               <div class="sz__culprit-av">
                 <Show when={odd()}>
                   {(o) => <Avatar index={o().avatar} size="var(--sz-cav)" connected={o().connected} />}
@@ -88,7 +116,8 @@ export function Sonuc(props: Props) {
                     <li
                       class="sz__tcell"
                       data-me={m.id === props.selfId ? "1" : undefined}
-                      data-odd={m.id === r().infiltrator ? "1" : undefined}
+                      data-odd={unmasked() && m.id === r().infiltrator ? "1" : undefined}
+                      data-seq={seq.attr(plan().step[m.id] ?? 0)}
                     >
                       <span class="sz__tav">
                         <Avatar index={m.avatar} size="var(--sz-tav)" connected={m.connected} />
@@ -112,7 +141,12 @@ export function Sonuc(props: Props) {
               </p>
             }
           >
-            <p class="sz__hint sz__hint--score" role="status" data-zero={mine() === 0 ? "1" : undefined}>
+            <p
+              class="sz__hint sz__hint--score"
+              role="status"
+              data-zero={mine() === 0 ? "1" : undefined}
+              data-seq={seq.attr(plan().finale)}
+            >
               <b>+{mine()}</b> genel skora eklendi
             </p>
           </Show>

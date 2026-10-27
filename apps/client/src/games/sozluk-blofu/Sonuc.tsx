@@ -1,9 +1,10 @@
-import { createMemo, For, onMount, Show } from "solid-js";
+import { createEffect, createMemo, For, on, onCleanup, Show } from "solid-js";
 import { hapticMatch, hapticSolo } from "../../fx/haptics.js";
+import { createSequence } from "../../fx/sequence.js";
 import { match as matchSound, solo as soloSound } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
-import { type CrewMember, type RevealCard, revealCards, type SozlukScreenView } from "./view.js";
+import { type CrewMember, type RevealCard, revealCards, revealPlan, type SozlukScreenView } from "./view.js";
 import { Term } from "./Write.js";
 
 interface Props {
@@ -32,26 +33,41 @@ export function Sonuc(props: Props) {
     return mineCard === undefined ? 0 : Object.values(r.picks).filter((c) => c === mineCard).length;
   };
 
-  onMount(() => {
-    if (props.spectator || !reveal()) return;
-    const t = setTimeout(() => {
-      if (mine() > 0) {
-        matchSound();
-        hapticMatch();
-      } else {
-        soloSound();
-        hapticSolo();
-      }
-    }, 900);
-    return () => clearTimeout(t);
+  // Sıralı açılış: sahte tanımlar azdan çoğa, en çok kandıran en son. Süre açılış aşamasına sığar.
+  const plan = createMemo(() => revealPlan(cards()));
+  const seq = createSequence({
+    steps: () => plan().steps,
+    startAt: () => props.view.pickEndsAt,
+    budgetMs: () => props.view.finishAt - props.view.pickEndsAt,
   });
+
+  // Dizi bitince bir kez: puan aldıysan eşleşme sesi, almadıysan alçak ses.
+  createEffect(
+    on(seq.done, (done, was) => {
+      if (!done || was || props.spectator || !reveal()) return;
+      const t = setTimeout(() => {
+        if (mine() > 0) {
+          matchSound();
+          hapticMatch();
+        } else {
+          soloSound();
+          hapticSolo();
+        }
+      }, 300);
+      onCleanup(() => clearTimeout(t));
+    }),
+  );
 
   return (
     <Show when={reveal()}>
       <div class="sb__head sb__head--res">
         <Term word={props.view.word} small />
         <Show when={!props.spectator} fallback={<span class="sb__verdict">Gerçek anlam açıldı</span>}>
-          <div class="sb__me" data-zero={mine() === 0 ? "1" : undefined}>
+          <div
+            class="sb__me"
+            data-zero={mine() === 0 ? "1" : undefined}
+            data-seq={seq.attr(plan().steps - 1)}
+          >
             <span class="sb__score">+{mine()}</span>
             <span class="sb__says">
               {foundReal() ? "Gerçeği buldun!" : "Gerçeği bulamadın"}
@@ -73,6 +89,8 @@ export function Sonuc(props: Props) {
                 class="sbres__card"
                 data-real={c.real ? "1" : undefined}
                 data-me={mineCard() ? "1" : undefined}
+                data-seq={seq.attr(plan().step[c.id] ?? 0)}
+                data-final={c.id === plan().champion ? "1" : undefined}
                 style={{ "--i": i(), "--ac": look(author()?.avatar ?? 0).color }}
               >
                 <div class="sbres__top">

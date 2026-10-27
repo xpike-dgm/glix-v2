@@ -90,3 +90,22 @@ export function wordSize(word: string): number {
   if (n <= 9) return 28;
   return 24;
 }
+
+export interface TallyPlan {
+  /** Oyuncu kimliği → açılış adımı: aynı oy sayısındakiler birlikte, az oydan çok oya. */
+  step: Record<string, number>;
+  /** Sızmanın kimliğinin açıldığı son adım (oy adımlarından sonra gelir). */
+  finale: number;
+  steps: number;
+}
+
+/**
+ * Sıralı açılış (yalnız sunum): oylar az alandan çok alana doğru açılır; son adımda sızmanın maskesi düşer.
+ * Hiç oy almayanlar ilk adımda birlikte görünür. Açılışta zaten herkese giden `tally` ile hesaplanır.
+ */
+export function tallyPlan(ids: readonly string[], tally: Readonly<Record<string, number>>): TallyPlan {
+  const counts = [...new Set(ids.map((id) => tally[id] ?? 0))].sort((a, b) => a - b);
+  const step: Record<string, number> = {};
+  for (const id of ids) step[id] = counts.indexOf(tally[id] ?? 0);
+  return { step, finale: counts.length, steps: counts.length + 1 };
+}

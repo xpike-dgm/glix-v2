@@ -1,5 +1,6 @@
 import { createEffect, createMemo, For, onCleanup, Show, untrack } from "solid-js";
 import { hapticMatch, hapticSolo, hapticTap, hapticTick } from "../../fx/haptics.js";
+import { createOpening } from "../../fx/opening.js";
 import { match as matchSound, solo as soloSound, tap, tick } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
@@ -14,6 +15,7 @@ import { SoundToggle } from "../../ui/SoundToggle.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./capraz-ates.css";
+import { Opening } from "./Opening.js";
 import { Sight } from "./Sight.js";
 import {
   gridColumns,
@@ -42,6 +44,8 @@ const chipText = (n: number): string => (n > 0 ? `+${n}` : n < 0 ? `−${Math.ab
 export default function CaprazAtesScreen(props: GameScreenProps) {
   const view = createMemo(() => parseCaprazAtesView(props.match.publicView, props.match.view));
   const reveal = () => view()?.reveal ?? null;
+  // Aşama başlarken bir kez, dokunulmaz süs sahnesi; girişi beklemez.
+  const opening = createOpening("capraz-ates", () => view()?.startedAt);
   const crew = createMemo(() =>
     props.match.participants.flatMap((id) => {
       const p = props.players.find((q) => q.id === id);
@@ -132,6 +136,9 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
 
   return (
     <Screen class="game ca">
+      <Show when={opening() && !reveal()}>
+        <Opening />
+      </Show>
       <header class="game__top">
         <Show when={view()} fallback={<div class="pbar" />}>
           <ProgressBar startedAt={bar().from} endsAt={bar().to} now={serverNow} urgency={!reveal()} />

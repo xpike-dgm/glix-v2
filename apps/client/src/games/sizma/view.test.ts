@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { outcomeOf, parseSizmaView, wordSize } from "./view.js";
+import { outcomeOf, parseSizmaView, tallyPlan, wordSize } from "./view.js";
 
 const pub = {
   players: ["a", "b", "c"],
@@ -73,5 +73,16 @@ describe("Sızma görünümü", () => {
   it("kelime boyu uzadıkça küçülür", () => {
     expect(wordSize("ÇAY")).toBeGreaterThan(wordSize("TELEVİZYON"));
     expect(wordSize("GÖKKUŞAĞI")).toBeGreaterThanOrEqual(24);
+  });
+  it("sıralı açılış: oylar azdan çoğa gruplanır, son adım maskenin düştüğü an", () => {
+    const plan = tallyPlan(["a", "b", "c", "d"], { a: 0, b: 3, c: 1, d: 0 });
+    expect(plan.step).toEqual({ a: 0, d: 0, c: 1, b: 2 });
+    expect(plan.finale).toBe(3);
+    expect(plan.steps).toBe(4);
+  });
+  it("sıralı açılış: oy yoksa tek adım + son adım", () => {
+    const plan = tallyPlan(["a", "b"], {});
+    expect(plan.step).toEqual({ a: 0, b: 0 });
+    expect(plan.steps).toBe(2);
   });
 });
