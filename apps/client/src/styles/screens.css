@@ -2358,7 +2358,7 @@
 .row__delta[data-dir="down"] {
   color: #ff6b7a;
 }
-.tok {
+.row__tok {
   position: absolute;
   left: 64px;
   top: 50%;
@@ -2376,7 +2376,7 @@
   pointer-events: none;
   z-index: 3;
 }
-.tok[data-neg="1"] {
+.row__tok[data-neg="1"] {
   color: #fff;
   background: #e0405a;
   box-shadow: 0 0 10px rgba(224, 64, 90, 0.55);

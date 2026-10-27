@@ -88,7 +88,7 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
           fill: "backwards",
         });
       }
-      const tok = row.querySelector<HTMLElement>(".tok");
+      const tok = row.querySelector<HTMLElement>(".row__tok");
       const score = row.querySelector<HTMLElement>(".row__score");
       if (tok && score && typeof tok.animate === "function") {
         const dx = score.getBoundingClientRect().right - tok.getBoundingClientRect().right;
@@ -219,7 +219,11 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
                   )}
                 </Show>
                 <Show when={award(r.player.id) !== 0 && !reduced}>
-                  <span class="tok" data-neg={award(r.player.id) < 0 ? "1" : undefined} aria-hidden="true">
+                  <span
+                    class="row__tok"
+                    data-neg={award(r.player.id) < 0 ? "1" : undefined}
+                    aria-hidden="true"
+                  >
                     {award(r.player.id) > 0 ? "+" : ""}
                     {formatScore(award(r.player.id))}
                   </span>
