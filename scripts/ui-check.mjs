@@ -1361,11 +1361,20 @@ function auditShell() {
   const issues = [];
   const frame = document.querySelector('.gframe[data-o="portrait"]');
   if (!frame) return issues;
+  // Ekran klavyesi açıkken (dar ve çok kısa) şerit bilerek gizlenir.
+  if (window.innerHeight <= 540 && window.innerWidth < 560) return issues;
   const bar = frame.querySelector(".gbar");
   if (!bar) return [["kabuk", "üst şerit (.gbar) yok"]];
   const row = bar.querySelector(".gbar__row");
   const tools = bar.querySelectorAll(".gbar__tools .icon-btn").length;
   const rowH = row ? row.getBoundingClientRect().height : 0;
+  // Yan yatırılmış telefonda (kısa ve yatay) şerit sola yan şerit olur; dikeydeki ölçüler geçerli değil.
+  const sideRail = window.innerHeight <= 500 && window.innerWidth >= 560;
+  if (sideRail) {
+    const b = bar.getBoundingClientRect();
+    if (b.left > 12 || b.width > 110) issues.push(["kabuk", `yan şerit yerinde değil [${b.left},${b.width}]`]);
+    return issues;
+  }
   if (Math.abs(rowH - 48) > 1) issues.push(["kabuk", `şerit yüksekliği ${rowH}px, beklenen 48px`]);
   if (tools !== 2) issues.push(["kabuk", `şeritte ses ve çıkış düğmeleri olmalı (${tools})`]);
   if (!bar.querySelector(".gbar__name") || !bar.querySelector(".gbar__round"))

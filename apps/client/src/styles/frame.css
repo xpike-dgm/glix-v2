@@ -491,6 +491,13 @@
   display: flex;
   margin-right: -10px;
 }
+.gbar__tools .icon-btn {
+  flex: none;
+}
+.gframe[data-o="portrait"] .kd__top,
+.gframe[data-o="portrait"] .kb__top {
+  margin-top: 0;
+}
 .gframe[data-spectator] .gbar + .ribbon {
   padding-top: 4px;
 }
@@ -611,7 +618,9 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  height: 10px;
+  height: 8px;
+  margin-top: -6px;
+  pointer-events: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -671,4 +680,47 @@
 }
 :root[data-motion="reduce"] .clock__track {
   transition: none;
+}
+
+/* Dikey oyun yan yatırılmış telefonda: üst şerit sola yan şerit olur, oyun dikey alanını korur. */
+@media (max-height: 500px) and (orientation: landscape) and (min-width: 560px) {
+  .gframe[data-o="portrait"] .gframe__main {
+    flex-direction: row;
+  }
+  .gframe[data-o="portrait"] .gbar {
+    flex: none;
+    width: 104px;
+    justify-content: flex-start;
+    gap: 4px;
+    padding: 6px 4px 6px max(8px, var(--safe-left));
+  }
+  .gframe[data-o="portrait"] .gbar__row {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  .gframe[data-o="portrait"] .gbar__title {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .gframe[data-o="portrait"] .gbar__clock {
+    height: 20px;
+  }
+  .gframe[data-o="portrait"] .gbar__tools {
+    margin: 0 0 0 -8px;
+  }
+  .gframe[data-o="portrait"] .gframe__body {
+    flex: 1;
+    min-width: 0;
+  }
+  .gframe[data-o="portrait"] .ribbon {
+    display: none;
+  }
+}
+
+/* Ekran klavyesi açıkken (dar ve çok kısa alan) şerit yazma alanına yer bırakır. */
+@media (max-height: 540px) and (max-width: 559px) {
+  .gframe[data-o="portrait"] .gbar {
+    display: none;
+  }
 }
