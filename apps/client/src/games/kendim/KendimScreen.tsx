@@ -1,5 +1,4 @@
 import { createMemo, Show } from "solid-js";
-import { serverNow } from "../../net/store.js";
 import { createVisibleArea } from "../../ui/keyboardArea.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";
 import type { GameScreenProps } from "../registry.js";

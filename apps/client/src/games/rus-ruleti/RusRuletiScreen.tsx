@@ -2,7 +2,6 @@ import { createEffect, createMemo, createSignal, For, on, onCleanup, Show, untra
 import { hapticError, hapticPress, hapticReady, hapticSolo, hapticTick } from "../../fx/haptics.js";
 import { unlockAudio } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
-import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";

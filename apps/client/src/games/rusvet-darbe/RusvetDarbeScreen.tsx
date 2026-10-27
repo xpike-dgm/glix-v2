@@ -1,6 +1,5 @@
 import { createMemo, Match, Show, Switch } from "solid-js";
 import { sendActionAck } from "../../net/client.js";
-import { serverNow } from "../../net/store.js";
 import { look } from "../../ui/avatars.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";
 import { PlayerPicker } from "../../ui/PlayerPicker.js";

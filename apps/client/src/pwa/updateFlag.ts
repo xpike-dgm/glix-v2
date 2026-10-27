@@ -14,7 +14,7 @@ export function consumeUpdated(
   store: Pick<Storage, "getItem" | "removeItem"> | null = safeSession(),
 ): boolean {
   try {
-    if (!store || store.getItem(FLAG) !== "1") return false;
+    if (store?.getItem(FLAG) !== "1") return false;
     store.removeItem(FLAG);
     return true;
   } catch {

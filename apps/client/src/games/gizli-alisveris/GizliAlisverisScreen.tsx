@@ -2,7 +2,6 @@ import { createEffect, createMemo, createSignal, For, on, Show } from "solid-js"
 import { hapticError, hapticTap } from "../../fx/haptics.js";
 import { fail, tap } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
-import { serverNow } from "../../net/store.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";
 import { pressable } from "../../ui/press.js";
 import { Screen } from "../../ui/Screen.js";

@@ -2,7 +2,6 @@ import { createMemo, createSignal, For, Match, onCleanup, Show, Switch } from "s
 import { hapticTap } from "../../fx/haptics.js";
 import { tap } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
-import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { createChoiceSync } from "../../ui/numberPicker.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";

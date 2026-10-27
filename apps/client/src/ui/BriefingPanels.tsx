@@ -30,7 +30,7 @@ export function BriefingPanels(props: {
   });
 
   return (
-    <Show when={allowed && !failed()} fallback={<>{props.fallback()}</>}>
+    <Show when={allowed && !failed()} fallback={props.fallback()}>
       <button
         type="button"
         class="panels"

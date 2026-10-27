@@ -2,7 +2,6 @@ import { createEffect, createMemo, on, Show } from "solid-js";
 import { hapticGo } from "../../fx/haptics.js";
 import { go } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
-import { serverNow } from "../../net/store.js";
 import { look } from "../../ui/avatars.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";
 import { PlayerPicker } from "../../ui/PlayerPicker.js";

@@ -1,7 +1,6 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { hapticTap } from "../../fx/haptics.js";
 import { sendAction, sendActionAck } from "../../net/client.js";
-import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { NumberPicker } from "../../ui/NumberPicker.js";
 import { createChoiceSync } from "../../ui/numberPicker.js";

@@ -474,7 +474,7 @@
     padding: 3% 4% 16%;
   }
   .bt__by .av {
-    --s: 22px !important;
+    --s: 22px;
   }
 }
 @media (max-height: 460px) {

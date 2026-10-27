@@ -1,7 +1,6 @@
 import { createEffect, createMemo, type JSX, on, Show } from "solid-js";
 import { hapticGo } from "../../fx/haptics.js";
 import { go } from "../../fx/sound.js";
-import { serverNow } from "../../net/store.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";
 import type { GameScreenProps } from "../registry.js";
 import "./laf.css";

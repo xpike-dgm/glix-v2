@@ -4,13 +4,13 @@
 }
 [data-seq="out"],
 [data-seq="out"] * {
-  animation-play-state: paused !important;
+  animation-play-state: paused;
 }
 [data-seq="in"] {
-  animation: seq-pop 380ms var(--ease) both !important;
+  animation: seq-pop 380ms var(--ease) both;
 }
 [data-seq="in"][data-final="1"] {
-  animation: seq-final 720ms var(--ease) both !important;
+  animation: seq-final 720ms var(--ease) both;
 }
 @keyframes seq-pop {
   from {

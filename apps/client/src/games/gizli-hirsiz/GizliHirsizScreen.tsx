@@ -2,7 +2,6 @@ import { createMemo, createSignal, onCleanup, Show } from "solid-js";
 import { hapticTap } from "../../fx/haptics.js";
 import { unlockAudio } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
-import { serverNow } from "../../net/store.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";
 import { Screen } from "../../ui/Screen.js";
 import { Status } from "../../ui/Status.js";

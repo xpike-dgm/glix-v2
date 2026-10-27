@@ -3,7 +3,6 @@ import { hapticMatch, hapticSolo, hapticTap, hapticTick } from "../../fx/haptics
 import { createOpening } from "../../fx/opening.js";
 import { match as matchSound, solo as soloSound, tap, tick } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
-import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
 import type { AckLike } from "../../ui/optimistic.js";
