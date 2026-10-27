@@ -274,14 +274,14 @@ function footer(ctx: Ctx): void {
 async function drawWinner(ctx: Ctx, env: CardEnv, m: Moment, y0: number): Promise<void> {
   const firsts = m.people.filter((p) => p.rank === 1);
   const rest = m.people.filter((p) => p.rank !== 1);
-  const big = firsts.length === 1 ? 520 : firsts.length === 2 ? 380 : 300;
+  const big = firsts.length === 1 ? (rest.length > 0 ? 430 : 520) : firsts.length === 2 ? 380 : 300;
   const colW = firsts.length === 1 ? 900 : CARD_W / firsts.length - 40;
   let bottom = y0;
   for (const [i, p] of firsts.entries()) {
     const cx = (CARD_W / firsts.length) * (i + 0.5);
     bottom = Math.max(
       bottom,
-      await drawPerson(ctx, env, p, cx, y0, big, colW, firsts.length === 1 ? 84 : 56, true),
+      await drawPerson(ctx, env, p, cx, y0, big, colW, firsts.length === 1 ? 76 : 56, true),
     );
   }
   let y = bottom + 50;
@@ -304,11 +304,11 @@ async function drawWinner(ctx: Ctx, env: CardEnv, m: Moment, y0: number): Promis
     const size = 210;
     for (const [i, p] of rest.entries()) {
       const cx = CARD_W / 2 + (i - (rest.length - 1) / 2) * 440;
-      await drawPerson(ctx, env, p, cx, Math.min(y + 20, CARD_H - 560), size, 400, 44, false);
+      await drawPerson(ctx, env, p, cx, Math.min(y + 60, CARD_H - 520), size, 400, 44, false);
       ctx.fillStyle = MAGENTA;
       ctx.font = `800 40px ${DISPLAY}`;
       ctx.textAlign = "center";
-      ctx.fillText(`${p.rank}.`, cx - size / 2 - 12, Math.min(y + 20, CARD_H - 560) + 52);
+      ctx.fillText(`${p.rank}.`, cx - size / 2 - 36, Math.min(y + 60, CARD_H - 520) + 52);
     }
   }
 }
@@ -337,12 +337,15 @@ async function drawDrawing(ctx: Ctx, env: CardEnv, m: Moment, y0: number): Promi
   ctx.shadowBlur = 0;
   const p = m.people[0];
   if (p) {
-    const top = y0 + board + 40;
-    await drawAvatar(ctx, env, p, CARD_W / 2 - 250, top + 60, 120, true);
+    const top = y0 + board + 60;
+    const fs = fitFont(ctx, p.nickname, 800, DISPLAY, 72, 32, 560);
+    const nameW = ctx.measureText(p.nickname).width;
+    const total = 140 + 28 + nameW;
+    const left = (CARD_W - total) / 2;
+    await drawAvatar(ctx, env, p, left + 70, top + 70, 140, true);
     ctx.textAlign = "left";
-    const fs = fitFont(ctx, p.nickname, 800, DISPLAY, 64, 32, 520);
     ctx.fillStyle = WHITE;
-    ctx.fillText(p.nickname, CARD_W / 2 - 170, top + 60 + fs * 0.35);
+    ctx.fillText(p.nickname, left + 168, top + 70 + fs * 0.35);
   }
 }
 
