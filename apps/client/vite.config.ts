@@ -124,6 +124,8 @@ export default defineConfig({
   ],
   server: {
     host: true,
+    // `scripts/ui-check.mjs`: yalnız denetimde modüller tarayıcı önbelleğinden gelsin (her yenilemede yeniden doğrulanmasın).
+    ...(process.env.GLIX_UI_CHECK ? { headers: { "Cache-Control": "max-age=3600" } } : {}),
     proxy: {
       "/ws": { target: "http://localhost:3900", ws: true },
       "/health": "http://localhost:3900",
