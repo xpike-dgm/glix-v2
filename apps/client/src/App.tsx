@@ -31,6 +31,7 @@ import { dataSaver, setTextSize, wifiOnly } from "./settings/settings.js";
 import { installErrorReporting } from "./telemetry/errors.js";
 import { preloadBriefing } from "./ui/briefingArt.js";
 import { Loading } from "./ui/Loading.js";
+import { collectGallery } from "./ui/matchGallery.js";
 import { preloadMoods } from "./ui/preloadMoods.js";
 import { preloadProps } from "./ui/props.js";
 import { Toasts } from "./ui/Toast.js";
@@ -48,6 +49,9 @@ export function App() {
     const snap = state.snapshot;
     if (snap && snap.phase !== "lobby") preloadMoods(snap.players.map((p) => p.avatar));
   });
+
+  // Karalama / Bozuk Telefon çizimleri (sunucunun herkese açık gönderdikleri) maç sonu galerisi için birikir.
+  createEffect(() => collectGallery(state.snapshot));
 
   // Lobiye girince lobi arka planı önden indirilir.
   createEffect(() => {

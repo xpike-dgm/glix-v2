@@ -225,10 +225,62 @@ button.kp__wire:active:not(:disabled) {
   color: var(--cyan);
 }
 .kp__note-text {
-  margin: 6px 0 0;
+  margin: 0;
   font-size: var(--fs-18);
   font-weight: 600;
   line-height: 1.35;
+}
+.kp__note-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.kp__diagram {
+  width: min(220px, 62vw);
+  height: auto;
+  flex: none;
+}
+.kp__dg-frame {
+  fill: rgba(10, 16, 48, 0.8);
+  stroke: rgba(140, 150, 200, 0.5);
+  stroke-width: 1.5;
+}
+.kp__dg-slot {
+  fill: none;
+  stroke: rgba(140, 150, 200, 0.45);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+.kp__dg-slot--on {
+  stroke: #fff;
+  stroke-width: 2.2;
+  stroke-dasharray: none;
+}
+.kp__dg-no {
+  fill: rgba(190, 198, 235, 0.7);
+  font-size: 14px;
+  font-weight: 700;
+}
+.kp__dg-no--on {
+  fill: #0a1030;
+}
+.kp__dg-arrow {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.kp__dg-cut {
+  stroke: #fff;
+  stroke-width: 3;
+}
+.kp__dg-scissors {
+  fill: none;
+  stroke: #0a1030;
+  stroke-width: 3.4;
+  stroke-linecap: round;
 }
 .kp__idle {
   flex: 1;
@@ -485,7 +537,10 @@ button.kp__wire:active:not(:disabled) {
   }
   .kp__note-text {
     font-size: var(--fs-15);
-    margin-top: 4px;
+    margin-top: 0;
+  }
+  .kp__diagram {
+    width: min(150px, 100%);
   }
   .kp__head--res {
     min-height: 44px;
@@ -499,5 +554,20 @@ button.kp__wire:active:not(:disabled) {
   }
   .kp__mini {
     display: none;
+  }
+}
+
+/* Kısa dikey ekran (320x568): çizim ve ipucu metni yan yana, not kısa kalsın. */
+@media (max-height: 640px) and (orientation: portrait) {
+  .kp__note-body {
+    flex-direction: row;
+    gap: 10px;
+  }
+  .kp__diagram {
+    width: 104px;
+  }
+  .kp__note-text {
+    font-size: var(--fs-15);
+    text-align: left;
   }
 }

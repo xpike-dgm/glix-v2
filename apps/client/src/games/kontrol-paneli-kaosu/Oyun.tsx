@@ -5,6 +5,7 @@ import { ready as readySound, tap, unlockAudio } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
 import { type AckLike, createOptimistic } from "../../ui/optimistic.js";
 import { TamamBar } from "../../ui/TamamBar.js";
+import { ClueDiagram } from "./ClueDiagram.js";
 import { Panel } from "./Panel.js";
 import { clueText, type KontrolScreenView } from "./view.js";
 
@@ -65,7 +66,10 @@ export function Oyun(props: Props) {
             {(clue) => (
               <div class="kp__note">
                 <span class="kp__note-tag">İpucu notu · sesli oku</span>
-                <p class="kp__note-text">{clueText(clue())}</p>
+                <div class="kp__note-body">
+                  <ClueDiagram clue={clue()} />
+                  <p class="kp__note-text">{clueText(clue())}</p>
+                </div>
               </div>
             )}
           </Show>

@@ -55,7 +55,10 @@ export function startMock(kind: string, params: URLSearchParams): void {
   let selection: RoomSnapshot["selection"] =
     params.get("sel") === "manual" ? { mode: "manual" } : { mode: "random", count: 5 };
   let tone: ContentTone = "arkadas";
-  let gameIds = selection.mode === "manual" ? ["butona-bas"] : [];
+  // `&pick=N` (manuel mod): ilk N oyun seçili gelir (lobi "Bu gece" şeridi denetimi).
+  const pick = Math.max(1, Math.min(CATALOG.length, Number(params.get("pick") ?? 1) || 1));
+  let gameIds =
+    selection.mode === "manual" ? (pick > 1 ? CATALOG.slice(0, pick).map((g) => g.id) : ["butona-bas"]) : [];
   let phase: RoomPhase = "lobby";
   let readyIds: string[] = [];
   const hostId = params.get("guest") === "1" ? "p1" : SELF;
@@ -195,6 +198,21 @@ export function startMock(kind: string, params: URLSearchParams): void {
     phase = "final";
     const totals = [5, 4, 4, 2, -1, 0, 3, 2];
     players = players.map((p, i) => ({ ...p, score: p.spectator ? 0 : (totals[i] ?? 0) }));
+    // `&gallery=N`: maç sonu galerisine N çizim koyar (ekran denetimi).
+    const gal = Number(params.get("gallery") ?? 0);
+    if (gal > 0)
+      void import("./mockKaralama.js").then(async (k) => {
+        const g = await import("../ui/matchGallery.js");
+        g.seedGallery(
+          Array.from({ length: gal }, (_, i) => ({
+            key: `dev:${i}`,
+            game: i % 3 === 2 ? ("bozuk" as const) : ("karalama" as const),
+            playerId: players[i % players.length]?.id ?? "p0",
+            strokes: k.sketch(i),
+            version: String(i),
+          })),
+        );
+      });
     publish();
     // Maç bitti, ev sahibi lobiye aldı: izleyici artık normal oyuncu.
     if (params.get("afterwatch") === "1")

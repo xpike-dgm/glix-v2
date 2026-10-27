@@ -2189,3 +2189,112 @@
   color: var(--text);
   font-weight: 600;
 }
+
+/* Final: maçın çizimleri galerisi (yatay kayan küçük resimler). */
+.gal {
+  flex: none;
+  margin-top: 8px;
+}
+.gal__title {
+  margin: 0 0 4px;
+  text-align: center;
+}
+.gal__strip {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 2px 4px 4px;
+  list-style: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+}
+.gal__item {
+  flex: none;
+  width: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  scroll-snap-align: start;
+}
+.gal__btn {
+  display: block;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--kd-board);
+}
+.gal__name {
+  max-width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .gal {
+    display: none;
+  }
+}
+
+/* Lobi: "Bu gece" şeridi (seçilen oyunların küçük kartları; rastgele modda "?"). */
+.tonight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 6px 0 2px;
+  border-top: 1px solid var(--line);
+}
+.tonight__label {
+  flex: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-13);
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+.tonight__strip {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 2px 2px;
+  list-style: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.tonight__strip::-webkit-scrollbar {
+  display: none;
+}
+.tonight__card {
+  flex: none;
+  width: 56px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(120, 140, 255, 0.12);
+  box-shadow: 0 0 0 1px rgba(160, 175, 255, 0.22);
+}
+.tonight__card .gcard__art {
+  display: block;
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.tonight__card--rnd {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+  color: var(--cyan);
+}

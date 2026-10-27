@@ -170,3 +170,31 @@ export function paintAll(
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   for (const s of strokes) paintStroke(ctx, s, halo);
 }
+
+/** Tekrar oynatma süresi: tüm çizim bu sürede baştan sona çizilir. */
+export const REPLAY_MS = 1_500;
+
+/**
+ * Çizimin ilk `fraction` (0..1) kadarı: noktalar darbeler sırasıyla sayılır, yarım kalan darbe kısaltılır
+ * (en az 2 nokta). 1 verilirse tüm darbeler döner.
+ */
+export function strokesUpTo(strokes: readonly KaralamaStroke[], fraction: number): KaralamaStroke[] {
+  if (fraction >= 1) return [...strokes];
+  if (fraction <= 0) return [];
+  let total = 0;
+  for (const s of strokes) total += (s.length - 2) / 2;
+  let left = Math.ceil(total * fraction);
+  const out: KaralamaStroke[] = [];
+  for (const s of strokes) {
+    if (left <= 0) break;
+    const n = (s.length - 2) / 2;
+    if (n <= left) {
+      out.push(s);
+      left -= n;
+    } else {
+      out.push(s.slice(0, 2 + Math.max(2, left) * 2));
+      left = 0;
+    }
+  }
+  return out;
+}
