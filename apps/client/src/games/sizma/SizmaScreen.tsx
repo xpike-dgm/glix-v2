@@ -10,6 +10,7 @@ import { Screen } from "../../ui/Screen.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import { Order, WordGem } from "./Clue.js";
+import { Fark } from "./Fark.js";
 import "./sizma.css";
 import { Sonuc } from "./Sonuc.js";
 import { type CrewMember, parseSizmaView } from "./view.js";
@@ -54,7 +55,8 @@ export default function SizmaScreen(props: GameScreenProps) {
     const v = view();
     if (!v) return null;
     if (v.phase === "vote") return { from: v.clueEndsAt, to: v.voteEndsAt, urgency: true };
-    if (v.phase === "reveal") return { from: v.voteEndsAt, to: v.finishAt, urgency: false };
+    if (v.phase === "notice") return { from: v.voteEndsAt, to: v.noticeEndsAt, urgency: true };
+    if (v.phase === "reveal") return { from: v.noticeEndsAt, to: v.finishAt, urgency: false };
     return null;
   };
 
@@ -70,72 +72,84 @@ export default function SizmaScreen(props: GameScreenProps) {
             when={v().reveal}
             fallback={
               <Show
-                when={v().phase === "vote"}
+                when={v().phase !== "notice"}
                 fallback={
-                  <>
-                    <div class="sz__head">
-                      <span class="overline">{spectator() ? "Kelimeler gizli" : "Senin kelimen"}</span>
-                    </div>
-                    <div class="sz__mid">
-                      <WordGem word={spectator() ? null : v().word} />
-                      <p class="sz__hint">Sırayla yüksek sesle ipucu ver · 2 tur</p>
-                      <Order crew={crew()} order={v().order} selfId={props.selfId} ready={v().ready} />
-                    </div>
-                    <TamamBar
-                      locked={v().locked}
-                      ready={v().ready.length}
-                      readyIds={v().ready}
-                      total={crew().length}
-                      spectator={spectator()}
-                      label="Oylamaya geç"
-                      doneLabel="Hazırsın"
-                      onLock={() => sendActionAck({ kind: "skip" })}
-                    />
-                  </>
+                  <Fark
+                    view={v()}
+                    crew={crew()}
+                    spectator={spectator()}
+                    onAnswer={(yes) => sendActionAck({ kind: "notice", yes })}
+                  />
                 }
               >
-                <div class="sz__head">
-                  <span class="overline">{spectator() ? "Gizli oylama" : "Gizli oy"}</span>
-                  <Show
-                    when={chosen()}
-                    fallback={
-                      <span class="sz__title">{spectator() ? "Herkes oy veriyor" : "Sızma kim?"}</span>
-                    }
-                  >
-                    {(p) => (
-                      <span class="sz__title sz__title--locked" style={{ "--tc": look(p().avatar).color }}>
-                        {p().nickname}
-                      </span>
-                    )}
-                  </Show>
-                  <Show when={!spectator() && v().word}>
-                    <span class="sz__mine">
-                      Kelimen <b>{v().word}</b>
-                    </span>
-                  </Show>
-                </div>
-                <PlayerPicker
-                  players={crew()}
-                  selfId={props.selfId}
-                  allowSelf
-                  selected={pick.value()}
-                  disabled={closed()}
-                  ring={SUSPECT}
-                  label={(p) =>
-                    p.id === props.selfId ? "Kendine oy ver" : `${p.nickname} adlı oyuncuya oy ver`
+                <Show
+                  when={v().phase === "vote"}
+                  fallback={
+                    <>
+                      <div class="sz__head">
+                        <span class="overline">{spectator() ? "Kelimeler gizli" : "Senin kelimen"}</span>
+                      </div>
+                      <div class="sz__mid">
+                        <WordGem word={spectator() ? null : v().word} />
+                        <p class="sz__hint">Sırayla yüksek sesle ipucu ver · 2 tur</p>
+                        <Order crew={crew()} order={v().order} selfId={props.selfId} ready={v().ready} />
+                      </div>
+                      <TamamBar
+                        locked={v().locked}
+                        ready={v().ready.length}
+                        readyIds={v().ready}
+                        total={crew().length}
+                        spectator={spectator()}
+                        label="Oylamaya geç"
+                        doneLabel="Hazırsın"
+                        onLock={() => sendActionAck({ kind: "skip" })}
+                      />
+                    </>
                   }
-                  ready={v().ready}
-                  onPick={(id) => pick.pick(id)}
-                />
-                <TamamBar
-                  locked={v().locked}
-                  ready={v().ready.length}
-                  readyIds={v().ready}
-                  total={crew().length}
-                  disabled={pick.value() === null}
-                  spectator={spectator()}
-                  onLock={() => sendActionAck({ kind: "lock" })}
-                />
+                >
+                  <div class="sz__head">
+                    <span class="overline">{spectator() ? "Gizli oylama" : "Gizli oy"}</span>
+                    <Show
+                      when={chosen()}
+                      fallback={
+                        <span class="sz__title">{spectator() ? "Herkes oy veriyor" : "Sızma kim?"}</span>
+                      }
+                    >
+                      {(p) => (
+                        <span class="sz__title sz__title--locked" style={{ "--tc": look(p().avatar).color }}>
+                          {p().nickname}
+                        </span>
+                      )}
+                    </Show>
+                    <Show when={!spectator() && v().word}>
+                      <span class="sz__mine">
+                        Kelimen <b>{v().word}</b>
+                      </span>
+                    </Show>
+                  </div>
+                  <PlayerPicker
+                    players={crew()}
+                    selfId={props.selfId}
+                    allowSelf
+                    selected={pick.value()}
+                    disabled={closed()}
+                    ring={SUSPECT}
+                    label={(p) =>
+                      p.id === props.selfId ? "Kendine oy ver" : `${p.nickname} adlı oyuncuya oy ver`
+                    }
+                    ready={v().ready}
+                    onPick={(id) => pick.pick(id)}
+                  />
+                  <TamamBar
+                    locked={v().locked}
+                    ready={v().ready.length}
+                    readyIds={v().ready}
+                    total={crew().length}
+                    disabled={pick.value() === null}
+                    spectator={spectator()}
+                    onLock={() => sendActionAck({ kind: "lock" })}
+                  />
+                </Show>
               </Show>
             }
           >

@@ -4,7 +4,7 @@ import { match as matchSound, solo as soloSound, tick } from "../../fx/sound.js"
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
 import type { CrewMember } from "./Pazarlik.js";
-import { flowsOf, type IttifakScreenView, ringPosition } from "./view.js";
+import { flowsOf, type IttifakScreenView, promiseRows, ringPosition } from "./view.js";
 
 /** Oy akışı: her oy bir enerji ipiyle hedefin portresine akar (ms). */
 const BEAM_MS = 520;
@@ -51,6 +51,12 @@ export function Sonuc(props: Props) {
       ];
     });
   });
+  const rows = createMemo(() => {
+    const r = reveal();
+    return r ? promiseRows(r, order(), props.selfId) : [];
+  });
+  const nameOf = (id: string) => props.crew.find((m) => m.id === id)?.nickname ?? "";
+  const kept = () => rows().filter((r) => r.kept).length;
   const lastDelay = () => Math.max(0, ...beams().map((b) => b.delay));
   const mine = () => reveal()?.scores[props.selfId] ?? 0;
   const myVote = () => {
@@ -138,6 +144,31 @@ export function Sonuc(props: Props) {
           </For>
         </div>
       </div>
+      <Show when={rows().length > 0}>
+        <div class="it__promises" style={{ "--p-at": `${CHIP_AT_MS + lastDelay() / 2 + 500}ms` }}>
+          <p class="it__promises-head">
+            Sözler · {kept()} tutuldu, {rows().length - kept()} bozuldu
+          </p>
+          <ul class="it__promise-list">
+            <For each={rows()}>
+              {(r) => (
+                <li
+                  class="it__promise"
+                  data-kept={r.kept ? "1" : "0"}
+                  data-me={r.from === props.selfId ? "1" : undefined}
+                >
+                  <span class="it__promise-text">
+                    {nameOf(r.from)} → {nameOf(r.to)}
+                  </span>
+                  <b class="it__promise-mark" role="img" aria-label={r.kept ? "tutuldu" : "bozuldu"}>
+                    {r.kept ? "✓" : "✗"}
+                  </b>
+                </li>
+              )}
+            </For>
+          </ul>
+        </div>
+      </Show>
       <p class="it__hint" role="status">
         Alınan her oy genel skora eklenir
       </p>

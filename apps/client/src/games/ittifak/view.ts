@@ -1,4 +1,10 @@
-import type { IttifakPhase, IttifakPublicView, IttifakReveal, IttifakView } from "@glix/engine";
+import type {
+  IttifakPhase,
+  IttifakPromise,
+  IttifakPublicView,
+  IttifakReveal,
+  IttifakView,
+} from "@glix/engine";
 import { parseNumberRecord } from "../../net/parse.js";
 
 type Rec = Record<string, unknown>;
@@ -9,6 +15,22 @@ const PHASES: readonly IttifakPhase[] = ["talk", "vote", "reveal"];
 /** Ekranın okuduğu birleşik görünüm: ortak (`publicView`) + kişiye özel (`view`). */
 export type IttifakScreenView = IttifakPublicView & IttifakView;
 
+function parsePromises(v: unknown): Record<string, IttifakPromise[]> | null {
+  if (v === undefined || v === null) return {};
+  if (!isRec(v)) return null;
+  const out: Record<string, IttifakPromise[]> = {};
+  for (const [from, list] of Object.entries(v)) {
+    if (!Array.isArray(list)) return null;
+    const items: IttifakPromise[] = [];
+    for (const item of list) {
+      if (!isRec(item) || typeof item.to !== "string" || typeof item.kept !== "boolean") return null;
+      items.push({ to: item.to, kept: item.kept });
+    }
+    out[from] = items;
+  }
+  return out;
+}
+
 function parseReveal(v: unknown): IttifakReveal | null {
   if (!isRec(v) || !isRec(v.votes)) return null;
   const scores = parseNumberRecord(v.scores);
@@ -18,7 +40,9 @@ function parseReveal(v: unknown): IttifakReveal | null {
     if (typeof to !== "string") return null;
     votes[from] = to;
   }
-  return { votes, scores };
+  const promises = parsePromises(v.promises);
+  if (!promises) return null;
+  return { votes, scores, promises };
 }
 
 /** Sunucudan gelen `publicView` bilinmez; İttifak ortak görünümü olarak doğrulanır. */
@@ -47,7 +71,9 @@ export function parseIttifakPrivateView(v: unknown): IttifakView | null {
   if (!isRec(v)) return null;
   if (v.myVote !== null && typeof v.myVote !== "string") return null;
   if (typeof v.locked !== "boolean") return null;
-  return { myVote: v.myVote, locked: v.locked };
+  const mine = v.myPromises === undefined ? [] : v.myPromises;
+  if (!Array.isArray(mine) || !mine.every((p) => typeof p === "string")) return null;
+  return { myVote: v.myVote, myPromises: [...(mine as string[])], locked: v.locked };
 }
 
 export function parseIttifakView(publicView: unknown, view: unknown): IttifakScreenView | null {
@@ -108,4 +134,29 @@ export function bondPattern(count: number): Bond[] {
   for (let i = 0; i < count; i += 3) add(i, (i + Math.max(2, Math.floor(count / 2))) % count);
   for (let i = 1; i < count; i += 3) add(i, (i + 2) % count);
   return bonds.slice(0, 6);
+}
+
+/** Açılan sözler: söz veren, alıcı ve tutuldu mu; katılım sırasıyla (kendi sözlerin önde). */
+export interface PromiseRow {
+  from: string;
+  to: string;
+  kept: boolean;
+}
+
+export function promiseRows(reveal: IttifakReveal, order: readonly string[], selfId: string): PromiseRow[] {
+  const known = new Set(order);
+  const rows: PromiseRow[] = [];
+  const ordered = [...order].sort((a, b) => Number(b === selfId) - Number(a === selfId));
+  for (const from of ordered) {
+    for (const p of reveal.promises[from] ?? []) {
+      if (known.has(p.to) && p.to !== from) rows.push({ from, to: p.to, kept: p.kept });
+    }
+  }
+  return rows;
+}
+
+/** Söz işaretini koy/kaldır: yeni liste (en çok `max` kişi; doluyken yeni eklenmez -> null). */
+export function togglePromise(current: readonly string[], target: string, max: number): string[] | null {
+  if (current.includes(target)) return current.filter((id) => id !== target);
+  return current.length >= max ? null : [...current, target];
 }

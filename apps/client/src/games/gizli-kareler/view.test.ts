@@ -20,6 +20,7 @@ const base: KarelerPublicView = {
   finishesAt: null,
   walkover: null,
   points: null,
+  bonus: null,
   ready: [],
 };
 const priv = { myChoice: 4, locked: false };
@@ -78,11 +79,38 @@ describe("Gizli Kareler görünümü", () => {
     expect(bad({ stage1: { ...reveal1, status: { a: "clash" } } })).toBeNull();
     expect(bad({ stage1: 3 })).toBeNull();
     expect(bad({ stage2: { startsAt: 1, endsAt: 2, players: [1] } })).toBeNull();
-    expect(bad({ stage1: reveal1, points: { a: 3 } })).toBeNull();
+    expect(bad({ stage1: reveal1, points: { a: 5 } })).toBeNull();
     // 1. aşama açılmadan sonraki aşama bilgisi olamaz.
     expect(bad({ points: { a: 0 } })).toBeNull();
     expect(bad({ stage2: { startsAt: 1, endsAt: 2, players: [] } })).toBeNull();
     expect(bad({ stage1: reveal1, stage2Reveal: reveal1 })).toBeNull();
+  });
+
+  it("ödül karesini okur; sonuçtan önce gelirse ya da bozuksa reddeder", () => {
+    const stage2 = { startsAt: 25_000, endsAt: 45_000, players: ["c", "e"] };
+    const done = {
+      ...base,
+      stage1: reveal1,
+      stage2,
+      stage2Reveal: { choices: { c: 4, e: 6 }, status: { c: "solo", e: "solo" } },
+      finishesAt: 50_000,
+      points: { a: 0, b: 0, c: 4, d: 0 },
+    };
+    expect(parseKarelerView({ ...done, bonus: { cell: 4, winner: "c" } }, priv)?.bonus).toEqual({
+      cell: 4,
+      winner: "c",
+    });
+    expect(parseKarelerView({ ...done, bonus: { cell: 4, winner: null } }, priv)?.bonus?.winner).toBeNull();
+    expect(parseKarelerView(done, priv)?.bonus).toBeNull();
+    // 2. aşama sonucu açılmadan ödül karesi olamaz.
+    expect(parseKarelerView({ ...base, bonus: { cell: 4, winner: null } }, priv)).toBeNull();
+    expect(
+      parseKarelerView({ ...done, stage2Reveal: null, bonus: { cell: 4, winner: null } }, priv),
+    ).toBeNull();
+    // Izgara dışı hücre ya da bozuk kazanan.
+    expect(parseKarelerView({ ...done, bonus: { cell: 9, winner: null } }, priv)).toBeNull();
+    expect(parseKarelerView({ ...done, bonus: { cell: 4, winner: 3 } }, priv)).toBeNull();
+    expect(parseKarelerView({ ...done, bonus: "x" }, priv)).toBeNull();
   });
 
   it("ekran aşaması: seçim, 1. sonuç, 2. seçim, son sonuç", () => {

@@ -4,10 +4,10 @@ import { createRng } from "../../rng.js";
 import { type IttifakState, ittifak, ittifakFillVotes, ittifakReveal } from "./index.js";
 import {
   ITTIFAK_DURATION_MS,
+  ITTIFAK_MAX_PROMISES,
   ITTIFAK_REVEAL_MS,
   ITTIFAK_TALK_MS,
   ITTIFAK_VOTE_MS,
-  ITTIFAK_MAX_PROMISES,
   type IttifakPublicView,
   type IttifakView,
 } from "./types.js";

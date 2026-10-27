@@ -8,6 +8,7 @@ import { Screen } from "../../ui/Screen.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import { Dagitim } from "./Dagitim.js";
+import { Darbe } from "./Darbe.js";
 import { type CrewMember, Duello } from "./Duello.js";
 import { Sonuc } from "./Sonuc.js";
 import "./rusvet-darbe.css";
@@ -104,6 +105,15 @@ export default function RusvetDarbeScreen(props: GameScreenProps) {
                 spectator={spectator()}
                 onGive={(tokens) => sendActionAck({ kind: "give", tokens })}
                 onDone={() => sendActionAck({ kind: "lock" })}
+              />
+            </Match>
+            <Match when={v().phase === "coup" && v().coup}>
+              <Darbe
+                view={v()}
+                crew={crew()}
+                selfId={props.selfId}
+                spectator={spectator()}
+                onCoup={(yes) => sendActionAck({ kind: "coup", yes })}
               />
             </Match>
             <Match when={v().phase === "reveal" && v().reveal}>

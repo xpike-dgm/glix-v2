@@ -111,7 +111,9 @@ export const sizma: GameDefinition<SizmaState, SizmaAction, SizmaView, SizmaPubl
       return Object.keys(r).length === 1 ? { kind: r.kind } : null;
     }
     if (r.kind === "notice") {
-      return Object.keys(r).length === 2 && typeof r.yes === "boolean" ? { kind: "notice", yes: r.yes } : null;
+      return Object.keys(r).length === 2 && typeof r.yes === "boolean"
+        ? { kind: "notice", yes: r.yes }
+        : null;
     }
     if (Object.keys(r).length !== 2 || r.kind !== "vote") return null;
     const target = r.target;

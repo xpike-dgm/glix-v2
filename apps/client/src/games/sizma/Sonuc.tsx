@@ -44,10 +44,16 @@ export function Sonuc(props: Props) {
   );
   const seq = createSequence({
     steps: () => plan().steps,
-    startAt: () => props.view.voteEndsAt,
-    budgetMs: () => props.view.finishAt - props.view.voteEndsAt,
+    startAt: () => props.view.noticeEndsAt,
+    budgetMs: () => props.view.finishAt - props.view.noticeEndsAt,
   });
   const unmasked = () => seq.shown() > plan().finale;
+  // Sızma açıklandıktan sonra "fark ettin mi" cevabı açılır.
+  const noticeLine = (): string => {
+    const r = reveal();
+    if (!r) return "";
+    return r.selfNoticed ? "Sızma kendini fark etti!" : "Sızma kendini fark etmedi";
+  };
 
   // Dizi bitince bir kez: sonuç sesi ve titreşimi.
   createEffect(
@@ -108,6 +114,18 @@ export function Sonuc(props: Props) {
               </div>
             </div>
 
+            <p
+              class="sz__notice"
+              role="status"
+              data-yes={reveal()?.selfNoticed ? "1" : "0"}
+              data-seq={seq.attr(plan().notice)}
+            >
+              {noticeLine()}
+              <Show when={reveal()?.selfNoticed}>
+                <b> +1</b>
+              </Show>
+            </p>
+
             <ul class="sz__tally" aria-label="Alınan oylar" data-n={ranked().length}>
               <For each={ranked()}>
                 {(m) => {
@@ -137,7 +155,7 @@ export function Sonuc(props: Props) {
             when={!props.spectator}
             fallback={
               <p class="sz__hint" role="status">
-                Yakalanırsa herkes +1, kurtulursa sızma +2
+                Yakalanırsa herkes +1, kurtulursa sızma +2; fark ederse sızma +1 daha
               </p>
             }
           >

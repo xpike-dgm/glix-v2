@@ -6,12 +6,15 @@
  *   ?mock=ittifak-talk-locked     pazarlık: sen "Oylamaya geçelim" dedin, diğerleri bekleniyor
  *   ?mock=ittifak-vote-locked     oylama: sen "Tamam" dedin (oy seçili), diğerleri bekleniyor
  *   ?mock=ittifak-reveal          oy akışı ve alınan oylar
+ *   ?mock=ittifak-talk            ... `&promised=1,2` söz işaretleri başlangıçta konmuş; portreye dokununca söz konur/kalkar
+ *   ?mock=ittifak-reveal          ... sözler açılır (tutuldu ✓ / bozuldu ✗); `&promises=many` herkes 2 söz vermiş
  *   ?mock=ittifak-reveal-zero     sen hiç oy almadın
  *   ?mock=ittifak-spectator-talk | -vote | -reveal   katılımcı değilsin
  */
 import type { GameInfo, MatchSnapshot, PlayerInfo, RoomPhase, RoomSnapshot } from "@glix/engine";
 import {
   ITTIFAK_DURATION_MS,
+  ITTIFAK_MAX_PROMISES,
   ITTIFAK_REVEAL_MS,
   ITTIFAK_TALK_MS,
   ITTIFAK_VOTE_MS,
@@ -62,6 +65,27 @@ export function startIttifakMock(kind: string, params: URLSearchParams): void {
       ? `p${Number(chosenParam ?? 1)}`
       : null;
   let myLocked = kind.includes("locked");
+  let myPromises: string[] = (params.get("promised") ?? "")
+    .split(",")
+    .filter((s) => s !== "")
+    .map((s) => `p${Number(s)}`)
+    .filter((id) => participants.includes(id) && id !== SELF)
+    .slice(0, ITTIFAK_MAX_PROMISES);
+  /** Açılışta gösterilen sözler: sen p1'e (tutuldu) ve p2'ye (bozuldu); `many`: herkes 2 kişiye. */
+  const promisesMock = (): Record<string, string[]> => {
+    const out: Record<string, string[]> = {};
+    if (params.get("promises") === "many") {
+      participants.forEach((id, i) => {
+        const a = participants[(i + 1) % participants.length] as string;
+        const b = participants[(i + 2) % participants.length] as string;
+        out[id] = [a, b].filter((x) => x !== id);
+      });
+      return out;
+    }
+    out[SELF] = participants.filter((id) => id !== SELF).slice(0, 2);
+    if (participants.includes("p1") && participants.includes("p3")) out.p1 = ["p0", "p3"];
+    return out;
+  };
   const readyIds2 = (): string[] => {
     if (stage === "reveal") return [];
     if (myLocked || spectator) {
@@ -95,10 +119,11 @@ export function startIttifakMock(kind: string, params: URLSearchParams): void {
       voteEndsAt: startedAt + ITTIFAK_TALK_MS + ITTIFAK_VOTE_MS,
       finishAt: startedAt + ITTIFAK_DURATION_MS,
       ready: readyIds2(),
-      reveal: stage === "reveal" ? ittifakReveal(participants, votes()) : null,
+      reveal: stage === "reveal" ? ittifakReveal(participants, votes(), promisesMock()) : null,
     },
     priv: {
       myVote: spectator ? null : stage === "reveal" ? (votes()[SELF] ?? null) : myVote,
+      myPromises: spectator ? [] : stage === "reveal" ? (promisesMock()[SELF] ?? []) : myPromises,
       locked: !spectator && stage !== "reveal" && myLocked,
     },
   });
@@ -148,7 +173,16 @@ export function startIttifakMock(kind: string, params: URLSearchParams): void {
   setState({ conn: "open", everOpen: true, nickname: "Cihad" });
   useMockSender((msg) => {
     if (msg.type !== "action") return;
-    const payload = msg.payload as { kind?: string; target?: string } | null;
+    const payload = msg.payload as { kind?: string; target?: string; on?: boolean } | null;
+    if (payload?.kind === "promise" && typeof payload.target === "string" && stage === "talk") {
+      const target = payload.target;
+      if (payload.on === true) {
+        if (myPromises.length >= ITTIFAK_MAX_PROMISES || myPromises.includes(target)) return;
+        myPromises = [...myPromises, target];
+      } else myPromises = myPromises.filter((id) => id !== target);
+      applySnapshot(snapshot());
+      return;
+    }
     if (payload?.kind === "skip" || (payload?.kind === "lock" && myVote !== null)) {
       myLocked = true;
       applySnapshot(snapshot());

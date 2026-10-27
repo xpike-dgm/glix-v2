@@ -7,7 +7,8 @@ export const sizmaBot: GameBot = {
   burstJitterMs: [100, 1_000, 6_000],
   generate: (rng, playerId, pub, priv, connected) => {
     const roll = rng.int(100);
-    if ((pub as { phase?: unknown } | null)?.phase === "notice") return { kind: "notice", yes: rng.int(2) === 0 };
+    if ((pub as { phase?: unknown } | null)?.phase === "notice")
+      return { kind: "notice", yes: rng.int(2) === 0 };
     if (roll < 30) return { kind: "skip" };
     if (roll < 40) return { kind: "lock" };
     if (roll < 44) return { kind: "vote", target: "ghost" };

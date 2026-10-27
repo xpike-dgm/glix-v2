@@ -8,8 +8,8 @@ import {
   ITTIFAK_TALK_MS,
   ITTIFAK_VOTE_MS,
   type IttifakAction,
-  type IttifakPromise,
   type IttifakPhase,
+  type IttifakPromise,
   type IttifakPublicView,
   type IttifakReveal,
   type IttifakView,
@@ -169,7 +169,10 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
       const has = mine.includes(action.target);
       if (action.on === has) return state;
       if (!action.on) {
-        return { ...state, promises: { ...state.promises, [playerId]: mine.filter((id) => id !== action.target) } };
+        return {
+          ...state,
+          promises: { ...state.promises, [playerId]: mine.filter((id) => id !== action.target) },
+        };
       }
       if (mine.length >= ITTIFAK_MAX_PROMISES) return { rejected: "too_many_promises" };
       return { ...state, promises: { ...state.promises, [playerId]: [...mine, action.target] } };
@@ -236,7 +239,9 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
       finishAt: state.finishAt,
       ready: phase === "talk" ? [...state.skipped] : phase === "vote" ? [...state.locked] : [],
       reveal:
-        phase === "reveal" && s.finalVotes !== null ? ittifakReveal(s.players, s.finalVotes, s.promises) : null,
+        phase === "reveal" && s.finalVotes !== null
+          ? ittifakReveal(s.players, s.finalVotes, s.promises)
+          : null,
     };
   },
 
@@ -253,7 +258,11 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
         : phase === "vote"
           ? s.locked.includes(playerId)
           : false;
-    return { myVote: voteOf(final ?? s.votes, playerId), myPromises: [...promisesOf(s.promises, playerId)], locked };
+    return {
+      myVote: voteOf(final ?? s.votes, playerId),
+      myPromises: [...promisesOf(s.promises, playerId)],
+      locked,
+    };
   },
 
   isFinished(state, ctx): boolean {

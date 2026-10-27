@@ -492,7 +492,12 @@ describe("sızma gizlilik (sızma kimliği kısa; yapısal kontrol)", () => {
     const p = pub(s, VOTE_AT + 600);
     expect(p.ready).toEqual(["pa1"]);
     expect(JSON.stringify(p)).not.toMatch(/votes|tally|myVote/);
-    expect(priv(s, "pb2", VOTE_AT + 600)).toEqual({ word: "ÇAY", myVote: null, myNotice: null, locked: false });
+    expect(priv(s, "pb2", VOTE_AT + 600)).toEqual({
+      word: "ÇAY",
+      myVote: null,
+      myNotice: null,
+      locked: false,
+    });
   });
 });
 
@@ -691,7 +696,16 @@ describe("sızma: fark ettin mi? (O11)", () => {
     const r = pub(s, NOTICE_END).reveal;
     expect(r?.selfNoticed).toBe(false);
     expect(Object.keys(r ?? {}).sort()).toEqual(
-      ["caught", "commonWord", "infiltrator", "infiltratorWord", "scores", "selfNoticed", "tally", "votes"].sort(),
+      [
+        "caught",
+        "commonWord",
+        "infiltrator",
+        "infiltratorWord",
+        "scores",
+        "selfNoticed",
+        "tally",
+        "votes",
+      ].sort(),
     );
     const yes = notice(caught(), "c", true);
     expect(pub(yes, NOTICE_END).reveal?.selfNoticed).toBe(true);

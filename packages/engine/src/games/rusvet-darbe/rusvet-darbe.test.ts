@@ -1033,7 +1033,14 @@ describe("rusvet-darbe darbe (O3)", () => {
     ["a", "b"],
   ];
   /** a başkan; b 2, c 2 alır; d ve e jeton almaz (hak sahipleri). */
-  const coupState = (players = P5, edges = STAR5, tokens: [string, number][] = [["b", 2], ["c", 2]]) => {
+  const coupState = (
+    players = P5,
+    edges = STAR5,
+    tokens: [string, number][] = [
+      ["b", 2],
+      ["c", 2],
+    ],
+  ) => {
     const s = act(at(withVotes(players, edges), E + 1), "a", give(tokens), T0 + E + 1_000);
     return rusvetDarbe.tick(s, ctx(T0 + COUP_AT, players));
   };
@@ -1156,9 +1163,7 @@ describe("rusvet-darbe darbe (O3)", () => {
     s = act(s, "e", coup(false), T0 + COUP_AT + 2_000);
     expect(pub(s, COUP_AT + 2_999).phase).toBe("coup");
     expect(pub(s, COUP_AT + 3_000).phase).toBe("reveal");
-    expect(
-      rusvetDarbe.isFinished(s, ctx(T0 + COUP_AT + 3_000 + RUSVET_REVEAL_MS - 1, P5)),
-    ).toBe(false);
+    expect(rusvetDarbe.isFinished(s, ctx(T0 + COUP_AT + 3_000 + RUSVET_REVEAL_MS - 1, P5))).toBe(false);
     expect(rusvetDarbe.isFinished(s, ctx(T0 + COUP_AT + 3_000 + RUSVET_REVEAL_MS, P5))).toBe(true);
   });
 

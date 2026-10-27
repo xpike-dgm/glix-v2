@@ -509,3 +509,70 @@
   border-radius: 999px;
   background: rgba(5, 8, 26, 0.78);
 }
+
+/* ---- Fark ettin mi? ---- */
+.sz__ask {
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+.sz__ask-mask {
+  color: var(--magenta, #ff2bd6);
+  filter: drop-shadow(0 0 10px currentColor);
+}
+.sz__status .status__main {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 7vw, var(--fs-32));
+  line-height: 1.15;
+}
+.sz__yn {
+  flex: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 6px 0 10px;
+}
+.sz__yn-btn {
+  min-height: 64px;
+  border-radius: var(--r-btn);
+  border: 2px solid var(--line);
+  background: var(--bg-1);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-18);
+  cursor: pointer;
+}
+.sz__yn-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.sz__yn-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.sz__yn-btn[data-on="1"] {
+  opacity: 1;
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--cyan) 50%, transparent);
+  background: color-mix(in srgb, var(--cyan) 12%, var(--bg-1));
+}
+.sz__notice {
+  margin: 0 0 4px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-15);
+  color: var(--text-dim);
+}
+.sz__notice[data-yes="1"] {
+  color: var(--lime);
+}
+@media (max-height: 460px) {
+  .sz__yn-btn {
+    min-height: 52px;
+  }
+  .sz__ask-mask {
+    display: none;
+  }
+}
