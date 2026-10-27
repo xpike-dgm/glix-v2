@@ -1,12 +1,12 @@
 /* Kör Bomba: neon masa, kablolar ve bomba. Sahne `.gframe__body` içinde (container: stage) tüm alanı doldurur. */
-.kb {
+.kbo {
   --seat: clamp(40px, min(15cqh, 9cqw), 64px);
   --bomb: clamp(80px, 27cqh, 132px);
   position: absolute;
   inset: 0;
   overflow: hidden;
 }
-.kb__felt {
+.kbo__felt {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -20,21 +20,21 @@
     0 0 28px rgba(46, 242, 255, 0.4),
     inset 0 0 36px rgba(46, 242, 255, 0.28);
 }
-.kb__felt::after {
+.kbo__felt::after {
   content: "";
   position: absolute;
   inset: 9% 8%;
   border-radius: 50%;
   border: 1.5px solid rgba(139, 92, 255, 0.55);
 }
-.kb__cables {
+.kbo__cables {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
 }
-.kb__cable {
+.kbo__cable {
   stroke: rgba(139, 92, 255, 0.55);
   stroke-width: 2.5;
   stroke-linecap: round;
@@ -42,14 +42,14 @@
     stroke 200ms,
     stroke-width 200ms;
 }
-.kb__cable--holder {
+.kbo__cable--holder {
   stroke: rgba(255, 59, 92, 0.75);
 }
-.kb__cable--on {
+.kbo__cable--on {
   stroke: var(--amber);
   stroke-width: 5;
 }
-.kb__hub {
+.kbo__hub {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -62,7 +62,7 @@
 }
 
 /* koltuklar */
-.kb__seat {
+.kbo__seat {
   position: absolute;
   z-index: 2;
   transform: translate(-50%, -50%);
@@ -80,11 +80,11 @@
   font: inherit;
   -webkit-tap-highlight-color: transparent;
 }
-button.kb__seat {
+button.kbo__seat {
   cursor: pointer;
   touch-action: manipulation;
 }
-.kb__name {
+.kbo__name {
   max-width: 96px;
   padding: 1px 9px;
   border-radius: 99px;
@@ -96,38 +96,38 @@ button.kb__seat {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.kb__seat:has(.av__self) .kb__name {
+.kbo__seat:has(.av__self) .kbo__name {
   margin-top: 8px;
 }
-.kb__seat .av {
+.kbo__seat .av {
   transition: transform 140ms var(--ease);
 }
-.kb__seat[data-holder="1"] .av__disc {
+.kbo__seat[data-holder="1"] .av__disc {
   box-shadow: 0 0 22px var(--red);
 }
-.kb__seat[data-holder="1"] .av {
+.kbo__seat[data-holder="1"] .av {
   transform: scale(1.12);
 }
-.kb__seat[data-white="1"] .av__img {
+.kbo__seat[data-white="1"] .av__img {
   filter: brightness(0) invert(1);
 }
-.kb__seat[data-white="1"] .av__disc {
+.kbo__seat[data-white="1"] .av__disc {
   border-color: #fff;
   background: #2b3361;
   box-shadow: 0 0 30px #fff;
-  animation: kb-flash 520ms var(--ease) both;
+  animation: kbo-flash 520ms var(--ease) both;
 }
-.kb__seat[data-tap="1"] .av__disc {
-  animation: kb-invite 1.4s ease-in-out infinite;
+.kbo__seat[data-tap="1"] .av__disc {
+  animation: kbo-invite 1.4s ease-in-out infinite;
 }
-.kb__seat[data-tap="1"]:active .av {
+.kbo__seat[data-tap="1"]:active .av {
   transform: scale(0.92);
 }
-.kb__seat[data-tap="1"]:active .av__disc {
+.kbo__seat[data-tap="1"]:active .av__disc {
   border-color: var(--text);
   box-shadow: 0 0 26px var(--text);
 }
-@keyframes kb-invite {
+@keyframes kbo-invite {
   0%,
   100% {
     box-shadow: 0 0 6px color-mix(in srgb, var(--c) 40%, transparent);
@@ -136,7 +136,7 @@ button.kb__seat {
     box-shadow: 0 0 20px var(--c);
   }
 }
-@keyframes kb-flash {
+@keyframes kbo-flash {
   0% {
     background: #fff;
     transform: scale(1.3);
@@ -148,7 +148,7 @@ button.kb__seat {
 }
 
 /* bomba */
-.kb__bomb {
+.kbo__bomb {
   position: absolute;
   z-index: 3;
   width: var(--bomb);
@@ -160,34 +160,34 @@ button.kb__seat {
     left 380ms var(--ease),
     top 380ms var(--ease);
 }
-.kb__bomb .bomb {
-  animation: kb-throb 1.3s ease-in-out infinite;
+.kbo__bomb .bomb {
+  animation: kbo-throb 1.3s ease-in-out infinite;
   filter: drop-shadow(0 0 16px rgba(255, 59, 92, 0.65));
 }
-.kb__bomb[data-skin="glow"] .bomb {
+.kbo__bomb[data-skin="glow"] .bomb {
   filter: drop-shadow(0 0 16px rgba(255, 194, 59, 0.6));
 }
-.kb[data-urgent="1"] .kb__bomb .bomb {
+.kbo[data-urgent="1"] .kbo__bomb .bomb {
   filter: drop-shadow(0 0 18px rgba(255, 59, 92, 0.9));
   animation-duration: 0.55s;
 }
-.kb__bomb::after {
+.kbo__bomb::after {
   content: "";
   position: absolute;
   inset: -4%;
   border-radius: 50%;
   border: 3px solid var(--red);
   opacity: 0;
-  animation: kb-ring 1.3s ease-out infinite;
+  animation: kbo-ring 1.3s ease-out infinite;
 }
-.kb__bomb[data-skin="glow"]::after {
+.kbo__bomb[data-skin="glow"]::after {
   border-color: var(--amber);
 }
-.kb[data-urgent="1"] .kb__bomb::after {
+.kbo[data-urgent="1"] .kbo__bomb::after {
   animation-duration: 0.55s;
   border-color: var(--red);
 }
-.kb__time {
+.kbo__time {
   position: relative;
   padding: 0.12em 0.34em;
   border-radius: 999px;
@@ -200,10 +200,10 @@ button.kb__seat {
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
-.kb[data-urgent="1"] .kb__time {
+.kbo[data-urgent="1"] .kbo__time {
   color: #ff9aa8;
 }
-@keyframes kb-throb {
+@keyframes kbo-throb {
   0%,
   100% {
     transform: scale(1);
@@ -212,7 +212,7 @@ button.kb__seat {
     transform: scale(1.05);
   }
 }
-@keyframes kb-ring {
+@keyframes kbo-ring {
   0% {
     transform: scale(0.96);
     opacity: 0.7;
@@ -224,7 +224,7 @@ button.kb__seat {
 }
 
 /* pas: kablo boyunca akan ışık */
-.kb__spark {
+.kbo__spark {
   position: absolute;
   z-index: 4;
   left: 50%;
@@ -242,12 +242,12 @@ button.kb__seat {
 }
 
 /* eklenen süre: sarı kıvılcım */
-.kb__bonuses {
+.kbo__bonuses {
   position: absolute;
   z-index: 5;
   pointer-events: none;
 }
-.kb__bonus {
+.kbo__bonus {
   position: absolute;
   left: 0;
   top: calc(var(--bomb) * -0.55);
@@ -258,9 +258,9 @@ button.kb__seat {
   color: var(--amber);
   text-shadow: 0 0 14px rgba(255, 194, 59, 0.85);
   white-space: nowrap;
-  animation: kb-bonus 1000ms var(--ease) both;
+  animation: kbo-bonus 1000ms var(--ease) both;
 }
-@keyframes kb-bonus {
+@keyframes kbo-bonus {
   0% {
     opacity: 0;
     transform: translate(-50%, 10px) scale(0.6);
@@ -276,7 +276,7 @@ button.kb__seat {
 }
 
 /* holder: PAS VER */
-.kb__cta {
+.kbo__cta {
   position: absolute;
   z-index: 3;
   left: 50%;
@@ -291,14 +291,14 @@ button.kb__seat {
   color: var(--text);
   text-shadow: 0 0 18px var(--red);
   pointer-events: none;
-  animation: kb-throb 1.3s ease-in-out infinite;
+  animation: kbo-throb 1.3s ease-in-out infinite;
 }
 
 /* patlama */
-.kb[data-blast="1"] {
-  animation: kb-shake 420ms linear both;
+.kbo[data-blast="1"] {
+  animation: kbo-shake 420ms linear both;
 }
-.kb__blast {
+.kbo__blast {
   position: absolute;
   z-index: 3;
   width: var(--bomb);
@@ -306,7 +306,7 @@ button.kb__seat {
   margin: calc(var(--bomb) / -2) 0 0 calc(var(--bomb) / -2);
   pointer-events: none;
 }
-@keyframes kb-shake {
+@keyframes kbo-shake {
   0%,
   100% {
     transform: translate(0, 0);
@@ -326,53 +326,53 @@ button.kb__seat {
 }
 
 /* anlatım görseli: ayrılan alana sığacak kadar küçülür */
-.kbart {
+.kboart {
   height: min(90px, 100cqh);
   width: auto;
   max-width: 100%;
 }
-.kbart__ring {
+.kboart__ring {
   transform-origin: 80px 56px;
-  animation: kb-ring 1.3s ease-out infinite;
+  animation: kbo-ring 1.3s ease-out infinite;
 }
-.kbart__dot {
+.kboart__dot {
   transform-origin: 80px 56px;
-  animation: kb-throb 1.3s ease-in-out infinite;
+  animation: kbo-throb 1.3s ease-in-out infinite;
 }
 
 /* biome-ignore-start lint/complexity/noImportantStyles: hareketi azaltma tercihi animasyonu ezmeli */
 @media (prefers-reduced-motion: reduce) {
-  :root:not([data-motion="full"]) .kb[data-blast="1"],
-  :root:not([data-motion="full"]) .kb__bomb .bomb,
-  :root:not([data-motion="full"]) .kb__bomb::after,
-  :root:not([data-motion="full"]) .kb__cta,
-  :root:not([data-motion="full"]) .kb__seat[data-tap="1"] .av__disc,
-  :root:not([data-motion="full"]) .kbart__ring,
-  :root:not([data-motion="full"]) .kbart__dot {
+  :root:not([data-motion="full"]) .kbo[data-blast="1"],
+  :root:not([data-motion="full"]) .kbo__bomb .bomb,
+  :root:not([data-motion="full"]) .kbo__bomb::after,
+  :root:not([data-motion="full"]) .kbo__cta,
+  :root:not([data-motion="full"]) .kbo__seat[data-tap="1"] .av__disc,
+  :root:not([data-motion="full"]) .kboart__ring,
+  :root:not([data-motion="full"]) .kboart__dot {
     animation: none !important;
   }
-  :root:not([data-motion="full"]) .kb__bomb {
+  :root:not([data-motion="full"]) .kbo__bomb {
     transition: none;
   }
-  :root:not([data-motion="full"]) .kb__bomb::after {
+  :root:not([data-motion="full"]) .kbo__bomb::after {
     opacity: 0.45;
   }
 }
 
 /* Ayarlar > Hareketi azalt: Açık */
-:root[data-motion="reduce"] .kb[data-blast="1"],
-:root[data-motion="reduce"] .kb__bomb .bomb,
-:root[data-motion="reduce"] .kb__bomb::after,
-:root[data-motion="reduce"] .kb__cta,
-:root[data-motion="reduce"] .kb__seat[data-tap="1"] .av__disc,
-:root[data-motion="reduce"] .kbart__ring,
-:root[data-motion="reduce"] .kbart__dot {
+:root[data-motion="reduce"] .kbo[data-blast="1"],
+:root[data-motion="reduce"] .kbo__bomb .bomb,
+:root[data-motion="reduce"] .kbo__bomb::after,
+:root[data-motion="reduce"] .kbo__cta,
+:root[data-motion="reduce"] .kbo__seat[data-tap="1"] .av__disc,
+:root[data-motion="reduce"] .kboart__ring,
+:root[data-motion="reduce"] .kboart__dot {
   animation: none !important;
 }
-:root[data-motion="reduce"] .kb__bomb {
+:root[data-motion="reduce"] .kbo__bomb {
   transition: none;
 }
-:root[data-motion="reduce"] .kb__bomb::after {
+:root[data-motion="reduce"] .kbo__bomb::after {
   opacity: 0.45;
 }
 /* biome-ignore-end lint/complexity/noImportantStyles: aralık sonu */

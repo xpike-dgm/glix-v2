@@ -71,20 +71,20 @@ export default function KorKronometreScreen(props: GameScreenProps) {
   const connectedOf = (id: string) => props.players.find((p) => p.id === id)?.connected ?? true;
 
   return (
-    <Screen class="kk">
+    <Screen class="kro">
       <Show when={view()}>
         <Show
           when={reveal()}
           fallback={
             <>
-              <p class="kk__target-label" role="status">
+              <p class="kro__target-label" role="status">
                 {formatTarget(targetMs())}
               </p>
-              <div class="kk__stage">
+              <div class="kro__stage">
                 <Dial locked={pressed()} />
-                <div class="kk__flash" ref={flashEl} aria-hidden="true" />
+                <div class="kro__flash" ref={flashEl} aria-hidden="true" />
               </div>
-              <p class="kk__hint" role="status">
+              <p class="kro__hint" role="status">
                 {props.spectator
                   ? "Herkes içinden sayıyor…"
                   : pressed()
@@ -94,7 +94,7 @@ export default function KorKronometreScreen(props: GameScreenProps) {
               <Show when={!props.spectator}>
                 <button
                   type="button"
-                  class="kk__press"
+                  class="kro__press"
                   data-done={pressed() ? "1" : undefined}
                   disabled={pressed() || closed()}
                   aria-label="Bas"
@@ -107,47 +107,47 @@ export default function KorKronometreScreen(props: GameScreenProps) {
                   }}
                   onContextMenu={(e) => e.preventDefault()}
                 >
-                  <span class="kk__press-label">{pressed() ? "BASTIN" : "BAS"}</span>
+                  <span class="kro__press-label">{pressed() ? "BASTIN" : "BAS"}</span>
                 </button>
               </Show>
             </>
           }
         >
           {(r) => (
-            <div class="kk__result">
-              <div class="kk__head">
+            <div class="kro__result">
+              <div class="kro__head">
                 <span class="overline">{formatTarget(targetMs())}</span>
-                <Show when={!props.spectator} fallback={<p class="kk__verdict">Sonuç</p>}>
-                  <p class="kk__verdict" data-win={(mine()?.points ?? 0) > 0 ? "1" : "0"}>
+                <Show when={!props.spectator} fallback={<p class="kro__verdict">Sonuç</p>}>
+                  <p class="kro__verdict" data-win={(mine()?.points ?? 0) > 0 ? "1" : "0"}>
                     {(mine()?.points ?? 0) > 0 ? `+${mine()?.points} puan` : "Puan yok"}
                   </p>
-                  <p class="kk__sub">
+                  <p class="kro__sub">
                     {mine()?.pressed
                       ? `${formatSeconds(mine()?.ms ?? 0)} sn · ${formatOffset(mine()?.ms ?? 0, targetMs())}`
                       : "Basmadın"}
                   </p>
                 </Show>
               </div>
-              <ol class="kk__rows">
+              <ol class="kro__rows">
                 <For each={r().entries}>
                   {(e, i) => (
                     <li
-                      class="kk__row rise"
+                      class="kro__row rise"
                       style={{ "--i": i() }}
                       data-me={e.playerId === props.selfId ? "1" : undefined}
                       data-pts={e.points}
                     >
                       <Avatar index={avatarOf(e.playerId)} size={36} connected={connectedOf(e.playerId)} />
-                      <div class="kk__track" aria-hidden="true">
-                        <i class="kk__target" style={{ left: `${targetPercent(targetMs())}%` }} />
+                      <div class="kro__track" aria-hidden="true">
+                        <i class="kro__target" style={{ left: `${targetPercent(targetMs())}%` }} />
                         <Show when={e.ms !== null}>
-                          <i class="kk__dot" style={{ left: `${trackPercent(e.ms ?? 0, targetMs())}%` }} />
+                          <i class="kro__dot" style={{ left: `${trackPercent(e.ms ?? 0, targetMs())}%` }} />
                         </Show>
                       </div>
-                      <span class="kk__time" data-missed={e.pressed ? undefined : "1"}>
+                      <span class="kro__time" data-missed={e.pressed ? undefined : "1"}>
                         {e.ms !== null ? formatSeconds(e.ms) : "basmadı"}
                       </span>
-                      <span class="kk__pts" data-pts={e.points}>
+                      <span class="kro__pts" data-pts={e.points}>
                         {e.pressed ? (e.points > 0 ? `+${e.points}` : "0") : "–"}
                       </span>
                     </li>

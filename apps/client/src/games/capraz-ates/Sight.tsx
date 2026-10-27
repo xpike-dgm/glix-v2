@@ -4,7 +4,7 @@ import { propSrc } from "../../ui/props.js";
 export function Sight() {
   return (
     <img
-      class="ca__sight-svg"
+      class="cx__sight-svg"
       src={propSrc("genel/nisangah")}
       alt=""
       aria-hidden="true"

@@ -6,18 +6,18 @@ import { propSrc } from "../../ui/props.js";
  */
 export function Dial(props: { locked?: boolean; demo?: boolean }) {
   return (
-    <div class="kk-dial" data-locked={props.locked ? "1" : undefined} aria-hidden="true">
+    <div class="kro-dial" data-locked={props.locked ? "1" : undefined} aria-hidden="true">
       <img
-        class="kk-dial__img"
+        class="kro-dial__img"
         src={propSrc("genel/kronometre")}
         alt=""
         draggable={false}
         width="384"
         height="384"
       />
-      <i class="kk-dial__pulse kk-dial__pulse--a" />
-      <i class="kk-dial__pulse kk-dial__pulse--b" />
-      <i class="kk-dial__core" />
+      <i class="kro-dial__pulse kro-dial__pulse--a" />
+      <i class="kro-dial__pulse kro-dial__pulse--b" />
+      <i class="kro-dial__core" />
     </div>
   );
 }

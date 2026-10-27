@@ -1,30 +1,30 @@
 /* ---- Kör Kronometre ---- */
-.kk .col {
+.kro .col {
   gap: 0;
 }
 
 /* Kadran sahnesi */
-.kk__stage {
+.kro__stage {
   position: relative;
   flex: 1 1 0;
   min-height: 0;
   display: grid;
   place-items: center;
 }
-.kk__flash {
+.kro__flash {
   position: absolute;
   inset: 0;
   opacity: 0;
   pointer-events: none;
   background: radial-gradient(closest-side, rgba(182, 255, 59, 0.5), transparent);
 }
-.kk-dial {
+.kro-dial {
   --size: min(78vw, 40dvh, 340px);
   position: relative;
   width: var(--size);
   height: var(--size);
 }
-.kk-dial__img {
+.kro-dial__img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -34,7 +34,7 @@
   transition: filter 200ms var(--ease);
 }
 /* Kadranın karanlık yüzü: görselde hafif aşağıda ve ortada. */
-.kk-dial__core {
+.kro-dial__core {
   position: absolute;
   left: 50%;
   top: 56%;
@@ -44,9 +44,9 @@
   border-radius: 50%;
   background: var(--cyan);
   filter: drop-shadow(0 0 7px var(--cyan));
-  animation: kk-core 2.4s ease-in-out infinite;
+  animation: kro-core 2.4s ease-in-out infinite;
 }
-@keyframes kk-core {
+@keyframes kro-core {
   0%,
   100% {
     transform: scale(0.8);
@@ -58,7 +58,7 @@
   }
 }
 /* Nabız: zamandan bağımsız, sabit döngü. */
-.kk-dial__pulse {
+.kro-dial__pulse {
   position: absolute;
   left: 29%;
   top: 35%;
@@ -67,12 +67,12 @@
   border-radius: 50%;
   border: 2px solid var(--cyan);
   opacity: 0;
-  animation: kk-pulse 2.4s var(--ease) infinite;
+  animation: kro-pulse 2.4s var(--ease) infinite;
 }
-.kk-dial__pulse--b {
+.kro-dial__pulse--b {
   animation-delay: 1.2s;
 }
-@keyframes kk-pulse {
+@keyframes kro-pulse {
   0% {
     transform: scale(0.35);
     opacity: 0.75;
@@ -82,21 +82,21 @@
     opacity: 0;
   }
 }
-.kk-dial[data-locked="1"] .kk-dial__img {
+.kro-dial[data-locked="1"] .kro-dial__img {
   filter: drop-shadow(0 0 22px rgba(182, 255, 59, 0.6));
 }
-.kk-dial[data-locked="1"] .kk-dial__core {
+.kro-dial[data-locked="1"] .kro-dial__core {
   background: var(--lime);
   filter: drop-shadow(0 0 8px var(--lime));
   animation: none;
   transform: scale(1.5);
 }
-.kk-dial[data-locked="1"] .kk-dial__pulse {
+.kro-dial[data-locked="1"] .kro-dial__pulse {
   animation: none;
   opacity: 0;
 }
 
-.kk__hint {
+.kro__hint {
   flex: none;
   margin: 8px 0 14px;
   text-align: center;
@@ -106,7 +106,7 @@
 }
 
 /* Ana eylem: başparmak bölgesinde dev tuş */
-.kk__press {
+.kro__press {
   flex: none;
   width: 100%;
   min-height: 84px;
@@ -125,19 +125,19 @@
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
-.kk__press:active,
-.kk__press[data-done="1"] {
+.kro__press:active,
+.kro__press[data-done="1"] {
   transform: translateY(4px) scale(0.985);
   box-shadow: 0 1px 0 #0c9aa6;
 }
-.kk__press[data-done="1"] {
+.kro__press[data-done="1"] {
   background: var(--lime);
   box-shadow: 0 1px 0 #5c8a12;
 }
-.kk__press:disabled:not([data-done="1"]) {
+.kro__press:disabled:not([data-done="1"]) {
   opacity: 0.5;
 }
-.kk__press-label {
+.kro__press-label {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 28px;
@@ -145,13 +145,13 @@
 }
 
 /* Sonuç */
-.kk__result {
+.kro__result {
   flex: 1 1 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
 }
-.kk__head {
+.kro__head {
   flex: none;
   display: flex;
   flex-direction: column;
@@ -159,7 +159,7 @@
   margin-top: clamp(2px, 1.6dvh, 14px);
   gap: 2px;
 }
-.kk__verdict {
+.kro__verdict {
   margin: 0;
   font-family: var(--font-display);
   font-weight: 800;
@@ -168,17 +168,17 @@
   white-space: nowrap;
   color: var(--text);
 }
-.kk__verdict[data-win="1"] {
+.kro__verdict[data-win="1"] {
   color: var(--lime);
   text-shadow: 0 0 18px rgba(182, 255, 59, 0.5);
 }
-.kk__sub {
+.kro__sub {
   margin: 0;
   font-size: var(--fs-15);
   color: var(--text-dim);
   font-variant-numeric: tabular-nums;
 }
-.kk__rows {
+.kro__rows {
   flex: 1 1 0;
   min-height: 0;
   list-style: none;
@@ -188,7 +188,7 @@
   flex-direction: column;
   gap: 6px;
 }
-.kk__row {
+.kro__row {
   flex: 1 1 0;
   min-height: 0;
   max-height: 54px;
@@ -199,20 +199,20 @@
   padding: 0 4px;
   border-radius: var(--r-sm);
 }
-.kk__row[data-me="1"] {
+.kro__row[data-me="1"] {
   background: rgba(46, 242, 255, 0.09);
   box-shadow: inset 0 0 0 1.5px rgba(46, 242, 255, 0.45);
 }
-.kk__row[data-pts="2"] {
+.kro__row[data-pts="2"] {
   background: rgba(182, 255, 59, 0.1);
 }
-.kk__track {
+.kro__track {
   position: relative;
   height: 6px;
   border-radius: 3px;
   background: var(--line);
 }
-.kk__target {
+.kro__target {
   position: absolute;
   top: -7px;
   bottom: -7px;
@@ -221,7 +221,7 @@
   background: var(--amber);
   border-radius: 1px;
 }
-.kk__dot {
+.kro__dot {
   position: absolute;
   top: 50%;
   width: 16px;
@@ -231,23 +231,23 @@
   background: var(--cyan);
   box-shadow: 0 0 10px var(--cyan);
 }
-.kk__row[data-pts="2"] .kk__dot {
+.kro__row[data-pts="2"] .kro__dot {
   background: var(--lime);
   box-shadow: 0 0 10px var(--lime);
 }
-.kk__row[data-pts="1"] .kk__dot {
+.kro__row[data-pts="1"] .kro__dot {
   background: var(--amber);
   box-shadow: 0 0 10px var(--amber);
 }
-.kk__time[data-missed="1"] {
+.kro__time[data-missed="1"] {
   font-size: var(--fs-13);
   font-weight: 500;
   color: var(--text-dim);
 }
-.kk__row:has(.kk__time[data-missed="1"]) {
+.kro__row:has(.kro__time[data-missed="1"]) {
   opacity: 0.7;
 }
-.kk__target-label {
+.kro__target-label {
   flex: none;
   margin: clamp(4px, 1.4dvh, 12px) 0 0;
   text-align: center;
@@ -258,33 +258,33 @@
   color: var(--cyan);
   text-shadow: 0 0 16px rgba(46, 242, 255, 0.45);
 }
-.kk__time {
+.kro__time {
   text-align: right;
   font-size: var(--fs-15);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
-.kk__pts {
+.kro__pts {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: var(--fs-15);
   text-align: right;
   color: var(--text-dim);
 }
-.kk__pts[data-pts="2"] {
+.kro__pts[data-pts="2"] {
   color: var(--lime);
 }
-.kk__pts[data-pts="1"] {
+.kro__pts[data-pts="1"] {
   color: var(--amber);
 }
 
 /* Anlatım görseli */
-.kkart {
+.kroart {
   width: 150px;
   height: 150px;
   display: grid;
   place-items: center;
 }
-.kkart .kk-dial {
+.kroart .kro-dial {
   --size: 140px;
 }

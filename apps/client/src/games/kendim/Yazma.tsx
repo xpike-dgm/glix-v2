@@ -35,14 +35,14 @@ export function Yazma(props: Props) {
   };
   return (
     <>
-      <div class="kd__head kd__head--write">
+      <div class="kn__head kn__head--write">
         <span class="overline">Kendini anlat</span>
-        <span class="kd__title">{props.spectator ? "Herkes yazıyor" : "Tek kelime yaz"}</span>
+        <span class="kn__title">{props.spectator ? "Herkes yazıyor" : "Tek kelime yaz"}</span>
       </div>
 
-      <div class="kd__mid">
+      <div class="kn__mid">
         {props.spectator ? (
-          <div class="kd__idle" aria-hidden="true">
+          <div class="kn__idle" aria-hidden="true">
             <span>· · ·</span>
           </div>
         ) : (
@@ -56,15 +56,15 @@ export function Yazma(props: Props) {
               onInput={(raw) => draft.input(raw)}
               onEnter={lock}
             />
-            <p class="kd__hint">Seni en iyi anlatan tek kelime</p>
+            <p class="kn__hint">Seni en iyi anlatan tek kelime</p>
           </>
         )}
       </div>
 
-      <ul class="kd__crew" aria-label="Oyuncular">
+      <ul class="kn__crew" aria-label="Oyuncular">
         <For each={props.crew}>
           {(p) => (
-            <li class="kd__p" data-done={props.view.ready.includes(p.id) ? "1" : undefined}>
+            <li class="kn__p" data-done={props.view.ready.includes(p.id) ? "1" : undefined}>
               <Avatar
                 index={p.avatar}
                 size="min(40px, calc((100vw - 40px - 56px) / 8))"

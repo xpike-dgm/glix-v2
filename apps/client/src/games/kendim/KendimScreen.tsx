@@ -39,7 +39,7 @@ export default function KendimScreen(props: GameScreenProps) {
   };
 
   return (
-    <section class="screen game kd" data-tight={area().height < 440 ? "1" : undefined} style={areaStyle()}>
+    <section class="screen game kn" data-tight={area().height < 440 ? "1" : undefined} style={areaStyle()}>
       <div class="col">
         <Show when={view()}>
           <PhaseClock startedAt={bar().from} endsAt={bar().to} urgency />

@@ -1,8 +1,8 @@
 /* ---- Çapraz Ateş ---- */
-.ca {
-  --ca-red: var(--red);
+.cx {
+  --cx-red: var(--red);
 }
-.ca__head {
+.cx__head {
   flex: none;
   display: flex;
   flex-direction: column;
@@ -12,7 +12,7 @@
   min-height: 62px;
   text-align: center;
 }
-.ca__title {
+.cx__title {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: clamp(20px, 6.6vw, var(--fs-32));
@@ -22,12 +22,12 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.ca__title--locked {
+.cx__title--locked {
   color: var(--tc, var(--text));
   text-shadow: 0 0 14px color-mix(in srgb, var(--tc, var(--red)) 55%, transparent);
-  animation: ca-title-in 320ms var(--ease) both;
+  animation: cx-title-in 320ms var(--ease) both;
 }
-@keyframes ca-title-in {
+@keyframes cx-title-in {
   from {
     transform: scale(1.18);
     opacity: 0.4;
@@ -38,7 +38,7 @@
   }
 }
 
-.ca__stage {
+.cx__stage {
   flex: 1;
   min-height: 0;
   container-type: size;
@@ -47,11 +47,11 @@
 }
 
 /* ---- Nişan alma ızgarası ---- */
-.ca__grid {
+.cx__grid {
   --gap: 10px;
   --cols: var(--cols-tall);
   --rows: var(--rows-tall);
-  --ca-av: clamp(
+  --cx-av: clamp(
     44px,
     min(
       calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols) - 16px),
@@ -66,7 +66,7 @@
   justify-items: center;
   align-content: center;
 }
-.ca__cell {
+.cx__cell {
   position: relative;
   width: 100%;
   min-height: 64px;
@@ -84,38 +84,38 @@
   -webkit-tap-highlight-color: transparent;
   transition: transform 80ms var(--ease);
 }
-.ca__slot {
+.cx__slot {
   position: relative;
   width: 100%;
 }
 /* Gezinen nişangâh düğmenin dışında, portrenin üstünde durur (düğmeye taşma yapmaz, dokunmayı engellemez). */
-.ca__sightbox {
+.cx__sightbox {
   position: absolute;
   top: 8px;
   left: 50%;
-  width: var(--ca-av);
-  height: var(--ca-av);
-  margin-left: calc(var(--ca-av) / -2);
+  width: var(--cx-av);
+  height: var(--cx-av);
+  margin-left: calc(var(--cx-av) / -2);
   pointer-events: none;
   z-index: 1;
 }
-.ca__cell:active:not(:disabled) {
+.cx__cell:active:not(:disabled) {
   transform: scale(0.96);
 }
-.ca__cell:disabled {
+.cx__cell:disabled {
   cursor: default;
 }
-.ca__cell[data-off="1"] {
+.cx__cell[data-off="1"] {
   opacity: 0.4;
 }
-.ca__portrait {
+.cx__portrait {
   position: relative;
   display: grid;
   place-items: center;
-  width: var(--ca-av);
-  height: var(--ca-av);
+  width: var(--cx-av);
+  height: var(--cx-av);
 }
-.ca__name {
+.cx__name {
   position: relative;
   z-index: 2;
   max-width: 100%;
@@ -127,12 +127,12 @@
   white-space: nowrap;
   color: #d5daf6;
 }
-.ca__cell[data-locked="1"] .ca__name {
+.cx__cell[data-locked="1"] .cx__name {
   color: var(--text);
 }
 
 /* İnce lazer nişangâhı: portre çevresinde yavaşça gezinir. */
-.ca__sight {
+.cx__sight {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -142,17 +142,17 @@
   color: color-mix(in srgb, var(--cyan) 85%, transparent);
   opacity: 0.4;
   pointer-events: none;
-  animation: ca-drift var(--dur, 8s) ease-in-out var(--delay, 0s) infinite;
+  animation: cx-drift var(--dur, 8s) ease-in-out var(--delay, 0s) infinite;
   will-change: transform;
 }
-.ca__sight-svg {
+.cx__sight-svg {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
   filter: drop-shadow(0 0 4px currentColor);
 }
-@keyframes ca-drift {
+@keyframes cx-drift {
   0%,
   100% {
     transform: translate(calc(var(--flip, 1) * -9%), -7%);
@@ -168,19 +168,19 @@
   }
 }
 /* Kilit: yalnız kendi ekranında; nişangâh ortaya oturur, kırmızıya döner ve döner. */
-.ca__slot[data-locked="1"] .ca__sight {
+.cx__slot[data-locked="1"] .cx__sight {
   width: 124%;
   height: 124%;
   margin: -62% 0 0 -62%;
   opacity: 1;
   color: var(--red);
-  animation: ca-lock 380ms var(--ease) both;
+  animation: cx-lock 380ms var(--ease) both;
 }
-.ca__slot[data-locked="1"] .ca__sight-svg {
-  animation: ca-spin 6s linear 380ms infinite;
+.cx__slot[data-locked="1"] .cx__sight-svg {
+  animation: cx-spin 6s linear 380ms infinite;
   filter: drop-shadow(0 0 5px var(--red));
 }
-@keyframes ca-lock {
+@keyframes cx-lock {
   from {
     transform: translate(calc(var(--flip, 1) * -9%), -7%) scale(1.5) rotate(-80deg);
     opacity: 0.5;
@@ -190,17 +190,17 @@
     opacity: 1;
   }
 }
-@keyframes ca-spin {
+@keyframes cx-spin {
   to {
     transform: rotate(90deg);
   }
 }
-.ca__slot[data-off="1"] .ca__sight,
-.ca__slot[data-idle="1"] .ca__sight {
+.cx__slot[data-off="1"] .cx__sight,
+.cx__slot[data-idle="1"] .cx__sight {
   opacity: 0.3;
 }
 
-.ca__hint {
+.cx__hint {
   flex: none;
   align-self: center;
   text-align: center;
@@ -216,36 +216,36 @@
 }
 
 /* ---- Açılış: ateş izleri ---- */
-.ca__head--reveal {
+.cx__head--reveal {
   min-height: 74px;
   gap: 2px;
 }
-.ca__score {
+.cx__score {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: clamp(40px, 13vw, 56px);
   line-height: 1;
-  animation: ca-pop 420ms var(--ease) var(--at, 1300ms) both;
+  animation: cx-pop 420ms var(--ease) var(--at, 1300ms) both;
 }
-.ca__score[data-o="free"] {
+.cx__score[data-o="free"] {
   color: var(--lime);
   text-shadow: 0 0 18px color-mix(in srgb, var(--lime) 55%, transparent);
 }
-.ca__score[data-o="hit"] {
+.cx__score[data-o="hit"] {
   color: var(--red);
   text-shadow: 0 0 18px color-mix(in srgb, var(--red) 55%, transparent);
 }
-.ca__score[data-o="clash"],
-.ca__score[data-o="idle"] {
+.cx__score[data-o="clash"],
+.cx__score[data-o="idle"] {
   color: var(--text);
 }
-.ca__verdict {
+.cx__verdict {
   font-size: var(--fs-15);
   font-weight: 600;
   color: #d5daf6;
-  animation: ca-fade 300ms var(--ease) var(--at, 1300ms) both;
+  animation: cx-fade 300ms var(--ease) var(--at, 1300ms) both;
 }
-@keyframes ca-pop {
+@keyframes cx-pop {
   from {
     transform: scale(0.4);
     opacity: 0;
@@ -259,7 +259,7 @@
     opacity: 1;
   }
 }
-@keyframes ca-fade {
+@keyframes cx-fade {
   from {
     opacity: 0;
   }
@@ -268,14 +268,14 @@
   }
 }
 
-.ca__arena {
-  --ca-rav: clamp(40px, 18cqw, 80px);
+.cx__arena {
+  --cx-rav: clamp(40px, 18cqw, 80px);
   position: relative;
   width: min(100cqw, 100cqh);
   aspect-ratio: 1;
   container-type: size;
 }
-.ca__lines {
+.cx__lines {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -283,40 +283,40 @@
   overflow: visible;
   pointer-events: none;
 }
-.ca__lines line {
+.cx__lines line {
   stroke: currentColor;
   stroke-linecap: butt;
   fill: none;
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
-  animation: ca-draw var(--beam-ms, 520ms) cubic-bezier(0.5, 0, 0.9, 0.6) var(--d, 0ms) both;
+  animation: cx-draw var(--beam-ms, 520ms) cubic-bezier(0.5, 0, 0.9, 0.6) var(--d, 0ms) both;
 }
-.ca__beam {
+.cx__beam {
   stroke-width: 0.9;
 }
-.ca__glow {
+.cx__glow {
   stroke-width: 2.8;
   opacity: 0.28;
 }
-@keyframes ca-draw {
+@keyframes cx-draw {
   to {
     stroke-dashoffset: 0;
   }
 }
-.ca__node {
+.cx__node {
   position: absolute;
   transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
-  width: var(--ca-rav);
-  height: var(--ca-rav);
+  width: var(--cx-rav);
+  height: var(--cx-rav);
 }
-.ca__node[data-me="1"] .av {
+.cx__node[data-me="1"] .av {
   outline: 2px solid var(--text);
   outline-offset: 3px;
   border-radius: 50%;
 }
-.ca__rname {
+.cx__rname {
   position: absolute;
   top: calc(100% + 3px);
   left: 50%;
@@ -333,7 +333,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.ca__chip {
+.cx__chip {
   position: absolute;
   top: -6px;
   right: -10px;
@@ -347,29 +347,29 @@
   text-align: center;
   background: #05081a;
   border: 2px solid currentColor;
-  animation: ca-pop 420ms var(--ease) var(--chip-at, 1300ms) both;
+  animation: cx-pop 420ms var(--ease) var(--chip-at, 1300ms) both;
 }
-.ca__chip[data-s="up"] {
+.cx__chip[data-s="up"] {
   color: var(--lime);
 }
-.ca__chip[data-s="down"] {
+.cx__chip[data-s="down"] {
   color: #ff6b85;
 }
-.ca__chip[data-s="zero"] {
+.cx__chip[data-s="zero"] {
   color: #c9cff0;
 }
 
 /* Çarpışma patlaması (karşılıklı hedeflerin ortasında) */
-.ca__burst,
-.ca__impact {
+.cx__burst,
+.cx__impact {
   position: absolute;
   width: 0;
   height: 0;
   pointer-events: none;
 }
-.ca__burst::before,
-.ca__burst::after,
-.ca__impact::before {
+.cx__burst::before,
+.cx__burst::after,
+.cx__impact::before {
   content: "";
   position: absolute;
   border-radius: 50%;
@@ -378,26 +378,26 @@
   transform: translate(-50%, -50%) scale(0);
   opacity: 0;
 }
-.ca__burst::before {
+.cx__burst::before {
   width: 22cqw;
   height: 22cqw;
   background: radial-gradient(circle, #fff 0 14%, var(--amber) 15% 34%, rgb(255 194 59 / 0) 66%);
-  animation: ca-burst 560ms var(--ease) var(--d, 600ms) both;
+  animation: cx-burst 560ms var(--ease) var(--d, 600ms) both;
 }
-.ca__burst::after {
+.cx__burst::after {
   width: 26cqw;
   height: 26cqw;
   border: 2px solid var(--amber);
-  animation: ca-burst-ring 640ms ease-out var(--d, 600ms) both;
+  animation: cx-burst-ring 640ms ease-out var(--d, 600ms) both;
 }
-.ca__impact::before {
+.cx__impact::before {
   width: 18cqw;
   height: 18cqw;
   border: 3px solid var(--red);
   box-shadow: 0 0 14px var(--red);
-  animation: ca-burst-ring 560ms ease-out var(--d, 600ms) both;
+  animation: cx-burst-ring 560ms ease-out var(--d, 600ms) both;
 }
-@keyframes ca-burst {
+@keyframes cx-burst {
   0% {
     transform: translate(-50%, -50%) scale(0.1);
     opacity: 1;
@@ -411,7 +411,7 @@
     opacity: 0.55;
   }
 }
-@keyframes ca-burst-ring {
+@keyframes cx-burst-ring {
   0% {
     transform: translate(-50%, -50%) scale(0.2);
     opacity: 1;
@@ -423,18 +423,18 @@
 }
 
 /* ---- Anlatım görseli ---- */
-.caart {
+.cxart {
   display: flex;
   align-items: center;
   width: min(100%, 300px);
 }
-.caart__p {
+.cxart__p {
   position: relative;
   flex: none;
   display: grid;
   place-items: center;
 }
-.caart__sight {
+.cxart__sight {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -442,9 +442,9 @@
   height: 124%;
   margin: -62% 0 0 -62%;
   color: var(--red);
-  animation: ca-drift 5s ease-in-out infinite;
+  animation: cx-drift 5s ease-in-out infinite;
 }
-.caart__line {
+.cxart__line {
   position: relative;
   flex: 1;
   height: 2px;
@@ -453,11 +453,11 @@
   background: linear-gradient(90deg, var(--magenta), rgb(255 43 214 / 0.15));
   box-shadow: 0 0 8px rgb(255 43 214 / 0.6);
 }
-.caart__line--r {
+.cxart__line--r {
   background: linear-gradient(270deg, var(--cyan), rgb(46 242 255 / 0.15));
   box-shadow: 0 0 8px rgb(46 242 255 / 0.6);
 }
-.caart__line::after {
+.cxart__line::after {
   content: "";
   position: absolute;
   top: -3px;
@@ -467,15 +467,15 @@
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 0 8px #fff;
-  animation: caart-shot 1.8s ease-in infinite;
+  animation: cxart-shot 1.8s ease-in infinite;
 }
-.caart__line--r::after {
+.cxart__line--r::after {
   left: auto;
   right: 0;
-  animation-name: caart-shot-r;
+  animation-name: cxart-shot-r;
   animation-delay: 0.9s;
 }
-@keyframes caart-shot {
+@keyframes cxart-shot {
   0%,
   100% {
     transform: translateX(0);
@@ -489,7 +489,7 @@
     opacity: 0;
   }
 }
-@keyframes caart-shot-r {
+@keyframes cxart-shot-r {
   0%,
   100% {
     transform: translateX(0);
@@ -505,58 +505,58 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root:not([data-motion="full"]) .ca__sight {
+  :root:not([data-motion="full"]) .cx__sight {
     animation: none;
     transform: translate(calc(var(--flip, 1) * -6%), -5%);
   }
-  :root:not([data-motion="full"]) .ca__slot[data-locked="1"] .ca__sight {
+  :root:not([data-motion="full"]) .cx__slot[data-locked="1"] .cx__sight {
     transform: none;
   }
-  :root:not([data-motion="full"]) .caart__sight {
+  :root:not([data-motion="full"]) .cxart__sight {
     animation: none;
   }
 }
 
 /* Ayarlar > Hareketi azalt: Açık */
-:root[data-motion="reduce"] .ca__sight {
+:root[data-motion="reduce"] .cx__sight {
   animation: none;
   transform: translate(calc(var(--flip, 1) * -6%), -5%);
 }
-:root[data-motion="reduce"] .ca__slot[data-locked="1"] .ca__sight {
+:root[data-motion="reduce"] .cx__slot[data-locked="1"] .cx__sight {
   transform: none;
 }
-:root[data-motion="reduce"] .caart__sight {
+:root[data-motion="reduce"] .cxart__sight {
   animation: none;
 }
 
 @media (max-height: 460px) {
-  .ca__grid {
+  .cx__grid {
     --cols: var(--cols-wide);
     --rows: var(--rows-wide);
   }
-  .ca__hint {
+  .cx__hint {
     display: none;
   }
-  .ca__head {
+  .cx__head {
     min-height: 52px;
     margin-top: 4px;
     justify-content: center;
   }
-  .ca__head .overline {
+  .cx__head .overline {
     display: none;
   }
 }
 
 /* ---- Açılış sahnesi (süs): nişangâhlar süpürüp kilitlenir ---- */
-.ca-open {
+.cx-open {
   position: fixed;
   inset: 0;
   z-index: 40;
   overflow: hidden;
   pointer-events: none;
-  animation: ca-open-fade 1900ms linear both;
+  animation: cx-open-fade 1900ms linear both;
 }
-.ca-open__sweep {
+.cx-open__sweep {
   position: absolute;
   left: 0;
   right: 0;
@@ -569,9 +569,9 @@
     rgba(255, 59, 92, 0.6) 98%,
     transparent
   );
-  animation: ca-open-sweep 1100ms cubic-bezier(0.5, 0, 0.5, 1) both;
+  animation: cx-open-sweep 1100ms cubic-bezier(0.5, 0, 0.5, 1) both;
 }
-.ca-open__sight {
+.cx-open__sight {
   --size: min(44vmin, 210px);
   --sx: -70vw;
   --sy: -45vh;
@@ -582,17 +582,17 @@
   height: var(--size);
   margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
   filter: drop-shadow(0 0 14px rgba(255, 59, 92, 0.8));
-  animation: ca-open-sight 1500ms var(--ease) calc(var(--k, 0) * 150ms) both;
+  animation: cx-open-sight 1500ms var(--ease) calc(var(--k, 0) * 150ms) both;
 }
-.ca-open__sight:nth-of-type(2) {
+.cx-open__sight:nth-of-type(2) {
   --sx: 70vw;
   --sy: -25vh;
 }
-.ca-open__sight:nth-of-type(3) {
+.cx-open__sight:nth-of-type(3) {
   --sx: 5vw;
   --sy: 70vh;
 }
-.ca-open__ring {
+.cx-open__ring {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -602,9 +602,9 @@
   border-radius: 50%;
   border: 3px solid #ff3b5c;
   box-shadow: 0 0 22px rgba(255, 59, 92, 0.8);
-  animation: ca-open-ring 700ms ease-out 1000ms both;
+  animation: cx-open-ring 700ms ease-out 1000ms both;
 }
-@keyframes ca-open-fade {
+@keyframes cx-open-fade {
   0%,
   72% {
     opacity: 1;
@@ -613,7 +613,7 @@
     opacity: 0;
   }
 }
-@keyframes ca-open-sweep {
+@keyframes cx-open-sweep {
   from {
     transform: translateY(-100%);
   }
@@ -621,7 +621,7 @@
     transform: translateY(380%);
   }
 }
-@keyframes ca-open-sight {
+@keyframes cx-open-sight {
   0% {
     opacity: 0;
     transform: translate(var(--sx), var(--sy)) rotate(-160deg) scale(1.8);
@@ -638,7 +638,7 @@
     transform: translate(0, 0) rotate(0deg) scale(0.55);
   }
 }
-@keyframes ca-open-ring {
+@keyframes cx-open-ring {
   from {
     opacity: 0.9;
     transform: scale(0.3);
@@ -649,10 +649,10 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  :root:not([data-motion="full"]) .ca-open {
+  :root:not([data-motion="full"]) .cx-open {
     display: none;
   }
 }
-:root[data-motion="reduce"] .ca-open {
+:root[data-motion="reduce"] .cx-open {
   display: none;
 }

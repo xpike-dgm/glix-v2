@@ -156,19 +156,19 @@ export default function KorBombaScreen(props: GameScreenProps) {
 
   return (
     <div
-      class="kb"
+      class="kbo"
       data-role={view()?.priv.role ?? "spectator"}
       data-blast={blast() ? "1" : undefined}
       data-urgent={urgent() ? "1" : undefined}
     >
-      <div class="kb__felt" aria-hidden="true" />
-      <svg class="kb__cables" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <div class="kbo__felt" aria-hidden="true" />
+      <svg class="kbo__cables" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <title>Kablolar</title>
         <For each={seats()}>
           {(s) => (
             <line
-              class="kb__cable"
-              classList={{ "kb__cable--on": lit() === s.id, "kb__cable--holder": holderId() === s.id }}
+              class="kbo__cable"
+              classList={{ "kbo__cable--on": lit() === s.id, "kbo__cable--holder": holderId() === s.id }}
               x1="50"
               y1="50"
               x2={s.x}
@@ -178,7 +178,7 @@ export default function KorBombaScreen(props: GameScreenProps) {
           )}
         </For>
       </svg>
-      <div class="kb__hub" aria-hidden="true" />
+      <div class="kbo__hub" aria-hidden="true" />
 
       <For each={seats()}>
         {(s) => {
@@ -190,7 +190,7 @@ export default function KorBombaScreen(props: GameScreenProps) {
           return (
             <Dynamic
               component={iAmHolder() && !isSelf() ? "button" : "div"}
-              class="kb__seat"
+              class="kbo__seat"
               type={iAmHolder() && !isSelf() ? "button" : undefined}
               disabled={iAmHolder() && !isSelf() ? !tappable() : undefined}
               aria-label={
@@ -210,34 +210,34 @@ export default function KorBombaScreen(props: GameScreenProps) {
                 self={isSelf()}
                 ring={isHolder() ? "#FF3B5C" : undefined}
               />
-              <span class="kb__name">{player()?.nickname ?? ""}</span>
+              <span class="kbo__name">{player()?.nickname ?? ""}</span>
             </Dynamic>
           );
         }}
       </For>
 
       <Show when={!blast()}>
-        <div class="kb__bomb" data-skin={skin()} style={{ left: `${bomb().x}%`, top: `${bomb().y}%` }}>
+        <div class="kbo__bomb" data-skin={skin()} style={{ left: `${bomb().x}%`, top: `${bomb().y}%` }}>
           <BombArt>
             <Show when={left() !== null}>
-              <span class="kb__time">{formatRemaining(left() ?? 0)}</span>
+              <span class="kbo__time">{formatRemaining(left() ?? 0)}</span>
             </Show>
           </BombArt>
         </div>
       </Show>
       <Show when={blast()}>
-        <div class="kb__blast" style={{ left: `${bomb().x}%`, top: `${bomb().y}%` }} aria-hidden="true">
+        <div class="kbo__blast" style={{ left: `${bomb().x}%`, top: `${bomb().y}%` }} aria-hidden="true">
           <BlastArt />
         </div>
       </Show>
 
-      <div class="kb__spark" ref={sparkEl} aria-hidden="true" />
-      <div class="kb__bonuses" style={{ left: `${bomb().x}%`, top: `${bomb().y}%` }} aria-hidden="true">
-        <For each={bonuses()}>{(b) => <span class="kb__bonus">{b.text}</span>}</For>
+      <div class="kbo__spark" ref={sparkEl} aria-hidden="true" />
+      <div class="kbo__bonuses" style={{ left: `${bomb().x}%`, top: `${bomb().y}%` }} aria-hidden="true">
+        <For each={bonuses()}>{(b) => <span class="kbo__bonus">{b.text}</span>}</For>
       </div>
 
       <Show when={iAmHolder()}>
-        <div class="kb__cta" aria-hidden="true">
+        <div class="kbo__cta" aria-hidden="true">
           PAS VER
         </div>
       </Show>

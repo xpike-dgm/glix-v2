@@ -133,7 +133,7 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
   };
 
   return (
-    <Screen class="game ca">
+    <Screen class="game cx">
       <Show when={opening() && !reveal()}>
         <Opening />
       </Show>
@@ -145,26 +145,26 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
         when={reveal()}
         fallback={
           <>
-            <div class="ca__head">
+            <div class="cx__head">
               <span class="overline">{props.spectator ? "Gizli nişan" : "Gizli hedefin"}</span>
               <Show
                 when={targetPlayer()}
                 fallback={
-                  <span class="ca__title">
+                  <span class="cx__title">
                     {props.spectator ? "Herkes nişan alıyor" : "Kimi vuracaksın?"}
                   </span>
                 }
               >
                 {(p) => (
-                  <span class="ca__title ca__title--locked" style={{ "--tc": look(p().avatar).color }}>
+                  <span class="cx__title cx__title--locked" style={{ "--tc": look(p().avatar).color }}>
                     {p().nickname}
                   </span>
                 )}
               </Show>
             </div>
 
-            <div class="ca__stage">
-              <div class="ca__grid" style={gridVars()}>
+            <div class="cx__stage">
+              <div class="cx__grid" style={gridVars()}>
                 <For each={spectatorList()}>
                   {(p, i) => {
                     const aimed = () => mine() === p.id;
@@ -172,7 +172,7 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
                     const press = pressable(() => choose(p.id, p.connected));
                     return (
                       <div
-                        class="ca__slot"
+                        class="cx__slot"
                         data-locked={aimed() ? "1" : undefined}
                         data-off={p.connected ? undefined : "1"}
                         data-idle={props.spectator || closed() ? "1" : undefined}
@@ -184,7 +184,7 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
                       >
                         <button
                           type="button"
-                          class="ca__cell"
+                          class="cx__cell"
                           data-locked={aimed() ? "1" : undefined}
                           data-off={p.connected ? undefined : "1"}
                           disabled={props.spectator || closed() || locked() || !p.connected}
@@ -193,19 +193,19 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
                           onPointerDown={press.onPointerDown}
                           onClick={press.onClick}
                         >
-                          <span class="ca__portrait">
+                          <span class="cx__portrait">
                             <Avatar
                               index={p.avatar}
-                              size="var(--ca-av)"
+                              size="var(--cx-av)"
                               connected={p.connected}
                               ring={aimed() ? LOCK_RED : undefined}
                               ready={ready()}
                             />
                           </span>
-                          <span class="ca__name">{p.nickname}</span>
+                          <span class="cx__name">{p.nickname}</span>
                         </button>
-                        <span class="ca__sightbox" aria-hidden="true">
-                          <span class="ca__sight">
+                        <span class="cx__sightbox" aria-hidden="true">
+                          <span class="cx__sight">
                             <Sight />
                           </span>
                         </span>
@@ -216,7 +216,7 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
               </div>
             </div>
 
-            <p class="ca__hint" role="status">
+            <p class="cx__hint" role="status">
               {props.spectator
                 ? "Hedefler süre bitince açılır"
                 : closed()
@@ -278,26 +278,26 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
           const verdict = () => VERDICT[outcomeOf(r(), props.selfId)];
           return (
             <>
-              <div class="ca__head ca__head--reveal" style={{ "--at": `${CHIP_AT_MS}ms` }}>
-                <Show when={!props.spectator} fallback={<span class="ca__title">Hedefler açıldı</span>}>
-                  <span class="ca__score" data-o={outcomeOf(r(), props.selfId)}>
+              <div class="cx__head cx__head--reveal" style={{ "--at": `${CHIP_AT_MS}ms` }}>
+                <Show when={!props.spectator} fallback={<span class="cx__title">Hedefler açıldı</span>}>
+                  <span class="cx__score" data-o={outcomeOf(r(), props.selfId)}>
                     {verdict().score}
                   </span>
-                  <span class="ca__verdict">{verdict().text}</span>
+                  <span class="cx__verdict">{verdict().text}</span>
                 </Show>
               </div>
 
-              <div class="ca__stage">
+              <div class="cx__stage">
                 <div
-                  class="ca__arena"
+                  class="cx__arena"
                   style={{ "--beam-ms": `${BEAM_MS}ms`, "--chip-at": `${CHIP_AT_MS + lastDelay() / 2}ms` }}
                 >
-                  <svg class="ca__lines" viewBox="0 0 100 100" aria-hidden="true">
+                  <svg class="cx__lines" viewBox="0 0 100 100" aria-hidden="true">
                     <For each={beams()}>
                       {(b) => (
                         <g style={{ color: b.color, "--d": `${b.delay}ms` }}>
-                          <line class="ca__glow" x1={b.x1} y1={b.y1} x2={b.x2} y2={b.y2} pathLength="1" />
-                          <line class="ca__beam" x1={b.x1} y1={b.y1} x2={b.x2} y2={b.y2} pathLength="1" />
+                          <line class="cx__glow" x1={b.x1} y1={b.y1} x2={b.x2} y2={b.y2} pathLength="1" />
+                          <line class="cx__beam" x1={b.x1} y1={b.y1} x2={b.x2} y2={b.y2} pathLength="1" />
                         </g>
                       )}
                     </For>
@@ -306,7 +306,7 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
                   <For each={bursts()}>
                     {(b) => (
                       <i
-                        class="ca__burst"
+                        class="cx__burst"
                         aria-hidden="true"
                         style={{ left: `${b.x}%`, top: `${b.y}%`, "--d": `${BEAM_MS + lastDelay() / 2}ms` }}
                       />
@@ -315,7 +315,7 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
                   <For each={impacts()}>
                     {(b) => (
                       <i
-                        class="ca__impact"
+                        class="cx__impact"
                         aria-hidden="true"
                         style={{
                           left: `${b.pos.x}%`,
@@ -331,13 +331,13 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
                       const score = () => r().scores[n.p.id] ?? 0;
                       return (
                         <div
-                          class="ca__node"
+                          class="cx__node"
                           data-me={n.p.id === props.selfId ? "1" : undefined}
                           style={{ left: `${n.pos.x}%`, top: `${n.pos.y}%` }}
                         >
-                          <Avatar index={n.p.avatar} size="var(--ca-rav)" connected={n.p.connected} />
-                          <span class="ca__rname">{n.p.nickname}</span>
-                          <span class="ca__chip" data-s={score() > 0 ? "up" : score() < 0 ? "down" : "zero"}>
+                          <Avatar index={n.p.avatar} size="var(--cx-rav)" connected={n.p.connected} />
+                          <span class="cx__rname">{n.p.nickname}</span>
+                          <span class="cx__chip" data-s={score() > 0 ? "up" : score() < 0 ? "down" : "zero"}>
                             {chipText(score())}
                           </span>
                         </div>
@@ -346,7 +346,7 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
                   </For>
                 </div>
               </div>
-              <p class="ca__hint" role="status">
+              <p class="cx__hint" role="status">
                 Puanlar genel skora eklenir
               </p>
             </>

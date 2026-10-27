@@ -122,15 +122,15 @@ export function Eslestirme(props: Props) {
 
   return (
     <>
-      <div class="kd__head">
+      <div class="kn__head">
         <span class="overline">
           {props.spectator ? "Eşleştirme" : `${paired()}/${props.view.cards.length} eşleşti`}
         </span>
-        <span class="kd__title">{props.spectator ? "Herkes eşleştiriyor" : "Kim yazdı?"}</span>
+        <span class="kn__title">{props.spectator ? "Herkes eşleştiriyor" : "Kim yazdı?"}</span>
       </div>
 
       <ul
-        class="kd__cards"
+        class="kn__cards"
         data-count={props.view.cards.length}
         data-dragging={drag() ? "1" : undefined}
         data-scroll
@@ -142,7 +142,7 @@ export function Eslestirme(props: Props) {
               <li style={{ "--i": i() }}>
                 <button
                   type="button"
-                  class="kd__card"
+                  class="kn__card"
                   data-paired={who() ? "1" : undefined}
                   data-idle={closed() ? "1" : undefined}
                   data-lifted={drag()?.card === card.id ? "1" : undefined}
@@ -177,14 +177,14 @@ export function Eslestirme(props: Props) {
                   }}
                 >
                   <span
-                    class="kd__word"
+                    class="kn__word"
                     data-long={wordLen(card.text) > 7 ? "1" : undefined}
                     style={{ "--len": wordLen(card.text) }}
                   >
                     {card.text}
                   </span>
-                  <span class="kd__slot">
-                    <Show when={who()} fallback={<i class="kd__empty" />}>
+                  <span class="kn__slot">
+                    <Show when={who()} fallback={<i class="kn__empty" />}>
                       {(m) => <Avatar index={m().avatar} size={30} />}
                     </Show>
                   </span>
@@ -196,15 +196,15 @@ export function Eslestirme(props: Props) {
       </ul>
 
       <Show when={!closed()}>
-        <div class="kd__tray" data-active={drag() ? "1" : undefined}>
-          <p class="kd__traytip">Kartı avatara sürükle ya da karta dokun</p>
-          <ul class="kd__drops" data-n={candidates().length}>
+        <div class="kn__tray" data-active={drag() ? "1" : undefined}>
+          <p class="kn__traytip">Kartı avatara sürükle ya da karta dokun</p>
+          <ul class="kn__drops" data-n={candidates().length}>
             <For each={candidates()}>
               {(m) => {
                 const taken = () => cardOfPlayer(lv(), m.id) !== null;
                 return (
                   <li
-                    class="kd__drop"
+                    class="kn__drop"
                     ref={(el) => {
                       trayRefs.set(m.id, el);
                       onCleanup(() => trayRefs.delete(m.id));
@@ -215,10 +215,10 @@ export function Eslestirme(props: Props) {
                   >
                     <Avatar
                       index={m.avatar}
-                      size="var(--kd-dav)"
+                      size="var(--kn-dav)"
                       ring={taken() ? "var(--lime)" : undefined}
                     />
-                    <span class="kd__drop-name">{m.nickname}</span>
+                    <span class="kn__drop-name">{m.nickname}</span>
                   </li>
                 );
               }}
@@ -240,7 +240,7 @@ export function Eslestirme(props: Props) {
         {(d) => (
           <Portal>
             <div
-              class="kd__ghost"
+              class="kn__ghost"
               aria-hidden="true"
               style={{ transform: `translate(${d().x}px, ${d().y}px) translate(-50%, -150%)` }}
             >
@@ -251,8 +251,8 @@ export function Eslestirme(props: Props) {
       </Show>
 
       <BottomSheet open={open() !== null} onClose={() => setOpen(null)} title={openCard()?.text ?? ""}>
-        <p class="kd__ask">Bu kelime kimin?</p>
-        <ul class="kd__who">
+        <p class="kn__ask">Bu kelime kimin?</p>
+        <ul class="kn__who">
           <For each={candidates()}>
             {(m) => {
               const current = () => pairOf(lv(), open() ?? -1) === m.id;
@@ -264,15 +264,15 @@ export function Eslestirme(props: Props) {
                 <li>
                   <button
                     type="button"
-                    class="kd__pick"
+                    class="kn__pick"
                     data-on={current() ? "1" : undefined}
                     aria-pressed={current()}
                     aria-label={`${m.nickname} adlı oyuncuyu seç`}
                     onClick={() => choose(m.id)}
                   >
                     <Avatar index={m.avatar} size={48} ring={current() ? "var(--lime)" : undefined} />
-                    <span class="kd__pick-name">{m.nickname}</span>
-                    <span class="kd__pick-tag" data-on={elsewhere() ? "1" : undefined}>
+                    <span class="kn__pick-name">{m.nickname}</span>
+                    <span class="kn__pick-tag" data-on={elsewhere() ? "1" : undefined}>
                       {elsewhere() ?? ""}
                     </span>
                   </button>
@@ -283,7 +283,7 @@ export function Eslestirme(props: Props) {
         </ul>
         <button
           type="button"
-          class="kd__clear"
+          class="kn__clear"
           disabled={pairOf(lv(), open() ?? -1) === null}
           onClick={() => choose(null)}
         >

@@ -226,7 +226,7 @@ const SCREENS = [
   {
     name: "capraz-tap",
     q: "mock=capraz-ates",
-    act: async (p) => p.locator(".ca__cell:not(:disabled)").nth(1).click(),
+    act: async (p) => p.locator(".cx__cell:not(:disabled)").nth(1).click(),
   },
   { name: "capraz-tamam", q: "mock=capraz-tamam" },
   { name: "capraz-tamam-8", q: "mock=capraz-tamam&n=8" },
@@ -473,7 +473,7 @@ const SCREENS = [
     name: "kronometre-press",
     q: "mock=kor-kronometre-counting",
     settle: 800,
-    act: async (p) => p.locator(".kk__press").click(),
+    act: async (p) => p.locator(".kro__press").click(),
   },
   { name: "kronometre-pressed", q: "mock=kor-kronometre-pressed" },
   { name: "kronometre-spectator", q: "mock=kor-kronometre-spectator" },
@@ -684,7 +684,7 @@ const SCREENS = [
     name: "kendim-match-sheet",
     q: "mock=kendim-match&n=8&paired=2",
     settle: 600,
-    act: async (p) => p.locator(".kd__card").first().click({ force: true }),
+    act: async (p) => p.locator(".kn__card").first().click({ force: true }),
   },
   { name: "kendim-match-locked", q: "mock=kendim-match-locked&n=6" },
   { name: "kendim-reveal-5", q: "mock=kendim-reveal&n=5", settle: 3000 },
@@ -1094,8 +1094,8 @@ const SCREENS = [
     q: "mock=kendim-match&n=6&paired=1",
     settle: 600,
     act: async (p) => {
-      const card = await p.locator(".kd__card").nth(1).boundingBox();
-      const drop = await p.locator(".kd__drop").nth(2).boundingBox();
+      const card = await p.locator(".kn__card").nth(1).boundingBox();
+      const drop = await p.locator(".kn__drop").nth(2).boundingBox();
       if (!card || !drop) throw new Error("kart ya da avatar yok");
       await p.mouse.move(card.x + card.width / 2, card.y + card.height / 2);
       await p.mouse.down();

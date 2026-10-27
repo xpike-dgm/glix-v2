@@ -1,11 +1,11 @@
 /* ---- Kendim ---- */
-.kd {
+.kn {
   overflow: hidden;
 }
-.kd .col {
+.kn .col {
   gap: 0;
 }
-.kd__head {
+.kn__head {
   flex: none;
   display: flex;
   flex-direction: column;
@@ -15,7 +15,7 @@
   min-height: 62px;
   text-align: center;
 }
-.kd__title {
+.kn__title {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: clamp(20px, 6.6vw, var(--fs-32));
@@ -27,7 +27,7 @@
 }
 
 /* ---- Yazma ---- */
-.kd__mid {
+.kn__mid {
   flex: 1;
   min-height: 0;
   display: flex;
@@ -36,13 +36,13 @@
   justify-content: center;
   gap: 12px;
 }
-.kd__hint {
+.kn__hint {
   margin: 0;
   color: var(--text-dim);
   font-size: var(--fs-15);
   text-align: center;
 }
-.kd__idle {
+.kn__idle {
   width: 100%;
   padding: 22px 18px;
   border-radius: 20px;
@@ -53,7 +53,7 @@
   font-size: 28px;
   color: var(--text-dim);
 }
-.kd__crew {
+.kn__crew {
   flex: none;
   list-style: none;
   margin: 0;
@@ -62,20 +62,20 @@
   justify-content: center;
   gap: 8px;
 }
-.kd__p {
+.kn__p {
   opacity: 0.5;
   filter: saturate(0.5);
   transition:
     opacity 200ms,
     filter 200ms;
 }
-.kd__p[data-done="1"] {
+.kn__p[data-done="1"] {
   opacity: 1;
   filter: none;
 }
 
 /* ---- Eşleştirme: hologram kartlar ---- */
-.kd__cards {
+.kn__cards {
   flex: 1;
   min-height: 0;
   list-style: none;
@@ -88,14 +88,14 @@
   align-content: center;
   overflow-y: auto;
 }
-.kd__cards > li {
+.kn__cards > li {
   display: flex;
   min-height: 0;
   max-height: 120px;
-  animation: kd-rise var(--t-slow) var(--ease) both;
+  animation: kn-rise var(--t-slow) var(--ease) both;
   animation-delay: calc(var(--i, 0) * 55ms);
 }
-@keyframes kd-rise {
+@keyframes kn-rise {
   from {
     opacity: 0;
     transform: translateY(12px);
@@ -105,7 +105,7 @@
     transform: none;
   }
 }
-.kd__card {
+.kn__card {
   --pc: var(--cyan);
   container-type: inline-size;
   position: relative;
@@ -140,30 +140,30 @@
     transform 80ms var(--ease),
     border-color 160ms,
     box-shadow 160ms;
-  animation: kd-float 5.4s ease-in-out calc(var(--i, 0) * -0.7s) infinite;
+  animation: kn-float 5.4s ease-in-out calc(var(--i, 0) * -0.7s) infinite;
 }
-.kd__card:active:not(:disabled) {
+.kn__card:active:not(:disabled) {
   transform: scale(0.96);
   animation: none;
 }
-.kd__card:disabled {
+.kn__card:disabled {
   cursor: default;
   touch-action: manipulation;
 }
-.kd__card[data-lifted="1"] {
+.kn__card[data-lifted="1"] {
   border-style: dashed;
   animation: none;
   transform: scale(0.96);
 }
-.kd__cards[data-dragging="1"] {
+.kn__cards[data-dragging="1"] {
   overflow-y: hidden;
 }
 
 /* Sürükle-bırak: avatar sırası ve parmağı izleyen kart hayaleti */
-.kd {
-  --kd-dav: min(36px, calc((100vw - 56px) / 7 - 8px));
+.kn {
+  --kn-dav: min(36px, calc((100vw - 56px) / 7 - 8px));
 }
-.kd__tray {
+.kn__tray {
   flex: none;
   display: flex;
   flex-direction: column;
@@ -171,14 +171,14 @@
   gap: 4px;
   padding: 4px 0 2px;
 }
-.kd__traytip {
+.kn__traytip {
   margin: 0;
   font-size: var(--fs-13);
   line-height: 1.2;
   color: var(--text-dim);
   text-align: center;
 }
-.kd__drops {
+.kn__drops {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -188,7 +188,7 @@
   gap: 2px;
   width: 100%;
 }
-.kd__drop {
+.kn__drop {
   --pc: var(--cyan);
   flex: 1 1 0;
   min-width: 0;
@@ -205,17 +205,17 @@
     background 120ms,
     border-color 120ms;
 }
-.kd__tray[data-active="1"] .kd__drop {
+.kn__tray[data-active="1"] .kn__drop {
   border-color: color-mix(in srgb, var(--pc) 55%, transparent);
 }
-.kd__drop[data-hot="1"] {
+.kn__drop[data-hot="1"] {
   transform: scale(1.18);
   border-style: solid;
   border-color: var(--pc);
   background: color-mix(in srgb, var(--pc) 22%, transparent);
   box-shadow: 0 0 16px color-mix(in srgb, var(--pc) 60%, transparent);
 }
-.kd__drop-name {
+.kn__drop-name {
   max-width: 100%;
   font-size: var(--fs-13);
   line-height: 1.1;
@@ -224,10 +224,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.kd__drop[data-taken="1"] .kd__drop-name {
+.kn__drop[data-taken="1"] .kn__drop-name {
   color: var(--text);
 }
-.kd__ghost {
+.kn__ghost {
   position: fixed;
   left: 0;
   top: 0;
@@ -250,16 +250,16 @@
   touch-action: none;
   will-change: transform;
 }
-.kd__card[data-idle="1"] {
+.kn__card[data-idle="1"] {
   opacity: 0.85;
 }
-.kd__card[data-paired="1"] {
+.kn__card[data-paired="1"] {
   border-color: var(--pc);
   box-shadow:
     0 0 18px color-mix(in srgb, var(--pc) 55%, transparent),
     inset 0 0 14px color-mix(in srgb, var(--pc) 22%, transparent);
 }
-@keyframes kd-float {
+@keyframes kn-float {
   0%,
   100% {
     transform: translateY(0);
@@ -268,7 +268,7 @@
     transform: translateY(-3px);
   }
 }
-.kd__word {
+.kn__word {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: clamp(13px, calc(100cqw / (var(--len, 6) * 0.98)), 20px);
@@ -277,18 +277,18 @@
   text-shadow: 0 0 12px color-mix(in srgb, var(--pc) 60%, transparent);
 }
 /* Uzun kelimeler: Unbounded geniş olduğundan daha dar bir yazı tipiyle satır ortasından bölünmeden sığar */
-.kd__word[data-long="1"] {
+.kn__word[data-long="1"] {
   font-family: var(--font-text);
   font-size: clamp(13px, calc(100cqw / (var(--len, 8) * 0.82)), 20px);
 }
-.kd__slot {
+.kn__slot {
   align-self: flex-end;
   display: grid;
   place-items: center;
   width: 32px;
   height: 32px;
 }
-.kd__empty {
+.kn__empty {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -296,12 +296,12 @@
 }
 
 /* Kim yazdı? seçici (alt sayfa) */
-.kd__ask {
+.kn__ask {
   margin: -4px 0 0;
   color: var(--text-dim);
   font-size: var(--fs-15);
 }
-.kd__who {
+.kn__who {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -309,7 +309,7 @@
   grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
   gap: 8px;
 }
-.kd__pick {
+.kn__pick {
   width: 100%;
   min-height: 96px;
   display: flex;
@@ -326,13 +326,13 @@
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
-.kd__pick:active {
+.kn__pick:active {
   transform: scale(0.96);
 }
-.kd__pick[data-on="1"] {
+.kn__pick[data-on="1"] {
   border-color: var(--lime);
 }
-.kd__pick-name {
+.kn__pick-name {
   max-width: 100%;
   font-size: var(--fs-15);
   font-weight: 600;
@@ -341,7 +341,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.kd__pick-tag {
+.kn__pick-tag {
   max-width: 100%;
   min-height: 16px;
   font-size: var(--fs-13);
@@ -351,7 +351,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.kd__clear {
+.kn__clear {
   min-height: 48px;
   border-radius: var(--r-btn);
   border: 1.5px solid rgba(160, 175, 255, 0.34);
@@ -361,40 +361,40 @@
   font-weight: 600;
   cursor: pointer;
 }
-.kd__clear:disabled {
+.kn__clear:disabled {
   opacity: 0.4;
   cursor: default;
 }
 
 /* ---- Sonuç ---- */
-.kd__head--res {
+.kn__head--res {
   min-height: 78px;
   gap: 2px;
 }
-.kd__score {
+.kn__score {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: clamp(40px, 13vw, 56px);
   line-height: 1;
   color: var(--lime);
   text-shadow: 0 0 18px color-mix(in srgb, var(--lime) 55%, transparent);
-  animation: kd-pop 420ms var(--ease) 700ms both;
+  animation: kn-pop 420ms var(--ease) 700ms both;
 }
-.kd__score[data-zero="1"] {
+.kn__score[data-zero="1"] {
   color: var(--text);
   text-shadow: none;
 }
-.kd__score[data-neg="1"] {
+.kn__score[data-neg="1"] {
   color: var(--red);
   text-shadow: 0 0 18px color-mix(in srgb, var(--red) 55%, transparent);
 }
-.kd__verdict {
+.kn__verdict {
   font-size: var(--fs-15);
   font-weight: 600;
   color: #d5daf6;
-  animation: kd-fade 300ms var(--ease) 700ms both;
+  animation: kn-fade 300ms var(--ease) 700ms both;
 }
-@keyframes kd-pop {
+@keyframes kn-pop {
   from {
     transform: scale(0.4);
     opacity: 0;
@@ -408,7 +408,7 @@
     opacity: 1;
   }
 }
-@keyframes kd-fade {
+@keyframes kn-fade {
   from {
     opacity: 0;
   }
@@ -416,7 +416,7 @@
     opacity: 1;
   }
 }
-.kd__results {
+.kn__results {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -426,7 +426,7 @@
   margin-top: 8px;
   padding-bottom: 6px;
 }
-.kd__rcards {
+.kn__rcards {
   flex: none;
   list-style: none;
   margin: 0;
@@ -435,7 +435,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
-.kd__rcard {
+.kn__rcard {
   container-type: inline-size;
   position: relative;
   min-width: 0;
@@ -446,35 +446,35 @@
   border-radius: 14px;
   border: 2px solid rgba(160, 175, 255, 0.3);
   background: linear-gradient(160deg, color-mix(in srgb, var(--cyan) 10%, var(--bg-1)), var(--bg-0));
-  animation: kd-rise 360ms var(--ease) calc(500ms + var(--i, 0) * 90ms) both;
+  animation: kn-rise 360ms var(--ease) calc(500ms + var(--i, 0) * 90ms) both;
 }
-.kd__rcard[data-mine="ok"] {
+.kn__rcard[data-mine="ok"] {
   border-color: var(--lime);
   box-shadow: 0 0 12px color-mix(in srgb, var(--lime) 40%, transparent);
 }
-.kd__rcard[data-mine="bad"] {
+.kn__rcard[data-mine="bad"] {
   border-color: var(--red);
   box-shadow: 0 0 12px color-mix(in srgb, var(--red) 40%, transparent);
 }
-.kd__rword {
+.kn__rword {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: clamp(13px, calc(100cqw / (var(--len, 6) * 0.98)), 18px);
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
-.kd__rword[data-long="1"] {
+.kn__rword[data-long="1"] {
   font-family: var(--font-text);
   font-size: clamp(13px, calc(100cqw / (var(--len, 8) * 0.82)), 18px);
 }
-.kd__rowner {
+.kn__rowner {
   display: flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
 }
-/* Karalama Defteri de `.kd__rname` kullanır; sıra kurallarına bağlı kalmamak için sahip satırına bağlanır. */
-.kd__rowner .kd__rname {
+/* Karalama Defteri de `.kn__rname` kullanır; sıra kurallarına bağlı kalmamak için sahip satırına bağlanır. */
+.kn__rowner .kn__rname {
   min-width: 0;
   font-family: inherit;
   font-size: var(--fs-13);
@@ -484,10 +484,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.kd__rcard[data-me="1"] .kd__rname {
+.kn__rcard[data-me="1"] .kn__rname {
   color: var(--text);
 }
-.kd__bonus {
+.kn__bonus {
   position: absolute;
   top: -8px;
   right: -6px;
@@ -500,7 +500,7 @@
   font-weight: 800;
   font-size: var(--fs-13);
 }
-.kd__rank {
+.kn__rank {
   flex: none;
   list-style: none;
   margin: 0;
@@ -509,7 +509,7 @@
   flex-direction: column;
   gap: 6px;
 }
-.kd__rrow {
+.kn__rrow {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -517,12 +517,12 @@
   padding: 4px 8px;
   border-radius: 12px;
   background: rgba(10, 16, 48, 0.7);
-  animation: kd-fade 300ms var(--ease) calc(700ms + var(--i, 0) * 70ms) both;
+  animation: kn-fade 300ms var(--ease) calc(700ms + var(--i, 0) * 70ms) both;
 }
-.kd__rrow[data-me="1"] {
+.kn__rrow[data-me="1"] {
   outline: 1.5px solid var(--text);
 }
-.kd__rrow-name {
+.kn__rrow-name {
   flex: 1 1 0;
   min-width: 0;
   font-size: var(--fs-15);
@@ -531,7 +531,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.kd__crown {
+.kn__crown {
   flex: none;
   padding: 1px 8px;
   border-radius: 999px;
@@ -541,7 +541,7 @@
   font-weight: 800;
   font-size: var(--fs-13);
 }
-.kd__pts {
+.kn__pts {
   flex: none;
   min-width: 34px;
   text-align: right;
@@ -550,20 +550,20 @@
   font-size: var(--fs-15);
   color: var(--lime);
 }
-.kd__pts[data-zero="1"] {
+.kn__pts[data-zero="1"] {
   color: #c9cff0;
 }
-.kd__pts[data-neg="1"] {
+.kn__pts[data-neg="1"] {
   color: var(--red);
 }
 
 /* ---- Anlatım görseli ---- */
-.kdart {
+.knart {
   display: flex;
   align-items: center;
   width: min(100%, 240px);
 }
-.kdart__card {
+.knart__card {
   flex: none;
   padding: 16px 14px;
   border-radius: 12px;
@@ -576,18 +576,18 @@
     repeating-linear-gradient(0deg, rgba(46, 242, 255, 0.08) 0 2px, transparent 2px 6px),
     linear-gradient(160deg, color-mix(in srgb, var(--cyan) 18%, var(--bg-1)), var(--bg-0));
   box-shadow: 0 0 14px rgba(46, 242, 255, 0.5);
-  animation: kd-float 3.6s ease-in-out infinite;
+  animation: kn-float 3.6s ease-in-out infinite;
 }
-.kdart__rope {
+.knart__rope {
   flex: 1;
   min-width: 20px;
   height: 3px;
   border-radius: 2px;
   background: linear-gradient(90deg, var(--cyan), var(--lime));
   box-shadow: 0 0 10px rgba(46, 242, 255, 0.6);
-  animation: kdart-rope 2.8s ease-in-out infinite;
+  animation: knart-rope 2.8s ease-in-out infinite;
 }
-@keyframes kdart-rope {
+@keyframes knart-rope {
   0%,
   100% {
     opacity: 0.25;
@@ -601,66 +601,66 @@
 
 /* ---- Alçak (yatay telefon) ekran ---- */
 @media (max-height: 460px) {
-  .kd__head {
+  .kn__head {
     min-height: 44px;
     margin-top: 4px;
     gap: 0;
   }
-  .kd__head .overline {
+  .kn__head .overline {
     display: none;
   }
-  .kd__title {
+  .kn__title {
     font-size: 20px;
   }
-  .kd__head--res {
+  .kn__head--res {
     min-height: 44px;
   }
-  .kd__score {
+  .kn__score {
     font-size: 34px;
   }
-  .kd__verdict,
-  .kd__hint {
+  .kn__verdict,
+  .kn__hint {
     display: none;
   }
-  .kd__cards {
+  .kn__cards {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     grid-auto-rows: minmax(64px, 1fr);
     gap: 8px;
   }
-  .kd__rcards {
+  .kn__rcards {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
-  .kd__crew {
+  .kn__crew {
     padding: 2px 0;
   }
 }
-.kd[data-tight="1"] .kd__head--write,
-.kd[data-tight="1"] .kd__crew,
-.kd[data-tight="1"] .kd__hint {
+.kn[data-tight="1"] .kn__head--write,
+.kn[data-tight="1"] .kn__crew,
+.kn[data-tight="1"] .kn__hint {
   display: none;
 }
-.kd[data-tight="1"] .kd__mid {
+.kn[data-tight="1"] .kn__mid {
   justify-content: flex-start;
   padding-top: 36px;
 }
 
 /* Yatay ekran: sürükleme sırası sıkışık (ipucu satırı gizli, avatarlar küçük) */
 @media (max-height: 460px) {
-  .kd {
-    --kd-dav: 30px;
+  .kn {
+    --kn-dav: 30px;
   }
-  .kd__traytip {
+  .kn__traytip {
     display: none;
   }
 }
-.kd__tray[data-active="1"] .kd__traytip {
+.kn__tray[data-active="1"] .kn__traytip {
   visibility: hidden;
 }
 
 /* Dar ekranda 6+ avatar yan yana sığmaz: adlar gizlenir (renk ve yüz ayırt eder) */
 @media (max-width: 400px) {
-  .kd__drops[data-n="6"] .kd__drop-name,
-  .kd__drops[data-n="7"] .kd__drop-name {
+  .kn__drops[data-n="6"] .kn__drop-name,
+  .kn__drops[data-n="7"] .kn__drop-name {
     display: none;
   }
 }

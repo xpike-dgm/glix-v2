@@ -4,12 +4,12 @@ import { propSrc } from "../../ui/props.js";
 /** Başlangıç sahnesi: nişangâhlar köşelerden süpürüp ortada kilitlenir. Süs katmanı; dokunuşu geçirir. */
 export function Opening() {
   return (
-    <div class="ca-open" aria-hidden="true">
-      <i class="ca-open__sweep" />
+    <div class="cx-open" aria-hidden="true">
+      <i class="cx-open__sweep" />
       <For each={[0, 1, 2]}>
         {(k) => (
           <img
-            class="ca-open__sight"
+            class="cx-open__sight"
             style={{ "--k": k }}
             src={propSrc("genel/nisangah")}
             alt=""
@@ -19,7 +19,7 @@ export function Opening() {
           />
         )}
       </For>
-      <i class="ca-open__ring" />
+      <i class="cx-open__ring" />
     </div>
   );
 }
