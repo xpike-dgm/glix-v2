@@ -30,6 +30,11 @@ export interface ButonaBasState {
   scores: Record<string, number>;
   /** Kapanmış, en az bir basışı olan son pencereler (en yenisi sonda). */
   recent: ButonaBasWindowResult[];
+  /**
+   * Evre sayacı (0: 1. tur, 1: ara, 2: 2. tur, 3: ara, 4: 3. tur, 5: bitti). Görünümler `ctx.now`'dan türetilir;
+   * sayaç yalnız "durum değişti" sinyalidir (sunucu yalnız durum değişince yayın yapar).
+   */
+  stage: number;
 }
 
 /** `now` anındaki konum: oynanan tur ve tur içi sıra; aradaysa ya da oyun dışındaysa null. */
@@ -67,6 +72,13 @@ function phaseAt(
     phase: "gap",
     phaseEndsAt: state.startedAt + butonaBasRoundOffset(round + 1),
   };
+}
+
+/** Evre numarası (bkz. `ButonaBasState.stage`). */
+function stageAt(state: ButonaBasState, now: number): number {
+  const { round, phase } = phaseAt(state, now);
+  if (phase === "over") return 2 * BUTONA_BAS_ROUNDS - 1;
+  return phase === "gap" ? 2 * round - 1 : 2 * round;
 }
 
 /** Kapanmış (kapanış anı <= `now`) pencereleri puanlar. Değişiklik yoksa aynı nesneyi döner. */
@@ -135,6 +147,7 @@ export const butonaBas: GameDefinition<ButonaBasState, ButonaBasAction, ButonaBa
         pending: {},
         scores,
         recent: [],
+        stage: 0,
       };
     },
 
@@ -151,7 +164,9 @@ export const butonaBas: GameDefinition<ButonaBasState, ButonaBasAction, ButonaBa
     },
 
     tick(state, ctx): ButonaBasState {
-      return settle(state, ctx.now);
+      const settled = settle(state, ctx.now);
+      const stage = stageAt(state, ctx.now);
+      return stage === settled.stage ? settled : { ...settled, stage };
     },
 
     publicView(state, ctx): ButonaBasPublicView {

@@ -29,7 +29,7 @@ function resetDb(): void {
 async function finishMatch(cs: Client[]): Promise<void> {
   await startPlaying(cs);
   await press(cs[0] as Client);
-  k.clock.advance(45_100);
+  k.clock.advance(51_100);
   await until(() => (cs[0] as Client).room.phase === "results", "sonuç");
   k.clock.advance(7_100);
   await until(() => (cs[0] as Client).room.phase === "final", "final");
@@ -60,8 +60,8 @@ describe("istatistik kaydı", () => {
       player_count: 2,
       outcome: "finished",
     });
-    expect(Number(g[0]?.duration_ms)).toBeGreaterThanOrEqual(44_900);
-    expect(Number(g[0]?.duration_ms)).toBeLessThanOrEqual(46_000);
+    expect(Number(g[0]?.duration_ms)).toBeGreaterThanOrEqual(50_900);
+    expect(Number(g[0]?.duration_ms)).toBeLessThanOrEqual(52_000);
 
     // Geri bildirim: temizlenmiş metin, oyuncu başına bir kez.
     a.send({ type: "feedback", rating: 5, text: "  çok\u0007 eğlenceli \n" });
@@ -253,7 +253,7 @@ describe("performans özeti", () => {
     await startPlaying(cs);
     a.send(perfMsg("butona-bas")); // playing: yok sayılır
     await press(a);
-    k.clock.advance(45_100);
+    k.clock.advance(51_100);
     await until(() => a.room.phase === "results", "sonuç");
     a.send(perfMsg("baska-oyun")); // yanlış gameId
     a.send(perfMsg("butona-bas"));

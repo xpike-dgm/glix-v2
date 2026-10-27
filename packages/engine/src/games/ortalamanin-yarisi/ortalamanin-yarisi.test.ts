@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
-import { ortalamaAwards, ortalamaninYarisi as g, type OrtalamaState, ortalamaSettle } from "./index.js";
+import { ortalamaninYarisi as g, type OrtalamaState, ortalamaAwards, ortalamaSettle } from "./index.js";
 import {
   ORTALAMA_CHOOSE_MS,
   ORTALAMA_DURATION_MS,
@@ -424,7 +424,8 @@ describe("ortalamanin-yarisi O5: 3 tur, değişen çarpan", () => {
   /** 1. tur başlangıcından itibaren turların seçim bitişleri (erken bitiş yokken). */
   const R = [0, 15_000, 30_000];
   const END = (r: number) => (R[r] ?? 0) + ORTALAMA_CHOOSE_MS;
-  const vals = (r: number, values: number[]) => values.map((v, i) => [`p${i + 1}`, v, (R[r] ?? 0) + 1_000] as const);
+  const vals = (r: number, values: number[]) =>
+    values.map((v, i) => [`p${i + 1}`, v, (R[r] ?? 0) + 1_000] as const);
   function playAll(rounds: number[][], seed = 1): OrtalamaState {
     let s = start(rounds[0]?.length ?? 4, seed);
     rounds.forEach((values, r) => {
@@ -441,7 +442,11 @@ describe("ortalamanin-yarisi O5: 3 tur, değişen çarpan", () => {
       { num: 3, den: 4 },
     ]);
     expect([0, 1, 2].map(ortalamaMultiplier)).toEqual(ORTALAMA_MULTIPLIERS);
-    const s = playAll([[40, 40, 40, 40], [40, 40, 40, 40], [40, 40, 40, 40]]);
+    const s = playAll([
+      [40, 40, 40, 40],
+      [40, 40, 40, 40],
+      [40, 40, 40, 40],
+    ]);
     expect(viewAt(s, END(0)).reveal?.target).toBe(20);
     expect(viewAt(s, END(1)).reveal?.target).toBeCloseTo(80 / 3, 10);
     expect(viewAt(s, END(2)).reveal?.target).toBe(30);
@@ -459,7 +464,12 @@ describe("ortalamanin-yarisi O5: 3 tur, değişen çarpan", () => {
     expect(viewAt(s, 14_999)).toMatchObject({ round: 1 });
     expect(viewAt(s, 15_000)).toMatchObject({ round: 2, reveal: null, roundStartedAt: T0 + 15_000 });
     expect(viewAt(s, 25_000).reveal).not.toBeNull();
-    expect(viewAt(s, 30_000)).toMatchObject({ round: 3, reveal: null, endsAt: T0 + 40_000, revealEndsAt: T0 + 47_000 });
+    expect(viewAt(s, 30_000)).toMatchObject({
+      round: 3,
+      reveal: null,
+      endsAt: T0 + 40_000,
+      revealEndsAt: T0 + 47_000,
+    });
     expect(viewAt(s, 46_999)).toMatchObject({ round: 3 });
     expect(g.isFinished(s, ctx(T0 + 46_999))).toBe(false);
     expect(g.isFinished(s, ctx(T0 + 47_000))).toBe(true);
@@ -499,7 +509,11 @@ describe("ortalamanin-yarisi O5: 3 tur, değişen çarpan", () => {
   });
 
   it("2. turdan itibaren önceki turun ortalaması ve hedefi görünür; 1. turda yok", () => {
-    const s = playAll([[10, 20, 30, 40], [50, 50, 50, 50], [0, 0, 0, 0]]);
+    const s = playAll([
+      [10, 20, 30, 40],
+      [50, 50, 50, 50],
+      [0, 0, 0, 0],
+    ]);
     expect(viewAt(s, 5_000).previous).toEqual([]);
     expect(viewAt(s, 12_000).previous).toEqual([]);
     const p2 = viewAt(s, 16_000);
@@ -647,7 +661,10 @@ describe("ortalamanin-yarisi O5: 3 tur, değişen çarpan", () => {
         }
         if (tickStep > 0) s = g.tick(s, ctx(T0 + t, seed));
       }
-      return { result: g.result(s), views: [5_000, 12_000, 20_000, 33_000, 44_000].map((at) => viewAt(s, at)) };
+      return {
+        result: g.result(s),
+        views: [5_000, 12_000, 20_000, 33_000, 44_000].map((at) => viewAt(s, at)),
+      };
     };
     for (const seed of [1, 2, 3, 99]) {
       expect(run(seed, 250)).toEqual(run(seed, 250));

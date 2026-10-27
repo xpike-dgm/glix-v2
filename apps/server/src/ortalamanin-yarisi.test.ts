@@ -20,6 +20,12 @@ interface Reveal {
 }
 interface Pub {
   endsAt: number;
+  round: number;
+  rounds: number;
+  multiplier: { num: number; den: number };
+  previous: { mean: number; target: number; multiplier: { num: number; den: number } }[];
+  totals: Record<string, number>;
+  final: null | Record<string, number>;
   reveal: null | Reveal;
 }
 
@@ -35,13 +41,16 @@ async function startGame(cs: Client[]): Promise<void> {
   await until(() => host.room.phase === "playing", "playing");
 }
 
-describe("ortalamaya en yakın: oda içinde tam maç", () => {
-  it("seçimler gizli kalır; sonuç açılır, puanlar genel skora eklenir; göndermeyene sayı atanır", async () => {
+describe("ortalamaya en yakın: oda içinde tam maç (3 tur)", () => {
+  it("seçimler gizli kalır; 3 tur çarpan ½, ⅔, ¾; genel skor yalnız sonda toplamdan verilir; göndermeyene sayı atanır", async () => {
     const cs = await setupRoom(["A", "B", "C", "D"]);
     const [a, b, c, d] = cs as [Client, Client, Client, Client];
     await startGame(cs);
     const pub = () => a.room.match?.publicView as Pub;
+    const ids = cs.map((x) => x.session.playerId) as [string, string, string, string];
 
+    // Tur 1
+    expect(pub()).toMatchObject({ round: 1, rounds: 3, multiplier: { num: 1, den: 2 }, previous: [] });
     expect(await choose(a, 90)).toBe(true);
     expect(await choose(a, 20)).toBe(true); // değiştirilebilir
     expect(await choose(b, 22)).toBe(true);
@@ -66,48 +75,97 @@ describe("ortalamaya en yakın: oda içinde tam maç", () => {
       expect(raw).not.toContain('"mean"');
     }
 
-    k.clock.advance(20_100 - 60 * 5);
-    await until(() => pub().reveal !== null, "seçimler açıldı");
+    k.clock.advance(10_100 - 60 * 5);
+    await until(() => pub().reveal !== null, "1. tur açıldı");
     expect(await choose(d, 10)).toBe(false); // süre doldu
 
-    const ids = cs.map((x) => x.session.playerId) as [string, string, string, string];
-    const r = pub().reveal as Reveal;
-    expect([r.choices[ids[0]], r.choices[ids[1]], r.choices[ids[2]]]).toEqual([20, 22, 60]);
-    const dv = r.choices[ids[3]] as number;
+    const r1 = pub().reveal as Reveal;
+    expect([r1.choices[ids[0]], r1.choices[ids[1]], r1.choices[ids[2]]]).toEqual([20, 22, 60]);
+    const dv = r1.choices[ids[3]] as number;
     expect(Number.isInteger(dv) && dv >= 0 && dv <= 100).toBe(true);
     const sum = 20 + 22 + 60 + dv;
-    expect(r.mean).toBeCloseTo(sum / 4, 10);
-    expect(r.target).toBeCloseTo(sum / 8, 10);
-    expect(r.order[0]).toBe(
-      [...ids].sort(
-        (x, y) =>
-          Math.abs((r.choices[x] as number) - r.target) - Math.abs((r.choices[y] as number) - r.target),
-      )[0],
+    expect(r1.mean).toBeCloseTo(sum / 4, 10);
+    expect(r1.target).toBeCloseTo(sum / 8, 10);
+    expect(pub().final).toBeNull();
+    // Tur puanı mini puana yazılır; genel skor henüz değişmez.
+    expect(pub().totals).toEqual(r1.points);
+    expect(a.room.players.map((p) => p.score)).toEqual([0, 0, 0, 0]);
+
+    // Tur 2: önceki ortalama ve hedef görünür, çarpan ⅔.
+    k.clock.advance(5_000);
+    await until(() => pub().round === 2, "2. tur");
+    expect(pub()).toMatchObject({ reveal: null, multiplier: { num: 2, den: 3 } });
+    expect(pub().previous).toHaveLength(1);
+    expect(pub().previous[0]?.mean).toBeCloseTo(r1.mean, 10);
+    expect(pub().previous[0]?.target).toBeCloseTo(r1.target, 10);
+    expect(await choose(a, 30)).toBe(true);
+    expect(await choose(b, 31)).toBe(true);
+    expect(await choose(c, 80)).toBe(true);
+    expect(await choose(d, 33)).toBe(true);
+    k.clock.advance(10_100);
+    await until(() => pub().reveal !== null, "2. tur açıldı");
+    const r2 = pub().reveal as Reveal;
+    expect(r2.target).toBeCloseTo(((30 + 31 + 80 + 33) / 4) * (2 / 3), 10);
+
+    // Tur 3: ¾; son sonuç genel skoru getirir.
+    k.clock.advance(5_000);
+    await until(() => pub().round === 3, "3. tur");
+    expect(pub().multiplier).toEqual({ num: 3, den: 4 });
+    expect(pub().previous).toHaveLength(2);
+    for (const [i, x] of [a, b, c, d].entries())
+      expect(await choose(x, [10, 50, 90, 50][i] as number)).toBe(true);
+    k.clock.advance(10_100);
+    await until(() => pub().reveal !== null, "3. tur açıldı");
+    const r3 = pub().reveal as Reveal;
+    expect(r3.target).toBeCloseTo(37.5, 10);
+    const totals = Object.fromEntries(
+      ids.map((id) => [id, (r1.points[id] ?? 0) + (r2.points[id] ?? 0) + (r3.points[id] ?? 0)]),
     );
+    expect(pub().totals).toEqual(totals);
+    const final = pub().final as Record<string, number>;
+    expect(Math.max(...Object.values(final))).toBeLessThanOrEqual(2);
 
     k.clock.advance(7_000);
     await until(() => a.room.phase === "results", "sonuç");
     const result = a.room.match?.result;
-    expect(result?.awards).toEqual(r.points);
-    expect(result?.miniScores).toEqual(r.points);
-    const total = Object.values(r.points).reduce((x, y) => x + y, 0);
-    expect(total).toBeGreaterThanOrEqual(1);
-    expect(total).toBeLessThanOrEqual(4);
-    const expectScores = ids.map((id) => r.points[id] ?? 0);
+    expect(result?.miniScores).toEqual(totals);
+    expect(result?.awards).toEqual(final);
+    const expectScores = ids.map((id) => final[id] ?? 0);
     expect(a.room.players.map((p) => p.score)).toEqual(expectScores);
     expect(d.room.players.map((p) => p.score)).toEqual(expectScores);
     expect(b.room.phase).toBe("results");
   });
 
-  it("en yakınlar eşitse hepsi +1 alır", async () => {
+  it("herkes aynı sayıyı seçerse her tur eşit; toplamda eşitlik: liderlerin hepsi +1", async () => {
     const cs = await setupRoom(["A", "B", "C"]);
     await startGame(cs);
-    for (const c of cs) expect(await choose(c, 40)).toBe(true); // ortalama 40, hedef 20; üçü de eşit
-    k.clock.advance(20_100);
     const a = cs[0] as Client;
-    k.clock.advance(7_000);
+    for (let round = 0; round < 3; round++) {
+      for (const c of cs) expect(await choose(c, 40)).toBe(true);
+      k.clock.advance(10_100);
+      await sync();
+      k.clock.advance(round < 2 ? 5_000 : 7_000);
+      await sync();
+    }
     await until(() => a.room.phase === "results", "sonuç");
+    // Her turda üçü de eşit en yakın: +1 x 3 tur = 3'er; toplam eşit -> hepsi +1.
+    expect(Object.values(a.room.match?.result?.miniScores ?? {})).toEqual([3, 3, 3]);
     expect(Object.values(a.room.match?.result?.awards ?? {})).toEqual([1, 1, 1]);
     expect(a.room.players.map((p) => p.score)).toEqual([1, 1, 1]);
+  });
+
+  it("bağlı herkes kilitleyince o tur erken biter ve sonraki tur erken başlar", async () => {
+    const cs = await setupRoom(["A", "B", "C"]);
+    await startGame(cs);
+    const a = cs[0] as Client;
+    const pub = () => a.room.match?.publicView as Pub;
+    for (const c of cs) expect(await choose(c, 40)).toBe(true);
+    for (const c of cs) c.send({ type: "action", seq: ++seq, payload: { kind: "lock" } });
+    await sync();
+    k.clock.advance(1_100);
+    await until(() => pub().reveal !== null, "erken açıldı");
+    expect(pub().round).toBe(1);
+    k.clock.advance(5_000);
+    await until(() => pub().round === 2, "2. tur erken başladı");
   });
 });

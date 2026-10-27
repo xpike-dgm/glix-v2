@@ -178,7 +178,12 @@ describe("asiri-yukleme kuralları", () => {
       expect(P(["a", "b"], { a: 30, b: 5 }, null)).toEqual({ a: 2, b: 0 });
     });
     it("en azda eşitlik: eşit en az tıklayanların hepsi −1", () => {
-      expect(P(["a", "b", "c", "d"], { a: 30, b: 20, c: 5, d: 5 }, null)).toEqual({ a: 2, b: 1, c: -1, d: -1 });
+      expect(P(["a", "b", "c", "d"], { a: 30, b: 20, c: 5, d: 5 }, null)).toEqual({
+        a: 2,
+        b: 1,
+        c: -1,
+        d: -1,
+      });
     });
     it("herkesin sayısı aynıysa kimse bu cezayı almaz", () => {
       expect(P(["a", "b", "c"], { a: 7, b: 7, c: 7 }, null)).toEqual({ a: 1, b: 1, c: 1 });

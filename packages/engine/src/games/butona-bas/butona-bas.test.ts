@@ -357,7 +357,9 @@ describe("butona-bas O8: 3 tur, daralan pencere", () => {
   it("turlar arası ara: basış reddedilir, pencere/ceza oluşmaz", () => {
     const s = start();
     for (const at of [15_000, 16_500, 17_999, 33_000, 34_999]) {
-      expect(butonaBas.reduce(s, "a", { kind: "press" }, ctx(T0 + at))).toEqual({ rejected: "between_rounds" });
+      expect(butonaBas.reduce(s, "a", { kind: "press" }, ctx(T0 + at))).toEqual({
+        rejected: "between_rounds",
+      });
     }
     expect(isRejected(butonaBas.reduce(s, "a", { kind: "press" }, ctx(T0 + 14_999)))).toBe(false);
     expect(isRejected(butonaBas.reduce(s, "a", { kind: "press" }, ctx(T0 + 18_000)))).toBe(false);
@@ -438,7 +440,13 @@ describe("butona-bas O8: 3 tur, daralan pencere", () => {
   it("görünüm: tur, evre, pencere ve süre bilgisi", () => {
     const s = start();
     const v = (at: number) => butonaBas.publicView(s, ctx(T0 + at));
-    expect(v(0)).toMatchObject({ round: 1, rounds: 3, phase: "play", windowMs: 300, phaseEndsAt: T0 + 15_000 });
+    expect(v(0)).toMatchObject({
+      round: 1,
+      rounds: 3,
+      phase: "play",
+      windowMs: 300,
+      phaseEndsAt: T0 + 15_000,
+    });
     expect(v(14_999)).toMatchObject({ round: 1, phase: "play", windowMs: 300 });
     // Ara: yaklaşan tur ve daralan pencere.
     expect(v(15_000)).toMatchObject({ round: 2, phase: "gap", windowMs: 200, phaseEndsAt: T0 + 18_000 });

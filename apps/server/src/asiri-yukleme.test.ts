@@ -80,14 +80,14 @@ describe("asiri-yukleme tam maç", () => {
 
     k.clock.advance(5_100);
     await until(() => a.room.phase === "results", "sonuç");
-    // a ve c patlamadı: a (40) tek lider +2, c (25) +1; b patladı -1.
+    // a ve c patlamadı: a (40) tek lider +2, c (25) +1 ama en az tıklayan olduğu için −1 (O7) = 0; b patladı -1.
     expect(a.room.match?.result?.awards).toEqual({
       [ids[0] as string]: 2,
       [ids[1] as string]: -1,
-      [ids[2] as string]: 1,
+      [ids[2] as string]: 0,
     });
-    expect(a.room.players.map((p) => p.score)).toEqual([2, -1, 1]);
-    expect(c.room.players.map((p) => p.score)).toEqual([2, -1, 1]);
+    expect(a.room.players.map((p) => p.score)).toEqual([2, -1, 0]);
+    expect(c.room.players.map((p) => p.score)).toEqual([2, -1, 0]);
   });
 
   it("pencere taşmadan biterse patlama olmaz ve tıklamalar sıralanır; 3 sn dolana kadar tur sürer", async () => {
@@ -105,8 +105,9 @@ describe("asiri-yukleme tam maç", () => {
     expect(pub(b).reveal).toMatchObject({ exploder: null, total: 100 });
     k.clock.advance(5_100);
     await until(() => a.room.phase === "results", "sonuç");
-    expect(a.room.match?.result?.awards).toEqual({ [ids[0] as string]: 2, [ids[1] as string]: 1 });
-    expect(a.room.players.map((p) => p.score)).toEqual([2, 1]);
+    // b ikinci sırada +1 alır ama en az tıklayan olduğu için −1 (O7) = 0.
+    expect(a.room.match?.result?.awards).toEqual({ [ids[0] as string]: 2, [ids[1] as string]: 0 });
+    expect(a.room.players.map((p) => p.score)).toEqual([2, 0]);
   });
 
   it("kimse tıklamazsa 90 sn teknik sınırda sıralama olmadan biter", async () => {

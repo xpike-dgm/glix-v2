@@ -38,8 +38,13 @@ export interface OrtalamaState {
   players: string[];
   startedAt: number;
   rounds: OrtalamaRoundState[];
-  /** Süresi dolmuş tur sayısı. Görünümler `ctx.now`'dan türetilir; sayaç yalnız "durum değişti" sinyalidir. */
+  /** Süresi dolmuş (sonucu açılmış) tur sayısı. */
   revealed: number;
+  /**
+   * Ekranda gösterilen tur (0 tabanlı). Görünümler `ctx.now`'dan türetilir; `revealed` ve `shown` yalnız
+   * "durum değişti" sinyalidir (sunucu yalnız durum değişince yayın yapar; tur geçişi de yayın gerektirir).
+   */
+  shown: number;
 }
 
 function finalChoices(state: OrtalamaState, round: OrtalamaRoundState): Record<string, number> {
@@ -178,7 +183,7 @@ export const ortalamaninYarisi: GameDefinition<
       });
       at += len.choose + len.reveal;
     }
-    return { players: [...players], startedAt: ctx.now, rounds, revealed: 0 };
+    return { players: [...players], startedAt: ctx.now, rounds, revealed: 0, shown: 0 };
   },
 
   reduce(state, playerId, action, ctx): OrtalamaState | Rejected {
@@ -196,7 +201,12 @@ export const ortalamaninYarisi: GameDefinition<
         i === index
           ? next
           : i > index && shift !== 0
-            ? { ...r, startAt: r.startAt + shift, endsAt: r.endsAt + shift, revealEndsAt: r.revealEndsAt + shift }
+            ? {
+                ...r,
+                startAt: r.startAt + shift,
+                endsAt: r.endsAt + shift,
+                revealEndsAt: r.revealEndsAt + shift,
+              }
             : r,
       ),
     });
@@ -217,10 +227,14 @@ export const ortalamaninYarisi: GameDefinition<
 
   tick(state, ctx): OrtalamaState {
     let revealed = state.revealed;
-    while (revealed < state.rounds.length && ctx.now >= (state.rounds[revealed]?.endsAt ?? Number.POSITIVE_INFINITY)) {
+    while (
+      revealed < state.rounds.length &&
+      ctx.now >= (state.rounds[revealed]?.endsAt ?? Number.POSITIVE_INFINITY)
+    ) {
       revealed++;
     }
-    return revealed === state.revealed ? state : { ...state, revealed };
+    const shown = currentRound(state, ctx.now);
+    return revealed === state.revealed && shown === state.shown ? state : { ...state, revealed, shown };
   },
 
   publicView(state, ctx): OrtalamaPublicView {

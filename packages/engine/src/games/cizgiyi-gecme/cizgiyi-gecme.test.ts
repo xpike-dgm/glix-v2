@@ -269,7 +269,14 @@ describe("cizgiyi-gecme gizlilik (yapısal)", () => {
     for (const at of [0, 1, 15_000, 29_999]) {
       const pub = g.publicView(s, ctx(T0 + at));
       expect(pub.reveal).toBeNull();
-      expect(Object.keys(pub).sort()).toEqual(["endsAt", "lockedIds", "reveal", "revealEndsAt", "startedAt", "zoneWidth"]);
+      expect(Object.keys(pub).sort()).toEqual([
+        "endsAt",
+        "lockedIds",
+        "reveal",
+        "revealEndsAt",
+        "startedAt",
+        "zoneWidth",
+      ]);
       const flat = JSON.stringify(pub);
       for (const id of ids(5)) expect(flat).not.toContain(id);
       for (const k of ["choices", "status", "points", "zone", "zones"]) expect(keys(pub)).not.toContain(k);

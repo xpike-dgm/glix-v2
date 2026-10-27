@@ -434,10 +434,10 @@ describe("maç akışı", () => {
     expect(bView.myScore).toBe(0);
 
     // Bitişte basış reddedilir.
-    at(44_900);
+    at(50_900);
     await sync();
     expect(a.room.phase).toBe("playing");
-    at(45_000);
+    at(51_000);
     b.send({ type: "action", seq: 901, payload: { kind: "press" } });
     await until(() => b.of("actionAck").some((x) => x.seq === 901));
     expect(b.of("actionAck").find((x) => x.seq === 901)?.ok).toBe(false);

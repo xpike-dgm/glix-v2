@@ -20,7 +20,9 @@ export const ORTALAMA_ROUND_REVEAL_MS = 5_000;
 export const ORTALAMA_REVEAL_MS = 7_000;
 /** Oyunun tam süresi (ms); erken bitişte kısalır. */
 export const ORTALAMA_DURATION_MS =
-  ORTALAMA_ROUNDS * ORTALAMA_CHOOSE_MS + (ORTALAMA_ROUNDS - 1) * ORTALAMA_ROUND_REVEAL_MS + ORTALAMA_REVEAL_MS;
+  ORTALAMA_ROUNDS * ORTALAMA_CHOOSE_MS +
+  (ORTALAMA_ROUNDS - 1) * ORTALAMA_ROUND_REVEAL_MS +
+  ORTALAMA_REVEAL_MS;
 
 /** Tur `round` (0 tabanlı) için çarpan. */
 export function ortalamaMultiplier(round: number): { num: number; den: number } {
