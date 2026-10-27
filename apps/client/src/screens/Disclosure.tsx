@@ -21,8 +21,13 @@ export function Disclosure() {
           saklanır. Şifren özetlenerek tutulur; kimseyle paylaşılmaz.
         </p>
         <p class="acct__text">
-          Ayrıntılar: <a href="/gizlilik.html">Gizlilik Politikası</a> ve{" "}
-          <a href="/kosullar.html">Kullanım Koşulları</a>.
+          <a class="acct__link" href="/gizlilik.html">
+            Gizlilik Politikası
+          </a>
+          <br />
+          <a class="acct__link" href="/kosullar.html">
+            Kullanım Koşulları
+          </a>
         </p>
       </div>
     </Screen>
