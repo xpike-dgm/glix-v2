@@ -22,7 +22,7 @@ export function EmojiBar(props: {
           <button
             type="button"
             class="emojibar__btn"
-            aria-label={`${emoji} gönder`}
+            aria-label={`${emoji} tepkisi ver`}
             onClick={() => {
               tap();
               hapticTap();

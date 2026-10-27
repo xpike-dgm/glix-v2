@@ -440,7 +440,7 @@ async function main() {
     log("hazırım ve parlayan başlat tamam");
 
     // 5c) Emoji: B atar, A'da avatarın üstünde görünür
-    await B.getByRole("button", { name: "🔥 gönder", exact: true }).click();
+    await B.getByRole("button", { name: "🔥 tepkisi ver", exact: true }).click();
     await A.locator(".reaction", { hasText: "🔥" }).waitFor(OPT);
     await shot(A, "06c-lobby-emoji");
     await A.locator(".reaction").first().waitFor({ state: "detached", timeout: 5000 });
