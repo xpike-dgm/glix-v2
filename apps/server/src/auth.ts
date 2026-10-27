@@ -1,6 +1,6 @@
 import { createHash, randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { Account, AccountStore } from "./accountStore.js";
+import type { Account, AccountStore, Suspension } from "./accountStore.js";
 import { SESSION_TTL_MS } from "./accountStore.js";
 import { isPrivateOrLoopback, normalizeIp } from "./clientIp.js";
 import {
@@ -229,6 +229,25 @@ const FIELD_TEXT: Record<ValidationField, string> = {
   login: "Kullanıcı adı/e-posta ya da şifre hatalı.",
 };
 
+/**
+ * Askıdaki hesap girişi: yalnız doğru şifre/Google kimliği kanıtlandıktan sonra söylenir (hesap varlığı sızmaz).
+ * Yönetici notu (sebep) kullanıcıya gösterilmez; hesap sahibi "Verimi indir" dökümünde görür.
+ */
+export function suspendedMessage(s: Suspension): string {
+  return s.until === null
+    ? "Hesabın askıya alındı."
+    : `Hesabın ${turkishDateTime(s.until)} tarihine kadar askıya alındı.`;
+}
+
+function suspended(res: ServerResponse, s: Suspension): void {
+  send(res, 403, {
+    ok: false,
+    code: "account_suspended",
+    message: suspendedMessage(s),
+    until: s.until,
+  });
+}
+
 /** Kullanıcı adı/e-posta ya da şifre yanlış: hesabın var olup olmadığı belli edilmez. */
 function badCredentials(res: ServerResponse): void {
   fail(res, 401, "bad_credentials", "Kullanıcı adı/e-posta ya da şifre hatalı.");
@@ -336,6 +355,8 @@ async function login(req: IncomingMessage, res: ServerResponse, env: AuthEnv): P
     badCredentials(res);
     return;
   }
+  const hold = env.accounts.suspension(found.id, env.now);
+  if (hold) return suspended(res, hold);
   await startSession(res, env, req, found);
 }
 
@@ -511,6 +532,8 @@ async function resetConfirm(req: IncomingMessage, res: ServerResponse, env: Auth
   env.accounts.markVerified(id);
   const account = env.accounts.findById(id);
   if (!account) return expired();
+  const hold = env.accounts.suspension(id, env.now);
+  if (hold) return suspended(res, hold);
   await startSession(res, env, req, account);
 }
 
@@ -608,6 +631,12 @@ async function googleCallback(req: IncomingMessage, res: ServerResponse, env: Au
   if (owner) {
     // Açık oturum başka bir hesaba aitse sessizce hesap değiştirilmez.
     if (current && current.id !== owner.id) return bounce("baska_hesap");
+    const hold = env.accounts.suspension(owner.id, env.now);
+    if (hold) {
+      // Bitiş anı adres parçasında taşınır (süresizde yok); sebep taşınmaz.
+      const until = hold.until === null ? "" : `&bitis=${hold.until}`;
+      return redirect(res, `${googleError("askida")}${until}`, [clear]);
+    }
     return redirect(res, flow.returnTo, current ? [clear] : [clear, issueSession(env, req, owner)]);
   }
   if (current) {

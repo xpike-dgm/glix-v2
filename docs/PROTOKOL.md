@@ -255,7 +255,7 @@ Yalnız `GET`; oturum çerezi şart (401 `login_required`); hesap başına hız 
   (eşitlikte oynama, sonra ad); kimsenin birinciliği olmayan oyun yok; birincilik sayısına göre azalan.
 - Tek toplu SQL sorgusu (`IN (kimlikler)`, arkadaş sayısı en çok 200).
 
-## Yönetici uçları (HTTP, `/api/admin/`, U16 A1, salt okunur)
+## Yönetici uçları (HTTP, `/api/admin/`, U16 A1 salt okunur, A2 hesap işlemleri)
 
 Ayrıntı ve kurulum: `docs/ADMIN.md`. `GLIX_ADMIN_ACCOUNT_IDS` boşsa tüm uçlar ve `/admin` sayfası 404 verir.
 
@@ -269,7 +269,23 @@ Ayrıntı ve kurulum: `docs/ADMIN.md`. `GLIX_ADMIN_ACCOUNT_IDS` boşsa tüm uçl
 - `POST logout`: yönetici çerezini siler. Tüm POST'larda `Origin` zorunlu ve Host ile aynı olmalı.
 - `GET live` (`AdminLive`), `GET stats` (`AdminStats`), `GET errors` (`AdminErrors`): tipler `packages/engine/src/admin.ts`.
   Oyuncu adı, kullanıcı adı, e-posta, IP ve oyun durumu içermez; açık oda satırında yalnız kod, aşama, sayılar ve oyun kimliği.
-- Kayıt: `admin_audit(id, account_id, action, detail, at)`; A1'de kod isteği/başarı/hata/kilit ve çıkış yazılır (kod ve belirteç asla).
+- Kayıt: `admin_audit(id, account_id, action, detail, at, target_id)`; kod isteği/başarı/hata/kilit, çıkış ve A2 hesap işlemleri yazılır
+  (kod, belirteç, e-posta ve askı sebebi asla). 1 yıl saklanır.
+- **A2, hesap uçları** (hepsi giriş kodu çerezi ister; tipler `AdminAccounts`, `AdminAccountSearch`, `AdminAccountDetail`, `AdminAuditPage`):
+  - `GET accounts`: toplam, doğrulanmış, giriş yöntemi dağılımı (`google`/`password`/`both` ayrık), 7/30 günde maç bitiren, askıdaki sayısı,
+    30 günlük yeni hesap, e-posta sayaçları (`mail`: gün x tür x {ok, failed}, 30 gün toplamı; `enabled:false` = istatistik kapalı).
+    Sayaç: stats göç 5 `mail_stats(day, kind, ok, failed)`, adres/hesap yok, 90 gün.
+  - `GET accounts/search?q=`: `q` "@" içeriyorsa tam e-posta (`account_search_email` kaydı, arama metni yazılmaz), değilse kullanıcı adı öneki
+    (büyük/küçük harf duyarsız, 1-20 `[A-Za-z0-9_]`); en çok 20 satır; satırda e-posta yok. 400 `invalid_input`.
+  - `GET accounts/detail?id=`: e-postanın göründüğü tek yer; her başarılı çağrı `account_view` (+ hedef kimlik) kaydeder. 404 `not_found`.
+  - `GET audit?before=<kayıt kimliği>&limit=` (varsayılan 50, en çok 100): yeniden eskiye `{entries:[{id, actorId, action, targetId, detail, at}], nextBefore}`.
+  - `POST accounts/rename {id, username}`, `accounts/suspend {id, duration:"1d"|"7d"|"forever", reason(1-140)}`, `accounts/unsuspend {id}`,
+    `accounts/delete {id, confirm:<kullanıcı adı>}`, `accounts/logout-all {id}`: 200 `{ok:true, ...}`; 400 `invalid_input`/`username_same`/`confirm_mismatch`,
+    403 `protected` (yönetici hesabı), 404 `not_found`, 409 `username_taken`/`not_suspended`, 429 `rate_limited`
+    (işlem: 10 ani, 6 sn'de 1; arama 30 ani, 2 sn'de 1; ayrıntı 20 ani, 3 sn'de 1; yönetici başına). Kayıt eylemleri: `account_rename`,
+    `account_suspend` (ayrıntı: süre), `account_unsuspend`, `account_delete`, `account_logout_all` (ayrıntı: kapanan oturum sayısı).
+- Oyuncu tarafı: askıdaki hesap `POST /api/auth/login` ile 403 `{code:"account_suspended", message, until}` alır; Google dönüşü
+  `/#google-hata=askida[&bitis=<ms>]`; şifre sıfırlama onayı da 403 verir.
 - İstemci hataları artık kalıcıdır (`/api/client-error` yine 204): `client_errors(day, message, frame, platform, browser, version,
   count, first_seen, last_seen)` gün başına gruplu; mesaj 200 karaktere kısaltılır, adres sorgusu/parçası, e-posta, IP ve uzun
   belirteçler atılır; `frame` yığının tepe karesi (taban dosya adı); ham kullanıcı aracısı saklanmaz; günde en çok 3000 satır.

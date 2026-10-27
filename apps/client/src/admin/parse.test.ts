@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { parseErrors, parseLive, parseState, parseStats, tryParse } from "./parse.js";
+import {
+  parseAccounts,
+  parseAuditPage,
+  parseDetail,
+  parseErrors,
+  parseLive,
+  parseSearch,
+  parseState,
+  parseStats,
+  tryParse,
+} from "./parse.js";
 
 const live = {
   rooms: 1,
@@ -101,5 +111,86 @@ describe("yönetici yanıt doğrulaması", () => {
     expect(parseState({ state: "need_otp" })).toBe("need_otp");
     expect(parseState({ state: "x" })).toBeNull();
     expect(parseState(null)).toBeNull();
+  });
+});
+
+const zero = { ok: 0, failed: 0 };
+const accountsReply = {
+  total: 3,
+  verified: 2,
+  methods: { google: 1, password: 1, both: 1 },
+  active7: 1,
+  active30: 2,
+  suspended: 0,
+  newPerDay: [{ day: "2026-10-27", count: 1 }],
+  mail: {
+    enabled: true,
+    days: [{ day: "2026-10-27", verify: { ok: 2, failed: 1 }, reset: zero, admin: zero }],
+    totals: { verify: { ok: 2, failed: 1 }, reset: zero, admin: zero },
+  },
+};
+const detailReply = {
+  id: 2,
+  username: "Ali",
+  email: "ali@test.local",
+  createdAt: 1,
+  verified: true,
+  google: false,
+  password: true,
+  usernameChangedAt: null,
+  lastSeen: 5,
+  sessions: 1,
+  matches: 2,
+  wins: 1,
+  games: 4,
+  badges: 1,
+  friends: 0,
+  protected: false,
+  suspension: null,
+};
+
+describe("hesap yanıtları", () => {
+  it("geçerli yanıtlar kabul edilir", () => {
+    expect(parseAccounts(accountsReply).mail.totals.verify.failed).toBe(1);
+    expect(parseDetail(detailReply).email).toBe("ali@test.local");
+    expect(
+      parseDetail({ ...detailReply, suspension: { since: 1, until: null, reason: "x" } }).suspension,
+    ).toEqual({ since: 1, until: null, reason: "x" });
+    expect(
+      parseSearch({
+        results: [
+          {
+            id: 2,
+            username: "Ali",
+            createdAt: 1,
+            verified: false,
+            google: false,
+            password: true,
+            lastSeen: null,
+            matches: 0,
+            suspended: false,
+          },
+        ],
+        limit: 20,
+      }).results[0]?.username,
+    ).toBe("Ali");
+    expect(
+      parseAuditPage({
+        entries: [{ id: 3, actorId: 1, action: "account_view", targetId: null, detail: "", at: 9 }],
+        nextBefore: 3,
+      }).nextBefore,
+    ).toBe(3);
+  });
+  it("eksik ya da yanlış tipli alan reddedilir", () => {
+    expect(tryParse(parseAccounts, { ...accountsReply, methods: null })).toBeNull();
+    expect(
+      tryParse(parseAccounts, { ...accountsReply, mail: { ...accountsReply.mail, days: [{ day: "x" }] } }),
+    ).toBeNull();
+    expect(tryParse(parseDetail, { ...detailReply, email: 5 })).toBeNull();
+    expect(tryParse(parseDetail, { ...detailReply, suspension: { since: 1 } })).toBeNull();
+    expect(tryParse(parseSearch, { results: [{ id: "2" }], limit: 20 })).toBeNull();
+    expect(tryParse(parseSearch, { results: {}, limit: 20 })).toBeNull();
+    expect(tryParse(parseAuditPage, { entries: [], nextBefore: "3" })).toBeNull();
+    expect(tryParse(parseAuditPage, null)).toBeNull();
   });
 });

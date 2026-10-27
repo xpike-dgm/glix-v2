@@ -66,6 +66,8 @@ function resolve(req: IncomingMessage, env: ProfileEnv): Outcome {
     // Kendi profiline ve kabul edilmiş arkadaşlarınınkine bakılır; başkası ya da bilinmeyen hesap aynı 404'ü alır.
     if (!found || (found.id !== account.id && !env.accounts.areFriends(account.id, found.id)))
       return NOT_FOUND;
+    // Askıdaki arkadaşın profili görünmez.
+    if (found.id !== account.id && env.accounts.suspension(found.id, env.now)) return NOT_FOUND;
     const data = env.accounts.profile(found.id, false);
     return data ? { status: 200, body: profileBody(data, env.gameName, false) } : NOT_FOUND;
   }

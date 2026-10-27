@@ -73,3 +73,61 @@ const PHASES: Record<string, string> = {
 export const phaseLabel = (phase: string): string => PHASES[phase] ?? phase;
 
 export const PLATFORM_LABEL: Record<string, string> = { ios: "iOS", android: "Android", diger: "Diğer" };
+
+// ---- A2: hesaplar ve işlem kaydı ---------------------------------------------------------------------------
+
+/** İşlem kaydındaki işlem adı -> okunur Türkçe etiket. Bilinmeyen kod olduğu gibi gösterilir. */
+const AUDIT_LABELS: Record<string, string> = {
+  otp_request: "Giriş kodu istendi",
+  otp_ok: "Panele giriş yapıldı",
+  otp_fail: "Hatalı giriş kodu",
+  otp_locked: "Giriş kodu kilitlendi",
+  otp_expired: "Giriş kodunun süresi doldu",
+  otp_none: "Kodsuz giriş denemesi",
+  logout: "Panelden çıkış",
+  account_view: "Hesap ayrıntısı görüntülendi",
+  account_search_email: "E-postayla hesap arandı",
+  account_rename: "Kullanıcı adı değiştirildi",
+  account_suspend: "Hesap askıya alındı",
+  account_unsuspend: "Askı kaldırıldı",
+  account_delete: "Hesap silindi",
+  account_logout_all: "Tüm oturumlar kapatıldı",
+};
+export const auditLabel = (action: string): string => AUDIT_LABELS[action] ?? action;
+
+const DURATION_LABELS: Record<string, string> = { "1d": "1 gün", "7d": "7 gün", forever: "süresiz" };
+const MAIL_STATE: Record<string, string> = {
+  sent: "gönderildi",
+  throttled: "sık istendi",
+  mail_failed: "e-posta gitmedi",
+};
+
+/** İşlem kaydı ayrıntısı: kodları okunur metne çevirir; boşsa boş döner. */
+export function auditDetail(action: string, detail: string): string {
+  if (detail === "") return "";
+  if (action === "account_suspend") return `Süre: ${DURATION_LABELS[detail] ?? detail}`;
+  if (action === "account_logout_all") return `${detail} oturum`;
+  if (action === "otp_request") return MAIL_STATE[detail] ?? detail;
+  return detail;
+}
+
+/** Hesabın giriş yöntemleri: "Şifre", "Google", "Şifre + Google". */
+export function methodsLabel(a: { password: boolean; google: boolean }): string {
+  if (a.password && a.google) return "Şifre + Google";
+  return a.google ? "Google" : "Şifre";
+}
+
+/** Askı bitişi: "27.10.2026 21:57'e kadar" ya da "süresiz". */
+export const fmtUntil = (until: number | null): string =>
+  until === null ? "süresiz" : `${fmtDateTime(until)} tarihine kadar`;
+
+/** Kullanıcı adı alanı için istemci tarafı ön denetim (sunucu yine denetler). */
+export const USERNAME_OK = /^[A-Za-z0-9_]{3,20}$/;
+
+/** Silme onayı: yazılan metin kullanıcı adıyla (büyük/küçük harf ve boşluk önemsiz) eşleşiyor mu. */
+export const confirmMatches = (typed: string, username: string): boolean =>
+  typed.trim().toLowerCase() === username.toLowerCase() && username.length > 0;
+
+/** Başarısızlık oranı 0..1; hiç gönderim yoksa null. */
+export const failRatio = (c: { ok: number; failed: number }): number | null =>
+  c.ok + c.failed === 0 ? null : c.failed / (c.ok + c.failed);

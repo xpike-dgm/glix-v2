@@ -332,7 +332,7 @@ describe("yardımcılar", () => {
   });
 
   it("createMailer: 2xx başarı, diğerleri ve fırlatma false", async () => {
-    const msg = { to: "a@b.co", subject: "s", html: "h", text: "t" };
+    const msg = { kind: "verify" as const, to: "a@b.co", subject: "s", html: "h", text: "t" };
     expect(await createMailer(MAIL, async () => ({ status: 200 })).send(msg)).toBe(true);
     expect(await createMailer(MAIL, async () => ({ status: 422 })).send(msg)).toBe(false);
     expect(

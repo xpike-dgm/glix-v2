@@ -1,6 +1,7 @@
 /**
- * Yönetici paneli (U16, A1) uç yanıtlarının tipleri: sunucu üretir, panel okur (docs/PROTOKOL.md "Yönetici uçları").
- * Kişi bilgisi taşımaz: e-posta, kullanıcı adı, IP, oyuncu adı ve oyun durumu bu tiplerde yoktur.
+ * Yönetici paneli (U16, A1 ve A2) uç yanıtlarının tipleri: sunucu üretir, panel okur (docs/PROTOKOL.md "Yönetici uçları").
+ * A1 tipleri kişi bilgisi taşımaz. A2 hesap tipleri (`AdminAccount*`, `AdminAudit*`) kullanıcı adı taşır; e-posta yalnız
+ * `AdminAccountDetail` içindedir.
  */
 
 /** `GET /api/admin/status`. */
@@ -123,4 +124,100 @@ export interface AdminErrors {
   perDay: { day: string; count: number }[];
   perf: AdminPerfRow[];
   failures: AdminGameFailure[];
+}
+
+// ---- A2: hesaplar ve işlem kaydı -----------------------------------------------------------------------------
+
+/** Bir e-posta türünün günlük sayacı: servise kabul edilen ve edilmeyen deneme sayısı. Adres tutulmaz. */
+export interface AdminMailCount {
+  ok: number;
+  failed: number;
+}
+
+/** E-posta türleri: doğrulama, şifre sıfırlama, yönetici giriş kodu. */
+export type AdminMailKind = "verify" | "reset" | "admin";
+
+export interface AdminMailDay extends Record<AdminMailKind, AdminMailCount> {
+  /** UTC gün, `YYYY-MM-DD`. */
+  day: string;
+}
+
+/** `GET /api/admin/accounts`: hesap toplamları ve e-posta gönderim durumu. */
+export interface AdminAccounts {
+  total: number;
+  verified: number;
+  /** Giriş yöntemi dağılımı; üçü ayrık ve toplamı `total`'dır (yöntemi olmayan hesap yoktur). */
+  methods: { google: number; password: number; both: number };
+  /** Son 7 / 30 günde en az bir maç bitiren hesap sayısı. */
+  active7: number;
+  active30: number;
+  /** Şu an askıda olan hesap sayısı. */
+  suspended: number;
+  newPerDay: { day: string; count: number }[];
+  mail: {
+    /** İstatistik kaydı kapalıysa sayaç tutulmaz. */
+    enabled: boolean;
+    /** Son 30 gün, eskiden yeniye. */
+    days: AdminMailDay[];
+    /** 30 günlük toplam. */
+    totals: Record<AdminMailKind, AdminMailCount>;
+  };
+}
+
+/** Arama sonucu satırı: e-posta içermez. */
+export interface AdminAccountRow {
+  id: number;
+  username: string;
+  createdAt: number;
+  verified: boolean;
+  google: boolean;
+  password: boolean;
+  /** En son oturum hareketi (saat hassasiyetinde); oturumu yoksa null. */
+  lastSeen: number | null;
+  matches: number;
+  suspended: boolean;
+}
+
+/** `GET /api/admin/accounts/search`. */
+export interface AdminAccountSearch {
+  results: AdminAccountRow[];
+  limit: number;
+}
+
+/** `GET /api/admin/accounts/detail`: e-postanın göründüğü tek yer. Bu uç her çağrıda işlem kaydına yazılır. */
+export interface AdminAccountDetail {
+  id: number;
+  username: string;
+  email: string;
+  createdAt: number;
+  verified: boolean;
+  google: boolean;
+  password: boolean;
+  usernameChangedAt: number | null;
+  lastSeen: number | null;
+  sessions: number;
+  matches: number;
+  wins: number;
+  games: number;
+  badges: number;
+  friends: number;
+  /** Yönetici listesindeki hesap: ad değiştirme, askı, silme ve oturum kapatma yapılamaz. */
+  protected: boolean;
+  suspension: { since: number; until: number | null; reason: string } | null;
+}
+
+export interface AdminAuditEntry {
+  id: number;
+  /** İşlemi yapan yönetici hesabı. */
+  actorId: number;
+  action: string;
+  targetId: number | null;
+  detail: string;
+  at: number;
+}
+
+/** `GET /api/admin/audit`: yeniden eskiye sayfa; `nextBefore` doluysa sonraki sayfa için `before` olarak verilir. */
+export interface AdminAuditPage {
+  entries: AdminAuditEntry[];
+  nextBefore: number | null;
 }

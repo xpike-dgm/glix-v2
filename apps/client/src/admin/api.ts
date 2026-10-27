@@ -1,5 +1,23 @@
-import type { AdminErrors, AdminLive, AdminStats } from "@glix/engine";
-import { parseErrors, parseLive, parseState, parseStats, tryParse } from "./parse.js";
+import type {
+  AdminAccountDetail,
+  AdminAccountSearch,
+  AdminAccounts,
+  AdminAuditPage,
+  AdminErrors,
+  AdminLive,
+  AdminStats,
+} from "@glix/engine";
+import {
+  parseAccounts,
+  parseAuditPage,
+  parseDetail,
+  parseErrors,
+  parseLive,
+  parseSearch,
+  parseState,
+  parseStats,
+  tryParse,
+} from "./parse.js";
 
 const BASE = "/api/admin/";
 export const NETWORK_ERROR = "Bağlantı kurulamadı. Biraz sonra tekrar dene.";
@@ -86,3 +104,32 @@ async function fetched<T>(path: string, parse: (v: unknown) => T): Promise<Fetch
 export const fetchLive = (): Promise<Fetched<AdminLive>> => fetched("live", parseLive);
 export const fetchStats = (): Promise<Fetched<AdminStats>> => fetched("stats", parseStats);
 export const fetchErrors = (): Promise<Fetched<AdminErrors>> => fetched("errors", parseErrors);
+
+export const fetchAccounts = (): Promise<Fetched<AdminAccounts>> => fetched("accounts", parseAccounts);
+export const searchAccounts = (q: string): Promise<Fetched<AdminAccountSearch>> =>
+  fetched(`accounts/search?q=${encodeURIComponent(q)}`, parseSearch);
+export const fetchDetail = (id: number): Promise<Fetched<AdminAccountDetail>> =>
+  fetched(`accounts/detail?id=${id}`, parseDetail);
+export const fetchAudit = (before: number | null): Promise<Fetched<AdminAuditPage>> =>
+  fetched(`audit${before === null ? "" : `?before=${before}`}`, parseAuditPage);
+
+/** Hesap işlemleri (hepsi POST; sunucu Origin, hız sınırı ve işlem kaydını uygular). */
+export type AccountAction =
+  | { op: "rename"; id: number; username: string }
+  | { op: "suspend"; id: number; duration: "1d" | "7d" | "forever"; reason: string }
+  | { op: "unsuspend"; id: number }
+  | { op: "delete"; id: number; confirm: string }
+  | { op: "logout-all"; id: number };
+
+const OK_TEXT: Record<AccountAction["op"], string> = {
+  rename: "Kullanıcı adı değiştirildi.",
+  suspend: "Hesap askıya alındı.",
+  unsuspend: "Askı kaldırıldı.",
+  delete: "Hesap silindi.",
+  "logout-all": "Tüm oturumlar kapatıldı.",
+};
+
+export function runAccountAction(a: AccountAction): Promise<ActionResult> {
+  const { op, ...body } = a;
+  return action(`accounts/${op}`, body, OK_TEXT[op]);
+}

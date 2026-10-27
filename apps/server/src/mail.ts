@@ -1,3 +1,4 @@
+import type { AdminMailKind } from "@glix/engine";
 import { log } from "./log.js";
 
 /**
@@ -13,6 +14,8 @@ export interface MailConfig {
 }
 
 export interface MailMessage {
+  /** E-posta türü: yalnız anonim gönderim sayacı içindir (adres ya da içerik değil). */
+  kind: AdminMailKind;
   to: string;
   subject: string;
   html: string;
@@ -38,10 +41,22 @@ export type FetchLike = (
 export const RESEND_URL = "https://api.resend.com/emails";
 const SEND_TIMEOUT_MS = 10_000;
 
+/** Gönderim sonucu bildirimi (anonim sayaç): tür ve servisin kabul edip etmediği. Hiç fırlatmamalı. */
+export type MailResultHook = (kind: AdminMailKind, ok: boolean) => void;
+
 export function createMailer(
   config: MailConfig,
   fetchImpl: FetchLike = fetch as unknown as FetchLike,
+  onResult: MailResultHook = () => {},
 ): Mailer {
+  const count = (kind: AdminMailKind, ok: boolean): boolean => {
+    try {
+      onResult(kind, ok);
+    } catch {
+      // Sayaç hatası gönderimi etkilemez.
+    }
+    return ok;
+  };
   return {
     async send(message) {
       try {
@@ -58,13 +73,13 @@ export function createMailer(
           redirect: "manual",
           signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
         });
-        if (res.status >= 200 && res.status < 300) return true;
+        if (res.status >= 200 && res.status < 300) return count(message.kind, true);
         log.warn("mail_failed", { status: res.status });
-        return false;
+        return count(message.kind, false);
       } catch {
         // Hata metni adres ya da anahtar içerebilir: yalnız genel kayıt.
         log.warn("mail_failed");
-        return false;
+        return count(message.kind, false);
       }
     },
   };
@@ -126,6 +141,7 @@ function page(heading: string, lead: string, button: string, link: string, note:
 
 export function verifyMessage(to: string, link: string): MailMessage {
   return {
+    kind: "verify",
     to,
     subject: "GLIX — E-postanı doğrula",
     text: `GLIX hesabının e-postasını doğrulamak için bu bağlantıyı aç:\n${link}\n\nBağlantı 24 saat geçerli.\n${IGNORE}`,
@@ -141,6 +157,7 @@ export function verifyMessage(to: string, link: string): MailMessage {
 
 export function resetMessage(to: string, link: string): MailMessage {
   return {
+    kind: "reset",
     to,
     subject: "GLIX — Şifre sıfırlama",
     text: `GLIX hesabın için yeni bir şifre belirlemek üzere bu bağlantıyı aç:\n${link}\n\nBağlantı 1 saat geçerli.\n${IGNORE}`,
@@ -158,6 +175,7 @@ export function resetMessage(to: string, link: string): MailMessage {
 export function adminCodeMessage(to: string, code: string, minutes: number): MailMessage {
   const style = "font-family:Arial,Helvetica,sans-serif;";
   return {
+    kind: "admin",
     to,
     subject: "GLIX — Yönetici giriş kodu",
     text: `GLIX yönetici paneli giriş kodun: ${code}\n\nKod ${minutes} dakika geçerli ve bir kez kullanılır.\n${IGNORE}`,
