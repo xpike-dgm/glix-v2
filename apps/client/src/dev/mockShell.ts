@@ -38,7 +38,7 @@ const BRIEFING = {
 export function startShellMock(kind: string, params: URLSearchParams): void {
   const fallbackN = kind === "landscape" ? 6 : 5;
   const n = Math.min(8, Math.max(2, Number(params.get("n")) || fallbackN));
-  const players: PlayerInfo[] = Array.from({ length: n }, (_, i) => ({
+  const roster: PlayerInfo[] = Array.from({ length: n }, (_, i) => ({
     id: `p${i}`,
     nickname: NAMES[i] ?? `Oyuncu${i}`,
     avatar: i,
@@ -47,6 +47,7 @@ export function startShellMock(kind: string, params: URLSearchParams): void {
     spectator: false,
   }));
   const watching = kind.startsWith("spectator") || params.has("spectator");
+  const players: PlayerInfo[] = roster.map((p) => ({ ...p, spectator: watching && p.id === SELF }));
   const participants = players.map((p) => p.id).filter((id) => !(watching && id === SELF));
   const now = Date.now();
 

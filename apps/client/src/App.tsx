@@ -49,6 +49,11 @@ export function App() {
     if (snap && snap.phase !== "lobby") preloadMoods(snap.players.map((p) => p.avatar));
   });
 
+  // Lobiye girince lobi arka planı önden indirilir.
+  createEffect(() => {
+    if (state.snapshot?.phase === "lobby") preloadWorld("lobi");
+  });
+
   // Anlatım başlarken o oyunun nesne görselleri önden indirilir.
   createEffect(() => {
     const m = state.snapshot?.match;

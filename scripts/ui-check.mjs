@@ -1005,6 +1005,20 @@ const SCREENS = [
   },
   { name: "zehirli-reveal-poison-5", q: "mock=zehirli-reveal&n=5&poison=1", settle: 2400 },
   { name: "zehirli-reveal-2", q: "mock=zehirli-reveal&n=2", settle: 2400 },
+  // Maç sürerken katılım: izleyici görünümü, sonuç/final izleyenler, lobiye dönen izleyici, host ayarı.
+  { name: "izleyici-izliyor", q: "mock=spectator-playing" },
+  { name: "izleyici-sonuc", q: "mock=results&n=6&watch=2", settle: 2400 },
+  { name: "izleyici-final", q: "mock=final&n=6&watch=2", settle: 2200 },
+  { name: "izleyici-lobi-oyuncu", q: "mock=final&n=4&guest=1&afterwatch=1", settle: 1800 },
+  {
+    name: "izleyici-lobi-ayar",
+    q: "mock=lobby&n=4",
+    settle: 1000,
+    act: async (p) => {
+      await p.getByText("Oyunlar", { exact: false }).first().click();
+      await p.getByRole("button", { name: "Kapalı", exact: true }).click();
+    },
+  },
 ];
 
 function freePort() {

@@ -21,6 +21,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `setGames` | `gameIds` | yalnız host, yalnız lobide; boş olamaz, tekrar yok; modu `manual` yapar |
 | `setRandom` | `count` | yalnız host, yalnız lobide; 1..katalog boyu; modu `random` yapar |
 | `chooseAvatar` | `avatar` (0–7) | yalnız lobide (`wrong_phase`); başkasında olan karakter `avatar_taken` ("Bu karakteri X aldı"), ilk gelen alır; aynı değer sessizce yok sayılır |
+| `setJoinPolicy` | `policy` (`izleyici`\|`kapali`) | yalnız host, yalnız lobide; başka değer `invalid_message`, maçta `wrong_phase`, host değilse `not_host`; aynı değer sessizce yok sayılır |
 | `setTone` | `tone` (`aile`\|`arkadas`\|`ofis`) | yalnız host, yalnız lobide; başka değer `invalid_message`, maçta `wrong_phase`, host değilse `not_host`; aynı değer sessizce yok sayılır |
 | `startMatch` | — | yalnız host; bağlı oyuncu sayısı tüm seçili oyunların min'ini karşılamalı |
 | `ready` | — | yalnız `briefing` aşamasında (lobi işareti için `setReady`) |
@@ -99,7 +100,18 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
 - **playing:** Oyunun `isFinished` true olunca biter.
 - **results:** `GameResult` gösterilir; `awards` genel skora eklenmiş olarak gelir.
 - **final:** Genel skor sıralaması. Host `returnToLobby` ile lobiye döner, skorlar sıfırlanır.
-- Maç sırasında yeni oyuncu katılamaz (`error{code:"match_in_progress"}`); `resume` her zaman çalışır.
+- Maç sürerken katılım (`RoomSnapshot.joinPolicy`, yeni oda `"izleyici"`; yalnız host lobide `setJoinPolicy` ile değiştirir):
+  - `izleyici`: `joinRoom` kabul edilir, oyuncu `PlayerInfo.spectator: true` ile eklenir. İzleyici maç oyuncu listesine
+    (`participants`, oyunun `setup`ı, `GameContext.connected`) hiç girmez; puan almaz, oy/seçimlere ve erken bitiş
+    ("bağlı herkes bitirdi") koşuluna sayılmaz; `ready`/`action` `not_participant` ile reddedilir; geri bildirim veremez.
+  - İzleyici de bir yer tutar: oyuncular + izleyiciler en çok 8; doluysa `room_full`.
+  - Yalnız herkese açık görünüm: izleyicinin `match.view` değeri `view(durum, null)`dır (kimseye bağlı olmayan görünüm);
+    oyun hiçbir zaman izleyicinin kimliğiyle `view` çağrılmaz, oyuncuya özel `view` ve gizli bilgi izleyiciye gitmez
+    (`izleyici-gizlilik.test.ts` her oyun için doğrular).
+  - Maç bitip oda lobiye dönünce (`returnToLobby`, maç iptali ya da katılımcıların hepsinin çıkması) `spectator` false olur;
+    izleyici normal oyuncu olur.
+  - `kapali`: maç sürerken `joinRoom` `error{code:"match_in_progress"}` ("Oyun sürüyor, bitince tekrar dene.") ile reddedilir.
+  - `resume` her zaman çalışır; kopup kendi oturumuyla dönen oyuncu (ya da izleyici) yerine döner, ayardan etkilenmez.
 - Bağlantı kopan oyuncu 120 sn içinde dönmezse odadan çıkarılır. Host koparsa 20 sn beklenir; bu sürede dönerse host olarak kalır.
   20 sn dolunca host bağlı en eski oyuncuya geçer (eski host dönünce geri almaz). Host kendi isteğiyle
   `leaveRoom` yaparsa devir hemen olur.

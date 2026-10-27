@@ -588,6 +588,49 @@ async function main() {
     for (const p of [A, B2, C]) assert((await myScore(p)) === 0, "yeni maçta skor 0 olmalı");
     log("lobiye dönüş ve sıfırlanmış skor tamam");
 
+    // 9c) Maç sürerken katılım: üçüncü tarayıcı izleyici olarak girer, izleme etiketini görür, eylem düğmesi
+    // yoktur; maç bitip lobiye dönülünce normal oyuncu olur.
+    {
+      const ctxF = await mk();
+      const F = await ctxF.newPage();
+      watch("F", F);
+      await F.goto("/");
+      await btn(F, /odaya katıl/i).click();
+      await setNick(F, "Fatma");
+      const fInput = F.getByRole("textbox", { name: "Oda kodu" });
+      await fInput.waitFor(OPT);
+      await fInput.pressSequentially(code.toLowerCase(), { delay: 30 });
+      await btn(F, /^katıl$/i).click();
+      await F.getByText("İzliyorsun · sonraki oyunda katılırsın", { exact: true }).waitFor(OPT);
+      assert(
+        await F.locator(".gframe__game").evaluate((el) => el.inert),
+        "izleyicinin oyun alanı etkileşime kapalı olmalı",
+      );
+      await shot(F, "13b-spectator-watching");
+      await A.getByText("izliyor", { exact: false })
+        .first()
+        .waitFor({ state: "attached", timeout: 2000 })
+        .catch(() => {});
+      await A.locator(".winner").waitFor({ timeout: 90_000 });
+      await F.locator(".winner").waitFor({ timeout: 20_000 });
+      assert(!(await btn(F, /lobiye dön/i).count()), "izleyici LOBİYE DÖN görmemeli");
+      await F.getByText("Lobiye dönünce oyuncu olursun", { exact: true }).waitFor(OPT);
+      await shot(F, "13c-spectator-final");
+      await btn(A, /lobiye dön/i).click();
+      for (const p of [A, F]) {
+        await p.locator(".roomcode").waitFor(OPT);
+        assert((await p.locator("button.seat:not(.seat--empty)").count()) === 4, "lobide dört oyuncu olmalı");
+      }
+      await btn(F, /^hazırım$/i).waitFor(OPT);
+      await shot(F, "13d-spectator-now-player");
+      // Sonraki adımlar (sunucu güncellemesi) için yeni bir maç başlatılır.
+      await btn(A, /^başlat$/i).click();
+      await A.locator(".brief__name").waitFor(OPT);
+      await F.locator(".brief__name").waitFor(OPT);
+      await btn(F, /hazırım/i).waitFor(OPT);
+      log("maç sürerken katılım: izleyici etiketi, final, lobide oyuncu olma tamam");
+    }
+
     // Senkron: oyun boyunca en az bir patch mesajı alınmış olmalı (ve arayüz zaten doğru çalıştı)
     log("WebSocket kareleri", frames);
     assert(frames.patch > 0, "hiç patch mesajı alınmadı");

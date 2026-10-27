@@ -48,10 +48,10 @@ Sırayla yapılacak:
 
 **D. Ev sahibi kontrolleri**
 - [x] Oyuncuya basılı tut → "Odadan çıkar" / "Ev sahipliğini devret".
-- [ ] Oda kilidi: oyun başlayınca yeni giriş yalnız izleyici olarak (ya da kapalı) — kural KURALLAR.md'ye yazılmadan uygulanmaz.
+- [x] Oda kilidi: oyun başlayınca yeni giriş yalnız izleyici olarak (ya da kapalı) — "Oyun sırasında katılım" lobi ayarı (İzleyici / Kapalı) olarak uygulandı; kural KURALLAR.md'de kilitli.
 
 **E. Görsel**
-- [ ] Lobiye dünya arka planı: tek "lobi salonu" görseli (dikey + yatay), Aşama 4 stilinde ChatGPT ile üretilir.
+- [x] Lobiye dünya arka planı: tek "lobi salonu" görseli (dikey + yatay), Aşama 4 stilinde ChatGPT ile üretilir.
 - [ ] Seçilen oyunlar alt kısımda küçük kart şeridi: "Bu gece: N oyun".
 
 Kabul (ek): tek kişilik oda 320×568–430×932'de kaydırmasız; boş daireye dokunma davet açar; `ui:check`'e lobi-solo,

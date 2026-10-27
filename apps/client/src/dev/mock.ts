@@ -7,6 +7,7 @@ import type {
   ClientMessage,
   ContentTone,
   GameInfo,
+  JoinPolicy,
   MatchSnapshot,
   PlayerInfo,
   RoomPhase,
@@ -44,6 +45,11 @@ export function startMock(kind: string, params: URLSearchParams): void {
     score: 0,
     spectator: false,
   }));
+  // `&watch=K`: son K kişi maçı izleyen (sıralanmayan); `&afterwatch=1`: kendin izleyici olarak final'den lobiye dönersin.
+  const watchCount = Math.min(n - 1, Math.max(0, Number(params.get("watch")) || 0));
+  players = players.map((p, i) => ({ ...p, spectator: i >= n - watchCount && watchCount > 0 }));
+  if (params.get("afterwatch") === "1") players = players.map((p) => ({ ...p, spectator: p.id === "p0" }));
+  let joinPolicy: JoinPolicy = params.get("join") === "kapali" ? "kapali" : "izleyici";
   let rev = 1;
   // Varsayılan oda rastgele 5; `&sel=manual` el ile modda açar.
   let selection: RoomSnapshot["selection"] =
@@ -91,7 +97,7 @@ export function startMock(kind: string, params: URLSearchParams): void {
             ],
           },
           orientation: "portrait",
-          participants: players.map((p) => p.id),
+          participants: players.filter((p) => !p.spectator).map((p) => p.id),
           readyIds,
           phaseStartedAt,
           phaseEndsAt,
@@ -112,7 +118,7 @@ export function startMock(kind: string, params: URLSearchParams): void {
       gameIds,
       selection,
       tone,
-      joinPolicy: "izleyici",
+      joinPolicy,
       lobbyReady: phase === "lobby" ? lobbyReady : [],
       catalog: CATALOG,
       match: match(),
@@ -176,10 +182,11 @@ export function startMock(kind: string, params: URLSearchParams): void {
     phaseStartedAt = Date.now();
     phaseEndsAt = phaseStartedAt + 7000;
     const scores = [9, 6, 6, 2, -1, 0, 3, 4];
-    mini = Object.fromEntries(players.map((p, i) => [p.id, scores[i] ?? 0]));
+    const playing = players.filter((p) => !p.spectator);
+    mini = Object.fromEntries(playing.map((p, i) => [p.id, scores[i] ?? 0]));
     result = {
       miniScores: mini,
-      awards: Object.fromEntries(players.map((p, i) => [p.id, i === 0 ? 2 : i === 1 ? 1 : i === 4 ? -1 : 0])),
+      awards: Object.fromEntries(playing.map((p, i) => [p.id, i === 0 ? 2 : i === 1 ? 1 : i === 4 ? -1 : 0])),
     };
     publish();
     if (kind === "results") later(toResults, 7000);
@@ -187,8 +194,15 @@ export function startMock(kind: string, params: URLSearchParams): void {
   const toFinal = (): void => {
     phase = "final";
     const totals = [5, 4, 4, 2, -1, 0, 3, 2];
-    players = players.map((p, i) => ({ ...p, score: totals[i] ?? 0 }));
+    players = players.map((p, i) => ({ ...p, score: p.spectator ? 0 : (totals[i] ?? 0) }));
     publish();
+    // Maç bitti, ev sahibi lobiye aldı: izleyici artık normal oyuncu.
+    if (params.get("afterwatch") === "1")
+      later(() => {
+        phase = "lobby";
+        players = players.map((p) => ({ ...p, score: 0, spectator: false }));
+        publish();
+      }, 500);
   };
   const toBriefing = (): void => {
     phase = "briefing";
@@ -207,6 +221,10 @@ export function startMock(kind: string, params: URLSearchParams): void {
         break;
       case "setTone":
         tone = msg.tone;
+        publish();
+        break;
+      case "setJoinPolicy":
+        joinPolicy = msg.policy;
         publish();
         break;
       case "setRandom":

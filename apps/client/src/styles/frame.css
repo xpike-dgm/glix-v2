@@ -31,7 +31,8 @@
 }
 /* Dünya görseli üstünde ikincil metin biraz açılır (kontrast). */
 .gframe,
-.briefing {
+.briefing,
+.lobby {
   --text-dim: #bcc4ec;
 }
 @media (prefers-reduced-motion: reduce) {
