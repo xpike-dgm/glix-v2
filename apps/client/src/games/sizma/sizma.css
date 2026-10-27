@@ -520,7 +520,7 @@
   color: var(--magenta, #ff2bd6);
   filter: drop-shadow(0 0 10px currentColor);
 }
-.sz__status .status__main {
+.sz__status-main {
   font-family: var(--font-display);
   font-size: clamp(22px, 7vw, var(--fs-32));
   line-height: 1.15;

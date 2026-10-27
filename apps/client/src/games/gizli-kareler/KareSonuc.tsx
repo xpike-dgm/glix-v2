@@ -195,9 +195,6 @@ export function KareSonuc(props: Props) {
                   </span>
                   <Show when={props.bonus?.cell === cell}>
                     <i class="kcell__glow" aria-hidden="true" />
-                    <b class="kcell__star" aria-hidden="true">
-                      ★
-                    </b>
                   </Show>
                   <Show when={state() === "solo"}>
                     <em class="kcell__pts">

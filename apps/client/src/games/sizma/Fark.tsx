@@ -44,13 +44,18 @@ export function Fark(props: Props) {
         <Show
           when={!props.spectator}
           fallback={
-            <Status class="sz__status" sub={`${props.view.ready.length}/${total()} cevapladı`}>
+            <Status
+              class="sz__status"
+              titleClass="sz__status-main"
+              sub={`${props.view.ready.length}/${total()} cevapladı`}
+            >
               Oyuncular cevap veriyor
             </Status>
           }
         >
           <Status
             class="sz__status"
+            titleClass="sz__status-main"
             sub={
               done() ? `Cevabın gizli · ${answered()}/${total()} cevapladı` : "Cevabın yalnız sana görünür"
             }

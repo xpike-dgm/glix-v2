@@ -84,6 +84,17 @@ export function Sonuc(props: Props) {
           >
             <span class="overline">{r().caught ? "Yakalandı!" : "Kurtuldu!"}</span>
             <span class="sz__verdict">{verdict()}</span>
+            <p
+              class="sz__notice"
+              role="status"
+              data-yes={reveal()?.selfNoticed ? "1" : "0"}
+              data-seq={seq.attr(plan().notice)}
+            >
+              {noticeLine()}
+              <Show when={reveal()?.selfNoticed}>
+                <b> +1</b>
+              </Show>
+            </p>
           </div>
 
           <div class="sz__rbody">
@@ -113,18 +124,6 @@ export function Sonuc(props: Props) {
                 </span>
               </div>
             </div>
-
-            <p
-              class="sz__notice"
-              role="status"
-              data-yes={reveal()?.selfNoticed ? "1" : "0"}
-              data-seq={seq.attr(plan().notice)}
-            >
-              {noticeLine()}
-              <Show when={reveal()?.selfNoticed}>
-                <b> +1</b>
-              </Show>
-            </p>
 
             <ul class="sz__tally" aria-label="Alınan oylar" data-n={ranked().length}>
               <For each={ranked()}>
