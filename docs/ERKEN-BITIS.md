@@ -35,6 +35,16 @@ yaratmamalı: bitiş yalnız "herkes yaptı" durumunda olur, bu da zaten herkese
 Butona Bas, Aşırı Yükleme, Kör Bomba, Rus Ruleti (zaten hamleyle ilerler), Zaman Bombası Hafızası (kontrol edilir:
 herkes girişi bitirdiyse aynı kural uygulanır).
 
+## Sonuç ekranı "Devam" (oyun kuralı değil, tur arası hız)
+- Mesaj: `{ type: "continue" }` (yalnız `results` aşaması; başka aşamada `wrong_phase`). KURALLAR etkilenmez.
+- Sayılanlar: o oyunun katılımcıları (izleyici sayılmaz; izleyicinin mesajı sessizce yok sayılır). Bağlı olmayan katılımcı
+  beklenmez (Tür 1 ile aynı). `MatchSnapshot.continueIds` yalnız kimlerin bastığını taşır.
+- Bitiş: bağlı katılımcıların hepsi bastıysa `phaseEndsAt = ctx.now + 1000` (`CONTINUE_GRACE_MS`); yalnız kısaltır, uzatmaz.
+  Karar sunucunun `stepMatch` adımında verilir (oyun `tick`i değil; bağlantıya bakmak burada serbest), böylece son bekleneni
+  kopma da sayımı tamamlar. Oyun durumu ve kayıt (`replay`) etkilenmez.
+- Hız sınırı: aynı oyuncudan `CONTINUE_MIN_GAP_MS` (300 ms) içinde gelen ikinci mesaj `rate_limited`; tekrar onay sessizdir.
+- İstemci: `TamamBar` ("Devam" / "Hazırsın · n/m hazır") + "Sıradaki: <oyun>" kartı.
+
 ## Test
 Her oyun için: (a) herkes kilitleyince/hamle yapınca aşama 1 sn sonra biter, (b) bir kişi eksikken bitmez,
 (c) bağlantısı kopan oyuncu beklenmez (Tür 1), (d) kilit sonrası değişiklik reddedilir, (e) kilit listesi seçimleri

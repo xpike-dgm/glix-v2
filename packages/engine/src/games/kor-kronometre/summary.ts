@@ -1,4 +1,4 @@
-import { decimal, fit, list, names, num, rec, str, type Summarize } from "../summary.js";
+import { decimal, fit, list, names, num, rec, type Summarize, str } from "../summary.js";
 
 /** Kör Kronometre: hedefe en yakın basış. */
 export const summarizeKorKronometre: Summarize = (_result, players, publicView) => {

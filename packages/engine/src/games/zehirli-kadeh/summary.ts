@@ -1,4 +1,4 @@
-import { fit, names, rec, strList, type Summarize } from "../summary.js";
+import { fit, names, rec, type Summarize, strList } from "../summary.js";
 
 /** Zehirli Kadeh: zehirli kadehte kalanlar. */
 export const summarizeZehirliKadeh: Summarize = (_result, players, publicView) => {

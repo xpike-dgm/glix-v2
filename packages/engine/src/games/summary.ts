@@ -43,7 +43,9 @@ export function names(players: readonly SummaryPlayer[], ids: readonly string[])
 /** Cümleyi üst sınıra kırpar (yedek önlem; cümleler zaten kısa kurulur). */
 export function fit(sentence: string): string {
   const chars = Array.from(sentence);
-  return chars.length <= SUMMARY_MAX_LENGTH ? sentence : `${chars.slice(0, SUMMARY_MAX_LENGTH - 1).join("")}…`;
+  return chars.length <= SUMMARY_MAX_LENGTH
+    ? sentence
+    : `${chars.slice(0, SUMMARY_MAX_LENGTH - 1).join("")}…`;
 }
 
 export function rec(v: unknown): Record<string, unknown> {

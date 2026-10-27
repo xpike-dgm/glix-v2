@@ -1,11 +1,11 @@
 import {
   APP_VERSION,
   type ClientMessage,
+  CONTINUE_MIN_GAP_MS,
   type ErrorCode,
   GAMES,
   MAX_PLAYERS,
   PROTOCOL_VERSION,
-  CONTINUE_MIN_GAP_MS,
   REACTION_MIN_GAP_MS,
 } from "@glix/engine";
 import {

@@ -1,4 +1,4 @@
-import { fit, list, nick, rec, strList, type Summarize } from "../summary.js";
+import { fit, list, nick, rec, type Summarize, strList } from "../summary.js";
 
 /** Çapraz Ateş: karşılıklı hedefleşen çiftler. */
 export const summarizeCaprazAtes: Summarize = (_result, players, publicView) => {

@@ -23,10 +23,10 @@ import { summarizeRusvetDarbe } from "./rusvet-darbe/summary.js";
 import { summarizeSizma } from "./sizma/summary.js";
 import { summarizeSonKisi } from "./son-kisi/summary.js";
 import { summarizeSozlukBlofu } from "./sozluk-blofu/summary.js";
+import type { Summarize, SummaryPlayer } from "./summary.js";
 import { summarizeYaziYaz } from "./yazi-yaz/summary.js";
 import { summarizeZamanBombasiHafizasi } from "./zaman-bombasi-hafizasi/summary.js";
 import { summarizeZehirliKadeh } from "./zehirli-kadeh/summary.js";
-import type { Summarize, SummaryPlayer } from "./summary.js";
 
 /** Oyun kimliği -> tur özeti fonksiyonu. Her oyunun kendi klasöründeki `summary.ts` buraya kaydedilir. */
 export const SUMMARIES: Readonly<Record<string, Summarize>> = {
@@ -40,10 +40,10 @@ export const SUMMARIES: Readonly<Record<string, Summarize>> = {
   "gizli-alisveris": summarizeGizliAlisveris,
   "gizli-hirsiz": summarizeGizliHirsiz,
   "gizli-kareler": summarizeGizliKareler,
-  "ittifak": summarizeIttifak,
+  ittifak: summarizeIttifak,
   "kara-borsa": summarizeKaraBorsa,
   "karalama-defteri": summarizeKaralamaDefteri,
-  "kendim": summarizeKendim,
+  kendim: summarizeKendim,
   "kontrol-paneli-kaosu": summarizeKontrolPaneliKaosu,
   "kor-bomba": summarizeKorBomba,
   "kor-kronometre": summarizeKorKronometre,
@@ -51,7 +51,7 @@ export const SUMMARIES: Readonly<Record<string, Summarize>> = {
   "ortalamanin-yarisi": summarizeOrtalamaninYarisi,
   "rus-ruleti": summarizeRusRuleti,
   "rusvet-darbe": summarizeRusvetDarbe,
-  "sizma": summarizeSizma,
+  sizma: summarizeSizma,
   "son-kisi": summarizeSonKisi,
   "sozluk-blofu": summarizeSozlukBlofu,
   "yazi-yaz": summarizeYaziYaz,

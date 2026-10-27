@@ -541,13 +541,25 @@ async function main() {
     await B2.locator(".podium").waitFor(OPT);
     await C.locator(".podium").waitFor(OPT);
 
-    // 10) Final
-    await A.locator(".winner").waitFor({ timeout: 20_000 });
+    // 9b) Sıradaki kartı + Devam: bağlı herkes basınca sonuç ekranı 7 sn'i beklemeden biter.
+    await A.getByText("Sıradaki", { exact: true }).waitFor(OPT);
+    await A.getByText("Final", { exact: true }).waitFor(OPT);
+    for (const p of [A, B2]) await p.getByRole("button", { name: "Devam", exact: true }).click();
+    await A.getByText("Diğerleri bekleniyor", { exact: false }).waitFor(OPT);
+    assert((await A.locator(".fin__head").count()) === 0, "biri eksikken final'e geçilmemeli");
+    await C.getByRole("button", { name: "Devam", exact: true }).click();
+    const devamAt = Date.now();
+    await shot(A, "14b-results-devam");
+
+    // 10) Final (Devam'dan en geç ~1 sn sonra)
+    await A.locator(".fin__head").waitFor({ timeout: 3_000 });
+    assert(Date.now() - devamAt < 2_800, `Devam sonrası final geç geldi: ${Date.now() - devamAt} ms`);
     await sleep(1500);
     await shot(A, "15-final");
-    assert(await btn(A, /lobiye dön/i).isVisible(), "host LOBİYE DÖN görmeli");
-    assert(!(await btn(C, /lobiye dön/i).count()), "C LOBİYE DÖN görmemeli");
-    const finalScores = await A.locator(".row__score--big").allInnerTexts();
+    assert(await btn(A, /^aynı ekiple yeni maç$/i).isVisible(), "host AYNI EKİPLE YENİ MAÇ görmeli");
+    assert(!(await btn(C, /^aynı ekiple yeni maç$/i).count()), "C AYNI EKİPLE YENİ MAÇ görmemeli");
+    await C.getByText("Host yeni maçı başlatacak", { exact: true }).waitFor(OPT);
+    const finalScores = await A.locator(".podium__score, .row__score--big").allInnerTexts();
     log(
       "final skorları",
       finalScores.map((s) => s.trim()),
@@ -556,7 +568,10 @@ async function main() {
     await A.getByRole("button", { name: "5 yıldız" }).click();
     await btn(A, /gönder/i).click();
     await A.getByText("Teşekkürler!").waitFor(OPT);
-    assert(await btn(A, /lobiye dön/i).isVisible(), "geri bildirimden sonra LOBİYE DÖN görünmeli");
+    assert(
+      await btn(A, /^aynı ekiple yeni maç$/i).isVisible(),
+      "geri bildirimden sonra AYNI EKİPLE YENİ MAÇ görünmeli",
+    );
     await shot(A, "15b-final-feedback");
     {
       // Sunucu geri bildirimi ve tamamlanan maçı kaydetmiş olmalı.
@@ -568,7 +583,7 @@ async function main() {
       assert(fb.length === 1 && fb[0].rating === 5, `geri bildirim kaydı: ${JSON.stringify(fb)}`);
       assert(done.length >= 1 && done[0].completed === 1, `maç kaydı: ${JSON.stringify(done)}`);
     }
-    await btn(A, /lobiye dön/i).click();
+    await btn(A, /^aynı ekiple yeni maç$/i).click();
     for (const p of [A, B2, C]) {
       await p.locator(".roomcode").waitFor(OPT);
       assert((await lobbyCode(p)) === code, "lobiye aynı odada dönülmeli");
@@ -611,12 +626,12 @@ async function main() {
         .first()
         .waitFor({ state: "attached", timeout: 2000 })
         .catch(() => {});
-      await A.locator(".winner").waitFor({ timeout: 90_000 });
-      await F.locator(".winner").waitFor({ timeout: 20_000 });
-      assert(!(await btn(F, /lobiye dön/i).count()), "izleyici LOBİYE DÖN görmemeli");
+      await A.locator(".fin__head").waitFor({ timeout: 90_000 });
+      await F.locator(".fin__head").waitFor({ timeout: 20_000 });
+      assert(!(await btn(F, /^aynı ekiple yeni maç$/i).count()), "izleyici AYNI EKİPLE YENİ MAÇ görmemeli");
       await F.getByText("Lobiye dönünce oyuncu olursun", { exact: true }).waitFor(OPT);
       await shot(F, "13c-spectator-final");
-      await btn(A, /lobiye dön/i).click();
+      await btn(A, /^aynı ekiple yeni maç$/i).click();
       for (const p of [A, F]) {
         await p.locator(".roomcode").waitFor(OPT);
         assert((await p.locator("button.seat:not(.seat--empty)").count()) === 4, "lobide dört oyuncu olmalı");

@@ -1,4 +1,4 @@
-import { fit, leaders, nick, rec, str, type Summarize } from "../summary.js";
+import { fit, leaders, nick, rec, type Summarize, str } from "../summary.js";
 
 /** Sözlük Blöfü: en çok kişiyi kandıran sahte tanım; yoksa gerçek tanımı bulanlar. */
 export const summarizeSozlukBlofu: Summarize = (_result, players, publicView) => {

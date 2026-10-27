@@ -1,4 +1,4 @@
-import { fit, list, names, num, rec, strList, type Summarize } from "../summary.js";
+import { fit, list, names, num, rec, type Summarize, strList } from "../summary.js";
 import { formatKredi } from "./types.js";
 
 /** Gizli Alışveriş: en değerli sepet. */

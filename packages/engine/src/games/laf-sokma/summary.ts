@@ -1,4 +1,4 @@
-import { leadLine, list, names, numRec, rec, str, type Summarize } from "../summary.js";
+import { leadLine, list, names, numRec, rec, type Summarize, str } from "../summary.js";
 
 /** Laf Sokma Düellosu: Laf Ustası olanlar, yoksa en çok puan. */
 export const summarizeLafSokma: Summarize = (result, players, publicView) => {

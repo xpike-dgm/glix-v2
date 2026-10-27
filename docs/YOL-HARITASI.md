@@ -64,11 +64,11 @@ lobi-2, lobi-8, lobi-qr, lobi-picker durumları eklendi.
 - Kabul: anlatımda ortalama bekleme (stats) %40 azalır.
 
 ### U4. Sonuç ve final ekranı
-- Sıralama değişimi animasyonu (↑2 yeşil ok, satırlar kayar), puan jetonları avatardan tabloya uçar.
-- **Tur özeti satırı:** oyunun `result`'ından türeyen tek cümle ("Elif 3 eşleşme ile turun yıldızı") — oyun başına
+- [x] Sıralama değişimi animasyonu (↑2 yeşil ok, satırlar kayar), puan jetonları avatardan tabloya uçar.
+- [x] **Tur özeti satırı:** oyunun `result`'ından türeyen tek cümle ("Elif 3 eşleşme ile turun yıldızı") — oyun başına
   `summarize(result)` saf fonksiyonu (engine), Y5 ile zenginleşir.
-- "Sıradaki: Kör Kronometre" kartı + **"Devam" (herkes basınca 7 sn beklenmez)** — sunucu `results` aşamasına erken bitiş.
-- Final: podyum + unvanlar + "Aynı ekiple yeni maç" + paylaşım kartı (U7).
+- [x] "Sıradaki: Kör Kronometre" kartı + **"Devam" (herkes basınca 7 sn beklenmez)** — sunucu `results` aşamasına erken bitiş.
+- [x] Final: podyum + unvanlar + "Aynı ekiple yeni maç" (paylaşım kartı U7'de).
 
 ### U5. Canlılık (juice)
 - **Tepki yağmuru:** sonuç/final ekranında 😂 😱 🔥 👏; sunucuda hız sınırlı yeni mesaj `react`, herkese yayın.
@@ -202,7 +202,7 @@ Bugün: yeni sürüm hazır olunca bekliyor (`registerType: prompt`), kullanıc�
 - [x] Sözlük Blöfü / Çağrışım / Sızma: sıralı dramatik açılış (en çok kandıran en son). (`fx/sequence.ts`; Sızma: oylar azdan çoğa, son adımda maske düşer)
 - Yazı Yaz: puansız "şüphe göstergesi". [x] Kendim: sürükle-bırak eşleştirme.
 - [x] Çapraz Ateş / Açgözlülük: sinematik açılış sahneleri.
-- Tüm oyunlar: `summarize(result)` (U4 tur özeti).
+- [x] Tüm oyunlar: `summarize(result)` (U4 tur özeti).
 
 **Kabul (her O maddesi):** kural senaryo testleri + invariants + sızıntı testleri + sunucu testi + `ui:check`; oyun
 karnesinde (stats) ortalama puan ve süre önce/sonra karşılaştırılır.
@@ -263,7 +263,7 @@ Ajan düzeni: en çok 2 eşzamanlı ajan, her oyun/özellik sonrası commit.
 ### Aşama 1 — Temel ve hızlı kazançlar (1 hafta)
 - O1 Zaman Bombası kısaltma (onaylı).
 - U2 lobi yeniden düzeni + "Oyunlar" + QR.
-- U4'ün sunucu kısmı: results "Devam" erken bitişi.
+- [x] U4'ün sunucu kısmı: results "Devam" erken bitişi.
 - Y0 altyapısı: `AiGateway` iskeleti (anahtar, bütçe, devre kesici, metrik), değerlendirme seti formatı — henüz
   oyuncuya görünür yapay zekâ yok.
 - Kapı: lobi 8 oyuncu 320 px kaydırmasız; Zaman Bombası ort. süre ≤ 90 sn (stats).

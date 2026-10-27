@@ -1,4 +1,4 @@
-import { decimal, fit, nick, num, rec, strList, type Summarize } from "../summary.js";
+import { decimal, fit, nick, num, rec, type Summarize, strList } from "../summary.js";
 
 /** Ortalamaya En Yakın: hedef ve ona en yakın seçim. */
 export const summarizeOrtalamaninYarisi: Summarize = (_result, players, publicView) => {

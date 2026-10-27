@@ -1,4 +1,4 @@
-import { fit, names, rec, strList, type Summarize } from "../summary.js";
+import { fit, names, rec, type Summarize, strList } from "../summary.js";
 
 /** Son Kişi: en son kaçan ve kaçamayanlar. */
 export const summarizeSonKisi: Summarize = (_result, players, publicView) => {

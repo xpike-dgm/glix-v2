@@ -9,5 +9,7 @@ export const summarizeCizgiyiGecme: Summarize = (_result, players, publicView) =
   const top = first[0];
   if (top === undefined) return "Tek kalan olmadı; kimse puan almadı";
   const choice = num(rec(reveal.choices)[top]);
-  return fit(`${names(players, first)} ${choice === undefined ? "" : `${choice} ile `}çizgiyi en yüksekten geçti`);
+  return fit(
+    `${names(players, first)} ${choice === undefined ? "" : `${choice} ile `}çizgiyi en yüksekten geçti`,
+  );
 };

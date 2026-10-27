@@ -1,4 +1,4 @@
-import { fit, nick, rec, str, type Summarize } from "../summary.js";
+import { fit, nick, rec, type Summarize, str } from "../summary.js";
 
 /** Karalama Defteri: bilgisiz oyuncu yakalandı mı. */
 export const summarizeKaralamaDefteri: Summarize = (_result, players, publicView) => {

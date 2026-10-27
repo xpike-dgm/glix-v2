@@ -1,4 +1,4 @@
-import { fit, nick, num, rec, str, type Summarize } from "../summary.js";
+import { fit, nick, num, rec, type Summarize, str } from "../summary.js";
 
 /** Kör Bomba: bomba kimin elinde patladı. */
 export const summarizeKorBomba: Summarize = (_result, players, publicView) => {
@@ -7,5 +7,7 @@ export const summarizeKorBomba: Summarize = (_result, players, publicView) => {
   if (pv.exploded !== true || holder === undefined) return null;
   const passes = num(pv.passes) ?? 0;
   const who = nick(players, holder);
-  return fit(passes > 0 ? `Bomba ${who} elinde, ${passes} pasın ardından patladı` : `Bomba ${who} elinde patladı`);
+  return fit(
+    passes > 0 ? `Bomba ${who} elinde, ${passes} pasın ardından patladı` : `Bomba ${who} elinde patladı`,
+  );
 };

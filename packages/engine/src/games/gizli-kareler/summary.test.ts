@@ -12,12 +12,12 @@ const result = { miniScores: { a: 4, b: 1, c: 0 }, awards: { a: 2, b: 1, c: 0 } 
 
 describe("gizli-kareler tur özeti", () => {
   it("cümle kurar (1)", () => {
-    const line = summarizeGizliKareler(result, players, {"points": {"a": 2, "b": 1, "c": 0}});
+    const line = summarizeGizliKareler(result, players, { points: { a: 2, b: 1, c: 0 } });
     expect(line).toBe("Elif 2 puanla karelerde önde");
     expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
   });
   it("cümle kurar (2)", () => {
-    const line = summarizeGizliKareler(result, players, {"points": {"a": 0, "b": 0}});
+    const line = summarizeGizliKareler(result, players, { points: { a: 0, b: 0 } });
     expect(line).toBe("Kimse tek başına kare tutamadı");
     expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
   });

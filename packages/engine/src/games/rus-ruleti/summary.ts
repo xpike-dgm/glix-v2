@@ -1,4 +1,4 @@
-import { fit, nick, rec, strList, type Summarize } from "../summary.js";
+import { fit, nick, rec, type Summarize, strList } from "../summary.js";
 
 /** Rus Ruleti: kaç kişi elendi, kim kaldı. */
 export const summarizeRusRuleti: Summarize = (_result, players, publicView) => {
@@ -8,6 +8,7 @@ export const summarizeRusRuleti: Summarize = (_result, players, publicView) => {
   const eliminated = strList(result.eliminated);
   const [only] = survivors;
   if (eliminated.length === 0) return "Kimse elenmedi";
-  if (survivors.length === 1 && only !== undefined) return fit(`${nick(players, only)} son hayatta kalan oldu`);
+  if (survivors.length === 1 && only !== undefined)
+    return fit(`${nick(players, only)} son hayatta kalan oldu`);
   return `${eliminated.length} kişi elendi, ${survivors.length} kişi kurtuldu`;
 };

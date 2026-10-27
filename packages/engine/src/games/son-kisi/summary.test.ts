@@ -12,21 +12,27 @@ const result = { miniScores: { a: 4, b: 1, c: 0 }, awards: { a: 2, b: 1, c: 0 } 
 
 describe("son-kisi tur özeti", () => {
   it("cümle kurar (1)", () => {
-    const line = summarizeSonKisi(result, players, {"result": {"escapes": [], "last": ["c"], "missed": [], "scores": {}}});
+    const line = summarizeSonKisi(result, players, {
+      result: { escapes: [], last: ["c"], missed: [], scores: {} },
+    });
     expect(line).toBe("Mert en son kaçtı");
     expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
   });
   it("cümle kurar (2)", () => {
-    const line = summarizeSonKisi(result, players, {"result": {"escapes": [], "last": ["c"], "missed": ["a"], "scores": {}}});
+    const line = summarizeSonKisi(result, players, {
+      result: { escapes: [], last: ["c"], missed: ["a"], scores: {} },
+    });
     expect(line).toBe("Mert en son kaçtı, 1 kişi kaçamadı");
     expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
   });
   it("cümle kurar (3)", () => {
-    const line = summarizeSonKisi(result, players, {"result": {"escapes": [], "last": [], "missed": ["a", "b"], "scores": {}}});
+    const line = summarizeSonKisi(result, players, {
+      result: { escapes: [], last: [], missed: ["a", "b"], scores: {} },
+    });
     expect(line).toBe("Kimse kaçamadı");
     expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
   });
   it("veri yoksa ya da eksikse cümle kurmaz (4)", () => {
-    expect(summarizeSonKisi(result, players, {"result": null})).toBeNull();
+    expect(summarizeSonKisi(result, players, { result: null })).toBeNull();
   });
 });

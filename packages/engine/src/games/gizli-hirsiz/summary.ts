@@ -1,4 +1,4 @@
-import { fit, nick, rec, strList, type Summarize } from "../summary.js";
+import { fit, nick, rec, type Summarize, strList } from "../summary.js";
 
 /** Gizli Hırsız: tek hırsız, çok hırsız ya da hırsızsız. */
 export const summarizeGizliHirsiz: Summarize = (_result, players, publicView) => {

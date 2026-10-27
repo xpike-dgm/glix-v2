@@ -1,4 +1,4 @@
-import { fit, list, rec, str, strList, type Summarize } from "../summary.js";
+import { fit, list, rec, type Summarize, str, strList } from "../summary.js";
 
 /** Çağrışım Ağı: en kalabalık küme. */
 export const summarizeCagrisimAgi: Summarize = (_result, _players, publicView) => {

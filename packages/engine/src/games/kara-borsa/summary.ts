@@ -1,4 +1,4 @@
-import { leadLine, list, rec, str, type Summarize } from "../summary.js";
+import { leadLine, list, rec, type Summarize, str } from "../summary.js";
 
 /** Kara Borsa: en çok kutu alan. */
 export const summarizeKaraBorsa: Summarize = (_result, players, publicView) => {
