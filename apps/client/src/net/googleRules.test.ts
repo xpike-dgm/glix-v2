@@ -15,6 +15,20 @@ describe("parseGoogleReturn", () => {
     });
   });
 
+  it("askıdaki hesap: bitiş varsa tarihli, yoksa ya da bozuksa süresiz metin; sebep taşınmaz", () => {
+    const until = Date.UTC(2026, 10, 3, 11, 5);
+    expect(parseGoogleReturn(`#google-hata=askida&bitis=${until}`)).toEqual({
+      kind: "hata",
+      text: "Hesabın 3 Kasım 2026 14:05 tarihine kadar askıya alındı.",
+    });
+    for (const h of ["#google-hata=askida", "#google-hata=askida&bitis=abc", "#google-hata=askida&bitis=-5"])
+      expect(parseGoogleReturn(h)).toEqual({ kind: "hata", text: "Hesabın askıya alındı." });
+    expect(parseGoogleReturn("#google-hata=askida&sebep=su-siteye-gir")).toEqual({
+      kind: "hata",
+      text: "Hesabın askıya alındı.",
+    });
+  });
+
   it("yeni kullanıcı: belirteç ve öneri", () => {
     expect(parseGoogleReturn(`#google-yeni=${TOKEN}&u=ali_01`)).toEqual({
       kind: "yeni",
@@ -48,6 +62,7 @@ describe("parseGoogleReturn", () => {
       "eposta_kayitli",
       "baska_hesap",
       "zaten_bagli",
+      "askida",
     ])
       expect(googleErrorText(code)).not.toMatch(/token|oauth|server|debug|protocol|stage|http/i);
   });

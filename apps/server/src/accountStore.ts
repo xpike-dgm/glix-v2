@@ -1,4 +1,5 @@
 import type { DatabaseSync } from "node:sqlite";
+import type { AdminAccountDetail, AdminAccountRow } from "@glix/engine";
 import { createFriendStore, FRIENDS_SCHEMA, type FriendStore } from "./friendStore.js";
 import { log } from "./log.js";
 import { loadSqlite } from "./statsStore.js";
@@ -119,6 +120,8 @@ export interface AccountExportData {
   createdAt: number;
   usernameChangedAt: number | null;
   sessions: { createdAt: number; lastSeen: number }[];
+  /** Kayıtlı askı bilgisi (süresi dolmuş olabilir; dökümü yazan süreyi denetler). Hesap sahibinin kendi verisidir. */
+  suspension: Suspension | null;
   games: {
     gameId: string;
     endedAt: number;
@@ -136,12 +139,34 @@ export interface AccountExportData {
 /** Yönetici ikinci adımı: tek kullanımlık kod denemesinin sonucu. */
 export type AdminOtpCheck = "ok" | "invalid" | "locked" | "expired" | "none";
 
-/** Yönetici işlem kaydı satırı (kod ve belirteç içermez). */
+/** Yönetici işlem kaydı satırı (kod, belirteç ve e-posta içermez). */
 export interface AdminAuditRow {
+  id: number;
+  /** İşlemi yapan yönetici hesabı. */
   accountId: number;
   action: string;
+  /** İşlemin hedefi olan hesap (hesap dışı olaylarda null). Hesap silinse de kimlik kayıtta kalır. */
+  targetId: number | null;
   detail: string;
   at: number;
+}
+
+/** Hesap askıda: başlangıç, bitiş (null = süresiz) ve yönetici notu. */
+export interface Suspension {
+  since: number;
+  until: number | null;
+  reason: string;
+}
+
+/** Yönetici hesap araması: kullanıcı adı öneki (küçük harf) ya da tam e-posta (küçük harf). */
+export type AdminSearchQuery = { kind: "prefix"; value: string } | { kind: "email"; value: string };
+
+/** Yönetici aramasında en çok bu kadar satır döner. */
+export const ADMIN_SEARCH_LIMIT = 20;
+
+/** Askı bitmişse (ya da hiç yoksa) false. `until` null = süresiz. */
+function suspensionActive(at: number | null, until: number | null, now: number): boolean {
+  return at !== null && (until === null || until > now);
 }
 
 /** Yönetici panelinin hesap toplamları: yalnız sayılar, kişi yok. */
@@ -152,6 +177,13 @@ export interface AccountMetrics {
   password: number;
   friendships: number;
   badgesAwarded: number;
+  /** Hem şifresi hem Google bağlantısı olan hesaplar (`google` ve `password` bunları da sayar). */
+  both: number;
+  /** Son 7 / 30 günde en az bir maç bitiren (final'e varan) hesap sayısı. */
+  active7: number;
+  active30: number;
+  /** Şu an askıda olan hesaplar. */
+  suspended: number;
   /** UTC gün başlangıcı (ms) ve o gün açılan hesap sayısı; son 30 gün, sıfırlar dahil. */
   newPerDay: { dayStart: number; count: number }[];
 }
@@ -257,10 +289,32 @@ export interface AccountStore extends FriendStore {
    * belirteçleri ve hesap satırı tek işlemde gider. Geri alınamaz. Hesap yoksa false.
    */
   deleteAccount(accountId: number): boolean;
-  /** Yönetici işlem kaydı yazar (`admin_audit`); `detail` kod/belirteç/e-posta taşımamalı. */
-  adminAudit(accountId: number, action: string, detail: string, at: number): void;
+  /**
+   * Yönetici işlem kaydı yazar (`admin_audit`); `detail` kod/belirteç/e-posta taşımamalı. `targetId` işlemin
+   * hedefi olan hesap kimliğidir.
+   */
+  adminAudit(accountId: number, action: string, detail: string, at: number, targetId?: number | null): void;
   /** Son `limit` yönetici kaydı (en yeni önde). */
   adminAuditTail(limit: number): AdminAuditRow[];
+  /** Sayfalı kayıt: `before` (kayıt kimliği) verilirse ondan eski olanlar, en yeni önde, en çok `limit`. */
+  adminAuditPage(before: number | null, limit: number): AdminAuditRow[];
+  /** Kullanıcı adı önekiyle ya da tam e-postayla arama (en çok `ADMIN_SEARCH_LIMIT`); satırlarda e-posta yoktur. */
+  adminSearch(query: AdminSearchQuery, now: number): AdminAccountRow[];
+  /** Tek hesabın yönetici dökümü (e-posta dahil); `protected` alanını çağıran doldurur. */
+  adminAccountDetail(accountId: number, now: number): Omit<AdminAccountDetail, "protected"> | null;
+  /** Hesap şu an askıdaysa bilgisi; süresi dolmuşsa ya da hiç askıya alınmamışsa null. */
+  suspension(accountId: number, now: number): Suspension | null;
+  /**
+   * Hesabı askıya alır (zaten askıdaysa yeni süre/sebep yazar) ve tüm oturumlarını siler. `until` null = süresiz.
+   * Hesap yoksa false.
+   */
+  suspend(accountId: number, now: number, until: number | null, reason: string): boolean;
+  /** Askıyı kaldırır; hesap yoksa ya da askıda değilse false. */
+  unsuspend(accountId: number, now: number): boolean;
+  /** Yönetici zoruyla kullanıcı adı değişikliği: bekleme süresini aşar ve hesabın kendi bekleme sayacına dokunmaz. */
+  forceUsername(accountId: number, username: string): "ok" | "taken" | "missing";
+  /** Hesabın tüm oturumlarını siler ("her yerden çıkar"); silinen oturum sayısını döner. */
+  deleteSessionsOf(accountId: number): number;
   /** Hesabın yönetici kodunu (yalnız özeti + tuz) kaydeder; eski kod silinir. Kod isteyen oturuma bağlıdır. */
   adminOtpPut(
     accountId: number,
@@ -394,6 +448,13 @@ const MIGRATIONS: readonly string[] = [
      created_at INTEGER NOT NULL,
      expires_at INTEGER NOT NULL
    );`,
+  // Yönetici paneli hesap işlemleri (U16 A2): askıya alma (`suspended_at` boşsa askıda değil; `suspended_until` boşsa
+  // süresiz) ve işlem kaydında hedef hesap. Askı bitince sütunlar günlük temizlikte silinir.
+  `ALTER TABLE accounts ADD COLUMN suspended_at INTEGER;
+   ALTER TABLE accounts ADD COLUMN suspended_until INTEGER;
+   ALTER TABLE accounts ADD COLUMN suspend_reason TEXT;
+   ALTER TABLE admin_audit ADD COLUMN target_id INTEGER;
+   CREATE INDEX admin_audit_target ON admin_audit (target_id);`,
 ];
 
 /** Yönetici işlem kayıtları bu süreden sonra silinir. */
@@ -417,6 +478,37 @@ function migrate(db: DatabaseSync): void {
       throw err;
     }
   }
+}
+
+interface AuditDbRow {
+  id: number;
+  account_id: number;
+  action: string;
+  detail: string;
+  at: number;
+  target_id: number | null;
+}
+
+const auditRow = (r: AuditDbRow): AdminAuditRow => ({
+  id: r.id,
+  accountId: r.account_id,
+  action: r.action,
+  targetId: r.target_id,
+  detail: r.detail,
+  at: r.at,
+});
+
+interface SearchDbRow {
+  id: number;
+  username: string;
+  created_at: number;
+  verified: number;
+  g: number;
+  p: number;
+  sus_at: number | null;
+  sus_until: number | null;
+  last_seen: number | null;
+  matches: number;
 }
 
 interface AccountRow {
@@ -452,7 +544,8 @@ export function createAccounts(path: string): AccountStore {
     "INSERT INTO sessions (id_hash, account_id, created_at, last_seen) VALUES (?, ?, ?, ?)",
   );
   const sessionRow = db.prepare(
-    `SELECT a.id AS id, a.username AS username, a.email AS email, s.created_at AS created_at, s.last_seen AS last_seen
+    `SELECT a.id AS id, a.username AS username, a.email AS email, s.created_at AS created_at, s.last_seen AS last_seen,
+            a.suspended_at AS sus_at, a.suspended_until AS sus_until
        FROM sessions s JOIN accounts a ON a.id = s.account_id WHERE s.id_hash = ?`,
   );
   const touch = db.prepare("UPDATE sessions SET last_seen = ? WHERE id_hash = ?");
@@ -580,11 +673,49 @@ export function createAccounts(path: string): AccountStore {
        UNION SELECT blocker FROM blocks WHERE blocked = ?`,
   );
   const insertAudit = db.prepare(
-    "INSERT INTO admin_audit (account_id, action, detail, at) VALUES (?, ?, ?, ?)",
+    "INSERT INTO admin_audit (account_id, action, detail, at, target_id) VALUES (?, ?, ?, ?, ?)",
   );
   const auditTail = db.prepare(
-    "SELECT account_id, action, detail, at FROM admin_audit ORDER BY id DESC LIMIT ?",
+    "SELECT id, account_id, action, detail, at, target_id FROM admin_audit ORDER BY id DESC LIMIT ?",
   );
+  const auditPage = db.prepare(
+    "SELECT id, account_id, action, detail, at, target_id FROM admin_audit WHERE id < ? ORDER BY id DESC LIMIT ?",
+  );
+  const searchColumns = `SELECT a.id AS id, a.username AS username, a.created_at AS created_at,
+            a.email_verified AS verified, a.google_sub IS NOT NULL AS g, a.pass_hash IS NOT NULL AS p,
+            a.suspended_at AS sus_at, a.suspended_until AS sus_until,
+            (SELECT MAX(s.last_seen) FROM sessions s WHERE s.account_id = a.id) AS last_seen,
+            (SELECT COUNT(*) FROM account_matches m WHERE m.account_id = a.id) AS matches
+       FROM accounts a`;
+  const searchPrefix = db.prepare(
+    `${searchColumns} WHERE a.username_lc >= ? AND a.username_lc < ? ORDER BY a.username_lc LIMIT ${ADMIN_SEARCH_LIMIT}`,
+  );
+  const searchEmail = db.prepare(`${searchColumns} WHERE a.email = ? LIMIT ${ADMIN_SEARCH_LIMIT}`);
+  const adminDetailRow = db.prepare(
+    `SELECT username, email, email_verified, google_sub IS NOT NULL AS g, pass_hash IS NOT NULL AS p, created_at,
+            username_changed_at, suspended_at, suspended_until, suspend_reason FROM accounts WHERE id = ?`,
+  );
+  const sessionSummary = db.prepare(
+    "SELECT COUNT(*) AS n, MAX(last_seen) AS last_seen FROM sessions WHERE account_id = ?",
+  );
+  const badgeCount = db.prepare("SELECT COUNT(*) AS n FROM badges WHERE account_id = ?");
+  const friendCount = db.prepare(
+    "SELECT COUNT(*) AS n FROM friends WHERE state = 'accepted' AND (a = ? OR b = ?)",
+  );
+  const suspensionRow = db.prepare(
+    "SELECT suspended_at, suspended_until, suspend_reason FROM accounts WHERE id = ?",
+  );
+  const suspendWrite = db.prepare(
+    "UPDATE accounts SET suspended_at = ?, suspended_until = ?, suspend_reason = ? WHERE id = ?",
+  );
+  const suspendClear = db.prepare(
+    "UPDATE accounts SET suspended_at = NULL, suspended_until = NULL, suspend_reason = NULL WHERE id = ?",
+  );
+  const suspendExpired = db.prepare(
+    `UPDATE accounts SET suspended_at = NULL, suspended_until = NULL, suspend_reason = NULL
+      WHERE suspended_until IS NOT NULL AND suspended_until <= ?`,
+  );
+  const forceRename = db.prepare("UPDATE accounts SET username = ?, username_lc = ? WHERE id = ?");
   const putOtp = db.prepare(
     `INSERT INTO admin_otp (account_id, session_hash, salt, code_hash, expires_at, attempts)
        VALUES (?, ?, ?, ?, ?, 0)
@@ -614,6 +745,15 @@ export function createAccounts(path: string): AccountStore {
   );
   const metricFriends = db.prepare("SELECT COUNT(*) AS n FROM friends WHERE state = 'accepted'");
   const metricBadges = db.prepare("SELECT COUNT(*) AS n FROM badges");
+  const metricBoth = db.prepare(
+    "SELECT COUNT(*) AS n FROM accounts WHERE google_sub IS NOT NULL AND pass_hash IS NOT NULL",
+  );
+  const metricActive = db.prepare(
+    "SELECT COUNT(DISTINCT account_id) AS n FROM account_matches WHERE ended_at >= ?",
+  );
+  const metricSuspended = db.prepare(
+    "SELECT COUNT(*) AS n FROM accounts WHERE suspended_at IS NOT NULL AND (suspended_until IS NULL OR suspended_until > ?)",
+  );
   const metricNew = db.prepare(
     `SELECT CAST(created_at / 86400000 AS INTEGER) AS d, COUNT(*) AS n FROM accounts
       WHERE created_at >= ? GROUP BY d`,
@@ -869,6 +1009,9 @@ export function createAccounts(path: string): AccountStore {
           }
         | undefined;
       if (!d) return null;
+      const sus = suspensionRow.get(accountId) as
+        | { suspended_at: number | null; suspended_until: number | null; suspend_reason: string | null }
+        | undefined;
       return {
         username: d.username,
         email: d.email,
@@ -877,6 +1020,10 @@ export function createAccounts(path: string): AccountStore {
         hasPassword: d.has_pass === 1,
         createdAt: d.created_at,
         usernameChangedAt: d.username_changed_at,
+        suspension:
+          sus && sus.suspended_at !== null
+            ? { since: sus.suspended_at, until: sus.suspended_until, reason: sus.suspend_reason ?? "" }
+            : null,
         sessions: (sessionTimes.all(accountId) as { created_at: number; last_seen: number }[]).map((r) => ({
           createdAt: r.created_at,
           lastSeen: r.last_seen,
@@ -1038,22 +1185,135 @@ export function createAccounts(path: string): AccountStore {
     },
     resolveSession(tokenHash, now) {
       const row = sessionRow.get(tokenHash) as
-        | (Omit<AccountRow, "pass_hash"> & { created_at: number; last_seen: number })
+        | (Omit<AccountRow, "pass_hash"> & {
+            created_at: number;
+            last_seen: number;
+            sus_at: number | null;
+            sus_until: number | null;
+          })
         | undefined;
       if (!row || now - row.created_at > SESSION_TTL_MS) return null;
+      // Askıdaki hesabın oturumları askıya alınırken silinir; yine de bir oturum kalmışsa hesap yok sayılır.
+      if (suspensionActive(row.sus_at, row.sus_until, now)) return null;
       if (now - row.last_seen > TOUCH_EVERY_MS) touch.run(now, tokenHash);
       return { id: row.id, username: row.username, email: row.email };
     },
     deleteSession(tokenHash) {
       removeSession.run(tokenHash);
     },
-    adminAudit(accountId, action, detail, at) {
-      insertAudit.run(accountId, action, detail, at);
+    adminAudit(accountId, action, detail, at, targetId = null) {
+      insertAudit.run(accountId, action, detail, at, targetId);
     },
     adminAuditTail(limit) {
-      return (
-        auditTail.all(limit) as { account_id: number; action: string; detail: string; at: number }[]
-      ).map((r) => ({ accountId: r.account_id, action: r.action, detail: r.detail, at: r.at }));
+      return (auditTail.all(limit) as unknown as AuditDbRow[]).map(auditRow);
+    },
+    adminAuditPage(before, limit) {
+      return (auditPage.all(before ?? Number.MAX_SAFE_INTEGER, limit) as unknown as AuditDbRow[]).map(
+        auditRow,
+      );
+    },
+    adminSearch(query, now) {
+      const rows =
+        query.kind === "email"
+          ? (searchEmail.all(query.value) as unknown as SearchDbRow[])
+          : (searchPrefix.all(query.value, `${query.value}\u{10FFFF}`) as unknown as SearchDbRow[]);
+      return rows.map((r) => ({
+        id: r.id,
+        username: r.username,
+        createdAt: r.created_at,
+        verified: r.verified === 1,
+        google: r.g === 1,
+        password: r.p === 1,
+        lastSeen: r.last_seen,
+        matches: r.matches,
+        suspended: suspensionActive(r.sus_at, r.sus_until, now),
+      }));
+    },
+    adminAccountDetail(accountId, now) {
+      const r = adminDetailRow.get(accountId) as
+        | {
+            username: string;
+            email: string;
+            email_verified: number;
+            g: number;
+            p: number;
+            created_at: number;
+            username_changed_at: number | null;
+            suspended_at: number | null;
+            suspended_until: number | null;
+            suspend_reason: string | null;
+          }
+        | undefined;
+      if (!r) return null;
+      const sess = sessionSummary.get(accountId) as { n: number; last_seen: number | null };
+      const m = matchTotals.get(accountId) as { n: number; wins: number };
+      const g = gameTotals.get(accountId) as { n: number };
+      return {
+        id: accountId,
+        username: r.username,
+        email: r.email,
+        createdAt: r.created_at,
+        verified: r.email_verified === 1,
+        google: r.g === 1,
+        password: r.p === 1,
+        usernameChangedAt: r.username_changed_at,
+        lastSeen: sess.last_seen,
+        sessions: sess.n,
+        matches: m.n,
+        wins: m.wins,
+        games: g.n,
+        badges: (badgeCount.get(accountId) as { n: number }).n,
+        friends: (friendCount.get(accountId, accountId) as { n: number }).n,
+        suspension: suspensionActive(r.suspended_at, r.suspended_until, now)
+          ? { since: r.suspended_at as number, until: r.suspended_until, reason: r.suspend_reason ?? "" }
+          : null,
+      };
+    },
+    suspension(accountId, now) {
+      const r = suspensionRow.get(accountId) as
+        | { suspended_at: number | null; suspended_until: number | null; suspend_reason: string | null }
+        | undefined;
+      if (!r || !suspensionActive(r.suspended_at, r.suspended_until, now)) return null;
+      return { since: r.suspended_at as number, until: r.suspended_until, reason: r.suspend_reason ?? "" };
+    },
+    suspend(accountId, now, until, reason) {
+      let done = false;
+      inTransaction(() => {
+        if (Number(suspendWrite.run(now, until, reason, accountId).changes) !== 1) return;
+        dropSessions.run(accountId);
+        done = true;
+      });
+      return done;
+    },
+    unsuspend(accountId, now) {
+      const r = suspensionRow.get(accountId) as
+        | { suspended_at: number | null; suspended_until: number | null }
+        | undefined;
+      if (!r || !suspensionActive(r.suspended_at, r.suspended_until, now)) return false;
+      return Number(suspendClear.run(accountId).changes) === 1;
+    },
+    forceUsername(accountId, username) {
+      const lc = username.toLowerCase();
+      let result: "ok" | "taken" | "missing" = "missing";
+      inTransaction(() => {
+        if (!byId.get(accountId)) return;
+        const owner = byUsername.get(lc) as { id: number } | undefined;
+        if (owner && owner.id !== accountId) {
+          result = "taken";
+          return;
+        }
+        try {
+          forceRename.run(username, lc, accountId);
+          result = "ok";
+        } catch (err) {
+          if (!String(err).includes("accounts.username_lc")) throw err;
+          result = "taken";
+        }
+      });
+      return result;
+    },
+    deleteSessionsOf(accountId) {
+      return Number(dropSessions.run(accountId).changes);
     },
     adminOtpPut(accountId, sessionHash, salt, codeHash, expiresAt) {
       putOtp.run(accountId, sessionHash, salt, codeHash, expiresAt);
@@ -1113,6 +1373,10 @@ export function createAccounts(path: string): AccountStore {
         verified: t.verified,
         google: t.google,
         password: t.pass,
+        both: (metricBoth.get() as { n: number }).n,
+        active7: (metricActive.get(now - 7 * 86_400_000) as { n: number }).n,
+        active30: (metricActive.get(now - 30 * 86_400_000) as { n: number }).n,
+        suspended: (metricSuspended.get(now) as { n: number }).n,
         friendships: (metricFriends.get() as { n: number }).n,
         badgesAwarded: (metricBadges.get() as { n: number }).n,
         newPerDay: Array.from({ length: 30 }, (_, i) => {
@@ -1128,6 +1392,7 @@ export function createAccounts(path: string): AccountStore {
         purgeAdmin.run(now);
         purgeOtp.run(now);
         purgeAudit.run(now - ADMIN_AUDIT_RETENTION_MS);
+        suspendExpired.run(now);
       } catch (err) {
         log.error("accounts_error", { op: "purge", error: String(err) });
       }

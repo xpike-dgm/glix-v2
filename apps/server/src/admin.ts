@@ -1,17 +1,32 @@
 /**
- * Yönetici paneli uçları (U16 A1, salt okunur): erişim denetimi ve üç veri ucu.
+ * Yönetici paneli uçları (U16 A1 salt okunur veri uçları, A2 hesap işlemleri): erişim denetimi, veri uçları, hesap arama,
+ * hesap dökümü ve hesap işlemleri (ad zorla değiştirme, askı, silme, oturum kapatma). İşlemler POST'tur; her biri
+ * Origin denetimi, yönetici başına hız sınırı ve işlem kaydı (`admin_audit`; e-posta asla yazılmaz) taşır.
  * Erişim = geçerli hesap oturumu + `GLIX_ADMIN_ACCOUNT_IDS` listesinde hesap + e-postayla gelen tek kullanımlık kodla
  * alınmış `glix_admin` çerezi. Kod ve belirteçler asla günlüğe yazılmaz; veritabanında yalnız özetleri durur.
  */
 import { createHash, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { AdminLive } from "@glix/engine";
-import type { AccountStore } from "./accountStore.js";
-import { buildErrors, buildStats } from "./adminData.js";
-import { hashToken, isSecureRequest, originAllowed, readCookie, readSessionToken, send } from "./auth.js";
+import type { AdminAccountDetail, AdminAccountSearch, AdminAuditPage, AdminLive } from "@glix/engine";
+import { type AccountStore, ADMIN_SEARCH_LIMIT, type AdminSearchQuery } from "./accountStore.js";
+import { buildAccounts, buildErrors, buildStats } from "./adminData.js";
+import {
+  hashToken,
+  isSecureRequest,
+  normalizeEmail,
+  originAllowed,
+  readCookie,
+  readSessionToken,
+  send,
+  USERNAME_PATTERN,
+} from "./auth.js";
+import type { Clock } from "./clock.js";
+import type { GoogleAuth } from "./google.js";
+import { confirmMatches } from "./kvkk.js";
 import { log } from "./log.js";
 import { adminCodeMessage, type MailService, type MailThrottle } from "./mail.js";
-import type { IpLimiter } from "./ratelimit.js";
+import { type IpLimiter, TokenBucket } from "./ratelimit.js";
+import type { Social } from "./social.js";
 import type { StatsStore } from "./statsStore.js";
 
 export const ADMIN_PREFIX = "/api/admin/";
@@ -23,7 +38,41 @@ export const OTP_GAP_MS = 60 * 1000;
 export const OTP_PER_DAY = 10;
 export const ADMIN_SESSION_TTL_MS = 12 * 3600 * 1000;
 const MAX_BODY_BYTES = 512;
+/** Hesap işlemi gövdesi (sebep metni dahil). */
+const MAX_ACTION_BODY_BYTES = 1024;
+/** Askı sebebi en çok bu kadar karakter. */
+export const SUSPEND_REASON_MAX = 140;
+const DAY_MS = 24 * 3600 * 1000;
+/** İşlem kaydı sayfası: varsayılan ve en büyük satır sayısı. */
+export const AUDIT_PAGE_DEFAULT = 50;
+export const AUDIT_PAGE_MAX = 100;
 
+/** Askı süresi seçenekleri: gün sayısı ya da süresiz (null). */
+export const SUSPEND_DURATIONS = { "1d": 1, "7d": 7, forever: null } as const;
+export type SuspendDuration = keyof typeof SUSPEND_DURATIONS;
+
+/** Yönetici başına hız sınırları (bellekte): işlemler, aramalar ve hesap dökümü görüntüleme ayrı kovalardır. */
+export interface AdminLimits {
+  action(adminId: number): boolean;
+  search(adminId: number): boolean;
+  detail(adminId: number): boolean;
+}
+
+export function createAdminLimits(clock: Clock): AdminLimits {
+  const make = (capacity: number, perSec: number) => {
+    const buckets = new Map<number, TokenBucket>();
+    return (id: number): boolean => {
+      let b = buckets.get(id);
+      if (!b) {
+        b = new TokenBucket(clock, capacity, perSec);
+        buckets.set(id, b);
+      }
+      return b.take();
+    };
+  };
+  // İşlem: 10 ani, 6 sn'de 1. Arama: 30 ani, 2 sn'de 1. Döküm (e-posta görünür): 20 ani, 3 sn'de 1.
+  return { action: make(10, 1 / 6), search: make(30, 1 / 2), detail: make(20, 1 / 3) };
+}
 export interface AdminEnv {
   accounts: AccountStore;
   stats: StatsStore;
@@ -37,6 +86,11 @@ export interface AdminEnv {
   ip: string;
   now: number;
   live: () => AdminLive;
+  /** Hesap işlemlerinin canlı etkisi (ad yayını, bağlantıları misafire çevirme). */
+  social: Social;
+  /** Silinen hesabın bekleyen Google kayıtları buradan düşer; kapalıysa null. */
+  google: GoogleAuth | null;
+  limits: AdminLimits;
 }
 
 function fail(res: ServerResponse, status: number, code: string, message: string): void {
@@ -58,8 +112,8 @@ function sameHex(a: string, b: string): boolean {
   return x.length === y.length && timingSafeEqual(x, y);
 }
 
-/** Gövdeyi en çok `MAX_BODY_BYTES` okur; geçersiz/büyükse null. */
-function readJson(req: IncomingMessage): Promise<unknown> {
+/** Gövdeyi en çok `max` bayt okur; geçersiz/büyükse null. */
+function readJson(req: IncomingMessage, max = MAX_BODY_BYTES): Promise<unknown> {
   return new Promise((resolve) => {
     const chunks: Buffer[] = [];
     let size = 0;
@@ -71,7 +125,7 @@ function readJson(req: IncomingMessage): Promise<unknown> {
     };
     req.on("data", (chunk: Buffer) => {
       size += chunk.length;
-      if (size > MAX_BODY_BYTES) {
+      if (size > max) {
         finish(null);
         req.destroy();
         return;
@@ -100,9 +154,15 @@ export function parseCode(data: unknown): string | null {
   return /^\d{6}$/.test(clean) ? clean : null;
 }
 
-function audit(env: AdminEnv, accountId: number, action: string, detail: string): void {
+function audit(
+  env: AdminEnv,
+  accountId: number,
+  action: string,
+  detail: string,
+  targetId: number | null = null,
+): void {
   try {
-    env.accounts.adminAudit(accountId, action, detail, env.now);
+    env.accounts.adminAudit(accountId, action, detail, env.now, targetId);
   } catch (err) {
     log.error("accounts_error", { op: "admin_audit", error: String(err) });
   }
@@ -116,12 +176,34 @@ export function handleAdmin(req: IncomingMessage, res: ServerResponse, env: Admi
   });
 }
 
+const POST_ROUTES: ReadonlySet<string> = new Set([
+  "otp/request",
+  "otp/verify",
+  "logout",
+  "accounts/rename",
+  "accounts/suspend",
+  "accounts/unsuspend",
+  "accounts/delete",
+  "accounts/logout-all",
+]);
+const GET_ROUTES: ReadonlySet<string> = new Set([
+  "status",
+  "live",
+  "stats",
+  "errors",
+  "accounts",
+  "accounts/search",
+  "accounts/detail",
+  "audit",
+]);
+
 async function route(req: IncomingMessage, res: ServerResponse, env: AdminEnv): Promise<void> {
   // Kapalıyken uçlar yok sayılır: hiçbir şey sızmaz.
   if (env.adminIds.size === 0) return notFound(res);
-  const name = (req.url ?? "").split("?")[0]?.slice(ADMIN_PREFIX.length) ?? "";
-  const isPost = name === "otp/request" || name === "otp/verify" || name === "logout";
-  const isGet = name === "status" || name === "live" || name === "stats" || name === "errors";
+  const url = new URL(req.url ?? "", "http://x");
+  const name = url.pathname.slice(ADMIN_PREFIX.length);
+  const isPost = POST_ROUTES.has(name);
+  const isGet = GET_ROUTES.has(name);
   if (!isPost && !isGet) return notFound(res);
   if (req.method !== (isPost ? "POST" : "GET")) {
     send(
@@ -168,9 +250,24 @@ async function route(req: IncomingMessage, res: ServerResponse, env: AdminEnv): 
       break;
   }
   if (!authed) return fail(res, 403, "otp_required", "Giriş kodu gerekli.");
-  if (name === "live") send(res, 200, env.live());
-  else if (name === "stats") send(res, 200, buildStats(env.stats, env.accounts, env.now));
-  else send(res, 200, buildErrors(env.stats, env.now));
+  switch (name) {
+    case "live":
+      return send(res, 200, env.live());
+    case "stats":
+      return send(res, 200, buildStats(env.stats, env.accounts, env.now));
+    case "errors":
+      return send(res, 200, buildErrors(env.stats, env.now));
+    case "accounts":
+      return send(res, 200, buildAccounts(env.stats, env.accounts, env.now));
+    case "accounts/search":
+      return searchAccounts(res, env, account.id, url.searchParams.get("q"));
+    case "accounts/detail":
+      return accountDetail(res, env, account.id, url.searchParams.get("id"));
+    case "audit":
+      return auditPage(res, env, url.searchParams.get("before"), url.searchParams.get("limit"));
+    default:
+      return accountAction(req, res, env, account.id, name);
+  }
 }
 
 function safeResolve(env: AdminEnv, token: string): { id: number; email: string } | null {
@@ -244,4 +341,229 @@ async function verifyCode(
   if (result === "invalid") return fail(res, 400, "invalid_code", "Kod hatalı.");
   if (result === "locked") return fail(res, 429, "locked", "Çok fazla hatalı deneme. Yeni kod iste.");
   fail(res, 400, "expired", "Kodun süresi doldu ya da kod istenmedi. Yeni kod iste.");
+}
+
+// ---- A2: hesap arama, döküm, işlemler ve işlem kaydı ---------------------------------------------------------
+
+/**
+ * Arama metni: "@" içeriyorsa tam e-posta, değilse kullanıcı adı öneki (1-20 harf/rakam/alt çizgi). Geçersizse null.
+ * İkisi de küçük harfe çevrilir (hesaplar küçük harfle aranır).
+ */
+export function parseSearch(q: string | null): AdminSearchQuery | null {
+  const text = (q ?? "").trim();
+  if (text.includes("@")) {
+    const email = normalizeEmail(text);
+    return email === null ? null : { kind: "email", value: email };
+  }
+  return /^[A-Za-z0-9_]{1,20}$/.test(text) ? { kind: "prefix", value: text.toLowerCase() } : null;
+}
+
+/** Sorgu dizgesindeki pozitif tam sayı (kimlik, sayfa imleci); değilse null. */
+export function parseId(v: string | null): number | null {
+  if (v === null || !/^\d{1,15}$/.test(v)) return null;
+  const n = Number(v);
+  return Number.isSafeInteger(n) && n > 0 ? n : null;
+}
+
+async function searchAccounts(
+  res: ServerResponse,
+  env: AdminEnv,
+  adminId: number,
+  q: string | null,
+): Promise<void> {
+  if (!env.limits.search(adminId)) return fail(res, 429, "rate_limited", "Biraz bekleyip tekrar dene.");
+  const query = parseSearch(q);
+  if (!query)
+    return fail(
+      res,
+      400,
+      "invalid_input",
+      "Kullanıcı adının başını (harf, rakam, alt çizgi) ya da tam bir e-posta yaz.",
+    );
+  // E-postayla arama kişisel veriyi sorgular: arama metni olmadan yalnız yapıldığı kaydedilir.
+  if (query.kind === "email") audit(env, adminId, "account_search_email", "");
+  const body: AdminAccountSearch = {
+    results: env.accounts.adminSearch(query, env.now),
+    limit: ADMIN_SEARCH_LIMIT,
+  };
+  send(res, 200, body);
+}
+
+async function accountDetail(
+  res: ServerResponse,
+  env: AdminEnv,
+  adminId: number,
+  rawId: string | null,
+): Promise<void> {
+  const id = parseId(rawId);
+  if (id === null) return fail(res, 400, "invalid_input", "Geçersiz hesap.");
+  if (!env.limits.detail(adminId)) return fail(res, 429, "rate_limited", "Biraz bekleyip tekrar dene.");
+  const found = env.accounts.adminAccountDetail(id, env.now);
+  if (!found) return fail(res, 404, "not_found", "Hesap bulunamadı.");
+  // E-posta bu yanıtta olduğu için her görüntüleme kaydedilir (yanıttan önce).
+  audit(env, adminId, "account_view", "", id);
+  const body: AdminAccountDetail = { ...found, protected: env.adminIds.has(id) };
+  send(res, 200, body);
+}
+
+async function auditPage(
+  res: ServerResponse,
+  env: AdminEnv,
+  rawBefore: string | null,
+  rawLimit: string | null,
+): Promise<void> {
+  const before = rawBefore === null ? null : parseId(rawBefore);
+  const asked = rawLimit === null ? AUDIT_PAGE_DEFAULT : parseId(rawLimit);
+  if ((rawBefore !== null && before === null) || asked === null)
+    return fail(res, 400, "invalid_input", "Geçersiz sayfa.");
+  const limit = Math.min(asked, AUDIT_PAGE_MAX);
+  // Bir fazla okunur: fazlası varsa sonraki sayfa vardır.
+  const rows = env.accounts.adminAuditPage(before, limit + 1);
+  const more = rows.length > limit;
+  const page = more ? rows.slice(0, limit) : rows;
+  const body: AdminAuditPage = {
+    entries: page.map((r) => ({
+      id: r.id,
+      actorId: r.accountId,
+      action: r.action,
+      targetId: r.targetId,
+      detail: r.detail,
+      at: r.at,
+    })),
+    nextBefore: more ? (page.at(-1)?.id ?? null) : null,
+  };
+  send(res, 200, body);
+}
+
+type ActionInput =
+  | { op: "rename"; id: number; username: string }
+  | { op: "suspend"; id: number; duration: SuspendDuration; reason: string }
+  | { op: "unsuspend"; id: number }
+  | { op: "delete"; id: number; confirm: string }
+  | { op: "logout-all"; id: number };
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+function exactKeys(o: Record<string, unknown>, keys: readonly string[]): boolean {
+  const own = Object.keys(o);
+  return own.length === keys.length && keys.every((k) => own.includes(k));
+}
+
+/** Sebep: kırpılmış, 1-140 karakter, denetim karakteri yok. */
+export function cleanReason(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const text = v.trim();
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: denetim karakterleri bilerek reddedilir
+  if (text.length === 0 || text.length > SUSPEND_REASON_MAX || /[\u0000-\u001f\u007f]/.test(text))
+    return null;
+  return text;
+}
+
+/** İşlem gövdesi doğrulaması; geçersizse null. */
+export function parseAction(op: ActionInput["op"], data: unknown): ActionInput | null {
+  if (!isRecord(data)) return null;
+  const id = data.id;
+  if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) return null;
+  switch (op) {
+    case "rename": {
+      if (!exactKeys(data, ["id", "username"])) return null;
+      const username = data.username;
+      return typeof username === "string" && USERNAME_PATTERN.test(username) ? { op, id, username } : null;
+    }
+    case "suspend": {
+      if (!exactKeys(data, ["id", "duration", "reason"])) return null;
+      const duration = data.duration;
+      const reason = cleanReason(data.reason);
+      if (typeof duration !== "string" || !Object.hasOwn(SUSPEND_DURATIONS, duration) || reason === null)
+        return null;
+      return { op, id, duration: duration as SuspendDuration, reason };
+    }
+    case "delete": {
+      if (!exactKeys(data, ["id", "confirm"])) return null;
+      const confirm = data.confirm;
+      return typeof confirm === "string" && confirm.length <= 64 ? { op, id, confirm } : null;
+    }
+    default:
+      return exactKeys(data, ["id"]) ? { op, id } : null;
+  }
+}
+
+const ACTION_OPS: Readonly<Record<string, ActionInput["op"]>> = {
+  "accounts/rename": "rename",
+  "accounts/suspend": "suspend",
+  "accounts/unsuspend": "unsuspend",
+  "accounts/delete": "delete",
+  "accounts/logout-all": "logout-all",
+};
+
+async function accountAction(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: AdminEnv,
+  adminId: number,
+  name: string,
+): Promise<void> {
+  const op = ACTION_OPS[name];
+  if (!op) return notFound(res);
+  if (!env.limits.action(adminId)) return fail(res, 429, "rate_limited", "Biraz bekleyip tekrar dene.");
+  const input = parseAction(op, await readJson(req, MAX_ACTION_BODY_BYTES));
+  if (!input) return fail(res, 400, "invalid_input", "Geçersiz istek.");
+  // Yönetici listesindeki hesaplar (işlemi yapan dahil) korunur.
+  if (env.adminIds.has(input.id))
+    return fail(res, 403, "protected", "Yönetici hesaplarına bu işlem yapılamaz.");
+  const target = env.accounts.findById(input.id);
+  if (!target) return fail(res, 404, "not_found", "Hesap bulunamadı.");
+  const { id } = input;
+
+  switch (input.op) {
+    case "rename": {
+      if (input.username === target.username)
+        return fail(res, 400, "username_same", "Bu zaten kullanıcı adı.");
+      const done = env.accounts.forceUsername(id, input.username);
+      if (done === "taken") return fail(res, 409, "username_taken", "Bu kullanıcı adı alınmış.");
+      if (done === "missing") return fail(res, 404, "not_found", "Hesap bulunamadı.");
+      // Canlı etki oyuncunun kendi değişikliğiyle aynı yoldan gider (oda adı, arkadaş listeleri).
+      env.social.accountRenamed(id, input.username);
+      audit(env, adminId, "account_rename", "", id);
+      return send(res, 200, { ok: true, username: input.username });
+    }
+    case "suspend": {
+      const days = SUSPEND_DURATIONS[input.duration];
+      const until = days === null ? null : env.now + days * DAY_MS;
+      const related = env.accounts.relatedAccountIds(id);
+      if (!env.accounts.suspend(id, env.now, until, input.reason))
+        return fail(res, 404, "not_found", "Hesap bulunamadı.");
+      env.social.accountSignedOut(id, related);
+      // Sebep hesap satırında durur (hesapla birlikte silinir); işlem kaydına yalnız süre yazılır.
+      audit(env, adminId, "account_suspend", input.duration, id);
+      return send(res, 200, { ok: true, until });
+    }
+    case "unsuspend": {
+      if (!env.accounts.unsuspend(id, env.now)) return fail(res, 409, "not_suspended", "Hesap askıda değil.");
+      audit(env, adminId, "account_unsuspend", "", id);
+      return send(res, 200, { ok: true });
+    }
+    case "delete": {
+      if (!confirmMatches(input.confirm, target.username))
+        return fail(res, 400, "confirm_mismatch", "Kullanıcı adını doğru yaz.");
+      // Silmeden önce topla: sonrasında ilişki ve Google kimliği okunamaz (KVKK silmesiyle aynı akış).
+      const related = env.accounts.relatedAccountIds(id);
+      const sub = env.accounts.exportData(id)?.googleSub ?? null;
+      if (!env.accounts.deleteAccount(id)) return fail(res, 404, "not_found", "Hesap bulunamadı.");
+      env.social.accountDeleted(id, related);
+      env.google?.flows.dropPendingFor(sub, target.email);
+      audit(env, adminId, "account_delete", "", id);
+      log.info("account_deleted");
+      return send(res, 200, { ok: true });
+    }
+    case "logout-all": {
+      const related = env.accounts.relatedAccountIds(id);
+      const closed = env.accounts.deleteSessionsOf(id);
+      env.social.accountSignedOut(id, related);
+      audit(env, adminId, "account_logout_all", String(closed), id);
+      return send(res, 200, { ok: true, closed });
+    }
+  }
 }

@@ -1,14 +1,18 @@
 import { createSignal, Match, onCleanup, onMount, Show, Switch } from "solid-js";
+import { AccountsPanel } from "./AccountsPanel.js";
+import { AuditPanel } from "./AuditPanel.js";
 import { type Gate, loadGate, logout, sendCode, verifyCode } from "./api.js";
 import { ErrorsPanel } from "./ErrorsPanel.js";
 import { LivePanel } from "./LivePanel.js";
 import { StatsPanel } from "./StatsPanel.js";
 
-type Tab = "canli" | "istatistik" | "hatalar";
+type Tab = "canli" | "istatistik" | "hatalar" | "hesaplar" | "kayit";
 const TABS: { id: Tab; label: string }[] = [
   { id: "canli", label: "Canlı durum" },
   { id: "istatistik", label: "Oyun istatistikleri" },
   { id: "hatalar", label: "Hatalar ve performans" },
+  { id: "hesaplar", label: "Hesaplar" },
+  { id: "kayit", label: "İşlem kaydı" },
 ];
 /** "Yeniden gönder" için bekleme (sunucu da 60 sn sınırı uygular). */
 const RESEND_WAIT_S = 60;
@@ -216,6 +220,12 @@ export function AdminApp() {
               </Match>
               <Match when={tab() === "hatalar"}>
                 <ErrorsPanel onOtp={() => void check()} />
+              </Match>
+              <Match when={tab() === "hesaplar"}>
+                <AccountsPanel onOtp={() => void check()} />
+              </Match>
+              <Match when={tab() === "kayit"}>
+                <AuditPanel onOtp={() => void check()} />
               </Match>
             </Switch>
           </main>

@@ -93,6 +93,7 @@ describe("istatistik kaydı", () => {
       { version: 2 },
       { version: 3 },
       { version: 4 },
+      { version: 5 },
     ]);
 
     // Özet Türkçe ve bu verilerden üretilir.

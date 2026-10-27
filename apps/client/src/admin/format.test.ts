@@ -1,5 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { fmtAgo, fmtDuration, fmtNum, fmtPct, fmtRate, level, phaseLabel, shortDay } from "./format.js";
+import {
+  auditDetail,
+  auditLabel,
+  confirmMatches,
+  failRatio,
+  fmtAgo,
+  fmtDuration,
+  fmtNum,
+  fmtPct,
+  fmtRate,
+  fmtUntil,
+  level,
+  methodsLabel,
+  phaseLabel,
+  shortDay,
+  USERNAME_OK,
+} from "./format.js";
 
 describe("yönetici biçimleyicileri", () => {
   it("süre", () => {
@@ -34,5 +50,44 @@ describe("yönetici biçimleyicileri", () => {
     expect(level(100, 50, 100)).toBe("bad");
     expect(phaseLabel("playing")).toBe("Oyunda");
     expect(phaseLabel("yeni")).toBe("yeni");
+  });
+});
+
+describe("hesap ve işlem kaydı biçimleyicileri", () => {
+  it("auditLabel: bilinen kodlar Türkçe, bilinmeyen olduğu gibi", () => {
+    expect(auditLabel("account_suspend")).toBe("Hesap askıya alındı");
+    expect(auditLabel("account_view")).toBe("Hesap ayrıntısı görüntülendi");
+    expect(auditLabel("otp_ok")).toBe("Panele giriş yapıldı");
+    expect(auditLabel("yeni_bir_sey")).toBe("yeni_bir_sey");
+  });
+
+  it("auditDetail: süre, oturum sayısı, e-posta durumu okunur; boş kalır", () => {
+    expect(auditDetail("account_suspend", "7d")).toBe("Süre: 7 gün");
+    expect(auditDetail("account_suspend", "forever")).toBe("Süre: süresiz");
+    expect(auditDetail("account_logout_all", "3")).toBe("3 oturum");
+    expect(auditDetail("otp_request", "mail_failed")).toBe("e-posta gitmedi");
+    expect(auditDetail("account_view", "")).toBe("");
+  });
+
+  it("methodsLabel ve fmtUntil", () => {
+    expect(methodsLabel({ password: true, google: false })).toBe("Şifre");
+    expect(methodsLabel({ password: false, google: true })).toBe("Google");
+    expect(methodsLabel({ password: true, google: true })).toBe("Şifre + Google");
+    expect(fmtUntil(null)).toBe("süresiz");
+    expect(fmtUntil(0)).toContain("tarihine kadar");
+  });
+
+  it("confirmMatches: büyük/küçük harf ve boşluk önemsiz, boş eşleşmez", () => {
+    expect(confirmMatches("  ALi_1 ", "ali_1")).toBe(true);
+    expect(confirmMatches("ali", "ali_1")).toBe(false);
+    expect(confirmMatches("", "")).toBe(false);
+  });
+
+  it("USERNAME_OK ve failRatio", () => {
+    expect(USERNAME_OK.test("Ali_01")).toBe(true);
+    expect(USERNAME_OK.test("a")).toBe(false);
+    expect(USERNAME_OK.test("bosluk var")).toBe(false);
+    expect(failRatio({ ok: 0, failed: 0 })).toBeNull();
+    expect(failRatio({ ok: 3, failed: 1 })).toBe(0.25);
   });
 });

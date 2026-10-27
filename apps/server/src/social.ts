@@ -62,6 +62,13 @@ export interface Social {
    * (`relatedIds`, silmeden önce toplanır) listelerini yenilemeleri bildirilir.
    */
   accountDeleted(accountId: number, relatedIds: readonly number[]): void;
+  /**
+   * Hesabın oturumları yönetici tarafından kapatıldı (askıya alma ya da "her yerden çıkar", U16 A2): silmedeki gibi
+   * canlı bağlantılar misafire döner (soket açık kalır, odadaki oyuncu mevcut adıyla misafir olarak oyunda kalır),
+   * bildirim aboneliği ve durum önbelleği silinir. Arkadaşlık kayıtları durur; `relatedIds` (arkadaşlar) listelerini
+   * yenileyince hesabı çevrimdışı görür.
+   */
+  accountSignedOut(accountId: number, relatedIds: readonly number[]): void;
   /** Her sunucu turunda çağrılır; tarama aralığı dolduysa değişen durumları arkadaşlara yayar. */
   tick(now: number): void;
 }
@@ -78,6 +85,7 @@ export const noopSocial: Social = {
   setPush: () => undefined,
   accountRenamed: () => undefined,
   accountDeleted: () => undefined,
+  accountSignedOut: () => undefined,
   tick: () => undefined,
 };
 
@@ -164,6 +172,24 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
       })
       .catch(() => undefined);
     return true;
+  }
+
+  /** Hesabın canlı bağlantılarını misafire çevirir ve bellek durumunu siler (silme ve askı ortak yolu). */
+  function unbind(accountId: number, relatedIds: readonly number[]): void {
+    // Bağlantılar misafir olur; odadaki oyuncu kaydı adıyla kalır ama hesapla bağı kopar (artık istatistik yazılmaz).
+    for (const conn of byAccount.get(accountId) ?? []) conn.account = null;
+    byAccount.delete(accountId);
+    lastSeen.delete(accountId);
+    pushTargets.delete(accountId);
+    senderBuckets.delete(accountId);
+    for (const key of pairSentAt.keys()) {
+      const [from, to] = key.split(":");
+      if (Number(from) === accountId || Number(to) === accountId) pairSentAt.delete(key);
+    }
+    for (const room of rt.rooms.values())
+      for (const player of room.players.values()) if (player.accountId === accountId) player.accountId = null;
+    const msg: ServerMessage = { type: "friendsChanged" };
+    for (const id of relatedIds) sendTo(id, msg);
   }
 
   return {
@@ -253,23 +279,8 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
       const msg: ServerMessage = { type: "friendsChanged" };
       for (const other of [...lists.friends, ...lists.incoming, ...lists.outgoing]) sendTo(other.id, msg);
     },
-    accountDeleted(accountId, relatedIds) {
-      // Bağlantılar misafir olur; odadaki oyuncu kaydı adıyla kalır ama hesapla bağı kopar (artık istatistik yazılmaz).
-      for (const conn of byAccount.get(accountId) ?? []) conn.account = null;
-      byAccount.delete(accountId);
-      lastSeen.delete(accountId);
-      pushTargets.delete(accountId);
-      senderBuckets.delete(accountId);
-      for (const key of pairSentAt.keys()) {
-        const [from, to] = key.split(":");
-        if (Number(from) === accountId || Number(to) === accountId) pairSentAt.delete(key);
-      }
-      for (const room of rt.rooms.values())
-        for (const player of room.players.values())
-          if (player.accountId === accountId) player.accountId = null;
-      const msg: ServerMessage = { type: "friendsChanged" };
-      for (const id of relatedIds) sendTo(id, msg);
-    },
+    accountDeleted: (accountId, relatedIds) => unbind(accountId, relatedIds),
+    accountSignedOut: (accountId, relatedIds) => unbind(accountId, relatedIds),
     tick(now) {
       if (now - lastScan < PRESENCE_SCAN_MS) return;
       lastScan = now;

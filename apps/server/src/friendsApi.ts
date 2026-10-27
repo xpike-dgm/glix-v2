@@ -109,6 +109,9 @@ export function createFriendsApi(env: FriendsEnv): (req: IncomingMessage, res: S
       // Kaldırma/geri alma gibi temizlik işlemleri hesap yoksa da zararsızdır; yine de varlık sızmasın.
       return NOT_FOUND;
     }
+    // Askıdaki hesap yeni istek alamaz/kabul edemez: bulunamamış gibi davranılır (temizlik işlemleri açık kalır).
+    if ((action === "request" || action === "accept") && accounts.suspension(other.id, clock.now()))
+      return NOT_FOUND;
     const changed = (): void => void social.sendTo(other.id, { type: "friendsChanged" });
     switch (action) {
       case "request": {

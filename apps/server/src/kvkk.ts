@@ -132,6 +132,16 @@ export function buildExport(
       password: data.hasPassword ? PASSWORD_NOTE : NO_PASSWORD_NOTE,
       created_at: iso(data.createdAt),
       username_changed_at: isoOrNull(data.usernameChangedAt),
+      // Askıdaki hesapta yönetici kararının sebebi (kullanıcıya girişte gösterilmez; buradan öğrenilir).
+      ...(data.suspension && (data.suspension.until === null || data.suspension.until > now)
+        ? {
+            suspension: {
+              since: iso(data.suspension.since),
+              until: isoOrNull(data.suspension.until),
+              reason: data.suspension.reason,
+            },
+          }
+        : {}),
     },
     sessions: data.sessions.map((s) => ({ created_at: iso(s.createdAt), last_seen: iso(s.lastSeen) })),
     stats: {

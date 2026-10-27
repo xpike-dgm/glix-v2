@@ -119,6 +119,21 @@ satıra dokununca o kişinin profili açılır (geri: sıralama). Arkadaşın yo
 - Anonim tablolar (`matches`, `game_plays`, `feedback`, `perf`) hesap kimliği taşımaz; silme onlara dokunmaz (testle doğrulanır).
 - Günlük: kullanıcı adı/e-posta yazan satır yoktur; yalnız kimliksiz `account_deleted` bilgi satırı eklendi.
 
+## Yönetici hesap işlemleri (U16 A2, uygulandı)
+Ayrıntı: `docs/ADMIN.md`, uçlar: `docs/PROTOKOL.md`. Yöneticiler destek ve kötüye kullanım için hesap ayrıntısını (e-posta dahil) görebilir;
+her görüntüleme `account_view` olarak kaydedilir. Yönetici: kullanıcı adını zorla değiştirir, askıya alır/kaldırır, hesabı siler, oturumları kapatır.
+- **Askı:** `accounts.suspended_at / suspended_until / suspend_reason` (göç 8; `suspended_at` boş = askıda değil, `suspended_until` boş = süresiz).
+  Askıya alınca tüm oturumlar silinir; parolayla ve Google ile giriş (ve şifre sıfırlama sonrası oturum açma) 403 `account_suspended`:
+  "Hesabın <tarih> tarihine kadar askıya alındı." / "Hesabın askıya alındı." Mesaj yalnız doğru şifre/Google kimliği kanıtlanınca verilir (varlık sızmaz).
+  **Sebep kullanıcıya girişte gösterilmez** (iç not; adres parçasıyla metin taşıma/yanıltma riski yok); hesap sahibi "Verimi indir" dosyasında
+  `account.suspension` altında görür. Canlı soketler silmedeki gibi misafire döner (odada kalır), arkadaşlar çevrimdışı görür, askıdaki hesaba
+  arkadaş isteği atılamaz ve profili görünmez ("bulunamadı"). Askı süresi dolunca kendiliğinden biter (giriş açılır); günlük temizlik sütunları siler.
+- **Ad zorla değiştirme:** aynı doğrulama ve benzersizlik; 7 günlük beklemeyi aşar ve hesabın kendi bekleme sayacına dokunmaz
+  (`username_changed_at` değişmez: yönetici değişikliği bekleme başlatmaz, sürmekte olanı sıfırlamaz). Canlı etki `Social.accountRenamed`.
+- **Silme:** `deleteAccount` + `Social.accountDeleted` + Google bekleyen kayıtları (KVKK silmesiyle aynı); yönetici kullanıcı adını yazar.
+- **Korunma:** `GLIX_ADMIN_ACCOUNT_IDS` içindeki hesaplara bu işlemler yapılamaz.
+- **İşlem kaydı:** `admin_audit` + `target_id`; e-posta, kod ve askı sebebi yazılmaz; 1 yıl, günlük temizlikte silinir.
+
 ## Veri modeli (SQLite, yeni göçler)
 `accounts(id, username, username_lc, email, email_verified, pass_hash, google_sub, created_at)`,
 `sessions(id_hash, account_id, created_at, last_seen)`, `email_tokens(kind, token_hash, account_id, expires_at)`,

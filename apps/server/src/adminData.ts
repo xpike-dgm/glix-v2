@@ -3,7 +3,7 @@
  * yalnız sayılar, oda kodları, aşamalar ve oyun kimlikleri.
  */
 import { monitorEventLoopDelay } from "node:perf_hooks";
-import type { AdminErrors, AdminLive, AdminRoomRow, AdminStats } from "@glix/engine";
+import type { AdminAccounts, AdminErrors, AdminLive, AdminRoomRow, AdminStats } from "@glix/engine";
 import { APP_VERSION } from "@glix/engine";
 import type { AccountStore } from "./accountStore.js";
 import { countActiveMatches, countPlayers } from "./rooms.js";
@@ -149,4 +149,23 @@ export function buildErrors(stats: StatsStore, now: number): AdminErrors {
   const part = stats.reader?.errors(now);
   if (part) return { enabled: true, ...part };
   return { enabled: false, groups: [], perDay: [], perf: [], failures: [] };
+}
+
+/** Hesaplar sekmesi: hesap toplamları (hesap deposu) + e-posta gönderim sayaçları (istatistik deposu). */
+export function buildAccounts(stats: StatsStore, accounts: AccountStore, now: number): AdminAccounts {
+  const m = accounts.adminMetrics(now);
+  const mail = stats.reader?.mail(now);
+  const zero = (): { ok: number; failed: number } => ({ ok: 0, failed: 0 });
+  return {
+    total: m.total,
+    verified: m.verified,
+    methods: { google: m.google - m.both, password: m.password - m.both, both: m.both },
+    active7: m.active7,
+    active30: m.active30,
+    suspended: m.suspended,
+    newPerDay: m.newPerDay.map((d) => ({ day: dayLabel(d.dayStart), count: d.count })),
+    mail: mail
+      ? { enabled: true, ...mail }
+      : { enabled: false, days: [], totals: { verify: zero(), reset: zero(), admin: zero() } },
+  };
 }

@@ -448,3 +448,146 @@ button:disabled {
     grid-column: 1 / -1;
   }
 }
+
+/* ---- A2: hesaplar ve işlem kaydı ---- */
+.adm-gap {
+  margin-top: var(--sp-4);
+}
+.adm-search {
+  display: grid;
+  gap: var(--sp-3);
+}
+.adm-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+}
+.adm-inline > label {
+  flex-basis: 100%;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.adm-field {
+  flex: 1 1 220px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--bg-0);
+  color: var(--text);
+  font-size: 16px;
+}
+.adm-btn--danger {
+  background: var(--red);
+  color: #fff;
+}
+.adm-link {
+  color: var(--cyan);
+  text-decoration: underline;
+  font-weight: 700;
+  min-height: 32px;
+  text-align: left;
+}
+.adm-wrap {
+  overflow-wrap: anywhere;
+}
+.adm-detail {
+  display: grid;
+  gap: var(--sp-3);
+}
+.adm-dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0;
+}
+.adm-dl > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.adm-dl dt {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.adm-dl dd {
+  margin: 0;
+}
+.adm-actions {
+  display: grid;
+  gap: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--line);
+}
+.adm-confirm {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border-radius: var(--r-sm);
+  border: 1px solid color-mix(in srgb, var(--amber) 60%, transparent);
+}
+.adm-seg {
+  display: flex;
+  flex-basis: 100%;
+  gap: var(--sp-1);
+}
+.adm-seg__opt {
+  flex: 1;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+.adm-seg__opt--on {
+  background: var(--bg-2);
+  box-shadow: inset 0 -2px 0 var(--cyan);
+}
+
+/* Telefonda tablo satırı kart olur: sütunlar tek harfe sıkışmaz. */
+@media (max-width: 700px) {
+  .adm-stack thead {
+    display: none;
+  }
+  .adm-stack,
+  .adm-stack tbody {
+    display: block;
+  }
+  .adm-stack tr {
+    display: grid;
+    gap: 2px;
+    padding: var(--sp-3);
+    border-bottom: 1px solid var(--line);
+  }
+  .adm-stack td {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding: 2px 0;
+    border: 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+  .adm-stack td::before {
+    content: attr(data-label);
+    color: var(--text-dim);
+    text-align: left;
+    flex: none;
+  }
+  .adm-stack .num {
+    text-align: right;
+  }
+}
+.adm-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+fieldset.adm-seg {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}

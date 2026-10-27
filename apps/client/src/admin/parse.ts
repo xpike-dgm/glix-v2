@@ -3,12 +3,19 @@
  * Tipler `@glix/engine`deki `Admin*` arayüzleridir (yalnız tip; pakete kod eklemez).
  */
 import type {
+  AdminAccountDetail,
+  AdminAccountRow,
+  AdminAccountSearch,
+  AdminAccounts,
+  AdminAuditPage,
   AdminDayCount,
   AdminErrorGroup,
   AdminErrors,
   AdminGameFailure,
   AdminGameStat,
   AdminLive,
+  AdminMailCount,
+  AdminMailDay,
   AdminPerfRow,
   AdminRoomRow,
   AdminStats,
@@ -205,6 +212,113 @@ export function parseErrors(v: unknown): AdminErrors {
     perDay: list(o, "perDay", (d) => ({ day: str(d, "day"), count: num(d, "count") }), 60),
     perf: list(o, "perf", perf, 10),
     failures: list(o, "failures", failure, 100),
+  };
+}
+
+// ---- A2: hesaplar ve işlem kaydı ---------------------------------------------------------------------------
+
+const mailCount = (o: Rec, k: string): AdminMailCount => {
+  const c = rec(o[k]);
+  return { ok: num(c, "ok"), failed: num(c, "failed") };
+};
+
+const mailDay = (o: Rec): AdminMailDay => ({
+  day: str(o, "day"),
+  verify: mailCount(o, "verify"),
+  reset: mailCount(o, "reset"),
+  admin: mailCount(o, "admin"),
+});
+
+export function parseAccounts(v: unknown): AdminAccounts {
+  const o = rec(v);
+  const methods = rec(o.methods);
+  const mail = rec(o.mail);
+  const totals = rec(mail.totals);
+  return {
+    total: num(o, "total"),
+    verified: num(o, "verified"),
+    methods: {
+      google: num(methods, "google"),
+      password: num(methods, "password"),
+      both: num(methods, "both"),
+    },
+    active7: num(o, "active7"),
+    active30: num(o, "active30"),
+    suspended: num(o, "suspended"),
+    newPerDay: list(o, "newPerDay", (d) => ({ day: str(d, "day"), count: num(d, "count") }), 60),
+    mail: {
+      enabled: bool(mail, "enabled"),
+      days: list(mail, "days", mailDay, 60),
+      totals: {
+        verify: mailCount(totals, "verify"),
+        reset: mailCount(totals, "reset"),
+        admin: mailCount(totals, "admin"),
+      },
+    },
+  };
+}
+
+const accountRow = (o: Rec): AdminAccountRow => ({
+  id: num(o, "id"),
+  username: str(o, "username"),
+  createdAt: num(o, "createdAt"),
+  verified: bool(o, "verified"),
+  google: bool(o, "google"),
+  password: bool(o, "password"),
+  lastSeen: nullableNum(o, "lastSeen"),
+  matches: num(o, "matches"),
+  suspended: bool(o, "suspended"),
+});
+
+export function parseSearch(v: unknown): AdminAccountSearch {
+  const o = rec(v);
+  return { results: list(o, "results", accountRow, 50), limit: num(o, "limit") };
+}
+
+export function parseDetail(v: unknown): AdminAccountDetail {
+  const o = rec(v);
+  const s = o.suspension;
+  const sus = s === null ? null : rec(s);
+  return {
+    id: num(o, "id"),
+    username: str(o, "username"),
+    email: str(o, "email"),
+    createdAt: num(o, "createdAt"),
+    verified: bool(o, "verified"),
+    google: bool(o, "google"),
+    password: bool(o, "password"),
+    usernameChangedAt: nullableNum(o, "usernameChangedAt"),
+    lastSeen: nullableNum(o, "lastSeen"),
+    sessions: num(o, "sessions"),
+    matches: num(o, "matches"),
+    wins: num(o, "wins"),
+    games: num(o, "games"),
+    badges: num(o, "badges"),
+    friends: num(o, "friends"),
+    protected: bool(o, "protected"),
+    suspension: sus
+      ? { since: num(sus, "since"), until: nullableNum(sus, "until"), reason: str(sus, "reason") }
+      : null,
+  };
+}
+
+export function parseAuditPage(v: unknown): AdminAuditPage {
+  const o = rec(v);
+  return {
+    entries: list(
+      o,
+      "entries",
+      (e) => ({
+        id: num(e, "id"),
+        actorId: num(e, "actorId"),
+        action: str(e, "action"),
+        targetId: nullableNum(e, "targetId"),
+        detail: str(e, "detail"),
+        at: num(e, "at"),
+      }),
+      200,
+    ),
+    nextBefore: nullableNum(o, "nextBefore"),
   };
 }
 

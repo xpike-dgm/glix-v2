@@ -1,13 +1,13 @@
 import { createRequire } from "node:module";
 import type { DatabaseSync } from "node:sqlite";
-import type { PerfMeta, PerfSample } from "@glix/engine";
+import type { AdminMailKind, PerfMeta, PerfSample } from "@glix/engine";
 import { log } from "./log.js";
 import { createStatsReader, type StatsReader } from "./statsAdmin.js";
 
 /** İstatistik satırları bu süreden sonra silinir (docs/PROTOKOL.md). */
 export const RETENTION_MS = 90 * 24 * 3600 * 1000;
 export const PURGE_EVERY_MS = 24 * 3600 * 1000;
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export type GameOutcome = "finished" | "aborted" | "failed";
 
@@ -59,6 +59,8 @@ export interface StatsStore {
   clientError(now: number, rec: ClientErrorRecord): void;
   /** Çöken oyunu kaydeder (yönetici paneli "çöken oyunlar"). */
   gameFailure(now: number, rec: GameFailureRecord): void;
+  /** E-posta gönderim denemesini gün/tür başına sayar (adres tutulmaz); `ok` = servis kabul etti. */
+  mailSent(now: number, kind: AdminMailKind, ok: boolean): void;
   /** Yönetici paneli için salt okunur toplamlar; istatistik kapalıysa null. */
   readonly reader: StatsReader | null;
   /** `now - 90 gün`den eski satırları siler. */
@@ -75,6 +77,7 @@ export const noopStats: StatsStore = {
   perf: () => {},
   clientError: () => {},
   gameFailure: () => {},
+  mailSent: () => {},
   reader: null,
   purge: () => {},
   close: () => {},
@@ -146,6 +149,14 @@ const MIGRATIONS: readonly string[] = [
      at INTEGER NOT NULL
    );
    CREATE INDEX game_failures_at ON game_failures (at);`,
+  // Yönetici paneli (U16 A2): e-posta gönderim sayaçları. Yalnız gün + tür + sayı; adres, hesap ya da içerik yok. 90 gün.
+  `CREATE TABLE mail_stats (
+     day INTEGER NOT NULL,
+     kind TEXT NOT NULL,
+     ok INTEGER NOT NULL DEFAULT 0,
+     failed INTEGER NOT NULL DEFAULT 0,
+     PRIMARY KEY (day, kind)
+   ) WITHOUT ROWID;`,
 ];
 
 const DAY_MS = 24 * 3600 * 1000;
@@ -242,6 +253,10 @@ export function createStats(path: string | undefined | null): StatsStore {
   const insertFailure = db.prepare(
     "INSERT INTO game_failures (game_id, fn, message, at) VALUES (?, ?, ?, ?)",
   );
+  const upsertMail = db.prepare(
+    `INSERT INTO mail_stats (day, kind, ok, failed) VALUES (?, ?, ?, ?)
+     ON CONFLICT (day, kind) DO UPDATE SET ok = ok + excluded.ok, failed = failed + excluded.failed`,
+  );
   const reader = createStatsReader(db);
   let closed = false;
   return {
@@ -316,10 +331,17 @@ export function createStats(path: string | undefined | null): StatsStore {
         insertFailure.run(f.gameId, f.fn, f.message, now);
       });
     },
+    mailSent: (now, kind, ok) => {
+      if (closed) return;
+      guarded("mailSent", undefined, () => {
+        upsertMail.run(Math.floor(now / DAY_MS) * DAY_MS, kind, ok ? 1 : 0, ok ? 0 : 1);
+      });
+    },
     purge: (now) => {
       if (closed) return;
       guarded("purge", undefined, () => {
         const cut = now - RETENTION_MS;
+        db.prepare("DELETE FROM mail_stats WHERE day < ?").run(Math.floor(cut / DAY_MS) * DAY_MS);
         db.prepare("DELETE FROM client_errors WHERE last_seen < ?").run(cut);
         db.prepare("DELETE FROM game_failures WHERE at < ?").run(cut);
         db.prepare("DELETE FROM perf WHERE created_at < ?").run(cut);

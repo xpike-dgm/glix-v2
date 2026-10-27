@@ -3,7 +3,7 @@
  * Hepsi sınırlı sonuç döner (LIMIT); kişi bilgisi bu tablolarda zaten yoktur.
  */
 import type { DatabaseSync } from "node:sqlite";
-import type { AdminErrors, AdminStats } from "@glix/engine";
+import type { AdminAccounts, AdminErrors, AdminMailCount, AdminMailKind, AdminStats } from "@glix/engine";
 
 const DAY_MS = 24 * 3600 * 1000;
 const RETENTION_DAYS = 90;
@@ -14,10 +14,17 @@ const PERF_ROWS = 20_000;
 export type StatsPart = Omit<AdminStats, "accounts">;
 export type ErrorsPart = Omit<AdminErrors, "enabled">;
 
+export type MailPart = Omit<AdminAccounts["mail"], "enabled">;
+
 export interface StatsReader {
   stats(now: number): StatsPart;
   errors(now: number): ErrorsPart;
+  /** Son 30 günün e-posta gönderim sayaçları (sıfırlar dahil, eskiden yeniye). */
+  mail(now: number): MailPart;
 }
+
+const MAIL_KINDS: readonly AdminMailKind[] = ["verify", "reset", "admin"];
+const MAIL_DAYS = 30;
 
 type Row = Record<string, number | string | null>;
 const num = (v: unknown): number => (typeof v === "number" ? v : 0);
@@ -43,6 +50,36 @@ export function createStatsReader(db: DatabaseSync): StatsReader {
   const all = (sql: string, ...args: number[]): Row[] => db.prepare(sql).all(...args) as Row[];
 
   return {
+    mail(now) {
+      const today = Math.floor(now / DAY_MS);
+      const rows = all(
+        "SELECT day, kind, ok, failed FROM mail_stats WHERE day >= ? LIMIT 500",
+        (today - (MAIL_DAYS - 1)) * DAY_MS,
+      );
+      const byKey = new Map(rows.map((r) => [`${num(r.day)}:${str(r.kind)}`, r]));
+      const totals: Record<AdminMailKind, AdminMailCount> = {
+        verify: { ok: 0, failed: 0 },
+        reset: { ok: 0, failed: 0 },
+        admin: { ok: 0, failed: 0 },
+      };
+      const days = Array.from({ length: MAIL_DAYS }, (_, i) => {
+        const d = today - (MAIL_DAYS - 1 - i);
+        const count = (kind: AdminMailKind): AdminMailCount => {
+          const r = byKey.get(`${d * DAY_MS}:${kind}`);
+          const c = { ok: num(r?.ok), failed: num(r?.failed) };
+          totals[kind].ok += c.ok;
+          totals[kind].failed += c.failed;
+          return c;
+        };
+        return {
+          day: dayLabel(d * DAY_MS),
+          verify: count(MAIL_KINDS[0] as AdminMailKind),
+          reset: count(MAIL_KINDS[1] as AdminMailKind),
+          admin: count(MAIL_KINDS[2] as AdminMailKind),
+        };
+      });
+      return { days, totals };
+    },
     stats(now) {
       const today = Math.floor(now / DAY_MS);
       const since = now - RETENTION_DAYS * DAY_MS;

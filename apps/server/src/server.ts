@@ -3,7 +3,7 @@ import { APP_VERSION, type GameLog, PROTOCOL_VERSION, parseClientMessage } from 
 import { type WebSocket, WebSocketServer } from "ws";
 import { createAccountRecorder } from "./accountStats.js";
 import { type AccountStore, createAccounts } from "./accountStore.js";
-import { ADMIN_PREFIX, handleAdmin } from "./admin.js";
+import { ADMIN_PREFIX, createAdminLimits, handleAdmin } from "./admin.js";
 import { buildLive, createHealthSampler } from "./adminData.js";
 import { AUTH_PREFIX, accountFromCookie, handleAuth } from "./auth.js";
 import { CLIENT_ERROR_PATH, handleClientError } from "./clientError.js";
@@ -127,7 +127,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const google = opts.google ? createGoogleAuth(opts.google) : null;
   const mail: MailService | null = opts.mail
     ? {
-        mailer: createMailer(opts.mail, opts.mailFetch),
+        mailer: createMailer(opts.mail, opts.mailFetch, (kind, ok) => stats.mailSent(clock.now(), kind, ok)),
         publicUrl: opts.mail.publicUrl,
         throttle: new MailThrottle(),
       }
@@ -176,6 +176,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   });
   const adminIds: ReadonlySet<number> = opts.adminAccountIds ?? new Set<number>();
   const adminThrottle = new MailThrottle();
+  const adminLimits = createAdminLimits(clock);
   const healthSampler = adminIds.size > 0 ? createHealthSampler() : null;
   const connections = new Set<Connection>();
   const perIp = new Map<string, number>();
@@ -267,6 +268,9 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         trustProxy: limits.trustProxy,
         ip: resolveClientIp(req.socket.remoteAddress, req.headers["x-forwarded-for"], limits.trustProxy),
         now: clock.now(),
+        social: rt.social,
+        google,
+        limits: adminLimits,
         live: () => {
           let withAccount = 0;
           for (const c of connections) if (c.account) withAccount += 1;
