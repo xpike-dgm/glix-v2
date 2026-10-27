@@ -134,6 +134,7 @@ export default defineConfig({
     proxy: {
       "/ws": { target: "http://localhost:3900", ws: true },
       "/health": "http://localhost:3900",
+      "/api": "http://localhost:3900",
     },
   },
   // Pixi tembel yüklenir; geliştirme sunucusu ilk açılışta yeniden paketleyip sayfayı yenilemesin.

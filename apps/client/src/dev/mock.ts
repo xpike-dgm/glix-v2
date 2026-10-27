@@ -363,6 +363,9 @@ export function startMock(kind: string, params: URLSearchParams): void {
   setState("session", { token: "mock", playerId: SELF, roomCode: "KX7QP" });
   switch (kind) {
     case "home":
+      // `&acct=1`: giriş yapmış kullanıcı (Oda kur + çıkış); varsayılan misafir.
+      if (params.get("acct") === "1")
+        setState("account", { username: "cihad_01", email: "cihad@example.com" });
       if (params.get("off") === "1") setState({ conn: "closed", failedAttempts: 2 });
       break;
     case "join":
@@ -370,6 +373,11 @@ export function startMock(kind: string, params: URLSearchParams): void {
       break;
     case "settings":
       setState({ nav: "settings" });
+      break;
+    case "login":
+    case "register":
+    case "aydinlatma":
+      setState({ nav: kind });
       break;
     case "notfound":
       setState({ notFoundCode: "ABCDE" });
@@ -408,6 +416,14 @@ export function startMock(kind: string, params: URLSearchParams): void {
     // Ekran görüntüsü uçuşun ortasına denk gelsin diye tekrarlanır.
     for (let k = 0; k < 8; k++) later(burst, 250 + k * 700);
   }
-  if (kind === "home" || kind === "join" || kind === "settings" || kind === "notfound")
+  if (
+    kind === "home" ||
+    kind === "join" ||
+    kind === "settings" ||
+    kind === "notfound" ||
+    kind === "login" ||
+    kind === "register" ||
+    kind === "aydinlatma"
+  )
     setState("session", null);
 }

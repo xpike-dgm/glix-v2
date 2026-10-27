@@ -1,5 +1,6 @@
 import { createEffect, createMemo, createSignal, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 import { installMusic, setLobbyMusic } from "./fx/music.js";
+import { refreshAccount } from "./net/account.js";
 import { startNet } from "./net/client.js";
 import { normalizeCode } from "./net/code.js";
 import { collectRounds } from "./net/matchHistory.js";
@@ -19,13 +20,16 @@ import { useUpdateFlow } from "./pwa/useUpdateFlow.js";
 import { setScreenAwake } from "./pwa/wakeLock.js";
 import { Briefing } from "./screens/Briefing.js";
 import { Countdown } from "./screens/Countdown.js";
+import { Disclosure } from "./screens/Disclosure.js";
 import { Final } from "./screens/Final.js";
 import { Home } from "./screens/Home.js";
 import { Join } from "./screens/Join.js";
 import { Lobby } from "./screens/Lobby.js";
+import { Login } from "./screens/Login.js";
 import { NotFound } from "./screens/NotFound.js";
 import { Playing } from "./screens/Playing.js";
 import { Reconnecting } from "./screens/Reconnecting.js";
+import { Register } from "./screens/Register.js";
 import { Results } from "./screens/Results.js";
 import { selectScreen } from "./screens/route.js";
 import { Settings } from "./screens/Settings.js";
@@ -195,6 +199,7 @@ export function App() {
       return;
     }
     watchNetwork();
+    void refreshAccount();
     void initContentPack({ guest: code !== "" });
     onCleanup(startNet());
   });
@@ -218,6 +223,15 @@ export function App() {
             </Match>
             <Match when={screen() === "settings"}>
               <Settings />
+            </Match>
+            <Match when={screen() === "login"}>
+              <Login />
+            </Match>
+            <Match when={screen() === "register"}>
+              <Register />
+            </Match>
+            <Match when={screen() === "aydinlatma"}>
+              <Disclosure />
             </Match>
             <Match when={screen() === "notfound"}>
               <NotFound />
