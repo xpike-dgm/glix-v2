@@ -9,11 +9,14 @@ export function minPlayersNeeded(
   mode: "random" | "manual",
   selected: readonly GameInfo[],
 ): number {
-  const pool = mode === "random" || selected.length === 0 ? catalog : selected;
+  const pool = mode === "random" || selected.length === 0 ? catalog.filter(inRandomPool) : selected;
   if (pool.length === 0) return 1;
   const mins = pool.map((g) => g.minPlayers);
   return mode === "random" || selected.length === 0 ? Math.min(...mins) : Math.max(...mins);
 }
+
+/** Oyun rastgele seçime girer mi (`randomPool: false` olanlar yalnız elle seçilir). */
+export const inRandomPool = (g: GameInfo): boolean => g.randomPool !== false;
 
 /** "Bir arkadaş daha" / "N arkadaş daha gelince başlayabilirsin". */
 export function friendsHint(missing: number): string {

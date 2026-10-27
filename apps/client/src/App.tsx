@@ -150,6 +150,8 @@ export function App() {
         devReady(import("./dev/mockCagrisim.js").then((m) => void m.startCagrisimMock(mock, params)));
       } else if (mock.startsWith("zaman-")) {
         devReady(import("./dev/mockZamanBombasi.js").then((m) => void m.startZamanBombasiMock(mock, params)));
+      } else if (mock.startsWith("kule-")) {
+        devReady(import("./dev/mockKule.js").then((m) => void m.startKuleMock(mock, params)));
       } else if (mock.startsWith("capraz-")) {
         devReady(import("./dev/mockCapraz.js").then((m) => void m.startCaprazMock(mock, params)));
       } else if (mock.startsWith("bozuk-")) {

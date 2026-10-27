@@ -75,7 +75,14 @@ function parseGameInfo(v: unknown): GameInfo | null {
   const { id, name, minPlayers, maxPlayers, orientation } = v;
   if (!isStr(id) || !isStr(name) || !isNum(minPlayers) || !isNum(maxPlayers)) return null;
   if (orientation !== "portrait" && orientation !== "landscape") return null;
-  return { id, name, minPlayers, maxPlayers, orientation };
+  return {
+    id,
+    name,
+    minPlayers,
+    maxPlayers,
+    orientation,
+    ...(v.randomPool === false ? { randomPool: false } : {}),
+  };
 }
 
 function parseResult(v: unknown): GameResult | null {
