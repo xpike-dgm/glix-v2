@@ -199,6 +199,7 @@ export function startSozlukMock(kind: string, params: URLSearchParams): void {
       gameIds: [INFO.id],
       selection: { mode: "manual" },
       tone: "arkadas",
+      lobbyReady: [],
       catalog: [INFO],
       match,
     };

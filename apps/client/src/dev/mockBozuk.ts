@@ -184,6 +184,7 @@ export function startBozukMock(kind: string, params: URLSearchParams): void {
       gameIds: [GAME_ID],
       selection: { mode: "manual" },
       tone: "arkadas",
+      lobbyReady: [],
       catalog: CATALOG,
       match: {
         round: 0,

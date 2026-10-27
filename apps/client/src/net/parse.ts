@@ -3,6 +3,7 @@ import {
   type ErrorCode,
   type GameInfo,
   type GameResult,
+  isLobbyEmoji,
   type LeftReason,
   type MatchSnapshot,
   type PlayerInfo,
@@ -33,6 +34,7 @@ const ERROR_CODES: readonly ErrorCode[] = [
   "already_in_room",
   "invalid_games",
   "avatar_taken",
+  "nickname_taken",
   "not_enough_players",
   "wrong_phase",
   "not_participant",
@@ -121,6 +123,7 @@ export function parseSnapshot(v: unknown): RoomSnapshot | null {
   const phase = PHASES.find((p) => p === v.phase);
   if (!phase) return null;
   if (!Array.isArray(v.players) || !Array.isArray(v.catalog) || !isStrArr(v.gameIds)) return null;
+  if (!isStrArr(v.lobbyReady)) return null;
   const players: PlayerInfo[] = [];
   for (const p of v.players) {
     const pp = parsePlayer(p);
@@ -153,6 +156,7 @@ export function parseSnapshot(v: unknown): RoomSnapshot | null {
     gameIds: v.gameIds,
     selection,
     tone,
+    lobbyReady: v.lobbyReady,
     catalog,
     match,
   };
@@ -198,6 +202,10 @@ export function parseServerMessage(raw: string): ServerMessage | null {
       const reason = LEFT.find((r) => r === data.reason);
       return reason ? { type: "left", reason } : null;
     }
+    case "reaction":
+      return isStr(data.playerId) && isLobbyEmoji(data.emoji)
+        ? { type: "reaction", playerId: data.playerId, emoji: data.emoji }
+        : null;
     case "error": {
       const code = ERROR_CODES.find((c) => c === data.code);
       return code && isStr(data.message) ? { type: "error", code, message: data.message } : null;

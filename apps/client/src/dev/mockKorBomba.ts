@@ -110,6 +110,7 @@ export function startKorBombaMock(kind: string, params: URLSearchParams): void {
       gameIds: [GAME.id],
       selection: { mode: "manual" },
       tone: "arkadas",
+      lobbyReady: [],
       catalog: [GAME],
       match,
     };

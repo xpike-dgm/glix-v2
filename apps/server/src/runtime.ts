@@ -37,6 +37,12 @@ export interface Player {
   conn: Connection | null;
   room: Room;
   graceCancel: Cancel | null;
+  /** Lobide "Hazırım" dedi (host olmayan oyuncu). Maç başlayınca ve lobiye dönünce sıfırlanır. */
+  lobbyReady: boolean;
+  /** Son emoji tepkisinin sunucu saati (ms); hız sınırı için. */
+  lastReactAt: number;
+  /** Son takma ad değişikliğinin sunucu saati (ms); hız sınırı için. */
+  lastRenameAt: number;
 }
 
 export interface Room {

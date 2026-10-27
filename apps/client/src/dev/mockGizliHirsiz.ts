@@ -103,6 +103,7 @@ export function startGizliHirsizMock(kind: string, params: URLSearchParams): voi
       gameIds: [GAME.id],
       selection: { mode: "manual" },
       tone: "arkadas",
+      lobbyReady: [],
       catalog: [GAME],
       match,
     };

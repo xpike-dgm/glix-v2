@@ -5,6 +5,7 @@ import {
   GAMES,
   MAX_PLAYERS,
   PROTOCOL_VERSION,
+  REACTION_MIN_GAP_MS,
 } from "@glix/engine";
 import {
   applyAction,
@@ -23,10 +24,15 @@ import {
   clearHostGrace,
   createRoom,
   isAvatarFree,
+  isNicknameTaken,
   markDisconnected,
   removePlayer,
+  setHost,
 } from "./rooms.js";
 import { type Connection, isConnected, type Room, type Runtime } from "./runtime.js";
+
+/** Bir oyuncunun takma adını en sık bu aralıkla değiştirebilir. */
+export const RENAME_MIN_GAP_MS = 1000;
 
 /** Bir soketten bu kadar başarısız oda kodu denemesinden sonra bağlantı kapatılır. */
 export const MAX_FAILED_JOINS = 10;
@@ -188,6 +194,72 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         return;
       }
       me.avatar = msg.avatar;
+      rt.broadcaster.markDirty(room);
+      return;
+    }
+    case "rename": {
+      const room = requireRoom(conn);
+      if (!room || !conn.player) return;
+      if (room.phase !== "lobby") {
+        fail(conn, "wrong_phase", "Takma ad oyun başlayınca değiştirilemez.");
+        return;
+      }
+      const me = conn.player;
+      if (me.nickname === msg.nickname) return;
+      const now = rt.clock.now();
+      if (now - me.lastRenameAt < RENAME_MIN_GAP_MS) {
+        fail(conn, "rate_limited");
+        return;
+      }
+      if (isNicknameTaken(room, msg.nickname, me)) {
+        fail(conn, "nickname_taken");
+        return;
+      }
+      me.lastRenameAt = now;
+      me.nickname = msg.nickname;
+      rt.broadcaster.markDirty(room);
+      return;
+    }
+    case "react": {
+      const room = requireRoom(conn);
+      if (!room || !conn.player) return;
+      // Geçici olay: yanlış aşama ya da çok sık gönderim sessizce atılır (hata göstermeden).
+      if (room.phase !== "lobby") return;
+      const me = conn.player;
+      const now = rt.clock.now();
+      if (now - me.lastReactAt < REACTION_MIN_GAP_MS) return;
+      me.lastReactAt = now;
+      const event = { type: "reaction", playerId: me.id, emoji: msg.emoji } as const;
+      for (const p of room.players.values()) p.conn?.send(event);
+      return;
+    }
+    case "setReady": {
+      const room = requireRoom(conn);
+      if (!room || !conn.player) return;
+      if (room.phase !== "lobby") {
+        fail(conn, "wrong_phase");
+        return;
+      }
+      const me = conn.player;
+      // Host hazır işareti taşımaz (maçı o başlatır); sessizce yok sayılır.
+      if (me.id === room.hostId || me.lobbyReady === msg.ready) return;
+      me.lobbyReady = msg.ready;
+      rt.broadcaster.markDirty(room);
+      return;
+    }
+    case "transferHost": {
+      const room = requireHost(conn);
+      if (!room) return;
+      if (room.phase !== "lobby") {
+        fail(conn, "wrong_phase");
+        return;
+      }
+      const target = room.players.get(msg.playerId);
+      if (!target || target.id === conn.player?.id || !isConnected(target)) {
+        fail(conn, "not_in_room", "Bu oyuncu odada değil.");
+        return;
+      }
+      setHost(room, target);
       rt.broadcaster.markDirty(room);
       return;
     }
