@@ -13,8 +13,16 @@ export const KOR_BOMBA_MAX_BONUS_MS = 4_000;
  */
 export const KOR_BOMBA_OUTRO_MS = 2_000;
 
-/** Bomba taşıyıcıdan başka bir bağlı katılımcıya geçer. */
-export type KorBombaAction = { kind: "pass"; to: string };
+/**
+ * Eylemler:
+ * - `pass`: bomba taşıyıcıdan başka bir bağlı katılımcıya geçer.
+ * - `predict` (O9): taşıyıcı olmayan katılımcı, bu elde (`turn` = o ana kadarki pas sayısı) bombanın patlayıp
+ *   patlamayacağını tahmin eder. Tahmin gizlidir, el başına bir kez verilir ve değişmez.
+ */
+export type KorBombaAction = { kind: "pass"; to: string } | { kind: "predict"; turn: number; explodes: boolean };
+
+/** Patlamada +1 alan tahminci için üst sınır (oyun başına). */
+export const KOR_BOMBA_PREDICT_BONUS = 1;
 
 /** Son başarılı pas (herkes görür; eklenen süre görünmez). */
 export interface KorBombaPass {
@@ -36,6 +44,19 @@ export interface KorBombaPublicView {
   exploded: boolean;
   /** Yalnız patladıktan sonra dolu. */
   explodedAt: number | null;
+  /** O9: patlamada "patlar" diye doğru bilenler (+1 alanlar). Yalnız patladıktan sonra dolu; öncesinde boş. */
+  correctPredictors: string[];
+}
+
+/** Kişinin kendi tahmini ya da çözülmüş sonucu (yalnız sahibine gider). */
+export interface KorBombaPrediction {
+  /** Tahminin verildiği el (pas sayısı). */
+  turn: number;
+  explodes: boolean;
+}
+export interface KorBombaPredictionResult {
+  turn: number;
+  correct: boolean;
 }
 
 /**
@@ -45,6 +66,14 @@ export interface KorBombaPublicView {
  * - `spectator`: izleyici; süre görmez.
  */
 export type KorBombaView =
-  | { role: "holder" }
-  | { role: "watcher"; explodeAt: number; lastBonusMs: number | null }
+  | { role: "holder"; lastResult: KorBombaPredictionResult | null }
+  | {
+      role: "watcher";
+      explodeAt: number;
+      lastBonusMs: number | null;
+      /** Bu elde verdiğim tahmin; yoksa null. Başkasınınki asla yoktur. */
+      prediction: KorBombaPrediction | null;
+      /** Son çözülen tahminimin sonucu. */
+      lastResult: KorBombaPredictionResult | null;
+    }
   | { role: "spectator" };

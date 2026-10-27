@@ -13,6 +13,10 @@ const generate: ActionGenerator = (rng, playerId, publicView, _privateView, conn
   const passes = typeof pub.passes === "number" ? pub.passes : 0;
   const targets = connected.filter((id) => id !== playerId);
   const roll = rng.next();
+  // Taşıyıcı olmayanlar çoğunlukla tahmin dener (yinelenen tahmin reddedilir).
+  if (typeof pub.holder === "string" && pub.holder !== playerId && roll > 0.45) {
+    return { kind: "predict", turn: passes, explodes: rng.next() < 0.5 };
+  }
   if (passes >= MAX_BOT_PASSES || targets.length === 0 || roll < 0.1) return { kind: "pass", to: playerId };
   return { kind: "pass", to: targets[rng.int(targets.length)] };
 };

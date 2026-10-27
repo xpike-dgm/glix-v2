@@ -279,6 +279,17 @@ tasarladığı alanlar birlikte kilitlenir; kodlama bu kural seti üzerinden yap
   Görsel: Dönen neon tabanca, risk yüzdesini taşıyan kırmızı halka ve patlamada
   kısa kamera sarsıntısı; elenen karakterler yarı saydam izleyici kartına geçer.
 
+**Değişiklik (O9, Ekim 2026, sahip onayı) — aşağıdaki cevapların önüne geçer:**
+
+- Elenen oyuncular (mini oyun bitene kadar izleyici) **her atıştan önce** o atış için tek bir tahmin verebilir:
+  **"Patlar mı?" — Evet / Hayır**. Atış başına tek tahmin; verilen tahmin değiştirilemez. Hayatta olanlar ve oyuna
+  katılmayan izleyiciler tahmin veremez.
+- Tahmin **puan vermez**. Atış çözülünce doğru tahmin sayılır; mini oyun sonunda **en az 2 doğru tahmin** yapan elenene
+  **"Kâhin"** rozeti verilir. Rozet yalnız mini oyun sonuç ekranında, herkese açık gösterilir.
+- Tahminler ve doğru sayıları mini oyun bitene kadar yalnız sahibinin ekranındadır (sahibi her atıştan sonra yalnız
+  "Bildin!" / "Bilemedin" görür); başkalarına ve herkese açık görünüme geçmez. Tahmin atışın sonucunu etkilemez.
+- Genel skor değişmez: hayatta kalanlar +1, elenenler 0.
+
 ---
 
 # B. Toplu formdan kilitlenen oyunlar
@@ -411,6 +422,20 @@ bomba kimdeyse o oyuncu 0, diğerleri +1 alır.
     değerlendirilir; patlama önce işlenirse pas geçersizdir. Pas veren ve alan
     oyuncu bağlantısı koparsa geçerli son sunucu durumu korunur. Bomba tek kez
     patladıktan sonra sonuç ekranı açılır ve bir sonraki mini oyuna geçilir.
+
+**Değişiklik (O9, Ekim 2026, sahip onayı) — aşağıdaki cevapların önüne geçer:**
+
+- Bombayı o an **taşımayan** her katılımcı, bombanın **her taşıyıcı eli** için tek bir tahmin verebilir:
+  **"Bu elde patlar"** ya da **"Patlamaz"**. Bu oyunda eleme yoktur; taşıyıcı olmayan herkes hak sahibidir. El başına tek
+  tahmin; verilen tahmin değiştirilemez. Bombayı yeni alan oyuncu o elde tahmin veremez; pas verince hak yeni elle döner.
+- **"Patlar" tahmini doğruysa** (bomba o taşıyıcının elinde patlarsa) tahminci genel skorda **+1** alır. Bu ödül oyun başına
+  oyuncu başına **en çok +1**'dir; yan bahis olarak kalır. "Patlamaz" tahmini ve yanlış tahmin puan almaz/kaybettirmez.
+  Bomba sahibi yine −1 alır.
+- Tahminler **patlayana ya da pasa kadar gizlidir**; yalnız sahibi kendi tahminini görür. Taşıyıcı hiçbir tahmini öğrenmez,
+  böylece blöfünü tahminlere göre ayarlayamaz. Pas olunca her tahminci yalnız kendi sonucunu görür ("Bildin!" /
+  "Bilemedin"); patlamada puan alanların adı herkese açılır ("Elif bildi!").
+- Gizli patlama süresi gizli kalır: tahmin düğmeleri süreye bağlı değildir (kalan süreye göre açılmaz, kapanmaz, değişmez)
+  ve tahmin sunucu tarafında süreden bağımsız işlenir. Tahmin, patlama anından sonra kabul edilmez.
 
 ## 11. Rüşvet ve Darbe — `rusvet-darbe`
 

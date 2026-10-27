@@ -191,7 +191,7 @@ Bugün: yeni sürüm hazır olunca bekliyor (`registerType: prompt`), kullanıc�
 | O6 | Kör Kronometre | Hedef 7–13 sn arası rastgele, başta gösterilir; basmayan sıralamaya girmez | ✓ uygulandı |
 | O7 | Aşırı Yükleme | En az tıklayan da −1 (risksiz pasifliği kırar) — sahip kararı | ✓ uygulandı |
 | O8 | Butona Bas | 3 tur, pencere 300→200→120 ms | ✓ uygulandı |
-| O9 | Kör Bomba / Rus Ruleti | İzleyen tahmini ("patlar mı?") doğru +1 (Rus Ruleti'nde rozet) |
+| O9 | Kör Bomba / Rus Ruleti | İzleyen tahmini ("patlar mı?") doğru +1 (Rus Ruleti'nde rozet) | ✓ uygulandı |
 | O10 | Gizli Kareler | 2. aşamada bir "ödül karesi" (+2) | ✓ uygulandı |
 | O11 | Sızma | Sonda "fark ettin mi?" — kendini fark eden sızmaya +1 | ✓ uygulandı |
 | O12 | Çizgiyi Geçme | Bölge genişliği oyuncu sayısına göre | ✓ uygulandı |
