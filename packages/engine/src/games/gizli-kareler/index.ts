@@ -1,12 +1,14 @@
 import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import {
   KARELER_BETWEEN_MS,
+  KARELER_BONUS_POINTS,
   KARELER_FINAL_MS,
   KARELER_LOCK_GRACE_MS,
   KARELER_STAGE_MS,
   type KarelerAction,
   type KarelerPublicView,
   type KarelerView,
+  type KareBonus,
   type KareReveal,
   type KareStatus,
   kareCells,
@@ -18,6 +20,11 @@ export * from "./types.js";
 export interface KarelerState {
   players: string[];
   size: number;
+  /**
+   * Gizli ödül karesi (2. aşamada +2): kurulumda tohumlu rastgelelikle seçilir. Yalnız sunucu durumunda yaşar;
+   * 2. aşamanın sonucu açılana kadar hiçbir görünümde yer almaz.
+   */
+  bonusCell: number;
   startedAt: number;
   /** 1. aşamanın en geç seçim bitişi. */
   stage1EndsAt: number;
@@ -74,8 +81,20 @@ interface Plan {
   walkover: string | null;
   stage2: { startsAt: number; endsAt: number; players: string[] } | null;
   stage2Reveal: KareReveal | null;
+  /** Ödül karesinin sonucu (2. aşama oynandıysa); aşama sonucu açılana kadar görünümlere girmez. */
+  bonus: KareBonus | null;
   finishesAt: number;
   points: Record<string, number>;
+}
+
+/** Ödül karesinde tek başına kalan: yalnız 2. aşama seçimlerine bakılır; birden çok kişi bastıysa kimse. */
+export function kareBonusWinner(
+  participants: readonly string[],
+  choices: Readonly<Record<string, number>>,
+  bonusCell: number,
+): string | null {
+  const on = participants.filter((id) => choices[id] === bonusCell);
+  return on.length === 1 ? (on[0] ?? null) : null;
 }
 
 /** 1. aşamanın gerçek seçim bitişi. */
@@ -97,6 +116,7 @@ function plan(state: KarelerState): Plan {
       walkover,
       stage2: null,
       stage2Reveal: null,
+      bonus: null,
       finishesAt: s1End + KARELER_FINAL_MS,
       points,
     };
@@ -105,12 +125,15 @@ function plan(state: KarelerState): Plan {
   const endsAt = state.end2At ?? startsAt + KARELER_STAGE_MS;
   const stage2Reveal = kareSettle(survivors, state.choices2);
   for (const id of soloIds(stage2Reveal)) points[id] = (points[id] ?? 0) + 1;
+  const winner = kareBonusWinner(survivors, state.choices2, state.bonusCell);
+  if (winner !== null) points[winner] = (points[winner] ?? 0) + KARELER_BONUS_POINTS;
   return {
     stage1,
     survivors,
     walkover: null,
     stage2: { startsAt, endsAt, players: survivors },
     stage2Reveal,
+    bonus: { cell: state.bonusCell, winner },
     finishesAt: endsAt + KARELER_FINAL_MS,
     points,
   };
@@ -137,7 +160,7 @@ export const gizliKareler: GameDefinition<KarelerState, KarelerAction, KarelerVi
     steps: [
       "Gizli karelerden yalnızca birini seç",
       "Aynı kareyi seçen arkadaşların birlikte elenir",
-      "Her aşamada tek kalan +1 alır; iki aşama var",
+      "Tek kalan +1 alır; 2. aşamadaki gizli ödül karesi +2 verir",
     ],
   },
 
@@ -155,6 +178,7 @@ export const gizliKareler: GameDefinition<KarelerState, KarelerAction, KarelerVi
     return {
       players: [...players],
       size: kareSize(players.length),
+      bonusCell: ctx.rng.int(kareCells(kareSize(players.length))),
       startedAt: ctx.now,
       stage1EndsAt: ctx.now + KARELER_STAGE_MS,
       end1At: null,
@@ -217,6 +241,7 @@ export const gizliKareler: GameDefinition<KarelerState, KarelerAction, KarelerVi
         finishesAt: null,
         walkover: null,
         points: null,
+        bonus: null,
       };
     }
     const p = plan(state);
@@ -227,6 +252,7 @@ export const gizliKareler: GameDefinition<KarelerState, KarelerAction, KarelerVi
       let v = p.stage1.status[id] === "solo" ? 1 : 0;
       if (p.walkover === id) v += 1;
       if (stage2Open && p.stage2Reveal?.status[id] === "solo") v += 1;
+      if (stage2Open && p.bonus?.winner === id) v += KARELER_BONUS_POINTS;
       points[id] = v;
     }
     return {
@@ -237,6 +263,7 @@ export const gizliKareler: GameDefinition<KarelerState, KarelerAction, KarelerVi
       finishesAt: p.finishesAt,
       walkover: p.walkover,
       points,
+      bonus: stage2Open ? p.bonus : null,
       ready: karelerPhase(state, ctx.now) === 2 ? [...state.locked2] : [],
     };
   },
