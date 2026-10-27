@@ -125,6 +125,7 @@ function onMessage(raw: string): void {
       if (redeployed) noteServerRestart();
       attempt = 0;
       announceReturn = state.everOpen && reconnectNotice(state.snapshot) !== null;
+      if (state.everOpen) perf.reconnect();
       syncReconnected();
       setState({ conn: "open", everOpen: true, failedAttempts: 0 });
       startPings();

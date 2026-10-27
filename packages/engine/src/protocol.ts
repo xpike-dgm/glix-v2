@@ -57,7 +57,7 @@ export type ClientMessage =
   /** Maç sonu geri bildirimi: yalnız `final` aşamasında, maç başına oyuncu başına bir kez. */
   | { type: "feedback"; rating: 1 | 2 | 3 | 4 | 5; text?: string }
   /** Anonim oyun başı performans özeti: yalnız `results` aşamasında, oyun başına oyuncu başına bir kez. */
-  | ({ type: "perf"; gameId: string } & PerfSample);
+  | ({ type: "perf"; gameId: string } & PerfSample & Partial<PerfMeta>);
 
 /** Bir oyun boyunca istemcide ölçülen gecikme özeti (ms ya da adet; hepsi küçük, negatif olmayan tam sayı). */
 export interface PerfSample {
@@ -70,6 +70,18 @@ export interface PerfSample {
   longTasks: number;
   longTaskMs: number;
 }
+
+/** Kaba platform grubu (UA'dan); cihaz modeli ya da sürüm tutulmaz. */
+export const PERF_PLATFORMS = ["ios", "android", "diger"] as const;
+export type PerfPlatform = (typeof PERF_PLATFORMS)[number];
+
+/** `perf` mesajının isteğe bağlı alanları (eski istemciler göndermez): platform grubu, kopma ve sayfa yenileme sayısı. */
+export interface PerfMeta {
+  platform: PerfPlatform;
+  reconnects: number;
+  reloads: number;
+}
+export const PERF_META_LIMITS = { reconnects: 1_000, reloads: 1_000 } as const;
 
 /** `perf` alanlarının üst sınırları; aşan mesaj geçersizdir. */
 export const PERF_LIMITS: Readonly<Record<keyof PerfSample, number>> = {
@@ -375,7 +387,13 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return text === "" ? { type: "feedback", rating: r } : { type: "feedback", rating: r, text };
     }
     case "perf": {
-      if (!hasExactKeys(data, ["type", "gameId", ...PERF_KEYS])) return null;
+      const allowed = ["type", "gameId", ...PERF_KEYS, "platform", "reconnects", "reloads"];
+      const own = Object.keys(data);
+      if (
+        !own.every((k) => allowed.includes(k)) ||
+        !["type", "gameId", ...PERF_KEYS].every((k) => own.includes(k))
+      )
+        return null;
       const gameId = data.gameId;
       if (typeof gameId !== "string" || gameId.length === 0 || gameId.length > 64) return null;
       const sample = {} as PerfSample;
@@ -384,7 +402,20 @@ export function parseClientMessage(raw: string): ClientMessage | null {
         if (typeof v !== "number" || !Number.isSafeInteger(v) || v < 0 || v > PERF_LIMITS[key]) return null;
         sample[key] = v;
       }
-      return { type: "perf", gameId, ...sample };
+      const meta: Partial<PerfMeta> = {};
+      if (Object.hasOwn(data, "platform")) {
+        const pl = data.platform;
+        if (!PERF_PLATFORMS.some((x) => x === pl)) return null;
+        meta.platform = pl as PerfPlatform;
+      }
+      for (const key of ["reconnects", "reloads"] as const) {
+        if (!Object.hasOwn(data, key)) continue;
+        const v = data[key];
+        if (typeof v !== "number" || !Number.isSafeInteger(v) || v < 0 || v > PERF_META_LIMITS[key])
+          return null;
+        meta[key] = v;
+      }
+      return { type: "perf", gameId, ...sample, ...meta };
     }
     case "leaveRoom":
     case "resync":

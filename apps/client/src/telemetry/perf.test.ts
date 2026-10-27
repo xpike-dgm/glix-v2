@@ -1,6 +1,13 @@
 import { PERF_LIMITS } from "@glix/engine";
 import { describe, expect, it } from "vitest";
-import { createPerfCollector, MAX_PENDING_ACKS, medianOf, percentile } from "./perf.js";
+import {
+  createPerfCollector,
+  MAX_PENDING_ACKS,
+  medianOf,
+  nextReloadCount,
+  percentile,
+  platformGroup,
+} from "./perf.js";
 
 function setup() {
   let t = 1000;
@@ -87,6 +94,7 @@ describe("performans toplayıcı", () => {
       tapP95: 0,
       longTasks: 0,
       longTaskMs: 0,
+      reconnects: 0,
     });
   });
 
@@ -108,5 +116,52 @@ describe("performans toplayıcı", () => {
     const s = c.sample();
     expect(s?.ackP95).toBe(PERF_LIMITS.ackP95);
     expect(s?.longTaskMs).toBe(PERF_LIMITS.longTaskMs);
+  });
+});
+
+describe("platform grubu", () => {
+  const iphone =
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1";
+  it("iPhone ve iPad (Macintosh görünümlü dokunmatik) ios", () => {
+    expect(platformGroup({ userAgent: iphone })).toBe("ios");
+    expect(
+      platformGroup({
+        userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+        platform: "MacIntel",
+        maxTouchPoints: 5,
+      }),
+    ).toBe("ios");
+  });
+  it("iOS üzerindeki Chrome da ios (aynı motor)", () => {
+    expect(platformGroup({ userAgent: iphone.replace("Version/17.4", "CriOS/123.0") })).toBe("ios");
+  });
+  it("Android android; masaüstü ve Mac diger", () => {
+    expect(
+      platformGroup({ userAgent: "Mozilla/5.0 (Linux; Android 14) Chrome/124.0 Mobile Safari/537.36" }),
+    ).toBe("android");
+    expect(
+      platformGroup({
+        userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+        platform: "MacIntel",
+        maxTouchPoints: 0,
+      }),
+    ).toBe("diger");
+    expect(platformGroup({ userAgent: "Mozilla/5.0 (X11; Linux x86_64) Chrome/124.0" })).toBe("diger");
+  });
+});
+
+describe("kopma ve yenileme sayıları", () => {
+  it("yeniden bağlanma tek başına örnek üretir ve reset sıfırlar", () => {
+    const { c } = setup();
+    c.reconnect();
+    c.reconnect();
+    expect(c.sample()).toMatchObject({ reconnects: 2 });
+    c.reset();
+    expect(c.sample()).toBeNull();
+  });
+  it("sayfa yenileme: yenile ya da bellekten atılma sayılır, normal açılış sayılmaz", () => {
+    expect(nextReloadCount(0, "navigate", false)).toBe(0);
+    expect(nextReloadCount(0, "reload", false)).toBe(1);
+    expect(nextReloadCount(1, "back_forward", true)).toBe(2);
   });
 });

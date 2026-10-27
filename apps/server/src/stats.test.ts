@@ -88,7 +88,7 @@ describe("istatistik kaydı", () => {
     expect(tables).toEqual(
       expect.arrayContaining(["matches", "game_plays", "feedback", "perf", "schema_version"]),
     );
-    expect(rows("SELECT * FROM schema_version")).toEqual([{ version: 1 }, { version: 2 }]);
+    expect(rows("SELECT * FROM schema_version")).toEqual([{ version: 1 }, { version: 2 }, { version: 3 }]);
 
     // Özet Türkçe ve bu verilerden üretilir.
     const text = summarize(dbFile, k.clock.now());
@@ -281,6 +281,25 @@ describe("performans özeti", () => {
     const text = summarize(dbFile, k.clock.now());
     expect(text).toContain("Cihaz performansı");
     expect(text).toMatch(/butona-bas\s+2\s+40\s+45\s+120/);
+  });
+
+  it("platform, kopma ve yenileme sayıları saklanır; eski istemci (alansız) 'diger' olur", () => {
+    const store = createStats(dbFile);
+    const now = 1_000_000_000_000;
+    const id = store.matchStarted(now, { playerCount: 2, selectionMode: "manual", gameCount: 1 });
+    store.perf(id, "butona-bas", now, { ...SAMPLE, platform: "ios", reconnects: 3, reloads: 1 });
+    store.perf(id, "butona-bas", now, { ...SAMPLE });
+    store.close();
+    const r = rows<Record<string, number | string>>(
+      "SELECT platform, reconnects, reloads FROM perf ORDER BY rowid",
+    );
+    expect(r).toEqual([
+      { platform: "ios", reconnects: 3, reloads: 1 },
+      { platform: "diger", reconnects: 0, reloads: 0 },
+    ]);
+    const text = summarize(dbFile, now);
+    expect(text).toContain("Platforma göre");
+    expect(text).toMatch(/^ {2}ios\s+1\s+40\s+45\s+120\s+2,0\s+3,0\s+1,0/m);
   });
 
   it("özet en kötü oyunu başa koyar", () => {
