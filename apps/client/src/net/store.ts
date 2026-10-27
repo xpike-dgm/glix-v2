@@ -8,7 +8,7 @@ import { initialSync, onPatch, onReconnect, onRoom, type SyncState, type SyncSte
 
 /** `idle`: sunucu odasız boştaki bağlantıyı kapattı; ilk eylemde sessizce yeniden açılır. */
 export type ConnStatus = "connecting" | "open" | "closed" | "idle";
-export type Nav = "home" | "join" | "settings" | "login" | "register" | "aydinlatma";
+export type Nav = "home" | "join" | "settings" | "login" | "register" | "aydinlatma" | "googleAd";
 
 /** Giriş yapmış hesap (yalnız kendi cihazında; başkasına gitmez). */
 export interface AccountInfo {
@@ -57,6 +57,8 @@ interface AppState {
   pushKey: string | null;
   /** Oturumu açık hesap; misafirde ya da henüz bilinmiyorsa null. */
   account: AccountInfo | null;
+  /** Sunucuda Google ile giriş açık mı; hesaba Google bağlı mı. Bilinmiyorsa kapalı sayılır. */
+  google: { enabled: boolean; linked: boolean };
 }
 
 export const [state, setState] = createStore<AppState>({
@@ -79,6 +81,7 @@ export const [state, setState] = createStore<AppState>({
   stage: null,
   pushKey: null,
   account: null,
+  google: { enabled: false, linked: false },
 });
 
 /** Sunucu saati (ms), ping/pong ölçümünün medyanıyla. */

@@ -28,6 +28,21 @@ export interface AccountStore {
   create(username: string, email: string, passHash: string, now: number): CreateResult;
   /** Kullanıcı adı ya da e-posta (küçük harfe çevrilmiş) ile bulur. */
   findByLogin(login: string): AccountWithHash | null;
+  /** Google `sub` ile bağlı hesap. */
+  findByGoogleSub(sub: string): Account | null;
+  /** E-posta (küçük harfe çevrilmiş) ile hesap. */
+  findByEmail(email: string): Account | null;
+  /** Hesap Google'a bağlı mı. */
+  hasGoogle(accountId: number): boolean;
+  /** Hesaba Google kimliği bağlar; `sub` başka hesapta ya da hesap zaten bağlıysa false. */
+  linkGoogle(accountId: number, sub: string): boolean;
+  /** Google ile yeni hesap: e-posta doğrulanmış, şifresiz. `sub` zaten kayıtlıysa "sub". */
+  createGoogle(
+    username: string,
+    email: string,
+    sub: string,
+    now: number,
+  ): CreateResult | { ok: false; field: "sub" };
   createSession(accountId: number, tokenHash: string, now: number): void;
   /** Geçerli oturumun hesabı; süresi dolmuşsa ya da yoksa null. */
   resolveSession(tokenHash: string, now: number): Account | null;
@@ -104,6 +119,13 @@ export function createAccounts(path: string): AccountStore {
   const byLogin = db.prepare(
     "SELECT id, username, email, pass_hash FROM accounts WHERE username_lc = ? OR email = ? LIMIT 1",
   );
+  const bySub = db.prepare("SELECT id, username, email FROM accounts WHERE google_sub = ?");
+  const byEmailRow = db.prepare("SELECT id, username, email FROM accounts WHERE email = ?");
+  const subOf = db.prepare("SELECT google_sub FROM accounts WHERE id = ?");
+  const setSub = db.prepare("UPDATE accounts SET google_sub = ? WHERE id = ? AND google_sub IS NULL");
+  const insertGoogle = db.prepare(
+    "INSERT INTO accounts (username, username_lc, email, email_verified, pass_hash, google_sub, created_at) VALUES (?, ?, ?, 1, NULL, ?, ?)",
+  );
   const insertSession = db.prepare(
     "INSERT INTO sessions (id_hash, account_id, created_at, last_seen) VALUES (?, ?, ?, ?)",
   );
@@ -136,6 +158,42 @@ export function createAccounts(path: string): AccountStore {
       const lc = login.toLowerCase();
       const row = byLogin.get(lc, lc) as AccountRow | undefined;
       return row ? { id: row.id, username: row.username, email: row.email, passHash: row.pass_hash } : null;
+    },
+    findByGoogleSub(sub) {
+      const row = bySub.get(sub) as Account | undefined;
+      return row ? { id: row.id, username: row.username, email: row.email } : null;
+    },
+    findByEmail(email) {
+      const row = byEmailRow.get(email) as Account | undefined;
+      return row ? { id: row.id, username: row.username, email: row.email } : null;
+    },
+    hasGoogle(accountId) {
+      const row = subOf.get(accountId) as { google_sub: string | null } | undefined;
+      return !!row?.google_sub;
+    },
+    linkGoogle(accountId, sub) {
+      try {
+        return Number(setSub.run(sub, accountId).changes) === 1;
+      } catch (err) {
+        if (String(err).includes("accounts.google_sub")) return false;
+        throw err;
+      }
+    },
+    createGoogle(username, email, sub, now) {
+      const lc = username.toLowerCase();
+      if (bySub.get(sub)) return { ok: false, field: "sub" };
+      if (byUsername.get(lc)) return { ok: false, field: "username" };
+      if (byEmail.get(email)) return { ok: false, field: "email" };
+      try {
+        const res = insertGoogle.run(username, lc, email, sub, now);
+        return { ok: true, account: { id: Number(res.lastInsertRowid), username, email } };
+      } catch (err) {
+        const text = String(err);
+        if (text.includes("accounts.google_sub")) return { ok: false, field: "sub" };
+        if (text.includes("accounts.username_lc")) return { ok: false, field: "username" };
+        if (text.includes("accounts.email")) return { ok: false, field: "email" };
+        throw err;
+      }
     },
     createSession(accountId, tokenHash, now) {
       insertSession.run(tokenHash, accountId, now, now);

@@ -12,6 +12,7 @@ import {
   unlockAudio,
   volume,
 } from "../fx/sound.js";
+import { startGoogle } from "../net/account.js";
 import { readAvatarChoice } from "../net/storage.js";
 import { goHome, setNickname, state, toast } from "../net/store.js";
 import { clearPack, downloadAll, packProgress, packRunning, storageEpoch } from "../pwa/packController.js";
@@ -346,6 +347,28 @@ export function Settings() {
             </GhostButton>
           </div>
         </Group>
+
+        <Show when={state.account && state.google.enabled}>
+          <Group title="Hesap">
+            <Show
+              when={!state.google.linked}
+              fallback={
+                <div class="set__row">
+                  <span class="set__text">
+                    <span class="set__label">Google hesabı bağlı</span>
+                    <span class="set__hint">Google ile tek dokunuşla giriş yapabilirsin</span>
+                  </span>
+                </div>
+              }
+            >
+              <div class="set__row set__row--action">
+                <GhostButton size="small" onClick={startGoogle}>
+                  Google hesabını bağla
+                </GhostButton>
+              </div>
+            </Show>
+          </Group>
+        </Show>
 
         <Group title="Profil">
           <div class="set__row set__row--col">

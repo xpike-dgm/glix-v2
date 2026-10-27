@@ -1,8 +1,9 @@
-import { createSignal } from "solid-js";
-import { login } from "../net/account.js";
+import { createSignal, Show } from "solid-js";
+import { googleNotice, login, setGoogleNotice } from "../net/account.js";
 import { loginError } from "../net/accountRules.js";
-import { setState } from "../net/store.js";
+import { setState, state } from "../net/store.js";
 import { GhostButton } from "../ui/GhostButton.js";
+import { GoogleButton } from "../ui/GoogleButton.js";
 import { AccountForm } from "./AccountForm.js";
 
 export function Login() {
@@ -18,14 +19,25 @@ export function Login() {
     <AccountForm
       title="Giriş yap"
       lead="Hesabınla oda kurabilirsin."
+      notice={googleNotice()}
       submit={submit}
       submitLabel="Giriş yap"
       footer={
-        <GhostButton size="small" onClick={() => setState("nav", "register")}>
+        <GhostButton
+          size="small"
+          onClick={() => {
+            setGoogleNotice(null);
+            setState("nav", "register");
+          }}
+        >
           Hesabın yok mu? Kayıt ol
         </GhostButton>
       }
     >
+      <Show when={state.google.enabled}>
+        <GoogleButton />
+        <p class="acct__or">veya</p>
+      </Show>
       <input
         class="field"
         type="text"
