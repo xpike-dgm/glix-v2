@@ -1,4 +1,5 @@
 import { createEffect, createMemo, createSignal, Match, onCleanup, onMount, Show, Switch } from "solid-js";
+import { installMusic, setLobbyMusic } from "./fx/music.js";
 import { startNet } from "./net/client.js";
 import { normalizeCode } from "./net/code.js";
 import { collectRounds } from "./net/matchHistory.js";
@@ -80,6 +81,9 @@ export function App() {
     preloadBriefing(m.gameId);
   });
 
+  // Lobi müziği yalnız lobide çalar; maç başlayınca durur (kullanıcı jestinden önce hiç çalmaz).
+  createEffect(() => setLobbyMusic(screen() === "lobby"));
+
   // Odadayken ekran uyanık kalır; ana ekranda bırakılır.
   createEffect(() => setScreenAwake(state.snapshot !== null));
 
@@ -96,6 +100,7 @@ export function App() {
   const [devLoading, setDevLoading] = createSignal(false);
 
   onMount(() => {
+    installMusic();
     installErrorReporting();
     announceUpdateIfAny();
     const params = new URLSearchParams(window.location.search);

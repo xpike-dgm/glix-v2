@@ -3,7 +3,10 @@ export const KEYS = {
   token: "glix.token",
   nickname: "glix.nick",
   muted: "glix.muted",
+  /** Efekt düzeyi (eskiden tek "ses düzeyi"; mevcut değer efektlere taşındı). */
   volume: "glix.volume",
+  /** Müzik düzeyi; yoksa efekt düzeyinin %60'ı. */
+  musicVolume: "glix.musicVolume",
   installHint: "glix.installHint",
   /** İlk maç sonuna kadar oynandı: kurulum ipucu bundan sonra çıkar. */
   firstMatch: "glix.firstMatch",

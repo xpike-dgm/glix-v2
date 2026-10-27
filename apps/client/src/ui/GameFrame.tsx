@@ -86,7 +86,7 @@ function Rail(props: Props & { win: ClockWindow | null }) {
       <Show when={!props.noClock && props.win}>
         {(win) => (
           <div class="rail__time">
-            <Clock vertical win={win()} now={props.now} />
+            <Clock vertical tension={!props.noClock} win={win()} now={props.now} />
           </div>
         )}
       </Show>
@@ -154,7 +154,7 @@ export function GameFrame(props: Props) {
                 </div>
                 <div class="gbar__clock">
                   <Show when={!props.noClock}>
-                    <Clock win={win()} now={props.now} />
+                    <Clock tension={!props.noClock} win={win()} now={props.now} />
                   </Show>
                 </div>
                 <div class="gbar__tools">

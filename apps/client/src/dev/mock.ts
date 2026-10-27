@@ -354,8 +354,8 @@ export function startMock(kind: string, params: URLSearchParams): void {
     default:
       publish();
   }
-  // `&emoji=1`: lobide birkaç oyuncudan emoji uçar (ekran denetimi için).
-  if (kind === "lobby" && params.get("emoji") === "1") {
+  // `&emoji=1`: lobide, sonuç ve finalde birkaç oyuncudan emoji uçar (ekran denetimi için).
+  if ((kind === "lobby" || kind === "results" || kind === "final") && params.get("emoji") === "1") {
     const picks = ["😂", "🔥", "👏", "😱"] as const;
     const burst = (): void => {
       players.slice(0, 4).forEach((p, i) => {

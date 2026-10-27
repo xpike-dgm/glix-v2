@@ -1137,6 +1137,8 @@ const SCREENS = [
   },
   { name: "final-host-podyum", q: "mock=final&n=5&gallery=6", settle: 2600 },
   { name: "final-misafir-podyum", q: "mock=final&n=5&guest=1&gallery=6", settle: 2600 },
+  { name: "results-tepki", q: "mock=results&n=5&emoji=1", settle: 2400 },
+  { name: "final-tepki", q: "mock=final&n=5&emoji=1", settle: 2200 },
 ];
 
 function freePort() {

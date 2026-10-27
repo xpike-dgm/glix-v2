@@ -21,7 +21,8 @@ function anchor(playerId: string): { x: number; y: number; w: number } | null {
   const el = document.querySelector(`[data-pid="${playerId}"]`);
   if (!el) return null;
   const r = el.getBoundingClientRect();
-  if (r.width === 0) return null;
+  // Kaydırma alanında görünmeyen avatarın emojisi ekran dışına uçmaz.
+  if (r.width === 0 || r.bottom < 0 || r.top > window.innerHeight - 24) return null;
   return { x: r.left + r.width / 2, y: r.top + Math.min(r.height, 90) * 0.35, w: r.width };
 }
 

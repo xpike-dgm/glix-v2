@@ -2004,6 +2004,13 @@
     transform 80ms var(--ease),
     background 120ms;
 }
+/* Sonuç/final: dört düğme ortada, altta ince şerit. */
+.emojibar--compact {
+  justify-content: center;
+  gap: 14px;
+  margin: 0;
+  padding-top: 2px;
+}
 .emojibar__btn:active {
   transform: scale(0.88);
   background: rgba(46, 242, 255, 0.14);
