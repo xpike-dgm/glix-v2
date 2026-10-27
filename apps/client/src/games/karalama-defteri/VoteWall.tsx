@@ -51,6 +51,12 @@ export function VoteWall(props: Props) {
   );
   const [picked, setPicked] = createSignal<string | null>(props.view.myVote);
   const [zoom, setZoom] = createSignal<string | null>(null);
+  /** Oyuncu başına çizim tekrarı sayacı; çizim duvara ilk çıktığında 1, dokununca artar. */
+  const [replays, setReplays] = createSignal<Record<string, number>>({});
+  const replayOf = (id: string): number => replays()[id] ?? 1;
+  const replayAgain = (id: string): void => {
+    setReplays((r) => ({ ...r, [id]: (r[id] ?? 1) + 1 }));
+  };
   createEffect(
     on(
       () => props.view.myVote,
@@ -147,12 +153,14 @@ export function VoteWall(props: Props) {
                 onClick={() => {
                   tap();
                   hapticTap();
+                  replayAgain(p.id);
                   setZoom(p.id);
                 }}
               >
                 <DrawingCanvas
                   strokes={drawingOf(p.id)?.strokes ?? []}
                   version={drawingOf(p.id)?.key ?? "0"}
+                  replay={replayOf(p.id)}
                 />
               </button>
               <button
@@ -199,6 +207,8 @@ export function VoteWall(props: Props) {
             picked={picked()}
             canVote={canVote(p())}
             selfId={props.selfId}
+            replay={replayOf(p().id)}
+            onReplay={() => replayAgain(p().id)}
             onVote={() => vote(p())}
             onClose={() => setZoom(null)}
           />
@@ -214,6 +224,8 @@ function Zoom(props: {
   picked: string | null;
   canVote: boolean;
   selfId: string;
+  replay: number;
+  onReplay: () => void;
   onVote: () => void;
   onClose: () => void;
 }) {
@@ -236,7 +248,14 @@ function Zoom(props: {
               <CloseIcon size={22} />
             </button>
           </div>
-          <DrawingCanvas class="kd__zoomcanvas" strokes={d()?.strokes ?? []} version={d()?.key ?? "0"} />
+          <button type="button" class="kd__replay" aria-label="Çizimi tekrar izle" onClick={props.onReplay}>
+            <DrawingCanvas
+              class="kd__zoomcanvas"
+              strokes={d()?.strokes ?? []}
+              version={d()?.key ?? "0"}
+              replay={props.replay}
+            />
+          </button>
           <Show when={!mine()}>
             <PrimaryButton
               variant={props.picked === props.player.id ? "done" : "cyan"}

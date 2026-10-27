@@ -1072,6 +1072,16 @@ const SCREENS = [
   { name: "acgozluluk-opening-end", q: "mock=acgozluluk-choosing&n=5&open=1", settle: 0 },
   { name: "zaman-sudden", q: "mock=zaman-sudden" },
   { name: "kronometre-target", q: "mock=kor-kronometre-counting&target=7" },
+  // Çila A: Karalama araç çubuğu, oylamada çizim tekrarı, maç sonu galerisi, panel ipucu çizimi, lobi "Bu gece" şeridi.
+  { name: "kd-toolbar-open", q: "mock=karalama-draw-ink", settle: 900 },
+  { name: "kd-vote-replay-done", q: "mock=karalama-vote&n=5", settle: 2600 },
+  { name: "final-gallery", q: "mock=final&n=5&gallery=12", settle: 2600 },
+  { name: "final-gallery-8", q: "mock=final&n=8&gallery=8", settle: 2600 },
+  { name: "kontrol-clue-panel", q: "mock=kontrol-play&n=4", settle: 1200 },
+  { name: "kontrol-clue-panel-3", q: "mock=kontrol-play&n=8&clue=3", settle: 1200 },
+  { name: "lobby-tonight-random", q: "mock=lobby&n=8", settle: 900 },
+  { name: "lobby-tonight-manual", q: "mock=lobby&n=8&sel=manual&pick=4", settle: 900 },
+  { name: "lobby-tonight-guest", q: "mock=lobby&n=8&guest=1&sel=manual&pick=3", settle: 900 },
 ];
 
 function freePort() {

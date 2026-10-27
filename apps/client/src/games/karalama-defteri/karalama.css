@@ -350,9 +350,16 @@
   font-weight: 700;
   font-size: var(--fs-18);
 }
-.kd__zoomcanvas {
+.kd__replay {
+  display: block;
   width: min(100%, 56dvh);
   align-self: center;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.kd__zoomcanvas {
+  width: 100%;
   border-radius: 18px;
   border: 1px solid var(--cyan);
   box-shadow: 0 0 24px rgba(46, 242, 255, 0.3);

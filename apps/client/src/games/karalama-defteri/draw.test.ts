@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { simplify, toGrid, toStrokeChunks } from "./draw.js";
+import { simplify, strokesUpTo, toGrid, toStrokeChunks } from "./draw.js";
 import { parseStroke } from "./view.js";
 
 describe("çizim yardımcıları", () => {
@@ -40,5 +40,20 @@ describe("çizim yardımcıları", () => {
   it("bölünen darbeler sunucunun kabul ettiği biçimde: sıkıştırılınca geçerli darbe", () => {
     const chunks = toStrokeChunks(Array.from({ length: 250 }, (_, i) => i % 1001));
     for (const c of chunks) expect(parseStroke([0, 2, ...c])).not.toBeNull();
+  });
+});
+
+describe("çizim tekrarı", () => {
+  const a = [0, 1, 0, 0, 10, 10, 20, 20, 30, 30];
+  const b = [2, 2, 5, 5, 6, 6];
+  it("kesir 0 boş, 1 tüm darbeler", () => {
+    expect(strokesUpTo([a, b], 0)).toEqual([]);
+    expect(strokesUpTo([a, b], 1)).toEqual([a, b]);
+  });
+  it("yarım kalan darbe kısalır ve en az iki nokta taşır", () => {
+    // 4 + 2 = 6 nokta; %50 -> ilk 3 nokta
+    expect(strokesUpTo([a, b], 0.5)).toEqual([[0, 1, 0, 0, 10, 10, 20, 20]]);
+    expect(strokesUpTo([a, b], 0.01)).toEqual([[0, 1, 0, 0, 10, 10]]);
+    expect(strokesUpTo([a, b], 0.9)).toEqual([a, b]);
   });
 });

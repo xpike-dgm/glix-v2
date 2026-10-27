@@ -52,7 +52,7 @@ Sırayla yapılacak:
 
 **E. Görsel**
 - [x] Lobiye dünya arka planı: tek "lobi salonu" görseli (dikey + yatay), Aşama 4 stilinde ChatGPT ile üretilir.
-- [ ] Seçilen oyunlar alt kısımda küçük kart şeridi: "Bu gece: N oyun".
+- [x] Seçilen oyunlar alt kısımda küçük kart şeridi: "Bu gece: N oyun". (Rastgele modda en çok 8 "?" kartı; 320×568'de 5+ oyuncuyla kaydırmasız sığma için şerit yalnız orada gizlenir.)
 
 Kabul (ek): tek kişilik oda 320×568–430×932'de kaydırmasız; boş daireye dokunma davet açar; `ui:check`'e lobi-solo,
 lobi-2, lobi-8, lobi-qr, lobi-picker durumları eklendi.
@@ -196,9 +196,9 @@ Bugün: yeni sürüm hazır olunca bekliyor (`registerType: prompt`), kullanıc�
 | O12 | Çizgiyi Geçme | Bölge genişliği oyuncu sayısına göre |
 
 **Kural değiştirmeyen cilalar (onaysız yapılabilir):**
-- Karalama: renk paleti + kalınlık, oylamada çiziliş tekrarı, maç sonu galeri.
+- [x] Karalama: renk paleti + kalınlık (zaten vardı: 6 renk + silgi, 3 kalınlık), oylamada çiziliş tekrarı, maç sonu galeri.
 - Gizli Alışveriş: gerçek ürün ikon seti (12 SVG).
-- Kontrol Paneli: ipucunu metin yerine mini panel çizimiyle göster.
+- [x] Kontrol Paneli: ipucunu metin yerine mini panel çizimiyle göster (metin alt yazı olarak kaldı).
 - [x] Sözlük Blöfü / Çağrışım / Sızma: sıralı dramatik açılış (en çok kandıran en son). (`fx/sequence.ts`; Sızma: oylar azdan çoğa, son adımda maske düşer)
 - Yazı Yaz: puansız "şüphe göstergesi". [x] Kendim: sürükle-bırak eşleştirme.
 - [x] Çapraz Ateş / Açgözlülük: sinematik açılış sahneleri.
