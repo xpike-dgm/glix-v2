@@ -28,6 +28,7 @@ import { GoogleUsername } from "./screens/GoogleUsername.js";
 import { Home } from "./screens/Home.js";
 import { InviteCard } from "./screens/InviteCard.js";
 import { Join } from "./screens/Join.js";
+import { Leaderboard } from "./screens/Leaderboard.js";
 import { Lobby } from "./screens/Lobby.js";
 import { Login } from "./screens/Login.js";
 import { NewPassword } from "./screens/NewPassword.js";
@@ -145,6 +146,8 @@ export function App() {
     if (mock) {
       if (mock.startsWith("sonkisi-")) {
         devReady(import("./dev/mockSonKisi.js").then((m) => void m.startSonKisiMock(mock, params)));
+      } else if (mock.startsWith("siralama") || mock.startsWith("rozet-")) {
+        devReady(import("./dev/mockSiralama.js").then((m) => void m.startSiralamaMock(mock, params)));
       } else if (mock.startsWith("arkadas")) {
         devReady(import("./dev/mockArkadas.js").then((m) => void m.startArkadasMock(mock, params)));
       } else if (mock.startsWith("zehirli-")) {
@@ -239,6 +242,9 @@ export function App() {
             </Match>
             <Match when={screen() === "friends"}>
               <Friends />
+            </Match>
+            <Match when={screen() === "leaderboard"}>
+              <Leaderboard />
             </Match>
             <Match when={screen() === "login"}>
               <Login />

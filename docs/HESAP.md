@@ -42,7 +42,7 @@ Yazma oyun akışının dışında, bitişte tek işlemde (küçük toplu yazma)
   `won` = yer 1. Yarıda kalan/çöken maçlar maç olarak yazılmaz (biten oyunlar yazılmış olur).
 - **Birlikte oynama** (`account_coplay`): biten her maçta hesaplı oyuncu çiftleri için iki yönlü sayaç artar (misafirler yok).
 - Maç sırasında odadan çıkan oyuncunun kaydı o noktadan sonra yazılmaz (oyuncu kaydı odadan silinmiştir).
-- Rozet ve oyuna özel rekorlar H6'dadır.
+- Rozetler aşağıda "Rozetler" bölümünde; oyuna özel rekorlar henüz yok.
 
 ### Profil ucu
 `GET /api/profile` (oturum şart; yoksa 401) tam profili döner; ayrıntı `docs/PROTOKOL.md`. `GET /api/profile/<kullanıcı>`
@@ -52,13 +52,24 @@ Profil ekranı (ana sayfada kullanıcı adına dokununca): üyelik tarihi; Maç 
 oyun listesi (kart görseli, oynama, birincilik, en iyi); son 10 maç; en çok birlikte oynadığın 5 kişi. Yeni hesapta
 "Henüz maç yok — bir oda kur!". Misafire final'de "Rozet ve istatistik için hesap aç" daveti ve Kayıt ol düğmesi çıkar
 (kayıt ekranı oda dışında olduğundan düğme önce odadan çıkmayı onaylatır).
-Rozetler ve sıralama sonraki adımlarda profile eklenecek. Arkadaşın profili (Arkadaşlar > arkadaş > Profilini gör) aynı ekranda, yalnız toplamlar/oyunlarla açılır.
+Rozetler profilde gösterilir. Arkadaşın profili (Arkadaşlar > arkadaş > Profilini gör) aynı ekranda, yalnız toplamlar, oyunlar ve kazanılan rozetlerle açılır.
 
-## Rozetler
-Kalıcı başarımlar, sunucuda maç sonunda değerlendirilir; yeni kazanılanlar sonuç ekranında "Yeni rozet!" olarak görünür.
-İlk küme (örnek): İlk maç, 10/50/100 maç, İlk galibiyet, 10 galibiyet, 10 farklı oyunda birincilik, Kâhin ×10,
-Kule'de 5 kusursuz, 8 kişilik maçı kazanmak, Arkadaşınla 10 maç, Gizli rozetler (kazanınca açılır).
-Rozet görselleri sonra ChatGPT'yle üretilir; o zamana dek simge + ad.
+## Rozetler (H6; uygulandı)
+Kalıcı başarımlar. Tanımlar tek modülde: `apps/server/src/badges.ts` (kimlik, Türkçe ad ve açıklama, `secret`, `check(istatistik, maç bağlamı)`).
+Kimlikler veritabanına yazıldığı için asla yeniden adlandırılmaz.
+- **Değerlendirme:** maç satırı `account_matches`'a yazıldıktan sonra, aynı kayıtçı yolunda (`createAccountRecorder`) ve **ayrı hata yalıtımıyla**
+  (rozet hatası maç kaydını ya da oyun akışını bozmaz) hesaplı her oyuncu için SQL toplamlarından (`badgeStats`) değerlendirilir. Yeni rozetler
+  `badges(account_id, badge_id, earned_at)`'e `INSERT OR IGNORE` ile yazılır: aynı rozet ikinci kez verilmez, bildirim yalnız ilk kazanışta gider.
+- **Bildirim:** yeni kimlikler hesabın canlı (TV olmayan) bağlantılarına `badgesEarned {ids}` olarak maç final'e varınca gider (`docs/PROTOKOL.md`).
+  İstemci final'de "Yeni rozet!" kartını gösterir (hareket azaltma ayarına uyar); bağlantısı o sırada kopuk olan kartı kaçırır ama rozet profilde durur.
+- **Profil:** kendi profilinde ızgara: kazanılan parlak ve adlı, kazanılmamış açık rozet sönük ve açıklamalı, kazanılmamış gizli rozet "???" / "Gizli rozet"
+  (gerçek kimlik ve ad sunucudan çıkmaz). Arkadaşın profilinde yalnız kazanılanlar görünür.
+- **Görsel:** görsel dosya yok; satır içi SVG madalyon. Şekil rozet ailesini söyler (daire: maç sayısı, altıgen: galibiyet, kare: diğer, baklava: gizli) ve içinde sayı ya da simge vardır; ad her zaman yazıyla yanındadır (renk körü güvenli).
+- **Rozetler (13):** İlk Adım (1 maç), Alışıyorum (10), Müdavim (50), Efsane Oyuncu (100); İlk Zafer (1 galibiyet), Kazanmayı Biliyor (10), Şampiyon (25);
+  Çok Yönlü (10 farklı oyunda birincilik); Kalabalığın Şampiyonu (8 kişilik maçı kazan); Can Dost (kabul edilmiş arkadaşla 10 maç, `account_coplay` + `friends`);
+  Seri Galip (son 3 maç galibiyet); **gizli:** Gece Kuşu (maç İstanbul 02:00–05:00 arası bitti), Hepsi Bir Arada (rastgele havuzdaki `randomPool !== false` her oyun en az bir kez oynandı).
+- **Kapsam dışı (motor verisi gerekir):** *Kâhin ×10* (Rus Ruleti; Kâhin yalnız oyun içi görünümde var, `GameResult` yalnız `miniScores`/`awards` taşır) ve
+  *Kule Ustası: tek maçta kusursuz* (kusursuz sayısı sonuçta yok). Oyun kuralı ve görünümler değiştirilmeden eklenemez; motor sonuca bir "başarım" alanı verirse eklenir.
 
 ## Arkadaşlar (H7, H8; uygulandı)
 Yalnız hesaplılar; misafir bu özelliklerden hiçbir şey görmez. Uç ve mesaj ayrıntısı `docs/PROTOKOL.md` "Arkadaşlar".
@@ -78,9 +89,12 @@ Yalnız hesaplılar; misafir bu özelliklerden hiçbir şey görmez. Uç ve mesa
 - **Arkadaşın lobisine katıl:** listede arkadaş lobideyse (ya da maçta ve oda izleyiciye açıksa, yer varsa) "Katıl"; sunucu `joinFriend` ile kodu çözer, mevcut katılım kuralları geçerli.
 - Bildirim aboneliği hesaba bağlıdır (yalnız bellekte; çıkışta, 404/410'da ve sunucu yeniden başlarken düşer): kalıcı bir bildirim adresi kaydı yoktur.
 
-## Arkadaş sıralaması
-Sen + arkadaşların. Sekmeler: **Bu hafta** (pazartesi sıfırlanır) ve **Tüm zamanlar**.
-Ölçüler: galibiyet, toplam genel skor, maç sayısı; oyun başına rekorlar ayrı listede.
+## Arkadaş sıralaması (H9; uygulandı)
+Sen + kabul edilmiş arkadaşların (yalnız hesaplılar). Sekmeler: **Bu hafta** (İstanbul pazartesi 00:00'da sıfırlanır) ve **Tüm zamanlar**.
+Ölçüler (çipler): **Galibiyet** (yer 1), **Puan** (genel skor toplamı), **Maç**; hepsi `account_matches`'tan tek toplu sorguyla. Eşit değer aynı sırayı paylaşır (1, 1, 3).
+İkinci bölüm "Oyun liderleri": oyun başına arkadaşlar arasında en çok birincilik (`account_games`). Uç ayrıntısı `docs/PROTOKOL.md` "Arkadaş sıralaması".
+Ekran: Arkadaşlar ekranından ve kendi Profilinden "Arkadaş sıralaması"; kendi satırın vurgulu (renk + sol çizgi + "Sen"), birinciye taç (değeri 0 ise yok);
+satıra dokununca o kişinin profili açılır (geri: sıralama). Arkadaşın yoksa "Sıralama için arkadaş ekle" ve Arkadaşlar düğmesi.
 
 ## KVKK
 Kayıtta kısa aydınlatma metni; Ayarlar'da "Verimi indir" (JSON) ve "Hesabımı sil" (oturumlar, arkadaşlıklar,
@@ -97,7 +111,8 @@ Arkadaşlık tabloları (göç 3, uygulandı; hepsinde `ON DELETE CASCADE`): `fr
 `account_games(account_id, game_id, ended_at, players, mini_score, rank, won)`,
 `account_matches(account_id, ended_at, players, games, score, place, won)`,
 `account_coplay(account_id, other_account_id, matches, last_at)` (PK ikisi); `(account_id, ended_at)` dizinleri.
-`deleteAccountData(accountId)` bu üç tablodaki satırları (karşı taraftaki sayaçlar dahil) siler; hesap silme (H10) çağıracak.
+Rozetler (göç 4, uygulandı): `badges(account_id, badge_id, earned_at)`, PK `(account_id, badge_id)`, `ON DELETE CASCADE`.
+`deleteAccountData(accountId)` bu üç tablodaki satırları (karşı taraftaki sayaçlar dahil) ve rozetleri siler; hesap silme (H10) çağıracak.
 
 ## Sıra
 H1 → H4 → H5 → H7 → H8 → H9 → H6 → H10; H2 ve H3, sahipten anahtarlar gelince araya girer.

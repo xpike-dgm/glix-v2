@@ -9,7 +9,8 @@ import {
   statusShape,
   statusText,
 } from "../net/friendsRules.js";
-import { setProfileOf } from "../net/profile.js";
+import { setLeaderboardFrom } from "../net/leaderboard.js";
+import { setProfileBack, setProfileOf } from "../net/profile.js";
 import { goHome, setState, state, toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
@@ -110,6 +111,7 @@ export function Friends() {
   const viewProfile = (f: Friend): void => {
     closeSheet();
     setProfileOf(f.username);
+    setProfileBack("friends");
     setState("nav", "profile");
   };
 
@@ -146,6 +148,16 @@ export function Friends() {
             Ekle
           </button>
         </form>
+        <GhostButton
+          size="small"
+          class="fr__rank"
+          onClick={() => {
+            setLeaderboardFrom("friends");
+            setState("nav", "leaderboard");
+          }}
+        >
+          Arkadaş sıralaması
+        </GhostButton>
         <Show when={error()}>
           {(text) => (
             <p class="acct__error" role="alert">

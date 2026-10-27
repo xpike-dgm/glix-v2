@@ -2,6 +2,7 @@ import { createSignal } from "solid-js";
 import { reconnectForAccount, sendPushUnsubscribe } from "./client.js";
 import { loadFriends, resetFriends } from "./friends.js";
 import { type GoogleReturn, parseGoogleReturn } from "./googleRules.js";
+import { resetLeaderboard } from "./leaderboard.js";
 import { parseMailReturn } from "./mailRules.js";
 import { goHome, setNickname, setState, state, toast } from "./store.js";
 
@@ -57,7 +58,10 @@ export async function refreshAccount(): Promise<void> {
     }
     if (account && !state.nickname) setNickname(account.username);
     if (account) void loadFriends();
-    else resetFriends();
+    else {
+      resetFriends();
+      resetLeaderboard();
+    }
   } catch {
     // ağ yok: misafir gibi devam
   }
@@ -97,6 +101,7 @@ export async function logout(): Promise<void> {
   // Bu cihazın bildirim aboneliği hesaptan ayrılır (davetler artık bu cihaza gitmesin); soket hâlâ hesaba bağlıyken bildirilir.
   sendPushUnsubscribe();
   resetFriends();
+  resetLeaderboard();
   try {
     await call("logout", "POST", {});
   } catch {

@@ -1,5 +1,7 @@
 import { createEffect, createSignal, For, Match, onMount, Show, Switch } from "solid-js";
-import { loadProfile, profileOf, profileState, setProfileOf } from "../net/profile.js";
+import { earnedSummary } from "../net/badgeRules.js";
+import { setLeaderboardFrom } from "../net/leaderboard.js";
+import { loadProfile, profileBack, profileOf, profileState, setProfileOf } from "../net/profile.js";
 import {
   isEmptyProfile,
   matchLine,
@@ -12,6 +14,7 @@ import {
 import { goHome, setState, state } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
+import { BadgeMedal } from "../ui/BadgeMedal.js";
 import { GhostButton } from "../ui/GhostButton.js";
 import { BackIcon, CrownIcon } from "../ui/Icons.js";
 import { Mascot } from "../ui/Mascot.js";
@@ -62,6 +65,39 @@ function GameRow(props: { game: ProfileGame }) {
         </span>
       </span>
     </li>
+  );
+}
+
+/** Rozetler: kazanılan parlak ve adlı; kazanılmamış sönük ve açıklamalı; gizli olan "???". */
+function Badges(props: { profile: ProfileInfo; own: boolean }) {
+  const list = () => props.profile.badges;
+  return (
+    <Show when={list().length > 0}>
+      <section class="set__group">
+        <div class="bd__head">
+          <h2 class="set__head">Rozetler</h2>
+          <Show when={props.own}>
+            <span class="bd__count">{earnedSummary(list())}</span>
+          </Show>
+        </div>
+        <ul class="bd__grid">
+          <For each={list()}>
+            {(b) => (
+              <li class="bd__item" data-earned={b.earned ? "1" : "0"}>
+                <BadgeMedal id={b.id} earned={b.earned} secret={b.secret} />
+                <span class="bd__name">{b.name}</span>
+                <Show when={!b.earned}>
+                  <span class="bd__desc">{b.description}</span>
+                </Show>
+                <Show when={b.earned}>
+                  <span class="sr-only">Kazanıldı</span>
+                </Show>
+              </li>
+            )}
+          </For>
+        </ul>
+      </section>
+    </Show>
   );
 }
 
@@ -142,7 +178,7 @@ export function Profile() {
       return;
     }
     setProfileOf(null);
-    setState("nav", "friends");
+    setState("nav", profileBack());
   };
   // Oturum düşerse (başka sekmede çıkış) ana sayfaya dönülür.
   createEffect(() => {
@@ -175,6 +211,19 @@ export function Profile() {
           <Show when={ready()}>{(p) => <p class="pf__since">Üyelik: {memberSince(p().createdAt)}</p>}</Show>
         </div>
 
+        <Show when={profileOf() === null && state.account}>
+          <GhostButton
+            size="small"
+            class="pf__rank"
+            onClick={() => {
+              setLeaderboardFrom("profile");
+              setState("nav", "leaderboard");
+            }}
+          >
+            Arkadaş sıralaması
+          </GhostButton>
+        </Show>
+
         <Switch>
           <Match when={failure()}>
             {(message) => (
@@ -187,19 +236,22 @@ export function Profile() {
           </Match>
           <Match when={ready()}>
             {(p) => (
-              <Show
-                when={!isEmptyProfile(p())}
-                fallback={
-                  <div class="pf__empty rise" style={{ "--i": 1 }}>
-                    <Mascot pose="merhaba" size="var(--mascot-lg, clamp(96px, 30vw, 150px))" />
-                    <p class="pf__note">
-                      {profileOf() === null ? "Henüz maç yok — bir oda kur!" : "Henüz maç yok."}
-                    </p>
-                  </div>
-                }
-              >
-                <Details profile={p()} />
-              </Show>
+              <>
+                <Show
+                  when={!isEmptyProfile(p())}
+                  fallback={
+                    <div class="pf__empty rise" style={{ "--i": 1 }}>
+                      <Mascot pose="merhaba" size="var(--mascot-lg, clamp(96px, 30vw, 150px))" />
+                      <p class="pf__note">
+                        {profileOf() === null ? "Henüz maç yok — bir oda kur!" : "Henüz maç yok."}
+                      </p>
+                    </div>
+                  }
+                >
+                  <Details profile={p()} />
+                </Show>
+                <Badges profile={p()} own={profileOf() === null} />
+              </>
             )}
           </Match>
           <Match when={true}>

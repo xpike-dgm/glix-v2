@@ -193,10 +193,10 @@ katılıp oynar. Giriş: Google ya da kendi hesabı. Sıralama yalnız arkadaşl
 - [x] H3 Google ile giriş (OAuth; sahibin Google Cloud'da açacağı istemci kimliğiyle).
 - [x] H4 Misafir sınırı: oda kurmak hesap ister; misafir kodla katılır, istatistiği tutulmaz.
 - [x] H5 İstatistik: yalnız hesaplılar için maç/oyun sonuçları; profil ekranı.
-- [ ] H6 Rozetler: kalıcı başarımlar, maç sonunda "Yeni rozet!".
+- [x] H6 Rozetler: kalıcı başarımlar, maç sonunda "Yeni rozet!". (Kâhin ve Kule Ustası rozetleri motor verisi gerektirdiğinden dışarıda; `docs/HESAP.md` "Rozetler".)
 - [x] H7 Arkadaşlar: kullanıcı adıyla istek, kabul/ret, liste, çevrimiçi/lobide durumu.
 - [x] H8 Lobiye hızlı davet (uygulama içi + web bildirimi) ve arkadaşın lobisine tek dokunuşla katılma.
-- [ ] H9 Arkadaş sıralaması.
+- [x] H9 Arkadaş sıralaması: sen + arkadaşların; bu hafta / tüm zamanlar; galibiyet, puan, maç; oyun liderleri.
 - [ ] H10 KVKK: aydınlatma metni, hesabı silme, verimi indirme.
 
 ---
