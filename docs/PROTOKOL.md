@@ -33,6 +33,8 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `visibility` | `hidden` (boolean) | sayfa gizlendi/göründü. Yalnız oyuncu bildirimi açtıysa ve odadaysa gönderilir; odasız bağlantıda sessizce yok sayılır. Yeniden bağlanınca (`resume`) sunucu bunu "görünür"e sıfırlar, istemci `session` sonrası yeniden bildirir |
 | `pushSubscribe` | `endpoint`, `p256dh`, `auth` | web bildirimi aboneliğini bu oyuncunun oturumuna bağlar (bkz. "Web bildirimleri"). `endpoint` https ve ≤ 500 karakter, kimlik bilgisi yok; `p256dh` 87, `auth` 22 karakter base64url (65 / 16 bayt). Sunucuda bildirim kapalıysa sessizce yok sayılır; uç nokta bilinen push servislerinden (FCM, Mozilla, Apple, Windows) değilse `invalid_message` |
 | `pushUnsubscribe` | — | aboneliği siler |
+| `inviteFriend` | `username` | **Hesaplı** bağlantı, odada, yalnız lobide. Kabul edilmiş arkadaşı odaya çağırır. Başarıda gönderene `inviteSent`; olmazsa `invite_failed` (arkadaş değil / engelli / çevrimdışı ve bildirimsiz / zaten odada), `rate_limited` (aynı arkadaşa 30 sn'de bir, gönderen başına dakikada 20), `not_in_room`, `wrong_phase`, `login_required` |
+| `joinFriend` | `username`, `nickname`, `avatar?` | **Hesaplı**, odasız bağlantı. Arkadaşın şu anki odasını sunucu çözer (kod istemciye gelmez) ve `joinRoom` kurallarıyla (maçta izleyici/kapalı, oda dolu) girer. Arkadaş değilse, odada değilse, oda katılıma kapalı ya da doluysa hepsinde aynı `friend_not_found`; misafirde de aynı. Başarıda `session` |
 | `feedback` | `rating` (1–5), `text?` (≤ 300) | yalnız `final`; maç başına bir kez; cevap `actionAck` değil, sessizce kaydedilir |
 | `perf` | `gameId`, `rttMs`, `ackP50`, `ackP95`, `ackN`, `slowTaps`, `tapP95`, `longTasks`, `longTaskMs` | yalnız `results` aşamasında ve yalnız o anki oyunun `gameId`'si için; oyun başına oyuncu başına bir kez; sessizce kaydedilir (cevap yok). Tam anahtar kümesi, hepsi negatif olmayan tam sayı: `rttMs`,`ackP50`,`ackP95`,`tapP95` ≤ 60 000; `ackN`,`slowTaps`,`longTasks` ≤ 10 000; `longTaskMs` ≤ 600 000; `gameId` ≤ 64 karakter. İsteğe bağlı (eski istemcide yok): `platform` (`ios` / `android` / `diger`, UA'dan kaba grup), `reconnects` (o oyunda soket yeniden açılma sayısı) ve `reloads` (sekme oturumunda sayfa yenileme sayısı), ikisi de ≤ 1 000. Aşan ya da fazladan alanlı mesaj `invalid_message` |
 
@@ -49,6 +51,11 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `actionAck` | `seq`, `ok`, `reason?` |
 | `left` | `reason: "left" \| "kicked" \| "closed"` |
 | `reaction` | `playerId`, `emoji` | **Geçici olay**: oda durumunda (`room`/`patch`) saklanmaz, `rev` almaz, yeniden bağlanana tekrarlanmaz. Lobi/sonuç/finalde gönderenle birlikte odadaki tüm bağlı oyunculara gider |
+| `friendStatus` | `username`, `status: "offline" \| "online" \| "lobby" \| "playing"` — yalnız kabul edilmiş arkadaşların canlı bağlantılarına; durum değişince (bkz. "Arkadaşlar") |
+| `friendRequest` | `username` — sana arkadaşlık isteği geldi |
+| `friendsChanged` | — arkadaş listen/isteklerin değişti (kabul, geri çekme, çıkarma, engel); istemci `GET /api/friends`'i yeniler |
+| `invite` | `from`, `roomCode`, `expiresAt` (sunucu saati, ms; gönderildikten 10 dk sonra) — arkadaşın seni odaya çağırıyor |
+| `inviteSent` | `username` — `inviteFriend` arkadaşına ulaştırıldı (canlı bağlantı ya da web bildirimi) |
 | `error` | `code`, `message` (Türkçe, oyuncuya gösterilebilir) |
 
 **Görünümler:** `match.publicView` odadaki herkes için aynıdır (oda başına bir kez hesaplanır ve
@@ -149,12 +156,45 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
   "Aynı ekiple yeni maç" (`returnToLobby`) dedi: "Yeni maç".
 - Metin geneldir: `{title, body: "Oda KOD", tag}`; oyun içeriği, ad ya da gizli bilgi asla. Pazarlama yok.
 - Tıklama (`public/sw-push.js`): açık pencere varsa öne getirilir, yoksa uygulama açılır ve kayıtlı oturum odayı geri getirir.
+- **Arkadaş daveti (H8):** hesaplı bağlantıdan gelen `pushSubscribe` odasız da kabul edilir ve abonelik ayrıca **hesaba** bağlanır
+  (yalnız bellekte, `hesap → abonelik`; çıkışta istemci `pushUnsubscribe` yollar, sunucu yeniden başlayınca ya da push servisi 404/410
+  derse düşer, aynı cihaz başka hesaba geçerse eski eşleme silinir). Davet edilen hesabın canlı bağlantısı yoksa bu abonelikle
+  `{title: "GLIX daveti", body: "<kullanıcı> seni GLIX odasına çağırıyor", tag: "glix-davet-KOD", url: "/?oda=KOD"}` gider; hizmet çalışanı
+  yalnız `/` ile başlayan (`//` olmayan) `url`'yi tıklamada açar (açık pencere varsa ona gider). `url` oyun bildirimlerinde yoktur.
+
+## Arkadaşlar (HTTP, `/api/friends`, H7; WS, H8)
+
+Hepsi JSON; oturum çerezi şart (yoksa 401 `login_required`); misafir bu uçlardan hiçbir şey göremez. POST'larda `Origin` denetimi (403 `forbidden`),
+`Content-Type: application/json`, gövde tam `{username}` (3–20 `[A-Za-z0-9_]`, büyük/küçük harf duyarsız). Hata gövdesi `{ok:false, code, message}` (Türkçe).
+Hız sınırı hesap başına: okuma 30 ani/1 sn, yazma 30 ani/2 sn'de 1, `request` ayrıca 10 ani/6 sn'de 1 → 429 `rate_limited`.
+- `GET /api/friends` → 200 `{ok:true, friends:[{username, since, status, joinable, withYou}], incoming:[{username, at}], outgoing:[{username, at}], blocked:[{username}]}`.
+  `status` `offline|online|lobby|playing`; `joinable`: arkadaşın odasına şimdi girilebilir (lobide yer var, ya da maçta izleyiciye açık ve yer var);
+  `withYou`: seninle aynı odada. **Oda kodu hiçbir yanıtta ve durum mesajında yoktur**; arkadaşa katılma `joinFriend` ile sunucuda çözülür. E-posta hiç dönmez.
+- `POST request` → 200 `{ok:true, result:"sent"|"accepted"}` (karşı taraf zaten istemişse kendiliğinden kabul, `accepted`). 404 `not_found` (kullanıcı yok), 400 `self`,
+  409 `already_friends` / `already_requested` / `blocked_by_me` (yalnız seni engelleyen sen isen) / `limit` (200 arkadaş ya da 50 bekleyen giden istek), 400 `request_failed` "İstek gönderilemedi."
+  (karşı taraf seni engellemiş **ya da** karşının kotası dolu: sebep ayırt edilmez, engellendiğin sızmaz). Karşı hesabın bekleyen gelen isteği en çok 100.
+- `POST accept` (yalnız karşının sana attığı isteği; yoksa 404 `no_request`, kota doluysa 409 `limit`), `decline` (karşıya haber verilmez), `cancel` (kendi isteğini geri çek),
+  `remove` (arkadaşlıktan çıkar), `block` (arkadaşlık/istek silinir; karşı taraf istek atamaz, davet edemez), `unblock`. `decline/cancel/remove/unblock` idempotenttir (200).
+  Bilinmeyen kullanıcı adı 404 `not_found`.
+- Karşı tarafa canlı bildirim: `request` → `friendRequest`; `accept`, `cancel`, `remove`, `block` ve otomatik kabul → `friendsChanged`.
+- **Durum (presence):** sunucu, hesaba bağlı canlı WS bağlantılarından türetir: bağlantı yok `offline`; bağlı ama odasız `online`; bir bağlantısı lobi aşamasındaki odada `lobby`
+  (lobi, başka bağlantıdaki maçtan önceliklidir); odası lobi dışında (anlatım…final) `playing`. Sahne (TV) bağlantısı oyuncu sayılmaz. Hesaplı bağlantı odasız da kapatılmaz
+  (60 sn boşta kapanma yalnız misafire uygulanır; çevrimiçi durumu ve canlı davet bu bağlantıdan gelir).
+  Değişim `friendStatus` ile yalnız kabul edilmiş arkadaşların bağlantılarına yayılır; sunucu durumları en çok **1 sn'de bir** tarar, aralıktaki dalgalanmalar tek mesaj olur.
+  Arkadaş değilsen ya da engelliysen hiçbir durum mesajı almazsın.
+- **Davet:** `inviteFriend {username}` (yukarıdaki tabloda). Sunucu bekleyen davet tutmaz; `invite.expiresAt = şimdi + 10 dk` istemcide sayılır, katılma normal `joinRoom` ile yapılır
+  (maçta "kapalı" ise mevcut `match_in_progress` mesajı). Önce canlı bağlantılara `invite` gider; hiçbiri yoksa hesaba bağlı web bildirimi aboneliği (bkz. "Web bildirimleri").
+  Sınırlar: aynı arkadaşa 30 sn'de bir, gönderen başına dakikada 20 (kova denenen her davette harcanır). Yalnız kabul edilmiş arkadaşlara; engelleyen/engellenen davet edemez.
+- **Profil:** `GET /api/profile/<kullanıcı>` kabul edilmiş arkadaşlara da açıktır (`recent` ve `coPlayers` yok); arkadaş olmayan ve bilinmeyen ad aynı 404'ü alır.
+- Protokol sürümü **2 kalır**: eklenen sunucu mesajlarını eski istemci tanımadığı için yok sayar (parse `null`), eklenen istemci mesajlarını yalnız yeni istemci yollar;
+  mevcut mesajların biçimi değişmedi.
 
 ## Hata kodları
 
 `invalid_message`, `rate_limited`, `nickname_invalid`, `room_not_found`, `room_full`, `match_in_progress`,
 `resume_failed`, `nickname_taken`, `not_host`, `not_in_room`, `already_in_room`, `invalid_games`, `avatar_taken`, `not_enough_players`,
-`wrong_phase`, `not_participant`, `game_failed`, `draining`, `server_busy`, `stage_full`, `stage_readonly`, `login_required`.
+`wrong_phase`, `not_participant`, `game_failed`, `draining`, `server_busy`, `stage_full`, `stage_readonly`, `login_required`,
+`invite_failed`, `friend_not_found`.
 
 `login_required`: `createRoom` yalnız hesaplı bağlantıdan kabul edilir. Kodla katılma (`joinRoom`), oynama ve sahne (`joinStage`) misafire açıktır.
 
@@ -187,15 +227,15 @@ Yalnız `GET`; oturum çerezi şart (yoksa 401 `login_required`); yanıtlar `Cac
   perGame:[{gameId, name, plays, wins, bestMini, avgMini}], recent:[{endedAt, players, place, score}] (son 10 maç, yeniden eskiye),
   coPlayers:[{username, matches}] (en çok 5)}`. `winRate` 0–1 arası (3 ondalık); `wins`/`gameWins` yer 1 sayısı; `perGame` oynamaya göre azalan;
   `favoriteGame` en çok oynanan (eşitte en son oynanan); `name` katalogdaki ad (katalogda olmayan eski oyun için "Eski oyun"). Toplamlar SQL toplamlarıyla hesaplanır.
-- `GET /api/profile/<kullanıcı>` → aynı gövde, `recent` ve `coPlayers` **yok**. Şimdilik yalnız oturumdaki hesabın kendi adı için 200; başka ad,
-  bilinmeyen ad ve geçersiz ad 404 `not_found` (hesabın var olup olmadığı sızmaz). Arkadaşlık (H7) gelince arkadaşlara açılacak.
+- `GET /api/profile/<kullanıcı>` → aynı gövde, `recent` ve `coPlayers` **yok**. Oturumdaki hesabın kendi adı ve kabul edilmiş arkadaşlar için 200; başka ad,
+  bilinmeyen ad ve geçersiz ad 404 `not_found` (hesabın var olup olmadığı sızmaz). Kabul edilmiş arkadaşlar için de 200 (H7).
 - Veri: `account_games`, `account_matches`, `account_coplay` (ayrıntı `docs/HESAP.md`). Sunucu bunları oyun/maç bitince tek işlemde yazar (`AccountStatsRecorder`, `Runtime.accountStats`).
 
 ## Sınırlar (sunucu)
 
 - Mesaj en çok 8 KiB; giden tampon 1 MB'ı aşan (okumayan) soket koparılır. Sunucu 20 sn'de bir ping atar, pong gelmeyen soket koparılır.
 - `MAX_SOCKETS`=3000, `MAX_SOCKETS_PER_IP`=40, `MAX_ROOMS`=1000 (`server_busy`); IP başına oda kurma: 10 ani, 6 sn'de 1.
-- 60 sn odaya girmeyen soket 4000 ile kapanır. Soket başına 10 yanlış oda kodunda ve üst üste 100 `rate_limited`'de 1008 ile kapanır; IP başına yanlış kod kovası 20 ani, 3 sn'de 1.
+- 60 sn odaya girmeyen **misafir** soketi 4000 ile kapanır (hesaplı soket açık kalır). Soket başına 10 yanlış oda kodunda ve üst üste 100 `rate_limited`'de 1008 ile kapanır; IP başına yanlış kod kovası 20 ani, 3 sn'de 1.
 - `TRUST_PROXY=1` iken loopback/özel adresten gelen isteklerde `X-Forwarded-For` son girdisi istemci IP'sidir.
 - Maç kaydı en çok 20 000 eylem tutar; aşılırsa `truncated` olur ve `replay` reddeder.
 
