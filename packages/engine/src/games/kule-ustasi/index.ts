@@ -168,8 +168,6 @@ export const kuleUstasi: GameDefinition<KuleState, KuleAction, KuleView, KulePub
   minPlayers: 2,
   maxPlayers: 8,
   orientation: "portrait",
-  // Kural 12: yeni oyun; sahip onaylayana kadar yalnız elle seçilir.
-  randomPool: false,
   briefing: {
     goal: "Bloğu kulenin tam üstüne bırak, kuleyi düşürme!",
     steps: [

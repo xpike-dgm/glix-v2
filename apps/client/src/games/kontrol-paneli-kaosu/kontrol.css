@@ -582,3 +582,10 @@ button.kp__wire:active:not(:disabled) {
   height: 12px;
   margin-top: -6px;
 }
+/* İşaret adın yanına ~21 px ekler: ad sütunu o kadar genişler (en uzun ad "kırmızı"). */
+:root[data-cb="1"] .kp__wire {
+  grid-template-columns: 30px minmax(0, 1fr) 88px;
+}
+:root[data-cb="1"] .kp__mini .kp__wire {
+  grid-template-columns: 26px minmax(0, 1fr) 80px;
+}

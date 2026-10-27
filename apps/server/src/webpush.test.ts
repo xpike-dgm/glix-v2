@@ -22,9 +22,11 @@ const RFC = {
   salt: "DGv6ra1nlYgDCS1FRnbzlw",
   ecdhSecret: "kyrL1jIIOHEzg3sM2ZWRHDRB62YACZhhSlknJ672kSs",
   ikm: "S4lYMb_L0FxCeq0WhDx813KgSYqU26kOyzWUdsXYyrg",
-  cek: "oIhVW04MRdy2sN17rA8TsA",
+  cek: "oIhVW04MRdy2XN9CiKLxTg",
   nonce: "4h_95klXJ5E_qnoN",
-  body: "DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A_yl95bQpu6cVPTpK4Mqgkf1CXztLVBSt2Ks3oZwbuwXPXLWyouBWLVWGNWQexSgSxsj_Qulcy4a-fN",
+  header:
+    "DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8",
+  ciphertext: "8pfeW0KbunFT06SuDKoJH9Ql87S1QUrdirN6GcG7sFz1y1sqLgVi1VhjVkHsUoEsbI_0LpXMuGvnzQ",
 };
 
 describe("RFC 8291 aes128gcm şifreleme", () => {
@@ -40,7 +42,7 @@ describe("RFC 8291 aes128gcm şifreleme", () => {
     expect(b64u(out.parts.ikm)).toBe(RFC.ikm);
     expect(b64u(out.parts.cek)).toBe(RFC.cek);
     expect(b64u(out.parts.nonce)).toBe(RFC.nonce);
-    expect(b64u(out.body)).toBe(RFC.body);
+    expect(b64u(out.body)).toBe(b64u(Buffer.concat([fromB64u(RFC.header), fromB64u(RFC.ciphertext)])));
   });
 
   it("başlık düzeni: tuz(16) + rs(4096) + kimlik uzunluğu(65) + sunucu anahtarı", () => {

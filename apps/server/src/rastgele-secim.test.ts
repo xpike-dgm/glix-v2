@@ -125,7 +125,7 @@ describe("rastgele oyun seçimi: başlatma", () => {
     const first = await pick();
     expect(await pick()).toEqual(first);
     expect(first).toHaveLength(POOL.length);
-    expect(first).not.toContain("kule-ustasi");
+    expect(first).toContain("kule-ustasi");
   });
 
   it("lobiye dönünce seçim korunur, oyun listesi yine boş olur", async () => {

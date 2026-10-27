@@ -1151,7 +1151,7 @@ doğru cevaplarla tur uzayabilir.
 
 ## 29. Kule Ustası — `kule-ustasi`
 
-**Durum: TASLAK** (Ekim 2026; sahip "yap" dedi, ayrıntılar asistan önerisi — sahip itiraz ederse güncellenir)
+**Durum: KİLİTLİ** (Ekim 2026; sahip "yap" dedi, testler geçti; ayrıntılar asistan önerisi — sahip itiraz ederse güncellenir)
 
 **Fikir:** Herkes sırayla ortak bir kuleye blok bırakır. Blok, kulenin üstünde sağa sola kayar; oyuncu doğru anda
 dokunup bırakır. Alttaki bloğun dışına taşan kısım kesilip düşer, kule daralır. Hiç üstüne denk getiremeyen kuleyi
@@ -1178,11 +1178,9 @@ düşürür ve oyundan çıkar.
     1. Blok kulenin üstünde kayar; sıran gelince dokunup bırak.
     2. Taşan kısım kesilir, kule daralır; tam oturtursan "Kusursuz!"
     3. Iskalayan kuleyi yıkar ve çıkar (−1); kalanlar +1.
-12. Yeni oyun olduğu için oyun testleri sahip onaylayıp çalıştırılana kadar **rastgele seçime girmez**; yalnız elle
-    seçilebilir.
-    Uygulama: oyun tanımında `randomPool: false` bayrağı; sunucunun rastgele seçici işlevi (`pickRandomGames`) bu
-    oyunları havuza almaz, katalogda (`GameInfo.randomPool`) görünür ve lobi rastgele sayısını havuz boyuyla
-    sınırlar. Sahip onaylayınca bayrak kaldırılır.
+12. Rastgele seçime girer (Ekim 2026: testler çalıştırıldı ve geçti; o zamana dek `randomPool: false` ile yalnız
+    elle seçilebiliyordu). Bayrak genel olarak duruyor: yeni bir oyun onay bekleyecekse aynı yolla havuz dışında
+    tutulur (`pickRandomGames` havuza almaz, katalogda `GameInfo.randomPool` görünür).
 
 ---
 

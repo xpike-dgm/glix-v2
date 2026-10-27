@@ -30,23 +30,22 @@ async function startKule(names: string[]): Promise<Client[]> {
 }
 
 describe("Kule Ustası: gerçek oda akışı", () => {
-  it("elle seçilir, rastgele seçime girmez", async () => {
+  it("rastgele seçime girer", async () => {
     const [host] = (await setupRoom(["A", "B", "C"])) as [Client, Client, Client];
     expect(host.room.catalog.find((g) => g.id === "kule-ustasi")).toMatchObject({
       id: "kule-ustasi",
       name: "Kule Ustası",
       minPlayers: 2,
       maxPlayers: 8,
-      randomPool: false,
     });
-    expect(host.room.catalog.filter((g) => g.randomPool === false).map((g) => g.id)).toEqual(["kule-ustasi"]);
+    expect(host.room.catalog.filter((g) => g.randomPool === false)).toEqual([]);
 
     host.send({ type: "setRandom", count: 64 });
     await until(() => host.room.selection.mode === "random" && host.room.selection.count > 5, "rastgele");
     host.send({ type: "startMatch" });
     await until(() => host.room.phase === "briefing", "briefing");
-    expect(host.room.gameIds).not.toContain("kule-ustasi");
-    expect(host.room.gameIds).toHaveLength(Object.values(GAMES).filter((g) => g.randomPool !== false).length);
+    expect(host.room.gameIds).toContain("kule-ustasi");
+    expect(host.room.gameIds).toHaveLength(Object.values(GAMES).length);
   });
 
   it("tam maç: kesme, sıra, zaman aşımı otomatik bırakışı, ıska ve yarısı çıkınca sonuç", async () => {
@@ -132,14 +131,18 @@ describe("Kule Ustası: gerçek oda akışı", () => {
     expect((await act(byId.get(o3) as Client, k.clock.now())).ok).toBe(false);
   });
 
-  it("90 sn dolunca oyun biter ve sonuç genel skora işlenir", async () => {
+  it("oyun en geç 90 sn içinde biter ve sonuç genel skora işlenir", async () => {
     const cs = (await startKule(["A", "B", "C"])) as [Client, Client, Client];
     const [host] = cs;
     const pub = () => host.room.match?.publicView as KulePublicView;
     const endsAt = pub().endsAt;
     expect(endsAt - pub().startedAt).toBe(90_000);
-    k.clock.advance(Math.max(0, endsAt - k.clock.now()));
-    await until(() => host.room.phase === "results", "sonuçlar");
+    // Saat adım adım ilerler: tek hamlede sarılırsa sonuç ekranı da geçer, maç finale atlar.
+    while (host.room.phase === "playing" && k.clock.now() < endsAt + 1000) {
+      k.clock.advance(500);
+      await sync();
+    }
+    expect(host.room.phase).toBe("results");
     const scores = host.room.match?.result?.miniScores ?? {};
     expect(Object.keys(scores)).toHaveLength(3);
     // Çıkan −1, kalan +1, kusursuz yapana ek +1: hiçbir puan bu aralığın dışına çıkamaz.

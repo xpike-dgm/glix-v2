@@ -89,8 +89,8 @@ describe("kurulum", () => {
     expect(orders.size).toBeGreaterThan(5);
   });
 
-  it("kural 12: rastgele havuzda değil, tutorial üç adım", () => {
-    expect(game.randomPool).toBe(false);
+  it("kural 12: rastgele havuzda, tutorial üç adım", () => {
+    expect(game.randomPool).toBeUndefined();
     expect(game.briefing.steps).toHaveLength(3);
   });
 });
