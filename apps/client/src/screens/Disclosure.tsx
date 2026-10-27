@@ -18,7 +18,11 @@ export function Disclosure() {
         </h1>
         <p class="acct__text">
           Hesap açarken verdiğin kullanıcı adı, e-posta adresi ve şifren yalnızca hesabını yönetmek için
-          saklanır. Şifren özetlenerek tutulur; kimseyle paylaşılmaz. Ayrıntılı metin yakında burada olacak.
+          saklanır. Şifren özetlenerek tutulur; kimseyle paylaşılmaz.
+        </p>
+        <p class="acct__text">
+          Ayrıntılar: <a href="/gizlilik.html">Gizlilik Politikası</a> ve{" "}
+          <a href="/kosullar.html">Kullanım Koşulları</a>.
         </p>
       </div>
     </Screen>

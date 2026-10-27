@@ -94,7 +94,12 @@ export default defineConfig({
         ],
         additionalManifestEntries: shellChunks,
         navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/ws(\/|$)/, /^\/api\//, /^\/health(\/|$)/],
+        navigateFallbackDenylist: [
+          /^\/ws(\/|$)/,
+          /^\/api\//,
+          /^\/health(\/|$)/,
+          /^\/(gizlilik|kosullar)\.html$/,
+        ],
         // Web bildirimleri: `push` ve `notificationclick` işleyicileri public/sw-push.js içinde; oluşturulan sw.js
         // bunu başta `importScripts` ile yükler. Tarayıcı içe aktarılan betikleri de güncelleme denetimine katar
         // (bayt değişirse yeni sürüm "bekliyor" olur ve mevcut güncelleme akışı — pwa.ts — aynen çalışır).
