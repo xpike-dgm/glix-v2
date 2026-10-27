@@ -11,6 +11,7 @@ import type { Mood } from "../ui/avatars.js";
 import { FeedbackRow } from "../ui/FeedbackRow.js";
 import { CrownIcon } from "../ui/Icons.js";
 import { LeaveButton } from "../ui/LeaveButton.js";
+import { Mascot } from "../ui/Mascot.js";
 import { MatchGallery } from "../ui/MatchGallery.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";

@@ -9,13 +9,13 @@ Durum: 24 oyun önizlemede, erken bitiş yayında. Bu belge sonraki büyük işi
 ## U — UI/UX iş kolu
 
 ### U1. Ortak oyun kabuğu (GameShell)
-- Tek üst şerit: sol oyun adı + "2/5", orta süre bileşeni, sağ ses/çıkış. Oyunlar yalnız orta alanı çizer.
-- **Süre bileşeni (`<Clock>`):** ince çubuk; son 5 sn kalınlaşır, kırmızıya döner, sayı belirir, tik sesi + hafif titreşim.
+- [x] Tek üst şerit: sol oyun adı + "2/5", orta süre bileşeni, sağ ses/çıkış. Oyunlar yalnız orta alanı çizer.
+- [x] **Süre bileşeni (`<Clock>`):** ince çubuk; son 5 sn kalınlaşır, kırmızıya döner, sayı belirir, tik sesi + hafif titreşim.
   Erken bitişte çubuk yumuşak kapanır (bugünkü sıçrama biter).
-- **Durum cümlesi (`<Status>`):** her an tek büyük cümle: "Seç!", "Bekle…", "Sıra Mert'te", "Açılıyor!".
-- **Hazır şeridi:** "n/m hazır" + avatar noktaları her oyunda aynı yerde (TamamBar ile birleşir).
-- **Maç yolu:** üstte 5 noktalı ilerleme (oyun simgeleri), geçilen yeşil, şu anki nabız atar.
-- Kabul: 24 oyunun hepsi kabuğa taşınmış; `ui:check`'e "kabuk tutarlılığı" denetimi (şerit yüksekliği, süre konumu).
+- [x] **Durum cümlesi (`<Status>`):** her an tek büyük cümle: "Seç!", "Bekle…", "Sıra Mert'te", "Açılıyor!".
+- [x] **Hazır şeridi:** "n/m hazır" + avatar noktaları her oyunda aynı yerde (TamamBar ile birleşir).
+- [x] **Maç yolu:** üstte 5 noktalı ilerleme (oyun simgeleri), geçilen yeşil, şu anki nabız atar.
+- [x] Kabul: 24 oyunun hepsi kabuğa taşınmış; `ui:check`'e "kabuk tutarlılığı" denetimi (şerit yüksekliği, süre konumu).
 
 ### U2. Lobi yeniden düzeni
 - 5+ oyuncuda 4 sütun küçük avatar ızgarası; boşalan yere yatay **oyun kartları şeridi** (rastgele modda dönen "?" kartlar).

@@ -1372,7 +1372,8 @@ function auditShell() {
   const sideRail = window.innerHeight <= 500 && window.innerWidth >= 560;
   if (sideRail) {
     const b = bar.getBoundingClientRect();
-    if (b.left > 12 || b.width > 110) issues.push(["kabuk", `yan şerit yerinde değil [${b.left},${b.width}]`]);
+    if (b.left > 12 || b.width > 110)
+      issues.push(["kabuk", `yan şerit yerinde değil [${b.left},${b.width}]`]);
     return issues;
   }
   if (Math.abs(rowH - 48) > 1) issues.push(["kabuk", `şerit yüksekliği ${rowH}px, beklenen 48px`]);
