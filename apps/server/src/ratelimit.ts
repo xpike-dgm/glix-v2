@@ -45,6 +45,8 @@ export class TokenBucket {
 export class IpLimiter {
   private readonly entries = new Map<string, { create: TokenBucket; joinFail: TokenBucket }>();
   private readonly reports = new Map<string, TokenBucket>();
+  private readonly auth = new Map<string, TokenBucket>();
+  private readonly loginFails = new Map<string, TokenBucket>();
 
   constructor(
     private readonly clock: Clock,
@@ -87,10 +89,37 @@ export class IpLimiter {
     return b.take();
   }
 
+  /** Kayıt/giriş isteği: IP başına 20 ani, 6 sn'de 1. */
+  takeAuth(ip: string): boolean {
+    let b = this.auth.get(ip);
+    if (!b) {
+      b = new TokenBucket(this.clock, 20, 1 / 6);
+      this.auth.set(ip, b);
+    }
+    return b.take();
+  }
+
+  /** Bu hesaba (küçük harfli giriş adı) yeni parola denemesine izin var mı (belirteç harcamaz). */
+  canTryLogin(key: string): boolean {
+    return this.loginFails.get(key)?.available() ?? true;
+  }
+
+  /** Hatalı parola: hesap başına 8 ani, 30 sn'de 1. */
+  recordFailedLogin(key: string): void {
+    let b = this.loginFails.get(key);
+    if (!b) {
+      b = new TokenBucket(this.clock, 8, 1 / 30);
+      this.loginFails.set(key, b);
+    }
+    b.take();
+  }
+
   /** Tamamen dolmuş (boşta) kayıtları siler; bellek sınırlı kalır. */
   prune(): void {
     for (const [ip, e] of this.entries) if (e.create.isFull() && e.joinFail.isFull()) this.entries.delete(ip);
     for (const [ip, b] of this.reports) if (b.isFull()) this.reports.delete(ip);
+    for (const [ip, b] of this.auth) if (b.isFull()) this.auth.delete(ip);
+    for (const [key, b] of this.loginFails) if (b.isFull()) this.loginFails.delete(key);
   }
 
   size(): number {

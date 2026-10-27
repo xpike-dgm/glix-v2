@@ -13,6 +13,8 @@ export interface Config {
   limits: ServerLimits;
   /** İstatistik SQLite yolu; null ise istatistik kapalı. */
   statsDb: string | null;
+  /** Hesap SQLite yolu; varsayılan istatistik dosyası. Hiçbiri yoksa null (bellekte, kalıcı değil). */
+  accountsDb: string | null;
   /** Web bildirimi VAPID anahtarları; üçü de yoksa null (bildirim kapalı). Geçerliliği sunucu açılırken denetlenir. */
   vapid: VapidConfig | null;
 }
@@ -66,6 +68,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   else if (env.NODE_ENV === "production") allowedOrigins = [];
   const drainTimeoutMs = Number(env.DRAIN_TIMEOUT_MS ?? 600_000);
   if (!Number.isFinite(drainTimeoutMs) || drainTimeoutMs < 0) throw new Error("DRAIN_TIMEOUT_MS geçersiz");
+  const statsDb = env.STATS_DB || (env.NODE_ENV === "production" ? "/data/glix.db" : null);
   const trust = (env.TRUST_PROXY ?? "").toLowerCase();
   return {
     limits: {
@@ -83,6 +86,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     allowedOrigins,
     revision: env.GIT_SHA || "dev",
     vapid: loadVapid(env),
-    statsDb: env.STATS_DB || (env.NODE_ENV === "production" ? "/data/glix.db" : null),
+    statsDb,
+    accountsDb: env.ACCOUNTS_DB || statsDb,
   };
 }

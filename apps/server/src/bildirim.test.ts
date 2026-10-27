@@ -35,6 +35,7 @@ function stubConn(): Connection {
     stage: null,
     ip: "127.0.0.1",
     failedJoins: 0,
+    account: null,
   };
 }
 

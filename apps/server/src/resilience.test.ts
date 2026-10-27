@@ -1,6 +1,17 @@
 import { type AnyGame, GAMES } from "@glix/engine";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { Client, create, k, press, setupRoom, startPlaying, sync, until, useServer } from "./testkit.js";
+import {
+  Client,
+  create,
+  k,
+  loginCookie,
+  press,
+  setupRoom,
+  startPlaying,
+  sync,
+  until,
+  useServer,
+} from "./testkit.js";
 
 useServer({ drainTimeoutMs: 120_000 });
 
@@ -232,7 +243,7 @@ describe("zarif kapanış (drain)", () => {
     expect(h.status).toBe(503);
     expect(h.body).toMatchObject({ ok: false, draining: true, activeMatches: 1 });
 
-    const fresh = await Client.connect();
+    const fresh = await Client.connect(loginCookie());
     fresh.send({ type: "createRoom", nickname: "Yeni" });
     await until(() => fresh.of("error").length > 0);
     expect(fresh.lastError?.message).toBe("Güncelleme yapılıyor, birazdan tekrar dene.");

@@ -21,6 +21,7 @@ export const ERROR_TEXT: Record<ErrorCode, string> = {
   draining: "Güncelleme yapılıyor, birazdan tekrar dene.",
   server_busy: "Sunucu şu an çok yoğun, birazdan tekrar dene.",
   stage_full: "Bu odada zaten iki TV ekranı var.",
+  login_required: "Oda kurmak için giriş yapmalısın.",
   stage_readonly: "TV ekranı oyuna karışamaz.",
 };
 

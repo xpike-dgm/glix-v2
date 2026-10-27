@@ -33,12 +33,22 @@ export interface Connection {
   stage: Room | null;
   /** Çözümlenmiş istemci IP'si (oran sınırları için). */
   ip: string;
+  /** Yükseltme anında çerezden çözülen hesap; yalnız sunucuda kalır, hiçbir mesajda yayınlanmaz. */
+  account: AccountRef | null;
   /** Bu bağlantıdaki başarısız (`room_not_found`) katılma sayısı. */
   failedJoins: number;
 }
 
+/** Bağlantıya bağlı hesap (e-posta taşımaz). */
+export interface AccountRef {
+  id: number;
+  username: string;
+}
+
 export interface Player {
   id: string;
+  /** Hesaplı oyuncunun hesap kimliği; misafirde null. Yalnız sunucuda, yayına girmez. */
+  accountId: number | null;
   nickname: string;
   avatar: number;
   token: string;
