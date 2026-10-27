@@ -1009,6 +1009,12 @@
     height: 14px;
   }
 }
+/* Çok kısa yatay ekranda (≤ 400 px) nokta şeridi yer kaplamaz; "n/m hazır" sayacı yeter. */
+@media (orientation: landscape) and (max-height: 400px) {
+  .tamam__dots {
+    display: none;
+  }
+}
 
 /* Tahmin satırı (Kör Bomba, Rus Ruleti): kompakt iki düğme, ardından "Tahminin alındı" */
 .prd {

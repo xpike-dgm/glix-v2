@@ -547,6 +547,10 @@
   font-size: var(--fs-18);
   font-variant-numeric: tabular-nums;
   color: #ff7d93;
+  /* Dünya arka planının parlak yerlerinde de okunsun. */
+  padding: 0 4px;
+  border-radius: 6px;
+  background: rgba(5, 8, 26, 0.78);
   animation: clock-beat 1s ease-out infinite;
 }
 @keyframes clock-beat {
