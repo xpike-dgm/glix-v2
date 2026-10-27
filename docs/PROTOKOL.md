@@ -16,7 +16,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `kick` | `playerId` | yalnız host, yalnız lobide (maçta `wrong_phase`); kendini/olmayanı atamaz (`not_in_room`). Atılanın oturum anahtarı silinir; `resume` `resume_failed` döner. Oda koduyla yeniden katılma engellenmez |
 | `transferHost` | `playerId` | yalnız host, yalnız lobide; hedef odada ve bağlı olmalı, kendisi olamaz (`not_in_room`). Taç hedefe geçer, bekleyen host devri iptal olur, hedefin hazır işareti silinir |
 | `rename` | `nickname` | `normalizeNickname` kuralları; yalnız lobide (`wrong_phase`); odada başkasında olan ad (büyük/küçük harf duyarsız) `nickname_taken`; oyuncu başına 1 sn'de en çok bir değişiklik (`rate_limited`); aynı ad sessizce yok sayılır |
-| `react` | `emoji` | yalnız `LOBBY_EMOJIS` (👋 😂 🔥 😱 👏 ❤️), aksi `invalid_message`; yalnız lobide; oyuncu başına 700 ms'de bir. Fazlası ve lobi dışı **sessizce** atılır (hata yok). Cevap: herkese `reaction` olayı |
+| `react` | `emoji` | yalnız `LOBBY_EMOJIS` (👋 😂 🔥 😱 👏 ❤️), aksi `invalid_message`; yalnız lobi, sonuç (`results`) ve final aşamalarında (oyun sırasında blöf işareti taşıyabileceği için kapalı); oyuncu başına 700 ms'de bir. Fazlası ve izinsiz aşama **sessizce** atılır (hata yok). Cevap: herkese `reaction` olayı |
 | `setReady` | `ready` (boolean) | lobide "Hazırım" işareti; yalnız lobide (`wrong_phase`); host için sessizce yok sayılır. Başlamak için şart değildir |
 | `setGames` | `gameIds` | yalnız host, yalnız lobide; boş olamaz, tekrar yok; modu `manual` yapar |
 | `setRandom` | `count` | yalnız host, yalnız lobide; 1..katalog boyu; modu `random` yapar |
@@ -43,7 +43,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `patch` | `baseRev`, `rev`, `patch` — sonraki değişimler, JSON Merge Patch (RFC 7386) |
 | `actionAck` | `seq`, `ok`, `reason?` |
 | `left` | `reason: "left" \| "kicked" \| "closed"` |
-| `reaction` | `playerId`, `emoji` | **Geçici olay**: oda durumunda (`room`/`patch`) saklanmaz, `rev` almaz, yeniden bağlanana tekrarlanmaz. Lobide gönderenle birlikte odadaki tüm bağlı oyunculara gider |
+| `reaction` | `playerId`, `emoji` | **Geçici olay**: oda durumunda (`room`/`patch`) saklanmaz, `rev` almaz, yeniden bağlanana tekrarlanmaz. Lobi/sonuç/finalde gönderenle birlikte odadaki tüm bağlı oyunculara gider |
 | `error` | `code`, `message` (Türkçe, oyuncuya gösterilebilir) |
 
 **Görünümler:** `match.publicView` odadaki herkes için aynıdır (oda başına bir kez hesaplanır ve

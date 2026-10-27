@@ -108,14 +108,61 @@ describe("lobi emoji tepkisi", () => {
     await until(() => a.of("reaction").length === 2);
   });
 
-  it("lobi dışında sessizce atılır", async () => {
+  it("oyun sırasında (anlatım, geri sayım, oyun) sessizce atılır", async () => {
     const cs = (await setupRoom(["A", "B"])) as [Client, Client];
-    await startPlaying(cs);
+    const host = cs[0];
+    host.send({ type: "startMatch" });
+    await until(() => host.room.phase === "briefing", "briefing");
+    k.clock.advance(1000);
+    cs[1].send({ type: "react", emoji: "🔥" });
+    await sync();
+    for (const c of cs) c.send({ type: "ready" });
+    await until(() => host.room.phase === "countdown", "countdown");
+    k.clock.advance(1000);
+    cs[1].send({ type: "react", emoji: "🔥" });
+    await sync();
+    k.clock.advance(2000);
+    await until(() => host.room.phase === "playing", "playing");
     k.clock.advance(1000);
     cs[1].send({ type: "react", emoji: "🔥" });
     await sync();
     expect(cs[0].of("reaction")).toHaveLength(0);
+    expect(cs[1].of("reaction")).toHaveLength(0);
     expect(cs[1].of("error")).toHaveLength(0);
+  });
+
+  it("sonuç ekranında herkese gider, hız sınırı ve izinli küme aynı kalır", async () => {
+    const cs = (await setupRoom(["A", "B"], ["butona-bas", "kor-bomba"])) as [Client, Client];
+    await startPlaying(cs);
+    k.clock.advance(45_000);
+    await until(() => cs[0].room.phase === "results", "results");
+    k.clock.advance(1000);
+    cs[1].send({ type: "react", emoji: "😱" });
+    await until(() => cs[0].of("reaction").length === 1 && cs[1].of("reaction").length === 1);
+    expect(cs[0].of("reaction")[0]).toEqual({
+      type: "reaction",
+      playerId: cs[1].session.playerId,
+      emoji: "😱",
+    });
+    k.clock.advance(300);
+    cs[1].send({ type: "react", emoji: "👏" });
+    await sync();
+    expect(cs[0].of("reaction")).toHaveLength(1);
+    cs[1].send({ type: "react", emoji: "💩" });
+    await until(() => cs[1].of("error").length > 0);
+    expect(cs[1].lastError?.code).toBe("invalid_message");
+  });
+
+  it("final ekranında herkese gider", async () => {
+    const cs = (await setupRoom(["A", "B"], ["butona-bas"])) as [Client, Client];
+    await startPlaying(cs);
+    k.clock.advance(45_000);
+    await until(() => cs[0].room.phase === "results", "results");
+    k.clock.advance(8_000);
+    await until(() => cs[0].room.phase === "final", "final");
+    k.clock.advance(1000);
+    cs[0].send({ type: "react", emoji: "🔥" });
+    await until(() => cs[0].of("reaction").length === 1 && cs[1].of("reaction").length === 1);
   });
 });
 
