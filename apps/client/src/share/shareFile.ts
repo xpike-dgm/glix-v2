@@ -8,7 +8,7 @@ interface ShareNav {
 }
 
 export function cardFile(blob: Blob, name: string): File {
-  return new File([blob], `${name}.png`, { type: "image/png" });
+  return new File([blob], `${name}.jpg`, { type: "image/jpeg" });
 }
 
 /** Bu cihazda dosyalı Web Share var mı (iOS/Android Safari-Chrome: evet; masaüstü çoğunlukla hayır). */

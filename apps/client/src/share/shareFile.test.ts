@@ -4,9 +4,9 @@ import { canShareFiles, cardFile, shareCard } from "./shareFile.js";
 const file = cardFile(new Blob(["x"]), "glix-an-1");
 
 describe("shareFile", () => {
-  it("dosya adı .png ve türü image/png", () => {
-    expect(file.name).toBe("glix-an-1.png");
-    expect(file.type).toBe("image/png");
+  it("dosya adı .jpg ve türü image/jpeg", () => {
+    expect(file.name).toBe("glix-an-1.jpg");
+    expect(file.type).toBe("image/jpeg");
   });
   it("canShare yoksa ya da false ise dosyalı paylaşım yok", () => {
     expect(canShareFiles(undefined, file)).toBe(false);

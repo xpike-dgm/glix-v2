@@ -26,7 +26,7 @@ function fakeEnv() {
       width: w,
       height: h,
       getContext: () => ctx,
-      toBlob: (cb: (b: Blob | null) => void) => cb(new Blob(["png"], { type: "image/png" })),
+      toBlob: (cb: (b: Blob | null) => void) => cb(new Blob(["jpg"], { type: "image/jpeg" })),
     } as unknown as HTMLCanvasElement;
   };
   const env: CardEnv = { makeCanvas, loadImage: async () => null, fontsReady: async () => {} };
@@ -49,7 +49,7 @@ describe("renderMomentCard", () => {
   it("1080x1920 tuval, PNG blob, alt bilgi metni ve takma adlar çizilir", async () => {
     const { env, texts, canvases } = fakeEnv();
     const blob = await renderMomentCard(winner, env);
-    expect(blob.type).toBe("image/png");
+    expect(blob.type).toBe("image/jpeg");
     expect(canvases[0]).toEqual({ w: CARD_W, h: CARD_H });
     expect(texts).toContain(FOOTER_TEXT);
     expect(texts).toContain("Elif");

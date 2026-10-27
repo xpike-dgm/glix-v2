@@ -374,6 +374,6 @@ export async function renderMomentCard(m: Moment, env: CardEnv = browserEnv): Pr
   else await drawSolo(ctx, env, m, y0);
   footer(ctx);
   return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("görüntü üretilemedi"))), "image/png");
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("görüntü üretilemedi"))), "image/jpeg", 0.9);
   });
 }
