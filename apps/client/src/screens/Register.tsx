@@ -1,8 +1,9 @@
-import { createSignal } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { register } from "../net/account.js";
 import { registerError } from "../net/accountRules.js";
-import { setState } from "../net/store.js";
+import { setState, state } from "../net/store.js";
 import { GhostButton } from "../ui/GhostButton.js";
+import { GoogleButton } from "../ui/GoogleButton.js";
 import { AccountForm } from "./AccountForm.js";
 
 // Aydınlatma metnine gidip dönünce yazılanlar kaybolmasın diye modül düzeyinde tutulur.
@@ -40,6 +41,10 @@ export function Register() {
         </>
       }
     >
+      <Show when={state.google.enabled}>
+        <GoogleButton />
+        <p class="acct__or">veya</p>
+      </Show>
       <input
         class="field"
         type="text"

@@ -12,6 +12,8 @@ interface Props {
   submitLabel: string;
   children: JSX.Element;
   footer?: JSX.Element;
+  /** Forma gelmeden önce oluşmuş bir sorunun metni (ör. Google dönüşü); hata satırı gibi gösterilir. */
+  notice?: string | null | undefined;
   back?: () => void;
 }
 
@@ -45,6 +47,13 @@ export function AccountForm(props: Props) {
         <p class="lead rise" style={{ "--i": 1 }}>
           {props.lead}
         </p>
+        <Show when={props.notice}>
+          {(text) => (
+            <p class="acct__error" role="alert">
+              {text()}
+            </p>
+          )}
+        </Show>
         <div class="acct__fields">{props.children}</div>
         <Show when={error()}>
           {(text) => (

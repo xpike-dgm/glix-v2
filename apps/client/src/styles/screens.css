@@ -2776,3 +2776,33 @@
   font-weight: 600;
   text-decoration: underline;
 }
+
+/* ---- Google ile devam et (Giriş / Kayıt) ---- */
+.gglbtn {
+  width: 100%;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 0 20px;
+  border-radius: var(--r-btn);
+  background: #fff;
+  color: #1f1f1f;
+  border: 1.5px solid #dadce0;
+  font-family: var(--font-text);
+  font-weight: 700;
+  font-size: var(--fs-18);
+  transition:
+    transform 80ms var(--ease),
+    background 120ms;
+}
+.gglbtn:active {
+  transform: scale(0.97);
+  background: #f1f3f4;
+}
+.acct__or {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: var(--fs-15);
+}

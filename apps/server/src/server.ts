@@ -7,6 +7,7 @@ import { CLIENT_ERROR_PATH, handleClientError } from "./clientError.js";
 import { resolveClientIp } from "./clientIp.js";
 import { type Clock, systemClock } from "./clock.js";
 import { DEFAULT_LIMITS, type ServerLimits } from "./config.js";
+import { createGoogleAuth, type GoogleConfig } from "./google.js";
 import { handleClose, handleMessage } from "./handlers.js";
 import { log } from "./log.js";
 import { runTick, TICK_MS } from "./match.js";
@@ -56,6 +57,8 @@ export interface ServerOptions {
   statsDb?: string | null;
   /** Hesap/oturum SQLite yolu (istatistikle aynı dosya olabilir). Verilmezse bellekte açılır (kalıcı değil). */
   accountsDb?: string | null;
+  /** Google ile giriş ayarı; verilmezse kapalı (uçlar hata koduyla döner, düğme gizlenir). */
+  google?: GoogleConfig | null;
   /** Web bildirimi anahtarları; verilmezse ya da geçersizse bildirim kapalı kalır. */
   vapid?: VapidConfig | null;
   /** Hazır gönderici (testlerde sahte); verilirse `vapid` yok sayılır. */
@@ -100,6 +103,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   stats.purge(clock.now());
   const accounts = createAccounts(opts.accountsDb || ":memory:");
   accounts.purge(clock.now());
+  const google = opts.google ? createGoogleAuth(opts.google) : null;
   let cancelPurge: () => void = () => {};
   const schedulePurge = (): void => {
     cancelPurge = clock.setTimeout(() => {
@@ -210,6 +214,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         now: clock.now(),
         trustProxy: limits.trustProxy,
         allowedOrigins: opts.allowedOrigins,
+        google,
       });
       return;
     }

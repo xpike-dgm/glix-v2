@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { GOOGLE_CALLBACK_PATH, type GoogleConfig } from "./google.js";
 import type { VapidConfig } from "./webpush.js";
 
 export interface Config {
@@ -17,6 +18,8 @@ export interface Config {
   accountsDb: string | null;
   /** Web bildirimi VAPID anahtarları; üçü de yoksa null (bildirim kapalı). Geçerliliği sunucu açılırken denetlenir. */
   vapid: VapidConfig | null;
+  /** Google ile giriş; kimlik, sır ve genel adres yoksa null (düğme gizlenir). */
+  google: GoogleConfig | null;
 }
 
 export interface ServerLimits {
@@ -56,6 +59,27 @@ export function loadVapid(env: NodeJS.ProcessEnv): VapidConfig | null {
   return publicKey && privateKey && subject ? { publicKey, privateKey, subject } : null;
 }
 
+/**
+ * `GLIX_GOOGLE_CLIENT_ID` ve `GLIX_GOOGLE_CLIENT_SECRET` birlikte verilir ya da hiç verilmez.
+ * Yönlendirme adresi `GLIX_PUBLIC_URL` (örn. https://glix.dgmcraft.online) + `/api/auth/google/callback`;
+ * Google Cloud'daki "yetkili yönlendirme URI'si" bununla birebir aynı olmalı.
+ */
+export function loadGoogle(env: NodeJS.ProcessEnv): GoogleConfig | null {
+  const clientId = env.GLIX_GOOGLE_CLIENT_ID?.trim() ?? "";
+  const clientSecret = env.GLIX_GOOGLE_CLIENT_SECRET?.trim() ?? "";
+  if (!clientId && !clientSecret) return null;
+  if (!clientId || !clientSecret)
+    throw new Error("GLIX_GOOGLE_CLIENT_ID ve GLIX_GOOGLE_CLIENT_SECRET birlikte verilmeli");
+  let base: URL;
+  try {
+    base = new URL(env.GLIX_PUBLIC_URL?.trim() ?? "");
+  } catch {
+    throw new Error("GLIX_PUBLIC_URL geçersiz (Google ile giriş için gerekli)");
+  }
+  if (base.protocol !== "https:" && base.protocol !== "http:") throw new Error("GLIX_PUBLIC_URL geçersiz");
+  return { clientId, clientSecret, redirectUri: `${base.origin}${GOOGLE_CALLBACK_PATH}` };
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const port = Number(env.PORT ?? 3900);
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error("PORT geçersiz");
@@ -86,6 +110,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     allowedOrigins,
     revision: env.GIT_SHA || "dev",
     vapid: loadVapid(env),
+    google: loadGoogle(env),
     statsDb,
     accountsDb: env.ACCOUNTS_DB || statsDb,
   };

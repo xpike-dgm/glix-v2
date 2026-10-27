@@ -1,6 +1,6 @@
 import { createEffect, createMemo, createSignal, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 import { installMusic, setLobbyMusic } from "./fx/music.js";
-import { refreshAccount } from "./net/account.js";
+import { consumeGoogleReturn, refreshAccount } from "./net/account.js";
 import { startNet } from "./net/client.js";
 import { normalizeCode } from "./net/code.js";
 import { collectRounds } from "./net/matchHistory.js";
@@ -22,6 +22,7 @@ import { Briefing } from "./screens/Briefing.js";
 import { Countdown } from "./screens/Countdown.js";
 import { Disclosure } from "./screens/Disclosure.js";
 import { Final } from "./screens/Final.js";
+import { GoogleUsername } from "./screens/GoogleUsername.js";
 import { Home } from "./screens/Home.js";
 import { Join } from "./screens/Join.js";
 import { Lobby } from "./screens/Lobby.js";
@@ -199,6 +200,7 @@ export function App() {
       return;
     }
     watchNetwork();
+    consumeGoogleReturn();
     void refreshAccount();
     void initContentPack({ guest: code !== "" });
     onCleanup(startNet());
@@ -229,6 +231,9 @@ export function App() {
             </Match>
             <Match when={screen() === "register"}>
               <Register />
+            </Match>
+            <Match when={screen() === "googleAd"}>
+              <GoogleUsername />
             </Match>
             <Match when={screen() === "aydinlatma"}>
               <Disclosure />

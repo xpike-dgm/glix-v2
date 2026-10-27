@@ -70,3 +70,17 @@ istatistikler silinir; anonim tablolar zaten kişisel veri içermez).
 
 ## Sıra
 H1 → H4 → H5 → H7 → H8 → H9 → H6 → H10; H2 ve H3, sahipten anahtarlar gelince araya girer.
+
+## Google ile giriş (H3, uygulandı)
+- Ayar: `GLIX_GOOGLE_CLIENT_ID` + `GLIX_GOOGLE_CLIENT_SECRET` (ikisi birlikte) ve `GLIX_PUBLIC_URL`
+  (örn. `https://glix.dgmcraft.online`; `ALLOWED_ORIGINS`'ten türetilmez). Yönlendirme adresi
+  `<GLIX_PUBLIC_URL>/api/auth/google/callback` ve Google Cloud'daki kayıtla birebir aynı olmalı. Eksikse özellik kapalıdır, düğme gizlenir.
+- Akış: `GET google/start` (PKCE S256, state, nonce; 10 dk `glix_oauth` çerezi yalnız sunucu belleğindeki kayda opak başvuru taşır,
+  tek kullanımlık) → Google → `GET google/callback` (state denetimi, kod değişimi `client_secret_post`; `iss`, `aud`, `exp`, `nonce`,
+  `email_verified` denetlenir, imza denetimi OIDC Core 3.1.3.7 gereği atlanır).
+- Çözümleme: `google_sub` varsa oturum açılır; yoksa açık oturum varsa hesaba bağlanır; yoksa ve e-posta başka hesapta kayıtlıysa
+  `eposta_kayitli` (otomatik birleştirme yok: önce şifreyle girilip Ayarlar > "Google hesabını bağla"); yoksa bekleyen kayıt oluşur
+  ve istemci "Kullanıcı adı seç" ekranını açar (`POST google/complete`). Şifresiz hesap (`pass_hash` boş) parolayla giremez.
+- Açık oturum başka hesaptaysa ve `sub` başka hesaba aitse sessiz hesap değişimi yapılmaz: `baska_hesap`.
+- Dönüş: başarıda `/` (ya da güvenli `returnTo`), hatada `/#google-hata=<kod>`, yeni kullanıcıda `/#google-yeni=<belirteç>&u=<öneri>`;
+  istemci işareti okuyup adres çubuğunu temizler. Hız sınırı: IP başına `takeAuth` kovası.

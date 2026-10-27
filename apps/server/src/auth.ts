@@ -3,6 +3,16 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Account, AccountStore } from "./accountStore.js";
 import { SESSION_TTL_MS } from "./accountStore.js";
 import { isPrivateOrLoopback, normalizeIp } from "./clientIp.js";
+import {
+  authorizeUrl,
+  exchangeCode,
+  GOOGLE_COOKIE,
+  GOOGLE_FLOW_TTL_MS,
+  type GoogleAuth,
+  safeReturnTo,
+  sameText,
+  suggestUsername,
+} from "./google.js";
 import { log } from "./log.js";
 import type { IpLimiter } from "./ratelimit.js";
 import { SECURITY_HEADERS } from "./static.js";
@@ -121,15 +131,19 @@ export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
-export function readSessionToken(cookieHeader: string | undefined): string | null {
+function readCookie(cookieHeader: string | undefined, name: string): string | null {
   if (!cookieHeader) return null;
   for (const part of cookieHeader.split(";")) {
     const eq = part.indexOf("=");
-    if (eq < 0 || part.slice(0, eq).trim() !== SESSION_COOKIE) continue;
+    if (eq < 0 || part.slice(0, eq).trim() !== name) continue;
     const value = part.slice(eq + 1).trim();
     return TOKEN_PATTERN.test(value) ? value : null;
   }
   return null;
+}
+
+export function readSessionToken(cookieHeader: string | undefined): string | null {
+  return readCookie(cookieHeader, SESSION_COOKIE);
 }
 
 /** Çerezdeki oturumu hesaba çözer (WS yükseltmesi ve `me` kullanır). Hata olursa misafir sayılır. */
@@ -166,6 +180,11 @@ function clearedCookie(secure: boolean): string {
   return `${SESSION_COOKIE}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure ? "; Secure" : ""}`;
 }
 
+/** Google akışının kısa ömürlü çerezi: yalnız sunucudaki akış kaydına opak bir başvuru taşır. */
+function oauthCookie(ref: string, secure: boolean, maxAgeSec: number): string {
+  return `${GOOGLE_COOKIE}=${ref}; HttpOnly; SameSite=Lax; Path=/api/auth/google; Max-Age=${maxAgeSec}${secure ? "; Secure" : ""}`;
+}
+
 // ---- HTTP uçları ------------------------------------------------------------------------------------------
 
 export interface AuthEnv {
@@ -175,6 +194,8 @@ export interface AuthEnv {
   now: number;
   trustProxy: boolean;
   allowedOrigins: readonly string[] | null;
+  /** Google ile giriş; ayarlı değilse null (uçlar kapalı, `me` bunu bildirir). */
+  google: GoogleAuth | null;
 }
 
 function send(
@@ -252,20 +273,24 @@ export function originAllowed(req: IncomingMessage, allowedOrigins: readonly str
   return !allowedOrigins || allowedOrigins.includes(origin);
 }
 
+/** Oturumu kaydeder; gönderilecek `Set-Cookie` değerini döner. */
+function issueSession(env: AuthEnv, req: IncomingMessage, account: Account): string {
+  const token = randomBytes(32).toString("base64url");
+  env.accounts.createSession(account.id, hashToken(token), env.now);
+  return sessionCookie(token, isSecureRequest(req, env.trustProxy));
+}
+
 async function startSession(
   res: ServerResponse,
   env: AuthEnv,
   req: IncomingMessage,
   account: Account,
 ): Promise<void> {
-  const token = randomBytes(32).toString("base64url");
-  env.accounts.createSession(account.id, hashToken(token), env.now);
-  const secure = isSecureRequest(req, env.trustProxy);
   send(
     res,
     200,
     { ok: true, account: { username: account.username, email: account.email } },
-    { "Set-Cookie": sessionCookie(token, secure) },
+    { "Set-Cookie": issueSession(env, req, account) },
   );
 }
 
@@ -317,7 +342,123 @@ function me(req: IncomingMessage, res: ServerResponse, env: AuthEnv): void {
   send(res, 200, {
     ok: true,
     account: account ? { username: account.username, email: account.email } : null,
+    // İstemci Google düğmesini ve "Google hesabını bağla" satırını buna göre gösterir.
+    providers: { google: env.google !== null },
+    linked: { google: account ? env.accounts.hasGoogle(account.id) : false },
   });
+}
+
+// ---- Google ile giriş -------------------------------------------------------------------------------------
+
+function redirect(res: ServerResponse, location: string, cookies: string[] = []): void {
+  res.writeHead(302, {
+    Location: location,
+    "Cache-Control": "no-store",
+    ...(cookies.length > 0 ? { "Set-Cookie": cookies } : {}),
+    ...SECURITY_HEADERS,
+  });
+  res.end();
+}
+
+/** Hata uygulamaya kısa bir kodla döner; istemci Türkçe metne çevirir (`#google-hata=<kod>`). */
+const googleError = (code: string): string => `/#google-hata=${code}`;
+
+function googleStart(req: IncomingMessage, res: ServerResponse, env: AuthEnv): void {
+  if (!env.google) {
+    redirect(res, googleError("kapali"));
+    return;
+  }
+  if (!env.limiter.takeAuth(env.ip)) {
+    redirect(res, googleError("cok_deneme"));
+    return;
+  }
+  const q = new URL(req.url ?? "", "http://x").searchParams;
+  const flow = env.google.flows.begin(env.now, safeReturnTo(q.get("returnTo")));
+  const secure = isSecureRequest(req, env.trustProxy);
+  redirect(res, authorizeUrl(env.google.config, flow), [
+    oauthCookie(flow.ref, secure, Math.floor(GOOGLE_FLOW_TTL_MS / 1000)),
+  ]);
+}
+
+/** Kullanıcı adı önerisi: alınmışsa sonuna rakam eklenir. */
+function freeSuggestion(env: AuthEnv, email: string): string {
+  const base = suggestUsername(email);
+  if (!env.accounts.findByLogin(base)) return base;
+  for (let i = 0; i < 8; i++) {
+    const candidate = `${base.slice(0, 16)}${100 + Math.floor(Math.random() * 900)}`;
+    if (!env.accounts.findByLogin(candidate)) return candidate;
+  }
+  return base;
+}
+
+async function googleCallback(req: IncomingMessage, res: ServerResponse, env: AuthEnv): Promise<void> {
+  const secure = isSecureRequest(req, env.trustProxy);
+  const clear = oauthCookie("", secure, 0);
+  const bounce = (code: string): void => redirect(res, googleError(code), [clear]);
+  const google = env.google;
+  if (!google) return bounce("kapali");
+  if (!env.limiter.takeAuth(env.ip)) return bounce("cok_deneme");
+  const flow = google.flows.take(readCookie(req.headers.cookie, GOOGLE_COOKIE), env.now);
+  if (!flow) return bounce("gecersiz");
+  const q = new URL(req.url ?? "", "http://x").searchParams;
+  const state = q.get("state");
+  if (!state || !sameText(state, flow.state)) return bounce("gecersiz");
+  if (q.has("error")) return bounce(q.get("error") === "access_denied" ? "iptal" : "dogrulanamadi");
+  const code = q.get("code");
+  if (!code || code.length > 2048) return bounce("gecersiz");
+  const id = await exchangeCode(google.config, code, flow, env.now);
+  if (id === "unverified") return bounce("eposta_dogrulanmamis");
+  if (typeof id === "string") return bounce("dogrulanamadi");
+
+  const current = accountFromCookie(env.accounts, req.headers.cookie, env.now);
+  const owner = env.accounts.findByGoogleSub(id.sub);
+  if (owner) {
+    // Açık oturum başka bir hesaba aitse sessizce hesap değiştirilmez.
+    if (current && current.id !== owner.id) return bounce("baska_hesap");
+    return redirect(res, flow.returnTo, current ? [clear] : [clear, issueSession(env, req, owner)]);
+  }
+  if (current) {
+    if (!env.accounts.linkGoogle(current.id, id.sub)) return bounce("zaten_bagli");
+    return redirect(res, flow.returnTo, [clear]);
+  }
+  // Aynı e-postayla şifreli bir hesap varsa otomatik birleştirilmez: önce şifreyle girip Ayarlar'dan bağlanır.
+  if (env.accounts.findByEmail(id.email)) return bounce("eposta_kayitli");
+  const token = google.flows.addPending(env.now, id.sub, id.email);
+  const hint = encodeURIComponent(freeSuggestion(env, id.email));
+  redirect(res, `/#google-yeni=${token}&u=${hint}`, [clear]);
+}
+
+/** `complete` gövdesi: `{token, username}`; geçerliyse veri, değilse hatalı alan. */
+function parseComplete(data: unknown): { token: string; username: string } | "token" | "username" {
+  if (!isRecord(data) || !exactKeys(data, ["token", "username"])) return "token";
+  if (typeof data.token !== "string" || !TOKEN_PATTERN.test(data.token)) return "token";
+  if (typeof data.username !== "string" || !USERNAME_PATTERN.test(data.username)) return "username";
+  return { token: data.token, username: data.username };
+}
+
+async function googleComplete(req: IncomingMessage, res: ServerResponse, env: AuthEnv): Promise<void> {
+  const google = env.google;
+  if (!google) return fail(res, 404, "google_disabled", "Google ile giriş şu an kapalı.");
+  const input = parseComplete(await readJson(req));
+  if (input === "username") return fail(res, 400, "invalid_input", FIELD_TEXT.username, "username");
+  if (input === "token") return fail(res, 400, "invalid_input", "Geçersiz istek.");
+  const pending = google.flows.peekPending(input.token, env.now);
+  if (!pending)
+    return fail(res, 410, "google_expired", "Süre doldu. Google ile girişi baştan dene.", "token");
+  const made = env.accounts.createGoogle(input.username, pending.email, pending.sub, env.now);
+  if (!made.ok) {
+    if (made.field === "username")
+      return fail(res, 409, "username_taken", "Bu kullanıcı adı alınmış.", "username");
+    google.flows.dropPending(input.token);
+    return fail(
+      res,
+      409,
+      made.field === "email" ? "email_taken" : "google_linked",
+      "Bu Google hesabıyla zaten bir hesap var. Şifrenle girip Ayarlar'dan bağla.",
+    );
+  }
+  google.flows.dropPending(input.token);
+  await startSession(res, env, req, made.account);
 }
 
 /** `/api/auth/*` isteğini işler. Yol bu önekle başlamıyorsa false döner (başkası ilgilensin). */
@@ -327,11 +468,15 @@ export function handleAuth(req: IncomingMessage, res: ServerResponse, env: AuthE
   const name = path.slice(AUTH_PREFIX.length);
   const method = req.method ?? "GET";
   const run = async (): Promise<void> => {
+    if (name === "google/start" || name === "google/callback") {
+      if (method !== "GET") return fail(res, 405, "method_not_allowed", "Geçersiz istek.");
+      return name === "google/start" ? googleStart(req, res, env) : googleCallback(req, res, env);
+    }
     if (name === "me") {
       if (method !== "GET") return fail(res, 405, "method_not_allowed", "Geçersiz istek.");
       return me(req, res, env);
     }
-    if (name !== "register" && name !== "login" && name !== "logout")
+    if (name !== "register" && name !== "login" && name !== "logout" && name !== "google/complete")
       return fail(res, 404, "not_found", "Bulunamadı.");
     if (method !== "POST") return fail(res, 405, "method_not_allowed", "Geçersiz istek.");
     if (!originAllowed(req, env.allowedOrigins)) return fail(res, 403, "forbidden", "İstek reddedildi.");
@@ -340,6 +485,7 @@ export function handleAuth(req: IncomingMessage, res: ServerResponse, env: AuthE
       return fail(res, 400, "invalid_input", "Geçersiz istek.");
     if (!env.limiter.takeAuth(env.ip))
       return fail(res, 429, "rate_limited", "Çok fazla deneme yaptın, biraz bekleyip tekrar dene.");
+    if (name === "google/complete") return googleComplete(req, res, env);
     if (name === "register") return register(req, res, env);
     return login(req, res, env);
   };

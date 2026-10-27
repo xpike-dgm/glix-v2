@@ -20,6 +20,10 @@ services:
       GLIX_VAPID_PUBLIC: ${GLIX_VAPID_PUBLIC:-}
       GLIX_VAPID_PRIVATE: ${GLIX_VAPID_PRIVATE:-}
       GLIX_VAPID_SUBJECT: ${GLIX_VAPID_SUBJECT:-}
+      # Google ile giriş (boşsa kapalı, düğme gizlenir). Yönlendirme: ${GLIX_PUBLIC_URL}/api/auth/google/callback
+      GLIX_GOOGLE_CLIENT_ID: ${GLIX_GOOGLE_CLIENT_ID:-}
+      GLIX_GOOGLE_CLIENT_SECRET: ${GLIX_GOOGLE_CLIENT_SECRET:-}
+      GLIX_PUBLIC_URL: ${GLIX_PUBLIC_URL:-}
     volumes:
       - glix-data:/data
     mem_limit: 512m

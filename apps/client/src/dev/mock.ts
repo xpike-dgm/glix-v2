@@ -20,6 +20,7 @@ import {
   type ButonaBasWindowResult,
 } from "@glix/engine";
 import { roundClockAt } from "../games/butona-bas/view.js";
+import { setGooglePending } from "../net/account.js";
 import { useMockSender } from "../net/client.js";
 import { emitReaction } from "../net/reactions.js";
 import { applySnapshot, setState } from "../net/store.js";
@@ -361,6 +362,8 @@ export function startMock(kind: string, params: URLSearchParams): void {
   });
 
   setState("session", { token: "mock", playerId: SELF, roomCode: "KX7QP" });
+  // `&google=1`: Google ile giriş açık (düğmeler görünür).
+  if (params.get("google") === "1") setState("google", { enabled: true, linked: false });
   switch (kind) {
     case "home":
       // `&acct=1`: giriş yapmış kullanıcı (Oda kur + çıkış); varsayılan misafir.
@@ -373,11 +376,18 @@ export function startMock(kind: string, params: URLSearchParams): void {
       break;
     case "settings":
       setState({ nav: "settings" });
+      // `&acct=1`: giriş yapmış hesap; `&google=1`: sunucuda Google açık (bağlı değil) — Ayarlar'da bağla satırı.
+      if (params.get("acct") === "1")
+        setState("account", { username: "cihad_01", email: "cihad@example.com" });
       break;
     case "login":
     case "register":
     case "aydinlatma":
       setState({ nav: kind });
+      break;
+    case "google-ad":
+      setGooglePending({ token: "A".repeat(43), suggestion: "kisi_adi" });
+      setState({ nav: "googleAd" });
       break;
     case "notfound":
       setState({ notFoundCode: "ABCDE" });
@@ -423,7 +433,8 @@ export function startMock(kind: string, params: URLSearchParams): void {
     kind === "notfound" ||
     kind === "login" ||
     kind === "register" ||
-    kind === "aydinlatma"
+    kind === "aydinlatma" ||
+    kind === "google-ad"
   )
     setState("session", null);
 }

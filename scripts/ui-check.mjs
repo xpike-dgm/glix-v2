@@ -97,6 +97,19 @@ const SCREENS = [
   { name: "hesap-kayit", q: "mock=register", settle: 600 },
   { name: "hesap-kayit-buyuk-yazi", q: "mock=register&text=large", settle: 600 },
   { name: "hesap-aydinlatma", q: "mock=aydinlatma", settle: 600 },
+  { name: "hesap-google-giris", q: "mock=login&google=1", settle: 600 },
+  { name: "hesap-google-kayit", q: "mock=register&google=1", settle: 600 },
+  { name: "hesap-google-kayit-buyuk-yazi", q: "mock=register&google=1&text=large", settle: 600 },
+  { name: "hesap-google-kullanici-adi", q: "mock=google-ad", settle: 600 },
+  {
+    name: "hesap-google-kullanici-adi-hata",
+    q: "mock=google-ad",
+    act: async (p) => {
+      await p.locator(".field").fill("a");
+      await p.locator(".pbtn").click();
+    },
+  },
+  { name: "ayarlar-google-bagla", q: "mock=settings&acct=1&google=1", settle: 900 },
   { name: "home-buyuk-yazi", q: "mock=home&text=large", settle: 1800 },
   { name: "join", q: "mock=join" },
   { name: "notfound", q: "mock=notfound" },
