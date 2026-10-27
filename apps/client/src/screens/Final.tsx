@@ -199,7 +199,7 @@ export function Final(props: { snap: RoomSnapshot }) {
           when={isHost()}
           fallback={
             <p class="waiting">
-              {watching() ? "Lobiye dönünce oyuncu olursun" : "Host yeni maçı başlatacak"}
+              {watching() ? "Lobiye dönünce oyuncu olursun" : "Ev sahibi yeni maçı başlatacak"}
             </p>
           }
         >

@@ -558,7 +558,7 @@ async function main() {
     await shot(A, "15-final");
     assert(await btn(A, /^aynı ekiple yeni maç$/i).isVisible(), "host AYNI EKİPLE YENİ MAÇ görmeli");
     assert(!(await btn(C, /^aynı ekiple yeni maç$/i).count()), "C AYNI EKİPLE YENİ MAÇ görmemeli");
-    await C.getByText("Host yeni maçı başlatacak", { exact: true }).waitFor(OPT);
+    await C.getByText("Ev sahibi yeni maçı başlatacak", { exact: true }).waitFor(OPT);
     const finalScores = await A.locator(".podium__score, .row__score--big").allInnerTexts();
     log(
       "final skorları",
