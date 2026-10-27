@@ -18,9 +18,10 @@ const base = {
   budget: null,
   ready: [],
   duel: null,
+  coup: null,
   reveal: null,
 };
-const priv = { myVote: null, mySign: null, myTokens: null, locked: false };
+const priv = { myVote: null, mySign: null, myTokens: null, myCoup: null, canCoup: false, locked: false };
 const hand = { candidates: ["a", "b"], signs: { a: "tas", b: "makas" }, advance: ["a"], replay: false };
 const duel = {
   hand: 2,
@@ -37,6 +38,7 @@ const reveal = {
   tokens: { a: 0, b: 2, c: 0 },
   scores: { a: 1, b: 2, c: 0 },
   duelHands: [hand],
+  coup: null,
 };
 
 describe("Rüşvet ve Darbe görünümü", () => {
@@ -53,6 +55,46 @@ describe("Rüşvet ve Darbe görünümü", () => {
     expect(g?.myTokens).toEqual([{ to: "b", n: 2 }]);
     const r = parseRusvetView({ ...base, phase: "reveal", president: "a", budget: 2, reveal }, priv);
     expect(r?.reveal?.scores.b).toBe(2);
+  });
+  it("darbe aşamasını ve sonucunu okur, bozuğunu reddeder", () => {
+    const c = parseRusvetView(
+      {
+        ...base,
+        phase: "coup",
+        president: "a",
+        budget: 2,
+        coup: { tokens: { a: 0, b: 2, c: 0 }, eligible: ["c"] },
+        ready: ["c"],
+      },
+      { ...priv, canCoup: true, myCoup: true },
+    );
+    expect(c?.coup?.eligible).toEqual(["c"]);
+    expect(c?.coup?.tokens.b).toBe(2);
+    expect(c?.canCoup).toBe(true);
+    expect(c?.myCoup).toBe(true);
+    const r = parseRusvetView(
+      {
+        ...base,
+        phase: "reveal",
+        president: "a",
+        budget: 2,
+        reveal: { ...reveal, coup: { eligible: ["c"], yes: 1, success: true } },
+      },
+      priv,
+    );
+    expect(r?.reveal?.coup).toEqual({ eligible: ["c"], yes: 1, success: true });
+    expect(
+      parseRusvetView({ ...base, phase: "coup", coup: { tokens: { a: "x" }, eligible: [] } }, priv),
+    ).toBeNull();
+    expect(parseRusvetView({ ...base, coup: { tokens: {}, eligible: [1] } }, priv)).toBeNull();
+    expect(
+      parseRusvetView(
+        { ...base, reveal: { ...reveal, coup: { eligible: [], yes: "1", success: true } } },
+        priv,
+      ),
+    ).toBeNull();
+    expect(parseRusvetView(base, { ...priv, myCoup: "evet" })).toBeNull();
+    expect(parseRusvetView(base, { ...priv, canCoup: 1 })).toBeNull();
   });
   it("hazır olanları ve kilidi okur, bozuğunu reddeder", () => {
     const v = parseRusvetView({ ...base, ready: ["a", "c"] }, { ...priv, locked: true });

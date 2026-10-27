@@ -9,7 +9,11 @@
  *   ?mock=rusvet-duel-out        düello, aday değilsin
  *   ?mock=rusvet-give            sen başkansın, jeton dağıt (`&budget=4`)
  *   ?mock=rusvet-give-wait       başkan başkası, jeton dağıtıyor
- *   ?mock=rusvet-reveal          sonuç: oy akışı, jetonlar, puanlar (`&me=president` ile başkan sensin)
+ *   ?mock=rusvet-reveal          sonuç: oy akışı, jetonlar, puanlar (`&me=president` ile başkan sensin;
+ *                                `&coup=hit|miss` darbe sonucu: tuttu / tutmadı)
+ *   ?mock=rusvet-coup            darbe oylaması, jeton almadın, oy hakkın var
+ *   ?mock=rusvet-coup-locked     darbe oylaması, oyunu verdin (`&vote=no` Darbe yok)
+ *   ?mock=rusvet-coup-wait       darbe oylaması, jeton aldın: "Darbe oylaması sürüyor"
  *   ?mock=rusvet-spectator-vote | -duel | -give | -reveal   katılımcı değilsin
  */
 import type {
@@ -24,7 +28,7 @@ import type {
   RusvetView,
   Sign,
 } from "@glix/engine";
-import { RUSVET_GIVE_MS, RUSVET_SIGN_MS, RUSVET_VOTE_MS, rusvetDarbe } from "@glix/engine";
+import { RUSVET_COUP_MS, RUSVET_GIVE_MS, RUSVET_SIGN_MS, RUSVET_VOTE_MS, rusvetDarbe } from "@glix/engine";
 import { useMockSender } from "../net/client.js";
 import { applySnapshot, setState } from "../net/store.js";
 
@@ -54,11 +58,13 @@ export function startRusvetMock(kind: string, params: URLSearchParams): void {
   const now = Date.now();
   const phase = kind.includes("reveal")
     ? "reveal"
-    : kind.includes("give")
-      ? "give"
-      : kind.includes("duel")
-        ? "duel"
-        : "vote";
+    : kind.includes("coup")
+      ? "coup"
+      : kind.includes("give")
+        ? "give"
+        : kind.includes("duel")
+          ? "duel"
+          : "vote";
   const selfPresident = kind === "rusvet-give" || params.get("me") === "president";
   const president = selfPresident ? SELF : "p1";
   const budget = Math.min(2 * (n - 1), Math.max(1, Number(params.get("budget")) || 3));
@@ -73,6 +79,7 @@ export function startRusvetMock(kind: string, params: URLSearchParams): void {
   let phaseEndsAt = now + 17_000;
   if (phase === "duel") [phaseStartedAt, phaseEndsAt] = [now - 3_000, now + RUSVET_SIGN_MS - 3_000];
   if (phase === "give") [phaseStartedAt, phaseEndsAt] = [now - 4_000, now + RUSVET_GIVE_MS - 4_000];
+  if (phase === "coup") [phaseStartedAt, phaseEndsAt] = [now - 3_000, now + RUSVET_COUP_MS - 3_000];
   if (phase === "reveal") [phaseStartedAt, phaseEndsAt] = [now - 300, now + 7_700];
   if (phase === "vote") [phaseStartedAt, phaseEndsAt] = [now - 4_000, now + RUSVET_VOTE_MS - 4_000];
   if (open) [phaseStartedAt, phaseEndsAt] = [now - 400, now + 2_100];
@@ -93,6 +100,8 @@ export function startRusvetMock(kind: string, params: URLSearchParams): void {
   if (kind === "rusvet-vote-locked") myVote = "p1";
   let myLocked = kind.endsWith("-locked");
   let rev = 1;
+  const coupMode = params.get("coup");
+  let myCoup: boolean | null = kind === "rusvet-coup-locked" ? params.get("vote") !== "no" : null;
 
   const signMap = (ids: string[]): Record<string, Sign> => {
     const out: Record<string, Sign> = {};
@@ -140,8 +149,36 @@ export function startRusvetMock(kind: string, params: URLSearchParams): void {
     return out;
   };
 
+  /** Darbe aşaması jeton dağılımı: `waits` jeton alır, geri kalanlar (hak sahibi) 0. */
+  const coupTokens = (): Record<string, number> => {
+    const out: Record<string, number> = {};
+    for (const id of participants) out[id] = 0;
+    const others = participants.filter((id) => id !== president);
+    const order =
+      kind === "rusvet-coup-wait"
+        ? [SELF, ...others.filter((id) => id !== SELF)]
+        : others.filter((id) => id !== SELF);
+    let left = Math.min(
+      counts()[president] ?? budget,
+      order.length > 1 ? order.length - 1 : 1,
+      2 * order.length,
+    );
+    for (let i = 0; left > 0 && i < order.length; i++) {
+      out[order[i] as string] = 1;
+      left--;
+    }
+    return out;
+  };
+  const coupEligible = (tk: Record<string, number>): string[] =>
+    participants.filter((id) => id !== president && (tk[id] ?? 0) === 0);
+
   /** Hazır olanlar (mock): kilitli ekranda sen ve birkaç kişi; izleyici ekranında birkaç kişi. */
   const readyList = (): string[] => {
+    if (phase === "coup") {
+      const el = coupEligible(coupTokens());
+      const others = el.filter((id) => id !== SELF).slice(0, Math.max(0, Math.floor(el.length / 2)));
+      return myCoup !== null && el.includes(SELF) ? [SELF, ...others] : others;
+    }
     if (phase === "give") return myLocked && selfPresident ? [SELF] : [];
     const pool = phase === "duel" ? duelCandidates : participants;
     if (spectator) return pool.slice(1, 3);
@@ -161,11 +198,13 @@ export function startRusvetMock(kind: string, params: URLSearchParams): void {
     };
     if (phase === "vote") {
       return {
-        pub: { ...base, phase, president: null, budget: null, duel: null, reveal: null },
+        pub: { ...base, phase, president: null, budget: null, duel: null, coup: null, reveal: null },
         priv: {
           myVote: spectator ? null : myVote,
           mySign: null,
           myTokens: null,
+          myCoup: null,
+          canCoup: false,
           locked: !spectator && myLocked,
         },
       };
@@ -177,6 +216,7 @@ export function startRusvetMock(kind: string, params: URLSearchParams): void {
           phase,
           president: null,
           budget: null,
+          coup: null,
           reveal: null,
           duel: {
             hand: replayHand || open ? 2 : 1,
@@ -192,24 +232,53 @@ export function startRusvetMock(kind: string, params: URLSearchParams): void {
           myVote: null,
           mySign: spectator || meOut ? null : mySign,
           myTokens: null,
+          myCoup: null,
+          canCoup: false,
           locked: !spectator && !meOut && mySign !== null,
         },
       };
     }
     if (phase === "give") {
       return {
-        pub: { ...base, phase, president, budget, duel: null, reveal: null },
+        pub: { ...base, phase, president, budget, duel: null, coup: null, reveal: null },
         priv: {
           myVote: null,
           mySign: null,
           myTokens: selfPresident && !spectator ? myTokens : null,
+          myCoup: null,
+          canCoup: false,
           locked: selfPresident && !spectator && myLocked,
         },
       };
     }
-    const tokens = givenTokens();
+    if (phase === "coup") {
+      const tk = coupTokens();
+      const el = coupEligible(tk);
+      return {
+        pub: {
+          ...base,
+          phase,
+          president,
+          budget: counts()[president] ?? budget,
+          duel: null,
+          coup: { tokens: tk, eligible: el },
+          reveal: null,
+        },
+        priv: {
+          myVote: null,
+          mySign: null,
+          myTokens: null,
+          myCoup: spectator ? null : myCoup,
+          canCoup: !spectator && el.includes(SELF),
+          locked: false,
+        },
+      };
+    }
+    const tokens = coupMode !== null ? coupTokens() : givenTokens();
+    const eligible = coupMode !== null ? coupEligible(tokens) : [];
+    const hit = coupMode === "hit";
     const scores: Record<string, number> = { ...tokens };
-    scores[president] = (scores[president] ?? 0) + 1;
+    if (!hit) scores[president] = (scores[president] ?? 0) + 1;
     return {
       pub: {
         ...base,
@@ -217,9 +286,20 @@ export function startRusvetMock(kind: string, params: URLSearchParams): void {
         president,
         budget: counts()[president] ?? budget,
         duel: null,
-        reveal: { votes: votes(), counts: counts(), tokens, scores, duelHands: [] },
+        coup: null,
+        reveal: {
+          votes: votes(),
+          counts: counts(),
+          tokens,
+          scores,
+          duelHands: [],
+          coup:
+            eligible.length > 0
+              ? { eligible, yes: hit ? eligible.length : Math.floor(eligible.length / 2), success: hit }
+              : null,
+        },
       },
-      priv: { myVote: null, mySign: null, myTokens: null, locked: false },
+      priv: { myVote: null, mySign: null, myTokens: null, myCoup: null, canCoup: false, locked: false },
     };
   };
 
@@ -267,8 +347,17 @@ export function startRusvetMock(kind: string, params: URLSearchParams): void {
   setState({ conn: "open", everOpen: true, nickname: "Cihad" });
   useMockSender((msg) => {
     if (msg.type !== "action") return;
-    const p = msg.payload as { kind?: string; target?: string; sign?: Sign; tokens?: Allocation[] } | null;
-    if (p?.kind === "lock") {
+    const p = msg.payload as {
+      kind?: string;
+      target?: string;
+      sign?: Sign;
+      tokens?: Allocation[];
+      yes?: boolean;
+    } | null;
+    if (p?.kind === "coup" && typeof p.yes === "boolean") {
+      if (phase !== "coup" || myCoup !== null) return;
+      myCoup = p.yes;
+    } else if (p?.kind === "lock") {
       if (phase === "vote" && myVote === null) return;
       if (phase === "give" && myTokens.length === 0) return;
       myLocked = true;

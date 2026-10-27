@@ -51,6 +51,7 @@ function Secim(props: SecimProps) {
     if (props.spectator) return "Sonuç süre bitince açılır";
     if (!props.canPick) return "Kalanlar 2. aşamada yarışıyor";
     if (props.v.locked) return "Seçimin kesinleşti";
+    if (props.stage === 2) return "Gizli ödül karesi var: tek başına basarsan +2";
     return mine() === null ? "Seçmezsen pasif kalırsın" : "Tamam'a basana kadar değiştirebilirsin";
   };
 
@@ -232,6 +233,7 @@ export default function GizliKarelerScreen(props: GameScreenProps) {
                   final={true}
                   continues={false}
                   walkover={null}
+                  bonus={v().bonus}
                   total={v().points?.[props.selfId] ?? 0}
                   entries={entries()}
                   selfId={props.selfId}

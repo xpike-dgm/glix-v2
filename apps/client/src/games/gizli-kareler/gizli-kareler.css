@@ -331,6 +331,28 @@ button.kcell:disabled {
     box-shadow: 0 0 20px rgba(255, 194, 59, 0.7);
   }
 }
+/* Ödül karesi: 2. aşama sonucunda parlayarak açılır */
+.kcell__glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 2px var(--gold),
+    0 0 26px 6px rgba(255, 194, 59, 0.75),
+    inset 0 0 22px rgba(255, 194, 59, 0.45);
+  opacity: 0;
+  animation: k-bonus 1200ms var(--ease) calc(700ms - var(--skew, 0ms)) infinite alternate both;
+}
+@keyframes k-bonus {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
 .kcell__pts {
   position: absolute;
   top: 3px;
@@ -408,6 +430,7 @@ button.kcell:disabled {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .kcell__glow,
   :root:not([data-motion="full"]) .kcell__beam,
   :root:not([data-motion="full"]) .kwho,
   :root:not([data-motion="full"]) .kcell__pts,
@@ -433,6 +456,7 @@ button.kcell:disabled {
 }
 
 /* Ayarlar > Hareketi azalt: Açık */
+:root[data-motion="reduce"] .kcell__glow,
 :root[data-motion="reduce"] .kcell__beam,
 :root[data-motion="reduce"] .kwho,
 :root[data-motion="reduce"] .kcell__pts,

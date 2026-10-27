@@ -70,6 +70,11 @@ export function Sonuc(props: Props) {
   });
   const mine = () => reveal()?.scores[props.selfId] ?? 0;
   const iAmPresident = () => props.view.president === props.selfId;
+  const coup = () => reveal()?.coup ?? null;
+  const coupLine = () => {
+    const c = coup();
+    return c ? `Darbe: ${c.yes}/${c.eligible.length}` : "";
+  };
   const presidentName = () => props.crew.find((m) => m.id === props.view.president)?.nickname ?? "";
 
   const timers = new Set<ReturnType<typeof setTimeout>>();
@@ -110,7 +115,9 @@ export function Sonuc(props: Props) {
           </span>
           <span class="rd__verdict">
             {iAmPresident()
-              ? "Başkan oldun"
+              ? coup()?.success
+                ? "Darbe oldu, +1 gitti"
+                : "Başkan oldun"
               : mine() === 0
                 ? "Jeton gelmedi"
                 : mine() === 1
@@ -191,6 +198,13 @@ export function Sonuc(props: Props) {
           </For>
         </div>
       </div>
+      <Show when={coup()}>
+        {(c) => (
+          <p class="rd__hint rd__hint--coup" role="status" data-hit={c().success ? "1" : undefined}>
+            {coupLine()} · {c().success ? "Başkanın +1'i iptal oldu" : "Darbe tutmadı"}
+          </p>
+        )}
+      </Show>
       <p class="rd__hint" role="status">
         Puanlar genel skora eklenir
       </p>

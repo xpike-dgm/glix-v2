@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
-import { ittifak, ittifakFillVotes, ittifakReveal } from "./index.js";
+import { type IttifakState, ittifak, ittifakFillVotes, ittifakReveal } from "./index.js";
 import {
   ITTIFAK_DURATION_MS,
+  ITTIFAK_MAX_PROMISES,
   ITTIFAK_REVEAL_MS,
   ITTIFAK_TALK_MS,
   ITTIFAK_VOTE_MS,
@@ -295,7 +296,7 @@ describe("ittifak gizlilik (oylar kısa kimliklerdir; yapısal kontrol)", () => 
   it("view yalnız kendi oyunu verir, başkasının oyunu ya da alınan oyu göstermez", () => {
     for (const who of players) {
       const v = priv(s, who, VOTE_AT);
-      expect(Object.keys(v)).toEqual(["myVote", "locked"]);
+      expect(Object.keys(v)).toEqual(["myVote", "myPromises", "locked"]);
     }
     expect(priv(s, "pa1", VOTE_AT).myVote).toBe("pb2");
     expect(priv(s, "pd4", VOTE_AT).myVote).toBeNull();
@@ -311,9 +312,9 @@ describe("ittifak gizlilik (oylar kısa kimliklerdir; yapısal kontrol)", () => 
       expect(publicJson).not.toContain('"votes"');
       expect(publicJson).not.toContain('"scores"');
       for (const other of ["z2w", "q3r"]) {
-        expect(JSON.stringify(priv(only, other, at))).toBe('{"myVote":null,"locked":false}');
+        expect(JSON.stringify(priv(only, other, at))).toBe('{"myVote":null,"myPromises":[],"locked":false}');
       }
-      expect(JSON.stringify(priv(only, null, at))).toBe('{"myVote":null,"locked":false}');
+      expect(JSON.stringify(priv(only, null, at))).toBe('{"myVote":null,"myPromises":[],"locked":false}');
     }
   });
 
@@ -413,8 +414,8 @@ describe("ittifak erken bitiş", () => {
       const p = pub(s, T0 + 10_100);
       expect(p.ready).toEqual(["b"]);
       expect(p.reveal).toBeNull();
-      expect(priv(s, "b", T0 + 10_100)).toEqual({ myVote: null, locked: true });
-      expect(priv(s, "a", T0 + 10_100)).toEqual({ myVote: null, locked: false });
+      expect(priv(s, "b", T0 + 10_100)).toEqual({ myVote: null, myPromises: [], locked: true });
+      expect(priv(s, "a", T0 + 10_100)).toEqual({ myVote: null, myPromises: [], locked: false });
     });
 
     it("(f) tick bağlantıya bakmaz", () => {
@@ -495,8 +496,167 @@ describe("ittifak erken bitiş", () => {
       const p = pub(s, VOTE_AT + 600);
       expect(p.ready).toEqual(["a"]);
       expect(JSON.stringify(p)).not.toMatch(/votes|scores|myVote/);
-      expect(priv(s, "a", VOTE_AT + 600)).toEqual({ myVote: "b", locked: true });
-      expect(priv(s, "b", VOTE_AT + 600)).toEqual({ myVote: "c", locked: false });
+      expect(priv(s, "a", VOTE_AT + 600)).toEqual({ myVote: "b", myPromises: [], locked: true });
+      expect(priv(s, "b", VOTE_AT + 600)).toEqual({ myVote: "c", myPromises: [], locked: false });
+    });
+  });
+});
+
+describe("ittifak söz işaretleri (O4)", () => {
+  const P = ["pa1", "pb2", "pc3", "pd4"];
+  const promise = (s: IttifakState, from: string, target: string, on = true, at = T0 + 5_000) =>
+    ittifak.reduce(s, from, { kind: "promise", target, on }, ctx(at, s.players));
+  const ok = (s: IttifakState, from: string, target: string, on = true, at = T0 + 5_000): IttifakState => {
+    const r = promise(s, from, target, on, at);
+    if (isRejected(r)) throw new Error(`reddedildi: ${r.rejected}`);
+    return r;
+  };
+  const rejected = (s: IttifakState, from: string, target: string, on = true, at = T0 + 5_000) => {
+    const r = promise(s, from, target, on, at);
+    return isRejected(r) ? r.rejected : "kabul";
+  };
+
+  it("en çok 2 kişiye söz işareti konur; kaldırınca yeniden yer açılır; aynı işareti tekrarlamak etkisizdir", () => {
+    expect(ITTIFAK_MAX_PROMISES).toBe(2);
+    let s = start(P);
+    s = ok(s, "pa1", "pb2");
+    s = ok(s, "pa1", "pc3");
+    expect(rejected(s, "pa1", "pd4")).toBe("too_many_promises");
+    expect(ok(s, "pa1", "pb2")).toBe(s); // zaten var
+    expect(ok(s, "pa1", "pd4", false)).toBe(s); // zaten yok
+    s = ok(s, "pa1", "pb2", false);
+    s = ok(s, "pa1", "pd4");
+    expect(priv(s, "pa1", T0 + 6_000).myPromises.sort()).toEqual(["pc3", "pd4"]);
+  });
+
+  it("kendine, bilinmeyene ve pazarlık dışında söz işareti konamaz", () => {
+    const s = start(P);
+    expect(rejected(s, "pa1", "pa1")).toBe("self_target");
+    expect(rejected(s, "pa1", "ghost")).toBe("unknown_target");
+    expect(rejected(s, "ghost", "pa1")).toBe("not_participant");
+    expect(rejected(s, "pa1", "pb2", true, T0 + ITTIFAK_TALK_MS)).toBe("not_talking");
+    expect(rejected(s, "pa1", "pb2", false, VOTE_AT)).toBe("not_talking");
+  });
+
+  it("herkes 'Oylamaya geçelim' dedikten sonra (konuşma kapanırken) işaret konamaz", () => {
+    let s = start(["pa1", "pb2", "pc3"]);
+    for (const id of s.players) {
+      const r = ittifak.reduce(s, id, { kind: "skip" }, ctx(T0 + 10_000, s.players));
+      if (isRejected(r)) throw new Error(r.rejected);
+      s = r;
+    }
+    expect(rejected(s, "pa1", "pb2", true, T0 + 10_500)).toBe("closed");
+  });
+
+  it("parseAction: promise yalnız {kind, target, on: boolean}", () => {
+    expect(ittifak.parseAction({ kind: "promise", target: "b", on: true })).toEqual({
+      kind: "promise",
+      target: "b",
+      on: true,
+    });
+    for (const bad of [
+      { kind: "promise", target: "b" },
+      { kind: "promise", target: "b", on: 1 },
+      { kind: "promise", target: "", on: true },
+      { kind: "promise", on: true },
+      { kind: "promise", target: "b", on: true, extra: 1 },
+    ])
+      expect(ittifak.parseAction(bad)).toBeNull();
+  });
+
+  it("sonuçta söz oyla karşılaştırılır: tutuldu ve bozuldu", () => {
+    let s = start(P);
+    s = ok(s, "pa1", "pb2");
+    s = ok(s, "pa1", "pc3");
+    s = ok(s, "pb2", "pa1");
+    s = vote(s, "pa1", "pb2"); // pa1: pb2'ye tuttu, pc3'e bozdu
+    s = vote(s, "pb2", "pc3"); // pb2: pa1'e bozdu
+    s = vote(s, "pc3", "pa1");
+    s = vote(s, "pd4", "pa1");
+    const r = pub(s, VOTE_END).reveal;
+    expect(r?.promises).toEqual({
+      pa1: [
+        { to: "pb2", kept: true },
+        { to: "pc3", kept: false },
+      ],
+      pb2: [{ to: "pa1", kept: false }],
+    });
+    // puanlama değişmez
+    expect(r?.scores).toEqual({ pa1: 2, pb2: 1, pc3: 1, pd4: 0 });
+    expect(scores(s)).toEqual(r?.scores);
+  });
+
+  it("oy vermeyenin sunucuca atanan oyu da karşılaştırılır; söz veren yoksa promises boştur", () => {
+    let s = start(P);
+    s = ok(s, "pa1", "pb2");
+    const r = pub(s, VOTE_END).reveal;
+    const filled = ittifakFillVotes(P, s.seed, {});
+    expect(r?.promises).toEqual({ pa1: [{ to: "pb2", kept: filled.pa1 === "pb2" }] });
+    expect(pub(start(P), VOTE_END).reveal?.promises).toEqual({});
+  });
+
+  it("söz işaretleri puanı etkilemez: işaretli ve işaretsiz aynı oylarla aynı skor", () => {
+    const edges: [string, string][] = [
+      ["pa1", "pb2"],
+      ["pb2", "pa1"],
+      ["pc3", "pa1"],
+      ["pd4", "pb2"],
+    ];
+    let plain = start(P);
+    let marked = start(P);
+    marked = ok(marked, "pa1", "pc3");
+    marked = ok(marked, "pd4", "pa1");
+    for (const [f, to] of edges) {
+      plain = vote(plain, f, to);
+      marked = vote(marked, f, to);
+    }
+    expect(scores(marked)).toEqual(scores(plain));
+  });
+
+  it("tekrar oynatma: aynı tohum ve eylemler aynı sonucu verir", () => {
+    const run = () => {
+      let s = start(P);
+      s = ok(s, "pa1", "pb2");
+      s = vote(s, "pa1", "pb2");
+      return JSON.stringify([s, pub(s, VOTE_END), ittifak.result(s)]);
+    };
+    expect(run()).toBe(run());
+  });
+
+  describe("gizlilik", () => {
+    let s = start(P, 5);
+    s = ok(s, "pa1", "pb2");
+    s = ok(s, "pa1", "pc3");
+    s = ok(s, "pd4", "pb2");
+    s = vote(s, "pa1", "pb2");
+
+    it("oylama bitene kadar publicView hiçbir söz içermez", () => {
+      for (const at of [T0 + 6_000, T0 + ITTIFAK_TALK_MS - 1, VOTE_AT, VOTE_END - 1]) {
+        const p = pub(s, at);
+        expect(p.reveal).toBeNull();
+        expect(JSON.stringify(p)).not.toMatch(/promise|kept|söz/i);
+        expect(Object.keys(p).sort()).toEqual(
+          ["finishAt", "phase", "players", "ready", "reveal", "startedAt", "talkEndsAt", "voteEndsAt"].sort(),
+        );
+      }
+    });
+
+    it("söz işaretini yalnız sahibi görür; alıcı dahil kimse başkasının sözünü görmez", () => {
+      for (const at of [T0 + 6_000, VOTE_AT, VOTE_END - 1]) {
+        expect(priv(s, "pa1", at).myPromises.sort()).toEqual(["pb2", "pc3"]);
+        expect(priv(s, "pd4", at).myPromises).toEqual(["pb2"]);
+        // alıcılar: pb2 iki söz aldı, pc3 bir söz aldı; ikisi de bunu görmez
+        for (const recv of ["pb2", "pc3", null, "ghost"]) {
+          expect(priv(s, recv, at).myPromises).toEqual([]);
+          expect(JSON.stringify(priv(s, recv, at))).not.toMatch(/pa1|pd4/);
+        }
+      }
+    });
+
+    it("oylama bitince sözler herkese açılır", () => {
+      const r = pub(s, VOTE_END).reveal;
+      expect(r?.promises.pa1?.map((x) => x.to).sort()).toEqual(["pb2", "pc3"]);
+      expect(r?.promises.pd4?.map((x) => x.to)).toEqual(["pb2"]);
     });
   });
 });

@@ -97,6 +97,47 @@
   white-space: nowrap;
 }
 
+/* Söz işareti: portreye dokununca konur; yalnız sahibine görünür */
+.it__tap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 48px);
+  height: max(100%, 48px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px dashed transparent;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.it__tap[data-on="1"] {
+  border: 2px solid var(--lime);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--lime) 55%, transparent);
+}
+.it__tap:active {
+  transform: translate(-50%, -50%) scale(0.94);
+}
+.it__seal {
+  position: absolute;
+  right: -8px;
+  top: -6px;
+  z-index: 2;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--lime);
+  color: #0a1200;
+  font-size: var(--fs-13);
+  font-weight: 800;
+  line-height: 1.25;
+  pointer-events: none;
+  animation: it-title-in 240ms var(--ease) both;
+}
+.it__hint--promise[data-full="1"] {
+  color: var(--amber);
+}
+
 /* Pazarlık: geçici neon bağlar ve konuşma izleri */
 .it__bonds,
 .it__lines {
@@ -297,6 +338,63 @@
   color: #c9cff0;
 }
 
+/* Açılan sözler: tutuldu (✓) / bozuldu (✗) */
+.it__promises {
+  flex: none;
+  width: 100%;
+  margin-bottom: 4px;
+  animation: it-fade 400ms var(--ease) var(--p-at, 2000ms) both;
+}
+.it__promises-head {
+  margin: 0 0 4px;
+  text-align: center;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.it__promise-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 6px;
+  max-height: 5.6em;
+  overflow-y: auto;
+}
+.it__promise {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1.5px solid currentColor;
+  font-size: var(--fs-13);
+  line-height: 1.3;
+  background: rgba(5, 8, 26, 0.86);
+}
+.it__promise[data-kept="1"] {
+  color: var(--lime);
+}
+.it__promise[data-kept="0"] {
+  color: var(--red);
+}
+.it__promise[data-me="1"] {
+  font-weight: 700;
+}
+.it__promise-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+.it__promise-mark {
+  font-size: var(--fs-15);
+}
+
 /* ---- Anlatım görseli ---- */
 .itart {
   display: flex;
@@ -351,5 +449,24 @@
   }
   .it__head--reveal {
     min-height: 60px;
+  }
+  .it__head--reveal .it__sub {
+    display: none;
+  }
+  .it__promises-head {
+    display: none;
+  }
+  .it__seal {
+    display: none;
+  }
+  .it__promise-list {
+    max-height: 2.1em;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .it__promise {
+    flex: none;
   }
 }

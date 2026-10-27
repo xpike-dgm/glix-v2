@@ -21,6 +21,7 @@ interface Pub {
   stage2: null | { players: string[] };
   stage2Reveal: null | Reveal;
   points: null | Record<string, number>;
+  bonus: null | { cell: number; winner: string | null };
 }
 
 async function startGame(cs: Client[]): Promise<void> {
@@ -77,10 +78,20 @@ describe("gizli kareler: oda içinde tam maç", () => {
     expect(await pick(d, 6)).toBe(true); // c ile çakışır
     await sleep(20);
     expect(pub().stage2Reveal).toBeNull();
+    // Ödül karesi 2. aşama sonucuna kadar kimseye bildirilmez (ortak ve özel görünümlerde yok).
+    for (const x of cs) {
+      expect((x.room.match?.publicView as Pub | undefined)?.bonus).toBeNull();
+      expect(JSON.stringify(x.room.match)).not.toMatch(/"bonus":\{/);
+    }
 
     k.clock.advance(20_000);
     await until(() => pub().stage2Reveal !== null, "2. aşama açıldı");
     expect(pub().stage2Reveal?.status).toEqual({ [ids[2]]: "clash", [ids[3]]: "clash" });
+    // Sonuçla birlikte ödül karesi açılır; iki oyuncu çakıştığı için ödülü kimse almaz.
+    const bonus = pub().bonus as NonNullable<Pub["bonus"]>;
+    expect(bonus.cell).toBeGreaterThanOrEqual(0);
+    expect(bonus.cell).toBeLessThan(9);
+    expect(bonus.winner).toBeNull();
 
     k.clock.advance(5_000);
     await until(() => a.room.phase === "results", "sonuç");

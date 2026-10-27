@@ -20,6 +20,7 @@ interface Pub {
     commonWord: string;
     infiltratorWord: string;
     caught: boolean;
+    selfNoticed: boolean;
     scores: Record<string, number>;
   };
 }
@@ -29,6 +30,7 @@ const privOf = (c: Client): Priv => c.room.match?.view as Priv;
 interface Priv {
   word: string | null;
   myVote: string | null;
+  myNotice: boolean | null;
   locked: boolean;
 }
 
@@ -98,16 +100,37 @@ describe("sizma: oda içinde tam maç", () => {
     expect(privOf(cs[1] as Client).myVote).toBe(infiltrator);
     for (const x of cs) expect(await act(x, { kind: "lock" })).toBe(true);
     k.clock.advance(1_100);
+    // Sızma açıklanmadan önce herkese "Sızma sen miydin?" sorulur.
+    await until(() => pub().phase === "notice", "fark ettin mi aşaması");
+    expect(pub().reveal).toBeNull();
+    expect(await act(a, { kind: "vote", target: ids[1] })).toBe(false); // geç oy
+    // Sızma (ve ikinci kişi) Evet der; diğerleri Hayır. Cevaplar gizli.
+    expect(await act(cs[oddIndex] as Client, { kind: "notice", yes: true })).toBe(true);
+    expect(await act(cs[oddIndex] as Client, { kind: "notice", yes: false })).toBe(false); // tek seferlik
+    await sync();
+    const others = cs.filter((_, i) => i !== oddIndex);
+    expect(privOf(cs[oddIndex] as Client).myNotice).toBe(true);
+    for (const x of others) {
+      expect(privOf(x).myNotice).toBeNull();
+      const raw = JSON.stringify(x.room.match);
+      expect(raw).not.toContain("selfNoticed");
+      expect(raw).not.toContain('"infiltrator"');
+    }
+    expect(pub().ready).toEqual([infiltrator]);
+    for (const [i, x] of others.entries()) expect(await act(x, { kind: "notice", yes: i === 0 })).toBe(true);
+    // Herkes cevapladı: kısa sürede sızma açılır.
+    k.clock.advance(1_100);
     await until(() => pub().reveal !== null, "açıldı");
     const r = pub().reveal as NonNullable<Pub["reveal"]>;
     expect(r.infiltrator).toBe(infiltrator);
     expect(r.caught).toBe(true);
-    expect(await act(a, { kind: "vote", target: ids[1] })).toBe(false); // geç oy
+    expect(r.selfNoticed).toBe(true);
 
     k.clock.advance(8_000);
     await until(() => a.room.phase === "results", "sonuç");
     const expected: Record<string, number> = {};
-    for (const id of ids) expected[id] = id === infiltrator ? 0 : 1;
+    // Yakalanan sızma 0, ama kendini fark etti: +1.
+    for (const id of ids) expected[id] = 1;
     expect(a.room.match?.result?.awards).toEqual(expected);
     expect(a.room.players.map((p) => p.score)).toEqual(ids.map((id) => expected[id]));
   });
@@ -121,7 +144,10 @@ describe("sizma: oda içinde tam maç", () => {
     k.clock.advance(300_000);
     await until(() => pub().phase === "vote", "tavan: oylama başladı");
     k.clock.advance(30_000);
+    await until(() => pub().phase === "notice", "fark ettin mi aşaması");
+    k.clock.advance(8_000); // kimse cevap vermedi: Hayır sayılır
     await until(() => pub().reveal !== null, "açıldı");
+    expect((pub().reveal as NonNullable<Pub["reveal"]>).selfNoticed).toBe(false);
     const infiltrator = (pub().reveal as NonNullable<Pub["reveal"]>).infiltrator;
     k.clock.advance(8_000);
     await until(() => a.room.phase === "results", "sonuç");

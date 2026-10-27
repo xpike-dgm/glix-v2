@@ -1,6 +1,10 @@
-import { createMemo, Show } from "solid-js";
+import { ITTIFAK_MAX_PROMISES } from "@glix/engine";
+import { createMemo, createSignal, Show } from "solid-js";
+import { hapticError } from "../../fx/haptics.js";
+import { fail } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
 import { look } from "../../ui/avatars.js";
+import { createOptimistic } from "../../ui/optimistic.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";
 import { PlayerPicker } from "../../ui/PlayerPicker.js";
 import { createPendingPick } from "../../ui/playerPicker.js";
@@ -10,7 +14,7 @@ import type { GameScreenProps } from "../registry.js";
 import "./ittifak.css";
 import { type CrewMember, Pazarlik } from "./Pazarlik.js";
 import { Sonuc } from "./Sonuc.js";
-import { parseIttifakView } from "./view.js";
+import { parseIttifakView, togglePromise } from "./view.js";
 
 const LOCK = "#B6FF3B";
 
@@ -34,6 +38,25 @@ export default function IttifakScreen(props: GameScreenProps) {
   const chosen = () => {
     const id = pick.value();
     return id === null ? null : (crew().find((m) => m.id === id) ?? null);
+  };
+
+  // Söz işaretleri: yalnız sana görünür; dokununca hemen görünür, sunucu onaylayınca kesinleşir.
+  const sameSet = (a: string[], b: string[]): boolean =>
+    a.length === b.length && [...a].sort().join("|") === [...b].sort().join("|");
+  const [promised, setPromised] = createOptimistic<string[]>(() => view()?.myPromises ?? [], {
+    equals: sameSet,
+  });
+  const [full, setFull] = createSignal(false);
+  const promise = (id: string): void => {
+    const next = togglePromise(promised(), id, ITTIFAK_MAX_PROMISES);
+    if (next === null) {
+      fail();
+      hapticError();
+      setFull(true);
+      return;
+    }
+    setFull(false);
+    setPromised(next, () => sendActionAck({ kind: "promise", target: id, on: next.includes(id) }));
   };
 
   const bar = () => {
@@ -69,7 +92,20 @@ export default function IttifakScreen(props: GameScreenProps) {
                       endsAt={v().talkEndsAt}
                       now={props.now}
                       ready={v().ready}
+                      promised={promised()}
+                      {...(props.spectator === true ? {} : { onPromise: promise })}
                     />
+                    <Show when={props.spectator !== true}>
+                      <p
+                        class="it__hint it__hint--promise"
+                        role="status"
+                        data-full={full() ? "1" : undefined}
+                      >
+                        {full()
+                          ? "En çok 2 söz işareti"
+                          : `Dokun: söz işareti ${promised().length}/${ITTIFAK_MAX_PROMISES} · yalnız sen görürsün`}
+                      </p>
+                    </Show>
                     <TamamBar
                       locked={v().locked}
                       ready={v().ready.length}

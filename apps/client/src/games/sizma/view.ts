@@ -5,7 +5,7 @@ type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === "object" && v !== null && !Array.isArray(v);
 const isNum = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
 const isStrArr = (v: unknown): v is string[] => Array.isArray(v) && v.every((p) => typeof p === "string");
-const PHASES: readonly SizmaPhase[] = ["clue", "vote", "reveal"];
+const PHASES: readonly SizmaPhase[] = ["clue", "vote", "notice", "reveal"];
 
 /** Ekranın okuduğu birleşik görünüm: ortak (`publicView`) + kişiye özel (`view`). */
 export type SizmaScreenView = SizmaPublicView & SizmaView;
@@ -15,6 +15,7 @@ function parseReveal(v: unknown): SizmaReveal | null {
   if (typeof v.infiltrator !== "string") return null;
   if (typeof v.commonWord !== "string" || typeof v.infiltratorWord !== "string") return null;
   if (typeof v.caught !== "boolean" || !isRec(v.votes)) return null;
+  if (v.selfNoticed !== undefined && typeof v.selfNoticed !== "boolean") return null;
   const votes: Record<string, string> = {};
   for (const [from, to] of Object.entries(v.votes)) {
     if (typeof to !== "string") return null;
@@ -30,6 +31,7 @@ function parseReveal(v: unknown): SizmaReveal | null {
     votes,
     tally,
     caught: v.caught,
+    selfNoticed: v.selfNoticed === true,
     scores,
   };
 }
@@ -40,6 +42,7 @@ export function parseSizmaPublicView(v: unknown): SizmaPublicView | null {
   if (!isStrArr(v.players) || !isStrArr(v.order) || !isStrArr(v.ready)) return null;
   if (typeof v.phase !== "string" || !PHASES.includes(v.phase as SizmaPhase)) return null;
   if (!isNum(v.startedAt) || !isNum(v.clueEndsAt) || !isNum(v.voteEndsAt) || !isNum(v.finishAt)) return null;
+  if (v.noticeEndsAt !== undefined && !isNum(v.noticeEndsAt)) return null;
   const reveal = v.reveal === null || v.reveal === undefined ? null : parseReveal(v.reveal);
   if (v.reveal !== null && v.reveal !== undefined && reveal === null) return null;
   return {
@@ -49,6 +52,7 @@ export function parseSizmaPublicView(v: unknown): SizmaPublicView | null {
     startedAt: v.startedAt,
     clueEndsAt: v.clueEndsAt,
     voteEndsAt: v.voteEndsAt,
+    noticeEndsAt: v.noticeEndsAt ?? v.voteEndsAt,
     finishAt: v.finishAt,
     ready: [...v.ready],
     reveal,
@@ -60,8 +64,9 @@ export function parseSizmaPrivateView(v: unknown): SizmaView | null {
   if (!isRec(v)) return null;
   if (v.word !== null && typeof v.word !== "string") return null;
   if (v.myVote !== null && typeof v.myVote !== "string") return null;
+  if (v.myNotice !== undefined && v.myNotice !== null && typeof v.myNotice !== "boolean") return null;
   if (typeof v.locked !== "boolean") return null;
-  return { word: v.word, myVote: v.myVote, locked: v.locked };
+  return { word: v.word, myVote: v.myVote, myNotice: v.myNotice ?? null, locked: v.locked };
 }
 
 export function parseSizmaView(publicView: unknown, view: unknown): SizmaScreenView | null {
@@ -94,8 +99,10 @@ export function wordSize(word: string): number {
 export interface TallyPlan {
   /** Oyuncu kimliği → açılış adımı: aynı oy sayısındakiler birlikte, az oydan çok oya. */
   step: Record<string, number>;
-  /** Sızmanın kimliğinin açıldığı son adım (oy adımlarından sonra gelir). */
+  /** Sızmanın kimliğinin açıldığı adım (oy adımlarından sonra gelir). */
   finale: number;
+  /** Sızmanın "fark ettin mi" cevabının açıldığı son adım (kimlikten sonra). */
+  notice: number;
   steps: number;
 }
 
@@ -107,5 +114,5 @@ export function tallyPlan(ids: readonly string[], tally: Readonly<Record<string,
   const counts = [...new Set(ids.map((id) => tally[id] ?? 0))].sort((a, b) => a - b);
   const step: Record<string, number> = {};
   for (const id of ids) step[id] = counts.indexOf(tally[id] ?? 0);
-  return { step, finale: counts.length, steps: counts.length + 1 };
+  return { step, finale: counts.length, notice: counts.length + 1, steps: counts.length + 2 };
 }

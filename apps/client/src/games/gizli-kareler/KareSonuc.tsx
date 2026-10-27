@@ -1,4 +1,4 @@
-import type { KareReveal } from "@glix/engine";
+import type { KareBonus, KareReveal } from "@glix/engine";
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { hapticMatch, hapticResult, hapticSolo, hapticTick } from "../../fx/haptics.js";
 import { reducedMotion } from "../../fx/motion.js";
@@ -24,6 +24,8 @@ interface Props {
   continues: boolean;
   /** Rakipsiz sayılıp otomatik +1 alan oyuncu. */
   walkover: string | null;
+  /** Ödül karesi (yalnız 2. aşama sonucunda); parlama efektiyle gösterilir. */
+  bonus?: KareBonus | null;
   /** Kendi toplam puanın (şimdiye kadar). */
   total: number;
   entries: SonucEntry[];
@@ -46,6 +48,10 @@ export function KareSonuc(props: Props) {
   const hasClash = () => Object.values(r().status).some((s) => s === "clash");
   const mine = () => statusOf(r(), props.selfId);
   const iAmWalkover = () => props.walkover === props.selfId;
+  const bonusWinner = () => props.bonus?.winner ?? null;
+  const iWonBonus = () => bonusWinner() !== null && bonusWinner() === props.selfId;
+  /** Ödül karesinde birden çok kişi varsa kimse ödül almaz. */
+  const bonusClash = () => props.bonus != null && (groups().get(props.bonus.cell)?.length ?? 0) > 1;
 
   const skew = Math.max(0, Math.min(6000, props.now() - props.anchor));
   const reduced = reducedMotion();
@@ -102,6 +108,7 @@ export function KareSonuc(props: Props) {
         : { label: "Bu aşamada", value: "Kimse yok", kind: "dim" };
     }
     if (m === "solo") {
+      if (iWonBonus()) return { label: "Ödül karesi!", value: "+3", kind: "gold" };
       return iAmWalkover()
         ? { label: "Rakipsiz kaldın", value: "+2", kind: "gold" }
         : { label: "Tek kaldın", value: "+1", kind: "gold" };
@@ -121,6 +128,12 @@ export function KareSonuc(props: Props) {
           : `${w?.nickname ?? "Biri"} rakipsiz kaldı: +1 daha`;
       }
       return "Kimse kalmadı, puan yok";
+    }
+    if (props.bonus != null) {
+      if (iWonBonus()) return "Tek kaldın +1, ödül karesi +2";
+      const w = bonusWinner();
+      if (w !== null) return `${byId().get(w)?.nickname ?? "Biri"} ödül karesini buldu: +2`;
+      if (bonusClash()) return "Ödül karesinde çakışma: ödül yok";
     }
     if (props.spectator || mine() === null) return "";
     return props.total > 0 ? `Toplam +${props.total}` : "Bu sefer puan yok";
@@ -148,9 +161,10 @@ export function KareSonuc(props: Props) {
                   class="kcell kcell--res"
                   data-state={state()}
                   data-has={ids().length > 0 ? "1" : undefined}
+                  data-bonus={props.bonus?.cell === cell ? (bonusWinner() !== null ? "win" : "1") : undefined}
                   style={{ "--i": cell, "--cols": whoColumns(ids().length) }}
                   role="img"
-                  aria-label={`${cellName(cell, props.size)}: ${ids().length} kişi`}
+                  aria-label={`${cellName(cell, props.size)}: ${ids().length} kişi${props.bonus?.cell === cell ? ", ödül karesi" : ""}`}
                 >
                   <Show when={ids().length === 0}>
                     <i class="kcell__core" />
@@ -179,8 +193,13 @@ export function KareSonuc(props: Props) {
                       }}
                     </For>
                   </span>
+                  <Show when={props.bonus?.cell === cell}>
+                    <i class="kcell__glow" aria-hidden="true" />
+                  </Show>
                   <Show when={state() === "solo"}>
-                    <em class="kcell__pts">+1</em>
+                    <em class="kcell__pts">
+                      {bonusWinner() !== null && ids()[0] === bonusWinner() ? "+3" : "+1"}
+                    </em>
                   </Show>
                 </div>
               );

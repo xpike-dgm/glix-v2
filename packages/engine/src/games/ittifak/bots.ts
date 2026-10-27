@@ -7,6 +7,10 @@ export const ittifakBot: GameBot = {
   burstJitterMs: [100, 1_000, 4_000],
   generate: (rng, playerId, _pub, _priv, connected) => {
     const roll = rng.int(100);
+    if (roll >= 80 && roll < 90) {
+      const pool = connected.filter((id) => id !== playerId);
+      return { kind: "promise", target: pool[rng.int(pool.length)] ?? "ghost", on: rng.int(4) !== 0 };
+    }
     if (roll >= 93) return { kind: rng.int(2) === 0 ? "skip" : "lock" };
     if (roll < 4) return { kind: "vote", target: playerId };
     if (roll < 7) return { kind: "vote", target: "ghost" };

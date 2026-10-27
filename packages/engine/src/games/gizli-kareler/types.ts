@@ -64,8 +64,21 @@ export interface KarelerPublicView {
   walkover: string | null;
   /** Şimdiye kadar açılan sonuçlardan kazanılan puanlar (genel skora direkt). 1. aşama açılmadan null. */
   points: Record<string, number> | null;
+  /** Ödül karesi: yalnız 2. aşamanın sonucu açılırken var; o ana kadar null (konumu hiçbir yerde yok). */
+  bonus: KareBonus | null;
   /** Şu an seçim yapılan aşamada "Tamam" diyenler (seçimleri gizli kalır); seçim aşaması dışında boş. */
   ready: string[];
+}
+
+/** Ödül karesinin ek puanı (2. aşamada tek başına basana, genel skora). */
+export const KARELER_BONUS_POINTS = 2;
+
+/** 2. aşamanın sonucuyla açılan ödül karesi. */
+export interface KareBonus {
+  /** Ödül karesinin hücre numarası. */
+  cell: number;
+  /** Ödül karesinde tek başına kalan oyuncu; hiç kimse ya da birden çok kişi bastıysa null. */
+  winner: string | null;
 }
 
 /** Kişiye özel görünüm: yalnız kendi seçimin (şu an seçim yapılan aşamada). */

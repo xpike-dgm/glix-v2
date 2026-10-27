@@ -3,6 +3,7 @@ import { derivedRng, drawSeed } from "../seeded.js";
 import {
   type Allocation,
   type DuelHand,
+  RUSVET_COUP_MS,
   RUSVET_GIVE_MS,
   RUSVET_LOCK_GRACE_MS,
   RUSVET_MAX_HANDS,
@@ -12,6 +13,7 @@ import {
   RUSVET_SIGN_REVEAL_MS,
   RUSVET_VOTE_MS,
   type RusvetAction,
+  type RusvetCoupResult,
   type RusvetPhase,
   type RusvetPublicView,
   type RusvetReveal,
@@ -22,7 +24,7 @@ import {
 
 export * from "./types.js";
 
-type Stage = "vote" | "duel" | "give" | "reveal";
+type Stage = "vote" | "duel" | "give" | "coup" | "reveal";
 
 export interface RusvetState {
   players: string[];
@@ -61,7 +63,19 @@ export interface RusvetState {
   tokens: Record<string, number>;
   /** Dağıtım bitince kurulur: kalan jetonlar rastgele tamamlanmış hâli. */
   finalTokens: Record<string, number> | null;
+  /** Darbe aşaması: oy hakkı olanlar (jeton almayan, başkan olmayan), başlangıç ve bitiş. */
+  coupEligible: string[];
+  coupStartedAt: number;
+  coupEndsAt: number;
+  /** Oyuncu -> darbe oyu (gizli; sonuç açılırken yalnız sayı açılır). */
+  coupVotes: Record<string, boolean>;
   finishAt: number | null;
+}
+
+/** Darbe tutar mı: oy hakkı olanların kesin çoğunluğu (yarıdan fazlası) "Darbe" demeli; eşitlik çoğunluk değildir. */
+export function coupSucceeds(eligible: readonly string[], votes: Record<string, boolean>): boolean {
+  const yes = eligible.filter((id) => own(votes, id) === true).length;
+  return yes * 2 > eligible.length;
 }
 
 /** Elin işaret bitişi: herkes işaret verdiyse erken. */
@@ -229,12 +243,32 @@ function advance(state: RusvetState, now: number): RusvetState {
     } else if (s.stage === "give") {
       if (now < s.giveEndsAt) return s;
       const president = s.president as string;
-      s = {
-        ...s,
-        stage: "reveal",
-        finalTokens: rusvetFillTokens(s.players, s.seed, president, s.budget, s.tokens),
-        finishAt: s.giveEndsAt + RUSVET_REVEAL_MS,
-      };
+      const finalTokens = rusvetFillTokens(s.players, s.seed, president, s.budget, s.tokens);
+      const coupEligible = s.players.filter((id) => id !== president && (own(finalTokens, id) ?? 0) === 0);
+      if (coupEligible.length === 0) {
+        // Oy hakkı olan yok: darbe aşaması atlanır.
+        s = {
+          ...s,
+          stage: "reveal",
+          finalTokens,
+          coupEligible,
+          coupStartedAt: s.giveEndsAt,
+          coupEndsAt: s.giveEndsAt,
+          finishAt: s.giveEndsAt + RUSVET_REVEAL_MS,
+        };
+      } else {
+        s = {
+          ...s,
+          stage: "coup",
+          finalTokens,
+          coupEligible,
+          coupStartedAt: s.giveEndsAt,
+          coupEndsAt: s.giveEndsAt + RUSVET_COUP_MS,
+        };
+      }
+    } else if (s.stage === "coup") {
+      if (now < s.coupEndsAt) return s;
+      s = { ...s, stage: "reveal", finishAt: s.coupEndsAt + RUSVET_REVEAL_MS };
     } else {
       return s;
     }
@@ -244,8 +278,18 @@ function advance(state: RusvetState, now: number): RusvetState {
 function scoresOf(s: RusvetState): Record<string, number> {
   const scores: Record<string, number> = {};
   for (const id of s.players) scores[id] = (s.finalTokens ? own(s.finalTokens, id) : 0) ?? 0;
-  if (s.president !== null) scores[s.president] = (scores[s.president] ?? 0) + 1;
+  if (s.president !== null && !coupResultOf(s)?.success) scores[s.president] = (scores[s.president] ?? 0) + 1;
   return scores;
+}
+
+/** Darbe oylamasının sonucu (aşama bittiyse); oy hakkı olan yoksa ya da henüz bitmediyse null. */
+function coupResultOf(s: RusvetState): RusvetCoupResult | null {
+  if (s.stage !== "reveal" || s.coupEligible.length === 0) return null;
+  return {
+    eligible: [...s.coupEligible],
+    yes: s.coupEligible.filter((id) => own(s.coupVotes, id) === true).length,
+    success: coupSucceeds(s.coupEligible, s.coupVotes),
+  };
 }
 
 function phaseOf(s: RusvetState): RusvetPhase {
@@ -262,8 +306,10 @@ function span(s: RusvetState): [number, number] {
     }
     case "give":
       return [s.giveStartedAt, s.giveEndsAt];
+    case "coup":
+      return [s.coupStartedAt, s.coupEndsAt];
     default:
-      return [s.giveEndsAt, s.finishAt ?? s.giveEndsAt];
+      return [s.coupEndsAt, s.finishAt ?? s.coupEndsAt];
   }
 }
 
@@ -272,6 +318,7 @@ function readyOf(s: RusvetState): string[] {
   if (s.stage === "vote") return [...s.votesLocked];
   if (s.stage === "duel") return s.candidates.filter((id) => own(s.signs, id) !== undefined);
   if (s.stage === "give" && s.giveLocked && s.president !== null) return [s.president];
+  if (s.stage === "coup") return s.coupEligible.filter((id) => own(s.coupVotes, id) !== undefined);
   return [];
 }
 
@@ -293,7 +340,7 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
     steps: [
       "Gizli oyunu ver, başkanlığı almaya çalış",
       "Başkan, aldığı oy kadar jetonu başkalarına dağıtır",
-      "Başkan +1, jetonlar sahiplerine puan olur",
+      "Başkan +1, jetonlar puan olur; jeton almayanlar darbe yapabilir",
     ],
   },
 
@@ -311,6 +358,9 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
       if (keys.length !== 2) return null;
       const sign = SIGNS.find((x) => x === r.sign);
       return sign === undefined ? null : { kind: "sign", sign };
+    }
+    if (r.kind === "coup") {
+      return keys.length === 2 && typeof r.yes === "boolean" ? { kind: "coup", yes: r.yes } : null;
     }
     if (r.kind === "lock") return keys.length === 1 ? { kind: "lock" } : null;
     if (r.kind === "give") {
@@ -358,6 +408,10 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
       giveLocked: false,
       tokens: {},
       finalTokens: null,
+      coupEligible: [],
+      coupStartedAt: 0,
+      coupEndsAt: 0,
+      coupVotes: {},
       finishAt: null,
     };
   },
@@ -367,6 +421,19 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
     const s = advance(state, ctx.now);
     if (s.stage === "reveal") return { rejected: "ended" };
+
+    if (action.kind === "coup") {
+      if (s.stage !== "coup") return { rejected: "wrong_phase" };
+      if (!s.coupEligible.includes(playerId)) return { rejected: "not_eligible" };
+      // Darbe oyu tek seferliktir.
+      if (own(s.coupVotes, playerId) !== undefined) return { rejected: "locked" };
+      const coupVotes = { ...s.coupVotes, [playerId]: action.yes };
+      const all = s.coupEligible.every((id) => own(coupVotes, id) !== undefined);
+      // Hak sahiplerinin hepsi oy verdiyse aşama kısa bir süre sonra biter (bağlantıya bakılmaz).
+      return all
+        ? { ...s, coupVotes, coupEndsAt: Math.min(s.coupEndsAt, ctx.now + RUSVET_LOCK_GRACE_MS) }
+        : { ...s, coupVotes };
+    }
 
     if (action.kind === "lock") {
       if (s.stage === "vote") {
@@ -441,7 +508,7 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
   publicView(state, ctx): RusvetPublicView {
     const s = advance(state, ctx.now);
     const [from, to] = span(s);
-    const elected = s.stage === "give" || s.stage === "reveal";
+    const elected = s.stage === "give" || s.stage === "coup" || s.stage === "reveal";
     let reveal: RusvetReveal | null = null;
     if (s.stage === "reveal" && s.finalVotes && s.counts && s.finalTokens) {
       reveal = {
@@ -450,6 +517,7 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
         tokens: { ...s.finalTokens },
         scores: scoresOf(s),
         duelHands: s.hands,
+        coup: coupResultOf(s),
       };
     }
     return {
@@ -473,12 +541,23 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
               history: s.hands,
             }
           : null,
+      coup:
+        s.stage === "coup" && s.finalTokens
+          ? { tokens: { ...s.finalTokens }, eligible: [...s.coupEligible] }
+          : null,
       reveal,
     };
   },
 
   view(state, playerId, ctx): RusvetView {
-    const empty: RusvetView = { myVote: null, mySign: null, myTokens: null, locked: false };
+    const empty: RusvetView = {
+      myVote: null,
+      mySign: null,
+      myTokens: null,
+      myCoup: null,
+      canCoup: false,
+      locked: false,
+    };
     if (playerId === null || !state.players.includes(playerId)) return empty;
     const s = advance(state, ctx.now);
     return {
@@ -488,6 +567,8 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
         s.president === playerId && (s.stage === "give" || s.stage === "reveal")
           ? allocationList(s.finalTokens ?? s.tokens, s.players)
           : null,
+      myCoup: s.stage === "coup" ? (own(s.coupVotes, playerId) ?? null) : null,
+      canCoup: s.stage === "coup" && s.coupEligible.includes(playerId),
       locked: readyOf(s).includes(playerId),
     };
   },

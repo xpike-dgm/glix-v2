@@ -1,6 +1,7 @@
-import { createMemo, createSignal, For, onCleanup } from "solid-js";
+import { createMemo, createSignal, For, onCleanup, Show } from "solid-js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
+import { pressable } from "../../ui/press.js";
 import { propSrc } from "../../ui/props.js";
 import { bondPattern, ringPosition } from "./view.js";
 
@@ -19,6 +20,26 @@ interface Props {
   now: () => number;
   /** "Oylamaya geçelim" diyenler. */
   ready?: readonly string[];
+  /** Söz işareti koyduğun oyuncular (yalnız sana görünür). */
+  promised?: readonly string[];
+  /** Verilirse portrelere dokununca söz işareti konur/kalkar (izleyicide verilmez). */
+  onPromise?: (id: string) => void;
+}
+
+function PromiseTap(props: { m: CrewMember; on: boolean; onPromise: (id: string) => void }) {
+  // Parmak dokunur dokunmaz etkinleşir; klavye/ekran okuyucu `click` ile.
+  const press = pressable(() => props.onPromise(props.m.id));
+  return (
+    <button
+      type="button"
+      class="it__tap"
+      data-on={props.on ? "1" : undefined}
+      aria-pressed={props.on}
+      aria-label={`${props.m.nickname} için söz işareti`}
+      onPointerDown={press.onPointerDown}
+      onClick={press.onClick}
+    />
+  );
 }
 
 /**
@@ -91,6 +112,18 @@ export function Pazarlik(props: Props) {
                 <b />
                 <b />
               </i>
+              <Show when={props.promised?.includes(m.id)}>
+                <span class="it__seal" aria-hidden="true">
+                  söz
+                </span>
+              </Show>
+              <Show when={props.onPromise && m.id !== props.selfId}>
+                <PromiseTap
+                  m={m}
+                  on={props.promised?.includes(m.id) === true}
+                  onPromise={(id) => props.onPromise?.(id)}
+                />
+              </Show>
               <span class="it__name">{m.nickname}</span>
             </div>
           )}

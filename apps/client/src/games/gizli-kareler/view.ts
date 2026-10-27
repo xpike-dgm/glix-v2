@@ -1,4 +1,11 @@
-import type { KarelerPublicView, KarelerView, KareReveal, KareStage2, KareStatus } from "@glix/engine";
+import type {
+  KareBonus,
+  KarelerPublicView,
+  KarelerView,
+  KareReveal,
+  KareStage2,
+  KareStatus,
+} from "@glix/engine";
 
 type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -39,10 +46,19 @@ function parsePoints(v: unknown): Record<string, number> | null | undefined {
   if (!isRec(v)) return undefined;
   const out: Record<string, number> = {};
   for (const [id, p] of Object.entries(v)) {
-    if (!isInt(p, 0, 2)) return undefined;
+    // En çok: 1. aşama +1, 2. aşama +1, ödül karesi +2.
+    if (!isInt(p, 0, 4)) return undefined;
     out[id] = p;
   }
   return out;
+}
+
+/** Ödül karesi: yalnız 2. aşamanın sonucuyla birlikte gelir. */
+function parseBonus(v: unknown, cells: number): KareBonus | null | undefined {
+  if (v === null || v === undefined) return null;
+  if (!isRec(v) || !isInt(v.cell, 0, cells - 1)) return undefined;
+  if (v.winner !== null && typeof v.winner !== "string") return undefined;
+  return { cell: v.cell, winner: v.winner };
 }
 
 /** Ekranın okuduğu birleşik görünüm: ortak (`publicView`) + kişiye özel (`view`). */
@@ -59,6 +75,8 @@ export function parseKarelerPublicView(v: unknown): KarelerPublicView | null {
   const stage2Reveal = parseReveal(v.stage2Reveal, cells);
   const stage2 = parseStage2(v.stage2);
   const points = parsePoints(v.points);
+  const bonus = parseBonus(v.bonus, cells);
+  if (bonus === undefined) return null;
   if (stage1 === undefined || stage2Reveal === undefined || stage2 === undefined || points === undefined) {
     return null;
   }
@@ -68,6 +86,8 @@ export function parseKarelerPublicView(v: unknown): KarelerPublicView | null {
   // Sonuç sırası tutarlı olmalı: 1. aşama açılmadan sonrası olamaz.
   if (stage1 === null && (stage2 !== null || stage2Reveal !== null || points !== null)) return null;
   if (stage2Reveal !== null && stage2 === null) return null;
+  // Ödül karesi 2. aşamanın sonucundan önce bilinemez.
+  if (bonus !== null && stage2Reveal === null) return null;
   return {
     size,
     startedAt: v.startedAt,
@@ -78,6 +98,7 @@ export function parseKarelerPublicView(v: unknown): KarelerPublicView | null {
     finishesAt: v.finishesAt,
     walkover: v.walkover,
     points,
+    bonus,
     ready: v.ready as string[],
   };
 }

@@ -2,6 +2,8 @@ import {
   type Allocation,
   type DuelHand,
   RUSVET_MAX_PER_PLAYER,
+  type RusvetCoupPublic,
+  type RusvetCoupResult,
   type RusvetDuel,
   type RusvetPhase,
   type RusvetPublicView,
@@ -17,7 +19,7 @@ type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === "object" && v !== null && !Array.isArray(v);
 const isNum = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
 const isStr = (v: unknown): v is string => typeof v === "string";
-const PHASES: readonly RusvetPhase[] = ["vote", "duel", "give", "reveal"];
+const PHASES: readonly RusvetPhase[] = ["vote", "duel", "give", "coup", "reveal"];
 const asSign = (v: unknown): Sign | null => SIGNS.find((s) => s === v) ?? null;
 
 /** Ekranın okuduğu birleşik görünüm: ortak (`publicView`) + kişiye özel (`view`). */
@@ -80,6 +82,20 @@ function parseDuel(v: unknown): RusvetDuel | null {
   };
 }
 
+function parseCoupResult(v: unknown): RusvetCoupResult | null {
+  if (!isRec(v)) return null;
+  const eligible = strArr(v.eligible);
+  if (!eligible || !isNum(v.yes) || typeof v.success !== "boolean") return null;
+  return { eligible, yes: v.yes, success: v.success };
+}
+
+function parseCoupPublic(v: unknown): RusvetCoupPublic | null {
+  if (!isRec(v)) return null;
+  const eligible = strArr(v.eligible);
+  const tokens = parseNumberRecord(v.tokens);
+  return eligible && tokens ? { eligible, tokens } : null;
+}
+
 function parseReveal(v: unknown): RusvetReveal | null {
   if (!isRec(v) || !isRec(v.votes)) return null;
   const votes: Record<string, string> = {};
@@ -92,7 +108,12 @@ function parseReveal(v: unknown): RusvetReveal | null {
   const scores = parseNumberRecord(v.scores);
   const duelHands = parseHands(v.duelHands);
   if (!counts || !tokens || !scores || !duelHands) return null;
-  return { votes, counts, tokens, scores, duelHands };
+  let coup: RusvetCoupResult | null = null;
+  if (v.coup !== null && v.coup !== undefined) {
+    coup = parseCoupResult(v.coup);
+    if (!coup) return null;
+  }
+  return { votes, counts, tokens, scores, duelHands, coup };
 }
 
 /** Sunucudan gelen `publicView` bilinmez; Rüşvet ve Darbe ortak görünümü olarak doğrulanır. */
@@ -111,6 +132,11 @@ export function parseRusvetPublicView(v: unknown): RusvetPublicView | null {
     duel = parseDuel(v.duel);
     if (!duel) return null;
   }
+  let coup: RusvetCoupPublic | null = null;
+  if (v.coup !== null && v.coup !== undefined) {
+    coup = parseCoupPublic(v.coup);
+    if (!coup) return null;
+  }
   let reveal: RusvetReveal | null = null;
   if (v.reveal !== null && v.reveal !== undefined) {
     reveal = parseReveal(v.reveal);
@@ -126,6 +152,7 @@ export function parseRusvetPublicView(v: unknown): RusvetPublicView | null {
     budget: v.budget ?? null,
     ready,
     duel,
+    coup,
     reveal,
   };
 }
@@ -151,8 +178,17 @@ export function parseRusvetPrivateView(v: unknown): RusvetView | null {
     myTokens = parseAllocations(v.myTokens);
     if (!myTokens) return null;
   }
+  if (v.myCoup !== null && v.myCoup !== undefined && typeof v.myCoup !== "boolean") return null;
+  if (v.canCoup !== undefined && typeof v.canCoup !== "boolean") return null;
   if (typeof v.locked !== "boolean") return null;
-  return { myVote: v.myVote, mySign, myTokens, locked: v.locked };
+  return {
+    myVote: v.myVote,
+    mySign,
+    myTokens,
+    myCoup: v.myCoup ?? null,
+    canCoup: v.canCoup ?? false,
+    locked: v.locked,
+  };
 }
 
 export function parseRusvetView(publicView: unknown, view: unknown): RusvetScreenView | null {

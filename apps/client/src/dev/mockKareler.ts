@@ -10,6 +10,10 @@
  *   ?mock=kareler-choosing2-out     2. aşama: elendin, izliyorsun
  *   ?mock=kareler-final             2. aşama sonucu (son sonuç; çakıştın)
  *   ?mock=kareler-final-win         2. aşama sonucu (tek kaldın, toplam +2)
+ *   ?mock=kareler-final-bonus       2. aşama sonucu: ödül karesini tek başına buldun (+2 ek), parlayan kare
+ *   ?mock=kareler-final-bonus-clash 2. aşama sonucu: ödül karesinde çakıştınız, ödül yok
+ *   ?mock=kareler-final-bonus-other 2. aşama sonucu: ödül karesini başkası buldu
+ *   ?mock=kareler-final-bonus-miss  2. aşama sonucu: ödül karesine kimse basmadı (`&bonus=N` kareyi değiştirir)
  *   ?mock=kareler-spectator         katılımcı değilsin (1. aşama)
  */
 import type { GameInfo, MatchSnapshot, PlayerInfo, RoomPhase, RoomSnapshot } from "@glix/engine";
@@ -19,6 +23,7 @@ import {
   KARELER_BETWEEN_MS,
   KARELER_STAGE_MS,
   type KarelerState,
+  kareCells,
   kareSize,
 } from "@glix/engine";
 import { useMockSender } from "../net/client.js";
@@ -81,7 +86,9 @@ export function startKarelerMock(kind: string, params: URLSearchParams): void {
   });
   const choices2: Record<string, number> = {};
   if (kind.startsWith("kareler-final")) {
-    for (const [id, c] of Object.entries(kind === "kareler-final-win" ? STAGE2_WIN : STAGE2))
+    for (const [id, c] of Object.entries(
+      kind === "kareler-final-win" || kind === "kareler-final-bonus" ? STAGE2_WIN : STAGE2,
+    ))
       choices2[id] = c;
   }
   // Seçim ekranlarında yalnız kendi seçimin vardır; sunucu gibi davran.
@@ -105,9 +112,23 @@ export function startKarelerMock(kind: string, params: URLSearchParams): void {
     }
     return base(choices1, choices2);
   };
+  /** Ödül karesi (mock): senaryoya göre; ızgaraya sığacak biçimde kısaltılır. */
+  const bonusCell = (): number => {
+    const cells = kareCells(kareSize(participants.length));
+    const given = Number(params.get("bonus"));
+    const byKind: Record<string, number> = {
+      "kareler-final-bonus": 7,
+      "kareler-final-bonus-clash": 7,
+      "kareler-final-bonus-other": 12,
+      "kareler-final-bonus-miss": 14,
+    };
+    const cell = params.get("bonus") !== null && Number.isInteger(given) ? given : (byKind[kind] ?? 12);
+    return ((cell % cells) + cells) % cells;
+  };
   const base = (c1: Record<string, number>, c2: Record<string, number>): KarelerState => ({
     players: participants,
     size: kareSize(participants.length),
+    bonusCell: bonusCell(),
     startedAt,
     stage1EndsAt: startedAt + S1,
     end1At: null,

@@ -13,7 +13,18 @@ async function vote(c: Client, target: string): Promise<boolean> {
 
 interface Pub {
   phase: string;
-  reveal: null | { votes: Record<string, string>; scores: Record<string, number> };
+  reveal: null | {
+    votes: Record<string, string>;
+    scores: Record<string, number>;
+    promises: Record<string, { to: string; kept: boolean }[]>;
+  };
+}
+
+async function act(c: Client, payload: unknown): Promise<boolean> {
+  const n = ++seq;
+  c.send({ type: "action", seq: n, payload });
+  for (let i = 0; i < 100 && !c.of("actionAck").some((a) => a.seq === n); i++) await sleep(5);
+  return c.of("actionAck").find((a) => a.seq === n)?.ok === true;
 }
 
 async function startGame(cs: Client[]): Promise<void> {
@@ -38,6 +49,19 @@ describe("ittifak: oda içinde tam maç", () => {
 
     expect(pub().phase).toBe("talk");
     expect(await vote(a, ids[1])).toBe(false); // pazarlık sürerken oy yok
+
+    // Söz işaretleri: en çok 2, kendine yok, yalnız sahibi görür (alıcı dahil kimse görmez).
+    const my = (x: Client) => (x.room.match?.view as { myPromises: string[] } | undefined)?.myPromises;
+    expect(await act(a, { kind: "promise", target: ids[1], on: true })).toBe(true);
+    expect(await act(a, { kind: "promise", target: ids[2], on: true })).toBe(true);
+    expect(await act(a, { kind: "promise", target: ids[3], on: true })).toBe(false); // üçüncü söz yok
+    expect(await act(a, { kind: "promise", target: ids[0], on: true })).toBe(false); // kendine yok
+    expect(await act(c, { kind: "promise", target: ids[0], on: true })).toBe(true);
+    await sync();
+    expect(my(a)?.sort()).toEqual([ids[1], ids[2]].sort());
+    for (const x of [b, d]) expect(my(x)).toEqual([]); // alıcı b bile görmez
+    expect(JSON.stringify(b.room.match)).not.toContain("kept");
+    expect(JSON.stringify(b.room.match?.publicView)).not.toContain("promise");
     k.clock.advance(60_100);
     await until(() => pub().phase === "vote", "oylama başladı");
 
@@ -67,6 +91,12 @@ describe("ittifak: oda içinde tam maç", () => {
     expect(await vote(d, ids[0])).toBe(false); // geç oy
 
     const r = pub().reveal as NonNullable<Pub["reveal"]>;
+    // a: ids[1]'e tuttu (oy ids[1]), ids[2]'ye bozdu; c: ids[0]'a bozdu (oy ids[1]).
+    expect(r.promises[ids[0]]).toEqual([
+      { to: ids[1], kept: true },
+      { to: ids[2], kept: false },
+    ]);
+    expect(r.promises[ids[2]]).toEqual([{ to: ids[0], kept: false }]);
     expect(r.votes[ids[0]]).toBe(ids[1]);
     expect(r.votes[ids[1]]).toBe(ids[0]);
     expect(r.votes[ids[2]]).toBe(ids[1]);

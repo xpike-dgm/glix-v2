@@ -3,12 +3,16 @@
 /** İpucu aşaması süresizdir; bu yalnız odanın takılı kalmaması için teknik üst sınırdır (5 dk). */
 export const SIZMA_CLUE_CAP_MS = 300_000;
 export const SIZMA_VOTE_MS = 30_000;
+/** "Sızma sen miydin?" aşamasının süresi (herkes cevaplarsa erken biter). */
+export const SIZMA_NOTICE_MS = 8_000;
+/** Kendini fark eden sızmanın ek puanı. */
+export const SIZMA_NOTICE_POINTS = 1;
 /** Oylar açıldıktan sonra sonucun gösterildiği süre (oyun bu sürenin sonunda biter). */
 export const SIZMA_REVEAL_MS = 8_000;
 /** Herkes hazırsa aşamanın bitişine kalan süre (ms). */
 export const SIZMA_LOCK_GRACE_MS = 1_000;
 /** En uzun oyun süresi (ipucu aşaması tavana dayanırsa). */
-export const SIZMA_MAX_DURATION_MS = SIZMA_CLUE_CAP_MS + SIZMA_VOTE_MS + SIZMA_REVEAL_MS;
+export const SIZMA_MAX_DURATION_MS = SIZMA_CLUE_CAP_MS + SIZMA_VOTE_MS + SIZMA_NOTICE_MS + SIZMA_REVEAL_MS;
 
 export type SizmaAction =
   /** İpucu aşamasında "Oylamaya geç". */
@@ -16,9 +20,11 @@ export type SizmaAction =
   /** Kendin dahil bir katılımcıya oy ver; oylama bitene kadar değiştirilebilir (son oy geçerli). */
   | { kind: "vote"; target: string }
   /** Oylamada "Tamam": oyun kesinleşir. */
-  | { kind: "lock" };
+  | { kind: "lock" }
+  /** "Sızma sen miydin?" Evet (true) / Hayır (false); herkes cevaplar, cevap tek seferliktir. */
+  | { kind: "notice"; yes: boolean };
 
-export type SizmaPhase = "clue" | "vote" | "reveal";
+export type SizmaPhase = "clue" | "vote" | "notice" | "reveal";
 
 export interface SizmaReveal {
   /** Sızma oyuncusu. */
@@ -32,6 +38,8 @@ export interface SizmaReveal {
   tally: Record<string, number>;
   /** Sızma tek başına en çok oyu aldı mı. */
   caught: boolean;
+  /** Sızma "Sızma sen miydin?" sorusuna Evet dedi mi (cevap vermediyse false). Diğerlerinin cevapları hiç açılmaz. */
+  selfNoticed: boolean;
   /** Genel skora eklenen puanlar. */
   scores: Record<string, number>;
 }
@@ -46,8 +54,10 @@ export interface SizmaPublicView {
   /** İpucu aşamasının teknik tavanı ya da (herkes geçtiyse) kapanış anı; oylamanın başlangıcı. */
   clueEndsAt: number;
   voteEndsAt: number;
+  /** "Sızma sen miydin?" aşamasının bitişi (herkes cevaplarsa erken); sonuç açılışının başlangıcı. */
+  noticeEndsAt: number;
   finishAt: number;
-  /** Bulunulan aşamada hazır olanlar: ipucunda "Oylamaya geç" diyenler, oylamada "Tamam" diyenler. */
+  /** Bulunulan aşamada hazır olanlar: ipucunda "Oylamaya geç" diyenler, oylamada "Tamam" diyenler, "Sızma sen miydin?" aşamasında cevap verenler (herkes cevaplar; cevabın ne olduğu değil). */
   ready: string[];
   reveal: SizmaReveal | null;
 }
@@ -57,6 +67,8 @@ export interface SizmaView {
   /** Senin kelimen (büyük harf); izleyicide null. */
   word: string | null;
   myVote: string | null;
+  /** "Sızma sen miydin?" cevabın (yalnız sana görünür); vermediysen null. */
+  myNotice: boolean | null;
   /** Bulunulan aşamada hazır dedin mi. */
   locked: boolean;
 }

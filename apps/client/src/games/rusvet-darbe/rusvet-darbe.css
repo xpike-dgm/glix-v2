@@ -57,6 +57,12 @@
   padding: 2px 12px;
   border-radius: 999px;
 }
+.rd__hint--coup {
+  color: var(--text);
+}
+.rd__hint--coup[data-hit="1"] {
+  color: var(--red);
+}
 .rd__hint--replay {
   color: var(--amber);
 }
@@ -256,6 +262,24 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin: 6px 0 2px;
+}
+.rd__signs--two {
+  grid-template-columns: repeat(2, 1fr);
+}
+.rd__sign--coup[data-on="1"] {
+  border-color: var(--red);
+  color: var(--red);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--red) 50%, transparent);
+  background: color-mix(in srgb, var(--red) 12%, var(--bg-1));
+}
+.rd__status {
+  margin-top: 6px;
+}
+.rd__status-main {
+  font-size: var(--fs-18);
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.25;
 }
 .rd__sign {
   min-height: 72px;

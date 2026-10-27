@@ -14,7 +14,9 @@ import {
 const T0 = 1_000_000;
 const ids = (n: number) => Array.from({ length: n }, (_, i) => `p${i + 1}`);
 const ctx = (now: number, connected: readonly string[] = ids(8)) => ({ now, rng: createRng(1), connected });
-const start = (n = 4): KarelerState => g.setup(ids(n), ctx(T0));
+/** Eski testler ödül karesinden bağımsız: ödül karesi ızgara dışına (-1) çekilir. Ödül testleri `withBonus` kullanır. */
+const start = (n = 4): KarelerState => ({ ...g.setup(ids(n), ctx(T0)), bonusCell: -1 });
+const withBonus = (s: KarelerState, cell: number): KarelerState => ({ ...s, bonusCell: cell });
 const S1 = KARELER_STAGE_MS;
 const S2_START = S1 + KARELER_BETWEEN_MS;
 const S2_END = S2_START + KARELER_STAGE_MS;
@@ -302,6 +304,7 @@ describe("gizli-kareler gizlilik", () => {
         "stage2Reveal",
         "startedAt",
         "walkover",
+        "bonus",
       ].sort(),
     );
     const raw = cellsOf(JSON.stringify(p));
@@ -313,6 +316,7 @@ describe("gizli-kareler gizlilik", () => {
     expect(priv(s, "p4", S1 - 1)).toEqual({ myChoice: 7, locked: false });
     expect(priv(s, null, S1 - 1)).toEqual({ myChoice: null, locked: false });
     for (const id of ids(4)) expect(Object.keys(priv(s, id, S1 - 1))).toEqual(["myChoice", "locked"]);
+    expect(p.bonus).toBeNull();
   });
 
   it("2. aşama bitmeden 2. aşama seçimleri hiçbir ortak görünümde yoktur; başkasının seçimi başkasına gitmez", () => {
@@ -440,5 +444,129 @@ describe("gizli-kareler erken bitiş (Tamam)", () => {
     let s = picked();
     for (const id of ids(4)) s = lock(s, id, 3_000);
     expect(g.tick(s, ctx(T0 + 5_000, []))).toEqual(g.tick(s, ctx(T0 + 5_000, ids(4))));
+  });
+});
+
+describe("gizli-kareler ödül karesi (O10)", () => {
+  /** Dört oyuncu, 1. aşamada hepsi ayrı karede (hepsi 2. aşamaya geçer). */
+  const base = () => stage1([0, 1, 2, 3]);
+  const BONUS = 7;
+
+  it("kurulumda ödül karesi ızgara içinde tohumlu rastgelelikle seçilir; aynı tohum aynı kare", () => {
+    for (const n of [2, 4, 5, 8]) {
+      const seen = new Set<number>();
+      for (let seed = 1; seed <= 60; seed++) {
+        const s = g.setup(ids(n), { now: T0, rng: createRng(seed), connected: ids(n) });
+        expect(s.bonusCell).toBeGreaterThanOrEqual(0);
+        expect(s.bonusCell).toBeLessThan(kareCells(kareSize(n)));
+        expect(g.setup(ids(n), { now: T0, rng: createRng(seed), connected: ids(n) })).toEqual(s);
+        seen.add(s.bonusCell);
+      }
+      expect(seen.size).toBeGreaterThan(1);
+    }
+  });
+
+  it("2. aşamada ödül karesine tek başına basan +1 (tek kalan) ve +2 (ödül) = +3 ek alır", () => {
+    const s = stage2(withBonus(base(), BONUS), { p1: BONUS, p2: 5, p3: 6, p4: 8 });
+    expect(pub(s, S2_END).bonus).toEqual({ cell: BONUS, winner: "p1" });
+    expect(pub(s, S2_END).points).toEqual({ p1: 4, p2: 2, p3: 2, p4: 2 });
+    expect(final(s).awards).toEqual({ p1: 4, p2: 2, p3: 2, p4: 2 });
+    expect(final(s).miniScores).toEqual(final(s).awards);
+  });
+
+  it("birden çok kişi ödül karesine basarsa kimse ödül almaz", () => {
+    const s = stage2(withBonus(base(), BONUS), { p1: BONUS, p2: BONUS, p3: 6, p4: 8 });
+    expect(pub(s, S2_END).bonus).toEqual({ cell: BONUS, winner: null });
+    expect(final(s).awards).toEqual({ p1: 1, p2: 1, p3: 2, p4: 2 });
+  });
+
+  it("kimse ödül karesine basmazsa ödül verilmez ama kare yine de açılır", () => {
+    const s = stage2(withBonus(base(), BONUS), { p1: 4, p2: 5, p3: 6, p4: 8 });
+    expect(pub(s, S2_END).bonus).toEqual({ cell: BONUS, winner: null });
+    expect(final(s).awards).toEqual({ p1: 2, p2: 2, p3: 2, p4: 2 });
+  });
+
+  it("ödül karesi 1. aşamada geçerli değildir: 1. aşamada o kareye basmak ödül getirmez", () => {
+    const s = stage2(withBonus(stage1([BONUS, 1, 2, 3]), BONUS), { p1: 4, p2: 5, p3: 6, p4: 8 });
+    expect(final(s).awards).toEqual({ p1: 2, p2: 2, p3: 2, p4: 2 });
+  });
+
+  it("2. aşama yoksa (tek kişi kaldı / kimse kalmadı) ödül karesi yoktur", () => {
+    const walk = withBonus(stage1([0, 0, 2, 3]), 2);
+    // p3 ve p4 kalır: 2. aşama var. Yalnız p5 kalırsa (rakipsiz geçiş) 2. aşama oynanmaz:
+    const single = withBonus(stage1([0, 0, 2, 2, 5]), 5);
+    expect(pub(single, KARELER_DURATION_MS).bonus).toBeNull();
+    expect(final(single).awards).toEqual({ p1: 0, p2: 0, p3: 0, p4: 0, p5: 2 });
+    expect(pub(walk, S2_END).bonus).not.toBeNull();
+    const none = withBonus(stage1([0, 0, 1, 1]), 0);
+    expect(pub(none, KARELER_DURATION_MS).bonus).toBeNull();
+  });
+
+  it("elenmiş oyuncu ödül kazanamaz (yalnız 2. aşamaya geçenler seçer)", () => {
+    const s = withBonus(stage1([0, 0, 2, 3]), BONUS);
+    const r = tryPick(s, "p1", BONUS, S2_START + 100);
+    expect(r).toEqual({ rejected: "eliminated" });
+  });
+
+  it("2. aşamayı oynayan ödül karesini yakalayamadan geçse bile puanlar yalnız açılışta artar", () => {
+    const s = stage2(withBonus(base(), BONUS), { p1: BONUS, p2: 5, p3: 6, p4: 8 });
+    // 2. aşama sürerken puan henüz yükselmemiştir
+    expect(pub(s, S2_END - 1).points).toEqual({ p1: 1, p2: 1, p3: 1, p4: 1 });
+    expect(pub(s, S2_END).points?.p1).toBe(4);
+  });
+
+  it("tekrar oynatma: aynı tohum ve eylemler aynı sonucu verir", () => {
+    const run = () => {
+      let s = g.setup(ids(4), { now: T0, rng: createRng(11), connected: ids(4) });
+      for (const [i, id] of ids(4).entries()) s = pick(s, id, i, 1_000 + i);
+      for (const [i, id] of ids(4).entries()) s = pick(s, id, 4 + i, S2_START + 500 + i);
+      return JSON.stringify([s, pub(s, S2_END), g.result(s)]);
+    };
+    expect(run()).toBe(run());
+  });
+
+  describe("gizlilik", () => {
+    /** Konumu belirgin yapmak için ödül karesi bilinen bir değer; JSON taraması ayırt edici sayı kullanır. */
+    const s = stage2(withBonus(base(), BONUS), { p1: 5, p2: 6, p3: 8, p4: 4 });
+
+    it("2. aşama sonuçlanana kadar ödül karesi hiçbir görünümde yoktur (publicView ve tüm view'lar)", () => {
+      for (const at of [0, 5_000, S1 - 1, S1, S2_START - 1, S2_START, S2_START + 500, S2_END - 1]) {
+        const p = pub(s, at);
+        expect(p.bonus).toBeNull();
+        expect(JSON.stringify(p)).not.toMatch(/bonus.*\d|ödül|odul/i);
+        for (const who of [...ids(4), null, "ghost"]) {
+          const v = priv(s, who, at);
+          expect(Object.keys(v).sort()).toEqual(["locked", "myChoice"]);
+          expect(JSON.stringify(v)).not.toMatch(/bonus|ödül/i);
+        }
+      }
+    });
+
+    it("ödül karesinin yerini sızdıran bir alan, puan ya da seçim farkı yoktur: iki farklı ödül karesi 2. aşama bitene kadar aynı görünüm verir", () => {
+      const a = stage2(withBonus(base(), 7), { p1: 5, p2: 6, p3: 8, p4: 4 });
+      const b = stage2(withBonus(base(), 5), { p1: 5, p2: 6, p3: 8, p4: 4 });
+      for (const at of [0, S1 - 1, S1, S2_START + 500, S2_END - 1]) {
+        expect(JSON.stringify(pub(a, at))).toBe(JSON.stringify(pub(b, at)));
+        for (const who of [...ids(4), null]) {
+          expect(JSON.stringify(priv(a, who, at))).toBe(JSON.stringify(priv(b, who, at)));
+        }
+      }
+    });
+
+    it("kabul/ret sonuçları ödül karesini ele vermez", () => {
+      const a = withBonus(base(), 7);
+      const b = withBonus(base(), 5);
+      for (const cell of [5, 7, 8]) {
+        const ra = tryPick(a, "p1", cell, S2_START + 100);
+        const rb = tryPick(b, "p1", cell, S2_START + 100);
+        expect(ra).not.toHaveProperty("rejected");
+        expect(rb).not.toHaveProperty("rejected");
+      }
+    });
+
+    it("secrets() boştur ve ödül karesi sonuçta (S2_END) açılır", () => {
+      expect(g.secrets(s)).toEqual([]);
+      expect(pub(s, S2_END).bonus).toEqual({ cell: BONUS, winner: null });
+    });
   });
 });

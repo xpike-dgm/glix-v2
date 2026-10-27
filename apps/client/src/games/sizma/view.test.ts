@@ -12,7 +12,7 @@ const pub = {
   ready: [],
   reveal: null,
 };
-const priv = { word: "ÇAY", myVote: null, locked: false };
+const priv = { word: "ÇAY", myVote: null, myNotice: null, locked: false };
 const reveal = {
   infiltrator: "c",
   commonWord: "ÇAY",
@@ -20,6 +20,7 @@ const reveal = {
   votes: { a: "c", b: "c" },
   tally: { a: 0, b: 0, c: 2 },
   caught: true,
+  selfNoticed: false,
   scores: { a: 1, b: 1, c: 0 },
 };
 
@@ -44,6 +45,21 @@ describe("Sızma görünümü", () => {
     expect(v?.reveal?.infiltrator).toBe("c");
     expect(v?.reveal?.caught).toBe(true);
     expect(v?.reveal?.tally.c).toBe(2);
+  });
+  it("fark ettin mi aşamasını ve cevabı okur, bozuğunu reddeder", () => {
+    const v = parseSizmaView(
+      { ...pub, phase: "notice", noticeEndsAt: 338_100, ready: ["a"] },
+      { ...priv, myNotice: true },
+    );
+    expect(v?.phase).toBe("notice");
+    expect(v?.noticeEndsAt).toBe(338_100);
+    expect(v?.myNotice).toBe(true);
+    expect(parseSizmaView(pub, { word: "A", myVote: null, locked: false })?.myNotice).toBeNull();
+    expect(parseSizmaView(pub, { ...priv, myNotice: "evet" })).toBeNull();
+    expect(parseSizmaView({ ...pub, noticeEndsAt: "x" }, priv)).toBeNull();
+    const r = parseSizmaView({ ...pub, phase: "reveal", reveal: { ...reveal, selfNoticed: true } }, priv);
+    expect(r?.reveal?.selfNoticed).toBe(true);
+    expect(parseSizmaView({ ...pub, reveal: { ...reveal, selfNoticed: 1 } }, priv)).toBeNull();
   });
   it("reveal alanı yoksa kapalı sayılır", () => {
     const { reveal: _drop, ...rest } = pub;
@@ -78,11 +94,12 @@ describe("Sızma görünümü", () => {
     const plan = tallyPlan(["a", "b", "c", "d"], { a: 0, b: 3, c: 1, d: 0 });
     expect(plan.step).toEqual({ a: 0, d: 0, c: 1, b: 2 });
     expect(plan.finale).toBe(3);
-    expect(plan.steps).toBe(4);
+    expect(plan.notice).toBe(4);
+    expect(plan.steps).toBe(5);
   });
   it("sıralı açılış: oy yoksa tek adım + son adım", () => {
     const plan = tallyPlan(["a", "b"], {});
     expect(plan.step).toEqual({ a: 0, b: 0 });
-    expect(plan.steps).toBe(2);
+    expect(plan.steps).toBe(3);
   });
 });

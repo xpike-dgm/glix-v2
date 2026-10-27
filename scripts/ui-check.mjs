@@ -613,6 +613,12 @@ const SCREENS = [
   { name: "kareler-choosing2-out-6", q: "mock=kareler-choosing2-out&n=6" },
   { name: "kareler-final-5", q: "mock=kareler-final&n=5", settle: 3200 },
   { name: "kareler-final-win-8", q: "mock=kareler-final-win&n=8", settle: 3200 },
+  { name: "kareler-final-bonus-5", q: "mock=kareler-final-bonus&n=5", settle: 3600 },
+  { name: "kareler-final-bonus-3", q: "mock=kareler-final-bonus&n=3", settle: 3600 },
+  { name: "kareler-final-bonus-8", q: "mock=kareler-final-bonus&n=8", settle: 3600 },
+  { name: "kareler-final-bonus-clash-5", q: "mock=kareler-final-bonus-clash&n=5", settle: 3600 },
+  { name: "kareler-final-bonus-other-8", q: "mock=kareler-final-bonus-other&n=8", settle: 3600 },
+  { name: "kareler-final-bonus-miss-6", q: "mock=kareler-final-bonus-miss&n=6", settle: 3600 },
   { name: "kareler-spectator", q: "mock=kareler-spectator&n=5" },
   { name: "alisveris-briefing", q: "mock=alisveris-briefing" },
   { name: "alisveris-shop-3", q: "mock=alisveris-shop&n=3" },
@@ -666,6 +672,28 @@ const SCREENS = [
   { name: "ittifak-spectator-talk", q: "mock=ittifak-spectator-talk&n=5" },
   { name: "ittifak-spectator-vote", q: "mock=ittifak-spectator-vote&n=5" },
   { name: "ittifak-spectator-reveal", q: "mock=ittifak-spectator-reveal&n=5", settle: 3000 },
+  { name: "ittifak-talk-promised-5", q: "mock=ittifak-talk&n=5&promised=1,2" },
+  { name: "ittifak-talk-promised-8", q: "mock=ittifak-talk&n=8&promised=3,5" },
+  { name: "ittifak-talk-promised-3", q: "mock=ittifak-talk&n=3&promised=1" },
+  {
+    name: "ittifak-talk-promise-tap",
+    q: "mock=ittifak-talk&n=6&promised=1,2",
+    settle: 500,
+    act: async (p) => {
+      // Üçüncü söz reddedilir ("En çok 2 söz işareti"), ilk söz kalkar.
+      await p
+        .getByRole("button", { name: /için söz işareti/ })
+        .nth(3)
+        .click();
+      await p
+        .getByRole("button", { name: /için söz işareti/ })
+        .nth(0)
+        .click();
+    },
+  },
+  { name: "ittifak-reveal-promises-5", q: "mock=ittifak-reveal&n=5", settle: 3600 },
+  { name: "ittifak-reveal-promises-8", q: "mock=ittifak-reveal&n=8&promises=many", settle: 3600 },
+  { name: "ittifak-reveal-promises-3", q: "mock=ittifak-reveal&n=3", settle: 3600 },
   { name: "kontrol-briefing", q: "mock=kontrol-briefing" },
   { name: "kontrol-play-4", q: "mock=kontrol-play&n=4" },
   { name: "kontrol-play-3clue", q: "mock=kontrol-play&n=8&clue=3" },
@@ -821,6 +849,20 @@ const SCREENS = [
   },
   { name: "rusvet-give-wait", q: "mock=rusvet-give-wait&n=5&budget=3", settle: 800 },
   { name: "rusvet-reveal-5", q: "mock=rusvet-reveal&n=5", settle: 5600 },
+  { name: "rusvet-coup-5", q: "mock=rusvet-coup&n=5", settle: 600 },
+  { name: "rusvet-coup-8", q: "mock=rusvet-coup&n=8", settle: 600 },
+  { name: "rusvet-coup-3", q: "mock=rusvet-coup&n=3", settle: 600 },
+  { name: "rusvet-coup-locked-5", q: "mock=rusvet-coup-locked&n=5", settle: 600 },
+  { name: "rusvet-coup-wait-5", q: "mock=rusvet-coup-wait&n=5", settle: 600 },
+  { name: "rusvet-coup-spectator-5", q: "mock=rusvet-spectator-coup&n=5", settle: 600 },
+  {
+    name: "rusvet-coup-tap",
+    q: "mock=rusvet-coup&n=6",
+    settle: 600,
+    act: async (p) => p.getByRole("button", { name: "Darbe", exact: true }).click(),
+  },
+  { name: "rusvet-reveal-coup-hit-5", q: "mock=rusvet-reveal&n=5&coup=hit", settle: 5600 },
+  { name: "rusvet-reveal-coup-miss-6", q: "mock=rusvet-reveal&n=6&coup=miss", settle: 5600 },
   { name: "rusvet-reveal-8", q: "mock=rusvet-reveal&n=8", settle: 5600 },
   { name: "rusvet-reveal-president", q: "mock=rusvet-reveal&n=5&me=president", settle: 5600 },
   { name: "rusvet-reveal-mid", q: "mock=rusvet-reveal&n=6", settle: 2200 },
@@ -855,6 +897,19 @@ const SCREENS = [
   { name: "sizma-reveal-escaped-6", q: "mock=sizma-reveal-escaped&n=6", settle: 2400 },
   { name: "sizma-reveal-odd-5", q: "mock=sizma-reveal&n=5&me=odd", settle: 2400 },
   { name: "sizma-reveal-odd-escaped-5", q: "mock=sizma-reveal-escaped&n=5&me=odd", settle: 2400 },
+  { name: "sizma-notice-5", q: "mock=sizma-notice&n=5" },
+  { name: "sizma-notice-8", q: "mock=sizma-notice&n=8" },
+  { name: "sizma-notice-3", q: "mock=sizma-notice&n=3" },
+  { name: "sizma-notice-answered-5", q: "mock=sizma-notice-answered&n=5" },
+  { name: "sizma-notice-spectator-5", q: "mock=sizma-spectator-notice&n=5" },
+  {
+    name: "sizma-notice-tap",
+    q: "mock=sizma-notice&n=5",
+    settle: 500,
+    act: async (p) => p.getByRole("button", { name: "Evet", exact: true }).click(),
+  },
+  { name: "sizma-reveal-noticed-odd-5", q: "mock=sizma-reveal-escaped&n=5&me=odd&noticed=1", settle: 2600 },
+  { name: "sizma-reveal-noticed-6", q: "mock=sizma-reveal&n=6&noticed=1", settle: 2600 },
   { name: "sizma-spectator-clue", q: "mock=sizma-spectator-clue&n=5" },
   { name: "sizma-spectator-vote", q: "mock=sizma-spectator-vote&n=5" },
   { name: "sizma-spectator-reveal", q: "mock=sizma-spectator-reveal&n=5", settle: 2400 },
