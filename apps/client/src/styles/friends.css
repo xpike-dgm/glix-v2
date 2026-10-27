@@ -1,0 +1,228 @@
+/* ---- Arkadaşlar: ekran, durum noktası, davet kartı (Ayarlar ve Profil stillerini paylaşır) ---- */
+.fr__add {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: stretch;
+}
+.fr__field {
+  flex: 1;
+  min-width: 0;
+  height: 56px;
+  padding: 0 var(--sp-4);
+  font-family: var(--font-text);
+  font-weight: 600;
+  font-size: var(--fs-18);
+}
+.fr__addbtn {
+  flex: none;
+  min-width: 72px;
+  min-height: 56px;
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-btn);
+  background: var(--cyan);
+  color: #021218;
+  font-weight: 700;
+  font-size: var(--fs-15);
+}
+.fr__addbtn:disabled {
+  opacity: 0.5;
+}
+.fr__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 60px;
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-4);
+}
+.fr__row + .fr__row {
+  border-top: 1px solid var(--line);
+}
+.fr__row > .pf__text {
+  flex: 1 1 110px;
+}
+/* Kabul / Reddet / İptal düğmeleri sığmazsa alt satıra iner ve sağa yaslanır. */
+.fr__acts {
+  display: flex;
+  gap: var(--sp-2);
+  margin-left: auto;
+}
+.fr__row--friend {
+  flex-wrap: nowrap;
+  padding: 0 var(--sp-3) 0 0;
+}
+.fr__row .pf__name {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+/* Lobide davet listesi: uzun listede sayfa değil liste kayar. */
+.fr__invlist {
+  flex: none;
+  max-height: min(52dvh, 360px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.fr__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 60px;
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
+  text-align: left;
+  color: var(--text);
+}
+.fr__row[data-status="offline"] .pf__name {
+  color: var(--text-dim);
+}
+.fr__btn {
+  flex: none;
+  min-width: 64px;
+  min-height: 48px;
+  padding: 0 var(--sp-3);
+  border-radius: 24px;
+  border: 1.5px solid rgba(160, 175, 255, 0.34);
+  color: var(--text);
+  font-weight: 600;
+  font-size: var(--fs-15);
+  line-height: 1.15;
+}
+.fr__btn--yes {
+  border-color: rgba(46, 242, 255, 0.6);
+  color: var(--cyan);
+}
+.fr__btn:active:not(:disabled) {
+  background: rgba(46, 242, 255, 0.14);
+}
+.fr__btn:disabled {
+  opacity: 0.5;
+}
+.fr__status,
+.fr__sheetstatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.fr__sheetstatus {
+  font-size: var(--fs-15);
+}
+/* Durum: renk + şekil + yazı (renk körü dostu). Halka çevrimdışı, daire çevrimiçi, kare lobide, üçgen oyunda. */
+.fr__dot {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+}
+.fr__dot[data-shape="ring"] {
+  border-radius: 50%;
+  border: 2px solid var(--text-dim);
+}
+.fr__dot[data-shape="dot"] {
+  border-radius: 50%;
+  background: var(--lime);
+}
+.fr__dot[data-shape="square"] {
+  border-radius: 2px;
+  background: var(--cyan);
+}
+.fr__dot[data-shape="triangle"] {
+  background: var(--amber);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.home__friends {
+  gap: 6px;
+}
+.fr__sheetrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.fr__sheetrow .gbtn {
+  flex: 1 1 auto;
+}
+.home__badge {
+  flex: none;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 11px;
+  background: #d01a40;
+  color: #fff;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+}
+
+/* Gelen davet kartı: kapatılana ya da süresi dolana dek kalır. */
+.invc {
+  position: fixed;
+  top: max(12px, var(--safe-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  width: min(calc(100% - 24px), 440px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border-radius: var(--r-btn);
+  border: 1.5px solid rgba(46, 242, 255, 0.55);
+  background: rgba(10, 16, 48, 0.97);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.5);
+  animation: invc-in var(--t-mid) var(--ease) both;
+}
+@keyframes invc-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -16px);
+  }
+}
+.invc__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.invc__text {
+  flex: 1;
+  min-width: 0;
+}
+.invc__title {
+  font-weight: 700;
+  font-size: var(--fs-15);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.invc__meta {
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.invc__warn {
+  font-size: var(--fs-13);
+  line-height: 1.35;
+  color: var(--amber);
+}
+.invc__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.invc__primary {
+  flex: 1;
+  min-width: 0;
+}
+.invc__actions .gbtn {
+  flex: none;
+  min-width: 80px;
+}
+/* Onay adımında düğmeler alt alta ve tam genişlikte (uzun etiket sığsın). */
+.invc__actions[data-confirm="1"] {
+  flex-direction: column;
+  align-items: stretch;
+}
+.invc__actions[data-confirm="1"] .gbtn {
+  flex: none;
+}

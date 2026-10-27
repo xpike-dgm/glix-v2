@@ -233,7 +233,7 @@ function badCredentials(res: ServerResponse): void {
 }
 
 /** Gövde bayt sınırıyla okunur; fazlası ya da bozuk JSON null. */
-function readJson(req: IncomingMessage): Promise<unknown> {
+export function readJson(req: IncomingMessage): Promise<unknown> {
   return new Promise((resolve) => {
     const chunks: Buffer[] = [];
     let size = 0;

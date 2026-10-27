@@ -109,3 +109,27 @@ describe("sunucu mesajı doğrulama", () => {
     );
   });
 });
+
+describe("arkadaş mesajları", () => {
+  it("durum, istek, değişim, davet ve davet onayı", () => {
+    expect(parseServerMessage(wire({ type: "friendStatus", username: "Ayse", status: "lobby" }))).toEqual({
+      type: "friendStatus",
+      username: "Ayse",
+      status: "lobby",
+    });
+    expect(parseServerMessage(wire({ type: "friendStatus", username: "Ayse", status: "uyuyor" }))).toBeNull();
+    expect(parseServerMessage(wire({ type: "friendRequest", username: "Ayse" }))?.type).toBe("friendRequest");
+    expect(parseServerMessage(wire({ type: "friendRequest" }))).toBeNull();
+    expect(parseServerMessage(wire({ type: "friendsChanged" }))).toEqual({ type: "friendsChanged" });
+    expect(parseServerMessage(wire({ type: "inviteSent", username: "Berk" }))?.type).toBe("inviteSent");
+    const invite = { type: "invite", from: "Ayse", roomCode: "ABCDE", expiresAt: 5 };
+    expect(parseServerMessage(wire(invite))).toEqual(invite);
+    expect(parseServerMessage(wire({ ...invite, roomCode: "abc" }))).toBeNull();
+    expect(parseServerMessage(wire({ ...invite, expiresAt: "x" }))).toBeNull();
+  });
+
+  it("yeni hata kodları kabul edilir", () => {
+    for (const code of ["invite_failed", "friend_not_found", "login_required", "stage_full"])
+      expect(parseServerMessage(wire({ type: "error", code, message: "x" }))?.type).toBe("error");
+  });
+});

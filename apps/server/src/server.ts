@@ -8,6 +8,7 @@ import { CLIENT_ERROR_PATH, handleClientError } from "./clientError.js";
 import { resolveClientIp } from "./clientIp.js";
 import { type Clock, systemClock } from "./clock.js";
 import { DEFAULT_LIMITS, type ServerLimits } from "./config.js";
+import { createFriendsApi, FRIENDS_PATH } from "./friendsApi.js";
 import { createGoogleAuth, type GoogleConfig } from "./google.js";
 import { handleClose, handleMessage } from "./handlers.js";
 import { log } from "./log.js";
@@ -24,6 +25,7 @@ import { handleProfile, PROFILE_PATH } from "./profile.js";
 import { TokenBucket } from "./ratelimit.js";
 import { countActiveMatches, countPlayers, createRuntime, disposeRuntime } from "./rooms.js";
 import type { AccountRef, Connection } from "./runtime.js";
+import { createSocial } from "./social.js";
 import { serveStatic } from "./static.js";
 import { createStats, PURGE_EVERY_MS } from "./statsStore.js";
 import { createWebPush, disabledPush, type PushGateway, type VapidConfig } from "./webpush.js";
@@ -143,6 +145,13 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     resolvePush(opts),
     createAccountRecorder(accounts),
   );
+  rt.social = createSocial(rt, accounts);
+  const friendsApi = createFriendsApi({
+    accounts,
+    social: rt.social,
+    clock,
+    allowedOrigins: opts.allowedOrigins,
+  });
   const perIp = new Map<string, number>();
   const aliveSockets = new WeakMap<WebSocket, boolean>();
 
@@ -162,6 +171,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       if (stopTicking) return;
       const t0 = performance.now();
       runTick(rt);
+      rt.social.tick(clock.now());
       rt.metrics.recordTick(performance.now() - t0);
       if (rt.draining && countActiveMatches(rt) === 0) finishDrain();
       scheduleTick();
@@ -238,6 +248,10 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         google,
         mail,
       });
+      return;
+    }
+    if (path === FRIENDS_PATH || path.startsWith(`${FRIENDS_PATH}/`)) {
+      friendsApi(req, res);
       return;
     }
     if (path === PROFILE_PATH || path.startsWith(`${PROFILE_PATH}/`)) {
@@ -338,13 +352,16 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     const armIdle = (): void => {
       cancelIdle = clock.setTimeout(() => {
         if (ws.readyState !== ws.OPEN) return;
-        if (conn.player || conn.stage) armIdle();
+        // Hesaplı bağlantı boşta da açık kalır: arkadaş durumu ve canlı davet bunun üzerinden gelir.
+        if (conn.player || conn.stage || conn.account) armIdle();
         else ws.close(IDLE_CLOSE_CODE, "Uzun süre işlem yapılmadı");
       }, limits.idleUnjoinedMs);
     };
     armIdle();
+    rt.social.attach(conn);
     ws.on("close", () => {
       cancelIdle();
+      rt.social.detach(conn);
       sockets.delete(ws);
       const left = (perIp.get(ip) ?? 1) - 1;
       if (left <= 0) perIp.delete(ip);

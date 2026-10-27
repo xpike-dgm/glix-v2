@@ -56,6 +56,20 @@ function isBase64urlOfLength(value: unknown, length: number): value is string {
   return typeof value === "string" && value.length === length && BASE64URL.test(value);
 }
 
+/** Kullanıcı adı: 3–20 karakter, harf/rakam/alt çizgi (sunucudaki hesap kuralıyla aynı). */
+export const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
+
+/** Arkadaşın durumu: yalnız arkadaşlar görür, sunucu bağlantılardan türetir. */
+export const FRIEND_STATUSES = ["offline", "online", "lobby", "playing"] as const;
+export type FriendStatus = (typeof FRIEND_STATUSES)[number];
+
+export function isFriendStatus(value: unknown): value is FriendStatus {
+  return typeof value === "string" && (FRIEND_STATUSES as readonly string[]).includes(value);
+}
+
+/** Davet bu süre (ms) sonra geçersizdir. */
+export const INVITE_TTL_MS = 10 * 60 * 1000;
+
 // Akış ayrıntıları: docs/PROTOKOL.md
 
 export type ClientMessage =
@@ -103,6 +117,10 @@ export type ClientMessage =
   | { type: "pushSubscribe"; endpoint: string; p256dh: string; auth: string }
   /** Bildirim aboneliğini siler. */
   | { type: "pushUnsubscribe" }
+  /** Lobideki hesaplı oyuncu, kabul edilmiş bir arkadaşını odaya çağırır (`invite` olarak ulaşır ya da web bildirimi gider). */
+  | { type: "inviteFriend"; username: string }
+  /** Arkadaşın şu anki odasına katıl (kod sunucuda çözülür, hiçbir yerde görünmez); yalnız hesaplı ve odasız bağlantı. */
+  | { type: "joinFriend"; username: string; nickname: string; avatar?: number }
   /** Maç sonu geri bildirimi: yalnız `final` aşamasında, maç başına oyuncu başına bir kez. */
   | { type: "feedback"; rating: 1 | 2 | 3 | 4 | 5; text?: string }
   /** Anonim oyun başı performans özeti: yalnız `results` aşamasında, oyun başına oyuncu başına bir kez. */
@@ -175,7 +193,9 @@ export type ErrorCode =
   | "server_busy"
   | "stage_full"
   | "stage_readonly"
-  | "login_required";
+  | "login_required"
+  | "invite_failed"
+  | "friend_not_found";
 
 export type RoomPhase = "lobby" | "briefing" | "countdown" | "playing" | "results" | "final";
 
@@ -267,6 +287,16 @@ export type ServerMessage =
   | { type: "left"; reason: LeftReason }
   /** Geçici olay (oda durumunda saklanmaz): lobide `playerId` bir emoji gönderdi. */
   | { type: "reaction"; playerId: string; emoji: LobbyEmoji }
+  /** Bir arkadaşının durumu değişti (yalnız kabul edilmiş arkadaşlara gider). */
+  | { type: "friendStatus"; username: string; status: FriendStatus }
+  /** Sana arkadaşlık isteği geldi. */
+  | { type: "friendRequest"; username: string }
+  /** Arkadaş listen ya da isteklerin değişti; liste HTTP'den yeniden okunur. */
+  | { type: "friendsChanged" }
+  /** Bir arkadaşın seni odaya çağırıyor; `expiresAt` sunucu saatiyle ms. */
+  | { type: "invite"; from: string; roomCode: string; expiresAt: number }
+  /** Gönderdiğin davet arkadaşına ulaştırıldı. */
+  | { type: "inviteSent"; username: string }
   | { type: "error"; code: ErrorCode; message: string };
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -502,6 +532,22 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       if (!isBase64urlOfLength(p256dh, PUSH_P256DH_LENGTH) || !isBase64urlOfLength(auth, PUSH_AUTH_LENGTH))
         return null;
       return { type: "pushSubscribe", endpoint, p256dh, auth };
+    }
+    case "inviteFriend": {
+      if (!hasExactKeys(data, ["type", "username"])) return null;
+      const username = data.username;
+      return typeof username === "string" && USERNAME_PATTERN.test(username)
+        ? { type: "inviteFriend", username }
+        : null;
+    }
+    case "joinFriend": {
+      if (!hasKeysWithOptionalAvatar(data, ["type", "username", "nickname"])) return null;
+      const username = data.username;
+      const nickname = normalizeNickname(data.nickname);
+      if (typeof username !== "string" || !USERNAME_PATTERN.test(username) || nickname === null) return null;
+      if (!Object.hasOwn(data, "avatar")) return { type: "joinFriend", username, nickname };
+      const avatar = parseAvatar(data.avatar);
+      return avatar === null ? null : { type: "joinFriend", username, nickname, avatar };
     }
     case "pushUnsubscribe":
     case "leaveRoom":

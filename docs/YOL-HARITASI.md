@@ -194,8 +194,8 @@ katılıp oynar. Giriş: Google ya da kendi hesabı. Sıralama yalnız arkadaşl
 - [x] H4 Misafir sınırı: oda kurmak hesap ister; misafir kodla katılır, istatistiği tutulmaz.
 - [x] H5 İstatistik: yalnız hesaplılar için maç/oyun sonuçları; profil ekranı.
 - [ ] H6 Rozetler: kalıcı başarımlar, maç sonunda "Yeni rozet!".
-- [ ] H7 Arkadaşlar: kullanıcı adıyla istek, kabul/ret, liste, çevrimiçi/lobide durumu.
-- [ ] H8 Lobiye hızlı davet (uygulama içi + web bildirimi) ve arkadaşın lobisine tek dokunuşla katılma.
+- [x] H7 Arkadaşlar: kullanıcı adıyla istek, kabul/ret, liste, çevrimiçi/lobide durumu.
+- [x] H8 Lobiye hızlı davet (uygulama içi + web bildirimi) ve arkadaşın lobisine tek dokunuşla katılma.
 - [ ] H9 Arkadaş sıralaması.
 - [ ] H10 KVKK: aydınlatma metni, hesabı silme, verimi indirme.
 

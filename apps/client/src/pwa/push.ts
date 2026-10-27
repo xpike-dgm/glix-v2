@@ -71,7 +71,7 @@ async function ensureSubscription(create: boolean): Promise<PushSubscription | n
   return sub;
 }
 
-/** Aboneliği sunucuya (oturumuna) bildirir. Odada değilse hiçbir şey yapmaz; oturum açılınca yeniden denenir. */
+/** Aboneliği sunucuya (oyuncu oturumuna ve hesaba) bildirir. Ne odada ne hesaplıysa sunucu yok sayar; oturum açılınca yeniden denenir. */
 function announce(sub: PushSubscription): void {
   const json = sub.toJSON();
   const p256dh = json.keys?.p256dh;
@@ -91,7 +91,7 @@ export async function enablePush(): Promise<EnableResult> {
     const sub = await ensureSubscription(true);
     if (!sub) return "failed";
     setNotifyOn(true);
-    if (state.session) announce(sub);
+    if (state.session || state.account) announce(sub);
     return "ok";
   } catch {
     return "failed";
@@ -110,7 +110,7 @@ export async function disablePush(): Promise<void> {
   }
 }
 
-/** Odaya (yeniden) girildi: bildirim açıksa abonelik bu oturuma bağlanır. Sunucu yeniden başlayınca da böyle geri gelir. */
+/** Odaya (yeniden) girildi ya da hesaplı bağlantı kuruldu: bildirim açıksa abonelik bağlanır. Sunucu yeniden başlayınca da böyle geri gelir. */
 async function resyncOnSession(): Promise<void> {
   if (!notifyOn() || permissionNow() !== "granted" || state.pushKey === null) return;
   try {

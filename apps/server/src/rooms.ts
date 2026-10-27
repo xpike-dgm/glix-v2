@@ -14,6 +14,7 @@ import { clearMatch, endMatchStats, recordPresence } from "./match.js";
 import { createMetrics } from "./metrics.js";
 import { IpLimiter } from "./ratelimit.js";
 import { type Connection, isConnected, type Player, type Room, type Runtime } from "./runtime.js";
+import { noopSocial } from "./social.js";
 import { noopStats, type StatsStore } from "./statsStore.js";
 import { disabledPush, type PushGateway } from "./webpush.js";
 
@@ -42,6 +43,7 @@ export function createRuntime(
     stats,
     accountStats,
     push,
+    social: noopSocial,
     recentLogs: [],
     rooms: new Map(),
     tokens: new Map(),

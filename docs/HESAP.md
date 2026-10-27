@@ -46,13 +46,13 @@ Yazma oyun akışının dışında, bitişte tek işlemde (küçük toplu yazma)
 
 ### Profil ucu
 `GET /api/profile` (oturum şart; yoksa 401) tam profili döner; ayrıntı `docs/PROTOKOL.md`. `GET /api/profile/<kullanıcı>`
-yalnız toplamlar, favori oyun ve oyun başına sonuçları döner; **şimdilik yalnız kullanıcının kendisi için** çalışır, başkası ve
-bilinmeyen hesap aynı 404'ü alır. Arkadaşlar (H7) gelince arkadaşlara açılacak.
+yalnız toplamlar, favori oyun ve oyun başına sonuçları döner; **kullanıcının kendisi ve kabul edilmiş arkadaşları için** çalışır, başkası ve
+bilinmeyen hesap aynı 404'ü alır.
 Profil ekranı (ana sayfada kullanıcı adına dokununca): üyelik tarihi; Maç / Galibiyet / Galibiyet oranı / Favori oyun kutuları;
 oyun listesi (kart görseli, oynama, birincilik, en iyi); son 10 maç; en çok birlikte oynadığın 5 kişi. Yeni hesapta
 "Henüz maç yok — bir oda kur!". Misafire final'de "Rozet ve istatistik için hesap aç" daveti ve Kayıt ol düğmesi çıkar
 (kayıt ekranı oda dışında olduğundan düğme önce odadan çıkmayı onaylatır).
-Rozetler, arkadaş listesi ve sıralama sonraki adımlarda profile eklenecek.
+Rozetler ve sıralama sonraki adımlarda profile eklenecek. Arkadaşın profili (Arkadaşlar > arkadaş > Profilini gör) aynı ekranda, yalnız toplamlar/oyunlarla açılır.
 
 ## Rozetler
 Kalıcı başarımlar, sunucuda maç sonunda değerlendirilir; yeni kazanılanlar sonuç ekranında "Yeni rozet!" olarak görünür.
@@ -60,13 +60,23 @@ Kalıcı başarımlar, sunucuda maç sonunda değerlendirilir; yeni kazanılanla
 Kule'de 5 kusursuz, 8 kişilik maçı kazanmak, Arkadaşınla 10 maç, Gizli rozetler (kazanınca açılır).
 Rozet görselleri sonra ChatGPT'yle üretilir; o zamana dek simge + ad.
 
-## Arkadaşlar
-- Kullanıcı adıyla istek → kabul/ret; istek ve liste en çok 200 kişi.
-- Liste: çevrimiçi / lobide / maçta durumu (yalnız arkadaşlar görür).
-- **Hızlı davet:** lobideyken "Arkadaş davet et" → arkadaş uygulamadaysa anında kart, değilse web bildirimi.
-  Davet 10 dk geçerli, tek dokunuşla odaya katılır.
-- **Arkadaşın lobisine katıl:** arkadaş lobideyse ve oda katılıma açıksa listede "Katıl" düğmesi.
-- Engelleme: arkadaşlıktan çıkarma ve istek göndermeyi engelleme.
+## Arkadaşlar (H7, H8; uygulandı)
+Yalnız hesaplılar; misafir bu özelliklerden hiçbir şey görmez. Uç ve mesaj ayrıntısı `docs/PROTOKOL.md` "Arkadaşlar".
+- Kullanıcı adıyla istek (büyük/küçük harf duyarsız) → kabul/ret/geri çek. Karşı taraf zaten istemişse istek kendiliğinden kabul olur.
+  En çok **200 arkadaş**, **50 bekleyen giden istek** (karşıda en çok 100 bekleyen gelen). Hata: bulunamadı, kendine, zaten arkadaş, "İstek gönderilemedi."
+  (karşı taraf engellemişse ya da kotası doluysa aynı metin: engellendiğin sızmaz).
+- Liste: çevrimiçi / lobide / oyunda / çevrimdışı durumu; **yalnız kabul edilmiş arkadaşlar** görür. Durum, sunucuda hesaba bağlı canlı WS
+  bağlantılarından ve oda aşamasından türetilir; değişim arkadaşlara `friendStatus` ile (en çok 1 sn'de bir tarama) gider. Oda kodu liste/durumda **yoktur**.
+- Engelleme: arkadaşlığı/isteği siler; engelli taraf istek atamaz, davet edemez; engel Arkadaşlar ekranından kaldırılır. Arkadaşların profil özetini (toplamlar,
+  favori ve oyun başına sonuçlar; son maçlar ve birlikte oynananlar değil) görebilirsin: `GET /api/profile/<kullanıcı>`.
+- **Ekran (Arkadaşlar):** ana sayfada profil düğmesinin yanında (gelen istek sayısı rozeti). Kullanıcı adıyla ekleme, gelen istekler (Kabul/Reddet),
+  gönderilenler (İptal), arkadaş listesi (çevrimiçi önde; durum **şekil + yazı + renk**: halka Çevrimdışı, daire Çevrimiçi, kare Lobide, üçgen Oyunda),
+  engellenenler (Engeli kaldır). Arkadaşa dokununca küçük sayfa: Lobisine katıl, Profilini gör, Arkadaşlıktan çıkar, Engelle (yıkıcı ikisi onay ister).
+- **Hızlı davet (H8):** lobide hesaplı herkes "Arkadaş davet et" → çevrimiçi ve odada olmayan arkadaşlar → dokununca `invite` arkadaşın canlı bağlantılarına gider
+  (uygulamada kalıcı bir kart: Katıl / Kapat, 10 dk). Canlı bağlantı yoksa hesaba bağlı web bildirimi ("<kullanıcı> seni GLIX odasına çağırıyor", tıklayınca `/?oda=KOD`).
+  Başka bir odadaysan "Katıl" önce uyarır: katılmak mevcut odadan ayrılmaktır. Sınır: aynı arkadaşa 30 sn'de bir, dakikada 20.
+- **Arkadaşın lobisine katıl:** listede arkadaş lobideyse (ya da maçta ve oda izleyiciye açıksa, yer varsa) "Katıl"; sunucu `joinFriend` ile kodu çözer, mevcut katılım kuralları geçerli.
+- Bildirim aboneliği hesaba bağlıdır (yalnız bellekte; çıkışta, 404/410'da ve sunucu yeniden başlarken düşer): kalıcı bir bildirim adresi kaydı yoktur.
 
 ## Arkadaş sıralaması
 Sen + arkadaşların. Sekmeler: **Bu hafta** (pazartesi sıfırlanır) ve **Tüm zamanlar**.
@@ -79,7 +89,10 @@ istatistikler silinir; anonim tablolar zaten kişisel veri içermez).
 ## Veri modeli (SQLite, yeni göçler)
 `accounts(id, username, username_lc, email, email_verified, pass_hash, google_sub, created_at)`,
 `sessions(id_hash, account_id, created_at, last_seen)`, `email_tokens(kind, token_hash, account_id, expires_at)`,
-`friends(a, b, state, created_at)`, `badges(account_id, badge_id, earned_at)`.
+`badges(account_id, badge_id, earned_at)`.
+Arkadaşlık tabloları (göç 3, uygulandı; hepsinde `ON DELETE CASCADE`): `friends(a, b, state, requested_by, created_at, updated_at)`
+(PK `(a, b)`, `a < b` kanonik çift, tek satır; `state` `pending|accepted`; `requested_by` isteği atan; `updated_at` kabul zamanı) ve
+`blocks(blocker, blocked, created_at)`. `deleteAccountData` bunları da (iki yönde) siler.
 İstatistik tabloları (göç 2, uygulandı; hepsinde `account_id` → `accounts` `ON DELETE CASCADE`):
 `account_games(account_id, game_id, ended_at, players, mini_score, rank, won)`,
 `account_matches(account_id, ended_at, players, games, score, place, won)`,

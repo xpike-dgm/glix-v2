@@ -10,6 +10,11 @@ const [profileState, setProfileState] = createSignal<ProfileState>({ kind: "load
 
 export { profileState };
 
+/** Başka bir arkadaşın profili bakılıyorsa onun kullanıcı adı; null ise kendi profilin. */
+const [profileOf, setProfileOf] = createSignal<string | null>(null);
+
+export { profileOf, setProfileOf };
+
 /** Yalnız geliştirme önizlemesi: durum sabitlenir, ağdan okuma yapılmaz. */
 let frozen = false;
 export function freezeProfile(next: ProfileState): void {
@@ -20,7 +25,7 @@ export function freezeProfile(next: ProfileState): void {
 /** Aynı anda tek istek; eski bir yanıt yenisinin üstüne yazmaz. */
 let seq = 0;
 
-/** Oturumdaki hesabın profilini yükler. Hata olursa Türkçe bir metin gösterilir. */
+/** Kendi profilini (ya da `profileOf` doluysa o arkadaşın sınırlı profilini) yükler. Hata olursa Türkçe bir metin gösterilir. */
 export async function loadProfile(): Promise<void> {
   if (frozen) return;
   const mine = ++seq;
@@ -29,7 +34,9 @@ export async function loadProfile(): Promise<void> {
     if (mine === seq) setProfileState(s);
   };
   try {
-    const res = await fetch("/api/profile", { credentials: "same-origin" });
+    const other = profileOf();
+    const url = other === null ? "/api/profile" : `/api/profile/${encodeURIComponent(other)}`;
+    const res = await fetch(url, { credentials: "same-origin" });
     let data: unknown = null;
     try {
       data = await res.json();
@@ -37,6 +44,8 @@ export async function loadProfile(): Promise<void> {
       // gövde okunamadı
     }
     if (res.status === 401) return done({ kind: "error", message: "Profilini görmek için giriş yap." });
+    if (res.status === 404 && other !== null)
+      return done({ kind: "error", message: "Bu profili artık göremezsin." });
     const profile = res.ok ? parseProfile(data) : null;
     if (profile) return done({ kind: "ready", profile });
     done({ kind: "error", message: "Profil şu an yüklenemedi. Biraz sonra tekrar dene." });

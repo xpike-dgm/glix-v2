@@ -1,4 +1,5 @@
 import type { DatabaseSync } from "node:sqlite";
+import { createFriendStore, FRIENDS_SCHEMA, type FriendStore } from "./friendStore.js";
 import { log } from "./log.js";
 import { loadSqlite } from "./statsStore.js";
 
@@ -63,7 +64,7 @@ export type CreateResult = { ok: true; account: Account } | { ok: false; field: 
  * aynı SQLite dosyasını paylaşabilir. Dosya yolu verilmezse bellekte açılır (yeniden başlatınca silinir).
  * Hata fırlatabilir: çağıran (auth.ts) 500 döner, sunucu çökmez.
  */
-export interface AccountStore {
+export interface AccountStore extends FriendStore {
   create(username: string, email: string, passHash: string, now: number): CreateResult;
   /** Kullanıcı adı ya da e-posta (küçük harfe çevrilmiş) ile bulur. */
   findByLogin(login: string): AccountWithHash | null;
@@ -121,7 +122,8 @@ export interface AccountStore {
   /** Profil toplamları; hesap yoksa null. `recent` ve `coPlayers` yalnız `full` iken doludur. */
   profile(accountId: number, full: boolean): ProfileData | null;
   /**
-   * Hesabın istatistik verisini siler (oyun, maç, birlikte oynama; karşı taraftaki sayaçlar dahil).
+   * Hesabın istatistik ve arkadaşlık verisini siler (oyun, maç, birlikte oynama; karşı taraftaki sayaçlar dahil;
+   * arkadaşlıklar, istekler ve engeller, iki yönde).
    * Hesabın kendisine dokunmaz; hesap silme (H10) bunu çağırır, tablolar ayrıca `ON DELETE CASCADE` taşır.
    */
   deleteAccountData(accountId: number): void;
@@ -181,6 +183,8 @@ const MIGRATIONS: readonly string[] = [
      PRIMARY KEY (account_id, other_account_id)
    );
    CREATE INDEX account_coplay_other ON account_coplay (other_account_id);`,
+  // Arkadaşlar (H7): tek satırlık kanonik çift ve engeller. Hesap silinince satırlar da gider.
+  FRIENDS_SCHEMA,
 ];
 
 function migrate(db: DatabaseSync): void {
@@ -294,6 +298,8 @@ export function createAccounts(path: string): AccountStore {
   const dropGames = db.prepare("DELETE FROM account_games WHERE account_id = ?");
   const dropMatches = db.prepare("DELETE FROM account_matches WHERE account_id = ?");
   const dropCoplay = db.prepare("DELETE FROM account_coplay WHERE account_id = ? OR other_account_id = ?");
+  const dropFriends = db.prepare("DELETE FROM friends WHERE a = ? OR b = ?");
+  const dropBlocks = db.prepare("DELETE FROM blocks WHERE blocker = ? OR blocked = ?");
   /** Tek işlem: ya hepsi yazılır ya hiçbiri. */
   const inTransaction = (work: () => void): void => {
     db.exec("BEGIN");
@@ -307,6 +313,7 @@ export function createAccounts(path: string): AccountStore {
   };
   let closed = false;
   return {
+    ...createFriendStore(db, inTransaction),
     findByUsername(username) {
       const row = byUsernameRow.get(username.toLowerCase()) as Account | undefined;
       return row ? { id: row.id, username: row.username, email: row.email } : null;
@@ -398,6 +405,8 @@ export function createAccounts(path: string): AccountStore {
         dropGames.run(accountId);
         dropMatches.run(accountId);
         dropCoplay.run(accountId, accountId);
+        dropFriends.run(accountId, accountId);
+        dropBlocks.run(accountId, accountId);
       });
     },
     isVerified(accountId) {
