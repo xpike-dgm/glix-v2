@@ -1,21 +1,47 @@
 // Otomatik tasarım denetimi: Vite geliştirme sunucusunda (mock sayfaları yalnız orada vardır; üretim
-// `dist`'ine girmez) her sahte ekranı beş telefon boyutunda açar, ekran görüntüsünü docs/qa/a3'e yazar ve
+// `dist`'ine girmez) her sahte ekranı telefon boyutlarında açar, ekran görüntüsünü docs/qa/a3'e yazar ve
 // şunları doğrular: taşma yok, kırpılmış metin yok, her etkileşimli öğe >= 48x48 px, etkileşimli öğeler
 // üst üste binmiyor, metin kontrastı >= 4.5:1, konsolda hata yok.
-// Önce `pnpm build` (motor paketi dist'ten okunur). Kullanım: `pnpm ui:check [ekran-adı-parçası]`.
+// Önce `pnpm build` (motor paketi dist'ten okunur).
+//
+// Üç kip (hepsi aynı denetimleri aynı sıkılıkta yapar; yalnız kapsam değişir):
+//   pnpm ui:check [parça]            TAM: her ekran, beş boyut (320x568, 390x844, 430x932, 844x390, 667x375).
+//   pnpm ui:check:hizli [parça]      HIZLI (--hizli): her ekran yalnız 320x568 ve 667x375'te. Açık `sizes`
+//                                    listesi olan ekran bu ikiliyle kesişimini koşar; kesişim boşsa listenin ilkini.
+//   pnpm ui:check:degisen [taban]    DEĞİŞEN (--degisen [taban]): `git diff taban...HEAD` + commitlenmemiş
+//                                    değişiklikleri ekran süzgeçlerine çevirir, yalnız onları HIZLI boyutlarda koşar.
+//                                    Taban varsayılanı origin/main ya da main. `--tum-boyut` beş boyutu geri getirir.
+// Ek bayraklar: `--liste` (koşmadan seçilen denetimleri yazar), `--ornek N` (her N'inci ekran, tüm boyutlarıyla; ölçüm için).
+// Ortam: UI_WORKERS (varsayılan min(4, çekirdek)), UI_CLOCK=0 (sahte saat yerine gerçek bekleme).
+// Hız: aynı ekranın boyutları tek bağlam/sayfada koşar (yeniden yükleme ile); sabit bekleme yerine uygulamanın
+// `data-ready` işareti + yazı tipleri + görseller + ağ sessizliği beklenir; `settle` süreleri sahte saatle
+// (zamanlayıcı/rAF ileri sarılır) gerçek beklemeden geçilir.
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { createServer } from "node:net";
+import { cpus } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
+import { matchScreen, planChanged } from "./ui-check-degisen.mjs";
 
 const ENV = process.env;
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CLIENT = join(ROOT, "apps/client");
 const OUT = join(ROOT, "docs/qa/a3");
-const ONLY = process.argv[2] ?? "";
+const ARGS = process.argv.slice(2);
+const flag = (n) => ARGS.includes(n);
+const DEGISEN = flag("--degisen");
+const dIdx = ARGS.indexOf("--degisen");
+const DEGISEN_BASE = DEGISEN && ARGS[dIdx + 1] && !ARGS[dIdx + 1].startsWith("-") ? ARGS[dIdx + 1] : "";
+const oIdx = ARGS.indexOf("--ornek");
+const STRIDE = oIdx >= 0 ? Math.max(1, Number(ARGS[oIdx + 1]) || 1) : Number(ENV.UI_STRIDE) || 1;
+const skipIdx = new Set([dIdx + 1, oIdx + 1]);
+const ONLY = ARGS.find((a, i) => !a.startsWith("-") && !skipIdx.has(i)) ?? "";
+const QUICK = flag("--hizli") || (DEGISEN && !flag("--tum-boyut"));
+const WORKERS = Math.max(1, Number(ENV.UI_WORKERS) || Math.min(4, cpus().length));
+const USE_CLOCK = ENV.UI_CLOCK !== "0";
 const T0 = Date.now();
 const log = (...a) => console.log(`[ui-check +${((Date.now() - T0) / 1000).toFixed(1)}s]`, ...a);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -30,6 +56,15 @@ const LANDSCAPE = [
   [667, 375],
 ];
 const ALL = [...PORTRAIT, ...LANDSCAPE];
+const QUICK_SIZES = [PORTRAIT[0], LANDSCAPE[1]];
+
+/** Ekranın koşacağı boyutlar; hızlı kipte QUICK_SIZES ile kesişim (boşsa listenin ilki). */
+function sizesFor(scr) {
+  const base = scr.sizes ?? ALL;
+  if (!QUICK) return base;
+  const inter = base.filter(([w, h]) => QUICK_SIZES.some(([qw, qh]) => qw === w && qh === h));
+  return inter.length ? inter : [base[0]];
+}
 
 const clickText = (text) => async (page) => {
   await page.getByText(text, { exact: false }).first().click();
@@ -1023,7 +1058,7 @@ async function startVite(port) {
     [viteBin, "--port", String(port), "--strictPort", "--host", "127.0.0.1"],
     {
       cwd: CLIENT,
-      env: { ...ENV, BROWSER: "none" },
+      env: { ...ENV, BROWSER: "none", GLIX_UI_CHECK: "1" },
       stdio: ["ignore", "pipe", "pipe"],
     },
   );
@@ -1289,31 +1324,85 @@ async function inPageContrast({ png, texts, dpr }) {
   return out;
 }
 
-async function checkOne(browser, scr, [w, h]) {
+/** Ağdaki yarım kalan istekleri izler (tembel yüklenen parçalar bitsin diye). */
+function trackNetwork(page) {
+  const st = { inflight: 0, last: Date.now() };
+  const bump = (d) => {
+    st.inflight = Math.max(0, st.inflight + d);
+    st.last = Date.now();
+  };
+  page.on("request", () => bump(1));
+  page.on("requestfinished", () => bump(-1));
+  page.on("requestfailed", () => bump(-1));
+  return st;
+}
+
+/** Bekleyen istek kalmayıp `quietMs` boyunca yeni istek gelmeyene dek bekler (üst sınırlı). */
+async function netQuiet(st, quietMs = 80, timeout = 8000) {
+  const end = Date.now() + timeout;
+  while (Date.now() < end) {
+    if (st.inflight === 0 && Date.now() - st.last >= quietMs) return;
+    await sleep(20);
+  }
+}
+
+/**
+ * İşçi başına bir bağlam (tarayıcı önbelleği ekranlar arası paylaşılır: modüller her yüklemede yeniden inmez);
+ * her belge açılışında yerel/oturum depolaması boşaltılır, yani her denetim "yeni bağlam" gibi temiz başlar.
+ */
+async function newContext(browser) {
   const ctx = await browser.newContext({
-    viewport: { width: w, height: h },
+    viewport: { width: 390, height: 844 },
     deviceScaleFactor: 1,
     isMobile: true,
     hasTouch: true,
     locale: "tr-TR",
   });
-  const page = await ctx.newPage();
-  const consoleErrors = [];
-  page.on("console", (m) => {
-    if (m.type() === "error") consoleErrors.push(m.text());
+  await ctx.addInitScript(() => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {
+      // erişilemez
+    }
   });
-  page.on("pageerror", (e) => consoleErrors.push(`pageerror: ${e.message}`));
+  // Sahte saat: `settle` gibi bekleme süreleri gerçek zaman harcamadan ileri sarılır (zamanlayıcılar, rAF,
+  // Date ve performance.now birlikte ilerler); saat sayfa yenilemelerinde de sürer.
+  if (USE_CLOCK) await ctx.clock.install({ time: new Date() });
+  return ctx;
+}
+
+async function newPage(ctx) {
+  const page = await ctx.newPage();
+  const st = { errors: [], net: trackNetwork(page) };
+  page.on("console", (m) => {
+    if (m.type() === "error") st.errors.push(m.text());
+  });
+  page.on("pageerror", (e) => st.errors.push(`pageerror: ${e.message}`));
+  return { page, st };
+}
+
+/** Sanal (sahte saat) ya da gerçek bekleme. */
+const wait = (page, ms) => (USE_CLOCK ? page.clock.runFor(ms) : sleep(ms));
+
+async function checkOne(page, st, scr, [w, h]) {
   const failures = [];
+  st.errors.length = 0;
   try {
-    // clock: sahte saat; geri sayım rakamı sabit kalsın (örn. 1700 ms sonra "2" ve orada durur)
-    if (scr.clock) await page.clock.install({ time: new Date() });
+    await page.setViewportSize({ width: w, height: h });
     await page.goto(`${URL_BASE}/?${scr.q}`, { waitUntil: "load" });
-    if (scr.clock) await page.clock.runFor(scr.clock);
+    // Uygulamanın hazır işareti (yalnız geliştirmede; App.tsx devReady), yazı tipleri, ağ.
+    await page.waitForSelector("html[data-ready]", { state: "attached", timeout: 15000 });
     await page.evaluate(() => document.fonts.ready);
-    await sleep(scr.settle ?? 1500);
+    await netQuiet(st.net);
+    // geri sayım rakamı sabit kalsın (örn. 1700 ms sonra "2" ve orada durur)
+    if (scr.clock) await page.clock.runFor(scr.clock);
+    await wait(page, scr.settle ?? DEFAULT_SETTLE);
+    await netQuiet(st.net);
     if (scr.act) {
       await scr.act(page);
-      await sleep(700);
+      await wait(page, 700);
+      await netQuiet(st.net);
     }
     // Oyun dünyası arka planı yüklensin (sonra belirme geçişi aşağıda bitiş karesine alınır).
     await page
@@ -1331,7 +1420,6 @@ async function checkOne(browser, scr, [w, h]) {
         },
       )
       .catch(() => {});
-    await sleep(100);
     // Ölçüm animasyon ortasına denk gelmesin: sonlu animasyonlar bitiş karesine, sonsuzlar durdurulur.
     // (Aksi halde kontrast, rozetin belirme ya da basış parlamasının o anki karesine bağlı kalır.)
     await page.evaluate(() => {
@@ -1343,7 +1431,18 @@ async function checkOne(browser, scr, [w, h]) {
         else a.finish();
       }
     });
-    await sleep(150); // istenmiş son kare çizilsin
+    await sleep(FRAME_MS); // istenmiş son kare çizilsin (gerçek zaman: sahte saatten bağımsız)
+
+    if (ENV.UI_DUMP) {
+      const sig = await page.evaluate(() => ({
+        text: document.body.innerText.replace(/\s+/g, " ").trim(),
+        els: document.querySelectorAll("*").length,
+        inter: document.querySelectorAll("button, a[href], input, select, textarea, summary, [role=button]")
+          .length,
+        scroll: document.documentElement.scrollWidth,
+      }));
+      appendFileSync(ENV.UI_DUMP, `${JSON.stringify({ k: `${scr.name} ${w}x${h}`, ...sig })}\n`);
+    }
     await page.screenshot({ path: join(OUT, `${scr.name}-${w}x${h}.png`) });
     const { issues, texts } = await page.evaluate(inPageAudit);
     for (const [kind, msg] of issues) failures.push(`[${kind}] ${msg}`);
@@ -1366,14 +1465,67 @@ async function checkOne(browser, scr, [w, h]) {
   } catch (e) {
     failures.push(`[hata] ${e instanceof Error ? e.message.split("\n")[0] : String(e)}`);
   }
-  for (const e of consoleErrors) failures.push(`[console] ${e.slice(0, 200)}`);
-  await ctx.close();
+  for (const e of st.errors) failures.push(`[console] ${e.slice(0, 200)}`);
   return failures;
 }
 
+/**
+ * Bir ekranın tüm boyutları tek bağlam/sayfada koşar (boyut değişince setViewportSize + yeniden yükleme).
+ * Hata veren denetimden sonra bağlam yenilenir.
+ */
+async function checkGroup(worker, browser, scr, sizes, onDone) {
+  let cur = await newPage(worker.ctx);
+  for (const size of sizes) {
+    const t0 = Date.now();
+    const failures = await checkOne(cur.page, cur.st, scr, size);
+    onDone(size, failures, Date.now() - t0);
+    if (failures.some((f) => f.startsWith("[hata]"))) {
+      // hata sonrası sayfa/fare durumu belirsiz: bağlamı at, sonraki boyut temiz bağlamla koşsun
+      await worker.ctx.close().catch(() => {});
+      worker.ctx = await newContext(browser);
+      cur = await newPage(worker.ctx);
+    }
+  }
+  await cur.page.close().catch(() => {});
+}
+
 let URL_BASE = "";
+const FRAME_MS = 60;
+// `settle` yazılmamış ekranlar için sanal bekleme: hazır işareti + ağ sessizliği sonrası kısa pay yeter
+// (sonlu animasyonlar zaten bitiş karesine alınır); zamanlayıcıyla ilerleyen ekranlar açık `settle` taşır.
+const DEFAULT_SETTLE = 400;
 
 async function main() {
+  const names = SCREENS.map((s) => s.name);
+  let filters = ONLY ? [ONLY] : null;
+  if (DEGISEN) {
+    const plan = planChanged(ROOT, DEGISEN_BASE, names);
+    log(`değişen kip: taban ${plan.base}, ${plan.files.length} dosya`);
+    for (const e of plan.entries.slice(0, 40)) {
+      const to = !e.filters.length ? "atlandı" : e.smoke ? "duman kümesi" : e.filters.join(", ");
+      log(`  ${e.file}: ${e.why} -> ${to}`);
+    }
+    if (plan.entries.length > 40) log(`  … ve ${plan.entries.length - 40} dosya daha`);
+    for (const m of plan.missing) log(`  uyarı: "${m}" hiçbir ekranla eşleşmedi`);
+    filters = plan.filters;
+    if (!plan.filters.length) log("arayüzü etkileyen değişiklik yok; denetim atlandı");
+    if (ONLY) filters = filters.filter((f) => f.includes(ONLY) || ONLY.includes(f));
+    if (plan.filters.length && DEGISEN && QUICK) log("boyutlar: hızlı (320x568, 667x375)");
+  }
+  let jobs = [];
+  for (const scr of SCREENS) {
+    if (DEGISEN) {
+      if (!filters?.some((f) => matchScreen(scr.name, f))) continue;
+    } else if (ONLY && !scr.name.includes(ONLY)) continue;
+    for (const size of sizesFor(scr)) jobs.push({ scr, size });
+  }
+  if (STRIDE > 1) jobs = jobs.filter((j) => SCREENS.indexOf(j.scr) % STRIDE === 0);
+  if (flag("--liste") || jobs.length === 0) {
+    if (flag("--liste")) for (const j of jobs) console.log(`${j.scr.name} ${j.size[0]}x${j.size[1]}`);
+    console.log(`\n===== ÖZET: ${jobs.length} denetim, ${jobs.length} geçti, 0 kaldı =====`);
+    return;
+  }
+
   mkdirSync(OUT, { recursive: true });
   const port = await freePort();
   log("vite başlatılıyor…");
@@ -1393,24 +1545,33 @@ async function main() {
     await warm.goto(`${URL_BASE}/?mock=landscape`, { waitUntil: "networkidle" });
     await warm.close();
 
-    const jobs = [];
-    for (const scr of SCREENS) {
-      if (ONLY && !scr.name.includes(ONLY)) continue;
-      for (const size of scr.sizes ?? ALL) jobs.push({ scr, size });
+    const groups = [];
+    for (const j of jobs) {
+      const g = groups.at(-1);
+      if (g && g.scr === j.scr) g.sizes.push(j.size);
+      else groups.push({ scr: j.scr, sizes: [j.size] });
     }
-    log(`${jobs.length} denetim`);
+    log(`${jobs.length} denetim, ${WORKERS} işçi${QUICK ? ", hızlı boyutlar" : ""}`);
     const results = [];
     let next = 0;
+    let busyMs = 0;
+    const tStart = Date.now();
     const worker = async () => {
-      while (next < jobs.length) {
-        const job = jobs[next++];
-        const failures = await checkOne(browser, job.scr, job.size);
-        results.push({ ...job, failures });
-        const tag = `${job.scr.name} ${job.size[0]}x${job.size[1]}`;
-        console.log(`${failures.length ? "✗" : "✓"} ${tag}${failures.length ? ` (${failures.length})` : ""}`);
+      const w = { ctx: await newContext(browser) };
+      while (next < groups.length) {
+        const { scr, sizes } = groups[next++];
+        await checkGroup(w, browser, scr, sizes, (size, failures, ms) => {
+          results.push({ scr, size, failures });
+          busyMs += ms;
+          const tag = `${scr.name} ${size[0]}x${size[1]}`;
+          console.log(
+            `${failures.length ? "✗" : "✓"} ${tag}${failures.length ? ` (${failures.length})` : ""}`,
+          );
+        });
       }
+      await w.ctx.close();
     };
-    await Promise.all(Array.from({ length: 3 }, worker));
+    await Promise.all(Array.from({ length: WORKERS }, worker));
 
     const bad = results.filter((r) => r.failures.length);
     console.log(
@@ -1421,6 +1582,10 @@ async function main() {
       for (const f of [...new Set(r.failures)]) console.log(`    ${f}`);
     }
     console.log(`\nEkran görüntüleri: ${OUT}`);
+    const wall = Date.now() - tStart;
+    log(
+      `süre: ${(wall / 1000).toFixed(1)} sn duvar, denetim başına ${Math.round(wall / results.length)} ms duvar / ${Math.round(busyMs / results.length)} ms işçi`,
+    );
     process.exitCode = bad.length ? 1 : 0;
   } finally {
     await browser?.close();

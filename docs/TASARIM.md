@@ -152,3 +152,9 @@ tek kalma alçalan "bzzt", geri sayım bip, sonuç fanfarı. Sağ üstte ses aç
   Titreşim aynı olaylara eşlenir; `prefers-reduced-motion`'da süreler yarıya iner.
 - **Denetim:** `pnpm ui:check` her ekranı 5 telefon boyutunda gezer (taşma, kırpılan metin, >= 48 px hedef,
   üst üste binme, kontrast, konsol hatası); görüntüler `docs/qa/a3/`. Büyük yazıda (>= 24 px) kontrast 3:1.
+  Üç kip (denetimler aynı, yalnız kapsam değişir): `pnpm ui:check` tam (her ekran, 5 boyut; dağıtım öncesi/CI);
+  `pnpm ui:check:hizli` her ekran yalnız 320x568 ve 667x375'te; `pnpm ui:check:degisen [taban]` yalnız
+  `git diff taban...HEAD` + commitlenmemiş değişikliklerin etkilediği ekranlar, hızlı boyutlarda (`--tum-boyut` ile 5).
+  Dosya→ekran eşlemesi `scripts/ui-check-degisen.mjs` başındaki tablodadır; ortak dosyalar (styles/ui/fx/net, App.tsx,
+  `public/assets`) ve bilinmeyenler küçük bir duman kümesine düşer. `UI_WORKERS` işçi sayısı (varsayılan min(4, çekirdek));
+  `--liste` koşmadan seçimi yazar. Uygulama dev'de `<html data-ready>` işaretler; betik sabit bekleme yerine onu bekler.
