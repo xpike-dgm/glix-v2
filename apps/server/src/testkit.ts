@@ -1,3 +1,4 @@
+import { createHash, randomBytes } from "node:crypto";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join as pathJoin } from "node:path";
@@ -46,8 +47,11 @@ export class Client {
       this.closeCode = code;
     });
   }
-  static async connect(): Promise<Client> {
-    const ws = new WebSocket(`ws://127.0.0.1:${k.srv.port}/ws`);
+  static async connect(cookie?: string): Promise<Client> {
+    const ws = new WebSocket(
+      `ws://127.0.0.1:${k.srv.port}/ws`,
+      cookie ? { headers: { Cookie: cookie } } : {},
+    );
     await new Promise<void>((resolve, reject) => {
       ws.once("open", () => resolve());
       ws.once("error", reject);
@@ -99,8 +103,25 @@ export async function until(pred: () => boolean, label = "koşul"): Promise<void
   throw new Error(`zaman aşımı: ${label}`);
 }
 
+let accountSeq = 0;
+/**
+ * Hesap açıp oturum çerezi döner (parola özeti hesaplamadan, doğrudan depoya yazar: testler hızlı kalır).
+ * Misafir oda kuramadığı için `create` bunu kullanır.
+ */
+export function loginCookie(username = `t${++accountSeq}_${Date.now().toString(36)}`): string {
+  const made = k.srv.accounts.create(username, `${username.toLowerCase()}@test.local`, "x", k.clock.now());
+  if (!made.ok) throw new Error("test hesabı açılamadı");
+  const token = randomBytes(32).toString("base64url");
+  k.srv.accounts.createSession(
+    made.account.id,
+    createHash("sha256").update(token).digest("hex"),
+    k.clock.now(),
+  );
+  return `glix_sess=${token}`;
+}
+
 export async function create(nickname: string): Promise<Client> {
-  const c = await Client.connect();
+  const c = await Client.connect(loginCookie());
   c.send({ type: "createRoom", nickname });
   await until(() => c.updates.length > 0, "oda kuruldu");
   // Oyun kataloğu büyüdükçe testler değişmesin: varsayılan seçim (tüm oyunlar) yerine Butona Bas.

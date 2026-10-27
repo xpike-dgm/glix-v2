@@ -15,6 +15,7 @@ function fakeConn() {
     sentVer: -1,
     ip: "x",
     failedJoins: 0,
+    account: null,
     close() {},
     send() {},
     sendRaw(text: string) {
@@ -51,6 +52,7 @@ function setup(players = 3) {
       token: `t${i}`,
       score: 0,
       spectator: false,
+      accountId: null,
       joinOrder: i,
       conn: c.conn,
       room,
@@ -159,6 +161,7 @@ describe("yayın: gereksiz mesaj ve yama zinciri", () => {
       token: "t9",
       score: 0,
       spectator: false,
+      accountId: null,
       joinOrder: 9,
       conn: late.conn,
       room: t.room,

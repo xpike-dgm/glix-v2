@@ -260,6 +260,12 @@ function handleError(code: string, message: string): void {
     setState({ notFoundCode: state.joinCode || "?", joinShake: state.joinShake + 1 });
     return;
   }
+  if (code === "login_required") {
+    // Oturum bu arada düşmüş olabilir: hesap bilgisi temizlenir, giriş ekranı açılır.
+    setState({ account: null, nav: "login" });
+    toast(message, "error");
+    return;
+  }
   if (SHOWN_ERRORS.has(code)) toast(message, "error");
 }
 
@@ -323,6 +329,12 @@ function reconnectNow(): void {
   }
   attempt = 0;
   open();
+}
+
+/** Giriş/çıkış sonrası: yeni çerezin WS yükseltmesinde okunması için soketi hemen yeniler. */
+export function reconnectForAccount(): void {
+  if (stopped || state.tv) return;
+  reconnectNow();
 }
 
 /** Sekme öne geldi ya da bfcache'ten döndü: soketi denetle, gerekirse beklemeden yeniden bağlan. */

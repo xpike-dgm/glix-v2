@@ -13,6 +13,9 @@ import {
 const ALL: ScreenId[] = [
   "home",
   "join",
+  "login",
+  "register",
+  "aydinlatma",
   "notfound",
   "lobby",
   "briefing",

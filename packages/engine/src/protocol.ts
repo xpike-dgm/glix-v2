@@ -174,7 +174,8 @@ export type ErrorCode =
   | "draining"
   | "server_busy"
   | "stage_full"
-  | "stage_readonly";
+  | "stage_readonly"
+  | "login_required";
 
 export type RoomPhase = "lobby" | "briefing" | "countdown" | "playing" | "results" | "final";
 

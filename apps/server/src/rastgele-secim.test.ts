@@ -1,13 +1,13 @@
 import { GAMES } from "@glix/engine";
 import { describe, expect, it } from "vitest";
-import { Client, join, k, sync, until, useServer } from "./testkit.js";
+import { Client, join, k, loginCookie, sync, until, useServer } from "./testkit.js";
 
 /** Rastgele havuzdaki oyunlar (`randomPool: false` olanlar yalnız elle seçilir). */
 const POOL = Object.values(GAMES).filter((g) => g.randomPool !== false);
 const TWO_PLAYER = POOL.filter((g) => g.minPlayers <= 2 && g.maxPlayers >= 2).map((g) => g.id);
 
 async function open(nickname: string): Promise<Client> {
-  const c = await Client.connect();
+  const c = await Client.connect(loginCookie());
   c.send({ type: "createRoom", nickname });
   await until(() => c.updates.length > 0, "oda kuruldu");
   return c;

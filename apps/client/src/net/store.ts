@@ -8,7 +8,13 @@ import { initialSync, onPatch, onReconnect, onRoom, type SyncState, type SyncSte
 
 /** `idle`: sunucu odasız boştaki bağlantıyı kapattı; ilk eylemde sessizce yeniden açılır. */
 export type ConnStatus = "connecting" | "open" | "closed" | "idle";
-export type Nav = "home" | "join" | "settings";
+export type Nav = "home" | "join" | "settings" | "login" | "register" | "aydinlatma";
+
+/** Giriş yapmış hesap (yalnız kendi cihazında; başkasına gitmez). */
+export interface AccountInfo {
+  username: string;
+  email: string;
+}
 export type ToastKind = "info" | "success" | "error";
 
 export interface Toast {
@@ -49,6 +55,8 @@ interface AppState {
   stage: { roomCode: string } | null;
   /** Sunucunun `welcome` ile bildirdiği VAPID genel anahtarı; sunucu bildirim göndermiyorsa null. */
   pushKey: string | null;
+  /** Oturumu açık hesap; misafirde ya da henüz bilinmiyorsa null. */
+  account: AccountInfo | null;
 }
 
 export const [state, setState] = createStore<AppState>({
@@ -70,6 +78,7 @@ export const [state, setState] = createStore<AppState>({
   tv: false,
   stage: null,
   pushKey: null,
+  account: null,
 });
 
 /** Sunucu saati (ms), ping/pong ölçümünün medyanıyla. */

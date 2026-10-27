@@ -154,7 +154,21 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
 
 `invalid_message`, `rate_limited`, `nickname_invalid`, `room_not_found`, `room_full`, `match_in_progress`,
 `resume_failed`, `nickname_taken`, `not_host`, `not_in_room`, `already_in_room`, `invalid_games`, `avatar_taken`, `not_enough_players`,
-`wrong_phase`, `not_participant`, `game_failed`, `draining`, `server_busy`, `stage_full`, `stage_readonly`.
+`wrong_phase`, `not_participant`, `game_failed`, `draining`, `server_busy`, `stage_full`, `stage_readonly`, `login_required`.
+
+`login_required`: `createRoom` yalnız hesaplı bağlantıdan kabul edilir. Kodla katılma (`joinRoom`), oynama ve sahne (`joinStage`) misafire açıktır.
+
+## Hesap uçları (HTTP, `/api/auth/`)
+
+Hepsi JSON; yanıtlar `Cache-Control: no-store`. Hata gövdesi `{ok:false, code, message, field?}` (`message` Türkçe, kullanıcıya gösterilir).
+- `POST register {username, email, password}` → 200 `{ok:true, account:{username,email}}` + `Set-Cookie`. Kullanıcı adı 3–20 `[A-Za-z0-9_]` (büyük/küçük harf duyarsız benzersiz), e-posta küçük harfe çevrilir ve benzersizdir, şifre 8–128 karakter. 400 `invalid_input`, 409 `username_taken` / `email_taken`.
+- `POST login {login, password}` (`login`: kullanıcı adı ya da e-posta) → 200 aynı gövde + `Set-Cookie`; yanlış şifre ve bilinmeyen hesap aynı 401 `bad_credentials`.
+- `POST logout` → 200, oturum silinir, çerez temizlenir. `GET me` → 200 `{ok:true, account:{username,email}|null}`.
+- Çerez `glix_sess`: 32 rastgele bayt (base64url), `HttpOnly; SameSite=Lax; Path=/; Max-Age=180 gün`, https ise `Secure` (doğrudan TLS ya da `TRUST_PROXY=1` ile güvenilen vekilin `X-Forwarded-Proto: https` bildirimi). Sunucuda yalnız sha256 özeti saklanır.
+- POST'larda `Origin` zorunlu ve `Host` ile aynı olmalı (CSRF); `ALLOWED_ORIGINS` varsa onda da olmalı → 403 `forbidden`.
+- Hız sınırı: IP başına kayıt/giriş 20 ani, 6 sn'de 1; hatalı parola hesap başına 8 ani, 30 sn'de 1 → 429 `rate_limited`.
+- WS yükseltmesinde çerez okunur ve bağlantı hesaba bağlanır; oyuncu kaydında `accountId` yalnız sunucuda tutulur, hiçbir mesajda yayınlanmaz.
+- Veri: `accounts`, `sessions`, `email_tokens` (henüz kullanılmıyor) tabloları; `ACCOUNTS_DB` (varsayılan: `STATS_DB`; ikisi de yoksa bellekte, kalıcı değil). Şifre: scrypt (N=16384, r=8, p=1, 16 bayt tuz), parametreler özetle birlikte saklanır.
 
 ## Sınırlar (sunucu)
 

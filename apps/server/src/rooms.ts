@@ -130,6 +130,7 @@ export function addPlayer(
   while (room.players.has(id)) id = randomBytes(6).toString("hex");
   const player: Player = {
     id,
+    accountId: conn.account?.id ?? null,
     nickname: uniqueNickname(room, nickname),
     avatar:
       preferredAvatar !== undefined && isAvatarFree(room, preferredAvatar)

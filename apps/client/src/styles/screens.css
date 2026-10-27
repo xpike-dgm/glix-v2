@@ -2711,3 +2711,68 @@
   align-items: center;
   gap: 8px;
 }
+
+/* ---- Hesap: ana sayfa satırı ve giriş/kayıt formları ---- */
+.home__auth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.home__auth .gbtn {
+  flex: 1;
+}
+.home__user {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  font-weight: 600;
+  font-size: var(--fs-15);
+  color: var(--text-dim);
+}
+.acct__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0 var(--sp-4);
+}
+.acct__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.acct__fields .field {
+  height: 56px;
+  font-size: var(--fs-18);
+}
+.acct__error {
+  text-align: center;
+  color: var(--red);
+  font-size: var(--fs-15);
+  line-height: 1.4;
+}
+.acct__legal,
+.acct__text {
+  text-align: center;
+  font-size: var(--fs-15);
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.acct__text {
+  text-align: left;
+}
+.acct__link {
+  display: inline-block;
+  padding: 14px 2px;
+  color: var(--cyan);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+}

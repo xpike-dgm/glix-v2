@@ -123,6 +123,11 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         fail(conn, "already_in_room");
         return;
       }
+      // Misafir yalnız kodla katılır; oda kurmak hesap ister (docs/HESAP.md).
+      if (!conn.account) {
+        fail(conn, "login_required");
+        return;
+      }
       if (rt.draining) {
         fail(conn, "draining");
         return;

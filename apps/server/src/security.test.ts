@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { WebSocket as ServerSocket } from "ws";
 import { WebSocket } from "ws";
-import { Client, create, join, k, setupRoom, sleep, sync, until, useServer } from "./testkit.js";
+import { Client, create, join, k, loginCookie, setupRoom, sleep, sync, until, useServer } from "./testkit.js";
 
 const closed = (c: Client) => until(() => c.closeCode !== null, "kapanış");
 const serverSide = (): ServerSocket[] => [...k.srv.sockets];
@@ -46,7 +46,7 @@ describe("üst sınırlar", () => {
   });
   it("oda sınırı server_busy döner", async () => {
     await create("Ali");
-    const c = await Client.connect();
+    const c = await Client.connect(loginCookie());
     c.send({ type: "createRoom", nickname: "Veli" });
     await until(() => c.lastError !== undefined);
     expect(c.lastError?.code).toBe("server_busy");
@@ -71,9 +71,9 @@ describe("toplam soket sınırı", () => {
 describe("oda kurma hızı", () => {
   useServer();
   it("IP başına 10 ani; sonrası rate_limited, zamanla yenilenir", async () => {
-    const c = await Client.connect();
+    const c = await Client.connect(loginCookie());
     const hits: Client[] = [];
-    for (let i = 0; i < 11; i++) hits.push(await Client.connect());
+    for (let i = 0; i < 11; i++) hits.push(await Client.connect(loginCookie()));
     for (const h of hits) h.send({ type: "createRoom", nickname: "Ali" });
     await until(() => hits.every((h) => h.updates.length > 0 || h.lastError), "yanıtlar");
     expect(hits.filter((h) => h.updates.length > 0)).toHaveLength(10);

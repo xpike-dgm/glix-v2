@@ -1,6 +1,8 @@
 import { createServer, type Server } from "node:http";
 import { APP_VERSION, type GameLog, PROTOCOL_VERSION, parseClientMessage } from "@glix/engine";
 import { type WebSocket, WebSocketServer } from "ws";
+import { type AccountStore, createAccounts } from "./accountStore.js";
+import { AUTH_PREFIX, accountFromCookie, handleAuth } from "./auth.js";
 import { CLIENT_ERROR_PATH, handleClientError } from "./clientError.js";
 import { resolveClientIp } from "./clientIp.js";
 import { type Clock, systemClock } from "./clock.js";
@@ -11,7 +13,7 @@ import { runTick, TICK_MS } from "./match.js";
 import { errorMessage } from "./messages.js";
 import { TokenBucket } from "./ratelimit.js";
 import { countActiveMatches, countPlayers, createRuntime, disposeRuntime } from "./rooms.js";
-import type { Connection } from "./runtime.js";
+import type { AccountRef, Connection } from "./runtime.js";
 import { serveStatic } from "./static.js";
 import { createStats, PURGE_EVERY_MS } from "./statsStore.js";
 import { createWebPush, disabledPush, type PushGateway, type VapidConfig } from "./webpush.js";
@@ -52,6 +54,8 @@ export interface ServerOptions {
   randomInt?: (max: number) => number;
   /** İstatistik SQLite yolu (":memory:" olabilir). Verilmezse/null ise istatistik kapalıdır. */
   statsDb?: string | null;
+  /** Hesap/oturum SQLite yolu (istatistikle aynı dosya olabilir). Verilmezse bellekte açılır (kalıcı değil). */
+  accountsDb?: string | null;
   /** Web bildirimi anahtarları; verilmezse ya da geçersizse bildirim kapalı kalır. */
   vapid?: VapidConfig | null;
   /** Hazır gönderici (testlerde sahte); verilirse `vapid` yok sayılır. */
@@ -74,6 +78,8 @@ export interface RunningServer {
   port: number;
   /** Açık WebSocket'ler (yalnız testler için). */
   sockets: ReadonlySet<WebSocket>;
+  /** Hesap deposu (yalnız testler için: hızlı oturum açma). */
+  accounts: AccountStore;
   /** Son biten oyunların kayıtları (yalnız testler için). */
   recentLogs: readonly GameLog[];
   /**
@@ -92,11 +98,14 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const limits: ServerLimits = { ...DEFAULT_LIMITS, ...opts.limits };
   const stats = createStats(opts.statsDb);
   stats.purge(clock.now());
+  const accounts = createAccounts(opts.accountsDb || ":memory:");
+  accounts.purge(clock.now());
   let cancelPurge: () => void = () => {};
   const schedulePurge = (): void => {
     cancelPurge = clock.setTimeout(() => {
       if (stopTicking) return;
       stats.purge(clock.now());
+      accounts.purge(clock.now());
       schedulePurge();
     }, PURGE_EVERY_MS);
   };
@@ -161,7 +170,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   schedulePurge();
 
   const server = createServer((req, res) => {
-    const path = (req.url ?? "/").split("?")[0];
+    const path = (req.url ?? "/").split("?")[0] ?? "/";
     if (path === "/health") {
       res.writeHead(rt.draining ? 503 : 200, {
         "Content-Type": "application/json",
@@ -190,6 +199,17 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         allowedOrigins: opts.allowedOrigins,
         limiter: rt.ipLimiter,
         ip: resolveClientIp(req.socket.remoteAddress, req.headers["x-forwarded-for"], limits.trustProxy),
+      });
+      return;
+    }
+    if (path.startsWith(AUTH_PREFIX)) {
+      handleAuth(req, res, {
+        accounts,
+        limiter: rt.ipLimiter,
+        ip: resolveClientIp(req.socket.remoteAddress, req.headers["x-forwarded-for"], limits.trustProxy),
+        now: clock.now(),
+        trustProxy: limits.trustProxy,
+        allowedOrigins: opts.allowedOrigins,
       });
       return;
     }
@@ -233,10 +253,16 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       socket.destroy();
       return;
     }
-    wss.handleUpgrade(req, socket, head, (ws) => wss.emit("connection", ws, { ip }));
+    const account = accountFromCookie(accounts, req.headers.cookie, clock.now());
+    wss.handleUpgrade(req, socket, head, (ws) =>
+      wss.emit("connection", ws, {
+        ip,
+        account: account ? { id: account.id, username: account.username } : null,
+      }),
+    );
   });
 
-  wss.on("connection", (ws: WebSocket, info: { ip: string }) => {
+  wss.on("connection", (ws: WebSocket, info: { ip: string; account: AccountRef | null }) => {
     const ip = info.ip;
     sockets.add(ws);
     perIp.set(ip, (perIp.get(ip) ?? 0) + 1);
@@ -262,6 +288,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       sentVer: -1,
       ip,
       failedJoins: 0,
+      account: info.account,
       sendRaw,
       send: (msg) => {
         if (msg.type === "error" && msg.code === "rate_limited") limitedThisMessage = true;
@@ -334,6 +361,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     server,
     port,
     sockets,
+    accounts,
     recentLogs: rt.recentLogs,
     drain: () => {
       rt.draining = true;
@@ -359,6 +387,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
           ws.close(code, code === 1012 ? "Sunucu yeniden başlıyor" : "Sunucu kapanıyor");
         wss.close();
         stats.close();
+        accounts.close();
         server.close(() => resolve());
         server.closeIdleConnections();
         setTimeout(() => server.closeAllConnections(), 2000).unref();

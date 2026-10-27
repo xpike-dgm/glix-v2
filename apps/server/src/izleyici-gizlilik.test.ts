@@ -57,6 +57,7 @@ function fake(): Fake {
     sentVer: -1,
     ip: "1.2.3.4",
     failedJoins: 0,
+    account: { id: 1, username: "host" },
     close() {},
     send(msg: ServerMessage) {
       f.sent.push(msg);

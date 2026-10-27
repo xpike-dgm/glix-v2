@@ -1,6 +1,7 @@
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { mountBackdrop } from "../backdrop/hero.js";
 import { reducedMotion } from "../fx/motion.js";
+import { logout } from "../net/account.js";
 import { createRoom } from "../net/client.js";
 import { setNickname, setState, state } from "../net/store.js";
 import { InstallHint } from "../pwa/InstallHint.js";
@@ -61,6 +62,10 @@ export function Home() {
   });
 
   const create = (): void => {
+    if (!state.account) {
+      setState("nav", "login");
+      return;
+    }
     if (!state.nickname) {
       setAfter("create");
       setSheet("nick");
@@ -151,12 +156,41 @@ export function Home() {
             </p>
           </div>
         </Show>
-        <PrimaryButton onClick={create} busy={state.busy} disabled={offline()}>
-          Oda kur
-        </PrimaryButton>
-        <GhostButton onClick={join} disabled={offline()}>
-          Odaya katıl
-        </GhostButton>
+        <Show
+          when={state.account}
+          fallback={
+            <>
+              <PrimaryButton onClick={join} busy={state.busy} disabled={offline()}>
+                Kodla katıl
+              </PrimaryButton>
+              <div class="home__auth">
+                <GhostButton size="small" onClick={() => setState("nav", "login")}>
+                  Giriş yap
+                </GhostButton>
+                <GhostButton size="small" onClick={() => setState("nav", "register")}>
+                  Kayıt ol
+                </GhostButton>
+              </div>
+            </>
+          }
+        >
+          {(account) => (
+            <>
+              <PrimaryButton onClick={create} busy={state.busy} disabled={offline()}>
+                Oda kur
+              </PrimaryButton>
+              <GhostButton onClick={join} disabled={offline()}>
+                Odaya katıl
+              </GhostButton>
+              <div class="home__auth">
+                <span class="home__user">{account().username}</span>
+                <GhostButton size="small" onClick={() => void logout()}>
+                  Çıkış yap
+                </GhostButton>
+              </div>
+            </>
+          )}
+        </Show>
         <GhostButton size="small" onClick={() => setSheet("how")}>
           Nasıl oynanır?
         </GhostButton>
@@ -172,7 +206,7 @@ export function Home() {
         <ol class="how">
           <li>
             <b>1</b>
-            <span>Oda kur ve kodu arkadaşlarınla paylaş.</span>
+            <span>Hesabınla oda kur ve kodu arkadaşlarınla paylaş.</span>
           </li>
           <li>
             <b>2</b>
