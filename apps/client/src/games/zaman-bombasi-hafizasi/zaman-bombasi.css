@@ -15,6 +15,59 @@
   top: 0;
 }
 
+/* ---- Toplam süre (90 sn) ve ani ölüm ---- */
+.ztotal {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 26px;
+  margin-top: 8px;
+  padding: 0 40px 0 54px;
+}
+.ztotal__clock {
+  flex: none;
+  min-width: 38px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.ztotal__bar {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ztotal__badge {
+  flex: none;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: var(--fs-13);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: #b3152f;
+  box-shadow: 0 0 14px rgba(255, 70, 90, 0.6);
+  animation: ztotal-pulse 1.1s ease-in-out infinite;
+}
+.ztotal[data-sudden="1"] .pbar__fill {
+  background: var(--red);
+}
+.ztotal[data-sudden="1"] .ztotal__clock {
+  color: var(--red);
+}
+@keyframes ztotal-pulse {
+  50% {
+    box-shadow: 0 0 4px rgba(255, 70, 90, 0.3);
+    opacity: 0.8;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ztotal__badge {
+    animation: none;
+  }
+}
+
 /* ---- Durum başlığı ---- */
 .zstatus {
   flex: none;

@@ -2,12 +2,16 @@ import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import { createRng } from "../../rng.js";
 import {
   ZAMAN_BOMBASI_COLORS,
+  ZAMAN_BOMBASI_INPUT_BASE_MS,
   ZAMAN_BOMBASI_INPUT_PER_ELEMENT_MS,
   ZAMAN_BOMBASI_INTRO_MS,
   ZAMAN_BOMBASI_PAUSE_FAIL_MS,
   ZAMAN_BOMBASI_PAUSE_OK_MS,
   ZAMAN_BOMBASI_START_LENGTH,
   ZAMAN_BOMBASI_STEP_MS,
+  ZAMAN_BOMBASI_SUDDEN_DEATH_AFTER_MS,
+  ZAMAN_BOMBASI_SUDDEN_DEATH_GROWTH,
+  ZAMAN_BOMBASI_TOTAL_MS,
   type ZamanBombasiAction,
   type ZamanBombasiColor,
   type ZamanBombasiLast,
@@ -37,6 +41,10 @@ export interface ZamanBombasiState {
   entered: ZamanBombasiColor[];
   /** Oyunun bitmesi için gereken elenme sayısı: ⌈başlangıç / 2⌉. */
   need: number;
+  /** Oyunun kurulduğu an; 90 sn'lik toplam süre ve ani ölüm buradan ölçülür. */
+  startedAt: number;
+  /** Süre dolduğu için mi bitti (değilse elenmeyle). */
+  timeUp: boolean;
   finished: boolean;
   endedAt: number | null;
   last: ZamanBombasiLast | null;
@@ -50,7 +58,8 @@ function drawColor(seed: number, index: number): ZamanBombasiColor {
 const inputStartOf = (s: ZamanBombasiState): number =>
   s.turnStart + s.sequence.length * ZAMAN_BOMBASI_STEP_MS;
 const deadlineOf = (s: ZamanBombasiState): number =>
-  inputStartOf(s) + s.sequence.length * ZAMAN_BOMBASI_INPUT_PER_ELEMENT_MS;
+  inputStartOf(s) + ZAMAN_BOMBASI_INPUT_BASE_MS + s.sequence.length * ZAMAN_BOMBASI_INPUT_PER_ELEMENT_MS;
+const endsAtOf = (s: ZamanBombasiState): number => s.startedAt + ZAMAN_BOMBASI_TOTAL_MS;
 
 function nextActiveIndex(order: readonly string[], eliminated: readonly string[], from: number): number {
   for (let step = 1; step <= order.length; step++) {
@@ -112,10 +121,15 @@ function eliminate(
 /** Dizi tam ve doğru tekrarlandı: dizi 1 renk uzar, sıra sonraki aktif oyuncuya geçer. */
 function succeed(s: ZamanBombasiState, at: number): ZamanBombasiState {
   const player = s.order[s.turnIndex] as string;
+  // Ani ölüm: yeni dizi kurulduğu an (= bu sıranın bittiği an `at`) oyun başından 60 sn'den fazla geçmişse +2.
+  const growth =
+    at - s.startedAt > ZAMAN_BOMBASI_SUDDEN_DEATH_AFTER_MS ? ZAMAN_BOMBASI_SUDDEN_DEATH_GROWTH : 1;
+  const sequence = [...s.sequence];
+  for (let i = 0; i < growth; i++) sequence.push(drawColor(s.seed, s.draws + i));
   return {
     ...s,
-    sequence: [...s.sequence, drawColor(s.seed, s.draws)],
-    draws: s.draws + 1,
+    sequence,
+    draws: s.draws + growth,
     turnIndex: nextActiveIndex(s.order, s.eliminated, s.turnIndex),
     turn: s.turn + 1,
     turnStart: at + ZAMAN_BOMBASI_PAUSE_OK_MS,
@@ -132,6 +146,12 @@ function advance(s: ZamanBombasiState, now: number): ZamanBombasiState {
   let cur = s;
   while (!cur.finished) {
     const due = deadlineOf(cur);
+    const limit = endsAtOf(cur);
+    // Toplam süre önce dolarsa (ya da aynı anda) giriş yapan oyuncunun sırası cezasız iptal edilir; oyun biter.
+    if (limit <= due) {
+      if (now < limit) break;
+      return { ...cur, entered: [], finished: true, timeUp: true, endedAt: limit };
+    }
     if (now < due) break;
     cur = eliminate(cur, due, "timeout");
   }
@@ -190,6 +210,8 @@ export const zamanBombasiHafizasi: GameDefinition<
       turnStart: ctx.now + ZAMAN_BOMBASI_INTRO_MS,
       entered: [],
       need: Math.ceil(players.length / 2),
+      startedAt: ctx.now,
+      timeUp: false,
       finished: false,
       endedAt: null,
       last: null,
@@ -237,6 +259,10 @@ export const zamanBombasiHafizasi: GameDefinition<
       sequence: phase === "pause" || phase === "playback" ? [...s.sequence] : null,
       pressed: phase === "input" ? [...s.entered] : [],
       need: s.need,
+      startedAt: s.startedAt,
+      endsAt: endsAtOf(s),
+      suddenDeathAt: s.startedAt + ZAMAN_BOMBASI_SUDDEN_DEATH_AFTER_MS,
+      timeUp: s.timeUp,
       last: s.last ? { ...s.last } : null,
     };
   },

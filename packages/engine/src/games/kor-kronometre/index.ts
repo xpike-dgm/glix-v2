@@ -1,20 +1,23 @@
 import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import {
-  KOR_KRONOMETRE_DURATION_MS,
   KOR_KRONOMETRE_LOCK_GRACE_MS,
   KOR_KRONOMETRE_REVEAL_MS,
-  KOR_KRONOMETRE_TARGET_MS,
+  KOR_KRONOMETRE_TARGET_MAX_S,
+  KOR_KRONOMETRE_TARGET_MIN_S,
   type KorKronometreAction,
   type KorKronometreEntry,
   type KorKronometrePublicView,
   type KorKronometreReveal,
   type KorKronometreView,
+  korKronometreDurationMs,
 } from "./types.js";
 
 export * from "./types.js";
 
 export interface KorKronometreState {
   players: string[];
+  /** Herkese açık hedef an (ms): setup'ta tohumlu RNG ile seçilen tam saniye. */
+  targetMs: number;
   startedAt: number;
   /** Basış süresinin bitişi; herkes bastıysa reduce'ta öne çekilir (basış anı + 1 sn). */
   endsAt: number;
@@ -25,31 +28,34 @@ export interface KorKronometreState {
   revealed: boolean;
 }
 
-/** Derece (1, 1, 3 …) ve puan (derece 1 → +2, derece 2 → +1) hesabı; yakından uzağa sıralı. */
+/**
+ * Derece (1, 1, 3 …) ve puan (derece 1 → +2, derece 2 → +1) hesabı. Yalnız basanlar sıralanır (yakından uzağa);
+ * basmayanlar sıralamaya girmez, puan almaz ve listenin sonunda katılım sırasıyla yer alır.
+ */
 export function korKronometreEntries(state: KorKronometreState): KorKronometreEntry[] {
-  const rows = state.players.map((playerId, order) => {
-    const at = state.presses[playerId];
-    const ms = at ?? KOR_KRONOMETRE_DURATION_MS;
-    return {
-      playerId,
-      order,
-      ms,
-      pressed: at !== undefined,
-      distance: Math.abs(ms - KOR_KRONOMETRE_TARGET_MS),
-    };
+  const pressed: { playerId: string; order: number; ms: number; distance: number }[] = [];
+  const missed: KorKronometreEntry[] = [];
+  state.players.forEach((playerId, order) => {
+    const ms = state.presses[playerId];
+    if (ms === undefined) {
+      missed.push({ playerId, ms: null, pressed: false, distance: null, rank: null, points: 0 });
+    } else {
+      pressed.push({ playerId, order, ms, distance: Math.abs(ms - state.targetMs) });
+    }
   });
-  rows.sort((a, b) => a.distance - b.distance || a.order - b.order);
-  return rows.map((r) => {
-    const rank = rows.findIndex((x) => x.distance === r.distance) + 1;
+  pressed.sort((a, b) => a.distance - b.distance || a.order - b.order);
+  const ranked = pressed.map((r): KorKronometreEntry => {
+    const rank = pressed.findIndex((x) => x.distance === r.distance) + 1;
     return {
       playerId: r.playerId,
       ms: r.ms,
-      pressed: r.pressed,
+      pressed: true,
       distance: r.distance,
       rank,
       points: rank === 1 ? 2 : rank === 2 ? 1 : 0,
     };
   });
+  return [...ranked, ...missed];
 }
 
 function settle(state: KorKronometreState): KorKronometreReveal {
@@ -68,11 +74,11 @@ export const korKronometre: GameDefinition<
   maxPlayers: 8,
   orientation: "portrait",
   briefing: {
-    goal: "İçinden say, tam 10. saniyede bas!",
+    goal: "İçinden say, hedef saniyede bas!",
     steps: [
-      "Sayaç yok; saniyeleri içinden say",
-      "Tek bir basışın var",
-      "10. saniyeye en yakın +2, ikinci +1",
+      "Sayaç görünmez; yalnız hedef süre yazılı",
+      "İçinden hedef süreyi say",
+      "Tek basışını doğru anda yap; en yakın +2, ikinci +1",
     ],
   },
 
@@ -84,11 +90,16 @@ export const korKronometre: GameDefinition<
   },
 
   setup(players: readonly string[], ctx: GameContext): KorKronometreState {
+    // Hedef: 7–13 sn arası tam saniye, tohumlu RNG'den (tekrar oynatmada aynı sonuç).
+    const span = KOR_KRONOMETRE_TARGET_MAX_S - KOR_KRONOMETRE_TARGET_MIN_S + 1;
+    const targetMs = (KOR_KRONOMETRE_TARGET_MIN_S + ctx.rng.int(span)) * 1_000;
+    const duration = korKronometreDurationMs(targetMs);
     return {
       players: [...players],
+      targetMs,
       startedAt: ctx.now,
-      endsAt: ctx.now + KOR_KRONOMETRE_DURATION_MS,
-      revealEndsAt: ctx.now + KOR_KRONOMETRE_DURATION_MS + KOR_KRONOMETRE_REVEAL_MS,
+      endsAt: ctx.now + duration,
+      revealEndsAt: ctx.now + duration + KOR_KRONOMETRE_REVEAL_MS,
       presses: {},
       revealed: false,
     };
@@ -115,6 +126,7 @@ export const korKronometre: GameDefinition<
   publicView(state, ctx): KorKronometrePublicView {
     return {
       startedAt: state.startedAt,
+      targetMs: state.targetMs,
       endsAt: state.endsAt,
       revealEndsAt: state.revealEndsAt,
       // Süre dolmadan kimin bastığı ve ne zaman bastığı yoktur.
@@ -131,7 +143,7 @@ export const korKronometre: GameDefinition<
   },
 
   /**
-   * Basış anları 0–17 999 arası, çoğu kez kısa sayılardır; alt dizgi sızıntı denetimi bunları koruyamaz.
+   * Basış anları 0–21 000 arası, çoğu kez kısa sayılardır; alt dizgi sızıntı denetimi bunları koruyamaz.
    * Gizlilik yapısal olarak sağlanır: `publicView` süre dolmadan basış taşımaz, `view` yalnız "bastın mı" der
    * (bkz. kor-kronometre.test.ts, "gizlilik").
    */

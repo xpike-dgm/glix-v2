@@ -97,4 +97,64 @@ describe("Zaman Bombası Hafızası: gerçek oda akışı", () => {
     // Sonuç ekranında da (izleyiciler dahil) oyun eylemi kabul edilmez.
     expect((await act(byId.get(o1) as Client, "mavi")).ok).toBe(false);
   });
+
+  it("90 sn dolunca giriş yapan oyuncunun sırası cezasız iptal edilir; ani ölümde dizi +2 uzar", async () => {
+    const cs = (await setupRoom(["A", "B", "C"])) as [Client, Client, Client];
+    const [host] = cs;
+    host.send({ type: "setGames", gameIds: ["zaman-bombasi-hafizasi"] });
+    await until(() => host.room.gameIds.join() === "zaman-bombasi-hafizasi", "oyun seçildi");
+    host.send({ type: "startMatch" });
+    await until(() => host.room.phase === "briefing", "briefing");
+    for (const c of cs) c.send({ type: "ready" });
+    await until(() => host.room.phase === "countdown", "countdown");
+    k.clock.advance(3000);
+    await until(() => host.room.phase === "playing", "playing");
+
+    const pub = () => host.room.match?.publicView as ZamanBombasiPublicView;
+    const byId = new Map(cs.map((c) => [c.session.playerId, c]));
+    const goTo = (t: number) => k.clock.advance(Math.max(0, t - k.clock.now()));
+    const endsAt = pub().endsAt;
+    expect(endsAt - pub().startedAt).toBe(90_000);
+    expect(pub().suddenDeathAt - pub().startedAt).toBe(60_000);
+    expect(pub().stepMs).toBe(350);
+    expect(pub().deadline - pub().inputStart).toBe(1_500 + 2 * 1_000);
+
+    // Herkes diziyi giriş evresinin başında doğru girer; ani ölüm başlayana kadar +1, sonra +2.
+    let sawSudden = false;
+    let guard = 0;
+    while (pub().deadline < endsAt && guard++ < 60) {
+      const before = pub().length;
+      const turn = pub().turn;
+      const seqNow = pub().sequence as ZamanBombasiColor[];
+      const who = byId.get(pub().active as string) as Client;
+      goTo(pub().inputStart);
+      for (const color of seqNow) expect((await act(who, color)).ok).toBe(true);
+      await until(() => pub().turn === turn + 1, "sonraki sıra");
+      const grew = pub().length - before;
+      if (k.clock.now() - pub().startedAt > 60_000) {
+        expect(grew).toBe(2);
+        sawSudden = true;
+      } else {
+        expect(grew).toBe(1);
+      }
+    }
+    expect(sawSudden).toBe(true);
+    expect(host.room.phase).toBe("playing");
+
+    // Son sıra: giriş penceresi toplam süreyi aşar; oyuncu yarım girer, süre dolar.
+    const who = byId.get(pub().active as string) as Client;
+    const seqNow = pub().sequence as ZamanBombasiColor[];
+    // (Sıra toplam süreden sonra başlıyorsa oynatma sırasında süre dolar; ceza yine yoktur.)
+    if (pub().inputStart < endsAt) {
+      goTo(pub().inputStart);
+      expect((await act(who, seqNow[0] as ZamanBombasiColor)).ok).toBe(true);
+    }
+    goTo(endsAt - 1_000);
+    await sync();
+    expect(host.room.phase).toBe("playing");
+    goTo(endsAt);
+    await until(() => host.room.phase === "results", "sonuçlar");
+    const result = host.room.match?.result;
+    expect(Object.values(result?.miniScores ?? {})).toEqual([0, 0, 0]);
+  });
 });

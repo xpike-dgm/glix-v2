@@ -4,16 +4,17 @@
  *   ?mock=kor-kronometre-counting    sayma; BAS'a basınca kadran donar
  *   ?mock=kor-kronometre-pressed     basıldı, diğerleri bekleniyor
  *   ?mock=kor-kronometre-reveal      sonuç (`&rank=1|2|3` kendi derecen, `&nopress=1` basmayanlar)
+ *   `&target=7..13` hedef saniye (varsayılan 11)
  *   ?mock=kor-kronometre-spectator   katılımcı değilsin
  */
 import {
   type GameInfo,
-  KOR_KRONOMETRE_DURATION_MS,
   KOR_KRONOMETRE_REVEAL_MS,
   type KorKronometreEntry,
   type KorKronometrePublicView,
   type KorKronometreView,
   korKronometre,
+  korKronometreDurationMs,
   type MatchSnapshot,
   type PlayerInfo,
   type RoomPhase,
@@ -33,18 +34,39 @@ const INFO: GameInfo = {
 };
 
 /** Sahte basışlar: kendi sıran `rank` ile belirlenir (1 = en yakın). */
-function fakeEntries(ids: string[], rank: number, nopress: boolean): KorKronometreEntry[] {
+function fakeEntries(ids: string[], rank: number, nopress: boolean, targetMs: number): KorKronometreEntry[] {
   const offsets = [-150, 420, -900, 1_800, -2_600, 3_900, -5_000, 7_000];
   const mineAt = Math.min(ids.length, Math.max(1, rank)) - 1;
   const others = ids.filter((id) => id !== SELF);
   const order: string[] = [];
   for (let s = 0, o = 0; s < ids.length; s++) order.push(s === mineAt ? SELF : (others[o++] as string));
-  return order.map((playerId, s) => {
-    const missed = nopress && s >= ids.length - 2;
-    const ms = missed ? KOR_KRONOMETRE_DURATION_MS : 10_000 + (offsets[s] ?? 7_000);
-    const distance = Math.abs(ms - 10_000);
-    return { playerId, ms, pressed: !missed, distance, rank: s + 1, points: s === 0 ? 2 : s === 1 ? 1 : 0 };
-  });
+  const rows = order.map((playerId, s) => ({ playerId, s, missed: nopress && s >= ids.length - 2 }));
+  const pressedRows = rows.filter((r) => !r.missed);
+  return [
+    ...pressedRows.map((r, i): KorKronometreEntry => {
+      const ms = targetMs + (offsets[r.s] ?? 7_000);
+      return {
+        playerId: r.playerId,
+        ms,
+        pressed: true,
+        distance: Math.abs(ms - targetMs),
+        rank: i + 1,
+        points: i === 0 ? 2 : i === 1 ? 1 : 0,
+      };
+    }),
+    ...rows
+      .filter((r) => r.missed)
+      .map(
+        (r): KorKronometreEntry => ({
+          playerId: r.playerId,
+          ms: null,
+          pressed: false,
+          distance: null,
+          rank: null,
+          points: 0,
+        }),
+      ),
+  ];
 }
 
 export function startKronometreMock(kind: string, params: URLSearchParams): void {
@@ -67,7 +89,10 @@ export function startKronometreMock(kind: string, params: URLSearchParams): void
   let pressed = kind.endsWith("pressed");
   let rev = 1;
   const revealed = kind.endsWith("reveal") || kind.endsWith("spectator-reveal");
-  const startedAt = revealed ? now - KOR_KRONOMETRE_DURATION_MS - 300 : now - 4_000;
+  const targetSeconds = Math.min(13, Math.max(7, Number(params.get("target")) || 11));
+  const targetMs = targetSeconds * 1_000;
+  const duration = korKronometreDurationMs(targetMs);
+  const startedAt = revealed ? now - duration - 300 : now - 4_000;
 
   const snapshot = (): RoomSnapshot => {
     if (kind === "kor-kronometre-briefing") {
@@ -77,14 +102,16 @@ export function startKronometreMock(kind: string, params: URLSearchParams): void
     }
     const pub: KorKronometrePublicView = {
       startedAt,
-      endsAt: startedAt + KOR_KRONOMETRE_DURATION_MS,
-      revealEndsAt: startedAt + KOR_KRONOMETRE_DURATION_MS + KOR_KRONOMETRE_REVEAL_MS,
+      targetMs,
+      endsAt: startedAt + duration,
+      revealEndsAt: startedAt + duration + KOR_KRONOMETRE_REVEAL_MS,
       reveal: revealed
         ? {
             entries: fakeEntries(
               participants,
               Number(params.get("rank")) || 1,
               params.get("nopress") === "1",
+              targetMs,
             ),
           }
         : null,

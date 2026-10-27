@@ -1070,6 +1070,8 @@ const SCREENS = [
   },
   { name: "capraz-opening-end", q: "mock=capraz-ates&open=1", settle: 0 },
   { name: "acgozluluk-opening-end", q: "mock=acgozluluk-choosing&n=5&open=1", settle: 0 },
+  { name: "zaman-sudden", q: "mock=zaman-sudden" },
+  { name: "kronometre-target", q: "mock=kor-kronometre-counting&target=7" },
 ];
 
 function freePort() {

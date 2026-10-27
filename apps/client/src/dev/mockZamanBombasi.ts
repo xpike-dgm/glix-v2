@@ -10,6 +10,8 @@
  *   ?mock=zaman-timeout      süre doldu
  *   ?mock=zaman-eliminated   sen elendin, izliyorsun
  *   ?mock=zaman-spectator    katılımcı değilsin
+ *   ?mock=zaman-sudden       ani ölüm evresi (son 30 sn), sıra sende
+ *   ?mock=zaman-timeup       toplam süre doldu, oyun bitti
  *   ?mock=zaman-results      sonuç ekranı
  * Süreler çok yavaş (adım başına 60 sn) tutulur: ekran görüntüsü kararlı kalır.
  */
@@ -80,14 +82,18 @@ export function startZamanBombasiMock(kind: string, params: URLSearchParams): vo
     length: 4,
     phase: "input",
     turn: 5,
-    turnStart: now - 4000 - 4 * 600,
+    turnStart: now - 4000 - 4 * 350,
     inputStart: now - 4000,
-    deadline: now + 8000,
-    stepMs: 600,
+    deadline: now + 30_000,
+    stepMs: 350,
     playbackIndex: -1,
     sequence: null,
     pressed: [],
     need,
+    startedAt: now - 10_000,
+    endsAt: now + 80_000,
+    suddenDeathAt: now + 50_000,
+    timeUp: false,
     last: { turn: 4, player: "p2", kind: "ok", at: now - 15_000 },
   };
   const priv: ZamanBombasiView = { isOut: false, myTurn: false, turnsAway: 1 };
@@ -109,7 +115,7 @@ export function startZamanBombasiMock(kind: string, params: URLSearchParams): vo
         stepMs: SLOW,
         turnStart: now - SLOW - 10_000,
         inputStart: now - SLOW - 10_000 + 4 * SLOW,
-        deadline: now - SLOW - 10_000 + 4 * SLOW + 12_000,
+        deadline: now - SLOW - 10_000 + 4 * SLOW + 5_500,
         playbackIndex: 1,
         sequence: seq,
       };
@@ -118,6 +124,32 @@ export function startZamanBombasiMock(kind: string, params: URLSearchParams): vo
     case "zaman-mine":
       pub = { ...base, active: SELF, pressed: ["yesil", "mavi"] };
       mine = { isOut: false, myTurn: true, turnsAway: 0 };
+      break;
+    case "zaman-sudden":
+      pub = {
+        ...base,
+        active: SELF,
+        length: 6,
+        deadline: now + 25_000,
+        pressed: ["yesil", "mavi"],
+        startedAt: now - 62_000,
+        endsAt: now + 28_000,
+        suddenDeathAt: now - 2_000,
+      };
+      mine = { isOut: false, myTurn: true, turnsAway: 0 };
+      break;
+    case "zaman-timeup":
+      pub = {
+        ...base,
+        phase: "over",
+        active: null,
+        sequence: null,
+        startedAt: now - 90_500,
+        endsAt: now - 500,
+        suddenDeathAt: now - 30_500,
+        timeUp: true,
+      };
+      mine = { isOut: false, myTurn: false, turnsAway: null };
       break;
     case "zaman-other":
       pub = { ...base, active: "p1", pressed: ["yesil"] };
@@ -130,8 +162,8 @@ export function startZamanBombasiMock(kind: string, params: URLSearchParams): vo
         phase: "pause",
         length: 5,
         turnStart: now + SLOW,
-        inputStart: now + SLOW + 5 * 600,
-        deadline: now + SLOW + 5 * 600 + 15_000,
+        inputStart: now + SLOW + 5 * 350,
+        deadline: now + SLOW + 5 * 350 + 15_000,
         sequence: [...seq, "yesil"],
         last: { turn: 4, player: "p1", kind: "ok", at: now - 300 },
       };
@@ -148,8 +180,8 @@ export function startZamanBombasiMock(kind: string, params: URLSearchParams): vo
         phase: "pause",
         length: 2,
         turnStart: now + SLOW,
-        inputStart: now + SLOW + 2 * 600,
-        deadline: now + SLOW + 2 * 600 + 6000,
+        inputStart: now + SLOW + 2 * 350,
+        deadline: now + SLOW + 2 * 350 + 3_500,
         sequence: ["sari", "yesil"],
         last:
           kind === "zaman-fail"
