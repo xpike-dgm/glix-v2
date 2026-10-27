@@ -199,9 +199,9 @@ Bugün: yeni sürüm hazır olunca bekliyor (`registerType: prompt`), kullanıc�
 - Karalama: renk paleti + kalınlık, oylamada çiziliş tekrarı, maç sonu galeri.
 - Gizli Alışveriş: gerçek ürün ikon seti (12 SVG).
 - Kontrol Paneli: ipucunu metin yerine mini panel çizimiyle göster.
-- Sözlük Blöfü / Çağrışım / Sızma: sıralı dramatik açılış (en çok kandıran en son).
-- Yazı Yaz: puansız "şüphe göstergesi". Kendim: sürükle-bırak eşleştirme.
-- Çapraz Ateş / Açgözlülük: sinematik açılış sahneleri.
+- [x] Sözlük Blöfü / Çağrışım / Sızma: sıralı dramatik açılış (en çok kandıran en son). (`fx/sequence.ts`; Sızma: oylar azdan çoğa, son adımda maske düşer)
+- Yazı Yaz: puansız "şüphe göstergesi". [x] Kendim: sürükle-bırak eşleştirme.
+- [x] Çapraz Ateş / Açgözlülük: sinematik açılış sahneleri.
 - Tüm oyunlar: `summarize(result)` (U4 tur özeti).
 
 **Kabul (her O maddesi):** kural senaryo testleri + invariants + sızıntı testleri + sunucu testi + `ui:check`; oyun

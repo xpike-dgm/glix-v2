@@ -72,6 +72,7 @@ const GAME_PROPS: Record<string, readonly PropPath[]> = {
   "son-kisi": ["genel/kacis-kolu"],
   ittifak: ["genel/el-sikisma"],
   "capraz-ates": ["genel/nisangah"],
+  "acgozluluk-limiti": ["genel/rusvet-jetonu"],
   "zehirli-kadeh": [
     "zehirli-kadeh/efekt-temiz",
     "zehirli-kadeh/efekt-zehir",

@@ -44,7 +44,8 @@ export function startCaprazMock(kind: string, params: URLSearchParams): void {
   const participants = watching ? ids.filter((id) => id !== SELF) : ids;
   const now = Date.now();
   const revealed = kind === "capraz-reveal" || kind === "capraz-spectator-reveal";
-  const startedAt = revealed ? now - CAPRAZ_ATES_FIRE_MS - 100 : now - 9_000;
+  // `&open=1`: aşama şimdi başladı (açılış sahnesi oynar).
+  const startedAt = revealed ? now - CAPRAZ_ATES_FIRE_MS - 100 : params.has("open") ? now - 100 : now - 9_000;
   const endsAt = kind === "capraz-closed" ? now - 400 : startedAt + CAPRAZ_ATES_FIRE_MS;
   // Önizlemede sonuç ekranı kendiliğinden gelmesin.
   const finishAt = startedAt + 10 * 60_000;

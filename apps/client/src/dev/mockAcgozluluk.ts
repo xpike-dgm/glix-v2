@@ -52,7 +52,8 @@ export function startAcgozlulukMock(kind: string, params: URLSearchParams): void
   let phase: RoomPhase = "playing";
   let readyIds: string[] = [];
   let phaseEndsAt: number | null = null;
-  let startedAt = now - 8_000;
+  // `&open=1`: aşama şimdi başladı (açılış sahnesi oynar).
+  let startedAt = params.has("open") ? now - 100 : now - 8_000;
   let myChoice: number | null = params.get("chosen") === "0" ? null : Math.min(count, 2);
   let locked = kind === "acgozluluk-locked";
   let rev = 1;

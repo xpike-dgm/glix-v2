@@ -1019,6 +1019,57 @@ const SCREENS = [
       await p.getByRole("button", { name: "Kapalı", exact: true }).click();
     },
   },
+  // O iş kolu cilaları: sıralı açılış (ortası = `at` açılışın başlangıcından beri geçen ms, sonu = varsayılan),
+  // Kendim sürükle-bırak (kart avatarın üstünde tutulurken) ve açılış sahneleri (bitiş karesinde donmuş).
+  {
+    name: "sozluk-reveal-seq-mid-6",
+    q: "mock=sozluk-reveal&n=6&at=-1500",
+    settle: 0,
+    // Sıra ortasında dondur: sonraki vuruşlar tetiklenmesin (ölçüm yarışmasın).
+    act: async (p) =>
+      p.evaluate(() => {
+        window.setTimeout = () => 0;
+      }),
+  },
+  { name: "sozluk-reveal-seq-end-6", q: "mock=sozluk-reveal&n=6" },
+  {
+    name: "cagrisim-reveal-seq-mid-8",
+    q: "mock=cagrisim-reveal&n=8&at=-1500",
+    settle: 0,
+    // Sıra ortasında dondur: sonraki vuruşlar tetiklenmesin (ölçüm yarışmasın).
+    act: async (p) =>
+      p.evaluate(() => {
+        window.setTimeout = () => 0;
+      }),
+  },
+  { name: "cagrisim-reveal-seq-end-8", q: "mock=cagrisim-reveal&n=8" },
+  {
+    name: "sizma-reveal-seq-mid-6",
+    q: "mock=sizma-reveal&n=6&at=0",
+    settle: 0,
+    // Sıra ortasında dondur: sonraki vuruşlar tetiklenmesin (ölçüm yarışmasın).
+    act: async (p) =>
+      p.evaluate(() => {
+        window.setTimeout = () => 0;
+      }),
+  },
+  { name: "sizma-reveal-seq-end-6", q: "mock=sizma-reveal&n=6" },
+  {
+    name: "kendim-match-drag-6",
+    q: "mock=kendim-match&n=6&paired=1",
+    settle: 600,
+    act: async (p) => {
+      const card = await p.locator(".kd__card").nth(1).boundingBox();
+      const drop = await p.locator(".kd__drop").nth(2).boundingBox();
+      if (!card || !drop) throw new Error("kart ya da avatar yok");
+      await p.mouse.move(card.x + card.width / 2, card.y + card.height / 2);
+      await p.mouse.down();
+      await p.mouse.move(card.x + card.width / 2 + 24, card.y + card.height / 2 + 24, { steps: 3 });
+      await p.mouse.move(drop.x + drop.width / 2, drop.y + drop.height / 2, { steps: 8 });
+    },
+  },
+  { name: "capraz-opening-end", q: "mock=capraz-ates&open=1", settle: 0 },
+  { name: "acgozluluk-opening-end", q: "mock=acgozluluk-choosing&n=5&open=1", settle: 0 },
 ];
 
 function freePort() {

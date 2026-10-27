@@ -197,8 +197,8 @@ export function Eslestirme(props: Props) {
 
       <Show when={!closed()}>
         <div class="kd__tray" data-active={drag() ? "1" : undefined}>
-          <p class="kd__traytip">Kartı oyuncunun üstüne sürükle ya da karta dokun</p>
-          <ul class="kd__drops">
+          <p class="kd__traytip">Kartı avatara sürükle ya da karta dokun</p>
+          <ul class="kd__drops" data-n={candidates().length}>
             <For each={candidates()}>
               {(m) => {
                 const taken = () => cardOfPlayer(lv(), m.id) !== null;
@@ -241,7 +241,7 @@ export function Eslestirme(props: Props) {
             <div
               class="kd__ghost"
               aria-hidden="true"
-              style={{ transform: `translate(${d().x}px, ${d().y}px) translate(-50%, -60%)` }}
+              style={{ transform: `translate(${d().x}px, ${d().y}px) translate(-50%, -150%)` }}
             >
               {d().text}
             </div>

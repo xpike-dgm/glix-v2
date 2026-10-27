@@ -51,7 +51,8 @@ export function startSizmaMock(kind: string, params: URLSearchParams): void {
   const infiltrator = meOdd && !spectator ? SELF : "p2";
   const clueEndsAt = stage === "clue" ? now + SIZMA_CLUE_CAP_MS - 40_000 : now - 9_000;
   const startedAt = clueEndsAt - SIZMA_CLUE_CAP_MS + (stage === "clue" ? 0 : 200_000);
-  const voteEndsAt = stage === "reveal" ? now - 300 : clueEndsAt + SIZMA_VOTE_MS;
+  const voteEndsAt =
+    stage === "reveal" ? now - Number(params.get("at") ?? 6_500) : clueEndsAt + SIZMA_VOTE_MS;
   const finishAt = voteEndsAt + 8_000;
 
   let phase: RoomPhase = "playing";

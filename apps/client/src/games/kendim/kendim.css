@@ -83,8 +83,8 @@
   padding: 6px 2px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: minmax(76px, 1fr);
-  gap: 12px 10px;
+  grid-auto-rows: minmax(60px, 1fr);
+  gap: 8px 10px;
   align-content: center;
   overflow-y: auto;
 }
@@ -111,7 +111,7 @@
   position: relative;
   flex: 1;
   min-width: 0;
-  min-height: 64px;
+  min-height: 56px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -151,7 +151,7 @@
   touch-action: manipulation;
 }
 .kd__card[data-lifted="1"] {
-  opacity: 0.35;
+  border-style: dashed;
   animation: none;
   transform: scale(0.96);
 }
@@ -161,7 +161,7 @@
 
 /* Sürükle-bırak: avatar sırası ve parmağı izleyen kart hayaleti */
 .kd {
-  --kd-dav: 40px;
+  --kd-dav: min(36px, calc((100vw - 56px) / 7 - 8px));
 }
 .kd__tray {
   flex: none;
@@ -169,7 +169,7 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 6px 0 2px;
+  padding: 4px 0 2px;
 }
 .kd__traytip {
   margin: 0;
@@ -183,13 +183,16 @@
   margin: 0;
   padding: 0;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
-  gap: 4px 6px;
+  gap: 2px;
+  width: 100%;
 }
 .kd__drop {
   --pc: var(--cyan);
-  width: 52px;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 54px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -229,7 +232,7 @@
   left: 0;
   top: 0;
   z-index: 60;
-  max-width: 46vw;
+  max-width: 70vw;
   padding: 8px 14px;
   border-radius: 14px;
   border: 2px solid var(--cyan);
@@ -239,11 +242,10 @@
     0 0 18px color-mix(in srgb, var(--cyan) 55%, transparent);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: var(--fs-18);
+  font-size: var(--fs-15);
   color: var(--text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  line-height: 1.15;
   pointer-events: none;
   touch-action: none;
   will-change: transform;
@@ -638,4 +640,25 @@
 .kd[data-tight="1"] .kd__mid {
   justify-content: flex-start;
   padding-top: 36px;
+}
+
+/* Yatay ekran: sürükleme sırası sıkışık (ipucu satırı gizli, avatarlar küçük) */
+@media (max-height: 460px) {
+  .kd {
+    --kd-dav: 30px;
+  }
+  .kd__traytip {
+    display: none;
+  }
+}
+.kd__tray[data-active="1"] .kd__traytip {
+  visibility: hidden;
+}
+
+/* Dar ekranda 6+ avatar yan yana sığmaz: adlar gizlenir (renk ve yüz ayırt eder) */
+@media (max-width: 400px) {
+  .kd__drops[data-n="6"] .kd__drop-name,
+  .kd__drops[data-n="7"] .kd__drop-name {
+    display: none;
+  }
 }

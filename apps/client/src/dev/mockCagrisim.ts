@@ -4,7 +4,7 @@
  *   ?mock=cagrisim-locked            cevabın kilitlenmiş
  *   ?mock=cagrisim-spectator         katılımcı değilsin
  *   ?mock=cagrisim-briefing          anlatım ekranı
- *   ?mock=cagrisim-reveal            açılış: sen bir ağdasın (`&n=8` oyuncu sayısı)
+ *   ?mock=cagrisim-reveal            açılış: sen bir ağdasın (`&n=8` oyuncu sayısı; `&at=ms` açılışın kaçıncı ms'sinde, varsayılan: sıralı açılış bitmiş)
  *   ?mock=cagrisim-reveal-single     açılış: tek kaldın
  *   ?mock=cagrisim-reveal-silent     açılış: yazmadın
  *   ?mock=cagrisim-reveal-spectator  açılış: izleyici
@@ -107,7 +107,7 @@ export function startCagrisimMock(kind: string, params: URLSearchParams): void {
     myAnswer = "mavi";
     answeredIds = participants.filter((id) => id !== "p4");
   } else if (kind.startsWith("cagrisim-reveal")) {
-    startedAt = now - 31_000;
+    startedAt = now - 30_000 - Number(params.get("at") ?? 4_200);
     revealed = true;
     reveal = sampleReveal(
       participants,
