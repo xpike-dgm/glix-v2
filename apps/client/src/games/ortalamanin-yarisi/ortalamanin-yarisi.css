@@ -442,9 +442,12 @@
     width: 26px;
     height: 38px;
   }
+  /* Üst şeritle birlikte 8 satır sığmaz: satırlar ezilip üst üste binmesin, liste kendi içinde kaysın. */
   .rrows {
-    grid-auto-rows: minmax(0, 38px);
+    grid-auto-rows: 38px;
     gap: 5px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   .rrow {
     padding: 0 8px;
