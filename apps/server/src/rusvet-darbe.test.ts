@@ -16,12 +16,20 @@ interface Pub {
   president: string | null;
   budget: number | null;
   duel: null | { hand: number; candidates: string[]; signs: Record<string, string> | null };
-  reveal: null | { tokens: Record<string, number>; scores: Record<string, number> };
+  coup: null | { tokens: Record<string, number>; eligible: string[] };
+  ready: string[];
+  reveal: null | {
+    tokens: Record<string, number>;
+    scores: Record<string, number>;
+    coup: null | { eligible: string[]; yes: number; success: boolean };
+  };
 }
 interface Priv {
   myVote: string | null;
   mySign: string | null;
   myTokens: { to: string; n: number }[] | null;
+  myCoup: boolean | null;
+  canCoup: boolean;
 }
 
 async function startGame(cs: Client[]): Promise<void> {
@@ -115,16 +123,40 @@ describe("rüşvet ve darbe: oda içinde tam maç", () => {
     }
 
     k.clock.advance(25_000);
+    await until(() => pub().phase === "coup", "darbe oylaması");
+    // Dağılım açıldı; jeton almayan c ve d (başkan a ve alıcı b hariç) oy hakkına sahip.
+    expect(pub().coup?.tokens[ids[1]]).toBe(1);
+    expect(pub().coup?.eligible).toEqual([ids[2], ids[3]]);
+    expect(pub().reveal).toBeNull();
+    expect(await send(a, { kind: "give", tokens: [] })).toBe(false);
+    expect(await send(a, { kind: "coup", yes: true })).toBe(false); // başkan oy kullanamaz
+    expect(await send(b, { kind: "coup", yes: true })).toBe(false); // jeton aldı
+    expect(await send(c, { kind: "coup", yes: true })).toBe(true);
+    expect(await send(c, { kind: "coup", yes: false })).toBe(false); // tek seferlik
+    await sync();
+    // Oy gizli: yalnız sahibi görür, ortak görünümde yalnız kimin oy verdiği var.
+    expect(priv(c)?.myCoup).toBe(true);
+    for (const x of [a, b, d]) {
+      expect(priv(x)?.myCoup).toBeNull();
+      expect(JSON.stringify(x.room.match)).not.toMatch(/"yes"|"success"/);
+    }
+    expect(pub().ready).toEqual([ids[2]]);
+    expect(priv(d)?.canCoup).toBe(true);
+    expect(priv(a)?.canCoup).toBe(false);
+    expect(await send(d, { kind: "coup", yes: true })).toBe(true);
+    // Hak sahiplerinin hepsi oy verdi: aşama kısa sürede biter.
+    k.clock.advance(1_000);
     await until(() => pub().reveal !== null, "sonuç açıldı");
     expect(pub().reveal?.tokens[ids[1]]).toBe(1);
-    expect(await send(a, { kind: "give", tokens: [] })).toBe(false);
+    expect(pub().reveal?.coup).toEqual({ eligible: [ids[2], ids[3]], yes: 2, success: true });
 
     k.clock.advance(8_000);
     await until(() => a.room.phase === "results", "sonuç");
-    const awards = { [ids[0]]: 1, [ids[1]]: 1, [ids[2]]: 0, [ids[3]]: 0 };
+    // Darbe başarılı: başkanın +1'i iptal; jeton etkilenmez.
+    const awards = { [ids[0]]: 0, [ids[1]]: 1, [ids[2]]: 0, [ids[3]]: 0 };
     expect(a.room.match?.result?.awards).toEqual(awards);
     expect(a.room.match?.result?.miniScores).toEqual(awards);
-    expect(a.room.players.map((p) => p.score)).toEqual([1, 1, 0, 0]);
-    expect(d.room.players.map((p) => p.score)).toEqual([1, 1, 0, 0]);
+    expect(a.room.players.map((p) => p.score)).toEqual([0, 1, 0, 0]);
+    expect(d.room.players.map((p) => p.score)).toEqual([0, 1, 0, 0]);
   }, 30_000);
 });
