@@ -1734,8 +1734,11 @@ async function checkOneInner(page, st, scr, [w, h]) {
       window.requestAnimationFrame = () => 0;
       for (const a of document.getAnimations()) {
         const iterations = a.effect?.getTiming().iterations;
-        if (iterations === Number.POSITIVE_INFINITY) a.pause();
-        else a.finish();
+        if (iterations === Number.POSITIVE_INFINITY) {
+          // Sonsuz döngüler her koşuda aynı karede dursun (rastgele kare = kararsız kontrast ölçümü).
+          a.pause();
+          a.currentTime = 0;
+        } else a.finish();
       }
     });
     await paintFrames(page); // istenmiş son kare çizilsin
@@ -1765,8 +1768,10 @@ async function checkOneInner(page, st, scr, [w, h]) {
     await page.evaluate(() => {
       void document.body.offsetWidth;
       for (const a of document.getAnimations()) {
-        if (a.effect?.getTiming().iterations === Number.POSITIVE_INFINITY) a.pause();
-        else a.finish();
+        if (a.effect?.getTiming().iterations === Number.POSITIVE_INFINITY) {
+          a.pause();
+          a.currentTime = 0;
+        } else a.finish();
       }
     });
     await paintFrames(page);
