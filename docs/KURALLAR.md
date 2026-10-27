@@ -139,6 +139,17 @@ tasarladığı alanlar birlikte kilitlenir; kodlama bu kural seti üzerinden yap
   Görsel: Ortak kelime kristali etrafında dönen karakter maskeleri; sızmanın
   maskesi diğerlerinden farklı bir renk sızıntısıyla kısa süreli görünür.
 
+**Değişiklik (O11, Ekim 2026, sahip onayı) — aşağıdaki cevapların önüne geçer:**
+
+- Oylama bitince sızma açıklanmadan önce kısa bir **"fark ettin mi?" aşaması** (**8 saniye**) gelir. Her oyuncu, sızmanın kim olduğunu
+  ele vermemek için **herkese birden** gizlice "Sızma sen miydin?" sorusunu **Evet / Hayır** diye yanıtlar. Cevap tek seferliktir.
+  Cevap vermeyen "Hayır" sayılır. Herkes cevap verince aşama erken biter.
+- **Sızma "Evet" dediyse genel skorda ek +1 alır** (yakalansın ya da yakalanmasın; yakalanırsa 0+1, kurtulursa 2+1).
+  Sızma olmayanlar hangi cevabı verirse versin puan almaz, kaybetmez.
+- Cevaplar sızma açıklandıktan sonra açılır, yalnız sızmanın cevabı gösterilir: **"Sızma kendini fark etti!"** ya da
+  **"Sızma kendini fark etmedi"**. Diğer oyuncuların cevapları hiçbir zaman açılmaz.
+- Tutorial adımı 3: "Oylamaya geç, sızmayı bul; sonda 'Sızma sen miydin?' sorusunu yanıtla."
+
 ## 4. Sözlük Blöfü — `sozluk-blofu`
 
 **Durum: KİLİTLİ**
@@ -428,6 +439,18 @@ puan dağıtımıdır.
     ilgili avatara uçar. Eşitlikte kısa bir “darbe düellosu” kartı açılır ve
     taş-kağıt-makas işaretleri aynı anda çarpışır.
 
+**Değişiklik (O3, Ekim 2026, sahip onayı) — aşağıdaki cevapların önüne geçer:**
+
+- Dağıtım bittikten sonra jeton dağılımı açılır ve kısa bir **darbe oylaması** (**10 saniye**) başlar. Başkan dışında, bu raundda
+  **hiç jeton almamış (0 jeton)** her oyuncu oy hakkına sahiptir: **"Darbe"** ya da **"Darbe yok"**. Oy gizlidir ve tek seferliktir;
+  oy vermeyen "Darbe yok" sayılır. Hak sahibi olanların hepsi oy verince aşama erken biter.
+- Hak sahiplerinin **kesin çoğunluğu** (yarıdan fazlası; eşitlik çoğunluk değildir) "Darbe" derse **başkanın bu raunda ait kendi ödülü
+  (+1) iptal olur**. Dağıtılan jetonlar etkilenmez. Başkanlığı kaybettirmez, yalnız +1'i siler.
+- Hak sahibi yoksa (herkes jeton aldı) bu aşama atlanır.
+- Oylar hiçbir zaman açılmaz; yalnız sayı açılır ("Darbe: 3/4"). Hak sahibi olmayanlar aşama sürerken yalnızca
+  "Darbe oylaması sürüyor" görür.
+- Tutorial adımı 3: "Süre bitince başkan +1 alır (darbe olmazsa), jetonlar sahiplerine yansır. Jeton alamayanlar darbe yapabilir."
+
 ## 12. Açgözlülük Limiti — `acgozluluk-limiti`
 
 **Durum: KİLİTLİ**
@@ -547,6 +570,14 @@ faz 18 saniyelik tek kare seçimidir.
     genel skor alır ve mini oyun kapanır. Geçersiz seçimler nedeniyle hiç canlı
     oyuncu kalmazsa oyun puansız kapanır.
 
+**Değişiklik (O10, Ekim 2026, sahip onayı) — aşağıdaki cevapların önüne geçer:**
+
+- **2. aşamada** sunucu tohumlu rastgelelikle gizlice bir kareyi **"ödül karesi"** seçer. Kare hiçbir oyuncuya ya da ekrana
+  2. aşamanın sonucu açılana kadar bildirilmez; 2. aşamada yalnız "Gizli bir ödül karesi var" denir.
+- 2. aşamada ödül karesini **tek başına** seçen oyuncu, aşamadaki +1'e **ek olarak genel skorda +2** alır. Ödül karesini birden fazla
+  oyuncu seçtiyse **kimse ödül almaz** (çakışanlar zaten elenir). Kimse seçmediyse ödül verilmez.
+- 2. aşamanın sonucu açılırken ödül karesi parlama efektiyle gösterilir. 2. aşama hiç oynanmazsa (bkz. özel durumlar) ödül karesi yoktur.
+
 ## 15. Karalama Defteri — `karalama-defteri`
 
 **Durum: KİLİTLİ**
@@ -619,6 +650,17 @@ oylamadır.
     uygulama içinde teklif, söz veya anlaşma nesnesi oluşturulmaz. Oyuncu oy
     vermezse sunucu kendisi dışındaki rastgele bir rakibe oy verir. Oylama
     sonuçları açılana kadar hiç kimse alınan oy sayısını göremez.
+
+**Değişiklik (O4, Ekim 2026, sahip onayı) — aşağıdaki cevapların önüne geçer:**
+
+- Pazarlık aşamasında her oyuncu kendi dışında **en çok 2 kişiye** gizlice **"söz" işareti** koyabilir ("sana oy vereceğim").
+  İşaret yalnız bir hatırlatma ve itibar ölçüsüdür; **puanı yoktur**, oyu bağlamaz. Pazarlık bitince işaretler kilitlenir.
+- **Söz işaretleri sonuç açılana kadar yalnız sözü verene görünür. Alıcı da dahil kimse görmez** (sayısını bile). Böylece
+  söz hâlâ sözlü pazarlıkta verilir, işaret kimseyi rahatlatan açık bir sinyal olmaz ve blöf oyunu korunur.
+- Sonuç açılışında her söz, gerçek oyla karşılaştırılarak **tutuldu (✓)** ya da **bozuldu (✗)** diye gösterilir. Oy vermeyenin
+  sunucuca atanan oyu da sayılır. Cezası yoktur.
+- Puanlama değişmez: alınan her oy genel skora +1.
+- Tutorial adımı 3: "İstersen gizlice söz işareti koy; sonuç ekranında kimin sözünü tuttuğunu gör."
 
 ## 17. Son Kişi — `son-kisi`
 
