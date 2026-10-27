@@ -35,6 +35,7 @@ export function snapshot(phase: RoomPhase = "lobby", extra: Partial<RoomSnapshot
     gameIds: ["butona-bas"],
     selection: { mode: "manual" },
     tone: "arkadas",
+    lobbyReady: [],
     catalog: [
       { id: "butona-bas", name: "Butona Bas", minPlayers: 2, maxPlayers: 8, orientation: "portrait" },
     ],

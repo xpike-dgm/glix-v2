@@ -154,6 +154,7 @@ export function startCagrisimMock(kind: string, params: URLSearchParams): void {
       gameIds: ["cagrisim-agi"],
       selection: { mode: "manual" },
       tone: "arkadas",
+      lobbyReady: [],
       catalog: CATALOG,
       match: match(),
     };

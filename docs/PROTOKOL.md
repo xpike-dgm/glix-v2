@@ -13,13 +13,17 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `joinRoom` | `code`, `nickname`, isteğe bağlı `avatar` (0–7) | 5 karakter, büyük harfe çevrilir |
 | `resume` | `token` | yeniden bağlanma; başarısızsa `error{code:"resume_failed"}` |
 | `leaveRoom` | — | |
-| `kick` | `playerId` | yalnız host, yalnız lobide |
+| `kick` | `playerId` | yalnız host, yalnız lobide (maçta `wrong_phase`); kendini/olmayanı atamaz (`not_in_room`). Atılanın oturum anahtarı silinir; `resume` `resume_failed` döner. Oda koduyla yeniden katılma engellenmez |
+| `transferHost` | `playerId` | yalnız host, yalnız lobide; hedef odada ve bağlı olmalı, kendisi olamaz (`not_in_room`). Taç hedefe geçer, bekleyen host devri iptal olur, hedefin hazır işareti silinir |
+| `rename` | `nickname` | `normalizeNickname` kuralları; yalnız lobide (`wrong_phase`); odada başkasında olan ad (büyük/küçük harf duyarsız) `nickname_taken`; oyuncu başına 1 sn'de en çok bir değişiklik (`rate_limited`); aynı ad sessizce yok sayılır |
+| `react` | `emoji` | yalnız `LOBBY_EMOJIS` (👋 😂 🔥 😱 👏 ❤️), aksi `invalid_message`; yalnız lobide; oyuncu başına 700 ms'de bir. Fazlası ve lobi dışı **sessizce** atılır (hata yok). Cevap: herkese `reaction` olayı |
+| `setReady` | `ready` (boolean) | lobide "Hazırım" işareti; yalnız lobide (`wrong_phase`); host için sessizce yok sayılır. Başlamak için şart değildir |
 | `setGames` | `gameIds` | yalnız host, yalnız lobide; boş olamaz, tekrar yok; modu `manual` yapar |
 | `setRandom` | `count` | yalnız host, yalnız lobide; 1..katalog boyu; modu `random` yapar |
 | `chooseAvatar` | `avatar` (0–7) | yalnız lobide (`wrong_phase`); başkasında olan karakter `avatar_taken` ("Bu karakteri X aldı"), ilk gelen alır; aynı değer sessizce yok sayılır |
 | `setTone` | `tone` (`aile`\|`arkadas`\|`ofis`) | yalnız host, yalnız lobide; başka değer `invalid_message`, maçta `wrong_phase`, host değilse `not_host`; aynı değer sessizce yok sayılır |
 | `startMatch` | — | yalnız host; bağlı oyuncu sayısı tüm seçili oyunların min'ini karşılamalı |
-| `ready` | — | yalnız `briefing` aşamasında |
+| `ready` | — | yalnız `briefing` aşamasında (lobi işareti için `setReady`) |
 | `action` | `seq`, `payload` | yalnız `playing`; `seq` istemci sayacı, `actionAck` ile döner |
 | `returnToLobby` | — | yalnız host, yalnız `final` |
 | `resync` | — | yama uygulanamadığında tam `room` snapshot ister |
@@ -37,6 +41,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `patch` | `baseRev`, `rev`, `patch` — sonraki değişimler, JSON Merge Patch (RFC 7386) |
 | `actionAck` | `seq`, `ok`, `reason?` |
 | `left` | `reason: "left" \| "kicked" \| "closed"` |
+| `reaction` | `playerId`, `emoji` | **Geçici olay**: oda durumunda (`room`/`patch`) saklanmaz, `rev` almaz, yeniden bağlanana tekrarlanmaz. Lobide gönderenle birlikte odadaki tüm bağlı oyunculara gider |
 | `error` | `code`, `message` (Türkçe, oyuncuya gösterilebilir) |
 
 **Görünümler:** `match.publicView` odadaki herkes için aynıdır (oda başına bir kez hesaplanır ve
@@ -47,6 +52,18 @@ farklanır); `match.view` yalnız o oyuncuya özeldir. Gizli bilgi yalnız `view
 Fark tam snapshot'tan büyükse sunucu doğrudan `room` gönderir. Hiçbir görünür alan değişmediyse mesaj
 gönderilmez; `rev` ve `serverNow` yalnız gönderilen mesajlarda ilerler (istemci saati ping/pong ile eşler,
 `serverNow`'a ihtiyaç duymaz).
+
+## Lobi: hazır işareti, emoji, yönetim
+
+- `RoomSnapshot.lobbyReady`: `setReady` diyen, bağlı, host olmayan oyuncuların kimlikleri. Lobi dışında boştur; maç başlayınca ve
+  maç sonunda lobiye dönünce (ya da maç yarıda iptal olunca) sıfırlanır. Host olan oyuncunun işareti düşer.
+  İstemci "herkes hazır" durumunu `allReady(snapshot)` ile hesaplar (host dışındaki bağlı oyuncular hazır, en az biri var);
+  yalnızca Başlat düğmesini parlatır, sunucu `startMatch`'te hazır olmayı aramaz.
+- Emoji tepkisi odanın bir parçası değildir: sunucu `reaction` mesajını anında yollar ve unutur. Hız sınırı oyuncu başına
+  (`REACTION_MIN_GAP_MS` = 700), ayrıca genel mesaj kovası geçerlidir.
+- Takma ad benzersizliği: katılırken çakışan ad otomatik numaralanır ("Ali 2"); lobide `rename` çakışmayı numaralamaz, reddeder.
+- Yeniden katılma kararı: atılan oyuncu kodu bilerek tekrar girebilir (kalıcı yasak için kimlik yok; IP/ad yasağı kırılgan).
+  Eski oturum anahtarı ise geçersizdir, sessizce odaya dönemez.
 
 ## İçerik tonu
 
@@ -91,7 +108,7 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
 ## Hata kodları
 
 `invalid_message`, `rate_limited`, `nickname_invalid`, `room_not_found`, `room_full`, `match_in_progress`,
-`resume_failed`, `not_host`, `not_in_room`, `already_in_room`, `invalid_games`, `avatar_taken`, `not_enough_players`,
+`resume_failed`, `nickname_taken`, `not_host`, `not_in_room`, `already_in_room`, `invalid_games`, `avatar_taken`, `not_enough_players`,
 `wrong_phase`, `not_participant`, `game_failed`, `draining`, `server_busy`.
 
 ## Sınırlar (sunucu)

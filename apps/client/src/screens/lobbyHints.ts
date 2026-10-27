@@ -26,3 +26,24 @@ export function friendsHint(missing: number): string {
 export function playerCounter(count: number, max: number, min: number): string {
   return `${count}/${max} oyuncu · en az ${min} gerekli`;
 }
+
+/** Oyun kartındaki alt yazı: yeterli kişi yoksa "en az N kişi", varsa oyuncu aralığı. */
+export function gameTag(game: GameInfo, connected: number): string {
+  return game.minPlayers > connected
+    ? `en az ${game.minPlayers} kişi`
+    : `${game.minPlayers}–${game.maxPlayers} oyuncu`;
+}
+
+/** Şu an yeterli oyuncu yok mu (kart soluk görünür ama seçilebilir). */
+export function isGameDim(game: GameInfo, connected: number): boolean {
+  return game.minPlayers > connected;
+}
+
+/** Oyuncu olmayanlar için salt okunur özet: "Bu gece: 3 oyun" ya da "Rastgele · 5". */
+export function selectionSummary(
+  mode: "random" | "manual",
+  randomCount: number,
+  selectedCount: number,
+): string {
+  return mode === "random" ? `Rastgele · ${randomCount}` : `Bu gece: ${selectedCount} oyun`;
+}

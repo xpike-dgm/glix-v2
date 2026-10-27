@@ -134,6 +134,9 @@ export function addPlayer(
     conn,
     room,
     graceCancel: null,
+    lobbyReady: false,
+    lastReactAt: Number.NEGATIVE_INFINITY,
+    lastRenameAt: Number.NEGATIVE_INFINITY,
   };
   room.players.set(id, player);
   rt.tokens.set(player.token, player);
@@ -161,7 +164,29 @@ export function transferHost(room: Room): void {
   clearHostGrace(room);
   const players = [...room.players.values()];
   const next = oldest(players.filter(isConnected)) ?? oldest(players);
-  if (next) room.hostId = next.id;
+  if (next) {
+    room.hostId = next.id;
+    next.lobbyReady = false;
+  }
+}
+
+/** Başka oyuncuyu host yapar (host kendi isteğiyle devreder). */
+export function setHost(room: Room, next: Player): void {
+  clearHostGrace(room);
+  room.hostId = next.id;
+  next.lobbyReady = false;
+}
+
+/** Odadaki herkesin lobi hazır işaretini kaldırır. */
+export function resetLobbyReady(room: Room): void {
+  for (const p of room.players.values()) p.lobbyReady = false;
+}
+
+/** Adı başka biri kullanıyor mu (büyük/küçük harf duyarsız). */
+export function isNicknameTaken(room: Room, nickname: string, except?: Player): boolean {
+  const wanted = nickname.toLowerCase();
+  for (const p of room.players.values()) if (p !== except && p.nickname.toLowerCase() === wanted) return true;
+  return false;
 }
 
 /** Oyuncuyu odadan çıkarır; bağlantısını odadan ayırır (soket açık kalır). */

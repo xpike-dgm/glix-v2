@@ -12,6 +12,16 @@ export const MAX_NICKNAME_LENGTH = 16;
 /** El ile seçimde en çok oyun (katalogdan büyük olmalı; `setRandom` sınırıyla aynı). */
 export const MAX_SELECTED_GAMES = 64;
 
+/** Lobide gönderilebilen sabit emoji kümesi (sunucu bu listeyle doğrular). */
+export const LOBBY_EMOJIS = ["👋", "😂", "🔥", "😱", "👏", "❤️"] as const;
+export type LobbyEmoji = (typeof LOBBY_EMOJIS)[number];
+/** Aynı oyuncunun iki emoji arasındaki en kısa süre; fazlası sessizce atılır. */
+export const REACTION_MIN_GAP_MS = 700;
+
+export function isLobbyEmoji(value: unknown): value is LobbyEmoji {
+  return typeof value === "string" && (LOBBY_EMOJIS as readonly string[]).includes(value);
+}
+
 // Akış ayrıntıları: docs/PROTOKOL.md
 
 export type ClientMessage =
@@ -22,9 +32,17 @@ export type ClientMessage =
   | { type: "joinRoom"; code: string; nickname: string; avatar?: number }
   /** Lobide karakter değiştir (yalnız lobi; odada benzersiz, ilk gelen alır). */
   | { type: "chooseAvatar"; avatar: number }
+  /** Lobide takma ad değiştir (yalnız lobi; odada benzersiz). */
+  | { type: "rename"; nickname: string }
+  /** Lobide emoji tepkisi (sabit küme, yalnız lobi, oyuncu başına 700 ms'de bir). Sunucu herkese `reaction` yollar. */
+  | { type: "react"; emoji: LobbyEmoji }
+  /** Lobide "Hazırım" işareti (host dışı oyuncular; yalnız lobi). Başlamak için şart değildir. */
+  | { type: "setReady"; ready: boolean }
   | { type: "resume"; token: string }
   | { type: "leaveRoom" }
   | { type: "kick"; playerId: string }
+  /** Ev sahipliğini devret (yalnız host, yalnız lobi; hedef odada ve bağlı olmalı). */
+  | { type: "transferHost"; playerId: string }
   | { type: "setGames"; gameIds: string[] }
   /** Rastgele mod: maç başında uygun oyunlar arasından `count` tanesi seçilir (1..katalog). */
   | { type: "setRandom"; count: number }
@@ -87,6 +105,7 @@ export type ErrorCode =
   | "already_in_room"
   | "invalid_games"
   | "avatar_taken"
+  | "nickname_taken"
   | "not_enough_players"
   | "wrong_phase"
   | "not_participant"
@@ -151,7 +170,9 @@ export interface RoomSnapshot {
   selection: { mode: "manual" } | { mode: "random"; count: number };
   /** Odanın içerik tonu; yeni oda: arkadaş. */
   tone: ContentTone;
-  /** Sunucudaki tüm oyunlar (Minigame Seçimi için). */
+  /** Lobide "Hazırım" diyen (host olmayan) oyuncuların kimlikleri; lobi dışında boştur. */
+  lobbyReady: string[];
+  /** Sunucudaki tüm oyunlar (Oyunlar bölümü için). */
   catalog: GameInfo[];
   match: MatchSnapshot | null;
 }
@@ -167,6 +188,8 @@ export type ServerMessage =
   | { type: "patch"; baseRev: number; rev: number; patch: MergePatch }
   | { type: "actionAck"; seq: number; ok: boolean; reason?: string }
   | { type: "left"; reason: LeftReason }
+  /** Geçici olay (oda durumunda saklanmaz): lobide `playerId` bir emoji gönderdi. */
+  | { type: "reaction"; playerId: string; emoji: LobbyEmoji }
   | { type: "error"; code: ErrorCode; message: string };
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -187,6 +210,15 @@ const LETTER_OR_DIGIT = /[\p{L}\p{N}]/u;
 const WHITESPACE_RUN = /\s+/gu;
 const CODE_PATTERN = /^[A-Z0-9]{5}$/;
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
+
+/**
+ * Herkes hazır mı: host dışındaki bağlı oyuncuların hepsi hazır ve en az bir kişi var.
+ * Başlamak için hazır olmak gerekmez; yalnız Başlat düğmesinin parlamasına bakar.
+ */
+export function allReady(snap: Pick<RoomSnapshot, "players" | "hostId" | "lobbyReady">): boolean {
+  const others = snap.players.filter((p) => p.connected && p.id !== snap.hostId);
+  return others.length > 0 && others.every((p) => snap.lobbyReady.includes(p.id));
+}
 
 /** Takma adı temizler (kırp, iç boşlukları tek boşluğa indir). Geçersizse null. */
 export function normalizeNickname(value: unknown): string | null {
@@ -272,6 +304,25 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       if (!hasExactKeys(data, ["type", "avatar"])) return null;
       const avatar = parseAvatar(data.avatar);
       return avatar === null ? null : { type: "chooseAvatar", avatar };
+    }
+    case "rename": {
+      if (!hasExactKeys(data, ["type", "nickname"])) return null;
+      const nickname = normalizeNickname(data.nickname);
+      return nickname === null ? null : { type: "rename", nickname };
+    }
+    case "react": {
+      if (!hasExactKeys(data, ["type", "emoji"])) return null;
+      return isLobbyEmoji(data.emoji) ? { type: "react", emoji: data.emoji } : null;
+    }
+    case "setReady": {
+      if (!hasExactKeys(data, ["type", "ready"])) return null;
+      return typeof data.ready === "boolean" ? { type: "setReady", ready: data.ready } : null;
+    }
+    case "transferHost": {
+      if (!hasExactKeys(data, ["type", "playerId"])) return null;
+      const id = data.playerId;
+      if (typeof id !== "string" || id.length === 0 || id.length > 64) return null;
+      return { type: "transferHost", playerId: id };
     }
     case "resume": {
       if (!hasExactKeys(data, ["type", "token"])) return null;

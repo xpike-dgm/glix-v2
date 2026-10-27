@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_FEEDBACK_TEXT, PERF_LIMITS, parseClientMessage } from "./protocol.js";
+import { allReady, LOBBY_EMOJIS, MAX_FEEDBACK_TEXT, PERF_LIMITS, parseClientMessage } from "./protocol.js";
 
 describe("parseClientMessage", () => {
   it("hello kabul eder", () => {
@@ -246,5 +246,58 @@ describe("parseClientMessage: oda mesajları", () => {
       expect(parseClientMessage(j({ ...ok, gameId: "a".repeat(64) }))).not.toBeNull();
       expect(parseClientMessage(j({ ...ok, gameId: 5 }))).toBeNull();
     });
+  });
+});
+
+describe("lobi mesajları (rename, react, setReady, transferHost)", () => {
+  const parse = (v: unknown) => parseClientMessage(JSON.stringify(v));
+
+  it("rename: takma adı temizler ve geçersizini reddeder", () => {
+    expect(parse({ type: "rename", nickname: "  Ali  Veli " })).toEqual({
+      type: "rename",
+      nickname: "Ali Veli",
+    });
+    for (const nickname of ["", "   ", "🙂", "a".repeat(17), 5, null, "a‮b"])
+      expect(parse({ type: "rename", nickname })).toBeNull();
+    expect(parse({ type: "rename" })).toBeNull();
+    expect(parse({ type: "rename", nickname: "Ali", extra: 1 })).toBeNull();
+  });
+
+  it("react: yalnız sabit emoji kümesi", () => {
+    for (const emoji of LOBBY_EMOJIS)
+      expect(parse({ type: "react", emoji })).toEqual({ type: "react", emoji });
+    for (const emoji of ["💩", "", "🔥🔥", "fire", 1, null, "❤"])
+      expect(parse({ type: "react", emoji })).toBeNull();
+    expect(parse({ type: "react" })).toBeNull();
+    expect(parse({ type: "react", emoji: "🔥", x: 1 })).toBeNull();
+  });
+
+  it("setReady: yalnız boolean", () => {
+    expect(parse({ type: "setReady", ready: true })).toEqual({ type: "setReady", ready: true });
+    expect(parse({ type: "setReady", ready: false })).toEqual({ type: "setReady", ready: false });
+    for (const ready of [1, "true", null, undefined]) expect(parse({ type: "setReady", ready })).toBeNull();
+    expect(parse({ type: "setReady" })).toBeNull();
+  });
+
+  it("transferHost: playerId zorunlu, 1-64 karakter", () => {
+    expect(parse({ type: "transferHost", playerId: "abc" })).toEqual({
+      type: "transferHost",
+      playerId: "abc",
+    });
+    for (const playerId of ["", "x".repeat(65), 1, null])
+      expect(parse({ type: "transferHost", playerId })).toBeNull();
+    expect(parse({ type: "transferHost" })).toBeNull();
+    expect(parse({ type: "transferHost", playerId: "a", extra: 1 })).toBeNull();
+  });
+
+  it("allReady: bağlı ve host olmayan herkes hazır olmalı, en az bir kişi", () => {
+    const p = (id: string, connected = true) => ({ id, nickname: id, avatar: 0, connected, score: 0 });
+    const base = { hostId: "h", players: [p("h"), p("a"), p("b")], lobbyReady: [] as string[] };
+    expect(allReady(base)).toBe(false);
+    expect(allReady({ ...base, lobbyReady: ["a"] })).toBe(false);
+    expect(allReady({ ...base, lobbyReady: ["a", "b"] })).toBe(true);
+    expect(allReady({ ...base, players: [p("h"), p("a"), p("b", false)], lobbyReady: ["a"] })).toBe(true);
+    expect(allReady({ ...base, players: [p("h")] })).toBe(false);
+    expect(allReady({ ...base, players: [p("h"), p("a", false)] })).toBe(false);
   });
 });

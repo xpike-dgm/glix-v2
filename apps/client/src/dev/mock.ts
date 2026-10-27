@@ -19,6 +19,7 @@ import {
   type ButonaBasWindowResult,
 } from "@glix/engine";
 import { useMockSender } from "../net/client.js";
+import { emitReaction } from "../net/reactions.js";
 import { applySnapshot, setState } from "../net/store.js";
 
 const NAMES = ["Cihad", "Elif", "Mert", "Zeynep", "Kaan", "Defne", "Burak", "Ayşe"];
@@ -50,6 +51,12 @@ export function startMock(kind: string, params: URLSearchParams): void {
   let gameIds = selection.mode === "manual" ? ["butona-bas"] : [];
   let phase: RoomPhase = "lobby";
   let readyIds: string[] = [];
+  const hostId = params.get("guest") === "1" ? "p1" : SELF;
+  // `&ready=K`: host dışındaki ilk K oyuncu lobide "Hazırım" demiş olur.
+  let lobbyReady: string[] = players
+    .filter((p) => p.id !== hostId && p.connected)
+    .slice(0, Math.max(0, Number(params.get("ready")) || 0))
+    .map((p) => p.id);
   let phaseStartedAt = Date.now();
   let phaseEndsAt: number | null = null;
   let result: MatchSnapshot["result"] = null;
@@ -97,13 +104,14 @@ export function startMock(kind: string, params: URLSearchParams): void {
       rev: ++rev,
       serverNow: Date.now(),
       code: "KX7QP",
-      hostId: params.get("guest") === "1" ? "p1" : SELF,
+      hostId,
       selfId: SELF,
       phase,
       players,
       gameIds,
       selection,
       tone,
+      lobbyReady: phase === "lobby" ? lobbyReady : [],
       catalog: CATALOG,
       match: match(),
     };
@@ -211,6 +219,17 @@ export function startMock(kind: string, params: URLSearchParams): void {
         publish();
         break;
       }
+      case "setReady":
+        lobbyReady = msg.ready ? [...new Set([...lobbyReady, SELF])] : lobbyReady.filter((id) => id !== SELF);
+        publish();
+        break;
+      case "rename":
+        players = players.map((p) => (p.id === SELF ? { ...p, nickname: msg.nickname } : p));
+        publish();
+        break;
+      case "react":
+        emitReaction(SELF, msg.emoji);
+        break;
       case "kick":
         players = players.filter((p) => p.id !== msg.playerId);
         publish();
@@ -274,6 +293,18 @@ export function startMock(kind: string, params: URLSearchParams): void {
       break;
     default:
       publish();
+  }
+  // `&emoji=1`: lobide birkaç oyuncudan emoji uçar (ekran denetimi için).
+  if (kind === "lobby" && params.get("emoji") === "1") {
+    const picks = ["😂", "🔥", "👏", "😱"] as const;
+    const burst = (): void => {
+      players.slice(0, 4).forEach((p, i) => {
+        const emoji = picks[i % picks.length];
+        if (emoji) emitReaction(p.id, emoji);
+      });
+    };
+    // Ekran görüntüsü uçuşun ortasına denk gelsin diye tekrarlanır.
+    for (let k = 0; k < 8; k++) later(burst, 250 + k * 700);
   }
   if (kind === "home" || kind === "join" || kind === "settings" || kind === "notfound")
     setState("session", null);

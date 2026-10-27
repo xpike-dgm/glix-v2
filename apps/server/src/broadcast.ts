@@ -51,6 +51,13 @@ function sendPatchOrRoom(conn: Connection, baseRev: number, snapshot: RoomSnapsh
   conn.sendRaw(text);
 }
 
+/** Hazır işaretli, bağlı, host olmayan oyuncular (katılım sırasıyla). */
+function lobbyReadyIds(room: Room): string[] {
+  return [...room.players.values()]
+    .filter((p) => p.lobbyReady && p.id !== room.hostId && p.conn !== null)
+    .map((p) => p.id);
+}
+
 type Shared = Omit<RoomSnapshot, "rev" | "serverNow" | "selfId" | "match"> & {
   match: Omit<NonNullable<RoomSnapshot["match"]>, "view"> | null;
 };
@@ -86,6 +93,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       gameIds: [...room.gameIds],
       selection: { ...room.selection },
       tone: room.tone,
+      lobbyReady: room.phase === "lobby" ? lobbyReadyIds(room) : [],
       catalog: rt.catalog,
       match: sharedMatch,
     };

@@ -1,10 +1,17 @@
-import { APP_VERSION, type ClientMessage, type ContentTone, type RoomSnapshot } from "@glix/engine";
+import {
+  APP_VERSION,
+  type ClientMessage,
+  type ContentTone,
+  type LobbyEmoji,
+  type RoomSnapshot,
+} from "@glix/engine";
 import { noteServerRestart } from "../pwa/pwa.js";
 import { CLIENT_PROTOCOL_VERSION, isProtocolMismatch } from "../pwa/updatePolicy.js";
 import { installPerfObservers, perf, trackPerf } from "../telemetry/perf.js";
 import { resolveWsUrl } from "../wsUrl.js";
 import { offsetFromPong } from "./clock.js";
 import { parseServerMessage } from "./parse.js";
+import { emitReaction } from "./reactions.js";
 import { decideOnReturn, PROBE_TIMEOUT_MS, reconnectNotice } from "./resume.js";
 import { KEYS, readAvatarChoice, readStored, removeStored, writeStored } from "./storage.js";
 import {
@@ -32,6 +39,7 @@ const SHOWN_ERRORS = new Set([
   "not_enough_players",
   "invalid_games",
   "avatar_taken",
+  "nickname_taken",
   "draining",
   "server_busy",
   "game_failed",
@@ -165,8 +173,11 @@ function onMessage(raw: string): void {
       removeStored(KEYS.token);
       clearRoom();
       goHome();
-      if (msg.reason === "kicked") toast("Odadan çıkarıldın", "error");
+      if (msg.reason === "kicked") toast("Ev sahibi seni odadan çıkardı", "error");
       else if (msg.reason === "closed") toast("Oda kapandı");
+      break;
+    case "reaction":
+      emitReaction(msg.playerId, msg.emoji);
       break;
     case "error":
       handleError(msg.code, msg.message);
@@ -386,6 +397,10 @@ export function chooseAvatar(avatar: number): Promise<ActionAck> {
     rawSend({ type: "chooseAvatar", avatar }) ? { ok: true } : { ok: false, reason: "offline" },
   );
 }
+export const transferHost = (playerId: string): boolean => rawSend({ type: "transferHost", playerId });
+export const setLobbyReady = (ready: boolean): boolean => rawSend({ type: "setReady", ready });
+export const sendReaction = (emoji: LobbyEmoji): boolean => rawSend({ type: "react", emoji });
+export const renameSelf = (nickname: string): boolean => rawSend({ type: "rename", nickname });
 export const startMatch = (): boolean => rawSend({ type: "startMatch" });
 export const sendReady = (): boolean => rawSend({ type: "ready" });
 export const returnToLobby = (): boolean => rawSend({ type: "returnToLobby" });

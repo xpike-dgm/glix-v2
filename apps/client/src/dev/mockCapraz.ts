@@ -98,6 +98,7 @@ export function startCaprazMock(kind: string, params: URLSearchParams): void {
       gameIds: [info.id],
       selection: { mode: "manual" },
       tone: "arkadas",
+      lobbyReady: [],
       catalog: [
         {
           id: info.id,

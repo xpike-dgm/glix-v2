@@ -1754,7 +1754,7 @@
 /* ---- Lobi: yalnızken sıcak ekran, davet, karakter seçici ---- */
 .solo {
   /* Üst şerit, kod ve Başlat ~330 px yer tutar; kalan yüksekliğe göre büyür. */
-  --room: calc(100dvh - 330px);
+  --room: calc(100dvh - 375px);
   --solo-mascot: clamp(56px, calc(var(--room) * 0.26), 150px);
   display: flex;
   flex-direction: column;
@@ -1934,4 +1934,213 @@
 }
 .solo__me:active {
   transform: scale(0.95);
+}
+
+/* ---- Lobi: emoji, hazırım, oyuncu yönetimi ---- */
+.seat {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.games--summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+}
+/* Yetersiz oyunculu oyun: görsel ve ad soluk, "en az N kişi" yazısı okunur kalır. */
+.gcard--dim .gcard__art {
+  opacity: 0.4;
+}
+.gcard--dim .gcard__name {
+  opacity: 0.7;
+}
+.emojibar {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  /* 6 × 48 px dar telefonda gutter'a taşar: kenar boşluğuna kadar uzanır. */
+  margin: 0 -6px;
+  padding-top: 6px;
+}
+.emojibar__btn {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 24px;
+  line-height: 1;
+  background: rgba(10, 16, 48, 0.6);
+  border: 1.5px solid var(--line);
+  transition:
+    transform 80ms var(--ease),
+    background 120ms;
+}
+.emojibar__btn:active {
+  transform: scale(0.88);
+  background: rgba(46, 242, 255, 0.14);
+}
+.reactions {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 40;
+}
+.reaction {
+  position: absolute;
+  font-size: 34px;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+  animation: reaction-float var(--flight, 1500ms) cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+}
+@keyframes reaction-float {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -30%) scale(0.5);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -70%) scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--drift, 0px)), -260%) scale(1);
+  }
+}
+/* Hareket azaltma: uçmaz, avatarın köşesinde sabit rozet olarak durur. */
+.reaction--still {
+  animation: none;
+  font-size: 26px;
+  padding: 3px;
+  border-radius: 50%;
+  background: var(--bg-0);
+  box-shadow: 0 0 0 2px var(--line);
+  transform: translate(-50%, -50%);
+}
+.pbtn.pbtn--glow {
+  animation: start-glow 1.4s ease-in-out infinite;
+  box-shadow:
+    0 4px 0 var(--edge),
+    0 0 30px 6px rgba(46, 242, 255, 0.8);
+}
+@keyframes start-glow {
+  50% {
+    box-shadow:
+      0 4px 0 var(--edge),
+      0 0 46px 12px rgba(46, 242, 255, 1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .pbtn--glow {
+    animation: none;
+  }
+}
+:root[data-motion="reduce"] .pbtn--glow {
+  animation: none;
+}
+.nickedit {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.nickedit__field {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  font-size: var(--fs-17, 17px);
+  padding: 0 14px;
+}
+.nickedit__field[aria-invalid="true"] {
+  border-color: var(--danger, #ff5d73);
+}
+.nickedit__save {
+  flex: none;
+  min-width: 84px;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: var(--r-btn);
+  border: 1.5px solid var(--cyan);
+  color: var(--cyan);
+  font-weight: 700;
+  font-size: var(--fs-15);
+}
+.nickedit__save:disabled {
+  opacity: 0.4;
+  border-color: var(--line);
+  color: var(--text-dim);
+}
+.picker__label {
+  margin-bottom: 4px;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+@media (orientation: landscape) and (max-height: 480px) {
+  .lobby .emojibar {
+    grid-column: 2;
+    grid-row: 4;
+    align-self: end;
+  }
+}
+
+/* Kısa dikey ekran (320x568): 8 oyuncu + emoji çubuğu + Başlat kaydırmasız sığsın. */
+@media (orientation: portrait) and (max-height: 640px) {
+  .lobby .lobby__scroll {
+    margin-top: 6px;
+    padding-bottom: 8px;
+  }
+  .lobby .seat__name {
+    margin-top: 8px;
+  }
+  .lobby .seats__more {
+    display: none;
+  }
+  .lobby .games__head,
+  .lobby .games--summary {
+    min-height: 48px;
+  }
+  .lobby .lobby__foot {
+    padding-top: 4px;
+  }
+  .lobby .emojibar {
+    padding-top: 2px;
+  }
+  .solo {
+    --solo-mascot: 48px;
+  }
+  .solo__qr {
+    width: 84px;
+    height: 84px;
+  }
+}
+@media (orientation: landscape) and (max-height: 480px) {
+  .solo {
+    --room: calc(100dvh - 190px);
+  }
+  .solo__text {
+    display: none;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 480px) {
+  /* Yatayda takma ad solda, karakterler sağda: pencere kısa kalır. */
+  .pickersheet {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.6fr);
+    gap: 16px;
+    align-items: start;
+  }
+  .nickedit {
+    flex-direction: column;
+    margin-bottom: 0;
+  }
+  .nickedit__field {
+    flex: none;
+  }
+  .nickedit__save {
+    width: 100%;
+  }
 }

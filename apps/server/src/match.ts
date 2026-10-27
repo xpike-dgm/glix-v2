@@ -166,6 +166,7 @@ export function beginMatch(rt: Runtime, room: Room): void {
     perfBy: new Set(),
   };
   room.match = match;
+  for (const p of room.players.values()) p.lobbyReady = false;
   enterBriefing(rt, room, match);
   rt.active.add(room);
 }
@@ -195,6 +196,7 @@ export function clearMatch(rt: Runtime, room: Room, outcome: "aborted" | "failed
   if (room.match) endMatchStats(rt, room.match, outcome);
   room.match = null;
   room.phase = "lobby";
+  for (const p of room.players.values()) p.lobbyReady = false;
   if (room.selection.mode === "random") room.gameIds = [];
   rt.active.delete(room);
 }

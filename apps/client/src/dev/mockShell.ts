@@ -121,6 +121,7 @@ export function startShellMock(kind: string, params: URLSearchParams): void {
     gameIds: [game.id],
     selection: { mode: "manual" },
     tone: "arkadas",
+    lobbyReady: [],
     catalog: CATALOG,
     match,
   };
