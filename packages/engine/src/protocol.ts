@@ -172,7 +172,7 @@ export interface RoomSnapshot {
   tone: ContentTone;
   /** Lobide "Hazırım" diyen (host olmayan) oyuncuların kimlikleri; lobi dışında boştur. */
   lobbyReady: string[];
-  /** Sunucudaki tüm oyunlar (Minigame Seçimi için). */
+  /** Sunucudaki tüm oyunlar (Oyunlar bölümü için). */
   catalog: GameInfo[];
   match: MatchSnapshot | null;
 }

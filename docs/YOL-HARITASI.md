@@ -41,13 +41,13 @@ Sırayla yapılacak:
 - [x] Katılma anı: avatar kayarak/zıplayarak girer, kısa ses + titreşim.
 
 **C. Bekleme süresini değerli yap**
-- [ ] Oyun seçimi (kartlı liste), ton ve tur ayarları oyuncu sayısından bağımsız baştan görünür; yetersiz sayıdaki oyunlar soluk + "en az N kişi".
-- [ ] Avatara dokun → düzenle: renk, ifade, takma ad.
-- [ ] Emoji tepkileri: lobide herkes emoji atar, avatarın üstünde uçar (hız sınırlı, sunucu doğrular).
-- [ ] "Hazırım" işareti; herkes hazırsa Başlat parlar.
+- [x] Oyun seçimi (kartlı liste), ton ve tur ayarları oyuncu sayısından bağımsız baştan görünür; yetersiz sayıdaki oyunlar soluk + "en az N kişi". (Başlık "Oyunlar"; host için açılır panel, diğerleri için salt okunur özet.)
+- [x] Avatara dokun → düzenle: renk, ifade, takma ad. (Karakter + takma ad; ifade yalnız oyun olaylarıyla değişen bir tepki olduğundan seçilmez.)
+- [x] Emoji tepkileri: lobide herkes emoji atar, avatarın üstünde uçar (hız sınırlı, sunucu doğrular).
+- [x] "Hazırım" işareti; herkes hazırsa Başlat parlar.
 
 **D. Ev sahibi kontrolleri**
-- [ ] Oyuncuya basılı tut → "Odadan çıkar" / "Ev sahipliğini devret".
+- [x] Oyuncuya basılı tut → "Odadan çıkar" / "Ev sahipliğini devret".
 - [ ] Oda kilidi: oyun başlayınca yeni giriş yalnız izleyici olarak (ya da kapalı) — kural KURALLAR.md'ye yazılmadan uygulanmaz.
 
 **E. Görsel**

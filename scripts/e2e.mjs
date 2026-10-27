@@ -114,6 +114,17 @@ function watch(label, page) {
 }
 
 const btn = (page, re) => page.getByRole("button", { name: re });
+
+/** Oyuncu koltuğuna 0,7 sn basılı tutar (ev sahibi menüsü). */
+async function longPressSeat(page, name) {
+  const seat = page.locator("button.seat:not(.seat--empty)", { hasText: name });
+  const box = await seat.boundingBox();
+  assert(box, `${name} koltuğu yok`);
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await sleep(700);
+  await page.mouse.up();
+}
 const OPT = { timeout: 15_000 };
 
 async function shot(page, name) {
@@ -315,7 +326,7 @@ async function main() {
       (await head.locator(".games__count").innerText()).trim() === "Rastgele · 5",
       "akordeon başlığı 'Rastgele · 5' göstermeli",
     );
-    await btn(A, /minigame seçimi/i).click();
+    await A.locator(".games__head").click();
     await A.locator(".seg__opt", { hasText: "Rastgele" }).waitFor(OPT);
     await shot(A, "05a-lobby-random");
     assert(
@@ -347,7 +358,7 @@ async function main() {
       (await head.locator(".games__count").innerText()).trim() === "1 oyun",
       "el ile modda başlık '1 oyun' göstermeli",
     );
-    await btn(A, /minigame seçimi/i).click();
+    await A.locator(".games__head").click();
 
     // Olmayan oda: nazik mesaj + ANA SAYFA
     const ctxD = await mk();
@@ -378,13 +389,17 @@ async function main() {
     log("lobide host yenileme: oda ve host korunuyor");
 
     // 5) A, C'yi çıkarır
+    // Oyuncu menüsü basılı tutarak açılır; kısa dokunuş menü açmaz
     await A.locator("button.seat:not(.seat--empty)", { hasText: "Cem" }).click();
+    await A.getByRole("dialog").waitFor({ state: "detached", ...OPT });
+    await longPressSeat(A, "Cem");
     const kickSheet = A.getByRole("dialog");
     await kickSheet.waitFor(OPT);
     await shot(A, "06-kick-sheet");
-    await kickSheet.getByRole("button", { name: /^çıkar$/i }).click();
+    await kickSheet.getByRole("button", { name: "Odadan çıkar", exact: true }).click();
+    await kickSheet.getByRole("button", { name: "Çıkar", exact: true }).click();
     await btn(C, /oda kur/i).waitFor(OPT);
-    await C.getByText("Odadan çıkarıldın").waitFor(OPT);
+    await C.getByText("Ev sahibi seni odadan çıkardı", { exact: true }).waitFor(OPT);
     await shot(C, "07-c-kicked");
     await A.waitForFunction(
       () => document.querySelectorAll("button.seat:not(.seat--empty)").length === 2,
@@ -402,8 +417,55 @@ async function main() {
     assert((await seatsCount(B)) === 3, "B üç oyuncu görmeli");
     log("çıkarma ve yeniden katılma tamam");
 
+    // 5b) Hazırım: B ve C işaretler, A'da rozet görünür; herkes hazırsa BAŞLAT parlar; hazır olmak şart değil
+    const readyBadges = () => A.locator("button.seat .av__badge--ready").count();
+    await btn(B, /^hazırım$/i).click();
+    await A.waitForFunction(
+      () => document.querySelectorAll("button.seat .av__badge--ready").length === 1,
+      null,
+      OPT,
+    );
+    assert((await A.locator(".pbtn--glow").count()) === 0, "herkes hazır değilken BAŞLAT parlamamalı");
+    await btn(C, /^hazırım$/i).click();
+    await A.waitForFunction(
+      () => document.querySelectorAll("button.seat .av__badge--ready").length === 2,
+      null,
+      OPT,
+    );
+    await A.locator(".pbtn--glow").waitFor(OPT);
+    await shot(A, "06b-lobby-all-ready");
+    await btn(B, /^hazırsın$/i).click();
+    await A.locator(".pbtn--glow").waitFor({ state: "detached", ...OPT });
+    assert((await readyBadges()) === 1, "B vazgeçince tek rozet kalmalı");
+    log("hazırım ve parlayan başlat tamam");
+
+    // 5c) Emoji: B atar, A'da avatarın üstünde görünür
+    await B.getByRole("button", { name: "🔥 gönder", exact: true }).click();
+    await A.locator(".reaction", { hasText: "🔥" }).waitFor(OPT);
+    await shot(A, "06c-lobby-emoji");
+    await A.locator(".reaction").first().waitFor({ state: "detached", timeout: 5000 });
+    log("emoji tepkisi tamam");
+
+    // 5d) Ev sahipliğini devret: A -> B, sonra B -> A
+    await longPressSeat(A, "Burak");
+    const handOver = A.getByRole("dialog");
+    await handOver.getByRole("button", { name: "Ev sahipliğini devret", exact: true }).click();
+    await handOver.getByRole("button", { name: "Devret", exact: true }).click();
+    await btn(B, /^başlat$/i).waitFor(OPT);
+    await btn(A, /^hazırım$/i).waitFor(OPT);
+    assert(!(await btn(A, /^başlat$/i).count()), "A artık BAŞLAT görmemeli");
+    await shot(B, "06d-b-host");
+    await longPressSeat(B, "Ayşe");
+    await B.getByRole("dialog").getByRole("button", { name: "Ev sahipliğini devret", exact: true }).click();
+    await B.getByRole("dialog").getByRole("button", { name: "Devret", exact: true }).click();
+    await btn(A, /^başlat$/i).waitFor(OPT);
+    assert(!(await btn(B, /^başlat$/i).count()), "B BAŞLAT'ı geri vermeli");
+    log("ev sahipliği devri tamam");
+
     // 6) Başlat → anlatım
     await btn(A, /^başlat$/i).click();
+    // Lobideki "Hazırım" ile karışmasın: önce anlatım ekranı gelsin
+    for (const p of [A, B, C]) await p.locator(".brief__name").waitFor(OPT);
     for (const p of [A, B, C]) await btn(p, /hazırım/i).waitFor(OPT);
     await shot(A, "08-briefing");
     await btn(B, /hazırım/i).click();
@@ -513,8 +575,13 @@ async function main() {
       assert((await p.locator("button.seat:not(.seat--empty)").count()) === 3, "lobide üç oyuncu olmalı");
     }
     await shot(A, "16-lobby-after");
+    assert(
+      (await A.locator("button.seat .av__badge--ready").count()) === 0,
+      "lobiye dönünce hazır rozetleri sıfırlanmalı",
+    );
     // Skorlar sıfırlandı: sonraki maçın başında herkes 0
     await btn(A, /^başlat$/i).click();
+    for (const p of [A, B2, C]) await p.locator(".brief__name").waitFor(OPT);
     for (const p of [A, B2, C]) await btn(p, /hazırım/i).waitFor(OPT);
     for (const p of [A, B2, C]) await btn(p, /hazırım/i).click();
     await A.locator(".game__num").waitFor(OPT);
