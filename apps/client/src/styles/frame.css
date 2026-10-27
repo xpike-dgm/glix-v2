@@ -453,25 +453,25 @@
 .gbar__row {
   width: 100%;
   max-width: 480px;
-  height: 44px;
+  height: 48px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(56px, 1.1fr) auto;
+  grid-template-columns: minmax(0, 1.2fr) minmax(48px, 1fr) auto;
   align-items: center;
   gap: 8px;
 }
 .gbar__title {
   min-width: 0;
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px;
+  column-gap: 6px;
 }
 .gbar__name {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-size: var(--fs-13);
   font-weight: 700;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
   color: var(--text);
 }
 .gbar__round {
@@ -489,11 +489,7 @@
 }
 .gbar__tools {
   display: flex;
-  margin-right: -6px;
-}
-.gbar__tools .icon-btn {
-  width: 40px;
-  height: 44px;
+  margin-right: -10px;
 }
 .gframe[data-spectator] .gbar + .ribbon {
   padding-top: 4px;

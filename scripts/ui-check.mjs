@@ -1356,6 +1356,35 @@ function inPageAudit() {
   return { issues, texts };
 }
 
+/** Kabuk tutarlılığı: dikey oyun ekranlarında üst şerit var, yüksekliği sabit, süre çubuğu hep aynı yerde. */
+function auditShell() {
+  const issues = [];
+  const frame = document.querySelector('.gframe[data-o="portrait"]');
+  if (!frame) return issues;
+  const bar = frame.querySelector(".gbar");
+  if (!bar) return [["kabuk", "üst şerit (.gbar) yok"]];
+  const row = bar.querySelector(".gbar__row");
+  const tools = bar.querySelectorAll(".gbar__tools .icon-btn").length;
+  const rowH = row ? row.getBoundingClientRect().height : 0;
+  if (Math.abs(rowH - 48) > 1) issues.push(["kabuk", `şerit yüksekliği ${rowH}px, beklenen 48px`]);
+  if (tools !== 2) issues.push(["kabuk", `şeritte ses ve çıkış düğmeleri olmalı (${tools})`]);
+  if (!bar.querySelector(".gbar__name") || !bar.querySelector(".gbar__round"))
+    issues.push(["kabuk", "oyun adı ya da tur sayacı yok"]);
+  const cell = bar.querySelector(".gbar__clock");
+  const clock = cell?.querySelector(".clock");
+  if (clock && cell && row) {
+    const c = clock.getBoundingClientRect();
+    const r = row.getBoundingClientRect();
+    const mid = (c.top + c.bottom) / 2 - r.top;
+    if (Math.abs(mid - rowH / 2) > 2) issues.push(["kabuk", `süre çubuğu şeritte ortalı değil (${mid}px)`]);
+    const t = bar.querySelector(".gbar__title").getBoundingClientRect();
+    const o = bar.querySelector(".gbar__tools").getBoundingClientRect();
+    if (c.left < t.right - 1 || c.right > o.left + 1)
+      issues.push(["kabuk", "süre çubuğu ad ya da düğmelerin üstüne biniyor"]);
+  }
+  return issues;
+}
+
 /** Sayfa içinde: saklı-metin ekran görüntüsünden arka plan örnekleyip kontrastı hesaplar. */
 async function inPageContrast({ png, texts, dpr }) {
   const img = new Image();
@@ -1466,6 +1495,7 @@ async function checkOne(browser, scr, [w, h]) {
     await page.screenshot({ path: join(OUT, `${scr.name}-${w}x${h}.png`) });
     const { issues, texts } = await page.evaluate(inPageAudit);
     for (const [kind, msg] of issues) failures.push(`[${kind}] ${msg}`);
+    for (const [kind, msg] of await page.evaluate(auditShell)) failures.push(`[${kind}] ${msg}`);
 
     // kontrast: metni saydamlaştırıp arka planı örnekle
     await page.addStyleTag({
