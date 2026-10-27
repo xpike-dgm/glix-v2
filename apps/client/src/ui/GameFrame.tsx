@@ -1,12 +1,16 @@
 import type { PlayerInfo } from "@glix/engine";
-import { createEffect, For, type JSX, on, onCleanup, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, For, type JSX, on, onCleanup, Show } from "solid-js";
 import type { HudInfo } from "../games/registry.js";
 import { Avatar } from "./Avatar.js";
+import { Clock } from "./Clock.js";
+import type { ClockWindow } from "./clockState.js";
 import { EyeIcon } from "./Icons.js";
 import { LeaveButton } from "./LeaveButton.js";
-import { ProgressBar } from "./ProgressBar.js";
+import { MatchPath } from "./MatchPath.js";
+import { roundLabel } from "./matchPath.js";
 import { RotateOverlay } from "./RotateOverlay.js";
 import { SoundToggle } from "./SoundToggle.js";
+import { ShellContext } from "./shell.js";
 import { createPortrait, lockLandscape } from "./viewport.js";
 import { WorldBackdrop } from "./WorldBackdrop.js";
 
@@ -16,6 +20,11 @@ interface Props {
   spectator: boolean;
   gameName: string;
   gameId: string;
+  /** 0 tabanlı oyun sırası ve maçtaki oyun sayısı. */
+  round: number;
+  total: number;
+  /** Kuralı gereği süresi gizli oyun: kabuk saati hiç çizilmez. */
+  noClock?: boolean | undefined;
   selfId: string;
   players: PlayerInfo[];
   participants: string[];
@@ -37,12 +46,19 @@ function SpectatorRibbon() {
 }
 
 /** Yatay oyunun yan şeridi: çık, süre çubuğu, kendi puanın, avatarlar, ses. */
-function Rail(props: Props) {
+function Rail(props: Props & { win: ClockWindow | null }) {
   const crew = () => props.players.filter((p) => props.participants.includes(p.id));
   const mine = (): number => props.hud?.myScore ?? props.hud?.scores[props.selfId] ?? 0;
   return (
     <aside class="rail" aria-label="Oyun durumu">
-      <LeaveButton />
+      <div class="rail__tools">
+        <LeaveButton />
+        <SoundToggle />
+      </div>
+      <div class="rail__title">
+        <span class="rail__name">{props.gameName}</span>
+        <span class="rail__round">{roundLabel(props.round, props.total)}</span>
+      </div>
       <div class="rail__mid">
         <Show when={props.hud}>
           {(hud) => (
@@ -67,17 +83,11 @@ function Rail(props: Props) {
           )}
         </Show>
       </div>
-      <SoundToggle />
-      <Show when={props.hud}>
-        {(hud) => (
-          <ProgressBar
-            vertical
-            class="rail__time"
-            startedAt={hud().startedAt}
-            endsAt={hud().endsAt}
-            now={props.now}
-            urgency
-          />
+      <Show when={!props.noClock && props.win}>
+        {(win) => (
+          <div class="rail__time">
+            <Clock vertical win={win()} now={props.now} />
+          </div>
         )}
       </Show>
     </aside>
@@ -93,6 +103,11 @@ export function GameFrame(props: Props) {
   const portraitViewport = createPortrait();
   const landscape = () => props.orientation === "landscape";
   const needsTurn = () => landscape() && portraitViewport();
+  const [reported, setReported] = createSignal<ClockWindow | null>(null);
+  // Yatay oyunlar süreyi `hud` ile bildirir; dikey oyunlar `<PhaseClock>` ile.
+  const win = createMemo<ClockWindow | null>(
+    () => reported() ?? (props.hud ? { ...props.hud, urgency: true } : null),
+  );
 
   createEffect(
     on(landscape, (is) => {
@@ -103,48 +118,59 @@ export function GameFrame(props: Props) {
   );
 
   return (
-    <div
-      class="gframe"
-      data-o={props.orientation}
-      data-spectator={props.spectator ? "1" : undefined}
-      data-turn={needsTurn() ? "1" : undefined}
-    >
-      <WorldBackdrop gameId={props.gameId} />
-      <Show when={landscape() && !needsTurn()}>
-        <Rail {...props} />
-      </Show>
-      <div class="gframe__main">
-        <Show when={props.spectator && !needsTurn()}>
-          <SpectatorRibbon />
+    <ShellContext.Provider value={{ setClock: (w) => setReported(w) }}>
+      <div
+        class="gframe"
+        data-o={props.orientation}
+        data-spectator={props.spectator ? "1" : undefined}
+        data-turn={needsTurn() ? "1" : undefined}
+      >
+        <WorldBackdrop gameId={props.gameId} />
+        <Show when={landscape() && !needsTurn()}>
+          <Rail {...props} win={win()} />
         </Show>
-        <div class="gframe__body">
-          {/* inert: izleyici eylem düğmesine dokunamaz ve klavyeyle odaklanamaz. */}
-          <div
-            class="gframe__game"
-            ref={(el) =>
-              createEffect(() => {
-                el.inert = props.spectator || needsTurn();
-              })
-            }
-          >
-            {props.children}
-          </div>
+        <div class="gframe__main">
           <Show when={!landscape()}>
-            <div class="gframe__chrome">
-              <div class="gframe__row">
-                <LeaveButton />
-                {/* İzleyicide oyunun kendi ses düğmesi inert olur; aynı yerde bu çalışır. */}
-                <Show when={props.spectator} fallback={<span />}>
+            <header class="gbar">
+              <div class="gbar__row">
+                <div class="gbar__title">
+                  <span class="gbar__name">{props.gameName}</span>
+                  <span class="gbar__round">{roundLabel(props.round, props.total)}</span>
+                </div>
+                <div class="gbar__clock">
+                  <Show when={!props.noClock}>
+                    <Clock win={win()} now={props.now} />
+                  </Show>
+                </div>
+                <div class="gbar__tools">
                   <SoundToggle />
-                </Show>
+                  <LeaveButton />
+                </div>
               </div>
-            </div>
+              <MatchPath round={props.round} total={props.total} />
+            </header>
           </Show>
+          <Show when={props.spectator && !needsTurn()}>
+            <SpectatorRibbon />
+          </Show>
+          <div class="gframe__body">
+            {/* inert: izleyici eylem düğmesine dokunamaz ve klavyeyle odaklanamaz. */}
+            <div
+              class="gframe__game"
+              ref={(el) =>
+                createEffect(() => {
+                  el.inert = props.spectator || needsTurn();
+                })
+              }
+            >
+              {props.children}
+            </div>
+          </div>
         </div>
+        <Show when={needsTurn()}>
+          <RotateOverlay gameName={props.gameName} />
+        </Show>
       </div>
-      <Show when={needsTurn()}>
-        <RotateOverlay gameName={props.gameName} />
-      </Show>
-    </div>
+    </ShellContext.Provider>
   );
 }

@@ -30,6 +30,8 @@ export interface GameEntry {
   /** Sonuç ekranının üstüne giren oyuna özel kısa açılış (ör. bilgisiz oyuncunun maskesi düşer). */
   Reveal?: Component<GameScreenProps>;
   /** Yatay oyunlar: yan şerit (süre çubuğu, puan, avatarlar) için görünümden özet çıkarır. */
+  /** Kuralı gereği süresi gizli oyun (Kör Kronometre, Kör Bomba, Son Kişi, Aşırı Yükleme): kabuk saati çizilmez. */
+  noClock?: boolean;
   hud?: (match: MatchSnapshot, selfId: string) => HudInfo | null;
 }
 
@@ -44,14 +46,17 @@ const registry: Record<string, GameEntry> = {
     Art: lazy(() => import("./butona-bas/BriefingArt.js")),
   },
   "kor-bomba": {
+    noClock: true,
     Screen: lazy(() => import("./kor-bomba/KorBombaScreen.js")),
     Art: lazy(() => import("./kor-bomba/BriefingArt.js")),
   },
   "asiri-yukleme": {
+    noClock: true,
     Screen: lazy(() => import("./asiri-yukleme/AsiriYuklemeScreen.js")),
     Art: lazy(() => import("./asiri-yukleme/BriefingArt.js")),
   },
   "kor-kronometre": {
+    noClock: true,
     Screen: lazy(() => import("./kor-kronometre/KorKronometreScreen.js")),
     Art: lazy(() => import("./kor-kronometre/BriefingArt.js")),
   },
@@ -89,6 +94,7 @@ const registry: Record<string, GameEntry> = {
     Reveal: lazy(() => import("./gizli-hirsiz/Reveal.js")),
   },
   "son-kisi": {
+    noClock: true,
     Screen: lazy(() => import("./son-kisi/SonKisiScreen.js")),
     Art: lazy(() => import("./son-kisi/BriefingArt.js")),
     Reveal: lazy(() => import("./son-kisi/Reveal.js")),
