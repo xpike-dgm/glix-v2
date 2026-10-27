@@ -4,6 +4,7 @@ import {
   type ErrorCode,
   type GameInfo,
   type GameResult,
+  isFriendStatus,
   isLobbyEmoji,
   JOIN_POLICIES,
   type LeftReason,
@@ -13,6 +14,7 @@ import {
   type RoomSnapshot,
   type ServerMessage,
 } from "@glix/engine";
+import { parseInvite } from "./friendsRules.js";
 
 type Rec = Record<string, unknown>;
 
@@ -43,6 +45,11 @@ const ERROR_CODES: readonly ErrorCode[] = [
   "game_failed",
   "draining",
   "server_busy",
+  "stage_full",
+  "stage_readonly",
+  "login_required",
+  "invite_failed",
+  "friend_not_found",
 ];
 const LEFT: readonly LeftReason[] = ["left", "kicked", "closed"];
 
@@ -231,6 +238,24 @@ export function parseServerMessage(raw: string): ServerMessage | null {
     case "reaction":
       return isStr(data.playerId) && isLobbyEmoji(data.emoji)
         ? { type: "reaction", playerId: data.playerId, emoji: data.emoji }
+        : null;
+    case "friendStatus":
+      return isStr(data.username) && data.username.length <= 20 && isFriendStatus(data.status)
+        ? { type: "friendStatus", username: data.username, status: data.status }
+        : null;
+    case "friendRequest":
+      return isStr(data.username) && data.username.length <= 20
+        ? { type: "friendRequest", username: data.username }
+        : null;
+    case "friendsChanged":
+      return { type: "friendsChanged" };
+    case "invite": {
+      const inv = parseInvite(data);
+      return inv ? { type: "invite", ...inv } : null;
+    }
+    case "inviteSent":
+      return isStr(data.username) && data.username.length <= 20
+        ? { type: "inviteSent", username: data.username }
         : null;
     case "error": {
       const code = ERROR_CODES.find((c) => c === data.code);

@@ -106,6 +106,60 @@ const SCREENS = [
   },
   { name: "profil-final-hesapli", q: "mock=final&n=4&acct=1", settle: 2200 },
   { name: "home-hesapli", q: "mock=home&acct=1", settle: 1800 },
+  // Arkadaşlar (H7) ve davetler (H8): önek "arkadas-".
+  { name: "arkadas-liste", q: "mock=arkadas", settle: 900 },
+  { name: "arkadas-liste-buyuk-yazi", q: "mock=arkadas&text=large", settle: 900 },
+  { name: "arkadas-liste-renk-koru", q: "mock=arkadas&cb=1", settle: 900 },
+  { name: "arkadas-liste-bos", q: "mock=arkadas&v=bos", settle: 900 },
+  { name: "arkadas-liste-engelli", q: "mock=arkadas&v=engelli", settle: 900 },
+  { name: "arkadas-liste-hata", q: "mock=arkadas&v=hata", settle: 900 },
+  { name: "arkadas-ana-rozet", q: "mock=arkadas-ana", settle: 1800 },
+  {
+    name: "arkadas-sayfa",
+    q: "mock=arkadas",
+    settle: 900,
+    act: async (p) => p.locator(".fr__main").first().click(),
+  },
+  {
+    name: "arkadas-sayfa-cikar",
+    q: "mock=arkadas",
+    settle: 900,
+    act: async (p) => {
+      await p.locator(".fr__main").first().click();
+      await p.getByText("Arkadaşlıktan çıkar", { exact: true }).click();
+    },
+  },
+  {
+    name: "arkadas-sayfa-engelle",
+    q: "mock=arkadas",
+    settle: 900,
+    act: async (p) => {
+      await p.locator(".fr__main").first().click();
+      await p.getByText("Engelle", { exact: true }).click();
+    },
+  },
+  {
+    name: "arkadas-davet-lobi",
+    q: "mock=arkadas-davet-lobi&n=3",
+    settle: 900,
+    act: async (p) => p.getByLabel("Arkadaş davet et", { exact: true }).click(),
+  },
+  {
+    name: "arkadas-davet-lobi-bos",
+    q: "mock=arkadas-davet-lobi&n=1&v=bos",
+    settle: 900,
+    act: async (p) => p.getByText("Arkadaş davet et", { exact: true }).first().click(),
+  },
+  { name: "arkadas-davet-karti", q: "mock=arkadas-kart", settle: 1800 },
+  { name: "arkadas-davet-karti-coklu", q: "mock=arkadas-kart-coklu", settle: 1800 },
+  { name: "arkadas-davet-karti-buyuk-yazi", q: "mock=arkadas-kart&text=large", settle: 1800 },
+  { name: "arkadas-davet-karti-odada", q: "mock=arkadas-kart-oda&n=3", settle: 1200 },
+  {
+    name: "arkadas-davet-karti-odada-onay",
+    q: "mock=arkadas-kart-oda&n=3",
+    settle: 1200,
+    act: async (p) => p.locator(".invc").getByText("Katıl", { exact: true }).click(),
+  },
   { name: "hesap-giris", q: "mock=login", settle: 600 },
   { name: "hesap-giris-hata", q: "mock=login", act: async (p) => p.locator(".pbtn").click() },
   { name: "hesap-kayit", q: "mock=register", settle: 600 },
@@ -1457,6 +1511,16 @@ function inPageAudit() {
       return this.bottom - this.top;
     },
   });
+  /**
+   * Gelen davet kartı (.invc) kapatılabilir yüzen bir katmandır; altında kalan öğeler kartla örtülü sayılır
+   * (toast gibi), bu yüzden kısmen örtüşme sayılmaz.
+   */
+  const floater = document.querySelector(".invc");
+  const underFloater = (el, r) => {
+    if (!floater || floater.contains(el)) return false;
+    const f = floater.getBoundingClientRect();
+    return r.left < f.right && r.right > f.left && r.top < f.bottom && r.bottom > f.top;
+  };
   const inView = (r) => r.left >= -0.5 && r.top >= -0.5 && r.right <= vw + 0.5 && r.bottom <= vh + 0.5;
   /**
    * Üstteki öğe bu öğe (ya da içindekilerden biri) mi? Örtülen öğeler denetlenmez.
@@ -1494,7 +1558,7 @@ function inPageAudit() {
       const sr = rectOf(sc);
       if (r.bottom < sr.top || r.top > sr.bottom) continue; // kaydırılarak görünür olur
     }
-    if (!topmost(el, r)) continue; // üstünü başka bir katman örtüyor
+    if (!topmost(el, r) || underFloater(el, r)) continue; // üstünü başka bir katman örtüyor
     // kaydırma alanında yalnız görünen kısım sayılır
     const vis = sc ? clipTo(r, rectOf(sc)) : r;
     inter.push({ el, r: vis });
@@ -1601,7 +1665,7 @@ function inPageAudit() {
       ]);
       continue;
     }
-    if (!topmost(el, r, true)) continue;
+    if (!topmost(el, r, true) || underFloater(el, r)) continue;
     const s = cs(el);
     const fontSize = parseFloat(s.fontSize);
     if (fontSize < 12.99) issues.push(["font", `yazı çok küçük (${fontSize}px): ${desc(el)}`]);

@@ -12,6 +12,14 @@ import { notifyOn } from "../settings/settings.js";
 import { installPerfObservers, perf, trackPerf } from "../telemetry/perf.js";
 import { resolveWsUrl } from "../wsUrl.js";
 import { offsetFromPong } from "./clock.js";
+import {
+  dropInvitesFor,
+  loadFriends,
+  onFriendRequest,
+  onFriendStatus,
+  onFriendsChanged,
+  receiveInvite,
+} from "./friends.js";
 import { parseServerMessage } from "./parse.js";
 import { emitReaction } from "./reactions.js";
 import { decideOnReturn, PROBE_TIMEOUT_MS, reconnectNotice } from "./resume.js";
@@ -46,6 +54,8 @@ const SHOWN_ERRORS = new Set([
   "server_busy",
   "game_failed",
   "stage_full",
+  "friend_not_found",
+  "invite_failed",
 ]);
 
 /** Sunucu güncelleme için yeniden başladı (WebSocket kapanış kodu 1012). */
@@ -73,6 +83,8 @@ let stageCode: string | null = null;
 let mockSender: ((msg: ClientMessage) => void) | null = null;
 /** Oturum (odaya giriş ya da yeniden bağlanma) kabul edilince çağrılır; bildirim aboneliğini yeniden bağlar. */
 let sessionHook: (() => void) | null = null;
+/** Son arkadaş daveti gönderme anı; davet hız sınırı hatasının yalnız kullanıcıya bağlı olanı gösterilir. */
+let lastInviteAt = Number.NEGATIVE_INFINITY;
 
 export function setSessionHook(fn: () => void): void {
   sessionHook = fn;
@@ -147,6 +159,11 @@ function onMessage(raw: string): void {
         if (stageCode) rawSend({ type: "joinStage", code: stageCode });
         break;
       }
+      if (state.account) {
+        // Hesaplı bağlantı: arkadaş listesi (rozet) tazelenir, bildirim aboneliği hesaba bağlanır.
+        void loadFriends();
+        sessionHook?.();
+      }
       const token = readStored(KEYS.token);
       if (token) rawSend({ type: "resume", token });
       else {
@@ -167,6 +184,7 @@ function onMessage(raw: string): void {
         session: { token: msg.token, playerId: msg.playerId, roomCode: msg.roomCode },
         busy: false,
       });
+      dropInvitesFor(msg.roomCode);
       sessionHook?.();
       reportVisibility();
       break;
@@ -209,6 +227,21 @@ function onMessage(raw: string): void {
       break;
     case "reaction":
       emitReaction(msg.playerId, msg.emoji);
+      break;
+    case "friendStatus":
+      onFriendStatus(msg.username, msg.status);
+      break;
+    case "friendRequest":
+      onFriendRequest(msg.username);
+      break;
+    case "friendsChanged":
+      onFriendsChanged();
+      break;
+    case "invite":
+      receiveInvite({ from: msg.from, roomCode: msg.roomCode, expiresAt: msg.expiresAt });
+      break;
+    case "inviteSent":
+      toast("Davet gönderildi", "success");
       break;
     case "error":
       handleError(msg.code, msg.message);
@@ -264,6 +297,10 @@ function handleError(code: string, message: string): void {
     // Oturum bu arada düşmüş olabilir: hesap bilgisi temizlenir, giriş ekranı açılır.
     setState({ account: null, nav: "login" });
     toast(message, "error");
+    return;
+  }
+  if (code === "rate_limited" && Date.now() - lastInviteAt < 3000) {
+    toast("Bu arkadaşını biraz önce çağırdın, birazdan tekrar dene.", "error");
     return;
   }
   if (SHOWN_ERRORS.has(code)) toast(message, "error");
@@ -433,6 +470,23 @@ export function joinRoom(code: string, nickname: string): void {
       ? { type: "joinRoom", code, nickname }
       : { type: "joinRoom", code, nickname, avatar },
   );
+}
+
+/** Arkadaşın şu anki odasına katıl: oda kodu sunucuda çözülür, istemci hiç görmez. */
+export function joinFriend(username: string, nickname: string): void {
+  setState("notFoundCode", null);
+  const avatar = readAvatarChoice();
+  intent(
+    avatar === undefined
+      ? { type: "joinFriend", username, nickname }
+      : { type: "joinFriend", username, nickname, avatar },
+  );
+}
+
+/** Lobideyken arkadaşı odaya çağırır. */
+export function inviteFriend(username: string): boolean {
+  lastInviteAt = Date.now();
+  return rawSend({ type: "inviteFriend", username });
 }
 
 /** Bu cihazı büyük ekran (sahne) yapar: `/tv` sayfası açılınca bir kez çağrılır. */

@@ -58,6 +58,9 @@ const SCREEN_FILES = {
   CountUp: ["results", "final"],
   ranking: ["results", "final"],
   NicknameSheet: ["home-nickname"],
+  Friends: ["arkadas"],
+  FriendInviteSheet: ["arkadas-davet"],
+  InviteCard: ["arkadas-davet-karti"],
 };
 
 /** Ortak dosyalar değişince bakılan küçük, geniş kapsamlı küme (tam ad eşleşmesi). */

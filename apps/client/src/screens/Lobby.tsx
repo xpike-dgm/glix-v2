@@ -30,12 +30,12 @@ import {
   transferHost,
 } from "../net/client.js";
 import { inviteLink } from "../net/code.js";
-import { setNickname, toast } from "../net/store.js";
+import { setNickname, state, toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
 import { EmojiBar } from "../ui/EmojiBar.js";
 import { GhostButton } from "../ui/GhostButton.js";
-import { CheckIcon, ChevronIcon, MinusIcon, PlusIcon, QrIcon, ShareIcon } from "../ui/Icons.js";
+import { CheckIcon, ChevronIcon, MinusIcon, PlusIcon, QrIcon, ShareIcon, UsersIcon } from "../ui/Icons.js";
 import { LeaveButton } from "../ui/LeaveButton.js";
 import { createLongPress } from "../ui/longPress.js";
 import { Mascot } from "../ui/Mascot.js";
@@ -47,6 +47,7 @@ import { Screen } from "../ui/Screen.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
 import { WorldBackdrop } from "../ui/WorldBackdrop.js";
 import { worldAllowed } from "../ui/world.js";
+import { FriendInviteSheet } from "./FriendInviteSheet.js";
 import {
   friendsHint,
   gameTag,
@@ -187,6 +188,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
   const [hostStep, setHostStep] = createSignal<"menu" | "kick" | "transfer">("menu");
   const [hostOpen, setHostOpen] = createSignal(false);
   const [inviteOpen, setInviteOpen] = createSignal(false);
+  const [friendOpen, setFriendOpen] = createSignal(false);
   const [pickOpen, setPickOpen] = createSignal(false);
   const [freshIds, setFreshIds] = createSignal<ReadonlySet<string>>(new Set());
 
@@ -406,6 +408,17 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                 <ShareIcon size={22} />
                 <span>Paylaş</span>
               </button>
+              <Show when={state.account}>
+                <button
+                  type="button"
+                  class="share"
+                  aria-label="Arkadaş davet et"
+                  onClick={() => setFriendOpen(true)}
+                >
+                  <UsersIcon size={22} />
+                  <span>Arkadaş</span>
+                </button>
+              </Show>
             </div>
           </Show>
           <p class="lobby__count">{playerCounter(snap().players.length, MAX_PLAYERS, need())}</p>
@@ -428,6 +441,12 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                 <ShareIcon size={22} />
                 <span>Arkadaşlarını çağır</span>
               </button>
+              <Show when={state.account}>
+                <button type="button" class="solo__call" onClick={() => setFriendOpen(true)}>
+                  <UsersIcon size={22} />
+                  <span>Arkadaş davet et</span>
+                </button>
+              </Show>
             </div>
           </Show>
 
@@ -490,7 +509,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                     type="button"
                     class="seat seat--empty"
                     style={{ "--i": snap().players.length + n }}
-                    aria-label="Arkadaş davet et"
+                    aria-label="Kodla ya da QR ile çağır"
                     onClick={() => setInviteOpen(true)}
                   >
                     <div class="seat__empty">
@@ -719,6 +738,12 @@ export function Lobby(props: { snap: RoomSnapshot }) {
             </div>
           </div>
         </BottomSheet>
+
+        <FriendInviteSheet
+          open={friendOpen()}
+          onClose={() => setFriendOpen(false)}
+          people={snap().players.length}
+        />
 
         <BottomSheet open={pickOpen()} onClose={() => setPickOpen(false)} title="Sen">
           <div class="pickersheet">

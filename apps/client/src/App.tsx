@@ -23,8 +23,10 @@ import { Countdown } from "./screens/Countdown.js";
 import { Disclosure } from "./screens/Disclosure.js";
 import { Final } from "./screens/Final.js";
 import { ForgotPassword } from "./screens/ForgotPassword.js";
+import { Friends } from "./screens/Friends.js";
 import { GoogleUsername } from "./screens/GoogleUsername.js";
 import { Home } from "./screens/Home.js";
+import { InviteCard } from "./screens/InviteCard.js";
 import { Join } from "./screens/Join.js";
 import { Lobby } from "./screens/Lobby.js";
 import { Login } from "./screens/Login.js";
@@ -143,6 +145,8 @@ export function App() {
     if (mock) {
       if (mock.startsWith("sonkisi-")) {
         devReady(import("./dev/mockSonKisi.js").then((m) => void m.startSonKisiMock(mock, params)));
+      } else if (mock.startsWith("arkadas")) {
+        devReady(import("./dev/mockArkadas.js").then((m) => void m.startArkadasMock(mock, params)));
       } else if (mock.startsWith("zehirli-")) {
         devReady(import("./dev/mockZehirli.js").then((m) => void m.startZehirliMock(mock, params)));
       } else if (mock.startsWith("rus-")) {
@@ -233,6 +237,9 @@ export function App() {
             <Match when={screen() === "profile"}>
               <Profile />
             </Match>
+            <Match when={screen() === "friends"}>
+              <Friends />
+            </Match>
             <Match when={screen() === "login"}>
               <Login />
             </Match>
@@ -293,6 +300,7 @@ export function App() {
       </Show>
       <Curtain screen={screen()} />
       <Reconnecting />
+      <InviteCard />
       <Toasts />
     </div>
   );

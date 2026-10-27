@@ -3,6 +3,9 @@ import { mountBackdrop } from "../backdrop/hero.js";
 import { reducedMotion } from "../fx/motion.js";
 import { logout } from "../net/account.js";
 import { createRoom } from "../net/client.js";
+import { incomingCount } from "../net/friends.js";
+import { badgeText } from "../net/friendsRules.js";
+import { setProfileOf } from "../net/profile.js";
 import { setNickname, setState, state } from "../net/store.js";
 import { InstallHint } from "../pwa/InstallHint.js";
 import { isOfflineHome } from "../pwa/offline.js";
@@ -187,11 +190,36 @@ export function Home() {
                   type="button"
                   class="home__userbtn"
                   aria-label="Profilim"
-                  onClick={() => setState("nav", "profile")}
+                  onClick={() => {
+                    setProfileOf(null);
+                    setState("nav", "profile");
+                  }}
                 >
                   <span>{account().username}</span>
                   <ChevronIcon size={16} />
                 </button>
+                <button
+                  type="button"
+                  class="home__userbtn home__friends"
+                  aria-label={
+                    incomingCount() > 0 ? `Arkadaşlar, ${incomingCount()} yeni istek` : "Arkadaşlar"
+                  }
+                  onClick={() => setState("nav", "friends")}
+                >
+                  <span>Arkadaşlar</span>
+                  <Show when={badgeText(incomingCount())}>
+                    {(text) => (
+                      <b class="home__badge" aria-hidden="true">
+                        {text()}
+                      </b>
+                    )}
+                  </Show>
+                </button>
+              </div>
+              <div class="home__auth">
+                <GhostButton size="small" onClick={() => setSheet("how")}>
+                  Nasıl oynanır?
+                </GhostButton>
                 <GhostButton size="small" onClick={() => void logout()}>
                   Çıkış yap
                 </GhostButton>
@@ -199,9 +227,11 @@ export function Home() {
             </>
           )}
         </Show>
-        <GhostButton size="small" onClick={() => setSheet("how")}>
-          Nasıl oynanır?
-        </GhostButton>
+        <Show when={!state.account}>
+          <GhostButton size="small" onClick={() => setSheet("how")}>
+            Nasıl oynanır?
+          </GhostButton>
+        </Show>
       </div>
 
       <NicknameSheet

@@ -1,5 +1,5 @@
 import { createEffect, createSignal, For, Match, onMount, Show, Switch } from "solid-js";
-import { loadProfile, profileState } from "../net/profile.js";
+import { loadProfile, profileOf, profileState, setProfileOf } from "../net/profile.js";
 import {
   isEmptyProfile,
   matchLine,
@@ -9,7 +9,7 @@ import {
   percentText,
   whenText,
 } from "../net/profileRules.js";
-import { goHome, state } from "../net/store.js";
+import { goHome, setState, state } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { GhostButton } from "../ui/GhostButton.js";
@@ -135,6 +135,15 @@ function Details(props: { profile: ProfileInfo }) {
 
 export function Profile() {
   onMount(() => void loadProfile());
+  // Arkadaşın profilinden geri: arkadaş listesine; kendi profilinden: ana sayfaya.
+  const back = (): void => {
+    if (profileOf() === null) {
+      goHome();
+      return;
+    }
+    setProfileOf(null);
+    setState("nav", "friends");
+  };
   // Oturum düşerse (başka sekmede çıkış) ana sayfaya dönülür.
   createEffect(() => {
     if (!state.account) goHome();
@@ -147,12 +156,12 @@ export function Profile() {
     const s = profileState();
     return s.kind === "error" ? s.message : null;
   };
-  const username = (): string => ready()?.username ?? state.account?.username ?? "";
+  const username = (): string => ready()?.username ?? profileOf() ?? state.account?.username ?? "";
 
   return (
     <Screen class="set pf">
       <header class="topbar">
-        <button type="button" class="icon-btn" aria-label="Geri" onClick={goHome}>
+        <button type="button" class="icon-btn" aria-label="Geri" onClick={back}>
           <BackIcon size={26} />
         </button>
         <h1 class="set__title display">Profil</h1>
@@ -183,7 +192,9 @@ export function Profile() {
                 fallback={
                   <div class="pf__empty rise" style={{ "--i": 1 }}>
                     <Mascot pose="merhaba" size="var(--mascot-lg, clamp(96px, 30vw, 150px))" />
-                    <p class="pf__note">Henüz maç yok — bir oda kur!</p>
+                    <p class="pf__note">
+                      {profileOf() === null ? "Henüz maç yok — bir oda kur!" : "Henüz maç yok."}
+                    </p>
                   </div>
                 }
               >
