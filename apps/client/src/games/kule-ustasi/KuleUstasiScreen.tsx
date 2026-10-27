@@ -1,9 +1,10 @@
-import { KULE_TURN_MS, type KuleBlock, kuleBlockLeft } from "@glix/engine";
+import { KULE_BASE_SPEED, KULE_TRACK, KULE_TURN_MS, type KuleBlock } from "@glix/engine";
 import { createEffect, createMemo, createSignal, For, onCleanup, Show, untrack } from "solid-js";
 import { hapticError, hapticMatch, hapticPress, hapticSolo } from "../../fx/haptics.js";
 import { reducedMotion } from "../../fx/motion.js";
 import { fail, match as matchSound, solo as soloSound, unlockAudio } from "../../fx/sound.js";
 import { type ActionAck, sendActionAck } from "../../net/client.js";
+import { createSmoothClock } from "../../net/smoothClock.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { createOptimistic } from "../../ui/optimistic.js";
 import { ProgressBar } from "../../ui/ProgressBar.js";
@@ -50,7 +51,17 @@ interface LocalDrop {
   at: number;
 }
 
+/** Motordaki `kuleBlockLeft` ile aynı üçgen dalga, yalnız ekranda akıcı çizim için kesirli (fark < 1 pist birimi). */
+function smoothLeft(turnStart: number, speed: number, width: number, now: number): number {
+  const range = KULE_TRACK - width;
+  if (range <= 0) return 0;
+  const dist = (Math.max(0, now - turnStart) * KULE_BASE_SPEED * speed) / 1_000_000;
+  const m = dist % (2 * range);
+  return m <= range ? m : 2 * range - m;
+}
+
 export default function KuleUstasiScreen(props: GameScreenProps) {
+  const smoothNow = createSmoothClock();
   const view = createMemo(() => parseKuleView(props.match.publicView, props.match.view));
   const [tick, setTick] = createSignal(0);
   const [clockNow, setClockNow] = createSignal(props.now());
@@ -114,22 +125,24 @@ export default function KuleUstasiScreen(props: GameScreenProps) {
     if (!v || !canDrop()) return;
     unlockAudio();
     hapticPress();
-    const at = Math.floor(props.now());
+    // Oyuncunun gördüğü konumla aynı saat: bırakma anı ekrandaki bloğa denk gelsin.
+    const at = Math.floor(smoothNow());
     const send = (): Promise<ActionAck> => sendActionAck({ kind: "drop", at });
     setLocalDrop({ turn: v.turn, at }, send);
   };
   const press = pressable(dropNow);
 
-  // Kayan blok: konum yalnız sunucu saatinin saf fonksiyonu; kare kare doğrudan DOM'a yazılır.
+  // Kayan blok: konum sunucu saatinin saf fonksiyonu; kare kare doğrudan DOM'a yazılır. Saat, 50 ms'lik sinyal
+  // yerine her karede okunan akıcı saattir; konum da yuvarlanmadan hesaplanır (`smoothLeft`).
   let mover: HTMLDivElement | undefined;
   let raf = 0;
   const frame = (): void => {
     const v = view();
     if (v && mover) {
       const d = frozen();
-      const t = d ? d.at : Math.min(props.now(), v.deadline);
-      const left = kuleBlockLeft(v.turnStart, v.speed, v.blockWidth, t);
-      mover.style.transform = `translateX(${(left / v.blockWidth) * 100}%)`;
+      const t = d ? d.at : Math.min(smoothNow(), v.deadline);
+      const left = smoothLeft(v.turnStart, v.speed, v.blockWidth, t);
+      mover.style.transform = `translate3d(${(left / v.blockWidth) * 100}%, 0, 0)`;
     }
     raf = requestAnimationFrame(frame);
   };
