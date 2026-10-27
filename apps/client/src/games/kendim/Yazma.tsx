@@ -79,6 +79,7 @@ export function Yazma(props: Props) {
       <TamamBar
         locked={props.view.locked}
         ready={props.view.ready.length}
+        readyIds={props.view.ready}
         total={props.crew.length}
         disabled={!hasWord(draft.text())}
         spectator={props.spectator}

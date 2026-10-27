@@ -1,14 +1,12 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { hapticTap } from "../../fx/haptics.js";
 import { sendAction, sendActionAck } from "../../net/client.js";
-import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { NumberPicker } from "../../ui/NumberPicker.js";
 import { createChoiceSync } from "../../ui/numberPicker.js";
 import type { AckLike } from "../../ui/optimistic.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./cizgiyi-gecme.css";
@@ -65,14 +63,7 @@ export default function CizgiyiGecmeScreen(props: GameScreenProps) {
 
   return (
     <Screen class="cg">
-      <header class="game__top">
-        <Show when={view()} fallback={<div class="pbar" />}>
-          {(v) => <ProgressBar startedAt={v().startedAt} endsAt={v().endsAt} now={serverNow} urgency />}
-        </Show>
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
+      <Show when={view()}>{(v) => <PhaseClock startedAt={v().startedAt} endsAt={v().endsAt} urgency />}</Show>
 
       <Show when={view()}>
         {(v) => (
@@ -134,6 +125,7 @@ export default function CizgiyiGecmeScreen(props: GameScreenProps) {
                         spectator
                         locked={false}
                         ready={lockedIds().length}
+                        readyIds={lockedIds()}
                         total={entries().length}
                         onLock={lock}
                       />
@@ -157,6 +149,7 @@ export default function CizgiyiGecmeScreen(props: GameScreenProps) {
                       locked={locked()}
                       disabled={mine() === null || closed()}
                       ready={lockedIds().length}
+                      readyIds={lockedIds()}
                       total={entries().length}
                       onLock={lock}
                     />

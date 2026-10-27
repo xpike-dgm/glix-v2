@@ -4,9 +4,8 @@ import { match as matchSound, solo as soloSound, tap, unlockAudio } from "../../
 import { sendAction } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
 import type { GameScreenProps } from "../registry.js";
 import { ArcadeButton, type ArcadeFx } from "./ArcadeButton.js";
 import { maxWindowIndex, newWindows, parseButonaBasView } from "./view.js";
@@ -153,14 +152,7 @@ export default function ButonaBasScreen(props: GameScreenProps) {
 
   return (
     <Screen class="game">
-      <header class="game__top">
-        <Show when={view()} fallback={<div class="pbar" />}>
-          {(v) => <ProgressBar startedAt={v().startedAt} endsAt={v().endsAt} now={serverNow} urgency />}
-        </Show>
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
+      <Show when={view()}>{(v) => <PhaseClock startedAt={v().startedAt} endsAt={v().endsAt} urgency />}</Show>
 
       <div class="game__score">
         <span class="overline">{props.spectator ? "En yüksek puan" : "Puanın"}</span>

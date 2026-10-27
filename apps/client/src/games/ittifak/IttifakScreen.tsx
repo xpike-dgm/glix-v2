@@ -1,12 +1,10 @@
 import { createMemo, Show } from "solid-js";
 import { sendActionAck } from "../../net/client.js";
-import { serverNow } from "../../net/store.js";
 import { look } from "../../ui/avatars.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import { PlayerPicker } from "../../ui/PlayerPicker.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
 import { createPendingPick } from "../../ui/playerPicker.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./ittifak.css";
@@ -48,14 +46,9 @@ export default function IttifakScreen(props: GameScreenProps) {
 
   return (
     <Screen class="game it">
-      <header class="game__top">
-        <Show when={view()} fallback={<div class="pbar" />}>
-          <ProgressBar startedAt={bar().from} endsAt={bar().to} now={serverNow} urgency={bar().urgency} />
-        </Show>
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
+      <Show when={view()}>
+        <PhaseClock startedAt={bar().from} endsAt={bar().to} urgency={bar().urgency} />
+      </Show>
 
       <Show when={view()}>
         {(v) => (
@@ -80,6 +73,7 @@ export default function IttifakScreen(props: GameScreenProps) {
                     <TamamBar
                       locked={v().locked}
                       ready={v().ready.length}
+                      readyIds={v().ready}
                       total={crew().length}
                       spectator={props.spectator === true}
                       label="Oylamaya geçelim"
@@ -119,6 +113,7 @@ export default function IttifakScreen(props: GameScreenProps) {
                 <TamamBar
                   locked={v().locked}
                   ready={v().ready.length}
+                  readyIds={v().ready}
                   total={crew().length}
                   disabled={pick.value() === null}
                   spectator={props.spectator === true}

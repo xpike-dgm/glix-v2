@@ -2,13 +2,11 @@ import { createEffect, createMemo, on, Show } from "solid-js";
 import { hapticGo } from "../../fx/haptics.js";
 import { go } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
-import { serverNow } from "../../net/store.js";
 import { look } from "../../ui/avatars.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import { PlayerPicker } from "../../ui/PlayerPicker.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
 import { createPendingPick } from "../../ui/playerPicker.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import { Order, WordGem } from "./Clue.js";
@@ -62,14 +60,9 @@ export default function SizmaScreen(props: GameScreenProps) {
 
   return (
     <Screen class="game sz">
-      <header class="game__top">
-        <Show when={bar()} fallback={<div class="pbar pbar--idle" />}>
-          {(b) => <ProgressBar startedAt={b().from} endsAt={b().to} now={serverNow} urgency={b().urgency} />}
-        </Show>
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
+      <Show when={bar()}>
+        {(b) => <PhaseClock startedAt={b().from} endsAt={b().to} urgency={b().urgency} />}
+      </Show>
 
       <Show when={view()}>
         {(v) => (
@@ -91,6 +84,7 @@ export default function SizmaScreen(props: GameScreenProps) {
                     <TamamBar
                       locked={v().locked}
                       ready={v().ready.length}
+                      readyIds={v().ready}
                       total={crew().length}
                       spectator={spectator()}
                       label="Oylamaya geç"
@@ -136,6 +130,7 @@ export default function SizmaScreen(props: GameScreenProps) {
                 <TamamBar
                   locked={v().locked}
                   ready={v().ready.length}
+                  readyIds={v().ready}
                   total={crew().length}
                   disabled={pick.value() === null}
                   spectator={spectator()}

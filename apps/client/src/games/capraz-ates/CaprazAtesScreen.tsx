@@ -3,15 +3,13 @@ import { hapticMatch, hapticSolo, hapticTap, hapticTick } from "../../fx/haptics
 import { createOpening } from "../../fx/opening.js";
 import { match as matchSound, solo as soloSound, tap, tick } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
-import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
 import type { AckLike } from "../../ui/optimistic.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import { createPendingPick } from "../../ui/playerPicker.js";
 import { pressable } from "../../ui/press.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./capraz-ates.css";
@@ -139,14 +137,9 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
       <Show when={opening() && !reveal()}>
         <Opening />
       </Show>
-      <header class="game__top">
-        <Show when={view()} fallback={<div class="pbar" />}>
-          <ProgressBar startedAt={bar().from} endsAt={bar().to} now={serverNow} urgency={!reveal()} />
-        </Show>
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
+      <Show when={view()}>
+        <PhaseClock startedAt={bar().from} endsAt={bar().to} urgency={!reveal()} />
+      </Show>
 
       <Show
         when={reveal()}
@@ -239,6 +232,7 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
               locked={locked()}
               disabled={closed() || mine() === null}
               ready={lockedIds().length}
+              readyIds={lockedIds()}
               total={crew().length}
               onLock={lock}
             />

@@ -1,8 +1,6 @@
 import { createMemo, Show } from "solid-js";
-import { serverNow } from "../../net/store.js";
 import { createVisibleArea } from "../../ui/keyboardArea.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import type { GameScreenProps } from "../registry.js";
 import { Sonuc } from "./Sonuc.js";
 import { Tahmin } from "./Tahmin.js";
@@ -45,14 +43,9 @@ export default function YaziYazScreen(props: GameScreenProps) {
   return (
     <section class="screen game yy" data-tight={area().height < 440 ? "1" : undefined} style={areaStyle()}>
       <div class="col">
-        <header class="game__top">
-          <Show when={view()} fallback={<div class="pbar" />}>
-            <ProgressBar startedAt={bar().from} endsAt={bar().to} now={serverNow} urgency={bar().urgency} />
-          </Show>
-          <div class="game__tools">
-            <SoundToggle />
-          </div>
-        </header>
+        <Show when={view()}>
+          <PhaseClock startedAt={bar().from} endsAt={bar().to} urgency={bar().urgency} />
+        </Show>
 
         <Show when={view()}>
           {(v) => (

@@ -38,7 +38,7 @@ export default function KaralamaDefteriScreen(props: GameScreenProps) {
               />
             </Match>
             <Match when={phase() === "draw"}>
-              <Header view={v()} now={props.now} title="Arkadaşların çiziyor" sound={false} />
+              <Header view={v()} now={props.now} title="Arkadaşların çiziyor" />
               <div class="kd__watch">
                 <svg viewBox="0 0 96 96" class="kd__watchart" aria-hidden="true">
                   <path d="M10 80c8-14 16 6 24-4" />
@@ -59,6 +59,7 @@ export default function KaralamaDefteriScreen(props: GameScreenProps) {
                   spectator
                   locked={false}
                   ready={v().drawDoneIds.length}
+                  readyIds={v().drawDoneIds}
                   total={v().players.length}
                   onLock={() => undefined}
                 />

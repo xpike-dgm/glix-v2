@@ -1,8 +1,6 @@
 import { KARALAMA_DRAW_MS } from "@glix/engine";
 import { createSignal, onCleanup, Show } from "solid-js";
-import { serverNow } from "../../net/store.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import type { KaralamaScreenView } from "./view.js";
 import { shownWord } from "./view.js";
 
@@ -13,8 +11,6 @@ interface Props {
   phase?: "draw" | "vote";
   /** Kelime yerine gösterilecek başlık (izleyici ya da oylama). */
   title?: string;
-  /** Sağ üstte ses düğmesi (izleyicide çerçeve zaten koyar). */
-  sound?: boolean;
 }
 
 /** Üst şerit: kelime (bilgisizde "yakın sinyal" etiketiyle), süre çubuğu ve kalan saniye. */
@@ -23,7 +19,6 @@ export function Header(props: Props) {
   const endsAt = () => (phase() === "draw" ? props.view.drawEndsAt : props.view.voteEndsAt);
   const startedAt = () =>
     phase() === "draw" ? props.view.drawEndsAt - KARALAMA_DRAW_MS : props.view.drawEndsAt;
-  const left = () => Math.max(0, Math.ceil((endsAt() - props.now()) / 1000));
 
   // "Yakın sinyal" etiketi kısa süre görünür, sonra söner.
   const [signal, setSignal] = createSignal(true);
@@ -35,7 +30,6 @@ export function Header(props: Props) {
   return (
     <>
       <header class="kd__top">
-        <span />
         <div class="kd__center">
           <Show
             when={props.title}
@@ -62,18 +56,8 @@ export function Header(props: Props) {
             <Show when={word()}>{(w) => <span class="kd__mine">Kelimen: {w()}</span>}</Show>
           </Show>
         </div>
-        <div class="kd__snd">
-          <Show when={props.sound !== false}>
-            <SoundToggle />
-          </Show>
-        </div>
       </header>
-      <div class="kd__time">
-        <ProgressBar startedAt={startedAt()} endsAt={endsAt()} now={serverNow} urgency />
-        <span class="kd__secs" aria-hidden="true">
-          {left()}
-        </span>
-      </div>
+      <PhaseClock startedAt={startedAt()} endsAt={endsAt()} urgency />
     </>
   );
 }

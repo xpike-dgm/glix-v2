@@ -145,12 +145,12 @@
   position: relative;
   z-index: 2;
   flex: none;
-  width: 104px;
+  width: 108px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 6px 20px 6px 10px;
+  padding: 6px;
   border-right: 1px solid var(--line);
   background: linear-gradient(90deg, rgba(5, 8, 26, 0.72), rgba(5, 8, 26, 0.3));
 }
@@ -210,13 +210,6 @@
   outline: 2px solid var(--text);
   outline-offset: 2px;
   border-radius: 50%;
-}
-.rail__time {
-  position: absolute;
-  right: 7px;
-  top: 12px;
-  bottom: 12px;
-  height: auto;
 }
 .pbar--v {
   width: 6px;
@@ -437,4 +430,296 @@
 }
 .gframe[data-spectator] .gframe__game .icon-btn {
   visibility: hidden;
+}
+
+/* ---- Kabuk üst şeridi (dikey oyunlar): ad + tur, süre, ses + çık; altında maç yolu ---- */
+.gbar {
+  position: relative;
+  z-index: 3;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: max(2px, var(--safe-top)) max(var(--gutter), var(--safe-right)) 0
+    max(var(--gutter), var(--safe-left));
+}
+.gbar__row {
+  width: 100%;
+  max-width: 480px;
+  height: 48px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(48px, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+.gbar__title {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 6px;
+}
+.gbar__name {
+  min-width: 0;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+.gbar__round {
+  flex: none;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+.gbar__clock {
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+.gbar__tools {
+  display: flex;
+  margin-right: -10px;
+}
+.gbar__tools .icon-btn {
+  flex: none;
+}
+.gframe[data-o="portrait"] .kd__top,
+.gframe[data-o="portrait"] .kb__top {
+  margin-top: 0;
+}
+.gframe[data-spectator] .gbar + .ribbon {
+  padding-top: 4px;
+}
+/* Kabuk üstü karşıladı; oyun ekranları kendi üst boşluğunu küçültür. */
+.gframe[data-o="portrait"] .gframe__body {
+  --safe-top: 0px;
+}
+.gframe[data-o="portrait"] .gframe__body .screen {
+  padding-top: 0;
+}
+
+/* ---- Clock ---- */
+.clock {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.clock__track {
+  flex: 1;
+  min-width: 0;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(140, 160, 255, 0.14);
+  overflow: hidden;
+  transition: height 180ms var(--ease);
+}
+.clock__fill {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cyan), color-mix(in srgb, var(--cyan), #fff 30%));
+  transform-origin: left center;
+  will-change: transform;
+}
+.clock[data-idle="1"] .clock__track {
+  opacity: 0.5;
+}
+.clock[data-tone="urgent"] .clock__track {
+  height: 9px;
+  border-radius: 5px;
+}
+.clock[data-tone="urgent"] .clock__fill {
+  background: var(--red);
+}
+.clock__secs {
+  flex: none;
+  min-width: 1.2em;
+  text-align: right;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-18);
+  font-variant-numeric: tabular-nums;
+  color: #ff7d93;
+  animation: clock-beat 1s ease-out infinite;
+}
+@keyframes clock-beat {
+  0% {
+    transform: scale(1.25);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+.clock[data-v="1"] {
+  flex-direction: column;
+  width: 20px;
+  height: 100%;
+}
+.clock[data-v="1"] .clock__track {
+  width: 5px;
+  height: auto;
+  flex: 1;
+  transition: width 180ms var(--ease);
+}
+.clock[data-v="1"] .clock__fill {
+  transform-origin: center bottom;
+  background: linear-gradient(0deg, var(--cyan), color-mix(in srgb, var(--cyan), #fff 30%));
+}
+.clock[data-v="1"][data-tone="urgent"] .clock__track {
+  width: 9px;
+  height: auto;
+}
+.clock[data-v="1"][data-tone="urgent"] .clock__fill {
+  background: var(--red);
+}
+.rail__time {
+  position: absolute;
+  right: 3px;
+  top: 64px;
+  bottom: 12px;
+  width: 20px;
+}
+.rail__tools {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+.rail__tools .icon-btn {
+  flex: none;
+}
+.rail__title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+}
+.rail__round {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Maç yolu ---- */
+.mpath {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  height: 8px;
+  margin-top: -6px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.mpath__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(140, 160, 255, 0.25);
+}
+.mpath__dot[data-s="done"] {
+  background: var(--lime);
+}
+.mpath__dot[data-s="current"] {
+  background: var(--text);
+  box-shadow: 0 0 0 0 rgba(243, 245, 255, 0.55);
+  animation: mpath-pulse 1.4s ease-out infinite;
+}
+@keyframes mpath-pulse {
+  70% {
+    box-shadow: 0 0 0 6px rgba(243, 245, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(243, 245, 255, 0);
+  }
+}
+
+/* ---- Durum cümlesi ---- */
+.status {
+  flex: none;
+  width: 100%;
+  text-align: center;
+}
+.status__main {
+  margin: 0;
+}
+.status__sub {
+  margin: 4px 0 0;
+  font-size: var(--fs-15);
+  color: var(--text-dim);
+}
+
+/* Azaltılmış hareket: nabız ve atış yok; renk değişimi kalır. */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .mpath__dot[data-s="current"],
+  :root:not([data-motion="full"]) .clock__secs {
+    animation: none;
+  }
+  :root:not([data-motion="full"]) .clock__track {
+    transition: none;
+  }
+}
+:root[data-motion="reduce"] .mpath__dot[data-s="current"],
+:root[data-motion="reduce"] .clock__secs {
+  animation: none;
+}
+:root[data-motion="reduce"] .clock__track {
+  transition: none;
+}
+
+/* Dikey oyun yan yatırılmış telefonda: üst şerit sola yan şerit olur, oyun dikey alanını korur. */
+@media (max-height: 500px) and (orientation: landscape) and (min-width: 560px) {
+  .gframe[data-o="portrait"] .gframe__main {
+    flex-direction: row;
+  }
+  .gframe[data-o="portrait"] .gbar {
+    flex: none;
+    width: 76px;
+    justify-content: flex-start;
+    gap: 4px;
+    padding: 4px 4px 4px max(6px, var(--safe-left));
+  }
+  .gframe[data-o="portrait"] .gbar__row {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  .gframe[data-o="portrait"] .gbar__title {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .gframe[data-o="portrait"] .gbar__clock {
+    height: 20px;
+  }
+  .gframe[data-o="portrait"] .gbar__tools {
+    flex-direction: column;
+    margin: 0 0 0 -2px;
+  }
+  /* Sağda aynı genişlikte boşluk: oyun, ekranın tam ortasında kalır. */
+  .gframe[data-o="portrait"] .gframe__body {
+    flex: 1;
+    min-width: 0;
+    margin-right: calc(76px + max(6px, var(--safe-left)) - max(0px, var(--safe-right)));
+  }
+  .gframe[data-o="portrait"] .ribbon {
+    display: none;
+  }
+}
+
+/* Ekran klavyesi açıkken (dar ve çok kısa alan) şerit yazma alanına yer bırakır. */
+@media (max-height: 540px) and (max-width: 559px) {
+  .gframe[data-o="portrait"] .gbar {
+    display: none;
+  }
 }

@@ -174,8 +174,6 @@ export function Gosteri(props: Props) {
         title={title()}
         startedAt={stageStart()}
         endsAt={r().stageEndsAt}
-        now={props.now}
-        sound={!props.spectator}
       />
       <div class="bt__who">
         <Show when={starter()}>

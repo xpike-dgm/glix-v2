@@ -7,7 +7,7 @@ import { createOptimistic } from "../../ui/optimistic.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
 import { pressable } from "../../ui/press.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
+import { Status } from "../../ui/Status.js";
 import type { GameScreenProps } from "../registry.js";
 import { Cup } from "./Cup.js";
 import { swapSound } from "./sounds.js";
@@ -128,18 +128,9 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
 
   return (
     <Screen class="game zk">
-      <header class="game__top">
-        <div class="pbar" />
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
-
-      <div class="zk__text">
-        <span class="overline">Zehirli Kadeh</span>
-        <h2 class="zk__head">{head().text}</h2>
-        <p class="zk__sub">{head().sub}</p>
-      </div>
+      <Status class="zk__text" titleClass="zk__head" subClass="zk__sub" sub={head().sub}>
+        {head().text}
+      </Status>
 
       <div class="zk__stage">
         <div class="zk__clock" data-bump={flash() ? String(flash()?.seq) : undefined}>

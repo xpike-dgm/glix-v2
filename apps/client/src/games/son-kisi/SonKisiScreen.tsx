@@ -4,7 +4,7 @@ import { unlockAudio } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
+import { Status } from "../../ui/Status.js";
 import type { GameScreenProps } from "../registry.js";
 import { Corridor } from "./Corridor.js";
 import { dash, thump } from "./sounds.js";
@@ -62,19 +62,9 @@ export default function SonKisiScreen(props: GameScreenProps) {
 
   return (
     <Screen class="sk">
-      <header class="game__top">
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
-
-      <div class="sk__text">
-        <span class="overline">Son Kişi</span>
-        <h2 class="sk__head" data-on={escaped() ? "1" : undefined}>
-          {headline()}
-        </h2>
-        <p class="sk__sub">{sub()}</p>
-      </div>
+      <Status class="sk__text" titleClass="sk__head" subClass="sk__sub" on={escaped()} sub={sub()}>
+        {headline()}
+      </Status>
 
       <div
         class="sk__stage"

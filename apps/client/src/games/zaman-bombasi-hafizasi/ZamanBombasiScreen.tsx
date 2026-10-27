@@ -9,7 +9,7 @@ import { Avatar } from "../../ui/Avatar.js";
 import { BlastArt, BombArt } from "../../ui/BombArt.js";
 import { ProgressBar } from "../../ui/ProgressBar.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
+import { Status } from "../../ui/Status.js";
 import type { GameScreenProps } from "../registry.js";
 import { PADS, PadSymbol, padSound } from "./pads.js";
 import {
@@ -337,12 +337,6 @@ export default function ZamanBombasiScreen(props: GameScreenProps) {
 
   return (
     <Screen class="game zgame">
-      <header class="game__top zgame__top">
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
-
       <Show when={view()}>
         {(v) => (
           <div class="ztotal" data-sudden={sudden() ? "1" : undefined}>
@@ -355,10 +349,15 @@ export default function ZamanBombasiScreen(props: GameScreenProps) {
         )}
       </Show>
 
-      <div class="zstatus" data-tone={tone()} role="status" aria-live="polite">
-        <h2 class="display zstatus__title">{title()}</h2>
-        <p class="zstatus__sub">{sub()}</p>
-      </div>
+      <Status
+        class="zstatus"
+        titleClass="display zstatus__title"
+        subClass="zstatus__sub"
+        tone={tone()}
+        sub={sub()}
+      >
+        {title()}
+      </Status>
 
       <div class="ztrack" aria-hidden="true">
         <For each={dots()}>{(i) => <i class="ztrack__dot" data-s={dotState(i)} />}</For>

@@ -892,3 +892,23 @@
     flex: none;
   }
 }
+
+/* Hazır şeridi: sayacın altında oyuncu başına bir nokta (her oyunda aynı yerde) */
+.tamam__dots {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+.tamam__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(140, 160, 255, 0.25);
+  transition: background 160ms;
+}
+.tamam__dot[data-on="1"] {
+  background: var(--lime);
+}

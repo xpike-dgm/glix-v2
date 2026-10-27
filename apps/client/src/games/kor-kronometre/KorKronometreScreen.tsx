@@ -5,7 +5,6 @@ import { match as matchSound, solo as soloSound, tap, unlockAudio } from "../../
 import { sendAction } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
 import type { GameScreenProps } from "../registry.js";
 import "./kor-kronometre.css";
 import { Dial } from "./Dial.js";
@@ -73,12 +72,6 @@ export default function KorKronometreScreen(props: GameScreenProps) {
 
   return (
     <Screen class="kk">
-      <header class="game__top">
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
-
       <Show when={view()}>
         <Show
           when={reveal()}

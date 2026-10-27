@@ -134,6 +134,7 @@ export function Dagitim(props: Props) {
       <TamamBar
         locked={props.view.locked}
         ready={props.view.ready.length}
+        readyIds={props.view.ready}
         total={1}
         disabled={tokenTotal(tokens()) === 0}
         label="Bitti"

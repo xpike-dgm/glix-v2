@@ -4,7 +4,6 @@ import { unlockAudio } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
 import type { GameScreenProps } from "../registry.js";
 import "./asiri-yukleme.css";
 import { reducedMotion } from "../../fx/motion.js";
@@ -152,12 +151,6 @@ export default function AsiriYuklemeScreen(props: GameScreenProps) {
   return (
     <Screen class={reveal() ? "ay" : "ay ay--play"}>
       <div class="ay__edge" data-on={danger() ? "1" : undefined} aria-hidden="true" />
-      <header class="game__top">
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
-
       <Show when={view()}>
         <Show
           when={reveal()}
