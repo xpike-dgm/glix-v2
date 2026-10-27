@@ -2702,3 +2702,12 @@
     z-index: 3;
   }
 }
+.fin__sharebtn {
+  align-self: center;
+  color: var(--cyan);
+}
+.fin__sharelabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}

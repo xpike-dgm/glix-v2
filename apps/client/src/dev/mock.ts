@@ -236,10 +236,25 @@ export function startMock(kind: string, params: URLSearchParams): void {
     // Final unvanları için tur geçmişi (herkese açık ödüller).
     void import("../net/matchHistory.js").then((m) =>
       m.seedRounds([
-        { round: 0, gameId: "butona-bas", awards: { p0: 2, p1: 1 } },
-        { round: 1, gameId: "sozluk-blofu", awards: { p2: 2, p3: 1, p4: -1 } },
+        {
+          round: 0,
+          gameId: "butona-bas",
+          awards: { p0: 2, p1: 1 },
+          summary: "Elif 10,00 sn hedefine 0,03 sn kala bastı",
+        },
+        {
+          round: 1,
+          gameId: "sozluk-blofu",
+          awards: { p2: 2, p3: 1, p4: -1 },
+          summary: "Can'ın uydurma tanımına 3 kişi kandı",
+        },
         { round: 2, gameId: "kor-bomba", awards: { p0: 2, p2: 1, p4: -1 } },
-        { round: 3, gameId: "cagrisim-agi", awards: { p1: 2, p0: 1 } },
+        {
+          round: 3,
+          gameId: "cagrisim-agi",
+          awards: { p1: 2, p0: 1 },
+          summary: "Deniz ve Elif aynı kelimede buluştu",
+        },
       ]),
     );
     // `&gallery=N`: maç sonu galerisine N çizim koyar (ekran denetimi).

@@ -6,14 +6,18 @@ import { fanfare } from "../fx/sound.js";
 import { returnToLobby } from "../net/client.js";
 import { matchRounds } from "../net/matchHistory.js";
 import { noteMatchFinished } from "../pwa/pwa.js";
+import { selectMoments } from "../share/momentCards.js";
+import { ShareSheet } from "../share/ShareSheet.js";
 import { Avatar } from "../ui/Avatar.js";
 import type { Mood } from "../ui/avatars.js";
 import { EmojiBar, RESULT_EMOJIS } from "../ui/EmojiBar.js";
 import { FeedbackRow } from "../ui/FeedbackRow.js";
-import { CrownIcon } from "../ui/Icons.js";
+import { GhostButton } from "../ui/GhostButton.js";
+import { CrownIcon, ShareIcon } from "../ui/Icons.js";
 import { LeaveButton } from "../ui/LeaveButton.js";
 import { Mascot } from "../ui/Mascot.js";
 import { MatchGallery } from "../ui/MatchGallery.js";
+import { galleryItems } from "../ui/matchGallery.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { ReactionLayer } from "../ui/ReactionLayer.js";
 import { createReactionSender } from "../ui/reactionSend.js";
@@ -79,6 +83,15 @@ export function Final(props: { snap: RoomSnapshot }) {
       playersOnly(props.snap.players).map((p) => p.id),
     ),
   );
+  const moments = () =>
+    selectMoments({
+      ranked: ranked(),
+      titles: titles(),
+      rounds: matchRounds(),
+      drawings: galleryItems(),
+      gameNames: Object.fromEntries(props.snap.catalog.map((g) => [g.id, g.name])),
+    });
+  const [shareOpen, setShareOpen] = createSignal(false);
   const playerOf = (id: string) => props.snap.players.find((p) => p.id === id);
 
   return (
@@ -89,7 +102,19 @@ export function Final(props: { snap: RoomSnapshot }) {
       </p>
       <header class="topbar">
         <LeaveButton />
-        <SoundToggle />
+        <div class="topbar__end">
+          <Show when={ranked().length > 0}>
+            <button
+              type="button"
+              class="icon-btn fin__share"
+              aria-label="Anları paylaş"
+              onClick={() => setShareOpen(true)}
+            >
+              <ShareIcon size={22} />
+            </button>
+          </Show>
+          <SoundToggle />
+        </div>
       </header>
 
       <div class="fin__scroll" data-scroll>
@@ -194,6 +219,14 @@ export function Final(props: { snap: RoomSnapshot }) {
 
           <MatchGallery players={props.snap.players} />
 
+          <Show when={ranked().length > 0}>
+            <GhostButton size="small" class="fin__sharebtn" onClick={() => setShareOpen(true)}>
+              <span class="fin__sharelabel">
+                <ShareIcon size={18} /> Anları paylaş
+              </span>
+            </GhostButton>
+          </Show>
+
           <Show when={!watching()}>
             <FeedbackRow />
           </Show>
@@ -217,6 +250,7 @@ export function Final(props: { snap: RoomSnapshot }) {
         </Show>
       </footer>
       <ReactionLayer />
+      <ShareSheet open={shareOpen()} onClose={() => setShareOpen(false)} moments={moments} />
     </Screen>
   );
 }

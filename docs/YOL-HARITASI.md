@@ -83,9 +83,10 @@ lobi-2, lobi-8, lobi-qr, lobi-picker durumları eklendi.
 - Başparmak bölgesi kuralı: birincil eylemler alt %40'ta; `ui:check`'e konum denetimi.
 
 ### U7. Paylaşılabilir anlar
-- Maç sonunda 9:16 kartlar (en iyi çizim, en çok kandıran blöf, 10,00'a en yakın basış…), istemcide canvas ile üretilir
-  (sunucuya görüntü gitmez). Web Share API; yoksa indir.
-- Kartta "Sen de oyna: glix…/KOD" — yalnız takma ad, başka kişisel veri yok.
+- [x] Maç sonunda 9:16 kartlar (kazanan, en iyi çizim, oyun başına en yüksek tur ödülü + özet cümlesi, büyük dönüş),
+  istemcide canvas ile üretilir (sunucuya görüntü gitmez). Web Share API (dosyalı); yoksa indir. (`apps/client/src/share/`)
+- [x] Kartta "Sen de oyna: glix.dgmcraft.online" — yalnız takma ad ve avatar, başka kişisel veri yok.
+  - Gerçek telefonda denenecek: iOS/Android'de dosyalı Web Share, yazı tipi yüklenmesi, kart üretim süresi.
 
 ### U8. Büyük ekran / TV (sahne) modu
 - Yeni rol **sahne**: `publicView` alır, `view` almaz (izleyiciyle aynı güvenlik sınıfı). `/tv` → oda kodu/QR ekranı.

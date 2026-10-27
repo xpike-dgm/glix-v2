@@ -1217,6 +1217,19 @@ const SCREENS = [
   { name: "final-misafir-podyum", q: "mock=final&n=5&guest=1&gallery=6", settle: 2600 },
   { name: "results-tepki", q: "mock=results&n=5&emoji=1", settle: 2400 },
   { name: "final-tepki", q: "mock=final&n=5&emoji=1", settle: 2200 },
+  // U7: "Anları paylaş" sayfası (kartlar bu cihazda canvas ile üretilir).
+  {
+    name: "final-paylas-5",
+    q: "mock=final&n=5&gallery=6",
+    settle: 9000,
+    act: async (p) => p.getByRole("button", { name: "Anları paylaş" }).first().click(),
+  },
+  {
+    name: "final-paylas-3",
+    q: "mock=final&n=3",
+    settle: 8000,
+    act: async (p) => p.getByRole("button", { name: "Anları paylaş" }).first().click(),
+  },
   { name: "ayarlar-muzik-efekt", q: "mock=settings", settle: 900 },
   { name: "ayarlar-muzik-efekt-buyuk-yazi", q: "mock=settings&text=large", settle: 900 },
 ];
