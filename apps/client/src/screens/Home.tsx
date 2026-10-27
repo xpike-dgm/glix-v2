@@ -11,7 +11,7 @@ import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
 import { GhostButton } from "../ui/GhostButton.js";
-import { GearIcon } from "../ui/Icons.js";
+import { ChevronIcon, GearIcon } from "../ui/Icons.js";
 import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
@@ -183,7 +183,15 @@ export function Home() {
                 Odaya katıl
               </GhostButton>
               <div class="home__auth">
-                <span class="home__user">{account().username}</span>
+                <button
+                  type="button"
+                  class="home__userbtn"
+                  aria-label="Profilim"
+                  onClick={() => setState("nav", "profile")}
+                >
+                  <span>{account().username}</span>
+                  <ChevronIcon size={16} />
+                </button>
                 <GhostButton size="small" onClick={() => void logout()}>
                   Çıkış yap
                 </GhostButton>

@@ -11,6 +11,7 @@ import {
   type MatchSnapshot,
   type Rng,
 } from "@glix/engine";
+import { buildGameRecord, buildMatchRecord, type Entrant } from "./accountStats.js";
 import { log } from "./log.js";
 import { errorMessage } from "./messages.js";
 import { notifyPlayers, roomHasPush } from "./push.js";
@@ -321,11 +322,45 @@ function finishGame(rt: Runtime, room: Room, match: Match): void {
     const player = room.players.get(id);
     if (player) player.score += points;
   }
+  recordGameStats(rt, room, match, result, now);
   match.result = result;
   match.continueIds = new Set();
   match.phaseStartedAt = now;
   match.phaseEndsAt = now + RESULTS_MS;
   room.phase = "results";
+}
+
+/**
+ * Hesaplı oyuncuların istatistiği (docs/HESAP.md): oyun bitince mini sonuçlar, maç bitince final sırası yazılır.
+ * Oyun akışını asla bozmaz; yazıcı tek işlemde, küçük bir toplu yazma yapar. Misafir ve izleyici yazılmaz.
+ */
+function recordGameStats(rt: Runtime, room: Room, match: Match, result: GameResult, now: number): void {
+  try {
+    const entrants: Entrant[] = [];
+    for (const id of match.participants) {
+      const player = room.players.get(id);
+      const score = result.miniScores[id];
+      if (!player || player.spectator || score === undefined) continue;
+      entrants.push({ playerId: id, accountId: player.accountId, score });
+    }
+    rt.accountStats.gameFinished(buildGameRecord(currentGame(match).id, now, entrants));
+  } catch (err) {
+    log.warn("account_stats_failed", { room: room.code, error: String(err) });
+  }
+}
+
+function recordMatchStats(rt: Runtime, room: Room, match: Match, now: number): void {
+  try {
+    const entrants: Entrant[] = [];
+    for (const id of match.startParticipants) {
+      const player = room.players.get(id);
+      if (!player || player.spectator) continue;
+      entrants.push({ playerId: id, accountId: player.accountId, score: player.score });
+    }
+    rt.accountStats.matchFinished(buildMatchRecord(match.games.length, now, entrants));
+  } catch (err) {
+    log.warn("account_stats_failed", { room: room.code, error: String(err) });
+  }
 }
 
 /** Biten oyunun kaydını son-N listesine ekler. */
@@ -349,6 +384,7 @@ function nextGameOrFinal(rt: Runtime, room: Room, match: Match): void {
   match.phaseEndsAt = null;
   room.phase = "final";
   endMatchStats(rt, match, "completed");
+  recordMatchStats(rt, room, match, rt.clock.now());
   rt.active.delete(room);
 }
 

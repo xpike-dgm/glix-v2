@@ -1,6 +1,7 @@
 import { createServer, type Server } from "node:http";
 import { APP_VERSION, type GameLog, PROTOCOL_VERSION, parseClientMessage } from "@glix/engine";
 import { type WebSocket, WebSocketServer } from "ws";
+import { createAccountRecorder } from "./accountStats.js";
 import { type AccountStore, createAccounts } from "./accountStore.js";
 import { AUTH_PREFIX, accountFromCookie, handleAuth } from "./auth.js";
 import { CLIENT_ERROR_PATH, handleClientError } from "./clientError.js";
@@ -19,6 +20,7 @@ import {
 } from "./mail.js";
 import { runTick, TICK_MS } from "./match.js";
 import { errorMessage } from "./messages.js";
+import { handleProfile, PROFILE_PATH } from "./profile.js";
 import { TokenBucket } from "./ratelimit.js";
 import { countActiveMatches, countPlayers, createRuntime, disposeRuntime } from "./rooms.js";
 import type { AccountRef, Connection } from "./runtime.js";
@@ -139,6 +141,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     opts.randomInt,
     stats,
     resolvePush(opts),
+    createAccountRecorder(accounts),
   );
   const perIp = new Map<string, number>();
   const aliveSockets = new WeakMap<WebSocket, boolean>();
@@ -234,6 +237,14 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         allowedOrigins: opts.allowedOrigins,
         google,
         mail,
+      });
+      return;
+    }
+    if (path === PROFILE_PATH || path.startsWith(`${PROFILE_PATH}/`)) {
+      handleProfile(req, res, {
+        accounts,
+        now: clock.now(),
+        gameName: (id) => rt.catalog.find((g) => g.id === id)?.name ?? null,
       });
       return;
     }

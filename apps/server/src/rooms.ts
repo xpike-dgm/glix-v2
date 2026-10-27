@@ -7,6 +7,7 @@ import {
   MAX_PLAYERS,
   ROOM_CODE_LENGTH,
 } from "@glix/engine";
+import { type AccountStatsRecorder, noopAccountStats } from "./accountStats.js";
 import { createBroadcaster } from "./broadcast.js";
 import { type Clock, systemClock } from "./clock.js";
 import { clearMatch, endMatchStats, recordPresence } from "./match.js";
@@ -30,6 +31,7 @@ export function createRuntime(
   pickInt: (max: number) => number = randomInt,
   stats: StatsStore = noopStats,
   push: PushGateway = disabledPush,
+  accountStats: AccountStatsRecorder = noopAccountStats,
 ): Runtime {
   const rt: Runtime = {
     clock,
@@ -38,6 +40,7 @@ export function createRuntime(
     ipLimiter: new IpLimiter(clock, roomCreateBurst),
     metrics: createMetrics(),
     stats,
+    accountStats,
     push,
     recentLogs: [],
     rooms: new Map(),

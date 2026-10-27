@@ -5,6 +5,7 @@ export type ScreenId =
   | "home"
   | "join"
   | "settings"
+  | "profile"
   | "login"
   | "register"
   | "aydinlatma"

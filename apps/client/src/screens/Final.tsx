@@ -3,13 +3,15 @@ import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-j
 import { playConfetti } from "../fx/confetti.js";
 import { hapticFinal } from "../fx/haptics.js";
 import { fanfare } from "../fx/sound.js";
-import { returnToLobby } from "../net/client.js";
+import { leaveRoom, returnToLobby } from "../net/client.js";
 import { matchRounds } from "../net/matchHistory.js";
+import { setState, state } from "../net/store.js";
 import { noteMatchFinished } from "../pwa/pwa.js";
 import { selectMoments } from "../share/momentCards.js";
 import { ShareSheet } from "../share/ShareSheet.js";
 import { Avatar } from "../ui/Avatar.js";
 import type { Mood } from "../ui/avatars.js";
+import { BottomSheet } from "../ui/BottomSheet.js";
 import { EmojiBar, RESULT_EMOJIS } from "../ui/EmojiBar.js";
 import { FeedbackRow } from "../ui/FeedbackRow.js";
 import { GhostButton } from "../ui/GhostButton.js";
@@ -92,6 +94,12 @@ export function Final(props: { snap: RoomSnapshot }) {
       gameNames: Object.fromEntries(props.snap.catalog.map((g) => [g.id, g.name])),
     });
   const [shareOpen, setShareOpen] = createSignal(false);
+  const [inviteOpen, setInviteOpen] = createSignal(false);
+  /** Kayıt ekranı oda dışındadır: önce odadan çıkılır, sonra kayıt açılır. */
+  const goRegister = (): void => {
+    leaveRoom();
+    setState("nav", "register");
+  };
   const playerOf = (id: string) => props.snap.players.find((p) => p.id === id);
 
   return (
@@ -227,6 +235,15 @@ export function Final(props: { snap: RoomSnapshot }) {
             </GhostButton>
           </Show>
 
+          <Show when={!state.account}>
+            <div class="fin__invite" role="note">
+              <span class="fin__invitetext">Rozet ve istatistik için hesap aç</span>
+              <GhostButton size="small" onClick={() => setInviteOpen(true)}>
+                Kayıt ol
+              </GhostButton>
+            </div>
+          </Show>
+
           <Show when={!watching()}>
             <FeedbackRow />
           </Show>
@@ -250,6 +267,15 @@ export function Final(props: { snap: RoomSnapshot }) {
         </Show>
       </footer>
       <ReactionLayer />
+      <BottomSheet open={inviteOpen()} onClose={() => setInviteOpen(false)} title="Hesap aç">
+        <p class="acct__text">Kayıt olmak için bu odadan çıkman gerekir. Devam edelim mi?</p>
+        <div class="sheet__actions">
+          <PrimaryButton onClick={goRegister}>Kayıt ol</PrimaryButton>
+          <GhostButton size="small" onClick={() => setInviteOpen(false)}>
+            Vazgeç
+          </GhostButton>
+        </div>
+      </BottomSheet>
       <ShareSheet open={shareOpen()} onClose={() => setShareOpen(false)} moments={moments} />
     </Screen>
   );

@@ -22,6 +22,8 @@ import {
 import { roundClockAt } from "../games/butona-bas/view.js";
 import { setGooglePending } from "../net/account.js";
 import { useMockSender } from "../net/client.js";
+import { freezeProfile } from "../net/profile.js";
+import { parseProfile } from "../net/profileRules.js";
 import { emitReaction } from "../net/reactions.js";
 import { applySnapshot, setState } from "../net/store.js";
 
@@ -36,6 +38,50 @@ const CATALOG: GameInfo[] = [
   { id: "capraz-ates", name: "Çapraz Ateş", minPlayers: 3, maxPlayers: 8, orientation: "landscape" },
   { id: "karalama-defteri", name: "Karalama Defteri", minPlayers: 3, maxPlayers: 8, orientation: "portrait" },
 ];
+
+/** Profil ekranı önizlemesi: dolu ya da yeni (boş) hesap. */
+function mockProfile(empty: boolean): {
+  kind: "ready";
+  profile: NonNullable<ReturnType<typeof parseProfile>>;
+} {
+  const day = 24 * 3600 * 1000;
+  const now = Date.now();
+  const games = empty
+    ? []
+    : [
+        { gameId: "butona-bas", name: "Butona Bas", plays: 14, wins: 6, bestMini: 9 },
+        { gameId: "kor-bomba", name: "Kör Bomba", plays: 9, wins: 2, bestMini: 4 },
+        { gameId: "cagrisim-agi", name: "Çağrışım Ağı", plays: 5, wins: 1, bestMini: -2 },
+      ];
+  const raw = {
+    ok: true,
+    username: "cihad_01",
+    createdAt: now - 40 * day,
+    totals: empty
+      ? { matches: 0, wins: 0, winRate: 0, games: 0, gameWins: 0 }
+      : { matches: 12, wins: 5, winRate: 0.417, games: 28, gameWins: 9 },
+    favoriteGame: empty ? null : { id: "butona-bas", name: "Butona Bas", plays: 14 },
+    perGame: games,
+    recent: empty
+      ? []
+      : [
+          { endedAt: now - 2 * 3600 * 1000, players: 5, place: 1, score: 11 },
+          { endedAt: now - day, players: 4, place: 3, score: 4 },
+          { endedAt: now - 3 * day, players: 8, place: 2, score: -1 },
+          { endedAt: now - 20 * day, players: 3, place: 1, score: 7 },
+        ],
+    coPlayers: empty
+      ? []
+      : [
+          { username: "elif_k", matches: 9 },
+          { username: "mert_34", matches: 6 },
+          { username: "zeynep", matches: 2 },
+        ],
+  };
+  const profile = parseProfile(raw);
+  if (!profile) throw new Error("örnek profil geçersiz");
+  return { kind: "ready", profile };
+}
 
 export function startMock(kind: string, params: URLSearchParams): void {
   const n = Math.min(8, Math.max(1, Number(params.get("n")) || 5));
@@ -362,6 +408,9 @@ export function startMock(kind: string, params: URLSearchParams): void {
   });
 
   setState("session", { token: "mock", playerId: SELF, roomCode: "KX7QP" });
+  // `&acct=1`: giriş yapmış hesap (finalde misafir daveti görünmez).
+  if (kind === "final" && params.get("acct") === "1")
+    setState("account", { username: "cihad_01", email: "cihad@example.com" });
   // `&google=1`: Google ile giriş açık (düğmeler görünür).
   if (params.get("google") === "1") setState("google", { enabled: true, linked: false });
   // `&mail=1`: e-posta açık (Şifremi unuttum görünür); `&verified=1`: e-posta doğrulanmış; `&pw=0`: şifresiz hesap.
@@ -387,6 +436,16 @@ export function startMock(kind: string, params: URLSearchParams): void {
       if (params.get("acct") === "1")
         setState("account", { username: "cihad_01", email: "cihad@example.com" });
       break;
+    case "profil": {
+      // `&v=bos|yukleniyor|hata`; varsayılan dolu profil. Ekran açılmadan önce sabitlenir (ağdan okumasın).
+      const v = params.get("v");
+      if (v === "yukleniyor") freezeProfile({ kind: "loading" });
+      else if (v === "hata")
+        freezeProfile({ kind: "error", message: "Profil şu an yüklenemedi. Biraz sonra tekrar dene." });
+      else freezeProfile(mockProfile(v === "bos"));
+      setState({ nav: "profile", account: { username: "cihad_01", email: "cihad@example.com" } });
+      break;
+    }
     case "login":
     case "register":
     case "aydinlatma":
@@ -443,6 +502,7 @@ export function startMock(kind: string, params: URLSearchParams): void {
     kind === "home" ||
     kind === "join" ||
     kind === "settings" ||
+    kind === "profil" ||
     kind === "notfound" ||
     kind === "login" ||
     kind === "register" ||
