@@ -4,7 +4,14 @@ import { tensionLevel } from "../ui/clockState.js";
 import { gameEntry } from "./registry.js";
 
 /** Süresi gizli oyunlar: kabuk saati çizilmez ve gerilim ritmi (kalan süreyi ele verir) çalmaz. */
-const HIDDEN_TIME = ["kor-kronometre", "kor-bomba", "son-kisi", "asiri-yukleme", "zaman-bombasi-hafizasi"];
+const HIDDEN_TIME = [
+  "kor-kronometre",
+  "kor-bomba",
+  "son-kisi",
+  "asiri-yukleme",
+  "zaman-bombasi-hafizasi",
+  "kule-ustasi",
+];
 
 describe("saati gizli oyunlarda gerilim ritmi yok", () => {
   it("hepsi kayıtta noClock işaretli", () => {

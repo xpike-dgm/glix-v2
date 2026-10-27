@@ -27,6 +27,7 @@ export const GAMES = {
   "kontrol-paneli-kaosu": { prefixes: ["kontrol"], mock: "mockKontrol", smoke: "kontrol-play-4" },
   "kor-bomba": { prefixes: ["kor-bomba"], mock: "mockKorBomba", smoke: "kor-bomba-holder" },
   "kor-kronometre": { prefixes: ["kronometre"], mock: "mockKronometre", smoke: "kronometre-counting" },
+  "kule-ustasi": { prefixes: ["kule"], mock: "mockKule", smoke: "kule-turn" },
   "laf-sokma": { prefixes: ["laf"], mock: "mockLaf", smoke: "laf-write-5" },
   "ortalamanin-yarisi": { prefixes: ["ortalama"], mock: "mockOrtalama", smoke: "ortalama-choosing-3" },
   "rus-ruleti": { prefixes: ["rus"], mock: "mockRusRuleti", smoke: "rus-hold-5" },

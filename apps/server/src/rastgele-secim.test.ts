@@ -2,9 +2,9 @@ import { GAMES } from "@glix/engine";
 import { describe, expect, it } from "vitest";
 import { Client, join, k, sync, until, useServer } from "./testkit.js";
 
-const TWO_PLAYER = Object.values(GAMES)
-  .filter((g) => g.minPlayers <= 2 && g.maxPlayers >= 2)
-  .map((g) => g.id);
+/** Rastgele havuzdaki oyunlar (`randomPool: false` olanlar yalnız elle seçilir). */
+const POOL = Object.values(GAMES).filter((g) => g.randomPool !== false);
+const TWO_PLAYER = POOL.filter((g) => g.minPlayers <= 2 && g.maxPlayers >= 2).map((g) => g.id);
 
 async function open(nickname: string): Promise<Client> {
   const c = await Client.connect();
@@ -124,7 +124,8 @@ describe("rastgele oyun seçimi: başlatma", () => {
     };
     const first = await pick();
     expect(await pick()).toEqual(first);
-    expect(first).toHaveLength(Object.keys(GAMES).length);
+    expect(first).toHaveLength(POOL.length);
+    expect(first).not.toContain("kule-ustasi");
   });
 
   it("lobiye dönünce seçim korunur, oyun listesi yine boş olur", async () => {

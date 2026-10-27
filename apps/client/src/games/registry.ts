@@ -88,6 +88,11 @@ const registry: Record<string, GameEntry> = {
     Art: lazy(() => import("./zaman-bombasi-hafizasi/BriefingArt.js")),
     StageView: lazy(() => import("./zaman-bombasi-hafizasi/StageView.js")),
   },
+  "kule-ustasi": {
+    noClock: true,
+    Screen: lazy(() => import("./kule-ustasi/KuleUstasiScreen.js")),
+    Art: lazy(() => import("./kule-ustasi/BriefingArt.js")),
+  },
   "capraz-ates": {
     Screen: lazy(() => import("./capraz-ates/CaprazAtesScreen.js")),
     Art: lazy(() => import("./capraz-ates/BriefingArt.js")),

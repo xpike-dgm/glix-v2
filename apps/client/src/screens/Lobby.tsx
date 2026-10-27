@@ -50,6 +50,7 @@ import { worldAllowed } from "../ui/world.js";
 import {
   friendsHint,
   gameTag,
+  inRandomPool,
   isGameDim,
   minPlayersNeeded,
   playerCounter,
@@ -273,9 +274,11 @@ export function Lobby(props: { snap: RoomSnapshot }) {
   const connected = () => snap().players.filter((p) => p.connected).length;
   const need = () => minPlayersNeeded(snap().catalog, sel().mode, selected());
   const sel = () => snap().selection;
+  /** Rastgele seçime giren oyun sayısı (elle seçilebilen ama havuz dışı oyunlar sayılmaz). */
+  const poolSize = () => snap().catalog.filter(inRandomPool).length;
   const randomCount = (): number => {
     const s = sel();
-    return s.mode === "random" ? Math.min(s.count, snap().catalog.length) : 0;
+    return s.mode === "random" ? Math.min(s.count, poolSize()) : 0;
   };
   const eligible = () =>
     snap().catalog.filter((g) => g.minPlayers <= connected() && connected() <= g.maxPlayers);
@@ -286,7 +289,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
   const blocker = (): string | undefined => {
     if (sel().mode === "random") {
       if (missing() > 0) return friendsHint(missing());
-      return eligible().length === 0 ? "Bu kalabalığa uygun oyun bulunamadı" : undefined;
+      return eligible().filter(inRandomPool).length === 0 ? "Bu kalabalığa uygun oyun bulunamadı" : undefined;
     }
     if (selected().length === 0) return "En az bir oyun seç";
     if (missing() > 0) return friendsHint(missing());
@@ -313,18 +316,20 @@ export function Lobby(props: { snap: RoomSnapshot }) {
 
   const chooseRandom = (): void => {
     if (!isHost() || sel().mode === "random") return;
-    setRandom(Math.min(lastCount.n, snap().catalog.length));
+    setRandom(Math.min(lastCount.n, poolSize()));
   };
   const chooseManual = (): void => {
     if (!isHost() || sel().mode === "manual") return;
     lastCount.n = randomCount();
-    const fit = eligible().map((g) => g.id);
+    const fit = eligible()
+      .filter(inRandomPool)
+      .map((g) => g.id);
     const first = snap().catalog[0]?.id;
     setGames(fit.length > 0 ? fit : first ? [first] : []);
   };
   const step = (delta: number): void => {
     if (!isHost()) return;
-    const next = Math.min(snap().catalog.length, Math.max(1, randomCount() + delta));
+    const next = Math.min(poolSize(), Math.max(1, randomCount() + delta));
     if (next === randomCount()) return;
     lastCount.n = next;
     setRandom(next);
@@ -614,7 +619,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                             type="button"
                             class="rnd__btn"
                             aria-label="Oyun sayısını artır"
-                            disabled={randomCount() >= snap().catalog.length}
+                            disabled={randomCount() >= poolSize()}
                             onClick={() => step(1)}
                           >
                             <PlusIcon size={26} />

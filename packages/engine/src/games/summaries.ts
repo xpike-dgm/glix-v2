@@ -16,6 +16,7 @@ import { summarizeKendim } from "./kendim/summary.js";
 import { summarizeKontrolPaneliKaosu } from "./kontrol-paneli-kaosu/summary.js";
 import { summarizeKorBomba } from "./kor-bomba/summary.js";
 import { summarizeKorKronometre } from "./kor-kronometre/summary.js";
+import { summarizeKuleUstasi } from "./kule-ustasi/summary.js";
 import { summarizeLafSokma } from "./laf-sokma/summary.js";
 import { summarizeOrtalamaninYarisi } from "./ortalamanin-yarisi/summary.js";
 import { summarizeRusRuleti } from "./rus-ruleti/summary.js";
@@ -48,6 +49,7 @@ export const SUMMARIES: Readonly<Record<string, Summarize>> = {
   "kor-bomba": summarizeKorBomba,
   "kor-kronometre": summarizeKorKronometre,
   "laf-sokma": summarizeLafSokma,
+  "kule-ustasi": summarizeKuleUstasi,
   "ortalamanin-yarisi": summarizeOrtalamaninYarisi,
   "rus-ruleti": summarizeRusRuleti,
   "rusvet-darbe": summarizeRusvetDarbe,

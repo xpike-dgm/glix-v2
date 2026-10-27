@@ -262,8 +262,8 @@ function auditGame(id: string, bots: Record<string, { generate: unknown }> = BOT
 
 describe("izleyici gizliliği (yapısal)", () => {
   const ids = Object.keys(GAMES);
-  it("tüm oyunlar kayıtlı ve botlu (27)", () => {
-    expect(ids).toHaveLength(27);
+  it("tüm oyunlar kayıtlı ve botlu (28)", () => {
+    expect(ids).toHaveLength(28);
     for (const id of ids) expect(BOTS[id], id).toBeDefined();
   });
 
