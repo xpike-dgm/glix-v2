@@ -100,7 +100,7 @@ export function App() {
     // Yalnız geliştirme: arayüz denetimi büyük yazıyı `&text=large` ile açar.
     if (import.meta.env.DEV && params.get("text") === "large") setTextSize("large");
     if (mock?.startsWith("hazirlaniyor")) {
-      devReady(import("./dev/mockHazirlaniyor.js").then((m) => m.startPackMock(mock)));
+      devReady(import("./dev/mockHazirlaniyor.js").then((m) => void m.startPackMock(mock)));
       return;
     }
     if (mock === "loading") {
@@ -110,61 +110,61 @@ export function App() {
     }
     if (mock) {
       if (mock.startsWith("sonkisi-")) {
-        devReady(import("./dev/mockSonKisi.js").then((m) => m.startSonKisiMock(mock, params)));
+        devReady(import("./dev/mockSonKisi.js").then((m) => void m.startSonKisiMock(mock, params)));
       } else if (mock.startsWith("zehirli-")) {
-        devReady(import("./dev/mockZehirli.js").then((m) => m.startZehirliMock(mock, params)));
+        devReady(import("./dev/mockZehirli.js").then((m) => void m.startZehirliMock(mock, params)));
       } else if (mock.startsWith("rus-")) {
-        devReady(import("./dev/mockRusRuleti.js").then((m) => m.startRusRuletiMock(mock, params)));
+        devReady(import("./dev/mockRusRuleti.js").then((m) => void m.startRusRuletiMock(mock, params)));
       } else if (mock.startsWith("gizli-")) {
-        devReady(import("./dev/mockGizliHirsiz.js").then((m) => m.startGizliHirsizMock(mock, params)));
+        devReady(import("./dev/mockGizliHirsiz.js").then((m) => void m.startGizliHirsizMock(mock, params)));
       } else if (mock.startsWith("kor-bomba")) {
-        devReady(import("./dev/mockKorBomba.js").then((m) => m.startKorBombaMock(mock, params)));
+        devReady(import("./dev/mockKorBomba.js").then((m) => void m.startKorBombaMock(mock, params)));
       } else if (mock.startsWith("asiri-yukleme")) {
-        devReady(import("./dev/mockAsiri.js").then((m) => m.startAsiriMock(mock, params)));
+        devReady(import("./dev/mockAsiri.js").then((m) => void m.startAsiriMock(mock, params)));
       } else if (mock.startsWith("kor-kronometre")) {
-        devReady(import("./dev/mockKronometre.js").then((m) => m.startKronometreMock(mock, params)));
+        devReady(import("./dev/mockKronometre.js").then((m) => void m.startKronometreMock(mock, params)));
       } else if (mock.startsWith("cagrisim")) {
-        devReady(import("./dev/mockCagrisim.js").then((m) => m.startCagrisimMock(mock, params)));
+        devReady(import("./dev/mockCagrisim.js").then((m) => void m.startCagrisimMock(mock, params)));
       } else if (mock.startsWith("zaman-")) {
-        devReady(import("./dev/mockZamanBombasi.js").then((m) => m.startZamanBombasiMock(mock, params)));
+        devReady(import("./dev/mockZamanBombasi.js").then((m) => void m.startZamanBombasiMock(mock, params)));
       } else if (mock.startsWith("capraz-")) {
-        devReady(import("./dev/mockCapraz.js").then((m) => m.startCaprazMock(mock, params)));
+        devReady(import("./dev/mockCapraz.js").then((m) => void m.startCaprazMock(mock, params)));
       } else if (mock.startsWith("bozuk-")) {
-        devReady(import("./dev/mockBozuk.js").then((m) => m.startBozukMock(mock, params)));
+        devReady(import("./dev/mockBozuk.js").then((m) => void m.startBozukMock(mock, params)));
       } else if (mock.startsWith("kara-")) {
-        devReady(import("./dev/mockBorsa.js").then((m) => m.startBorsaMock(mock, params)));
+        devReady(import("./dev/mockBorsa.js").then((m) => void m.startBorsaMock(mock, params)));
       } else if (mock.startsWith("karalama-")) {
-        devReady(import("./dev/mockKaralama.js").then((m) => m.startKaralamaMock(mock, params)));
+        devReady(import("./dev/mockKaralama.js").then((m) => void m.startKaralamaMock(mock, params)));
       } else if (mock.startsWith("acgozluluk-")) {
-        devReady(import("./dev/mockAcgozluluk.js").then((m) => m.startAcgozlulukMock(mock, params)));
+        devReady(import("./dev/mockAcgozluluk.js").then((m) => void m.startAcgozlulukMock(mock, params)));
       } else if (mock.startsWith("cizgi-")) {
-        devReady(import("./dev/mockCizgi.js").then((m) => m.startCizgiMock(mock, params)));
+        devReady(import("./dev/mockCizgi.js").then((m) => void m.startCizgiMock(mock, params)));
       } else if (mock.startsWith("alisveris-")) {
-        devReady(import("./dev/mockAlisveris.js").then((m) => m.startAlisverisMock(mock, params)));
+        devReady(import("./dev/mockAlisveris.js").then((m) => void m.startAlisverisMock(mock, params)));
       } else if (mock.startsWith("kareler-")) {
-        devReady(import("./dev/mockKareler.js").then((m) => m.startKarelerMock(mock, params)));
+        devReady(import("./dev/mockKareler.js").then((m) => void m.startKarelerMock(mock, params)));
       } else if (mock.startsWith("ittifak-")) {
-        devReady(import("./dev/mockIttifak.js").then((m) => m.startIttifakMock(mock, params)));
+        devReady(import("./dev/mockIttifak.js").then((m) => void m.startIttifakMock(mock, params)));
       } else if (mock.startsWith("kontrol-")) {
-        devReady(import("./dev/mockKontrol.js").then((m) => m.startKontrolMock(mock, params)));
+        devReady(import("./dev/mockKontrol.js").then((m) => void m.startKontrolMock(mock, params)));
       } else if (mock.startsWith("kendim-")) {
-        devReady(import("./dev/mockKendim.js").then((m) => m.startKendimMock(mock, params)));
+        devReady(import("./dev/mockKendim.js").then((m) => void m.startKendimMock(mock, params)));
       } else if (mock.startsWith("yazi-")) {
-        devReady(import("./dev/mockYazi.js").then((m) => m.startYaziMock(mock, params)));
+        devReady(import("./dev/mockYazi.js").then((m) => void m.startYaziMock(mock, params)));
       } else if (mock.startsWith("sozluk-")) {
-        devReady(import("./dev/mockSozluk.js").then((m) => m.startSozlukMock(mock, params)));
+        devReady(import("./dev/mockSozluk.js").then((m) => void m.startSozlukMock(mock, params)));
       } else if (mock.startsWith("laf-")) {
-        devReady(import("./dev/mockLaf.js").then((m) => m.startLafMock(mock, params)));
+        devReady(import("./dev/mockLaf.js").then((m) => void m.startLafMock(mock, params)));
       } else if (mock.startsWith("sizma-")) {
-        devReady(import("./dev/mockSizma.js").then((m) => m.startSizmaMock(mock, params)));
+        devReady(import("./dev/mockSizma.js").then((m) => void m.startSizmaMock(mock, params)));
       } else if (mock.startsWith("rusvet-")) {
-        devReady(import("./dev/mockRusvet.js").then((m) => m.startRusvetMock(mock, params)));
+        devReady(import("./dev/mockRusvet.js").then((m) => void m.startRusvetMock(mock, params)));
       } else if (mock.startsWith("ortalama-")) {
-        devReady(import("./dev/mockOrtalama.js").then((m) => m.startOrtalamaMock(mock, params)));
+        devReady(import("./dev/mockOrtalama.js").then((m) => void m.startOrtalamaMock(mock, params)));
       } else if (/^(landscape|briefing-ready|spectator-)/.test(mock)) {
-        devReady(import("./dev/mockShell.js").then((m) => m.startShellMock(mock, params)));
+        devReady(import("./dev/mockShell.js").then((m) => void m.startShellMock(mock, params)));
       } else {
-        devReady(import("./dev/mock.js").then((m) => m.startMock(mock, params)));
+        devReady(import("./dev/mock.js").then((m) => void m.startMock(mock, params)));
       }
       return;
     }

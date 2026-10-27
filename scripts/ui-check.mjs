@@ -37,7 +37,7 @@ const dIdx = ARGS.indexOf("--degisen");
 const DEGISEN_BASE = DEGISEN && ARGS[dIdx + 1] && !ARGS[dIdx + 1].startsWith("-") ? ARGS[dIdx + 1] : "";
 const oIdx = ARGS.indexOf("--ornek");
 const STRIDE = oIdx >= 0 ? Math.max(1, Number(ARGS[oIdx + 1]) || 1) : Number(ENV.UI_STRIDE) || 1;
-const skipIdx = new Set([dIdx + 1, oIdx + 1]);
+const skipIdx = new Set([dIdx >= 0 ? dIdx + 1 : -1, oIdx >= 0 ? oIdx + 1 : -1]);
 const ONLY = ARGS.find((a, i) => !a.startsWith("-") && !skipIdx.has(i)) ?? "";
 const QUICK = flag("--hizli") || (DEGISEN && !flag("--tum-boyut"));
 const WORKERS = Math.max(1, Number(ENV.UI_WORKERS) || Math.min(4, cpus().length));
@@ -1420,6 +1420,16 @@ async function checkOne(page, st, scr, [w, h]) {
         },
       )
       .catch(() => {});
+    // Çözülmemiş görsel kareyi geciktirip ekran görüntüsünde eksik arka plana yol açmasın.
+    await page
+      .evaluate(() =>
+        Promise.all(
+          [...document.querySelectorAll(".world__img, .panels__img, .gcard__art img")].map((i) =>
+            i.decode().catch(() => {}),
+          ),
+        ),
+      )
+      .catch(() => {});
     // Ölçüm animasyon ortasına denk gelmesin: sonlu animasyonlar bitiş karesine, sonsuzlar durdurulur.
     // (Aksi halde kontrast, rozetin belirme ya da basış parlamasının o anki karesine bağlı kalır.)
     await page.evaluate(() => {
@@ -1490,7 +1500,7 @@ async function checkGroup(worker, browser, scr, sizes, onDone) {
 }
 
 let URL_BASE = "";
-const FRAME_MS = 60;
+const FRAME_MS = 120;
 // `settle` yazılmamış ekranlar için sanal bekleme: hazır işareti + ağ sessizliği sonrası kısa pay yeter
 // (sonlu animasyonlar zaten bitiş karesine alınır); zamanlayıcıyla ilerleyen ekranlar açık `settle` taşır.
 const DEFAULT_SETTLE = 400;
