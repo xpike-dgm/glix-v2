@@ -453,12 +453,15 @@ async function main() {
     await handOver.getByRole("button", { name: "Devret", exact: true }).click();
     await btn(B, /^başlat$/i).waitFor(OPT);
     await btn(A, /^hazırım$/i).waitFor(OPT);
+    // Devir iki istemciye ayrı anlarda ulaşır: eski host'un düğmesinin kalkmasını bekle.
+    await btn(A, /^başlat$/i).waitFor({ state: "detached", timeout: OPT.timeout });
     assert(!(await btn(A, /^başlat$/i).count()), "A artık BAŞLAT görmemeli");
     await shot(B, "06d-b-host");
     await longPressSeat(B, "Ayşe");
     await B.getByRole("dialog").getByRole("button", { name: "Ev sahipliğini devret", exact: true }).click();
     await B.getByRole("dialog").getByRole("button", { name: "Devret", exact: true }).click();
     await btn(A, /^başlat$/i).waitFor(OPT);
+    await btn(B, /^başlat$/i).waitFor({ state: "detached", timeout: OPT.timeout });
     assert(!(await btn(B, /^başlat$/i).count()), "B BAŞLAT'ı geri vermeli");
     log("ev sahipliği devri tamam");
 
