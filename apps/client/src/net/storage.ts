@@ -5,6 +5,8 @@ export const KEYS = {
   muted: "glix.muted",
   volume: "glix.volume",
   installHint: "glix.installHint",
+  /** İlk maç sonuna kadar oynandı: kurulum ipucu bundan sonra çıkar. */
+  firstMatch: "glix.firstMatch",
   sessizdeCal: "glix.sessizdeCal",
   avatar: "glix.avatar",
   haptics: "glix.haptics",

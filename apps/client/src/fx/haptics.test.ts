@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { shapePattern } from "./haptics.js";
+import { iosSwitchSupported, mayUseSwitch, pickHapticPath, shapePattern } from "./haptics.js";
 
 describe("shapePattern", () => {
   it("normal harekette deseni olduğu gibi verir", () => {
@@ -43,5 +43,31 @@ describe("titreşim ayarı", () => {
     settings.setHaptics(false);
     haptics.hapticTap();
     expect(vibrate).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("titreşim yolu seçimi", () => {
+  it("ayar kapalıysa hiçbir yol yok", () => {
+    expect(pickHapticPath({ enabled: false, hasVibrate: true, iosSwitch: true })).toBe("none");
+  });
+  it("vibrate varsa o; yoksa iOS anahtarı; ikisi de yoksa hiç", () => {
+    expect(pickHapticPath({ enabled: true, hasVibrate: true, iosSwitch: true })).toBe("vibrate");
+    expect(pickHapticPath({ enabled: true, hasVibrate: false, iosSwitch: true })).toBe("ios-switch");
+    expect(pickHapticPath({ enabled: true, hasVibrate: false, iosSwitch: false })).toBe("none");
+  });
+  it("anahtar yolu yalnız iPhone ve switch desteğiyle", () => {
+    const iphone =
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1";
+    const ipad =
+      "Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1";
+    expect(iosSwitchSupported(iphone, true)).toBe(true);
+    expect(iosSwitchSupported(iphone, false)).toBe(false);
+    expect(iosSwitchSupported(ipad, true)).toBe(false);
+    expect(iosSwitchSupported("Mozilla/5.0 (Linux; Android 14) Chrome/124", true)).toBe(false);
+  });
+  it("etkin dokunuş yokken anahtar denenmez", () => {
+    expect(mayUseSwitch(false)).toBe(false);
+    expect(mayUseSwitch(true)).toBe(true);
+    expect(mayUseSwitch(undefined)).toBe(true);
   });
 });

@@ -9,11 +9,19 @@ export interface HintInput {
   canPrompt: boolean;
   /** iOS Safari (kurulu değil). */
   iosSafari: boolean;
+  /** Oyuncu en az bir maçı sonuna kadar oynadı (ilk ziyarette ipucu çıkmaz). */
+  firstMatchDone: boolean;
 }
 
 /** Hangi kurulum ipucu gösterilir: Chromium için "Yükle" düğmesi, iOS Safari için tek satırlık yönerge. */
-export function pickInstallHint({ standalone, dismissed, canPrompt, iosSafari }: HintInput): InstallHint {
-  if (standalone || dismissed) return null;
+export function pickInstallHint({
+  standalone,
+  dismissed,
+  canPrompt,
+  iosSafari,
+  firstMatchDone,
+}: HintInput): InstallHint {
+  if (standalone || dismissed || !firstMatchDone) return null;
   if (canPrompt) return "prompt";
   if (iosSafari) return "ios";
   return null;

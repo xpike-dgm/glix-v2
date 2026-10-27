@@ -1,5 +1,6 @@
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from "solid-js";
 import { hapticMatch, hapticSolo, hapticTap } from "../../fx/haptics.js";
+import { currentFlashPeak } from "../../fx/shake.js";
 import { match as matchSound, solo as soloSound, tap, unlockAudio } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
@@ -39,7 +40,10 @@ export default function KorKronometreScreen(props: GameScreenProps) {
     unlockAudio();
     tap();
     hapticTap();
-    flashEl?.animate([{ opacity: 0.55 }, { opacity: 0 }], { duration: 420, easing: "ease-out" });
+    flashEl?.animate([{ opacity: currentFlashPeak(0.55) }, { opacity: 0 }], {
+      duration: 420,
+      easing: "ease-out",
+    });
   };
 
   // Sonuç açılınca bir kez ses ve titreşim.

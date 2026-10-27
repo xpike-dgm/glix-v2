@@ -155,6 +155,14 @@ html[data-pixi="1"] .stage::after {
   letter-spacing: 0.01em;
 }
 
+/* Titreşimsiz cihazda (iOS Safari, eski tarayıcı) sarsıntılar biraz güçlenir; JS `fx/shake.ts` ile aynı oran. */
+:root {
+  --shake-gain: 1;
+}
+:root[data-haptics="none"] {
+  --shake-gain: 1.4;
+}
+
 /* biome-ignore-start lint/complexity/noImportantStyles: hareketi azaltma tercihi her animasyonu ezmeli */
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-motion="full"]) *,

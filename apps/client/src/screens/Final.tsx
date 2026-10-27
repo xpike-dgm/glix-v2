@@ -4,6 +4,7 @@ import { playConfetti } from "../fx/confetti.js";
 import { hapticFinal } from "../fx/haptics.js";
 import { fanfare } from "../fx/sound.js";
 import { returnToLobby } from "../net/client.js";
+import { noteMatchFinished } from "../pwa/pwa.js";
 import { Avatar } from "../ui/Avatar.js";
 import type { Mood } from "../ui/avatars.js";
 import { FeedbackRow } from "../ui/FeedbackRow.js";
@@ -38,6 +39,7 @@ export function Final(props: { snap: RoomSnapshot }) {
   onMount(() => {
     fanfare();
     hapticFinal();
+    noteMatchFinished();
     const t = setTimeout(() => setAnnounce(spoken()), 250);
     onCleanup(() => clearTimeout(t));
     if (!confetti) return;

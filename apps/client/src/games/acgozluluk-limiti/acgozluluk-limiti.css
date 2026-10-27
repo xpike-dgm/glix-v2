@@ -256,19 +256,19 @@
     transform: translateX(0);
   }
   12% {
-    transform: translateX(-12px) rotate(-1.5deg);
+    transform: translateX(calc(-12px * var(--shake-gain, 1))) rotate(-1.5deg);
   }
   28% {
-    transform: translateX(10px) rotate(1.2deg);
+    transform: translateX(calc(10px * var(--shake-gain, 1))) rotate(1.2deg);
   }
   46% {
-    transform: translateX(-7px);
+    transform: translateX(calc(-7px * var(--shake-gain, 1)));
   }
   66% {
-    transform: translateX(4px);
+    transform: translateX(calc(4px * var(--shake-gain, 1)));
   }
   84% {
-    transform: translateX(-2px);
+    transform: translateX(calc(-2px * var(--shake-gain, 1)));
   }
 }
 

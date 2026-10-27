@@ -17,13 +17,13 @@
 }
 @keyframes a-shake {
   20% {
-    transform: translateX(-6px);
+    transform: translateX(calc(-6px * var(--shake-gain, 1)));
   }
   50% {
-    transform: translateX(6px);
+    transform: translateX(calc(6px * var(--shake-gain, 1)));
   }
   80% {
-    transform: translateX(-3px);
+    transform: translateX(calc(-3px * var(--shake-gain, 1)));
   }
 }
 .abudget__row {

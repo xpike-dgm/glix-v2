@@ -16,6 +16,7 @@ const [waitingWorker, setWaitingWorker] = createSignal<ServiceWorker | null>(nul
 const [online, setOnline] = createSignal(typeof navigator === "undefined" ? true : navigator.onLine);
 const [promptEvent, setPromptEvent] = createSignal<InstallPromptEvent | null>(null);
 const [dismissed, setDismissed] = createSignal(readStored(KEYS.installHint) === "1");
+const [firstMatchDone, setFirstMatchDone] = createSignal(readStored(KEYS.firstMatch) === "1");
 const [installed, setInstalled] = createSignal(false);
 
 export const updateWaiting = (): boolean => waitingWorker() !== null;
@@ -28,7 +29,15 @@ export function installHint() {
     dismissed: dismissed(),
     canPrompt: promptEvent() !== null,
     iosSafari: isIosSafari(navigator),
+    firstMatchDone: firstMatchDone(),
   });
+}
+
+/** Final ekranı gösterildi: kurulum ipucu artık ana sayfada (ya da bir sonraki açılışta) çıkabilir. */
+export function noteMatchFinished(): void {
+  if (firstMatchDone()) return;
+  setFirstMatchDone(true);
+  writeStored(KEYS.firstMatch, "1");
 }
 
 export function dismissInstallHint(): void {

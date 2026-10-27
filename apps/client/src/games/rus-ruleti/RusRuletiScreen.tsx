@@ -1,5 +1,5 @@
 import { createEffect, createMemo, createSignal, For, on, onCleanup, Show, untrack } from "solid-js";
-import { hapticError, hapticReady, hapticSolo, hapticTap, hapticTick } from "../../fx/haptics.js";
+import { hapticError, hapticPress, hapticReady, hapticSolo, hapticTick } from "../../fx/haptics.js";
 import { unlockAudio } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
@@ -55,7 +55,7 @@ export default function RusRuletiScreen(props: GameScreenProps) {
     if (!canAim()) return;
     unlockAudio();
     lock();
-    hapticTap();
+    hapticPress();
     setSel(id);
   };
   const fire = (): void => {

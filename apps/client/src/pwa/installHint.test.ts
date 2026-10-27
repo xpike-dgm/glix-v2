@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { isIosSafari, pickInstallHint } from "./installHint.js";
 
-const base = { standalone: false, dismissed: false, canPrompt: false, iosSafari: false };
+const base = {
+  standalone: false,
+  dismissed: false,
+  canPrompt: false,
+  iosSafari: false,
+  firstMatchDone: true,
+};
 
 describe("pickInstallHint", () => {
   it("hiçbir imkan yoksa ipucu yok", () => {
@@ -12,6 +18,10 @@ describe("pickInstallHint", () => {
   });
   it("iOS Safari'de yönerge", () => {
     expect(pickInstallHint({ ...base, iosSafari: true })).toBe("ios");
+  });
+  it("ilk maç bitmeden hiçbir ipucu çıkmaz", () => {
+    expect(pickInstallHint({ ...base, canPrompt: true, firstMatchDone: false })).toBeNull();
+    expect(pickInstallHint({ ...base, iosSafari: true, firstMatchDone: false })).toBeNull();
   });
   it("kurulu (standalone) ya da kapatılmışsa asla göstermez", () => {
     expect(pickInstallHint({ ...base, canPrompt: true, standalone: true })).toBeNull();

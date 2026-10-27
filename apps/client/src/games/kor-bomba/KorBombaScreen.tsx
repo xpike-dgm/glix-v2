@@ -1,6 +1,6 @@
 import { createEffect, createMemo, createSignal, For, on, onCleanup, Show, untrack } from "solid-js";
 import { Dynamic } from "solid-js/web";
-import { hapticError, hapticSolo, hapticTap } from "../../fx/haptics.js";
+import { hapticError, hapticPress, hapticSolo, hapticTap } from "../../fx/haptics.js";
 import { fail, unlockAudio } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
@@ -147,7 +147,7 @@ export default function KorBombaScreen(props: GameScreenProps) {
     if (!target || target.connected === false) return;
     unlockAudio();
     tak();
-    hapticTap();
+    hapticPress();
     localPass = true;
     setHolder(id, () => sendActionAck({ kind: "pass", to: id }));
     setLit(id);
