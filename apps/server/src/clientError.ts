@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { toStoredError } from "./errorScrub.js";
+import { scrubText, toStoredError } from "./errorScrub.js";
 import { log } from "./log.js";
 import type { IpLimiter } from "./ratelimit.js";
 import { SECURITY_HEADERS } from "./static.js";
@@ -127,7 +127,12 @@ export function handleClientError(req: IncomingMessage, res: ServerResponse, env
       reply(res, 400);
       return;
     }
-    log.warn("client_error", { ...report });
+    // Günlükte de e-posta, IP ve belirteç benzeri diziler maskelenir; uzunluk sınırları doğrulamadakiyle aynı.
+    log.warn("client_error", {
+      ...report,
+      message: scrubText(report.message, 500),
+      ...(report.stack ? { stack: scrubText(report.stack, 2048) } : {}),
+    });
     (env.stats ?? noopStats).clientError(env.now ?? Date.now(), toStoredError(report));
     reply(res, 204);
   });

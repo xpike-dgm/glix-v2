@@ -111,9 +111,16 @@ describe("POST /api/client-error", () => {
     }
   });
 
+  it("günlükte e-posta, IP ve belirteç maskelenir", async () => {
+    const message = "hata ali@ornek.com 10.1.2.3 abcdefghijklmnopqrstuvwxyz123456";
+    expect(await post(JSON.stringify({ message, version: "1" }))).toBe(204);
+    const l = logged()[0] as { message: string };
+    expect(l.message).toBe("hata [e-posta] [ip] [belirteç]");
+  });
+
   it("uzun alanlar kırpılır", async () => {
     expect(
-      await post(JSON.stringify({ message: "m".repeat(900), version: "1", stack: "s".repeat(3000) })),
+      await post(JSON.stringify({ message: "mm ".repeat(300), version: "1", stack: "ss ".repeat(1000) })),
     ).toBe(204);
     const l = logged()[0] as { message: string; stack: string };
     expect(l.message).toHaveLength(500);
