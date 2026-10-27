@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { player } from "../net/fixtures.js";
-import { formatScore, playersOnly, podiumOrder, rankPlayers, watchersOf, winnersOf } from "./ranking.js";
+import {
+  deltaLabel,
+  formatScore,
+  playersOnly,
+  podiumOrder,
+  previousScore,
+  rankDeltas,
+  rankPlayers,
+  watchersOf,
+  winnersOf,
+} from "./ranking.js";
 
 const players = [player("a"), player("b"), player("c"), player("d")];
 
@@ -46,5 +56,29 @@ describe("izleyiciler", () => {
     expect(watchersOf(all).map((p) => p.id)).toEqual(["b"]);
     const r = rankPlayers(playersOnly(all), (p) => p.score);
     expect(r.map((x) => x.player.id)).toEqual(["a", "c"]);
+  });
+});
+
+describe("tur sonu sıra değişimi", () => {
+  const mk = (id: string, score: number) => ({ ...player(id), score });
+  it("önceki puan, bu turun ödülü çıkarılarak bulunur", () => {
+    expect(previousScore(mk("a", 5), { a: 2 })).toBe(3);
+    expect(previousScore(mk("a", 5), {})).toBe(5);
+  });
+  it("yükselen pozitif, düşen negatif, değişmeyen yok", () => {
+    // Önce: a 5, b 4, c 3, d 0 -> sonra: c +3 = 6 öne geçer, a ve b birer düşer.
+    const now = [mk("a", 5), mk("b", 4), mk("c", 6), mk("d", 0)];
+    expect(rankDeltas(now, { c: 3 })).toEqual({ c: 2, a: -1, b: -1 });
+  });
+  it("ödül yoksa değişim yoktur; eşit puan sırayı paylaşır", () => {
+    expect(rankDeltas([mk("a", 2), mk("b", 1)], {})).toEqual({});
+    // Önce a 3, b 1 -> sonra b +2 = 3: eşitlik, b 2. sıradan 1.'ye çıkar, a 1.'de kalır.
+    expect(rankDeltas([mk("a", 3), mk("b", 3)], { b: 2 })).toEqual({ b: 1 });
+  });
+  it("rozet metni", () => {
+    expect(deltaLabel(2)).toBe("↑2");
+    expect(deltaLabel(-1)).toBe("↓1");
+    expect(deltaLabel(0)).toBe("");
+    expect(deltaLabel(undefined)).toBe("");
   });
 });

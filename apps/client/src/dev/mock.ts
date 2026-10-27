@@ -61,6 +61,7 @@ export function startMock(kind: string, params: URLSearchParams): void {
     selection.mode === "manual" ? (pick > 1 ? CATALOG.slice(0, pick).map((g) => g.id) : ["butona-bas"]) : [];
   let phase: RoomPhase = "lobby";
   let readyIds: string[] = [];
+  let continueIds: string[] = [];
   const hostId = params.get("guest") === "1" ? "p1" : SELF;
   // `&ready=K`: host dışındaki ilk K oyuncu lobide "Hazırım" demiş olur.
   let lobbyReady: string[] = players
@@ -102,7 +103,7 @@ export function startMock(kind: string, params: URLSearchParams): void {
           orientation: "portrait",
           participants: players.filter((p) => !p.spectator).map((p) => p.id),
           readyIds,
-          continueIds: [],
+          continueIds,
           phaseStartedAt,
           phaseEndsAt,
           publicView,
@@ -188,9 +189,16 @@ export function startMock(kind: string, params: URLSearchParams): void {
     const scores = [9, 6, 6, 2, -1, 0, 3, 4];
     const playing = players.filter((p) => !p.spectator);
     mini = Object.fromEntries(playing.map((p, i) => [p.id, scores[i] ?? 0]));
+    if (gameIds.length === 0) gameIds = ["butona-bas", "kor-bomba", "cagrisim-agi"];
+    // Genel puanlar bu turun ödüllerini içerir; önceki sıralama bunlardan geri çıkarılır (sıra değişimi görünsün).
+    const prev = [1, 5, 4, 3, 2, 0, 3, 2];
+    const awardOf = (i: number): number => (i === 0 ? 2 : i === 1 ? 1 : i === 4 ? -1 : 0);
+    players = players.map((p, i) => (p.spectator ? p : { ...p, score: (prev[i] ?? 0) + awardOf(i) }));
+    // `&devam=1`: sen ve çoğu oyuncu Devam demiş.
+    continueIds = params.get("devam") === "1" ? [SELF, ...playing.slice(1, -2).map((p) => p.id)] : [];
     result = {
       miniScores: mini,
-      awards: Object.fromEntries(playing.map((p, i) => [p.id, i === 0 ? 2 : i === 1 ? 1 : i === 4 ? -1 : 0])),
+      awards: Object.fromEntries(playing.map((p, i) => [p.id, awardOf(i)])),
     };
     publish();
     if (kind === "results") later(toResults, 7000);
@@ -199,6 +207,15 @@ export function startMock(kind: string, params: URLSearchParams): void {
     phase = "final";
     const totals = [5, 4, 4, 2, -1, 0, 3, 2];
     players = players.map((p, i) => ({ ...p, score: p.spectator ? 0 : (totals[i] ?? 0) }));
+    // Final unvanları için tur geçmişi (herkese açık ödüller).
+    void import("../net/matchHistory.js").then((m) =>
+      m.seedRounds([
+        { round: 0, gameId: "butona-bas", awards: { p0: 2, p1: 1 } },
+        { round: 1, gameId: "sozluk-blofu", awards: { p2: 2, p3: 1, p4: -1 } },
+        { round: 2, gameId: "kor-bomba", awards: { p0: 2, p2: 1, p4: -1 } },
+        { round: 3, gameId: "cagrisim-agi", awards: { p1: 2, p0: 1 } },
+      ]),
+    );
     // `&gallery=N`: maç sonu galerisine N çizim koyar (ekran denetimi).
     const gal = Number(params.get("gallery") ?? 0);
     if (gal > 0)
@@ -287,6 +304,10 @@ export function startMock(kind: string, params: URLSearchParams): void {
         later(() => addWindow(Math.random() < 0.65 && mate ? [SELF, mate.id] : [SELF]), 260);
         break;
       }
+      case "continue":
+        continueIds = [...new Set([...continueIds, SELF])];
+        publish();
+        break;
       case "returnToLobby":
         phase = "lobby";
         players = players.map((p) => ({ ...p, score: 0 }));

@@ -1082,6 +1082,26 @@ const SCREENS = [
   { name: "lobby-tonight-random", q: "mock=lobby&n=8", settle: 900 },
   { name: "lobby-tonight-manual", q: "mock=lobby&n=8&sel=manual&pick=4", settle: 900 },
   { name: "lobby-tonight-guest", q: "mock=lobby&n=8&guest=1&sel=manual&pick=3", settle: 900 },
+  // U4: sonuç ve final ekranı (sıra değişimi, Devam, podyum + unvanlar + galeri).
+  { name: "sonuc-hareket-5", q: "mock=results&n=5", settle: 2600 },
+  { name: "sonuc-hareket-8", q: "mock=results&n=8", settle: 2600 },
+  { name: "sonuc-devam-basildi", q: "mock=results&n=5&devam=1", settle: 2600 },
+  {
+    name: "sonuc-devam-tikla",
+    q: "mock=results&n=5",
+    settle: 2200,
+    act: async (p) => p.getByRole("button", { name: "Devam", exact: true }).click(),
+  },
+  { name: "final-podyum-5", q: "mock=final&n=5&gallery=10", settle: 2600 },
+  { name: "final-podyum-8", q: "mock=final&n=8&gallery=12", settle: 2600 },
+  {
+    name: "final-podyum-kaydir-8",
+    q: "mock=final&n=8&gallery=12",
+    settle: 2600,
+    act: async (p) => p.locator(".fin__scroll").evaluate((el) => el.scrollTo(0, el.scrollHeight)),
+  },
+  { name: "final-host-podyum", q: "mock=final&n=5&gallery=6", settle: 2600 },
+  { name: "final-misafir-podyum", q: "mock=final&n=5&guest=1&gallery=6", settle: 2600 },
 ];
 
 function freePort() {

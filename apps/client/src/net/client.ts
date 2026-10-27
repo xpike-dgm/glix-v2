@@ -406,6 +406,7 @@ export const sendReaction = (emoji: LobbyEmoji): boolean => rawSend({ type: "rea
 export const renameSelf = (nickname: string): boolean => rawSend({ type: "rename", nickname });
 export const startMatch = (): boolean => rawSend({ type: "startMatch" });
 export const sendReady = (): boolean => rawSend({ type: "ready" });
+export const sendContinue = (): boolean => rawSend({ type: "continue" });
 export const returnToLobby = (): boolean => rawSend({ type: "returnToLobby" });
 export const sendFeedback = (rating: number, text: string): boolean => {
   const clean = text.trim();

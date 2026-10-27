@@ -17,7 +17,7 @@ export function MatchGallery(props: { players: PlayerInfo[] }) {
     <Show when={galleryItems().length > 0}>
       <section class="kd gal rise" style={{ "--i": 3 }} aria-label="Maçın çizimleri">
         <p class="overline gal__title">Maçın çizimleri</p>
-        <ul class="gal__strip" data-scroll>
+        <ul class="gal__strip">
           <For each={galleryItems()}>
             {(it) => (
               <li class="gal__item">

@@ -53,3 +53,33 @@ export function playersOnly(players: readonly PlayerInfo[]): PlayerInfo[] {
 export function watchersOf(players: readonly PlayerInfo[]): PlayerInfo[] {
   return players.filter((p) => p.spectator);
 }
+
+/** Bu turdan önceki genel puan: şimdiki puandan bu turda eklenen puan çıkarılır (sunucu `result.awards`'ı zaten gönderir). */
+export function previousScore(player: PlayerInfo, awards: Readonly<Record<string, number>>): number {
+  return player.score - (awards[player.id] ?? 0);
+}
+
+/**
+ * Tur sonunda genel sıralamadaki değişim: oyuncu kimliği -> önceki sıra eksi yeni sıra
+ * (pozitif: yükseldi, negatif: düştü, 0 ya da yok: aynı). Eşit puan aynı sırayı paylaşır.
+ */
+export function rankDeltas(
+  players: readonly PlayerInfo[],
+  awards: Readonly<Record<string, number>>,
+): Record<string, number> {
+  const now = rankPlayers(players, (p) => p.score);
+  const before = rankPlayers(players, (p) => previousScore(p, awards));
+  const prevRank = new Map(before.map((r) => [r.player.id, r.rank]));
+  const out: Record<string, number> = {};
+  for (const r of now) {
+    const prev = prevRank.get(r.player.id);
+    if (prev !== undefined && prev !== r.rank) out[r.player.id] = prev - r.rank;
+  }
+  return out;
+}
+
+/** Sıra değişimi rozeti: "↑2", "↓1"; değişmediyse boş. */
+export function deltaLabel(delta: number | undefined): string {
+  if (!delta) return "";
+  return delta > 0 ? `↑${delta}` : `↓${Math.abs(delta)}`;
+}

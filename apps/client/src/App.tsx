@@ -1,6 +1,7 @@
 import { createEffect, createMemo, createSignal, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 import { startNet } from "./net/client.js";
 import { normalizeCode } from "./net/code.js";
+import { collectRounds } from "./net/matchHistory.js";
 import { setState, state } from "./net/store.js";
 import { PackScreen } from "./pwa/PackScreen.js";
 import {
@@ -52,6 +53,7 @@ export function App() {
 
   // Karalama / Bozuk Telefon çizimleri (sunucunun herkese açık gönderdikleri) maç sonu galerisi için birikir.
   createEffect(() => collectGallery(state.snapshot));
+  createEffect(() => collectRounds(state.snapshot));
 
   // Lobiye girince lobi arka planı önden indirilir.
   createEffect(() => {

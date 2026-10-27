@@ -2306,3 +2306,365 @@
     display: none;
   }
 }
+
+/* ---- Sonuç: tur özeti, genel sıralama (FLIP), sıradaki oyun + Devam ---- */
+.results__summary {
+  margin: 2px 0 0;
+  font-size: var(--fs-15);
+  color: var(--text-dim);
+  text-wrap: balance;
+}
+.results__body {
+  justify-content: flex-start;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.results__body::-webkit-scrollbar {
+  display: none;
+}
+.results__standing {
+  flex: none;
+  margin: 14px 0 6px;
+  text-align: center;
+}
+.srows {
+  margin-top: 0;
+  overflow: visible;
+  flex: none;
+  padding-bottom: 8px;
+}
+.srow {
+  position: relative;
+  min-height: 46px;
+}
+.srow .row__score {
+  min-width: 44px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.row__score[data-bump="1"] {
+  animation: pop-big 320ms var(--ease);
+}
+.row__delta {
+  flex: none;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+  font-variant-numeric: tabular-nums;
+}
+.row__delta[data-dir="up"] {
+  color: var(--lime);
+}
+.row__delta[data-dir="down"] {
+  color: #ff6b7a;
+}
+.tok {
+  position: absolute;
+  left: 64px;
+  top: 50%;
+  margin-top: -13px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #1b2d00;
+  background: var(--lime);
+  box-shadow: 0 0 10px rgba(182, 255, 59, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.tok[data-neg="1"] {
+  color: #fff;
+  background: #e0405a;
+  box-shadow: 0 0 10px rgba(224, 64, 90, 0.55);
+}
+.next {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.next__card {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.next__art {
+  flex: none;
+  width: 64px;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(140, 160, 255, 0.12);
+}
+.next__art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.next__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.next__text .overline {
+  font-size: var(--fs-13);
+  letter-spacing: 0.1em;
+}
+.next__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-15);
+  line-height: 1.2;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.next__go {
+  flex: 0 0 min(150px, 46%);
+}
+.next__go .tamam {
+  padding-top: 0;
+}
+.next__go .tamam__count {
+  margin-top: 4px;
+  font-size: var(--fs-13);
+}
+.results__foot {
+  padding-top: 8px;
+}
+@media (max-height: 700px) and (orientation: portrait) {
+  .podium {
+    --pod-big: 60px;
+    --pod-small: 48px;
+    margin-top: 4px;
+  }
+  .podium__badge {
+    height: 26px;
+    margin-bottom: 4px;
+  }
+  .podium__name {
+    margin-top: 8px;
+  }
+  .podium__score {
+    font-size: var(--fs-18);
+  }
+  .podium__col[data-pos="1"] .podium__block,
+  .podium__col[data-pos="2"] .podium__block {
+    height: 22px;
+    font-size: var(--fs-15);
+  }
+  .podium__col[data-pos="0"] .podium__block {
+    height: 30px;
+    font-size: var(--fs-15);
+  }
+}
+@media (max-height: 460px) {
+  .next__art {
+    width: 48px;
+  }
+  .next__go .tamam__count {
+    display: none;
+  }
+}
+
+/* ---- Final: podyum, unvanlar, galeri; orta bölge kayar, ana düğme altta sabit ---- */
+.fin__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 14px;
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 14px), transparent);
+  mask-image: linear-gradient(#000 calc(100% - 14px), transparent);
+}
+.fin__scroll::-webkit-scrollbar {
+  display: none;
+}
+.fin__a,
+.fin__b {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.fin__head {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.fin__name {
+  margin: 0;
+  font-size: clamp(26px, 8vw, 34px);
+  line-height: 1.1;
+  color: var(--amber);
+  text-shadow: 0 0 22px rgba(255, 194, 59, 0.45);
+  overflow-wrap: anywhere;
+}
+.fin__score {
+  margin: 0;
+  font-size: var(--fs-18);
+  color: var(--text-dim);
+}
+.fin__podium {
+  margin-top: 0;
+  --pod-big: clamp(72px, 22vw, 100px);
+  --pod-small: clamp(56px, 17vw, 72px);
+}
+.fin__crown {
+  display: block;
+  width: 30px;
+  height: 30px;
+  color: var(--amber);
+  filter: drop-shadow(0 0 10px rgba(255, 194, 59, 0.7));
+  transform: rotate(-6deg);
+}
+.fin__rows {
+  margin: 0;
+  overflow: visible;
+  flex: none;
+}
+.fin__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+.fin__chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.fin__chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 99px;
+  background: rgba(255, 194, 59, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(255, 194, 59, 0.3);
+  max-width: 100%;
+}
+.fin__chiptext {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+.fin__chiplabel {
+  font-weight: 700;
+  font-size: var(--fs-15);
+  color: var(--amber);
+}
+.fin__chipnick {
+  font-size: 13px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Galeri: küçük resimler kırılarak dizilir; en az bir tam satır her zaman görünür. */
+.fin .gal {
+  margin-top: 0;
+}
+.fin .gal__strip {
+  flex-wrap: wrap;
+  justify-content: center;
+  overflow: visible;
+  padding: 2px 0 4px;
+}
+.fin .final__foot {
+  padding-top: 8px;
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .fin__scroll {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    column-gap: 16px;
+  }
+  .fin__podium {
+    --pod-big: 56px;
+    --pod-small: 44px;
+  }
+  .fin__podium .podium__block {
+    height: 22px;
+  }
+  .fin__podium .podium__col[data-pos="0"] .podium__block {
+    height: 30px;
+  }
+}
+@media (max-height: 700px) and (orientation: portrait) {
+  .fin__podium {
+    --pod-big: 60px;
+    --pod-small: 48px;
+  }
+}
+.next__go .tamam__count[data-quiet="1"] {
+  display: none;
+}
+.next__go .pbtn {
+  min-width: 0;
+  width: 100%;
+  min-height: 52px;
+  padding-inline: 8px;
+  font-size: var(--fs-18);
+}
+@media (max-width: 359px) {
+  .next__art {
+    display: none;
+  }
+  .next__go {
+    flex-basis: 132px;
+  }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .fin__podium .podium__block {
+    display: none;
+  }
+  .fin__podium .podium__score {
+    font-size: var(--fs-18);
+  }
+  .fin__podium .podium__badge {
+    height: 24px;
+    margin-bottom: 0;
+  }
+  .fin__rows .row {
+    gap: 8px;
+    padding: 4px 8px;
+    min-height: 44px;
+  }
+  .fin__rows .row__score--big {
+    width: auto;
+    min-width: 28px;
+  }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .fin .fb__form {
+    flex-wrap: wrap;
+  }
+  .fin .fb__input {
+    order: 3;
+    flex: 1 1 100%;
+  }
+  .fin .fb__chip,
+  .fin .fb__send {
+    flex: 1 1 0;
+  }
+}
