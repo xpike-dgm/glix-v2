@@ -18,11 +18,13 @@ import { clearPack, downloadAll, packProgress, packRunning, storageEpoch } from 
 import { fraction, megabytes } from "../pwa/packPolicy.js";
 import { checkForUpdate } from "../pwa/pwa.js";
 import {
+  colorBlind,
   dataSaver,
   haptics,
   MOTION_CHOICES,
   type MotionPref,
   motion,
+  setColorBlind,
   setDataSaver,
   setHaptics,
   setMotion,
@@ -280,6 +282,12 @@ export function Settings() {
             names={TEXT_LABEL}
             value={textSize()}
             onChange={setTextSize}
+          />
+          <Toggle
+            label="Renk körlüğü dostu mod"
+            hint="Renklere şekil, desen ve yazı ekler"
+            on={colorBlind()}
+            onChange={setColorBlind}
           />
         </Group>
 

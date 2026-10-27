@@ -6,7 +6,8 @@ import { Avatar } from "../../ui/Avatar.js";
 import { CheckIcon } from "../../ui/Icons.js";
 import type { Crew } from "./KontrolScreen.js";
 import { Panel } from "./Panel.js";
-import { COLOR_CSS, COLOR_NAME, outcomeOf } from "./view.js";
+import { CbMarker } from "../../ui/CbMarker.js";
+import { COLOR_CSS, COLOR_MARK, COLOR_NAME, outcomeOf } from "./view.js";
 
 interface Props {
   reveal: KontrolReveal;
@@ -93,6 +94,7 @@ export function Sonuc(props: Props) {
                     {(c) => (
                       <>
                         <i class="kp__dot" style={{ background: COLOR_CSS[c()] }} />
+                        <CbMarker index={COLOR_MARK[c()]} size={13} />
                         <span>{COLOR_NAME[c()]}</span>
                         {row()?.correct ? <CheckIcon size={14} /> : <Cross />}
                       </>

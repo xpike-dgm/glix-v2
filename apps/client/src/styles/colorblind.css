@@ -1,0 +1,75 @@
+/*
+ * Renk körlüğü dostu mod (Ayarlar > Görünüm): `:root[data-cb="1"]`.
+ * Renkle verilen her bilgiye şekil, desen ya da yazı ikinci ipucu olarak biner.
+ * Kapalıyken işaretler yer tutmaz; oyunlar kendi yerleşimlerini kendi CSS'inde kurar.
+ */
+.cbm,
+.cbs {
+  display: none;
+  flex: none;
+  vertical-align: middle;
+  pointer-events: none;
+}
+:root[data-cb="1"] .cbm,
+:root[data-cb="1"] .cbs,
+.cbm[data-always="1"],
+.cbs[data-always="1"] {
+  display: inline-flex;
+}
+.cbm {
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.7));
+}
+.cbs[data-kind="ok"] {
+  color: var(--lime);
+}
+.cbs[data-kind="bad"] {
+  color: var(--red);
+}
+.cbs[data-kind="star"] {
+  color: var(--amber);
+}
+.cbs {
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.7));
+}
+
+/* Desen kaplaması: `.cbpat` + `data-p="0..7"`. Yalnız mod açıkken çizilir; zemin rengi yerinde kalır. */
+:root[data-cb="1"] .cbpat {
+  position: relative;
+  overflow: hidden;
+}
+:root[data-cb="1"] .cbpat::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  --cbp: rgba(0, 0, 0, 0.42);
+  mix-blend-mode: normal;
+}
+:root[data-cb="1"] .cbpat[data-p="0"]::after {
+  background: none;
+}
+:root[data-cb="1"] .cbpat[data-p="1"]::after {
+  background: repeating-linear-gradient(45deg, var(--cbp) 0 2px, transparent 2px 6px);
+}
+:root[data-cb="1"] .cbpat[data-p="2"]::after {
+  background: repeating-linear-gradient(-45deg, var(--cbp) 0 2px, transparent 2px 6px);
+}
+:root[data-cb="1"] .cbpat[data-p="3"]::after {
+  background: repeating-linear-gradient(0deg, var(--cbp) 0 2px, transparent 2px 6px);
+}
+:root[data-cb="1"] .cbpat[data-p="4"]::after {
+  background: repeating-linear-gradient(90deg, var(--cbp) 0 2px, transparent 2px 6px);
+}
+:root[data-cb="1"] .cbpat[data-p="5"]::after {
+  background: radial-gradient(circle, var(--cbp) 0 1.6px, transparent 2px) 0 0 / 6px 6px;
+}
+:root[data-cb="1"] .cbpat[data-p="6"]::after {
+  background:
+    repeating-linear-gradient(45deg, var(--cbp) 0 2px, transparent 2px 7px),
+    repeating-linear-gradient(-45deg, var(--cbp) 0 2px, transparent 2px 7px);
+}
+:root[data-cb="1"] .cbpat[data-p="7"]::after {
+  background:
+    conic-gradient(var(--cbp) 25%, transparent 0 50%, var(--cbp) 0 75%, transparent 0) 0 0 / 8px 8px;
+}

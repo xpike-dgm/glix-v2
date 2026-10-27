@@ -5,7 +5,7 @@ import { KEYS, readStored, writeStored } from "../net/storage.js";
  * Ayarların tek kaynağı. Her ayar: bir sinyal (okuyan her yer kendiliğinden güncellenir), bir okuyucu
  * (bozuk değer varsayılana düşer) ve kalıcı bir yazıcı. Ses düzeyi/sessiz `fx/sound.ts`, "Sessiz modda da çal"
  * `fx/audioSession.ts` içinde yaşar; burada yinelenmez.
- * TODO: "Renk körlüğü dostu mod" oyun başına çalışma ister (renk dışında ikinci ipucu); o gelene dek ayar yok.
+ * "Renk körlüğü dostu mod": kökte `data-cb="1"`; renkle verilen her bilgiye şekil/desen/yazı ikinci ipucu olarak biner.
  */
 
 export type MotionPref = "auto" | "reduce" | "full";
@@ -31,11 +31,12 @@ const [motion, setMotionSignal] = createSignal<MotionPref>(
 const [textSize, setTextSizeSignal] = createSignal<TextSize>(
   parseChoice(readStored(KEYS.textSize), TEXT_CHOICES, "normal"),
 );
+const [colorBlind, setColorBlindSignal] = createSignal(parseFlag(readStored(KEYS.colorBlind), false));
 const [dataSaver, setDataSaverSignal] = createSignal(parseFlag(readStored(KEYS.dataSaver), false));
 const [wifiOnly, setWifiOnlySignal] = createSignal(parseFlag(readStored(KEYS.wifiOnly), true));
 const [telemetry, setTelemetrySignal] = createSignal(parseFlag(readStored(KEYS.telemetry), true));
 
-export { dataSaver, haptics, motion, telemetry, textSize, wifiOnly };
+export { colorBlind, dataSaver, haptics, motion, telemetry, textSize, wifiOnly };
 
 /** Kök öğeye yazılan özellikler: CSS yalnız bunlara bakar. */
 export function applyRootSettings(
@@ -46,6 +47,8 @@ export function applyRootSettings(
   else root.dataset.motion = motion();
   if (textSize() === "normal") delete root.dataset.text;
   else root.dataset.text = textSize();
+  if (colorBlind()) root.dataset.cb = "1";
+  else delete root.dataset.cb;
 }
 
 export function setHaptics(on: boolean): void {
@@ -60,6 +63,11 @@ export function setMotion(v: MotionPref): void {
 export function setTextSize(v: TextSize): void {
   setTextSizeSignal(v);
   writeStored(KEYS.textSize, v);
+  applyRootSettings();
+}
+export function setColorBlind(on: boolean): void {
+  setColorBlindSignal(on);
+  writeStored(KEYS.colorBlind, on ? "1" : "0");
   applyRootSettings();
 }
 export function setDataSaver(on: boolean): void {

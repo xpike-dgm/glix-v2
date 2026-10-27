@@ -571,3 +571,14 @@ button.kp__wire:active:not(:disabled) {
     text-align: left;
   }
 }
+
+/* Renk körlüğü dostu mod: kablo hattı desenli ve kalın, ad yanında şekil; şema aynı şekilleri taşır. */
+.kp__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+:root[data-cb="1"] .kp__core {
+  height: 12px;
+  margin-top: -6px;
+}
