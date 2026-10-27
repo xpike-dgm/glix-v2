@@ -5,10 +5,9 @@ import { sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { createChoiceSync } from "../../ui/numberPicker.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import { pressable } from "../../ui/press.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./gizli-kareler.css";
@@ -109,6 +108,7 @@ function Secim(props: SecimProps) {
         <TamamBar
           locked={props.v.locked}
           ready={props.v.ready.length}
+          readyIds={props.v.ready}
           total={total()}
           disabled={mine() === null}
           spectator={props.spectator}
@@ -172,21 +172,15 @@ export default function GizliKarelerScreen(props: GameScreenProps) {
 
   return (
     <Screen class="kk">
-      <header class="game__top">
-        <Show when={view()} fallback={<div class="pbar" />}>
-          {(v) => (
-            <ProgressBar
-              startedAt={bar(v()).from}
-              endsAt={bar(v()).to}
-              now={serverNow}
-              urgency={phase() === "choose1" || phase() === "choose2"}
-            />
-          )}
-        </Show>
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
+      <Show when={view()}>
+        {(v) => (
+          <PhaseClock
+            startedAt={bar(v()).from}
+            endsAt={bar(v()).to}
+            urgency={phase() === "choose1" || phase() === "choose2"}
+          />
+        )}
+      </Show>
 
       <Show when={view()}>
         {(v) => (

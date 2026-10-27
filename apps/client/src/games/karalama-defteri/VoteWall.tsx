@@ -121,13 +121,7 @@ export function VoteWall(props: Props) {
 
   return (
     <>
-      <Header
-        view={props.view}
-        now={props.now}
-        phase="vote"
-        title="Kelimeyi bilmeyen kim?"
-        sound={!props.spectator}
-      />
+      <Header view={props.view} now={props.now} phase="vote" title="Kelimeyi bilmeyen kim?" />
       <div
         class="kd__wall"
         ref={wall}
@@ -196,6 +190,7 @@ export function VoteWall(props: Props) {
         locked={locked()}
         disabled={picked() === null || props.now() >= props.view.voteEndsAt}
         ready={props.view.lockedIds.length}
+        readyIds={props.view.lockedIds}
         total={n()}
         onLock={lockVote}
       />

@@ -30,7 +30,7 @@ export interface GameEntry {
   /** Sonuç ekranının üstüne giren oyuna özel kısa açılış (ör. bilgisiz oyuncunun maskesi düşer). */
   Reveal?: Component<GameScreenProps>;
   /** Yatay oyunlar: yan şerit (süre çubuğu, puan, avatarlar) için görünümden özet çıkarır. */
-  /** Kuralı gereği süresi gizli oyun (Kör Kronometre, Kör Bomba, Son Kişi, Aşırı Yükleme): kabuk saati çizilmez. */
+  /** Kuralı gereği süresi gizli oyun (Kör Kronometre, Kör Bomba, Son Kişi, Aşırı Yükleme) ya da kendi toplam saatini çizen oyun (Zaman Bombası): kabuk saati çizilmez. */
   noClock?: boolean;
   hud?: (match: MatchSnapshot, selfId: string) => HudInfo | null;
 }
@@ -81,6 +81,7 @@ const registry: Record<string, GameEntry> = {
     Art: lazy(() => import("./ortalamanin-yarisi/BriefingArt.js")),
   },
   "zaman-bombasi-hafizasi": {
+    noClock: true,
     Screen: lazy(() => import("./zaman-bombasi-hafizasi/ZamanBombasiScreen.js")),
     Art: lazy(() => import("./zaman-bombasi-hafizasi/BriefingArt.js")),
   },

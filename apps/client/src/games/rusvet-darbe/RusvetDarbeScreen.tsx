@@ -2,11 +2,10 @@ import { createMemo, Match, Show, Switch } from "solid-js";
 import { sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { look } from "../../ui/avatars.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import { PlayerPicker } from "../../ui/PlayerPicker.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
 import { createPendingPick } from "../../ui/playerPicker.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import { Dagitim } from "./Dagitim.js";
@@ -40,21 +39,15 @@ export default function RusvetDarbeScreen(props: GameScreenProps) {
 
   return (
     <Screen class="game rd">
-      <header class="game__top">
-        <Show when={view()} fallback={<div class="pbar" />}>
-          {(v) => (
-            <ProgressBar
-              startedAt={v().phaseStartedAt}
-              endsAt={v().phaseEndsAt}
-              now={serverNow}
-              urgency={v().phase !== "reveal"}
-            />
-          )}
-        </Show>
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
+      <Show when={view()}>
+        {(v) => (
+          <PhaseClock
+            startedAt={v().phaseStartedAt}
+            endsAt={v().phaseEndsAt}
+            urgency={v().phase !== "reveal"}
+          />
+        )}
+      </Show>
 
       <Show when={view()}>
         {(v) => (
@@ -88,6 +81,7 @@ export default function RusvetDarbeScreen(props: GameScreenProps) {
               <TamamBar
                 locked={v().locked}
                 ready={v().ready.length}
+                readyIds={v().ready}
                 total={crew().length}
                 disabled={pick.value() === null}
                 spectator={spectator()}

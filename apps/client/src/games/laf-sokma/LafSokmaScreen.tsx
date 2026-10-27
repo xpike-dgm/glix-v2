@@ -2,8 +2,7 @@ import { createEffect, createMemo, type JSX, on, Show } from "solid-js";
 import { hapticGo } from "../../fx/haptics.js";
 import { go } from "../../fx/sound.js";
 import { serverNow } from "../../net/store.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import type { GameScreenProps } from "../registry.js";
 import "./laf.css";
 import { Reveal } from "./Reveal.js";
@@ -46,26 +45,20 @@ export default function LafSokmaScreen(props: GameScreenProps) {
   return (
     <section class="screen game lf" data-tight={tight() ? "1" : undefined} style={areaStyle()}>
       <div class="col">
-        <header class="game__top">
-          <Show when={view()} fallback={<div class="pbar" />}>
-            {(v) => (
-              <ProgressBar
-                startedAt={v().stageStartedAt}
-                endsAt={v().stageEndsAt}
-                now={serverNow}
-                urgency={
-                  v().phase === "write" ||
-                  v().phase === "finalWrite" ||
-                  v().phase === "vote" ||
-                  v().phase === "finalVote"
-                }
-              />
-            )}
-          </Show>
-          <div class="game__tools">
-            <SoundToggle />
-          </div>
-        </header>
+        <Show when={view()}>
+          {(v) => (
+            <PhaseClock
+              startedAt={v().stageStartedAt}
+              endsAt={v().stageEndsAt}
+              urgency={
+                v().phase === "write" ||
+                v().phase === "finalWrite" ||
+                v().phase === "vote" ||
+                v().phase === "finalVote"
+              }
+            />
+          )}
+        </Show>
 
         <Show
           when={view()}

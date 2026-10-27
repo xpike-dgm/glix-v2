@@ -6,9 +6,8 @@ import { sendAction, sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import type { AckLike } from "../../ui/optimistic.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./acgozluluk-limiti.css";
@@ -88,14 +87,7 @@ export default function AcgozlulukLimitiScreen(props: GameScreenProps) {
 
   return (
     <Screen class="lim">
-      <header class="game__top">
-        <Show when={view()} fallback={<div class="pbar" />}>
-          {(v) => <ProgressBar startedAt={v().startedAt} endsAt={v().endsAt} now={serverNow} urgency />}
-        </Show>
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
+      <Show when={view()}>{(v) => <PhaseClock startedAt={v().startedAt} endsAt={v().endsAt} urgency />}</Show>
 
       <Show when={view()}>
         {(v) => (
@@ -153,6 +145,7 @@ export default function AcgozlulukLimitiScreen(props: GameScreenProps) {
                           spectator
                           locked={false}
                           ready={lockedIds().length}
+                          readyIds={lockedIds()}
                           total={entries().length}
                           onLock={lock}
                         />
@@ -194,6 +187,7 @@ export default function AcgozlulukLimitiScreen(props: GameScreenProps) {
                       locked={locked()}
                       disabled={closed() || mine() === null}
                       ready={lockedIds().length}
+                      readyIds={lockedIds()}
                       total={entries().length}
                       onLock={lock}
                     />

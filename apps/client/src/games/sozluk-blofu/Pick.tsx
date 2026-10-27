@@ -64,6 +64,7 @@ export function Pick(props: Props) {
       <TamamBar
         locked={props.view.locked}
         ready={props.view.ready.length}
+        readyIds={props.view.ready}
         total={props.crew.length}
         disabled={pick.value() === null}
         spectator={props.spectator}

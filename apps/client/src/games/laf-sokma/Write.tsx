@@ -251,6 +251,7 @@ export function Write(props: Props) {
       <TamamBar
         locked={locked()}
         ready={props.view.ready.length}
+        readyIds={props.view.ready}
         total={props.crew.length}
         disabled={!hasAny() || busy()}
         spectator={props.spectator}

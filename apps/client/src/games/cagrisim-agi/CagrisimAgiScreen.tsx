@@ -24,9 +24,8 @@ import {
 import { sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
 import type { GameScreenProps } from "../registry.js";
 import "./cagrisim.css";
 import { Hub } from "./Hub.js";
@@ -156,12 +155,8 @@ function Reveal(props: {
   };
   return (
     <>
-      <header class="game__top">
-        <ProgressBar startedAt={props.startedAt} endsAt={props.endsAt} now={serverNow} />
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
+      <PhaseClock startedAt={props.startedAt} endsAt={props.endsAt} />
+
       <div class="ca-res__head">
         <Hub word={props.word} mini />
         <Show when={headline()}>
@@ -303,17 +298,7 @@ export default function CagrisimAgiScreen(props: GameScreenProps) {
               when={v().reveal}
               fallback={
                 <>
-                  <header class="game__top">
-                    <ProgressBar
-                      startedAt={v().startedAt}
-                      endsAt={v().answerEndsAt}
-                      now={serverNow}
-                      urgency
-                    />
-                    <div class="game__tools">
-                      <SoundToggle />
-                    </div>
-                  </header>
+                  <PhaseClock startedAt={v().startedAt} endsAt={v().answerEndsAt} urgency />
 
                   <div class="ca__mid">
                     <Hub word={v().word} />

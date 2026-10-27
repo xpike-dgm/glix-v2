@@ -104,6 +104,16 @@ export function GameFrame(props: Props) {
   const landscape = () => props.orientation === "landscape";
   const needsTurn = () => landscape() && portraitViewport();
   const [reported, setReported] = createSignal<ClockWindow | null>(null);
+  let owner: symbol | null = null;
+  const setClock = (who: symbol, w: ClockWindow | null): void => {
+    if (w) {
+      owner = who;
+      setReported(w);
+    } else if (owner === who) {
+      owner = null;
+      setReported(null);
+    }
+  };
   // Yatay oyunlar süreyi `hud` ile bildirir; dikey oyunlar `<PhaseClock>` ile.
   const win = createMemo<ClockWindow | null>(
     () => reported() ?? (props.hud ? { ...props.hud, urgency: true } : null),
@@ -118,7 +128,12 @@ export function GameFrame(props: Props) {
   );
 
   return (
-    <ShellContext.Provider value={{ setClock: (w) => setReported(w) }}>
+    <ShellContext.Provider
+      value={{
+        setClock,
+        crew: () => props.players.filter((p) => props.participants.includes(p.id)),
+      }}
+    >
       <div
         class="gframe"
         data-o={props.orientation}

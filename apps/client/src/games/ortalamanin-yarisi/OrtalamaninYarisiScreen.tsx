@@ -6,9 +6,8 @@ import { look } from "../../ui/avatars.js";
 import { NumberPicker } from "../../ui/NumberPicker.js";
 import { createChoiceSync } from "../../ui/numberPicker.js";
 import type { AckLike } from "../../ui/optimistic.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./ortalamanin-yarisi.css";
@@ -63,14 +62,7 @@ export default function OrtalamaninYarisiScreen(props: GameScreenProps) {
 
   return (
     <Screen class="ort">
-      <header class="game__top">
-        <Show when={view()} fallback={<div class="pbar" />}>
-          {(v) => <ProgressBar startedAt={v().startedAt} endsAt={v().endsAt} now={serverNow} urgency />}
-        </Show>
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
+      <Show when={view()}>{(v) => <PhaseClock startedAt={v().startedAt} endsAt={v().endsAt} urgency />}</Show>
 
       <Show when={view()}>
         {(v) => (
@@ -115,6 +107,7 @@ export default function OrtalamaninYarisiScreen(props: GameScreenProps) {
                         spectator
                         locked={false}
                         ready={lockedIds().length}
+                        readyIds={lockedIds()}
                         total={entries().length}
                         onLock={lock}
                       />
@@ -138,6 +131,7 @@ export default function OrtalamaninYarisiScreen(props: GameScreenProps) {
                       locked={locked()}
                       disabled={mine() === null || closed()}
                       ready={lockedIds().length}
+                      readyIds={lockedIds()}
                       total={entries().length}
                       onLock={lock}
                     />

@@ -27,8 +27,6 @@ export function Cizme(props: Props) {
         title={props.spectator ? "Arkadaşların çiziyor" : "Cümleyi çiz"}
         startedAt={props.view.stepStartedAt ?? props.view.startedAt}
         endsAt={props.view.stepEndsAt ?? props.view.startedAt}
-        now={props.now}
-        sound={!props.spectator}
       />
       <Show when={!props.spectator}>
         <p class="bt__say" data-blank={sentence() === "…" ? "1" : undefined}>
@@ -67,6 +65,7 @@ export function Cizme(props: Props) {
               spectator
               locked={false}
               ready={props.view.doneIds.length}
+              readyIds={props.view.doneIds}
               total={props.crew.length}
               onLock={() => undefined}
             />

@@ -14,9 +14,14 @@ interface Props {
  */
 export function PhaseClock(props: Props) {
   const shell = useShell();
+  const owner = Symbol("phase-clock");
   createEffect(() => {
-    shell.setClock({ startedAt: props.startedAt, endsAt: props.endsAt, urgency: props.urgency === true });
+    shell.setClock(owner, {
+      startedAt: props.startedAt,
+      endsAt: props.endsAt,
+      urgency: props.urgency === true,
+    });
   });
-  onCleanup(() => shell.setClock(null));
+  onCleanup(() => shell.setClock(owner, null));
   return null;
 }

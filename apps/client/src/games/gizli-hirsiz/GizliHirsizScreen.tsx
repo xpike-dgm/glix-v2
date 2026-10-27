@@ -3,9 +3,9 @@ import { hapticTap } from "../../fx/haptics.js";
 import { unlockAudio } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
+import { Status } from "../../ui/Status.js";
 import type { GameScreenProps } from "../registry.js";
 import { Core } from "./Core.js";
 import "./gizli-hirsiz.css";
@@ -52,22 +52,11 @@ export default function GizliHirsizScreen(props: GameScreenProps) {
 
   return (
     <Screen class="gh">
-      <header class="game__top">
-        <Show when={view()} fallback={<div class="pbar" />}>
-          {(v) => <ProgressBar startedAt={v().startedAt} endsAt={v().endsAt} now={serverNow} urgency />}
-        </Show>
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
+      <Show when={view()}>{(v) => <PhaseClock startedAt={v().startedAt} endsAt={v().endsAt} urgency />}</Show>
 
-      <div class="gh__text">
-        <span class="overline">Gizli Hırsız</span>
-        <h2 class="gh__head" data-on={pressed() ? "1" : undefined}>
-          {headline()}
-        </h2>
-        <p class="gh__sub">{sub()}</p>
-      </div>
+      <Status class="gh__text" titleClass="gh__head" subClass="gh__sub" on={pressed()} sub={sub()}>
+        {headline()}
+      </Status>
 
       <div class="gh__stage">
         <Core state={pressed() ? "marked" : "idle"} />

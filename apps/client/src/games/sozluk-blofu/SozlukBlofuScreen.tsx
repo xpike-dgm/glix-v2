@@ -2,8 +2,7 @@ import { createEffect, createMemo, type JSX, on, Show } from "solid-js";
 import { hapticGo } from "../../fx/haptics.js";
 import { go } from "../../fx/sound.js";
 import { serverNow } from "../../net/store.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import type { GameScreenProps } from "../registry.js";
 import { Pick } from "./Pick.js";
 import "./sozluk.css";
@@ -53,16 +52,9 @@ export default function SozlukBlofuScreen(props: GameScreenProps) {
   return (
     <section class="screen game sb" data-tight={tight() ? "1" : undefined} style={areaStyle()}>
       <div class="col">
-        <header class="game__top">
-          <Show when={bar()} fallback={<div class="pbar" />}>
-            {(b) => (
-              <ProgressBar startedAt={b().from} endsAt={b().to} now={serverNow} urgency={b().urgency} />
-            )}
-          </Show>
-          <div class="game__tools">
-            <SoundToggle />
-          </div>
-        </header>
+        <Show when={bar()}>
+          {(b) => <PhaseClock startedAt={b().from} endsAt={b().to} urgency={b().urgency} />}
+        </Show>
 
         <Show
           when={view()}

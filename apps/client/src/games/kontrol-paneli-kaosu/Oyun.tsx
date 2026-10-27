@@ -35,7 +35,6 @@ export function Oyun(props: Props) {
   return (
     <>
       <div class="kp__head">
-        <span class="overline">Kontrol paneli</span>
         <span class="kp__title">
           {props.spectator ? "Herkes kablo kesiyor" : cutDone() ? "Kablo kesildi" : "Bir kablo kes"}
         </span>

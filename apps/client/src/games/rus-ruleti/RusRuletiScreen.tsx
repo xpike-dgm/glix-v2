@@ -4,11 +4,11 @@ import { unlockAudio } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
 import { pressable } from "../../ui/press.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
+import { Status } from "../../ui/Status.js";
 import type { GameScreenProps } from "../registry.js";
 import { Revolver } from "./Revolver.js";
 import { bang, click, cock, lock } from "./sounds.js";
@@ -163,29 +163,13 @@ export default function RusRuletiScreen(props: GameScreenProps) {
 
   return (
     <Screen class="game rr">
-      <header class="game__top">
-        <Show when={view()} fallback={<div class="pbar" />}>
-          <ProgressBar
-            startedAt={bar().from}
-            endsAt={bar().to}
-            now={serverNow}
-            urgency={stage() === "deciding"}
-          />
-        </Show>
-        <div class="game__tools">
-          <SoundToggle />
-        </div>
-      </header>
+      <Show when={view()}>
+        <PhaseClock startedAt={bar().from} endsAt={bar().to} urgency={stage() === "deciding"} />
+      </Show>
 
-      <div class="rr__text">
-        <span class="overline">Rus Ruleti</span>
-        <h2 class="rr__head" data-tone={head().tone}>
-          {head().text}
-        </h2>
-        <p class="rr__sub" role="status">
-          {head().sub}
-        </p>
-      </div>
+      <Status class="rr__text" titleClass="rr__head" subClass="rr__sub" tone={head().tone} sub={head().sub}>
+        {head().text}
+      </Status>
 
       <div class="rr__stage" data-hit={hit()}>
         <div class="rr__ring" data-danger={(view()?.pub.risk ?? 0) >= 50 ? "1" : undefined}>

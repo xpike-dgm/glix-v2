@@ -3,15 +3,13 @@ import { createEffect, createMemo, createSignal, For, on, Show } from "solid-js"
 import { hapticError, hapticMatch, hapticReady, hapticResult } from "../../fx/haptics.js";
 import { fail, match as matchSound, ready as readySound, roundResult } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
-import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { GhostButton } from "../../ui/GhostButton.js";
 import { NumberPicker } from "../../ui/NumberPicker.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
 import { type PropPath, propSrc } from "../../ui/props.js";
 import { Screen } from "../../ui/Screen.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
 import type { GameScreenProps } from "../registry.js";
 import "./kara-borsa.css";
 import { type BorsaScreenView, hintText, parseBorsaView, sortedBids } from "./view.js";
@@ -48,7 +46,6 @@ export default function KaraBorsaScreen(props: GameScreenProps) {
       return p ? [p] : [];
     }),
   );
-  const left = (v: BorsaScreenView) => Math.max(0, Math.ceil((v.stageEndsAt - props.now()) / 1000));
   return (
     <Screen class="kb">
       <Show
@@ -62,25 +59,14 @@ export default function KaraBorsaScreen(props: GameScreenProps) {
         {(v) => (
           <>
             <header class="kb__top">
-              <span />
               <div class="kb__center">
                 <span class="kb__chip">
                   TUR {Math.min(v().round + 1, v().rounds)}/{v().rounds}
                 </span>
                 <span class="kb__title">{v().phase === "bid" ? "Teklifini ver" : "Kutu açıldı"}</span>
               </div>
-              <div class="kb__snd">
-                <Show when={!props.spectator}>
-                  <SoundToggle />
-                </Show>
-              </div>
             </header>
-            <div class="kb__time">
-              <ProgressBar startedAt={v().stageStartedAt} endsAt={v().stageEndsAt} now={serverNow} urgency />
-              <span class="kb__secs" aria-hidden="true">
-                {left(v())}
-              </span>
-            </div>
+            <PhaseClock startedAt={v().stageStartedAt} endsAt={v().stageEndsAt} urgency />
             <Show
               when={v().phase === "bid"}
               fallback={<Reveal view={v()} crew={crew()} selfId={props.selfId} />}

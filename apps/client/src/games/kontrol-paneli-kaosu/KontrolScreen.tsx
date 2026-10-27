@@ -1,7 +1,6 @@
 import { createMemo, Show } from "solid-js";
 import { serverNow } from "../../net/store.js";
-import { ProgressBar } from "../../ui/ProgressBar.js";
-import { SoundToggle } from "../../ui/SoundToggle.js";
+import { PhaseClock } from "../../ui/PhaseClock.js";
 import type { GameScreenProps } from "../registry.js";
 import { Oyun } from "./Oyun.js";
 import { Sonuc } from "./Sonuc.js";
@@ -32,14 +31,9 @@ export default function KontrolScreen(props: GameScreenProps) {
   return (
     <section class="screen game kp">
       <div class="col">
-        <header class="game__top">
-          <Show when={view()} fallback={<div class="pbar" />}>
-            <ProgressBar startedAt={bar().from} endsAt={bar().to} now={serverNow} urgency={bar().urgency} />
-          </Show>
-          <div class="game__tools">
-            <SoundToggle />
-          </div>
-        </header>
+        <Show when={view()}>
+          <PhaseClock startedAt={bar().from} endsAt={bar().to} urgency={bar().urgency} />
+        </Show>
 
         <Show when={view()}>
           {(v) => (

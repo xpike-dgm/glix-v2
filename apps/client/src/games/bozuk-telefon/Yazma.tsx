@@ -51,8 +51,6 @@ export function Yazma(props: Props) {
         }
         startedAt={props.view.stepStartedAt ?? props.view.startedAt}
         endsAt={props.view.stepEndsAt ?? props.view.startedAt}
-        now={props.now}
-        sound={!props.spectator}
       />
       <div class="bt__body">
         <Show
@@ -132,6 +130,7 @@ export function Yazma(props: Props) {
         locked={locked()}
         disabled={!hasSentence(text())}
         ready={props.view.doneIds.length}
+        readyIds={props.view.doneIds}
         total={total()}
         onLock={lock}
       />

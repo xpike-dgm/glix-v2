@@ -230,6 +230,7 @@ export function Eslestirme(props: Props) {
       <TamamBar
         locked={props.view.locked}
         ready={props.view.ready.length}
+        readyIds={props.view.ready}
         total={props.crew.length}
         spectator={props.spectator}
         onLock={lock}
