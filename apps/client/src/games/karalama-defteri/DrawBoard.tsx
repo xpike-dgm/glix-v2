@@ -10,6 +10,7 @@ import { hapticReady, hapticTap, hapticTick } from "../../fx/haptics.js";
 import { tap, tick, unlockAudio } from "../../fx/sound.js";
 import { sendAction, sendActionAck } from "../../net/client.js";
 import { serverNow, toast } from "../../net/store.js";
+import { CbMarker } from "../../ui/CbMarker.js";
 import type { AckLike } from "../../ui/optimistic.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import {
@@ -444,7 +445,9 @@ export function DrawBoard(props: DrawBoardProps) {
                 disabled={locked()}
                 onClick={() => choosePen(i())}
               >
-                <i />
+                <i class="cbpat" data-p={(i() % 7) + 1}>
+                  <CbMarker index={i()} size={14} class="kd__swmark" />
+                </i>
               </button>
             )}
           </For>

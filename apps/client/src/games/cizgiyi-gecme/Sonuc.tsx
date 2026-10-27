@@ -4,6 +4,7 @@ import { hapticMatch, hapticResult, hapticSolo, hapticTick } from "../../fx/hapt
 import { reducedMotion } from "../../fx/motion.js";
 import { fail, fanfare, match as matchSound, solo as soloSound, tick } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { CbState } from "../../ui/CbState.js";
 import { groupByZone, isDense, pointsOf, statusOf, zoneLabel, zonesTopDown } from "./view.js";
 
 export interface SonucEntry {
@@ -159,6 +160,12 @@ export function Sonuc(props: Props) {
                             connected={e()?.connected ?? true}
                           />
                           <b class="cgchip__n">{r().choices[id]}</b>
+                          <Show when={st() === "crashed"}>
+                            <CbState kind="bad" size={13} />
+                          </Show>
+                          <Show when={st() === "first"}>
+                            <CbState kind="star" size={13} />
+                          </Show>
                           <Show when={pts() > 0}>
                             <em class="cgchip__pts">+{pts()}</em>
                           </Show>

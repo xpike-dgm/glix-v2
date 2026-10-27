@@ -506,3 +506,10 @@
     font-size: 14px;
   }
 }
+
+/* Renk körlüğü dostu mod: kazanan adımın köşesinde yıldız (altın çerçeve tek başına yetmez). */
+.bt__cb {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+}

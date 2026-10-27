@@ -7,6 +7,7 @@ import { fanfare, match as matchSound, solo as soloSound, tick } from "../../fx/
 import { Avatar } from "../../ui/Avatar.js";
 import { UrunArt } from "./Urun.js";
 import { productValueText, ranking } from "./view.js";
+import { CbState } from "../../ui/CbState.js";
 
 export interface SonucEntry {
   id: string;
@@ -154,7 +155,12 @@ export function AlisverisSonuc(props: Props) {
                     connected={e()?.connected ?? true}
                   />
                   <span class="arow__main">
-                    <span class="arow__name">{e()?.nickname ?? "Oyuncu"}</span>
+                    <span class="arow__name">
+                      <Show when={win()}>
+                        <CbState kind="star" size={13} class="arow__cb" />{" "}
+                      </Show>
+                      {e()?.nickname ?? "Oyuncu"}
+                    </span>
                     <span class="arow__items">
                       <For each={r().baskets[id] ?? []} fallback={<em>Sepet boş</em>}>
                         {(pid) => {

@@ -512,3 +512,11 @@ button.aitem:active:not(:disabled) {
 :root[data-motion="reduce"] .ashutter {
   display: none;
 }
+
+/* Renk körlüğü dostu mod: bütçe azalınca sayının önünde "!" (sayının amber rengi tek başına yetmez). */
+:root[data-cb="1"] .abudget[data-low="1"] .abudget__num::before {
+  content: "! ";
+}
+:root[data-cb="1"] .abudget[data-low="1"] .abar__fill {
+  background: repeating-linear-gradient(45deg, var(--amber) 0 5px, #3a1a00 5px 8px);
+}

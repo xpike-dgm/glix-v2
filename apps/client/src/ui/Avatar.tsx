@@ -1,4 +1,5 @@
 import { createEffect, createSignal, on, Show } from "solid-js";
+import { colorBlind } from "../settings/settings.js";
 import { look, type Mood, moodSrc } from "./avatars.js";
 import { CheckIcon, CrownIcon } from "./Icons.js";
 
@@ -37,6 +38,7 @@ export function Avatar(props: Props) {
       if (s === null) setLoaded(null);
     }),
   );
+  const pipSized = () => typeof props.size === "string" || props.size >= 32;
   const small = () => typeof props.size === "string" || props.size >= 40;
   return (
     <div
@@ -85,7 +87,8 @@ export function Avatar(props: Props) {
           <i />
         </span>
       </Show>
-      <Show when={big() && props.pip}>
+      {/* Renk körlüğü dostu modda 32 px ve üstü her avatar kendi simgesini taşır (renk tek ipucu olmasın). */}
+      <Show when={(big() && props.pip) || (colorBlind() && pipSized())}>
         <img class="av__pip" src={l().pip} alt="" draggable={false} />
       </Show>
       <Show when={small() && props.host}>

@@ -630,3 +630,18 @@
 .zbart__pad--idle::after {
   display: none;
 }
+
+/* Renk körlüğü dostu mod: şekiller sönük tuşta da tam görünür ve beyaz konturlu; yol noktaları desenle ayrışır. */
+:root[data-cb="1"] .zpad__sym,
+:root[data-cb="1"] .zpad[data-state="dim"] .zpad__sym {
+  opacity: 1;
+  color: #fff;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.75)) drop-shadow(0 2px 0 rgba(0, 0, 0, 0.35));
+}
+:root[data-cb="1"] .ztrack__dot[data-s="ok"] {
+  background: repeating-linear-gradient(45deg, var(--lime) 0 3px, #1a2a05 3px 5px);
+}
+:root[data-cb="1"] .ztrack__dot[data-s="on"] {
+  background: rgba(46, 242, 255, 0.55);
+  height: 5px;
+}

@@ -624,3 +624,11 @@
     display: none;
   }
 }
+
+/* Renk körlüğü dostu mod: kalem renkleri desen ve şekil taşır (renk adı düğmenin etiketinde de var). */
+:root[data-cb="1"] .kd__swatch i {
+  display: grid;
+  place-items: center;
+  color: #0a1030;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.55);
+}

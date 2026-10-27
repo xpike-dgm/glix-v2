@@ -4,6 +4,8 @@ import { hapticMatch, hapticResult, hapticSolo, hapticTick } from "../../fx/hapt
 import { reducedMotion } from "../../fx/motion.js";
 import { fanfare, go, match as matchSound, solo as soloSound, tick } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { CbMarker } from "../../ui/CbMarker.js";
+import { CbState } from "../../ui/CbState.js";
 import { look } from "../../ui/avatars.js";
 import {
   assignLanes,
@@ -200,7 +202,12 @@ export function Sonuc(props: Props) {
                       "--c": look(e()?.avatar ?? 0).color,
                       "--d": `${(i() * 60) % 400}ms`,
                     }}
-                  />
+                  >
+                    <CbMarker index={e()?.avatar ?? 0} size={12} class="sc__cb" />
+                    <Show when={tierOf(r(), id) === "gold"}>
+                      <CbState kind="star" size={11} class="sc__cbstar" />
+                    </Show>
+                  </i>
                 </>
               );
             }}

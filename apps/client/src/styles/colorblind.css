@@ -73,3 +73,31 @@
   background:
     conic-gradient(var(--cbp) 25%, transparent 0 50%, var(--cbp) 0 75%, transparent 0) 0 0 / 8px 8px;
 }
+
+/* Hazır olanların noktasında ✓ (lime halka tek başına yetmez). */
+:root[data-cb="1"] .tamam__dot {
+  position: relative;
+}
+.tamam__cb {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 12px;
+  height: 12px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #0a1030;
+}
+
+/* Süre çubuğu: son dilimler renkle birlikte çizgili. Sayı ve kalınlaşma zaten ayrı ipucu. */
+:root[data-cb="1"] .pbar__fill[data-tone="amber"],
+:root[data-cb="1"] .pbar--v .pbar__fill[data-tone="amber"] {
+  background: repeating-linear-gradient(45deg, var(--amber) 0 5px, #3a2a00 5px 8px);
+}
+:root[data-cb="1"] .pbar__fill[data-tone="red"],
+:root[data-cb="1"] .pbar--v .pbar__fill[data-tone="red"],
+:root[data-cb="1"] .clock[data-tone="urgent"] .clock__fill,
+:root[data-cb="1"] .clock[data-v="1"][data-tone="urgent"] .clock__fill {
+  background: repeating-linear-gradient(45deg, var(--red) 0 3px, #3a0010 3px 5px);
+}

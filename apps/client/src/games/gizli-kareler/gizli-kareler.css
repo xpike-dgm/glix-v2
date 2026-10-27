@@ -479,3 +479,22 @@ button.kcell:disabled {
   animation: none;
   border-color: var(--gold);
 }
+
+/* Renk körlüğü dostu mod: ödül karesi ★, çakışan kare ✗ (parıltı ve renk tek başına yetmez). */
+.kcell__cb {
+  position: absolute;
+  top: 3px;
+  z-index: 3;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #0a1030;
+}
+.kcell__cb--bonus {
+  right: 3px;
+}
+.kcell__cb--clash {
+  left: 3px;
+}
