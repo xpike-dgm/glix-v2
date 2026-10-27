@@ -166,7 +166,7 @@ describe("Google ile giriş", () => {
     expect(done.cookie).toMatch(/^glix_sess=/);
     const who = await me(done.cookie);
     expect(who.account).toEqual({ username: "Kisi_1", email: "kisi.adi@gmail.com" });
-    expect(who.linked).toEqual({ google: true });
+    expect(who.linked).toEqual({ google: true, password: false });
     // Şifresiz hesap: parola ile giriş genel hatayla reddedilir.
     const pw = await post("login", { login: "kisi_1", password: "herhangi-bir-sey" });
     expect(pw.status).toBe(401);
@@ -224,7 +224,7 @@ describe("Google ile giriş", () => {
     const sess = `glix_sess=${token}`;
     const { hop } = await login(() => ({ sub: "sub-ali", email: "baska@gmail.com" }), sess);
     expect(hop.location).toBe("/");
-    expect((await me(sess)).linked).toEqual({ google: true });
+    expect((await me(sess)).linked).toEqual({ google: true, password: true });
     expect(k.srv.accounts.findByGoogleSub("sub-ali")?.username).toBe("Ali_01");
     const next = await login(() => ({ sub: "sub-ali" }));
     expect(cookiePair(next.hop, "glix_sess")).toMatch(/^glix_sess=/);

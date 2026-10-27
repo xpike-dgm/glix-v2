@@ -12,7 +12,8 @@ import {
   unlockAudio,
   volume,
 } from "../fx/sound.js";
-import { startGoogle } from "../net/account.js";
+import { changePassword, resendVerification, startGoogle } from "../net/account.js";
+import { passwordError } from "../net/accountRules.js";
 import { readAvatarChoice } from "../net/storage.js";
 import { goHome, setNickname, state, toast } from "../net/store.js";
 import { clearPack, downloadAll, packProgress, packRunning, storageEpoch } from "../pwa/packController.js";
@@ -141,6 +142,37 @@ function Choice<T extends string>(props: {
 export function Settings() {
   const [silent, setSilent] = createSignal(getPlayInSilent());
   const [used, setUsed] = createSignal<number | null>(null);
+  const [pwOpen, setPwOpen] = createSignal(false);
+  const [pwCurrent, setPwCurrent] = createSignal("");
+  const [pwNew, setPwNew] = createSignal("");
+  const [pwError, setPwError] = createSignal<string | null>(null);
+  const [pwBusy, setPwBusy] = createSignal(false);
+  const closePw = (): void => {
+    setPwOpen(false);
+    setPwCurrent("");
+    setPwNew("");
+    setPwError(null);
+  };
+  const submitPw = async (): Promise<void> => {
+    if (pwBusy()) return;
+    const bad = pwCurrent().length === 0 ? "Mevcut şifreni yaz." : passwordError(pwNew());
+    if (bad) {
+      setPwError(bad);
+      return;
+    }
+    setPwBusy(true);
+    try {
+      const reply = await changePassword(pwCurrent(), pwNew());
+      if (!reply.ok) {
+        setPwError(reply.message);
+        return;
+      }
+      closePw();
+      toast("Şifren değişti.", "success");
+    } finally {
+      setPwBusy(false);
+    }
+  };
   const [confirmClear, setConfirmClear] = createSignal(false);
   const [checking, setChecking] = createSignal(false);
   const [nick, setNick] = createSignal(state.nickname);
@@ -348,26 +380,67 @@ export function Settings() {
           </div>
         </Group>
 
-        <Show when={state.account && state.google.enabled}>
-          <Group title="Hesap">
-            <Show
-              when={!state.google.linked}
-              fallback={
-                <div class="set__row">
-                  <span class="set__text">
-                    <span class="set__label">Google hesabı bağlı</span>
-                    <span class="set__hint">Google ile tek dokunuşla giriş yapabilirsin</span>
-                  </span>
-                </div>
-              }
-            >
-              <div class="set__row set__row--action">
-                <GhostButton size="small" onClick={startGoogle}>
-                  Google hesabını bağla
-                </GhostButton>
+        <Show when={state.account}>
+          {(account) => (
+            <Group title="Hesap">
+              <div class="set__row">
+                <span class="set__text">
+                  <span class="set__label">E-posta</span>
+                  <span class="set__hint set__hint--wrap">{account().email}</span>
+                </span>
+                <Show when={state.mail.enabled}>
+                  <span class="set__value">{state.mail.verified ? "Doğrulandı" : "Doğrulanmadı"}</span>
+                </Show>
               </div>
-            </Show>
-          </Group>
+              <Show when={state.mail.enabled && !state.mail.verified}>
+                <div class="set__row set__row--action">
+                  <GhostButton size="small" onClick={() => void resendVerification()}>
+                    E-postanı doğrula — Tekrar gönder
+                  </GhostButton>
+                </div>
+              </Show>
+              <Show
+                when={state.mail.hasPassword}
+                fallback={
+                  <Show when={state.mail.enabled}>
+                    <div class="set__row">
+                      <span class="set__text">
+                        <span class="set__label">Şifre yok</span>
+                        <span class="set__hint set__hint--wrap">
+                          Şifre belirlemek için çıkış yapıp girişte "Şifremi unuttum"u kullan.
+                        </span>
+                      </span>
+                    </div>
+                  </Show>
+                }
+              >
+                <div class="set__row set__row--action">
+                  <GhostButton size="small" onClick={() => setPwOpen(true)}>
+                    Şifre değiştir
+                  </GhostButton>
+                </div>
+              </Show>
+              <Show when={state.google.enabled}>
+                <Show
+                  when={!state.google.linked}
+                  fallback={
+                    <div class="set__row">
+                      <span class="set__text">
+                        <span class="set__label">Google hesabı bağlı</span>
+                        <span class="set__hint">Google ile tek dokunuşla giriş yapabilirsin</span>
+                      </span>
+                    </div>
+                  }
+                >
+                  <div class="set__row set__row--action">
+                    <GhostButton size="small" onClick={startGoogle}>
+                      Google hesabını bağla
+                    </GhostButton>
+                  </div>
+                </Show>
+              </Show>
+            </Group>
+          )}
         </Show>
 
         <Group title="Profil">
@@ -467,6 +540,56 @@ export function Settings() {
           <div style={{ height: "8px" }} />
           <GhostButton onClick={() => setConfirmClear(false)}>Vazgeç</GhostButton>
         </div>
+      </BottomSheet>
+
+      <BottomSheet open={pwOpen()} onClose={closePw} title="Şifre değiştir">
+        <form
+          class="sheet__form"
+          novalidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            void submitPw();
+          }}
+        >
+          <input
+            class="field"
+            type="password"
+            name="current-password"
+            autocomplete="current-password"
+            maxLength={128}
+            placeholder="Mevcut şifre"
+            aria-label="Mevcut şifre"
+            value={pwCurrent()}
+            onInput={(e) => setPwCurrent(e.currentTarget.value)}
+          />
+          <input
+            class="field"
+            type="password"
+            name="new-password"
+            autocomplete="new-password"
+            maxLength={128}
+            enterkeyhint="go"
+            placeholder="Yeni şifre (8+)"
+            aria-label="Yeni şifre"
+            value={pwNew()}
+            onInput={(e) => setPwNew(e.currentTarget.value)}
+          />
+          <Show when={pwError()}>
+            {(text) => (
+              <p class="acct__error" role="alert">
+                {text()}
+              </p>
+            )}
+          </Show>
+          <p class="sheet__text">Diğer cihazlardaki oturumların kapanır.</p>
+          <div class="sheet__actions">
+            <PrimaryButton type="submit" busy={pwBusy()}>
+              Kaydet
+            </PrimaryButton>
+            <div style={{ height: "8px" }} />
+            <GhostButton onClick={closePw}>Vazgeç</GhostButton>
+          </div>
+        </form>
       </BottomSheet>
     </Screen>
   );

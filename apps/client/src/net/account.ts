@@ -1,6 +1,7 @@
 import { createSignal } from "solid-js";
 import { reconnectForAccount } from "./client.js";
 import { type GoogleReturn, parseGoogleReturn } from "./googleRules.js";
+import { parseMailReturn } from "./mailRules.js";
 import { goHome, setNickname, setState, state, toast } from "./store.js";
 
 const BASE = "/api/auth/";
@@ -47,6 +48,11 @@ export async function refreshAccount(): Promise<void> {
       const providers = isRecord(data.providers) ? data.providers : {};
       const linked = isRecord(data.linked) ? data.linked : {};
       setState("google", { enabled: providers.google === true, linked: linked.google === true });
+      setState("mail", {
+        enabled: providers.mail === true,
+        verified: account !== null && data.verified === true,
+        hasPassword: linked.password === true,
+      });
     }
     if (account && !state.nickname) setNickname(account.username);
   } catch {
@@ -73,6 +79,7 @@ async function enter(path: "login" | "register", body: unknown): Promise<Account
   void refreshAccount();
   reconnectForAccount();
   goHome();
+  if (path === "register" && state.mail.enabled) toast("Doğrulama bağlantısı e-postana gönderildi.");
   return { ok: true, message: "" };
 }
 
@@ -90,6 +97,7 @@ export async function logout(): Promise<void> {
   }
   setState("account", null);
   setState("google", "linked", false);
+  setState("mail", { verified: false, hasPassword: false });
   reconnectForAccount();
 }
 
@@ -160,4 +168,85 @@ export async function completeGoogle(username: string): Promise<AccountReply> {
   reconnectForAccount();
   goHome();
   return { ok: true, message: "" };
+}
+
+// ---- E-posta doğrulama, şifre sıfırlama ve değiştirme -----------------------------------------------------
+
+/** Sıfırlama bağlantısından gelen belirteç; "Yeni şifre" ekranı bunu kullanır. */
+const [resetToken, setResetToken] = createSignal<string | null>(null);
+
+export { resetToken };
+
+/** Açılışta bir kez: e-postadan dönüş işareti varsa uygular ve adres çubuğunu temizler. */
+export function consumeMailReturn(): void {
+  const found = parseMailReturn(window.location.hash);
+  if (!found) return;
+  window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  if (found.kind === "dogrulama") {
+    toast(found.text, found.ok ? "success" : "error");
+    return;
+  }
+  setResetToken(found.token);
+  setState("nav", "yeniSifre");
+}
+
+/** Genel istek: başarıda `{ok:true, data}`, değilse sunucunun Türkçe metni. */
+async function plain(path: string, body: unknown): Promise<{ ok: boolean; message: string; data: unknown }> {
+  let data: unknown;
+  try {
+    data = await call(path, "POST", body);
+  } catch {
+    return { ok: false, message: NETWORK_ERROR, data: null };
+  }
+  if (!isRecord(data)) return { ok: false, message: NETWORK_ERROR, data };
+  if (data.ok === true) return { ok: true, message: "", data };
+  return { ok: false, message: typeof data.message === "string" ? data.message : NETWORK_ERROR, data };
+}
+
+/** Doğrulama e-postasını yeniden ister (Ayarlar). */
+export async function resendVerification(): Promise<void> {
+  const r = await plain("verify/resend", {});
+  if (!r.ok) return toast(r.message, "error");
+  if (isRecord(r.data) && r.data.verified === true) {
+    setState("mail", "verified", true);
+    return toast("E-postan zaten doğrulanmış.");
+  }
+  toast("Doğrulama bağlantısı gönderildi.", "success");
+}
+
+/** Şifre sıfırlama bağlantısı ister. Hesap olsun olmasın sunucu aynı yanıtı verir. */
+export async function requestReset(email: string): Promise<AccountReply> {
+  const r = await plain("reset/request", { email: email.trim() });
+  return { ok: r.ok, message: r.message };
+}
+
+/** Yeni şifreyi belirler; başarıda kullanıcı yeni oturumla girmiş olur. */
+export async function confirmReset(password: string): Promise<AccountReply> {
+  const token = resetToken();
+  if (!token) return { ok: false, message: "Bağlantı geçersiz ya da süresi dolmuş. Yeniden iste." };
+  let data: unknown;
+  try {
+    data = await call("reset/confirm", "POST", { token, password });
+  } catch {
+    return { ok: false, message: NETWORK_ERROR };
+  }
+  if (!isRecord(data)) return { ok: false, message: NETWORK_ERROR };
+  const account = data.ok === true ? parseAccount(data.account) : null;
+  if (!account) {
+    return { ok: false, message: typeof data.message === "string" ? data.message : NETWORK_ERROR };
+  }
+  setResetToken(null);
+  setState("account", account);
+  if (!state.nickname) setNickname(account.username);
+  void refreshAccount();
+  reconnectForAccount();
+  goHome();
+  toast("Şifren değişti.", "success");
+  return { ok: true, message: "" };
+}
+
+/** Oturumdaki hesabın şifresini değiştirir; diğer cihazlardaki oturumlar kapanır. */
+export async function changePassword(current: string, password: string): Promise<AccountReply> {
+  const r = await plain("password", { current, password });
+  return { ok: r.ok, message: r.message };
 }

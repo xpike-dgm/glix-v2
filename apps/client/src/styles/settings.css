@@ -227,3 +227,6 @@
   transform-origin: left center;
   transition: transform 320ms var(--ease);
 }
+.set__hint--wrap {
+  overflow-wrap: anywhere;
+}

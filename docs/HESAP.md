@@ -26,7 +26,7 @@ VDS'teki Mailu dışarıya mail **gönderemiyor**: sağlayıcı 25. portu kapatm
 DKIM yok, SPF bu sunucuyu kapsamıyor, iki ayrı DMARC kaydı var. Bu yüzden işlemsel e-posta servisi kullanılır
 (587 portu açık): **Brevo** (ücretsiz günde 300) ya da **Resend** (ücretsiz ayda 3000). Gönderen: `noreply@dgmcraft.online`.
 Gerekenler: servis hesabı, API anahtarı (`/srv/glix/shared/.env`), alan adına SPF/DKIM kayıtları, DMARC'ın teke indirilmesi.
-Mail servisi gelene kadar hesaplar doğrulanmamış açılır; şifre sıfırlama mail gelince açılır.
+Mail servisi gelene kadar hesaplar doğrulanmamış açılır; şifre sıfırlama mail gelince açılır (bkz. "E-posta (H2, uygulandı)").
 
 ## Misafir
 - Misafir oda **kuramaz**; ana sayfada "Kodla katıl" ve "Giriş yap / Kayıt ol" görür.
@@ -84,3 +84,24 @@ H1 → H4 → H5 → H7 → H8 → H9 → H6 → H10; H2 ve H3, sahipten anahtar
 - Açık oturum başka hesaptaysa ve `sub` başka hesaba aitse sessiz hesap değişimi yapılmaz: `baska_hesap`.
 - Dönüş: başarıda `/` (ya da güvenli `returnTo`), hatada `/#google-hata=<kod>`, yeni kullanıcıda `/#google-yeni=<belirteç>&u=<öneri>`;
   istemci işareti okuyup adres çubuğunu temizler. Hız sınırı: IP başına `takeAuth` kovası.
+
+## E-posta: doğrulama ve şifre sıfırlama (H2, uygulandı)
+- **Taşıma:** Resend HTTPS API'si (`POST https://api.resend.com/emails`, `Authorization: Bearer`, JSON `{from,to:[adres],subject,html,text}`), SMTP ve yeni bağımlılık yok.
+  Ayar: `GLIX_RESEND_API_KEY`, `GLIX_MAIL_FROM` (örn. `GLIX <noreply@dgmcraft.online>`) ve bağlantılar için `GLIX_PUBLIC_URL`. Biri eksikse e-posta kapalıdır:
+  kayıt çalışır (doğrulanmamış), "Şifremi unuttum" gizlenir, ilgili uçlar 404 `mail_disabled` döner (`GET me` → `providers.mail`).
+  Gönderim arka planda yapılır; 2xx dışı yanıt ya da hata yalnızca genel `mail_failed` kaydı bırakır, kaydı bozmaz. Adres, belirteç ve anahtar günlüğe yazılmaz. Fetch testlerde enjekte edilir.
+- **Belirteçler:** 32 rastgele bayt (base64url); yalnız sha256 özeti `email_tokens`'a yazılır, tek kullanımlık (tüketme tek SQL `DELETE ... RETURNING`).
+  `verify` 24 saat, `reset` 1 saat geçerli. Yeni `reset` belirteci hesabın eskilerini geçersiz kılar.
+- **Doğrulama:** kayıtta (şifreli hesap) `<GLIX_PUBLIC_URL>/api/auth/verify?t=<belirteç>` bağlantısı gider. `GET verify` → 302 `/#eposta=dogrulandi` ya da `/#eposta=gecersiz`.
+  Oturumdaki doğrulanmamış kullanıcı `POST verify/resend` ile yeniden isteyebilir: hesap başına 60 sn'de 1, günde 5 (kayıttaki ilk e-posta dahil).
+  Doğrulama **zorunlu değil** (oyun ve oda kurma açık); Ayarlar > Hesap'ta "E-postanı doğrula — Tekrar gönder" yumuşak uyarısı vardır. Google hesapları zaten doğrulanmıştır.
+- **Şifre sıfırlama:** `POST reset/request {email}` her zaman `ok` döner (hesap var mı belli edilmez). Hesap varsa `<GLIX_PUBLIC_URL>/#sifre-sifirla=<belirteç>` gider (adres parçası sunucuya ulaşmaz).
+  Hız sınırı: IP başına günde 20, e-posta başına 60 sn'de 1 / günde 5 (sınır aşılınca da yanıt aynı). `POST reset/confirm {token, password}`: şifre yazılır, belirteç tüketilir,
+  hesabın **tüm** oturumları silinir, e-posta doğrulanmış sayılır (bağlantıya e-postadan ulaşıldı) ve yeni oturumla giriş yapılır.
+  **Yalnız Google'la açılmış (şifresiz) hesap** da bu yolla ilk şifresini belirleyebilir; sonra şifreyle de girebilir.
+- **Şifre değiştirme:** `POST password {current, password}` (oturum şart; hatalı mevcut şifre `login` ile aynı hesap-başı kovaya sayılır). Mevcut oturum kalır, diğer oturumlar silinir.
+  Şifresiz Google hesabı için 409 `no_password`; arayüz düğmeyi gizler ve "Şifremi unuttum"a yönlendirir.
+- **İstemci:** Giriş'te "Şifremi unuttum" (yalnız `mail` açıksa) → e-posta ekranı → "Bağlantı gönderildi"; `#sifre-sifirla=` ile "Yeni şifre" ekranı; açılışta adres parçası temizlenir.
+- **Mail içeriği:** Türkçe, düz metin + sade koyu temalı satır içi biçemli HTML (görsel, izleme yok); konular "GLIX — E-postanı doğrula" ve "GLIX — Şifre sıfırlama";
+  geçerlilik süresi ve "Bu isteği sen yapmadıysan bu e-postayı yok say." yer alır.
+- **Kurulum (sahip):** Resend hesabı, `dgmcraft.online` için SPF/DKIM kayıtları, tek DMARC kaydı, anahtarı `/srv/glix/shared/.env`'e `GLIX_RESEND_API_KEY` olarak yazmak.

@@ -164,15 +164,21 @@ Hepsi JSON; yanıtlar `Cache-Control: no-store`. Hata gövdesi `{ok:false, code,
 - `POST register {username, email, password}` → 200 `{ok:true, account:{username,email}}` + `Set-Cookie`. Kullanıcı adı 3–20 `[A-Za-z0-9_]` (büyük/küçük harf duyarsız benzersiz), e-posta küçük harfe çevrilir ve benzersizdir, şifre 8–128 karakter. 400 `invalid_input`, 409 `username_taken` / `email_taken`.
 - `POST login {login, password}` (`login`: kullanıcı adı ya da e-posta) → 200 aynı gövde + `Set-Cookie`; yanlış şifre ve bilinmeyen hesap aynı 401 `bad_credentials`.
 - `POST logout` → 200, oturum silinir, çerez temizlenir. `GET me` → 200 `{ok:true, account:{username,email}|null}`.
-- `GET me` ayrıca `providers:{google}` (sunucuda Google açık mı) ve `linked:{google}` (oturumdaki hesap bağlı mı) döner.
+- `GET me` ayrıca `providers:{google, mail}` (sunucuda Google / e-posta açık mı), `linked:{google, password}` (oturumdaki hesapta Google bağlı mı / şifre var mı) ve `verified` (e-postası doğrulanmış mı; oturum yoksa false) döner.
 - **Google ile giriş** (yalnız yapılandırılmışsa): `GET google/start[?returnTo=/yol]` → 302 Google (`scope=openid email`, `prompt=select_account`, PKCE S256, `state`, `nonce`) + `glix_oauth` çerezi (HttpOnly, SameSite=Lax, `Path=/api/auth/google`, 10 dk, https ise Secure).
   `GET google/callback?code&state` → 302: başarıda `returnTo` (varsayılan `/`) + `glix_sess`; hatada `/#google-hata=<kod>` (`kapali`, `cok_deneme`, `gecersiz`, `iptal`, `dogrulanamadi`, `eposta_dogrulanmamis`, `eposta_kayitli`, `baska_hesap`, `zaten_bagli`); yeni kullanıcıda `/#google-yeni=<43 karakter belirteç>&u=<öneri>`.
   `POST google/complete {token, username}` → 200 `{ok:true, account}` + `Set-Cookie`; 400 `invalid_input`, 409 `username_taken` (belirteç korunur) / `email_taken` / `google_linked`, 410 `google_expired`, 404 `google_disabled`. `Origin` zorunlu. `returnTo` yalnız aynı kaynaktaki yol olabilir.
+- **E-posta** (yalnız `GLIX_RESEND_API_KEY` + `GLIX_MAIL_FROM` + `GLIX_PUBLIC_URL` varsa; yoksa aşağıdaki POST uçları 404 `mail_disabled`):
+  `GET verify?t=<43 karakter>` → 302 `/#eposta=dogrulandi` | `/#eposta=gecersiz` (belirteç 24 sa, tek kullanımlık).
+  `POST verify/resend {}` → 200 `{ok:true, verified}`; oturum yoksa 401 `login_required`; hesap başına 60 sn'de 1, günde 5 → 429 `rate_limited`.
+  `POST reset/request {email}` → 200 `{ok:true}` (hesap var olsun olmasın); geçersiz e-posta 400 `invalid_input`; IP başına günde 20 → 429. Bağlantı `<GLIX_PUBLIC_URL>/#sifre-sifirla=<belirteç>` (1 sa).
+  `POST reset/confirm {token, password}` → 200 `{ok:true, account}` + yeni `Set-Cookie` (hesabın tüm eski oturumları silinir); 410 `token_invalid`, 400 `invalid_input`.
+  `POST password {current, password}` → 200 `{ok:true}` (diğer oturumlar silinir); 401 `login_required` / `bad_credentials` (`field:"current"`), 409 `no_password`, 429 `rate_limited`.
 - Çerez `glix_sess`: 32 rastgele bayt (base64url), `HttpOnly; SameSite=Lax; Path=/; Max-Age=180 gün`, https ise `Secure` (doğrudan TLS ya da `TRUST_PROXY=1` ile güvenilen vekilin `X-Forwarded-Proto: https` bildirimi). Sunucuda yalnız sha256 özeti saklanır.
 - POST'larda `Origin` zorunlu ve `Host` ile aynı olmalı (CSRF); `ALLOWED_ORIGINS` varsa onda da olmalı → 403 `forbidden`.
 - Hız sınırı: IP başına kayıt/giriş 20 ani, 6 sn'de 1; hatalı parola hesap başına 8 ani, 30 sn'de 1 → 429 `rate_limited`.
 - WS yükseltmesinde çerez okunur ve bağlantı hesaba bağlanır; oyuncu kaydında `accountId` yalnız sunucuda tutulur, hiçbir mesajda yayınlanmaz.
-- Veri: `accounts`, `sessions`, `email_tokens` (henüz kullanılmıyor) tabloları; `ACCOUNTS_DB` (varsayılan: `STATS_DB`; ikisi de yoksa bellekte, kalıcı değil). Şifre: scrypt (N=16384, r=8, p=1, 16 bayt tuz), parametreler özetle birlikte saklanır.
+- Veri: `accounts`, `sessions`, `email_tokens` (`kind` verify|reset, yalnız sha256 özeti, `expires_at`) tabloları; `ACCOUNTS_DB` (varsayılan: `STATS_DB`; ikisi de yoksa bellekte, kalıcı değil). Şifre: scrypt (N=16384, r=8, p=1, 16 bayt tuz), parametreler özetle birlikte saklanır.
 
 ## Sınırlar (sunucu)
 

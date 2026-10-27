@@ -109,6 +109,27 @@ const SCREENS = [
       await p.locator(".pbtn").click();
     },
   },
+  { name: "hesap-giris-unuttum", q: "mock=login&mail=1", settle: 600 },
+  { name: "hesap-unuttum", q: "mock=unuttum&mail=1", settle: 600 },
+  {
+    name: "hesap-unuttum-hata",
+    q: "mock=unuttum&mail=1",
+    act: async (p) => {
+      await p.locator(".field").fill("x");
+      await p.locator(".pbtn").click();
+    },
+  },
+  { name: "hesap-yeni-sifre", q: "mock=yeni-sifre&mail=1", settle: 600 },
+  { name: "hesap-yeni-sifre-buyuk-yazi", q: "mock=yeni-sifre&mail=1&text=large", settle: 600 },
+  { name: "ayarlar-eposta-dogrulanmamis", q: "mock=settings&acct=1&mail=1", settle: 900 },
+  { name: "ayarlar-eposta-dogrulanmis", q: "mock=settings&acct=1&mail=1&verified=1&google=1", settle: 900 },
+  { name: "ayarlar-sifresiz-hesap", q: "mock=settings&acct=1&mail=1&verified=1&pw=0", settle: 900 },
+  {
+    name: "ayarlar-sifre-degistir",
+    q: "mock=settings&acct=1&mail=1&verified=1",
+    settle: 900,
+    act: clickText("Şifre değiştir"),
+  },
   { name: "ayarlar-google-bagla", q: "mock=settings&acct=1&google=1", settle: 900 },
   { name: "home-buyuk-yazi", q: "mock=home&text=large", settle: 1800 },
   { name: "join", q: "mock=join" },

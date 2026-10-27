@@ -23,15 +23,28 @@ export function Login() {
       submit={submit}
       submitLabel="Giriş yap"
       footer={
-        <GhostButton
-          size="small"
-          onClick={() => {
-            setGoogleNotice(null);
-            setState("nav", "register");
-          }}
-        >
-          Hesabın yok mu? Kayıt ol
-        </GhostButton>
+        <>
+          <Show when={state.mail.enabled}>
+            <GhostButton
+              size="small"
+              onClick={() => {
+                setGoogleNotice(null);
+                setState("nav", "unuttum");
+              }}
+            >
+              Şifremi unuttum
+            </GhostButton>
+          </Show>
+          <GhostButton
+            size="small"
+            onClick={() => {
+              setGoogleNotice(null);
+              setState("nav", "register");
+            }}
+          >
+            Hesabın yok mu? Kayıt ol
+          </GhostButton>
+        </>
       }
     >
       <Show when={state.google.enabled}>

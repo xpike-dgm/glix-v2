@@ -9,6 +9,8 @@ export type ScreenId =
   | "register"
   | "aydinlatma"
   | "googleAd"
+  | "unuttum"
+  | "yeniSifre"
   | "notfound"
   | "lobby"
   | "briefing"

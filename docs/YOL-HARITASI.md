@@ -189,7 +189,7 @@ Bugün: yeni sürüm hazır olunca bekliyor (`registerType: prompt`), kullanıc�
 Ayrıntılı tasarım: `docs/HESAP.md`. Sahip kararları (Ekim 2026): misafirin istatistiği tutulmaz; misafir yalnız kodla
 katılıp oynar. Giriş: Google ya da kendi hesabı. Sıralama yalnız arkadaşlar arasında.
 - [x] H1 Hesap çekirdeği: kayıt (kullanıcı adı + e-posta + şifre), giriş/çıkış, oturum çerezi, WS bağlantısında kimlik.
-- [ ] H2 E-posta: doğrulama ve şifre sıfırlama (işlemsel e-posta servisi; Mailu dışarı mail gönderemiyor).
+- [x] H2 E-posta: doğrulama ve şifre sıfırlama (Resend HTTPS API; anahtar ve alan adı kayıtları sahipte, yoksa özellik kapalı).
 - [x] H3 Google ile giriş (OAuth; sahibin Google Cloud'da açacağı istemci kimliğiyle).
 - [x] H4 Misafir sınırı: oda kurmak hesap ister; misafir kodla katılır, istatistiği tutulmaz.
 - [ ] H5 İstatistik: yalnız hesaplılar için maç/oyun sonuçları; profil ekranı.
