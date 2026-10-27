@@ -115,6 +115,7 @@ export function createRoom(rt: Runtime): Room {
     flushCancel: null,
     deleteCancel: null,
     hostGraceCancel: null,
+    createdAt: rt.clock.now(),
   };
   rt.rooms.set(room.code, room);
   return room;

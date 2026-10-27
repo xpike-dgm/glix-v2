@@ -27,6 +27,8 @@ services:
       # E-posta: doğrulama ve şifre sıfırlama (Resend; boşsa kapalı, sıfırlama gizlenir). Bağlantılar GLIX_PUBLIC_URL ile kurulur.
       GLIX_RESEND_API_KEY: ${GLIX_RESEND_API_KEY:-}
       GLIX_MAIL_FROM: ${GLIX_MAIL_FROM:-}
+      # Yönetici paneli (/admin): virgülle ayrılmış hesap kimlikleri. Boşsa panel kapalı (404). Giriş kodu e-postayla gelir (Resend gerekir).
+      GLIX_ADMIN_ACCOUNT_IDS: ${GLIX_ADMIN_ACCOUNT_IDS:-}
     volumes:
       - glix-data:/data
     mem_limit: 512m

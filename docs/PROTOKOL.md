@@ -255,6 +255,26 @@ Yalnız `GET`; oturum çerezi şart (401 `login_required`); hesap başına hız 
   (eşitlikte oynama, sonra ad); kimsenin birinciliği olmayan oyun yok; birincilik sayısına göre azalan.
 - Tek toplu SQL sorgusu (`IN (kimlikler)`, arkadaş sayısı en çok 200).
 
+## Yönetici uçları (HTTP, `/api/admin/`, U16 A1, salt okunur)
+
+Ayrıntı ve kurulum: `docs/ADMIN.md`. `GLIX_ADMIN_ACCOUNT_IDS` boşsa tüm uçlar ve `/admin` sayfası 404 verir.
+
+- Erişim: geçerli `glix_sess` + hesap kimliği listede + e-postayla alınan koddan sonra verilen `glix_admin` çerezi
+  (HttpOnly, SameSite=Strict, Path=/api/admin, Secure, 12 saat; yalnız özeti saklanır, o hesap oturumuna bağlı).
+- Yanıtlar: oturum yok 401 `login_required`; yönetici olmayan 404; çerez yok 403 `otp_required`.
+- `GET status` -> `{state: "need_otp" | "ready"}`.
+- `POST otp/request` (gövdesiz): 6 haneli kod e-postalanır (10 dk, tek kullanım, özet olarak saklanır; hesapta 60 sn arayla,
+  günde 10). 503 `mail_disabled`, 502 `mail_failed`, 429 `too_soon`.
+- `POST otp/verify {code}`: doğruysa 200 + `glix_admin` çerezi; 400 `invalid_code`/`expired`, 429 `locked` (5 yanlış deneme).
+- `POST logout`: yönetici çerezini siler. Tüm POST'larda `Origin` zorunlu ve Host ile aynı olmalı.
+- `GET live` (`AdminLive`), `GET stats` (`AdminStats`), `GET errors` (`AdminErrors`): tipler `packages/engine/src/admin.ts`.
+  Oyuncu adı, kullanıcı adı, e-posta, IP ve oyun durumu içermez; açık oda satırında yalnız kod, aşama, sayılar ve oyun kimliği.
+- Kayıt: `admin_audit(id, account_id, action, detail, at)`; A1'de kod isteği/başarı/hata/kilit ve çıkış yazılır (kod ve belirteç asla).
+- İstemci hataları artık kalıcıdır (`/api/client-error` yine 204): `client_errors(day, message, frame, platform, browser, version,
+  count, first_seen, last_seen)` gün başına gruplu; mesaj 200 karaktere kısaltılır, adres sorgusu/parçası, e-posta, IP ve uzun
+  belirteçler atılır; `frame` yığının tepe karesi (taban dosya adı); ham kullanıcı aracısı saklanmaz; günde en çok 3000 satır.
+  Çöken oyunlar: `game_failures(id, game_id, fn, message, at)` (maç kaydı yazılmaz). İkisi de 90 gün saklanır (stats göç 4).
+
 ## Sınırlar (sunucu)
 
 - Mesaj en çok 8 KiB; giden tampon 1 MB'ı aşan (okumayan) soket koparılır. Sunucu 20 sn'de bir ping atar, pong gelmeyen soket koparılır.

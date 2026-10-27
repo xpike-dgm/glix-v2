@@ -2,11 +2,12 @@ import { createRequire } from "node:module";
 import type { DatabaseSync } from "node:sqlite";
 import type { PerfMeta, PerfSample } from "@glix/engine";
 import { log } from "./log.js";
+import { createStatsReader, type StatsReader } from "./statsAdmin.js";
 
 /** İstatistik satırları bu süreden sonra silinir (docs/PROTOKOL.md). */
 export const RETENTION_MS = 90 * 24 * 3600 * 1000;
 export const PURGE_EVERY_MS = 24 * 3600 * 1000;
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export type GameOutcome = "finished" | "aborted" | "failed";
 
@@ -14,6 +15,23 @@ export interface MatchStart {
   playerCount: number;
   selectionMode: "manual" | "random";
   gameCount: number;
+}
+
+/** Kalıcı istemci hata satırı: hepsi temizlenmiş/kısaltılmıştır (bkz. errorScrub.ts); kişi bilgisi içermez. */
+export interface ClientErrorRecord {
+  message: string;
+  /** Yığının tepe karesi: `işlev dosya:satır:sütun` (dosya adı yalnız taban ad). */
+  frame: string;
+  platform: "ios" | "android" | "diger";
+  browser: string;
+  version: string;
+}
+
+/** Çöken oyun satırı: oyun, çöken işlev ve kısaltılmış hata metni. Maç kaydı (eylemler) ASLA yazılmaz. */
+export interface GameFailureRecord {
+  gameId: string | null;
+  fn: string;
+  message: string;
 }
 
 export interface GamePlay {
@@ -37,6 +55,12 @@ export interface StatsStore {
   feedback(matchId: number | null, now: number, rating: number, text: string | null): void;
   /** Anonim istemci performans özeti (oyun başına oyuncu başına en çok bir). */
   perf(matchId: number | null, gameId: string, now: number, sample: PerfSample & Partial<PerfMeta>): void;
+  /** İstemci hatasını gün başına gruplayarak sayar (aynı gün + aynı hata + aynı platform/tarayıcı/sürüm = tek satır). */
+  clientError(now: number, rec: ClientErrorRecord): void;
+  /** Çöken oyunu kaydeder (yönetici paneli "çöken oyunlar"). */
+  gameFailure(now: number, rec: GameFailureRecord): void;
+  /** Yönetici paneli için salt okunur toplamlar; istatistik kapalıysa null. */
+  readonly reader: StatsReader | null;
   /** `now - 90 gün`den eski satırları siler. */
   purge(now: number): void;
   close(): void;
@@ -49,6 +73,9 @@ export const noopStats: StatsStore = {
   matchEnded: () => {},
   feedback: () => {},
   perf: () => {},
+  clientError: () => {},
+  gameFailure: () => {},
+  reader: null,
   purge: () => {},
   close: () => {},
 };
@@ -98,7 +125,32 @@ const MIGRATIONS: readonly string[] = [
   `ALTER TABLE perf ADD COLUMN platform TEXT NOT NULL DEFAULT 'diger';
    ALTER TABLE perf ADD COLUMN reconnects INTEGER NOT NULL DEFAULT 0;
    ALTER TABLE perf ADD COLUMN reloads INTEGER NOT NULL DEFAULT 0;`,
+  // Yönetici paneli (U16 A1): istemci hataları gün başına gruplu sayaç; çöken oyunlar (kayıt içeriği yok). 90 gün.
+  `CREATE TABLE client_errors (
+     day INTEGER NOT NULL,
+     message TEXT NOT NULL,
+     frame TEXT NOT NULL,
+     platform TEXT NOT NULL,
+     browser TEXT NOT NULL,
+     version TEXT NOT NULL,
+     count INTEGER NOT NULL,
+     first_seen INTEGER NOT NULL,
+     last_seen INTEGER NOT NULL,
+     PRIMARY KEY (day, message, frame, platform, browser, version)
+   ) WITHOUT ROWID;
+   CREATE TABLE game_failures (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     game_id TEXT,
+     fn TEXT NOT NULL,
+     message TEXT NOT NULL,
+     at INTEGER NOT NULL
+   );
+   CREATE INDEX game_failures_at ON game_failures (at);`,
 ];
+
+const DAY_MS = 24 * 3600 * 1000;
+/** Bir günde saklanan en çok farklı hata satırı (sürekli değişen metinle tabloyu şişirmeyi önler). */
+export const MAX_ERROR_ROWS_PER_DAY = 3000;
 
 type SqliteModule = typeof import("node:sqlite");
 
@@ -180,9 +232,21 @@ export function createStats(path: string | undefined | null): StatsStore {
   const insertPerf = db.prepare(
     "INSERT INTO perf (match_id, game_id, created_at, rtt_ms, ack_p50, ack_p95, ack_n, slow_taps, tap_p95, long_tasks, long_task_ms, platform, reconnects, reloads) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
   );
+  const upsertError = db.prepare(
+    `INSERT INTO client_errors (day, message, frame, platform, browser, version, count, first_seen, last_seen)
+     VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+     ON CONFLICT (day, message, frame, platform, browser, version)
+     DO UPDATE SET count = count + 1, last_seen = excluded.last_seen`,
+  );
+  const errorRowsToday = db.prepare("SELECT COUNT(*) AS n FROM client_errors WHERE day = ?");
+  const insertFailure = db.prepare(
+    "INSERT INTO game_failures (game_id, fn, message, at) VALUES (?, ?, ?, ?)",
+  );
+  const reader = createStatsReader(db);
   let closed = false;
   return {
     enabled: true,
+    reader,
     matchStarted: (now, info) =>
       closed
         ? null
@@ -237,10 +301,27 @@ export function createStats(path: string | undefined | null): StatsStore {
         );
       });
     },
+    clientError: (now, e) => {
+      if (closed) return;
+      guarded("clientError", undefined, () => {
+        const day = Math.floor(now / DAY_MS) * DAY_MS;
+        const n = (errorRowsToday.get(day) as { n: number }).n;
+        if (n >= MAX_ERROR_ROWS_PER_DAY) return;
+        upsertError.run(day, e.message, e.frame, e.platform, e.browser, e.version, now, now);
+      });
+    },
+    gameFailure: (now, f) => {
+      if (closed) return;
+      guarded("gameFailure", undefined, () => {
+        insertFailure.run(f.gameId, f.fn, f.message, now);
+      });
+    },
     purge: (now) => {
       if (closed) return;
       guarded("purge", undefined, () => {
         const cut = now - RETENTION_MS;
+        db.prepare("DELETE FROM client_errors WHERE last_seen < ?").run(cut);
+        db.prepare("DELETE FROM game_failures WHERE at < ?").run(cut);
         db.prepare("DELETE FROM perf WHERE created_at < ?").run(cut);
         db.prepare("DELETE FROM game_plays WHERE started_at < ?").run(cut);
         db.prepare("DELETE FROM feedback WHERE created_at < ?").run(cut);

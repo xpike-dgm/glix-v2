@@ -133,6 +133,29 @@ export interface AccountExportData {
   coplay: { username: string; matches: number; lastAt: number }[];
 }
 
+/** Yönetici ikinci adımı: tek kullanımlık kod denemesinin sonucu. */
+export type AdminOtpCheck = "ok" | "invalid" | "locked" | "expired" | "none";
+
+/** Yönetici işlem kaydı satırı (kod ve belirteç içermez). */
+export interface AdminAuditRow {
+  accountId: number;
+  action: string;
+  detail: string;
+  at: number;
+}
+
+/** Yönetici panelinin hesap toplamları: yalnız sayılar, kişi yok. */
+export interface AccountMetrics {
+  total: number;
+  verified: number;
+  google: number;
+  password: number;
+  friendships: number;
+  badgesAwarded: number;
+  /** UTC gün başlangıcı (ms) ve o gün açılan hesap sayısı; son 30 gün, sıfırlar dahil. */
+  newPerDay: { dayStart: number; count: number }[];
+}
+
 export type CreateResult = { ok: true; account: Account } | { ok: false; field: "username" | "email" };
 
 /**
@@ -234,6 +257,42 @@ export interface AccountStore extends FriendStore {
    * belirteçleri ve hesap satırı tek işlemde gider. Geri alınamaz. Hesap yoksa false.
    */
   deleteAccount(accountId: number): boolean;
+  /** Yönetici işlem kaydı yazar (`admin_audit`); `detail` kod/belirteç/e-posta taşımamalı. */
+  adminAudit(accountId: number, action: string, detail: string, at: number): void;
+  /** Son `limit` yönetici kaydı (en yeni önde). */
+  adminAuditTail(limit: number): AdminAuditRow[];
+  /** Hesabın yönetici kodunu (yalnız özeti + tuz) kaydeder; eski kod silinir. Kod isteyen oturuma bağlıdır. */
+  adminOtpPut(
+    accountId: number,
+    sessionHash: string,
+    salt: string,
+    codeHash: string,
+    expiresAt: number,
+  ): void;
+  /**
+   * Kod denemesi (tek işlemde): süre/oturum/deneme sınırı denetlenir, `matches` özeti karşılaştırır. Doğruysa kod silinir
+   * (tek kullanım); yanlış denemeler sayılır, `maxAttempts`'a varınca kod silinir ("locked").
+   */
+  adminOtpCheck(
+    accountId: number,
+    sessionHash: string,
+    now: number,
+    maxAttempts: number,
+    matches: (salt: string, codeHash: string) => boolean,
+  ): AdminOtpCheck;
+  /** Yönetici çerezi oturumu: yalnız özet saklanır; hesap oturumu silinince birlikte gider. */
+  adminSessionCreate(
+    tokenHash: string,
+    accountId: number,
+    sessionHash: string,
+    now: number,
+    expiresAt: number,
+  ): void;
+  /** Çerez hâlâ geçerli mi: süre dolmadı, aynı hesap ve aynı hesap oturumu. */
+  adminSessionValid(tokenHash: string, accountId: number, sessionHash: string, now: number): boolean;
+  adminSessionDelete(tokenHash: string): void;
+  /** Panel için hesap toplamları. */
+  adminMetrics(now: number): AccountMetrics;
   close(): void;
 }
 
@@ -311,7 +370,34 @@ const MIGRATIONS: readonly string[] = [
      value INTEGER NOT NULL
    );
    CREATE INDEX account_game_stats_account ON account_game_stats (account_id, game_id, key);`,
+  // Yönetici paneli (U16 A1): işlem kaydı, tek kullanımlık kod (yalnız özet) ve yönetici çerez oturumu (yalnız özet).
+  `CREATE TABLE admin_audit (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     account_id INTEGER NOT NULL,
+     action TEXT NOT NULL,
+     detail TEXT NOT NULL,
+     at INTEGER NOT NULL
+   );
+   CREATE INDEX admin_audit_at ON admin_audit (at);
+   CREATE TABLE admin_otp (
+     account_id INTEGER PRIMARY KEY REFERENCES accounts (id) ON DELETE CASCADE,
+     session_hash TEXT NOT NULL,
+     salt TEXT NOT NULL,
+     code_hash TEXT NOT NULL,
+     expires_at INTEGER NOT NULL,
+     attempts INTEGER NOT NULL DEFAULT 0
+   );
+   CREATE TABLE admin_sessions (
+     token_hash TEXT PRIMARY KEY,
+     account_id INTEGER NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+     session_hash TEXT NOT NULL REFERENCES sessions (id_hash) ON DELETE CASCADE,
+     created_at INTEGER NOT NULL,
+     expires_at INTEGER NOT NULL
+   );`,
 ];
+
+/** Yönetici işlem kayıtları bu süreden sonra silinir. */
+export const ADMIN_AUDIT_RETENTION_MS = 365 * 24 * 3600 * 1000;
 
 function migrate(db: DatabaseSync): void {
   db.exec("CREATE TABLE IF NOT EXISTS account_schema_version (version INTEGER NOT NULL)");
@@ -492,6 +578,45 @@ export function createAccounts(path: string): AccountStore {
     `SELECT CASE WHEN a = ? THEN b ELSE a END AS id FROM friends WHERE a = ? OR b = ?
        UNION SELECT blocked FROM blocks WHERE blocker = ?
        UNION SELECT blocker FROM blocks WHERE blocked = ?`,
+  );
+  const insertAudit = db.prepare(
+    "INSERT INTO admin_audit (account_id, action, detail, at) VALUES (?, ?, ?, ?)",
+  );
+  const auditTail = db.prepare(
+    "SELECT account_id, action, detail, at FROM admin_audit ORDER BY id DESC LIMIT ?",
+  );
+  const putOtp = db.prepare(
+    `INSERT INTO admin_otp (account_id, session_hash, salt, code_hash, expires_at, attempts)
+       VALUES (?, ?, ?, ?, ?, 0)
+       ON CONFLICT (account_id) DO UPDATE SET session_hash = excluded.session_hash, salt = excluded.salt,
+         code_hash = excluded.code_hash, expires_at = excluded.expires_at, attempts = 0`,
+  );
+  const getOtp = db.prepare(
+    "SELECT session_hash, salt, code_hash, expires_at, attempts FROM admin_otp WHERE account_id = ?",
+  );
+  const dropOtp = db.prepare("DELETE FROM admin_otp WHERE account_id = ?");
+  const bumpOtp = db.prepare("UPDATE admin_otp SET attempts = attempts + 1 WHERE account_id = ?");
+  const insertAdminSession = db.prepare(
+    `INSERT INTO admin_sessions (token_hash, account_id, session_hash, created_at, expires_at)
+       SELECT ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM sessions WHERE id_hash = ?)`,
+  );
+  const adminSessionRow = db.prepare(
+    "SELECT account_id, session_hash, expires_at FROM admin_sessions WHERE token_hash = ?",
+  );
+  const dropAdminSession = db.prepare("DELETE FROM admin_sessions WHERE token_hash = ?");
+  const purgeAdmin = db.prepare("DELETE FROM admin_sessions WHERE expires_at < ?");
+  const purgeOtp = db.prepare("DELETE FROM admin_otp WHERE expires_at < ?");
+  const purgeAudit = db.prepare("DELETE FROM admin_audit WHERE at < ?");
+  const metricTotals = db.prepare(
+    `SELECT COUNT(*) AS total, COALESCE(SUM(email_verified), 0) AS verified,
+            COALESCE(SUM(google_sub IS NOT NULL), 0) AS google, COALESCE(SUM(pass_hash IS NOT NULL), 0) AS pass
+       FROM accounts`,
+  );
+  const metricFriends = db.prepare("SELECT COUNT(*) AS n FROM friends WHERE state = 'accepted'");
+  const metricBadges = db.prepare("SELECT COUNT(*) AS n FROM badges");
+  const metricNew = db.prepare(
+    `SELECT CAST(created_at / 86400000 AS INTEGER) AS d, COUNT(*) AS n FROM accounts
+      WHERE created_at >= ? GROUP BY d`,
   );
   const dropAccount = db.prepare("DELETE FROM accounts WHERE id = ?");
   const dropTokensOf = db.prepare("DELETE FROM email_tokens WHERE account_id = ?");
@@ -922,10 +1047,87 @@ export function createAccounts(path: string): AccountStore {
     deleteSession(tokenHash) {
       removeSession.run(tokenHash);
     },
+    adminAudit(accountId, action, detail, at) {
+      insertAudit.run(accountId, action, detail, at);
+    },
+    adminAuditTail(limit) {
+      return (
+        auditTail.all(limit) as { account_id: number; action: string; detail: string; at: number }[]
+      ).map((r) => ({ accountId: r.account_id, action: r.action, detail: r.detail, at: r.at }));
+    },
+    adminOtpPut(accountId, sessionHash, salt, codeHash, expiresAt) {
+      putOtp.run(accountId, sessionHash, salt, codeHash, expiresAt);
+    },
+    adminOtpCheck(accountId, sessionHash, now, maxAttempts, matches) {
+      let result: AdminOtpCheck = "none";
+      inTransaction(() => {
+        const row = getOtp.get(accountId) as
+          | { session_hash: string; salt: string; code_hash: string; expires_at: number; attempts: number }
+          | undefined;
+        if (!row || row.session_hash !== sessionHash) return;
+        if (row.expires_at <= now) {
+          dropOtp.run(accountId);
+          result = "expired";
+          return;
+        }
+        if (row.attempts >= maxAttempts) {
+          dropOtp.run(accountId);
+          result = "locked";
+          return;
+        }
+        if (matches(row.salt, row.code_hash)) {
+          dropOtp.run(accountId);
+          result = "ok";
+          return;
+        }
+        bumpOtp.run(accountId);
+        if (row.attempts + 1 >= maxAttempts) {
+          dropOtp.run(accountId);
+          result = "locked";
+        } else result = "invalid";
+      });
+      return result;
+    },
+    adminSessionCreate(tokenHash, accountId, sessionHash, now, expiresAt) {
+      insertAdminSession.run(tokenHash, accountId, sessionHash, now, expiresAt, sessionHash);
+    },
+    adminSessionValid(tokenHash, accountId, sessionHash, now) {
+      const row = adminSessionRow.get(tokenHash) as
+        | { account_id: number; session_hash: string; expires_at: number }
+        | undefined;
+      return (
+        !!row && row.account_id === accountId && row.session_hash === sessionHash && row.expires_at > now
+      );
+    },
+    adminSessionDelete(tokenHash) {
+      dropAdminSession.run(tokenHash);
+    },
+    adminMetrics(now) {
+      const t = metricTotals.get() as { total: number; verified: number; google: number; pass: number };
+      const today = Math.floor(now / 86_400_000);
+      const byDay = new Map(
+        (metricNew.all((today - 29) * 86_400_000) as { d: number; n: number }[]).map((r) => [r.d, r.n]),
+      );
+      return {
+        total: t.total,
+        verified: t.verified,
+        google: t.google,
+        password: t.pass,
+        friendships: (metricFriends.get() as { n: number }).n,
+        badgesAwarded: (metricBadges.get() as { n: number }).n,
+        newPerDay: Array.from({ length: 30 }, (_, i) => {
+          const d = today - (29 - i);
+          return { dayStart: d * 86_400_000, count: byDay.get(d) ?? 0 };
+        }),
+      };
+    },
     purge(now) {
       try {
         purgeSessions.run(now - SESSION_TTL_MS);
         purgeTokens.run(now);
+        purgeAdmin.run(now);
+        purgeOtp.run(now);
+        purgeAudit.run(now - ADMIN_AUDIT_RETENTION_MS);
       } catch (err) {
         log.error("accounts_error", { op: "purge", error: String(err) });
       }

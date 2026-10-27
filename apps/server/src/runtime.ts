@@ -100,6 +100,8 @@ export interface Room {
   deleteCancel: Cancel | null;
   /** Host koptuğunda devir öncesi bekleme zamanlayıcısı. */
   hostGraceCancel: Cancel | null;
+  /** Odanın kurulduğu sunucu saati (ms); yönetici panelinde oda yaşı için. */
+  createdAt: number;
 }
 
 export interface Runtime {

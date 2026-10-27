@@ -3,6 +3,8 @@ import { APP_VERSION, type GameLog, PROTOCOL_VERSION, parseClientMessage } from 
 import { type WebSocket, WebSocketServer } from "ws";
 import { createAccountRecorder } from "./accountStats.js";
 import { type AccountStore, createAccounts } from "./accountStore.js";
+import { ADMIN_PREFIX, handleAdmin } from "./admin.js";
+import { buildLive, createHealthSampler } from "./adminData.js";
 import { AUTH_PREFIX, accountFromCookie, handleAuth } from "./auth.js";
 import { CLIENT_ERROR_PATH, handleClientError } from "./clientError.js";
 import { resolveClientIp } from "./clientIp.js";
@@ -78,6 +80,8 @@ export interface ServerOptions {
   mailFetch?: MailFetch;
   /** Web bildirimi anahtarları; verilmezse ya da geçersizse bildirim kapalı kalır. */
   vapid?: VapidConfig | null;
+  /** Yönetici paneline girebilen hesap kimlikleri; boş/verilmezse panel kapalıdır (`/admin` 404). */
+  adminAccountIds?: ReadonlySet<number>;
   /** Hazır gönderici (testlerde sahte); verilirse `vapid` yok sayılır. */
   push?: PushGateway;
 }
@@ -170,6 +174,10 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     clock,
     gameName: (id) => rt.catalog.find((g) => g.id === id)?.name ?? null,
   });
+  const adminIds: ReadonlySet<number> = opts.adminAccountIds ?? new Set<number>();
+  const adminThrottle = new MailThrottle();
+  const healthSampler = adminIds.size > 0 ? createHealthSampler() : null;
+  const connections = new Set<Connection>();
   const perIp = new Map<string, number>();
   const aliveSockets = new WeakMap<WebSocket, boolean>();
 
@@ -247,8 +255,36 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       );
       return;
     }
+    if (path.startsWith(ADMIN_PREFIX)) {
+      handleAdmin(req, res, {
+        accounts,
+        stats,
+        limiter: rt.ipLimiter,
+        throttle: adminThrottle,
+        mail,
+        adminIds,
+        allowedOrigins: opts.allowedOrigins,
+        trustProxy: limits.trustProxy,
+        ip: resolveClientIp(req.socket.remoteAddress, req.headers["x-forwarded-for"], limits.trustProxy),
+        now: clock.now(),
+        live: () => {
+          let withAccount = 0;
+          for (const c of connections) if (c.account) withAccount += 1;
+          return buildLive({
+            rt,
+            startedAt,
+            revision: opts.revision,
+            sockets: { total: sockets.size, accounts: withAccount },
+            sampler: healthSampler ?? { cpuPercent: () => 0, eventLoopLagMsP95: () => 0, stop: () => {} },
+          });
+        },
+      });
+      return;
+    }
     if (path === CLIENT_ERROR_PATH) {
       handleClientError(req, res, {
+        stats,
+        now: clock.now(),
         allowedOrigins: opts.allowedOrigins,
         limiter: rt.ipLimiter,
         ip: resolveClientIp(req.socket.remoteAddress, req.headers["x-forwarded-for"], limits.trustProxy),
@@ -289,7 +325,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       });
       return;
     }
-    serveStatic(req, res, opts.clientDir).catch((err: unknown) => {
+    serveStatic(req, res, opts.clientDir, { adminEnabled: adminIds.size > 0 }).catch((err: unknown) => {
       log.error("static_failed", { error: String(err) });
       if (!res.headersSent) res.writeHead(500);
       res.end();
@@ -372,6 +408,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       },
       close: (code, reason) => ws.close(code, reason),
     };
+    connections.add(conn);
     const bucket = new TokenBucket(clock);
     let invalid = 0;
     // Odaya girmeyen soketler boşuna yer tutmasın: süre dolunca hâlâ odasızsa kapatılır (4000).
@@ -388,6 +425,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     rt.social.attach(conn);
     ws.on("close", () => {
       cancelIdle();
+      connections.delete(conn);
       rt.social.detach(conn);
       sockets.delete(ws);
       const left = (perIp.get(ip) ?? 1) - 1;
@@ -465,6 +503,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         for (const ws of sockets)
           ws.close(code, code === 1012 ? "Sunucu yeniden başlıyor" : "Sunucu kapanıyor");
         wss.close();
+        healthSampler?.stop();
         stats.close();
         accounts.close();
         server.close(() => resolve());

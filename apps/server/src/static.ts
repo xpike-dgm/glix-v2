@@ -61,11 +61,20 @@ export function cacheControl(urlPath: string): string {
   return "no-cache";
 }
 
+export interface StaticOptions {
+  /** Yönetici paneli açık mı (`GLIX_ADMIN_ACCOUNT_IDS` dolu). Kapalıyken `/admin` ve `admin.html` 404 verir. */
+  adminEnabled?: boolean;
+}
+
+/** `/admin` (ve sonundaki eğik çizgi) yönetici sayfasıdır; geri kalan `/admin/...` yolları yoktur. */
+const ADMIN_PAGE = /^\/admin\/?$/;
+
 /** İstemci dosyalarını sunar. İstek işlendiyse true döner. */
 export async function serveStatic(
   req: IncomingMessage,
   res: ServerResponse,
   clientDir: string,
+  options: StaticOptions = {},
 ): Promise<void> {
   if (req.method !== "GET" && req.method !== "HEAD") {
     res.writeHead(405, { Allow: "GET, HEAD", ...SECURITY_HEADERS });
@@ -84,6 +93,17 @@ export async function serveStatic(
     notFound(res);
     return;
   }
+
+  const adminPage = ADMIN_PAGE.test(urlPath) || urlPath === "/admin.html";
+  if ((adminPage || urlPath.startsWith("/admin/")) && !options.adminEnabled) {
+    notFound(res);
+    return;
+  }
+  if (urlPath.startsWith("/admin/") && !adminPage) {
+    notFound(res);
+    return;
+  }
+  if (ADMIN_PAGE.test(urlPath)) urlPath = "/admin.html";
 
   let file = resolve(join(root, normalize(urlPath)));
   if (file !== root && !file.startsWith(root + sep)) {
@@ -117,6 +137,8 @@ export async function serveStatic(
     "Content-Length": info.size,
     "Cache-Control": isShell ? "no-cache" : cacheControl(servedPath),
     ...SECURITY_HEADERS,
+    // Yönetici sayfası arama motorlarına açık değildir.
+    ...(servedPath === "/admin.html" ? { "X-Robots-Tag": "noindex" } : {}),
   };
   res.writeHead(200, headers);
   if (req.method === "HEAD") {

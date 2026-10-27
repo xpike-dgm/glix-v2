@@ -153,3 +153,20 @@ export function resetMessage(to: string, link: string): MailMessage {
     ),
   };
 }
+
+/** Yönetici paneli giriş kodu. Kod yalnız bu e-postada ve kısa süre geçerlidir; günlüğe yazılmaz. */
+export function adminCodeMessage(to: string, code: string, minutes: number): MailMessage {
+  const style = "font-family:Arial,Helvetica,sans-serif;";
+  return {
+    to,
+    subject: "GLIX — Yönetici giriş kodu",
+    text: `GLIX yönetici paneli giriş kodun: ${code}\n\nKod ${minutes} dakika geçerli ve bir kez kullanılır.\n${IGNORE}`,
+    html: `<!doctype html><html lang="tr"><body style="margin:0;padding:24px;background:#111318;${style}">
+<div style="max-width:480px;margin:0 auto;padding:28px;background:#1a1d24;border-radius:14px;color:#e8eaf0;${style}">
+<h1 style="margin:0 0 16px;font-size:22px;color:#ffffff;">Yönetici giriş kodu</h1>
+<p style="margin:0 0 20px;font-size:16px;line-height:1.5;">GLIX yönetici paneline girmek için bu kodu yaz:</p>
+<p style="margin:0 0 24px;font-size:34px;letter-spacing:8px;font-weight:bold;color:#33d6e8;">${code}</p>
+<p style="margin:0;font-size:13px;line-height:1.5;color:#a4a9b6;">Kod ${minutes} dakika geçerli ve bir kez kullanılır. ${IGNORE}</p>
+</div></body></html>`,
+  };
+}
