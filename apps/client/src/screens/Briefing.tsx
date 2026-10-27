@@ -77,12 +77,12 @@ export function Briefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
         </div>
 
         <div class="brief__foot">
-          <div class="strip">
+          <div class="strip" style={{ "--n": strip().length }}>
             <For each={strip()}>
               {(p) => (
                 <Avatar
                   index={p.avatar}
-                  size={48}
+                  size="var(--strip-av, 48px)"
                   connected={p.connected}
                   ready={isReady(p.id)}
                   ring={isReady(p.id) ? "#B6FF3B" : undefined}

@@ -737,6 +737,9 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  /* Çok kısa ekranda (ör. 320×568 + "yatay oynanır" notu) adımlar alttaki avatar şeridinin üstüne taşmasın. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .brief__text {
   flex: none;
@@ -1362,8 +1365,12 @@
   .brief__wait {
     display: none;
   }
+  /* Avatar şeridi tek satırda kalır: kişi sayısına göre küçülür (8 kişide ~30px), adımlara yer açılır. */
   .strip {
     padding: 0;
+    flex-wrap: nowrap;
+    gap: 6px;
+    --strip-av: min(44px, calc((100vw - 40px) / var(--n, 6) - 6px));
   }
   .podium__block {
     height: 50px;
@@ -1465,6 +1472,11 @@
   }
 }
 @media (max-height: 640px) and (orientation: portrait) {
+  .strip {
+    flex-wrap: nowrap;
+    gap: 6px;
+    --strip-av: min(44px, calc((100vw - 40px) / var(--n, 6) - 6px));
+  }
   .brief__art {
     min-height: 104px;
     padding: 2px 0;
