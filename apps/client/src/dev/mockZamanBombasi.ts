@@ -246,6 +246,7 @@ export function startZamanBombasiMock(kind: string, params: URLSearchParams): vo
     tone: "arkadas",
     joinPolicy: "izleyici",
     lobbyReady: [],
+    stageCount: 0,
     catalog: CATALOG,
     match,
   };

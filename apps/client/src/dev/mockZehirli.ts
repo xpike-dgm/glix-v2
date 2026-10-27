@@ -110,6 +110,7 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
       tone: "arkadas",
       joinPolicy: "izleyici",
       lobbyReady: [],
+      stageCount: 0,
       catalog: [INFO],
       match,
     };

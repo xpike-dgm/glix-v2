@@ -103,6 +103,7 @@ export function startCaprazMock(kind: string, params: URLSearchParams): void {
       tone: "arkadas",
       joinPolicy: "izleyici",
       lobbyReady: [],
+      stageCount: 0,
       catalog: [
         {
           id: info.id,

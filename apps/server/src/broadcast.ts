@@ -16,6 +16,8 @@ export interface Broadcaster {
   flush(room: Room): void;
   /** İstemci `resync` istedi: yalnız bu bağlantıya tam snapshot gönderir. */
   resync(room: Room, player: Player): void;
+  /** Sahne `resync` istedi: yalnız bu sahne bağlantısına tam snapshot gönderir. */
+  resyncStage(room: Room, conn: Connection): void;
 }
 
 /**
@@ -95,6 +97,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       selection: { ...room.selection },
       tone: room.tone,
       joinPolicy: room.joinPolicy,
+      stageCount: room.stages.size,
       lobbyReady: room.phase === "lobby" ? lobbyReadyIds(room) : [],
       catalog: rt.catalog,
       match: sharedMatch,
@@ -137,6 +140,26 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       serverNow,
       selfId: player.id,
       match: content.match ? { ...content.match, view: matchViewFor(rt, room, player.id) } : null,
+    };
+  }
+
+  /**
+   * Sahne (TV) görünümü: oyuncu kimliği yok (`selfId` boş), `match.view` = `view(durum, null)` (izleyiciyle aynı).
+   * Sahne hiçbir oyuncuya bağlı değildir; oyuna kimliği hiç verilmez.
+   */
+  function snapshotForStage(
+    rt: Runtime,
+    room: Room,
+    rev: number,
+    serverNow: number,
+    content: Shared,
+  ): RoomSnapshot {
+    return {
+      ...content,
+      rev,
+      serverNow,
+      selfId: "",
+      match: content.match ? { ...content.match, view: matchViewFor(rt, room, null) } : null,
     };
   }
 
@@ -200,7 +223,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
     }
     room.lastFlushAt = clock.now();
     const connected = [...room.players.values()].filter((p) => p.conn !== null);
-    if (connected.length === 0) return;
+    if (connected.length === 0 && room.stages.size === 0) return;
     const rt = getRuntime();
     // Ortak kısım bir kez hesaplanır ve bir kez farklanır; oyuncu başına yalnız selfId ve match.view eklenir.
     let refreshed: ReturnType<typeof refreshShared>;
@@ -220,6 +243,18 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       try {
         if (sendFast(rt, room, conn, player, cache, content, prevVer, rev, serverNow)) continue;
         deliver(conn, snapshotFor(rt, room, rev, serverNow, content, player));
+        conn.sentVer = cache.ver;
+      } catch (err) {
+        if (err instanceof GameFault) {
+          fail(rt, room, err);
+          return;
+        }
+        log.warn("broadcast_failed", { roomCode: room.code, error: String(err) });
+      }
+    }
+    for (const conn of [...room.stages]) {
+      try {
+        deliver(conn, snapshotForStage(rt, room, rev, serverNow, content));
         conn.sentVer = cache.ver;
       } catch (err) {
         if (err instanceof GameFault) {
@@ -255,6 +290,17 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       try {
         const { cache, content } = refreshShared(rt, room);
         deliver(conn, snapshotFor(rt, room, ++room.rev, clock.now(), content, player));
+        conn.sentVer = cache.ver;
+      } catch (err) {
+        fail(rt, room, err);
+      }
+    },
+    resyncStage(room, conn) {
+      const rt = getRuntime();
+      conn.lastSent = null;
+      try {
+        const { cache, content } = refreshShared(rt, room);
+        deliver(conn, snapshotForStage(rt, room, ++room.rev, clock.now(), content));
         conn.sentVer = cache.ver;
       } catch (err) {
         fail(rt, room, err);

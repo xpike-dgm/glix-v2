@@ -125,6 +125,7 @@ export function startMock(kind: string, params: URLSearchParams): void {
       selection,
       tone,
       joinPolicy,
+      stageCount: 0,
       lobbyReady: phase === "lobby" ? lobbyReady : [],
       catalog: CATALOG,
       match: match(),

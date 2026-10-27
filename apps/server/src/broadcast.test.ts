@@ -10,6 +10,7 @@ function fakeConn() {
   const raw: string[] = [];
   const conn = {
     player: null,
+    stage: null,
     lastSent: null,
     sentVer: -1,
     ip: "x",

@@ -28,6 +28,8 @@ export interface Connection {
   sentVer: number;
   close(code: number, reason: string): void;
   player: Player | null;
+  /** Sahne (TV) olarak bağlandığı oda; oyuncu değildir (`player` null kalır). */
+  stage: Room | null;
   /** Çözümlenmiş istemci IP'si (oran sınırları için). */
   ip: string;
   /** Bu bağlantıdaki başarısız (`room_not_found`) katılma sayısı. */
@@ -61,6 +63,8 @@ export interface Room {
   code: string;
   hostId: string;
   players: Map<string, Player>;
+  /** Bağlı sahne (TV) bağlantıları; oyuncu sayılmaz, listede görünmez, en çok MAX_STAGES. */
+  stages: Set<Connection>;
   phase: RoomPhase;
   /** Manuel modda seçili oyunlar; rastgele modda lobide boş, maçta seçilenler. */
   gameIds: string[];

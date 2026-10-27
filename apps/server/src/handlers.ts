@@ -5,6 +5,7 @@ import {
   type ErrorCode,
   GAMES,
   MAX_PLAYERS,
+  MAX_STAGES,
   PROTOCOL_VERSION,
   REACTION_MIN_GAP_MS,
 } from "@glix/engine";
@@ -67,7 +68,38 @@ function requireHost(conn: Connection): Room | null {
   return room;
 }
 
+/** Sahne (TV) bağlantısının gönderebildikleri: bağlantı, ping, ayrılma ve tam görüntü isteği. Gerisi reddedilir. */
+function handleStageMessage(rt: Runtime, conn: Connection, room: Room, msg: ClientMessage): void {
+  switch (msg.type) {
+    case "hello":
+      conn.send({ type: "welcome", protocolVersion: PROTOCOL_VERSION, serverVersion: APP_VERSION });
+      return;
+    case "ping":
+      conn.send({ type: "pong", t: msg.t, serverTime: rt.clock.now() });
+      return;
+    case "resync":
+      rt.broadcaster.resyncStage(room, conn);
+      return;
+    case "leaveRoom":
+      room.stages.delete(conn);
+      conn.stage = null;
+      conn.lastSent = null;
+      conn.send({ type: "left", reason: "left" });
+      rt.broadcaster.markDirty(room);
+      return;
+    case "action":
+      conn.send({ type: "actionAck", seq: msg.seq, ok: false, reason: "not_participant" });
+      return;
+    default:
+      fail(conn, "stage_readonly");
+  }
+}
+
 export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage): void {
+  if (conn.stage) {
+    handleStageMessage(rt, conn, conn.stage, msg);
+    return;
+  }
   switch (msg.type) {
     case "hello":
       conn.send({ type: "welcome", protocolVersion: PROTOCOL_VERSION, serverVersion: APP_VERSION });
@@ -136,6 +168,39 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       }
       addPlayer(rt, room, msg.nickname, conn, msg.avatar, spectator);
       sendSession(conn);
+      rt.broadcaster.markDirty(room);
+      return;
+    }
+    case "joinStage": {
+      if (conn.player) {
+        fail(conn, "already_in_room");
+        return;
+      }
+      if (rt.draining) {
+        fail(conn, "draining");
+        return;
+      }
+      if (!rt.ipLimiter.canTryJoin(conn.ip)) {
+        fail(conn, "rate_limited");
+        return;
+      }
+      const room = rt.rooms.get(msg.code);
+      if (!room) {
+        rt.ipLimiter.recordFailedJoin(conn.ip);
+        conn.failedJoins += 1;
+        fail(conn, "room_not_found");
+        if (conn.failedJoins >= MAX_FAILED_JOINS) conn.close(1008, "Çok sayıda hatalı oda kodu");
+        return;
+      }
+      // Sahne koltuk tutmaz ve 8 sınırına girmez; kendi üst sınırı vardır.
+      if (room.stages.size >= MAX_STAGES) {
+        fail(conn, "stage_full");
+        return;
+      }
+      room.stages.add(conn);
+      conn.stage = room;
+      conn.lastSent = null;
+      conn.send({ type: "stage", roomCode: room.code });
       rt.broadcaster.markDirty(room);
       return;
     }
@@ -461,6 +526,12 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
 
 /** Soket kapandı. */
 export function handleClose(rt: Runtime, conn: Connection): void {
+  if (conn.stage) {
+    const room = conn.stage;
+    conn.stage = null;
+    if (room.stages.delete(conn)) rt.broadcaster.markDirty(room);
+    return;
+  }
   const player = conn.player;
   conn.player = null;
   if (player && player.conn === conn) markDisconnected(rt, player);

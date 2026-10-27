@@ -20,6 +20,8 @@ export const ERROR_TEXT: Record<ErrorCode, string> = {
   game_failed: "Oyunda bir sorun çıktı. Lobiye döndün, puanların korundu.",
   draining: "Güncelleme yapılıyor, birazdan tekrar dene.",
   server_busy: "Sunucu şu an çok yoğun, birazdan tekrar dene.",
+  stage_full: "Bu odada zaten iki TV ekranı var.",
+  stage_readonly: "TV ekranı oyuna karışamaz.",
 };
 
 export function errorMessage(code: ErrorCode, text?: string): ServerMessage {

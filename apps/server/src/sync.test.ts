@@ -108,6 +108,7 @@ describe("yama senkronu", () => {
       tone: "arkadas",
       joinPolicy: "izleyici",
       lobbyReady: [],
+      stageCount: 0,
       catalog: [],
       match: null,
     } as RoomSnapshot;

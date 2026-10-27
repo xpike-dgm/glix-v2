@@ -240,6 +240,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     let rateLimitStreak = 0;
     const conn: Connection = {
       player: null,
+      stage: null,
       lastSent: null,
       sentVer: -1,
       ip,
@@ -258,7 +259,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     const armIdle = (): void => {
       cancelIdle = clock.setTimeout(() => {
         if (ws.readyState !== ws.OPEN) return;
-        if (conn.player) armIdle();
+        if (conn.player || conn.stage) armIdle();
         else ws.close(IDLE_CLOSE_CODE, "Uzun süre işlem yapılmadı");
       }, limits.idleUnjoinedMs);
     };

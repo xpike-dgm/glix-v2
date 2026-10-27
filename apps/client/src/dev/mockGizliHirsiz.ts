@@ -107,6 +107,7 @@ export function startGizliHirsizMock(kind: string, params: URLSearchParams): voi
       tone: "arkadas",
       joinPolicy: "izleyici",
       lobbyReady: [],
+      stageCount: 0,
       catalog: [GAME],
       match,
     };

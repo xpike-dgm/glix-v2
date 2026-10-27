@@ -146,6 +146,7 @@ export function startKronometreMock(kind: string, params: URLSearchParams): void
       tone: "arkadas",
       joinPolicy: "izleyici",
       lobbyReady: [],
+      stageCount: 0,
       catalog: [INFO],
       match,
     };

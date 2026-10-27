@@ -38,6 +38,7 @@ export function snapshot(phase: RoomPhase = "lobby", extra: Partial<RoomSnapshot
     tone: "arkadas",
     joinPolicy: "izleyici",
     lobbyReady: [],
+    stageCount: 0,
     catalog: [
       { id: "butona-bas", name: "Butona Bas", minPlayers: 2, maxPlayers: 8, orientation: "portrait" },
     ],

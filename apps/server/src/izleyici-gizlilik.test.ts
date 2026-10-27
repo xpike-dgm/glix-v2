@@ -1,5 +1,5 @@
 /**
- * Yapısal gizlilik: maç sırasında odaya giren bir izleyici, hiçbir oyunda oyuncuya özel `view` ya da gizli
+ * Yapısal gizlilik: maç sırasında odaya giren bir izleyici (ve sahne/TV bağlantısı; aynı güvenlik sınıfı), hiçbir oyunda oyuncuya özel `view` ya da gizli
  * bilgi almaz. Her oyun için gerçek sunucu akışı (katılım, hazırım, eylemler, yayın) botlarla sürülür ve
  * izleyicinin bağlantısına giden her ileti denetlenir:
  *   1. Oyuna izleyicinin kimliği hiç verilmez (`setup` oyuncu listesi, `view` çağrıları).
@@ -30,6 +30,8 @@ interface Fake {
   raw: string[];
   snapshot: RoomSnapshot | null;
   id(): string;
+  /** Sahne bağlantısı: `session` yerine `stage` iletisi alır. */
+  stageCode(): string | null;
 }
 
 function fake(): Fake {
@@ -37,6 +39,10 @@ function fake(): Fake {
     sent: [],
     raw: [],
     snapshot: null,
+    stageCode: () => {
+      const m = f.sent.find((x) => x.type === "stage");
+      return m && m.type === "stage" ? m.roomCode : null;
+    },
     id: () => {
       const s = f.sent.find((m) => m.type === "session");
       if (!s || s.type !== "session") throw new Error("oturum yok");
@@ -46,6 +52,7 @@ function fake(): Fake {
   };
   f.conn = {
     player: null,
+    stage: null,
     lastSent: null,
     sentVer: -1,
     ip: "1.2.3.4",
@@ -109,6 +116,18 @@ function auditGame(id: string, bots: Record<string, { generate: unknown }> = BOT
     handleMessage(rt, host.conn, { type: "startMatch" });
     if ((room.phase as string) !== "briefing") return [`${id}: maç başlamadı (${room.phase})`];
 
+    // Sahne (TV) bağlantıları: biri anlatımdan önce, biri oyun sürerken girer. İzleyiciyle aynı kurallara tabidir.
+    const stagers: Fake[] = [];
+    const joinStager = () => {
+      const t = fake();
+      handleMessage(rt, t.conn, { type: "joinStage", code: room.code });
+      if (t.stageCode() !== room.code) violations.push(`${id}: sahne odaya girmedi`);
+      stagers.push(t);
+    };
+    joinStager();
+    if (room.players.size !== n || [...room.players.values()].some((p) => p.spectator))
+      violations.push(`${id}: sahne oyuncu listesine girdi`);
+
     // İlk izleyici anlatımda, ikincisi oyun başladıktan sonra girer.
     const watchers: Fake[] = [];
     const joinWatcher = (name: string) => {
@@ -129,6 +148,8 @@ function auditGame(id: string, bots: Record<string, { generate: unknown }> = BOT
     let sawPlaying = false;
     let sawResults = false;
     let joinedLate = false;
+    let sawStagePlaying = false;
+    let sawStageResults = false;
     for (let step = 0; step < MAX_STEPS && room.phase !== "final"; step++) {
       const match = room.match;
       if (!match) break;
@@ -136,6 +157,7 @@ function auditGame(id: string, bots: Record<string, { generate: unknown }> = BOT
         if (!joinedLate && step > 8) {
           joinedLate = true;
           joinWatcher("Izleyici2");
+          joinStager();
         }
         const connected = [...match.participants];
         const ctx = { now: clock.now(), rng: createRng(1), connected };
@@ -160,6 +182,32 @@ function auditGame(id: string, bots: Record<string, { generate: unknown }> = BOT
       const expectedView = live ? JSON.stringify(game.view(m.state, null, ctx) ?? null) : "null";
       const secrets = live ? game.secrets(m.state) : [];
       const finished = live && game.isFinished(m.state, ctx);
+      for (const t of stagers) {
+        const snap = t.snapshot?.match;
+        if (t.snapshot && t.snapshot.selfId !== "") violations.push(`${id}: sahneye oyuncu kimliği verildi`);
+        if (t.snapshot && t.snapshot.players.some((p) => p.nickname.startsWith("TV")))
+          violations.push(`${id}: sahne oyuncu listesinde`);
+        if (snap && room.phase === "results" && snap.result) sawStageResults = true;
+        if (snap && room.phase === "playing" && snap.publicView !== null) sawStagePlaying = true;
+        if (snap && JSON.stringify(snap.view ?? null) !== expectedView)
+          violations.push(`${id}: sahnenin view'ı view(durum, null) değil (adım ${step})`);
+        if (
+          snap &&
+          JSON.stringify(snap.publicView ?? null) !==
+            JSON.stringify(watchers[0]?.snapshot?.match?.publicView ?? null)
+        )
+          violations.push(`${id}: sahnenin publicView'ı izleyiciyle aynı değil (adım ${step})`);
+        for (const raw of t.raw.slice(checked.get(t) ?? 0)) {
+          const text = matchPart(raw);
+          for (const sec of secrets) {
+            if (sec.value.length < 3 || (finished && sec.ownerIds.length === 0)) continue;
+            if (text.includes(sec.value) || text.includes(JSON.stringify(sec.value).slice(1, -1))) {
+              violations.push(`${id}: gizli bilgi sahneye gitti: ${sec.label}`);
+            }
+          }
+        }
+        checked.set(t, t.raw.length);
+      }
       for (const w of watchers) {
         const snap = w.snapshot?.match;
         if (snap && room.phase === "results" && snap.result) sawResults = true;
@@ -184,6 +232,9 @@ function auditGame(id: string, bots: Record<string, { generate: unknown }> = BOT
     if (!sawResults) violations.push(`${id}: izleyici sonuç ekranına hiç ulaşmadı`);
     if (!sawPlaying) violations.push(`${id}: izleyici hiç oynanış görünümü almadı (test boş geçiyor)`);
 
+    if (!sawStageResults) violations.push(`${id}: sahne sonuç ekranına hiç ulaşmadı`);
+    if (!sawStagePlaying) violations.push(`${id}: sahne hiç oynanış görünümü almadı (test boş geçiyor)`);
+
     const watcherIds = new Set(watchers.map((w) => w.id()));
     for (const call of viewSpy.mock.calls) {
       if (typeof call[1] === "string" && watcherIds.has(call[1]))
@@ -192,6 +243,11 @@ function auditGame(id: string, bots: Record<string, { generate: unknown }> = BOT
     for (const call of setupSpy.mock.calls) {
       if ((call[0] as readonly string[]).some((p) => watcherIds.has(p)))
         violations.push(`${id}: izleyici setup oyuncu listesine girdi`);
+    }
+    for (const t of stagers) {
+      if (room.stages.size !== stagers.length) violations.push(`${id}: sahne sayısı tutmuyor`);
+      if (room.players.size !== watchers.length + n) violations.push(`${id}: sahne koltuk tuttu`);
+      if (t.conn.player !== null) violations.push(`${id}: sahne bağlantısına oyuncu bağlandı`);
     }
     for (const w of watchers) {
       if (room.match?.participants.includes(w.id())) violations.push(`${id}: izleyici katılımcı oldu`);

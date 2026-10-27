@@ -162,6 +162,17 @@ describe("parseClientMessage: oda mesajları", () => {
     expect(parseClientMessage(j({ type: "feedback", rating: 3, extra: 1 }))).toBeNull();
     expect(parseClientMessage(j({ type: "feedback" }))).toBeNull();
   });
+  it("joinStage yalnız geçerli kodla kabul edilir (küçük harf büyütülür)", () => {
+    expect(parseClientMessage(j({ type: "joinStage", code: "ab2cd" }))).toEqual({
+      type: "joinStage",
+      code: "AB2CD",
+    });
+    for (const code of ["ABC", "ABCDEF", "AB CD", "", 12345, null, undefined]) {
+      expect(parseClientMessage(j({ type: "joinStage", code }))).toBeNull();
+    }
+    expect(parseClientMessage(j({ type: "joinStage", code: "AB2CD", nickname: "TV" }))).toBeNull();
+    expect(parseClientMessage(j({ type: "joinStage" }))).toBeNull();
+  });
   it("argümansız mesajlar yalnız type ile kabul edilir", () => {
     for (const type of ["leaveRoom", "startMatch", "ready", "continue", "returnToLobby", "resync"]) {
       expect(parseClientMessage(j({ type }))).toEqual({ type });
