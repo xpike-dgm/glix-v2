@@ -77,7 +77,7 @@ export function Leaderboard() {
             )}
           </For>
         </div>
-        <div class="lb__chips rise" style={{ "--i": 1 }} role="group" aria-label="Ölçü">
+        <fieldset class="lb__chips rise" style={{ "--i": 1 }} aria-label="Ölçü">
           <For each={METRICS}>
             {(m) => (
               <button
@@ -90,7 +90,7 @@ export function Leaderboard() {
               </button>
             )}
           </For>
-        </div>
+        </fieldset>
 
         <Show when={leaderboardLoad() === "loading"}>
           <p class="pf__note" role="status">

@@ -20,6 +20,10 @@
   color: #06102e;
 }
 .lb__chips {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--sp-2);
