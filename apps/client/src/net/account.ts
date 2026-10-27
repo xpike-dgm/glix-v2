@@ -79,7 +79,8 @@ async function enter(path: "login" | "register", body: unknown): Promise<Account
   void refreshAccount();
   reconnectForAccount();
   goHome();
-  if (path === "register" && state.mail.enabled) toast("Doğrulama bağlantısı e-postana gönderildi.");
+  if (path === "register" && state.mail.enabled)
+    toast("Doğrulama maili gönderildi. Gelmezse spam klasörüne bak.");
   return { ok: true, message: "" };
 }
 
@@ -211,7 +212,7 @@ export async function resendVerification(): Promise<void> {
     setState("mail", "verified", true);
     return toast("E-postan zaten doğrulanmış.");
   }
-  toast("Doğrulama bağlantısı gönderildi.", "success");
+  toast("Doğrulama maili gönderildi. Gelmezse spam klasörüne bak.", "success");
 }
 
 /** Şifre sıfırlama bağlantısı ister. Hesap olsun olmasın sunucu aynı yanıtı verir. */
