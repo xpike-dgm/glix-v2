@@ -8,12 +8,15 @@ import { matchRounds } from "../net/matchHistory.js";
 import { noteMatchFinished } from "../pwa/pwa.js";
 import { Avatar } from "../ui/Avatar.js";
 import type { Mood } from "../ui/avatars.js";
+import { EmojiBar, RESULT_EMOJIS } from "../ui/EmojiBar.js";
 import { FeedbackRow } from "../ui/FeedbackRow.js";
 import { CrownIcon } from "../ui/Icons.js";
 import { LeaveButton } from "../ui/LeaveButton.js";
 import { Mascot } from "../ui/Mascot.js";
 import { MatchGallery } from "../ui/MatchGallery.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
+import { ReactionLayer } from "../ui/ReactionLayer.js";
+import { createReactionSender } from "../ui/reactionSend.js";
 import { Screen } from "../ui/Screen.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
 import { Watchers } from "../ui/Watchers.js";
@@ -22,6 +25,7 @@ import { deriveTitles } from "./titles.js";
 
 export function Final(props: { snap: RoomSnapshot }) {
   let confetti: HTMLDivElement | undefined;
+  const react = createReactionSender();
   const ranked = createMemo(() => rankPlayers(playersOnly(props.snap.players), (p) => p.score));
   const winners = () => winnersOf(ranked());
   const lastRank = () => ranked().at(-1)?.rank ?? 0;
@@ -106,6 +110,7 @@ export function Final(props: { snap: RoomSnapshot }) {
                 <div
                   class="podium__col"
                   data-rank={r.rank}
+                  data-pid={r.player.id}
                   data-pos={top().indexOf(r)}
                   style={{ "--i": 3 - top().indexOf(r) }}
                 >
@@ -120,6 +125,7 @@ export function Final(props: { snap: RoomSnapshot }) {
                     index={r.player.avatar}
                     size={podiumAvatar(r.rank)}
                     mood={rowMood(r.rank, r.score)}
+                    live={r.rank === 1 ? "joy" : undefined}
                     connected={r.player.connected}
                     self={r.player.id === props.snap.selfId}
                   />
@@ -162,6 +168,7 @@ export function Final(props: { snap: RoomSnapshot }) {
                 {(r, i) => (
                   <li
                     class="row rise"
+                    data-pid={r.player.id}
                     style={{ "--i": 4 + i() }}
                     data-me={r.player.id === props.snap.selfId ? "1" : undefined}
                   >
@@ -195,6 +202,7 @@ export function Final(props: { snap: RoomSnapshot }) {
       </div>
 
       <footer class="final__foot">
+        <EmojiBar compact emojis={RESULT_EMOJIS} onPick={react} />
         <Show
           when={isHost()}
           fallback={
@@ -208,6 +216,7 @@ export function Final(props: { snap: RoomSnapshot }) {
           </PrimaryButton>
         </Show>
       </footer>
+      <ReactionLayer />
     </Screen>
   );
 }

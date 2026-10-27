@@ -86,6 +86,7 @@ export function Briefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
                   connected={p.connected}
                   ready={isReady(p.id)}
                   ring={isReady(p.id) ? "#B6FF3B" : undefined}
+                  live={isReady(p.id) ? "breathe" : undefined}
                   class={isReady(p.id) ? "" : "av--wait"}
                 />
               )}

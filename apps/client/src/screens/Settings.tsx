@@ -2,7 +2,16 @@ import { APP_VERSION, normalizeNickname } from "@glix/engine";
 import { createEffect, createSignal, type JSX, on, Show } from "solid-js";
 import { applyAudioSession, getPlayInSilent, setPlayInSilent } from "../fx/audioSession.js";
 import { hapticTap } from "../fx/haptics.js";
-import { muted, setMuted, setVolume, tap, unlockAudio, volume } from "../fx/sound.js";
+import {
+  musicVolume,
+  muted,
+  setMusicVolume,
+  setMuted,
+  setVolume,
+  tap,
+  unlockAudio,
+  volume,
+} from "../fx/sound.js";
 import { readAvatarChoice } from "../net/storage.js";
 import { goHome, setNickname, state, toast } from "../net/store.js";
 import { clearPack, downloadAll, packProgress, packRunning, storageEpoch } from "../pwa/packController.js";
@@ -210,7 +219,13 @@ export function Settings() {
       <div class="set__body" data-scroll>
         <Group title="Ses">
           <Slider
-            label="Ses düzeyi"
+            label="Müzik"
+            value={musicVolume()}
+            onInput={(v) => setMusicVolume(v)}
+            onDone={() => unlockAudio()}
+          />
+          <Slider
+            label="Efektler"
             value={volume()}
             onInput={(v) => setVolume(v)}
             onDone={() => {
@@ -218,7 +233,12 @@ export function Settings() {
               tap();
             }}
           />
-          <Toggle label="Sesi kapat" on={muted()} onChange={(on) => setMuted(on)} />
+          <Toggle
+            label="Sesi kapat"
+            hint="Müziği ve efektleri birlikte kapatır"
+            on={muted()}
+            onChange={(on) => setMuted(on)}
+          />
           <Show when={hasAudioSession()}>
             <Toggle
               label="Sessiz modda da çal"

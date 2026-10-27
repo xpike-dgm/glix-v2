@@ -56,3 +56,19 @@ describe("resumeContext", () => {
     expect(resumeContext(c as unknown as AudioContext)).toBe(true);
   });
 });
+
+describe("readMusicVolume (müzik/efekt ayrımı)", () => {
+  it("kayıt yoksa ya da bozuksa efekt düzeyinin %60'ı", async () => {
+    const { readMusicVolume } = await import("./sound.js");
+    expect(readMusicVolume(null, 0.8)).toBe(0.48);
+    expect(readMusicVolume("abc", 1)).toBe(0.6);
+    expect(readMusicVolume("2", 0.5)).toBe(0.3);
+    expect(readMusicVolume("", 0)).toBe(0);
+  });
+
+  it("kayıtlı değer korunur (0 dahil)", async () => {
+    const { readMusicVolume } = await import("./sound.js");
+    expect(readMusicVolume("0", 0.8)).toBe(0);
+    expect(readMusicVolume("0.25", 0.8)).toBe(0.25);
+  });
+});

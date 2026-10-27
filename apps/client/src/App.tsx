@@ -1,4 +1,5 @@
 import { createEffect, createMemo, createSignal, Match, onCleanup, onMount, Show, Switch } from "solid-js";
+import { installMusic, setLobbyMusic } from "./fx/music.js";
 import { startNet } from "./net/client.js";
 import { normalizeCode } from "./net/code.js";
 import { collectRounds } from "./net/matchHistory.js";
@@ -31,6 +32,7 @@ import { Settings } from "./screens/Settings.js";
 import { dataSaver, setTextSize, wifiOnly } from "./settings/settings.js";
 import { installErrorReporting } from "./telemetry/errors.js";
 import { preloadBriefing } from "./ui/briefingArt.js";
+import { Curtain } from "./ui/Curtain.js";
 import { Loading } from "./ui/Loading.js";
 import { collectGallery } from "./ui/matchGallery.js";
 import { preloadMoods } from "./ui/preloadMoods.js";
@@ -80,6 +82,9 @@ export function App() {
     preloadBriefing(m.gameId);
   });
 
+  // Lobi müziği yalnız lobide çalar; maç başlayınca durur (kullanıcı jestinden önce hiç çalmaz).
+  createEffect(() => setLobbyMusic(screen() === "lobby"));
+
   // Odadayken ekran uyanık kalır; ana ekranda bırakılır.
   createEffect(() => setScreenAwake(state.snapshot !== null));
 
@@ -96,6 +101,7 @@ export function App() {
   const [devLoading, setDevLoading] = createSignal(false);
 
   onMount(() => {
+    installMusic();
     installErrorReporting();
     announceUpdateIfAny();
     const params = new URLSearchParams(window.location.search);
@@ -239,6 +245,7 @@ export function App() {
       <Show when={packScreenOpen()}>
         <PackScreen />
       </Show>
+      <Curtain screen={screen()} />
       <Reconnecting />
       <Toasts />
     </div>

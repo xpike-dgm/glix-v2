@@ -229,7 +229,8 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       const room = requireRoom(conn);
       if (!room || !conn.player) return;
       // Geçici olay: yanlış aşama ya da çok sık gönderim sessizce atılır (hata göstermeden).
-      if (room.phase !== "lobby") return;
+      // Yalnız lobi, sonuç ve final: oyun sırasında (blöf oyunlarında) gizli işaret taşıyabilir.
+      if (room.phase !== "lobby" && room.phase !== "results" && room.phase !== "final") return;
       const me = conn.player;
       const now = rt.clock.now();
       if (now - me.lastReactAt < REACTION_MIN_GAP_MS) return;

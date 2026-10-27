@@ -5,6 +5,7 @@ import {
   movedEarlier,
   shouldTick,
   stepFraction,
+  tensionLevel,
   URGENT_MS,
 } from "./clockState.js";
 
@@ -60,5 +61,32 @@ describe("shouldTick", () => {
     expect(shouldTick(null, v)).toBe(true);
     expect(shouldTick(v.secs, v)).toBe(false);
     expect(shouldTick(null, clockView(win(), 5000))).toBe(false);
+  });
+});
+
+describe("tensionLevel (gerilim ritmi)", () => {
+  const win = { startedAt: 0, endsAt: 30_000, urgency: true };
+
+  it("10 sn'den uzakta ve bittikten sonra kapalı", () => {
+    expect(tensionLevel(win, 10_000, true)).toBe(0);
+    expect(tensionLevel(win, 19_999, true)).toBe(0);
+    expect(tensionLevel(win, 30_000, true)).toBe(0);
+    expect(tensionLevel(win, 31_000, true)).toBe(0);
+  });
+
+  it("son 10 sn'de açılır ve süre azaldıkça yükselir", () => {
+    const a = tensionLevel(win, 21_000, true);
+    const b = tensionLevel(win, 27_000, true);
+    expect(a).toBeGreaterThan(0);
+    expect(b).toBeGreaterThan(a);
+    expect(b).toBeLessThanOrEqual(1);
+  });
+
+  it("süresi gizli oyunda (saat görünmez) ya da karar süresi değilken asla açılmaz", () => {
+    for (let now = 0; now <= 31_000; now += 500) {
+      expect(tensionLevel(win, now, false)).toBe(0);
+      expect(tensionLevel({ ...win, urgency: false }, now, true)).toBe(0);
+    }
+    expect(tensionLevel(null, 25_000, true)).toBe(0);
   });
 });

@@ -3,8 +3,8 @@ import { KEYS, readStored, writeStored } from "../net/storage.js";
 import { applyAudioSession } from "./audioSession.js";
 
 /**
- * WebAudio ile kod içinde üretilen kısa sesler (dosya yok). Tek ana ses düzeyi (`volume`) ve kalıcı sessiz
- * tercihi var. Tarayıcılar (özellikle iOS) sesi yalnız ilk dokunuştan sonra açar: `installAudioUnlock`
+ * WebAudio ile kod içinde üretilen sesler (dosya yok). Efekt düzeyi (`volume`), müzik düzeyi (`musicVolume`)
+ * ve kalıcı tek sessiz tercihi (ikisini birden kapatır) var. Tarayıcılar (özellikle iOS) sesi yalnız ilk dokunuştan sonra açar: `installAudioUnlock`
  * ilk jestte bağlamı başlatır.
  */
 
@@ -16,7 +16,24 @@ function readVolume(): number {
 }
 const [volume, setVolumeSignal] = createSignal(readVolume());
 
-export { muted, volume };
+/** Müzik varsayılanı: efekt düzeyinin %60'ı. Kayıt yoksa/bozuksa o. */
+export const MUSIC_DEFAULT_RATIO = 0.6;
+export function readMusicVolume(raw: string | null, effects: number): number {
+  const v = raw === null ? Number.NaN : Number(raw);
+  return Number.isFinite(v) && v >= 0 && v <= 1 ? v : Math.round(effects * MUSIC_DEFAULT_RATIO * 100) / 100;
+}
+const [musicVolume, setMusicVolumeSignal] = createSignal(
+  readMusicVolume(readStored(KEYS.musicVolume), volume()),
+);
+
+export { musicVolume, muted, volume };
+
+/** Bağlam ilk kez kurulunca (kullanıcı jestinden) çağrılacak işler; müzik buraya bağlanır. */
+const unlockHooks = new Set<() => void>();
+export function onAudioUnlocked(fn: () => void): () => void {
+  unlockHooks.add(fn);
+  return () => void unlockHooks.delete(fn);
+}
 
 let ctx: AudioContext | null = null;
 const resuming = new WeakSet<object>();
@@ -37,11 +54,31 @@ export function resumeContext(c: Pick<AudioContext, "state" | "resume">): boolea
   return true;
 }
 let master: GainNode | null = null;
+let musicGain: GainNode | null = null;
+
+/** Müzik katmanının bağlanacağı yer: bağlam (jestle açılmışsa) ve müzik düzeyi düğümü. */
+export function musicBus(): { ctx: AudioContext; out: GainNode } | null {
+  return ctx && musicGain ? { ctx, out: musicGain } : null;
+}
+
+const musicTarget = (): number => (muted() ? 0 : musicVolume());
+function applyMusicGain(): void {
+  if (musicGain && ctx) musicGain.gain.setTargetAtTime(musicTarget(), ctx.currentTime, 0.05);
+}
 
 export function setMuted(on: boolean): void {
   setMutedSignal(on);
   writeStored(KEYS.muted, on ? "1" : "0");
+  applyMusicGain();
   if (!on) tap();
+}
+
+/** Müzik düzeyi, 0–1. Kalıcıdır. */
+export function setMusicVolume(v: number): void {
+  const clean = Math.min(1, Math.max(0, Number.isFinite(v) ? v : 0));
+  setMusicVolumeSignal(clean);
+  writeStored(KEYS.musicVolume, String(clean));
+  applyMusicGain();
 }
 
 /** Üst şerit düğmesi ile Ayarlar aynı durumu okur ve yazar. */
@@ -49,7 +86,7 @@ export function toggleMute(): void {
   setMuted(!muted());
 }
 
-/** Ana ses düzeyi, 0–1. Kalıcıdır. */
+/** Efekt düzeyi, 0–1. Kalıcıdır. */
 export function setVolume(v: number): void {
   const clean = Math.min(1, Math.max(0, Number.isFinite(v) ? v : 0.8));
   setVolumeSignal(clean);
@@ -71,12 +108,18 @@ function audio(): AudioContext | null {
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -14;
     comp.ratio.value = 6;
-    master.connect(comp).connect(ctx.destination);
+    master.connect(comp);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = musicTarget();
+    musicGain.connect(comp);
+    comp.connect(ctx.destination);
   } catch {
     ctx = null;
     master = null;
+    musicGain = null;
     return null;
   }
+  for (const fn of unlockHooks) fn();
   return ctx;
 }
 

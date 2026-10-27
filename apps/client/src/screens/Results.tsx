@@ -9,7 +9,10 @@ import { sendContinue } from "../net/client.js";
 import { createServerNow } from "../net/time.js";
 import { Avatar } from "../ui/Avatar.js";
 import type { Mood } from "../ui/avatars.js";
+import { EmojiBar, RESULT_EMOJIS } from "../ui/EmojiBar.js";
 import { ProgressBar } from "../ui/ProgressBar.js";
+import { ReactionLayer } from "../ui/ReactionLayer.js";
+import { createReactionSender } from "../ui/reactionSend.js";
 import { Screen } from "../ui/Screen.js";
 import { TamamBar } from "../ui/TamamBar.js";
 import { Watchers } from "../ui/Watchers.js";
@@ -34,6 +37,7 @@ const SLIDE_MS = 500;
 
 export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
   const now = createServerNow(100);
+  const react = createReactionSender();
   const result = () => props.match.result;
   const ranked = createMemo(() =>
     rankPlayers(playersOnly(props.snap.players), (p) => result()?.miniScores[p.id]),
@@ -158,6 +162,7 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
               <div
                 class="podium__col"
                 data-rank={r.rank}
+                data-pid={r.player.id}
                 data-pos={top().indexOf(r)}
                 style={{ "--i": 3 - top().indexOf(r) }}
               >
@@ -170,6 +175,7 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
                   index={r.player.avatar}
                   size={podiumAvatar(r.rank)}
                   mood={moodOf(r)}
+                  live={r.rank === 1 && award(r.player.id) >= 0 ? "joy" : undefined}
                   host={r.player.id === props.snap.hostId}
                   connected={r.player.connected}
                   self={r.player.id === props.snap.selfId}
@@ -191,6 +197,7 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
               <li
                 class="row srow"
                 data-id={r.player.id}
+                data-pid={top().some((t) => t.player.id === r.player.id) ? undefined : r.player.id}
                 data-me={r.player.id === props.snap.selfId ? "1" : undefined}
               >
                 <span class="row__rank">{r.rank}</span>
@@ -240,6 +247,7 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
       <Watchers players={watchersOf(props.snap.players)} selfId={props.snap.selfId} />
 
       <footer class="results__foot">
+        <EmojiBar compact emojis={RESULT_EMOJIS} onPick={react} />
         <div class="next">
           <div class="next__card">
             <Show when={nextId()} fallback={<span class="next__art next__art--final" aria-hidden="true" />}>
@@ -277,6 +285,7 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
           {(end) => <ProgressBar startedAt={props.match.phaseStartedAt} endsAt={end()} now={now} />}
         </Show>
       </footer>
+      <ReactionLayer />
     </Screen>
   );
 }

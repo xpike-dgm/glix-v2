@@ -2004,6 +2004,13 @@
     transform 80ms var(--ease),
     background 120ms;
 }
+/* Sonuç/final: dört düğme ortada, altta ince şerit. */
+.emojibar--compact {
+  justify-content: center;
+  gap: 14px;
+  margin: 0;
+  padding-top: 2px;
+}
 .emojibar__btn:active {
   transform: scale(0.88);
   background: rgba(46, 242, 255, 0.14);
@@ -2678,5 +2685,20 @@
   .fin .fb__chip,
   .fin .fb__send {
     flex: 1 1 0;
+  }
+}
+
+/* Yatay geniş ekran: tepki dörtlüsü içerik sütununun dışında, sağ kenarda dikey durur (dikey alan değerli). */
+@media (orientation: landscape) and (max-height: 520px) and (min-width: 640px) {
+  .final__foot .emojibar--compact,
+  .results__foot .emojibar--compact {
+    position: fixed;
+    right: max(8px, var(--safe-right, 0px));
+    top: 50%;
+    transform: translateY(-50%);
+    flex-direction: column;
+    gap: 6px;
+    padding: 0;
+    z-index: 3;
   }
 }

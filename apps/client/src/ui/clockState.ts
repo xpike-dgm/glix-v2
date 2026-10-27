@@ -62,3 +62,18 @@ export function movedEarlier(prev: ClockWindow | null, next: ClockWindow | null,
 export function shouldTick(prevSecs: number | null, view: ClockView): boolean {
   return view.secs !== null && view.secs !== prevSecs;
 }
+
+/** Gerilim yatağı bu kadar ms kala başlar. */
+export const TENSION_MS = 10_000;
+
+/**
+ * Gerilim müziği yoğunluğu 0..1 (0: kapalı). Yalnız karar süreleri (`urgency`) ve süresi görünen oyunlar için;
+ * pencere yok, bitti ya da 10 sn'den uzaksa 0. `visible` false ise (saati gizli oyun) her zaman 0: gerilim
+ * ritmi kalan süreyi ele vereceğinden süresi gizli oyunlarda asla çalmaz.
+ */
+export function tensionLevel(win: ClockWindow | null, now: number, visible: boolean): number {
+  if (!visible || !win || !win.urgency) return 0;
+  const left = win.endsAt - now;
+  if (left <= 0 || left > TENSION_MS) return 0;
+  return Math.min(1, Math.max(0.05, 1 - left / TENSION_MS));
+}

@@ -1,18 +1,31 @@
 import { createSignal, onCleanup, Show } from "solid-js";
 import { hapticTick } from "../fx/haptics.js";
+import { setTensionLevel } from "../fx/music.js";
 import { tick } from "../fx/sound.js";
-import { type ClockView, type ClockWindow, clockView, shouldTick, stepFraction } from "./clockState.js";
+import {
+  type ClockView,
+  type ClockWindow,
+  clockView,
+  shouldTick,
+  stepFraction,
+  tensionLevel,
+} from "./clockState.js";
 
 interface Props {
   win: ClockWindow | null;
   /** Sunucu saati (ms). */
   now: () => number;
   vertical?: boolean;
+  /**
+   * Gerilim müziği bu saate bağlı mı. Süresi gizli oyunlarda kabuk saati hiç çizilmez; yine de çağıran
+   * `false` verirse ritim ele vermez.
+   */
+  tension?: boolean;
 }
 
 /**
  * Kabuk süre çubuğu: sunucu saatine bağlı ince çubuk. Son 5 sn kalınlaşır, kırmızıya döner, sayı gösterir,
- * saniyede bir tik sesi ve hafif titreşim verir. Pencere erkene alınırsa çubuk yumuşakça kapanır.
+ * saniyede bir tik sesi ve hafif titreşim verir; son 10 sn'de alçak bir gerilim yatağı (müzik) başlar, süre bitince susar. Pencere erkene alınırsa çubuk yumuşakça kapanır.
  */
 export function Clock(props: Props) {
   let fill: HTMLDivElement | undefined;
@@ -34,10 +47,14 @@ export function Clock(props: Props) {
       hapticTick();
     }
     prevSecs = v.secs;
+    setTensionLevel(tensionLevel(props.win, props.now(), props.tension === true));
     raf = requestAnimationFrame(frame);
   };
   raf = requestAnimationFrame(frame);
-  onCleanup(() => cancelAnimationFrame(raf));
+  onCleanup(() => {
+    cancelAnimationFrame(raf);
+    setTensionLevel(0);
+  });
 
   return (
     <div
