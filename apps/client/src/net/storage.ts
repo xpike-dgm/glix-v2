@@ -15,6 +15,7 @@ export const KEYS = {
   haptics: "glix.haptics",
   motion: "glix.motion",
   textSize: "glix.textSize",
+  colorBlind: "glix.colorBlind",
   dataSaver: "glix.dataSaver",
   telemetry: "glix.telemetry",
   wifiOnly: "glix.wifiOnly",

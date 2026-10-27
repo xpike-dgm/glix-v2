@@ -1,6 +1,7 @@
 import type { Clue, WireColor } from "@glix/engine";
 import { For } from "solid-js";
-import { COLOR_CSS, clueText } from "./view.js";
+import { CbGlyph } from "../../ui/CbMarker.js";
+import { COLOR_CSS, COLOR_MARK, clueText } from "./view.js";
 
 const ROWS = [1, 2, 3, 4] as const;
 const ROW_H = 20;
@@ -37,6 +38,15 @@ export function ClueDiagram(props: { clue: Clue }) {
               <text x="22" y={rowY(i()) + 14.5} class={c() ? "kp__dg-no kp__dg-no--on" : "kp__dg-no"}>
                 {pos}
               </text>
+              {c() ? (
+                <CbGlyph
+                  index={COLOR_MARK[c() as WireColor]}
+                  cx={96}
+                  cy={rowY(i()) + ROW_H / 2}
+                  size={14}
+                  color="#0a1030"
+                />
+              ) : null}
             </g>
           );
         }}
@@ -52,6 +62,14 @@ export function ClueDiagram(props: { clue: Clue }) {
         style={{ fill: COLOR_CSS[props.clue.cut] }}
       />
       <path d="M178 46l24 12m0-12l-24 12" class="kp__dg-scissors" />
+      <CbGlyph
+        index={COLOR_MARK[props.clue.cut]}
+        cx={171}
+        cy={52}
+        size={11}
+        color="#0a1030"
+        class="kp__dg-cbcut"
+      />
     </svg>
   );
 }

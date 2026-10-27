@@ -24,6 +24,7 @@ import {
 import { sendActionAck } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { CbMarker } from "../../ui/CbMarker.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
 import type { GameScreenProps } from "../registry.js";
@@ -109,6 +110,7 @@ function Cluster(props: {
       data-me={props.group.members.includes(props.selfId) ? "1" : undefined}
     >
       <div class="cl__top">
+        <CbMarker index={props.index} size={16} class="cl__cb" />
         <span class="cl__text">{props.group.text}</span>
         <span class="cl__pts">+{props.group.points}</span>
       </div>

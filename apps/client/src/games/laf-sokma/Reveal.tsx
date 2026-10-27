@@ -3,6 +3,7 @@ import { hapticMatch, hapticResult, hapticSolo } from "../../fx/haptics.js";
 import { match as matchSound, roundResult, solo as soloSound } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
+import { CbState } from "../../ui/CbState.js";
 import { StarIcon } from "../../ui/Icons.js";
 import { type CrewMember, duelCards, type LafScreenView, myPoints } from "./view.js";
 import { PromptBubble } from "./Write.js";
@@ -85,6 +86,9 @@ export function Reveal(props: Props) {
                         {(a) => <Avatar index={a().avatar} size={28} connected={a().connected} />}
                       </Show>
                       <span class="lf__who">{self() ? "Sen" : (author()?.nickname ?? "?")}</span>
+                      <Show when={c.points > 0 && c.points === topPoints()}>
+                        <CbState kind="star" size={14} class="lf__cb" />
+                      </Show>
                       <span class="lf__pts" data-zero={c.points === 0 ? "1" : undefined}>
                         +{c.points}
                       </span>

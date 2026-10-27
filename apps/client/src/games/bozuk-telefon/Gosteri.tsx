@@ -12,6 +12,7 @@ import {
 } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { CbState } from "../../ui/CbState.js";
 import { CheckIcon } from "../../ui/Icons.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
 import { DrawingCanvas } from "../karalama-defteri/DrawingCanvas.js";
@@ -252,6 +253,9 @@ export function Gosteri(props: Props) {
                           {(a) => <Avatar index={a().avatar} size={26} connected={a().connected} />}
                         </Show>
                       </span>
+                      <Show when={r().stage === "result" && winner() === i}>
+                        <CbState kind="star" size={18} class="bt__cb" />
+                      </Show>
                       <Show when={(myVote() ?? picked()) === i && r().stage !== "result"}>
                         <span class="bt__tick">
                           <CheckIcon size={16} />

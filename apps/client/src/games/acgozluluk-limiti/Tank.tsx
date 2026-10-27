@@ -71,7 +71,8 @@ export function Tank(props: Props) {
             <For each={segments()}>
               {(s) => (
                 <i
-                  class="tank__seg"
+                  class="tank__seg cbpat"
+                  data-p={s.avatar % 8}
                   data-me={s.id === props.selfId ? "1" : undefined}
                   style={{
                     height: `${s.pct}%`,

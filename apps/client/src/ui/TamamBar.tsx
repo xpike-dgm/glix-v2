@@ -1,5 +1,6 @@
 import { For, Show } from "solid-js";
 import { Avatar } from "./Avatar.js";
+import { CbState } from "./CbState.js";
 import { type AckLike, createOptimistic, toAck } from "./optimistic.js";
 import { PrimaryButton } from "./PrimaryButton.js";
 import { useShell } from "./shell.js";
@@ -90,6 +91,9 @@ export function TamamBar(props: Props) {
                   live={d.on ? undefined : "think"}
                   ring={d.on ? "#B6FF3B" : undefined}
                 />
+                <Show when={d.on}>
+                  <CbState kind="ok" size={10} class="tamam__cb" />
+                </Show>
               </li>
             )}
           </For>

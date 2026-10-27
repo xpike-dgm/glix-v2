@@ -374,3 +374,24 @@
     gap: 0;
   }
 }
+
+/* Renk körlüğü dostu mod: kadeh rengi köşede şekil; sonuçta zehirli ✗ / temiz ✓ rozeti. */
+.zkcup__mark {
+  position: absolute;
+  left: 4%;
+  top: 6%;
+  color: #fff;
+  z-index: 2;
+}
+.zkcup__verdict {
+  position: absolute;
+  right: 0;
+  bottom: 4%;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #0a1030;
+}

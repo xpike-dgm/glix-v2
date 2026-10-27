@@ -1,8 +1,9 @@
 import type { WireColor } from "@glix/engine";
 import { For, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
+import { CbMarker } from "../../ui/CbMarker.js";
 import { propSrc } from "../../ui/props.js";
-import { COLOR_CSS, COLOR_NAME } from "./view.js";
+import { COLOR_CSS, COLOR_MARK, COLOR_NAME, COLOR_PATTERN } from "./view.js";
 
 const WIRE_FILE = { blue: "mavi", green: "yesil", red: "kirmizi", yellow: "sari" } as const;
 
@@ -48,7 +49,7 @@ export function Panel(props: Props) {
               >
                 <span class="kp__no">{i() + 1}</span>
                 <span class="kp__channel">
-                  <i class="kp__core" />
+                  <i class="kp__core cbpat" data-p={COLOR_PATTERN[color]} />
                   <img
                     class="kp__img"
                     src={propSrc(
@@ -74,7 +75,10 @@ export function Panel(props: Props) {
                     />
                   </Show>
                 </span>
-                <span class="kp__name">{COLOR_NAME[color]}</span>
+                <span class="kp__name">
+                  <CbMarker index={COLOR_MARK[color]} size={16} class="kp__mark" />
+                  {COLOR_NAME[color]}
+                </span>
               </Dynamic>
             </li>
           );

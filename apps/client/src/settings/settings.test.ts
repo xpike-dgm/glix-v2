@@ -29,6 +29,37 @@ describe("varsayılanlar", () => {
     expect(s.dataSaver()).toBe(false);
     expect(s.telemetry()).toBe(true);
     expect(s.wifiOnly()).toBe(true);
+    expect(s.colorBlind()).toBe(false);
+  });
+});
+
+describe("renk körlüğü dostu mod", () => {
+  it("varsayılan kapalı; açılınca saklanır ve yeni açılışta okunur", async () => {
+    const a = await fresh();
+    expect(a.colorBlind()).toBe(false);
+    a.setColorBlind(true);
+    expect(a.colorBlind()).toBe(true);
+    expect(a.storage.data.get("glix.colorBlind")).toBe("1");
+    const b = await fresh(Object.fromEntries(a.storage.data));
+    expect(b.colorBlind()).toBe(true);
+    b.setColorBlind(false);
+    expect(b.storage.data.get("glix.colorBlind")).toBe("0");
+  });
+  it("bozuk kayıt kapalıya düşer", async () => {
+    const s = await fresh({ "glix.colorBlind": "belki" });
+    expect(s.colorBlind()).toBe(false);
+  });
+  it("kökte data-cb=1 yazar, kapanınca kaldırır", async () => {
+    const s = await fresh();
+    const root = { dataset: {} as Record<string, string> } as unknown as HTMLElement;
+    s.applyRootSettings(root);
+    expect(root.dataset.cb).toBeUndefined();
+    s.setColorBlind(true);
+    s.applyRootSettings(root);
+    expect(root.dataset.cb).toBe("1");
+    s.setColorBlind(false);
+    s.applyRootSettings(root);
+    expect(root.dataset.cb).toBeUndefined();
   });
 });
 

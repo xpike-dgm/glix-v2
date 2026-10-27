@@ -636,3 +636,18 @@
   border-color: var(--blue);
   background: linear-gradient(rgba(59, 123, 255, 0.18), rgba(59, 123, 255, 0.18)), rgba(14, 20, 56, 0.92);
 }
+
+/* Renk körlüğü dostu mod: ölçekteki nokta oyuncunun şeklini taşır (satırdaki avatarın simgesiyle aynı sıra); altın sıra yıldızlı. */
+:root[data-cb="1"] .sc__dot {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  color: #0a1030;
+}
+.sc__cbstar {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+}

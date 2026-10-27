@@ -12,6 +12,7 @@ import { type PropPath, propSrc } from "../../ui/props.js";
 import { Screen } from "../../ui/Screen.js";
 import type { GameScreenProps } from "../registry.js";
 import "./kara-borsa.css";
+import { CbState } from "../../ui/CbState.js";
 import { type BorsaScreenView, hintText, parseBorsaView, sortedBids } from "./view.js";
 
 const BOXES = ["kutu-ahsap", "kutu-celik", "kutu-hediye", "kutu-antika"] as const;
@@ -259,6 +260,9 @@ function Reveal(props: { view: BorsaScreenView; crew: PlayerInfo[]; selfId: stri
                   <span class="kb__bidname">
                     {row.id === props.selfId ? "Sen" : (person(row.id)?.nickname ?? "?")}
                   </span>
+                  <Show when={rr().winner === row.id}>
+                    <CbState kind="star" size={14} class="kb__cb" />
+                  </Show>
                   <b>{row.amount === 0 ? "geçti" : row.amount}</b>
                 </li>
               )}

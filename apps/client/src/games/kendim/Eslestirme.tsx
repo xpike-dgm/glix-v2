@@ -6,6 +6,7 @@ import { sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
 import { BottomSheet } from "../../ui/BottomSheet.js";
+import { CbState } from "../../ui/CbState.js";
 import { type AckLike, createOptimistic } from "../../ui/optimistic.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import { clampToViewport, type DropTarget, exceedsDragThreshold, hitTest } from "./dragMatch.js";
@@ -218,6 +219,9 @@ export function Eslestirme(props: Props) {
                       size="var(--kn-dav)"
                       ring={taken() ? "var(--lime)" : undefined}
                     />
+                    <Show when={taken()}>
+                      <CbState kind="ok" size={12} class="kn__cb" />
+                    </Show>
                     <span class="kn__drop-name">{m.nickname}</span>
                   </li>
                 );

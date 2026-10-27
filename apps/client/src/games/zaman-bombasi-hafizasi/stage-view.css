@@ -157,3 +157,12 @@
   font-size: 26px;
   color: var(--text-dim);
 }
+
+/* Renk körlüğü dostu mod: TV'de de şekil her zaman tam görünür, ilerleme noktaları desenle ayrışır. */
+:root[data-cb="1"] .zbtv__pad svg {
+  color: #fff;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
+}
+:root[data-cb="1"] .zbtv__dot[data-s="ok"] {
+  background: repeating-linear-gradient(45deg, var(--lime) 0 4px, #1a2a05 4px 7px);
+}

@@ -4,6 +4,7 @@ import { hapticMatch, hapticTap, hapticTick } from "../../fx/haptics.js";
 import { fail, tap, tick, unlockAudio } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
+import { CbState } from "../../ui/CbState.js";
 import { SignIcon } from "./SignIcon.js";
 import { handOutcome, type RusvetScreenView, SIGN_LABEL } from "./view.js";
 
@@ -124,6 +125,9 @@ export function Duello(props: Props) {
                     ready={shown() === null && props.view.ready.includes(m.id)}
                   />
                   <span class="rd__name">{m.nickname}</span>
+                  <Show when={statusOf(m.id) === "win" || statusOf(m.id) === "out"}>
+                    <CbState kind={statusOf(m.id) === "win" ? "ok" : "bad"} size={16} />
+                  </Show>
                   <span class="rd__card" data-open={shown() ? "1" : undefined}>
                     <span class="rd__card-back">?</span>
                     <span class="rd__card-front">

@@ -4,6 +4,7 @@ import { hapticMatch, hapticResult, hapticSolo, hapticTick } from "../../fx/hapt
 import { reducedMotion } from "../../fx/motion.js";
 import { fail, fanfare, match as matchSound, solo as soloSound, tick } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { CbState } from "../../ui/CbState.js";
 import { cellName, groupByCell, statusOf, whoColumns } from "./view.js";
 
 export interface SonucEntry {
@@ -195,6 +196,10 @@ export function KareSonuc(props: Props) {
                   </span>
                   <Show when={props.bonus?.cell === cell}>
                     <i class="kcell__glow" aria-hidden="true" />
+                    <CbState kind="star" size={16} class="kcell__cb kcell__cb--bonus" />
+                  </Show>
+                  <Show when={state() === "clash"}>
+                    <CbState kind="bad" size={16} class="kcell__cb kcell__cb--clash" />
                   </Show>
                   <Show when={state() === "solo"}>
                     <em class="kcell__pts">

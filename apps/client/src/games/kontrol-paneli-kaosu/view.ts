@@ -107,6 +107,14 @@ export const COLOR_CSS: Record<WireColor, string> = {
   yellow: "#ffc23b",
 };
 
+/**
+ * Renk körlüğü dostu mod: her kablo rengine ayrı şekil (`ui/cbShapes.ts` sırası) ve desen.
+ * Şekiller Zaman Bombası tuşlarıyla aynı: mavi daire, yeşil kare, kırmızı üçgen, sarı yıldız.
+ */
+export const COLOR_MARK: Record<WireColor, number> = { blue: 0, green: 1, red: 2, yellow: 3 };
+/** Desen sırası (`styles/colorblind.css` `data-p`; 0 = düz). */
+export const COLOR_PATTERN: Record<WireColor, number> = { blue: 4, green: 1, red: 2, yellow: 5 };
+
 /** İpucu cümlesi: "1. kablo mavi ve 3. kablo sarı ise maviyi kes". */
 export function clueText(clue: Clue): string {
   const parts = clue.conditions.map((c) => `${c.position}. kablo ${COLOR_NAME[c.color]}`);
