@@ -12,7 +12,11 @@ Durum: TASARIM (Ekim 2026). Sahip kararları:
 
 ## Kimlik
 - **Kullanıcı adı:** 3–20 karakter, harf/rakam/alt çizgi, büyük-küçük harf duyarsız benzersiz. Arkadaş aramada kullanılır.
-  Oyundaki takma ad ayrı kalır (odada istediğini yazabilir; varsayılan kullanıcı adı).
+  **Tek ad:** hesaplı oyuncunun oyundaki adı kullanıcı adıdır (ayrı takma ad yok; lobide takma ad düzenleme gizli, sunucu
+  hesaplıdan `rename`'i `account_name` ile reddeder). Odalarda, arkadaş listelerinde ve davetlerde kullanıcı adı görünür.
+  Misafir takma adını eskisi gibi seçer/değiştirir. **Değiştirme:** `POST /api/auth/username`, 7 günde bir; ilk değişiklik
+  hesap açılışından sayılmaz, hemen serbest (Google ile açılanlar dahil). Kilitliyken "Kullanıcı adını <tarih> tarihinde tekrar
+  değiştirebilirsin." Değişince odadaki ad yayınlanır, arkadaşlara `friendsChanged` gider (`username_changed_at`, göç 4).
 - **Kendi hesabı:** e-posta + şifre (en az 8 karakter). Şifre scrypt ile özetlenir (tuz + sabit süreli karşılaştırma).
 - **Google ile giriş:** OAuth yetkilendirme kodu akışı (PKCE + state). Kimlik belirteci doğrudan Google'ın belirteç
   uç noktasından TLS ile alınır; `sub` hesabı belirler. İlk girişte kullanıcı adı seçtirilir.
@@ -48,7 +52,7 @@ Yazma oyun akışının dışında, bitişte tek işlemde (küçük toplu yazma)
 `GET /api/profile` (oturum şart; yoksa 401) tam profili döner; ayrıntı `docs/PROTOKOL.md`. `GET /api/profile/<kullanıcı>`
 yalnız toplamlar, favori oyun ve oyun başına sonuçları döner; **kullanıcının kendisi ve kabul edilmiş arkadaşları için** çalışır, başkası ve
 bilinmeyen hesap aynı 404'ü alır.
-Profil ekranı (ana sayfada kullanıcı adına dokununca): üyelik tarihi; Maç / Galibiyet / Galibiyet oranı / Favori oyun kutuları;
+Profil ekranı (ana sayfada sol üstteki ad rozetine dokununca; rozette bekleyen istek sayısı görünür; ekranda "Arkadaşlar" ve "Kullanıcı adını değiştir" girişleri vardır): üyelik tarihi; Maç / Galibiyet / Galibiyet oranı / Favori oyun kutuları;
 oyun listesi (kart görseli, oynama, birincilik, en iyi); son 10 maç; en çok birlikte oynadığın 5 kişi. Yeni hesapta
 "Henüz maç yok — bir oda kur!". Misafire final'de "Rozet ve istatistik için hesap aç" daveti ve Kayıt ol düğmesi çıkar
 (kayıt ekranı oda dışında olduğundan düğme önce odadan çıkmayı onaylatır).

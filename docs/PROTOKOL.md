@@ -9,14 +9,14 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 |---|---|---|
 | `hello` | `clientVersion` | bağlantı açılınca ilk mesaj |
 | `ping` | `t` | saat farkı ölçümü |
-| `createRoom` | `nickname` | 1–16 karakter, kırpılır; biçim/yön/görünmez karakter (`Cf`,`Zl`,`Zp`,`Co`,`Cs`) yasak, en çok 2 ardışık birleştirici işaret, en az bir harf/rakam (yalnız emoji reddedilir) |
+| `createRoom` | `nickname` (hesaplıda sunucu yok sayıp kullanıcı adını koyar; yine de geçerli olmalı) | 1–16 karakter, kırpılır; biçim/yön/görünmez karakter (`Cf`,`Zl`,`Zp`,`Co`,`Cs`) yasak, en çok 2 ardışık birleştirici işaret, en az bir harf/rakam (yalnız emoji reddedilir) |
 | `joinRoom` | `code`, `nickname`, isteğe bağlı `avatar` (0–7) | 5 karakter, büyük harfe çevrilir |
 | `joinStage` | `code` | **Sahne (TV)** olarak odaya bağlan (bkz. "Sahne (TV) rolü"). `nickname`/`avatar` yok; `room_not_found` / `stage_full` / `draining` / `rate_limited` döner |
 | `resume` | `token` | yeniden bağlanma; başarısızsa `error{code:"resume_failed"}` |
 | `leaveRoom` | — | |
 | `kick` | `playerId` | yalnız host, yalnız lobide (maçta `wrong_phase`); kendini/olmayanı atamaz (`not_in_room`). Atılanın oturum anahtarı silinir; `resume` `resume_failed` döner. Oda koduyla yeniden katılma engellenmez |
 | `transferHost` | `playerId` | yalnız host, yalnız lobide; hedef odada ve bağlı olmalı, kendisi olamaz (`not_in_room`). Taç hedefe geçer, bekleyen host devri iptal olur, hedefin hazır işareti silinir |
-| `rename` | `nickname` | `normalizeNickname` kuralları; yalnız lobide (`wrong_phase`); odada başkasında olan ad (büyük/küçük harf duyarsız) `nickname_taken`; oyuncu başına 1 sn'de en çok bir değişiklik (`rate_limited`); aynı ad sessizce yok sayılır |
+| `rename` | `nickname` | `normalizeNickname` kuralları; **yalnız misafir** (hesaplı bağlantıda `account_name` ile reddedilir: ad kullanıcı adıdır);  yalnız lobide (`wrong_phase`); odada başkasında olan ad (büyük/küçük harf duyarsız) `nickname_taken`; oyuncu başına 1 sn'de en çok bir değişiklik (`rate_limited`); aynı ad sessizce yok sayılır |
 | `react` | `emoji` | yalnız `LOBBY_EMOJIS` (👋 😂 🔥 😱 👏 ❤️), aksi `invalid_message`; yalnız lobi, sonuç (`results`) ve final aşamalarında (oyun sırasında blöf işareti taşıyabileceği için kapalı); oyuncu başına 700 ms'de bir. Fazlası ve izinsiz aşama **sessizce** atılır (hata yok). Cevap: herkese `reaction` olayı |
 | `setReady` | `ready` (boolean) | lobide "Hazırım" işareti; yalnız lobide (`wrong_phase`); host için sessizce yok sayılır. Başlamak için şart değildir |
 | `setGames` | `gameIds` | yalnız host, yalnız lobide; boş olamaz, tekrar yok; modu `manual` yapar |
@@ -194,7 +194,7 @@ Hız sınırı hesap başına: okuma 30 ani/1 sn, yazma 30 ani/2 sn'de 1, `reque
 `invalid_message`, `rate_limited`, `nickname_invalid`, `room_not_found`, `room_full`, `match_in_progress`,
 `resume_failed`, `nickname_taken`, `not_host`, `not_in_room`, `already_in_room`, `invalid_games`, `avatar_taken`, `not_enough_players`,
 `wrong_phase`, `not_participant`, `game_failed`, `draining`, `server_busy`, `stage_full`, `stage_readonly`, `login_required`,
-`invite_failed`, `friend_not_found`.
+`invite_failed`, `friend_not_found`, `account_name`.
 
 `login_required`: `createRoom` yalnız hesaplı bağlantıdan kabul edilir. Kodla katılma (`joinRoom`), oynama ve sahne (`joinStage`) misafire açıktır.
 
@@ -213,6 +213,7 @@ Hepsi JSON; yanıtlar `Cache-Control: no-store`. Hata gövdesi `{ok:false, code,
   `POST verify/resend {}` → 200 `{ok:true, verified}`; oturum yoksa 401 `login_required`; hesap başına 60 sn'de 1, günde 5 → 429 `rate_limited`.
   `POST reset/request {email}` → 200 `{ok:true}` (hesap var olsun olmasın); geçersiz e-posta 400 `invalid_input`; IP başına günde 20 → 429. Bağlantı `<GLIX_PUBLIC_URL>/#sifre-sifirla=<belirteç>` (1 sa).
   `POST reset/confirm {token, password}` → 200 `{ok:true, account}` + yeni `Set-Cookie` (hesabın tüm eski oturumları silinir); 410 `token_invalid`, 400 `invalid_input`.
+  `POST username {username}` (oturum şart; Origin + JSON + IP hız sınırı) → 200 `{ok:true, account, usernameAvailableAt}`; kurallar `register` ile aynı, büyük/küçük harf duyarsız benzersiz (kendi adının harf boyu değişebilir). **7 günde bir**: ilk değişiklik hemen serbest (hesap açılışından sayılmaz), sonrakiler son değişiklikten 7 gün sonra. 400 `invalid_input` / `username_same`, 401 `login_required`, 409 `username_taken`, 429 `username_cooldown` (`availableAt` ms; metin "Kullanıcı adını 3 Kasım 2026 14:05 tarihinde tekrar değiştirebilirsin.", Türkiye saati). Başarıda odadaki oyuncu adı yayınlanır, arkadaşlar/istek sahipleri `friendsChanged` alır. `GET me` de `usernameAvailableAt` (ms ya da null) döner.
   `POST password {current, password}` → 200 `{ok:true}` (diğer oturumlar silinir); 401 `login_required` / `bad_credentials` (`field:"current"`), 409 `no_password`, 429 `rate_limited`.
 - Çerez `glix_sess`: 32 rastgele bayt (base64url), `HttpOnly; SameSite=Lax; Path=/; Max-Age=180 gün`, https ise `Secure` (doğrudan TLS ya da `TRUST_PROXY=1` ile güvenilen vekilin `X-Forwarded-Proto: https` bildirimi). Sunucuda yalnız sha256 özeti saklanır.
 - POST'larda `Origin` zorunlu ve `Host` ile aynı olmalı (CSRF); `ALLOWED_ORIGINS` varsa onda da olmalı → 403 `forbidden`.

@@ -120,8 +120,12 @@ export function loginCookie(username = `t${++accountSeq}_${Date.now().toString(3
   return `glix_sess=${token}`;
 }
 
+/**
+ * Odayı hesaplı bir host kurar. Hesaplı oyuncunun oyun içi adı kullanıcı adıdır; testler beklediği adı
+ * görsün diye hesap doğrudan depoya bu adla açılır (HTTP kaydındaki biçim denetimi atlanır).
+ */
 export async function create(nickname: string): Promise<Client> {
-  const c = await Client.connect(loginCookie());
+  const c = await Client.connect(loginCookie(nickname));
   c.send({ type: "createRoom", nickname });
   await until(() => c.updates.length > 0, "oda kuruldu");
   // Oyun kataloğu büyüdükçe testler değişmesin: varsayılan seçim (tüm oyunlar) yerine Butona Bas.

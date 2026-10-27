@@ -247,6 +247,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         allowedOrigins: opts.allowedOrigins,
         google,
         mail,
+        onRenamed: (id, username) => rt.social.accountRenamed(id, username),
       });
       return;
     }

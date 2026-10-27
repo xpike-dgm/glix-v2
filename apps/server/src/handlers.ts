@@ -107,6 +107,14 @@ function handleStageMessage(rt: Runtime, conn: Connection, room: Room, msg: Clie
 }
 
 /**
+ * Oyundaki ad: hesaplı bağlantıda istemcinin yolladığı takma ad yok sayılır, kullanıcı adı kullanılır
+ * (tek ad kuralı; istemci yalnız protokolün geçerlilik denetiminden geçsin diye bir ad yollar).
+ */
+function gameName(conn: Connection, wanted: string): string {
+  return conn.account?.username ?? wanted;
+}
+
+/**
  * Odaya oyuncu (maç sürüyorsa izleyici) olarak girer: `joinRoom` ve `joinFriend` ortak yolu.
  * Karar: room_full ve match_in_progress, room_not_found'dan ayrı kalır. Bunlar kodun doğru olduğunu
  * ele verir, ama 5 karakterli kod uzayı (32^5) + soket/IP sınırları tahmini pratikte imkânsız kılar;
@@ -130,7 +138,7 @@ function enterRoom(
     fail(conn, "room_full");
     return;
   }
-  addPlayer(rt, room, nickname, conn, avatar, spectator);
+  addPlayer(rt, room, gameName(conn, nickname), conn, avatar, spectator);
   sendSession(conn);
   rt.broadcaster.markDirty(room);
 }
@@ -170,7 +178,7 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         return;
       }
       const room = createRoom(rt);
-      addPlayer(rt, room, msg.nickname, conn, msg.avatar);
+      addPlayer(rt, room, gameName(conn, msg.nickname), conn, msg.avatar);
       sendSession(conn);
       rt.broadcaster.markDirty(room);
       return;
@@ -361,6 +369,11 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         return;
       }
       const me = conn.player;
+      // Hesaplı oyuncunun adı kullanıcı adıdır; odada ayrı takma ad yoktur.
+      if (conn.account) {
+        fail(conn, "account_name");
+        return;
+      }
       if (me.nickname === msg.nickname) return;
       const now = rt.clock.now();
       if (now - me.lastRenameAt < RENAME_MIN_GAP_MS) {

@@ -1,4 +1,6 @@
 import { createEffect, createSignal, For, Match, onMount, Show, Switch } from "solid-js";
+import { incomingCount } from "../net/friends.js";
+import { badgeText } from "../net/friendsRules.js";
 import { loadProfile, profileOf, profileState, setProfileOf } from "../net/profile.js";
 import {
   isEmptyProfile,
@@ -13,11 +15,12 @@ import { goHome, setState, state } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { GhostButton } from "../ui/GhostButton.js";
-import { BackIcon, CrownIcon } from "../ui/Icons.js";
+import { BackIcon, ChevronRightIcon, CrownIcon, PencilIcon, UsersIcon } from "../ui/Icons.js";
 import { Mascot } from "../ui/Mascot.js";
 import { Screen } from "../ui/Screen.js";
 import { worldAllowed } from "../ui/world.js";
 import { formatScore } from "./ranking.js";
+import { UsernameSheet } from "./UsernameSheet.js";
 
 /** Oyun kartı küçük görseli; yüklenemezse (ya da veri tasarrufunda) boş çerçeve kalır. */
 function Thumb(props: { id: string }) {
@@ -133,7 +136,51 @@ function Details(props: { profile: ProfileInfo }) {
   );
 }
 
+/** Kendi profilinin üstündeki iki kapı: Arkadaşlar (istek sayısıyla) ve Kullanıcı adını değiştir. */
+function Hub(props: { onRename: () => void }) {
+  const count = (): number => incomingCount();
+  return (
+    <section class="pf__hub rise" style={{ "--i": 1 }} aria-label="Hesabım">
+      <div class="set__card">
+        <button
+          type="button"
+          class="set__row set__row--btn hub__row"
+          aria-label={count() > 0 ? `Arkadaşlar, ${count()} yeni istek` : "Arkadaşlar"}
+          onClick={() => setState("nav", "friends")}
+        >
+          <span class="hub__icon" aria-hidden="true">
+            <UsersIcon size={24} />
+          </span>
+          <span class="set__text">
+            <span class="set__label">Arkadaşlar</span>
+            <span class="set__hint">Ekle, davet et, birlikte oyna</span>
+          </span>
+          <Show when={badgeText(count())}>
+            {(text) => (
+              <b class="home__badge" aria-hidden="true">
+                {text()}
+              </b>
+            )}
+          </Show>
+          <ChevronRightIcon size={20} class="hub__chev" />
+        </button>
+        <button type="button" class="set__row set__row--btn hub__row" onClick={props.onRename}>
+          <span class="hub__icon" aria-hidden="true">
+            <PencilIcon size={24} />
+          </span>
+          <span class="set__text">
+            <span class="set__label">Kullanıcı adını değiştir</span>
+            <span class="set__hint">Oyunda ve arkadaş listelerinde bu adla görünürsün</span>
+          </span>
+          <ChevronRightIcon size={20} class="hub__chev" />
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function Profile() {
+  const [renameOpen, setRenameOpen] = createSignal(false);
   onMount(() => void loadProfile());
   // Arkadaşın profilinden geri: arkadaş listesine; kendi profilinden: ana sayfaya.
   const back = (): void => {
@@ -175,6 +222,10 @@ export function Profile() {
           <Show when={ready()}>{(p) => <p class="pf__since">Üyelik: {memberSince(p().createdAt)}</p>}</Show>
         </div>
 
+        <Show when={profileOf() === null}>
+          <Hub onRename={() => setRenameOpen(true)} />
+        </Show>
+
         <Switch>
           <Match when={failure()}>
             {(message) => (
@@ -209,6 +260,8 @@ export function Profile() {
           </Match>
         </Switch>
       </div>
+
+      <UsernameSheet open={renameOpen()} onClose={() => setRenameOpen(false)} />
     </Screen>
   );
 }

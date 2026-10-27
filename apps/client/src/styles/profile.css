@@ -158,20 +158,3 @@
   flex: none;
   color: var(--cyan);
 }
-.home__userbtn {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  min-height: 48px;
-  color: var(--cyan);
-  font-weight: 600;
-  font-size: var(--fs-15);
-}
-.home__userbtn span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}

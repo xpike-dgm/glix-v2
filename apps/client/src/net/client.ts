@@ -11,6 +11,7 @@ import { CLIENT_PROTOCOL_VERSION, isProtocolMismatch } from "../pwa/updatePolicy
 import { notifyOn } from "../settings/settings.js";
 import { installPerfObservers, perf, trackPerf } from "../telemetry/perf.js";
 import { resolveWsUrl } from "../wsUrl.js";
+import { wireNickname } from "./accountRules.js";
 import { offsetFromPong } from "./clock.js";
 import {
   dropInvitesFor,
@@ -50,6 +51,7 @@ const SHOWN_ERRORS = new Set([
   "invalid_games",
   "avatar_taken",
   "nickname_taken",
+  "account_name",
   "draining",
   "server_busy",
   "game_failed",
@@ -456,14 +458,17 @@ function intent(msg: ClientMessage): void {
   flushPending();
 }
 
-export function createRoom(nickname: string): void {
+export function createRoom(name: string): void {
   setState("notFoundCode", null);
+  // Hesaplıda sunucu kullanıcı adını koyar; burada yalnız geçerli bir değer gönderilir.
+  const nickname = wireNickname(name);
   const avatar = readAvatarChoice();
   intent(avatar === undefined ? { type: "createRoom", nickname } : { type: "createRoom", nickname, avatar });
 }
 
-export function joinRoom(code: string, nickname: string): void {
+export function joinRoom(code: string, name: string): void {
   setState({ notFoundCode: null, joinCode: code });
+  const nickname = wireNickname(name);
   const avatar = readAvatarChoice();
   intent(
     avatar === undefined
@@ -473,8 +478,9 @@ export function joinRoom(code: string, nickname: string): void {
 }
 
 /** Arkadaşın şu anki odasına katıl: oda kodu sunucuda çözülür, istemci hiç görmez. */
-export function joinFriend(username: string, nickname: string): void {
+export function joinFriend(username: string, name: string): void {
   setState("notFoundCode", null);
+  const nickname = wireNickname(name);
   const avatar = readAvatarChoice();
   intent(
     avatar === undefined

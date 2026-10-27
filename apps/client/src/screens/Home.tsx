@@ -1,12 +1,11 @@
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { mountBackdrop } from "../backdrop/hero.js";
 import { reducedMotion } from "../fx/motion.js";
-import { logout } from "../net/account.js";
 import { createRoom } from "../net/client.js";
 import { incomingCount } from "../net/friends.js";
 import { badgeText } from "../net/friendsRules.js";
 import { setProfileOf } from "../net/profile.js";
-import { setNickname, setState, state } from "../net/store.js";
+import { openSettings, ownName, setNickname, setState, state } from "../net/store.js";
 import { InstallHint } from "../pwa/InstallHint.js";
 import { isOfflineHome } from "../pwa/offline.js";
 import { isOnline } from "../pwa/pwa.js";
@@ -14,7 +13,7 @@ import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
 import { GhostButton } from "../ui/GhostButton.js";
-import { ChevronIcon, GearIcon } from "../ui/Icons.js";
+import { GearIcon } from "../ui/Icons.js";
 import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
@@ -31,7 +30,7 @@ const CREW: readonly (readonly [number, number])[] = [
 ];
 
 type Sheet = "nick" | "how" | null;
-type After = "create" | "join" | null;
+type After = "join" | null;
 
 export function Home() {
   let bg: HTMLDivElement | undefined;
@@ -69,15 +68,10 @@ export function Home() {
       setState("nav", "login");
       return;
     }
-    if (!state.nickname) {
-      setAfter("create");
-      setSheet("nick");
-      return;
-    }
-    createRoom(state.nickname);
+    createRoom(ownName());
   };
   const join = (): void => {
-    if (!state.nickname) {
+    if (!ownName()) {
       setAfter("join");
       setSheet("nick");
       return;
@@ -89,34 +83,60 @@ export function Home() {
     setSheet(null);
     const next = after();
     setAfter(null);
-    if (next === "create") createRoom(name);
-    else if (next === "join") setState("nav", "join");
+    if (next === "join") setState("nav", "join");
   };
 
   return (
     <Screen class="home">
       <div class="home__bg" ref={bg} aria-hidden="true" />
       <header class="topbar">
-        <Show when={state.nickname} fallback={<span />}>
-          <button
-            type="button"
-            class="chip"
-            onClick={() => {
-              setAfter(null);
-              setSheet("nick");
-            }}
-          >
-            <Avatar index={avatarFromName(state.nickname)} size={32} />
-            <span class="chip__name">{state.nickname}</span>
-          </button>
+        {/* Sol üstteki ad: girişliyse Profil'in, misafirse takma ad penceresinin tek kapısı. */}
+        <Show
+          when={state.account}
+          fallback={
+            <Show when={state.nickname} fallback={<span />}>
+              <button
+                type="button"
+                class="chip"
+                onClick={() => {
+                  setAfter(null);
+                  setSheet("nick");
+                }}
+              >
+                <Avatar index={avatarFromName(state.nickname)} size={32} />
+                <span class="chip__name">{state.nickname}</span>
+              </button>
+            </Show>
+          }
+        >
+          {(account) => (
+            <button
+              type="button"
+              class="chip"
+              aria-label={
+                incomingCount() > 0
+                  ? `Profilim, ${account().username}, ${incomingCount()} yeni arkadaşlık isteği`
+                  : `Profilim, ${account().username}`
+              }
+              onClick={() => {
+                setProfileOf(null);
+                setState("nav", "profile");
+              }}
+            >
+              <Avatar index={avatarFromName(account().username)} size={32} />
+              <span class="chip__name">{account().username}</span>
+              <Show when={badgeText(incomingCount())}>
+                {(text) => (
+                  <b class="home__badge chip__badge" aria-hidden="true">
+                    {text()}
+                  </b>
+                )}
+              </Show>
+            </button>
+          )}
         </Show>
         <div class="topbar__end">
-          <button
-            type="button"
-            class="icon-btn"
-            aria-label="Ayarlar"
-            onClick={() => setState("nav", "settings")}
-          >
+          <button type="button" class="icon-btn" aria-label="Ayarlar" onClick={openSettings}>
             <GearIcon size={22} />
           </button>
           <SoundToggle />
@@ -177,55 +197,17 @@ export function Home() {
             </>
           }
         >
-          {(account) => (
-            <>
-              <PrimaryButton onClick={create} busy={state.busy} disabled={offline()}>
-                Oda kur
-              </PrimaryButton>
-              <GhostButton onClick={join} disabled={offline()}>
-                Odaya katıl
-              </GhostButton>
-              <div class="home__auth">
-                <button
-                  type="button"
-                  class="home__userbtn"
-                  aria-label="Profilim"
-                  onClick={() => {
-                    setProfileOf(null);
-                    setState("nav", "profile");
-                  }}
-                >
-                  <span>{account().username}</span>
-                  <ChevronIcon size={16} />
-                </button>
-                <button
-                  type="button"
-                  class="home__userbtn home__friends"
-                  aria-label={
-                    incomingCount() > 0 ? `Arkadaşlar, ${incomingCount()} yeni istek` : "Arkadaşlar"
-                  }
-                  onClick={() => setState("nav", "friends")}
-                >
-                  <span>Arkadaşlar</span>
-                  <Show when={badgeText(incomingCount())}>
-                    {(text) => (
-                      <b class="home__badge" aria-hidden="true">
-                        {text()}
-                      </b>
-                    )}
-                  </Show>
-                </button>
-              </div>
-              <div class="home__auth">
-                <GhostButton size="small" onClick={() => setSheet("how")}>
-                  Nasıl oynanır?
-                </GhostButton>
-                <GhostButton size="small" onClick={() => void logout()}>
-                  Çıkış yap
-                </GhostButton>
-              </div>
-            </>
-          )}
+          <>
+            <PrimaryButton onClick={create} busy={state.busy} disabled={offline()}>
+              Oda kur
+            </PrimaryButton>
+            <GhostButton onClick={join} disabled={offline()}>
+              Odaya katıl
+            </GhostButton>
+            <GhostButton size="small" onClick={() => setSheet("how")}>
+              Nasıl oynanır?
+            </GhostButton>
+          </>
         </Show>
         <Show when={!state.account}>
           <GhostButton size="small" onClick={() => setSheet("how")}>

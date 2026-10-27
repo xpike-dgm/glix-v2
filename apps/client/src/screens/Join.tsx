@@ -1,7 +1,7 @@
-import { createSignal } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { joinRoom } from "../net/client.js";
 import { isCompleteCode } from "../net/code.js";
-import { goHome, setNickname, setState, state } from "../net/store.js";
+import { goHome, ownName, setNickname, setState, state } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { CodeInput } from "../ui/CodeInput.js";
@@ -22,11 +22,11 @@ export function Join() {
       setLocalShake((n) => n + 1);
       return;
     }
-    if (!state.nickname) {
+    if (!ownName()) {
       setNickOpen(true);
       return;
     }
-    go(state.nickname);
+    go(ownName());
   };
 
   return (
@@ -35,10 +35,23 @@ export function Join() {
         <button type="button" class="icon-btn" aria-label="Geri" onClick={goHome}>
           <BackIcon size={26} />
         </button>
-        <button type="button" class="chip" onClick={() => setNickOpen(true)}>
-          <Avatar index={avatarFromName(state.nickname || "?")} size={32} />
-          <span class="chip__name">{state.nickname || "Takma ad"}</span>
-        </button>
+        {/* Hesaplıda ad kullanıcı adıdır (burada değişmez); misafir takma adını düzenler. */}
+        <Show
+          when={state.account}
+          fallback={
+            <button type="button" class="chip" onClick={() => setNickOpen(true)}>
+              <Avatar index={avatarFromName(state.nickname || "?")} size={32} />
+              <span class="chip__name">{state.nickname || "Takma ad"}</span>
+            </button>
+          }
+        >
+          {(account) => (
+            <span class="chip chip--static">
+              <Avatar index={avatarFromName(account().username)} size={32} />
+              <span class="chip__name">{account().username}</span>
+            </span>
+          )}
+        </Show>
       </header>
 
       <div class="join__body">

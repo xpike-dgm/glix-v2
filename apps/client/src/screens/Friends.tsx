@@ -10,7 +10,7 @@ import {
   statusText,
 } from "../net/friendsRules.js";
 import { setProfileOf } from "../net/profile.js";
-import { goHome, setState, state, toast } from "../net/store.js";
+import { goHome, ownName, setState, state, toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
@@ -32,9 +32,9 @@ export function StatusDot(props: { status: Friend["status"] }) {
   );
 }
 
-/** Katılırken kullanılacak takma ad: cihazdaki ad, yoksa kullanıcı adı. */
+/** Katılırken kullanılacak ad: hesapta kullanıcı adı. */
 function myNickname(): string {
-  return state.nickname || state.account?.username || "Oyuncu";
+  return ownName() || "Oyuncu";
 }
 
 type Step = "menu" | "remove" | "block";
@@ -116,7 +116,16 @@ export function Friends() {
   return (
     <Screen class="set fr">
       <header class="topbar">
-        <button type="button" class="icon-btn" aria-label="Geri" onClick={goHome}>
+        <button
+          type="button"
+          class="icon-btn"
+          aria-label="Geri"
+          onClick={() => {
+            // Arkadaşlar, Profil'den açılır; geri oraya döner.
+            setProfileOf(null);
+            setState("nav", "profile");
+          }}
+        >
           <BackIcon size={26} />
         </button>
         <h1 class="set__title display">Arkadaşlar</h1>

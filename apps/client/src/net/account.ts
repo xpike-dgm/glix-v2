@@ -1,4 +1,5 @@
 import { createSignal } from "solid-js";
+import { parseAvailableAt } from "./accountRules.js";
 import { reconnectForAccount, sendPushUnsubscribe } from "./client.js";
 import { loadFriends, resetFriends } from "./friends.js";
 import { type GoogleReturn, parseGoogleReturn } from "./googleRules.js";
@@ -45,6 +46,10 @@ export async function refreshAccount(): Promise<void> {
     const data = await call("me", "GET");
     const account = isRecord(data) ? parseAccount(data.account) : null;
     setState("account", account);
+    setState(
+      "usernameAvailableAt",
+      account && isRecord(data) ? parseAvailableAt(data.usernameAvailableAt) : null,
+    );
     if (isRecord(data)) {
       const providers = isRecord(data.providers) ? data.providers : {};
       const linked = isRecord(data.linked) ? data.linked : {};
@@ -103,6 +108,7 @@ export async function logout(): Promise<void> {
     // çevrimdışıysa da yerel durum temizlenir; çerez sunucuda süresiyle düşer
   }
   setState("account", null);
+  setState("usernameAvailableAt", null);
   setState("google", "linked", false);
   setState("mail", { verified: false, hasPassword: false });
   reconnectForAccount();
@@ -256,4 +262,24 @@ export async function confirmReset(password: string): Promise<AccountReply> {
 export async function changePassword(current: string, password: string): Promise<AccountReply> {
   const r = await plain("password", { current, password });
   return { ok: r.ok, message: r.message };
+}
+
+/**
+ * Kullanıcı adını değiştirir (7 günde bir). Başarıda yeni ad hemen yazılır; odadaysan sunucu oyuncu adını
+ * odaya yayar, arkadaşlarının listesi kendiliğinden yenilenir. Kilitliyken sunucu tarihi Türkçe söyler.
+ */
+export async function changeUsername(username: string): Promise<AccountReply> {
+  const r = await plain("username", { username });
+  if (!r.ok) {
+    if (isRecord(r.data)) {
+      const at = parseAvailableAt(r.data.availableAt);
+      if (at !== null) setState("usernameAvailableAt", at);
+    }
+    return { ok: false, message: r.message };
+  }
+  const account = isRecord(r.data) ? parseAccount(r.data.account) : null;
+  if (!account) return { ok: false, message: NETWORK_ERROR };
+  setState("account", account);
+  setState("usernameAvailableAt", isRecord(r.data) ? parseAvailableAt(r.data.usernameAvailableAt) : null);
+  return { ok: true, message: "" };
 }

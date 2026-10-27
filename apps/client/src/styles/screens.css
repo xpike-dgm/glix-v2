@@ -2722,17 +2722,6 @@
 .home__auth .gbtn {
   flex: 1;
 }
-.home__user {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: center;
-  font-weight: 600;
-  font-size: var(--fs-15);
-  color: var(--text-dim);
-}
 .acct__body {
   flex: 1;
   min-height: 0;
@@ -2805,4 +2794,13 @@
   text-align: center;
   color: var(--text-dim);
   font-size: var(--fs-15);
+}
+
+/* Ana sayfa: ad rozetindeki bekleyen arkadaşlık isteği sayısı */
+.chip__badge {
+  margin-left: -2px;
+}
+.chip--static:active {
+  transform: none;
+  background: rgba(140, 160, 255, 0.09);
 }

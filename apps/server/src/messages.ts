@@ -14,6 +14,7 @@ export const ERROR_TEXT: Record<ErrorCode, string> = {
   invalid_games: "Seçilen oyunlar geçerli değil.",
   avatar_taken: "Bu karakter alınmış.",
   nickname_taken: "Bu takma ad odada kullanılıyor.",
+  account_name: "Hesabınla oynarken adın kullanıcı adındır. Profilinden değiştirebilirsin.",
   not_enough_players: "Yeterli oyuncu yok.",
   wrong_phase: "Bunu şu an yapamazsın.",
   not_participant: "Bu oyunda yer almıyorsun.",
