@@ -11,6 +11,8 @@ export * from "./games/gizli-alisveris/index.js";
 export * from "./games/gizli-hirsiz/index.js";
 export * from "./games/gizli-kareler/index.js";
 export * from "./games/index.js";
+export * from "./games/summaries.js";
+export * from "./games/summary.js";
 export * from "./games/ittifak/index.js";
 export * from "./games/kara-borsa/index.js";
 export * from "./games/karalama-defteri/index.js";
