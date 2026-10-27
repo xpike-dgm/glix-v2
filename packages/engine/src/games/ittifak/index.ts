@@ -3,10 +3,12 @@ import { derivedRng, drawSeed } from "../seeded.js";
 import {
   ITTIFAK_DURATION_MS,
   ITTIFAK_LOCK_GRACE_MS,
+  ITTIFAK_MAX_PROMISES,
   ITTIFAK_REVEAL_MS,
   ITTIFAK_TALK_MS,
   ITTIFAK_VOTE_MS,
   type IttifakAction,
+  type IttifakPromise,
   type IttifakPhase,
   type IttifakPublicView,
   type IttifakReveal,
@@ -31,6 +33,8 @@ export interface IttifakState {
   locked: string[];
   /** Herkes kilitlediyse true: `voteEndsAt` öne çekilmiştir, yeni eylem kabul edilmez. */
   voteClosing: boolean;
+  /** Oyuncu -> söz işaretleri (gizli; sonuç açılana kadar yalnız sahibinin görünümünde). */
+  promises: Record<string, string[]>;
   /** Oyuncu -> son verilen oy (gizli; oylama bitene kadar yalnız sahibinin görünümünde). */
   votes: Record<string, string>;
   /** Oylama bitince tick/eylem tarafından bir kez kurulur: eksik oylar tamamlanmış hâli. */
@@ -63,14 +67,26 @@ export function ittifakFillVotes(
   return out;
 }
 
-export function ittifakReveal(players: readonly string[], votes: Record<string, string>): IttifakReveal {
+const promisesOf = (promises: Record<string, string[]>, id: string): string[] =>
+  Object.hasOwn(promises, id) ? (promises[id] ?? []) : [];
+
+export function ittifakReveal(
+  players: readonly string[],
+  votes: Record<string, string>,
+  promises: Record<string, string[]> = {},
+): IttifakReveal {
   const scores: Record<string, number> = {};
   for (const id of players) scores[id] = 0;
   for (const id of players) {
     const to = voteOf(votes, id);
     if (to !== null && Object.hasOwn(scores, to)) scores[to] = (scores[to] ?? 0) + 1;
   }
-  return { votes: { ...votes }, scores };
+  const kept: Record<string, IttifakPromise[]> = {};
+  for (const from of players) {
+    const list = promisesOf(promises, from);
+    if (list.length > 0) kept[from] = list.map((to) => ({ to, kept: voteOf(votes, from) === to }));
+  }
+  return { votes: { ...votes }, scores, promises: kept };
 }
 
 /** Zamana göre ilerletir; saftır. Değişiklik yoksa aynı nesne döner. */
@@ -97,9 +113,9 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
   briefing: {
     goal: "Arkadaşlarından oy topla, her oy bir puan!",
     steps: [
-      "60 saniye oy iste, vaatte bulun",
+      "60 saniye oy iste, vaatte bulun; istersen gizlice söz işareti koy",
       "Tek gizli oyun var, kendine veremezsin",
-      "Kim sözünü tuttu? Oy akışından gör",
+      "Kim sözünü tuttu? Sonuç ekranında gör",
     ],
   },
 
@@ -108,6 +124,12 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
     const r = raw as Record<string, unknown>;
     if (r.kind === "skip" || r.kind === "lock") {
       return Object.keys(r).length === 1 ? { kind: r.kind } : null;
+    }
+    if (r.kind === "promise") {
+      if (Object.keys(r).length !== 3 || typeof r.on !== "boolean") return null;
+      const target = r.target;
+      if (typeof target !== "string" || target.length === 0 || target.length > 64) return null;
+      return { kind: "promise", target, on: r.on };
     }
     if (Object.keys(r).length !== 2 || r.kind !== "vote") return null;
     const target = r.target;
@@ -124,6 +146,7 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
       voteEndsAt: ctx.now + ITTIFAK_TALK_MS + ITTIFAK_VOTE_MS,
       finishAt: ctx.now + ITTIFAK_DURATION_MS,
       skipped: [],
+      promises: {},
       talkClosing: false,
       locked: [],
       voteClosing: false,
@@ -137,6 +160,20 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
     if (!state.players.includes(playerId)) return { rejected: "not_participant" };
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
     if (ctx.now >= state.voteEndsAt) return { rejected: "ended" };
+    if (action.kind === "promise") {
+      if (ctx.now >= state.talkEndsAt) return { rejected: "not_talking" };
+      if (state.talkClosing) return { rejected: "closed" };
+      if (action.target === playerId) return { rejected: "self_target" };
+      if (!state.players.includes(action.target)) return { rejected: "unknown_target" };
+      const mine = promisesOf(state.promises, playerId);
+      const has = mine.includes(action.target);
+      if (action.on === has) return state;
+      if (!action.on) {
+        return { ...state, promises: { ...state.promises, [playerId]: mine.filter((id) => id !== action.target) } };
+      }
+      if (mine.length >= ITTIFAK_MAX_PROMISES) return { rejected: "too_many_promises" };
+      return { ...state, promises: { ...state.promises, [playerId]: [...mine, action.target] } };
+    }
     if (action.kind === "skip") {
       if (ctx.now >= state.talkEndsAt) return { rejected: "not_talking" };
       if (state.talkClosing) return { rejected: "closed" };
@@ -198,12 +235,15 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
       voteEndsAt: state.voteEndsAt,
       finishAt: state.finishAt,
       ready: phase === "talk" ? [...state.skipped] : phase === "vote" ? [...state.locked] : [],
-      reveal: phase === "reveal" && s.finalVotes !== null ? ittifakReveal(s.players, s.finalVotes) : null,
+      reveal:
+        phase === "reveal" && s.finalVotes !== null ? ittifakReveal(s.players, s.finalVotes, s.promises) : null,
     };
   },
 
   view(state, playerId, ctx): IttifakView {
-    if (playerId === null || !state.players.includes(playerId)) return { myVote: null, locked: false };
+    if (playerId === null || !state.players.includes(playerId)) {
+      return { myVote: null, myPromises: [], locked: false };
+    }
     const s = advance(state, ctx.now);
     const final = s.finalVotes;
     const phase = phaseOf(state, ctx.now);
@@ -213,7 +253,7 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
         : phase === "vote"
           ? s.locked.includes(playerId)
           : false;
-    return { myVote: voteOf(final ?? s.votes, playerId), locked };
+    return { myVote: voteOf(final ?? s.votes, playerId), myPromises: [...promisesOf(s.promises, playerId)], locked };
   },
 
   isFinished(state, ctx): boolean {
@@ -228,7 +268,7 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
 
   result(state) {
     const final = state.finalVotes ?? ittifakFillVotes(state.players, state.seed, state.votes);
-    const { scores } = ittifakReveal(state.players, final);
+    const { scores } = ittifakReveal(state.players, final, state.promises);
     return { miniScores: { ...scores }, awards: { ...scores } };
   },
 };
