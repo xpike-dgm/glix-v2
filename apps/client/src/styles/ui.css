@@ -297,6 +297,92 @@
   box-shadow: 0 0 22px var(--red);
   animation: av-pulse 420ms var(--ease);
 }
+/* ---- Avatar canlılığı: nefes, sevinç, düşünme, çatlak (hareket azaltmada dururlar) ---- */
+.av[data-live="breathe"] {
+  animation: av-breathe 3.2s ease-in-out var(--live-d, 0s) infinite;
+}
+.av[data-live="joy"] {
+  animation: av-joy 900ms var(--ease) 350ms 2 both;
+}
+.av[data-live="think"] {
+  animation: av-think 2.4s ease-in-out var(--live-d, 0s) infinite;
+}
+.av__think {
+  position: absolute;
+  right: -10%;
+  top: -14%;
+  display: flex;
+  gap: 8%;
+  padding: 4% 8%;
+  border-radius: 99px;
+  background: var(--text);
+  box-shadow: 0 0 0 max(1px, calc(var(--s) * 0.03)) var(--bg-0);
+}
+.av__think i {
+  width: max(2px, calc(var(--s) * 0.09));
+  height: max(2px, calc(var(--s) * 0.09));
+  border-radius: 50%;
+  background: var(--bg-0);
+  animation: av-dot 1.2s ease-in-out infinite;
+}
+.av__think i:nth-child(2) {
+  animation-delay: 160ms;
+}
+.av__think i:nth-child(3) {
+  animation-delay: 320ms;
+}
+/* Elendi: ruh hâli görselinin üstüne ince çatlak çizgileri ve hafif solgunluk. */
+.av[data-out="1"] .av__disc::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(118deg, transparent 46%, rgba(255, 255, 255, 0.75) 47%, transparent 49%) 0 0 / 100% 100%,
+    linear-gradient(62deg, transparent 58%, rgba(255, 255, 255, 0.6) 59%, transparent 61%) 0 0 / 100% 100%,
+    linear-gradient(170deg, transparent 30%, rgba(255, 255, 255, 0.55) 31%, transparent 32.5%) 0 0 / 100% 100%;
+  mask-image: radial-gradient(75% 75% at 55% 45%, #000 20%, transparent 85%);
+  -webkit-mask-image: radial-gradient(75% 75% at 55% 45%, #000 20%, transparent 85%);
+  mix-blend-mode: screen;
+}
+.av[data-out="1"] .av__disc {
+  filter: saturate(0.7);
+}
+@keyframes av-breathe {
+  50% {
+    transform: translateY(-2.5%) scale(1.02);
+  }
+}
+@keyframes av-joy {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    transform: translateY(-14%) scale(1.06);
+  }
+  60% {
+    transform: translateY(0) scale(0.97, 1.03);
+  }
+}
+@keyframes av-think {
+  25% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes av-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+  }
+  30% {
+    opacity: 1;
+  }
+}
 @keyframes av-pulse {
   0% {
     transform: scale(1);
@@ -903,12 +989,12 @@
   gap: 6px;
 }
 .tamam__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(140, 160, 255, 0.25);
-  transition: background 160ms;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  opacity: 0.6;
+  transition: opacity 160ms;
 }
 .tamam__dot[data-on="1"] {
-  background: var(--lime);
+  opacity: 1;
 }

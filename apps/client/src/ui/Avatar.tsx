@@ -16,6 +16,11 @@ interface Props {
   ring?: string | undefined;
   /** Kısa süreli parlama. */
   flash?: "match" | "solo" | undefined;
+  /**
+   * Canlılık katmanı (yalnız CSS, hareket azaltmada durur): `breathe` bekleme nefesi, `joy` sevinç zıplaması,
+   * `think` düşünüyor (yavaş sallanma + üç nokta). Elenen (`mood="out"`) avatara çatlak kendiliğinden biner.
+   */
+  live?: "breathe" | "joy" | "think" | undefined;
   /** Simge (hex rozet) göster; küçük boylarda gizlenir. */
   pip?: boolean;
   class?: string;
@@ -35,11 +40,14 @@ export function Avatar(props: Props) {
   const small = () => typeof props.size === "string" || props.size >= 40;
   return (
     <div
+      data-live={props.connected === false ? undefined : props.live}
+      data-out={props.mood === "out" ? "1" : undefined}
       class={`av ${props.connected === false ? "av--off" : ""} ${props.flash ? `av--flash-${props.flash}` : ""} ${props.class ?? ""}`}
       style={{
         "--s": typeof props.size === "number" ? `${props.size}px` : props.size,
         "--c": props.ring ?? l().color,
         "--pc": l().color,
+        "--live-d": `${-((props.index * 0.37) % 2.6).toFixed(2)}s`,
       }}
     >
       <div class="av__disc">
@@ -70,6 +78,13 @@ export function Avatar(props: Props) {
           )}
         </Show>
       </div>
+      <Show when={props.live === "think" && props.connected !== false}>
+        <span class="av__think" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </span>
+      </Show>
       <Show when={big() && props.pip}>
         <img class="av__pip" src={l().pip} alt="" draggable={false} />
       </Show>

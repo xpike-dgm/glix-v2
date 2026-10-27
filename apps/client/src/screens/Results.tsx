@@ -175,6 +175,7 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
                   index={r.player.avatar}
                   size={podiumAvatar(r.rank)}
                   mood={moodOf(r)}
+                  live={r.rank === 1 && award(r.player.id) >= 0 ? "joy" : undefined}
                   host={r.player.id === props.snap.hostId}
                   connected={r.player.connected}
                   self={r.player.id === props.snap.selfId}

@@ -32,6 +32,7 @@ import { Settings } from "./screens/Settings.js";
 import { dataSaver, setTextSize, wifiOnly } from "./settings/settings.js";
 import { installErrorReporting } from "./telemetry/errors.js";
 import { preloadBriefing } from "./ui/briefingArt.js";
+import { Curtain } from "./ui/Curtain.js";
 import { Loading } from "./ui/Loading.js";
 import { collectGallery } from "./ui/matchGallery.js";
 import { preloadMoods } from "./ui/preloadMoods.js";
@@ -244,6 +245,7 @@ export function App() {
       <Show when={packScreenOpen()}>
         <PackScreen />
       </Show>
+      <Curtain screen={screen()} />
       <Reconnecting />
       <Toasts />
     </div>

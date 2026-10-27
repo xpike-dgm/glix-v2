@@ -71,10 +71,11 @@ lobi-2, lobi-8, lobi-qr, lobi-picker durumları eklendi.
 - [x] Final: podyum + unvanlar + "Aynı ekiple yeni maç" (paylaşım kartı U7'de).
 
 ### U5. Canlılık (juice)
-- **Tepki yağmuru:** sonuç/final ekranında 😂 😱 🔥 👏; sunucuda hız sınırlı yeni mesaj `react`, herkese yayın.
-- **Avatar ifadeleri:** 4 durum (bekliyor-nefes, sevinç, elendi-çatlak, düşünüyor) — mevcut avatar SVG'lerine katman.
-- **Geçiş perdesi:** briefing → countdown → oyun → sonuç arasında tutarlı ışık süpürmesi.
-- **Ses katmanı:** lobi döngüsü, oyun içi gerilim ritmi (süre bileşenine bağlı), tek ana ses + müzik/efekt ayrı düzey.
+- [x] **Tepki yağmuru:** sonuç/final ekranında 😂 😱 🔥 👏; sunucuda hız sınırlı yeni mesaj `react`, herkese yayın. (Lobi, sonuç, final açık; oyun sırasında kapalı.)
+- [x] **Avatar ifadeleri:** 4 durum (bekliyor-nefes, sevinç, elendi-çatlak, düşünüyor) — mevcut avatar SVG'lerine katman.
+- [x] **Geçiş perdesi:** briefing → countdown → oyun → sonuç arasında tutarlı ışık süpürmesi.
+- [x] **Ses katmanı:** lobi döngüsü, oyun içi gerilim ritmi (süre bileşenine bağlı), tek ana ses + müzik/efekt ayrı düzey.
+  - Gerçek telefonda dinlenip ayarlanacak: müzik havası/düzeyi, gerilim nabzı hızı (`fx/musicScheduler.ts`).
 
 ### U6. Erişilebilirlik ve ayarlar
 - Ayarlar sayfası: büyük yazı, titreşim aç/kapa, müzik/efekt ayrı, hareket azaltma (sistem ayarına ek), **renk körü modu**

@@ -125,6 +125,7 @@ export function Final(props: { snap: RoomSnapshot }) {
                     index={r.player.avatar}
                     size={podiumAvatar(r.rank)}
                     mood={rowMood(r.rank, r.score)}
+                    live={r.rank === 1 ? "joy" : undefined}
                     connected={r.player.connected}
                     self={r.player.id === props.snap.selfId}
                   />

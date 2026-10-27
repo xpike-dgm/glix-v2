@@ -1,4 +1,5 @@
 import { For, Show } from "solid-js";
+import { Avatar } from "./Avatar.js";
 import { type AckLike, createOptimistic, toAck } from "./optimistic.js";
 import { PrimaryButton } from "./PrimaryButton.js";
 import { useShell } from "./shell.js";
@@ -37,7 +38,7 @@ export function TamamBar(props: Props) {
     const ids = props.readyIds;
     const crew = shell.crew();
     if (!ids || crew.length === 0 || crew.length !== props.total) return [];
-    return crew.map((p) => ({ id: p.id, on: ids.includes(p.id) }));
+    return crew.map((p) => ({ id: p.id, avatar: p.avatar, on: ids.includes(p.id) }));
   };
   const lock = (): void => {
     if (locked()) return;
@@ -78,7 +79,20 @@ export function TamamBar(props: Props) {
       </Show>
       <Show when={dots().length > 0}>
         <ul class="tamam__dots" aria-hidden="true">
-          <For each={dots()}>{(d) => <li class="tamam__dot" data-on={d.on ? "1" : undefined} />}</For>
+          <For each={dots()}>
+            {(d) => (
+              <li class="tamam__dot" data-on={d.on ? "1" : undefined}>
+                {/* Kilitlemeyen düşünür (nokta balonu), kilitleyen sevinir. */}
+                <Avatar
+                  index={d.avatar}
+                  size={20}
+                  mood={d.on ? "happy" : "idle"}
+                  live={d.on ? undefined : "think"}
+                  ring={d.on ? "#B6FF3B" : undefined}
+                />
+              </li>
+            )}
+          </For>
         </ul>
       </Show>
     </div>

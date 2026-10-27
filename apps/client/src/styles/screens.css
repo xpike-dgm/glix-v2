@@ -2687,3 +2687,18 @@
     flex: 1 1 0;
   }
 }
+
+/* Yatay geniş ekran: tepki dörtlüsü içerik sütununun dışında, sağ kenarda dikey durur (dikey alan değerli). */
+@media (orientation: landscape) and (max-height: 520px) and (min-width: 640px) {
+  .final__foot .emojibar--compact,
+  .results__foot .emojibar--compact {
+    position: fixed;
+    right: max(8px, var(--safe-right, 0px));
+    top: 50%;
+    transform: translateY(-50%);
+    flex-direction: column;
+    gap: 6px;
+    padding: 0;
+    z-index: 3;
+  }
+}

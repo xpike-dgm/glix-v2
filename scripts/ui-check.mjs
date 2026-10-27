@@ -1139,6 +1139,8 @@ const SCREENS = [
   { name: "final-misafir-podyum", q: "mock=final&n=5&guest=1&gallery=6", settle: 2600 },
   { name: "results-tepki", q: "mock=results&n=5&emoji=1", settle: 2400 },
   { name: "final-tepki", q: "mock=final&n=5&emoji=1", settle: 2200 },
+  { name: "ayarlar-muzik-efekt", q: "mock=settings", settle: 900 },
+  { name: "ayarlar-muzik-efekt-buyuk-yazi", q: "mock=settings&text=large", settle: 900 },
 ];
 
 function freePort() {

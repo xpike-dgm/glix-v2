@@ -383,7 +383,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
               data-pid={snap().selfId}
               onClick={() => setPickOpen(true)}
             >
-              <Avatar index={myAvatar()} size={56} host connected />
+              <Avatar index={myAvatar()} size={56} host connected live="breathe" />
             </button>
           </Show>
           <Show when={!solo()}>
@@ -471,6 +471,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                         ready={snap().lobbyReady.includes(player.id)}
                         connected={player.connected}
                         self={mine()}
+                        live="breathe"
                         pip
                       />
                       <span class="seat__name">{player.nickname}</span>
