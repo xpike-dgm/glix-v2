@@ -55,6 +55,40 @@ export interface ProfileData {
   perGame: { gameId: string; plays: number; wins: number; bestMini: number; avgMini: number }[];
   recent: { endedAt: number; players: number; place: number; score: number }[];
   coPlayers: { username: string; matches: number }[];
+  /** Kazanılmış rozetler (kimlik + zaman); adlar `badges.ts`'te. */
+  badges: { badgeId: string; earnedAt: number }[];
+}
+
+/** Rozet değerlendirmesinin SQL toplamları (maç satırı yazıldıktan sonra). */
+export interface BadgeStats {
+  matches: number;
+  wins: number;
+  /** Birinci olunan farklı oyun sayısı. */
+  winGames: number;
+  /** Oynanan oyunların kimlikleri. */
+  playedGames: string[];
+  /** Kabul edilmiş bir arkadaşla en çok birlikte oynanan maç sayısı. */
+  friendCoplayMax: number;
+  /** Son maçların galibiyet bayrakları, en yeni önde (en çok 3). */
+  lastWon: boolean[];
+}
+
+/** Sıralama satırı: hesap ve dönemdeki toplamları (hiç maçı yoksa sıfırlar). */
+export interface StandingRow {
+  accountId: number;
+  username: string;
+  matches: number;
+  wins: number;
+  score: number;
+}
+
+/** Bir oyunda bir hesabın dönemdeki birincilik/oynama sayısı. */
+export interface GameStandingRow {
+  gameId: string;
+  accountId: number;
+  username: string;
+  plays: number;
+  wins: number;
 }
 
 export type CreateResult = { ok: true; account: Account } | { ok: false; field: "username" | "email" };
@@ -121,8 +155,21 @@ export interface AccountStore extends FriendStore {
   recordMatch(endedAt: number, rows: readonly MatchRow[], pairs: readonly CoplayPair[]): void;
   /** Profil toplamları; hesap yoksa null. `recent` ve `coPlayers` yalnız `full` iken doludur. */
   profile(accountId: number, full: boolean): ProfileData | null;
+  /** Rozet değerlendirmesi için toplamlar. */
+  badgeStats(accountId: number): BadgeStats;
+  /** Kazanılmış rozetler (kazanma sırasıyla). */
+  earnedBadges(accountId: number): { badgeId: string; earnedAt: number }[];
+  /** Rozetleri yazar; yalnızca yeni kazanılanların kimliklerini döner (zaten olan atlanır, ikinci kez verilmez). */
+  awardBadges(accountId: number, badgeIds: readonly string[], at: number): string[];
   /**
-   * Hesabın istatistik ve arkadaşlık verisini siler (oyun, maç, birlikte oynama; karşı taraftaki sayaçlar dahil;
+   * Verilen hesapların (en çok ~200) maç toplamları; `since` doluysa yalnız o andan sonra biten maçlar.
+   * Tek toplu sorgu; maçı olmayan hesap da sıfırlarla döner.
+   */
+  standings(accountIds: readonly number[], since: number | null): StandingRow[];
+  /** Verilen hesapların oyun başına birincilik/oynama sayıları (en az bir oyunu olanlar). */
+  gameStandings(accountIds: readonly number[], since: number | null): GameStandingRow[];
+  /**
+   * Hesabın istatistik ve arkadaşlık verisini siler (oyun, maç, rozet, birlikte oynama; karşı taraftaki sayaçlar dahil;
    * arkadaşlıklar, istekler ve engeller, iki yönde).
    * Hesabın kendisine dokunmaz; hesap silme (H10) bunu çağırır, tablolar ayrıca `ON DELETE CASCADE` taşır.
    */
@@ -185,6 +232,13 @@ const MIGRATIONS: readonly string[] = [
    CREATE INDEX account_coplay_other ON account_coplay (other_account_id);`,
   // Arkadaşlar (H7): tek satırlık kanonik çift ve engeller. Hesap silinince satırlar da gider.
   FRIENDS_SCHEMA,
+  // Rozetler (H6): kazanılan rozet bir kez yazılır. Hesap silinince satırlar da gider.
+  `CREATE TABLE badges (
+     account_id INTEGER NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+     badge_id TEXT NOT NULL,
+     earned_at INTEGER NOT NULL,
+     PRIMARY KEY (account_id, badge_id)
+   );`,
 ];
 
 function migrate(db: DatabaseSync): void {
@@ -295,6 +349,26 @@ export function createAccounts(path: string): AccountStore {
        FROM account_coplay c JOIN accounts a ON a.id = c.other_account_id
        WHERE c.account_id = ? ORDER BY c.matches DESC, c.last_at DESC, a.username_lc LIMIT ${TOP_COPLAYERS}`,
   );
+  const winGameCount = db.prepare(
+    "SELECT COUNT(DISTINCT game_id) AS n FROM account_games WHERE account_id = ? AND won = 1",
+  );
+  const playedGameRows = db.prepare("SELECT DISTINCT game_id FROM account_games WHERE account_id = ?");
+  const friendCoplay = db.prepare(
+    `SELECT COALESCE(MAX(c.matches), 0) AS n FROM account_coplay c
+       JOIN friends f ON f.a = MIN(c.account_id, c.other_account_id) AND f.b = MAX(c.account_id, c.other_account_id)
+       WHERE c.account_id = ? AND f.state = 'accepted'`,
+  );
+  const lastWonRows = db.prepare(
+    "SELECT won FROM account_matches WHERE account_id = ? ORDER BY ended_at DESC, rowid DESC LIMIT 3",
+  );
+  const earnedRows = db.prepare(
+    "SELECT badge_id, earned_at FROM badges WHERE account_id = ? ORDER BY earned_at, rowid",
+  );
+  const insertBadge = db.prepare(
+    `INSERT OR IGNORE INTO badges (account_id, badge_id, earned_at)
+       SELECT ?, ?, ? WHERE EXISTS (SELECT 1 FROM accounts WHERE id = ?)`,
+  );
+  const dropBadges = db.prepare("DELETE FROM badges WHERE account_id = ?");
   const dropGames = db.prepare("DELETE FROM account_games WHERE account_id = ?");
   const dropMatches = db.prepare("DELETE FROM account_matches WHERE account_id = ?");
   const dropCoplay = db.prepare("DELETE FROM account_coplay WHERE account_id = ? OR other_account_id = ?");
@@ -398,12 +472,94 @@ export function createAccounts(path: string): AccountStore {
             ).map((r) => ({ endedAt: r.ended_at, players: r.players, place: r.place, score: r.score }))
           : [],
         coPlayers: full ? (coplayRows.all(accountId) as { username: string; matches: number }[]) : [],
+        badges: (earnedRows.all(accountId) as { badge_id: string; earned_at: number }[]).map((r) => ({
+          badgeId: r.badge_id,
+          earnedAt: r.earned_at,
+        })),
       };
+    },
+    badgeStats(accountId) {
+      const m = matchTotals.get(accountId) as { n: number; wins: number };
+      const wg = winGameCount.get(accountId) as { n: number };
+      const fc = friendCoplay.get(accountId) as { n: number };
+      return {
+        matches: m.n,
+        wins: m.wins,
+        winGames: wg.n,
+        playedGames: (playedGameRows.all(accountId) as { game_id: string }[]).map((r) => r.game_id),
+        friendCoplayMax: fc.n,
+        lastWon: (lastWonRows.all(accountId) as { won: number }[]).map((r) => r.won === 1),
+      };
+    },
+    earnedBadges(accountId) {
+      return (earnedRows.all(accountId) as { badge_id: string; earned_at: number }[]).map((r) => ({
+        badgeId: r.badge_id,
+        earnedAt: r.earned_at,
+      }));
+    },
+    awardBadges(accountId, badgeIds, at) {
+      const fresh: string[] = [];
+      inTransaction(() => {
+        for (const id of badgeIds)
+          if (Number(insertBadge.run(accountId, id, at, accountId).changes) === 1) fresh.push(id);
+      });
+      return fresh;
+    },
+    standings(accountIds, since) {
+      if (accountIds.length === 0) return [];
+      const marks = accountIds.map(() => "?").join(",");
+      const rows = db
+        .prepare(
+          `SELECT a.id AS id, a.username AS username, COUNT(m.account_id) AS matches,
+                  COALESCE(SUM(m.won), 0) AS wins, COALESCE(SUM(m.score), 0) AS score
+             FROM accounts a
+             LEFT JOIN account_matches m ON m.account_id = a.id AND m.ended_at >= ?
+             WHERE a.id IN (${marks}) GROUP BY a.id`,
+        )
+        .all(since ?? Number.MIN_SAFE_INTEGER, ...accountIds) as {
+        id: number;
+        username: string;
+        matches: number;
+        wins: number;
+        score: number;
+      }[];
+      return rows.map((r) => ({
+        accountId: r.id,
+        username: r.username,
+        matches: r.matches,
+        wins: r.wins,
+        score: r.score,
+      }));
+    },
+    gameStandings(accountIds, since) {
+      if (accountIds.length === 0) return [];
+      const marks = accountIds.map(() => "?").join(",");
+      const rows = db
+        .prepare(
+          `SELECT g.game_id AS game_id, a.id AS id, a.username AS username, COUNT(*) AS plays, SUM(g.won) AS wins
+             FROM account_games g JOIN accounts a ON a.id = g.account_id
+             WHERE g.account_id IN (${marks}) AND g.ended_at >= ? GROUP BY g.game_id, a.id`,
+        )
+        .all(...accountIds, since ?? Number.MIN_SAFE_INTEGER) as {
+        game_id: string;
+        id: number;
+        username: string;
+        plays: number;
+        wins: number;
+      }[];
+      return rows.map((r) => ({
+        gameId: r.game_id,
+        accountId: r.id,
+        username: r.username,
+        plays: r.plays,
+        wins: r.wins,
+      }));
     },
     deleteAccountData(accountId) {
       inTransaction(() => {
         dropGames.run(accountId);
         dropMatches.run(accountId);
+        dropBadges.run(accountId);
         dropCoplay.run(accountId, accountId);
         dropFriends.run(accountId, accountId);
         dropBlocks.run(accountId, accountId);

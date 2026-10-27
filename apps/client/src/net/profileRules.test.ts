@@ -19,6 +19,21 @@ const good = {
   coPlayers: [{ username: "veli", matches: 2 }],
 };
 
+describe("parseProfile rozetler", () => {
+  it("rozet listesini okur; alan yoksa boş", () => {
+    const badge = {
+      id: "ilk-mac",
+      name: "İlk Adım",
+      description: "İlk maçını bitir.",
+      secret: false,
+      earned: true,
+    };
+    expect(parseProfile({ ...good, badges: [badge] })?.badges).toEqual([badge]);
+    expect(parseProfile(good)?.badges).toEqual([]);
+    expect(parseProfile({ ...good, badges: "x" })?.badges).toEqual([]);
+  });
+});
+
 describe("parseProfile", () => {
   it("geçerli yanıtı okur", () => {
     const p = parseProfile(good);

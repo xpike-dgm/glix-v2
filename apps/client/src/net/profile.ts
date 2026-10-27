@@ -15,6 +15,11 @@ const [profileOf, setProfileOf] = createSignal<string | null>(null);
 
 export { profileOf, setProfileOf };
 
+/** Arkadaşın profilinden geri dönülecek ekran (arkadaş listesi ya da sıralama). */
+const [profileBack, setProfileBack] = createSignal<"friends" | "leaderboard">("friends");
+
+export { profileBack, setProfileBack };
+
 /** Yalnız geliştirme önizlemesi: durum sabitlenir, ağdan okuma yapılmaz. */
 let frozen = false;
 export function freezeProfile(next: ProfileState): void {

@@ -1,0 +1,108 @@
+/* ---- Arkadaş sıralaması (Profil/Ayarlar kart stillerini paylaşır) ---- */
+.lb__tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-1);
+  padding: 4px;
+  border-radius: 28px;
+  border: 1.5px solid var(--line);
+  background: rgba(10, 16, 48, 0.6);
+}
+.lb__tab {
+  min-height: 48px;
+  border-radius: 24px;
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: var(--fs-15);
+}
+.lb__tab[aria-selected="true"] {
+  background: var(--cyan);
+  color: #06102e;
+}
+.lb__chips {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+}
+.lb__chip {
+  min-height: 48px;
+  padding: 0 var(--sp-2);
+  border-radius: 24px;
+  border: 1.5px solid rgba(160, 175, 255, 0.34);
+  color: var(--text);
+  font-weight: 600;
+  font-size: var(--fs-15);
+}
+/* Seçili çip dolgu + onay işaretiyle de belli olur (renge ek). */
+.lb__chip[aria-pressed="true"] {
+  background: rgba(60, 220, 255, 0.18);
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: inset 0 0 0 1px var(--cyan);
+}
+.lb__chip[aria-pressed="true"]::before {
+  content: "✓ ";
+}
+.lb__hint {
+  text-align: center;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+/* set__body bir sütun esnek kutudur: çocuklar kaydırma yerine büzülmesin. */
+.lb__list,
+.lb__tabs,
+.lb__chips,
+.lb__hint {
+  flex: none;
+}
+.lb__list {
+  list-style: none;
+}
+.lb__li + .lb__li {
+  border-top: 1px solid var(--line);
+}
+.lb__li[data-first="1"] .pf__place {
+  color: var(--amber);
+}
+.lb__li[data-you="1"] {
+  background: rgba(60, 220, 255, 0.12);
+  box-shadow: inset 4px 0 0 var(--cyan);
+}
+.lb__row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 60px;
+  padding: var(--sp-2) var(--sp-4);
+  text-align: left;
+  color: var(--text);
+}
+.lb__row .pf__name {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.lb__you {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--cyan);
+}
+.lb__value {
+  flex: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-18);
+}
+.lb__game .pf__meta {
+  overflow-wrap: anywhere;
+}
+.fr__rank {
+  align-self: stretch;
+}
+.pf__rank {
+  align-self: center;
+}

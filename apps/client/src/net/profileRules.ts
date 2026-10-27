@@ -1,3 +1,5 @@
+import { type BadgeInfo, parseBadges } from "./badgeRules.js";
+
 /** Profil ekranının verisi ve saf yardımcıları (sunucu yanıtı doğrulanır; ağdan gelen hiçbir şeye güvenilmez). */
 
 export interface ProfileGame {
@@ -23,6 +25,8 @@ export interface ProfileInfo {
   perGame: ProfileGame[];
   recent: ProfileRecentMatch[];
   coPlayers: { username: string; matches: number }[];
+  /** Rozetler (kendi profilinde hepsi, arkadaşınkinde yalnız kazanılanlar). Eski sunucuda boş. */
+  badges: BadgeInfo[];
 }
 
 /** Sunucu sınırlarının üstünde yanıt gelirse (bozuk/kötü niyetli) listeler kırpılır. */
@@ -116,6 +120,7 @@ export function parseProfile(data: unknown): ProfileInfo | null {
     perGame,
     recent,
     coPlayers,
+    badges: parseBadges(data.badges),
   };
 }
 

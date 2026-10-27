@@ -3,6 +3,7 @@ import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-j
 import { playConfetti } from "../fx/confetti.js";
 import { hapticFinal } from "../fx/haptics.js";
 import { fanfare } from "../fx/sound.js";
+import { dismissBadges } from "../net/badges.js";
 import { leaveRoom, returnToLobby } from "../net/client.js";
 import { matchRounds } from "../net/matchHistory.js";
 import { setState, state } from "../net/store.js";
@@ -20,6 +21,7 @@ import { LeaveButton } from "../ui/LeaveButton.js";
 import { Mascot } from "../ui/Mascot.js";
 import { MatchGallery } from "../ui/MatchGallery.js";
 import { galleryItems } from "../ui/matchGallery.js";
+import { NewBadgeCard } from "../ui/NewBadgeCard.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { ReactionLayer } from "../ui/ReactionLayer.js";
 import { createReactionSender } from "../ui/reactionSend.js";
@@ -56,6 +58,8 @@ export function Final(props: { snap: RoomSnapshot }) {
     fanfare();
     hapticFinal();
     noteMatchFinished();
+    // Final'den ayrılınca (lobi, çıkış) rozet kartı bir sonraki maça taşınmaz.
+    onCleanup(dismissBadges);
     const t = setTimeout(() => setAnnounce(spoken()), 250);
     onCleanup(() => clearTimeout(t));
     if (!confetti) return;
@@ -267,6 +271,7 @@ export function Final(props: { snap: RoomSnapshot }) {
         </Show>
       </footer>
       <ReactionLayer />
+      <NewBadgeCard />
       <BottomSheet open={inviteOpen()} onClose={() => setInviteOpen(false)} title="Hesap aç">
         <p class="acct__text">Kayıt olmak için bu odadan çıkman gerekir. Devam edelim mi?</p>
         <div class="sheet__actions">

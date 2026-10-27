@@ -11,6 +11,7 @@ import { CLIENT_PROTOCOL_VERSION, isProtocolMismatch } from "../pwa/updatePolicy
 import { notifyOn } from "../settings/settings.js";
 import { installPerfObservers, perf, trackPerf } from "../telemetry/perf.js";
 import { resolveWsUrl } from "../wsUrl.js";
+import { receiveBadges } from "./badges.js";
 import { offsetFromPong } from "./clock.js";
 import {
   dropInvitesFor,
@@ -236,6 +237,9 @@ function onMessage(raw: string): void {
       break;
     case "friendsChanged":
       onFriendsChanged();
+      break;
+    case "badgesEarned":
+      void receiveBadges(msg.ids);
       break;
     case "invite":
       receiveInvite({ from: msg.from, roomCode: msg.roomCode, expiresAt: msg.expiresAt });

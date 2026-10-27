@@ -11,6 +11,7 @@ import { DEFAULT_LIMITS, type ServerLimits } from "./config.js";
 import { createFriendsApi, FRIENDS_PATH } from "./friendsApi.js";
 import { createGoogleAuth, type GoogleConfig } from "./google.js";
 import { handleClose, handleMessage } from "./handlers.js";
+import { createLeaderboardApi, LEADERBOARD_PATH } from "./leaderboard.js";
 import { log } from "./log.js";
 import {
   createMailer,
@@ -143,7 +144,9 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     opts.randomInt,
     stats,
     resolvePush(opts),
-    createAccountRecorder(accounts),
+    createAccountRecorder(accounts, (accountId, ids) =>
+      rt.social.sendTo(accountId, { type: "badgesEarned", ids }),
+    ),
   );
   rt.social = createSocial(rt, accounts);
   const friendsApi = createFriendsApi({
@@ -151,6 +154,11 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     social: rt.social,
     clock,
     allowedOrigins: opts.allowedOrigins,
+  });
+  const leaderboardApi = createLeaderboardApi({
+    accounts,
+    clock,
+    gameName: (id) => rt.catalog.find((g) => g.id === id)?.name ?? null,
   });
   const perIp = new Map<string, number>();
   const aliveSockets = new WeakMap<WebSocket, boolean>();
@@ -252,6 +260,10 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     }
     if (path === FRIENDS_PATH || path.startsWith(`${FRIENDS_PATH}/`)) {
       friendsApi(req, res);
+      return;
+    }
+    if (path === LEADERBOARD_PATH || path.startsWith(`${LEADERBOARD_PATH}/`)) {
+      leaderboardApi(req, res);
       return;
     }
     if (path === PROFILE_PATH || path.startsWith(`${PROFILE_PATH}/`)) {

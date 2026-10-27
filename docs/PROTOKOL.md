@@ -56,6 +56,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `friendsChanged` | — arkadaş listen/isteklerin değişti (kabul, geri çekme, çıkarma, engel); istemci `GET /api/friends`'i yeniler |
 | `invite` | `from`, `roomCode`, `expiresAt` (sunucu saati, ms; gönderildikten 10 dk sonra) — arkadaşın seni odaya çağırıyor |
 | `inviteSent` | `username` — `inviteFriend` arkadaşına ulaştırıldı (canlı bağlantı ya da web bildirimi) |
+| `badgesEarned` | `ids: string[]` — maç final'e varınca bu maçla kazandığın **yeni** rozet kimlikleri (hesaplı oyuncunun canlı bağlantılarına; boş liste gönderilmez, aynı rozet ikinci kez gelmez). Eski istemciler bilinmeyen tipi yok saydığı için protokol sürümü artmadı. İstemci adları `GET /api/profile`'dan okur |
 | `error` | `code`, `message` (Türkçe, oyuncuya gösterilebilir) |
 
 **Görünümler:** `match.publicView` odadaki herkes için aynıdır (oda başına bir kez hesaplanır ve
@@ -227,9 +228,22 @@ Yalnız `GET`; oturum çerezi şart (yoksa 401 `login_required`); yanıtlar `Cac
   perGame:[{gameId, name, plays, wins, bestMini, avgMini}], recent:[{endedAt, players, place, score}] (son 10 maç, yeniden eskiye),
   coPlayers:[{username, matches}] (en çok 5)}`. `winRate` 0–1 arası (3 ondalık); `wins`/`gameWins` yer 1 sayısı; `perGame` oynamaya göre azalan;
   `favoriteGame` en çok oynanan (eşitte en son oynanan); `name` katalogdaki ad (katalogda olmayan eski oyun için "Eski oyun"). Toplamlar SQL toplamlarıyla hesaplanır.
+- Her iki yanıtta `badges:[{id, name, description, secret, earned, earnedAt|null}]` (H6): kendi profilinde tüm rozetler (kazanılmamış gizli rozet
+  `{id:"gizli-N", name:"???", description:"Gizli rozet", secret:true, earned:false}` olur, gerçek kimlik/ad sızmaz); arkadaşın profilinde **yalnız kazanılanlar**.
 - `GET /api/profile/<kullanıcı>` → aynı gövde, `recent` ve `coPlayers` **yok**. Oturumdaki hesabın kendi adı ve kabul edilmiş arkadaşlar için 200; başka ad,
   bilinmeyen ad ve geçersiz ad 404 `not_found` (hesabın var olup olmadığı sızmaz). Kabul edilmiş arkadaşlar için de 200 (H7).
 - Veri: `account_games`, `account_matches`, `account_coplay` (ayrıntı `docs/HESAP.md`). Sunucu bunları oyun/maç bitince tek işlemde yazar (`AccountStatsRecorder`, `Runtime.accountStats`).
+
+## Arkadaş sıralaması (HTTP, `/api/leaderboard`, H9)
+
+Yalnız `GET`; oturum çerezi şart (401 `login_required`); hesap başına hız sınırı (429 `rate_limited`); `Cache-Control: no-store`. Yalnız **sen ve kabul edilmiş arkadaşların**
+(bekleyen istek, engelli ve yabancı yok). Geçersiz sorgu 400 `invalid_input`.
+- `GET /api/leaderboard?period=week|all&metric=wins|score|matches` → 200 `{ok:true, rows:[{username, value, rank, you}]}`. `value` dönemdeki `account_matches`
+  toplamı: `wins` = yer 1 sayısı, `score` = genel skor toplamı, `matches` = maç sayısı. Değere göre azalan; eşit değer aynı `rank`'ı paylaşır (1, 1, 3); eşitlikte kullanıcı adı sırası.
+  Maçı olmayan kişi `value: 0` ile listelenir. `week` = **İstanbul pazartesi 00:00'dan** beri (Türkiye yıl boyu UTC+3); `all` = tümü.
+- `GET /api/leaderboard/games?period=week|all` → 200 `{ok:true, games:[{gameId, name, leader:{username, wins}, you:{wins}}]}`. Oyun başına en çok birincilik
+  (eşitlikte oynama, sonra ad); kimsenin birinciliği olmayan oyun yok; birincilik sayısına göre azalan.
+- Tek toplu SQL sorgusu (`IN (kimlikler)`, arkadaş sayısı en çok 200).
 
 ## Sınırlar (sunucu)
 

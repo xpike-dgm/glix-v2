@@ -297,6 +297,11 @@ export type ServerMessage =
   | { type: "invite"; from: string; roomCode: string; expiresAt: number }
   /** Gönderdiğin davet arkadaşına ulaştırıldı. */
   | { type: "inviteSent"; username: string }
+  /**
+   * Maç sonunda yeni rozet(ler) kazandın (yalnız hesaplı oyuncunun canlı bağlantılarına). Eski istemciler bilinmeyen
+   * mesajı yok sayar; bu yüzden protokol sürümü artmadı.
+   */
+  | { type: "badgesEarned"; ids: string[] }
   | { type: "error"; code: ErrorCode; message: string };
 
 function isRecord(v: unknown): v is Record<string, unknown> {

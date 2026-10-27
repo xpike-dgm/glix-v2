@@ -1,4 +1,5 @@
 import type { AccountStore, CoplayPair, GameRow, MatchRow } from "./accountStore.js";
+import { awardAfterMatch } from "./badges.js";
 import { log } from "./log.js";
 
 /** Sıralamaya giren bir oyuncu: oyuncu kimliği, varsa hesap kimliği ve puanı. */
@@ -107,8 +108,17 @@ export function buildMatchRecord(
   };
 }
 
-/** Hesap deposuna yazan yazıcı: tek işlem, hata günlüğe gider. */
-export function createAccountRecorder(store: AccountStore): AccountStatsRecorder {
+/** Yeni rozet kazanıldığında çağrılır (hesap kimliği, rozet kimlikleri). */
+export type BadgesEarnedHandler = (accountId: number, badgeIds: string[]) => void;
+
+/**
+ * Hesap deposuna yazan yazıcı: tek işlem, hata günlüğe gider. Maç satırı yazıldıktan sonra rozetler değerlendirilir;
+ * bu adım ayrı hata yalıtımındadır (rozet hatası maç kaydını ya da oyun akışını bozmaz).
+ */
+export function createAccountRecorder(
+  store: AccountStore,
+  onBadges: BadgesEarnedHandler = () => {},
+): AccountStatsRecorder {
   return {
     gameFinished(record) {
       if (record.rows.length === 0) return;
@@ -124,6 +134,20 @@ export function createAccountRecorder(store: AccountStore): AccountStatsRecorder
         store.recordMatch(record.endedAt, record.rows, record.pairs);
       } catch (err) {
         log.error("accounts_error", { op: "record_match", error: String(err) });
+        return;
+      }
+      for (const row of record.rows) {
+        try {
+          const ids = awardAfterMatch(store, row.accountId, {
+            endedAt: record.endedAt,
+            players: row.players,
+            place: row.place,
+            won: row.place === 1,
+          });
+          if (ids.length > 0) onBadges(row.accountId, ids);
+        } catch (err) {
+          log.error("accounts_error", { op: "badges", error: String(err) });
+        }
       }
     },
   };

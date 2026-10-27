@@ -14,6 +14,7 @@ import {
   type RoomSnapshot,
   type ServerMessage,
 } from "@glix/engine";
+import { parseBadgeIds } from "./badgeRules.js";
 import { parseInvite } from "./friendsRules.js";
 
 type Rec = Record<string, unknown>;
@@ -257,6 +258,10 @@ export function parseServerMessage(raw: string): ServerMessage | null {
       return isStr(data.username) && data.username.length <= 20
         ? { type: "inviteSent", username: data.username }
         : null;
+    case "badgesEarned": {
+      const ids = parseBadgeIds(data.ids);
+      return ids ? { type: "badgesEarned", ids } : null;
+    }
     case "error": {
       const code = ERROR_CODES.find((c) => c === data.code);
       return code && isStr(data.message) ? { type: "error", code, message: data.message } : null;
