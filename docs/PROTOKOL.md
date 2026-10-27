@@ -30,6 +30,9 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `action` | `seq`, `payload` | yalnız `playing`; `seq` istemci sayacı, `actionAck` ile döner |
 | `returnToLobby` | — | yalnız host, yalnız `final` |
 | `resync` | — | yama uygulanamadığında tam `room` snapshot ister |
+| `visibility` | `hidden` (boolean) | sayfa gizlendi/göründü. Yalnız oyuncu bildirimi açtıysa ve odadaysa gönderilir; odasız bağlantıda sessizce yok sayılır. Yeniden bağlanınca (`resume`) sunucu bunu "görünür"e sıfırlar, istemci `session` sonrası yeniden bildirir |
+| `pushSubscribe` | `endpoint`, `p256dh`, `auth` | web bildirimi aboneliğini bu oyuncunun oturumuna bağlar (bkz. "Web bildirimleri"). `endpoint` https ve ≤ 500 karakter, kimlik bilgisi yok; `p256dh` 87, `auth` 22 karakter base64url (65 / 16 bayt). Sunucuda bildirim kapalıysa sessizce yok sayılır; uç nokta bilinen push servislerinden (FCM, Mozilla, Apple, Windows) değilse `invalid_message` |
+| `pushUnsubscribe` | — | aboneliği siler |
 | `feedback` | `rating` (1–5), `text?` (≤ 300) | yalnız `final`; maç başına bir kez; cevap `actionAck` değil, sessizce kaydedilir |
 | `perf` | `gameId`, `rttMs`, `ackP50`, `ackP95`, `ackN`, `slowTaps`, `tapP95`, `longTasks`, `longTaskMs` | yalnız `results` aşamasında ve yalnız o anki oyunun `gameId`'si için; oyun başına oyuncu başına bir kez; sessizce kaydedilir (cevap yok). Tam anahtar kümesi, hepsi negatif olmayan tam sayı: `rttMs`,`ackP50`,`ackP95`,`tapP95` ≤ 60 000; `ackN`,`slowTaps`,`longTasks` ≤ 10 000; `longTaskMs` ≤ 600 000; `gameId` ≤ 64 karakter. İsteğe bağlı (eski istemcide yok): `platform` (`ios` / `android` / `diger`, UA'dan kaba grup), `reconnects` (o oyunda soket yeniden açılma sayısı) ve `reloads` (sekme oturumunda sayfa yenileme sayısı), ikisi de ≤ 1 000. Aşan ya da fazladan alanlı mesaj `invalid_message` |
 
@@ -37,7 +40,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 
 | type | alanlar |
 |---|---|
-| `welcome` | `protocolVersion`, `serverVersion` |
+| `welcome` | `protocolVersion`, `serverVersion`, `pushKey?` — sunucu web bildirimi gönderebiliyorsa VAPID genel anahtarı (base64url); yoksa alan hiç gelmez ve istemci Ayarlar'daki anahtarı gizler |
 | `pong` | `t`, `serverTime` |
 | `session` | `token`, `playerId`, `roomCode` — istemci `localStorage`'a yazar |
 | `stage` | `roomCode` — `joinStage` kabul edildi. Belirteç ve oyuncu kimliği yoktur; bağlantı kopunca istemci yeniden `joinStage` yollar |
@@ -133,6 +136,19 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
   20 sn dolunca host bağlı en eski oyuncuya geçer (eski host dönünce geri almaz). Host kendi isteğiyle
   `leaveRoom` yaparsa devir hemen olur.
 - Oda boş kalırsa 120 sn sonra silinir.
+
+## Web bildirimleri
+İsteğe bağlı (oyuncu Ayarlar'dan açar; iOS'ta yalnız ana ekrana eklenmişse). Sunucu `GLIX_VAPID_PUBLIC`, `GLIX_VAPID_PRIVATE`,
+`GLIX_VAPID_SUBJECT` ile açılır; harici paket yok: VAPID (RFC 8292, ES256) ve ileti şifreleme (RFC 8291, aes128gcm) `node:crypto` ile.
+- Abonelik **yalnız bellekte**, `Player` üzerinde durur: oyuncu ayrılınca/atılınca/oda kapanınca silinir; sunucu yeniden başlarsa
+  istemci `session` kabulünden sonra aboneliği yeniden gönderir. Push servisi 404/410 derse abonelik düşer.
+- Gönderim: `fetch` POST, `TTL: 60`, `Urgency: high`, 5 sn zaman aşımı, yönlendirme izlenmez. Uç nokta izin listesi dışındaysa istek atılmaz.
+- Alıcı: abonelik var **ve** (`visibility` ile gizli bildirmiş **ya da** bağlantısı kopuk ama oturumu yaşıyor). Oyuncu başına 20 sn'de en çok bir.
+- Tetikleyiciler: (1) host maçı başlattı: "Oyun başlıyor!"; (2) sıra tabanlı oyunda sıra bir oyuncuya geçti: "Sıra sende!"
+  (oyun tanımında isteğe bağlı `notify(state, ctx)`; şimdilik Zaman Bombası Hafızası ve Kör Bomba); (3) final sonrası host
+  "Aynı ekiple yeni maç" (`returnToLobby`) dedi: "Yeni maç".
+- Metin geneldir: `{title, body: "Oda KOD", tag}`; oyun içeriği, ad ya da gizli bilgi asla. Pazarlama yok.
+- Tıklama (`public/sw-push.js`): açık pencere varsa öne getirilir, yoksa uygulama açılır ve kayıtlı oturum odayı geri getirir.
 
 ## Hata kodları
 

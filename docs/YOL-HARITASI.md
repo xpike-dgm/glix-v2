@@ -122,7 +122,7 @@ Zaten var: dvh yükseklik, safe-area, klavye alanı (visualViewport), iOS "Ana E
 - [x] iPhone açılış görselleri (apple-touch-startup-image, cihaz boyutlarına göre; maskotlu, ChatGPT ile).
 - [x] Kurulum ipucu ilk oyun bittikten sonra, adımları görselli ("Paylaş → Ana Ekrana Ekle").
 - [ ] Not: eklenmemiş sitelerde iOS 7 gün kullanılmayan veriyi silebilir; ekleme kalıcılık sağlar.
-- [ ] Web bildirimleri (iOS 16.4+, yalnız ana ekrana eklenmişse): "Arkadaşın seni odaya çağırıyor".
+- [x] Web bildirimleri (iOS 16.4+, yalnız ana ekrana eklenmişse): isteğe bağlı; maç başlayınca, sıra sende ve yeni maç için (arka plandaki oyuncuya, 20 sn'de en çok bir). VAPID anahtarları yoksa kapalı (`deploy/README.md`). **Gerçek iPhone'da doğrulanmalı.**
 
 **5. Dokunma ve ekran**
 - [x] Uzun basma menüsü ve metin seçimi tüm oyun alanlarında kapalı (her oyun denetlenir).
