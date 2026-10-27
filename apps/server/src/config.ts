@@ -23,6 +23,8 @@ export interface Config {
   google: GoogleConfig | null;
   /** E-posta (doğrulama, şifre sıfırlama); anahtar, gönderen ve genel adres yoksa null (özellik kapalı). */
   mail: MailConfig | null;
+  /** Yönetici paneline girebilen hesap kimlikleri (`GLIX_ADMIN_ACCOUNT_IDS`); boşsa panel kapalıdır (/admin 404). */
+  adminAccountIds: ReadonlySet<number>;
 }
 
 export interface ServerLimits {
@@ -100,6 +102,18 @@ export function loadMail(env: NodeJS.ProcessEnv): MailConfig | null {
   }
 }
 
+/** `GLIX_ADMIN_ACCOUNT_IDS`: virgülle ayrılmış pozitif tam sayı hesap kimlikleri. Boş = panel kapalı; bozuk değer açılışı durdurur. */
+export function loadAdminIds(env: NodeJS.ProcessEnv): Set<number> {
+  const ids = new Set<number>();
+  for (const part of (env.GLIX_ADMIN_ACCOUNT_IDS ?? "").split(",")) {
+    const text = part.trim();
+    if (!text) continue;
+    if (!/^[1-9]\d{0,9}$/.test(text)) throw new Error("GLIX_ADMIN_ACCOUNT_IDS geçersiz");
+    ids.add(Number(text));
+  }
+  return ids;
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const port = Number(env.PORT ?? 3900);
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error("PORT geçersiz");
@@ -132,6 +146,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     vapid: loadVapid(env),
     google: loadGoogle(env),
     mail: loadMail(env),
+    adminAccountIds: loadAdminIds(env),
     statsDb,
     accountsDb: env.ACCOUNTS_DB || statsDb,
   };

@@ -88,7 +88,12 @@ describe("istatistik kaydı", () => {
     expect(tables).toEqual(
       expect.arrayContaining(["matches", "game_plays", "feedback", "perf", "schema_version"]),
     );
-    expect(rows("SELECT * FROM schema_version")).toEqual([{ version: 1 }, { version: 2 }, { version: 3 }]);
+    expect(rows("SELECT * FROM schema_version")).toEqual([
+      { version: 1 },
+      { version: 2 },
+      { version: 3 },
+      { version: 4 },
+    ]);
 
     // Özet Türkçe ve bu verilerden üretilir.
     const text = summarize(dbFile, k.clock.now());

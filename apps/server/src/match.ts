@@ -12,6 +12,7 @@ import {
   type Rng,
 } from "@glix/engine";
 import { buildGameRecord, buildMatchRecord, type Entrant } from "./accountStats.js";
+import { scrubText } from "./errorScrub.js";
 import { log } from "./log.js";
 import { errorMessage } from "./messages.js";
 import { notifyPlayers, roomHasPush } from "./push.js";
@@ -98,6 +99,12 @@ export function abortMatch(rt: Runtime, room: Room, err: unknown): void {
     error: cause instanceof Error ? cause.message : String(cause),
     stack: cause instanceof Error ? cause.stack : undefined,
     gameLog,
+  });
+  // Panel için asgari kayıt: oyun, çöken işlev ve kısaltılmış hata metni. Maç kaydı (eylemler) yazılmaz.
+  rt.stats.gameFailure(rt.clock.now(), {
+    gameId,
+    fn: fault.fn,
+    message: scrubText(cause instanceof Error ? cause.message : String(cause)),
   });
   for (const player of room.players.values()) {
     player.conn?.send(errorMessage("game_failed"));

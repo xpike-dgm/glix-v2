@@ -1,7 +1,9 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { scrubText, toStoredError } from "./errorScrub.js";
 import { log } from "./log.js";
 import type { IpLimiter } from "./ratelimit.js";
 import { SECURITY_HEADERS } from "./static.js";
+import { noopStats, type StatsStore } from "./statsStore.js";
 
 export const CLIENT_ERROR_PATH = "/api/client-error";
 export const MAX_CLIENT_ERROR_BYTES = 4 * 1024;
@@ -16,6 +18,10 @@ export interface ClientErrorEnv {
   allowedOrigins: readonly string[] | null;
   limiter: IpLimiter;
   ip: string;
+  /** Kalıcı kayıt (yönetici paneli); verilmezse yalnız günlük. */
+  stats?: StatsStore;
+  /** Sunucu saati (ms); verilmezse sistem saati. */
+  now?: number;
 }
 
 function reply(res: ServerResponse, status: number, extra: Record<string, string> = {}): void {
@@ -121,7 +127,13 @@ export function handleClientError(req: IncomingMessage, res: ServerResponse, env
       reply(res, 400);
       return;
     }
-    log.warn("client_error", { ...report });
+    // Günlükte de e-posta, IP ve belirteç benzeri diziler maskelenir; uzunluk sınırları doğrulamadakiyle aynı.
+    log.warn("client_error", {
+      ...report,
+      message: scrubText(report.message, 500),
+      ...(report.stack ? { stack: scrubText(report.stack, 2048) } : {}),
+    });
+    (env.stats ?? noopStats).clientError(env.now ?? Date.now(), toStoredError(report));
     reply(res, 204);
   });
 }

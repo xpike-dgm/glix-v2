@@ -132,7 +132,7 @@ export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
-function readCookie(cookieHeader: string | undefined, name: string): string | null {
+export function readCookie(cookieHeader: string | undefined, name: string): string | null {
   if (!cookieHeader) return null;
   for (const part of cookieHeader.split(";")) {
     const eq = part.indexOf("=");
@@ -203,7 +203,7 @@ export interface AuthEnv {
   onRenamed?: (accountId: number, username: string) => void;
 }
 
-function send(
+export function send(
   res: ServerResponse,
   status: number,
   body: unknown,

@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import { defineConfig, type Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import solid from "vite-plugin-solid";
@@ -33,6 +34,11 @@ function emitAssetManifest(): Plugin {
   };
 }
 
+/** `admin.html` girişinin parçası mı (yönetici paneli oyun kabuğundan ayrıdır). */
+function isAdminEntry(facadeModuleId: string | null, name: string): boolean {
+  return name === "admin" || (facadeModuleId?.endsWith("/admin.html") ?? false);
+}
+
 function collectShellChunks(): Plugin {
   return {
     name: "glix-shell-chunks",
@@ -48,8 +54,10 @@ function collectShellChunks(): Plugin {
         seen.add(name);
         for (const dep of chunk.imports) visit(dep);
       };
+      // Yönetici paneli (admin.html) ayrı girişi kabuğa girmez: oyun paketi ve hizmet çalışanı onu bilmez.
       for (const [name, item] of Object.entries(bundle))
-        if (item.type === "chunk" && item.isEntry) visit(name);
+        if (item.type === "chunk" && item.isEntry && !isAdminEntry(item.facadeModuleId, item.name))
+          visit(name);
       for (const name of seen) if (name.includes("/chunks/")) shellChunks.push({ url: name, revision: null });
     },
   };
@@ -77,9 +85,12 @@ export default defineConfig({
           "assets/**/*.{png,webp,jpg,svg}",
           "assets/*latin-*.woff2",
         ],
+        // Yönetici paneli (admin.html, assets/admin-*) oyunun çevrimdışı kabuğuna girmez; `/admin` ağdan okunur.
         // Ruh hâli, maskot, rozet ve oyun nesnesi ve dünya arka planı görselleri kabuğa girmez; ilk kullanımda çalışma anında önbelleğe alınır.
         globIgnores: [
           "**/chunks/**",
+          "**/assets/admin-*",
+          "admin.html",
           "**/assets/avatars/moods/**",
           "**/assets/mascot/**",
           "**/assets/badges/**",
@@ -99,6 +110,8 @@ export default defineConfig({
           /^\/api\//,
           /^\/health(\/|$)/,
           /^\/(gizlilik|kosullar)\.html$/,
+          // Yönetici paneli ayrı sayfadır: hizmet çalışanı /admin gezintisini oyun kabuğuyla yanıtlamaz.
+          /^\/admin/,
         ],
         // Web bildirimleri: `push` ve `notificationclick` işleyicileri public/sw-push.js içinde; oluşturulan sw.js
         // bunu başta `importScripts` ile yükler. Tarayıcı içe aktarılan betikleri de güncelleme denetimine katar
@@ -147,6 +160,11 @@ export default defineConfig({
   build: {
     target: "es2022",
     rollupOptions: {
+      // İki sayfa: oyun (index) ve yönetici paneli (admin; kendi küçük paketi).
+      input: {
+        index: resolve(import.meta.dirname, "index.html"),
+        admin: resolve(import.meta.dirname, "admin.html"),
+      },
       // Tembel parçalar ayrı klasörde: hizmet çalışanı kabuğu (giriş) ile bunları ayırt eder.
       output: { chunkFileNames: "assets/chunks/[name]-[hash].js" },
     },
