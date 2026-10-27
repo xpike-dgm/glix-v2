@@ -109,7 +109,7 @@ describe("rus-ruleti tam maç", () => {
     expect(end.result?.survivors).toEqual(end.alive);
 
     // Elenenler izleyici rolündedir.
-    for (const id of end.eliminated) expect(view(byId.get(id) as Client)).toEqual({ role: "out" });
+    for (const id of end.eliminated) expect(view(byId.get(id) as Client)).toEqual({ role: "out", turn: end.shots, prediction: null, lastResult: null });
     for (const id of end.alive) expect(view(byId.get(id) as Client)).toEqual({ role: "alive" });
   });
 
@@ -132,3 +132,69 @@ describe("rus-ruleti tam maç", () => {
     expect(a.room.players.map((p) => p.score)).toEqual(ids.map((id) => expected[id]));
   });
 });
+
+describe("rus-ruleti tahmini (O9)", () => {
+  it("yalnız elenen tahmin verir; tahmin gizli kalır; rozet yalnız bitişte herkese açılır", async () => {
+    const { cs, ids } = await newMatch(["A", "B", "C", "D", "E", "F"]);
+    const [a] = cs as [Client, ...Client[]];
+    const byId = new Map(cs.map((c) => [c.session.playerId, c] as const));
+
+    // İlk eleme olana (oyun bitmeden) güvenli biçimde ilerle.
+    for (let guard = 0; guard < 120 && pub(a).eliminated.length === 0 && !pub(a).over; guard++) {
+      const p = pub(a);
+      goTo(Math.max(k.clock.now(), p.openAt));
+      await sync();
+      const target = p.alive.find((id) => id !== p.holder) as string;
+      await send(byId.get(p.holder) as Client, { kind: "shoot", target });
+      await until(() => pub(a).shots > p.shots, "atış");
+    }
+    expect(pub(a).eliminated.length).toBeGreaterThan(0);
+    expect(pub(a).over).toBe(false);
+
+    const out = byId.get(pub(a).eliminated[0] as string) as Client;
+    const aliveOne = byId.get(pub(a).alive[0] as string) as Client;
+    const turn = pub(a).shots;
+    // Hayatta olan tahmin veremez.
+    expect(await send(aliveOne, { kind: "predict", turn, explodes: true })).toEqual({
+      ok: false,
+      reason: "alive_cannot_predict",
+    });
+    // Elenen verir; ikinci tahmin ve yanlış sıra reddedilir.
+    expect(await send(out, { kind: "predict", turn: turn + 1, explodes: true })).toEqual({
+      ok: false,
+      reason: "stale_turn",
+    });
+    expect(await send(out, { kind: "predict", turn, explodes: false })).toEqual({ ok: true });
+    expect(await send(out, { kind: "predict", turn, explodes: true })).toEqual({
+      ok: false,
+      reason: "already_predicted",
+    });
+    await until(() => (view(out) as { prediction: unknown }).prediction === false, "tahmin görünümde");
+    expect(view(out)).toMatchObject({ role: "out", turn, prediction: false });
+
+    // Başkalarına tahmin sızmaz: hayatta olanın görünümü ve ortak görünüm değişmez.
+    expect(view(aliveOne)).toEqual({ role: "alive" });
+    for (const c of cs) {
+      expect(JSON.stringify(pub(c))).not.toMatch(/prediction|predict|correct|kahin/i);
+    }
+    if (c0(aliveOne) !== c0(out)) expect(JSON.stringify(aliveOne.msgs.slice(-3))).not.toContain('"prediction":false');
+
+    // Oyun bitene kadar oyna; rozet yalnız bitişte ortak görünümde.
+    for (let guard = 0; guard < 200 && a.room.phase === "playing" && !pub(a).over; guard++) {
+      const p = pub(a);
+      goTo(Math.max(k.clock.now(), p.openAt));
+      await sync();
+      const target = p.alive.find((id) => id !== p.holder) ?? p.holder;
+      await send(byId.get(p.holder) as Client, { kind: "shoot", target });
+      await until(() => pub(a).shots > p.shots || pub(a).over, "atış");
+    }
+    await until(() => a.room.phase === "results", "sonuç");
+    expect(Array.isArray(pub(a).result?.kahinler)).toBe(true);
+    // Puan yalnız hayatta kalmaya bağlıdır; tahmin puan vermez.
+    const end = pub(a);
+    const expected = Object.fromEntries(ids.map((id) => [id, end.alive.includes(id) ? 1 : 0]));
+    expect(a.room.match?.result?.awards).toEqual(expected);
+  });
+});
+
+const c0 = (c: Client): string => c.session.playerId;
