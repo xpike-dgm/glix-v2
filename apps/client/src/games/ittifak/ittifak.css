@@ -456,6 +456,9 @@
   .it__promises-head {
     display: none;
   }
+  .it__seal {
+    display: none;
+  }
   .it__promise-list {
     max-height: 2.1em;
     flex-wrap: nowrap;
