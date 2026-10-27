@@ -11,6 +11,11 @@ import type {
   AdminGameSwitch,
   AdminLive,
   AdminMaintenance,
+  AdminPoolBulk,
+  AdminPoolFilter,
+  AdminPoolPage,
+  AdminPoolSummary,
+  AdminPools,
   AdminReportDetail,
   AdminReportPage,
   AdminRoomPlayers,
@@ -28,6 +33,10 @@ import {
   parseGameList,
   parseLive,
   parseMaintenance,
+  parsePoolBulk,
+  parsePoolPage,
+  parsePoolSummary,
+  parsePools,
   parsePushStatus,
   parseReportDetail,
   parseReportPage,
@@ -268,3 +277,61 @@ export const addBannedWord = (word: string): Promise<ActionResult> =>
   action("banned-words/add", { word }, "Kelime eklendi.");
 export const removeBannedWord = (word: string): Promise<ActionResult> =>
   action("banned-words/remove", { word }, "Kelime silindi.");
+
+// ---- A4: içerik havuzları ---------------------------------------------------------------------------------------
+
+export const fetchPools = (): Promise<Fetched<AdminPools>> => fetched("pools", parsePools);
+export const fetchPoolPage = (
+  pool: string,
+  q: string,
+  filter: AdminPoolFilter,
+  page: number,
+): Promise<Fetched<AdminPoolPage>> => {
+  const qs = new URLSearchParams({ pool, filter, page: String(page) });
+  if (q.trim() !== "") qs.set("q", q.trim());
+  return fetched(`pools/entries?${qs.toString()}`, parsePoolPage);
+};
+
+export type PoolResult = { ok: true; pool: AdminPoolSummary | null } | { ok: false; message: string };
+
+async function poolPost(path: string, body: unknown): Promise<PoolResult> {
+  try {
+    const r = await raw("POST", path, body);
+    if (r.status !== 200) return { ok: false, message: messageOf(r.json, "İşlem yapılamadı.") };
+    const pool =
+      typeof r.json === "object" && r.json !== null
+        ? tryParse(parsePoolSummary, (r.json as { pool?: unknown }).pool)
+        : null;
+    return { ok: true, pool };
+  } catch {
+    return { ok: false, message: NETWORK_ERROR };
+  }
+}
+
+export const togglePoolEntry = (pool: string, key: string, disabled: boolean): Promise<PoolResult> =>
+  poolPost("pools/toggle", { pool, key, disabled });
+export const addPoolEntry = (pool: string, fields: Record<string, string>): Promise<PoolResult> =>
+  poolPost("pools/add", { pool, fields });
+export const editPoolEntry = (
+  pool: string,
+  key: string,
+  fields: Record<string, string>,
+): Promise<PoolResult> => poolPost("pools/edit", { pool, key, fields });
+export const deletePoolEntry = (pool: string, key: string): Promise<PoolResult> =>
+  poolPost("pools/delete", { pool, key });
+
+/** Toplu satırları doğrular (`save` false) ya da geçerli olanları kaydeder (`save` true). */
+export async function sendPoolLines(
+  pool: string,
+  lines: string[],
+  save: boolean,
+): Promise<{ ok: true; data: AdminPoolBulk } | { ok: false; message: string }> {
+  try {
+    const r = await raw("POST", save ? "pools/bulk" : "pools/check", { pool, lines });
+    if (r.status !== 200) return { ok: false, message: messageOf(r.json, "İşlem yapılamadı.") };
+    const data = tryParse(parsePoolBulk, r.json);
+    return data ? { ok: true, data } : { ok: false, message: BAD_REPLY };
+  } catch {
+    return { ok: false, message: NETWORK_ERROR };
+  }
+}

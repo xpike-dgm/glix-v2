@@ -98,3 +98,31 @@ Mevcut adlar kendiliğinden değişmez; "Listeye takılan mevcut hesaplar" salt 
 
 ### İşlem kaydı eylemleri
 `report_status`, `room_view`, `room_close`, `room_kick`, `banned_word_add`, `banned_word_remove`.
+
+## İçerik havuzları (A4)
+**İçerik havuzları** sekmesi: oyunların seçtiği kelime/soru listelerini görür ve düzenlersin. Yapay zekâ içerik üretmez; girdileri yönetici (insan) yazar. Hazır havuz kodda durur (`packages/engine/src/games/<oyun>/pool.ts`).
+
+### Nasıl çalışır
+- Hazır girdi **silinmez, kapatılır** (geri açılır). Yönetici **girdi ekler**, eklediğini düzenler ya da siler. Hazır girdiyi düzenlemek = hazırı kapat + değişen hâlini "Eklenen" olarak ekle.
+- Değişiklikler `content_overrides(pool_id, entry_key, action 'disable'|'add', value JSON, created_at, updated_at)` tablosundadır (anahtar: havuz + girdi anahtarı + eylem; aynı anahtar hem kapalı hazır hem eklenen olabilir).
+- Girdi anahtarı büyük/küçük harf ve aksan duyarsızdır (GÖL = gol). Tekrar denetimi bu anahtarla, hazır açık girdiler ve eklenenler arasında yapılır; Sızma/Karalama çiftlerinde sıra önemsizdir. Her metin alanı yasaklı kelime listesinden (Moderasyon) geçer. Havuz başına en çok 1000 eklenen girdi.
+- **Yeni maçlara uygulanır.** Maç başlarken sunucu etkin havuzu `GameContext.content` ile verir; oyun yalnız `setup` içinde `poolEntries()` ile okur ve seçtiğini durumuna yazar. Süren maç değişmez.
+- **Asgari boy:** etkin girdi sayısı havuzun `min`'inin altındaysa ayar uygulanmaz, oyun hazır havuzla devam eder; panel "Asgarinin altında" uyarısı verir. Hiç değişiklik yapılmamış havuz hiç bağlama konmaz (davranış eskisiyle aynı).
+- **Kayıt/tekrar oynatma:** değiştirilmiş havuzların etkin listesi `GameLog.content`'e yazılır; `replay` aynı listeyi kurar, sonradan yapılan değişiklikler kaydı etkilemez. Değişiklik yoksa alan yoktur.
+
+### Havuzlar
+| Kimlik | Oyun | Girdi | Hazır | Asgari |
+|---|---|---|---|---|
+| `sozluk-blofu/kelimeler` | Sözlük Blöfü | kelime (3-16 harf, tek sözcük) + gerçek tanım (6-100 karakter, kelimeyi içermez) | 87 | 10 |
+| `cagrisim-agi/kelimeler` | Çağrışım Ağı | tek kelime (2-16 harf) | 321 | 10 |
+| `sizma/ciftler` | Sızma | iki farklı kelime (2-16 harf) | 160 | 10 |
+| `karalama-defteri/ciftler` | Karalama Defteri | ana + yakın kelime (3-16 harf, biri ötekini içermez) | 160 | 10 |
+| `laf-sokma/aile`, `/arkadas`, `/ofis` | Laf Sokma | soru (12-90 karakter, "?" ile biter); ton başına ayrı havuz | 110 x 3 | 20 (teknik ihtiyaç 9) |
+
+Havuz olmayanlar: Kendim/Yazı Yaz (kelimeyi oyuncular yazar), Gizli Alışveriş ürün kataloğu (oyun kuralının parçası, metin havuzu değil), botların kelime listeleri (test/bot verisi).
+
+### Ekran
+Havuz seç -> arama (aksan duyarsız), süzgeç (Tümü / Hazır / Eklenen / Kapalı), 25'erli sayfalar; rozetler Hazır / Eklenen / Kapalı. *Girdi ekle* alan şemasına göre form kurar. *Toplu ekle*: her satıra bir girdi (çok alanlıysa `;` ile ayır: `kelime; tanım`), en çok 200 satır; **Önizle** satır satır "Eklenecek / Geçersiz / Zaten var / Yasaklı kelime / Havuz dolu" der, kaydetme yalnız geçerli satırları ekler. Her değiştirici işlem panelde onay ister.
+
+### Uçlar ve işlem kaydı
+GET `pools`, `pools/entries?pool=&q=&filter=&page=`. POST (Origin + işlem hız sınırı + onay + kayıt): `pools/toggle`, `pools/add`, `pools/edit`, `pools/delete`, `pools/bulk`; `pools/check` yazmaz (arama kovası). İşlem kaydı eylemleri: `pool_disable`, `pool_enable`, `pool_add`, `pool_edit`, `pool_delete`, `pool_bulk`; ayrıntıya yalnız havuz kimliği ve girdi anahtarının 8 haneli özeti (toplu: sayılar) yazılır, **girdi metni yazılmaz**.

@@ -29,6 +29,8 @@ import { yaziYaz } from "./yazi-yaz/index.js";
 import { zamanBombasiHafizasi } from "./zaman-bombasi-hafizasi/index.js";
 import { zehirliKadeh } from "./zehirli-kadeh/index.js";
 
+export * from "./content-pools.js";
+
 export const GAMES: Record<string, AnyGame> = {
   [butonaBas.id]: butonaBas,
   [acgozlulukLimiti.id]: acgozlulukLimiti,

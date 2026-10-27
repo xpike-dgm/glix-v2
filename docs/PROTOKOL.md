@@ -101,6 +101,7 @@ gönderilmez; `rev` ve `serverNow` yalnız gönderilen mesajlarda ilerler (istem
   içerik havuzu olan oyunlar (şimdilik Laf Sokma) kullanır, diğerleri yok sayar. Maçlar arası lobiye dönünce korunur.
 - Sunucu tonu maç başında (her oyunun `setup`ında) `GameContext.tone` olarak verir; yalnız `setup` okur.
   Oyun içinde ton değişmez (lobi dışında `setTone` reddedilir).
+- `GameContext.content` (isteğe bağlı, `ContentSet`: havuz kimliği -> etkin girdiler) yalnız yöneticinin değiştirdiği havuzlar için maç başında verilir (yalnız `setup` okur, `poolEntries`); `GameLog.content` olarak kaydedilir ve `replay` aynısını verir. Ağ protokolünde değişiklik yok.
 - `GameLog.tone` kaydedilir; `replay` `setup`ı aynı tonla çağırır, böylece aynı havuz kurulur.
 
 ## Maç kaydı
@@ -340,6 +341,7 @@ Protokol sürümü **artmadı** (2): yalnız yeni mesaj ve değerler eklendi; es
   - `GET rooms/players?code=` -> `{code, phase, players:[{id, nickname, connected, spectator, host, account}]}`: görünen adların göründüğü tek uç; her başarılı çağrı `room_view` (oda kodu) yazar. 404 oda yok.
   - `POST rooms/close {code}` (herkese ve TV'ye `left: adminClosed`, süren maç hesap istatistiği/rozet yazılmadan biter; kayıt `room_close`), `POST rooms/kick {code, playerId}` (`left: removed`, 10 dk giriş engeli; kayıt `room_kick`). Canlı durum tablosunda oyuncu adı hâlâ yoktur.
   - `GET banned-words` -> `{words:[{word, addedAt}], max: 500}`; `POST banned-words/add {word}` (1-40 karakter, normalleşince ≥2 harf; 409 `exists`/`full`), `POST banned-words/remove {word}` (404 yok); kayıt `banned_word_add|remove`. `GET banned-words/accounts` -> listeye takılan mevcut hesaplar (en çok 50, salt okunur).
+  - `GET pools` -> `{pools: AdminPoolSummary[], customMax}`; `GET pools/entries?pool=&q=&filter=all|builtin|custom|disabled&page=` -> `AdminPoolPage`; `POST pools/toggle {pool,key,disabled}`, `pools/add {pool,fields}`, `pools/edit {pool,key,fields}`, `pools/delete {pool,key}`, `pools/check|bulk {pool,lines[≤200]}` -> `AdminPoolBulk`. Kayıt: `pool_*` (girdi metni yazılmaz). Ayrıntı: `docs/ADMIN.md` "İçerik havuzları".
 
 ## Sınırlar (sunucu)
 

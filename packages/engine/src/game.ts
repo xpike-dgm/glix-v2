@@ -1,3 +1,4 @@
+import type { ContentSet } from "./content.js";
 import type { Rng } from "./rng.js";
 
 /** Odanın içerik tonu: oyunların metin havuzlarını (soru, konu) seçmesi için. Host lobide seçer. */
@@ -32,6 +33,11 @@ export interface GameContext {
    * Tonu önemsemeyen oyun yok sayar; verilmediyse (eski kayıt, test) oyun kendi varsayılanını kullanır.
    */
   tone?: ContentTone;
+  /**
+   * Yöneticinin değiştirdiği içerik havuzları (kimlik -> etkin girdiler). Yalnız `setup` okur (`poolEntries`);
+   * oyun seçtiği girdiyi durumuna yazar. Verilmezse ya da havuz yoksa yerleşik havuz kullanılır. `GameLog.content`'e yazılır.
+   */
+  content?: ContentSet;
 }
 
 export interface Rejected {
@@ -137,6 +143,8 @@ export interface GameLog {
   presence: { t: number; playerId: string; connected: boolean }[];
   /** `setup`a verilen oda tonu; yoksa (eski kayıt) `setup` tonsuz çağrılır. */
   tone?: ContentTone;
+  /** `setup`a verilen içerik havuzları; yoksa yerleşik havuzlar. `replay` aynısını verir. */
+  content?: ContentSet;
   /** Eylem sınırı aşıldığı için kayıt eksik: `replay` bu kaydı reddeder. */
   truncated?: boolean;
 }

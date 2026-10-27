@@ -11,6 +11,7 @@ import type {
 import type { AccountStatsRecorder } from "./accountStats.js";
 import type { Broadcaster } from "./broadcast.js";
 import type { Cancel, Clock } from "./clock.js";
+import type { ContentStore } from "./contentStore.js";
 import type { Match } from "./match.js";
 import type { Metrics } from "./metrics.js";
 import type { BannedWords, ReportDesk, RoomKicks } from "./moderation.js";
@@ -143,6 +144,8 @@ export interface Runtime {
   announcement: Announcement | null;
   /** Yönetici yasaklı kelime listesi (ad denetimi); testlerde varsayılan hiçbir şeyi engellemez. */
   bannedWords: BannedWords;
+  /** İçerik havuzu değişiklikleri (A4); yeni maçların `setup` bağlamına verilir. Testlerde varsayılan hiçbir şeyi değiştirmez. */
+  content: ContentStore;
   /** Oyuncu bildirimi kabulü; sunucu kurulurken bağlanır. */
   reports: ReportDesk;
   /** Yönetici atmasından sonra odaya girme engeli (10 dk). */

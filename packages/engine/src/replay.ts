@@ -1,3 +1,4 @@
+import type { ContentSet } from "./content.js";
 import {
   type AnyGame,
   type ContentTone,
@@ -23,6 +24,7 @@ export class GameRecorder {
   private readonly actions: GameLog["actions"] = [];
   private readonly presenceLog: GameLog["presence"] = [];
   private readonly players: string[];
+  private readonly content?: ContentSet;
 
   constructor(
     private readonly gameId: string,
@@ -30,8 +32,11 @@ export class GameRecorder {
     players: readonly string[],
     private readonly startedAt: number,
     private readonly tone?: ContentTone,
+    content?: ContentSet,
   ) {
     this.players = [...players];
+    // Kayıt, sunucunun sonradan değiştirebileceği nesneye bağlı kalmasın.
+    if (content !== undefined) this.content = JSON.parse(JSON.stringify(content)) as ContentSet;
   }
 
   record(t: number, playerId: string, action: unknown): void {
@@ -67,6 +72,7 @@ export class GameRecorder {
       endedAt,
       presence: this.presenceLog.map((p) => ({ ...p })),
       ...(this.tone !== undefined ? { tone: this.tone } : {}),
+      ...(this.content !== undefined ? { content: this.content } : {}),
       ...(this.truncated ? { truncated: true } : {}),
     };
   }
@@ -97,6 +103,7 @@ export function replay(game: AnyGame, log: GameLog): GameResult {
   let state = game.setup(log.players, {
     ...ctxAt(log.startedAt),
     ...(log.tone !== undefined ? { tone: log.tone } : {}),
+    ...(log.content !== undefined ? { content: log.content } : {}),
   });
   for (const entry of log.actions) {
     state = game.tick(state, ctxAt(entry.t));

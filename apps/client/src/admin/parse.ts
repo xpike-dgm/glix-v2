@@ -24,6 +24,11 @@ import type {
   AdminMailDay,
   AdminMaintenance,
   AdminPerfRow,
+  AdminPoolBulk,
+  AdminPoolEntry,
+  AdminPoolPage,
+  AdminPoolSummary,
+  AdminPools,
   AdminRelease,
   AdminReportDetail,
   AdminReportPage,
@@ -529,4 +534,105 @@ export function parseState(v: unknown): "need_otp" | "ready" | null {
   if (typeof v !== "object" || v === null) return null;
   const s = (v as { state?: unknown }).state;
   return s === "need_otp" || s === "ready" ? s : null;
+}
+
+// ---- A4: içerik havuzları ------------------------------------------------------------------------------------------
+
+function fieldValues(o: Rec, k: string): Record<string, string> {
+  const r = rec(o[k]);
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(r)) {
+    if (typeof value !== "string") throw new ParseError(`${k}.${key}: metin bekleniyordu`);
+    out[key] = value;
+  }
+  return out;
+}
+
+function poolSummary(o: Rec): AdminPoolSummary {
+  return {
+    id: str(o, "id"),
+    gameId: str(o, "gameId"),
+    gameName: str(o, "gameName"),
+    label: str(o, "label"),
+    hint: str(o, "hint"),
+    fields: list(
+      o,
+      "fields",
+      (f) => ({
+        key: str(f, "key"),
+        label: str(f, "label"),
+        hint: str(f, "hint"),
+        min: num(f, "min"),
+        max: num(f, "max"),
+        long: bool(f, "long"),
+      }),
+      8,
+    ),
+    min: num(o, "min"),
+    needed: num(o, "needed"),
+    builtin: num(o, "builtin"),
+    custom: num(o, "custom"),
+    disabled: num(o, "disabled"),
+    active: num(o, "active"),
+    applied: bool(o, "applied"),
+    belowMin: bool(o, "belowMin"),
+  };
+}
+
+export function parsePools(v: unknown): AdminPools {
+  const o = rec(v);
+  return { pools: list(o, "pools", poolSummary, 50), customMax: num(o, "customMax") };
+}
+
+export const parsePoolSummary = (v: unknown): AdminPoolSummary => poolSummary(rec(v));
+
+export function parsePoolPage(v: unknown): AdminPoolPage {
+  const o = rec(v);
+  return {
+    pool: poolSummary(rec(o.pool)),
+    entries: list(
+      o,
+      "entries",
+      (e): AdminPoolEntry => {
+        const source = str(e, "source");
+        if (source !== "builtin" && source !== "custom") throw new ParseError("source: geçersiz");
+        return {
+          key: str(e, "key"),
+          source,
+          disabled: bool(e, "disabled"),
+          fields: fieldValues(e, "fields"),
+        };
+      },
+      200,
+    ),
+    total: num(o, "total"),
+    page: num(o, "page"),
+    pageSize: num(o, "pageSize"),
+  };
+}
+
+const LINE_STATUSES = ["ok", "invalid", "duplicate", "banned", "full"] as const;
+
+export function parsePoolBulk(v: unknown): AdminPoolBulk {
+  const o = rec(v);
+  return {
+    lines: list(
+      o,
+      "lines",
+      (l) => {
+        const status = str(l, "status");
+        if (!(LINE_STATUSES as readonly string[]).includes(status)) throw new ParseError("status: geçersiz");
+        return {
+          line: num(l, "line"),
+          status: status as (typeof LINE_STATUSES)[number],
+          message: str(l, "message"),
+          fields: fieldValues(l, "fields"),
+        };
+      },
+      300,
+    ),
+    ok: num(o, "ok"),
+    added: num(o, "added"),
+    pool: poolSummary(rec(o.pool)),
+  };
 }

@@ -1,6 +1,8 @@
+import { poolEntries } from "../../content.js";
 import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
 import { rankAwards } from "../scoring.js";
 import { foldKey } from "../text.js";
+import { CAGRISIM_POOL } from "./pool.js";
 import {
   CAGRISIM_ANSWER_MS,
   CAGRISIM_LOCK_GRACE_MS,
@@ -15,6 +17,7 @@ import {
 } from "./types.js";
 import { CAGRISIM_WORDS } from "./words.js";
 
+export { CAGRISIM_POOL } from "./pool.js";
 export * from "./types.js";
 export { CAGRISIM_WORDS } from "./words.js";
 
@@ -95,9 +98,10 @@ export const cagrisimAgi: GameDefinition<
   },
 
   setup(players: readonly string[], ctx: GameContext): CagrisimAgiState {
+    const pool = poolEntries(CAGRISIM_POOL, ctx.content);
     return {
       players: [...players],
-      word: CAGRISIM_WORDS[ctx.rng.int(CAGRISIM_WORDS.length)] as string,
+      word: pool[ctx.rng.int(pool.length)] as string,
       startedAt: ctx.now,
       answerEndsAt: ctx.now + CAGRISIM_ANSWER_MS,
       endsAt: ctx.now + CAGRISIM_TOTAL_MS,

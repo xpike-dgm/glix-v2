@@ -17,6 +17,7 @@ import {
   type AdminContent,
   type AdminLive,
   type AdminMaintenance,
+  type AdminPoolFilter,
   type AdminReportDetail,
   type AdminReportPage,
   type AdminReportRow,
@@ -55,6 +56,14 @@ import {
 } from "./auth.js";
 import { BACKUP_FRESH_MS, BACKUP_PER_DAY, type BackupService } from "./backup.js";
 import type { Clock } from "./clock.js";
+import {
+  BULK_MAX_LINE_LENGTH,
+  BULK_MAX_LINES,
+  CONTENT_CUSTOM_MAX,
+  type ContentStore,
+  entryTag,
+  POOL_PAGE_SIZE,
+} from "./contentStore.js";
 import type { GoogleAuth } from "./google.js";
 import { confirmMatches } from "./kvkk.js";
 import { log } from "./log.js";
@@ -139,6 +148,8 @@ export interface AdminEnv {
   rooms: AdminRoomOps;
   /** A4: yasaklı kelime listesi. */
   banned: BannedWords;
+  /** A4: içerik havuzları (kelime/soru listeleri). */
+  content: ContentStore;
   /** Bu sunucu sürecinin başlangıç kaydı (`server_starts`); kayıt yazılamadıysa null. */
   runId: number | null;
 }
@@ -246,6 +257,12 @@ const POST_ROUTES: ReadonlySet<string> = new Set([
   "rooms/kick",
   "banned-words/add",
   "banned-words/remove",
+  "pools/toggle",
+  "pools/add",
+  "pools/edit",
+  "pools/delete",
+  "pools/check",
+  "pools/bulk",
 ]);
 const GET_ROUTES: ReadonlySet<string> = new Set([
   "status",
@@ -264,6 +281,8 @@ const GET_ROUTES: ReadonlySet<string> = new Set([
   "rooms/players",
   "banned-words",
   "banned-words/accounts",
+  "pools",
+  "pools/entries",
 ]);
 
 async function route(req: IncomingMessage, res: ServerResponse, env: AdminEnv): Promise<void> {
@@ -352,6 +371,17 @@ async function route(req: IncomingMessage, res: ServerResponse, env: AdminEnv): 
       return send(res, 200, bannedBody(env));
     case "banned-words/accounts":
       return bannedAccounts(res, env, account.id);
+    case "pools":
+      return send(res, 200, { pools: env.content.summaries(), customMax: CONTENT_CUSTOM_MAX });
+    case "pools/entries":
+      return poolEntries(res, env, account.id, url.searchParams);
+    case "pools/toggle":
+    case "pools/add":
+    case "pools/edit":
+    case "pools/delete":
+    case "pools/check":
+    case "pools/bulk":
+      return poolAction(req, res, env, account.id, name);
     case "reports/status":
     case "rooms/close":
     case "rooms/kick":
@@ -1108,6 +1138,167 @@ async function moderationAction(
       if (!env.banned.remove(input.word)) return fail(res, 404, "not_found", "Kelime listede yok.");
       audit(env, adminId, "banned_word_remove", input.word.trim().slice(0, 40));
       return send(res, 200, { ok: true, ...bannedBody(env) });
+    }
+  }
+}
+
+// ---- A4: içerik havuzları -----------------------------------------------------------------------------------------
+
+const POOL_FILTERS: readonly AdminPoolFilter[] = ["all", "builtin", "custom", "disabled"];
+const MAX_POOL_BODY_BYTES = 2048;
+/** Toplu doğrulama/ekleme gövdesi: 200 satır x 300 karakter (UTF-8 en çok 4 bayt/karakter için pay dahil). */
+const MAX_POOL_BULK_BODY_BYTES = BULK_MAX_LINES * BULK_MAX_LINE_LENGTH * 2 + 1024;
+
+async function poolEntries(
+  res: ServerResponse,
+  env: AdminEnv,
+  adminId: number,
+  q: URLSearchParams,
+): Promise<void> {
+  const poolId = q.get("pool") ?? "";
+  const filter = q.get("filter") ?? "all";
+  const text = q.get("q") ?? "";
+  const rawPage = q.get("page");
+  const page = rawPage === null ? 1 : parseId(rawPage);
+  if (
+    poolId === "" ||
+    poolId.length > 64 ||
+    !(POOL_FILTERS as readonly string[]).includes(filter) ||
+    text.length > 80 ||
+    page === null
+  )
+    return fail(res, 400, "invalid_input", "Geçersiz istek.");
+  if (!env.limits.search(adminId)) return fail(res, 429, "rate_limited", "Biraz bekleyip tekrar dene.");
+  const body = env.content.page(poolId, text, filter as AdminPoolFilter, page);
+  if (!body) return fail(res, 404, "not_found", "Havuz bulunamadı.");
+  send(res, 200, body);
+}
+
+type PoolInput =
+  | { op: "pools/toggle"; pool: string; key: string; disabled: boolean }
+  | { op: "pools/add"; pool: string; fields: Record<string, string> }
+  | { op: "pools/edit"; pool: string; key: string; fields: Record<string, string> }
+  | { op: "pools/delete"; pool: string; key: string }
+  | { op: "pools/check" | "pools/bulk"; pool: string; lines: string[] };
+
+const isPoolId = (v: unknown): v is string =>
+  typeof v === "string" && /^[a-z0-9-]+\/[a-z0-9-]+$/.test(v) && v.length <= 64;
+const isEntryKey = (v: unknown): v is string => typeof v === "string" && v.length > 0 && v.length <= 200;
+
+function parseFieldValues(v: unknown): Record<string, string> | null {
+  if (!isRecord(v)) return null;
+  const keys = Object.keys(v);
+  if (keys.length === 0 || keys.length > 4) return null;
+  const out: Record<string, string> = {};
+  for (const k of keys) {
+    const value = v[k];
+    if (typeof value !== "string" || value.length > 1000 || !/^[a-z]{1,12}$/.test(k)) return null;
+    out[k] = value;
+  }
+  return out;
+}
+
+/** Havuz işlem gövdesi doğrulaması; geçersizse null. */
+export function parsePoolInput(op: PoolInput["op"], data: unknown): PoolInput | null {
+  if (!isRecord(data) || !isPoolId(data.pool)) return null;
+  const pool = data.pool;
+  switch (op) {
+    case "pools/toggle":
+      if (
+        !exactKeys(data, ["pool", "key", "disabled"]) ||
+        !isEntryKey(data.key) ||
+        typeof data.disabled !== "boolean"
+      )
+        return null;
+      return { op, pool, key: data.key, disabled: data.disabled };
+    case "pools/add": {
+      if (!exactKeys(data, ["pool", "fields"])) return null;
+      const fields = parseFieldValues(data.fields);
+      return fields === null ? null : { op, pool, fields };
+    }
+    case "pools/edit": {
+      if (!exactKeys(data, ["pool", "key", "fields"]) || !isEntryKey(data.key)) return null;
+      const fields = parseFieldValues(data.fields);
+      return fields === null ? null : { op, pool, key: data.key, fields };
+    }
+    case "pools/delete":
+      return exactKeys(data, ["pool", "key"]) && isEntryKey(data.key) ? { op, pool, key: data.key } : null;
+    case "pools/check":
+    case "pools/bulk": {
+      if (!exactKeys(data, ["pool", "lines"]) || !Array.isArray(data.lines)) return null;
+      if (data.lines.length === 0 || data.lines.length > BULK_MAX_LINES) return null;
+      const lines: string[] = [];
+      for (const l of data.lines) {
+        if (typeof l !== "string" || l.length > BULK_MAX_LINE_LENGTH * 4) return null;
+        lines.push(l);
+      }
+      return { op, pool, lines };
+    }
+  }
+}
+
+const POOL_STATUS: Record<string, number> = {
+  unknown_pool: 404,
+  not_found: 404,
+  invalid: 400,
+  banned: 400,
+  exists: 409,
+  full: 409,
+  unchanged: 409,
+  builtin: 400,
+};
+
+async function poolAction(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: AdminEnv,
+  adminId: number,
+  name: string,
+): Promise<void> {
+  const op = name as PoolInput["op"];
+  const bulk = op === "pools/check" || op === "pools/bulk";
+  // Doğrulama (yazmaz) arama kovasını, değiştiren işlemler işlem kovasını kullanır.
+  const allowed = op === "pools/check" ? env.limits.search(adminId) : env.limits.action(adminId);
+  if (!allowed) return fail(res, 429, "rate_limited", "Biraz bekleyip tekrar dene.");
+  const input = parsePoolInput(
+    op,
+    await readJson(req, bulk ? MAX_POOL_BULK_BODY_BYTES : MAX_POOL_BODY_BYTES),
+  );
+  if (!input) return fail(res, 400, "invalid_input", "Geçersiz istek.");
+  const done = (
+    r: { ok: true; id: string } | { ok: false; code: string; message: string },
+    action: string,
+    extra = "",
+  ): void => {
+    if (!r.ok) {
+      fail(res, POOL_STATUS[r.code] ?? 400, r.code, r.message);
+      return;
+    }
+    // Girdi metni işlem kaydına yazılmaz: havuz kimliği ve girdinin kısa özeti.
+    audit(env, adminId, action, `${input.pool}:${r.id}${extra}`);
+    send(res, 200, { ok: true, pool: env.content.summary(input.pool) });
+  };
+  switch (input.op) {
+    case "pools/toggle":
+      return done(
+        env.content.toggle(input.pool, input.key, input.disabled, env.now),
+        input.disabled ? "pool_disable" : "pool_enable",
+      );
+    case "pools/add":
+      return done(env.content.add(input.pool, input.fields, env.now), "pool_add");
+    case "pools/edit":
+      return done(env.content.edit(input.pool, input.key, input.fields, env.now), "pool_edit");
+    case "pools/delete":
+      return done(env.content.remove(input.pool, input.key), "pool_delete");
+    case "pools/check": {
+      const r = env.content.check(input.pool, input.lines);
+      return r ? send(res, 200, r) : fail(res, 404, "not_found", "Havuz bulunamadı.");
+    }
+    case "pools/bulk": {
+      const r = env.content.bulk(input.pool, input.lines, env.now);
+      if (!r) return fail(res, 404, "not_found", "Havuz bulunamadı.");
+      audit(env, adminId, "pool_bulk", `${input.pool}:added=${r.added}:skipped=${r.lines.length - r.ok}`);
+      return send(res, 200, r);
     }
   }
 }

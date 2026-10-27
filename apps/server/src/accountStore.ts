@@ -229,6 +229,20 @@ export interface ReportRow extends NewReport {
   reviewedAt: number | null;
 }
 
+export type ContentOverrideAction = "disable" | "add";
+export interface ContentOverrideRow {
+  poolId: string;
+  key: string;
+  action: ContentOverrideAction;
+  /** `add` için girdinin JSON'u; `disable` için null. */
+  value: string | null;
+  createdAt: number;
+  updatedAt: number;
+}
+export type ContentOverrideOp =
+  | { op: "put"; poolId: string; key: string; action: ContentOverrideAction; value: string | null }
+  | { op: "delete"; poolId: string; key: string; action: ContentOverrideAction };
+
 export interface BannedWordRow {
   word: string;
   folded: string;
@@ -358,6 +372,17 @@ export interface AccountStore extends FriendStore {
   /** `full`: üst sınır dolu; `exists`: normalleşmiş hâli zaten listede. */
   bannedWordAdd(word: string, folded: string, now: number, max: number): "ok" | "exists" | "full";
   bannedWordRemove(folded: string): boolean;
+  /** İçerik havuzu değişiklikleri (eskiden yeniye). */
+  contentOverrides(): ContentOverrideRow[];
+  /** Satırı yazar (aynı havuz+anahtar+eylem varsa değerini ve güncelleme zamanını yeniler). */
+  contentOverridePut(
+    row: { poolId: string; key: string; action: ContentOverrideAction; value: string | null },
+    now: number,
+  ): void;
+  /** Satırı siler; yoksa false. */
+  contentOverrideDelete(poolId: string, key: string, action: ContentOverrideAction): boolean;
+  /** Birden çok yazma/silmeyi tek işlemde yapar (toplu ekleme, düzenleme). */
+  contentOverrideBatch(ops: ContentOverrideOp[], now: number): void;
   /** Hesapları kimlik sırasıyla tarar (listeye takılan mevcut hesaplar yardımcısı için): `afterId`'den büyük ilk `limit`. */
   scanUsernames(afterId: number, limit: number): { id: number; username: string }[];
   /** Kullanıcı adı önekiyle ya da tam e-postayla arama (en çok `ADMIN_SEARCH_LIMIT`); satırlarda e-posta yoktur. */
@@ -594,6 +619,17 @@ const MIGRATIONS: readonly string[] = [
      folded TEXT PRIMARY KEY,
      word TEXT NOT NULL,
      added_at INTEGER NOT NULL
+   );`,
+  // İçerik havuzu değişiklikleri (A4): yerleşik girdiyi kapatma ('disable') ve yönetici girdisi ('add').
+  // Aynı anahtar hem kapatılmış yerleşik hem eklenen girdi olabilir (düzenleme), bu yüzden anahtar üçlüdür.
+  `CREATE TABLE content_overrides (
+     pool_id TEXT NOT NULL,
+     entry_key TEXT NOT NULL,
+     action TEXT NOT NULL CHECK (action IN ('disable', 'add')),
+     value TEXT,
+     created_at INTEGER NOT NULL,
+     updated_at INTEGER NOT NULL,
+     PRIMARY KEY (pool_id, entry_key, action)
    );`,
 ];
 
@@ -991,6 +1027,17 @@ export function createAccounts(path: string): AccountStore {
     "INSERT OR IGNORE INTO banned_words (folded, word, added_at) VALUES (?, ?, ?)",
   );
   const bannedDelete = db.prepare("DELETE FROM banned_words WHERE folded = ?");
+  const contentList = db.prepare(
+    "SELECT pool_id, entry_key, action, value, created_at, updated_at FROM content_overrides ORDER BY created_at, rowid",
+  );
+  const contentPut = db.prepare(
+    `INSERT INTO content_overrides (pool_id, entry_key, action, value, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT (pool_id, entry_key, action) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+  );
+  const contentDelete = db.prepare(
+    "DELETE FROM content_overrides WHERE pool_id = ? AND entry_key = ? AND action = ?",
+  );
   const usernameScan = db.prepare("SELECT id, username FROM accounts WHERE id > ? ORDER BY id LIMIT ?");
   const metricTotals = db.prepare(
     `SELECT COUNT(*) AS total, COALESCE(SUM(email_verified), 0) AS verified,
@@ -1537,6 +1584,39 @@ export function createAccounts(path: string): AccountStore {
     },
     bannedWordRemove(folded) {
       return Number(bannedDelete.run(folded).changes) === 1;
+    },
+    contentOverrides() {
+      return (
+        contentList.all() as unknown as {
+          pool_id: string;
+          entry_key: string;
+          action: ContentOverrideAction;
+          value: string | null;
+          created_at: number;
+          updated_at: number;
+        }[]
+      ).map((r) => ({
+        poolId: r.pool_id,
+        key: r.entry_key,
+        action: r.action,
+        value: r.value,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
+      }));
+    },
+    contentOverridePut(row, now) {
+      contentPut.run(row.poolId, row.key, row.action, row.value, now, now);
+    },
+    contentOverrideDelete(poolId, key, action) {
+      return Number(contentDelete.run(poolId, key, action).changes) === 1;
+    },
+    contentOverrideBatch(ops, now) {
+      inTransaction(() => {
+        for (const o of ops) {
+          if (o.op === "put") contentPut.run(o.poolId, o.key, o.action, o.value, now, now);
+          else contentDelete.run(o.poolId, o.key, o.action);
+        }
+      });
     },
     scanUsernames(afterId, limit) {
       return usernameScan.all(afterId, limit) as unknown as { id: number; username: string }[];
