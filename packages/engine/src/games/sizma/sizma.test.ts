@@ -5,6 +5,7 @@ import { sizma, sizmaOutcome } from "./index.js";
 import {
   SIZMA_CLUE_CAP_MS,
   SIZMA_MAX_DURATION_MS,
+  SIZMA_NOTICE_MS,
   SIZMA_REVEAL_MS,
   SIZMA_VOTE_MS,
   type SizmaPublicView,
@@ -47,6 +48,7 @@ function rej(s: S, id: string, action: unknown, at: number, connected: readonly 
 
 const VOTE_AT = T0 + SIZMA_CLUE_CAP_MS + 1_000;
 const VOTE_END = T0 + SIZMA_CLUE_CAP_MS + SIZMA_VOTE_MS;
+const NOTICE_END = VOTE_END + SIZMA_NOTICE_MS;
 const vote = (s: S, from: string, to: string, at = VOTE_AT, connected?: readonly string[]) =>
   ok(s, from, { kind: "vote", target: to }, at, connected);
 const cast = (players: string[], infiltrator: string, edges: [string, string][]): S => {
@@ -65,12 +67,14 @@ describe("sızma meta ve kurulum", () => {
     expect(JSON.stringify(sizma.briefing)).not.toMatch(/protocol|server|debug|stage/i);
   });
 
-  it("süreler: 5 dk teknik tavan, 30 sn oylama", () => {
+  it("süreler: 5 dk teknik tavan, 30 sn oylama, 8 sn fark ettin mi", () => {
+    expect(SIZMA_NOTICE_MS).toBe(8_000);
     expect(SIZMA_CLUE_CAP_MS).toBe(300_000);
     expect(SIZMA_VOTE_MS).toBe(30_000);
     const s = sizma.setup(["a", "b", "c"], ctx(T0));
     expect(s.clueEndsAt).toBe(T0 + 300_000);
     expect(s.voteEndsAt).toBe(T0 + 330_000);
+    expect(s.noticeEndsAt).toBe(T0 + 338_000);
     expect(s.finishAt).toBe(T0 + SIZMA_MAX_DURATION_MS);
   });
 
@@ -153,11 +157,15 @@ describe("sızma ipucu aşaması (süresiz)", () => {
     const voting = tick(s, T0 + SIZMA_CLUE_CAP_MS);
     expect(voting).not.toBe(s);
     expect(tick(voting, VOTE_END - 1)).toBe(voting);
-    const done = tick(voting, VOTE_END);
-    expect(done).not.toBe(voting);
-    expect(tick(done, VOTE_END + 99_999)).toBe(done);
+    const noticing = tick(voting, VOTE_END);
+    expect(noticing).not.toBe(voting);
+    expect(noticing.stage).toBe("notice");
+    expect(tick(noticing, NOTICE_END - 1)).toBe(noticing);
+    const done = tick(noticing, NOTICE_END);
+    expect(done).not.toBe(noticing);
+    expect(tick(done, NOTICE_END + 99_999)).toBe(done);
     // Seyrek tick: ipucundan doğrudan açılışa atlayabilir.
-    expect(tick(s, VOTE_END + 5).stage).toBe("reveal");
+    expect(tick(s, NOTICE_END + 5).stage).toBe("reveal");
   });
 
   it("ipucu aşamasında oy ve Tamam reddedilir", () => {
@@ -177,7 +185,9 @@ describe("sızma ipucu aşaması (süresiz)", () => {
     expect(pub(s, T0 + 20_999).phase).toBe("clue");
     expect(pub(s, T0 + 21_000).phase).toBe("vote");
     expect(pub(s, T0 + 21_000).voteEndsAt).toBe(T0 + 21_000 + SIZMA_VOTE_MS);
-    expect(pub(s, T0 + 21_000).finishAt).toBe(T0 + 21_000 + SIZMA_VOTE_MS + SIZMA_REVEAL_MS);
+    expect(pub(s, T0 + 21_000).finishAt).toBe(
+      T0 + 21_000 + SIZMA_VOTE_MS + SIZMA_NOTICE_MS + SIZMA_REVEAL_MS,
+    );
     expect(rej(s, "a", { kind: "vote", target: "b" }, T0 + 21_000)).toBeNull();
   });
 
@@ -393,7 +403,9 @@ describe("sızma sonuç açılışı", () => {
   ]);
 
   it("oylama bitince tick'ten sonra sızma, kelimeler, oy akışı ve puanlar herkese açılır", () => {
-    const p = pub(s, VOTE_END);
+    expect(pub(s, VOTE_END).phase).toBe("notice");
+    expect(pub(s, VOTE_END).reveal).toBeNull();
+    const p = pub(s, NOTICE_END);
     expect(p.phase).toBe("reveal");
     expect(p.reveal?.infiltrator).toBe("c");
     expect(p.reveal?.commonWord).toBe("ÇAY");
@@ -405,13 +417,13 @@ describe("sızma sonuç açılışı", () => {
   });
 
   it("tick atılmadan açılış görünmez (aşama sunucu yayınıyla değişir)", () => {
-    expect(sizma.publicView(s, ctx(VOTE_END, s.players)).reveal).toBeNull();
+    expect(sizma.publicView(s, ctx(NOTICE_END, s.players)).reveal).toBeNull();
   });
 
   it("açılış süresi dolana kadar bitmez", () => {
     expect(sizma.isFinished(s, ctx(VOTE_END))).toBe(false);
-    expect(sizma.isFinished(s, ctx(VOTE_END + SIZMA_REVEAL_MS - 1))).toBe(false);
-    expect(sizma.isFinished(s, ctx(VOTE_END + SIZMA_REVEAL_MS))).toBe(true);
+    expect(sizma.isFinished(s, ctx(NOTICE_END + SIZMA_REVEAL_MS - 1))).toBe(false);
+    expect(sizma.isFinished(s, ctx(NOTICE_END + SIZMA_REVEAL_MS))).toBe(true);
   });
 });
 
@@ -430,9 +442,9 @@ describe("sızma gizlilik (sızma kimliği kısa; yapısal kontrol)", () => {
     }
   });
 
-  it("view yalnız word, myVote ve locked verir; kimse sızma olduğunu görmez", () => {
+  it("view yalnız word, myVote, myNotice ve locked verir; kimse sızma olduğunu görmez", () => {
     for (const who of players) {
-      expect(Object.keys(priv(A, who, VOTE_AT)).sort()).toEqual(["locked", "myVote", "word"]);
+      expect(Object.keys(priv(A, who, VOTE_AT)).sort()).toEqual(["locked", "myNotice", "myVote", "word"]);
     }
     // Sızma farklı kelimeyi görür ama bunun "sızma kelimesi" olduğu belirtilmez: görünüm biçimi aynıdır.
     expect(Object.keys(priv(A, "pc3", VOTE_AT))).toEqual(Object.keys(priv(A, "pa1", VOTE_AT)));
@@ -453,7 +465,7 @@ describe("sızma gizlilik (sızma kimliği kısa; yapısal kontrol)", () => {
     const odd = secrets.find((x) => x.value === "KAHVE");
     expect(common?.ownerIds).toEqual(["pa1", "pb2", "pd4"]);
     expect(odd?.ownerIds).toEqual(["pc3"]);
-    expect(sizma.secrets(tick(A, VOTE_END))).toEqual([]);
+    expect(sizma.secrets(tick(A, NOTICE_END))).toEqual([]);
   });
 
   it("çok kısa kelimeler (2 harf) secrets()'a girmez ama görünümlerde yine yalnız sahibine gider", () => {
@@ -480,7 +492,7 @@ describe("sızma gizlilik (sızma kimliği kısa; yapısal kontrol)", () => {
     const p = pub(s, VOTE_AT + 600);
     expect(p.ready).toEqual(["pa1"]);
     expect(JSON.stringify(p)).not.toMatch(/votes|tally|myVote/);
-    expect(priv(s, "pb2", VOTE_AT + 600)).toEqual({ word: "ÇAY", myVote: null, locked: false });
+    expect(priv(s, "pb2", VOTE_AT + 600)).toEqual({ word: "ÇAY", myVote: null, myNotice: null, locked: false });
   });
 });
 
@@ -496,10 +508,12 @@ describe("sızma erken bitiş: oylamada Tamam", () => {
     for (const id of P) s = ok(s, id, { kind: "lock" }, VOTE_AT + 2_000);
     expect(s.voteEndsAt).toBe(VOTE_AT + 3_000);
     expect(pub(s, VOTE_AT + 2_999).phase).toBe("vote");
-    expect(pub(s, VOTE_AT + 3_000).phase).toBe("reveal");
-    expect(pub(s, VOTE_AT + 3_000).reveal?.scores).toEqual({ a: 1, b: 1, c: 0 });
-    expect(sizma.isFinished(s, ctx(VOTE_AT + 3_000 + SIZMA_REVEAL_MS - 1, P))).toBe(false);
-    expect(sizma.isFinished(s, ctx(VOTE_AT + 3_000 + SIZMA_REVEAL_MS, P))).toBe(true);
+    expect(pub(s, VOTE_AT + 3_000).phase).toBe("notice");
+    const ne = VOTE_AT + 3_000 + SIZMA_NOTICE_MS;
+    expect(pub(s, ne).phase).toBe("reveal");
+    expect(pub(s, ne).reveal?.scores).toEqual({ a: 1, b: 1, c: 0 });
+    expect(sizma.isFinished(s, ctx(ne + SIZMA_REVEAL_MS - 1, P))).toBe(false);
+    expect(sizma.isFinished(s, ctx(ne + SIZMA_REVEAL_MS, P))).toBe(true);
     expect(sizma.result(s).awards).toEqual({ a: 1, b: 1, c: 0 });
   });
 
@@ -565,6 +579,197 @@ describe("sızma erken bitiş: oylamada Tamam", () => {
     for (const id of P) s = ok(s, id, { kind: "vote", target: "a" }, base + 100);
     for (const id of P) s = ok(s, id, { kind: "lock" }, base + 2_000);
     expect(s.voteEndsAt).toBe(base + 3_000);
-    expect(sizma.isFinished(s, ctx(base + 3_000 + SIZMA_REVEAL_MS, P))).toBe(true);
+    expect(sizma.isFinished(s, ctx(base + 3_000 + SIZMA_NOTICE_MS + SIZMA_REVEAL_MS, P))).toBe(true);
+  });
+});
+
+describe("sızma: fark ettin mi? (O11)", () => {
+  const P = ["a", "b", "c", "d"];
+  const N_AT = VOTE_END + 1_000;
+  const notice = (s: S, id: string, yes: boolean, at = N_AT, connected?: readonly string[]) =>
+    ok(s, id, { kind: "notice", yes }, at, connected);
+  /** c sızma; oylar: a ve b c'ye (yakalanır) ya da dağınık (kurtulur). */
+  const caught = () =>
+    cast(P, "c", [
+      ["a", "c"],
+      ["b", "c"],
+      ["d", "a"],
+    ]);
+  const escaped = () =>
+    cast(P, "c", [
+      ["a", "b"],
+      ["b", "a"],
+      ["d", "a"],
+    ]);
+
+  it("oylamadan sonra 8 sn'lik aşama gelir, sonra sonuç; aşama sırası vote -> notice -> reveal", () => {
+    const s = caught();
+    expect(pub(s, VOTE_END - 1).phase).toBe("vote");
+    expect(pub(s, VOTE_END).phase).toBe("notice");
+    expect(pub(s, NOTICE_END - 1).phase).toBe("notice");
+    expect(pub(s, NOTICE_END).phase).toBe("reveal");
+    expect(pub(s, VOTE_END).noticeEndsAt).toBe(NOTICE_END);
+    expect(s.finishAt).toBe(NOTICE_END + SIZMA_REVEAL_MS);
+  });
+
+  it("cevap yalnız bu aşamada kabul edilir", () => {
+    const s = caught();
+    expect(rej(s, "a", { kind: "notice", yes: true }, VOTE_AT)).toBe("not_notice_yet");
+    expect(rej(s, "a", { kind: "notice", yes: true }, VOTE_END - 1)).toBe("not_notice_yet");
+    expect(rej(s, "a", { kind: "notice", yes: true }, NOTICE_END)).toBe("ended");
+    expect(rej(s, "ghost", { kind: "notice", yes: true }, N_AT)).toBe("not_participant");
+    // oylama bittikten sonra oy ve Tamam reddedilir
+    expect(rej(s, "a", { kind: "vote", target: "b" }, N_AT)).toBe("ended");
+  });
+
+  it("cevap tek seferliktir", () => {
+    let s = caught();
+    s = notice(s, "a", false);
+    expect(rej(s, "a", { kind: "notice", yes: true }, N_AT + 100)).toBe("locked");
+  });
+
+  it("sızma Evet derse +1: yakalanmışsa 0+1, kurtulmuşsa 2+1", () => {
+    let c = caught();
+    c = notice(c, "c", true);
+    expect(sizma.result(tick(c, NOTICE_END)).awards).toEqual({ a: 1, b: 1, c: 1, d: 1 });
+    let e = escaped();
+    e = notice(e, "c", true);
+    expect(sizma.result(tick(e, NOTICE_END)).awards).toEqual({ a: 0, b: 0, c: 3, d: 0 });
+  });
+
+  it("sızma Hayır derse ya da cevap vermezse ek puan yok", () => {
+    const hayir = notice(caught(), "c", false);
+    expect(sizma.result(hayir).awards).toEqual({ a: 1, b: 1, c: 0, d: 1 });
+    expect(sizma.result(caught()).awards).toEqual({ a: 1, b: 1, c: 0, d: 1 });
+    expect(sizma.result(notice(escaped(), "c", false)).awards).toEqual({ a: 0, b: 0, c: 2, d: 0 });
+  });
+
+  it("sızma olmayanlar Evet ya da Hayır derse hiçbir şey kazanmaz ya da kaybetmez", () => {
+    let s = caught();
+    s = notice(s, "a", true);
+    s = notice(s, "b", false);
+    s = notice(s, "d", true);
+    expect(sizma.result(s).awards).toEqual({ a: 1, b: 1, c: 0, d: 1 });
+    let e = escaped();
+    e = notice(e, "a", true);
+    e = notice(e, "b", true);
+    e = notice(e, "d", true);
+    expect(sizma.result(e).awards).toEqual({ a: 0, b: 0, c: 2, d: 0 });
+  });
+
+  it("herkes cevaplayınca aşama 1 sn sonra biter, sonuç süresi buna göre kayar", () => {
+    let s = caught();
+    for (const id of P) s = notice(s, id, id === "c", N_AT);
+    expect(s.noticeEndsAt).toBe(N_AT + 1_000);
+    expect(pub(s, N_AT + 999).phase).toBe("notice");
+    expect(pub(s, N_AT + 1_000).phase).toBe("reveal");
+    expect(sizma.isFinished(s, ctx(N_AT + 1_000 + SIZMA_REVEAL_MS - 1, P))).toBe(false);
+    expect(sizma.isFinished(s, ctx(N_AT + 1_000 + SIZMA_REVEAL_MS, P))).toBe(true);
+    expect(pub(s, N_AT + 1_000).reveal?.selfNoticed).toBe(true);
+  });
+
+  it("bir kişi eksikken bitmez; kopuk oyuncu beklenmez", () => {
+    let s = caught();
+    for (const id of ["a", "b", "c"]) s = notice(s, id, false);
+    expect(s.noticeEndsAt).toBe(NOTICE_END);
+    let t = caught();
+    const conn = ["a", "b", "c"];
+    for (const id of conn) t = notice(t, id, false, N_AT, conn);
+    expect(t.noticeEndsAt).toBe(N_AT + 1_000);
+  });
+
+  it("tick bağlantıya bakmaz", () => {
+    const s = notice(caught(), "a", true);
+    expect(tick(s, NOTICE_END + 5, [])).toEqual(tick(s, NOTICE_END + 5, P));
+  });
+
+  it("sonuçta yalnız sızmanın cevabı açılır (selfNoticed); diğerlerinin cevabı hiçbir alanda yok", () => {
+    let s = caught();
+    s = notice(s, "a", true);
+    s = notice(s, "b", true);
+    s = notice(s, "c", false);
+    const r = pub(s, NOTICE_END).reveal;
+    expect(r?.selfNoticed).toBe(false);
+    expect(Object.keys(r ?? {}).sort()).toEqual(
+      ["caught", "commonWord", "infiltrator", "infiltratorWord", "scores", "selfNoticed", "tally", "votes"].sort(),
+    );
+    const yes = notice(caught(), "c", true);
+    expect(pub(yes, NOTICE_END).reveal?.selfNoticed).toBe(true);
+  });
+
+  it("parseAction: notice yalnız {kind, yes: boolean}", () => {
+    expect(sizma.parseAction({ kind: "notice", yes: true })).toEqual({ kind: "notice", yes: true });
+    expect(sizma.parseAction({ kind: "notice", yes: false })).toEqual({ kind: "notice", yes: false });
+    for (const bad of [
+      { kind: "notice" },
+      { kind: "notice", yes: "evet" },
+      { kind: "notice", yes: 1 },
+      { kind: "notice", yes: true, x: 1 },
+    ])
+      expect(sizma.parseAction(bad)).toBeNull();
+  });
+
+  it("tekrar oynatma: aynı tohum ve eylemler aynı sonucu verir", () => {
+    const run = () => {
+      let s = sizma.setup(P, ctx(T0, P, 21));
+      s = notice(s, s.infiltrator, true);
+      return JSON.stringify([s, pub(s, NOTICE_END), sizma.result(s)]);
+    };
+    expect(run()).toBe(run());
+  });
+
+  describe("gizlilik", () => {
+    const players = ["pa1", "pb2", "pc3", "pd4"];
+    /** pc3 ve pa1 sızma; her iki durumda herkes Evet derse ve iki farklı cevap kümesiyle ortak görünüm aynı olmalı. */
+    const make = (infiltrator: string, answers: Record<string, boolean>): S => {
+      let s: S = { ...start(players, infiltrator) };
+      for (const [id, yes] of Object.entries(answers)) s = notice(s, id, yes, N_AT);
+      return s;
+    };
+    const A = make("pc3", { pa1: true, pc3: true });
+    const B = make("pa1", { pa1: false, pc3: false });
+
+    it("aşama sürerken publicView hangi cevapların ne olduğunu ve sızmayı içermez; cevaplar değişince birebir aynı", () => {
+      for (const at of [VOTE_END, N_AT + 100, NOTICE_END - 1]) {
+        const a = JSON.stringify(sizma.publicView(tick(A, at), ctx(at, players)));
+        const b = JSON.stringify(sizma.publicView(tick(B, at), ctx(at, players)));
+        expect(a).toBe(b);
+        expect(a).not.toMatch(/selfNoticed|infiltrator|"yes|myNotice/);
+        expect(sizma.publicView(tick(A, at), ctx(at, players)).reveal).toBeNull();
+      }
+    });
+
+    it("kimlerin cevapladığı görünür (hepsi cevaplar), ne cevapladığı değil", () => {
+      const p = pub(A, N_AT + 100);
+      expect(p.ready.sort()).toEqual(["pa1", "pc3"]);
+      expect(pub(start(players, "pc3"), VOTE_END).ready).toEqual([]);
+    });
+
+    it("myNotice yalnız sahibinin görünümünde; başkalarının cevabı görünümde yok", () => {
+      const at = N_AT + 100;
+      expect(priv(A, "pa1", at).myNotice).toBe(true);
+      expect(priv(A, "pc3", at).myNotice).toBe(true);
+      for (const who of ["pb2", "pd4", null, "ghost"]) expect(priv(A, who, at).myNotice).toBeNull();
+      expect(priv(B, "pa1", at).myNotice).toBe(false);
+      // Sızma olan ile olmayanın görünümü biçim olarak aynıdır
+      expect(Object.keys(priv(A, "pc3", at))).toEqual(Object.keys(priv(A, "pa1", at)));
+      // Cevap vermeyenin görünümü sızma/cevap bilgisi taşımaz
+      expect(JSON.stringify(priv(A, "pb2", at))).toBe(JSON.stringify(priv(B, "pb2", at)));
+    });
+
+    it("sızma ile olmayanın cevabı dışarıdan ayırt edilemez: aynı cevap, farklı sızma -> ortak görünüm aynı", () => {
+      const x = make("pc3", { pa1: true });
+      const y = make("pa1", { pa1: true });
+      for (const at of [N_AT + 100, NOTICE_END - 1]) {
+        expect(JSON.stringify(sizma.publicView(tick(x, at), ctx(at, players)))).toBe(
+          JSON.stringify(sizma.publicView(tick(y, at), ctx(at, players))),
+        );
+      }
+    });
+
+    it("sonuç açılana kadar bütün cevaplar gizli; secrets() sonuç açılınca boş", () => {
+      expect(sizma.secrets(tick(A, NOTICE_END))).toEqual([]);
+      expect(pub(A, NOTICE_END).reveal?.selfNoticed).toBe(true);
+    });
   });
 });
