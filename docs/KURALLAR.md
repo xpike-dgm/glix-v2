@@ -1151,7 +1151,35 @@ doğru cevaplarla tur uzayabilir.
 
 ## 29. Kule Ustası — `kule-ustasi`
 
-**Durum: ERTELENDİ** (sahip kararı: diğer üç oyundan sonra; deterministik fizik prototipiyle ele alınacak)
+**Durum: TASLAK** (Ekim 2026; sahip "yap" dedi, ayrıntılar asistan önerisi — sahip itiraz ederse güncellenir)
+
+**Fikir:** Herkes sırayla ortak bir kuleye blok bırakır. Blok, kulenin üstünde sağa sola kayar; oyuncu doğru anda
+dokunup bırakır. Alttaki bloğun dışına taşan kısım kesilip düşer, kule daralır. Hiç üstüne denk getiremeyen kuleyi
+düşürür ve oyundan çıkar.
+
+1. Minimum oyuncu / maksimum oyuncu: [2-8]
+2. Sıra: maç başında bir kez karıştırılır, çıkan oyuncular atlanarak aynı çevrim tekrarlanır.
+3. Sırası gelen oyuncunun ekranında blok, kulenin üstünde **sabit hızla sağa-sola gidip gelir**; oyuncu **bir kez
+   dokunarak** bırakır. Konum sunucu saatine bağlı bir fonksiyondur (herkes aynı hareketi görür). Diğerleri izler.
+4. Bırakma anı: istemci dokunduğu anı sunucu saatiyle gönderir; sunucu, sıranın başlangıcından önceki ya da 400 ms'den
+   eski anları kabul etmez (gecikme hilesine karşı). Sıra süresi **6 saniye**; dokunmayan oyuncu süre dolduğu anda
+   bırakmış sayılır.
+5. **Kesme:** Bırakılan bloğun alttaki bloğun dışına taşan kısmı kesilir; kalan genişlik yeni bloğun genişliğidir.
+   **Kusursuz:** taşma bloğun genişliğinin %4'ünden azsa kesilmez, blok tam oturur ve "Kusursuz!" sayılır.
+6. **Iska:** Blok alttakinin üstüne hiç denk gelmezse kule yıkılır: o oyuncu **çıkar**, kule **başlangıç genişliğine
+   sıfırlanır** (yeni taban) ve sıra kalanlarla sürer.
+7. **Hız:** Her başarılı katta kayma hızı %6 artar (en çok başlangıcın 2,5 katı). Kule sıfırlanınca hız da sıfırlanır.
+8. **Bitiş:** Başlangıç oyuncularının yarısı çıkınca ya da **90 saniye** dolunca (hangisi önce gelirse). Süre dolarken
+   sırası gelmiş oyuncunun bırakışı iptal edilir, cezası olmaz.
+9. **Puan (genel skor):** Çıkanlar **−1**, kalanlar **+1**. En çok "Kusursuz" yapan oyuncu(lar) ek **+1** (en az 1
+   kusursuz gerekir; eşitlikte hepsi alır).
+10. Gizli bilgi yoktur; her şey herkese açıktır.
+11. Tutorialda gösterilecek üç adım:
+    1. Blok kulenin üstünde kayar; sıran gelince dokunup bırak.
+    2. Taşan kısım kesilir, kule daralır; tam oturtursan "Kusursuz!"
+    3. Iskalayan kuleyi yıkar ve çıkar (−1); kalanlar +1.
+12. Yeni oyun olduğu için oyun testleri sahip onaylayıp çalıştırılana kadar **rastgele seçime girmez**; yalnız elle
+    seçilebilir.
 
 ---
 
