@@ -15,6 +15,8 @@ export interface RoundRecord {
   gameId: string;
   /** Turda genel skora eklenen puanlar. */
   awards: Record<string, number>;
+  /** Turun tek cümlelik herkese açık özeti (`summarizeRound`); paylaşım kartları için. Yoksa yok. */
+  summary?: string | undefined;
 }
 
 export interface Title {

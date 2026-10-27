@@ -1,0 +1,124 @@
+/* Anları paylaş sayfası: yatay kayan 9:16 kart önizlemeleri. */
+.kart {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+.kart__hint {
+  color: var(--text-dim);
+  font-size: var(--fs-13);
+  text-align: center;
+}
+.kart__strip {
+  --card-h: min(50dvh, 520px);
+  flex: none;
+  list-style: none;
+  margin: 0 calc(-1 * var(--gutter));
+  padding: 4px var(--gutter) 6px;
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 var(--gutter);
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.kart__strip::-webkit-scrollbar {
+  display: none;
+}
+.kart__card {
+  flex: none;
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.kart__frame {
+  height: var(--card-h);
+  width: calc(var(--card-h) * 9 / 16);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--bg-0);
+  border: 1px solid var(--line);
+  box-shadow: 0 0 24px rgba(46, 242, 255, 0.12);
+}
+.kart__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.kart__wait {
+  height: 100%;
+  animation: wait 1.4s ease-in-out infinite;
+  background: linear-gradient(160deg, rgba(46, 242, 255, 0.1), rgba(255, 43, 214, 0.1));
+}
+.kart__btn {
+  min-width: 120px;
+  min-height: 48px;
+  padding: 0 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--cyan);
+  background: rgba(46, 242, 255, 0.1);
+  color: var(--cyan);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-13);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.kart__btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.kart__btn:disabled {
+  opacity: 0.4;
+}
+.kart__bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+/* Yatay telefon: kartlar solda, düğme sağ sütunda; sayfa tam genişlik. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .sheet-root .sheet:has(.kart) {
+    max-width: 100%;
+    gap: 6px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .kart {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 12px;
+  }
+  .kart__strip {
+    --card-h: calc(100dvh - 140px);
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .kart__bar {
+    flex: none;
+    width: 150px;
+    justify-content: flex-end;
+    padding-bottom: 6px;
+  }
+  .kart__btn {
+    min-width: 0;
+    width: 100%;
+  }
+}

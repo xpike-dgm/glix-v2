@@ -1,4 +1,4 @@
-import type { RoomSnapshot } from "@glix/engine";
+import { type RoomSnapshot, summarizeRound } from "@glix/engine";
 import { createSignal } from "solid-js";
 import type { RoundRecord } from "../screens/titles.js";
 
@@ -26,7 +26,8 @@ export function collectRounds(snap: RoomSnapshot | null): void {
   }
   const m = snap.match;
   if (!m?.result || (snap.phase !== "results" && snap.phase !== "final")) return;
-  const rec: RoundRecord = { round: m.round, gameId: m.gameId, awards: { ...m.result.awards } };
+  const summary = summarizeRound(m.gameId, m.result, snap.players, m.publicView) ?? undefined;
+  const rec: RoundRecord = { round: m.round, gameId: m.gameId, awards: { ...m.result.awards }, summary };
   setRounds((cur) => (cur.some((r) => r.round === rec.round) ? cur : [...cur, rec]));
 }
 
