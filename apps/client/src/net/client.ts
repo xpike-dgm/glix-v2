@@ -44,6 +44,7 @@ const SHOWN_ERRORS = new Set([
   "draining",
   "server_busy",
   "game_failed",
+  "stage_full",
 ]);
 
 /** Sunucu güncelleme için yeniden başladı (WebSocket kapanış kodu 1012). */
@@ -66,6 +67,8 @@ let probeTimer: ReturnType<typeof setTimeout> | undefined;
 let announceReturn = false;
 /** İlk `welcome`deki sunucu sürümü; sonraki bağlanmada değiştiyse deploy olmuştur. */
 let knownServerVersion: string | null = null;
+/** Sahne (TV) kipi: oturum anahtarı kullanılmaz; her bağlanışta `joinStage` ile odaya girilir. */
+let stageCode: string | null = null;
 let mockSender: ((msg: ClientMessage) => void) | null = null;
 
 /** Geliştirme önizlemesi: mesajlar sahte sunucuya gider. */
@@ -130,6 +133,13 @@ function onMessage(raw: string): void {
       syncReconnected();
       setState({ conn: "open", everOpen: true, failedAttempts: 0 });
       startPings();
+      if (state.tv) {
+        // TV hiçbir zaman oyuncu oturumunu sürdürmez (aynı tarayıcıdaki oyuncu belirtecine dokunmaz).
+        restartedByServer = false;
+        pending = null;
+        if (stageCode) rawSend({ type: "joinStage", code: stageCode });
+        break;
+      }
       const token = readStored(KEYS.token);
       if (token) rawSend({ type: "resume", token });
       else {
@@ -150,6 +160,10 @@ function onMessage(raw: string): void {
         session: { token: msg.token, playerId: msg.playerId, roomCode: msg.roomCode },
         busy: false,
       });
+      break;
+    case "stage":
+      restartedByServer = false;
+      setState({ stage: { roomCode: msg.roomCode }, busy: false, notFoundCode: null });
       break;
     case "room":
       applySnapshot(msg.snapshot);
@@ -172,6 +186,12 @@ function onMessage(raw: string): void {
       break;
     case "left":
       announceReturn = false;
+      if (state.tv) {
+        stageCode = null;
+        clearRoom();
+        if (msg.reason === "closed") toast("Oda kapandı");
+        break;
+      }
       removeStored(KEYS.token);
       clearRoom();
       goHome();
@@ -205,6 +225,15 @@ function blockForUpdate(): void {
 }
 
 function handleError(code: string, message: string): void {
+  if (state.tv && (code === "room_not_found" || code === "stage_full")) {
+    // TV: kod yanlış ya da oda kapanmış; kod giriş ekranına dönülür.
+    stageCode = null;
+    pending = null;
+    clearRoom();
+    setState({ notFoundCode: code === "room_not_found" ? state.joinCode || "?" : null, busy: false });
+    if (code === "stage_full") toast(message, "error");
+    return;
+  }
   if (code === "resume_failed") {
     announceReturn = false;
     removeStored(KEYS.token);
@@ -376,6 +405,26 @@ export function joinRoom(code: string, nickname: string): void {
       ? { type: "joinRoom", code, nickname }
       : { type: "joinRoom", code, nickname, avatar },
   );
+}
+
+/** Bu cihazı büyük ekran (sahne) yapar: `/tv` sayfası açılınca bir kez çağrılır. */
+export function enterTvMode(): void {
+  setState("tv", true);
+}
+
+/** Sahne olarak odaya bağlanır (koltuk tutmaz). Bağlantı koparsa aynı kodla yeniden girilir. */
+export function joinStage(code: string): void {
+  setState({ notFoundCode: null, joinCode: code });
+  stageCode = code;
+  intent({ type: "joinStage", code });
+}
+
+/** Sahneden çıkar; kod giriş ekranına dönülür. */
+export function leaveStage(): void {
+  rawSend({ type: "leaveRoom" });
+  stageCode = null;
+  clearRoom();
+  setState({ joinCode: "", notFoundCode: null });
 }
 
 export function leaveRoom(): void {

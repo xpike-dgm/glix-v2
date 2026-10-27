@@ -88,9 +88,16 @@ lobi-2, lobi-8, lobi-qr, lobi-picker durumları eklendi.
 - Kartta "Sen de oyna: glix…/KOD" — yalnız takma ad, başka kişisel veri yok.
 
 ### U8. Büyük ekran / TV (sahne) modu
-- Yeni rol **sahne**: `publicView` alır, `view` almaz (izleyiciyle aynı güvenlik sınıfı). `/tv` → oda kodu/QR ekranı.
-- Her oyuna `StageView` (yatay, büyük animasyon); sahne varken telefon arayüzü sade kumandaya döner.
-- Tablet/masaüstü: iki sütun (sol oyun, sağ oyuncular/skor).
+- [x] Yeni rol **sahne** (`joinStage`): koltuk tutmaz, 8 sınırına girmez (odada en çok 2), oyuncu listesinde görünmez, kimlik almaz;
+  `publicView` + `view(durum, null)` (izleyiciyle aynı güvenlik sınıfı; `izleyici-gizlilik.test.ts` 27 oyunda sahneyi de denetler).
+  Yalnız `hello`/`ping`/`resync`/`leaveRoom` gönderebilir, eylem reddedilir. Bkz. `docs/PROTOKOL.md` "Sahne (TV) rolü".
+- [x] `/tv` (ya da `/tv?oda=KOD`): büyük kod girişi (kumanda uyumlu), lobide dev kod + QR + gelen oyuncular; 1920x1080 ve 1280x720.
+- [x] Her oyun için genel TV görünümü (`apps/client/src/stage/`): oyun dünyası, ad/tur/kabuk saati, oyun ekranı izleyici kipinde büyütülmüş,
+  sağda oyuncu listesi; anlatım, sonuç podyumu ve final büyük.
+- [x] Oyuna özel `StageView` (kayıt defterinde `StageView`): Zaman Bombası Hafızası (dev renk tuşları), Karalama Defteri (dev çizim duvarı).
+  Diğer 25 oyun genel görünümle çalışır; özel görünüm ekledikçe `registry.ts`'e `StageView` yazılır.
+- [x] Sahne varken telefonda küçük "TV'de oynanıyor" rozeti (`RoomSnapshot.stageCount`); oyun arayüzleri değişmedi.
+- [x] Tablet/masaüstü (>= 1024 px): iki sütun (sol oyun, sağ oyuncular/puan), yalnız kabukta.
 
 ### U9. iOS uyumu
 Zaten var: dvh yükseklik, safe-area, klavye alanı (visualViewport), iOS "Ana Ekrana Ekle" ipucu, dokunuşla ses açma.

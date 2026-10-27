@@ -10,6 +10,23 @@ describe("sunucu mesajı doğrulama", () => {
     expect(m?.type).toBe("room");
     if (m?.type === "room") expect(m.snapshot.match?.gameId).toBe("butona-bas");
   });
+  it("sahne onayını ve stageCount alanını doğrular", () => {
+    expect(parseServerMessage(wire({ type: "stage", roomCode: "KX7QP" }))).toEqual({
+      type: "stage",
+      roomCode: "KX7QP",
+    });
+    expect(parseServerMessage(wire({ type: "stage" }))).toBeNull();
+    expect(parseServerMessage(wire({ type: "stage", roomCode: 5 }))).toBeNull();
+    const parse = (stageCount: unknown) =>
+      parseServerMessage(wire({ type: "room", snapshot: { ...snapshot(), stageCount } }));
+    const two = parse(2);
+    if (two?.type === "room") expect(two.snapshot.stageCount).toBe(2);
+    else throw new Error("room kabul edilmedi");
+    for (const bad of [undefined, "2", -3, null]) {
+      const m = parse(bad);
+      if (m?.type === "room") expect(m.snapshot.stageCount).toBe(0);
+    }
+  });
   it("oyun seçim modunu doğrular", () => {
     const parse = (selection: unknown) =>
       parseServerMessage(wire({ type: "room", snapshot: { ...snapshot(), selection } }));

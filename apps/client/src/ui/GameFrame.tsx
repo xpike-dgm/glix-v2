@@ -11,6 +11,7 @@ import { roundLabel } from "./matchPath.js";
 import { RotateOverlay } from "./RotateOverlay.js";
 import { SoundToggle } from "./SoundToggle.js";
 import { ShellContext } from "./shell.js";
+import { TvBadge } from "./TvBadge.js";
 import { createPortrait, lockLandscape } from "./viewport.js";
 import { WorldBackdrop } from "./WorldBackdrop.js";
 
@@ -141,6 +142,7 @@ export function GameFrame(props: Props) {
         data-turn={needsTurn() ? "1" : undefined}
       >
         <WorldBackdrop gameId={props.gameId} />
+        <TvBadge />
         <Show when={landscape() && !needsTurn()}>
           <Rail {...props} win={win()} />
         </Show>

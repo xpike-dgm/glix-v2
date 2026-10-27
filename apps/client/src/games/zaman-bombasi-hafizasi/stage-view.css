@@ -1,0 +1,159 @@
+/* Zaman Bombası Hafızası büyük ekran görünümü (TV). Sınıflar `zbtv` ile başlar. */
+.zbtv {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 8px 0 0;
+}
+.zbtv__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+.zbtv__who {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-width: 0;
+}
+.zbtv__bomb {
+  width: 150px;
+  height: 150px;
+}
+.zbtv__head {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 64px;
+  line-height: 1.05;
+  color: var(--text);
+}
+.zbtv__head[data-tone="lime"] {
+  color: var(--lime);
+}
+.zbtv__head[data-tone="red"] {
+  color: var(--red);
+}
+.zbtv__head[data-tone="cyan"] {
+  color: var(--cyan);
+}
+.zbtv__sub {
+  margin-top: 8px;
+  font-size: 32px;
+  color: var(--text-dim);
+}
+.zbtv__total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.zbtv__totalnum {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 88px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.zbtv[data-sudden="1"] .zbtv__totalnum {
+  color: var(--red);
+}
+.zbtv__badge {
+  padding: 6px 18px;
+  border-radius: 999px;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--red);
+}
+.zbtv__pads {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 22px;
+}
+.zbtv__pad {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: 40px;
+  border: 6px solid color-mix(in srgb, var(--pad) 70%, #000);
+  background: color-mix(in srgb, var(--pad) 26%, var(--bg-0));
+  color: color-mix(in srgb, var(--pad) 70%, #fff);
+  opacity: 0.55;
+  transition:
+    opacity 90ms,
+    background 90ms,
+    box-shadow 90ms,
+    transform 90ms;
+}
+.zbtv__pad[data-c="yesil"] {
+  --pad: #22d36b;
+}
+.zbtv__pad[data-c="kirmizi"] {
+  --pad: #ff3b5c;
+}
+.zbtv__pad[data-c="sari"] {
+  --pad: #ffc23b;
+}
+.zbtv__pad[data-c="mavi"] {
+  --pad: #3b7bff;
+}
+.zbtv__pad[data-state="lit"] {
+  opacity: 1;
+  background: var(--pad);
+  color: #0a1030;
+  transform: scale(1.02);
+  box-shadow:
+    0 0 90px color-mix(in srgb, var(--pad) 80%, transparent),
+    inset 0 0 60px rgba(255, 255, 255, 0.35);
+}
+.zbtv__pad svg {
+  width: 150px;
+  height: 150px;
+}
+.zbtv__padname {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.zbtv__track {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  min-height: 26px;
+}
+.zbtv__dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(140, 160, 255, 0.22);
+}
+.zbtv__dot[data-s="on"] {
+  background: var(--cyan);
+}
+.zbtv__dot[data-s="now"] {
+  background: #fff;
+  box-shadow: 0 0 18px #fff;
+}
+.zbtv__dot[data-s="ok"] {
+  background: var(--lime);
+}
+.zbtv__len {
+  text-align: center;
+  font-size: 26px;
+  color: var(--text-dim);
+}

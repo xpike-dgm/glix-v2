@@ -56,6 +56,11 @@ const LANDSCAPE = [
   [667, 375],
 ];
 const ALL = [...PORTRAIT, ...LANDSCAPE];
+/** U8: TV (sahne) ekranları bu iki boyutta denetlenir. */
+const TV = [
+  [1920, 1080],
+  [1280, 720],
+];
 const QUICK_SIZES = [PORTRAIT[0], LANDSCAPE[1]];
 
 /** Ekranın koşacağı boyutlar; hızlı kipte QUICK_SIZES ile kesişim (boşsa listenin ilki). */
@@ -1219,6 +1224,25 @@ const SCREENS = [
   { name: "final-tepki", q: "mock=final&n=5&emoji=1", settle: 2200 },
   { name: "ayarlar-muzik-efekt", q: "mock=settings", settle: 900 },
   { name: "ayarlar-muzik-efekt-buyuk-yazi", q: "mock=settings&text=large", settle: 900 },
+  // U8: TV (sahne) ekranları. Yalnız 1920x1080 ve 1280x720; telefon boyutları anlamsız.
+  { name: "tv-giris", q: "mock=tv-entry", sizes: TV, settle: 900 },
+  { name: "tv-lobi-5", q: "mock=tv-lobby&n=5", sizes: TV, settle: 1400 },
+  { name: "tv-lobi-8", q: "mock=tv-lobby&n=8", sizes: TV, settle: 1400 },
+  { name: "tv-anlatim", q: "mock=tv-briefing&n=6", sizes: TV, settle: 1600 },
+  { name: "tv-oynanis-dikey", q: "mock=tv-playing&n=6", sizes: TV, settle: 1600 },
+  { name: "tv-oynanis-yatay", q: "mock=tv-landscape&n=6", sizes: TV, settle: 1600 },
+  { name: "tv-sonuc", q: "mock=tv-results&n=6", sizes: TV, settle: 2400 },
+  { name: "tv-final", q: "mock=tv-final&n=8", sizes: TV, settle: 2600 },
+  { name: "tv-zaman-bombasi-sira", q: "mock=tv-zaman-mine&n=6", sizes: TV, settle: 1400 },
+  { name: "tv-zaman-bombasi-izle", q: "mock=tv-zaman-playback&n=6", sizes: TV, settle: 1400 },
+  { name: "tv-karalama-cizim", q: "mock=tv-karalama-draw&n=6", sizes: TV, settle: 1400 },
+  { name: "tv-karalama-oylama", q: "mock=tv-karalama-vote&n=6", sizes: TV, settle: 2600 },
+  { name: "tv-karalama-sonuc", q: "mock=tv-karalama-results&n=6", sizes: TV, settle: 2600 },
+  // U8: tablet/masaüstü iki sütun (oyun solda, oyuncular/puan sağda).
+  { name: "tablet-iki-sutun-oyun", q: "mock=spectator-playing&n=6", sizes: [[1024, 768]], settle: 1200 },
+  { name: "tablet-iki-sutun-yatay", q: "mock=landscape&n=6", sizes: [[1024, 768]], settle: 1200 },
+  // U8: sahne varken telefon rozeti.
+  { name: "tv-telefon-rozeti", q: "mock=spectator-playing&n=5&stage=1", settle: 1200 },
 ];
 
 function freePort() {
