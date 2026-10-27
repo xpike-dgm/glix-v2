@@ -200,7 +200,7 @@ katılıp oynar. Giriş: Google ya da kendi hesabı. Sıralama yalnız arkadaşl
 - [x] Arayüz düzeni: sol üst ad rozeti tek giriş (girişliyse Profil; rozette istek sayısı), Arkadaşlar/Kullanıcı adı Profil'de,
   Çıkış yap Ayarlar'ın en altında (onaylı), tek kullanıcı adı (7 günde bir değişir), Ayarlar kategori listesi
   (Oyuncu, Cihaz, Bildirimler, Hesap, Hakkında) ve her kategori için ayrıntı sayfası.
-- [ ] H10 KVKK: aydınlatma metni, hesabı silme, verimi indirme.
+- [x] H10 KVKK: aydınlatma metni, hesabı silme, verimi indirme (uygulandı; bkz. docs/HESAP.md "KVKK").
 
 ---
 

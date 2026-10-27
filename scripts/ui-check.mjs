@@ -304,6 +304,53 @@ const SCREENS = [
     act: clickText("Şifre değiştir"),
   },
   { name: "ayarlar-google-bagla", q: "mock=settings&acct=1&google=1&page=hesap", settle: 900 },
+  // KVKK (H10): Hesap sayfasının altındaki iki satır, indirme düğmesi durumu, silme penceresi (şifreli / yalnız Google).
+  {
+    name: "ayarlar-hesap-verilerim",
+    q: "mock=settings&acct=1&mail=1&verified=1&page=hesap",
+    settle: 900,
+    act: async (p) => p.getByText("Hesabımı sil").first().scrollIntoViewIfNeeded(),
+  },
+  {
+    name: "ayarlar-hesap-verilerim-buyuk-yazi",
+    q: "mock=settings&acct=1&mail=1&verified=1&page=hesap&text=large",
+    settle: 900,
+    act: async (p) => p.getByText("Hesabımı sil").first().scrollIntoViewIfNeeded(),
+  },
+  {
+    name: "ayarlar-veri-indiriliyor",
+    q: "mock=settings&acct=1&mail=1&verified=1&page=hesap&exp=busy",
+    settle: 900,
+    act: async (p) => p.getByText("Hazırlanıyor").first().scrollIntoViewIfNeeded(),
+  },
+  {
+    name: "ayarlar-hesap-sil-sifreli",
+    q: "mock=settings&acct=1&mail=1&verified=1&page=hesap",
+    settle: 900,
+    act: async (p) => p.locator(".gbtn--danger").click(),
+  },
+  {
+    name: "ayarlar-hesap-sil-sifreli-dolu",
+    q: "mock=settings&acct=1&mail=1&verified=1&page=hesap",
+    settle: 900,
+    act: async (p) => {
+      await p.locator(".gbtn--danger").click();
+      await p.locator("#del-confirm").fill("cihad_01");
+      await p.getByLabel("Şifren").fill("gizli-sifre");
+    },
+  },
+  {
+    name: "ayarlar-hesap-sil-google",
+    q: "mock=settings&acct=1&mail=1&verified=1&pw=0&google=1&page=hesap",
+    settle: 900,
+    act: async (p) => p.locator(".gbtn--danger").click(),
+  },
+  {
+    name: "ayarlar-hesap-sil-google-buyuk-yazi",
+    q: "mock=settings&acct=1&mail=1&verified=1&pw=0&page=hesap&text=large",
+    settle: 900,
+    act: async (p) => p.locator(".gbtn--danger").click(),
+  },
   { name: "home-buyuk-yazi", q: "mock=home&text=large", settle: 1800 },
   { name: "join", q: "mock=join" },
   { name: "notfound", q: "mock=notfound" },

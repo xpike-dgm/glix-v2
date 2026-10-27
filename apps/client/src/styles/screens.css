@@ -2757,6 +2757,24 @@
 .acct__text {
   text-align: left;
 }
+.acct__subhead {
+  font-family: var(--font-display);
+  font-size: var(--fs-18);
+  font-weight: 800;
+  color: var(--text);
+  margin-top: var(--sp-3);
+}
+.acct__list {
+  margin: 0;
+  padding-left: 22px;
+  text-align: left;
+  font-size: var(--fs-15);
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.acct__list li + li {
+  margin-top: 6px;
+}
 .acct__link {
   display: inline-block;
   padding: 14px 2px;

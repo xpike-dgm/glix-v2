@@ -101,6 +101,30 @@ export type RenameResult =
   | { ok: false; reason: "cooldown"; availableAt: number }
   | { ok: false; reason: "missing" };
 
+/** Hesabın "verimi indir" dökümü için ham veri (şifre özeti ve oturum belirteçleri içermez). */
+export interface AccountExportData {
+  username: string;
+  email: string;
+  emailVerified: boolean;
+  /** Google `sub` değeri (bağlı değilse null); hesap sahibinin kendi verisidir. */
+  googleSub: string | null;
+  /** Şifre özeti saklanıyor mu (özetin kendisi hiçbir yerde dışarı verilmez). */
+  hasPassword: boolean;
+  createdAt: number;
+  usernameChangedAt: number | null;
+  sessions: { createdAt: number; lastSeen: number }[];
+  games: {
+    gameId: string;
+    endedAt: number;
+    players: number;
+    miniScore: number;
+    rank: number;
+    won: boolean;
+  }[];
+  matches: { endedAt: number; players: number; games: number; score: number; place: number; won: boolean }[];
+  coplay: { username: string; matches: number; lastAt: number }[];
+}
+
 export type CreateResult = { ok: true; account: Account } | { ok: false; field: "username" | "email" };
 
 /**
@@ -191,6 +215,17 @@ export interface AccountStore extends FriendStore {
    * Hesabın kendisine dokunmaz; hesap silme (H10) bunu çağırır, tablolar ayrıca `ON DELETE CASCADE` taşır.
    */
   deleteAccountData(accountId: number): void;
+  /** "Verimi indir" için hesaba ait ham veri; hesap yoksa null. */
+  exportData(accountId: number): AccountExportData | null;
+  /** Oturumun açılış anı (ms); oturum yoksa null. "Taze giriş" denetimi için. */
+  sessionCreatedAt(tokenHash: string): number | null;
+  /** Arkadaşlık/istek/engel ilişkisi olan hesapların kimlikleri (iki yönde, tekrarsız); silmeden önce bildirim için. */
+  relatedAccountIds(accountId: number): number[];
+  /**
+   * Hesabı kalıcı siler (H10): istatistik, rozet, arkadaşlık ve engeller (`deleteAccountData`), oturumlar, e-posta
+   * belirteçleri ve hesap satırı tek işlemde gider. Geri alınamaz. Hesap yoksa false.
+   */
+  deleteAccount(accountId: number): boolean;
   close(): void;
 }
 
@@ -397,6 +432,34 @@ export function createAccounts(path: string): AccountStore {
   const dropCoplay = db.prepare("DELETE FROM account_coplay WHERE account_id = ? OR other_account_id = ?");
   const dropFriends = db.prepare("DELETE FROM friends WHERE a = ? OR b = ?");
   const dropBlocks = db.prepare("DELETE FROM blocks WHERE blocker = ? OR blocked = ?");
+  const detailRow = db.prepare(
+    `SELECT username, email, email_verified, google_sub, pass_hash IS NOT NULL AS has_pass, created_at,
+            username_changed_at FROM accounts WHERE id = ?`,
+  );
+  const sessionTimes = db.prepare(
+    "SELECT created_at, last_seen FROM sessions WHERE account_id = ? ORDER BY created_at",
+  );
+  const gameDump = db.prepare(
+    `SELECT game_id, ended_at, players, mini_score, rank, won FROM account_games
+       WHERE account_id = ? ORDER BY ended_at, rowid`,
+  );
+  const matchDump = db.prepare(
+    `SELECT ended_at, players, games, score, place, won FROM account_matches
+       WHERE account_id = ? ORDER BY ended_at, rowid`,
+  );
+  const coplayDump = db.prepare(
+    `SELECT a.username AS username, c.matches AS matches, c.last_at AS last_at
+       FROM account_coplay c JOIN accounts a ON a.id = c.other_account_id
+       WHERE c.account_id = ? ORDER BY a.username_lc`,
+  );
+  const sessionCreated = db.prepare("SELECT created_at FROM sessions WHERE id_hash = ?");
+  const relatedRows = db.prepare(
+    `SELECT CASE WHEN a = ? THEN b ELSE a END AS id FROM friends WHERE a = ? OR b = ?
+       UNION SELECT blocked FROM blocks WHERE blocker = ?
+       UNION SELECT blocker FROM blocks WHERE blocked = ?`,
+  );
+  const dropAccount = db.prepare("DELETE FROM accounts WHERE id = ?");
+  const dropTokensOf = db.prepare("DELETE FROM email_tokens WHERE account_id = ?");
   /** Tek işlem: ya hepsi yazılır ya hiçbiri. */
   const inTransaction = (work: () => void): void => {
     db.exec("BEGIN");
@@ -625,6 +688,94 @@ export function createAccounts(path: string): AccountStore {
         dropFriends.run(accountId, accountId);
         dropBlocks.run(accountId, accountId);
       });
+    },
+    exportData(accountId) {
+      const d = detailRow.get(accountId) as
+        | {
+            username: string;
+            email: string;
+            email_verified: number;
+            google_sub: string | null;
+            has_pass: number;
+            created_at: number;
+            username_changed_at: number | null;
+          }
+        | undefined;
+      if (!d) return null;
+      return {
+        username: d.username,
+        email: d.email,
+        emailVerified: d.email_verified === 1,
+        googleSub: d.google_sub,
+        hasPassword: d.has_pass === 1,
+        createdAt: d.created_at,
+        usernameChangedAt: d.username_changed_at,
+        sessions: (sessionTimes.all(accountId) as { created_at: number; last_seen: number }[]).map((r) => ({
+          createdAt: r.created_at,
+          lastSeen: r.last_seen,
+        })),
+        games: (
+          gameDump.all(accountId) as {
+            game_id: string;
+            ended_at: number;
+            players: number;
+            mini_score: number;
+            rank: number;
+            won: number;
+          }[]
+        ).map((r) => ({
+          gameId: r.game_id,
+          endedAt: r.ended_at,
+          players: r.players,
+          miniScore: r.mini_score,
+          rank: r.rank,
+          won: r.won === 1,
+        })),
+        matches: (
+          matchDump.all(accountId) as {
+            ended_at: number;
+            players: number;
+            games: number;
+            score: number;
+            place: number;
+            won: number;
+          }[]
+        ).map((r) => ({
+          endedAt: r.ended_at,
+          players: r.players,
+          games: r.games,
+          score: r.score,
+          place: r.place,
+          won: r.won === 1,
+        })),
+        coplay: (coplayDump.all(accountId) as { username: string; matches: number; last_at: number }[]).map(
+          (r) => ({ username: r.username, matches: r.matches, lastAt: r.last_at }),
+        ),
+      };
+    },
+    sessionCreatedAt(tokenHash) {
+      const row = sessionCreated.get(tokenHash) as { created_at: number } | undefined;
+      return row ? row.created_at : null;
+    },
+    relatedAccountIds(accountId) {
+      return (relatedRows.all(accountId, accountId, accountId, accountId, accountId) as { id: number }[]).map(
+        (r) => r.id,
+      );
+    },
+    deleteAccount(accountId) {
+      let removed = false;
+      inTransaction(() => {
+        dropGames.run(accountId);
+        dropMatches.run(accountId);
+        dropBadges.run(accountId);
+        dropCoplay.run(accountId, accountId);
+        dropFriends.run(accountId, accountId);
+        dropBlocks.run(accountId, accountId);
+        dropSessions.run(accountId);
+        dropTokensOf.run(accountId);
+        removed = Number(dropAccount.run(accountId).changes) === 1;
+      });
+      return removed;
     },
     isVerified(accountId) {
       const row = verifiedOf.get(accountId) as { email_verified: number } | undefined;

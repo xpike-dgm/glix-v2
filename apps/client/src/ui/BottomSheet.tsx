@@ -88,6 +88,7 @@ export function BottomSheet(props: Props) {
           />
           <div
             class="sheet"
+            data-scroll
             role="dialog"
             aria-modal="true"
             aria-label={props.title}

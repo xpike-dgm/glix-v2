@@ -222,6 +222,15 @@ Hepsi JSON; yanıtlar `Cache-Control: no-store`. Hata gövdesi `{ok:false, code,
 - WS yükseltmesinde çerez okunur ve bağlantı hesaba bağlanır; oyuncu kaydında `accountId` yalnız sunucuda tutulur, hiçbir mesajda yayınlanmaz.
 - Veri: `accounts`, `sessions`, `email_tokens` (`kind` verify|reset, yalnız sha256 özeti, `expires_at`) tabloları; `ACCOUNTS_DB` (varsayılan: `STATS_DB`; ikisi de yoksa bellekte, kalıcı değil). Şifre: scrypt (N=16384, r=8, p=1, 16 bayt tuz), parametreler özetle birlikte saklanır.
 
+## KVKK uçları (HTTP, `/api/account/`, H10)
+
+Yalnız `POST`; oturum çerezi, `Origin` denetimi ve IP hız sınırı şart (401 `login_required`, 403 `forbidden`, 405, 429 `rate_limited`). Hata gövdesi `{ok:false, code, message, field?}`.
+- `POST export` (gövde yok sayılır) → 200, `Content-Type: application/json`, `Content-Disposition: attachment; filename="glix-verilerim-YYYY-MM-DD.json"`, `no-store`. Gövde: `aciklama`, `exported_at`, `account`, `sessions`, `stats {games, matches, coplay}`,
+  `friends {friends, incoming_requests, outgoing_requests, blocked}`, `badges`, `push_subscription`. Şifre özeti ve oturum belirteci özeti yoktur. Hesap başına günde 3 (aşılınca 429).
+- `POST delete {confirm, password?}` (JSON) → 200 `{ok:true}` + çerez silen `Set-Cookie`. 400 `invalid_input` / `confirm_mismatch` (`field:"confirm"`), 401 `bad_credentials` (`field:"password"`),
+  403 `fresh_login_required` (şifresiz hesapta oturum 10 dk'dan eski), 429 (hesap başına saatte 5 deneme; hatalı şifre `pw:` kovasına da sayılır). Silme anında ve kalıcıdır; ilişkili hesaplar `friendsChanged` alır.
+  Hesabın canlı WS bağlantıları misafire döner, odadaki oyuncu adıyla kalır. Yeni WS mesajı yok; protokol sürümü değişmedi.
+
 ## Profil ucu (HTTP, `/api/profile`, H5)
 
 Yalnız `GET`; oturum çerezi şart (yoksa 401 `login_required`); yanıtlar `Cache-Control: no-store`. Hata gövdesi hesap uçlarındaki gibi `{ok:false, code, message}`.

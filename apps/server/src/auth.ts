@@ -177,7 +177,7 @@ function sessionCookie(token: string, secure: boolean): string {
   return `${SESSION_COOKIE}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${secure ? "; Secure" : ""}`;
 }
 
-function clearedCookie(secure: boolean): string {
+export function clearedCookie(secure: boolean): string {
   return `${SESSION_COOKIE}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure ? "; Secure" : ""}`;
 }
 

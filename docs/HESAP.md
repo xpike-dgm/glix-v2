@@ -100,9 +100,20 @@ Sen + kabul edilmiş arkadaşların (yalnız hesaplılar). Sekmeler: **Bu hafta*
 Ekran: Arkadaşlar ekranından ve kendi Profilinden "Arkadaş sıralaması"; kendi satırın vurgulu (renk + sol çizgi + "Sen"), birinciye taç (değeri 0 ise yok);
 satıra dokununca o kişinin profili açılır (geri: sıralama). Arkadaşın yoksa "Sıralama için arkadaş ekle" ve Arkadaşlar düğmesi.
 
-## KVKK
-Kayıtta kısa aydınlatma metni; Ayarlar'da "Verimi indir" (JSON) ve "Hesabımı sil" (oturumlar, arkadaşlıklar,
-istatistikler silinir; anonim tablolar zaten kişisel veri içermez).
+## KVKK (H10, uygulandı)
+- **Aydınlatma:** kayıt ekranındaki "Aydınlatma metni" (`Disclosure.tsx`) `/gizlilik.html` ile uyumlu özettir (veri sorumlusu e-postası, hangi veri/neden, saklama, haklar, Ayarlar yolu).
+- **Verimi indir:** Ayarlar > Hesap > Verilerim. `POST /api/account/export` JSON dosyası döner (`glix-verilerim-<YYYY-MM-DD>.json`, Türkiye saati). İçerik: açıklama, hesap alanları
+  (kullanıcı adı, e-posta, doğrulama, Google bağlı mı ve `sub`, şifre için "özet saklanır, dosyaya konmaz" notu, açılış ve ad değiştirme tarihi), oturumlar (yalnız açılış/son görülme; belirteç özeti yok),
+  `account_games` / `account_matches` satırları, birlikte oynananlar (kullanıcı adıyla), arkadaşlar/istekler/engeller (ad + tarih), rozetler, bildirim aboneliği var mı. Hesap başına günde 3.
+  İstemci fetch + blob + bağlantıyla indirir; iOS ana ekran uygulamasında (indirmeyi tutmaz) dosya yeni sekmede açılır.
+- **Hesabımı sil:** Ayarlar > Hesap'ın en altı. `POST /api/account/delete {confirm, password?}`: kullanıcı adı yazılır (büyük/küçük harf duyarsız); şifreli hesapta şifre (hatalı deneme giriş sınırına sayılır);
+  yalnız Google hesabında oturum en çok 10 dk önce açılmış olmalı, değilse 403 `fresh_login_required` ("Güvenlik için çıkış yapıp tekrar giriş yap, sonra sil."). Hesap başına saatte 5 deneme.
+  Silme tek işlemde ve kalıcıdır (`deleteAccount`): istatistik, rozet, birlikte oynama (karşı taraftaki sayaçlar dahil), arkadaşlık/istek/engel, oturumlar, e-posta belirteçleri, hesap satırı.
+  Ardından: bekleyen Google kayıtları ve bildirim aboneliği düşer, ilişkili hesaplara `friendsChanged` gider, çerez silinir.
+  **Odadaki kullanıcı:** soketi açık kalır, misafire döner; oyuncu kaydı odada mevcut adıyla durur (`accountId` null: artık istatistik yazılmaz, takma ad değiştirebilir). Odadan atılmaz (en az şaşırtıcı davranış).
+  Diğer cihazlardaki soketler de misafir olur; arayüzleri bir sonraki hesap okumasında (açılış/oturum denetimi) çıkışı görür.
+- Anonim tablolar (`matches`, `game_plays`, `feedback`, `perf`) hesap kimliği taşımaz; silme onlara dokunmaz (testle doğrulanır).
+- Günlük: kullanıcı adı/e-posta yazan satır yoktur; yalnız kimliksiz `account_deleted` bilgi satırı eklendi.
 
 ## Veri modeli (SQLite, yeni göçler)
 `accounts(id, username, username_lc, email, email_verified, pass_hash, google_sub, created_at)`,
@@ -116,7 +127,7 @@ Arkadaşlık tabloları (göç 3, uygulandı; hepsinde `ON DELETE CASCADE`): `fr
 `account_matches(account_id, ended_at, players, games, score, place, won)`,
 `account_coplay(account_id, other_account_id, matches, last_at)` (PK ikisi); `(account_id, ended_at)` dizinleri.
 Rozetler (göç 4, uygulandı): `badges(account_id, badge_id, earned_at)`, PK `(account_id, badge_id)`, `ON DELETE CASCADE`.
-`deleteAccountData(accountId)` bu üç tablodaki satırları (karşı taraftaki sayaçlar dahil) ve rozetleri siler; hesap silme (H10) çağıracak.
+`deleteAccountData(accountId)` bu üç tablodaki satırları (karşı taraftaki sayaçlar dahil) ve rozetleri siler; hesap silme (H10) `deleteAccount` içinde çağırır.
 
 ## Sıra
 H1 → H4 → H5 → H7 → H8 → H9 → H6 → H10; H2 ve H3, sahipten anahtarlar gelince araya girer.

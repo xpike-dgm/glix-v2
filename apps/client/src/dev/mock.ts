@@ -20,7 +20,7 @@ import {
   type ButonaBasWindowResult,
 } from "@glix/engine";
 import { roundClockAt } from "../games/butona-bas/view.js";
-import { setGooglePending } from "../net/account.js";
+import { setExportBusy, setGooglePending } from "../net/account.js";
 import { useMockSender } from "../net/client.js";
 import { freezeFriends } from "../net/friends.js";
 import { parseFriends } from "../net/friendsRules.js";
@@ -434,6 +434,8 @@ export function startMock(kind: string, params: URLSearchParams): void {
       verified: params.get("verified") === "1",
       hasPassword: params.get("pw") !== "0",
     });
+  // `&exp=busy`: "Verimi indir" sürüyor (düğme kilitli, "Hazırlanıyor…").
+  if (params.get("exp") === "busy") setExportBusy(true);
   switch (kind) {
     case "home":
       // `&acct=1`: giriş yapmış kullanıcı (Oda kur + çıkış); varsayılan misafir.
