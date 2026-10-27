@@ -186,7 +186,12 @@ export function parseServerMessage(raw: string): ServerMessage | null {
   switch (data.type) {
     case "welcome":
       return isNum(data.protocolVersion) && isStr(data.serverVersion)
-        ? { type: "welcome", protocolVersion: data.protocolVersion, serverVersion: data.serverVersion }
+        ? {
+            type: "welcome",
+            protocolVersion: data.protocolVersion,
+            serverVersion: data.serverVersion,
+            ...(isStr(data.pushKey) && data.pushKey.length <= 128 ? { pushKey: data.pushKey } : {}),
+          }
         : null;
     case "pong":
       return isNum(data.t) && isNum(data.serverTime)

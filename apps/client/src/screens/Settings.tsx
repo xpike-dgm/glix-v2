@@ -16,6 +16,7 @@ import { readAvatarChoice } from "../net/storage.js";
 import { goHome, setNickname, state, toast } from "../net/store.js";
 import { clearPack, downloadAll, packProgress, packRunning, storageEpoch } from "../pwa/packController.js";
 import { fraction, megabytes } from "../pwa/packPolicy.js";
+import { disablePush, enablePush, pushMode } from "../pwa/push.js";
 import { checkForUpdate } from "../pwa/pwa.js";
 import {
   dataSaver,
@@ -23,6 +24,7 @@ import {
   MOTION_CHOICES,
   type MotionPref,
   motion,
+  notifyOn,
   setDataSaver,
   setHaptics,
   setMotion,
@@ -204,6 +206,17 @@ export function Settings() {
       .finally(() => setChecking(false));
   };
 
+  const toggleNotify = (on: boolean): void => {
+    if (!on) {
+      void disablePush();
+      return;
+    }
+    void enablePush().then((r) => {
+      if (r === "denied") toast("Bildirim izni verilmedi", "error");
+      else if (r === "failed") toast("Bildirimler şu an açılamadı", "error");
+    });
+  };
+
   const avatar = (): number => readAvatarChoice() ?? avatarFromName(state.nickname);
 
   return (
@@ -359,6 +372,34 @@ export function Settings() {
             </span>
           </div>
         </Group>
+
+        <Show when={pushMode() !== "hidden"}>
+          <Group title="Bildirimler">
+            <Show
+              when={pushMode() === "hint"}
+              fallback={
+                <Toggle
+                  label="Bildirimler"
+                  hint={
+                    pushMode() === "denied"
+                      ? "İzin kapalı. Tarayıcı ayarlarından açabilirsin"
+                      : "Başka uygulamadayken oyun başlayınca ve sıra sana gelince haber verir"
+                  }
+                  on={notifyOn() && pushMode() === "toggle"}
+                  disabled={pushMode() === "denied"}
+                  onChange={toggleNotify}
+                />
+              }
+            >
+              <div class="set__row">
+                <span class="set__text">
+                  <span class="set__label">Bildirimler</span>
+                  <span class="set__hint">Ana ekrana ekleyince açılabilir</span>
+                </span>
+              </div>
+            </Show>
+          </Group>
+        </Show>
 
         <Group title="Gizlilik">
           <Toggle

@@ -47,6 +47,8 @@ interface AppState {
   tv: boolean;
   /** Sahne olarak bağlanılan oda (sunucu `stage` ile onaylayınca dolar). */
   stage: { roomCode: string } | null;
+  /** Sunucunun `welcome` ile bildirdiği VAPID genel anahtarı; sunucu bildirim göndermiyorsa null. */
+  pushKey: string | null;
 }
 
 export const [state, setState] = createStore<AppState>({
@@ -67,6 +69,7 @@ export const [state, setState] = createStore<AppState>({
   serverProtocol: null,
   tv: false,
   stage: null,
+  pushKey: null,
 });
 
 /** Sunucu saati (ms), ping/pong ölçümünün medyanıyla. */

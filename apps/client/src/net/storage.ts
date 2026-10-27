@@ -18,6 +18,8 @@ export const KEYS = {
   dataSaver: "glix.dataSaver",
   telemetry: "glix.telemetry",
   wifiOnly: "glix.wifiOnly",
+  /** Web bildirimleri açık ("1") ya da kapalı; yalnız oyuncu Ayarlar'dan açınca "1" olur. */
+  notify: "glix.notify",
   /** İçerik paketi: tamamlanan sürüm; "off" = kullanıcı önbelleği temizledi, kendiliğinden indirme yok. */
   packState: "glix.packState",
 } as const;

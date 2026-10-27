@@ -80,7 +80,8 @@ export function isAllowedPushEndpoint(endpoint: string): boolean {
   } catch {
     return false;
   }
-  if (url.protocol !== "https:" || url.port !== "" || url.username !== "" || url.password !== "") return false;
+  if (url.protocol !== "https:" || url.port !== "" || url.username !== "" || url.password !== "")
+    return false;
   const host = url.hostname.toLowerCase();
   return ALLOWED_PUSH_HOSTS.some((allowed) => host === allowed || host.endsWith(`.${allowed}`));
 }
@@ -148,7 +149,8 @@ const text = (s: string): Buffer => Buffer.from(s, "utf8");
 /** RFC 8291 §3.4 + RFC 8188: aes128gcm, tek kayıt. */
 export function encryptPayload(plaintext: Buffer, opts: EncryptOptions): EncryptedPush {
   if (plaintext.length > MAX_PLAINTEXT_BYTES) throw new Error("bildirim yükü çok büyük");
-  if (opts.uaPublic.length !== 65 || opts.authSecret.length !== 16) throw new Error("abonelik anahtarları geçersiz");
+  if (opts.uaPublic.length !== 65 || opts.authSecret.length !== 16)
+    throw new Error("abonelik anahtarları geçersiz");
   const ecdh = createECDH("prime256v1");
   if (opts.asPrivate) ecdh.setPrivateKey(opts.asPrivate);
   else ecdh.generateKeys();
@@ -179,7 +181,13 @@ export function encryptPayload(plaintext: Buffer, opts: EncryptOptions): Encrypt
 
 export type FetchLike = (
   url: string,
-  init: { method: string; headers: Record<string, string>; body: Buffer; redirect: "manual"; signal: AbortSignal },
+  init: {
+    method: string;
+    headers: Record<string, string>;
+    body: Buffer;
+    redirect: "manual";
+    signal: AbortSignal;
+  },
 ) => Promise<{ status: number }>;
 
 /** Yapılandırması doğrulanmış gerçek gönderici. Geçersiz yapılandırmada fırlatır. */

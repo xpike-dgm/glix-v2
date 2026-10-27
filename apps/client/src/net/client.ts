@@ -8,6 +8,7 @@ import {
 } from "@glix/engine";
 import { noteServerRestart } from "../pwa/pwa.js";
 import { CLIENT_PROTOCOL_VERSION, isProtocolMismatch } from "../pwa/updatePolicy.js";
+import { notifyOn } from "../settings/settings.js";
 import { installPerfObservers, perf, trackPerf } from "../telemetry/perf.js";
 import { resolveWsUrl } from "../wsUrl.js";
 import { offsetFromPong } from "./clock.js";
@@ -70,6 +71,12 @@ let knownServerVersion: string | null = null;
 /** Sahne (TV) kipi: oturum anahtarı kullanılmaz; her bağlanışta `joinStage` ile odaya girilir. */
 let stageCode: string | null = null;
 let mockSender: ((msg: ClientMessage) => void) | null = null;
+/** Oturum (odaya giriş ya da yeniden bağlanma) kabul edilince çağrılır; bildirim aboneliğini yeniden bağlar. */
+let sessionHook: (() => void) | null = null;
+
+export function setSessionHook(fn: () => void): void {
+  sessionHook = fn;
+}
 
 /** Geliştirme önizlemesi: mesajlar sahte sunucuya gider. */
 export function useMockSender(fn: (msg: ClientMessage) => void): void {
@@ -119,7 +126,7 @@ function onMessage(raw: string): void {
       const redeployed =
         restartedByServer || (knownServerVersion !== null && knownServerVersion !== msg.serverVersion);
       knownServerVersion = msg.serverVersion;
-      setState("serverProtocol", msg.protocolVersion);
+      setState({ serverProtocol: msg.protocolVersion, pushKey: msg.pushKey ?? null });
       if (isProtocolMismatch(msg.protocolVersion, CLIENT_PROTOCOL_VERSION)) {
         // Sunucu başka bir protokol konuşuyor: oda kurma/katılma/devam yok; "Güncelleme gerekli" ekranı çıkar.
         blockForUpdate();
@@ -160,6 +167,8 @@ function onMessage(raw: string): void {
         session: { token: msg.token, playerId: msg.playerId, roomCode: msg.roomCode },
         busy: false,
       });
+      sessionHook?.();
+      reportVisibility();
       break;
     case "stage":
       restartedByServer = false;
@@ -338,7 +347,14 @@ function onReturn(restored: boolean): void {
   }
 }
 
+/** Sayfa durumunu sunucuya bildirir; yalnız oyuncu bildirimi açmışsa ve odadaysa (başka veri gitmez). */
+function reportVisibility(): void {
+  if (!state.session || state.tv || !notifyOn()) return;
+  rawSend({ type: "visibility", hidden: document.visibilityState === "hidden" });
+}
+
 function onVisibility(): void {
+  reportVisibility();
   if (document.visibilityState === "hidden") {
     hiddenAt = Date.now();
     return;
@@ -434,6 +450,9 @@ export function leaveRoom(): void {
   goHome();
 }
 
+export const sendPushSubscribe = (sub: { endpoint: string; p256dh: string; auth: string }): boolean =>
+  rawSend({ type: "pushSubscribe", ...sub });
+export const sendPushUnsubscribe = (): boolean => rawSend({ type: "pushUnsubscribe" });
 export const kick = (playerId: string): boolean => rawSend({ type: "kick", playerId });
 export const setRandom = (count: number): boolean => rawSend({ type: "setRandom", count });
 export const setJoinPolicy = (policy: JoinPolicy): boolean => rawSend({ type: "setJoinPolicy", policy });
