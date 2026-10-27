@@ -23,6 +23,10 @@
   padding: var(--sp-3) 0 var(--sp-6);
   -webkit-overflow-scrolling: touch;
 }
+/* Kaydırma gövdesinde satırlar sıkışıp kırpılmasın (büyük yazı, kısa ekran). */
+.set__body > * {
+  flex-shrink: 0;
+}
 .set__group {
   display: flex;
   flex-direction: column;
@@ -229,4 +233,75 @@
 }
 .set__hint--wrap {
   overflow-wrap: anywhere;
+}
+
+/* ---- Ayarlar ana listesi: büyük kategori satırları ---- */
+.set__cats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.set__cat {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 72px;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-btn);
+  border: 1.5px solid var(--line);
+  background: rgba(10, 16, 48, 0.6);
+  color: var(--text);
+  text-align: left;
+  transition:
+    transform 80ms var(--ease),
+    background 120ms;
+}
+.set__cat:active {
+  transform: scale(0.985);
+  background: rgba(140, 160, 255, 0.14);
+}
+.set__caticon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(140, 160, 255, 0.12);
+  color: var(--cyan);
+}
+.set__catname {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-18);
+  line-height: 1.2;
+}
+.hub__chev {
+  flex: none;
+  color: var(--text-dim);
+}
+.set__row--link {
+  text-decoration: none;
+  justify-content: space-between;
+}
+.set__row--danger .set__label {
+  color: var(--red);
+}
+.set__logout {
+  margin-top: var(--sp-2);
+}
+/* Profil: Arkadaşlar / Kullanıcı adı kapıları */
+.hub__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(140, 160, 255, 0.12);
+  color: var(--cyan);
 }

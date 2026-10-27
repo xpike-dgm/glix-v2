@@ -747,25 +747,28 @@ export function Lobby(props: { snap: RoomSnapshot }) {
 
         <BottomSheet open={pickOpen()} onClose={() => setPickOpen(false)} title="Sen">
           <div class="pickersheet">
-            <form class="nickedit" onSubmit={saveNick}>
-              <input
-                class="field nickedit__field"
-                type="text"
-                maxLength={MAX_NICKNAME_LENGTH}
-                placeholder="Takma ad"
-                autocomplete="off"
-                autocapitalize="words"
-                spellcheck={false}
-                enterkeyhint="done"
-                aria-label="Takma ad"
-                aria-invalid={nickDraft().length > 0 && nickClean() === null}
-                value={nickDraft()}
-                onInput={(e) => setNickDraft(e.currentTarget.value)}
-              />
-              <button type="submit" class="nickedit__save" disabled={!nickChanged()}>
-                Kaydet
-              </button>
-            </form>
+            {/* Hesaplıda ad kullanıcı adıdır; odada ayrı takma ad yoktur. */}
+            <Show when={!state.account}>
+              <form class="nickedit" onSubmit={saveNick}>
+                <input
+                  class="field nickedit__field"
+                  type="text"
+                  maxLength={MAX_NICKNAME_LENGTH}
+                  placeholder="Takma ad"
+                  autocomplete="off"
+                  autocapitalize="words"
+                  spellcheck={false}
+                  enterkeyhint="done"
+                  aria-label="Takma ad"
+                  aria-invalid={nickDraft().length > 0 && nickClean() === null}
+                  value={nickDraft()}
+                  onInput={(e) => setNickDraft(e.currentTarget.value)}
+                />
+                <button type="submit" class="nickedit__save" disabled={!nickChanged()}>
+                  Kaydet
+                </button>
+              </form>
+            </Show>
             <div class="pickersheet__pick">
               <p class="picker__label">Karakterini seç</p>
               <div class="picker">

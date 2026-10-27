@@ -81,8 +81,10 @@ export function lowestFreeAvatar(room: Room): number {
 }
 
 /** Aynı takma ad varsa " 2", " 3" ... ekler (büyük/küçük harf duyarsız). 16 karakter sınırı korunur. */
-export function uniqueNickname(room: Room, wanted: string): string {
-  const taken = new Set([...room.players.values()].map((p) => p.nickname.toLowerCase()));
+export function uniqueNickname(room: Room, wanted: string, except?: Player): string {
+  const taken = new Set(
+    [...room.players.values()].filter((p) => p !== except).map((p) => p.nickname.toLowerCase()),
+  );
   if (!taken.has(wanted.toLowerCase())) return wanted;
   for (let n = 2; ; n++) {
     const suffix = ` ${n}`;

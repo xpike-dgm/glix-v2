@@ -197,6 +197,9 @@ katılıp oynar. Giriş: Google ya da kendi hesabı. Sıralama yalnız arkadaşl
 - [x] H7 Arkadaşlar: kullanıcı adıyla istek, kabul/ret, liste, çevrimiçi/lobide durumu.
 - [x] H8 Lobiye hızlı davet (uygulama içi + web bildirimi) ve arkadaşın lobisine tek dokunuşla katılma.
 - [x] H9 Arkadaş sıralaması: sen + arkadaşların; bu hafta / tüm zamanlar; galibiyet, puan, maç; oyun liderleri.
+- [x] Arayüz düzeni: sol üst ad rozeti tek giriş (girişliyse Profil; rozette istek sayısı), Arkadaşlar/Kullanıcı adı Profil'de,
+  Çıkış yap Ayarlar'ın en altında (onaylı), tek kullanıcı adı (7 günde bir değişir), Ayarlar kategori listesi
+  (Oyuncu, Cihaz, Bildirimler, Hesap, Hakkında) ve her kategori için ayrıntı sayfası.
 - [ ] H10 KVKK: aydınlatma metni, hesabı silme, verimi indirme.
 
 ---

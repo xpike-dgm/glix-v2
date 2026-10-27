@@ -22,6 +22,9 @@ export type Nav =
   | "unuttum"
   | "yeniSifre";
 
+/** Ayarlar'ın açık sayfası: `main` kategori listesi, diğerleri bir kategorinin ayrıntısı. */
+export type SettingsPage = "main" | "oyuncu" | "cihaz" | "bildirim" | "hesap" | "hakkinda";
+
 /** Giriş yapmış hesap (yalnız kendi cihazında; başkasına gitmez). */
 export interface AccountInfo {
   username: string;
@@ -51,6 +54,7 @@ interface AppState {
   clockOffset: number;
   toasts: Toast[];
   nav: Nav;
+  settingsPage: SettingsPage;
   joinCode: string;
   nickname: string;
   /** Oda kodu bulunamadığında dolu. */
@@ -69,6 +73,8 @@ interface AppState {
   pushKey: string | null;
   /** Oturumu açık hesap; misafirde ya da henüz bilinmiyorsa null. */
   account: AccountInfo | null;
+  /** Kullanıcı adı değişikliği bu ana dek kapalı (ms); serbestse ya da bilinmiyorsa null. */
+  usernameAvailableAt: number | null;
   /** Sunucuda Google ile giriş açık mı; hesaba Google bağlı mı. Bilinmiyorsa kapalı sayılır. */
   google: { enabled: boolean; linked: boolean };
   /** E-posta özellikleri: sunucuda açık mı, hesabın e-postası doğrulanmış mı, hesabın şifresi var mı. */
@@ -85,6 +91,7 @@ export const [state, setState] = createStore<AppState>({
   clockOffset: 0,
   toasts: [],
   nav: "home",
+  settingsPage: "main",
   joinCode: "",
   nickname: readStored(KEYS.nickname) ?? "",
   notFoundCode: null,
@@ -95,6 +102,7 @@ export const [state, setState] = createStore<AppState>({
   stage: null,
   pushKey: null,
   account: null,
+  usernameAvailableAt: null,
   google: { enabled: false, linked: false },
   mail: { enabled: false, verified: false, hasPassword: false },
 });
@@ -157,7 +165,17 @@ export function setNickname(name: string): void {
 }
 
 export function goHome(): void {
-  setState({ nav: "home", joinCode: "", notFoundCode: null, busy: false });
+  setState({ nav: "home", settingsPage: "main", joinCode: "", notFoundCode: null, busy: false });
+}
+
+/** Ayarlar'ı kategori listesinden açar. */
+export function openSettings(): void {
+  setState({ nav: "settings", settingsPage: "main" });
+}
+
+/** Oyundaki ad: hesapta kullanıcı adı (tek ad), misafirde cihazdaki takma ad. */
+export function ownName(): string {
+  return state.account?.username ?? state.nickname;
 }
 
 export function clearRoom(): void {

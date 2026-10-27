@@ -3,9 +3,14 @@ import {
   emailError,
   loginError,
   normalizeEmail,
+  parseAvailableAt,
   passwordError,
   registerError,
+  turkishDateTime,
   usernameError,
+  usernameLockedUntil,
+  usernameNote,
+  wireNickname,
 } from "./accountRules.js";
 
 describe("kullanıcı adı", () => {
@@ -46,5 +51,39 @@ describe("form denetimi", () => {
     expect(loginError({ login: " ", password: "x" })).not.toBeNull();
     expect(loginError({ login: "abc", password: "" })).not.toBeNull();
     expect(loginError({ login: "abc", password: "x" })).toBeNull();
+  });
+});
+
+describe("oyundaki ad (tek ad kuralı)", () => {
+  it("protokole her zaman geçerli bir ad gider", () => {
+    expect(wireNickname("Ali_01")).toBe("Ali_01");
+    expect(wireNickname("a".repeat(20))).toBe("a".repeat(16));
+    expect(wireNickname("___")).toBe("Oyuncu");
+    expect(wireNickname("")).toBe("Oyuncu");
+  });
+});
+
+describe("kullanıcı adı değiştirme tarihi", () => {
+  it("Türkiye saatiyle yazılır", () => {
+    expect(turkishDateTime(Date.UTC(2026, 10, 3, 11, 5))).toBe("3 Kasım 2026 14:05");
+    expect(turkishDateTime(Date.UTC(2026, 11, 31, 22, 0))).toBe("1 Ocak 2027 01:00");
+  });
+  it("kilit yalnız gelecekteki anda sürer", () => {
+    expect(usernameLockedUntil(null, 100)).toBeNull();
+    expect(usernameLockedUntil(100, 100)).toBeNull();
+    expect(usernameLockedUntil(101, 100)).toBe(101);
+  });
+  it("bilgi satırı serbestken kuralı, kilitliyken tarihi söyler", () => {
+    expect(usernameNote(null, 0)).toBe("Kullanıcı adını 7 günde bir değiştirebilirsin.");
+    const at = Date.UTC(2026, 10, 3, 11, 5);
+    expect(usernameNote(at, at - 1)).toBe(
+      "Kullanıcı adını 3 Kasım 2026 14:05 tarihinde tekrar değiştirebilirsin.",
+    );
+    expect(usernameNote(at, at + 1)).toBe("Kullanıcı adını 7 günde bir değiştirebilirsin.");
+  });
+  it("sunucu değeri doğrulanır", () => {
+    expect(parseAvailableAt(1_700_000_000_000)).toBe(1_700_000_000_000);
+    for (const bad of [null, undefined, "5", 0, -1, Number.NaN, Number.POSITIVE_INFINITY])
+      expect(parseAvailableAt(bad), String(bad)).toBeNull();
   });
 });

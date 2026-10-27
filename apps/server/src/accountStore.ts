@@ -91,6 +91,16 @@ export interface GameStandingRow {
   wins: number;
 }
 
+/** Kullanıcı adı en sık bu aralıkla değiştirilebilir (ilk değişiklik hesap açılışından sayılmaz, hemen serbest). */
+export const USERNAME_COOLDOWN_MS = 7 * 24 * 3600 * 1000;
+
+/** `taken`: başka hesapta var; `cooldown`: bekleme süresi dolmadı (`availableAt` ms). */
+export type RenameResult =
+  | { ok: true; account: Account; availableAt: number }
+  | { ok: false; reason: "taken" }
+  | { ok: false; reason: "cooldown"; availableAt: number }
+  | { ok: false; reason: "missing" };
+
 export type CreateResult = { ok: true; account: Account } | { ok: false; field: "username" | "email" };
 
 /**
@@ -141,6 +151,13 @@ export interface AccountStore extends FriendStore {
   deleteSession(tokenHash: string): void;
   /** Süresi dolan oturumları siler. */
   purge(now: number): void;
+  /**
+   * Kullanıcı adını değiştirir (büyük/küçük harf duyarsız benzersiz; kendi adının harf boyu değişebilir).
+   * Son değişiklikten `USERNAME_COOLDOWN_MS` dolmadıysa `cooldown`. Denetim ve yazma tek işlemde yapılır.
+   */
+  changeUsername(accountId: number, username: string, now: number): RenameResult;
+  /** Bir sonraki değişikliğin serbest olacağı an (ms); şimdi serbestse null. */
+  usernameAvailableAt(accountId: number, now: number): number | null;
   /** Kullanıcı adıyla (yalnız kullanıcı adı; e-posta eşleşmez) hesap bulur. */
   findByUsername(username: string): Account | null;
   /**
@@ -239,6 +256,8 @@ const MIGRATIONS: readonly string[] = [
      earned_at INTEGER NOT NULL,
      PRIMARY KEY (account_id, badge_id)
    );`,
+  // Kullanıcı adı değişikliği: son değişiklik anı (null = hiç değişmedi, hemen serbest).
+  `ALTER TABLE accounts ADD COLUMN username_changed_at INTEGER;`,
 ];
 
 function migrate(db: DatabaseSync): void {
@@ -313,6 +332,10 @@ export function createAccounts(path: string): AccountStore {
   const setPass = db.prepare("UPDATE accounts SET pass_hash = ? WHERE id = ?");
   const dropSessions = db.prepare("DELETE FROM sessions WHERE account_id = ?");
   const dropOtherSessions = db.prepare("DELETE FROM sessions WHERE account_id = ? AND id_hash != ?");
+  const renameState = db.prepare("SELECT username_changed_at AS at FROM accounts WHERE id = ?");
+  const renameWrite = db.prepare(
+    "UPDATE accounts SET username = ?, username_lc = ?, username_changed_at = ? WHERE id = ?",
+  );
   const byUsernameRow = db.prepare("SELECT id, username, email FROM accounts WHERE username_lc = ?");
   const insertGame = db.prepare(
     `INSERT INTO account_games (account_id, game_id, ended_at, players, mini_score, rank, won)
@@ -388,6 +411,44 @@ export function createAccounts(path: string): AccountStore {
   let closed = false;
   return {
     ...createFriendStore(db, inTransaction),
+    changeUsername(accountId, username, now) {
+      const lc = username.toLowerCase();
+      let result: RenameResult = { ok: false, reason: "missing" };
+      inTransaction(() => {
+        const found = byId.get(accountId) as Account | undefined;
+        if (!found) return;
+        const at = (renameState.get(accountId) as { at: number | null } | undefined)?.at ?? null;
+        if (at !== null && now < at + USERNAME_COOLDOWN_MS) {
+          result = { ok: false, reason: "cooldown", availableAt: at + USERNAME_COOLDOWN_MS };
+          return;
+        }
+        const owner = byUsername.get(lc) as { id: number } | undefined;
+        if (owner && owner.id !== accountId) {
+          result = { ok: false, reason: "taken" };
+          return;
+        }
+        try {
+          renameWrite.run(username, lc, now, accountId);
+        } catch (err) {
+          // Eşzamanlı iki değişiklik yarışırsa UNIQUE kısıtı son sözü söyler.
+          if (String(err).includes("accounts.username_lc")) {
+            result = { ok: false, reason: "taken" };
+            return;
+          }
+          throw err;
+        }
+        result = {
+          ok: true,
+          account: { id: accountId, username, email: found.email },
+          availableAt: now + USERNAME_COOLDOWN_MS,
+        };
+      });
+      return result;
+    },
+    usernameAvailableAt(accountId, now) {
+      const at = (renameState.get(accountId) as { at: number | null } | undefined)?.at ?? null;
+      return at !== null && now < at + USERNAME_COOLDOWN_MS ? at + USERNAME_COOLDOWN_MS : null;
+    },
     findByUsername(username) {
       const row = byUsernameRow.get(username.toLowerCase()) as Account | undefined;
       return row ? { id: row.id, username: row.username, email: row.email } : null;

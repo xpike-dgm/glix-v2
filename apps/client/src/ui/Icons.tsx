@@ -105,3 +105,42 @@ export const UsersIcon = (p: P) => (
     <path d="M16 4.8a3.2 3.2 0 010 6.2M18.4 14.4c1.8.8 2.8 2.6 2.8 5.6" />
   </svg>
 );
+export const ChevronRightIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M9 6l6 6-6 6" />
+  </svg>
+);
+export const UserIcon = (p: P) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="8" r="3.6" />
+    <path d="M4.8 20.5c0-3.8 3.2-6.5 7.2-6.5s7.2 2.7 7.2 6.5" />
+  </svg>
+);
+export const PhoneIcon = (p: P) => (
+  <svg {...base(p)}>
+    <rect x="6.5" y="2.5" width="11" height="19" rx="2.6" />
+    <path d="M10.5 18.5h3" />
+  </svg>
+);
+export const BellIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M6 16.5V11a6 6 0 0112 0v5.5l1.6 2H4.4l1.6-2zM10 21h4" />
+  </svg>
+);
+export const KeyIcon = (p: P) => (
+  <svg {...base(p)}>
+    <circle cx="8" cy="15" r="4" />
+    <path d="M11 12l8.5-8.5M16 7l3 3" />
+  </svg>
+);
+export const InfoIcon = (p: P) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v6M12 7.6v.1" />
+  </svg>
+);
+export const PencilIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 013 3L8 19l-4 1z" />
+  </svg>
+);

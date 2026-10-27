@@ -22,6 +22,8 @@ import {
 import { roundClockAt } from "../games/butona-bas/view.js";
 import { setGooglePending } from "../net/account.js";
 import { useMockSender } from "../net/client.js";
+import { freezeFriends } from "../net/friends.js";
+import { parseFriends } from "../net/friendsRules.js";
 import { freezeProfile } from "../net/profile.js";
 import { parseProfile } from "../net/profileRules.js";
 import { emitReaction } from "../net/reactions.js";
@@ -411,6 +413,18 @@ export function startMock(kind: string, params: URLSearchParams): void {
   // `&acct=1`: giriş yapmış hesap (finalde misafir daveti görünmez).
   if (kind === "final" && params.get("acct") === "1")
     setState("account", { username: "cihad_01", email: "cihad@example.com" });
+  // `&badge=N`: N bekleyen arkadaşlık isteği (ana sayfada ad rozeti, Profil'de Arkadaşlar satırı).
+  const badge = Number(params.get("badge") ?? 0);
+  if (Number.isInteger(badge) && badge > 0) {
+    const incoming = Array.from({ length: badge }, (_, i) => ({
+      username: `istek_${i + 1}`,
+      at: Date.now(),
+    }));
+    const parsed = parseFriends({ ok: true, friends: [], incoming, outgoing: [], blocked: [] });
+    if (parsed) freezeFriends(parsed, "ready");
+  }
+  // `&cool=1`: kullanıcı adı yakın zamanda değişmiş (3 gün sonra tekrar değiştirilebilir).
+  if (params.get("cool") === "1") setState("usernameAvailableAt", Date.now() + 3 * 24 * 3600 * 1000);
   // `&google=1`: Google ile giriş açık (düğmeler görünür).
   if (params.get("google") === "1") setState("google", { enabled: true, linked: false });
   // `&mail=1`: e-posta açık (Şifremi unuttum görünür); `&verified=1`: e-posta doğrulanmış; `&pw=0`: şifresiz hesap.
@@ -430,12 +444,17 @@ export function startMock(kind: string, params: URLSearchParams): void {
     case "join":
       setState({ nav: "join", joinCode: "KX7" });
       break;
-    case "settings":
-      setState({ nav: "settings" });
+    case "settings": {
+      // `&page=oyuncu|cihaz|bildirim|hesap|hakkinda`: o kategorinin ayrıntı sayfası; varsayılan ana liste.
+      const page = params.get("page");
+      const pages = ["oyuncu", "cihaz", "bildirim", "hesap", "hakkinda"] as const;
+      const open = pages.find((x) => x === page);
+      setState({ nav: "settings", settingsPage: open ?? "main" });
       // `&acct=1`: giriş yapmış hesap; `&google=1`: sunucuda Google açık (bağlı değil) — Ayarlar'da bağla satırı.
       if (params.get("acct") === "1")
         setState("account", { username: "cihad_01", email: "cihad@example.com" });
       break;
+    }
     case "profil": {
       // `&v=bos|yukleniyor|hata`; varsayılan dolu profil. Ekran açılmadan önce sabitlenir (ağdan okumasın).
       const v = params.get("v");

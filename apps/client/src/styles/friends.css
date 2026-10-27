@@ -132,9 +132,6 @@
   background: var(--amber);
   clip-path: polygon(50% 0, 100% 100%, 0 100%);
 }
-.home__friends {
-  gap: 6px;
-}
 .fr__sheetrow {
   display: flex;
   flex-wrap: wrap;

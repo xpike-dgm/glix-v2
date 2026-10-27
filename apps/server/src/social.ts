@@ -3,6 +3,7 @@ import type { AccountStore } from "./accountStore.js";
 import { log } from "./log.js";
 import { invitePayload } from "./pushText.js";
 import { TokenBucket } from "./ratelimit.js";
+import { uniqueNickname } from "./rooms.js";
 import type { Connection, Room, Runtime } from "./runtime.js";
 import type { PushTarget } from "./webpush.js";
 
@@ -48,6 +49,11 @@ export interface Social {
   friendRoom(accountId: number, username: string): Room | null;
   /** Hesaba bağlı bildirim aboneliği (misafirde işlem yok). `null` siler. */
   setPush(accountId: number, target: PushTarget | null): void;
+  /**
+   * Hesabın kullanıcı adı değişti: canlı bağlantılardaki ad, odadaki oyuncu adı (yayınlanır), durum önbelleği
+   * güncellenir; arkadaşlara (istek bekleyenler dahil) listelerini yenilemeleri bildirilir.
+   */
+  accountRenamed(accountId: number, username: string): void;
   /** Her sunucu turunda çağrılır; tarama aralığı dolduysa değişen durumları arkadaşlara yayar. */
   tick(now: number): void;
 }
@@ -61,6 +67,7 @@ export const noopSocial: Social = {
   invite: () => "failed",
   friendRoom: () => null,
   setPush: () => undefined,
+  accountRenamed: () => undefined,
   tick: () => undefined,
 };
 
@@ -216,6 +223,24 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
       // Aynı cihaz başka hesaba geçtiyse eski eşleme düşer: davet yanlış hesaba gitmesin.
       for (const [id, t] of pushTargets) if (t.endpoint === target.endpoint) pushTargets.delete(id);
       pushTargets.set(accountId, target);
+    },
+    accountRenamed(accountId, username) {
+      for (const conn of byAccount.get(accountId) ?? []) conn.account = { id: accountId, username };
+      const seen = lastSeen.get(accountId);
+      if (seen) lastSeen.set(accountId, { ...seen, username });
+      // Bağlantısı o an kopuk (süre tanınan) oyuncu da dahil: odalardaki tüm kayıtlar gezilir.
+      for (const room of rt.rooms.values()) {
+        for (const player of room.players.values()) {
+          if (player.accountId !== accountId) continue;
+          const next = uniqueNickname(room, username, player);
+          if (next === player.nickname) continue;
+          player.nickname = next;
+          rt.broadcaster.markDirty(room);
+        }
+      }
+      const lists = accounts.friendLists(accountId);
+      const msg: ServerMessage = { type: "friendsChanged" };
+      for (const other of [...lists.friends, ...lists.incoming, ...lists.outgoing]) sendTo(other.id, msg);
     },
     tick(now) {
       if (now - lastScan < PRESENCE_SCAN_MS) return;

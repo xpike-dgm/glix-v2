@@ -334,7 +334,7 @@ describe("maç akışı kaydı", () => {
 
     // Maç sürerken katılan hesaplı kişi izleyici olur; hiçbir şey yazılmaz.
     const izleyici = await enter(loginCookie("Izleyici_3"), "Izleyici", code);
-    expect(izleyici.room.players.find((p) => p.nickname === "Izleyici")?.spectator).toBe(true);
+    expect(izleyici.room.players.find((p) => p.nickname === "Izleyici_3")?.spectator).toBe(true);
 
     // İlk pencerede iki hesaplı basar (+1 +1), misafir basmaz (0): mini sıra 1, 1, 3.
     k.clock.advance(startedAt + 20 - k.clock.now());

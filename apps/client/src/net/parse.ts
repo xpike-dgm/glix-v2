@@ -40,6 +40,7 @@ const ERROR_CODES: readonly ErrorCode[] = [
   "invalid_games",
   "avatar_taken",
   "nickname_taken",
+  "account_name",
   "not_enough_players",
   "wrong_phase",
   "not_participant",

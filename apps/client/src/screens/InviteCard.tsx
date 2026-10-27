@@ -2,7 +2,7 @@ import { createEffect, createMemo, createSignal, on, onCleanup, Show } from "sol
 import { joinRoom, leaveRoom } from "../net/client.js";
 import { dismissInvite, invites } from "../net/friends.js";
 import { leavesCurrentRoom, liveInvites, remainingText } from "../net/friendsRules.js";
-import { serverNow, state } from "../net/store.js";
+import { ownName, serverNow, state } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { GhostButton } from "../ui/GhostButton.js";
@@ -34,7 +34,7 @@ export function InviteCard() {
   // Kart değişince onay adımı sıfırlanır.
   createEffect(on(top, () => setConfirming(false)));
 
-  const nickname = (): string => state.nickname || state.account?.username || "Oyuncu";
+  const nickname = (): string => ownName() || "Oyuncu";
   const currentCode = (): string | null => state.snapshot?.code ?? null;
 
   const accept = (): void => {

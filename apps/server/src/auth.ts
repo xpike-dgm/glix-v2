@@ -199,6 +199,8 @@ export interface AuthEnv {
   google: GoogleAuth | null;
   /** E-posta (doğrulama, şifre sıfırlama); ayarlı değilse null. */
   mail: MailService | null;
+  /** Kullanıcı adı değişince çalışma zamanını (oda adı, arkadaş listeleri) günceller; testlerde verilmeyebilir. */
+  onRenamed?: (accountId: number, username: string) => void;
 }
 
 function send(
@@ -337,6 +339,65 @@ async function login(req: IncomingMessage, res: ServerResponse, env: AuthEnv): P
   await startSession(res, env, req, found);
 }
 
+const MONTHS = [
+  "Ocak",
+  "Şubat",
+  "Mart",
+  "Nisan",
+  "Mayıs",
+  "Haziran",
+  "Temmuz",
+  "Ağustos",
+  "Eylül",
+  "Ekim",
+  "Kasım",
+  "Aralık",
+];
+/** Türkiye saati (UTC+3, yaz saati yok) ile "3 Kasım 2026 14:05". */
+export function turkishDateTime(ms: number): string {
+  const d = new Date(ms + 3 * 3600 * 1000);
+  const pad = (n: number): string => String(n).padStart(2, "0");
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+}
+
+/** `{username}` gövdesi; geçerliyse kullanıcı adı, değilse null. */
+export function parseUsernameChange(data: unknown): string | null {
+  if (!isRecord(data) || !exactKeys(data, ["username"])) return null;
+  const name = data.username;
+  return typeof name === "string" && USERNAME_PATTERN.test(name) ? name : null;
+}
+
+async function changeUsername(req: IncomingMessage, res: ServerResponse, env: AuthEnv): Promise<void> {
+  const account = accountFromCookie(env.accounts, req.headers.cookie, env.now);
+  if (!account) return fail(res, 401, "login_required", "Önce giriş yap.");
+  const username = parseUsernameChange(await readJson(req));
+  if (username === null) return fail(res, 400, "invalid_input", FIELD_TEXT.username, "username");
+  if (username === account.username)
+    return fail(res, 400, "username_same", "Bu zaten kullanıcı adın.", "username");
+  const done = env.accounts.changeUsername(account.id, username, env.now);
+  if (!done.ok) {
+    if (done.reason === "cooldown") {
+      send(res, 429, {
+        ok: false,
+        code: "username_cooldown",
+        message: `Kullanıcı adını ${turkishDateTime(done.availableAt)} tarihinde tekrar değiştirebilirsin.`,
+        availableAt: done.availableAt,
+      });
+      return;
+    }
+    if (done.reason === "taken")
+      return fail(res, 409, "username_taken", "Bu kullanıcı adı alınmış.", "username");
+    return fail(res, 401, "login_required", "Önce giriş yap.");
+  }
+  // Oturum kaydı hesap kimliğine bağlıdır: çerez ve diğer cihazlar yeni adı kendiliğinden görür.
+  env.onRenamed?.(account.id, done.account.username);
+  send(res, 200, {
+    ok: true,
+    account: { username: done.account.username, email: done.account.email },
+    usernameAvailableAt: done.availableAt,
+  });
+}
+
 function logout(req: IncomingMessage, res: ServerResponse, env: AuthEnv): void {
   const token = readSessionToken(req.headers.cookie);
   if (token) env.accounts.deleteSession(hashToken(token));
@@ -355,6 +416,8 @@ function me(req: IncomingMessage, res: ServerResponse, env: AuthEnv): void {
       password: account ? env.accounts.passwordHash(account.id) !== null : false,
     },
     verified: account ? env.accounts.isVerified(account.id) : false,
+    // Kullanıcı adı değişikliği bu ana dek kapalıysa açılacağı an (ms); serbestse null.
+    usernameAvailableAt: account ? env.accounts.usernameAvailableAt(account.id, env.now) : null,
   });
 }
 
@@ -611,7 +674,7 @@ export function handleAuth(req: IncomingMessage, res: ServerResponse, env: AuthE
       return me(req, res, env);
     }
     const posts = ["register", "login", "logout", "google/complete", "verify/resend", "reset/request"];
-    if (!posts.includes(name) && name !== "reset/confirm" && name !== "password")
+    if (!posts.includes(name) && name !== "reset/confirm" && name !== "password" && name !== "username")
       return fail(res, 404, "not_found", "Bulunamadı.");
     if (method !== "POST") return fail(res, 405, "method_not_allowed", "Geçersiz istek.");
     if (!originAllowed(req, env.allowedOrigins)) return fail(res, 403, "forbidden", "İstek reddedildi.");
@@ -625,6 +688,7 @@ export function handleAuth(req: IncomingMessage, res: ServerResponse, env: AuthE
     if (name === "reset/request") return resetRequest(req, res, env);
     if (name === "reset/confirm") return resetConfirm(req, res, env);
     if (name === "password") return changePassword(req, res, env);
+    if (name === "username") return changeUsername(req, res, env);
     if (name === "register") return register(req, res, env);
     return login(req, res, env);
   };
