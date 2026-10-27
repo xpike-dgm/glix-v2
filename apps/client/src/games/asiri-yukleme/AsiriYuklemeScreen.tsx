@@ -1,5 +1,5 @@
 import { createEffect, createMemo, createSignal, For, on, onCleanup, Show } from "solid-js";
-import { hapticError, hapticMatch, hapticSolo, hapticTap } from "../../fx/haptics.js";
+import { hapticError, hapticMatch, hapticPress, hapticSolo } from "../../fx/haptics.js";
 import { unlockAudio } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
@@ -86,7 +86,7 @@ export default function AsiriYuklemeScreen(props: GameScreenProps) {
     if (now - lastFx >= FX_GAP_MS) {
       lastFx = now;
       zap();
-      hapticTap();
+      hapticPress();
     }
     const box = sparksEl?.getBoundingClientRect();
     if (box) spark(e.clientX - box.left, e.clientY - box.top);

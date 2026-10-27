@@ -54,6 +54,16 @@ export function summarize(path: string, now = Date.now()): string {
   if (perf.length === 0) out.push("  henüz kayıt yok");
   out.push(...perfLines(perf));
 
+  const byPlatform = all(
+    "SELECT platform AS id, rtt_ms, ack_p50, ack_p95, slow_taps, reconnects, reloads FROM perf WHERE created_at >= ?",
+  );
+  out.push("");
+  out.push(
+    "Platforma göre (örnek / medyan RTT ms / medyan onay ms / onay p95 ms / örnek başı yavaş dokunma / örnek başı kopma / örnek başı sayfa yenileme):",
+  );
+  if (byPlatform.length === 0) out.push("  henüz kayıt yok");
+  out.push(...platformLines(byPlatform));
+
   const f = db
     .prepare("SELECT COUNT(*) AS n, AVG(rating) AS avg FROM feedback WHERE created_at >= ?")
     .get(since) as Row;
@@ -96,4 +106,20 @@ function perfLines(rows: Row[]): string[] {
     };
   });
   return lines.sort((a, b) => b.worst - a.worst).map((l) => l.text);
+}
+
+/** Platform grubu başına (ios / android / diger) gecikme, kopma ve yenileme özeti; en çok örneği olan başta. */
+function platformLines(rows: Row[]): string[] {
+  const groups = new Map<string, Row[]>();
+  for (const r of rows) {
+    const list = groups.get(String(r.id)) ?? [];
+    list.push(r);
+    groups.set(String(r.id), list);
+  }
+  return [...groups.entries()]
+    .sort((a, b) => b[1].length - a[1].length)
+    .map(([id, rs]) => {
+      const col = (k: string): number[] => rs.map((r) => num(r[k]));
+      return `  ${id.padEnd(24)} ${String(rs.length).padStart(4)}  ${String(Math.round(median(col("rtt_ms")))).padStart(5)}  ${String(Math.round(median(col("ack_p50")))).padStart(5)}  ${String(Math.round(p95(col("ack_p95")))).padStart(5)}  ${fmt1(mean(col("slow_taps"))).padStart(6)}  ${fmt1(mean(col("reconnects"))).padStart(6)}  ${fmt1(mean(col("reloads"))).padStart(6)}`;
+    });
 }

@@ -1,5 +1,6 @@
 import { render } from "solid-js/web";
 import { App } from "./App.js";
+import { applyHapticsCompensation } from "./fx/haptics.js";
 import { installAudioUnlock } from "./fx/sound.js";
 import { initPwa } from "./pwa/pwa.js";
 import { applyRootSettings } from "./settings/settings.js";
@@ -14,6 +15,7 @@ import "./styles/settings.css";
 
 installAudioUnlock();
 applyRootSettings();
+applyHapticsCompensation();
 // iOS Safari `:active` basılı görünümünü yalnız sayfada bir dokunma dinleyicisi varsa gösterir.
 document.addEventListener("touchstart", () => undefined, { passive: true });
 initPwa();

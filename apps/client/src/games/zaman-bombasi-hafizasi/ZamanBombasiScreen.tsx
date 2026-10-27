@@ -1,7 +1,7 @@
 // biome-ignore-all lint/a11y/noSvgWithoutTitle: simgeler dekoratif (aria-hidden); anlam metinde
 import type { ZamanBombasiColor } from "@glix/engine";
 import { createEffect, createMemo, createSignal, For, onCleanup, Show, untrack } from "solid-js";
-import { hapticError, hapticMatch, hapticSolo, hapticTap } from "../../fx/haptics.js";
+import { hapticError, hapticMatch, hapticPress, hapticSolo } from "../../fx/haptics.js";
 import { fail, match as matchSound, solo as soloSound, unlockAudio } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
@@ -221,7 +221,7 @@ export default function ZamanBombasiScreen(props: GameScreenProps) {
     clearTimeout(releaseTimer);
     setPressedPad(color);
     padSound(color, 180);
-    hapticTap();
+    hapticPress();
     sendAction({ kind: "press", color });
   };
   const up = (): void => {

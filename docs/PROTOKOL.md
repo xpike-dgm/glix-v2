@@ -29,7 +29,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `returnToLobby` | — | yalnız host, yalnız `final` |
 | `resync` | — | yama uygulanamadığında tam `room` snapshot ister |
 | `feedback` | `rating` (1–5), `text?` (≤ 300) | yalnız `final`; maç başına bir kez; cevap `actionAck` değil, sessizce kaydedilir |
-| `perf` | `gameId`, `rttMs`, `ackP50`, `ackP95`, `ackN`, `slowTaps`, `tapP95`, `longTasks`, `longTaskMs` | yalnız `results` aşamasında ve yalnız o anki oyunun `gameId`'si için; oyun başına oyuncu başına bir kez; sessizce kaydedilir (cevap yok). Tam anahtar kümesi, hepsi negatif olmayan tam sayı: `rttMs`,`ackP50`,`ackP95`,`tapP95` ≤ 60 000; `ackN`,`slowTaps`,`longTasks` ≤ 10 000; `longTaskMs` ≤ 600 000; `gameId` ≤ 64 karakter. Aşan ya da fazladan alanlı mesaj `invalid_message` |
+| `perf` | `gameId`, `rttMs`, `ackP50`, `ackP95`, `ackN`, `slowTaps`, `tapP95`, `longTasks`, `longTaskMs` | yalnız `results` aşamasında ve yalnız o anki oyunun `gameId`'si için; oyun başına oyuncu başına bir kez; sessizce kaydedilir (cevap yok). Tam anahtar kümesi, hepsi negatif olmayan tam sayı: `rttMs`,`ackP50`,`ackP95`,`tapP95` ≤ 60 000; `ackN`,`slowTaps`,`longTasks` ≤ 10 000; `longTaskMs` ≤ 600 000; `gameId` ≤ 64 karakter. İsteğe bağlı (eski istemcide yok): `platform` (`ios` / `android` / `diger`, UA'dan kaba grup), `reconnects` (o oyunda soket yeniden açılma sayısı) ve `reloads` (sekme oturumunda sayfa yenileme sayısı), ikisi de ≤ 1 000. Aşan ya da fazladan alanlı mesaj `invalid_message` |
 
 ## Sunucu → istemci
 
@@ -144,10 +144,10 @@ Amaç: beta oyun gecelerinden öğrenmek. Kişisel veri tutulmaz: takma ad, IP, 
 - **Okuma:** yalnız sunucu içinden `node dist/stats.js` ile özet (oyun başına oynanma, ortalama süre, ortalama puan,
   son geri bildirim metinleri). Dışarıya uç nokta açılmaz.
 - **Performans (anonim, oyun başına):** istemci her oyunun sonunda tek bir `perf` mesajı yollar (yeni uç nokta yok, aynı WebSocket).
-  İçerik yalnız sayılardır; oyuncu kimliği, takma ad, oda kodu, metin yok. Tablo `perf(match_id, game_id, created_at, rtt_ms, ack_p50, ack_p95, ack_n, slow_taps, tap_p95, long_tasks, long_task_ms)`, 90 gün saklanır.
+  İçerik yalnız sayılardır; oyuncu kimliği, takma ad, oda kodu, metin yok. Tablo `perf(match_id, game_id, created_at, rtt_ms, ack_p50, ack_p95, ack_n, slow_taps, tap_p95, long_tasks, long_task_ms, platform, reconnects, reloads)` (son üçü göç 3 ile eklendi; eski satırlar `diger`/0), 90 gün saklanır.
   - `rttMs`: ping/pong gidiş-dönüşünün son 9 örnek medyanı. `ackP50`/`ackP95`/`ackN`: `action` gönderiminden `actionAck`'e kadar geçen süre (ms) ve örnek sayısı.
   - `slowTaps`: Event Timing API'de 200 ms'den uzun süren etkileşim sayısı; `tapP95`: bildirilen etkileşim sürelerinin p95'i (tarayıcı yalnız ≥ 40 ms olanları bildirir, bu yüzden yalnız yavaş kuyruğu gösterir).
   - `longTasks`/`longTaskMs`: Long Tasks API sayısı ve toplam süresi. Desteklemeyen tarayıcıda (ör. iOS Safari) Event Timing ve Long Tasks alanları 0 gelir.
   - Eylem yapmamış ve yavaşlık görmemiş oyuncu mesaj göndermez. Geliştirme önizlemesinde (mock) ölçüm yoktur.
-  - Özet: `node dist/stats.js` "Cihaz performansı" tablosunu oyun başına örnek sayısı, medyan RTT, medyan onay, onay p95'inin p95'i, örnek başı yavaş dokunma ve uzun görev ms olarak, en kötü oyun başta verir.
+  - Özet: `node dist/stats.js` "Cihaz performansı" tablosunu oyun başına örnek sayısı, medyan RTT, medyan onay, onay p95'inin p95'i, örnek başı yavaş dokunma ve uzun görev ms olarak, en kötü oyun başta verir; ayrıca "Platforma göre" tablosu (ios / android / diger) örnek, medyan RTT, medyan onay, onay p95, yavaş dokunma, kopma ve sayfa yenileme ortalamalarını gösterir.
 - **Yayın gecikmesi:** sunucu değişiklikleri odaya en çok 16 ms birleştirerek yayar (`BROADCAST_INTERVAL_MS`); WebSocket sıkıştırması (`perMessageDeflate`) kapalı, TCP_NODELAY açıktır.

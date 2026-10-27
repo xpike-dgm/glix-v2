@@ -240,6 +240,17 @@ describe("parseClientMessage: oda mesajları", () => {
       expect(parseClientMessage(j(missing))).toBeNull();
       expect(parseClientMessage(j({ ...ok, playerId: "x" }))).toBeNull();
     });
+    it("platform, kopma ve yenileme sayıları isteğe bağlıdır ve doğrulanır", () => {
+      const withMeta = { ...ok, platform: "ios", reconnects: 2, reloads: 1 };
+      expect(parseClientMessage(j(withMeta))).toEqual(withMeta);
+      expect(parseClientMessage(j({ ...ok, platform: "diger" }))).not.toBeNull();
+      expect(parseClientMessage(j({ ...ok, platform: "windows" }))).toBeNull();
+      expect(parseClientMessage(j({ ...ok, platform: 3 }))).toBeNull();
+      expect(parseClientMessage(j({ ...ok, reconnects: 1000 }))).not.toBeNull();
+      expect(parseClientMessage(j({ ...ok, reconnects: 1001 }))).toBeNull();
+      expect(parseClientMessage(j({ ...ok, reloads: -1 }))).toBeNull();
+      expect(parseClientMessage(j({ ...ok, reloads: 1.5 }))).toBeNull();
+    });
     it("gameId 1..64 karakter olmalı", () => {
       expect(parseClientMessage(j({ ...ok, gameId: "" }))).toBeNull();
       expect(parseClientMessage(j({ ...ok, gameId: "a".repeat(65) }))).toBeNull();

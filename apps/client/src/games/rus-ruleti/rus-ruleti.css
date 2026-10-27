@@ -125,16 +125,16 @@
     transform: translate(0, 0);
   }
   15% {
-    transform: translate(-9px, 4px) rotate(-2deg);
+    transform: translate(calc(-9px * var(--shake-gain, 1)), calc(4px * var(--shake-gain, 1))) rotate(-2deg);
   }
   35% {
-    transform: translate(8px, -5px) rotate(2deg);
+    transform: translate(calc(8px * var(--shake-gain, 1)), calc(-5px * var(--shake-gain, 1))) rotate(2deg);
   }
   55% {
-    transform: translate(-5px, 3px);
+    transform: translate(calc(-5px * var(--shake-gain, 1)), calc(3px * var(--shake-gain, 1)));
   }
   75% {
-    transform: translate(3px, -2px);
+    transform: translate(calc(3px * var(--shake-gain, 1)), calc(-2px * var(--shake-gain, 1)));
   }
 }
 

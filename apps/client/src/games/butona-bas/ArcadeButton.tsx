@@ -1,4 +1,5 @@
 import { createEffect, For, on } from "solid-js";
+import { currentFlashPeak, currentShakeGain } from "../../fx/shake.js";
 import { propSrc } from "../../ui/props.js";
 
 export interface ArcadeFx {
@@ -29,14 +30,16 @@ export function ArcadeButton(props: Props) {
       () => props.fx,
       (fx) => {
         if (!fx) return;
-        if (fx.kind === "solo") {
+        const gain = currentShakeGain();
+        if (fx.kind === "solo" && gain > 0) {
+          const x = (px: number): string => `translateX(${(px * gain).toFixed(1)}px)`;
           root?.animate(
             [
               { transform: "translateX(0)" },
-              { transform: "translateX(-12px) rotate(-1.5deg)" },
-              { transform: "translateX(10px) rotate(1.2deg)" },
-              { transform: "translateX(-7px)" },
-              { transform: "translateX(4px)" },
+              { transform: `${x(-12)} rotate(${(-1.5 * gain).toFixed(2)}deg)` },
+              { transform: `${x(10)} rotate(${(1.2 * gain).toFixed(2)}deg)` },
+              { transform: x(-7) },
+              { transform: x(4) },
               { transform: "translateX(0)" },
             ],
             { duration: 380, easing: "ease-out" },
@@ -44,7 +47,10 @@ export function ArcadeButton(props: Props) {
         }
         if (flash) {
           flash.style.background = fx.kind === "match" ? "var(--lime)" : "#ff1f45";
-          flash.animate([{ opacity: 0.7 }, { opacity: 0 }], { duration: 420, easing: "ease-out" });
+          flash.animate([{ opacity: currentFlashPeak(0.7) }, { opacity: 0 }], {
+            duration: 420,
+            easing: "ease-out",
+          });
         }
       },
       { defer: true },

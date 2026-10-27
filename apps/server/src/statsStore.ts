@@ -1,12 +1,12 @@
 import { createRequire } from "node:module";
 import type { DatabaseSync } from "node:sqlite";
-import type { PerfSample } from "@glix/engine";
+import type { PerfMeta, PerfSample } from "@glix/engine";
 import { log } from "./log.js";
 
 /** İstatistik satırları bu süreden sonra silinir (docs/PROTOKOL.md). */
 export const RETENTION_MS = 90 * 24 * 3600 * 1000;
 export const PURGE_EVERY_MS = 24 * 3600 * 1000;
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export type GameOutcome = "finished" | "aborted" | "failed";
 
@@ -36,7 +36,7 @@ export interface StatsStore {
   matchEnded(matchId: number | null, now: number, completed: boolean): void;
   feedback(matchId: number | null, now: number, rating: number, text: string | null): void;
   /** Anonim istemci performans özeti (oyun başına oyuncu başına en çok bir). */
-  perf(matchId: number | null, gameId: string, now: number, sample: PerfSample): void;
+  perf(matchId: number | null, gameId: string, now: number, sample: PerfSample & Partial<PerfMeta>): void;
   /** `now - 90 gün`den eski satırları siler. */
   purge(now: number): void;
   close(): void;
@@ -94,6 +94,10 @@ const MIGRATIONS: readonly string[] = [
      long_task_ms INTEGER NOT NULL
    );
    CREATE INDEX perf_created_at ON perf (created_at);`,
+  // iOS ayrı grup: platform (ios/android/diger), oyun başına kopma ve sekme oturumu başına sayfa yenileme.
+  `ALTER TABLE perf ADD COLUMN platform TEXT NOT NULL DEFAULT 'diger';
+   ALTER TABLE perf ADD COLUMN reconnects INTEGER NOT NULL DEFAULT 0;
+   ALTER TABLE perf ADD COLUMN reloads INTEGER NOT NULL DEFAULT 0;`,
 ];
 
 type SqliteModule = typeof import("node:sqlite");
@@ -174,7 +178,7 @@ export function createStats(path: string | undefined | null): StatsStore {
     "INSERT INTO feedback (match_id, rating, text, created_at) VALUES (?, ?, ?, ?)",
   );
   const insertPerf = db.prepare(
-    "INSERT INTO perf (match_id, game_id, created_at, rtt_ms, ack_p50, ack_p95, ack_n, slow_taps, tap_p95, long_tasks, long_task_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO perf (match_id, game_id, created_at, rtt_ms, ack_p50, ack_p95, ack_n, slow_taps, tap_p95, long_tasks, long_task_ms, platform, reconnects, reloads) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
   );
   let closed = false;
   return {
@@ -227,6 +231,9 @@ export function createStats(path: string | undefined | null): StatsStore {
           p.tapP95,
           p.longTasks,
           p.longTaskMs,
+          p.platform ?? "diger",
+          p.reconnects ?? 0,
+          p.reloads ?? 0,
         );
       });
     },

@@ -1,6 +1,34 @@
-import { type ClientMessage, PERF_LIMITS, type PerfSample, type RoomSnapshot } from "@glix/engine";
+import {
+  type ClientMessage,
+  PERF_LIMITS,
+  PERF_META_LIMITS,
+  type PerfPlatform,
+  type PerfSample,
+  type RoomSnapshot,
+} from "@glix/engine";
 
 import { telemetry } from "../settings/settings.js";
+
+interface UaInput {
+  userAgent: string;
+  platform?: string;
+  maxTouchPoints?: number;
+}
+
+/** UA'dan kaba platform grubu. iPadOS 13+ kendini Macintosh diye tanıtır; dokunmatik olması ayırır. Model/sürüm tutulmaz. */
+export function platformGroup({ userAgent, platform = "", maxTouchPoints = 0 }: UaInput): PerfPlatform {
+  if (/iPhone|iPad|iPod/.test(userAgent) || (platform === "MacIntel" && maxTouchPoints > 1)) return "ios";
+  if (/Android/.test(userAgent)) return "android";
+  return "diger";
+}
+
+const clampMeta = (key: keyof typeof PERF_META_LIMITS, v: number): number =>
+  Math.min(PERF_META_LIMITS[key], Math.max(0, Math.round(Number.isFinite(v) ? v : 0)));
+
+/** Bu sekme oturumunda sayfa kaç kez yeniden yüklendi (yenile ya da iOS'un sekmeyi bellekten atması). */
+export function nextReloadCount(prev: number, navType: string | undefined, wasDiscarded: boolean): number {
+  return navType === "reload" || wasDiscarded ? prev + 1 : prev;
+}
 
 /** Aynı anda bekleyen en çok bu kadar eylem zamanlanır; fazlası en eskiden başlayarak atılır. */
 export const MAX_PENDING_ACKS = 256;
@@ -36,12 +64,14 @@ export interface PerfCollector {
   reset(): void;
   /** Ping/pong gidiş-dönüş süresi (ms). */
   addRtt(ms: number): void;
+  /** Soket koptuktan sonra yeniden açıldı (oyun başına sayılır). */
+  reconnect(): void;
   actionSent(seq: number): void;
   actionAcked(seq: number): void;
   interaction(durationMs: number): void;
   longTask(durationMs: number): void;
   /** Gönderilecek özet; hiç eylem/yavaşlık gözlenmediyse (sinyal yok) null. */
-  sample(): PerfSample | null;
+  sample(): (PerfSample & { reconnects: number }) | null;
 }
 
 export function createPerfCollector(now: () => number): PerfCollector {
@@ -52,6 +82,7 @@ export function createPerfCollector(now: () => number): PerfCollector {
   let slowTaps = 0;
   let longTasks = 0;
   let longTaskMs = 0;
+  let reconnects = 0;
   return {
     reset() {
       sentAt = new Map();
@@ -60,10 +91,14 @@ export function createPerfCollector(now: () => number): PerfCollector {
       slowTaps = 0;
       longTasks = 0;
       longTaskMs = 0;
+      reconnects = 0;
     },
     addRtt(ms) {
       if (!Number.isFinite(ms) || ms < 0) return;
       rtts = [...rtts, ms].slice(-RTT_SAMPLES);
+    },
+    reconnect() {
+      reconnects += 1;
     },
     actionSent(seq) {
       sentAt.set(seq, now());
@@ -87,7 +122,7 @@ export function createPerfCollector(now: () => number): PerfCollector {
       longTaskMs += durationMs;
     },
     sample() {
-      if (acks.length === 0 && slowTaps === 0 && longTasks === 0) return null;
+      if (acks.length === 0 && slowTaps === 0 && longTasks === 0 && reconnects === 0) return null;
       return {
         rttMs: clamp("rttMs", medianOf(rtts)),
         ackP50: clamp("ackP50", percentile(acks, 0.5)),
@@ -97,6 +132,7 @@ export function createPerfCollector(now: () => number): PerfCollector {
         tapP95: clamp("tapP95", percentile(taps, 0.95)),
         longTasks: clamp("longTasks", longTasks),
         longTaskMs: clamp("longTaskMs", longTaskMs),
+        reconnects: clampMeta("reconnects", reconnects),
       };
     },
   };
@@ -106,6 +142,25 @@ export function createPerfCollector(now: () => number): PerfCollector {
 const enabled = typeof window !== "undefined" && !import.meta.env.DEV;
 
 export const perf = createPerfCollector(() => performance.now());
+
+const RELOADS_KEY = "glix.reloads";
+
+/** Sekme oturumu başına sayfa yenileme sayısı (sessionStorage; yoksa 0). Açılışta bir kez hesaplanır. */
+function countReloads(): number {
+  if (!enabled) return 0;
+  try {
+    const prev = Number(sessionStorage.getItem(RELOADS_KEY) ?? "0") || 0;
+    const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    const wasDiscarded = (document as Document & { wasDiscarded?: boolean }).wasDiscarded === true;
+    const next = nextReloadCount(prev, nav?.type, wasDiscarded);
+    if (next !== prev) sessionStorage.setItem(RELOADS_KEY, String(next));
+    return next;
+  } catch {
+    return 0;
+  }
+}
+const reloads = countReloads();
+const platform: PerfPlatform = typeof navigator === "undefined" ? "diger" : platformGroup(navigator);
 
 interface EventTimingEntry extends PerformanceEntry {
   interactionId?: number;
@@ -164,6 +219,6 @@ export function trackPerf(snapshot: RoomSnapshot, send: (msg: ClientMessage) => 
     sentKey = key;
     if (!m.participants.includes(snapshot.selfId)) return;
     const s = perf.sample();
-    if (s) send({ type: "perf", gameId: m.gameId, ...s });
+    if (s) send({ type: "perf", gameId: m.gameId, ...s, platform, reloads: clampMeta("reloads", reloads) });
   }
 }

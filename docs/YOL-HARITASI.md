@@ -106,29 +106,29 @@ Zaten var: dvh yükseklik, safe-area, klavye alanı (visualViewport), iOS "Ana E
 - [x] Seslerin önceden ve küçük parçalar hâlinde yüklenmesi (ilk ses gecikmesiz).
 
 **3. Titreşim**
-- [ ] iOS'ta `navigator.vibrate` yok: iOS 18 Safari anahtar (switch) dokunuş yolunun önemli anlarda (bomba, eleme) denenmesi.
-- [ ] Titreşimsiz cihazda telafi: ekran sarsıntısı/parlama biraz güçlenir.
+- [x] iOS'ta `navigator.vibrate` yok: iOS 18 Safari anahtar (switch) dokunuş yolunun önemli anlarda (bomba, eleme) denenmesi (`hapticPress`, yalnız kullanıcının kendi dokunuşunda; **gerçek iPhone'da doğrulanmalı**).
+- [x] Titreşimsiz cihazda telafi: ekran sarsıntısı/parlama biraz güçlenir.
 
 **4. Ana ekrana ekleme**
-- [ ] iPhone açılış görselleri (apple-touch-startup-image, cihaz boyutlarına göre; maskotlu, ChatGPT ile).
-- [ ] Kurulum ipucu ilk oyun bittikten sonra, adımları görselli ("Paylaş → Ana Ekrana Ekle").
+- [x] iPhone açılış görselleri (apple-touch-startup-image, cihaz boyutlarına göre; maskotlu, ChatGPT ile).
+- [x] Kurulum ipucu ilk oyun bittikten sonra, adımları görselli ("Paylaş → Ana Ekrana Ekle").
 - [ ] Not: eklenmemiş sitelerde iOS 7 gün kullanılmayan veriyi silebilir; ekleme kalıcılık sağlar.
 - [ ] Web bildirimleri (iOS 16.4+, yalnız ana ekrana eklenmişse): "Arkadaşın seni odaya çağırıyor".
 
 **5. Dokunma ve ekran**
-- [ ] Uzun basma menüsü ve metin seçimi tüm oyun alanlarında kapalı (her oyun denetlenir).
-- [ ] Kenar kaydırma / çift dokunma yakınlaştırma oyun ekranlarında kapalı; çizim oyunlarında Safari "geri" hareketi çizimi bozmaz.
-- [ ] Yatay ekranda Dynamic Island/alt çizgi düğmelerin üstüne gelmez (tüm oyunlar).
-- [ ] Tüm yazı kutularında yazı boyutu ≥16px (iOS otomatik yakınlaştırma yok).
+- [x] Uzun basma menüsü ve metin seçimi tüm oyun alanlarında kapalı (her oyun denetlenir).
+- [x] Kenar kaydırma / çift dokunma yakınlaştırma oyun ekranlarında kapalı; çizim oyunlarında Safari "geri" hareketi çizimi bozmaz.
+- [x] Yatay ekranda Dynamic Island/alt çizgi düğmelerin üstüne gelmez (tüm oyunlar).
+- [x] Tüm yazı kutularında yazı boyutu ≥16px (iOS otomatik yakınlaştırma yok).
 
 **6. Performans**
-- [ ] Düşük Güç Modu (30 fps): zamanlama oyunları kare sayısıyla değil gerçek saatle ölçer — denetim.
-- [ ] Eski iPhone bellek: görsel bellekten temizleme, Pixi bağlamını tek oluşturup yeniden kullanma.
-- [ ] Telemetride iOS ayrı grup: tıklama gecikmesi, kopma sayısı, sayfa yeniden yüklenmesi.
+- [x] Düşük Güç Modu (30 fps): zamanlama oyunları kare sayısıyla değil gerçek saatle ölçer — denetim.
+- [x] Eski iPhone bellek: görsel bellekten temizleme, Pixi bağlamını tek oluşturup yeniden kullanma.
+- [x] Telemetride iOS ayrı grup: tıklama gecikmesi, kopma sayısı, sayfa yeniden yüklenmesi.
 
 **7. Paylaşma**
-- [ ] Paylaşılan bağlantıya önizleme kartı (Open Graph görseli) — WhatsApp/iMessage'da görsel çıkar.
-- [ ] QR ile katılma (U2-A) iOS kamerasıyla doğrudan açılır.
+- [x] Paylaşılan bağlantıya önizleme kartı (Open Graph görseli) — WhatsApp/iMessage'da görsel çıkar.
+- [x] QR ile katılma (U2-A) iOS kamerasıyla doğrudan açılır.
 
 **8. Test**
 - [ ] `ui:check`'in WebKit (Safari motoru) ile de koşması.
