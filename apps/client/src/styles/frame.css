@@ -706,11 +706,15 @@
     flex-direction: column;
     margin: 0 0 0 -2px;
   }
-  /* Sağda aynı genişlikte boşluk: oyun, ekranın tam ortasında kalır. */
+  /* Kısa yatay ekranda genişlik değerli: sağda simetri boşluğu bırakılmaz; üstte rozetler kenara yapışmasın
+     diye küçük bir pay kalır. */
   .gframe[data-o="portrait"] .gframe__body {
     flex: 1;
     min-width: 0;
-    margin-right: calc(76px + max(6px, var(--safe-left)) - max(0px, var(--safe-right)));
+  }
+  /* Şerit yanda: üstte şerit yok, oyun ekranı kendi küçük üst payını geri alır. */
+  .gframe[data-o="portrait"] .gframe__body .screen {
+    padding-top: 8px;
   }
   .gframe[data-o="portrait"] .ribbon {
     display: none;
