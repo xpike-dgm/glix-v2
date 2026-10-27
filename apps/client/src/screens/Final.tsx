@@ -12,6 +12,7 @@ import { CrownIcon } from "../ui/Icons.js";
 import { LeaveButton } from "../ui/LeaveButton.js";
 import { Mascot } from "../ui/Mascot.js";
 import { MatchGallery } from "../ui/MatchGallery.js";
+import { galleryItems } from "../ui/matchGallery.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
@@ -64,7 +65,9 @@ export function Final(props: { snap: RoomSnapshot }) {
   });
 
   return (
-    <Screen class={ranked().length >= 7 ? "final final--dense" : "final"}>
+    <Screen
+      class={`final${ranked().length >= 7 ? " final--dense" : ""}${galleryItems().length > 0 ? " final--gallery" : ""}`}
+    >
       <div class="confetti" ref={confetti} aria-hidden="true" />
       <p class="sr-only" role="status" aria-live="polite">
         {announce()}
@@ -138,9 +141,10 @@ export function Final(props: { snap: RoomSnapshot }) {
             </li>
           )}
         </For>
+        <li class="gal-row">
+          <MatchGallery players={props.snap.players} />
+        </li>
       </ul>
-
-      <MatchGallery players={props.snap.players} />
 
       <Watchers players={watchers()} selfId={props.snap.selfId} />
 

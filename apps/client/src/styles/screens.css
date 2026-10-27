@@ -1583,13 +1583,16 @@
 }
 
 /* Final: 7–8 oyuncuda kazanan biraz küçülür, tüm sıralama tek ekrana sığar. */
-.final--dense {
+.final--dense,
+.final--gallery {
   --win-av: clamp(76px, min(26vw, 12dvh), 120px);
 }
-.final--dense .winner__avatars {
+.final--dense .winner__avatars,
+.final--gallery .winner__avatars {
   padding-top: 28px;
 }
-.final--dense .rows--final {
+.final--dense .rows--final,
+.final--gallery .rows--final {
   margin-top: 10px;
 }
 .final--dense .row {
@@ -2211,7 +2214,7 @@
 }
 .gal__item {
   flex: none;
-  width: 64px;
+  width: 56px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2220,26 +2223,20 @@
 }
 .gal__btn {
   display: block;
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 12px;
   overflow: hidden;
   background: var(--kd-board);
 }
-.gal__name {
-  max-width: 64px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--fs-13);
-  color: var(--text-dim);
+.gal-row {
+  flex: none;
+  list-style: none;
 }
-@media (orientation: landscape) and (max-height: 520px) {
-  .gal {
-    display: none;
-  }
+.gal-row:empty {
+  display: none;
 }
 
 /* Lobi: "Bu gece" şeridi (seçilen oyunların küçük kartları; rastgele modda "?"). */
@@ -2293,8 +2290,19 @@
   box-shadow: none;
 }
 .tonight__card--rnd {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  max-width: 56px;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: var(--fs-15);
   color: var(--cyan);
+}
+
+/* Kısa dikey ekranda (320x568) 5+ oyuncuyla yer yok: şerit yalnız orada gizlenir (kaydırmasız sığma kuralı). */
+@media (orientation: portrait) and (max-height: 640px) {
+  .tonight[data-crowded="1"] {
+    display: none;
+  }
 }

@@ -38,7 +38,6 @@ export function MatchGallery(props: { players: PlayerInfo[] }) {
                     replay={replays()[it.key] ?? 0}
                   />
                 </button>
-                <span class="gal__name">{who(it.playerId)}</span>
               </li>
             )}
           </For>

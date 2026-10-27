@@ -133,17 +133,27 @@ function GameThumb(props: { id: string }) {
 }
 
 /** "Bu gece" şeridi: seçilen oyunların küçük kartları (rastgele modda "?" kartları); herkes görür. */
-function TonightStrip(props: { mode: "random" | "manual"; count: number; ids: string[]; names: string[] }) {
+function TonightStrip(props: {
+  mode: "random" | "manual";
+  count: number;
+  ids: string[];
+  names: string[];
+  crowded: boolean;
+}) {
   const n = () => (props.mode === "random" ? props.count : props.ids.length);
   return (
     <Show when={n() > 0}>
-      <section class="tonight" aria-label={`Bu gece: ${n()} oyun`}>
+      <section
+        class="tonight"
+        data-crowded={props.crowded ? "1" : undefined}
+        aria-label={`Bu gece: ${n()} oyun`}
+      >
         <span class="tonight__label">Bu gece: {n()} oyun</span>
         <ul class="tonight__strip" data-scroll>
           <Show
             when={props.mode === "manual"}
             fallback={
-              <For each={Array.from({ length: n() }, (_, i) => i)}>
+              <For each={Array.from({ length: Math.min(n(), 8) }, (_, i) => i)}>
                 {() => (
                   <li class="tonight__card tonight__card--rnd" aria-hidden="true">
                     ?
@@ -657,6 +667,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
             count={randomCount()}
             ids={selected().map((g) => g.id)}
             names={selected().map((g) => g.name)}
+            crowded={snap().players.length > 4}
           />
         </div>
 
