@@ -12,6 +12,14 @@ const generate: ActionGenerator = (rng, playerId, publicView, _privateView, conn
   const pub = isRec(publicView) ? (publicView as unknown as Partial<RusRuletiPublicView>) : {};
   const alive = Array.isArray(pub.alive) ? pub.alive.filter((x): x is string => typeof x === "string") : [];
   const roll = rng.next();
+  // Elenenler (hayatta olmayanlar) tahmin dener; hayattakilerin tahmini reddedilir.
+  if (!alive.includes(playerId) && alive.length > 0 && roll > 0.3) {
+    return {
+      kind: "predict",
+      turn: typeof pub.shots === "number" ? pub.shots : 0,
+      explodes: rng.next() < 0.5,
+    };
+  }
   if (roll < 0.15) return { kind: "shoot", target: playerId };
   if (roll < 0.2) return { kind: "shoot", target: "kimse" };
   const pool = alive.filter((id) => id !== playerId && connected.includes(id));

@@ -28,7 +28,8 @@ const pass = (to: string): KorBombaAction => ({ kind: "pass", to });
 
 describe("kor-bomba tahmini: uygunluk", () => {
   it("taşıyıcı olmayan her katılımcı tahmin verebilir", () => {
-    for (const id of ["b", "c", "d"]) expect(typeof act(fixed(), id, predict(0, true), T0 + 10)).toBe("object");
+    for (const id of ["b", "c", "d"])
+      expect(typeof act(fixed(), id, predict(0, true), T0 + 10)).toBe("object");
   });
 
   it("taşıyıcı tahmin veremez", () => {
@@ -110,10 +111,13 @@ describe("kor-bomba tahmini: puan", () => {
     let t = T0;
     const order = ["a", "c", "d", "c", "d"];
     for (let i = 0; i < order.length; i++) {
-      s = okState(act(s, "b", predict(i, true), (t += 10)));
-      s = okState(act(s, order[i] as string, pass(order[i + 1] ?? "a"), (t += 10)));
+      t += 10;
+      s = okState(act(s, "b", predict(i, true), t));
+      t += 10;
+      s = okState(act(s, order[i] as string, pass(order[i + 1] ?? "a"), t));
     }
-    s = okState(act(s, "b", predict(s.passes, true), (t += 10)));
+    t += 10;
+    s = okState(act(s, "b", predict(s.passes, true), t));
     const r = korBomba.result(korBomba.tick(s, ctx(s.explodeAt)));
     expect(r.awards.b).toBe(1);
     expect(Object.values(r.awards).filter((v) => v > 1)).toEqual([]);

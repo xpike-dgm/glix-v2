@@ -1,11 +1,11 @@
 import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import {
   KOR_BOMBA_MAX_BONUS_MS,
-  KOR_BOMBA_PREDICT_BONUS,
   KOR_BOMBA_MAX_FUSE_MS,
   KOR_BOMBA_MIN_BONUS_MS,
   KOR_BOMBA_MIN_FUSE_MS,
   KOR_BOMBA_OUTRO_MS,
+  KOR_BOMBA_PREDICT_BONUS,
   type KorBombaAction,
   type KorBombaPass,
   type KorBombaPredictionResult,

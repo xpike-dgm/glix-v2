@@ -9,7 +9,18 @@ export const RUS_RULETI_DECISION_MS = 18_000;
 /** Her atıştan sonra sonuç animasyonu için bekleme (ms); bu sürede eylem kabul edilmez. */
 export const RUS_RULETI_OPEN_MS = 2_500;
 
-export type RusRuletiAction = { kind: "shoot"; target: string };
+/** Bir "Kâhin" rozeti için gereken en az doğru tahmin sayısı (O9). */
+export const RUS_RULETI_KAHIN_MIN_CORRECT = 2;
+
+/**
+ * Eylemler:
+ * - `shoot`: silah sahibi hedefe ateş eder.
+ * - `predict` (O9): elenen izleyici, sıradaki atışın (`turn` = o ana kadarki atış sayısı) patlayıp patlamayacağını
+ *   tahmin eder. Tahmin gizlidir, atış başına bir kez verilir ve değişmez; puan vermez.
+ */
+export type RusRuletiAction =
+  | { kind: "shoot"; target: string }
+  | { kind: "predict"; turn: number; explodes: boolean };
 
 /** Son atış: herkes görür (patlama atış anında belirlenir, önceden gizli değer yoktur). */
 export interface RusRuletiShot {
@@ -31,6 +42,14 @@ export interface RusRuletiResult {
   survivors: string[];
   /** Elenenler, elenme sırasıyla (0). */
   eliminated: string[];
+  /** O9: "Kâhin" rozeti alanlar (en az 2 doğru tahmin). Yalnız mini oyun bitince herkese açılır; puan vermez. */
+  kahinler: string[];
+}
+
+/** Elenen oyuncunun son çözülen tahmininin sonucu (yalnız sahibine gider). */
+export interface RusRuletiPredictionResult {
+  turn: number;
+  correct: boolean;
 }
 
 /** Herkese açık görünüm. */
@@ -55,6 +74,14 @@ export interface RusRuletiPublicView {
 }
 
 /** Kişiye özel görünüm: oyuncunun durumu. */
-export interface RusRuletiView {
-  role: "alive" | "out" | "spectator";
-}
+export type RusRuletiView =
+  | { role: "alive" }
+  | { role: "spectator" }
+  | {
+      role: "out";
+      /** Şu an tahmin edilen atış sırası (eylemdeki `turn`). */
+      turn: number;
+      /** Bu atış için verdiğim tahmin (patlar mı); yoksa null. Başkasınınki asla yoktur. */
+      prediction: boolean | null;
+      lastResult: RusRuletiPredictionResult | null;
+    };

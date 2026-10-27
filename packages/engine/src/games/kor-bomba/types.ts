@@ -19,7 +19,9 @@ export const KOR_BOMBA_OUTRO_MS = 2_000;
  * - `predict` (O9): taşıyıcı olmayan katılımcı, bu elde (`turn` = o ana kadarki pas sayısı) bombanın patlayıp
  *   patlamayacağını tahmin eder. Tahmin gizlidir, el başına bir kez verilir ve değişmez.
  */
-export type KorBombaAction = { kind: "pass"; to: string } | { kind: "predict"; turn: number; explodes: boolean };
+export type KorBombaAction =
+  | { kind: "pass"; to: string }
+  | { kind: "predict"; turn: number; explodes: boolean };
 
 /** Patlamada +1 alan tahminci için üst sınır (oyun başına). */
 export const KOR_BOMBA_PREDICT_BONUS = 1;
