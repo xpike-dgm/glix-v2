@@ -185,6 +185,20 @@ Bugün: yeni sürüm hazır olunca bekliyor (`registerType: prompt`), kullanıc�
 - [x] Uyumsuz güncellemeler (`protocolVersion` değişti): tam ekran "Güncelleme gerekli → Güncelle"; güncellemeden oyuna girilemez.
 - [x] Sunucu güncellemesi (deploy) sırasında açık maçlar biter veya sürer (draining), sonra herkes yeni sürüme geçer.
 
+### U15. Hesaplar, arkadaşlar, istatistik ve rozetler
+Ayrıntılı tasarım: `docs/HESAP.md`. Sahip kararları (Ekim 2026): misafirin istatistiği tutulmaz; misafir yalnız kodla
+katılıp oynar. Giriş: Google ya da kendi hesabı. Sıralama yalnız arkadaşlar arasında.
+- [ ] H1 Hesap çekirdeği: kayıt (kullanıcı adı + e-posta + şifre), giriş/çıkış, oturum çerezi, WS bağlantısında kimlik.
+- [ ] H2 E-posta: doğrulama ve şifre sıfırlama (işlemsel e-posta servisi; Mailu dışarı mail gönderemiyor).
+- [ ] H3 Google ile giriş (OAuth; sahibin Google Cloud'da açacağı istemci kimliğiyle).
+- [ ] H4 Misafir sınırı: oda kurmak hesap ister; misafir kodla katılır, istatistiği tutulmaz.
+- [ ] H5 İstatistik: yalnız hesaplılar için maç/oyun sonuçları; profil ekranı.
+- [ ] H6 Rozetler: kalıcı başarımlar, maç sonunda "Yeni rozet!".
+- [ ] H7 Arkadaşlar: kullanıcı adıyla istek, kabul/ret, liste, çevrimiçi/lobide durumu.
+- [ ] H8 Lobiye hızlı davet (uygulama içi + web bildirimi) ve arkadaşın lobisine tek dokunuşla katılma.
+- [ ] H9 Arkadaş sıralaması.
+- [ ] H10 KVKK: aydınlatma metni, hesabı silme, verimi indirme.
+
 ---
 
 ## O — Oyun iyileştirmeleri iş kolu
