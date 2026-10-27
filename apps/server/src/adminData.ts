@@ -3,9 +3,16 @@
  * yalnız sayılar, oda kodları, aşamalar ve oyun kimlikleri.
  */
 import { monitorEventLoopDelay } from "node:perf_hooks";
-import type { AdminAccounts, AdminErrors, AdminLive, AdminRoomRow, AdminStats } from "@glix/engine";
+import type {
+  AdminAccounts,
+  AdminErrors,
+  AdminLive,
+  AdminRelease,
+  AdminRoomRow,
+  AdminStats,
+} from "@glix/engine";
 import { APP_VERSION } from "@glix/engine";
-import type { AccountStore } from "./accountStore.js";
+import type { AccountStore, ServerStartRow } from "./accountStore.js";
 import { countActiveMatches, countPlayers } from "./rooms.js";
 import type { Runtime } from "./runtime.js";
 import { dayLabel } from "./statsAdmin.js";
@@ -168,4 +175,30 @@ export function buildAccounts(stats: StatsStore, accounts: AccountStore, now: nu
       ? { enabled: true, ...mail }
       : { enabled: false, days: [], totals: { verify: zero(), reset: zero(), admin: zero() } },
   };
+}
+
+/**
+ * "Son yayınlar": başlangıç kayıtlarından süreli liste (satırlar yeniden eskiye). Süren sunucu `runId`; temiz kapanışta
+ * bitiş kapanış anıdır; kapanış kaydı olmayan (çökme, zorla durdurma) başlangıç için bitiş en geç sonraki başlangıçtır.
+ */
+export function buildReleases(
+  rows: readonly ServerStartRow[],
+  runId: number | null,
+  now: number,
+): AdminRelease[] {
+  return rows.map((r, i) => {
+    const newer = i > 0 ? rows[i - 1] : undefined;
+    const running = r.id === runId;
+    const endedAt = running ? null : (r.stoppedAt ?? newer?.startedAt ?? null);
+    const end = running ? now : endedAt;
+    return {
+      id: r.id,
+      revision: r.revision,
+      version: r.version,
+      startedAt: r.startedAt,
+      endedAt,
+      durationSec: end === null ? null : Math.max(0, Math.round((end - r.startedAt) / 1000)),
+      state: running ? "running" : r.stoppedAt !== null ? "clean" : "unclean",
+    };
+  });
 }

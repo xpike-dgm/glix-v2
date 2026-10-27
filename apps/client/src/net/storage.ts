@@ -23,6 +23,8 @@ export const KEYS = {
   notify: "glix.notify",
   /** İçerik paketi: tamamlanan sürüm; "off" = kullanıcı önbelleği temizledi, kendiliğinden indirme yok. */
   packState: "glix.packState",
+  /** Kullanıcının kapattığı son duyurunun kimliği (yeni duyuru yeni kimlik alır, yeniden görünür). */
+  announcementDismissed: "glix.duyuru",
 } as const;
 
 export function readStored(key: string): string | null {

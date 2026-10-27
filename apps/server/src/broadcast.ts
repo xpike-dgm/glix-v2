@@ -1,5 +1,6 @@
 import { diffMerge, type MergePatch, type RoomSnapshot } from "@glix/engine";
 import type { Clock } from "./clock.js";
+import { catalogFor } from "./gameSwitches.js";
 import { log } from "./log.js";
 import { abortMatch, GameFault, matchViewFor, sharedMatchSnapshot } from "./match.js";
 import type { Connection, Player, Room, Runtime } from "./runtime.js";
@@ -99,7 +100,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       joinPolicy: room.joinPolicy,
       stageCount: room.stages.size,
       lobbyReady: room.phase === "lobby" ? lobbyReadyIds(room) : [],
-      catalog: rt.catalog,
+      catalog: catalogFor(rt, room),
       match: sharedMatch,
     };
   }

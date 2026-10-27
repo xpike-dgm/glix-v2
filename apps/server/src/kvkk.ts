@@ -184,7 +184,9 @@ export function buildExport(
       name: badgeById(b.badgeId)?.name ?? null,
       earned_at: iso(b.earnedAt),
     })),
-    push_subscription: social.hasPush(accountId),
+    // Bildirim aboneliği hesapla birlikte kalıcı saklanır (yalnız ne zaman eklendiği dökülür; uç nokta ve anahtarlar değil).
+    push_subscription: data.push !== null,
+    push_subscription_since: data.push ? iso(data.push.createdAt) : null,
   };
 }
 

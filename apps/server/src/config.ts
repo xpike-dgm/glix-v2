@@ -142,7 +142,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     port,
     clientDir: env.CLIENT_DIR || resolve(fileURLToPath(new URL("../../client/dist", import.meta.url))),
     allowedOrigins,
-    revision: env.GIT_SHA || "dev",
+    revision: env.GIT_SHA || env.REVISION || "dev",
     vapid: loadVapid(env),
     google: loadGoogle(env),
     mail: loadMail(env),

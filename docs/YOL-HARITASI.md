@@ -209,8 +209,8 @@ gizli bilgileri (rol, cevap) panelde de görünmez; e-posta yalnız tek hesap ar
 - [x] A1 Oyun istatistikleri: günlük/haftalık maç ve oyuncu sayısı, oyun başına oynanma/süre/yarıda bırakılma, maç sonu puanları ve geri bildirimler, rastgele seçim dağılımı.
 - [x] A1 Hatalar ve performans: gruplanmış istemci hataları, iOS/Android ayrı kopma-gecikme-yavaş dokunuş, çöken oyun kayıtları.
 - [x] A2 Hesaplar: toplam/yeni kayıt, doğrulama oranı, giriş yöntemi dağılımı; kullanıcı adıyla arama; kullanıcı adını zorla değiştirme; askıya alma/silme; mail gönderim durumu; işlem kaydı.
-- [ ] A3 İçerik ve ayarlar: oyunu geçici kapatma / rastgele havuzdan çıkarma, ana sayfa duyuru bandı, herkese web bildirimi.
-- [ ] A3 Bakım: yeni maçı durdurup mevcutları bitirme (boşaltma), veritabanı yedeği indirme, son yayınlar.
+- [x] A3 İçerik ve ayarlar: oyunu geçici kapatma / rastgele havuzdan çıkarma, ana sayfa duyuru bandı, herkese web bildirimi.
+- [x] A3 Bakım: yeni maçı durdurup mevcutları bitirme (boşaltma), veritabanı yedeği indirme, son yayınlar.
 - [ ] A4 Moderasyon: oyuncuya "bildir" düğmesi ve inceleme kuyruğu, yasaklı kelime listesi, odayı kapatma, oyuncu atma.
 - [ ] A4 Kelime ve soru havuzlarını görüntüleme ve düzenleme.
 

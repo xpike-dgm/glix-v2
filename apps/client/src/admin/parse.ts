@@ -8,17 +8,24 @@ import type {
   AdminAccountSearch,
   AdminAccounts,
   AdminAuditPage,
+  AdminBroadcastResult,
+  AdminBroadcastStatus,
+  AdminContent,
   AdminDayCount,
   AdminErrorGroup,
   AdminErrors,
   AdminGameFailure,
   AdminGameStat,
+  AdminGameSwitch,
   AdminLive,
   AdminMailCount,
   AdminMailDay,
+  AdminMaintenance,
   AdminPerfRow,
+  AdminRelease,
   AdminRoomRow,
   AdminStats,
+  Announcement,
 } from "@glix/engine";
 
 class ParseError extends Error {}
@@ -319,6 +326,91 @@ export function parseAuditPage(v: unknown): AdminAuditPage {
       200,
     ),
     nextBefore: nullableNum(o, "nextBefore"),
+  };
+}
+
+// ---- A3: içerik, bildirim ve bakım ---------------------------------------------------------------------------
+
+const gameSwitch = (o: Rec): AdminGameSwitch => ({
+  id: str(o, "id"),
+  name: str(o, "name"),
+  minPlayers: num(o, "minPlayers"),
+  maxPlayers: num(o, "maxPlayers"),
+  open: bool(o, "open"),
+  randomPool: bool(o, "randomPool"),
+  engineRandomPool: bool(o, "engineRandomPool"),
+  overridden: bool(o, "overridden"),
+});
+
+function announcement(v: unknown): Announcement | null {
+  if (v === null) return null;
+  const o = rec(v);
+  const kind = o.kind;
+  if (kind !== "bilgi" && kind !== "uyari") throw new ParseError("kind: bilinmeyen tür");
+  return { id: num(o, "id"), text: str(o, "text"), kind, endsAt: nullableNum(o, "endsAt") };
+}
+
+export function parseContent(v: unknown): AdminContent {
+  const o = rec(v);
+  return { games: list(o, "games", gameSwitch, 200), announcement: announcement(o.announcement) };
+}
+
+/** `content/game` yanıtı: güncel oyun listesi. */
+export function parseGameList(v: unknown): AdminGameSwitch[] {
+  return list(rec(v), "games", gameSwitch, 200);
+}
+
+const RELEASE_STATES = ["running", "clean", "unclean"] as const;
+
+const release = (o: Rec): AdminRelease => {
+  const state = RELEASE_STATES.find((x) => x === o.state);
+  if (!state) throw new ParseError("state: bilinmeyen durum");
+  return {
+    id: num(o, "id"),
+    revision: str(o, "revision"),
+    version: str(o, "version"),
+    startedAt: num(o, "startedAt"),
+    endedAt: nullableNum(o, "endedAt"),
+    durationSec: nullableNum(o, "durationSec"),
+    state,
+  };
+};
+
+export function parseMaintenance(v: unknown): AdminMaintenance {
+  const o = rec(v);
+  const backup = rec(o.backup);
+  return {
+    on: bool(o, "on"),
+    activeMatches: num(o, "activeMatches"),
+    rooms: num(o, "rooms"),
+    players: num(o, "players"),
+    draining: bool(o, "draining"),
+    backup: {
+      usedToday: num(backup, "usedToday"),
+      limit: num(backup, "limit"),
+      nextAt: nullableNum(backup, "nextAt"),
+    },
+    releases: list(o, "releases", release, 50),
+  };
+}
+
+const broadcastResult = (o: Rec): AdminBroadcastResult => ({
+  at: num(o, "at"),
+  title: str(o, "title"),
+  total: num(o, "total"),
+  sent: num(o, "sent"),
+  failed: num(o, "failed"),
+  removed: num(o, "removed"),
+  finished: bool(o, "finished"),
+});
+
+export function parsePushStatus(v: unknown): AdminBroadcastStatus {
+  const o = rec(v);
+  return {
+    enabled: bool(o, "enabled"),
+    subscribers: num(o, "subscribers"),
+    nextAllowedAt: nullableNum(o, "nextAllowedAt"),
+    last: o.last === null ? null : broadcastResult(rec(o.last)),
   };
 }
 

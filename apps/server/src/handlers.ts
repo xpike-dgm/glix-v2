@@ -9,6 +9,7 @@ import {
   PROTOCOL_VERSION,
   REACTION_MIN_GAP_MS,
 } from "@glix/engine";
+import { openIds } from "./gameSwitches.js";
 import {
   applyAction,
   beginMatch,
@@ -34,6 +35,7 @@ import {
   setHost,
 } from "./rooms.js";
 import { type Connection, isConnected, type Room, type Runtime } from "./runtime.js";
+import { siteNoticeOf } from "./siteSettings.js";
 import { isAllowedPushEndpoint } from "./webpush.js";
 
 /** Bir oyuncunun takma adını en sık bu aralıkla değiştirebilir. */
@@ -52,6 +54,7 @@ function sendWelcome(rt: Runtime, conn: Connection): void {
     protocolVersion: PROTOCOL_VERSION,
     serverVersion: APP_VERSION,
     ...(rt.push.publicKey ? { pushKey: rt.push.publicKey } : {}),
+    site: siteNoticeOf(rt),
   });
 }
 
@@ -167,6 +170,10 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       }
       if (rt.draining) {
         fail(conn, "draining");
+        return;
+      }
+      if (rt.maintenance) {
+        fail(conn, "maintenance");
         return;
       }
       if (!rt.ipLimiter.takeCreate(conn.ip)) {
@@ -461,6 +468,11 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         fail(conn, "invalid_games");
         return;
       }
+      const open = openIds(rt);
+      if (!msg.gameIds.every((id) => open.has(id))) {
+        fail(conn, "invalid_games", "Seçtiğin oyunlardan biri şu an kapalı.");
+        return;
+      }
       room.gameIds = [...msg.gameIds];
       room.selection = { mode: "manual" };
       rt.broadcaster.markDirty(room);
@@ -509,6 +521,10 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         fail(conn, "wrong_phase");
         return;
       }
+      if (rt.maintenance) {
+        fail(conn, "maintenance");
+        return;
+      }
       if (room.selection.mode === "random") {
         const connectedCount = [...room.players.values()].filter(isConnected).length;
         const picked = pickRandomGames(rt, connectedCount, room.selection.count);
@@ -522,7 +538,8 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         rt.broadcaster.markDirty(room);
         return;
       }
-      if (room.gameIds.length === 0 || !room.gameIds.every((id) => Object.hasOwn(GAMES, id))) {
+      const open = openIds(rt);
+      if (room.gameIds.length === 0 || !room.gameIds.every((id) => open.has(id))) {
         fail(conn, "invalid_games");
         return;
       }

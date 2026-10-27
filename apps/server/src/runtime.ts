@@ -1,4 +1,5 @@
 import type {
+  Announcement,
   ContentTone,
   GameInfo,
   GameLog,
@@ -128,7 +129,12 @@ export interface Runtime {
   /** Etkin maçı olan odalar (tick yalnız bunlar için çalışır). */
   active: Set<Room>;
   broadcaster: Broadcaster;
+  /** Etkin katalog: yönetici anahtarlarıyla süzülmüş (kapalı oyunlar yok, `randomPool` etkin değer). Bkz. gameSwitches.ts. */
   catalog: GameInfo[];
+  /** Bakım kipi: yeni oda kurulamaz, yeni maç başlamaz (süren maçlar biter). */
+  maintenance: boolean;
+  /** Yayındaki duyuru (süresi dolmuş olabilir; `siteNoticeOf` süzer). */
+  announcement: Announcement | null;
   /** Yeni odanın varsayılan oyun seçimi; null ise rastgele 5. */
   defaultGameIds: string[] | null;
   /** 0..max-1 arası rastgele tamsayı (testlerde değiştirilebilir; varsayılan crypto). */

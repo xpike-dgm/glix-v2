@@ -133,3 +133,56 @@ describe("arkadaş mesajları", () => {
       expect(parseServerMessage(wire({ type: "error", code, message: "x" }))?.type).toBe("error");
   });
 });
+
+describe("A3: duyuru, bakım ve lobi bildirimi", () => {
+  const ann = { id: 2, text: "Bu akşam bakım var", kind: "uyari", endsAt: null };
+
+  it("welcome site alanını taşır; eski sunucuda alan yoktur", () => {
+    const base = { type: "welcome", protocolVersion: 2, serverVersion: "0.1.0" };
+    const withSite = parseServerMessage(wire({ ...base, site: { announcement: ann, maintenance: true } }));
+    expect(withSite).toEqual({ ...base, site: { announcement: ann, maintenance: true } });
+    expect(parseServerMessage(wire(base))).toEqual(base);
+    // Bozuk site alanı welcome'u düşürmez, yalnız alanı atar.
+    expect(parseServerMessage(wire({ ...base, site: "x" }))).toEqual(base);
+  });
+
+  it("siteNotice yalnız geçerli durumla kabul edilir", () => {
+    expect(
+      parseServerMessage(wire({ type: "siteNotice", site: { announcement: null, maintenance: false } })),
+    ).toEqual({
+      type: "siteNotice",
+      site: { announcement: null, maintenance: false },
+    });
+    expect(parseServerMessage(wire({ type: "siteNotice", site: { announcement: ann } }))).toBeNull();
+    expect(parseServerMessage(wire({ type: "siteNotice" }))).toBeNull();
+  });
+
+  it("lobbyNotice kısa bir metin ister", () => {
+    expect(parseServerMessage(wire({ type: "lobbyNotice", text: "Kule Ustası şu an kapalı." }))).toEqual({
+      type: "lobbyNotice",
+      text: "Kule Ustası şu an kapalı.",
+    });
+    for (const bad of [
+      { type: "lobbyNotice" },
+      { type: "lobbyNotice", text: "" },
+      { type: "lobbyNotice", text: "x".repeat(201) },
+    ])
+      expect(parseServerMessage(wire(bad))).toBeNull();
+  });
+
+  it("bakım hata kodu kabul edilir", () => {
+    expect(
+      parseServerMessage(
+        wire({
+          type: "error",
+          code: "maintenance",
+          message: "Kısa bir bakım yapıyoruz, birazdan tekrar dene.",
+        }),
+      ),
+    ).toEqual({
+      type: "error",
+      code: "maintenance",
+      message: "Kısa bir bakım yapıyoruz, birazdan tekrar dene.",
+    });
+  });
+});

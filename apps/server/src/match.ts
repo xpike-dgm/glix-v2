@@ -13,6 +13,7 @@ import {
 } from "@glix/engine";
 import { buildGameRecord, buildMatchRecord, type Entrant } from "./accountStats.js";
 import { scrubText } from "./errorScrub.js";
+import { pruneClosedGames } from "./gameSwitches.js";
 import { log } from "./log.js";
 import { errorMessage } from "./messages.js";
 import { notifyPlayers, roomHasPush } from "./push.js";
@@ -144,7 +145,8 @@ function enterBriefing(rt: Runtime, room: Room, match: Match): void {
  * `randomPool: false` olan oyunlar (ör. onay bekleyen yeni oyun) havuza girmez; yalnız elle seçilir.
  */
 export function pickRandomGames(rt: Runtime, connected: number, count: number): string[] {
-  const pool = Object.values(GAMES)
+  // Etkin katalog: kapalı oyunlar yok, `randomPool` yönetici ayarına göre (bkz. gameSwitches.ts).
+  const pool = rt.catalog
     .filter((g) => g.randomPool !== false && g.minPlayers <= connected && connected <= g.maxPlayers)
     .map((g) => g.id);
   // Fisher-Yates
@@ -225,6 +227,8 @@ export function clearMatch(rt: Runtime, room: Room, outcome: "aborted" | "failed
     p.spectator = false;
   }
   if (room.selection.mode === "random") room.gameIds = [];
+  // Maç sırasında kapatılan oyun elle seçimde kalmış olabilir: lobiye dönünce çıkarılır.
+  pruneClosedGames(rt, room);
   rt.active.delete(room);
 }
 

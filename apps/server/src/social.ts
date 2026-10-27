@@ -31,7 +31,7 @@ export interface Presence {
 
 /**
  * Arkadaş sistemi çalışma zamanı: hesaba bağlı canlı bağlantılar, durum (çevrimiçi/lobide/oyunda) türetmesi,
- * davetler ve hesaba bağlı web bildirimi abonelikleri. Hepsi bellekte; hiçbiri kalıcı değildir.
+ * ve davetler bellekte tutulur. Hesaba bağlı web bildirimi abonelikleri veritabanında kalıcıdır (`account_push`).
  */
 export interface Social {
   /** Hesaplı bağlantıyı dizine ekler (WS yükseltmesinde çerezden çözülen hesapla). */
@@ -49,7 +49,7 @@ export interface Social {
   friendRoom(accountId: number, username: string): Room | null;
   /** Hesaba bağlı bildirim aboneliği var mı ("Verimi indir" dökümü için). */
   hasPush(accountId: number): boolean;
-  /** Hesaba bağlı bildirim aboneliği (misafirde işlem yok). `null` siler. */
+  /** Hesaba bağlı bildirim aboneliğini kalıcı yazar (misafirde işlem yok). `null` siler. */
   setPush(accountId: number, target: PushTarget | null): void;
   /**
    * Hesabın kullanıcı adı değişti: canlı bağlantılardaki ad, odadaki oyuncu adı (yayınlanır), durum önbelleği
@@ -93,7 +93,6 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
   const byAccount = new Map<number, Set<Connection>>();
   /** Son yayılan durum (çevrimdışı olanlar silinir); kullanıcı adı çevrimdışı mesajı için saklanır. */
   const lastSeen = new Map<number, { username: string; status: FriendStatus }>();
-  const pushTargets = new Map<number, PushTarget>();
   const senderBuckets = new Map<number, TokenBucket>();
   const pairSentAt = new Map<string, number>();
   let lastScan = Number.NEGATIVE_INFINITY;
@@ -162,13 +161,23 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
       for (const [key, b] of senderBuckets) if (b.isFull()) senderBuckets.delete(key);
   }
 
+  /** Kalıcı aboneliği okur; veritabanı hatası bildirimi sessizce atlatır (davet ikincil yol). */
+  function pushOf(accountId: number): PushTarget | null {
+    try {
+      return accounts.pushGet(accountId);
+    } catch (err) {
+      log.error("accounts_error", { op: "push_get", error: String(err) });
+      return null;
+    }
+  }
+
   function pushInvite(accountId: number, from: string, code: string): boolean {
-    const target = pushTargets.get(accountId);
+    const target = pushOf(accountId);
     if (!target || !rt.push.enabled) return false;
     rt.push
       .send(target, invitePayload(from, code))
       .then((result) => {
-        if (result === "gone" && pushTargets.get(accountId) === target) pushTargets.delete(accountId);
+        if (result === "gone") accounts.pushDeleteEndpoint(target.endpoint);
       })
       .catch(() => undefined);
     return true;
@@ -180,7 +189,11 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
     for (const conn of byAccount.get(accountId) ?? []) conn.account = null;
     byAccount.delete(accountId);
     lastSeen.delete(accountId);
-    pushTargets.delete(accountId);
+    try {
+      accounts.pushDelete(accountId);
+    } catch (err) {
+      log.error("accounts_error", { op: "push_delete", error: String(err) });
+    }
     senderBuckets.delete(accountId);
     for (const key of pairSentAt.keys()) {
       const [from, to] = key.split(":");
@@ -251,15 +264,15 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
       const { room } = presence(target.id);
       return room && joinable(room) ? room : null;
     },
-    hasPush: (accountId) => pushTargets.has(accountId),
+    hasPush: (accountId) => pushOf(accountId) !== null,
     setPush(accountId, target) {
-      if (target === null) {
-        pushTargets.delete(accountId);
-        return;
+      try {
+        if (target === null) accounts.pushDelete(accountId);
+        // Aynı cihaz başka hesaba geçtiyse eski eşleme düşer (depo yapar): davet yanlış hesaba gitmesin.
+        else accounts.pushSet(accountId, target, rt.clock.now());
+      } catch (err) {
+        log.error("accounts_error", { op: "push_set", error: String(err) });
       }
-      // Aynı cihaz başka hesaba geçtiyse eski eşleme düşer: davet yanlış hesaba gitmesin.
-      for (const [id, t] of pushTargets) if (t.endpoint === target.endpoint) pushTargets.delete(id);
-      pushTargets.set(accountId, target);
     },
     accountRenamed(accountId, username) {
       for (const conn of byAccount.get(accountId) ?? []) conn.account = { id: accountId, username };

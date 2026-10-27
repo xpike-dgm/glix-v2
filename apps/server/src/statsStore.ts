@@ -65,6 +65,10 @@ export interface StatsStore {
   readonly reader: StatsReader | null;
   /** `now - 90 gün`den eski satırları siler. */
   purge(now: number): void;
+  /** Veritabanı dosya yolu (":memory:" olabilir); kapalıysa null. */
+  readonly path: string | null;
+  /** Veritabanının tutarlı bir kopyasını `dest` dosyasına yazar (`VACUUM INTO`). Kapalıysa fırlatır. */
+  snapshotTo(dest: string): void;
   close(): void;
 }
 
@@ -80,6 +84,10 @@ export const noopStats: StatsStore = {
   mailSent: () => {},
   reader: null,
   purge: () => {},
+  path: null,
+  snapshotTo: () => {
+    throw new Error("istatistik kapalı");
+  },
   close: () => {},
 };
 
@@ -349,6 +357,10 @@ export function createStats(path: string | undefined | null): StatsStore {
         db.prepare("DELETE FROM feedback WHERE created_at < ?").run(cut);
         db.prepare("DELETE FROM matches WHERE started_at < ?").run(cut);
       });
+    },
+    path,
+    snapshotTo: (dest) => {
+      db.prepare("VACUUM INTO ?").run(dest);
     },
     close: () => {
       if (closed) return;

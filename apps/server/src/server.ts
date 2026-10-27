@@ -6,11 +6,13 @@ import { type AccountStore, createAccounts } from "./accountStore.js";
 import { ADMIN_PREFIX, createAdminLimits, handleAdmin } from "./admin.js";
 import { buildLive, createHealthSampler } from "./adminData.js";
 import { AUTH_PREFIX, accountFromCookie, handleAuth } from "./auth.js";
+import { createBackupService } from "./backup.js";
 import { CLIENT_ERROR_PATH, handleClientError } from "./clientError.js";
 import { resolveClientIp } from "./clientIp.js";
 import { type Clock, systemClock } from "./clock.js";
 import { DEFAULT_LIMITS, type ServerLimits } from "./config.js";
 import { createFriendsApi, FRIENDS_PATH } from "./friendsApi.js";
+import { gameNameOf } from "./gameSwitches.js";
 import { createGoogleAuth, type GoogleConfig } from "./google.js";
 import { handleClose, handleMessage } from "./handlers.js";
 import { ACCOUNT_PATH, createAccountApi } from "./kvkk.js";
@@ -26,9 +28,11 @@ import {
 import { runTick, TICK_MS } from "./match.js";
 import { errorMessage } from "./messages.js";
 import { handleProfile, PROFILE_PATH } from "./profile.js";
+import { createPushBroadcaster } from "./pushBroadcast.js";
 import { TokenBucket } from "./ratelimit.js";
 import { countActiveMatches, countPlayers, createRuntime, disposeRuntime } from "./rooms.js";
 import type { AccountRef, Connection } from "./runtime.js";
+import { createSiteSettings } from "./siteSettings.js";
 import { createSocial } from "./social.js";
 import { serveStatic } from "./static.js";
 import { createStats, PURGE_EVERY_MS } from "./statsStore.js";
@@ -84,6 +88,10 @@ export interface ServerOptions {
   adminAccountIds?: ReadonlySet<number>;
   /** Hazır gönderici (testlerde sahte); verilirse `vapid` yok sayılır. */
   push?: PushGateway;
+  /** Yedeklerin geçici kopyaları için klasör; varsayılan sistem geçici klasörü (konteynerde /tmp, bellek diski). */
+  backupDir?: string;
+  /** Herkese bildirimde saniyedeki gönderim sayısı; varsayılan 20 (testlerde küçültülür). */
+  broadcastPerSecond?: number;
 }
 
 function resolvePush(opts: ServerOptions): PushGateway {
@@ -172,13 +180,27 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const leaderboardApi = createLeaderboardApi({
     accounts,
     clock,
-    gameName: (id) => rt.catalog.find((g) => g.id === id)?.name ?? null,
+    gameName: gameNameOf,
   });
+  const connections = new Set<Connection>();
+  // Duyuru ve bakım kipi değişikliği tüm açık bağlantılara (misafir, hesaplı, sahne) canlı gider.
+  const site = createSiteSettings(rt, accounts, (msg) => {
+    const text = JSON.stringify(msg);
+    for (const c of connections) c.sendRaw(text);
+  });
+  const broadcaster = createPushBroadcaster(rt, accounts, clock, opts.broadcastPerSecond);
+  const backup = createBackupService(accounts, stats, opts.backupDir);
+  // Sunucu başlangıç kaydı ("son yayınlar"); yazılamazsa sunucu yine açılır.
+  let runId: number | null = null;
+  try {
+    runId = accounts.serverStarted(opts.revision, APP_VERSION, clock.now());
+  } catch (err) {
+    log.error("accounts_error", { op: "server_started", error: String(err) });
+  }
   const adminIds: ReadonlySet<number> = opts.adminAccountIds ?? new Set<number>();
   const adminThrottle = new MailThrottle();
   const adminLimits = createAdminLimits(clock);
   const healthSampler = adminIds.size > 0 ? createHealthSampler() : null;
-  const connections = new Set<Connection>();
   const perIp = new Map<string, number>();
   const aliveSockets = new WeakMap<WebSocket, boolean>();
 
@@ -199,6 +221,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       const t0 = performance.now();
       runTick(rt);
       rt.social.tick(clock.now());
+      site.tick(clock.now());
       rt.metrics.recordTick(performance.now() - t0);
       if (rt.draining && countActiveMatches(rt) === 0) finishDrain();
       scheduleTick();
@@ -271,6 +294,11 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         social: rt.social,
         google,
         limits: adminLimits,
+        site,
+        broadcaster,
+        backup,
+        clock,
+        runId,
         live: () => {
           let withAccount = 0;
           for (const c of connections) if (c.account) withAccount += 1;
@@ -325,7 +353,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       handleProfile(req, res, {
         accounts,
         now: clock.now(),
-        gameName: (id) => rt.catalog.find((g) => g.id === id)?.name ?? null,
+        gameName: gameNameOf,
       });
       return;
     }
@@ -508,6 +536,14 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
           ws.close(code, code === 1012 ? "Sunucu yeniden başlıyor" : "Sunucu kapanıyor");
         wss.close();
         healthSampler?.stop();
+        // Temiz kapanış kaydı (çökme/zorla durdurmada yazılmaz; panel bunu "kapanış kaydı yok" gösterir).
+        if (runId !== null) {
+          try {
+            accounts.serverStopped(runId, clock.now());
+          } catch (err) {
+            log.error("accounts_error", { op: "server_stopped", error: String(err) });
+          }
+        }
         stats.close();
         accounts.close();
         server.close(() => resolve());

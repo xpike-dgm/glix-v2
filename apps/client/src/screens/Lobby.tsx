@@ -44,6 +44,7 @@ import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { QrCode } from "../ui/QrCode.js";
 import { ReactionLayer } from "../ui/ReactionLayer.js";
 import { Screen } from "../ui/Screen.js";
+import { SiteBanner } from "../ui/SiteBanner.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
 import { WorldBackdrop } from "../ui/WorldBackdrop.js";
 import { worldAllowed } from "../ui/world.js";
@@ -425,6 +426,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
         </div>
 
         <div class="lobby__scroll" data-scroll ref={scroller}>
+          <SiteBanner compact />
           <Show when={solo()}>
             <div class="solo rise" style={{ "--i": 2 }}>
               <Mascot pose="oda-bos" size="var(--solo-mascot, 120px)" />

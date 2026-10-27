@@ -17,6 +17,7 @@ import { GearIcon } from "../ui/Icons.js";
 import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
+import { SiteBanner } from "../ui/SiteBanner.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
 import { NicknameSheet } from "./NicknameSheet.js";
 
@@ -142,6 +143,8 @@ export function Home() {
           <SoundToggle />
         </div>
       </header>
+
+      <SiteBanner />
 
       <div class="home__hero">
         <h1 class="wordmark" aria-label="GLIX">

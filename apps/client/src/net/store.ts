@@ -1,8 +1,9 @@
-import type { PlayerInfo, RoomSnapshot } from "@glix/engine";
+import type { PlayerInfo, RoomSnapshot, SiteNotice } from "@glix/engine";
 import { createStore, reconcile, unwrap } from "solid-js/store";
 import { hapticError } from "../fx/haptics.js";
 import { fail } from "../fx/sound.js";
 import { median, pushSample } from "./clock.js";
+import { EMPTY_SITE, parseDismissed } from "./siteRules.js";
 import { KEYS, readStored, writeStored } from "./storage.js";
 import { initialSync, onPatch, onReconnect, onRoom, type SyncState, type SyncStep } from "./sync.js";
 
@@ -79,6 +80,10 @@ interface AppState {
   google: { enabled: boolean; linked: boolean };
   /** E-posta özellikleri: sunucuda açık mı, hesabın e-postası doğrulanmış mı, hesabın şifresi var mı. */
   mail: { enabled: boolean; verified: boolean; hasPassword: boolean };
+  /** Sunucunun bildirdiği duyuru ve bakım kipi (`welcome` / `siteNotice`); henüz bağlanılmadıysa boş. */
+  site: SiteNotice;
+  /** Kullanıcının kapattığı duyurunun kimliği (cihazda hatırlanır). */
+  dismissedAnnouncement: number | null;
 }
 
 export const [state, setState] = createStore<AppState>({
@@ -105,7 +110,15 @@ export const [state, setState] = createStore<AppState>({
   usernameAvailableAt: null,
   google: { enabled: false, linked: false },
   mail: { enabled: false, verified: false, hasPassword: false },
+  site: EMPTY_SITE,
+  dismissedAnnouncement: parseDismissed(readStored(KEYS.announcementDismissed)),
 });
+
+/** Duyuruyu bu cihazda kapatır; aynı duyuru bir daha çıkmaz, yenisi (yeni kimlik) çıkar. */
+export function dismissAnnouncement(id: number): void {
+  setState("dismissedAnnouncement", id);
+  writeStored(KEYS.announcementDismissed, String(id));
+}
 
 /** Sunucu saati (ms), ping/pong ölçümünün medyanıyla. */
 export function serverNow(): number {

@@ -13,7 +13,9 @@ import {
   level,
   methodsLabel,
   phaseLabel,
+  releaseStateLabel,
   shortDay,
+  shortRevision,
   USERNAME_OK,
 } from "./format.js";
 
@@ -89,5 +91,43 @@ describe("hesap ve işlem kaydı biçimleyicileri", () => {
     expect(USERNAME_OK.test("bosluk var")).toBe(false);
     expect(failRatio({ ok: 0, failed: 0 })).toBeNull();
     expect(failRatio({ ok: 3, failed: 1 })).toBe(0.25);
+  });
+});
+
+describe("A3 işlem kaydı etiketleri", () => {
+  it("yeni işlemler okunur Türkçe etiket alır", () => {
+    for (const a of [
+      "game_switch",
+      "announcement_set",
+      "announcement_clear",
+      "push_broadcast",
+      "push_broadcast_done",
+      "maintenance_on",
+      "maintenance_off",
+      "db_backup",
+      "db_backup_denied",
+      "db_backup_failed",
+    ])
+      expect(auditLabel(a)).not.toBe(a);
+  });
+
+  it("ayrıntılar okunur metne çevrilir", () => {
+    expect(auditDetail("game_switch", "kule-ustasi:closed")).toBe("kule-ustasi kapatıldı");
+    expect(auditDetail("game_switch", "butona-bas:open,pool_out")).toBe(
+      "butona-bas açıldı, rastgele havuzdan çıkarıldı",
+    );
+    expect(auditDetail("announcement_set", "uyari")).toBe("Uyarı");
+    expect(auditDetail("push_broadcast", "12")).toBe("12 abonelik");
+    expect(auditDetail("push_broadcast_done", "10/1/1")).toBe("10 gitti, 1 gitmedi, 1 abonelik silindi");
+    expect(auditDetail("db_backup", "2")).toBe("2 dosya");
+    expect(auditDetail("db_backup_denied", "fresh_required")).toBe("giriş kodu eski");
+    expect(auditDetail("maintenance_on", "")).toBe("");
+  });
+
+  it("yayın durumu ve revizyon", () => {
+    expect(releaseStateLabel("running")).toBe("Çalışıyor");
+    expect(releaseStateLabel("unclean")).toBe("Kapanış kaydı yok");
+    expect(shortRevision("0123456789abcdef")).toBe("0123456");
+    expect(shortRevision("dev")).toBe("dev");
   });
 });
