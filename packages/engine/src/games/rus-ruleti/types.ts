@@ -9,8 +9,8 @@ export const RUS_RULETI_DECISION_MS = 18_000;
 /** Her atıştan sonra sonuç animasyonu için bekleme (ms); bu sürede eylem kabul edilmez. */
 export const RUS_RULETI_OPEN_MS = 2_500;
 
-/** Bir "Kâhin" rozeti için gereken en az doğru tahmin sayısı (O9). */
-export const RUS_RULETI_KAHIN_MIN_CORRECT = 2;
+/** "Kâhin" rozeti için gereken en az doğru "Evet, patlar" tahmini (O9); ayrıca "Evet"lerin en az yarısı doğru olmalı. */
+export const RUS_RULETI_KAHIN_MIN_CORRECT = 1;
 
 /**
  * Eylemler:
@@ -42,7 +42,7 @@ export interface RusRuletiResult {
   survivors: string[];
   /** Elenenler, elenme sırasıyla (0). */
   eliminated: string[];
-  /** O9: "Kâhin" rozeti alanlar (en az 2 doğru tahmin). Yalnız mini oyun bitince herkese açılır; puan vermez. */
+  /** O9: "Kâhin" rozeti alanlar (patlamayı bilenler). Yalnız mini oyun bitince herkese açılır; puan vermez. */
   kahinler: string[];
 }
 

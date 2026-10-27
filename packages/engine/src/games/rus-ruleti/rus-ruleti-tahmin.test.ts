@@ -133,24 +133,34 @@ describe("rus-ruleti tahmini: rozet eşiği", () => {
       deadline: T0 + 18_000,
     };
   };
-  const kahin = (s: RusRuletiState) => s.eliminated.filter((id) => (s.correct[id] ?? 0) >= 2);
-
-  it("tek doğru tahmin rozet vermez, iki doğru verir; yanlışlar sayılmaz", () => {
-    // a: güvenli (Hayır) doğru, güvenli (Evet) yanlış, güvenli (Hayır) doğru -> 2 doğru. b: 1 doğru.
-    let s = playShots(eight(), [
-      { guessA: false, guessB: false, boom: false },
-      { guessA: true, guessB: true, boom: false },
-      { guessA: false, guessB: true, boom: false },
-    ]);
-    expect(s.correct).toEqual({ a: 2, b: 1 });
-    expect(kahin(s)).toEqual(["a"]);
-    s = { ...s, over: true };
-    expect(rusRuleti.publicView(s, ctx(T0)).result?.kahinler).toEqual(["a"]);
+  it("yalnız 'Hayır' diyen hiç kâhin olmaz; 'Evet' hiç tutmadıysa da olmaz", () => {
+    // a: hep Hayır (hepsi "doğru" ama sayılmaz). b: iki kez Evet, ikisi de boş.
+    const s = {
+      ...playShots(eight(), [
+        { guessA: false, guessB: true, boom: false },
+        { guessA: false, guessB: true, boom: false },
+        { guessA: false, boom: false },
+      ]),
+      over: true,
+    };
+    expect(s.correct).toEqual({});
+    expect(s.yes).toEqual({ b: 2 });
+    expect(rusRuleti.publicView(s, ctx(T0)).result?.kahinler).toEqual([]);
   });
 
-  it("tam 1 doğru: rozet yok", () => {
-    const s = { ...playShots(eight(), [{ guessA: false, boom: false }]), over: true };
-    expect(rusRuleti.publicView(s, ctx(T0)).result?.kahinler).toEqual([]);
+  it("'Evet'lerin en az yarısı tutmalı: 1/2 kâhin, 1/3 değil", () => {
+    // a: Evet(boş), Evet(patladı) -> 1/2. b: Evet(boş), Evet(boş), Evet(patladı) -> 1/3.
+    const s = {
+      ...playShots(eight(), [
+        { guessA: true, guessB: true, boom: false },
+        { guessA: false, guessB: true, boom: false },
+        { guessA: true, guessB: true, boom: true },
+      ]),
+      over: true,
+    };
+    expect(s.correct).toEqual({ a: 1, b: 1 });
+    expect(s.yes).toEqual({ a: 2, b: 3 });
+    expect(rusRuleti.publicView(s, ctx(T0)).result?.kahinler).toEqual(["a"]);
   });
 
   it("patlayan atışı bilen de sayılır", () => {
@@ -164,10 +174,7 @@ describe("rus-ruleti tahmini: rozet eşiği", () => {
 
   it("rozet yalnız elenenlere: hayatta kalan tahmin veremediği için kâhin olamaz", () => {
     const s = {
-      ...playShots(eight(), [
-        { guessA: false, boom: false },
-        { guessA: false, boom: false },
-      ]),
+      ...playShots(eight(), [{ guessA: true, boom: true }]),
       over: true,
     };
     expect(rusRuleti.publicView(s, ctx(T0)).result?.kahinler).toEqual(["a"]);
@@ -248,10 +255,8 @@ describe("rus-ruleti tahmini: gizlilik", () => {
   });
 
   it("rozet bitişte herkese açık, öncesinde asla", () => {
-    const s = playShots(base(), [
-      { guessA: false, boom: false },
-      { guessA: false, boom: false },
-    ]);
+    // a patlamayı önceden bildi (1/1); oyun henüz sürüyor.
+    const s = base({ correct: { a: 1 }, yes: { a: 1 } });
     expect(s.over).toBe(false);
     expect(rusRuleti.publicView(s, ctx(T0)).result).toBeNull();
     expect(rusRuleti.publicView({ ...s, over: true }, ctx(T0)).result?.kahinler).toEqual(["a"]);

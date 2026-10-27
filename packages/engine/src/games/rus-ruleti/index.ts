@@ -36,8 +36,10 @@ export interface RusRuletiState {
   over: boolean;
   /** GİZLİ (O9): sıradaki atış için elenenlerin tahmini (oyuncu → patlar mı). Yalnız sahibinin `view`ına girer. */
   predictions: Record<string, boolean>;
-  /** GİZLİ (O9): oyuncu başına doğru tahmin sayısı; yalnız oyun bitince "Kâhin" rozeti olarak açılır. */
+  /** GİZLİ (O9): oyuncu başına doğru çıkan "Evet, patlar" tahmini sayısı; yalnız oyun bitince "Kâhin" olarak açılır. */
   correct: Record<string, number>;
+  /** GİZLİ (O9): oyuncu başına verilen "Evet, patlar" tahmini sayısı (Kâhin için en az yarısı doğru olmalı). */
+  yes: Record<string, number>;
   /** GİZLİ (O9): son çözülen tahminin sonucu; yalnız sahibine gider. */
   results: Record<string, RusRuletiPredictionResult>;
 }
@@ -46,22 +48,32 @@ export interface RusRuletiState {
 function resolvePredictions(
   state: RusRuletiState,
   exploded: boolean,
-): Pick<RusRuletiState, "predictions" | "correct" | "results"> {
+): Pick<RusRuletiState, "predictions" | "correct" | "yes" | "results"> {
   const correct = { ...state.correct };
+  const yes = { ...state.yes };
   const results = { ...state.results };
   for (const [id, guess] of Object.entries(state.predictions)) {
     const hit = guess === exploded;
     results[id] = { turn: state.shots, correct: hit };
-    if (hit) correct[id] = (correct[id] ?? 0) + 1;
+    // Kâhin yalnız patlamayı bilenleri sayar: "Hayır" çoğu atışta zaten doğrudur.
+    if (guess) {
+      yes[id] = (yes[id] ?? 0) + 1;
+      if (exploded) correct[id] = (correct[id] ?? 0) + 1;
+    }
   }
-  return { predictions: {}, correct, results };
+  return { predictions: {}, correct, yes, results };
 }
 
-/** "Kâhin" rozeti: elenmiş olup en az 2 doğru tahmin yapanlar (oyuncu sırasıyla). */
+/**
+ * "Kâhin" rozeti: elenmiş olup en az bir kez "Evet, patlar" deyip bilen ve "Evet" tahminlerinin en az yarısı
+ * doğru çıkanlar (oyuncu sırasıyla).
+ */
 export function rusRuletiKahinler(state: RusRuletiState): string[] {
-  return state.players.filter(
-    (id) => state.eliminated.includes(id) && (state.correct[id] ?? 0) >= RUS_RULETI_KAHIN_MIN_CORRECT,
-  );
+  return state.players.filter((id) => {
+    const hits = state.correct[id] ?? 0;
+    const calls = state.yes[id] ?? 0;
+    return state.eliminated.includes(id) && hits >= RUS_RULETI_KAHIN_MIN_CORRECT && hits * 2 >= calls;
+  });
 }
 
 /** Atış `no` için rastgelelik: tohum + sıra numarasından türetilir. */
@@ -204,6 +216,7 @@ export const rusRuleti: GameDefinition<RusRuletiState, RusRuletiAction, RusRulet
         over: false,
         predictions: {},
         correct: {},
+        yes: {},
         results: {},
       };
     },

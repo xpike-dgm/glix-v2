@@ -284,8 +284,9 @@ tasarladığı alanlar birlikte kilitlenir; kodlama bu kural seti üzerinden yap
 - Elenen oyuncular (mini oyun bitene kadar izleyici) **her atıştan önce** o atış için tek bir tahmin verebilir:
   **"Patlar mı?" — Evet / Hayır**. Atış başına tek tahmin; verilen tahmin değiştirilemez. Hayatta olanlar ve oyuna
   katılmayan izleyiciler tahmin veremez.
-- Tahmin **puan vermez**. Atış çözülünce doğru tahmin sayılır; mini oyun sonunda **en az 2 doğru tahmin** yapan elenene
-  **"Kâhin"** rozeti verilir. Rozet yalnız mini oyun sonuç ekranında, herkese açık gösterilir.
+- Tahmin **puan vermez**. Mini oyun sonunda **"Kâhin"** rozeti, en az bir kez **"Evet, patlar" deyip bilen** ve
+  **"Evet" tahminlerinin en az yarısı doğru çıkan** elenene verilir ("Hayır" tahminleri rozete sayılmaz; çoğu atış zaten
+  boş geçer). Rozet yalnız mini oyun sonuç ekranında, herkese açık gösterilir. (Eşik güncellemesi, Ekim 2026, sahip onayı.)
 - Tahminler ve doğru sayıları mini oyun bitene kadar yalnız sahibinin ekranındadır (sahibi her atıştan sonra yalnız
   "Bildin!" / "Bilemedin" görür); başkalarına ve herkese açık görünüme geçmez. Tahmin atışın sonucunu etkilemez.
 - Genel skor değişmez: hayatta kalanlar +1, elenenler 0.
