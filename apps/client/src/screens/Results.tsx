@@ -9,13 +9,16 @@ import { Avatar } from "../ui/Avatar.js";
 import type { Mood } from "../ui/avatars.js";
 import { ProgressBar } from "../ui/ProgressBar.js";
 import { Screen } from "../ui/Screen.js";
+import { Watchers } from "../ui/Watchers.js";
 import { CountUp } from "./CountUp.js";
-import { formatScore, podiumOrder, rankPlayers } from "./ranking.js";
+import { formatScore, playersOnly, podiumOrder, rankPlayers, watchersOf } from "./ranking.js";
 
 export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
   const now = createServerNow(100);
   const result = () => props.match.result;
-  const ranked = createMemo(() => rankPlayers(props.snap.players, (p) => result()?.miniScores[p.id]));
+  const ranked = createMemo(() =>
+    rankPlayers(playersOnly(props.snap.players), (p) => result()?.miniScores[p.id]),
+  );
   const top = () => ranked().slice(0, 3);
   const rest = () => ranked().slice(3);
   const award = (id: string) => result()?.awards[id] ?? 0;
@@ -131,6 +134,8 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
           </For>
         </ul>
       </div>
+
+      <Watchers players={watchersOf(props.snap.players)} selfId={props.snap.selfId} />
 
       <footer class="results__foot">
         <Show when={props.match.phaseEndsAt}>

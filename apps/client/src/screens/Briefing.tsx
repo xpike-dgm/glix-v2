@@ -97,8 +97,8 @@ export function Briefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
               <div class="watch" role="status">
                 <EyeIcon size={24} />
                 <span class="watch__text">
-                  <b>Bu turu izleyeceksin</b>
-                  <span>Sonraki oyuna katılacaksın</span>
+                  <b>İzliyorsun</b>
+                  <span>Sonraki oyunda katılırsın</span>
                 </span>
               </div>
             }

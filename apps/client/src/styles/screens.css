@@ -561,6 +561,17 @@
   font-size: var(--fs-13);
   color: var(--text-dim);
 }
+.joinset {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.seg--join .seg__opt {
+  min-height: 44px;
+  padding: 0 4px;
+  font-size: var(--fs-13);
+  white-space: nowrap;
+}
 .seg--tone {
   flex: 1;
   min-width: 0;
@@ -2143,4 +2154,38 @@
   .nickedit__save {
     width: 100%;
   }
+}
+
+/* Maçı izleyenler (sonuç ve final): sıralamaya girmezler, tek satır. */
+.watchers {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 2px 4px;
+  color: #c3b0ff;
+}
+.watchers svg {
+  flex: none;
+}
+.watchers__avs {
+  display: flex;
+  flex: none;
+}
+.watchers__avs > * + * {
+  margin-left: -8px;
+}
+.watchers__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.watchers__text b {
+  color: var(--text);
+  font-weight: 600;
 }

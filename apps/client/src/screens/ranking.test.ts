@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { player } from "../net/fixtures.js";
-import { formatScore, podiumOrder, rankPlayers, winnersOf } from "./ranking.js";
+import { formatScore, playersOnly, podiumOrder, rankPlayers, watchersOf, winnersOf } from "./ranking.js";
 
 const players = [player("a"), player("b"), player("c"), player("d")];
 
@@ -36,5 +36,15 @@ describe("formatScore", () => {
     expect(formatScore(-1)).toBe("\u22121");
     expect(formatScore(0)).toBe("0");
     expect(formatScore(12)).toBe("12");
+  });
+});
+
+describe("izleyiciler", () => {
+  const all = [player("a"), player("b", 1, { spectator: true }), player("c", 2)];
+  it("sıralamaya yalnız oyuncular girer, izleyenler ayrı listelenir", () => {
+    expect(playersOnly(all).map((p) => p.id)).toEqual(["a", "c"]);
+    expect(watchersOf(all).map((p) => p.id)).toEqual(["b"]);
+    const r = rankPlayers(playersOnly(all), (p) => p.score);
+    expect(r.map((x) => x.player.id)).toEqual(["a", "c"]);
   });
 });

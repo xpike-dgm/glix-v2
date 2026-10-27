@@ -13,11 +13,12 @@ import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
-import { formatScore, rankPlayers, winnersOf } from "./ranking.js";
+import { Watchers } from "../ui/Watchers.js";
+import { formatScore, playersOnly, rankPlayers, watchersOf, winnersOf } from "./ranking.js";
 
 export function Final(props: { snap: RoomSnapshot }) {
   let confetti: HTMLDivElement | undefined;
-  const ranked = createMemo(() => rankPlayers(props.snap.players, (p) => p.score));
+  const ranked = createMemo(() => rankPlayers(playersOnly(props.snap.players), (p) => p.score));
   const winners = () => winnersOf(ranked());
   const lastRank = () => ranked().at(-1)?.rank ?? 0;
   /** 1. sıra sevinir; sonuncu yalnız puanı negatifse "out", yoksa sakin. */
@@ -25,6 +26,8 @@ export function Final(props: { snap: RoomSnapshot }) {
     rank === 1 ? "happy" : rank === lastRank() && ranked().length > 1 && score < 0 ? "out" : "idle";
   const isHost = () => props.snap.hostId === props.snap.selfId;
   const tie = () => winners().length > 1;
+  const watchers = () => watchersOf(props.snap.players);
+  const watching = () => watchers().some((p) => p.id === props.snap.selfId);
 
   const [announce, setAnnounce] = createSignal("");
   const spoken = (): string => {
@@ -134,9 +137,18 @@ export function Final(props: { snap: RoomSnapshot }) {
         </For>
       </ul>
 
+      <Watchers players={watchers()} selfId={props.snap.selfId} />
+
       <footer class="final__foot">
-        <FeedbackRow />
-        <Show when={isHost()} fallback={<p class="waiting">Host seni lobiye alacak</p>}>
+        <Show when={!watching()}>
+          <FeedbackRow />
+        </Show>
+        <Show
+          when={isHost()}
+          fallback={
+            <p class="waiting">{watching() ? "Lobiye dönünce oyuncu olursun" : "Host seni lobiye alacak"}</p>
+          }
+        >
           <PrimaryButton onClick={() => returnToLobby()}>Lobiye dön</PrimaryButton>
         </Show>
       </footer>

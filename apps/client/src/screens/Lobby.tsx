@@ -4,6 +4,7 @@ import {
   CONTENT_TONE_LABELS,
   CONTENT_TONES,
   type ContentTone,
+  type JoinPolicy,
   type LobbyEmoji,
   MAX_NICKNAME_LENGTH,
   MAX_PLAYERS,
@@ -21,6 +22,7 @@ import {
   renameSelf,
   sendReaction,
   setGames,
+  setJoinPolicy,
   setLobbyReady,
   setRandom,
   setTone,
@@ -99,6 +101,11 @@ async function copyCode(code: string): Promise<void> {
   }
   toast(`Oda kodu: ${code}`);
 }
+
+const JOIN_OPTIONS: readonly { policy: JoinPolicy; label: string }[] = [
+  { policy: "izleyici", label: "İzleyici" },
+  { policy: "kapali", label: "Kapalı" },
+];
 
 /** Boş koltukta en çok kaç daire gösterilir; kalanı "+N yer daha" olur. */
 const MAX_EMPTY_SLOTS = 3;
@@ -281,6 +288,11 @@ export function Lobby(props: { snap: RoomSnapshot }) {
   const chooseTone = (tone: ContentTone): void => {
     if (!isHost() || snap().tone === tone) return;
     setTone(tone);
+  };
+
+  const choosePolicy = (policy: JoinPolicy): void => {
+    if (!isHost() || snap().joinPolicy === policy) return;
+    setJoinPolicy(policy);
   };
 
   const toggleGame = (id: string): void => {
@@ -508,6 +520,25 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                           onClick={() => chooseTone(t)}
                         >
                           {CONTENT_TONE_LABELS[t]}
+                        </button>
+                      )}
+                    </For>
+                  </div>
+                </div>
+                <div class="joinset">
+                  <span class="tone__label">Oyun sırasında katılım</span>
+                  <div class="seg seg--join">
+                    <For each={JOIN_OPTIONS}>
+                      {(o) => (
+                        <button
+                          type="button"
+                          class="seg__opt"
+                          aria-pressed={snap().joinPolicy === o.policy}
+                          data-on={snap().joinPolicy === o.policy ? "1" : undefined}
+                          disabled={!isHost()}
+                          onClick={() => choosePolicy(o.policy)}
+                        >
+                          {o.label}
                         </button>
                       )}
                     </For>

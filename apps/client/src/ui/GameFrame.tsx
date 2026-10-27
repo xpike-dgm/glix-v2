@@ -31,7 +31,7 @@ function SpectatorRibbon() {
   return (
     <div class="ribbon" role="status">
       <EyeIcon size={16} />
-      <span>İzliyorsun — sonraki oyuna katılacaksın</span>
+      <span>İzliyorsun · sonraki oyunda katılırsın</span>
     </div>
   );
 }

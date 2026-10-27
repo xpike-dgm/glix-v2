@@ -43,3 +43,13 @@ export function podiumOrder<T>(top: readonly T[]): T[] {
 export function formatScore(n: number): string {
   return n < 0 ? `\u2212${Math.abs(n)}` : String(n);
 }
+
+/** Sıralamaya girenler: izleyiciler hariç. */
+export function playersOnly(players: readonly PlayerInfo[]): PlayerInfo[] {
+  return players.filter((p) => !p.spectator);
+}
+
+/** Maçı izleyenler (sıralanmaz). */
+export function watchersOf(players: readonly PlayerInfo[]): PlayerInfo[] {
+  return players.filter((p) => p.spectator);
+}
