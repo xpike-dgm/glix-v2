@@ -1754,7 +1754,7 @@
 /* ---- Lobi: yalnızken sıcak ekran, davet, karakter seçici ---- */
 .solo {
   /* Üst şerit, kod ve Başlat ~330 px yer tutar; kalan yüksekliğe göre büyür. */
-  --room: calc(100dvh - 330px);
+  --room: calc(100dvh - 375px);
   --solo-mascot: clamp(56px, calc(var(--room) * 0.26), 150px);
   display: flex;
   flex-direction: column;
@@ -1948,16 +1948,23 @@
   gap: 10px;
   min-height: 48px;
 }
-.gcard--dim {
-  opacity: 0.55;
+/* Yetersiz oyunculu oyun: görsel ve ad soluk, "en az N kişi" yazısı okunur kalır. */
+.gcard--dim .gcard__art {
+  opacity: 0.4;
+}
+.gcard--dim .gcard__name {
+  opacity: 0.7;
 }
 .emojibar {
   flex: none;
   display: flex;
   justify-content: space-between;
+  /* 6 × 48 px dar telefonda gutter'a taşar: kenar boşluğuna kadar uzanır. */
+  margin: 0 -6px;
   padding-top: 6px;
 }
 .emojibar__btn {
+  flex: none;
   width: 48px;
   height: 48px;
   display: grid;
@@ -2076,5 +2083,64 @@
     grid-column: 2;
     grid-row: 4;
     align-self: end;
+  }
+}
+
+/* Kısa dikey ekran (320x568): 8 oyuncu + emoji çubuğu + Başlat kaydırmasız sığsın. */
+@media (orientation: portrait) and (max-height: 640px) {
+  .lobby .lobby__scroll {
+    margin-top: 6px;
+    padding-bottom: 8px;
+  }
+  .lobby .seat__name {
+    margin-top: 8px;
+  }
+  .lobby .seats__more {
+    display: none;
+  }
+  .lobby .games__head,
+  .lobby .games--summary {
+    min-height: 48px;
+  }
+  .lobby .lobby__foot {
+    padding-top: 4px;
+  }
+  .lobby .emojibar {
+    padding-top: 2px;
+  }
+  .solo {
+    --solo-mascot: 48px;
+  }
+  .solo__qr {
+    width: 84px;
+    height: 84px;
+  }
+}
+@media (orientation: landscape) and (max-height: 480px) {
+  .solo {
+    --room: calc(100dvh - 190px);
+  }
+  .solo__text {
+    display: none;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 480px) {
+  /* Yatayda takma ad solda, karakterler sağda: pencere kısa kalır. */
+  .pickersheet {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.6fr);
+    gap: 16px;
+    align-items: start;
+  }
+  .nickedit {
+    flex-direction: column;
+    margin-bottom: 0;
+  }
+  .nickedit__field {
+    flex: none;
+  }
+  .nickedit__save {
+    width: 100%;
   }
 }

@@ -297,12 +297,14 @@ export function startMock(kind: string, params: URLSearchParams): void {
   // `&emoji=1`: lobide birkaç oyuncudan emoji uçar (ekran denetimi için).
   if (kind === "lobby" && params.get("emoji") === "1") {
     const picks = ["😂", "🔥", "👏", "😱"] as const;
-    later(() => {
+    const burst = (): void => {
       players.slice(0, 4).forEach((p, i) => {
         const emoji = picks[i % picks.length];
         if (emoji) emitReaction(p.id, emoji);
       });
-    }, 250);
+    };
+    // Ekran görüntüsü uçuşun ortasına denk gelsin diye tekrarlanır.
+    for (let k = 0; k < 8; k++) later(burst, 250 + k * 700);
   }
   if (kind === "home" || kind === "join" || kind === "settings" || kind === "notfound")
     setState("session", null);

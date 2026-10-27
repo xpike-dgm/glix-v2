@@ -94,23 +94,38 @@ const SCREENS = [
     settle: 600,
     act: async (p) => p.locator(".seat--self").click(),
   },
-  { name: "lobby-random", q: "mock=lobby", settle: 1000, act: clickText("Minigame Seçimi") },
-  { name: "lobby-manual", q: "mock=lobby&sel=manual", settle: 1000, act: clickText("Minigame Seçimi") },
+  { name: "lobby-random", q: "mock=lobby", settle: 1000, act: clickText("Oyunlar") },
+  { name: "lobby-manual", q: "mock=lobby&sel=manual", settle: 1000, act: clickText("Oyunlar") },
   {
     name: "lobby-tone-host",
     q: "mock=lobby",
     settle: 1000,
     act: async (p) => {
-      await p.getByText("Minigame Seçimi", { exact: false }).first().click();
+      await p.getByText("Oyunlar", { exact: false }).first().click();
       await p.getByRole("button", { name: "Ofis" }).click();
     },
   },
-  { name: "lobby-tone-guest", q: "mock=lobby&guest=1", settle: 1000, act: clickText("Minigame Seçimi") },
+  { name: "lobby-tone-guest", q: "mock=lobby&guest=1", settle: 1000, act: clickText("Oyunlar") },
+  // Lobi geri bildirimi C/D: ayarlar baştan, hazırım, emoji, ev sahibi menüsü, oyuncu görünümü.
+  { name: "lobby-solo-settings", q: "mock=lobby&n=1&sel=manual", settle: 900, act: clickText("Oyunlar") },
+  { name: "lobby-8-ready", q: "mock=lobby&n=8&ready=7", settle: 900 },
+  { name: "lobby-emoji", q: "mock=lobby&n=4&emoji=1", settle: 700 },
   {
-    name: "lobby-kick",
-    q: "mock=lobby",
-    act: async (p) => p.locator(".seat:not(:disabled):not(.seat--self):not(.seat--empty)").first().click(),
+    name: "lobby-host-sheet",
+    q: "mock=lobby&n=5",
+    settle: 500,
+    act: async (p) => {
+      const seat = p.locator(".seat:not(:disabled):not(.seat--self):not(.seat--empty)").first();
+      const box = await seat.boundingBox();
+      if (!box) throw new Error("oyuncu koltuğu yok");
+      await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await p.mouse.down();
+      await p.waitForTimeout(700);
+      await p.mouse.up();
+    },
   },
+  { name: "lobby-guest", q: "mock=lobby&n=5&guest=1&ready=2", settle: 900 },
+  { name: "lobby-guest-8", q: "mock=lobby&n=8&guest=1&ready=3", settle: 900 },
   { name: "briefing", q: "mock=briefing" },
   { name: "lobby-buyuk-yazi", q: "mock=lobby&n=4&text=large", settle: 900 },
   { name: "briefing-buyuk-yazi", q: "mock=briefing&text=large" },

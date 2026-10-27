@@ -68,4 +68,27 @@ describe("sunucu mesajı doğrulama", () => {
     expect(parseServerMessage("[]")).toBeNull();
     expect(parseServerMessage(wire({ type: "yok" }))).toBeNull();
   });
+  it("reaction mesajını yalnız izinli emojiyle kabul eder", () => {
+    expect(parseServerMessage(wire({ type: "reaction", playerId: "p1", emoji: "🔥" }))).toEqual({
+      type: "reaction",
+      playerId: "p1",
+      emoji: "🔥",
+    });
+    expect(parseServerMessage(wire({ type: "reaction", playerId: "p1", emoji: "💩" }))).toBeNull();
+    expect(parseServerMessage(wire({ type: "reaction", emoji: "🔥" }))).toBeNull();
+    expect(parseServerMessage(wire({ type: "reaction", playerId: 3, emoji: "🔥" }))).toBeNull();
+  });
+  it("snapshot'ta lobbyReady dizi olmalı", () => {
+    const parse = (lobbyReady: unknown) =>
+      parseServerMessage(wire({ type: "room", snapshot: { ...snapshot(), lobbyReady } }));
+    const ok = parse(["a"]);
+    if (ok?.type === "room") expect(ok.snapshot.lobbyReady).toEqual(["a"]);
+    else throw new Error("kabul edilmedi");
+    for (const bad of [undefined, null, "a", [1], {}]) expect(parse(bad)).toBeNull();
+  });
+  it("nickname_taken hata kodunu tanır", () => {
+    expect(parseServerMessage(wire({ type: "error", code: "nickname_taken", message: "x" }))?.type).toBe(
+      "error",
+    );
+  });
 });

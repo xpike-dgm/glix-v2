@@ -213,7 +213,8 @@ export function Lobby(props: { snap: RoomSnapshot }) {
   );
 
   const emptyCount = () => Math.max(0, MAX_PLAYERS - snap().players.length);
-  const shownEmpty = () => Math.min(MAX_EMPTY_SLOTS, emptyCount());
+  // Tek bir yer artacaksa "+1 yer daha" yazmak yerine o daireyi de göster (aynı satıra sığar).
+  const shownEmpty = () => (emptyCount() <= MAX_EMPTY_SLOTS + 1 ? emptyCount() : MAX_EMPTY_SLOTS);
   const moreEmpty = () => emptyCount() - shownEmpty();
   const solo = () => snap().players.length < 2;
   const selected = () => snap().catalog.filter((g) => snap().gameIds.includes(g.id));
@@ -593,7 +594,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
           when={isHost()}
           fallback={
             <PrimaryButton variant={isReady() ? "done" : "cyan"} onClick={() => setLobbyReady(!isReady())}>
-              {isReady() ? "Hazırsın · vazgeç" : "Hazırım"}
+              {isReady() ? "Hazırsın" : "Hazırım"}
             </PrimaryButton>
           }
         >
@@ -624,50 +625,54 @@ export function Lobby(props: { snap: RoomSnapshot }) {
       </BottomSheet>
 
       <BottomSheet open={pickOpen()} onClose={() => setPickOpen(false)} title="Sen">
-        <form class="nickedit" onSubmit={saveNick}>
-          <input
-            class="field nickedit__field"
-            type="text"
-            maxLength={MAX_NICKNAME_LENGTH}
-            placeholder="Takma ad"
-            autocomplete="off"
-            autocapitalize="words"
-            spellcheck={false}
-            enterkeyhint="done"
-            aria-label="Takma ad"
-            aria-invalid={nickDraft().length > 0 && nickClean() === null}
-            value={nickDraft()}
-            onInput={(e) => setNickDraft(e.currentTarget.value)}
-          />
-          <button type="submit" class="nickedit__save" disabled={!nickChanged()}>
-            Kaydet
-          </button>
-        </form>
-        <p class="picker__label">Karakterini seç</p>
-        <div class="picker">
-          <For each={Array.from({ length: AVATAR_COUNT }, (_, n) => n)}>
-            {(n) => {
-              const owner = () => ownerOf(n);
-              const chosen = () => myAvatar() === n;
-              return (
-                <button
-                  type="button"
-                  class="picker__opt"
-                  classList={{ "picker__opt--taken": owner() !== undefined, "picker__opt--on": chosen() }}
-                  aria-pressed={chosen()}
-                  aria-disabled={owner() !== undefined}
-                  onClick={() => {
-                    const o = owner();
-                    if (o) toast(`Bu karakteri ${o.nickname} aldı`);
-                    else pick(n);
-                  }}
-                >
-                  <Avatar index={n} size="var(--pick-av, 60px)" />
-                  <span class="picker__name">{owner()?.nickname ?? (chosen() ? "Sen" : "Boş")}</span>
-                </button>
-              );
-            }}
-          </For>
+        <div class="pickersheet">
+          <form class="nickedit" onSubmit={saveNick}>
+            <input
+              class="field nickedit__field"
+              type="text"
+              maxLength={MAX_NICKNAME_LENGTH}
+              placeholder="Takma ad"
+              autocomplete="off"
+              autocapitalize="words"
+              spellcheck={false}
+              enterkeyhint="done"
+              aria-label="Takma ad"
+              aria-invalid={nickDraft().length > 0 && nickClean() === null}
+              value={nickDraft()}
+              onInput={(e) => setNickDraft(e.currentTarget.value)}
+            />
+            <button type="submit" class="nickedit__save" disabled={!nickChanged()}>
+              Kaydet
+            </button>
+          </form>
+          <div class="pickersheet__pick">
+            <p class="picker__label">Karakterini seç</p>
+            <div class="picker">
+              <For each={Array.from({ length: AVATAR_COUNT }, (_, n) => n)}>
+                {(n) => {
+                  const owner = () => ownerOf(n);
+                  const chosen = () => myAvatar() === n;
+                  return (
+                    <button
+                      type="button"
+                      class="picker__opt"
+                      classList={{ "picker__opt--taken": owner() !== undefined, "picker__opt--on": chosen() }}
+                      aria-pressed={chosen()}
+                      aria-disabled={owner() !== undefined}
+                      onClick={() => {
+                        const o = owner();
+                        if (o) toast(`Bu karakteri ${o.nickname} aldı`);
+                        else pick(n);
+                      }}
+                    >
+                      <Avatar index={n} size="var(--pick-av, 60px)" />
+                      <span class="picker__name">{owner()?.nickname ?? (chosen() ? "Sen" : "Boş")}</span>
+                    </button>
+                  );
+                }}
+              </For>
+            </div>
+          </div>
         </div>
       </BottomSheet>
 
