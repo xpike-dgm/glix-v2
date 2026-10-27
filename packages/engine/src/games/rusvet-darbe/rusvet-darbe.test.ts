@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
 import {
+  coupSucceeds,
   type RusvetState,
   resolveHand,
   rusvetCounts,
@@ -11,6 +12,7 @@ import {
   signBeats,
 } from "./index.js";
 import {
+  RUSVET_COUP_MS,
   RUSVET_GIVE_MS,
   RUSVET_MAX_DURATION_MS,
   RUSVET_MAX_HANDS,
@@ -25,6 +27,8 @@ import {
 } from "./types.js";
 
 const T0 = 1_000_000;
+/** Dağıtım + darbe aşaması bitince sonuç açılır (en az bir oyuncu jeton almamışsa). */
+const REVEAL_AT = RUSVET_GIVE_MS + RUSVET_COUP_MS;
 const HAND_MS = RUSVET_SIGN_MS + RUSVET_SIGN_REVEAL_MS;
 const ctx = (now: number, connected: readonly string[] = ["a", "b", "c", "d", "e", "f"], seed = 1) => ({
   now,
@@ -64,6 +68,14 @@ const give = (tokens: [string, number][]): RusvetAction => ({
   kind: "give",
   tokens: tokens.map(([to, n]) => ({ to, n })),
 });
+const EMPTY_VIEW: RusvetView = {
+  myVote: null,
+  mySign: null,
+  myTokens: null,
+  myCoup: null,
+  canCoup: false,
+  locked: false,
+};
 const sign = (s: Sign): RusvetAction => ({ kind: "sign", sign: s });
 
 /** 4 oyuncu, herkes bir oy alır -> dörtlü eşitlik (bütçe 1). */
@@ -96,7 +108,8 @@ describe("rusvet-darbe meta", () => {
     expect(RUSVET_SIGN_REVEAL_MS).toBe(2_500);
     expect(RUSVET_GIVE_MS).toBe(25_000);
     expect(RUSVET_MAX_HANDS).toBe(6);
-    expect(RUSVET_MAX_DURATION_MS).toBe(20_000 + 6 * 10_500 + 25_000 + RUSVET_REVEAL_MS);
+    expect(RUSVET_COUP_MS).toBe(10_000);
+    expect(RUSVET_MAX_DURATION_MS).toBe(20_000 + 6 * 10_500 + 25_000 + RUSVET_COUP_MS + RUSVET_REVEAL_MS);
   });
 
   it("kurulumda ctx.rng'den tek tohum alınır; aynı tohum aynı durum", () => {
@@ -415,7 +428,7 @@ describe("rusvet-darbe düello akışı", () => {
     const FAST = 100 + RUSVET_SIGN_REVEAL_MS;
     for (let h = 0; h < RUSVET_MAX_HANDS; h++)
       for (const id of ["a", "b", "c", "d"]) s = act(s, id, sign("tas"), T0 + E + h * FAST + 100);
-    const fastEnd = E + RUSVET_MAX_HANDS * FAST + RUSVET_GIVE_MS + RUSVET_REVEAL_MS;
+    const fastEnd = E + RUSVET_MAX_HANDS * FAST + RUSVET_GIVE_MS + RUSVET_COUP_MS + RUSVET_REVEAL_MS;
     expect(rusvetDarbe.isFinished(s, ctx(T0 + fastEnd - 1))).toBe(false);
     expect(rusvetDarbe.isFinished(s, ctx(T0 + fastEnd))).toBe(true);
   });
@@ -495,7 +508,7 @@ describe("rusvet-darbe jeton dağıtımı", () => {
       { to: "d", n: 2 },
     ]);
     expect(rej(s, "a", give([["b", 1]]), T0 + E + RUSVET_GIVE_MS - 1)).toBe("kabul");
-    expect(rej(s, "a", give([["b", 1]]), T0 + E + RUSVET_GIVE_MS)).toBe("ended");
+    expect(rej(s, "a", give([["b", 1]]), T0 + E + RUSVET_GIVE_MS)).toBe("wrong_phase");
   });
 
   it("bağlı olmayan oyuncuya yeni jeton eklenemez; mevcut jeton azaltılabilir", () => {
@@ -540,7 +553,7 @@ describe("rusvet-darbe jeton dağıtımı", () => {
 
   it("hiç dağıtım yapılmazsa tüm jetonlar rastgele dağıtılır", () => {
     const s = base();
-    const p = pub(at(s, E + RUSVET_GIVE_MS), E + RUSVET_GIVE_MS);
+    const p = pub(at(s, E + REVEAL_AT), E + REVEAL_AT);
     expect(p.phase).toBe("reveal");
     const sum = Object.values(p.reveal?.tokens ?? {}).reduce((x, y) => x + y, 0);
     expect(sum).toBe(3);
@@ -550,7 +563,7 @@ describe("rusvet-darbe jeton dağıtımı", () => {
   it("kısmi dağıtım korunur, kalan rastgele tamamlanır", () => {
     let s = base();
     s = act(s, "a", give([["b", 2]]), T0 + E + 1_000);
-    const p = pub(s, E + RUSVET_GIVE_MS);
+    const p = pub(s, E + REVEAL_AT);
     expect(p.reveal?.tokens.b).toBe(2);
     expect(Object.values(p.reveal?.tokens ?? {}).reduce((x, y) => x + y, 0)).toBe(3);
   });
@@ -598,7 +611,7 @@ describe("rusvet-darbe puanlama", () => {
       ]),
       T0 + E + 1_000,
     );
-    const p = pub(s, E + RUSVET_GIVE_MS);
+    const p = pub(s, E + REVEAL_AT);
     expect(p.phase).toBe("reveal");
     expect(p.reveal?.votes).toEqual({ a: "b", b: "a", c: "a", d: "a" });
     expect(p.reveal?.counts).toEqual({ a: 3, b: 1, c: 0, d: 0 });
@@ -609,7 +622,7 @@ describe("rusvet-darbe puanlama", () => {
 
   it("sonuç süresi dolana kadar bitmez; bitişten sonra her eylem reddedilir", () => {
     const s = withVotes(["a", "b", "c", "d"], STAR4);
-    const end = E + RUSVET_GIVE_MS + RUSVET_REVEAL_MS;
+    const end = E + RUSVET_GIVE_MS + RUSVET_REVEAL_MS; // bu oyunda herkes jeton alır: darbe aşaması atlanır
     expect(rusvetDarbe.isFinished(s, ctx(T0 + end - 1))).toBe(false);
     expect(rusvetDarbe.isFinished(s, ctx(T0 + end))).toBe(true);
     expect(rej(s, "a", { kind: "vote", target: "b" }, T0 + end + 5)).toBe("ended");
@@ -633,6 +646,7 @@ describe("rusvet-darbe tick ve zamanlama", () => {
     expect(give1).not.toBe(s);
     expect(rusvetDarbe.tick(give1, ctx(T0 + RUSVET_VOTE_MS + RUSVET_GIVE_MS - 1, []))).toBe(give1);
     const rev = rusvetDarbe.tick(give1, ctx(T0 + RUSVET_VOTE_MS + RUSVET_GIVE_MS, []));
+    // Dağıtım yapılmadı: rastgele dağıtımda herkes jeton aldı, darbe aşaması atlanır.
     expect(rev.stage).toBe("reveal");
     expect(rusvetDarbe.tick(rev, ctx(T0 + 999_999, []))).toBe(rev);
   });
@@ -714,12 +728,19 @@ describe("rusvet-darbe gizlilik (kısa kimlikler/işaretler; yapısal kontrol)",
       expect(json).not.toContain('"votes"');
       expect(json).not.toContain('"counts"');
       for (const id of players)
-        expect(Object.keys(priv(s0, id, off)).sort()).toEqual(["locked", "mySign", "myTokens", "myVote"]);
+        expect(Object.keys(priv(s0, id, off)).sort()).toEqual([
+          "canCoup",
+          "locked",
+          "myCoup",
+          "mySign",
+          "myTokens",
+          "myVote",
+        ]);
       expect(priv(s0, "pa1", off).myVote).toBe("pb2");
       expect(priv(s0, "pb2", off).myVote).toBeNull();
       expect(priv(s0, "pd4", off).myVote).toBeNull();
-      expect(priv(s0, null, off)).toEqual({ myVote: null, mySign: null, myTokens: null, locked: false });
-      expect(priv(s0, "ghost", off)).toEqual({ myVote: null, mySign: null, myTokens: null, locked: false });
+      expect(priv(s0, null, off)).toEqual(EMPTY_VIEW);
+      expect(priv(s0, "ghost", off)).toEqual(EMPTY_VIEW);
     }
   });
 
@@ -797,7 +818,7 @@ describe("rusvet-darbe gizlilik (kısa kimlikler/işaretler; yapısal kontrol)",
       ]),
       T0 + E + 1_000,
     );
-    const p = pub(s, E + RUSVET_GIVE_MS);
+    const p = pub(s, E + REVEAL_AT);
     expect(p.reveal?.tokens.pb2).toBe(2);
     expect(p.reveal?.votes.pb2).toBe("pa1");
   });
@@ -877,7 +898,7 @@ describe("rusvet-darbe erken bitiş", () => {
       const p = pub(s, 5_100);
       expect(p.ready).toEqual(["b"]);
       expect(JSON.stringify(p)).not.toMatch(/votes|counts/);
-      expect(priv(s, "b", 5_100)).toEqual({ myVote: "a", mySign: null, myTokens: null, locked: true });
+      expect(priv(s, "b", 5_100)).toEqual({ ...EMPTY_VIEW, myVote: "a", locked: true });
       expect(priv(s, "a", 5_100).locked).toBe(false);
     });
 
@@ -994,6 +1015,232 @@ describe("rusvet-darbe erken bitiş", () => {
       expect(JSON.stringify(p)).not.toMatch(/tokens|"n"/);
       expect(priv(s, "a", E + 2_200).locked).toBe(true);
       expect(priv(s, "b", E + 2_200).locked).toBe(false);
+    });
+  });
+});
+
+describe("rusvet-darbe darbe (O3)", () => {
+  const E = RUSVET_VOTE_MS;
+  const COUP_AT = E + RUSVET_GIVE_MS;
+  const P5 = ["a", "b", "c", "d", "e"];
+  const coup = (yes: boolean): RusvetAction => ({ kind: "coup", yes });
+  /** a: 4 oy alır (bütçe 4), başkan olur. */
+  const STAR5: [string, string][] = [
+    ["b", "a"],
+    ["c", "a"],
+    ["d", "a"],
+    ["e", "a"],
+    ["a", "b"],
+  ];
+  /** a başkan; b 2, c 2 alır; d ve e jeton almaz (hak sahipleri). */
+  const coupState = (players = P5, edges = STAR5, tokens: [string, number][] = [["b", 2], ["c", 2]]) => {
+    const s = act(at(withVotes(players, edges), E + 1), "a", give(tokens), T0 + E + 1_000);
+    return rusvetDarbe.tick(s, ctx(T0 + COUP_AT, players));
+  };
+  const scoresAfter = (s: RusvetState) => rusvetDarbe.result(s).miniScores;
+
+  it("jeton almayan oyuncular hak sahibidir; başkan ve jeton alanlar değildir", () => {
+    const s = coupState();
+    expect(s.stage).toBe("coup");
+    expect(s.coupEligible).toEqual(["d", "e"]);
+    const p = pub(s, COUP_AT + 1);
+    expect(p.phase).toBe("coup");
+    expect(p.coup?.eligible).toEqual(["d", "e"]);
+    expect(p.coup?.tokens).toEqual({ a: 0, b: 2, c: 2, d: 0, e: 0 });
+    expect(p.phaseEndsAt - p.phaseStartedAt).toBe(RUSVET_COUP_MS);
+    expect(priv(s, "d", COUP_AT + 1).canCoup).toBe(true);
+    expect(priv(s, "a", COUP_AT + 1).canCoup).toBe(false);
+    expect(priv(s, "b", COUP_AT + 1).canCoup).toBe(false);
+    expect(rej(s, "b", coup(true), T0 + COUP_AT + 100)).toBe("not_eligible");
+    expect(rej(s, "a", coup(true), T0 + COUP_AT + 100)).toBe("not_eligible");
+  });
+
+  it("darbe oyu yalnız darbe aşamasında kabul edilir", () => {
+    const s = withVotes(P5, STAR5);
+    expect(rej(s, "d", coup(true), T0 + 1_000)).toBe("wrong_phase");
+    const giving = at(s, E + 1);
+    expect(rej(giving, "d", coup(true), T0 + E + 2_000)).toBe("wrong_phase");
+    const done = coupState();
+    expect(rej(done, "d", coup(true), T0 + COUP_AT + RUSVET_COUP_MS + 1)).toBe("ended");
+  });
+
+  it("oy tek seferliktir", () => {
+    let s = coupState();
+    s = act(s, "d", coup(false), T0 + COUP_AT + 100);
+    expect(rej(s, "d", coup(true), T0 + COUP_AT + 200)).toBe("locked");
+  });
+
+  it("2 hak sahibinden 2'si Darbe derse (kesin çoğunluk) başkanın +1'i iptal olur; jetonlar etkilenmez", () => {
+    let s = coupState();
+    s = act(s, "d", coup(true), T0 + COUP_AT + 100);
+    s = act(s, "e", coup(true), T0 + COUP_AT + 200);
+    const p = pub(s, COUP_AT + 5_000);
+    expect(p.phase).toBe("reveal");
+    expect(p.reveal?.coup).toEqual({ eligible: ["d", "e"], yes: 2, success: true });
+    expect(p.reveal?.scores).toEqual({ a: 0, b: 2, c: 2, d: 0, e: 0 });
+    expect(scoresAfter(s)).toEqual({ a: 0, b: 2, c: 2, d: 0, e: 0 });
+  });
+
+  it("eşitlik çoğunluk değildir: 2 hak sahibinden 1 Darbe -> başkan +1 korur", () => {
+    let s = coupState();
+    s = act(s, "d", coup(true), T0 + COUP_AT + 100);
+    s = act(s, "e", coup(false), T0 + COUP_AT + 200);
+    expect(pub(s, COUP_AT + 5_000).reveal?.coup).toEqual({ eligible: ["d", "e"], yes: 1, success: false });
+    expect(scoresAfter(s).a).toBe(1);
+  });
+
+  it("oy vermeyen 'Darbe yok' sayılır: süre dolunca tek Darbe oyu 2 kişide çoğunluk olmaz", () => {
+    let s = coupState();
+    s = act(s, "d", coup(true), T0 + COUP_AT + 100);
+    const p = pub(s, COUP_AT + RUSVET_COUP_MS);
+    expect(p.phase).toBe("reveal");
+    expect(p.reveal?.coup).toEqual({ eligible: ["d", "e"], yes: 1, success: false });
+    expect(scoresAfter(s).a).toBe(1);
+  });
+
+  it("tek hak sahibi Darbe derse çoğunluktur (1/1)", () => {
+    // a başkan, b 2 + c 2 + d 0; 4 oyuncu, bütçe 3 -> b 2, c 1, d 0
+    const players = ["a", "b", "c", "d"];
+    let s = coupState(players, STAR4, [
+      ["b", 2],
+      ["c", 1],
+    ]);
+    expect(s.coupEligible).toEqual(["d"]);
+    s = act(s, "d", coup(true), T0 + COUP_AT + 100);
+    expect(pub(s, COUP_AT + 5_000).reveal?.coup).toEqual({ eligible: ["d"], yes: 1, success: true });
+    expect(scoresAfter(s).a).toBe(0);
+  });
+
+  it("3 hak sahibinden 2 Darbe -> çoğunluk; 3'te 1 -> değil", () => {
+    // 6 oyuncu, a başkan 5 oy (bütçe 5)... b 2, c 0, d 0, e 0 -> a verir b:2,c:0 dağıtım kısmi, kalan rastgele
+    // Hak sahibi sayısını kesin tutmak için doğrudan saf yardımcıyı da sına.
+    const eligible = ["x", "y", "z"];
+    expect(coupSucceeds(eligible, { x: true, y: true })).toBe(true);
+    expect(coupSucceeds(eligible, { x: true })).toBe(false);
+    expect(coupSucceeds(eligible, { x: true, y: true, z: true })).toBe(true);
+    expect(coupSucceeds(["x", "y", "z", "w"], { x: true, y: true })).toBe(false);
+    expect(coupSucceeds(["x", "y", "z", "w"], { x: true, y: true, z: true })).toBe(true);
+    expect(coupSucceeds([], {})).toBe(false);
+  });
+
+  it("herkes jeton aldıysa darbe aşaması atlanır; başkan +1 alır", () => {
+    // 3 oyuncu, a başkan 2 oy; b ve c birer jeton alır.
+    const players = ["a", "b", "c"];
+    let s = withVotes(players, [
+      ["b", "a"],
+      ["c", "a"],
+      ["a", "b"],
+    ]);
+    s = act(
+      at(s, E + 1),
+      "a",
+      give([
+        ["b", 1],
+        ["c", 1],
+      ]),
+      T0 + E + 1_000,
+    );
+    const p = pub(s, COUP_AT);
+    expect(p.phase).toBe("reveal");
+    expect(p.coup).toBeNull();
+    expect(p.reveal?.coup).toBeNull();
+    expect(p.reveal?.scores).toEqual({ a: 1, b: 1, c: 1 });
+    expect(rusvetDarbe.isFinished(s, ctx(T0 + COUP_AT + RUSVET_REVEAL_MS, players))).toBe(true);
+  });
+
+  it("hak sahiplerinin hepsi oy verince aşama 1 sn sonra biter (erken bitiş)", () => {
+    let s = coupState();
+    s = act(s, "d", coup(false), T0 + COUP_AT + 1_000);
+    expect(pub(s, COUP_AT + 1_100).phase).toBe("coup");
+    expect(pub(s, COUP_AT + 1_100).ready).toEqual(["d"]);
+    s = act(s, "e", coup(false), T0 + COUP_AT + 2_000);
+    expect(pub(s, COUP_AT + 2_999).phase).toBe("coup");
+    expect(pub(s, COUP_AT + 3_000).phase).toBe("reveal");
+    expect(
+      rusvetDarbe.isFinished(s, ctx(T0 + COUP_AT + 3_000 + RUSVET_REVEAL_MS - 1, P5)),
+    ).toBe(false);
+    expect(rusvetDarbe.isFinished(s, ctx(T0 + COUP_AT + 3_000 + RUSVET_REVEAL_MS, P5))).toBe(true);
+  });
+
+  it("erken bitiş bağlantıya bakmaz; tick ctx.connected okumaz", () => {
+    let s = coupState();
+    s = act(s, "d", coup(true), T0 + COUP_AT + 1_000, ["d"]);
+    s = act(s, "e", coup(true), T0 + COUP_AT + 1_100, ["d", "e"]);
+    const a = rusvetDarbe.tick(s, ctx(T0 + COUP_AT + 5_000, []));
+    const b = rusvetDarbe.tick(s, ctx(T0 + COUP_AT + 5_000, P5));
+    expect(a).toEqual(b);
+  });
+
+  it("tick darbe aşamasının sınırlarında durumu değiştirir", () => {
+    const s = coupState();
+    expect(rusvetDarbe.tick(s, ctx(T0 + COUP_AT + RUSVET_COUP_MS - 1, []))).toBe(s);
+    expect(rusvetDarbe.tick(s, ctx(T0 + COUP_AT + RUSVET_COUP_MS, [])).stage).toBe("reveal");
+  });
+
+  it("toplam süre sınırı darbe aşamasını da kapsar", () => {
+    const s = withVotes(P5, STAR5);
+    expect(rusvetDarbe.isFinished(s, ctx(T0 + RUSVET_MAX_DURATION_MS))).toBe(true);
+  });
+
+  it("aynı tohum ve aynı eylemlerle sonuç aynıdır (yeniden oynatılabilir)", () => {
+    const run = () => {
+      let s = coupState();
+      s = act(s, "d", coup(true), T0 + COUP_AT + 100);
+      s = act(s, "e", coup(true), T0 + COUP_AT + 200);
+      return JSON.stringify([s, pub(s, COUP_AT + 5_000), rusvetDarbe.result(s)]);
+    };
+    expect(run()).toBe(run());
+  });
+
+  it("parseAction: coup yalnız {kind, yes: boolean}", () => {
+    expect(rusvetDarbe.parseAction({ kind: "coup", yes: true })).toEqual({ kind: "coup", yes: true });
+    expect(rusvetDarbe.parseAction({ kind: "coup", yes: false })).toEqual({ kind: "coup", yes: false });
+    for (const bad of [
+      { kind: "coup" },
+      { kind: "coup", yes: "evet" },
+      { kind: "coup", yes: 1 },
+      { kind: "coup", yes: true, extra: 1 },
+    ])
+      expect(rusvetDarbe.parseAction(bad)).toBeNull();
+  });
+
+  describe("gizlilik", () => {
+    const s0 = (() => {
+      let s = coupState();
+      s = act(s, "d", coup(true), T0 + COUP_AT + 100);
+      return s;
+    })();
+
+    it("darbe sürerken kimsenin oyu, sayı ya da 'yes' alanı başka birinin görünümünde yoktur", () => {
+      for (const off of [COUP_AT + 150, COUP_AT + RUSVET_COUP_MS - 1]) {
+        const p = pub(s0, off);
+        const json = JSON.stringify(p);
+        expect(p.reveal).toBeNull();
+        expect(json).not.toMatch(/yes|success|coupVotes|"myCoup"/);
+        expect(p.ready).toEqual(["d"]); // yalnız kim oy verdi, ne verdiği değil
+        for (const other of ["a", "b", "c", "e", null, "ghost"]) {
+          const v = priv(s0, other, off);
+          expect(v.myCoup).toBeNull();
+        }
+        expect(priv(s0, "d", off).myCoup).toBe(true);
+      }
+    });
+
+    it("oy sonuç aşamasında bile yalnız sayı olarak açılır; kim ne dedi yok", () => {
+      let s = act(s0, "e", coup(false), T0 + COUP_AT + 200);
+      const p = pub(s, COUP_AT + 5_000);
+      const json = JSON.stringify(p.reveal?.coup);
+      expect(json).toBe('{"eligible":["d","e"],"yes":1,"success":false}');
+      for (const id of ["a", "b", "c", "d", "e"]) {
+        // sonuçta bile başkasının darbe oyu görünümlerde yok (yalnız kendi oyu, ve yalnız darbe aşamasında)
+        expect(JSON.stringify(priv(s, id, COUP_AT + 5_000))).not.toContain('"myCoup":true');
+      }
+      s = s0;
+    });
+
+    it("darbe aşaması dışında kimse oy hakkı taşımaz (canCoup false)", () => {
+      const giving = at(withVotes(P5, STAR5), E + 1);
+      for (const id of P5) expect(priv(giving, id, E + 1_000).canCoup).toBe(false);
     });
   });
 });

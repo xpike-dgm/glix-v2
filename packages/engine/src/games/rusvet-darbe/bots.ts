@@ -15,11 +15,12 @@ export const rusvetDarbeBot: GameBot = {
     const pub = (publicView ?? {}) as PubLike;
     const others = connected.filter((id) => id !== playerId);
     const roll = rng.int(100);
-    if (roll >= 94 && pub.phase !== "duel") return { kind: "lock" };
+    if (roll >= 94 && pub.phase !== "duel" && pub.phase !== "coup") return { kind: "lock" };
     if (pub.phase === "duel") {
       if (roll < 5) return { kind: "sign", sign: "kagit_" };
       return { kind: "sign", sign: SIGNS[rng.int(SIGNS.length)] };
     }
+    if (pub.phase === "coup") return { kind: "coup", yes: rng.int(2) === 0 };
     if (pub.phase === "give") {
       if (roll < 8) return { kind: "give", tokens: [{ to: playerId, n: 1 }] };
       if (roll < 14) return { kind: "give", tokens: others.map((to) => ({ to, n: 2 })).slice(0, 8) };
