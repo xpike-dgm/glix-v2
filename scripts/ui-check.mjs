@@ -1385,7 +1385,7 @@ async function newPage(ctx) {
 /** Sanal (sahte saat) ya da gerçek bekleme. */
 const wait = (page, ms) => (USE_CLOCK ? page.clock.runFor(ms) : sleep(ms));
 
-async function checkOne(page, st, scr, [w, h]) {
+async function checkOneInner(page, st, scr, [w, h]) {
   const failures = [];
   st.errors.length = 0;
   try {
@@ -1424,12 +1424,13 @@ async function checkOne(page, st, scr, [w, h]) {
     await page
       .evaluate(() =>
         Promise.all(
-          [...document.querySelectorAll(".world__img, .panels__img, .gcard__art img")].map((i) =>
-            i.decode().catch(() => {}),
-          ),
+          [...document.querySelectorAll(".world__img, .panels__img, .gcard__art img")]
+            .filter((i) => i.complete) // tembel (ekran dışı) görsel hiç yüklenmez; decode() sonsuza dek bekler
+            .map((i) => i.decode().catch(() => {})),
         ),
       )
       .catch(() => {});
+    await scrollQuiet(page);
     // Ölçüm animasyon ortasına denk gelmesin: sonlu animasyonlar bitiş karesine, sonsuzlar durdurulur.
     // (Aksi halde kontrast, rozetin belirme ya da basış parlamasının o anki karesine bağlı kalır.)
     await page.evaluate(() => {
@@ -1441,7 +1442,7 @@ async function checkOne(page, st, scr, [w, h]) {
         else a.finish();
       }
     });
-    await sleep(FRAME_MS); // istenmiş son kare çizilsin (gerçek zaman: sahte saatten bağımsız)
+    await paintFrames(page); // istenmiş son kare çizilsin
 
     if (ENV.UI_DUMP) {
       const sig = await page.evaluate(() => ({
@@ -1462,6 +1463,16 @@ async function checkOne(page, st, scr, [w, h]) {
       content:
         "*{color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important;caret-color:transparent!important}.confetti{display:none!important}",
     });
+    // Saydam renge geçiş de bir CSS geçişi başlatabilir (color transition): bitiş karesine alınsın, yoksa
+    // ölçüm metnin solmakta olan karesine denk gelir.
+    await page.evaluate(() => {
+      void document.body.offsetWidth;
+      for (const a of document.getAnimations()) {
+        if (a.effect?.getTiming().iterations === Number.POSITIVE_INFINITY) a.pause();
+        else a.finish();
+      }
+    });
+    await paintFrames(page);
     const png = (await page.screenshot()).toString("base64");
     const ratios = await page.evaluate(
       `(${inPageContrast.toString()})(${JSON.stringify({ png, texts, dpr: 1 })})`,
@@ -1477,6 +1488,20 @@ async function checkOne(page, st, scr, [w, h]) {
   }
   for (const e of st.errors) failures.push(`[console] ${e.slice(0, 200)}`);
   return failures;
+}
+
+/** Takılan bir denetim bütün koşuyu kilitlemesin: süre aşımı hata sayılır, bağlam yenilenir. */
+const CHECK_TIMEOUT_MS = 90000;
+async function checkOne(page, st, scr, size) {
+  let timer;
+  const timeout = new Promise((res) => {
+    timer = setTimeout(() => res(["[hata] denetim zaman aşımına uğradı"]), CHECK_TIMEOUT_MS);
+  });
+  try {
+    return await Promise.race([checkOneInner(page, st, scr, size), timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**
@@ -1499,8 +1524,40 @@ async function checkGroup(worker, browser, scr, sizes, onDone) {
   await cur.page.close().catch(() => {});
 }
 
+/**
+ * Gerçek (sahte saatten bağımsız) iki kare çizilene dek bekler: belge zaman çizelgesi yalnız çizilen karede
+ * ilerler, bu yüzden kısa bir WAAPI animasyonunun bitişi "stil+yerleşim+boyama uygulandı" demektir.
+ * Sabit uyku yükte yetmez (eski kare görüntülenir), bu hem hızlı hem kesin.
+ */
+async function paintFrames(page) {
+  await page.evaluate(async () => {
+    for (let i = 0; i < 2; i++) await document.documentElement.animate([{}, {}], { duration: 1 }).finished;
+  });
+}
+
+/**
+ * Yumuşak kaydırma (scroll-behavior/scrollIntoView) gerçek zamanda sürer, sahte saat ve animasyon bitirme onu
+ * hızlandırmaz: tüm kaydırma konumları art arda 3 karede değişmeyene dek beklenir (en çok ~150 kare; sahte saat performance.now'u dondurduğu için kare sayılır).
+ */
+async function scrollQuiet(page) {
+  await page.evaluate(async () => {
+    const pos = () =>
+      [document.scrollingElement, ...document.querySelectorAll("*")]
+        .filter((e) => e && (e.scrollTop || e.scrollLeft))
+        .map((e) => `${e.scrollTop},${e.scrollLeft}`)
+        .join("|");
+    let last = pos();
+    let still = 0;
+    for (let frame = 0; still < 3 && frame < 150; frame++) {
+      await document.documentElement.animate([{}, {}], { duration: 1 }).finished;
+      const now = pos();
+      still = now === last ? still + 1 : 0;
+      last = now;
+    }
+  });
+}
+
 let URL_BASE = "";
-const FRAME_MS = 120;
 // `settle` yazılmamış ekranlar için sanal bekleme: hazır işareti + ağ sessizliği sonrası kısa pay yeter
 // (sonlu animasyonlar zaten bitiş karesine alınır); zamanlayıcıyla ilerleyen ekranlar açık `settle` taşır.
 const DEFAULT_SETTLE = 400;
