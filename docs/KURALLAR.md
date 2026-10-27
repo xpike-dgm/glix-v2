@@ -21,6 +21,12 @@ tasarladığı alanlar birlikte kilitlenir; kodlama bu kural seti üzerinden yap
 - Dil: Türkçe.
 - Hedef cihaz: telefon PWA.
 - Oda: katılım kodu, yalnızca takma ad, 2–8 oyuncu.
+- Maç sürerken odaya katılım (KİLİTLİ, Ekim 2026): oda yöneticisi lobide "Oyun sırasında katılım" ayarını seçer:
+  - **İzleyici olarak** (varsayılan): maç sürerken gelen kişi odaya izleyici olarak girer; yalnız herkese açık
+    görünümü görür, hiçbir oyuna katılmaz, puan almaz, oylara ve seçimlere sayılmaz. Maç bitip oda lobiye dönünce
+    normal oyuncu olur. İzleyici de bir yer tutar: oyuncular + izleyiciler en fazla 8 kişidir; oda doluysa katılamaz.
+  - **Kapalı**: maç sürerken yeni kimse giremez; "Oyun sürüyor, bitince tekrar dene" mesajı görür.
+  - Maç sırasında bağlantısı kopup aynı oturumla geri dönen oyuncu bu ayardan etkilenmez; kendi yerine döner.
 - Oda yöneticisi oyunları manuel seçebilir veya rastgele oyun sayısı belirleyebilir.
 - Aynı maçta aynı mini oyun tekrar etmez.
 - Bot bulunmaz.
