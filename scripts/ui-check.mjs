@@ -1275,6 +1275,33 @@ const SCREENS = [
   { name: "tablet-iki-sutun-yatay", q: "mock=landscape&n=6", sizes: [[1024, 768]], settle: 1200 },
   // U8: sahne varken telefon rozeti.
   { name: "tv-telefon-rozeti", q: "mock=spectator-playing&n=5&stage=1", settle: 1200 },
+  // U6/U12: renk körlüğü dostu mod (`&cb=1`, yalnız geliştirmede): renkle verilen bilgiye şekil/desen/yazı biner.
+  { name: "ayarlar-renk-korlugu", q: "mock=settings&cb=1", settle: 900 },
+  { name: "lobby-renk-korlugu", q: "mock=lobby&n=8&ready=4&cb=1", settle: 900 },
+  { name: "zaman-playback-renk-korlugu", q: "mock=zaman-playback&cb=1" },
+  { name: "zaman-mine-renk-korlugu", q: "mock=zaman-mine&cb=1" },
+  { name: "zaman-ok-renk-korlugu", q: "mock=zaman-ok&cb=1" },
+  { name: "kontrol-play-renk-korlugu", q: "mock=kontrol-play&n=4&cb=1" },
+  { name: "kontrol-play-3clue-renk-korlugu", q: "mock=kontrol-play&n=8&clue=3&cb=1" },
+  {
+    name: "kontrol-play-select-renk-korlugu",
+    q: "mock=kontrol-play&n=4&cb=1",
+    act: async (p) => p.locator(".kp__wire").nth(1).click(),
+  },
+  { name: "kontrol-reveal-renk-korlugu", q: "mock=kontrol-reveal&n=5&cb=1", settle: 2500 },
+  { name: "kontrol-reveal-wrong-renk-korlugu", q: "mock=kontrol-reveal-wrong&n=4&cb=1", settle: 2500 },
+  { name: "zehirli-play-renk-korlugu", q: "mock=zehirli-play&n=5&cb=1" },
+  { name: "zehirli-reveal-renk-korlugu", q: "mock=zehirli-reveal&n=6&poison=1&cb=1", settle: 2400 },
+  { name: "kd-draw-renk-korlugu", q: "mock=karalama-draw&cb=1" },
+  { name: "kareler-reveal-renk-korlugu", q: "mock=kareler-reveal&n=5&cb=1", settle: 3200 },
+  { name: "kareler-final-renk-korlugu", q: "mock=kareler-final&n=5&cb=1", settle: 3200 },
+  { name: "ortalama-reveal-renk-korlugu", q: "mock=ortalama-reveal&n=5&cb=1", settle: 6000 },
+  { name: "cizgi-reveal-renk-korlugu", q: "mock=cizgi-reveal&n=5&cb=1", settle: 6000 },
+  { name: "alisveris-reveal-renk-korlugu", q: "mock=alisveris-reveal&n=5&cb=1", settle: 6000 },
+  { name: "alisveris-low-renk-korlugu", q: "mock=alisveris-low&n=5&cb=1" },
+  { name: "acgozluluk-reveal-over-renk-korlugu", q: "mock=acgozluluk-reveal-over&n=5&cb=1", settle: 2800 },
+  { name: "asiri-reveal-boom-renk-korlugu", q: "mock=asiri-yukleme-reveal-boom&n=5&cb=1", settle: 1800 },
+  { name: "cagrisim-reveal-renk-korlugu", q: "mock=cagrisim-reveal&n=5&cb=1", settle: 2400 },
 ];
 
 function freePort() {

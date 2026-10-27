@@ -12,12 +12,12 @@ import {
 } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { CbState } from "../../ui/CbState.js";
 import { CheckIcon } from "../../ui/Icons.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
 import { DrawingCanvas } from "../karalama-defteri/DrawingCanvas.js";
 import { StepHeader } from "./StepHeader.js";
 import type { BozukScreenView, ParsedDrawing, ParsedReveal, ParsedStep } from "./view.js";
-import { CbState } from "../../ui/CbState.js";
 
 interface Props {
   view: BozukScreenView;

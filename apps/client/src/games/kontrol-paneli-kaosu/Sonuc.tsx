@@ -3,10 +3,10 @@ import { For, onCleanup, onMount, Show } from "solid-js";
 import { hapticMatch, hapticSolo } from "../../fx/haptics.js";
 import { match as matchSound, solo as soloSound } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { CbMarker } from "../../ui/CbMarker.js";
 import { CheckIcon } from "../../ui/Icons.js";
 import type { Crew } from "./KontrolScreen.js";
 import { Panel } from "./Panel.js";
-import { CbMarker } from "../../ui/CbMarker.js";
 import { COLOR_CSS, COLOR_MARK, COLOR_NAME, outcomeOf } from "./view.js";
 
 interface Props {

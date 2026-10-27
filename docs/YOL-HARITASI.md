@@ -79,7 +79,9 @@ lobi-2, lobi-8, lobi-qr, lobi-picker durumları eklendi.
 
 ### U6. Erişilebilirlik ve ayarlar
 - Ayarlar sayfası: büyük yazı, titreşim aç/kapa, müzik/efekt ayrı, hareket azaltma (sistem ayarına ek), **renk körü modu**
-  (Zaman Bombası, Kontrol Paneli, avatarlarda renk + desen/şekil kodu zorunlu).
+  (Zaman Bombası, Kontrol Paneli, avatarlarda renk + desen/şekil kodu zorunlu). [x] Renk körü modu yapıldı (U12): Zaman Bombası
+  şekilleri sönük tuşta da tam görünür; Kontrol Paneli kabloları şekil + desen + ad, ipucu şeması aynı şekillerle; avatarlar
+  32 px ve üstünde kendi simgesini taşır; kazanan ★, doğru ✓, yanlış ✗ işaretleri.
 - Başparmak bölgesi kuralı: birincil eylemler alt %40'ta; `ui:check`'e konum denetimi.
 
 ### U7. Paylaşılabilir anlar
@@ -160,7 +162,7 @@ Zaten var: dvh yükseklik, safe-area, klavye alanı (visualViewport), iOS "Ana E
   - [x] Ses: tek "Ses düzeyi" (ayrı müzik yok), sessize alma, "Sessiz modda da çal" (yalnız `navigator.audioSession` olan cihazda).
   - [x] Titreşim aç/kapa (desteklemeyen cihazda soluk + açıklama); `fx/haptics.ts` ayarı gözetir.
   - [x] Hareketi azalt (Açık / Kapalı / Cihaza göre; tek yardımcı `fx/motion.ts`, CSS `data-motion`), yazı boyutu (Normal / Büyük).
-  - [ ] Renk körlüğü dostu mod: ertelendi (oyun başına çalışma ister; ayar `settings/settings.ts` içinde TODO).
+  - [x] Renk körlüğü dostu mod (Görünüm): kökte `data-cb="1"`; renkle verilen bilgiye şekil/desen/yazı biner (`ui/cbShapes.ts`, `ui/CbMarker.tsx`, `ui/CbState.tsx`, `styles/colorblind.css`). Geliştirmede `&cb=1`.
   - [x] Veri tasarrufu: görselleri atla (`worldAllowed()` okur). [x] "Yalnız Wi-Fi'de indir" (varsayılan açık).
   - [x] Profil: takma ad (motorun `normalizeNickname` doğrulaması), varsayılan karakter salt okunur.
   - [x] Depolama: kullanılan yer, "Önbelleği temizle". [x] "Tüm içeriği indir" (satır içi ilerleme; depolama tahmini yenilenir).

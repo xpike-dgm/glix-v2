@@ -12,8 +12,8 @@ import { type PropPath, propSrc } from "../../ui/props.js";
 import { Screen } from "../../ui/Screen.js";
 import type { GameScreenProps } from "../registry.js";
 import "./kara-borsa.css";
-import { type BorsaScreenView, hintText, parseBorsaView, sortedBids } from "./view.js";
 import { CbState } from "../../ui/CbState.js";
+import { type BorsaScreenView, hintText, parseBorsaView, sortedBids } from "./view.js";
 
 const BOXES = ["kutu-ahsap", "kutu-celik", "kutu-hediye", "kutu-antika"] as const;
 

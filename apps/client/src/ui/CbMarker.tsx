@@ -25,7 +25,6 @@ export function CbMarker(props: Props) {
       height={props.size ?? 14}
       viewBox="0 0 24 24"
       aria-hidden="true"
-      focusable="false"
     >
       <path
         d={s().path}
@@ -60,7 +59,6 @@ export function CbGlyph(props: GlyphProps) {
       data-shape={cbIndex(props.index)}
       transform={`translate(${props.cx - props.size / 2} ${props.cy - props.size / 2}) scale(${k()})`}
       style={props.color ? { color: props.color } : undefined}
-      aria-hidden="true"
     >
       <path
         d={s().path}

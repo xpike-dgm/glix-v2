@@ -101,3 +101,20 @@
 :root[data-cb="1"] .clock[data-v="1"][data-tone="urgent"] .clock__fill {
   background: repeating-linear-gradient(45deg, var(--red) 0 3px, #3a0010 3px 5px);
 }
+
+/* Maç yolu: geçilen oyun kare, şimdiki büyük daire, gelecek küçük soluk daire (yalnız renkle ayrılmasın). */
+:root[data-cb="1"] .mpath__dot[data-s="done"] {
+  border-radius: 2px;
+}
+:root[data-cb="1"] .mpath__dot[data-s="current"] {
+  width: 10px;
+  height: 10px;
+}
+
+/* Kazanan/elenen gibi renkle verilen küçük sonuç yazıları: kalın ve altı çizili ayrım. */
+:root[data-cb="1"] .float--match::before {
+  content: "✓ ";
+}
+:root[data-cb="1"] .float--solo::before {
+  content: "✗ ";
+}

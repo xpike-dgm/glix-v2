@@ -535,3 +535,8 @@
     font-size: 40px;
   }
 }
+
+/* Renk körlüğü dostu mod: küme rengi kartın başında şekil olarak da yer alır. */
+.cl__cb {
+  color: var(--gc);
+}

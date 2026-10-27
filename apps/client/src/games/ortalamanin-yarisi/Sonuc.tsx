@@ -4,9 +4,9 @@ import { hapticMatch, hapticResult, hapticSolo, hapticTick } from "../../fx/hapt
 import { reducedMotion } from "../../fx/motion.js";
 import { fanfare, go, match as matchSound, solo as soloSound, tick } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { look } from "../../ui/avatars.js";
 import { CbMarker } from "../../ui/CbMarker.js";
 import { CbState } from "../../ui/CbState.js";
-import { look } from "../../ui/avatars.js";
 import {
   assignLanes,
   formatNumber,

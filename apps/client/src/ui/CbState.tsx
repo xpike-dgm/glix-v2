@@ -16,7 +16,11 @@ interface Props {
 export function CbState(props: Props) {
   const size = () => props.size ?? 14;
   return (
-    <span class={`cbs ${props.class ?? ""}`} data-kind={props.kind} data-always={props.always ? "1" : undefined}>
+    <span
+      class={`cbs ${props.class ?? ""}`}
+      data-kind={props.kind}
+      data-always={props.always ? "1" : undefined}
+    >
       {props.kind === "ok" ? (
         <CheckIcon size={size()} />
       ) : props.kind === "bad" ? (

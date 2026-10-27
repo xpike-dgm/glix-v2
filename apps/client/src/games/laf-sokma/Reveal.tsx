@@ -3,10 +3,10 @@ import { hapticMatch, hapticResult, hapticSolo } from "../../fx/haptics.js";
 import { match as matchSound, roundResult, solo as soloSound } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
+import { CbState } from "../../ui/CbState.js";
 import { StarIcon } from "../../ui/Icons.js";
 import { type CrewMember, duelCards, type LafScreenView, myPoints } from "./view.js";
 import { PromptBubble } from "./Write.js";
-import { CbState } from "../../ui/CbState.js";
 
 interface Props {
   view: LafScreenView;

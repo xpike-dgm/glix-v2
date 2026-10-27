@@ -3,6 +3,7 @@ import { hapticError, hapticMatch, hapticPress, hapticSolo } from "../../fx/hapt
 import { unlockAudio } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { CbState } from "../../ui/CbState.js";
 import { Screen } from "../../ui/Screen.js";
 import type { GameScreenProps } from "../registry.js";
 import "./asiri-yukleme.css";
@@ -216,7 +217,12 @@ export default function AsiriYuklemeScreen(props: GameScreenProps) {
                       <div class="ay__bar" aria-hidden="true">
                         <i style={{ width: `${row.exploded ? 100 : barRatio(row.clicks, rows()) * 100}%` }} />
                       </div>
-                      <span class="ay__clicks">{row.clicks}</span>
+                      <span class="ay__clicks">
+                        {row.clicks}
+                        <Show when={row.exploded}>
+                          <CbState kind="bad" size={14} />
+                        </Show>
+                      </span>
                       <span class="ay__pts" data-pts={row.points}>
                         {row.points > 0 ? `+${row.points}` : row.points < 0 ? "−1" : "0"}
                       </span>
