@@ -109,7 +109,13 @@ describe("rus-ruleti tam maç", () => {
     expect(end.result?.survivors).toEqual(end.alive);
 
     // Elenenler izleyici rolündedir.
-    for (const id of end.eliminated) expect(view(byId.get(id) as Client)).toEqual({ role: "out", turn: end.shots, prediction: null, lastResult: null });
+    for (const id of end.eliminated)
+      expect(view(byId.get(id) as Client)).toEqual({
+        role: "out",
+        turn: end.shots,
+        prediction: null,
+        lastResult: null,
+      });
     for (const id of end.alive) expect(view(byId.get(id) as Client)).toEqual({ role: "alive" });
   });
 
@@ -177,7 +183,8 @@ describe("rus-ruleti tahmini (O9)", () => {
     for (const c of cs) {
       expect(JSON.stringify(pub(c))).not.toMatch(/prediction|predict|correct|kahin/i);
     }
-    if (c0(aliveOne) !== c0(out)) expect(JSON.stringify(aliveOne.msgs.slice(-3))).not.toContain('"prediction":false');
+    if (c0(aliveOne) !== c0(out))
+      expect(JSON.stringify(aliveOne.msgs.slice(-3))).not.toContain('"prediction":false');
 
     // Oyun bitene kadar oyna; rozet yalnız bitişte ortak görünümde.
     for (let guard = 0; guard < 200 && a.room.phase === "playing" && !pub(a).over; guard++) {

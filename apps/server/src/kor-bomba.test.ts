@@ -136,7 +136,7 @@ describe("kor-bomba tahmini (O9)", () => {
     // Gizlilik: taşıyıcıya giden hiçbir ileti tahmin içermez; z'ye başkasının tahmini gitmez; publicView temiz.
     const holderMsgs = JSON.stringify(holder.msgs);
     expect(holderMsgs).not.toContain('"prediction":{');
-    expect(holderMsgs).not.toContain("correctPredictors\":[\"");
+    expect(holderMsgs).not.toContain('correctPredictors":["');
     expect(JSON.stringify(z.msgs)).not.toContain('"prediction":{');
     expect(JSON.stringify(y.msgs)).not.toContain('"explodes":true');
     for (const c of cs) expect(pub(c).correctPredictors).toEqual([]);

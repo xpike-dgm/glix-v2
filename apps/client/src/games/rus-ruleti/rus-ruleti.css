@@ -324,6 +324,10 @@
   background: rgba(139, 92, 255, 0.18);
 }
 .rrr__rozet {
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: var(--fs-13);

@@ -49,7 +49,7 @@ export default function Reveal(props: GameScreenProps) {
                     <Show when={person(id)}>
                       {(p) => <Avatar index={p().avatar} size={30} mood="out" connected={p().connected} />}
                     </Show>
-                    <span class="rrr__rozet">Kâhin</span>
+                    <span class="rrr__rozet">{person(id)?.nickname} · Kâhin</span>
                     <span class="sr-only">{person(id)?.nickname} Kâhin rozeti kazandı</span>
                   </li>
                 )}
