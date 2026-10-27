@@ -143,6 +143,12 @@ export function buildExport(
         rank: g.rank,
         won: g.won,
       })),
+      game_stats: data.gameStats.map((g) => ({
+        game_id: g.gameId,
+        ended_at: iso(g.endedAt),
+        key: g.key,
+        value: g.value,
+      })),
       matches: data.matches.map((m) => ({
         ended_at: iso(m.endedAt),
         players: m.players,

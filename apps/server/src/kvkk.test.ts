@@ -82,6 +82,7 @@ const OWNED = [
   ["account_games", "account_id = ?"],
   ["account_matches", "account_id = ?"],
   ["account_coplay", "account_id = ? OR other_account_id = ?"],
+  ["account_game_stats", "account_id = ?"],
   ["badges", "account_id = ?"],
   ["friends", "a = ? OR b = ? OR requested_by = ?"],
   ["blocks", "blocker = ? OR blocked = ?"],
@@ -99,7 +100,7 @@ async function seed(me: Made, others: { friend: Made; asker: Made; asked: Made; 
   a.requestFriend(me.id, others.asked.id, 4000);
   a.blockAccount(me.id, others.blocked.id, 5000);
   a.recordGame(6000, [
-    { accountId: me.id, gameId: "butona-bas", players: 2, miniScore: 10, rank: 1 },
+    { accountId: me.id, gameId: "butona-bas", players: 2, miniScore: 10, rank: 1, stats: { perfects: 3 } },
     { accountId: others.friend.id, gameId: "butona-bas", players: 2, miniScore: 5, rank: 2 },
   ]);
   a.recordMatch(
@@ -199,7 +200,12 @@ describe("Verimi indir", () => {
       aciklama: string;
       account: Record<string, unknown>;
       sessions: Record<string, unknown>[];
-      stats: { games: unknown[]; matches: unknown[]; coplay: { username: string; matches: number }[] };
+      stats: {
+        games: unknown[];
+        game_stats: unknown[];
+        matches: unknown[];
+        coplay: { username: string; matches: number }[];
+      };
       friends: Record<string, { username: string }[]>;
       badges: { id: string; name: string }[];
       push_subscription: boolean;
@@ -217,6 +223,9 @@ describe("Verimi indir", () => {
     expect(d.account.username_changed_at).toBeNull();
     expect(Object.keys(d.sessions[0] ?? {}).sort()).toEqual(["created_at", "last_seen"]);
     expect(d.stats.games).toHaveLength(1);
+    expect(d.stats.game_stats).toEqual([
+      { game_id: "butona-bas", ended_at: expect.any(String), key: "perfects", value: 3 },
+    ]);
     expect(d.stats.matches).toHaveLength(1);
     expect(d.stats.coplay).toEqual([expect.objectContaining({ username: "Dost_1", matches: 1 })]);
     expect(d.friends.friends?.map((f) => f.username)).toEqual(["Dost_1"]);

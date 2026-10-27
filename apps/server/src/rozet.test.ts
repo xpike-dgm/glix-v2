@@ -120,6 +120,88 @@ describe("rozet değerlendirme", () => {
     db.close();
   });
 
+  it("Büyük Kâhin: 9 oyunda unvan yetmez, 10. oyunla verilir; ikinci kez verilmez", () => {
+    const { db, mk, finish, ids, earned } = setup();
+    const a = mk("Ali");
+    const kahin = (n: number): void => {
+      for (let i = 0; i < n; i++)
+        db.recordGame(NOON + i, [
+          { accountId: a, gameId: "rus-ruleti", players: 6, miniScore: 0, rank: 5, stats: { kahin: 1 } },
+        ]);
+    };
+    kahin(9);
+    finish(a);
+    expect(ids(a)).not.toContain("kahin-on");
+    // Başka oyunun aynı adlı sayacı sayılmaz.
+    db.recordGame(NOON, [
+      { accountId: a, gameId: "diger", players: 2, miniScore: 0, rank: 2, stats: { kahin: 1 } },
+    ]);
+    finish(a);
+    expect(ids(a)).not.toContain("kahin-on");
+    kahin(1);
+    finish(a);
+    expect(ids(a)).toContain("kahin-on");
+    const n = earned.filter(([, b]) => b.includes("kahin-on")).length;
+    kahin(3);
+    finish(a);
+    expect(earned.filter(([, b]) => b.includes("kahin-on")).length).toBe(n);
+    expect(db.badgeStats(a).kahinGames).toBe(13);
+    db.close();
+  });
+
+  it("Kule Ustası: tek oyunda 2 kusursuz yetmez, 3 yeter; oyunlar toplanmaz", () => {
+    const { db, mk, finish, ids } = setup();
+    const a = mk("Ali");
+    const play = (perfects: number): void =>
+      db.recordGame(NOON, [
+        { accountId: a, gameId: "kule-ustasi", players: 3, miniScore: 1, rank: 1, stats: { perfects } },
+      ]);
+    play(2);
+    play(2);
+    finish(a);
+    expect(ids(a)).not.toContain("kule-ustasi");
+    expect(db.badgeStats(a).maxPerfects).toBe(2);
+    play(3);
+    finish(a);
+    expect(ids(a)).toContain("kule-ustasi");
+    finish(a);
+    expect(ids(a).filter((x) => x === "kule-ustasi")).toHaveLength(1);
+    db.close();
+  });
+
+  it("sayaçlar: sıfır ve geçersiz değer yazılmaz; silinen hesaba yazılmaz; silme ve dışa aktarma kapsar", () => {
+    const { db, mk } = setup();
+    const a = mk("Ali");
+    const b = mk("Veli");
+    db.recordGame(NOON, [
+      {
+        accountId: a,
+        gameId: "kule-ustasi",
+        players: 2,
+        miniScore: 1,
+        rank: 1,
+        stats: { perfects: 0, x: -1, y: 1.5 },
+      },
+      { accountId: b, gameId: "kule-ustasi", players: 2, miniScore: 1, rank: 2, stats: { perfects: 4 } },
+    ]);
+    expect(db.exportData(a)?.gameStats).toEqual([]);
+    expect(db.exportData(b)?.gameStats).toEqual([
+      { gameId: "kule-ustasi", endedAt: NOON, key: "perfects", value: 4 },
+    ]);
+    db.deleteAccountData(b);
+    expect(db.exportData(b)?.gameStats).toEqual([]);
+    expect(db.badgeStats(b).maxPerfects).toBe(0);
+    db.recordGame(NOON, [
+      { accountId: a, gameId: "kule-ustasi", players: 2, miniScore: 1, rank: 1, stats: { perfects: 2 } },
+    ]);
+    expect(db.deleteAccount(a)).toBe(true);
+    db.recordGame(NOON, [
+      { accountId: a, gameId: "kule-ustasi", players: 2, miniScore: 1, rank: 1, stats: { perfects: 2 } },
+    ]);
+    expect(db.badgeStats(a).maxPerfects).toBe(0);
+    db.close();
+  });
+
   it("8 kişilik maçı kazan: 7 kişide ya da kaybedince verilmez", () => {
     const { db, mk, finish, ids } = setup();
     const a = mk("Ali");

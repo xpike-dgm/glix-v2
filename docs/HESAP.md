@@ -69,11 +69,15 @@ Kimlikler veritabanına yazıldığı için asla yeniden adlandırılmaz.
 - **Profil:** kendi profilinde ızgara: kazanılan parlak ve adlı, kazanılmamış açık rozet sönük ve açıklamalı, kazanılmamış gizli rozet "???" / "Gizli rozet"
   (gerçek kimlik ve ad sunucudan çıkmaz). Arkadaşın profilinde yalnız kazanılanlar görünür.
 - **Görsel:** görsel dosya yok; satır içi SVG madalyon. Şekil rozet ailesini söyler (daire: maç sayısı, altıgen: galibiyet, kare: diğer, baklava: gizli) ve içinde sayı ya da simge vardır; ad her zaman yazıyla yanındadır (renk körü güvenli).
-- **Rozetler (13):** İlk Adım (1 maç), Alışıyorum (10), Müdavim (50), Efsane Oyuncu (100); İlk Zafer (1 galibiyet), Kazanmayı Biliyor (10), Şampiyon (25);
+- **Rozetler (15):** İlk Adım (1 maç), Alışıyorum (10), Müdavim (50), Efsane Oyuncu (100); İlk Zafer (1 galibiyet), Kazanmayı Biliyor (10), Şampiyon (25);
   Çok Yönlü (10 farklı oyunda birincilik); Kalabalığın Şampiyonu (8 kişilik maçı kazan); Can Dost (kabul edilmiş arkadaşla 10 maç, `account_coplay` + `friends`);
   Seri Galip (son 3 maç galibiyet); **gizli:** Gece Kuşu (maç İstanbul 02:00–05:00 arası bitti), Hepsi Bir Arada (rastgele havuzdaki `randomPool !== false` her oyun en az bir kez oynandı).
-- **Kapsam dışı (motor verisi gerekir):** *Kâhin ×10* (Rus Ruleti; Kâhin yalnız oyun içi görünümde var, `GameResult` yalnız `miniScores`/`awards` taşır) ve
-  *Kule Ustası: tek maçta kusursuz* (kusursuz sayısı sonuçta yok). Oyun kuralı ve görünümler değiştirilmeden eklenemez; motor sonuca bir "başarım" alanı verirse eklenir.
+- **Motor sayaçları (rozet muhasebesi):** `GameResult.stats?` (oyuncu -> sayaç adı -> değer) **yalnız sunucu içindir**; `sharedMatchSnapshot`
+  (`match.ts`, `publicResult`) sonucu istemciye `miniScores`/`awards` ile sınırlar, bu yüzden oyuncu, TV/sahne ve izleyici yüklerinde `stats` yoktur.
+  Oyun bitince hesaplı oyuncunun sayaçları `account_game_stats(account_id, game_id, ended_at, key, value)`'e yazılır (göç; sıfır ve geçersiz değer yazılmaz,
+  hesap silinince gider, "Verimi indir"de `stats.game_stats` olarak yer alır). Rus Ruleti `kahin: 1` (Kâhin unvanı, zaten sonuç ekranında herkese açık), Kule Ustası `perfects: n` yazar.
+- **Sayaç rozetleri (2):** Büyük Kâhin (`kahin-on`; Rus Ruleti'nde 10 farklı oyunda Kâhin, `SUM(kahin)` >= 10) ve Kule Ustası (`kule-ustasi`; tek oyunda 3 kusursuz bırakış, `MAX(perfects)` >= 3).
+  Diğerleri gibi maç final'e varınca değerlendirilir.
 
 ## Arkadaşlar (H7, H8; uygulandı)
 Yalnız hesaplılar; misafir bu özelliklerden hiçbir şey görmez. Uç ve mesaj ayrıntısı `docs/PROTOKOL.md` "Arkadaşlar".
@@ -104,7 +108,7 @@ satıra dokununca o kişinin profili açılır (geri: sıralama). Arkadaşın yo
 - **Aydınlatma:** kayıt ekranındaki "Aydınlatma metni" (`Disclosure.tsx`) `/gizlilik.html` ile uyumlu özettir (veri sorumlusu e-postası, hangi veri/neden, saklama, haklar, Ayarlar yolu).
 - **Verimi indir:** Ayarlar > Hesap > Verilerim. `POST /api/account/export` JSON dosyası döner (`glix-verilerim-<YYYY-MM-DD>.json`, Türkiye saati). İçerik: açıklama, hesap alanları
   (kullanıcı adı, e-posta, doğrulama, Google bağlı mı ve `sub`, şifre için "özet saklanır, dosyaya konmaz" notu, açılış ve ad değiştirme tarihi), oturumlar (yalnız açılış/son görülme; belirteç özeti yok),
-  `account_games` / `account_matches` satırları, birlikte oynananlar (kullanıcı adıyla), arkadaşlar/istekler/engeller (ad + tarih), rozetler, bildirim aboneliği var mı. Hesap başına günde 3.
+  `account_games` / `account_matches` satırları, birlikte oynananlar (kullanıcı adıyla), arkadaşlar/istekler/engeller (ad + tarih), oyun sayaçları, rozetler, bildirim aboneliği var mı. Hesap başına günde 3.
   İstemci fetch + blob + bağlantıyla indirir; iOS ana ekran uygulamasında (indirmeyi tutmaz) dosya yeni sekmede açılır.
 - **Hesabımı sil:** Ayarlar > Hesap'ın en altı. `POST /api/account/delete {confirm, password?}`: kullanıcı adı yazılır (büyük/küçük harf duyarsız); şifreli hesapta şifre (hatalı deneme giriş sınırına sayılır);
   yalnız Google hesabında oturum en çok 10 dk önce açılmış olmalı, değilse 403 `fresh_login_required` ("Güvenlik için çıkış yapıp tekrar giriş yap, sonra sil."). Hesap başına saatte 5 deneme.

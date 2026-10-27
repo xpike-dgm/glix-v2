@@ -53,6 +53,11 @@ export interface GameResult {
   miniScores: Record<string, number>;
   /** Genel skora eklenecek puanlar (kural dosyasındaki aktarım). */
   awards: Record<string, number>;
+  /**
+   * Yalnız sunucu muhasebesi (rozetler): oyuncu kimliği -> sayaç adı -> değer. İstemciye ASLA gönderilmez
+   * (sunucu `match.ts` anlık görüntüde ayıklar). Saf ve belirleyici olmalı; oyun kuralını etkilemez.
+   */
+  stats?: Record<string, Record<string, number>>;
 }
 
 /**

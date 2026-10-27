@@ -29,6 +29,8 @@ const ICONS: Record<Extract<MedalGlyph, { kind: "icon" }>["name"], string> = {
   simsek: "M13 3L5 13.5h6L10 21l8-10.5h-6L13 3z",
   ay: "M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z",
   parilti: "M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2L12 3z",
+  goz: "M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 100-6 3 3 0 000 6z",
+  kule: "M6 21h12M7 21v-4h10v4M8 17v-4h8v4M9.5 13V9h5v4M11 9V5h2v4",
   soru: "M9 9a3 3 0 115 2c-1 .8-2 1.3-2 3M12 18h.01",
 };
 

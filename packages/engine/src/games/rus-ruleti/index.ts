@@ -289,6 +289,9 @@ export const rusRuleti: GameDefinition<RusRuletiState, RusRuletiAction, RusRulet
     result(state) {
       const scores: Record<string, number> = {};
       for (const id of state.players) scores[id] = state.alive.includes(id) ? 1 : 0;
-      return { miniScores: { ...scores }, awards: { ...scores } };
+      // Kâhin unvanı sunucuda "Kâhin ×10" rozeti için sayılır; istemciye gitmez (sonuçtan ayıklanır).
+      const stats: Record<string, Record<string, number>> = {};
+      for (const id of rusRuletiKahinler(state)) stats[id] = { kahin: 1 };
+      return { miniScores: { ...scores }, awards: { ...scores }, stats };
     },
   };

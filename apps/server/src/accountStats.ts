@@ -8,6 +8,8 @@ export interface Entrant {
   /** Misafirde null. */
   accountId: number | null;
   score: number;
+  /** Oyun sonucundaki sayaçlar (`GameResult.stats`); yalnız sunucu muhasebesi. */
+  stats?: Readonly<Record<string, number>>;
 }
 
 /** Biten mini oyunun kaydı; yalnız hesaplı oyuncular satıra dönüşür. */
@@ -76,6 +78,7 @@ export function buildGameRecord(gameId: string, endedAt: number, entrants: reado
       players: entrants.length,
       miniScore: e.score,
       rank: ranks.get(e.playerId) ?? entrants.length,
+      ...(e.stats ? { stats: e.stats } : {}),
     })),
   };
 }
