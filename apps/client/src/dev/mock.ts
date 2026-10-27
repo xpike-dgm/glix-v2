@@ -42,6 +42,7 @@ export function startMock(kind: string, params: URLSearchParams): void {
     avatar: i,
     connected: !(kind === "lobby" && i === 3),
     score: 0,
+    spectator: false,
   }));
   let rev = 1;
   // Varsayılan oda rastgele 5; `&sel=manual` el ile modda açar.
@@ -111,6 +112,7 @@ export function startMock(kind: string, params: URLSearchParams): void {
       gameIds,
       selection,
       tone,
+      joinPolicy: "izleyici",
       lobbyReady: phase === "lobby" ? lobbyReady : [],
       catalog: CATALOG,
       match: match(),

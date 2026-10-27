@@ -1,9 +1,11 @@
 import {
   CONTENT_TONES,
+  DEFAULT_JOIN_POLICY,
   type ErrorCode,
   type GameInfo,
   type GameResult,
   isLobbyEmoji,
+  JOIN_POLICIES,
   type LeftReason,
   type MatchSnapshot,
   type PlayerInfo,
@@ -58,7 +60,14 @@ function parsePlayer(v: unknown): PlayerInfo | null {
   if (!isRec(v)) return null;
   const { id, nickname, avatar, connected, score } = v;
   if (!isStr(id) || !isStr(nickname) || !isNum(avatar) || !isBool(connected) || !isNum(score)) return null;
-  return { id, nickname, avatar: Math.min(7, Math.max(0, Math.trunc(avatar))), connected, score };
+  return {
+    id,
+    nickname,
+    avatar: Math.min(7, Math.max(0, Math.trunc(avatar))),
+    connected,
+    score,
+    spectator: v.spectator === true,
+  };
 }
 
 function parseGameInfo(v: unknown): GameInfo | null {
@@ -156,6 +165,7 @@ export function parseSnapshot(v: unknown): RoomSnapshot | null {
     gameIds: v.gameIds,
     selection,
     tone,
+    joinPolicy: JOIN_POLICIES.find((j) => j === v.joinPolicy) ?? DEFAULT_JOIN_POLICY,
     lobbyReady: v.lobbyReady,
     catalog,
     match,

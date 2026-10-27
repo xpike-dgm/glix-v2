@@ -121,15 +121,18 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       // Karar: room_full ve match_in_progress, room_not_found'dan ayrı kalır. Bunlar kodun doğru olduğunu
       // ele verir, ama 5 karakterli kod uzayı (32^5) + yukarıdaki soket/IP sınırları tahmini pratikte
       // imkânsız kılar; arkadaşına "oda dolu" ile "oda yok" ayrımını göstermek kullanıcı deneyimi için daha değerli.
-      if (room.phase !== "lobby") {
+      // Maç sürerken: "Kapalı" ise reddedilir, "İzleyici" ise izleyici olarak girer.
+      const spectator = room.phase !== "lobby";
+      if (spectator && room.joinPolicy === "kapali") {
         fail(conn, "match_in_progress");
         return;
       }
+      // İzleyici de bir yer tutar: oyuncular + izleyiciler en fazla MAX_PLAYERS.
       if (room.players.size >= MAX_PLAYERS) {
         fail(conn, "room_full");
         return;
       }
-      addPlayer(rt, room, msg.nickname, conn, msg.avatar);
+      addPlayer(rt, room, msg.nickname, conn, msg.avatar, spectator);
       sendSession(conn);
       rt.broadcaster.markDirty(room);
       return;
@@ -320,6 +323,18 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       rt.broadcaster.markDirty(room);
       return;
     }
+    case "setJoinPolicy": {
+      const room = requireHost(conn);
+      if (!room) return;
+      if (room.phase !== "lobby") {
+        fail(conn, "wrong_phase");
+        return;
+      }
+      if (room.joinPolicy === msg.policy) return;
+      room.joinPolicy = msg.policy;
+      rt.broadcaster.markDirty(room);
+      return;
+    }
     case "startMatch": {
       const room = requireHost(conn);
       if (!room) return;
@@ -388,6 +403,8 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         fail(conn, "wrong_phase");
         return;
       }
+      // İzleyici maça katılmadı; geri bildirim veremez (sessizce yok sayılır).
+      if (conn.player.spectator) return;
       // Maç başına oyuncu başına bir kez; sonrakiler sessizce yok sayılır.
       if (match.feedbackBy.has(conn.player.id)) return;
       match.feedbackBy.add(conn.player.id);

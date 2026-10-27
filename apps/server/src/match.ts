@@ -142,7 +142,10 @@ export function pickRandomGames(rt: Runtime, connected: number, count: number): 
 /** Maçı başlatır. Ön koşullar (host, lobi, oyuncu sayısı) çağıran tarafından denetlenir. */
 export function beginMatch(rt: Runtime, room: Room): void {
   const games = room.gameIds.map((id) => GAMES[id]).filter((g): g is AnyGame => g !== undefined);
-  const participants = [...room.players.values()].filter(isConnected).map((p) => p.id);
+  // İzleyici lobide bulunmaz (lobiye dönünce bayrağı silinir); yine de oyun kurulumuna asla girmez.
+  const participants = [...room.players.values()]
+    .filter((p) => !p.spectator && isConnected(p))
+    .map((p) => p.id);
   const match: Match = {
     games,
     index: 0,
@@ -196,7 +199,11 @@ export function clearMatch(rt: Runtime, room: Room, outcome: "aborted" | "failed
   if (room.match) endMatchStats(rt, room.match, outcome);
   room.match = null;
   room.phase = "lobby";
-  for (const p of room.players.values()) p.lobbyReady = false;
+  // Maç bitti: izleyiciler normal oyuncu olur.
+  for (const p of room.players.values()) {
+    p.lobbyReady = false;
+    p.spectator = false;
+  }
   if (room.selection.mode === "random") room.gameIds = [];
   rt.active.delete(room);
 }
@@ -423,11 +430,15 @@ export function sharedMatchSnapshot(rt: Runtime, room: Room): Omit<MatchSnapshot
   };
 }
 
-/** Oyuncuya özel oyun görünümü; katılımcı olmayan izleyici görünümü alır. */
+/**
+ * Oyuncuya özel oyun görünümü. Katılımcı olmayan (izleyici dahil) kimse için oyuncu kimliği oyuna hiç
+ * verilmez: `view(state, null)`, yani kimseye bağlı olmayan izleyici görünümü gider.
+ */
 export function matchViewFor(rt: Runtime, room: Room, playerId: string): unknown {
   const match = room.match;
   if (!match?.rng || (room.phase !== "playing" && room.phase !== "results")) return null;
-  const who = match.participants.includes(playerId) ? playerId : null;
+  const who =
+    match.participants.includes(playerId) && !room.players.get(playerId)?.spectator ? playerId : null;
   const game = currentGame(match);
   const ctx = ctxFor(rt, room, match);
   return guard("view", () => game.view(match.state, who, ctx));

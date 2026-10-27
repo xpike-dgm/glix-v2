@@ -50,6 +50,7 @@ export function startZamanBombasiMock(kind: string, params: URLSearchParams): vo
     avatar: i,
     connected: true,
     score: 0,
+    spectator: false,
   }));
   const spectator = kind === "zaman-spectator";
   const participants = players.map((p) => p.id).filter((id) => !(spectator && id === SELF));
@@ -210,6 +211,7 @@ export function startZamanBombasiMock(kind: string, params: URLSearchParams): vo
     gameIds: [zamanBombasiHafizasi.id],
     selection: { mode: "manual" },
     tone: "arkadas",
+    joinPolicy: "izleyici",
     lobbyReady: [],
     catalog: CATALOG,
     match,

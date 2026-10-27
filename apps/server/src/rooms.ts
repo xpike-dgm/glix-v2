@@ -1,6 +1,7 @@
 import { randomBytes, randomInt } from "node:crypto";
 import {
   DEFAULT_CONTENT_TONE,
+  DEFAULT_JOIN_POLICY,
   getCatalog,
   MAX_NICKNAME_LENGTH,
   MAX_PLAYERS,
@@ -95,6 +96,7 @@ export function createRoom(rt: Runtime): Room {
     gameIds: rt.defaultGameIds ? [...rt.defaultGameIds] : [],
     selection: rt.defaultGameIds ? { mode: "manual" } : { mode: "random", count: DEFAULT_RANDOM_COUNT },
     tone: DEFAULT_CONTENT_TONE,
+    joinPolicy: DEFAULT_JOIN_POLICY,
     match: null,
     rev: 0,
     nextJoinOrder: 0,
@@ -107,13 +109,14 @@ export function createRoom(rt: Runtime): Room {
   return room;
 }
 
-/** Odaya oyuncu ekler ve bağlantıya bağlar. İlk oyuncu host olur. */
+/** Odaya oyuncu ekler ve bağlantıya bağlar. İlk oyuncu host olur. `spectator`: maç sürerken giren izleyici. */
 export function addPlayer(
   rt: Runtime,
   room: Room,
   nickname: string,
   conn: Connection,
   preferredAvatar?: number,
+  spectator = false,
 ): Player {
   if (room.deleteCancel) {
     room.deleteCancel();
@@ -130,6 +133,7 @@ export function addPlayer(
         : lowestFreeAvatar(room),
     token: generateToken(),
     score: 0,
+    spectator,
     joinOrder: room.nextJoinOrder++,
     conn,
     room,
@@ -163,7 +167,13 @@ export function clearHostGrace(room: Room): void {
 export function transferHost(room: Room): void {
   clearHostGrace(room);
   const players = [...room.players.values()];
-  const next = oldest(players.filter(isConnected)) ?? oldest(players);
+  // Önce oyuncular (izleyiciler değil); kimse yoksa en eski bağlı, o da yoksa en eski kişi.
+  const playing = players.filter((p) => !p.spectator);
+  const next =
+    oldest(playing.filter(isConnected)) ??
+    oldest(players.filter(isConnected)) ??
+    oldest(playing) ??
+    oldest(players);
   if (next) {
     room.hostId = next.id;
     next.lobbyReady = false;
@@ -203,10 +213,9 @@ export function removePlayer(rt: Runtime, room: Room, player: Player): void {
     recordPresence(rt, room, player.id, false);
   }
   if (room.hostId === player.id) transferHost(room);
-  if (room.players.size === 0) {
-    if (room.phase !== "lobby") clearMatch(rt, room);
-    scheduleEmptyDelete(rt, room);
-  }
+  // Maçta oyuncu kalmadıysa (yalnız izleyiciler varsa) maç biter, izleyiciler oyuncu olarak lobiye döner.
+  if (room.phase !== "lobby" && ![...room.players.values()].some((p) => !p.spectator)) clearMatch(rt, room);
+  if (room.players.size === 0) scheduleEmptyDelete(rt, room);
   rt.broadcaster.markDirty(room);
 }
 

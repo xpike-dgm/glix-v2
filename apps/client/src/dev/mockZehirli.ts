@@ -36,6 +36,7 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
     avatar: i,
     connected: true,
     score: 0,
+    spectator: false,
   }));
   const ids = players.map((p) => p.id);
   const spectator = kind === "zehirli-spectator";
@@ -106,6 +107,7 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
       gameIds: [INFO.id],
       selection: { mode: "manual" },
       tone: "arkadas",
+      joinPolicy: "izleyici",
       lobbyReady: [],
       catalog: [INFO],
       match,

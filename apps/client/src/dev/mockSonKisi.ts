@@ -50,6 +50,7 @@ export function startSonKisiMock(kind: string, params: URLSearchParams): void {
     avatar: i,
     connected: true,
     score: 0,
+    spectator: false,
   }));
   const spectating = kind === "sonkisi-spectator";
   const participants = players.map((p) => p.id).filter((id) => !(spectating && id === SELF));
@@ -133,6 +134,7 @@ export function startSonKisiMock(kind: string, params: URLSearchParams): void {
       gameIds: [GAME.id],
       selection: { mode: "manual" },
       tone: "arkadas",
+      joinPolicy: "izleyici",
       lobbyReady: [],
       catalog: [GAME],
       match,

@@ -291,7 +291,14 @@ describe("lobi mesajları (rename, react, setReady, transferHost)", () => {
   });
 
   it("allReady: bağlı ve host olmayan herkes hazır olmalı, en az bir kişi", () => {
-    const p = (id: string, connected = true) => ({ id, nickname: id, avatar: 0, connected, score: 0 });
+    const p = (id: string, connected = true, spectator = false) => ({
+      id,
+      nickname: id,
+      avatar: 0,
+      connected,
+      score: 0,
+      spectator,
+    });
     const base = { hostId: "h", players: [p("h"), p("a"), p("b")], lobbyReady: [] as string[] };
     expect(allReady(base)).toBe(false);
     expect(allReady({ ...base, lobbyReady: ["a"] })).toBe(false);
@@ -299,5 +306,33 @@ describe("lobi mesajları (rename, react, setReady, transferHost)", () => {
     expect(allReady({ ...base, players: [p("h"), p("a"), p("b", false)], lobbyReady: ["a"] })).toBe(true);
     expect(allReady({ ...base, players: [p("h")] })).toBe(false);
     expect(allReady({ ...base, players: [p("h"), p("a", false)] })).toBe(false);
+  });
+
+  it("allReady: izleyici hazır beklemesini engellemez", () => {
+    const p = (id: string, spectator = false) => ({
+      id,
+      nickname: id,
+      avatar: 0,
+      connected: true,
+      score: 0,
+      spectator,
+    });
+    const snap = { hostId: "h", players: [p("h"), p("a"), p("w", true)], lobbyReady: ["a"] };
+    expect(allReady(snap)).toBe(true);
+  });
+
+  it("setJoinPolicy: yalnız izleyici / kapali kabul edilir", () => {
+    expect(parse({ type: "setJoinPolicy", policy: "izleyici" })).toEqual({
+      type: "setJoinPolicy",
+      policy: "izleyici",
+    });
+    expect(parse({ type: "setJoinPolicy", policy: "kapali" })).toEqual({
+      type: "setJoinPolicy",
+      policy: "kapali",
+    });
+    for (const policy of ["", "Kapalı", "open", 1, null, undefined, ["izleyici"]])
+      expect(parse({ type: "setJoinPolicy", policy })).toBeNull();
+    expect(parse({ type: "setJoinPolicy" })).toBeNull();
+    expect(parse({ type: "setJoinPolicy", policy: "kapali", extra: 1 })).toBeNull();
   });
 });

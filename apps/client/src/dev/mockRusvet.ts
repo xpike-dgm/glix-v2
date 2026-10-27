@@ -47,6 +47,7 @@ export function startRusvetMock(kind: string, params: URLSearchParams): void {
     avatar: i,
     connected: true,
     score: 0,
+    spectator: false,
   }));
   const spectator = kind.includes("spectator");
   const participants = players.map((p) => p.id).filter((id) => !(spectator && id === SELF));
@@ -255,6 +256,7 @@ export function startRusvetMock(kind: string, params: URLSearchParams): void {
       gameIds: [INFO.id],
       selection: { mode: "manual" },
       tone: "arkadas",
+      joinPolicy: "izleyici",
       lobbyReady: [],
       catalog: [INFO],
       match,

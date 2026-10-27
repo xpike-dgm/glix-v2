@@ -35,6 +35,7 @@ export function startBorsaMock(kind: string, params: URLSearchParams): void {
     avatar: i,
     connected: !(i === n - 1 && n > 5),
     score: 0,
+    spectator: false,
   }));
   const spectator = kind.includes("spectator");
   const participants = players.map((p) => p.id).filter((id) => !(spectator && id === SELF));
@@ -111,6 +112,7 @@ export function startBorsaMock(kind: string, params: URLSearchParams): void {
       gameIds: [GAME_ID],
       selection: { mode: "manual" },
       tone: "arkadas",
+      joinPolicy: "izleyici",
       lobbyReady: [],
       catalog: CATALOG,
       match: {

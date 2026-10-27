@@ -2,6 +2,7 @@ import {
   APP_VERSION,
   type ClientMessage,
   type ContentTone,
+  type JoinPolicy,
   type LobbyEmoji,
   type RoomSnapshot,
 } from "@glix/engine";
@@ -385,6 +386,7 @@ export function leaveRoom(): void {
 
 export const kick = (playerId: string): boolean => rawSend({ type: "kick", playerId });
 export const setRandom = (count: number): boolean => rawSend({ type: "setRandom", count });
+export const setJoinPolicy = (policy: JoinPolicy): boolean => rawSend({ type: "setJoinPolicy", policy });
 export const setTone = (tone: ContentTone): boolean => rawSend({ type: "setTone", tone });
 export const setGames = (gameIds: string[]): boolean => rawSend({ type: "setGames", gameIds });
 /**

@@ -1,7 +1,7 @@
 import type { MatchSnapshot, PlayerInfo, RoomPhase, RoomSnapshot } from "@glix/engine";
 
 export function player(id: string, avatar = 0, extra: Partial<PlayerInfo> = {}): PlayerInfo {
-  return { id, nickname: id.toUpperCase(), avatar, connected: true, score: 0, ...extra };
+  return { id, nickname: id.toUpperCase(), avatar, connected: true, score: 0, spectator: false, ...extra };
 }
 
 export function matchSnap(extra: Partial<MatchSnapshot> = {}): MatchSnapshot {
@@ -35,6 +35,7 @@ export function snapshot(phase: RoomPhase = "lobby", extra: Partial<RoomSnapshot
     gameIds: ["butona-bas"],
     selection: { mode: "manual" },
     tone: "arkadas",
+    joinPolicy: "izleyici",
     lobbyReady: [],
     catalog: [
       { id: "butona-bas", name: "Butona Bas", minPlayers: 2, maxPlayers: 8, orientation: "portrait" },

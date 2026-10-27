@@ -22,6 +22,15 @@ export function isLobbyEmoji(value: unknown): value is LobbyEmoji {
   return typeof value === "string" && (LOBBY_EMOJIS as readonly string[]).includes(value);
 }
 
+/** Maç sürerken odaya katılım: "izleyici" (varsayılan) izleyici olarak girer, "kapali" kimseyi almaz. */
+export const JOIN_POLICIES = ["izleyici", "kapali"] as const;
+export type JoinPolicy = (typeof JOIN_POLICIES)[number];
+export const DEFAULT_JOIN_POLICY: JoinPolicy = "izleyici";
+
+export function isJoinPolicy(value: unknown): value is JoinPolicy {
+  return typeof value === "string" && (JOIN_POLICIES as readonly string[]).includes(value);
+}
+
 // Akış ayrıntıları: docs/PROTOKOL.md
 
 export type ClientMessage =
@@ -48,6 +57,8 @@ export type ClientMessage =
   | { type: "setRandom"; count: number }
   /** İçerik tonu (yalnız host, yalnız lobi). Oyunlar içerik havuzunu buna göre seçer. */
   | { type: "setTone"; tone: ContentTone }
+  /** Maç sürerken katılım ayarı (yalnız host, yalnız lobi). */
+  | { type: "setJoinPolicy"; policy: JoinPolicy }
   | { type: "startMatch" }
   | { type: "ready" }
   | { type: "action"; seq: number; payload: unknown }
@@ -123,6 +134,8 @@ export interface PlayerInfo {
   connected: boolean;
   /** Genel skor. */
   score: number;
+  /** Maç sürerken odaya girdi: yalnız izler, puan almaz; maç bitip lobiye dönünce oyuncu olur. */
+  spectator: boolean;
 }
 
 export interface GameInfo {
@@ -170,6 +183,8 @@ export interface RoomSnapshot {
   selection: { mode: "manual" } | { mode: "random"; count: number };
   /** Odanın içerik tonu; yeni oda: arkadaş. */
   tone: ContentTone;
+  /** Maç sürerken gelenlere ne olur; yeni oda: izleyici. */
+  joinPolicy: JoinPolicy;
   /** Lobide "Hazırım" diyen (host olmayan) oyuncuların kimlikleri; lobi dışında boştur. */
   lobbyReady: string[];
   /** Sunucudaki tüm oyunlar (Oyunlar bölümü için). */
@@ -216,7 +231,7 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
  * Başlamak için hazır olmak gerekmez; yalnız Başlat düğmesinin parlamasına bakar.
  */
 export function allReady(snap: Pick<RoomSnapshot, "players" | "hostId" | "lobbyReady">): boolean {
-  const others = snap.players.filter((p) => p.connected && p.id !== snap.hostId);
+  const others = snap.players.filter((p) => p.connected && !p.spectator && p.id !== snap.hostId);
   return others.length > 0 && others.every((p) => snap.lobbyReady.includes(p.id));
 }
 
@@ -352,6 +367,10 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       const count = data.count;
       if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 1 || count > 64) return null;
       return { type: "setRandom", count };
+    }
+    case "setJoinPolicy": {
+      if (!hasExactKeys(data, ["type", "policy"])) return null;
+      return isJoinPolicy(data.policy) ? { type: "setJoinPolicy", policy: data.policy } : null;
     }
     case "setTone": {
       if (!hasExactKeys(data, ["type", "tone"])) return null;

@@ -83,6 +83,7 @@ export function startCagrisimMock(kind: string, params: URLSearchParams): void {
     avatar: i,
     connected: true,
     score: 0,
+    spectator: false,
   }));
   const watching = kind.includes("spectator");
   const participants = players.map((p) => p.id).filter((id) => !(watching && id === SELF));
@@ -154,6 +155,7 @@ export function startCagrisimMock(kind: string, params: URLSearchParams): void {
       gameIds: ["cagrisim-agi"],
       selection: { mode: "manual" },
       tone: "arkadas",
+      joinPolicy: "izleyici",
       lobbyReady: [],
       catalog: CATALOG,
       match: match(),

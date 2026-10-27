@@ -37,6 +37,7 @@ export function startCaprazMock(kind: string, params: URLSearchParams): void {
     avatar: i,
     connected: !(kind === "capraz-ates" && params.has("off") && i === 2),
     score: 0,
+    spectator: false,
   }));
   const ids = players.map((p) => p.id);
   const watching = kind.startsWith("capraz-spectator");
@@ -98,6 +99,7 @@ export function startCaprazMock(kind: string, params: URLSearchParams): void {
       gameIds: [info.id],
       selection: { mode: "manual" },
       tone: "arkadas",
+      joinPolicy: "izleyici",
       lobbyReady: [],
       catalog: [
         {

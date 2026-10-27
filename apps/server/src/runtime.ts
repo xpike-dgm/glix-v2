@@ -1,4 +1,12 @@
-import type { ContentTone, GameInfo, GameLog, RoomPhase, RoomSnapshot, ServerMessage } from "@glix/engine";
+import type {
+  ContentTone,
+  GameInfo,
+  GameLog,
+  JoinPolicy,
+  RoomPhase,
+  RoomSnapshot,
+  ServerMessage,
+} from "@glix/engine";
 import type { Broadcaster } from "./broadcast.js";
 import type { Cancel, Clock } from "./clock.js";
 import type { Match } from "./match.js";
@@ -32,6 +40,8 @@ export interface Player {
   avatar: number;
   token: string;
   score: number;
+  /** Maç sürerken girdi: yalnız izler (maça katılmaz, puan almaz). Lobiye dönünce false olur. */
+  spectator: boolean;
   /** Katılım sırası; "en eski" host seçimi için. */
   joinOrder: number;
   conn: Connection | null;
@@ -55,6 +65,8 @@ export interface Room {
   selection: RoomSnapshot["selection"];
   /** İçerik tonu; maç başında oyunların `setup`ına verilir. */
   tone: ContentTone;
+  /** Maç sürerken gelen kişiye ne olur (yalnız lobide değişir). */
+  joinPolicy: JoinPolicy;
   match: Match | null;
   rev: number;
   nextJoinOrder: number;

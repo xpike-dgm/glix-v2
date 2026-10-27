@@ -41,6 +41,7 @@ export function startRusRuletiMock(kind: string, params: URLSearchParams): void 
     avatar: i,
     connected: !(params.get("off") === "1" && i === 2),
     score: 0,
+    spectator: false,
   }));
   const ids = players.map((p) => p.id);
   const spectator = kind === "rus-spectator";
@@ -149,6 +150,7 @@ export function startRusRuletiMock(kind: string, params: URLSearchParams): void 
       gameIds: [INFO.id],
       selection: { mode: "manual" },
       tone: "arkadas",
+      joinPolicy: "izleyici",
       lobbyReady: [],
       catalog: [INFO],
       match,

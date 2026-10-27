@@ -124,6 +124,8 @@ describe("oda kodu tahmini", () => {
   });
   it("match_in_progress, room_not_found'dan ayrı bir hata olarak kalır", async () => {
     const [host] = await setupRoom(["Ali", "Veli"]);
+    host?.send({ type: "setJoinPolicy", policy: "kapali" });
+    await until(() => host?.room.joinPolicy === "kapali", "ayar");
     host?.send({ type: "startMatch" });
     await until(() => host?.room.phase === "briefing", "briefing");
     const j = await Client.connect();

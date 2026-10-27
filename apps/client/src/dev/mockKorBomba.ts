@@ -47,6 +47,7 @@ export function startKorBombaMock(kind: string, params: URLSearchParams): void {
     avatar: i,
     connected: !(kind === "kor-bomba-holder" && i === 3 && n > 4),
     score: 0,
+    spectator: false,
   }));
   const spectating = kind === "kor-bomba-spectator";
   const participants = players.map((p) => p.id).filter((id) => !(spectating && id === SELF));
@@ -110,6 +111,7 @@ export function startKorBombaMock(kind: string, params: URLSearchParams): void {
       gameIds: [GAME.id],
       selection: { mode: "manual" },
       tone: "arkadas",
+      joinPolicy: "izleyici",
       lobbyReady: [],
       catalog: [GAME],
       match,

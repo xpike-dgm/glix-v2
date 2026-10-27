@@ -48,6 +48,7 @@ export function startGizliHirsizMock(kind: string, params: URLSearchParams): voi
     avatar: i,
     connected: true,
     score: 0,
+    spectator: false,
   }));
   const spectating = kind === "gizli-spectator";
   const participants = players.map((p) => p.id).filter((id) => !(spectating && id === SELF));
@@ -103,6 +104,7 @@ export function startGizliHirsizMock(kind: string, params: URLSearchParams): voi
       gameIds: [GAME.id],
       selection: { mode: "manual" },
       tone: "arkadas",
+      joinPolicy: "izleyici",
       lobbyReady: [],
       catalog: [GAME],
       match,

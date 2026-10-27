@@ -24,7 +24,7 @@ describe("oda kurma ve katılma", () => {
     const room = a.room;
     expect(room).toMatchObject({ code: s.roomCode, hostId: s.playerId, selfId: s.playerId, phase: "lobby" });
     expect(room.players).toEqual([
-      { id: s.playerId, nickname: "Ayşe", avatar: 0, connected: true, score: 0 },
+      { id: s.playerId, nickname: "Ayşe", avatar: 0, connected: true, score: 0, spectator: false },
     ]);
     expect(room.catalog.map((g) => g.id)).toContain("butona-bas");
     expect(room.gameIds).toContain("butona-bas");
@@ -336,10 +336,11 @@ describe("maç akışı", () => {
     expect(m?.participants).toHaveLength(2);
     expect(m?.briefing.steps.length).toBeLessThanOrEqual(3);
     expect((m?.phaseEndsAt ?? 0) - (m?.phaseStartedAt ?? 0)).toBe(40_000);
-    // Briefing'de eylem ve katılım engellenir.
+    // Briefing'de eylem engellenir; maç sürerken gelen izleyici olur (ayrıntı: izleyici.test.ts).
     a.send({ type: "action", seq: 1, payload: { kind: "press" } });
     const late = await join(a.session.roomCode, "Geç");
-    expect(late.lastError?.code).toBe("match_in_progress");
+    expect(late.lastError).toBeUndefined();
+    expect(late.room.players.find((p) => p.nickname === "Geç")?.spectator).toBe(true);
     a.send({ type: "ready" });
     await until(() => a.room.match?.readyIds.length === 1);
     expect(a.room.phase).toBe("briefing");
