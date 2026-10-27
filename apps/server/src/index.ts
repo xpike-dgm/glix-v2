@@ -1,6 +1,11 @@
+import { setDefaultAutoSelectFamilyAttemptTimeout } from "node:net";
 import { loadConfig } from "./config.js";
 import { log } from "./log.js";
 import { startServer } from "./server.js";
+
+// Dış istekler (Resend, Google, bildirim servisleri): Node her adres için varsayılan 250 ms bekler. Sunucudan
+// Cloudflare'e bağlantı ~400 ms sürdüğünden tüm adresler zaman aşımına düşüyordu; 2 sn yeterli pay bırakır.
+setDefaultAutoSelectFamilyAttemptTimeout(2000);
 
 const config = loadConfig();
 const running = await startServer(config);
