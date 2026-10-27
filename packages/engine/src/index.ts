@@ -18,6 +18,7 @@ export * from "./games/kendim/index.js";
 export * from "./games/kontrol-paneli-kaosu/index.js";
 export * from "./games/kor-bomba/index.js";
 export * from "./games/kor-kronometre/index.js";
+export * from "./games/kule-ustasi/index.js";
 export * from "./games/laf-sokma/index.js";
 export * from "./games/ortalamanin-yarisi/index.js";
 export * from "./games/rus-ruleti/index.js";

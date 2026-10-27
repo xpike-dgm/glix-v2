@@ -1180,6 +1180,9 @@ düşürür ve oyundan çıkar.
     3. Iskalayan kuleyi yıkar ve çıkar (−1); kalanlar +1.
 12. Yeni oyun olduğu için oyun testleri sahip onaylayıp çalıştırılana kadar **rastgele seçime girmez**; yalnız elle
     seçilebilir.
+    Uygulama: oyun tanımında `randomPool: false` bayrağı; sunucunun rastgele seçici işlevi (`pickRandomGames`) bu
+    oyunları havuza almaz, katalogda (`GameInfo.randomPool`) görünür ve lobi rastgele sayısını havuz boyuyla
+    sınırlar. Sahip onaylayınca bayrak kaldırılır.
 
 ---
 

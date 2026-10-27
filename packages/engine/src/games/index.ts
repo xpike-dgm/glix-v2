@@ -17,6 +17,7 @@ import { kendim } from "./kendim/index.js";
 import { kontrolPaneliKaosu } from "./kontrol-paneli-kaosu/index.js";
 import { korBomba } from "./kor-bomba/index.js";
 import { korKronometre } from "./kor-kronometre/index.js";
+import { kuleUstasi } from "./kule-ustasi/index.js";
 import { lafSokma } from "./laf-sokma/index.js";
 import { ortalamaninYarisi } from "./ortalamanin-yarisi/index.js";
 import { rusRuleti } from "./rus-ruleti/index.js";
@@ -56,6 +57,7 @@ export const GAMES: Record<string, AnyGame> = {
   [bozukTelefon.id]: bozukTelefon,
   [karaBorsa.id]: karaBorsa,
   [lafSokma.id]: lafSokma,
+  [kuleUstasi.id]: kuleUstasi,
 };
 
 export function getCatalog(): GameInfo[] {
@@ -65,5 +67,6 @@ export function getCatalog(): GameInfo[] {
     minPlayers: g.minPlayers,
     maxPlayers: g.maxPlayers,
     orientation: g.orientation,
+    ...(g.randomPool === false ? { randomPool: false as const } : {}),
   }));
 }

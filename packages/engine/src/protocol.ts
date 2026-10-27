@@ -172,6 +172,8 @@ export interface GameInfo {
   minPlayers: number;
   maxPlayers: number;
   orientation: "portrait" | "landscape";
+  /** `false`: rastgele seçime girmez, yalnız elle seçilir. Yoksa havuzdadır. */
+  randomPool?: false;
 }
 
 export interface MatchSnapshot {

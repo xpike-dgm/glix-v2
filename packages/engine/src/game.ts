@@ -66,6 +66,11 @@ export interface GameDefinition<State, Action, View, PublicView = unknown> {
   maxPlayers: number;
   orientation: "portrait" | "landscape";
   briefing: Briefing;
+  /**
+   * `false`: oyun rastgele seçime girmez; yalnız host elle seçebilir (ör. onay bekleyen yeni oyun).
+   * Verilmezse (varsayılan) oyun rastgele havuzdadır. Havuzu sunucu `pickRandomGames` uygular.
+   */
+  randomPool?: false;
   /** Ağdan gelen ham eylemi doğrular; geçersizse null. */
   parseAction(raw: unknown): Action | null;
   setup(players: readonly string[], ctx: GameContext): State;

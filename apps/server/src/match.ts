@@ -127,10 +127,13 @@ function enterBriefing(rt: Runtime, room: Room, match: Match): void {
   room.phase = "briefing";
 }
 
-/** Bağlı oyuncu sayısına uyan oyunlar arasından tekrarsız, rastgele sırayla en çok `count` tane seçer. */
+/**
+ * Bağlı oyuncu sayısına uyan oyunlar arasından tekrarsız, rastgele sırayla en çok `count` tane seçer.
+ * `randomPool: false` olan oyunlar (ör. onay bekleyen yeni oyun) havuza girmez; yalnız elle seçilir.
+ */
 export function pickRandomGames(rt: Runtime, connected: number, count: number): string[] {
   const pool = Object.values(GAMES)
-    .filter((g) => g.minPlayers <= connected && connected <= g.maxPlayers)
+    .filter((g) => g.randomPool !== false && g.minPlayers <= connected && connected <= g.maxPlayers)
     .map((g) => g.id);
   // Fisher-Yates
   for (let i = pool.length - 1; i > 0; i--) {
