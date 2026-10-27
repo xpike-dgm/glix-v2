@@ -998,3 +998,14 @@
 .tamam__dot[data-on="1"] {
   opacity: 1;
 }
+/* Kısa yatay ekranda oyun alanı değerli: şerit küçülür ve sayaca yaslanır. */
+@media (orientation: landscape) and (max-height: 420px) {
+  .tamam__dots {
+    margin-top: 2px;
+    gap: 4px;
+  }
+  .tamam__dot {
+    width: 14px;
+    height: 14px;
+  }
+}
