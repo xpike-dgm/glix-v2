@@ -38,6 +38,24 @@ export function isJoinPolicy(value: unknown): value is JoinPolicy {
   return typeof value === "string" && (JOIN_POLICIES as readonly string[]).includes(value);
 }
 
+/** Web bildirimi aboneliği sınırları (docs/PROTOKOL.md "Web bildirimleri"). */
+export const PUSH_ENDPOINT_MAX = 500;
+/** `p256dh` (65 baytlık sıkıştırılmamış P-256 noktası) ve `auth` (16 bayt) base64url uzunlukları (dolgusuz). */
+export const PUSH_P256DH_LENGTH = 87;
+export const PUSH_AUTH_LENGTH = 22;
+const BASE64URL = /^[A-Za-z0-9_-]+$/;
+
+const HTTPS_URL = /^https:\/\/[A-Za-z0-9.-]+(?::\d{1,5})?(?:[/?#][^\s]*)?$/;
+
+/** Bildirim uç noktası: en çok 500 karakter, https, kimlik bilgisi yok. Konak denetimi sunucuda ayrıca yapılır. */
+export function isPushEndpoint(value: unknown): value is string {
+  return typeof value === "string" && value.length <= PUSH_ENDPOINT_MAX && HTTPS_URL.test(value);
+}
+
+function isBase64urlOfLength(value: unknown, length: number): value is string {
+  return typeof value === "string" && value.length === length && BASE64URL.test(value);
+}
+
 // Akış ayrıntıları: docs/PROTOKOL.md
 
 export type ClientMessage =
@@ -79,6 +97,12 @@ export type ClientMessage =
   | { type: "returnToLobby" }
   /** İstemci elindeki snapshot'a yama uygulayamadığında tam snapshot ister. */
   | { type: "resync" }
+  /** Sayfa gizlendi/göründü (yalnız bildirim açıkken gönderilir). Sunucu yalnız gizli oyunculara bildirim yollar. */
+  | { type: "visibility"; hidden: boolean }
+  /** Web bildirimi aboneliğini bu oyuncunun oturumuna bağlar (oda ömrü boyunca bellekte). `p256dh` 65, `auth` 16 bayt (base64url). */
+  | { type: "pushSubscribe"; endpoint: string; p256dh: string; auth: string }
+  /** Bildirim aboneliğini siler. */
+  | { type: "pushUnsubscribe" }
   /** Maç sonu geri bildirimi: yalnız `final` aşamasında, maç başına oyuncu başına bir kez. */
   | { type: "feedback"; rating: 1 | 2 | 3 | 4 | 5; text?: string }
   /** Anonim oyun başı performans özeti: yalnız `results` aşamasında, oyun başına oyuncu başına bir kez. */
@@ -227,7 +251,8 @@ export interface RoomSnapshot {
 export type LeftReason = "left" | "kicked" | "closed";
 
 export type ServerMessage =
-  | { type: "welcome"; protocolVersion: number; serverVersion: string }
+  /** `pushKey`: sunucu web bildirimi gönderebiliyorsa VAPID genel anahtarı (base64url); yoksa alan hiç gelmez. */
+  | { type: "welcome"; protocolVersion: number; serverVersion: string; pushKey?: string }
   | { type: "pong"; t: number; serverTime: number }
   | { type: "session"; token: string; playerId: string; roomCode: string }
   /** Sahne bağlantısı kabul edildi (belirteç ve oyuncu kimliği yoktur; yeniden bağlanınca yeniden `joinStage`). */
@@ -463,6 +488,19 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       }
       return { type: "perf", gameId, ...sample, ...meta };
     }
+    case "visibility": {
+      if (!hasExactKeys(data, ["type", "hidden"])) return null;
+      return typeof data.hidden === "boolean" ? { type: "visibility", hidden: data.hidden } : null;
+    }
+    case "pushSubscribe": {
+      if (!hasExactKeys(data, ["type", "endpoint", "p256dh", "auth"])) return null;
+      const { endpoint, p256dh, auth } = data;
+      if (!isPushEndpoint(endpoint)) return null;
+      if (!isBase64urlOfLength(p256dh, PUSH_P256DH_LENGTH) || !isBase64urlOfLength(auth, PUSH_AUTH_LENGTH))
+        return null;
+      return { type: "pushSubscribe", endpoint, p256dh, auth };
+    }
+    case "pushUnsubscribe":
     case "leaveRoom":
     case "resync":
     case "startMatch":

@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import type { VapidConfig } from "./webpush.js";
 
 export interface Config {
   host: string;
@@ -12,6 +13,8 @@ export interface Config {
   limits: ServerLimits;
   /** İstatistik SQLite yolu; null ise istatistik kapalı. */
   statsDb: string | null;
+  /** Web bildirimi VAPID anahtarları; üçü de yoksa null (bildirim kapalı). Geçerliliği sunucu açılırken denetlenir. */
+  vapid: VapidConfig | null;
 }
 
 export interface ServerLimits {
@@ -43,6 +46,14 @@ function positiveInt(env: NodeJS.ProcessEnv, name: string, fallback: number): nu
   return n;
 }
 
+/** `GLIX_VAPID_PUBLIC`, `GLIX_VAPID_PRIVATE`, `GLIX_VAPID_SUBJECT`; eksik biri varsa bildirim kapalı. */
+export function loadVapid(env: NodeJS.ProcessEnv): VapidConfig | null {
+  const publicKey = env.GLIX_VAPID_PUBLIC?.trim();
+  const privateKey = env.GLIX_VAPID_PRIVATE?.trim();
+  const subject = env.GLIX_VAPID_SUBJECT?.trim();
+  return publicKey && privateKey && subject ? { publicKey, privateKey, subject } : null;
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const port = Number(env.PORT ?? 3900);
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error("PORT geçersiz");
@@ -71,6 +82,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     clientDir: env.CLIENT_DIR || resolve(fileURLToPath(new URL("../../client/dist", import.meta.url))),
     allowedOrigins,
     revision: env.GIT_SHA || "dev",
+    vapid: loadVapid(env),
     statsDb: env.STATS_DB || (env.NODE_ENV === "production" ? "/data/glix.db" : null),
   };
 }

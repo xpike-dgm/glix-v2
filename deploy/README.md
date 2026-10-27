@@ -16,7 +16,7 @@
 ## Dosyalar
 
 - `Dockerfile`, `docker-compose.yml` — imaj, çalışma sınırları (512 MB, 2 CPU, salt okunur) ve `glix-data` birimi.
-- `.env.example` — `/srv/glix/shared/.env` için örnek (`GLIX_ALLOWED_ORIGINS`).
+- `.env.example` — `/srv/glix/shared/.env` için örnek (`GLIX_ALLOWED_ORIGINS`, isteğe bağlı `GLIX_VAPID_*`).
 - `Caddyfile.glix` — Caddy'ye eklenecek blok.
 - `deploy.sh` — sunucu dağıtım betiği.
 
@@ -32,6 +32,20 @@
   (`docker logs glix-glix-1 | grep client_error`). IP yazılmaz.
 - Node 22'de `node:sqlite` deneysel uyarısı sunucuda yükleme anında bastırılır; `dist/stats.js` aynı şekilde sessizdir.
 - Sorun olursa `stats_error` günlüğü görünür; istatistik hataları maçı etkilemez, veritabanı açılamazsa sunucu istatistiksiz başlar.
+
+## Web bildirimleri (isteğe bağlı)
+
+Ana ekrana eklenmiş uygulamada, oyuncu Ayarlar'dan açarsa: maç başlayınca, sıra kendisine gelince (Zaman Bombası, Kör Bomba) ve
+host "Aynı ekiple yeni maç" deyince, **yalnız uygulamadan ayrılmış oyunculara** bildirim gider (oyuncu başına 20 sn'de en çok bir).
+Metin geneldir ve yalnız oda kodunu içerir. Abonelikler yalnız bellekte tutulur; oyuncu odadan çıkınca silinir.
+
+1. Anahtar üret (sunucuda ya da kendi makinende): `node scripts/vapid-keys.mjs mailto:adresin@ornek.com`
+2. Çıktıdaki üç satırı `/srv/glix/shared/.env` dosyasına ekle (`GLIX_VAPID_PUBLIC`, `GLIX_VAPID_PRIVATE`, `GLIX_VAPID_SUBJECT`).
+3. `/srv/glix/deploy.sh` ile yeniden dağıt. Başarılıysa günlükte uyarı yoktur; geçersiz anahtarda `push_disabled` günlüğü çıkar ve bildirim kapalı kalır.
+
+Anahtarlar eksikse ya da geçersizse bildirim kapalıdır: istemci `welcome` içinde anahtar görmez ve Ayarlar'daki anahtar gizlenir.
+Özel anahtar değişirse eski abonelikler geçersiz olur; oyuncular Ayarlar'dan bildirimi yeniden açar. Gönderim yalnız bilinen push
+servislerine yapılır (FCM, Mozilla, Apple, Windows); başka bir uç nokta reddedilir.
 
 ## Geri alma
 

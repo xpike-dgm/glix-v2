@@ -14,6 +14,7 @@ import { createMetrics } from "./metrics.js";
 import { IpLimiter } from "./ratelimit.js";
 import { type Connection, isConnected, type Player, type Room, type Runtime } from "./runtime.js";
 import { noopStats, type StatsStore } from "./statsStore.js";
+import { disabledPush, type PushGateway } from "./webpush.js";
 
 export const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const GRACE_MS = 120_000;
@@ -28,6 +29,7 @@ export function createRuntime(
   defaultGameIds?: readonly string[],
   pickInt: (max: number) => number = randomInt,
   stats: StatsStore = noopStats,
+  push: PushGateway = disabledPush,
 ): Runtime {
   const rt: Runtime = {
     clock,
@@ -36,6 +38,7 @@ export function createRuntime(
     ipLimiter: new IpLimiter(clock, roomCreateBurst),
     metrics: createMetrics(),
     stats,
+    push,
     recentLogs: [],
     rooms: new Map(),
     tokens: new Map(),
@@ -143,6 +146,9 @@ export function addPlayer(
     lastReactAt: Number.NEGATIVE_INFINITY,
     lastRenameAt: Number.NEGATIVE_INFINITY,
     lastContinueAt: Number.NEGATIVE_INFINITY,
+    hidden: false,
+    push: null,
+    lastPushAt: Number.NEGATIVE_INFINITY,
   };
   room.players.set(id, player);
   rt.tokens.set(player.token, player);
@@ -209,6 +215,7 @@ export function removePlayer(rt: Runtime, room: Room, player: Player): void {
     player.graceCancel = null;
   }
   rt.tokens.delete(player.token);
+  player.push = null;
   if (player.conn) {
     player.conn.player = null;
     player.conn = null;
@@ -267,6 +274,7 @@ export function deleteRoom(rt: Runtime, room: Room): void {
   for (const player of room.players.values()) {
     if (player.graceCancel) player.graceCancel();
     player.graceCancel = null;
+    player.push = null;
     rt.tokens.delete(player.token);
     if (player.conn) {
       player.conn.send({ type: "left", reason: "closed" });

@@ -14,6 +14,7 @@ import { countActiveMatches, countPlayers, createRuntime, disposeRuntime } from 
 import type { Connection } from "./runtime.js";
 import { serveStatic } from "./static.js";
 import { createStats, PURGE_EVERY_MS } from "./statsStore.js";
+import { createWebPush, disabledPush, type PushGateway, type VapidConfig } from "./webpush.js";
 
 /** Bu kadar geçersiz mesajdan sonra bağlantı kapatılır. */
 export const MAX_INVALID_MESSAGES = 5;
@@ -51,6 +52,21 @@ export interface ServerOptions {
   randomInt?: (max: number) => number;
   /** İstatistik SQLite yolu (":memory:" olabilir). Verilmezse/null ise istatistik kapalıdır. */
   statsDb?: string | null;
+  /** Web bildirimi anahtarları; verilmezse ya da geçersizse bildirim kapalı kalır. */
+  vapid?: VapidConfig | null;
+  /** Hazır gönderici (testlerde sahte); verilirse `vapid` yok sayılır. */
+  push?: PushGateway;
+}
+
+function resolvePush(opts: ServerOptions): PushGateway {
+  if (opts.push) return opts.push;
+  if (!opts.vapid) return disabledPush;
+  try {
+    return createWebPush(opts.vapid);
+  } catch (err) {
+    log.warn("push_disabled", { error: String(err) });
+    return disabledPush;
+  }
 }
 
 export interface RunningServer {
@@ -91,6 +107,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     opts.defaultGameIds,
     opts.randomInt,
     stats,
+    resolvePush(opts),
   );
   const perIp = new Map<string, number>();
   const aliveSockets = new WeakMap<WebSocket, boolean>();

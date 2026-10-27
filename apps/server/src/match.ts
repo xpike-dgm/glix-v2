@@ -13,6 +13,7 @@ import {
 } from "@glix/engine";
 import { log } from "./log.js";
 import { errorMessage } from "./messages.js";
+import { notifyPlayers, roomHasPush } from "./push.js";
 import type { Player, Room, Runtime } from "./runtime.js";
 import { isConnected } from "./runtime.js";
 
@@ -51,6 +52,8 @@ export interface Match {
   feedbackBy: Set<string>;
   /** Geçerli oyunda performans özeti göndermiş oyuncular (oyun başına bir kez). */
   perfBy: Set<string>;
+  /** Oyunun "sıra kimde" dediği son oyuncular (`notify`); yalnız yeni sıra alanlara bildirim gider. */
+  turnHolders: Set<string>;
 }
 
 /** Bir oyun fonksiyonu hata fırlattı; `fn` hangisi olduğunu söyler (setup, reduce, tick, view, result...). */
@@ -117,6 +120,7 @@ function enterBriefing(rt: Runtime, room: Room, match: Match): void {
   match.participants = match.startParticipants.filter((id) => room.players.has(id));
   match.readyIds = new Set();
   match.perfBy = new Set();
+  match.turnHolders = new Set();
   match.state = null;
   match.rng = null;
   match.result = null;
@@ -171,6 +175,7 @@ export function beginMatch(rt: Runtime, room: Room): void {
     statsEnded: false,
     feedbackBy: new Set(),
     perfBy: new Set(),
+    turnHolders: new Set(),
   };
   room.match = match;
   for (const p of room.players.values()) p.lobbyReady = false;
@@ -253,6 +258,25 @@ export function recordPresence(rt: Runtime, room: Room, playerId: string, connec
   } catch (err) {
     log.warn("recorder_failed", { room: room.code, error: String(err) });
   }
+}
+
+/**
+ * Sıra tabanlı oyunlarda sırası yeni gelen oyunculara "Sıra sende!" bildirimi gider (yalnız arka plandakilere,
+ * `notifyPlayers` süzer). Oyunun `notify` kancası hata verirse yalnız günlüğe yazılır; maç etkilenmez.
+ */
+function notifyTurns(rt: Runtime, room: Room, match: Match): void {
+  const game = currentGame(match);
+  if (!game.notify || !roomHasPush(rt, room) || !match.rng) return;
+  let holders: readonly string[];
+  try {
+    holders = game.notify(match.state, ctxFor(rt, room, match));
+  } catch (err) {
+    log.warn("notify_failed", { room: room.code, error: String(err) });
+    return;
+  }
+  const fresh = holders.filter((id) => !match.turnHolders.has(id));
+  match.turnHolders = new Set(holders);
+  if (fresh.length > 0) notifyPlayers(rt, room, "turn", fresh);
 }
 
 function startPlaying(rt: Runtime, room: Room, match: Match): void {
@@ -372,6 +396,7 @@ function stepMatchUnsafe(rt: Runtime, room: Room): void {
         finishGame(rt, room, match);
         rt.broadcaster.markDirty(room);
       } else if (changed) {
+        notifyTurns(rt, room, match);
         rt.broadcaster.markDirty(room);
       }
       return;
@@ -424,6 +449,7 @@ function applyActionUnsafe(rt: Runtime, room: Room, playerId: string, payload: u
   }
   if (next !== match.state) {
     match.state = next;
+    notifyTurns(rt, room, match);
     rt.broadcaster.markDirty(room);
   }
   return { ok: true };

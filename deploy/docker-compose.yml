@@ -16,6 +16,10 @@ services:
       TRUST_PROXY: "1"
       # Anonim istatistik ve geri bildirim (SQLite); 90 gün saklanır.
       STATS_DB: /data/glix.db
+      # Web bildirimleri (boşsa kapalı). Anahtarlar: node scripts/vapid-keys.mjs
+      GLIX_VAPID_PUBLIC: ${GLIX_VAPID_PUBLIC:-}
+      GLIX_VAPID_PRIVATE: ${GLIX_VAPID_PRIVATE:-}
+      GLIX_VAPID_SUBJECT: ${GLIX_VAPID_SUBJECT:-}
     volumes:
       - glix-data:/data
     mem_limit: 512m

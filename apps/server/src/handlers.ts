@@ -22,6 +22,7 @@ import {
   stepMatch,
 } from "./match.js";
 import { errorMessage } from "./messages.js";
+import { notifyPlayers } from "./push.js";
 import {
   addPlayer,
   clearHostGrace,
@@ -33,6 +34,7 @@ import {
   setHost,
 } from "./rooms.js";
 import { type Connection, isConnected, type Room, type Runtime } from "./runtime.js";
+import { isAllowedPushEndpoint } from "./webpush.js";
 
 /** Bir oyuncunun takma adını en sık bu aralıkla değiştirebilir. */
 export const RENAME_MIN_GAP_MS = 1000;
@@ -42,6 +44,15 @@ export const MAX_FAILED_JOINS = 10;
 
 function fail(conn: Connection, code: ErrorCode, text?: string): void {
   conn.send(errorMessage(code, text));
+}
+
+function sendWelcome(rt: Runtime, conn: Connection): void {
+  conn.send({
+    type: "welcome",
+    protocolVersion: PROTOCOL_VERSION,
+    serverVersion: APP_VERSION,
+    ...(rt.push.publicKey ? { pushKey: rt.push.publicKey } : {}),
+  });
 }
 
 function sendSession(conn: Connection): void {
@@ -72,7 +83,7 @@ function requireHost(conn: Connection): Room | null {
 function handleStageMessage(rt: Runtime, conn: Connection, room: Room, msg: ClientMessage): void {
   switch (msg.type) {
     case "hello":
-      conn.send({ type: "welcome", protocolVersion: PROTOCOL_VERSION, serverVersion: APP_VERSION });
+      sendWelcome(rt, conn);
       return;
     case "ping":
       conn.send({ type: "pong", t: msg.t, serverTime: rt.clock.now() });
@@ -102,7 +113,7 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
   }
   switch (msg.type) {
     case "hello":
-      conn.send({ type: "welcome", protocolVersion: PROTOCOL_VERSION, serverVersion: APP_VERSION });
+      sendWelcome(rt, conn);
       return;
     case "ping":
       conn.send({ type: "pong", t: msg.t, serverTime: rt.clock.now() });
@@ -221,6 +232,8 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       }
       if (player.room.hostId === player.id) clearHostGrace(player.room);
       player.conn = conn;
+      // Yeni bağlantı: istemci sayfa durumunu oturum kabulünden sonra yeniden bildirir.
+      player.hidden = false;
       if (!old) recordPresence(rt, player.room, player.id, true);
       conn.player = player;
       conn.lastSent = null;
@@ -238,6 +251,25 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         return;
       }
       rt.broadcaster.resync(conn.player.room, conn.player);
+      return;
+    }
+    case "visibility": {
+      // Odasız bağlantıda sessizce yok sayılır.
+      if (conn.player) conn.player.hidden = msg.hidden;
+      return;
+    }
+    case "pushSubscribe": {
+      const player = conn.player;
+      if (!player || !rt.push.enabled) return;
+      if (!isAllowedPushEndpoint(msg.endpoint)) {
+        fail(conn, "invalid_message");
+        return;
+      }
+      player.push = { endpoint: msg.endpoint, p256dh: msg.p256dh, auth: msg.auth };
+      return;
+    }
+    case "pushUnsubscribe": {
+      if (conn.player) conn.player.push = null;
       return;
     }
     case "leaveRoom": {
@@ -419,6 +451,7 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         }
         room.gameIds = picked;
         beginMatch(rt, room);
+        notifyMatchStart(rt, room);
         rt.broadcaster.markDirty(room);
         return;
       }
@@ -433,6 +466,7 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         return;
       }
       beginMatch(rt, room);
+      notifyMatchStart(rt, room);
       rt.broadcaster.markDirty(room);
       return;
     }
@@ -518,10 +552,16 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       }
       for (const p of room.players.values()) p.score = 0;
       clearMatch(rt, room);
+      notifyPlayers(rt, room, "rematch", room.players.keys());
       rt.broadcaster.markDirty(room);
       return;
     }
   }
+}
+
+/** Maç başladı: katılımcılardan arka plandakilere "Oyun başlıyor!" gider. */
+function notifyMatchStart(rt: Runtime, room: Room): void {
+  if (room.match) notifyPlayers(rt, room, "start", room.match.startParticipants);
 }
 
 /** Soket kapandı. */

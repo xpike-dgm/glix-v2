@@ -186,6 +186,10 @@ export const korBomba: GameDefinition<KorBombaState, KorBombaAction, KorBombaVie
     return ctx.now >= state.explodeAt + KOR_BOMBA_OUTRO_MS;
   },
 
+  notify(state) {
+    return state.exploded ? [] : [state.holder];
+  },
+
   secrets(state) {
     if (state.exploded) return [];
     return [

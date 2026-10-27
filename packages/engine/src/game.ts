@@ -96,6 +96,13 @@ export interface GameDefinition<State, Action, View, PublicView = unknown> {
    * (ve izleyicinin) `view` çıktısında `value`'nun geçmediğini doğrular. Gizli bilgisi olmayan oyun boş dizi döner.
    */
   secrets(state: State): readonly SecretEntry[];
+  /**
+   * İsteğe bağlı, yalnız sıra tabanlı oyunlar için: şu an "sıra kimde" ise onların kimlikleri (çoğunlukla tek kişi).
+   * Sunucu bunu yalnız arka plandaki oyunculara "Sıra sende!" bildirimi göndermek için okar; sonuç hiçbir yere
+   * kaydedilmez ve oyunun gidişini etkilemez. Yalnız herkesin zaten gördüğü bilgiyi (kimin sırası olduğunu) kullanır;
+   * gizli bilgi taşımaz. Durumu değiştirmez; zamana bağlıysa `ctx.now` kullanır.
+   */
+  notify?(state: State, ctx: GameContext): readonly string[];
 }
 
 export interface SecretEntry {

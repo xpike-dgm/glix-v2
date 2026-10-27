@@ -291,6 +291,12 @@ export const zamanBombasiHafizasi: GameDefinition<
     return { miniScores: { ...state.scores }, awards: { ...state.scores } };
   },
 
+  notify(state, ctx) {
+    const s = advance(state, ctx.now);
+    const active = s.order[s.turnIndex];
+    return s.finished || active === undefined ? [] : [active];
+  },
+
   secrets() {
     return [];
   },

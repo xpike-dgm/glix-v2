@@ -13,6 +13,7 @@ import type { Match } from "./match.js";
 import type { Metrics } from "./metrics.js";
 import type { IpLimiter } from "./ratelimit.js";
 import type { StatsStore } from "./statsStore.js";
+import type { PushGateway, PushTarget } from "./webpush.js";
 
 /** Bir WebSocket bağlantısının sunucudaki temsili. Oda/oyuncu bağı oturum açılınca dolar. */
 export interface Connection {
@@ -57,6 +58,12 @@ export interface Player {
   lastContinueAt: number;
   /** Son takma ad değişikliğinin sunucu saati (ms); hız sınırı için. */
   lastRenameAt: number;
+  /** İstemci sayfasını gizledi (yalnız bildirim açıkken bildirir). Yeniden bağlanınca sıfırlanır. */
+  hidden: boolean;
+  /** Web bildirimi aboneliği; yalnız bellekte, oyuncuyla birlikte (ayrılınca, atılınca, oda kapanınca) yok olur. */
+  push: PushTarget | null;
+  /** Son bildirimin sunucu saati (ms); 20 sn sınırı için. */
+  lastPushAt: number;
 }
 
 export interface Room {
@@ -94,6 +101,8 @@ export interface Runtime {
   metrics: Metrics;
   /** Anonim istatistik deposu (devre dışıysa hiçbir şey yapmaz). */
   stats: StatsStore;
+  /** Web bildirimi göndericisi (VAPID yoksa kapalı). */
+  push: PushGateway;
   /** Son biten/çöken oyunların kayıtları (en yeni sonda, en çok RECENT_LOGS). */
   recentLogs: GameLog[];
   /** Oturum belirteci -> oyuncu. */
