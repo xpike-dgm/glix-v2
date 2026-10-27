@@ -6,17 +6,24 @@ export type ZamanBombasiColor = (typeof ZAMAN_BOMBASI_COLORS)[number];
 /** Başlangıç (ve her elenmeden sonraki) dizi uzunluğu. */
 export const ZAMAN_BOMBASI_START_LENGTH = 2;
 /** Dizi oynatılırken eleman başına süre. */
-export const ZAMAN_BOMBASI_STEP_MS = 600;
-/** Aktif oyuncunun giriş süresi: dizi uzunluğu × bu değer. */
-export const ZAMAN_BOMBASI_INPUT_PER_ELEMENT_MS = 3_000;
+export const ZAMAN_BOMBASI_STEP_MS = 350;
+/** Aktif oyuncunun giriş süresi: bu taban + dizi uzunluğu × eleman başı süre (O1). */
+export const ZAMAN_BOMBASI_INPUT_BASE_MS = 1_500;
+export const ZAMAN_BOMBASI_INPUT_PER_ELEMENT_MS = 1_000;
+/** Toplam süre sınırı (oyun kurulduğu andan; oynatma dahil). Dolunca oyun biter (O1). */
+export const ZAMAN_BOMBASI_TOTAL_MS = 90_000;
+/** Ani ölüm: yeni bir sıranın dizisi kurulduğu an, oyun başından bu süre geçmişse (kesin büyük) dizi 2 renk uzar. */
+export const ZAMAN_BOMBASI_SUDDEN_DEATH_AFTER_MS = 60_000;
+/** Ani ölümde bir doğru sıradan sonra dizinin uzama miktarı (normalde 1). */
+export const ZAMAN_BOMBASI_SUDDEN_DEATH_GROWTH = 2;
 /** İlk sıranın başlamasından önceki hazırlık payı. */
 export const ZAMAN_BOMBASI_INTRO_MS = 1_500;
 /** Doğru cevaptan sonra sonraki sıranın başlamasına kadar kısa nefes payı. */
 export const ZAMAN_BOMBASI_PAUSE_OK_MS = 900;
 /** Elenmeden sonra (çatlama ve pasife düşme gösterilsin diye) sonraki sıranın başlamasına kadar pay. */
 export const ZAMAN_BOMBASI_PAUSE_FAIL_MS = 2_200;
-/** Bu simülasyon/bot süre sınırı (oyun yalnız elenmelerle biter, sabit süresi yok). */
-export const ZAMAN_BOMBASI_BOT_SPAN_MS = 150_000;
+/** Simülasyon/bot süre sınırı (toplam süre sınırından biraz uzun). */
+export const ZAMAN_BOMBASI_BOT_SPAN_MS = 95_000;
 
 export type ZamanBombasiAction = { kind: "press"; color: ZamanBombasiColor };
 
@@ -57,7 +64,7 @@ export interface ZamanBombasiPublicView {
   turnStart: number;
   /** Giriş evresinin başladığı an (= turnStart + uzunluk × stepMs). */
   inputStart: number;
-  /** Giriş süresinin bittiği an (= inputStart + uzunluk × 3 sn). */
+  /** Giriş süresinin bittiği an (= inputStart + 1,5 sn + uzunluk × 1 sn). */
   deadline: number;
   stepMs: number;
   /** Oynatma evresinde şu an yanan elemanın sırası; başka evrede -1. */
@@ -68,6 +75,14 @@ export interface ZamanBombasiPublicView {
   pressed: ZamanBombasiColor[];
   /** Oyunun bitmesi için gereken elenme sayısı. */
   need: number;
+  /** Oyunun başladığı an (toplam süre buradan işler). */
+  startedAt: number;
+  /** Toplam sürenin bittiği an (= startedAt + 90 sn). */
+  endsAt: number;
+  /** Ani ölümün başladığı an (= startedAt + 60 sn). */
+  suddenDeathAt: number;
+  /** Oyun süre dolduğu için mi bitti. */
+  timeUp: boolean;
   /** Son sıranın sonucu. */
   last: ZamanBombasiLast | null;
 }

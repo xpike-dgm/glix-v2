@@ -20,8 +20,8 @@ const ctx = (now: number, connected: readonly string[] = [], seed = 1) => ({
 const ids = (n: number) => Array.from({ length: n }, (_, i) => `p${i + 1}`);
 const start = (n = 4, seed = 1): ZamanBombasiState => game.setup(ids(n), ctx(T0, ids(n), seed));
 /** Giriş evresinin başlangıcı (mutlak). */
-const inputAt = (s: ZamanBombasiState) => s.turnStart + s.sequence.length * 600;
-const deadlineAt = (s: ZamanBombasiState) => inputAt(s) + s.sequence.length * 3000;
+const inputAt = (s: ZamanBombasiState) => s.turnStart + s.sequence.length * 350;
+const deadlineAt = (s: ZamanBombasiState) => inputAt(s) + 1500 + s.sequence.length * 1000;
 const active = (s: ZamanBombasiState) => s.order[s.turnIndex] as string;
 
 function press(s: ZamanBombasiState, id: string, color: ZamanBombasiColor, at: number): ZamanBombasiState {
@@ -105,25 +105,25 @@ describe("eylem ayrıştırma", () => {
 });
 
 describe("evreler ve süreler (mutlak zamandan türer)", () => {
-  it("hazırlık → oynatma (eleman başına 600 ms) → giriş", () => {
+  it("hazırlık → oynatma (eleman başına 350 ms) → giriş", () => {
     const s = start(3);
     const t = s.turnStart;
     expect(game.publicView(s, ctx(t - 1)).phase).toBe("pause");
     const p0 = game.publicView(s, ctx(t));
     expect([p0.phase, p0.playbackIndex]).toEqual(["playback", 0]);
-    expect(game.publicView(s, ctx(t + 599)).playbackIndex).toBe(0);
-    expect(game.publicView(s, ctx(t + 600)).playbackIndex).toBe(1);
-    expect(game.publicView(s, ctx(t + 1199)).playbackIndex).toBe(1);
-    const inp = game.publicView(s, ctx(t + 1200));
+    expect(game.publicView(s, ctx(t + 349)).playbackIndex).toBe(0);
+    expect(game.publicView(s, ctx(t + 350)).playbackIndex).toBe(1);
+    expect(game.publicView(s, ctx(t + 699)).playbackIndex).toBe(1);
+    const inp = game.publicView(s, ctx(t + 700));
     expect([inp.phase, inp.playbackIndex]).toEqual(["input", -1]);
   });
 
-  it("süre = dizi uzunluğu × 3 sn; görünüm mutlak zamanları verir", () => {
+  it("süre = 1,5 sn + dizi uzunluğu × 1 sn; görünüm mutlak zamanları verir", () => {
     const s = start(3);
     const v = game.publicView(s, ctx(s.turnStart));
-    expect(v.inputStart).toBe(s.turnStart + 1200);
-    expect(v.deadline).toBe(v.inputStart + 6000);
-    expect(v.stepMs).toBe(600);
+    expect(v.inputStart).toBe(s.turnStart + 700);
+    expect(v.deadline).toBe(v.inputStart + 3500);
+    expect(v.stepMs).toBe(350);
     expect(v.length).toBe(2);
   });
 
@@ -163,9 +163,10 @@ describe("doğru cevap", () => {
     expect(n.last).toMatchObject({ kind: "ok", player: first, at: t });
   });
 
-  it("giriş süresi uzayan diziyle 3 × uzunluk olur", () => {
+  it("giriş süresi uzayan diziyle 1,5 sn + uzunluk × 1 sn olur", () => {
     const n = solve(start(4));
-    expect(deadlineAt(n) - inputAt(n)).toBe(9000);
+    expect(n.sequence).toHaveLength(3);
+    expect(deadlineAt(n) - inputAt(n)).toBe(4500);
   });
 
   it("kısmi doğru basış yankılanır, sıra değişmez", () => {
@@ -588,5 +589,158 @@ describe("bot takvimi", () => {
     }
     expect(ended).toBe(150);
     expect(withOk).toBeGreaterThan(0);
+  });
+});
+
+/** `startedAt`'i kaydırarak toplam süre/ani ölüm sınırlarını istenen ana getirir (kalan her şey aynı kalır). */
+const withStart = (s: ZamanBombasiState, startedAt: number): ZamanBombasiState => ({ ...s, startedAt });
+
+describe("toplam süre sınırı (O1, 90 sn)", () => {
+  it("toplam süre kurulumdan 90 sn; görünüm mutlak zamanları verir", () => {
+    const s = start(4);
+    const v = game.publicView(s, ctx(T0));
+    expect(v.endsAt).toBe(T0 + 90_000);
+    expect(v.suddenDeathAt).toBe(T0 + 60_000);
+    expect(v.timeUp).toBe(false);
+  });
+
+  it("hiç elenme olmadan 90. saniyede biter; süre dolmadan bitmez; puanlar değişmez", () => {
+    let s = start(4);
+    const endsAt = T0 + 90_000;
+    while (inputAt(s) < endsAt && deadlineAt(s) < endsAt) s = solve(s);
+    // Son tam sıra bitti; kalan sıra ya yeni başlamamış ya da giriş penceresi sınırı aşıyor.
+    expect(s.eliminated).toEqual([]);
+    const before = game.isFinished(s, ctx(endsAt - 1));
+    expect(before).toBe(false);
+    const done = game.tick(s, ctx(endsAt));
+    expect(done.finished).toBe(true);
+    expect(done.timeUp).toBe(true);
+    expect(done.endedAt).toBe(endsAt);
+    expect(done.eliminated).toEqual([]);
+    expect(game.isFinished(s, ctx(endsAt))).toBe(true);
+    const res = game.result(done);
+    expect(Object.values(res.miniScores).every((p) => p === 0)).toBe(true);
+  });
+
+  it("geç tick sonucu değiştirmez: bitiş anı endsAt'a işlenir", () => {
+    const s = start(4);
+    const late = game.tick(s, ctx(T0 + 500_000));
+    // Hiç cevap yok: 4 oyuncudan 2 elenince oyun biter (elenme bitişi, süre bitişi değil).
+    expect(late.finished).toBe(true);
+    expect(late.timeUp).toBe(false);
+    expect(late.eliminated).toHaveLength(2);
+  });
+
+  it("giriş sırasında süre dolarsa aktif oyuncunun sırası cezasız iptal edilir", () => {
+    const s0 = start(4);
+    const endsAt = inputAt(s0) + 100;
+    const s = withStart(s0, endsAt - 90_000);
+    const who = active(s);
+    const half = press(s, who, s.sequence[0] as ZamanBombasiColor, inputAt(s));
+    expect(game.isFinished(half, ctx(endsAt - 1))).toBe(false);
+    const view = game.publicView(half, ctx(endsAt));
+    expect(view.timeUp).toBe(true);
+    expect(view.phase).toBe("over");
+    expect(view.active).toBeNull();
+    const done = game.tick(half, ctx(endsAt));
+    expect(done.finished).toBe(true);
+    expect(done.eliminated).toEqual([]);
+    expect(done.scores).toEqual(s.scores);
+    expect(done.last).toBeNull();
+    expect(game.view(done, who, ctx(endsAt))).toEqual({ isOut: false, myTurn: false, turnsAway: null });
+    // Süre dolduktan sonra basış kabul edilmez, 1 ms önce kabul edilir.
+    expect(rejection(half, who, s.sequence[1] as ZamanBombasiColor, endsAt)).toBe("ended");
+    expect(rejection(half, who, s.sequence[1] as ZamanBombasiColor, endsAt - 1)).toBeNull();
+  });
+
+  it("süre dolmadan önce zaman aşımına uğrayan sıra yine cezalandırılır", () => {
+    const s0 = start(4);
+    const endsAt = deadlineAt(s0) + 1;
+    const s = withStart(s0, endsAt - 90_000);
+    const who = active(s);
+    const done = game.tick(s, ctx(endsAt));
+    expect(done.eliminated).toEqual([who]);
+    expect(done.scores[who]).toBe(-1);
+    expect(done.finished).toBe(true);
+    expect(done.timeUp).toBe(true);
+    expect(done.endedAt).toBe(endsAt);
+  });
+
+  it("süre ile aynı anda dolan giriş penceresi iptal sayılır, ceza yok", () => {
+    const s0 = start(4);
+    const endsAt = deadlineAt(s0);
+    const done = game.tick(withStart(s0, endsAt - 90_000), ctx(endsAt));
+    expect(done.eliminated).toEqual([]);
+    expect(done.timeUp).toBe(true);
+  });
+
+  it("süre bitişi elenme bitişiyle birleşirse elenme önce (daha erken) olandır", () => {
+    const s0 = start(2);
+    const who = active(s0);
+    const at = inputAt(s0);
+    const s = withStart(s0, at + 1000 - 90_000);
+    const r = failTurn(s, at);
+    expect(r.finished).toBe(true);
+    expect(r.timeUp).toBe(false);
+    expect(r.eliminated).toEqual([who]);
+  });
+});
+
+describe("ani ölüm (O1, 60 sn sonrası +2)", () => {
+  it("dizi kurulduğu an oyun başından tam 60 sn geçmişse hâlâ +1", () => {
+    const s0 = start(4);
+    const at = inputAt(s0);
+    const s = withStart(s0, at - 60_000);
+    const n = solve(s, at);
+    expect(n.sequence).toHaveLength(3);
+    expect(n.draws).toBe(s.draws + 1);
+  });
+
+  it("60 sn'yi 1 ms aşınca +2: önceki dizi başta kalır, giriş süresi yeni uzunluğa göre", () => {
+    const s0 = start(4);
+    const at = inputAt(s0);
+    const s = withStart(s0, at - 60_001);
+    const n = solve(s, at);
+    expect(n.sequence).toHaveLength(4);
+    expect(n.sequence.slice(0, 2)).toEqual(s.sequence);
+    expect(n.draws).toBe(s.draws + 2);
+    expect(deadlineAt(n) - inputAt(n)).toBe(1500 + 4 * 1000);
+    expect(game.publicView(n, ctx(n.turnStart)).length).toBe(4);
+  });
+
+  it("ölçüt sıranın dizisinin kurulduğu andır (cevap anı), sıranın başladığı an değil", () => {
+    const s0 = start(4);
+    const t0 = inputAt(s0);
+    const s = withStart(s0, t0 - 59_000);
+    expect(solve(s, t0).sequence).toHaveLength(3);
+    // Aynı sıra 2 sn sonra (60 sn'yi aşınca) çözülürse dizi +2 uzar.
+    expect(solve(s, t0 + 2000).sequence).toHaveLength(4);
+  });
+
+  it("ani ölüm aynı tohumda belirlidir ve renkler tohumdan türer", () => {
+    const s0 = start(4, 9);
+    const at = inputAt(s0);
+    const a = solve(withStart(s0, at - 70_000), at);
+    const b = solve(withStart(start(4, 9), at - 70_000), at);
+    expect(a.sequence).toEqual(b.sequence);
+    expect(a.sequence).toHaveLength(4);
+  });
+
+  it("ani ölümde elenme dizi uzunluğunu yine 2'ye sıfırlar", () => {
+    const s0 = start(4);
+    const at = inputAt(s0);
+    const n = failTurn(withStart(s0, at - 70_000), at);
+    expect(n.sequence).toHaveLength(2);
+  });
+
+  it("art arda doğru sıralarda ani ölüm +2'şer büyütür (2 → 3 → 5 → 7)", () => {
+    const s0 = start(4);
+    let s = withStart(s0, inputAt(s0) - 59_000);
+    const lens = [s.sequence.length];
+    for (let i = 0; i < 3; i++) {
+      s = solve(s, Math.max(inputAt(s), s.startedAt + 60_000 + i * 100));
+      lens.push(s.sequence.length);
+    }
+    expect(lens).toEqual([2, 3, 5, 7]);
   });
 });

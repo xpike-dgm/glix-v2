@@ -2,15 +2,24 @@ import { describe, expect, it } from "vitest";
 import { isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
 import { type KorKronometreState, korKronometre, korKronometreEntries } from "./index.js";
-import { KOR_KRONOMETRE_DURATION_MS, KOR_KRONOMETRE_REVEAL_MS } from "./types.js";
+import { KOR_KRONOMETRE_REVEAL_MS, korKronometreDurationMs } from "./types.js";
 
 const T0 = 5_000_000;
-const ctx = (now: number, connected: readonly string[] = ["a", "b", "c"]) => ({
+const ctx = (now: number, connected: readonly string[] = ["a", "b", "c"], seed = 1) => ({
   now,
-  rng: createRng(1),
+  rng: createRng(seed),
   connected,
 });
-const start = (players = ["a", "b", "c"]): KorKronometreState => korKronometre.setup(players, ctx(T0));
+/** Hedefi `seconds` olan ilk tohum (hedef setup'ta tohumlu RNG'den gelir). */
+const seedForTarget = (seconds: number): number => {
+  for (let seed = 1; seed < 5000; seed++) {
+    if (korKronometre.setup(["a", "b"], ctx(T0, ["a", "b"], seed)).targetMs === seconds * 1000) return seed;
+  }
+  throw new Error(`hedef ${seconds} için tohum yok`);
+};
+/** Varsayılan: hedef 10 sn (süre 18 sn); diğer testler hedefi açıkça seçer. */
+const start = (players = ["a", "b", "c"], targetSeconds = 10): KorKronometreState =>
+  korKronometre.setup(players, ctx(T0, players, seedForTarget(targetSeconds)));
 
 function press(state: KorKronometreState, id: string, at: number): KorKronometreState {
   const r = korKronometre.reduce(state, id, { kind: "press" }, ctx(T0 + at));
@@ -21,14 +30,46 @@ const rejection = (state: KorKronometreState, id: string, at: number): string | 
   const r = korKronometre.reduce(state, id, { kind: "press" }, ctx(T0 + at));
   return isRejected(r) ? r.rejected : null;
 };
-const finish = (s: KorKronometreState) => korKronometre.tick(s, ctx(T0 + KOR_KRONOMETRE_DURATION_MS));
+const finish = (s: KorKronometreState) => korKronometre.tick(s, ctx(T0 + (s.endsAt - s.startedAt)));
 
 describe("kor-kronometre kuralları", () => {
-  it("2-8 oyuncu, 18 sn, tek aşama", () => {
+  it("2-8 oyuncu, tek aşama; süre = hedef + 8 sn", () => {
     expect(korKronometre.minPlayers).toBe(2);
     expect(korKronometre.maxPlayers).toBe(8);
-    const s = start();
-    expect(s.endsAt - s.startedAt).toBe(18_000);
+    for (const sec of [7, 8, 9, 10, 11, 12, 13]) {
+      const s = start(["a", "b", "c"], sec);
+      expect(s.targetMs).toBe(sec * 1000);
+      expect(s.endsAt - s.startedAt).toBe(sec * 1000 + 8_000);
+      expect(s.revealEndsAt - s.endsAt).toBe(KOR_KRONOMETRE_REVEAL_MS);
+    }
+  });
+
+  it("anlatım: 3 madde, 2. madde hedef süreyi saymak", () => {
+    expect(korKronometre.briefing.steps).toHaveLength(3);
+    expect(korKronometre.briefing.steps[1]).toBe("İçinden hedef süreyi say");
+  });
+
+  it("basış penceresi hedefe göre: hedef 7 -> 15 sn, hedef 13 -> 21 sn", () => {
+    const a = start(["a", "b"], 7);
+    expect(rejection(a, "a", 14_999)).toBeNull();
+    expect(rejection(a, "a", 15_000)).toBe("ended");
+    const b = start(["a", "b"], 13);
+    expect(rejection(b, "a", 20_999)).toBeNull();
+    expect(rejection(b, "a", 21_000)).toBe("ended");
+  });
+
+  it("hedef: 7–13 tam saniye, tohumdan belirli; tüm değerler çıkar; farklı tohumlarda değişir", () => {
+    const seen = new Set<number>();
+    for (let seed = 1; seed <= 400; seed++) {
+      const s = korKronometre.setup(["a", "b"], ctx(T0, ["a", "b"], seed));
+      expect(Number.isInteger(s.targetMs / 1000)).toBe(true);
+      expect(s.targetMs).toBeGreaterThanOrEqual(7_000);
+      expect(s.targetMs).toBeLessThanOrEqual(13_000);
+      const again = korKronometre.setup(["a", "b"], ctx(T0, ["a", "b"], seed));
+      expect(again.targetMs).toBe(s.targetMs);
+      seen.add(s.targetMs / 1000);
+    }
+    expect([...seen].sort((x, y) => x - y)).toEqual([7, 8, 9, 10, 11, 12, 13]);
   });
 
   it("basış anı sunucu saatinden oyun başına göre kaydedilir", () => {
@@ -55,27 +96,46 @@ describe("kor-kronometre kuralları", () => {
     expect(r.awards).toEqual({ a: 2, b: 1, c: 0 });
   });
 
-  it("basmayan oyuncu 18 000 ms basmış sayılır", () => {
+  it("basmayan oyuncu sıralamaya girmez, puan almaz; sıralama sonunda 'basmadı' olarak yer alır", () => {
     let s = start();
-    s = press(s, "a", 1_000); // uzaklık 9000 > 8000
+    s = press(s, "a", 1_000); // uzaklık 9000: tek basan
     const entries = korKronometreEntries(finish(s));
-    const c = entries.find((e) => e.playerId === "c");
-    expect(c).toMatchObject({ ms: 18_000, pressed: false, distance: 8_000 });
-    const a = entries.find((e) => e.playerId === "a");
-    expect(a?.distance).toBe(9_000);
-    // Basmayanlar (b, c) eşit: ikisi de 1. derece; a 3. derece.
-    expect(korKronometre.result(finish(s)).awards).toEqual({ a: 0, b: 2, c: 2 });
+    expect(entries.map((e) => e.playerId)).toEqual(["a", "b", "c"]);
+    expect(entries[0]).toMatchObject({ playerId: "a", pressed: true, rank: 1, points: 2, distance: 9_000 });
+    for (const e of entries.slice(1)) {
+      expect(e).toEqual({ playerId: e.playerId, ms: null, pressed: false, distance: null, rank: null, points: 0 });
+    }
   });
 
-  it("basan ile basmayan: 18 sn kabulü ikinci puanı da verir", () => {
+  it("basmayan, basanların uzaklığından bağımsız: uzak basış bile basmayandan öndedir", () => {
+    let s = start(["a", "b", "c"]);
+    s = press(s, "a", 100);
+    s = press(s, "b", 17_900);
+    const entries = korKronometreEntries(finish(s));
+    expect(entries.map((e) => [e.playerId, e.rank, e.points])).toEqual([
+      ["b", 1, 2],
+      ["a", 2, 1],
+      ["c", null, 0],
+    ]);
+  });
+
+  it("yalnız bir kişi bastıysa +2 o alır, diğerleri 0", () => {
     let s = start(["a", "b"]);
-    s = press(s, "a", 9_000);
-    expect(korKronometre.result(finish(s)).awards).toEqual({ a: 2, b: 1 });
+    s = press(s, "b", 17_000);
+    expect(korKronometre.result(finish(s)).awards).toEqual({ a: 0, b: 2 });
   });
 
-  it("kimse basmazsa hepsi 18 sn sayılır ve eşit derece paylaşılır", () => {
-    const r = korKronometre.result(finish(start()));
-    expect(r.awards).toEqual({ a: 2, b: 2, c: 2 });
+  it("kimse basmazsa kimse puan almaz ve kimse sıralanmaz", () => {
+    const f = finish(start());
+    expect(korKronometre.result(f).awards).toEqual({ a: 0, b: 0, c: 0 });
+    expect(korKronometreEntries(f).every((e) => e.rank === null && !e.pressed)).toBe(true);
+  });
+
+  it("iki kişi bastı, biri basmadı: ikinci +1, basmayan 0", () => {
+    let s = start();
+    s = press(s, "a", 9_000);
+    s = press(s, "c", 12_000);
+    expect(korKronometre.result(finish(s)).awards).toEqual({ a: 2, b: 0, c: 1 });
   });
 
   it("eşitlik: iki birinci ikisi de +2, kimse +1 almaz (sonraki derece atlanır)", () => {
@@ -101,6 +161,28 @@ describe("kor-kronometre kuralları", () => {
     s = press(s, "c", 11_000);
     s = press(s, "d", 15_000);
     expect(korKronometre.result(finish(s)).awards).toEqual({ a: 2, b: 1, c: 1, d: 0 });
+  });
+
+  it("hedef 10 dışında da mesafe o turun hedefinden ölçülür", () => {
+    let s = start(["a", "b", "c"], 7);
+    s = press(s, "a", 10_000); // 3000
+    s = press(s, "b", 7_400); // 400
+    s = press(s, "c", 6_000); // 1000
+    expect(korKronometre.result(finish(s)).awards).toEqual({ a: 0, b: 2, c: 1 });
+  });
+
+  it("eşitlik: aynı mesafede iki basış (hedefin iki yanı) ikisi de 1. derece", () => {
+    let s = start(["a", "b", "c"], 12);
+    s = press(s, "a", 11_000);
+    s = press(s, "b", 13_000);
+    s = press(s, "c", 12_500);
+    const entries = korKronometreEntries(finish(s));
+    expect(entries.map((e) => [e.playerId, e.rank])).toEqual([
+      ["c", 1],
+      ["a", 2],
+      ["b", 2],
+    ]);
+    expect(korKronometre.result(finish(s)).awards).toEqual({ a: 1, b: 1, c: 2 });
   });
 
   it("sıralama yakından uzağa; aynı mesafede katılım sırası", () => {
@@ -131,7 +213,7 @@ describe("kor-kronometre kuralları", () => {
     expect(rejection(start(), "a", -1)).toBe("not_started");
   });
 
-  it("bağlantısı kopmuş oyuncunun basışı da geçerlidir ve basmayan sayılırsa 18 sn", () => {
+  it("bağlantısı kopmuş oyuncunun basışı da geçerlidir ve basmayan sayılırsa sıralanmaz", () => {
     const s = start();
     const r = korKronometre.reduce(s, "a", { kind: "press" }, ctx(T0 + 10_000, ["b", "c"]));
     expect(isRejected(r)).toBe(false);
@@ -139,7 +221,7 @@ describe("kor-kronometre kuralları", () => {
 
   it("bitiş: sonuç gösterimi bitince oyun biter", () => {
     const s = start();
-    const end = T0 + KOR_KRONOMETRE_DURATION_MS + KOR_KRONOMETRE_REVEAL_MS;
+    const end = T0 + korKronometreDurationMs(10_000) + KOR_KRONOMETRE_REVEAL_MS;
     expect(korKronometre.isFinished(s, ctx(end - 1))).toBe(false);
     expect(korKronometre.isFinished(s, ctx(end))).toBe(true);
   });
@@ -174,7 +256,7 @@ describe("kor-kronometre gizlilik", () => {
       const json = JSON_OF(pub);
       expect(json).not.toContain("7321");
       expect(json).not.toContain("10042");
-      expect(Object.keys(pub).sort()).toEqual(["endsAt", "reveal", "revealEndsAt", "startedAt"]);
+      expect(Object.keys(pub).sort()).toEqual(["endsAt", "reveal", "revealEndsAt", "startedAt", "targetMs"]);
     }
   });
 
@@ -198,11 +280,12 @@ describe("kor-kronometre gizlilik", () => {
     expect(pub.reveal?.entries).toHaveLength(3);
   });
 
-  it("view/publicView hiçbir yerde hedef sayısını (10000) ya da kalan süreyi taşımaz", () => {
-    const s = start();
-    const json = JSON_OF([korKronometre.publicView(s, ctx(T0 + 5_000)), korKronometre.view(s, "a", ctx(T0))]);
-    expect(json).not.toContain("10000");
-    expect(json).not.toContain("target");
+  it("hedef herkese açıktır; kişisel görünümde yoktur ve kalan süre sayacı hiçbir yerde taşınmaz", () => {
+    const s = start(["a", "b", "c"], 11);
+    expect(korKronometre.publicView(s, ctx(T0 + 5_000)).targetMs).toBe(11_000);
+    expect(korKronometre.publicView(s, ctx(T0 + 5_000, [], 99)).targetMs).toBe(11_000);
+    expect(JSON_OF(korKronometre.view(s, "a", ctx(T0)))).toBe('{"pressed":false}');
+    expect(Object.keys(korKronometre.publicView(s, ctx(T0))).some((k) => /remain|left|kalan/i.test(k))).toBe(false);
   });
 });
 
@@ -225,11 +308,19 @@ describe("kor-kronometre erken bitiş (herkes bastı)", () => {
     expect(korKronometre.result(s).awards).toEqual({ a: 0, b: 1, c: 2 });
   });
 
+  it("(a2) erken bitiş hedefe göre: hedef 7 iken herkes basınca yine 1 sn sonra açılır", () => {
+    let s = start(["a", "b"], 7);
+    s = press(s, "a", 6_000);
+    s = press(s, "b", 8_000);
+    expect(s.endsAt).toBe(T0 + 9_000);
+    expect(korKronometre.result(s).awards).toEqual({ a: 2, b: 2 });
+  });
+
   it("(b) bir kişi eksikken bitmez", () => {
     let s = start();
     s = press(s, "a", 5_000);
     s = press(s, "b", 6_000);
-    expect(s.endsAt).toBe(T0 + KOR_KRONOMETRE_DURATION_MS);
+    expect(s.endsAt).toBe(T0 + korKronometreDurationMs(10_000));
     expect(korKronometre.publicView(s, ctx(T0 + 12_000)).reveal).toBeNull();
   });
 
@@ -238,7 +329,7 @@ describe("kor-kronometre erken bitiş (herkes bastı)", () => {
     s = press(s, "a", 5_000);
     s = press(s, "b", 6_000);
     expect(korKronometre.tick(s, ctx(T0 + 7_000, ["a", "b"]))).toBe(s);
-    expect(s.endsAt).toBe(T0 + KOR_KRONOMETRE_DURATION_MS);
+    expect(s.endsAt).toBe(T0 + korKronometreDurationMs(10_000));
   });
 
   it("(d) herkes bastıktan sonra yeni basış reddedilir", () => {
