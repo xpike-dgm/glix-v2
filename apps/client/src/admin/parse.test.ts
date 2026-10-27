@@ -2,9 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   parseAccounts,
   parseAuditPage,
+  parseContent,
   parseDetail,
   parseErrors,
+  parseGameList,
   parseLive,
+  parseMaintenance,
+  parsePushStatus,
   parseSearch,
   parseState,
   parseStats,
@@ -192,5 +196,76 @@ describe("hesap yanıtları", () => {
     expect(tryParse(parseSearch, { results: {}, limit: 20 })).toBeNull();
     expect(tryParse(parseAuditPage, { entries: [], nextBefore: "3" })).toBeNull();
     expect(tryParse(parseAuditPage, null)).toBeNull();
+  });
+});
+
+describe("A3 yanıt doğrulaması", () => {
+  const game = {
+    id: "kule-ustasi",
+    name: "Kule Ustası",
+    minPlayers: 2,
+    maxPlayers: 8,
+    open: true,
+    randomPool: true,
+    engineRandomPool: true,
+    overridden: false,
+  };
+  const content = {
+    games: [game],
+    announcement: { id: 3, text: "Merhaba", kind: "bilgi", endsAt: null },
+  };
+  const maintenance = {
+    on: false,
+    activeMatches: 2,
+    rooms: 3,
+    players: 9,
+    draining: false,
+    backup: { usedToday: 1, limit: 3, nextAt: null },
+    releases: [
+      {
+        id: 2,
+        revision: "abc1234",
+        version: "0.1.0",
+        startedAt: 5,
+        endedAt: null,
+        durationSec: 10,
+        state: "running",
+      },
+      { id: 1, revision: "dev", version: "0.1.0", startedAt: 1, endedAt: 4, durationSec: 3, state: "clean" },
+    ],
+  };
+  const push = {
+    enabled: true,
+    subscribers: 4,
+    nextAllowedAt: null,
+    last: { at: 9, title: "Selam", total: 4, sent: 3, failed: 1, removed: 0, finished: true },
+  };
+
+  it("geçerli yanıtlar çözülür", () => {
+    expect(parseContent(content).games[0]?.name).toBe("Kule Ustası");
+    expect(parseContent({ ...content, announcement: null }).announcement).toBeNull();
+    expect(parseGameList({ ok: true, games: [game] })).toHaveLength(1);
+    expect(parseMaintenance(maintenance).releases.map((r) => r.state)).toEqual(["running", "clean"]);
+    expect(parsePushStatus(push).last?.sent).toBe(3);
+    expect(parsePushStatus({ ...push, last: null }).last).toBeNull();
+  });
+
+  it("bozuk alanlar reddedilir", () => {
+    expect(tryParse(parseContent, { ...content, games: [{ ...game, open: "evet" }] })).toBeNull();
+    expect(
+      tryParse(parseContent, { ...content, announcement: { id: 1, text: "x", kind: "hata", endsAt: null } }),
+    ).toBeNull();
+    expect(tryParse(parseContent, null)).toBeNull();
+    expect(tryParse(parseMaintenance, { ...maintenance, backup: null })).toBeNull();
+    expect(
+      tryParse(parseMaintenance, {
+        ...maintenance,
+        releases: [{ ...maintenance.releases[0], state: "bilinmez" }],
+      }),
+    ).toBeNull();
+    expect(tryParse(parseMaintenance, { ...maintenance, on: 1 })).toBeNull();
+    expect(tryParse(parsePushStatus, { ...push, last: { at: 1 } })).toBeNull();
+    expect(tryParse(parsePushStatus, { ...push, subscribers: "4" })).toBeNull();
+    expect(tryParse(parseGameList, { games: "x" })).toBeNull();
   });
 });

@@ -7,9 +7,25 @@
  */
 import { createHash, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { AdminAccountDetail, AdminAccountSearch, AdminAuditPage, AdminLive } from "@glix/engine";
+import { pipeline } from "node:stream";
+import {
+  type AdminAccountDetail,
+  type AdminAccountSearch,
+  type AdminAuditPage,
+  type AdminContent,
+  type AdminLive,
+  type AdminMaintenance,
+  ANNOUNCEMENT_MAX_AHEAD_MS,
+  type AnnouncementKind,
+  BROADCAST_BODY_MAX,
+  BROADCAST_TITLE_MAX,
+  cleanAnnouncementText,
+  cleanPlainText,
+  cleanSitePath,
+  isAnnouncementKind,
+} from "@glix/engine";
 import { type AccountStore, ADMIN_SEARCH_LIMIT, type AdminSearchQuery } from "./accountStore.js";
-import { buildAccounts, buildErrors, buildStats } from "./adminData.js";
+import { buildAccounts, buildErrors, buildReleases, buildStats } from "./adminData.js";
 import {
   hashToken,
   isSecureRequest,
@@ -20,12 +36,15 @@ import {
   send,
   USERNAME_PATTERN,
 } from "./auth.js";
+import { BACKUP_FRESH_MS, BACKUP_PER_DAY, type BackupService } from "./backup.js";
 import type { Clock } from "./clock.js";
 import type { GoogleAuth } from "./google.js";
 import { confirmMatches } from "./kvkk.js";
 import { log } from "./log.js";
 import { adminCodeMessage, type MailService, type MailThrottle } from "./mail.js";
+import type { PushBroadcaster } from "./pushBroadcast.js";
 import { type IpLimiter, TokenBucket } from "./ratelimit.js";
+import type { SiteSettings } from "./siteSettings.js";
 import type { Social } from "./social.js";
 import type { StatsStore } from "./statsStore.js";
 
@@ -91,6 +110,15 @@ export interface AdminEnv {
   /** Silinen hesabın bekleyen Google kayıtları buradan düşer; kapalıysa null. */
   google: GoogleAuth | null;
   limits: AdminLimits;
+  /** A3: oyun anahtarları, duyuru, bakım kipi. */
+  site: SiteSettings;
+  /** A3: herkese web bildirimi. */
+  broadcaster: PushBroadcaster;
+  /** A3: veritabanı yedeği. */
+  backup: BackupService;
+  clock: Clock;
+  /** Bu sunucu sürecinin başlangıç kaydı (`server_starts`); kayıt yazılamadıysa null. */
+  runId: number | null;
 }
 
 function fail(res: ServerResponse, status: number, code: string, message: string): void {
@@ -185,6 +213,12 @@ const POST_ROUTES: ReadonlySet<string> = new Set([
   "accounts/unsuspend",
   "accounts/delete",
   "accounts/logout-all",
+  "content/game",
+  "announcement/set",
+  "announcement/clear",
+  "push/broadcast",
+  "maintenance/set",
+  "backup",
 ]);
 const GET_ROUTES: ReadonlySet<string> = new Set([
   "status",
@@ -195,6 +229,9 @@ const GET_ROUTES: ReadonlySet<string> = new Set([
   "accounts/search",
   "accounts/detail",
   "audit",
+  "content",
+  "maintenance",
+  "push/status",
 ]);
 
 async function route(req: IncomingMessage, res: ServerResponse, env: AdminEnv): Promise<void> {
@@ -265,6 +302,20 @@ async function route(req: IncomingMessage, res: ServerResponse, env: AdminEnv): 
       return accountDetail(res, env, account.id, url.searchParams.get("id"));
     case "audit":
       return auditPage(res, env, url.searchParams.get("before"), url.searchParams.get("limit"));
+    case "content":
+      return send(res, 200, contentBody(env));
+    case "maintenance":
+      return send(res, 200, maintenanceBody(env));
+    case "push/status":
+      return send(res, 200, env.broadcaster.status());
+    case "backup":
+      return downloadBackup(req, res, env, account.id, adminHash);
+    case "content/game":
+    case "announcement/set":
+    case "announcement/clear":
+    case "push/broadcast":
+    case "maintenance/set":
+      return contentAction(req, res, env, account.id, name);
     default:
       return accountAction(req, res, env, account.id, name);
   }
@@ -566,4 +617,227 @@ async function accountAction(
       return send(res, 200, { ok: true, closed });
     }
   }
+}
+
+// ---- A3: içerik, bildirim ve bakım ---------------------------------------------------------------------------
+
+/** Duyuru/bildirim gövdesi (metinler dahil) için en büyük bayt. */
+const MAX_CONTENT_BODY_BYTES = 2048;
+
+function contentBody(env: AdminEnv): AdminContent {
+  return { games: env.site.games(), announcement: env.site.announcement() };
+}
+
+function maintenanceBody(env: AdminEnv): AdminMaintenance {
+  const live = env.live();
+  const used = env.accounts.adminAuditCount("db_backup", env.now - DAY_MS);
+  return {
+    on: env.site.maintenance(),
+    activeMatches: live.activeMatches,
+    rooms: live.rooms,
+    players: live.players,
+    draining: live.draining,
+    backup: {
+      usedToday: used.count,
+      limit: BACKUP_PER_DAY,
+      nextAt: used.count >= BACKUP_PER_DAY && used.oldest !== null ? used.oldest + DAY_MS : null,
+    },
+    releases: buildReleases(env.accounts.serverStarts(20), env.runId, env.now),
+  };
+}
+
+export interface GameSwitchInput {
+  id: string;
+  open?: boolean;
+  random?: boolean;
+}
+
+/** `content/game` gövdesi: `id` + en az biri `open` / `random` (doğru/yanlış). */
+export function parseGameSwitch(data: unknown): GameSwitchInput | null {
+  if (!isRecord(data)) return null;
+  const keys = Object.keys(data);
+  if (!keys.every((k) => k === "id" || k === "open" || k === "random")) return null;
+  const { id, open, random } = data;
+  if (typeof id !== "string" || id.length === 0 || id.length > 64) return null;
+  if (open === undefined && random === undefined) return null;
+  if (open !== undefined && typeof open !== "boolean") return null;
+  if (random !== undefined && typeof random !== "boolean") return null;
+  return {
+    id,
+    ...(open === undefined ? {} : { open }),
+    ...(random === undefined ? {} : { random }),
+  };
+}
+
+export interface AnnouncementInput {
+  text: string;
+  kind: AnnouncementKind;
+  endsAt: number | null;
+}
+
+/** `announcement/set` gövdesi: `text`, `kind`, `endsAt` (gelecekte bir an ya da null). */
+export function parseAnnouncementInput(data: unknown, now: number): AnnouncementInput | null {
+  if (!isRecord(data) || !exactKeys(data, ["text", "kind", "endsAt"])) return null;
+  const text = cleanAnnouncementText(data.text);
+  if (text === null || !isAnnouncementKind(data.kind)) return null;
+  const ends = data.endsAt;
+  if (ends === null) return { text, kind: data.kind, endsAt: null };
+  if (typeof ends !== "number" || !Number.isSafeInteger(ends)) return null;
+  if (ends <= now || ends > now + ANNOUNCEMENT_MAX_AHEAD_MS) return null;
+  return { text, kind: data.kind, endsAt: ends };
+}
+
+export interface BroadcastBody {
+  title: string;
+  body: string;
+  url: string | null;
+}
+
+/** `push/broadcast` gövdesi: `title` (≤40), `body` (≤120), `url` (site içi yol ya da null). */
+export function parseBroadcastBody(data: unknown): BroadcastBody | null {
+  if (!isRecord(data) || !exactKeys(data, ["title", "body", "url"])) return null;
+  const title = cleanPlainText(data.title, BROADCAST_TITLE_MAX);
+  const body = cleanPlainText(data.body, BROADCAST_BODY_MAX);
+  if (title === null || body === null) return null;
+  if (data.url === null) return { title, body, url: null };
+  const url = cleanSitePath(data.url);
+  return url === null ? null : { title, body, url };
+}
+
+async function contentAction(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: AdminEnv,
+  adminId: number,
+  name: string,
+): Promise<void> {
+  if (!env.limits.action(adminId)) return fail(res, 429, "rate_limited", "Biraz bekleyip tekrar dene.");
+  const data = await readJson(req, MAX_CONTENT_BODY_BYTES);
+  const invalid = (): void => fail(res, 400, "invalid_input", "Geçersiz istek.");
+  switch (name) {
+    case "content/game": {
+      const input = parseGameSwitch(data);
+      if (!input) return invalid();
+      if (env.site.setGame(input.id, input, env.now) === "unknown")
+        return fail(res, 404, "not_found", "Oyun bulunamadı.");
+      const changes: string[] = [];
+      if (input.open !== undefined) changes.push(input.open ? "open" : "closed");
+      if (input.random !== undefined) changes.push(input.random ? "pool_in" : "pool_out");
+      audit(env, adminId, "game_switch", `${input.id}:${changes.join(",")}`);
+      return send(res, 200, { ok: true, games: env.site.games() });
+    }
+    case "announcement/set": {
+      const input = parseAnnouncementInput(data, env.now);
+      if (!input)
+        return fail(
+          res,
+          400,
+          "invalid_input",
+          "Duyuru metni 1-140 karakter olmalı (< ve > yok); bitiş zamanı ileri bir an olmalı (en çok 30 gün).",
+        );
+      const a = env.site.setAnnouncement(input.text, input.kind, input.endsAt, env.now);
+      audit(env, adminId, "announcement_set", input.kind);
+      return send(res, 200, { ok: true, announcement: a });
+    }
+    case "announcement/clear": {
+      if (!isRecord(data) || Object.keys(data).length !== 0) return invalid();
+      env.site.clearAnnouncement();
+      audit(env, adminId, "announcement_clear", "");
+      return send(res, 200, { ok: true });
+    }
+    case "maintenance/set": {
+      if (!isRecord(data) || !exactKeys(data, ["on"]) || typeof data.on !== "boolean") return invalid();
+      env.site.setMaintenance(data.on, env.now);
+      audit(env, adminId, data.on ? "maintenance_on" : "maintenance_off", "");
+      return send(res, 200, { ok: true, on: data.on });
+    }
+    case "push/broadcast": {
+      const input = parseBroadcastBody(data);
+      if (!input)
+        return fail(
+          res,
+          400,
+          "invalid_input",
+          "Başlık en çok 40, metin en çok 120 karakter olmalı (< ve > yok); bağlantı sitenin kendi yolu olmalı.",
+        );
+      const started = env.broadcaster.start(input);
+      if (!started.ok) {
+        const messages = {
+          disabled: [503, "Bildirim gönderimi bu sunucuda kapalı."],
+          running: [409, "Bir gönderim zaten sürüyor."],
+          cooldown: [429, "Saatte en çok bir kez gönderilebilir."],
+          empty: [409, "Bildirim açmış kimse yok."],
+        } as const;
+        const [status, message] = messages[started.reason];
+        return fail(res, status, `broadcast_${started.reason}`, message);
+      }
+      audit(env, adminId, "push_broadcast", `${started.total}`);
+      // Sonuç sayıları işlem kaydına gönderim bitince yazılır (başlık ve metin yazılmaz).
+      void started.done.then((r) => {
+        try {
+          env.accounts.adminAudit(
+            adminId,
+            "push_broadcast_done",
+            `${r.sent}/${r.failed}/${r.removed}`,
+            env.clock.now(),
+            null,
+          );
+        } catch (err) {
+          log.error("accounts_error", { op: "admin_audit", error: String(err) });
+        }
+      });
+      return send(res, 202, { ok: true, total: started.total });
+    }
+    default:
+      return notFound(res);
+  }
+}
+
+/** Yedek dosya adı: UTC `glix-yedek-20261027-2157.tar`. */
+export function backupFileName(now: number): string {
+  const d = new Date(now);
+  const p = (n: number): string => String(n).padStart(2, "0");
+  return `glix-yedek-${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}-${p(d.getUTCHours())}${p(d.getUTCMinutes())}.tar`;
+}
+
+async function downloadBackup(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: AdminEnv,
+  adminId: number,
+  adminHash: string | null,
+): Promise<void> {
+  if (!env.limits.action(adminId)) return fail(res, 429, "rate_limited", "Biraz bekleyip tekrar dene.");
+  const data = await readJson(req, MAX_BODY_BYTES);
+  if (!isRecord(data) || !exactKeys(data, ["ack"]) || data.ack !== true)
+    return fail(res, 400, "invalid_input", "Geçersiz istek.");
+  // E-posta adresleri içerdiği için yedek yalnız yakın zamanda kodla girilmiş oturumda alınır.
+  const createdAt = adminHash === null ? null : env.accounts.adminSessionCreatedAt(adminHash);
+  if (createdAt === null || env.now - createdAt > BACKUP_FRESH_MS) {
+    audit(env, adminId, "db_backup_denied", "fresh_required");
+    return fail(res, 403, "fresh_required", "Yedek için giriş kodunu yeniden girmelisin.");
+  }
+  if (env.accounts.adminAuditCount("db_backup", env.now - DAY_MS).count >= BACKUP_PER_DAY)
+    return fail(res, 429, "backup_limit", "Günde en çok 3 yedek alınabilir.");
+  let backup: Awaited<ReturnType<BackupService["create"]>>;
+  try {
+    backup = await env.backup.create(env.now);
+  } catch (err) {
+    log.error("backup_failed", { error: String(err) });
+    audit(env, adminId, "db_backup_failed", "");
+    return fail(res, 500, "backup_failed", "Yedek alınamadı.");
+  }
+  if (!backup) return fail(res, 409, "backup_busy", "Başka bir yedek hazırlanıyor.");
+  // Kayıt indirme başlamadan yazılır; indirme yarıda kesilse de hak harcanmış sayılır.
+  audit(env, adminId, "db_backup", String(backup.files.length));
+  res.writeHead(200, {
+    "Content-Type": "application/x-tar",
+    "Content-Length": String(backup.size),
+    "Content-Disposition": `attachment; filename="${backupFileName(env.now)}"`,
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+  });
+  pipeline(backup.stream, res, (err) => {
+    if (err) log.warn("backup_stream_ended", { error: String(err) });
+  });
 }

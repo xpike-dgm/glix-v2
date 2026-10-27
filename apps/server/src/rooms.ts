@@ -50,6 +50,8 @@ export function createRuntime(
     active: new Set(),
     broadcaster: createBroadcaster(clock, () => rt),
     catalog: getCatalog(),
+    maintenance: false,
+    announcement: null,
     defaultGameIds: defaultGameIds ? [...defaultGameIds] : null,
     randomInt: pickInt,
   };
@@ -98,13 +100,16 @@ export function uniqueNickname(room: Room, wanted: string, except?: Player): str
 }
 
 export function createRoom(rt: Runtime): Room {
+  // Varsayılan seçim (yalnız testlerde/yapılandırmada) kapalı oyunları taşımaz.
+  const open = new Set(rt.catalog.map((g) => g.id));
+  const defaults = rt.defaultGameIds ? rt.defaultGameIds.filter((id) => open.has(id)) : null;
   const room: Room = {
     code: generateCode(rt.rooms),
     hostId: "",
     players: new Map(),
     stages: new Set(),
     phase: "lobby",
-    gameIds: rt.defaultGameIds ? [...rt.defaultGameIds] : [],
+    gameIds: defaults ? [...defaults] : [],
     selection: rt.defaultGameIds ? { mode: "manual" } : { mode: "random", count: DEFAULT_RANDOM_COUNT },
     tone: DEFAULT_CONTENT_TONE,
     joinPolicy: DEFAULT_JOIN_POLICY,

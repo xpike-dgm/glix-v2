@@ -1,4 +1,5 @@
 import { type ContentTone, type GameResult, isContentTone } from "./game.js";
+import type { SiteNotice } from "./siteNotice.js";
 
 export const PROTOCOL_VERSION = 2;
 export const APP_VERSION = "0.1.0";
@@ -196,7 +197,9 @@ export type ErrorCode =
   | "stage_readonly"
   | "login_required"
   | "invite_failed"
-  | "friend_not_found";
+  | "friend_not_found"
+  /** Bakım kipi: yeni oda kurulamaz, yeni maç başlamaz (U16 A3). */
+  | "maintenance";
 
 export type RoomPhase = "lobby" | "briefing" | "countdown" | "playing" | "results" | "final";
 
@@ -275,8 +278,15 @@ export interface RoomSnapshot {
 export type LeftReason = "left" | "kicked" | "closed";
 
 export type ServerMessage =
-  /** `pushKey`: sunucu web bildirimi gönderebiliyorsa VAPID genel anahtarı (base64url); yoksa alan hiç gelmez. */
-  | { type: "welcome"; protocolVersion: number; serverVersion: string; pushKey?: string }
+  /**
+   * `pushKey`: sunucu web bildirimi gönderebiliyorsa VAPID genel anahtarı (base64url); yoksa alan hiç gelmez.
+   * `site`: duyuru ve bakım kipi (eski sunucularda yoktur).
+   */
+  | { type: "welcome"; protocolVersion: number; serverVersion: string; pushKey?: string; site?: SiteNotice }
+  /** Duyuru ya da bakım kipi değişti (tüm bağlantılara gider). Eski istemciler bilinmeyen mesajı yok sayar. */
+  | { type: "siteNotice"; site: SiteNotice }
+  /** Lobi bilgilendirmesi (ör. kapatılan oyun seçimden çıkarıldı); istemci kısa bir bildirim olarak gösterir. */
+  | { type: "lobbyNotice"; text: string }
   | { type: "pong"; t: number; serverTime: number }
   | { type: "session"; token: string; playerId: string; roomCode: string }
   /** Sahne bağlantısı kabul edildi (belirteç ve oyuncu kimliği yoktur; yeniden bağlanınca yeniden `joinStage`). */

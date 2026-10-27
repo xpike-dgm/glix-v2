@@ -1,5 +1,7 @@
+import type { Announcement } from "./siteNotice.js";
+
 /**
- * Yönetici paneli (U16, A1 ve A2) uç yanıtlarının tipleri: sunucu üretir, panel okur (docs/PROTOKOL.md "Yönetici uçları").
+ * Yönetici paneli (U16, A1, A2 ve A3) uç yanıtlarının tipleri: sunucu üretir, panel okur (docs/PROTOKOL.md "Yönetici uçları").
  * A1 tipleri kişi bilgisi taşımaz. A2 hesap tipleri (`AdminAccount*`, `AdminAudit*`) kullanıcı adı taşır; e-posta yalnız
  * `AdminAccountDetail` içindedir.
  */
@@ -220,4 +222,83 @@ export interface AdminAuditEntry {
 export interface AdminAuditPage {
   entries: AdminAuditEntry[];
   nextBefore: number | null;
+}
+
+// ---- A3: içerik, bildirim ve bakım ------------------------------------------------------------------------
+
+/** Bir oyunun yönetici anahtarları. `randomPool` etkin değerdir (yönetici ayarı varsa o, yoksa motor varsayılanı). */
+export interface AdminGameSwitch {
+  id: string;
+  name: string;
+  minPlayers: number;
+  maxPlayers: number;
+  /** Kapalı oyun lobi kataloğundan ve rastgele seçimden çıkar; süren maç normal biter. */
+  open: boolean;
+  /** Etkin rastgele havuz üyeliği. */
+  randomPool: boolean;
+  /** Motorun varsayılanı (oyun tanımındaki `randomPool`). */
+  engineRandomPool: boolean;
+  /** Yönetici ayarı motor varsayılanından farklı mı (panelde "değiştirildi" işareti). */
+  overridden: boolean;
+}
+
+/** `GET /api/admin/content`. */
+export interface AdminContent {
+  games: AdminGameSwitch[];
+  announcement: Announcement | null;
+}
+
+export type AdminReleaseState = "running" | "clean" | "unclean";
+
+/** Bir sunucu başlangıcı ("son yayınlar"). `endedAt`: temiz kapanışta kapanış anı; değilse sonraki başlangıç (üst sınır). */
+export interface AdminRelease {
+  id: number;
+  revision: string;
+  version: string;
+  startedAt: number;
+  endedAt: number | null;
+  durationSec: number | null;
+  state: AdminReleaseState;
+}
+
+/** `GET /api/admin/maintenance`. */
+export interface AdminMaintenance {
+  on: boolean;
+  activeMatches: number;
+  rooms: number;
+  players: number;
+  /** Sunucu boşaltma (SIGTERM) kipinde mi. */
+  draining: boolean;
+  backup: {
+    /** Son 24 saatte alınan yedek sayısı ve günlük sınır. */
+    usedToday: number;
+    limit: number;
+    /** Sınır dolduysa yeniden alınabileceği an (ms), değilse null. */
+    nextAt: number | null;
+  };
+  /** Son 20 başlangıç, yeniden eskiye. */
+  releases: AdminRelease[];
+}
+
+/** Herkese bildirimin sonucu ya da son durumu. */
+export interface AdminBroadcastResult {
+  at: number;
+  title: string;
+  total: number;
+  sent: number;
+  failed: number;
+  removed: number;
+  /** false: gönderim sürüyor. */
+  finished: boolean;
+}
+
+/** `GET /api/admin/push/status`. */
+export interface AdminBroadcastStatus {
+  /** Bildirim gönderimi bu sunucuda açık mı (VAPID ayarlı). */
+  enabled: boolean;
+  /** Kayıtlı hesap aboneliği sayısı. */
+  subscribers: number;
+  /** Yeni gönderim en erken bu anda yapılabilir (ms); şimdi serbestse null. */
+  nextAllowedAt: number | null;
+  last: AdminBroadcastResult | null;
 }

@@ -421,7 +421,12 @@ async function changeUsername(req: IncomingMessage, res: ServerResponse, env: Au
 
 function logout(req: IncomingMessage, res: ServerResponse, env: AuthEnv): void {
   const token = readSessionToken(req.headers.cookie);
-  if (token) env.accounts.deleteSession(hashToken(token));
+  if (token) {
+    // Çıkış yapan cihaza bildirim gitmesin: hesaba bağlı kalıcı abonelik de silinir (istemci ayrıca bildirir).
+    const account = env.accounts.resolveSession(hashToken(token), env.now);
+    if (account) env.accounts.pushDelete(account.id);
+    env.accounts.deleteSession(hashToken(token));
+  }
   send(res, 200, { ok: true }, { "Set-Cookie": clearedCookie(isSecureRequest(req, env.trustProxy)) });
 }
 

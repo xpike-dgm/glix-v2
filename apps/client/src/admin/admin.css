@@ -591,3 +591,66 @@ fieldset.adm-seg {
   padding: 0;
   min-width: 0;
 }
+
+/* ---- A3: içerik ve bakım ---- */
+.adm-confirm--sticky {
+  position: sticky;
+  bottom: var(--sp-3);
+  z-index: 3;
+  background: var(--bg-1);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
+}
+.adm-seg--cell {
+  flex-basis: auto;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+.adm-seg--cell .adm-seg__opt {
+  min-height: 36px;
+  padding: 0 var(--sp-3);
+  white-space: nowrap;
+  font-size: var(--fs-13);
+}
+.adm-table tr[data-closed] td:first-child {
+  opacity: 0.6;
+}
+.adm-textarea {
+  min-height: 72px;
+  padding: var(--sp-2) var(--sp-3);
+  resize: vertical;
+  font-family: inherit;
+}
+.adm-count {
+  margin-top: calc(var(--sp-1) * -1);
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: right;
+}
+.adm-count[data-over] {
+  color: var(--red);
+  font-weight: 700;
+}
+.adm-live-ann,
+.adm-preview {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border-radius: var(--r-sm);
+  border: 1px solid color-mix(in srgb, var(--cyan) 45%, transparent);
+  background: color-mix(in srgb, var(--cyan) 8%, transparent);
+  overflow-wrap: anywhere;
+}
+.adm-live-ann[data-kind="uyari"],
+.adm-preview[data-kind="uyari"] {
+  border-color: color-mix(in srgb, var(--amber) 55%, transparent);
+  background: color-mix(in srgb, var(--amber) 10%, transparent);
+}
+.adm-live-ann .adm-btn {
+  justify-self: start;
+}
+@media (max-width: 700px) {
+  .adm-seg--cell {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}

@@ -25,6 +25,7 @@ import {
 import { parseServerMessage } from "./parse.js";
 import { emitReaction } from "./reactions.js";
 import { decideOnReturn, PROBE_TIMEOUT_MS, reconnectNotice } from "./resume.js";
+import { EMPTY_SITE } from "./siteRules.js";
 import { KEYS, readAvatarChoice, readStored, removeStored, writeStored } from "./storage.js";
 import {
   addClockSample,
@@ -59,6 +60,7 @@ const SHOWN_ERRORS = new Set([
   "stage_full",
   "friend_not_found",
   "invite_failed",
+  "maintenance",
 ]);
 
 /** Sunucu güncelleme için yeniden başladı (WebSocket kapanış kodu 1012). */
@@ -142,6 +144,8 @@ function onMessage(raw: string): void {
         restartedByServer || (knownServerVersion !== null && knownServerVersion !== msg.serverVersion);
       knownServerVersion = msg.serverVersion;
       setState({ serverProtocol: msg.protocolVersion, pushKey: msg.pushKey ?? null });
+      // Eski sunucu `site` göndermez: boş kalır.
+      setState("site", msg.site ?? EMPTY_SITE);
       if (isProtocolMismatch(msg.protocolVersion, CLIENT_PROTOCOL_VERSION)) {
         // Sunucu başka bir protokol konuşuyor: oda kurma/katılma/devam yok; "Güncelleme gerekli" ekranı çıkar.
         blockForUpdate();
@@ -230,6 +234,12 @@ function onMessage(raw: string): void {
       break;
     case "reaction":
       emitReaction(msg.playerId, msg.emoji);
+      break;
+    case "siteNotice":
+      setState("site", msg.site);
+      break;
+    case "lobbyNotice":
+      toast(msg.text);
       break;
     case "friendStatus":
       onFriendStatus(msg.username, msg.status);

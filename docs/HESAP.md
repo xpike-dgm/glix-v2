@@ -95,7 +95,11 @@ Yalnız hesaplılar; misafir bu özelliklerden hiçbir şey görmez. Uç ve mesa
   (uygulamada kalıcı bir kart: Katıl / Kapat, 10 dk). Canlı bağlantı yoksa hesaba bağlı web bildirimi ("<kullanıcı> seni GLIX odasına çağırıyor", tıklayınca `/?oda=KOD`).
   Başka bir odadaysan "Katıl" önce uyarır: katılmak mevcut odadan ayrılmaktır. Sınır: aynı arkadaşa 30 sn'de bir, dakikada 20.
 - **Arkadaşın lobisine katıl:** listede arkadaş lobideyse (ya da maçta ve oda izleyiciye açıksa, yer varsa) "Katıl"; sunucu `joinFriend` ile kodu çözer, mevcut katılım kuralları geçerli.
-- Bildirim aboneliği hesaba bağlıdır (yalnız bellekte; çıkışta, 404/410'da ve sunucu yeniden başlarken düşer): kalıcı bir bildirim adresi kaydı yoktur.
+- Bildirim aboneliği hesaba bağlıdır ve **kalıcıdır** (U16 A3): `account_push(account_id PK, endpoint UNIQUE, p256dh, auth, created_at)`, hesap başına tek abonelik,
+  hesap silinince `ON DELETE CASCADE` ile (ve `deleteAccount` açıkça) gider. İstemci her hesaplı bağlantıda aboneliği yeniden bildirir (aynıysa yazılmaz).
+  Aboneliği silen olaylar: Ayarlar'dan bildirimi kapatmak (`pushUnsubscribe`), çıkış yapmak (istemci `pushUnsubscribe` yollar, `POST /api/auth/logout` sunucuda da siler),
+  yönetici askısı / "oturumları kapat", hesap silme, push servisinin 404/410 dönmesi, aynı cihazın başka hesaba geçmesi.
+  Davetler ve yönetici "Herkese bildirim"i bu kayıttan okur, bu yüzden sunucu yeniden başlayınca da çalışır. Misafirin odadaki aboneliği yine yalnız bellekte durur.
 
 ## Arkadaş sıralaması (H9; uygulandı)
 Sen + kabul edilmiş arkadaşların (yalnız hesaplılar). Sekmeler: **Bu hafta** (İstanbul pazartesi 00:00'da sıfırlanır) ve **Tüm zamanlar**.
@@ -108,7 +112,7 @@ satıra dokununca o kişinin profili açılır (geri: sıralama). Arkadaşın yo
 - **Aydınlatma:** kayıt ekranındaki "Aydınlatma metni" (`Disclosure.tsx`) `/gizlilik.html` ile uyumlu özettir (veri sorumlusu e-postası, hangi veri/neden, saklama, haklar, Ayarlar yolu).
 - **Verimi indir:** Ayarlar > Hesap > Verilerim. `POST /api/account/export` JSON dosyası döner (`glix-verilerim-<YYYY-MM-DD>.json`, Türkiye saati). İçerik: açıklama, hesap alanları
   (kullanıcı adı, e-posta, doğrulama, Google bağlı mı ve `sub`, şifre için "özet saklanır, dosyaya konmaz" notu, açılış ve ad değiştirme tarihi), oturumlar (yalnız açılış/son görülme; belirteç özeti yok),
-  `account_games` / `account_matches` satırları, birlikte oynananlar (kullanıcı adıyla), arkadaşlar/istekler/engeller (ad + tarih), oyun sayaçları, rozetler, bildirim aboneliği var mı. Hesap başına günde 3.
+  `account_games` / `account_matches` satırları, birlikte oynananlar (kullanıcı adıyla), arkadaşlar/istekler/engeller (ad + tarih), oyun sayaçları, rozetler, bildirim aboneliği var mı ve ne zaman eklendi (`push_subscription`, `push_subscription_since`; uç nokta ve anahtarlar dökülmez). Hesap başına günde 3.
   İstemci fetch + blob + bağlantıyla indirir; iOS ana ekran uygulamasında (indirmeyi tutmaz) dosya yeni sekmede açılır.
 - **Hesabımı sil:** Ayarlar > Hesap'ın en altı. `POST /api/account/delete {confirm, password?}`: kullanıcı adı yazılır (büyük/küçük harf duyarsız); şifreli hesapta şifre (hatalı deneme giriş sınırına sayılır);
   yalnız Google hesabında oturum en çok 10 dk önce açılmış olmalı, değilse 403 `fresh_login_required` ("Güvenlik için çıkış yapıp tekrar giriş yap, sonra sil."). Hesap başına saatte 5 deneme.

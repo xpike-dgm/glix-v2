@@ -28,6 +28,10 @@ tasarladığı alanlar birlikte kilitlenir; kodlama bu kural seti üzerinden yap
   - **Kapalı**: maç sürerken yeni kimse giremez; "Oyun sürüyor, bitince tekrar dene" mesajı görür.
   - Maç sırasında bağlantısı kopup aynı oturumla geri dönen oyuncu bu ayardan etkilenmez; kendi yerine döner.
 - Oda yöneticisi oyunları manuel seçebilir veya rastgele oyun sayısı belirleyebilir.
+- Site yöneticisi (yönetim paneli) bir oyunu geçici olarak **kapatabilir** (lobide seçilemez, rastgele seçime girmez, lobide
+  seçiliyse seçimden çıkarılır ve odadakilere söylenir; süren maç normal biter) ve oyunun **rastgele havuz** üyeliğini
+  değiştirebilir: bu ayar oyun tanımındaki `randomPool` varsayılanını iki yönde de ezer (havuz dışı bir oyunu havuza ekleyebilir,
+  havuzdakini dışarı alabilir). Oyunun kendi kuralları değişmez (`docs/ADMIN.md`).
 - Aynı maçta aynı mini oyun tekrar etmez.
 - Bot bulunmaz.
 - Maç verileri maç bitince kalıcı olarak saklanmaz.

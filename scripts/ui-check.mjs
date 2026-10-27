@@ -172,6 +172,23 @@ const SCREENS = [
   { name: "home-hesapli", q: "mock=home&acct=1", settle: 1800 },
   { name: "home-hesapli-rozet", q: "mock=home&acct=1&badge=3", settle: 1800 },
   { name: "home-hesapli-rozet-buyuk-yazi", q: "mock=home&acct=1&badge=12&text=large", settle: 1800 },
+  // Site duyurusu ve bakım bandı (U16 A3): önek "duyuru-".
+  { name: "duyuru-home-bilgi", q: "mock=home&duyuru=bilgi", settle: 1800 },
+  { name: "duyuru-home-uyari-hesapli", q: "mock=home&acct=1&duyuru=uyari", settle: 1800 },
+  { name: "duyuru-home-uzun", q: "mock=home&duyuru=uzun", settle: 1800 },
+  { name: "duyuru-home-uzun-buyuk-yazi", q: "mock=home&duyuru=uzun&text=large", settle: 1800 },
+  { name: "duyuru-home-bakim", q: "mock=home&bakim=1", settle: 1800 },
+  { name: "duyuru-home-bakim-ve-duyuru", q: "mock=home&acct=1&bakim=1&duyuru=uyari", settle: 1800 },
+  {
+    name: "duyuru-home-kapatilinca",
+    q: "mock=home&duyuru=bilgi",
+    settle: 1200,
+    act: async (p) => p.locator(".site-banner__x").click(),
+  },
+  { name: "duyuru-lobby-bilgi", q: "mock=lobby&n=3&duyuru=bilgi", settle: 900 },
+  { name: "duyuru-lobby-uzun-solo", q: "mock=lobby&n=1&duyuru=uzun", settle: 900 },
+  { name: "duyuru-lobby-bakim", q: "mock=lobby&n=4&bakim=1", settle: 900 },
+  { name: "duyuru-lobby-8-bakim-ve-duyuru", q: "mock=lobby&n=8&bakim=1&duyuru=uyari", settle: 900 },
   // Arkadaş sıralaması (H9): önek "siralama-".
   { name: "siralama-hafta-galibiyet", q: "mock=siralama", settle: 900 },
   { name: "siralama-hafta-galibiyet-buyuk-yazi", q: "mock=siralama&text=large", settle: 900 },

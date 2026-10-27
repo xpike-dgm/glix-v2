@@ -16,6 +16,7 @@ import {
 } from "@glix/engine";
 import { parseBadgeIds } from "./badgeRules.js";
 import { parseInvite } from "./friendsRules.js";
+import { parseSiteNotice } from "./siteRules.js";
 
 type Rec = Record<string, unknown>;
 
@@ -52,6 +53,7 @@ const ERROR_CODES: readonly ErrorCode[] = [
   "login_required",
   "invite_failed",
   "friend_not_found",
+  "maintenance",
 ];
 const LEFT: readonly LeftReason[] = ["left", "kicked", "closed"];
 
@@ -200,14 +202,24 @@ export function parseServerMessage(raw: string): ServerMessage | null {
   }
   if (!isRec(data)) return null;
   switch (data.type) {
-    case "welcome":
-      return isNum(data.protocolVersion) && isStr(data.serverVersion)
-        ? {
-            type: "welcome",
-            protocolVersion: data.protocolVersion,
-            serverVersion: data.serverVersion,
-            ...(isStr(data.pushKey) && data.pushKey.length <= 128 ? { pushKey: data.pushKey } : {}),
-          }
+    case "welcome": {
+      if (!isNum(data.protocolVersion) || !isStr(data.serverVersion)) return null;
+      const site = parseSiteNotice(data.site);
+      return {
+        type: "welcome",
+        protocolVersion: data.protocolVersion,
+        serverVersion: data.serverVersion,
+        ...(isStr(data.pushKey) && data.pushKey.length <= 128 ? { pushKey: data.pushKey } : {}),
+        ...(site ? { site } : {}),
+      };
+    }
+    case "siteNotice": {
+      const site = parseSiteNotice(data.site);
+      return site ? { type: "siteNotice", site } : null;
+    }
+    case "lobbyNotice":
+      return isStr(data.text) && data.text.length > 0 && data.text.length <= 200
+        ? { type: "lobbyNotice", text: data.text }
         : null;
     case "pong":
       return isNum(data.t) && isNum(data.serverTime)

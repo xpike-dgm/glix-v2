@@ -42,7 +42,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 
 | type | alanlar |
 |---|---|
-| `welcome` | `protocolVersion`, `serverVersion`, `pushKey?` — sunucu web bildirimi gönderebiliyorsa VAPID genel anahtarı (base64url); yoksa alan hiç gelmez ve istemci Ayarlar'daki anahtarı gizler |
+| `welcome` | `protocolVersion`, `serverVersion`, `pushKey?` — sunucu web bildirimi gönderebiliyorsa VAPID genel anahtarı (base64url); yoksa alan hiç gelmez ve istemci Ayarlar'daki anahtarı gizler. `site?: SiteNotice` — yayındaki duyuru ve bakım kipi (bkz. "Duyuru ve bakım"); eski sunucuda alan yoktur |
 | `pong` | `t`, `serverTime` |
 | `session` | `token`, `playerId`, `roomCode` — istemci `localStorage`'a yazar |
 | `stage` | `roomCode` — `joinStage` kabul edildi. Belirteç ve oyuncu kimliği yoktur; bağlantı kopunca istemci yeniden `joinStage` yollar |
@@ -57,6 +57,8 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `invite` | `from`, `roomCode`, `expiresAt` (sunucu saati, ms; gönderildikten 10 dk sonra) — arkadaşın seni odaya çağırıyor |
 | `inviteSent` | `username` — `inviteFriend` arkadaşına ulaştırıldı (canlı bağlantı ya da web bildirimi) |
 | `badgesEarned` | `ids: string[]` — maç final'e varınca bu maçla kazandığın **yeni** rozet kimlikleri (hesaplı oyuncunun canlı bağlantılarına; boş liste gönderilmez, aynı rozet ikinci kez gelmez). Eski istemciler bilinmeyen tipi yok saydığı için protokol sürümü artmadı. İstemci adları `GET /api/profile`'dan okur |
+| `siteNotice` | `site: SiteNotice` — duyuru ya da bakım kipi değişti (ya da duyurunun süresi doldu); **tüm** açık bağlantılara (misafir, hesaplı, sahne) gider |
+| `lobbyNotice` | `text` — lobi bilgilendirmesi (ör. "Kule Ustası şu an kapalı, seçimden çıkarıldı."): odadaki bağlı oyunculara gider, istemci kısa bir bildirim (toast) gösterir. Oda durumunda saklanmaz |
 | `error` | `code`, `message` (Türkçe, oyuncuya gösterilebilir) |
 
 **Görünümler:** `match.publicView` odadaki herkes için aynıdır (oda başına bir kez hesaplanır ve
@@ -145,6 +147,22 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
   `leaveRoom` yaparsa devir hemen olur.
 - Oda boş kalırsa 120 sn sonra silinir.
 
+## Duyuru ve bakım (U16 A3)
+
+`SiteNotice = { announcement: Announcement | null, maintenance: boolean }`, `Announcement = { id, text (1-140, düz metin), kind: "bilgi" | "uyari", endsAt: ms | null }`
+(tipler `packages/engine/src/siteNotice.ts`). Bağlanınca `welcome.site` ile gelir, değişince tüm bağlantılara `siteNotice` gider. Süresi dolan duyuruyu
+sunucu turunda kaldırır ve `siteNotice` yollar; `welcome` hiçbir zaman süresi dolmuş duyuru taşımaz. `id` her yeni duyuruda artar (kaldırılıp yeniden yayınlansa da tekrar etmez):
+istemci kapatılan duyurunun kimliğini `localStorage`'da (`glix.duyuru`) tutar, yeni duyuru yeniden görünür. Metin düz metindir; istemci HTML yorumlamaz.
+- **Bakım kipi** (`maintenance: true`): `createRoom` ve `startMatch` yeni hata kodu `maintenance` ("Kısa bir bakım yapıyoruz, birazdan tekrar dene.") ile reddedilir;
+  `joinRoom` / `joinFriend` / `joinStage`, süren maçlar ve `returnToLobby` etkilenmez. Ana sayfada otomatik bir bant görünür.
+- **Oyun anahtarları:** `RoomSnapshot.catalog` yönetici ayarlarıyla süzülmüş **etkin** kataloğu taşır: kapalı oyun yoktur, `GameInfo.randomPool` etkin değerdir
+  (havuzdaysa alan hiç gelmez, dışındaysa `false`). Kapalı oyun `setGames`/`startMatch`te `invalid_games` ("Seçtiğin oyunlardan biri şu an kapalı.") verir; rastgele seçim
+  yalnız bu kataloğun havuzundan seçer. Ayar değişince lobideki odalar yeni kataloğu `patch` ile alır; kapanan oyun lobi seçimlerinden çıkar ve `lobbyNotice` gider.
+  Süren maçın oyunu o odanın kataloğunda kalır (sonuç ekranları adı bulsun); maç bitip lobiye dönünce seçimden çıkarılır.
+- **Protokol sürümü artmadı** (`PROTOCOL_VERSION = 2`): `welcome.site`, `siteNotice`, `lobbyNotice` eklemedir; eski istemci bilinmeyen alanı/mesajı yok sayar. Tek bozulma:
+  eski (önbellekteki) istemci `maintenance` hata kodunu tanımaz ve mesajı düşürür (oda kurma düğmesi yanıt vermemiş gibi görünür); istemci her dağıtımda kendini yeniler
+  ve yeni derleme bu kodu gösterir, bu yüzden sürüm artırılmadı (artırmak herkese "Güncelleme gerekli" ekranı gösterirdi).
+
 ## Web bildirimleri
 İsteğe bağlı (oyuncu Ayarlar'dan açar; iOS'ta yalnız ana ekrana eklenmişse). Sunucu `GLIX_VAPID_PUBLIC`, `GLIX_VAPID_PRIVATE`,
 `GLIX_VAPID_SUBJECT` ile açılır; harici paket yok: VAPID (RFC 8292, ES256) ve ileti şifreleme (RFC 8291, aes128gcm) `node:crypto` ile.
@@ -158,10 +176,12 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
 - Metin geneldir: `{title, body: "Oda KOD", tag}`; oyun içeriği, ad ya da gizli bilgi asla. Pazarlama yok.
 - Tıklama (`public/sw-push.js`): açık pencere varsa öne getirilir, yoksa uygulama açılır ve kayıtlı oturum odayı geri getirir.
 - **Arkadaş daveti (H8):** hesaplı bağlantıdan gelen `pushSubscribe` odasız da kabul edilir ve abonelik ayrıca **hesaba** bağlanır
-  (yalnız bellekte, `hesap → abonelik`; çıkışta istemci `pushUnsubscribe` yollar, sunucu yeniden başlayınca ya da push servisi 404/410
-  derse düşer, aynı cihaz başka hesaba geçerse eski eşleme silinir). Davet edilen hesabın canlı bağlantısı yoksa bu abonelikle
+  (U16 A3'ten beri **kalıcı**: `account_push` tablosu, bkz. `docs/HESAP.md`; çıkışta istemci `pushUnsubscribe` yollar ve `POST /api/auth/logout` sunucuda da siler,
+  push servisi 404/410 derse düşer, aynı cihaz başka hesaba geçerse eski eşleme silinir; sunucu yeniden başlayınca kalır). Davet edilen hesabın canlı bağlantısı yoksa bu abonelikle
   `{title: "GLIX daveti", body: "<kullanıcı> seni GLIX odasına çağırıyor", tag: "glix-davet-KOD", url: "/?oda=KOD"}` gider; hizmet çalışanı
   yalnız `/` ile başlayan (`//` olmayan) `url`'yi tıklamada açar (açık pencere varsa ona gider). `url` oyun bildirimlerinde yoktur.
+- **Herkese bildirim (U16 A3, yönetici):** `{title (≤40), body (≤120), tag: "glix-duyuru", url?}`. Hedefler: `account_push` + açık odalardaki bellek abonelikleri, uç noktaya göre
+  tekilleştirilir. Saniyede en çok 20 gönderim (partiler arası 1 sn), 404/410 dönen abonelik silinir, saatte en çok 1 gönderim (son gönderim `server_settings.broadcast_last`te durur).
 
 ## Arkadaşlar (HTTP, `/api/friends`, H7; WS, H8)
 
@@ -255,7 +275,7 @@ Yalnız `GET`; oturum çerezi şart (401 `login_required`); hesap başına hız 
   (eşitlikte oynama, sonra ad); kimsenin birinciliği olmayan oyun yok; birincilik sayısına göre azalan.
 - Tek toplu SQL sorgusu (`IN (kimlikler)`, arkadaş sayısı en çok 200).
 
-## Yönetici uçları (HTTP, `/api/admin/`, U16 A1 salt okunur, A2 hesap işlemleri)
+## Yönetici uçları (HTTP, `/api/admin/`, U16 A1 salt okunur, A2 hesap işlemleri, A3 içerik ve bakım)
 
 Ayrıntı ve kurulum: `docs/ADMIN.md`. `GLIX_ADMIN_ACCOUNT_IDS` boşsa tüm uçlar ve `/admin` sayfası 404 verir.
 
@@ -284,6 +304,22 @@ Ayrıntı ve kurulum: `docs/ADMIN.md`. `GLIX_ADMIN_ACCOUNT_IDS` boşsa tüm uçl
     403 `protected` (yönetici hesabı), 404 `not_found`, 409 `username_taken`/`not_suspended`, 429 `rate_limited`
     (işlem: 10 ani, 6 sn'de 1; arama 30 ani, 2 sn'de 1; ayrıntı 20 ani, 3 sn'de 1; yönetici başına). Kayıt eylemleri: `account_rename`,
     `account_suspend` (ayrıntı: süre), `account_unsuspend`, `account_delete`, `account_logout_all` (ayrıntı: kapanan oturum sayısı).
+- **A3, içerik ve bakım uçları** (giriş kodu çerezi ister; tipler `AdminContent`, `AdminMaintenance`, `AdminBroadcastStatus` — `packages/engine/src/admin.ts`). Tüm POST'lar:
+  `Origin` denetimi, yönetici başına işlem hız sınırı (10 ani, 6 sn'de 1), işlem kaydı. Hata gövdesi `{ok:false, code, message}`.
+  - `GET content` -> `{games: AdminGameSwitch[], announcement}`. `POST content/game {id, open?: boolean, random?: boolean}` (en az biri) -> `{ok, games}`; 404 `not_found`.
+    Kayıt `game_switch` (`<oyun>:open|closed|pool_in|pool_out`). Ayarlar `server_settings.games` (JSON, yalnız varsayılandan farklılar) içinde kalıcıdır.
+  - `POST announcement/set {text, kind, endsAt: ms|null}` (metin 1-140 düz metin, `<` `>` yok; bitiş ileri bir an ve ≤ 30 gün) -> `{ok, announcement}`; `POST announcement/clear {}`.
+    Kayıt `announcement_set` (ayrıntı: tür; metin yazılmaz), `announcement_clear`.
+  - `GET push/status` -> `{enabled, subscribers, nextAllowedAt, last}`. `POST push/broadcast {title, body, url: "/yol"|null}` -> **202** `{ok, total}` (gönderim arka planda sürer,
+    sonuç `push/status`ta `last: {at, title, total, sent, failed, removed, finished}`); 400 `invalid_input`, 409 `broadcast_running`/`broadcast_empty`, 429 `broadcast_cooldown`,
+    503 `broadcast_disabled`. Kayıt `push_broadcast` (ayrıntı: hedef sayısı) ve bitince `push_broadcast_done` (`gitti/gitmedi/silindi`); başlık ve metin yazılmaz.
+  - `GET maintenance` -> `{on, activeMatches, rooms, players, draining, backup: {usedToday, limit, nextAt}, releases: AdminRelease[≤20]}`. `POST maintenance/set {on}`;
+    kayıt `maintenance_on` / `maintenance_off`. Bakım kipi `server_settings.maintenance`te kalıcıdır (yeniden başlatmada da açık kalır).
+  - `POST backup {ack: true}` -> **tar akışı** (`application/x-tar`, `Content-Disposition: attachment; filename="glix-yedek-YYYYMMDD-HHMM.tar"`, `Content-Length` bilinir). İçinde `glix.db`
+    (hesap ve istatistik aynı dosyaysa, üretimde) ya da `glix-hesap.db` + `glix-istatistik.db`; her biri `VACUUM INTO` ile alınmış tutarlı SQLite kopyası, e-posta adresleri içerir.
+    Koşullar: yönetici çerezi en çok 30 dk önce alınmış olmalı (yoksa 403 `fresh_required`, `db_backup_denied` kaydı); son 24 saatte en çok 3 yedek (429 `backup_limit`, sayım işlem kaydından);
+    aynı anda tek yedek (409 `backup_busy`); 400 `invalid_input` (`ack` yok). Geçici klasör `os.tmpdir()` altında (konteynerde `/tmp`, bellek diski) `glix-yedek-*`, akış bitince/kopunca silinir.
+    Kayıt `db_backup` (ayrıntı: dosya sayısı; indirme başlamadan yazılır), `db_backup_failed`.
 - Oyuncu tarafı: askıdaki hesap `POST /api/auth/login` ile 403 `{code:"account_suspended", message, until}` alır; Google dönüşü
   `/#google-hata=askida[&bitis=<ms>]`; şifre sıfırlama onayı da 403 verir.
 - İstemci hataları artık kalıcıdır (`/api/client-error` yine 204): `client_errors(day, message, frame, platform, browser, version,

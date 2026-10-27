@@ -92,6 +92,16 @@ const AUDIT_LABELS: Record<string, string> = {
   account_unsuspend: "Askı kaldırıldı",
   account_delete: "Hesap silindi",
   account_logout_all: "Tüm oturumlar kapatıldı",
+  game_switch: "Oyun anahtarı değiştirildi",
+  announcement_set: "Duyuru yayınlandı",
+  announcement_clear: "Duyuru kaldırıldı",
+  push_broadcast: "Herkese bildirim başlatıldı",
+  push_broadcast_done: "Herkese bildirim bitti",
+  maintenance_on: "Bakım kipi açıldı",
+  maintenance_off: "Bakım kipi kapandı",
+  db_backup: "Veritabanı yedeği indirildi",
+  db_backup_denied: "Yedek reddedildi",
+  db_backup_failed: "Yedek alınamadı",
 };
 export const auditLabel = (action: string): string => AUDIT_LABELS[action] ?? action;
 
@@ -102,12 +112,42 @@ const MAIL_STATE: Record<string, string> = {
   mail_failed: "e-posta gitmedi",
 };
 
+const SWITCH_TEXT: Record<string, string> = {
+  open: "açıldı",
+  closed: "kapatıldı",
+  pool_in: "rastgele havuza eklendi",
+  pool_out: "rastgele havuzdan çıkarıldı",
+};
+
+/** "kule-ustasi:closed,pool_out" -> "kule-ustasi kapatıldı, rastgele havuzdan çıkarıldı". */
+function gameSwitchDetail(detail: string): string {
+  const [id, changes] = detail.split(":");
+  const text = (changes ?? "")
+    .split(",")
+    .map((c) => SWITCH_TEXT[c] ?? c)
+    .join(", ");
+  return `${id ?? ""} ${text}`.trim();
+}
+
+/** "3/1/1" (gitti/gitmedi/silindi) -> "3 gitti, 1 gitmedi, 1 abonelik silindi". */
+function broadcastDoneDetail(detail: string): string {
+  const m = /^(\d+)\/(\d+)\/(\d+)$/.exec(detail);
+  return m ? `${m[1]} gitti, ${m[2]} gitmedi, ${m[3]} abonelik silindi` : detail;
+}
+
 /** İşlem kaydı ayrıntısı: kodları okunur metne çevirir; boşsa boş döner. */
 export function auditDetail(action: string, detail: string): string {
   if (detail === "") return "";
   if (action === "account_suspend") return `Süre: ${DURATION_LABELS[detail] ?? detail}`;
   if (action === "account_logout_all") return `${detail} oturum`;
   if (action === "otp_request") return MAIL_STATE[detail] ?? detail;
+  if (action === "game_switch") return gameSwitchDetail(detail);
+  if (action === "announcement_set")
+    return detail === "uyari" ? "Uyarı" : detail === "bilgi" ? "Bilgi" : detail;
+  if (action === "push_broadcast") return `${detail} abonelik`;
+  if (action === "push_broadcast_done") return broadcastDoneDetail(detail);
+  if (action === "db_backup") return `${detail} dosya`;
+  if (action === "db_backup_denied") return detail === "fresh_required" ? "giriş kodu eski" : detail;
   return detail;
 }
 
@@ -131,3 +171,13 @@ export const confirmMatches = (typed: string, username: string): boolean =>
 /** Başarısızlık oranı 0..1; hiç gönderim yoksa null. */
 export const failRatio = (c: { ok: number; failed: number }): number | null =>
   c.ok + c.failed === 0 ? null : c.failed / (c.ok + c.failed);
+
+const RELEASE_STATE: Record<string, string> = {
+  running: "Çalışıyor",
+  clean: "Temiz kapandı",
+  unclean: "Kapanış kaydı yok",
+};
+export const releaseStateLabel = (state: string): string => RELEASE_STATE[state] ?? state;
+
+/** Revizyonun kısa hali (ilk 7 karakter). */
+export const shortRevision = (rev: string): string => rev.slice(0, 7);

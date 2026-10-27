@@ -26,6 +26,7 @@ export const ERROR_TEXT: Record<ErrorCode, string> = {
   stage_readonly: "TV ekranı oyuna karışamaz.",
   invite_failed: "Davet gönderilemedi.",
   friend_not_found: "Arkadaşın şu an katılabileceğin bir odada değil.",
+  maintenance: "Kısa bir bakım yapıyoruz, birazdan tekrar dene.",
 };
 
 export function errorMessage(code: ErrorCode, text?: string): ServerMessage {

@@ -38,3 +38,4 @@ export * from "./moderation/index.js";
 export * from "./protocol.js";
 export * from "./replay.js";
 export * from "./rng.js";
+export * from "./siteNotice.js";

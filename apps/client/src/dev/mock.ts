@@ -423,6 +423,24 @@ export function startMock(kind: string, params: URLSearchParams): void {
     const parsed = parseFriends({ ok: true, friends: [], incoming, outgoing: [], blocked: [] });
     if (parsed) freezeFriends(parsed, "ready");
   }
+  // `&duyuru=bilgi|uyari|uzun`: yönetici duyurusu; `&bakim=1`: bakım kipi bandı (ana sayfa ve lobi).
+  const duyuru = params.get("duyuru");
+  if (duyuru === "bilgi" || duyuru === "uyari" || duyuru === "uzun")
+    setState("site", {
+      announcement: {
+        id: 7,
+        kind: duyuru === "bilgi" ? "bilgi" : "uyari",
+        text:
+          duyuru === "uzun"
+            ? "Bu akşam 23.00'te kısa bir güncelleme yapacağız. Sürmekte olan oyunlar bitince yeniden başlatılır, odan kapanmaz; kod ile tekrar katılabilirsin."
+            : duyuru === "bilgi"
+              ? "Yeni oyun geldi: Kule Ustası artık rastgele seçimde!"
+              : "Bu akşam 23.00'te kısa bir güncelleme olacak.",
+        endsAt: null,
+      },
+      maintenance: params.get("bakim") === "1",
+    });
+  else if (params.get("bakim") === "1") setState("site", { announcement: null, maintenance: true });
   // `&cool=1`: kullanıcı adı yakın zamanda değişmiş (3 gün sonra tekrar değiştirilebilir).
   if (params.get("cool") === "1") setState("usernameAvailableAt", Date.now() + 3 * 24 * 3600 * 1000);
   // `&google=1`: Google ile giriş açık (düğmeler görünür).

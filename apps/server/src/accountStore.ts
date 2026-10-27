@@ -3,6 +3,7 @@ import type { AdminAccountDetail, AdminAccountRow } from "@glix/engine";
 import { createFriendStore, FRIENDS_SCHEMA, type FriendStore } from "./friendStore.js";
 import { log } from "./log.js";
 import { loadSqlite } from "./statsStore.js";
+import type { PushTarget } from "./webpush.js";
 
 /** Oturum bu süre sonra kendiliğinden düşer (çerez Max-Age ile aynı). */
 export const SESSION_TTL_MS = 180 * 24 * 3600 * 1000;
@@ -134,6 +135,17 @@ export interface AccountExportData {
   gameStats: { gameId: string; endedAt: number; key: string; value: number }[];
   matches: { endedAt: number; players: number; games: number; score: number; place: number; won: boolean }[];
   coplay: { username: string; matches: number; lastAt: number }[];
+  /** Kayıtlı web bildirimi aboneliği (yalnız ne zaman eklendiği; uç nokta ve anahtarlar dışarı verilmez). */
+  push: { createdAt: number } | null;
+}
+
+/** Sunucu başlangıç kaydı ("son yayınlar"). `stoppedAt` boşsa temiz kapanış kaydı yoktur. */
+export interface ServerStartRow {
+  id: number;
+  revision: string;
+  version: string;
+  startedAt: number;
+  stoppedAt: number | null;
 }
 
 /** Yönetici ikinci adımı: tek kullanımlık kod denemesinin sonucu. */
@@ -347,6 +359,36 @@ export interface AccountStore extends FriendStore {
   adminSessionDelete(tokenHash: string): void;
   /** Panel için hesap toplamları. */
   adminMetrics(now: number): AccountMetrics;
+  /** Yönetici çerezi oturumunun açılış anı (ms); yoksa null. "Taze giriş" denetimi için. */
+  adminSessionCreatedAt(tokenHash: string): number | null;
+  /** `since` (dahil) sonrası `action` kayıtlarının sayısı ve en eskisinin anı (yoksa null). Günlük yedek sınırı için. */
+  adminAuditCount(action: string, since: number): { count: number; oldest: number | null };
+  /** Yönetici ayarı (`server_settings`); yoksa null. Değerler JSON metnidir. */
+  settingGet(key: string): string | null;
+  settingSet(key: string, value: string, at: number): void;
+  settingDelete(key: string): void;
+  /**
+   * Hesaba bağlı web bildirimi aboneliğini yazar (hesap başına tek; aynı uç nokta başka hesapta varsa oradan düşer,
+   * böylece aynı cihaz hesap değiştirince bildirim yanlış hesaba gitmez). Aynıysa dokunmaz.
+   */
+  pushSet(accountId: number, target: PushTarget, at: number): void;
+  pushGet(accountId: number): PushTarget | null;
+  pushDelete(accountId: number): void;
+  /** Uç nokta artık yok (404/410): abonelik silinir. */
+  pushDeleteEndpoint(endpoint: string): void;
+  /** Tüm hesap abonelikleri (herkese bildirim için). */
+  pushAll(): { accountId: number; target: PushTarget }[];
+  pushCount(): number;
+  /** Sunucu başlangıcını kaydeder: önceki kapanış kaydı olmayanlar çökmüş sayılır (satırda kalır); kimliği döner. */
+  serverStarted(revision: string, version: string, at: number): number;
+  /** Temiz kapanışı kaydeder. */
+  serverStopped(id: number, at: number): void;
+  /** Son `limit` başlangıç, yeniden eskiye. */
+  serverStarts(limit: number): ServerStartRow[];
+  /** Veritabanının tutarlı bir kopyasını `dest` dosyasına yazar (`VACUUM INTO`; dosya yoksa oluşur, varsa hata). */
+  snapshotTo(dest: string): void;
+  /** Veritabanı dosya yolu (":memory:" olabilir). */
+  readonly path: string;
   close(): void;
 }
 
@@ -455,7 +497,31 @@ const MIGRATIONS: readonly string[] = [
    ALTER TABLE accounts ADD COLUMN suspend_reason TEXT;
    ALTER TABLE admin_audit ADD COLUMN target_id INTEGER;
    CREATE INDEX admin_audit_target ON admin_audit (target_id);`,
+  // Yönetici paneli içerik ve bakım (U16 A3): yönetici ayarları (oyun anahtarları, duyuru, bakım kipi), hesaba bağlı
+  // kalıcı web bildirimi aboneliği (hesap silinince gider) ve sunucu başlangıç kayıtları ("son yayınlar").
+  `CREATE TABLE server_settings (
+     key TEXT PRIMARY KEY,
+     value TEXT NOT NULL,
+     updated_at INTEGER NOT NULL
+   );
+   CREATE TABLE account_push (
+     account_id INTEGER PRIMARY KEY REFERENCES accounts (id) ON DELETE CASCADE,
+     endpoint TEXT NOT NULL UNIQUE,
+     p256dh TEXT NOT NULL,
+     auth TEXT NOT NULL,
+     created_at INTEGER NOT NULL
+   );
+   CREATE TABLE server_starts (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     revision TEXT NOT NULL,
+     version TEXT NOT NULL,
+     started_at INTEGER NOT NULL,
+     stopped_at INTEGER
+   );`,
 ];
+
+/** Sunucu başlangıç kayıtları en çok bu kadar tutulur. */
+export const SERVER_START_KEEP = 200;
 
 /** Yönetici işlem kayıtları bu süreden sonra silinir. */
 export const ADMIN_AUDIT_RETENTION_MS = 365 * 24 * 3600 * 1000;
@@ -674,6 +740,40 @@ export function createAccounts(path: string): AccountStore {
   );
   const insertAudit = db.prepare(
     "INSERT INTO admin_audit (account_id, action, detail, at, target_id) VALUES (?, ?, ?, ?, ?)",
+  );
+  const auditCount = db.prepare(
+    "SELECT COUNT(*) AS n, MIN(at) AS oldest FROM admin_audit WHERE action = ? AND at >= ?",
+  );
+  const adminSessionCreated = db.prepare("SELECT created_at FROM admin_sessions WHERE token_hash = ?");
+  const settingRow = db.prepare("SELECT value FROM server_settings WHERE key = ?");
+  const settingUpsert = db.prepare(
+    `INSERT INTO server_settings (key, value, updated_at) VALUES (?, ?, ?)
+     ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+  );
+  const settingDrop = db.prepare("DELETE FROM server_settings WHERE key = ?");
+  const pushRow = db.prepare("SELECT endpoint, p256dh, auth FROM account_push WHERE account_id = ?");
+  const pushUpsert = db.prepare(
+    `INSERT INTO account_push (account_id, endpoint, p256dh, auth, created_at) VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT (account_id) DO UPDATE SET endpoint = excluded.endpoint, p256dh = excluded.p256dh,
+       auth = excluded.auth, created_at = excluded.created_at`,
+  );
+  const pushDropOfEndpoint = db.prepare("DELETE FROM account_push WHERE endpoint = ? AND account_id != ?");
+  const pushDrop = db.prepare("DELETE FROM account_push WHERE account_id = ?");
+  const pushDropEndpoint = db.prepare("DELETE FROM account_push WHERE endpoint = ?");
+  const pushList = db.prepare(
+    "SELECT account_id, endpoint, p256dh, auth FROM account_push ORDER BY account_id",
+  );
+  const pushTotal = db.prepare("SELECT COUNT(*) AS n FROM account_push");
+  const pushSince = db.prepare("SELECT created_at FROM account_push WHERE account_id = ?");
+  const startInsert = db.prepare(
+    "INSERT INTO server_starts (revision, version, started_at, stopped_at) VALUES (?, ?, ?, NULL)",
+  );
+  const startStop = db.prepare("UPDATE server_starts SET stopped_at = ? WHERE id = ? AND stopped_at IS NULL");
+  const startList = db.prepare(
+    "SELECT id, revision, version, started_at, stopped_at FROM server_starts ORDER BY id DESC LIMIT ?",
+  );
+  const startTrim = db.prepare(
+    "DELETE FROM server_starts WHERE id <= (SELECT MAX(id) FROM server_starts) - ?",
   );
   const auditTail = db.prepare(
     "SELECT id, account_id, action, detail, at, target_id FROM admin_audit ORDER BY id DESC LIMIT ?",
@@ -1068,6 +1168,10 @@ export function createAccounts(path: string): AccountStore {
         coplay: (coplayDump.all(accountId) as { username: string; matches: number; last_at: number }[]).map(
           (r) => ({ username: r.username, matches: r.matches, lastAt: r.last_at }),
         ),
+        push: (() => {
+          const p = pushSince.get(accountId) as { created_at: number } | undefined;
+          return p ? { createdAt: p.created_at } : null;
+        })(),
       };
     },
     sessionCreatedAt(tokenHash) {
@@ -1091,6 +1195,7 @@ export function createAccounts(path: string): AccountStore {
         dropBlocks.run(accountId, accountId);
         dropSessions.run(accountId);
         dropTokensOf.run(accountId);
+        pushDrop.run(accountId);
         removed = Number(dropAccount.run(accountId).changes) === 1;
       });
       return removed;
@@ -1362,6 +1467,83 @@ export function createAccounts(path: string): AccountStore {
     adminSessionDelete(tokenHash) {
       dropAdminSession.run(tokenHash);
     },
+    adminSessionCreatedAt(tokenHash) {
+      const row = adminSessionCreated.get(tokenHash) as { created_at: number } | undefined;
+      return row ? row.created_at : null;
+    },
+    adminAuditCount(action, since) {
+      const r = auditCount.get(action, since) as { n: number; oldest: number | null };
+      return { count: r.n, oldest: r.oldest };
+    },
+    settingGet(key) {
+      const row = settingRow.get(key) as { value: string } | undefined;
+      return row ? row.value : null;
+    },
+    settingSet(key, value, at) {
+      settingUpsert.run(key, value, at);
+    },
+    settingDelete(key) {
+      settingDrop.run(key);
+    },
+    pushSet(accountId, target, at) {
+      const cur = pushRow.get(accountId) as { endpoint: string; p256dh: string; auth: string } | undefined;
+      if (cur && cur.endpoint === target.endpoint && cur.p256dh === target.p256dh && cur.auth === target.auth)
+        return;
+      inTransaction(() => {
+        pushDropOfEndpoint.run(target.endpoint, accountId);
+        pushUpsert.run(accountId, target.endpoint, target.p256dh, target.auth, at);
+      });
+    },
+    pushGet(accountId) {
+      const r = pushRow.get(accountId) as { endpoint: string; p256dh: string; auth: string } | undefined;
+      return r ? { endpoint: r.endpoint, p256dh: r.p256dh, auth: r.auth } : null;
+    },
+    pushDelete(accountId) {
+      pushDrop.run(accountId);
+    },
+    pushDeleteEndpoint(endpoint) {
+      pushDropEndpoint.run(endpoint);
+    },
+    pushAll() {
+      return (pushList.all() as { account_id: number; endpoint: string; p256dh: string; auth: string }[]).map(
+        (r) => ({
+          accountId: r.account_id,
+          target: { endpoint: r.endpoint, p256dh: r.p256dh, auth: r.auth },
+        }),
+      );
+    },
+    pushCount() {
+      return (pushTotal.get() as { n: number }).n;
+    },
+    serverStarted(revision, version, at) {
+      const id = Number(startInsert.run(revision, version, at).lastInsertRowid);
+      startTrim.run(SERVER_START_KEEP);
+      return id;
+    },
+    serverStopped(id, at) {
+      startStop.run(at, id);
+    },
+    serverStarts(limit) {
+      return (
+        startList.all(limit) as {
+          id: number;
+          revision: string;
+          version: string;
+          started_at: number;
+          stopped_at: number | null;
+        }[]
+      ).map((r) => ({
+        id: r.id,
+        revision: r.revision,
+        version: r.version,
+        startedAt: r.started_at,
+        stoppedAt: r.stopped_at,
+      }));
+    },
+    snapshotTo(dest) {
+      db.prepare("VACUUM INTO ?").run(dest);
+    },
+    path,
     adminMetrics(now) {
       const t = metricTotals.get() as { total: number; verified: number; google: number; pass: number };
       const today = Math.floor(now / 86_400_000);
