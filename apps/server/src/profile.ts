@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { AccountStore, ProfileData } from "./accountStore.js";
 import { accountFromCookie, USERNAME_PATTERN } from "./auth.js";
+import { badgeViews } from "./badges.js";
 import { log } from "./log.js";
 import { SECURITY_HEADERS } from "./static.js";
 
@@ -36,6 +37,7 @@ export function profileBody(
     totals: data.totals,
     favoriteGame: data.favoriteGame ? { ...data.favoriteGame, name: name(data.favoriteGame.id) } : null,
     perGame: data.perGame.map((g) => ({ ...g, name: name(g.gameId) })),
+    badges: badgeViews(data.badges, !full),
     ...(full ? { recent: data.recent, coPlayers: data.coPlayers } : {}),
   };
 }
