@@ -6,6 +6,7 @@ import { fanfare } from "../fx/sound.js";
 import { dismissBadges } from "../net/badges.js";
 import { leaveRoom, returnToLobby } from "../net/client.js";
 import { matchRounds } from "../net/matchHistory.js";
+import { openReport } from "../net/reportUi.js";
 import { setState, state } from "../net/store.js";
 import { noteMatchFinished } from "../pwa/pwa.js";
 import { selectMoments } from "../share/momentCards.js";
@@ -236,6 +237,12 @@ export function Final(props: { snap: RoomSnapshot }) {
               <span class="fin__sharelabel">
                 <ShareIcon size={18} /> Anları paylaş
               </span>
+            </GhostButton>
+          </Show>
+
+          <Show when={props.snap.players.length > 1}>
+            <GhostButton size="small" class="rep__link" onClick={() => openReport()}>
+              Oyuncuyu bildir
             </GhostButton>
           </Show>
 

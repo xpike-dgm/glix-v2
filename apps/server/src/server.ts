@@ -5,6 +5,7 @@ import { createAccountRecorder } from "./accountStats.js";
 import { type AccountStore, createAccounts } from "./accountStore.js";
 import { ADMIN_PREFIX, createAdminLimits, handleAdmin } from "./admin.js";
 import { buildLive, createHealthSampler } from "./adminData.js";
+import { createAdminRoomOps } from "./adminRooms.js";
 import { AUTH_PREFIX, accountFromCookie, handleAuth } from "./auth.js";
 import { createBackupService } from "./backup.js";
 import { CLIENT_ERROR_PATH, handleClientError } from "./clientError.js";
@@ -27,6 +28,7 @@ import {
 } from "./mail.js";
 import { runTick, TICK_MS } from "./match.js";
 import { errorMessage } from "./messages.js";
+import { type BannedWords, createBannedWords, createReportDesk } from "./moderation.js";
 import { handleProfile, PROFILE_PATH } from "./profile.js";
 import { createPushBroadcaster } from "./pushBroadcast.js";
 import { TokenBucket } from "./ratelimit.js";
@@ -114,6 +116,8 @@ export interface RunningServer {
   accounts: AccountStore;
   /** Son biten oyunların kayıtları (yalnız testler için). */
   recentLogs: readonly GameLog[];
+  /** Yönetici yasaklı kelime listesi (yalnız testler için). */
+  bannedWords: BannedWords;
   /**
    * Drain kipine girer: yeni oda/katılım reddedilir, mevcut maçlar sürer. Maçı olan oda kalmayınca ya da
    * süre dolunca çözülür (soketleri kapatmaz; ardından `close(1012)` çağrılır).
@@ -162,6 +166,8 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     ),
   );
   rt.social = createSocial(rt, accounts);
+  rt.bannedWords = createBannedWords(accounts);
+  rt.reports = createReportDesk(accounts, clock);
   const friendsApi = createFriendsApi({
     accounts,
     social: rt.social,
@@ -299,6 +305,8 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         backup,
         clock,
         runId,
+        rooms: createAdminRoomOps(rt),
+        banned: rt.bannedWords,
         live: () => {
           let withAccount = 0;
           for (const c of connections) if (c.account) withAccount += 1;
@@ -333,6 +341,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         allowedOrigins: opts.allowedOrigins,
         google,
         mail,
+        bannedWords: rt.bannedWords,
         onRenamed: (id, username) => rt.social.accountRenamed(id, username),
       });
       return;
@@ -512,6 +521,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     sockets,
     accounts,
     recentLogs: rt.recentLogs,
+    bannedWords: rt.bannedWords,
     drain: () => {
       rt.draining = true;
       if (countActiveMatches(rt) === 0) return Promise.resolve();

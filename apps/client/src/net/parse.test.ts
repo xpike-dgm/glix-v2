@@ -186,3 +186,16 @@ describe("A3: duyuru, bakım ve lobi bildirimi", () => {
     });
   });
 });
+
+describe("U16 A4 yeni mesajlar", () => {
+  it("reportAck, yeni ayrılma sebepleri ve hata kodları", () => {
+    expect(parseServerMessage(JSON.stringify({ type: "reportAck" }))).toEqual({ type: "reportAck" });
+    for (const reason of ["adminClosed", "removed"])
+      expect(parseServerMessage(JSON.stringify({ type: "left", reason }))).toEqual({ type: "left", reason });
+    expect(parseServerMessage(JSON.stringify({ type: "left", reason: "bilinmeyen" }))).toBeNull();
+    for (const code of ["report_limit", "report_duplicate", "room_blocked"]) {
+      const msg = parseServerMessage(JSON.stringify({ type: "error", code, message: "Metin" }));
+      expect(msg).toEqual({ type: "error", code, message: "Metin" });
+    }
+  });
+});

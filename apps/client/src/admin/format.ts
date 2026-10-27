@@ -1,4 +1,5 @@
 /** Yönetici paneli biçimleyicileri (Türkçe). Saf işlevler; testleri format.test.ts. */
+import { isReportStatus, REPORT_STATUS_LABELS } from "./moderationRules.js";
 
 const MONTHS = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
 
@@ -102,6 +103,12 @@ const AUDIT_LABELS: Record<string, string> = {
   db_backup: "Veritabanı yedeği indirildi",
   db_backup_denied: "Yedek reddedildi",
   db_backup_failed: "Yedek alınamadı",
+  report_status: "Bildirim durumu değişti",
+  room_view: "Oda oyuncuları görüntülendi",
+  room_close: "Oda kapatıldı",
+  room_kick: "Oyuncu odadan atıldı",
+  banned_word_add: "Yasaklı kelime eklendi",
+  banned_word_remove: "Yasaklı kelime silindi",
 };
 export const auditLabel = (action: string): string => AUDIT_LABELS[action] ?? action;
 
@@ -135,6 +142,13 @@ function broadcastDoneDetail(detail: string): string {
   return m ? `${m[1]} gitti, ${m[2]} gitmedi, ${m[3]} abonelik silindi` : detail;
 }
 
+/** `kimlik:durum` -> "Bildirim #12: İncelendi". */
+function reportStatusDetail(detail: string): string {
+  const [id, status] = detail.split(":");
+  const label = isReportStatus(status) ? REPORT_STATUS_LABELS[status] : (status ?? "");
+  return `Bildirim #${id ?? "?"}: ${label}`;
+}
+
 /** İşlem kaydı ayrıntısı: kodları okunur metne çevirir; boşsa boş döner. */
 export function auditDetail(action: string, detail: string): string {
   if (detail === "") return "";
@@ -146,6 +160,8 @@ export function auditDetail(action: string, detail: string): string {
     return detail === "uyari" ? "Uyarı" : detail === "bilgi" ? "Bilgi" : detail;
   if (action === "push_broadcast") return `${detail} abonelik`;
   if (action === "push_broadcast_done") return broadcastDoneDetail(detail);
+  if (action === "report_status") return reportStatusDetail(detail);
+  if (action === "room_view" || action === "room_close" || action === "room_kick") return `Oda ${detail}`;
   if (action === "db_backup") return `${detail} dosya`;
   if (action === "db_backup_denied") return detail === "fresh_required" ? "giriş kodu eski" : detail;
   return detail;

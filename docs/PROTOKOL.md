@@ -215,7 +215,7 @@ Hız sınırı hesap başına: okuma 30 ani/1 sn, yazma 30 ani/2 sn'de 1, `reque
 `invalid_message`, `rate_limited`, `nickname_invalid`, `room_not_found`, `room_full`, `match_in_progress`,
 `resume_failed`, `nickname_taken`, `not_host`, `not_in_room`, `already_in_room`, `invalid_games`, `avatar_taken`, `not_enough_players`,
 `wrong_phase`, `not_participant`, `game_failed`, `draining`, `server_busy`, `stage_full`, `stage_readonly`, `login_required`,
-`invite_failed`, `friend_not_found`, `account_name`.
+`invite_failed`, `friend_not_found`, `account_name`, `maintenance`, `report_limit`, `report_duplicate`, `room_blocked`.
 
 `login_required`: `createRoom` yalnız hesaplı bağlantıdan kabul edilir. Kodla katılma (`joinRoom`), oynama ve sahne (`joinStage`) misafire açıktır.
 
@@ -326,6 +326,20 @@ Ayrıntı ve kurulum: `docs/ADMIN.md`. `GLIX_ADMIN_ACCOUNT_IDS` boşsa tüm uçl
   count, first_seen, last_seen)` gün başına gruplu; mesaj 200 karaktere kısaltılır, adres sorgusu/parçası, e-posta, IP ve uzun
   belirteçler atılır; `frame` yığının tepe karesi (taban dosya adı); ham kullanıcı aracısı saklanmaz; günde en çok 3000 satır.
   Çöken oyunlar: `game_failures(id, game_id, fn, message, at)` (maç kaydı yazılmaz). İkisi de 90 gün saklanır (stats göç 4).
+
+## Oyuncu bildirimi ve yönetici moderasyonu (U16 A4)
+
+Protokol sürümü **artmadı** (2): yalnız yeni mesaj ve değerler eklendi; eski istemci bilinmeyen mesajı yok sayar (eski sunucu yeni `report` mesajını `invalid_message` sayar; ikisi birlikte dağıtılır). Tek fark: eski istemci `left` mesajının yeni sebeplerini (`adminClosed`, `removed`) görmez ve oda ekranında kalır; sonraki hamlesi `not_in_room` hatası alır, sayfayı yenileyince düzelir.
+
+- **`report {playerId, reason: "name"|"abuse"|"cheat"|"other", note?}`** (istemci → sunucu): aynı odadaki başka oyuncuyu bildirir (lobi, sonuç, final; hesaplı ya da misafir; sahne yollayamaz: `stage_readonly`). `note` ≤200 karakter (denetim/biçim karakterleri boşluğa iner, kırpılır; boş not yok sayılır). Başarıda yalnız bildirene `reportAck`; hata: `report_duplicate` (aynı bildiren, hedef, oda: 24 saat), `report_limit` (bildiren başına saatte 5; hesaplıda hesap, misafirde bağlantı IP'si), `not_in_room` (kendini ya da odada olmayanı), `server_busy` (kayıt yazılamadı). Hedefe ve diğerlerine hiçbir şey gitmez.
+- **`left` sebepleri:** `adminClosed` ("Oda yönetici tarafından kapatıldı."), `removed` ("Odadan çıkarıldın."). `room_blocked` hatası: yönetici tarafından atıldığın odaya 10 dakika girilemez ("Odadan çıkarıldın, bu odaya şimdilik giremezsin."; `joinRoom`/`joinFriend`).
+- **Ad denetimi:** yasaklı kelimeye takılan misafir takma adı (`joinRoom`, `joinFriend`, `rename`) `nickname_invalid` + "Bu ad kullanılamaz." alır. Hesap uçları `POST /api/auth/register|username|google/complete` 400 `invalid_input` (`field:"username"`, `message:"Bu ad kullanılamaz."`) döner.
+- **Yönetici uçları** (giriş kodu çerezi; tüm POST'lar Origin + işlem hız sınırı + işlem kaydı; tipler `packages/engine/src/moderation/report.ts`):
+  - `GET reports?status=new|reviewed|actioned|rejected&before=&limit=` -> `{reports: AdminReportRow[], nextBefore, counts}`; `GET reports/detail?id=` -> `AdminReportDetail` (not, kanıt, yönetici notu, `targetPlayerId`, `inRoom`, `targetProtected`). Notlu/kanıtlı ayrıntı yalnız bu uçtadır.
+  - `POST reports/status {id, status, note(≤300)}`; kayıt `report_status` (`<kimlik>:<durum>`, hedef hesap kimliği `target_id`; not yazılmaz).
+  - `GET rooms/players?code=` -> `{code, phase, players:[{id, nickname, connected, spectator, host, account}]}`: görünen adların göründüğü tek uç; her başarılı çağrı `room_view` (oda kodu) yazar. 404 oda yok.
+  - `POST rooms/close {code}` (herkese ve TV'ye `left: adminClosed`, süren maç hesap istatistiği/rozet yazılmadan biter; kayıt `room_close`), `POST rooms/kick {code, playerId}` (`left: removed`, 10 dk giriş engeli; kayıt `room_kick`). Canlı durum tablosunda oyuncu adı hâlâ yoktur.
+  - `GET banned-words` -> `{words:[{word, addedAt}], max: 500}`; `POST banned-words/add {word}` (1-40 karakter, normalleşince ≥2 harf; 409 `exists`/`full`), `POST banned-words/remove {word}` (404 yok); kayıt `banned_word_add|remove`. `GET banned-words/accounts` -> listeye takılan mevcut hesaplar (en çok 50, salt okunur).
 
 ## Sınırlar (sunucu)
 

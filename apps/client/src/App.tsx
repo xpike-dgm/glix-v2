@@ -48,6 +48,7 @@ import { Loading } from "./ui/Loading.js";
 import { collectGallery } from "./ui/matchGallery.js";
 import { preloadMoods } from "./ui/preloadMoods.js";
 import { preloadProps } from "./ui/props.js";
+import { ReportSheet } from "./ui/ReportSheet.js";
 import { SidePlayers } from "./ui/SidePlayers.js";
 import { Toasts } from "./ui/Toast.js";
 import { preloadWorld } from "./ui/world.js";
@@ -307,6 +308,9 @@ export function App() {
       <Curtain screen={screen()} />
       <Reconnecting />
       <InviteCard />
+      <Show when={state.snapshot}>
+        <ReportSheet />
+      </Show>
       <Toasts />
     </div>
   );

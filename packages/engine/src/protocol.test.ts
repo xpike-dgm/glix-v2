@@ -138,6 +138,40 @@ describe("parseClientMessage: oda mesajları", () => {
     expect(parseClientMessage(j({ type: "setRandom", count: 3, extra: 1 }))).toBeNull();
     expect(parseClientMessage(j({ type: "setRandom" }))).toBeNull();
   });
+  it("report sebep, hedef ve notu doğrular (U16 A4)", () => {
+    expect(parseClientMessage(j({ type: "report", playerId: "ab12", reason: "abuse" }))).toEqual({
+      type: "report",
+      playerId: "ab12",
+      reason: "abuse",
+    });
+    expect(
+      parseClientMessage(
+        j({ type: "report", playerId: "ab12", reason: "name", note: "  kötü\u0000 ad \n " }),
+      ),
+    ).toEqual({ type: "report", playerId: "ab12", reason: "name", note: "kötü ad" });
+    // Boş not yok sayılır.
+    expect(parseClientMessage(j({ type: "report", playerId: "x", reason: "cheat", note: "   " }))).toEqual({
+      type: "report",
+      playerId: "x",
+      reason: "cheat",
+    });
+    expect(
+      parseClientMessage(j({ type: "report", playerId: "x", reason: "other", note: "a".repeat(200) })),
+    ).not.toBeNull();
+    for (const bad of [
+      { type: "report" },
+      { type: "report", playerId: "x" },
+      { type: "report", playerId: "", reason: "other" },
+      { type: "report", playerId: "x".repeat(65), reason: "other" },
+      { type: "report", playerId: "x", reason: "spam" },
+      { type: "report", playerId: "x", reason: "other", note: "a".repeat(201) },
+      { type: "report", playerId: "x", reason: "other", note: 5 },
+      { type: "report", playerId: "x", reason: "other", extra: 1 },
+      { type: "report", playerId: 5, reason: "other" },
+    ])
+      expect(parseClientMessage(j(bad)), JSON.stringify(bad)).toBeNull();
+  });
+
   it("feedback puan ve metni doğrular", () => {
     expect(parseClientMessage(j({ type: "feedback", rating: 5 }))).toEqual({ type: "feedback", rating: 5 });
     expect(parseClientMessage(j({ type: "feedback", rating: 3, text: "  güzel\u0000 oyun\n " }))).toEqual({

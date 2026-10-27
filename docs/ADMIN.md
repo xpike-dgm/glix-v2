@@ -1,4 +1,4 @@
-# Yönetici paneli (U16, A1, A2 ve A3)
+# Yönetici paneli (U16, A1, A2, A3 ve A4 moderasyon)
 
 `/admin` sayfası, oyundan ayrı küçük bir pakettir (`admin.html`; oyun paketine ve çevrimdışı önbelleğe girmez). A1 salt
 okunur sekmeler: Canlı durum, Oyun istatistikleri, Hatalar ve performans; bunlarda oyuncu adı, e-posta, IP ve oyun durumu görünmez.
@@ -63,3 +63,38 @@ o oyunun geçtiği maçların ortalamasıdır.
   Koşullar: giriş kodu en çok **30 dk önce** girilmiş olmalı (değilse panel "kodu yeniden gir" der), son 24 saatte **en çok 3** yedek (tüm yöneticiler toplamı, işlem kaydından sayılır), aynı anda tek yedek. Her yedek `db_backup` olarak kaydedilir.
 - **Son yayınlar:** konteyner dağıtım geçmişini göremediği için sunucu her başlangıcı `server_starts(revision, version, started_at, stopped_at)` tablosuna yazar (revizyon `GIT_SHA`, yoksa `REVISION`, yoksa `dev`) ve temiz kapanışta `stopped_at` yazar. Panel son 20 kaydı süreyle gösterir; kapanış kaydı olmayan satır çökme/zorla durdurma demektir ve süresi en geç sonraki başlangıçtır. En çok 200 kayıt tutulur.
 - **İşlem kaydı:** `game_switch`, `announcement_set`/`announcement_clear`, `push_broadcast`/`push_broadcast_done`, `maintenance_on`/`maintenance_off`, `db_backup`/`db_backup_denied`/`db_backup_failed`.
+
+## Moderasyon (A4)
+**Moderasyon** sekmesi ve **Canlı durum** tablosundaki oda işlemleri. Hepsi POST + Origin denetimi + yönetici başına hız sınırı + panelde ayrı onay ("Emin misin?") + işlem kaydı taşır.
+
+### "Bildir" (oyuncu tarafı)
+Lobide bir oyuncuya dokunmak (ev sahibi için basılı tutmak da) menü açar: "Bildir". Sonuç ve final ekranında "Oyuncuyu bildir" listeden kişi seçtirir. Sebep düğmesi (Uygunsuz ad / Hakaret-küfür / Hile / Diğer) + isteğe bağlı not (≤200) -> "Bildirimin alındı. Teşekkürler." Başka kimseye bildirim gitmez.
+Sınırlar: bildiren başına saatte 5 (hesaplıda hesap, misafirde bağlantı IP'si), aynı (bildiren, hedef, oda) bir kez. Kayıt: `reports` tablosu (180 gün; `docs/HESAP.md`, `gizlilik.html`).
+
+### Kanıt (oyun başına ne eklenir)
+Yalnız sebep "Hakaret-küfür" ya da "Diğer" ise, yalnız **hedefin son biten oyunda herkese zaten gösterilmiş** (`publicView` açılış alanları) metinleri; oyun biterken sunucuda alınır (oda başına son oyun, yayına girmez), en çok 8 metin x 120 karakter. Emin olunmayan oyunda hiçbir şey eklenmez. Açılmamış/yazarı gizli metin ve gerçek tanım asla eklenmez.
+
+| Oyun | Eklenen |
+|---|---|
+| laf-sokma | açılmış düello kartlarındaki cevapları (önceki açılışlar + son açılış) |
+| sozluk-blofu | açılışta sahibi gösterilen sahte tanımları (gerçek tanım hariç) |
+| kendim | açılışta sahibi gösterilen kelimesi |
+| yazi-yaz | yazan olarak açılan kelimesi (tahminler eklenmez) |
+| cagrisim-agi | açılışta gösterilen cevabı |
+| bozuk-telefon, karalama-defteri ve diğer tüm oyunlar | hiçbir şey (zincir/çizim adım adım gösterilir, toplu herkese açık kayıt yok) |
+
+Oyun içi sonuç aşamasından önce (yazma/eşleştirme) yapılan bildirimde kanıt yoktur; yalnız oyun kimliği yazılır. Kod: `packages/engine/src/moderation/evidence.ts`.
+
+### Kuyruk ve ayrıntı
+Durum süzgeci (Yeni / İncelendi / İşlem yapıldı / Reddedildi / Tümü, sayılarla), yeniden eskiye sayfalı. Ayrıntı: hedefin bildirim anındaki adı (hesap kimliği ya da "misafir"), bildiren (hesap kimliği ya da misafir), sebep, not, kanıt, yönetici notu (≤300, yalnız yöneticide). İşlemler: *İncelendi*, *İşlem yapıldı*, *Reddet*, *Yeniden aç* (`report_status`). Kısayollar: hedef hesapsa **Hesap işlemleri** (A2 ayrıntısı gömülür: ad zorla değiştirme, askıya alma; yönetici hesabında kapalı), hedef misafirse ve oda hâlâ açıksa **Odadan at**.
+
+### Oda işlemleri (Canlı durum)
+Tabloda ad yok. Her satırdaki **Oyuncular** tek odanın oyuncu adlarını açar (`room_view` kaydı) ve şunları sunar: **Oyuncuyu at** ("Odadan çıkarıldın."; 10 dakika aynı odaya giremez: hesaplıda hesap, misafirde IP; oda kapanınca engel de gider) ve **Odayı kapat** (herkese ve TV'ye "Oda yönetici tarafından kapatıldı.", ana ekrana döner; süren maç hesap istatistiği/rozet yazılmadan biter, anonim istatistikte "yarıda kaldı" sayılır). Kayıtlar `room_close`, `room_kick` (ayrıntı: oda kodu; oyuncu adı yazılmaz).
+
+### Yasaklı kelimeler
+Yönetici listesi (en çok 500, her biri ≤40 karakter, başlangıçta boş). Eşleştirme (`packages/engine/src/moderation/bannedWords.ts`): Türkçe küçük harf, aksan/nokta işaretleri atılır (ı/i, ş/s, ğ/g, ç/c, ö/o, ü/u), 0→o 1→i 3→e 4→a 5→s 7→t (+ @→a $→s !→i), harf olmayan her şey ayraç sayılıp atılır. 4+ harfli kelime ayraçsız adın içinde aranır; 3 harf ve altı yalnız bütün ad ya da ayrı sözcük olarak takılır ("amk" yasaksa "Kamkum" geçer). Uygulandığı yerler: kullanıcı adı (kayıt, değiştirme, Google kaydı) ve misafir takma adı (katılma, yeniden adlandırma); takılırsa "Bu ad kullanılamaz.". Uygulanmadığı yerler: yönetici ad değiştirmesi, duyuru, **oyun içi serbest yazı**.
+Mevcut adlar kendiliğinden değişmez; "Listeye takılan mevcut hesaplar" salt okunur tarama yapar (en çok 50).
+**Oyun içi metin maskeleme uygulanmadı:** oyuncu metninin sunucuya girdiği tek merkez `applyAction` yükü, ama yük oyuna özgü ve `unknown` (alan adı oyuna göre değişir); orada `***` yapmak oyun anlamını bozar (ör. yalnız yasaklı kelimeden oluşan Kendim/Yazı Yaz girdisi harf içermediğinden reddedilir = fiilen engel, Yazı Yaz tahmin eşitliği) ve oyun başına bilgi gerektirir. Laf Sokma zaten kendi küçük süzgecini (`blocklist.ts`) uygular.
+
+### İşlem kaydı eylemleri
+`report_status`, `room_view`, `room_close`, `room_kick`, `banned_word_add`, `banned_word_remove`.

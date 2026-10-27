@@ -1,5 +1,12 @@
 import type { DatabaseSync } from "node:sqlite";
-import type { AdminAccountDetail, AdminAccountRow } from "@glix/engine";
+import type {
+  AdminAccountDetail,
+  AdminAccountRow,
+  ReportEvidence,
+  ReportReason,
+  ReportStatus,
+} from "@glix/engine";
+import { REPORT_RETENTION_MS } from "@glix/engine";
 import { createFriendStore, FRIENDS_SCHEMA, type FriendStore } from "./friendStore.js";
 import { log } from "./log.js";
 import { loadSqlite } from "./statsStore.js";
@@ -200,6 +207,34 @@ export interface AccountMetrics {
   newPerDay: { dayStart: number; count: number }[];
 }
 
+/** Yeni bildirim (U16 A4). Hedefin görünen adı bildirim anındaki addır. */
+export interface NewReport {
+  reporterAccountId: number | null;
+  targetAccountId: number | null;
+  targetName: string;
+  /** Hedefin odadaki oyuncu kimliği (odada kalırsa "Odadan at" için). */
+  targetPlayerId: string;
+  roomCode: string;
+  gameId: string | null;
+  reason: ReportReason;
+  note: string;
+  evidence: ReportEvidence | null;
+  createdAt: number;
+}
+
+export interface ReportRow extends NewReport {
+  id: number;
+  status: ReportStatus;
+  adminNote: string;
+  reviewedAt: number | null;
+}
+
+export interface BannedWordRow {
+  word: string;
+  folded: string;
+  addedAt: number;
+}
+
 export type CreateResult = { ok: true; account: Account } | { ok: false; field: "username" | "email" };
 
 /**
@@ -310,6 +345,21 @@ export interface AccountStore extends FriendStore {
   adminAuditTail(limit: number): AdminAuditRow[];
   /** Sayfalı kayıt: `before` (kayıt kimliği) verilirse ondan eski olanlar, en yeni önde, en çok `limit`. */
   adminAuditPage(before: number | null, limit: number): AdminAuditRow[];
+  /** Bildirimi yazar (U16 A4); kimliğini döner. */
+  reportInsert(report: NewReport): number;
+  /** Yeniden eskiye sayfa: `status` verilirse yalnız o durum, `before` (kimlik) verilirse ondan eskiler. */
+  reportPage(status: ReportStatus | null, before: number | null, limit: number): ReportRow[];
+  reportGet(id: number): ReportRow | null;
+  /** Durumu ve yönetici notunu yazar; bildirim yoksa false. */
+  reportSetStatus(id: number, status: ReportStatus, adminNote: string, now: number): boolean;
+  reportCounts(): Record<ReportStatus, number>;
+  /** Yasaklı kelimeler (eskiden yeniye). */
+  bannedWordsList(): BannedWordRow[];
+  /** `full`: üst sınır dolu; `exists`: normalleşmiş hâli zaten listede. */
+  bannedWordAdd(word: string, folded: string, now: number, max: number): "ok" | "exists" | "full";
+  bannedWordRemove(folded: string): boolean;
+  /** Hesapları kimlik sırasıyla tarar (listeye takılan mevcut hesaplar yardımcısı için): `afterId`'den büyük ilk `limit`. */
+  scanUsernames(afterId: number, limit: number): { id: number; username: string }[];
   /** Kullanıcı adı önekiyle ya da tam e-postayla arama (en çok `ADMIN_SEARCH_LIMIT`); satırlarda e-posta yoktur. */
   adminSearch(query: AdminSearchQuery, now: number): AdminAccountRow[];
   /** Tek hesabın yönetici dökümü (e-posta dahil); `protected` alanını çağıran doldurur. */
@@ -518,6 +568,33 @@ const MIGRATIONS: readonly string[] = [
      started_at INTEGER NOT NULL,
      stopped_at INTEGER
    );`,
+  // Moderasyon (U16 A4): oyuncu bildirimleri (180 gün saklanır) ve yönetici yasaklı kelime listesi (başlangıçta boş).
+  // Bildirimde hesap kimlikleri yabancı anahtar değildir: hesap silinince ilgili alan null yapılır, kayıt süresi dolana dek kalır.
+  `CREATE TABLE reports (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     created_at INTEGER NOT NULL,
+     reporter_account_id INTEGER,
+     target_account_id INTEGER,
+     target_name TEXT NOT NULL,
+     target_player_id TEXT NOT NULL,
+     room_code TEXT NOT NULL,
+     game_id TEXT,
+     reason TEXT NOT NULL,
+     note TEXT NOT NULL,
+     evidence TEXT,
+     status TEXT NOT NULL DEFAULT 'new',
+     admin_note TEXT NOT NULL DEFAULT '',
+     reviewed_at INTEGER
+   );
+   CREATE INDEX reports_created ON reports (created_at);
+   CREATE INDEX reports_status ON reports (status, id);
+   CREATE INDEX reports_reporter ON reports (reporter_account_id);
+   CREATE INDEX reports_target ON reports (target_account_id);
+   CREATE TABLE banned_words (
+     folded TEXT PRIMARY KEY,
+     word TEXT NOT NULL,
+     added_at INTEGER NOT NULL
+   );`,
 ];
 
 /** Sunucu başlangıç kayıtları en çok bu kadar tutulur. */
@@ -562,6 +639,55 @@ const auditRow = (r: AuditDbRow): AdminAuditRow => ({
   targetId: r.target_id,
   detail: r.detail,
   at: r.at,
+});
+
+interface ReportDbRow {
+  id: number;
+  created_at: number;
+  reporter_account_id: number | null;
+  target_account_id: number | null;
+  target_name: string;
+  target_player_id: string;
+  room_code: string;
+  game_id: string | null;
+  reason: string;
+  note: string;
+  evidence: string | null;
+  status: string;
+  admin_note: string;
+  reviewed_at: number | null;
+}
+
+/** Saklanan kanıt metnini güvenle çözer; bozuksa null. */
+function parseEvidence(raw: string | null): ReportEvidence | null {
+  if (raw === null) return null;
+  try {
+    const v: unknown = JSON.parse(raw);
+    if (typeof v !== "object" || v === null) return null;
+    const { gameId, texts } = v as { gameId?: unknown; texts?: unknown };
+    if (typeof gameId !== "string" || !Array.isArray(texts) || !texts.every((t) => typeof t === "string"))
+      return null;
+    return { gameId, texts: texts as string[] };
+  } catch {
+    return null;
+  }
+}
+
+const reportRow = (r: ReportDbRow): ReportRow => ({
+  id: r.id,
+  createdAt: r.created_at,
+  reporterAccountId: r.reporter_account_id,
+  targetAccountId: r.target_account_id,
+  targetName: r.target_name,
+  targetPlayerId: r.target_player_id,
+  roomCode: r.room_code,
+  gameId: r.game_id,
+  reason: r.reason as ReportReason,
+  note: r.note,
+  evidence: parseEvidence(r.evidence),
+  status: r.status as ReportStatus,
+  adminNote: r.admin_note,
+  reviewedAt: r.reviewed_at,
 });
 
 interface SearchDbRow {
@@ -838,6 +964,34 @@ export function createAccounts(path: string): AccountStore {
   const purgeAdmin = db.prepare("DELETE FROM admin_sessions WHERE expires_at < ?");
   const purgeOtp = db.prepare("DELETE FROM admin_otp WHERE expires_at < ?");
   const purgeAudit = db.prepare("DELETE FROM admin_audit WHERE at < ?");
+  const purgeReports = db.prepare("DELETE FROM reports WHERE created_at < ?");
+  const insertReport = db.prepare(
+    `INSERT INTO reports (created_at, reporter_account_id, target_account_id, target_name, target_player_id,
+                          room_code, game_id, reason, note, evidence)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  );
+  const reportsAll = db.prepare("SELECT * FROM reports WHERE id < ? ORDER BY id DESC LIMIT ?");
+  const reportsByStatus = db.prepare(
+    "SELECT * FROM reports WHERE status = ? AND id < ? ORDER BY id DESC LIMIT ?",
+  );
+  const reportById = db.prepare("SELECT * FROM reports WHERE id = ?");
+  const reportUpdate = db.prepare(
+    "UPDATE reports SET status = ?, admin_note = ?, reviewed_at = ? WHERE id = ?",
+  );
+  const reportStatusCounts = db.prepare("SELECT status, COUNT(*) AS n FROM reports GROUP BY status");
+  const reportsDetachReporter = db.prepare(
+    "UPDATE reports SET reporter_account_id = NULL WHERE reporter_account_id = ?",
+  );
+  const reportsDetachTarget = db.prepare(
+    "UPDATE reports SET target_account_id = NULL WHERE target_account_id = ?",
+  );
+  const bannedList = db.prepare("SELECT word, folded, added_at FROM banned_words ORDER BY added_at, folded");
+  const bannedCount = db.prepare("SELECT COUNT(*) AS n FROM banned_words");
+  const bannedInsert = db.prepare(
+    "INSERT OR IGNORE INTO banned_words (folded, word, added_at) VALUES (?, ?, ?)",
+  );
+  const bannedDelete = db.prepare("DELETE FROM banned_words WHERE folded = ?");
+  const usernameScan = db.prepare("SELECT id, username FROM accounts WHERE id > ? ORDER BY id LIMIT ?");
   const metricTotals = db.prepare(
     `SELECT COUNT(*) AS total, COALESCE(SUM(email_verified), 0) AS verified,
             COALESCE(SUM(google_sub IS NOT NULL), 0) AS google, COALESCE(SUM(pass_hash IS NOT NULL), 0) AS pass
@@ -1196,6 +1350,9 @@ export function createAccounts(path: string): AccountStore {
         dropSessions.run(accountId);
         dropTokensOf.run(accountId);
         pushDrop.run(accountId);
+        // Bildirimlerde hesaba bağ kopar (yabancı anahtar yok); kayıt süresi dolana dek kalır.
+        reportsDetachReporter.run(accountId);
+        reportsDetachTarget.run(accountId);
         removed = Number(dropAccount.run(accountId).changes) === 1;
       });
       return removed;
@@ -1316,6 +1473,73 @@ export function createAccounts(path: string): AccountStore {
       return (auditPage.all(before ?? Number.MAX_SAFE_INTEGER, limit) as unknown as AuditDbRow[]).map(
         auditRow,
       );
+    },
+    reportInsert(r) {
+      const info = insertReport.run(
+        r.createdAt,
+        r.reporterAccountId,
+        r.targetAccountId,
+        r.targetName,
+        r.targetPlayerId,
+        r.roomCode,
+        r.gameId,
+        r.reason,
+        r.note,
+        r.evidence === null ? null : JSON.stringify(r.evidence),
+      );
+      return Number(info.lastInsertRowid);
+    },
+    reportPage(status, before, limit) {
+      const from = before ?? Number.MAX_SAFE_INTEGER;
+      const rows =
+        status === null
+          ? (reportsAll.all(from, limit) as unknown as ReportDbRow[])
+          : (reportsByStatus.all(status, from, limit) as unknown as ReportDbRow[]);
+      return rows.map(reportRow);
+    },
+    reportGet(id) {
+      const r = reportById.get(id) as ReportDbRow | undefined;
+      return r ? reportRow(r) : null;
+    },
+    reportSetStatus(id, status, adminNote, now) {
+      return Number(reportUpdate.run(status, adminNote, status === "new" ? null : now, id).changes) === 1;
+    },
+    reportCounts() {
+      const out: Record<ReportStatus, number> = { new: 0, reviewed: 0, actioned: 0, rejected: 0 };
+      for (const r of reportStatusCounts.all() as unknown as { status: string; n: number }[]) {
+        if (r.status in out) out[r.status as ReportStatus] = r.n;
+      }
+      return out;
+    },
+    bannedWordsList() {
+      return (bannedList.all() as unknown as { word: string; folded: string; added_at: number }[]).map(
+        (r) => ({
+          word: r.word,
+          folded: r.folded,
+          addedAt: r.added_at,
+        }),
+      );
+    },
+    bannedWordAdd(word, folded, now, max) {
+      let result: "ok" | "exists" | "full" = "ok";
+      inTransaction(() => {
+        const count = (bannedCount.get() as { n: number }).n;
+        const info = count >= max ? null : bannedInsert.run(folded, word, now);
+        if (info === null) {
+          // Dolu listede de var olan kelime "full" değil "exists" sayılır.
+          const exists = (bannedList.all() as unknown as { folded: string }[]).some(
+            (r) => r.folded === folded,
+          );
+          result = exists ? "exists" : "full";
+        } else if (Number(info.changes) === 0) result = "exists";
+      });
+      return result;
+    },
+    bannedWordRemove(folded) {
+      return Number(bannedDelete.run(folded).changes) === 1;
+    },
+    scanUsernames(afterId, limit) {
+      return usernameScan.all(afterId, limit) as unknown as { id: number; username: string }[];
     },
     adminSearch(query, now) {
       const rows =
@@ -1574,6 +1798,7 @@ export function createAccounts(path: string): AccountStore {
         purgeAdmin.run(now);
         purgeOtp.run(now);
         purgeAudit.run(now - ADMIN_AUDIT_RETENTION_MS);
+        purgeReports.run(now - REPORT_RETENTION_MS);
         suspendExpired.run(now);
       } catch (err) {
         log.error("accounts_error", { op: "purge", error: String(err) });

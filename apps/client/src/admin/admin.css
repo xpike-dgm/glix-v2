@@ -654,3 +654,40 @@ fieldset.adm-seg {
     justify-content: flex-end;
   }
 }
+
+/* ---- A4: moderasyon ---- */
+.adm-seg--wrap {
+  flex-wrap: wrap;
+}
+.adm-seg--wrap .adm-seg__opt {
+  flex: 1 1 auto;
+  padding: 0 var(--sp-3);
+}
+.adm-evidence {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-5);
+  border-left: 3px solid var(--amber);
+  background: var(--bg-0);
+  border-radius: var(--r-sm);
+  display: grid;
+  gap: var(--sp-1);
+}
+.adm-words {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--sp-2);
+}
+.adm-word {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  min-height: 44px;
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg-1);
+}

@@ -13,6 +13,7 @@ import type { Broadcaster } from "./broadcast.js";
 import type { Cancel, Clock } from "./clock.js";
 import type { Match } from "./match.js";
 import type { Metrics } from "./metrics.js";
+import type { BannedWords, ReportDesk, RoomKicks } from "./moderation.js";
 import type { IpLimiter } from "./ratelimit.js";
 import type { Social } from "./social.js";
 import type { StatsStore } from "./statsStore.js";
@@ -103,6 +104,11 @@ export interface Room {
   hostGraceCancel: Cancel | null;
   /** Odanın kurulduğu sunucu saati (ms); yönetici panelinde oda yaşı için. */
   createdAt: number;
+  /**
+   * Son biten oyunda herkese açık gösterilmiş metinler (oyuncu kimliği -> metinler); yalnız sunucuda, "Bildir" kanıtı
+   * için (bkz. packages/engine/src/moderation/evidence.ts). Yayına girmez.
+   */
+  evidence: { gameId: string; texts: Record<string, string[]> } | null;
 }
 
 export interface Runtime {
@@ -135,6 +141,12 @@ export interface Runtime {
   maintenance: boolean;
   /** Yayındaki duyuru (süresi dolmuş olabilir; `siteNoticeOf` süzer). */
   announcement: Announcement | null;
+  /** Yönetici yasaklı kelime listesi (ad denetimi); testlerde varsayılan hiçbir şeyi engellemez. */
+  bannedWords: BannedWords;
+  /** Oyuncu bildirimi kabulü; sunucu kurulurken bağlanır. */
+  reports: ReportDesk;
+  /** Yönetici atmasından sonra odaya girme engeli (10 dk). */
+  roomKicks: RoomKicks;
   /** Yeni odanın varsayılan oyun seçimi; null ise rastgele 5. */
   defaultGameIds: string[] | null;
   /** 0..max-1 arası rastgele tamsayı (testlerde değiştirilebilir; varsayılan crypto). */

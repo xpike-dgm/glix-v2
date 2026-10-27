@@ -43,7 +43,7 @@ export const GAMES = {
 
 /** `apps/client/src/screens/<Ad>.tsx` -> ekran süzgeçleri. */
 const SCREEN_FILES = {
-  Lobby: ["lobby"],
+  Lobby: ["lobby", "bildir"],
   lobbyHints: ["lobby"],
   Briefing: ["briefing"],
   Home: ["home"],
@@ -53,8 +53,8 @@ const SCREEN_FILES = {
   Reconnecting: ["reconnect"],
   Countdown: ["countdown"],
   Playing: ["playing", "spectator-playing"],
-  Results: ["results"],
-  Final: ["final"],
+  Results: ["results", "bildir"],
+  Final: ["final", "bildir"],
   CountUp: ["results", "final"],
   ranking: ["results", "final"],
   NicknameSheet: ["home-nickname"],
@@ -127,6 +127,12 @@ export function mapFile(path) {
     return f ? { filters: f, why: `ekran ${m[1]}` } : smoke(`bilinmeyen ekran dosyası ${m[1]}`);
   }
 
+  if (
+    p === "apps/client/src/styles/report.css" ||
+    /\/ui\/ReportSheet\.tsx$/.test(p) ||
+    /\/net\/report[A-Za-z]*\.ts$/.test(p)
+  )
+    return { filters: ["bildir"], why: "bildir penceresi" };
   if (p === "apps/client/src/styles/settings.css") return { filters: ["ayarlar"], why: "ayarlar biçemi" };
   if (/^apps\/client\/src\/(styles|ui|fx|net)\//.test(p)) return smoke("ortak arayüz (styles/ui/fx/net)");
   if (p === "apps/client/src/App.tsx") return smoke("App.tsx");

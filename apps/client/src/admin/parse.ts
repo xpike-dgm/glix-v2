@@ -8,6 +8,8 @@ import type {
   AdminAccountSearch,
   AdminAccounts,
   AdminAuditPage,
+  AdminBannedAccounts,
+  AdminBannedWords,
   AdminBroadcastResult,
   AdminBroadcastStatus,
   AdminContent,
@@ -23,10 +25,17 @@ import type {
   AdminMaintenance,
   AdminPerfRow,
   AdminRelease,
+  AdminReportDetail,
+  AdminReportPage,
+  AdminReportRow,
+  AdminRoomPlayers,
   AdminRoomRow,
   AdminStats,
   Announcement,
+  ReportEvidence,
+  ReportStatus,
 } from "@glix/engine";
+import { isReportReason, isReportStatus, REPORT_STATUSES } from "./moderationRules.js";
 
 class ParseError extends Error {}
 
@@ -411,6 +420,97 @@ export function parsePushStatus(v: unknown): AdminBroadcastStatus {
     subscribers: num(o, "subscribers"),
     nextAllowedAt: nullableNum(o, "nextAllowedAt"),
     last: o.last === null ? null : broadcastResult(rec(o.last)),
+  };
+}
+
+// ---- A4: moderasyon -------------------------------------------------------------------------------------------
+
+function reportStatus(o: Rec, k: string): ReportStatus {
+  const v = o[k];
+  if (!isReportStatus(v)) throw new ParseError(`${k}: bilinmeyen durum`);
+  return v;
+}
+
+const reportRow = (o: Rec): AdminReportRow => {
+  const reason = o.reason;
+  if (!isReportReason(reason)) throw new ParseError("reason: bilinmeyen sebep");
+  return {
+    id: num(o, "id"),
+    createdAt: num(o, "createdAt"),
+    status: reportStatus(o, "status"),
+    reason,
+    targetName: str(o, "targetName"),
+    targetAccountId: nullableNum(o, "targetAccountId"),
+    roomCode: str(o, "roomCode"),
+    gameId: nullableStr(o, "gameId"),
+  };
+};
+
+export function parseReportPage(v: unknown): AdminReportPage {
+  const o = rec(v);
+  const c = rec(o.counts);
+  const counts = Object.fromEntries(REPORT_STATUSES.map((st) => [st, num(c, st)])) as Record<
+    ReportStatus,
+    number
+  >;
+  return { reports: list(o, "reports", reportRow, 200), nextBefore: nullableNum(o, "nextBefore"), counts };
+}
+
+function evidence(v: unknown): ReportEvidence | null {
+  if (v === null) return null;
+  const o = rec(v);
+  return { gameId: str(o, "gameId"), texts: strList(o, "texts") };
+}
+
+export function parseReportDetail(v: unknown): AdminReportDetail {
+  const o = rec(v);
+  return {
+    ...reportRow(o),
+    reporterAccountId: nullableNum(o, "reporterAccountId"),
+    note: str(o, "note"),
+    evidence: evidence(o.evidence),
+    adminNote: str(o, "adminNote"),
+    reviewedAt: nullableNum(o, "reviewedAt"),
+    targetPlayerId: str(o, "targetPlayerId"),
+    inRoom: bool(o, "inRoom"),
+    targetProtected: bool(o, "targetProtected"),
+  };
+}
+
+export function parseBannedWords(v: unknown): AdminBannedWords {
+  const o = rec(v);
+  return {
+    words: list(o, "words", (w) => ({ word: str(w, "word"), addedAt: num(w, "addedAt") }), 600),
+    max: num(o, "max"),
+  };
+}
+
+export function parseBannedAccounts(v: unknown): AdminBannedAccounts {
+  const o = rec(v);
+  return {
+    accounts: list(o, "accounts", (a) => ({ id: num(a, "id"), username: str(a, "username") }), 200),
+    truncated: bool(o, "truncated"),
+  };
+}
+
+export function parseRoomPlayers(v: unknown): AdminRoomPlayers {
+  const o = rec(v);
+  return {
+    code: str(o, "code"),
+    phase: str(o, "phase"),
+    players: list(
+      o,
+      "players",
+      (p) => ({
+        id: str(p, "id"),
+        nickname: str(p, "nickname"),
+        connected: bool(p, "connected"),
+        spectator: bool(p, "spectator"),
+        host: bool(p, "host"),
+        account: bool(p, "account"),
+      }),
+      20,
+    ),
   };
 }
 

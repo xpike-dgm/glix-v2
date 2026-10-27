@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   parseAccounts,
   parseAuditPage,
+  parseBannedAccounts,
+  parseBannedWords,
   parseContent,
   parseDetail,
   parseErrors,
@@ -9,6 +11,9 @@ import {
   parseLive,
   parseMaintenance,
   parsePushStatus,
+  parseReportDetail,
+  parseReportPage,
+  parseRoomPlayers,
   parseSearch,
   parseState,
   parseStats,
@@ -267,5 +272,66 @@ describe("A3 yanıt doğrulaması", () => {
     expect(tryParse(parsePushStatus, { ...push, last: { at: 1 } })).toBeNull();
     expect(tryParse(parsePushStatus, { ...push, subscribers: "4" })).toBeNull();
     expect(tryParse(parseGameList, { games: "x" })).toBeNull();
+  });
+});
+
+describe("A4 moderasyon yanıtları", () => {
+  const row = {
+    id: 3,
+    createdAt: 1000,
+    status: "new",
+    reason: "abuse",
+    targetName: "Ali",
+    targetAccountId: null,
+    roomCode: "ABCDE",
+    gameId: "kendim",
+  };
+  const counts = { new: 1, reviewed: 0, actioned: 0, rejected: 2 };
+
+  it("bildirim sayfası", () => {
+    const page = parseReportPage({ reports: [row], nextBefore: null, counts });
+    expect(page.reports[0]?.targetName).toBe("Ali");
+    expect(page.counts.rejected).toBe(2);
+    expect(
+      tryParse(parseReportPage, { reports: [{ ...row, status: "yeni" }], nextBefore: null, counts }),
+    ).toBeNull();
+    expect(
+      tryParse(parseReportPage, { reports: [{ ...row, reason: "spam" }], nextBefore: null, counts }),
+    ).toBeNull();
+    expect(tryParse(parseReportPage, { reports: [], nextBefore: null, counts: { new: 1 } })).toBeNull();
+    expect(tryParse(parseReportPage, { reports: [row], counts })).toBeNull();
+  });
+
+  it("bildirim ayrıntısı kanıtla ve kanıtsız", () => {
+    const base = {
+      ...row,
+      reporterAccountId: 4,
+      note: "not",
+      evidence: { gameId: "kendim", texts: ["ELMA"] },
+      adminNote: "",
+      reviewedAt: null,
+      targetPlayerId: "0123456789ab",
+      inRoom: true,
+      targetProtected: false,
+    };
+    expect(parseReportDetail(base).evidence?.texts).toEqual(["ELMA"]);
+    expect(parseReportDetail({ ...base, evidence: null }).evidence).toBeNull();
+    expect(tryParse(parseReportDetail, { ...base, evidence: { gameId: "k", texts: [1] } })).toBeNull();
+    expect(tryParse(parseReportDetail, { ...base, inRoom: "evet" })).toBeNull();
+  });
+
+  it("yasaklı kelimeler, takılan hesaplar ve oda oyuncuları", () => {
+    expect(parseBannedWords({ words: [{ word: "x", addedAt: 1 }], max: 500 }).max).toBe(500);
+    expect(tryParse(parseBannedWords, { words: [{ word: 5, addedAt: 1 }], max: 500 })).toBeNull();
+    expect(
+      parseBannedAccounts({ accounts: [{ id: 1, username: "a" }], truncated: false }).accounts,
+    ).toHaveLength(1);
+    const room = {
+      code: "ABCDE",
+      phase: "lobby",
+      players: [{ id: "ab", nickname: "Ali", connected: true, spectator: false, host: true, account: false }],
+    };
+    expect(parseRoomPlayers(room).players[0]?.nickname).toBe("Ali");
+    expect(tryParse(parseRoomPlayers, { ...room, players: [{ id: "ab" }] })).toBeNull();
   });
 });

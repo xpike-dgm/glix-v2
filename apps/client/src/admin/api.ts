@@ -3,17 +3,25 @@ import type {
   AdminAccountSearch,
   AdminAccounts,
   AdminAuditPage,
+  AdminBannedAccounts,
+  AdminBannedWords,
   AdminBroadcastStatus,
   AdminContent,
   AdminErrors,
   AdminGameSwitch,
   AdminLive,
   AdminMaintenance,
+  AdminReportDetail,
+  AdminReportPage,
+  AdminRoomPlayers,
   AdminStats,
+  ReportStatus,
 } from "@glix/engine";
 import {
   parseAccounts,
   parseAuditPage,
+  parseBannedAccounts,
+  parseBannedWords,
   parseContent,
   parseDetail,
   parseErrors,
@@ -21,6 +29,9 @@ import {
   parseLive,
   parseMaintenance,
   parsePushStatus,
+  parseReportDetail,
+  parseReportPage,
+  parseRoomPlayers,
   parseSearch,
   parseState,
   parseStats,
@@ -223,3 +234,37 @@ export async function downloadBackup(): Promise<BackupResult> {
     return { ok: false, message: NETWORK_ERROR };
   }
 }
+
+// ---- A4: moderasyon -------------------------------------------------------------------------------------------
+
+export const fetchReports = (
+  status: ReportStatus | "all",
+  before: number | null,
+): Promise<Fetched<AdminReportPage>> => {
+  const q = new URLSearchParams();
+  if (status !== "all") q.set("status", status);
+  if (before !== null) q.set("before", String(before));
+  const qs = q.toString();
+  return fetched(`reports${qs === "" ? "" : `?${qs}`}`, parseReportPage);
+};
+export const fetchReport = (id: number): Promise<Fetched<AdminReportDetail>> =>
+  fetched(`reports/detail?id=${id}`, parseReportDetail);
+export const setReportStatus = (id: number, status: ReportStatus, note: string): Promise<ActionResult> =>
+  action("reports/status", { id, status, note }, "Bildirim güncellendi.");
+
+/** Tek odanın oyuncuları (görünen adlar burada; açmak işlem kaydına yazılır). */
+export const fetchRoomPlayers = (code: string): Promise<Fetched<AdminRoomPlayers>> =>
+  fetched(`rooms/players?code=${encodeURIComponent(code)}`, parseRoomPlayers);
+export const closeRoom = (code: string): Promise<ActionResult> =>
+  action("rooms/close", { code }, "Oda kapatıldı.");
+export const kickPlayer = (code: string, playerId: string): Promise<ActionResult> =>
+  action("rooms/kick", { code, playerId }, "Oyuncu odadan atıldı.");
+
+export const fetchBannedWords = (): Promise<Fetched<AdminBannedWords>> =>
+  fetched("banned-words", parseBannedWords);
+export const fetchBannedAccounts = (): Promise<Fetched<AdminBannedAccounts>> =>
+  fetched("banned-words/accounts", parseBannedAccounts);
+export const addBannedWord = (word: string): Promise<ActionResult> =>
+  action("banned-words/add", { word }, "Kelime eklendi.");
+export const removeBannedWord = (word: string): Promise<ActionResult> =>
+  action("banned-words/remove", { word }, "Kelime silindi.");

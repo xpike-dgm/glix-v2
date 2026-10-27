@@ -12,20 +12,37 @@ import {
   type AdminAccountDetail,
   type AdminAccountSearch,
   type AdminAuditPage,
+  type AdminBannedAccounts,
+  type AdminBannedWords,
   type AdminContent,
   type AdminLive,
   type AdminMaintenance,
+  type AdminReportDetail,
+  type AdminReportPage,
+  type AdminReportRow,
+  type AdminRoomPlayers,
   ANNOUNCEMENT_MAX_AHEAD_MS,
   type AnnouncementKind,
+  BANNED_WORDS_MAX,
   BROADCAST_BODY_MAX,
   BROADCAST_TITLE_MAX,
   cleanAnnouncementText,
   cleanPlainText,
   cleanSitePath,
   isAnnouncementKind,
+  isReportStatus,
+  REPORT_ADMIN_NOTE_MAX,
+  type ReportStatus,
+  ROOM_CODE_LENGTH,
 } from "@glix/engine";
-import { type AccountStore, ADMIN_SEARCH_LIMIT, type AdminSearchQuery } from "./accountStore.js";
+import {
+  type AccountStore,
+  ADMIN_SEARCH_LIMIT,
+  type AdminSearchQuery,
+  type ReportRow,
+} from "./accountStore.js";
 import { buildAccounts, buildErrors, buildReleases, buildStats } from "./adminData.js";
+import type { AdminRoomOps } from "./adminRooms.js";
 import {
   hashToken,
   isSecureRequest,
@@ -42,6 +59,7 @@ import type { GoogleAuth } from "./google.js";
 import { confirmMatches } from "./kvkk.js";
 import { log } from "./log.js";
 import { adminCodeMessage, type MailService, type MailThrottle } from "./mail.js";
+import type { BannedWords } from "./moderation.js";
 import type { PushBroadcaster } from "./pushBroadcast.js";
 import { type IpLimiter, TokenBucket } from "./ratelimit.js";
 import type { SiteSettings } from "./siteSettings.js";
@@ -117,6 +135,10 @@ export interface AdminEnv {
   /** A3: veritabanı yedeği. */
   backup: BackupService;
   clock: Clock;
+  /** A4: oda oyuncu listesi, odayı kapatma, oyuncu atma. */
+  rooms: AdminRoomOps;
+  /** A4: yasaklı kelime listesi. */
+  banned: BannedWords;
   /** Bu sunucu sürecinin başlangıç kaydı (`server_starts`); kayıt yazılamadıysa null. */
   runId: number | null;
 }
@@ -219,6 +241,11 @@ const POST_ROUTES: ReadonlySet<string> = new Set([
   "push/broadcast",
   "maintenance/set",
   "backup",
+  "reports/status",
+  "rooms/close",
+  "rooms/kick",
+  "banned-words/add",
+  "banned-words/remove",
 ]);
 const GET_ROUTES: ReadonlySet<string> = new Set([
   "status",
@@ -232,6 +259,11 @@ const GET_ROUTES: ReadonlySet<string> = new Set([
   "content",
   "maintenance",
   "push/status",
+  "reports",
+  "reports/detail",
+  "rooms/players",
+  "banned-words",
+  "banned-words/accounts",
 ]);
 
 async function route(req: IncomingMessage, res: ServerResponse, env: AdminEnv): Promise<void> {
@@ -310,6 +342,22 @@ async function route(req: IncomingMessage, res: ServerResponse, env: AdminEnv): 
       return send(res, 200, env.broadcaster.status());
     case "backup":
       return downloadBackup(req, res, env, account.id, adminHash);
+    case "reports":
+      return reportsPage(res, env, url.searchParams);
+    case "reports/detail":
+      return reportDetail(res, env, account.id, url.searchParams.get("id"));
+    case "rooms/players":
+      return roomPlayers(res, env, account.id, url.searchParams.get("code"));
+    case "banned-words":
+      return send(res, 200, bannedBody(env));
+    case "banned-words/accounts":
+      return bannedAccounts(res, env, account.id);
+    case "reports/status":
+    case "rooms/close":
+    case "rooms/kick":
+    case "banned-words/add":
+    case "banned-words/remove":
+      return moderationAction(req, res, env, account.id, name);
     case "content/game":
     case "announcement/set":
     case "announcement/clear":
@@ -840,4 +888,226 @@ async function downloadBackup(
   pipeline(backup.stream, res, (err) => {
     if (err) log.warn("backup_stream_ended", { error: String(err) });
   });
+}
+
+// ---- A4: moderasyon -----------------------------------------------------------------------------------------------
+
+const MAX_MODERATION_BODY_BYTES = 1024;
+
+/** Oda kodu: 5 karakter, büyük harf/rakam. Geçersizse null. */
+export function parseRoomCode(v: unknown): string | null {
+  if (typeof v !== "string" || v.length !== ROOM_CODE_LENGTH) return null;
+  const code = v.toUpperCase();
+  return /^[A-Z0-9]{5}$/.test(code) ? code : null;
+}
+
+const reportRowOf = (r: ReportRow): AdminReportRow => ({
+  id: r.id,
+  createdAt: r.createdAt,
+  status: r.status,
+  reason: r.reason,
+  targetName: r.targetName,
+  targetAccountId: r.targetAccountId,
+  roomCode: r.roomCode,
+  gameId: r.gameId,
+});
+
+async function reportsPage(res: ServerResponse, env: AdminEnv, q: URLSearchParams): Promise<void> {
+  const rawStatus = q.get("status");
+  const status = rawStatus === null || rawStatus === "" ? null : rawStatus;
+  const rawBefore = q.get("before");
+  const before = rawBefore === null ? null : parseId(rawBefore);
+  const rawLimit = q.get("limit");
+  const asked = rawLimit === null ? AUDIT_PAGE_DEFAULT : parseId(rawLimit);
+  if (
+    (status !== null && !isReportStatus(status)) ||
+    (rawBefore !== null && before === null) ||
+    asked === null
+  )
+    return fail(res, 400, "invalid_input", "Geçersiz istek.");
+  const limit = Math.min(asked, AUDIT_PAGE_MAX);
+  const rows = env.accounts.reportPage(status, before, limit + 1);
+  const more = rows.length > limit;
+  const page = more ? rows.slice(0, limit) : rows;
+  const body: AdminReportPage = {
+    reports: page.map(reportRowOf),
+    nextBefore: more ? (page.at(-1)?.id ?? null) : null,
+    counts: env.accounts.reportCounts(),
+  };
+  send(res, 200, body);
+}
+
+async function reportDetail(
+  res: ServerResponse,
+  env: AdminEnv,
+  adminId: number,
+  rawId: string | null,
+): Promise<void> {
+  const id = parseId(rawId);
+  if (id === null) return fail(res, 400, "invalid_input", "Geçersiz bildirim.");
+  if (!env.limits.search(adminId)) return fail(res, 429, "rate_limited", "Biraz bekleyip tekrar dene.");
+  const r = env.accounts.reportGet(id);
+  if (!r) return fail(res, 404, "not_found", "Bildirim bulunamadı.");
+  const body: AdminReportDetail = {
+    ...reportRowOf(r),
+    reporterAccountId: r.reporterAccountId,
+    note: r.note,
+    evidence: r.evidence,
+    adminNote: r.adminNote,
+    reviewedAt: r.reviewedAt,
+    targetPlayerId: r.targetPlayerId,
+    inRoom: env.rooms.hasPlayer(r.roomCode, r.targetPlayerId),
+    targetProtected: r.targetAccountId !== null && env.adminIds.has(r.targetAccountId),
+  };
+  send(res, 200, body);
+}
+
+async function roomPlayers(
+  res: ServerResponse,
+  env: AdminEnv,
+  adminId: number,
+  rawCode: string | null,
+): Promise<void> {
+  const code = parseRoomCode(rawCode);
+  if (code === null) return fail(res, 400, "invalid_input", "Geçersiz oda kodu.");
+  if (!env.limits.detail(adminId)) return fail(res, 429, "rate_limited", "Biraz bekleyip tekrar dene.");
+  const found = env.rooms.players(code);
+  if (!found) return fail(res, 404, "not_found", "Oda bulunamadı (kapanmış olabilir).");
+  // Görünen adlar bu yanıtta olduğu için her açış kaydedilir (yanıttan önce).
+  audit(env, adminId, "room_view", code);
+  const body: AdminRoomPlayers = found;
+  send(res, 200, body);
+}
+
+function bannedBody(env: AdminEnv): AdminBannedWords {
+  return { words: env.banned.list(), max: BANNED_WORDS_MAX };
+}
+
+/** Listeye takılan mevcut hesaplar (salt okunur yardımcı); en çok bu kadar gösterilir. */
+export const BANNED_ACCOUNTS_LIMIT = 50;
+const SCAN_BATCH = 2000;
+const SCAN_MAX_BATCHES = 100;
+
+async function bannedAccounts(res: ServerResponse, env: AdminEnv, adminId: number): Promise<void> {
+  if (!env.limits.search(adminId)) return fail(res, 429, "rate_limited", "Biraz bekleyip tekrar dene.");
+  const found: { id: number; username: string }[] = [];
+  let truncated = false;
+  let after = 0;
+  for (let i = 0; i < SCAN_MAX_BATCHES && !truncated; i++) {
+    const batch = env.accounts.scanUsernames(after, SCAN_BATCH);
+    if (batch.length === 0) break;
+    for (const a of batch) {
+      if (env.banned.matches(a.username)) {
+        if (found.length >= BANNED_ACCOUNTS_LIMIT) {
+          truncated = true;
+          break;
+        }
+        found.push(a);
+      }
+    }
+    after = batch[batch.length - 1]?.id ?? after;
+    if (batch.length < SCAN_BATCH) break;
+  }
+  const body: AdminBannedAccounts = { accounts: found, truncated };
+  send(res, 200, body);
+}
+
+type ModerationInput =
+  | { op: "reports/status"; id: number; status: ReportStatus; note: string }
+  | { op: "rooms/close"; code: string }
+  | { op: "rooms/kick"; code: string; playerId: string }
+  | { op: "banned-words/add"; word: string }
+  | { op: "banned-words/remove"; word: string };
+
+/** Yönetici notu: kırpılmış, ≤300 karakter, denetim karakteri yok; boş olabilir. */
+export function cleanAdminNote(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const text = v.trim();
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: denetim karakterleri bilerek reddedilir
+  if (Array.from(text).length > REPORT_ADMIN_NOTE_MAX || /[\u0000-\u001f\u007f]/.test(text)) return null;
+  return text;
+}
+
+/** Moderasyon işlem gövdesi doğrulaması; geçersizse null. */
+export function parseModeration(op: ModerationInput["op"], data: unknown): ModerationInput | null {
+  if (!isRecord(data)) return null;
+  switch (op) {
+    case "reports/status": {
+      if (!exactKeys(data, ["id", "status", "note"])) return null;
+      const { id, status } = data;
+      const note = cleanAdminNote(data.note);
+      if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) return null;
+      if (!isReportStatus(status) || note === null) return null;
+      return { op, id, status, note };
+    }
+    case "rooms/close": {
+      if (!exactKeys(data, ["code"])) return null;
+      const code = parseRoomCode(data.code);
+      return code === null ? null : { op, code };
+    }
+    case "rooms/kick": {
+      if (!exactKeys(data, ["code", "playerId"])) return null;
+      const code = parseRoomCode(data.code);
+      const playerId = data.playerId;
+      if (code === null || typeof playerId !== "string" || !/^[0-9a-f]{12}$/.test(playerId)) return null;
+      return { op, code, playerId };
+    }
+    case "banned-words/add":
+    case "banned-words/remove": {
+      if (!exactKeys(data, ["word"]) || typeof data.word !== "string" || data.word.length > 200) return null;
+      return { op, word: data.word };
+    }
+  }
+}
+
+async function moderationAction(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: AdminEnv,
+  adminId: number,
+  name: string,
+): Promise<void> {
+  if (!env.limits.action(adminId)) return fail(res, 429, "rate_limited", "Biraz bekleyip tekrar dene.");
+  const input = parseModeration(
+    name as ModerationInput["op"],
+    await readJson(req, MAX_MODERATION_BODY_BYTES),
+  );
+  if (!input) return fail(res, 400, "invalid_input", "Geçersiz istek.");
+  switch (input.op) {
+    case "reports/status": {
+      const report = env.accounts.reportGet(input.id);
+      if (!report) return fail(res, 404, "not_found", "Bildirim bulunamadı.");
+      env.accounts.reportSetStatus(input.id, input.status, input.note, env.now);
+      // Not metni işlem kaydına yazılmaz; yalnız yeni durum.
+      audit(env, adminId, "report_status", `${input.id}:${input.status}`, report.targetAccountId);
+      return send(res, 200, { ok: true, status: input.status });
+    }
+    case "rooms/close": {
+      if (!env.rooms.close(input.code))
+        return fail(res, 404, "not_found", "Oda bulunamadı (kapanmış olabilir).");
+      audit(env, adminId, "room_close", input.code);
+      return send(res, 200, { ok: true });
+    }
+    case "rooms/kick": {
+      const done = env.rooms.kick(input.code, input.playerId);
+      if (done === "no_room") return fail(res, 404, "not_found", "Oda bulunamadı (kapanmış olabilir).");
+      if (done === "no_player") return fail(res, 404, "not_found", "Oyuncu artık odada değil.");
+      audit(env, adminId, "room_kick", input.code);
+      return send(res, 200, { ok: true });
+    }
+    case "banned-words/add": {
+      const done = env.banned.add(input.word, env.now);
+      if (done === "invalid")
+        return fail(res, 400, "invalid_input", "Kelime 1-40 karakter olmalı ve en az iki harf içermeli.");
+      if (done === "exists") return fail(res, 409, "exists", "Bu kelime zaten listede.");
+      if (done === "full") return fail(res, 409, "full", `Liste dolu (en çok ${BANNED_WORDS_MAX} kelime).`);
+      audit(env, adminId, "banned_word_add", input.word.trim().slice(0, 40));
+      return send(res, 200, { ok: true, ...bannedBody(env) });
+    }
+    case "banned-words/remove": {
+      if (!env.banned.remove(input.word)) return fail(res, 404, "not_found", "Kelime listede yok.");
+      audit(env, adminId, "banned_word_remove", input.word.trim().slice(0, 40));
+      return send(res, 200, { ok: true, ...bannedBody(env) });
+    }
+  }
 }

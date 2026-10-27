@@ -27,6 +27,9 @@ export const ERROR_TEXT: Record<ErrorCode, string> = {
   invite_failed: "Davet gönderilemedi.",
   friend_not_found: "Arkadaşın şu an katılabileceğin bir odada değil.",
   maintenance: "Kısa bir bakım yapıyoruz, birazdan tekrar dene.",
+  report_limit: "Çok fazla bildirim gönderdin, biraz sonra tekrar dene.",
+  report_duplicate: "Bu oyuncuyu zaten bildirdin.",
+  room_blocked: "Odadan çıkarıldın, bu odaya şimdilik giremezsin.",
 };
 
 export function errorMessage(code: ErrorCode, text?: string): ServerMessage {
