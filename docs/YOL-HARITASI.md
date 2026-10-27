@@ -202,6 +202,18 @@ katılıp oynar. Giriş: Google ya da kendi hesabı. Sıralama yalnız arkadaşl
   (Oyuncu, Cihaz, Bildirimler, Hesap, Hakkında) ve her kategori için ayrıntı sayfası.
 - [x] H10 KVKK: aydınlatma metni, hesabı silme, verimi indirme (uygulandı; bkz. docs/HESAP.md "KVKK").
 
+### U16. Yönetici paneli
+`/admin`; yalnız yönetici işaretli hesap, girişte e-postaya tek kullanımlık kod, her işlem kayıt altında. Oyuncuların
+gizli bilgileri (rol, cevap) panelde de görünmez; e-posta yalnız tek hesap aranırken görünür.
+- [ ] A1 Canlı durum: oda/oyuncu/maç/TV sayıları, sunucu sağlığı (bellek, işlemci, gecikme, veri), açık odalar listesi (içeriksiz), sürüm ve son yayın.
+- [ ] A1 Oyun istatistikleri: günlük/haftalık maç ve oyuncu sayısı, oyun başına oynanma/süre/yarıda bırakılma, maç sonu puanları ve geri bildirimler, rastgele seçim dağılımı.
+- [ ] A1 Hatalar ve performans: gruplanmış istemci hataları, iOS/Android ayrı kopma-gecikme-yavaş dokunuş, çöken oyun kayıtları.
+- [ ] A2 Hesaplar: toplam/yeni kayıt, doğrulama oranı, giriş yöntemi dağılımı; kullanıcı adıyla arama; kullanıcı adını zorla değiştirme; askıya alma/silme; mail gönderim durumu; işlem kaydı.
+- [ ] A3 İçerik ve ayarlar: oyunu geçici kapatma / rastgele havuzdan çıkarma, ana sayfa duyuru bandı, herkese web bildirimi.
+- [ ] A3 Bakım: yeni maçı durdurup mevcutları bitirme (boşaltma), veritabanı yedeği indirme, son yayınlar.
+- [ ] A4 Moderasyon: oyuncuya "bildir" düğmesi ve inceleme kuyruğu, yasaklı kelime listesi, odayı kapatma, oyuncu atma.
+- [ ] A4 Kelime ve soru havuzlarını görüntüleme ve düzenleme.
+
 ---
 
 ## O — Oyun iyileştirmeleri iş kolu
