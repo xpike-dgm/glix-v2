@@ -28,8 +28,10 @@ export async function playConfetti(host: HTMLElement): Promise<() => void> {
 
   // Konfeti şeridi (8 parça, 256 px); yüklenemezse düz dikdörtgenlere dönülür.
   let pieces: InstanceType<typeof Texture>[] = [];
+  let sheetLoaded = false;
   try {
     const sheet = await Assets.load<InstanceType<typeof Texture>>(SHEET);
+    sheetLoaded = true;
     pieces = Array.from(
       { length: SHEET_FRAMES },
       (_, i) =>
@@ -66,6 +68,9 @@ export async function playConfetti(host: HTMLElement): Promise<() => void> {
     if (disposed) return;
     disposed = true;
     app.destroy(true, { children: true });
+    // Eski iPhone belleği: parçalar ve şerit görseli GPU'dan bırakılır (bir sonraki finalde yeniden yüklenir).
+    for (const piece of pieces) piece.destroy(false);
+    if (sheetLoaded) void Assets.unload(SHEET).catch(() => undefined);
   };
   app.ticker.add((tk) => {
     const dt = tk.deltaMS / 1000;

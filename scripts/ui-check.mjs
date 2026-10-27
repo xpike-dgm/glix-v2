@@ -1144,6 +1144,13 @@ function inPageAudit() {
         "target",
         `dokunma hedefi küçük ${Math.round(r.width)}x${Math.round(r.height)}: ${desc(el)}`,
       ]);
+    // iOS Safari, 16px'ten küçük yazı kutusuna odaklanınca sayfayı yakınlaştırır.
+    if (
+      (el.tagName === "TEXTAREA" ||
+        (el.tagName === "INPUT" && !/^(checkbox|radio|range|button|submit|hidden)$/.test(el.type))) &&
+      parseFloat(cs(el).fontSize) < 15.99
+    )
+      issues.push(["font", `yazı kutusu 16px'ten küçük (${cs(el).fontSize}): ${desc(el)}`]);
     if (!sc && !inView(r)) issues.push(["overflow", `etkileşimli öğe ekran dışında: ${desc(el)}`]);
     if (el.tagName === "BUTTON" && !el.getAttribute("aria-label") && !el.textContent.trim())
       issues.push(["a11y", `etiketsiz düğme: ${desc(el)}`]);

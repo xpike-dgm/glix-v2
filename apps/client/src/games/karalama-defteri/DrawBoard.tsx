@@ -100,6 +100,9 @@ const TrashIcon = () => (
 );
 
 /** Çizim tahtası: tek parmakla/kalemle çizim, 6 renk + silgi, 3 kalınlık, geri al, temizle. */
+/** Tahtanın ekran kenarından en az bu kadar (px) içeride kalması için ayrılan pay. */
+const EDGE_INSET = 8;
+
 export function DrawBoard(props: DrawBoardProps) {
   let base: HTMLCanvasElement | undefined;
   let live: HTMLCanvasElement | undefined;
@@ -135,7 +138,8 @@ export function DrawBoard(props: DrawBoardProps) {
   };
   const resizeBoard = (): void => {
     if (!stage || !base || !live) return;
-    const side = Math.floor(Math.min(stage.clientWidth, stage.clientHeight));
+    // Yanlardan küçük pay: Safari'nin kenardan "geri" kaydırması çizgiyi alıp götürmesin.
+    const side = Math.floor(Math.min(stage.clientWidth - EDGE_INSET * 2, stage.clientHeight));
     if (side < 2) return;
     setBox(side);
     const backing = Math.round(side * dpr());
@@ -145,6 +149,18 @@ export function DrawBoard(props: DrawBoardProps) {
     }
     repaint();
   };
+  // Safari kenar kaydırması (geri) tahtada başlayan dokunuşlarda devreye girmesin.
+  const stopTouch = (e: TouchEvent): void => {
+    if (e.cancelable) e.preventDefault();
+  };
+  onMount(() => {
+    live?.addEventListener("touchstart", stopTouch, { passive: false });
+    live?.addEventListener("touchmove", stopTouch, { passive: false });
+    onCleanup(() => {
+      live?.removeEventListener("touchstart", stopTouch);
+      live?.removeEventListener("touchmove", stopTouch);
+    });
+  });
   onMount(() => {
     resizeBoard();
     const ro = new ResizeObserver(resizeBoard);
