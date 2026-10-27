@@ -5,8 +5,8 @@ import { state } from "../net/store.js";
 export function TvBadge() {
   return (
     <Show when={(state.snapshot?.stageCount ?? 0) > 0}>
-      <span class="tvbadge" role="status">
-        TV'de oynanıyor
+      <span class="tvbadge" role="status" aria-label="TV'de oynanıyor">
+        TV
       </span>
     </Show>
   );

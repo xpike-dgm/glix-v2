@@ -142,7 +142,6 @@ export function GameFrame(props: Props) {
         data-turn={needsTurn() ? "1" : undefined}
       >
         <WorldBackdrop gameId={props.gameId} />
-        <TvBadge />
         <Show when={landscape() && !needsTurn()}>
           <Rail {...props} win={win()} />
         </Show>
@@ -153,6 +152,7 @@ export function GameFrame(props: Props) {
                 <div class="gbar__title">
                   <span class="gbar__name">{props.gameName}</span>
                   <span class="gbar__round">{roundLabel(props.round, props.total)}</span>
+                  <TvBadge />
                 </div>
                 <div class="gbar__clock">
                   <Show when={!props.noClock}>
