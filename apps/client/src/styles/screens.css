@@ -1856,6 +1856,44 @@
 .gcard--dim .gcard__name {
   opacity: 0.7;
 }
+.emojibar-wrap {
+  flex: none;
+  min-width: 0;
+}
+/* Tepki paketi sahibine sayfa şeridi: emojiler + her paket için küçük görsel düğmesi. */
+.emojibar__pages {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 4px;
+}
+.emojibar__page {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 24px;
+  font-size: 20px;
+  line-height: 1;
+  background: rgba(10, 16, 48, 0.5);
+  border: 1.5px solid var(--line);
+}
+.emojibar__page[aria-selected="true"] {
+  border-color: var(--amber);
+  background: rgba(255, 194, 59, 0.16);
+}
+.emojibar__page img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+.emojibar__btn[data-sticker] img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  pointer-events: none;
+}
 .emojibar {
   flex: none;
   display: flex;
@@ -1913,6 +1951,13 @@
   }
 }
 /* Hareket azaltma: uçmaz, avatarın köşesinde sabit rozet olarak durur. */
+.reaction__sticker {
+  display: block;
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+}
 .reaction--still {
   animation: none;
   font-size: 26px;
@@ -1987,7 +2032,7 @@
   color: var(--text-dim);
 }
 @media (orientation: landscape) and (max-height: 480px) {
-  .lobby .emojibar {
+  .lobby .emojibar-wrap {
     grid-column: 2;
     grid-row: 4;
     align-self: end;
@@ -2011,6 +2056,9 @@
   }
   .lobby .emojibar {
     padding-top: 2px;
+  }
+  .lobby .emojibar__pages {
+    margin-top: 2px;
   }
   .solo__qr {
     --qr: 84px;

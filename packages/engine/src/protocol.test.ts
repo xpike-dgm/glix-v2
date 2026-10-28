@@ -328,6 +328,20 @@ describe("lobi mesajları (rename, react, setReady, transferHost)", () => {
     expect(parse({ type: "rename", nickname: "Ali", extra: 1 })).toBeNull();
   });
 
+  it("react: tepki paketi çıkartması (pack:<paket>:<1..6>) geçer, bozuk kimlik reddedilir", () => {
+    for (const emoji of ["pack:parti:1", "pack:neon-yuzler:6", "pack:efsane-tepkiler:3"])
+      expect(parse({ type: "react", emoji })).toEqual({ type: "react", emoji });
+    for (const emoji of [
+      "pack:parti:7",
+      "pack:parti:0",
+      "pack:yok:1",
+      "pack:parti:1 ",
+      "pack:parti:1:2",
+      "pack:",
+    ])
+      expect(parse({ type: "react", emoji })).toBeNull();
+  });
+
   it("react: yalnız sabit emoji kümesi", () => {
     for (const emoji of LOBBY_EMOJIS)
       expect(parse({ type: "react", emoji })).toEqual({ type: "react", emoji });

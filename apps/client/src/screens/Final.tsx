@@ -1,6 +1,6 @@
 import type { RoomSnapshot } from "@glix/engine";
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
-import { playConfetti } from "../fx/confetti.js";
+import { playFinalFx, winnerCelebration } from "../fx/finalFx.js";
 import { hapticFinal } from "../fx/haptics.js";
 import { fanfare } from "../fx/sound.js";
 import { dismissBadges } from "../net/badges.js";
@@ -78,7 +78,7 @@ export function Final(props: { snap: RoomSnapshot }) {
     if (!confetti) return;
     let stop: (() => void) | undefined;
     let gone = false;
-    playConfetti(confetti)
+    playFinalFx(confetti, winnerCelebration(winners()))
       .then((d) => {
         if (gone) d();
         else stop = d;

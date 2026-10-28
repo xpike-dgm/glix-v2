@@ -99,6 +99,18 @@ const clickText = (text) => async (page) => {
   await page.getByText(text, { exact: false }).first().click();
 };
 
+/** Mağazada "Efektler" bölümüne geçip ilgili sekmeyi açar (M3: kart arkası, zafer, tepki, giriş). */
+const efektSekme = (ad) => async (page) => {
+  await page.getByRole("tab", { name: "Efektler", exact: true }).click();
+  await page.getByRole("tab", { name: ad, exact: true }).click();
+  await page.locator("[role=tabpanel]").evaluate((el) => el.scrollIntoView({ block: "start" }));
+};
+/** Efekt sekmesindeki ilk satın alınabilir ürünün satın alma sayfasını açar. */
+const efektSatinAl = (ad, tur) => async (page) => {
+  await efektSekme(ad)(page);
+  await page.locator(`.shop-card[data-status=buy][data-type=${tur}]`).first().click();
+};
+
 /** Kart seçiminde n'inci karta dokunur (incelenir). */
 const kartBak = (n) => async (page) => {
   await page.locator(".kc-deal .kc-card").nth(n).click();
@@ -449,6 +461,149 @@ const SCREENS = [
     settle: 2600,
     act: karakterHazir,
   },
+  // Mağaza M3 (U18): kart arkası, zafer kutlaması, tepki paketi, giriş efekti; önek "magaza-efekt-", "dolap-", "kozmetik-".
+  { name: "magaza-efekt-kart-arkasi", q: "mock=magaza", settle: 900, act: efektSekme("Kart arkası") },
+  { name: "magaza-efekt-zafer", q: "mock=magaza", settle: 900, act: efektSekme("Zafer") },
+  { name: "magaza-efekt-tepki", q: "mock=magaza", settle: 900, act: efektSekme("Tepki") },
+  { name: "magaza-efekt-giris", q: "mock=magaza", settle: 900, act: efektSekme("Giriş") },
+  {
+    name: "magaza-efekt-kart-arkasi-buyuk-yazi",
+    q: "mock=magaza&text=large",
+    settle: 900,
+    act: efektSekme("Kart arkası"),
+  },
+  {
+    name: "magaza-efekt-zafer-buyuk-yazi",
+    q: "mock=magaza&text=large",
+    settle: 900,
+    act: efektSekme("Zafer"),
+  },
+  {
+    name: "magaza-efekt-satin-al-kart-arkasi",
+    q: "mock=magaza",
+    settle: 900,
+    act: efektSatinAl("Kart arkası", "kart-arkasi"),
+  },
+  {
+    name: "magaza-efekt-satin-al-zafer",
+    q: "mock=magaza",
+    settle: 1500,
+    act: efektSatinAl("Zafer", "zafer"),
+  },
+  { name: "magaza-efekt-satin-al-tepki", q: "mock=magaza", settle: 900, act: efektSatinAl("Tepki", "tepki") },
+  {
+    name: "magaza-efekt-satin-al-giris",
+    q: "mock=magaza",
+    settle: 500,
+    act: efektSatinAl("Giriş", "giris"),
+  },
+  {
+    name: "magaza-efekt-satin-al-giris-buyuk-yazi",
+    q: "mock=magaza&text=large",
+    settle: 500,
+    act: efektSatinAl("Giriş", "giris"),
+  },
+  {
+    name: "magaza-efekt-sahipsin-paket",
+    q: "mock=magaza",
+    settle: 900,
+    act: async (p) => {
+      await efektSekme("Tepki")(p);
+      await p.locator(".shop-card[data-status=owned][data-type=tepki]").first().click();
+    },
+  },
+  {
+    name: "dolap-efektler",
+    q: "mock=dolap",
+    settle: 900,
+    act: async (p) => p.locator(".set__body").evaluate((el) => el.scrollTo(0, el.scrollHeight)),
+  },
+  {
+    name: "dolap-efektler-buyuk-yazi",
+    q: "mock=dolap&text=large",
+    settle: 900,
+    act: async (p) => p.locator(".set__body").evaluate((el) => el.scrollTo(0, el.scrollHeight)),
+  },
+  { name: "kozmetik-lobi-giris", q: "mock=lobby&n=8&acct=1&giris=portal", settle: 450 },
+  { name: "kozmetik-lobi-giris-isinlanma", q: "mock=lobby&n=8&acct=1&giris=isinlanma", settle: 500 },
+  {
+    name: "kozmetik-lobi-giris-az-hareket",
+    q: "mock=lobby&n=8&acct=1&giris=altin-isik&motion=reduce",
+    settle: 450,
+  },
+  { name: "kozmetik-lobi-tepki-paketi", q: "mock=lobby&n=8&acct=1&paket=1", settle: 900 },
+  { name: "kozmetik-lobi-tepki-stiker", q: "mock=lobby&n=8&acct=1&paket=1&emoji=1&stiker=1", settle: 1100 },
+  {
+    name: "kozmetik-final-tepki-yelpaze",
+    q: "mock=final&n=4&acct=1&paket=1",
+    settle: 2200,
+    act: async (p) => {
+      await p.getByRole("button", { name: "Tepki gönder" }).click();
+      await p.getByRole("button", { name: /Tepki sayfası/ }).click();
+      await p.waitForTimeout(500);
+    },
+  },
+  {
+    name: "kozmetik-sonuc-tepki-yelpaze",
+    q: "mock=results&n=4&acct=1&paket=1",
+    settle: 1500,
+    act: async (p) => {
+      await p.getByRole("button", { name: "Tepki gönder" }).click();
+      await p.getByRole("button", { name: /Tepki sayfası/ }).click();
+      await p.waitForTimeout(500);
+    },
+  },
+  {
+    name: "kozmetik-final-zafer-konfeti",
+    q: "mock=final&n=4&acct=1&zaferdongu=1&zafer=konfeti",
+    settle: 2600,
+    act: karakterHazir,
+  },
+  {
+    name: "kozmetik-final-zafer-balon",
+    q: "mock=final&n=4&acct=1&zaferdongu=1&zafer=balon",
+    settle: 2600,
+    act: karakterHazir,
+  },
+  {
+    name: "kozmetik-final-zafer-havai-fisek",
+    q: "mock=final&n=4&acct=1&zaferdongu=1&zafer=havai-fisek",
+    settle: 2600,
+    act: karakterHazir,
+  },
+  {
+    name: "kozmetik-final-zafer-simsek",
+    q: "mock=final&n=4&acct=1&zaferdongu=1&zafer=simsek",
+    settle: 2600,
+    act: karakterHazir,
+  },
+  {
+    name: "kozmetik-final-zafer-altin-yagmur",
+    q: "mock=final&n=4&acct=1&zaferdongu=1&zafer=altin-yagmur",
+    settle: 2600,
+    act: karakterHazir,
+  },
+  {
+    name: "kozmetik-final-zafer-az-hareket",
+    q: "mock=final&n=4&acct=1&zaferdongu=1&zafer=balon&motion=reduce",
+    settle: 2600,
+    act: karakterHazir,
+  },
+  {
+    name: "kozmetik-final-zafer-tv",
+    q: "mock=tv-final&n=4&zaferdongu=1&zafer=altin-yagmur",
+    sizes: TV,
+    settle: 2600,
+    act: karakterHazir,
+  },
+  { name: "kozmetik-kart-sirt", q: "mock=kart-secim-kor&sirt=elektrik", settle: 700 },
+  {
+    name: "kozmetik-kart-sirt-altin",
+    q: "mock=kart-secim-kor&sirt=altin-kraliyet",
+    sizes: KART_TELEFON,
+    settle: 700,
+  },
+  { name: "kozmetik-kart-tv-sirt", q: "mock=tv-kart-secim&n=6&sirt=mor-girdap", sizes: TV, settle: 1600 },
   { name: "kozmetik-profil", q: "mock=profil", settle: 900 },
   {
     name: "ana-magaza-misafir",
@@ -2345,7 +2500,7 @@ function inPageAudit() {
       (own || interactive) &&
       !["auto", "scroll"].includes(s.overflowX) &&
       // Avatar çerçevesi bilerek avatarın kutusundan taşar (resim, %161 boy); taşma metni kırpmaz.
-      !el.querySelector(".av__frame-box") &&
+      !el.querySelector(".av__frame-box, .av__entry") &&
       el.scrollWidth > el.clientWidth + 1
     )
       issues.push(["clip", `metin kutusundan taşıyor (${el.scrollWidth} > ${el.clientWidth}): ${desc(el)}`]);

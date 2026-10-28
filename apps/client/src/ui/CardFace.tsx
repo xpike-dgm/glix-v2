@@ -57,6 +57,8 @@ export function CardBack(props: {
   label?: string;
   /** row: alçak satır (dikey telefon); tile: dikey kart; auto: ekrana göre. */
   layout?: "row" | "tile" | "auto";
+  /** Kart arkası görseli (mağazadan kuşanılan); yoksa klasik. */
+  src?: string | undefined;
 }) {
   const layout = useLayout(() => props.layout ?? "auto");
   return (
@@ -68,7 +70,7 @@ export function CardBack(props: {
       aria-label={props.label ?? "Kapalı kart"}
       onClick={() => props.onClick?.()}
     >
-      <BackPic />
+      <BackPic src={props.src} />
       <Show when={layout() === "row"}>
         <span class="kc-card__body">
           <span class="kc-card__name">Kapalı kart</span>
@@ -79,8 +81,11 @@ export function CardBack(props: {
 }
 
 /** Kart sırtı görseli; yüklenemezse kaldırılır ve arkadaki "?" görünür. */
-export function BackPic() {
+export function BackPic(props: { src?: string | undefined }) {
   const [off, setOff] = createSignal(false);
+  // Özel sırt yüklenemezse klasik sırta, o da yüklenemezse "?" desenine dönülür.
+  const [fallback, setFallback] = createSignal(false);
+  const src = () => (props.src && !fallback() ? props.src : CARD_BACK_SRC);
   return (
     <span class="kc-card__pic" data-off={off() ? "1" : undefined} aria-hidden="true">
       <Show when={off()}>
@@ -89,11 +94,11 @@ export function BackPic() {
       <Show when={!off()}>
         <img
           class="kc-card__frame"
-          src={CARD_BACK_SRC}
+          src={src()}
           alt=""
           decoding="async"
           draggable={false}
-          onError={() => setOff(true)}
+          onError={() => (props.src && !fallback() ? setFallback(true) : setOff(true))}
         />
       </Show>
     </span>

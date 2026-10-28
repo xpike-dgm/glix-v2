@@ -3,16 +3,23 @@ import {
   COSMETIC_ITEMS,
   COSMETIC_PRICES,
   COSMETIC_TYPES,
+  cosmeticAssetFiles,
   cosmeticsFromEquipped,
   currentPrice,
   DEFAULT_DANCE,
   dailyDeals,
   dealPrice,
+  isEquippable,
   istanbulDayNumber,
   itemsOfType,
   nextIstanbulMidnight,
   PLACE_DANCE,
   parseCosmetics,
+  parseStickerId,
+  STICKER_NAMES,
+  STICKERS_PER_PACK,
+  stickerFile,
+  stickerId,
 } from "./cosmetics.js";
 
 const DAY = 24 * 3600 * 1000;
@@ -28,7 +35,7 @@ describe("kozmetik kataloğu", () => {
       expect(i.name.length).toBeGreaterThan(0);
     }
     for (const t of COSMETIC_TYPES) expect(COSMETIC_ITEMS.some((i) => i.type === t.id)).toBe(true);
-    expect(COSMETIC_ITEMS).toHaveLength(27);
+    expect(COSMETIC_ITEMS).toHaveLength(45);
   });
 
   it("parseCosmetics: bilinmeyen ya da yanlış türdeki kimlik atılır", () => {
@@ -153,5 +160,66 @@ describe("günün fırsatı", () => {
     const other = COSMETIC_ITEMS.find((i) => !deals.some((d) => d.itemId === i.id));
     expect(currentPrice(other?.id ?? "", now)).toBe(other?.price);
     expect(currentPrice("yok", now)).toBeNull();
+  });
+});
+
+describe("resimli mağaza türleri (M3)", () => {
+  it("her türün ürün sayısı ve nadirlik dağılımı: sıradan, nadir, efsanevi", () => {
+    const by = (t: Parameters<typeof itemsOfType>[0]) => itemsOfType(t).map((i) => i.rarity);
+    expect(by("kart-arkasi")).toEqual(["siradan", "siradan", "nadir", "nadir", "efsanevi"]);
+    expect(by("zafer")).toEqual(["siradan", "siradan", "nadir", "nadir", "efsanevi"]);
+    expect(by("tepki")).toEqual(["siradan", "nadir", "efsanevi"]);
+    expect(by("giris")).toEqual(["siradan", "siradan", "nadir", "nadir", "efsanevi"]);
+  });
+
+  it("görsel dosya listesi: kart arkası 1, zafer 4, paket 6, giriş 2", () => {
+    const count = (id: string) =>
+      cosmeticAssetFiles(COSMETIC_ITEMS.find((i) => i.id === id) ?? COSMETIC_ITEMS[0]!).length;
+    expect(count("kart-elektrik")).toBe(1);
+    expect(count("zafer-balon")).toBe(4);
+    expect(count("tepki-efsane")).toBe(6);
+    expect(count("giris-portal")).toBe(2);
+    expect(count("unvan-efsane")).toBe(0);
+  });
+
+  it("kuşanılan alanlar: kart arkası, zafer ve giriş kuşanılır; tepki paketi kuşanılmaz", () => {
+    expect(
+      cosmeticsFromEquipped({ "kart-arkasi": "kart-elektrik", zafer: "zafer-balon", giris: "giris-portal" }),
+    ).toEqual({ cardBack: "kart-elektrik", celebration: "zafer-balon", entry: "giris-portal" });
+    expect(cosmeticsFromEquipped({ tepki: "tepki-parti" })).toBeUndefined();
+    expect(
+      parseCosmetics({ cardBack: "kart-elektrik", entry: "giris-duman", celebration: "kart-elektrik" }),
+    ).toEqual({
+      cardBack: "kart-elektrik",
+      entry: "giris-duman",
+    });
+    expect(COSMETIC_TYPES.filter((t) => !isEquippable(t)).map((t) => t.id)).toEqual(["tepki"]);
+  });
+
+  it("çıkartma kimlikleri: geçerli biçim çözülür, bozuk olanlar reddedilir", () => {
+    const pack = itemsOfType("tepki")[1];
+    if (!pack) throw new Error("paket yok");
+    expect(STICKER_NAMES[pack.asset ?? ""]).toHaveLength(STICKERS_PER_PACK);
+    for (let n = 1; n <= STICKERS_PER_PACK; n++) {
+      const ref = parseStickerId(stickerId(pack, n));
+      expect(ref?.item.id).toBe("tepki-parti");
+      expect(ref?.n).toBe(n);
+      expect(stickerFile(ref ?? { item: pack, n })).toBe(`tepki/parti-${n}.webp`);
+    }
+    for (const bad of [
+      "pack:parti:0",
+      "pack:parti:7",
+      "pack:parti:10",
+      "pack:yok:1",
+      "pack:parti",
+      "pack::1",
+      "pack:../x:1",
+      "Pack:parti:1",
+      "😂",
+      "",
+      null,
+      3,
+    ])
+      expect(parseStickerId(bad)).toBeNull();
   });
 });

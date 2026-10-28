@@ -6,6 +6,7 @@ import {
   cosmeticType,
   currentPrice,
   dailyDeals,
+  itemsOfType,
 } from "@glix/engine";
 
 /** Mağaza verisi ve saf yardımcıları (ağdan gelen hiçbir şeye güvenilmez). Katalog motorda, burada yalnız durum var. */
@@ -41,6 +42,7 @@ export function parseShopState(data: unknown, localNow: number): ShopState | nul
   }
   const equipped: ShopState["equipped"] = {};
   for (const t of COSMETIC_TYPES) {
+    if (t.key === null) continue;
     const id = data.equipped[t.id];
     if (typeof id !== "string") continue;
     const it = cosmeticItem(id);
@@ -141,28 +143,59 @@ export const RARITY_LABEL: Readonly<Record<CosmeticItem["rarity"], string>> = {
 /** Fırsat indirimi etiketi ("-%30"). */
 export const DISCOUNT_LABEL = "−%30";
 
-/** Dolap bölümleri sırası: çerçeve, unvan, ad efekti, dans, şapka, üst (katalog sırasından bağımsız). */
-export const SHOP_TYPES = (["cerceve", "unvan", "ad-efekti", "dans", "sapka", "ust"] as const).map((id) =>
-  cosmeticType(id),
-);
+/**
+ * Dolap bölümleri sırası: önce görünüş (çerçeve, unvan, ad efekti, dans, şapka, üst), sonra efektler (kart arkası,
+ * zafer, giriş) ve en sonda tepki paketleri (katalog sırasından bağımsız).
+ */
+export const SHOP_TYPES = (
+  ["cerceve", "unvan", "ad-efekti", "dans", "sapka", "ust", "kart-arkasi", "zafer", "giris", "tepki"] as const
+).map((id) => cosmeticType(id));
 
 /** Mağaza sekmesi: tek tür ya da aynı gruptaki türler ("Giysiler": her giysi yuvası ayrı türdür). */
 export interface ShopTab {
   id: string;
   label: string;
   types: CosmeticTypeId[];
+  /** Hangi bölümde: "gorunus" (avatar ve kürsü) ya da "efekt" (oyun içi efektler). */
+  section: ShopSection;
 }
 
-/** Mağaza sekmeleri: çerçeve, lakap, ad efekti, dans ve tüm giysi yuvaları tek "Giysiler" sekmesinde. */
+export type ShopSection = "gorunus" | "efekt";
+
+export const SHOP_SECTIONS: readonly { id: ShopSection; label: string }[] = [
+  { id: "gorunus", label: "Görünüş" },
+  { id: "efekt", label: "Efektler" },
+];
+
+const single = (id: CosmeticTypeId, section: ShopSection, label?: string): ShopTab => ({
+  id,
+  label: label ?? cosmeticType(id).plural,
+  types: [id],
+  section,
+});
+
+/**
+ * Mağaza sekmeleri iki bölümde (dar ekranda her bölüm tek satıra sığar): Görünüş = çerçeve, lakap, ad efekti,
+ * dans, giysiler; Efektler = kart arkası, zafer, tepki, giriş.
+ */
 export const SHOP_TABS: readonly ShopTab[] = [
-  ...(["cerceve", "unvan", "ad-efekti", "dans"] as const).map((id) => ({
-    id,
-    label: cosmeticType(id).plural,
-    types: [id] as CosmeticTypeId[],
-  })),
+  single("cerceve", "gorunus"),
+  single("unvan", "gorunus"),
+  single("ad-efekti", "gorunus"),
+  single("dans", "gorunus"),
   {
     id: "giysi",
     label: "Giysiler",
     types: COSMETIC_TYPES.filter((t) => t.group === "giysi").map((t) => t.id),
+    section: "gorunus",
   },
+  single("kart-arkasi", "efekt", "Kart arkası"),
+  single("zafer", "efekt", "Zafer"),
+  single("tepki", "efekt", "Tepki"),
+  single("giris", "efekt", "Giriş"),
 ];
+
+/** Sahip olunan tepki paketleri (katalog sırasıyla): tepki yelpazesine çıkartma sayfası olarak eklenir. */
+export function ownedPacks(s: ShopState | null): CosmeticItem[] {
+  return s ? itemsOfType("tepki").filter((i) => s.owned.includes(i.id)) : [];
+}

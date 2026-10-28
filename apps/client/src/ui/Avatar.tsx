@@ -4,7 +4,7 @@ import { colorBlind } from "../settings/settings.js";
 import { look, type Mood, moodSrc } from "./avatars.js";
 import { CheckIcon, CrownIcon } from "./Icons.js";
 import { HouseIcon } from "./LobbyIcons.js";
-import { frameCrownTop, frameSrc } from "./shopArt.js";
+import { entryLayers, frameCrownTop, frameSrc } from "./shopArt.js";
 
 interface Props {
   index: number;
@@ -31,6 +31,11 @@ interface Props {
   live?: "breathe" | "joy" | "think" | undefined;
   /** Kuşanılan avatar çerçevesi (katalog kimliği); bilinmeyen kimlik yok sayılır. */
   frame?: string | undefined;
+  /**
+   * Giriş efekti (katalog kimliği): takıldığında bir kez oynar (~1 sn); zemin halkası avatarın arkasında, ışık
+   * önünde. Çağıran kısa süre sonra kaldırır; yeniden oynatmak için kaldırıp yeniden verir. Bilinmeyen kimlik yok sayılır.
+   */
+  entry?: string | undefined;
   /** Simge (hex rozet) göster; küçük boylarda gizlenir. */
   pip?: boolean;
   class?: string;
@@ -41,6 +46,7 @@ export function Avatar(props: Props) {
   /** Geçerli çerçeve kimliği (katalogda ve doğru türde); yoksa undefined. */
   const framed = () =>
     props.frame !== undefined && cosmeticItem(props.frame)?.type === "cerceve" ? props.frame : undefined;
+  const entry = () => entryLayers(props.entry);
   const big = () => typeof props.size === "string" || props.size >= 56;
   const src = () => (props.mood ? moodSrc(props.index, props.mood) : null);
   // Ruh hâli görseli yüklenene kadar büst görünür; yüklenince çapraz geçiş olur.
@@ -66,6 +72,13 @@ export function Avatar(props: Props) {
         "--live-d": `${-((props.index * 0.37) % 2.6).toFixed(2)}s`,
       }}
     >
+      <Show when={entry()}>
+        {(art) => (
+          <span class="av__entry av__entry--back" data-fx={props.entry} aria-hidden="true">
+            <img src={art().back} alt="" draggable={false} />
+          </span>
+        )}
+      </Show>
       <div class="av__disc">
         <img
           class="av__img"
@@ -106,6 +119,13 @@ export function Avatar(props: Props) {
               width="384"
               height="384"
             />
+          </span>
+        )}
+      </Show>
+      <Show when={entry()}>
+        {(art) => (
+          <span class="av__entry av__entry--front" data-fx={props.entry} aria-hidden="true">
+            <img src={art().front} alt="" draggable={false} />
           </span>
         )}
       </Show>

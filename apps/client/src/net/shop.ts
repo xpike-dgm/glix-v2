@@ -6,7 +6,7 @@ import {
   currentPrice,
 } from "@glix/engine";
 import { createSignal } from "solid-js";
-import { parseShopState, type ShopState, shopErrorText } from "./shopRules.js";
+import { ownedPacks, parseShopState, type ShopState, shopErrorText } from "./shopRules.js";
 
 export type ShopLoad = "loading" | "ready" | "error";
 
@@ -21,6 +21,14 @@ export const ownCosmetics = (): Cosmetics | undefined => {
   const s = shop();
   return s ? cosmeticsFromEquipped(s.equipped) : undefined;
 };
+
+/** Sahip olunan tepki paketleri; mağaza yüklenmediyse (misafir dahil) boş. */
+export const ownPacks = () => ownedPacks(shop());
+
+/** Hesaplı oyuncu bir odadayken tepki paketlerini bilmek için mağaza durumu bir kez yüklenir. */
+export function ensureShopLoaded(): void {
+  if (shop() === null && shopLoad() !== "error") void loadShop();
+}
 
 /** Yalnız geliştirme önizlemesi: durum sabitlenir, ağ kullanılmaz; satın alma/kuşanma yerelde uygulanır. */
 let frozen = false;

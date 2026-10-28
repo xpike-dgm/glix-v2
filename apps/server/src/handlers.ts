@@ -7,6 +7,7 @@ import {
   MAX_PLAYERS,
   MAX_STAGES,
   PROTOCOL_VERSION,
+  parseStickerId,
   REACTION_MIN_GAP_MS,
 } from "@glix/engine";
 import { cardEvent, playContext } from "./cards.js";
@@ -423,6 +424,11 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       const now = rt.clock.now();
       if (now - me.lastReactAt < REACTION_MIN_GAP_MS) return;
       me.lastReactAt = now;
+      // Tepki paketi çıkartması: yalnız paketin hesaplı sahibi gönderebilir (misafir ve sahip olmayan sessizce atılır).
+      const sticker = parseStickerId(msg.emoji);
+      if (sticker) {
+        if (!rt.social.ownsCosmetic(conn.account?.id ?? null, sticker.item.id)) return;
+      }
       const event = { type: "reaction", playerId: me.id, emoji: msg.emoji } as const;
       for (const p of room.players.values()) p.conn?.send(event);
       return;

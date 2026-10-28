@@ -9,6 +9,7 @@ import type {
   JoinPolicy,
   MatchSnapshot,
   PlayerInfo,
+  ReactionId,
   RoomPhase,
   RoomSnapshot,
 } from "@glix/engine";
@@ -131,6 +132,34 @@ export function startMock(kind: string, params: URLSearchParams): void {
       const extra = KARS[p.id];
       return extra ? { ...p, cosmetics: { ...p.cosmetics, ...extra } } : p;
     });
+  }
+  // `&zafer=balon|konfeti|havai-fisek|simsek|altin-yagmur`: 1. sıradaki Cihad'ın kuşandığı zafer kutlaması;
+  // `&giris=isinlanma|duman|simsek|portal|altin-isik`: sen ve Elif lobiye giriş efektiyle girersin.
+  const zafer = params.get("zafer");
+  const giris = params.get("giris");
+  if (zafer || giris) {
+    players = players.map((p) => {
+      if (p.id === "p0" && zafer)
+        return { ...p, cosmetics: { ...p.cosmetics, celebration: `zafer-${zafer}` } };
+      if ((p.id === "p0" || p.id === "p1") && giris)
+        return { ...p, cosmetics: { ...p.cosmetics, entry: `giris-${giris}` } };
+      return p;
+    });
+  }
+  // `&paket=1`: hesaplı oyuncu üç tepki paketine de sahip (tepki yelpazesinde çıkartma sayfaları).
+  // Hesaplı oyuncu odadayken tepki paketleri için mağaza durumu okunur: önizlemede ağ yerine sabit durum.
+  if (
+    (params.get("acct") === "1" || params.get("paket") === "1") &&
+    (kind === "lobby" || kind === "results" || kind === "final")
+  ) {
+    const paket = params.get("paket") === "1";
+    freezeShop({
+      balance: 500,
+      owned: paket ? ["tepki-neon-yuzler", "tepki-parti", "tepki-efsane"] : [],
+      equipped: {},
+      clockOffset: 0,
+    });
+    if (paket) setState({ account: { username: "cihad_01", email: "cihad@example.com" } });
   }
   // `&watch=K`: son K kişi maçı izleyen (sıralanmayan); `&afterwatch=1`: kendin izleyici olarak final'den lobiye dönersin.
   const watchCount = Math.min(n - 1, Math.max(0, Number(params.get("watch")) || 0));
@@ -617,6 +646,12 @@ export function startMock(kind: string, params: URLSearchParams): void {
                 "dans-makarena",
                 "sapka-neon-kep",
                 "ust-neon-bomber",
+                "kart-neon-izgara",
+                "kart-elektrik",
+                "zafer-balon",
+                "zafer-altin-yagmur",
+                "tepki-parti",
+                "giris-portal",
               ],
         equipped:
           v === "bos"
@@ -628,6 +663,9 @@ export function startMock(kind: string, params: URLSearchParams): void {
                 dans: "dans-makarena",
                 sapka: "sapka-neon-kep",
                 ust: "ust-neon-bomber",
+                "kart-arkasi": "kart-elektrik",
+                zafer: "zafer-balon",
+                giris: "giris-portal",
               },
         clockOffset: 0,
       });
@@ -679,7 +717,12 @@ export function startMock(kind: string, params: URLSearchParams): void {
   }
   // `&emoji=1`: lobide, sonuç ve finalde birkaç oyuncudan emoji uçar (ekran denetimi için).
   if ((kind === "lobby" || kind === "results" || kind === "final") && params.get("emoji") === "1") {
-    const picks = ["😂", "🔥", "👏", "😱"] as const;
+    // `&stiker=1`: emoji yerine tepki paketi çıkartmaları uçar.
+    const picks = (
+      params.get("stiker") === "1"
+        ? ["pack:parti:2", "pack:efsane-tepkiler:1", "pack:neon-yuzler:5", "pack:parti:5"]
+        : ["😂", "🔥", "👏", "😱"]
+    ) as readonly ReactionId[];
     const burst = (): void => {
       players.slice(0, 4).forEach((p, i) => {
         const emoji = picks[i % picks.length];

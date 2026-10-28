@@ -4,7 +4,7 @@ import {
   type CardSettings,
   type ClientMessage,
   type JoinPolicy,
-  type LobbyEmoji,
+  type ReactionId,
   type ReportReason,
   type RoomSnapshot,
 } from "@glix/engine";
@@ -586,7 +586,7 @@ export function chooseAvatar(avatar: number): Promise<ActionAck> {
 }
 export const transferHost = (playerId: string): boolean => rawSend({ type: "transferHost", playerId });
 export const setLobbyReady = (ready: boolean): boolean => rawSend({ type: "setReady", ready });
-export const sendReaction = (emoji: LobbyEmoji): boolean => rawSend({ type: "react", emoji });
+export const sendReaction = (emoji: ReactionId): boolean => rawSend({ type: "react", emoji });
 export const renameSelf = (nickname: string): boolean => rawSend({ type: "rename", nickname });
 /** Lobide Kartlar ayarı (yalnız host). */
 export const setCards = (settings: CardSettings): boolean =>

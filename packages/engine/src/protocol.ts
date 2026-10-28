@@ -1,6 +1,7 @@
 import { type CardId, type CardSettings, isCardId, parseCardSettings } from "./cards/catalog.js";
 import type { CardsMine, CardsPublic } from "./cards/view.js";
-import type { Cosmetics } from "./cosmetics.js";
+import type { Cosmetics, StickerId } from "./cosmetics.js";
+import { parseStickerId } from "./cosmetics.js";
 import type { GameResult } from "./game.js";
 import { isReportReason, type ReportReason, sanitizeReportNote } from "./moderation/report.js";
 import type { SiteNotice } from "./siteNotice.js";
@@ -32,6 +33,13 @@ export const REACTION_MIN_GAP_MS = 700;
 
 export function isLobbyEmoji(value: unknown): value is LobbyEmoji {
   return typeof value === "string" && (LOBBY_EMOJIS as readonly string[]).includes(value);
+}
+
+/** Tepki: sabit emoji ya da tepki paketi çıkartması (`pack:<paket>:<n>`, bkz. `parseStickerId`). */
+export type ReactionId = LobbyEmoji | StickerId;
+
+export function isReactionId(value: unknown): value is ReactionId {
+  return isLobbyEmoji(value) || parseStickerId(value) !== null;
 }
 
 /** Maç sürerken odaya katılım: "izleyici" (varsayılan) izleyici olarak girer, "kapali" kimseyi almaz. */
@@ -93,7 +101,7 @@ export type ClientMessage =
   /** Lobide takma ad değiştir (yalnız lobi; odada benzersiz). */
   | { type: "rename"; nickname: string }
   /** Lobide emoji tepkisi (sabit küme, yalnız lobi, oyuncu başına 700 ms'de bir). Sunucu herkese `reaction` yollar. */
-  | { type: "react"; emoji: LobbyEmoji }
+  | { type: "react"; emoji: ReactionId }
   /** Lobide "Hazırım" işareti (host dışı oyuncular; yalnız lobi). Başlamak için şart değildir. */
   | { type: "setReady"; ready: boolean }
   | { type: "resume"; token: string }
@@ -347,7 +355,7 @@ export type ServerMessage =
   | { type: "actionAck"; seq: number; ok: boolean; reason?: string }
   | { type: "left"; reason: LeftReason }
   /** Geçici olay (oda durumunda saklanmaz): lobide `playerId` bir emoji gönderdi. */
-  | { type: "reaction"; playerId: string; emoji: LobbyEmoji }
+  | { type: "reaction"; playerId: string; emoji: ReactionId }
   /** Bir arkadaşının durumu değişti (yalnız kabul edilmiş arkadaşlara gider). */
   | { type: "friendStatus"; username: string; status: FriendStatus }
   /** Sana arkadaşlık isteği geldi. */
@@ -504,7 +512,7 @@ export function parseClientMessage(raw: string): ClientMessage | null {
     }
     case "react": {
       if (!hasExactKeys(data, ["type", "emoji"])) return null;
-      return isLobbyEmoji(data.emoji) ? { type: "react", emoji: data.emoji } : null;
+      return isReactionId(data.emoji) ? { type: "react", emoji: data.emoji } : null;
     }
     case "setReady": {
       if (!hasExactKeys(data, ["type", "ready"])) return null;

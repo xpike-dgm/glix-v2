@@ -1558,7 +1558,7 @@ export function createAccounts(path: string): AccountStore {
     },
     cosmetics: (accountId) => cosDump(accountId),
     equipCosmetic(accountId, type, itemId) {
-      if (!COSMETIC_TYPES.some((t) => t.id === type)) return "unknown";
+      if (!COSMETIC_TYPES.some((t) => t.id === type && t.key !== null)) return "unknown";
       let result: CosmeticEquip = "missing";
       inTransaction(() => {
         if (!glixAccount.get(accountId)) return;

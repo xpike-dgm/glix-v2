@@ -16,6 +16,7 @@ import {
   itemStatus,
   priceNow,
   RARITY_LABEL,
+  SHOP_SECTIONS,
   SHOP_TABS,
   type ShopState,
   shopErrorText,
@@ -24,10 +25,12 @@ import {
 } from "../net/shopRules.js";
 import { goHome, state, toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
+import { isArtItem } from "../ui/artItems.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
 import { CharacterPoster } from "../ui/CharacterPoster.js";
 import { CharacterView } from "../ui/CharacterView.js";
+import { frameOf } from "../ui/Cosmetic.js";
 import { CosmeticPreview, itemCosmetics } from "../ui/CosmeticPreview.js";
 import { isCharacterItem, posterSpec, previewCosmetics } from "../ui/characterItems.js";
 import { GhostButton } from "../ui/GhostButton.js";
@@ -36,6 +39,15 @@ import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
 import { BalancePill, Price, RarityChip, ShopTabBar } from "../ui/ShopBits.js";
+import {
+  CardBackArt,
+  CelebrationCollage,
+  CelebrationLive,
+  EntryLayers,
+  EntryLive,
+  PackCollage,
+  PackGrid,
+} from "../ui/ShopPreview.js";
 import { boxSrc } from "../ui/shopArt.js";
 
 function previewParts(item: CosmeticItem): "avatar" | "name" | "title" {
@@ -68,17 +80,33 @@ function Card(props: {
       onClick={() => props.onOpen(props.item.id)}
     >
       <span class="shop-card__pv" aria-hidden="true">
+        <Show when={isArtItem(props.item)}>
+          <Show when={props.item.type === "kart-arkasi"}>
+            <CardBackArt item={props.item} size="tile" />
+          </Show>
+          <Show when={props.item.type === "zafer"}>
+            <CelebrationCollage item={props.item} />
+          </Show>
+          <Show when={props.item.type === "tepki"}>
+            <PackCollage item={props.item} />
+          </Show>
+          <Show when={props.item.type === "giris"}>
+            <EntryLayers item={props.item} />
+          </Show>
+        </Show>
         <Show
-          when={isCharacterItem(props.item)}
+          when={!isArtItem(props.item) && isCharacterItem(props.item)}
           fallback={
-            <CosmeticPreview
-              avatar={avatarFromName(name())}
-              name={name()}
-              cosmetics={itemCosmetics(props.item)}
-              size={60}
-              parts={previewParts(props.item)}
-              plate={props.deal === undefined}
-            />
+            <Show when={!isArtItem(props.item)}>
+              <CosmeticPreview
+                avatar={avatarFromName(name())}
+                name={name()}
+                cosmetics={itemCosmetics(props.item)}
+                size={60}
+                parts={previewParts(props.item)}
+                plate={props.deal === undefined}
+              />
+            </Show>
           }
         >
           <CharacterPoster
@@ -120,11 +148,17 @@ const TYPE_LABEL: Readonly<Record<CosmeticTypeId, string>> = {
   dans: "Dans",
   sapka: "Şapka",
   ust: "Üst giysi",
+  "kart-arkasi": "Kart arkası",
+  zafer: "Zafer kutlaması",
+  tepki: "Tepki paketi",
+  giris: "Giriş efekti",
 };
 
 /** Mağaza: günün fırsatı (iki büyük karo), alt çizgili sekmeler, iki sütun ürün ızgarası; karta dokununca satın alma sayfası. */
 export function Shop() {
   const [tab, setTab] = createSignal<string>("cerceve");
+  const section = () => SHOP_TABS.find((t) => t.id === tab())?.section ?? "gorunus";
+  const sectionTabs = () => SHOP_TABS.filter((t) => t.section === section());
   const [openId, setOpenId] = createSignal<string | null>(null);
   const [busy, setBusy] = createSignal(false);
   const [msg, setMsg] = createSignal<string | null>(null);
@@ -239,8 +273,26 @@ export function Shop() {
                 </section>
               </Show>
 
+              <div class="shop-sections" role="tablist" aria-label="Ürün bölümü">
+                <For each={SHOP_SECTIONS}>
+                  {(sec) => (
+                    <button
+                      type="button"
+                      role="tab"
+                      class="shop-section"
+                      aria-selected={section() === sec.id}
+                      onClick={() => {
+                        if (section() !== sec.id)
+                          setTab(SHOP_TABS.find((t) => t.section === sec.id)?.id ?? "cerceve");
+                      }}
+                    >
+                      {sec.label}
+                    </button>
+                  )}
+                </For>
+              </div>
               <div class="shop-tabs" role="tablist" aria-label="Ürün türü">
-                <For each={SHOP_TABS}>
+                <For each={sectionTabs()}>
                   {(t) => (
                     <button
                       type="button"
@@ -289,18 +341,44 @@ export function Shop() {
                       <RarityChip rarity={item().rarity} />
                       <span class="shop-sheet__type">{TYPE_LABEL[item().type]}</span>
                     </p>
-                    <div class="shop-sheet__stage" data-char={isCharacterItem(item()) ? "1" : undefined}>
-                      <Show
-                        when={isCharacterItem(item())}
-                        fallback={
-                          <CosmeticPreview
+                    <div
+                      class="shop-sheet__stage"
+                      data-char={isCharacterItem(item()) ? "1" : undefined}
+                      data-art={isArtItem(item()) ? item().type : undefined}
+                    >
+                      <Show when={item().type === "kart-arkasi"}>
+                        <CardBackArt item={item()} size="big" />
+                      </Show>
+                      <Show when={item().type === "zafer"}>
+                        <Show when={item().id} keyed>
+                          <CelebrationLive item={item()} />
+                        </Show>
+                      </Show>
+                      <Show when={item().type === "tepki"}>
+                        <PackGrid item={item()} />
+                      </Show>
+                      <Show when={item().type === "giris"}>
+                        <Show when={item().id} keyed>
+                          <EntryLive
+                            item={item()}
                             avatar={avatarFromName(name())}
-                            name={name()}
-                            cosmetics={itemCosmetics(item())}
-                            size="clamp(76px, 26vmin, 120px)"
-                            parts="both"
-                            plate
+                            frame={frameOf(ownCosmetics())}
                           />
+                        </Show>
+                      </Show>
+                      <Show
+                        when={!isArtItem(item()) && isCharacterItem(item())}
+                        fallback={
+                          <Show when={!isArtItem(item())}>
+                            <CosmeticPreview
+                              avatar={avatarFromName(name())}
+                              name={name()}
+                              cosmetics={itemCosmetics(item())}
+                              size="clamp(76px, 26vmin, 120px)"
+                              parts="both"
+                              plate
+                            />
+                          </Show>
                         }
                       >
                         <CharacterView
@@ -331,7 +409,14 @@ export function Shop() {
                         </span>
                       </PrimaryButton>
                     </Show>
-                    <Show when={status() === "owned"}>
+                    <Show when={status() === "owned" && item().type === "tepki"}>
+                      <PrimaryButton variant="done" disabled>
+                        <span class="shop-buy">
+                          <CheckIcon size={20} /> Tepkilerde hazır
+                        </span>
+                      </PrimaryButton>
+                    </Show>
+                    <Show when={status() === "owned" && item().type !== "tepki"}>
                       <PrimaryButton busy={busy()} onClick={() => void equip(item())}>
                         Kuşan
                       </PrimaryButton>
