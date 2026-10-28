@@ -33,6 +33,10 @@ describe("parseProfile rozetler", () => {
     expect(parseProfile(good)?.glix).toBeNull();
     expect(parseProfile({ ...good, glix: 120 })?.glix).toBe(120);
     expect(parseProfile({ ...good, glix: -5 })?.glix).toBeNull();
+    expect(parseProfile(good)?.cosmetics).toBeUndefined();
+    expect(parseProfile({ ...good, cosmetics: { title: "unvan-efsane", frame: "yok" } })?.cosmetics).toEqual({
+      title: "unvan-efsane",
+    });
     expect(parseProfile({ ...good, badges: "x" })?.badges).toEqual([]);
   });
 });

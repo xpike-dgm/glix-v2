@@ -156,3 +156,18 @@ export const CoinIcon = (p: P) => (
     <path d="M12 8.2l3 3.8-3 3.8-3-3.8z" fill="#8a5a00" stroke="none" />
   </svg>
 );
+
+/** Dolap (askı): Dolabım girişi. */
+export const HangerIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M12 7.5V6.4a2.2 2.2 0 1 0-2.2-2.2" />
+    <path d="M12 7.5 3.4 14a1.6 1.6 0 0 0 1 2.9h15.2a1.6 1.6 0 0 0 1-2.9z" />
+  </svg>
+);
+/** Alışveriş çantası: Mağaza girişi. */
+export const BagIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M5 8h14l-1 12.2H6z" />
+    <path d="M9 10.5V7a3 3 0 0 1 6 0v3.5" />
+  </svg>
+);

@@ -158,3 +158,11 @@ describe("Glix yönetici yardımcıları", () => {
     expect(auditDetail("account_glix", "-5")).toBe("-5 Glix");
   });
 });
+
+describe("kozmetik işlem kaydı", () => {
+  it("armağan, geri alma ve satın alma satırları ürün adıyla yazılır", () => {
+    expect(auditDetail("account_cosmetic_grant", "unvan-efsane")).toBe("Efsane");
+    expect(auditDetail("account_cosmetic_revoke", "yok-boyle")).toBe("yok-boyle");
+    expect(glixRefText("satin-alma", "cerceve-cift")).toBe("Çift Halka");
+  });
+});

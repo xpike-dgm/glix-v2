@@ -42,6 +42,9 @@ export function Disclosure() {
           <li>Maç sonuçların, istatistiklerin ve rozetlerin: profilini ve sıralamayı göstermek için.</li>
           <li>Glix bakiyen ve Glix hareketlerin: ne zaman ve neden kazandığını göstermek için.</li>
           <li>
+            Mağazadan aldığın ve kuşandığın ürünler (unvan, ad efekti, çerçeve): diğer oyuncular da görür.
+          </li>
+          <li>
             Arkadaşların, isteklerin ve engellediklerin: arkadaş özelliklerini çalıştırmak için. Yalnız kabul
             ettiğin arkadaşlar durumunu ve profil özetini görür.
           </li>

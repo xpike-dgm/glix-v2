@@ -23,6 +23,8 @@ import "./styles/leaderboard.css";
 import "./styles/colorblind.css";
 import "./styles/cards.css";
 import "./styles/result.css";
+import "./styles/cosmetics.css";
+import "./styles/shop.css";
 
 installAudioUnlock();
 applyRootSettings();

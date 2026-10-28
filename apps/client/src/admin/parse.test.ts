@@ -155,6 +155,10 @@ const detailReply = {
   badges: 1,
   friends: 0,
   glix: { balance: 40, ledger: [{ at: 7, amount: 40, reason: "mac", ref: "yer:1" }] },
+  cosmetics: {
+    owned: [{ itemId: "unvan-sansli", acquiredAt: 9, pricePaid: 0 }],
+    equipped: { unvan: "unvan-sansli" },
+  },
   protected: false,
   suspension: null,
 };
@@ -164,6 +168,8 @@ describe("hesap yanıtları", () => {
     expect(parseAccounts(accountsReply).mail.totals.verify.failed).toBe(1);
     expect(parseDetail(detailReply).email).toBe("ali@test.local");
     expect(parseDetail(detailReply).glix.balance).toBe(40);
+    expect(parseDetail(detailReply).cosmetics.equipped).toEqual({ unvan: "unvan-sansli" });
+    expect(tryParse(parseDetail, { ...detailReply, cosmetics: undefined })).toBeNull();
     expect(parseDetail(detailReply).glix.ledger[0]?.reason).toBe("mac");
     expect(
       parseDetail({ ...detailReply, suspension: { since: 1, until: null, reason: "x" } }).suspension,

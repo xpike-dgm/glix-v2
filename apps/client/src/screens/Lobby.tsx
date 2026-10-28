@@ -17,6 +17,7 @@ import { inviteLink } from "../net/code.js";
 import { setNickname, state, toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
+import { frameOf, PlayerName, PlayerTitle } from "../ui/Cosmetic.js";
 import { EmojiBar } from "../ui/EmojiBar.js";
 import { ChevronRightIcon, GearIcon, PlusIcon, QrIcon, ShareIcon, UsersIcon } from "../ui/Icons.js";
 import { LeaveButton } from "../ui/LeaveButton.js";
@@ -283,7 +284,15 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                 data-pid={snap().selfId}
                 onClick={() => setPickOpen(true)}
               >
-                <Avatar index={myAvatar()} size={56} host hostMark="house" connected live="breathe" />
+                <Avatar
+                  index={myAvatar()}
+                  size={56}
+                  host
+                  hostMark="house"
+                  connected
+                  live="breathe"
+                  frame={frameOf(me()?.cosmetics)}
+                />
               </button>
             </Show>
             <Show when={!solo()}>
@@ -394,8 +403,12 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                           connected={player.connected}
                           self={mine()}
                           live="breathe"
+                          frame={frameOf(player.cosmetics)}
                         />
-                        <span class="seat__name">{player.nickname}</span>
+                        <span class="seat__name">
+                          <PlayerName name={player.nickname} cosmetics={player.cosmetics} />
+                        </span>
+                        <PlayerTitle cosmetics={player.cosmetics} class="seat__title" />
                       </button>
                     );
                   }}

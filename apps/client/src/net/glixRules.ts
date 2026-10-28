@@ -55,45 +55,54 @@ export function parseGlixEarned(data: unknown): GlixEarnedInfo | null {
   return { total, parts, balance, capped: data.capped };
 }
 
-/** Rozetin görünen adı: "Rozet: İlk Adım +25". Ad bilinmiyorsa genel ifade. */
 export interface GlixLine {
   label: string;
   amount: number;
 }
 
-/** Döküm satırları. `placeOf`: maçtaki sıra (bilinmiyorsa null); `badgeName`: rozet adı (bilinmiyorsa undefined). */
-export function glixLines(
-  earned: GlixEarnedInfo,
-  placeOf: number | null,
-  badgeName: (id: string) => string | undefined,
-): GlixLine[] {
-  return earned.parts.map((p) => {
+/**
+ * Kısa döküm satırları ("Maç +10 · 1. +15 · İlk maç ×2 +25 · Rozet +50"). `placeOf`: maçtaki sıra (bilinmiyorsa null).
+ * Birden çok rozet tek "Rozet" satırında toplanır.
+ */
+export function glixLines(earned: GlixEarnedInfo, placeOf: number | null): GlixLine[] {
+  const out: GlixLine[] = [];
+  let badge = 0;
+  for (const p of earned.parts) {
     switch (p.kind) {
       case "mac":
-        return { label: "Maç", amount: p.amount };
+        out.push({ label: "Maç", amount: p.amount });
+        break;
       case "sira":
-        return { label: placeOf === null ? "Sıralama" : `${placeOf}. oldun`, amount: p.amount };
+        out.push({ label: placeOf === null ? "Sıra" : `${placeOf}.`, amount: p.amount });
+        break;
       case "gununIlki":
-        return { label: "Günün ilk maçı ×2", amount: p.amount };
+        out.push({ label: "İlk maç ×2", amount: p.amount });
+        break;
       default:
-        return { label: `Rozet: ${badgeName(p.badgeId ?? "") ?? "Yeni rozet"}`, amount: p.amount };
+        badge += p.amount;
     }
-  });
+  }
+  if (badge > 0) out.push({ label: "Rozet", amount: badge });
+  return out;
 }
 
-export const GLIX_CAP_TEXT = "Bugünlük maç sınırına ulaştın";
+/** Tek satırlık döküm metni. */
+export const glixInline = (lines: readonly GlixLine[]): string =>
+  lines.map((l) => `${l.label} +${l.amount}`).join(" · ");
+
+export const GLIX_CAP_TEXT = "Bugünlük sınır doldu";
 
 /** "+25 Glix" */
 export function glixText(n: number): string {
   return `${n > 0 ? "+" : ""}${n} Glix`;
 }
 
-/** Misafire gösterilen metin: tamamlama + sıralama eki; ikiye katlama ve sınır yok. */
+/** Misafire gösterilen metin ("Kayıt ol" bağlantısı yanına eklenir): tamamlama + sıralama eki; ikiye katlama ve sınır yok. */
 export function guestGlixText(place: number): string {
-  return `Hesap açsaydın ${matchBase(place)} Glix kazanırdın`;
+  return `Hesap açsan +${matchBase(place)} Glix kazanırdın`;
 }
 
-/** Profilde: "Glix bakiyen: 1.250" gibi (Türkçe binlik ayırıcı). */
+/** Bakiye rakamı: "1.250" (Türkçe binlik ayırıcı). */
 export function balanceText(n: number): string {
-  return `Glix bakiyen: ${n.toLocaleString("tr-TR")}`;
+  return n.toLocaleString("tr-TR");
 }

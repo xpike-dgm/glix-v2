@@ -16,6 +16,7 @@ import { ShareSheet } from "../share/ShareSheet.js";
 import { Avatar } from "../ui/Avatar.js";
 import type { Mood } from "../ui/avatars.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
+import { frameOf, PlayerName, PlayerTitle } from "../ui/Cosmetic.js";
 import { EmojiFan } from "../ui/EmojiFan.js";
 import { FeedbackRow } from "../ui/FeedbackRow.js";
 import { GhostButton } from "../ui/GhostButton.js";
@@ -169,8 +170,12 @@ export function Final(props: { snap: RoomSnapshot }) {
                     winner={r.rank === 1}
                     connected={r.player.connected}
                     self={r.player.id === props.snap.selfId}
+                    frame={frameOf(r.player.cosmetics)}
                   />
-                  <span class="podium__name">{r.player.nickname}</span>
+                  <span class="podium__name">
+                    <PlayerName name={r.player.nickname} cosmetics={r.player.cosmetics} />
+                  </span>
+                  <PlayerTitle cosmetics={r.player.cosmetics} class="podium__title" />
                   <span class="podium__score">{formatScore(r.score)}</span>
                   <PodiumBlock rank={r.rank} />
                 </div>
@@ -221,9 +226,15 @@ export function Final(props: { snap: RoomSnapshot }) {
                       size={36}
                       mood={rowMood(r.rank, r.score)}
                       connected={r.player.connected}
+                      frame={frameOf(r.player.cosmetics)}
                     />
                     <span class="row__name">
-                      <span class="row__nick">{r.player.nickname}</span>
+                      <span class="row__who">
+                        <span class="row__nick">
+                          <PlayerName name={r.player.nickname} cosmetics={r.player.cosmetics} />
+                        </span>
+                        <PlayerTitle cosmetics={r.player.cosmetics} />
+                      </span>
                       <Show when={r.player.id === props.snap.selfId}>
                         <em class="row__me">Sen</em>
                       </Show>
@@ -238,22 +249,17 @@ export function Final(props: { snap: RoomSnapshot }) {
           <MatchGallery players={props.snap.players} />
 
           <Show when={!state.account}>
-            <div class="fin__invite" role="note">
-              <span class="fin__invitetext">
-                <Show when={myPlace()} fallback="Rozet ve istatistik için hesap aç">
-                  {(place) => (
-                    <>
-                      {guestGlixText(place())}
-                      <br />
-                      <span class="fin__invitesub">Rozet ve istatistik de hesapla gelir</span>
-                    </>
-                  )}
+            <p class="fin__guest">
+              <span>
+                <Show when={myPlace()} fallback="Hesap açsan Glix ve rozet kazanırdın">
+                  {(place) => guestGlixText(place())}
                 </Show>
+                {" ·"}
               </span>
-              <GhostButton size="small" onClick={() => setInviteOpen(true)}>
+              <button type="button" class="fin__link" onClick={() => setInviteOpen(true)}>
                 Kayıt ol
-              </GhostButton>
-            </div>
+              </button>
+            </p>
           </Show>
 
           <Show when={!watching()}>

@@ -343,6 +343,28 @@ export function parseDetail(v: unknown): AdminAccountDetail {
         ),
       };
     })(),
+    cosmetics: (() => {
+      const c = rec(o.cosmetics);
+      const eq = rec(c.equipped);
+      const equipped: Record<string, string> = {};
+      for (const [slot, id] of Object.entries(eq)) {
+        if (typeof id !== "string") throw new ParseError("equipped");
+        equipped[slot] = id;
+      }
+      return {
+        owned: list(
+          c,
+          "owned",
+          (r) => ({
+            itemId: str(r, "itemId"),
+            acquiredAt: num(r, "acquiredAt"),
+            pricePaid: num(r, "pricePaid"),
+          }),
+          100,
+        ),
+        equipped,
+      };
+    })(),
     protected: bool(o, "protected"),
     suspension: sus
       ? { since: num(sus, "since"), until: nullableNum(sus, "until"), reason: str(sus, "reason") }

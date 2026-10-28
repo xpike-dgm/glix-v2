@@ -11,6 +11,7 @@ import { createServerNow } from "../net/time.js";
 import { Avatar } from "../ui/Avatar.js";
 import type { Mood } from "../ui/avatars.js";
 import { CardLines } from "../ui/CardLines.js";
+import { frameOf, PlayerName, PlayerTitle } from "../ui/Cosmetic.js";
 import { EmojiFan } from "../ui/EmojiFan.js";
 import { PodiumBlock } from "../ui/PodiumBlock.js";
 import { ProgressBar } from "../ui/ProgressBar.js";
@@ -194,8 +195,12 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
                   winner={r.rank === 1}
                   connected={r.player.connected}
                   self={r.player.id === props.snap.selfId}
+                  frame={frameOf(r.player.cosmetics)}
                 />
-                <span class="podium__name">{r.player.nickname}</span>
+                <span class="podium__name">
+                  <PlayerName name={r.player.nickname} cosmetics={r.player.cosmetics} />
+                </span>
+                <PlayerTitle cosmetics={r.player.cosmetics} class="podium__title" />
                 <span class="podium__score">{formatScore(r.score)}</span>
                 <PodiumBlock rank={r.rank} />
               </div>
@@ -221,9 +226,15 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
                   size={36}
                   mood={award(r.player.id) < 0 ? "shock" : "idle"}
                   connected={r.player.connected}
+                  frame={frameOf(r.player.cosmetics)}
                 />
                 <span class="row__name">
-                  <span class="row__nick">{r.player.nickname}</span>
+                  <span class="row__who">
+                    <span class="row__nick">
+                      <PlayerName name={r.player.nickname} cosmetics={r.player.cosmetics} />
+                    </span>
+                    <PlayerTitle cosmetics={r.player.cosmetics} />
+                  </span>
                   <Show when={r.player.id === props.snap.selfId}>
                     <em class="row__me">Sen</em>
                   </Show>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { balanceText, glixLines, glixText, guestGlixText, parseGlixEarned } from "./glixRules.js";
+import { balanceText, glixInline, glixLines, glixText, guestGlixText, parseGlixEarned } from "./glixRules.js";
 
 const ok = {
   total: 85,
@@ -49,25 +49,25 @@ describe("glixEarned doğrulama", () => {
 });
 
 describe("Glix metinleri", () => {
-  it("döküm satırları", () => {
+  it("kısa döküm satırları: rozetler tek satırda toplanır", () => {
     const info = parseGlixEarned(ok);
     if (!info) throw new Error("geçerli olmalı");
-    const names: Record<string, string> = { "ilk-mac": "İlk Adım" };
-    expect(glixLines(info, 2, (id) => names[id])).toEqual([
+    const lines = glixLines(info, 2);
+    expect(lines).toEqual([
       { label: "Maç", amount: 10 },
-      { label: "2. oldun", amount: 10 },
-      { label: "Günün ilk maçı ×2", amount: 20 },
-      { label: "Rozet: İlk Adım", amount: 25 },
-      { label: "Rozet: Yeni rozet", amount: 20 },
+      { label: "2.", amount: 10 },
+      { label: "İlk maç ×2", amount: 20 },
+      { label: "Rozet", amount: 45 },
     ]);
-    expect(glixLines(info, null, () => undefined)[1]?.label).toBe("Sıralama");
+    expect(glixInline(lines)).toBe("Maç +10 · 2. +10 · İlk maç ×2 +20 · Rozet +45");
+    expect(glixLines(info, null)[1]?.label).toBe("Sıra");
   });
 
   it("toplam, bakiye ve misafir metni", () => {
     expect(glixText(25)).toBe("+25 Glix");
-    expect(balanceText(1250)).toMatch(/^Glix bakiyen: 1[. ]?250$/);
-    expect(guestGlixText(1)).toBe("Hesap açsaydın 25 Glix kazanırdın");
-    expect(guestGlixText(3)).toBe("Hesap açsaydın 15 Glix kazanırdın");
-    expect(guestGlixText(7)).toBe("Hesap açsaydın 10 Glix kazanırdın");
+    expect(balanceText(1250)).toMatch(/^1[. ]?250$/);
+    expect(guestGlixText(1)).toBe("Hesap açsan +25 Glix kazanırdın");
+    expect(guestGlixText(3)).toBe("Hesap açsan +15 Glix kazanırdın");
+    expect(guestGlixText(7)).toBe("Hesap açsan +10 Glix kazanırdın");
   });
 });

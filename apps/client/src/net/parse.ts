@@ -14,6 +14,7 @@ import {
   parseCardSettings,
   parseCardsMine,
   parseCardsPublic,
+  parseCosmetics,
   type RoomPhase,
   type RoomSnapshot,
   type ServerMessage,
@@ -86,6 +87,7 @@ export function parseNumberRecord(v: unknown): Record<string, number> | null {
 
 function parsePlayer(v: unknown): PlayerInfo | null {
   if (!isRec(v)) return null;
+  const cosmetics = parseCosmetics(v.cosmetics);
   const { id, nickname, avatar, connected, score } = v;
   if (!isStr(id) || !isStr(nickname) || !isNum(avatar) || !isBool(connected) || !isNum(score)) return null;
   return {
@@ -98,6 +100,7 @@ function parsePlayer(v: unknown): PlayerInfo | null {
     ...(isStr(v.username) && v.username.length > 0 && v.username.length <= 32
       ? { username: v.username }
       : {}),
+    ...(cosmetics ? { cosmetics } : {}),
   };
 }
 

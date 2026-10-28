@@ -1,0 +1,255 @@
+/* ---- Kozmetikler: unvan, ad efekti, avatar çerçevesi (kod çizimi; katalog packages/engine/src/cosmetics.ts) ----
+   Koyu zeminlerde (--bg-0 .. --bg-2) 4,5:1 üstü kontrast; hareket yalnız "Hareketi azalt" kapalıyken oynar. */
+
+/* ---- Ad efekti ---- */
+.cos-name {
+  /* Düz metin gibi davranır; bulunduğu kutudaki kesme (ellipsis) üst öğede çalışır. */
+  max-width: 100%;
+}
+.cos-name[data-fx="ad-neon-mavi"] {
+  color: #8dfaff;
+  text-shadow:
+    0 0 6px rgba(46, 242, 255, 0.7),
+    0 0 14px rgba(46, 242, 255, 0.4);
+}
+.cos-name[data-fx="ad-neon-pembe"] {
+  color: #ff93e8;
+  text-shadow:
+    0 0 6px rgba(255, 43, 214, 0.7),
+    0 0 14px rgba(255, 43, 214, 0.4);
+}
+.cos-name[data-fx="ad-gokkusagi"] {
+  background-image: linear-gradient(90deg, #ff8080, #ffd666, #85ffa0, #66ddff, #bf9dff, #ff8080);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: #ffd666;
+  -webkit-text-fill-color: transparent;
+  animation: cos-flow 7s linear infinite;
+}
+.cos-name[data-fx="ad-kivilcim"] {
+  color: #fff6da;
+  animation: cos-spark 2.6s ease-in-out infinite;
+}
+.cos-name[data-fx="ad-altin-parilti"] {
+  background-image: linear-gradient(
+    100deg,
+    #ffc233 0%,
+    #ffe9a0 22%,
+    #ffb81f 44%,
+    #fff4c9 52%,
+    #ffc233 68%,
+    #ffe08a 100%
+  );
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: #ffc233;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 4px rgba(255, 194, 59, 0.45));
+  animation: cos-sheen 4.2s ease-in-out infinite alternate;
+}
+@keyframes cos-flow {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes cos-sheen {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+@keyframes cos-spark {
+  0%,
+  100% {
+    text-shadow:
+      0 0 3px rgba(255, 226, 140, 0.55),
+      0 0 8px rgba(255, 194, 59, 0.25);
+  }
+  50% {
+    text-shadow:
+      0 0 5px rgba(255, 244, 200, 0.95),
+      0 0 14px rgba(255, 194, 59, 0.6),
+      0 0 22px rgba(46, 242, 255, 0.35);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .cos-name,
+  :root:not([data-motion="full"]) .av__ring {
+    animation: none;
+  }
+}
+:root[data-motion="reduce"] .cos-name,
+:root[data-motion="reduce"] .av__ring {
+  animation: none;
+}
+/* Yüksek karşıtlık / zorunlu renk kipinde degrade metin kaybolmasın. */
+@media (forced-colors: active) {
+  .cos-name {
+    background: none;
+    color: CanvasText;
+    -webkit-text-fill-color: currentColor;
+    text-shadow: none;
+    filter: none;
+  }
+}
+
+/* ---- Unvan (adın altında) ---- */
+.cos-title {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  /* Uzun unvan kesilmez, en çok iki satıra sarılır (en uzun unvan 14 harf). */
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--cyan);
+}
+.cos-title[data-r="nadir"] {
+  color: #b9a1ff;
+}
+.cos-title[data-r="efsanevi"] {
+  color: var(--amber);
+}
+
+/* ---- Avatar çerçevesi ----
+   Avatarın kendi kutusunun İÇİNDE çizilir (disk küçülür), böylece yerleşim değişmez ve komşuya taşmaz;
+   rozetler (ev, taç, hazır, Sen) çerçevenin üstünde kalır (DOM'da sonra gelir). */
+.av[data-framed] .av__disc {
+  inset: 12%;
+}
+.av[data-framed="cerceve-cift"] .av__disc {
+  inset: 17%;
+}
+.av__frame {
+  --fw: max(2px, calc(var(--s) * 0.045));
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.av__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+.av__gem {
+  display: none;
+}
+.av__frame[data-frame="cerceve-camgobegi"] .av__ring {
+  border: var(--fw) solid #2ef2ff;
+  box-shadow:
+    0 0 calc(var(--s) * 0.16) rgba(46, 242, 255, 0.55),
+    inset 0 0 calc(var(--s) * 0.08) rgba(46, 242, 255, 0.35);
+}
+.av__frame[data-frame="cerceve-pembe"] .av__ring {
+  border: var(--fw) solid #ff2bd6;
+  box-shadow:
+    0 0 calc(var(--s) * 0.16) rgba(255, 43, 214, 0.55),
+    inset 0 0 calc(var(--s) * 0.08) rgba(255, 43, 214, 0.35);
+}
+.av__frame[data-frame="cerceve-cift"] .av__ring {
+  border: max(1.5px, calc(var(--s) * 0.035)) solid #b9a1ff;
+  box-shadow: 0 0 calc(var(--s) * 0.14) rgba(169, 139, 255, 0.5);
+}
+.av__frame[data-frame="cerceve-cift"]::before {
+  content: "";
+  position: absolute;
+  inset: 9%;
+  border-radius: 50%;
+  border: max(1.5px, calc(var(--s) * 0.035)) solid #e6dcff;
+}
+.av__frame[data-frame="cerceve-donen-neon"] .av__ring {
+  background: conic-gradient(from 0deg, #ff2bd6, #2ef2ff, #b6ff3b, #ff2bd6);
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - var(--fw)),
+    #000 calc(100% - var(--fw) + 0.5px)
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - var(--fw)),
+    #000 calc(100% - var(--fw) + 0.5px)
+  );
+  animation: cos-spin 6s linear infinite;
+}
+.av__frame[data-frame="cerceve-donen-neon"] {
+  filter: drop-shadow(0 0 calc(var(--s) * 0.06) rgba(46, 242, 255, 0.6));
+}
+.av__frame[data-frame="cerceve-altin-tac"] {
+  filter: drop-shadow(0 0 calc(var(--s) * 0.08) rgba(255, 194, 59, 0.6));
+}
+.av__frame[data-frame="cerceve-altin-tac"] .av__ring {
+  --gw: max(3px, calc(var(--s) * 0.06));
+  background: conic-gradient(from 210deg, #fff2bd, #ffb81f, #fff2bd, #c98400, #ffd35c, #fff2bd);
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - var(--gw)),
+    #000 calc(100% - var(--gw) + 0.5px)
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - var(--gw)),
+    #000 calc(100% - var(--gw) + 0.5px)
+  );
+}
+/* Taç değil iki mücevher: kazanan tacı (avatarın tepesinde) ile çakışmasın diye yanlarda. */
+.av__frame[data-frame="cerceve-altin-tac"] .av__gem {
+  display: block;
+  position: absolute;
+  top: 50%;
+  width: calc(var(--s) * 0.13);
+  height: calc(var(--s) * 0.13);
+  background: linear-gradient(135deg, #fff8dc, #ffc233);
+  border-radius: 2px;
+  box-shadow: 0 0 0 max(1px, calc(var(--s) * 0.02)) #8a5a00;
+}
+.av__frame[data-frame="cerceve-altin-tac"] .av__gem--l {
+  left: 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.av__frame[data-frame="cerceve-altin-tac"] .av__gem--r {
+  right: 0;
+  transform: translate(50%, -50%) rotate(45deg);
+}
+@keyframes cos-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Küçük avatarlarda (satır simgesi) çerçeve ince ve yakın kalır. */
+@media (forced-colors: active) {
+  .av__frame .av__ring {
+    border: 2px solid CanvasText;
+    background: none;
+    -webkit-mask: none;
+    mask: none;
+  }
+}
+
+/* ---- Yerleşimler: koltuk, podyum, sıralama satırı ---- */
+.seat__title,
+.podium__title {
+  margin-top: 1px;
+  text-align: center;
+  padding: 0 4px;
+}
+.row__who {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.25;
+}
+.row__who .cos-title {
+  font-weight: 500;
+}
+.pmenu__text .cos-title {
+  font-size: var(--fs-13);
+}

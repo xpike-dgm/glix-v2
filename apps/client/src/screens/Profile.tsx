@@ -18,8 +18,17 @@ import { goHome, setState, state } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { BadgeMedal } from "../ui/BadgeMedal.js";
+import { frameOf, PlayerName, PlayerTitle } from "../ui/Cosmetic.js";
 import { GhostButton } from "../ui/GhostButton.js";
-import { BackIcon, ChevronRightIcon, CoinIcon, CrownIcon, PencilIcon, UsersIcon } from "../ui/Icons.js";
+import {
+  BackIcon,
+  ChevronRightIcon,
+  CoinIcon,
+  CrownIcon,
+  HangerIcon,
+  PencilIcon,
+  UsersIcon,
+} from "../ui/Icons.js";
 import { Mascot } from "../ui/Mascot.js";
 import { Screen } from "../ui/Screen.js";
 import { worldAllowed } from "../ui/world.js";
@@ -174,22 +183,11 @@ function Details(props: { profile: ProfileInfo }) {
 }
 
 /** Kendi profilinin üstündeki iki kapı: Arkadaşlar (istek sayısıyla) ve Kullanıcı adını değiştir. */
-function Hub(props: { onRename: () => void; glix: number | null }) {
+function Hub(props: { onRename: () => void }) {
   const count = (): number => incomingCount();
   return (
     <section class="pf__hub rise" style={{ "--i": 1 }} aria-label="Hesabım">
       <div class="set__card">
-        <Show when={props.glix !== null}>
-          <div class="set__row hub__row hub__glix" role="status">
-            <span class="hub__icon hub__icon--coin" aria-hidden="true">
-              <CoinIcon size={28} />
-            </span>
-            <span class="set__text">
-              <span class="set__label">{balanceText(props.glix ?? 0)}</span>
-              <span class="set__hint">Maç oynadıkça ve rozet kazandıkça artar</span>
-            </span>
-          </div>
-        </Show>
         <button
           type="button"
           class="set__row set__row--btn hub__row"
@@ -226,6 +224,20 @@ function Hub(props: { onRename: () => void; glix: number | null }) {
           <span class="set__text">
             <span class="set__label">Arkadaş sıralaması</span>
             <span class="set__hint">Bu hafta ve tüm zamanlar</span>
+          </span>
+          <ChevronRightIcon size={20} class="hub__chev" />
+        </button>
+        <button
+          type="button"
+          class="set__row set__row--btn hub__row"
+          onClick={() => setState("nav", "locker")}
+        >
+          <span class="hub__icon" aria-hidden="true">
+            <HangerIcon size={24} />
+          </span>
+          <span class="set__text">
+            <span class="set__label">Dolabım</span>
+            <span class="set__hint">Unvan, ad efekti ve çerçeveni seç</span>
           </span>
           <ChevronRightIcon size={20} class="hub__chev" />
         </button>
@@ -282,13 +294,32 @@ export function Profile() {
 
       <div class="set__body" data-scroll>
         <div class="pf__head rise" style={{ "--i": 0 }}>
-          <Avatar index={avatarFromName(username())} size={72} />
-          <h2 class="pf__user">{username()}</h2>
-          <Show when={ready()}>{(p) => <p class="pf__since">Üyelik: {memberSince(p().createdAt)}</p>}</Show>
+          <Avatar index={avatarFromName(username())} size={72} frame={frameOf(ready()?.cosmetics)} />
+          <h2 class="pf__user">
+            <PlayerName name={username()} cosmetics={ready()?.cosmetics} />
+          </h2>
+          <PlayerTitle cosmetics={ready()?.cosmetics} />
+          <Show when={ready()}>
+            {(p) => (
+              <p class="pf__since">
+                Üyelik: {memberSince(p().createdAt)}
+                <Show when={p().glix !== null}>
+                  <span
+                    class="pf__bal"
+                    role="status"
+                    aria-label={`Glix bakiyen ${balanceText(p().glix ?? 0)}`}
+                  >
+                    <CoinIcon size={14} />
+                    {balanceText(p().glix ?? 0)}
+                  </span>
+                </Show>
+              </p>
+            )}
+          </Show>
         </div>
 
         <Show when={profileOf() === null && state.account}>
-          <Hub onRename={() => setRenameOpen(true)} glix={ready()?.glix ?? null} />
+          <Hub onRename={() => setRenameOpen(true)} />
         </Show>
 
         <Switch>

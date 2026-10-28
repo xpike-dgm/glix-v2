@@ -31,6 +31,7 @@ import { parseProfile } from "../net/profileRules.js";
 import { emitReaction } from "../net/reactions.js";
 import { markReportDone } from "../net/report.js";
 import { REPORT_THANKS } from "../net/reportRules.js";
+import { freezeShop } from "../net/shop.js";
 import { applySnapshot, setState } from "../net/store.js";
 
 const NAMES = ["Cihad", "Elif", "Mert", "Zeynep", "Kaan", "Defne", "Burak", "Ayşe"];
@@ -68,6 +69,9 @@ function mockProfile(empty: boolean): {
       : { matches: 12, wins: 5, winRate: 0.417, games: 28, gameWins: 9 },
     favoriteGame: empty ? null : { id: "butona-bas", name: "Butona Bas", plays: 14 },
     glix: empty ? 0 : 1250,
+    cosmetics: empty
+      ? undefined
+      : { title: "unvan-efsane", nameFx: "ad-altin-parilti", frame: "cerceve-altin-tac" },
     perGame: games,
     recent: empty
       ? []
@@ -100,6 +104,21 @@ export function startMock(kind: string, params: URLSearchParams): void {
     score: 0,
     spectator: false,
   }));
+  // `&cos=1`: birkaç oyuncuda kuşanılmış unvan / ad efekti / çerçeve (hesaplılar).
+  if (params.get("cos") === "1") {
+    const COS: Record<string, PlayerInfo["cosmetics"]> = {
+      p0: { title: "unvan-efsane", nameFx: "ad-altin-parilti", frame: "cerceve-altin-tac" },
+      p1: { title: "unvan-parti-canavari", nameFx: "ad-gokkusagi", frame: "cerceve-donen-neon" },
+      p2: { nameFx: "ad-kivilcim", frame: "cerceve-cift" },
+      p3: { title: "unvan-sessiz-tehlike", nameFx: "ad-neon-mavi", frame: "cerceve-camgobegi" },
+      p4: { title: "unvan-son-saniyeci", nameFx: "ad-neon-pembe", frame: "cerceve-pembe" },
+      p5: { title: "unvan-bluf-ustasi" },
+    };
+    players = players.map((p) => {
+      const cosmetics = COS[p.id];
+      return cosmetics ? { ...p, username: p.username ?? p.nickname.toLowerCase(), cosmetics } : p;
+    });
+  }
   // `&watch=K`: son K kişi maçı izleyen (sıralanmayan); `&afterwatch=1`: kendin izleyici olarak final'den lobiye dönersin.
   const watchCount = Math.min(n - 1, Math.max(0, Number(params.get("watch")) || 0));
   players = players.map((p, i) => ({ ...p, spectator: i >= n - watchCount && watchCount > 0 }));
@@ -565,6 +584,28 @@ export function startMock(kind: string, params: URLSearchParams): void {
       setState({ nav: "profile", account: { username: "cihad_01", email: "cihad@example.com" } });
       break;
     }
+    case "magaza":
+    case "dolap": {
+      // `&v=az` (bakiye az), `&v=bos` (hiç ürün yok); varsayılan karışık sahiplik. Durum sabitlenir.
+      const v = params.get("v");
+      freezeShop({
+        balance: v === "az" ? 90 : 1250,
+        owned:
+          v === "bos"
+            ? []
+            : ["unvan-sansli", "unvan-efsane", "ad-neon-mavi", "cerceve-cift", "cerceve-altin-tac"],
+        equipped:
+          v === "bos"
+            ? {}
+            : { unvan: "unvan-efsane", "ad-efekti": "ad-neon-mavi", cerceve: "cerceve-altin-tac" },
+        clockOffset: 0,
+      });
+      setState({
+        nav: kind === "magaza" ? "shop" : "locker",
+        account: { username: "cihad_01", email: "cihad@example.com" },
+      });
+      break;
+    }
     case "login":
     case "register":
     case "aydinlatma":
@@ -622,6 +663,8 @@ export function startMock(kind: string, params: URLSearchParams): void {
     kind === "join" ||
     kind === "settings" ||
     kind === "profil" ||
+    kind === "magaza" ||
+    kind === "dolap" ||
     kind === "notfound" ||
     kind === "login" ||
     kind === "register" ||

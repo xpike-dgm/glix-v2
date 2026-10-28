@@ -10,6 +10,27 @@ describe("sunucu mesajı doğrulama", () => {
     expect(m?.type).toBe("room");
     if (m?.type === "room") expect(m.snapshot.match?.gameId).toBe("butona-bas");
   });
+  it("oyuncu kozmetikleri: katalogdaki kimlikler kalır, bilinmeyenler atılır", () => {
+    const snap = snapshot();
+    const first = snap.players[0];
+    if (!first) throw new Error("oyuncu");
+    const withCos = (cosmetics: unknown) => ({
+      ...snap,
+      players: [{ ...first, cosmetics }, ...snap.players.slice(1)],
+    });
+    const read = (cosmetics: unknown) => {
+      const m = parseServerMessage(wire({ type: "room", snapshot: withCos(cosmetics) }));
+      if (m?.type !== "room") throw new Error("room kabul edilmedi");
+      return m.snapshot.players[0]?.cosmetics;
+    };
+    expect(read({ title: "unvan-efsane", frame: "cerceve-cift" })).toEqual({
+      title: "unvan-efsane",
+      frame: "cerceve-cift",
+    });
+    expect(read({ title: "yok-boyle", nameFx: "unvan-efsane" })).toBeUndefined();
+    expect(read("x")).toBeUndefined();
+    expect(read(undefined)).toBeUndefined();
+  });
   it("sahne onayını ve stageCount alanını doğrular", () => {
     expect(parseServerMessage(wire({ type: "stage", roomCode: "KX7QP" }))).toEqual({
       type: "stage",

@@ -1,3 +1,4 @@
+import { cosmeticItem } from "@glix/engine";
 import { createEffect, createSignal, on, Show } from "solid-js";
 import { colorBlind } from "../settings/settings.js";
 import { look, type Mood, moodSrc } from "./avatars.js";
@@ -27,6 +28,8 @@ interface Props {
    * `think` düşünüyor (yavaş sallanma + üç nokta). Elenen (`mood="out"`) avatara çatlak kendiliğinden biner.
    */
   live?: "breathe" | "joy" | "think" | undefined;
+  /** Kuşanılan avatar çerçevesi (katalog kimliği); bilinmeyen kimlik yok sayılır. */
+  frame?: string | undefined;
   /** Simge (hex rozet) göster; küçük boylarda gizlenir. */
   pip?: boolean;
   class?: string;
@@ -34,6 +37,9 @@ interface Props {
 
 export function Avatar(props: Props) {
   const l = () => look(props.index);
+  /** Geçerli çerçeve kimliği (katalogda ve doğru türde); yoksa undefined. */
+  const framed = () =>
+    props.frame !== undefined && cosmeticItem(props.frame)?.type === "cerceve" ? props.frame : undefined;
   const big = () => typeof props.size === "string" || props.size >= 56;
   const src = () => (props.mood ? moodSrc(props.index, props.mood) : null);
   // Ruh hâli görseli yüklenene kadar büst görünür; yüklenince çapraz geçiş olur.
@@ -49,6 +55,7 @@ export function Avatar(props: Props) {
     <div
       data-live={props.connected === false ? undefined : props.live}
       data-out={props.mood === "out" ? "1" : undefined}
+      data-framed={framed()}
       class={`av ${props.connected === false ? "av--off" : ""} ${props.flash ? `av--flash-${props.flash}` : ""} ${props.class ?? ""}`}
       style={{
         "--s": typeof props.size === "number" ? `${props.size}px` : props.size,
@@ -85,6 +92,17 @@ export function Avatar(props: Props) {
           )}
         </Show>
       </div>
+      <Show
+        when={props.frame !== undefined && cosmeticItem(props.frame)?.type === "cerceve" ? props.frame : null}
+      >
+        {(id) => (
+          <span class="av__frame" data-frame={id()} aria-hidden="true">
+            <i class="av__ring" />
+            <i class="av__gem av__gem--l" />
+            <i class="av__gem av__gem--r" />
+          </span>
+        )}
+      </Show>
       <Show when={props.live === "think" && props.connected !== false}>
         <span class="av__think" aria-hidden="true">
           <i />

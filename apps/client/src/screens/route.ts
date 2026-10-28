@@ -8,6 +8,8 @@ export type ScreenId =
   | "profile"
   | "friends"
   | "leaderboard"
+  | "shop"
+  | "locker"
   | "login"
   | "register"
   | "aydinlatma"

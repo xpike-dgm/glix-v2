@@ -1,0 +1,299 @@
+/* ---- Mağaza ve Dolabım: sade dil (ince çizgi, küçük yazı, hap düğmeler; kalın çerçeve yok) ---- */
+.shop {
+  --kc: var(--cyan);
+}
+.shop-bal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px 0 8px;
+  border-radius: 99px;
+  background: rgba(255, 194, 59, 0.12);
+  color: var(--amber);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.shop-h {
+  margin: 0;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.shop-note {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.shop-note--left {
+  text-align: left;
+}
+.shop-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding-top: var(--sp-6);
+}
+.shop-deal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  flex: none;
+}
+.shop-deal__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+.shop-deal__left {
+  font-size: var(--fs-13);
+  color: var(--amber);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sekmeler: ince, çizgisiz bölünmüş kontrol */
+.shop-tabs {
+  display: flex;
+  gap: 2px;
+  flex: none;
+  padding: 3px;
+  border-radius: 99px;
+  background: rgba(140, 160, 255, 0.08);
+}
+.shop-tab {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 6px;
+  border-radius: 99px;
+  color: var(--text-dim);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.shop-tab[aria-selected="true"] {
+  background: rgba(140, 160, 255, 0.2);
+  color: var(--text);
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-2);
+  flex: none;
+}
+/* Kart: ince renk kenarı (nadirlik), dolgu hafif; kalın çerçeve yok */
+.shop-card {
+  --kc: var(--cyan);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 8px 10px 11px;
+  border-radius: 14px;
+  background: rgba(140, 160, 255, 0.07);
+  box-shadow: inset 2px 0 0 var(--kc);
+  text-align: center;
+  color: var(--text);
+  transition: background 120ms;
+}
+.shop-card:active {
+  background: rgba(140, 160, 255, 0.14);
+}
+.shop-card[data-r="nadir"],
+.shop-sheet[data-r="nadir"] {
+  --kc: #a98bff;
+}
+.shop-card[data-r="efsanevi"],
+.shop-sheet[data-r="efsanevi"] {
+  --kc: var(--amber);
+}
+.shop-card__pv {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 60px;
+  min-width: 0;
+}
+.shop-card__name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+  line-height: 1.2;
+  font-size: var(--fs-13);
+  font-weight: 600;
+}
+.shop-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+  min-height: 24px;
+  max-width: 100%;
+}
+.shop-card__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.shop-card__state[data-on="1"] {
+  color: var(--lime);
+}
+.shop-card__off {
+  white-space: nowrap;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--lime);
+}
+.shop-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px 2px 6px;
+  border-radius: 99px;
+  background: rgba(255, 194, 59, 0.12);
+  color: var(--amber);
+  font-size: var(--fs-13);
+  font-variant-numeric: tabular-nums;
+}
+.shop-price b {
+  font-weight: 700;
+}
+.shop-price__old {
+  color: var(--text-dim);
+  text-decoration-thickness: 1px;
+}
+.shop-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--kc, var(--cyan));
+}
+
+/* Önizleme: oyuncunun kendi avatarı / adı */
+.cpv {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  min-width: 0;
+}
+.cpv__name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
+  font-weight: 700;
+  font-size: var(--fs-15);
+}
+.shop-card .cpv__name {
+  font-size: var(--fs-15);
+}
+
+/* Satın alma sayfası */
+.shop-sheet {
+  --kc: var(--cyan);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-3);
+}
+.shop-sheet__pv {
+  display: grid;
+  place-items: center;
+  min-height: 110px;
+  padding: var(--sp-3) 0;
+}
+.shop-sheet__pv .cpv__name {
+  font-size: var(--fs-18);
+}
+.shop-sheet__meta,
+.shop-sheet__desc {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.shop-sheet__meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.shop-sheet__err {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-13);
+  color: var(--red);
+}
+.shop__invite {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-15);
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+
+/* Dolabım */
+.locker-pv {
+  display: grid;
+  place-items: center;
+  flex: none;
+  padding: var(--sp-4) 0 var(--sp-2);
+}
+.locker-sec {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  flex: none;
+}
+.locker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.locker-chip {
+  --kc: var(--text-dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  max-width: 100%;
+  padding: 0 14px;
+  border-radius: 99px;
+  background: rgba(140, 160, 255, 0.08);
+  color: var(--text);
+  font-size: var(--fs-13);
+  font-weight: 600;
+}
+.locker-chip[data-r="siradan"] {
+  --kc: var(--cyan);
+}
+.locker-chip[data-r="nadir"] {
+  --kc: #a98bff;
+}
+.locker-chip[data-r="efsanevi"] {
+  --kc: var(--amber);
+}
+.locker-chip[aria-pressed="true"] {
+  background: rgba(60, 220, 255, 0.16);
+  color: var(--text);
+}
+.shop-sheet .pbtn__label {
+  white-space: normal;
+  text-align: center;
+  max-width: 100%;
+}

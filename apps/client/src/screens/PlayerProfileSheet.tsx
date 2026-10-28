@@ -1,7 +1,9 @@
+import type { Cosmetics } from "@glix/engine";
 import { createEffect, createSignal, on, Show } from "solid-js";
 import { type ProfileInfo, parseProfile } from "../net/profileRules.js";
 import { Avatar } from "../ui/Avatar.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
+import { frameOf, PlayerName, PlayerTitle } from "../ui/Cosmetic.js";
 
 type Load = { kind: "loading" } | { kind: "ready"; profile: ProfileInfo } | { kind: "error" };
 
@@ -14,6 +16,7 @@ export function PlayerProfileSheet(props: {
   onClose: () => void;
   username: string | null;
   avatar: number;
+  cosmetics?: Cosmetics | undefined;
 }) {
   const [load, setLoad] = createSignal<Load>({ kind: "loading" });
   let seq = 0;
@@ -53,9 +56,12 @@ export function PlayerProfileSheet(props: {
       title={props.username ?? "Profil"}
       header={
         <div class="pmenu__who">
-          <Avatar index={props.avatar} size={52} />
+          <Avatar index={props.avatar} size={52} frame={frameOf(props.cosmetics)} />
           <div class="pmenu__text">
-            <span class="pmenu__name">{props.username}</span>
+            <span class="pmenu__name">
+              <PlayerName name={props.username ?? ""} cosmetics={props.cosmetics} />
+            </span>
+            <PlayerTitle cosmetics={props.cosmetics} />
             <span class="pmenu__tag">Arkadaşın</span>
           </div>
         </div>

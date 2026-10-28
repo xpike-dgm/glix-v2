@@ -31,6 +31,7 @@ import { InviteCard } from "./screens/InviteCard.js";
 import { Join } from "./screens/Join.js";
 import { Leaderboard } from "./screens/Leaderboard.js";
 import { Lobby } from "./screens/Lobby.js";
+import { Locker } from "./screens/Locker.js";
 import { Login } from "./screens/Login.js";
 import { NewPassword } from "./screens/NewPassword.js";
 import { NotFound } from "./screens/NotFound.js";
@@ -41,6 +42,7 @@ import { Register } from "./screens/Register.js";
 import { Results } from "./screens/Results.js";
 import { selectScreen } from "./screens/route.js";
 import { Settings } from "./screens/Settings.js";
+import { Shop } from "./screens/Shop.js";
 import { dataSaver, setColorBlind, setTextSize, wifiOnly } from "./settings/settings.js";
 import { installErrorReporting } from "./telemetry/errors.js";
 import { preloadGameArt } from "./ui/artPreload.js";
@@ -269,6 +271,12 @@ export function App() {
             </Match>
             <Match when={screen() === "leaderboard"}>
               <Leaderboard />
+            </Match>
+            <Match when={screen() === "shop"}>
+              <Shop />
+            </Match>
+            <Match when={screen() === "locker"}>
+              <Locker />
             </Match>
             <Match when={screen() === "login"}>
               <Login />

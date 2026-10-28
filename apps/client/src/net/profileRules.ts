@@ -1,3 +1,4 @@
+import { type Cosmetics, parseCosmetics } from "@glix/engine";
 import { type BadgeInfo, parseBadges } from "./badgeRules.js";
 
 /** Profil ekranının verisi ve saf yardımcıları (sunucu yanıtı doğrulanır; ağdan gelen hiçbir şeye güvenilmez). */
@@ -29,6 +30,8 @@ export interface ProfileInfo {
   badges: BadgeInfo[];
   /** Glix bakiyesi; yalnız kendi profilinde (arkadaşınkinde ve eski sunucuda null). */
   glix: number | null;
+  /** Kuşanılan unvan / ad efekti / çerçeve (katalogda olmayan kimlikler atılır). */
+  cosmetics?: Cosmetics;
 }
 
 /** Sunucu sınırlarının üstünde yanıt gelirse (bozuk/kötü niyetli) listeler kırpılır. */
@@ -114,6 +117,7 @@ export function parseProfile(data: unknown): ProfileInfo | null {
     const n = count(c.matches);
     return name !== null && n !== null ? [{ username: name, matches: n }] : [];
   });
+  const cosmetics = parseCosmetics(data.cosmetics);
   return {
     username,
     createdAt,
@@ -124,6 +128,7 @@ export function parseProfile(data: unknown): ProfileInfo | null {
     coPlayers,
     badges: parseBadges(data.badges),
     glix: count(data.glix),
+    ...(cosmetics ? { cosmetics } : {}),
   };
 }
 
