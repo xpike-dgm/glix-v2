@@ -109,7 +109,11 @@ let accountSeq = 0;
  * Misafir oda kuramadığı için `create` bunu kullanır.
  */
 export function loginCookie(username = `t${++accountSeq}_${Date.now().toString(36)}`): string {
-  const made = k.srv.accounts.create(username, `${username.toLowerCase()}@test.local`, "x", k.clock.now());
+  // Aynı adla ikinci oda kuran testler (ör. iki ayrı maç) aynı hesaba yeni oturum açar.
+  const existing = k.srv.accounts.findByUsername(username);
+  const made = existing
+    ? ({ ok: true, account: existing } as const)
+    : k.srv.accounts.create(username, `${username.toLowerCase()}@test.local`, "x", k.clock.now());
   if (!made.ok) throw new Error("test hesabı açılamadı");
   const token = randomBytes(32).toString("base64url");
   k.srv.accounts.createSession(

@@ -1,3 +1,4 @@
+import { poolEntries } from "../../content.js";
 import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
 import {
   addStroke,
@@ -10,6 +11,7 @@ import {
   parseStrokeFields,
   undoStroke,
 } from "../drawing.js";
+import { KARALAMA_POOL } from "./pool.js";
 import {
   KARALAMA_DRAW_MS,
   KARALAMA_LOCK_GRACE_MS,
@@ -24,7 +26,7 @@ import {
   type KaralamaStroke,
   type KaralamaView,
 } from "./types.js";
-import { DRAWING_PAIRS, type DrawingPair } from "./words.js";
+import type { DrawingPair } from "./words.js";
 
 export * from "./types.js";
 
@@ -35,16 +37,8 @@ const MIN_WORD_LENGTH = 3;
  * Oynanabilir çiftler: iki kelime de en az 3 karakter ve biri ötekinin içinde geçmez
  * (aksi halde bir oyuncunun kelimesi ötekinin görünümünde "sızmış" sayılırdı ve ipucu olurdu).
  */
-export const KARALAMA_PAIRS: readonly DrawingPair[] = DRAWING_PAIRS.filter((p) => {
-  const main = p.main.toLocaleLowerCase("tr");
-  const near = p.near.toLocaleLowerCase("tr");
-  return (
-    [...p.main].length >= MIN_WORD_LENGTH &&
-    [...p.near].length >= MIN_WORD_LENGTH &&
-    !main.includes(near) &&
-    !near.includes(main)
-  );
-});
+export const KARALAMA_PAIRS: readonly DrawingPair[] = KARALAMA_POOL.builtin;
+export { KARALAMA_POOL } from "./pool.js";
 
 const LIMITS: DrawLimits = {
   maxStrokes: KARALAMA_MAX_STROKES,
@@ -149,7 +143,7 @@ export const karalamaDefteri: GameDefinition<
   },
 
   setup(players: readonly string[], ctx: GameContext): KaralamaState {
-    const pool = KARALAMA_PAIRS;
+    const pool = poolEntries(KARALAMA_POOL, ctx.content);
     const pair = pool[ctx.rng.int(pool.length)] as DrawingPair;
     const outsider = players[ctx.rng.int(players.length)] as string;
     return {

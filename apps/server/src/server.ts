@@ -12,6 +12,7 @@ import { CLIENT_ERROR_PATH, handleClientError } from "./clientError.js";
 import { resolveClientIp } from "./clientIp.js";
 import { type Clock, systemClock } from "./clock.js";
 import { DEFAULT_LIMITS, type ServerLimits } from "./config.js";
+import { type ContentStore, createContentStore } from "./contentStore.js";
 import { createFriendsApi, FRIENDS_PATH } from "./friendsApi.js";
 import { gameNameOf } from "./gameSwitches.js";
 import { createGoogleAuth, type GoogleConfig } from "./google.js";
@@ -118,6 +119,8 @@ export interface RunningServer {
   recentLogs: readonly GameLog[];
   /** Yönetici yasaklı kelime listesi (yalnız testler için). */
   bannedWords: BannedWords;
+  /** İçerik havuzu deposu (yalnız testler için). */
+  content: ContentStore;
   /**
    * Drain kipine girer: yeni oda/katılım reddedilir, mevcut maçlar sürer. Maçı olan oda kalmayınca ya da
    * süre dolunca çözülür (soketleri kapatmaz; ardından `close(1012)` çağrılır).
@@ -167,6 +170,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   );
   rt.social = createSocial(rt, accounts);
   rt.bannedWords = createBannedWords(accounts);
+  rt.content = createContentStore(accounts, rt.bannedWords);
   rt.reports = createReportDesk(accounts, clock);
   const friendsApi = createFriendsApi({
     accounts,
@@ -307,6 +311,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         runId,
         rooms: createAdminRoomOps(rt),
         banned: rt.bannedWords,
+        content: rt.content,
         live: () => {
           let withAccount = 0;
           for (const c of connections) if (c.account) withAccount += 1;
@@ -522,6 +527,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     accounts,
     recentLogs: rt.recentLogs,
     bannedWords: rt.bannedWords,
+    content: rt.content,
     drain: () => {
       rt.draining = true;
       if (countActiveMatches(rt) === 0) return Promise.resolve();

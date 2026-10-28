@@ -1,4 +1,6 @@
+import { poolEntries } from "../../content.js";
 import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
+import { SIZMA_POOL } from "./pool.js";
 import {
   SIZMA_CLUE_CAP_MS,
   SIZMA_LOCK_GRACE_MS,
@@ -12,7 +14,6 @@ import {
   type SizmaReveal,
   type SizmaView,
 } from "./types.js";
-import { SIZMA_PAIRS } from "./words.js";
 
 export * from "./types.js";
 
@@ -122,7 +123,8 @@ export const sizma: GameDefinition<SizmaState, SizmaAction, SizmaView, SizmaPubl
   },
 
   setup(players: readonly string[], ctx: GameContext): SizmaState {
-    const pair = SIZMA_PAIRS[ctx.rng.int(SIZMA_PAIRS.length)] as readonly [string, string];
+    const pairs = poolEntries(SIZMA_POOL, ctx.content);
+    const pair = pairs[ctx.rng.int(pairs.length)] as readonly [string, string];
     const flip = ctx.rng.int(2) === 1;
     const [common, other] = flip ? [pair[1], pair[0]] : [pair[0], pair[1]];
     const infiltrator = players[ctx.rng.int(players.length)] as string;

@@ -302,14 +302,22 @@ function startPlaying(rt: Runtime, room: Room, match: Match): void {
   match.gameStartedAt = now;
   match.rng = createRng(seed);
   const rng = match.rng;
-  match.recorder = new GameRecorder(game.id, seed, match.participants, now, room.tone);
+  // Havuz değişiklikleri yalnız bu andan sonra başlayan oyunlara uygulanır; etkin havuz kayda da yazılır (replay birebir).
+  const content = rt.content.forGame(game.id);
+  match.recorder = new GameRecorder(game.id, seed, match.participants, now, room.tone, content);
   // Briefing sırasında kopanlar başlangıçta bağlı değildir.
   const connected = connectedParticipants(room, match);
   for (const id of match.participants) {
     if (!connected.includes(id)) match.recorder.presence(now, id, false);
   }
   match.state = guard("setup", () =>
-    game.setup(match.participants, { now, rng, connected, tone: room.tone }),
+    game.setup(match.participants, {
+      now,
+      rng,
+      connected,
+      tone: room.tone,
+      ...(content !== undefined ? { content } : {}),
+    }),
   );
   match.phaseStartedAt = now;
   match.phaseEndsAt = null;

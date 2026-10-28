@@ -1,5 +1,7 @@
+import { poolEntries } from "../../content.js";
 import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
 import { derivedRng, drawSeed } from "../seeded.js";
+import { SOZLUK_POOL, type SozlukEntry } from "./pool.js";
 import { bluffDisplayForm, charCount, compareKey } from "./text.js";
 import {
   SOZLUK_LOCK_GRACE_MS,
@@ -17,6 +19,7 @@ import {
 } from "./types.js";
 import { SOZLUK_ENTRIES } from "./words.js";
 
+export { SOZLUK_POOL, type SozlukEntry } from "./pool.js";
 export * from "./types.js";
 export { SOZLUK_ENTRIES } from "./words.js";
 
@@ -134,7 +137,8 @@ export const sozlukBlofu: GameDefinition<SozlukState, SozlukAction, SozlukView, 
   },
 
   setup(players: readonly string[], ctx: GameContext): SozlukState {
-    const entry = SOZLUK_ENTRIES[ctx.rng.int(SOZLUK_ENTRIES.length)] as (typeof SOZLUK_ENTRIES)[number];
+    const pool = poolEntries(SOZLUK_POOL, ctx.content);
+    const entry = pool[ctx.rng.int(pool.length)] as SozlukEntry;
     const writeEndsAt = ctx.now + SOZLUK_WRITE_MS;
     const pickEndsAt = writeEndsAt + SOZLUK_PICK_MS;
     return {

@@ -7,9 +7,19 @@ import { ErrorsPanel } from "./ErrorsPanel.js";
 import { LivePanel } from "./LivePanel.js";
 import { MaintenancePanel } from "./MaintenancePanel.js";
 import { ModerationPanel } from "./ModerationPanel.js";
+import { PoolsPanel } from "./PoolsPanel.js";
 import { StatsPanel } from "./StatsPanel.js";
 
-type Tab = "canli" | "istatistik" | "hatalar" | "hesaplar" | "moderasyon" | "icerik" | "bakim" | "kayit";
+type Tab =
+  | "canli"
+  | "istatistik"
+  | "hatalar"
+  | "hesaplar"
+  | "moderasyon"
+  | "icerik"
+  | "havuzlar"
+  | "bakim"
+  | "kayit";
 const TABS: { id: Tab; label: string }[] = [
   { id: "canli", label: "Canlı durum" },
   { id: "istatistik", label: "Oyun istatistikleri" },
@@ -17,6 +27,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "hesaplar", label: "Hesaplar" },
   { id: "moderasyon", label: "Moderasyon" },
   { id: "icerik", label: "İçerik" },
+  { id: "havuzlar", label: "İçerik havuzları" },
   { id: "bakim", label: "Bakım" },
   { id: "kayit", label: "İşlem kaydı" },
 ];
@@ -235,6 +246,9 @@ export function AdminApp() {
               </Match>
               <Match when={tab() === "icerik"}>
                 <ContentPanel onOtp={() => void check()} />
+              </Match>
+              <Match when={tab() === "havuzlar"}>
+                <PoolsPanel onOtp={() => void check()} />
               </Match>
               <Match when={tab() === "bakim"}>
                 <MaintenancePanel onOtp={() => void check()} />

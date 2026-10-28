@@ -1,8 +1,10 @@
+import { poolEntries } from "../../content.js";
 import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
 import { moderateText } from "../../moderation/blocklist.js";
 import type { Rng } from "../../rng.js";
 import { derivedRng, drawSeed } from "../seeded.js";
-import { LAF_DEFAULT_TONE, LAF_PROMPTS, type LafTone } from "./prompts.js";
+import { LAF_POOLS } from "./pool.js";
+import { LAF_DEFAULT_TONE, type LafTone } from "./prompts.js";
 import { cleanAnswer } from "./text.js";
 import {
   LAF_ANSWER_MAX,
@@ -26,6 +28,7 @@ import {
   type LafView,
 } from "./types.js";
 
+export * from "./pool.js";
 export * from "./prompts.js";
 export * from "./types.js";
 
@@ -366,7 +369,7 @@ export function createLafSokma(
       const seed = drawSeed(ctx.rng);
       const rng = derivedRng(seed, "setup");
       const roomTone: LafTone = ctx.tone ?? tone;
-      const pool = rng.shuffle(LAF_PROMPTS[roomTone]);
+      const pool = rng.shuffle(poolEntries(LAF_POOLS[roomTone], ctx.content));
       const pairs = lafAssign(list, rng);
       const duels: LafDuelState[] = pairs.map((authors, i) => ({
         id: `q${i + 1}`,

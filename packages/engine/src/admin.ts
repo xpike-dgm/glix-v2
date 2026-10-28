@@ -302,3 +302,87 @@ export interface AdminBroadcastStatus {
   nextAllowedAt: number | null;
   last: AdminBroadcastResult | null;
 }
+
+// ---- A4: içerik havuzları ----------------------------------------------------------------------------------------
+
+/** Bir havuzun form alanı (panel formu bundan kurulur). */
+export interface AdminPoolField {
+  key: string;
+  label: string;
+  hint: string;
+  min: number;
+  max: number;
+  long: boolean;
+}
+
+export interface AdminPoolSummary {
+  id: string;
+  gameId: string;
+  gameName: string;
+  label: string;
+  hint: string;
+  fields: AdminPoolField[];
+  /** Etkin havuz bundan küçükse yerleşik havuz kullanılır. */
+  min: number;
+  /** Bir maçın havuzdan çektiği en çok girdi. */
+  needed: number;
+  builtin: number;
+  /** Eklenen (yönetici) girdi sayısı. */
+  custom: number;
+  /** Kapatılan yerleşik girdi sayısı. */
+  disabled: number;
+  /** Yeni maçlarda kullanılacak girdi sayısı (yerleşik açık + eklenen). */
+  active: number;
+  /** Değişiklik var ve yeni maçlara uygulanıyor. */
+  applied: boolean;
+  /** Değişiklik var ama etkin sayı `min`'in altında: yerleşik havuz kullanılıyor. */
+  belowMin: boolean;
+}
+
+/** `GET /api/admin/pools`. */
+export interface AdminPools {
+  pools: AdminPoolSummary[];
+  /** Havuz başına en çok eklenen girdi. */
+  customMax: number;
+}
+
+export type AdminPoolFilter = "all" | "builtin" | "custom" | "disabled";
+
+export interface AdminPoolEntry {
+  /** Girdiyi tanıtan anahtar (büyük/küçük harf ve aksan duyarsız); işlemlerde bu gönderilir. */
+  key: string;
+  source: "builtin" | "custom";
+  /** Yalnız yerleşik girdiler kapatılabilir. */
+  disabled: boolean;
+  fields: Record<string, string>;
+}
+
+/** `GET /api/admin/pools/entries`. */
+export interface AdminPoolPage {
+  pool: AdminPoolSummary;
+  entries: AdminPoolEntry[];
+  /** Süzgece uyan toplam girdi. */
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export type AdminPoolLineStatus = "ok" | "invalid" | "duplicate" | "banned" | "full";
+
+export interface AdminPoolLine {
+  /** 1'den başlayan satır numarası (boş satırlar atlanır ama numara korunur). */
+  line: number;
+  status: AdminPoolLineStatus;
+  /** Durum `ok` değilse Türkçe açıklama. */
+  message: string;
+  fields: Record<string, string>;
+}
+
+/** `POST /api/admin/pools/check` ve `pools/bulk` yanıtı. */
+export interface AdminPoolBulk {
+  lines: AdminPoolLine[];
+  ok: number;
+  /** Yalnız `pools/bulk`: kaydedilen satır sayısı. */
+  added: number;
+  pool: AdminPoolSummary;
+}

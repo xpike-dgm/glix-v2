@@ -11,6 +11,7 @@ import {
 import { type AccountStatsRecorder, noopAccountStats } from "./accountStats.js";
 import { createBroadcaster } from "./broadcast.js";
 import { type Clock, systemClock } from "./clock.js";
+import { noContent } from "./contentStore.js";
 import { clearMatch, endMatchStats, recordPresence } from "./match.js";
 import { createMetrics } from "./metrics.js";
 import { noBannedWords, noReportDesk, RoomKicks } from "./moderation.js";
@@ -55,6 +56,7 @@ export function createRuntime(
     maintenance: false,
     announcement: null,
     bannedWords: noBannedWords,
+    content: noContent,
     reports: noReportDesk,
     roomKicks: new RoomKicks(clock),
     defaultGameIds: defaultGameIds ? [...defaultGameIds] : null,
