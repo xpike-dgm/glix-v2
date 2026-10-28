@@ -29,7 +29,7 @@ export function PodiumPerson(props: {
           <Avatar
             class="podium__tag"
             index={props.player.avatar}
-            size={26}
+            size={22}
             connected={props.player.connected}
             frame={frameOf(props.player.cosmetics)}
           />

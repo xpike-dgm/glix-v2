@@ -85,8 +85,8 @@ export function TvFinal(props: { snap: RoomSnapshot }) {
                     connected={r.player.connected}
                   />
                   <span class="tv__podname">{r.player.nickname}</span>
+                  <span class="tv__podscore">{formatScore(r.score)}</span>
                 </span>
-                <span class="tv__podscore">{formatScore(r.score)}</span>
                 <div class="tv__podchar" data-cslot={r.player.id}>
                   <div class="tv__podph">
                     <Avatar

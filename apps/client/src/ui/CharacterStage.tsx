@@ -64,7 +64,16 @@ export function CharacterStage(props: { chars: readonly PodiumChar[] }) {
     const root = host?.parentElement;
     if (!host) return;
     void import("../character/stage.js")
-      .then((m) => (host ? m.mountCharacterStage(host, { reduced }) : null))
+      .then((m) =>
+        host
+          ? m.mountCharacterStage(host, {
+              reduced,
+              onShown: () => {
+                if (root) root.dataset.charsShown = "1";
+              },
+            })
+          : null,
+      )
       .then((s) => {
         if (!s) return;
         if (gone) {
@@ -93,7 +102,10 @@ export function CharacterStage(props: { chars: readonly PodiumChar[] }) {
       clearTimeout(perfTimer);
       stage?.destroy();
       stage = null;
-      if (root) delete root.dataset.chars;
+      if (root) {
+        delete root.dataset.chars;
+        delete root.dataset.charsShown;
+      }
       delete (window as { __glixCharacterStage?: Stage }).__glixCharacterStage;
     });
   });

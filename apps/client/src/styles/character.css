@@ -6,7 +6,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  top: -36px;
+  top: -70px;
   z-index: 1;
   pointer-events: none;
 }
@@ -42,14 +42,14 @@
 .podium__char {
   position: relative;
   width: 100%;
-  height: calc(var(--pod-small, 56px) * var(--char-k, 1.75));
+  height: clamp(120px, 26vh, 190px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
   margin-top: 4px;
 }
 .podium__col[data-rank="1"] .podium__char {
-  height: calc(var(--pod-big, 76px) * var(--char-k, 1.75));
+  height: clamp(150px, 33vh, 230px);
 }
 .podium__col .podium__block {
   margin-top: -6px;
@@ -119,14 +119,14 @@
   }
 }
 
-/* Alçak yatay ekran (telefon yan): karakter biraz daha kısa, ad satırı sıkı; yazılar ve blok sığsın. */
+/* Alçak yatay ekran (telefon yan): karakterler yüksekliğin elverdiği kadar büyük; yazılar sıkı. */
 @media (orientation: landscape) and (max-height: 520px) {
   .podium .podium__char {
-    height: 72px;
+    height: 25vh;
     margin-top: 0;
   }
   .podium .podium__col[data-rank="1"] .podium__char {
-    height: 82px;
+    height: 29vh;
   }
   .podium__who {
     margin-top: 0;
@@ -276,4 +276,27 @@
   .locker-look__stage {
     --cview-h: 130px;
   }
+}
+
+/* Kürsü yazıları sıkı: ad (yanında küçük rozet) ve puan iki küçük satır; karakter kürsünün yıldızı.
+   Lakap kürsüde gösterilmez (sıralama satırlarında ve profilde görünür). */
+.podium .podium__title {
+  display: none;
+}
+.podium .podium__who {
+  margin-top: 4px;
+  gap: 5px;
+}
+.podium .podium__name {
+  font-size: var(--fs-15);
+  line-height: 1.2;
+}
+.podium .podium__score {
+  margin-top: 0;
+  font-size: 20px;
+  line-height: 1.15;
+}
+.podium .podium__you {
+  font-size: var(--fs-13);
+  padding: 0 7px;
 }

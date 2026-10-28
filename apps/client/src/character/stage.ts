@@ -34,6 +34,8 @@ export interface StageOptions {
   reduced: boolean;
   /** En çok bu piksel yoğunluğu (varsayılan 2). */
   maxDpr?: number;
+  /** Karakterler tümüyle görününce (belirme bitince) bir kez çağrılır. */
+  onShown?: () => void;
 }
 
 /** Kare maliyeti ölçümü (geliştirme önizlemesi için). */
@@ -216,6 +218,7 @@ export async function mountCharacterStage(host: HTMLElement, opts: StageOptions)
 
   const alphaOf = (l: Live): number => (l.slot.dim ? 0.45 : 1);
 
+  let shown = false;
   function frame(dtS: number): void {
     hostBox = host.getBoundingClientRect();
     for (const l of lives.values()) {
@@ -224,6 +227,10 @@ export async function mountCharacterStage(host: HTMLElement, opts: StageOptions)
       l.age += dtS;
       l.puppet.container.alpha = (opts.reduced ? 1 : smooth01(l.age / FADE_S)) * alphaOf(l);
       pickPose(l, dtS);
+    }
+    if (!shown && lives.size > 0 && [...lives.values()].every((l) => l.age >= FADE_S || opts.reduced)) {
+      shown = true;
+      opts.onShown?.();
     }
   }
 

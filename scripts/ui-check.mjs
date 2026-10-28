@@ -90,6 +90,11 @@ function sizesFor(scr) {
   return inter.length ? inter : [base[0]];
 }
 
+/** Kürsü karakterleri tümüyle görününce (Pixi + varlıklar yüklendi, belirme bitti) devam eder. */
+const karakterHazir = async (page) => {
+  await page.waitForSelector("[data-chars-shown]", { timeout: 25_000 });
+};
+
 const clickText = (text) => async (page) => {
   await page.getByText(text, { exact: false }).first().click();
 };
@@ -404,14 +409,46 @@ const SCREENS = [
   },
   { name: "kozmetik-sonuc", q: "mock=results&n=6&acct=1&cos=1", settle: 1500 },
   // Kürsü karakteri (U18 M4): sonuç ve final; 1. dans eder, 2. ve 3. alkışlar. Karakter hazır olunca `data-chars`.
-  { name: "kursu-sonuc", q: "mock=results&n=6&acct=1&cos=1&kars=1", sizes: SONUC_BOYUTLAR, settle: 2600 },
-  { name: "kursu-sonuc-varsayilan", q: "mock=results&n=6", settle: 2600 },
-  { name: "kursu-sonuc-buyuk-yazi", q: "mock=results&n=6&acct=1&cos=1&kars=1&text=large", settle: 2600 },
-  { name: "kursu-final", q: "mock=final&n=6&acct=1&cos=1&kars=1", sizes: SONUC_BOYUTLAR, settle: 2600 },
-  { name: "kursu-final-varsayilan", q: "mock=final&n=4", settle: 2600 },
-  { name: "kursu-final-beraber", q: "mock=final&n=6&acct=1&cos=1&kars=1&beraber=1", settle: 2600 },
-  { name: "kursu-final-buyuk-yazi", q: "mock=final&n=6&acct=1&cos=1&kars=1&text=large", settle: 2600 },
-  { name: "kursu-final-az-hareket", q: "mock=final&n=6&acct=1&cos=1&kars=1&motion=reduce", settle: 2600 },
+  {
+    name: "kursu-sonuc",
+    q: "mock=results&n=6&acct=1&cos=1&kars=1",
+    sizes: SONUC_BOYUTLAR,
+    settle: 2600,
+    act: karakterHazir,
+  },
+  { name: "kursu-sonuc-varsayilan", q: "mock=results&n=6", settle: 2600, act: karakterHazir },
+  {
+    name: "kursu-sonuc-buyuk-yazi",
+    q: "mock=results&n=6&acct=1&cos=1&kars=1&text=large",
+    settle: 2600,
+    act: karakterHazir,
+  },
+  {
+    name: "kursu-final",
+    q: "mock=final&n=6&acct=1&cos=1&kars=1",
+    sizes: SONUC_BOYUTLAR,
+    settle: 2600,
+    act: karakterHazir,
+  },
+  { name: "kursu-final-varsayilan", q: "mock=final&n=4", settle: 2600, act: karakterHazir },
+  {
+    name: "kursu-final-beraber",
+    q: "mock=final&n=6&acct=1&cos=1&kars=1&beraber=1",
+    settle: 2600,
+    act: karakterHazir,
+  },
+  {
+    name: "kursu-final-buyuk-yazi",
+    q: "mock=final&n=6&acct=1&cos=1&kars=1&text=large",
+    settle: 2600,
+    act: karakterHazir,
+  },
+  {
+    name: "kursu-final-az-hareket",
+    q: "mock=final&n=6&acct=1&cos=1&kars=1&motion=reduce",
+    settle: 2600,
+    act: karakterHazir,
+  },
   { name: "kozmetik-profil", q: "mock=profil", settle: 900 },
   {
     name: "ana-magaza-misafir",
@@ -2066,7 +2103,13 @@ const SCREENS = [
   { name: "tv-oynanis-yatay", q: "mock=tv-landscape&n=6", sizes: TV, settle: 1600 },
   { name: "tv-sonuc", q: "mock=tv-results&n=6", sizes: TV, settle: 2400 },
   { name: "tv-final", q: "mock=tv-final&n=8", sizes: TV, settle: 2600 },
-  { name: "tv-final-kursu", q: "mock=tv-final&n=8&cos=1&kars=1", sizes: TV, settle: 3000 },
+  {
+    name: "tv-final-kursu",
+    q: "mock=tv-final&n=8&cos=1&kars=1",
+    sizes: TV,
+    settle: 3000,
+    act: karakterHazir,
+  },
   { name: "tv-zaman-bombasi-sira", q: "mock=tv-zaman-mine&n=6", sizes: TV, settle: 1400 },
   { name: "tv-zaman-bombasi-izle", q: "mock=tv-zaman-playback&n=6", sizes: TV, settle: 1400 },
   { name: "tv-karalama-cizim", q: "mock=tv-karalama-draw&n=6", sizes: TV, settle: 1400 },
