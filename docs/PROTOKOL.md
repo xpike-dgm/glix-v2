@@ -17,7 +17,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `kick` | `playerId` | yalnız host, yalnız lobide (maçta `wrong_phase`); kendini/olmayanı atamaz (`not_in_room`). Atılanın oturum anahtarı silinir; `resume` `resume_failed` döner. Oda koduyla yeniden katılma engellenmez |
 | `transferHost` | `playerId` | yalnız host, yalnız lobide; hedef odada ve bağlı olmalı, kendisi olamaz (`not_in_room`). Taç hedefe geçer, bekleyen host devri iptal olur, hedefin hazır işareti silinir |
 | `rename` | `nickname` | `normalizeNickname` kuralları; **yalnız misafir** (hesaplı bağlantıda `account_name` ile reddedilir: ad kullanıcı adıdır);  yalnız lobide (`wrong_phase`); odada başkasında olan ad (büyük/küçük harf duyarsız) `nickname_taken`; oyuncu başına 1 sn'de en çok bir değişiklik (`rate_limited`); aynı ad sessizce yok sayılır |
-| `react` | `emoji` | yalnız `LOBBY_EMOJIS` (👋 😂 🔥 😱 👏 ❤️), aksi `invalid_message`; yalnız lobi, sonuç (`results`) ve final aşamalarında (oyun sırasında blöf işareti taşıyabileceği için kapalı); oyuncu başına 700 ms'de bir. Fazlası ve izinsiz aşama **sessizce** atılır (hata yok). Cevap: herkese `reaction` olayı |
+| `react` | `emoji` | `LOBBY_EMOJIS` (👋 😂 🔥 😱 👏 ❤️) **ya da** tepki paketi çıkartması `pack:<paket>:<1..6>` (paket: `neon-yuzler`, `parti`, `efsane-tepkiler`); aksi `invalid_message`. Çıkartmayı yalnız paketin **hesaplı sahibi** gönderebilir: misafir ve sahip olmayan **sessizce** atılır (hız sınırı yine tüketilir); yalnız lobi, sonuç (`results`) ve final aşamalarında (oyun sırasında blöf işareti taşıyabileceği için kapalı); oyuncu başına 700 ms'de bir. Fazlası ve izinsiz aşama **sessizce** atılır (hata yok). Cevap: herkese `reaction` olayı |
 | `setReady` | `ready` (boolean) | lobide "Hazırım" işareti; yalnız lobide (`wrong_phase`); host için sessizce yok sayılır. Başlamak için şart değildir |
 | `setGames` | `gameIds` | yalnız host, yalnız lobide; boş olamaz, tekrar yok; modu `manual` yapar |
 | `setRandom` | `count` | yalnız host, yalnız lobide; 1..katalog boyu; modu `random` yapar |
@@ -55,7 +55,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `patch` | `baseRev`, `rev`, `patch` — sonraki değişimler, JSON Merge Patch (RFC 7386) |
 | `actionAck` | `seq`, `ok`, `reason?` |
 | `left` | `reason: "left" \| "kicked" \| "closed"` |
-| `reaction` | `playerId`, `emoji` | **Geçici olay**: oda durumunda (`room`/`patch`) saklanmaz, `rev` almaz, yeniden bağlanana tekrarlanmaz. Lobi/sonuç/finalde gönderenle birlikte odadaki tüm bağlı oyunculara gider |
+| `reaction` | `playerId`, `emoji` (emoji ya da `pack:<paket>:<n>`) | **Geçici olay**: oda durumunda (`room`/`patch`) saklanmaz, `rev` almaz, yeniden bağlanana tekrarlanmaz. Lobi/sonuç/finalde gönderenle birlikte odadaki tüm bağlı oyunculara gider |
 | `friendStatus` | `username`, `status: "offline" \| "online" \| "lobby" \| "playing"` — yalnız kabul edilmiş arkadaşların canlı bağlantılarına; durum değişince (bkz. "Arkadaşlar") |
 | `friendRequest` | `username` — sana arkadaşlık isteği geldi |
 | `friendsChanged` | — arkadaş listen/isteklerin değişti (kabul, geri çekme, çıkarma, engel); istemci `GET /api/friends`'i yeniler |
@@ -95,6 +95,7 @@ gönderilmez; `rev` ve `serverNow` yalnız gönderilen mesajlarda ilerler (istem
   maç sonunda lobiye dönünce (ya da maç yarıda iptal olunca) sıfırlanır. Host olan oyuncunun işareti düşer.
   İstemci "herkes hazır" durumunu `allReady(snapshot)` ile hesaplar (host dışındaki bağlı oyuncular hazır, en az biri var);
   yalnızca Başlat düğmesini parlatır, sunucu `startMatch`'te hazır olmayı aramaz.
+- Tepki paketi çıkartması (M3) aynı `react`/`reaction` mesajlarını kullanır, ek mesaj yoktur; **`PROTOCOL_VERSION` 3 kalır**. Eski istemci `reaction.emoji` değerini tanımayınca mesajı doğrulamada düşürür (çökmez, çıkartma görünmez); yeni istemci bilinmeyen paket/sıra kimliğini aynı şekilde yok sayar. Ortak 700 ms hız sınırı emoji ve çıkartmayı birlikte sayar.
 - Emoji tepkisi odanın bir parçası değildir: sunucu `reaction` mesajını anında yollar ve unutur. Hız sınırı oyuncu başına
   (`REACTION_MIN_GAP_MS` = 700), ayrıca genel mesaj kovası geçerlidir.
 - Takma ad benzersizliği: katılırken çakışan ad otomatik numaralanır ("Ali 2"); lobide `rename` çakışmayı numaralamaz, reddeder.

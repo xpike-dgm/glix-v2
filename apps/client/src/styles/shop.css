@@ -671,7 +671,7 @@
   width: 56px;
 }
 .art-card[data-size="big"] {
-  width: clamp(120px, 34vw, 170px);
+  width: min(34vw, 170px, 26vh);
 }
 .art-sprites {
   display: flex;
@@ -802,7 +802,7 @@
 }
 .shop-section {
   flex: 1;
-  min-height: 40px;
+  min-height: 48px;
   border-radius: 11px;
   color: var(--text-dim);
   font-size: var(--fs-15);
@@ -832,9 +832,16 @@
 .locker-tile[data-type="kart-arkasi"] .art-card[data-size="tile"] {
   width: 44px;
 }
+.locker-tile .art-sprites {
+  max-width: 100%;
+}
 .locker-tile .art-sprites img {
-  width: 22px;
-  height: 22px;
+  flex: 0 1 18px;
+  min-width: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0 -1px;
+  transform: none;
 }
 .locker-tile .art-collage {
   transform: scale(0.8);

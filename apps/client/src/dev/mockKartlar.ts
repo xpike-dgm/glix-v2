@@ -56,6 +56,15 @@ export function startKartMock(rawKind: string, params: URLSearchParams): void {
     score: SCORES[i] ?? 0,
     spectator: spectator && i === 0,
   }));
+  // `&sirt=elektrik`: sen (ve TV destesi için Elif, Mert) özel kart arkası kuşanmış olursun.
+  const sirt = params.get("sirt");
+  if (sirt) {
+    const backs = [`kart-${sirt}`, "kart-altin-kraliyet", "kart-gece-sehri"] as const;
+    for (const [i, id] of backs.entries()) {
+      const p = players[i];
+      if (p) p.cosmetics = { cardBack: id };
+    }
+  }
   const participants = players.filter((p) => !p.spectator).map((p) => p.id);
   const now = Date.now();
   const others = participants.filter((id) => id !== SELF);

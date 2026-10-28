@@ -400,12 +400,18 @@
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-motion="full"]) .av__entry {
     animation: none;
-    opacity: 0.85;
+    opacity: 0.8;
+  }
+  :root:not([data-motion="full"]) .av__entry--front {
+    display: none;
   }
 }
 :root[data-motion="reduce"] .av__entry {
   animation: none;
-  opacity: 0.85;
+  opacity: 0.8;
+}
+:root[data-motion="reduce"] .av__entry--front {
+  display: none;
 }
 
 /* Zafer kutlaması: hareket azaltmada Pixi yerine birkaç sabit görsel (üstte yan yana). */
