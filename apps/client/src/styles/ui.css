@@ -282,10 +282,14 @@
   color: var(--bg-0);
   box-shadow: 0 0 0 2px var(--bg-0);
 }
+/* Süzgeç (grayscale) animasyonlu öğenin kendisinde olursa her karede yeniden süzülür (TV lobisinde 17 fps).
+   Gri tonlama çocuklara verilir; yalnız opacity animasyonu bileşen katmanında kalır, görünüm aynıdır. */
 .av--off {
   opacity: 0.4;
-  filter: grayscale(1);
   animation: wait 2.2s ease-in-out infinite;
+}
+.av--off > * {
+  filter: grayscale(1);
 }
 .av--flash-match .av__disc {
   border-color: var(--lime);

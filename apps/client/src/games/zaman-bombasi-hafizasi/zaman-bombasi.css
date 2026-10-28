@@ -56,10 +56,10 @@
 .ztotal[data-sudden="1"] .ztotal__clock {
   color: var(--red);
 }
+/* Yalnız opacity: gölge sabit kalır (animasyonlu box-shadow her karede boyatıyordu); görünüm neredeyse aynı. */
 @keyframes ztotal-pulse {
   50% {
-    box-shadow: 0 0 4px rgba(255, 70, 90, 0.3);
-    opacity: 0.8;
+    opacity: 0.7;
   }
 }
 @media (prefers-reduced-motion: reduce) {
