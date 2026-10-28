@@ -167,6 +167,18 @@ export interface AccountExportData {
 export type GlixReason = "mac" | "rozet" | "yonetici" | "satin-alma";
 
 /** Glix hareket defteri satırı; `amount` işaretlidir. `ref`: rozet kimliği, yönetici notu ya da maç sırası. */
+/** Glix ekonomisi ham toplamları (yönetici paneli). `d` İstanbul gün numarasıdır (1970-01-01 = 0). */
+export interface EconomyRaw {
+  ledger: { d: number; reason: GlixReason; pos: number; neg: number }[];
+  /** Günlük maç sınırına ulaşan hesap sayısı (o gün 'mac' toplamı >= sınır). */
+  capHits: { d: number; n: number }[];
+  circulation: { total: number; holders: number };
+  /** Aralıkta ücretli satın alınan ürünler: adet ve toplam ödenen Glix. */
+  sales: { itemId: string; count: number; glix: number }[];
+  /** Verilen fırsat ürünlerinden `dealFrom`dan beri (bugün) fırsat fiyatıyla satılan adet. */
+  dealSold: { itemId: string; count: number }[];
+}
+
 export interface GlixLedgerRow {
   id: number;
   at: number;
@@ -526,6 +538,14 @@ export interface AccountStore extends FriendStore {
   adminSessionDelete(tokenHash: string): void;
   /** Panel için hesap toplamları. */
   adminMetrics(now: number): AccountMetrics;
+  /** Glix ekonomisi: [from, to) aralığı için toplu okuma (tek geçişli SQL, indeksli). */
+  economy(
+    from: number,
+    to: number,
+    capAmount: number,
+    deals: readonly { itemId: string; price: number }[],
+    dealFrom: number,
+  ): EconomyRaw;
   /** Yönetici çerezi oturumunun açılış anı (ms); yoksa null. "Taze giriş" denetimi için. */
   adminSessionCreatedAt(tokenHash: string): number | null;
   /** `since` (dahil) sonrası `action` kayıtlarının sayısı ve en eskisinin anı (yoksa null). Günlük yedek sınırı için. */
@@ -759,6 +779,9 @@ const MIGRATIONS: readonly string[] = [
      item_id TEXT NOT NULL,
      PRIMARY KEY (account_id, slot)
    ) WITHOUT ROWID;`,
+  // Glix ekonomisi paneli (yönetici): tüm hesaplar üzerinden zaman aralığı taramaları için indeksler.
+  `CREATE INDEX glix_ledger_at ON glix_ledger (at);
+   CREATE INDEX cosmetic_owned_at ON cosmetic_owned (acquired_at);`,
 ];
 
 /** Yönetici hesap dökümünde gösterilen son Glix hareketi sayısı. */
@@ -1210,6 +1233,30 @@ export function createAccounts(path: string): AccountStore {
     "DELETE FROM content_overrides WHERE pool_id = ? AND entry_key = ? AND action = ?",
   );
   const usernameScan = db.prepare("SELECT id, username FROM accounts WHERE id > ? ORDER BY id LIMIT ?");
+  const ecoLedger = db.prepare(
+    `SELECT (at + 10800000) / 86400000 AS d, reason,
+            COALESCE(SUM(CASE WHEN amount > 0 THEN amount END), 0) AS pos,
+            COALESCE(SUM(CASE WHEN amount < 0 THEN -amount END), 0) AS neg
+       FROM glix_ledger WHERE at >= ? AND at < ? GROUP BY d, reason`,
+  );
+  const ecoCap = db.prepare(
+    `SELECT d, COUNT(*) AS n FROM (
+       SELECT (at + 10800000) / 86400000 AS d, account_id
+         FROM glix_ledger WHERE reason = 'mac' AND at >= ? AND at < ?
+        GROUP BY d, account_id HAVING SUM(amount) >= ?
+     ) GROUP BY d`,
+  );
+  const ecoCirculation = db.prepare(
+    "SELECT COALESCE(SUM(glix), 0) AS total, COUNT(CASE WHEN glix > 0 THEN 1 END) AS holders FROM accounts",
+  );
+  const ecoSales = db.prepare(
+    `SELECT item_id AS itemId, COUNT(*) AS count, SUM(price_paid) AS glix FROM cosmetic_owned
+      WHERE price_paid > 0 AND acquired_at >= ? AND acquired_at < ? GROUP BY item_id`,
+  );
+  const ecoDealSold = db.prepare(
+    `SELECT COUNT(*) AS n FROM cosmetic_owned
+      WHERE item_id = ? AND price_paid = ? AND acquired_at >= ? AND acquired_at < ?`,
+  );
   const metricTotals = db.prepare(
     `SELECT COUNT(*) AS total, COALESCE(SUM(email_verified), 0) AS verified,
             COALESCE(SUM(google_sub IS NOT NULL), 0) AS google, COALESCE(SUM(pass_hash IS NOT NULL), 0) AS pass
@@ -2214,6 +2261,19 @@ export function createAccounts(path: string): AccountStore {
           const d = today - (29 - i);
           return { dayStart: d * 86_400_000, count: byDay.get(d) ?? 0 };
         }),
+      };
+    },
+    economy(from, to, capAmount, deals, dealFrom) {
+      const c = ecoCirculation.get() as { total: number; holders: number };
+      return {
+        ledger: ecoLedger.all(from, to) as EconomyRaw["ledger"],
+        capHits: ecoCap.all(from, to, capAmount) as EconomyRaw["capHits"],
+        circulation: { total: c.total, holders: c.holders },
+        sales: ecoSales.all(from, to) as EconomyRaw["sales"],
+        dealSold: deals.map((d) => ({
+          itemId: d.itemId,
+          count: (ecoDealSold.get(d.itemId, d.price, dealFrom, to) as { n: number }).n,
+        })),
       };
     },
     purge(now) {

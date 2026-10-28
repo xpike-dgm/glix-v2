@@ -68,6 +68,19 @@ o oyunun geçtiği maçların ortalamasıdır.
 - **Son yayınlar:** konteyner dağıtım geçmişini göremediği için sunucu her başlangıcı `server_starts(revision, version, started_at, stopped_at)` tablosuna yazar (revizyon `GIT_SHA`, yoksa `REVISION`, yoksa `dev`) ve temiz kapanışta `stopped_at` yazar. Panel son 20 kaydı süreyle gösterir; kapanış kaydı olmayan satır çökme/zorla durdurma demektir ve süresi en geç sonraki başlangıçtır. En çok 200 kayıt tutulur.
 - **İşlem kaydı:** `game_switch`, `announcement_set`/`announcement_clear`, `push_broadcast`/`push_broadcast_done`, `maintenance_on`/`maintenance_off`, `db_backup`/`db_backup_denied`/`db_backup_failed`.
 
+## Glix ekonomisi
+**Glix ekonomisi** sekmesi (salt okunur; kişi bilgisi yok). `GET /api/admin/economy?days=7|30` (başka değer 400 `bad_request`); diğer yönetici okumalarıyla aynı kapı: oturum + yönetici + giriş kodu.
+Günler **İstanbul takvim günü**dür (gece yarısı UTC+3); son gün bugündür. Veri `glix_ledger` ve `cosmetic_owned` tablolarından tek geçişli SQL ile okunur, `glix_ledger(at)` ve `cosmetic_owned(acquired_at)` indeksleri eklendi (hesap göçü sonuna).
+
+Yanıt: `days`, `daily[]` (eskiden yeniye, sıfır günler dahil), `totals`, `circulation`, `dailyCap`, `topItems`, `sales`, `byRarity`, `byType`, `deals`, `dealEndsAt`.
+- **Günlük satır:** `mac`, `rozet`, `yonetici` (yöneticinin eklediği), `yoneticiEksi` (düştüğü, pozitif sayı), `harcanan` (mağaza `satin-alma`, pozitif sayı), `kazanilan` = mac + rozet + yonetici, `net` = kazanilan - yoneticiEksi - harcanan, `sinirdaki`.
+- **Günlük sınıra ulaşan:** o İstanbul gününde `mac` satırları toplamı >= 300 (`GLIX_DAILY_MATCH_CAP`) olan hesap sayısı (defterden türetilir).
+- **Dolaşım:** tüm hesap bakiyelerinin toplamı ve bakiyesi 0'dan büyük hesap sayısı (yönetici hesapları dahil).
+- **Satışlar:** seçili aralıkta `price_paid > 0` ürün satın almaları (yönetici armağanı `price_paid = 0` sayılmaz). `topItems`: adede göre ilk 10 (ad ve tür adı motor kataloğundan, Türkçe); `byRarity` / `byType`: adet ve toplam Glix.
+- **Günün fırsatı:** bugünün fırsat ürünleri (`dailyDeals`), liste/fırsat fiyatı ve **bugün fırsat fiyatıyla** satılan adet (ödenen tutar = fırsat fiyatı).
+- Ekran: özet kutucukları (dolaşım, bakiyesi olan hesap, kazanılan, harcanan, net, sınıra ulaşan), günlük kazanılan / harcanan / sınıra ulaşan sütun grafikleri, günlük döküm tablosu, en çok satanlar, nadirlik/tür dağılımı ve fırsat tablosu. Yeni bağımlılık yok (mevcut `Bars` / `HBars` bileşenleri).
+- İşlem kaydına yazılmaz (salt okunur, yalnız toplamlar).
+
 ## Moderasyon (A4)
 **Moderasyon** sekmesi ve **Canlı durum** tablosundaki oda işlemleri. Hepsi POST + Origin denetimi + yönetici başına hız sınırı + panelde ayrı onay ("Emin misin?") + işlem kaydı taşır.
 

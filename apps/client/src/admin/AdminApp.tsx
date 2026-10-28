@@ -3,6 +3,7 @@ import { AccountsPanel } from "./AccountsPanel.js";
 import { AuditPanel } from "./AuditPanel.js";
 import { type Gate, loadGate, logout, sendCode, verifyCode } from "./api.js";
 import { ContentPanel } from "./ContentPanel.js";
+import { EconomyPanel } from "./EconomyPanel.js";
 import { ErrorsPanel } from "./ErrorsPanel.js";
 import { LivePanel } from "./LivePanel.js";
 import { MaintenancePanel } from "./MaintenancePanel.js";
@@ -15,6 +16,7 @@ type Tab =
   | "istatistik"
   | "hatalar"
   | "hesaplar"
+  | "ekonomi"
   | "moderasyon"
   | "icerik"
   | "havuzlar"
@@ -25,6 +27,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "istatistik", label: "Oyun istatistikleri" },
   { id: "hatalar", label: "Hatalar ve performans" },
   { id: "hesaplar", label: "Hesaplar" },
+  { id: "ekonomi", label: "Glix ekonomisi" },
   { id: "moderasyon", label: "Moderasyon" },
   { id: "icerik", label: "İçerik" },
   { id: "havuzlar", label: "İçerik havuzları" },
@@ -240,6 +243,9 @@ export function AdminApp() {
               </Match>
               <Match when={tab() === "hesaplar"}>
                 <AccountsPanel onOtp={() => void check()} />
+              </Match>
+              <Match when={tab() === "ekonomi"}>
+                <EconomyPanel onOtp={() => void check()} />
               </Match>
               <Match when={tab() === "moderasyon"}>
                 <ModerationPanel onOtp={() => void check()} />
