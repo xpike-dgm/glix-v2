@@ -223,6 +223,21 @@ Maç düzeyinde kartlar (kurallar: docs/KURALLAR.md "0. Maç düzeyi kuralları:
 - [ ] Kart görselleri (`/assets/cards/<kimlik>.webp`): şimdilik CSS çerçeve + elmas işareti; görseller sonra eklenecek (bkz. docs/GORSEL-URETIM.md).
 - [ ] Oyun içi (oynanış sırasında) küçük "oynanan kartlar" şeridi: şimdilik kartlar geri sayımda ve sonuç satırlarında görünür.
 
+### U18. Glix ve kozmetik mağaza
+Sahip kararları (Ekim 2026). Yalnız görünüş satılır, oyunda avantaj yok; gerçek parayla satış yok.
+- **Para birimi "Glix"**, yalnız hesaplı oyunculara. Kazanç: tamamlanan maç 10; sıralama eki 1. +15, 2. +10, 3. +5;
+  günün ilk maçı ×2; yeni rozet kademesine göre 25 / 50 / 100. Maçlardan günlük üst sınır 300 Glix (rozet ödülü sınır dışı).
+  Misafire maç sonunda "hesap açsaydın N Glix kazanırdın".
+- **Fiyatlar:** sıradan 150, nadir 400, efsanevi 1000 Glix.
+- **Düzen:** her zaman açık katalog + günün fırsatı (her gün indirimli 1–2 ürün). Ana menüde "Mağaza", profilde "Dolabım".
+- **İlk sürüm ürünleri:** avatar çerçevesi, ad efekti, kart arkası, zafer kutlaması, unvan, tepki paketi, lobi giriş
+  efekti; kürsü karakteri için dans ve giysi (parçalı karakter denemesi onaylanırsa; bkz. `docs/gorsel/KARAKTER.md`).
+  Her türün ücretsiz bir temel ürünü olur.
+- Uygulama sırası (öneri): M1 Glix bakiyesi, kazanç kuralları, hareket kaydı, maç sonu "+N Glix", yönetici düzeltmesi,
+  KVKK dışa aktarma/silme → M2 Mağaza + Dolabım, satın alma ve kuşanma (sunucu doğrular), kuşanılanların diğer
+  oyunculara görünmesi → M3 ürün görselleri (ChatGPT) ve görünüş türleri → M4 kürsü karakteri, dans ve giysiler.
+- [ ] M1  - [ ] M2  - [ ] M3  - [ ] M4
+
 ---
 
 ## O — Oyun iyileştirmeleri iş kolu
@@ -363,15 +378,3 @@ Ajan düzeni: en çok 2 eşzamanlı ajan, her oyun/özellik sonrası commit.
 - Linkten ilk oyuna süre, maç tamamlama oranı, oyun başına ortalama puan ve süre (stats), terk oranı.
 - Yapay zekâ: çağrı sayısı, p95 gecikme, yedeğe düşme oranı, maç başına maliyet, moderasyon yanlış pozitif oranı.
 - Teknik: tick p95, bellek, `ui:check` sayısı, e2e süresi.
-
-## Konuşulacaklar (karar verilmedi)
-
-### Kalıcı para ve kozmetik mağaza (taslak, Ekim 2026)
-Sahip: "yapılacaklar listesinde dursun, sonra konuşuruz". Asistan önerisi, karar yok:
-- Tamamlanan maç sonunda hesaplı oyunculara para birimi (ad önerisi: "Kıvılcım"; oyunlardaki "jeton"la karışmasın);
-  misafire "hesap açsaydın N kazanırdın". Ek: günün ilk maçı ×2, yeni rozet, arkadaşla maç. Günlük sınır, en az 3 oyuncu
-  ve 3 oyun şartı, kasma tespiti (yönetici paneli).
-- Yalnız görünüş satılır, oyunda avantaj yok. Gerçek parayla satış yok (App Store kararı sahipte).
-- Ürünler: avatar çerçevesi, ad efekti, lobi giriş animasyonu, zafer kutlaması, tepki paketi, kart arkası, profil
-  arka planı/unvan; sonra karakter kostümleri ve günlük vitrin. Bazı ürünler yalnız rozetle açılır.
-- Ana menüde "Mağaza", profilde "Dolabım"; yönetici panelinde jeton düzeltme ve vitrin yönetimi; KVKK dışa aktarma/silme.
