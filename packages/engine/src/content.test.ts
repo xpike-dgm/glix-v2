@@ -12,12 +12,11 @@ import { GameRecorder, replay } from "./replay.js";
 import { createRng } from "./rng.js";
 
 const PLAYERS = ["a", "b", "c", "d"];
-const ctx = (seed: number, content?: ContentSet, tone?: "aile" | "arkadas" | "ofis"): GameContext => ({
+const ctx = (seed: number, content?: ContentSet): GameContext => ({
   now: 1_000,
   rng: createRng(seed),
   connected: PLAYERS,
   ...(content ? { content } : {}),
-  ...(tone ? { tone } : {}),
 });
 
 /** Test için uydurma (içerik üretimi değil) alan değerleri: yalnız harf dizileri. */
@@ -108,13 +107,13 @@ const PROBES: Probe[] = [
       return [s.mainWord, s.nearWord];
     },
   },
-  ...(["aile", "arkadas", "ofis"] as const).map((tone) => ({
-    poolId: `laf-sokma/${tone}`,
+  {
+    poolId: "laf-sokma/sorular",
     picked: (seed: number, c?: ContentSet) => {
-      const s = lafSokma.setup(PLAYERS, ctx(seed, c, tone));
+      const s = lafSokma.setup(PLAYERS, ctx(seed, c));
       return [...s.duels.map((d) => d.prompt), s.finalPrompt];
     },
-  })),
+  },
 ];
 
 describe.each(PROBES)("$poolId", ({ poolId, picked }) => {
@@ -188,7 +187,7 @@ describe.each(PROBES)("$poolId", ({ poolId, picked }) => {
 describe("kayıttan tekrar oynatma içeriği korur", () => {
   it("GameLog.content kayıt altına alınır ve replay aynı havuzu kurar (Sözlük Blöfü)", () => {
     const content: ContentSet = { "sozluk-blofu/kelimeler": custom("sozluk-blofu/kelimeler", 30) };
-    const rec = new GameRecorder("sozluk-blofu", 5, PLAYERS, 1_000, undefined, content);
+    const rec = new GameRecorder("sozluk-blofu", 5, PLAYERS, 1_000, content);
     const log = rec.finish(200_000);
     expect(log.content).toEqual(content);
     const withContent = replay(sozlukBlofu, JSON.parse(JSON.stringify(log)));
@@ -205,7 +204,7 @@ describe("kayıttan tekrar oynatma içeriği korur", () => {
     const content: Record<string, unknown[]> = {
       "cagrisim-agi/kelimeler": custom("cagrisim-agi/kelimeler", 12),
     };
-    const rec = new GameRecorder("cagrisim-agi", 1, PLAYERS, 0, undefined, content);
+    const rec = new GameRecorder("cagrisim-agi", 1, PLAYERS, 0, content);
     content["cagrisim-agi/kelimeler"]?.push("SONRADAN");
     expect(rec.finish(1).content?.["cagrisim-agi/kelimeler"]).toHaveLength(12);
   });

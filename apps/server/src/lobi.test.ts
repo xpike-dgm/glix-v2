@@ -251,11 +251,11 @@ describe("ev sahipliğini devretme ve atma", () => {
     await until(() => b.room.hostId === c.session.playerId);
     expect(a.room.hostId).toBe(c.session.playerId);
     // Eski host artık host işlemi yapamaz, yenisi yapar.
-    a.send({ type: "setTone", tone: "ofis" });
+    a.send({ type: "setRandom", count: 3 });
     await until(() => a.of("error").length > 0);
     expect(a.lastError?.code).toBe("not_host");
-    c.send({ type: "setTone", tone: "ofis" });
-    await until(() => a.room.tone === "ofis");
+    c.send({ type: "setRandom", count: 3 });
+    await until(() => a.room.selection.mode === "random" && a.room.selection.count === 3);
   });
 
   it("host olmayan devredemez; kendine, olmayana ya da kopuk oyuncuya devredilmez", async () => {

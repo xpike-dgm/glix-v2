@@ -1,6 +1,5 @@
 import type {
   Announcement,
-  ContentTone,
   GameInfo,
   GameLog,
   JoinPolicy,
@@ -92,7 +91,6 @@ export interface Room {
   gameIds: string[];
   selection: RoomSnapshot["selection"];
   /** İçerik tonu; maç başında oyunların `setup`ına verilir. */
-  tone: ContentTone;
   /** Maç sürerken gelen kişiye ne olur (yalnız lobide değişir). */
   joinPolicy: JoinPolicy;
   match: Match | null;

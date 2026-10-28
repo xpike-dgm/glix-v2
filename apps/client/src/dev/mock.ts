@@ -5,7 +5,6 @@
  */
 import type {
   ClientMessage,
-  ContentTone,
   GameInfo,
   JoinPolicy,
   MatchSnapshot,
@@ -106,7 +105,6 @@ export function startMock(kind: string, params: URLSearchParams): void {
   // Varsayılan oda rastgele 5; `&sel=manual` el ile modda açar.
   let selection: RoomSnapshot["selection"] =
     params.get("sel") === "manual" ? { mode: "manual" } : { mode: "random", count: 5 };
-  let tone: ContentTone = "arkadas";
   // `&pick=N` (manuel mod): ilk N oyun seçili gelir (lobi "Bu gece" şeridi denetimi).
   const pick = Math.max(1, Math.min(CATALOG.length, Number(params.get("pick") ?? 1) || 1));
   let gameIds =
@@ -174,7 +172,6 @@ export function startMock(kind: string, params: URLSearchParams): void {
       players,
       gameIds,
       selection,
-      tone,
       joinPolicy,
       stageCount: 0,
       lobbyReady: phase === "lobby" ? lobbyReady : [],
@@ -349,8 +346,6 @@ export function startMock(kind: string, params: URLSearchParams): void {
         publish();
         break;
       case "setTone":
-        tone = msg.tone;
-        publish();
         break;
       case "setJoinPolicy":
         joinPolicy = msg.policy;

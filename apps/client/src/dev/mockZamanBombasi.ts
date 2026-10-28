@@ -243,7 +243,6 @@ export function startZamanBombasiMock(kind: string, params: URLSearchParams): vo
     players,
     gameIds: [zamanBombasiHafizasi.id],
     selection: { mode: "manual" },
-    tone: "arkadas",
     joinPolicy: "izleyici",
     lobbyReady: [],
     stageCount: 0,

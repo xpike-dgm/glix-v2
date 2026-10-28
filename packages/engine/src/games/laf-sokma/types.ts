@@ -1,7 +1,4 @@
 /** Laf Sokma Düellosu — istemci ile sunucu arasındaki sözleşme. Kurallar: docs/KURALLAR.md §27, docs/A8-LAF-SOKMA.md. */
-import type { LafTone } from "./prompts.js";
-
-export type { LafTone } from "./prompts.js";
 
 /** Soru yazma aşaması (her oyuncu iki soruya cevap yazar). */
 export const LAF_WRITE_MS = 60_000;
@@ -79,7 +76,8 @@ export interface LafDuel {
 /** Herkese açık görünüm: cevap-yazar eşleşmesi ilgili sorunun açılışına kadar hiçbir yerde yoktur. */
 export interface LafPublicView {
   players: string[];
-  tone: LafTone;
+  /** Eski istemciler için sabit değer (ton kaldırıldı); yeni istemci okumaz. Sonraki sürümde silinecek. */
+  tone?: "arkadas";
   phase: LafPhase;
   /** Gösterilen düello sırası (0'dan); yazma ve final aşamalarında null. */
   index: number | null;

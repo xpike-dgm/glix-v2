@@ -506,18 +506,9 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       rt.broadcaster.markDirty(room);
       return;
     }
-    case "setTone": {
-      const room = requireHost(conn);
-      if (!room) return;
-      if (room.phase !== "lobby") {
-        fail(conn, "wrong_phase");
-        return;
-      }
-      if (room.tone === msg.tone) return;
-      room.tone = msg.tone;
-      rt.broadcaster.markDirty(room);
+    case "setTone":
+      // Eski istemci uyumu: ton özelliği kaldırıldı; mesaj sessizce yok sayılır (hata ve yayın yok).
       return;
-    }
     case "setJoinPolicy": {
       const room = requireHost(conn);
       if (!room) return;

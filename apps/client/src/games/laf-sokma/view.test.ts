@@ -11,7 +11,6 @@ import {
 
 const pub = {
   players: ["a", "b", "c"],
-  tone: "arkadas",
   phase: "write",
   index: null,
   total: 3,
@@ -83,7 +82,6 @@ describe("Laf Sokma görünümü", () => {
   it("bozuk görünümleri reddeder", () => {
     expect(parseLafPublicView(null)).toBeNull();
     expect(parseLafPublicView({ ...pub, phase: "başka" })).toBeNull();
-    expect(parseLafPublicView({ ...pub, tone: "x" })).toBeNull();
     expect(parseLafPublicView({ ...pub, history: [{ id: 3 }] })).toBeNull();
     expect(parseLafPublicView({ ...pub, duel: { id: "q1", prompt: "S", cards: [{ id: 1 }] } })).toBeNull();
     expect(parseLafPrivateView({ ...priv, tasks: [{ id: "q1" }] })).toBeNull();

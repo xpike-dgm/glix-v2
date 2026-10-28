@@ -1,7 +1,6 @@
 import {
   APP_VERSION,
   type ClientMessage,
-  type ContentTone,
   type JoinPolicy,
   type LobbyEmoji,
   type ReportReason,
@@ -567,7 +566,6 @@ export function sendReport(playerId: string, reason: ReportReason, note: string)
 }
 export const setRandom = (count: number): boolean => rawSend({ type: "setRandom", count });
 export const setJoinPolicy = (policy: JoinPolicy): boolean => rawSend({ type: "setJoinPolicy", policy });
-export const setTone = (tone: ContentTone): boolean => rawSend({ type: "setTone", tone });
 export const setGames = (gameIds: string[]): boolean => rawSend({ type: "setGames", gameIds });
 /**
  * Lobide karakter seç. Seçim cihazda hatırlanır. Yanıt sunucu görünümüyle gelir; çakışmada sunucu

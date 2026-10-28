@@ -162,7 +162,6 @@ export function startIttifakMock(kind: string, params: URLSearchParams): void {
       players,
       gameIds: [INFO.id],
       selection: { mode: "manual" },
-      tone: "arkadas",
       joinPolicy: "izleyici",
       lobbyReady: [],
       stageCount: 0,

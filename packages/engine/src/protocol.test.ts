@@ -118,11 +118,12 @@ describe("parseClientMessage: oda mesajları", () => {
     expect(parseClientMessage(j({ type: "setGames", gameIds: many.slice(0, 27) }))).not.toBeNull();
     expect(parseClientMessage(j({ type: "setGames", gameIds: many.slice(0, 64) }))).not.toBeNull();
   });
-  it("setTone yalnız aile/arkadas/ofis kabul eder, tam anahtar kümesiyle", () => {
-    for (const tone of ["aile", "arkadas", "ofis"]) {
-      expect(parseClientMessage(j({ type: "setTone", tone }))).toEqual({ type: "setTone", tone });
+  it("setTone eski istemci uyumu: biçimi doğru olan mesaj değersiz kabul edilir, bozuk olan reddedilir", () => {
+    // Ton kaldırıldı: değer atılır, sunucu sessizce yok sayar.
+    for (const tone of ["aile", "arkadas", "ofis", "kaba"]) {
+      expect(parseClientMessage(j({ type: "setTone", tone }))).toEqual({ type: "setTone" });
     }
-    for (const tone of ["Aile", "kaba", "", null, 1, undefined, ["ofis"], "__proto__"]) {
+    for (const tone of [null, 1, undefined, ["ofis"], "x".repeat(17)]) {
       expect(parseClientMessage(j({ type: "setTone", tone }))).toBeNull();
     }
     expect(parseClientMessage(j({ type: "setTone" }))).toBeNull();

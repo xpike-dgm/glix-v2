@@ -1,22 +1,11 @@
 import type { ContentSet } from "./content.js";
 import type { Rng } from "./rng.js";
 
-/** Odanın içerik tonu: oyunların metin havuzlarını (soru, konu) seçmesi için. Host lobide seçer. */
-export const CONTENT_TONES = ["aile", "arkadas", "ofis"] as const;
-export type ContentTone = (typeof CONTENT_TONES)[number];
-/** Host ton seçmediyse kullanılan ton. */
-export const DEFAULT_CONTENT_TONE: ContentTone = "arkadas";
-
-/** Ekranda gösterilen ton adları (arayüz metni). */
-export const CONTENT_TONE_LABELS: Record<ContentTone, string> = {
-  aile: "Aile",
-  arkadas: "Arkadaş",
-  ofis: "Ofis",
-};
-
-export function isContentTone(value: unknown): value is ContentTone {
-  return typeof value === "string" && (CONTENT_TONES as readonly string[]).includes(value);
-}
+/**
+ * Eski kayıtlardaki oda tonu. Ton özelliği kaldırıldı (sahip kararı); yeni maçlar ton taşımaz.
+ * Yalnız ton taşıyan eski `GameLog`'ların `replay`i için okunur.
+ */
+export type LegacyContentTone = "aile" | "arkadas" | "ofis";
 
 /** Oyun fonksiyonlarına sunucunun verdiği bağlam. `now` sunucu saatidir (ms). */
 export interface GameContext {
@@ -28,11 +17,10 @@ export interface GameContext {
    */
   connected: readonly string[];
   /**
-   * Odanın içerik tonu. Yalnız `setup` okur (içerik havuzunu seçmek için); `reduce`/`tick`/görünüm fonksiyonlarına
-   * verilmez. Ton oyunun başında sabitlenir ve `GameLog.tone`'a yazılır, böylece `replay` aynı havuzu kurar.
-   * Tonu önemsemeyen oyun yok sayar; verilmediyse (eski kayıt, test) oyun kendi varsayılanını kullanır.
+   * Yalnız ton taşıyan ESKİ kayıtların `replay`i için: sunucu yeni maçlarda vermez. Verilirse `setup` kaydın
+   * kurulduğu eski ton havuzunu kullanır (aynı durum yeniden kurulur); tonu önemsemeyen oyun yok sayar.
    */
-  tone?: ContentTone;
+  tone?: LegacyContentTone;
   /**
    * Yöneticinin değiştirdiği içerik havuzları (kimlik -> etkin girdiler). Yalnız `setup` okur (`poolEntries`);
    * oyun seçtiği girdiyi durumuna yazar. Verilmezse ya da havuz yoksa yerleşik havuz kullanılır. `GameLog.content`'e yazılır.
@@ -141,8 +129,8 @@ export interface GameLog {
   endedAt: number;
   /** Bağlantı değişimleri (zaman sıralı); `replay` her eylem ve tick öncesi bağlı listesini buna göre kurar. */
   presence: { t: number; playerId: string; connected: boolean }[];
-  /** `setup`a verilen oda tonu; yoksa (eski kayıt) `setup` tonsuz çağrılır. */
-  tone?: ContentTone;
+  /** Yalnız eski kayıtlarda bulunur (ton özelliği kaldırıldı): `replay` `setup`a aynen verir, yeni kayıt yazmaz. */
+  tone?: LegacyContentTone;
   /** `setup`a verilen içerik havuzları; yoksa yerleşik havuzlar. `replay` aynısını verir. */
   content?: ContentSet;
   /** Eylem sınırı aşıldığı için kayıt eksik: `replay` bu kaydı reddeder. */

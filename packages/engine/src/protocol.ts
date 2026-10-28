@@ -1,4 +1,4 @@
-import { type ContentTone, type GameResult, isContentTone } from "./game.js";
+import type { GameResult } from "./game.js";
 import { isReportReason, type ReportReason, sanitizeReportNote } from "./moderation/report.js";
 import type { SiteNotice } from "./siteNotice.js";
 
@@ -101,8 +101,11 @@ export type ClientMessage =
   | { type: "setGames"; gameIds: string[] }
   /** Rastgele mod: maç başında uygun oyunlar arasından `count` tanesi seçilir (1..katalog). */
   | { type: "setRandom"; count: number }
-  /** İçerik tonu (yalnız host, yalnız lobi). Oyunlar içerik havuzunu buna göre seçer. */
-  | { type: "setTone"; tone: ContentTone }
+  /**
+   * ESKİ: ton özelliği kaldırıldı (sahip kararı). Önbellekteki eski istemciler hâlâ gönderebilir; sunucu sessizce
+   * yok sayar (hata dönmez). Değer taşımaz. Sonraki sürümde silinecek.
+   */
+  | { type: "setTone" }
   /** Maç sürerken katılım ayarı (yalnız host, yalnız lobi). */
   | { type: "setJoinPolicy"; policy: JoinPolicy }
   | { type: "startMatch" }
@@ -274,8 +277,11 @@ export interface RoomSnapshot {
   gameIds: string[];
   /** Oyun seçim modu. Yeni oda: rastgele 5. */
   selection: { mode: "manual" } | { mode: "random"; count: number };
-  /** Odanın içerik tonu; yeni oda: arkadaş. */
-  tone: ContentTone;
+  /**
+   * Ton özelliği kaldırıldı (sahip kararı). Önbellekteki eski istemciler alanı zorunlu okuyup anlık görüntüyü
+   * atar, bu yüzden sunucu bir sürüm daha sabit "arkadas" gönderir; yeni istemci okumaz. Sonraki sürümde silinecek.
+   */
+  tone?: "arkadas";
   /** Maç sürerken gelenlere ne olur; yeni oda: izleyici. */
   joinPolicy: JoinPolicy;
   /** Odaya bağlı sahne (TV) sayısı; telefonlar "TV'de oynanıyor" rozetini buna göre gösterir. */
@@ -504,8 +510,10 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return isJoinPolicy(data.policy) ? { type: "setJoinPolicy", policy: data.policy } : null;
     }
     case "setTone": {
-      if (!hasExactKeys(data, ["type", "tone"])) return null;
-      return isContentTone(data.tone) ? { type: "setTone", tone: data.tone } : null;
+      // Eski istemci uyumu: biçim doğrulanır (tam anahtar kümesi, metin değer) ama değer atılır.
+      if (!hasExactKeys(data, ["type", "tone"]) || typeof data.tone !== "string" || data.tone.length > 16)
+        return null;
+      return { type: "setTone" };
     }
     case "action": {
       if (!hasExactKeys(data, ["type", "seq", "payload"])) return null;

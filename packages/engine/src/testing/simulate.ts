@@ -1,4 +1,4 @@
-import { type AnyGame, type ContentTone, type GameLog, type GameResult, isRejected } from "../game.js";
+import { type AnyGame, type GameLog, type GameResult, isRejected, type LegacyContentTone } from "../game.js";
 import { GameRecorder } from "../replay.js";
 import { createRng, type Rng } from "../rng.js";
 import { deepFreeze } from "./deep.js";
@@ -250,8 +250,8 @@ export interface RunOptions {
   /** Durumları derin dondurur (varsayılan true). */
   freeze?: boolean;
   onStep?: (info: StepInfo) => void;
-  /** `setup`a verilen oda tonu (kayda da yazılır). */
-  tone?: ContentTone;
+  /** Yalnız eski ton taşıyan kaydı sınamak için. */
+  tone?: LegacyContentTone;
 }
 
 export interface RunOutput {
@@ -287,7 +287,7 @@ export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
   items.sort((a, b) => a.t - b.t || a.order - b.order);
 
   const rng = createRng(seed);
-  const recorder = new GameRecorder(game.id, seed, players, startedAt, opts.tone);
+  const recorder = new GameRecorder(game.id, seed, players, startedAt);
   const roster = f([...players]);
   const online = new Set(players);
   let connected: readonly string[] = f([...players]);
@@ -332,7 +332,8 @@ export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
       accepted,
       rejected,
       unparsed,
-      log: recorder.finish(now),
+      // Yeni kayıt ton yazmaz; eski ton taşıyan kaydı taklit etmek için yalnız istenirse eklenir.
+      log: { ...recorder.finish(now), ...(opts.tone !== undefined ? { tone: opts.tone } : {}) },
     };
   };
 

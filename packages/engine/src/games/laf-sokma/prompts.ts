@@ -2,23 +2,15 @@
  * Laf Sokma Düellosu soru havuzu: elle yazılmış TASLAK (sahip gözden geçirecek). Oyun hiçbir yapay zekâ ya da
  * dış servis çağrısı yapmaz; sorular yalnız bu dosyadan seçilir.
  *
- * Üç ton, her biri 110 açık uçlu soru. Siyaset, din, etnik köken, gerçek kişi ve marka yoktur.
- * - aile: çocukların da oynayabileceği masum esprili sorular
- * - arkadas: kışkırtıcı ama kaba, cinsel ya da nefret içeren olmayan sorular
- * - ofis: iş yerinde rahatça sorulabilecek sorular
+ * Tek havuz: eskiden üç tona bölünmüş üç liste (aile, arkadaş, ofis) birleştirilip tekilleştirildi.
+ * Açık uçlu sorular; siyaset, din, etnik köken, gerçek kişi ve marka yoktur.
  */
 
-import { CONTENT_TONE_LABELS, CONTENT_TONES, type ContentTone, DEFAULT_CONTENT_TONE } from "../../game.js";
+import { dedupeKey } from "../../content.js";
+import type { LegacyContentTone } from "../../game.js";
 
-export const LAF_TONES = CONTENT_TONES;
-/** Oda tonuyla aynı küme: host lobide seçer, oyun `ctx.tone`'dan okur. */
-export type LafTone = ContentTone;
-
-/** Host ton seçmediyse kullanılan ton. */
-export const LAF_DEFAULT_TONE: LafTone = DEFAULT_CONTENT_TONE;
-
-/** Ekranda gösterilen ton adları (arayüz metni). */
-export const LAF_TONE_LABELS: Record<LafTone, string> = CONTENT_TONE_LABELS;
+/** Eski ton adları: yalnız ton taşıyan eski kayıtların `replay`i için (ton özelliği kaldırıldı). */
+export const LAF_LEGACY_TONES: readonly LegacyContentTone[] = ["aile", "arkadas", "ofis"];
 
 export const LAF_PROMPTS_AILE: readonly string[] = [
   "Bir süper kahramanın en gereksiz gücü?",
@@ -359,12 +351,27 @@ export const LAF_PROMPTS_OFIS: readonly string[] = [
   "Cuma günü saat 17.59'da herkesin yaptığı şey?",
 ];
 
-export const LAF_PROMPTS: Record<LafTone, readonly string[]> = {
+/** Eski ton başına listeler (replay için); yeni maçlar yalnız `LAF_PROMPTS` birleşik listesini kullanır. */
+export const LAF_LEGACY_PROMPTS: Record<LegacyContentTone, readonly string[]> = {
   aile: LAF_PROMPTS_AILE,
   arkadas: LAF_PROMPTS_ARKADAS,
   ofis: LAF_PROMPTS_OFIS,
 };
 
-export function isLafTone(value: unknown): value is LafTone {
-  return typeof value === "string" && (LAF_TONES as readonly string[]).includes(value);
+/** Üç eski listenin `dedupeKey` ile tekilleştirilmiş birleşimi (ilk görülen kalır; sıra aile, arkadaş, ofis). */
+function mergePrompts(): readonly string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const list of LAF_LEGACY_TONES.map((t) => LAF_LEGACY_PROMPTS[t])) {
+    for (const q of list) {
+      const k = dedupeKey(q);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push(q);
+    }
+  }
+  return out;
 }
+
+/** Laf Sokma'nın tek soru havuzu. */
+export const LAF_PROMPTS: readonly string[] = mergePrompts();

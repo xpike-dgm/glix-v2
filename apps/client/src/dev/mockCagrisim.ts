@@ -155,7 +155,6 @@ export function startCagrisimMock(kind: string, params: URLSearchParams): void {
       players,
       gameIds: ["cagrisim-agi"],
       selection: { mode: "manual" },
-      tone: "arkadas",
       joinPolicy: "izleyici",
       lobbyReady: [],
       stageCount: 0,

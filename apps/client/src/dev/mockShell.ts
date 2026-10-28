@@ -128,7 +128,6 @@ export function startShellMock(kind: string, params: URLSearchParams): void {
     players,
     gameIds: [game.id],
     selection: { mode: "manual" },
-    tone: "arkadas",
     joinPolicy: "izleyici",
     lobbyReady: [],
     stageCount: 0,

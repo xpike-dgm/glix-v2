@@ -26,7 +26,7 @@ Durum: 24 oyun önizlemede, erken bitiş yayında. Bu belge sonraki büyük işi
 
 #### U2 ek — lobi geri bildirimi (Ekim 2026, tek kişilik oda ekran görüntüsü)
 Gözlem: yalnızken 7 boş "+" dairesi ekranı kaplıyor ve tıklanınca bir şey yapmıyor; alttaki "Bu oyuncu sayısıyla
-oynanabilecek oyun yok" hata gibi okunuyor; oyun/ton ayarları bu durumda görünmüyor; davet tek "Paylaş" düğmesine bağlı.
+oynanabilecek oyun yok" hata gibi okunuyor; oyun ayarları bu durumda görünmüyor; davet tek "Paylaş" düğmesine bağlı.
 Sırayla yapılacak:
 
 **A. Hızlı kazanımlar**
@@ -41,7 +41,7 @@ Sırayla yapılacak:
 - [x] Katılma anı: avatar kayarak/zıplayarak girer, kısa ses + titreşim.
 
 **C. Bekleme süresini değerli yap**
-- [x] Oyun seçimi (kartlı liste), ton ve tur ayarları oyuncu sayısından bağımsız baştan görünür; yetersiz sayıdaki oyunlar soluk + "en az N kişi". (Başlık "Oyunlar"; host için açılır panel, diğerleri için salt okunur özet.)
+- [x] Oyun seçimi (kartlı liste) ve tur ayarları oyuncu sayısından bağımsız baştan görünür; yetersiz sayıdaki oyunlar soluk + "en az N kişi". (Başlık "Oyunlar"; host için açılır panel, diğerleri için salt okunur özet.)
 - [x] Avatara dokun → düzenle: renk, ifade, takma ad. (Karakter + takma ad; ifade yalnız oyun olaylarıyla değişen bir tepki olduğundan seçilmez.)
 - [x] Emoji tepkileri: lobide herkes emoji atar, avatarın üstünde uçar (hız sınırlı, sunucu doğrular).
 - [x] "Hazırım" işareti; herkes hazırsa Başlat parlar.
@@ -341,6 +341,11 @@ Ajan düzeni: en çok 2 eşzamanlı ajan, her oyun/özellik sonrası commit.
 - Kapı: TV + 6 telefonla tam maç (e2e'ye sahne istemcisi eklenir); oyun gecesi ortalama ≥ 4,3/5.
 
 ---
+
+## Sahip kararları
+- **Ton kaldırıldı:** lobideki içerik tonu (Aile / Arkadaş / Ofis) sahip kararıyla silindi. Laf Sokma üç listeyi tekilleştirip
+  tek havuzda (`laf-sokma/sorular`, 330 soru) topladı; `setTone` kaldırıldı (eski istemci için sessizce yok sayılır), yönetici
+  havuzları göçle birleştirildi. Ayrıntı: `docs/PROTOKOL.md` "İçerik havuzları", `docs/ADMIN.md`.
 
 ## Ölçütler (her aşama sonunda)
 - Linkten ilk oyuna süre, maç tamamlama oranı, oyun başına ortalama puan ve süre (stats), terk oranı.

@@ -105,7 +105,6 @@ describe("yama senkronu", () => {
       players: [],
       gameIds: [],
       selection: { mode: "random", count: 5 },
-      tone: "arkadas",
       joinPolicy: "izleyici",
       lobbyReady: [],
       stageCount: 0,

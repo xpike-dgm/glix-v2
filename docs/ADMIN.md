@@ -117,7 +117,9 @@ Mevcut adlar kendiliğinden değişmez; "Listeye takılan mevcut hesaplar" salt 
 | `cagrisim-agi/kelimeler` | Çağrışım Ağı | tek kelime (2-16 harf) | 321 | 10 |
 | `sizma/ciftler` | Sızma | iki farklı kelime (2-16 harf) | 160 | 10 |
 | `karalama-defteri/ciftler` | Karalama Defteri | ana + yakın kelime (3-16 harf, biri ötekini içermez) | 160 | 10 |
-| `laf-sokma/aile`, `/arkadas`, `/ofis` | Laf Sokma | soru (12-90 karakter, "?" ile biter); ton başına ayrı havuz | 110 x 3 | 20 (teknik ihtiyaç 9) |
+| `laf-sokma/sorular` | Laf Sokma | soru (12-90 karakter, "?" ile biter); tek havuz | 330 | 20 (teknik ihtiyaç 9) |
+
+Not: ton özelliği kaldırıldığında eski `laf-sokma/aile`, `/arkadas`, `/ofis` havuzlarının yönetici değişiklikleri (kapatılan hazır sorular, eklenen sorular) bir veritabanı göçüyle `laf-sokma/sorular` havuzuna taşındı; aynı anahtar çakışırsa en eski kayıt kalır.
 
 Havuz olmayanlar: Kendim/Yazı Yaz (kelimeyi oyuncular yazar), Gizli Alışveriş ürün kataloğu (oyun kuralının parçası, metin havuzu değil), botların kelime listeleri (test/bot verisi).
 

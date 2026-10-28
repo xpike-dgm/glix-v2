@@ -2,8 +2,8 @@
 
 Kanonik kural: `docs/KURALLAR.md` §27 (TASLAK). Aşağıdakiler kuralın söylemediği uygulama kararlarıdır.
 
-- **Soru havuzu:** `packages/engine/src/games/laf-sokma/prompts.ts`, elle yazılmış taslak (3 ton × 110). Oyun hiçbir
-  yapay zekâ ya da dış servis çağırmaz. Ton: host lobide seçer (`setTone`, varsayılan **arkadaş**); `setup` `ctx.tone`'u okur (yoksa `createLafSokma(tone)` tonu). Seçilen ton `GameLog.tone`'a yazılır; anlatım ekranında "Ton: …" görünür.
+- **Soru havuzu:** `packages/engine/src/games/laf-sokma/prompts.ts`, elle yazılmış taslak (tek havuz: eski aile/arkadaş/ofis listeleri `dedupeKey` ile
+  birleştirildi, 330 soru; yönetici kimliği `laf-sokma/sorular`). Oyun hiçbir yapay zekâ ya da dış servis çağırmaz. Ton seçimi kaldırıldı (sahip kararı); yalnız ton taşıyan eski kayıtların `replay`i `ctx.tone` ile eski ton listelerini kullanır.
 - **Dağıtım:** N oyuncu için N düello soru + 1 final sorusu (hepsi farklı). Oyuncular karışık bir halkada kurulur,
   `adım` uzaklıktaki iki oyuncu bir soruyu alır (1 ≤ adım < N/2): herkes 2 soru, çift tekrar yok, 3 oyuncuda üçgen.
 - **Süreler:** yazma 60 sn; düello başına oylama 10 sn + açılış 7 sn; final yazma 45 sn; final oylama 20 sn
