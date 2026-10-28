@@ -154,6 +154,7 @@ export function addPlayer(
   const player: Player = {
     id,
     accountId: conn.account?.id ?? null,
+    username: conn.account?.username ?? null,
     nickname: uniqueNickname(room, nickname),
     avatar:
       preferredAvatar !== undefined && isAvatarFree(room, preferredAvatar)

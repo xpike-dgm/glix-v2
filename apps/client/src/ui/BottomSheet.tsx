@@ -6,6 +6,8 @@ interface Props {
   open: boolean;
   onClose: () => void;
   title?: string;
+  /** Başlık yerine özel üst alan (örn. avatar + ad); `title` yine ekran okuyucu adı olarak kalır. */
+  header?: JSX.Element;
   children: JSX.Element;
 }
 
@@ -97,8 +99,15 @@ export function BottomSheet(props: Props) {
           >
             <div class="sheet__grip" aria-hidden="true" />
             <div class="sheet__head">
-              <Show when={props.title} fallback={<span />}>
-                <h2 class="sheet__title">{props.title}</h2>
+              <Show
+                when={props.header}
+                fallback={
+                  <Show when={props.title} fallback={<span />}>
+                    <h2 class="sheet__title">{props.title}</h2>
+                  </Show>
+                }
+              >
+                <div class="sheet__who">{props.header}</div>
               </Show>
               <button
                 type="button"

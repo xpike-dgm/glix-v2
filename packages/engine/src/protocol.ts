@@ -242,6 +242,8 @@ export interface PlayerInfo {
   score: number;
   /** Maç sürerken odaya girdi: yalnız izler, puan almaz; maç bitip lobiye dönünce oyuncu olur. */
   spectator: boolean;
+  /** Hesaplı oyuncunun kullanıcı adı (yalnız ad; e-posta asla); misafirde alan yoktur. Eski istemciler yok sayar. */
+  username?: string;
 }
 
 export interface GameInfo {

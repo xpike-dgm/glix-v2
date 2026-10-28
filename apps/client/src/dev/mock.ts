@@ -100,6 +100,18 @@ export function startMock(kind: string, params: URLSearchParams): void {
   const watchCount = Math.min(n - 1, Math.max(0, Number(params.get("watch")) || 0));
   players = players.map((p, i) => ({ ...p, spectator: i >= n - watchCount && watchCount > 0 }));
   if (params.get("afterwatch") === "1") players = players.map((p) => ({ ...p, spectator: p.id === "p0" }));
+  // `&acct=1` (lobi): sen hesaplısın; Elif ve Mert arkadaşın, Zeynep eklenebilir, Kaan'a istek gitmiş; diğerleri misafir.
+  const MOCK_USERNAMES: Record<string, string> = {
+    p1: "elif_k",
+    p2: "mert_34",
+    p3: "zeynep_z",
+    p4: "kaan_07",
+  };
+  if (kind === "lobby" && params.get("acct") === "1")
+    players = players.map((p) => {
+      const username = MOCK_USERNAMES[p.id];
+      return username ? { ...p, username } : p;
+    });
   let joinPolicy: JoinPolicy = params.get("join") === "kapali" ? "kapali" : "izleyici";
   let rev = 1;
   // Varsayılan oda rastgele 5; `&sel=manual` el ile modda açar.
@@ -419,8 +431,26 @@ export function startMock(kind: string, params: URLSearchParams): void {
 
   setState("session", { token: "mock", playerId: SELF, roomCode: "KX7QP" });
   // `&acct=1`: giriş yapmış hesap (finalde misafir daveti görünmez).
-  if (kind === "final" && params.get("acct") === "1")
+  if ((kind === "final" || kind === "lobby") && params.get("acct") === "1")
     setState("account", { username: "cihad_01", email: "cihad@example.com" });
+  if (kind === "lobby" && params.get("acct") === "1") {
+    const now = Date.now();
+    const friend = (username: string) => ({
+      username,
+      since: now - 86_400_000,
+      status: "online",
+      joinable: false,
+      withYou: true,
+    });
+    const data = parseFriends({
+      ok: true,
+      friends: [friend("elif_k"), friend("mert_34")],
+      incoming: [],
+      outgoing: [{ username: "kaan_07", at: now - 3_600_000 }],
+      blocked: [],
+    });
+    if (data) freezeFriends(data, "ready");
+  }
   // `&badge=N`: N bekleyen arkadaşlık isteği (ana sayfada ad rozeti, Profil'de Arkadaşlar satırı).
   const badge = Number(params.get("badge") ?? 0);
   if (Number.isInteger(badge) && badge > 0) {

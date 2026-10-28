@@ -55,6 +55,8 @@ export interface Player {
   id: string;
   /** Hesaplı oyuncunun hesap kimliği; misafirde null. Yalnız sunucuda, yayına girmez. */
   accountId: number | null;
+  /** Hesaplı oyuncunun kullanıcı adı; misafirde null. Anlık görüntüde herkese açık `PlayerInfo.username` olur (e-posta yok). */
+  username: string | null;
   nickname: string;
   avatar: number;
   token: string;

@@ -375,11 +375,12 @@
   flex: 1;
   min-height: 0;
   margin: 12px -6px 0;
-  padding: 4px 6px 14px;
+  padding: 10px 6px 16px;
   overflow-y: auto;
   scrollbar-width: none;
-  -webkit-mask-image: linear-gradient(#000 calc(100% - 14px), transparent);
-  mask-image: linear-gradient(#000 calc(100% - 14px), transparent);
+  /* Üstte ve altta yumuşak solma: kod başlığının altında yarım kesik düğme görünmez. */
+  -webkit-mask-image: linear-gradient(transparent, #000 10px, #000 calc(100% - 16px), transparent);
+  mask-image: linear-gradient(transparent, #000 10px, #000 calc(100% - 16px), transparent);
 }
 .lobby__scroll::-webkit-scrollbar {
   display: none;
@@ -390,7 +391,7 @@
   gap: 10px 4px;
 }
 .seats__more {
-  margin-top: 8px;
+  margin-top: 4px;
   text-align: center;
   font-size: var(--fs-13);
   color: var(--text-dim);
@@ -460,53 +461,12 @@
 .seat--empty {
   padding-top: 6px;
 }
-.games {
-  margin-top: 6px;
-  border-top: 1px solid var(--line);
+/* Misafirde boş koltuk düğme değil, soluk yer tutucudur. */
+.seat--still {
+  pointer-events: none;
 }
-.games__head {
-  width: 100%;
-  min-height: 56px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-align: left;
-}
-.games__title {
-  flex: 1;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: var(--fs-15);
-  letter-spacing: 0.04em;
-}
-.games__count {
-  font-size: var(--fs-15);
-  color: var(--text-dim);
-}
-.games__chev {
-  color: var(--text-dim);
-  transition: transform var(--t-mid) var(--ease);
-}
-.games[data-open="1"] .games__chev {
-  transform: rotate(180deg);
-}
-.games__panel {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows var(--t-mid) var(--ease);
-}
-.games[data-open="1"] .games__panel {
-  grid-template-rows: 1fr;
-}
-.games__inner {
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.games[data-open="1"] .games__inner {
-  padding-bottom: 4px;
+.seat--still .seat__empty {
+  border-color: rgba(160, 175, 255, 0.14);
 }
 .seg {
   display: grid;
@@ -537,35 +497,12 @@
 .seg__opt:disabled {
   opacity: 1;
 }
-.games__count {
-  white-space: nowrap;
-}
 @media (max-width: 359px) {
-  .games__title {
-    font-size: var(--fs-13);
-  }
   .seg__opt {
     padding: 0 2px;
     font-size: var(--fs-13);
     white-space: nowrap;
   }
-}
-.joinset__label {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: var(--fs-13);
-  color: var(--text-dim);
-}
-.joinset {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.seg--join .seg__opt {
-  min-height: 48px;
-  padding: 0 4px;
-  font-size: var(--fs-13);
-  white-space: nowrap;
 }
 .rnd {
   display: flex;
@@ -1756,55 +1693,12 @@
 }
 
 /* ---- Lobi: yalnızken sıcak ekran, davet, karakter seçici ---- */
-.solo {
-  /* Üst şerit, kod ve Başlat ~330 px yer tutar; kalan yüksekliğe göre büyür. */
-  --room: calc(100dvh - 375px);
-  --solo-mascot: clamp(56px, calc(var(--room) * 0.26), 150px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(4px, calc(var(--room) * 0.03), 14px);
-  text-align: center;
-}
-.solo__qr {
-  width: clamp(96px, calc(var(--room) * 0.5), 230px);
-  height: clamp(96px, calc(var(--room) * 0.5), 230px);
-  border-radius: 14px;
-  box-shadow: 0 0 28px rgba(46, 242, 255, 0.25);
-  transition: transform 80ms var(--ease);
-}
-.solo__qr:active {
-  transform: scale(0.97);
-}
 .qr {
   display: block;
   width: 100%;
   height: 100%;
   border-radius: 12px;
   background: #fff;
-}
-.solo__text {
-  max-width: 280px;
-  color: var(--text-dim);
-  font-size: var(--fs-13);
-  line-height: 1.3;
-}
-.solo__call {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 48px;
-  padding: 0 22px;
-  border-radius: 24px;
-  border: 1.5px solid rgba(46, 242, 255, 0.6);
-  color: var(--cyan);
-  font-weight: 700;
-  font-size: var(--fs-15);
-}
-.solo__call:active {
-  background: rgba(46, 242, 255, 0.14);
 }
 .invite {
   display: flex;
@@ -1884,9 +1778,6 @@
     flex-wrap: wrap;
     align-items: flex-start;
   }
-  .solo {
-    --room: calc(100dvh - 110px);
-  }
   .lobby .lobby__scroll {
     grid-column: 2;
     grid-row: 1 / 5;
@@ -1921,11 +1812,6 @@
     gap: 2px;
   }
 }
-@media (orientation: portrait) and (max-height: 640px) {
-  .solo__text {
-    display: none;
-  }
-}
 .solo__me {
   flex: none;
   display: grid;
@@ -1945,12 +1831,6 @@
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
-}
-.games--summary {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 48px;
 }
 /* Yetersiz oyunculu oyun: görsel ve ad soluk, "en az N kişi" yazısı okunur kalır. */
 .gcard--dim .gcard__art {
@@ -2116,30 +1996,14 @@
   .lobby .seats__more {
     display: none;
   }
-  .lobby .games__head,
-  .lobby .games--summary {
-    min-height: 48px;
-  }
   .lobby .lobby__foot {
     padding-top: 4px;
   }
   .lobby .emojibar {
     padding-top: 2px;
   }
-  .solo {
-    --solo-mascot: 48px;
-  }
   .solo__qr {
-    width: 84px;
-    height: 84px;
-  }
-}
-@media (orientation: landscape) and (max-height: 480px) {
-  .solo {
-    --room: calc(100dvh - 190px);
-  }
-  .solo__text {
-    display: none;
+    --qr: 84px;
   }
 }
 
@@ -2243,7 +2107,7 @@
   display: none;
 }
 
-/* Lobi: "Bu gece" şeridi (seçilen oyunların küçük kartları; rastgele modda "?"). */
+/* Lobi: "Seçilen oyunlar" şeridi (elle seçimde oyunların küçük kartları). */
 .tonight {
   display: flex;
   align-items: center;
@@ -2292,16 +2156,6 @@
   margin: 0;
   border-radius: 0;
   box-shadow: none;
-}
-.tonight__card--rnd {
-  flex: 1 1 0;
-  width: auto;
-  min-width: 0;
-  max-width: 56px;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: var(--fs-15);
-  color: var(--cyan);
 }
 
 /* Kısa dikey ekranda (320x568) 5+ oyuncuyla yer yok: şerit yalnız orada gizlenir (kaydırmasız sığma kuralı). */

@@ -93,6 +93,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
         connected: p.conn !== null,
         score: p.score,
         spectator: p.spectator,
+        ...(p.username !== null ? { username: p.username } : {}),
       })),
       gameIds: [...room.gameIds],
       selection: { ...room.selection },

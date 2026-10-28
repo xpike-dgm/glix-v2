@@ -409,7 +409,14 @@ const SCREENS = [
     act: async (p) => p.getByRole("button", { name: "QR kodu büyüt" }).click(),
   },
   { name: "lobby-2", q: "mock=lobby&n=2" },
+  { name: "lobby-2-guest", q: "mock=lobby&n=2&guest=1", settle: 900 },
   { name: "lobby-8", q: "mock=lobby&n=8" },
+  // Gerçek telefonlar tarayıcı çubuklarına ~100 px kaybeder: 390x750.
+  { name: "lobby-solo-750", q: "mock=lobby&n=1", settle: 900, sizes: [[390, 750]] },
+  { name: "lobby-solo-hesap-750", q: "mock=lobby&n=1&acct=1", settle: 900, sizes: [[390, 750]] },
+  { name: "lobby-2-guest-750", q: "mock=lobby&n=2&guest=1", settle: 900, sizes: [[390, 750]] },
+  { name: "lobby-8-750", q: "mock=lobby&n=8", settle: 900, sizes: [[390, 750]] },
+  { name: "lobby-solo-hesap", q: "mock=lobby&n=1&acct=1", settle: 900 },
   {
     name: "lobby-qr",
     q: "mock=lobby&n=2",
@@ -434,11 +441,64 @@ const SCREENS = [
     settle: 600,
     act: async (p) => p.locator(".seat--self").click(),
   },
-  { name: "lobby-random", q: "mock=lobby", settle: 1000, act: clickText("Oyunlar") },
-  { name: "lobby-manual", q: "mock=lobby&sel=manual", settle: 1000, act: clickText("Oyunlar") },
-  { name: "lobby-guest", q: "mock=lobby&guest=1", settle: 1000, act: clickText("Oyunlar") },
-  // Lobi geri bildirimi C/D: ayarlar baştan, hazırım, emoji, ev sahibi menüsü, oyuncu görünümü.
-  { name: "lobby-solo-settings", q: "mock=lobby&n=1&sel=manual", settle: 900, act: clickText("Oyunlar") },
+  // Lobi ayarları ekranı (ev sahibi ve misafir salt okunur).
+  { name: "lobby-settings-random", q: "mock=lobby", settle: 900, act: clickText("Lobi ayarları") },
+  { name: "lobby-settings-solo", q: "mock=lobby&n=1", settle: 900, act: clickText("Lobi ayarları") },
+  {
+    name: "lobby-settings-manual",
+    q: "mock=lobby&sel=manual&pick=3",
+    settle: 900,
+    act: clickText("Lobi ayarları"),
+  },
+  {
+    name: "lobby-settings-cards",
+    q: "mock=lobby",
+    settle: 900,
+    act: async (p) => {
+      await p.getByText("Lobi ayarları", { exact: false }).first().click();
+      await p.getByText("Tek tek kartlar", { exact: false }).first().click();
+    },
+  },
+  { name: "lobby-settings-guest", q: "mock=lobby&guest=1&n=4", settle: 900, act: clickText("Lobi ayarları") },
+  {
+    name: "lobby-settings-manual-guest",
+    q: "mock=lobby&guest=1&n=4&sel=manual&pick=3",
+    settle: 900,
+    act: clickText("Lobi ayarları"),
+  },
+  { name: "lobby-manual-strip", q: "mock=lobby&n=3&sel=manual&pick=4", settle: 900 },
+  // Oyuncu menüsü: hesaplı hedef (eklenebilir / arkadaş / istek gitmiş), misafir hedef, misafir izleyici.
+  {
+    name: "lobby-menu-eklenebilir",
+    q: "mock=lobby&n=6&acct=1",
+    settle: 600,
+    act: async (p) => p.locator('.seat[data-pid="p3"]').click(),
+  },
+  {
+    name: "lobby-menu-arkadas",
+    q: "mock=lobby&n=6&acct=1",
+    settle: 600,
+    act: async (p) => p.locator('.seat[data-pid="p1"]').click(),
+  },
+  {
+    name: "lobby-menu-istek-gitti",
+    q: "mock=lobby&n=6&acct=1",
+    settle: 600,
+    act: async (p) => p.locator('.seat[data-pid="p4"]').click(),
+  },
+  {
+    name: "lobby-menu-misafir-hedef",
+    q: "mock=lobby&n=6&acct=1",
+    settle: 600,
+    act: async (p) => p.locator('.seat[data-pid="p5"]').click(),
+  },
+  {
+    name: "lobby-menu-misafir-bakan",
+    q: "mock=lobby&n=6&guest=1",
+    settle: 600,
+    act: async (p) => p.locator('.seat[data-pid="p2"]').click(),
+  },
+  // Lobi geri bildirimi C/D: hazırım, emoji, ev sahibi menüsü, oyuncu görünümü.
   { name: "lobby-8-ready", q: "mock=lobby&n=8&ready=7", settle: 900 },
   { name: "lobby-emoji", q: "mock=lobby&n=4&emoji=1", settle: 700 },
   {
@@ -456,6 +516,7 @@ const SCREENS = [
     },
   },
   { name: "lobby-guest", q: "mock=lobby&n=5&guest=1&ready=2", settle: 900 },
+  { name: "lobby-guest-hesapli", q: "mock=lobby&n=3&guest=1&acct=1", settle: 900 },
   { name: "lobby-guest-8", q: "mock=lobby&n=8&guest=1&ready=3", settle: 900 },
   { name: "briefing", q: "mock=briefing" },
   { name: "lobby-buyuk-yazi", q: "mock=lobby&n=4&text=large", settle: 900 },
@@ -1495,7 +1556,7 @@ const SCREENS = [
     q: "mock=lobby&n=4",
     settle: 1000,
     act: async (p) => {
-      await p.getByText("Oyunlar", { exact: false }).first().click();
+      await p.getByText("Lobi ayarları", { exact: false }).first().click();
       await p.getByRole("button", { name: "Kapalı", exact: true }).click();
     },
   },
@@ -1671,7 +1732,7 @@ const SCREENS = [
     q: "mock=lobby&n=5",
     settle: 900,
     act: async (p) => {
-      await p.getByText("Oyunlar", { exact: false }).first().click();
+      await p.getByText("Lobi ayarları", { exact: false }).first().click();
       await p.locator(".kc-open").click();
     },
   },
@@ -1680,7 +1741,7 @@ const SCREENS = [
     q: "mock=lobby&n=5&guest=1",
     settle: 900,
     act: async (p) => {
-      await p.locator(".kc-guestrow").click();
+      await p.getByText("Lobi ayarları", { exact: false }).first().click();
     },
   },
   {
@@ -1688,11 +1749,11 @@ const SCREENS = [
     q: "mock=lobby&n=5&cards=off",
     settle: 900,
     act: async (p) => {
-      await p.getByText("Oyunlar", { exact: false }).first().click();
-      await p.locator(".kc-open").click();
+      await p.getByText("Lobi ayarları", { exact: false }).first().click();
+      // Kartlar kapalıyken tek tek kartlar gizlidir; yalnız ana anahtar görünür.
     },
   },
-  { name: "kart-lobi-ozet", q: "mock=lobby&n=5&cards=some", settle: 900, act: clickText("Oyunlar") },
+  { name: "kart-lobi-ozet", q: "mock=lobby&n=5&cards=some", settle: 900, act: clickText("Lobi ayarları") },
   { name: "kart-tv-secim", q: "mock=tv-kart-secim&n=6", sizes: TV, settle: 1600 },
   { name: "kart-tv-anlatim", q: "mock=tv-kart-anlatim&n=6", sizes: TV, settle: 1600 },
   { name: "kart-tv-geri-sayim", q: "mock=tv-kart-geri-sayim&n=6", sizes: TV, settle: 1800 },

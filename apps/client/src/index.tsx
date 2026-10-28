@@ -11,6 +11,7 @@ import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/ui.css";
 import "./styles/screens.css";
+import "./styles/lobby.css";
 import "./styles/game.css";
 import "./styles/frame.css";
 import "./styles/settings.css";

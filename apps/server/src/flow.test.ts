@@ -24,8 +24,19 @@ describe("oda kurma ve katılma", () => {
     const room = a.room;
     expect(room).toMatchObject({ code: s.roomCode, hostId: s.playerId, selfId: s.playerId, phase: "lobby" });
     expect(room.players).toEqual([
-      { id: s.playerId, nickname: "Ayşe", avatar: 0, connected: true, score: 0, spectator: false },
+      {
+        id: s.playerId,
+        nickname: "Ayşe",
+        avatar: 0,
+        connected: true,
+        score: 0,
+        spectator: false,
+        username: "Ayşe",
+      },
     ]);
+    // Misafirde kullanıcı adı alanı hiç yoktur.
+    const guest = await join(s.roomCode, "Misafir");
+    expect(guest.room.players.find((p) => p.nickname === "Misafir")).not.toHaveProperty("username");
     expect(room.catalog.map((g) => g.id)).toContain("butona-bas");
     expect(room.gameIds).toContain("butona-bas");
     expect(room.match).toBeNull();
