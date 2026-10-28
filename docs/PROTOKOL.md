@@ -141,6 +141,7 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
 - **results:** `match.continueIds` "Devam" diyenleri taşır (yalnız kimler). Sıradaki oyun `gameIds[round+1]` ile bellidir (zaten herkese açık). Önceki genel puan, istemcide `player.score − result.awards[id]` ile bulunur (sıra değişimi animasyonu için ek alan yok). Tur özeti satırı istemcide `summarizeRound(gameId, result, players, publicView)` ile (engine, saf) üretilir.
 - **cards:** (kartlar açıksa) her 3. oyunun sonuç ekranından sonra, son oyun hariç. `match.round` az önce biten oyunun sırasıdır; `phaseEndsAt` 15 sn sonrasıdır, bağlı herkes seçince 1 sn sonraya çekilir. Ayrıntı: "Kartlar".
 - **final:** Genel skor sıralaması. Host `returnToLobby` ile lobiye döner, skorlar sıfırlanır.
+- `PlayerInfo.username?` (lobi oyuncu menüsü): hesaplı oyuncunun kullanıcı adı; misafirde alan yoktur. Yalnız ad yayınlanır (e-posta ve hesap kimliği asla). İstemci "Arkadaş ekle" / "Profilini gör" için kullanır; eski istemciler fazladan alanı yok sayar.
 - Maç sürerken katılım (`RoomSnapshot.joinPolicy`, yeni oda `"izleyici"`; yalnız host lobide `setJoinPolicy` ile değiştirir):
   - `izleyici`: `joinRoom` kabul edilir, oyuncu `PlayerInfo.spectator: true` ile eklenir. İzleyici maç oyuncu listesine
     (`participants`, oyunun `setup`ı, `GameContext.connected`) hiç girmez; puan almaz, oy/seçimlere ve erken bitiş

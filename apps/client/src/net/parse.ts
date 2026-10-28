@@ -94,6 +94,9 @@ function parsePlayer(v: unknown): PlayerInfo | null {
     connected,
     score,
     spectator: v.spectator === true,
+    ...(isStr(v.username) && v.username.length > 0 && v.username.length <= 32
+      ? { username: v.username }
+      : {}),
   };
 }
 

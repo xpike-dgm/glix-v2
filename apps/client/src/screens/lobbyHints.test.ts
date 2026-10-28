@@ -1,12 +1,13 @@
 import type { GameInfo } from "@glix/engine";
 import { describe, expect, it } from "vitest";
 import {
+  emptySeats,
   friendsHint,
   gameTag,
   isGameDim,
   minPlayersNeeded,
   playerCounter,
-  selectionSummary,
+  settingsLine,
 } from "./lobbyHints.js";
 
 const g = (id: string, minPlayers: number): GameInfo => ({
@@ -43,8 +44,25 @@ describe("lobi ipuçları", () => {
     expect(isGameDim(g("a", 3), 3)).toBe(false);
     expect(gameTag(g("a", 3), 3)).toBe("3–8 oyuncu");
   });
-  it("oyuncu olmayanlar için salt okunur özet", () => {
-    expect(selectionSummary("random", 5, 0)).toBe("Rastgele · 5");
-    expect(selectionSummary("manual", 0, 3)).toBe("Bu gece: 3 oyun");
+  it("boş koltuklar en çok bir satır, kalanı '+N yer daha'", () => {
+    expect(emptySeats(1, 8)).toEqual({ shown: 3, more: 4 });
+    expect(emptySeats(2, 8)).toEqual({ shown: 2, more: 4 });
+    expect(emptySeats(4, 8)).toEqual({ shown: 4, more: 0 });
+    expect(emptySeats(5, 8)).toEqual({ shown: 3, more: 0 });
+    expect(emptySeats(7, 8)).toEqual({ shown: 1, more: 0 });
+    expect(emptySeats(8, 8)).toEqual({ shown: 0, more: 0 });
+  });
+  it("ayar özeti tek satır", () => {
+    const base = {
+      mode: "random",
+      randomCount: 5,
+      selectedCount: 0,
+      cardsOn: true,
+      joinPolicy: "izleyici",
+    } as const;
+    expect(settingsLine(base)).toBe("5 rastgele oyun · Kartlar açık · Geç gelen izler");
+    expect(
+      settingsLine({ ...base, mode: "manual", selectedCount: 3, cardsOn: false, joinPolicy: "kapali" }),
+    ).toBe("3 oyun seçili · Kartlar kapalı · Geç gelen giremez");
   });
 });

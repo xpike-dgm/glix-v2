@@ -2,6 +2,7 @@ import { createEffect, createSignal, on, Show } from "solid-js";
 import { colorBlind } from "../settings/settings.js";
 import { look, type Mood, moodSrc } from "./avatars.js";
 import { CheckIcon, CrownIcon } from "./Icons.js";
+import { HouseIcon } from "./LobbyIcons.js";
 
 interface Props {
   index: number;
@@ -12,6 +13,8 @@ interface Props {
   host?: boolean;
   /** Sonuç/final kazananı: avatarın tepesinde büyük taç. Ev sahibi rozeti (`host`) bu ekranlarda verilmez. */
   winner?: boolean;
+  /** Ev sahibi işareti: `house` lobide (taç "kazanan" gibi okunur), varsayılan taç. */
+  hostMark?: "house";
   ready?: boolean;
   connected?: boolean;
   self?: boolean;
@@ -99,9 +102,18 @@ export function Avatar(props: Props) {
         </span>
       </Show>
       <Show when={small() && props.host}>
-        <span class="av__badge av__badge--host">
-          <CrownIcon size="62%" />
-        </span>
+        <Show
+          when={props.hostMark === "house"}
+          fallback={
+            <span class="av__badge av__badge--host">
+              <CrownIcon size="62%" />
+            </span>
+          }
+        >
+          <span class="av__badge av__badge--host av__badge--house" role="img" aria-label="Ev sahibi">
+            <HouseIcon size="64%" />
+          </span>
+        </Show>
       </Show>
       <Show when={small() && props.ready}>
         <span class="av__badge av__badge--ready">
