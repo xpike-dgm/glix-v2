@@ -61,6 +61,23 @@ const TV = [
   [1920, 1080],
   [1280, 720],
 ];
+/** Kart seçimi: gerçek telefon boyutları (tarayıcı çubuklarıyla kısalmış görünür alan dahil) + eski üçlü. */
+const KART_TELEFON = [
+  [390, 750],
+  [390, 700],
+  [360, 740],
+  [412, 780],
+  [390, 844],
+  [320, 568],
+  [667, 375],
+];
+/** Yeni rozet kutlaması: dikey telefonlar + alçak yatay. */
+const ROZET_BOYUT = [
+  [390, 750],
+  [320, 568],
+  [430, 932],
+  [667, 375],
+];
 const QUICK_SIZES = [PORTRAIT[0], LANDSCAPE[1]];
 
 /** Ekranın koşacağı boyutlar; hızlı kipte QUICK_SIZES ile kesişim (boşsa listenin ilki). */
@@ -242,6 +259,26 @@ const SCREENS = [
   { name: "rozet-profil-bos", q: "mock=rozet-profil&v=bos", settle: 900 },
   { name: "rozet-final-yeni", q: "mock=rozet-final&n=4", settle: 2200 },
   { name: "rozet-final-yeni-iki", q: "mock=rozet-final&n=4&k=2", settle: 2200 },
+  { name: "rozet-final-yeni-mac", q: "mock=rozet-final&n=4&f=mac", sizes: ROZET_BOYUT, settle: 2200 },
+  {
+    name: "rozet-final-yeni-galibiyet",
+    q: "mock=rozet-final&n=4&f=galibiyet",
+    sizes: ROZET_BOYUT,
+    settle: 2200,
+  },
+  { name: "rozet-final-yeni-ozel", q: "mock=rozet-final&n=4&f=ozel", sizes: ROZET_BOYUT, settle: 2200 },
+  { name: "rozet-final-yeni-gizli", q: "mock=rozet-final&n=4&f=gizli", sizes: ROZET_BOYUT, settle: 2200 },
+  { name: "rozet-final-yeni-dort", q: "mock=rozet-final&n=4&k=4", sizes: ROZET_BOYUT, settle: 2200 },
+  {
+    name: "rozet-final-yeni-ikinci",
+    q: "mock=rozet-final&n=4&k=2",
+    sizes: ROZET_BOYUT,
+    settle: 2200,
+    act: async (p) => {
+      await p.getByRole("button", { name: "Harika!" }).click();
+      await p.waitForTimeout(1600);
+    },
+  },
   { name: "rozet-final-yeni-buyuk-yazi", q: "mock=rozet-final&n=4&text=large", settle: 2200 },
   // Arkadaşlar (H7) ve davetler (H8): önek "arkadas-".
   { name: "arkadas-liste", q: "mock=arkadas", settle: 900 },
@@ -1620,9 +1657,9 @@ const SCREENS = [
   { name: "rus-kahin-8", q: "mock=rus-kahin&n=8", settle: 2400 },
   // U8: TV (sahne) ekranları. Yalnız 1920x1080 ve 1280x720; telefon boyutları anlamsız.
   // ---- Kartlar (docs/KURALLAR.md "Kartlar"): kart seçimi, el, açıklama, sonuç satırları, lobi ayarı ----
-  { name: "kart-secim", q: "mock=kart-secim", settle: 700 },
+  { name: "kart-secim", q: "mock=kart-secim", sizes: KART_TELEFON, settle: 700 },
   { name: "kart-secim-8", q: "mock=kart-secim&n=8", settle: 700 },
-  { name: "kart-secim-4", q: "mock=kart-secim-4", settle: 700 },
+  { name: "kart-secim-4", q: "mock=kart-secim-4", sizes: KART_TELEFON, settle: 700 },
   { name: "kart-secim-kor", q: "mock=kart-secim-kor", settle: 700 },
   { name: "kart-secim-secti", q: "mock=kart-secim-secti", settle: 700 },
   { name: "kart-secim-degistir", q: "mock=kart-secim-degistir", settle: 700 },
@@ -1632,12 +1669,38 @@ const SCREENS = [
   { name: "kart-secim-buyuk-yazi", q: "mock=kart-secim-4&text=large", settle: 700 },
   { name: "kart-secim-renk-koru", q: "mock=kart-secim-4&cb=1", settle: 700 },
   // Kart seçimi yeni tasarım: kartlar kendi görüntüsüyle; dokununca incelenir, "Bu kartı seç" ile onaylanır
-  { name: "kart-secim-bakis", q: "mock=kart-secim", settle: 700, act: kartBak(1) },
-  { name: "kart-secim-uzun-ad", q: "mock=kart-secim-uzun", settle: 700, act: kartBak(0) },
-  { name: "kart-secim-4-bakis", q: "mock=kart-secim-4", settle: 700, act: kartBak(2) },
+  { name: "kart-secim-bakis", q: "mock=kart-secim", sizes: KART_TELEFON, settle: 700, act: kartBak(1) },
+  {
+    name: "kart-secim-uzun-ad",
+    q: "mock=kart-secim-uzun",
+    sizes: KART_TELEFON,
+    settle: 700,
+    act: kartBak(0),
+  },
+  { name: "kart-secim-4-bakis", q: "mock=kart-secim-4", sizes: KART_TELEFON, settle: 700, act: kartBak(2) },
+  { name: "kart-secim-gizli", q: "mock=kart-secim-gizli", sizes: KART_TELEFON, settle: 700 },
+  {
+    name: "kart-secim-gizli-bakis",
+    q: "mock=kart-secim-gizli",
+    sizes: KART_TELEFON,
+    settle: 700,
+    act: kartBak(0),
+  },
   { name: "kart-secim-kumarbaz", q: "mock=kart-secim-kumarbaz", settle: 700 },
-  { name: "kart-secim-kumarbaz-bakis", q: "mock=kart-secim-kumarbaz", settle: 700, act: kartBak(1) },
-  { name: "kart-secim-degistir-bakis", q: "mock=kart-secim-degistir", settle: 700, act: kartBak(2) },
+  {
+    name: "kart-secim-kumarbaz-bakis",
+    q: "mock=kart-secim-kumarbaz",
+    sizes: KART_TELEFON,
+    settle: 700,
+    act: kartBak(1),
+  },
+  {
+    name: "kart-secim-degistir-bakis",
+    q: "mock=kart-secim-degistir",
+    sizes: KART_TELEFON,
+    settle: 700,
+    act: kartBak(2),
+  },
   { name: "kart-secim-kotu-bakis", q: "mock=kart-secim-kotu-kart", settle: 700, act: kartBak(1) },
   { name: "kart-anlatim", q: "mock=kart-anlatim", settle: 900 },
   { name: "kart-anlatim-8", q: "mock=kart-anlatim&n=8", settle: 900 },

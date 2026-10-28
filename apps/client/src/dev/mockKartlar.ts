@@ -1,7 +1,7 @@
 /**
  * Yalnız geliştirme önizlemesi (üretim paketine girmez; App.tsx `import.meta.env.DEV` ile korur).
  * Kart sistemi ekranlarını sahte verilerle açar: `?mock=kart-<durum>` (TV için `mock=tv-kart-<durum>`; `&n=8` oyuncu sayısı).
- *   kart-secim | kart-secim-4 | kart-secim-kor | kart-secim-secti | kart-secim-degistir | kart-secim-sessiz
+ *   kart-secim | kart-secim-4 | kart-secim-gizli | kart-secim-kor | kart-secim-secti | kart-secim-degistir | kart-secim-sessiz
  *   kart-secim-kotu | kart-secim-izleyici | kart-secim-kotu-kart | kart-secim-kumarbaz | kart-secim-uzun
  *   kart-anlatim | kart-anlatim-oynadi | kart-anlatim-bos
  *   kart-geri-sayim | kart-sonuc | kart-sonuc-bos
@@ -62,7 +62,7 @@ export function startKartMock(rawKind: string, params: URLSearchParams): void {
 
   let phase: RoomPhase = "cards";
   let phaseStartedAt = now - 3_000;
-  let phaseEndsAt: number | null = now + 12_000;
+  let phaseEndsAt: number | null = now + 22_000;
   let publicCards: CardsPublic = {
     phase: { done: others.slice(0, 2), silenced: [] },
     hands: Object.fromEntries(participants.map((id) => [id, id === SELF ? 2 : id === "p2" ? 1 : 0])),
@@ -101,6 +101,13 @@ export function startKartMock(rawKind: string, params: URLSearchParams): void {
         ...(mine as CardsMine),
         hand: ["kalkan"],
         pick: pickState({ options: ["takviye", "talihsizlik", "cift-puan", "ters-kose"] }),
+      };
+      break;
+    case "kart-secim-gizli":
+      mine = {
+        ...(mine as CardsMine),
+        hand: ["kalkan"],
+        pick: pickState({ options: ["koruma", "ayna", "celme"] }),
       };
       break;
     case "kart-secim-kor":

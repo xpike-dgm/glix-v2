@@ -56,7 +56,7 @@ istatistikteki mini oyun sırası kartlardan etkilenmez. Bu bölüm kanoniktir; 
    Maçın **son** oyunundan sonra gelmez (sıradaki aşama final). "Son oyun", Veto/Oyunu Seç uygulandıktan sonraki güncel listeye göre belirlenir.
 2. **Kimler:** Maça katılan oyuncular (izleyiciler değil). İzleyiciler ve TV "Oyuncular kart seçiyor" ekranını görür; kimin seçimini bitirdiği
    herkese açıktır, seçenekler ve seçimler değildir.
-3. **Süre:** 15 saniye. Bağlı bütün katılımcılar seçimini bitirince aşama 1 saniye sonra erken biter. Süre dolduğunda (ya da erken bitişte)
+3. **Süre:** 25 saniye (önce kartı incelemek, sonra onaylamak için). Bağlı bütün katılımcılar seçimini bitirince aşama 1 saniye sonra erken biter. Süre dolduğunda (ya da erken bitişte)
    seçmemiş her oyuncuya (bağlantısı kopuk olanlar dahil) kendi seçenekleri arasından **rastgele** biri verilir.
 4. **Kapalıysa:** Lobideki Kartlar ayarı kapalıysa ya da hiçbir kart etkin değilse aşama hiç gelmez, maç kartsız oynanır.
 5. **Sıfırlama:** Bütün kart durumu (el, bekleyen kötü kartlar, bayraklar) maçla birlikte başlar ve biter. Maç bitince eldeki kartlar yanar;
@@ -86,7 +86,7 @@ istatistikteki mini oyun sırası kartlardan etkilenmez. Bu bölüm kanoniktir; 
 ## K3. El, iyi ve kötü kartlar
 
 1. **İyi kart** (sıradan, nadir, efsanevi) oyuncunun **eline** girer. El en çok **2** kart tutar.
-2. El doluyken iyi kart seçilirse aynı 15 saniyenin içinde bir **değiştirme adımı** gelir: oyuncu elindeki 2 karttan birini atar ya da yeni kartı atar.
+2. El doluyken iyi kart seçilirse aynı 25 saniyenin içinde bir **değiştirme adımı** gelir: oyuncu elindeki 2 karttan birini atar ya da yeni kartı atar.
    Süre dolarsa **yeni kart atılır** (eldeki kartlar korunur). Atılan kart yanar.
 3. **Kötü kart** ele girmez; seçilir seçilmez etkisi başlar:
    - **Sonraki mini oyuna** işleyenler: Talihsizlik, Ağır Yük, Hayırsever, Açık Hedef, Kumarbaz (−2 kısmı), Lanetli Hediye (−1 kısmı).
@@ -116,50 +116,50 @@ Sıradan (turkuaz çerçeve, 1 elmas):
 
 | Kimlik | Ad | Metin | Tür |
 |---|---|---|---|
-| kalkan | Kalkan | eksiye düşersen 0 sayılır | |
-| sigorta | Sigorta | sonuncu olursan +1 | |
-| takviye | Takviye | oyun sonunda +1 | |
-| kendine-guven | Kendine Güven | birinci olursan +2, olamazsan −1 | |
-| tahmin | Tahmin | bir oyuncu seç; o birinci olursa +2 | hedef |
-| ortaklik | Ortaklık | seçtiğin oyuncuyla bu oyundaki puanlarınızın toplamı ikinize eşit bölünür | hedef |
-| koruma | Koruma | seçtiğin oyuncuya (ya da kendine) bu oyunda saldırı kartı işlemez | hedef (kendin dahil), gizli |
-| ayna | Ayna | sana oynanan ilk saldırı saldırana döner | gizli |
-| vergi | Vergi | seçtiğin oyuncu puan alırsa 1 puanı sana geçer | hedef, saldırı |
-| celme | Çelme | seçtiğin oyuncu −1 | hedef, saldırı |
-| veto | Veto | sıradaki oyunlardan birini listeden çıkar | oyun seç |
-| genis-secim | Geniş Seçim | bir sonraki kart seçiminde 4 kart görürsün | |
+| kalkan | Kalkan | Eksiye düşersen 0 sayılır | |
+| sigorta | Sigorta | Sonuncu olursan +1 | |
+| takviye | Takviye | Oyun sonunda +1 | |
+| kendine-guven | Kendine Güven | Birinci olursan +2, olamazsan −1 | |
+| tahmin | Tahmin | Bir oyuncu seç; o birinci olursa +2 | hedef |
+| ortaklik | Ortaklık | Seçtiğin oyuncuyla bu oyundaki puanlarınızın toplamı ikinize eşit bölünür | hedef |
+| koruma | Koruma | Seçtiğin oyuncuya (ya da kendine) bu oyunda saldırı kartı işlemez | hedef (kendin dahil), gizli |
+| ayna | Ayna | Sana oynanan ilk saldırı saldırana döner | gizli |
+| vergi | Vergi | Seçtiğin oyuncu puan alırsa 1 puanı sana geçer | hedef, saldırı |
+| celme | Çelme | Seçtiğin oyuncu −1 | hedef, saldırı |
+| veto | Veto | Sıradaki oyunlardan birini listeden çıkar | oyun seç |
+| genis-secim | Geniş Seçim | Bir sonraki kart seçiminde 4 kart görürsün | |
 
 Nadir (mor çerçeve, 2 elmas):
 
 | Kimlik | Ad | Metin | Tür |
 |---|---|---|---|
-| cift-puan | Çift Puan | puanın ×2 (eksi de ×2) | |
-| takas | Takas | oyun sonunda seçtiğin oyuncuyla bu oyunun puanlarınızı değiştirin | hedef |
-| oyunu-sec | Sıradaki Oyunu Seç | bir sonraki mini oyunu sen belirlersin | oyun seç |
-| lanet | Lanet | seçtiğin oyuncu bu oyundan artı puan alamaz | hedef, saldırı |
-| hirsiz | Hırsız | bu oyunun birincisinden 1 puan al | saldırı |
-| kart-cal | Kart Çal | seçtiğin oyuncunun elindeki rastgele bir kartı al | hedef, saldırı |
+| cift-puan | Çift Puan | Puanın ×2 (eksi de ×2) | |
+| takas | Takas | Oyun sonunda seçtiğin oyuncuyla bu oyunun puanlarınızı değiştirin | hedef |
+| oyunu-sec | Sıradaki Oyunu Seç | Bir sonraki mini oyunu sen belirlersin | oyun seç |
+| lanet | Lanet | Seçtiğin oyuncu bu oyundan artı puan alamaz | hedef, saldırı |
+| hirsiz | Hırsız | Bu oyunun birincisinden 1 puan al | saldırı |
+| kart-cal | Kart Çal | Seçtiğin oyuncunun elindeki rastgele bir kartı al | hedef, saldırı |
 
 Efsanevi (altın çerçeve, 3 elmas):
 
 | Kimlik | Ad | Metin | Tür |
 |---|---|---|---|
-| altin-dokunus | Altın Dokunuş | puanın ×3 (eksi etkilenmez) | |
-| ters-kose | Ters Köşe | bu oyunun sıralaması tamamen tersine döner | |
+| altin-dokunus | Altın Dokunuş | Puanın ×3 (eksi etkilenmez) | |
+| ters-kose | Ters Köşe | Bu oyunun sıralaması tamamen tersine döner | |
 
 Kötü (kırmızı çerçeve, kırık elmas işareti; ayrı olasılık, ele girmez):
 
 | Kimlik | Ad | Etki |
 |---|---|---|
-| talihsizlik | Talihsizlik | sonraki oyunda −1 |
-| agir-yuk | Ağır Yük | sonraki oyunda puanın yarıya iner |
-| hayirsever | Hayırsever | sonraki oyunda puan alırsan 1'i sonuncuya gider |
-| acik-hedef | Açık Hedef | sonraki oyunda sana oynanan saldırılar iki kat etkili |
-| bos-el | Boş El | elindeki rastgele bir kart yanar (hemen) |
-| kor-secim | Kör Seçim | bir sonraki seçimde kartlar ters gelir, görmeden seçersin |
-| sessizlik | Sessizlik | bir sonraki kart seçimini kaçırırsın |
-| kumarbaz | Kumarbaz | sonraki oyunda −2, ama bir sonraki seçimde 2 kart alırsın |
-| lanetli-hediye | Lanetli Hediye | sonraki oyunda −1, ama bir sonraki seçimde nadir ve efsanevi kart çıkma şansın artar |
+| talihsizlik | Talihsizlik | Sonraki oyunda −1 |
+| agir-yuk | Ağır Yük | Sonraki oyunda puanın yarıya iner |
+| hayirsever | Hayırsever | Sonraki oyunda puan alırsan 1'i sonuncuya gider |
+| acik-hedef | Açık Hedef | Sonraki oyunda sana oynanan saldırılar iki kat etkili |
+| bos-el | Boş El | Elindeki rastgele bir kart yanar (hemen) |
+| kor-secim | Kör Seçim | Bir sonraki seçimde kartlar ters gelir, görmeden seçersin |
+| sessizlik | Sessizlik | Bir sonraki kart seçimini kaçırırsın |
+| kumarbaz | Kumarbaz | Sonraki oyunda −2, ama bir sonraki seçimde 2 kart alırsın |
+| lanetli-hediye | Lanetli Hediye | Sonraki oyunda −1, ama bir sonraki seçimde nadir ve efsanevi kart çıkma şansın artar |
 
 **Saldırı kartları** (⚔): Vergi, Çelme, Lanet, Hırsız, Kart Çal. Oynandıklarında herkese açıktır; Koruma, Ayna ve Açık Hedef yalnız bunlarla etkileşir.
 

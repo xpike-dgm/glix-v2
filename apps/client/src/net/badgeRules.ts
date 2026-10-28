@@ -74,6 +74,22 @@ export function medalShape(id: string, secret: boolean): MedalShape {
   return "square";
 }
 
+export type BadgeFamily = "mac" | "galibiyet" | "ozel" | "gizli";
+
+/** Rozet ailesi (kutlama ekranının ışık rengi): maç sayısı turkuaz, galibiyet altın, özel eflatun-pembe, gizli mor. */
+export function badgeFamily(id: string, secret: boolean): BadgeFamily {
+  switch (medalShape(id, secret)) {
+    case "circle":
+      return "mac";
+    case "hex":
+      return "galibiyet";
+    case "diamond":
+      return "gizli";
+    case "square":
+      return "ozel";
+  }
+}
+
 /** Rozet simgesi: sayı yazan rozetlerde sayı, diğerlerinde çizim anahtarı. */
 export type MedalGlyph =
   | { kind: "number"; text: string }

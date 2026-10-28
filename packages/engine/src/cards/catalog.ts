@@ -40,63 +40,63 @@ const def = <I extends string>(
 });
 
 const LIST = [
-  def("kalkan", "Kalkan", "eksiye düşersen 0 sayılır", "siradan"),
-  def("sigorta", "Sigorta", "sonuncu olursan +1", "siradan"),
-  def("takviye", "Takviye", "oyun sonunda +1", "siradan"),
-  def("kendine-guven", "Kendine Güven", "birinci olursan +2, olamazsan −1", "siradan"),
-  def("tahmin", "Tahmin", "bir oyuncu seç; o birinci olursa +2", "siradan", { target: "player" }),
+  def("kalkan", "Kalkan", "Eksiye düşersen 0 sayılır", "siradan"),
+  def("sigorta", "Sigorta", "Sonuncu olursan +1", "siradan"),
+  def("takviye", "Takviye", "Oyun sonunda +1", "siradan"),
+  def("kendine-guven", "Kendine Güven", "Birinci olursan +2, olamazsan −1", "siradan"),
+  def("tahmin", "Tahmin", "Bir oyuncu seç; o birinci olursa +2", "siradan", { target: "player" }),
   def(
     "ortaklik",
     "Ortaklık",
-    "seçtiğin oyuncuyla bu oyundaki puanlarınızın toplamı ikinize eşit bölünür",
+    "Seçtiğin oyuncuyla bu oyundaki puanlarınızın toplamı ikinize eşit bölünür",
     "siradan",
     { target: "player" },
   ),
-  def("koruma", "Koruma", "seçtiğin oyuncuya (ya da kendine) bu oyunda saldırı kartı işlemez", "siradan", {
+  def("koruma", "Koruma", "Seçtiğin oyuncuya (ya da kendine) bu oyunda saldırı kartı işlemez", "siradan", {
     target: "playerOrSelf",
     hidden: true,
   }),
-  def("ayna", "Ayna", "sana oynanan ilk saldırı saldırana döner", "siradan", { hidden: true }),
-  def("vergi", "Vergi", "seçtiğin oyuncu puan alırsa 1 puanı sana geçer", "siradan", {
+  def("ayna", "Ayna", "Sana oynanan ilk saldırı saldırana döner", "siradan", { hidden: true }),
+  def("vergi", "Vergi", "Seçtiğin oyuncu puan alırsa 1 puanı sana geçer", "siradan", {
     target: "player",
     attack: true,
   }),
-  def("celme", "Çelme", "seçtiğin oyuncu −1", "siradan", { target: "player", attack: true }),
-  def("veto", "Veto", "sıradaki oyunlardan birini listeden çıkar", "siradan", { target: "game" }),
-  def("genis-secim", "Geniş Seçim", "bir sonraki kart seçiminde 4 kart görürsün", "siradan"),
+  def("celme", "Çelme", "Seçtiğin oyuncu −1", "siradan", { target: "player", attack: true }),
+  def("veto", "Veto", "Sıradaki oyunlardan birini listeden çıkar", "siradan", { target: "game" }),
+  def("genis-secim", "Geniş Seçim", "Bir sonraki kart seçiminde 4 kart görürsün", "siradan"),
 
-  def("cift-puan", "Çift Puan", "puanın ×2 (eksi de ×2)", "nadir"),
-  def("takas", "Takas", "oyun sonunda seçtiğin oyuncuyla bu oyunun puanlarınızı değiştirin", "nadir", {
+  def("cift-puan", "Çift Puan", "Puanın ×2 (eksi de ×2)", "nadir"),
+  def("takas", "Takas", "Oyun sonunda seçtiğin oyuncuyla bu oyunun puanlarınızı değiştirin", "nadir", {
     target: "player",
   }),
-  def("oyunu-sec", "Sıradaki Oyunu Seç", "bir sonraki mini oyunu sen belirlersin", "nadir", {
+  def("oyunu-sec", "Sıradaki Oyunu Seç", "Bir sonraki mini oyunu sen belirlersin", "nadir", {
     target: "game",
   }),
-  def("lanet", "Lanet", "seçtiğin oyuncu bu oyundan artı puan alamaz", "nadir", {
+  def("lanet", "Lanet", "Seçtiğin oyuncu bu oyundan artı puan alamaz", "nadir", {
     target: "player",
     attack: true,
   }),
-  def("hirsiz", "Hırsız", "bu oyunun birincisinden 1 puan al", "nadir", { attack: true }),
-  def("kart-cal", "Kart Çal", "seçtiğin oyuncunun elindeki rastgele bir kartı al", "nadir", {
+  def("hirsiz", "Hırsız", "Bu oyunun birincisinden 1 puan al", "nadir", { attack: true }),
+  def("kart-cal", "Kart Çal", "Seçtiğin oyuncunun elindeki rastgele bir kartı al", "nadir", {
     target: "player",
     attack: true,
   }),
 
-  def("altin-dokunus", "Altın Dokunuş", "puanın ×3 (eksi etkilenmez)", "efsanevi"),
-  def("ters-kose", "Ters Köşe", "bu oyunun sıralaması tamamen tersine döner", "efsanevi"),
+  def("altin-dokunus", "Altın Dokunuş", "Puanın ×3 (eksi etkilenmez)", "efsanevi"),
+  def("ters-kose", "Ters Köşe", "Bu oyunun sıralaması tamamen tersine döner", "efsanevi"),
 
-  def("talihsizlik", "Talihsizlik", "sonraki oyunda −1", "kotu"),
-  def("agir-yuk", "Ağır Yük", "sonraki oyunda puanın yarıya iner", "kotu"),
-  def("hayirsever", "Hayırsever", "sonraki oyunda puan alırsan 1'i sonuncuya gider", "kotu"),
-  def("acik-hedef", "Açık Hedef", "sonraki oyunda sana oynanan saldırılar iki kat etkili", "kotu"),
-  def("bos-el", "Boş El", "elindeki rastgele bir kart yanar", "kotu"),
-  def("kor-secim", "Kör Seçim", "bir sonraki seçimde kartlar ters gelir, görmeden seçersin", "kotu"),
-  def("sessizlik", "Sessizlik", "bir sonraki kart seçimini kaçırırsın", "kotu"),
-  def("kumarbaz", "Kumarbaz", "sonraki oyunda −2, ama bir sonraki seçimde 2 kart alırsın", "kotu"),
+  def("talihsizlik", "Talihsizlik", "Sonraki oyunda −1", "kotu"),
+  def("agir-yuk", "Ağır Yük", "Sonraki oyunda puanın yarıya iner", "kotu"),
+  def("hayirsever", "Hayırsever", "Sonraki oyunda puan alırsan 1'i sonuncuya gider", "kotu"),
+  def("acik-hedef", "Açık Hedef", "Sonraki oyunda sana oynanan saldırılar iki kat etkili", "kotu"),
+  def("bos-el", "Boş El", "Elindeki rastgele bir kart yanar", "kotu"),
+  def("kor-secim", "Kör Seçim", "Bir sonraki seçimde kartlar ters gelir, görmeden seçersin", "kotu"),
+  def("sessizlik", "Sessizlik", "Bir sonraki kart seçimini kaçırırsın", "kotu"),
+  def("kumarbaz", "Kumarbaz", "Sonraki oyunda −2, ama bir sonraki seçimde 2 kart alırsın", "kotu"),
   def(
     "lanetli-hediye",
     "Lanetli Hediye",
-    "sonraki oyunda −1, ama bir sonraki seçimde nadir ve efsanevi kart çıkma şansın artar",
+    "Sonraki oyunda −1, ama bir sonraki seçimde nadir ve efsanevi kart çıkma şansın artar",
     "kotu",
   ),
 ] as const;
@@ -121,7 +121,7 @@ export const CARD_GEMS: Readonly<Record<CardRarity, number>> = { siradan: 1, nad
 /** Elin en çok tutabileceği kart. */
 export const MAX_HAND = 2;
 /** Kart seçimi süresi (ms). */
-export const CARDS_MS = 15_000;
+export const CARDS_MS = 25_000;
 /** Bağlı herkes seçimini bitirince aşamanın kapanmasına kalan süre (ms). */
 export const CARDS_DONE_GRACE_MS = 1_000;
 /** Her N mini oyundan sonra kart seçimi gelir. */
