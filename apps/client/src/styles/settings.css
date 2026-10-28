@@ -305,7 +305,3 @@
   background: rgba(140, 160, 255, 0.12);
   color: var(--cyan);
 }
-
-.hub__icon--coin {
-  background: rgba(255, 194, 59, 0.14);
-}

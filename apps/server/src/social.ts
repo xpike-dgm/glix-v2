@@ -1,4 +1,11 @@
-import { type FriendStatus, INVITE_TTL_MS, MAX_PLAYERS, type ServerMessage } from "@glix/engine";
+import {
+  type Cosmetics,
+  cosmeticsFromEquipped,
+  type FriendStatus,
+  INVITE_TTL_MS,
+  MAX_PLAYERS,
+  type ServerMessage,
+} from "@glix/engine";
 import type { AccountStore } from "./accountStore.js";
 import { log } from "./log.js";
 import { invitePayload } from "./pushText.js";
@@ -47,6 +54,12 @@ export interface Social {
   invite(conn: Connection, username: string): InviteOutcome;
   /** Arkadaşın katılınabilir odası; arkadaş değilse, odada değilse ya da katılım kapalıysa null (nedeni ayırt edilmez). */
   friendRoom(accountId: number, username: string): Room | null;
+  /** Hesabın kuşandığı kozmetikler (odadaki oyunculara görünür); hesapsız ya da boşsa undefined. */
+  cosmeticsOf(accountId: number | null): Cosmetics | undefined;
+  /**
+   * Hesap kozmetik kuşandı/çıkardı: odadaki oyuncu kaydı güncellenir ve oda yeniden yayınlanır (herkes görür).
+   */
+  cosmeticsChanged(accountId: number): void;
   /** Hesaba bağlı bildirim aboneliği var mı ("Verimi indir" dökümü için). */
   hasPush(accountId: number): boolean;
   /** Hesaba bağlı bildirim aboneliğini kalıcı yazar (misafirde işlem yok). `null` siler. */
@@ -78,6 +91,8 @@ export const noopSocial: Social = {
   detach: () => undefined,
   presence: () => ({ status: "offline", room: null }),
   joinable: () => false,
+  cosmeticsOf: () => undefined,
+  cosmeticsChanged: () => undefined,
   sendTo: () => 0,
   invite: () => "failed",
   friendRoom: () => null,
@@ -110,6 +125,16 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
       room = r;
     }
     return { status, room };
+  }
+
+  function cosmeticsOf(accountId: number | null): Cosmetics | undefined {
+    if (accountId === null) return undefined;
+    try {
+      return cosmeticsFromEquipped(accounts.cosmetics(accountId).equipped);
+    } catch (err) {
+      log.error("accounts_error", { op: "cosmetics_of", error: String(err) });
+      return undefined;
+    }
   }
 
   function joinable(room: Room): boolean {
@@ -199,8 +224,18 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
       const [from, to] = key.split(":");
       if (Number(from) === accountId || Number(to) === accountId) pairSentAt.delete(key);
     }
-    for (const room of rt.rooms.values())
-      for (const player of room.players.values()) if (player.accountId === accountId) player.accountId = null;
+    for (const room of rt.rooms.values()) {
+      let had = false;
+      for (const player of room.players.values()) {
+        if (player.accountId !== accountId) continue;
+        player.accountId = null;
+        if (player.cosmetics !== undefined) {
+          player.cosmetics = undefined;
+          had = true;
+        }
+      }
+      if (had) rt.broadcaster.markDirty(room);
+    }
     const msg: ServerMessage = { type: "friendsChanged" };
     for (const id of relatedIds) sendTo(id, msg);
   }
@@ -223,6 +258,20 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
     },
     presence,
     joinable,
+    cosmeticsOf,
+    cosmeticsChanged(accountId) {
+      const next = cosmeticsOf(accountId);
+      for (const room of rt.rooms.values()) {
+        let changed = false;
+        for (const player of room.players.values()) {
+          if (player.accountId !== accountId) continue;
+          if (JSON.stringify(player.cosmetics) === JSON.stringify(next)) continue;
+          player.cosmetics = next;
+          changed = true;
+        }
+        if (changed) rt.broadcaster.markDirty(room);
+      }
+    },
     sendTo,
     invite(conn, username) {
       const me = conn.account;

@@ -30,7 +30,7 @@ const CREW: readonly (readonly [number, number])[] = [
   [5, 50],
 ];
 
-type Sheet = "nick" | "how" | null;
+type Sheet = "nick" | "how" | "shop" | null;
 type After = "join" | null;
 
 export function Home() {
@@ -78,6 +78,11 @@ export function Home() {
       return;
     }
     setState("nav", "join");
+  };
+  /** Hesaplıya mağaza açılır; misafire kısa bir hesap daveti gösterilir. */
+  const openShop = (): void => {
+    if (state.account) setState("nav", "shop");
+    else setSheet("shop");
   };
   const nickDone = (name: string): void => {
     setNickname(name);
@@ -207,15 +212,25 @@ export function Home() {
             <GhostButton onClick={join} disabled={offline()}>
               Odaya katıl
             </GhostButton>
-            <GhostButton size="small" onClick={() => setSheet("how")}>
-              Nasıl oynanır?
-            </GhostButton>
+            <div class="home__auth">
+              <GhostButton size="small" onClick={openShop}>
+                Mağaza
+              </GhostButton>
+              <GhostButton size="small" onClick={() => setSheet("how")}>
+                Nasıl oynanır?
+              </GhostButton>
+            </div>
           </>
         </Show>
         <Show when={!state.account}>
-          <GhostButton size="small" onClick={() => setSheet("how")}>
-            Nasıl oynanır?
-          </GhostButton>
+          <div class="home__auth">
+            <GhostButton size="small" onClick={openShop}>
+              Mağaza
+            </GhostButton>
+            <GhostButton size="small" onClick={() => setSheet("how")}>
+              Nasıl oynanır?
+            </GhostButton>
+          </div>
         </Show>
       </div>
 
@@ -225,6 +240,28 @@ export function Home() {
         onClose={() => setSheet(null)}
         onDone={nickDone}
       />
+      <BottomSheet open={sheet() === "shop"} onClose={() => setSheet(null)} title="Mağaza için hesap aç">
+        <p class="shop__invite">
+          Maç oynayarak Glix kazan; unvan, ad efekti ve çerçevelerle görünüşünü değiştir. Bunun için hesap
+          gerekir.
+        </p>
+        <PrimaryButton
+          onClick={() => {
+            setSheet(null);
+            setState("nav", "register");
+          }}
+        >
+          Kayıt ol
+        </PrimaryButton>
+        <GhostButton
+          onClick={() => {
+            setSheet(null);
+            setState("nav", "login");
+          }}
+        >
+          Giriş yap
+        </GhostButton>
+      </BottomSheet>
       <BottomSheet open={sheet() === "how"} onClose={() => setSheet(null)} title="Nasıl oynanır?">
         <ol class="how">
           <li>

@@ -19,6 +19,24 @@
   font-size: var(--fs-13);
   color: var(--text-dim);
 }
+.pf__since {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 10px;
+}
+.pf__bal {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px 2px 6px;
+  border-radius: 99px;
+  background: rgba(255, 194, 59, 0.12);
+  color: var(--amber);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
 .pf__tiles {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -137,96 +155,77 @@
   color: var(--text-dim);
 }
 /* Final: misafire hesap daveti (tek satır, sakin). */
-.fin__invite {
+.fin__guest {
+  margin: 0;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-2);
-  padding: 0 var(--sp-2) 0 var(--sp-4);
-  border-radius: var(--r-btn);
-  border: 1px solid var(--line);
-  background: rgba(10, 16, 48, 0.45);
-}
-.fin__invitetext {
-  flex: 1;
-  min-width: 0;
+  justify-content: center;
+  column-gap: 8px;
+  text-align: center;
   font-size: var(--fs-13);
-  line-height: 1.3;
+  line-height: 1.4;
   color: var(--text-dim);
 }
-.fin__invite .gbtn {
-  flex: none;
+.fin__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 4px;
+  font: inherit;
+  font-weight: 700;
   color: var(--cyan);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
 }
 
-.fin__invitesub {
-  font-size: var(--fs-13);
-  opacity: 0.85;
-}
-
-/* Final: kazanılan Glix özeti (dokununca döküm açılır). */
+/* Final: kazanılan Glix, küçük hap (dokununca tek satır döküm). */
 .glx {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-2);
-}
-.glx__bar {
-  display: flex;
   align-items: center;
-  gap: var(--sp-3);
-  min-height: 52px;
-  padding: 0 var(--sp-4);
-  border-radius: var(--r-btn);
-  border: 1px solid var(--amber);
-  background: rgba(255, 194, 59, 0.1);
-  color: var(--text);
+  gap: var(--sp-1);
+  text-align: center;
+}
+.glx__pill {
+  /* Düğme 48 px dokunma alanıdır; görünen hap içindeki .glx__chip'tir. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 4px;
   font: inherit;
   cursor: pointer;
 }
-.glx__total {
-  font-family: var(--font-display);
-  font-size: var(--fs-18);
+.glx__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px 0 8px;
+  border-radius: 99px;
+  background: rgba(255, 194, 59, 0.12);
   color: var(--amber);
-}
-.glx__hint {
-  margin-left: auto;
-  font-size: var(--fs-13);
-  color: var(--text-dim);
-}
-.glx__chev {
-  flex: none;
-  color: var(--text-dim);
-  transition: transform 0.2s ease;
-}
-.glx__bar[aria-expanded="true"] .glx__chev {
-  transform: rotate(90deg);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 .glx__list {
-  list-style: none;
   margin: 0;
-  padding: var(--sp-2) var(--sp-4);
-  border-radius: var(--r-btn);
-  border: 1px solid var(--line);
-  background: rgba(10, 16, 48, 0.45);
+  max-width: 34ch;
+  font-size: var(--fs-13);
+  line-height: 1.4;
+  color: var(--text-dim);
 }
 .glx__list[hidden] {
   display: none;
 }
-.glx__line {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  padding: var(--sp-1) 0;
-  font-size: var(--fs-15);
-  color: var(--text);
-}
-.glx__line b {
-  color: var(--amber);
-  font-variant-numeric: tabular-nums;
-}
 .glx__cap {
   margin: 0;
-  text-align: center;
   font-size: var(--fs-13);
   color: var(--text-dim);
 }

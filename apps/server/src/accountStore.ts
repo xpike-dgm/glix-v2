@@ -6,7 +6,15 @@ import type {
   ReportReason,
   ReportStatus,
 } from "@glix/engine";
-import { type GlixPart, matchAward, REPORT_RETENTION_MS } from "@glix/engine";
+import {
+  COSMETIC_TYPES,
+  type CosmeticTypeId,
+  cosmeticItem,
+  currentPrice,
+  type GlixPart,
+  matchAward,
+  REPORT_RETENTION_MS,
+} from "@glix/engine";
 import { istanbulDayStart } from "./badges.js";
 import { createFriendStore, FRIENDS_SCHEMA, type FriendStore } from "./friendStore.js";
 import { log } from "./log.js";
@@ -71,6 +79,8 @@ export interface ProfileData {
   badges: { badgeId: string; earnedAt: number }[];
   /** Glix bakiyesi. */
   glix: number;
+  /** Kuşanılan kozmetikler (tür -> ürün kimliği). */
+  equipped: Record<string, string>;
 }
 
 /** Rozet değerlendirmesinin SQL toplamları (maç satırı yazıldıktan sonra). */
@@ -147,6 +157,8 @@ export interface AccountExportData {
   coplay: { username: string; matches: number; lastAt: number }[];
   /** Glix bakiyesi ve tüm hareketleri (eskiden yeniye). */
   glix: { balance: number; ledger: Omit<GlixLedgerRow, "id">[] };
+  /** Mağazadan alınan ya da armağan edilen kozmetikler ve kuşanılanlar. */
+  cosmetics: CosmeticsDump;
   /** Kayıtlı web bildirimi aboneliği (yalnız ne zaman eklendiği; uç nokta ve anahtarlar dışarı verilmez). */
   push: { createdAt: number } | null;
 }
@@ -172,6 +184,27 @@ export interface GlixMatchCredit {
 }
 
 export type GlixAdjustResult = { ok: true; balance: number } | { ok: false; reason: "missing" | "negative" };
+
+/** Sahip olunan kozmetik (mağaza M2). `pricePaid` 0: yönetici armağanı. */
+export interface OwnedCosmetic {
+  itemId: string;
+  acquiredAt: number;
+  pricePaid: number;
+}
+
+export type CosmeticPurchase =
+  | { ok: true; balance: number; price: number }
+  | { ok: false; reason: "missing" | "unknown" | "owned" }
+  | { ok: false; reason: "insufficient"; balance: number; price: number };
+
+/** Kuşanma sonucu: `unknown` katalogda yok ya da tür tutmuyor; `not_owned` sahip değil. */
+export type CosmeticEquip = "ok" | "missing" | "unknown" | "not_owned";
+
+/** Yönetici hesap dökümü ve dışa aktarma için sahip olunanlar + kuşanılanlar (tür -> ürün). */
+export interface CosmeticsDump {
+  owned: OwnedCosmetic[];
+  equipped: Record<string, string>;
+}
 
 /** Sunucu başlangıç kaydı ("son yayınlar"). `stoppedAt` boşsa temiz kapanış kaydı yoktur. */
 export interface ServerStartRow {
@@ -372,6 +405,19 @@ export interface AccountStore extends FriendStore {
   glixLedger(accountId: number, limit: number): GlixLedgerRow[];
   /** `at`'ın İstanbul gününde maçlardan kazanılan Glix. */
   glixEarnedToday(accountId: number, at: number): number;
+  /**
+   * Kozmetik satın alma (tek işlem): ürün var mı, sahip değil mi, güncel (fırsat dahil) fiyat, bakiye yeterli mi;
+   * sahipliği yazar, defterde `satin-alma` satırı (negatif tutar, ref = ürün) ve bakiyeyi birlikte günceller.
+   */
+  purchaseCosmetic(accountId: number, itemId: string, at: number): CosmeticPurchase;
+  /** Sahip olunan kozmetikler (eskiden yeniye) ve kuşanılanlar (tür -> ürün kimliği). */
+  cosmetics(accountId: number): CosmeticsDump;
+  /** Türdeki ürünü kuşanır; `itemId` null ise temel (yok) seçilir. Yalnız sahip olunan ürün kuşanılır. */
+  equipCosmetic(accountId: number, type: CosmeticTypeId, itemId: string | null): CosmeticEquip;
+  /** Yönetici armağanı: fiyat 0, defter ve bakiye değişmez. `owned`: zaten vardı. */
+  grantCosmetic(accountId: number, itemId: string, at: number): "granted" | "owned" | "unknown" | "missing";
+  /** Yönetici geri alma: kuşanılıysa çıkarılır, Glix iade edilmez. Sahip değilse false. */
+  revokeCosmetic(accountId: number, itemId: string): boolean;
   /**
    * Verilen hesapların (en çok ~200) maç toplamları; `since` doluysa yalnız o andan sonra biten maçlar.
    * Tek toplu sorgu; maçı olmayan hesap da sıfırlarla döner.
@@ -698,6 +744,21 @@ const MIGRATIONS: readonly string[] = [
      ref TEXT
    );
    CREATE INDEX glix_ledger_account ON glix_ledger (account_id, at);`,
+  // Kozmetik mağaza (U18 M2): sahip olunan ürünler (fiyat 0 = yönetici armağanı) ve tür başına kuşanılan ürün.
+  // Ürün kimlikleri kataloğa (packages/engine/src/cosmetics.ts) karşı doğrulanır; hesapla birlikte silinir.
+  `CREATE TABLE cosmetic_owned (
+     account_id INTEGER NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+     item_id TEXT NOT NULL,
+     acquired_at INTEGER NOT NULL,
+     price_paid INTEGER NOT NULL,
+     PRIMARY KEY (account_id, item_id)
+   ) WITHOUT ROWID;
+   CREATE TABLE cosmetic_equipped (
+     account_id INTEGER NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+     slot TEXT NOT NULL,
+     item_id TEXT NOT NULL,
+     PRIMARY KEY (account_id, slot)
+   ) WITHOUT ROWID;`,
 ];
 
 /** Yönetici hesap dökümünde gösterilen son Glix hareketi sayısı. */
@@ -956,6 +1017,29 @@ export function createAccounts(path: string): AccountStore {
   );
   const dropGlix = db.prepare("DELETE FROM glix_ledger WHERE account_id = ?");
   const resetGlix = db.prepare("UPDATE accounts SET glix = 0 WHERE id = ?");
+  const cosOwnedAll = db.prepare(
+    "SELECT item_id, acquired_at, price_paid FROM cosmetic_owned WHERE account_id = ? ORDER BY acquired_at, item_id",
+  );
+  const cosOwnedHas = db.prepare("SELECT 1 AS x FROM cosmetic_owned WHERE account_id = ? AND item_id = ?");
+  const cosOwnedAdd = db.prepare(
+    "INSERT INTO cosmetic_owned (account_id, item_id, acquired_at, price_paid) VALUES (?, ?, ?, ?)",
+  );
+  const cosOwnedDrop = db.prepare("DELETE FROM cosmetic_owned WHERE account_id = ? AND item_id = ?");
+  const cosEquippedAll = db.prepare("SELECT slot, item_id FROM cosmetic_equipped WHERE account_id = ?");
+  const cosEquip = db.prepare(
+    `INSERT INTO cosmetic_equipped (account_id, slot, item_id) VALUES (?, ?, ?)
+     ON CONFLICT (account_id, slot) DO UPDATE SET item_id = excluded.item_id`,
+  );
+  const cosUnequip = db.prepare("DELETE FROM cosmetic_equipped WHERE account_id = ? AND slot = ?");
+  const cosUnequipItem = db.prepare("DELETE FROM cosmetic_equipped WHERE account_id = ? AND item_id = ?");
+  const cosDump = (accountId: number): CosmeticsDump => ({
+    owned: (cosOwnedAll.all(accountId) as { item_id: string; acquired_at: number; price_paid: number }[]).map(
+      (r) => ({ itemId: r.item_id, acquiredAt: r.acquired_at, pricePaid: r.price_paid }),
+    ),
+    equipped: Object.fromEntries(
+      (cosEquippedAll.all(accountId) as { slot: string; item_id: string }[]).map((r) => [r.slot, r.item_id]),
+    ),
+  });
   const dropGames = db.prepare("DELETE FROM account_games WHERE account_id = ?");
   const dropMatches = db.prepare("DELETE FROM account_matches WHERE account_id = ?");
   const dropCoplay = db.prepare("DELETE FROM account_coplay WHERE account_id = ? OR other_account_id = ?");
@@ -1293,6 +1377,7 @@ export function createAccounts(path: string): AccountStore {
           earnedAt: r.earned_at,
         })),
         glix: (glixAccount.get(accountId) as { glix: number } | undefined)?.glix ?? 0,
+        equipped: cosDump(accountId).equipped,
       };
     },
     badgeStats(accountId) {
@@ -1393,6 +1478,81 @@ export function createAccounts(path: string): AccountStore {
     glixEarnedToday(accountId, at) {
       const start = istanbulDayStart(at);
       return (glixToday.get(accountId, start, start + 24 * 3600 * 1000) as { s: number }).s;
+    },
+    purchaseCosmetic(accountId, itemId, at) {
+      let result: CosmeticPurchase = { ok: false, reason: "missing" };
+      inTransaction(() => {
+        const acc = glixAccount.get(accountId) as { glix: number } | undefined;
+        if (!acc) return;
+        const price = cosmeticItem(itemId) ? currentPrice(itemId, at) : null;
+        if (price === null || price <= 0) {
+          result = { ok: false, reason: "unknown" };
+          return;
+        }
+        if (cosOwnedHas.get(accountId, itemId)) {
+          result = { ok: false, reason: "owned" };
+          return;
+        }
+        if (acc.glix < price) {
+          result = { ok: false, reason: "insufficient", balance: acc.glix, price };
+          return;
+        }
+        cosOwnedAdd.run(accountId, itemId, at, price);
+        glixInsert.run(accountId, at, -price, "satin-alma", itemId);
+        glixAdd.run(-price, accountId);
+        result = { ok: true, balance: acc.glix - price, price };
+      });
+      return result;
+    },
+    cosmetics: (accountId) => cosDump(accountId),
+    equipCosmetic(accountId, type, itemId) {
+      if (!COSMETIC_TYPES.some((t) => t.id === type)) return "unknown";
+      let result: CosmeticEquip = "missing";
+      inTransaction(() => {
+        if (!glixAccount.get(accountId)) return;
+        if (itemId === null) {
+          cosUnequip.run(accountId, type);
+          result = "ok";
+          return;
+        }
+        const it = cosmeticItem(itemId);
+        if (!it || it.type !== type) {
+          result = "unknown";
+          return;
+        }
+        if (!cosOwnedHas.get(accountId, itemId)) {
+          result = "not_owned";
+          return;
+        }
+        cosEquip.run(accountId, type, itemId);
+        result = "ok";
+      });
+      return result;
+    },
+    grantCosmetic(accountId, itemId, at) {
+      let result: "granted" | "owned" | "unknown" | "missing" = "missing";
+      inTransaction(() => {
+        if (!glixAccount.get(accountId)) return;
+        if (!cosmeticItem(itemId)) {
+          result = "unknown";
+          return;
+        }
+        if (cosOwnedHas.get(accountId, itemId)) {
+          result = "owned";
+          return;
+        }
+        cosOwnedAdd.run(accountId, itemId, at, 0);
+        result = "granted";
+      });
+      return result;
+    },
+    revokeCosmetic(accountId, itemId) {
+      let removed = false;
+      inTransaction(() => {
+        cosUnequipItem.run(accountId, itemId);
+        removed = Number(cosOwnedDrop.run(accountId, itemId).changes) === 1;
+      });
+      return removed;
     },
     standings(accountIds, since) {
       if (accountIds.length === 0) return [];
@@ -1540,6 +1700,7 @@ export function createAccounts(path: string): AccountStore {
             }[]
           ).map((r) => ({ at: r.at, amount: r.amount, reason: r.reason, ref: r.ref })),
         },
+        cosmetics: cosDump(accountId),
         push: (() => {
           const p = pushSince.get(accountId) as { created_at: number } | undefined;
           return p ? { createdAt: p.created_at } : null;
@@ -1855,6 +2016,7 @@ export function createAccounts(path: string): AccountStore {
             }[]
           ).map((g) => ({ at: g.at, amount: g.amount, reason: g.reason, ref: g.ref })),
         },
+        cosmetics: cosDump(accountId),
         friends: (friendCount.get(accountId, accountId) as { n: number }).n,
         suspension: suspensionActive(r.suspended_at, r.suspended_until, now)
           ? { since: r.suspended_at as number, until: r.suspended_until, reason: r.suspend_reason ?? "" }

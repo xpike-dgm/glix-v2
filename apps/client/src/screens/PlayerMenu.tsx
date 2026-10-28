@@ -7,6 +7,7 @@ import { openReport } from "../net/reportUi.js";
 import { state, toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
+import { frameOf, PlayerName, PlayerTitle } from "../ui/Cosmetic.js";
 import { GhostButton } from "../ui/GhostButton.js";
 import { ExitIcon, UserIcon } from "../ui/Icons.js";
 import { FlagIcon, TransferIcon, UserPlusIcon } from "../ui/LobbyIcons.js";
@@ -85,9 +86,17 @@ export function PlayerMenu(props: {
           <Show when={step() === "menu" && props.target} fallback={<h2 class="sheet__title">{title()}</h2>}>
             {(t) => (
               <div class="pmenu__who">
-                <Avatar index={t().avatar} size={52} connected={t().connected} />
+                <Avatar
+                  index={t().avatar}
+                  size={52}
+                  connected={t().connected}
+                  frame={frameOf(t().cosmetics)}
+                />
                 <div class="pmenu__text">
-                  <span class="pmenu__name">{t().nickname}</span>
+                  <span class="pmenu__name">
+                    <PlayerName name={t().nickname} cosmetics={t().cosmetics} />
+                  </span>
+                  <PlayerTitle cosmetics={t().cosmetics} />
                   <Show when={props.targetIsHost || !t().connected}>
                     <span class="pmenu__tag">{props.targetIsHost ? "Ev sahibi" : "Bağlantısı koptu"}</span>
                   </Show>
@@ -187,6 +196,7 @@ export function PlayerMenu(props: {
       </BottomSheet>
 
       <PlayerProfileSheet
+        cosmetics={props.target?.cosmetics}
         open={profileOpen()}
         onClose={() => setProfileOpen(false)}
         username={username()}

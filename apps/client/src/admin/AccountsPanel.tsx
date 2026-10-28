@@ -1,4 +1,5 @@
 import type { AdminAccountDetail, AdminAccountRow, AdminAccounts } from "@glix/engine";
+import { COSMETIC_ITEMS, cosmeticItem } from "@glix/engine";
 import { createSignal, For, onMount, Show } from "solid-js";
 import { type AccountAction, fetchAccounts, fetchDetail, runAccountAction, searchAccounts } from "./api.js";
 import { Bars, HBars } from "./charts.js";
@@ -175,7 +176,8 @@ type Step =
   | { op: "unsuspend" }
   | { op: "delete" }
   | { op: "logout-all" }
-  | { op: "glix"; amount: number; reason: string };
+  | { op: "glix"; amount: number; reason: string }
+  | { op: "cosmetic-grant" | "cosmetic-revoke"; itemId: string };
 
 function stepText(step: Step, a: AdminAccountDetail): string {
   switch (step.op) {
@@ -191,6 +193,10 @@ function stepText(step: Step, a: AdminAccountDetail): string {
       return `"${a.username}" hesabı ve tüm verisi kalıcı olarak silinecek. Geri alınamaz.`;
     case "logout-all":
       return `"${a.username}" tüm cihazlardan çıkarılacak.`;
+    case "cosmetic-grant":
+      return `"${a.username}" hesabına "${cosmeticItem(step.itemId)?.name ?? step.itemId}" armağan edilecek (Glix düşmez).`;
+    case "cosmetic-revoke":
+      return `"${a.username}" hesabından "${cosmeticItem(step.itemId)?.name ?? step.itemId}" geri alınacak (Glix iade edilmez).`;
     case "glix":
       return `"${a.username}" bakiyesine ${fmtGlixDelta(step.amount)} Glix yazılacak (${a.glix.balance} -> ${a.glix.balance + step.amount}). Sebep: ${step.reason}`;
   }
@@ -208,6 +214,7 @@ export function Detail(props: { id: number; onClose: () => void; onChanged: () =
   const [typed, setTyped] = createSignal("");
   const [glixAmount, setGlixAmount] = createSignal("");
   const [glixReason, setGlixReason] = createSignal("");
+  const [grantItem, setGrantItem] = createSignal("");
 
   async function load(): Promise<void> {
     const r = await fetchDetail(props.id);
@@ -251,6 +258,10 @@ export function Detail(props: { id: number; onClose: () => void; onChanged: () =
       case "glix":
         payload = { op: "glix", id: a.id, amount: s.amount, reason: s.reason };
         break;
+      case "cosmetic-grant":
+      case "cosmetic-revoke":
+        payload = { op: s.op, id: a.id, itemId: s.itemId };
+        break;
     }
     setBusy(true);
     const r = await runAccountAction(payload);
@@ -264,6 +275,7 @@ export function Detail(props: { id: number; onClose: () => void; onChanged: () =
     setReason("");
     setGlixAmount("");
     setGlixReason("");
+    setGrantItem("");
     setDone(r.message);
     props.onChanged();
     if (s.op === "delete") {
@@ -398,6 +410,82 @@ export function Detail(props: { id: number; onClose: () => void; onChanged: () =
                   </tbody>
                 </table>
               </div>
+            </Show>
+            <h4 class="adm-h4">Mağaza ürünleri</h4>
+            <Show
+              when={a().cosmetics.owned.length > 0}
+              fallback={<p class="adm-muted">Sahip olunan ürün yok.</p>}
+            >
+              <div class="adm-table-wrap">
+                <table class="adm-table adm-stack">
+                  <thead>
+                    <tr>
+                      <th>Ürün</th>
+                      <th>Nasıl</th>
+                      <th>Kuşanılı</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <For each={a().cosmetics.owned}>
+                      {(o) => (
+                        <tr>
+                          <td data-label="Ürün">{cosmeticItem(o.itemId)?.name ?? o.itemId}</td>
+                          <td data-label="Nasıl">
+                            {o.pricePaid === 0 ? "Armağan" : `${fmtInt(o.pricePaid)} Glix`} ·{" "}
+                            {fmtDateTime(o.acquiredAt)}
+                          </td>
+                          <td data-label="Kuşanılı">
+                            {Object.values(a().cosmetics.equipped).includes(o.itemId) ? "Evet" : "Hayır"}
+                          </td>
+                          <td>
+                            <Show when={!a().protected}>
+                              <button
+                                type="button"
+                                class="adm-btn adm-btn--ghost adm-btn--small"
+                                onClick={() => ask({ op: "cosmetic-revoke", itemId: o.itemId })}
+                              >
+                                Geri al
+                              </button>
+                            </Show>
+                          </td>
+                        </tr>
+                      )}
+                    </For>
+                  </tbody>
+                </table>
+              </div>
+            </Show>
+            <Show when={!a().protected}>
+              <form
+                class="adm-inline"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (grantItem() !== "") ask({ op: "cosmetic-grant", itemId: grantItem() });
+                }}
+              >
+                <label for="adm-grant">Ürün armağan et</label>
+                <select
+                  id="adm-grant"
+                  class="adm-field"
+                  value={grantItem()}
+                  onChange={(e) => setGrantItem(e.currentTarget.value)}
+                >
+                  <option value="">Seç…</option>
+                  <For
+                    each={COSMETIC_ITEMS.filter((i) => !a().cosmetics.owned.some((o) => o.itemId === i.id))}
+                  >
+                    {(i) => (
+                      <option value={i.id}>
+                        {i.name} ({i.rarity})
+                      </option>
+                    )}
+                  </For>
+                </select>
+                <button type="submit" class="adm-btn adm-btn--small" disabled={grantItem() === ""}>
+                  Armağan et
+                </button>
+              </form>
             </Show>
             <p class="adm-muted adm-note">Bu ekranı açman işlem kaydına yazıldı.</p>
 

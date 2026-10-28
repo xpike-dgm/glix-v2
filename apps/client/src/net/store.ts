@@ -16,6 +16,8 @@ export type Nav =
   | "profile"
   | "friends"
   | "leaderboard"
+  | "shop"
+  | "locker"
   | "login"
   | "register"
   | "aydinlatma"

@@ -214,6 +214,11 @@ export interface AdminAccountDetail {
   friends: number;
   /** Glix bakiyesi ve son hareketler (yeniden eskiye). */
   glix: { balance: number; ledger: AdminGlixRow[] };
+  /** Sahip olunan kozmetikler (`pricePaid` 0: armağan) ve kuşanılanlar (tür -> ürün kimliği). */
+  cosmetics: {
+    owned: { itemId: string; acquiredAt: number; pricePaid: number }[];
+    equipped: Record<string, string>;
+  };
   /** Yönetici listesindeki hesap: ad değiştirme, askı, silme ve oturum kapatma yapılamaz. */
   protected: boolean;
   suspension: { since: number; until: number | null; reason: string } | null;

@@ -49,6 +49,7 @@ o oyunun geçtiği maçların ortalamasıdır.
   - *Glix düzelt:* ayrıntıda Glix bakiyesi ve son 20 hareket (zaman, işaretli tutar, neden, ayrıntı) görünür. İşlem: işaretli tamsayı (0 olmaz, |tutar| ≤ 100000) + zorunlu kısa sebep (1-140 karakter);
     `POST /api/admin/accounts/glix {id, amount, reason}`. Bakiye 0'ın altına inemez (409 `glix_negative`). Defterde `yonetici` satırı (sebep `ref` alanında) ve bakiye tek işlemde yazılır;
     işlem kaydına `account_glix` + tutar yazılır (sebep yalnız defterde). Yönetici hesaplarına yapılamaz.
+  - *Mağaza ürünleri (U18 M2):* ayrıntıda sahip olunan ürünler (ad, "Armağan" ya da ödenen Glix, zaman, kuşanılı mı). **Armağan et:** `POST /api/admin/accounts/cosmetic-grant {id, itemId}` (ürün katalogda olmalı; hesapta varsa 409 `already_owned`); `price_paid` 0, bakiye ve Glix defteri değişmez. **Geri al:** `POST /api/admin/accounts/cosmetic-revoke {id, itemId}` (sahip değilse 409 `not_owned`); kuşanılıysa çıkarılır, odadaki görünüm düşer, Glix iade edilmez. İşlem kaydına `account_cosmetic_grant` / `account_cosmetic_revoke` + ürün kimliği yazılır. Yönetici hesaplarına yapılamaz.
   - *Oturumları kapat:* tüm oturumlar silinir, canlı soketler misafire döner; hesap ve veri yerinde kalır.
   - *Hesabı sil:* KVKK silmesiyle aynı (`deleteAccount` + sosyal temizlik); yönetici kullanıcı adını yazarak onaylar.
 - **Korunma:** `GLIX_ADMIN_ACCOUNT_IDS` içindeki hesaplara (kendisi dahil) ad değiştirme, askı, silme ve oturum kapatma yapılamaz.

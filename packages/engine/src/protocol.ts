@@ -1,5 +1,6 @@
 import { type CardId, type CardSettings, isCardId, parseCardSettings } from "./cards/catalog.js";
 import type { CardsMine, CardsPublic } from "./cards/view.js";
+import type { Cosmetics } from "./cosmetics.js";
 import type { GameResult } from "./game.js";
 import { isReportReason, type ReportReason, sanitizeReportNote } from "./moderation/report.js";
 import type { SiteNotice } from "./siteNotice.js";
@@ -244,6 +245,11 @@ export interface PlayerInfo {
   spectator: boolean;
   /** Hesaplı oyuncunun kullanıcı adı (yalnız ad; e-posta asla); misafirde alan yoktur. Eski istemciler yok sayar. */
   username?: string;
+  /**
+   * Hesaplı oyuncunun kuşandığı görünüm (unvan, ad efekti, çerçeve; kataloğun kimlikleri). Yalnız hesaplıda ve
+   * yalnız dolu olanlar; misafirde alan yoktur. İstemci katalogda olmayan kimliği yok sayar (`parseCosmetics`).
+   */
+  cosmetics?: Cosmetics;
 }
 
 export interface GameInfo {

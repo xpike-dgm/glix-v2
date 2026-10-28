@@ -30,6 +30,7 @@ import {
   cleanAnnouncementText,
   cleanPlainText,
   cleanSitePath,
+  cosmeticItem,
   isAnnouncementKind,
   isReportStatus,
   REPORT_ADMIN_NOTE_MAX,
@@ -247,6 +248,8 @@ const POST_ROUTES: ReadonlySet<string> = new Set([
   "accounts/delete",
   "accounts/logout-all",
   "accounts/glix",
+  "accounts/cosmetic-grant",
+  "accounts/cosmetic-revoke",
   "content/game",
   "announcement/set",
   "announcement/clear",
@@ -571,7 +574,8 @@ type ActionInput =
   | { op: "unsuspend"; id: number }
   | { op: "delete"; id: number; confirm: string }
   | { op: "logout-all"; id: number }
-  | { op: "glix"; id: number; amount: number; reason: string };
+  | { op: "glix"; id: number; amount: number; reason: string }
+  | { op: "cosmetic-grant" | "cosmetic-revoke"; id: number; itemId: string };
 
 /** Tek düzeltmede en çok |tutar|. */
 export const GLIX_ADJUST_MAX = 100_000;
@@ -628,6 +632,13 @@ export function parseAction(op: ActionInput["op"], data: unknown): ActionInput |
         return null;
       return { op, id, amount, reason };
     }
+    case "cosmetic-grant":
+    case "cosmetic-revoke": {
+      if (!exactKeys(data, ["id", "itemId"])) return null;
+      const itemId = data.itemId;
+      if (typeof itemId !== "string" || !cosmeticItem(itemId)) return null;
+      return { op, id, itemId };
+    }
     case "delete": {
       if (!exactKeys(data, ["id", "confirm"])) return null;
       const confirm = data.confirm;
@@ -645,6 +656,8 @@ const ACTION_OPS: Readonly<Record<string, ActionInput["op"]>> = {
   "accounts/delete": "delete",
   "accounts/logout-all": "logout-all",
   "accounts/glix": "glix",
+  "accounts/cosmetic-grant": "cosmetic-grant",
+  "accounts/cosmetic-revoke": "cosmetic-revoke",
 };
 
 async function accountAction(
@@ -716,6 +729,21 @@ async function accountAction(
       }
       audit(env, adminId, "account_glix", String(input.amount), id);
       return send(res, 200, { ok: true, balance: done.balance });
+    }
+    case "cosmetic-grant": {
+      const done = env.accounts.grantCosmetic(id, input.itemId, env.now);
+      if (done === "owned") return fail(res, 409, "already_owned", "Hesapta bu ürün zaten var.");
+      if (done !== "granted") return fail(res, 404, "not_found", "Hesap ya da ürün bulunamadı.");
+      audit(env, adminId, "account_cosmetic_grant", input.itemId, id);
+      return send(res, 200, { ok: true });
+    }
+    case "cosmetic-revoke": {
+      if (!env.accounts.revokeCosmetic(id, input.itemId))
+        return fail(res, 409, "not_owned", "Hesapta bu ürün yok.");
+      // Kuşanılıyorsa odadaki görünümü de düşer.
+      env.social.cosmeticsChanged(id);
+      audit(env, adminId, "account_cosmetic_revoke", input.itemId, id);
+      return send(res, 200, { ok: true });
     }
     case "logout-all": {
       const related = env.accounts.relatedAccountIds(id);

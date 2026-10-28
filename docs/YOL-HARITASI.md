@@ -239,7 +239,7 @@ Sahip kararları (Ekim 2026). Yalnız görünüş satılır, oyunda avantaj yok;
 - **Kürsü karakteri yöntemi (sahip onayı):** ChatGPT'nin tek ana çiziminden kesilmiş parçalar, PixiJS `MeshSimple` ile
   tek parça esneyen karakter olarak çizilir (eklemde dikiş yok); danslar CMU hareket kayıtlarından (`bvh2dance.py`,
   ticari kullanıma açık) dönüştürülür. Deneme: `tools/karakter-deneme/`.
-- [x] M1  - [ ] M2  - [ ] M3  - [ ] M4
+- [x] M1  - [x] M2 (mağaza + Dolabım; kodla çizilen unvan, ad efekti, çerçeve — resimli türler M3/M4'te)  - [ ] M3  - [ ] M4
 
 ---
 

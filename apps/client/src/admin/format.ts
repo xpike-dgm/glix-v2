@@ -1,4 +1,5 @@
 /** Yönetici paneli biçimleyicileri (Türkçe). Saf işlevler; testleri format.test.ts. */
+import { cosmeticItem } from "@glix/engine";
 import { isReportStatus, REPORT_STATUS_LABELS } from "./moderationRules.js";
 
 const MONTHS = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
@@ -94,6 +95,8 @@ const AUDIT_LABELS: Record<string, string> = {
   account_delete: "Hesap silindi",
   account_logout_all: "Tüm oturumlar kapatıldı",
   account_glix: "Glix düzeltildi",
+  account_cosmetic_grant: "Ürün armağan edildi",
+  account_cosmetic_revoke: "Ürün geri alındı",
   game_switch: "Oyun anahtarı değiştirildi",
   announcement_set: "Duyuru yayınlandı",
   announcement_clear: "Duyuru kaldırıldı",
@@ -155,6 +158,8 @@ export function auditDetail(action: string, detail: string): string {
   if (detail === "") return "";
   if (action === "account_suspend") return `Süre: ${DURATION_LABELS[detail] ?? detail}`;
   if (action === "account_logout_all") return `${detail} oturum`;
+  if (action === "account_cosmetic_grant" || action === "account_cosmetic_revoke")
+    return cosmeticItem(detail)?.name ?? detail;
   if (action === "account_glix") return `${Number(detail) > 0 ? "+" : ""}${detail} Glix`;
   if (action === "otp_request") return MAIL_STATE[detail] ?? detail;
   if (action === "game_switch") return gameSwitchDetail(detail);
@@ -217,6 +222,7 @@ export function fmtGlixDelta(n: number): string {
 export function glixRefText(reason: string, ref: string | null): string {
   if (ref === null) return "";
   if (reason === "mac") return ref.startsWith("yer:") ? `${ref.slice(4)}. sıra` : "";
+  if (reason === "satin-alma") return cosmeticItem(ref)?.name ?? ref;
   return ref;
 }
 

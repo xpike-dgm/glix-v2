@@ -155,6 +155,7 @@ export function addPlayer(
     id,
     accountId: conn.account?.id ?? null,
     username: conn.account?.username ?? null,
+    cosmetics: rt.social.cosmeticsOf(conn.account?.id ?? null),
     nickname: uniqueNickname(room, nickname),
     avatar:
       preferredAvatar !== undefined && isAvatarFree(room, preferredAvatar)
