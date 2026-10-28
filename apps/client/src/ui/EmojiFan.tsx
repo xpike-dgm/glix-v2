@@ -45,7 +45,9 @@ export function EmojiFan(props: {
   const step = () => 90 / Math.max(1, list().length - 1);
   const place = (i: number): { x: number; y: number } => {
     const a = ((from() + i * step()) * Math.PI) / 180;
-    return { x: Math.round(RADIUS * Math.sin(a) * 10) / 10, y: Math.round(-RADIUS * Math.cos(a) * 10) / 10 };
+    // Beş ve daha çok düğme çeyrekte yan yana sığmaz (48 px kutular binerdi): tekler bir sıra dışarıda durur.
+    const r = list().length > 4 && i % 2 === 1 ? RADIUS + 54 : RADIUS;
+    return { x: Math.round(r * Math.sin(a) * 10) / 10, y: Math.round(-r * Math.cos(a) * 10) / 10 };
   };
   /** Dilimler arasında ince boşluk bırakan koni: her dilim emojisini ortalar, kenarlarda 1,2° boşluk. */
   const slices = (): string => {

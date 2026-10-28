@@ -17,5 +17,7 @@ export function winnerCelebration(
 }
 
 export function playFinalFx(host: HTMLElement, celebration: string | undefined): Promise<() => void> {
-  return celebration ? playCelebration(host, celebration) : playConfetti(host);
+  // Yalnız geliştirme önizlemesi: `&zaferdongu=1` kutlamayı döngüye alır (ekran denetimi karakterler gelince çekilir).
+  const loop = import.meta.env.DEV && new URLSearchParams(location.search).get("zaferdongu") === "1";
+  return celebration ? playCelebration(host, celebration, { loop }) : playConfetti(host);
 }
