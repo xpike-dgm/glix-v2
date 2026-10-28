@@ -267,9 +267,10 @@ describe("kart seçimi aşaması", () => {
     const ann = a.room.match?.cards?.announce ?? [];
     expect(ann.map((x) => x.cardId)).toEqual(["talihsizlik", "talihsizlik"]);
     expect(mine(a)?.hand).toEqual([]);
-    const before = [scoreOf(a, a), scoreOf(a, b)];
+    const beforeA = scoreOf(a, a);
+    const beforeB = scoreOf(a, b);
     await playOut(cs); // 4. oyun: ham 1 / 0, Talihsizlik −1 → 0 / −1
-    expect([scoreOf(a, a) - before[0]!, scoreOf(a, b) - before[1]!]).toEqual([0, -1]);
+    expect([scoreOf(a, a) - beforeA, scoreOf(a, b) - beforeB]).toEqual([0, -1]);
     expect(a.room.match?.cards?.announce).toEqual([]);
     expect(a.room.match?.result?.awards).toEqual({ [idOf(a)]: 0, [idOf(b)]: -1 });
   });
