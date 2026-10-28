@@ -61,9 +61,12 @@ async function download(cookie: string, body: unknown = { ack: true }) {
   return { res, data };
 }
 
-/** Geçici klasör boşalana dek bekler (temizlik akış kapanınca asenkron yapılır). */
+/**
+ * Geçici klasör boşalana dek bekler (temizlik akış kapanınca asenkron yapılır). Pay 5 sn: tüm test dosyaları
+ * birlikte koşarken silme 1 sn'yi aşabiliyor.
+ */
 async function emptied(dir: string): Promise<boolean> {
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 500; i++) {
     if (readdirSync(dir).length === 0) return true;
     await sleep(10);
   }

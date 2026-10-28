@@ -53,8 +53,16 @@ export function catalogFor(rt: Runtime, room: Room): GameInfo[] {
   return extra.length === 0 ? rt.catalog : [...rt.catalog, ...extra];
 }
 
-/** Kataloğu açık oyunların kimlikleri olarak verir. */
-export const openIds = (rt: Runtime): Set<string> => new Set(rt.catalog.map((g) => g.id));
+/**
+ * Açık oyunların kimlikleri: kayıtlı her oyun, yönetici kapatmadıysa açıktır. Kapalı = motor kataloğunda olup etkin
+ * katalogdan düşmüş oyun. (Katalog açılışta hesaplanır; sonradan kaydedilen oyunlar — ör. testlerin sahte oyunları —
+ * kapalı sayılmaz.)
+ */
+export function openIds(rt: Runtime): Set<string> {
+  const listed = new Set(rt.catalog.map((g) => g.id));
+  const closed = new Set(ENGINE_CATALOG.filter((g) => !listed.has(g.id)).map((g) => g.id));
+  return new Set(Object.keys(GAMES).filter((id) => !closed.has(id)));
+}
 
 /**
  * Lobideki odanın seçiminden kapalı oyunları çıkarır; çıkarılan varsa odadakilere kısa bir bilgi gider.

@@ -139,8 +139,22 @@ async function setNick(page, name) {
   await btn(page, /^tamam$/i).click();
 }
 
+// Misafir oda kuramaz: ev sahibi önce arayüzden hesap açar (oyun içi adı kullanıcı adıdır).
+async function registerViaUi(page, username) {
+  await btn(page, /^kayıt ol$/i)
+    .first()
+    .click();
+  await page.getByRole("textbox", { name: "Kullanıcı adı" }).fill(username);
+  await page.getByRole("textbox", { name: "E-posta" }).fill(`${username.toLowerCase()}@e2e.test`);
+  await page.getByLabel("Şifre").fill("e2e-sifre-123");
+  await btn(page, /^kayıt ol$/i)
+    .last()
+    .click();
+  await btn(page, /oda kur/i).waitFor(OPT);
+}
+
 async function joinViaUi(page, code, nick) {
-  await btn(page, /odaya katıl/i).click();
+  await btn(page, /odaya katıl|kodla katıl/i).click();
   const codeInput = page.getByRole("textbox", { name: "Oda kodu" });
   await codeInput.waitFor(OPT);
   await codeInput.pressSequentially(code.toLowerCase(), { delay: 30 });
@@ -234,14 +248,16 @@ async function main() {
     watch("B", B);
     watch("C", C);
 
-    // 1) A: takma ad + oda kur
+    // 1) A: misafir ana sayfası, hesap açar, oda kurar (hesaplının adı kullanıcı adıdır)
     await A.goto("/");
-    await btn(A, /oda kur/i).waitFor(OPT);
+    await btn(A, /^kayıt ol$/i)
+      .first()
+      .waitFor(OPT);
+    assert(!(await btn(A, /oda kur/i).count()), "misafir ana sayfasında Oda kur olmamalı");
     await shot(A, "01-home");
+    await registerViaUi(A, "Ayse");
+    await shot(A, "02-home-account");
     await btn(A, /oda kur/i).click();
-    await A.getByRole("textbox", { name: "Takma ad" }).waitFor(OPT);
-    await shot(A, "02-nickname");
-    await setNick(A, "Ayşe");
     const code = await lobbyCode(A);
     log("oda kodu", code);
     await shot(A, "03-lobby-solo");
@@ -249,7 +265,7 @@ async function main() {
 
     // 2) B: ODAYA KATIL, kodu elle yazar
     await B.goto("/");
-    await btn(B, /odaya katıl/i).click();
+    await btn(B, /odaya katıl|kodla katıl/i).click();
     await B.getByRole("textbox", { name: "Takma ad" }).waitFor(OPT);
     await setNick(B, "Burak");
     const codeInput = B.getByRole("textbox", { name: "Oda kodu" });
@@ -295,7 +311,7 @@ async function main() {
     await shot(A, "05-qr");
     await inviteSheet.getByRole("button", { name: /kapat/i }).first().click();
     await inviteSheet.waitFor({ state: "detached", ...OPT });
-    await btn(A, /arkadaş davet et/i)
+    await btn(A, /kodla ya da qr ile çağır/i)
       .first()
       .click();
     await A.getByRole("dialog").getByRole("img", { name: /qr/i }).waitFor(OPT);
@@ -371,7 +387,7 @@ async function main() {
     await btn(D, /ana sayfa/i).waitFor(OPT);
     await shot(D, "d-notfound");
     await btn(D, /ana sayfa/i).click();
-    await btn(D, /oda kur/i).waitFor(OPT);
+    await btn(D, /odaya katıl|kodla katıl/i).waitFor(OPT);
     await ctxD.close();
 
     // 4) Lobide yenileme: host (A) yeniler; 20 sn bekleme süresi içinde döndüğü için host kalır
@@ -389,8 +405,10 @@ async function main() {
     log("lobide host yenileme: oda ve host korunuyor");
 
     // 5) A, C'yi çıkarır
-    // Oyuncu menüsü basılı tutarak açılır; kısa dokunuş menü açmaz
+    // Başkasına kısa dokunuş da oyuncu menüsünü açar (bildir; ev sahibine ayrıca çıkar/devret)
     await A.locator("button.seat:not(.seat--empty)", { hasText: "Cem" }).click();
+    await A.getByRole("dialog").waitFor(OPT);
+    await A.keyboard.press("Escape");
     await A.getByRole("dialog").waitFor({ state: "detached", ...OPT });
     await longPressSeat(A, "Cem");
     const kickSheet = A.getByRole("dialog");
@@ -398,7 +416,7 @@ async function main() {
     await shot(A, "06-kick-sheet");
     await kickSheet.getByRole("button", { name: "Odadan çıkar", exact: true }).click();
     await kickSheet.getByRole("button", { name: "Çıkar", exact: true }).click();
-    await btn(C, /oda kur/i).waitFor(OPT);
+    await btn(C, /odaya katıl|kodla katıl/i).waitFor(OPT);
     await C.getByText("Ev sahibi seni odadan çıkardı", { exact: true }).waitFor(OPT);
     await shot(C, "07-c-kicked");
     await A.waitForFunction(
@@ -457,7 +475,7 @@ async function main() {
     await btn(A, /^başlat$/i).waitFor({ state: "detached", timeout: OPT.timeout });
     assert(!(await btn(A, /^başlat$/i).count()), "A artık BAŞLAT görmemeli");
     await shot(B, "06d-b-host");
-    await longPressSeat(B, "Ayşe");
+    await longPressSeat(B, "Ayse");
     await B.getByRole("dialog").getByRole("button", { name: "Ev sahipliğini devret", exact: true }).click();
     await B.getByRole("dialog").getByRole("button", { name: "Devret", exact: true }).click();
     await btn(A, /^başlat$/i).waitFor(OPT);
@@ -609,6 +627,12 @@ async function main() {
       "final skorları",
       finalScores.map((s) => s.trim()),
     );
+    // Hesaplı A'nın ilk maçı: "Yeni rozet!" kartı çıkar; kapatılınca son ekran kullanılabilir.
+    const badgeCard = A.getByRole("dialog", { name: "Yeni rozet" });
+    await badgeCard.waitFor(OPT);
+    await shot(A, "15b-new-badge");
+    await badgeCard.getByRole("button").first().click();
+    await badgeCard.waitFor({ state: "detached", ...OPT });
     // Geri bildirim: A beş yıldız verir, "Teşekkürler!" görür; LOBİYE DÖN görünür kalır.
     await A.getByRole("button", { name: "5 yıldız" }).click();
     await btn(A, /gönder/i).click();
@@ -655,7 +679,7 @@ async function main() {
       const F = await ctxF.newPage();
       watch("F", F);
       await F.goto("/");
-      await btn(F, /odaya katıl/i).click();
+      await btn(F, /odaya katıl|kodla katıl/i).click();
       await setNick(F, "Fatma");
       const fInput = F.getByRole("textbox", { name: "Oda kodu" });
       await fInput.waitFor(OPT);
@@ -716,8 +740,8 @@ async function main() {
         });
       });
       await D.goto("/");
+      await registerViaUi(D, "Deniz");
       await btn(D, /oda kur/i).click();
-      await setNick(D, "Deniz");
       const dCode = await lobbyCode(D);
       const socketsBefore = sockets;
       const roomsBefore = frames.room;

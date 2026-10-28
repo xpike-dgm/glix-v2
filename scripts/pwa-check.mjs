@@ -255,10 +255,10 @@ async function main() {
       (await note.innerText()).includes("İnternet bağlantısı yok — bağlanınca oyuna katılabilirsin"),
       "çevrimdışı metni",
     );
-    assert(await page.getByRole("button", { name: /oda kur/i }).isDisabled(), "ODA KUR devre dışı olmalı");
+    // Misafir ana sayfası: oda kurmak hesap ister; katılma düğmesi "Kodla katıl"
     assert(
-      await page.getByRole("button", { name: /odaya katıl/i }).isDisabled(),
-      "ODAYA KATIL devre dışı olmalı",
+      await page.getByRole("button", { name: /odaya katıl|kodla katıl/i }).isDisabled(),
+      "KODLA KATIL devre dışı olmalı",
     );
     assert(
       (await page.locator(".overlay").count()) === 0,
@@ -283,10 +283,10 @@ async function main() {
     // 7) Bağlantı gelince durum kalkar ve düğmeler açılır
     await ctx.setOffline(false);
     await page.locator(".offline").waitFor({ state: "detached", timeout: 20_000 });
-    await page.getByRole("button", { name: /oda kur/i }).waitFor(OPT);
+    await page.getByRole("button", { name: /odaya katıl|kodla katıl/i }).waitFor(OPT);
     assert(
-      await page.getByRole("button", { name: /oda kur/i }).isEnabled(),
-      "bağlantı gelince ODA KUR açılmalı",
+      await page.getByRole("button", { name: /odaya katıl|kodla katıl/i }).isEnabled(),
+      "bağlantı gelince KODLA KATIL açılmalı",
     );
     log("bağlantı dönünce ana sayfa etkin");
 
@@ -343,6 +343,8 @@ async function main() {
     const openSettings = async () => {
       await page.goto(base, { waitUntil: "load" });
       await page.getByRole("button", { name: "Ayarlar" }).click();
+      // Ayarlar başlıklara bölünmüş: içerik indirme "Cihaz" altında
+      await page.getByRole("button", { name: /^Cihaz/ }).click();
       await page.getByRole("button", { name: "Tüm içeriği indir" }).waitFor(OPT);
     };
     const runPack = async () => {

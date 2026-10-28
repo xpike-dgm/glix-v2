@@ -108,10 +108,12 @@ describe("http", () => {
 
 describe("ws", () => {
   it("hello -> welcome", async () => {
+    // `site`: duyuru bandı ve bakım durumu (U16 A3); alanları kendi testlerinde denetlenir.
     expect(await exchange(`ws://${base}/ws`, '{"type":"hello","clientVersion":"0.0.1"}')).toEqual({
       type: "welcome",
       protocolVersion: 2,
       serverVersion: "0.1.0",
+      site: expect.any(Object),
     });
   });
   it("ping -> pong", async () => {

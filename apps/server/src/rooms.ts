@@ -12,6 +12,7 @@ import { type AccountStatsRecorder, noopAccountStats } from "./accountStats.js";
 import { createBroadcaster } from "./broadcast.js";
 import { type Clock, systemClock } from "./clock.js";
 import { noContent } from "./contentStore.js";
+import { openIds } from "./gameSwitches.js";
 import { clearMatch, endMatchStats, recordPresence } from "./match.js";
 import { createMetrics } from "./metrics.js";
 import { noBannedWords, noReportDesk, RoomKicks } from "./moderation.js";
@@ -108,7 +109,7 @@ export function uniqueNickname(room: Room, wanted: string, except?: Player): str
 
 export function createRoom(rt: Runtime): Room {
   // Varsayılan seçim (yalnız testlerde/yapılandırmada) kapalı oyunları taşımaz.
-  const open = new Set(rt.catalog.map((g) => g.id));
+  const open = openIds(rt);
   const defaults = rt.defaultGameIds ? rt.defaultGameIds.filter((id) => open.has(id)) : null;
   const room: Room = {
     code: generateCode(rt.rooms),
