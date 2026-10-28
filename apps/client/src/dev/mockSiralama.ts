@@ -1,7 +1,7 @@
 /**
  * Yalnız geliştirme önizlemesi: arkadaş sıralaması, rozetli profil ve final'de "Yeni rozet!" kartı.
  * `?mock=siralama` (`&v=bos|yukleniyor|hata|sifir`, `&p=all`, `&m=score|matches`), `rozet-profil`
- * (`&v=arkadas|bos`), `rozet-final` (`&n=4`, `&k=2` iki rozet). Ekran açılmadan önce veri sabitlenir (ağdan okumasın).
+ * (`&v=arkadas|bos`), `rozet-final` (`&n=4`, `&k=2|4` birden çok rozet, `&f=mac|galibiyet|ozel|gizli` tek rozet). Ekran açılmadan önce veri sabitlenir (ağdan okumasın).
  */
 
 import { type BadgeInfo, parseBadges } from "../net/badgeRules.js";
@@ -157,9 +157,22 @@ export function startSiralamaMock(kind: string, params: URLSearchParams): void {
   // rozet-final: yeni rozet kartı final'in üstünde.
   startMock("final", params);
   setState("account", ACCOUNT);
-  const two = params.get("k") === "2";
-  const fresh = badgeList(true, false).filter((b) =>
-    (two ? ["on-mac", "gece-kusu"] : ["on-mac"]).includes(b.id),
+  // k=2: iki rozet, k=4: dört aile birden; f=mac|galibiyet|ozel|gizli: tek rozet (aile önizlemesi).
+  const ids = (() => {
+    const family: Record<string, string> = {
+      mac: "on-mac",
+      galibiyet: "on-galibiyet",
+      ozel: "seri",
+      gizli: "gece-kusu",
+    };
+    const f = params.get("f");
+    if (f !== null && family[f] !== undefined) return [family[f]];
+    const k = params.get("k");
+    if (k === "4") return ["on-mac", "on-galibiyet", "seri", "gece-kusu"];
+    return k === "2" ? ["on-mac", "gece-kusu"] : ["on-mac"];
+  })();
+  const fresh = parseBadges(
+    ALL_BADGES.filter((b) => ids.includes(b.id)).map((b) => ({ ...b, earned: true })),
   );
   showBadges(fresh);
 }

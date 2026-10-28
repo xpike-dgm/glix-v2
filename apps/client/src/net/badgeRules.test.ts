@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  badgeFamily,
   earnedSummary,
   medalGlyph,
   medalShape,
@@ -70,6 +71,12 @@ describe("madalyon", () => {
     expect(medalShape("on-mac", false)).toBe("circle");
     expect(medalShape("on-galibiyet", false)).toBe("hex");
     expect(medalShape("seri", false)).toBe("square");
+  });
+  it("aile şekilden türetilir", () => {
+    expect(badgeFamily("on-mac", false)).toBe("mac");
+    expect(badgeFamily("on-galibiyet", false)).toBe("galibiyet");
+    expect(badgeFamily("seri", false)).toBe("ozel");
+    expect(badgeFamily("gece-kusu", true)).toBe("gizli");
   });
   it("sayılı rozetler sayı gösterir, diğerleri çizim", () => {
     expect(medalGlyph("yuz-mac")).toEqual({ kind: "number", text: "100" });

@@ -167,7 +167,7 @@ describe("kart seçimi aşaması", () => {
     expect(phases.at(-1)).toBe("final");
   });
 
-  it("herkes 15 sn süreyle 3 seçenek görür; seçenekler benzersiz ve kendisine özel", async () => {
+  it("herkes 25 sn süreyle 3 seçenek görür; seçenekler benzersiz ve kendisine özel", async () => {
     const cs = await setupRoom(["A", "B", "C"]);
     const [a, b] = cs as [Client, Client, Client];
     await start(cs, QUICK_IDS.slice(0, 4));

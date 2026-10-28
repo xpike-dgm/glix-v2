@@ -18,7 +18,7 @@ import { WorldBackdrop } from "../ui/WorldBackdrop.js";
 import { playersOnly } from "./ranking.js";
 
 /**
- * Kart seçimi (docs/KURALLAR.md K2, K3): 15 sn, gizli 3 (ya da 4) seçenek, dokununca seç. El doluyken iyi kart seçilirse
+ * Kart seçimi (docs/KURALLAR.md K2, K3): 25 sn, gizli 3 (ya da 4) seçenek, dokununca seç. El doluyken iyi kart seçilirse
  * aynı süre içinde "hangisini atacaksın" adımı gelir. İzleyiciler ve kartı olmayanlar herkese açık "kart seçiyor" ekranını görür.
  */
 export function Cards(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
@@ -85,14 +85,11 @@ export function Cards(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
       <Screen class="kcards">
         <header class="kc-head">
           <div class="kc-head__row">
-            <p class="overline">Kart seçimi</p>
+            <LeaveButton />
             <div class="kc-head__clock">
               <Clock tension={false} win={win()} now={now} />
             </div>
-            <div class="kc-head__tools">
-              <SoundToggle />
-              <LeaveButton />
-            </div>
+            <SoundToggle />
           </div>
           <h1 class="display kc-title" aria-live="polite">
             <Show when={state() === "pick"}>{left()}</Show>
@@ -253,49 +250,51 @@ function Deal(props: {
       <Show when={props.intro && props.direct}>
         <p class="kc-note">{props.intro}</p>
       </Show>
-      <div class="kc-deal__cards" data-n={props.items.length} data-look={looked() ? "1" : undefined}>
-        <For each={props.items}>
-          {(it) => (
-            <Show
-              when={!it.taken}
-              fallback={
-                <div class="kc-slot">
-                  <CheckIcon size={20} />
-                  <span>Aldın</span>
-                </div>
-              }
-            >
-              <div
-                class="kc-deal__slot"
-                data-r={it.id ? CARDS[it.id].rarity : undefined}
-                data-on={it.busy || props.look === it.key ? "1" : undefined}
+      <div class="kc-deal__stage">
+        <div class="kc-deal__cards" data-n={props.items.length} data-look={looked() ? "1" : undefined}>
+          <For each={props.items}>
+            {(it) => (
+              <Show
+                when={!it.taken}
+                fallback={
+                  <div class="kc-slot">
+                    <CheckIcon size={20} />
+                    <span>Aldın</span>
+                  </div>
+                }
               >
-                <Show
-                  when={it.id}
-                  fallback={
-                    <CardBack
-                      layout="tile"
-                      label={`Kapalı kart ${it.key + 1}`}
-                      disabled={it.busy}
-                      onClick={() => touch(it.key)}
-                    />
-                  }
+                <div
+                  class="kc-deal__slot"
+                  data-r={it.id ? CARDS[it.id].rarity : undefined}
+                  data-on={it.busy || props.look === it.key ? "1" : undefined}
                 >
-                  {(id) => (
-                    <CardFace
-                      id={id()}
-                      layout="tile"
-                      disabled={it.busy}
-                      on={it.busy || props.look === it.key}
-                      badge={it.key === props.newKey ? "Yeni" : undefined}
-                      onClick={() => touch(it.key)}
-                    />
-                  )}
-                </Show>
-              </div>
-            </Show>
-          )}
-        </For>
+                  <Show
+                    when={it.id}
+                    fallback={
+                      <CardBack
+                        layout="tile"
+                        label={`Kapalı kart ${it.key + 1}`}
+                        disabled={it.busy}
+                        onClick={() => touch(it.key)}
+                      />
+                    }
+                  >
+                    {(id) => (
+                      <CardFace
+                        id={id()}
+                        layout="tile"
+                        disabled={it.busy}
+                        on={it.busy || props.look === it.key}
+                        badge={it.key === props.newKey ? "Yeni" : undefined}
+                        onClick={() => touch(it.key)}
+                      />
+                    )}
+                  </Show>
+                </div>
+              </Show>
+            )}
+          </For>
+        </div>
       </div>
       <Show when={!props.direct}>
         <div class="kc-info" aria-live="polite">
@@ -348,6 +347,9 @@ function CardInfo(props: { id: CardId; label: string; onAct: () => void }) {
         </Show>
       </p>
       <p class="kc-info__text">{def().text}</p>
+      <Show when={def().hidden}>
+        <p class="kc-info__why">Oynayınca rakipler görmez</p>
+      </Show>
       <PrimaryButton onClick={props.onAct}>{props.label}</PrimaryButton>
     </div>
   );
