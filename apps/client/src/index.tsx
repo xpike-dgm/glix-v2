@@ -1,6 +1,7 @@
 import { render } from "solid-js/web";
 import { App } from "./App.js";
 import { applyHapticsCompensation } from "./fx/haptics.js";
+import { installNoZoom } from "./fx/noZoom.js";
 import { installAudioUnlock } from "./fx/sound.js";
 import { initPush } from "./pwa/push.js";
 import { initPwa } from "./pwa/pwa.js";
@@ -27,6 +28,7 @@ import "./styles/cosmetics.css";
 import "./styles/shop.css";
 
 installAudioUnlock();
+installNoZoom();
 applyRootSettings();
 applyHapticsCompensation();
 // iOS Safari `:active` basılı görünümünü yalnız sayfada bir dokunma dinleyicisi varsa gösterir.

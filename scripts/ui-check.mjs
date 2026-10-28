@@ -346,7 +346,14 @@ const SCREENS = [
   },
   { name: "kozmetik-sonuc", q: "mock=results&n=6&acct=1&cos=1", settle: 1500 },
   { name: "kozmetik-profil", q: "mock=profil", settle: 900 },
-  { name: "ana-magaza-misafir", q: "mock=home", settle: 600, act: clickText("Mağaza") },
+  {
+    name: "ana-magaza-misafir",
+    q: "mock=home",
+    settle: 600,
+    act: async (p) => {
+      await p.getByRole("button", { name: "Mağaza" }).click();
+    },
+  },
   { name: "home-hesapli", q: "mock=home&acct=1", settle: 1800 },
   { name: "home-hesapli-rozet", q: "mock=home&acct=1&badge=3", settle: 1800 },
   { name: "home-hesapli-rozet-buyuk-yazi", q: "mock=home&acct=1&badge=12&text=large", settle: 1800 },

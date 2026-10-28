@@ -2637,3 +2637,29 @@
   transform: none;
   background: rgba(140, 160, 255, 0.09);
 }
+
+/* Ana sayfa üst çubuğu: Mağaza, Ayarlar ve ses ikonları her zaman sığsın; profil çipi gerekirse adı kısaltır. */
+.home .topbar .chip {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: none;
+}
+.home .topbar .chip__name {
+  min-width: 0;
+}
+.home .topbar .topbar__end {
+  flex: none;
+}
+@media (max-width: 359px) {
+  .home .topbar .chip {
+    position: relative;
+    gap: 6px;
+    padding-right: 10px;
+  }
+  /* Dar ekranda istek sayacı avatarın köşesine biner; ad için yer kalır. */
+  .home .topbar .chip__badge {
+    position: absolute;
+    top: 2px;
+    left: 30px;
+  }
+}

@@ -199,3 +199,11 @@ html[data-pixi="1"] .stage::after {
   white-space: nowrap;
   border: 0;
 }
+
+/* Oyunda kaydırma çubuğu gösterilmez (telefonda sağ kenarda çizgi gibi duruyor); kaydırma parmakla sürer. */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}

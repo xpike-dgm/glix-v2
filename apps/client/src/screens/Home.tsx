@@ -13,7 +13,7 @@ import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
 import { GhostButton } from "../ui/GhostButton.js";
-import { GearIcon } from "../ui/Icons.js";
+import { BagIcon, GearIcon } from "../ui/Icons.js";
 import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
@@ -142,6 +142,9 @@ export function Home() {
           )}
         </Show>
         <div class="topbar__end">
+          <button type="button" class="icon-btn" aria-label="Mağaza" onClick={openShop}>
+            <BagIcon size={22} />
+          </button>
           <button type="button" class="icon-btn" aria-label="Ayarlar" onClick={openSettings}>
             <GearIcon size={22} />
           </button>
@@ -212,25 +215,15 @@ export function Home() {
             <GhostButton onClick={join} disabled={offline()}>
               Odaya katıl
             </GhostButton>
-            <div class="home__auth">
-              <GhostButton size="small" onClick={openShop}>
-                Mağaza
-              </GhostButton>
-              <GhostButton size="small" onClick={() => setSheet("how")}>
-                Nasıl oynanır?
-              </GhostButton>
-            </div>
-          </>
-        </Show>
-        <Show when={!state.account}>
-          <div class="home__auth">
-            <GhostButton size="small" onClick={openShop}>
-              Mağaza
-            </GhostButton>
             <GhostButton size="small" onClick={() => setSheet("how")}>
               Nasıl oynanır?
             </GhostButton>
-          </div>
+          </>
+        </Show>
+        <Show when={!state.account}>
+          <GhostButton size="small" onClick={() => setSheet("how")}>
+            Nasıl oynanır?
+          </GhostButton>
         </Show>
       </div>
 
