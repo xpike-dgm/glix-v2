@@ -181,6 +181,23 @@ describe("yönetici hesap girdileri", () => {
     expect(parseAction("glix", { id: 2, amount: 5, reason: "" })).toBeNull();
     expect(parseAction("glix", { id: 2, amount: 5 })).toBeNull();
     expect(parseAction("glix", { id: 2, amount: 5, reason: "x", extra: 1 })).toBeNull();
+    expect(parseAction("cosmetic-grant", { id: 2, itemId: "unvan-sansli" })).toEqual({
+      op: "cosmetic-grant",
+      id: 2,
+      itemId: "unvan-sansli",
+    });
+    expect(parseAction("cosmetic-revoke", { id: 2, itemId: "cerceve-cift" })).toEqual({
+      op: "cosmetic-revoke",
+      id: 2,
+      itemId: "cerceve-cift",
+    });
+    for (const bad of [
+      { id: 2 },
+      { id: 2, itemId: "yok" },
+      { id: 2, itemId: 4 },
+      { id: 2, itemId: "unvan-sansli", x: 1 },
+    ])
+      expect(parseAction("cosmetic-grant", bad)).toBeNull();
     expect(parseAction("logout-all", { id: 2, extra: true })).toBeNull();
     expect(parseAction("logout-all", [])).toBeNull();
   });
@@ -206,6 +223,8 @@ describe("hesap uçları: erişim denetimi", () => {
     ["accounts/delete", { id: 2, confirm: "x" }],
     ["accounts/logout-all", { id: 2 }],
     ["accounts/glix", { id: 2, amount: 10, reason: "x" }],
+    ["accounts/cosmetic-grant", { id: 2, itemId: "unvan-sansli" }],
+    ["accounts/cosmetic-revoke", { id: 2, itemId: "unvan-sansli" }],
   ];
 
   it("oturum yoksa 401; yönetici olmayan 404; yönetici çerezi yoksa 403", async () => {
@@ -530,6 +549,66 @@ describe("Glix düzeltmesi", () => {
     expect((await post("accounts/glix", cookie, { id: 999, amount: 5, reason: "x" })).status).toBe(404);
     expect((await post("accounts/glix", cookie, { id: 1, amount: 5, reason: "x" })).status).toBe(403);
     expect(k.srv.accounts.glixLedger(t.id, 10)).toEqual([]);
+  });
+});
+
+// ---- Kozmetik armağan / geri alma ------------------------------------------------------------------------------
+
+describe("kozmetik armağan ve geri alma", () => {
+  useServer({ adminAccountIds: ADMIN, mail: MAIL, mailFetch, statsDb: ":memory:" });
+
+  it("döküm sahip olunanları ve kuşanılanları gösterir; armağan bakiyeye ve deftere dokunmaz, işlem kaydına yazılır", async () => {
+    const cookie = await adminLogin();
+    const t = await register("Kozm_Hedef");
+    k.srv.accounts.creditBadgeGlix(t.id, [{ badgeId: "r", amount: 40 }], 100);
+    const g = await post("accounts/cosmetic-grant", cookie, { id: t.id, itemId: "unvan-efsane" });
+    expect(g.status).toBe(200);
+    k.srv.accounts.equipCosmetic(t.id, "unvan", "unvan-efsane");
+    const d = await get<AdminAccountDetail>(`accounts/detail?id=${t.id}`, cookie);
+    expect(d.body.cosmetics).toEqual({
+      owned: [{ itemId: "unvan-efsane", acquiredAt: k.clock.now(), pricePaid: 0 }],
+      equipped: { unvan: "unvan-efsane" },
+    });
+    expect(d.body.glix.balance).toBe(40);
+    expect(d.body.glix.ledger).toHaveLength(1);
+    const row = k.srv.accounts.adminAuditTail(5).find((a) => a.action === "account_cosmetic_grant");
+    expect(row).toMatchObject({ accountId: 1, targetId: t.id, detail: "unvan-efsane" });
+    // İkinci armağan çakışır.
+    const again = await post("accounts/cosmetic-grant", cookie, { id: t.id, itemId: "unvan-efsane" });
+    expect(again.status).toBe(409);
+  });
+
+  it("geri alma sahipliği ve kuşanmayı kaldırır, Glix iade etmez, işlem kaydına yazar", async () => {
+    const cookie = await adminLogin();
+    const t = await register("Kozm_Geri");
+    k.srv.accounts.adjustGlix(t.id, 500, "t", k.clock.now());
+    k.srv.accounts.purchaseCosmetic(t.id, "unvan-sansli", k.clock.now());
+    k.srv.accounts.equipCosmetic(t.id, "unvan", "unvan-sansli");
+    const balance = k.srv.accounts.glixBalance(t.id);
+    const r = await post("accounts/cosmetic-revoke", cookie, { id: t.id, itemId: "unvan-sansli" });
+    expect(r.status).toBe(200);
+    expect(k.srv.accounts.cosmetics(t.id)).toEqual({ owned: [], equipped: {} });
+    expect(k.srv.accounts.glixBalance(t.id)).toBe(balance);
+    expect(k.srv.accounts.adminAuditTail(5).some((a) => a.action === "account_cosmetic_revoke")).toBe(true);
+    expect(
+      (await post("accounts/cosmetic-revoke", cookie, { id: t.id, itemId: "unvan-sansli" })).status,
+    ).toBe(409);
+  });
+
+  it("geçersiz gövde 400, bilinmeyen hesap 404, yönetici hesabı 403", async () => {
+    const cookie = await adminLogin();
+    const t = await register("Kozm_Gecersiz");
+    expect((await post("accounts/cosmetic-grant", cookie, { id: t.id, itemId: "yok-boyle" })).status).toBe(
+      400,
+    );
+    expect((await post("accounts/cosmetic-grant", cookie, { id: t.id })).status).toBe(400);
+    expect((await post("accounts/cosmetic-grant", cookie, { id: 999, itemId: "unvan-sansli" })).status).toBe(
+      404,
+    );
+    expect((await post("accounts/cosmetic-grant", cookie, { id: 1, itemId: "unvan-sansli" })).status).toBe(
+      403,
+    );
+    expect(k.srv.accounts.cosmetics(t.id).owned).toEqual([]);
   });
 });
 

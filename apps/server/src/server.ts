@@ -35,6 +35,7 @@ import { createPushBroadcaster } from "./pushBroadcast.js";
 import { TokenBucket } from "./ratelimit.js";
 import { countActiveMatches, countPlayers, createRuntime, disposeRuntime } from "./rooms.js";
 import type { AccountRef, Connection, Runtime } from "./runtime.js";
+import { createShopApi, SHOP_PATH } from "./shopApi.js";
 import { createSiteSettings } from "./siteSettings.js";
 import { createSocial } from "./social.js";
 import { serveStatic } from "./static.js";
@@ -179,6 +180,12 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   rt.content = createContentStore(accounts, rt.bannedWords);
   rt.reports = createReportDesk(accounts, clock);
   const friendsApi = createFriendsApi({
+    accounts,
+    social: rt.social,
+    clock,
+    allowedOrigins: opts.allowedOrigins,
+  });
+  const shopApi = createShopApi({
     accounts,
     social: rt.social,
     clock,
@@ -363,6 +370,10 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     }
     if (path === FRIENDS_PATH || path.startsWith(`${FRIENDS_PATH}/`)) {
       friendsApi(req, res);
+      return;
+    }
+    if (path === SHOP_PATH || path.startsWith(`${SHOP_PATH}/`)) {
+      shopApi(req, res);
       return;
     }
     if (path === LEADERBOARD_PATH || path.startsWith(`${LEADERBOARD_PATH}/`)) {

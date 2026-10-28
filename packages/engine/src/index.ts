@@ -1,6 +1,7 @@
 export * from "./admin.js";
 export * from "./cards/index.js";
 export * from "./content.js";
+export * from "./cosmetics.js";
 export * from "./game.js";
 export * from "./games/acgozluluk-limiti/index.js";
 export * from "./games/asiri-yukleme/index.js";

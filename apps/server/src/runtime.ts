@@ -2,6 +2,7 @@ import type {
   Announcement,
   CardLog,
   CardSettings,
+  Cosmetics,
   GameInfo,
   GameLog,
   JoinPolicy,
@@ -57,6 +58,8 @@ export interface Player {
   accountId: number | null;
   /** Hesaplı oyuncunun kullanıcı adı; misafirde null. Anlık görüntüde herkese açık `PlayerInfo.username` olur (e-posta yok). */
   username: string | null;
+  /** Kuşandığı görünüm (hesaplıda, katalog kimlikleriyle); anlık görüntüde herkese açık `PlayerInfo.cosmetics`. */
+  cosmetics: Cosmetics | undefined;
   nickname: string;
   avatar: number;
   token: string;

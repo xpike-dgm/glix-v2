@@ -85,6 +85,8 @@ const OWNED = [
   ["account_game_stats", "account_id = ?"],
   ["badges", "account_id = ?"],
   ["glix_ledger", "account_id = ?"],
+  ["cosmetic_owned", "account_id = ?"],
+  ["cosmetic_equipped", "account_id = ?"],
   ["friends", "a = ? OR b = ? OR requested_by = ?"],
   ["blocks", "blocker = ? OR blocked = ?"],
 ] as const;
@@ -115,6 +117,8 @@ async function seed(me: Made, others: { friend: Made; asker: Made; asked: Made; 
   a.awardBadges(me.id, ["ilk-adim"], 8000);
   a.creditMatchGlix(me.id, 7000, 1);
   a.creditBadgeGlix(me.id, [{ badgeId: "ilk-adim", amount: 25 }], 8000);
+  a.grantCosmetic(me.id, "unvan-sansli", 8500);
+  a.equipCosmetic(me.id, "unvan", "unvan-sansli");
   a.createToken("verify", me.id, "verify-hash-gizli", k.clock.now() + 100000);
   a.createToken("reset", me.id, "reset-hash-gizli", k.clock.now() + 100000);
 }
@@ -215,6 +219,10 @@ describe("Verimi indir", () => {
         balance: number;
         movements: { at: string; amount: number; reason: string; ref: string | null }[];
       };
+      cosmetics: {
+        owned: { id: string; name: string; acquired_at: string; price_paid: number }[];
+        equipped: { type: string; id: string }[];
+      };
       push_subscription: boolean;
     };
     expect(d.aciklama).toMatch(/GLIX/);
@@ -246,6 +254,10 @@ describe("Verimi indir", () => {
       { at: expect.any(String), amount: 50, reason: "mac", ref: "yer:1" },
       { at: expect.any(String), amount: 25, reason: "rozet", ref: "ilk-adim" },
     ]);
+    expect(d.cosmetics.owned).toEqual([
+      { id: "unvan-sansli", name: "Şanslı", acquired_at: expect.any(String), price_paid: 0 },
+    ]);
+    expect(d.cosmetics.equipped).toEqual([{ type: "unvan", id: "unvan-sansli" }]);
     expect(d.push_subscription).toBe(true);
     // Sızıntı denetimi: ne şifre özeti ne de oturum/belirteç özetleri dosyada.
     const hash = k.srv.accounts.passwordHash(me.id) ?? "";

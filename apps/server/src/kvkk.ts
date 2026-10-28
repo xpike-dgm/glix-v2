@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { cosmeticItem } from "@glix/engine";
 import type { AccountStore } from "./accountStore.js";
 import {
   accountFromCookie,
@@ -192,6 +193,15 @@ export function buildExport(
         reason: g.reason,
         ref: g.ref,
       })),
+    },
+    cosmetics: {
+      owned: data.cosmetics.owned.map((o) => ({
+        id: o.itemId,
+        name: cosmeticItem(o.itemId)?.name ?? null,
+        acquired_at: iso(o.acquiredAt),
+        price_paid: o.pricePaid,
+      })),
+      equipped: Object.entries(data.cosmetics.equipped).map(([type, id]) => ({ type, id })),
     },
     // Bildirim aboneliği hesapla birlikte kalıcı saklanır (yalnız ne zaman eklendiği dökülür; uç nokta ve anahtarlar değil).
     push_subscription: data.push !== null,
