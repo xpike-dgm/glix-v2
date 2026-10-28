@@ -78,12 +78,12 @@
 }
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-motion="full"]) .cos-name,
-  :root:not([data-motion="full"]) .av__ring {
+  :root:not([data-motion="full"]) .av__frame {
     animation: none;
   }
 }
 :root[data-motion="reduce"] .cos-name,
-:root[data-motion="reduce"] .av__ring {
+:root[data-motion="reduce"] .av__frame {
   animation: none;
 }
 /* Yüksek karşıtlık / zorunlu renk kipinde degrade metin kaybolmasın. */
@@ -117,119 +117,91 @@
   color: var(--amber);
 }
 
-/* ---- Avatar çerçevesi ----
-   Avatarın kendi kutusunun İÇİNDE çizilir (disk küçülür), böylece yerleşim değişmez ve komşuya taşmaz;
-   rozetler (ev, taç, hazır, Sen) çerçevenin üstünde kalır (DOM'da sonra gelir). */
+/* ---- Unvan levhası: 512x128 görsel üstünde ortalı yazı ---- */
+.cos-plate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 210px);
+  aspect-ratio: 4 / 1;
+  padding: 0 7%;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  text-align: center;
+}
+.cos-plate__t {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-13);
+  font-weight: 800;
+  line-height: 1.1;
+  color: #8ff7ff;
+  text-shadow: 0 0 8px rgba(46, 242, 255, 0.45);
+}
+.cos-plate[data-r="nadir"] .cos-plate__t {
+  color: #dccbff;
+  text-shadow: 0 0 8px rgba(139, 92, 255, 0.6);
+}
+.cos-plate[data-r="efsanevi"] .cos-plate__t {
+  color: #ffe08a;
+  text-shadow: 0 0 8px rgba(255, 194, 59, 0.5);
+}
+.cos-plate--empty {
+  border: 1.5px dashed rgba(142, 151, 199, 0.6);
+  border-radius: 10px;
+  background: none;
+  width: 80%;
+  min-height: 30px;
+}
+
+/* ---- Avatar çerçevesi (resim) ----
+   Çerçeve 384x384; ortadaki şeffaf delik görselin %62'si. Avatar deliğe oturur, çerçeve avatar boyunun
+   1/0,62 katı çizilir ve ortalanır: avatarın kutusundan taşar (mutlak konum, yerleşimi etkilemez).
+   Rozetler (ev, taç, hazır, Sen) çerçevenin üstünde kalır (DOM'da sonra gelir). */
 .av[data-framed] .av__disc {
-  inset: 12%;
+  border-width: 0;
+  box-shadow: none;
 }
-.av[data-framed="cerceve-cift"] .av__disc {
-  inset: 17%;
-}
-.av__frame {
-  --fw: max(2px, calc(var(--s) * 0.045));
+/* Çerçeve kutusu avatarla aynı boyda; çerçeve resmi taşan kısmıyla görünür (overflow-clip-margin) ama taşma
+   üst öğelerin kaydırılabilir alanına katılmaz (koltuk/satır kutuları yerleşimini bozmaz). Desteklemeyen
+   tarayıcıda çerçeve yine görünür, yalnız taşma sayılır. */
+.av__frame-box {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
   pointer-events: none;
 }
-.av__ring {
+@supports (overflow-clip-margin: 1px) {
+  .av__frame-box {
+    overflow: clip;
+    /* em = avatar boyu (calc() bu özellikte çalışmaz): kenar payı avatarın %32'si. */
+    font-size: var(--s);
+    overflow-clip-margin: 0.32em;
+  }
+}
+.av__frame {
   position: absolute;
-  inset: 0;
-  border-radius: 50%;
-}
-.av__gem {
-  display: none;
-}
-.av__frame[data-frame="cerceve-camgobegi"] .av__ring {
-  border: var(--fw) solid #2ef2ff;
-  box-shadow:
-    0 0 calc(var(--s) * 0.16) rgba(46, 242, 255, 0.55),
-    inset 0 0 calc(var(--s) * 0.08) rgba(46, 242, 255, 0.35);
-}
-.av__frame[data-frame="cerceve-pembe"] .av__ring {
-  border: var(--fw) solid #ff2bd6;
-  box-shadow:
-    0 0 calc(var(--s) * 0.16) rgba(255, 43, 214, 0.55),
-    inset 0 0 calc(var(--s) * 0.08) rgba(255, 43, 214, 0.35);
-}
-.av__frame[data-frame="cerceve-cift"] .av__ring {
-  border: max(1.5px, calc(var(--s) * 0.035)) solid #b9a1ff;
-  box-shadow: 0 0 calc(var(--s) * 0.14) rgba(169, 139, 255, 0.5);
-}
-.av__frame[data-frame="cerceve-cift"]::before {
-  content: "";
-  position: absolute;
-  inset: 9%;
-  border-radius: 50%;
-  border: max(1.5px, calc(var(--s) * 0.035)) solid #e6dcff;
-}
-.av__frame[data-frame="cerceve-donen-neon"] .av__ring {
-  background: conic-gradient(from 0deg, #ff2bd6, #2ef2ff, #b6ff3b, #ff2bd6);
-  -webkit-mask: radial-gradient(
-    farthest-side,
-    transparent calc(100% - var(--fw)),
-    #000 calc(100% - var(--fw) + 0.5px)
-  );
-  mask: radial-gradient(
-    farthest-side,
-    transparent calc(100% - var(--fw)),
-    #000 calc(100% - var(--fw) + 0.5px)
-  );
-  animation: cos-spin 6s linear infinite;
+  left: -30.65%;
+  top: -30.65%;
+  width: 161.29%;
+  height: 161.29%;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
 }
 .av__frame[data-frame="cerceve-donen-neon"] {
-  filter: drop-shadow(0 0 calc(var(--s) * 0.06) rgba(46, 242, 255, 0.6));
-}
-.av__frame[data-frame="cerceve-altin-tac"] {
-  filter: drop-shadow(0 0 calc(var(--s) * 0.08) rgba(255, 194, 59, 0.6));
-}
-.av__frame[data-frame="cerceve-altin-tac"] .av__ring {
-  --gw: max(3px, calc(var(--s) * 0.06));
-  background: conic-gradient(from 210deg, #fff2bd, #ffb81f, #fff2bd, #c98400, #ffd35c, #fff2bd);
-  -webkit-mask: radial-gradient(
-    farthest-side,
-    transparent calc(100% - var(--gw)),
-    #000 calc(100% - var(--gw) + 0.5px)
-  );
-  mask: radial-gradient(
-    farthest-side,
-    transparent calc(100% - var(--gw)),
-    #000 calc(100% - var(--gw) + 0.5px)
-  );
-}
-/* Taç değil iki mücevher: kazanan tacı (avatarın tepesinde) ile çakışmasın diye yanlarda. */
-.av__frame[data-frame="cerceve-altin-tac"] .av__gem {
-  display: block;
-  position: absolute;
-  top: 50%;
-  width: calc(var(--s) * 0.13);
-  height: calc(var(--s) * 0.13);
-  background: linear-gradient(135deg, #fff8dc, #ffc233);
-  border-radius: 2px;
-  box-shadow: 0 0 0 max(1px, calc(var(--s) * 0.02)) #8a5a00;
-}
-.av__frame[data-frame="cerceve-altin-tac"] .av__gem--l {
-  left: 0;
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-.av__frame[data-frame="cerceve-altin-tac"] .av__gem--r {
-  right: 0;
-  transform: translate(50%, -50%) rotate(45deg);
+  animation: cos-spin 14s linear infinite;
 }
 @keyframes cos-spin {
   to {
     transform: rotate(360deg);
   }
 }
-/* Küçük avatarlarda (satır simgesi) çerçeve ince ve yakın kalır. */
-@media (forced-colors: active) {
-  .av__frame .av__ring {
-    border: 2px solid CanvasText;
-    background: none;
-    -webkit-mask: none;
-    mask: none;
-  }
+/* Kazanan tacı çerçevenin üstüne çıkar (konum çerçeve tablosundan: shopArt.ts). */
+.av[data-framed] .av__crown {
+  top: var(--crown-top, -72%);
 }
 
 /* ---- Yerleşimler: koltuk, podyum, sıralama satırı ---- */
@@ -252,4 +224,32 @@
 }
 .pmenu__text .cos-title {
   font-size: var(--fs-13);
+}
+
+/* Podyum: çerçeveli avatarın altındaki ad çerçeveye değmesin; çerçeveli kazananın tacı çerçevenin üstüne çıkar,
+   başlıkla çakışmasın diye tepede pay bırakılır. */
+@media (orientation: portrait) {
+  .podium__col .av[data-framed] {
+    margin-bottom: calc(var(--s) * 0.16);
+  }
+  .podium__col[data-rank="1"] .av[data-framed] {
+    margin-top: calc(var(--s) * 0.3);
+  }
+}
+/* Yatay (kısa) ekran: kazanan tacı küçülüp çerçevenin hemen üstünde durur; başlıktaki puan satırına binmesin. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .av[data-framed] .av__crown {
+    width: 30%;
+    top: -58%;
+  }
+}
+/* Final başlığı çerçeve süsünün üstünde kalır; yatayda kazanan avatarı biraz aşağı alınır. */
+.fin .fin__head {
+  position: relative;
+  z-index: 5;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .podium__col[data-rank="1"] .av[data-framed] {
+    margin-top: calc(var(--s) * 0.16);
+  }
 }

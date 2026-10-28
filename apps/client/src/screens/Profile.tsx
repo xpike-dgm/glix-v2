@@ -298,7 +298,7 @@ export function Profile() {
           <h2 class="pf__user">
             <PlayerName name={username()} cosmetics={ready()?.cosmetics} />
           </h2>
-          <PlayerTitle cosmetics={ready()?.cosmetics} />
+          <PlayerTitle cosmetics={ready()?.cosmetics} plate />
           <Show when={ready()}>
             {(p) => (
               <p class="pf__since">

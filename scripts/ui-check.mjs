@@ -235,6 +235,56 @@ const SCREENS = [
   { name: "magaza-ana-buyuk-yazi", q: "mock=magaza&text=large", settle: 900 },
   { name: "magaza-ad-efektleri", q: "mock=magaza", settle: 900, act: clickText("Ad efektleri") },
   { name: "magaza-cerceveler", q: "mock=magaza", settle: 900, act: clickText("Çerçeveler") },
+  {
+    name: "magaza-izgara-cerceve",
+    q: "mock=magaza",
+    settle: 900,
+    act: async (p) => p.locator("[role=tabpanel]").evaluate((el) => el.scrollIntoView({ block: "start" })),
+  },
+  {
+    name: "magaza-izgara-unvan",
+    q: "mock=magaza",
+    settle: 900,
+    act: async (p) => {
+      await p.getByRole("tab", { name: "Unvanlar" }).click();
+      await p.locator("[role=tabpanel]").evaluate((el) => el.scrollIntoView({ block: "start" }));
+    },
+  },
+  {
+    name: "magaza-izgara-ad-efekti",
+    q: "mock=magaza",
+    settle: 900,
+    act: async (p) => {
+      await p.getByRole("tab", { name: "Ad efektleri" }).click();
+      await p.locator("[role=tabpanel]").evaluate((el) => el.scrollIntoView({ block: "start" }));
+    },
+  },
+  { name: "magaza-unvanlar", q: "mock=magaza", settle: 900, act: clickText("Unvanlar") },
+  {
+    name: "magaza-satin-al-unvan",
+    q: "mock=magaza",
+    settle: 700,
+    act: async (p) => {
+      await p.getByRole("tab", { name: "Unvanlar" }).click();
+      await p.locator("[role=tabpanel] .shop-card[data-status=buy]").first().click();
+    },
+  },
+  {
+    name: "magaza-satin-al-ad-efekti",
+    q: "mock=magaza",
+    settle: 700,
+    act: async (p) => {
+      await p.getByRole("tab", { name: "Ad efektleri" }).click();
+      await p.locator("[role=tabpanel] .shop-card[data-status=buy]").first().click();
+    },
+  },
+  {
+    name: "magaza-kusanildi",
+    q: "mock=magaza",
+    settle: 700,
+    act: async (p) => p.locator(".shop-card[data-status=equipped]").first().click(),
+  },
+  { name: "magaza-dolap-sekmesi", q: "mock=magaza", settle: 900, act: clickText("Dolabım") },
   { name: "magaza-bos-hesap", q: "mock=magaza&v=bos", settle: 900 },
   {
     name: "magaza-satin-al",
@@ -261,6 +311,18 @@ const SCREENS = [
     act: async (p) => p.locator(".shop-card[data-status=owned]").first().click(),
   },
   { name: "dolap-dolu", q: "mock=dolap", settle: 900 },
+  {
+    name: "dolap-dolu-asagi",
+    q: "mock=dolap",
+    settle: 900,
+    act: async (p) => p.locator(".set__body").evaluate((el) => el.scrollTo(0, el.scrollHeight)),
+  },
+  {
+    name: "dolap-dolu-asagi-buyuk-yazi",
+    q: "mock=dolap&text=large",
+    settle: 900,
+    act: async (p) => p.locator(".set__body").evaluate((el) => el.scrollTo(0, el.scrollHeight)),
+  },
   { name: "dolap-dolu-buyuk-yazi", q: "mock=dolap&text=large", settle: 900 },
   { name: "dolap-bos", q: "mock=dolap&v=bos", settle: 900 },
   { name: "kozmetik-lobi", q: "mock=lobby&n=8&acct=1&cos=1", settle: 900 },
@@ -2149,6 +2211,8 @@ function inPageAudit() {
     if (
       (own || interactive) &&
       !["auto", "scroll"].includes(s.overflowX) &&
+      // Avatar çerçevesi bilerek avatarın kutusundan taşar (resim, %161 boy); taşma metni kırpmaz.
+      !el.querySelector(".av__frame-box") &&
       el.scrollWidth > el.clientWidth + 1
     )
       issues.push(["clip", `metin kutusundan taşıyor (${el.scrollWidth} > ${el.clientWidth}): ${desc(el)}`]);

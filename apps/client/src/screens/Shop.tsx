@@ -1,5 +1,4 @@
 import {
-  COSMETIC_TYPES,
   type CosmeticItem,
   type CosmeticTypeId,
   cosmeticItem,
@@ -7,7 +6,6 @@ import {
   nextIstanbulMidnight,
 } from "@glix/engine";
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
-import { balanceText } from "../net/glixRules.js";
 import { buyItem, equipItem, loadShop, shop, shopError, shopLoad } from "../net/shop.js";
 import {
   buyText,
@@ -28,27 +26,18 @@ import { avatarFromName } from "../ui/avatars.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
 import { CosmeticPreview, itemCosmetics } from "../ui/CosmeticPreview.js";
 import { GhostButton } from "../ui/GhostButton.js";
-import { BackIcon, CheckIcon, CoinIcon } from "../ui/Icons.js";
+import { BackIcon, BoltIcon, CheckIcon, CoinIcon } from "../ui/Icons.js";
 import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
+import { BalancePill, Price, RarityChip, SHOP_TYPES, ShopTabBar } from "../ui/ShopBits.js";
+import { boxSrc } from "../ui/shopArt.js";
 
-function Price(props: { price: number; list?: number | undefined }) {
-  return (
-    <span class="shop-price">
-      <CoinIcon size={14} />
-      <Show when={props.list !== undefined && props.list !== props.price}>
-        <s class="shop-price__old">{props.list}</s>
-      </Show>
-      <b>{props.price}</b>
-    </span>
-  );
+function previewParts(item: CosmeticItem): "avatar" | "name" | "title" {
+  return item.type === "cerceve" ? "avatar" : item.type === "unvan" ? "title" : "name";
 }
 
-function previewParts(item: CosmeticItem): "avatar" | "name" {
-  return item.type === "cerceve" ? "avatar" : "name";
-}
-
+/** Ürün karosu: nadirliğe göre kutu görseli, büyük önizleme, ad, nadirlik çipi, fiyat ya da durum hapı. */
 function Card(props: {
   item: CosmeticItem;
   s: ShopState;
@@ -65,6 +54,8 @@ function Card(props: {
       class="shop-card"
       data-r={props.item.rarity}
       data-status={status()}
+      data-type={props.item.type}
+      style={{ "--box": `url(${boxSrc(props.item.rarity)})` }}
       aria-label={`${props.item.name}, ${RARITY_LABEL[props.item.rarity]}, ${
         status() === "buy" ? `${price()} Glix` : status() === "equipped" ? "kuşanıldı" : "sahipsin"
       }`}
@@ -75,37 +66,42 @@ function Card(props: {
           avatar={avatarFromName(name())}
           name={name()}
           cosmetics={itemCosmetics(props.item)}
-          size={44}
+          size={60}
           parts={previewParts(props.item)}
+          plate={props.deal === undefined}
         />
       </span>
-      {/* Unvanda ürün adı önizlemedeki unvanın kendisidir; tekrar yazılmaz. */}
+      {/* Unvanda ürün adı önizlemedeki levhanın kendisidir; tekrar yazılmaz. */}
       <Show when={props.item.type !== "unvan"}>
         <span class="shop-card__name">{props.item.name}</span>
       </Show>
+      <RarityChip rarity={props.item.rarity} />
       <span class="shop-card__foot">
         {status() === "buy" ? (
-          <>
-            <Price price={price()} list={props.deal ? props.deal.listPrice : undefined} />
-            <Show when={props.deal}>
-              <span class="shop-card__off">{DISCOUNT_LABEL}</span>
-            </Show>
-          </>
+          <Price price={price()} list={props.deal ? props.deal.listPrice : undefined} />
         ) : status() === "equipped" ? (
-          <span class="shop-card__state" data-on="1">
+          <span class="shop-state" data-on="1">
             <CheckIcon size={14} /> Kuşanıldı
           </span>
         ) : (
-          <span class="shop-card__state">Sahipsin</span>
+          <span class="shop-state" data-on="1">
+            <CheckIcon size={14} /> Sahipsin
+          </span>
         )}
       </span>
     </button>
   );
 }
 
-/** Mağaza: günün fırsatı (ince satır), sekmeler, kompakt ürün kartları; karta dokununca satın alma sayfası. */
+const TYPE_LABEL: Readonly<Record<CosmeticTypeId, string>> = {
+  unvan: "Unvan",
+  "ad-efekti": "Ad efekti",
+  cerceve: "Avatar çerçevesi",
+};
+
+/** Mağaza: günün fırsatı (iki büyük karo), alt çizgili sekmeler, iki sütun ürün ızgarası; karta dokununca satın alma sayfası. */
 export function Shop() {
-  const [tab, setTab] = createSignal<CosmeticTypeId>(COSMETIC_TYPES[0]?.id ?? "unvan");
+  const [tab, setTab] = createSignal<CosmeticTypeId>("cerceve");
   const [openId, setOpenId] = createSignal<string | null>(null);
   const [busy, setBusy] = createSignal(false);
   const [msg, setMsg] = createSignal<string | null>(null);
@@ -171,22 +167,15 @@ export function Shop() {
 
   return (
     <Screen class="set shop">
-      <header class="topbar">
+      <header class="topbar shop-top">
         <button type="button" class="icon-btn" aria-label="Geri" onClick={goHome}>
           <BackIcon size={26} />
         </button>
-        <h1 class="set__title display">Mağaza</h1>
-        <Show when={shop()} fallback={<span class="set__spacer" aria-hidden="true" />}>
-          {(s) => (
-            <span class="shop-bal" role="status" aria-label={`Glix bakiyen ${balanceText(s().balance)}`}>
-              <CoinIcon size={16} />
-              {balanceText(s().balance)}
-            </span>
-          )}
-        </Show>
+        <h1 class="shop-top__title display">Mağaza</h1>
+        <Show when={shop()}>{(s) => <BalancePill balance={s().balance} />}</Show>
       </header>
 
-      <div class="set__body" data-scroll>
+      <div class="set__body shop-body" data-scroll>
         <Show
           when={shop()}
           fallback={
@@ -211,10 +200,13 @@ export function Shop() {
               <Show when={deals().length > 0}>
                 <section class="shop-deal" aria-label="Günün fırsatı">
                   <div class="shop-deal__head">
-                    <h2 class="shop-h">Günün fırsatı</h2>
+                    <h2 class="shop-h">
+                      <BoltIcon size={22} />
+                      Günün fırsatı
+                    </h2>
                     <span class="shop-deal__left">{dealCountdownText(left())}</span>
                   </div>
-                  <div class="shop-grid">
+                  <div class="shop-grid shop-grid--deal">
                     <For each={deals()}>
                       {(d) => <Card item={d.item} s={s()} now={now()} deal={d} onOpen={open} />}
                     </For>
@@ -223,7 +215,7 @@ export function Shop() {
               </Show>
 
               <div class="shop-tabs" role="tablist" aria-label="Ürün türü">
-                <For each={COSMETIC_TYPES}>
+                <For each={SHOP_TYPES}>
                   {(t) => (
                     <button
                       type="button"
@@ -238,7 +230,7 @@ export function Shop() {
                 </For>
               </div>
 
-              <div class="shop-grid" role="tabpanel">
+              <div class="shop-grid" classList={{ "shop-grid--rows": tab() === "unvan" }} role="tabpanel">
                 <For each={itemsOfType(tab())}>
                   {(item) => (
                     <Card
@@ -256,6 +248,8 @@ export function Shop() {
         </Show>
       </div>
 
+      <ShopTabBar active="shop" />
+
       <BottomSheet open={opened() !== null} onClose={() => setOpenId(null)} title={opened()?.name ?? "Ürün"}>
         <Show when={opened()}>
           {(item) => (
@@ -266,19 +260,20 @@ export function Shop() {
                 const missing = () => shortfall(s().balance, price());
                 return (
                   <div class="shop-sheet" data-r={item().rarity}>
-                    <div class="shop-sheet__pv">
+                    <p class="shop-sheet__meta">
+                      <RarityChip rarity={item().rarity} />
+                      <span class="shop-sheet__type">{TYPE_LABEL[item().type]}</span>
+                    </p>
+                    <div class="shop-sheet__stage">
                       <CosmeticPreview
                         avatar={avatarFromName(name())}
                         name={name()}
                         cosmetics={itemCosmetics(item())}
-                        size={item().type === "cerceve" ? 88 : 64}
+                        size="clamp(76px, 26vmin, 120px)"
                         parts="both"
+                        plate
                       />
                     </div>
-                    <p class="shop-sheet__meta">
-                      <span class="shop-dot" aria-hidden="true" />
-                      {RARITY_LABEL[item().rarity]} · {COSMETIC_TYPES.find((t) => t.id === item().type)?.name}
-                    </p>
                     <p class="shop-sheet__desc">{item().description}</p>
                     <Show when={msg()}>
                       <p class="shop-sheet__err" role="alert">
@@ -292,7 +287,10 @@ export function Shop() {
                         reason={missing() > 0 ? shortfallText(missing()) : undefined}
                         onClick={() => void buy(item())}
                       >
-                        {buyText(price())}
+                        <span class="shop-buy">
+                          <CoinIcon size={28} />
+                          {buyText(price())}
+                        </span>
                       </PrimaryButton>
                     </Show>
                     <Show when={status() === "owned"}>
@@ -301,7 +299,11 @@ export function Shop() {
                       </PrimaryButton>
                     </Show>
                     <Show when={status() === "equipped"}>
-                      <PrimaryButton disabled>Kuşanıldı</PrimaryButton>
+                      <PrimaryButton variant="done" disabled>
+                        <span class="shop-buy">
+                          <CheckIcon size={20} /> Kuşanıldı
+                        </span>
+                      </PrimaryButton>
                       <GhostButton onClick={() => void unequip(item())}>Çıkar</GhostButton>
                     </Show>
                   </div>

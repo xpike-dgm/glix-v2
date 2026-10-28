@@ -5,7 +5,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, posix } from "node:path";
 
 /** Çalışma anı `glix-art` önbelleğine giren görsel yolları (hizmet çalışanı yolu ve indirme listesi aynı kuraldan). */
-export const ART_PATTERN = /^\/assets\/(avatars\/moods|mascot|badges|props|worlds|cards|briefing|fx)\//;
+export const ART_PATTERN = /^\/assets\/(avatars\/moods|mascot|badges|props|worlds|cards|briefing|fx|shop)\//;
 
 const IMAGE = /\.(webp|png|jpe?g|svg|avif)$/i;
 
