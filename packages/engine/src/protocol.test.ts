@@ -173,6 +173,14 @@ describe("parseClientMessage: oda mesajları", () => {
       expect(parseClientMessage(j(bad)), JSON.stringify(bad)).toBeNull();
   });
 
+  it("feedback metninde yön değiştirme (bidi) ve biçim karakterleri ayıklanır", () => {
+    expect(parseClientMessage(j({ type: "feedback", rating: 4, text: "iyi\u202Eoyun\u2066 evet" }))).toEqual({
+      type: "feedback",
+      rating: 4,
+      text: "iyi oyun evet",
+    });
+  });
+
   it("feedback puan ve metni doğrular", () => {
     expect(parseClientMessage(j({ type: "feedback", rating: 5 }))).toEqual({ type: "feedback", rating: 5 });
     expect(parseClientMessage(j({ type: "feedback", rating: 3, text: "  güzel\u0000 oyun\n " }))).toEqual({

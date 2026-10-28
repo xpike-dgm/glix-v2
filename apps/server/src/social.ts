@@ -82,6 +82,11 @@ export interface Social {
    * yenileyince hesabı çevrimdışı görür.
    */
   accountSignedOut(accountId: number, relatedIds: readonly number[]): void;
+  /**
+   * Hesabın bazı oturumları iptal edildi (çıkış, şifre değişimi/sıfırlama): `revoked(oturumÖzeti)` true dönen canlı
+   * bağlantılar misafire çevrilir; hesabın diğer bağlantıları ve bildirim aboneliği olduğu gibi kalır.
+   */
+  sessionsRevoked(accountId: number, revoked: (sessionHash: string | null) => boolean): void;
   /** Her sunucu turunda çağrılır; tarama aralığı dolduysa değişen durumları arkadaşlara yayar. */
   tick(now: number): void;
 }
@@ -101,6 +106,7 @@ export const noopSocial: Social = {
   accountRenamed: () => undefined,
   accountDeleted: () => undefined,
   accountSignedOut: () => undefined,
+  sessionsRevoked: () => undefined,
   tick: () => undefined,
 };
 
@@ -340,6 +346,31 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
       const lists = accounts.friendLists(accountId);
       const msg: ServerMessage = { type: "friendsChanged" };
       for (const other of [...lists.friends, ...lists.incoming, ...lists.outgoing]) sendTo(other.id, msg);
+    },
+    sessionsRevoked(accountId, revoked) {
+      const set = byAccount.get(accountId);
+      if (!set) return;
+      const dropped = new Set<Connection>();
+      for (const conn of set) {
+        if (!revoked(conn.sessionHash ?? null)) continue;
+        conn.account = null;
+        dropped.add(conn);
+      }
+      if (dropped.size === 0) return;
+      for (const conn of dropped) set.delete(conn);
+      if (set.size === 0) byAccount.delete(accountId);
+      for (const room of rt.rooms.values()) {
+        let had = false;
+        for (const player of room.players.values()) {
+          if (player.accountId !== accountId || !player.conn || !dropped.has(player.conn)) continue;
+          player.accountId = null;
+          if (player.cosmetics !== undefined) {
+            player.cosmetics = undefined;
+            had = true;
+          }
+        }
+        if (had) rt.broadcaster.markDirty(room);
+      }
     },
     accountDeleted: (accountId, relatedIds) => unbind(accountId, relatedIds),
     accountSignedOut: (accountId, relatedIds) => unbind(accountId, relatedIds),

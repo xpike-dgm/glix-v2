@@ -42,6 +42,8 @@ export interface Connection {
   ip: string;
   /** Yükseltme anında çerezden çözülen hesap; yalnız sunucuda kalır, hiçbir mesajda yayınlanmaz. */
   account: AccountRef | null;
+  /** Hesabı çözen oturum çerezinin özeti; oturum iptal edilince bu bağlantı misafire döner. */
+  sessionHash?: string | null;
   /** Bu bağlantıdaki başarısız (`room_not_found`) katılma sayısı. */
   failedJoins: number;
 }
