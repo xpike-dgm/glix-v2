@@ -204,8 +204,10 @@
 .fin .podium__col {
   gap: 0;
 }
-.fin .podium__name {
+.fin .podium__who {
   margin-top: 8px;
+}
+.fin .podium__name {
   font-size: var(--fs-15);
 }
 .fin .podium__score {
@@ -364,7 +366,7 @@
 }
 /* Sonuç: kazananın tacı ödül rozetiyle çakışmasın. */
 .results .podium__col[data-rank="1"] .podium__badge {
-  margin-bottom: 24px;
+  margin-bottom: 4px;
 }
 /* Köşe düğmelerine yer: başlık ortada kalır. */
 .results .results__head {

@@ -1,0 +1,275 @@
+/* ---- Kürsü karakteri (sonuç, final): tuval katmanı, karakter kutusu, ad satırı ---- */
+
+/* Tuval kürsünün üstüne biner: bloğun üstünde, yazıların altında. Üstte pay: dans ederken kollar yukarı çıkar. */
+.cstage {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: -36px;
+  z-index: 1;
+  pointer-events: none;
+}
+.cstage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.podium__who,
+.podium__title,
+.podium__score,
+.podium__badge {
+  position: relative;
+  z-index: 2;
+}
+.podium__who {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+}
+.podium__who .podium__name {
+  margin-top: 0;
+  min-width: 0;
+}
+.podium__tag {
+  flex: none;
+}
+/* Karakter kutusu: boyu avatar boyundan türer (`--pod-big`, `--pod-small`), böylece her ekran boyu için
+   mevcut ayarlar geçerli kalır. Ayaklar kutunun altındadır; blok hemen altında durur. */
+.podium__char {
+  position: relative;
+  width: 100%;
+  height: calc(var(--pod-small, 56px) * var(--char-k, 1.75));
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-top: 4px;
+}
+.podium__col[data-rank="1"] .podium__char {
+  height: calc(var(--pod-big, 76px) * var(--char-k, 1.75));
+}
+.podium__col .podium__block {
+  margin-top: -6px;
+}
+/* Yer tutucu avatar: karakter hazır olunca silinir. */
+.podium__ph {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 6px;
+  transition: opacity 280ms var(--ease);
+}
+.podium[data-chars="ready"] .podium__ph {
+  opacity: 0;
+  pointer-events: none;
+}
+/* Kazanan tacı: ad satırındaki avatar rozetinin üstünde. */
+.podium__tagwrap {
+  position: relative;
+  flex: none;
+  display: grid;
+}
+.podium__crown {
+  position: absolute;
+  z-index: 3;
+  left: -7px;
+  top: -12px;
+  width: 18px;
+  aspect-ratio: 1;
+  transform: rotate(-22deg);
+  color: var(--amber);
+  filter: drop-shadow(0 0 6px rgba(255, 194, 59, 0.75));
+  pointer-events: none;
+}
+/* Kazananın arkasında altın ışık. */
+.podium__col[data-rank="1"] .podium__char::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 170%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(255, 194, 59, 0.22), transparent);
+  pointer-events: none;
+}
+/* "Sen" işareti puanın yanında. */
+.podium__score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.podium__you {
+  padding: 1px 8px;
+  border-radius: 99px;
+  font-family: var(--font-body);
+  font-size: var(--fs-13);
+  font-weight: 700;
+  line-height: 1.3;
+  background: var(--text);
+  color: var(--bg-0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .podium__ph {
+    transition: none;
+  }
+}
+
+/* Alçak yatay ekran (telefon yan): karakter biraz daha kısa, ad satırı sıkı; yazılar ve blok sığsın. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .podium .podium__char {
+    height: 72px;
+    margin-top: 0;
+  }
+  .podium .podium__col[data-rank="1"] .podium__char {
+    height: 82px;
+  }
+  .podium__who {
+    margin-top: 0;
+  }
+  .fin .fin__score {
+    display: none;
+  }
+  .podium__col .podium__block {
+    margin-top: -4px;
+  }
+}
+
+/* Tek karakterli görünüm (mağaza satın alma sayfası, dolap): kutu içinde, yer tutucu avatar hazır olunca silinir. */
+.cview {
+  position: relative;
+  width: 100%;
+  height: var(--cview-h, 200px);
+}
+.cview__box {
+  position: absolute;
+  inset: 0;
+}
+.cview__ph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transition: opacity 280ms var(--ease);
+}
+.cview[data-chars="ready"] .cview__ph {
+  opacity: 0;
+  pointer-events: none;
+}
+.cview .cstage {
+  top: 0;
+}
+
+/* Durağan afiş (ızgara karoları): resim kutuya sığar. */
+.cposter {
+  position: relative;
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: center;
+  width: 100%;
+  height: var(--cposter-h, 112px);
+  min-height: 0;
+}
+.cposter__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: cposter-in 260ms var(--ease) both;
+}
+.cposter__ph {
+  display: grid;
+  place-items: center;
+  opacity: 0.55;
+}
+@keyframes cposter-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cview__ph {
+    transition: none;
+  }
+  .cposter__img {
+    animation: none;
+  }
+}
+
+/* ---- Mağaza ve dolap: sekmeler, afiş karoları, canlı önizleme ---- */
+
+/* Beş sekme dar ekrana tek satırda sığmaz: alta sarar (kaydırma yok; her sekme tam görünür). */
+.shop-tabs {
+  flex-wrap: wrap;
+}
+.shop-tab {
+  flex: 1 1 auto;
+  padding: 0 8px;
+  font-size: var(--fs-15);
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.shop-card[data-type="dans"] .shop-card__pv,
+.shop-card[data-type="sapka"] .shop-card__pv,
+.shop-card[data-type="ust"] .shop-card__pv {
+  min-height: 118px;
+  --cposter-h: 118px;
+}
+.shop-card[data-type="sapka"] .shop-card__pv,
+.shop-card[data-type="ust"] .shop-card__pv {
+  min-height: 104px;
+  --cposter-h: 104px;
+}
+.shop-sheet__stage[data-char] {
+  --cview-h: clamp(170px, 34vh, 260px);
+  padding: var(--sp-2) 0 10px;
+}
+.locker-look__stage {
+  width: 100%;
+  padding: 0;
+  --cview-h: clamp(150px, 26vh, 220px);
+}
+.locker-look__name {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 0;
+}
+.locker-look__tag {
+  flex: none;
+}
+.locker-tile[data-type="dans"] .locker-tile__pv,
+.locker-tile[data-type="sapka"] .locker-tile__pv,
+.locker-tile[data-type="ust"] .locker-tile__pv {
+  min-height: 86px;
+  --cposter-h: 86px;
+}
+.locker-tile[data-type="dans"]:not([data-r="yok"]),
+.locker-tile[data-type="sapka"]:not([data-r="yok"]),
+.locker-tile[data-type="ust"]:not([data-r="yok"]) {
+  padding: 2px 0 8px;
+  gap: 4px;
+}
+/* Ad efekti önizlemesi (ad + dolgu) büyük yazıda 84 px'e sığmaz. */
+.shop-card[data-type="ad-efekti"] .shop-card__pv {
+  min-height: 100px;
+}
+/* Fırsat karosunda eski + yeni fiyat büyük yazıda dar karoya sığsın. */
+.shop-grid--deal .shop-price {
+  padding: 0 8px 0 4px;
+  gap: 3px;
+}
+/* Alçak yatay ekran: önizleme küçülür, satın alma düğmesi görünür kalır. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .shop-sheet__stage[data-char] {
+    --cview-h: 112px;
+  }
+  .locker-look__stage {
+    --cview-h: 130px;
+  }
+}

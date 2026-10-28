@@ -5,9 +5,11 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, posix } from "node:path";
 
 /** Çalışma anı `glix-art` önbelleğine giren görsel yolları (hizmet çalışanı yolu ve indirme listesi aynı kuraldan). */
-export const ART_PATTERN = /^\/assets\/(avatars\/moods|mascot|badges|props|worlds|cards|briefing|fx|shop)\//;
+export const ART_PATTERN =
+  /^\/assets\/(avatars\/moods|mascot|badges|props|worlds|cards|briefing|fx|shop|karakter)\//;
 
-const IMAGE = /\.(webp|png|jpe?g|svg|avif)$/i;
+/** Görseller ve kürsü karakterinin iskelet/dans dosyaları (`karakter/*.json`, küçük metin dosyaları). */
+const IMAGE = /\.(webp|png|jpe?g|svg|avif|json)$/i;
 
 /** İçerik özeti: sha256'nın ilk 16 onaltılık hanesi. */
 export const hashBytes = (bytes) => createHash("sha256").update(bytes).digest("hex").slice(0, 16);

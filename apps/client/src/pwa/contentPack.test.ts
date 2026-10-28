@@ -110,6 +110,9 @@ describe("parseManifest", () => {
 describe("isArtResponse", () => {
   it("yalnız başarılı görsel yanıtı", () => {
     expect(isArtResponse(image())).toBe(true);
+    expect(
+      isArtResponse(new Response("{}", { headers: { "content-type": "application/json; charset=utf-8" } })),
+    ).toBe(true);
     expect(isArtResponse(new Response("<html>", { headers: { "content-type": "text/html" } }))).toBe(false);
     expect(isArtResponse(new Response("x", { status: 404, headers: { "content-type": "image/webp" } }))).toBe(
       false,

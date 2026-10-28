@@ -16,6 +16,7 @@ import { ShareSheet } from "../share/ShareSheet.js";
 import { Avatar } from "../ui/Avatar.js";
 import type { Mood } from "../ui/avatars.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
+import { CharacterStage, type PodiumChar } from "../ui/CharacterStage.js";
 import { frameOf, PlayerName, PlayerTitle } from "../ui/Cosmetic.js";
 import { EmojiFan } from "../ui/EmojiFan.js";
 import { FeedbackRow } from "../ui/FeedbackRow.js";
@@ -28,6 +29,7 @@ import { MatchGallery } from "../ui/MatchGallery.js";
 import { galleryItems } from "../ui/matchGallery.js";
 import { NewBadgeCard } from "../ui/NewBadgeCard.js";
 import { PodiumBlock } from "../ui/PodiumBlock.js";
+import { PodiumPerson } from "../ui/PodiumPerson.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { ReactionLayer } from "../ui/ReactionLayer.js";
 import { FlagIcon } from "../ui/ResultIcons.js";
@@ -92,6 +94,16 @@ export function Final(props: { snap: RoomSnapshot }) {
 
   const top = () => ranked().slice(0, 3);
   const rest = () => ranked().slice(3);
+  /** Kürsü karakterleri: 1. sıradaki herkes (beraberlik dahil) dans eder, diğerleri alkışlar. */
+  const stageChars = (): PodiumChar[] =>
+    top().map((r, i) => ({
+      key: r.player.id,
+      avatar: r.player.avatar,
+      cosmetics: r.player.cosmetics,
+      act: r.rank === 1 ? "dance" : "ovation",
+      offset: i * 1.3,
+      dim: !r.player.connected,
+    }));
   const podiumAvatar = (rank: number) =>
     rank === 1 ? "var(--pod-big, clamp(72px, 22vw, 100px))" : "var(--pod-small, clamp(56px, 17vw, 72px))";
   const titles = createMemo(() =>
@@ -162,25 +174,20 @@ export function Final(props: { snap: RoomSnapshot }) {
                   data-pos={top().indexOf(r)}
                   style={{ "--i": 3 - top().indexOf(r) }}
                 >
-                  <Avatar
-                    index={r.player.avatar}
-                    size={podiumAvatar(r.rank)}
+                  <PodiumPerson
+                    player={r.player}
+                    rank={r.rank}
+                    score={r.score}
+                    self={r.player.id === props.snap.selfId}
                     mood={rowMood(r.rank, r.score)}
                     live={r.rank === 1 ? "joy" : undefined}
-                    winner={r.rank === 1}
-                    connected={r.player.connected}
-                    self={r.player.id === props.snap.selfId}
-                    frame={frameOf(r.player.cosmetics)}
+                    avatarSize={podiumAvatar(r.rank)}
                   />
-                  <span class="podium__name">
-                    <PlayerName name={r.player.nickname} cosmetics={r.player.cosmetics} />
-                  </span>
-                  <PlayerTitle cosmetics={r.player.cosmetics} class="podium__title" />
-                  <span class="podium__score">{formatScore(r.score)}</span>
                   <PodiumBlock rank={r.rank} />
                 </div>
               )}
             </For>
+            <CharacterStage chars={stageChars()} />
           </div>
         </div>
 

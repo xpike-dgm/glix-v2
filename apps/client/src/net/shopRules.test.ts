@@ -8,6 +8,8 @@ import {
   ownedOfType,
   parseShopState,
   priceNow,
+  SHOP_TABS,
+  SHOP_TYPES,
   type ShopState,
   shopErrorText,
   shortfall,
@@ -134,5 +136,50 @@ describe("mağaza yardımcıları", () => {
     );
     expect(owned.map((i) => i.id)).toEqual(["unvan-sansli", "unvan-efsane"]);
     expect(itemsOfType("cerceve")).toHaveLength(5);
+  });
+});
+
+describe("kürsü karakteri ürünleri (dans, şapka, üst)", () => {
+  it("mağaza yanıtında yeni türler kuşanılabilir; yanlış yuvadaki ürün atılır", () => {
+    const s = parseShopState(
+      {
+        ...good,
+        owned: ["dans-twist", "sapka-neon-kep", "ust-neon-bomber"],
+        equipped: { dans: "dans-twist", sapka: "sapka-neon-kep", ust: "sapka-neon-kep" },
+      },
+      NOW,
+    );
+    expect(s?.owned).toEqual(["dans-twist", "sapka-neon-kep", "ust-neon-bomber"]);
+    expect(s?.equipped).toEqual({ dans: "dans-twist", sapka: "sapka-neon-kep" });
+  });
+
+  it("sekmeler: giysi yuvaları tek 'Giysiler' sekmesinde; dans kendi sekmesinde", () => {
+    expect(SHOP_TABS.map((t) => t.label)).toEqual([
+      "Çerçeveler",
+      "Lakaplar",
+      "Ad efektleri",
+      "Danslar",
+      "Giysiler",
+    ]);
+    const giysi = SHOP_TABS.find((t) => t.id === "giysi");
+    expect(giysi?.types).toEqual(["sapka", "ust"]);
+    expect(SHOP_TABS.find((t) => t.id === "dans")?.types).toEqual(["dans"]);
+  });
+
+  it("dolap bölümleri: her giysi yuvası ayrı, dans 'Sevinç' ile başlar, giysiler 'Yok' ile", () => {
+    expect(SHOP_TYPES.map((t) => t.name)).toEqual(["Çerçeve", "Lakap", "Ad efekti", "Dans", "Şapka", "Üst"]);
+    expect(SHOP_TYPES.find((t) => t.id === "dans")?.none).toBe("Sevinç");
+    expect(SHOP_TYPES.find((t) => t.id === "sapka")?.none).toBe("Yok");
+  });
+
+  it("dolap: yalnız sahip olunan danslar", () => {
+    const st: ShopState = {
+      balance: 0,
+      owned: ["dans-twist", "dans-lambada", "sapka-neon-kep"],
+      equipped: {},
+      clockOffset: 0,
+    };
+    const owned = ownedOfType(st, "dans", COSMETIC_ITEMS);
+    expect(owned.map((i) => i.id)).toEqual(["dans-twist", "dans-lambada"]);
   });
 });

@@ -43,7 +43,7 @@ import { Results } from "./screens/Results.js";
 import { selectScreen } from "./screens/route.js";
 import { Settings } from "./screens/Settings.js";
 import { Shop } from "./screens/Shop.js";
-import { dataSaver, setColorBlind, setTextSize, wifiOnly } from "./settings/settings.js";
+import { dataSaver, setColorBlind, setMotion, setTextSize, wifiOnly } from "./settings/settings.js";
 import { installErrorReporting } from "./telemetry/errors.js";
 import { preloadGameArt } from "./ui/artPreload.js";
 import { Curtain } from "./ui/Curtain.js";
@@ -158,6 +158,7 @@ export function App() {
     // Yalnız geliştirme: arayüz denetimi büyük yazıyı `&text=large` ile açar.
     if (import.meta.env.DEV && params.get("text") === "large") setTextSize("large");
     if (import.meta.env.DEV && params.get("cb") === "1") setColorBlind(true);
+    if (import.meta.env.DEV && params.get("motion") === "reduce") setMotion("reduce");
     if (mock?.startsWith("hazirlaniyor")) {
       devReady(import("./dev/mockHazirlaniyor.js").then((m) => void m.startPackMock(mock)));
       return;

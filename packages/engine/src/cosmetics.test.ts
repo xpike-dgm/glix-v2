@@ -5,10 +5,13 @@ import {
   COSMETIC_TYPES,
   cosmeticsFromEquipped,
   currentPrice,
+  DEFAULT_DANCE,
   dailyDeals,
   dealPrice,
   istanbulDayNumber,
+  itemsOfType,
   nextIstanbulMidnight,
+  PLACE_DANCE,
   parseCosmetics,
 } from "./cosmetics.js";
 
@@ -25,7 +28,7 @@ describe("kozmetik kataloğu", () => {
       expect(i.name.length).toBeGreaterThan(0);
     }
     for (const t of COSMETIC_TYPES) expect(COSMETIC_ITEMS.some((i) => i.type === t.id)).toBe(true);
-    expect(COSMETIC_ITEMS).toHaveLength(17);
+    expect(COSMETIC_ITEMS).toHaveLength(27);
   });
 
   it("parseCosmetics: bilinmeyen ya da yanlış türdeki kimlik atılır", () => {
@@ -48,6 +51,51 @@ describe("kozmetik kataloğu", () => {
     });
     expect(cosmeticsFromEquipped({})).toBeUndefined();
     expect(cosmeticsFromEquipped({ unvan: "cerceve-cift" })).toBeUndefined();
+  });
+});
+
+describe("kürsü karakteri ürünleri", () => {
+  it("dans fiyatları ve dağılımı: 3 sıradan, 3 nadir, 2 efsanevi", () => {
+    const dances = itemsOfType("dans");
+    expect(dances).toHaveLength(8);
+    const price = (r: string) => dances.filter((d) => d.rarity === r).map((d) => d.price);
+    expect(price("siradan")).toEqual([150, 150, 150]);
+    expect(price("nadir")).toEqual([400, 400, 400]);
+    expect(price("efsanevi")).toEqual([1000, 1000]);
+    expect(dances.map((d) => d.name)).toEqual([
+      "Twist",
+      "Tavuk Dansı",
+      "Neşeli Adım",
+      "Charleston",
+      "Lambada",
+      "Makarena",
+      "Kazaçok",
+      "Çizgi Film Dansı",
+    ]);
+  });
+
+  it("dans ve giysi ürünlerinin karakter varlığı adı var; varsayılan ve selam satılmaz", () => {
+    for (const d of itemsOfType("dans")) expect(d.asset).toMatch(/^[a-z]{2,16}$/);
+    for (const t of ["sapka", "ust"] as const)
+      for (const i of itemsOfType(t)) expect(i.asset).toMatch(/^[a-z]+$/);
+    // selam satılmaz, varsayılan dans katalogda ürün değildir
+    expect(itemsOfType("dans").some((d) => d.asset === PLACE_DANCE || d.asset === DEFAULT_DANCE)).toBe(false);
+    expect(DEFAULT_DANCE).toBe("sevinc");
+    expect(PLACE_DANCE).toBe("selam");
+  });
+
+  it("her giysi yuvası ayrı bir türdür ve giysi grubundadır", () => {
+    expect(COSMETIC_TYPES.filter((t) => t.group === "giysi").map((t) => t.id)).toEqual(["sapka", "ust"]);
+    expect(itemsOfType("sapka").map((i) => [i.id, i.rarity])).toEqual([["sapka-neon-kep", "siradan"]]);
+    expect(itemsOfType("ust").map((i) => [i.id, i.rarity])).toEqual([["ust-neon-bomber", "nadir"]]);
+  });
+
+  it("cosmeticsFromEquipped / parseCosmetics yeni alanları taşır, yanlış türü atar", () => {
+    const eq = { dans: "dans-twist", sapka: "sapka-neon-kep", ust: "ust-neon-bomber" };
+    const want = { dance: "dans-twist", hat: "sapka-neon-kep", top: "ust-neon-bomber" };
+    expect(cosmeticsFromEquipped(eq)).toEqual(want);
+    expect(parseCosmetics(want)).toEqual(want);
+    expect(parseCosmetics({ dance: "sapka-neon-kep", hat: "dans-twist", top: "yok-boyle" })).toBeUndefined();
   });
 });
 
