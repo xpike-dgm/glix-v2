@@ -352,6 +352,9 @@ Ajan düzeni: en çok 2 eşzamanlı ajan, her oyun/özellik sonrası commit.
 ---
 
 ## Sahip kararları
+- **Kalite düşürülmez (Ekim 2026):** performans ve boyut iyileştirmeleri görsel kaliteyi, animasyonu ya da oynanışı
+  düşürmeden yapılır. Görsel yeniden kodlama yalnız gözle ayırt edilemeyecek düzeydeyse (önce/sonra karşılaştırmasıyla)
+  uygulanır; efektler kaldırılmaz, aynı görünüm daha ucuz yöntemle yeniden yapılır.
 - **Ton kaldırıldı:** lobideki içerik tonu (Aile / Arkadaş / Ofis) sahip kararıyla silindi. Laf Sokma üç listeyi tekilleştirip
   tek havuzda (`laf-sokma/sorular`, 330 soru) topladı; `setTone` kaldırıldı (eski istemci için sessizce yok sayılır), yönetici
   havuzları göçle birleştirildi. Ayrıntı: `docs/PROTOKOL.md` "İçerik havuzları", `docs/ADMIN.md`.
