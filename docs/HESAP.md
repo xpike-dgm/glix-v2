@@ -43,7 +43,7 @@ Yazma oyun akışının dışında, bitişte tek işlemde (küçük toplu yazma)
 - **Oyun bitince** (`account_games`): oyun kimliği, oyuncu sayısı, mini skor, mini sıra (mini skora göre; eşit skor aynı sırayı
   paylaşır: 1, 1, 3; sıralamaya misafirler de girer), `won` = sıra 1. Sonuç ekranında sıralanan oyuncular (mini skoru olanlar) yazılır.
 - **Maç final'e varınca** (`account_matches`): oyuncu sayısı, oyun sayısı, genel skor, yer (genel skora göre, eşitler paylaşır),
-  `won` = yer 1. Yarıda kalan/çöken maçlar maç olarak yazılmaz (biten oyunlar yazılmış olur).
+  `won` = yer 1. Genel skor **kart etkilerini içerir** (docs/KURALLAR.md "Kartlar"); mini skor ve mini sıra kartlardan etkilenmez. Yarıda kalan/çöken maçlar maç olarak yazılmaz (biten oyunlar yazılmış olur).
 - **Birlikte oynama** (`account_coplay`): biten her maçta hesaplı oyuncu çiftleri için iki yönlü sayaç artar (misafirler yok).
 - Maç sırasında odadan çıkan oyuncunun kaydı o noktadan sonra yazılmaz (oyuncu kaydı odadan silinmiştir).
 - Rozetler aşağıda "Rozetler" bölümünde; oyuna özel rekorlar henüz yok.
