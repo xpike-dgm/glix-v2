@@ -204,6 +204,8 @@ export interface AuthEnv {
   bannedWords?: BannedWords;
   /** Kullanıcı adı değişince çalışma zamanını (oda adı, arkadaş listeleri) günceller; testlerde verilmeyebilir. */
   onRenamed?: (accountId: number, username: string) => void;
+  /** Oturum iptal edilince o oturumun canlı soketlerini misafire çevirir (`revoked`: oturum özeti iptal mi). */
+  onSessionsRevoked?: (accountId: number, revoked: (sessionHash: string | null) => boolean) => void;
 }
 
 export function send(
@@ -353,12 +355,13 @@ async function login(req: IncomingMessage, res: ServerResponse, env: AuthEnv): P
     fail(res, 400, "invalid_input", FIELD_TEXT[input], input);
     return;
   }
-  const key = input.login.toLowerCase();
+  const found = env.accounts.findByLogin(input.login.toLowerCase());
+  // Sınır hesap başınadır (şifre değiştirme/silme ile aynı kova): kullanıcı adı ile e-posta ayrı hak açmaz.
+  const key = found ? `pw:${found.id}` : input.login.toLowerCase();
   if (!env.limiter.canTryLogin(key)) {
     fail(res, 429, "rate_limited", "Çok fazla deneme yaptın, biraz bekleyip tekrar dene.");
     return;
   }
-  const found = env.accounts.findByLogin(key);
   const ok = await verifyPassword(input.password, found?.passHash ?? (await getDummyHash()));
   if (!found?.passHash || !ok) {
     env.limiter.recordFailedLogin(key);
@@ -438,6 +441,7 @@ function logout(req: IncomingMessage, res: ServerResponse, env: AuthEnv): void {
     const account = env.accounts.resolveSession(hashToken(token), env.now);
     if (account) env.accounts.pushDelete(account.id);
     env.accounts.deleteSession(hashToken(token));
+    if (account) env.onSessionsRevoked?.(account.id, (hash) => hash === hashToken(token));
   }
   send(res, 200, { ok: true }, { "Set-Cookie": clearedCookie(isSecureRequest(req, env.trustProxy)) });
 }
@@ -546,6 +550,7 @@ async function resetConfirm(req: IncomingMessage, res: ServerResponse, env: Auth
   if (id === null) return expired();
   // Bağlantı e-postaya ulaşıldığını kanıtlar; tüm oturumlar düşer, kullanıcı yeni oturumla girer.
   env.accounts.replacePassword(id, hash, null);
+  env.onSessionsRevoked?.(id, () => true);
   env.accounts.markVerified(id);
   const account = env.accounts.findById(id);
   if (!account) return expired();
@@ -577,7 +582,9 @@ async function changePassword(req: IncomingMessage, res: ServerResponse, env: Au
     env.limiter.recordFailedLogin(key);
     return fail(res, 401, "bad_credentials", "Mevcut şifre hatalı.", "current");
   }
-  env.accounts.replacePassword(account.id, await hashPassword(data.password), hashToken(token));
+  const keep = hashToken(token);
+  env.accounts.replacePassword(account.id, await hashPassword(data.password), keep);
+  env.onSessionsRevoked?.(account.id, (hash) => hash !== keep);
   send(res, 200, { ok: true });
 }
 

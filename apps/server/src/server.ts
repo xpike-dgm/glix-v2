@@ -6,7 +6,7 @@ import { type AccountStore, createAccounts } from "./accountStore.js";
 import { ADMIN_PREFIX, createAdminLimits, handleAdmin } from "./admin.js";
 import { buildLive, createHealthSampler } from "./adminData.js";
 import { createAdminRoomOps } from "./adminRooms.js";
-import { AUTH_PREFIX, accountFromCookie, handleAuth } from "./auth.js";
+import { AUTH_PREFIX, accountFromCookie, handleAuth, hashToken, readSessionToken } from "./auth.js";
 import { createBackupService } from "./backup.js";
 import { CLIENT_ERROR_PATH, handleClientError } from "./clientError.js";
 import { resolveClientIp } from "./clientIp.js";
@@ -107,6 +107,12 @@ function resolvePush(opts: ServerOptions): PushGateway {
     log.warn("push_disabled", { error: String(err) });
     return disabledPush;
   }
+}
+
+interface UpgradeInfo {
+  ip: string;
+  account: AccountRef | null;
+  sessionHash: string | null;
 }
 
 export interface RunningServer {
@@ -361,6 +367,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         mail,
         bannedWords: rt.bannedWords,
         onRenamed: (id, username) => rt.social.accountRenamed(id, username),
+        onSessionsRevoked: (id, revoked) => rt.social.sessionsRevoked(id, revoked),
       });
       return;
     }
@@ -429,15 +436,17 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       return;
     }
     const account = accountFromCookie(accounts, req.headers.cookie, clock.now());
+    const sessionToken = account ? readSessionToken(req.headers.cookie) : null;
     wss.handleUpgrade(req, socket, head, (ws) =>
       wss.emit("connection", ws, {
         ip,
         account: account ? { id: account.id, username: account.username } : null,
+        sessionHash: sessionToken ? hashToken(sessionToken) : null,
       }),
     );
   });
 
-  wss.on("connection", (ws: WebSocket, info: { ip: string; account: AccountRef | null }) => {
+  wss.on("connection", (ws: WebSocket, info: UpgradeInfo) => {
     const ip = info.ip;
     sockets.add(ws);
     perIp.set(ip, (perIp.get(ip) ?? 0) + 1);
@@ -464,6 +473,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       ip,
       failedJoins: 0,
       account: info.account,
+      sessionHash: info.sessionHash,
       sendRaw,
       send: (msg) => {
         if (msg.type === "error" && msg.code === "rate_limited") limitedThisMessage = true;
