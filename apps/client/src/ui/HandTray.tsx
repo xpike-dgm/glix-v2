@@ -86,7 +86,7 @@ export function HandTray(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
           when={chosen()}
           fallback={
             <div class="kc-pick">
-              <For each={hand()}>{(id) => <CardFace id={id} layout="tile" onClick={() => select(id)} />}</For>
+              <For each={hand()}>{(id) => <CardFace id={id} layout="row" onClick={() => select(id)} />}</For>
               <div class="sheet__actions">
                 <GhostButton size="small" onClick={close}>
                   Vazgeç

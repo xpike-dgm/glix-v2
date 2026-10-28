@@ -1265,6 +1265,10 @@
   .tagline {
     font-size: var(--fs-15);
   }
+  /* Yatay telefonda duyuru şeridi yer açtığı için slogan düğmenin altında kalıyordu; şerit varken gizlenir. */
+  .home:has(.site-banners) .tagline {
+    display: none;
+  }
   .home__actions {
     gap: 8px;
   }

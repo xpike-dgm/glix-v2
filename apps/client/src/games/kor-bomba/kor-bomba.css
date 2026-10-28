@@ -6,6 +6,12 @@
   inset: 0;
   overflow: hidden;
 }
+/* Alçak sahnede (yatay telefon) bomba küçülür; taşıyıcının adı bombanın altında kalmasın. */
+@container stage (max-height: 420px) {
+  .kbo {
+    --bomb: clamp(64px, 21cqh, 132px);
+  }
+}
 .kbo__felt {
   position: absolute;
   left: 50%;
