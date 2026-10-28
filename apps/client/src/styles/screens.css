@@ -2721,6 +2721,8 @@
 }
 .home__auth .gbtn {
   flex: 1;
+  /* Yatay ekranda parlak dünya arka planı üstünde de 4.5:1 kontrast kalsın diye zemin daha koyu. */
+  background: rgba(5, 8, 26, 0.78);
 }
 .acct__body {
   flex: 1;
