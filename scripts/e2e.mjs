@@ -639,10 +639,7 @@ async function main() {
     await A.getByRole("button", { name: "5 yıldız" }).click();
     await btn(A, /^gönder$/i).click();
     await A.getByText("Teşekkürler!").waitFor(OPT);
-    assert(
-      await btn(A, /^tekrar oyna$/i).isVisible(),
-      "geri bildirimden sonra TEKRAR OYNA görünmeli",
-    );
+    assert(await btn(A, /^tekrar oyna$/i).isVisible(), "geri bildirimden sonra TEKRAR OYNA görünmeli");
     await shot(A, "15b-final-feedback");
     {
       // Sunucu geri bildirimi ve tamamlanan maçı kaydetmiş olmalı.
