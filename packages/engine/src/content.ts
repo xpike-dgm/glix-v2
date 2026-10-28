@@ -88,16 +88,24 @@ export function textLength(text: string): number {
   return n;
 }
 
-/** Tekrar denetimi için: aksan/nokta işareti atılır, ı→i, küçük harf, noktalama atılır, boşluklar teke iner. */
+/**
+ * Tekrar denetimi için: küçük harf, noktalama atılır, boşluklar teke iner. ö/ş/ç/ğ/ü korunur ("göl" ile "gol",
+ * "kaş" ile "kas" ayrı kelimelerdir); yalnız I/ı/İ/i tek harf sayılır, çünkü büyük harfle yazanın hangisini
+ * kastettiği belli değildir (DENEMELIK = denemelik).
+ */
 export function dedupeKey(text: string): string {
   return text
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .replace(/[ıI]/g, "i")
-    .toLowerCase()
+    .normalize("NFC")
+    .replace(/[Iıİ]/g, "i")
+    .toLocaleLowerCase("tr-TR")
     .replace(/[^\p{L}\p{N}\s]/gu, "")
     .replace(/\s+/gu, " ")
     .trim();
+}
+
+/** Arama için gevşek anahtar: aksan ve noktalar da atılır ("go" ile GÖKKUŞAĞI bulunur). */
+export function searchKey(text: string): string {
+  return dedupeKey(text).normalize("NFD").replace(/\p{M}/gu, "");
 }
 
 /** Serbest metin alanı: NFC, boşluklar teke iner, görünmez karakter ve `<` `>` reddedilir, uzunluk sınırları. */

@@ -18,6 +18,7 @@ import {
   GAMES,
   parseEntry,
   poolById,
+  searchKey,
 } from "@glix/engine";
 import type { AccountStore, ContentOverrideOp } from "./accountStore.js";
 import { log } from "./log.js";
@@ -312,13 +313,13 @@ export function createContentStore(accounts: AccountStore, banned: BannedWords):
       }
       for (const c of st.customs)
         all.push({ key: c.key, source: "custom", disabled: false, fields: c.fields });
-      const needle = dedupeKey(q);
+      const needle = searchKey(q);
       const rows = all.filter((e) => {
         if (filter === "builtin" && e.source !== "builtin") return false;
         if (filter === "custom" && e.source !== "custom") return false;
         if (filter === "disabled" && !e.disabled) return false;
         if (needle === "") return true;
-        return Object.values(e.fields).some((t) => dedupeKey(t).includes(needle));
+        return Object.values(e.fields).some((t) => searchKey(t).includes(needle));
       });
       const pages = Math.max(1, Math.ceil(rows.length / POOL_PAGE_SIZE));
       const at = Math.min(Math.max(1, page), pages);

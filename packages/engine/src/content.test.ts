@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ContentSet } from "./content.js";
-import { poolEntries } from "./content.js";
+import { dedupeKey, poolEntries, searchKey } from "./content.js";
 import type { GameContext } from "./game.js";
 import { cagrisimAgi } from "./games/cagrisim-agi/index.js";
 import { CONTENT_POOLS, poolById } from "./games/content-pools.js";
@@ -208,5 +208,18 @@ describe("kayıttan tekrar oynatma içeriği korur", () => {
     const rec = new GameRecorder("cagrisim-agi", 1, PLAYERS, 0, undefined, content);
     content["cagrisim-agi/kelimeler"]?.push("SONRADAN");
     expect(rec.finish(1).content?.["cagrisim-agi/kelimeler"]).toHaveLength(12);
+  });
+});
+
+describe("tekrar anahtarı", () => {
+  it("Türkçe harfleri ayırır, yalnız I/ı/İ/i ve büyük/küçük harfi birleştirir", () => {
+    expect(dedupeKey("GÖL")).not.toBe(dedupeKey("GOL"));
+    expect(dedupeKey("kaş")).not.toBe(dedupeKey("kas"));
+    expect(dedupeKey("DENEMELIK")).toBe(dedupeKey("denemelik"));
+    expect(dedupeKey("denemelık")).toBe(dedupeKey("Denemelik!"));
+    expect(dedupeKey("İSTANBUL")).toBe(dedupeKey("istanbul"));
+  });
+  it("arama anahtarı aksanları da atar", () => {
+    expect(searchKey("GÖKKUŞAĞI").includes(searchKey("go"))).toBe(true);
   });
 });
