@@ -138,7 +138,7 @@ describe("A3: duyuru, bakım ve lobi bildirimi", () => {
   const ann = { id: 2, text: "Bu akşam bakım var", kind: "uyari", endsAt: null };
 
   it("welcome site alanını taşır; eski sunucuda alan yoktur", () => {
-    const base = { type: "welcome", protocolVersion: 2, serverVersion: "0.1.0" };
+    const base = { type: "welcome", protocolVersion: 3, serverVersion: "0.1.0" };
     const withSite = parseServerMessage(wire({ ...base, site: { announcement: ann, maintenance: true } }));
     expect(withSite).toEqual({ ...base, site: { announcement: ann, maintenance: true } });
     expect(parseServerMessage(wire(base))).toEqual(base);

@@ -9,6 +9,7 @@ import {
   PROTOCOL_VERSION,
   REACTION_MIN_GAP_MS,
 } from "@glix/engine";
+import { cardEvent, playContext } from "./cards.js";
 import { openIds } from "./gameSwitches.js";
 import {
   applyAction,
@@ -518,6 +519,81 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       }
       if (room.joinPolicy === msg.policy) return;
       room.joinPolicy = msg.policy;
+      rt.broadcaster.markDirty(room);
+      return;
+    }
+    case "setCards": {
+      const room = requireHost(conn);
+      if (!room) return;
+      if (room.phase !== "lobby") {
+        fail(conn, "wrong_phase");
+        return;
+      }
+      room.cardSettings = { enabled: msg.enabled, off: [...msg.off] };
+      rt.broadcaster.markDirty(room);
+      return;
+    }
+    case "pickCard":
+    case "discardCard": {
+      const room = requireRoom(conn);
+      if (!room || !conn.player) return;
+      const match = room.match;
+      if (room.phase !== "cards" || !match?.cards) {
+        fail(conn, "wrong_phase");
+        return;
+      }
+      const me = conn.player.id;
+      if (!match.cards.players.includes(me) || conn.player.spectator) {
+        fail(conn, "not_participant");
+        return;
+      }
+      const outcome = cardEvent(
+        rt,
+        match,
+        msg.type === "pickCard"
+          ? { k: "pick", p: me, i: msg.index }
+          : { k: "discard", p: me, drop: msg.index === null ? "new" : msg.index },
+      );
+      if (!outcome.ok) {
+        fail(conn, "card_invalid");
+        return;
+      }
+      stepMatch(rt, room);
+      rt.broadcaster.markDirty(room);
+      return;
+    }
+    case "playCard":
+    case "unplayCard": {
+      const room = requireRoom(conn);
+      if (!room || !conn.player) return;
+      const match = room.match;
+      if (room.phase !== "briefing" || !match?.cards) {
+        fail(conn, "wrong_phase");
+        return;
+      }
+      const me = conn.player.id;
+      if (!match.participants.includes(me) || conn.player.spectator) {
+        fail(conn, "not_participant");
+        return;
+      }
+      const outcome = cardEvent(
+        rt,
+        match,
+        msg.type === "unplayCard"
+          ? { k: "unplay", p: me }
+          : {
+              k: "play",
+              p: me,
+              card: msg.card,
+              ...(msg.target !== undefined ? { target: msg.target } : {}),
+              ...(msg.gameId !== undefined ? { gameId: msg.gameId } : {}),
+              ctx: playContext(rt, room, match),
+            },
+      );
+      if (!outcome.ok) {
+        fail(conn, "card_invalid");
+        return;
+      }
       rt.broadcaster.markDirty(room);
       return;
     }

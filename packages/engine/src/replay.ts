@@ -1,3 +1,4 @@
+import { type ResolveOutput, resolveCards } from "./cards/resolve.js";
 import type { ContentSet } from "./content.js";
 import { type AnyGame, type GameContext, type GameLog, type GameResult, isRejected } from "./game.js";
 import { createRng } from "./rng.js";
@@ -18,6 +19,7 @@ export class GameRecorder {
   private readonly presenceLog: GameLog["presence"] = [];
   private readonly players: string[];
   private readonly content?: ContentSet;
+  private cardsRecord?: GameLog["cards"];
 
   constructor(
     private readonly gameId: string,
@@ -54,6 +56,11 @@ export class GameRecorder {
     this.presenceLog.push({ t, playerId, connected });
   }
 
+  /** Oyunun kart hesabı girdilerini kaydeder (oyun bitince, sonuç hesaplanırken). */
+  setCards(cards: NonNullable<GameLog["cards"]>): void {
+    this.cardsRecord = JSON.parse(JSON.stringify(cards)) as NonNullable<GameLog["cards"]>;
+  }
+
   finish(endedAt: number): GameLog {
     return {
       gameId: this.gameId,
@@ -64,6 +71,7 @@ export class GameRecorder {
       endedAt,
       presence: this.presenceLog.map((p) => ({ ...p })),
       ...(this.content !== undefined ? { content: this.content } : {}),
+      ...(this.cardsRecord !== undefined ? { cards: this.cardsRecord } : {}),
       ...(this.truncated ? { truncated: true } : {}),
     };
   }
@@ -107,4 +115,22 @@ export function replay(game: AnyGame, log: GameLog): GameResult {
   }
   state = game.tick(state, ctxAt(log.endedAt));
   return game.result(state);
+}
+
+/** `replay` + kart hesabı: kayıtta kart girdileri varsa nihai puanlar ve etki satırları da yeniden üretilir. */
+export function replayWithCards(
+  game: AnyGame,
+  log: GameLog,
+): { result: GameResult; cards: ResolveOutput | null } {
+  const result = replay(game, log);
+  if (!log.cards) return { result, cards: null };
+  return {
+    result,
+    cards: resolveCards({
+      ...log.cards,
+      participants: log.players,
+      miniScores: result.miniScores,
+      awards: result.awards,
+    }),
+  };
 }

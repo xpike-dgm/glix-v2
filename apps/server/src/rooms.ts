@@ -1,5 +1,6 @@
 import { randomBytes, randomInt } from "node:crypto";
 import {
+  DEFAULT_CARD_SETTINGS,
   DEFAULT_JOIN_POLICY,
   getCatalog,
   type LeftReason,
@@ -48,6 +49,7 @@ export function createRuntime(
     push,
     social: noopSocial,
     recentLogs: [],
+    recentCardLogs: [],
     rooms: new Map(),
     tokens: new Map(),
     active: new Set(),
@@ -120,6 +122,7 @@ export function createRoom(rt: Runtime): Room {
     selection: rt.defaultGameIds ? { mode: "manual" } : { mode: "random", count: DEFAULT_RANDOM_COUNT },
     joinPolicy: DEFAULT_JOIN_POLICY,
     match: null,
+    cardSettings: { enabled: DEFAULT_CARD_SETTINGS.enabled, off: [...DEFAULT_CARD_SETTINGS.off] },
     rev: 0,
     nextJoinOrder: 0,
     lastFlushAt: Number.NEGATIVE_INFINITY,

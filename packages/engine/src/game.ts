@@ -1,3 +1,4 @@
+import type { ResolveInput } from "./cards/resolve.js";
 import type { ContentSet } from "./content.js";
 import type { Rng } from "./rng.js";
 
@@ -133,6 +134,11 @@ export interface GameLog {
   tone?: LegacyContentTone;
   /** `setup`a verilen içerik havuzları; yoksa yerleşik havuzlar. `replay` aynısını verir. */
   content?: ContentSet;
+  /**
+   * Bu oyunun kart hesabının girdileri (kartlar açıksa): `replayWithCards` ham sonuca uygulayıp nihai puanları
+   * birebir yeniden üretir. Ham `miniScores` / `awards` buraya yazılmaz; `replay` onları üretir.
+   */
+  cards?: Omit<ResolveInput, "miniScores" | "awards" | "participants">;
   /** Eylem sınırı aşıldığı için kayıt eksik: `replay` bu kaydı reddeder. */
   truncated?: boolean;
 }

@@ -284,7 +284,7 @@ describe("hız sınırı ve geçersiz mesaj", () => {
     const c = await Client.connect();
     c.send({ type: "hello", clientVersion: "x" });
     await until(() => c.of("welcome").length > 0);
-    expect(c.of("welcome")[0]).toMatchObject({ protocolVersion: 2 });
+    expect(c.of("welcome")[0]).toMatchObject({ protocolVersion: 3 });
   });
 });
 

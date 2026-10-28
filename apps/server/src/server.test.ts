@@ -46,7 +46,7 @@ describe("http", () => {
     expect(body).toMatchObject({
       ok: true,
       version: "0.1.0",
-      protocolVersion: 2,
+      protocolVersion: 3,
       rooms: 0,
       players: 0,
       revision: "testrev",
@@ -111,7 +111,7 @@ describe("ws", () => {
     // `site`: duyuru bandı ve bakım durumu (U16 A3); alanları kendi testlerinde denetlenir.
     expect(await exchange(`ws://${base}/ws`, '{"type":"hello","clientVersion":"0.0.1"}')).toEqual({
       type: "welcome",
-      protocolVersion: 2,
+      protocolVersion: 3,
       serverVersion: "0.1.0",
       site: expect.any(Object),
     });
