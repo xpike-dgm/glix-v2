@@ -21,6 +21,10 @@ export function WorldBackdrop(props: { gameId: string }) {
           decoding="async"
           draggable={false}
           onLoad={() => setLoaded(src())}
+          // Önden indirilmiş (önbellekteki) görsel ilk karede hazır gelir: 600 ms'lik belirme beklemeden görünür.
+          ref={(el) => {
+            if (el.complete && el.naturalWidth > 0) setLoaded(src());
+          }}
         />
         <div class="world__scrim" />
       </div>

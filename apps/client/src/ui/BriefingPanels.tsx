@@ -50,6 +50,7 @@ export function BriefingPanels(props: {
                 alt=""
                 aria-hidden="true"
                 decoding="async"
+                fetchpriority={i === 0 ? "high" : "low"}
                 draggable={false}
                 width="720"
                 height="540"

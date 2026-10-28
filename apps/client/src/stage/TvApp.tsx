@@ -6,6 +6,7 @@ import { state } from "../net/store.js";
 import { setScreenAwake } from "../pwa/wakeLock.js";
 import { Reconnecting } from "../screens/Reconnecting.js";
 import { installErrorReporting } from "../telemetry/errors.js";
+import { preloadGameArt } from "../ui/artPreload.js";
 import { Toasts } from "../ui/Toast.js";
 import { WorldBackdrop } from "../ui/WorldBackdrop.js";
 import { preloadWorld } from "../ui/world.js";
@@ -64,6 +65,22 @@ export function TvApp() {
     return s.phase === "lobby" || s.phase === "final" || !s.match ? "lobi" : s.match.gameId;
   });
   createEffect(() => preloadWorld(worldId()));
+  // Anlatım çizgi romanı ve nesne görselleri ile sıradaki oyunun görselleri önden inip hazır beklesin.
+  createEffect(() => {
+    const id = state.snapshot?.match?.gameId;
+    if (id) preloadGameArt(id);
+  });
+  createEffect(() => {
+    const snap = state.snapshot;
+    const next = snap?.match
+      ? snap.gameIds[snap.match.round + 1]
+      : snap?.phase === "lobby"
+        ? snap.gameIds[0]
+        : undefined;
+    if (!next) return;
+    const t = setTimeout(() => preloadGameArt(next, true), 1200);
+    onCleanup(() => clearTimeout(t));
+  });
 
   return (
     <div class="stage tvstage">

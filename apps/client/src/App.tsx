@@ -43,13 +43,12 @@ import { selectScreen } from "./screens/route.js";
 import { Settings } from "./screens/Settings.js";
 import { dataSaver, setColorBlind, setTextSize, wifiOnly } from "./settings/settings.js";
 import { installErrorReporting } from "./telemetry/errors.js";
-import { preloadBriefing } from "./ui/briefingArt.js";
+import { preloadGameArt } from "./ui/artPreload.js";
 import { Curtain } from "./ui/Curtain.js";
 import { Loading } from "./ui/Loading.js";
 import { collectGallery } from "./ui/matchGallery.js";
 import { preloadCards } from "./ui/preloadCards.js";
 import { preloadMoods } from "./ui/preloadMoods.js";
-import { preloadProps } from "./ui/props.js";
 import { ReportSheet } from "./ui/ReportSheet.js";
 import { SidePlayers } from "./ui/SidePlayers.js";
 import { Toasts } from "./ui/Toast.js";
@@ -99,13 +98,27 @@ export function App() {
     if (state.snapshot?.phase === "lobby") preloadWorld("lobi");
   });
 
-  // Anlatım başlarken o oyunun nesne görselleri önden indirilir.
+  // Anlatım başlarken o oyunun görselleri önden indirilir; ardından sıradaki oyununkiler düşük öncelikle gelir,
+  // böylece sonuç ekranından sonra anlatım açıldığında arka plan ve çizgi roman hazırdır.
+  const currentGameId = createMemo(() => state.snapshot?.match?.gameId ?? null);
+  const nextGameId = createMemo(() => {
+    const snap = state.snapshot;
+    if (!snap) return null;
+    // Lobide elle seçilmiş ilk oyun, maç içinde bir sonraki oyun. Rastgele modda lobide liste boştur.
+    const idx = snap.match ? snap.match.round + 1 : snap.phase === "lobby" ? 0 : -1;
+    return idx >= 0 ? (snap.gameIds[idx] ?? null) : null;
+  });
   createEffect(() => {
-    const m = state.snapshot?.match;
-    if (!m) return;
-    preloadProps(m.gameId);
-    preloadWorld(m.gameId);
-    preloadBriefing(m.gameId);
+    const id = currentGameId();
+    if (!id) return;
+    preloadGameArt(id);
+  });
+  createEffect(() => {
+    const id = nextGameId();
+    if (!id) return;
+    // Şimdiki görünümün görselleri istenip yerleşsin diye kısa bekleme.
+    const t = setTimeout(() => preloadGameArt(id, true), 1200);
+    onCleanup(() => clearTimeout(t));
   });
 
   // Lobi müziği yalnız lobide çalar; maç başlayınca durur (kullanıcı jestinden önce hiç çalmaz).
