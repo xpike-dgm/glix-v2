@@ -14,7 +14,7 @@ Nadirlik: **Sıradan** (camgöbeği), **Nadir** (mor), **Efsanevi** (altın). Ka
 
 Sahip mevcut mağaza ekranını "çok kötü" buldu; kodla çizilmiş çerçeveleri de beğenmedi. Senden iki şey istiyoruz:
 **(A) mağaza ekranının tasarım şablonu** ve **(B) mağazanın gerçek görselleri**. Oyunda her şey kaliteli görünmeli.
-Mevcut (beğenilmeyen) hâli: `referans/ekranlar/magaza-mevcut.png` — bunu tekrar etme, daha iyisini yap.
+Mevcut (beğenilmeyen) hâli: `referans/ekranlar/magaza-mevcut.jpg` — bunu tekrar etme, daha iyisini yap.
 
 ## (A) Tasarım şablonu — `tasarim/` klasörü
 Telefon ekranı maketleri, **1080×2340** (dikey), oyunun arka planı ve neon dünyasıyla. Bunlar **yön gösteren
