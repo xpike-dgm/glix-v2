@@ -2,7 +2,7 @@ import { CARDS, type CardId, type CardRarity, type CardSettings, DEFAULT_CARD_SE
 import { For, Show } from "solid-js";
 import { setCards } from "../net/client.js";
 import { BottomSheet } from "./BottomSheet.js";
-import { GemMark } from "./CardFace.js";
+import { CardThumb, GemMark } from "./CardFace.js";
 import { cardsOfRarity, RARITY_LABEL, toggleCard } from "./cards.js";
 import { GhostButton } from "./GhostButton.js";
 
@@ -64,6 +64,7 @@ export function CardSettingsSheet(props: {
                     disabled={!props.host}
                     onClick={() => flip(id)}
                   >
+                    <CardThumb id={id} />
                     <span class="kc-sw__label">
                       <b>{CARDS[id].name}</b>
                       <span>{CARDS[id].text}</span>

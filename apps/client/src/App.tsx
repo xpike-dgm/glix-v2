@@ -47,6 +47,7 @@ import { preloadBriefing } from "./ui/briefingArt.js";
 import { Curtain } from "./ui/Curtain.js";
 import { Loading } from "./ui/Loading.js";
 import { collectGallery } from "./ui/matchGallery.js";
+import { preloadCards } from "./ui/preloadCards.js";
 import { preloadMoods } from "./ui/preloadMoods.js";
 import { preloadProps } from "./ui/props.js";
 import { ReportSheet } from "./ui/ReportSheet.js";
@@ -86,6 +87,12 @@ export function App() {
   // Karalama / Bozuk Telefon çizimleri (sunucunun herkese açık gönderdikleri) maç sonu galerisi için birikir.
   createEffect(() => collectGallery(state.snapshot));
   createEffect(() => collectRounds(state.snapshot));
+
+  // Kartlı maç başlayınca çerçeveler ve kart sırtı önden indirilir.
+  createEffect(() => {
+    const snap = state.snapshot;
+    if (snap && snap.phase !== "lobby" && snap.cardSettings?.enabled !== false) preloadCards();
+  });
 
   // Lobiye girince lobi arka planı önden indirilir.
   createEffect(() => {

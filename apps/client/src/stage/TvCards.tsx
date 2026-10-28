@@ -2,6 +2,7 @@ import type { MatchSnapshot, RoomSnapshot } from "@glix/engine";
 import { createMemo } from "solid-js";
 import { createServerNow } from "../net/time.js";
 import { playersOnly } from "../screens/ranking.js";
+import { BackPic } from "../ui/CardFace.js";
 import { Clock } from "../ui/Clock.js";
 import { TvBoard } from "./TvParts.js";
 
@@ -34,13 +35,13 @@ export function TvCards(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
         </header>
         <div class="tv__deck" aria-hidden="true">
           <span class="kc-card kc-card--back" data-layout="tile" style={{ "--k": -1 }}>
-            <span class="kc-card__qmark">?</span>
+            <BackPic />
           </span>
           <span class="kc-card kc-card--back" data-layout="tile" style={{ "--k": 0 }}>
-            <span class="kc-card__qmark">?</span>
+            <BackPic />
           </span>
           <span class="kc-card kc-card--back" data-layout="tile" style={{ "--k": 1 }}>
-            <span class="kc-card__qmark">?</span>
+            <BackPic />
           </span>
         </div>
         <p class="tv__lead">Oyuncular kart seçiyor. Kartlar bir sonraki oyunun başında açıklanır.</p>

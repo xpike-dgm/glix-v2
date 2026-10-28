@@ -114,7 +114,7 @@ export function Cards(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
                       {(id) => (
                         <CardFace
                           id={id()}
-                          layout="tile"
+                          layout="auto"
                           disabled={sent().includes(i())}
                           on={sent().includes(i())}
                           onClick={() => choose(i())}
@@ -132,15 +132,15 @@ export function Cards(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
 
           <Show when={state() === "discard"}>
             <p class="kc-note">Yeni kartı almak için birini at. Yeni kartı atmak için ona dokun.</p>
-            <div class="kc-opts" data-n={3}>
+            <div class="kc-opts" data-n={(mine()?.hand.length ?? 0) + (pick()?.held ? 1 : 0)}>
               <For each={mine()?.hand ?? []}>
-                {(id, i) => <CardFace id={id} layout="tile" onClick={() => drop(i())} note={<DropMark />} />}
+                {(id, i) => <CardFace id={id} layout="auto" onClick={() => drop(i())} note={<DropMark />} />}
               </For>
               <Show when={pick()?.held}>
                 {(held) => (
                   <CardFace
                     id={held()}
-                    layout="tile"
+                    layout="auto"
                     badge="Yeni"
                     onClick={() => drop(null)}
                     note={<DropMark />}
@@ -158,7 +158,7 @@ export function Cards(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
               <Show when={state() === "wait" && (pick()?.got.length ?? 0) > 0}>
                 <p class="kc-note">Seçtiğin kart{(pick()?.got.length ?? 0) > 1 ? "lar" : ""}:</p>
                 <div class="kc-opts" data-n={pick()?.got.length ?? 1}>
-                  <For each={pick()?.got ?? []}>{(id) => <CardFace id={id as CardId} layout="tile" />}</For>
+                  <For each={pick()?.got ?? []}>{(id) => <CardFace id={id as CardId} layout="auto" />}</For>
                 </div>
               </Show>
               <p class="kc-note">Diğerleri bekleniyor…</p>

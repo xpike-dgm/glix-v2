@@ -366,16 +366,16 @@ button.kcell:disabled {
   padding: 0 5px;
   border-radius: 999px;
   background: rgba(5, 8, 26, 0.88);
-  opacity: 0;
   animation: k-float 700ms var(--ease) calc(2400ms - var(--skew, 0ms)) both;
 }
+/* Puan etiketi soluk geçişle değil, görünürlük + kayma ile gelir: yarı saydam hâlde okunması zor kalmaz. */
 @keyframes k-float {
   from {
-    opacity: 0;
+    visibility: hidden;
     transform: translateY(8px);
   }
   to {
-    opacity: 1;
+    visibility: visible;
     transform: none;
   }
 }
