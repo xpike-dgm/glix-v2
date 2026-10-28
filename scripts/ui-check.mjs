@@ -246,7 +246,7 @@ const SCREENS = [
     q: "mock=magaza",
     settle: 900,
     act: async (p) => {
-      await p.getByRole("tab", { name: "Unvanlar" }).click();
+      await p.getByRole("tab", { name: "Lakaplar" }).click();
       await p.locator("[role=tabpanel]").evaluate((el) => el.scrollIntoView({ block: "start" }));
     },
   },
@@ -259,13 +259,13 @@ const SCREENS = [
       await p.locator("[role=tabpanel]").evaluate((el) => el.scrollIntoView({ block: "start" }));
     },
   },
-  { name: "magaza-unvanlar", q: "mock=magaza", settle: 900, act: clickText("Unvanlar") },
+  { name: "magaza-unvanlar", q: "mock=magaza", settle: 900, act: clickText("Lakaplar") },
   {
     name: "magaza-satin-al-unvan",
     q: "mock=magaza",
     settle: 700,
     act: async (p) => {
-      await p.getByRole("tab", { name: "Unvanlar" }).click();
+      await p.getByRole("tab", { name: "Lakaplar" }).click();
       await p.locator("[role=tabpanel] .shop-card[data-status=buy]").first().click();
     },
   },

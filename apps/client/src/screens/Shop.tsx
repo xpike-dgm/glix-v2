@@ -94,7 +94,7 @@ function Card(props: {
 }
 
 const TYPE_LABEL: Readonly<Record<CosmeticTypeId, string>> = {
-  unvan: "Unvan",
+  unvan: "Lakap",
   "ad-efekti": "Ad efekti",
   cerceve: "Avatar çerçevesi",
 };

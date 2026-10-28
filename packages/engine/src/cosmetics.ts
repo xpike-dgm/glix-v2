@@ -30,14 +30,14 @@ export interface CosmeticType {
   id: CosmeticTypeId;
   /** `Cosmetics` içindeki anahtar. */
   key: CosmeticKey;
-  /** Tekil ad ("Unvan"), çoğul ad (sekme: "Unvanlar") ve ücretsiz temel seçeneğin adı. */
+  /** Tekil ad ("Lakap"), çoğul ad (sekme: "Lakaplar") ve ücretsiz temel seçeneğin adı. */
   name: string;
   plural: string;
   none: string;
 }
 
 export const COSMETIC_TYPES: readonly CosmeticType[] = [
-  { id: "unvan", key: "title", name: "Unvan", plural: "Unvanlar", none: "Yok" },
+  { id: "unvan", key: "title", name: "Lakap", plural: "Lakaplar", none: "Yok" },
   { id: "ad-efekti", key: "nameFx", name: "Ad efekti", plural: "Ad efektleri", none: "Yok" },
   { id: "cerceve", key: "frame", name: "Çerçeve", plural: "Çerçeveler", none: "Yok" },
 ];

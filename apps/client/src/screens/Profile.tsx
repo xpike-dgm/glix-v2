@@ -237,7 +237,7 @@ function Hub(props: { onRename: () => void }) {
           </span>
           <span class="set__text">
             <span class="set__label">Dolabım</span>
-            <span class="set__hint">Unvan, ad efekti ve çerçeveni seç</span>
+            <span class="set__hint">Lakap, ad efekti ve çerçeveni seç</span>
           </span>
           <ChevronRightIcon size={20} class="hub__chev" />
         </button>
