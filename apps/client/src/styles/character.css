@@ -131,6 +131,10 @@
   .podium__who {
     margin-top: 0;
   }
+  /* Sütun dar (≈75 px): ad avatar rozetiyle yarışmasın; karakterin kendisi zaten kişiyi gösterir. */
+  .podium__tagwrap {
+    display: none;
+  }
   .fin .fin__score {
     display: none;
   }
