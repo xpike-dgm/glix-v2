@@ -38,7 +38,7 @@ import { isConnected } from "./runtime.js";
 export const TICK_MS = 100;
 export const BRIEFING_TIMEOUT_MS = 40_000;
 export const COUNTDOWN_MS = 3_000;
-export const RESULTS_MS = 7_000;
+export const RESULTS_MS = 30_000;
 /** Bellekte tutulan son oyun kaydı sayısı (docs/PROTOKOL.md "Maç kaydı"). */
 export const RECENT_LOGS = 20;
 

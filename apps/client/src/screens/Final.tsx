@@ -14,17 +14,19 @@ import { ShareSheet } from "../share/ShareSheet.js";
 import { Avatar } from "../ui/Avatar.js";
 import type { Mood } from "../ui/avatars.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
-import { EmojiBar, RESULT_EMOJIS } from "../ui/EmojiBar.js";
+import { EmojiFan } from "../ui/EmojiFan.js";
 import { FeedbackRow } from "../ui/FeedbackRow.js";
 import { GhostButton } from "../ui/GhostButton.js";
-import { CrownIcon, ShareIcon } from "../ui/Icons.js";
+import { ShareIcon } from "../ui/Icons.js";
 import { LeaveButton } from "../ui/LeaveButton.js";
 import { Mascot } from "../ui/Mascot.js";
 import { MatchGallery } from "../ui/MatchGallery.js";
 import { galleryItems } from "../ui/matchGallery.js";
 import { NewBadgeCard } from "../ui/NewBadgeCard.js";
+import { PodiumBlock } from "../ui/PodiumBlock.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { ReactionLayer } from "../ui/ReactionLayer.js";
+import { FlagIcon } from "../ui/ResultIcons.js";
 import { createReactionSender } from "../ui/reactionSend.js";
 import { Screen } from "../ui/Screen.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
@@ -152,26 +154,18 @@ export function Final(props: { snap: RoomSnapshot }) {
                   data-pos={top().indexOf(r)}
                   style={{ "--i": 3 - top().indexOf(r) }}
                 >
-                  <div class="podium__badge">
-                    <Show when={r.rank === 1}>
-                      <span class="fin__crown" aria-hidden="true">
-                        <CrownIcon size="100%" />
-                      </span>
-                    </Show>
-                  </div>
                   <Avatar
                     index={r.player.avatar}
                     size={podiumAvatar(r.rank)}
                     mood={rowMood(r.rank, r.score)}
                     live={r.rank === 1 ? "joy" : undefined}
+                    winner={r.rank === 1}
                     connected={r.player.connected}
                     self={r.player.id === props.snap.selfId}
                   />
                   <span class="podium__name">{r.player.nickname}</span>
                   <span class="podium__score">{formatScore(r.score)}</span>
-                  <div class="podium__block">
-                    <span>{r.rank}</span>
-                  </div>
+                  <PodiumBlock rank={r.rank} />
                 </div>
               )}
             </For>
@@ -232,20 +226,6 @@ export function Final(props: { snap: RoomSnapshot }) {
 
           <MatchGallery players={props.snap.players} />
 
-          <Show when={ranked().length > 0}>
-            <GhostButton size="small" class="fin__sharebtn" onClick={() => setShareOpen(true)}>
-              <span class="fin__sharelabel">
-                <ShareIcon size={18} /> Anları paylaş
-              </span>
-            </GhostButton>
-          </Show>
-
-          <Show when={props.snap.players.length > 1}>
-            <GhostButton size="small" class="rep__link" onClick={() => openReport()}>
-              Oyuncuyu bildir
-            </GhostButton>
-          </Show>
-
           <Show when={!state.account}>
             <div class="fin__invite" role="note">
               <span class="fin__invitetext">Rozet ve istatistik için hesap aç</span>
@@ -263,19 +243,26 @@ export function Final(props: { snap: RoomSnapshot }) {
       </div>
 
       <footer class="final__foot">
-        <EmojiBar compact emojis={RESULT_EMOJIS} onPick={react} />
-        <Show
-          when={isHost()}
-          fallback={
-            <p class="waiting">
-              {watching() ? "Lobiye dönünce oyuncu olursun" : "Ev sahibi yeni maçı başlatacak"}
-            </p>
-          }
-        >
-          <PrimaryButton class="pbtn--long" onClick={() => returnToLobby()}>
-            Aynı ekiple yeni maç
-          </PrimaryButton>
+        <Show when={props.snap.players.length > 1}>
+          <button type="button" class="corner-btn" aria-label="Oyuncuyu bildir" onClick={() => openReport()}>
+            <FlagIcon size={22} />
+          </button>
         </Show>
+        <div class="final__main">
+          <Show
+            when={isHost()}
+            fallback={
+              <p class="waiting">
+                {watching() ? "Lobiye dönünce oyuncu olursun" : "Ev sahibi yeni maçı başlatacak"}
+              </p>
+            }
+          >
+            <PrimaryButton class="pbtn--long" onClick={() => returnToLobby()}>
+              Aynı ekiple yeni maç
+            </PrimaryButton>
+          </Show>
+        </div>
+        <EmojiFan onPick={react} />
       </footer>
       <ReactionLayer />
       <NewBadgeCard />

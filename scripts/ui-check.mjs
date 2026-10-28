@@ -61,6 +61,8 @@ const TV = [
   [1920, 1080],
   [1280, 720],
 ];
+/** Sonuç ve final: ayrıca 390x750 (tarayıcı çubukları yenmiş gerçek telefon yüksekliği). */
+const SONUC_BOYUTLAR = [PORTRAIT[1], [390, 750], PORTRAIT[0], LANDSCAPE[1]];
 const QUICK_SIZES = [PORTRAIT[0], LANDSCAPE[1]];
 
 /** Ekranın koşacağı boyutlar; hızlı kipte QUICK_SIZES ile kesişim (boşsa listenin ilki). */
@@ -541,11 +543,36 @@ const SCREENS = [
   { name: "capraz-reveal-3", q: "mock=capraz-reveal&n=3", settle: 2800 },
   { name: "capraz-spectator", q: "mock=capraz-spectator" },
   { name: "capraz-spectator-reveal", q: "mock=capraz-spectator-reveal", settle: 2800 },
-  { name: "results-3", q: "mock=results&n=3", settle: 2400 },
-  { name: "results-5", q: "mock=results&n=5", settle: 2400 },
-  { name: "results-8", q: "mock=results&n=8", settle: 2400 },
-  { name: "final-3", q: "mock=final&n=3", settle: 2200 },
-  { name: "final-8", q: "mock=final&n=8", settle: 2200 },
+  { name: "results-3", q: "mock=results&n=3", settle: 2400, sizes: SONUC_BOYUTLAR },
+  { name: "results-5", q: "mock=results&n=5", settle: 2400, sizes: SONUC_BOYUTLAR },
+  { name: "results-8", q: "mock=results&n=8", settle: 2400, sizes: SONUC_BOYUTLAR },
+  // Final tek telefon ekranına (390x750: tarayıcı çubukları sonrası gerçek yükseklik) kaydırmasız sığmalı.
+  { name: "final-3", q: "mock=final&n=3", settle: 2200, sizes: SONUC_BOYUTLAR },
+  { name: "final-5", q: "mock=final&n=5", settle: 2200, sizes: SONUC_BOYUTLAR },
+  { name: "final-8", q: "mock=final&n=8", settle: 2200, sizes: SONUC_BOYUTLAR },
+  // Tepki yelpazesi: köşe düğmesine dokununca mandalina dilimleri açılır.
+  {
+    name: "results-tepki-acik",
+    q: "mock=results&n=5",
+    settle: 2400,
+    sizes: SONUC_BOYUTLAR,
+    act: async (p) => {
+      await p.getByRole("button", { name: "Tepki gönder" }).click();
+      await p.getByRole("button", { name: "Tepki: Ateş" }).waitFor();
+      await p.waitForTimeout(600);
+    },
+  },
+  {
+    name: "final-tepki-acik",
+    q: "mock=final&n=5",
+    settle: 2200,
+    sizes: SONUC_BOYUTLAR,
+    act: async (p) => {
+      await p.getByRole("button", { name: "Tepki gönder" }).click();
+      await p.getByRole("button", { name: "Tepki: Ateş" }).waitFor();
+      await p.waitForTimeout(600);
+    },
+  },
   {
     name: "final-feedback-open",
     q: "mock=final&n=8",

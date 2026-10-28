@@ -31,7 +31,7 @@ async function finishMatch(cs: Client[]): Promise<void> {
   await press(cs[0] as Client);
   k.clock.advance(51_100);
   await until(() => (cs[0] as Client).room.phase === "results", "sonuç");
-  k.clock.advance(7_100);
+  k.clock.advance(30_100);
   await until(() => (cs[0] as Client).room.phase === "final", "final");
 }
 
@@ -277,7 +277,7 @@ describe("performans özeti", () => {
     expect(JSON.stringify(r)).not.toContain(a.session.playerId);
 
     // final'de de yok sayılır.
-    k.clock.advance(7_100);
+    k.clock.advance(30_100);
     await until(() => a.room.phase === "final", "final");
     a.send(perfMsg("butona-bas"));
     a.send({ type: "ping", t: 2 });

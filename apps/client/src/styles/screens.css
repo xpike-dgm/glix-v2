@@ -973,36 +973,49 @@
   line-height: 1.2;
   margin-top: 2px;
 }
+/* Podyum bloğu: altın/gümüş/bronz neon blok + madalya (numara yok). Görsel değişkenle değiştirilebilir:
+   `--pod-art: url(...)` verilirse blok arka planı o görsel olur (renkler ve madalya yerinde kalır). */
+.podium__col {
+  --pod-rgb: 255, 194, 59;
+}
+.podium__col[data-rank="2"] {
+  --pod-rgb: 201, 210, 255;
+}
+.podium__col[data-rank="3"] {
+  --pod-rgb: 255, 138, 59;
+}
 .podium__block {
+  position: relative;
   width: 100%;
   margin-top: 10px;
   border-radius: 14px 14px 0 0;
   display: grid;
   place-items: start center;
   padding-top: 8px;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: var(--fs-24);
-  border-top: 2px solid var(--amber);
-  background: linear-gradient(180deg, rgba(255, 194, 59, 0.5), rgba(255, 194, 59, 0.04));
-  color: var(--text);
+  border-top: 2px solid rgb(var(--pod-rgb));
+  background:
+    var(--pod-art, none) center / 100% 100% no-repeat,
+    linear-gradient(115deg, rgba(255, 255, 255, 0.22) 0 14%, transparent 14% 100%),
+    linear-gradient(180deg, rgba(var(--pod-rgb), 0.55), rgba(var(--pod-rgb), 0.06));
+  box-shadow:
+    0 -4px 22px -6px rgba(var(--pod-rgb), 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  color: rgb(var(--pod-rgb));
   height: 88px;
+}
+.podium__medal {
+  display: block;
+  width: var(--medal, 30px);
+  height: var(--medal, 30px);
+  filter: drop-shadow(0 0 8px rgba(var(--pod-rgb), 0.75));
 }
 .podium__col[data-pos="1"] .podium__block {
   height: 62px;
+  --medal: 26px;
 }
 .podium__col[data-pos="2"] .podium__block {
   height: 44px;
-}
-.podium__col[data-rank="2"] .podium__block {
-  border-color: #c9d2ff;
-  color: var(--text);
-  background: linear-gradient(180deg, rgba(201, 210, 255, 0.34), rgba(201, 210, 255, 0.03));
-}
-.podium__col[data-rank="3"] .podium__block {
-  border-color: var(--orange, #ff8a3b);
-  color: var(--text);
-  background: linear-gradient(180deg, rgba(255, 138, 59, 0.34), rgba(255, 138, 59, 0.03));
+  --medal: 22px;
 }
 .podium__col[data-rank="1"] .podium__score {
   color: var(--amber);
@@ -1982,13 +1995,6 @@
     transform 80ms var(--ease),
     background 120ms;
 }
-/* Sonuç/final: dört düğme ortada, altta ince şerit. */
-.emojibar--compact {
-  justify-content: center;
-  gap: 14px;
-  margin: 0;
-  padding-top: 2px;
-}
 .emojibar__btn:active {
   transform: scale(0.88);
   background: rgba(46, 242, 255, 0.14);
@@ -2527,14 +2533,6 @@
   --pod-big: clamp(72px, 22vw, 100px);
   --pod-small: clamp(56px, 17vw, 72px);
 }
-.fin__crown {
-  display: block;
-  width: 30px;
-  height: 30px;
-  color: var(--amber);
-  filter: drop-shadow(0 0 10px rgba(255, 194, 59, 0.7));
-  transform: rotate(-6deg);
-}
 .fin__rows {
   margin: 0;
   overflow: visible;
@@ -2671,30 +2669,6 @@
   .fin .fb__send {
     flex: 1 1 0;
   }
-}
-
-/* Yatay geniş ekran: tepki dörtlüsü içerik sütununun dışında, sağ kenarda dikey durur (dikey alan değerli). */
-@media (orientation: landscape) and (max-height: 520px) and (min-width: 640px) {
-  .final__foot .emojibar--compact,
-  .results__foot .emojibar--compact {
-    position: fixed;
-    right: max(8px, var(--safe-right, 0px));
-    top: 50%;
-    transform: translateY(-50%);
-    flex-direction: column;
-    gap: 6px;
-    padding: 0;
-    z-index: 3;
-  }
-}
-.fin__sharebtn {
-  align-self: center;
-  color: var(--cyan);
-}
-.fin__sharelabel {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
 }
 
 /* ---- Hesap: ana sayfa satırı ve giriş/kayıt formları ---- */

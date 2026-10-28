@@ -423,7 +423,7 @@ describe("rozet bildirimi (canlı bağlantı)", () => {
     k.clock.advance(startedAt + 51_000 - k.clock.now());
     await until(() => host.room.phase === "results", "results");
     expect(host.of("badgesEarned")).toEqual([]);
-    k.clock.advance(7_100);
+    k.clock.advance(30_100);
     await until(() => host.room.phase === "final", "final");
     await until(() => host.of("badgesEarned").length > 0 && ikinci.of("badgesEarned").length > 0, "rozet");
 

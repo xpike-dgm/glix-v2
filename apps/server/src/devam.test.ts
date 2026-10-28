@@ -141,7 +141,7 @@ describe("sonuç ekranında Devam (erken bitiş)", () => {
 
     k.clock.advance(45_000);
     await until(() => a.room.phase === "results");
-    k.clock.advance(7_000);
+    k.clock.advance(30_000);
     await until(() => a.room.phase === "final");
     await wait();
     b.send({ type: "continue" });

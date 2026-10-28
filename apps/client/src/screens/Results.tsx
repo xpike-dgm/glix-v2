@@ -11,10 +11,11 @@ import { createServerNow } from "../net/time.js";
 import { Avatar } from "../ui/Avatar.js";
 import type { Mood } from "../ui/avatars.js";
 import { CardLines } from "../ui/CardLines.js";
-import { EmojiBar, RESULT_EMOJIS } from "../ui/EmojiBar.js";
-import { GhostButton } from "../ui/GhostButton.js";
+import { EmojiFan } from "../ui/EmojiFan.js";
+import { PodiumBlock } from "../ui/PodiumBlock.js";
 import { ProgressBar } from "../ui/ProgressBar.js";
 import { ReactionLayer } from "../ui/ReactionLayer.js";
+import { FlagIcon } from "../ui/ResultIcons.js";
 import { createReactionSender } from "../ui/reactionSend.js";
 import { Screen } from "../ui/Screen.js";
 import { TamamBar } from "../ui/TamamBar.js";
@@ -136,6 +137,17 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
       <p class="sr-only" role="status" aria-live="polite">
         {announce()}
       </p>
+      <Show when={props.snap.players.length > 1}>
+        <button
+          type="button"
+          class="corner-btn corner-btn--start"
+          aria-label="Oyuncuyu bildir"
+          onClick={() => openReport()}
+        >
+          <FlagIcon size={22} />
+        </button>
+      </Show>
+      <EmojiFan class="corner-btn--end" open="down" onPick={react} />
       <header class="results__head rise">
         <p class="overline">
           Oyun {props.match.round + 1} / {props.match.total}
@@ -179,15 +191,13 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
                   size={podiumAvatar(r.rank)}
                   mood={moodOf(r)}
                   live={r.rank === 1 && award(r.player.id) >= 0 ? "joy" : undefined}
-                  host={r.player.id === props.snap.hostId}
+                  winner={r.rank === 1}
                   connected={r.player.connected}
                   self={r.player.id === props.snap.selfId}
                 />
                 <span class="podium__name">{r.player.nickname}</span>
                 <span class="podium__score">{formatScore(r.score)}</span>
-                <div class="podium__block">
-                  <span>{r.rank}</span>
-                </div>
+                <PodiumBlock rank={r.rank} />
               </div>
             )}
           </For>
@@ -247,17 +257,11 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
             )}
           </For>
         </ul>
-        <Show when={props.snap.players.length > 1}>
-          <GhostButton size="small" class="rep__link" onClick={() => openReport()}>
-            Oyuncuyu bildir
-          </GhostButton>
-        </Show>
       </div>
 
       <Watchers players={watchersOf(props.snap.players)} selfId={props.snap.selfId} />
 
       <footer class="results__foot">
-        <EmojiBar compact emojis={RESULT_EMOJIS} onPick={react} />
         <div class="next">
           <div class="next__card">
             <Show when={nextId()} fallback={<span class="next__art next__art--final" aria-hidden="true" />}>

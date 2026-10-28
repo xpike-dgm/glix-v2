@@ -33,6 +33,10 @@ tasarladığı alanlar birlikte kilitlenir; kodlama bu kural seti üzerinden yap
   değiştirebilir: bu ayar oyun tanımındaki `randomPool` varsayılanını iki yönde de ezer (havuz dışı bir oyunu havuza ekleyebilir,
   havuzdakini dışarı alabilir). Oyunun kendi kuralları değişmez (`docs/ADMIN.md`).
 - Aynı maçta aynı mini oyun tekrar etmez.
+- Sonuç ekranı (KİLİTLİ, Ekim 2026, sahip onayı): her mini oyundan sonra gösterilir. **Bağlı bütün katılımcılar "Devam"a
+  basınca** hemen (1 saniye sonra) kapanır; basmayan olursa **30 saniye** sonra kendiliğinden kapanır (eskisi 7 saniyeydi).
+  Bağlantısı kopan oyuncu beklenmez. Podyumda sıra numarası yazmaz; sıra altın/gümüş/bronz bloklar ve madalya ile gösterilir.
+  Sonuç ve final ekranlarında taç yalnız kazanana verilir (ev sahibi tacı bu ekranlarda gösterilmez).
 - Kartlar (KİLİTLİ, Ekim 2026): her 3. mini oyundan sonra kart seçimi, anlatımda kart oynama ve oyun sonu puan etkileri için bkz. "0. Maç düzeyi kuralları: Kartlar".
 - Bot bulunmaz.
 - Maç verileri maç bitince kalıcı olarak saklanmaz.

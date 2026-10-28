@@ -111,7 +111,7 @@ async function playOut(cs: Client[]): Promise<void> {
 /** Sonuç ekranından sonra: kart seçimi varsa onun açıldığı, yoksa sıradaki anlatımın açıldığı ana kadar. */
 async function afterResults(cs: Client[]): Promise<"cards" | "briefing" | "final"> {
   const host = cs[0] as Client;
-  k.clock.advance(7000);
+  k.clock.advance(30_000);
   await until(() => ["cards", "briefing", "final"].includes(host.room.phase), "sonuç sonrası");
   return host.room.phase as "cards" | "briefing" | "final";
 }
@@ -400,7 +400,7 @@ describe("lobi ayarı", () => {
     await until(() => a.of("error").some((e) => e.code === "wrong_phase"), "maçta reddedildi");
     expect(a.room.cardSettings).toEqual({ enabled: true, off: ["kalkan"] });
     await playOut(cs);
-    k.clock.advance(7000);
+    k.clock.advance(30_000);
     await until(() => a.room.phase === "final", "final");
     a.send({ type: "returnToLobby" });
     await until(() => a.room.phase === "lobby", "lobi");
@@ -681,7 +681,7 @@ describe("Veto ve Sıradaki Oyunu Seç", () => {
     await until(() => a.room.match?.round === 2, "oyun 3");
     expect(a.room.match?.gameId).toBe(games[3]);
     await playOut(cs);
-    k.clock.advance(7000);
+    k.clock.advance(30_000);
     await until(() => a.room.phase === "final", "final");
     a.send({ type: "returnToLobby" });
     await until(() => a.room.phase === "lobby", "lobi");
@@ -796,7 +796,7 @@ describe("oyun hatası ve kayıt", () => {
     const live = JSON.parse(JSON.stringify(cardsOf(a))) as CardsState;
     // Oyun 4'ü de bitir
     await playOut(cs);
-    k.clock.advance(7000);
+    k.clock.advance(30_000);
     await until(() => a.room.phase === "final", "final");
     const log = k.srv.recentCardLogs.at(-1);
     expect(log).toBeDefined();
@@ -849,7 +849,7 @@ describe("oyun hatası ve kayıt", () => {
     a.send({ type: "playCard", card: "cift-puan" });
     await until(() => mine(a)?.staged !== null, "oynadı");
     await playOut(cs);
-    k.clock.advance(7000);
+    k.clock.advance(30_000);
     await until(() => a.room.phase === "final", "final");
     // Ham 1 → Çift Puan ile 2; yalnız hesaplı host satır yazar.
     expect(scoreOf(a, a)).toBe(2);

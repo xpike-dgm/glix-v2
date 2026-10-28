@@ -78,7 +78,7 @@ describe("yama senkronu", () => {
     // maçı bitir: 45 sn
     k.clock.advance(45_000);
     await until(() => a.room.phase === "results" || a.room.phase === "final", "sonuç");
-    k.clock.advance(8_000);
+    k.clock.advance(31_000);
     await until(() => a.room.phase === "final", "final");
     const mark = a.mark();
     a.send({ type: "returnToLobby" });

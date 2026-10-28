@@ -131,7 +131,7 @@ sunucu günlüğüne yazılır.
 ## Maç akışı (sunucu)
 
 ```
-lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(7 sn) → (3., 6. … oyundan sonra, son oyun hariç) cards(15 sn)] → final → (host) lobby
+lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(30 sn; herkes Devam derse erken) → (3., 6. … oyundan sonra, son oyun hariç) cards(15 sn)] → final → (host) lobby
 ```
 
 - **briefing:** Katılımcıların hepsi `ready` gönderince biter. Bağlantısı kopmuş oyuncu beklenmez.
