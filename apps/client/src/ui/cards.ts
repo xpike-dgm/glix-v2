@@ -144,5 +144,9 @@ export const cardArt = (id: CardId): string => `/assets/cards/${id}.webp`;
 export const cardFrame = (r: CardRarity): string => `/assets/cards/cerceve-${r}.webp`;
 export const CARD_BACK_SRC = "/assets/cards/arka.webp";
 
-/** Dikey tam kartın (yazı çerçeve panelinde) sığdığı ekran: geniş ve yüksek yatay ekran. Telefon her yönde satır düzenini kullanır. */
-export const ROOMY_QUERY = "(orientation: landscape) and (min-width: 900px) and (min-height: 600px)";
+/**
+ * Kart metninin kartın kendi panelinde ≥13 px sığdığı ekran: büyük yatay ekran (masaüstü, tablet yatay).
+ * Burada tek dokunuş seçer. Daha küçük ekranlarda (telefonlar, dikey tablet) kartta yalnız ad görünür;
+ * dokununca açıklama altta / yanda açılır ve "Bu kartı seç" ile onaylanır.
+ */
+export const ROOMY_QUERY = "(orientation: landscape) and (min-width: 1000px) and (min-height: 680px)";

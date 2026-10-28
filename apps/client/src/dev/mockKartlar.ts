@@ -2,7 +2,7 @@
  * Yalnız geliştirme önizlemesi (üretim paketine girmez; App.tsx `import.meta.env.DEV` ile korur).
  * Kart sistemi ekranlarını sahte verilerle açar: `?mock=kart-<durum>` (TV için `mock=tv-kart-<durum>`; `&n=8` oyuncu sayısı).
  *   kart-secim | kart-secim-4 | kart-secim-kor | kart-secim-secti | kart-secim-degistir | kart-secim-sessiz
- *   kart-secim-kotu | kart-secim-izleyici
+ *   kart-secim-kotu | kart-secim-izleyici | kart-secim-kotu-kart | kart-secim-kumarbaz | kart-secim-uzun
  *   kart-anlatim | kart-anlatim-oynadi | kart-anlatim-bos
  *   kart-geri-sayim | kart-sonuc | kart-sonuc-bos
  */
@@ -144,6 +144,25 @@ export function startKartMock(rawKind: string, params: URLSearchParams): void {
           done: true,
           options: [null, "celme", "cift-puan"],
         }),
+      };
+      break;
+    case "kart-secim-kotu-kart":
+      mine = {
+        ...(mine as CardsMine),
+        hand: ["kalkan"],
+        pick: pickState({ options: ["takviye", "talihsizlik", "cift-puan"] }),
+      };
+      break;
+    case "kart-secim-kumarbaz":
+      mine = {
+        ...(mine as CardsMine),
+        pick: pickState({ total: 2, taken: [1], got: ["celme"], options: ["takviye", null, "ters-kose"] }),
+      };
+      break;
+    case "kart-secim-uzun":
+      mine = {
+        ...(mine as CardsMine),
+        pick: pickState({ options: ["oyunu-sec", "kendine-guven", "lanetli-hediye"] }),
       };
       break;
     case "kart-secim-izleyici":

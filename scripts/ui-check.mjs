@@ -75,6 +75,11 @@ const clickText = (text) => async (page) => {
   await page.getByText(text, { exact: false }).first().click();
 };
 
+/** Kart seçiminde n'inci karta dokunur (incelenir). */
+const kartBak = (n) => async (page) => {
+  await page.locator(".kc-deal .kc-card").nth(n).click();
+};
+
 /** Bildir: lobide ilk oyuncuya dokun, menüden "Bildir", sebep seç, not yaz. */
 async function bildirLobiForm(page) {
   await page.locator(".seat:not(.seat--self):not(.seat--empty)").first().click();
@@ -1626,6 +1631,14 @@ const SCREENS = [
   { name: "kart-secim-izleyici", q: "mock=kart-secim-izleyici", settle: 700 },
   { name: "kart-secim-buyuk-yazi", q: "mock=kart-secim-4&text=large", settle: 700 },
   { name: "kart-secim-renk-koru", q: "mock=kart-secim-4&cb=1", settle: 700 },
+  // Kart seçimi yeni tasarım: kartlar kendi görüntüsüyle; dokununca incelenir, "Bu kartı seç" ile onaylanır
+  { name: "kart-secim-bakis", q: "mock=kart-secim", settle: 700, act: kartBak(1) },
+  { name: "kart-secim-uzun-ad", q: "mock=kart-secim-uzun", settle: 700, act: kartBak(0) },
+  { name: "kart-secim-4-bakis", q: "mock=kart-secim-4", settle: 700, act: kartBak(2) },
+  { name: "kart-secim-kumarbaz", q: "mock=kart-secim-kumarbaz", settle: 700 },
+  { name: "kart-secim-kumarbaz-bakis", q: "mock=kart-secim-kumarbaz", settle: 700, act: kartBak(1) },
+  { name: "kart-secim-degistir-bakis", q: "mock=kart-secim-degistir", settle: 700, act: kartBak(2) },
+  { name: "kart-secim-kotu-bakis", q: "mock=kart-secim-kotu-kart", settle: 700, act: kartBak(1) },
   { name: "kart-anlatim", q: "mock=kart-anlatim", settle: 900 },
   { name: "kart-anlatim-8", q: "mock=kart-anlatim&n=8", settle: 900 },
   { name: "kart-anlatim-oynadi", q: "mock=kart-anlatim-oynadi", settle: 900 },
