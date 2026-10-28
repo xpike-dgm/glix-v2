@@ -335,22 +335,22 @@ async function main() {
     );
     assert((await B.evaluate(() => localStorage.getItem("glix.avatar"))) === "7", "karakter hatırlanmadı");
 
-    // Minigame akordeonu: oda rastgele 5 ile açılır; host "Ben seçeyim"e geçip yalnız Butona Bas'ı bırakır,
-    // son oyun kapatılamaz
-    const head = A.locator(".games__head");
-    assert(
-      (await head.locator(".games__count").innerText()).trim() === "Rastgele · 5",
-      "akordeon başlığı 'Rastgele · 5' göstermeli",
-    );
-    await A.locator(".games__head").click();
+    // Lobi ayarları: lobide tek satır özet ("5 rastgele oyun · …"); dokununca ayrı ayar ekranı açılır. Host
+    // "Ben seçeyim"e geçip yalnız Butona Bas'ı bırakır, son oyun kapatılamaz. Misafir ekranı salt okunur görür.
+    const settingsRow = A.locator("button.lrow", { hasText: "Lobi ayarları" });
+    assert((await settingsRow.innerText()).includes("5 rastgele"), "ayar özeti '5 rastgele oyun' göstermeli");
+    await settingsRow.click();
     await A.locator(".seg__opt", { hasText: "Rastgele" }).waitFor(OPT);
     await shot(A, "05a-lobby-random");
+    await C.locator("button.lrow", { hasText: "Lobi ayarları" }).click();
+    await C.getByText("Ayarları yalnızca oda sahibi değiştirebilir.").waitFor(OPT);
     assert(
       !(await C.locator(".seg__opt", { hasText: "Ben seçeyim" })
         .isEnabled()
         .catch(() => false)),
       "host olmayan seçim biçimini değiştirememeli",
     );
+    await C.getByRole("button", { name: "Geri" }).click();
     await A.locator(".seg__opt", { hasText: "Ben seçeyim" }).click();
     const card = A.locator(".gcard", { hasText: "Butona Bas" });
     await card.waitFor(OPT);
@@ -370,11 +370,9 @@ async function main() {
     await card.click();
     await A.getByText("En az bir oyun seçili olmalı").waitFor(OPT);
     assert((await card.getAttribute("aria-pressed")) === "true", "son oyun seçili kalmalı");
-    assert(
-      (await head.locator(".games__count").innerText()).trim() === "1 oyun",
-      "el ile modda başlık '1 oyun' göstermeli",
-    );
-    await A.locator(".games__head").click();
+    await A.getByText("1 oyun seçili").waitFor(OPT);
+    await A.getByRole("button", { name: "Geri" }).click();
+    await settingsRow.waitFor(OPT);
 
     // Olmayan oda: nazik mesaj + ANA SAYFA
     const ctxD = await mk();
@@ -631,11 +629,15 @@ async function main() {
     const badgeCard = A.getByRole("dialog", { name: "Yeni rozet" });
     await badgeCard.waitFor(OPT);
     await shot(A, "15b-new-badge");
-    await badgeCard.getByRole("button").first().click();
+    // Birden çok rozet sırayla gösterilir: her biri "Harika!" ile geçilir, sonuncusu kutlamayı kapatır.
+    for (let i = 0; i < 6 && (await badgeCard.count()) > 0; i++) {
+      await badgeCard.getByRole("button", { name: /harika/i }).click();
+      await sleep(400);
+    }
     await badgeCard.waitFor({ state: "detached", ...OPT });
     // Geri bildirim: A beş yıldız verir, "Teşekkürler!" görür; LOBİYE DÖN görünür kalır.
     await A.getByRole("button", { name: "5 yıldız" }).click();
-    await btn(A, /gönder/i).click();
+    await btn(A, /^gönder$/i).click();
     await A.getByText("Teşekkürler!").waitFor(OPT);
     assert(
       await btn(A, /^aynı ekiple yeni maç$/i).isVisible(),
