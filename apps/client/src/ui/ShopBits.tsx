@@ -1,4 +1,4 @@
-import { type CosmeticRarity, cosmeticItem, cosmeticType } from "@glix/engine";
+import { type CosmeticRarity, cosmeticItem } from "@glix/engine";
 import { For, Show } from "solid-js";
 import { balanceText } from "../net/glixRules.js";
 import { RARITY_LABEL } from "../net/shopRules.js";
@@ -68,6 +68,3 @@ export function ShopTabBar(props: { active: "shop" | "locker" }) {
     </nav>
   );
 }
-
-/** Mağaza sekmeleri ve dolap bölümleri sırası: çerçeve, unvan, ad efekti (katalog sırasından bağımsız). */
-export const SHOP_TYPES = (["cerceve", "unvan", "ad-efekti"] as const).map((id) => cosmeticType(id));

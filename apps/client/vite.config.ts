@@ -99,6 +99,7 @@ export default defineConfig({
           "**/assets/cards/**",
           "**/assets/briefing/**",
           "**/assets/shop/**",
+          "**/assets/karakter/**",
           // Paylaşım kartı (≈260 KB) yalnız tarayıcıların/sosyal ağların indirdiği bir dosyadır; kabuğa girmez.
           "**/assets/brand/paylasim.jpg",
           // iOS açılış görselleri (iki MB'a kadar) kabuğa girmez; iOS bunları kendisi indirir.

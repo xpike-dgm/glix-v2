@@ -27,6 +27,15 @@ describe("sunucu mesajı doğrulama", () => {
       title: "unvan-efsane",
       frame: "cerceve-cift",
     });
+    // kürsü karakteri alanları (sürüm 3'e eklemeli): bilinmeyenler ve yanlış yuva atılır, kalanlar geçer
+    expect(read({ dance: "dans-twist", hat: "sapka-neon-kep", top: "ust-neon-bomber" })).toEqual({
+      dance: "dans-twist",
+      hat: "sapka-neon-kep",
+      top: "ust-neon-bomber",
+    });
+    expect(read({ dance: "dans-yok", hat: "ust-neon-bomber", top: "ust-neon-bomber" })).toEqual({
+      top: "ust-neon-bomber",
+    });
     expect(read({ title: "yok-boyle", nameFx: "unvan-efsane" })).toBeUndefined();
     expect(read("x")).toBeUndefined();
     expect(read(undefined)).toBeUndefined();

@@ -121,9 +121,10 @@ export function pendingWork(diff: PackDiff): { files: number; bytes: number } {
   return { files: todo.length, bytes: packBytes(todo) };
 }
 
-/** Görsel yanıtı mı? (SPA geri dönüşü HTML ile 200 döner; onu görsel diye saklamayız.) */
+/** Görsel (ya da karakter iskeleti/dansı: JSON) yanıtı mı? SPA geri dönüşü HTML ile 200 döner; onu saklamayız. */
 export function isArtResponse(res: Response): boolean {
-  return res.ok && (res.headers.get("content-type") ?? "").startsWith("image/");
+  const type = res.headers.get("content-type") ?? "";
+  return res.ok && (type.startsWith("image/") || type.startsWith("application/json"));
 }
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));

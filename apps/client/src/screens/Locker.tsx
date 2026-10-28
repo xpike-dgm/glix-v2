@@ -7,15 +7,18 @@ import {
 } from "@glix/engine";
 import { createEffect, For, onMount, Show } from "solid-js";
 import { equipItem, loadShop, ownCosmetics, shop, shopLoad } from "../net/shop.js";
-import { ownedOfType, RARITY_LABEL, shopErrorText } from "../net/shopRules.js";
+import { ownedOfType, RARITY_LABEL, SHOP_TYPES, shopErrorText } from "../net/shopRules.js";
 import { goHome, setState, state, toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
+import { CharacterPoster } from "../ui/CharacterPoster.js";
+import { CharacterView } from "../ui/CharacterView.js";
 import { EmptyPlate, frameOf, PlayerName, PlayerTitle, TitlePlate } from "../ui/Cosmetic.js";
 import { CosmeticPreview, itemCosmetics } from "../ui/CosmeticPreview.js";
+import { defaultDancePoster, isCharacterItem, posterSpec } from "../ui/characterItems.js";
 import { BackIcon, CheckIcon } from "../ui/Icons.js";
 import { Screen } from "../ui/Screen.js";
-import { SHOP_TYPES, ShopTabBar } from "../ui/ShopBits.js";
+import { ShopTabBar } from "../ui/ShopBits.js";
 import { boxSrc } from "../ui/shopArt.js";
 
 /** Bölüm başlığı yanındaki küçük simge (çember, taç, kıvılcım). */
@@ -31,6 +34,30 @@ function SecIcon(props: { type: CosmeticTypeId }) {
           d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"
           stroke="currentColor"
           stroke-width="2.2"
+          stroke-linejoin="round"
+        />
+      </Show>
+      <Show when={props.type === "dans"}>
+        <path
+          d="M9 18V6l10-2v12M9 18a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM19 16a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
+      </Show>
+      <Show when={props.type === "sapka"}>
+        <path
+          d="M4 15c0-5 3.5-8 8-8s8 3 8 8M3 15h18l-1.5 3h-15z"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linejoin="round"
+        />
+      </Show>
+      <Show when={props.type === "ust"}>
+        <path
+          d="M8 4l-5 3 2 4 3-1v10h8V10l3 1 2-4-5-3c-.6 1.6-1.8 2.4-4 2.4S8.6 5.6 8 4z"
+          stroke="currentColor"
+          stroke-width="2"
           stroke-linejoin="round"
         />
       </Show>
@@ -81,10 +108,24 @@ function Tile(props: {
               when={props.type === "unvan"}
               fallback={
                 <Show
-                  when={props.type === "cerceve"}
-                  fallback={<span class="locker-tile__plain">{props.name}</span>}
+                  when={props.type === "dans"}
+                  fallback={
+                    <Show
+                      when={props.type === "cerceve" || props.type === "sapka" || props.type === "ust"}
+                      fallback={<span class="locker-tile__plain">{props.name}</span>}
+                    >
+                      <span class="locker-tile__ring" />
+                    </Show>
+                  }
                 >
-                  <span class="locker-tile__ring" />
+                  <CharacterPoster
+                    layers={defaultDancePoster(ownCosmetics()).layers}
+                    dance={defaultDancePoster(ownCosmetics()).dance}
+                    focus="full"
+                    avatar={avatarFromName(props.name)}
+                    label={props.label}
+                    fallback={<Avatar index={avatarFromName(props.name)} size={36} />}
+                  />
                 </Show>
               }
             >
@@ -96,13 +137,27 @@ function Tile(props: {
             <Show
               when={props.type === "unvan"}
               fallback={
-                <CosmeticPreview
-                  avatar={avatarFromName(props.name)}
-                  name={props.name}
-                  cosmetics={itemCosmetics(i())}
-                  size={34}
-                  parts={props.type === "cerceve" ? "avatar" : "name"}
-                />
+                <Show
+                  when={isCharacterItem(i())}
+                  fallback={
+                    <CosmeticPreview
+                      avatar={avatarFromName(props.name)}
+                      name={props.name}
+                      cosmetics={itemCosmetics(i())}
+                      size={34}
+                      parts={props.type === "cerceve" ? "avatar" : "name"}
+                    />
+                  }
+                >
+                  <CharacterPoster
+                    layers={posterSpec(i(), ownCosmetics()).layers}
+                    dance={posterSpec(i(), ownCosmetics()).dance}
+                    focus={posterSpec(i(), ownCosmetics()).focus}
+                    avatar={avatarFromName(props.name)}
+                    label={props.label}
+                    fallback={<Avatar index={avatarFromName(props.name)} size={36} />}
+                  />
+                </Show>
               }
             >
               <TitlePlate item={i()} />
@@ -151,13 +206,25 @@ export function Locker() {
             <>
               <section class="locker-look" aria-label="Şimdiki görünüm">
                 <div class="locker-look__stage">
-                  <Avatar
-                    index={avatarFromName(name())}
-                    size="clamp(72px, 22vmin, 104px)"
-                    frame={frameOf(ownCosmetics())}
+                  <CharacterView
+                    avatar={avatarFromName(name())}
+                    cosmetics={ownCosmetics()}
+                    fallback={
+                      <Avatar
+                        index={avatarFromName(name())}
+                        size="clamp(72px, 22vmin, 104px)"
+                        frame={frameOf(ownCosmetics())}
+                      />
+                    }
                   />
                 </div>
                 <h2 class="locker-look__name">
+                  <Avatar
+                    class="locker-look__tag"
+                    index={avatarFromName(name())}
+                    size={36}
+                    frame={frameOf(ownCosmetics())}
+                  />
                   <PlayerName name={name()} cosmetics={ownCosmetics()} />
                 </h2>
                 <PlayerTitle cosmetics={ownCosmetics()} plate />

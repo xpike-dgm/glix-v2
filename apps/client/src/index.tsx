@@ -26,6 +26,7 @@ import "./styles/cards.css";
 import "./styles/result.css";
 import "./styles/cosmetics.css";
 import "./styles/shop.css";
+import "./styles/character.css";
 
 installAudioUnlock();
 installNoZoom();

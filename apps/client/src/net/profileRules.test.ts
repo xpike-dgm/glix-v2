@@ -37,6 +37,13 @@ describe("parseProfile rozetler", () => {
     expect(parseProfile({ ...good, cosmetics: { title: "unvan-efsane", frame: "yok" } })?.cosmetics).toEqual({
       title: "unvan-efsane",
     });
+    expect(
+      parseProfile({ ...good, cosmetics: { dance: "dans-lambada", top: "ust-neon-bomber", hat: "x" } })
+        ?.cosmetics,
+    ).toEqual({
+      dance: "dans-lambada",
+      top: "ust-neon-bomber",
+    });
     expect(parseProfile({ ...good, badges: "x" })?.badges).toEqual([]);
   });
 });

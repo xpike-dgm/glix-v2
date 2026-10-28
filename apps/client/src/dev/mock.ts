@@ -119,6 +119,19 @@ export function startMock(kind: string, params: URLSearchParams): void {
       return cosmetics ? { ...p, username: p.username ?? p.nickname.toLowerCase(), cosmetics } : p;
     });
   }
+  // `&kars=1`: kürsü karakterleri için kuşanılmış dans ve giysi (Cihad: Makarena + kep + bomber, Elif: şapka,
+  // Mert: bomber); `&kars=2` yalnız varsayılan görünüm (hiçbir şey kuşanılmamış).
+  if (params.get("kars") === "1") {
+    const KARS: Record<string, PlayerInfo["cosmetics"]> = {
+      p0: { dance: "dans-makarena", hat: "sapka-neon-kep", top: "ust-neon-bomber" },
+      p1: { dance: "dans-twist", hat: "sapka-neon-kep" },
+      p2: { dance: "dans-kazacok", top: "ust-neon-bomber" },
+    };
+    players = players.map((p) => {
+      const extra = KARS[p.id];
+      return extra ? { ...p, cosmetics: { ...p.cosmetics, ...extra } } : p;
+    });
+  }
   // `&watch=K`: son K kişi maçı izleyen (sıralanmayan); `&afterwatch=1`: kendin izleyici olarak final'den lobiye dönersin.
   const watchCount = Math.min(n - 1, Math.max(0, Number(params.get("watch")) || 0));
   players = players.map((p, i) => ({ ...p, spectator: i >= n - watchCount && watchCount > 0 }));
@@ -322,7 +335,8 @@ export function startMock(kind: string, params: URLSearchParams): void {
   };
   const toFinal = (): void => {
     phase = "final";
-    const totals = [5, 4, 4, 2, -1, 0, 3, 2];
+    // `&beraber=1`: ilk üç oyuncu aynı puanda (hepsi 1. sırada).
+    const totals = params.get("beraber") === "1" ? [5, 5, 5, 2, -1, 0, 3, 2] : [5, 4, 4, 2, -1, 0, 3, 2];
     players = players.map((p, i) => ({ ...p, score: p.spectator ? 0 : (totals[i] ?? 0) }));
     // Final unvanları için tur geçmişi (herkese açık ödüller).
     void import("../net/matchHistory.js").then((m) =>
@@ -593,11 +607,28 @@ export function startMock(kind: string, params: URLSearchParams): void {
         owned:
           v === "bos"
             ? []
-            : ["unvan-sansli", "unvan-efsane", "ad-neon-mavi", "cerceve-cift", "cerceve-altin-tac"],
+            : [
+                "unvan-sansli",
+                "unvan-efsane",
+                "ad-neon-mavi",
+                "cerceve-cift",
+                "cerceve-altin-tac",
+                "dans-twist",
+                "dans-makarena",
+                "sapka-neon-kep",
+                "ust-neon-bomber",
+              ],
         equipped:
           v === "bos"
             ? {}
-            : { unvan: "unvan-efsane", "ad-efekti": "ad-neon-mavi", cerceve: "cerceve-altin-tac" },
+            : {
+                unvan: "unvan-efsane",
+                "ad-efekti": "ad-neon-mavi",
+                cerceve: "cerceve-altin-tac",
+                dans: "dans-makarena",
+                sapka: "sapka-neon-kep",
+                ust: "ust-neon-bomber",
+              },
         clockOffset: 0,
       });
       setState({

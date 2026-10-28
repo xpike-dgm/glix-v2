@@ -3,7 +3,12 @@
  * geri sayım) aynı tabloyu kullanır. Sahip kararları: `docs/YOL-HARITASI.md` U18, ayrıntı `docs/HESAP.md`.
  *
  * Yeni bir tür eklemek: `COSMETIC_TYPES`'a satır, `Cosmetics`'e anahtar, `ITEMS`'a ürünler; istemcide türün çizicisi.
- * M2'de yalnız kodla çizilen üç tür var (unvan, ad efekti, çerçeve); resimli türler M3/M4'te gelir.
+ * M2'de yalnız kodla çizilen üç tür var (unvan, ad efekti, çerçeve). M4'te kürsü karakteri gelir: `dans` (tek yuva) ve
+ * her giysi yuvası kendi türüdür (`sapka`, `ust`; ileride alt, ayakkabı, aksesuar). Giysi türlerinin `group` alanı
+ * `"giysi"`dir: mağaza hepsini tek "Giysiler" sekmesinde toplar, dolap yuva başına bölüm gösterir.
+ *
+ * Renk seçeneği (sonradan): kuşanılan değer ürün kimliğidir; renkli sürüm `kimlik~renk` biçimiyle aynı alanlara
+ * sığar (`cosmetic_equipped.item_id` metindir), şema değişmez. Bugün hiçbir ürünün rengi yok.
  */
 import { createRng } from "./rng.js";
 
@@ -21,10 +26,20 @@ export interface Cosmetics {
   title?: string;
   nameFx?: string;
   frame?: string;
+  /** Kürsü dansı (`dans` türü); kuşanılmadıysa varsayılan dans. */
+  dance?: string;
+  /** Şapka ve üst giysi (kürsü karakteri). */
+  hat?: string;
+  top?: string;
 }
 export type CosmeticKey = keyof Cosmetics;
 
-export type CosmeticTypeId = "unvan" | "ad-efekti" | "cerceve";
+export type CosmeticTypeId = "unvan" | "ad-efekti" | "cerceve" | "dans" | "sapka" | "ust";
+
+/** Varsayılan kürsü dansı (ücretsiz, kuşanılmadığında oynar). Dans dosyası `karakter/dans/<kimlik>.json`. */
+export const DEFAULT_DANCE = "sevinc";
+/** İkinci ve üçüncü için selam hareketi; satılmaz. */
+export const PLACE_DANCE = "selam";
 
 export interface CosmeticType {
   id: CosmeticTypeId;
@@ -34,12 +49,18 @@ export interface CosmeticType {
   name: string;
   plural: string;
   none: string;
+  /** Mağazada aynı sekmeyi paylaşan türler ("giysi"); yoksa tür kendi sekmesidir. */
+  group?: "giysi";
 }
 
 export const COSMETIC_TYPES: readonly CosmeticType[] = [
   { id: "unvan", key: "title", name: "Lakap", plural: "Lakaplar", none: "Yok" },
   { id: "ad-efekti", key: "nameFx", name: "Ad efekti", plural: "Ad efektleri", none: "Yok" },
   { id: "cerceve", key: "frame", name: "Çerçeve", plural: "Çerçeveler", none: "Yok" },
+  // Dansın "yok" seçeneği varsayılan dans Sevinç'tir (ücretsiz; katalogda ürün olarak yer almaz).
+  { id: "dans", key: "dance", name: "Dans", plural: "Danslar", none: "Sevinç" },
+  { id: "sapka", key: "hat", name: "Şapka", plural: "Şapkalar", none: "Yok", group: "giysi" },
+  { id: "ust", key: "top", name: "Üst", plural: "Üstler", none: "Yok", group: "giysi" },
 ];
 
 export interface CosmeticItem {
@@ -50,6 +71,11 @@ export interface CosmeticItem {
   price: number;
   name: string;
   description: string;
+  /**
+   * Karakter varlığı: `dans` için dans dosyasının kimliği (`karakter/dans/<asset>.json`), giysi için `rig.json`
+   * `wardrobe` katmanının adı (şapka `sapka`, ceket `ceket`).
+   */
+  asset?: string;
 }
 
 function item(
@@ -58,8 +84,9 @@ function item(
   rarity: CosmeticRarity,
   name: string,
   description: string,
+  asset?: string,
 ): CosmeticItem {
-  return { id, type, rarity, price: COSMETIC_PRICES[rarity], name, description };
+  return { id, type, rarity, price: COSMETIC_PRICES[rarity], name, description, ...(asset ? { asset } : {}) };
 }
 
 export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
@@ -80,6 +107,23 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
   item("cerceve-cift", "cerceve", "nadir", "Çift Halka", "İç içe iki ince halka."),
   item("cerceve-donen-neon", "cerceve", "nadir", "Dönen Neon", "Avatarının çevresinde dönen neon."),
   item("cerceve-altin-tac", "cerceve", "efsanevi", "Altın Taç Halkası", "Taçlı altın halka."),
+  item("dans-twist", "dans", "siradan", "Twist", "Kalçalar sağa sola, ayaklar yerde.", "twist"),
+  item("dans-tavuk", "dans", "siradan", "Tavuk Dansı", "Kanatlar çırpılır, kuyruk sallanır.", "tavuk"),
+  item("dans-mutlu", "dans", "siradan", "Neşeli Adım", "Gülümseten, hafif adımlı bir dans.", "mutlu"),
+  item("dans-charleston", "dans", "nadir", "Charleston", "Eski zaman, yeni neon.", "charleston"),
+  item("dans-lambada", "dans", "nadir", "Lambada", "Kalçalar dalgalanır.", "lambada"),
+  item("dans-makarena", "dans", "nadir", "Makarena", "Kollar sırayla, sonra bir dönüş.", "makarena"),
+  item("dans-kazacok", "dans", "efsanevi", "Kazaçok", "Çömel, tekmele, zıpla.", "kazacok"),
+  item(
+    "dans-cizgi-film",
+    "dans",
+    "efsanevi",
+    "Çizgi Film Dansı",
+    "Eski bir çizgi filmden fırlamış gibi.",
+    "mickey",
+  ),
+  item("sapka-neon-kep", "sapka", "siradan", "Neon Kep", "Kürsüde başında neon bir kep.", "sapka"),
+  item("ust-neon-bomber", "ust", "nadir", "Neon Bomber", "Kürsüde sırtında neon bomber ceket.", "ceket"),
 ];
 
 const BY_ID: ReadonlyMap<string, CosmeticItem> = new Map(COSMETIC_ITEMS.map((i) => [i.id, i]));

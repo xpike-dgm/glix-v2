@@ -161,6 +161,64 @@ describe("kuşanma", () => {
   });
 });
 
+describe("kürsü karakteri: dans, şapka, üst", () => {
+  it("satın alma ve kuşanma yuva başına tek; yuvalar birbirini bozmaz", () => {
+    const { db, mk } = setup();
+    const id = mk("Ali", 5000);
+    for (const item of ["dans-twist", "dans-makarena", "sapka-neon-kep", "ust-neon-bomber"]) {
+      expect(db.purchaseCosmetic(id, item, NOON).ok).toBe(true);
+    }
+    expect(db.glixBalance(id)).toBe(5000 - 150 - 400 - 150 - 400);
+    expect(db.equipCosmetic(id, "dans", "dans-twist")).toBe("ok");
+    expect(db.equipCosmetic(id, "dans", "dans-makarena")).toBe("ok");
+    expect(db.equipCosmetic(id, "sapka", "sapka-neon-kep")).toBe("ok");
+    expect(db.equipCosmetic(id, "ust", "ust-neon-bomber")).toBe("ok");
+    // dans yuvasında tek ürün: ikincisi birincinin yerini aldı
+    expect(db.cosmetics(id).equipped).toEqual({
+      dans: "dans-makarena",
+      sapka: "sapka-neon-kep",
+      ust: "ust-neon-bomber",
+    });
+    // yanlış yuva ve alınmamış ürün
+    expect(db.equipCosmetic(id, "ust", "sapka-neon-kep")).toBe("unknown");
+    expect(db.equipCosmetic(id, "dans", "dans-kazacok")).toBe("not_owned");
+    expect(db.equipCosmetic(id, "dans", null)).toBe("ok");
+    expect(db.cosmetics(id).equipped).toEqual({ sapka: "sapka-neon-kep", ust: "ust-neon-bomber" });
+  });
+
+  it("efsanevi dans 600 Glix ile alınamaz; varsayılan dans satılmaz", () => {
+    const { db, mk } = setup();
+    // fırsat indirimi en çok %30: 600 Glix hangi gün olursa olsun 1000'lik dansa yetmez
+    const id = mk("Ali", 600);
+    expect(db.purchaseCosmetic(id, "dans-kazacok", NOON)).toMatchObject({
+      ok: false,
+      reason: "insufficient",
+    });
+    // varsayılan dans ürün değildir: satın alınamaz
+    expect(db.purchaseCosmetic(id, "dans-sevinc", NOON)).toMatchObject({ ok: false, reason: "unknown" });
+  });
+
+  it("armağan ve geri alma kuşanılan dansı çıkarır", () => {
+    const { db, mk } = setup();
+    const id = mk("Ali");
+    expect(db.grantCosmetic(id, "dans-cizgi-film", NOON)).toBe("granted");
+    expect(db.equipCosmetic(id, "dans", "dans-cizgi-film")).toBe("ok");
+    expect(db.cosmetics(id).equipped).toEqual({ dans: "dans-cizgi-film" });
+    expect(db.revokeCosmetic(id, "dans-cizgi-film")).toBe(true);
+    expect(db.cosmetics(id).equipped).toEqual({});
+  });
+
+  it("istek gövdesi yeni türleri tanır", () => {
+    expect(parseEquip({ type: "dans", itemId: "dans-twist" })).toEqual({
+      type: "dans",
+      itemId: "dans-twist",
+    });
+    expect(parseEquip({ type: "sapka", itemId: null })).toEqual({ type: "sapka", itemId: null });
+    expect(parseEquip({ type: "ust", itemId: "ust-neon-bomber" })?.type).toBe("ust");
+    expect(parseEquip({ type: "alt", itemId: null })).toBeNull();
+  });
+});
+
 describe("istek gövdeleri", () => {
   it("satın alma: yalnız itemId", () => {
     expect(parseBuy({ itemId: "unvan-sansli" })).toEqual({ itemId: "unvan-sansli" });
@@ -368,5 +426,25 @@ describe("kuşanılanlar odadaki herkese görünür", () => {
     await until(() => me(bora, "Kz_Ali")?.cosmetics?.title === undefined, "unvan düştü");
     expect(me(bora, "Kz_Ali")?.cosmetics).toEqual({ frame: "cerceve-donen-neon" });
     expect(parseCosmetics(me(bora, "Kz_Ali")?.cosmetics)).toEqual({ frame: "cerceve-donen-neon" });
+  });
+
+  it("dans ve giysi de odadaki herkese gider", async () => {
+    const cookie = loginCookie("Kz_Dans");
+    const id = k.srv.accounts.findByUsername("Kz_Dans")?.id as number;
+    for (const item of ["dans-lambada", "sapka-neon-kep", "ust-neon-bomber"])
+      k.srv.accounts.grantCosmetic(id, item, k.clock.now());
+    const dans = await enter(cookie, "Kz_Dans");
+    const bora = await enter(loginCookie("Kz_Bora2"), "Bora2", dans.session.roomCode);
+    await sync();
+    expect((await equip(cookie, { type: "dans", itemId: "dans-lambada" })).status).toBe(200);
+    expect((await equip(cookie, { type: "sapka", itemId: "sapka-neon-kep" })).status).toBe(200);
+    expect((await equip(cookie, { type: "ust", itemId: "ust-neon-bomber" })).status).toBe(200);
+    await until(() => me(bora, "Kz_Dans")?.cosmetics?.top === "ust-neon-bomber", "üst giysi");
+    expect(me(bora, "Kz_Dans")?.cosmetics).toEqual({
+      dance: "dans-lambada",
+      hat: "sapka-neon-kep",
+      top: "ust-neon-bomber",
+    });
+    expect((await equip(cookie, { type: "dans", itemId: "dans-twist" })).status).toBe(409);
   });
 });

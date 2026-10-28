@@ -6,7 +6,7 @@ import {
   nextIstanbulMidnight,
 } from "@glix/engine";
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
-import { buyItem, equipItem, loadShop, shop, shopError, shopLoad } from "../net/shop.js";
+import { buyItem, equipItem, loadShop, ownCosmetics, shop, shopError, shopLoad } from "../net/shop.js";
 import {
   buyText,
   type DealView,
@@ -16,21 +16,26 @@ import {
   itemStatus,
   priceNow,
   RARITY_LABEL,
+  SHOP_TABS,
   type ShopState,
   shopErrorText,
   shortfall,
   shortfallText,
 } from "../net/shopRules.js";
 import { goHome, state, toast } from "../net/store.js";
+import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
+import { CharacterPoster } from "../ui/CharacterPoster.js";
+import { CharacterView } from "../ui/CharacterView.js";
 import { CosmeticPreview, itemCosmetics } from "../ui/CosmeticPreview.js";
+import { isCharacterItem, posterSpec, previewCosmetics } from "../ui/characterItems.js";
 import { GhostButton } from "../ui/GhostButton.js";
 import { BackIcon, BoltIcon, CheckIcon, CoinIcon } from "../ui/Icons.js";
 import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
-import { BalancePill, Price, RarityChip, SHOP_TYPES, ShopTabBar } from "../ui/ShopBits.js";
+import { BalancePill, Price, RarityChip, ShopTabBar } from "../ui/ShopBits.js";
 import { boxSrc } from "../ui/shopArt.js";
 
 function previewParts(item: CosmeticItem): "avatar" | "name" | "title" {
@@ -48,6 +53,7 @@ function Card(props: {
   const status = () => itemStatus(props.s, props.item);
   const price = () => priceNow(props.s, props.item.id, props.now);
   const name = () => state.account?.username ?? "Sen";
+  const poster = () => posterSpec(props.item, ownCosmetics());
   return (
     <button
       type="button"
@@ -62,14 +68,28 @@ function Card(props: {
       onClick={() => props.onOpen(props.item.id)}
     >
       <span class="shop-card__pv" aria-hidden="true">
-        <CosmeticPreview
-          avatar={avatarFromName(name())}
-          name={name()}
-          cosmetics={itemCosmetics(props.item)}
-          size={60}
-          parts={previewParts(props.item)}
-          plate={props.deal === undefined}
-        />
+        <Show
+          when={isCharacterItem(props.item)}
+          fallback={
+            <CosmeticPreview
+              avatar={avatarFromName(name())}
+              name={name()}
+              cosmetics={itemCosmetics(props.item)}
+              size={60}
+              parts={previewParts(props.item)}
+              plate={props.deal === undefined}
+            />
+          }
+        >
+          <CharacterPoster
+            layers={poster().layers}
+            dance={poster().dance}
+            focus={poster().focus}
+            avatar={avatarFromName(name())}
+            label={props.item.name}
+            fallback={<Avatar index={avatarFromName(name())} size={44} />}
+          />
+        </Show>
       </span>
       {/* Unvanda ürün adı önizlemedeki levhanın kendisidir; tekrar yazılmaz. */}
       <Show when={props.item.type !== "unvan"}>
@@ -97,11 +117,14 @@ const TYPE_LABEL: Readonly<Record<CosmeticTypeId, string>> = {
   unvan: "Lakap",
   "ad-efekti": "Ad efekti",
   cerceve: "Avatar çerçevesi",
+  dans: "Dans",
+  sapka: "Şapka",
+  ust: "Üst giysi",
 };
 
 /** Mağaza: günün fırsatı (iki büyük karo), alt çizgili sekmeler, iki sütun ürün ızgarası; karta dokununca satın alma sayfası. */
 export function Shop() {
-  const [tab, setTab] = createSignal<CosmeticTypeId>("cerceve");
+  const [tab, setTab] = createSignal<string>("cerceve");
   const [openId, setOpenId] = createSignal<string | null>(null);
   const [busy, setBusy] = createSignal(false);
   const [msg, setMsg] = createSignal<string | null>(null);
@@ -126,6 +149,8 @@ export function Shop() {
     const at = now() + (s?.clockOffset ?? 0);
     return nextIstanbulMidnight(at) - at;
   };
+  const tabItems = (): CosmeticItem[] =>
+    (SHOP_TABS.find((t) => t.id === tab())?.types ?? []).flatMap((t) => itemsOfType(t));
   const opened = () => {
     const id = openId();
     return id === null ? null : (cosmeticItem(id) ?? null);
@@ -215,7 +240,7 @@ export function Shop() {
               </Show>
 
               <div class="shop-tabs" role="tablist" aria-label="Ürün türü">
-                <For each={SHOP_TYPES}>
+                <For each={SHOP_TABS}>
                   {(t) => (
                     <button
                       type="button"
@@ -224,14 +249,14 @@ export function Shop() {
                       aria-selected={tab() === t.id}
                       onClick={() => setTab(t.id)}
                     >
-                      {t.plural}
+                      {t.label}
                     </button>
                   )}
                 </For>
               </div>
 
               <div class="shop-grid" classList={{ "shop-grid--rows": tab() === "unvan" }} role="tabpanel">
-                <For each={itemsOfType(tab())}>
+                <For each={tabItems()}>
                   {(item) => (
                     <Card
                       item={item}
@@ -264,15 +289,28 @@ export function Shop() {
                       <RarityChip rarity={item().rarity} />
                       <span class="shop-sheet__type">{TYPE_LABEL[item().type]}</span>
                     </p>
-                    <div class="shop-sheet__stage">
-                      <CosmeticPreview
-                        avatar={avatarFromName(name())}
-                        name={name()}
-                        cosmetics={itemCosmetics(item())}
-                        size="clamp(76px, 26vmin, 120px)"
-                        parts="both"
-                        plate
-                      />
+                    <div class="shop-sheet__stage" data-char={isCharacterItem(item()) ? "1" : undefined}>
+                      <Show
+                        when={isCharacterItem(item())}
+                        fallback={
+                          <CosmeticPreview
+                            avatar={avatarFromName(name())}
+                            name={name()}
+                            cosmetics={itemCosmetics(item())}
+                            size="clamp(76px, 26vmin, 120px)"
+                            parts="both"
+                            plate
+                          />
+                        }
+                      >
+                        <CharacterView
+                          avatar={avatarFromName(name())}
+                          cosmetics={previewCosmetics(item(), ownCosmetics())}
+                          fallback={
+                            <Avatar index={avatarFromName(name())} size="clamp(64px, 20vmin, 96px)" />
+                          }
+                        />
+                      </Show>
                     </div>
                     <p class="shop-sheet__desc">{item().description}</p>
                     <Show when={msg()}>

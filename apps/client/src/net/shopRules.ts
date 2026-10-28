@@ -3,6 +3,7 @@ import {
   type CosmeticItem,
   type CosmeticTypeId,
   cosmeticItem,
+  cosmeticType,
   currentPrice,
   dailyDeals,
 } from "@glix/engine";
@@ -139,3 +140,29 @@ export const RARITY_LABEL: Readonly<Record<CosmeticItem["rarity"], string>> = {
 
 /** Fırsat indirimi etiketi ("-%30"). */
 export const DISCOUNT_LABEL = "−%30";
+
+/** Dolap bölümleri sırası: çerçeve, unvan, ad efekti, dans, şapka, üst (katalog sırasından bağımsız). */
+export const SHOP_TYPES = (["cerceve", "unvan", "ad-efekti", "dans", "sapka", "ust"] as const).map((id) =>
+  cosmeticType(id),
+);
+
+/** Mağaza sekmesi: tek tür ya da aynı gruptaki türler ("Giysiler": her giysi yuvası ayrı türdür). */
+export interface ShopTab {
+  id: string;
+  label: string;
+  types: CosmeticTypeId[];
+}
+
+/** Mağaza sekmeleri: çerçeve, lakap, ad efekti, dans ve tüm giysi yuvaları tek "Giysiler" sekmesinde. */
+export const SHOP_TABS: readonly ShopTab[] = [
+  ...(["cerceve", "unvan", "ad-efekti", "dans"] as const).map((id) => ({
+    id,
+    label: cosmeticType(id).plural,
+    types: [id] as CosmeticTypeId[],
+  })),
+  {
+    id: "giysi",
+    label: "Giysiler",
+    types: COSMETIC_TYPES.filter((t) => t.group === "giysi").map((t) => t.id),
+  },
+];

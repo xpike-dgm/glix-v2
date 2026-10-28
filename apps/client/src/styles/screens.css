@@ -894,8 +894,10 @@
   justify-content: center;
   margin-bottom: 8px;
 }
-.podium__name {
+.podium__who {
   margin-top: 14px;
+}
+.podium__name {
   max-width: 100%;
   font-size: var(--fs-15);
   font-weight: 600;
@@ -988,8 +990,10 @@
     height: 40px;
     margin-bottom: 10px;
   }
-  .podium__name {
+  .podium__who {
     margin-top: 16px;
+  }
+  .podium__name {
     font-size: var(--fs-18);
   }
   .podium__score {
@@ -1378,7 +1382,7 @@
     height: 28px;
     margin-bottom: 4px;
   }
-  .podium__name {
+  .podium__who {
     margin-top: 10px;
   }
   .podium__col[data-pos="1"] .podium__block,
@@ -2314,7 +2318,7 @@
     height: 26px;
     margin-bottom: 4px;
   }
-  .podium__name {
+  .podium__who {
     margin-top: 8px;
   }
   .podium__score {
