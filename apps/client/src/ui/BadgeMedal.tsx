@@ -1,5 +1,5 @@
 // biome-ignore-all lint/a11y/noSvgWithoutTitle: madalyon dekoratif (aria-hidden); anlamı yanındaki metin taşır
-import { Match, Show, Switch } from "solid-js";
+import { createSignal, Match, Show, Switch } from "solid-js";
 import { type MedalGlyph, type MedalShape, medalGlyph, medalShape } from "../net/badgeRules.js";
 
 interface Props {
@@ -34,11 +34,57 @@ const ICONS: Record<Extract<MedalGlyph, { kind: "icon" }>["name"], string> = {
   soru: "M9 9a3 3 0 115 2c-1 .8-2 1.3-2 3M12 18h.01",
 };
 
+/** Görseli olan rozetler (`/assets/badges/<id>.webp`, saydam madalyon). Listede olmayan çizimle gösterilir. */
+const ART = new Set([
+  "ilk-mac",
+  "on-mac",
+  "elli-mac",
+  "yuz-mac",
+  "ilk-galibiyet",
+  "on-galibiyet",
+  "yirmibes-galibiyet",
+  "cok-yonlu",
+  "kalabalik-sampiyonu",
+  "can-dost",
+  "seri",
+  "kahin-on",
+  "kule-ustasi",
+  "gece-kusu",
+  "hepsi-bir-arada",
+]);
+
 /**
- * Rozet madalyonu: şekil + simge (ya da sayı). Kazanılmamış olan sönük ve kesik çizgilidir;
- * gizli ve kazanılmamış olanda yalnız "?" görünür.
+ * Rozet madalyonu. Görseli varsa o (kazanılmamışsa soluk; gizli ve kazanılmamışsa "kilitli" madalyonu);
+ * görsel yoksa ya da yüklenemezse çizim: şekil + simge (ya da sayı), kazanılmamış olan sönük ve kesik çizgili.
  */
 export function BadgeMedal(props: Props) {
+  const [failed, setFailed] = createSignal(false);
+  const hiddenArt = () => props.secret === true && !props.earned;
+  const artSrc = (): string | null => {
+    if (hiddenArt()) return "/assets/badges/kilitli.webp";
+    return ART.has(props.id) ? `/assets/badges/${props.id}.webp` : null;
+  };
+  return (
+    <Show when={!failed() && artSrc()} fallback={<DrawnMedal {...props} />}>
+      {(src) => (
+        <img
+          class="bd__medal bd__art"
+          data-earned={props.earned ? "1" : undefined}
+          src={src()}
+          width={props.size ?? 64}
+          height={props.size ?? 64}
+          alt=""
+          aria-hidden="true"
+          decoding="async"
+          draggable={false}
+          onError={() => setFailed(true)}
+        />
+      )}
+    </Show>
+  );
+}
+
+function DrawnMedal(props: Props) {
   const hidden = () => props.secret === true && !props.earned;
   const shape = () => medalShape(props.id, props.secret === true);
   const glyph = (): MedalGlyph => (hidden() ? { kind: "icon", name: "soru" } : medalGlyph(props.id));

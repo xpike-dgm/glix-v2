@@ -4,6 +4,14 @@
   display: block;
   overflow: visible;
 }
+/* Görselli madalyon: kazanılmamışsa soluk ve renksiz (gizli olanın "kilitli" görseli zaten sönük). */
+.bd__art {
+  object-fit: contain;
+}
+.bd__art:not([data-earned]) {
+  filter: grayscale(0.85) brightness(0.75);
+  opacity: 0.55;
+}
 .bd__shape {
   fill: rgba(120, 140, 255, 0.1);
   stroke: var(--line-strong, rgba(160, 175, 255, 0.45));
