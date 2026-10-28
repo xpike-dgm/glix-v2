@@ -139,14 +139,8 @@ describe("seçim, el sınırı, değiştirme", () => {
     const b = ok(open(createCardsState(21, PL, DEFAULT_CARD_SETTINGS)), { k: "close" });
     expect(a.by).toEqual(b.by);
     for (const id of PL) {
-      const pc = a.by[id];
-      const got =
-        (pc?.hand.length ?? 0) +
-        (pc?.pending.length ?? 0) +
-        (a.announce.filter((x) => x.playerId === id).length > 0 ? 0 : 0);
-      expect(
-        got + a.announce.filter((x) => x.playerId === id && !pc?.pending.includes(x.cardId)).length,
-      ).toBeGreaterThanOrEqual(1);
+      const got = (a.by[id]?.hand.length ?? 0) + a.announce.filter((x) => x.playerId === id).length;
+      expect(got).toBeGreaterThanOrEqual(1);
     }
   });
   it("el hiçbir zaman 2 kartı aşmaz", () => {

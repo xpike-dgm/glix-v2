@@ -10,6 +10,7 @@ import { openReport } from "../net/reportUi.js";
 import { createServerNow } from "../net/time.js";
 import { Avatar } from "../ui/Avatar.js";
 import type { Mood } from "../ui/avatars.js";
+import { CardLines } from "../ui/CardLines.js";
 import { EmojiBar, RESULT_EMOJIS } from "../ui/EmojiBar.js";
 import { GhostButton } from "../ui/GhostButton.js";
 import { ProgressBar } from "../ui/ProgressBar.js";
@@ -191,6 +192,8 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
             )}
           </For>
         </div>
+
+        <CardLines cards={props.match.cards} players={props.snap.players} />
 
         <p class="overline results__standing">Genel sıralama</p>
         <ul class="rows srows" ref={listEl} aria-label="Genel sıralama">

@@ -1,9 +1,10 @@
-import type { MatchSnapshot } from "@glix/engine";
+import type { MatchSnapshot, RoomSnapshot } from "@glix/engine";
 import { createMemo, Show } from "solid-js";
 import { createServerNow } from "../net/time.js";
+import { CardReveal } from "../ui/CardNotices.js";
 
 /** Geri sayım: 3-2-1 dev rakamlarla. */
-export function TvCountdown(props: { match: MatchSnapshot }) {
+export function TvCountdown(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
   const now = createServerNow(40);
   const n = createMemo(() => {
     const end = props.match.phaseEndsAt;
@@ -19,6 +20,12 @@ export function TvCountdown(props: { match: MatchSnapshot }) {
         </Show>
       </div>
       <p class="tv__lead">Telefonlarınızı hazırlayın!</p>
+      <CardReveal
+        big
+        cards={props.match.cards}
+        players={props.snap.players}
+        gameName={(id) => props.snap.catalog.find((g) => g.id === id)?.name ?? id}
+      />
     </main>
   );
 }

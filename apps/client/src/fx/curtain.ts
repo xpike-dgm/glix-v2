@@ -3,7 +3,7 @@ import type { ScreenId } from "../screens/route.js";
 /** Işık süpürmesinin süresi (ms); CSS animasyonuyla aynı. */
 export const CURTAIN_MS = 450;
 
-const FLOW: ReadonlySet<ScreenId> = new Set(["briefing", "countdown", "playing", "results"]);
+const FLOW: ReadonlySet<ScreenId> = new Set(["briefing", "countdown", "playing", "results", "cards"]);
 
 /**
  * Geçiş perdesi yalnız maç akışının içinde (anlatım → geri sayım → oyun → sonuç) süpürür. Lobi/final/ana

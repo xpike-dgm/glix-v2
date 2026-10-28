@@ -1614,6 +1614,76 @@ const SCREENS = [
   { name: "rus-kahin-6", q: "mock=rus-kahin&n=6", settle: 2400 },
   { name: "rus-kahin-8", q: "mock=rus-kahin&n=8", settle: 2400 },
   // U8: TV (sahne) ekranları. Yalnız 1920x1080 ve 1280x720; telefon boyutları anlamsız.
+  // ---- Kartlar (docs/KURALLAR.md "Kartlar"): kart seçimi, el, açıklama, sonuç satırları, lobi ayarı ----
+  { name: "kart-secim", q: "mock=kart-secim", settle: 700 },
+  { name: "kart-secim-8", q: "mock=kart-secim&n=8", settle: 700 },
+  { name: "kart-secim-4", q: "mock=kart-secim-4", settle: 700 },
+  { name: "kart-secim-kor", q: "mock=kart-secim-kor", settle: 700 },
+  { name: "kart-secim-secti", q: "mock=kart-secim-secti", settle: 700 },
+  { name: "kart-secim-degistir", q: "mock=kart-secim-degistir", settle: 700 },
+  { name: "kart-secim-sessiz", q: "mock=kart-secim-sessiz", settle: 700 },
+  { name: "kart-secim-kotu", q: "mock=kart-secim-kotu", settle: 700 },
+  { name: "kart-secim-izleyici", q: "mock=kart-secim-izleyici", settle: 700 },
+  { name: "kart-secim-buyuk-yazi", q: "mock=kart-secim-4&text=large", settle: 700 },
+  { name: "kart-secim-renk-koru", q: "mock=kart-secim-4&cb=1", settle: 700 },
+  { name: "kart-anlatim", q: "mock=kart-anlatim", settle: 900 },
+  { name: "kart-anlatim-8", q: "mock=kart-anlatim&n=8", settle: 900 },
+  { name: "kart-anlatim-oynadi", q: "mock=kart-anlatim-oynadi", settle: 900 },
+  { name: "kart-anlatim-bos", q: "mock=kart-anlatim-bos", settle: 900 },
+  { name: "kart-oyna-sec", q: "mock=kart-anlatim", settle: 700, act: clickText("Kart oyna") },
+  {
+    name: "kart-oyna-hedef",
+    q: "mock=kart-anlatim",
+    settle: 700,
+    act: async (p) => {
+      await p.getByText("Kart oyna", { exact: false }).first().click();
+      await p.locator(".sheet .kc-card").first().click();
+    },
+  },
+  {
+    name: "kart-oyna-oyun",
+    q: "mock=kart-anlatim",
+    settle: 700,
+    act: async (p) => {
+      await p.getByText("Kart oyna", { exact: false }).first().click();
+      await p.locator(".sheet .kc-card").nth(1).click();
+    },
+  },
+  { name: "kart-geri-sayim", q: "mock=kart-geri-sayim", settle: 1600 },
+  { name: "kart-geri-sayim-8", q: "mock=kart-geri-sayim&n=8", settle: 1600 },
+  { name: "kart-sonuc", q: "mock=kart-sonuc", settle: 2400 },
+  { name: "kart-sonuc-bos", q: "mock=kart-sonuc-bos", settle: 2400 },
+  {
+    name: "kart-lobi-ayar",
+    q: "mock=lobby&n=5",
+    settle: 900,
+    act: async (p) => {
+      await p.getByText("Oyunlar", { exact: false }).first().click();
+      await p.locator(".kc-open").click();
+    },
+  },
+  {
+    name: "kart-lobi-ayar-misafir",
+    q: "mock=lobby&n=5&guest=1",
+    settle: 900,
+    act: async (p) => {
+      await p.locator(".kc-guestrow").click();
+    },
+  },
+  {
+    name: "kart-lobi-ayar-kapali",
+    q: "mock=lobby&n=5&cards=off",
+    settle: 900,
+    act: async (p) => {
+      await p.getByText("Oyunlar", { exact: false }).first().click();
+      await p.locator(".kc-open").click();
+    },
+  },
+  { name: "kart-lobi-ozet", q: "mock=lobby&n=5&cards=some", settle: 900, act: clickText("Oyunlar") },
+  { name: "kart-tv-secim", q: "mock=tv-kart-secim&n=6", sizes: TV, settle: 1600 },
+  { name: "kart-tv-anlatim", q: "mock=tv-kart-anlatim&n=6", sizes: TV, settle: 1600 },
+  { name: "kart-tv-geri-sayim", q: "mock=tv-kart-geri-sayim&n=6", sizes: TV, settle: 1800 },
+  { name: "kart-tv-sonuc", q: "mock=tv-kart-sonuc&n=6", sizes: TV, settle: 2600 },
   { name: "tv-giris", q: "mock=tv-entry", sizes: TV, settle: 900 },
   { name: "tv-lobi-5", q: "mock=tv-lobby&n=5", sizes: TV, settle: 1400 },
   { name: "tv-lobi-8", q: "mock=tv-lobby&n=8", sizes: TV, settle: 1400 },

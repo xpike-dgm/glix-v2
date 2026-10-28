@@ -20,6 +20,7 @@ export type ScreenId =
   | "countdown"
   | "playing"
   | "results"
+  | "cards"
   | "final";
 
 export interface RouteInput {
@@ -40,6 +41,7 @@ export function selectScreen({ snapshot, nav, notFound }: RouteInput): ScreenId 
     case "countdown":
     case "playing":
     case "results":
+    case "cards":
       return snapshot.match ? snapshot.phase : "lobby";
   }
 }

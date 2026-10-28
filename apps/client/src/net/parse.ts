@@ -1,4 +1,6 @@
 import {
+  type CardsMine,
+  type CardsPublic,
   DEFAULT_JOIN_POLICY,
   type ErrorCode,
   type GameInfo,
@@ -9,6 +11,9 @@ import {
   type LeftReason,
   type MatchSnapshot,
   type PlayerInfo,
+  parseCardSettings,
+  parseCardsMine,
+  parseCardsPublic,
   type RoomPhase,
   type RoomSnapshot,
   type ServerMessage,
@@ -25,7 +30,15 @@ const isNum = (v: unknown): v is number => typeof v === "number" && Number.isFin
 const isBool = (v: unknown): v is boolean => typeof v === "boolean";
 const isStrArr = (v: unknown): v is string[] => Array.isArray(v) && v.every(isStr);
 
-const PHASES: readonly RoomPhase[] = ["lobby", "briefing", "countdown", "playing", "results", "final"];
+const PHASES: readonly RoomPhase[] = [
+  "lobby",
+  "briefing",
+  "countdown",
+  "playing",
+  "results",
+  "cards",
+  "final",
+];
 const ERROR_CODES: readonly ErrorCode[] = [
   "invalid_message",
   "rate_limited",
@@ -44,6 +57,7 @@ const ERROR_CODES: readonly ErrorCode[] = [
   "not_enough_players",
   "wrong_phase",
   "not_participant",
+  "card_invalid",
   "game_failed",
   "draining",
   "server_busy",
@@ -120,6 +134,16 @@ function parseMatch(v: unknown): MatchSnapshot | null {
     result = parseResult(v.result);
     if (!result) return null;
   }
+  let cards: CardsPublic | null = null;
+  if (v.cards !== null && v.cards !== undefined) {
+    cards = parseCardsPublic(v.cards);
+    if (!cards) return null;
+  }
+  let mine: CardsMine | null = null;
+  if (v.mine !== null && v.mine !== undefined) {
+    mine = parseCardsMine(v.mine);
+    if (!mine) return null;
+  }
   return {
     round: v.round,
     total: v.total,
@@ -135,6 +159,8 @@ function parseMatch(v: unknown): MatchSnapshot | null {
     publicView: v.publicView ?? null,
     view: v.view ?? null,
     result,
+    cards,
+    mine,
   };
 }
 
@@ -168,6 +194,8 @@ export function parseSnapshot(v: unknown): RoomSnapshot | null {
     if (!gg) return null;
     catalog.push(gg);
   }
+  const cardSettings = v.cardSettings === undefined ? null : parseCardSettings(v.cardSettings);
+  if (v.cardSettings !== undefined && !cardSettings) return null;
   let match: MatchSnapshot | null = null;
   if (v.match !== null && v.match !== undefined) {
     match = parseMatch(v.match);
@@ -183,6 +211,7 @@ export function parseSnapshot(v: unknown): RoomSnapshot | null {
     players,
     gameIds: v.gameIds,
     selection,
+    ...(cardSettings ? { cardSettings } : {}),
     joinPolicy: JOIN_POLICIES.find((j) => j === v.joinPolicy) ?? DEFAULT_JOIN_POLICY,
     stageCount: isNum(v.stageCount) ? Math.max(0, Math.floor(v.stageCount)) : 0,
     lobbyReady: v.lobbyReady,

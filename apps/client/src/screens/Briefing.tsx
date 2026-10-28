@@ -7,6 +7,8 @@ import { gameEntry } from "../games/registry.js";
 import { sendReady } from "../net/client.js";
 import { Avatar } from "../ui/Avatar.js";
 import { BriefingPanels } from "../ui/BriefingPanels.js";
+import { BadCardNotice } from "../ui/CardNotices.js";
+import { HandTray } from "../ui/HandTray.js";
 import { CheckIcon, EyeIcon, RotateIcon } from "../ui/Icons.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
@@ -33,6 +35,7 @@ export function Briefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
         <h1 class="display brief__name rise" style={{ "--i": 1 }}>
           {match().gameName}
         </h1>
+        <BadCardNotice cards={match().cards} players={snap().players} />
         <Show when={match().orientation === "landscape"}>
           <p class="brief__turn rise" style={{ "--i": 2 }}>
             <RotateIcon size={20} />
@@ -99,24 +102,27 @@ export function Briefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
               </div>
             }
           >
-            <PrimaryButton
-              variant={ready() ? "done" : "cyan"}
-              disabled={ready()}
-              onClick={() => {
-                setSent(true);
-                readySound();
-                hapticReady();
-                sendReady();
-              }}
-            >
-              {ready() ? (
-                <span class="inline-icon">
-                  <CheckIcon size={22} /> Hazırım
-                </span>
-              ) : (
-                "Hazırım"
-              )}
-            </PrimaryButton>
+            <div class="kc-actions">
+              <HandTray snap={snap()} match={match()} />
+              <PrimaryButton
+                variant={ready() ? "done" : "cyan"}
+                disabled={ready()}
+                onClick={() => {
+                  setSent(true);
+                  readySound();
+                  hapticReady();
+                  sendReady();
+                }}
+              >
+                {ready() ? (
+                  <span class="inline-icon">
+                    <CheckIcon size={22} /> Hazırım
+                  </span>
+                ) : (
+                  "Hazırım"
+                )}
+              </PrimaryButton>
+            </div>
             <p class="brief__wait" data-on={ready() ? "1" : undefined}>
               Diğerleri bekleniyor…
             </p>

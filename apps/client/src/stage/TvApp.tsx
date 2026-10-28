@@ -10,6 +10,7 @@ import { Toasts } from "../ui/Toast.js";
 import { WorldBackdrop } from "../ui/WorldBackdrop.js";
 import { preloadWorld } from "../ui/world.js";
 import { TvBriefing } from "./TvBriefing.js";
+import { TvCards } from "./TvCards.js";
 import { TvCountdown } from "./TvCountdown.js";
 import { TvEntry } from "./TvEntry.js";
 import { TvFinal } from "./TvFinal.js";
@@ -100,13 +101,16 @@ export function TvApp() {
                           <TvBriefing snap={snap()} match={match()} />
                         </Match>
                         <Match when={snap().phase === "countdown"}>
-                          <TvCountdown match={match()} />
+                          <TvCountdown snap={snap()} match={match()} />
                         </Match>
                         <Match when={snap().phase === "playing"}>
                           <TvPlaying snap={snap()} match={match()} />
                         </Match>
                         <Match when={snap().phase === "results"}>
                           <TvResults snap={snap()} match={match()} />
+                        </Match>
+                        <Match when={snap().phase === "cards"}>
+                          <TvCards snap={snap()} match={match()} />
                         </Match>
                       </Switch>
                     )}
