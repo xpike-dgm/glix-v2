@@ -329,6 +329,21 @@ const SCREENS = [
   { name: "kozmetik-lobi-buyuk-yazi", q: "mock=lobby&n=8&acct=1&cos=1&text=large", settle: 900 },
   { name: "kozmetik-final", q: "mock=final&n=6&acct=1&cos=1", settle: 2200 },
   { name: "kozmetik-final-buyuk-yazi", q: "mock=final&n=6&acct=1&cos=1&text=large", settle: 2200 },
+  {
+    name: "kozmetik-final-siralama",
+    q: "mock=final&n=6&acct=1&cos=1",
+    settle: 2200,
+    act: async (p) => p.locator(".fin__scroll").evaluate((el) => el.scrollTo(0, el.scrollHeight)),
+  },
+  {
+    name: "kozmetik-sonuc-siralama",
+    q: "mock=results&n=6&acct=1&cos=1",
+    settle: 1500,
+    act: async (p) =>
+      p.evaluate(() => {
+        for (const el of document.querySelectorAll("[data-scroll]")) el.scrollTo(0, el.scrollHeight);
+      }),
+  },
   { name: "kozmetik-sonuc", q: "mock=results&n=6&acct=1&cos=1", settle: 1500 },
   { name: "kozmetik-profil", q: "mock=profil", settle: 900 },
   { name: "ana-magaza-misafir", q: "mock=home", settle: 600, act: clickText("Mağaza") },

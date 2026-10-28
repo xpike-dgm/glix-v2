@@ -17,18 +17,18 @@ interface FrameArt {
 
 /** Çerçeve ürün kimliği -> görsel. Süslü sürümler gelince taç yüksekliği (`crownTop`) buradan ayarlanır. */
 const FRAMES: Readonly<Record<string, FrameArt>> = {
-  "cerceve-camgobegi": { file: "camgobegi-halka", crownTop: -72 },
-  "cerceve-pembe": { file: "pembe-halka", crownTop: -72 },
-  "cerceve-cift": { file: "cift-halka", crownTop: -72 },
-  "cerceve-donen-neon": { file: "donen-neon", crownTop: -72 },
-  "cerceve-altin-tac": { file: "altin-tac-halkasi", crownTop: -80 },
+  "cerceve-camgobegi": { file: "camgobegi-halka", crownTop: -64 },
+  "cerceve-pembe": { file: "pembe-halka", crownTop: -64 },
+  "cerceve-cift": { file: "cift-halka", crownTop: -64 },
+  "cerceve-donen-neon": { file: "donen-neon", crownTop: -64 },
+  "cerceve-altin-tac": { file: "altin-tac-halkasi", crownTop: -66 },
 };
 
 export const frameSrc = (id: string): string | undefined => {
   const f = FRAMES[id];
   return f ? `${BASE}/cerceve/${f.file}.webp` : undefined;
 };
-export const frameCrownTop = (id: string): number => FRAMES[id]?.crownTop ?? -72;
+export const frameCrownTop = (id: string): number => FRAMES[id]?.crownTop ?? -64;
 
 /** Ürün kutusu arka planı (480x600) ve unvan levhası (512x128), nadirliğe göre. */
 export const boxSrc = (r: Rarity): string => `${BASE}/kutu/kutu-${r}.webp`;

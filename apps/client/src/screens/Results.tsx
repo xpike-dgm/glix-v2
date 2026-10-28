@@ -223,7 +223,7 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
                 <span class="row__rank">{r.rank}</span>
                 <Avatar
                   index={r.player.avatar}
-                  size={36}
+                  size={frameOf(r.player.cosmetics) ? 28 : 36}
                   mood={award(r.player.id) < 0 ? "shock" : "idle"}
                   connected={r.player.connected}
                   frame={frameOf(r.player.cosmetics)}

@@ -617,3 +617,40 @@
   font-weight: 800;
   text-shadow: 0 0 10px color-mix(in srgb, currentColor 55%, transparent);
 }
+
+/* Unvanlar sekmesi: kompakt satırlar (levha solda, nadirlik çipi ve fiyat/durum sağda). */
+.shop-grid--rows {
+  gap: var(--sp-2);
+}
+.shop-grid--rows .shop-card[data-type="unvan"] {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) auto;
+  grid-template-areas:
+    "pv chip"
+    "pv foot";
+  align-items: center;
+  justify-items: center;
+  gap: 4px 8px;
+  padding: 8px 8px;
+  text-align: left;
+}
+.shop-grid--rows .shop-card__pv {
+  grid-area: pv;
+  min-height: 0;
+}
+.shop-grid--rows .cpv__av {
+  display: none;
+}
+.shop-grid--rows .shop-chip {
+  grid-area: chip;
+  padding: 1px 8px;
+}
+.shop-grid--rows .shop-card__foot {
+  grid-area: foot;
+  min-height: 0;
+  margin: 0;
+}
+.shop-grid--rows .shop-price,
+.shop-grid--rows .shop-state {
+  min-height: 32px;
+}

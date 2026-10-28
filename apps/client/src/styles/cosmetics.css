@@ -232,8 +232,12 @@
   .podium__col .av[data-framed] {
     margin-bottom: calc(var(--s) * 0.16);
   }
+  /* Taç (boyun %32'si) çerçevenin üstünde durur; başlık satırına değmesin diye tepede pay. */
   .podium__col[data-rank="1"] .av[data-framed] {
-    margin-top: calc(var(--s) * 0.3);
+    margin-top: calc(var(--s) * 0.66);
+  }
+  .podium__col .av[data-framed] .av__crown {
+    width: 32%;
   }
 }
 /* Yatay (kısa) ekran: kazanan tacı küçülüp çerçevenin hemen üstünde durur; başlıktaki puan satırına binmesin. */
@@ -252,4 +256,16 @@
   .podium__col[data-rank="1"] .av[data-framed] {
     margin-top: calc(var(--s) * 0.16);
   }
+}
+
+/* Lobi koltuğu: çerçeve biraz küçük çizilir, komşu koltuklarla arada boşluk kalır (delik avatara hafif biner). */
+.seat .av__frame {
+  left: -25%;
+  top: -25%;
+  width: 150%;
+  height: 150%;
+}
+/* Kompakt satır: çerçeve satır yüksekliğine sığar; sıra numarası ve addan küçük bir pay. */
+.row .av[data-framed] {
+  margin: 0 5px;
 }
