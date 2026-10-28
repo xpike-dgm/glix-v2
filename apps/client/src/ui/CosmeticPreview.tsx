@@ -16,20 +16,26 @@ export function CosmeticPreview(props: {
   avatar: number;
   name: string;
   cosmetics: Cosmetics | undefined;
-  size: number;
+  size: number | string;
   /** Hangi parça gösterilir: yalnız avatar (çerçeve), yalnız ad + unvan (kart), ikisi (büyük önizleme). */
-  parts?: "avatar" | "name" | "both";
+  parts?: "avatar" | "name" | "title" | "both";
+  /** Unvan levha üzerinde mi (büyük önizleme) yoksa düz metin mi. */
+  plate?: boolean | undefined;
 }) {
   return (
-    <span class="cpv" style={{ "--cpv-av": `${props.size}px` }}>
+    <span class="cpv" style={{ "--cpv-av": typeof props.size === "number" ? `${props.size}px` : props.size }}>
       <Show when={props.parts !== "name"}>
-        <Avatar index={props.avatar} size={props.size} frame={frameOf(props.cosmetics)} />
+        <span class="cpv__av">
+          <Avatar index={props.avatar} size={props.size} frame={frameOf(props.cosmetics)} />
+        </span>
       </Show>
-      <Show when={props.parts !== "avatar"}>
+      <Show when={props.parts !== "avatar" && props.parts !== "title"}>
         <span class="cpv__name">
           <PlayerName name={props.name} cosmetics={props.cosmetics} />
         </span>
-        <PlayerTitle cosmetics={props.cosmetics} />
+      </Show>
+      <Show when={props.parts !== "avatar"}>
+        <PlayerTitle cosmetics={props.cosmetics} plate={props.plate} />
       </Show>
     </span>
   );

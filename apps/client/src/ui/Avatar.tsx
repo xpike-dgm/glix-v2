@@ -4,6 +4,7 @@ import { colorBlind } from "../settings/settings.js";
 import { look, type Mood, moodSrc } from "./avatars.js";
 import { CheckIcon, CrownIcon } from "./Icons.js";
 import { HouseIcon } from "./LobbyIcons.js";
+import { frameCrownTop, frameSrc } from "./shopArt.js";
 
 interface Props {
   index: number;
@@ -61,6 +62,7 @@ export function Avatar(props: Props) {
         "--s": typeof props.size === "number" ? `${props.size}px` : props.size,
         "--c": props.ring ?? l().color,
         "--pc": l().color,
+        "--crown-top": framed() ? `${frameCrownTop(framed() ?? "")}%` : undefined,
         "--live-d": `${-((props.index * 0.37) % 2.6).toFixed(2)}s`,
       }}
     >
@@ -92,14 +94,18 @@ export function Avatar(props: Props) {
           )}
         </Show>
       </div>
-      <Show
-        when={props.frame !== undefined && cosmeticItem(props.frame)?.type === "cerceve" ? props.frame : null}
-      >
+      <Show when={framed()}>
         {(id) => (
-          <span class="av__frame" data-frame={id()} aria-hidden="true">
-            <i class="av__ring" />
-            <i class="av__gem av__gem--l" />
-            <i class="av__gem av__gem--r" />
+          <span class="av__frame-box" aria-hidden="true">
+            <img
+              class="av__frame"
+              data-frame={id()}
+              src={frameSrc(id())}
+              alt=""
+              draggable={false}
+              width="384"
+              height="384"
+            />
           </span>
         )}
       </Show>

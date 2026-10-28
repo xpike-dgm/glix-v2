@@ -822,6 +822,14 @@
   font-size: 15px;
   letter-spacing: 0.02em;
 }
+/* Final'in "Tekrar oyna" düğmesi her zaman tek satır (320 px'te de). */
+.final__main .pbtn.pbtn--long {
+  font-size: clamp(13px, 4vw, 15px);
+  letter-spacing: 0;
+}
+.final__main .pbtn.pbtn--long .pbtn__label {
+  white-space: nowrap;
+}
 
 /* ---- Maskot ---- */
 .mascot {

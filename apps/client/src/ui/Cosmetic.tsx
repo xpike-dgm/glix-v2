@@ -1,5 +1,6 @@
 import { type CosmeticItem, type Cosmetics, cosmeticItem } from "@glix/engine";
 import { Show } from "solid-js";
+import { plateSrc } from "./shopArt.js";
 
 /** Katalogdaki ürünü ve türünü doğrular; bilinmeyen kimlik ya da yanlış tür yok sayılır (ağdan gelen veri). */
 function pick(id: string | undefined, type: CosmeticItem["type"]): CosmeticItem | null {
@@ -25,16 +26,46 @@ export function PlayerName(props: { name: string; cosmetics?: Cosmetics | undefi
   );
 }
 
-/** Adın altındaki unvan; yoksa hiçbir şey çizilmez. Uzunsa kesilir. */
-export function PlayerTitle(props: { cosmetics?: Cosmetics | undefined; class?: string }) {
+/**
+ * Adın altındaki unvan; yoksa hiçbir şey çizilmez. `plate`: nadirliğe uygun levha üzerinde ortalı yazı
+ * (mağaza, dolap, profil gibi belirgin yerler); varsayılan küçük düz metin (koltuk, satır).
+ */
+export function PlayerTitle(props: {
+  cosmetics?: Cosmetics | undefined;
+  class?: string;
+  plate?: boolean | undefined;
+}) {
   const t = () => pick(props.cosmetics?.title, "unvan");
   return (
     <Show when={t()}>
       {(it) => (
-        <span class={`cos-title ${props.class ?? ""}`} data-r={it().rarity}>
-          {it().name}
-        </span>
+        <Show
+          when={props.plate}
+          fallback={
+            <span class={`cos-title ${props.class ?? ""}`} data-r={it().rarity}>
+              {it().name}
+            </span>
+          }
+        >
+          <TitlePlate item={it()} class={props.class} />
+        </Show>
       )}
     </Show>
   );
 }
+
+/** Unvan levhası: 512x128 görsel, yazı ortada (nadirliğe göre renk). */
+export function TitlePlate(props: { item: CosmeticItem; class?: string | undefined }) {
+  return (
+    <span
+      class={`cos-plate ${props.class ?? ""}`}
+      data-r={props.item.rarity}
+      style={{ "background-image": `url(${plateSrc(props.item.rarity)})` }}
+    >
+      <span class="cos-plate__t">{props.item.name}</span>
+    </span>
+  );
+}
+
+/** Levhasız boş unvan yeri ("Yok"): kesik çizgili levha. */
+export const EmptyPlate = () => <span class="cos-plate cos-plate--empty" aria-hidden="true" />;

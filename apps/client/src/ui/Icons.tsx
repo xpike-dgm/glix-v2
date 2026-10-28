@@ -1,5 +1,6 @@
 // biome-ignore-all lint/a11y/noSvgWithoutTitle: simgeler dekoratif (aria-hidden); anlamı yanındaki metin taşır
 import type { JSX } from "solid-js";
+import { COIN_SRC } from "./shopArt.js";
 
 type P = { size?: number | string; class?: string };
 const base = (p: P): JSX.SvgSVGAttributes<SVGSVGElement> => ({
@@ -150,11 +151,19 @@ export const PencilIcon = (p: P) => (
  * koymak için yalnız bu bileşen değişir.
  */
 export const CoinIcon = (p: P) => (
-  <svg {...base(p)} stroke-width={1.8}>
-    <circle cx="12" cy="12" r="9.4" fill="var(--amber)" stroke="#8a5a00" />
-    <circle cx="12" cy="12" r="6.4" fill="none" stroke="#8a5a00" />
-    <path d="M12 8.2l3 3.8-3 3.8-3-3.8z" fill="#8a5a00" stroke="none" />
-  </svg>
+  <img
+    class={`coin ${p.class ?? ""}`}
+    src={COIN_SRC}
+    alt=""
+    aria-hidden="true"
+    draggable={false}
+    width={p.size ?? 24}
+    height={p.size ?? 24}
+    style={{
+      width: typeof p.size === "number" ? `${p.size}px` : p.size,
+      height: typeof p.size === "number" ? `${p.size}px` : p.size,
+    }}
+  />
 );
 
 /** Dolap (askı): Dolabım girişi. */
@@ -169,5 +178,12 @@ export const BagIcon = (p: P) => (
   <svg {...base(p)}>
     <path d="M5 8h14l-1 12.2H6z" />
     <path d="M9 10.5V7a3 3 0 0 1 6 0v3.5" />
+  </svg>
+);
+
+/** Yıldırım: "Günün fırsatı" başlığı. */
+export const BoltIcon = (p: P) => (
+  <svg {...base(p)} fill="currentColor" stroke="none">
+    <path d="M13.4 2 5 13.2h5.6L9.6 22 19 10.2h-5.8z" />
   </svg>
 );
