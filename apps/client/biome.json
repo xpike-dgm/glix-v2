@@ -1,5 +1,5 @@
 {
   "root": false,
   "extends": "//",
-  "files": { "includes": ["**", "!**/dist", "!**/node_modules", "!**/.turbo", "!public"] }
+  "files": { "includes": ["**", "!**/dist", "!**/dist-perf", "!**/node_modules", "!**/.turbo", "!public"] }
 }
