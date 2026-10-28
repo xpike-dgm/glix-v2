@@ -161,6 +161,8 @@ export interface AccountExportData {
   cosmetics: CosmeticsDump;
   /** Kayıtlı web bildirimi aboneliği (yalnız ne zaman eklendiği; uç nokta ve anahtarlar dışarı verilmez). */
   push: { createdAt: number } | null;
+  /** Hesabın gönderdiği oyuncu bildirimleri (hedef kişi ve yönetici notu dökülmez: başkasına ait bilgi). */
+  reportsFiled: { createdAt: number; reason: string; note: string }[];
 }
 
 /** Glix hareketinin nedeni: maç, rozet, yönetici düzeltmesi (`satin-alma` mağaza için ayrılmıştır). */
@@ -1209,6 +1211,9 @@ export function createAccounts(path: string): AccountStore {
     "UPDATE reports SET status = ?, admin_note = ?, reviewed_at = ? WHERE id = ?",
   );
   const reportStatusCounts = db.prepare("SELECT status, COUNT(*) AS n FROM reports GROUP BY status");
+  const reportsFiledRows = db.prepare(
+    "SELECT created_at, reason, note FROM reports WHERE reporter_account_id = ? ORDER BY id",
+  );
   const reportsDetachReporter = db.prepare(
     "UPDATE reports SET reporter_account_id = NULL WHERE reporter_account_id = ?",
   );
@@ -1752,6 +1757,9 @@ export function createAccounts(path: string): AccountStore {
           const p = pushSince.get(accountId) as { created_at: number } | undefined;
           return p ? { createdAt: p.created_at } : null;
         })(),
+        reportsFiled: (
+          reportsFiledRows.all(accountId) as { created_at: number; reason: string; note: string }[]
+        ).map((r) => ({ createdAt: r.created_at, reason: r.reason, note: r.note })),
       };
     },
     sessionCreatedAt(tokenHash) {
