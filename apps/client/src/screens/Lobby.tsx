@@ -114,7 +114,7 @@ const JOIN_OPTIONS: readonly { policy: JoinPolicy; label: string }[] = [
 const MAX_EMPTY_SLOTS = 3;
 
 /** Oyun kartı görseli; yüklenemezse (ya da veri tasarrufunda) boş çerçeve kalır. */
-function GameThumb(props: { id: string }) {
+function GameThumb(props: { id: string; eager?: boolean }) {
   const [ok, setOk] = createSignal(worldAllowed());
   return (
     <Show when={ok()}>
@@ -122,7 +122,7 @@ function GameThumb(props: { id: string }) {
         <img
           src={`/assets/cards/${props.id}.webp`}
           alt=""
-          loading="lazy"
+          loading={props.eager ? "eager" : "lazy"}
           decoding="async"
           draggable={false}
           width="800"
@@ -167,7 +167,7 @@ function TonightStrip(props: {
             <For each={props.ids}>
               {(id, i) => (
                 <li class="tonight__card" title={props.names[i()]}>
-                  <GameThumb id={id} />
+                  <GameThumb id={id} eager />
                 </li>
               )}
             </For>

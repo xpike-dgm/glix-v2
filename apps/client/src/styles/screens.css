@@ -2033,24 +2033,31 @@
   transform: translate(-50%, -50%);
 }
 .pbtn.pbtn--glow {
+  box-shadow: 0 4px 0 var(--edge);
+}
+/* Parıltı: büyük bulanık gölge her karede yeniden boyanmasın diye ayrı katmanda yalnız opacity oynar.
+   Dış gölge düğmenin içine çizilmez; düğme yüzü etkilenmez. */
+.pbtn--glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 46px 12px rgb(46, 242, 255);
+  opacity: 0.7;
+  pointer-events: none;
   animation: start-glow 1.4s ease-in-out infinite;
-  box-shadow:
-    0 4px 0 var(--edge),
-    0 0 30px 6px rgba(46, 242, 255, 0.8);
 }
 @keyframes start-glow {
   50% {
-    box-shadow:
-      0 4px 0 var(--edge),
-      0 0 46px 12px rgba(46, 242, 255, 1);
+    opacity: 1;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  :root:not([data-motion="full"]) .pbtn--glow {
+  :root:not([data-motion="full"]) .pbtn--glow::before {
     animation: none;
   }
 }
-:root[data-motion="reduce"] .pbtn--glow {
+:root[data-motion="reduce"] .pbtn--glow::before {
   animation: none;
 }
 .nickedit {

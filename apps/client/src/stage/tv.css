@@ -213,9 +213,10 @@
   gap: 18px;
   padding: 28px 28px 24px;
   border-radius: 36px;
-  background: rgba(5, 8, 26, 0.62);
+  /* backdrop-filter kaldırıldı: büyük panelde içindeki her animasyonda arka plan yeniden bulanıyordu (TV'de 17 fps).
+     Arkadaki dünya görseli zaten koyu örtülü; bulanıklığın yerini biraz daha koyu zemin tutar. */
+  background: rgba(5, 8, 26, 0.74);
   border: 2px solid var(--line);
-  backdrop-filter: blur(6px);
 }
 .tv__board {
   flex: 1;

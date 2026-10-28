@@ -636,16 +636,31 @@
   background: var(--lime);
 }
 .mpath__dot[data-s="current"] {
+  position: relative;
   background: var(--text);
-  box-shadow: 0 0 0 0 rgba(243, 245, 255, 0.55);
+}
+/* Halka: box-shadow yerine büyüyen yarı saydam daire (transform + opacity; her karede boyama yok). */
+.mpath__dot[data-s="current"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(243, 245, 255, 0.55);
+  pointer-events: none;
   animation: mpath-pulse 1.4s ease-out infinite;
 }
 @keyframes mpath-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
   70% {
-    box-shadow: 0 0 0 6px rgba(243, 245, 255, 0);
+    transform: scale(2.7);
+    opacity: 0;
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(243, 245, 255, 0);
+    transform: scale(2.7);
+    opacity: 0;
   }
 }
 

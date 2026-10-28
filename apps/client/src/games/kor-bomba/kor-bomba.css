@@ -123,7 +123,13 @@ button.kbo__seat {
   box-shadow: 0 0 30px #fff;
   animation: kbo-flash 520ms var(--ease) both;
 }
-.kbo__seat[data-tap="1"] .av__disc {
+.kbo__seat[data-tap="1"] .av::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 20px var(--c);
+  pointer-events: none;
   animation: kbo-invite 1.4s ease-in-out infinite;
 }
 .kbo__seat[data-tap="1"]:active .av {
@@ -133,13 +139,14 @@ button.kbo__seat {
   border-color: var(--text);
   box-shadow: 0 0 26px var(--text);
 }
+/* Davet parıltısı ayrı katmanda yalnız opacity ile atar (box-shadow animasyonu her karede boyatıyordu). */
 @keyframes kbo-invite {
   0%,
   100% {
-    box-shadow: 0 0 6px color-mix(in srgb, var(--c) 40%, transparent);
+    opacity: 0;
   }
   50% {
-    box-shadow: 0 0 20px var(--c);
+    opacity: 1;
   }
 }
 @keyframes kbo-flash {
@@ -352,13 +359,16 @@ button.kbo__seat {
   :root:not([data-motion="full"]) .kbo__bomb .bomb,
   :root:not([data-motion="full"]) .kbo__bomb::after,
   :root:not([data-motion="full"]) .kbo__cta,
-  :root:not([data-motion="full"]) .kbo__seat[data-tap="1"] .av__disc,
+  :root:not([data-motion="full"]) .kbo__seat[data-tap="1"] .av::after,
   :root:not([data-motion="full"]) .kboart__ring,
   :root:not([data-motion="full"]) .kboart__dot {
     animation: none !important;
   }
   :root:not([data-motion="full"]) .kbo__bomb {
     transition: none;
+  }
+  :root:not([data-motion="full"]) .kbo__seat[data-tap="1"] .av::after {
+    opacity: 0;
   }
   :root:not([data-motion="full"]) .kbo__bomb::after {
     opacity: 0.45;
@@ -370,13 +380,16 @@ button.kbo__seat {
 :root[data-motion="reduce"] .kbo__bomb .bomb,
 :root[data-motion="reduce"] .kbo__bomb::after,
 :root[data-motion="reduce"] .kbo__cta,
-:root[data-motion="reduce"] .kbo__seat[data-tap="1"] .av__disc,
+:root[data-motion="reduce"] .kbo__seat[data-tap="1"] .av::after,
 :root[data-motion="reduce"] .kboart__ring,
 :root[data-motion="reduce"] .kboart__dot {
   animation: none !important;
 }
 :root[data-motion="reduce"] .kbo__bomb {
   transition: none;
+}
+:root[data-motion="reduce"] .kbo__seat[data-tap="1"] .av::after {
+  opacity: 0;
 }
 :root[data-motion="reduce"] .kbo__bomb::after {
   opacity: 0.45;

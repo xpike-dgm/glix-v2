@@ -1,7 +1,15 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
   "files": {
-    "includes": ["**", "!**/dist", "!**/node_modules", "!**/coverage", "!**/.turbo", "!pnpm-lock.yaml"]
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/dist-perf",
+      "!**/node_modules",
+      "!**/coverage",
+      "!**/.turbo",
+      "!pnpm-lock.yaml"
+    ]
   },
   "formatter": {
     "enabled": true,

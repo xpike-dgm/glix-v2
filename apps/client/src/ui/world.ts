@@ -1,4 +1,5 @@
 import { dataSaver } from "../settings/settings.js";
+import { warmImage } from "./imageWarm.js";
 
 /** Oyun dünyası arka planı: /assets/worlds/<oyun>-<portrait|landscape>.webp (dikey 720x1280, yatay 1280x720). */
 export type WorldOrientation = "portrait" | "landscape";
@@ -24,17 +25,8 @@ export function currentWorldOrientation(): WorldOrientation {
   return window.innerHeight >= window.innerWidth ? "portrait" : "landscape";
 }
 
-const started = new Set<string>();
-const keep: HTMLImageElement[] = [];
-
 /** Anlatım başlarken bu yöndeki dünya görselini önden indirir (engellemez). */
-export function preloadWorld(gameId: string): void {
-  if (typeof Image === "undefined" || !worldAllowed()) return;
-  const src = worldSrc(gameId, currentWorldOrientation());
-  if (started.has(src)) return;
-  started.add(src);
-  const img = new Image();
-  img.decoding = "async";
-  img.src = src;
-  keep.push(img);
+export function preloadWorld(gameId: string, low = false): void {
+  if (!worldAllowed()) return;
+  warmImage(worldSrc(gameId, currentWorldOrientation()), low);
 }
