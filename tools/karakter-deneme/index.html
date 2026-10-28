@@ -1,0 +1,35 @@
+<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#0b0820}</style>
+<script type="module">
+import * as PIXI from "./pixi.mjs";
+const W=390,H=844, app=new PIXI.Application(); await app.init({width:W,height:H,background:0x0b0820,antialias:true,resolution:2,autoDensity:true,preserveDrawingBuffer:true});
+document.body.appendChild(app.canvas); app.ticker.stop();
+const rig=await (await fetch("kar/pivots.json")).json(), dance=await (await fetch("dance.json")).json();
+const files=new Set(Object.values(rig.parts).map(p=>p.file)); for(const w of Object.values(rig.wardrobe)) for(const p of w.pieces) files.add(p.file);
+const tex={}; for(const f of files) tex[f]=await PIXI.Assets.load("kar/"+f);
+function makeChar(outfit){ const c=new PIXI.Container(); const items=[];
+  for(const n of rig.drawOrder){ const p=rig.parts[n]; const s=new PIXI.Sprite(tex[p.file]); s.anchor.set(p.pivot[0]/p.size[0],p.pivot[1]/p.size[1]); c.addChild(s); items.push([n,s]);
+    for(const [wn,w] of Object.entries(rig.wardrobe)) if(outfit.includes(wn)) for(const q of w.pieces) if(q.drawAfter===n){ const t=new PIXI.Sprite(tex[q.file]); t.anchor.set(q.pivot[0]/q.size[0],q.pivot[1]/q.size[1]); c.addChild(t); items.push([q.bone,t]); } }
+  // şapka başın üstünde kalsın
+  return {c,items}; }
+function pose(ch, angles, rootY=0){ const world={root:{x:0,y:rootY,r:0}};
+  const order=["torso","head","left_upper_arm","left_forearm","left_hand","right_upper_arm","right_forearm","right_hand","left_thigh","left_shin","left_foot","right_thigh","right_shin","right_foot"];
+  for(const n of order){ const p=rig.parts[n], par=world[p.parent], a=(angles[n]||0)*Math.PI/180, co=Math.cos(par.r), si=Math.sin(par.r);
+    world[n]={x:par.x+co*p.position[0]-si*p.position[1], y:par.y+si*p.position[0]+co*p.position[1], r:par.r+a}; }
+  for(const [b,s] of ch.items){ const w=world[b]; s.position.set(w.x,w.y); s.rotation=w.r; } }
+function danceAngles(t){ const ft=(t%dance.duration)*dance.fps, i=Math.floor(ft), f=ft-i, a=dance.frames[i].parts, b=dance.frames[i+1].parts, o={};
+  for(const n in a) o[n]=a[n].angle+(b[n].angle-a[n].angle)*f; return {o, ry:(a.root.y+(b.root.y-a.root.y)*f)*3}; }
+// kürsü
+const g=new PIXI.Graphics(); const steps=[[150,560,90,0xffc23b],[45,620,90,0xb8c4d6],[255,650,90,0xd08a4a]];
+for(const [x,y,w,col] of steps){ g.rect(x,y,w,H-y-160).fill(0x1a1440); g.rect(x,y,w,6).fill(col); } app.stage.addChild(g);
+const S=0.20; const chars=[[makeChar(["sapka","ceket"]),195,560],[makeChar([]),90,620],[makeChar(["sapka"]),300,650]];
+for(const [ch,x,y] of chars){ ch.c.scale.set(S); ch.c.position.set(x,y-(1536-782)*S*0.82); app.stage.addChild(ch.c); }
+const big=makeChar(["sapka","ceket"]); big.c.scale.set(0.5); big.c.position.set(W/2,0); big.c.visible=false; app.stage.addChild(big.c);
+window.frame=(t,closeup=false)=>{ const d=danceAngles(t);
+  pose(chars[0][0], d.o, d.ry);
+  const idle=Math.sin(t*Math.PI)*4; const clap={left_upper_arm:-60+idle*3,left_forearm:-70,right_upper_arm:60-idle*3,right_forearm:70,head:idle};
+  pose(chars[1][0], clap); pose(chars[2][0], {...clap,left_upper_arm:-55-idle*3,right_upper_arm:55+idle*3});
+  g.visible=!closeup; for(const [ch] of chars) ch.c.visible=!closeup; big.c.visible=closeup;
+  if(closeup){ pose(big,d.o,d.ry); big.c.position.set(W/2,560); }
+  app.renderer.render(app.stage); };
+window.ready=true;
+</script>

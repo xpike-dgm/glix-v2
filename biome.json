@@ -8,7 +8,8 @@
       "!**/node_modules",
       "!**/coverage",
       "!**/.turbo",
-      "!pnpm-lock.yaml"
+      "!pnpm-lock.yaml",
+      "!tools/karakter-deneme"
     ]
   },
   "formatter": {
@@ -18,11 +19,21 @@
     "lineWidth": 110
   },
   "javascript": {
-    "formatter": { "quoteStyle": "double" }
+    "formatter": {
+      "quoteStyle": "double"
+    }
   },
   "linter": {
     "enabled": true,
-    "rules": { "preset": "recommended" }
+    "rules": {
+      "preset": "recommended"
+    }
   },
-  "assist": { "actions": { "source": { "organizeImports": "on" } } }
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  }
 }

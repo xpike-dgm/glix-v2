@@ -1,0 +1,131 @@
+<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#0b0820}</style>
+<script type="module">
+import * as PIXI from "./pixi.mjs";
+const Q = new URLSearchParams(location.search);
+const W = +(Q.get("w") || 390), H = +(Q.get("h") || 844);
+const app = new PIXI.Application();
+await app.init({ width: W, height: H, background: 0x0b0820, antialias: true, resolution: 2, autoDensity: true, preserveDrawingBuffer: true });
+document.body.appendChild(app.canvas); app.ticker.stop();
+
+const rig = await (await fetch("kar/pivots.json")).json();
+const P = rig.parts, NAMES = Object.keys(P);
+const img = (src) => new Promise((r, e) => { const i = new Image(); i.onload = () => r(i); i.onerror = e; i.src = src; });
+const IW = 1024, IH = 1536;
+
+// --- dinlenme pozunda eklem konumları (ana.png koordinatı) ---
+const rest = { root: { x: rig.root.position[0], y: rig.root.position[1] } };
+const order = ["torso", "head", "left_upper_arm", "left_forearm", "left_hand", "right_upper_arm", "right_forearm", "right_hand",
+  "left_thigh", "left_shin", "left_foot", "right_thigh", "right_shin", "right_foot"];
+for (const n of order) { const p = P[n], q = rest[p.parent]; rest[n] = { x: q.x + p.position[0], y: q.y + p.position[1] }; }
+
+// --- parçalar: her parça kendi görseliyle (gizli bölgeleri tamamlanmış), atlasa paketlenir ---
+const L = Object.fromEntries(order.map((n, i) => [n, i]));
+const PIECES = []; // {key, layer, bone, im, ox, oy}
+for (const n of order) PIECES.push({ key: "body:" + n, layer: "body", bone: n, im: await img("kar/" + P[n].file), ox: P[n].sourceOrigin[0], oy: P[n].sourceOrigin[1] });
+for (const [wn, w] of Object.entries(rig.wardrobe)) for (const q of w.pieces)
+  PIECES.push({ key: wn + ":" + q.bone, layer: wn, bone: q.bone, im: await img("kar/" + q.file), ox: q.sourceOrigin[0], oy: q.sourceOrigin[1] });
+// raf paketleme
+const AW = 4096; let px = 0, py = 0, rowH = 0;
+for (const pc of PIECES.slice().sort((x, y) => y.im.height - x.im.height)) {
+  if (px + pc.im.width + 32 > AW) { px = 0; py += rowH + 32; rowH = 0; }
+  pc.ax = px + 16; pc.ay = py + 16; px += pc.im.width + 32; rowH = Math.max(rowH, pc.im.height);
+}
+const AH = py + rowH + 32;
+const atlas = document.createElement("canvas"); atlas.width = AW; atlas.height = AH;
+const ag = atlas.getContext("2d", { willReadFrequently: true });
+for (const pc of PIECES) ag.drawImage(pc.im, pc.ax, pc.ay);
+const AD = ag.getImageData(0, 0, AW, AH).data;
+const atlasTex = PIXI.Texture.from(atlas);
+
+// eklem bölgeleri: çocuk kemik -> yarıçap
+const JR = { head: 46, left_upper_arm: 44, right_upper_arm: 44, left_forearm: 36, right_forearm: 36, left_hand: 26, right_hand: 26,
+  left_thigh: 48, right_thigh: 48, left_shin: 38, right_shin: 38, left_foot: 30, right_foot: 30 };
+const CHILD_DIR = {};
+function norm(x, y) { const l = Math.hypot(x, y) || 1; return [x / l, y / l]; }
+for (const n of order) { const x = P[n].position[0], y = P[n].position[1]; CHILD_DIR[n] = norm(x, y); }
+const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+// ağırlık yalnız konuma ve parçanın kemiğine bağlı: aynı yerdeki ebeveyn ve çocuk köşeleri aynı hareket eder (dikiş yok)
+function weights(x, y, bone) {
+  let zone = null, best = 1e9;
+  for (const c of order) {
+    if (!JR[c]) continue;
+    if (bone !== c && bone !== P[c].parent) continue;
+    const d = Math.hypot(x - rest[c].x, y - rest[c].y);
+    if (d < JR[c] * 1.5 && d < best) { best = d; zone = c; }
+  }
+  if (!zone) return [[L[bone], 1]];
+  const dir = CHILD_DIR[zone];
+  const t = ((x - rest[zone].x) * dir[0] + (y - rest[zone].y) * dir[1]) / JR[zone];
+  const wc = smooth(-0.9, 0.9, t);
+  return [[L[zone], wc], [L[P[zone].parent], 1 - wc]];
+}
+
+const G = +(Q.get("g") || 10);
+const DRAW = [
+  "body:left_thigh", "body:left_shin", "body:left_foot", "body:right_thigh", "body:right_shin", "body:right_foot",
+  "body:head", "body:torso", "ceket:torso",
+  "body:left_upper_arm", "ceket:left_upper_arm", "body:left_forearm", "ceket:left_forearm", "body:left_hand",
+  "body:right_upper_arm", "ceket:right_upper_arm", "body:right_forearm", "ceket:right_forearm", "body:right_hand",
+  "sapka:head",
+];
+function buildMesh(outfit) {
+  const verts = [], uvs = [], wts = [], idx = [];
+  for (const key of DRAW) {
+    const pc = PIECES.find((q) => q.key === key);
+    if (!pc || (pc.layer !== "body" && !outfit.includes(pc.layer))) continue;
+    const map = new Map();
+    const vtx = (gx, gy) => {
+      const k = gx + ":" + gy; if (map.has(k)) return map.get(k);
+      const x = gx * G, y = gy * G, i = verts.length / 2;
+      verts.push(x, y); uvs.push((pc.ax + x - pc.ox) / AW, (pc.ay + y - pc.oy) / AH); wts.push(weights(x, y, pc.bone));
+      map.set(k, i); return i;
+    };
+    const gx0 = Math.floor(pc.ox / G), gy0 = Math.floor(pc.oy / G), gx1 = Math.ceil((pc.ox + pc.im.width) / G), gy1 = Math.ceil((pc.oy + pc.im.height) / G);
+    for (let cy = gy0; cy < gy1; cy++) for (let cx = gx0; cx < gx1; cx++) {
+      let any = false;
+      for (let y = cy * G; y < (cy + 1) * G && !any; y++) for (let x = cx * G; x < (cx + 1) * G; x++) {
+        const lx = x - pc.ox, ly = y - pc.oy; if (lx < 0 || ly < 0 || lx >= pc.im.width || ly >= pc.im.height) continue;
+        if (AD[((pc.ay + ly) * AW + pc.ax + lx) * 4 + 3] > 4) { any = true; break; }
+      }
+      if (!any) continue;
+      const a = vtx(cx, cy), b = vtx(cx + 1, cy), d = vtx(cx, cy + 1), e = vtx(cx + 1, cy + 1);
+      idx.push(a, b, e, a, e, d);
+    }
+  }
+  return { verts: new Float32Array(verts), rest: new Float32Array(verts), uvs: new Float32Array(uvs), idx: new Uint32Array(idx), wts };
+}
+
+class Dancer {
+  constructor(outfit, scale) {
+    this.m = buildMesh(outfit);
+    this.mesh = new PIXI.MeshSimple({ texture: atlasTex, vertices: this.m.verts, uvs: this.m.uvs, indices: this.m.idx });
+    this.c = new PIXI.Container(); this.c.addChild(this.mesh); this.c.scale.set(scale);
+    this.mesh.position.set(-rest.root.x, -rest.root.y);
+  }
+  pose(angles, rootY = 0) { // angles: yerel derece
+    const world = { root: { x: rest.root.x, y: rest.root.y + rootY, r: 0 } }, T = [];
+    for (const n of order) {
+      const p = P[n], q = world[p.parent], co = Math.cos(q.r), si = Math.sin(q.r);
+      const x = q.x + co * p.position[0] - si * p.position[1], y = q.y + si * p.position[0] + co * p.position[1];
+      world[n] = { x, y, r: q.r + ((angles[n] || 0) * Math.PI) / 180 };
+      T[L[n]] = { x, y, c: Math.cos(world[n].r), s: Math.sin(world[n].r), rx: rest[n].x, ry: rest[n].y };
+    }
+    const v = this.mesh.vertices, r = this.m.rest, wts = this.m.wts;
+    for (let i = 0; i < wts.length; i++) {
+      const x0 = r[i * 2], y0 = r[i * 2 + 1]; let x = 0, y = 0;
+      for (const [b, w] of wts[i]) { const t = T[b], dx = x0 - t.rx, dy = y0 - t.ry; x += w * (t.x + t.c * dx - t.s * dy); y += w * (t.y + t.s * dx + t.c * dy); }
+      v[i * 2] = x; v[i * 2 + 1] = y;
+    }
+    this.mesh.vertices = v;
+  }
+}
+const dances = {};
+for (const n of ["makarena", "tavuk", "charleston", "twist", "sevinc", "mickey"]) dances[n] = await (await fetch(`mocap/${n}.json`)).json();
+function sample(d, t) {
+  const n = d.frames.length, ft = (t * d.fps) % n, i = Math.floor(ft), f = ft - i, A = d.frames[i], B = d.frames[(i + 1) % n], o = {};
+  for (const k in A.angles) { let df = B.angles[k] - A.angles[k]; df = ((df + 540) % 360) - 180; o[k] = A.angles[k] + df * f; }
+  return { o, ry: A.root.y + (B.root.y - A.root.y) * f };
+}
+window.Dancer = Dancer; window.dances = dances; window.sample = sample; window.app = app; window.PIXI = PIXI;
+window.ready = true;
+</script>

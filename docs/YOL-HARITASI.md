@@ -236,6 +236,9 @@ Sahip kararları (Ekim 2026). Yalnız görünüş satılır, oyunda avantaj yok;
 - Uygulama sırası (öneri): M1 Glix bakiyesi, kazanç kuralları, hareket kaydı, maç sonu "+N Glix", yönetici düzeltmesi,
   KVKK dışa aktarma/silme → M2 Mağaza + Dolabım, satın alma ve kuşanma (sunucu doğrular), kuşanılanların diğer
   oyunculara görünmesi → M3 ürün görselleri (ChatGPT) ve görünüş türleri → M4 kürsü karakteri, dans ve giysiler.
+- **Kürsü karakteri yöntemi (sahip onayı):** ChatGPT'nin tek ana çiziminden kesilmiş parçalar, PixiJS `MeshSimple` ile
+  tek parça esneyen karakter olarak çizilir (eklemde dikiş yok); danslar CMU hareket kayıtlarından (`bvh2dance.py`,
+  ticari kullanıma açık) dönüştürülür. Deneme: `tools/karakter-deneme/`.
 - [ ] M1  - [ ] M2  - [ ] M3  - [ ] M4
 
 ---
