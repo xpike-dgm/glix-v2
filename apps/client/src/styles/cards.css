@@ -390,16 +390,6 @@ button.kc-card:disabled {
   overflow-y: auto;
   padding: 2px 2px 6px;
 }
-.kc-opts {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.kc-slot {
-  min-height: 84px;
-  border-radius: 16px;
-  border: 2px dashed rgba(160, 175, 255, 0.25);
-}
 .kc-note {
   display: flex;
   align-items: center;
@@ -550,20 +540,6 @@ button.kc-card:disabled {
 }
 .kc-games__btn:active {
   background: rgba(46, 242, 255, 0.2);
-}
-
-/* Dar dikey ekranda 4 seçenek / değiştirme adımı: satırlar alçalır, küçük kart daralır */
-.kc-opts[data-n="4"] {
-  gap: 6px;
-}
-.kc-opts[data-n="4"] .kc-card,
-.kc-body[data-state="discard"] .kc-card {
-  --pw: 44px;
-  padding: 5px 12px 5px 6px;
-  gap: 10px;
-}
-.kc-body[data-state="discard"] .kc-opts {
-  gap: 8px;
 }
 
 /* ---- Duyurular, açıklama, sonuç satırları ---- */
@@ -867,36 +843,6 @@ button.kc-card:disabled {
   .kc-head__row {
     flex: 1;
   }
-  .kc-opts {
-    display: grid;
-    grid-template-columns: repeat(var(--kc-n, 3), minmax(0, 1fr));
-    gap: 10px;
-  }
-  .kc-opts[data-n="4"] {
-    --kc-n: 4;
-  }
-  .kc-opts[data-n="1"] {
-    --kc-n: 1;
-    max-width: 260px;
-  }
-  .kc-opts[data-n="2"] {
-    --kc-n: 2;
-  }
-  .kc-opts[data-n="4"] {
-    --kc-n: 2;
-  }
-  .kc-opts .kc-card {
-    --pw: 52px;
-    min-height: 0;
-    padding: 6px 10px 6px 6px;
-    align-items: flex-start;
-  }
-  .kc-opts .kc-card__name {
-    font-size: var(--fs-15);
-  }
-  .kc-slot {
-    min-height: 96px;
-  }
   .kc-foot {
     flex-direction: row;
     align-items: center;
@@ -1033,32 +979,376 @@ button.kc-card:disabled {
 .tv__deck .kc-card__qmark {
   font-size: 120px;
 }
-/* Geniş ekranda (masaüstü, tablet yatay) üç dikey kart yan yana */
-@media (orientation: landscape) and (min-width: 900px) and (min-height: 600px) {
-  .kcards .col {
-    max-width: 1080px;
+
+/* ---- Kart seçimi: kartlar kendi tasarımıyla, çevrelerinde kutu yok ---- */
+.kc-note--ok {
+  color: var(--lime);
+  font-weight: 700;
+}
+.kc-deal {
+  --gap: 8px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.kc-deal__cards {
+  --n: 3;
+  --cols: 3;
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  gap: var(--gap);
+  width: 100%;
+  max-width: 560px;
+  padding: 18px 2px 4px;
+}
+/* 4 kart: dar/kısa ekranda tek sıra yerine 2x2, kart genişliği yüksekliğe göre */
+.kc-deal__cards[data-n="4"] {
+  --n: 2;
+  width: min(100%, calc(2 * var(--cw4, 100px) + var(--gap)));
+  --cw4: clamp(88px, 19dvh, 220px);
+}
+.kc-deal__cards[data-n="1"] {
+  --n: 1;
+  --cols: 1;
+  max-width: 200px;
+}
+.kc-deal__cards[data-n="2"] {
+  --n: 2;
+  --cols: 2;
+  max-width: 380px;
+}
+.kc-deal__cards[data-n="4"] {
+  --cols: 4;
+}
+.kc-deal .kc-card {
+  position: relative;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 200ms var(--ease),
+    opacity 160ms;
+}
+/* Parlama: kartın dışındaki ayrı katman (kartı taşırmaz), yalnız opacity değişir */
+.kc-deal__slot {
+  --kc: #7f8ce0;
+  position: relative;
+  min-width: 0;
+}
+.kc-deal__slot[data-r="siradan"] {
+  --kc: var(--cyan);
+}
+.kc-deal__slot[data-r="nadir"] {
+  --kc: #a98bff;
+}
+.kc-deal__slot[data-r="efsanevi"] {
+  --kc: var(--amber);
+}
+.kc-deal__slot[data-r="kotu"] {
+  --kc: var(--red);
+}
+.kc-deal__slot::before {
+  content: "";
+  position: absolute;
+  inset: -6% -12%;
+  z-index: -1;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--kc) 75%, transparent), transparent);
+  opacity: 0;
+  transition: opacity 200ms;
+  pointer-events: none;
+}
+.kc-deal .kc-card[data-layout="tile"][data-on="1"] {
+  transform: translateY(-3%) scale(1.07);
+  z-index: 2;
+  filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--kc) 30%, rgba(0, 0, 0, 0.5)));
+}
+.kc-deal .kc-card[data-on="1"]::before {
+  opacity: 0.85;
+}
+.kc-deal__cards[data-look] .kc-card:not([data-on]) {
+  opacity: 0.55;
+}
+button.kc-card:active:not(:disabled) {
+  filter: none;
+}
+.kc-deal .kc-card[data-layout="tile"] .kc-card__pic {
+  width: 100%;
+}
+/* Eşik altı ekranlarda kartta yalnız ad var; ad kart genişliğiyle büyür, en çok 2 satır, en az 13 px */
+.kc-deal:not([data-mode="direct"]) .kc-card__ptext,
+.kc-deal:not([data-mode="direct"]) .kc-card__tags .kc-card__tag:not([data-k="new"]) {
+  display: none;
+}
+.kc-deal:not([data-mode="direct"]) .kc-card__panel {
+  left: 6%;
+  right: 6%;
+  overflow: visible;
+}
+.kc-deal:not([data-mode="direct"]) .kc-card__pname {
+  font-size: clamp(13px, 11cqw, 40px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  overflow-wrap: normal;
+}
+.kc-deal:not([data-mode="direct"]) .kc-card__tags .kc-card__tag {
+  font-size: 13px;
+  padding: 0 5px;
+}
+/* Kartlar ekran genişliğini olabildiğince kullanır; parlama için üstte pay kalır */
+.kc-body[data-state="pick"],
+.kc-body[data-state="discard"],
+.kc-body[data-state="wait"] {
+  margin-inline: -10px;
+}
+.kc-deal:not([data-mode="direct"]) .kc-card__pname {
+  text-wrap: balance;
+}
+.kc-deal .kc-card[data-r="kotu"] .kc-card__pname {
+  color: #ffdde3;
+}
+/* Yeterince uzun dikey ekran (390x844 …): iki kart yan yana, üçüncü altta ortada (4 kartta 2x2); kart boyu yüksekliğe göre.
+ * Açıklama + "Bu kartı seç" kaydırmadan sığmalı: kartlara ayrılan yükseklik = ekran - başlık/şerit/açıklama payı.
+ * 761 px altında (320x568, 360x640, 375x667) iki sıra kartla açıklama sığmaz; orada üç kart tek sıra kalır. */
+@media (orientation: portrait) and (min-height: 761px) {
+  .kcards:has(.kc-hand) {
+    --kc-chrome: 475px;
   }
-  .kc-opts {
-    display: grid;
-    grid-template-columns: repeat(var(--kc-n, 3), minmax(0, 300px));
+  .kc-deal__cards,
+  .kc-deal__cards[data-n="4"] {
+    --cwh: clamp(100px, calc((100dvh - var(--kc-chrome, 410px)) / 3), 220px);
+    --cw: min(var(--cwh), calc((100% - var(--gap)) / 2));
+    --n: 2;
+    grid-template-columns: repeat(2, var(--cw));
     justify-content: center;
-    gap: 20px;
+    row-gap: 16px;
+    width: 100%;
+    max-width: none;
   }
-  .kc-opts[data-n="1"] {
-    --kc-n: 1;
+  .kc-deal__cards[data-n="3"] > :nth-child(3) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: var(--cw);
   }
-  .kc-opts[data-n="2"] {
-    --kc-n: 2;
+  .kc-deal__cards[data-n="1"] {
+    --n: 1;
+    grid-template-columns: var(--cw);
   }
-  .kc-opts[data-n="4"] {
-    --kc-n: 4;
-    grid-template-columns: repeat(4, minmax(0, 250px));
+  .kc-deal__cards[data-n="1"] .kc-deal__slot,
+  .kc-deal__cards[data-n="1"] .kc-card {
+    min-width: 0;
+  }
+}
+/* Kısa dikey ekran (320x568): başlık küçülür, el şeridi gizlenir; açıklama ve düğme kartların altına sığar */
+@media (orientation: portrait) and (max-height: 640px) {
+  .kcards .kc-title {
+    font-size: var(--fs-18);
+  }
+  .kcards .kc-hand {
+    display: none;
+  }
+  .kc-deal__cards[data-n="4"] {
+    --cw4: 16dvh;
+  }
+  .kc-deal__cards {
+    padding-top: 14px;
+  }
+  .kc-info__name {
+    font-size: var(--fs-18);
+  }
+  .kc-info__text {
+    font-size: var(--fs-15);
+  }
+}
+/* Kumarbaz: önceden alınan seçenek */
+.kc-slot {
+  aspect-ratio: 2 / 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 12px;
+  border: 2px dashed rgba(160, 175, 255, 0.3);
+  color: var(--lime);
+  font-weight: 700;
+  font-size: var(--fs-13);
+}
+
+/* Açıklama alanı */
+.kc-info {
+  width: 100%;
+  max-width: 560px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  text-align: center;
+}
+.kc-info__hint,
+.kc-info__intro {
+  color: var(--text-dim);
+  font-size: var(--fs-15);
+  line-height: 1.35;
+  padding-top: 6px;
+}
+.kc-info__hint {
+  color: var(--text);
+  font-weight: 700;
+  font-size: var(--fs-18);
+}
+.kc-info__card {
+  --kc: var(--cyan);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.kc-info__card[data-r="nadir"] {
+  --kc: #a98bff;
+}
+.kc-info__card[data-r="efsanevi"] {
+  --kc: var(--amber);
+}
+.kc-info__card[data-r="kotu"] {
+  --kc: var(--red);
+}
+.kc-info__name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-24);
+  line-height: 1.1;
+  color: var(--kc);
+}
+.kc-info__card[data-r="nadir"] .kc-info__name {
+  color: #c9b6ff;
+}
+.kc-info__card[data-r="kotu"] .kc-info__name {
+  color: #ff9fb0;
+}
+.kc-info__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.kc-info__rar {
+  font-size: var(--fs-13);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.kc-info__text {
+  font-size: var(--fs-16, 16px);
+  line-height: 1.3;
+  color: var(--text);
+}
+.kc-info__card .pbtn-wrap {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 4px;
+}
+
+/* Seçildi bekleme ekranı: alınan kartlar küçük ve ortada */
+.kc-wait {
+  align-items: center;
+  text-align: center;
+}
+.kc-wait .kc-deal--got {
+  flex: none;
+}
+.kc-wait__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.kc-wait .kc-deal--got .kc-deal__cards {
+  grid-template-columns: repeat(var(--n), minmax(0, 104px));
+  justify-content: center;
+  width: auto;
+  max-width: none;
+}
+
+/* Alçak yatay telefon: kartlar solda yüksekliğe göre, açıklama sağda */
+@media (orientation: landscape) and (max-height: 520px) {
+  .kc-deal {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  .kc-deal__cards,
+  .kc-deal__cards[data-n="4"] {
+    --cw: min(calc((100dvh - 150px) / 1.5), calc((100vw - 250px - var(--cols, 4) * 8px) / var(--cols, 4)));
+    flex: none;
+    width: auto;
+    max-width: none;
+    grid-template-columns: repeat(var(--cols, 3), var(--cw));
+  }
+  .kc-info {
+    flex: 1;
+    max-width: 280px;
+    align-self: center;
+  }
+  .kc-wait {
+    flex-direction: row;
+    justify-content: center;
+    gap: 16px;
+  }
+  .kc-wait .kc-deal--got .kc-deal__cards {
+    grid-template-columns: repeat(var(--n), minmax(0, min(104px, calc((100dvh - 190px) / 1.5))));
+  }
+}
+
+/* Büyük yatay ekran: açıklama kartın içinde, tek dokunuş seçer */
+@media (orientation: landscape) and (min-width: 1000px) and (min-height: 680px) {
+  .kcards .col {
+    max-width: 1180px;
   }
   .kc-body {
     justify-content: center;
   }
-  .kc-slot {
-    aspect-ratio: 2 / 3;
-    border-radius: 20px;
+  .kc-deal {
+    flex: none;
+    justify-content: center;
+    gap: 14px;
   }
+  .kc-deal__cards,
+  .kc-deal__cards[data-n="4"] {
+    --gap: 22px;
+    --cw: min(300px, calc((100dvh - 250px) / 1.5));
+    grid-template-columns: repeat(var(--cols), var(--cw));
+    width: auto;
+    max-width: none;
+    justify-content: center;
+    padding-top: 16px;
+  }
+  .kc-deal__cards[data-n="4"] {
+    --cw: min(260px, calc((100dvh - 250px) / 1.5));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .kc-deal .kc-card,
+  :root:not([data-motion="full"]) .kc-deal__slot::before {
+    transition: none;
+  }
+  :root:not([data-motion="full"]) .kc-deal .kc-card[data-layout="tile"][data-on="1"] {
+    transform: none;
+  }
+}
+:root[data-motion="reduce"] .kc-deal .kc-card,
+:root[data-motion="reduce"] .kc-deal__slot::before {
+  transition: none;
+}
+:root[data-motion="reduce"] .kc-deal .kc-card[data-layout="tile"][data-on="1"] {
+  transform: none;
 }

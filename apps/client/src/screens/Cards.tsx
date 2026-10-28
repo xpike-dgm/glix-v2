@@ -1,17 +1,19 @@
-import type { CardId, MatchSnapshot, RoomSnapshot } from "@glix/engine";
+import { CARDS, type CardId, type MatchSnapshot, type RoomSnapshot } from "@glix/engine";
 import { createEffect, createMemo, createSignal, For, on, Show } from "solid-js";
 import { hapticTap } from "../fx/haptics.js";
 import { tap, unlockAudio } from "../fx/sound.js";
 import { discardCard, pickCard } from "../net/client.js";
 import { createServerNow } from "../net/time.js";
 import { Avatar } from "../ui/Avatar.js";
-import { CardBack, CardFace } from "../ui/CardFace.js";
+import { CardBack, CardFace, GemMark } from "../ui/CardFace.js";
 import { Clock } from "../ui/Clock.js";
-import { picksLeftText } from "../ui/cards.js";
+import { picksLeftText, RARITY_LABEL, ROOMY_QUERY } from "../ui/cards.js";
 import { CheckIcon, EyeIcon } from "../ui/Icons.js";
 import { LeaveButton } from "../ui/LeaveButton.js";
+import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
+import { createMediaQuery } from "../ui/viewport.js";
 import { WorldBackdrop } from "../ui/WorldBackdrop.js";
 import { playersOnly } from "./ranking.js";
 
@@ -39,6 +41,15 @@ export function Cards(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
     on(
       () => pick()?.taken.length ?? 0,
       () => setSent([]),
+    ),
+  );
+  const direct = createMediaQuery(ROOMY_QUERY);
+  // İncelenen kart (dokunuldu, henüz onaylanmadı). Seçim adımı ya da kart sayısı değişince sıfırlanır.
+  const [look, setLook] = createSignal<number | null>(null);
+  createEffect(
+    on(
+      () => [state(), pick()?.taken.length ?? 0],
+      () => setLook(null),
     ),
   );
   const choose = (i: number): void => {
@@ -94,74 +105,61 @@ export function Cards(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
 
         <div class="kc-body" data-state={state()}>
           <Show when={state() === "pick"}>
-            <div class="kc-opts" data-n={pick()?.options.length ?? 3}>
-              <For each={pick()?.options ?? []}>
-                {(card, i) => (
-                  <Show
-                    when={!pick()?.taken.includes(i())}
-                    fallback={<div class="kc-slot" aria-hidden="true" />}
-                  >
-                    <Show
-                      when={card}
-                      fallback={
-                        <CardBack
-                          label={`Kapalı kart ${i() + 1}`}
-                          disabled={sent().includes(i())}
-                          onClick={() => choose(i())}
-                        />
-                      }
-                    >
-                      {(id) => (
-                        <CardFace
-                          id={id()}
-                          layout="auto"
-                          disabled={sent().includes(i())}
-                          on={sent().includes(i())}
-                          onClick={() => choose(i())}
-                        />
-                      )}
-                    </Show>
-                  </Show>
-                )}
-              </For>
-            </div>
-            <Show when={pick()?.blind}>
-              <p class="kc-note">Kör Seçim: kartlar ters geldi, görmeden seçiyorsun.</p>
-            </Show>
+            <Deal
+              items={(pick()?.options ?? []).map((card, i) => ({
+                key: i,
+                id: card,
+                taken: pick()?.taken.includes(i) === true,
+                busy: sent().includes(i),
+              }))}
+              direct={direct()}
+              blind={pick()?.blind === true}
+              look={look()}
+              hint="Bir karta dokun"
+              actLabel="Bu kartı seç"
+              onLook={setLook}
+              onAct={choose}
+            />
           </Show>
 
           <Show when={state() === "discard"}>
-            <p class="kc-note">Yeni kartı almak için birini at. Yeni kartı atmak için ona dokun.</p>
-            <div class="kc-opts" data-n={(mine()?.hand.length ?? 0) + (pick()?.held ? 1 : 0)}>
-              <For each={mine()?.hand ?? []}>
-                {(id, i) => <CardFace id={id} layout="auto" onClick={() => drop(i())} note={<DropMark />} />}
-              </For>
-              <Show when={pick()?.held}>
-                {(held) => (
-                  <CardFace
-                    id={held()}
-                    layout="auto"
-                    badge="Yeni"
-                    onClick={() => drop(null)}
-                    note={<DropMark />}
-                  />
-                )}
-              </Show>
-            </div>
+            <Deal
+              items={[
+                ...(mine()?.hand ?? []).map((id, i) => ({ key: i, id, taken: false, busy: false })),
+                ...(pick()?.held ? [{ key: HELD, id: pick()?.held ?? null, taken: false, busy: false }] : []),
+              ]}
+              direct={direct()}
+              blind={false}
+              look={look()}
+              intro="Elin dolu. Yeni kartı almak için birini at."
+              hint="Atacağın karta dokun"
+              actLabel="Bu kartı at"
+              newKey={HELD}
+              onLook={setLook}
+              onAct={(key) => drop(key === HELD ? null : key)}
+            />
           </Show>
 
           <Show when={state() === "wait" || state() === "silent"}>
             <div class="kc-wait">
-              <Show when={state() === "silent"}>
-                <p class="kc-note">Sessizlik yüzünden bu turda kart seçemezsin.</p>
-              </Show>
               <Show when={state() === "wait" && (pick()?.got.length ?? 0) > 0}>
-                <p class="kc-note">Seçtiğin kart{(pick()?.got.length ?? 0) > 1 ? "lar" : ""}:</p>
-                <div class="kc-opts" data-n={pick()?.got.length ?? 1}>
-                  <For each={pick()?.got ?? []}>{(id) => <CardFace id={id as CardId} layout="auto" />}</For>
+                <div class="kc-deal kc-deal--got" data-mode={direct() ? "direct" : "show"}>
+                  <div class="kc-deal__cards" data-n={pick()?.got.length ?? 1}>
+                    <For each={pick()?.got ?? []}>{(id) => <CardFace id={id as CardId} layout="tile" />}</For>
+                  </div>
                 </div>
               </Show>
-              <p class="kc-note">Diğerleri bekleniyor…</p>
+              <div class="kc-wait__text">
+                <Show when={state() === "silent"}>
+                  <p class="kc-note">Sessizlik yüzünden bu turda kart seçemezsin.</p>
+                </Show>
+                <Show when={state() === "wait"}>
+                  <p class="kc-note kc-note--ok">
+                    <CheckIcon size={18} /> Seçimin alındı
+                  </p>
+                </Show>
+                <p class="kc-note">Diğerleri bekleniyor…</p>
+              </div>
             </div>
           </Show>
 
@@ -201,17 +199,156 @@ export function Cards(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
               <For each={mine()?.hand ?? []}>{(id) => <CardFace id={id} layout="mini" />}</For>
             </div>
           </Show>
-          <Show when={state() === "wait"}>
-            <p class="kc-ok">
-              <CheckIcon size={18} /> Hazır
-            </p>
-          </Show>
         </footer>
       </Screen>
     </>
   );
 }
 
-function DropMark() {
-  return <span class="kc-card__drop">At</span>;
+/** Değiştirme adımında yeni kartın anahtarı (eldekiler 0, 1 …). */
+const HELD = -1;
+
+interface DealItem {
+  key: number;
+  /** null: kapalı kart (Kör Seçim). */
+  id: CardId | null;
+  /** Kumarbaz: önceden alınmış seçenek. */
+  taken: boolean;
+  /** Dokunuldu, sunucu onayı bekleniyor. */
+  busy: boolean;
+}
+
+/**
+ * Kartların kendi tasarımıyla (çerçeve + çizim + ad) yan yana gösterildiği seçim alanı; kartların çevresinde kutu yok.
+ * - direct (büyük yatay ekran): açıklama kartın panelinde, tek dokunuş seçer.
+ * - değilse: dokunmak kartı İNCELER (kalkar, parlar, diğerleri solar); açıklama ve "Bu kartı seç" altta / yanda çıkar.
+ *   Aynı karta yeniden dokunmak da onaylar. Onaylanmadan hiçbir şey seçilmez. Kör Seçim'de incelenecek bir şey yoktur: dokunuş seçer.
+ */
+function Deal(props: {
+  items: DealItem[];
+  direct: boolean;
+  blind: boolean;
+  look: number | null;
+  intro?: string;
+  hint: string;
+  actLabel: string;
+  newKey?: number;
+  onLook: (key: number | null) => void;
+  onAct: (key: number) => void;
+}) {
+  const inspect = () => !props.direct && !props.blind;
+  const mode = () => (props.direct ? "direct" : "inspect");
+  const looked = () => props.items.find((it) => it.key === props.look && !it.taken) ?? null;
+  const touch = (key: number): void => {
+    if (!inspect() || props.look === key) {
+      props.onAct(key);
+      return;
+    }
+    tap();
+    hapticTap();
+    props.onLook(key);
+  };
+  return (
+    <div class="kc-deal" data-mode={mode()} data-blind={props.blind ? "1" : undefined}>
+      <Show when={props.intro && props.direct}>
+        <p class="kc-note">{props.intro}</p>
+      </Show>
+      <div class="kc-deal__cards" data-n={props.items.length} data-look={looked() ? "1" : undefined}>
+        <For each={props.items}>
+          {(it) => (
+            <Show
+              when={!it.taken}
+              fallback={
+                <div class="kc-slot">
+                  <CheckIcon size={20} />
+                  <span>Aldın</span>
+                </div>
+              }
+            >
+              <div
+                class="kc-deal__slot"
+                data-r={it.id ? CARDS[it.id].rarity : undefined}
+                data-on={it.busy || props.look === it.key ? "1" : undefined}
+              >
+                <Show
+                  when={it.id}
+                  fallback={
+                    <CardBack
+                      layout="tile"
+                      label={`Kapalı kart ${it.key + 1}`}
+                      disabled={it.busy}
+                      onClick={() => touch(it.key)}
+                    />
+                  }
+                >
+                  {(id) => (
+                    <CardFace
+                      id={id()}
+                      layout="tile"
+                      disabled={it.busy}
+                      on={it.busy || props.look === it.key}
+                      badge={it.key === props.newKey ? "Yeni" : undefined}
+                      onClick={() => touch(it.key)}
+                    />
+                  )}
+                </Show>
+              </div>
+            </Show>
+          )}
+        </For>
+      </div>
+      <Show when={!props.direct}>
+        <div class="kc-info" aria-live="polite">
+          <Show
+            when={props.blind}
+            fallback={
+              <Show
+                when={looked()?.id}
+                fallback={
+                  <>
+                    <Show when={props.intro}>
+                      <p class="kc-info__intro">{props.intro}</p>
+                    </Show>
+                    <p class="kc-info__hint">{props.hint}</p>
+                  </>
+                }
+              >
+                {(id) => (
+                  <CardInfo id={id()} label={props.actLabel} onAct={() => props.onAct(props.look ?? 0)} />
+                )}
+              </Show>
+            }
+          >
+            <p class="kc-info__hint">Kör Seçim: kartlar ters geldi, görmeden seçiyorsun. Bir karta dokun.</p>
+          </Show>
+        </div>
+      </Show>
+    </div>
+  );
+}
+
+/** İncelenen kartın açıklaması: ad, nadirlik (elmas + yazı), etiketler, metin ve onay düğmesi. */
+function CardInfo(props: { id: CardId; label: string; onAct: () => void }) {
+  const def = () => CARDS[props.id];
+  return (
+    <div class="kc-info__card" data-r={def().rarity}>
+      <h2 class="kc-info__name">{def().name}</h2>
+      <p class="kc-info__meta">
+        <GemMark rarity={def().rarity} />
+        <span class="kc-info__rar">{RARITY_LABEL[def().rarity]}</span>
+        <Show when={def().attack}>
+          <span class="kc-card__tag" data-k="attack">
+            Saldırı
+          </span>
+        </Show>
+        <Show when={def().hidden}>
+          <span class="kc-card__tag" data-k="hidden">
+            Gizli
+          </span>
+        </Show>
+      </p>
+      <p class="kc-info__text">{def().text}</p>
+      <PrimaryButton onClick={props.onAct}>{props.label}</PrimaryButton>
+    </div>
+  );
 }
