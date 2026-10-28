@@ -36,7 +36,7 @@ export interface GameChoice {
 export interface CardsMine {
   hand: CardId[];
   /** Anlatım sırasında: Veto'da çıkarılabilecek ve Oyunu Seç'te seçilebilecek oyunlar (diğer aşamalarda boş). */
-  choices: { veto: GameChoice[]; pick: GameChoice[] };
+  gameOptions: { veto: GameChoice[]; pick: GameChoice[] };
   /** Kart seçimi sürerken kendi durumu. */
   pick: {
     /** Kör Seçim ya da alınmış seçenekler `null`. */
@@ -89,7 +89,7 @@ export function publicCards(state: CardsState, inResults: boolean): CardsPublic 
 export function mineCards(
   state: CardsState,
   playerId: string,
-  choices: CardsMine["choices"] = { veto: [], pick: [] },
+  gameOptions: CardsMine["gameOptions"] = { veto: [], pick: [] },
 ): CardsMine | null {
   const pc = state.by[playerId];
   if (!pc) return null;
@@ -98,7 +98,7 @@ export function mineCards(
   const played = state.plays.find((p) => p.playerId === playerId);
   return {
     hand: [...pc.hand],
-    choices,
+    gameOptions,
     pick: ps
       ? {
           options: ps.options.map((c, i) => (ps.blind || ps.taken.includes(i) ? null : c)),
@@ -227,13 +227,13 @@ export function parseCardsMine(v: unknown): CardsMine | null {
     }
     return out;
   };
-  const ch = isRec(v.choices)
-    ? { veto: parseChoices(v.choices.veto), pick: parseChoices(v.choices.pick) }
+  const ch = isRec(v.gameOptions)
+    ? { veto: parseChoices(v.gameOptions.veto), pick: parseChoices(v.gameOptions.pick) }
     : null;
   if (!ch?.veto || !ch.pick) return null;
   const staged = v.staged === null || v.staged === undefined ? null : parsePlay(v.staged);
   const played = v.played === null || v.played === undefined ? null : parsePlay(v.played);
   if ((v.staged ?? null) !== null && !staged) return null;
   if ((v.played ?? null) !== null && !played) return null;
-  return { hand: v.hand as CardId[], choices: { veto: ch.veto, pick: ch.pick }, pick, staged, played };
+  return { hand: v.hand as CardId[], gameOptions: { veto: ch.veto, pick: ch.pick }, pick, staged, played };
 }

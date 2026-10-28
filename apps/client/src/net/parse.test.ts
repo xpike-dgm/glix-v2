@@ -210,7 +210,7 @@ describe("kart alanları", () => {
   };
   const mine = {
     hand: ["kalkan"],
-    choices: { veto: [{ id: "g", name: "G" }], pick: [] },
+    gameOptions: { veto: [{ id: "g", name: "G" }], pick: [] },
     pick: {
       options: [null, "celme", "takviye"],
       blind: false,
@@ -259,7 +259,7 @@ describe("kart alanları", () => {
     if (m?.type === "room") {
       expect(m.snapshot.match?.cards?.announce[0]?.cardId).toBe("talihsizlik");
       expect(m.snapshot.match?.mine?.pick?.options).toEqual([null, "celme", "takviye"]);
-      expect(m.snapshot.match?.mine?.choices.veto[0]?.name).toBe("G");
+      expect(m.snapshot.match?.mine?.gameOptions.veto[0]?.name).toBe("G");
     }
     const none = withMatch({ cards: null, mine: null });
     if (none?.type === "room") {
@@ -273,7 +273,7 @@ describe("kart alanları", () => {
     expect(withMatch({ cards: { ...cards, lines: [{ ...cards.lines[0], before: 1.5 }] } })).toBeNull();
     expect(withMatch({ mine: { ...mine, hand: ["yok"] } })).toBeNull();
     expect(withMatch({ mine: { ...mine, pick: { ...mine.pick, options: ["yok"] } } })).toBeNull();
-    expect(withMatch({ mine: { ...mine, choices: null } })).toBeNull();
+    expect(withMatch({ mine: { ...mine, gameOptions: null } })).toBeNull();
   });
   it("card_invalid hata kodunu tanır", () => {
     expect(parseServerMessage(wire({ type: "error", code: "card_invalid", message: "x" }))?.type).toBe(

@@ -20,7 +20,8 @@ export function HandTray(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
   const staged = () => mine()?.staged ?? null;
   const nick = (id: string): string => props.snap.players.find((p) => p.id === id)?.nickname ?? "";
   const gameName = (id: string): string =>
-    props.match.mine?.choices.veto.concat(props.match.mine.choices.pick).find((g) => g.id === id)?.name ??
+    props.match.mine?.gameOptions.veto.concat(props.match.mine.gameOptions.pick).find((g) => g.id === id)
+      ?.name ??
     props.snap.catalog.find((g) => g.id === id)?.name ??
     id;
   const crew = createMemo(() =>
@@ -43,7 +44,7 @@ export function HandTray(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
   const choices = () => {
     const c = chosen();
     if (!c) return [];
-    return (c === "veto" ? mine()?.choices.veto : mine()?.choices.pick) ?? [];
+    return (c === "veto" ? mine()?.gameOptions.veto : mine()?.gameOptions.pick) ?? [];
   };
   const title = () => {
     const c = chosen();

@@ -663,8 +663,8 @@ describe("Veto ve Sıradaki Oyunu Seç", () => {
     await start(cs, games);
     setHand(a, a, ["veto"]);
     // Anlatımda seçenekler yalnız oynayana sunulur
-    await until(() => (mine(a)?.choices.veto.length ?? 0) === 3, "veto listesi");
-    expect(mine(a)?.choices.veto.map((g) => g.id)).toEqual(games.slice(1));
+    await until(() => (mine(a)?.gameOptions.veto.length ?? 0) === 3, "veto listesi");
+    expect(mine(a)?.gameOptions.veto.map((g) => g.id)).toEqual(games.slice(1));
     a.send({ type: "playCard", card: "veto", gameId: games[2] as string });
     await until(() => mine(a)?.staged?.cardId === "veto", "staged");
     expect(a.room.match?.total).toBe(4); // kesinleşmeden liste değişmez
@@ -706,8 +706,8 @@ describe("Veto ve Sıradaki Oyunu Seç", () => {
     const games = QUICK_IDS.slice(0, 4);
     await start(cs, games);
     setHand(a, a, ["oyunu-sec"]);
-    await until(() => (mine(a)?.choices.pick.length ?? 0) > 0, "seçilebilenler");
-    const pickable = mine(a)?.choices.pick.map((g) => g.id) ?? [];
+    await until(() => (mine(a)?.gameOptions.pick.length ?? 0) > 0, "seçilebilenler");
+    const pickable = mine(a)?.gameOptions.pick.map((g) => g.id) ?? [];
     expect(pickable).toContain("butona-bas");
     expect(pickable).not.toContain(games[0]); // zaten oynanan/oynanan sayılan
     expect(pickable.every((id) => rt().catalog.some((g) => g.id === id))).toBe(true);

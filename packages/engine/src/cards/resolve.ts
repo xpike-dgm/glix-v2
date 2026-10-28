@@ -364,7 +364,13 @@ export function resolveCards(input: ResolveInput): ResolveOutput {
   }
 
   for (const k of Object.keys(a)) a[k] = (a[k] ?? 0) + 0; // -0 → 0
-  return { awards: a, lines, hands, revealed };
+  // Oyunun vermediği ve kartların da değiştirmediği sıfır puanlar eklenmez: kart etkisi yoksa sonuç oyunun
+  // kendi sonucuyla birebir aynı kalır (tekrar oynatma ve oyun testleri bunu bekler).
+  const awards: Record<string, number> = {};
+  for (const [id, v] of Object.entries(a)) {
+    if (v !== 0 || Object.hasOwn(input.awards, id)) awards[id] = v;
+  }
+  return { awards, lines, hands, revealed };
 }
 
 /**

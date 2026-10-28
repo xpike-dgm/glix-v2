@@ -72,7 +72,7 @@ export function startKartMock(rawKind: string, params: URLSearchParams): void {
   };
   let mine: CardsMine | null = {
     hand: [],
-    choices: { veto: [], pick: [] },
+    gameOptions: { veto: [], pick: [] },
     pick: {
       options: ["takviye", "celme", "cift-puan"],
       blind: false,
@@ -168,7 +168,7 @@ export function startKartMock(rawKind: string, params: URLSearchParams): void {
       const hand: CardId[] = kind === "kart-anlatim-bos" ? [] : ["celme", "veto"];
       mine = {
         hand: kind === "kart-anlatim-oynadi" ? ["veto"] : hand,
-        choices: { veto: gamesLeft, pick: CATALOG.slice(0, 4).map((g) => ({ id: g.id, name: g.name })) },
+        gameOptions: { veto: gamesLeft, pick: CATALOG.slice(0, 4).map((g) => ({ id: g.id, name: g.name })) },
         pick: null,
         staged: kind === "kart-anlatim-oynadi" ? { playerId: SELF, cardId: "celme", target: "p1" } : null,
         played: null,
@@ -187,7 +187,7 @@ export function startKartMock(rawKind: string, params: URLSearchParams): void {
       publicCards = { ...publicCards, phase: null, plays };
       mine = {
         hand: ["koruma"],
-        choices: { veto: [], pick: [] },
+        gameOptions: { veto: [], pick: [] },
         pick: null,
         staged: null,
         played: { playerId: SELF, cardId: "ayna" },
@@ -210,7 +210,7 @@ export function startKartMock(rawKind: string, params: URLSearchParams): void {
               { cardId: "ayna", owner: "p1", subject: "p2", before: 1, after: 0, note: "yansidi" },
             ].slice(0, kind === "kart-sonuc" ? 5 : 0) as CardLine[]);
       publicCards = { ...publicCards, phase: null, lines };
-      mine = { hand: [], choices: { veto: [], pick: [] }, pick: null, staged: null, played: null };
+      mine = { hand: [], gameOptions: { veto: [], pick: [] }, pick: null, staged: null, played: null };
       const miniScores = Object.fromEntries(
         participants.map((id, i) => [id, (participants.length - i) * 10]),
       );
