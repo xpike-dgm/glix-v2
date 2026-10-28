@@ -444,20 +444,20 @@ export function startMock(kind: string, params: URLSearchParams): void {
     setState("account", { username: "cihad_01", email: "cihad@example.com" });
     const samples: Record<string, GlixEarnedInfo> = {
       "1": {
-        total: 20,
+        total: 25,
         parts: [
           { kind: "mac", amount: 10 },
-          { kind: "sira", amount: 10 },
+          { kind: "sira", amount: 15 },
         ],
         balance: 140,
         capped: false,
       },
       ilk: {
-        total: 90,
+        total: 100,
         parts: [
           { kind: "mac", amount: 10 },
-          { kind: "sira", amount: 10 },
-          { kind: "gununIlki", amount: 20 },
+          { kind: "sira", amount: 15 },
+          { kind: "gununIlki", amount: 25 },
           { kind: "rozet", amount: 50, badgeId: "on-mac" },
         ],
         balance: 410,
