@@ -3,6 +3,7 @@ import {
   type CosmeticItem,
   type CosmeticTypeId,
   cosmeticItem,
+  isEquippable,
   itemsOfType,
 } from "@glix/engine";
 import { createEffect, For, onMount, Show } from "solid-js";
@@ -10,6 +11,7 @@ import { equipItem, loadShop, ownCosmetics, shop, shopLoad } from "../net/shop.j
 import { ownedOfType, RARITY_LABEL, SHOP_TYPES, shopErrorText } from "../net/shopRules.js";
 import { goHome, setState, state, toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
+import { ART_TYPES } from "../ui/artItems.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { CharacterPoster } from "../ui/CharacterPoster.js";
 import { CharacterView } from "../ui/CharacterView.js";
@@ -19,7 +21,10 @@ import { defaultDancePoster, isCharacterItem, posterSpec } from "../ui/character
 import { BackIcon, CheckIcon } from "../ui/Icons.js";
 import { Screen } from "../ui/Screen.js";
 import { ShopTabBar } from "../ui/ShopBits.js";
+import { CardBackArt, CelebrationCollage, EntryLayers, PackCollage } from "../ui/ShopPreview.js";
 import { boxSrc } from "../ui/shopArt.js";
+
+const isArtType = (t: CosmeticTypeId): boolean => ART_TYPES.includes(t);
 
 /** Bölüm başlığı yanındaki küçük simge (çember, taç, kıvılcım). */
 function SecIcon(props: { type: CosmeticTypeId }) {
@@ -61,6 +66,32 @@ function SecIcon(props: { type: CosmeticTypeId }) {
           stroke-linejoin="round"
         />
       </Show>
+      <Show when={props.type === "kart-arkasi"}>
+        <rect x="6" y="3" width="12" height="18" rx="2.5" stroke="currentColor" stroke-width="2.2" />
+        <path d="M12 8.5l2 3.5-2 3.5-2-3.5z" fill="currentColor" />
+      </Show>
+      <Show when={props.type === "zafer"}>
+        <path
+          d="M5 20l3-9 6 6zM13 4v3M18 7l-2 2M20 13h-3M16 3l.8 1.8L19 5.5l-1.7.8L16.5 8l-.8-1.7L14 5.5l1.7-.7z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+          stroke-linecap="round"
+        />
+      </Show>
+      <Show when={props.type === "tepki"}>
+        <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="2.2" />
+        <path
+          d="M8.5 14c1 1.8 2.2 2.5 3.5 2.5s2.5-.7 3.5-2.5M9 9.5h.01M15 9.5h.01"
+          stroke="currentColor"
+          stroke-width="2.4"
+          stroke-linecap="round"
+        />
+      </Show>
+      <Show when={props.type === "giris"}>
+        <ellipse cx="12" cy="18" rx="7" ry="2.5" stroke="currentColor" stroke-width="2.2" />
+        <path d="M8 17V8l4-4 4 4v9" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+      </Show>
       <Show when={props.type === "ad-efekti"}>
         <path
           d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"
@@ -79,6 +110,8 @@ function Tile(props: {
   on: boolean;
   name: string;
   onPick: () => void;
+  /** Kuşanılmaz tür (tepki paketi): dokunuşsuz, "Hazır" etiketli karo. */
+  fixed?: boolean;
 }) {
   const it = () => props.item;
   return (
@@ -88,9 +121,15 @@ function Tile(props: {
       data-type={props.type}
       data-r={it()?.rarity ?? "yok"}
       data-on={props.on ? "1" : undefined}
-      aria-pressed={props.on}
+      data-fixed={props.fixed ? "1" : undefined}
+      disabled={props.fixed}
+      aria-pressed={props.fixed ? undefined : props.on}
       aria-label={
-        it() ? `${props.label}, ${RARITY_LABEL[it()?.rarity ?? "siradan"]}` : `${props.label}, kuşanma`
+        props.fixed
+          ? `${props.label}, ${RARITY_LABEL[it()?.rarity ?? "siradan"]}, tepkilerde kullanıma hazır`
+          : it()
+            ? `${props.label}, ${RARITY_LABEL[it()?.rarity ?? "siradan"]}`
+            : `${props.label}, kuşanma`
       }
       style={it() ? { "--box": `url(${boxSrc(it()?.rarity ?? "siradan")})` } : undefined}
       onClick={props.onPick}
@@ -100,69 +139,82 @@ function Tile(props: {
           <CheckIcon size={14} />
         </span>
       </Show>
+      <Show when={props.fixed}>
+        <span class="locker-tile__ready" aria-hidden="true">
+          Hazır
+        </span>
+      </Show>
       <span class="locker-tile__pv" aria-hidden="true">
-        <Show
-          when={it()}
-          fallback={
-            <Show
-              when={props.type === "unvan"}
-              fallback={
-                <Show
-                  when={props.type === "dans"}
-                  fallback={
-                    <Show
-                      when={props.type === "cerceve" || props.type === "sapka" || props.type === "ust"}
-                      fallback={<span class="locker-tile__plain">{props.name}</span>}
-                    >
-                      <span class="locker-tile__ring" />
-                    </Show>
-                  }
-                >
-                  <CharacterPoster
-                    layers={defaultDancePoster(ownCosmetics()).layers}
-                    dance={defaultDancePoster(ownCosmetics()).dance}
-                    focus="full"
-                    avatar={avatarFromName(props.name)}
-                    label={props.label}
-                    fallback={<Avatar index={avatarFromName(props.name)} size={36} />}
-                  />
-                </Show>
-              }
-            >
-              <EmptyPlate />
-            </Show>
-          }
-        >
-          {(i) => (
-            <Show
-              when={props.type === "unvan"}
-              fallback={
-                <Show
-                  when={isCharacterItem(i())}
-                  fallback={
-                    <CosmeticPreview
+        <Show when={props.type === "kart-arkasi"}>
+          <CardBackArt item={it() ?? undefined} size="tile" />
+        </Show>
+        <Show when={props.type === "zafer" && it()}>{(i) => <CelebrationCollage item={i()} />}</Show>
+        <Show when={props.type === "tepki" && it()}>{(i) => <PackCollage item={i()} />}</Show>
+        <Show when={props.type === "giris" && it()}>{(i) => <EntryLayers item={i()} />}</Show>
+        <Show when={!isArtType(props.type)}>
+          <Show
+            when={it()}
+            fallback={
+              <Show
+                when={props.type === "unvan"}
+                fallback={
+                  <Show
+                    when={props.type === "dans"}
+                    fallback={
+                      <Show
+                        when={props.type === "cerceve" || props.type === "sapka" || props.type === "ust"}
+                        fallback={<span class="locker-tile__plain">{props.name}</span>}
+                      >
+                        <span class="locker-tile__ring" />
+                      </Show>
+                    }
+                  >
+                    <CharacterPoster
+                      layers={defaultDancePoster(ownCosmetics()).layers}
+                      dance={defaultDancePoster(ownCosmetics()).dance}
+                      focus="full"
                       avatar={avatarFromName(props.name)}
-                      name={props.name}
-                      cosmetics={itemCosmetics(i())}
-                      size={34}
-                      parts={props.type === "cerceve" ? "avatar" : "name"}
+                      label={props.label}
+                      fallback={<Avatar index={avatarFromName(props.name)} size={36} />}
                     />
-                  }
-                >
-                  <CharacterPoster
-                    layers={posterSpec(i(), ownCosmetics()).layers}
-                    dance={posterSpec(i(), ownCosmetics()).dance}
-                    focus={posterSpec(i(), ownCosmetics()).focus}
-                    avatar={avatarFromName(props.name)}
-                    label={props.label}
-                    fallback={<Avatar index={avatarFromName(props.name)} size={36} />}
-                  />
-                </Show>
-              }
-            >
-              <TitlePlate item={i()} />
-            </Show>
-          )}
+                  </Show>
+                }
+              >
+                <EmptyPlate />
+              </Show>
+            }
+          >
+            {(i) => (
+              <Show
+                when={props.type === "unvan"}
+                fallback={
+                  <Show
+                    when={isCharacterItem(i())}
+                    fallback={
+                      <CosmeticPreview
+                        avatar={avatarFromName(props.name)}
+                        name={props.name}
+                        cosmetics={itemCosmetics(i())}
+                        size={34}
+                        parts={props.type === "cerceve" ? "avatar" : "name"}
+                      />
+                    }
+                  >
+                    <CharacterPoster
+                      layers={posterSpec(i(), ownCosmetics()).layers}
+                      dance={posterSpec(i(), ownCosmetics()).dance}
+                      focus={posterSpec(i(), ownCosmetics()).focus}
+                      avatar={avatarFromName(props.name)}
+                      label={props.label}
+                      fallback={<Avatar index={avatarFromName(props.name)} size={36} />}
+                    />
+                  </Show>
+                }
+              >
+                <TitlePlate item={i()} />
+              </Show>
+            )}
+          </Show>
         </Show>
       </span>
       <span class="locker-tile__name">{props.label}</span>
@@ -240,14 +292,16 @@ export function Locker() {
                         <span class="locker-sec__line" aria-hidden="true" />
                       </h2>
                       <div class="locker-grid" data-type={t.id}>
-                        <Tile
-                          type={t.id}
-                          item={null}
-                          label={t.none}
-                          name={name()}
-                          on={s().equipped[t.id] === undefined}
-                          onPick={() => void pick(t.id, null)}
-                        />
+                        <Show when={isEquippable(t)}>
+                          <Tile
+                            type={t.id}
+                            item={null}
+                            label={t.none}
+                            name={name()}
+                            on={s().equipped[t.id] === undefined}
+                            onPick={() => void pick(t.id, null)}
+                          />
+                        </Show>
                         <For each={owned()}>
                           {(it) => (
                             <Tile
@@ -256,6 +310,7 @@ export function Locker() {
                               label={it.name}
                               name={name()}
                               on={s().equipped[t.id] === it.id}
+                              fixed={!isEquippable(t)}
                               onPick={() => void pick(t.id, it.id)}
                             />
                           )}
@@ -263,6 +318,11 @@ export function Locker() {
                       </div>
                       <Show when={owned().length === 0}>
                         <p class="shop-note shop-note--left">Henüz yok. Mağazadan alabilirsin.</p>
+                      </Show>
+                      <Show when={!isEquippable(t) && owned().length > 0}>
+                        <p class="shop-note shop-note--left">
+                          Aldığın paketler kuşanmadan hazır: tepki düğmesinde yeni bir sayfa olarak çıkar.
+                        </p>
                       </Show>
                     </section>
                   );

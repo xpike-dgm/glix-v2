@@ -6,7 +6,7 @@ import {
   type GameInfo,
   type GameResult,
   isFriendStatus,
-  isLobbyEmoji,
+  isReactionId,
   JOIN_POLICIES,
   type LeftReason,
   type MatchSnapshot,
@@ -287,7 +287,7 @@ export function parseServerMessage(raw: string): ServerMessage | null {
     case "reportAck":
       return { type: "reportAck" };
     case "reaction":
-      return isStr(data.playerId) && isLobbyEmoji(data.emoji)
+      return isStr(data.playerId) && isReactionId(data.emoji)
         ? { type: "reaction", playerId: data.playerId, emoji: data.emoji }
         : null;
     case "friendStatus":

@@ -56,6 +56,8 @@ export interface Social {
   friendRoom(accountId: number, username: string): Room | null;
   /** Hesabın kuşandığı kozmetikler (odadaki oyunculara görünür); hesapsız ya da boşsa undefined. */
   cosmeticsOf(accountId: number | null): Cosmetics | undefined;
+  /** Hesap bu kozmetiğe sahip mi (tepki paketi çıkartması gönderirken)? Hata ya da hesapsızlıkta false. */
+  ownsCosmetic(accountId: number | null, itemId: string): boolean;
   /**
    * Hesap kozmetik kuşandı/çıkardı: odadaki oyuncu kaydı güncellenir ve oda yeniden yayınlanır (herkes görür).
    */
@@ -92,6 +94,7 @@ export const noopSocial: Social = {
   presence: () => ({ status: "offline", room: null }),
   joinable: () => false,
   cosmeticsOf: () => undefined,
+  ownsCosmetic: () => false,
   cosmeticsChanged: () => undefined,
   sendTo: () => 0,
   invite: () => "failed",
@@ -134,6 +137,16 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
     } catch (err) {
       log.error("accounts_error", { op: "cosmetics_of", error: String(err) });
       return undefined;
+    }
+  }
+
+  function ownsCosmetic(accountId: number | null, itemId: string): boolean {
+    if (accountId === null) return false;
+    try {
+      return accounts.cosmetics(accountId).owned.some((o) => o.itemId === itemId);
+    } catch (err) {
+      log.error("accounts_error", { op: "owns_cosmetic", error: String(err) });
+      return false;
     }
   }
 
@@ -259,6 +272,7 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
     presence,
     joinable,
     cosmeticsOf,
+    ownsCosmetic,
     cosmeticsChanged(accountId) {
       const next = cosmeticsOf(accountId);
       for (const room of rt.rooms.values()) {

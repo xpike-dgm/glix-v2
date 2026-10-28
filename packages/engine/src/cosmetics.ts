@@ -31,10 +31,26 @@ export interface Cosmetics {
   /** Şapka ve üst giysi (kürsü karakteri). */
   hat?: string;
   top?: string;
+  /** Kart arkası (`kart-arkasi` türü); kuşanılmadıysa klasik sırt. */
+  cardBack?: string;
+  /** Zafer kutlaması (`zafer` türü); kazanan kuşandıysa final ekranında herkese oynar. */
+  celebration?: string;
+  /** Lobi giriş efekti (`giris` türü); lobiye girişte koltukta oynar. */
+  entry?: string;
 }
 export type CosmeticKey = keyof Cosmetics;
 
-export type CosmeticTypeId = "unvan" | "ad-efekti" | "cerceve" | "dans" | "sapka" | "ust";
+export type CosmeticTypeId =
+  | "unvan"
+  | "ad-efekti"
+  | "cerceve"
+  | "dans"
+  | "sapka"
+  | "ust"
+  | "kart-arkasi"
+  | "zafer"
+  | "tepki"
+  | "giris";
 
 /** Varsayılan kürsü dansı (ücretsiz, kuşanılmadığında oynar). Dans dosyası `karakter/dans/<kimlik>.json`. */
 export const DEFAULT_DANCE = "sevinc";
@@ -43,8 +59,11 @@ export const PLACE_DANCE = "selam";
 
 export interface CosmeticType {
   id: CosmeticTypeId;
-  /** `Cosmetics` içindeki anahtar. */
-  key: CosmeticKey;
+  /**
+   * `Cosmetics` içindeki anahtar. `null`: tür kuşanılmaz, sahip olmak yeter (tepki paketleri); sunucu kuşanmayı
+   * reddeder ve oyunculara kuşanılan olarak gitmez.
+   */
+  key: CosmeticKey | null;
   /** Tekil ad ("Lakap"), çoğul ad (sekme: "Lakaplar") ve ücretsiz temel seçeneğin adı. */
   name: string;
   plural: string;
@@ -52,6 +71,9 @@ export interface CosmeticType {
   /** Mağazada aynı sekmeyi paylaşan türler ("giysi"); yoksa tür kendi sekmesidir. */
   group?: "giysi";
 }
+
+/** Kuşanılabilir mi (tek yuvalı)? Tepki paketleri değildir: alınan paket hep kullanılabilir. */
+export const isEquippable = (type: CosmeticType): boolean => type.key !== null;
 
 export const COSMETIC_TYPES: readonly CosmeticType[] = [
   { id: "unvan", key: "title", name: "Lakap", plural: "Lakaplar", none: "Yok" },
@@ -61,6 +83,19 @@ export const COSMETIC_TYPES: readonly CosmeticType[] = [
   { id: "dans", key: "dance", name: "Dans", plural: "Danslar", none: "Sevinç" },
   { id: "sapka", key: "hat", name: "Şapka", plural: "Şapkalar", none: "Yok", group: "giysi" },
   { id: "ust", key: "top", name: "Üst", plural: "Üstler", none: "Yok", group: "giysi" },
+  // Kart arkasının "yok" seçeneği klasik sırttır (ücretsiz, katalogda ürün olarak yer almaz).
+  { id: "kart-arkasi", key: "cardBack", name: "Kart arkası", plural: "Kart arkaları", none: "Klasik" },
+  // Zaferin "yok" seçeneği her finaldeki klasik konfetidir.
+  {
+    id: "zafer",
+    key: "celebration",
+    name: "Zafer kutlaması",
+    plural: "Zafer kutlamaları",
+    none: "Klasik konfeti",
+  },
+  // Paketler kuşanılmaz: sahip olunan her paketin çıkartmaları tepki yelpazesine eklenir.
+  { id: "tepki", key: null, name: "Tepki paketi", plural: "Tepki paketleri", none: "Yok" },
+  { id: "giris", key: "entry", name: "Giriş efekti", plural: "Giriş efektleri", none: "Yok" },
 ];
 
 export interface CosmeticItem {
@@ -73,7 +108,9 @@ export interface CosmeticItem {
   description: string;
   /**
    * Karakter varlığı: `dans` için dans dosyasının kimliği (`karakter/dans/<asset>.json`), giysi için `rig.json`
-   * `wardrobe` katmanının adı (şapka `sapka`, ceket `ceket`).
+   * `wardrobe` katmanının adı (şapka `sapka`, ceket `ceket`). Resimli türlerde `public/assets/shop/` altındaki
+   * dosya öneki: kart arkası `kart-arkasi/<asset>.webp`, zafer `zafer/<asset>-1..4.webp`, tepki paketi
+   * `tepki/<asset>-1..6.webp` (paket kimliği de budur), giriş `giris/<asset>-zemin|isik.webp`.
    */
   asset?: string;
 }
@@ -122,6 +159,101 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     "Eski bir çizgi filmden fırlamış gibi.",
     "mickey",
   ),
+  item(
+    "kart-neon-izgara",
+    "kart-arkasi",
+    "siradan",
+    "Neon Izgara",
+    "Kart sırtında neon bir ızgara.",
+    "neon-izgara",
+  ),
+  item(
+    "kart-gece-sehri",
+    "kart-arkasi",
+    "siradan",
+    "Gece Şehri",
+    "Kartların sırtında ışıl ışıl bir şehir.",
+    "gece-sehri",
+  ),
+  item(
+    "kart-mor-girdap",
+    "kart-arkasi",
+    "nadir",
+    "Mor Girdap",
+    "Sırttaki mor girdap seni içine çeker.",
+    "mor-girdap",
+  ),
+  item("kart-elektrik", "kart-arkasi", "nadir", "Elektrik", "Kartın sırtında elektrik akar.", "elektrik"),
+  item(
+    "kart-altin-kraliyet",
+    "kart-arkasi",
+    "efsanevi",
+    "Altın Kraliyet",
+    "Kraliyete yakışır altın sırt.",
+    "altin-kraliyet",
+  ),
+  item(
+    "zafer-konfeti",
+    "zafer",
+    "siradan",
+    "Konfeti Patlaması",
+    "Kazanınca renkli konfeti patlar.",
+    "konfeti",
+  ),
+  item("zafer-balon", "zafer", "siradan", "Neon Balonlar", "Kazanınca neon balonlar yükselir.", "balon"),
+  item(
+    "zafer-havai-fisek",
+    "zafer",
+    "nadir",
+    "Havai Fişek",
+    "Kazanınca gökyüzü havai fişekle dolar.",
+    "havai-fisek",
+  ),
+  item("zafer-simsek", "zafer", "nadir", "Şimşek Fırtınası", "Kazanınca şimşekler çakar.", "simsek"),
+  item(
+    "zafer-altin-yagmur",
+    "zafer",
+    "efsanevi",
+    "Altın Yağmur",
+    "Kazanınca altın ve yıldız yağar.",
+    "altin-yagmur",
+  ),
+  item(
+    "tepki-neon-yuzler",
+    "tepki",
+    "siradan",
+    "Neon Yüzler",
+    "Altı neon yüz ifadesi: gülen, şaşkın, sinirli…",
+    "neon-yuzler",
+  ),
+  item("tepki-parti", "tepki", "nadir", "Parti", "Şapka, disko topu, kadeh ve daha fazlası.", "parti"),
+  item(
+    "tepki-efsane",
+    "tepki",
+    "efsanevi",
+    "Efsane Tepkiler",
+    "Taç, ateş topu, roket, elmas…",
+    "efsane-tepkiler",
+  ),
+  item(
+    "giris-isinlanma",
+    "giris",
+    "siradan",
+    "Işınlanma",
+    "Lobiye ışık huzmesiyle ışınlanırsın.",
+    "isinlanma",
+  ),
+  item("giris-duman", "giris", "siradan", "Duman", "Lobiye dumanın içinden çıkarsın.", "duman"),
+  item("giris-simsek", "giris", "nadir", "Şimşek", "Lobiye şimşek çakarak girersin.", "simsek"),
+  item("giris-portal", "giris", "nadir", "Portal", "Lobiye bir portaldan geçersin.", "portal"),
+  item(
+    "giris-altin-isik",
+    "giris",
+    "efsanevi",
+    "Altın Işık Sütunu",
+    "Lobiye altın bir ışık sütunuyla inersin.",
+    "altin-isik",
+  ),
   item("sapka-neon-kep", "sapka", "siradan", "Neon Kep", "Kürsüde başında neon bir kep.", "sapka"),
   item("ust-neon-bomber", "ust", "nadir", "Neon Bomber", "Kürsüde sırtında neon bomber ceket.", "ceket"),
 ];
@@ -147,6 +279,7 @@ export function itemsOfType(type: CosmeticTypeId): CosmeticItem[] {
 export function cosmeticsFromEquipped(equipped: Readonly<Record<string, string>>): Cosmetics | undefined {
   const out: Cosmetics = {};
   for (const t of COSMETIC_TYPES) {
+    if (t.key === null) continue;
     const id = equipped[t.id];
     if (id === undefined) continue;
     const it = BY_ID.get(id);
@@ -164,6 +297,7 @@ export function parseCosmetics(raw: unknown): Cosmetics | undefined {
   const rec = raw as Record<string, unknown>;
   const out: Cosmetics = {};
   for (const t of COSMETIC_TYPES) {
+    if (t.key === null) continue;
     const id = rec[t.key];
     if (typeof id !== "string") continue;
     const it = BY_ID.get(id);
@@ -171,6 +305,63 @@ export function parseCosmetics(raw: unknown): Cosmetics | undefined {
   }
   return Object.keys(out).length > 0 ? out : undefined;
 }
+
+// ---- Resimli ürün dosyaları ----
+
+/** Zafer kutlamasının parçacık görseli sayısı ve tepki paketinin çıkartma sayısı. */
+export const CELEBRATION_SPRITES = 4;
+export const STICKERS_PER_PACK = 6;
+
+/** Ürünün `public/assets/shop/` altındaki tüm görselleri (göreli yol); resimsiz türlerde boş. */
+export function cosmeticAssetFiles(it: CosmeticItem): string[] {
+  const a = it.asset;
+  if (!a) return [];
+  const nth = (n: number): number[] => Array.from({ length: n }, (_, i) => i + 1);
+  switch (it.type) {
+    case "kart-arkasi":
+      return [`kart-arkasi/${a}.webp`];
+    case "zafer":
+      return nth(CELEBRATION_SPRITES).map((n) => `zafer/${a}-${n}.webp`);
+    case "tepki":
+      return nth(STICKERS_PER_PACK).map((n) => `tepki/${a}-${n}.webp`);
+    case "giris":
+      return [`giris/${a}-zemin.webp`, `giris/${a}-isik.webp`];
+    default:
+      return [];
+  }
+}
+
+/** Çıkartmaların ekran okuyucu adları (paket kimliği -> 6 ad, görsel sırasıyla). */
+export const STICKER_NAMES: Readonly<Record<string, readonly string[]>> = {
+  "neon-yuzler": ["Gülüyor", "Şaşkın", "Sinirli", "Ağlıyor", "Göz kırpıyor", "Uykulu"],
+  parti: ["Parti şapkası", "Disko topu", "Kadeh tokuşturma", "Havai fişek", "Dans eden avatar", "Alkış"],
+  "efsane-tepkiler": ["Altın taç", "Ateş topu", "Mikrofonu bırak", "Roket", "Elmas", "Şimşekli kupa"],
+};
+
+/** Tepki paketi çıkartmasının kimliği: `pack:<paketKimliği>:<1..6>` (`react` ve `reaction` mesajlarında). */
+export type StickerId = `pack:${string}:${number}`;
+
+export interface StickerRef {
+  /** Paket ürünü (`tepki` türü). */
+  item: CosmeticItem;
+  /** 1..STICKERS_PER_PACK */
+  n: number;
+}
+
+/** Çıkartma kimliğini çözer; biçim, paket ya da sıra katalogda yoksa null (ağdan gelen veri). */
+export function parseStickerId(raw: unknown): StickerRef | null {
+  if (typeof raw !== "string" || raw.length > 40) return null;
+  const m = /^pack:([a-z]+(?:-[a-z]+)*):([1-9])$/.exec(raw);
+  if (!m) return null;
+  const item = COSMETIC_ITEMS.find((i) => i.type === "tepki" && i.asset === m[1]);
+  const n = Number(m[2]);
+  return item && n >= 1 && n <= STICKERS_PER_PACK ? { item, n } : null;
+}
+
+export const stickerId = (item: CosmeticItem, n: number): StickerId => `pack:${item.asset ?? ""}:${n}`;
+
+/** Çıkartmanın görsel yolu (`/assets/shop/` altında). */
+export const stickerFile = (ref: StickerRef): string => `tepki/${ref.item.asset ?? ""}-${ref.n}.webp`;
 
 // ---- Günün fırsatı ----
 

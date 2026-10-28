@@ -1,6 +1,6 @@
 import type { RoomSnapshot } from "@glix/engine";
 import { createMemo, For, onCleanup, onMount, Show } from "solid-js";
-import { playConfetti } from "../fx/confetti.js";
+import { playFinalFx, winnerCelebration } from "../fx/finalFx.js";
 import { fanfare } from "../fx/sound.js";
 import { matchRounds } from "../net/matchHistory.js";
 import { formatScore, playersOnly, podiumOrder, rankPlayers, winnersOf } from "../screens/ranking.js";
@@ -47,7 +47,7 @@ export function TvFinal(props: { snap: RoomSnapshot }) {
     if (!confetti) return;
     let stop: (() => void) | undefined;
     let gone = false;
-    playConfetti(confetti)
+    playFinalFx(confetti, winnerCelebration(winners()))
       .then((d) => {
         if (gone) d();
         else stop = d;

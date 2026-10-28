@@ -1,12 +1,12 @@
 import {
   AVATAR_COUNT,
   allReady,
-  type LobbyEmoji,
   MAX_NICKNAME_LENGTH,
   MAX_PLAYERS,
   normalizeNickname,
   type PlayerInfo,
   REACTION_MIN_GAP_MS,
+  type ReactionId,
   type RoomSnapshot,
 } from "@glix/engine";
 import { createEffect, createSignal, For, on, onCleanup, Show } from "solid-js";
@@ -45,6 +45,9 @@ import {
   settingsLine,
 } from "./lobbyHints.js";
 import { PlayerMenu } from "./PlayerMenu.js";
+
+/** Giriş efektinin koltukta kalma süresi (ms); CSS animasyonu bundan kısadır. */
+const ENTRY_FX_MS = 1300;
 
 async function share(code: string): Promise<void> {
   const url = inviteLink(location.origin, code);
@@ -204,6 +207,34 @@ export function Lobby(props: { snap: RoomSnapshot }) {
     ),
   );
 
+  // Giriş efekti (mağaza): lobiye ilk görünen oyuncunun koltuğunda ~1 sn oynar; herkes görür. Açılışta yalnız
+  // kendimiz (lobiye yeni girdik), sonradan gelenler için hepsi. Efekti olmayan oyuncu için bir şey çizilmez.
+  const [entryIds, setEntryIds] = createSignal<ReadonlySet<string>>(new Set());
+  let entrySeen: Set<string> | null = null;
+  const entryTimers: ReturnType<typeof setTimeout>[] = [];
+  onCleanup(() => {
+    for (const t of entryTimers) clearTimeout(t);
+  });
+  createEffect(
+    on(
+      () => snap().players.map((p) => p.id),
+      (ids) => {
+        const first = entrySeen === null;
+        const seen: Set<string> = entrySeen ?? new Set();
+        const arrived = ids.filter((id) => !seen.has(id) && (!first || id === snap().selfId));
+        entrySeen = new Set(ids);
+        const fx = arrived.filter((id) => snap().players.find((p) => p.id === id)?.cosmetics?.entry);
+        if (fx.length === 0) return;
+        setEntryIds((cur) => new Set([...cur, ...fx]));
+        entryTimers.push(
+          setTimeout(() => {
+            setEntryIds((cur) => new Set([...cur].filter((id) => !fx.includes(id))));
+          }, ENTRY_FX_MS),
+        );
+      },
+    ),
+  );
+
   const empty = () => emptySeats(snap().players.length, MAX_PLAYERS);
   const solo = () => snap().players.length < 2;
   const selected = () => snap().catalog.filter((g) => snap().gameIds.includes(g.id));
@@ -238,7 +269,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
   const isReady = (): boolean => snap().lobbyReady.includes(snap().selfId);
   const everyoneReady = (): boolean => allReady(snap());
   let lastReact = Number.NEGATIVE_INFINITY;
-  const react = (emoji: LobbyEmoji): void => {
+  const react = (emoji: ReactionId): void => {
     const now = Date.now();
     if (now - lastReact < REACTION_MIN_GAP_MS) return;
     lastReact = now;
@@ -404,6 +435,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                           self={mine()}
                           live="breathe"
                           frame={frameOf(player.cosmetics)}
+                          entry={entryIds().has(player.id) ? player.cosmetics?.entry : undefined}
                         />
                         <span class="seat__name">
                           <PlayerName name={player.nickname} cosmetics={player.cosmetics} />

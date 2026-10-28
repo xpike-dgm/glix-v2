@@ -154,7 +154,56 @@
 .efan[data-open] .efan__item:active {
   transform: translate(var(--x), var(--y)) scale(0.9);
 }
+.efan__sticker {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  pointer-events: none;
+}
+/* Sayfa değiştirici: köşe düğmesinin yanında küçük yuvarlak; paket sahibi için çıkartma sayfalarını gezdirir. */
+.efan__page {
+  position: absolute;
+  z-index: 3;
+  right: calc(100% + 6px);
+  top: 6px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
+  background: rgba(10, 16, 48, 0.85);
+  border: 1.5px solid rgba(255, 194, 59, 0.6);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.efan__page-ico {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+.efan__dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -9px;
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+}
+.efan__dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+}
+.efan__dots i[data-on] {
+  background: var(--amber);
+}
 .efan__item:focus-visible,
+.efan__page:focus-visible,
 .efan__btn:focus-visible,
 .corner-btn:focus-visible {
   outline: 2px solid var(--cyan);

@@ -6,6 +6,7 @@ import {
   formatCountdown,
   itemStatus,
   ownedOfType,
+  ownedPacks,
   parseShopState,
   priceNow,
   SHOP_TABS,
@@ -160,6 +161,18 @@ describe("kürsü karakteri ürünleri (dans, şapka, üst)", () => {
       "Ad efektleri",
       "Danslar",
       "Giysiler",
+      "Kart arkası",
+      "Zafer",
+      "Tepki",
+      "Giriş",
+    ]);
+    // İki bölüm: Görünüş (5 sekme) ve Efektler (4 sekme); her sekme tek bölümde.
+    expect(SHOP_TABS.filter((t) => t.section === "gorunus")).toHaveLength(5);
+    expect(SHOP_TABS.filter((t) => t.section === "efekt").map((t) => t.id)).toEqual([
+      "kart-arkasi",
+      "zafer",
+      "tepki",
+      "giris",
     ]);
     const giysi = SHOP_TABS.find((t) => t.id === "giysi");
     expect(giysi?.types).toEqual(["sapka", "ust"]);
@@ -167,7 +180,19 @@ describe("kürsü karakteri ürünleri (dans, şapka, üst)", () => {
   });
 
   it("dolap bölümleri: her giysi yuvası ayrı, dans 'Sevinç' ile başlar, giysiler 'Yok' ile", () => {
-    expect(SHOP_TYPES.map((t) => t.name)).toEqual(["Çerçeve", "Lakap", "Ad efekti", "Dans", "Şapka", "Üst"]);
+    expect(SHOP_TYPES.map((t) => t.name)).toEqual([
+      "Çerçeve",
+      "Lakap",
+      "Ad efekti",
+      "Dans",
+      "Şapka",
+      "Üst",
+      "Kart arkası",
+      "Zafer kutlaması",
+      "Giriş efekti",
+      "Tepki paketi",
+    ]);
+    expect(SHOP_TYPES.find((t) => t.id === "kart-arkasi")?.none).toBe("Klasik");
     expect(SHOP_TYPES.find((t) => t.id === "dans")?.none).toBe("Sevinç");
     expect(SHOP_TYPES.find((t) => t.id === "sapka")?.none).toBe("Yok");
   });
@@ -181,5 +206,35 @@ describe("kürsü karakteri ürünleri (dans, şapka, üst)", () => {
     };
     const owned = ownedOfType(st, "dans", COSMETIC_ITEMS);
     expect(owned.map((i) => i.id)).toEqual(["dans-twist", "dans-lambada"]);
+  });
+});
+
+describe("resimli türler (M3)", () => {
+  const withOwned = (owned: string[], equipped: Record<string, string> = {}) =>
+    parseShopState({ ...good, owned, equipped }, NOW);
+
+  it("her türün sekmesi var: katalogdaki her ürün bir mağaza sekmesinde görünür", () => {
+    const shown = new Set(SHOP_TABS.flatMap((t) => t.types));
+    for (const it of COSMETIC_ITEMS) expect(shown.has(it.type), it.id).toBe(true);
+  });
+
+  it("yeni türlerin ürünleri doğrulanır: kart arkası kuşanılır, tepki paketi kuşanılmış sayılmaz", () => {
+    const s = withOwned(["kart-elektrik", "zafer-balon", "tepki-parti", "giris-duman"], {
+      "kart-arkasi": "kart-elektrik",
+      giris: "giris-duman",
+      tepki: "tepki-parti",
+      zafer: "kart-elektrik",
+    });
+    expect(s?.equipped).toEqual({ "kart-arkasi": "kart-elektrik", giris: "giris-duman" });
+    const parti = itemsOfType("tepki")[1];
+    if (!parti || !s) throw new Error("hazırlık");
+    expect(itemStatus(s, parti)).toBe("owned");
+  });
+
+  it("sahip olunan paketler katalog sırasıyla; hiçbiri yoksa ya da mağaza yoksa boş", () => {
+    expect(ownedPacks(null)).toEqual([]);
+    expect(ownedPacks(withOwned(["unvan-sansli"]))).toEqual([]);
+    const s = withOwned(["tepki-efsane", "tepki-neon-yuzler", "giris-duman"]);
+    expect(ownedPacks(s).map((p) => p.id)).toEqual(["tepki-neon-yuzler", "tepki-efsane"]);
   });
 });

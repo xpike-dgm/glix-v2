@@ -1,19 +1,12 @@
-import type { LobbyEmoji } from "@glix/engine";
-import { createSignal, For, onCleanup, Show } from "solid-js";
+import type { LobbyEmoji, ReactionId } from "@glix/engine";
+import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { hapticTap } from "../fx/haptics.js";
 import { tap } from "../fx/sound.js";
+import { ensureShopLoaded, ownPacks } from "../net/shop.js";
+import { state } from "../net/store.js";
 import { RESULT_EMOJIS } from "./EmojiBar.js";
 import { SmileIcon } from "./ResultIcons.js";
-
-/** Ekran okuyucu adları; tanımsız emoji için emojinin kendisi okunur. */
-const NAMES: Partial<Record<LobbyEmoji, string>> = {
-  "😂": "Kahkaha",
-  "😱": "Şok",
-  "🔥": "Ateş",
-  "👏": "Alkış",
-  "👋": "El sallama",
-  "❤️": "Kalp",
-};
+import { reactionPages } from "./reactionPages.js";
 
 /** Dilimlerin dizildiği çeyrek daire: düğme merkezinden emojilerin uzaklığı (px); halka ölçüleri CSS'te. */
 const RADIUS = 150;
@@ -25,16 +18,27 @@ const RADIUS = 150;
  * Yalnız `transform` ve `opacity` canlandırılır. Hareket azaltmada bütün geçişler kökteki kuralla anında olur.
  */
 export function EmojiFan(props: {
-  onPick: (emoji: LobbyEmoji) => void;
+  onPick: (emoji: ReactionId) => void;
   emojis?: readonly LobbyEmoji[];
   /** `up` (varsayılan): köşe altta. `down`: köşe üstte. */
   open?: "up" | "down";
   class?: string;
 }) {
   const [shown, setShown] = createSignal(false);
+  // Sayfalar: emojiler + sahip olunan her tepki paketi (çıkartmalar). Paket yoksa tek sayfa, değiştirici görünmez.
+  const [pageNo, setPageNo] = createSignal(0);
+  onMount(() => {
+    if (state.account) ensureShopLoaded();
+  });
+  const pages = createMemo(() => reactionPages(props.emojis ?? RESULT_EMOJIS, ownPacks()));
+  const page = () => pages()[Math.min(pageNo(), pages().length - 1)] ?? pages()[0];
+  const nextPage = (): void => {
+    tap();
+    setPageNo((n) => (n + 1) % pages().length);
+  };
   let btn: HTMLButtonElement | undefined;
   let first: HTMLButtonElement | undefined;
-  const list = () => props.emojis ?? RESULT_EMOJIS;
+  const list = () => page()?.items ?? [];
   const down = () => props.open === "down";
   /** Saat yönünde, yukarıdan ölçülen açı: yukarı-sol çeyrek 270..360, aşağı-sol çeyrek 180..270. */
   const from = () => (down() ? 180 : 270);
@@ -92,15 +96,31 @@ export function EmojiFan(props: {
         <div class="efan__scrim" aria-hidden="true" onPointerDown={() => close(false)} />
       </Show>
       <div class="efan__ring" aria-hidden="true" style={{ "--efan-bg": slices() }} />
+      <Show when={shown() && pages().length > 1}>
+        <button
+          type="button"
+          class="efan__page"
+          aria-label={`Tepki sayfası: ${page()?.label}. Değiştirmek için dokun`}
+          onClick={nextPage}
+        >
+          <Show when={page()?.icon} fallback={<span class="efan__page-ico">😀</span>}>
+            {(src) => <img class="efan__page-ico" src={src()} alt="" draggable={false} />}
+          </Show>
+          <span class="efan__dots" aria-hidden="true">
+            <For each={pages()}>{(_, i) => <i data-on={i() === pageNo() ? "1" : undefined} />}</For>
+          </span>
+        </button>
+      </Show>
       {/* biome-ignore lint/a11y/useSemanticElements: açılır tepki listesi; düğmeler kendi adlarını taşır */}
       <div class="efan__items" role="group" aria-label="Tepkiler">
         <For each={list()}>
-          {(emoji, i) => (
+          {(choice, i) => (
             <button
               type="button"
               class="efan__item"
+              data-sticker={choice.src ? "1" : undefined}
               tabIndex={shown() ? 0 : -1}
-              aria-label={`Tepki: ${NAMES[emoji] ?? emoji}`}
+              aria-label={`Tepki: ${choice.label}`}
               ref={(el) => {
                 if (i() === 0) first = el;
               }}
@@ -112,11 +132,13 @@ export function EmojiFan(props: {
               onClick={() => {
                 tap();
                 hapticTap();
-                props.onPick(emoji);
+                props.onPick(choice.id);
                 close(true);
               }}
             >
-              {emoji}
+              <Show when={choice.src} fallback={choice.text}>
+                {(src) => <img class="efan__sticker" src={src()} alt="" draggable={false} decoding="async" />}
+              </Show>
             </button>
           )}
         </For>

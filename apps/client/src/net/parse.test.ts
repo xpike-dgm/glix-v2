@@ -115,6 +115,34 @@ describe("sunucu mesajı doğrulama", () => {
     expect(parseServerMessage("[]")).toBeNull();
     expect(parseServerMessage(wire({ type: "yok" }))).toBeNull();
   });
+  it("reaction: tepki paketi çıkartması kabul edilir; bilinmeyen paket ya da sıra yok sayılır (eski/yeni uyumu)", () => {
+    expect(parseServerMessage(wire({ type: "reaction", playerId: "p1", emoji: "pack:parti:4" }))).toEqual({
+      type: "reaction",
+      playerId: "p1",
+      emoji: "pack:parti:4",
+    });
+    for (const emoji of ["pack:gelecek-paket:1", "pack:parti:7", "pack:parti:", "pack:"])
+      expect(parseServerMessage(wire({ type: "reaction", playerId: "p1", emoji }))).toBeNull();
+  });
+  it("oyuncu kozmetikleri: kart arkası, zafer ve giriş geçer; yanlış tür atılır", () => {
+    const snap = snapshot();
+    const first = snap.players[0];
+    if (!first) throw new Error("oyuncu");
+    const cosmetics = { cardBack: "kart-mor-girdap", celebration: "zafer-simsek", entry: "giris-duman" };
+    const bad = { cardBack: "zafer-simsek", celebration: "yok", entry: "tepki-parti" };
+    const read = (c: unknown) => {
+      const m = parseServerMessage(
+        wire({
+          type: "room",
+          snapshot: { ...snap, players: [{ ...first, cosmetics: c }, ...snap.players.slice(1)] },
+        }),
+      );
+      if (m?.type !== "room") throw new Error("room kabul edilmedi");
+      return m.snapshot.players[0]?.cosmetics;
+    };
+    expect(read(cosmetics)).toEqual(cosmetics);
+    expect(read(bad)).toBeUndefined();
+  });
   it("reaction mesajını yalnız izinli emojiyle kabul eder", () => {
     expect(parseServerMessage(wire({ type: "reaction", playerId: "p1", emoji: "🔥" }))).toEqual({
       type: "reaction",

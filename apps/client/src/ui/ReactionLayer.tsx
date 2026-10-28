@@ -1,12 +1,13 @@
-import type { LobbyEmoji } from "@glix/engine";
+import type { ReactionId } from "@glix/engine";
 import { createSignal, For, onCleanup, onMount } from "solid-js";
 import { reducedMotion } from "../fx/motion.js";
 import { onReaction, REACTION_FLIGHT_MS } from "../net/reactions.js";
+import { stickerSrc } from "./shopArt.js";
 
 interface Floating {
   key: number;
   playerId: string;
-  emoji: LobbyEmoji;
+  emoji: ReactionId;
   x: number;
   y: number;
   drift: number;
@@ -74,7 +75,12 @@ export function ReactionLayer() {
               "--flight": `${REACTION_FLIGHT_MS}ms`,
             }}
           >
-            {it.emoji}
+            {/* Çıkartma kimliği katalogda yoksa (bilinmeyen paket) hiçbir şey çizilmez; emoji metin kalır. */}
+            {stickerSrc(it.emoji) ? (
+              <img class="reaction__sticker" src={stickerSrc(it.emoji)} alt="" draggable={false} />
+            ) : (
+              it.emoji
+            )}
           </span>
         )}
       </For>

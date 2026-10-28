@@ -13,6 +13,7 @@ import { LeaveButton } from "../ui/LeaveButton.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
+import { cardBackOf } from "../ui/shopArt.js";
 import { createMediaQuery } from "../ui/viewport.js";
 import { WorldBackdrop } from "../ui/WorldBackdrop.js";
 import { playersOnly } from "./ranking.js";
@@ -24,6 +25,7 @@ import { playersOnly } from "./ranking.js";
 export function Cards(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
   const now = createServerNow(100);
   const mine = () => props.match.mine ?? null;
+  const myBack = () => cardBackOf(props.snap.players.find((p) => p.id === props.snap.selfId)?.cosmetics);
   const pick = () => mine()?.pick ?? null;
   const crew = createMemo(() =>
     playersOnly(props.snap.players).filter((p) => props.match.participants.includes(p.id)),
@@ -112,6 +114,7 @@ export function Cards(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
               direct={direct()}
               blind={pick()?.blind === true}
               look={look()}
+              back={myBack()}
               hint="Bir karta dokun"
               actLabel="Bu kartı seç"
               onLook={setLook}
@@ -230,6 +233,8 @@ function Deal(props: {
   hint: string;
   actLabel: string;
   newKey?: number;
+  /** Kendi kart arkası görseli (kuşanılan ya da klasik). */
+  back?: string;
   onLook: (key: number | null) => void;
   onAct: (key: number) => void;
 }) {
@@ -272,6 +277,7 @@ function Deal(props: {
                     when={it.id}
                     fallback={
                       <CardBack
+                        src={props.back}
                         layout="tile"
                         label={`Kapalı kart ${it.key + 1}`}
                         disabled={it.busy}
