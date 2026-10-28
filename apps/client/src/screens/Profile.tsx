@@ -2,6 +2,7 @@ import { createEffect, createSignal, For, Match, onMount, Show, Switch } from "s
 import { earnedSummary } from "../net/badgeRules.js";
 import { incomingCount } from "../net/friends.js";
 import { badgeText } from "../net/friendsRules.js";
+import { balanceText } from "../net/glixRules.js";
 import { setLeaderboardFrom } from "../net/leaderboard.js";
 import { loadProfile, profileBack, profileOf, profileState, setProfileOf } from "../net/profile.js";
 import {
@@ -18,7 +19,7 @@ import { Avatar } from "../ui/Avatar.js";
 import { avatarFromName } from "../ui/avatars.js";
 import { BadgeMedal } from "../ui/BadgeMedal.js";
 import { GhostButton } from "../ui/GhostButton.js";
-import { BackIcon, ChevronRightIcon, CrownIcon, PencilIcon, UsersIcon } from "../ui/Icons.js";
+import { BackIcon, ChevronRightIcon, CoinIcon, CrownIcon, PencilIcon, UsersIcon } from "../ui/Icons.js";
 import { Mascot } from "../ui/Mascot.js";
 import { Screen } from "../ui/Screen.js";
 import { worldAllowed } from "../ui/world.js";
@@ -173,11 +174,22 @@ function Details(props: { profile: ProfileInfo }) {
 }
 
 /** Kendi profilinin üstündeki iki kapı: Arkadaşlar (istek sayısıyla) ve Kullanıcı adını değiştir. */
-function Hub(props: { onRename: () => void }) {
+function Hub(props: { onRename: () => void; glix: number | null }) {
   const count = (): number => incomingCount();
   return (
     <section class="pf__hub rise" style={{ "--i": 1 }} aria-label="Hesabım">
       <div class="set__card">
+        <Show when={props.glix !== null}>
+          <div class="set__row hub__row hub__glix" role="status">
+            <span class="hub__icon hub__icon--coin" aria-hidden="true">
+              <CoinIcon size={28} />
+            </span>
+            <span class="set__text">
+              <span class="set__label">{balanceText(props.glix ?? 0)}</span>
+              <span class="set__hint">Maç oynadıkça ve rozet kazandıkça artar</span>
+            </span>
+          </div>
+        </Show>
         <button
           type="button"
           class="set__row set__row--btn hub__row"
@@ -276,7 +288,7 @@ export function Profile() {
         </div>
 
         <Show when={profileOf() === null && state.account}>
-          <Hub onRename={() => setRenameOpen(true)} />
+          <Hub onRename={() => setRenameOpen(true)} glix={ready()?.glix ?? null} />
         </Show>
 
         <Switch>

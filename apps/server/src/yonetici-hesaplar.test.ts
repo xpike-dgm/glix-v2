@@ -170,6 +170,17 @@ describe("yönetici hesap girdileri", () => {
     expect(parseAction("delete", { id: 2, confirm: "Ad" })).toEqual({ op: "delete", id: 2, confirm: "Ad" });
     expect(parseAction("delete", { id: 2 })).toBeNull();
     expect(parseAction("unsuspend", { id: 2 })).toEqual({ op: "unsuspend", id: 2 });
+    expect(parseAction("glix", { id: 2, amount: -20, reason: " telafi " })).toEqual({
+      op: "glix",
+      id: 2,
+      amount: -20,
+      reason: "telafi",
+    });
+    for (const bad of [0, 1.5, "5", 100_001, -100_001, null])
+      expect(parseAction("glix", { id: 2, amount: bad, reason: "x" })).toBeNull();
+    expect(parseAction("glix", { id: 2, amount: 5, reason: "" })).toBeNull();
+    expect(parseAction("glix", { id: 2, amount: 5 })).toBeNull();
+    expect(parseAction("glix", { id: 2, amount: 5, reason: "x", extra: 1 })).toBeNull();
     expect(parseAction("logout-all", { id: 2, extra: true })).toBeNull();
     expect(parseAction("logout-all", [])).toBeNull();
   });
@@ -194,6 +205,7 @@ describe("hesap uçları: erişim denetimi", () => {
     ["accounts/unsuspend", { id: 2 }],
     ["accounts/delete", { id: 2, confirm: "x" }],
     ["accounts/logout-all", { id: 2 }],
+    ["accounts/glix", { id: 2, amount: 10, reason: "x" }],
   ];
 
   it("oturum yoksa 401; yönetici olmayan 404; yönetici çerezi yoksa 403", async () => {
@@ -457,6 +469,67 @@ describe("zorla kullanıcı adı değiştirme", () => {
     expect((await post("accounts/rename", cookie, { id: tid, username: "Yeni_Canli" })).status).toBe(200);
     await until(() => host.room.players.some((p) => p.nickname === "Yeni_Canli"), "oda adı");
     await until(() => watcher.of("friendsChanged").length > 0, "arkadaş haberi");
+  });
+});
+
+// ---- Glix düzeltmesi -------------------------------------------------------------------------------------------
+
+describe("Glix düzeltmesi", () => {
+  useServer({ adminAccountIds: ADMIN, mail: MAIL, mailFetch, statsDb: ":memory:" });
+
+  it("döküm bakiye ve son 20 hareketi verir; düzeltme deftere, bakiyeye ve işlem kaydına yazılır", async () => {
+    const cookie = await adminLogin();
+    const t = await register("Glix_Hedef");
+    for (let i = 0; i < 25; i++)
+      k.srv.accounts.creditBadgeGlix(t.id, [{ badgeId: `r-${i}`, amount: 1 }], 100 + i);
+    const before = await get<AdminAccountDetail>(`accounts/detail?id=${t.id}`, cookie);
+    expect(before.body.glix.balance).toBe(25);
+    expect(before.body.glix.ledger).toHaveLength(20);
+    expect(before.body.glix.ledger[0]).toMatchObject({ reason: "rozet", ref: "r-24" });
+
+    const r = await post("accounts/glix", cookie, { id: t.id, amount: 50, reason: "Hata telafisi" });
+    expect(r.status).toBe(200);
+    expect(r.body.balance).toBe(75);
+    const after = await get<AdminAccountDetail>(`accounts/detail?id=${t.id}`, cookie);
+    expect(after.body.glix.balance).toBe(75);
+    expect(after.body.glix.ledger[0]).toEqual({
+      at: k.clock.now(),
+      amount: 50,
+      reason: "yonetici",
+      ref: "Hata telafisi",
+    });
+    const row = k.srv.accounts.adminAuditTail(5).find((a) => a.action === "account_glix");
+    expect(row).toMatchObject({ accountId: 1, targetId: t.id, detail: "50" });
+    // Sebep metni işlem kaydına değil deftere yazılır.
+    expect(JSON.stringify(row)).not.toContain("telafisi");
+    // Profilde bakiye görünür.
+    const prof = await fetch(`${base()}/api/profile`, { headers: { Cookie: t.cookie } });
+    expect(((await prof.json()) as { glix: number }).glix).toBe(75);
+  });
+
+  it("bakiye 0'ın altına inemez; hiçbir şey yazılmaz", async () => {
+    const cookie = await adminLogin();
+    const t = await register("Glix_Eksi");
+    expect((await post("accounts/glix", cookie, { id: t.id, amount: 30, reason: "x" })).status).toBe(200);
+    const r = await post("accounts/glix", cookie, { id: t.id, amount: -31, reason: "x" });
+    expect(r.status).toBe(409);
+    expect(r.body.code).toBe("glix_negative");
+    expect(k.srv.accounts.glixBalance(t.id)).toBe(30);
+    expect(k.srv.accounts.glixLedger(t.id, 10)).toHaveLength(1);
+    expect((await post("accounts/glix", cookie, { id: t.id, amount: -30, reason: "sıfırla" })).status).toBe(
+      200,
+    );
+    expect(k.srv.accounts.glixBalance(t.id)).toBe(0);
+  });
+
+  it("geçersiz gövde 400, bilinmeyen hesap 404, yönetici hesabı 403", async () => {
+    const cookie = await adminLogin();
+    const t = await register("Glix_Gecersiz");
+    expect((await post("accounts/glix", cookie, { id: t.id, amount: 0, reason: "x" })).status).toBe(400);
+    expect((await post("accounts/glix", cookie, { id: t.id, amount: 5 })).status).toBe(400);
+    expect((await post("accounts/glix", cookie, { id: 999, amount: 5, reason: "x" })).status).toBe(404);
+    expect((await post("accounts/glix", cookie, { id: 1, amount: 5, reason: "x" })).status).toBe(403);
+    expect(k.srv.accounts.glixLedger(t.id, 10)).toEqual([]);
   });
 });
 

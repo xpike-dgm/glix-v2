@@ -35,6 +35,7 @@ export * from "./games/text.js";
 export * from "./games/yazi-yaz/index.js";
 export * from "./games/zaman-bombasi-hafizasi/index.js";
 export * from "./games/zehirli-kadeh/index.js";
+export * from "./glix.js";
 export * from "./mergePatch.js";
 export * from "./moderation/index.js";
 export * from "./protocol.js";

@@ -168,8 +168,10 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     opts.randomInt,
     stats,
     resolvePush(opts),
-    createAccountRecorder(accounts, (accountId, ids) =>
-      rt.social.sendTo(accountId, { type: "badgesEarned", ids }),
+    createAccountRecorder(
+      accounts,
+      (accountId, ids) => rt.social.sendTo(accountId, { type: "badgesEarned", ids }),
+      (accountId, earned) => rt.social.sendTo(accountId, { type: "glixEarned", ...earned }),
     ),
   );
   rt.social = createSocial(rt, accounts);

@@ -30,6 +30,9 @@ describe("parseProfile rozetler", () => {
     };
     expect(parseProfile({ ...good, badges: [badge] })?.badges).toEqual([badge]);
     expect(parseProfile(good)?.badges).toEqual([]);
+    expect(parseProfile(good)?.glix).toBeNull();
+    expect(parseProfile({ ...good, glix: 120 })?.glix).toBe(120);
+    expect(parseProfile({ ...good, glix: -5 })?.glix).toBeNull();
     expect(parseProfile({ ...good, badges: "x" })?.badges).toEqual([]);
   });
 });

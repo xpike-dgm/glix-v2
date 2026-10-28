@@ -93,6 +93,7 @@ const AUDIT_LABELS: Record<string, string> = {
   account_unsuspend: "Askı kaldırıldı",
   account_delete: "Hesap silindi",
   account_logout_all: "Tüm oturumlar kapatıldı",
+  account_glix: "Glix düzeltildi",
   game_switch: "Oyun anahtarı değiştirildi",
   announcement_set: "Duyuru yayınlandı",
   announcement_clear: "Duyuru kaldırıldı",
@@ -154,6 +155,7 @@ export function auditDetail(action: string, detail: string): string {
   if (detail === "") return "";
   if (action === "account_suspend") return `Süre: ${DURATION_LABELS[detail] ?? detail}`;
   if (action === "account_logout_all") return `${detail} oturum`;
+  if (action === "account_glix") return `${Number(detail) > 0 ? "+" : ""}${detail} Glix`;
   if (action === "otp_request") return MAIL_STATE[detail] ?? detail;
   if (action === "game_switch") return gameSwitchDetail(detail);
   if (action === "announcement_set")
@@ -197,3 +199,31 @@ export const releaseStateLabel = (state: string): string => RELEASE_STATE[state]
 
 /** Revizyonun kısa hali (ilk 7 karakter). */
 export const shortRevision = (rev: string): string => rev.slice(0, 7);
+
+/** Glix defteri nedeni -> Türkçe etiket (yönetici paneli). */
+export const GLIX_REASON_LABEL: Record<string, string> = {
+  mac: "Maç",
+  rozet: "Rozet",
+  yonetici: "Yönetici düzeltmesi",
+  "satin-alma": "Satın alma",
+};
+
+/** Glix tutarı: işaretli ("+25", "-10"). */
+export function fmtGlixDelta(n: number): string {
+  return n > 0 ? `+${n}` : String(n);
+}
+
+/** Defter satırı için ayrıntı: rozet kimliği, yönetici notu; maçta "2. sıra". */
+export function glixRefText(reason: string, ref: string | null): string {
+  if (ref === null) return "";
+  if (reason === "mac") return ref.startsWith("yer:") ? `${ref.slice(4)}. sıra` : "";
+  return ref;
+}
+
+/** Düzeltme tutarı alanı: sıfırdan farklı tamsayı, |tutar| en çok 100000. */
+export function parseGlixAmount(text: string): number | null {
+  const t = text.trim();
+  if (!/^[+-]?\d{1,6}$/.test(t)) return null;
+  const n = Number(t);
+  return n !== 0 && Math.abs(n) <= 100_000 ? n : null;
+}

@@ -19,6 +19,7 @@ import type {
   AdminGameFailure,
   AdminGameStat,
   AdminGameSwitch,
+  AdminGlixRow,
   AdminLive,
   AdminMailCount,
   AdminMailDay,
@@ -296,6 +297,15 @@ export function parseSearch(v: unknown): AdminAccountSearch {
   return { results: list(o, "results", accountRow, 50), limit: num(o, "limit") };
 }
 
+const GLIX_REASONS = ["mac", "rozet", "yonetici", "satin-alma"] as const;
+
+function glixReason(o: Rec): AdminGlixRow["reason"] {
+  const v = str(o, "reason");
+  const found = GLIX_REASONS.find((r) => r === v);
+  if (!found) throw new ParseError("reason");
+  return found;
+}
+
 export function parseDetail(v: unknown): AdminAccountDetail {
   const o = rec(v);
   const s = o.suspension;
@@ -316,6 +326,23 @@ export function parseDetail(v: unknown): AdminAccountDetail {
     games: num(o, "games"),
     badges: num(o, "badges"),
     friends: num(o, "friends"),
+    glix: (() => {
+      const g = rec(o.glix);
+      return {
+        balance: num(g, "balance"),
+        ledger: list(
+          g,
+          "ledger",
+          (r) => ({
+            at: num(r, "at"),
+            amount: num(r, "amount"),
+            reason: glixReason(r),
+            ref: r.ref === null ? null : str(r, "ref"),
+          }),
+          50,
+        ),
+      };
+    })(),
     protected: bool(o, "protected"),
     suspension: sus
       ? { since: num(sus, "since"), until: nullableNum(sus, "until"), reason: str(sus, "reason") }

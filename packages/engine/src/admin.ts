@@ -187,6 +187,15 @@ export interface AdminAccountSearch {
 }
 
 /** `GET /api/admin/accounts/detail`: e-postanın göründüğü tek yer. Bu uç her çağrıda işlem kaydına yazılır. */
+/** Hesabın Glix defterinden bir satır (yönetici dökümü). */
+export interface AdminGlixRow {
+  at: number;
+  /** İşaretli tutar. */
+  amount: number;
+  reason: "mac" | "rozet" | "yonetici" | "satin-alma";
+  ref: string | null;
+}
+
 export interface AdminAccountDetail {
   id: number;
   username: string;
@@ -203,6 +212,8 @@ export interface AdminAccountDetail {
   games: number;
   badges: number;
   friends: number;
+  /** Glix bakiyesi ve son hareketler (yeniden eskiye). */
+  glix: { balance: number; ledger: AdminGlixRow[] };
   /** Yönetici listesindeki hesap: ad değiştirme, askı, silme ve oturum kapatma yapılamaz. */
   protected: boolean;
   suspension: { since: number; until: number | null; reason: string } | null;

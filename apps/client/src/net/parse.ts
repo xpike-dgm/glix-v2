@@ -20,6 +20,7 @@ import {
 } from "@glix/engine";
 import { parseBadgeIds } from "./badgeRules.js";
 import { parseInvite } from "./friendsRules.js";
+import { parseGlixEarned } from "./glixRules.js";
 import { parseSiteNotice } from "./siteRules.js";
 
 type Rec = Record<string, unknown>;
@@ -307,6 +308,10 @@ export function parseServerMessage(raw: string): ServerMessage | null {
     case "badgesEarned": {
       const ids = parseBadgeIds(data.ids);
       return ids ? { type: "badgesEarned", ids } : null;
+    }
+    case "glixEarned": {
+      const g = parseGlixEarned(data);
+      return g ? { type: "glixEarned", ...g } : null;
     }
     case "error": {
       const code = ERROR_CODES.find((c) => c === data.code);

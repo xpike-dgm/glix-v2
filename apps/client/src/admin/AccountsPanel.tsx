@@ -7,10 +7,14 @@ import {
   failRatio,
   fmtAgo,
   fmtDateTime,
+  fmtGlixDelta,
   fmtInt,
   fmtPct,
   fmtUntil,
+  GLIX_REASON_LABEL,
+  glixRefText,
   methodsLabel,
+  parseGlixAmount,
   shortDay,
   USERNAME_OK,
 } from "./format.js";
@@ -170,7 +174,8 @@ type Step =
   | { op: "suspend"; duration: "1d" | "7d" | "forever"; reason: string }
   | { op: "unsuspend" }
   | { op: "delete" }
-  | { op: "logout-all" };
+  | { op: "logout-all" }
+  | { op: "glix"; amount: number; reason: string };
 
 function stepText(step: Step, a: AdminAccountDetail): string {
   switch (step.op) {
@@ -186,6 +191,8 @@ function stepText(step: Step, a: AdminAccountDetail): string {
       return `"${a.username}" hesabı ve tüm verisi kalıcı olarak silinecek. Geri alınamaz.`;
     case "logout-all":
       return `"${a.username}" tüm cihazlardan çıkarılacak.`;
+    case "glix":
+      return `"${a.username}" bakiyesine ${fmtGlixDelta(step.amount)} Glix yazılacak (${a.glix.balance} -> ${a.glix.balance + step.amount}). Sebep: ${step.reason}`;
   }
 }
 
@@ -199,6 +206,8 @@ export function Detail(props: { id: number; onClose: () => void; onChanged: () =
   const [duration, setDuration] = createSignal<"1d" | "7d" | "forever">("7d");
   const [reason, setReason] = createSignal("");
   const [typed, setTyped] = createSignal("");
+  const [glixAmount, setGlixAmount] = createSignal("");
+  const [glixReason, setGlixReason] = createSignal("");
 
   async function load(): Promise<void> {
     const r = await fetchDetail(props.id);
@@ -239,6 +248,9 @@ export function Detail(props: { id: number; onClose: () => void; onChanged: () =
       case "logout-all":
         payload = { op: "logout-all", id: a.id };
         break;
+      case "glix":
+        payload = { op: "glix", id: a.id, amount: s.amount, reason: s.reason };
+        break;
     }
     setBusy(true);
     const r = await runAccountAction(payload);
@@ -250,6 +262,8 @@ export function Detail(props: { id: number; onClose: () => void; onChanged: () =
     setStep(null);
     setNewName("");
     setReason("");
+    setGlixAmount("");
+    setGlixReason("");
     setDone(r.message);
     props.onChanged();
     if (s.op === "delete") {
@@ -349,7 +363,42 @@ export function Detail(props: { id: number; onClose: () => void; onChanged: () =
                 <dt>Ad değiştirme</dt>
                 <dd>{a().usernameChangedAt === null ? "hiç" : fmtDateTime(a().usernameChangedAt ?? 0)}</dd>
               </div>
+              <div>
+                <dt>Glix bakiyesi</dt>
+                <dd>{fmtInt(a().glix.balance)}</dd>
+              </div>
             </dl>
+            <Show when={a().glix.ledger.length > 0}>
+              <h4 class="adm-h4">Son Glix hareketleri</h4>
+              <div class="adm-table-wrap">
+                <table class="adm-table adm-stack">
+                  <thead>
+                    <tr>
+                      <th>Zaman</th>
+                      <th>Tutar</th>
+                      <th>Neden</th>
+                      <th>Ayrıntı</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <For each={a().glix.ledger}>
+                      {(g) => (
+                        <tr>
+                          <td data-label="Zaman">{fmtDateTime(g.at)}</td>
+                          <td data-label="Tutar" data-level={g.amount < 0 ? "bad" : undefined}>
+                            {fmtGlixDelta(g.amount)}
+                          </td>
+                          <td data-label="Neden">{GLIX_REASON_LABEL[g.reason] ?? g.reason}</td>
+                          <td data-label="Ayrıntı" class="adm-wrap">
+                            {glixRefText(g.reason, g.ref)}
+                          </td>
+                        </tr>
+                      )}
+                    </For>
+                  </tbody>
+                </table>
+              </div>
+            </Show>
             <p class="adm-muted adm-note">Bu ekranı açman işlem kaydına yazıldı.</p>
 
             <Show
@@ -442,6 +491,42 @@ export function Detail(props: { id: number; onClose: () => void; onChanged: () =
                         Askıyı kaldır
                       </button>
                     </Show>
+
+                    <form
+                      class="adm-inline"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const amount = parseGlixAmount(glixAmount());
+                        if (amount !== null) ask({ op: "glix", amount, reason: glixReason().trim() });
+                      }}
+                    >
+                      <label for="adm-glix-amount">Glix düzeltmesi (örn. 50 ya da -20)</label>
+                      <input
+                        id="adm-glix-amount"
+                        class="adm-field"
+                        inputmode="numeric"
+                        maxlength="7"
+                        autocomplete="off"
+                        value={glixAmount()}
+                        onInput={(e) => setGlixAmount(e.currentTarget.value)}
+                      />
+                      <label for="adm-glix-reason">Sebep (kayıt için)</label>
+                      <input
+                        id="adm-glix-reason"
+                        class="adm-field"
+                        maxlength="140"
+                        autocomplete="off"
+                        value={glixReason()}
+                        onInput={(e) => setGlixReason(e.currentTarget.value)}
+                      />
+                      <button
+                        type="submit"
+                        class="adm-btn adm-btn--small"
+                        disabled={parseGlixAmount(glixAmount()) === null || glixReason().trim() === ""}
+                      >
+                        Glix düzelt
+                      </button>
+                    </form>
 
                     <div class="adm-inline">
                       <button

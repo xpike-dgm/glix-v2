@@ -27,6 +27,8 @@ export interface ProfileInfo {
   coPlayers: { username: string; matches: number }[];
   /** Rozetler (kendi profilinde hepsi, arkadaşınkinde yalnız kazanılanlar). Eski sunucuda boş. */
   badges: BadgeInfo[];
+  /** Glix bakiyesi; yalnız kendi profilinde (arkadaşınkinde ve eski sunucuda null). */
+  glix: number | null;
 }
 
 /** Sunucu sınırlarının üstünde yanıt gelirse (bozuk/kötü niyetli) listeler kırpılır. */
@@ -121,6 +123,7 @@ export function parseProfile(data: unknown): ProfileInfo | null {
     recent,
     coPlayers,
     badges: parseBadges(data.badges),
+    glix: count(data.glix),
   };
 }
 

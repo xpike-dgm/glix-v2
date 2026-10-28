@@ -184,6 +184,15 @@ export function buildExport(
       name: badgeById(b.badgeId)?.name ?? null,
       earned_at: iso(b.earnedAt),
     })),
+    glix: {
+      balance: data.glix.balance,
+      movements: data.glix.ledger.map((g) => ({
+        at: iso(g.at),
+        amount: g.amount,
+        reason: g.reason,
+        ref: g.ref,
+      })),
+    },
     // Bildirim aboneliği hesapla birlikte kalıcı saklanır (yalnız ne zaman eklendiği dökülür; uç nokta ve anahtarlar değil).
     push_subscription: data.push !== null,
     push_subscription_since: data.push ? iso(data.push.createdAt) : null,

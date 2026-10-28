@@ -357,6 +357,18 @@ export type ServerMessage =
    * mesajı yok sayar; bu yüzden protokol sürümü artmadı.
    */
   | { type: "badgesEarned"; ids: string[] }
+  /**
+   * Maç sonunda kazandığın Glix (yalnız hesaplı oyuncunun canlı bağlantılarına; `badgesEarned`'den sonra). `parts`
+   * dökümü: maç, sıra eki, günün ilk maçı, rozet (rozet parçasında `badgeId`). `capped`: günlük maç sınırı yüzünden
+   * bir kısmı ödenmedi (`total` 0 olabilir). Eski istemciler bilinmeyen mesajı yok sayar; protokol sürümü artmadı.
+   */
+  | {
+      type: "glixEarned";
+      total: number;
+      parts: { kind: "mac" | "sira" | "gununIlki" | "rozet"; amount: number; badgeId?: string }[];
+      balance: number;
+      capped: boolean;
+    }
   /** `report` kabul edildi ("Bildirimin alındı. Teşekkürler."). */
   | { type: "reportAck" }
   | { type: "error"; code: ErrorCode; message: string };

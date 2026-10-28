@@ -6,12 +6,15 @@ import {
   failRatio,
   fmtAgo,
   fmtDuration,
+  fmtGlixDelta,
   fmtNum,
   fmtPct,
   fmtRate,
   fmtUntil,
+  glixRefText,
   level,
   methodsLabel,
+  parseGlixAmount,
   phaseLabel,
   releaseStateLabel,
   shortDay,
@@ -129,5 +132,29 @@ describe("A3 işlem kaydı etiketleri", () => {
     expect(releaseStateLabel("unclean")).toBe("Kapanış kaydı yok");
     expect(shortRevision("0123456789abcdef")).toBe("0123456");
     expect(shortRevision("dev")).toBe("dev");
+  });
+});
+
+describe("Glix yönetici yardımcıları", () => {
+  it("işaretli tutar ve defter ayrıntısı", () => {
+    expect(fmtGlixDelta(25)).toBe("+25");
+    expect(fmtGlixDelta(-10)).toBe("-10");
+    expect(glixRefText("mac", "yer:2")).toBe("2. sıra");
+    expect(glixRefText("rozet", "ilk-mac")).toBe("ilk-mac");
+    expect(glixRefText("yonetici", null)).toBe("");
+  });
+
+  it("düzeltme tutarı: sıfırdan farklı tamsayı, sınırlı", () => {
+    expect(parseGlixAmount(" 50 ")).toBe(50);
+    expect(parseGlixAmount("-20")).toBe(-20);
+    expect(parseGlixAmount("+7")).toBe(7);
+    for (const bad of ["", "0", "1.5", "abc", "100001", "-100001", "1e3"])
+      expect(parseGlixAmount(bad)).toBeNull();
+  });
+
+  it("işlem kaydı etiketi", () => {
+    expect(auditLabel("account_glix")).toBe("Glix düzeltildi");
+    expect(auditDetail("account_glix", "50")).toBe("+50 Glix");
+    expect(auditDetail("account_glix", "-5")).toBe("-5 Glix");
   });
 });

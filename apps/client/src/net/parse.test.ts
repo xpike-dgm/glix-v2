@@ -281,3 +281,25 @@ describe("kart alanları", () => {
     );
   });
 });
+
+describe("glixEarned", () => {
+  const msg = {
+    type: "glixEarned",
+    total: 35,
+    parts: [
+      { kind: "mac", amount: 10 },
+      { kind: "rozet", amount: 25, badgeId: "ilk-mac" },
+    ],
+    balance: 60,
+    capped: false,
+  };
+  it("geçerli mesajı ayrıştırır", () => {
+    expect(parseServerMessage(wire(msg))).toEqual(msg);
+  });
+  it("toplamı tutmayan ya da bozuk mesajı atar", () => {
+    expect(parseServerMessage(wire({ ...msg, total: 36 }))).toBeNull();
+    expect(parseServerMessage(wire({ ...msg, parts: [{ kind: "mac", amount: -10 }] }))).toBeNull();
+    expect(parseServerMessage(wire({ ...msg, balance: "60" }))).toBeNull();
+    expect(parseServerMessage(wire({ ...msg, capped: 1 }))).toBeNull();
+  });
+});

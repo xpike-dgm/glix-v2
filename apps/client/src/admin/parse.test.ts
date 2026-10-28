@@ -154,6 +154,7 @@ const detailReply = {
   games: 4,
   badges: 1,
   friends: 0,
+  glix: { balance: 40, ledger: [{ at: 7, amount: 40, reason: "mac", ref: "yer:1" }] },
   protected: false,
   suspension: null,
 };
@@ -162,6 +163,8 @@ describe("hesap yanıtları", () => {
   it("geçerli yanıtlar kabul edilir", () => {
     expect(parseAccounts(accountsReply).mail.totals.verify.failed).toBe(1);
     expect(parseDetail(detailReply).email).toBe("ali@test.local");
+    expect(parseDetail(detailReply).glix.balance).toBe(40);
+    expect(parseDetail(detailReply).glix.ledger[0]?.reason).toBe("mac");
     expect(
       parseDetail({ ...detailReply, suspension: { since: 1, until: null, reason: "x" } }).suspension,
     ).toEqual({ since: 1, until: null, reason: "x" });
@@ -196,6 +199,13 @@ describe("hesap yanıtları", () => {
       tryParse(parseAccounts, { ...accountsReply, mail: { ...accountsReply.mail, days: [{ day: "x" }] } }),
     ).toBeNull();
     expect(tryParse(parseDetail, { ...detailReply, email: 5 })).toBeNull();
+    expect(tryParse(parseDetail, { ...detailReply, glix: undefined })).toBeNull();
+    expect(
+      tryParse(parseDetail, {
+        ...detailReply,
+        glix: { balance: 1, ledger: [{ at: 1, amount: 1, reason: "x", ref: null }] },
+      }),
+    ).toBeNull();
     expect(tryParse(parseDetail, { ...detailReply, suspension: { since: 1 } })).toBeNull();
     expect(tryParse(parseSearch, { results: [{ id: "2" }], limit: 20 })).toBeNull();
     expect(tryParse(parseSearch, { results: {}, limit: 20 })).toBeNull();
