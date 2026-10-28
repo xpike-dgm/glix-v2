@@ -3,8 +3,7 @@ import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../g
 import { moderateText } from "../../moderation/blocklist.js";
 import type { Rng } from "../../rng.js";
 import { derivedRng, drawSeed } from "../seeded.js";
-import { LAF_POOLS } from "./pool.js";
-import { LAF_DEFAULT_TONE, type LafTone } from "./prompts.js";
+import { LAF_LEGACY_POOLS, LAF_POOL } from "./pool.js";
 import { cleanAnswer } from "./text.js";
 import {
   LAF_ANSWER_MAX,
@@ -44,7 +43,6 @@ export interface LafDuelState {
 export interface LafState {
   players: string[];
   seed: number;
-  tone: LafTone;
   startedAt: number;
   duels: LafDuelState[];
   finalPrompt: string;
@@ -302,7 +300,8 @@ function lafPublic(state: LafState): LafPublicView {
   const castKeys = get(state.votes, key) ?? {};
   return {
     players: [...state.players],
-    tone: state.tone,
+    // Eski istemciler `tone` alanını zorunlu okur; ton kaldırıldı, sabit değer bir sürüm daha gönderilir.
+    tone: "arkadas",
     phase,
     index: inDuel ? kind.duel : null,
     total: n,
@@ -325,9 +324,7 @@ function lafPublic(state: LafState): LafPublicView {
   };
 }
 
-export function createLafSokma(
-  tone: LafTone = LAF_DEFAULT_TONE,
-): GameDefinition<LafState, LafAction, LafView, LafPublicView> {
+export function createLafSokma(): GameDefinition<LafState, LafAction, LafView, LafPublicView> {
   return {
     id: "laf-sokma",
     name: "Laf Sokma Düellosu",
@@ -368,8 +365,9 @@ export function createLafSokma(
       const list = [...players];
       const seed = drawSeed(ctx.rng);
       const rng = derivedRng(seed, "setup");
-      const roomTone: LafTone = ctx.tone ?? tone;
-      const pool = rng.shuffle(poolEntries(LAF_POOLS[roomTone], ctx.content));
+      // `ctx.tone` yalnız eski ton taşıyan kayıtların replay'inde gelir: o kaydın kurulduğu eski havuz okunur.
+      const source = ctx.tone !== undefined ? LAF_LEGACY_POOLS[ctx.tone] : LAF_POOL;
+      const pool = rng.shuffle(poolEntries(source, ctx.content));
       const pairs = lafAssign(list, rng);
       const duels: LafDuelState[] = pairs.map((authors, i) => ({
         id: `q${i + 1}`,
@@ -379,7 +377,6 @@ export function createLafSokma(
       return {
         players: list,
         seed,
-        tone: roomTone,
         startedAt: ctx.now,
         duels,
         finalPrompt: pool[list.length] as string,
@@ -489,7 +486,6 @@ export function createLafSokma(
       const legit = JSON.stringify({
         prompts: [...state.duels.map((d) => d.prompt), state.finalPrompt],
         players: state.players,
-        tone: state.tone,
         cards: [
           pub.duel?.cards,
           pub.reveal?.cards.map((c) => c.text),

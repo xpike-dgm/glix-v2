@@ -23,7 +23,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `setRandom` | `count` | yalnız host, yalnız lobide; 1..katalog boyu; modu `random` yapar |
 | `chooseAvatar` | `avatar` (0–7) | yalnız lobide (`wrong_phase`); başkasında olan karakter `avatar_taken` ("Bu karakteri X aldı"), ilk gelen alır; aynı değer sessizce yok sayılır |
 | `setJoinPolicy` | `policy` (`izleyici`\|`kapali`) | yalnız host, yalnız lobide; başka değer `invalid_message`, maçta `wrong_phase`, host değilse `not_host`; aynı değer sessizce yok sayılır |
-| `setTone` | `tone` (`aile`\|`arkadas`\|`ofis`) | yalnız host, yalnız lobide; başka değer `invalid_message`, maçta `wrong_phase`, host değilse `not_host`; aynı değer sessizce yok sayılır |
+| `setTone` | `tone` (metin) | **KALDIRILDI** (ton özelliği sahip kararıyla silindi). Yalnız eski önbellekli istemciler için kabul edilir: biçim doğruysa (`type` + metin `tone`) **sessizce yok sayılır** (hata yok, yayın yok, oda değişmez); bozuksa `invalid_message`. Sonraki sürümde ayrıştırıcıdan da silinecek |
 | `startMatch` | — | yalnız host; bağlı oyuncu sayısı tüm seçili oyunların min'ini karşılamalı |
 | `ready` | — | yalnız `briefing` aşamasında (lobi işareti için `setReady`) |
 | `continue` | — | yalnız `results` aşaması (`wrong_phase`); izleyici ve katılımcı olmayan sessizce yok sayılır; aynı oyuncudan 300 ms içinde ikinci mesaj `rate_limited`. Bağlı tüm katılımcılar basınca sonuç ekranı 1 sn sonra biter (`phaseEndsAt` kısalır). Yanıt: `match.continueIds` güncellenir. Bkz. `docs/ERKEN-BITIS.md` |
@@ -95,14 +95,18 @@ gönderilmez; `rev` ve `serverNow` yalnız gönderilen mesajlarda ilerler (istem
 - Yeniden katılma kararı: atılan oyuncu kodu bilerek tekrar girebilir (kalıcı yasak için kimlik yok; IP/ad yasağı kırılgan).
   Eski oturum anahtarı ise geçersizdir, sessizce odaya dönemez.
 
-## İçerik tonu
+## İçerik havuzları (ton kaldırıldı)
 
-- `RoomSnapshot.tone`: `"aile" | "arkadas" | "ofis"`; yeni oda `"arkadas"`. Oyuna özel değil, odaya özel küçük bir ayardır;
-  içerik havuzu olan oyunlar (şimdilik Laf Sokma) kullanır, diğerleri yok sayar. Maçlar arası lobiye dönünce korunur.
-- Sunucu tonu maç başında (her oyunun `setup`ında) `GameContext.tone` olarak verir; yalnız `setup` okur.
-  Oyun içinde ton değişmez (lobi dışında `setTone` reddedilir).
+- Ton özelliği (Aile / Arkadaş / Ofis) **sahip kararıyla kaldırıldı**: lobide seçici, `setTone` işlemi ve odanın tonu yok;
+  Laf Sokma tek soru havuzundan (`laf-sokma/sorular`) çeker.
+- Geriye dönük uyum (bir sürüm): önbellekteki eski istemciler `RoomSnapshot.tone` ve Laf Sokma ortak görünümündeki `tone`
+  alanını zorunlu okuyup bulamazsa anlık görüntüyü atar. Bu yüzden sunucu iki alanı **sabit `"arkadas"`** olarak göndermeye
+  devam eder (tipte isteğe bağlı, yeni istemci okumaz); `PROTOCOL_VERSION` artırılmadı (artırmak her açık istemciyi
+  güncelleme akışına zorlardı). Sonraki sürümde alanlar ve `setTone` ayrıştırması silinecek. Eski istemcinin `setTone` mesajı sessizce yok sayılır.
 - `GameContext.content` (isteğe bağlı, `ContentSet`: havuz kimliği -> etkin girdiler) yalnız yöneticinin değiştirdiği havuzlar için maç başında verilir (yalnız `setup` okur, `poolEntries`); `GameLog.content` olarak kaydedilir ve `replay` aynısını verir. Ağ protokolünde değişiklik yok.
-- `GameLog.tone` kaydedilir; `replay` `setup`ı aynı tonla çağırır, böylece aynı havuz kurulur.
+- Eski kayıtlar: ton taşıyan eski `GameLog.tone` okunmaya devam eder; yeni kayıt ton yazmaz. `replay` `tone` varsa `setup`ı
+  o tonla çağırır ve Laf Sokma kaydın kurulduğu eski ton listelerini (yalnız replay için tutulur) ve `content`teki eski
+  havuz kimliklerini (`laf-sokma/aile|arkadas|ofis`) kullanır; böylece eski kayıt aynı sonucu verir. Ton taşımayan kayıt birleşik havuzu kullanır.
 
 ## Maç kaydı
 

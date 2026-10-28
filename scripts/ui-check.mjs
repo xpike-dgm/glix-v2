@@ -431,16 +431,7 @@ const SCREENS = [
   },
   { name: "lobby-random", q: "mock=lobby", settle: 1000, act: clickText("Oyunlar") },
   { name: "lobby-manual", q: "mock=lobby&sel=manual", settle: 1000, act: clickText("Oyunlar") },
-  {
-    name: "lobby-tone-host",
-    q: "mock=lobby",
-    settle: 1000,
-    act: async (p) => {
-      await p.getByText("Oyunlar", { exact: false }).first().click();
-      await p.getByRole("button", { name: "Ofis" }).click();
-    },
-  },
-  { name: "lobby-tone-guest", q: "mock=lobby&guest=1", settle: 1000, act: clickText("Oyunlar") },
+  { name: "lobby-guest", q: "mock=lobby&guest=1", settle: 1000, act: clickText("Oyunlar") },
   // Lobi geri bildirimi C/D: ayarlar baştan, hazırım, emoji, ev sahibi menüsü, oyuncu görünümü.
   { name: "lobby-solo-settings", q: "mock=lobby&n=1&sel=manual", settle: 900, act: clickText("Oyunlar") },
   { name: "lobby-8-ready", q: "mock=lobby&n=8&ready=7", settle: 900 },

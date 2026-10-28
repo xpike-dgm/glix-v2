@@ -1,12 +1,5 @@
 import type { ContentSet } from "./content.js";
-import {
-  type AnyGame,
-  type ContentTone,
-  type GameContext,
-  type GameLog,
-  type GameResult,
-  isRejected,
-} from "./game.js";
+import { type AnyGame, type GameContext, type GameLog, type GameResult, isRejected } from "./game.js";
 import { createRng } from "./rng.js";
 
 /** Bir oyunda kaydedilecek en çok eylem; aşılırsa kayıt durur ve `truncated` işaretlenir. */
@@ -31,7 +24,6 @@ export class GameRecorder {
     private readonly seed: number,
     players: readonly string[],
     private readonly startedAt: number,
-    private readonly tone?: ContentTone,
     content?: ContentSet,
   ) {
     this.players = [...players];
@@ -71,7 +63,6 @@ export class GameRecorder {
       actions: this.actions.map((a) => ({ ...a })),
       endedAt,
       presence: this.presenceLog.map((p) => ({ ...p })),
-      ...(this.tone !== undefined ? { tone: this.tone } : {}),
       ...(this.content !== undefined ? { content: this.content } : {}),
       ...(this.truncated ? { truncated: true } : {}),
     };

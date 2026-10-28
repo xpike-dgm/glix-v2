@@ -96,7 +96,8 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       })),
       gameIds: [...room.gameIds],
       selection: { ...room.selection },
-      tone: room.tone,
+      // Eski istemciler alanı zorunlu okur (docs/PROTOKOL.md); ton kaldırıldı, sabit değer.
+      tone: "arkadas",
       joinPolicy: room.joinPolicy,
       stageCount: room.stages.size,
       lobbyReady: room.phase === "lobby" ? lobbyReadyIds(room) : [],

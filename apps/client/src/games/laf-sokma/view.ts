@@ -6,7 +6,6 @@ import type {
   LafPhase,
   LafPublicView,
   LafTask,
-  LafTone,
   LafView,
 } from "@glix/engine";
 import { parseNumberRecord } from "../../net/parse.js";
@@ -18,7 +17,6 @@ const isStr = (v: unknown): v is string => typeof v === "string";
 const isStrArr = (v: unknown): v is string[] => Array.isArray(v) && v.every(isStr);
 const isNullableStr = (v: unknown): v is string | null => v === null || isStr(v);
 const PHASES: readonly LafPhase[] = ["write", "vote", "reveal", "finalWrite", "finalVote", "finalReveal"];
-const TONES: readonly LafTone[] = ["aile", "arkadas", "ofis"];
 
 /** Ekranın okuduğu birleşik görünüm: ortak (`publicView`) + kişiye özel (`view`). */
 export type LafScreenView = LafPublicView & LafView;
@@ -75,7 +73,6 @@ export function parseLafPublicView(v: unknown): LafPublicView | null {
   if (!isRec(v)) return null;
   if (!isStrArr(v.players) || !isStrArr(v.ready) || !isStrArr(v.voters)) return null;
   if (!isStr(v.phase) || !PHASES.includes(v.phase as LafPhase)) return null;
-  if (!isStr(v.tone) || !TONES.includes(v.tone as LafTone)) return null;
   if (v.index !== null && !isNum(v.index)) return null;
   if (!isNum(v.total) || !isNum(v.startedAt) || !isNum(v.stageStartedAt) || !isNum(v.stageEndsAt))
     return null;
@@ -94,7 +91,6 @@ export function parseLafPublicView(v: unknown): LafPublicView | null {
   if (!scores) return null;
   return {
     players: [...v.players],
-    tone: v.tone as LafTone,
     phase: v.phase as LafPhase,
     index: v.index === null ? null : (v.index as number),
     total: v.total,

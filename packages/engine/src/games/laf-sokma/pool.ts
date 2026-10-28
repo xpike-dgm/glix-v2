@@ -1,28 +1,22 @@
 import { type ContentPool, cleanLine, dedupeKey } from "../../content.js";
-import { LAF_PROMPTS, LAF_TONES, type LafTone } from "./prompts.js";
-
-const TONE_NAMES: Record<LafTone, string> = { aile: "Aile", arkadas: "Arkadaş", ofis: "Ofis" };
-const TONE_HINTS: Record<LafTone, string> = {
-  aile: "Çocukların da oynayabileceği masum esprili, açık uçlu soru.",
-  arkadas: "Kışkırtıcı ama kaba, cinsel ya da nefret içeren olmayan, açık uçlu soru.",
-  ofis: "İş yerinde rahatça sorulabilecek, açık uçlu soru.",
-};
+import type { LegacyContentTone } from "../../game.js";
+import { LAF_LEGACY_PROMPTS, LAF_LEGACY_TONES, LAF_PROMPTS } from "./prompts.js";
 
 /** 8 oyunculu maç: her oyuncu için bir düello sorusu + final sorusu. */
 const LAF_MAX_PROMPTS = 9;
 
-function makePool(tone: LafTone): ContentPool<string> {
+function makePool(id: string, label: string, hint: string, builtin: readonly string[]): ContentPool<string> {
   return {
-    id: `laf-sokma/${tone}`,
+    id,
     gameId: "laf-sokma",
-    label: `Laf Sokma soruları (${TONE_NAMES[tone]})`,
-    hint: TONE_HINTS[tone],
+    label,
+    hint,
     fields: [
       { key: "text", label: "Soru", hint: "soru işaretiyle biten tek cümle", min: 12, max: 90, long: true },
     ],
     min: 20,
     needed: LAF_MAX_PROMPTS,
-    builtin: LAF_PROMPTS[tone],
+    builtin,
     fromFields(v) {
       const line = cleanLine(v.text, "Soru", 12, 90);
       if (!line.ok) return line;
@@ -35,11 +29,23 @@ function makePool(tone: LafTone): ContentPool<string> {
   };
 }
 
-/** Ton -> Laf Sokma soru havuzu. Oyun, odanın tonuna karşılık gelen havuzu okur. */
-export const LAF_POOLS: Record<LafTone, ContentPool<string>> = {
-  aile: makePool("aile"),
-  arkadas: makePool("arkadas"),
-  ofis: makePool("ofis"),
-};
+/** Laf Sokma'nın tek soru havuzu. */
+export const LAF_POOL: ContentPool<string> = makePool(
+  "laf-sokma/sorular",
+  "Laf Sokma soruları",
+  "Kışkırtıcı ama kaba, cinsel ya da nefret içeren olmayan, açık uçlu soru.",
+  LAF_PROMPTS,
+);
 
-export const LAF_POOL_LIST: readonly ContentPool<string>[] = LAF_TONES.map((t) => LAF_POOLS[t]);
+export const LAF_POOL_LIST: readonly ContentPool<string>[] = [LAF_POOL];
+
+/**
+ * Eski ton başına havuzlar: yalnız ton taşıyan eski kayıtların `replay`i içindir (kayıttaki `content` eski
+ * havuz kimlikleriyle gelir). Yönetici paneline açılmaz, `CONTENT_POOLS`ta yoktur.
+ */
+export const LAF_LEGACY_POOLS: Record<LegacyContentTone, ContentPool<string>> = Object.fromEntries(
+  LAF_LEGACY_TONES.map((t) => [
+    t,
+    makePool(`laf-sokma/${t}`, `Laf Sokma soruları (eski ${t})`, "", LAF_LEGACY_PROMPTS[t]),
+  ]),
+) as Record<LegacyContentTone, ContentPool<string>>;

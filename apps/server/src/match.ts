@@ -304,7 +304,7 @@ function startPlaying(rt: Runtime, room: Room, match: Match): void {
   const rng = match.rng;
   // Havuz değişiklikleri yalnız bu andan sonra başlayan oyunlara uygulanır; etkin havuz kayda da yazılır (replay birebir).
   const content = rt.content.forGame(game.id);
-  match.recorder = new GameRecorder(game.id, seed, match.participants, now, room.tone, content);
+  match.recorder = new GameRecorder(game.id, seed, match.participants, now, content);
   // Briefing sırasında kopanlar başlangıçta bağlı değildir.
   const connected = connectedParticipants(room, match);
   for (const id of match.participants) {
@@ -315,7 +315,6 @@ function startPlaying(rt: Runtime, room: Room, match: Match): void {
       now,
       rng,
       connected,
-      tone: room.tone,
       ...(content !== undefined ? { content } : {}),
     }),
   );

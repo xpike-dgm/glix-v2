@@ -1,4 +1,4 @@
-import { CONTENT_TONE_LABELS, type MatchSnapshot, type RoomSnapshot } from "@glix/engine";
+import type { MatchSnapshot, RoomSnapshot } from "@glix/engine";
 import { createSignal, For, Show, Suspense } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { hapticReady } from "../fx/haptics.js";
@@ -55,11 +55,6 @@ export function Briefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
           </div>
 
           <div class="brief__text">
-            <Show when={match().gameId === "laf-sokma"}>
-              <p class="brief__tone rise" style={{ "--i": 3 }}>
-                Ton: <b>{CONTENT_TONE_LABELS[snap().tone]}</b>
-              </p>
-            </Show>
             <p class="brief__goal rise" style={{ "--i": 3 }}>
               {match().briefing.goal}
             </p>

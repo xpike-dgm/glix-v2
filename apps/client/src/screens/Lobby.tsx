@@ -1,9 +1,6 @@
 import {
   AVATAR_COUNT,
   allReady,
-  CONTENT_TONE_LABELS,
-  CONTENT_TONES,
-  type ContentTone,
   type JoinPolicy,
   type LobbyEmoji,
   MAX_NICKNAME_LENGTH,
@@ -25,7 +22,6 @@ import {
   setJoinPolicy,
   setLobbyReady,
   setRandom,
-  setTone,
   startMatch,
   transferHost,
 } from "../net/client.js";
@@ -339,11 +335,6 @@ export function Lobby(props: { snap: RoomSnapshot }) {
     setRandom(next);
   };
 
-  const chooseTone = (tone: ContentTone): void => {
-    if (!isHost() || snap().tone === tone) return;
-    setTone(tone);
-  };
-
   const choosePolicy = (policy: JoinPolicy): void => {
     if (!isHost() || snap().joinPolicy === policy) return;
     setJoinPolicy(policy);
@@ -525,8 +516,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
             <section class="games games--summary" aria-label="Oyunlar">
               <span class="games__title">Oyunlar</span>
               <span class="games__count">
-                {selectionSummary(sel().mode, randomCount(), selected().length)} ·{" "}
-                {CONTENT_TONE_LABELS[snap().tone]}
+                {selectionSummary(sel().mode, randomCount(), selected().length)}
               </span>
             </section>
           </Show>
@@ -574,27 +564,8 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                       Ben seçeyim
                     </button>
                   </div>
-                  <div class="tone">
-                    <span class="tone__label">Ton</span>
-                    <div class="seg seg--tone">
-                      <For each={CONTENT_TONES}>
-                        {(t) => (
-                          <button
-                            type="button"
-                            class="seg__opt"
-                            aria-pressed={snap().tone === t}
-                            data-on={snap().tone === t ? "1" : undefined}
-                            disabled={!isHost()}
-                            onClick={() => chooseTone(t)}
-                          >
-                            {CONTENT_TONE_LABELS[t]}
-                          </button>
-                        )}
-                      </For>
-                    </div>
-                  </div>
                   <div class="joinset">
-                    <span class="tone__label">Oyun sırasında katılım</span>
+                    <span class="joinset__label">Oyun sırasında katılım</span>
                     <div class="seg seg--join">
                       <For each={JOIN_OPTIONS}>
                         {(o) => (

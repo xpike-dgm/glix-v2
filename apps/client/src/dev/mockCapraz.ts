@@ -100,7 +100,6 @@ export function startCaprazMock(kind: string, params: URLSearchParams): void {
       players,
       gameIds: [info.id],
       selection: { mode: "manual" },
-      tone: "arkadas",
       joinPolicy: "izleyici",
       lobbyReady: [],
       stageCount: 0,

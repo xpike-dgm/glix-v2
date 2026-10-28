@@ -1,5 +1,4 @@
 import {
-  CONTENT_TONES,
   DEFAULT_JOIN_POLICY,
   type ErrorCode,
   type GameInfo,
@@ -163,8 +162,6 @@ export function parseSnapshot(v: unknown): RoomSnapshot | null {
   }
   const selection = parseSelection(v.selection);
   if (!selection) return null;
-  const tone = CONTENT_TONES.find((t) => t === v.tone);
-  if (!tone) return null;
   const catalog: GameInfo[] = [];
   for (const g of v.catalog) {
     const gg = parseGameInfo(g);
@@ -186,7 +183,6 @@ export function parseSnapshot(v: unknown): RoomSnapshot | null {
     players,
     gameIds: v.gameIds,
     selection,
-    tone,
     joinPolicy: JOIN_POLICIES.find((j) => j === v.joinPolicy) ?? DEFAULT_JOIN_POLICY,
     stageCount: isNum(v.stageCount) ? Math.max(0, Math.floor(v.stageCount)) : 0,
     lobbyReady: v.lobbyReady,

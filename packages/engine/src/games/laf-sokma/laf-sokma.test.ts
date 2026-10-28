@@ -1,25 +1,26 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
+import { dedupeKey } from "../../content.js";
 import { isRejected } from "../../game.js";
 import { replay } from "../../replay.js";
 import { createRng } from "../../rng.js";
 import { runSimulation } from "../../testing/simulate.js";
 import {
-  createLafSokma,
   LAF_ANSWER_MAX,
   LAF_EMPTY_REVEAL_MS,
   LAF_FINAL_ID,
   LAF_FINAL_REVEAL_MS,
   LAF_FINAL_VOTE_MS,
   LAF_FINAL_WRITE_MS,
+  LAF_LEGACY_PROMPTS,
+  LAF_LEGACY_TONES,
+  LAF_POOL,
   LAF_PROMPTS,
   LAF_REVEAL_MS,
-  LAF_TONES,
   LAF_VOTE_MS,
   LAF_WRITE_MS,
   type LafPublicView,
   type LafState,
-  type LafTone,
   type LafView,
   lafAdvance,
   lafAssign,
@@ -36,22 +37,19 @@ const ctx = (now: number, connected: readonly string[] = ALL, seed = 1) => ({
   rng: createRng(seed),
   connected,
 });
-const start = (players: string[] = ["a", "b", "c", "d"], seed = 1, tone?: "aile" | "arkadas" | "ofis") =>
-  (tone ? createLafSokma(tone) : lafSokma).setup(players, ctx(T0, players, seed));
-describe("laf-sokma: oda tonu (ctx.tone)", () => {
-  it("ctx.tone fabrika tonunu geçersiz kılar; verilmezse fabrika tonu kullanılır", () => {
-    for (const tone of LAF_TONES) {
-      const s = lafSokma.setup(["a", "b", "c"], { ...ctx(T0, ["a", "b", "c"], 4), tone });
-      expect(s.tone).toBe(tone);
-      for (const d of s.duels) expect(LAF_PROMPTS[tone]).toContain(d.prompt);
-      expect(LAF_PROMPTS[tone]).toContain(s.finalPrompt);
-    }
-    expect(createLafSokma("ofis").setup(["a", "b", "c"], ctx(T0, ["a", "b", "c"])).tone).toBe("ofis");
+const start = (players: string[] = ["a", "b", "c", "d"], seed = 1) =>
+  lafSokma.setup(players, ctx(T0, players, seed));
+describe("laf-sokma: tek soru havuzu", () => {
+  it("sorular birleşik havuzdan gelir; ton alanı durumda yoktur", () => {
+    const s = lafSokma.setup(["a", "b", "c"], ctx(T0, ["a", "b", "c"], 4));
+    expect(s).not.toHaveProperty("tone");
+    for (const d of s.duels) expect(LAF_PROMPTS).toContain(d.prompt);
+    expect(LAF_PROMPTS).toContain(s.finalPrompt);
   });
 
-  it("aynı tohum ve tonla kurulum birebir aynıdır; kayıt tonu taşır, replay aynı sonucu verir", () => {
+  it("aynı tohumla kurulum birebir aynıdır; kayıt ton taşımaz, replay aynı sonucu verir", () => {
     const players = ["a", "b", "c", "d"];
-    const run = (tone: LafTone) =>
+    const run = () =>
       runSimulation(lafSokma, {
         seed: 11,
         players,
@@ -60,16 +58,53 @@ describe("laf-sokma: oda tonu (ctx.tone)", () => {
         ticks: [T0 + 1000, T0 + 200_000],
         durationMs: lafMaxDurationMs(players.length),
         disconnectProbability: 0,
-        tone,
       });
-    for (const tone of LAF_TONES) {
-      const out = run(tone);
-      expect((out.state as LafState).tone).toBe(tone);
+    const out = run();
+    expect(out.log.tone).toBeUndefined();
+    expect(replay(lafSokma, JSON.parse(JSON.stringify(out.log)))).toEqual(out.result);
+    expect(run().state).toEqual(out.state);
+  });
+
+  it("ortak görünüm eski istemciler için sabit tone alanını taşır", () => {
+    expect(pub(start(), T0).tone).toBe("arkadas");
+  });
+});
+
+describe("laf-sokma: ton taşıyan ESKİ kayıtların replay'i", () => {
+  const players = ["a", "b", "c", "d"];
+  const old = (tone: "aile" | "arkadas" | "ofis") =>
+    runSimulation(lafSokma, {
+      seed: 11,
+      players,
+      startedAt: T0,
+      actions: [],
+      ticks: [T0 + 1000, T0 + 200_000],
+      durationMs: lafMaxDurationMs(players.length),
+      disconnectProbability: 0,
+      tone,
+    });
+
+  it("eski ton havuzundan kurulur ve replay aynı durumu/sonucu verir", () => {
+    for (const tone of LAF_LEGACY_TONES) {
+      const out = old(tone);
       expect(out.log.tone).toBe(tone);
+      const s = out.state as LafState;
+      for (const d of s.duels) expect(LAF_LEGACY_PROMPTS[tone]).toContain(d.prompt);
+      expect(LAF_LEGACY_PROMPTS[tone]).toContain(s.finalPrompt);
       expect(replay(lafSokma, JSON.parse(JSON.stringify(out.log)))).toEqual(out.result);
-      expect(run(tone).state).toEqual(out.state);
+      expect(old(tone).state).toEqual(s);
     }
-    expect((run("aile").state as LafState).duels).not.toEqual((run("ofis").state as LafState).duels);
+    expect((old("aile").state as LafState).duels).not.toEqual((old("ofis").state as LafState).duels);
+  });
+
+  it("eski kaydın içeriği eski havuz kimliğiyle okunur", () => {
+    const mine = LAF_LEGACY_PROMPTS.ofis.slice(0, 25);
+    const s = lafSokma.setup(players, {
+      ...ctx(T0, players, 3),
+      tone: "ofis",
+      content: { "laf-sokma/ofis": [...mine] },
+    });
+    for (const d of s.duels) expect(mine).toContain(d.prompt);
   });
 });
 
@@ -134,16 +169,6 @@ describe("laf-sokma meta", () => {
     expect(LAF_FINAL_WRITE_MS).toBe(45_000);
     expect(LAF_ANSWER_MAX).toBe(80);
   });
-
-  it("varsayılan ton arkadaş; üç ton seçilebilir ve soru o havuzdan gelir", () => {
-    expect(start().tone).toBe("arkadas");
-    for (const tone of LAF_TONES) {
-      const s = start(["a", "b", "c"], 3, tone);
-      expect(s.tone).toBe(tone);
-      for (const d of s.duels) expect(LAF_PROMPTS[tone]).toContain(d.prompt);
-      expect(LAF_PROMPTS[tone]).toContain(s.finalPrompt);
-    }
-  });
 });
 
 describe("soru dağıtımı", () => {
@@ -183,18 +208,21 @@ describe("soru dağıtımı", () => {
     }
   });
 
-  it("havuz: her ton 110 benzersiz soru, makul uzunlukta", () => {
-    for (const tone of LAF_TONES) {
-      const list = LAF_PROMPTS[tone];
-      expect(list).toHaveLength(110);
-      expect(new Set(list).size).toBe(110);
-      for (const q of list) {
-        expect(q.length).toBeLessThanOrEqual(90);
-        expect(q.endsWith("?")).toBe(true);
-      }
+  it("havuz: üç eski listenin tekilleştirilmiş birleşimi, makul uzunlukta", () => {
+    const all = LAF_LEGACY_TONES.flatMap((t) => LAF_LEGACY_PROMPTS[t]);
+    expect(all).toHaveLength(330);
+    const keys = LAF_PROMPTS.map((q) => dedupeKey(q));
+    expect(new Set(keys).size).toBe(LAF_PROMPTS.length);
+    expect(LAF_PROMPTS).toHaveLength(330);
+    // Her eski listenin her sorusu birleşik havuzda var (kayıp yok).
+    for (const q of all) expect(keys).toContain(dedupeKey(q));
+    for (const q of LAF_PROMPTS) {
+      expect(q.length).toBeLessThanOrEqual(90);
+      expect(q.endsWith("?")).toBe(true);
     }
-    const all = LAF_TONES.flatMap((t) => LAF_PROMPTS[t]);
-    expect(new Set(all).size).toBe(330);
+    expect(LAF_POOL.id).toBe("laf-sokma/sorular");
+    expect(LAF_POOL.builtin).toBe(LAF_PROMPTS);
+    expect(LAF_POOL.min).toBe(20);
   });
 });
 

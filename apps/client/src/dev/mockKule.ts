@@ -222,7 +222,6 @@ export function startKuleMock(kind: string, params: URLSearchParams): void {
     players,
     gameIds: [kuleUstasi.id],
     selection: { mode: "manual" },
-    tone: "arkadas",
     joinPolicy: "izleyici",
     lobbyReady: [],
     stageCount: 0,

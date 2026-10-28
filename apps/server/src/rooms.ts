@@ -1,6 +1,5 @@
 import { randomBytes, randomInt } from "node:crypto";
 import {
-  DEFAULT_CONTENT_TONE,
   DEFAULT_JOIN_POLICY,
   getCatalog,
   type LeftReason,
@@ -119,7 +118,6 @@ export function createRoom(rt: Runtime): Room {
     phase: "lobby",
     gameIds: defaults ? [...defaults] : [],
     selection: rt.defaultGameIds ? { mode: "manual" } : { mode: "random", count: DEFAULT_RANDOM_COUNT },
-    tone: DEFAULT_CONTENT_TONE,
     joinPolicy: DEFAULT_JOIN_POLICY,
     match: null,
     rev: 0,

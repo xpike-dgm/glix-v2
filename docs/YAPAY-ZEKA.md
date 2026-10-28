@@ -50,7 +50,7 @@ Kabul: H1 değerlendirme setinde ≥ %95 doğru; yanlış pozitif (farklı şeyl
 | E4 | **Maç hikâyesi** | Final ekranında 3–4 cümlelik "bu gecenin hikâyesi" — paylaşım kartına da girer |
 | E5 | **Karalama yorumcusu** | Oylama sonrası en çok oy alan çizim için sanat eleştirmeni ağzından kısa yorum (görsel girdi; açılış penceresinde) |
 | E6 | **Kendim/Yazı Yaz "grup röntgeni"** | Herkesin yazdığı kelimelerden eğlenceli grup analizi ("Bu grup %60 aç, %40 uykusuz") |
-| E7 | **Ceza/görev çarkı** | Son sıradakine gruba uygun eğlenceli görev (host'un seçtiği ton: aile / arkadaş / ofis) |
+| E7 | **Ceza/görev çarkı** | Son sıradakine gruba uygun eğlenceli görev (ton seçimi kaldırıldı; tek genel ton) |
 
 ## 3. Yapay zekâ oyuncu ve dolgu
 
@@ -113,7 +113,7 @@ Kabul: yanlış pozitif (masum metni engelleme) ≤ %1; engellenen metin oyuncuy
 
 | # | Özellik | Ayrıntı |
 |---|---|---|
-| P1 | **Akıllı maç planlayıcı** | Oyuncu sayısı, istenen süre ve ton → dengeli 5 oyunluk sıra (hız/blöf/çizim karışık) |
+| P1 | **Akıllı maç planlayıcı** | Oyuncu sayısı ve istenen süre → dengeli 5 oyunluk sıra (hız/blöf/çizim karışık) |
 | P2 | **Tema gecesi** | Host bir tema yazar ("90'lar"), anlatıcı ve unvanlar o temada konuşur (içerik havuzları değişmez) |
 | P3 | **Takım dengeleyici** | Geçmiş performansa göre dengeli takımlar (takım modu gelince) |
 | P4 | **Maç sonu duyuru metni** | Host'a WhatsApp grubuna atılacak eğlenceli kazanan duyurusu |

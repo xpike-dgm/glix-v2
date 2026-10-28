@@ -104,7 +104,6 @@ export function startGizliHirsizMock(kind: string, params: URLSearchParams): voi
       players,
       gameIds: [GAME.id],
       selection: { mode: "manual" },
-      tone: "arkadas",
       joinPolicy: "izleyici",
       lobbyReady: [],
       stageCount: 0,

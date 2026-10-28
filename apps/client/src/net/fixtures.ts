@@ -35,7 +35,6 @@ export function snapshot(phase: RoomPhase = "lobby", extra: Partial<RoomSnapshot
     players: [player("a"), player("b", 1)],
     gameIds: ["butona-bas"],
     selection: { mode: "manual" },
-    tone: "arkadas",
     joinPolicy: "izleyici",
     lobbyReady: [],
     stageCount: 0,

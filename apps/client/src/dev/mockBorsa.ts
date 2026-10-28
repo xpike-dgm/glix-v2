@@ -111,7 +111,6 @@ export function startBorsaMock(kind: string, params: URLSearchParams): void {
       players,
       gameIds: [GAME_ID],
       selection: { mode: "manual" },
-      tone: "arkadas",
       joinPolicy: "izleyici",
       lobbyReady: [],
       stageCount: 0,

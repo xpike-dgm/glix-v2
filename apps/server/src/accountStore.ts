@@ -631,6 +631,15 @@ const MIGRATIONS: readonly string[] = [
      updated_at INTEGER NOT NULL,
      PRIMARY KEY (pool_id, entry_key, action)
    );`,
+  // Laf Sokma tonu kaldırıldı (sahip kararı): üç ton havuzunun değişiklikleri tek 'laf-sokma/sorular' havuzuna taşınır.
+  // Anahtar `dedupeKey` çıktısıdır ve havuzdan bağımsızdır; üç havuzda aynı anahtar çakışırsa en eski kayıt kalır
+  // (INSERT OR IGNORE, created_at sırasıyla). Eski kimlikli satırlar sonra silinir.
+  `INSERT OR IGNORE INTO content_overrides (pool_id, entry_key, action, value, created_at, updated_at)
+     SELECT 'laf-sokma/sorular', entry_key, action, value, created_at, updated_at
+       FROM content_overrides
+      WHERE pool_id IN ('laf-sokma/aile', 'laf-sokma/arkadas', 'laf-sokma/ofis')
+      ORDER BY created_at, rowid;
+   DELETE FROM content_overrides WHERE pool_id IN ('laf-sokma/aile', 'laf-sokma/arkadas', 'laf-sokma/ofis');`,
 ];
 
 /** Sunucu başlangıç kayıtları en çok bu kadar tutulur. */

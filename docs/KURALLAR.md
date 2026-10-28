@@ -1126,7 +1126,7 @@ doğru cevaplarla tur uzayabilir.
 
 - Amaç: Aynı soruya rakibinden daha komik cevap verip oyları toplamak.
 - Minimum oyuncu: **3**. Maksimum oyuncu: **8**.
-- Sistem soru havuzundan (elle hazırlanmış, tonu host seçer: Aile / Arkadaş / Ofis) sorular seçer; her soru tam
+- Sistem tek soru havuzundan (elle hazırlanmış; ton seçimi yok) sorular seçer; her soru tam
   **iki** oyuncuya verilir ve her oyuncu **iki** soru alır (eşleşmeler kendini tekrar etmeyecek şekilde dağıtılır).
 - Yazma: 60 sn; her cevap en çok 80 karakter. Cevaplar sunucuda temizlenir ve moderasyon filtresinden geçer.
 - Oylama: her soru sırayla gösterilir; iki cevap yan yana, **isimsiz**. Cevabı olmayan iki oyuncu 10 sn içinde
