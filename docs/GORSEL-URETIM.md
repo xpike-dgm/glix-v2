@@ -241,6 +241,13 @@ goblets (no characters)`, 2) `two avatars swapping goblets with a light trail be
 most glowing gold, one emitting purple-black smoke, avatars reacting`.
 Yönetici her oyun için 3 kare tarifini aşama başında `docs/gorsel/briefing-tarifleri.md` olarak çıkarır.
 
+### 5.2b Kart sistemi kartları (29 görsel)
+Maç içi kartlar (docs/KURALLAR.md "Kartlar"): her kart için `cards/<kart-kimliği>.webp` (oyun kapaklarıyla aynı klasör; kimlikler çakışmaz, testle doğrulanır).
+Oran 1:1 (en az 512×512), kartın üstündeki küçük sanat alanına gider; çerçeve, elmaslar ve metin istemcide çizilir, görselde yazı olmaz.
+Kimlikler: sıradan 12 (`kalkan sigorta takviye kendine-guven tahmin ortaklik koruma ayna vergi celme veto genis-secim`), nadir 6
+(`cift-puan takas oyunu-sec lanet hirsiz kart-cal`), efsanevi 2 (`altin-dokunus ters-kose`), kötü 9 (`talihsizlik agir-yuk hayirsever acik-hedef bos-el kor-secim sessizlik kumarbaz lanetli-hediye`).
+Görsel yokken kartlar CSS çerçeve ve elmas işaretiyle çizilir.
+
 ### 5.3 Küçük görseller (≈ 8)
 | Görsel | Tarif |
 |---|---|

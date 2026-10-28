@@ -1,8 +1,10 @@
+import { type CardId, type CardSettings, isCardId, parseCardSettings } from "./cards/catalog.js";
+import type { CardsMine, CardsPublic } from "./cards/view.js";
 import type { GameResult } from "./game.js";
 import { isReportReason, type ReportReason, sanitizeReportNote } from "./moderation/report.js";
 import type { SiteNotice } from "./siteNotice.js";
 
-export const PROTOCOL_VERSION = 2;
+export const PROTOCOL_VERSION = 3;
 export const APP_VERSION = "0.1.0";
 
 export const MAX_MESSAGE_LENGTH = 4096;
@@ -108,8 +110,18 @@ export type ClientMessage =
   | { type: "setTone" }
   /** Maç sürerken katılım ayarı (yalnız host, yalnız lobi). */
   | { type: "setJoinPolicy"; policy: JoinPolicy }
+  /** Kartlar ayarı (yalnız host, yalnız lobi): ana anahtar ve kapatılan kartlar (docs/KURALLAR.md K8). */
+  | ({ type: "setCards" } & CardSettings)
   | { type: "startMatch" }
   | { type: "ready" }
+  /** Kart seçimi aşamasında `index`inci seçeneği seç (docs/KURALLAR.md K2). */
+  | { type: "pickCard"; index: number }
+  /** Elin doluyken seçilen iyi kart için karar: elden `index`inci kartı at ya da (`null`) yeni kartı at. */
+  | { type: "discardCard"; index: number | null }
+  /** Anlatımda elinden kart oyna; `target`: hedef oyuncu, `gameId`: Veto / Oyunu Seç için oyun. */
+  | { type: "playCard"; card: CardId; target?: string; gameId?: string }
+  /** Anlatım bitmeden oynadığın kartı geri al. */
+  | { type: "unplayCard" }
   /** `results` aşamasında "Devam": bağlı tüm oyuncular basınca sonuç ekranı 1 sn sonra biter. */
   | { type: "continue" }
   | { type: "action"; seq: number; payload: unknown }
@@ -199,6 +211,8 @@ export type ErrorCode =
   | "not_enough_players"
   | "wrong_phase"
   | "not_participant"
+  /** Kart eylemi geçersiz (elde yok, hedef uygun değil, süre doldu...). */
+  | "card_invalid"
   | "game_failed"
   | "draining"
   | "server_busy"
@@ -216,7 +230,7 @@ export type ErrorCode =
   /** Yönetici seni bu odadan çıkardı; 10 dakika girilemez (U16 A4). */
   | "room_blocked";
 
-export type RoomPhase = "lobby" | "briefing" | "countdown" | "playing" | "results" | "final";
+export type RoomPhase = "lobby" | "briefing" | "countdown" | "playing" | "results" | "cards" | "final";
 
 export interface PlayerInfo {
   id: string;
@@ -260,8 +274,12 @@ export interface MatchSnapshot {
   publicView: unknown;
   /** Oyunun bu oyuncuya özel görünümü (playing/results); izleyicide izleyici görünümü. */
   view: unknown;
-  /** results ve final aşamasında dolu. */
+  /** results ve final aşamasında dolu. `awards` kart etkileri dahil nihai genel skor puanlarıdır. */
   result: GameResult | null;
+  /** Herkese açık kart bilgisi (kartlar kapalıysa yok). */
+  cards?: CardsPublic | null;
+  /** Yalnız bu oyuncunun kart bilgisi (izleyici ve sahnede null). */
+  mine?: CardsMine | null;
 }
 
 export interface RoomSnapshot {
@@ -284,6 +302,8 @@ export interface RoomSnapshot {
   tone?: "arkadas";
   /** Maç sürerken gelenlere ne olur; yeni oda: izleyici. */
   joinPolicy: JoinPolicy;
+  /** Kartlar ayarı (docs/KURALLAR.md K8); yoksa kartlar açık sayılır. Misafirler yalnız okur. */
+  cardSettings?: CardSettings;
   /** Odaya bağlı sahne (TV) sayısı; telefonlar "TV'de oynanıyor" rozetini buna göre gösterir. */
   stageCount: number;
   /** Lobide "Hazırım" diyen (host olmayan) oyuncuların kimlikleri; lobi dışında boştur. */
@@ -603,6 +623,49 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       if (!Object.hasOwn(data, "avatar")) return { type: "joinFriend", username, nickname };
       const avatar = parseAvatar(data.avatar);
       return avatar === null ? null : { type: "joinFriend", username, nickname, avatar };
+    }
+    case "setCards": {
+      if (!hasExactKeys(data, ["type", "enabled", "off"])) return null;
+      const settings = parseCardSettings({ enabled: data.enabled, off: data.off });
+      return settings === null ? null : { type: "setCards", ...settings };
+    }
+    case "pickCard": {
+      if (!hasExactKeys(data, ["type", "index"])) return null;
+      const i = data.index;
+      return typeof i === "number" && Number.isInteger(i) && i >= 0 && i < 8
+        ? { type: "pickCard", index: i }
+        : null;
+    }
+    case "discardCard": {
+      if (!hasExactKeys(data, ["type", "index"])) return null;
+      const i = data.index;
+      if (i === null) return { type: "discardCard", index: null };
+      return typeof i === "number" && Number.isInteger(i) && i >= 0 && i < 8
+        ? { type: "discardCard", index: i }
+        : null;
+    }
+    case "playCard": {
+      const keys = Object.keys(data);
+      if (!keys.every((k) => k === "type" || k === "card" || k === "target" || k === "gameId")) return null;
+      if (!isCardId(data.card)) return null;
+      const out: { type: "playCard"; card: CardId; target?: string; gameId?: string } = {
+        type: "playCard",
+        card: data.card,
+      };
+      if (Object.hasOwn(data, "target")) {
+        const t = data.target;
+        if (typeof t !== "string" || t.length === 0 || t.length > 64) return null;
+        out.target = t;
+      }
+      if (Object.hasOwn(data, "gameId")) {
+        const g = data.gameId;
+        if (typeof g !== "string" || g.length === 0 || g.length > 64) return null;
+        out.gameId = g;
+      }
+      return out;
+    }
+    case "unplayCard": {
+      return hasExactKeys(data, ["type"]) ? { type: "unplayCard" } : null;
     }
     case "pushUnsubscribe":
     case "leaveRoom":

@@ -1,5 +1,7 @@
 import {
   APP_VERSION,
+  type CardId,
+  type CardSettings,
   type ClientMessage,
   type JoinPolicy,
   type LobbyEmoji,
@@ -59,6 +61,7 @@ const SHOWN_ERRORS = new Set([
   "draining",
   "server_busy",
   "game_failed",
+  "card_invalid",
   "stage_full",
   "friend_not_found",
   "invite_failed",
@@ -581,6 +584,17 @@ export const transferHost = (playerId: string): boolean => rawSend({ type: "tran
 export const setLobbyReady = (ready: boolean): boolean => rawSend({ type: "setReady", ready });
 export const sendReaction = (emoji: LobbyEmoji): boolean => rawSend({ type: "react", emoji });
 export const renameSelf = (nickname: string): boolean => rawSend({ type: "rename", nickname });
+/** Lobide Kartlar ayarı (yalnız host). */
+export const setCards = (settings: CardSettings): boolean =>
+  rawSend({ type: "setCards", enabled: settings.enabled, off: settings.off });
+/** Kart seçimi: `index`inci seçenek. */
+export const pickCard = (index: number): boolean => rawSend({ type: "pickCard", index });
+/** El doluyken yeni kart için karar: elden `index`inci kartı at, ya da (`null`) yeni kartı at. */
+export const discardCard = (index: number | null): boolean => rawSend({ type: "discardCard", index });
+/** Anlatımda kart oyna. */
+export const playCard = (card: CardId, extra: { target?: string; gameId?: string } = {}): boolean =>
+  rawSend({ type: "playCard", card, ...extra });
+export const unplayCard = (): boolean => rawSend({ type: "unplayCard" });
 export const startMatch = (): boolean => rawSend({ type: "startMatch" });
 export const sendReady = (): boolean => rawSend({ type: "ready" });
 export const sendContinue = (): boolean => rawSend({ type: "continue" });

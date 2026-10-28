@@ -138,7 +138,7 @@ describe("A3: duyuru, bakım ve lobi bildirimi", () => {
   const ann = { id: 2, text: "Bu akşam bakım var", kind: "uyari", endsAt: null };
 
   it("welcome site alanını taşır; eski sunucuda alan yoktur", () => {
-    const base = { type: "welcome", protocolVersion: 2, serverVersion: "0.1.0" };
+    const base = { type: "welcome", protocolVersion: 3, serverVersion: "0.1.0" };
     const withSite = parseServerMessage(wire({ ...base, site: { announcement: ann, maintenance: true } }));
     expect(withSite).toEqual({ ...base, site: { announcement: ann, maintenance: true } });
     expect(parseServerMessage(wire(base))).toEqual(base);
@@ -197,5 +197,87 @@ describe("U16 A4 yeni mesajlar", () => {
       const msg = parseServerMessage(JSON.stringify({ type: "error", code, message: "Metin" }));
       expect(msg).toEqual({ type: "error", code, message: "Metin" });
     }
+  });
+});
+
+describe("kart alanları", () => {
+  const cards = {
+    phase: { done: ["b"], silenced: [] },
+    hands: { a: 1, b: 0 },
+    announce: [{ playerId: "b", cardId: "talihsizlik" }],
+    plays: [{ playerId: "a", cardId: "celme", target: "b" }],
+    lines: [{ cardId: "celme", owner: "a", subject: "b", before: 1, after: 0 }],
+  };
+  const mine = {
+    hand: ["kalkan"],
+    choices: { veto: [{ id: "g", name: "G" }], pick: [] },
+    pick: {
+      options: [null, "celme", "takviye"],
+      blind: false,
+      taken: [0],
+      total: 1,
+      got: ["kalkan"],
+      held: null,
+      silenced: false,
+      done: false,
+    },
+    staged: null,
+    played: null,
+  };
+  const withMatch = (extra: Record<string, unknown>, phase = "cards") =>
+    parseServerMessage(
+      wire({
+        type: "room",
+        snapshot: { ...snapshot(phase as never), match: { ...snapshot("briefing").match, ...extra } },
+      }),
+    );
+  it("kart seçimi aşamasını ve kart ayarını kabul eder", () => {
+    const m = parseServerMessage(
+      wire({
+        type: "room",
+        snapshot: { ...snapshot("cards"), cardSettings: { enabled: true, off: ["kalkan"] } },
+      }),
+    );
+    expect(m?.type).toBe("room");
+    if (m?.type === "room") {
+      expect(m.snapshot.phase).toBe("cards");
+      expect(m.snapshot.cardSettings).toEqual({ enabled: true, off: ["kalkan"] });
+    }
+  });
+  it("kart ayarı yoksa alan yoktur; bozuksa snapshot reddedilir", () => {
+    const m = parseServerMessage(wire({ type: "room", snapshot: snapshot("lobby") }));
+    if (m?.type === "room") expect(m.snapshot.cardSettings).toBeUndefined();
+    for (const bad of [{ enabled: true }, { enabled: true, off: ["yok"] }, "x", null]) {
+      expect(
+        parseServerMessage(wire({ type: "room", snapshot: { ...snapshot("lobby"), cardSettings: bad } })),
+      ).toBeNull();
+    }
+  });
+  it("herkese açık ve özel kart bilgisini doğrular", () => {
+    const m = withMatch({ cards, mine });
+    expect(m?.type).toBe("room");
+    if (m?.type === "room") {
+      expect(m.snapshot.match?.cards?.announce[0]?.cardId).toBe("talihsizlik");
+      expect(m.snapshot.match?.mine?.pick?.options).toEqual([null, "celme", "takviye"]);
+      expect(m.snapshot.match?.mine?.choices.veto[0]?.name).toBe("G");
+    }
+    const none = withMatch({ cards: null, mine: null });
+    if (none?.type === "room") {
+      expect(none.snapshot.match?.cards).toBeNull();
+      expect(none.snapshot.match?.mine).toBeNull();
+    }
+  });
+  it("bozuk kart verisi snapshot'ı reddeder", () => {
+    expect(withMatch({ cards: { ...cards, announce: [{ playerId: "b", cardId: "yok" }] } })).toBeNull();
+    expect(withMatch({ cards: { ...cards, hands: { a: "x" } } })).toBeNull();
+    expect(withMatch({ cards: { ...cards, lines: [{ ...cards.lines[0], before: 1.5 }] } })).toBeNull();
+    expect(withMatch({ mine: { ...mine, hand: ["yok"] } })).toBeNull();
+    expect(withMatch({ mine: { ...mine, pick: { ...mine.pick, options: ["yok"] } } })).toBeNull();
+    expect(withMatch({ mine: { ...mine, choices: null } })).toBeNull();
+  });
+  it("card_invalid hata kodunu tanır", () => {
+    expect(parseServerMessage(wire({ type: "error", code: "card_invalid", message: "x" }))?.type).toBe(
+      "error",
+    );
   });
 });

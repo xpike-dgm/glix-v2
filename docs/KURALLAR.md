@@ -33,6 +33,7 @@ tasarladığı alanlar birlikte kilitlenir; kodlama bu kural seti üzerinden yap
   değiştirebilir: bu ayar oyun tanımındaki `randomPool` varsayılanını iki yönde de ezer (havuz dışı bir oyunu havuza ekleyebilir,
   havuzdakini dışarı alabilir). Oyunun kendi kuralları değişmez (`docs/ADMIN.md`).
 - Aynı maçta aynı mini oyun tekrar etmez.
+- Kartlar (KİLİTLİ, Ekim 2026): her 3. mini oyundan sonra kart seçimi, anlatımda kart oynama ve oyun sonu puan etkileri için bkz. "0. Maç düzeyi kuralları: Kartlar".
 - Bot bulunmaz.
 - Maç verileri maç bitince kalıcı olarak saklanmaz.
 - Her mini oyundan önce yaklaşık 10 saniyelik görsel/animasyonlu öğretici ekran
@@ -40,6 +41,178 @@ tasarladığı alanlar birlikte kilitlenir; kodlama bu kural seti üzerinden yap
 - Tema neon arcade, yüksek kaliteli 2.5D sahne ve en fazla 8 farklı karakterdir.
 - Her oyunun kendi mini oyun puanı ve genel skora aktarım kuralı olabilir.
 - Aşağıda “genel skor” denilen puan, maçın toplam skor tablosuna eklenen puandır.
+
+---
+
+# 0. Maç düzeyi kuralları: Kartlar (KİLİTLİ, Ekim 2026)
+
+Kartlar tek bir mini oyuna değil bütün maça aittir. Mini oyunun kendi kuralları değişmez; kartlar yalnız oyun bitince
+**genel skora giden puanları** (`awards`) değiştirir. Mini oyun puanı (`miniScores`), mini oyun sıralaması, podyum ve
+istatistikteki mini oyun sırası kartlardan etkilenmez. Bu bölüm kanoniktir; arayüz buradan kural icat etmez.
+
+## K1. Genel akış
+
+1. **Ne zaman:** Maçın 3., 6., 9. … mini oyunu bittikten ve sonuç ekranı kapandıktan sonra **Kart seçimi** aşaması gelir.
+   Maçın **son** oyunundan sonra gelmez (sıradaki aşama final). "Son oyun", Veto/Oyunu Seç uygulandıktan sonraki güncel listeye göre belirlenir.
+2. **Kimler:** Maça katılan oyuncular (izleyiciler değil). İzleyiciler ve TV "Oyuncular kart seçiyor" ekranını görür; kimin seçimini bitirdiği
+   herkese açıktır, seçenekler ve seçimler değildir.
+3. **Süre:** 15 saniye. Bağlı bütün katılımcılar seçimini bitirince aşama 1 saniye sonra erken biter. Süre dolduğunda (ya da erken bitişte)
+   seçmemiş her oyuncuya (bağlantısı kopuk olanlar dahil) kendi seçenekleri arasından **rastgele** biri verilir.
+4. **Kapalıysa:** Lobideki Kartlar ayarı kapalıysa ya da hiçbir kart etkin değilse aşama hiç gelmez, maç kartsız oynanır.
+5. **Sıfırlama:** Bütün kart durumu (el, bekleyen kötü kartlar, bayraklar) maçla birlikte başlar ve biter. Maç bitince eldeki kartlar yanar;
+   yeni maç herkes için boş elle başlar. Maç sırasında odaya giren izleyicinin kartı yoktur; maç bitip oyuncu olunca sonraki maça boş elle girer.
+
+## K2. Seçenekler ve çekiliş
+
+1. Her oyuncu **kendi** seçeneklerini gizlice görür: **3 kart** (önceki aşamada bir sonraki seçim için Geniş Seçim oynadıysa **4**).
+   Seçenekler sunucuda, maçın tohumundan türetilen rastgelelikle, oyuncudan bağımsız çekilir (iki oyuncu aynı kartları görebilir).
+   Bir oyuncunun kendi seçenekleri arasında aynı kart iki kez çıkmaz.
+2. **Gizli olasılıklar** (oyunculara hiçbir yerde gösterilmez). Her seçenek yuvası için önce kötü mü iyi mi olduğu belirlenir:
+   - Kötü kart olasılığı: **%30**; oyuncu üst yarıdaysa **%35**, alt yarıdaysa **%25**.
+   - Kötü değilse nadirlik: **sıradan %70 / nadir %25 / efsanevi %5**; alt yarıdaki oyuncu için **%60 / %32 / %8**.
+   - Seçilen sınıf içinde kart, o sınıfın **etkin** ve bu oyuncunun seçeneklerinde henüz olmayan kartları arasından eşit olasılıkla seçilir.
+   - Bir sınıfta (kötü ya da bir nadirlik) çekilebilir kart kalmadıysa o sınıf elenir ve kalan olasılıklar yeniden normalleştirilir.
+     Hiç kart kalmadıysa o oyuncunun seçenek sayısı azalır (en az bir kart varsa aşama yine yapılır).
+3. **Üst/alt yarı** (oyuncu sayısı n, güncel **toplam skor**ları): bir oyuncu, kendinden **kesin yüksek** puanlı oyuncu sayısı n/2'den azsa **üst yarıdadır**;
+   kendinden **kesin düşük** puanlı oyuncu sayısı n/2'den azsa **alt yarıdadır**. İkisi birden doğruysa (ortadaki oyuncu, tek sayıda oyuncuda; ya da
+   berabere kalan oyuncular) oyuncu **nötr**dür: kötü kart %30, nadirlik 70/25/5. Maçın ilk aşamasında herkes 3 oyun puanı almıştır, yani tablo normal hesaplanır.
+4. **Lanetli Hediye** bayrağı olan oyuncunun bir sonraki çekilişinde nadir ve efsanevi ağırlıkları **iki katına** çıkarılır (sıradan ağırlığı aynı kalır) ve
+   üç nadirlik yeniden normalleştirilir. Bayrak o çekilişte tüketilir.
+5. **Kör Seçim** bayrağı olan oyuncu kartları görmeden seçer: yalnız kart sırtlarını görür, seçince kartı öğrenir. **Kumarbaz** bayrağı olan oyuncu
+   aynı aşamada sırayla **2 kart** seçer (ikincisini ilk seçtiği kart dışında kalan seçeneklerden). **Sessizlik** bayrağı olan oyuncu o aşamayı kaçırır:
+   seçenek almaz, "Bu turu kaçırdın" görür ve diğer bayrakları (Geniş Seçim, Kör Seçim, Kumarbaz, Lanetli Hediye) **bekler**, yani sonraki aşamaya kalır.
+   Bayraklar aşama **açılırken** okunur ve tüketilir; aşama içinde çekilen yeni bayraklar bir sonraki aşamaya aittir.
+
+## K3. El, iyi ve kötü kartlar
+
+1. **İyi kart** (sıradan, nadir, efsanevi) oyuncunun **eline** girer. El en çok **2** kart tutar.
+2. El doluyken iyi kart seçilirse aynı 15 saniyenin içinde bir **değiştirme adımı** gelir: oyuncu elindeki 2 karttan birini atar ya da yeni kartı atar.
+   Süre dolarsa **yeni kart atılır** (eldeki kartlar korunur). Atılan kart yanar.
+3. **Kötü kart** ele girmez; seçilir seçilmez etkisi başlar:
+   - **Sonraki mini oyuna** işleyenler: Talihsizlik, Ağır Yük, Hayırsever, Açık Hedef, Kumarbaz (−2 kısmı), Lanetli Hediye (−1 kısmı).
+   - **Hemen** işleyen: Boş El (elindeki rastgele bir kart yanar; el boşsa etkisiz).
+   - **Sonraki kart seçimine** işleyenler: Kör Seçim, Sessizlik, Kumarbaz (2 kart kısmı), Lanetli Hediye (şans kısmı).
+   Bekleyen bir kötü kart yalnız **bir** mini oyunun hesabında işler ve sonra silinir; aynı oyuna birden çok kötü kart bekliyorsa hepsi işler.
+4. Kötü kartlar aşama bitince herkese açık duyurulur: "<oyuncu> kötü kart çekti: Talihsizlik". Duyuru, o kartın işlediği oyunun sonucuna kadar ekranda kalır.
+5. Eldeki kartlar herkese kapalıdır; yalnız **kaç kart** tuttuğu herkese açıktır.
+
+## K4. Kart oynamak
+
+1. **Ne zaman:** bir mini oyunun **anlatım** (briefing) ekranında, oyuna katılan her oyuncu elinden **en çok 1** kart oynayabilir. Hedefli kart oynanırken
+   hedef (ya da Veto/Oyunu Seç için oyun) o anda seçilir. Oynanan kart elden hemen çıkar; anlatım bitmeden **geri alınabilir** (kart ele döner).
+   Anlatım bitince (herkes hazır ya da 40 sn doldu) seçimler **kesinleşir**.
+2. **Hedef:** hedef, aynı oyuna katılan **başka** bir oyuncudur (izleyici olmaz). Koruma kendine de oynanabilir. Tahmin ve diğer hedefli kartlar kendine oynanamaz.
+3. **Açıklama:** kesinleşen kartlar oyunun başında (geri sayım ekranı) **herkese açık** gösterilir (telefonlar ve TV): "Elif, Mert'e Çelme oynadı".
+   **İstisna:** Ayna ve Koruma gizli kalır; tetiklenince (sonuç ekranında) açılır. Hiç tetiklenmeyen Ayna/Koruma hiç açıklanmaz; kart yine de yanmıştır.
+4. **Kapsam:** oynanan kart yalnız o mini oyunun `awards` hesabını etkiler; metni başka bir şey söylüyorsa (Geniş Seçim, Veto, Oyunu Seç, Kart Çal) o kadarını.
+   Oynanan kart (etkisi olsun olmasın) **yanar**; elde kalmaz.
+5. **Oyunu iptal / oyuncu ayrılması:** oyun hatası maçı bitirir (ayrı bir "oyun iptali" yoktur): bütün kart durumu maçla birlikte silinir, oynanan kartlar **kaybolur**,
+   puan değişmez. Oyuncu odadan ayrılırsa: kendi kartı etkisiz kalır, hedefi olduğu kartlar etkisiz kalır (kart yanar, satırda "etkisiz" yazar), ayrılan oyuncunun puanı
+   zaten hesaba katılmaz. Bağlantısı yalnız koptuysa (odada duruyorsa) katılımcı sayılmaya devam eder.
+
+## K5. Kartlar
+
+Sıradan (turkuaz çerçeve, 1 elmas):
+
+| Kimlik | Ad | Metin | Tür |
+|---|---|---|---|
+| kalkan | Kalkan | eksiye düşersen 0 sayılır | |
+| sigorta | Sigorta | sonuncu olursan +1 | |
+| takviye | Takviye | oyun sonunda +1 | |
+| kendine-guven | Kendine Güven | birinci olursan +2, olamazsan −1 | |
+| tahmin | Tahmin | bir oyuncu seç; o birinci olursa +2 | hedef |
+| ortaklik | Ortaklık | seçtiğin oyuncuyla bu oyundaki puanlarınızın toplamı ikinize eşit bölünür | hedef |
+| koruma | Koruma | seçtiğin oyuncuya (ya da kendine) bu oyunda saldırı kartı işlemez | hedef (kendin dahil), gizli |
+| ayna | Ayna | sana oynanan ilk saldırı saldırana döner | gizli |
+| vergi | Vergi | seçtiğin oyuncu puan alırsa 1 puanı sana geçer | hedef, saldırı |
+| celme | Çelme | seçtiğin oyuncu −1 | hedef, saldırı |
+| veto | Veto | sıradaki oyunlardan birini listeden çıkar | oyun seç |
+| genis-secim | Geniş Seçim | bir sonraki kart seçiminde 4 kart görürsün | |
+
+Nadir (mor çerçeve, 2 elmas):
+
+| Kimlik | Ad | Metin | Tür |
+|---|---|---|---|
+| cift-puan | Çift Puan | puanın ×2 (eksi de ×2) | |
+| takas | Takas | oyun sonunda seçtiğin oyuncuyla bu oyunun puanlarınızı değiştirin | hedef |
+| oyunu-sec | Sıradaki Oyunu Seç | bir sonraki mini oyunu sen belirlersin | oyun seç |
+| lanet | Lanet | seçtiğin oyuncu bu oyundan artı puan alamaz | hedef, saldırı |
+| hirsiz | Hırsız | bu oyunun birincisinden 1 puan al | saldırı |
+| kart-cal | Kart Çal | seçtiğin oyuncunun elindeki rastgele bir kartı al | hedef, saldırı |
+
+Efsanevi (altın çerçeve, 3 elmas):
+
+| Kimlik | Ad | Metin | Tür |
+|---|---|---|---|
+| altin-dokunus | Altın Dokunuş | puanın ×3 (eksi etkilenmez) | |
+| ters-kose | Ters Köşe | bu oyunun sıralaması tamamen tersine döner | |
+
+Kötü (kırmızı çerçeve, kırık elmas işareti; ayrı olasılık, ele girmez):
+
+| Kimlik | Ad | Etki |
+|---|---|---|
+| talihsizlik | Talihsizlik | sonraki oyunda −1 |
+| agir-yuk | Ağır Yük | sonraki oyunda puanın yarıya iner |
+| hayirsever | Hayırsever | sonraki oyunda puan alırsan 1'i sonuncuya gider |
+| acik-hedef | Açık Hedef | sonraki oyunda sana oynanan saldırılar iki kat etkili |
+| bos-el | Boş El | elindeki rastgele bir kart yanar (hemen) |
+| kor-secim | Kör Seçim | bir sonraki seçimde kartlar ters gelir, görmeden seçersin |
+| sessizlik | Sessizlik | bir sonraki kart seçimini kaçırırsın |
+| kumarbaz | Kumarbaz | sonraki oyunda −2, ama bir sonraki seçimde 2 kart alırsın |
+| lanetli-hediye | Lanetli Hediye | sonraki oyunda −1, ama bir sonraki seçimde nadir ve efsanevi kart çıkma şansın artar |
+
+**Saldırı kartları** (⚔): Vergi, Çelme, Lanet, Hırsız, Kart Çal. Oynandıklarında herkese açıktır; Koruma, Ayna ve Açık Hedef yalnız bunlarla etkileşir.
+
+## K6. Hesaplama sırası (kesin)
+
+Oyun bitince sunucu, oyunun ham `awards` değerinden başlar ve aşağıdaki adımları **bu sırayla** uygular. Her adım bir önceki adımın çıktısı üzerinde çalışır.
+Aynı türden birden çok kart varsa **oynanma sırasıyla** (kart oynayanlar arasında anlatım sırasında kim önce oynadıysa) işlenir.
+Bekleyen kötü kartlar, oyuncunun kendi adımında kart gibi işler ("sahip" oyuncudur).
+
+**Sıralama tanımı.** "Birinci", mini oyun puanı (`miniScores`) en yüksek olan oyuncu(lar)dır; "sonuncu", puanı en düşük olan oyuncu(lar)dır. Berabere kalanlar sırayı paylaşır
+(hepsi birinci / hepsi sonuncu). Herkesin puanı eşitse herkes birincidir ve kimse sonuncu değildir. Yalnız oyuna katılanlar sayılır.
+
+0. **Etkisiz kartlar:** sahibi (ya da hedefi, ortağı) odadan ayrılmış kart etkisizdir ve aşağıdaki adımlarda atlanır.
+1. **Ters Köşe:** katılımcılar mini oyun puanına göre dizilir (yüksekten düşüğe; eşitler tek grup). Her oyuncu, kendi sırasının **aynadaki sırasının**
+   ham ödülünü alır (n oyuncuda r. sıradaki, n+1−r. sıradakinin ödülünü). Beraberlik grubunun toplam ödülü, aynadaki sıraların ödüllerinin toplamıdır ve grup içinde
+   eşit bölünür; bölümden artan puanlar (alt tamsayıya yuvarlanmış bölümün kalanı) katılım sırasındaki ilk üyelerden başlayarak +1 verilir (toplam korunur). Birden çok Ters Köşe oynanırsa her biri tekrar tersler (çift sayıda eski haline döner).
+2. **Takas:** sahip ile hedef, o ana kadarki ödüllerini değiştirir.
+3. **Ortaklık:** sahip ile hedefin ödülleri toplanır ve ikiye bölünür. Toplam tekse tek puan **mini oyun puanı yüksek olana** (eşitse kartı oynayana) gider;
+   yani tek puan iyi oynayana kalır; eksi toplamda da iyi oynayan daha az kaybeder (−3 → iyi taraf −1, kötü taraf −2). Toplam korunur.
+4. **Çarpanlar:** her oyuncuya sırayla: Ağır Yük (puan ikiye bölünür, sıfıra doğru yuvarlanır: 3→1, −3→−1, 1→0), Çift Puan (×2, eksi de ×2), Altın Dokunuş (×3, yalnız pozitif puanda).
+5. **Sabit eklemeler** (her oyuncuya, hepsi birlikte): Takviye +1; Sigorta: sonuncuysa +1; Kendine Güven: birinciyse +2 değilse −1; Tahmin: hedefi birinciyse +2;
+   Talihsizlik −1; Kumarbaz −2; Lanetli Hediye −1.
+6. **Saldırılar**, oynanma sırasıyla, her biri o anki ödüller üzerinde:
+   - **Koruma:** hedefi (kim korursa korusun, bir oyuncuya birden çok Koruma da olabilir) koruyan bir Koruma varsa saldırı **işlemez**; Koruma açılır ("korundu").
+   - **Ayna:** hedefte Ayna varsa ve henüz tetiklenmediyse saldırı, roller değişerek **saldırana** uygulanır (Ayna sahibi saldıran, saldıran da hedef rolünü alır); Ayna açılır ve tüketilir.
+     Yansıyan saldırı yeniden yansıtılamaz; saldıranın Koruması varsa yansıyan saldırı da işlemez.
+   - **Açık Hedef:** saldırıdan etkilenen oyuncunun Açık Hedef'i varsa sayısal etki iki katıdır (Çelme −2, Vergi 2 puan, Hırsız 2 puan). Lanet ve Kart Çal'ı etkilemez.
+   - **Çelme:** hedef −1. **Lanet:** hedefin ödülü 0'dan büyükse 0 olur. **Vergi:** hedefin ödülü 0'dan büyükse 1 puan (Açık Hedef ile 2, ödülü aşamaz) sahibine geçer.
+     **Hırsız:** oyunun birincisinden 1 puan (Açık Hedef ile 2) sahibine geçer; birinci birden çoksa sahibi dışındaki birinciler arasında o ana kadarki ödülü **en yüksek** olandan alınır
+     (eşitse katılım sırasındaki ilkinden); sahibi tek birinciyse etkisizdir. Hırsız puanı eksiye de düşürebilir. **Kart Çal:** hedefin elindeki rastgele bir kart sahibinin eline geçer
+     (hedefin eli boşsa etkisiz). Sahibin elinde yer yoksa çalınan kart yanar. Rastgelelik maç tohumundan türetilir.
+7. **Hayırsever:** ödülü 0'dan büyük olan Hayırsever sahibi, 1 puanı sonuncuya verir (sahibinin kendisi sonuncuysa ya da kimse sonuncu değilse etkisiz; sonuncu birden çoksa
+   o ana kadarki ödülü en düşük, eşitse katılım sırasındaki ilk oyuncu).
+8. **Kalkan (en son):** Kalkan sahibinin ödülü 0'ın altındaysa 0 olur.
+
+Sonuç ekranı, her oynanan ya da işleyen kart için bir **etki satırı** gösterir: "Çift Puan: +2 → +4" gibi (önceki → sonraki ödül), ya da "korundu" / "yansıdı" / "etkisiz".
+Oyuncunun genel skoru bu sonuçlarla artar; hesap istatistiğindeki maç puanı kartların etkisini içerir.
+
+## K7. Maç listesini değiştiren kartlar
+
+1. **Veto:** oynayan, henüz oynanmamış sonraki oyunlardan birini seçer. Yalnız **sonra en az 2 oyun kalıyorsa** oynanabilir (Veto asla şimdiki oyunu son oyun yapmaz).
+   Kesinleşirken oynanma sırasıyla uygulanır; seçilen oyun artık listede değilse ya da çıkarınca 1'den az oyun kalacaksa etkisiz (kart yanar). Liste kısalır, "Oyun x / y" güncellenir.
+2. **Sıradaki Oyunu Seç:** yalnız sonraki bir oyun varsa oynanabilir. Seçilebilen oyunlar: kapalı olmayan, bu maçta henüz **oynanmamış**, o anki bağlı oyuncu sayısına uyan ve rastgele
+   havuzda olan (ya da zaten bu maçın listesinde bulunan) oyunlar. Seçilen oyun listede **sonraki** sıraya gelir: listede başka bir yerdeyse oradan çıkarılıp öne alınır
+   (liste uzunluğu aynı), listede yoksa şimdiki sıradaki **sonraki** oyunun yerini alır. Aynı anlatımda birden çok Oyunu Seç oynanırsa **ilk oynanan** geçerlidir, ötekiler etkisizdir.
+3. Manuel seçimde host'un lobideki listesi korunur: liste değişiklikleri yalnız bu maçı etkiler, lobiye dönünce host'un seçimi geri gelir.
+
+## K8. Lobi ayarı: Kartlar
+
+- Host, lobide **Kartlar** ayarını açar: ana anahtar (varsayılan **açık**) ve her kart için ayrı anahtar (hepsi varsayılan **açık**; iyi ve kötü kartlar dahil istediğini kapatabilir).
+- Ayar odada kalır (maç bitip lobiye dönünce korunur); misafirler ayarı yalnız **okur**. Ayar yalnız lobide değişir; maç başlarken sabitlenir.
+- Ana anahtar kapalıysa ya da hiçbir kart etkin değilse Kart seçimi aşaması yoktur.
+- Kapatılan kart çekilişe girmez; elde zaten bulunan bir kart maç içinde kapatılamaz (ayar maç başında sabitlenir).
 
 ---
 

@@ -1,4 +1,4 @@
-# GLIX v2 — Protokol v2 (A1)
+# GLIX v2 — Protokol v3 (A1; kartlar ile 3)
 
 Tek WebSocket: `/ws`. Tüm mesajlar JSON, `type` alanlı. Tipler: `packages/engine/src/protocol.ts`.
 Sunucu tek otoritedir; istemci yalnız niyet gönderir.
@@ -24,8 +24,13 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `chooseAvatar` | `avatar` (0–7) | yalnız lobide (`wrong_phase`); başkasında olan karakter `avatar_taken` ("Bu karakteri X aldı"), ilk gelen alır; aynı değer sessizce yok sayılır |
 | `setJoinPolicy` | `policy` (`izleyici`\|`kapali`) | yalnız host, yalnız lobide; başka değer `invalid_message`, maçta `wrong_phase`, host değilse `not_host`; aynı değer sessizce yok sayılır |
 | `setTone` | `tone` (metin) | **KALDIRILDI** (ton özelliği sahip kararıyla silindi). Yalnız eski önbellekli istemciler için kabul edilir: biçim doğruysa (`type` + metin `tone`) **sessizce yok sayılır** (hata yok, yayın yok, oda değişmez); bozuksa `invalid_message`. Sonraki sürümde ayrıştırıcıdan da silinecek |
+| `setCards` | `enabled` (boolean), `off` (kart kimlikleri, tekrarsız) | yalnız host, yalnız lobide (`not_host` / `wrong_phase`); bilinmeyen/tekrarlı kimlik, eksik ya da fazla alan `invalid_message`. Kapalı liste katalog sırasına çevrilir. Ayar odada kalır, yayında `RoomSnapshot.cardSettings` olarak herkese gider (bkz. "Kartlar") |
 | `startMatch` | — | yalnız host; bağlı oyuncu sayısı tüm seçili oyunların min'ini karşılamalı |
 | `ready` | — | yalnız `briefing` aşamasında (lobi işareti için `setReady`) |
+| `pickCard` | `index` (0–7) | yalnız `cards` aşaması ve yalnız kart hakkı olan oyuncu; geçersiz dizin / zaten alınmış / bitirmiş / değiştirme beklerken `error{card_invalid}`; yanlış aşama `wrong_phase`, izleyici `not_participant` |
+| `discardCard` | `index` (0–7 ya da `null`) | yalnız `cards` aşaması, yalnız elin doluyken seçilen iyi kart için karar bekleyen oyuncu: elden `index`inci kartı atar, `null` yeni kartı atar. Aksi `card_invalid` |
+| `playCard` | `card`, `target?` (oyuncu kimliği), `gameId?` | yalnız `briefing` aşaması, yalnız katılımcı; kart elde olmalı, oyuncu başına en çok 1, hedef/oyun kartın türüne uymalı (docs/KURALLAR.md K4, K7); geçersizse `card_invalid`. Kabul edilince `match.mine.staged` dolar (yalnız sahibine) |
+| `unplayCard` | — | yalnız `briefing`; oynanan (henüz kesinleşmemiş) kartı ele geri alır; yoksa `card_invalid` |
 | `continue` | — | yalnız `results` aşaması (`wrong_phase`); izleyici ve katılımcı olmayan sessizce yok sayılır; aynı oyuncudan 300 ms içinde ikinci mesaj `rate_limited`. Bağlı tüm katılımcılar basınca sonuç ekranı 1 sn sonra biter (`phaseEndsAt` kısalır). Yanıt: `match.continueIds` güncellenir. Bkz. `docs/ERKEN-BITIS.md` |
 | `action` | `seq`, `payload` | yalnız `playing`; `seq` istemci sayacı, `actionAck` ile döner |
 | `returnToLobby` | — | yalnız host, yalnız `final` |
@@ -126,7 +131,7 @@ sunucu günlüğüne yazılır.
 ## Maç akışı (sunucu)
 
 ```
-lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(7 sn)] → final → (host) lobby
+lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(7 sn) → (3., 6. … oyundan sonra, son oyun hariç) cards(15 sn)] → final → (host) lobby
 ```
 
 - **briefing:** Katılımcıların hepsi `ready` gönderince biter. Bağlantısı kopmuş oyuncu beklenmez.
@@ -134,6 +139,7 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
 - **playing:** Oyunun `isFinished` true olunca biter.
 - **results:** `GameResult` gösterilir; `awards` genel skora eklenmiş olarak gelir.
 - **results:** `match.continueIds` "Devam" diyenleri taşır (yalnız kimler). Sıradaki oyun `gameIds[round+1]` ile bellidir (zaten herkese açık). Önceki genel puan, istemcide `player.score − result.awards[id]` ile bulunur (sıra değişimi animasyonu için ek alan yok). Tur özeti satırı istemcide `summarizeRound(gameId, result, players, publicView)` ile (engine, saf) üretilir.
+- **cards:** (kartlar açıksa) her 3. oyunun sonuç ekranından sonra, son oyun hariç. `match.round` az önce biten oyunun sırasıdır; `phaseEndsAt` 15 sn sonrasıdır, bağlı herkes seçince 1 sn sonraya çekilir. Ayrıntı: "Kartlar".
 - **final:** Genel skor sıralaması. Host `returnToLobby` ile lobiye döner, skorlar sıfırlanır.
 - Maç sürerken katılım (`RoomSnapshot.joinPolicy`, yeni oda `"izleyici"`; yalnız host lobide `setJoinPolicy` ile değiştirir):
   - `izleyici`: `joinRoom` kabul edilir, oyuncu `PlayerInfo.spectator: true` ile eklenir. İzleyici maç oyuncu listesine
@@ -152,6 +158,30 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
   `leaveRoom` yaparsa devir hemen olur.
 - Oda boş kalırsa 120 sn sonra silinir.
 
+## Kartlar (docs/KURALLAR.md "0. Maç düzeyi kuralları: Kartlar")
+
+- **Faz:** `RoomPhase` = `lobby | briefing | countdown | playing | results | cards | final`. Yeni faz `cards`; sonuç ekranından sonra, sıradaki oyunun `briefing`ine geçmeden önce açılır.
+- **Protokol sürümü 2 → 3 oldu.** Gerekçe: eski (önbellekteki) bir istemci bilinmeyen `cards` aşamasını doğrulamada reddedip bütün anlık görüntüyü düşürür; oyuncu
+  kart seçimi sırasında donmuş ekranda kalırdı. Sürüm artınca eski istemci "Güncelleme gerekli" ekranını görür ve yenilenir (diğer eklemeler gibi sessizce yok
+  sayılamayacak bir bozulma olduğu için bilinçli artırıldı).
+- **`RoomSnapshot.cardSettings`** (`{ enabled, off }`, yoksa kartlar açık sayılır): lobi ayarı, herkese açık. Misafirler yalnız okur.
+- **`MatchSnapshot.cards`** (herkese açık; kartlar kapalıysa `null`/yok): `phase` (`cards` aşamasında `{done, silenced}`: seçimini bitirenler ve turu kaçıranlar; seçenekler ve seçimler yok),
+  `hands` (oyuncu başına **kart sayısı**), `announce` (aşama bitince açıklanan kötü kartlar; aşama sürerken boş), `plays` (oyun başında kesinleşen kartlar; tetiklenmemiş Ayna/Koruma yok),
+  `lines` (yalnız `results` aşamasında: "önceki → sonraki" etki satırları; tetiklenen Ayna/Koruma dahil).
+- **`MatchSnapshot.mine`** (yalnız bu oyuncuya; izleyicide, sahnede ve kartı olmayanda `null`): `hand`, `choices` (anlatımda Veto ve Oyunu Seç için oyun listeleri), `pick` (kart seçimi sürerken:
+  `options` — Kör Seçim'de ya da alınmışsa `null`, `taken`, `total`, `got`, `held`, `silenced`, `done`), `staged` (geri alınabilir oynanan kart), `played` (kesinleşmiş, gizli dahil).
+  Sunucu bunu oyuncu başına üretir ve `patch`e yalnız o oyuncunun bağlantısına yazar; başka oyuncunun seçeneği/eli hiçbir mesajda yer almaz (`kartlar.test.ts` bunu doğrular).
+- **`MatchSnapshot.result.awards`:** kart etkileri **dahil** nihai genel skor puanlarıdır (`player.score` bununla artar; hesap istatistiğindeki maç puanı da). `miniScores` değişmez.
+- **Hata kodu:** `card_invalid` ("Bu kartı şu an oynayamazsın."). Yanlış aşama `wrong_phase`, izleyici/katılımcı olmayan `not_participant`.
+- **Yeniden bağlanma:** `resume` sonrası tam `room` snapshot'ı oyuncunun `mine`ını (seçenekler, el, oynadığı kart) içerir; kart seçimi sırasında dönen aynı seçeneklerle devam eder.
+- **Kayıt / tekrar oynatma:** maç tohumu (`CardLog.seed`) maç başında bir kez çekilir; çekilişler ve rastgele seçimler tohumdan **olaya özgü** türetilir (`deriveRng(seed, ...)`), kayıtta akış durumu yoktur.
+  Her durum değişikliği bir `CardEvent` olarak zaman damgasıyla `CardLog.events`'e yazılır (`open`, `pick`, `discard`, `close`, `play`, `unplay`, `commit`, `resolve`); `replayCards(log)` aynı durumu kurar.
+  Oyun kaydı (`GameLog.cards`) kart hesabının girdilerini (oynayışlar, bekleyen kötü kartlar, eller, ayrılmayanlar, tohum) taşır; `replayWithCards(oyun, kayıt)` ham sonuca uygulayıp nihai puanları ve etki satırlarını birebir üretir.
+  Maç bitince/iptalde kart kaydı son-20 listesine (`recentCardLogs`) eklenir.
+- **Sunucu akışı:** 3. (6., 9. …) oyunun `results` süresi dolunca `cardPhaseDue` (kartlar açık, oynanan oyun sayısı 3'ün katı, listede oyun kalmış) ise `cards` açılır; seçmeyene süre dolunca rastgele kart verilir, değiştirme bekleyen yeni kart atılır; sonra `briefing`.
+  `briefing` biterken (`ready` ya da 40 sn) oynanan kartlar kesinleşir (Veto / Oyunu Seç maç listesini ve `room.gameIds`i günceller); `finishGame` kart hesabını uygular.
+  Manuel seçimde maç bitince host'un listesi geri gelir.
+
 ## Duyuru ve bakım (U16 A3)
 
 `SiteNotice = { announcement: Announcement | null, maintenance: boolean }`, `Announcement = { id, text (1-140, düz metin), kind: "bilgi" | "uyari", endsAt: ms | null }`
@@ -164,7 +194,7 @@ istemci kapatılan duyurunun kimliğini `localStorage`'da (`glix.duyuru`) tutar,
   (havuzdaysa alan hiç gelmez, dışındaysa `false`). Kapalı oyun `setGames`/`startMatch`te `invalid_games` ("Seçtiğin oyunlardan biri şu an kapalı.") verir; rastgele seçim
   yalnız bu kataloğun havuzundan seçer. Ayar değişince lobideki odalar yeni kataloğu `patch` ile alır; kapanan oyun lobi seçimlerinden çıkar ve `lobbyNotice` gider.
   Süren maçın oyunu o odanın kataloğunda kalır (sonuç ekranları adı bulsun); maç bitip lobiye dönünce seçimden çıkarılır.
-- **Protokol sürümü artmadı** (`PROTOCOL_VERSION = 2`): `welcome.site`, `siteNotice`, `lobbyNotice` eklemedir; eski istemci bilinmeyen alanı/mesajı yok sayar. Tek bozulma:
+- **Protokol sürümü artmadı** (o zaman `PROTOCOL_VERSION = 2`; kartlarla 3 oldu, bkz. "Kartlar"): `welcome.site`, `siteNotice`, `lobbyNotice` eklemedir; eski istemci bilinmeyen alanı/mesajı yok sayar. Tek bozulma:
   eski (önbellekteki) istemci `maintenance` hata kodunu tanımaz ve mesajı düşürür (oda kurma düğmesi yanıt vermemiş gibi görünür); istemci her dağıtımda kendini yeniler
   ve yeni derleme bu kodu gösterir, bu yüzden sürüm artırılmadı (artırmak herkese "Güncelleme gerekli" ekranı gösterirdi).
 
@@ -220,7 +250,7 @@ Hız sınırı hesap başına: okuma 30 ani/1 sn, yazma 30 ani/2 sn'de 1, `reque
 `invalid_message`, `rate_limited`, `nickname_invalid`, `room_not_found`, `room_full`, `match_in_progress`,
 `resume_failed`, `nickname_taken`, `not_host`, `not_in_room`, `already_in_room`, `invalid_games`, `avatar_taken`, `not_enough_players`,
 `wrong_phase`, `not_participant`, `game_failed`, `draining`, `server_busy`, `stage_full`, `stage_readonly`, `login_required`,
-`invite_failed`, `friend_not_found`, `account_name`, `maintenance`, `report_limit`, `report_duplicate`, `room_blocked`.
+`invite_failed`, `friend_not_found`, `account_name`, `maintenance`, `report_limit`, `report_duplicate`, `room_blocked`, `card_invalid`.
 
 `login_required`: `createRoom` yalnız hesaplı bağlantıdan kabul edilir. Kodla katılma (`joinRoom`), oynama ve sahne (`joinStage`) misafire açıktır.
 

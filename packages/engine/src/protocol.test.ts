@@ -393,3 +393,86 @@ describe("lobi mesajları (rename, react, setReady, transferHost)", () => {
     expect(parse({ type: "setJoinPolicy", policy: "kapali", extra: 1 })).toBeNull();
   });
 });
+
+describe("parseClientMessage: kart mesajları", () => {
+  it("setCards: ana anahtar ve kapalı kartlar; liste katalog sırasına girer", () => {
+    expect(parseClientMessage(j({ type: "setCards", enabled: true, off: [] }))).toEqual({
+      type: "setCards",
+      enabled: true,
+      off: [],
+    });
+    expect(parseClientMessage(j({ type: "setCards", enabled: false, off: ["ayna", "kalkan"] }))).toEqual({
+      type: "setCards",
+      enabled: false,
+      off: ["kalkan", "ayna"],
+    });
+  });
+  it("setCards: bilinmeyen kart, tekrar, eksik/fazla alan ve yanlış tip reddedilir", () => {
+    const bad = [
+      { type: "setCards", enabled: true, off: ["yok"] },
+      { type: "setCards", enabled: true, off: ["kalkan", "kalkan"] },
+      { type: "setCards", enabled: true },
+      { type: "setCards", off: [] },
+      { type: "setCards", enabled: 1, off: [] },
+      { type: "setCards", enabled: true, off: "kalkan" },
+      { type: "setCards", enabled: true, off: [], x: 1 },
+    ];
+    for (const m of bad) expect(parseClientMessage(j(m)), j(m)).toBeNull();
+  });
+  it("pickCard / discardCard dizinleri", () => {
+    expect(parseClientMessage(j({ type: "pickCard", index: 2 }))).toEqual({ type: "pickCard", index: 2 });
+    for (const index of [-1, 1.5, 8, "1", null, undefined])
+      expect(parseClientMessage(j({ type: "pickCard", index })), String(index)).toBeNull();
+    expect(parseClientMessage(j({ type: "discardCard", index: null }))).toEqual({
+      type: "discardCard",
+      index: null,
+    });
+    expect(parseClientMessage(j({ type: "discardCard", index: 1 }))).toEqual({
+      type: "discardCard",
+      index: 1,
+    });
+    expect(parseClientMessage(j({ type: "discardCard", index: -1 }))).toBeNull();
+    expect(parseClientMessage(j({ type: "discardCard" }))).toBeNull();
+  });
+  it("playCard: kart kimliği, isteğe bağlı hedef ve oyun", () => {
+    expect(parseClientMessage(j({ type: "playCard", card: "takviye" }))).toEqual({
+      type: "playCard",
+      card: "takviye",
+    });
+    expect(parseClientMessage(j({ type: "playCard", card: "celme", target: "p1" }))).toEqual({
+      type: "playCard",
+      card: "celme",
+      target: "p1",
+    });
+    expect(parseClientMessage(j({ type: "playCard", card: "veto", gameId: "kor-bomba" }))).toEqual({
+      type: "playCard",
+      card: "veto",
+      gameId: "kor-bomba",
+    });
+    const bad = [
+      { type: "playCard" },
+      { type: "playCard", card: "yok" },
+      { type: "playCard", card: 5 },
+      { type: "playCard", card: "celme", target: "" },
+      { type: "playCard", card: "celme", target: 5 },
+      { type: "playCard", card: "celme", target: "x".repeat(65) },
+      { type: "playCard", card: "veto", gameId: "" },
+      { type: "playCard", card: "celme", extra: 1 },
+    ];
+    for (const m of bad) expect(parseClientMessage(j(m)), j(m)).toBeNull();
+  });
+  it("unplayCard yalnız tür taşır; ortak 'yalnız tür' mesajları (leaveRoom, resync, pushUnsubscribe) bozulmadı", () => {
+    expect(parseClientMessage(j({ type: "unplayCard" }))).toEqual({ type: "unplayCard" });
+    expect(parseClientMessage(j({ type: "unplayCard", x: 1 }))).toBeNull();
+    for (const type of [
+      "leaveRoom",
+      "resync",
+      "pushUnsubscribe",
+      "startMatch",
+      "ready",
+      "continue",
+      "returnToLobby",
+    ])
+      expect(parseClientMessage(j({ type })), type).toEqual({ type });
+  });
+});

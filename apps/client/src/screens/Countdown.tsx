@@ -1,11 +1,12 @@
-import type { MatchSnapshot } from "@glix/engine";
+import type { MatchSnapshot, RoomSnapshot } from "@glix/engine";
 import { createEffect, createMemo, on, onMount, Show } from "solid-js";
 import { hapticGo, hapticTick } from "../fx/haptics.js";
 import { go, tick } from "../fx/sound.js";
 import { createServerNow } from "../net/time.js";
+import { CardReveal } from "../ui/CardNotices.js";
 import { Screen } from "../ui/Screen.js";
 
-export function Countdown(props: { match: MatchSnapshot }) {
+export function Countdown(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
   const now = createServerNow(40);
   const n = createMemo(() => {
     const end = props.match.phaseEndsAt;
@@ -54,6 +55,11 @@ export function Countdown(props: { match: MatchSnapshot }) {
           </Show>
         </div>
         <p class="lead">Hazır ol!</p>
+        <CardReveal
+          cards={props.match.cards}
+          players={props.snap.players}
+          gameName={(id) => props.snap.catalog.find((g) => g.id === id)?.name ?? id}
+        />
       </div>
     </Screen>
   );

@@ -20,6 +20,7 @@ import "./styles/report.css";
 import "./styles/badges.css";
 import "./styles/leaderboard.css";
 import "./styles/colorblind.css";
+import "./styles/cards.css";
 
 installAudioUnlock();
 applyRootSettings();

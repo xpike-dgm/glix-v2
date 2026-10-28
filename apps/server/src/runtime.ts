@@ -1,5 +1,7 @@
 import type {
   Announcement,
+  CardLog,
+  CardSettings,
   GameInfo,
   GameLog,
   JoinPolicy,
@@ -94,6 +96,8 @@ export interface Room {
   /** Maç sürerken gelen kişiye ne olur (yalnız lobide değişir). */
   joinPolicy: JoinPolicy;
   match: Match | null;
+  /** Kartlar ayarı (docs/KURALLAR.md K8); odada kalır, yalnız lobide değişir. */
+  cardSettings: CardSettings;
   rev: number;
   nextJoinOrder: number;
   lastFlushAt: number;
@@ -129,6 +133,8 @@ export interface Runtime {
   social: Social;
   /** Son biten/çöken oyunların kayıtları (en yeni sonda, en çok RECENT_LOGS). */
   recentLogs: GameLog[];
+  /** Son biten maçların kart kayıtları (en yeni sonda, en çok RECENT_LOGS). */
+  recentCardLogs: CardLog[];
   /** Oturum belirteci -> oyuncu. */
   tokens: Map<string, Player>;
   /** Etkin maçı olan odalar (tick yalnız bunlar için çalışır). */

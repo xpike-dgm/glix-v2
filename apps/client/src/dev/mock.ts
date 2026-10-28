@@ -173,6 +173,13 @@ export function startMock(kind: string, params: URLSearchParams): void {
       gameIds,
       selection,
       joinPolicy,
+      // `&cards=off` kartlar kapalı, `&cards=some` birkaç kart kapalı; yoksa hepsi açık.
+      cardSettings:
+        params.get("cards") === "off"
+          ? { enabled: false, off: [] }
+          : params.get("cards") === "some"
+            ? { enabled: true, off: ["kalkan", "hirsiz", "bos-el"] }
+            : { enabled: true, off: [] },
       stageCount: 0,
       lobbyReady: phase === "lobby" ? lobbyReady : [],
       catalog: CATALOG,

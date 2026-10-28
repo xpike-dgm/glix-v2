@@ -18,6 +18,7 @@ export const ERROR_TEXT: Record<ErrorCode, string> = {
   not_enough_players: "Yeterli oyuncu yok.",
   wrong_phase: "Bunu şu an yapamazsın.",
   not_participant: "Bu oyunda yer almıyorsun.",
+  card_invalid: "Bu kartı şu an oynayamazsın.",
   game_failed: "Oyunda bir sorun çıktı. Lobiye döndün, puanların korundu.",
   draining: "Güncelleme yapılıyor, birazdan tekrar dene.",
   server_busy: "Sunucu şu an çok yoğun, birazdan tekrar dene.",

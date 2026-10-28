@@ -1,5 +1,5 @@
 import { createServer, type Server } from "node:http";
-import { APP_VERSION, type GameLog, PROTOCOL_VERSION, parseClientMessage } from "@glix/engine";
+import { APP_VERSION, type CardLog, type GameLog, PROTOCOL_VERSION, parseClientMessage } from "@glix/engine";
 import { type WebSocket, WebSocketServer } from "ws";
 import { createAccountRecorder } from "./accountStats.js";
 import { type AccountStore, createAccounts } from "./accountStore.js";
@@ -34,7 +34,7 @@ import { handleProfile, PROFILE_PATH } from "./profile.js";
 import { createPushBroadcaster } from "./pushBroadcast.js";
 import { TokenBucket } from "./ratelimit.js";
 import { countActiveMatches, countPlayers, createRuntime, disposeRuntime } from "./rooms.js";
-import type { AccountRef, Connection } from "./runtime.js";
+import type { AccountRef, Connection, Runtime } from "./runtime.js";
 import { createSiteSettings } from "./siteSettings.js";
 import { createSocial } from "./social.js";
 import { serveStatic } from "./static.js";
@@ -117,6 +117,10 @@ export interface RunningServer {
   accounts: AccountStore;
   /** Son biten oyunların kayıtları (yalnız testler için). */
   recentLogs: readonly GameLog[];
+  /** Son biten maçların kart kayıtları (yalnız testler için). */
+  recentCardLogs: readonly CardLog[];
+  /** Çalışma zamanı durumu (yalnız testler için: oda ve maç durumunu kurmak/okumak). */
+  runtime: Runtime;
   /** Yönetici yasaklı kelime listesi (yalnız testler için). */
   bannedWords: BannedWords;
   /** İçerik havuzu deposu (yalnız testler için). */
@@ -526,6 +530,8 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     sockets,
     accounts,
     recentLogs: rt.recentLogs,
+    recentCardLogs: rt.recentCardLogs,
+    runtime: rt,
     bannedWords: rt.bannedWords,
     content: rt.content,
     drain: () => {

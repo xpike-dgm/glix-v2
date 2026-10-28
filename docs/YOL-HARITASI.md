@@ -214,6 +214,15 @@ gizli bilgileri (rol, cevap) panelde de görünmez; e-posta yalnız tek hesap ar
 - [x] A4 Moderasyon: oyuncuya "bildir" düğmesi ve inceleme kuyruğu, yasaklı kelime listesi, odayı kapatma, oyuncu atma.
 - [x] A4 Kelime ve soru havuzlarını görüntüleme ve düzenleme.
 
+### U17. Kart sistemi
+Maç düzeyinde kartlar (kurallar: docs/KURALLAR.md "0. Maç düzeyi kuralları: Kartlar"; protokol: docs/PROTOKOL.md "Kartlar"; protokol sürümü 3).
+- [x] Kurallar kanonik belgede yazıldı: kart seçimi aşaması (her 3. oyundan sonra, son oyun hariç, 15 sn), gizli olasılıklar, el sınırı 2, kötü kartlar, anlatımda oynama, kesin hesaplama sırası, Veto / Oyunu Seç, lobi ayarı.
+- [x] Motor: `packages/engine/src/cards/` (katalog, çekiliş, hesaplama, olay tabanlı durum makinesi, kayıt/tekrar oynatma, görünümler) ve birim testleri (istatistiksel olasılık dahil).
+- [x] Sunucu: `cards` aşaması, `playCard` / `pickCard` / `discardCard` / `setCards`, oyun sonu hesabı, yeniden bağlanma, izleyici/TV gizliliği, kart kaydı; akış testleri (`kartlar.test.ts`).
+- [x] İstemci: kart seçimi ekranı, el çekmecesi ve hedef seçici, oyun başı açıklama (telefon + TV), kötü kart duyurusu, sonuç etki satırları, lobi Kartlar ayarı; `kart-` önizlemeleri `scripts/ui-check.mjs`'te.
+- [ ] Kart görselleri (`/assets/cards/<kimlik>.webp`): şimdilik CSS çerçeve + elmas işareti; görseller sonra eklenecek (bkz. docs/GORSEL-URETIM.md).
+- [ ] Oyun içi (oynanış sırasında) küçük "oynanan kartlar" şeridi: şimdilik kartlar geri sayımda ve sonuç satırlarında görünür.
+
 ---
 
 ## O — Oyun iyileştirmeleri iş kolu

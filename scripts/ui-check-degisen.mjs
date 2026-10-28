@@ -43,17 +43,18 @@ export const GAMES = {
 
 /** `apps/client/src/screens/<Ad>.tsx` -> ekran süzgeçleri. */
 const SCREEN_FILES = {
-  Lobby: ["lobby", "bildir"],
+  Lobby: ["lobby", "bildir", "kart-lobi"],
   lobbyHints: ["lobby"],
-  Briefing: ["briefing"],
+  Briefing: ["briefing", "kart-anlatim"],
   Home: ["home"],
   Settings: ["ayarlar"],
   Join: ["join"],
   NotFound: ["notfound"],
   Reconnecting: ["reconnect"],
-  Countdown: ["countdown"],
+  Cards: ["kart"],
+  Countdown: ["countdown", "kart-geri-sayim"],
   Playing: ["playing", "spectator-playing"],
-  Results: ["results", "bildir"],
+  Results: ["results", "bildir", "kart-sonuc"],
   Final: ["final", "bildir"],
   CountUp: ["results", "final"],
   ranking: ["results", "final"],
@@ -134,6 +135,13 @@ export function mapFile(path) {
   )
     return { filters: ["bildir"], why: "bildir penceresi" };
   if (p === "apps/client/src/styles/settings.css") return { filters: ["ayarlar"], why: "ayarlar biçemi" };
+  if (
+    p === "apps/client/src/styles/cards.css" ||
+    /\/ui\/(Card[A-Za-z]*|HandTray|cards)\.tsx?$/.test(p) ||
+    /\/stage\/TvCards\.tsx$/.test(p) ||
+    /\/dev\/mockKartlar\.ts$/.test(p)
+  )
+    return { filters: ["kart"], why: "kart sistemi" };
   if (/^apps\/client\/src\/(styles|ui|fx|net)\//.test(p)) return smoke("ortak arayüz (styles/ui/fx/net)");
   if (p === "apps/client/src/App.tsx") return smoke("App.tsx");
   return smoke("bilinmeyen dosya");

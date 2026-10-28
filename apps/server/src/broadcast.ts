@@ -2,7 +2,7 @@ import { diffMerge, type MergePatch, type RoomSnapshot } from "@glix/engine";
 import type { Clock } from "./clock.js";
 import { catalogFor } from "./gameSwitches.js";
 import { log } from "./log.js";
-import { abortMatch, GameFault, matchViewFor, sharedMatchSnapshot } from "./match.js";
+import { abortMatch, GameFault, matchMineFor, matchViewFor, sharedMatchSnapshot } from "./match.js";
 import type { Connection, Player, Room, Runtime } from "./runtime.js";
 
 /** Birleştirme penceresi: bir eylemin yayını en çok bu kadar gecikir (tick 100 ms olduğundan tick yayınları zaten seyrek). */
@@ -62,7 +62,7 @@ function lobbyReadyIds(room: Room): string[] {
 }
 
 type Shared = Omit<RoomSnapshot, "rev" | "serverNow" | "selfId" | "match"> & {
-  match: Omit<NonNullable<RoomSnapshot["match"]>, "view"> | null;
+  match: Omit<NonNullable<RoomSnapshot["match"]>, "view" | "mine"> | null;
 };
 
 /**
@@ -99,6 +99,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       // Eski istemciler alanı zorunlu okur (docs/PROTOKOL.md); ton kaldırıldı, sabit değer.
       tone: "arkadas",
       joinPolicy: room.joinPolicy,
+      cardSettings: { enabled: room.cardSettings.enabled, off: [...room.cardSettings.off] },
       stageCount: room.stages.size,
       lobbyReady: room.phase === "lobby" ? lobbyReadyIds(room) : [],
       catalog: catalogFor(rt, room),
@@ -141,7 +142,13 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       rev,
       serverNow,
       selfId: player.id,
-      match: content.match ? { ...content.match, view: matchViewFor(rt, room, player.id) } : null,
+      match: content.match
+        ? {
+            ...content.match,
+            view: matchViewFor(rt, room, player.id),
+            mine: matchMineFor(rt, room, player.id),
+          }
+        : null,
     };
   }
 
@@ -161,7 +168,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       rev,
       serverNow,
       selfId: "",
-      match: content.match ? { ...content.match, view: matchViewFor(rt, room, null) } : null,
+      match: content.match ? { ...content.match, view: matchViewFor(rt, room, null), mine: null } : null,
     };
   }
 
@@ -192,25 +199,30 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
     if ((last.match === null) !== (content.match === null)) return false;
     let viewPatch: MergePatch | null = null;
     let view: unknown = null;
+    let mine: ReturnType<typeof matchMineFor> = null;
     if (content.match && last.match) {
       view = matchViewFor(rt, room, player.id);
-      viewPatch = diffMerge({ view: last.match.view }, { view });
+      mine = matchMineFor(rt, room, player.id);
+      viewPatch = diffMerge({ view: last.match.view, mine: last.match.mine ?? null }, { view, mine });
       if (viewPatch === null) return false;
     }
     const sharedChanged = cache.ver !== prevVer;
-    const viewChanged = viewPatch !== null && "view" in viewPatch;
+    const viewChanged = viewPatch !== null && ("view" in viewPatch || "mine" in viewPatch);
     if (!sharedChanged && !viewChanged) return true; // yalnız rev/serverNow değişti: gönderilmez
     const patch: MergePatch = { rev, serverNow, ...(sharedChanged ? cache.patch : null) };
-    if (viewChanged && content.match) {
+    if (viewChanged && content.match && viewPatch) {
       const m = patch.match;
-      patch.match = { ...(typeof m === "object" && m !== null ? m : null), view: viewPatch?.view };
+      const own: MergePatch = {};
+      if ("view" in viewPatch) own.view = viewPatch.view;
+      if ("mine" in viewPatch) own.mine = viewPatch.mine;
+      patch.match = { ...(typeof m === "object" && m !== null ? m : null), ...own };
     }
     const snapshot: RoomSnapshot = {
       ...content,
       rev,
       serverNow,
       selfId: player.id,
-      match: content.match ? { ...content.match, view } : null,
+      match: content.match ? { ...content.match, view, mine } : null,
     };
     conn.lastSent = snapshot;
     conn.sentVer = cache.ver;

@@ -1,6 +1,9 @@
 import { randomInt } from "node:crypto";
 import {
   type AnyGame,
+  type CardRecorder,
+  type CardsMine,
+  type CardsState,
   CONTINUE_GRACE_MS,
   collectPublicTexts,
   createRng,
@@ -13,6 +16,17 @@ import {
   type Rng,
 } from "@glix/engine";
 import { buildGameRecord, buildMatchRecord, type Entrant } from "./accountStats.js";
+import {
+  archiveCardLog,
+  cardPhaseDue,
+  cardsMineOf,
+  cardsPublicOf,
+  commitCards,
+  openCardPhase,
+  resolveGameCards,
+  startCards,
+  stepCardPhase,
+} from "./cards.js";
 import { scrubText } from "./errorScrub.js";
 import { pruneClosedGames } from "./gameSwitches.js";
 import { log } from "./log.js";
@@ -58,6 +72,12 @@ export interface Match {
   perfBy: Set<string>;
   /** Oyunun "sıra kimde" dediği son oyuncular (`notify`); yalnız yeni sıra alanlara bildirim gider. */
   turnHolders: Set<string>;
+  /** Kartlar (docs/KURALLAR.md K1..K8); kartlar kapalıysa ya da hiç kart etkin değilse null. */
+  cards: CardsState | null;
+  cardRec: CardRecorder | null;
+  cardLogArchived: boolean;
+  /** Maç başındaki oyun listesi: manuel seçimde lobiye dönünce host'un listesi geri gelir (Veto / Oyunu Seç yalnız maçı etkiler). */
+  originalGameIds: string[];
 }
 
 /** Bir oyun fonksiyonu hata fırlattı; `fn` hangisi olduğunu söyler (setup, reduce, tick, view, result...). */
@@ -190,7 +210,12 @@ export function beginMatch(rt: Runtime, room: Room): void {
     feedbackBy: new Set(),
     perfBy: new Set(),
     turnHolders: new Set(),
+    cards: null,
+    cardRec: null,
+    cardLogArchived: false,
+    originalGameIds: [...room.gameIds],
   };
+  startCards(rt, room, match);
   room.match = match;
   for (const p of room.players.values()) p.lobbyReady = false;
   enterBriefing(rt, room, match);
@@ -219,7 +244,12 @@ export function endMatchStats(rt: Runtime, match: Match, outcome: "aborted" | "f
 
 /** Maçı bırakıp lobiye döner (skorlara dokunmaz). */
 export function clearMatch(rt: Runtime, room: Room, outcome: "aborted" | "failed" = "aborted"): void {
-  if (room.match) endMatchStats(rt, room.match, outcome);
+  if (room.match) {
+    endMatchStats(rt, room.match, outcome);
+    archiveCardLog(rt, room.match);
+    // Veto / Oyunu Seç yalnız o maçı etkiler: manuel seçimde host'un listesi geri gelir.
+    if (room.selection.mode === "manual") room.gameIds = [...room.match.originalGameIds];
+  }
   room.match = null;
   room.phase = "lobby";
   // Maç bitti: izleyiciler normal oyuncu olur.
@@ -325,7 +355,9 @@ function startPlaying(rt: Runtime, room: Room, match: Match): void {
 
 function finishGame(rt: Runtime, room: Room, match: Match): void {
   const now = rt.clock.now();
-  const result = guard("result", () => currentGame(match).result(match.state));
+  const baseResult = guard("result", () => currentGame(match).result(match.state));
+  // Kartlar: oyunun ham puanları kart etkileriyle nihai genel skor puanlarına çevrilir (docs/KURALLAR.md K6).
+  const result = resolveGameCards(rt, room, match, baseResult);
   archiveLog(rt, match);
   if (match.gameStartedAt !== null) {
     rt.stats.gamePlayed(match.statsId, {
@@ -426,10 +458,16 @@ function archiveLog(rt: Runtime, match: Match): void {
 
 function nextGameOrFinal(rt: Runtime, room: Room, match: Match): void {
   if (match.index + 1 < match.games.length) {
+    // Her 3. oyundan sonra (son oyun hariç) kart seçimi gelir; sıradaki oyun o aşamadan sonra başlar.
+    if (cardPhaseDue(room, match)) {
+      openCardPhase(rt, room, match);
+      return;
+    }
     match.index += 1;
     enterBriefing(rt, room, match);
     return;
   }
+  archiveCardLog(rt, match);
   match.phaseStartedAt = rt.clock.now();
   match.phaseEndsAt = null;
   room.phase = "final";
@@ -461,6 +499,8 @@ function stepMatchUnsafe(rt: Runtime, room: Room): void {
         .filter((p): p is Player => p !== undefined && isConnected(p));
       const allReady = waiting.length > 0 && waiting.every((p) => match.readyIds.has(p.id));
       if (allReady || (match.phaseEndsAt !== null && now >= match.phaseEndsAt)) {
+        // Anlatım bitti: oynanan kartlar kesinleşir ve herkese açıklanır (geri sayım ekranı).
+        commitCards(rt, room, match);
         match.phaseStartedAt = now;
         match.phaseEndsAt = now + COUNTDOWN_MS;
         room.phase = "countdown";
@@ -503,6 +543,15 @@ function stepMatchUnsafe(rt: Runtime, room: Room): void {
         nextGameOrFinal(rt, room, match);
         rt.broadcaster.markDirty(room);
       }
+      return;
+    }
+    case "cards": {
+      const step = stepCardPhase(rt, room, match);
+      if (step === "done") {
+        match.index += 1;
+        enterBriefing(rt, room, match);
+        rt.broadcaster.markDirty(room);
+      } else if (step === "dirty") rt.broadcaster.markDirty(room);
       return;
     }
     default:
@@ -553,7 +602,7 @@ function publicResult(result: GameResult | null): GameResult | null {
 }
 
 /** Maçın herkese ortak görünen kısmı (`publicView` dahil; oyuncuya özel `view` hariç). Oda başına bir kez hesaplanır. */
-export function sharedMatchSnapshot(rt: Runtime, room: Room): Omit<MatchSnapshot, "view"> | null {
+export function sharedMatchSnapshot(rt: Runtime, room: Room): Omit<MatchSnapshot, "view" | "mine"> | null {
   const match = room.match;
   if (!match) return null;
   const game = currentGame(match);
@@ -576,6 +625,7 @@ export function sharedMatchSnapshot(rt: Runtime, room: Room): Omit<MatchSnapshot
     phaseEndsAt: match.phaseEndsAt,
     publicView,
     result: room.phase === "results" || room.phase === "final" ? publicResult(match.result) : null,
+    cards: cardsPublicOf(room, match),
   };
 }
 
@@ -593,6 +643,12 @@ export function matchViewFor(rt: Runtime, room: Room, playerId: string | null): 
   const game = currentGame(match);
   const ctx = ctxFor(rt, room, match);
   return guard("view", () => game.view(match.state, who, ctx));
+}
+
+/** Oyuncuya özel kart bilgisi (el, seçenekler, oynadığı kart); izleyicide ve sahnede null. */
+export function matchMineFor(rt: Runtime, room: Room, playerId: string | null): CardsMine | null {
+  const match = room.match;
+  return match ? cardsMineOf(rt, room, match, playerId) : null;
 }
 
 export function runTick(rt: Runtime): void {

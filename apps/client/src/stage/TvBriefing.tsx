@@ -4,6 +4,7 @@ import { Dynamic } from "solid-js/web";
 import { gameEntry } from "../games/registry.js";
 import { playersOnly } from "../screens/ranking.js";
 import { BriefingPanels } from "../ui/BriefingPanels.js";
+import { BadCardNotice } from "../ui/CardNotices.js";
 import { CheckIcon } from "../ui/Icons.js";
 import { TvBoard } from "./TvParts.js";
 
@@ -27,6 +28,7 @@ export function TvBriefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) 
             <CheckIcon size={28} /> {readyCount()} / {crew().length} hazır
           </p>
         </header>
+        <BadCardNotice cards={props.match.cards} players={props.snap.players} big />
         <div class="tv__briefbody">
           <div class="tv__briefart">
             <BriefingPanels

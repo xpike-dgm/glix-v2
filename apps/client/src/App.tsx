@@ -19,6 +19,7 @@ import { CLIENT_PROTOCOL_VERSION } from "./pwa/updatePolicy.js";
 import { useUpdateFlow } from "./pwa/useUpdateFlow.js";
 import { setScreenAwake } from "./pwa/wakeLock.js";
 import { Briefing } from "./screens/Briefing.js";
+import { Cards } from "./screens/Cards.js";
 import { Countdown } from "./screens/Countdown.js";
 import { Disclosure } from "./screens/Disclosure.js";
 import { Final } from "./screens/Final.js";
@@ -74,7 +75,7 @@ export function App() {
 
   const update = useUpdateFlow(screen);
   /** Tablet/masaüstünde maç sürerken ikinci sütun (oyuncular/puan) açılır; genişlik sınırı CSS'te. */
-  const twoCols = () => ["briefing", "countdown", "playing", "results"].includes(screen());
+  const twoCols = () => ["briefing", "countdown", "playing", "results", "cards"].includes(screen());
 
   // Maça girince odadaki oyuncuların ruh hâli görselleri önden yüklenir.
   createEffect(() => {
@@ -145,7 +146,9 @@ export function App() {
       return;
     }
     if (mock) {
-      if (mock.startsWith("sonkisi-")) {
+      if (mock.startsWith("kart-")) {
+        devReady(import("./dev/mockKartlar.js").then((m) => void m.startKartMock(mock, params)));
+      } else if (mock.startsWith("sonkisi-")) {
         devReady(import("./dev/mockSonKisi.js").then((m) => void m.startSonKisiMock(mock, params)));
       } else if (mock.startsWith("siralama") || mock.startsWith("rozet-")) {
         devReady(import("./dev/mockSiralama.js").then((m) => void m.startSiralamaMock(mock, params)));
@@ -284,13 +287,16 @@ export function App() {
                           <Briefing snap={snap()} match={match()} />
                         </Match>
                         <Match when={screen() === "countdown"}>
-                          <Countdown match={match()} />
+                          <Countdown snap={snap()} match={match()} />
                         </Match>
                         <Match when={screen() === "playing"}>
                           <Playing snap={snap()} match={match()} />
                         </Match>
                         <Match when={screen() === "results"}>
                           <Results snap={snap()} match={match()} />
+                        </Match>
+                        <Match when={screen() === "cards"}>
+                          <Cards snap={snap()} match={match()} />
                         </Match>
                       </Switch>
                     )}

@@ -30,6 +30,8 @@ import { openReport } from "../net/reportUi.js";
 import { setNickname, state, toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
+import { CardSettingsSheet } from "../ui/CardSettingsSheet.js";
+import { settingsSummary } from "../ui/cards.js";
 import { EmojiBar } from "../ui/EmojiBar.js";
 import { GhostButton } from "../ui/GhostButton.js";
 import { CheckIcon, ChevronIcon, MinusIcon, PlusIcon, QrIcon, ShareIcon, UsersIcon } from "../ui/Icons.js";
@@ -186,6 +188,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
   const [hostStep, setHostStep] = createSignal<"menu" | "kick" | "transfer">("menu");
   const [hostOpen, setHostOpen] = createSignal(false);
   const [inviteOpen, setInviteOpen] = createSignal(false);
+  const [cardsOpen, setCardsOpen] = createSignal(false);
   const [friendOpen, setFriendOpen] = createSignal(false);
   const [pickOpen, setPickOpen] = createSignal(false);
   const [freshIds, setFreshIds] = createSignal<ReadonlySet<string>>(new Set());
@@ -519,6 +522,10 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                 {selectionSummary(sel().mode, randomCount(), selected().length)}
               </span>
             </section>
+            <button type="button" class="games games--summary kc-guestrow" onClick={() => setCardsOpen(true)}>
+              <span class="games__title">Kartlar</span>
+              <span class="games__count">{settingsSummary(snap().cardSettings)}</span>
+            </button>
           </Show>
           <Show when={isHost()}>
             <section class="games" data-open={open() ? "1" : undefined}>
@@ -582,6 +589,13 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                         )}
                       </For>
                     </div>
+                  </div>
+                  <div class="joinset">
+                    <span class="joinset__label">Kartlar</span>
+                    <button type="button" class="kc-open" onClick={() => setCardsOpen(true)}>
+                      <span>{settingsSummary(snap().cardSettings)}</span>
+                      <ChevronIcon size={20} class="kc-open__chev" />
+                    </button>
                   </div>
                   <Show when={sel().mode === "random"}>
                     <div class="rnd">
@@ -686,6 +700,13 @@ export function Lobby(props: { snap: RoomSnapshot }) {
             </PrimaryButton>
           </Show>
         </footer>
+
+        <CardSettingsSheet
+          open={cardsOpen()}
+          onClose={() => setCardsOpen(false)}
+          settings={snap().cardSettings}
+          host={isHost()}
+        />
 
         <BottomSheet open={inviteOpen()} onClose={() => setInviteOpen(false)} title="Arkadaşlarını çağır">
           <div class="invite">
