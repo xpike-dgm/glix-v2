@@ -441,7 +441,7 @@ function parseCode(value: unknown): string | null {
 export function sanitizeFeedbackText(value: unknown): string | null {
   if (typeof value !== "string" || value.length > MAX_FEEDBACK_TEXT * 4) return null;
   const clean = value
-    .replace(/[\p{Cc}\p{Zl}\p{Zp}]+/gu, " ")
+    .replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}\p{Co}\p{Cs}]+/gu, " ")
     .replace(/\s+/gu, " ")
     .trim();
   return Array.from(clean).length > MAX_FEEDBACK_TEXT ? null : clean;
