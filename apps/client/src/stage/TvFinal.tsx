@@ -7,7 +7,7 @@ import { formatScore, playersOnly, podiumOrder, rankPlayers, winnersOf } from ".
 import { deriveTitles } from "../screens/titles.js";
 import { Avatar } from "../ui/Avatar.js";
 import type { Mood } from "../ui/avatars.js";
-import { CrownIcon } from "../ui/Icons.js";
+import { PodiumBlock } from "../ui/PodiumBlock.js";
 
 /** Final: kazanan, dev podyum, geri kalan sıralama ve unvanlar. Konfeti ve fanfar TV'de çalar. */
 export function TvFinal(props: { snap: RoomSnapshot }) {
@@ -66,23 +66,17 @@ export function TvFinal(props: { snap: RoomSnapshot }) {
           <For each={podiumOrder(top())}>
             {(r) => (
               <div class="tv__pod" data-rank={r.rank} data-pid={r.player.id}>
-                <Show when={r.rank === 1}>
-                  <span class="tv__crown" aria-hidden="true">
-                    <CrownIcon size="100%" />
-                  </span>
-                </Show>
                 <Avatar
                   index={r.player.avatar}
                   size={r.rank === 1 ? 220 : 170}
                   mood={mood(r.rank, r.score)}
                   live={r.rank === 1 ? "joy" : undefined}
+                  winner={r.rank === 1}
                   connected={r.player.connected}
                 />
                 <span class="tv__podname">{r.player.nickname}</span>
                 <span class="tv__podscore">{formatScore(r.score)}</span>
-                <div class="tv__podblock">
-                  <span>{r.rank}</span>
-                </div>
+                <PodiumBlock class="tv__podblock" rank={r.rank} />
               </div>
             )}
           </For>

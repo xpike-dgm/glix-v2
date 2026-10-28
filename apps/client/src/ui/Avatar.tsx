@@ -10,6 +10,8 @@ interface Props {
   /** px sayısı ya da CSS uzunluğu (örn. clamp(...)). */
   size: number | string;
   host?: boolean;
+  /** Sonuç/final kazananı: avatarın tepesinde büyük taç. Ev sahibi rozeti (`host`) bu ekranlarda verilmez. */
+  winner?: boolean;
   ready?: boolean;
   connected?: boolean;
   self?: boolean;
@@ -90,6 +92,11 @@ export function Avatar(props: Props) {
       {/* Renk körlüğü dostu modda 32 px ve üstü her avatar kendi simgesini taşır (renk tek ipucu olmasın). */}
       <Show when={(big() && props.pip) || (colorBlind() && pipSized())}>
         <img class="av__pip" src={l().pip} alt="" draggable={false} />
+      </Show>
+      <Show when={small() && props.winner}>
+        <span class="av__crown" aria-hidden="true">
+          <CrownIcon size="100%" />
+        </span>
       </Show>
       <Show when={small() && props.host}>
         <span class="av__badge av__badge--host">

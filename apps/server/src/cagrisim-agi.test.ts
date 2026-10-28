@@ -82,7 +82,7 @@ describe("çağrışım ağı: oda içi tam maç", () => {
     expect(result?.miniScores).toEqual({ [ida]: 2, [idb]: 2, [idc]: 0, [idd]: 0 });
     expect(result?.awards).toEqual({ [ida]: 1, [idb]: 1 });
     expect(a.room.players.map((p) => p.score)).toEqual([1, 1, 0, 0]);
-    k.clock.advance(7_000);
+    k.clock.advance(30_000);
     await until(() => a.room.phase === "final", "final");
     expect(a.room.players.map((p) => p.score)).toEqual([1, 1, 0, 0]);
   });

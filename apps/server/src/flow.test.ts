@@ -448,12 +448,12 @@ describe("maç akışı", () => {
     // B tek lider +2, A ikinci +1
     expect(result?.awards).toEqual({ [b.session.playerId]: 2, [a.session.playerId]: 1 });
     expect(a.room.players.map((p) => p.score)).toEqual([1, 2]);
-    expect(b.room.match?.phaseEndsAt).toBe((b.room.match?.phaseStartedAt ?? 0) + 7_000);
+    expect(b.room.match?.phaseEndsAt).toBe((b.room.match?.phaseStartedAt ?? 0) + 30_000);
     v = a.room.match?.publicView as typeof v;
     expect(v.scores[b.session.playerId]).toBe(0);
 
-    // Sonuç ekranı 7 sn sürer, sonra final.
-    k.clock.advance(6_800);
+    // Sonuç ekranı 30 sn sürer, sonra final.
+    k.clock.advance(29_800);
     await sync();
     expect(a.room.phase).toBe("results");
     k.clock.advance(400);

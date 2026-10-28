@@ -114,7 +114,7 @@ Neon etkisi = 1 renkli `box-shadow`/`text-shadow` (en fazla 2 katman). `backdrop
 ### Sonuç
 - Oyun sonu: mini oyun puanlarıyla sıralama; ilk 3 avatar büyük ve kademeli (podyum hissi),
   genel skora eklenen puan "+2" rozetiyle sayarak artar.
-- 7 sn sonra otomatik sonraki oyuna/final'e geçer; süre ince çubukla görünür.
+- 30 sn sonra (herkes "Devam" derse hemen) otomatik sonraki oyuna/final'e geçer; süre ince çubukla görünür.
 
 ### Final
 - Kazanan büyük avatar + Pixi konfeti (2 sn, sonra durur). Tam sıralama altta.

@@ -13,6 +13,7 @@ import {
 import { Avatar } from "../ui/Avatar.js";
 import type { Mood } from "../ui/avatars.js";
 import { CardLines } from "../ui/CardLines.js";
+import { PodiumBlock } from "../ui/PodiumBlock.js";
 import { ProgressBar } from "../ui/ProgressBar.js";
 import { TvBoard } from "./TvParts.js";
 
@@ -73,13 +74,12 @@ export function TvResults(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
                   size={hasCards() ? (r.rank === 1 ? 150 : 116) : r.rank === 1 ? 240 : 180}
                   mood={mood(r.rank, r.player.id)}
                   live={r.rank === 1 ? "joy" : undefined}
+                  winner={r.rank === 1}
                   connected={r.player.connected}
                 />
                 <span class="tv__podname">{r.player.nickname}</span>
                 <span class="tv__podscore">{formatScore(r.score)}</span>
-                <div class="tv__podblock">
-                  <span>{r.rank}</span>
-                </div>
+                <PodiumBlock class="tv__podblock" rank={r.rank} />
               </div>
             )}
           </For>
@@ -97,7 +97,7 @@ export function TvResults(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
           </Show>
         </footer>
       </main>
-      <TvBoard title="Genel sıralama" hostId={props.snap.hostId} rows={rows()} />
+      <TvBoard title="Genel sıralama" hostId={props.snap.hostId} hideHost rows={rows()} />
     </div>
   );
 }

@@ -563,24 +563,48 @@
   font-size: 60px;
   color: var(--cyan);
 }
+.tv__pod {
+  --pod-rgb: 139, 92, 255;
+}
+.tv__pod[data-rank="1"] {
+  --pod-rgb: 255, 194, 59;
+}
+.tv__pod[data-rank="2"] {
+  --pod-rgb: 201, 210, 255;
+}
+.tv__pod[data-rank="3"] {
+  --pod-rgb: 255, 138, 59;
+}
+/* Altın/gümüş/bronz neon blok + madalya (numara yok). `--pod-art` ile görsel takılabilir. */
 .tv__podblock {
   width: 100%;
   height: 120px;
   display: grid;
-  place-items: center;
+  place-items: start center;
+  padding-top: 14px;
   border-radius: 28px 28px 0 0;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 80px;
-  color: rgba(255, 255, 255, 0.9);
-  background: linear-gradient(180deg, rgba(139, 92, 255, 0.55), rgba(139, 92, 255, 0.18));
+  border-top: 4px solid rgb(var(--pod-rgb));
+  color: rgb(var(--pod-rgb));
+  background:
+    var(--pod-art, none) center / 100% 100% no-repeat,
+    linear-gradient(115deg, rgba(255, 255, 255, 0.2) 0 12%, transparent 12% 100%),
+    linear-gradient(180deg, rgba(var(--pod-rgb), 0.6), rgba(var(--pod-rgb), 0.1));
+  box-shadow: 0 -8px 40px -10px rgba(var(--pod-rgb), 0.7);
+}
+.tv__podblock .podium__medal {
+  --medal: 64px;
 }
 .tv__pod[data-rank="1"] .tv__podblock {
   height: 190px;
-  background: linear-gradient(180deg, rgba(255, 194, 59, 0.7), rgba(255, 194, 59, 0.2));
+}
+.tv__pod[data-rank="1"] .tv__podblock .podium__medal {
+  --medal: 96px;
 }
 .tv__pod[data-rank="3"] .tv__podblock {
-  height: 80px;
+  height: 96px;
+}
+.tv__pod[data-rank="3"] .tv__podblock .podium__medal {
+  --medal: 52px;
 }
 .tv__next {
   flex: none;
@@ -639,11 +663,6 @@
 }
 .tv__podium--final .tv__pod[data-rank="1"] {
   width: 460px;
-}
-.tv__crown {
-  width: 96px;
-  height: 96px;
-  color: var(--amber);
 }
 .tv__side--final {
   overflow: hidden;

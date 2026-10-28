@@ -105,7 +105,7 @@ describe("maç sürerken katılım: izleyici", () => {
     await until(() => self(c)?.spectator === true, "izleyici");
     k.clock.advance(46_000);
     await until(() => a.room.phase === "results", "results");
-    k.clock.advance(8_000);
+    k.clock.advance(31_000);
     await until(() => a.room.phase === "final", "final");
     // Final'de hâlâ izleyici; sıralamaya girmez (bayrak sunucudan gelir).
     expect(c.room.players.find((p) => p.id === c.session.playerId)?.spectator).toBe(true);

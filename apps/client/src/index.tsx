@@ -21,6 +21,7 @@ import "./styles/badges.css";
 import "./styles/leaderboard.css";
 import "./styles/colorblind.css";
 import "./styles/cards.css";
+import "./styles/result.css";
 
 installAudioUnlock();
 applyRootSettings();

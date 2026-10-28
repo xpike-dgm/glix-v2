@@ -158,7 +158,7 @@ describe("lobi emoji tepkisi", () => {
     await startPlaying(cs);
     k.clock.advance(45_000);
     await until(() => cs[0].room.phase === "results", "results");
-    k.clock.advance(8_000);
+    k.clock.advance(31_000);
     await until(() => cs[0].room.phase === "final", "final");
     k.clock.advance(1000);
     cs[0].send({ type: "react", emoji: "🔥" });
@@ -218,7 +218,7 @@ describe("lobide hazırım", () => {
     // Bayrak maç boyunca açık kalmamalı: oyun bitip lobiye dönünce yine boş.
     k.clock.advance(46_000);
     await until(() => a.room.phase === "results");
-    k.clock.advance(8000);
+    k.clock.advance(31_000);
     await until(() => a.room.phase === "final");
     a.send({ type: "returnToLobby" });
     await until(() => a.room.phase === "lobby");

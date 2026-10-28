@@ -53,6 +53,8 @@ export function TvBoard(props: {
   title: string;
   rows: BoardRow[];
   hostId: string;
+  /** Sonuç ekranında ev sahibi tacı gösterilmez (taç yalnız kazananındır). */
+  hideHost?: boolean;
   /** Satır sayısına göre yoğunluk: 5'ten fazlaysa satırlar sıkılaşır. */
   footer?: JSX.Element;
 }) {
@@ -75,7 +77,7 @@ export function TvBoard(props: {
                 size={dense() ? 64 : 84}
                 connected={r.player.connected}
                 ready={r.ready === true}
-                host={r.player.id === props.hostId}
+                host={props.hideHost !== true && r.player.id === props.hostId}
               />
               <span class="tv__pname">
                 <span class="tv__pnick">{r.player.nickname}</span>
