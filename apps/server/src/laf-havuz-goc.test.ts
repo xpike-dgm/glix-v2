@@ -11,13 +11,13 @@ afterAll(() => rmSync(dir, { recursive: true, force: true }));
 describe("Laf Sokma ton havuzlarının tek havuza taşınması (göç)", () => {
   it("üç eski havuzun satırları laf-sokma/sorular'a taşınır; çakışmada en eski kayıt kalır", () => {
     const path = join(dir, "hesap.db");
-    // Göçten önceki duruma getir: Laf göçünü ve ondan sonraki Glix (tablo + sütun) ile mağaza (iki tablo) göçlerini geri al, eski kimlikli
+    // Göçten önceki duruma getir: Laf göçünü ve ondan sonraki Glix (tablo + sütun), mağaza (iki tablo) ve ekonomi (iki indeks) göçlerini geri al, eski kimlikli
     // satırları ekle.
     createAccounts(path).close();
     const { DatabaseSync: Db } = loadSqlite();
     const raw = new Db(path);
     raw.exec(
-      "DELETE FROM account_schema_version WHERE version >= (SELECT MAX(version) - 2 FROM account_schema_version)",
+      "DELETE FROM account_schema_version WHERE version >= (SELECT MAX(version) - 3 FROM account_schema_version)",
     );
     raw.exec(
       "DROP TABLE cosmetic_equipped; DROP TABLE cosmetic_owned; DROP TABLE glix_ledger; ALTER TABLE accounts DROP COLUMN glix;",

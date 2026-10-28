@@ -6,6 +6,7 @@ import {
   parseBannedWords,
   parseContent,
   parseDetail,
+  parseEconomy,
   parseErrors,
   parseGameList,
   parseLive,
@@ -349,5 +350,49 @@ describe("A4 moderasyon yanıtları", () => {
     };
     expect(parseRoomPlayers(room).players[0]?.nickname).toBe("Ali");
     expect(tryParse(parseRoomPlayers, { ...room, players: [{ id: "ab" }] })).toBeNull();
+  });
+});
+
+describe("parseEconomy", () => {
+  const day = {
+    day: "2026-10-26",
+    mac: 100,
+    rozet: 25,
+    yonetici: 40,
+    yoneticiEksi: 30,
+    harcanan: 105,
+    kazanilan: 165,
+    net: 30,
+    sinirdaki: 1,
+  };
+  const { day: _d, ...totals } = day;
+  const eco = {
+    days: 7,
+    daily: [day],
+    totals,
+    circulation: { total: 1234, holders: 5 },
+    dailyCap: 300,
+    topItems: [
+      { itemId: "unvan-sansli", name: "Şanslı", rarity: "siradan", typeName: "Lakap", count: 2, glix: 210 },
+    ],
+    sales: { count: 2, glix: 210 },
+    byRarity: [{ id: "siradan", label: "Sıradan", count: 2, glix: 210 }],
+    byType: [{ id: "unvan", label: "Lakap", count: 2, glix: 210 }],
+    deals: [
+      { itemId: "unvan-sansli", name: "Şanslı", rarity: "siradan", listPrice: 150, price: 105, soldToday: 2 },
+    ],
+    dealEndsAt: 1,
+  };
+
+  it("geçerli yanıtı olduğu gibi okur", () => {
+    expect(parseEconomy(eco)).toEqual(eco);
+  });
+
+  it("eksik ya da yanlış tipli alanda hata verir", () => {
+    expect(tryParse(parseEconomy, { ...eco, circulation: { total: "1", holders: 5 } })).toBeNull();
+    expect(tryParse(parseEconomy, { ...eco, daily: [{ ...day, net: null }] })).toBeNull();
+    expect(tryParse(parseEconomy, { ...eco, deals: [{ itemId: "x" }] })).toBeNull();
+    expect(tryParse(parseEconomy, { ...eco, topItems: "yok" })).toBeNull();
+    expect(tryParse(parseEconomy, null)).toBeNull();
   });
 });

@@ -7,6 +7,7 @@ import type {
   AdminBannedWords,
   AdminBroadcastStatus,
   AdminContent,
+  AdminEconomy,
   AdminErrors,
   AdminGameSwitch,
   AdminLive,
@@ -29,6 +30,7 @@ import {
   parseBannedWords,
   parseContent,
   parseDetail,
+  parseEconomy,
   parseErrors,
   parseGameList,
   parseLive,
@@ -131,6 +133,8 @@ async function fetched<T>(path: string, parse: (v: unknown) => T): Promise<Fetch
 
 export const fetchLive = (): Promise<Fetched<AdminLive>> => fetched("live", parseLive);
 export const fetchStats = (): Promise<Fetched<AdminStats>> => fetched("stats", parseStats);
+export const fetchEconomy = (days: number): Promise<Fetched<AdminEconomy>> =>
+  fetched(`economy?days=${days}`, parseEconomy);
 export const fetchErrors = (): Promise<Fetched<AdminErrors>> => fetched("errors", parseErrors);
 
 export const fetchAccounts = (): Promise<Fetched<AdminAccounts>> => fetched("accounts", parseAccounts);

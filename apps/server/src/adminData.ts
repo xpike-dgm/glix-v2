@@ -5,13 +5,24 @@
 import { monitorEventLoopDelay } from "node:perf_hooks";
 import type {
   AdminAccounts,
+  AdminEconomy,
+  AdminEconomyDay,
+  AdminEconomyGroup,
   AdminErrors,
   AdminLive,
   AdminRelease,
   AdminRoomRow,
   AdminStats,
 } from "@glix/engine";
-import { APP_VERSION } from "@glix/engine";
+import {
+  APP_VERSION,
+  COSMETIC_TYPES,
+  cosmeticItem,
+  dailyDeals,
+  GLIX_DAILY_MATCH_CAP,
+  istanbulDayNumber,
+  nextIstanbulMidnight,
+} from "@glix/engine";
 import type { AccountStore, ServerStartRow } from "./accountStore.js";
 import { countActiveMatches, countPlayers } from "./rooms.js";
 import type { Runtime } from "./runtime.js";
@@ -201,4 +212,119 @@ export function buildReleases(
       state: running ? "running" : r.stoppedAt !== null ? "clean" : "unclean",
     };
   });
+}
+
+const ECO_DAY_MS = 24 * 3600 * 1000;
+const ECO_OFFSET_MS = 3 * 3600 * 1000;
+const TOP_ITEMS = 10;
+const RARITY_LABEL: Record<string, string> = { siradan: "Sıradan", nadir: "Nadir", efsanevi: "Efsanevi" };
+
+/**
+ * Glix ekonomisi: son `days` İstanbul günü (bugün dahil). Günler İstanbul gece yarısından gece yarısına;
+ * tek geçişli, indeksli SQL (`AccountStore.economy`). Kişi bilgisi üretmez.
+ */
+export function buildEconomy(accounts: AccountStore, now: number, days: number): AdminEconomy {
+  const today = istanbulDayNumber(now);
+  const first = today - (days - 1);
+  const from = first * ECO_DAY_MS - ECO_OFFSET_MS;
+  const to = (today + 1) * ECO_DAY_MS - ECO_OFFSET_MS;
+  const deals = dailyDeals(now);
+  const raw = accounts.economy(from, to, GLIX_DAILY_MATCH_CAP, deals, today * ECO_DAY_MS - ECO_OFFSET_MS);
+
+  const rows = new Map<number, AdminEconomyDay>();
+  const daily: AdminEconomyDay[] = Array.from({ length: days }, (_, i) => {
+    const d = first + i;
+    const row: AdminEconomyDay = {
+      day: new Date(d * ECO_DAY_MS).toISOString().slice(0, 10),
+      mac: 0,
+      rozet: 0,
+      yonetici: 0,
+      yoneticiEksi: 0,
+      harcanan: 0,
+      kazanilan: 0,
+      net: 0,
+      sinirdaki: 0,
+    };
+    rows.set(d, row);
+    return row;
+  });
+  for (const r of raw.ledger) {
+    const row = rows.get(r.d);
+    if (!row) continue;
+    if (r.reason === "mac") row.mac += r.pos;
+    else if (r.reason === "rozet") row.rozet += r.pos;
+    else if (r.reason === "yonetici") {
+      row.yonetici += r.pos;
+      row.yoneticiEksi += r.neg;
+    } else row.harcanan += r.neg;
+  }
+  for (const c of raw.capHits) {
+    const row = rows.get(c.d);
+    if (row) row.sinirdaki = c.n;
+  }
+  const totals = {
+    mac: 0,
+    rozet: 0,
+    yonetici: 0,
+    yoneticiEksi: 0,
+    harcanan: 0,
+    kazanilan: 0,
+    net: 0,
+    sinirdaki: 0,
+  };
+  for (const row of daily) {
+    row.kazanilan = row.mac + row.rozet + row.yonetici;
+    row.net = row.kazanilan - row.yoneticiEksi - row.harcanan;
+    for (const key of Object.keys(totals) as (keyof typeof totals)[]) totals[key] += row[key];
+  }
+
+  const items = raw.sales.map((s) => {
+    const it = cosmeticItem(s.itemId);
+    return {
+      itemId: s.itemId,
+      name: it?.name ?? s.itemId,
+      rarity: it?.rarity ?? "",
+      typeId: it?.type ?? "",
+      typeName: COSMETIC_TYPES.find((t) => t.id === it?.type)?.name ?? "",
+      count: s.count,
+      glix: s.glix,
+    };
+  });
+  items.sort((a, b) => b.count - a.count || b.glix - a.glix || a.itemId.localeCompare(b.itemId));
+  const group = (key: "rarity" | "typeId", label: (id: string) => string): AdminEconomyGroup[] => {
+    const m = new Map<string, AdminEconomyGroup>();
+    for (const i of items) {
+      const id = i[key];
+      const g = m.get(id) ?? { id, label: label(id), count: 0, glix: 0 };
+      g.count += i.count;
+      g.glix += i.glix;
+      m.set(id, g);
+    }
+    return [...m.values()].sort((a, b) => b.glix - a.glix || a.id.localeCompare(b.id));
+  };
+  const soldById = new Map(raw.dealSold.map((d) => [d.itemId, d.count]));
+
+  return {
+    days,
+    daily,
+    totals,
+    circulation: raw.circulation,
+    dailyCap: GLIX_DAILY_MATCH_CAP,
+    topItems: items.slice(0, TOP_ITEMS).map(({ typeId: _t, ...rest }) => rest),
+    sales: { count: items.reduce((a, i) => a + i.count, 0), glix: items.reduce((a, i) => a + i.glix, 0) },
+    byRarity: group("rarity", (id) => RARITY_LABEL[id] ?? id),
+    byType: group("typeId", (id) => COSMETIC_TYPES.find((t) => t.id === id)?.name ?? id),
+    deals: deals.map((d) => {
+      const it = cosmeticItem(d.itemId);
+      return {
+        itemId: d.itemId,
+        name: it?.name ?? d.itemId,
+        rarity: it?.rarity ?? "",
+        listPrice: d.listPrice,
+        price: d.price,
+        soldToday: soldById.get(d.itemId) ?? 0,
+      };
+    }),
+    dealEndsAt: nextIstanbulMidnight(now),
+  };
 }

@@ -14,6 +14,9 @@ import type {
   AdminBroadcastStatus,
   AdminContent,
   AdminDayCount,
+  AdminEconomy,
+  AdminEconomyDay,
+  AdminEconomyGroup,
   AdminErrorGroup,
   AdminErrors,
   AdminGameFailure,
@@ -683,5 +686,65 @@ export function parsePoolBulk(v: unknown): AdminPoolBulk {
     ok: num(o, "ok"),
     added: num(o, "added"),
     pool: poolSummary(rec(o.pool)),
+  };
+}
+
+const ecoDayFields = (o: Rec): Omit<AdminEconomyDay, "day"> => ({
+  mac: num(o, "mac"),
+  rozet: num(o, "rozet"),
+  yonetici: num(o, "yonetici"),
+  yoneticiEksi: num(o, "yoneticiEksi"),
+  harcanan: num(o, "harcanan"),
+  kazanilan: num(o, "kazanilan"),
+  net: num(o, "net"),
+  sinirdaki: num(o, "sinirdaki"),
+});
+const ecoGroup = (o: Rec): AdminEconomyGroup => ({
+  id: str(o, "id"),
+  label: str(o, "label"),
+  count: num(o, "count"),
+  glix: num(o, "glix"),
+});
+
+export function parseEconomy(v: unknown): AdminEconomy {
+  const o = rec(v);
+  const circ = rec(o.circulation);
+  const sales = rec(o.sales);
+  return {
+    days: num(o, "days"),
+    daily: list(o, "daily", (d) => ({ day: str(d, "day"), ...ecoDayFields(d) }), 90),
+    totals: ecoDayFields(rec(o.totals)),
+    circulation: { total: num(circ, "total"), holders: num(circ, "holders") },
+    dailyCap: num(o, "dailyCap"),
+    topItems: list(
+      o,
+      "topItems",
+      (i) => ({
+        itemId: str(i, "itemId"),
+        name: str(i, "name"),
+        rarity: str(i, "rarity"),
+        typeName: str(i, "typeName"),
+        count: num(i, "count"),
+        glix: num(i, "glix"),
+      }),
+      50,
+    ),
+    sales: { count: num(sales, "count"), glix: num(sales, "glix") },
+    byRarity: list(o, "byRarity", ecoGroup, 20),
+    byType: list(o, "byType", ecoGroup, 20),
+    deals: list(
+      o,
+      "deals",
+      (d) => ({
+        itemId: str(d, "itemId"),
+        name: str(d, "name"),
+        rarity: str(d, "rarity"),
+        listPrice: num(d, "listPrice"),
+        price: num(d, "price"),
+        soldToday: num(d, "soldToday"),
+      }),
+      10,
+    ),
+    dealEndsAt: num(o, "dealEndsAt"),
   };
 }

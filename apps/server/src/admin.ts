@@ -31,6 +31,7 @@ import {
   cleanPlainText,
   cleanSitePath,
   cosmeticItem,
+  ECONOMY_RANGES,
   isAnnouncementKind,
   isReportStatus,
   REPORT_ADMIN_NOTE_MAX,
@@ -43,7 +44,7 @@ import {
   type AdminSearchQuery,
   type ReportRow,
 } from "./accountStore.js";
-import { buildAccounts, buildErrors, buildReleases, buildStats } from "./adminData.js";
+import { buildAccounts, buildEconomy, buildErrors, buildReleases, buildStats } from "./adminData.js";
 import type { AdminRoomOps } from "./adminRooms.js";
 import {
   hashToken,
@@ -276,6 +277,7 @@ const GET_ROUTES: ReadonlySet<string> = new Set([
   "accounts",
   "accounts/search",
   "accounts/detail",
+  "economy",
   "audit",
   "content",
   "maintenance",
@@ -351,6 +353,12 @@ async function route(req: IncomingMessage, res: ServerResponse, env: AdminEnv): 
       return send(res, 200, buildErrors(env.stats, env.now));
     case "accounts":
       return send(res, 200, buildAccounts(env.stats, env.accounts, env.now));
+    case "economy": {
+      const days = Number(url.searchParams.get("days") ?? "7");
+      if (!(ECONOMY_RANGES as readonly number[]).includes(days))
+        return fail(res, 400, "bad_request", "Geçersiz aralık.");
+      return send(res, 200, buildEconomy(env.accounts, env.now, days));
+    }
     case "accounts/search":
       return searchAccounts(res, env, account.id, url.searchParams.get("q"));
     case "accounts/detail":

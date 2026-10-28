@@ -402,3 +402,74 @@ export interface AdminPoolBulk {
   added: number;
   pool: AdminPoolSummary;
 }
+
+// ---- Glix ekonomisi ----
+
+/** Glix ekonomisi aralıkları (gün). */
+export const ECONOMY_RANGES = [7, 30] as const;
+
+export interface AdminEconomyDay {
+  /** İstanbul takvim günü, `YYYY-MM-DD`. */
+  day: string;
+  /** Kazanç (pozitif tutarlar), nedene göre. `yonetici`: yöneticinin eklediği. */
+  mac: number;
+  rozet: number;
+  yonetici: number;
+  /** Yöneticinin düştüğü Glix (pozitif sayı). */
+  yoneticiEksi: number;
+  /** Mağazada harcanan Glix (pozitif sayı). */
+  harcanan: number;
+  /** Toplam kazanç (mac + rozet + yonetici). */
+  kazanilan: number;
+  /** kazanilan - yoneticiEksi - harcanan. */
+  net: number;
+  /** O gün günlük maç sınırına ulaşan hesap sayısı. */
+  sinirdaki: number;
+}
+
+export interface AdminEconomyItem {
+  itemId: string;
+  name: string;
+  rarity: string;
+  /** Tür adı ("Lakap", "Çerçeve", ...). */
+  typeName: string;
+  count: number;
+  glix: number;
+}
+
+export interface AdminEconomyGroup {
+  /** Kimlik (nadirlik ya da tür kimliği). */
+  id: string;
+  label: string;
+  count: number;
+  glix: number;
+}
+
+export interface AdminEconomyDeal {
+  itemId: string;
+  name: string;
+  rarity: string;
+  listPrice: number;
+  price: number;
+  /** Bugün (İstanbul günü) fırsat fiyatıyla satılan adet. */
+  soldToday: number;
+}
+
+/** `GET /api/admin/economy?days=7|30`. Kişi bilgisi yok. */
+export interface AdminEconomy {
+  days: number;
+  /** Eskiden yeniye, sıfır günler dahil. */
+  daily: AdminEconomyDay[];
+  /** Aralık toplamı (günlüklerin toplamı). */
+  totals: Omit<AdminEconomyDay, "day">;
+  circulation: { total: number; holders: number };
+  /** Günlük maç sınırı (Glix). */
+  dailyCap: number;
+  topItems: AdminEconomyItem[];
+  /** Aralıktaki toplam ücretli satış. */
+  sales: { count: number; glix: number };
+  byRarity: AdminEconomyGroup[];
+  byType: AdminEconomyGroup[];
+  deals: AdminEconomyDeal[];
+  dealEndsAt: number;
+}
