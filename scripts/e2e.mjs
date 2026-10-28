@@ -617,8 +617,8 @@ async function main() {
     await TV.locator(".tv__winner").waitFor(OPT);
     await shot(TV, "tv-06-final");
     log("TV: anlatım, oyun, sonuç ve final izlendi; maç etkilenmedi");
-    assert(await btn(A, /^aynı ekiple yeni maç$/i).isVisible(), "host AYNI EKİPLE YENİ MAÇ görmeli");
-    assert(!(await btn(C, /^aynı ekiple yeni maç$/i).count()), "C AYNI EKİPLE YENİ MAÇ görmemeli");
+    assert(await btn(A, /^tekrar oyna$/i).isVisible(), "host TEKRAR OYNA görmeli");
+    assert(!(await btn(C, /^tekrar oyna$/i).count()), "C TEKRAR OYNA görmemeli");
     await C.getByText("Ev sahibi yeni maçı başlatacak", { exact: true }).waitFor(OPT);
     const finalScores = await A.locator(".podium__score, .row__score--big").allInnerTexts();
     log(
@@ -640,8 +640,8 @@ async function main() {
     await btn(A, /^gönder$/i).click();
     await A.getByText("Teşekkürler!").waitFor(OPT);
     assert(
-      await btn(A, /^aynı ekiple yeni maç$/i).isVisible(),
-      "geri bildirimden sonra AYNI EKİPLE YENİ MAÇ görünmeli",
+      await btn(A, /^tekrar oyna$/i).isVisible(),
+      "geri bildirimden sonra TEKRAR OYNA görünmeli",
     );
     await shot(A, "15b-final-feedback");
     {
@@ -654,7 +654,7 @@ async function main() {
       assert(fb.length === 1 && fb[0].rating === 5, `geri bildirim kaydı: ${JSON.stringify(fb)}`);
       assert(done.length >= 1 && done[0].completed === 1, `maç kaydı: ${JSON.stringify(done)}`);
     }
-    await btn(A, /^aynı ekiple yeni maç$/i).click();
+    await btn(A, /^tekrar oyna$/i).click();
     for (const p of [A, B2, C]) {
       await p.locator(".roomcode").waitFor(OPT);
       assert((await lobbyCode(p)) === code, "lobiye aynı odada dönülmeli");
@@ -699,10 +699,10 @@ async function main() {
         .catch(() => {});
       await A.locator(".fin__head").waitFor({ timeout: 90_000 });
       await F.locator(".fin__head").waitFor({ timeout: 20_000 });
-      assert(!(await btn(F, /^aynı ekiple yeni maç$/i).count()), "izleyici AYNI EKİPLE YENİ MAÇ görmemeli");
+      assert(!(await btn(F, /^tekrar oyna$/i).count()), "izleyici TEKRAR OYNA görmemeli");
       await F.getByText("Lobiye dönünce oyuncu olursun", { exact: true }).waitFor(OPT);
       await shot(F, "13c-spectator-final");
-      await btn(A, /^aynı ekiple yeni maç$/i).click();
+      await btn(A, /^tekrar oyna$/i).click();
       for (const p of [A, F]) {
         await p.locator(".roomcode").waitFor(OPT);
         assert((await p.locator("button.seat:not(.seat--empty)").count()) === 4, "lobide dört oyuncu olmalı");

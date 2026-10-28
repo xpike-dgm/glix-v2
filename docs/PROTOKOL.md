@@ -211,7 +211,7 @@ istemci kapatılan duyurunun kimliğini `localStorage`'da (`glix.duyuru`) tutar,
 - Alıcı: abonelik var **ve** (`visibility` ile gizli bildirmiş **ya da** bağlantısı kopuk ama oturumu yaşıyor). Oyuncu başına 20 sn'de en çok bir.
 - Tetikleyiciler: (1) host maçı başlattı: "Oyun başlıyor!"; (2) sıra tabanlı oyunda sıra bir oyuncuya geçti: "Sıra sende!"
   (oyun tanımında isteğe bağlı `notify(state, ctx)`; şimdilik Zaman Bombası Hafızası ve Kör Bomba); (3) final sonrası host
-  "Aynı ekiple yeni maç" (`returnToLobby`) dedi: "Yeni maç".
+  "Tekrar oyna" (`returnToLobby`) dedi: "Yeni maç".
 - Metin geneldir: `{title, body: "Oda KOD", tag}`; oyun içeriği, ad ya da gizli bilgi asla. Pazarlama yok.
 - Tıklama (`public/sw-push.js`): açık pencere varsa öne getirilir, yoksa uygulama açılır ve kayıtlı oturum odayı geri getirir.
 - **Arkadaş daveti (H8):** hesaplı bağlantıdan gelen `pushSubscribe` odasız da kabul edilir ve abonelik ayrıca **hesaba** bağlanır

@@ -36,7 +36,7 @@
 ## Web bildirimleri (isteğe bağlı)
 
 Ana ekrana eklenmiş uygulamada, oyuncu Ayarlar'dan açarsa: maç başlayınca, sıra kendisine gelince (Zaman Bombası, Kör Bomba) ve
-host "Aynı ekiple yeni maç" deyince, **yalnız uygulamadan ayrılmış oyunculara** bildirim gider (oyuncu başına 20 sn'de en çok bir).
+host "Tekrar oyna" deyince, **yalnız uygulamadan ayrılmış oyunculara** bildirim gider (oyuncu başına 20 sn'de en çok bir).
 Metin geneldir ve yalnız oda kodunu içerir. Abonelikler yalnız bellekte tutulur; oyuncu odadan çıkınca silinir.
 
 1. Anahtar üret (sunucuda ya da kendi makinende): `node scripts/vapid-keys.mjs mailto:adresin@ornek.com`

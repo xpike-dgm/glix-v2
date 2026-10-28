@@ -68,7 +68,7 @@ lobi-2, lobi-8, lobi-qr, lobi-picker durumları eklendi.
 - [x] **Tur özeti satırı:** oyunun `result`'ından türeyen tek cümle ("Elif 3 eşleşme ile turun yıldızı") — oyun başına
   `summarize(result)` saf fonksiyonu (engine), Y5 ile zenginleşir.
 - [x] "Sıradaki: Kör Kronometre" kartı + **"Devam" (herkes basınca 7 sn beklenmez)** — sunucu `results` aşamasına erken bitiş.
-- [x] Final: podyum + unvanlar + "Aynı ekiple yeni maç" (paylaşım kartı U7'de).
+- [x] Final: podyum + unvanlar + "Tekrar oyna" (paylaşım kartı U7'de).
 
 ### U5. Canlılık (juice)
 - [x] **Tepki yağmuru:** sonuç/final ekranında 😂 😱 🔥 👏; sunucuda hız sınırlı yeni mesaj `react`, herkese yayın. (Lobi, sonuç, final açık; oyun sırasında kapalı.)

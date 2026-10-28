@@ -285,7 +285,7 @@ export function Final(props: { snap: RoomSnapshot }) {
             }
           >
             <PrimaryButton class="pbtn--long" onClick={() => returnToLobby()}>
-              Aynı ekiple yeni maç
+              Tekrar oyna
             </PrimaryButton>
           </Show>
         </div>
