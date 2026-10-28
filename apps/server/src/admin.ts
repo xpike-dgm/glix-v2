@@ -246,6 +246,7 @@ const POST_ROUTES: ReadonlySet<string> = new Set([
   "accounts/unsuspend",
   "accounts/delete",
   "accounts/logout-all",
+  "accounts/glix",
   "content/game",
   "announcement/set",
   "announcement/clear",
@@ -569,7 +570,11 @@ type ActionInput =
   | { op: "suspend"; id: number; duration: SuspendDuration; reason: string }
   | { op: "unsuspend"; id: number }
   | { op: "delete"; id: number; confirm: string }
-  | { op: "logout-all"; id: number };
+  | { op: "logout-all"; id: number }
+  | { op: "glix"; id: number; amount: number; reason: string };
+
+/** Tek düzeltmede en çok |tutar|. */
+export const GLIX_ADJUST_MAX = 100_000;
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -609,6 +614,20 @@ export function parseAction(op: ActionInput["op"], data: unknown): ActionInput |
         return null;
       return { op, id, duration: duration as SuspendDuration, reason };
     }
+    case "glix": {
+      if (!exactKeys(data, ["id", "amount", "reason"])) return null;
+      const amount = data.amount;
+      const reason = cleanReason(data.reason);
+      if (
+        typeof amount !== "number" ||
+        !Number.isSafeInteger(amount) ||
+        amount === 0 ||
+        Math.abs(amount) > GLIX_ADJUST_MAX ||
+        reason === null
+      )
+        return null;
+      return { op, id, amount, reason };
+    }
     case "delete": {
       if (!exactKeys(data, ["id", "confirm"])) return null;
       const confirm = data.confirm;
@@ -625,6 +644,7 @@ const ACTION_OPS: Readonly<Record<string, ActionInput["op"]>> = {
   "accounts/unsuspend": "unsuspend",
   "accounts/delete": "delete",
   "accounts/logout-all": "logout-all",
+  "accounts/glix": "glix",
 };
 
 async function accountAction(
@@ -686,6 +706,16 @@ async function accountAction(
       audit(env, adminId, "account_delete", "", id);
       log.info("account_deleted");
       return send(res, 200, { ok: true });
+    }
+    case "glix": {
+      const done = env.accounts.adjustGlix(id, input.amount, input.reason, env.now);
+      if (!done.ok) {
+        return done.reason === "negative"
+          ? fail(res, 409, "glix_negative", "Bakiye 0'ın altına inemez.")
+          : fail(res, 404, "not_found", "Hesap bulunamadı.");
+      }
+      audit(env, adminId, "account_glix", String(input.amount), id);
+      return send(res, 200, { ok: true, balance: done.balance });
     }
     case "logout-all": {
       const related = env.accounts.relatedAccountIds(id);

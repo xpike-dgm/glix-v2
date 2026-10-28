@@ -6,7 +6,8 @@ import type {
   ReportReason,
   ReportStatus,
 } from "@glix/engine";
-import { REPORT_RETENTION_MS } from "@glix/engine";
+import { type GlixPart, matchAward, REPORT_RETENTION_MS } from "@glix/engine";
+import { istanbulDayStart } from "./badges.js";
 import { createFriendStore, FRIENDS_SCHEMA, type FriendStore } from "./friendStore.js";
 import { log } from "./log.js";
 import { loadSqlite } from "./statsStore.js";
@@ -68,6 +69,8 @@ export interface ProfileData {
   coPlayers: { username: string; matches: number }[];
   /** Kazanılmış rozetler (kimlik + zaman); adlar `badges.ts`'te. */
   badges: { badgeId: string; earnedAt: number }[];
+  /** Glix bakiyesi. */
+  glix: number;
 }
 
 /** Rozet değerlendirmesinin SQL toplamları (maç satırı yazıldıktan sonra). */
@@ -142,9 +145,33 @@ export interface AccountExportData {
   gameStats: { gameId: string; endedAt: number; key: string; value: number }[];
   matches: { endedAt: number; players: number; games: number; score: number; place: number; won: boolean }[];
   coplay: { username: string; matches: number; lastAt: number }[];
+  /** Glix bakiyesi ve tüm hareketleri (eskiden yeniye). */
+  glix: { balance: number; ledger: Omit<GlixLedgerRow, "id">[] };
   /** Kayıtlı web bildirimi aboneliği (yalnız ne zaman eklendiği; uç nokta ve anahtarlar dışarı verilmez). */
   push: { createdAt: number } | null;
 }
+
+/** Glix hareketinin nedeni: maç, rozet, yönetici düzeltmesi (`satin-alma` mağaza için ayrılmıştır). */
+export type GlixReason = "mac" | "rozet" | "yonetici" | "satin-alma";
+
+/** Glix hareket defteri satırı; `amount` işaretlidir. `ref`: rozet kimliği, yönetici notu ya da maç sırası. */
+export interface GlixLedgerRow {
+  id: number;
+  at: number;
+  amount: number;
+  reason: GlixReason;
+  ref: string | null;
+}
+
+/** Bir maçtan yazılan Glix; `total` 0 olabilir (günlük sınır dolduysa). */
+export interface GlixMatchCredit {
+  parts: GlixPart[];
+  total: number;
+  capped: boolean;
+  balance: number;
+}
+
+export type GlixAdjustResult = { ok: true; balance: number } | { ok: false; reason: "missing" | "negative" };
 
 /** Sunucu başlangıç kaydı ("son yayınlar"). `stoppedAt` boşsa temiz kapanış kaydı yoktur. */
 export interface ServerStartRow {
@@ -326,6 +353,25 @@ export interface AccountStore extends FriendStore {
   earnedBadges(accountId: number): { badgeId: string; earnedAt: number }[];
   /** Rozetleri yazar; yalnızca yeni kazanılanların kimliklerini döner (zaten olan atlanır, ikinci kez verilmez). */
   awardBadges(accountId: number, badgeIds: readonly string[], at: number): string[];
+  /**
+   * Biten maçın Glix ödülünü tek işlemde hesaplar ve yazar (günlük sınır ve günün ilk maçı İstanbul gününe göre,
+   * hareket defterinden okunur; yarış olmaz). Hesap yoksa null. Kazanç 0 ise defter satırı yazılmaz.
+   */
+  creditMatchGlix(accountId: number, at: number, place: number): GlixMatchCredit | null;
+  /** Yeni rozetlerin Glix ödülünü yazar (günlük sınıra sayılmaz); yeni bakiyeyi döner, hesap yoksa null. */
+  creditBadgeGlix(
+    accountId: number,
+    rewards: readonly { badgeId: string; amount: number }[],
+    at: number,
+  ): number | null;
+  /** Yönetici düzeltmesi: işaretli tutar, bakiye 0'ın altına inemez. Defter ve bakiye tek işlemde yazılır. */
+  adjustGlix(accountId: number, amount: number, note: string, at: number): GlixAdjustResult;
+  /** Glix bakiyesi; hesap yoksa 0. */
+  glixBalance(accountId: number): number;
+  /** Son hareketler, yeniden eskiye. */
+  glixLedger(accountId: number, limit: number): GlixLedgerRow[];
+  /** `at`'ın İstanbul gününde maçlardan kazanılan Glix. */
+  glixEarnedToday(accountId: number, at: number): number;
   /**
    * Verilen hesapların (en çok ~200) maç toplamları; `since` doluysa yalnız o andan sonra biten maçlar.
    * Tek toplu sorgu; maçı olmayan hesap da sıfırlarla döner.
@@ -640,7 +686,22 @@ const MIGRATIONS: readonly string[] = [
       WHERE pool_id IN ('laf-sokma/aile', 'laf-sokma/arkadas', 'laf-sokma/ofis')
       ORDER BY created_at, rowid;
    DELETE FROM content_overrides WHERE pool_id IN ('laf-sokma/aile', 'laf-sokma/arkadas', 'laf-sokma/ofis');`,
+  // Glix (U18 M1): hızlı bakiye (hesap satırında) ve değişmez hareket defteri; ikisi aynı işlemde yazılır.
+  // `amount` işaretli tamsayı; neden: mac | rozet | yonetici | satin-alma (mağaza M2). Hesapla birlikte silinir.
+  `ALTER TABLE accounts ADD COLUMN glix INTEGER NOT NULL DEFAULT 0;
+   CREATE TABLE glix_ledger (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     account_id INTEGER NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+     at INTEGER NOT NULL,
+     amount INTEGER NOT NULL,
+     reason TEXT NOT NULL CHECK (reason IN ('mac', 'rozet', 'yonetici', 'satin-alma')),
+     ref TEXT
+   );
+   CREATE INDEX glix_ledger_account ON glix_ledger (account_id, at);`,
 ];
+
+/** Yönetici hesap dökümünde gösterilen son Glix hareketi sayısı. */
+export const ADMIN_GLIX_ROWS = 20;
 
 /** Sunucu başlangıç kayıtları en çok bu kadar tutulur. */
 export const SERVER_START_KEEP = 200;
@@ -878,6 +939,23 @@ export function createAccounts(path: string): AccountStore {
        SELECT ?, ?, ? WHERE EXISTS (SELECT 1 FROM accounts WHERE id = ?)`,
   );
   const dropBadges = db.prepare("DELETE FROM badges WHERE account_id = ?");
+  const glixAccount = db.prepare("SELECT glix FROM accounts WHERE id = ?");
+  const glixAdd = db.prepare("UPDATE accounts SET glix = glix + ? WHERE id = ?");
+  const glixInsert = db.prepare(
+    "INSERT INTO glix_ledger (account_id, at, amount, reason, ref) VALUES (?, ?, ?, ?, ?)",
+  );
+  const glixToday = db.prepare(
+    `SELECT COALESCE(SUM(amount), 0) AS s, COUNT(*) AS n FROM glix_ledger
+      WHERE account_id = ? AND reason = 'mac' AND at >= ? AND at < ?`,
+  );
+  const glixRows = db.prepare(
+    "SELECT id, at, amount, reason, ref FROM glix_ledger WHERE account_id = ? ORDER BY id DESC LIMIT ?",
+  );
+  const glixAllRows = db.prepare(
+    "SELECT at, amount, reason, ref FROM glix_ledger WHERE account_id = ? ORDER BY id",
+  );
+  const dropGlix = db.prepare("DELETE FROM glix_ledger WHERE account_id = ?");
+  const resetGlix = db.prepare("UPDATE accounts SET glix = 0 WHERE id = ?");
   const dropGames = db.prepare("DELETE FROM account_games WHERE account_id = ?");
   const dropMatches = db.prepare("DELETE FROM account_matches WHERE account_id = ?");
   const dropCoplay = db.prepare("DELETE FROM account_coplay WHERE account_id = ? OR other_account_id = ?");
@@ -1214,6 +1292,7 @@ export function createAccounts(path: string): AccountStore {
           badgeId: r.badge_id,
           earnedAt: r.earned_at,
         })),
+        glix: (glixAccount.get(accountId) as { glix: number } | undefined)?.glix ?? 0,
       };
     },
     badgeStats(accountId) {
@@ -1244,6 +1323,76 @@ export function createAccounts(path: string): AccountStore {
           if (Number(insertBadge.run(accountId, id, at, accountId).changes) === 1) fresh.push(id);
       });
       return fresh;
+    },
+    creditMatchGlix(accountId, at, place) {
+      let out: GlixMatchCredit | null = null;
+      inTransaction(() => {
+        const acc = glixAccount.get(accountId) as { glix: number } | undefined;
+        if (!acc) return;
+        const start = istanbulDayStart(at);
+        const day = glixToday.get(accountId, start, start + 24 * 3600 * 1000) as { s: number; n: number };
+        const award = matchAward({ place, earnedToday: day.s, firstToday: day.n === 0 });
+        if (award.total > 0) {
+          glixInsert.run(accountId, at, award.total, "mac", `yer:${place}`);
+          glixAdd.run(award.total, accountId);
+        }
+        out = {
+          parts: award.parts,
+          total: award.total,
+          capped: award.capped,
+          balance: acc.glix + award.total,
+        };
+      });
+      return out;
+    },
+    creditBadgeGlix(accountId, rewards, at) {
+      let balance: number | null = null;
+      inTransaction(() => {
+        const acc = glixAccount.get(accountId) as { glix: number } | undefined;
+        if (!acc) return;
+        let sum = 0;
+        for (const r of rewards) {
+          if (!Number.isSafeInteger(r.amount) || r.amount <= 0) continue;
+          glixInsert.run(accountId, at, r.amount, "rozet", r.badgeId);
+          sum += r.amount;
+        }
+        if (sum > 0) glixAdd.run(sum, accountId);
+        balance = acc.glix + sum;
+      });
+      return balance;
+    },
+    adjustGlix(accountId, amount, note, at) {
+      let result: GlixAdjustResult = { ok: false, reason: "missing" };
+      inTransaction(() => {
+        const acc = glixAccount.get(accountId) as { glix: number } | undefined;
+        if (!acc) return;
+        if (!Number.isSafeInteger(amount) || acc.glix + amount < 0) {
+          result = { ok: false, reason: "negative" };
+          return;
+        }
+        glixInsert.run(accountId, at, amount, "yonetici", note);
+        glixAdd.run(amount, accountId);
+        result = { ok: true, balance: acc.glix + amount };
+      });
+      return result;
+    },
+    glixBalance(accountId) {
+      return (glixAccount.get(accountId) as { glix: number } | undefined)?.glix ?? 0;
+    },
+    glixLedger(accountId, limit) {
+      return (
+        glixRows.all(accountId, limit) as {
+          id: number;
+          at: number;
+          amount: number;
+          reason: GlixReason;
+          ref: string | null;
+        }[]
+      ).map((r) => ({ id: r.id, at: r.at, amount: r.amount, reason: r.reason, ref: r.ref }));
+    },
+    glixEarnedToday(accountId, at) {
+      const start = istanbulDayStart(at);
+      return (glixToday.get(accountId, start, start + 24 * 3600 * 1000) as { s: number }).s;
     },
     standings(accountIds, since) {
       if (accountIds.length === 0) return [];
@@ -1301,6 +1450,8 @@ export function createAccounts(path: string): AccountStore {
         dropGameStats.run(accountId);
         dropMatches.run(accountId);
         dropBadges.run(accountId);
+        dropGlix.run(accountId);
+        resetGlix.run(accountId);
         dropCoplay.run(accountId, accountId);
         dropFriends.run(accountId, accountId);
         dropBlocks.run(accountId, accountId);
@@ -1378,6 +1529,17 @@ export function createAccounts(path: string): AccountStore {
         coplay: (coplayDump.all(accountId) as { username: string; matches: number; last_at: number }[]).map(
           (r) => ({ username: r.username, matches: r.matches, lastAt: r.last_at }),
         ),
+        glix: {
+          balance: (glixAccount.get(accountId) as { glix: number } | undefined)?.glix ?? 0,
+          ledger: (
+            glixAllRows.all(accountId) as {
+              at: number;
+              amount: number;
+              reason: GlixReason;
+              ref: string | null;
+            }[]
+          ).map((r) => ({ at: r.at, amount: r.amount, reason: r.reason, ref: r.ref })),
+        },
         push: (() => {
           const p = pushSince.get(accountId) as { created_at: number } | undefined;
           return p ? { createdAt: p.created_at } : null;
@@ -1400,6 +1562,7 @@ export function createAccounts(path: string): AccountStore {
         dropGameStats.run(accountId);
         dropMatches.run(accountId);
         dropBadges.run(accountId);
+        dropGlix.run(accountId);
         dropCoplay.run(accountId, accountId);
         dropFriends.run(accountId, accountId);
         dropBlocks.run(accountId, accountId);
@@ -1681,6 +1844,17 @@ export function createAccounts(path: string): AccountStore {
         wins: m.wins,
         games: g.n,
         badges: (badgeCount.get(accountId) as { n: number }).n,
+        glix: {
+          balance: (glixAccount.get(accountId) as { glix: number } | undefined)?.glix ?? 0,
+          ledger: (
+            glixRows.all(accountId, ADMIN_GLIX_ROWS) as {
+              at: number;
+              amount: number;
+              reason: GlixReason;
+              ref: string | null;
+            }[]
+          ).map((g) => ({ at: g.at, amount: g.amount, reason: g.reason, ref: g.ref })),
+        },
         friends: (friendCount.get(accountId, accountId) as { n: number }).n,
         suspension: suspensionActive(r.suspended_at, r.suspended_until, now)
           ? { since: r.suspended_at as number, until: r.suspended_until, reason: r.suspend_reason ?? "" }

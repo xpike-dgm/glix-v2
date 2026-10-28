@@ -46,6 +46,9 @@ o oyunun geçtiği maçların ortalamasıdır.
     döner (odada oyuna devam eder), arkadaşlar çevrimdışı görür, arkadaş isteği "bulunamadı" olur. Süre dolunca kendiliğinden açılır.
     **Kullanıcı giriş ekranında yalnız bitiş tarihini görür; sebep gösterilmez** (iç not), hesap sahibi "Verimi indir" dosyasında görür.
     İşlem kaydına sebep yazılmaz (yalnız süre), sebep hesap satırında durur ve hesapla birlikte silinir.
+  - *Glix düzelt:* ayrıntıda Glix bakiyesi ve son 20 hareket (zaman, işaretli tutar, neden, ayrıntı) görünür. İşlem: işaretli tamsayı (0 olmaz, |tutar| ≤ 100000) + zorunlu kısa sebep (1-140 karakter);
+    `POST /api/admin/accounts/glix {id, amount, reason}`. Bakiye 0'ın altına inemez (409 `glix_negative`). Defterde `yonetici` satırı (sebep `ref` alanında) ve bakiye tek işlemde yazılır;
+    işlem kaydına `account_glix` + tutar yazılır (sebep yalnız defterde). Yönetici hesaplarına yapılamaz.
   - *Oturumları kapat:* tüm oturumlar silinir, canlı soketler misafire döner; hesap ve veri yerinde kalır.
   - *Hesabı sil:* KVKK silmesiyle aynı (`deleteAccount` + sosyal temizlik); yönetici kullanıcı adını yazarak onaylar.
 - **Korunma:** `GLIX_ADMIN_ACCOUNT_IDS` içindeki hesaplara (kendisi dahil) ad değiştirme, askı, silme ve oturum kapatma yapılamaz.

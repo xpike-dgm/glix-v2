@@ -11,6 +11,11 @@ const [fresh, setFresh] = createSignal<readonly BadgeInfo[]>([]);
 
 export { fresh as freshBadges };
 
+/** Rozet kimliği -> ad (profil yanıtından öğrenilir); Glix dökümünde "Rozet: ad" için. */
+const [names, setNames] = createSignal<Readonly<Record<string, string>>>({});
+
+export { names as badgeNames };
+
 let seq = 0;
 
 /** Yeni rozet kimlikleri geldi: adlar profilden okunur; okunamazsa kısa bir bildirim gösterilir. */
@@ -19,6 +24,8 @@ export async function receiveBadges(ids: readonly string[]): Promise<void> {
   try {
     const res = await fetch("/api/profile", { credentials: "same-origin" });
     const profile = res.ok ? parseProfile(await res.json()) : null;
+    if (profile)
+      setNames(Object.fromEntries(profile.badges.filter((b) => b.earned).map((b) => [b.id, b.name])));
     if (mine !== seq) return;
     const list = profile ? newBadges(ids, profile.badges) : [];
     if (list.length > 0) {
@@ -34,7 +41,13 @@ export async function receiveBadges(ids: readonly string[]): Promise<void> {
 /** Yalnız geliştirme önizlemesi: kart doğrudan verilir. */
 export function showBadges(list: readonly BadgeInfo[]): void {
   seq += 1;
+  setNames(Object.fromEntries(list.map((b) => [b.id, b.name])));
   setFresh(list);
+}
+
+/** Yalnız geliştirme önizlemesi: rozet adlarını kart göstermeden bildirir. */
+export function rememberBadgeNames(map: Readonly<Record<string, string>>): void {
+  setNames(map);
 }
 
 export function dismissBadges(): void {

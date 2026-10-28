@@ -158,3 +158,75 @@
   flex: none;
   color: var(--cyan);
 }
+
+.fin__invitesub {
+  font-size: var(--fs-13);
+  opacity: 0.85;
+}
+
+/* Final: kazanılan Glix özeti (dokununca döküm açılır). */
+.glx {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.glx__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 52px;
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-btn);
+  border: 1px solid var(--amber);
+  background: rgba(255, 194, 59, 0.1);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.glx__total {
+  font-family: var(--font-display);
+  font-size: var(--fs-18);
+  color: var(--amber);
+}
+.glx__hint {
+  margin-left: auto;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.glx__chev {
+  flex: none;
+  color: var(--text-dim);
+  transition: transform 0.2s ease;
+}
+.glx__bar[aria-expanded="true"] .glx__chev {
+  transform: rotate(90deg);
+}
+.glx__list {
+  list-style: none;
+  margin: 0;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-btn);
+  border: 1px solid var(--line);
+  background: rgba(10, 16, 48, 0.45);
+}
+.glx__list[hidden] {
+  display: none;
+}
+.glx__line {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-1) 0;
+  font-size: var(--fs-15);
+  color: var(--text);
+}
+.glx__line b {
+  color: var(--amber);
+  font-variant-numeric: tabular-nums;
+}
+.glx__cap {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}

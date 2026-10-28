@@ -34,7 +34,7 @@ Mail servisi gelene kadar hesaplar doğrulanmamış açılır; şifre sıfırlam
 
 ## Misafir
 - Misafir oda **kuramaz**; ana sayfada "Kodla katıl" ve "Giriş yap / Kayıt ol" görür.
-- Misafir oyunda her şeyi yapar ama hiçbir şey kaydedilmez; maç sonunda "Rozet ve istatistik için hesap aç" daveti.
+- Misafir oyunda her şeyi yapar ama hiçbir şey kaydedilmez; maç sonunda "Hesap açsaydın N Glix kazanırdın" (rozet ve istatistik de hesapla gelir) daveti; N bkz. "Glix".
 - TV/sahne modu kodla bağlandığı için değişmez.
 
 ## İstatistik (yalnız hesaplılar, H5 uygulandı)
@@ -108,15 +108,32 @@ Sen + kabul edilmiş arkadaşların (yalnız hesaplılar). Sekmeler: **Bu hafta*
 Ekran: Arkadaşlar ekranından ve kendi Profilinden "Arkadaş sıralaması"; kendi satırın vurgulu (renk + sol çizgi + "Sen"), birinciye taç (değeri 0 ise yok);
 satıra dokununca o kişinin profili açılır (geri: sıralama). Arkadaşın yoksa "Sıralama için arkadaş ekle" ve Arkadaşlar düğmesi.
 
+## Glix (U18 M1, uygulandı)
+Para birimi "Glix"; yalnız hesaplı oyuncu kazanır, misafirin bakiyesi yoktur ve hiçbir şey saklanmaz. Fiyatlar ve mağaza M2'dedir.
+- **Kazanç (tamamlanan maç başına):** maç tamamlandı **10**; sıralama eki (paylaşılan sıra, 1-1-3) 1. **+15**, 2. **+10**, 3. **+5**, 4. ve sonrası yok.
+  **Günün ilk maçı** (İstanbul takvim günü; o gün maçtan Glix defterine yazılmış ilk maç): tamamlama + sıralama **ikiye katlanır** (ikinci kopya `gununIlki` parçası).
+  **Günlük sınır:** maçtan gelen Glix (tamamlama + sıra + ikiye katlama) İstanbul gününde hesap başına en çok **300**; sınırı aşan maç sınıra kadar kısmen ödenir (parçalar sırayla `mac`, `sira`, `gununIlki` kırpılır), sınır dolduktan sonra 0 ödenir.
+  **Rozet ödülü** yeni kazanılan her rozet için, sınıra sayılmaz: ilk-mac 25, on-mac 50, elli-mac 100, yuz-mac 100, ilk-galibiyet 25, on-galibiyet 50, yirmibes-galibiyet 100;
+  diğer (gizli olmayan) özel rozetler 50 (cok-yonlu, kalabalik-sampiyonu, can-dost, seri, kahin-on, kule-ustasi); gizli rozetler 100 (gece-kusu, hepsi-bir-arada). Tutar `badges.ts` içinde `BadgeDef.glix` alanındadır; testle her rozetin ödülü olduğu doğrulanır.
+- **Yalnız biten maç:** hesaplar yalnız `createAccountRecorder.matchFinished` (maç final'e varınca, `match.ts` `recordMatchStats`) yolundan ödenir; terk edilen/kapanan maç bu yola girmez. Aynı hesap bir maçta iki kez girdiyse bir kez sayılır (`accountEntrants`).
+- **Hesaplama yeri:** kurallar saf fonksiyondur (`packages/engine/src/glix.ts`: `matchAward`, `matchBase`, sabitler); sunucu ve istemci aynı sayıları kullanır. Gün sınırı ve "ilk maç" kararı depoda, **tek işlemde** (`creditMatchGlix`) deftere bakılarak verilir (yarış olmaz). Rozet ödülü `creditBadgeGlix`; yalnız `awardBadges`in yeni döndürdüğü rozetler ödenir.
+- **Depolama (göç 12):** `accounts.glix` (hızlı bakiye, `NOT NULL DEFAULT 0`) ve `glix_ledger(id, account_id, at, amount, reason, ref)` (`reason`: `mac | rozet | yonetici | satin-alma`; `ref`: maçta `yer:<sıra>`, rozette rozet kimliği, yöneticide kısa not). Defter satırı ve bakiye aynı işlemde yazılır; `account_id` `ON DELETE CASCADE`. Bakiye 0'ın altına inmez (yönetici düzeltmesinde reddedilir). `satin-alma` M2 içindir.
+- **Hata yalıtımı:** Glix adımı rozetten bağımsız try/catch içindedir; hata günlüğe (`op: "glix"`) gider, maç kaydını ve oyun akışını bozmaz.
+- **Bildirim:** `glixEarned {total, parts, balance, capped}` hesabın canlı bağlantılarına `badgesEarned`'den sonra gider (kazanç 0 ve sınır dolmamışsa gönderilmez; sınır dolduysa `total: 0, capped: true`). Ayrıntı `docs/PROTOKOL.md`.
+- **Arayüz:** final'de "+N Glix" satırı (dokununca döküm: "Maç +10", "2. oldun +10", "Günün ilk maçı ×2", "Rozet: <ad> +50", sınırda "Bugünlük maç sınırına ulaştın"); rozet kutlaması önce, Glix satırı final ekranında kalır. Mesaj gelmezse hiçbir şey görünmez. Profilde "Glix bakiyen: N" (`GET /api/profile` kendi profilinde `glix`; arkadaşın profilinde yok). Jeton simgesi `CoinIcon` (geçici çizim, M3'te yenilenir).
+- **Misafir:** final'deki davet "Hesap açsaydın N Glix kazanırdın" der; N = `matchBase(sıra)` (tamamlama + sıra eki; ikiye katlama ve sınır yok), istemcide hesaplanır, hiçbir şey saklanmaz.
+- **Yönetici:** hesap ayrıntısında bakiye ve son 20 hareket; "Glix düzelt" (işaretli tutar, sebep zorunlu) `yonetici` satırı yazar ve `account_glix` işlem kaydı düşer (`docs/ADMIN.md`).
+- **KVKK:** "Verimi indir" dosyasında `glix: {balance, movements}`; hesap silme defteri ve bakiyeyi siler. Aydınlatma metni ve `gizlilik.html` Glix bakiyesi/hareketlerini sayar.
+
 ## KVKK (H10, uygulandı)
 - **Aydınlatma:** kayıt ekranındaki "Aydınlatma metni" (`Disclosure.tsx`) `/gizlilik.html` ile uyumlu özettir (veri sorumlusu e-postası, hangi veri/neden, saklama, haklar, Ayarlar yolu).
 - **Verimi indir:** Ayarlar > Hesap > Verilerim. `POST /api/account/export` JSON dosyası döner (`glix-verilerim-<YYYY-MM-DD>.json`, Türkiye saati). İçerik: açıklama, hesap alanları
   (kullanıcı adı, e-posta, doğrulama, Google bağlı mı ve `sub`, şifre için "özet saklanır, dosyaya konmaz" notu, açılış ve ad değiştirme tarihi), oturumlar (yalnız açılış/son görülme; belirteç özeti yok),
-  `account_games` / `account_matches` satırları, birlikte oynananlar (kullanıcı adıyla), arkadaşlar/istekler/engeller (ad + tarih), oyun sayaçları, rozetler, bildirim aboneliği var mı ve ne zaman eklendi (`push_subscription`, `push_subscription_since`; uç nokta ve anahtarlar dökülmez). Hesap başına günde 3.
+  `account_games` / `account_matches` satırları, birlikte oynananlar (kullanıcı adıyla), arkadaşlar/istekler/engeller (ad + tarih), oyun sayaçları, rozetler, Glix bakiyesi ve hareketleri (`glix`), bildirim aboneliği var mı ve ne zaman eklendi (`push_subscription`, `push_subscription_since`; uç nokta ve anahtarlar dökülmez). Hesap başına günde 3.
   İstemci fetch + blob + bağlantıyla indirir; iOS ana ekran uygulamasında (indirmeyi tutmaz) dosya yeni sekmede açılır.
 - **Hesabımı sil:** Ayarlar > Hesap'ın en altı. `POST /api/account/delete {confirm, password?}`: kullanıcı adı yazılır (büyük/küçük harf duyarsız); şifreli hesapta şifre (hatalı deneme giriş sınırına sayılır);
   yalnız Google hesabında oturum en çok 10 dk önce açılmış olmalı, değilse 403 `fresh_login_required` ("Güvenlik için çıkış yapıp tekrar giriş yap, sonra sil."). Hesap başına saatte 5 deneme.
-  Silme tek işlemde ve kalıcıdır (`deleteAccount`): istatistik, rozet, birlikte oynama (karşı taraftaki sayaçlar dahil), arkadaşlık/istek/engel, oturumlar, e-posta belirteçleri, hesap satırı.
+  Silme tek işlemde ve kalıcıdır (`deleteAccount`): istatistik, rozet, Glix defteri ve bakiye, birlikte oynama (karşı taraftaki sayaçlar dahil), arkadaşlık/istek/engel, oturumlar, e-posta belirteçleri, hesap satırı.
   Ardından: bekleyen Google kayıtları ve bildirim aboneliği düşer, ilişkili hesaplara `friendsChanged` gider, çerez silinir.
   **Odadaki kullanıcı:** soketi açık kalır, misafire döner; oyuncu kaydı odada mevcut adıyla durur (`accountId` null: artık istatistik yazılmaz, takma ad değiştirebilir). Odadan atılmaz (en az şaşırtıcı davranış).
   Diğer cihazlardaki soketler de misafir olur; arayüzleri bir sonraki hesap okumasında (açılış/oturum denetimi) çıkışı görür.

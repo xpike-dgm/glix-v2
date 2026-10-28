@@ -20,9 +20,12 @@ import {
 } from "@glix/engine";
 import { roundClockAt } from "../games/butona-bas/view.js";
 import { setExportBusy, setGooglePending } from "../net/account.js";
+import { rememberBadgeNames } from "../net/badges.js";
 import { useMockSender } from "../net/client.js";
 import { freezeFriends } from "../net/friends.js";
 import { parseFriends } from "../net/friendsRules.js";
+import { receiveGlix } from "../net/glix.js";
+import type { GlixEarnedInfo } from "../net/glixRules.js";
 import { freezeProfile } from "../net/profile.js";
 import { parseProfile } from "../net/profileRules.js";
 import { emitReaction } from "../net/reactions.js";
@@ -64,6 +67,7 @@ function mockProfile(empty: boolean): {
       ? { matches: 0, wins: 0, winRate: 0, games: 0, gameWins: 0 }
       : { matches: 12, wins: 5, winRate: 0.417, games: 28, gameWins: 9 },
     favoriteGame: empty ? null : { id: "butona-bas", name: "Butona Bas", plays: 14 },
+    glix: empty ? 0 : 1250,
     perGame: games,
     recent: empty
       ? []
@@ -433,6 +437,44 @@ export function startMock(kind: string, params: URLSearchParams): void {
   // `&acct=1`: giriş yapmış hesap (finalde misafir daveti görünmez).
   if ((kind === "final" || kind === "lobby") && params.get("acct") === "1")
     setState("account", { username: "cihad_01", email: "cihad@example.com" });
+  // `&glix=1|ilk|sinir|dolu`: hesaplı finalde "+N Glix" özeti (1: maç+sıra, ilk: günün ilk maçı + rozet,
+  // sinir: sınıra takılan kısmi ödeme, dolu: sınır dolu, ödeme yok). Rozet adı Glix dökümünde görünsün diye bilinir.
+  const glixKind = params.get("glix");
+  if (kind === "final" && glixKind) {
+    setState("account", { username: "cihad_01", email: "cihad@example.com" });
+    const samples: Record<string, GlixEarnedInfo> = {
+      "1": {
+        total: 25,
+        parts: [
+          { kind: "mac", amount: 10 },
+          { kind: "sira", amount: 15 },
+        ],
+        balance: 140,
+        capped: false,
+      },
+      ilk: {
+        total: 100,
+        parts: [
+          { kind: "mac", amount: 10 },
+          { kind: "sira", amount: 15 },
+          { kind: "gununIlki", amount: 25 },
+          { kind: "rozet", amount: 50, badgeId: "on-mac" },
+        ],
+        balance: 410,
+        capped: false,
+      },
+      sinir: {
+        total: 5,
+        parts: [{ kind: "mac", amount: 5 }],
+        balance: 355,
+        capped: true,
+      },
+      dolu: { total: 0, parts: [], balance: 355, capped: true },
+    };
+    const sample = samples[glixKind];
+    if (sample) receiveGlix(sample);
+    rememberBadgeNames({ "on-mac": "Alışıyorum" });
+  }
   if (kind === "lobby" && params.get("acct") === "1") {
     const now = Date.now();
     const friend = (username: string) => ({

@@ -144,3 +144,15 @@ export const PencilIcon = (p: P) => (
     <path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 013 3L8 19l-4 1z" />
   </svg>
 );
+
+/**
+ * Glix jetonu: basit çizim (altın daire, iç halka, ortada eşkenar baklava). Gerçek çizim sonra gelecek; yerine
+ * koymak için yalnız bu bileşen değişir.
+ */
+export const CoinIcon = (p: P) => (
+  <svg {...base(p)} stroke-width={1.8}>
+    <circle cx="12" cy="12" r="9.4" fill="var(--amber)" stroke="#8a5a00" />
+    <circle cx="12" cy="12" r="6.4" fill="none" stroke="#8a5a00" />
+    <path d="M12 8.2l3 3.8-3 3.8-3-3.8z" fill="#8a5a00" stroke="none" />
+  </svg>
+);

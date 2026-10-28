@@ -5,6 +5,8 @@ import { hapticFinal } from "../fx/haptics.js";
 import { fanfare } from "../fx/sound.js";
 import { dismissBadges } from "../net/badges.js";
 import { leaveRoom, returnToLobby } from "../net/client.js";
+import { clearGlix } from "../net/glix.js";
+import { guestGlixText } from "../net/glixRules.js";
 import { matchRounds } from "../net/matchHistory.js";
 import { openReport } from "../net/reportUi.js";
 import { setState, state } from "../net/store.js";
@@ -17,6 +19,7 @@ import { BottomSheet } from "../ui/BottomSheet.js";
 import { EmojiFan } from "../ui/EmojiFan.js";
 import { FeedbackRow } from "../ui/FeedbackRow.js";
 import { GhostButton } from "../ui/GhostButton.js";
+import { GlixSummary } from "../ui/GlixSummary.js";
 import { ShareIcon } from "../ui/Icons.js";
 import { LeaveButton } from "../ui/LeaveButton.js";
 import { Mascot } from "../ui/Mascot.js";
@@ -48,6 +51,9 @@ export function Final(props: { snap: RoomSnapshot }) {
   const watchers = () => watchersOf(props.snap.players);
   const watching = () => watchers().some((p) => p.id === props.snap.selfId);
 
+  /** Kendi sıran (izleyiciyse yok). */
+  const myPlace = (): number | null => ranked().find((r) => r.player.id === props.snap.selfId)?.rank ?? null;
+
   const [announce, setAnnounce] = createSignal("");
   const spoken = (): string => {
     const names = winners()
@@ -63,6 +69,7 @@ export function Final(props: { snap: RoomSnapshot }) {
     noteMatchFinished();
     // Final'den ayrılınca (lobi, çıkış) rozet kartı bir sonraki maça taşınmaz.
     onCleanup(dismissBadges);
+    onCleanup(clearGlix);
     const t = setTimeout(() => setAnnounce(spoken()), 250);
     onCleanup(() => clearTimeout(t));
     if (!confetti) return;
@@ -173,6 +180,10 @@ export function Final(props: { snap: RoomSnapshot }) {
         </div>
 
         <div class="fin__b">
+          <Show when={state.account}>
+            <GlixSummary place={myPlace()} />
+          </Show>
+
           <Show when={titles().length > 0}>
             <section class="fin__titles rise" style={{ "--i": 6 }} aria-label="Unvanlar">
               <p class="overline">Unvanlar</p>
@@ -228,7 +239,17 @@ export function Final(props: { snap: RoomSnapshot }) {
 
           <Show when={!state.account}>
             <div class="fin__invite" role="note">
-              <span class="fin__invitetext">Rozet ve istatistik için hesap aç</span>
+              <span class="fin__invitetext">
+                <Show when={myPlace()} fallback="Rozet ve istatistik için hesap aç">
+                  {(place) => (
+                    <>
+                      {guestGlixText(place())}
+                      <br />
+                      <span class="fin__invitesub">Rozet ve istatistik de hesapla gelir</span>
+                    </>
+                  )}
+                </Show>
+              </span>
               <GhostButton size="small" onClick={() => setInviteOpen(true)}>
                 Kayıt ol
               </GhostButton>

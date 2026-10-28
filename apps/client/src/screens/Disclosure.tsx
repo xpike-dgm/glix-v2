@@ -40,6 +40,7 @@ export function Disclosure() {
             kimliğin ve e-postan alınır.
           </li>
           <li>Maç sonuçların, istatistiklerin ve rozetlerin: profilini ve sıralamayı göstermek için.</li>
+          <li>Glix bakiyen ve Glix hareketlerin: ne zaman ve neden kazandığını göstermek için.</li>
           <li>
             Arkadaşların, isteklerin ve engellediklerin: arkadaş özelliklerini çalıştırmak için. Yalnız kabul
             ettiğin arkadaşlar durumunu ve profil özetini görür.

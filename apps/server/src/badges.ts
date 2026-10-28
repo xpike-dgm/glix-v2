@@ -17,6 +17,8 @@ export interface BadgeDef {
   description: string;
   /** Gizli rozet: kazanılana kadar adı ve açıklaması gösterilmez. */
   secret: boolean;
+  /** Rozet ilk kazanıldığında verilen Glix (günlük maç sınırına sayılmaz): kademeye göre 25 / 50 / 100. */
+  glix: number;
   /** `stats` maç satırı yazıldıktan sonraki toplamlardır; rozet kazanıldıysa true. */
   check(stats: BadgeStats, ctx: MatchContext, pool: readonly string[]): boolean;
 }
@@ -28,6 +30,12 @@ const DAY_MS = 24 * 3600 * 1000;
 /** İstanbul saatiyle günün saati (0-23). */
 export function istanbulHour(ms: number): number {
   return Math.floor(((((ms + ISTANBUL_OFFSET_MS) % DAY_MS) + DAY_MS) % DAY_MS) / 3600_000);
+}
+
+/** İstanbul takvim gününün 00:00'ı (UTC ms). Günlük Glix sınırı bu güne göre sayılır. */
+export function istanbulDayStart(ms: number): number {
+  const local = ms + ISTANBUL_OFFSET_MS;
+  return Math.floor(local / DAY_MS) * DAY_MS - ISTANBUL_OFFSET_MS;
 }
 
 /** İstanbul'da o haftanın pazartesi 00:00'ı (UTC ms). Hafta pazartesi başlar. */
@@ -57,6 +65,7 @@ export const BADGES: readonly BadgeDef[] = [
     name: "İlk Adım",
     description: "İlk maçını bitir.",
     secret: false,
+    glix: 25,
     check: atLeast("matches", 1),
   },
   {
@@ -64,6 +73,7 @@ export const BADGES: readonly BadgeDef[] = [
     name: "Alışıyorum",
     description: "10 maç oyna.",
     secret: false,
+    glix: 50,
     check: atLeast("matches", 10),
   },
   {
@@ -71,6 +81,7 @@ export const BADGES: readonly BadgeDef[] = [
     name: "Müdavim",
     description: "50 maç oyna.",
     secret: false,
+    glix: 100,
     check: atLeast("matches", 50),
   },
   {
@@ -78,6 +89,7 @@ export const BADGES: readonly BadgeDef[] = [
     name: "Efsane Oyuncu",
     description: "100 maç oyna.",
     secret: false,
+    glix: 100,
     check: atLeast("matches", 100),
   },
   {
@@ -85,6 +97,7 @@ export const BADGES: readonly BadgeDef[] = [
     name: "İlk Zafer",
     description: "Bir maçı birinci bitir.",
     secret: false,
+    glix: 25,
     check: atLeast("wins", 1),
   },
   {
@@ -92,6 +105,7 @@ export const BADGES: readonly BadgeDef[] = [
     name: "Kazanmayı Biliyor",
     description: "10 maç kazan.",
     secret: false,
+    glix: 50,
     check: atLeast("wins", 10),
   },
   {
@@ -99,6 +113,7 @@ export const BADGES: readonly BadgeDef[] = [
     name: "Şampiyon",
     description: "25 maç kazan.",
     secret: false,
+    glix: 100,
     check: atLeast("wins", 25),
   },
   {
@@ -106,6 +121,7 @@ export const BADGES: readonly BadgeDef[] = [
     name: "Çok Yönlü",
     description: "10 farklı oyunda birinci ol.",
     secret: false,
+    glix: 50,
     check: (stats) => stats.winGames >= 10,
   },
   {
@@ -113,6 +129,7 @@ export const BADGES: readonly BadgeDef[] = [
     name: "Kalabalığın Şampiyonu",
     description: "8 kişilik bir maçı kazan.",
     secret: false,
+    glix: 50,
     check: (_stats, ctx) => ctx.won && ctx.players >= 8,
   },
   {
@@ -120,6 +137,7 @@ export const BADGES: readonly BadgeDef[] = [
     name: "Can Dost",
     description: "Aynı arkadaşınla 10 maç oyna.",
     secret: false,
+    glix: 50,
     check: (stats) => stats.friendCoplayMax >= 10,
   },
   {
@@ -127,6 +145,7 @@ export const BADGES: readonly BadgeDef[] = [
     name: "Seri Galip",
     description: "Üst üste 3 maç kazan.",
     secret: false,
+    glix: 50,
     check: (stats) => stats.lastWon.length >= 3 && stats.lastWon.slice(0, 3).every((w) => w),
   },
   {
@@ -134,6 +153,7 @@ export const BADGES: readonly BadgeDef[] = [
     name: "Büyük Kâhin",
     description: "Rus Ruleti'nde 10 farklı oyunda Kâhin ol.",
     secret: false,
+    glix: 50,
     check: (stats) => stats.kahinGames >= 10,
   },
   {
@@ -141,6 +161,7 @@ export const BADGES: readonly BadgeDef[] = [
     name: "Kule Ustası",
     description: "Kule Ustası'nda tek oyunda 3 kusursuz bırakış yap.",
     secret: false,
+    glix: 50,
     check: (stats) => stats.maxPerfects >= 3,
   },
   {
@@ -148,6 +169,7 @@ export const BADGES: readonly BadgeDef[] = [
     name: "Gece Kuşu",
     description: "Gece 02:00 ile 05:00 arasında bir maç bitir.",
     secret: true,
+    glix: 100,
     check: (_stats, ctx) => {
       const h = istanbulHour(ctx.endedAt);
       return h >= 2 && h < 5;
@@ -158,6 +180,7 @@ export const BADGES: readonly BadgeDef[] = [
     name: "Hepsi Bir Arada",
     description: "Rastgele havuzdaki her oyunu en az bir kez oyna.",
     secret: true,
+    glix: 100,
     check: (stats, _ctx, pool) => pool.length > 0 && pool.every((id) => stats.playedGames.includes(id)),
   },
 ];

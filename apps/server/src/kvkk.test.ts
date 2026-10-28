@@ -84,6 +84,7 @@ const OWNED = [
   ["account_coplay", "account_id = ? OR other_account_id = ?"],
   ["account_game_stats", "account_id = ?"],
   ["badges", "account_id = ?"],
+  ["glix_ledger", "account_id = ?"],
   ["friends", "a = ? OR b = ? OR requested_by = ?"],
   ["blocks", "blocker = ? OR blocked = ?"],
 ] as const;
@@ -112,6 +113,8 @@ async function seed(me: Made, others: { friend: Made; asker: Made; asked: Made; 
     [[me.id, others.friend.id]],
   );
   a.awardBadges(me.id, ["ilk-adim"], 8000);
+  a.creditMatchGlix(me.id, 7000, 1);
+  a.creditBadgeGlix(me.id, [{ badgeId: "ilk-adim", amount: 25 }], 8000);
   a.createToken("verify", me.id, "verify-hash-gizli", k.clock.now() + 100000);
   a.createToken("reset", me.id, "reset-hash-gizli", k.clock.now() + 100000);
 }
@@ -208,6 +211,10 @@ describe("Verimi indir", () => {
       };
       friends: Record<string, { username: string }[]>;
       badges: { id: string; name: string }[];
+      glix: {
+        balance: number;
+        movements: { at: string; amount: number; reason: string; ref: string | null }[];
+      };
       push_subscription: boolean;
     };
     expect(d.aciklama).toMatch(/GLIX/);
@@ -233,6 +240,12 @@ describe("Verimi indir", () => {
     expect(d.friends.outgoing_requests?.map((f) => f.username)).toEqual(["Istenen_3"]);
     expect(d.friends.blocked?.map((f) => f.username)).toEqual(["Engelli_4"]);
     expect(d.badges).toEqual([expect.objectContaining({ id: "ilk-adim" })]);
+    // İlk maç 1. sıra: (10 + 15) x 2 = 50; rozet +25.
+    expect(d.glix.balance).toBe(75);
+    expect(d.glix.movements).toEqual([
+      { at: expect.any(String), amount: 50, reason: "mac", ref: "yer:1" },
+      { at: expect.any(String), amount: 25, reason: "rozet", ref: "ilk-adim" },
+    ]);
     expect(d.push_subscription).toBe(true);
     // Sızıntı denetimi: ne şifre özeti ne de oturum/belirteç özetleri dosyada.
     const hash = k.srv.accounts.passwordHash(me.id) ?? "";

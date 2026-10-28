@@ -1,5 +1,6 @@
+import type { GlixPart } from "@glix/engine";
 import type { AccountStore, CoplayPair, GameRow, MatchRow } from "./accountStore.js";
-import { awardAfterMatch } from "./badges.js";
+import { awardAfterMatch, badgeById } from "./badges.js";
 import { log } from "./log.js";
 
 /** Sıralamaya giren bir oyuncu: oyuncu kimliği, varsa hesap kimliği ve puanı. */
@@ -114,6 +115,18 @@ export function buildMatchRecord(
 /** Yeni rozet kazanıldığında çağrılır (hesap kimliği, rozet kimlikleri). */
 export type BadgesEarnedHandler = (accountId: number, badgeIds: string[]) => void;
 
+/** Maç sonunda kazanılan Glix (oyuncuya giden mesajın içeriği). */
+export interface GlixEarned {
+  total: number;
+  parts: GlixPart[];
+  balance: number;
+  /** Günlük maç sınırı yüzünden bir kısım (ya da hepsi) ödenmedi. */
+  capped: boolean;
+}
+
+/** Glix kazanıldığında çağrılır (hesap kimliği, kazanç). Hiç kazanç yoksa ve sınır da dolmadıysa çağrılmaz. */
+export type GlixEarnedHandler = (accountId: number, earned: GlixEarned) => void;
+
 /**
  * Hesap deposuna yazan yazıcı: tek işlem, hata günlüğe gider. Maç satırı yazıldıktan sonra rozetler değerlendirilir;
  * bu adım ayrı hata yalıtımındadır (rozet hatası maç kaydını ya da oyun akışını bozmaz).
@@ -121,6 +134,7 @@ export type BadgesEarnedHandler = (accountId: number, badgeIds: string[]) => voi
 export function createAccountRecorder(
   store: AccountStore,
   onBadges: BadgesEarnedHandler = () => {},
+  onGlix: GlixEarnedHandler = () => {},
 ): AccountStatsRecorder {
   return {
     gameFinished(record) {
@@ -140,8 +154,9 @@ export function createAccountRecorder(
         return;
       }
       for (const row of record.rows) {
+        let ids: string[] = [];
         try {
-          const ids = awardAfterMatch(store, row.accountId, {
+          ids = awardAfterMatch(store, row.accountId, {
             endedAt: record.endedAt,
             players: row.players,
             place: row.place,
@@ -151,7 +166,44 @@ export function createAccountRecorder(
         } catch (err) {
           log.error("accounts_error", { op: "badges", error: String(err) });
         }
+        // Glix ayrı yalıtımda: hata rozeti, maç kaydını ya da oyun akışını bozmaz.
+        try {
+          const earned = creditGlix(store, row.accountId, record.endedAt, row.place, ids);
+          if (earned && (earned.total > 0 || earned.capped)) onGlix(row.accountId, earned);
+        } catch (err) {
+          log.error("accounts_error", { op: "glix", error: String(err) });
+        }
       }
     },
+  };
+}
+
+/** Maç ödülünü ve (varsa) bu maçla kazanılan rozetlerin ödülünü yazar; hesap yoksa null. */
+export function creditGlix(
+  store: AccountStore,
+  accountId: number,
+  endedAt: number,
+  place: number,
+  badgeIds: readonly string[],
+): GlixEarned | null {
+  const match = store.creditMatchGlix(accountId, endedAt, place);
+  if (!match) return null;
+  const rewards = badgeIds.flatMap((badgeId) => {
+    const glix = badgeById(badgeId)?.glix ?? 0;
+    return glix > 0 ? [{ badgeId, amount: glix }] : [];
+  });
+  const balance =
+    rewards.length > 0
+      ? (store.creditBadgeGlix(accountId, rewards, endedAt) ?? match.balance)
+      : match.balance;
+  const parts: GlixPart[] = [
+    ...match.parts,
+    ...rewards.map((r) => ({ kind: "rozet" as const, amount: r.amount, badgeId: r.badgeId })),
+  ];
+  return {
+    total: parts.reduce((sum, p) => sum + p.amount, 0),
+    parts,
+    balance,
+    capped: match.capped,
   };
 }

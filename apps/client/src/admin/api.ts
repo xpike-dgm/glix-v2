@@ -147,7 +147,8 @@ export type AccountAction =
   | { op: "suspend"; id: number; duration: "1d" | "7d" | "forever"; reason: string }
   | { op: "unsuspend"; id: number }
   | { op: "delete"; id: number; confirm: string }
-  | { op: "logout-all"; id: number };
+  | { op: "logout-all"; id: number }
+  | { op: "glix"; id: number; amount: number; reason: string };
 
 const OK_TEXT: Record<AccountAction["op"], string> = {
   rename: "Kullanıcı adı değiştirildi.",
@@ -155,6 +156,7 @@ const OK_TEXT: Record<AccountAction["op"], string> = {
   unsuspend: "Askı kaldırıldı.",
   delete: "Hesap silindi.",
   "logout-all": "Tüm oturumlar kapatıldı.",
+  glix: "Glix düzeltildi.",
 };
 
 export function runAccountAction(a: AccountAction): Promise<ActionResult> {

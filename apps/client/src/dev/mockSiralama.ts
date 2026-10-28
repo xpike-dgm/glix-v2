@@ -127,6 +127,7 @@ function profileWith(own: boolean, empty: boolean): NonNullable<ReturnType<typeo
     recent: empty ? [] : [{ endedAt: now - 2 * 3600 * 1000, players: 5, place: 1, score: 11 }],
     coPlayers: empty ? [] : [{ username: "elif_k", matches: 9 }],
     badges: badgeList(own, empty),
+    ...(own ? { glix: empty ? 0 : 340 } : {}),
   };
   const profile = parseProfile(raw);
   if (!profile) throw new Error("örnek profil geçersiz");

@@ -38,7 +38,8 @@ export function profileBody(
     favoriteGame: data.favoriteGame ? { ...data.favoriteGame, name: name(data.favoriteGame.id) } : null,
     perGame: data.perGame.map((g) => ({ ...g, name: name(g.gameId) })),
     badges: badgeViews(data.badges, !full),
-    ...(full ? { recent: data.recent, coPlayers: data.coPlayers } : {}),
+    // Bakiye yalnız kendi profilinde.
+    ...(full ? { recent: data.recent, coPlayers: data.coPlayers, glix: data.glix } : {}),
   };
 }
 
