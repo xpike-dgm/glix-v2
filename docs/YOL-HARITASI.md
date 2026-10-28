@@ -239,6 +239,12 @@ Sahip kararları (Ekim 2026). Yalnız görünüş satılır, oyunda avantaj yok;
 - **Kürsü karakteri yöntemi (sahip onayı):** ChatGPT'nin tek ana çiziminden kesilmiş parçalar, PixiJS `MeshSimple` ile
   tek parça esneyen karakter olarak çizilir (eklemde dikiş yok); danslar CMU hareket kayıtlarından (`bvh2dance.py`,
   ticari kullanıma açık) dönüştürülür. Deneme: `tools/karakter-deneme/`.
+- **Kürsü giysileri (sahip onayı, Ekim 2026):** yuvalar ve başlangıç sayıları — şapka 8, üst 8, alt 6, ayakkabı 6,
+  aksesuar 6 (toplam 34 temel parça). Her parça 4–5 neon renk seçeneğiyle satılır (renk kodla değişir, yeni görsel
+  gerekmez); maske neon rengi ayrıca seçilebilir. Ek olarak 4–5 efsanevi tam kostüm (astronot, ninja, süper kahraman,
+  robot, korsan gibi; birden çok yuvayı kaplar). Danslar: başlangıçta 8–10, zamanla 20+. Nadirlik her yuvada yaklaşık
+  yarı sıradan, üçte bir nadir, kalanı efsanevi. Sonrasında ayda bir 6–10 parçalık yeni koleksiyon.
+  **Gece çalışma listesinde bekliyor** (görseller ChatGPT iş kuyruğundan: `/srv/glix/gorsel/kuyruk/`).
 - [x] M1  - [x] M2 (mağaza + Dolabım; kodla çizilen unvan, ad efekti, çerçeve — resimli türler M3/M4'te)  - [ ] M3  - [ ] M4
 
 ---
