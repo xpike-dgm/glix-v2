@@ -146,7 +146,7 @@ export function createShopApi(env: ShopEnv): (req: IncomingMessage, res: ServerR
     switch (r) {
       case "ok":
         social.cosmeticsChanged(me.id);
-        return { status: 200, body: { ok: true, equipped: accounts.cosmetics(me.id).equipped } };
+        return { status: 200, body: { ok: true, equipped: accounts.equippedCosmetics(me.id) } };
       case "unknown":
         return fail(404, "unknown_item", "Bu ürün bulunamadı.");
       case "unknown_colour":

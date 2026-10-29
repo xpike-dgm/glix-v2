@@ -139,7 +139,7 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
   function cosmeticsOf(accountId: number | null): Cosmetics | undefined {
     if (accountId === null) return undefined;
     try {
-      return cosmeticsFromEquipped(accounts.cosmetics(accountId).equipped);
+      return cosmeticsFromEquipped(accounts.equippedCosmetics(accountId));
     } catch (err) {
       log.error("accounts_error", { op: "cosmetics_of", error: String(err) });
       return undefined;
@@ -149,7 +149,7 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
   function ownsCosmetic(accountId: number | null, itemId: string): boolean {
     if (accountId === null) return false;
     try {
-      return accounts.cosmetics(accountId).owned.some((o) => o.itemId === itemId);
+      return accounts.ownsCosmetic(accountId, itemId);
     } catch (err) {
       log.error("accounts_error", { op: "owns_cosmetic", error: String(err) });
       return false;
