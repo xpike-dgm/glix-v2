@@ -46,7 +46,7 @@ export function SentenceField(props: Props) {
         rows={2}
         maxlength={BOZUK_TEXT_MAX}
         autocomplete="off"
-        autocapitalize="characters"
+        autocapitalize="none"
         autocorrect="off"
         spellcheck={false}
         enterkeyhint="done"

@@ -1,4 +1,5 @@
 import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
+import { everyoneReady } from "../ready.js";
 import {
   type Clue,
   type ClueCondition,
@@ -207,8 +208,8 @@ export const kontrolPaneliKaosu: GameDefinition<KontrolState, KontrolAction, Kon
       if (ctx.now >= state.endsAt) return { rejected: "ended" };
       if (has(state.cuts, playerId)) return { rejected: "already_cut" };
       const cuts = { ...state.cuts, [playerId]: action.color };
-      // Her katılımcı tek hakkını kullandıysa (sonuç artık değişemez) 1 sn sonra biter.
-      if (!state.players.every((id) => has(cuts, id))) return { ...state, cuts };
+      // Bağlı her katılımcı tek hakkını kullandıysa 1 sn sonra biter (kopuk oyuncu beklenmez).
+      if (!everyoneReady(state.players, ctx.connected, (id) => has(cuts, id))) return { ...state, cuts };
       const endsAt = Math.min(state.endsAt, ctx.now + KONTROL_LOCK_GRACE_MS);
       return { ...state, cuts, closing: true, endsAt, finishAt: endsAt + KONTROL_REVEAL_MS };
     },

@@ -1,4 +1,5 @@
 import type { GameContext, GameDefinition, Rejected } from "../../game.js";
+import { everyoneReady } from "../ready.js";
 import { derivedRng, drawSeed } from "../seeded.js";
 import {
   type Allocation,
@@ -428,8 +429,8 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
       // Darbe oyu tek seferliktir.
       if (own(s.coupVotes, playerId) !== undefined) return { rejected: "locked" };
       const coupVotes = { ...s.coupVotes, [playerId]: action.yes };
-      const all = s.coupEligible.every((id) => own(coupVotes, id) !== undefined);
-      // Hak sahiplerinin hepsi oy verdiyse aşama kısa bir süre sonra biter (bağlantıya bakılmaz).
+      const all = everyoneReady(s.coupEligible, ctx.connected, (id) => own(coupVotes, id) !== undefined);
+      // Bağlı hak sahiplerinin hepsi oy verdiyse aşama kısa bir süre sonra biter (kopuk hak sahibi beklenmez).
       return all
         ? { ...s, coupVotes, coupEndsAt: Math.min(s.coupEndsAt, ctx.now + RUSVET_LOCK_GRACE_MS) }
         : { ...s, coupVotes };
@@ -479,8 +480,8 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
       // İşaret tek seferliktir: ilk işaret kesindir.
       if (own(s.signs, playerId) !== undefined) return { rejected: "locked" };
       const signs = { ...s.signs, [playerId]: action.sign };
-      // Düellodaki herkes işaret verdiyse açılış hemen başlar (bağlantıya bakılmaz).
-      const all = s.candidates.every((id) => own(signs, id) !== undefined);
+      // Düellodaki bağlı herkes işaret verdiyse açılış hemen başlar (kopuk düellocu beklenmez).
+      const all = everyoneReady(s.candidates, ctx.connected, (id) => own(signs, id) !== undefined);
       return all ? { ...s, signs, handSignEnd: Math.min(signEndOf(s), ctx.now) } : { ...s, signs };
     }
 
