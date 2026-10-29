@@ -910,3 +910,68 @@
 .shop-sub:first-child {
   margin-top: 0;
 }
+
+/* Yuva çipleri (mağaza giysi yuvası, dolap bölümüne atla): üç sütun, geniş ekranda tek satır. */
+.slot-chips {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 6px;
+  flex: none;
+}
+.slot-chip {
+  min-height: 48px;
+  padding: 0 8px;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  background: rgba(8, 12, 36, 0.6);
+  color: var(--text-dim);
+  font-size: var(--fs-15);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.slot-chip[aria-pressed="true"] {
+  color: var(--text);
+  background: rgba(46, 242, 255, 0.16);
+  border-color: rgba(46, 242, 255, 0.55);
+}
+.slot-chip:active {
+  filter: brightness(1.25);
+}
+
+/* Günün fırsatı: karo önizlemesi daha alçak (ilk ekranda ürün ızgarası da görünsün). */
+.shop-grid--deal .shop-card__pv {
+  min-height: 64px;
+  --cposter-h: 74px;
+}
+.shop-grid--deal .shop-card[data-type="cerceve"] .shop-card__pv {
+  min-height: 72px;
+}
+.shop-grid--deal .shop-card[data-type="dans"] .shop-card__pv,
+.shop-grid--deal .shop-card[data-type="sapka"] .shop-card__pv,
+.shop-grid--deal .shop-card[data-type="ust"] .shop-card__pv,
+.shop-grid--deal .shop-card[data-type="alt"] .shop-card__pv,
+.shop-grid--deal .shop-card[data-type="ayakkabi"] .shop-card__pv,
+.shop-grid--deal .shop-card[data-type="aksesuar"] .shop-card__pv,
+.shop-grid--deal .shop-card[data-type="kostum"] .shop-card__pv {
+  min-height: 74px;
+  --cposter-h: 74px;
+}
+
+/* Yetersiz Glix: eksik tutar asıl bilgidir; okunur ve vurgulu. */
+.shop-sheet .pbtn__reason {
+  font-size: var(--fs-18);
+  font-weight: 700;
+  color: var(--amber);
+}
+
+/* Dolap: seçili karonun halkası ızgaradan taşmasın (başlıklarla aynı kenarda dursun). */
+.locker-grid {
+  padding: 3px;
+}
+.swatches__label {
+  font-variant-numeric: normal;
+}

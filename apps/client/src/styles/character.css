@@ -206,16 +206,31 @@
 
 /* ---- Mağaza ve dolap: sekmeler, afiş karoları, canlı önizleme ---- */
 
-/* Beş sekme dar ekrana tek satırda sığmaz: alta sarar (kaydırma yok; her sekme tam görünür). */
+/* Sekmeler: sarmalı satırlar, her satır eşit paylı (beş sekmede 3+2, dört sekmede 2+2); geniş ekranda tek satır.
+   Büyük yazıda sığmayan sekme alt satıra geçer; kaydırma yok, her sekme tam görünür. */
 .shop-tabs {
   flex-wrap: wrap;
+  border-bottom: 0;
 }
 .shop-tab {
-  flex: 1 1 auto;
+  flex: 1 0 30%;
+  min-width: min-content;
   padding: 0 8px;
   font-size: var(--fs-15);
   white-space: nowrap;
   overflow-wrap: normal;
+  border-bottom: 1.5px solid var(--line);
+}
+.shop-tab:first-child:nth-last-child(4),
+.shop-tab:first-child:nth-last-child(4) ~ .shop-tab {
+  flex-basis: 45%;
+}
+@media (min-width: 560px) {
+  .shop-tab,
+  .shop-tab:first-child:nth-last-child(4),
+  .shop-tab:first-child:nth-last-child(4) ~ .shop-tab {
+    flex-basis: 0;
+  }
 }
 .shop-card[data-type="dans"] .shop-card__pv,
 .shop-card[data-type="sapka"] .shop-card__pv,

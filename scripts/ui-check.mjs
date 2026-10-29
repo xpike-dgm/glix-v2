@@ -428,6 +428,8 @@ const SCREENS = [
     act: async (p) => {
       await clickText("Giysiler")(p);
       await p.waitForTimeout(800);
+      await p.getByRole("button", { name: "Üst", exact: true }).click();
+      await p.waitForTimeout(800);
       await p.locator(".shop-card[data-type=ust]").first().click();
     },
   },

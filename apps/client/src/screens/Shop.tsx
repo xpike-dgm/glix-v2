@@ -45,7 +45,15 @@ import { BackIcon, BoltIcon, CheckIcon, CoinIcon } from "../ui/Icons.js";
 import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
-import { BalancePill, ColourSwatches, Price, RarityChip, ShopTabBar } from "../ui/ShopBits.js";
+import {
+  BalancePill,
+  ColourSwatches,
+  colourName,
+  Price,
+  RarityChip,
+  ShopTabBar,
+  SlotChips,
+} from "../ui/ShopBits.js";
 import {
   CardBackArt,
   CelebrationCollage,
@@ -119,7 +127,7 @@ function Card(props: {
                 avatar={avatarFromName(name())}
                 name={name()}
                 cosmetics={itemCosmetics(props.item)}
-                size={60}
+                size={props.deal ? 44 : 60}
                 parts={previewParts(props.item)}
                 plate={props.deal === undefined}
               />
@@ -187,6 +195,8 @@ export function Shop() {
   /** Satın alma sayfasında seçili giysi rengi (önizleme ve kuşanma). */
   const [colour, setColour] = createSignal<ClothingColourId>(DEFAULT_COLOUR);
   const [now, setNow] = createSignal(Date.now());
+  /** Giysiler sekmesinde açık yuva (şapka, üst…); varsayılan ilk yuva. */
+  const [slot, setSlot] = createSignal<CosmeticTypeId>("sapka");
 
   onMount(() => {
     void loadShop();
@@ -212,6 +222,15 @@ export function Shop() {
     (SHOP_TABS.find((t) => t.id === tab())?.types ?? [])
       .map((t) => ({ type: t, items: itemsOfType(t) }))
       .filter((g) => g.items.length > 0);
+  /** Giysiler sekmesinde yalnız seçili yuva görünür (39 ürünlük tek uzun liste yerine); öteki sekmelerde tümü. */
+  const slotChips = () =>
+    tab() === "giysi" ? tabGroups().map((g) => ({ id: g.type, label: cosmeticType(g.type).name })) : [];
+  const activeSlot = (): CosmeticTypeId => {
+    const chips = slotChips();
+    return chips.find((c) => c.id === slot())?.id ?? chips[0]?.id ?? slot();
+  };
+  const shownGroups = () =>
+    tab() === "giysi" ? tabGroups().filter((g) => g.type === activeSlot()) : tabGroups();
   const opened = () => {
     const id = openId();
     return id === null ? null : (cosmeticItem(id) ?? null);
@@ -350,13 +369,13 @@ export function Shop() {
                 </For>
               </div>
 
+              <Show when={slotChips().length > 1}>
+                <SlotChips label="Giysi türü" items={slotChips()} value={activeSlot()} onPick={setSlot} />
+              </Show>
               <div role="tabpanel">
-                <For each={tabGroups()}>
+                <For each={shownGroups()}>
                   {(g) => (
                     <>
-                      <Show when={tabGroups().length > 1}>
-                        <h2 class="shop-sub">{cosmeticType(g.type).plural}</h2>
-                      </Show>
                       <div class="shop-grid" classList={{ "shop-grid--rows": tab() === "unvan" }}>
                         <For each={g.items}>
                           {(item) => (
@@ -445,6 +464,7 @@ export function Shop() {
                       </Show>
                     </div>
                     <Show when={isClothingType(item().type)}>
+                      <p class="swatches__label">Renk: {colourName(colour())}</p>
                       <ColourSwatches value={colour()} onPick={setColour} />
                     </Show>
                     <p class="shop-sheet__desc">{item().description}</p>
