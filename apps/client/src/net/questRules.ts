@@ -95,5 +95,5 @@ export const questResetText = (clock: string): string => `${clock} kaldı`;
 export const questCountText = (quests: readonly QuestView[]): string =>
   `${quests.filter((q) => q.done).length}/${quests.length}`;
 
-/** Satırdaki ilerleme metni ("2/3"; yalnız hedef 1'den büyükse). */
-export const questProgressText = (q: QuestView): string => (q.target > 1 ? `${q.progress}/${q.target}` : "");
+/** Satırdaki ilerleme metni ("2/3"); her görevde aynı hizada, tek seferlik görevde de ("0/1"). */
+export const questProgressText = (q: QuestView): string => `${q.progress}/${q.target}`;

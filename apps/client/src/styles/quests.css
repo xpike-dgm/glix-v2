@@ -6,7 +6,8 @@
   padding: var(--sp-2) var(--sp-3);
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(10, 16, 48, 0.55);
+  /* Opak: arkadaki ufuk çizgisi ve ızgara görev satırlarının içinden geçmesin. */
+  background: #0b1030;
   text-align: left;
 }
 .qst__head {

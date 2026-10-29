@@ -118,6 +118,6 @@ describe("kart metinleri", () => {
     if (!s?.enabled) throw new Error("durum");
     expect(questCountText(s.quests)).toBe("1/2");
     expect(questProgressText(s.quests[1] as QuestView)).toBe("1/3");
-    expect(questProgressText({ ...(s.quests[1] as QuestView), target: 1 })).toBe("");
+    expect(questProgressText({ ...(s.quests[1] as QuestView), progress: 0, target: 1 })).toBe("0/1");
   });
 });
