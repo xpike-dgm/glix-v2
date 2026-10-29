@@ -101,27 +101,36 @@ const smooth01 = (x: number): number => {
 };
 
 export async function mountCharacterStage(host: HTMLElement, opts: StageOptions): Promise<CharacterStage> {
-  const [kit, pixi] = await Promise.all([loadKit(), loadPixi()]);
+  // Takım (ağ + görsel çözümü) ile Pixi/GL bağlamı birbirini beklemez: ikisi birlikte başlar. Takımın görselleri
+  // beklerken bağlam kurulur (bağlam oluşturma ve gölgelendirici derleme ana iş parçacığını tutan en uzun iştir).
+  const kitJob = loadKit();
+  kitJob.catch(() => undefined);
+  const pixi = await loadPixi();
   const dpr = opts.resolution ?? Math.min(window.devicePixelRatio || 1, opts.maxDpr ?? 2);
   const app: Application = new pixi.Application();
+  const initJob = app.init({
+    resizeTo: host,
+    backgroundAlpha: 0,
+    antialias: dpr < 2,
+    preference: "webgl",
+    powerPreference: "low-power",
+    resolution: dpr,
+    autoDensity: true,
+    autoStart: false,
+  });
+  initJob.catch(() => undefined);
+  let kit: CharacterKit;
   let ctx: PuppetContext;
   try {
-    await app.init({
-      resizeTo: host,
-      backgroundAlpha: 0,
-      antialias: dpr < 2,
-      preference: "webgl",
-      powerPreference: "low-power",
-      resolution: dpr,
-      autoDensity: true,
-      autoStart: false,
-    });
+    kit = await kitJob;
+    await initJob;
     host.appendChild(app.canvas);
     app.canvas.setAttribute("aria-hidden", "true");
     // Atlas bu sahneye özeldir (paylaşılan önbelleğe girmez): sahne kapanırken GPU'dan bırakılır.
     ctx = createContext(app, kit, pixi);
   } catch (err) {
     // Başlatma yarıda kaldıysa çizim bağlamı (GPU) ve tuval sızmasın.
+    await initJob.catch(() => undefined);
     try {
       app.destroy(APP_VIEW_ONLY, { children: true, texture: true });
     } catch {

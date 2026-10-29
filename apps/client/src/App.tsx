@@ -50,6 +50,7 @@ import { Curtain } from "./ui/Curtain.js";
 import { Loading } from "./ui/Loading.js";
 import { collectGallery } from "./ui/matchGallery.js";
 import { preloadCards } from "./ui/preloadCards.js";
+import { preloadCharacters } from "./ui/preloadCharacters.js";
 import { preloadMoods } from "./ui/preloadMoods.js";
 import { ReportSheet } from "./ui/ReportSheet.js";
 import { SidePlayers } from "./ui/SidePlayers.js";
@@ -83,6 +84,12 @@ export function App() {
   createEffect(() => {
     const snap = state.snapshot;
     if (snap && snap.phase !== "lobby") preloadMoods(snap.players.map((p) => p.avatar));
+  });
+
+  // Maça girince kürsü karakterlerinin takımı da boşta önden hazırlanır (sonuç/final ilk kez açılırken beklenmez).
+  createEffect(() => {
+    const snap = state.snapshot;
+    if (snap && snap.phase !== "lobby") preloadCharacters();
   });
 
   // Karalama / Bozuk Telefon çizimleri (sunucunun herkese açık gönderdikleri) maç sonu galerisi için birikir.
