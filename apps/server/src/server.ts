@@ -119,6 +119,9 @@ interface UpgradeInfo {
   sessionHash: string | null;
 }
 
+/** HTTP boşta-bağlantı süresi (vekilin ve istemcinin yeniden kullanım süresinden uzun). */
+export const KEEP_ALIVE_MS = 65_000;
+
 export interface RunningServer {
   server: Server;
   port: number;
@@ -428,6 +431,12 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     maxPayload: MAX_PAYLOAD_BYTES,
     perMessageDeflate: false,
   });
+
+  // Node'un varsayılan 5 sn boşta-bağlantı süresi, ters vekilin (Caddy) ve istemcinin bağlantıyı yeniden kullandığı
+  // an ile çakışıp "ECONNRESET"e yol açar (gevşek yükte seyrek, yükte sık). Vekilden uzun tutulur;
+  // headersTimeout her zaman bundan büyük olmalıdır. Kapanışta boştaki bağlantılar zaten kapatılır.
+  server.keepAliveTimeout = KEEP_ALIVE_MS;
+  server.headersTimeout = KEEP_ALIVE_MS + 1000;
 
   server.on("upgrade", (req, socket, head) => {
     const path = (req.url ?? "").split("?")[0];

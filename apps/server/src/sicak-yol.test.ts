@@ -54,6 +54,15 @@ function allEquipped(): Record<string, string> {
   return equipped;
 }
 
+/**
+ * İşlemci süresi (ms). Eşikler işin kendi maliyetini ölçer; duvar saati makine yükünde (başka süreçler çekirdeği
+ * aldığında) 2-3 kat şişip testi boşuna düşürüyordu. İşlemci süresi zamanlayıcı kesintilerinden etkilenmez.
+ */
+function cpuMs(): number {
+  const u = process.cpuUsage();
+  return (u.user + u.system) / 1000;
+}
+
 describe("odaya giriş: kozmetik okuma", () => {
   it("girişte yalnız kuşanılanlar okunur (sahip listesi okunmaz); çıkartma sahipliği tek aramadır", () => {
     const base = createAccounts(":memory:");
@@ -198,9 +207,9 @@ describe("maç sonu hattı (8 hesap)", () => {
     }));
     rec.gameFinished(buildGameRecord("butona-bas", now, entrants));
     for (const key of Object.keys(calls)) delete calls[key];
-    const t0 = performance.now();
+    const t0 = cpuMs();
     rec.matchFinished(buildMatchRecord(3, now, entrants));
-    const ms = performance.now() - t0;
+    const ms = cpuMs() - t0;
     console.log(
       `maç sonu hattı (8 hesap, 1500 maç geçmişi): ${ms.toFixed(1)} ms, çağrılar ${JSON.stringify(calls)}`,
     );
@@ -295,9 +304,9 @@ describe("yönetici ekonomi sorgusu (100 bin defter satırı)", () => {
     raw.close();
     const store = createAccounts(path);
     const to = t0 + 90 * day;
-    const started = performance.now();
+    const started = cpuMs();
     const eco = store.economy(to - 90 * day, to, 150, [], to);
-    const ms = performance.now() - started;
+    const ms = cpuMs() - started;
     console.log(`ekonomi sorgusu (100k satır, 90 gün): ${ms.toFixed(1)} ms`);
     expect(eco.ledger.length).toBeGreaterThan(0);
     expect(ms).toBeLessThan(1000);

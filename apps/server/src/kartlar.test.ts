@@ -652,7 +652,9 @@ describe("her kartın etkisi (maç içinde)", () => {
         await until(() => a.room.match?.round === i + 1, "sıradaki");
       }
     }
-  });
+    // Tek testte ~30 oyun oynanır; her adım gerçek zamanda en az ~30 ms bekler (bkz. `sync`). Boş makinede ~2 sn,
+    // yük altında vitest'in 5 sn varsayılanını aşıyordu. Neden yalnızca makine yükü olduğundan pay 60 sn.
+  }, 60_000);
 });
 
 describe("Veto ve Sıradaki Oyunu Seç", () => {
