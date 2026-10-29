@@ -1,4 +1,15 @@
-import { createEffect, createMemo, createSignal, Match, onCleanup, onMount, Show, Switch } from "solid-js";
+import type { MatchSnapshot, RoomSnapshot } from "@glix/engine";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  ErrorBoundary,
+  Match,
+  onCleanup,
+  onMount,
+  Show,
+  Switch,
+} from "solid-js";
 import { lookOf } from "./character/look.js";
 import { installMusic, setLobbyMusic } from "./fx/music.js";
 import { consumeGoogleReturn, consumeMailReturn, refreshAccount } from "./net/account.js";
@@ -29,6 +40,7 @@ import { ForgotPassword } from "./screens/ForgotPassword.js";
 import { Friends } from "./screens/Friends.js";
 import { GoogleUsername } from "./screens/GoogleUsername.js";
 import { Home } from "./screens/Home.js";
+import { createHeld } from "./screens/held.js";
 import { InviteCard } from "./screens/InviteCard.js";
 import { Join } from "./screens/Join.js";
 import { Leaderboard } from "./screens/Leaderboard.js";
@@ -43,6 +55,7 @@ import { Reconnecting } from "./screens/Reconnecting.js";
 import { Register } from "./screens/Register.js";
 import { Results } from "./screens/Results.js";
 import { selectScreen } from "./screens/route.js";
+import { ScreenError } from "./screens/ScreenError.js";
 import { Settings } from "./screens/Settings.js";
 import { Shop } from "./screens/Shop.js";
 import { dataSaver, setColorBlind, setMotion, setTextSize, wifiOnly } from "./settings/settings.js";
@@ -79,6 +92,11 @@ export function App() {
   );
 
   const update = useUpdateFlow(screen);
+  /** Odadaki ekranların okuduğu oda ve maç: geçişte geç kalan hesaplar fırlatmasın diye son geçerli değer. */
+  const heldRoom = createHeld(() => state.snapshot);
+  const heldMatch = createHeld(() => state.snapshot?.match);
+  const room = (): RoomSnapshot => heldRoom() as RoomSnapshot;
+  const match = (): MatchSnapshot => heldMatch() as MatchSnapshot;
   /** Tablet/masaüstünde maç sürerken ikinci sütun (oyuncular/puan) açılır; genişlik sınırı CSS'te. */
   const twoCols = () => ["briefing", "countdown", "playing", "results", "cards"].includes(screen());
 
@@ -279,92 +297,91 @@ export function App() {
     <div class="stage">
       <div class="shell2" data-cols={twoCols() ? "2" : undefined}>
         <div class="shell2__main">
-          <Switch>
-            <Match when={update() === "block-required"}>
-              <UpdateRequired />
-            </Match>
-            <Match when={devLoading()}>
-              <Loading />
-            </Match>
-            <Match when={screen() === "home"}>
-              <Home />
-            </Match>
-            <Match when={screen() === "join"}>
-              <Join />
-            </Match>
-            <Match when={screen() === "settings"}>
-              <Settings />
-            </Match>
-            <Match when={screen() === "profile"}>
-              <Profile />
-            </Match>
-            <Match when={screen() === "friends"}>
-              <Friends />
-            </Match>
-            <Match when={screen() === "leaderboard"}>
-              <Leaderboard />
-            </Match>
-            <Match when={screen() === "shop"}>
-              <Shop />
-            </Match>
-            <Match when={screen() === "locker"}>
-              <Locker />
-            </Match>
-            <Match when={screen() === "login"}>
-              <Login />
-            </Match>
-            <Match when={screen() === "register"}>
-              <Register />
-            </Match>
-            <Match when={screen() === "googleAd"}>
-              <GoogleUsername />
-            </Match>
-            <Match when={screen() === "unuttum"}>
-              <ForgotPassword />
-            </Match>
-            <Match when={screen() === "yeniSifre"}>
-              <NewPassword />
-            </Match>
-            <Match when={screen() === "aydinlatma"}>
-              <Disclosure />
-            </Match>
-            <Match when={screen() === "notfound"}>
-              <NotFound />
-            </Match>
-            <Match when={state.snapshot}>
-              {(snap) => (
+          <ErrorBoundary fallback={(err, reset) => <ScreenError error={err} reset={reset} screen={screen} />}>
+            <Switch>
+              <Match when={update() === "block-required"}>
+                <UpdateRequired />
+              </Match>
+              <Match when={devLoading()}>
+                <Loading />
+              </Match>
+              <Match when={screen() === "home"}>
+                <Home />
+              </Match>
+              <Match when={screen() === "join"}>
+                <Join />
+              </Match>
+              <Match when={screen() === "settings"}>
+                <Settings />
+              </Match>
+              <Match when={screen() === "profile"}>
+                <Profile />
+              </Match>
+              <Match when={screen() === "friends"}>
+                <Friends />
+              </Match>
+              <Match when={screen() === "leaderboard"}>
+                <Leaderboard />
+              </Match>
+              <Match when={screen() === "shop"}>
+                <Shop />
+              </Match>
+              <Match when={screen() === "locker"}>
+                <Locker />
+              </Match>
+              <Match when={screen() === "login"}>
+                <Login />
+              </Match>
+              <Match when={screen() === "register"}>
+                <Register />
+              </Match>
+              <Match when={screen() === "googleAd"}>
+                <GoogleUsername />
+              </Match>
+              <Match when={screen() === "unuttum"}>
+                <ForgotPassword />
+              </Match>
+              <Match when={screen() === "yeniSifre"}>
+                <NewPassword />
+              </Match>
+              <Match when={screen() === "aydinlatma"}>
+                <Disclosure />
+              </Match>
+              <Match when={screen() === "notfound"}>
+                <NotFound />
+              </Match>
+              <Match when={state.snapshot}>
+                {/* Daraltılmış `(snap) =>`/`(match) =>` okuyucuları yerine son geçerli değerler (bkz. screens/held.ts). */}
                 <Switch>
                   <Match when={screen() === "lobby"}>
-                    <Lobby snap={snap()} />
+                    <Lobby snap={room()} />
                   </Match>
                   <Match when={screen() === "final"}>
-                    <Final snap={snap()} />
+                    <Final snap={room()} />
                   </Match>
-                  <Match when={snap().match}>
-                    {(match) => (
-                      <Switch>
-                        <Match when={screen() === "briefing"}>
-                          <Briefing snap={snap()} match={match()} />
-                        </Match>
-                        <Match when={screen() === "countdown"}>
-                          <Countdown snap={snap()} match={match()} />
-                        </Match>
-                        <Match when={screen() === "playing"}>
-                          <Playing snap={snap()} match={match()} />
-                        </Match>
-                        <Match when={screen() === "results"}>
-                          <Results snap={snap()} match={match()} />
-                        </Match>
-                        <Match when={screen() === "cards"}>
-                          <Cards snap={snap()} match={match()} />
-                        </Match>
-                      </Switch>
-                    )}
+                  <Match when={state.snapshot?.match}>
+                    <Switch>
+                      <Match when={screen() === "briefing"}>
+                        <Briefing snap={room()} match={match()} />
+                      </Match>
+                      <Match when={screen() === "countdown"}>
+                        <Countdown snap={room()} match={match()} />
+                      </Match>
+                      <Match when={screen() === "playing"}>
+                        <Playing snap={room()} match={match()} />
+                      </Match>
+                      <Match when={screen() === "results"}>
+                        <Results snap={room()} match={match()} />
+                      </Match>
+                      <Match when={screen() === "cards"}>
+                        <Cards snap={room()} match={match()} />
+                      </Match>
+                    </Switch>
                   </Match>
                 </Switch>
-              )}
-            </Match>
-          </Switch>
+              </Match>
+            </Switch>
+          </ErrorBoundary>
         </div>
         <Show when={twoCols() ? state.snapshot : null}>{(snap) => <SidePlayers snap={snap()} />}</Show>
       </div>

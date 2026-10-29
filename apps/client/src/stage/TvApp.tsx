@@ -1,9 +1,11 @@
+import type { MatchSnapshot, RoomSnapshot } from "@glix/engine";
 import { createEffect, createMemo, createSignal, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 import { enterTvMode, joinStage, startNet } from "../net/client.js";
 import { normalizeCode } from "../net/code.js";
 import { collectRounds } from "../net/matchHistory.js";
 import { state } from "../net/store.js";
 import { setScreenAwake } from "../pwa/wakeLock.js";
+import { createHeld } from "../screens/held.js";
 import { Reconnecting } from "../screens/Reconnecting.js";
 import { installErrorReporting } from "../telemetry/errors.js";
 import { preloadGameArt } from "../ui/artPreload.js";
@@ -35,6 +37,10 @@ function devReady(started: Promise<unknown>): void {
 
 /** Büyük ekran (sahne) uygulaması: oda koduyla bağlanır, yalnız izler; hiçbir eylem göndermez. */
 export function TvApp() {
+  const heldRoom = createHeld(() => state.snapshot);
+  const heldMatch = createHeld(() => state.snapshot?.match);
+  const room = (): RoomSnapshot => heldRoom() as RoomSnapshot;
+  const match = (): MatchSnapshot => heldMatch() as MatchSnapshot;
   const [canvas, setCanvas] = createSignal(tvCanvas(window.innerWidth, window.innerHeight));
   const onResize = (): void => {
     setCanvas(tvCanvas(window.innerWidth, window.innerHeight));
@@ -99,42 +105,37 @@ export function TvApp() {
             <TvEntry />
           </Match>
           <Match when={state.snapshot}>
-            {(snap) => (
-              <>
-                <Show when={snap().phase !== "lobby"}>
-                  <TvCodeTag code={snap().code} />
-                </Show>
+            {/* Daraltılmış okuyucular yerine son geçerli değerler (bkz. screens/held.ts). */}
+            <Show when={room().phase !== "lobby"}>
+              <TvCodeTag code={room().code} />
+            </Show>
+            <Switch>
+              <Match when={room().phase === "lobby"}>
+                <TvLobby snap={room()} />
+              </Match>
+              <Match when={room().phase === "final"}>
+                <TvFinal snap={room()} />
+              </Match>
+              <Match when={state.snapshot?.match}>
                 <Switch>
-                  <Match when={snap().phase === "lobby"}>
-                    <TvLobby snap={snap()} />
+                  <Match when={room().phase === "briefing"}>
+                    <TvBriefing snap={room()} match={match()} />
                   </Match>
-                  <Match when={snap().phase === "final"}>
-                    <TvFinal snap={snap()} />
+                  <Match when={room().phase === "countdown"}>
+                    <TvCountdown snap={room()} match={match()} />
                   </Match>
-                  <Match when={snap().match}>
-                    {(match) => (
-                      <Switch>
-                        <Match when={snap().phase === "briefing"}>
-                          <TvBriefing snap={snap()} match={match()} />
-                        </Match>
-                        <Match when={snap().phase === "countdown"}>
-                          <TvCountdown snap={snap()} match={match()} />
-                        </Match>
-                        <Match when={snap().phase === "playing"}>
-                          <TvPlaying snap={snap()} match={match()} />
-                        </Match>
-                        <Match when={snap().phase === "results"}>
-                          <TvResults snap={snap()} match={match()} />
-                        </Match>
-                        <Match when={snap().phase === "cards"}>
-                          <TvCards snap={snap()} match={match()} />
-                        </Match>
-                      </Switch>
-                    )}
+                  <Match when={room().phase === "playing"}>
+                    <TvPlaying snap={room()} match={match()} />
+                  </Match>
+                  <Match when={room().phase === "results"}>
+                    <TvResults snap={room()} match={match()} />
+                  </Match>
+                  <Match when={room().phase === "cards"}>
+                    <TvCards snap={room()} match={match()} />
                   </Match>
                 </Switch>
-              </>
-            )}
+              </Match>
+            </Switch>
           </Match>
         </Switch>
       </div>

@@ -7,11 +7,18 @@ import type { ClientErrorRecord } from "./statsStore.js";
 export const MAX_STORED_MESSAGE = 200;
 export const MAX_STORED_FRAME = 120;
 
+/**
+ * E-posta: `@`'tan sonra yalnız alan adı (harf/rakam/tire etiketleri, noktayla ayrılmış, harfli bir uzantıyla biten)
+ * gelir. Safari/Firefox yığın karesi `işlev@https://alan/dosya.js:1:2` biçimindedir: `@`'tan sonra `https:` gelir,
+ * alan adı kuralına uymaz ve maskelenmez (yığın okunur kalır).
+ */
+const EMAIL = /[^\s@"'<>()/:]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![A-Za-z0-9-]*:\/\/)/g;
+
 /** Metindeki adreslerin sorgu (`?...`) ve parça (`#...`) kısmı atılır; e-posta, IPv4 ve uzun belirteçler maskelenir. */
 export function scrubText(text: string, max = MAX_STORED_MESSAGE): string {
   return text
     .replace(/https?:\/\/[^\s"'<>)]+/gi, (url) => url.split(/[?#]/)[0] ?? "")
-    .replace(/[^\s@"'<>()]+@[^\s@"'<>()]+\.[^\s@"'<>()]+/g, "[e-posta]")
+    .replace(EMAIL, "[e-posta]")
     .replace(/\b\d{1,3}(?:\.\d{1,3}){3}\b/g, "[ip]")
     .replace(/[A-Za-z0-9_-]{24,}/g, "[belirteç]")
     .replace(/\s+/g, " ")

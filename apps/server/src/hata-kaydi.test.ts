@@ -50,6 +50,20 @@ describe("hata metni temizleme", () => {
     expect(text).not.toMatch(/SIR|ali@|10\.1\.2\.3|AAAA/);
   });
 
+  it("Safari/Firefox yığın kareleri (`işlev@https://...`) e-posta sayılmaz; gerçek e-posta yine maskelenir", () => {
+    const stack =
+      "ke@https://glix.test/assets/chunks/tokens-DRjnE4S3.js:1:9447\n" +
+      "@https://glix.test/assets/index-ab12.js:3:4\n" +
+      "Object.run@http://localhost:3900/assets/a.js?v=1:5:6";
+    expect(scrubText(stack, 2048)).toBe(
+      "ke@https://glix.test/assets/chunks/tokens-DRjnE4S3.js:1:9447 " +
+        "@https://glix.test/assets/index-ab12.js:3:4 Object.run@http://localhost:3900/assets/a.js",
+    );
+    expect(scrubText("ke@https://glix.test/a.js:1:2 yaz: ayse.k+not@posta.example.com.tr bitti", 2048)).toBe(
+      "ke@https://glix.test/a.js:1:2 yaz: [e-posta] bitti",
+    );
+  });
+
   it("200 karaktere kısaltılır, boşluklar toplanır", () => {
     expect(scrubText("kelime ".repeat(100))).toHaveLength(200);
     expect(scrubText("  a \n\t b  ")).toBe("a b");
