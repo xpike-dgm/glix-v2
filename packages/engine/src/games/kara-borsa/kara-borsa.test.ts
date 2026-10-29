@@ -376,10 +376,24 @@ describe("kara-borsa erken bitiş", () => {
     expect(tickAt(s, 15_000).stage).toBe("bid");
   });
 
-  it("(c) bağlantısı kopan oyuncu da beklenir (tek seferlik hamle: tüm katılımcılar)", () => {
+  it("(c) ÖNERİ: bağlantısı kopan oyuncu beklenmez; bağlı herkes verince tur 1 sn sonra biter", () => {
     let s = start();
-    for (const id of ["a", "b", "c"]) s = act(s, id, bid(5), 2_000, ["a", "b", "c"]);
+    for (const id of ["a", "b"]) s = act(s, id, bid(5), 2_000, ["a", "b", "c"]);
     expect(s.stageEndsAt).toBe(T0 + BORSA_BID_MS);
+    s = act(s, "c", bid(5), 3_000, ["a", "b", "c"]);
+    expect(s.stageEndsAt).toBe(T0 + 4_000);
+    expect(tickAt(s, 4_000).stage).toBe("reveal");
+    // Kopuk "d" teklif vermedi: 0 sayılır, kutu başkasına gider ya da kimseye gitmez.
+    expect(tickAt(s, 4_000).history[0]?.bids.d).toBe(0);
+  });
+
+  it("(c2) bağlı olan biri hâlâ vermediyse bitmez; bağlı kimse yoksa erken bitiş olmaz", () => {
+    let s = start();
+    s = act(s, "a", bid(5), 2_000, ["a", "b"]);
+    expect(s.stageEndsAt).toBe(T0 + BORSA_BID_MS);
+    const r = game.reduce(s, "b", bid(5), ctx(3_000, []));
+    if (isRejected(r)) throw new Error("reddedildi");
+    expect(r.stageEndsAt).toBe(T0 + BORSA_BID_MS);
   });
 
   it("(c) jetonu biten oyuncu teklif beklenmez (yalnız 0 verebilir)", () => {

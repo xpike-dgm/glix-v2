@@ -38,6 +38,17 @@ export function normalizeAnswer(text: string): string {
   return text.toLocaleLowerCase("tr").trim().replace(/\s+/g, " ");
 }
 
+const TURKISH_LETTERS = /[çğıöşüÇĞİÖŞÜ]/gu;
+
+/**
+ * Aynı gruptaki yazılışlardan ekranda gösterilecek olan: Türkçe harf (ç ğ ı ö ş ü) içeren yazılış, İngilizce klavyeyle
+ * yazılana tercih edilir ("kasik" ile "kaşık" aynı grupta kaşık görünür). Eşitlikte ilk cevap veren kalır (belirleyici).
+ */
+function displayVariant(current: string, candidate: string): string {
+  const score = (t: string): number => (t.match(TURKISH_LETTERS) ?? []).length;
+  return score(candidate) > score(current) ? candidate : current;
+}
+
 /** Gruplar (≥2 kişi, büyükten küçüğe), tek kalanlar ve susanlar. Oyuncu sırası belirleyicidir. */
 export function groupAnswers(players: readonly string[], answers: Record<string, string>): CagrisimReveal {
   const byKey = new Map<string, { text: string; members: string[] }>();
@@ -50,8 +61,10 @@ export function groupAnswers(players: readonly string[], answers: Record<string,
     }
     const key = foldKey(raw);
     const entry = byKey.get(key);
-    if (entry) entry.members.push(id);
-    else byKey.set(key, { text: normalizeAnswer(raw), members: [id] });
+    if (entry) {
+      entry.members.push(id);
+      entry.text = displayVariant(entry.text, normalizeAnswer(raw));
+    } else byKey.set(key, { text: normalizeAnswer(raw), members: [id] });
   }
   const groups: CagrisimGroup[] = [];
   const singles: CagrisimReveal["singles"] = [];

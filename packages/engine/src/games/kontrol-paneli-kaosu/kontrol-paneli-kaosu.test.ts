@@ -32,10 +32,10 @@ const pub = (s: State, at: number) => game.publicView(tick(s, at), ctx(at, s.pla
 const priv = (s: State, who: string | null, at: number) =>
   game.view(tick(s, at), who, ctx(at, s.players)) as KontrolView;
 
-function cut(s: State, who: string, color: WireColor, at = T0 + 1_000): State {
+function cut(s: State, who: string, color: WireColor, at = T0 + 1_000, connected?: readonly string[]): State {
   const parsed = game.parseAction({ kind: "cut", color });
   if (parsed === null) throw new Error("geçersiz");
-  const r = game.reduce(s, who, parsed, ctx(at, s.players));
+  const r = game.reduce(s, who, parsed, ctx(at, connected ?? s.players));
   if (isRejected(r)) throw new Error(`reddedildi: ${r.rejected}`);
   return r;
 }
@@ -297,10 +297,29 @@ describe("erken bitiş (tek seferlik hamle)", () => {
     expect(pub(s, T0 + 6_000).reveal).not.toBeNull();
   });
 
-  it("(b) bir kişi eksikken bitmez; bağlantısı kopan da dahil herkes beklenir (süre dolar)", () => {
+  it("(b) bağlı biri eksikken bitmez (süre dolar)", () => {
     let s = start(ids(3));
     s = cut(s, "p1", "red", T0 + 5_000);
     s = cut(s, "p2", "red", T0 + 5_000);
+    expect(s.endsAt).toBe(T0 + KONTROL_PLAY_MS);
+  });
+
+  it("(b2) ÖNERİ: bağlantısı kopan oyuncu beklenmez; bağlı herkes kesince 1 sn sonra biter", () => {
+    const on = ["p1", "p2"];
+    let s = start(ids(3));
+    s = cut(s, "p1", "red", T0 + 5_000, on);
+    expect(s.endsAt).toBe(T0 + KONTROL_PLAY_MS);
+    s = cut(s, "p2", "red", T0 + 5_200, on);
+    expect(s.endsAt).toBe(T0 + 6_200);
+    expect(pub(s, T0 + 6_200).reveal).not.toBeNull();
+    // Kopuk p3 geri dönse de kapanış penceresi geçince kesemez.
+    expect(reject(s, "p3", "red", T0 + 6_200)).toBe("ended");
+  });
+
+  it("(b3) kimse bağlı değilken erken bitiş olmaz", () => {
+    let s = start(ids(2));
+    s = cut(s, "p1", "red", T0 + 5_000, []);
+    s = cut(s, "p2", "red", T0 + 5_000, []);
     expect(s.endsAt).toBe(T0 + KONTROL_PLAY_MS);
   });
 

@@ -1,5 +1,6 @@
 import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import { hasExactKeys, isPlainObject } from "../drawing.js";
+import { everyoneReady } from "../ready.js";
 import { makeHints } from "./hints.js";
 import {
   BORSA_BID_MS,
@@ -191,8 +192,9 @@ export const karaBorsa: GameDefinition<BorsaState, BorsaAction, BorsaView, Borsa
     if (action.amount > (s.coins[playerId] ?? 0)) return { rejected: "insufficient" };
     const bids = { ...s.bids, [playerId]: { amount: action.amount, seq: s.nextSeq } };
     const next = { ...s, bids, nextSeq: s.nextSeq + 1 };
-    // Herkes (jetonu bitenler dahil) teklifini verdiyse tur 1 sn sonra biter.
-    if (bidders(next).length === next.players.length) {
+    // Bağlı herkes (jetonu bitenler dahil) teklifini verdiyse tur 1 sn sonra biter; kopuk oyuncu beklenmez.
+    const given = new Set(bidders(next));
+    if (everyoneReady(next.players, ctx.connected, (id) => given.has(id))) {
       return { ...next, stageEndsAt: Math.min(next.stageEndsAt, ctx.now + BORSA_EARLY_MS) };
     }
     return next;

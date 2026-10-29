@@ -33,6 +33,18 @@ tasarladığı alanlar birlikte kilitlenir; kodlama bu kural seti üzerinden yap
   değiştirebilir: bu ayar oyun tanımındaki `randomPool` varsayılanını iki yönde de ezer (havuz dışı bir oyunu havuza ekleyebilir,
   havuzdakini dışarı alabilir). Oyunun kendi kuralları değişmez (`docs/ADMIN.md`).
 - Aynı maçta aynı mini oyun tekrar etmez.
+- **Erken bitiş genel kuralı (ÖNERİ — sahip onayı bekliyor):** Her etkin oyuncunun bir şey göndermesi gereken ve "herkes gönderdi" sorusunun
+  net cevabı olan aşamalarda (çizim, yazı, cevap, oy, teklif, kesim, kilitleme), **bağlı bütün katılımcılar gönderdiğinde
+  aşama 1 saniye sonra erken biter** (son gönderen onayı görsün diye). Bağlantısı kopan oyuncu ve izleyici beklenmez; bağlı
+  kimse yoksa erken bitiş olmaz. Gönderim geri alınamıyorsa ya da kilitleme düğmesi varsa "gönderdi" = kilitledi. Erken
+  bitiş aşamanın yalnız süresini kısaltır; puanlamayı ve gizli bilginin ne zaman açıldığını değiştirmez. **Zamanlama oyunları
+  ve bekleme/blöf stratejisi olan aşamalar kapsam dışıdır** (Butona Bas, Kör Kronometre süresi, Kule Ustası, Aşırı Yükleme,
+  Kör Bomba, Zaman Bombası Hafızası, Rus Ruleti). Oyun bazlı döküm: `docs/ONERI-KURAL.md`.
+- **Yazılı cevap eşleşmesi genel kuralı (ÖNERİ — sahip onayı bekliyor):** Oyuncuların yazdığı kelime/cevabın **eşleşip eşleşmediğine** bakılan her
+  yerde karşılaştırma klavyeden bağımsızdır: büyük/küçük harf, ç/c, ğ/g, ı/İ/i/I, ö/o, ş/s, ü/u ve noktalama farkı yok
+  sayılır (İngilizce klavyeyle yazan Türkçe klavyeyle yazanla eşleşir). Ekranda her zaman oyuncunun yazdığı biçim gösterilir.
+  Kopya/yasak denetimi gibi kelimeleri **birleştirmemesi gereken** yerlerde (yönetici içerik havuzlarının tekrar denetimi) katı
+  anahtar kullanılır: "göl" ile "gol" ayrı kelimedir.
 - Sonuç ekranı (KİLİTLİ, Ekim 2026, sahip onayı): her mini oyundan sonra gösterilir. **Bağlı bütün katılımcılar "Devam"a
   basınca** hemen (1 saniye sonra) kapanır; basmayan olursa **30 saniye** sonra kendiliğinden kapanır (eskisi 7 saniyeydi).
   Bağlantısı kopan oyuncu beklenmez. Podyumda sıra numarası yazmaz; sıra altın/gümüş/bronz bloklar ve madalya ile gösterilir.
@@ -387,6 +399,9 @@ Oyuncunun genel skoru bu sonuçlarla artar; hesap istatistiğindeki maç puanı 
   Görsel: Ana kelimeden yayılan elektrikli bir merkez ve oyuncu portrelerini
   bağlayan neon düğümler; aynı cevaplar aynı renkte kümelenir.
 
+**Değişiklik (ÖNERİ — sahip onayı bekliyor, Ekim 2026):** Gruplama klavyeden bağımsızdır (kaşık = kasik = KASIK). Bir grupta
+farklı yazılışlar varsa açılışta **Türkçe harf içeren yazılış** (kaşık) gösterilir; eşitlikte ilk cevap veren.
+
 ## 6. Butona Bas — `butona-bas`
 
 **Durum: KİLİTLİ**
@@ -663,7 +678,7 @@ puan dağıtımıdır.
 
 - Dağıtım bittikten sonra jeton dağılımı açılır ve kısa bir **darbe oylaması** (**10 saniye**) başlar. Başkan dışında, bu raundda
   **hiç jeton almamış (0 jeton)** her oyuncu oy hakkına sahiptir: **"Darbe"** ya da **"Darbe yok"**. Oy gizlidir ve tek seferliktir;
-  oy vermeyen "Darbe yok" sayılır. Hak sahibi olanların hepsi oy verince aşama erken biter.
+  oy vermeyen "Darbe yok" sayılır. Hak sahibi olanların hepsi oy verince aşama erken biter. **(ÖNERİ — sahip onayı bekliyor):** yalnız bağlı hak sahipleri beklenir; kopuk hak sahibi beklenmez. Aynı şekilde düellodaki işaret aşamasında bağlı adayların hepsi işaret verince açılış hemen başlar.
 - Hak sahiplerinin **kesin çoğunluğu** (yarıdan fazlası; eşitlik çoğunluk değildir) "Darbe" derse **başkanın bu raunda ait kendi ödülü
   (+1) iptal olur**. Dağıtılan jetonlar etkilenmez. Başkanlığı kaybettirmez, yalnız +1'i siler.
 - Hak sahibi yoksa (herkes jeton aldı) bu aşama atlanır.
@@ -1137,6 +1152,10 @@ yani birbirlerinin ne yapcağı birbirinde yazıyor birbirlerinde çözümü alm
     kesen oyuncu +1, o panelin ipucunu taşıyan oyuncu da +1 alır. Yanlış veya
     boş kesim 0'dır ve oyuncu kesimini değiştiremez.
 
+**Değişiklik (ÖNERİ — sahip onayı bekliyor, Ekim 2026):** Kesim tek seferlik ve gizli olduğundan, **bağlı bütün katılımcılar
+kestiğinde** oyun 1 saniye sonra erken biter; bağlantısı kopan oyuncu beklenmez (eskiden kopuk oyuncu da beklenirdi). Kopuk
+oyuncunun kesimi yoksa o oyuncu için sonuç süre bitmiş gibi hesaplanır (kesmemiş = puan yok).
+
 ## 22. Zehirli Kadeh — `zehirli-kadeh`
 
 **Durum: KİLİTLİ**
@@ -1324,7 +1343,7 @@ doğru cevaplarla tur uzayabilir.
 - Kutunun gerçek değeri gizli: 0–60 arası tam sayı, ya da **%15 olasılıkla lanetli** (değer −20).
 - Her turda her oyuncu **yalnız kendine özel bir ipucu** alır (ör. "değeri 30'dan büyük", "çift sayı",
   "lanetli değil", "değeri 10'un katı değil"). İpucu her zaman doğrudur; sözlü blöf serbesttir.
-- Teklif: 20 sn, gizli, **tek seferlik** (0 ile mevcut jeton arası; 0 = geç). Herkes teklif verince erken biter.
+- Teklif: 20 sn, gizli, **tek seferlik** (0 ile mevcut jeton arası; 0 = geç). Bağlı herkes teklif verince erken biter (ÖNERİ — sahip onayı bekliyor): bağlantısı kopan oyuncu beklenmez (teklifi 0 sayılır); eskiden kopuk oyuncu da beklenirdi.
 - En yüksek teklif kutuyu alır ve teklifini öder; eşitlikte önce teklif veren kazanır. Kimse teklif vermezse kutu
   kimseye gitmez. Teklifler ve kutunun değeri tur sonunda açılır (5 sn).
 - Mini puan: kalan jeton + aldığı kutuların değerleri toplamı.

@@ -925,10 +925,12 @@ describe("rusvet-darbe erken bitiş", () => {
       expect(p.duel?.revealEndsAt).toBe(T0 + E + 2_000 + RUSVET_SIGN_REVEAL_MS);
     });
 
-    it("(c) bağlantıya bakılmaz: kopuk aday da işaret vermeden bitmez", () => {
+    it("(c) ÖNERİ: kopuk aday beklenmez; bağlı adaylar verince açılış hemen başlar", () => {
       let s = duel();
       for (const id of ["a", "b", "c"]) s = act(s, id, sign("tas"), T0 + E + 1_000, ["a", "b", "c"]);
-      expect(pub(s, E + 3_000).duel?.signs).toBeNull();
+      // Açılışta işaret vermeyen kopuk aday için sunucu işaret doldurur; önemli olan açılışın hemen başlamasıdır.
+      expect(pub(s, E + 1_000).duel?.signs).toMatchObject({ a: "tas", b: "tas", c: "tas" });
+      expect(pub(s, E + 1_000).duel?.signEndsAt).toBe(T0 + E + 1_000);
     });
 
     it("(d) işaret kesin; açılıştan sonra değişmez", () => {
