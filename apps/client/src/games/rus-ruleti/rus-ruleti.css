@@ -333,11 +333,6 @@
   font-size: var(--fs-13);
   color: var(--text);
 }
-.rr__predict {
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
 /* Anlatım görseli */
 .rrart {
   position: relative;

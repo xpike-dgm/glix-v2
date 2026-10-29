@@ -1711,7 +1711,7 @@ const SCREENS = [
     name: "ittifak-talk-skip",
     q: "mock=ittifak-talk&n=6",
     settle: 1200,
-    act: async (p) => p.getByRole("button", { name: "Oylamaya geçelim" }).click(),
+    act: async (p) => p.getByRole("button", { name: "Oylamaya geç" }).click(),
   },
   { name: "ittifak-reveal-5", q: "mock=ittifak-reveal&n=5", settle: 3000 },
   { name: "ittifak-reveal-8", q: "mock=ittifak-reveal&n=8", settle: 3000 },

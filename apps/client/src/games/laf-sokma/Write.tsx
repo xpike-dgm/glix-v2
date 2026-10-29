@@ -249,6 +249,8 @@ export function Write(props: Props) {
       </div>
 
       <TamamBar
+        dots={false}
+        doneLabel="Gönderildi"
         locked={locked()}
         ready={props.view.ready.length}
         readyIds={props.view.ready}

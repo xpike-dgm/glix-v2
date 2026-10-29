@@ -17,6 +17,8 @@ interface Props {
   chosen: boolean | null;
   /** Dar alanlarda soru yalnız ekran okuyucuya okunur. */
   compact?: boolean;
+  /** Soru üstte, iki eşit büyük düğme altta (geniş alanlı oyunlar). */
+  stacked?: boolean;
   class?: string;
 }
 
@@ -35,7 +37,10 @@ export function PredictRow(props: Props) {
   const yes = pressable(() => pick(true));
   const no = pressable(() => pick(false));
   return (
-    <div class={`prd ${props.class ?? ""}`} data-done={shown() !== null ? "1" : undefined}>
+    <div
+      class={`prd ${props.stacked ? "prd--stack" : ""} ${props.class ?? ""}`}
+      data-done={shown() !== null ? "1" : undefined}
+    >
       <Show
         when={shown() === null}
         fallback={

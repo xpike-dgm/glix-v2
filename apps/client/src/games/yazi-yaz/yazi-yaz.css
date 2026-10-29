@@ -445,8 +445,9 @@
 .yy__row {
   flex: none;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 4px 8px;
   min-height: 40px;
   padding: 4px 8px;
   border-radius: 12px;
@@ -490,12 +491,22 @@
 .yy__guess[data-ok="0"] {
   color: var(--red);
 }
+/* Tahmin edilen kelime tam okunur: sığmazsa çip bir alt satıra iner, kesilmez. */
 .yy__guess-text {
-  max-width: 44px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   color: #e4e8ff;
+}
+.yy__guess {
+  min-width: 0;
+  max-width: 100%;
+}
+/* Dar ekranda kelime çipi puanın önüne geçmez: ikinci satıra, puan ilk satırda kalır. */
+@media (max-width: 359px) {
+  .yy__guess {
+    order: 5;
+    margin-left: 40px;
+  }
 }
 .yy__pts {
   flex: none;

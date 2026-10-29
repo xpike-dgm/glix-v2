@@ -259,7 +259,7 @@ button.kp__wire:active:not(:disabled) {
 }
 .kp__dg-no {
   fill: rgba(190, 198, 235, 0.7);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
 }
 .kp__dg-no--on {

@@ -96,12 +96,13 @@ export function Tartisma(props: Props) {
         <RolePeek role={props.view.role} />
       </Show>
       <TamamBar
+        dots={false}
         locked={props.view.locked}
         ready={props.view.ready.length}
         readyIds={props.view.ready}
         total={props.crew.length}
         spectator={props.spectator}
-        label="Tahmine geçelim"
+        label="Tahmine geç"
         doneLabel="Hazırsın"
         onLock={() => sendActionAck({ kind: "skip" })}
       />
