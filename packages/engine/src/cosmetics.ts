@@ -714,8 +714,41 @@ export interface DailyDeal {
  * O İstanbul gününün fırsatları: ücretli ürünlerden gün numarasıyla tohumlanan karıştırmadan ilk `DEAL_COUNT`
  * tanesi (farklı). Aynı gün her yerde aynı sonucu verir.
  */
+/**
+ * Geçiş dönemi: canlıdaki eski uygulama (önbellekteki PWA) günün fırsatını kendi küçük kataloğundan hesaplar. Katalog
+ * büyüdüğü için sunucu başka ürün seçerse oyuncu indirimli gördüğü ürüne tam fiyat öder. Bu tarihe dek fırsat havuzu
+ * eski katalogdaki ücretli ürünlerdir (aynı sırayla); eski ve yeni istemci aynı fırsatı gösterir.
+ */
+export const LEGACY_DEAL_POOL: readonly string[] = [
+  "unvan-parti-canavari",
+  "unvan-sessiz-tehlike",
+  "unvan-sansli",
+  "unvan-taktikci",
+  "unvan-bluf-ustasi",
+  "unvan-son-saniyeci",
+  "unvan-efsane",
+  "ad-neon-mavi",
+  "ad-neon-pembe",
+  "ad-gokkusagi",
+  "ad-kivilcim",
+  "ad-altin-parilti",
+  "cerceve-camgobegi",
+  "cerceve-pembe",
+  "cerceve-cift",
+  "cerceve-donen-neon",
+  "cerceve-altin-tac",
+];
+/** Geçişin bittiği an: 12 Kasım 2026 00:00 İstanbul. */
+export const LEGACY_DEAL_POOL_UNTIL = Date.UTC(2026, 10, 11, 21, 0, 0);
+
 export function dailyDeals(ms: number): DailyDeal[] {
-  const paid = COSMETIC_ITEMS.filter((i) => i.price > 0);
+  const paid =
+    ms < LEGACY_DEAL_POOL_UNTIL
+      ? LEGACY_DEAL_POOL.flatMap((id) => {
+          const it = BY_ID.get(id);
+          return it && it.price > 0 ? [it] : [];
+        })
+      : COSMETIC_ITEMS.filter((i) => i.price > 0);
   const rng = createRng(Math.imul(istanbulDayNumber(ms), 0x9e3779b1) ^ 0x51ed270b);
   return rng
     .shuffle(paid)
