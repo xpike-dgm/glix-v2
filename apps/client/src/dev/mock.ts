@@ -4,6 +4,7 @@
  * Üretim derlemesinde App.tsx'teki `import.meta.env.DEV` koruması nedeniyle pakete girmez.
  */
 import type {
+  CardsPublic,
   ClientMessage,
   GameInfo,
   JoinPolicy,
@@ -254,6 +255,22 @@ export function startMock(kind: string, params: URLSearchParams): void {
           publicView,
           view,
           result,
+          // `&kart=1`: oyun başında açıklanmış kartlar (oyun içi "oynanan kartlar" rozeti).
+          ...(params.get("kart") === "1"
+            ? {
+                cards: {
+                  phase: null,
+                  hands: {},
+                  announce: [],
+                  plays: [
+                    { playerId: "p1", cardId: "celme", target: SELF },
+                    { playerId: "p2", cardId: "cift-puan" },
+                    { playerId: "p3", cardId: "veto", gameId: "kor-bomba" },
+                  ],
+                  lines: [],
+                } satisfies CardsPublic,
+              }
+            : {}),
         };
 
   const publish = (): void => {

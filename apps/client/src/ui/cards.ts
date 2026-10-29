@@ -108,6 +108,18 @@ export function revealList(cards: CardsPublic | null | undefined): PublicPlay[] 
   return cards?.plays ?? [];
 }
 
+/**
+ * Oyun içi "oynanan kartlar" rozeti: oyun başında herkese açıklanan kartların sayısı ve nadirlikleri (en çok 3 elmas).
+ * Kart yoksa null (rozet çizilmez). Etkisiz kalan kartlar da açıklandığı için sayılır.
+ */
+export function playedBadge(
+  cards: CardsPublic | null | undefined,
+): { count: number; rarities: CardRarity[] } | null {
+  const plays = revealList(cards);
+  if (plays.length === 0) return null;
+  return { count: plays.length, rarities: plays.slice(0, 3).map((p) => CARDS[p.cardId].rarity) };
+}
+
 /** Lobi ayarı özeti: "Kapalı", "Hepsi açık", "27 / 29 kart açık". */
 export function settingsSummary(settings: CardSettings | undefined): string {
   const s = settings ?? DEFAULT_CARD_SETTINGS;

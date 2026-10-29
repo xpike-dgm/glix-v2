@@ -221,7 +221,7 @@ Maç düzeyinde kartlar (kurallar: docs/KURALLAR.md "0. Maç düzeyi kuralları:
 - [x] Sunucu: `cards` aşaması, `playCard` / `pickCard` / `discardCard` / `setCards`, oyun sonu hesabı, yeniden bağlanma, izleyici/TV gizliliği, kart kaydı; akış testleri (`kartlar.test.ts`).
 - [x] İstemci: kart seçimi ekranı, el çekmecesi ve hedef seçici, oyun başı açıklama (telefon + TV), kötü kart duyurusu, sonuç etki satırları, lobi Kartlar ayarı; `kart-` önizlemeleri `scripts/ui-check.mjs`'te.
 - [ ] Kart görselleri (`/assets/cards/<kimlik>.webp`): şimdilik CSS çerçeve + elmas işareti; görseller sonra eklenecek (bkz. docs/GORSEL-URETIM.md).
-- [ ] Oyun içi (oynanış sırasında) küçük "oynanan kartlar" şeridi: şimdilik kartlar geri sayımda ve sonuç satırlarında görünür.
+- [x] Oyun içi (oynanış sırasında) küçük "oynanan kartlar" rozeti: dikey oyunlarda üst çubukta (sesin yanında) kart sayısı; dokununca kim hangi kartı oynadı listesi açılır. Yalnız oyun başında herkese açıklanan veri; kısa yatay ekranda (yan şerit) gizlenir. (`ui/PlayedCards.tsx`; önizleme `mock=playing&kart=1`)
 
 ### U18. Glix ve kozmetik mağaza
 Sahip kararları (Ekim 2026). Yalnız görünüş satılır, oyunda avantaj yok; gerçek parayla satış yok.

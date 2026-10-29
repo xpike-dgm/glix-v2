@@ -45,6 +45,8 @@ export function Playing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
           participants={props.match.participants}
           hud={hud()}
           now={now}
+          cards={props.match.cards}
+          gameNameOf={(id) => props.snap.catalog.find((g) => g.id === id)?.name ?? id}
         >
           <Suspense fallback={<Loading />}>
             <Dynamic

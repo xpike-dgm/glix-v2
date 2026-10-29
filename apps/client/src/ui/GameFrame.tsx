@@ -1,4 +1,4 @@
-import type { PlayerInfo } from "@glix/engine";
+import type { CardsPublic, PlayerInfo } from "@glix/engine";
 import { createEffect, createMemo, createSignal, For, type JSX, on, onCleanup, Show } from "solid-js";
 import type { HudInfo } from "../games/registry.js";
 import { Avatar } from "./Avatar.js";
@@ -8,6 +8,7 @@ import { EyeIcon } from "./Icons.js";
 import { LeaveButton } from "./LeaveButton.js";
 import { MatchPath } from "./MatchPath.js";
 import { roundLabel } from "./matchPath.js";
+import { PlayedCards } from "./PlayedCards.js";
 import { RotateOverlay } from "./RotateOverlay.js";
 import { SoundToggle } from "./SoundToggle.js";
 import { ShellContext } from "./shell.js";
@@ -33,6 +34,10 @@ interface Props {
   hud: HudInfo | null;
   /** Sunucu saati (ms). */
   now: () => number;
+  /** Bu oyun için oynanan kartlar (herkese açık); varsa üst çubukta küçük rozet çıkar. */
+  cards?: CardsPublic | null | undefined;
+  /** Kart açıklamasında oyun adı için. */
+  gameNameOf?: ((id: string) => string) | undefined;
   children: JSX.Element;
 }
 
@@ -160,6 +165,11 @@ export function GameFrame(props: Props) {
                   </Show>
                 </div>
                 <div class="gbar__tools">
+                  <PlayedCards
+                    cards={props.cards}
+                    players={props.players}
+                    gameName={props.gameNameOf ?? ((id) => id)}
+                  />
                   <SoundToggle />
                   <LeaveButton />
                 </div>

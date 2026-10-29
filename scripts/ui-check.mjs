@@ -2303,6 +2303,18 @@ const SCREENS = [
       await p.locator(".sheet .kc-card").nth(1).click();
     },
   },
+  // Oyun içi "oynanan kartlar" rozeti (üst çubukta) ve dokununca açılan liste.
+  { name: "kart-oyun-ici-serit", q: "mock=playing&kart=1", settle: 1200 },
+  {
+    name: "kart-oyun-ici-liste",
+    q: "mock=playing&kart=1",
+    settle: 1200,
+    sizes: [[320, 568]],
+    act: async (p) => {
+      await p.getByRole("button", { name: /Oynanan kartlar/ }).click();
+      await p.waitForTimeout(600);
+    },
+  },
   { name: "kart-geri-sayim", q: "mock=kart-geri-sayim", settle: 1600 },
   { name: "kart-geri-sayim-8", q: "mock=kart-geri-sayim&n=8", settle: 1600 },
   { name: "kart-sonuc", q: "mock=kart-sonuc", settle: 2400 },
