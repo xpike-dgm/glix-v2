@@ -47,7 +47,7 @@ describe("kozmetik kataloğu", () => {
     // Giysi yuvalarından henüz ürünü olmayanlar olabilir (arayüz onları göstermez); diğer türlerin hepsinde ürün var.
     for (const t of COSMETIC_TYPES.filter((x) => x.group !== "giysi"))
       expect(COSMETIC_ITEMS.some((i) => i.type === t.id)).toBe(true);
-    expect(COSMETIC_ITEMS).toHaveLength(52);
+    expect(COSMETIC_ITEMS).toHaveLength(56);
   });
 
   it("parseCosmetics: bilinmeyen ya da yanlış türdeki kimlik atılır", () => {
@@ -122,7 +122,13 @@ describe("kürsü karakteri ürünleri", () => {
       ["sapka-korsan", "nadir"],
       ["sapka-tac", "efsanevi"],
     ]);
-    expect(itemsOfType("ust").map((i) => [i.id, i.rarity])).toEqual([["ust-neon-bomber", "nadir"]]);
+    expect(itemsOfType("ust").map((i) => [i.id, i.rarity])).toEqual([
+      ["ust-neon-bomber", "nadir"],
+      ["ust-kapusonlu", "siradan"],
+      ["ust-forma", "siradan"],
+      ["ust-deri-ceket", "nadir"],
+      ["ust-smokin", "nadir"],
+    ]);
   });
 
   it("cosmeticsFromEquipped / parseCosmetics yeni alanları taşır, yanlış türü atar", () => {

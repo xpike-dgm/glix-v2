@@ -316,6 +316,10 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
   ),
   item("sapka-tac", "sapka", "efsanevi", "Taç", "Neon kristallerle süslü altın taç.", "tac"),
   item("ust-neon-bomber", "ust", "nadir", "Neon Bomber", "Kürsüde sırtında neon bomber ceket.", "ceket"),
+  item("ust-kapusonlu", "ust", "siradan", "Kapüşonlu", "Göğsünde neon şeritli bol kapüşonlu.", "kapusonlu"),
+  item("ust-forma", "ust", "siradan", "Forma", "Neon çizgili kısa kollu spor forması.", "forma"),
+  item("ust-deri-ceket", "ust", "nadir", "Deri Ceket", "Yakası neon kenarlı siyah deri ceket.", "deri-ceket"),
+  item("ust-smokin", "ust", "nadir", "Smokin", "Papyonlu, yakası neon smokin.", "smokin"),
 ];
 
 const BY_ID: ReadonlyMap<string, CosmeticItem> = new Map(COSMETIC_ITEMS.map((i) => [i.id, i]));

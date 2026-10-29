@@ -29,12 +29,16 @@ describe("iskelet", () => {
     expect(Object.keys(rig.wardrobe).sort()).toEqual([
       "bere",
       "ceket",
+      "deri-ceket",
+      "forma",
       "fotr",
+      "kapusonlu",
       "korsan",
       "kovboy",
       "kulaklikli-kask",
       "parti",
       "sapka",
+      "smokin",
       "tac",
     ]);
   });

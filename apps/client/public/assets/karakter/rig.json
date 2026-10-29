@@ -338,6 +338,246 @@
      "sourceOrigin": [172.5, 9]
     }
    ]
+  },
+  "deri-ceket": {
+   "visible": true,
+   "slot": "ust",
+   "pieces": [
+    {
+     "file": "giysi/deri_ceket_torso.webp",
+     "size": [185, 163],
+     "pivot": [92, 188.5],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [164, 202.5]
+    },
+    {
+     "file": "giysi/deri_ceket_left_upper_arm.webp",
+     "size": [88, 127],
+     "pivot": [66, 22],
+     "parent": "left_upper_arm",
+     "bone": "left_upper_arm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_upper_arm",
+     "layer": "on",
+     "sourceOrigin": [117, 218.5]
+    },
+    {
+     "file": "giysi/deri_ceket_left_forearm.webp",
+     "size": [95, 106],
+     "pivot": [73, 21.5],
+     "parent": "left_forearm",
+     "bone": "left_forearm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_forearm",
+     "layer": "on",
+     "sourceOrigin": [75, 304.5]
+    },
+    {
+     "file": "giysi/deri_ceket_right_upper_arm.webp",
+     "size": [90, 127],
+     "pivot": [21.5, 21.5],
+     "parent": "right_upper_arm",
+     "bone": "right_upper_arm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_upper_arm",
+     "layer": "on",
+     "sourceOrigin": [307.5, 219]
+    },
+    {
+     "file": "giysi/deri_ceket_right_forearm.webp",
+     "size": [95, 107],
+     "pivot": [21.5, 21.5],
+     "parent": "right_forearm",
+     "bone": "right_forearm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_forearm",
+     "layer": "on",
+     "sourceOrigin": [342.5, 304.5]
+    }
+   ]
+  },
+  "forma": {
+   "visible": true,
+   "slot": "ust",
+   "pieces": [
+    {
+     "file": "giysi/forma_torso.webp",
+     "size": [185, 193],
+     "pivot": [92, 189.5],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [164, 201.5]
+    },
+    {
+     "file": "giysi/forma_left_upper_arm.webp",
+     "size": [79, 103],
+     "pivot": [57, 26.5],
+     "parent": "left_upper_arm",
+     "bone": "left_upper_arm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_upper_arm",
+     "layer": "on",
+     "sourceOrigin": [126, 214]
+    },
+    {
+     "file": "giysi/forma_right_upper_arm.webp",
+     "size": [79, 103],
+     "pivot": [21.5, 26.5],
+     "parent": "right_upper_arm",
+     "bone": "right_upper_arm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_upper_arm",
+     "layer": "on",
+     "sourceOrigin": [307.5, 214]
+    }
+   ]
+  },
+  "kapusonlu": {
+   "visible": true,
+   "slot": "ust",
+   "pieces": [
+    {
+     "file": "giysi/kapusonlu_torso.webp",
+     "size": [185, 192],
+     "pivot": [92, 199],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [164, 192]
+    },
+    {
+     "file": "giysi/kapusonlu_left_upper_arm.webp",
+     "size": [89, 141],
+     "pivot": [66.5, 29],
+     "parent": "left_upper_arm",
+     "bone": "left_upper_arm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_upper_arm",
+     "layer": "on",
+     "sourceOrigin": [116.5, 211.5]
+    },
+    {
+     "file": "giysi/kapusonlu_left_forearm.webp",
+     "size": [93, 105],
+     "pivot": [70.5, 21.5],
+     "parent": "left_forearm",
+     "bone": "left_forearm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_forearm",
+     "layer": "on",
+     "sourceOrigin": [77.5, 304.5]
+    },
+    {
+     "file": "giysi/kapusonlu_right_upper_arm.webp",
+     "size": [89, 143],
+     "pivot": [21.5, 28.5],
+     "parent": "right_upper_arm",
+     "bone": "right_upper_arm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_upper_arm",
+     "layer": "on",
+     "sourceOrigin": [307.5, 212]
+    },
+    {
+     "file": "giysi/kapusonlu_right_forearm.webp",
+     "size": [91, 105],
+     "pivot": [21.5, 21.5],
+     "parent": "right_forearm",
+     "bone": "right_forearm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_forearm",
+     "layer": "on",
+     "sourceOrigin": [342.5, 304.5]
+    }
+   ]
+  },
+  "smokin": {
+   "visible": true,
+   "slot": "ust",
+   "pieces": [
+    {
+     "file": "giysi/smokin_torso.webp",
+     "size": [185, 184],
+     "pivot": [92, 179.5],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [164, 211.5]
+    },
+    {
+     "file": "giysi/smokin_left_upper_arm.webp",
+     "size": [86, 127],
+     "pivot": [64, 21.5],
+     "parent": "left_upper_arm",
+     "bone": "left_upper_arm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_upper_arm",
+     "layer": "on",
+     "sourceOrigin": [119, 219]
+    },
+    {
+     "file": "giysi/smokin_left_forearm.webp",
+     "size": [93, 107],
+     "pivot": [71, 21.5],
+     "parent": "left_forearm",
+     "bone": "left_forearm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_forearm",
+     "layer": "on",
+     "sourceOrigin": [77, 304.5]
+    },
+    {
+     "file": "giysi/smokin_right_upper_arm.webp",
+     "size": [86, 127],
+     "pivot": [21.5, 21.5],
+     "parent": "right_upper_arm",
+     "bone": "right_upper_arm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_upper_arm",
+     "layer": "on",
+     "sourceOrigin": [307.5, 219]
+    },
+    {
+     "file": "giysi/smokin_right_forearm.webp",
+     "size": [93, 107],
+     "pivot": [21.5, 21.5],
+     "parent": "right_forearm",
+     "bone": "right_forearm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_forearm",
+     "layer": "on",
+     "sourceOrigin": [342.5, 304.5]
+    }
+   ]
   }
  },
  "scale": 0.5,
