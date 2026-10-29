@@ -158,6 +158,20 @@ const registry: Record<string, GameEntry> = {
     Screen: lazy(() => import("./laf-sokma/LafSokmaScreen.js")),
     Art: lazy(() => import("./laf-sokma/BriefingArt.js")),
   },
+  // TASLAK oyunlar (sahip onayı bekliyor): sunucu bunları yalnız taslak yolu açıksa gönderir (docs/TASLAK-OYUNLAR.md).
+  "ortak-nokta": {
+    Screen: lazy(() => import("./ortak-nokta/OrtakNoktaScreen.js")),
+    Art: lazy(() => import("./ortak-nokta/BriefingArt.js")),
+  },
+  "tek-ve-kucuk": {
+    Screen: lazy(() => import("./tek-ve-kucuk/TekVeKucukScreen.js")),
+    Art: lazy(() => import("./tek-ve-kucuk/BriefingArt.js")),
+  },
+  "sessiz-sira": {
+    noClock: true,
+    Screen: lazy(() => import("./sessiz-sira/SessizSiraScreen.js")),
+    Art: lazy(() => import("./sessiz-sira/BriefingArt.js")),
+  },
   "karalama-defteri": {
     Screen: lazy(() => import("./karalama-defteri/KaralamaDefteriScreen.js")),
     Art: lazy(() => import("./karalama-defteri/BriefingArt.js")),

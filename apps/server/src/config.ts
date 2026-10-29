@@ -25,6 +25,11 @@ export interface Config {
   mail: MailConfig | null;
   /** Yönetici paneline girebilen hesap kimlikleri (`GLIX_ADMIN_ACCOUNT_IDS`); boşsa panel kapalıdır (/admin 404). */
   adminAccountIds: ReadonlySet<number>;
+  /**
+   * TASLAK oyunları açar (`GLIX_TASLAK_OYUNLAR=1`; yalnız geliştirme/önizleme): sahip onayı bekleyen oyunlar lobide
+   * elle seçilebilir olur, yine de rastgele havuza girmez. Varsayılan kapalı; üretimde ayarlanmaz.
+   */
+  draftGames: boolean;
 }
 
 export interface ServerLimits {
@@ -147,6 +152,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     google: loadGoogle(env),
     mail: loadMail(env),
     adminAccountIds: loadAdminIds(env),
+    draftGames: env.GLIX_TASLAK_OYUNLAR === "1",
     statsDb,
     accountsDb: env.ACCOUNTS_DB || statsDb,
   };

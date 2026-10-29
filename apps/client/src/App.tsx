@@ -238,6 +238,8 @@ export function App() {
         devReady(import("./dev/mockSizma.js").then((m) => void m.startSizmaMock(mock, params)));
       } else if (mock.startsWith("rusvet-")) {
         devReady(import("./dev/mockRusvet.js").then((m) => void m.startRusvetMock(mock, params)));
+      } else if (/^(ortak-nokta|tek-ve-kucuk|sessiz-sira)-/.test(mock)) {
+        devReady(import("./dev/mockTaslak.js").then((m) => void m.startTaslakMock(mock, params)));
       } else if (mock.startsWith("ortalama-")) {
         devReady(import("./dev/mockOrtalama.js").then((m) => void m.startOrtalamaMock(mock, params)));
       } else if (/^(landscape|briefing-ready|spectator-)/.test(mock)) {

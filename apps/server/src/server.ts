@@ -41,6 +41,7 @@ import { createSiteSettings } from "./siteSettings.js";
 import { createSocial } from "./social.js";
 import { serveStatic } from "./static.js";
 import { createStats, PURGE_EVERY_MS } from "./statsStore.js";
+import { enableDraftGames } from "./taslak.js";
 import { createWebPush, disabledPush, type PushGateway, type VapidConfig } from "./webpush.js";
 
 /** Bu kadar geçersiz mesajdan sonra bağlantı kapatılır. */
@@ -97,6 +98,8 @@ export interface ServerOptions {
   backupDir?: string;
   /** Herkese bildirimde saniyedeki gönderim sayısı; varsayılan 20 (testlerde küçültülür). */
   broadcastPerSecond?: number;
+  /** TASLAK oyunları açar (yalnız geliştirme/test; bkz. `taslak.ts`). Varsayılan kapalı. */
+  draftGames?: boolean;
 }
 
 function resolvePush(opts: ServerOptions): PushGateway {
@@ -168,6 +171,10 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       schedulePurge();
     }, PURGE_EVERY_MS);
   };
+  if (opts.draftGames) {
+    const opened = enableDraftGames();
+    log.warn("draft_games_enabled", { games: opened });
+  }
   const rt = createRuntime(
     clock,
     limits.maxRooms,
