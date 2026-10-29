@@ -349,6 +349,42 @@ const SCREENS = [
       await p.waitForTimeout(1500);
     },
   },
+  // Kürsü giysileri (yeni şapkalar, renkler): mağazada yuva başlıkları, satın alma sayfasında renk topları.
+  {
+    name: "magaza-giysi-sapkalar",
+    q: "mock=magaza",
+    settle: 2600,
+    act: async (p) => {
+      await clickText("Giysiler")(p);
+      await p.waitForTimeout(2500);
+    },
+  },
+  {
+    name: "magaza-giysi-renk",
+    q: "mock=magaza",
+    settle: 2600,
+    act: async (p) => {
+      await clickText("Giysiler")(p);
+      await p.waitForTimeout(800);
+      await p.locator(".shop-card[data-status=buy][data-type=sapka]").first().click();
+      await p.waitForTimeout(800);
+      await p.getByRole("button", { name: "Pembe", exact: true }).click();
+      await p.waitForTimeout(1200);
+    },
+  },
+  {
+    name: "magaza-giysi-renk-buyuk-yazi",
+    q: "mock=magaza&text=large",
+    settle: 2600,
+    act: async (p) => {
+      await clickText("Giysiler")(p);
+      await p.waitForTimeout(800);
+      await p.locator(".shop-card[data-status=buy][data-type=sapka]").first().click();
+      await p.waitForTimeout(800);
+      await p.getByRole("button", { name: "Mor", exact: true }).click();
+      await p.waitForTimeout(1200);
+    },
+  },
   {
     name: "magaza-dans-satin-al",
     q: "mock=magaza",
@@ -400,6 +436,25 @@ const SCREENS = [
   },
   { name: "dolap-dolu-buyuk-yazi", q: "mock=dolap&text=large", settle: 900 },
   { name: "dolap-bos", q: "mock=dolap&v=bos", settle: 900 },
+  // Kürsü giysileri: dolapta kuşanılı giysinin renk topları (renkli karolar) ve şapka bölümü.
+  {
+    name: "dolap-renk",
+    q: "mock=dolap&v=renk",
+    settle: 2400,
+    act: async (p) => {
+      await p.locator(".locker-sec[data-type=sapka]").scrollIntoViewIfNeeded();
+      await p.waitForTimeout(2500);
+    },
+  },
+  {
+    name: "dolap-renk-buyuk-yazi",
+    q: "mock=dolap&v=renk&text=large",
+    settle: 2400,
+    act: async (p) => {
+      await p.locator(".locker-sec[data-type=sapka]").scrollIntoViewIfNeeded();
+      await p.waitForTimeout(2500);
+    },
+  },
   { name: "kozmetik-lobi", q: "mock=lobby&n=8&acct=1&cos=1", settle: 900 },
   { name: "kozmetik-lobi-buyuk-yazi", q: "mock=lobby&n=8&acct=1&cos=1&text=large", settle: 900 },
   { name: "kozmetik-final", q: "mock=final&n=6&acct=1&cos=1", settle: 2200 },
@@ -424,6 +479,20 @@ const SCREENS = [
   {
     name: "kursu-sonuc",
     q: "mock=results&n=6&acct=1&cos=1&kars=1",
+    sizes: SONUC_BOYUTLAR,
+    settle: 2600,
+    act: karakterHazir,
+  },
+  {
+    name: "kursu-sapkalar",
+    q: "mock=final&n=6&acct=1&cos=1&kars=3",
+    sizes: SONUC_BOYUTLAR,
+    settle: 2600,
+    act: karakterHazir,
+  },
+  {
+    name: "kursu-sapkalar-sonuc",
+    q: "mock=results&n=6&acct=1&cos=1&kars=3",
     sizes: SONUC_BOYUTLAR,
     settle: 2600,
     act: karakterHazir,

@@ -279,8 +279,8 @@
 .shop-card[data-type="ad-efekti"] .shop-card__pv {
   min-height: 100px;
 }
-/* Fırsat karosunda eski + yeni fiyat büyük yazıda dar karoya sığsın. */
-.shop-grid--deal .shop-price {
+/* İndirimli ürün (eski + yeni fiyat) fırsat karosunda da, ızgarada da dar karoya sığsın. */
+.shop-card .shop-price {
   padding: 0 8px 0 4px;
   gap: 3px;
 }

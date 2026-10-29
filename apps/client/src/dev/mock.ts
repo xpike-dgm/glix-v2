@@ -133,6 +133,24 @@ export function startMock(kind: string, params: URLSearchParams): void {
       return extra ? { ...p, cosmetics: { ...p.cosmetics, ...extra } } : p;
     });
   }
+  // `&kars=3`: kürsüde farklı şapkalar ve renkler (hepsi hesaplı): taç/mor, korsan/pembe, kovboy/altın,
+  // bere/yeşil, kulaklıklı kask/camgöbeği, parti şapkası/pembe.
+  if (params.get("kars") === "3") {
+    const HATS: Record<string, PlayerInfo["cosmetics"]> = {
+      p0: { dance: "dans-makarena", hat: "sapka-tac~mor", top: "ust-neon-bomber~pembe" },
+      p1: { dance: "dans-twist", hat: "sapka-korsan~pembe" },
+      p2: { dance: "dans-kazacok", hat: "sapka-kovboy~altin" },
+      p3: { hat: "sapka-bere~yesil" },
+      p4: { hat: "sapka-kulaklikli-kask" },
+      p5: { hat: "sapka-parti~pembe" },
+    };
+    players = players.map((p) => {
+      const extra = HATS[p.id];
+      return extra
+        ? { ...p, username: p.username ?? p.nickname.toLowerCase(), cosmetics: { ...p.cosmetics, ...extra } }
+        : p;
+    });
+  }
   // `&zafer=balon|konfeti|havai-fisek|simsek|altin-yagmur`: 1. sıradaki Cihad'ın kuşandığı zafer kutlaması;
   // `&giris=isinlanma|duman|simsek|portal|altin-isik`: sen ve Elif lobiye giriş efektiyle girersin.
   const zafer = params.get("zafer");
@@ -645,6 +663,9 @@ export function startMock(kind: string, params: URLSearchParams): void {
                 "dans-twist",
                 "dans-makarena",
                 "sapka-neon-kep",
+                "sapka-kovboy",
+                "sapka-tac",
+                "sapka-bere",
                 "ust-neon-bomber",
                 "kart-neon-izgara",
                 "kart-elektrik",
@@ -661,8 +682,9 @@ export function startMock(kind: string, params: URLSearchParams): void {
                 "ad-efekti": "ad-neon-mavi",
                 cerceve: "cerceve-altin-tac",
                 dans: "dans-makarena",
-                sapka: "sapka-neon-kep",
-                ust: "ust-neon-bomber",
+                // `&v=renk`: giysiler seçilmiş renkle kuşanılı (dolapta renk topları, karolarda renkli afiş).
+                sapka: v === "renk" ? "sapka-kovboy~altin" : "sapka-neon-kep",
+                ust: v === "renk" ? "ust-neon-bomber~pembe" : "ust-neon-bomber",
                 "kart-arkasi": "kart-elektrik",
                 zafer: "zafer-balon",
                 giris: "giris-portal",

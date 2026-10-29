@@ -13,3 +13,5 @@ Sahip bu yöntemi onayladı; U18 M4 bu denemeden üretime taşınacak. Oyun kodu
 - `*.json`: dönüştürülmüş danslar (makarena 143_35, tavuk 143_34, charleston 93_03, twist 141_12, sevinc 79_69,
   mickey 120_05).
 - `index.html`: eski parçalı yöntem (karşılaştırma için).
+
+- `giysiEkle.mjs`: gelen giysi klasörünü (ürün başına `<kimlik>.json` + webp parçalar) `rig.json` gardırobuna ekler; kullanım ve kurallar `docs/HESAP.md` "Giysi yuvaları, renkler, içe aktarıcı".
