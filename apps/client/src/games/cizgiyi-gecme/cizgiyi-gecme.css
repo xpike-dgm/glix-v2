@@ -2,7 +2,7 @@
 .cg {
   --gold: #ffc23b;
   --blue: #3b7bff;
-  --label-w: 46px;
+  --label-w: 54px;
 }
 .cg .col {
   gap: 0;
@@ -60,6 +60,7 @@
   width: var(--label-w);
   align-self: center;
   text-align: right;
+  white-space: nowrap;
   font-size: var(--fs-13);
   font-weight: 600;
   color: #b4bcea;
@@ -168,8 +169,8 @@
 }
 .cg__tower--res[data-dense="1"] .cgrow {
   flex: none;
-  min-height: calc(22px + (var(--lines, 1) - 1) * 36px);
-  padding: 2px 0;
+  min-height: calc(40px + (var(--lines, 1) - 1) * 40px);
+  padding: 3px 0;
 }
 
 /* Sonuç başlığı */

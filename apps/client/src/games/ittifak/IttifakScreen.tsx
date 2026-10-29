@@ -112,7 +112,7 @@ export default function IttifakScreen(props: GameScreenProps) {
                       readyIds={v().ready}
                       total={crew().length}
                       spectator={props.spectator === true}
-                      label="Oylamaya geçelim"
+                      label="Oylamaya geç"
                       doneLabel="Hazırsın"
                       onLock={() => sendActionAck({ kind: "skip" })}
                     />

@@ -261,6 +261,7 @@ export default function RusRuletiScreen(props: GameScreenProps) {
               {(turn) => (
                 <PredictRow
                   class="rr__predict"
+                  stacked
                   question="Patlar mı?"
                   yesLabel="Evet"
                   noLabel="Hayır"

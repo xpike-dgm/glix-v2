@@ -77,6 +77,8 @@ export function Yazma(props: Props) {
       </ul>
 
       <TamamBar
+        dots={false}
+        doneLabel="Gönderildi"
         locked={props.view.locked}
         ready={props.view.ready.length}
         readyIds={props.view.ready}

@@ -191,8 +191,11 @@ button.aitem:active:not(:disabled) {
   color: var(--gold);
   line-height: 1.1;
 }
+/* Bölünen fiyat: eski fiyat küçük ve üstte, yeni fiyat altta büyük. */
 .aitem__price s {
+  display: block;
   font-size: var(--fs-13);
+  line-height: 1;
   color: var(--text-dim);
 }
 .aitem[data-in="1"]::after {

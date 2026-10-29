@@ -85,6 +85,7 @@ export function Tahmin(props: Props) {
           />
         </Show>
         <TamamBar
+          dots={false}
           locked={props.view.locked}
           ready={props.view.ready.length}
           readyIds={props.view.ready}

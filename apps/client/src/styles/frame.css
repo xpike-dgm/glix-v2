@@ -448,23 +448,26 @@
   max-width: 480px;
   height: 48px;
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(48px, 1fr) auto;
+  grid-template-columns: fit-content(72%) minmax(24px, 1fr) auto;
   align-items: center;
-  gap: 8px;
+  gap: 4px 6px;
 }
 .gbar__title {
   min-width: 0;
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: 6px;
+  flex-direction: column;
+  align-items: flex-start;
 }
+/* Oyun adı her zaman tek satır (13 px); başlık sütunu içeriğe göre açılır, kesme son çare. */
 .gbar__name {
   min-width: 0;
+  max-width: 100%;
   font-size: var(--fs-13);
   font-weight: 700;
-  line-height: 1.15;
-  overflow-wrap: anywhere;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--text);
 }
 .gbar__round {
@@ -552,6 +555,13 @@
   border-radius: 6px;
   background: rgba(5, 8, 26, 0.78);
   animation: clock-beat 1s ease-out infinite;
+}
+/* Son saniyelerde sayı birimsiz kalmasın: "3 sn". */
+.clock:not([data-v="1"]) .clock__secs::after {
+  content: " sn";
+  font-family: var(--font-text);
+  font-size: var(--fs-13);
+  font-weight: 700;
 }
 @keyframes clock-beat {
   0% {
@@ -717,6 +727,10 @@
   .gframe[data-o="portrait"] .gbar__title {
     flex-direction: column;
     align-items: flex-start;
+  }
+  .gframe[data-o="portrait"] .gbar__name {
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
   .gframe[data-o="portrait"] .gbar__clock {
     height: 20px;

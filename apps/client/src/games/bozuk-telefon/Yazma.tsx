@@ -126,6 +126,7 @@ export function Yazma(props: Props) {
         </For>
       </ul>
       <TamamBar
+        dots={false}
         spectator={props.spectator}
         locked={locked()}
         disabled={!hasSentence(text())}

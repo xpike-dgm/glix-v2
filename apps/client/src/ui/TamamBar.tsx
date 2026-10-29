@@ -19,14 +19,16 @@ interface Props {
   spectator?: boolean;
   /** Düğme yazısı (varsayılan "Tamam"). */
   label?: string;
-  /** Kilitlenince düğmede görünen yazı. */
+  /** Kilitlenince durum çipinde görünen yazı. */
   doneLabel?: string;
+  /** `false`: oyun kendi hazır şeridini çiziyorsa alttaki nokta şeridi çıkmaz (tek şerit kalır). */
+  dots?: boolean;
   /** Basınca düğme hemen "Hazırsın"a döner; dönen yanıt reddedilirse geri alınır. */
   /** `false`: yerelde reddedildi; `sendActionAck` sözü: reddedilirse kilit geri açılır. */
   onLock: () => AckLike;
 }
 
-/** "Tamam" ile seçimi kesinleştirme: büyük düğme, kilitlenince "Diğerleri bekleniyor · 3/5 hazır". */
+/** "Tamam" ile seçimi kesinleştirme: büyük düğme; kilitlenince düşük vurgulu durum (✓ Gönderildi) ve "Diğerleri bekleniyor · 3/5 hazır". */
 export function TamamBar(props: Props) {
   const [sent, setSent] = createOptimistic<boolean>(() => props.locked);
   const locked = () => props.locked || sent();
@@ -38,7 +40,7 @@ export function TamamBar(props: Props) {
   const dots = () => {
     const ids = props.readyIds;
     const crew = shell.crew();
-    if (!ids || crew.length === 0 || crew.length !== props.total) return [];
+    if (props.dots === false || !ids || crew.length === 0 || crew.length !== props.total) return [];
     return crew.map((p) => ({ id: p.id, avatar: p.avatar, on: ids.includes(p.id) }));
   };
   const lock = (): void => {
@@ -65,9 +67,19 @@ export function TamamBar(props: Props) {
             </PrimaryButton>
           }
         >
-          <PrimaryButton variant="done" disabled>
-            {props.doneLabel ?? "Hazırsın"}
-          </PrimaryButton>
+          <p class="tamam__done">
+            <svg class="tamam__done-ico" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+              <path
+                d="M3 8.5l3.2 3.2L13 4.8"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span>{props.doneLabel ?? "Hazırsın"}</span>
+          </p>
           <p class="tamam__count" role="status">
             Diğerleri bekleniyor · {count()}
           </p>
