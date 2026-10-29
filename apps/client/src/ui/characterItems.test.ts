@@ -17,7 +17,7 @@ const item = (id: string) => {
 
 describe("karakter ürünleri önizlemesi", () => {
   it("yalnız dans ve giysi karakter üzerinde gösterilir", () => {
-    expect(COSMETIC_ITEMS.filter(isCharacterItem)).toHaveLength(36);
+    expect(COSMETIC_ITEMS.filter(isCharacterItem)).toHaveLength(42);
     expect(isCharacterItem(item("cerceve-cift"))).toBe(false);
   });
 
@@ -49,6 +49,11 @@ describe("karakter ürünleri önizlemesi", () => {
       dance: null,
       focus: "torso",
     });
+  });
+
+  it("başa takılan aksesuar baş kadrajında, diğer aksesuarlar gövde kadrajında", () => {
+    expect(posterSpec(item("aksesuar-gunes-gozlugu"), undefined).focus).toBe("head");
+    expect(posterSpec(item("aksesuar-kolye"), undefined).focus).toBe("torso");
   });
 
   it("giysi afişinde seçilen renk katmana yazılır; kadraj yuvaya göre", () => {

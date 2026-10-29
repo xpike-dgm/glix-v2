@@ -370,6 +370,40 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     "Dize kadar uzanan ışıl ışıl çizme.",
     "neon-cizme",
   ),
+  item("aksesuar-kolye", "aksesuar", "siradan", "Kolye", "Kalın zincir, parlayan neon madalyon.", "kolye"),
+  item("aksesuar-atki", "aksesuar", "siradan", "Atkı", "Ucu göğse düşen neon şeritli atkı.", "atki"),
+  item(
+    "aksesuar-gunes-gozlugu",
+    "aksesuar",
+    "nadir",
+    "Güneş Gözlüğü",
+    "Maskenin önüne geniş neon gözlük.",
+    "gunes-gozlugu",
+  ),
+  item(
+    "aksesuar-sirt-cantasi",
+    "aksesuar",
+    "nadir",
+    "Sırt Çantası",
+    "Askıları omuzda, ışıklı sırt çantası.",
+    "sirt-cantasi",
+  ),
+  item(
+    "aksesuar-pelerin",
+    "aksesuar",
+    "nadir",
+    "Pelerin",
+    "Omuzdan bacaklara uzanan neon kenarlı pelerin.",
+    "pelerin",
+  ),
+  item(
+    "aksesuar-kanat",
+    "aksesuar",
+    "efsanevi",
+    "Neon Kanat",
+    "Sırtta açılan ışıl ışıl tüy kanatlar.",
+    "kanat",
+  ),
 ];
 
 const BY_ID: ReadonlyMap<string, CosmeticItem> = new Map(COSMETIC_ITEMS.map((i) => [i.id, i]));

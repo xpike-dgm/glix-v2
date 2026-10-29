@@ -1328,6 +1328,126 @@
      "sourceOrigin": [297, 651.5]
     }
    ]
+  },
+  "atki": {
+   "visible": true,
+   "slot": "aksesuar",
+   "pieces": [
+    {
+     "file": "giysi/atki_torso.webp",
+     "size": [143, 197],
+     "pivot": [65, 196.5],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [191, 194.5]
+    }
+   ]
+  },
+  "gunes-gozlugu": {
+   "visible": true,
+   "slot": "aksesuar",
+   "pieces": [
+    {
+     "file": "giysi/gunes_gozlugu_head.webp",
+     "size": [154, 58],
+     "pivot": [75, 111.5],
+     "parent": "head",
+     "bone": "head",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "head",
+     "layer": "on",
+     "sourceOrigin": [181, 120.5]
+    }
+   ]
+  },
+  "kanat": {
+   "visible": true,
+   "slot": "aksesuar",
+   "pieces": [
+    {
+     "file": "giysi/kanat_torso_arka.webp",
+     "size": [502, 350],
+     "pivot": [251, 373.5],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "arka",
+     "sourceOrigin": [5, 17.5]
+    }
+   ]
+  },
+  "kolye": {
+   "visible": true,
+   "slot": "aksesuar",
+   "pieces": [
+    {
+     "file": "giysi/kolye_torso.webp",
+     "size": [117, 129],
+     "pivot": [58, 189.5],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [198, 201.5]
+    }
+   ]
+  },
+  "pelerin": {
+   "visible": true,
+   "slot": "aksesuar",
+   "pieces": [
+    {
+     "file": "giysi/pelerin_torso_arka.webp",
+     "size": [497, 418],
+     "pivot": [248.5, 178.5],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "arka",
+     "sourceOrigin": [7.5, 212.5]
+    }
+   ]
+  },
+  "sirt-cantasi": {
+   "visible": true,
+   "slot": "aksesuar",
+   "pieces": [
+    {
+     "file": "giysi/sirt_cantasi_torso_arka.webp",
+     "size": [287, 193],
+     "pivot": [143.5, 214],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "arka",
+     "sourceOrigin": [112.5, 177]
+    },
+    {
+     "file": "giysi/sirt_cantasi_torso.webp",
+     "size": [150, 151],
+     "pivot": [75, 182.5],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [181, 208.5]
+    }
+   ]
   }
  },
  "scale": 0.5,

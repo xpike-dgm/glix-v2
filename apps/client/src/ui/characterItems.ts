@@ -35,6 +35,11 @@ export const FOCUS_OF: Readonly<Partial<Record<CosmeticTypeId, PosterFocus>>> = 
   kostum: "full",
 };
 
+/** Yuvasının kadrajına sığmayan tek tek ürünler (ör. başa takılan aksesuar). */
+export const FOCUS_OF_ASSET: Readonly<Record<string, PosterFocus>> = {
+  "gunes-gozlugu": "head",
+};
+
 /**
  * Karo afişi: dans ürünü oyuncunun kuşandığı giysilerle dansın en karakteristik karesinde; giysi ürünü tek başına
  * dinlenme duruşunda (kendi yuvasına uygun kadrajda) görünür; `colour` giysinin neon rengidir.
@@ -53,7 +58,7 @@ export function posterSpec(
     layers: item.asset ? [item.asset] : [],
     tints: item.asset && deg !== 0 ? { [item.asset]: deg } : {},
     dance: null,
-    focus: FOCUS_OF[item.type] ?? "torso",
+    focus: (item.asset && FOCUS_OF_ASSET[item.asset]) || FOCUS_OF[item.type] || "torso",
   };
 }
 

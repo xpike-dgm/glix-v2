@@ -27,6 +27,7 @@ describe("iskelet", () => {
       if (p.parent !== "root") expect(ix(p.parent)).toBeLessThan(i);
     });
     expect(Object.keys(rig.wardrobe).sort()).toEqual([
+      "atki",
       "bere",
       "bot",
       "ceket",
@@ -35,10 +36,13 @@ describe("iskelet", () => {
       "etek",
       "forma",
       "fotr",
+      "gunes-gozlugu",
+      "kanat",
       "kapusonlu",
       "kargo",
       "kaykay",
       "kimono",
+      "kolye",
       "korsan",
       "kot",
       "kovboy",
@@ -46,7 +50,9 @@ describe("iskelet", () => {
       "neon-cizme",
       "parti",
       "paten",
+      "pelerin",
       "sapka",
+      "sirt-cantasi",
       "smokin",
       "sort",
       "spor",

@@ -184,7 +184,7 @@ describe("kürsü karakteri ürünleri (dans, şapka, üst)", () => {
       "giris",
     ]);
     const giysi = SHOP_TABS.find((t) => t.id === "giysi");
-    expect(giysi?.types).toEqual(["sapka", "ust", "alt", "ayakkabi"]);
+    expect(giysi?.types).toEqual(["sapka", "ust", "alt", "ayakkabi", "aksesuar"]);
     expect(SHOP_TABS.find((t) => t.id === "dans")?.types).toEqual(["dans"]);
   });
 
@@ -198,6 +198,7 @@ describe("kürsü karakteri ürünleri (dans, şapka, üst)", () => {
       "Üst",
       "Alt",
       "Ayakkabı",
+      "Aksesuar",
       "Kart arkası",
       "Zafer kutlaması",
       "Giriş efekti",
