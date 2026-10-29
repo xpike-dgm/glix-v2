@@ -15,7 +15,7 @@ describe("resimli ürün yolları", () => {
         checked++;
       }
     }
-    expect(checked).toBe(5 * 1 + 5 * 4 + 3 * 6 + 5 * 2);
+    expect(checked).toBe(9 * 1 + 5 * 4 + 3 * 6 + 5 * 2);
   });
 
   it("kart arkası: kuşanılan görsel, yoksa ya da bilinmiyorsa klasik", () => {
