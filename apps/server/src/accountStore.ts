@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import type { DatabaseSync } from "node:sqlite";
 import type {
   AdminAccountDetail,
@@ -448,6 +449,10 @@ export interface AccountStore extends FriendStore {
   purchaseCosmetic(accountId: number, itemId: string, at: number): CosmeticPurchase;
   /** Sahip olunan kozmetikler (eskiden yeniye) ve kuşanılanlar (tür -> ürün kimliği). */
   cosmetics(accountId: number): CosmeticsDump;
+  /** Yalnız kuşanılanlar (odaya giriş sıcak yolu: sahip listesi okunmaz). */
+  equippedCosmetics(accountId: number): Record<string, string>;
+  /** Hesap bu ürüne sahip mi (tek indeksli arama). */
+  ownsCosmetic(accountId: number, itemId: string): boolean;
   /** Türdeki ürünü kuşanır; `itemId` null ise temel (yok) seçilir. Yalnız sahip olunan ürün kuşanılır. */
   equipCosmetic(accountId: number, type: CosmeticTypeId, itemId: string | null): CosmeticEquip;
   /** Yönetici armağanı: fiyat 0, defter ve bakiye değişmez. `owned`: zaten vardı. */
@@ -603,7 +608,8 @@ export interface AccountStore extends FriendStore {
   close(): void;
 }
 
-const MIGRATIONS: readonly string[] = [
+/** Göç listesi (yalnız testler okur; sıra ve içerik değişmez, yalnız sona eklenir). */
+export const ACCOUNT_MIGRATIONS: readonly string[] = [
   `CREATE TABLE accounts (
      id INTEGER PRIMARY KEY AUTOINCREMENT,
      username TEXT NOT NULL,
@@ -827,10 +833,17 @@ const MIGRATIONS: readonly string[] = [
    );
    INSERT INTO glix_ledger_new (id, account_id, at, amount, reason, ref)
      SELECT id, account_id, at, amount, reason, ref FROM glix_ledger;
+   -- AUTOINCREMENT sayacı eski tablodan taşınır: son satırlar silinmiş olsa bile kimlikler yeniden kullanılmaz.
+   DELETE FROM sqlite_sequence WHERE name = 'glix_ledger_new';
+   INSERT INTO sqlite_sequence (name, seq) SELECT 'glix_ledger_new', seq FROM sqlite_sequence WHERE name = 'glix_ledger';
    DROP TABLE glix_ledger;
    ALTER TABLE glix_ledger_new RENAME TO glix_ledger;
    CREATE INDEX glix_ledger_account ON glix_ledger (account_id, at);
    CREATE INDEX glix_ledger_at ON glix_ledger (at);`,
+  // Maç sonu rozet/görev hesabı hesabın tüm geçmişini tarar (sayım, farklı oyun, galibiyet): kapsayıcı indeksler tablo
+  // satırlarını okutmaz. Geçmiş büyüdükçe maç sonu olay döngüsünü tutmasın diye (INCELEME-3).
+  `CREATE INDEX account_games_cover ON account_games (account_id, game_id, won);
+   CREATE INDEX account_matches_cover ON account_matches (account_id, ended_at, won);`,
 ];
 
 /** Yönetici hesap dökümünde gösterilen son Glix hareketi sayısı. */
@@ -842,16 +855,25 @@ export const SERVER_START_KEEP = 200;
 /** Yönetici işlem kayıtları bu süreden sonra silinir. */
 export const ADMIN_AUDIT_RETENTION_MS = 365 * 24 * 3600 * 1000;
 
-function migrate(db: DatabaseSync): void {
+function migrate(db: DatabaseSync, path: string): void {
   db.exec("CREATE TABLE IF NOT EXISTS account_schema_version (version INTEGER NOT NULL)");
   const row = db.prepare("SELECT MAX(version) AS v FROM account_schema_version").get() as
     | { v: number | null }
     | undefined;
   let version = row?.v ?? 0;
-  while (version < MIGRATIONS.length) {
+  // Bekleyen göç varsa ve veritabanında gerçek veri varsa, göçten önce tutarlı bir kopya alınır (geri dönüş yolu).
+  if (path !== ":memory:" && version > 0 && version < ACCOUNT_MIGRATIONS.length) {
+    const dest = `${path}.oncesi-v${version}`;
+    try {
+      if (!existsSync(dest)) db.prepare("VACUUM INTO ?").run(dest);
+    } catch (err) {
+      log.warn("migration_backup_failed", { error: String(err) });
+    }
+  }
+  while (version < ACCOUNT_MIGRATIONS.length) {
     db.exec("BEGIN");
     try {
-      db.exec(MIGRATIONS[version] as string);
+      db.exec(ACCOUNT_MIGRATIONS[version] as string);
       version += 1;
       db.prepare("INSERT INTO account_schema_version (version) VALUES (?)").run(version);
       db.exec("COMMIT");
@@ -954,7 +976,7 @@ export function createAccounts(path: string): AccountStore {
   const db = new Db(path);
   db.exec("PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA busy_timeout = 2000;");
   db.exec("PRAGMA foreign_keys = ON");
-  migrate(db);
+  migrate(db, path);
   const byUsername = db.prepare("SELECT id FROM accounts WHERE username_lc = ?");
   const byEmail = db.prepare("SELECT id FROM accounts WHERE email = ?");
   const insert = db.prepare(
@@ -1130,6 +1152,10 @@ export function createAccounts(path: string): AccountStore {
   const cosUnequipItem = db.prepare(
     "DELETE FROM cosmetic_equipped WHERE account_id = ? AND (item_id = ? OR item_id LIKE ? ESCAPE '\\')",
   );
+  const equippedOf = (accountId: number): Record<string, string> =>
+    Object.fromEntries(
+      (cosEquippedAll.all(accountId) as { slot: string; item_id: string }[]).map((r) => [r.slot, r.item_id]),
+    );
   const cosDump = (accountId: number): CosmeticsDump => ({
     owned: (cosOwnedAll.all(accountId) as { item_id: string; acquired_at: number; price_paid: number }[]).map(
       (r) => ({ itemId: r.item_id, acquiredAt: r.acquired_at, pricePaid: r.price_paid }),
@@ -1668,6 +1694,8 @@ export function createAccounts(path: string): AccountStore {
       return result;
     },
     cosmetics: (accountId) => cosDump(accountId),
+    equippedCosmetics: (accountId) => equippedOf(accountId),
+    ownsCosmetic: (accountId, itemId) => cosOwnedHas.get(accountId, itemId) !== undefined,
     equipCosmetic(accountId, type, itemId) {
       if (!COSMETIC_TYPES.some((t) => t.id === type && t.key !== null)) return "unknown";
       let result: CosmeticEquip = "missing";
