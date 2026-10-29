@@ -953,11 +953,12 @@
   }
 }
 @keyframes pack-sweep {
+  /* Çubuk genişliğinin %40'ı: kapsayıcıya göre -%40..%100 = kendi genişliğine göre -%100..%250 (yerleşim yerine transform). */
   0% {
-    margin-left: -40%;
+    transform: translateX(-100%);
   }
   100% {
-    margin-left: 100%;
+    transform: translateX(250%);
   }
 }
 @media (prefers-reduced-motion: reduce) {
