@@ -26,6 +26,7 @@ import {
 } from "./friends.js";
 import { receiveGlix } from "./glix.js";
 import { parseServerMessage } from "./parse.js";
+import { receiveQuestsDone } from "./quests.js";
 import { emitReaction } from "./reactions.js";
 import { beginReport, markReportDone, markReportFailed, reportSending } from "./report.js";
 import { isReportError, REPORT_FAILED, REPORT_THANKS, reportErrorText } from "./reportRules.js";
@@ -268,6 +269,9 @@ function onMessage(raw: string): void {
       break;
     case "glixEarned":
       receiveGlix({ total: msg.total, parts: msg.parts, balance: msg.balance, capped: msg.capped });
+      break;
+    case "questsDone":
+      receiveQuestsDone({ quests: msg.quests, balance: msg.balance });
       break;
     case "invite":
       receiveInvite({ from: msg.from, roomCode: msg.roomCode, expiresAt: msg.expiresAt });

@@ -29,6 +29,7 @@ import { receiveGlix } from "../net/glix.js";
 import type { GlixEarnedInfo } from "../net/glixRules.js";
 import { freezeProfile } from "../net/profile.js";
 import { parseProfile } from "../net/profileRules.js";
+import { freezeQuests, freezeQuestsDone } from "../net/quests.js";
 import { emitReaction } from "../net/reactions.js";
 import { markReportDone } from "../net/report.js";
 import { REPORT_THANKS } from "../net/reportRules.js";
@@ -554,6 +555,37 @@ export function startMock(kind: string, params: URLSearchParams): void {
     const sample = samples[glixKind];
     if (sample) receiveGlix(sample);
     rememberBadgeNames({ "on-mac": "Alışıyorum" });
+  }
+  // `&gorev=1|bitti`: günlük görevler (anahtar açık). Ana sayfada kart (1: ilerleme sürüyor, bitti: biri tamam);
+  // finalde `&gorev=1` "Görev tamamlandı" satırını gösterir.
+  const questKind = params.get("gorev");
+  if (questKind && (kind === "home" || kind === "final")) {
+    setState("account", { username: "cihad_01", email: "cihad@example.com" });
+    if (kind === "home") {
+      const finished = questKind === "bitti";
+      freezeQuests({
+        enabled: true,
+        clockOffset: 0,
+        endsAt: Date.now() + (5 * 3600 + 12 * 60 + 33) * 1000,
+        quests: [
+          {
+            id: "mac-3",
+            text: "3 maç bitir",
+            target: 3,
+            progress: finished ? 3 : 2,
+            reward: 30,
+            done: finished,
+          },
+          { id: "ilk3", text: "Bir maçta ilk 3'e gir", target: 1, progress: 0, reward: 50, done: false },
+          { id: "farkli-5", text: "5 farklı oyun oyna", target: 5, progress: 3, reward: 80, done: false },
+        ],
+      });
+    } else {
+      freezeQuestsDone({
+        quests: [{ id: "ilk3", text: "Bir maçta ilk 3'e gir", reward: 50 }],
+        balance: 190,
+      });
+    }
   }
   if (kind === "lobby" && params.get("acct") === "1") {
     const now = Date.now();

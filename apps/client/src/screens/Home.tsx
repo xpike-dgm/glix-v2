@@ -16,6 +16,7 @@ import { GhostButton } from "../ui/GhostButton.js";
 import { BagIcon, GearIcon } from "../ui/Icons.js";
 import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
+import { QuestCard } from "../ui/QuestCard.js";
 import { Screen } from "../ui/Screen.js";
 import { SiteBanner } from "../ui/SiteBanner.js";
 import { SoundToggle } from "../ui/SoundToggle.js";
@@ -182,6 +183,9 @@ export function Home() {
       </div>
 
       <div class="home__actions">
+        <Show when={state.account}>
+          <QuestCard />
+        </Show>
         <Show when={offline()} fallback={<InstallHint />}>
           <div class="offline-wrap">
             <Mascot pose="baglanti-koptu" size="var(--mascot-sm, 64px)" />

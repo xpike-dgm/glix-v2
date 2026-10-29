@@ -235,6 +235,7 @@ describe("A3 yanıt doğrulaması", () => {
   const content = {
     games: [game],
     announcement: { id: 3, text: "Merhaba", kind: "bilgi", endsAt: null },
+    gunlukGorevler: false,
   };
   const maintenance = {
     on: false,
@@ -266,6 +267,9 @@ describe("A3 yanıt doğrulaması", () => {
   it("geçerli yanıtlar çözülür", () => {
     expect(parseContent(content).games[0]?.name).toBe("Kule Ustası");
     expect(parseContent({ ...content, announcement: null }).announcement).toBeNull();
+    expect(parseContent(content).gunlukGorevler).toBe(false);
+    expect(parseContent({ ...content, gunlukGorevler: true }).gunlukGorevler).toBe(true);
+    expect(tryParse(parseContent, { ...content, gunlukGorevler: "1" })).toBeNull();
     expect(parseGameList({ ok: true, games: [game] })).toHaveLength(1);
     expect(parseMaintenance(maintenance).releases.map((r) => r.state)).toEqual(["running", "clean"]);
     expect(parsePushStatus(push).last?.sent).toBe(3);

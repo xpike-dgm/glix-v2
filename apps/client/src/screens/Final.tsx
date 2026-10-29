@@ -8,6 +8,7 @@ import { leaveRoom, returnToLobby } from "../net/client.js";
 import { clearGlix } from "../net/glix.js";
 import { guestGlixText } from "../net/glixRules.js";
 import { matchRounds } from "../net/matchHistory.js";
+import { clearQuestsDone } from "../net/quests.js";
 import { openReport } from "../net/reportUi.js";
 import { setState, state } from "../net/store.js";
 import { noteMatchFinished } from "../pwa/pwa.js";
@@ -31,6 +32,7 @@ import { NewBadgeCard } from "../ui/NewBadgeCard.js";
 import { PodiumBlock } from "../ui/PodiumBlock.js";
 import { PodiumPerson } from "../ui/PodiumPerson.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
+import { QuestsDone } from "../ui/QuestsDone.js";
 import { ReactionLayer } from "../ui/ReactionLayer.js";
 import { FlagIcon } from "../ui/ResultIcons.js";
 import { createReactionSender } from "../ui/reactionSend.js";
@@ -73,6 +75,7 @@ export function Final(props: { snap: RoomSnapshot }) {
     // Final'den ayrılınca (lobi, çıkış) rozet kartı bir sonraki maça taşınmaz.
     onCleanup(dismissBadges);
     onCleanup(clearGlix);
+    onCleanup(clearQuestsDone);
     const t = setTimeout(() => setAnnounce(spoken()), 250);
     onCleanup(() => clearTimeout(t));
     if (!confetti) return;
@@ -194,6 +197,7 @@ export function Final(props: { snap: RoomSnapshot }) {
         <div class="fin__b">
           <Show when={state.account}>
             <GlixSummary place={myPlace()} />
+            <QuestsDone />
           </Show>
 
           <Show when={titles().length > 0}>

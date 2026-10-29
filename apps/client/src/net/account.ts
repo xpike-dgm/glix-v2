@@ -15,6 +15,7 @@ import {
 } from "./kvkkRules.js";
 import { resetLeaderboard } from "./leaderboard.js";
 import { parseMailReturn } from "./mailRules.js";
+import { resetQuests } from "./quests.js";
 import { goHome, setNickname, setState, state, toast } from "./store.js";
 
 const BASE = "/api/auth/";
@@ -76,6 +77,7 @@ export async function refreshAccount(): Promise<void> {
     else {
       resetFriends();
       resetLeaderboard();
+      resetQuests();
     }
   } catch {
     // ağ yok: misafir gibi devam
@@ -117,6 +119,7 @@ export async function logout(): Promise<void> {
   sendPushUnsubscribe();
   resetFriends();
   resetLeaderboard();
+  resetQuests();
   try {
     await call("logout", "POST", {});
   } catch {
@@ -396,6 +399,7 @@ export async function deleteMyAccount(form: DeleteForm): Promise<AccountReply> {
   sendPushUnsubscribe();
   resetFriends();
   resetLeaderboard();
+  resetQuests();
   setState("account", null);
   setState("usernameAvailableAt", null);
   setState("google", "linked", false);
