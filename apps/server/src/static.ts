@@ -28,7 +28,7 @@ const TYPES: Record<string, string> = {
 /** Tüm statik yanıtlara eklenen güvenlik başlıkları (CSP: yalnız aynı kaynak; Pixi/Vite satır içi betik gerektirmez). */
 export const SECURITY_HEADERS: Record<string, string> = {
   "Content-Security-Policy":
-    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
   "Referrer-Policy": "no-referrer",
@@ -49,7 +49,7 @@ async function isFile(path: string): Promise<boolean> {
 }
 
 /** Aynı adla yenilenebilen görsel klasörleri (istemcideki `glix-art` deseniyle aynı). */
-const ART_DIR = /^\/assets\/(?:worlds|cards|briefing|props|avatars|mascot|badges|fx|brand)\//;
+const ART_DIR = /^\/assets\/(?:worlds|cards|briefing|props|avatars|mascot|badges|fx|brand|shop|karakter)\//;
 
 /**
  * Derleme çıktısı adında özet taşıdığı için değişmezdir. Görseller aynı adla yenilenebilir: tarayıcı

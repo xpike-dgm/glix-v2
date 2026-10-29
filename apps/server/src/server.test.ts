@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
 import { type RunningServer, startServer } from "./server.js";
-import { cacheControl } from "./static.js";
+import { cacheControl, SECURITY_HEADERS } from "./static.js";
 
 let running: RunningServer;
 let restricted: RunningServer;
@@ -87,6 +87,15 @@ describe("http", () => {
     expect(cacheControl("/assets/chunks/Lobby-Ab12Cd34.js")).toBe("public, max-age=31536000, immutable");
     expect(cacheControl("/assets/brand/logo.webp")).toBe("public, max-age=300");
     expect(cacheControl("/assets/worlds/kor-bomba-portrait.webp")).toBe("public, max-age=300");
+    // Mağaza görselleri ve karakter iskeleti/dansları adı sabit dosyalardır (özet taşımaz): değişmez diye saklanamaz.
+    expect(cacheControl("/assets/karakter/rig.json")).toBe("public, max-age=300");
+    expect(cacheControl("/assets/karakter/dans/twist.json")).toBe("public, max-age=300");
+    expect(cacheControl("/assets/shop/cerceve/ejderha.webp")).toBe("public, max-age=300");
+  });
+  it("içerik politikası: kayıt klibi önizlemesi (video blob:) ve eval yok", () => {
+    const csp = SECURITY_HEADERS["Content-Security-Policy"] ?? "";
+    expect(csp).toContain("media-src 'self' blob:");
+    expect(csp).not.toContain("unsafe-eval");
   });
   it("olmayan dosya 404, yol aşımı engellenir", async () => {
     expect((await fetch(`http://${base}/missing.png`)).status).toBe(404);
