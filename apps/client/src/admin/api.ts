@@ -206,6 +206,8 @@ export const startBroadcast = (body: {
   body: string;
   url: string | null;
 }): Promise<ActionResult> => action("push/broadcast", body, "Gönderim başladı.");
+export const setQuests = (on: boolean): Promise<ActionResult> =>
+  action("content/quests", { on }, on ? "Günlük görevler açıldı." : "Günlük görevler kapandı.");
 export const setMaintenance = (on: boolean): Promise<ActionResult> =>
   action("maintenance/set", { on }, on ? "Bakım kipi açıldı." : "Bakım kipi kapandı.");
 

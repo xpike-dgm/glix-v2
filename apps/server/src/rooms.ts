@@ -56,6 +56,7 @@ export function createRuntime(
     broadcaster: createBroadcaster(clock, () => rt),
     catalog: getCatalog(),
     maintenance: false,
+    gunlukGorevler: false,
     announcement: null,
     bannedWords: noBannedWords,
     content: noContent,

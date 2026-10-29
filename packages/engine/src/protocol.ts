@@ -383,6 +383,12 @@ export type ServerMessage =
       balance: number;
       capped: boolean;
     }
+  /**
+   * Maç sonunda günlük görev(ler) tamamlandı (yalnız hesaplı oyuncunun canlı bağlantılarına; `glixEarned`'den sonra,
+   * yalnız `gunlukGorevler` ayarı açıkken). `quests`: tamamlananlar (ödüllü), `balance`: ödüller dahil yeni bakiye.
+   * Eski istemciler bilinmeyen mesajı yok sayar; protokol sürümü artmadı.
+   */
+  | { type: "questsDone"; quests: { id: string; text: string; reward: number }[]; balance: number }
   /** `report` kabul edildi ("Bildirimin alındı. Teşekkürler."). */
   | { type: "reportAck" }
   | { type: "error"; code: ErrorCode; message: string };

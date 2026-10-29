@@ -192,7 +192,7 @@ export interface AdminGlixRow {
   at: number;
   /** İşaretli tutar. */
   amount: number;
-  reason: "mac" | "rozet" | "yonetici" | "satin-alma";
+  reason: "mac" | "rozet" | "yonetici" | "satin-alma" | "gorev";
   ref: string | null;
 }
 
@@ -262,6 +262,8 @@ export interface AdminGameSwitch {
 export interface AdminContent {
   games: AdminGameSwitch[];
   announcement: Announcement | null;
+  /** Günlük görevler anahtarı (varsayılan kapalı; ödüller sahip onayı bekliyor). */
+  gunlukGorevler: boolean;
 }
 
 export type AdminReleaseState = "running" | "clean" | "unclean";
@@ -414,12 +416,14 @@ export interface AdminEconomyDay {
   /** Kazanç (pozitif tutarlar), nedene göre. `yonetici`: yöneticinin eklediği. */
   mac: number;
   rozet: number;
+  /** Günlük görev ödülleri (günlük maç sınırına sayılmaz). */
+  gorev: number;
   yonetici: number;
   /** Yöneticinin düştüğü Glix (pozitif sayı). */
   yoneticiEksi: number;
   /** Mağazada harcanan Glix (pozitif sayı). */
   harcanan: number;
-  /** Toplam kazanç (mac + rozet + yonetici). */
+  /** Toplam kazanç (mac + rozet + gorev + yonetici). */
   kazanilan: number;
   /** kazanilan - yoneticiEksi - harcanan. */
   net: number;

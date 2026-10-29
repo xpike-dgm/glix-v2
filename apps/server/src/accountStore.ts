@@ -15,8 +15,10 @@ import {
   currentPrice,
   type GlixPart,
   matchAward,
+  type QuestFacts,
   REPORT_RETENTION_MS,
   splitEquipped,
+  top3Streak,
 } from "@glix/engine";
 import { istanbulDayStart } from "./badges.js";
 import { createFriendStore, FRIENDS_SCHEMA, type FriendStore } from "./friendStore.js";
@@ -160,6 +162,8 @@ export interface AccountExportData {
   coplay: { username: string; matches: number; lastAt: number }[];
   /** Glix bakiyesi ve tüm hareketleri (eskiden yeniye). */
   glix: { balance: number; ledger: Omit<GlixLedgerRow, "id">[] };
+  /** Ödenen günlük görevler (gün = İstanbul gün başlangıcı, UTC ms). */
+  quests: { day: number; questId: string; at: number; reward: number }[];
   /** Mağazadan alınan ya da armağan edilen kozmetikler ve kuşanılanlar. */
   cosmetics: CosmeticsDump;
   /** Kayıtlı web bildirimi aboneliği (yalnız ne zaman eklendiği; uç nokta ve anahtarlar dışarı verilmez). */
@@ -169,7 +173,7 @@ export interface AccountExportData {
 }
 
 /** Glix hareketinin nedeni: maç, rozet, yönetici düzeltmesi (`satin-alma` mağaza için ayrılmıştır). */
-export type GlixReason = "mac" | "rozet" | "yonetici" | "satin-alma";
+export type GlixReason = "mac" | "rozet" | "yonetici" | "satin-alma" | "gorev";
 
 /** Glix hareket defteri satırı; `amount` işaretlidir. `ref`: rozet kimliği, yönetici notu ya da maç sırası. */
 /** Glix ekonomisi ham toplamları (yönetici paneli). `d` İstanbul gün numarasıdır (1970-01-01 = 0). */
@@ -415,6 +419,20 @@ export interface AccountStore extends FriendStore {
     rewards: readonly { badgeId: string; amount: number }[],
     at: number,
   ): number | null;
+  /** Günlük görev olguları: `dayStart`'tan 24 saat içindeki kayıtlı maç/oyun/rozet satırlarından. */
+  questFacts(accountId: number, dayStart: number): QuestFacts;
+  /** O gün ödenmiş görev kimlikleri. */
+  questsPaid(accountId: number, dayStart: number): string[];
+  /**
+   * Tamamlanan görevlerin ödülünü tek işlemde yazar. Her (hesap, gün, görev) yalnız bir kez ödenir; zaten ödenmiş
+   * olanlar atlanır. Günlük maç sınırına sayılmaz (`gorev` nedeni). Yeni ödenenleri ve bakiyeyi döner; hesap yoksa null.
+   */
+  creditQuests(
+    accountId: number,
+    dayStart: number,
+    at: number,
+    quests: readonly { id: string; reward: number }[],
+  ): { paid: { id: string; reward: number }[]; balance: number } | null;
   /** Yönetici düzeltmesi: işaretli tutar, bakiye 0'ın altına inemez. Defter ve bakiye tek işlemde yazılır. */
   adjustGlix(accountId: number, amount: number, note: string, at: number): GlixAdjustResult;
   /** Glix bakiyesi; hesap yoksa 0. */
@@ -788,6 +806,31 @@ const MIGRATIONS: readonly string[] = [
   // Glix ekonomisi paneli (yönetici): tüm hesaplar üzerinden zaman aralığı taramaları için indeksler.
   `CREATE INDEX glix_ledger_at ON glix_ledger (at);
    CREATE INDEX cosmetic_owned_at ON cosmetic_owned (acquired_at);`,
+  // Günlük görevler: ödenen görev satırı (hesap + İstanbul günü + görev; birincil anahtar çifte ödemeyi engeller).
+  // Görev seçimi ve ilerleme depolanmaz (kimlik+günden ve kayıtlı maç satırlarından hesaplanır). Hesapla birlikte silinir.
+  `CREATE TABLE quest_rewards (
+     account_id INTEGER NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+     day INTEGER NOT NULL,
+     quest_id TEXT NOT NULL,
+     at INTEGER NOT NULL,
+     reward INTEGER NOT NULL,
+     PRIMARY KEY (account_id, day, quest_id)
+   ) WITHOUT ROWID;`,
+  // Defter nedenine 'gorev' eklenir. SQLite CHECK değiştiremez: tablo yeniden kurulur (satırlar ve kimlikler korunur).
+  `CREATE TABLE glix_ledger_new (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     account_id INTEGER NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+     at INTEGER NOT NULL,
+     amount INTEGER NOT NULL,
+     reason TEXT NOT NULL CHECK (reason IN ('mac', 'rozet', 'yonetici', 'satin-alma', 'gorev')),
+     ref TEXT
+   );
+   INSERT INTO glix_ledger_new (id, account_id, at, amount, reason, ref)
+     SELECT id, account_id, at, amount, reason, ref FROM glix_ledger;
+   DROP TABLE glix_ledger;
+   ALTER TABLE glix_ledger_new RENAME TO glix_ledger;
+   CREATE INDEX glix_ledger_account ON glix_ledger (account_id, at);
+   CREATE INDEX glix_ledger_at ON glix_ledger (at);`,
 ];
 
 /** Yönetici hesap dökümünde gösterilen son Glix hareketi sayısı. */
@@ -1045,6 +1088,29 @@ export function createAccounts(path: string): AccountStore {
     "SELECT at, amount, reason, ref FROM glix_ledger WHERE account_id = ? ORDER BY id",
   );
   const dropGlix = db.prepare("DELETE FROM glix_ledger WHERE account_id = ?");
+  const dropQuests = db.prepare("DELETE FROM quest_rewards WHERE account_id = ?");
+  const questInsert = db.prepare(
+    "INSERT OR IGNORE INTO quest_rewards (account_id, day, quest_id, at, reward) VALUES (?, ?, ?, ?, ?)",
+  );
+  const questPaidRows = db.prepare("SELECT quest_id FROM quest_rewards WHERE account_id = ? AND day = ?");
+  const questAllRows = db.prepare(
+    "SELECT day, quest_id, at, reward FROM quest_rewards WHERE account_id = ? ORDER BY day, at, quest_id",
+  );
+  const questMatchRows = db.prepare(
+    "SELECT place, score FROM account_matches WHERE account_id = ? AND ended_at >= ? AND ended_at < ? ORDER BY ended_at, rowid",
+  );
+  const questGameRows = db.prepare(
+    `SELECT COUNT(*) AS n, COUNT(DISTINCT game_id) AS d, COALESCE(SUM(CASE WHEN rank = 1 THEN 1 ELSE 0 END), 0) AS w
+       FROM account_games WHERE account_id = ? AND ended_at >= ? AND ended_at < ?`,
+  );
+  const questBadgeCount = db.prepare(
+    "SELECT COUNT(*) AS n FROM badges WHERE account_id = ? AND earned_at >= ? AND earned_at < ?",
+  );
+  const questFriendPlay = db.prepare(
+    `SELECT COUNT(*) AS n FROM account_coplay c
+       JOIN friends f ON f.a = MIN(c.account_id, c.other_account_id) AND f.b = MAX(c.account_id, c.other_account_id)
+       WHERE c.account_id = ? AND f.state = 'accepted' AND c.last_at >= ? AND c.last_at < ?`,
+  );
   const resetGlix = db.prepare("UPDATE accounts SET glix = 0 WHERE id = ?");
   const cosOwnedAll = db.prepare(
     "SELECT item_id, acquired_at, price_paid FROM cosmetic_owned WHERE account_id = ? ORDER BY acquired_at, item_id",
@@ -1505,6 +1571,44 @@ export function createAccounts(path: string): AccountStore {
       });
       return balance;
     },
+    questFacts(accountId, dayStart) {
+      const end = dayStart + 24 * 3600 * 1000;
+      const matches = questMatchRows.all(accountId, dayStart, end) as { place: number; score: number }[];
+      const g = questGameRows.get(accountId, dayStart, end) as { n: number; d: number; w: number };
+      return {
+        matches: matches.length,
+        top3Matches: matches.filter((m) => m.place <= 3).length,
+        bestScore: matches.reduce((best, m) => Math.max(best, m.score), 0),
+        gamesFinished: g.n,
+        distinctGames: g.d,
+        gameWins: g.w,
+        friendMatches: (questFriendPlay.get(accountId, dayStart, end) as { n: number }).n,
+        badges: (questBadgeCount.get(accountId, dayStart, end) as { n: number }).n,
+        top3Streak: top3Streak(matches.map((m) => m.place)),
+      };
+    },
+    questsPaid(accountId, dayStart) {
+      return (questPaidRows.all(accountId, dayStart) as { quest_id: string }[]).map((r) => r.quest_id);
+    },
+    creditQuests(accountId, dayStart, at, quests) {
+      let out: { paid: { id: string; reward: number }[]; balance: number } | null = null;
+      inTransaction(() => {
+        const acc = glixAccount.get(accountId) as { glix: number } | undefined;
+        if (!acc) return;
+        const paid: { id: string; reward: number }[] = [];
+        let sum = 0;
+        for (const q of quests) {
+          if (!Number.isSafeInteger(q.reward) || q.reward <= 0) continue;
+          if (Number(questInsert.run(accountId, dayStart, q.id, at, q.reward).changes) !== 1) continue;
+          glixInsert.run(accountId, at, q.reward, "gorev", q.id);
+          paid.push(q);
+          sum += q.reward;
+        }
+        if (sum > 0) glixAdd.run(sum, accountId);
+        out = { paid, balance: acc.glix + sum };
+      });
+      return out;
+    },
     adjustGlix(accountId, amount, note, at) {
       let result: GlixAdjustResult = { ok: false, reason: "missing" };
       inTransaction(() => {
@@ -1679,6 +1783,7 @@ export function createAccounts(path: string): AccountStore {
         dropMatches.run(accountId);
         dropBadges.run(accountId);
         dropGlix.run(accountId);
+        dropQuests.run(accountId);
         resetGlix.run(accountId);
         dropCoplay.run(accountId, accountId);
         dropFriends.run(accountId, accountId);
@@ -1768,6 +1873,9 @@ export function createAccounts(path: string): AccountStore {
             }[]
           ).map((r) => ({ at: r.at, amount: r.amount, reason: r.reason, ref: r.ref })),
         },
+        quests: (
+          questAllRows.all(accountId) as { day: number; quest_id: string; at: number; reward: number }[]
+        ).map((r) => ({ day: r.day, questId: r.quest_id, at: r.at, reward: r.reward })),
         cosmetics: cosDump(accountId),
         push: (() => {
           const p = pushSince.get(accountId) as { created_at: number } | undefined;
@@ -1795,6 +1903,7 @@ export function createAccounts(path: string): AccountStore {
         dropMatches.run(accountId);
         dropBadges.run(accountId);
         dropGlix.run(accountId);
+        dropQuests.run(accountId);
         dropCoplay.run(accountId, accountId);
         dropFriends.run(accountId, accountId);
         dropBlocks.run(accountId, accountId);

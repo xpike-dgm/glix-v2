@@ -151,6 +151,8 @@ export interface Runtime {
   catalog: GameInfo[];
   /** Bakım kipi: yeni oda kurulamaz, yeni maç başlamaz (süren maçlar biter). */
   maintenance: boolean;
+  /** Günlük görevler anahtarı (varsayılan kapalı): kapalıyken ilerleme, ödül ve arayüz yoktur. */
+  gunlukGorevler: boolean;
   /** Yayındaki duyuru (süresi dolmuş olabilir; `siteNoticeOf` süzer). */
   announcement: Announcement | null;
   /** Yönetici yasaklı kelime listesi (ad denetimi); testlerde varsayılan hiçbir şeyi engellemez. */

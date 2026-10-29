@@ -22,6 +22,7 @@ import {
 import { parseBadgeIds } from "./badgeRules.js";
 import { parseInvite } from "./friendsRules.js";
 import { parseGlixEarned } from "./glixRules.js";
+import { parseQuestsDone } from "./questRules.js";
 import { parseSiteNotice } from "./siteRules.js";
 
 type Rec = Record<string, unknown>;
@@ -315,6 +316,10 @@ export function parseServerMessage(raw: string): ServerMessage | null {
     case "glixEarned": {
       const g = parseGlixEarned(data);
       return g ? { type: "glixEarned", ...g } : null;
+    }
+    case "questsDone": {
+      const q = parseQuestsDone(data);
+      return q ? { type: "questsDone", ...q } : null;
     }
     case "error": {
       const code = ERROR_CODES.find((c) => c === data.code);

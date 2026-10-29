@@ -98,6 +98,8 @@ const AUDIT_LABELS: Record<string, string> = {
   account_cosmetic_grant: "Ürün armağan edildi",
   account_cosmetic_revoke: "Ürün geri alındı",
   game_switch: "Oyun anahtarı değiştirildi",
+  quests_on: "Günlük görevler açıldı",
+  quests_off: "Günlük görevler kapandı",
   announcement_set: "Duyuru yayınlandı",
   announcement_clear: "Duyuru kaldırıldı",
   push_broadcast: "Herkese bildirim başlatıldı",
@@ -211,6 +213,7 @@ export const GLIX_REASON_LABEL: Record<string, string> = {
   rozet: "Rozet",
   yonetici: "Yönetici düzeltmesi",
   "satin-alma": "Satın alma",
+  gorev: "Günlük görev",
 };
 
 /** Glix tutarı: işaretli ("+25", "-10"). */
@@ -222,6 +225,7 @@ export function fmtGlixDelta(n: number): string {
 export function glixRefText(reason: string, ref: string | null): string {
   if (ref === null) return "";
   if (reason === "mac") return ref.startsWith("yer:") ? `${ref.slice(4)}. sıra` : "";
+  if (reason === "gorev") return ref;
   if (reason === "satin-alma") return cosmeticItem(ref)?.name ?? ref;
   return ref;
 }

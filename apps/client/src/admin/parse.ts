@@ -300,7 +300,7 @@ export function parseSearch(v: unknown): AdminAccountSearch {
   return { results: list(o, "results", accountRow, 50), limit: num(o, "limit") };
 }
 
-const GLIX_REASONS = ["mac", "rozet", "yonetici", "satin-alma"] as const;
+const GLIX_REASONS = ["mac", "rozet", "yonetici", "satin-alma", "gorev"] as const;
 
 function glixReason(o: Rec): AdminGlixRow["reason"] {
   const v = str(o, "reason");
@@ -418,7 +418,11 @@ function announcement(v: unknown): Announcement | null {
 
 export function parseContent(v: unknown): AdminContent {
   const o = rec(v);
-  return { games: list(o, "games", gameSwitch, 200), announcement: announcement(o.announcement) };
+  return {
+    games: list(o, "games", gameSwitch, 200),
+    announcement: announcement(o.announcement),
+    gunlukGorevler: bool(o, "gunlukGorevler"),
+  };
 }
 
 /** `content/game` yanıtı: güncel oyun listesi. */
@@ -692,6 +696,7 @@ export function parsePoolBulk(v: unknown): AdminPoolBulk {
 const ecoDayFields = (o: Rec): Omit<AdminEconomyDay, "day"> => ({
   mac: num(o, "mac"),
   rozet: num(o, "rozet"),
+  gorev: num(o, "gorev"),
   yonetici: num(o, "yonetici"),
   yoneticiEksi: num(o, "yoneticiEksi"),
   harcanan: num(o, "harcanan"),

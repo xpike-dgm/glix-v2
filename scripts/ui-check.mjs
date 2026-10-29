@@ -137,6 +137,11 @@ async function bildirListeForm(page) {
 /** name: dosya adı; q: sorgu; act: ek eylem; settle: bekleme (ms); sizes: yalnız bu boyutlarda; clock: sahte saat (ms). */
 const SCREENS = [
   { name: "home", q: "mock=home", settle: 1800 },
+  // Günlük görevler (anahtar açık): ana sayfa kartı ve finalde tamamlanma satırı.
+  { name: "gorev-ana", q: "mock=home&gorev=1", settle: 1800 },
+  { name: "gorev-ana-tamam", q: "mock=home&gorev=bitti", settle: 1800 },
+  { name: "gorev-ana-buyuk-yazi", q: "mock=home&gorev=1&text=large", settle: 1800 },
+  { name: "gorev-final", q: "mock=final&n=4&acct=1&glix=1&gorev=1", settle: 2200 },
   { name: "home-offline", q: "mock=home&off=1", settle: 1200 },
   { name: "loading", q: "mock=loading" },
   { name: "home-nickname", q: "mock=home", act: async (p) => p.locator(".chip").click() },
