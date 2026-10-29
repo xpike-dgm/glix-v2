@@ -16,6 +16,7 @@ import {
 import { resetLeaderboard } from "./leaderboard.js";
 import { parseMailReturn } from "./mailRules.js";
 import { resetQuests } from "./quests.js";
+import { resetShop } from "./shop.js";
 import { goHome, setNickname, setState, state, toast } from "./store.js";
 
 const BASE = "/api/auth/";
@@ -78,6 +79,7 @@ export async function refreshAccount(): Promise<void> {
       resetFriends();
       resetLeaderboard();
       resetQuests();
+      resetShop();
     }
   } catch {
     // ağ yok: misafir gibi devam
@@ -96,6 +98,8 @@ async function enter(path: "login" | "register", body: unknown): Promise<Account
   if (!account) {
     return { ok: false, message: typeof data.message === "string" ? data.message : NETWORK_ERROR };
   }
+  // Önceki hesabın (ya da aynı sekmede başka hesabın) mağaza durumu yeni hesaba sızmasın.
+  resetShop();
   setState("account", account);
   // Takma ad boşsa varsayılan kullanıcı adı olur; sonradan serbestçe değiştirilebilir.
   if (!state.nickname) setNickname(account.username);
@@ -120,6 +124,7 @@ export async function logout(): Promise<void> {
   resetFriends();
   resetLeaderboard();
   resetQuests();
+  resetShop();
   try {
     await call("logout", "POST", {});
   } catch {
@@ -400,6 +405,7 @@ export async function deleteMyAccount(form: DeleteForm): Promise<AccountReply> {
   resetFriends();
   resetLeaderboard();
   resetQuests();
+  resetShop();
   setState("account", null);
   setState("usernameAvailableAt", null);
   setState("google", "linked", false);

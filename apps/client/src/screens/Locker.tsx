@@ -11,7 +11,7 @@ import {
   itemsOfType,
 } from "@glix/engine";
 import { createEffect, For, onMount, Show } from "solid-js";
-import { equipItem, loadShop, ownCosmetics, shop, shopLoad } from "../net/shop.js";
+import { equipItem, loadShop, ownCosmetics, shop, shopError, shopLoad } from "../net/shop.js";
 import {
   equippedColour,
   equippedId,
@@ -29,6 +29,7 @@ import { CharacterView } from "../ui/CharacterView.js";
 import { EmptyPlate, frameOf, PlayerName, PlayerTitle, TitlePlate } from "../ui/Cosmetic.js";
 import { CosmeticPreview, itemCosmetics } from "../ui/CosmeticPreview.js";
 import { defaultDancePoster, isCharacterItem, posterSpec } from "../ui/characterItems.js";
+import { GhostButton } from "../ui/GhostButton.js";
 import { BackIcon, CheckIcon } from "../ui/Icons.js";
 import { Screen } from "../ui/Screen.js";
 import { ColourSwatches, ShopTabBar } from "../ui/ShopBits.js";
@@ -296,9 +297,20 @@ export function Locker() {
         <Show
           when={shop()}
           fallback={
-            <p class="shop-note" role="status">
-              {shopLoad() === "error" ? shopErrorText(null) : "Yükleniyor…"}
-            </p>
+            <Show
+              when={shopLoad() === "error"}
+              fallback={
+                <p class="shop-note" role="status">
+                  Yükleniyor…
+                </p>
+              }
+            >
+              {/* Yükleme başarısızsa ekran "Yükleniyor"da takılı kalmaz: hata ve yeniden deneme düğmesi. */}
+              <div class="shop-empty" role="alert">
+                <p class="shop-note">{shopError() ?? shopErrorText(null)}</p>
+                <GhostButton onClick={() => void loadShop()}>Tekrar dene</GhostButton>
+              </div>
+            </Show>
           }
         >
           {(s) => (

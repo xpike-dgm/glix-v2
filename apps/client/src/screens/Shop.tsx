@@ -222,12 +222,15 @@ export function Shop() {
     setOpenId(id);
   }
 
+  /** İşlem sürerken kullanıcı sayfayı kapatıp başka ürünü açtıysa sonuç o ürüne yazılmaz. */
+  const stillOpen = (item: CosmeticItem): boolean => openId() === item.id;
+
   async function buy(item: CosmeticItem): Promise<void> {
     if (busy()) return;
     setBusy(true);
     const r = await buyItem(item.id);
     setBusy(false);
-    setMsg(r.ok ? null : r.message);
+    if (stillOpen(item)) setMsg(r.ok ? null : r.message);
   }
 
   async function equip(item: CosmeticItem): Promise<void> {
@@ -240,8 +243,9 @@ export function Shop() {
     setBusy(false);
     if (r.ok) {
       toast(`${item.name} kuşanıldı`, "success");
-      setOpenId(null);
-    } else setMsg(r.message);
+      if (stillOpen(item)) setOpenId(null);
+    } else if (stillOpen(item)) setMsg(r.message);
+    else toast(r.message, "error");
   }
 
   async function unequip(item: CosmeticItem): Promise<void> {
@@ -249,8 +253,10 @@ export function Shop() {
     setBusy(true);
     const r = await equipItem(item.type, null);
     setBusy(false);
-    if (r.ok) setOpenId(null);
-    else setMsg(r.message);
+    if (r.ok) {
+      if (stillOpen(item)) setOpenId(null);
+    } else if (stillOpen(item)) setMsg(r.message);
+    else toast(r.message, "error");
   }
 
   return (

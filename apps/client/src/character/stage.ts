@@ -8,7 +8,14 @@ import { APP_VIEW_ONLY, loadPixi } from "../fx/pixiLoad.js";
 import { clapClip } from "./clap.js";
 import { clipSeconds, type DanceClip, mapBones, sampleDance, wrapDelta } from "./dance.js";
 import { type CharacterKit, loadDance, loadKit } from "./kit.js";
-import { createContext, createPuppet, destroyContext, layerIdOf, type Puppet } from "./puppet.js";
+import {
+  createContext,
+  createPuppet,
+  destroyContext,
+  layerIdOf,
+  type Puppet,
+  type PuppetContext,
+} from "./puppet.js";
 
 /** Karakterin ne yaptığı. */
 export type Act =
@@ -97,21 +104,31 @@ export async function mountCharacterStage(host: HTMLElement, opts: StageOptions)
   const [kit, pixi] = await Promise.all([loadKit(), loadPixi()]);
   const dpr = opts.resolution ?? Math.min(window.devicePixelRatio || 1, opts.maxDpr ?? 2);
   const app: Application = new pixi.Application();
-  await app.init({
-    resizeTo: host,
-    backgroundAlpha: 0,
-    antialias: dpr < 2,
-    preference: "webgl",
-    powerPreference: "low-power",
-    resolution: dpr,
-    autoDensity: true,
-    autoStart: false,
-  });
-  host.appendChild(app.canvas);
-  app.canvas.setAttribute("aria-hidden", "true");
-
-  // Atlas bu sahneye özeldir (paylaşılan önbelleğe girmez): sahne kapanırken GPU'dan bırakılır.
-  const ctx = createContext(app, kit, pixi);
+  let ctx: PuppetContext;
+  try {
+    await app.init({
+      resizeTo: host,
+      backgroundAlpha: 0,
+      antialias: dpr < 2,
+      preference: "webgl",
+      powerPreference: "low-power",
+      resolution: dpr,
+      autoDensity: true,
+      autoStart: false,
+    });
+    host.appendChild(app.canvas);
+    app.canvas.setAttribute("aria-hidden", "true");
+    // Atlas bu sahneye özeldir (paylaşılan önbelleğe girmez): sahne kapanırken GPU'dan bırakılır.
+    ctx = createContext(app, kit, pixi);
+  } catch (err) {
+    // Başlatma yarıda kaldıysa çizim bağlamı (GPU) ve tuval sızmasın.
+    try {
+      app.destroy(APP_VIEW_ONLY, { children: true, texture: true });
+    } catch {
+      // başlatılamamış uygulama zaten yıkılmış olabilir
+    }
+    throw err;
+  }
   const sk = kit.skeleton;
   const nBones = sk.parent.length;
   const fig = kit.figure;

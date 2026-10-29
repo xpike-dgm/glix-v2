@@ -298,14 +298,24 @@ export async function playCelebration(
 
   const { Application, Assets, Sprite, Texture } = await loadPixi();
   const app = new Application();
-  await app.init({
-    resizeTo: host,
-    backgroundAlpha: 0,
-    antialias: false,
-    preference: "webgl",
-    resolution: Math.min(window.devicePixelRatio || 1, 1.5),
-    autoDensity: true,
-  });
+  try {
+    await app.init({
+      resizeTo: host,
+      backgroundAlpha: 0,
+      antialias: false,
+      preference: "webgl",
+      resolution: Math.min(window.devicePixelRatio || 1, 1.5),
+      autoDensity: true,
+    });
+  } catch (err) {
+    // Başlatma yarıda kaldıysa çizim bağlamı (GPU) sızmasın.
+    try {
+      app.destroy(APP_VIEW_ONLY, { children: true });
+    } catch {
+      // başlatılamamış uygulama zaten yıkılmış olabilir
+    }
+    throw err;
+  }
   host.appendChild(app.canvas);
   const w = app.screen.width;
   const h = app.screen.height;
