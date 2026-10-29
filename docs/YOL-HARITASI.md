@@ -89,6 +89,13 @@ lobi-2, lobi-8, lobi-qr, lobi-picker durumları eklendi.
   istemcide canvas ile üretilir (sunucuya görüntü gitmez). Web Share API (dosyalı); yoksa indir. (`apps/client/src/share/`)
 - [x] Kartta "Sen de oyna: glix.dgmcraft.online" — yalnız takma ad ve avatar, başka kişisel veri yok.
   - Gerçek telefonda denenecek: iOS/Android'de dosyalı Web Share, yazı tipi yüklenmesi, kart üretim süresi.
+- [x] **Dans klibi** ("Anları paylaş" sayfasının altı): ~5 sn, dikey (720x1280; düşük donanımda 540x960) klip. Kazananın kuşandığı dans
+  (giysi + kimlik rengiyle), 2./3. alkış ve selam, logo, ad ve puanlar, kuşanılmışsa zafer parçacıkları. Ekran dışı Pixi sahnesi
+  (`mountCharacterStage` `manual`) + 2B tuvalde birleştirme; `captureStream(30)` + `MediaRecorder`; dans zamanı duvar saatinden
+  (kare düşse klip uzamaz). Biçim: MP4 (H.264) varsa o, yoksa WebM VP9/VP8; `MediaRecorder` yoksa ya da hareket azaltma açıksa
+  podyumun PNG afişi. "Klip hazırlanıyor…" çubuğu + "Vazgeç"; bitince sahne/tuval/akış bırakılır; sekme gizlenirse yarıda biter.
+  Dosyalı Web Share, yoksa indir. Hiçbir görüntü sunucuya gitmez. (`apps/client/src/share/danceClip.ts`, `clipFormat.ts`, `clipTiming.ts`)
+  - Gerçek telefonda denenecek: iOS Safari MP4 kaydı, Android Chrome kare hızı, paylaşım hedeflerinin (WhatsApp, Instagram) klibi kabulü.
 
 ### U8. Büyük ekran / TV (sahne) modu
 - [x] Yeni rol **sahne** (`joinStage`): koltuk tutmaz, 8 sınırına girmez (odada en çok 2), oyuncu listesinde görünmez, kimlik almaz;
