@@ -14,6 +14,7 @@ import {
   splitEquipped,
 } from "@glix/engine";
 import { errorTextForCode } from "./errorText.js";
+import { balanceText } from "./glixRules.js";
 
 /** Mağaza verisi ve saf yardımcıları (ağdan gelen hiçbir şeye güvenilmez). Katalog motorda, burada yalnız durum var. */
 
@@ -110,8 +111,8 @@ export const dealCountdownText = (left: number): string => `Yenilenmesine ${form
 /** Bakiyeyi aşan kısım; yetiyorsa 0. */
 export const shortfall = (balance: number, price: number): number => Math.max(0, price - balance);
 
-export const shortfallText = (need: number): string => `${need} Glix daha gerekli`;
-export const buyText = (price: number): string => `${price} Glix'e satın al`;
+export const shortfallText = (need: number): string => `${balanceText(need)} Glix daha gerekli`;
+export const buyText = (price: number): string => `${balanceText(price)} Glix'e satın al`;
 
 export const STATUS_LABEL: Readonly<Record<ItemStatus, string>> = {
   buy: "Satın al",

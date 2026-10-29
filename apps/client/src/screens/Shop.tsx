@@ -11,6 +11,7 @@ import {
   nextIstanbulMidnight,
 } from "@glix/engine";
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { balanceText } from "../net/glixRules.js";
 import { buyItem, equipItem, loadShop, ownCosmetics, shop, shopError, shopLoad } from "../net/shop.js";
 import {
   buyText,
@@ -87,7 +88,11 @@ function Card(props: {
       data-type={props.item.type}
       style={{ "--box": `url(${boxSrc(props.item.rarity)})` }}
       aria-label={`${props.item.name}, ${RARITY_LABEL[props.item.rarity]}, ${
-        status() === "buy" ? `${price()} Glix` : status() === "equipped" ? "kuşanıldı" : "sahipsin"
+        status() === "buy"
+          ? `${balanceText(price())} Glix`
+          : status() === "equipped"
+            ? "kuşanıldı"
+            : "sahipsin"
       }`}
       onClick={() => props.onOpen(props.item.id)}
     >

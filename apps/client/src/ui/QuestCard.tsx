@@ -1,4 +1,5 @@
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { balanceText } from "../net/glixRules.js";
 import { questCountText, questProgressText, questResetText } from "../net/questRules.js";
 import { loadQuests, quests } from "../net/quests.js";
 import { formatCountdown } from "../net/shopRules.js";
@@ -49,7 +50,7 @@ export function QuestCard() {
                     <span class="qst__num">{questProgressText(quest)}</span>
                     <span class="qst__reward">
                       <CoinIcon size={14} />
-                      {quest.done ? "Tamam" : `+${quest.reward}`}
+                      {quest.done ? "Tamam" : `+${balanceText(quest.reward)}`}
                     </span>
                     <span
                       class="qst__bar"

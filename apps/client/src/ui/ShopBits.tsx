@@ -23,9 +23,9 @@ export function Price(props: { price: number; list?: number | undefined; size?: 
     <span class="shop-price">
       <CoinIcon size={props.size ?? 20} />
       <Show when={props.list !== undefined && props.list !== props.price}>
-        <s class="shop-price__old">{props.list}</s>
+        <s class="shop-price__old">{balanceText(props.list ?? 0)}</s>
       </Show>
-      <b>{props.price}</b>
+      <b>{balanceText(props.price)}</b>
     </span>
   );
 }

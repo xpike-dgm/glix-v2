@@ -1,4 +1,5 @@
 import { type QuestCompleted, type QuestView, questById } from "@glix/engine";
+import { balanceText } from "./glixRules.js";
 
 /** Günlük görev verisi ve saf yardımcıları (ağdan gelen hiçbir şeye güvenilmez). Metin her zaman yerel havuzdan gelir. */
 
@@ -84,7 +85,7 @@ export function parseQuestsDone(data: unknown): QuestsDoneInfo | null {
 /** "Görev tamamlandı: +50 Glix" (birden çoksa toplam). */
 export function questDoneText(info: QuestsDoneInfo): string {
   const total = info.quests.reduce((s, q) => s + q.reward, 0);
-  return `${info.quests.length > 1 ? "Görevler tamamlandı" : "Görev tamamlandı"}: +${total} Glix`;
+  return `${info.quests.length > 1 ? "Görevler tamamlandı" : "Görev tamamlandı"}: +${balanceText(total)} Glix`;
 }
 
 /** Kartın geri sayımı: "05:12:33 kaldı". */

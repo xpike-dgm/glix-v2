@@ -63,6 +63,13 @@ export function looksTechnical(text: string): boolean {
     )
   )
     return true;
+  // Sunucudan sızabilecek İngilizce cümleler (Türkçe mesajlarda bu sözcükler geçmez).
+  if (
+    /\b(invalid|error|not found|forbidden|denied|required|missing|expected|token|cannot|unable|must|please|too many|rate limit|request|server|payload)\b/i.test(
+      t,
+    )
+  )
+    return true;
   if (/^\d{3}\b/.test(t) || t.includes("[object")) return true;
   return false;
 }

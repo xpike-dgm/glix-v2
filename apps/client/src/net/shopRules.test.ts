@@ -275,3 +275,11 @@ describe("resimli türler (M3)", () => {
     expect(ownedPacks(s).map((p) => p.id)).toEqual(["tepki-neon-yuzler", "tepki-efsane"]);
   });
 });
+
+describe("Glix tutarları binlik ayırıcıyla yazılır", () => {
+  it("1.250 biçimi ve ek uyumu", () => {
+    expect(buyText(1250)).toBe("1.250 Glix'e satın al");
+    expect(shortfallText(2400)).toBe("2.400 Glix daha gerekli");
+    expect(buyText(150)).toBe("150 Glix'e satın al");
+  });
+});

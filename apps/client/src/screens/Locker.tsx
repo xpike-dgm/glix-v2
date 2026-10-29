@@ -175,7 +175,7 @@ function Tile(props: {
           ? `${props.label}, ${RARITY_LABEL[it()?.rarity ?? "siradan"]}, tepkilerde kullanıma hazır`
           : it()
             ? `${props.label}, ${RARITY_LABEL[it()?.rarity ?? "siradan"]}`
-            : `${props.label}, kuşanma`
+            : props.label
       }
       style={it() ? { "--box": `url(${boxSrc(it()?.rarity ?? "siradan")})` } : undefined}
       onClick={props.onPick}

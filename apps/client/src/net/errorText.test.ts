@@ -58,6 +58,14 @@ describe("hata metinleri", () => {
     expect(playerErrorText("zzz", 500)).toBe(GENERIC_ERROR);
   });
 
+  it("İngilizce sunucu cümleleri oyuncuya gitmez", () => {
+    for (const m of ["Invalid request body", "Item not found", "Too many requests, please slow down"])
+      expect(looksTechnical(m), m).toBe(true);
+    expect(playerErrorText("invalid_input", "Invalid request body")).toBe(
+      "Girdiğin bilgi geçersiz, kontrol edip tekrar dene.",
+    );
+  });
+
   it("Türkçe sunucu mesajı olduğu gibi gösterilir", () => {
     expect(looksTechnical("Kod hatalı.")).toBe(false);
     expect(playerErrorText("invalid_input", "Kod hatalı.")).toBe("Kod hatalı.");

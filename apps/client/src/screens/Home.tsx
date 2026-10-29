@@ -239,7 +239,7 @@ export function Home() {
       />
       <BottomSheet open={sheet() === "shop"} onClose={() => setSheet(null)} title="Mağaza için hesap aç">
         <p class="shop__invite">
-          Maç oynayarak Glix kazan; unvan, ad efekti ve çerçevelerle görünüşünü değiştir. Bunun için hesap
+          Maç oynayarak Glix kazan; lakap, ad efekti ve çerçevelerle görünüşünü değiştir. Bunun için hesap
           gerekir.
         </p>
         <PrimaryButton

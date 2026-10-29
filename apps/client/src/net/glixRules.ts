@@ -88,18 +88,18 @@ export function glixLines(earned: GlixEarnedInfo, placeOf: number | null): GlixL
 
 /** Tek satırlık döküm metni. */
 export const glixInline = (lines: readonly GlixLine[]): string =>
-  lines.map((l) => `${l.label} +${l.amount}`).join(" · ");
+  lines.map((l) => `${l.label} +${balanceText(l.amount)}`).join(" · ");
 
 export const GLIX_CAP_TEXT = "Bugünlük sınır doldu";
 
 /** "+25 Glix" */
 export function glixText(n: number): string {
-  return `${n > 0 ? "+" : ""}${n} Glix`;
+  return `${n > 0 ? "+" : ""}${balanceText(n)} Glix`;
 }
 
 /** Misafire gösterilen metin ("Kayıt ol" bağlantısı yanına eklenir): tamamlama + sıralama eki; ikiye katlama ve sınır yok. */
 export function guestGlixText(place: number): string {
-  return `Hesap açsan +${matchBase(place)} Glix kazanırdın`;
+  return `Hesap açsan +${balanceText(matchBase(place))} Glix kazanırdın`;
 }
 
 /** Bakiye rakamı: "1.250" (Türkçe binlik ayırıcı). */
