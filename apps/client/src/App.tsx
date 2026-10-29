@@ -150,6 +150,17 @@ export function App() {
     if (code) setState({ nav: "join", joinCode: code });
 
     const mock = import.meta.env.DEV ? params.get("mock") : null;
+    // Yalnız geliştirme önizlemesi: arkada sunucu yok; hesaplı ekranların `/api/*` istekleri (mağaza, görevler)
+    // ağa gitmeden "yok" yanıtı alır (aksi hâlde vite vekili 502 verir, arayüz denetimi konsol hatası sayar).
+    if (import.meta.env.DEV && mock) {
+      const realFetch = window.fetch.bind(window);
+      window.fetch = (input, init) => {
+        const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+        if (new URL(url, window.location.href).pathname.startsWith("/api/"))
+          return Promise.resolve(new Response(JSON.stringify({ ok: false }), { status: 503 }));
+        return realFetch(input, init);
+      };
+    }
     if (mock === "update-required") {
       setState("serverProtocol", CLIENT_PROTOCOL_VERSION + 1);
       devReady(Promise.resolve());
