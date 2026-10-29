@@ -728,6 +728,354 @@
      "sourceOrigin": [188, 203.5]
     }
    ]
+  },
+  "esofman": {
+   "visible": true,
+   "slot": "alt",
+   "pieces": [
+    {
+     "file": "giysi/esofman_torso.webp",
+     "size": [147, 126],
+     "pivot": [73, 42],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [183, 349]
+    },
+    {
+     "file": "giysi/esofman_left_thigh.webp",
+     "size": [82, 175],
+     "pivot": [50, 32.5],
+     "parent": "left_thigh",
+     "bone": "left_thigh",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_thigh",
+     "layer": "on",
+     "sourceOrigin": [160.5, 357.5]
+    },
+    {
+     "file": "giysi/esofman_left_shin.webp",
+     "size": [89, 138],
+     "pivot": [57.5, 30],
+     "parent": "left_shin",
+     "bone": "left_shin",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_shin",
+     "layer": "on",
+     "sourceOrigin": [142, 474.5]
+    },
+    {
+     "file": "giysi/esofman_right_thigh.webp",
+     "size": [83, 175],
+     "pivot": [32, 32.5],
+     "parent": "right_thigh",
+     "bone": "right_thigh",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_thigh",
+     "layer": "on",
+     "sourceOrigin": [269.5, 357.5]
+    },
+    {
+     "file": "giysi/esofman_right_shin.webp",
+     "size": [89, 138],
+     "pivot": [31, 30],
+     "parent": "right_shin",
+     "bone": "right_shin",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_shin",
+     "layer": "on",
+     "sourceOrigin": [281.5, 474.5]
+    }
+   ]
+  },
+  "etek": {
+   "visible": true,
+   "slot": "alt",
+   "pieces": [
+    {
+     "file": "giysi/etek_torso.webp",
+     "size": [147, 109],
+     "pivot": [73, 42.5],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [183, 348.5]
+    },
+    {
+     "file": "giysi/etek_left_thigh.webp",
+     "size": [85, 97],
+     "pivot": [54.5, 30.5],
+     "parent": "left_thigh",
+     "bone": "left_thigh",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_thigh",
+     "layer": "on",
+     "sourceOrigin": [156, 359.5]
+    },
+    {
+     "file": "giysi/etek_right_thigh.webp",
+     "size": [85, 96],
+     "pivot": [30, 30.5],
+     "parent": "right_thigh",
+     "bone": "right_thigh",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_thigh",
+     "layer": "on",
+     "sourceOrigin": [271.5, 359.5]
+    }
+   ]
+  },
+  "kargo": {
+   "visible": true,
+   "slot": "alt",
+   "pieces": [
+    {
+     "file": "giysi/kargo_torso.webp",
+     "size": [147, 125],
+     "pivot": [73, 41.5],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [183, 349.5]
+    },
+    {
+     "file": "giysi/kargo_left_thigh.webp",
+     "size": [89, 175],
+     "pivot": [57.5, 32],
+     "parent": "left_thigh",
+     "bone": "left_thigh",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_thigh",
+     "layer": "on",
+     "sourceOrigin": [153, 358]
+    },
+    {
+     "file": "giysi/kargo_left_shin.webp",
+     "size": [82, 141],
+     "pivot": [49.5, 30],
+     "parent": "left_shin",
+     "bone": "left_shin",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_shin",
+     "layer": "on",
+     "sourceOrigin": [150, 474.5]
+    },
+    {
+     "file": "giysi/kargo_right_thigh.webp",
+     "size": [89, 175],
+     "pivot": [32, 32.5],
+     "parent": "right_thigh",
+     "bone": "right_thigh",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_thigh",
+     "layer": "on",
+     "sourceOrigin": [269.5, 357.5]
+    },
+    {
+     "file": "giysi/kargo_right_shin.webp",
+     "size": [81, 141],
+     "pivot": [31.5, 30],
+     "parent": "right_shin",
+     "bone": "right_shin",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_shin",
+     "layer": "on",
+     "sourceOrigin": [281, 474.5]
+    }
+   ]
+  },
+  "kot": {
+   "visible": true,
+   "slot": "alt",
+   "pieces": [
+    {
+     "file": "giysi/kot_torso.webp",
+     "size": [147, 129],
+     "pivot": [73, 49.5],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [183, 341.5]
+    },
+    {
+     "file": "giysi/kot_left_thigh.webp",
+     "size": [74, 176],
+     "pivot": [43.5, 33.5],
+     "parent": "left_thigh",
+     "bone": "left_thigh",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_thigh",
+     "layer": "on",
+     "sourceOrigin": [167, 356.5]
+    },
+    {
+     "file": "giysi/kot_left_shin.webp",
+     "size": [75, 144],
+     "pivot": [44.5, 30],
+     "parent": "left_shin",
+     "bone": "left_shin",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_shin",
+     "layer": "on",
+     "sourceOrigin": [155, 474.5]
+    },
+    {
+     "file": "giysi/kot_right_thigh.webp",
+     "size": [77, 176],
+     "pivot": [30, 33.5],
+     "parent": "right_thigh",
+     "bone": "right_thigh",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_thigh",
+     "layer": "on",
+     "sourceOrigin": [271.5, 356.5]
+    },
+    {
+     "file": "giysi/kot_right_shin.webp",
+     "size": [77, 144],
+     "pivot": [30, 30],
+     "parent": "right_shin",
+     "bone": "right_shin",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_shin",
+     "layer": "on",
+     "sourceOrigin": [282.5, 474.5]
+    }
+   ]
+  },
+  "sort": {
+   "visible": true,
+   "slot": "alt",
+   "pieces": [
+    {
+     "file": "giysi/sort_torso.webp",
+     "size": [147, 122],
+     "pivot": [73, 40],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [183, 351]
+    },
+    {
+     "file": "giysi/sort_left_thigh.webp",
+     "size": [72, 118],
+     "pivot": [40.5, 32.5],
+     "parent": "left_thigh",
+     "bone": "left_thigh",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_thigh",
+     "layer": "on",
+     "sourceOrigin": [170, 357.5]
+    },
+    {
+     "file": "giysi/sort_right_thigh.webp",
+     "size": [71, 118],
+     "pivot": [30, 32.5],
+     "parent": "right_thigh",
+     "bone": "right_thigh",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_thigh",
+     "layer": "on",
+     "sourceOrigin": [271.5, 357.5]
+    }
+   ]
+  },
+  "takim-pantolon": {
+   "visible": true,
+   "slot": "alt",
+   "pieces": [
+    {
+     "file": "giysi/takim_pantolon_torso.webp",
+     "size": [147, 124],
+     "pivot": [73, 45.5],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [183, 345.5]
+    },
+    {
+     "file": "giysi/takim_pantolon_left_thigh.webp",
+     "size": [73, 175],
+     "pivot": [42.5, 32.5],
+     "parent": "left_thigh",
+     "bone": "left_thigh",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_thigh",
+     "layer": "on",
+     "sourceOrigin": [168, 357.5]
+    },
+    {
+     "file": "giysi/takim_pantolon_left_shin.webp",
+     "size": [72, 139],
+     "pivot": [41.5, 30],
+     "parent": "left_shin",
+     "bone": "left_shin",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_shin",
+     "layer": "on",
+     "sourceOrigin": [158, 474.5]
+    },
+    {
+     "file": "giysi/takim_pantolon_right_thigh.webp",
+     "size": [71, 175],
+     "pivot": [30, 32],
+     "parent": "right_thigh",
+     "bone": "right_thigh",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_thigh",
+     "layer": "on",
+     "sourceOrigin": [271.5, 358]
+    },
+    {
+     "file": "giysi/takim_pantolon_right_shin.webp",
+     "size": [71, 139],
+     "pivot": [30, 30],
+     "parent": "right_shin",
+     "bone": "right_shin",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_shin",
+     "layer": "on",
+     "sourceOrigin": [282.5, 474.5]
+    }
+   ]
   }
  },
  "scale": 0.5,

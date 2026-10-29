@@ -184,7 +184,7 @@ describe("kürsü karakteri ürünleri (dans, şapka, üst)", () => {
       "giris",
     ]);
     const giysi = SHOP_TABS.find((t) => t.id === "giysi");
-    expect(giysi?.types).toEqual(["sapka", "ust"]);
+    expect(giysi?.types).toEqual(["sapka", "ust", "alt"]);
     expect(SHOP_TABS.find((t) => t.id === "dans")?.types).toEqual(["dans"]);
   });
 
@@ -196,6 +196,7 @@ describe("kürsü karakteri ürünleri (dans, şapka, üst)", () => {
       "Dans",
       "Şapka",
       "Üst",
+      "Alt",
       "Kart arkası",
       "Zafer kutlaması",
       "Giriş efekti",
@@ -238,7 +239,7 @@ describe("giysi renkleri ve boş yuvalar", () => {
   });
 
   it("katalogda ürünü olmayan giysi yuvası mağaza sekmesinde ve dolapta gösterilmez", () => {
-    expect(SHOP_TYPES.map((t) => t.id)).not.toContain("alt");
+    expect(SHOP_TYPES.map((t) => t.id)).toContain("alt");
     expect(SHOP_TYPES.map((t) => t.id)).not.toContain("kostum");
     for (const t of SHOP_TABS.find((x) => x.id === "giysi")?.types ?? [])
       expect(itemsOfType(t).length).toBeGreaterThan(0);
