@@ -283,7 +283,8 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
       <footer class="results__foot">
         <div class="next">
           <div class="next__card">
-            <Show when={nextId()} fallback={<span class="next__art next__art--final" aria-hidden="true" />}>
+            {/* Görseli olmayan sıradaki (rastgele oyun, final) için boş kutu çizilmez. */}
+            <Show when={nextId()}>
               {(id) => (
                 <span class="next__art" aria-hidden="true">
                   <img
@@ -293,7 +294,7 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
                     draggable={false}
                     width="800"
                     height="450"
-                    onError={(e) => e.currentTarget.remove()}
+                    onError={(e) => e.currentTarget.parentElement?.remove()}
                   />
                 </span>
               )}
