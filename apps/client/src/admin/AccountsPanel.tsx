@@ -7,7 +7,7 @@ import type {
   AdminPlayerSort,
 } from "@glix/engine";
 import { COSMETIC_ITEMS, cosmeticItem } from "@glix/engine";
-import { createEffect, createSignal, For, on, onMount, Show } from "solid-js";
+import { createEffect, createSignal, For, on, onCleanup, onMount, Show } from "solid-js";
 import {
   type AccountAction,
   fetchAccounts,
@@ -1104,6 +1104,26 @@ export function AccountsPanel(props: { onOtp: () => void }) {
   const [loading, setLoading] = createSignal(false);
   const [open, setOpen] = createSignal<number | null>(null);
   const [refreshKey, setRefreshKey] = createSignal(0);
+  // Dar ekranda (≤700 px) ayrıntı tam ekran ayrı görünümdür; liste ve özet gizlenir (silinmez: süzgeç ve kaydırma korunur).
+  const mq = typeof window !== "undefined" ? window.matchMedia("(max-width: 700px)") : null;
+  const [narrow, setNarrow] = createSignal(mq?.matches ?? false);
+  let scrollBack = 0;
+  onMount(() => {
+    const onChange = (): void => {
+      setNarrow(mq?.matches ?? false);
+    };
+    mq?.addEventListener("change", onChange);
+    onCleanup(() => mq?.removeEventListener("change", onChange));
+  });
+  const openAccount = (id: number): void => {
+    scrollBack = window.scrollY;
+    setOpen(id);
+    if (narrow()) window.scrollTo(0, 0);
+  };
+  const closeAccount = (): void => {
+    setOpen(null);
+    if (narrow()) requestAnimationFrame(() => window.scrollTo(0, scrollBack));
+  };
 
   async function load(): Promise<void> {
     setLoading(true);
@@ -1136,13 +1156,21 @@ export function AccountsPanel(props: { onOtp: () => void }) {
       </header>
       <Banner text={error()} />
 
-      <PlayerList onOpen={setOpen} onOtp={props.onOtp} refreshKey={refreshKey()} />
+      <Show when={narrow() && open() !== null}>
+        <button type="button" class="adm-btn adm-btn--ghost adm-back" onClick={closeAccount}>
+          ‹ Hesaplar
+        </button>
+      </Show>
+
+      <div class="adm-acc-list" hidden={narrow() && open() !== null}>
+        <PlayerList onOpen={openAccount} onOtp={props.onOtp} refreshKey={refreshKey()} />
+      </div>
 
       <Show when={open()} keyed>
         {(id) => (
           <Detail
             id={id}
-            onClose={() => setOpen(null)}
+            onClose={closeAccount}
             onOtp={props.onOtp}
             onChanged={() => {
               void load();
@@ -1152,16 +1180,25 @@ export function AccountsPanel(props: { onOtp: () => void }) {
         )}
       </Show>
 
-      <Show
-        when={data()}
-        fallback={
-          <Show when={!error()}>
-            <p class="adm-muted">Yükleniyor...</p>
-          </Show>
-        }
-      >
-        {(d) => <Overview data={d()} />}
-      </Show>
+      <div class="adm-acc-list" hidden={narrow() && open() !== null}>
+        <Show
+          when={data()}
+          fallback={
+            <Show when={!error()}>
+              <p class="adm-muted">Yükleniyor...</p>
+            </Show>
+          }
+        >
+          {(d) => (
+            <Show when={narrow()} fallback={<Overview data={d()} />}>
+              <details class="adm-summary">
+                <summary>Özet</summary>
+                <Overview data={d()} />
+              </details>
+            </Show>
+          )}
+        </Show>
+      </div>
     </section>
   );
 }
