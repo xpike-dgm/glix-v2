@@ -7,7 +7,7 @@ import type { Application } from "pixi.js";
 import { APP_VIEW_ONLY, loadPixi } from "../fx/pixiLoad.js";
 import { posterTime, sampleDance } from "./dance.js";
 import { loadDance, loadKit } from "./kit.js";
-import { createContext, createPuppet, destroyContext, type PuppetContext } from "./puppet.js";
+import { createContext, createPuppet, destroyContext, type Puppet, type PuppetContext } from "./puppet.js";
 
 /** Kadraj: tüm boy, yalnız baş ve omuz (şapka), gövde (üst giysi), bacaklar (alt), ayaklar (ayakkabı). */
 export type PosterFocus = "full" | "head" | "torso" | "legs" | "feet";
@@ -68,17 +68,42 @@ let pending = 0;
 async function open(): Promise<Shared> {
   const [kit, pixi] = await Promise.all([loadKit(), loadPixi()]);
   const app = new pixi.Application();
-  await app.init({
-    width: 240,
-    height: 320,
-    backgroundAlpha: 0,
-    antialias: true,
-    preference: "webgl",
-    powerPreference: "low-power",
-    resolution: 1,
-    autoStart: false,
-  });
-  return { app, ctx: createContext(app, kit, pixi) };
+  try {
+    await app.init({
+      width: 240,
+      height: 320,
+      backgroundAlpha: 0,
+      antialias: true,
+      preference: "webgl",
+      powerPreference: "low-power",
+      resolution: 1,
+      autoStart: false,
+    });
+    return { app, ctx: createContext(app, kit, pixi) };
+  } catch (err) {
+    // Yarım kalan çizim bağlamı (GPU) sızmasın.
+    try {
+      app.destroy(APP_VIEW_ONLY, { children: true, texture: true });
+    } catch {
+      // başlatılamamış uygulama zaten yıkılmış olabilir
+    }
+    throw err;
+  }
+}
+
+/**
+ * Ortak çizim bağlamı. Açılış başarısız olursa (WebGL yok/bağlam kaybı) reddedilmiş söz saklanmaz: sonraki afiş
+ * yeniden dener, yoksa bir kez olan hata oturum boyunca bütün afişleri kalıcı olarak bozardı.
+ */
+function acquire(): Promise<Shared> {
+  if (!shared) {
+    const p = open();
+    shared = p;
+    p.catch(() => {
+      if (shared === p) shared = null;
+    });
+  }
+  return shared;
 }
 
 function scheduleClose(): void {
@@ -87,16 +112,17 @@ function scheduleClose(): void {
     if (pending > 0 || !shared) return;
     const s = shared;
     shared = null;
-    void s.then((v) => {
-      v.app.destroy(APP_VIEW_ONLY, { children: true, texture: true });
-      destroyContext(v.ctx);
-    });
+    void s
+      .then((v) => {
+        v.app.destroy(APP_VIEW_ONLY, { children: true, texture: true });
+        destroyContext(v.ctx);
+      })
+      .catch(() => undefined);
   }, 4000);
 }
 
 async function draw(req: PosterRequest): Promise<string> {
-  shared ??= open();
-  const { app, ctx } = await shared;
+  const { app, ctx } = await acquire();
   const { kit } = ctx;
   const sk = kit.skeleton;
   const size = SIZE[req.focus];
@@ -112,6 +138,25 @@ async function draw(req: PosterRequest): Promise<string> {
     });
   }
   const puppet = createPuppet(ctx, req.layers);
+  try {
+    return await snapshot(puppet, req, app, ctx, angles);
+  } finally {
+    // Çizim ya da resme çevirme hata verse de karakter sahnede kalmaz.
+    app.stage.removeChild(puppet.container);
+    puppet.destroy();
+  }
+}
+
+async function snapshot(
+  puppet: Puppet,
+  req: PosterRequest,
+  app: Application,
+  ctx: PuppetContext,
+  angles: Float32Array,
+): Promise<string> {
+  const { kit } = ctx;
+  const sk = kit.skeleton;
+  const size = SIZE[req.focus];
   puppet.setHue(req.hue);
   puppet.setTints(req.tints ?? {});
   puppet.setPose(angles, 0);
@@ -129,8 +174,6 @@ async function draw(req: PosterRequest): Promise<string> {
     frame: new ctx.pixi.Rectangle(0, 0, size.w, size.h),
     resolution: 1,
   }) as HTMLCanvasElement;
-  app.stage.removeChild(puppet.container);
-  puppet.destroy();
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
   if (!blob) throw new Error("afiş resme çevrilemedi");
   return URL.createObjectURL(blob);

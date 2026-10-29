@@ -420,6 +420,8 @@ export async function makeClip(input: ClipInput, opts: ClipOptions): Promise<Cli
       (recorder as MediaRecorder).onstop = () => res();
       (recorder as MediaRecorder).onerror = () => rej(new Error("kayıt hatası"));
     });
+    // Kayıt hatası döngü sürerken gelirse "işlenmemiş ret" olmasın; sonuç yine aşağıda beklenir.
+    stopped.catch(() => undefined);
     document.addEventListener("visibilitychange", onHidden);
 
     // İlk kareyi çiz, sonra kaydı başlat; duvar saati ilk kareden sayılır.

@@ -125,8 +125,19 @@ export async function buyItem(itemId: string): Promise<ActionResult> {
   }
 }
 
-/** Kuşanır; `itemId` null ise o türde temel (yok) seçilir. */
-export async function equipItem(type: CosmeticTypeId, itemId: string | null): Promise<ActionResult> {
+let equipChain: Promise<unknown> = Promise.resolve();
+
+/**
+ * Kuşanır; `itemId` null ise o türde temel (yok) seçilir. Kuşanmalar sırayla gönderilir: art arda dokunuşlar
+ * (renk topları, dolap karoları) sunucuda ters sırayla işlenip son dokunuşu ezmesin.
+ */
+export function equipItem(type: CosmeticTypeId, itemId: string | null): Promise<ActionResult> {
+  const job = equipChain.then(() => equipNow(type, itemId));
+  equipChain = job.catch(() => undefined);
+  return job;
+}
+
+async function equipNow(type: CosmeticTypeId, itemId: string | null): Promise<ActionResult> {
   const s = shop();
   if (frozen && s) {
     const equipped = { ...s.equipped };

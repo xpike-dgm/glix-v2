@@ -2,6 +2,7 @@ import { createEffect, createSignal, type JSX, onCleanup, Show } from "solid-js"
 import { hueShiftFor } from "../character/look.js";
 import type { PosterFocus } from "../character/poster.js";
 import { look } from "./avatars.js";
+import { latestGate } from "./latestGate.js";
 
 /**
  * Durağan karakter afişi: mağaza ve dolap karolarında. Afiş Pixi ile tembel çizilip resme çevrilir (önbellekli);
@@ -21,6 +22,7 @@ export function CharacterPoster(props: {
 }) {
   const [src, setSrc] = createSignal<string | null>(null);
   let gone = false;
+  const begin = latestGate();
   onCleanup(() => {
     gone = true;
   });
@@ -32,13 +34,16 @@ export function CharacterPoster(props: {
       hue: hueShiftFor(look(props.avatar).color),
       focus: props.focus,
     };
+    // Özellikler hızla değişirse yavaş eski afiş, önbellekten anında gelen yenisinin üstüne yazmaz.
+    const current = begin();
     void import("../character/poster.js")
       .then((m) => m.renderPoster(req))
       .then((url) => {
-        if (!gone) setSrc(url);
+        if (!gone && current()) setSrc(url);
       })
       .catch(() => {
-        // afiş çizilemedi: avatar kalır
+        // afiş çizilemedi: eski ürünün afişi kalmasın, avatar görünsün
+        if (!gone && current()) setSrc(null);
       });
   });
   return (
