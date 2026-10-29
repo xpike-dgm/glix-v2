@@ -272,7 +272,17 @@ describe("günün fırsatı", () => {
 describe("resimli mağaza türleri (M3)", () => {
   it("her türün ürün sayısı ve nadirlik dağılımı: sıradan, nadir, efsanevi", () => {
     const by = (t: Parameters<typeof itemsOfType>[0]) => itemsOfType(t).map((i) => i.rarity);
-    expect(by("kart-arkasi")).toEqual(["siradan", "siradan", "nadir", "nadir", "efsanevi"]);
+    expect(by("kart-arkasi")).toEqual([
+      "siradan",
+      "siradan",
+      "siradan",
+      "siradan",
+      "nadir",
+      "nadir",
+      "nadir",
+      "efsanevi",
+      "efsanevi",
+    ]);
     expect(by("zafer")).toEqual(["siradan", "siradan", "nadir", "nadir", "efsanevi"]);
     expect(by("tepki")).toEqual(["siradan", "nadir", "efsanevi"]);
     expect(by("giris")).toEqual(["siradan", "siradan", "nadir", "nadir", "efsanevi"]);

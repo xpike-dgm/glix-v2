@@ -226,15 +226,6 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     "gece-sehri",
   ),
   item(
-    "kart-mor-girdap",
-    "kart-arkasi",
-    "nadir",
-    "Mor Girdap",
-    "Sırttaki mor girdap seni içine çeker.",
-    "mor-girdap",
-  ),
-  item("kart-elektrik", "kart-arkasi", "nadir", "Elektrik", "Kartın sırtında elektrik akar.", "elektrik"),
-  item(
     "kart-retro-oyun",
     "kart-arkasi",
     "siradan",
@@ -250,6 +241,15 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     "Su altında parlayan denizanaları.",
     "okyanus",
   ),
+  item(
+    "kart-mor-girdap",
+    "kart-arkasi",
+    "nadir",
+    "Mor Girdap",
+    "Sırttaki mor girdap seni içine çeker.",
+    "mor-girdap",
+  ),
+  item("kart-elektrik", "kart-arkasi", "nadir", "Elektrik", "Kartın sırtında elektrik akar.", "elektrik"),
   item(
     "kart-ejderha-pulu",
     "kart-arkasi",
