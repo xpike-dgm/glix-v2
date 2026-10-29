@@ -84,6 +84,7 @@ export default defineConfig({
           "assets/*.{js,css}",
           "assets/**/*.{png,webp,jpg,svg}",
           "assets/*latin-*.woff2",
+          "assets/*-tr-*.woff2",
         ],
         // Yönetici paneli (admin.html, assets/admin-*) oyunun çevrimdışı kabuğuna girmez; `/admin` ağdan okunur.
         // Ruh hâli, maskot, rozet ve oyun nesnesi ve dünya arka planı görselleri kabuğa girmez; ilk kullanımda çalışma anında önbelleğe alınır.
@@ -161,6 +162,8 @@ export default defineConfig({
   optimizeDeps: { include: ["pixi.js"] },
   build: {
     target: "es2022",
+    // Küçük .woff2 dosyaları (Türkçe harf alt kümeleri) satır içi veri adresi olmasın: CSP `font-src 'self'` veri adresini engeller.
+    assetsInlineLimit: (file) => (file.endsWith(".woff2") ? false : undefined),
     rollupOptions: {
       // İki sayfa: oyun (index) ve yönetici paneli (admin; kendi küçük paketi).
       input: {
