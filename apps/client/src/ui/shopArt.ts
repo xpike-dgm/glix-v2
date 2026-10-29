@@ -29,6 +29,12 @@ const FRAMES: Readonly<Record<string, FrameArt>> = {
   "cerceve-cift": { file: "cift-halka", crownTop: -64 },
   "cerceve-donen-neon": { file: "donen-neon", crownTop: -64 },
   "cerceve-altin-tac": { file: "altin-tac-halkasi", crownTop: -66 },
+  "cerceve-yesil-sarmasik": { file: "yesil-sarmasik", crownTop: -64 },
+  "cerceve-buz-kristali": { file: "buz-kristali", crownTop: -64 },
+  "cerceve-ates-halkasi": { file: "ates-halkasi", crownTop: -64 },
+  "cerceve-devre-karti": { file: "devre-karti", crownTop: -64 },
+  "cerceve-galaksi": { file: "galaksi", crownTop: -64 },
+  "cerceve-ejderha": { file: "ejderha", crownTop: -68 },
 };
 
 export const frameSrc = (id: string): string | undefined => {

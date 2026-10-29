@@ -145,7 +145,7 @@ describe("mağaza yardımcıları", () => {
       COSMETIC_ITEMS,
     );
     expect(owned.map((i) => i.id)).toEqual(["unvan-sansli", "unvan-efsane"]);
-    expect(itemsOfType("cerceve")).toHaveLength(5);
+    expect(itemsOfType("cerceve")).toHaveLength(11);
   });
 });
 
