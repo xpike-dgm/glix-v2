@@ -1,6 +1,11 @@
 /**
  * Ekran Uyanık Tutma: oyuncu bir odadayken ekran kararmasın. iOS arka plana geçince kilidi bırakır;
  * sekme geri gelince yeniden alınır. Destek yoksa ya da reddedilirse sessizce vazgeçilir.
+ *
+ * iOS Safari kilidi kullanıcı dokunuşunun dışında (sunucu mesajıyla açılan oda, `visibilitychange` dönüşü) reddedebilir.
+ * Yalnız o yollardan istenirse kilit hiç alınmaz ve "Hazırım"dan sonra telefona dokunmadan bekleyen oyuncunun ekranı
+ * otomatik kilitlenir: sayfa askıya alınır, geri sayım uykuda geçer, telefon açılınca oyun başlamış olur. Bu yüzden
+ * kilit tutulmuyorsa her dokunuşta (`onGesture`, kullanıcı etkinliğinin içinde) yeniden denenir.
  */
 
 export interface SentinelLike {
@@ -17,6 +22,8 @@ export interface WakeLockController {
   setWanted(wanted: boolean): Promise<void>;
   /** Sekme görünür olunca çağrılır. */
   onVisible(): Promise<void>;
+  /** Kullanıcı dokundu/tuşa bastı: kilit isteniyor ama tutulmuyorsa bu jestin içinde yeniden istenir. */
+  onGesture(): Promise<void>;
 }
 
 export function createWakeLock(host: WakeLockHost, isVisible: () => boolean): WakeLockController {
@@ -54,6 +61,7 @@ export function createWakeLock(host: WakeLockHost, isVisible: () => boolean): Wa
       else await release();
     },
     onVisible: acquire,
+    onGesture: acquire,
   };
 }
 
@@ -67,6 +75,10 @@ export function setScreenAwake(wanted: boolean): void {
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") void c.onVisible();
     });
+    // İstek dinleyicinin içinde, eşzamanlı çıkar (kullanıcı etkinliği sürerken); kilit varsa hiçbir şey yapmaz.
+    const onGesture = (): void => void c.onGesture();
+    for (const type of ["pointerdown", "keydown"] as const)
+      window.addEventListener(type, onGesture, { capture: true, passive: true });
   }
   void controller.setWanted(wanted);
 }
