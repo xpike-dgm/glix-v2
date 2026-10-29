@@ -1760,6 +1760,23 @@ const SCREENS = [
   { name: "yazi-talk-5", q: "mock=yazi-talk&n=5" },
   { name: "yazi-talk-8", q: "mock=yazi-talk&n=8&role=writer" },
   { name: "yazi-talk-3", q: "mock=yazi-talk&n=3" },
+  // Şüphe göstergesi: dokunulan oyuncuda yalnız bu cihazda görünen "?" işareti.
+  {
+    name: "yazi-talk-suphe",
+    q: "mock=yazi-talk&n=5",
+    sizes: [[320, 568]],
+    act: async (p) => {
+      await p
+        .getByRole("button", { name: /şüphe işareti/ })
+        .nth(0)
+        .click();
+      await p
+        .getByRole("button", { name: /şüphe işareti/ })
+        .nth(2)
+        .click();
+      await p.waitForTimeout(300);
+    },
+  },
   { name: "yazi-talk-locked", q: "mock=yazi-talk-locked&n=6" },
   { name: "yazi-guess-5", q: "mock=yazi-guess&n=5" },
   { name: "yazi-guess-8", q: "mock=yazi-guess&n=8&chosen=3" },

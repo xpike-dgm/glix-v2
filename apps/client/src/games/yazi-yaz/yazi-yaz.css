@@ -183,6 +183,56 @@
   width: var(--yy-av);
   height: var(--yy-av);
 }
+/* Şüphe işareti: portrenin üstünde saydam düğme (en az 48 px); işaret yalnız bu cihazda görünür. */
+.yy__sus-btn {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: 50%;
+  width: max(48px, 100%);
+  height: max(48px, 100%);
+  transform: translate(-50%, -50%);
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.yy__sus-btn:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+.yy__sus {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  z-index: 3;
+  width: 20px;
+  height: 20px;
+  display: none;
+  place-items: center;
+  border-radius: 50%;
+  font-style: normal;
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1;
+  color: #1a1100;
+  background: var(--amber);
+  box-shadow: 0 0 10px rgba(255, 194, 59, 0.7);
+}
+.yy__node[data-sus="1"] .yy__sus {
+  display: grid;
+}
+.yy__node[data-sus="1"] .av {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+.yy__hint {
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
 .yy__node[data-me="1"] .av {
   outline: 2px solid var(--text);
   outline-offset: 3px;
@@ -503,7 +553,8 @@
     --yy-av: 30px;
   }
   .yy__name,
-  .yy__bubble {
+  .yy__bubble,
+  .yy__hint {
     display: none;
   }
   .yy__head {
