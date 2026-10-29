@@ -34,12 +34,19 @@ const SIZE: Record<PosterFocus, { w: number; h: number }> = {
 };
 
 /** Kadrajın rig koordinatındaki dikdörtgeni (x, y, genişlik, yükseklik). */
-function frameRect(
+export function frameRect(
   focus: PosterFocus,
   fig: { top: number; bottom: number; left: number; right: number },
   rootX: number,
+  layersTop: number = Number.POSITIVE_INFINITY,
 ) {
-  if (focus === "head") return { x: rootX - 125, y: fig.top - 18, w: 250, h: 250 };
+  if (focus === "head") {
+    // Uzun şapkalar (sihirbaz külahı gibi) baş kadrajının üstünden taşmasın: kadraj yukarı ve kare olarak büyür.
+    const bottom = fig.top - 18 + 250;
+    const top = Math.min(fig.top - 18, layersTop - 8);
+    const side = bottom - top;
+    return { x: rootX - side / 2, y: top, w: side, h: side };
+  }
   if (focus === "torso") return { x: rootX - 190, y: fig.top + 125, w: 380, h: 316 };
   const figH = fig.bottom - fig.top;
   if (focus === "legs") return { x: rootX - 150, y: fig.top + figH * 0.42, w: 300, h: figH * 0.5 };
@@ -171,7 +178,10 @@ async function snapshot(
   puppet.setHue(req.hue);
   puppet.setTints(req.tints ?? {});
   puppet.setPose(angles, 0);
-  const rect = frameRect(req.focus, kit.figure, sk.rig.root[0]);
+  const layersTop = Math.min(
+    ...req.layers.flatMap((l) => (sk.rig.wardrobe[l] ?? []).map((q) => q.sourceOrigin[1])),
+  );
+  const rect = frameRect(req.focus, kit.figure, sk.rig.root[0], layersTop);
   const s = Math.min(size.w / rect.w, size.h / rect.h);
   puppet.container.scale.set(s);
   puppet.container.position.set(

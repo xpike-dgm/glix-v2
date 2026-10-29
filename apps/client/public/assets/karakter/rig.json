@@ -2342,6 +2342,78 @@
      "sourceOrigin": [302.5, 599.5]
     }
    ]
+  },
+  "boynuz": {
+   "visible": true,
+   "slot": "sapka",
+   "pieces": [
+    {
+     "file": "giysi/boynuz_head.webp",
+     "size": [135, 56],
+     "pivot": [67, 183.5],
+     "parent": "head",
+     "bone": "head",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "head",
+     "layer": "on",
+     "sourceOrigin": [189, 48.5]
+    }
+   ]
+  },
+  "kasket": {
+   "visible": true,
+   "slot": "sapka",
+   "pieces": [
+    {
+     "file": "giysi/kasket_head.webp",
+     "size": [170, 75],
+     "pivot": [85.5, 182],
+     "parent": "head",
+     "bone": "head",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "head",
+     "layer": "on",
+     "sourceOrigin": [170.5, 50]
+    }
+   ]
+  },
+  "samuray": {
+   "visible": true,
+   "slot": "sapka",
+   "pieces": [
+    {
+     "file": "giysi/samuray_head.webp",
+     "size": [238, 206],
+     "pivot": [118.5, 221],
+     "parent": "head",
+     "bone": "head",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "head",
+     "layer": "on",
+     "sourceOrigin": [137.5, 11]
+    }
+   ]
+  },
+  "sihirbaz": {
+   "visible": true,
+   "slot": "sapka",
+   "pieces": [
+    {
+     "file": "giysi/sihirbaz_head.webp",
+     "size": [168, 91],
+     "pivot": [84, 225],
+     "parent": "head",
+     "bone": "head",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "head",
+     "layer": "on",
+     "sourceOrigin": [172, 7]
+    }
+   ]
   }
  },
  "scale": 0.5,
