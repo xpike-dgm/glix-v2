@@ -111,6 +111,9 @@ export interface Room {
   nextJoinOrder: number;
   lastFlushAt: number;
   flushCancel: Cancel | null;
+  /** Oyunun/geri sayımın tam zamanlı uyandırması (tick'ten bağımsız); en çok bir tane. */
+  wakeCancel: Cancel | null;
+  wakeAt: number | null;
   deleteCancel: Cancel | null;
   /** Host koptuğunda devir öncesi bekleme zamanlayıcısı. */
   hostGraceCancel: Cancel | null;

@@ -108,6 +108,14 @@ export interface GameDefinition<State, Action, View, PublicView = unknown> {
    * gizli bilgi taşımaz. Durumu değiştirmez; zamana bağlıysa `ctx.now` kullanır.
    */
   notify?(state: State, ctx: GameContext): readonly string[];
+  /**
+   * İsteğe bağlı: `state` kendiliğinden (eylem gelmeden, yalnız zamanla) en erken hangi mutlak anda değişir
+   * (`tick` çıktısı ya da görünüm farklı olur, oyun biter)? `ctx.now`'dan sonraki an ya da yok ise null.
+   * Sunucu bu ana tam zamanlı bir uyandırma kurar; böylece görünür geçişler 100 ms'lik tick'i beklemez. Yalnız
+   * yayın gecikmesini azaltır: oyunun sonucu tick zamanlamasından bağımsız kalmak zorundadır (sunucu aynı
+   * `tick`/`isFinished`'i çağırır), bu yüzden kural değiştirmez. Saf olmalı, `ctx.connected`'a bakmamalı.
+   */
+  nextWake?(state: State, ctx: GameContext): number | null;
 }
 
 export interface SecretEntry {

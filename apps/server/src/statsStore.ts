@@ -3,6 +3,7 @@ import type { DatabaseSync } from "node:sqlite";
 import type { AdminMailKind, PerfMeta, PerfSample } from "@glix/engine";
 import { log } from "./log.js";
 import { createStatsReader, type StatsReader } from "./statsAdmin.js";
+import { startWalCheckpointer } from "./walCheckpoint.js";
 
 /** İstatistik satırları bu süreden sonra silinir (docs/PROTOKOL.md). */
 export const RETENTION_MS = 90 * 24 * 3600 * 1000;
@@ -236,6 +237,7 @@ export function createStats(path: string | undefined | null): StatsStore {
     log.error("stats_error", { op: "open", error: String(err) });
     return noopStats;
   }
+  const walCheckpointer = startWalCheckpointer(db, path);
   const insertMatch = db.prepare(
     "INSERT INTO matches (started_at, player_count, selection_mode, game_count) VALUES (?, ?, ?, ?)",
   );
@@ -365,7 +367,10 @@ export function createStats(path: string | undefined | null): StatsStore {
     close: () => {
       if (closed) return;
       closed = true;
-      guarded("close", undefined, () => db.close());
+      guarded("close", undefined, () => {
+        walCheckpointer?.stop();
+        db.close();
+      });
     },
   };
 }

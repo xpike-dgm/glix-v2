@@ -137,6 +137,14 @@ export function makeStepChecker(game: AnyGame, players: readonly string[]) {
       twice(`${where} tick`, info.now, info.connected, (ctx) => game.tick(info.prev, ctx));
     }
     twice(`${where} isFinished`, info.now, info.connected, (ctx) => game.isFinished(info.state, ctx));
+    if (game.nextWake) {
+      const wake = twice(`${where} nextWake`, info.now, info.connected, (ctx) =>
+        game.nextWake?.(info.state, ctx),
+      );
+      if (wake !== null && wake !== undefined && !(wake > info.now)) {
+        throw new InvariantViolation("impure", `${where}: nextWake şimdiden sonra olmalı (${wake})`);
+      }
+    }
     twice(`${where} secrets`, info.now, info.connected, () => game.secrets(info.state));
     twice(`${where} publicView`, info.now, info.connected, (ctx) => game.publicView(info.state, ctx));
     for (const p of [...players, null]) {

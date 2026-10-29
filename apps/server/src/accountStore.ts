@@ -25,6 +25,7 @@ import { istanbulDayStart } from "./badges.js";
 import { createFriendStore, FRIENDS_SCHEMA, type FriendStore } from "./friendStore.js";
 import { log } from "./log.js";
 import { loadSqlite } from "./statsStore.js";
+import { startWalCheckpointer } from "./walCheckpoint.js";
 import type { PushTarget } from "./webpush.js";
 
 /** Oturum bu süre sonra kendiliğinden düşer (çerez Max-Age ile aynı). */
@@ -977,6 +978,7 @@ export function createAccounts(path: string): AccountStore {
   db.exec("PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA busy_timeout = 2000;");
   db.exec("PRAGMA foreign_keys = ON");
   migrate(db, path);
+  const walCheckpointer = startWalCheckpointer(db, path);
   const byUsername = db.prepare("SELECT id FROM accounts WHERE username_lc = ?");
   const byEmail = db.prepare("SELECT id FROM accounts WHERE email = ?");
   const insert = db.prepare(
@@ -2454,6 +2456,7 @@ export function createAccounts(path: string): AccountStore {
       if (closed) return;
       closed = true;
       try {
+        walCheckpointer?.stop();
         db.close();
       } catch (err) {
         log.error("accounts_error", { op: "close", error: String(err) });
