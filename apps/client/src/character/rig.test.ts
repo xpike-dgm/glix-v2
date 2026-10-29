@@ -33,6 +33,7 @@ describe("iskelet", () => {
       "forma",
       "fotr",
       "kapusonlu",
+      "kimono",
       "korsan",
       "kovboy",
       "kulaklikli-kask",
@@ -40,6 +41,8 @@ describe("iskelet", () => {
       "sapka",
       "smokin",
       "tac",
+      "yagmurluk",
+      "zirh-yelek",
     ]);
   });
 

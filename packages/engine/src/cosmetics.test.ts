@@ -47,7 +47,7 @@ describe("kozmetik kataloğu", () => {
     // Giysi yuvalarından henüz ürünü olmayanlar olabilir (arayüz onları göstermez); diğer türlerin hepsinde ürün var.
     for (const t of COSMETIC_TYPES.filter((x) => x.group !== "giysi"))
       expect(COSMETIC_ITEMS.some((i) => i.type === t.id)).toBe(true);
-    expect(COSMETIC_ITEMS).toHaveLength(56);
+    expect(COSMETIC_ITEMS).toHaveLength(59);
   });
 
   it("parseCosmetics: bilinmeyen ya da yanlış türdeki kimlik atılır", () => {
@@ -128,6 +128,9 @@ describe("kürsü karakteri ürünleri", () => {
       ["ust-forma", "siradan"],
       ["ust-deri-ceket", "nadir"],
       ["ust-smokin", "nadir"],
+      ["ust-yagmurluk", "siradan"],
+      ["ust-kimono", "nadir"],
+      ["ust-zirh-yelek", "efsanevi"],
     ]);
   });
 
