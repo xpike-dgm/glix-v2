@@ -13,6 +13,7 @@ import {
   itemsOfType,
   splitEquipped,
 } from "@glix/engine";
+import { errorTextForCode } from "./errorText.js";
 
 /** Mağaza verisi ve saf yardımcıları (ağdan gelen hiçbir şeye güvenilmez). Katalog motorda, burada yalnız durum var. */
 
@@ -118,27 +119,8 @@ export const STATUS_LABEL: Readonly<Record<ItemStatus, string>> = {
   equipped: "Kuşanıldı",
 };
 
-/** Sunucu hata kodlarının oyuncuya gösterilen Türkçe karşılığı. */
-export function shopErrorText(code: string | null): string {
-  switch (code) {
-    case "unknown_item":
-      return "Bu ürün artık yok.";
-    case "already_owned":
-      return "Bu ürüne zaten sahipsin.";
-    case "insufficient_glix":
-      return "Yeterli Glix yok.";
-    case "not_owned":
-      return "Bu ürüne sahip değilsin.";
-    case "rate_limited":
-      return "Çok hızlı gidiyorsun, biraz yavaşla.";
-    case "login_required":
-      return "Önce giriş yap.";
-    case "network":
-      return "Bağlantı kurulamadı, tekrar dene.";
-    default:
-      return "Bir sorun oluştu, biraz sonra tekrar dene.";
-  }
-}
+/** Sunucu hata kodlarının oyuncuya gösterilen Türkçe karşılığı (ortak tablo `errorText.ts`). */
+export const shopErrorText = (code: string | null): string => errorTextForCode(code);
 
 /** Tür başına, katalog sırasıyla: yalnız sahip olunanlar (Dolabım). */
 export function ownedOfType(

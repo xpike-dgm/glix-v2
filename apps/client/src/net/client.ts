@@ -16,6 +16,7 @@ import { resolveWsUrl } from "../wsUrl.js";
 import { wireNickname } from "./accountRules.js";
 import { receiveBadges } from "./badges.js";
 import { offsetFromPong } from "./clock.js";
+import { playerErrorText } from "./errorText.js";
 import {
   dropInvitesFor,
   loadFriends,
@@ -314,7 +315,7 @@ function handleError(code: string, message: string): void {
     pending = null;
     clearRoom();
     setState({ notFoundCode: code === "room_not_found" ? state.joinCode || "?" : null, busy: false });
-    if (code === "stage_full") toast(message, "error");
+    if (code === "stage_full") toast(playerErrorText(code, message), "error");
     return;
   }
   if (code === "resume_failed") {
@@ -337,14 +338,14 @@ function handleError(code: string, message: string): void {
   if (code === "login_required") {
     // Oturum bu arada düşmüş olabilir: hesap bilgisi temizlenir, giriş ekranı açılır.
     setState({ account: null, nav: "login" });
-    toast(message, "error");
+    toast(playerErrorText(code, message), "error");
     return;
   }
   if (code === "rate_limited" && Date.now() - lastInviteAt < 3000) {
     toast("Bu arkadaşını biraz önce çağırdın, birazdan tekrar dene.", "error");
     return;
   }
-  if (SHOWN_ERRORS.has(code)) toast(message, "error");
+  if (SHOWN_ERRORS.has(code)) toast(playerErrorText(code, message), "error");
 }
 
 function open(): void {
