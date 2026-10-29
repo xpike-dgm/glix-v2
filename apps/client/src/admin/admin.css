@@ -753,3 +753,253 @@ fieldset.adm-seg {
   min-height: 160px;
   width: 100%;
 }
+
+/* ---- Oyuncu listesi ve hesap dökümü ---- */
+.adm-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  vertical-align: middle;
+}
+.adm-dot--on {
+  background: var(--lime);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--lime) 25%, transparent);
+}
+.adm-plist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: var(--sp-3);
+}
+.adm-pcard {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg-1);
+  min-width: 0;
+}
+.adm-pcard--sus {
+  border-color: color-mix(in srgb, var(--amber) 55%, transparent);
+}
+.adm-pcard__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.adm-pcard__head .adm-link {
+  overflow-wrap: anywhere;
+}
+.adm-pcard__state {
+  flex: none;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.adm-pcard__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+.adm-pcard__badges:empty {
+  display: none;
+}
+.adm-pcard__meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px var(--sp-3);
+  margin: 0;
+  font-size: var(--fs-13);
+}
+.adm-pcard__meta > div {
+  display: contents;
+}
+.adm-pcard__meta dt {
+  color: var(--text-dim);
+}
+.adm-pcard__meta dd {
+  margin: 0;
+  text-align: right;
+}
+.adm-group {
+  display: grid;
+  gap: var(--sp-1);
+}
+.adm-group__h {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.adm-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sp-2);
+}
+.adm-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  min-width: 0;
+}
+.adm-item--on {
+  border-color: color-mix(in srgb, var(--cyan) 60%, transparent);
+}
+.adm-item__main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 160px;
+}
+.adm-item__name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.adm-item__name .adm-badge {
+  margin-left: var(--sp-2);
+}
+.adm-item__sub {
+  font-size: 12px;
+}
+.adm-item__acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* ---- Telefon (320-430 px) ---- */
+.adm-shell {
+  overflow-x: clip;
+}
+@media (max-width: 700px) {
+  .adm-shell {
+    padding: 0 12px var(--sp-12);
+  }
+  /* Bölümler kaydırmasız, sarmalı ızgara: hepsi görünür ve en az 44 px dokunma alanı. */
+  .adm-top {
+    position: static;
+    align-items: center;
+  }
+  .adm-tabs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 96px), 1fr));
+    gap: var(--sp-1);
+    overflow: visible;
+  }
+  .adm-tab {
+    min-height: 44px;
+    min-width: 0;
+    padding: var(--sp-1) var(--sp-2);
+    text-align: center;
+    border: 1px solid var(--line);
+    white-space: normal;
+    font-size: 13px;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+  .adm-btn--small,
+  .adm-seg__opt,
+  .adm-seg--cell .adm-seg__opt {
+    min-height: 44px;
+  }
+  .adm-btn {
+    padding: 0 var(--sp-4);
+  }
+  .adm-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .adm-inline > .adm-btn,
+  .adm-inline > .adm-field {
+    flex: 1 1 100%;
+  }
+  .adm-item__acts .adm-btn {
+    flex: 1 1 auto;
+  }
+  .adm-card {
+    padding: var(--sp-3);
+  }
+  .adm-plist {
+    grid-template-columns: 100%;
+  }
+  .adm-dl {
+    grid-template-columns: 100%;
+  }
+  /* Onay adımı ekranın altına yapışan sayfa olur; içeriği kapatmaz, uzunsa kayar. */
+  .adm-confirm--sheet,
+  .adm-confirm--sticky {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    max-height: 80vh;
+    overflow-y: auto;
+    border-radius: var(--r-sm) var(--r-sm) 0 0;
+    border-width: 1px 0 0;
+    padding: var(--sp-4) 12px calc(var(--sp-4) + env(safe-area-inset-bottom, 0px));
+    background: var(--bg-1);
+    box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.6);
+  }
+  .adm-confirm .adm-inline > .adm-btn {
+    flex: 1 1 40%;
+  }
+  .adm-table-wrap {
+    overflow-x: visible;
+    border: 0;
+  }
+  .adm-words {
+    grid-template-columns: 100%;
+  }
+  .adm-poolpick {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
+  }
+  .adm-hbars li {
+    grid-template-columns: 64px 1fr auto;
+  }
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+@media (max-width: 700px) {
+  .adm-stack .adm-err {
+    min-width: 0;
+    max-width: none;
+  }
+}
+
+.adm-acc-list[hidden] {
+  display: none;
+}
+.adm-back {
+  justify-self: start;
+  min-height: 44px;
+}
+.adm-summary {
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 0 var(--sp-3) var(--sp-3);
+}
+.adm-summary > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  cursor: pointer;
+}

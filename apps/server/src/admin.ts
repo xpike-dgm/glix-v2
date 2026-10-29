@@ -9,6 +9,8 @@ import { createHash, randomBytes, randomInt, timingSafeEqual } from "node:crypto
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { pipeline } from "node:stream";
 import {
+  ADMIN_PLAYER_FILTERS,
+  ADMIN_PLAYER_SORTS,
   type AdminAccountDetail,
   type AdminAccountSearch,
   type AdminAuditPage,
@@ -17,6 +19,9 @@ import {
   type AdminContent,
   type AdminLive,
   type AdminMaintenance,
+  type AdminPlayerFilter,
+  type AdminPlayerPage,
+  type AdminPlayerSort,
   type AdminPoolFilter,
   type AdminReportDetail,
   type AdminReportPage,
@@ -27,6 +32,8 @@ import {
   BANNED_WORDS_MAX,
   BROADCAST_BODY_MAX,
   BROADCAST_TITLE_MAX,
+  COSMETIC_TYPES,
+  type CosmeticTypeId,
   cleanAnnouncementText,
   cleanPlainText,
   cleanSitePath,
@@ -41,6 +48,7 @@ import {
 import {
   type AccountStore,
   ADMIN_SEARCH_LIMIT,
+  type AdminPlayerListQuery,
   type AdminSearchQuery,
   type ReportRow,
 } from "./accountStore.js";
@@ -88,6 +96,8 @@ export const ADMIN_SESSION_TTL_MS = 12 * 3600 * 1000;
 const MAX_BODY_BYTES = 512;
 /** Hesap işlemi gövdesi (sebep metni dahil). */
 const MAX_ACTION_BODY_BYTES = 1024;
+/** Askıya alınan hesabın canlı soketleri bu kodla kapatılır. */
+export const SUSPEND_CLOSE_CODE = 4003;
 /** Askı sebebi en çok bu kadar karakter. */
 export const SUSPEND_REASON_MAX = 140;
 const DAY_MS = 24 * 3600 * 1000;
@@ -251,6 +261,8 @@ const POST_ROUTES: ReadonlySet<string> = new Set([
   "accounts/glix",
   "accounts/cosmetic-grant",
   "accounts/cosmetic-revoke",
+  "accounts/cosmetic-unequip",
+  "accounts/glix-set",
   "content/game",
   "content/quests",
   "announcement/set",
@@ -277,6 +289,7 @@ const GET_ROUTES: ReadonlySet<string> = new Set([
   "errors",
   "accounts",
   "accounts/search",
+  "accounts/list",
   "accounts/detail",
   "economy",
   "audit",
@@ -362,6 +375,8 @@ async function route(req: IncomingMessage, res: ServerResponse, env: AdminEnv): 
     }
     case "accounts/search":
       return searchAccounts(res, env, account.id, url.searchParams.get("q"));
+    case "accounts/list":
+      return listAccounts(res, env, account.id, url.searchParams);
     case "accounts/detail":
       return accountDetail(res, env, account.id, url.searchParams.get("id"));
     case "audit":
@@ -545,7 +560,125 @@ async function accountDetail(
   if (!found) return fail(res, 404, "not_found", "Hesap bulunamadı.");
   // E-posta bu yanıtta olduğu için her görüntüleme kaydedilir (yanıttan önce).
   audit(env, adminId, "account_view", "", id);
-  const body: AdminAccountDetail = { ...found, protected: env.adminIds.has(id) };
+  const body: AdminAccountDetail = {
+    ...found,
+    protected: env.adminIds.has(id),
+    live: env.social.liveOf(id),
+  };
+  send(res, 200, body);
+}
+
+/** Oyuncu listesi sayfa boyutu: varsayılan ve en büyük. */
+export const PLAYER_PAGE_DEFAULT = 25;
+export const PLAYER_PAGE_MAX = 50;
+/** "Çevrimiçi" süzgecinde sorguya verilen en çok hesap sayısı (soket sayısı bunu aşarsa fazlası listelenmez). */
+const PLAYER_ONLINE_IDS_MAX = 2000;
+const SORT_DEFAULT_DIR: Readonly<Record<AdminPlayerSort, "asc" | "desc">> = {
+  seen: "desc",
+  created: "desc",
+  glix: "desc",
+  name: "asc",
+};
+
+/** İmleç: `[değer, kimlik]` çiftinin base64url JSON'u. Sıralamaya uymayan değer tipi geçersizdir. */
+export function encodeCursor(value: number | string, id: number): string {
+  return Buffer.from(JSON.stringify([value, id])).toString("base64url");
+}
+
+export function decodeCursor(
+  raw: string,
+  sort: AdminPlayerSort,
+): { value: number | string; id: number } | null {
+  if (!/^[A-Za-z0-9_-]{1,200}$/.test(raw)) return null;
+  let v: unknown;
+  try {
+    v = JSON.parse(Buffer.from(raw, "base64url").toString("utf8"));
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(v) || v.length !== 2) return null;
+  const [value, id] = v as [unknown, unknown];
+  if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) return null;
+  if (sort === "name") {
+    return typeof value === "string" && value.length >= 1 && value.length <= 40 ? { value, id } : null;
+  }
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= -1e15 && value <= 1e15
+    ? { value, id }
+    : null;
+}
+
+/** Liste sorgu dizgesi doğrulaması; geçersizse null. */
+export function parsePlayerQuery(p: URLSearchParams): {
+  filter: AdminPlayerFilter;
+  sort: AdminPlayerSort;
+  dir: "asc" | "desc";
+  prefix: string | null;
+  after: string | null;
+  limit: number;
+} | null {
+  const filter = p.get("filter") ?? "all";
+  const sort = p.get("sort") ?? "seen";
+  if (!(ADMIN_PLAYER_FILTERS as readonly string[]).includes(filter)) return null;
+  if (!(ADMIN_PLAYER_SORTS as readonly string[]).includes(sort)) return null;
+  const s = sort as AdminPlayerSort;
+  const dirRaw = p.get("dir");
+  if (dirRaw !== null && dirRaw !== "asc" && dirRaw !== "desc") return null;
+  const limitRaw = p.get("limit");
+  const limit = limitRaw === null ? PLAYER_PAGE_DEFAULT : parseId(limitRaw);
+  if (limit === null) return null;
+  let prefix: string | null = null;
+  const q = p.get("q");
+  if (q !== null && q.trim() !== "") {
+    const parsed = parseSearch(q);
+    if (!parsed || parsed.kind !== "prefix") return null;
+    prefix = parsed.value;
+  }
+  return {
+    filter: filter as AdminPlayerFilter,
+    sort: s,
+    dir: dirRaw ?? SORT_DEFAULT_DIR[s],
+    prefix,
+    after: p.get("after"),
+    limit: Math.min(limit, PLAYER_PAGE_MAX),
+  };
+}
+
+async function listAccounts(
+  res: ServerResponse,
+  env: AdminEnv,
+  adminId: number,
+  params: URLSearchParams,
+): Promise<void> {
+  const q = parsePlayerQuery(params);
+  if (!q) return fail(res, 400, "invalid_input", "Geçersiz liste isteği.");
+  const cursor = q.after === null ? null : decodeCursor(q.after, q.sort);
+  if (q.after !== null && cursor === null) return fail(res, 400, "invalid_input", "Geçersiz sayfa.");
+  if (!env.limits.search(adminId)) return fail(res, 429, "rate_limited", "Biraz bekleyip tekrar dene.");
+  const ids =
+    q.filter === "online"
+      ? env.social.onlineAccountIds().slice(0, PLAYER_ONLINE_IDS_MAX)
+      : q.filter === "admin"
+        ? [...env.adminIds]
+        : null;
+  const query: AdminPlayerListQuery = {
+    suspendedOnly: q.filter === "suspended",
+    ids,
+    prefix: q.prefix,
+    sort: q.sort,
+    dir: q.dir,
+    cursor,
+    limit: q.limit,
+  };
+  const page = env.accounts.adminPlayerPage(query, env.now);
+  const body: AdminPlayerPage = {
+    rows: page.rows.map((r) => ({
+      ...r,
+      admin: env.adminIds.has(r.id),
+      live: env.social.liveOf(r.id),
+    })),
+    next: page.next === null ? null : encodeCursor(page.next.value, page.next.id),
+    total: page.total,
+  };
   send(res, 200, body);
 }
 
@@ -585,10 +718,17 @@ type ActionInput =
   | { op: "delete"; id: number; confirm: string }
   | { op: "logout-all"; id: number }
   | { op: "glix"; id: number; amount: number; reason: string }
-  | { op: "cosmetic-grant" | "cosmetic-revoke"; id: number; itemId: string };
+  | { op: "glix-set"; id: number; balance: number; reason: string }
+  | { op: "cosmetic-grant" | "cosmetic-revoke"; id: number; itemId: string }
+  | { op: "cosmetic-unequip"; id: number; slot: string };
 
 /** Tek düzeltmede en çok |tutar|. */
 export const GLIX_ADJUST_MAX = 100_000;
+/** "Bakiyeyi ayarla" hedefi en çok bu kadar olabilir. */
+export const GLIX_BALANCE_MAX = 10_000_000;
+
+/** Kuşanılabilen kozmetik türü kimlikleri (yönetici "kuşanmayı kaldır" için). */
+const EQUIP_SLOTS: readonly string[] = COSMETIC_TYPES.filter((t) => t.key !== null).map((t) => t.id);
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -642,6 +782,25 @@ export function parseAction(op: ActionInput["op"], data: unknown): ActionInput |
         return null;
       return { op, id, amount, reason };
     }
+    case "glix-set": {
+      if (!exactKeys(data, ["id", "balance", "reason"])) return null;
+      const balance = data.balance;
+      const reason = cleanReason(data.reason);
+      if (
+        typeof balance !== "number" ||
+        !Number.isSafeInteger(balance) ||
+        balance < 0 ||
+        balance > GLIX_BALANCE_MAX ||
+        reason === null
+      )
+        return null;
+      return { op, id, balance, reason };
+    }
+    case "cosmetic-unequip": {
+      if (!exactKeys(data, ["id", "slot"])) return null;
+      const slot = data.slot;
+      return typeof slot === "string" && EQUIP_SLOTS.includes(slot) ? { op, id, slot } : null;
+    }
     case "cosmetic-grant":
     case "cosmetic-revoke": {
       if (!exactKeys(data, ["id", "itemId"])) return null;
@@ -668,6 +827,8 @@ const ACTION_OPS: Readonly<Record<string, ActionInput["op"]>> = {
   "accounts/glix": "glix",
   "accounts/cosmetic-grant": "cosmetic-grant",
   "accounts/cosmetic-revoke": "cosmetic-revoke",
+  "accounts/cosmetic-unequip": "cosmetic-unequip",
+  "accounts/glix-set": "glix-set",
 };
 
 async function accountAction(
@@ -707,10 +868,12 @@ async function accountAction(
       const related = env.accounts.relatedAccountIds(id);
       if (!env.accounts.suspend(id, env.now, until, input.reason))
         return fail(res, 404, "not_found", "Hesap bulunamadı.");
+      // Canlı soketler hemen kapanır (hesap dizininden silinmeden önce); sonra bağlantılar misafire döner.
+      const dropped = env.social.disconnect(id, SUSPEND_CLOSE_CODE, "Hesabın askıya alındı");
       env.social.accountSignedOut(id, related);
       // Sebep hesap satırında durur (hesapla birlikte silinir); işlem kaydına yalnız süre yazılır.
       audit(env, adminId, "account_suspend", input.duration, id);
-      return send(res, 200, { ok: true, until });
+      return send(res, 200, { ok: true, until, disconnected: dropped });
     }
     case "unsuspend": {
       if (!env.accounts.unsuspend(id, env.now)) return fail(res, 409, "not_suspended", "Hesap askıda değil.");
@@ -753,6 +916,34 @@ async function accountAction(
       // Kuşanılıyorsa odadaki görünümü de düşer.
       env.social.cosmeticsChanged(id);
       audit(env, adminId, "account_cosmetic_revoke", input.itemId, id);
+      return send(res, 200, { ok: true });
+    }
+    case "glix-set": {
+      const done = env.accounts.setGlixBalance(id, input.balance, input.reason, env.now, GLIX_ADJUST_MAX);
+      if (!done.ok) {
+        if (done.reason === "same") return fail(res, 409, "glix_same", "Bakiye zaten bu değerde.");
+        if (done.reason === "too_big")
+          return fail(res, 400, "glix_too_big", `Tek seferde en çok ${GLIX_ADJUST_MAX} Glix değişebilir.`);
+        return fail(res, 404, "not_found", "Hesap bulunamadı.");
+      }
+      // Kim (işlem kaydı sahibi), ne (eski -> yeni) ve neden (sebep; defterde de durur).
+      audit(
+        env,
+        adminId,
+        "account_glix_set",
+        `${done.balance - done.amount}->${done.balance}: ${input.reason}`,
+        id,
+      );
+      return send(res, 200, { ok: true, balance: done.balance, amount: done.amount });
+    }
+    case "cosmetic-unequip": {
+      const worn = env.accounts.equippedCosmetics(id)[input.slot];
+      if (worn === undefined) return fail(res, 409, "not_equipped", "Bu türde kuşanılmış ürün yok.");
+      if (env.accounts.equipCosmetic(id, input.slot as CosmeticTypeId, null) !== "ok")
+        return fail(res, 404, "not_found", "Hesap bulunamadı.");
+      // Odadaki görünüm de hemen güncellenir (iptal ile aynı yol).
+      env.social.cosmeticsChanged(id);
+      audit(env, adminId, "account_cosmetic_unequip", `${input.slot}:${worn}`, id);
       return send(res, 200, { ok: true });
     }
     case "logout-all": {
@@ -1197,10 +1388,14 @@ async function moderationAction(
       return send(res, 200, { ok: true });
     }
     case "rooms/kick": {
+      // Yönetici hesabının oyuncusu atılamaz (hesap işlemleriyle aynı koruma).
+      const target = env.rooms.accountIdOf(input.code, input.playerId);
+      if (target !== null && env.adminIds.has(target))
+        return fail(res, 403, "protected", "Yönetici hesaplarına bu işlem yapılamaz.");
       const done = env.rooms.kick(input.code, input.playerId);
       if (done === "no_room") return fail(res, 404, "not_found", "Oda bulunamadı (kapanmış olabilir).");
       if (done === "no_player") return fail(res, 404, "not_found", "Oyuncu artık odada değil.");
-      audit(env, adminId, "room_kick", input.code);
+      audit(env, adminId, "room_kick", input.code, target);
       return send(res, 200, { ok: true });
     }
     case "banned-words/add": {

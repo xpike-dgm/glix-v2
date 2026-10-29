@@ -12,6 +12,9 @@ import type {
   AdminGameSwitch,
   AdminLive,
   AdminMaintenance,
+  AdminPlayerFilter,
+  AdminPlayerPage,
+  AdminPlayerSort,
   AdminPoolBulk,
   AdminPoolFilter,
   AdminPoolPage,
@@ -35,6 +38,7 @@ import {
   parseGameList,
   parseLive,
   parseMaintenance,
+  parsePlayerPage,
   parsePoolBulk,
   parsePoolPage,
   parsePoolSummary,
@@ -140,6 +144,24 @@ export const fetchErrors = (): Promise<Fetched<AdminErrors>> => fetched("errors"
 export const fetchAccounts = (): Promise<Fetched<AdminAccounts>> => fetched("accounts", parseAccounts);
 export const searchAccounts = (q: string): Promise<Fetched<AdminAccountSearch>> =>
   fetched(`accounts/search?q=${encodeURIComponent(q)}`, parseSearch);
+export interface PlayerListParams {
+  filter: AdminPlayerFilter;
+  sort: AdminPlayerSort;
+  dir: "asc" | "desc";
+  q: string;
+  after: string | null;
+}
+
+export function playerListPath(p: PlayerListParams): string {
+  const qs = new URLSearchParams({ filter: p.filter, sort: p.sort, dir: p.dir });
+  if (p.q.trim() !== "") qs.set("q", p.q.trim());
+  if (p.after !== null) qs.set("after", p.after);
+  return `accounts/list?${qs.toString()}`;
+}
+
+/** Tüm hesapların imleçli listesi (süzgeç, sıralama, ad öneki). */
+export const fetchPlayerList = (p: PlayerListParams): Promise<Fetched<AdminPlayerPage>> =>
+  fetched(playerListPath(p), parsePlayerPage);
 export const fetchDetail = (id: number): Promise<Fetched<AdminAccountDetail>> =>
   fetched(`accounts/detail?id=${id}`, parseDetail);
 export const fetchAudit = (before: number | null): Promise<Fetched<AdminAuditPage>> =>
@@ -153,7 +175,9 @@ export type AccountAction =
   | { op: "delete"; id: number; confirm: string }
   | { op: "logout-all"; id: number }
   | { op: "glix"; id: number; amount: number; reason: string }
-  | { op: "cosmetic-grant" | "cosmetic-revoke"; id: number; itemId: string };
+  | { op: "glix-set"; id: number; balance: number; reason: string }
+  | { op: "cosmetic-grant" | "cosmetic-revoke"; id: number; itemId: string }
+  | { op: "cosmetic-unequip"; id: number; slot: string };
 
 const OK_TEXT: Record<AccountAction["op"], string> = {
   rename: "Kullanıcı adı değiştirildi.",
@@ -164,6 +188,8 @@ const OK_TEXT: Record<AccountAction["op"], string> = {
   glix: "Glix düzeltildi.",
   "cosmetic-grant": "Ürün armağan edildi.",
   "cosmetic-revoke": "Ürün geri alındı.",
+  "cosmetic-unequip": "Ürün çıkarıldı.",
+  "glix-set": "Bakiye ayarlandı.",
 };
 
 export function runAccountAction(a: AccountAction): Promise<ActionResult> {

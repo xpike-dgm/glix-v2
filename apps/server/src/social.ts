@@ -1,4 +1,5 @@
 import {
+  type AdminAccountLive,
   type Cosmetics,
   cosmeticsFromEquipped,
   type FriendStatus,
@@ -89,6 +90,15 @@ export interface Social {
    * bağlantılar misafire çevrilir; hesabın diğer bağlantıları ve bildirim aboneliği olduğu gibi kalır.
    */
   sessionsRevoked(accountId: number, revoked: (sessionHash: string | null) => boolean): void;
+  /** Canlı soketi olan hesapların kimlikleri (yönetici paneli "çevrimiçi" süzgeci). */
+  onlineAccountIds(): number[];
+  /** Hesabın canlı durumu: soketi var mı, hangi odada ve hangi rolde (yönetici paneli). */
+  liveOf(accountId: number): AdminAccountLive;
+  /**
+   * Hesabın canlı soketlerini kapatır (askı); kapatılan sayıyı döner. `accountSignedOut`tan ÖNCE çağrılır: sonrasında
+   * hesap bağlantı dizininden silindiği için soketler bulunamaz.
+   */
+  disconnect(accountId: number, code: number, reason: string): number;
   /** Her sunucu turunda çağrılır; tarama aralığı dolduysa değişen durumları arkadaşlara yayar. */
   tick(now: number): void;
 }
@@ -110,6 +120,9 @@ export const noopSocial: Social = {
   accountDeleted: () => undefined,
   accountSignedOut: () => undefined,
   sessionsRevoked: () => undefined,
+  onlineAccountIds: () => [],
+  liveOf: () => ({ online: false, room: null }),
+  disconnect: () => 0,
   tick: () => undefined,
 };
 
@@ -385,6 +398,30 @@ export function createSocial(rt: Runtime, accounts: AccountStore): Social {
         }
         if (had) rt.broadcaster.markDirty(room);
       }
+    },
+    onlineAccountIds: () => [...byAccount.keys()],
+    liveOf(accountId) {
+      const conns = byAccount.get(accountId);
+      if (!conns || conns.size === 0) return { online: false, room: null };
+      for (const conn of conns) {
+        const p = conn.player;
+        if (!p) continue;
+        const role = p.id === p.room.hostId ? "host" : p.spectator ? "spectator" : "player";
+        return { online: true, room: { code: p.room.code, role, playerId: p.id } };
+      }
+      return { online: true, room: null };
+    },
+    disconnect(accountId, code, reason) {
+      let n = 0;
+      for (const conn of [...(byAccount.get(accountId) ?? [])]) {
+        try {
+          conn.close(code, reason);
+          n += 1;
+        } catch (err) {
+          log.error("admin_failed", { op: "disconnect", error: String(err) });
+        }
+      }
+      return n;
     },
     accountDeleted: (accountId, relatedIds) => unbind(accountId, relatedIds),
     accountSignedOut: (accountId, relatedIds) => unbind(accountId, relatedIds),

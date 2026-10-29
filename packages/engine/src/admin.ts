@@ -196,6 +196,38 @@ export interface AdminGlixRow {
   ref: string | null;
 }
 
+/** Hesabın odadaki rolü: host, izleyici ya da oyuncu. */
+export type AdminPlayerRole = "player" | "spectator" | "host";
+
+/** Hesabın şu anki canlı durumu (çalışma zamanından; veritabanından değil): canlı soketi var mı, hangi odada. */
+export interface AdminAccountLive {
+  online: boolean;
+  /** Odadaysa kod, rol ve oyuncu kimliği (`rooms/kick` için); değilse null. */
+  room: { code: string; role: AdminPlayerRole; playerId: string } | null;
+}
+
+/** Oyuncu listesi satırı: arama satırı + Glix, canlı durum ve yönetici işareti. */
+export interface AdminPlayerRow extends AdminAccountRow {
+  glix: number;
+  /** Askı süresiz değilse bitiş anı (ms); süresizse ya da askıda değilse null. */
+  suspendedUntil: number | null;
+  admin: boolean;
+  live: AdminAccountLive;
+}
+
+export const ADMIN_PLAYER_FILTERS = ["all", "online", "suspended", "admin"] as const;
+export type AdminPlayerFilter = (typeof ADMIN_PLAYER_FILTERS)[number];
+export const ADMIN_PLAYER_SORTS = ["seen", "created", "glix", "name"] as const;
+export type AdminPlayerSort = (typeof ADMIN_PLAYER_SORTS)[number];
+
+/** `GET /api/admin/accounts/list`: imleçli sayfa (`next` doluysa sonraki sayfa için `after` olarak verilir). */
+export interface AdminPlayerPage {
+  rows: AdminPlayerRow[];
+  next: string | null;
+  /** Süzgece uyan toplam hesap sayısı. */
+  total: number;
+}
+
 export interface AdminAccountDetail {
   id: number;
   username: string;
@@ -222,6 +254,8 @@ export interface AdminAccountDetail {
   /** Yönetici listesindeki hesap: ad değiştirme, askı, silme ve oturum kapatma yapılamaz. */
   protected: boolean;
   suspension: { since: number; until: number | null; reason: string } | null;
+  /** Canlı durum (çalışma zamanından). */
+  live: AdminAccountLive;
 }
 
 export interface AdminAuditEntry {

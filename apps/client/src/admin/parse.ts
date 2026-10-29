@@ -4,6 +4,7 @@
  */
 import type {
   AdminAccountDetail,
+  AdminAccountLive,
   AdminAccountRow,
   AdminAccountSearch,
   AdminAccounts,
@@ -28,6 +29,9 @@ import type {
   AdminMailDay,
   AdminMaintenance,
   AdminPerfRow,
+  AdminPlayerPage,
+  AdminPlayerRole,
+  AdminPlayerRow,
   AdminPoolBulk,
   AdminPoolEntry,
   AdminPoolPage,
@@ -295,6 +299,44 @@ const accountRow = (o: Rec): AdminAccountRow => ({
   suspended: bool(o, "suspended"),
 });
 
+const ROLES: readonly AdminPlayerRole[] = ["player", "spectator", "host"];
+
+/** Canlı durum: oda varsa kod, rol ve oyuncu kimliği (atma için) biçimce doğrulanır. */
+function liveOf(v: unknown): AdminAccountLive {
+  const o = rec(v);
+  const online = bool(o, "online");
+  if (o.room === null) return { online, room: null };
+  const r = rec(o.room);
+  const role = ROLES.find((x) => x === r.role);
+  const code = str(r, "code");
+  const playerId = str(r, "playerId");
+  if (!role || !/^[A-Z0-9]{5}$/.test(code) || !/^[0-9a-f]{12}$/.test(playerId)) throw new ParseError("room");
+  return { online, room: { code, role, playerId } };
+}
+
+export function parsePlayerPage(v: unknown): AdminPlayerPage {
+  const o = rec(v);
+  const next = o.next;
+  if (next !== null && (typeof next !== "string" || !/^[A-Za-z0-9_-]{1,200}$/.test(next)))
+    throw new ParseError("next");
+  return {
+    rows: list(
+      o,
+      "rows",
+      (r): AdminPlayerRow => ({
+        ...accountRow(r),
+        glix: num(r, "glix"),
+        suspendedUntil: nullableNum(r, "suspendedUntil"),
+        admin: bool(r, "admin"),
+        live: liveOf(r.live),
+      }),
+      100,
+    ),
+    next,
+    total: num(o, "total"),
+  };
+}
+
 export function parseSearch(v: unknown): AdminAccountSearch {
   const o = rec(v);
   return { results: list(o, "results", accountRow, 50), limit: num(o, "limit") };
@@ -369,6 +411,7 @@ export function parseDetail(v: unknown): AdminAccountDetail {
       };
     })(),
     protected: bool(o, "protected"),
+    live: liveOf(o.live),
     suspension: sus
       ? { since: num(sus, "since"), until: nullableNum(sus, "until"), reason: str(sus, "reason") }
       : null,

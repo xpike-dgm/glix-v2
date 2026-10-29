@@ -139,7 +139,7 @@ export function EconomyPanel(props: { onOtp: () => void }) {
 
             <h3 class="adm-h3">Günlük döküm</h3>
             <div class="adm-table-wrap">
-              <table class="adm-table">
+              <table class="adm-table adm-stack">
                 <thead>
                   <tr>
                     <th>Gün</th>
@@ -156,14 +156,28 @@ export function EconomyPanel(props: { onOtp: () => void }) {
                   <For each={[...d().daily].reverse()}>
                     {(x) => (
                       <tr>
-                        <td>{shortDay(x.day)}</td>
-                        <td class="num">{fmtInt(x.mac)}</td>
-                        <td class="num">{fmtInt(x.rozet)}</td>
-                        <td class="num">{fmtInt(x.yonetici)}</td>
-                        <td class="num">{fmtInt(x.yoneticiEksi)}</td>
-                        <td class="num">{fmtInt(x.harcanan)}</td>
-                        <td class="num">{signed(x.net)}</td>
-                        <td class="num">{fmtInt(x.sinirdaki)}</td>
+                        <td data-label="Gün">{shortDay(x.day)}</td>
+                        <td data-label="Maç" class="num">
+                          {fmtInt(x.mac)}
+                        </td>
+                        <td data-label="Rozet" class="num">
+                          {fmtInt(x.rozet)}
+                        </td>
+                        <td data-label="Yönetici +" class="num">
+                          {fmtInt(x.yonetici)}
+                        </td>
+                        <td data-label="Yönetici -" class="num">
+                          {fmtInt(x.yoneticiEksi)}
+                        </td>
+                        <td data-label="Harcanan" class="num">
+                          {fmtInt(x.harcanan)}
+                        </td>
+                        <td data-label="Net" class="num">
+                          {signed(x.net)}
+                        </td>
+                        <td data-label="Sınırda" class="num">
+                          {fmtInt(x.sinirdaki)}
+                        </td>
                       </tr>
                     )}
                   </For>
@@ -182,7 +196,7 @@ export function EconomyPanel(props: { onOtp: () => void }) {
                   fallback={<p class="adm-muted">Bu aralıkta satış yok.</p>}
                 >
                   <div class="adm-table-wrap">
-                    <table class="adm-table">
+                    <table class="adm-table adm-stack">
                       <thead>
                         <tr>
                           <th>Ürün</th>
@@ -195,10 +209,14 @@ export function EconomyPanel(props: { onOtp: () => void }) {
                         <For each={d().topItems}>
                           {(i) => (
                             <tr>
-                              <td>{i.name}</td>
-                              <td>{i.typeName}</td>
-                              <td class="num">{fmtInt(i.count)}</td>
-                              <td class="num">{fmtInt(i.glix)}</td>
+                              <td data-label="Ürün">{i.name}</td>
+                              <td data-label="Tür">{i.typeName}</td>
+                              <td data-label="Adet" class="num">
+                                {fmtInt(i.count)}
+                              </td>
+                              <td data-label="Glix" class="num">
+                                {fmtInt(i.glix)}
+                              </td>
                             </tr>
                           )}
                         </For>
@@ -234,7 +252,7 @@ export function EconomyPanel(props: { onOtp: () => void }) {
             <h3 class="adm-h3">Günün fırsatı</h3>
             <p class="adm-muted">{fmtDateTime(d().dealEndsAt)} tarihine kadar geçerli.</p>
             <div class="adm-table-wrap">
-              <table class="adm-table">
+              <table class="adm-table adm-stack">
                 <thead>
                   <tr>
                     <th>Ürün</th>
@@ -247,10 +265,16 @@ export function EconomyPanel(props: { onOtp: () => void }) {
                   <For each={d().deals}>
                     {(x) => (
                       <tr>
-                        <td>{x.name}</td>
-                        <td class="num">{fmtInt(x.listPrice)}</td>
-                        <td class="num">{fmtInt(x.price)}</td>
-                        <td class="num">{fmtInt(x.soldToday)}</td>
+                        <td data-label="Ürün">{x.name}</td>
+                        <td data-label="Liste" class="num">
+                          {fmtInt(x.listPrice)}
+                        </td>
+                        <td data-label="Fırsat" class="num">
+                          {fmtInt(x.price)}
+                        </td>
+                        <td data-label="Bugün satılan" class="num">
+                          {fmtInt(x.soldToday)}
+                        </td>
                       </tr>
                     )}
                   </For>

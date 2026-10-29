@@ -81,7 +81,7 @@ export function StatsPanel(props: { onOtp: () => void }) {
                 <div class="adm-card">
                   <h3 class="adm-h3">Haftalık toplam (son 8 hafta)</h3>
                   <div class="adm-table-wrap">
-                    <table class="adm-table">
+                    <table class="adm-table adm-stack">
                       <thead>
                         <tr>
                           <th>Hafta başı</th>
@@ -93,9 +93,13 @@ export function StatsPanel(props: { onOtp: () => void }) {
                         <For each={[...d().weekly].reverse()}>
                           {(w) => (
                             <tr>
-                              <td>{shortDay(w.weekStart)}</td>
-                              <td class="num">{fmtInt(w.matches)}</td>
-                              <td class="num">{fmtInt(w.players)}</td>
+                              <td data-label="Hafta başı">{shortDay(w.weekStart)}</td>
+                              <td data-label="Maç" class="num">
+                                {fmtInt(w.matches)}
+                              </td>
+                              <td data-label="Oyuncu" class="num">
+                                {fmtInt(w.players)}
+                              </td>
                             </tr>
                           )}
                         </For>
@@ -119,7 +123,7 @@ export function StatsPanel(props: { onOtp: () => void }) {
               <h3 class="adm-h3">Oyunlar</h3>
               <Show when={d().games.length > 0} fallback={<p class="adm-muted">Henüz oyun kaydı yok.</p>}>
                 <div class="adm-table-wrap">
-                  <table class="adm-table">
+                  <table class="adm-table adm-stack">
                     <thead>
                       <tr>
                         <th>Oyun</th>
@@ -136,16 +140,24 @@ export function StatsPanel(props: { onOtp: () => void }) {
                       <For each={d().games}>
                         {(g) => (
                           <tr>
-                            <td>{g.gameId}</td>
-                            <td class="num">{fmtInt(g.plays)}</td>
-                            <td class="num">{fmtNum(g.avgDurationSec, 0)} sn</td>
-                            <td class="num" data-level={g.abandonRate >= 0.3 ? "warn" : "ok"}>
+                            <td data-label="Oyun">{g.gameId}</td>
+                            <td data-label="Oynanma" class="num">
+                              {fmtInt(g.plays)}
+                            </td>
+                            <td data-label="Ort. süre" class="num">
+                              {fmtNum(g.avgDurationSec, 0)} sn
+                            </td>
+                            <td
+                              data-label="Yarıda kalma"
+                              class="num"
+                              data-level={g.abandonRate >= 0.3 ? "warn" : "ok"}
+                            >
                               {fmtPct(g.abandonRate)}
                             </td>
-                            <td class="num" data-level={g.failed > 0 ? "bad" : "ok"}>
+                            <td data-label="Çöken" class="num" data-level={g.failed > 0 ? "bad" : "ok"}>
                               {g.failed}
                             </td>
-                            <td class="num">
+                            <td data-label="Maç puanı" class="num">
                               {g.ratingAvg === null ? "—" : `${fmtNum(g.ratingAvg, 2)} (${g.ratingCount})`}
                             </td>
                           </tr>

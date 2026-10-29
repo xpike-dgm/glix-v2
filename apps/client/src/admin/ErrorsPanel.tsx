@@ -72,7 +72,7 @@ export function ErrorsPanel(props: { onOtp: () => void }) {
               fallback={<p class="adm-muted">Kayıtlı istemci hatası yok.</p>}
             >
               <div class="adm-table-wrap">
-                <table class="adm-table">
+                <table class="adm-table adm-stack">
                   <thead>
                     <tr>
                       <th>Hata</th>
@@ -86,19 +86,21 @@ export function ErrorsPanel(props: { onOtp: () => void }) {
                     <For each={d().groups}>
                       {(g) => (
                         <tr>
-                          <td class="adm-err">
+                          <td data-label="Hata" class="adm-err">
                             <span>{g.message}</span>
                             <code class="mono adm-muted">{g.frame}</code>
                           </td>
-                          <td class="num">{fmtInt(g.count)}</td>
-                          <td>
+                          <td data-label="Adet" class="num">
+                            {fmtInt(g.count)}
+                          </td>
+                          <td data-label="İlk / son görülme">
                             <span>{fmtDateTime(g.firstSeen)}</span>
                             <br />
                             <span class="adm-muted">
                               {fmtAgo(g.lastSeen, Date.now())} · {fmtDateTime(g.lastSeen)}
                             </span>
                           </td>
-                          <td>
+                          <td data-label="Platform">
                             <For each={Object.entries(g.platforms).filter(([, n]) => n > 0)}>
                               {([p, n]) => (
                                 <span class="adm-chip">
@@ -107,7 +109,7 @@ export function ErrorsPanel(props: { onOtp: () => void }) {
                               )}
                             </For>
                           </td>
-                          <td class="adm-muted">
+                          <td data-label="Tarayıcı · sürüm" class="adm-muted">
                             {g.browsers.join(", ")} · {g.versions.join(", ")}
                           </td>
                         </tr>
@@ -121,7 +123,7 @@ export function ErrorsPanel(props: { onOtp: () => void }) {
             <h3 class="adm-h3">Cihaz performansı (son 7 gün)</h3>
             <Show when={d().perf.length > 0} fallback={<p class="adm-muted">Performans kaydı yok.</p>}>
               <div class="adm-table-wrap">
-                <table class="adm-table">
+                <table class="adm-table adm-stack">
                   <thead>
                     <tr>
                       <th>Platform</th>
@@ -138,20 +140,40 @@ export function ErrorsPanel(props: { onOtp: () => void }) {
                     <For each={d().perf}>
                       {(p) => (
                         <tr>
-                          <td>{PLATFORM_LABEL[p.platform] ?? p.platform}</td>
-                          <td class="num">{fmtInt(p.samples)}</td>
-                          <td class="num" data-level={p.reconnectsPerSample >= 1 ? "warn" : "ok"}>
+                          <td data-label="Platform">{PLATFORM_LABEL[p.platform] ?? p.platform}</td>
+                          <td data-label="Örnek" class="num">
+                            {fmtInt(p.samples)}
+                          </td>
+                          <td
+                            data-label="Kopma / örnek"
+                            class="num"
+                            data-level={p.reconnectsPerSample >= 1 ? "warn" : "ok"}
+                          >
                             {fmtNum(p.reconnectsPerSample, 2)}
                           </td>
-                          <td class="num">{fmtNum(p.reloadsPerSample, 2)}</td>
-                          <td class="num" data-level={p.ackP95 >= 300 ? "warn" : "ok"}>
+                          <td data-label="Yenileme / örnek" class="num">
+                            {fmtNum(p.reloadsPerSample, 2)}
+                          </td>
+                          <td
+                            data-label="Onay p95 (ms)"
+                            class="num"
+                            data-level={p.ackP95 >= 300 ? "warn" : "ok"}
+                          >
                             {fmtInt(p.ackP95)}
                           </td>
-                          <td class="num" data-level={p.tapP95 >= 200 ? "warn" : "ok"}>
+                          <td
+                            data-label="Dokunma p95 (ms)"
+                            class="num"
+                            data-level={p.tapP95 >= 200 ? "warn" : "ok"}
+                          >
                             {fmtInt(p.tapP95)}
                           </td>
-                          <td class="num">{fmtNum(p.longTasksPerSample, 2)}</td>
-                          <td class="num">{fmtInt(p.rttMedian)}</td>
+                          <td data-label="Uzun görev / örnek" class="num">
+                            {fmtNum(p.longTasksPerSample, 2)}
+                          </td>
+                          <td data-label="RTT medyan (ms)" class="num">
+                            {fmtInt(p.rttMedian)}
+                          </td>
                         </tr>
                       )}
                     </For>
@@ -166,7 +188,7 @@ export function ErrorsPanel(props: { onOtp: () => void }) {
             <h3 class="adm-h3">Çöken oyunlar</h3>
             <Show when={d().failures.length > 0} fallback={<p class="adm-muted">Çöken oyun yok.</p>}>
               <div class="adm-table-wrap">
-                <table class="adm-table">
+                <table class="adm-table adm-stack">
                   <thead>
                     <tr>
                       <th>Zaman</th>
@@ -179,10 +201,12 @@ export function ErrorsPanel(props: { onOtp: () => void }) {
                     <For each={d().failures}>
                       {(f) => (
                         <tr>
-                          <td>{fmtDateTime(f.at)}</td>
-                          <td>{f.gameId}</td>
-                          <td class="mono">{f.fn}</td>
-                          <td class="adm-err">
+                          <td data-label="Zaman">{fmtDateTime(f.at)}</td>
+                          <td data-label="Oyun">{f.gameId}</td>
+                          <td data-label="İşlev" class="mono">
+                            {f.fn}
+                          </td>
+                          <td data-label="Hata" class="adm-err">
                             <span>{f.message}</span>
                           </td>
                         </tr>
