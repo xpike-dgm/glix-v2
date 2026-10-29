@@ -273,7 +273,7 @@ Sahip kararları (Ekim 2026). Yalnız görünüş satılır, oyunda avantaj yok;
 - Gizli Alışveriş: gerçek ürün ikon seti (12 SVG).
 - [x] Kontrol Paneli: ipucunu metin yerine mini panel çizimiyle göster (metin alt yazı olarak kaldı).
 - [x] Sözlük Blöfü / Çağrışım / Sızma: sıralı dramatik açılış (en çok kandıran en son). (`fx/sequence.ts`; Sızma: oylar azdan çoğa, son adımda maske düşer)
-- Yazı Yaz: puansız "şüphe göstergesi". [x] Kendim: sürükle-bırak eşleştirme.
+- [x] Yazı Yaz: puansız "şüphe göstergesi" (tartışmada portreye dokun: yalnız bu cihazda "?" işareti, sunucuya gitmez). [x] Kendim: sürükle-bırak eşleştirme.
 - [x] Çapraz Ateş / Açgözlülük: sinematik açılış sahneleri.
 - [x] Tüm oyunlar: `summarize(result)` (U4 tur özeti).
 
