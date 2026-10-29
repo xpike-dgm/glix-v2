@@ -1031,7 +1031,7 @@ async function main() {
       await openItem(it.tab, it.name);
       const buy = shopSheet.getByRole("button", { name: /Glix'e satın al/ });
       assert(await buy.isEnabled(), `${it.name} alınabilir olmalı`);
-      const price = Number(/(\d+) Glix'e satın al/.exec(await buy.innerText())?.[1]);
+      const price = Number(/([\d.]+) Glix'e satın al/.exec(await buy.innerText())?.[1]?.replaceAll(".", ""));
       assert(price > 0 && price <= 150, `${it.name} fiyatı beklenmedik: ${price}`);
       await buy.click();
       await shopSheet.getByRole("button", { name: "Kuşan" }).waitFor(OPT);
@@ -1049,9 +1049,13 @@ async function main() {
     // 12b) Yetmeyen ürün: "X Glix daha gerekli" ve satın al düğmesi kapalı (istek de gitmez).
     await openItem("Lakaplar", "Efsane");
     const buyEfsane = shopSheet.getByRole("button", { name: /Glix'e satın al/ });
-    const priceEfsane = Number(/(\d+) Glix'e satın al/.exec(await buyEfsane.innerText())?.[1]);
+    const priceEfsane = Number(
+      /([\d.]+) Glix'e satın al/.exec(await buyEfsane.innerText())?.[1]?.replaceAll(".", ""),
+    );
     assert(priceEfsane > afterBuy, `Efsane (${priceEfsane}) bakiyeden (${afterBuy}) pahalı olmalı`);
-    await shopSheet.getByText(`${priceEfsane - afterBuy} Glix daha gerekli`, { exact: true }).waitFor(OPT);
+    await shopSheet
+      .getByText(`${(priceEfsane - afterBuy).toLocaleString("tr-TR")} Glix daha gerekli`, { exact: true })
+      .waitFor(OPT);
     assert(await buyEfsane.isDisabled(), "yetmeyince satın al düğmesi kapalı olmalı");
     await shot(A, "19b-shop-insufficient");
     await closeSheet();
