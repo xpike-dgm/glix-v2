@@ -1,5 +1,5 @@
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
-import { mountBackdrop } from "../backdrop/hero.js";
+import { mountBackdrop, whenCalm } from "../backdrop/hero.js";
 import { reducedMotion } from "../fx/motion.js";
 import { createRoom } from "../net/client.js";
 import { incomingCount } from "../net/friends.js";
@@ -44,9 +44,11 @@ export function Home() {
 
   onMount(() => {
     if (!bg || reducedMotion()) return;
+    const host = bg;
     let dispose: (() => void) | undefined;
     let gone = false;
-    mountBackdrop(bg)
+    whenCalm(host)
+      .then(() => (gone ? Promise.reject(new Error("gone")) : mountBackdrop(host)))
       .then((d) => {
         if (gone) {
           d();

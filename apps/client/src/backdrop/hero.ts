@@ -7,6 +7,41 @@ const lowEnd = (): boolean =>
 
 const COLORS = [0x2ef2ff, 0xff2bd6, 0x8b5cff, 0x2ef2ff, 0xb6ff3b];
 
+/** Zemin, ilk ekranın görünür içeriğini (logo, yazı tipleri) geciktirmesin diye en çok bu kadar beklenir. */
+const CALM_CAP_MS = 10_000;
+
+/**
+ * Logo ve yazı tipleri inene dek (ve tarayıcı boşa çıkana dek) bekler. Pixi + yan parçalar ≈250 KB (gz) olduğundan
+ * yavaş ağda hemen başlarsa logo ve karakterler onunla aynı hatta yarışır (ölçüm: yavaş 3G'de logo 18 sn). Süre sınırı
+ * aşılırsa yine de başlar; görünüm değişmez, yalnız parçacıklar biraz sonra gelir.
+ */
+export function whenCalm(host: HTMLElement): Promise<void> {
+  return new Promise((resolve) => {
+    let done = false;
+    const go = (): void => {
+      if (done) return;
+      done = true;
+      clearTimeout(cap);
+      const idle = (
+        window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }
+      ).requestIdleCallback;
+      if (idle) idle.call(window, () => resolve(), { timeout: 1000 });
+      else setTimeout(resolve, 0);
+    };
+    const cap = setTimeout(go, CALM_CAP_MS);
+    const logo = host.ownerDocument.querySelector<HTMLImageElement>(".wordmark__img");
+    const logoReady =
+      !logo || logo.complete
+        ? Promise.resolve()
+        : new Promise<void>((r) => {
+            logo.addEventListener("load", () => r(), { once: true });
+            logo.addEventListener("error", () => r(), { once: true });
+          });
+    const fontsReady = host.ownerDocument.fonts?.ready ?? Promise.resolve();
+    void Promise.all([logoReady, fontsReady]).then(go, go);
+  });
+}
+
 /**
  * Ana sayfa arka planı: yavaş akan neon partiküller + ufuktaki ızgara. 30 fps sınırı, sekme gizliyken durur.
  * Pixi tembel yüklenir. Durdurma işlevi döner.
