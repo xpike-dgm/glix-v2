@@ -11,6 +11,11 @@ export function cardFile(blob: Blob, name: string): File {
   return new File([blob], `${name}.jpg`, { type: "image/jpeg" });
 }
 
+/** Klip (video) ya da podyum afişi (PNG) dosyası. */
+export function clipFile(blob: Blob, name: string, ext: "mp4" | "webm" | "png", mime: string): File {
+  return new File([blob], `${name}.${ext}`, { type: mime });
+}
+
 /** Bu cihazda dosyalı Web Share var mı (iOS/Android Safari-Chrome: evet; masaüstü çoğunlukla hayır). */
 export function canShareFiles(nav: ShareNav | undefined, file: File): boolean {
   if (!nav || typeof nav.share !== "function" || typeof nav.canShare !== "function") return false;

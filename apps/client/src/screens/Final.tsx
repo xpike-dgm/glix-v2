@@ -12,6 +12,7 @@ import { clearQuestsDone } from "../net/quests.js";
 import { openReport } from "../net/reportUi.js";
 import { setState, state } from "../net/store.js";
 import { noteMatchFinished } from "../pwa/pwa.js";
+import type { ClipInput } from "../share/danceClip.js";
 import { selectMoments } from "../share/momentCards.js";
 import { ShareSheet } from "../share/ShareSheet.js";
 import { Avatar } from "../ui/Avatar.js";
@@ -123,6 +124,17 @@ export function Final(props: { snap: RoomSnapshot }) {
       drawings: galleryItems(),
       gameNames: Object.fromEntries(props.snap.catalog.map((g) => [g.id, g.name])),
     });
+  const clipInput = (): ClipInput => ({
+    people: top().map((r) => ({
+      id: r.player.id,
+      nickname: r.player.nickname,
+      avatar: r.player.avatar,
+      cosmetics: r.player.cosmetics,
+      rank: r.rank,
+      score: formatScore(r.score),
+    })),
+    celebration: winnerCelebration(winners()),
+  });
   const [shareOpen, setShareOpen] = createSignal(false);
   const [inviteOpen, setInviteOpen] = createSignal(false);
   /** Kayıt ekranı oda dışındadır: önce odadan çıkılır, sonra kayıt açılır. */
@@ -313,7 +325,7 @@ export function Final(props: { snap: RoomSnapshot }) {
           </GhostButton>
         </div>
       </BottomSheet>
-      <ShareSheet open={shareOpen()} onClose={() => setShareOpen(false)} moments={moments} />
+      <ShareSheet open={shareOpen()} onClose={() => setShareOpen(false)} moments={moments} clip={clipInput} />
     </Screen>
   );
 }

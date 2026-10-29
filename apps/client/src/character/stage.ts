@@ -39,6 +39,10 @@ export interface StageOptions {
   maxDpr?: number;
   /** Karakterler tümüyle görününce (belirme bitince) bir kez çağrılır. */
   onShown?: () => void;
+  /** Kesin piksel yoğunluğu (cihazınkini yok sayar); klip kaydı sabit boyutta çizer. */
+  resolution?: number;
+  /** Elle sürülür: kendi ticker'ı yoktur, kareyi `step` ilerletir ve çizer (klip kaydı, afiş). */
+  manual?: boolean;
 }
 
 /** Kare maliyeti ölçümü (geliştirme önizlemesi için). */
@@ -51,6 +55,12 @@ export interface StagePerf {
 
 export interface CharacterStage {
   update(slots: readonly StageSlot[]): void;
+  /** Elle sürülen sahnede zamanı `dtS` saniye ilerletip bir kare çizer (dans zamanı çağıranın saatine bağlıdır). */
+  step(dtS: number): void;
+  /** Çizim tuvali (klip kaydı bunu kendi tuvaline kopyalar; çizimden hemen sonra okunmalıdır). */
+  readonly canvas: HTMLCanvasElement;
+  /** Bekleyen dans dosyaları yüklenince (ya da yüklenemeyince) çözülür. */
+  settled(): Promise<void>;
   destroy(): void;
   perf(): StagePerf;
 }
@@ -85,7 +95,7 @@ const smooth01 = (x: number): number => {
 
 export async function mountCharacterStage(host: HTMLElement, opts: StageOptions): Promise<CharacterStage> {
   const [kit, pixi] = await Promise.all([loadKit(), loadPixi()]);
-  const dpr = Math.min(window.devicePixelRatio || 1, opts.maxDpr ?? 2);
+  const dpr = opts.resolution ?? Math.min(window.devicePixelRatio || 1, opts.maxDpr ?? 2);
   const app: Application = new pixi.Application();
   await app.init({
     resizeTo: host,
@@ -111,6 +121,7 @@ export async function mountCharacterStage(host: HTMLElement, opts: StageOptions)
   const clap = clapClip();
   const clapMap = mapBones(clap, sk.index);
   let disposed = false;
+  const pending = new Set<Promise<void>>();
   let hostBox = host.getBoundingClientRect();
 
   function makeLive(slot: StageSlot): Live {
@@ -157,7 +168,7 @@ export async function mountCharacterStage(host: HTMLElement, opts: StageOptions)
     l.clipId = id;
     l.clip = null;
     l.map = null;
-    void loadDance(id)
+    const job = loadDance(id)
       .then((c) => {
         if (disposed || l.clipId !== id) return;
         l.clip = c;
@@ -166,7 +177,9 @@ export async function mountCharacterStage(host: HTMLElement, opts: StageOptions)
       })
       .catch(() => {
         // dans dosyası yoksa karakter dinlenme duruşunda kalır
-      });
+      })
+      .finally(() => pending.delete(job));
+    pending.add(job);
   }
 
   function place(l: Live): boolean {
@@ -258,7 +271,7 @@ export async function mountCharacterStage(host: HTMLElement, opts: StageOptions)
   };
 
   const onVis = (): void => {
-    if (opts.reduced) return;
+    if (opts.reduced || opts.manual) return;
     if (document.hidden) app.ticker.stop();
     else app.ticker.start();
   };
@@ -268,13 +281,22 @@ export async function mountCharacterStage(host: HTMLElement, opts: StageOptions)
   });
   ro.observe(host);
 
-  if (!opts.reduced) {
+  if (!opts.reduced && !opts.manual) {
     app.ticker.maxFPS = 30;
     app.ticker.add(tick);
     if (!document.hidden) app.ticker.start();
   }
 
   return {
+    canvas: app.canvas,
+    settled: async () => {
+      while (pending.size > 0) await Promise.all([...pending]);
+    },
+    step(dtS) {
+      if (disposed) return;
+      frame(Math.max(0, dtS));
+      app.render();
+    },
     update(slots) {
       if (disposed) return;
       const keep = new Set<string>();
