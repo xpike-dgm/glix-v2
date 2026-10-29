@@ -996,6 +996,11 @@ async function main() {
     await A.getByText("Oyun güncellendi, yeni oda kurabilirsin.").waitFor({ timeout: 30_000 });
     await A.getByText("Tekrar bağlanıyor").waitFor({ state: "hidden", timeout: 30_000 });
     for (const p of [B2, C]) await btn(p, /odaya katıl|kodla katıl/i).waitFor({ timeout: 30_000 });
+    // Sunucu dinlemeye başlamadan hemen önceki yeniden bağlanma denemeleri reddedilir (beklenen, yük altında pencere
+    // uzar); yalnız bu WebSocket bağlantı reddi elenir, başka her hata sayılır.
+    for (let i = errors.length - 1; i >= 0; i--)
+      if (/WebSocket connection to .*\/ws' failed: .*ERR_CONNECTION_REFUSED/.test(errors[i] ?? ""))
+        errors.splice(i, 1);
     log("sunucu güncelleme (drain, 1012, resume mesajı) tamam");
 
     // 12) Mağaza: Ana sayfadaki "Mağaza" simgesi; her türden bir ürün (Lakap, Çerçeve, Dans) satın alınır.
