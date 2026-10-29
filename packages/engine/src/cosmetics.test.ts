@@ -8,6 +8,7 @@ import {
   cleanEquipped,
   colourUnlocked,
   cosmeticAssetFiles,
+  cosmeticItem,
   cosmeticsFromEquipped,
   coveredSlots,
   currentPrice,
@@ -20,6 +21,8 @@ import {
   isEquippable,
   istanbulDayNumber,
   itemsOfType,
+  LEGACY_DEAL_POOL,
+  LEGACY_DEAL_POOL_UNTIL,
   nextIstanbulMidnight,
   PLACE_DANCE,
   parseCosmetics,
@@ -217,6 +220,32 @@ describe("giysi yuvaları ve renkleri", () => {
 });
 
 describe("günün fırsatı", () => {
+  it("geçiş döneminde canlıdaki eski istemciyle aynı fırsatlar (eski kataloğun ücretli ürünleri)", () => {
+    // f1e4ad4 sürümünün dailyDeals çıktısı (29 Ekim'den itibaren 5 gün).
+    const eski = [
+      "unvan-efsane,unvan-taktikci",
+      "unvan-parti-canavari,cerceve-cift",
+      "cerceve-camgobegi,unvan-bluf-ustasi",
+      "cerceve-altin-tac,cerceve-pembe",
+      "cerceve-altin-tac,ad-kivilcim",
+    ];
+    eski.forEach((beklenen, k) => {
+      const d = dailyDeals(Date.UTC(2026, 9, 29, 9) + k * DAY);
+      expect(d.map((x) => x.itemId).join(",")).toBe(beklenen);
+    });
+    for (const id of LEGACY_DEAL_POOL) expect(cosmeticItem(id)?.price ?? 0).toBeGreaterThan(0);
+  });
+
+  it("geçişten sonra fırsat havuzu tüm ücretli katalog", () => {
+    const yeni = new Set<string>();
+    for (let k = 0; k < 60; k++)
+      for (const d of dailyDeals(LEGACY_DEAL_POOL_UNTIL + k * DAY)) yeni.add(d.itemId);
+    expect([...yeni].some((id) => !LEGACY_DEAL_POOL.includes(id))).toBe(true);
+    expect(dailyDeals(LEGACY_DEAL_POOL_UNTIL - 1).every((d) => LEGACY_DEAL_POOL.includes(d.itemId))).toBe(
+      true,
+    );
+  });
+
   it("aynı İstanbul gününde hep aynı, iki farklı ücretli ürün", () => {
     const a = dailyDeals(at("2026-10-28T00:00:00+03:00"));
     const b = dailyDeals(at("2026-10-28T23:59:59+03:00"));
