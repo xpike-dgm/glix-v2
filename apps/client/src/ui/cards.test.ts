@@ -8,6 +8,7 @@ import {
   gemCount,
   lineSentence,
   picksLeftText,
+  playedBadge,
   playSentence,
   settingsSummary,
   signed,
@@ -130,5 +131,28 @@ describe("kart ayarı yardımcıları", () => {
     expect(picksLeftText(1, 0)).toBe("Bir kart seç");
     expect(picksLeftText(2, 0)).toBe("2 kart seç");
     expect(picksLeftText(2, 1)).toBe("1 kart daha seç");
+  });
+});
+
+describe("playedBadge", () => {
+  const pub = (plays: { playerId: string; cardId: "celme" | "cift-puan" | "veto" | "koruma" }[]) =>
+    ({ phase: null, hands: {}, announce: [], plays, lines: [] }) as never;
+  it("kart yoksa rozet yok", () => {
+    expect(playedBadge(null)).toBeNull();
+    expect(playedBadge(undefined)).toBeNull();
+    expect(playedBadge(pub([]))).toBeNull();
+  });
+  it("sayıyı ve en çok 3 nadirliği verir", () => {
+    const b = playedBadge(
+      pub([
+        { playerId: "a", cardId: "celme" },
+        { playerId: "b", cardId: "cift-puan" },
+        { playerId: "c", cardId: "veto" },
+        { playerId: "d", cardId: "koruma" },
+      ]),
+    );
+    expect(b?.count).toBe(4);
+    expect(b?.rarities).toHaveLength(3);
+    expect(b?.rarities[0]).toBe(CARDS.celme.rarity);
   });
 });

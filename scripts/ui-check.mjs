@@ -600,7 +600,16 @@ const SCREENS = [
     q: "mock=lobby&n=8&acct=1&giris=altin-isik&motion=reduce",
     settle: 450,
   },
-  { name: "kozmetik-lobi-tepki-paketi", q: "mock=lobby&n=8&acct=1&paket=1", settle: 900 },
+  {
+    name: "kozmetik-lobi-tepki-paketi",
+    q: "mock=lobby&n=8&acct=1&paket=1",
+    settle: 900,
+    act: async (p) => {
+      await p.getByRole("button", { name: "Tepki gönder" }).click();
+      await p.getByRole("button", { name: /Tepki sayfası/ }).click();
+      await p.waitForTimeout(500);
+    },
+  },
   { name: "kozmetik-lobi-tepki-stiker", q: "mock=lobby&n=8&acct=1&paket=1&emoji=1&stiker=1", settle: 1100 },
   {
     name: "kozmetik-final-tepki-yelpaze",
@@ -1125,6 +1134,16 @@ const SCREENS = [
     q: "mock=results&n=5",
     settle: 2400,
     sizes: SONUC_BOYUTLAR,
+    act: async (p) => {
+      await p.getByRole("button", { name: "Tepki gönder" }).click();
+      await p.getByRole("button", { name: "Tepki: Ateş" }).waitFor();
+      await p.waitForTimeout(600);
+    },
+  },
+  {
+    name: "lobby-tepki-acik",
+    q: "mock=lobby&n=8",
+    settle: 900,
     act: async (p) => {
       await p.getByRole("button", { name: "Tepki gönder" }).click();
       await p.getByRole("button", { name: "Tepki: Ateş" }).waitFor();
@@ -1741,6 +1760,23 @@ const SCREENS = [
   { name: "yazi-talk-5", q: "mock=yazi-talk&n=5" },
   { name: "yazi-talk-8", q: "mock=yazi-talk&n=8&role=writer" },
   { name: "yazi-talk-3", q: "mock=yazi-talk&n=3" },
+  // Şüphe göstergesi: dokunulan oyuncuda yalnız bu cihazda görünen "?" işareti.
+  {
+    name: "yazi-talk-suphe",
+    q: "mock=yazi-talk&n=5",
+    sizes: [[320, 568]],
+    act: async (p) => {
+      await p
+        .getByRole("button", { name: /şüphe işareti/ })
+        .nth(0)
+        .click();
+      await p
+        .getByRole("button", { name: /şüphe işareti/ })
+        .nth(2)
+        .click();
+      await p.waitForTimeout(300);
+    },
+  },
   { name: "yazi-talk-locked", q: "mock=yazi-talk-locked&n=6" },
   { name: "yazi-guess-5", q: "mock=yazi-guess&n=5" },
   { name: "yazi-guess-8", q: "mock=yazi-guess&n=8&chosen=3" },
@@ -2282,6 +2318,18 @@ const SCREENS = [
     act: async (p) => {
       await p.getByText("Kart oyna", { exact: false }).first().click();
       await p.locator(".sheet .kc-card").nth(1).click();
+    },
+  },
+  // Oyun içi "oynanan kartlar" rozeti (üst çubukta) ve dokununca açılan liste.
+  { name: "kart-oyun-ici-serit", q: "mock=playing&kart=1", settle: 1200 },
+  {
+    name: "kart-oyun-ici-liste",
+    q: "mock=playing&kart=1",
+    settle: 1200,
+    sizes: [[320, 568]],
+    act: async (p) => {
+      await p.getByRole("button", { name: /Oynanan kartlar/ }).click();
+      await p.waitForTimeout(600);
     },
   },
   { name: "kart-geri-sayim", q: "mock=kart-geri-sayim", settle: 1600 },

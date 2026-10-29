@@ -1391,3 +1391,45 @@ button.kc-card:active:not(:disabled) {
 :root[data-motion="reduce"] .kc-deal .kc-card[data-layout="tile"][data-on="1"] {
   transform: none;
 }
+
+/* ---- Oyun içi "oynanan kartlar" rozeti (üst çubuk araçlarında, sesin yanında) ---- */
+.pcb {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--text-dim);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.pcb__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 7px;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  background: rgba(10, 16, 48, 0.6);
+  border: 1px solid var(--line);
+}
+.pcb:active .pcb__pill {
+  background: rgba(46, 242, 255, 0.14);
+}
+.pcb:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: -4px;
+}
+/* Kısa yatay ekranda üst çubuk yan şerit olur: rozet yer kaplamasın. */
+@media (max-height: 500px) and (orientation: landscape) and (min-width: 560px) {
+  .gframe[data-o="portrait"] .pcb {
+    display: none;
+  }
+}

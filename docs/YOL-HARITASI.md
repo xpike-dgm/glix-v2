@@ -221,7 +221,7 @@ Maç düzeyinde kartlar (kurallar: docs/KURALLAR.md "0. Maç düzeyi kuralları:
 - [x] Sunucu: `cards` aşaması, `playCard` / `pickCard` / `discardCard` / `setCards`, oyun sonu hesabı, yeniden bağlanma, izleyici/TV gizliliği, kart kaydı; akış testleri (`kartlar.test.ts`).
 - [x] İstemci: kart seçimi ekranı, el çekmecesi ve hedef seçici, oyun başı açıklama (telefon + TV), kötü kart duyurusu, sonuç etki satırları, lobi Kartlar ayarı; `kart-` önizlemeleri `scripts/ui-check.mjs`'te.
 - [ ] Kart görselleri (`/assets/cards/<kimlik>.webp`): şimdilik CSS çerçeve + elmas işareti; görseller sonra eklenecek (bkz. docs/GORSEL-URETIM.md).
-- [ ] Oyun içi (oynanış sırasında) küçük "oynanan kartlar" şeridi: şimdilik kartlar geri sayımda ve sonuç satırlarında görünür.
+- [x] Oyun içi (oynanış sırasında) küçük "oynanan kartlar" rozeti: dikey oyunlarda üst çubukta (sesin yanında) kart sayısı; dokununca kim hangi kartı oynadı listesi açılır. Yalnız oyun başında herkese açıklanan veri; kısa yatay ekranda (yan şerit) gizlenir. (`ui/PlayedCards.tsx`; önizleme `mock=playing&kart=1`)
 
 ### U18. Glix ve kozmetik mağaza
 Sahip kararları (Ekim 2026). Yalnız görünüş satılır, oyunda avantaj yok; gerçek parayla satış yok.
@@ -273,7 +273,7 @@ Sahip kararları (Ekim 2026). Yalnız görünüş satılır, oyunda avantaj yok;
 - Gizli Alışveriş: gerçek ürün ikon seti (12 SVG).
 - [x] Kontrol Paneli: ipucunu metin yerine mini panel çizimiyle göster (metin alt yazı olarak kaldı).
 - [x] Sözlük Blöfü / Çağrışım / Sızma: sıralı dramatik açılış (en çok kandıran en son). (`fx/sequence.ts`; Sızma: oylar azdan çoğa, son adımda maske düşer)
-- Yazı Yaz: puansız "şüphe göstergesi". [x] Kendim: sürükle-bırak eşleştirme.
+- [x] Yazı Yaz: puansız "şüphe göstergesi" (tartışmada portreye dokun: yalnız bu cihazda "?" işareti, sunucuya gitmez). [x] Kendim: sürükle-bırak eşleştirme.
 - [x] Çapraz Ateş / Açgözlülük: sinematik açılış sahneleri.
 - [x] Tüm oyunlar: `summarize(result)` (U4 tur özeti).
 
