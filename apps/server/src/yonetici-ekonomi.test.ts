@@ -74,6 +74,8 @@ describe("Glix ekonomisi ucu", () => {
 
     // Yönetici düzeltmeleri: dünün son milisaniyesi dünün, bugünün ilk milisaniyesi bugünün sayılır.
     expect(acc.adjustGlix(a, 2000, "kurulum", TODAY - 1).ok).toBe(true);
+    // B de fırsat ürününü alabilsin: katalog büyüyünce fırsat nadirlik değiştirir (en pahalısı 700).
+    expect(acc.adjustGlix(b, 1000, "kurulum", YESTERDAY + 5).ok).toBe(true);
     expect(acc.adjustGlix(a, 40, "bugun", TODAY).ok).toBe(true);
     expect(acc.adjustGlix(a, -30, "eksi", TODAY + 5).ok).toBe(true);
     acc.creditBadgeGlix(b, [{ badgeId: "ilk-mac", amount: 25 }], TODAY + 10);
@@ -120,7 +122,7 @@ describe("Glix ekonomisi ucu", () => {
     expect(today.mac).toBe(mac(b, TODAY, TODAY + DAY) + mac(a, TODAY, TODAY + DAY));
 
     expect(yesterday.rozet).toBe(50);
-    expect(yesterday.yonetici).toBe(2000);
+    expect(yesterday.yonetici).toBe(3000);
     expect(today.rozet).toBe(25);
     expect(today.yonetici).toBe(40);
     expect(today.yoneticiEksi).toBe(30);
