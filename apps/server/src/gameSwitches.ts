@@ -2,7 +2,7 @@
  * Oyun anahtarları (U16 A3): yöneticinin "Açık/Kapalı" ve "Rastgele seçimde/Dışında" ayarlarının katalog ve odalara
  * etkisi. Motor değişmez; etkin katalog sunucuda bu ayarlarla süzülür (`Runtime.catalog`).
  */
-import { GAMES, type GameInfo, getCatalog } from "@glix/engine";
+import { GAMES, type GameInfo, getCatalog, isTaslakOyun } from "@glix/engine";
 import type { Room, Runtime } from "./runtime.js";
 
 /** Bir oyunun yönetici ayarı. Yalnız varsayılandan farklı olanlar saklanır. */
@@ -16,7 +16,8 @@ export interface GameOverride {
 export type GameOverrides = Readonly<Record<string, GameOverride>>;
 
 /** Motorun tanımladığı tüm oyunlar (kapalı olanlar dahil); ad aramaları için. */
-export const ENGINE_CATALOG: readonly GameInfo[] = getCatalog();
+// Değiştirilebilir dizi: yalnız `taslak.ts` (açık geliştirme yolu) taslak oyunları ekler.
+export const ENGINE_CATALOG: GameInfo[] = getCatalog();
 
 /** Oyunun motor varsayılanı rastgele havuzda mı. */
 export const engineInPool = (g: GameInfo): boolean => g.randomPool !== false;
@@ -36,7 +37,8 @@ export function effectiveCatalog(
   for (const g of base) {
     const o = overrides[g.id];
     if (o?.open === false) continue;
-    const inPool = o?.random ?? engineInPool(g);
+    // Taslak oyun hiçbir ayarla rastgele havuza giremez (yönetici "Rastgele seçimde" dese bile).
+    const inPool = isTaslakOyun(g.id) ? false : (o?.random ?? engineInPool(g));
     const { randomPool: _engine, ...rest } = g;
     out.push(inPool ? rest : { ...rest, randomPool: false });
   }
