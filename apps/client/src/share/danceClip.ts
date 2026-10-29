@@ -108,6 +108,40 @@ function pill(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h:
   ctx.roundRect(x, y, w, h, r);
 }
 
+/** Podyum madalyası rengi (oyundaki kürsüyle aynı: altın, gümüş, bronz). Sıra numarası yazılmaz. */
+const medalColor = (rank: number): string => (rank === 1 ? "#ffc23b" : rank === 2 ? "#c9d2ff" : "#ff8a3b");
+
+/** `MedalIcon` (ResultIcons.tsx) ile aynı çizim: kurdele + yuvarlak + yıldız; `size` px, üst-ortası (cx, top). */
+function drawMedal(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  top: number,
+  size: number,
+  color: string,
+): void {
+  ctx.save();
+  ctx.translate(cx - size / 2, top);
+  ctx.scale(size / 24, size / 24);
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = color;
+  ctx.globalAlpha = 0.55;
+  ctx.fill(new Path2D("M7 2h4l1.4 5.2-3 .8L7 2zM17 2h-4l-1.4 5.2 3 .8L17 2z"));
+  ctx.globalAlpha = 1;
+  ctx.beginPath();
+  ctx.arc(12, 15, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = "rgba(0,0,0,0.28)";
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.arc(12, 15, 4.6, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(0,0,0,0.34)";
+  ctx.fill(new Path2D("M12 11.6l1 2.1 2.3.3-1.7 1.6.4 2.3-2-1.1-2 1.1.4-2.3-1.7-1.6 2.3-.3z"));
+  ctx.restore();
+}
+
 /** Karelerde değişmeyen her şey (arka plan, logo, başlık, podyum blokları, adlar, puanlar, alt yazı) bir kez çizilir. */
 async function drawBackdrop(
   ctx: CanvasRenderingContext2D,
@@ -179,10 +213,8 @@ async function drawBackdrop(
     ctx.strokeStyle = color;
     ctx.lineWidth = 3;
     ctx.stroke();
+    drawMedal(ctx, c.cx, c.blockTop + 8, p.rank === 1 ? 84 : 64, medalColor(p.rank));
     ctx.textAlign = "center";
-    ctx.fillStyle = p.rank === 1 ? GOLD : WHITE;
-    ctx.font = `800 ${p.rank === 1 ? 54 : 40}px ${DISPLAY}`;
-    ctx.fillText(String(p.rank), c.cx, c.blockTop + (p.rank === 1 ? 62 : 48));
     ctx.fillStyle = WHITE;
     fit(ctx, p.nickname, 800, DISPLAY, 26, 16, c.blockW - 20);
     ctx.fillText(p.nickname, c.cx, c.blockTop + c.blockH - 42);

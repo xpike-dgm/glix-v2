@@ -209,3 +209,19 @@
   background: transparent;
   color: var(--text-dim);
 }
+
+/* Yatay telefon: panel sıkı durur; sayfa kayar (alttaki "Klip oluştur" erişilebilir kalır). */
+@media (orientation: landscape) and (max-height: 520px) {
+  .klip {
+    margin-top: 4px;
+    gap: 10px;
+    padding: 8px;
+  }
+  .klip__media {
+    width: 45px;
+    height: 80px;
+  }
+  .kart__strip {
+    --card-h: calc(100dvh - 215px);
+  }
+}
