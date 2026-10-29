@@ -1,14 +1,25 @@
 import {
+  type ClothingColourId,
   COSMETIC_TYPES,
   type CosmeticItem,
   type CosmeticTypeId,
   cosmeticItem,
+  DEFAULT_COLOUR,
+  equippedValue,
+  isClothingType,
   isEquippable,
   itemsOfType,
 } from "@glix/engine";
 import { createEffect, For, onMount, Show } from "solid-js";
 import { equipItem, loadShop, ownCosmetics, shop, shopLoad } from "../net/shop.js";
-import { ownedOfType, RARITY_LABEL, SHOP_TYPES, shopErrorText } from "../net/shopRules.js";
+import {
+  equippedColour,
+  equippedId,
+  ownedOfType,
+  RARITY_LABEL,
+  SHOP_TYPES,
+  shopErrorText,
+} from "../net/shopRules.js";
 import { goHome, setState, state, toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { ART_TYPES } from "../ui/artItems.js";
@@ -20,7 +31,7 @@ import { CosmeticPreview, itemCosmetics } from "../ui/CosmeticPreview.js";
 import { defaultDancePoster, isCharacterItem, posterSpec } from "../ui/characterItems.js";
 import { BackIcon, CheckIcon } from "../ui/Icons.js";
 import { Screen } from "../ui/Screen.js";
-import { ShopTabBar } from "../ui/ShopBits.js";
+import { ColourSwatches, ShopTabBar } from "../ui/ShopBits.js";
 import { CardBackArt, CelebrationCollage, EntryLayers, PackCollage } from "../ui/ShopPreview.js";
 import { boxSrc } from "../ui/shopArt.js";
 
@@ -61,6 +72,38 @@ function SecIcon(props: { type: CosmeticTypeId }) {
       <Show when={props.type === "ust"}>
         <path
           d="M8 4l-5 3 2 4 3-1v10h8V10l3 1 2-4-5-3c-.6 1.6-1.8 2.4-4 2.4S8.6 5.6 8 4z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
+      </Show>
+      <Show when={props.type === "alt"}>
+        <path
+          d="M7 3h10l1 18h-5l-1-9-1 9H6z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
+      </Show>
+      <Show when={props.type === "ayakkabi"}>
+        <path
+          d="M4 6h5v6c1.5 1.5 4 2 7 3l4 1.5V19H4z"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linejoin="round"
+        />
+      </Show>
+      <Show when={props.type === "aksesuar"}>
+        <path
+          d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1.1 5.6L12 15.6 7 18.4l1.1-5.6L4 8.9l5.6-.7z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
+      </Show>
+      <Show when={props.type === "kostum"}>
+        <path
+          d="M12 4a2 2 0 1 0 0-.01M12 6c-5 0-8 3-8 8v2h16v-2c0-5-3-8-8-8zM9 16v4h6v-4"
           stroke="currentColor"
           stroke-width="2"
           stroke-linejoin="round"
@@ -112,6 +155,8 @@ function Tile(props: {
   onPick: () => void;
   /** Kuşanılmaz tür (tepki paketi): dokunuşsuz, "Hazır" etiketli karo. */
   fixed?: boolean;
+  /** Kuşanılan giysinin rengi (karo bu renkle görünür). */
+  colour?: ClothingColourId;
 }) {
   const it = () => props.item;
   return (
@@ -162,7 +207,7 @@ function Tile(props: {
                     when={props.type === "dans"}
                     fallback={
                       <Show
-                        when={props.type === "cerceve" || props.type === "sapka" || props.type === "ust"}
+                        when={props.type === "cerceve" || isClothingType(props.type)}
                         fallback={<span class="locker-tile__plain">{props.name}</span>}
                       >
                         <span class="locker-tile__ring" />
@@ -171,6 +216,7 @@ function Tile(props: {
                   >
                     <CharacterPoster
                       layers={defaultDancePoster(ownCosmetics()).layers}
+                      tints={defaultDancePoster(ownCosmetics()).tints}
                       dance={defaultDancePoster(ownCosmetics()).dance}
                       focus="full"
                       avatar={avatarFromName(props.name)}
@@ -201,9 +247,10 @@ function Tile(props: {
                     }
                   >
                     <CharacterPoster
-                      layers={posterSpec(i(), ownCosmetics()).layers}
-                      dance={posterSpec(i(), ownCosmetics()).dance}
-                      focus={posterSpec(i(), ownCosmetics()).focus}
+                      layers={posterSpec(i(), ownCosmetics(), props.colour).layers}
+                      tints={posterSpec(i(), ownCosmetics(), props.colour).tints}
+                      dance={posterSpec(i(), ownCosmetics(), props.colour).dance}
+                      focus={posterSpec(i(), ownCosmetics(), props.colour).focus}
                       avatar={avatarFromName(props.name)}
                       label={props.label}
                       fallback={<Avatar index={avatarFromName(props.name)} size={36} />}
@@ -309,13 +356,30 @@ export function Locker() {
                               item={cosmeticItem(it.id) ?? null}
                               label={it.name}
                               name={name()}
-                              on={s().equipped[t.id] === it.id}
+                              on={equippedId(s(), t.id) === it.id}
+                              colour={
+                                equippedId(s(), t.id) === it.id ? equippedColour(s(), t.id) : DEFAULT_COLOUR
+                              }
                               fixed={!isEquippable(t)}
-                              onPick={() => void pick(t.id, it.id)}
+                              onPick={() => {
+                                // Kuşanılı karoya yeniden dokunmak rengi sıfırlamaz.
+                                if (equippedId(s(), t.id) !== it.id) void pick(t.id, it.id);
+                              }}
                             />
                           )}
                         </For>
                       </div>
+                      <Show when={isClothingType(t.id) && equippedId(s(), t.id)}>
+                        {(id) => (
+                          <div class="locker-colours">
+                            <p class="swatches__label">Renk</p>
+                            <ColourSwatches
+                              value={equippedColour(s(), t.id)}
+                              onPick={(c) => void pick(t.id, equippedValue(id(), c))}
+                            />
+                          </div>
+                        )}
+                      </Show>
                       <Show when={owned().length === 0}>
                         <p class="shop-note shop-note--left">Henüz yok. Mağazadan alabilirsin.</p>
                       </Show>

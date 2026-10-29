@@ -1,4 +1,4 @@
-import { type CosmeticRarity, cosmeticItem } from "@glix/engine";
+import { CLOTHING_COLOURS, type ClothingColourId, type CosmeticRarity, cosmeticItem } from "@glix/engine";
 import { For, Show } from "solid-js";
 import { balanceText } from "../net/glixRules.js";
 import { RARITY_LABEL } from "../net/shopRules.js";
@@ -66,5 +66,34 @@ export function ShopTabBar(props: { active: "shop" | "locker" }) {
         )}
       </For>
     </nav>
+  );
+}
+
+/**
+ * Giysi rengi seçici: beş neon renk topu (camgöbeği, pembe, altın, yeşil, mor). Seçili olan halkalıdır; her top
+ * en az 44 px dokunma alanıdır. `onPick` verilen rengi bildirir (sahiplik/kuşanma çağıranın işi).
+ */
+export function ColourSwatches(props: {
+  value: ClothingColourId;
+  onPick: (colour: ClothingColourId) => void;
+  disabled?: boolean | undefined;
+}) {
+  return (
+    <fieldset class="swatches" aria-label="Giysi rengi">
+      <For each={CLOTHING_COLOURS}>
+        {(c) => (
+          <button
+            type="button"
+            class="swatch"
+            aria-pressed={props.value === c.id}
+            aria-label={c.name}
+            data-colour={c.id}
+            disabled={props.disabled}
+            style={{ "--sw": c.hex }}
+            onClick={() => props.onPick(c.id)}
+          />
+        )}
+      </For>
+    </fieldset>
   );
 }

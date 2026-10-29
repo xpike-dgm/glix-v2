@@ -245,7 +245,7 @@ Sahip kararları (Ekim 2026). Yalnız görünüş satılır, oyunda avantaj yok;
   robot, korsan gibi; birden çok yuvayı kaplar). Danslar: başlangıçta 8–10, zamanla 20+. Nadirlik her yuvada yaklaşık
   yarı sıradan, üçte bir nadir, kalanı efsanevi. Sonrasında ayda bir 6–10 parçalık yeni koleksiyon.
   **Gece çalışma listesinde bekliyor** (görseller ChatGPT iş kuyruğundan: `/srv/glix/gorsel/kuyruk/`).
-- [x] M1  - [x] M2 (mağaza + Dolabım; kodla çizilen unvan, ad efekti, çerçeve — resimli türler M3/M4'te)  - [x] M3 (kart arkası, zafer kutlaması, tepki paketi, giriş efekti; ayrıntı `docs/HESAP.md`)  - [x] M4 (kürsü karakteri: 8 dans, şapka ve üst yuvası, sonuç/final/TV kürsüsünde dans; ayrıntı `docs/HESAP.md`). Kalan giysi yuvaları (alt, ayakkabı, aksesuar), parça renk seçenekleri ve tam kostümler gece çalışma listesinde.
+- [x] M1  - [x] M2 (mağaza + Dolabım; kodla çizilen unvan, ad efekti, çerçeve — resimli türler M3/M4'te)  - [x] M3 (kart arkası, zafer kutlaması, tepki paketi, giriş efekti; ayrıntı `docs/HESAP.md`)  - [x] M4 (kürsü karakteri: 8 dans, şapka ve üst yuvası, sonuç/final/TV kürsüsünde dans; ayrıntı `docs/HESAP.md`). Giysi altyapısı hazır: alt/ayakkabı/aksesuar/kostüm yuvaları, 5 renk seçeneği (`COLOUR_MODE`: sahip kararı bekliyor, varsayılan serbest), içe aktarıcı `tools/karakter-deneme/giysiEkle.mjs` ve 7 yeni şapka (ayrıntı `docs/HESAP.md`). Kalan: üst/alt/ayakkabı/aksesuar parçaları ve 4–5 efsanevi kostümün görselleri (gece çalışma listesi).
 
 ---
 

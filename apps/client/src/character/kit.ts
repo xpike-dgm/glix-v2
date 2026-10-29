@@ -11,6 +11,7 @@ import {
   type MeshData,
   type PieceGeo,
   type PieceSpec,
+  pieceKey,
 } from "./mesh.js";
 import { buildSkeleton, parseRig, type Rig, type Skeleton } from "./rig.js";
 
@@ -72,9 +73,9 @@ async function buildKit(): Promise<CharacterKit> {
       oy: p.sourceOrigin[1],
     });
   for (const [layer, pieces] of Object.entries(rig.wardrobe))
-    for (const q of pieces)
+    for (const [i, q] of pieces.entries())
       jobs.push({
-        key: `${layer}:${q.bone}`,
+        key: pieceKey(layer, i),
         layer,
         bone: q.bone,
         after: q.drawAfter,

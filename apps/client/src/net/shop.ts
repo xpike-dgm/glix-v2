@@ -1,7 +1,7 @@
 import {
   type Cosmetics,
   type CosmeticTypeId,
-  cosmeticItem,
+  cleanEquipped,
   cosmeticsFromEquipped,
   currentPrice,
 } from "@glix/engine";
@@ -130,8 +130,9 @@ export async function equipItem(type: CosmeticTypeId, itemId: string | null): Pr
   const s = shop();
   if (frozen && s) {
     const equipped = { ...s.equipped };
-    if (itemId === null || !cosmeticItem(itemId)) delete equipped[type];
-    else equipped[type] = itemId;
+    const clean = itemId === null ? null : cleanEquipped(type, itemId);
+    if (clean === null) delete equipped[type];
+    else equipped[type] = clean;
     setShop({ ...s, equipped });
     return { ok: true };
   }

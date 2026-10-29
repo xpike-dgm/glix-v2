@@ -1,6 +1,13 @@
 import { COSMETIC_ITEMS, cosmeticItem, itemsOfType } from "@glix/engine";
 import { describe, expect, it } from "vitest";
-import { defaultDancePoster, isCharacterItem, posterSpec, previewCosmetics } from "./characterItems.js";
+import { hueShiftFor } from "../character/look.js";
+import {
+  defaultDancePoster,
+  FOCUS_OF,
+  isCharacterItem,
+  posterSpec,
+  previewCosmetics,
+} from "./characterItems.js";
 
 const item = (id: string) => {
   const it = cosmeticItem(id);
@@ -10,35 +17,57 @@ const item = (id: string) => {
 
 describe("karakter ürünleri önizlemesi", () => {
   it("yalnız dans ve giysi karakter üzerinde gösterilir", () => {
-    expect(COSMETIC_ITEMS.filter(isCharacterItem)).toHaveLength(10);
+    expect(COSMETIC_ITEMS.filter(isCharacterItem)).toHaveLength(17);
     expect(isCharacterItem(item("cerceve-cift"))).toBe(false);
   });
 
   it("dans afişi oyuncunun giysileriyle, dansın kendi dosyasıyla", () => {
     expect(posterSpec(item("dans-cizgi-film"), { hat: "sapka-neon-kep" })).toEqual({
       layers: ["sapka"],
+      tints: {},
       dance: "mickey",
       focus: "full",
     });
-    expect(posterSpec(item("dans-twist"), undefined)).toEqual({ layers: [], dance: "twist", focus: "full" });
+    expect(posterSpec(item("dans-twist"), undefined)).toEqual({
+      layers: [],
+      tints: {},
+      dance: "twist",
+      focus: "full",
+    });
   });
 
   it("giysi afişi tek başına: şapka baş kadrajı, üst gövde kadrajı, dans yok", () => {
     expect(posterSpec(item("sapka-neon-kep"), { top: "ust-neon-bomber" })).toEqual({
       layers: ["sapka"],
+      tints: {},
       dance: null,
       focus: "head",
     });
     expect(posterSpec(item("ust-neon-bomber"), undefined)).toEqual({
       layers: ["ceket"],
+      tints: {},
       dance: null,
       focus: "torso",
+    });
+  });
+
+  it("giysi afişinde seçilen renk katmana yazılır; kadraj yuvaya göre", () => {
+    expect(posterSpec(item("sapka-tac"), undefined, "mor").tints).toEqual({ tac: hueShiftFor("#8B5CFF") });
+    expect(posterSpec(item("sapka-tac"), undefined, "camgobegi").tints).toEqual({});
+    expect(FOCUS_OF).toEqual({
+      sapka: "head",
+      ust: "torso",
+      aksesuar: "torso",
+      alt: "legs",
+      ayakkabi: "feet",
+      kostum: "full",
     });
   });
 
   it("varsayılan dans afişi Sevinç", () => {
     expect(defaultDancePoster({ top: "ust-neon-bomber" })).toEqual({
       layers: ["ceket"],
+      tints: {},
       dance: "sevinc",
       focus: "full",
     });
@@ -54,6 +83,12 @@ describe("karakter ürünleri önizlemesi", () => {
       ...equipped,
       top: "ust-neon-bomber",
     });
+    expect(previewCosmetics(item("sapka-tac"), equipped, "pembe")).toEqual({
+      ...equipped,
+      hat: "sapka-tac~pembe",
+    });
+    expect(previewCosmetics(item("sapka-tac"), equipped).hat).toBe("sapka-tac");
+    expect(previewCosmetics(item("cerceve-cift"), equipped)).toEqual(equipped);
     expect(itemsOfType("dans").every((i) => previewCosmetics(i, undefined).dance === i.id)).toBe(true);
   });
 });

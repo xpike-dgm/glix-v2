@@ -8,14 +8,16 @@ import { posterTime, sampleDance } from "./dance.js";
 import { loadDance, loadKit } from "./kit.js";
 import { createContext, createPuppet, destroyContext, type PuppetContext } from "./puppet.js";
 
-/** Kadraj: tüm boy, yalnız baş ve omuz (şapka), gövde (üst giysi). */
-export type PosterFocus = "full" | "head" | "torso";
+/** Kadraj: tüm boy, yalnız baş ve omuz (şapka), gövde (üst giysi), bacaklar (alt), ayaklar (ayakkabı). */
+export type PosterFocus = "full" | "head" | "torso" | "legs" | "feet";
 
 export interface PosterRequest {
   /** Giyilen giysi katmanları. */
   layers: readonly string[];
   /** Dans dosyası kimliği; null: dinlenme duruşu. */
   dance: string | null;
+  /** Giysi katmanı -> neon renk dönüşü (derece). */
+  tints?: Readonly<Record<string, number>>;
   /** Kimlik renk dönüşü (derece). */
   hue: number;
   focus: PosterFocus;
@@ -25,6 +27,8 @@ const SIZE: Record<PosterFocus, { w: number; h: number }> = {
   full: { w: 220, h: 320 },
   head: { w: 240, h: 240 },
   torso: { w: 240, h: 200 },
+  legs: { w: 240, h: 220 },
+  feet: { w: 240, h: 200 },
 };
 
 /** Kadrajın rig koordinatındaki dikdörtgeni (x, y, genişlik, yükseklik). */
@@ -35,10 +39,19 @@ function frameRect(
 ) {
   if (focus === "head") return { x: rootX - 125, y: fig.top - 18, w: 250, h: 250 };
   if (focus === "torso") return { x: rootX - 190, y: fig.top + 125, w: 380, h: 316 };
+  const figH = fig.bottom - fig.top;
+  if (focus === "legs") return { x: rootX - 150, y: fig.top + figH * 0.42, w: 300, h: figH * 0.5 };
+  if (focus === "feet") return { x: rootX - 150, y: fig.bottom - figH * 0.3, w: 300, h: figH * 0.3 };
   const w = fig.right - fig.left + 60;
   const h = fig.bottom - fig.top + 40;
   return { x: fig.left - 30, y: fig.top - 20, w, h };
 }
+
+const tintKey = (t: Readonly<Record<string, number>> | undefined): string =>
+  Object.entries(t ?? {})
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${k}:${Math.round(v)}`)
+    .join(",");
 
 const cache = new Map<string, Promise<string>>();
 let chain: Promise<unknown> = Promise.resolve();
@@ -99,6 +112,7 @@ async function draw(req: PosterRequest): Promise<string> {
   }
   const puppet = createPuppet(ctx, req.layers);
   puppet.setHue(req.hue);
+  puppet.setTints(req.tints ?? {});
   puppet.setPose(angles, 0);
   const rect = frameRect(req.focus, kit.figure, sk.rig.root[0]);
   const s = Math.min(size.w / rect.w, size.h / rect.h);
@@ -123,7 +137,7 @@ async function draw(req: PosterRequest): Promise<string> {
 
 /** Afişin resim adresi (nesne URL'si); aynı istek bir kez çizilir. Çizilemezse reddeder. */
 export function renderPoster(req: PosterRequest): Promise<string> {
-  const key = `${req.focus}|${req.dance ?? "-"}|${[...req.layers].sort().join("+")}|${Math.round(req.hue)}`;
+  const key = `${req.focus}|${req.dance ?? "-"}|${[...req.layers].sort().join("+")}|${Math.round(req.hue)}|${tintKey(req.tints)}`;
   const hit = cache.get(key);
   if (hit) return hit;
   pending++;

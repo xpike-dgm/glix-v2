@@ -219,12 +219,20 @@
 }
 .shop-card[data-type="dans"] .shop-card__pv,
 .shop-card[data-type="sapka"] .shop-card__pv,
-.shop-card[data-type="ust"] .shop-card__pv {
+.shop-card[data-type="ust"] .shop-card__pv,
+.shop-card[data-type="alt"] .shop-card__pv,
+.shop-card[data-type="ayakkabi"] .shop-card__pv,
+.shop-card[data-type="aksesuar"] .shop-card__pv,
+.shop-card[data-type="kostum"] .shop-card__pv {
   min-height: 118px;
   --cposter-h: 118px;
 }
 .shop-card[data-type="sapka"] .shop-card__pv,
-.shop-card[data-type="ust"] .shop-card__pv {
+.shop-card[data-type="ust"] .shop-card__pv,
+.shop-card[data-type="alt"] .shop-card__pv,
+.shop-card[data-type="ayakkabi"] .shop-card__pv,
+.shop-card[data-type="aksesuar"] .shop-card__pv,
+.shop-card[data-type="kostum"] .shop-card__pv {
   min-height: 104px;
   --cposter-h: 104px;
 }
@@ -249,13 +257,21 @@
 }
 .locker-tile[data-type="dans"] .locker-tile__pv,
 .locker-tile[data-type="sapka"] .locker-tile__pv,
-.locker-tile[data-type="ust"] .locker-tile__pv {
+.locker-tile[data-type="ust"] .locker-tile__pv,
+.locker-tile[data-type="alt"] .locker-tile__pv,
+.locker-tile[data-type="ayakkabi"] .locker-tile__pv,
+.locker-tile[data-type="aksesuar"] .locker-tile__pv,
+.locker-tile[data-type="kostum"] .locker-tile__pv {
   min-height: 86px;
   --cposter-h: 86px;
 }
 .locker-tile[data-type="dans"]:not([data-r="yok"]),
 .locker-tile[data-type="sapka"]:not([data-r="yok"]),
-.locker-tile[data-type="ust"]:not([data-r="yok"]) {
+.locker-tile[data-type="ust"]:not([data-r="yok"]),
+.locker-tile[data-type="alt"]:not([data-r="yok"]),
+.locker-tile[data-type="ayakkabi"]:not([data-r="yok"]),
+.locker-tile[data-type="aksesuar"]:not([data-r="yok"]),
+.locker-tile[data-type="kostum"]:not([data-r="yok"]) {
   padding: 2px 0 8px;
   gap: 4px;
 }
@@ -263,8 +279,8 @@
 .shop-card[data-type="ad-efekti"] .shop-card__pv {
   min-height: 100px;
 }
-/* Fırsat karosunda eski + yeni fiyat büyük yazıda dar karoya sığsın. */
-.shop-grid--deal .shop-price {
+/* İndirimli ürün (eski + yeni fiyat) fırsat karosunda da, ızgarada da dar karoya sığsın. */
+.shop-card .shop-price {
   padding: 0 8px 0 4px;
   gap: 3px;
 }

@@ -7,8 +7,12 @@
  * her giysi yuvası kendi türüdür (`sapka`, `ust`; ileride alt, ayakkabı, aksesuar). Giysi türlerinin `group` alanı
  * `"giysi"`dir: mağaza hepsini tek "Giysiler" sekmesinde toplar, dolap yuva başına bölüm gösterir.
  *
- * Renk seçeneği (sonradan): kuşanılan değer ürün kimliğidir; renkli sürüm `kimlik~renk` biçimiyle aynı alanlara
- * sığar (`cosmetic_equipped.item_id` metindir), şema değişmez. Bugün hiçbir ürünün rengi yok.
+ * Giysi yuvaları: şapka, üst, alt, ayakkabı, aksesuar ve tam kostüm (`GIYSI_SIRASI`). Boş yuva (katalogda ürünü
+ * olmayan tür) arayüzde gösterilmez. Kostüm kuşanılınca kapladığı yuvaların giysisi çıkar (`covers`, bkz. `lookRules`).
+ *
+ * Renk seçeneği: her giysi beş neon renkle giyilir (`CLOTHING_COLOURS`; çizimin camgöbeği varsayılandır). Kuşanılan
+ * değer `kimlik` (varsayılan renk) ya da `kimlik~renk`tir; `cosmetic_equipped.item_id` metindir, şema değişmez.
+ * Renk yalnız giysinin neon vurgusunu boyar (istemci süzgeci). Sahiplik kuralı `COLOUR_MODE` ile tek yerden seçilir.
  */
 import { createRng } from "./rng.js";
 
@@ -28,9 +32,14 @@ export interface Cosmetics {
   frame?: string;
   /** Kürsü dansı (`dans` türü); kuşanılmadıysa varsayılan dans. */
   dance?: string;
-  /** Şapka ve üst giysi (kürsü karakteri). */
+  /** Giysi yuvaları (kürsü karakteri); değer `kimlik` ya da `kimlik~renk`. */
   hat?: string;
   top?: string;
+  bottom?: string;
+  shoes?: string;
+  accessory?: string;
+  /** Tam kostüm: kapladığı yuvaların giysisini ezer. */
+  costume?: string;
   /** Kart arkası (`kart-arkasi` türü); kuşanılmadıysa klasik sırt. */
   cardBack?: string;
   /** Zafer kutlaması (`zafer` türü); kazanan kuşandıysa final ekranında herkese oynar. */
@@ -47,6 +56,10 @@ export type CosmeticTypeId =
   | "dans"
   | "sapka"
   | "ust"
+  | "alt"
+  | "ayakkabi"
+  | "aksesuar"
+  | "kostum"
   | "kart-arkasi"
   | "zafer"
   | "tepki"
@@ -83,6 +96,10 @@ export const COSMETIC_TYPES: readonly CosmeticType[] = [
   { id: "dans", key: "dance", name: "Dans", plural: "Danslar", none: "Sevinç" },
   { id: "sapka", key: "hat", name: "Şapka", plural: "Şapkalar", none: "Yok", group: "giysi" },
   { id: "ust", key: "top", name: "Üst", plural: "Üstler", none: "Yok", group: "giysi" },
+  { id: "alt", key: "bottom", name: "Alt", plural: "Altlar", none: "Yok", group: "giysi" },
+  { id: "ayakkabi", key: "shoes", name: "Ayakkabı", plural: "Ayakkabılar", none: "Yok", group: "giysi" },
+  { id: "aksesuar", key: "accessory", name: "Aksesuar", plural: "Aksesuarlar", none: "Yok", group: "giysi" },
+  { id: "kostum", key: "costume", name: "Kostüm", plural: "Kostümler", none: "Yok", group: "giysi" },
   // Kart arkasının "yok" seçeneği klasik sırttır (ücretsiz, katalogda ürün olarak yer almaz).
   { id: "kart-arkasi", key: "cardBack", name: "Kart arkası", plural: "Kart arkaları", none: "Klasik" },
   // Zaferin "yok" seçeneği her finaldeki klasik konfetidir.
@@ -113,6 +130,11 @@ export interface CosmeticItem {
    * `tepki/<asset>-1..6.webp` (paket kimliği de budur), giriş `giris/<asset>-zemin|isik.webp`.
    */
   asset?: string;
+  /**
+   * Yalnız kostüm: kapladığı giysi yuvaları. Kuşanılınca bu yuvalardaki giysiler çıkar (kostüm onların yerini
+   * tutar). Parçalarının kemiklerinden türer (`coveredSlots`); katalog testi rig.json ile eşitliği denetler.
+   */
+  covers?: readonly CosmeticTypeId[];
 }
 
 function item(
@@ -122,8 +144,18 @@ function item(
   name: string,
   description: string,
   asset?: string,
+  covers?: readonly CosmeticTypeId[],
 ): CosmeticItem {
-  return { id, type, rarity, price: COSMETIC_PRICES[rarity], name, description, ...(asset ? { asset } : {}) };
+  return {
+    id,
+    type,
+    rarity,
+    price: COSMETIC_PRICES[rarity],
+    name,
+    description,
+    ...(asset ? { asset } : {}),
+    ...(covers ? { covers } : {}),
+  };
 }
 
 export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
@@ -255,6 +287,34 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     "altin-isik",
   ),
   item("sapka-neon-kep", "sapka", "siradan", "Neon Kep", "Kürsüde başında neon bir kep.", "sapka"),
+  item("sapka-bere", "sapka", "siradan", "Bere", "Ponponlu, neon çizgili sıcak bir bere.", "bere"),
+  item("sapka-fotr", "sapka", "siradan", "Fötr", "Neon şeritli klasik fötr şapka.", "fotr"),
+  item("sapka-parti", "sapka", "siradan", "Parti Şapkası", "Neon zikzaklı külah: parti başlasın!", "parti"),
+  item(
+    "sapka-kovboy",
+    "sapka",
+    "nadir",
+    "Kovboy Şapkası",
+    "Neon dikişli, geniş kenarlı kovboy şapkası.",
+    "kovboy",
+  ),
+  item(
+    "sapka-kulaklikli-kask",
+    "sapka",
+    "nadir",
+    "Kulaklıklı Kask",
+    "Neon ışıklı kulaklıkla gelen fütüristik kask.",
+    "kulaklikli-kask",
+  ),
+  item(
+    "sapka-korsan",
+    "sapka",
+    "nadir",
+    "Korsan Şapkası",
+    "Ortasında neon yıldız parlayan korsan şapkası.",
+    "korsan",
+  ),
+  item("sapka-tac", "sapka", "efsanevi", "Taç", "Neon kristallerle süslü altın taç.", "tac"),
   item("ust-neon-bomber", "ust", "nadir", "Neon Bomber", "Kürsüde sırtında neon bomber ceket.", "ceket"),
 ];
 
@@ -275,22 +335,131 @@ export function itemsOfType(type: CosmeticTypeId): CosmeticItem[] {
   return COSMETIC_ITEMS.filter((i) => i.type === type);
 }
 
-/** Kuşanılanları oyunculara giden `Cosmetics` alanına çevirir; bilinmeyen/yanlış türdeki kimlik atlanır. */
+// ---- Giysi yuvaları, kemik eşlemesi, kostüm kuralı ----
+
+/** Giysi türü mü (şapka, üst, alt, ayakkabı, aksesuar, kostüm)? */
+export const isClothingType = (type: CosmeticTypeId): boolean => cosmeticType(type).group === "giysi";
+
+/**
+ * Giysi yuvalarının çizim sırası (arkadan öne), AYNI kemiğe bağlı parçalar arasında: kostüm en altta, sonra alt,
+ * ayakkabı, üst; aksesuar üstün ÜSTÜNDE, şapka en üstte. (Farklı kemiklerde sıra gövdenin çizim sırasıdır;
+ * `arka` katmanı her yuvada gövdenin arkasına çizilir.)
+ */
+export const GIYSI_SIRASI: readonly CosmeticTypeId[] = [
+  "kostum",
+  "alt",
+  "ayakkabi",
+  "ust",
+  "aksesuar",
+  "sapka",
+];
+
+/** Kemik adı -> o kemikteki giysinin yuvası. Kostümün kapladığı yuvalar parçalarının kemiklerinden türer. */
+export function slotOfBone(bone: string): CosmeticTypeId | null {
+  if (bone === "head") return "sapka";
+  if (bone === "torso" || /_(upper_arm|forearm|hand)$/.test(bone)) return "ust";
+  if (/_(thigh|shin)$/.test(bone)) return "alt";
+  if (/_foot$/.test(bone)) return "ayakkabi";
+  return null;
+}
+
+/** Kemik listesinin kapladığı yuvalar (`GIYSI_SIRASI` sırasıyla, tekil). Aksesuar hiç kaplanmaz. */
+export function coveredSlots(bones: readonly string[]): CosmeticTypeId[] {
+  const set = new Set(bones.map(slotOfBone));
+  return GIYSI_SIRASI.filter((t) => set.has(t));
+}
+
+// ---- Giysi renkleri ----
+
+export type ClothingColourId = "camgobegi" | "pembe" | "altin" | "yesil" | "mor";
+
+export interface ClothingColour {
+  id: ClothingColourId;
+  name: string;
+  /** Oyunun neon renk jetonu (`tokens.css`): camgöbeği, magenta, amber, lime, violet. */
+  hex: string;
+}
+
+export const CLOTHING_COLOURS: readonly ClothingColour[] = [
+  { id: "camgobegi", name: "Camgöbeği", hex: "#2EF2FF" },
+  { id: "pembe", name: "Pembe", hex: "#FF2BD6" },
+  { id: "altin", name: "Altın", hex: "#FFC23B" },
+  { id: "yesil", name: "Yeşil", hex: "#B6FF3B" },
+  { id: "mor", name: "Mor", hex: "#8B5CFF" },
+];
+
+/** Çizildiği gibi renk: kuşanılan değerde yazılmaz (`kimlik`). */
+export const DEFAULT_COLOUR: ClothingColourId = "camgobegi";
+
+/**
+ * Renk iş kuralı (sahip kararı bekliyor): "free" = ürüne sahip olmak tüm renkleri açar, renk Dolabım'da ücretsiz
+ * seçilir. "paid" = varsayılan dışındaki her renk ayrı satın alınır (sahip olunan `kimlik~renk` ürünü). Yalnız
+ * `colourUnlocked` bu sabite bakar; "paid"e geçmek için ek olarak mağazaya renk ürünleri eklenmelidir.
+ */
+export type ColourMode = "free" | "paid";
+export const COLOUR_MODE: ColourMode = "free";
+
+export const clothingColour = (id: string): ClothingColour | undefined =>
+  CLOTHING_COLOURS.find((c) => c.id === id);
+
+/** Kuşanılan değer: `kimlik` ya da `kimlik~renk`. */
+export interface Equipped {
+  id: string;
+  colour: ClothingColourId;
+}
+
+/** Değeri ayırır; rengi bilinmiyorsa ya da biçim bozuksa null (kimliğin katalogda olması burada aranmaz). */
+export function splitEquipped(value: string): Equipped | null {
+  const i = value.indexOf("~");
+  if (i < 0) return value.length > 0 ? { id: value, colour: DEFAULT_COLOUR } : null;
+  const id = value.slice(0, i);
+  const colour = clothingColour(value.slice(i + 1));
+  return id.length > 0 && colour ? { id, colour: colour.id } : null;
+}
+
+/** Kuşanılan değerin kanonik yazımı: varsayılan renk yazılmaz. */
+export const equippedValue = (id: string, colour: ClothingColourId = DEFAULT_COLOUR): string =>
+  colour === DEFAULT_COLOUR ? id : `${id}~${colour}`;
+
+/**
+ * Bir yuvaya yazılacak/okunan değeri doğrular ve kanonik biçime getirir. Ürün katalogda ve bu türde olmalı; renk
+ * yalnız giysi türlerinde ve bilinen renklerden olabilir. Geçersizse null.
+ */
+export function cleanEquipped(type: CosmeticTypeId, value: unknown): string | null {
+  if (typeof value !== "string" || value.length > 64) return null;
+  const e = splitEquipped(value);
+  if (!e) return null;
+  const it = BY_ID.get(e.id);
+  if (!it || it.type !== type) return null;
+  if (value.includes("~") && !isClothingType(type)) return null;
+  return equippedValue(e.id, e.colour);
+}
+
+/** Bu renk bu hesapta açık mı? `owns(kimlik)`: ürüne sahiplik. "free": ürüne sahip olmak yeter. */
+export function colourUnlocked(
+  owns: (itemId: string) => boolean,
+  id: string,
+  colour: ClothingColourId,
+): boolean {
+  if (!owns(id)) return false;
+  if (colour === DEFAULT_COLOUR || COLOUR_MODE === "free") return true;
+  return owns(`${id}~${colour}`);
+}
+
+/** Kuşanılanları oyunculara giden `Cosmetics` alanına çevirir; bilinmeyen/yanlış türdeki değer atlanır. */
 export function cosmeticsFromEquipped(equipped: Readonly<Record<string, string>>): Cosmetics | undefined {
   const out: Cosmetics = {};
   for (const t of COSMETIC_TYPES) {
     if (t.key === null) continue;
-    const id = equipped[t.id];
-    if (id === undefined) continue;
-    const it = BY_ID.get(id);
-    if (it && it.type === t.id) out[t.key] = id;
+    const v = cleanEquipped(t.id, equipped[t.id]);
+    if (v !== null) out[t.key] = v;
   }
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
 /**
- * Ağdan gelen `cosmetics` alanını doğrular: yalnız katalogda olan ve doğru türdeki kimlikler kalır, gerisi atılır.
- * Hiçbir şey kalmadıysa `undefined`.
+ * Ağdan gelen `cosmetics` alanını doğrular: yalnız katalogda olan ve doğru türdeki kimlikler (giysilerde bilinen
+ * renkle) kalır, gerisi atılır. Hiçbir şey kalmadıysa `undefined`.
  */
 export function parseCosmetics(raw: unknown): Cosmetics | undefined {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return undefined;
@@ -298,10 +467,8 @@ export function parseCosmetics(raw: unknown): Cosmetics | undefined {
   const out: Cosmetics = {};
   for (const t of COSMETIC_TYPES) {
     if (t.key === null) continue;
-    const id = rec[t.key];
-    if (typeof id !== "string") continue;
-    const it = BY_ID.get(id);
-    if (it && it.type === t.id) out[t.key] = id;
+    const v = cleanEquipped(t.id, rec[t.key]);
+    if (v !== null) out[t.key] = v;
   }
   return Object.keys(out).length > 0 ? out : undefined;
 }

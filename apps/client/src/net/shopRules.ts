@@ -1,12 +1,17 @@
 import {
+  type ClothingColourId,
   COSMETIC_TYPES,
   type CosmeticItem,
   type CosmeticTypeId,
+  cleanEquipped,
   cosmeticItem,
   cosmeticType,
   currentPrice,
+  DEFAULT_COLOUR,
   dailyDeals,
+  isClothingType,
   itemsOfType,
+  splitEquipped,
 } from "@glix/engine";
 
 /** Mağaza verisi ve saf yardımcıları (ağdan gelen hiçbir şeye güvenilmez). Katalog motorda, burada yalnız durum var. */
@@ -15,7 +20,7 @@ export interface ShopState {
   balance: number;
   /** Sahip olunan ürün kimlikleri (katalogda olanlar). */
   owned: string[];
-  /** Tür -> kuşanılan ürün kimliği. */
+  /** Tür -> kuşanılan değer (`kimlik` ya da giysilerde `kimlik~renk`). */
   equipped: Partial<Record<CosmeticTypeId, string>>;
   /** Sunucu saati ile yerel saat arasındaki fark (sunucu - yerel, ms): fırsat ve geri sayım sunucu gününe göre. */
   clockOffset: number;
@@ -43,10 +48,8 @@ export function parseShopState(data: unknown, localNow: number): ShopState | nul
   const equipped: ShopState["equipped"] = {};
   for (const t of COSMETIC_TYPES) {
     if (t.key === null) continue;
-    const id = data.equipped[t.id];
-    if (typeof id !== "string") continue;
-    const it = cosmeticItem(id);
-    if (it && it.type === t.id) equipped[t.id] = id;
+    const v = cleanEquipped(t.id, data.equipped[t.id]);
+    if (v !== null) equipped[t.id] = v;
   }
   return { balance, owned, equipped, clockOffset: serverNow - localNow };
 }
@@ -77,8 +80,20 @@ export function priceNow(s: ShopState, id: string, localNow: number): number {
 
 export type ItemStatus = "buy" | "owned" | "equipped";
 
+/** Türde kuşanılan ürünün kimliği (renk eki olmadan). */
+export const equippedId = (s: ShopState, type: CosmeticTypeId): string | undefined => {
+  const v = s.equipped[type];
+  return v === undefined ? undefined : splitEquipped(v)?.id;
+};
+
+/** Türde kuşanılan giysinin rengi (kuşanılmadıysa varsayılan). */
+export const equippedColour = (s: ShopState, type: CosmeticTypeId): ClothingColourId => {
+  const v = s.equipped[type];
+  return (v === undefined ? null : splitEquipped(v))?.colour ?? DEFAULT_COLOUR;
+};
+
 export function itemStatus(s: ShopState, item: CosmeticItem): ItemStatus {
-  if (s.equipped[item.type] === item.id) return "equipped";
+  if (equippedId(s, item.type) === item.id) return "equipped";
   return s.owned.includes(item.id) ? "owned" : "buy";
 }
 
@@ -144,12 +159,30 @@ export const RARITY_LABEL: Readonly<Record<CosmeticItem["rarity"], string>> = {
 export const DISCOUNT_LABEL = "−%30";
 
 /**
- * Dolap bölümleri sırası: önce görünüş (çerçeve, unvan, ad efekti, dans, şapka, üst), sonra efektler (kart arkası,
- * zafer, giriş) ve en sonda tepki paketleri (katalog sırasından bağımsız).
+ * Dolap bölümleri sırası: önce görünüş (çerçeve, unvan, ad efekti, dans, giysi yuvaları), sonra efektler (kart
+ * arkası, zafer, giriş) ve en sonda tepki paketleri (katalog sırasından bağımsız). Katalogda ürünü olmayan giysi
+ * yuvası gösterilmez (boş bölüm kalabalık yapar).
  */
 export const SHOP_TYPES = (
-  ["cerceve", "unvan", "ad-efekti", "dans", "sapka", "ust", "kart-arkasi", "zafer", "giris", "tepki"] as const
-).map((id) => cosmeticType(id));
+  [
+    "cerceve",
+    "unvan",
+    "ad-efekti",
+    "dans",
+    "sapka",
+    "ust",
+    "alt",
+    "ayakkabi",
+    "aksesuar",
+    "kostum",
+    "kart-arkasi",
+    "zafer",
+    "giris",
+    "tepki",
+  ] as const
+)
+  .filter((id) => !isClothingType(id) || itemsOfType(id).length > 0)
+  .map((id) => cosmeticType(id));
 
 /** Mağaza sekmesi: tek tür ya da aynı gruptaki türler ("Giysiler": her giysi yuvası ayrı türdür). */
 export interface ShopTab {
@@ -186,7 +219,8 @@ export const SHOP_TABS: readonly ShopTab[] = [
   {
     id: "giysi",
     label: "Giysiler",
-    types: COSMETIC_TYPES.filter((t) => t.group === "giysi").map((t) => t.id),
+    // Katalogda ürünü olmayan yuva sekmede yer almaz.
+    types: COSMETIC_TYPES.filter((t) => t.group === "giysi" && itemsOfType(t.id).length > 0).map((t) => t.id),
     section: "gorunus",
   },
   single("kart-arkasi", "efekt", "Kart arkası"),

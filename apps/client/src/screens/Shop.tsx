@@ -1,7 +1,12 @@
 import {
+  type ClothingColourId,
   type CosmeticItem,
   type CosmeticTypeId,
   cosmeticItem,
+  cosmeticType,
+  DEFAULT_COLOUR,
+  equippedValue,
+  isClothingType,
   itemsOfType,
   nextIstanbulMidnight,
 } from "@glix/engine";
@@ -13,6 +18,7 @@ import {
   DISCOUNT_LABEL,
   dealCountdownText,
   dealViews,
+  equippedColour,
   itemStatus,
   priceNow,
   RARITY_LABEL,
@@ -38,7 +44,7 @@ import { BackIcon, BoltIcon, CheckIcon, CoinIcon } from "../ui/Icons.js";
 import { Mascot } from "../ui/Mascot.js";
 import { PrimaryButton } from "../ui/PrimaryButton.js";
 import { Screen } from "../ui/Screen.js";
-import { BalancePill, Price, RarityChip, ShopTabBar } from "../ui/ShopBits.js";
+import { BalancePill, ColourSwatches, Price, RarityChip, ShopTabBar } from "../ui/ShopBits.js";
 import {
   CardBackArt,
   CelebrationCollage,
@@ -65,7 +71,13 @@ function Card(props: {
   const status = () => itemStatus(props.s, props.item);
   const price = () => priceNow(props.s, props.item.id, props.now);
   const name = () => state.account?.username ?? "Sen";
-  const poster = () => posterSpec(props.item, ownCosmetics());
+  // Giysi kuşanılmışsa karo kuşanılan rengiyle görünür.
+  const poster = () =>
+    posterSpec(
+      props.item,
+      ownCosmetics(),
+      status() === "equipped" ? equippedColour(props.s, props.item.type) : DEFAULT_COLOUR,
+    );
   return (
     <button
       type="button"
@@ -111,6 +123,7 @@ function Card(props: {
         >
           <CharacterPoster
             layers={poster().layers}
+            tints={poster().tints}
             dance={poster().dance}
             focus={poster().focus}
             avatar={avatarFromName(name())}
@@ -148,6 +161,10 @@ const TYPE_LABEL: Readonly<Record<CosmeticTypeId, string>> = {
   dans: "Dans",
   sapka: "Şapka",
   ust: "Üst giysi",
+  alt: "Alt giysi",
+  ayakkabi: "Ayakkabı",
+  aksesuar: "Aksesuar",
+  kostum: "Tam kostüm",
   "kart-arkasi": "Kart arkası",
   zafer: "Zafer kutlaması",
   tepki: "Tepki paketi",
@@ -162,6 +179,8 @@ export function Shop() {
   const [openId, setOpenId] = createSignal<string | null>(null);
   const [busy, setBusy] = createSignal(false);
   const [msg, setMsg] = createSignal<string | null>(null);
+  /** Satın alma sayfasında seçili giysi rengi (önizleme ve kuşanma). */
+  const [colour, setColour] = createSignal<ClothingColourId>(DEFAULT_COLOUR);
   const [now, setNow] = createSignal(Date.now());
 
   onMount(() => {
@@ -183,8 +202,11 @@ export function Shop() {
     const at = now() + (s?.clockOffset ?? 0);
     return nextIstanbulMidnight(at) - at;
   };
-  const tabItems = (): CosmeticItem[] =>
-    (SHOP_TABS.find((t) => t.id === tab())?.types ?? []).flatMap((t) => itemsOfType(t));
+  /** Sekmenin ürünleri yuva başına gruplanır; ürünü olmayan yuva hiç görünmez. */
+  const tabGroups = () =>
+    (SHOP_TABS.find((t) => t.id === tab())?.types ?? [])
+      .map((t) => ({ type: t, items: itemsOfType(t) }))
+      .filter((g) => g.items.length > 0);
   const opened = () => {
     const id = openId();
     return id === null ? null : (cosmeticItem(id) ?? null);
@@ -193,6 +215,10 @@ export function Shop() {
 
   function open(id: string): void {
     setMsg(null);
+    const it = cosmeticItem(id);
+    const s = shop();
+    // Kuşanılmış giysi kendi rengiyle açılır; diğerleri çizildiği gibi (camgöbeği).
+    setColour(it && s && itemStatus(s, it) === "equipped" ? equippedColour(s, it.type) : DEFAULT_COLOUR);
     setOpenId(id);
   }
 
@@ -207,7 +233,10 @@ export function Shop() {
   async function equip(item: CosmeticItem): Promise<void> {
     if (busy()) return;
     setBusy(true);
-    const r = await equipItem(item.type, item.id);
+    const r = await equipItem(
+      item.type,
+      isClothingType(item.type) ? equippedValue(item.id, colour()) : item.id,
+    );
     setBusy(false);
     if (r.ok) {
       toast(`${item.name} kuşanıldı`, "success");
@@ -307,16 +336,27 @@ export function Shop() {
                 </For>
               </div>
 
-              <div class="shop-grid" classList={{ "shop-grid--rows": tab() === "unvan" }} role="tabpanel">
-                <For each={tabItems()}>
-                  {(item) => (
-                    <Card
-                      item={item}
-                      s={s()}
-                      now={now()}
-                      deal={deals().find((d) => d.item.id === item.id)}
-                      onOpen={open}
-                    />
+              <div role="tabpanel">
+                <For each={tabGroups()}>
+                  {(g) => (
+                    <>
+                      <Show when={tabGroups().length > 1}>
+                        <h2 class="shop-sub">{cosmeticType(g.type).plural}</h2>
+                      </Show>
+                      <div class="shop-grid" classList={{ "shop-grid--rows": tab() === "unvan" }}>
+                        <For each={g.items}>
+                          {(item) => (
+                            <Card
+                              item={item}
+                              s={s()}
+                              now={now()}
+                              deal={deals().find((d) => d.item.id === item.id)}
+                              onOpen={open}
+                            />
+                          )}
+                        </For>
+                      </div>
+                    </>
                   )}
                 </For>
               </div>
@@ -383,13 +423,16 @@ export function Shop() {
                       >
                         <CharacterView
                           avatar={avatarFromName(name())}
-                          cosmetics={previewCosmetics(item(), ownCosmetics())}
+                          cosmetics={previewCosmetics(item(), ownCosmetics(), colour())}
                           fallback={
                             <Avatar index={avatarFromName(name())} size="clamp(64px, 20vmin, 96px)" />
                           }
                         />
                       </Show>
                     </div>
+                    <Show when={isClothingType(item().type)}>
+                      <ColourSwatches value={colour()} onPick={setColour} />
+                    </Show>
                     <p class="shop-sheet__desc">{item().description}</p>
                     <Show when={msg()}>
                       <p class="shop-sheet__err" role="alert">
@@ -421,7 +464,13 @@ export function Shop() {
                         Kuşan
                       </PrimaryButton>
                     </Show>
-                    <Show when={status() === "equipped"}>
+                    <Show when={status() === "equipped" && colour() !== equippedColour(s(), item().type)}>
+                      <PrimaryButton busy={busy()} onClick={() => void equip(item())}>
+                        Rengi uygula
+                      </PrimaryButton>
+                      <GhostButton onClick={() => void unequip(item())}>Çıkar</GhostButton>
+                    </Show>
+                    <Show when={status() === "equipped" && colour() === equippedColour(s(), item().type)}>
                       <PrimaryButton variant="done" disabled>
                         <span class="shop-buy">
                           <CheckIcon size={20} /> Kuşanıldı

@@ -850,3 +850,63 @@
   width: 56px;
   height: 56px;
 }
+
+/* Giysi rengi seçici: beş neon top; seçili olan beyaz halkalı, dokunma alanı 48 px. */
+.swatches {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+.swatch {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+.swatch::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  background: var(--sw);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--sw) 70%, transparent);
+}
+.swatch[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  border: 2.5px solid var(--text);
+}
+.swatch:disabled {
+  opacity: 0.5;
+}
+.swatches__label {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: var(--fs-15);
+  text-align: center;
+}
+.locker-colours {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--sp-2);
+}
+/* Mağazada giysi bölümleri: yuva başlığı + kendi ızgarası. */
+.shop-sub {
+  margin: var(--sp-3) 0 var(--sp-2);
+  color: var(--text-dim);
+  font-size: var(--fs-15);
+  font-weight: 700;
+}
+.shop-sub:first-child {
+  margin-top: 0;
+}

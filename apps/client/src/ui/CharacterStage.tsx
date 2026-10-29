@@ -46,6 +46,7 @@ export function CharacterStage(props: { chars: readonly PodiumChar[] }) {
         key: c.key,
         anchor,
         layers: lk.layers,
+        tints: lk.tints,
         dim: c.dim === true,
         hue: hueShiftFor(look(c.avatar).color),
         act: reduced

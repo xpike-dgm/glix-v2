@@ -9,11 +9,14 @@ import type {
 import {
   COSMETIC_TYPES,
   type CosmeticTypeId,
+  cleanEquipped,
+  colourUnlocked,
   cosmeticItem,
   currentPrice,
   type GlixPart,
   matchAward,
   REPORT_RETENTION_MS,
+  splitEquipped,
 } from "@glix/engine";
 import { istanbulDayStart } from "./badges.js";
 import { createFriendStore, FRIENDS_SCHEMA, type FriendStore } from "./friendStore.js";
@@ -212,7 +215,8 @@ export type CosmeticPurchase =
   | { ok: false; reason: "insufficient"; balance: number; price: number };
 
 /** Kuşanma sonucu: `unknown` katalogda yok ya da tür tutmuyor; `not_owned` sahip değil. */
-export type CosmeticEquip = "ok" | "missing" | "unknown" | "not_owned";
+/** `unknown_colour`: giysi değerindeki renk bilinmiyor (ya da renk desteklemeyen türde renk verildi). */
+export type CosmeticEquip = "ok" | "missing" | "unknown" | "not_owned" | "unknown_colour";
 
 /** Yönetici hesap dökümü ve dışa aktarma için sahip olunanlar + kuşanılanlar (tür -> ürün). */
 export interface CosmeticsDump {
@@ -1056,7 +1060,10 @@ export function createAccounts(path: string): AccountStore {
      ON CONFLICT (account_id, slot) DO UPDATE SET item_id = excluded.item_id`,
   );
   const cosUnequip = db.prepare("DELETE FROM cosmetic_equipped WHERE account_id = ? AND slot = ?");
-  const cosUnequipItem = db.prepare("DELETE FROM cosmetic_equipped WHERE account_id = ? AND item_id = ?");
+  // Renkli değer `kimlik~renk` de ürünün kuşanılmışıdır.
+  const cosUnequipItem = db.prepare(
+    "DELETE FROM cosmetic_equipped WHERE account_id = ? AND (item_id = ? OR item_id LIKE ? ESCAPE '\\')",
+  );
   const cosDump = (accountId: number): CosmeticsDump => ({
     owned: (cosOwnedAll.all(accountId) as { item_id: string; acquired_at: number; price_paid: number }[]).map(
       (r) => ({ itemId: r.item_id, acquiredAt: r.acquired_at, pricePaid: r.price_paid }),
@@ -1567,16 +1574,25 @@ export function createAccounts(path: string): AccountStore {
           result = "ok";
           return;
         }
-        const it = cosmeticItem(itemId);
+        // Değer `kimlik` ya da giysilerde `kimlik~renk`; renk bilinmiyorsa reddedilir.
+        const sep = itemId.indexOf("~");
+        const baseId = sep < 0 ? itemId : itemId.slice(0, sep);
+        const it = cosmeticItem(baseId);
         if (!it || it.type !== type) {
           result = "unknown";
           return;
         }
-        if (!cosOwnedHas.get(accountId, itemId)) {
+        const value = cleanEquipped(type, itemId);
+        if (value === null) {
+          result = "unknown_colour";
+          return;
+        }
+        const e = splitEquipped(value);
+        if (!e || !colourUnlocked((id) => cosOwnedHas.get(accountId, id) !== undefined, e.id, e.colour)) {
           result = "not_owned";
           return;
         }
-        cosEquip.run(accountId, type, itemId);
+        cosEquip.run(accountId, type, value);
         result = "ok";
       });
       return result;
@@ -1601,7 +1617,7 @@ export function createAccounts(path: string): AccountStore {
     revokeCosmetic(accountId, itemId) {
       let removed = false;
       inTransaction(() => {
-        cosUnequipItem.run(accountId, itemId);
+        cosUnequipItem.run(accountId, itemId, `${itemId.replace(/[\\%_]/g, "\\$&")}~%`);
         removed = Number(cosOwnedDrop.run(accountId, itemId).changes) === 1;
       });
       return removed;

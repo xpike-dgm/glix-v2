@@ -22,7 +22,9 @@ export interface StageSlot {
   /** Karakterin sığacağı kutu (ayaklar altta ortada). */
   anchor: HTMLElement;
   layers: readonly string[];
-  /** Renk dönüşü (derece); 0 = çizimin kendi camgöbeği. */
+  /** Giysi katmanı -> neon renk dönüşü (derece); yazılmayan katman çizildiği gibi kalır. */
+  tints: Readonly<Record<string, number>>;
+  /** Gövdenin kimlik rengi dönüşü (derece); 0 = çizimin kendi camgöbeği. */
   hue: number;
   act: Act;
   /** Soluk çiz (bağlantısı kopuk). */
@@ -291,6 +293,7 @@ export async function mountCharacterStage(host: HTMLElement, opts: StageOptions)
           lives.set(slot.key, l);
         } else l.slot = slot;
         l.puppet.setHue(slot.hue);
+        l.puppet.setTints(slot.tints);
         ensureClip(l);
       }
       for (const [key, l] of lives) {

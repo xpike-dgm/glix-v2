@@ -7,6 +7,8 @@
  * harmanlı kemik dönüşümüyle (linear blend skinning) köşeler yeniden hesaplanır.
  */
 
+import { GIYSI_SIRASI } from "@glix/engine";
+
 /** `rig.json` içindeki gövde parçası. Konumlar yarım boy (512x768) piksel cinsindendir. */
 export interface RigPart {
   name: string;
@@ -24,9 +26,13 @@ export interface WardrobePiece {
   file: string;
   size: readonly [number, number];
   bone: string;
-  /** Hangi gövde parçasından hemen sonra çizilir. */
+  /** Hangi gövde parçasından hemen sonra çizilir (`behind` ise yok sayılır). */
   drawAfter: string;
   sourceOrigin: readonly [number, number];
+  /** `layer: "arka"`: gövdenin ARKASINA çizilir (pelerin, kanat, sırt çantası); "on" kendi kemiğinin önüne. */
+  behind: boolean;
+  /** Katmanın giysi yuvası (`GIYSI_SIRASI` türü): aynı kemikteki parçaların sırasını belirler. */
+  slot: string;
 }
 
 export interface Rig {
@@ -84,6 +90,8 @@ export function parseRig(raw: unknown): Rig | null {
   if (isRec(raw.wardrobe)) {
     for (const [layer, w] of Object.entries(raw.wardrobe)) {
       if (!isRec(w) || !Array.isArray(w.pieces)) return null;
+      const slot = typeof w.slot === "string" && GIYSI_SIRASI.some((t) => t === w.slot) ? w.slot : null;
+      if (slot === null) return null;
       const pieces: WardrobePiece[] = [];
       for (const q of w.pieces) {
         if (!isRec(q)) return null;
@@ -92,7 +100,8 @@ export function parseRig(raw: unknown): Rig | null {
         const sourceOrigin = pair(q.sourceOrigin);
         if (!file || !size || !sourceOrigin || typeof q.bone !== "string" || !done.has(q.bone)) return null;
         const drawAfter = typeof q.drawAfter === "string" ? q.drawAfter : q.bone;
-        pieces.push({ file, size, bone: q.bone, drawAfter, sourceOrigin });
+        if (q.layer !== undefined && q.layer !== "on" && q.layer !== "arka") return null;
+        pieces.push({ file, size, bone: q.bone, drawAfter, sourceOrigin, behind: q.layer === "arka", slot });
       }
       wardrobe[layer] = pieces;
     }

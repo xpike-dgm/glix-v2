@@ -1,6 +1,15 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { COSMETIC_ITEMS, DEFAULT_DANCE, itemsOfType, PLACE_DANCE } from "@glix/engine";
+import {
+  COSMETIC_ITEMS,
+  coveredSlots,
+  DEFAULT_DANCE,
+  isClothingType,
+  itemsOfType,
+  PLACE_DANCE,
+  slotOfBone,
+} from "@glix/engine";
 import { describe, expect, it } from "vitest";
+import { BONE_SLOT, coversOfBones, pieceRelative } from "../../../../tools/karakter-deneme/giysiEkle.mjs";
 import { parseDance } from "./dance.js";
 
 /** Katalog ile karakter varlıkları (public/assets/karakter) birbirini tutar. */
@@ -30,14 +39,67 @@ describe("katalog ve karakter varlıkları", () => {
     expect(total).toBeLessThan(100_000);
   });
 
-  it("giysi ürünlerinin katmanı rig.json'da tanımlı, parça görselleri var", () => {
-    const rig = JSON.parse(readFileSync(file("rig.json"), "utf8")) as {
-      wardrobe: Record<string, { pieces: { file: string }[] }>;
-    };
-    for (const it of COSMETIC_ITEMS.filter((i) => i.type === "sapka" || i.type === "ust")) {
+  const rig = JSON.parse(readFileSync(file("rig.json"), "utf8")) as {
+    parts: Record<string, { pivot: [number, number]; sourceOrigin: [number, number] }>;
+    wardrobe: Record<
+      string,
+      {
+        slot: string;
+        pieces: {
+          file: string;
+          bone: string;
+          layer?: string;
+          size: [number, number];
+          pivot: [number, number];
+          sourceOrigin: [number, number];
+        }[];
+      }
+    >;
+  };
+  const clothes = COSMETIC_ITEMS.filter((i) => isClothingType(i.type));
+
+  it("her giysi ürününün katmanı rig.json'da tanımlı, yuvası türüyle aynı, parça görselleri var", () => {
+    for (const it of clothes) {
       const layer = rig.wardrobe[it.asset ?? ""];
-      expect(layer).toBeDefined();
-      for (const p of layer?.pieces ?? []) expect(existsSync(file(p.file))).toBe(true);
+      expect(layer, it.id).toBeDefined();
+      expect(layer?.slot, it.id).toBe(it.type);
+      expect(layer?.pieces.length, it.id).toBeGreaterThan(0);
+      for (const p of layer?.pieces ?? []) {
+        expect(existsSync(file(p.file)), p.file).toBe(true);
+        expect(rig.parts[p.bone], p.bone).toBeDefined();
+        expect(["on", "arka", undefined]).toContain(p.layer);
+      }
     }
+  });
+
+  it("rig.json'daki her giysi katmanı katalogda bir ürüne bağlı (artık dosya yok)", () => {
+    const assets = new Set(clothes.map((i) => i.asset));
+    for (const name of Object.keys(rig.wardrobe)) expect(assets.has(name), name).toBe(true);
+    const used = new Set(
+      Object.values(rig.wardrobe).flatMap((l) => l.pieces.map((p) => p.file.split("/")[1])),
+    );
+    for (const f of readdirSync(file("giysi/"))) expect(used.has(f), f).toBe(true);
+  });
+
+  it("pivot, parçanın kemiğe göre yerleşiminden türer (içe aktarıcı çıktısı baş ile hizalı)", () => {
+    for (const layer of Object.values(rig.wardrobe))
+      for (const p of layer.pieces) {
+        const bone = rig.parts[p.bone];
+        if (!bone) throw new Error(p.bone);
+        const want = pieceRelative(p.sourceOrigin, bone);
+        expect(p.pivot).toEqual(want.pivot);
+      }
+  });
+
+  it("kostüm covers alanı, parçalarının kemiklerinden türeyen yuvalarla aynı; bone->yuva tablosu motorla aynı", () => {
+    for (const it of clothes.filter((i) => i.type === "kostum")) {
+      const bones = rig.wardrobe[it.asset ?? ""]?.pieces.map((p) => p.bone) ?? [];
+      expect([...(it.covers ?? [])].sort()).toEqual(coveredSlots(bones).sort());
+      expect(it.covers).not.toContain("aksesuar");
+    }
+    for (const bone of Object.keys(rig.parts)) expect(BONE_SLOT[bone] ?? null).toBe(slotOfBone(bone));
+    expect(coversOfBones(["torso", "head", "left_foot"]).sort()).toEqual(
+      coveredSlots(["torso", "head", "left_foot"]).sort(),
+    );
   });
 });

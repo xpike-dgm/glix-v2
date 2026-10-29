@@ -1,4 +1,5 @@
 /** Ağ (mesh) üretimi (saf): parça başına ızgara köşeleri, UV ve ağırlıklar; kıyafete göre birleştirme. */
+import { GIYSI_SIRASI } from "@glix/engine";
 import {
   BODY_DRAW_ORDER,
   buildSkinData,
@@ -105,16 +106,32 @@ export function buildPieceGeometry(
   };
 }
 
-/** Giyilen katmanlara göre parça sırası (arkadan öne): gövde sırası, her gövde parçasının ardına giysi parçaları. */
+/** Parça anahtarı: katman adı ve parçanın katmandaki sırası (aynı kemikte birden çok parça olabilir). */
+export const pieceKey = (layer: string, index: number): string => `${layer}#${index}`;
+
+/**
+ * Giyilen katmanlara göre parça sırası (arkadan öne):
+ * 1. `arka` parçalar (pelerin, kanat, sırt çantası): tüm gövdenin arkasında;
+ * 2. gövde sırası; her gövde parçasının ardına, o kemiğe bağlı giysi parçaları yuva sırasıyla
+ *    (kostüm, alt, ayakkabı, üst, aksesuar, şapka; bkz. `GIYSI_SIRASI`).
+ */
 export function drawKeys(rig: Rig, layers: readonly string[]): string[] {
+  const rank = (l: string): number =>
+    (GIYSI_SIRASI as readonly string[]).indexOf(rig.wardrobe[l]?.[0]?.slot ?? "");
+  const wanted = [...new Set(layers)]
+    .filter((l) => rig.wardrobe[l] !== undefined)
+    .sort((a, b) => rank(a) - rank(b));
   const out: string[] = [];
+  for (const layer of wanted)
+    (rig.wardrobe[layer] ?? []).forEach((q, i) => {
+      if (q.behind) out.push(pieceKey(layer, i));
+    });
   for (const bone of BODY_DRAW_ORDER) {
     out.push(`body:${bone}`);
-    for (const layer of layers) {
-      const pieces = rig.wardrobe[layer];
-      if (!pieces) continue;
-      for (const q of pieces) if (q.drawAfter === bone) out.push(`${layer}:${q.bone}`);
-    }
+    for (const layer of wanted)
+      (rig.wardrobe[layer] ?? []).forEach((q, i) => {
+        if (!q.behind && q.drawAfter === bone) out.push(pieceKey(layer, i));
+      });
   }
   return out;
 }
@@ -124,6 +141,10 @@ export interface MeshData {
   uvs: Float32Array;
   indices: Uint32Array;
   skin: SkinData;
+  /** Çizilen giysi katmanlarının adları (ağdaki ilk görünme sırasıyla). */
+  layerNames: string[];
+  /** Köşe başına katman: -1 gövde, yoksa `layerNames` dizini (renk süzgeci için). */
+  vertexLayer: Int16Array;
 }
 
 /** Hazır parça geometrilerini verilen sırayla tek ağa birleştirir; bilinmeyen anahtar atlanır. */
@@ -139,9 +160,16 @@ export function assembleMesh(
   const uvs = new Float32Array(nv * 2);
   const indices = new Uint32Array(ni);
   const wts: VertexWeights[] = [];
+  const layerNames: string[] = [];
+  const vertexLayer = new Int16Array(nv).fill(-1);
   let vo = 0;
   let io = 0;
   for (const g of parts) {
+    if (g.layer !== "body") {
+      let li = layerNames.indexOf(g.layer);
+      if (li < 0) li = layerNames.push(g.layer) - 1;
+      vertexLayer.fill(li, vo, vo + g.count);
+    }
     rest.set(g.rest, vo * 2);
     uvs.set(g.uvs, vo * 2);
     for (let i = 0; i < g.idx.length; i++) indices[io + i] = (g.idx[i] ?? 0) + vo;
@@ -149,5 +177,5 @@ export function assembleMesh(
     vo += g.count;
     io += g.idx.length;
   }
-  return { rest, uvs, indices, skin: buildSkinData(sk, rest, wts) };
+  return { rest, uvs, indices, skin: buildSkinData(sk, rest, wts), layerNames, vertexLayer };
 }

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { assembleMesh, buildPieceGeometry, drawKeys, GRID, type PieceGeo, type PieceSpec } from "./mesh.js";
-import { buildSkeleton, parseRig } from "./rig.js";
+import { buildSkeleton, parseRig, type Rig } from "./rig.js";
 
 const rig = parseRig(
   JSON.parse(readFileSync(new URL("../../public/assets/karakter/rig.json", import.meta.url), "utf8")),
@@ -11,7 +11,7 @@ const sk = buildSkeleton(rig);
 
 const spec = (key: string, bone: string, ox: number, oy: number, w: number, h: number): PieceSpec => ({
   key,
-  layer: key.split(":")[0] ?? "body",
+  layer: key.split(/[:#]/)[0] ?? "body",
   bone: sk.index.get(bone) ?? 0,
   after: bone,
   w,
@@ -60,11 +60,67 @@ describe("ağ üretimi", () => {
   it("çizim sırası: gövde arkadan öne, giysi kendi kemiğinin hemen arkasında", () => {
     const keys = drawKeys(rig, ["sapka", "ceket"]);
     expect(keys[0]).toBe("body:left_thigh");
-    expect(keys.indexOf("sapka:head")).toBe(keys.indexOf("body:head") + 1);
-    expect(keys.indexOf("ceket:torso")).toBe(keys.indexOf("body:torso") + 1);
-    expect(keys.indexOf("ceket:left_forearm")).toBe(keys.indexOf("body:left_forearm") + 1);
+    expect(keys.indexOf("sapka#0")).toBe(keys.indexOf("body:head") + 1);
+    expect(keys.indexOf("ceket#0")).toBe(keys.indexOf("body:torso") + 1);
+    expect(keys.indexOf("ceket#2")).toBe(keys.indexOf("body:left_forearm") + 1);
     expect(drawKeys(rig, [])).toHaveLength(14);
     expect(drawKeys(rig, ["yok-boyle"])).toHaveLength(14);
+  });
+
+  it("yeni şapkalar başın hemen arkasında, katmanlar rig'de tanımlı", () => {
+    for (const l of ["bere", "fotr", "parti", "kovboy", "kulaklikli-kask", "korsan", "tac"]) {
+      expect(rig.wardrobe[l]?.[0]?.slot).toBe("sapka");
+      const keys = drawKeys(rig, [l]);
+      expect(keys.indexOf(`${l}#0`)).toBe(keys.indexOf("body:head") + 1);
+    }
+  });
+
+  describe("yuva sırası, arka katman ve kostüm", () => {
+    const piece = (bone: string, slot: string, behind = false) => ({
+      file: "giysi/x.webp",
+      size: [10, 10] as const,
+      bone,
+      drawAfter: bone,
+      sourceOrigin: [0, 0] as const,
+      behind,
+      slot,
+    });
+    const synth: Rig = {
+      ...rig,
+      wardrobe: {
+        ...rig.wardrobe,
+        pelerin: [piece("torso", "aksesuar", true)],
+        pantolon: [piece("left_thigh", "alt"), piece("torso", "alt")],
+        bot: [piece("left_foot", "ayakkabi")],
+        kolye: [piece("torso", "aksesuar")],
+        takim: [piece("torso", "kostum"), piece("head", "kostum")],
+      },
+    };
+
+    it("arka katman tüm gövdeden önce çizilir", () => {
+      const keys = drawKeys(synth, ["ceket", "pelerin"]);
+      expect(keys[0]).toBe("pelerin#0");
+      expect(keys.indexOf("pelerin#0")).toBeLessThan(keys.indexOf("body:left_thigh"));
+      expect(keys).toHaveLength(14 + 1 + 5);
+    });
+
+    it("aynı kemikte: alt, üstün altında; aksesuar üstün üstünde; şapka en üstte", () => {
+      const keys = drawKeys(synth, ["kolye", "ceket", "pantolon", "sapka"]);
+      const t = keys.indexOf("body:torso");
+      expect(keys.slice(t, t + 4)).toEqual(["body:torso", "pantolon#1", "ceket#0", "kolye#0"]);
+      expect(keys.indexOf("sapka#0")).toBe(keys.indexOf("body:head") + 1);
+      // ayakkabı ayağın hemen arkasında, pantolon bacakta
+      expect(drawKeys(synth, ["bot"]).indexOf("bot#0")).toBe(
+        drawKeys(synth, ["bot"]).indexOf("body:left_foot") + 1,
+      );
+      expect(keys.indexOf("pantolon#0")).toBe(keys.indexOf("body:left_thigh") + 1);
+    });
+
+    it("kostüm yuvası aynı kemikte en altta çizilir", () => {
+      const keys = drawKeys(synth, ["ceket", "takim"]);
+      const t = keys.indexOf("body:torso");
+      expect(keys.slice(t, t + 3)).toEqual(["body:torso", "takim#0", "ceket#0"]);
+    });
   });
 
   it("birleştirme: indeksler parça kaymasıyla yeniden numaralanır", () => {
@@ -83,5 +139,9 @@ describe("ağ üretimi", () => {
     expect(Math.max(...m.indices)).toBe(a.count + b.count - 1);
     expect(m.indices[a.idx.length]).toBe((b.idx[0] ?? 0) + a.count);
     expect(m.skin.count).toBe(a.count + b.count);
+    // köşe katmanları: gövde -1, giysi katmanın dizini (renk süzgeci için)
+    expect(m.layerNames).toEqual(["sapka"]);
+    expect(Array.from(m.vertexLayer.slice(0, a.count)).every((v) => v === -1)).toBe(true);
+    expect(Array.from(m.vertexLayer.slice(a.count)).every((v) => v === 0)).toBe(true);
   });
 });
