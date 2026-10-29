@@ -88,8 +88,8 @@ export function EconomyPanel(props: { onOtp: () => void }) {
                 <span class="adm-tile__label">Kazanılan ({d().days} gün)</span>
                 <strong class="adm-tile__value">{fmtInt(d().totals.kazanilan)}</strong>
                 <span class="adm-tile__sub">
-                  maç {fmtInt(d().totals.mac)} · rozet {fmtInt(d().totals.rozet)} · yönetici{" "}
-                  {fmtInt(d().totals.yonetici)}
+                  maç {fmtInt(d().totals.mac)} · rozet {fmtInt(d().totals.rozet)} · görev{" "}
+                  {fmtInt(d().totals.gorev)} · yönetici {fmtInt(d().totals.yonetici)}
                 </span>
               </div>
               <div class="adm-tile">

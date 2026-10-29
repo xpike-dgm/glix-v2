@@ -32,6 +32,7 @@ import { errorMessage } from "./messages.js";
 import { type BannedWords, createBannedWords, createReportDesk } from "./moderation.js";
 import { handleProfile, PROFILE_PATH } from "./profile.js";
 import { createPushBroadcaster } from "./pushBroadcast.js";
+import { createQuestsApi, QUESTS_PATH } from "./quests.js";
 import { TokenBucket } from "./ratelimit.js";
 import { countActiveMatches, countPlayers, createRuntime, disposeRuntime } from "./rooms.js";
 import type { AccountRef, Connection, Runtime } from "./runtime.js";
@@ -179,6 +180,8 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       accounts,
       (accountId, ids) => rt.social.sendTo(accountId, { type: "badgesEarned", ids }),
       (accountId, earned) => rt.social.sendTo(accountId, { type: "glixEarned", ...earned }),
+      () => rt.gunlukGorevler,
+      (accountId, quests, balance) => rt.social.sendTo(accountId, { type: "questsDone", quests, balance }),
     ),
   );
   rt.social = createSocial(rt, accounts);
@@ -191,6 +194,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     clock,
     allowedOrigins: opts.allowedOrigins,
   });
+  const questsApi = createQuestsApi({ accounts, clock, enabled: () => rt.gunlukGorevler });
   const shopApi = createShopApi({
     accounts,
     social: rt.social,
@@ -377,6 +381,10 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     }
     if (path === FRIENDS_PATH || path.startsWith(`${FRIENDS_PATH}/`)) {
       friendsApi(req, res);
+      return;
+    }
+    if (path === QUESTS_PATH) {
+      questsApi(req, res);
       return;
     }
     if (path === SHOP_PATH || path.startsWith(`${SHOP_PATH}/`)) {

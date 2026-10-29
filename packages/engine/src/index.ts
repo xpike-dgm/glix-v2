@@ -40,6 +40,7 @@ export * from "./glix.js";
 export * from "./mergePatch.js";
 export * from "./moderation/index.js";
 export * from "./protocol.js";
+export * from "./quests.js";
 export * from "./replay.js";
 export * from "./rng.js";
 export * from "./siteNotice.js";

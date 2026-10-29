@@ -194,6 +194,12 @@ export function buildExport(
         ref: g.ref,
       })),
     },
+    daily_quests: data.quests.map((q) => ({
+      quest_id: q.questId,
+      day: new Date(q.day + 3 * 3600 * 1000).toISOString().slice(0, 10),
+      paid_at: iso(q.at),
+      reward: q.reward,
+    })),
     cosmetics: {
       owned: data.cosmetics.owned.map((o) => ({
         id: o.itemId,

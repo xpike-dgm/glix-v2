@@ -1,7 +1,8 @@
-import type { GlixPart } from "@glix/engine";
+import type { GlixPart, QuestCompleted } from "@glix/engine";
 import type { AccountStore, CoplayPair, GameRow, MatchRow } from "./accountStore.js";
 import { awardAfterMatch, badgeById } from "./badges.js";
 import { log } from "./log.js";
+import { settleQuests } from "./quests.js";
 
 /** Sıralamaya giren bir oyuncu: oyuncu kimliği, varsa hesap kimliği ve puanı. */
 export interface Entrant {
@@ -127,6 +128,9 @@ export interface GlixEarned {
 /** Glix kazanıldığında çağrılır (hesap kimliği, kazanç). Hiç kazanç yoksa ve sınır da dolmadıysa çağrılmaz. */
 export type GlixEarnedHandler = (accountId: number, earned: GlixEarned) => void;
 
+/** Günlük görev tamamlandığında çağrılır (hesap kimliği, tamamlananlar, yeni bakiye). */
+export type QuestsDoneHandler = (accountId: number, quests: QuestCompleted[], balance: number) => void;
+
 /**
  * Hesap deposuna yazan yazıcı: tek işlem, hata günlüğe gider. Maç satırı yazıldıktan sonra rozetler değerlendirilir;
  * bu adım ayrı hata yalıtımındadır (rozet hatası maç kaydını ya da oyun akışını bozmaz).
@@ -135,6 +139,9 @@ export function createAccountRecorder(
   store: AccountStore,
   onBadges: BadgesEarnedHandler = () => {},
   onGlix: GlixEarnedHandler = () => {},
+  /** Günlük görevler anahtarı; kapalıyken (varsayılan) görev hesabı hiç çalışmaz. */
+  questsEnabled: () => boolean = () => false,
+  onQuests: QuestsDoneHandler = () => {},
 ): AccountStatsRecorder {
   return {
     gameFinished(record) {
@@ -172,6 +179,14 @@ export function createAccountRecorder(
           if (earned && (earned.total > 0 || earned.capped)) onGlix(row.accountId, earned);
         } catch (err) {
           log.error("accounts_error", { op: "glix", error: String(err) });
+        }
+        // Günlük görevler: kapalıyken hiçbir şey okunmaz ya da yazılmaz; hata yalıtımı ayrı.
+        if (!questsEnabled()) continue;
+        try {
+          const done = settleQuests(store, row.accountId, record.endedAt);
+          if (done) onQuests(row.accountId, done.quests, done.balance);
+        } catch (err) {
+          log.error("accounts_error", { op: "quests", error: String(err) });
         }
       }
     },

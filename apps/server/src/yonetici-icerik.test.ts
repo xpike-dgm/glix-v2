@@ -55,6 +55,7 @@ const POSTS: [string, unknown][] = [
   ["announcement/set", { text: "Merhaba", kind: "bilgi", endsAt: null }],
   ["announcement/clear", {}],
   ["push/broadcast", { title: "Başlık", body: "Metin", url: null }],
+  ["content/quests", { on: true }],
   ["maintenance/set", { on: true }],
   ["backup", { ack: true }],
 ];

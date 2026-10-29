@@ -358,6 +358,7 @@ describe("parseEconomy", () => {
     day: "2026-10-26",
     mac: 100,
     rozet: 25,
+    gorev: 0,
     yonetici: 40,
     yoneticiEksi: 30,
     harcanan: 105,

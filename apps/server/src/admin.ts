@@ -252,6 +252,7 @@ const POST_ROUTES: ReadonlySet<string> = new Set([
   "accounts/cosmetic-grant",
   "accounts/cosmetic-revoke",
   "content/game",
+  "content/quests",
   "announcement/set",
   "announcement/clear",
   "push/broadcast",
@@ -401,6 +402,7 @@ async function route(req: IncomingMessage, res: ServerResponse, env: AdminEnv): 
     case "banned-words/remove":
       return moderationAction(req, res, env, account.id, name);
     case "content/game":
+    case "content/quests":
     case "announcement/set":
     case "announcement/clear":
     case "push/broadcast":
@@ -769,7 +771,11 @@ async function accountAction(
 const MAX_CONTENT_BODY_BYTES = 2048;
 
 function contentBody(env: AdminEnv): AdminContent {
-  return { games: env.site.games(), announcement: env.site.announcement() };
+  return {
+    games: env.site.games(),
+    announcement: env.site.announcement(),
+    gunlukGorevler: env.site.gunlukGorevler(),
+  };
 }
 
 function maintenanceBody(env: AdminEnv): AdminMaintenance {
@@ -869,6 +875,12 @@ async function contentAction(
       if (input.random !== undefined) changes.push(input.random ? "pool_in" : "pool_out");
       audit(env, adminId, "game_switch", `${input.id}:${changes.join(",")}`);
       return send(res, 200, { ok: true, games: env.site.games() });
+    }
+    case "content/quests": {
+      if (!isRecord(data) || !exactKeys(data, ["on"]) || typeof data.on !== "boolean") return invalid();
+      env.site.setGunlukGorevler(data.on, env.now);
+      audit(env, adminId, data.on ? "quests_on" : "quests_off", "");
+      return send(res, 200, { ok: true, on: data.on });
     }
     case "announcement/set": {
       const input = parseAnnouncementInput(data, env.now);

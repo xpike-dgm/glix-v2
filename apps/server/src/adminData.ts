@@ -238,6 +238,7 @@ export function buildEconomy(accounts: AccountStore, now: number, days: number):
       day: new Date(d * ECO_DAY_MS).toISOString().slice(0, 10),
       mac: 0,
       rozet: 0,
+      gorev: 0,
       yonetici: 0,
       yoneticiEksi: 0,
       harcanan: 0,
@@ -253,6 +254,7 @@ export function buildEconomy(accounts: AccountStore, now: number, days: number):
     if (!row) continue;
     if (r.reason === "mac") row.mac += r.pos;
     else if (r.reason === "rozet") row.rozet += r.pos;
+    else if (r.reason === "gorev") row.gorev += r.pos;
     else if (r.reason === "yonetici") {
       row.yonetici += r.pos;
       row.yoneticiEksi += r.neg;
@@ -265,6 +267,7 @@ export function buildEconomy(accounts: AccountStore, now: number, days: number):
   const totals = {
     mac: 0,
     rozet: 0,
+    gorev: 0,
     yonetici: 0,
     yoneticiEksi: 0,
     harcanan: 0,
@@ -273,7 +276,7 @@ export function buildEconomy(accounts: AccountStore, now: number, days: number):
     sinirdaki: 0,
   };
   for (const row of daily) {
-    row.kazanilan = row.mac + row.rozet + row.yonetici;
+    row.kazanilan = row.mac + row.rozet + row.gorev + row.yonetici;
     row.net = row.kazanilan - row.yoneticiEksi - row.harcanan;
     for (const key of Object.keys(totals) as (keyof typeof totals)[]) totals[key] += row[key];
   }

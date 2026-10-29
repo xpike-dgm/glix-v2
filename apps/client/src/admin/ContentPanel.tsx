@@ -6,6 +6,7 @@ import {
   fetchPushStatus,
   publishAnnouncement,
   setGameSwitch,
+  setQuests,
   startBroadcast,
 } from "./api.js";
 import { Confirm } from "./Confirm.js";
@@ -27,6 +28,7 @@ type Pending =
   | { kind: "game"; game: AdminGameSwitch; patch: { open?: boolean; random?: boolean } }
   | { kind: "announce"; text: string; announceKind: "bilgi" | "uyari"; endsAt: number | null }
   | { kind: "clear" }
+  | { kind: "quests"; on: boolean }
   | { kind: "broadcast"; title: string; body: string; url: string | null };
 
 const KINDS = [
@@ -49,6 +51,10 @@ function pendingText(p: Pending, subscribers: number): string {
       return `Duyuru herkese gösterilecek (ana sayfa ve lobi, misafirler dahil): "${p.text}"${
         p.endsAt === null ? "" : ` Bitiş: ${fmtDateTime(p.endsAt)}.`
       }`;
+    case "quests":
+      return p.on
+        ? "Günlük görevler açılacak: hesaplı oyuncular ana sayfada 3 görev görür, tamamlayınca Glix kazanır (ödül tutarları yer tutucudur, onaylı mı kontrol et)."
+        : "Günlük görevler kapatılacak: görev kartı ve ödüller kalkar; o güne kadar ödenenler kalır.";
     case "clear":
       return "Duyuru herkesten kaldırılacak.";
     case "broadcast":
@@ -172,6 +178,13 @@ export function ContentPanel(props: { onOtp: () => void }) {
         const r = await publishAnnouncement({ text: p.text, kind: p.announceKind, endsAt: p.endsAt });
         ok = r.ok;
         message = r.message;
+        break;
+      }
+      case "quests": {
+        const r = await setQuests(p.on);
+        ok = r.ok;
+        message = r.message;
+        if (r.ok) setContent((c) => (c ? { ...c, gunlukGorevler: p.on } : c));
         break;
       }
       case "clear": {
@@ -327,6 +340,29 @@ export function ContentPanel(props: { onOtp: () => void }) {
                   </For>
                 </tbody>
               </table>
+            </div>
+          )}
+        </Show>
+      </div>
+
+      <div class="adm-card">
+        <h3 class="adm-h3">Günlük görevler</h3>
+        <p class="adm-muted adm-note">
+          Hesaplı oyunculara günde 3 görev (kolay, orta, zor). Kapalıyken görev kartı, ilerleme ve ödül
+          yoktur. Ödül tutarları yer tutucudur; açmadan önce <span class="mono">docs/HESAP.md</span> tablosunu
+          onayla.
+        </p>
+        <Show when={content()}>
+          {(c) => (
+            <div class="adm-inline">
+              <b>{c().gunlukGorevler ? "Açık" : "Kapalı"}</b>
+              <button
+                type="button"
+                class="adm-btn adm-btn--small"
+                onClick={() => ask({ kind: "quests", on: !c().gunlukGorevler })}
+              >
+                {c().gunlukGorevler ? "Kapat" : "Aç"}
+              </button>
             </div>
           )}
         </Show>

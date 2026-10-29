@@ -27,6 +27,7 @@ const KEY_GAMES = "games";
 const KEY_ANNOUNCEMENT = "announcement";
 const KEY_ANNOUNCEMENT_SEQ = "announcement_seq";
 const KEY_MAINTENANCE = "maintenance";
+const KEY_QUESTS = "gunlukGorevler";
 
 /** Herkese gösterilecek durum: süresi dolmuş duyuru çıkarılır. */
 export function siteNoticeOf(rt: Runtime): SiteNotice {
@@ -44,6 +45,9 @@ export interface SiteSettings {
   /** Yayındaki (süresi dolmamış) duyuru. */
   announcement(): Announcement | null;
   maintenance(): boolean;
+  /** Günlük görevler açık mı (varsayılan kapalı). */
+  gunlukGorevler(): boolean;
+  setGunlukGorevler(on: boolean, now: number): void;
   /** Yönetici panelinin oyun listesi (kapalı olanlar dahil, motor sırasıyla). */
   games(): AdminGameSwitch[];
   /** Oyun anahtarını değiştirir; bilinmeyen oyunda "unknown". */
@@ -101,6 +105,7 @@ export function createSiteSettings(
   let overrides: GameOverrides = parseOverrides(accounts.settingGet(KEY_GAMES));
   rt.catalog = effectiveCatalog(overrides);
   rt.maintenance = accounts.settingGet(KEY_MAINTENANCE) === "1";
+  rt.gunlukGorevler = accounts.settingGet(KEY_QUESTS) === "1";
   rt.announcement = parseAnnouncement(accounts.settingGet(KEY_ANNOUNCEMENT));
 
   const pushNotice = (): void => broadcast({ type: "siteNotice", site: siteNoticeOf(rt) });
@@ -117,6 +122,12 @@ export function createSiteSettings(
   return {
     announcement: () => siteNoticeOf(rt).announcement,
     maintenance: () => rt.maintenance,
+    gunlukGorevler: () => rt.gunlukGorevler,
+    setGunlukGorevler(on, now) {
+      if (on) accounts.settingSet(KEY_QUESTS, "1", now);
+      else accounts.settingDelete(KEY_QUESTS);
+      rt.gunlukGorevler = on;
+    },
     games() {
       return ENGINE_CATALOG.map((g) => {
         const o = overrides[g.id];
