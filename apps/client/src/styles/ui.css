@@ -773,7 +773,8 @@
 .offline {
   padding: 12px 14px;
   border-radius: 16px;
-  background: rgba(255, 194, 59, 0.1);
+  /* Opak: arkadaki ızgara çizgileri metnin içinden geçmesin. */
+  background: #221f2b;
   border: 1px solid rgba(255, 194, 59, 0.45);
   color: var(--text);
   font-size: var(--fs-15);

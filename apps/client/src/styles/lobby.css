@@ -151,11 +151,15 @@
   flex-direction: column;
   gap: var(--sp-2);
 }
+/* Ayarlar ekranındaki grup başlığıyla (.set__head) aynı: sayfa başlığıyla yarışmaz. */
 .lset__head {
   padding: 0 var(--sp-2);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: var(--fs-18);
+  font-size: var(--fs-13);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
 }
 .lset__sub {
   margin: 0;

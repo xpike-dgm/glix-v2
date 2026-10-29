@@ -77,7 +77,9 @@ export function Join() {
           onClick={submit}
           busy={state.busy}
           disabled={!isCompleteCode(state.joinCode)}
-          reason={isCompleteCode(state.joinCode) ? undefined : "5 harfli kodu gir"}
+          reason={
+            state.joinCode.length > 0 && !isCompleteCode(state.joinCode) ? "5 harfli kodu gir" : undefined
+          }
         >
           Katıl
         </PrimaryButton>

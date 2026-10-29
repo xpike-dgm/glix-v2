@@ -251,10 +251,7 @@ async function main() {
       await page.locator(".wordmark img").evaluate((i) => i.complete && i.naturalWidth > 0),
       "çevrimdışı ana sayfada logo yüklenmedi",
     );
-    assert(
-      (await note.innerText()).includes("İnternet bağlantısı yok — bağlanınca oyuna katılabilirsin"),
-      "çevrimdışı metni",
-    );
+    assert((await note.innerText()).includes("İnternet yok — bağlanınca katılabilirsin"), "çevrimdışı metni");
     // Misafir ana sayfası: oda kurmak hesap ister; katılma düğmesi "Kodla katıl"
     assert(
       await page.getByRole("button", { name: /odaya katıl|kodla katıl/i }).isDisabled(),

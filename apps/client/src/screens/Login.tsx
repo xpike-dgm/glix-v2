@@ -35,16 +35,18 @@ export function Login() {
               Şifremi unuttum
             </GhostButton>
           </Show>
-          <GhostButton
-            size="small"
-            onClick={() => {
-              setGoogleNotice(null);
-              setState("nav", "register");
-            }}
-          >
-            Hesabın yok mu? Kayıt ol
-          </GhostButton>
         </>
+      }
+      after={
+        <GhostButton
+          size="small"
+          onClick={() => {
+            setGoogleNotice(null);
+            setState("nav", "register");
+          }}
+        >
+          Hesabın yok mu? Kayıt ol
+        </GhostButton>
       }
     >
       <Show when={state.google.enabled}>

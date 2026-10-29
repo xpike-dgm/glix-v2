@@ -566,14 +566,13 @@ export function Settings() {
                     <div class="set__row">
                       <span class="set__text">
                         <span class="set__hint set__hint--wrap">
-                          Doğrulama maili gelmediyse spam (gereksiz) klasörüne bak; "Spam değil" olarak
-                          işaretle.
+                          Doğrulama maili gelmediyse spam (gereksiz) klasörüne bak.
                         </span>
                       </span>
                     </div>
                     <div class="set__row set__row--action">
                       <GhostButton size="small" onClick={() => void resendVerification()}>
-                        E-postanı doğrula — Tekrar gönder
+                        Doğrulama mailini tekrar gönder
                       </GhostButton>
                     </div>
                   </Show>

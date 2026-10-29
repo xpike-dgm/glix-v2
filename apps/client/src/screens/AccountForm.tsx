@@ -12,6 +12,8 @@ interface Props {
   submitLabel: string;
   children: JSX.Element;
   footer?: JSX.Element;
+  /** Ana düğmenin altında görünen geçiş bağlantısı (ör. "Hesabın yok mu? Kayıt ol"). */
+  after?: JSX.Element;
   /** Forma gelmeden önce oluşmuş bir sorunun metni (ör. Google dönüşü); hata satırı gibi gösterilir. */
   notice?: string | null | undefined;
   back?: () => void;
@@ -66,6 +68,7 @@ export function AccountForm(props: Props) {
         <PrimaryButton type="submit" busy={busy()}>
           {props.submitLabel}
         </PrimaryButton>
+        {props.after}
       </form>
     </Screen>
   );

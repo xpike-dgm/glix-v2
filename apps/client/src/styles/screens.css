@@ -371,6 +371,12 @@
     justify-content: center;
   }
 }
+/* Hesaplı oyuncuda üç davet düğmesi var; kod biraz küçülerek aynı satırda kalır (misafirle aynı yerleşim). */
+@media (min-width: 340px) and (max-width: 399px) {
+  .lobby__head--3 .roomcode {
+    font-size: clamp(28px, 7.8vw, 40px);
+  }
+}
 .lobby__scroll {
   flex: 1;
   min-height: 0;
@@ -2530,7 +2536,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
-  padding: var(--sp-2) 0 var(--sp-4);
+  /* Yanlarda pay: ana düğmenin parlaması kaydırma kutusunun kenarında kesilmesin. */
+  margin-inline: -16px;
+  padding: var(--sp-2) 16px var(--sp-4);
 }
 .acct__fields {
   display: flex;
@@ -2539,7 +2547,13 @@
 }
 .acct__fields .field {
   height: 56px;
+  font-family: var(--font-text);
+  font-weight: 600;
   font-size: var(--fs-18);
+}
+.acct__fields .field::placeholder {
+  color: rgba(142, 151, 199, 0.8);
+  font-weight: 500;
 }
 .acct__error {
   text-align: center;
@@ -2574,6 +2588,15 @@
 }
 .acct__list li + li {
   margin-top: 6px;
+}
+/* Yasal cümle tek dokunma hedefidir; satır yüksekliği şişmez. */
+.acct__legal--btn {
+  min-height: 48px;
+  padding: 6px 4px;
+  font-family: inherit;
+}
+.acct__legal--btn .acct__link {
+  padding: 0;
 }
 .acct__link {
   display: inline-block;

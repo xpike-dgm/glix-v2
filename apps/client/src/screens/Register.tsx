@@ -28,17 +28,19 @@ export function Register() {
       submitLabel="Kayıt ol"
       footer={
         <>
-          <p class="acct__legal">
-            Kayıt olarak{" "}
-            <button type="button" class="acct__link" onClick={() => setState("nav", "aydinlatma")}>
-              aydınlatma metnini
-            </button>{" "}
-            kabul edersin.
-          </p>
-          <GhostButton size="small" onClick={() => setState("nav", "login")}>
-            Zaten hesabın var mı? Giriş yap
-          </GhostButton>
+          <button
+            type="button"
+            class="acct__legal acct__legal--btn"
+            onClick={() => setState("nav", "aydinlatma")}
+          >
+            Kayıt olarak <span class="acct__link">aydınlatma metnini</span> kabul edersin.
+          </button>
         </>
+      }
+      after={
+        <GhostButton size="small" onClick={() => setState("nav", "login")}>
+          Zaten hesabın var mı? Giriş yap
+        </GhostButton>
       }
     >
       <Show when={state.google.enabled}>

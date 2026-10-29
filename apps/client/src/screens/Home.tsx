@@ -190,7 +190,7 @@ export function Home() {
           <div class="offline-wrap">
             <Mascot pose="baglanti-koptu" size="var(--mascot-sm, 64px)" />
             <p class="offline" role="status">
-              İnternet bağlantısı yok — bağlanınca oyuna katılabilirsin
+              İnternet yok — bağlanınca katılabilirsin
             </p>
           </div>
         </Show>

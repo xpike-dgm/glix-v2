@@ -296,7 +296,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
             <SoundToggle />
           </header>
 
-          <div class="lobby__head rise">
+          <div class="lobby__head rise" classList={{ "lobby__head--3": !!state.account && !solo() }}>
             <div class="lobby__code">
               <p class="overline">Oda kodu</p>
               <button
