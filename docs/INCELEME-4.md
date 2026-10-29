@@ -66,3 +66,11 @@ Yük: `taskset -c 0` ile vitest + 12 CPU yakıcı.
 - `kartlar.test.ts`: düzeltmeden önce 3/3 koşuda aynı test düşüyordu; sonra 30/30 geçti.
 - `yedek-yayinlar.test.ts`: ilk düzeltmeyle 30 koşuda 28 geçti (2 düşüş = zaman aşımı, yukarıdaki 60 sn'ye yol
   açtı); zaman aşımı düzeltmesinden sonra 30/30 geçti.
+
+Ek kanıt (tek çekirdek + 4 yakıcı): `devam`, `lobi`, `sicak-yol`, `kullanici-adi`, `hizmet-baglanti` dosyaları art arda
+30 koşuda 30/30 geçti. Son durum: motor 2054, istemci 868, sunucu 754 test yeşil; `pnpm typecheck` yeşil.
+`pnpm check` depoda bu işten bağımsız, daha önce var olan lint hatalarıyla (ör. `tek-ve-kucuk`, `admin.ts`) kırmızı kalır;
+değiştirilen dosyalarda hata yoktur.
+
+Kalan risk: `kartlar.test.ts` içindeki "erken biter" testleri 1 sn'lik sahte ek süreyi istemci görünümünden bekler;
+17'den çok `sync` turu gerekirse süre dolabilir. Bu aşırı yükte bile (40 yakıcı) görülmedi, dokunulmadı.
