@@ -625,7 +625,19 @@
 }
 .lobby__foot {
   flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding-top: 10px;
+}
+/* Ana işlem (Başlat / Hazırım) kalan genişliği alır; tepki yelpazesi sağda 48 px köşe düğmesidir. */
+.lobby__main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.lobby__main .pbtn {
+  width: 100%;
+  min-width: 0;
 }
 
 /* ---- Briefing ---- */
@@ -1856,71 +1868,6 @@
 .gcard--dim .gcard__name {
   opacity: 0.7;
 }
-.emojibar-wrap {
-  flex: none;
-  min-width: 0;
-}
-/* Tepki paketi sahibine sayfa şeridi: emojiler + her paket için küçük görsel düğmesi. */
-.emojibar__pages {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  padding-top: 4px;
-}
-.emojibar__page {
-  width: 48px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border-radius: 24px;
-  font-size: 20px;
-  line-height: 1;
-  background: rgba(10, 16, 48, 0.5);
-  border: 1.5px solid var(--line);
-}
-.emojibar__page[aria-selected="true"] {
-  border-color: var(--amber);
-  background: rgba(255, 194, 59, 0.16);
-}
-.emojibar__page img {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-}
-.emojibar__btn[data-sticker] img {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-  pointer-events: none;
-}
-.emojibar {
-  flex: none;
-  display: flex;
-  justify-content: space-between;
-  /* 6 × 48 px dar telefonda gutter'a taşar: kenar boşluğuna kadar uzanır. */
-  margin: 0 -6px;
-  padding-top: 6px;
-}
-.emojibar__btn {
-  flex: none;
-  width: 48px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  font-size: 24px;
-  line-height: 1;
-  background: rgba(10, 16, 48, 0.6);
-  border: 1.5px solid var(--line);
-  transition:
-    transform 80ms var(--ease),
-    background 120ms;
-}
-.emojibar__btn:active {
-  transform: scale(0.88);
-  background: rgba(46, 242, 255, 0.14);
-}
 .reactions {
   position: fixed;
   inset: 0;
@@ -2031,14 +1978,6 @@
   font-size: var(--fs-13);
   color: var(--text-dim);
 }
-@media (orientation: landscape) and (max-height: 480px) {
-  .lobby .emojibar-wrap {
-    grid-column: 2;
-    grid-row: 4;
-    align-self: end;
-  }
-}
-
 /* Kısa dikey ekran (320x568): 8 oyuncu + emoji çubuğu + Başlat kaydırmasız sığsın. */
 @media (orientation: portrait) and (max-height: 640px) {
   .lobby .lobby__scroll {
@@ -2053,12 +1992,6 @@
   }
   .lobby .lobby__foot {
     padding-top: 4px;
-  }
-  .lobby .emojibar {
-    padding-top: 2px;
-  }
-  .lobby .emojibar__pages {
-    margin-top: 2px;
   }
   .solo__qr {
     --qr: 84px;

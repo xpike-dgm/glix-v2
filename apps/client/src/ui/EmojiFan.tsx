@@ -4,9 +4,11 @@ import { hapticTap } from "../fx/haptics.js";
 import { tap } from "../fx/sound.js";
 import { ensureShopLoaded, ownPacks } from "../net/shop.js";
 import { state } from "../net/store.js";
-import { RESULT_EMOJIS } from "./EmojiBar.js";
 import { SmileIcon } from "./ResultIcons.js";
 import { reactionPages } from "./reactionPages.js";
+
+/** Sonuç ve final ekranlarında gösterilen dörtlü (sunucunun izinli kümesinin alt kümesi). */
+const RESULT_EMOJIS: readonly LobbyEmoji[] = ["😂", "😱", "🔥", "👏"];
 
 /** Dilimlerin dizildiği çeyrek daire: düğme merkezinden emojilerin uzaklığı (px); halka ölçüleri CSS'te. */
 const RADIUS = 150;

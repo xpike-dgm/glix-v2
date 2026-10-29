@@ -1,6 +1,7 @@
 import {
   AVATAR_COUNT,
   allReady,
+  LOBBY_EMOJIS,
   MAX_NICKNAME_LENGTH,
   MAX_PLAYERS,
   normalizeNickname,
@@ -18,7 +19,7 @@ import { setNickname, state, toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
 import { frameOf, PlayerName, PlayerTitle } from "../ui/Cosmetic.js";
-import { EmojiBar } from "../ui/EmojiBar.js";
+import { EmojiFan } from "../ui/EmojiFan.js";
 import { ChevronRightIcon, GearIcon, PlusIcon, QrIcon, ShareIcon, UsersIcon } from "../ui/Icons.js";
 import { LeaveButton } from "../ui/LeaveButton.js";
 import { createLongPress } from "../ui/longPress.js";
@@ -496,30 +497,31 @@ export function Lobby(props: { snap: RoomSnapshot }) {
             </Show>
           </div>
 
-          <Show when={!solo()}>
-            <EmojiBar onPick={react} />
-          </Show>
-
           <footer class="lobby__foot">
-            <Show
-              when={isHost()}
-              fallback={
-                <PrimaryButton
-                  variant={isReady() ? "done" : "cyan"}
-                  onClick={() => setLobbyReady(!isReady())}
-                >
-                  {isReady() ? "Hazırsın" : "Hazırım"}
-                </PrimaryButton>
-              }
-            >
-              <PrimaryButton
-                class={everyoneReady() && blocker() === undefined ? "pbtn--glow" : ""}
-                disabled={blocker() !== undefined}
-                reason={blocker()}
-                onClick={() => startMatch()}
+            <div class="lobby__main">
+              <Show
+                when={isHost()}
+                fallback={
+                  <PrimaryButton
+                    variant={isReady() ? "done" : "cyan"}
+                    onClick={() => setLobbyReady(!isReady())}
+                  >
+                    {isReady() ? "Hazırsın" : "Hazırım"}
+                  </PrimaryButton>
+                }
               >
-                Başlat
-              </PrimaryButton>
+                <PrimaryButton
+                  class={everyoneReady() && blocker() === undefined ? "pbtn--glow" : ""}
+                  disabled={blocker() !== undefined}
+                  reason={blocker()}
+                  onClick={() => startMatch()}
+                >
+                  Başlat
+                </PrimaryButton>
+              </Show>
+            </div>
+            <Show when={!solo()}>
+              <EmojiFan emojis={LOBBY_EMOJIS} onPick={react} />
             </Show>
           </footer>
 

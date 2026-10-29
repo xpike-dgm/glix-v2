@@ -600,7 +600,16 @@ const SCREENS = [
     q: "mock=lobby&n=8&acct=1&giris=altin-isik&motion=reduce",
     settle: 450,
   },
-  { name: "kozmetik-lobi-tepki-paketi", q: "mock=lobby&n=8&acct=1&paket=1", settle: 900 },
+  {
+    name: "kozmetik-lobi-tepki-paketi",
+    q: "mock=lobby&n=8&acct=1&paket=1",
+    settle: 900,
+    act: async (p) => {
+      await p.getByRole("button", { name: "Tepki gönder" }).click();
+      await p.getByRole("button", { name: /Tepki sayfası/ }).click();
+      await p.waitForTimeout(500);
+    },
+  },
   { name: "kozmetik-lobi-tepki-stiker", q: "mock=lobby&n=8&acct=1&paket=1&emoji=1&stiker=1", settle: 1100 },
   {
     name: "kozmetik-final-tepki-yelpaze",
@@ -1125,6 +1134,16 @@ const SCREENS = [
     q: "mock=results&n=5",
     settle: 2400,
     sizes: SONUC_BOYUTLAR,
+    act: async (p) => {
+      await p.getByRole("button", { name: "Tepki gönder" }).click();
+      await p.getByRole("button", { name: "Tepki: Ateş" }).waitFor();
+      await p.waitForTimeout(600);
+    },
+  },
+  {
+    name: "lobby-tepki-acik",
+    q: "mock=lobby&n=8",
+    settle: 900,
     act: async (p) => {
       await p.getByRole("button", { name: "Tepki gönder" }).click();
       await p.getByRole("button", { name: "Tepki: Ateş" }).waitFor();
