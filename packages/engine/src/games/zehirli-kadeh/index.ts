@@ -1,4 +1,4 @@
-import type { GameContext, GameDefinition, Rejected } from "../../game.js";
+import { type GameContext, type GameDefinition, LATE_ACTION_GRACE_MS, type Rejected } from "../../game.js";
 import {
   ZEHIRLI_KADEH_BASE_MS,
   ZEHIRLI_KADEH_LOCK_GRACE_MS,
@@ -45,6 +45,7 @@ export const zehirliKadeh: GameDefinition<
   ZehirliKadehPublicView
 > = {
   id: "zehirli-kadeh",
+  graceMs: LATE_ACTION_GRACE_MS,
   name: "Zehirli Kadeh",
   minPlayers: 2,
   maxPlayers: 8,

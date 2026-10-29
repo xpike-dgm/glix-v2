@@ -1,5 +1,11 @@
 import { poolEntries } from "../../content.js";
-import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
+import {
+  type GameContext,
+  type GameDefinition,
+  LATE_ACTION_GRACE_MS,
+  type Rejected,
+  type SecretEntry,
+} from "../../game.js";
 import { derivedRng, drawSeed } from "../seeded.js";
 import { SOZLUK_POOL, type SozlukEntry } from "./pool.js";
 import { bluffDisplayForm, charCount, compareKey } from "./text.js";
@@ -104,6 +110,7 @@ function jsonHas(json: string, value: string): boolean {
 
 export const sozlukBlofu: GameDefinition<SozlukState, SozlukAction, SozlukView, SozlukPublicView> = {
   id: "sozluk-blofu",
+  graceMs: LATE_ACTION_GRACE_MS,
   name: "Sözlük Blöfü",
   minPlayers: 3,
   maxPlayers: 8,

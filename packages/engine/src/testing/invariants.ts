@@ -206,6 +206,7 @@ export function checkGameInvariants(game: AnyGame, bot: GameBot, opts: Invariant
     actions,
     durationMs: bot.durationMs,
     slackMs,
+    ...(game.graceMs !== undefined ? { graceMs: game.graceMs } : {}),
     // Tüm koşulların aynı presence takvimini kullanması tick-bağımsızlığı karşılaştırmasını anlamlı kılar.
     presence: buildPresence(opts.seed, players, startedAt, bot.durationMs, opts.disconnectProbability),
   };

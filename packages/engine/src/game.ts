@@ -71,6 +71,14 @@ export interface GameDefinition<State, Action, View, PublicView = unknown> {
    * Verilmezse (varsayılan) oyun rastgele havuzdadır. Havuzu sunucu `pickRandomGames` uygular.
    */
   randomPool?: false;
+  /**
+   * İsteğe bağlı "geç gelen eylem payı" (ms; docs/KURALLAR.md). Verilirse sunucu bu oyuna `setup` dışında
+   * gerçek saat yerine `gameClock` ile gecikmeli saati (`ctx.now`) verir: süreye bağlı her geçiş ve bitiş
+   * (tick, `reduce` reddi, `isFinished`) `graceMs` kadar geç gerçekleşir, böylece süre dolmadan gönderilip ağ
+   * gecikmesiyle biraz geç ulaşan eylem kabul edilir. İstemci süreyi yine özgün `endsAt`'ten gösterir.
+   * Oyun kodu değişmez; yalnız zamanlamayı puanlayan (tepki/ritim/bekleme) oyunlar bunu KULLANMAZ.
+   */
+  graceMs?: number;
   /** Ağdan gelen ham eylemi doğrular; geçersizse null. */
   parseAction(raw: unknown): Action | null;
   setup(players: readonly string[], ctx: GameContext): State;
@@ -153,3 +161,15 @@ export interface GameLog {
 
 // biome-ignore lint/suspicious/noExplicitAny: kayıt defteri farklı tipte oyunları birlikte tutar.
 export type AnyGame = GameDefinition<any, any, any, any>;
+
+/** Geç gelen eylem payı (ms): `graceMs` alan oyunlarda süre bitişi bu kadar gecikir. */
+export const LATE_ACTION_GRACE_MS = 250;
+
+/**
+ * Oyun saati: `setup` gerçek an `startedAt`'ta çalışır (mutlak bitiş zamanları gerçek koordinatta kalır), sonrası
+ * `max(startedAt, now - graceMs)`. `graceMs` yoksa/0 ise gerçek saatin kendisi. Tek yerde tanımlıdır; sunucu ve
+ * simülasyon aynı işlevi kullanır.
+ */
+export function gameClock(startedAt: number, now: number, graceMs: number | undefined): number {
+  return graceMs === undefined || graceMs <= 0 ? now : Math.max(startedAt, now - graceMs);
+}

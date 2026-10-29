@@ -11,6 +11,7 @@ import {
   type GameContext,
   GameRecorder,
   type GameResult,
+  gameClock,
   isRejected,
   type MatchSnapshot,
   type Rng,
@@ -109,7 +110,7 @@ export function abortMatch(rt: Runtime, room: Room, err: unknown): void {
   const cause = fault.original;
   let gameLog: unknown = null;
   try {
-    gameLog = match?.recorder?.finish(rt.clock.now()) ?? null;
+    gameLog = match?.recorder ? match.recorder.finish(gameNow(rt, match)) : null;
   } catch {
     // kayıt alınamadı; hata yine de günlüğe yazılır
   }
@@ -288,9 +289,18 @@ function connectedParticipants(room: Room, match: Match): string[] {
   });
 }
 
+/**
+ * Oyunun gördüğü saat (`gameClock`): payı olmayan oyunda gerçek saat; payı olanda `gameStartedAt`'tan sonra
+ * `graceMs` geriden gelir. Oyuna, kayda (eylem, bağlantı, bitiş) ve `nextWake` çevirisine hep bu verilir.
+ */
+function gameNow(rt: Runtime, match: Match): number {
+  const now = rt.clock.now();
+  return match.gameStartedAt === null ? now : gameClock(match.gameStartedAt, now, currentGame(match).graceMs);
+}
+
 function ctxFor(rt: Runtime, room: Room, match: Match): GameContext {
   if (!match.rng) throw new Error("rng yok");
-  return { now: rt.clock.now(), rng: match.rng, connected: connectedParticipants(room, match) };
+  return { now: gameNow(rt, match), rng: match.rng, connected: connectedParticipants(room, match) };
 }
 
 /**
@@ -301,7 +311,7 @@ export function recordPresence(rt: Runtime, room: Room, playerId: string, connec
   const match = room.match;
   if (!match?.recorder || room.phase !== "playing" || !match.participants.includes(playerId)) return;
   try {
-    match.recorder.presence(rt.clock.now(), playerId, connected);
+    match.recorder.presence(gameNow(rt, match), playerId, connected);
   } catch (err) {
     log.warn("recorder_failed", { room: room.code, error: String(err) });
   }
@@ -451,7 +461,7 @@ function captureEvidence(rt: Runtime, room: Room, match: Match): void {
 function archiveLog(rt: Runtime, match: Match): void {
   try {
     if (!match.recorder) return;
-    rt.recentLogs.push(match.recorder.finish(rt.clock.now()));
+    rt.recentLogs.push(match.recorder.finish(gameNow(rt, match)));
     if (rt.recentLogs.length > RECENT_LOGS) rt.recentLogs.splice(0, rt.recentLogs.length - RECENT_LOGS);
   } catch (err) {
     log.warn("recorder_failed", { error: String(err) });
@@ -504,7 +514,9 @@ function wakeTime(rt: Runtime, room: Room, match: Match): number | null {
   const game = currentGame(match);
   if (game.nextWake === undefined) return null;
   const ctx = ctxFor(rt, room, match);
-  return guard("nextWake", () => game.nextWake?.(match.state, ctx) ?? null);
+  const at = guard("nextWake", () => game.nextWake?.(match.state, ctx) ?? null);
+  // Oyun saati gerçek saatten `graceMs` geridedir: oyunun bildirdiği an gerçek saate geri çevrilir.
+  return at === null ? null : at + (game.graceMs ?? 0);
 }
 
 /**

@@ -61,7 +61,12 @@ describe("zehirli-kadeh tam maç", () => {
     k.clock.advance(startedAt + 29_900 - k.clock.now());
     await sync();
     expect(a.room.phase).toBe("playing");
+    // Geç gelen eylem payı (250 ms): özgün bitişte faz sürer; pay dolunca sonuç açılır ve geç takas reddedilir.
     k.clock.advance(startedAt + 30_000 - k.clock.now());
+    await sleep(30);
+    expect(a.room.phase).toBe("playing");
+    k.clock.advance(250);
+    await until(() => a.room.phase === "results", "sonuç");
     expect(await send(c, { kind: "swap", target: ia })).toMatchObject({ ok: false });
     await until(() => a.room.phase === "results", "sonuç");
 

@@ -1,4 +1,11 @@
-import { type AnyGame, type GameLog, type GameResult, isRejected, type LegacyContentTone } from "../game.js";
+import {
+  type AnyGame,
+  type GameLog,
+  type GameResult,
+  gameClock,
+  isRejected,
+  type LegacyContentTone,
+} from "../game.js";
 import { GameRecorder } from "../replay.js";
 import { createRng, type Rng } from "../rng.js";
 import { deepFreeze } from "./deep.js";
@@ -250,6 +257,11 @@ export interface RunOptions {
   /** Durumları derin dondurur (varsayılan true). */
   freeze?: boolean;
   onStep?: (info: StepInfo) => void;
+  /**
+   * Geç gelen eylem payı (`GameDefinition.graceMs`): verilirse oyun, sunucudaki gibi `gameClock` saatini görür
+   * (`setup` gerçek `startedAt`'ta); kayıt ve `onStep.now` da oyun saatindedir. `takvim` (ticks/actions) gerçek saattir.
+   */
+  graceMs?: number;
   /** Yalnız eski ton taşıyan kaydı sınamak için. */
   tone?: LegacyContentTone;
 }
@@ -291,7 +303,8 @@ export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
   const roster = f([...players]);
   const online = new Set(players);
   let connected: readonly string[] = f([...players]);
-  const ctxAt = (now: number) => ({ now, rng, connected });
+  const gc = (t: number): number => gameClock(startedAt, t, opts.graceMs);
+  const ctxAt = (now: number) => ({ now: gc(now), rng, connected });
   let state: unknown = f(
     game.setup(roster, { ...ctxAt(startedAt), ...(opts.tone !== undefined ? { tone: opts.tone } : {}) }),
   );
@@ -316,7 +329,7 @@ export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
     steps++;
     opts.onStep?.({
       label: "finish-tick",
-      now,
+      now: gc(now),
       connected,
       prev,
       state,
@@ -333,7 +346,7 @@ export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
       rejected,
       unparsed,
       // Yeni kayıt ton yazmaz; eski ton taşıyan kaydı taklit etmek için yalnız istenirse eklenir.
-      log: { ...recorder.finish(now), ...(opts.tone !== undefined ? { tone: opts.tone } : {}) },
+      log: { ...recorder.finish(gc(now)), ...(opts.tone !== undefined ? { tone: opts.tone } : {}) },
     };
   };
 
@@ -348,10 +361,10 @@ export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
       if (p.connected) online.add(p.playerId);
       else online.delete(p.playerId);
       connected = f(players.filter((id) => online.has(id)));
-      recorder.presence(now, p.playerId, p.connected);
+      recorder.presence(gc(now), p.playerId, p.connected);
       opts.onStep?.({
         label: "presence",
-        now,
+        now: gc(now),
         connected,
         prev,
         state,
@@ -363,7 +376,16 @@ export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
     }
     if (item.action === null) {
       state = f(game.tick(state, ctxAt(now)));
-      opts.onStep?.({ label: "tick", now, connected, prev, state, event: null, reduced: null, parsed: null });
+      opts.onStep?.({
+        label: "tick",
+        now: gc(now),
+        connected,
+        prev,
+        state,
+        event: null,
+        reduced: null,
+        parsed: null,
+      });
     } else {
       const event = item.action;
       let raw = event.raw;
@@ -389,10 +411,10 @@ export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
         } else {
           accepted++;
           state = f(reduced);
-          recorder.record(now, event.playerId, raw);
+          recorder.record(gc(now), event.playerId, raw);
         }
       }
-      opts.onStep?.({ label: "action", now, connected, prev, state, event, reduced, parsed });
+      opts.onStep?.({ label: "action", now: gc(now), connected, prev, state, event, reduced, parsed });
     }
     if (game.isFinished(state, ctxAt(now))) return finish(now);
   }

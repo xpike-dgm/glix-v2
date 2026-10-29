@@ -1,4 +1,10 @@
-import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
+import {
+  type GameContext,
+  type GameDefinition,
+  LATE_ACTION_GRACE_MS,
+  type Rejected,
+  type SecretEntry,
+} from "../../game.js";
 import { foldKey, sanitizeWord } from "../text.js";
 import {
   YAZI_YAZ_GUESS_MS,
@@ -123,6 +129,7 @@ function parseText(raw: unknown, allowEmpty: boolean): string | null {
 
 export const yaziYaz: GameDefinition<YaziYazState, YaziYazAction, YaziYazView, YaziYazPublicView> = {
   id: "yazi-yaz",
+  graceMs: LATE_ACTION_GRACE_MS,
   name: "Yazı Yaz",
   minPlayers: 3,
   maxPlayers: 8,
