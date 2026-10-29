@@ -4,6 +4,7 @@ import { createEffect, createMemo, createSignal, For, onCleanup, Show, untrack }
 import { hapticError, hapticMatch, hapticPress, hapticSolo } from "../../fx/haptics.js";
 import { fail, match as matchSound, solo as soloSound, unlockAudio } from "../../fx/sound.js";
 import { sendAction } from "../../net/client.js";
+import { atServerTime } from "../../net/serverTimer.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { BlastArt, BombArt } from "../../ui/BombArt.js";
@@ -71,7 +72,7 @@ export default function ZamanBombasiScreen(props: GameScreenProps) {
   const [frac, setFrac] = createSignal(1);
   let panel: HTMLDivElement | undefined;
   const timers = new Set<ReturnType<typeof setTimeout>>();
-  let playTimers: ReturnType<typeof setTimeout>[] = [];
+  let playTimers: (() => void)[] = [];
   const later = (fn: () => void, ms: number): void => {
     const t = setTimeout(
       () => {
@@ -84,7 +85,7 @@ export default function ZamanBombasiScreen(props: GameScreenProps) {
   };
   onCleanup(() => {
     for (const t of timers) clearTimeout(t);
-    for (const t of playTimers) clearTimeout(t);
+    for (const cancel of playTimers) cancel();
     cancelAnimationFrame(raf);
   });
 
@@ -93,15 +94,17 @@ export default function ZamanBombasiScreen(props: GameScreenProps) {
     const v = view();
     if (!v) return;
     untrack(() => {
-      for (const t of playTimers) clearTimeout(t);
+      for (const cancel of playTimers) cancel();
       playTimers = [];
       setLit(null);
       const now = serverNow();
+      // Saat eşitlemesi beklerken sunucu saatini geri çekebilir: sınır gerçekten geçilmeden çağrılmaz (yoksa
+      // evre, ör. giriş, bir sonraki sunucu yayınına — sıranın zaman aşımına — kadar açılmaz).
       const at = (target: number, fn: () => void): void => {
-        playTimers.push(setTimeout(fn, Math.max(0, target - serverNow())));
+        playTimers.push(atServerTime(target, fn, serverNow));
       };
       for (const edge of [v.turnStart, v.inputStart, v.deadline, v.endsAt]) {
-        if (edge > now) at(edge + 2, () => setTick((n) => n + 1));
+        if (edge > now) at(edge, () => setTick((n) => n + 1));
       }
       setTick((n) => n + 1);
       if (v.phase === "over") return;

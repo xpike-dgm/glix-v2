@@ -744,3 +744,35 @@ describe("ani ölüm (O1, 60 sn sonrası +2)", () => {
     expect(lens).toEqual([2, 3, 5, 7]);
   });
 });
+
+describe("3 oyunculu sıra akışı (canlı hata: sıra arkadaşta, tuşları kapalı)", () => {
+  it("her sırada yalnız aktif oyuncu myTurn; oynatma → giriş sınırı mutlak ve basış tam o anda kabul edilir", () => {
+    let s = start(3, 11);
+    const players = [...s.order];
+    for (let i = 0; i < 9; i++) {
+      const who = active(s);
+      expect(who).toBe(players[i % 3]);
+      const pv = game.publicView(s, ctx(s.turnStart));
+      expect(pv.phase).toBe("playback");
+      expect(pv.active).toBe(who);
+      expect(pv.inputStart).toBe(inputAt(s));
+      for (const id of players) {
+        const mine = game.view(s, id, ctx(pv.inputStart)).myTurn;
+        expect(mine).toBe(id === who);
+      }
+      // Sınırdan 1 ms önce reddedilir, sınırda kabul edilir (istemci tuşları tam bu anda açar).
+      expect(rejection(s, who, s.sequence[0] as ZamanBombasiColor, pv.inputStart - 1)).toBe("not_input_yet");
+      expect(game.publicView(s, ctx(pv.inputStart)).phase).toBe("input");
+      s = solve(s, pv.inputStart);
+      expect(s.sequence.length).toBe(3 + i);
+    }
+  });
+
+  it("yayın yalnız durum değişince: oynatma evresinde hesaplanan görünüm, giriş anında bile tick'te değişmez", () => {
+    const s = start(3, 11);
+    const during = s.turnStart + 10;
+    // Sunucu tick'i durumu değiştirmez (aynı nesne) → yeni yayın yok; istemci girişi kendi saatinden açmalı.
+    expect(game.tick(s, ctx(inputAt(s)))).toBe(s);
+    expect(game.publicView(s, ctx(during)).phase).toBe("playback");
+  });
+});

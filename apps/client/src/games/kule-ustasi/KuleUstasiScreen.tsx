@@ -4,6 +4,7 @@ import { hapticError, hapticMatch, hapticPress, hapticSolo } from "../../fx/hapt
 import { reducedMotion } from "../../fx/motion.js";
 import { fail, match as matchSound, solo as soloSound, unlockAudio } from "../../fx/sound.js";
 import { type ActionAck, sendActionAck } from "../../net/client.js";
+import { atServerTime } from "../../net/serverTimer.js";
 import { createSmoothClock } from "../../net/smoothClock.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { createOptimistic } from "../../ui/optimistic.js";
@@ -86,19 +87,20 @@ export default function KuleUstasiScreen(props: GameScreenProps) {
     props.players.find((p) => p.id === id)?.nickname ?? "Oyuncu";
 
   // Sıra sınırlarında yeniden hesapla: evre mutlak zamanlardan türer (sunucu yalnız durum değişince yayın yapar).
-  let edgeTimers: ReturnType<typeof setTimeout>[] = [];
+  let edgeTimers: (() => void)[] = [];
   onCleanup(() => {
-    for (const t of edgeTimers) clearTimeout(t);
+    for (const cancel of edgeTimers) cancel();
   });
   createEffect(() => {
     const v = view();
     if (!v) return;
     untrack(() => {
-      for (const t of edgeTimers) clearTimeout(t);
+      for (const cancel of edgeTimers) cancel();
       edgeTimers = [];
       const now = props.now();
+      // Saat eşitlemesi beklerken sunucu saatini geri çekse de sınır geçilmeden çağrılmaz (net/serverTimer.ts).
       for (const edge of [v.turnStart, v.deadline, v.endsAt]) {
-        if (edge > now) edgeTimers.push(setTimeout(() => setTick((n) => n + 1), edge - props.now() + 2));
+        if (edge > now) edgeTimers.push(atServerTime(edge, () => setTick((n) => n + 1), props.now));
       }
       setTick((n) => n + 1);
     });
