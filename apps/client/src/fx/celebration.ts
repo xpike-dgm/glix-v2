@@ -1,5 +1,6 @@
 import { CELEBRATION_SPRITES, cosmeticItem } from "@glix/engine";
 import { reducedMotion } from "./motion.js";
+import { APP_VIEW_ONLY, loadPixi } from "./pixiLoad.js";
 
 /**
  * Zafer kutlaması (mağaza türü `zafer`): finalde kazananın kuşandığı kutlama herkesin ekranında oynar.
@@ -295,7 +296,7 @@ export async function playCelebration(
   const asset = item.asset;
   if (reducedMotion()) return playStill(host, asset, opts.loop === true);
 
-  const { Application, Assets, Sprite, Texture } = await import("pixi.js");
+  const { Application, Assets, Sprite, Texture } = await loadPixi();
   const app = new Application();
   await app.init({
     resizeTo: host,
@@ -323,7 +324,7 @@ export async function playCelebration(
   const dispose = (): void => {
     if (disposed) return;
     disposed = true;
-    app.destroy(true, { children: true });
+    app.destroy(APP_VIEW_ONLY, { children: true });
     for (const u of urls) void Assets.unload(u).catch(() => undefined);
   };
   if (textures.length === 0) {
