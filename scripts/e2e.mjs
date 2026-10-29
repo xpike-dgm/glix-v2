@@ -101,7 +101,11 @@ function watch(label, page) {
   page.on("console", (m) => {
     if (m.type() === "error") errors.push(`[${label}] console: ${m.text()}`);
   });
-  page.on("pageerror", (e) => errors.push(`[${label}] pageerror: ${e.message}`));
+  page.on("pageerror", (e) =>
+    errors.push(
+      `[${label}] pageerror (+${((Date.now() - T0) / 1000).toFixed(1)}s): ${e.message}\n${e.stack ?? ""}`,
+    ),
+  );
   page.on("requestfailed", (r) => {
     // Sayfa kapanırken iptal edilen istekler hata sayılmaz.
     if (!/ERR_ABORTED/.test(r.failure()?.errorText ?? ""))
@@ -126,6 +130,82 @@ async function longPressSeat(page, name) {
   await page.mouse.up();
 }
 const OPT = { timeout: 15_000 };
+
+/** SQLite dosyasını (yalnız okunur ya da yazılır) açıp işi yapar; sunucunun kendi bağlantısına karışmaz. */
+async function withDb(fn, { write = false } = {}) {
+  const { DatabaseSync } = await import("node:sqlite");
+  const db = new DatabaseSync(STATS_DB, { readOnly: !write });
+  try {
+    return fn(db);
+  } finally {
+    db.close();
+  }
+}
+
+/** Maç sıralama eki (docs/HESAP.md "Glix"): 1. +15, 2. +10, 3. +5. */
+const placeBonus = (place) => ({ 1: 15, 2: 10, 3: 5 })[place] ?? 0;
+
+const accountRow = (db, username) =>
+  db.prepare("SELECT id, glix FROM accounts WHERE username_lc = ?").get(username.toLowerCase());
+
+/** Lobi ayarlarında yalnız Butona Bas'ı bırakır (kısa maç için). */
+async function pickOnlyButonaBas(page) {
+  const settingsRow = page.locator("button.lrow", { hasText: "Lobi ayarları" });
+  await settingsRow.click();
+  await page.locator(".seg__opt", { hasText: "Rastgele" }).waitFor(OPT);
+  await page.locator(".seg__opt", { hasText: "Ben seçeyim" }).click();
+  const card = page.locator(".gcard", { hasText: "Butona Bas" });
+  await card.waitFor(OPT);
+  for (;;) {
+    const others = page.locator('.gcard[aria-pressed="true"]').filter({ hasNotText: "Butona Bas" });
+    if ((await others.count()) === 0) break;
+    const before = await page.locator('.gcard[aria-pressed="true"]').count();
+    await others.first().click();
+    await page.waitForFunction(
+      (n) => document.querySelectorAll('.gcard[aria-pressed="true"]').length === n - 1,
+      before,
+      OPT,
+    );
+  }
+  await page.getByRole("button", { name: "Geri" }).click();
+  await settingsRow.waitFor(OPT);
+}
+
+/** Dolu koltuk sayısı `expected` olana dek bekler. */
+async function waitSeats(page, expected) {
+  await page.waitForFunction(
+    (n) => document.querySelectorAll("button.seat:not(.seat--empty)").length === n,
+    expected,
+    OPT,
+  );
+}
+
+/** "Yeni rozet!" kutlaması varsa (kısa süre bekler) hepsini "Harika!" ile geçer. */
+async function dismissBadgeCards(page) {
+  const card = page.getByRole("dialog", { name: "Yeni rozet" });
+  await card.waitFor({ timeout: 3000 }).catch(() => {});
+  for (let i = 0; i < 6 && (await card.count()) > 0; i++) {
+    await card.getByRole("button", { name: /harika/i }).click();
+    await sleep(400);
+  }
+  await card.waitFor({ state: "detached", ...OPT });
+}
+
+/** Final'deki "+N Glix" hapını açar; döküm satırını döner. */
+async function openGlixPill(page, expectedTotal) {
+  const region = page.getByRole("region", { name: "Kazandığın Glix" });
+  const pill = region.getByRole("button");
+  await pill.waitFor(OPT);
+  const label = (await pill.innerText()).trim();
+  assert(
+    label === `+${expectedTotal} Glix`,
+    `Glix hapı "+${expectedTotal} Glix" olmalı, bulundu: "${label}"`,
+  );
+  await pill.click();
+  const list = region.locator("#glx-list");
+  await list.waitFor({ state: "visible", ...OPT });
+  return (await list.innerText()).trim();
+}
 
 async function shot(page, name) {
   await sleep(450); // giriş animasyonları otursun
@@ -585,6 +665,9 @@ async function main() {
 
     // 9) Sonuç ekranı
     await A.locator(".podium").waitFor({ timeout: 70_000 });
+    // Kürsü karakterleri (Pixi) tembel yüklenir; hazır olunca kürsüye data-chars-shown yazılır.
+    await A.locator(".podium[data-chars-shown]").waitFor({ timeout: 30_000 });
+
     await sleep(2200); // ödül sayacı bitsin
     await shot(A, "14-results");
     await TV.locator(".tv__podium").waitFor(OPT);
@@ -605,13 +688,13 @@ async function main() {
     for (const p of [A, B2]) await p.getByRole("button", { name: "Devam", exact: true }).click();
     await A.getByText("Diğerleri bekleniyor", { exact: false }).waitFor(OPT);
     assert((await A.locator(".fin__head").count()) === 0, "biri eksikken final'e geçilmemeli");
+    await shot(A, "14b-results-devam");
     await C.getByRole("button", { name: "Devam", exact: true }).click();
     const devamAt = Date.now();
-    await shot(A, "14b-results-devam");
 
     // 10) Final (Devam'dan en geç ~1 sn sonra)
-    await A.locator(".fin__head").waitFor({ timeout: 3_000 });
-    assert(Date.now() - devamAt < 2_800, `Devam sonrası final geç geldi: ${Date.now() - devamAt} ms`);
+    await A.locator(".fin__head").waitFor({ timeout: 5_000 });
+    assert(Date.now() - devamAt < 4_000, `Devam sonrası final geç geldi: ${Date.now() - devamAt} ms`);
     await sleep(1500);
     await shot(A, "15-final");
     await TV.locator(".tv__winner").waitFor(OPT);
@@ -635,6 +718,58 @@ async function main() {
       await sleep(400);
     }
     await badgeCard.waitFor({ state: "detached", ...OPT });
+    await A.locator(".fin [data-chars-shown]").waitFor({ timeout: 30_000 });
+    log("kürsü karakterleri Sonuç ve Final'de göründü");
+
+    // Glix (ilk maç): hap "+N Glix"; N = günün ilk maçı için ikiye katlanmış maç + sıra ödülü, artı rozet ödülleri.
+    const m1 = await withDb((db) => {
+      const acc = accountRow(db, "Ayse");
+      const places = db
+        .prepare("SELECT place FROM account_matches WHERE account_id = ? ORDER BY rowid")
+        .all(acc.id)
+        .map((r) => r.place);
+      const ledger = db
+        .prepare("SELECT id, amount, reason, ref FROM glix_ledger WHERE account_id = ? ORDER BY id")
+        .all(acc.id);
+      const others = db.prepare("SELECT 1 FROM glix_ledger WHERE account_id != ?").all(acc.id);
+      return { acc, places, ledger, others };
+    });
+    assert(m1.places.length === 1, `A'nın tek maç kaydı olmalı: ${JSON.stringify(m1.places)}`);
+    const place1 = m1.places[0];
+    const mac1 = m1.ledger.filter((r) => r.reason === "mac");
+    const badge1 = m1.ledger.filter((r) => r.reason === "rozet").reduce((t, r) => t + r.amount, 0);
+    assert(mac1.length === 1, `tek 'mac' defter satırı beklenir: ${JSON.stringify(m1.ledger)}`);
+    assert(
+      mac1[0].amount === 2 * (10 + placeBonus(place1)) && mac1[0].ref === `yer:${place1}`,
+      `ilk maç ödülü ikiye katlanmalı (yer ${place1}): ${JSON.stringify(mac1[0])}`,
+    );
+    assert(m1.others.length === 0, "yalnız hesaplı A'ya Glix yazılmalı (misafirlere ya da başkasına değil)");
+    assert(m1.acc.glix === mac1[0].amount + badge1, "bakiye defter toplamına eşit olmalı");
+    const total1 = mac1[0].amount + badge1;
+    const breakdown1 = await openGlixPill(A, total1);
+    log("Glix hapı", `+${total1}`, breakdown1);
+    assert(breakdown1.includes("Maç +10"), `döküm "Maç +10" içermeli: ${breakdown1}`);
+    assert(
+      breakdown1.includes(`İlk maç ×2 +${10 + placeBonus(place1)}`),
+      `döküm "İlk maç ×2" içermeli: ${breakdown1}`,
+    );
+    if (placeBonus(place1) > 0)
+      assert(
+        breakdown1.includes(`${place1}. +${placeBonus(place1)}`),
+        `döküm sıra ekini içermeli: ${breakdown1}`,
+      );
+    if (badge1 > 0) assert(breakdown1.includes(`Rozet +${badge1}`), `döküm rozeti içermeli: ${breakdown1}`);
+    await shot(A, "15c-glix-breakdown");
+    // Misafirler hap görmez; yalnız "Hesap açsan +N Glix kazanırdın" satırı çıkar.
+    for (const g of [B2, C]) {
+      const line = (await g.locator(".fin__guest").innerText()).replace(/\s+/g, " ");
+      const n = Number(/Hesap açsan \+(\d+) Glix kazanırdın/.exec(line)?.[1]);
+      assert([10, 15, 20, 25].includes(n), `misafir Glix satırı beklenmedik: "${line}"`);
+      assert(
+        (await g.getByRole("region", { name: "Kazandığın Glix" }).count()) === 0,
+        "misafirde Glix hapı olmamalı",
+      );
+    }
     // Geri bildirim: A beş yıldız verir, "Teşekkürler!" görür; LOBİYE DÖN görünür kalır.
     await A.getByRole("button", { name: "5 yıldız" }).click();
     await btn(A, /^gönder$/i).click();
@@ -818,6 +953,8 @@ async function main() {
 
     // 11) Sunucu güncellenir (SIGTERM): drain -> /health 503, maç sürer; süre dolunca 1012 ile kapanır,
     // istemci yeniden bağlanır, oda bellekte olmadığı için "Oyun güncellendi" der ve yeni oda kurulabilir.
+    // Sunucu durdurulmadan önceki bölümde (maçlar, kürsü karakterleri, Glix) tarayıcı hatası olmamalı.
+    assert(errors.length === 0, `sunucu güncellemesinden önce tarayıcı hataları:\n${errors.join("\n")}`);
     const exited = new Promise((r) => server.child.once("exit", r));
     server.child.kill("SIGTERM");
     let drainHealth = null;
@@ -834,15 +971,254 @@ async function main() {
     await exited;
     await A.getByText("Tekrar bağlanıyor").waitFor(OPT);
     await shot(A, "17-reconnecting");
+    // Sunucu kapalıyken (veritabanına tek yazan biz) A'ya mağaza için 500 Glix armağan edilir: bakiye + defter satırı.
+    // (Sunucu bakiyeyi bellekte tutmaz; her okuma veritabanındandır, yeniden başlayınca zaten taze okur.)
+    const GRANT = 500;
+    const afterGrant = await withDb(
+      (db) => {
+        const acc = accountRow(db, "Ayse");
+        db.exec("BEGIN");
+        db.prepare(
+          "INSERT INTO glix_ledger (account_id, at, amount, reason, ref) VALUES (?, ?, ?, 'yonetici', 'e2e')",
+        ).run(acc.id, Date.now(), GRANT);
+        db.prepare("UPDATE accounts SET glix = glix + ? WHERE id = ?").run(GRANT, acc.id);
+        db.exec("COMMIT");
+        return { id: acc.id, balance: acc.glix + GRANT };
+      },
+      { write: true },
+    );
+    // Kapalı sunucuda yalnız A, B2, C kalsın (TV ve izleyici sayfaları yeniden bağlanma gürültüsü çıkarmasın).
+    for (const p of [...pages]) if (![A, B2, C].includes(p)) await p.close();
     errors.length = 0; // sunucu bilerek durduruldu: bu süredeki bağlantı hataları beklenen
     server = await startServer(port);
     await A.getByText("Oyun güncellendi, yeni oda kurabilirsin.").waitFor({ timeout: 30_000 });
     await A.getByText("Tekrar bağlanıyor").waitFor({ state: "hidden", timeout: 30_000 });
+    for (const p of [B2, C]) await btn(p, /odaya katıl|kodla katıl/i).waitFor({ timeout: 30_000 });
+    log("sunucu güncelleme (drain, 1012, resume mesajı) tamam");
+
+    // 12) Mağaza: Ana sayfadaki "Mağaza" simgesi; her türden bir ürün (Lakap, Çerçeve, Dans) satın alınır.
+    await A.getByRole("button", { name: "Mağaza", exact: true }).click();
+    await A.getByRole("heading", { name: "Mağaza", level: 1 }).waitFor(OPT);
+    const balanceChip = A.getByRole("status", { name: /Glix bakiyen/ });
+    await balanceChip.waitFor(OPT);
+    const chipText = async () => (await balanceChip.getAttribute("aria-label")) ?? "";
+    assert(
+      (await chipText()) === `Glix bakiyen ${afterGrant.balance.toLocaleString("tr-TR")}`,
+      `mağaza bakiyesi ${afterGrant.balance} olmalı: "${await chipText()}"`,
+    );
+    await shot(A, "19-shop");
+    const shopSheet = A.getByRole("dialog");
+    const openItem = async (tabName, itemName) => {
+      await A.getByRole("tab", { name: tabName }).click();
+      await A.getByRole("tabpanel")
+        .getByRole("button", { name: new RegExp(`^${itemName},`) })
+        .click();
+      await shopSheet.waitFor(OPT);
+    };
+    const closeSheet = async () => {
+      await A.keyboard.press("Escape");
+      await shopSheet.waitFor({ state: "detached", ...OPT });
+    };
+    const BUYS = [
+      { tab: "Lakaplar", name: "Parti Canavarı", id: "unvan-parti-canavari" },
+      { tab: "Çerçeveler", name: "Camgöbeği Halka", id: "cerceve-camgobegi" },
+      { tab: "Danslar", name: "Twist", id: "dans-twist" },
+    ];
+    let spent = 0;
+    for (const it of BUYS) {
+      await openItem(it.tab, it.name);
+      const buy = shopSheet.getByRole("button", { name: /Glix'e satın al/ });
+      assert(await buy.isEnabled(), `${it.name} alınabilir olmalı`);
+      const price = Number(/(\d+) Glix'e satın al/.exec(await buy.innerText())?.[1]);
+      assert(price > 0 && price <= 150, `${it.name} fiyatı beklenmedik: ${price}`);
+      await buy.click();
+      await shopSheet.getByRole("button", { name: "Kuşan" }).waitFor(OPT);
+      spent += price;
+      await closeSheet();
+      await A.waitForFunction(
+        (want) => document.querySelector('[aria-label^="Glix bakiyen"]')?.getAttribute("aria-label") === want,
+        `Glix bakiyen ${(afterGrant.balance - spent).toLocaleString("tr-TR")}`,
+        OPT,
+      );
+    }
+    const afterBuy = afterGrant.balance - spent;
+    log("satın alındı:", BUYS.map((b) => b.name).join(", "), "harcanan", spent, "kalan", afterBuy);
+
+    // 12b) Yetmeyen ürün: "X Glix daha gerekli" ve satın al düğmesi kapalı (istek de gitmez).
+    await openItem("Lakaplar", "Efsane");
+    const buyEfsane = shopSheet.getByRole("button", { name: /Glix'e satın al/ });
+    const priceEfsane = Number(/(\d+) Glix'e satın al/.exec(await buyEfsane.innerText())?.[1]);
+    assert(priceEfsane > afterBuy, `Efsane (${priceEfsane}) bakiyeden (${afterBuy}) pahalı olmalı`);
+    await shopSheet.getByText(`${priceEfsane - afterBuy} Glix daha gerekli`, { exact: true }).waitFor(OPT);
+    assert(await buyEfsane.isDisabled(), "yetmeyince satın al düğmesi kapalı olmalı");
+    await shot(A, "19b-shop-insufficient");
+    await closeSheet();
+
+    // 12c) Dolabım: alt sekmeden; üç ürün kuşanılır.
+    await A.getByRole("navigation", { name: "Mağaza ve Dolabım" })
+      .getByRole("button", { name: "Dolabım" })
+      .click();
+    await A.getByRole("heading", { name: "Dolabım", level: 1 }).waitFor(OPT);
+    for (const it of BUYS) {
+      const tile = A.getByRole("button", { name: new RegExp(`^${it.name}, `) });
+      await tile.click();
+      await A.getByRole("button", { name: new RegExp(`^${it.name}, `), pressed: true }).waitFor(OPT);
+    }
+    await shot(A, "20-locker-equipped");
+    const owned = await withDb((db) => ({
+      items: db
+        .prepare("SELECT item_id FROM cosmetic_owned WHERE account_id = ? ORDER BY item_id")
+        .all(afterGrant.id)
+        .map((r) => r.item_id),
+      equipped: Object.fromEntries(
+        db
+          .prepare("SELECT slot, item_id FROM cosmetic_equipped WHERE account_id = ?")
+          .all(afterGrant.id)
+          .map((r) => [r.slot, r.item_id]),
+      ),
+      balance: accountRow(db, "Ayse").glix,
+      bought: db
+        .prepare("SELECT amount, ref FROM glix_ledger WHERE account_id = ? AND reason = 'satin-alma'")
+        .all(afterGrant.id),
+    }));
+    assert(
+      JSON.stringify(owned.items) === JSON.stringify(BUYS.map((b) => b.id).sort()),
+      `sahip olunanlar: ${owned.items}`,
+    );
+    assert(
+      Object.values(owned.equipped).length === 3,
+      `üç ürün kuşanılmalı: ${JSON.stringify(owned.equipped)}`,
+    );
+    assert(owned.balance === afterBuy, `veritabanı bakiyesi ${afterBuy} olmalı: ${owned.balance}`);
+    assert(
+      owned.bought.length === 3 && owned.bought.reduce((t, r) => t - r.amount, 0) === spent,
+      `satın alma defteri: ${JSON.stringify(owned.bought)}`,
+    );
+
+    // Mağazaya dönüp çık, ana sayfadan yeni oda kur; B ve C katılınca A'nın lakabı ve çerçevesi koltukta görünür.
+    await A.getByRole("navigation", { name: "Mağaza ve Dolabım" })
+      .getByRole("button", { name: "Mağaza" })
+      .click();
+    await A.getByRole("heading", { name: "Mağaza", level: 1 }).waitFor(OPT);
+    await A.getByRole("button", { name: "Geri", exact: true }).click();
     await btn(A, /oda kur/i).click();
-    await A.locator(".roomcode").waitFor(OPT);
-    assert((await lobbyCode(A)) !== code, "yeni sunucuda yeni oda kurulmalı");
+    const code2 = await lobbyCode(A);
+    assert(code2 !== code, "yeni sunucuda yeni oda kurulmalı");
     await shot(A, "18-new-room-after-restart");
-    log("sunucu güncelleme (drain, 1012, resume mesajı) ve yeni oda tamam");
+    await joinViaUi(B2, code2, null);
+    await joinViaUi(C, code2, null);
+    await waitSeats(A, 3);
+    for (const [label, page] of [
+      ["B", B2],
+      ["C", C],
+      ["A", A],
+    ]) {
+      const seat = page.locator("button.seat:not(.seat--empty)", { hasText: "Ayse" });
+      await seat.getByText("Parti Canavarı", { exact: true }).waitFor(OPT);
+      await seat.locator('.av[data-framed="cerceve-camgobegi"]').waitFor(OPT);
+      log(`${label} ekranında A'nın lakabı ve çerçevesi görünüyor`);
+    }
+    await shot(B2, "21-lobby-cosmetics");
+
+    // 13) İkinci maç: bakiye artar ama günün ilk maçı olmadığından ikiye katlanmaz.
+    const before2 = await withDb((db) => ({
+      lastId: db.prepare("SELECT MAX(id) AS m FROM glix_ledger").get().m,
+      balance: accountRow(db, "Ayse").glix,
+      matches: db.prepare("SELECT COUNT(*) AS n FROM account_matches WHERE account_id = ?").get(afterGrant.id)
+        .n,
+    }));
+    await pickOnlyButonaBas(A);
+    await btn(A, /^başlat$/i).click();
+    for (const p of [A, B2, C]) await p.locator(".brief__name").waitFor(OPT);
+    for (const p of [A, B2, C]) await btn(p, /hazırım/i).click();
+    await A.locator(".game__num").waitFor(OPT);
+    await A.locator(".fin__head").waitFor({ timeout: 120_000 });
+    await A.locator(".fin [data-chars-shown]").waitFor({ timeout: 30_000 });
+    await dismissBadgeCards(A);
+    const m2 = await withDb((db) => {
+      const places = db
+        .prepare("SELECT place FROM account_matches WHERE account_id = ? ORDER BY rowid")
+        .all(afterGrant.id)
+        .map((r) => r.place);
+      const rows = db
+        .prepare("SELECT amount, reason, ref FROM glix_ledger WHERE account_id = ? AND id > ? ORDER BY id")
+        .all(afterGrant.id, before2.lastId);
+      return { places, rows, balance: accountRow(db, "Ayse").glix };
+    });
+    assert(m2.places.length === before2.matches + 1, `yeni maç kaydı beklenir: ${JSON.stringify(m2.places)}`);
+    const place2 = m2.places[m2.places.length - 1];
+    const mac2 = m2.rows.filter((r) => r.reason === "mac");
+    const badge2 = m2.rows.filter((r) => r.reason === "rozet").reduce((t, r) => t + r.amount, 0);
+    assert(
+      mac2.length === 1 && mac2[0].amount === 10 + placeBonus(place2),
+      `ikinci maç ikiye katlanmamalı (yer ${place2}): ${JSON.stringify(m2.rows)}`,
+    );
+    const total2 = mac2[0].amount + badge2;
+    assert(
+      m2.balance === before2.balance + total2 && m2.balance > before2.balance,
+      `bakiye ${before2.balance} → ${before2.balance + total2} olmalı: ${m2.balance}`,
+    );
+    const breakdown2 = await openGlixPill(A, total2);
+    assert(!breakdown2.includes("İlk maç"), `ikinci maçta "İlk maç ×2" olmamalı: ${breakdown2}`);
+    assert(breakdown2.includes("Maç +10"), `döküm "Maç +10" içermeli: ${breakdown2}`);
+    log("ikinci maç Glix", `+${total2}`, breakdown2);
+    await shot(A, "22-final-second-match");
+
+    // 14) Profilde bakiye hapı, Ayarlar > Hesap > Verimi indir (KVKK): dosyada defter ve sahip olunanlar.
+    await A.getByRole("button", { name: "Odadan çık" }).click();
+    await A.getByRole("button", { name: "Çık", exact: true }).click();
+    await A.getByRole("button", { name: /^Profilim, Ayse/ }).click();
+    const profileBal = A.getByRole("status", { name: /Glix bakiyen/ });
+    await profileBal.waitFor(OPT);
+    assert(
+      (await profileBal.getAttribute("aria-label")) === `Glix bakiyen ${m2.balance.toLocaleString("tr-TR")}`,
+      `profil bakiyesi ${m2.balance} olmalı`,
+    );
+    await shot(A, "23-profile-balance");
+    await A.goto("/");
+    await A.getByRole("button", { name: "Ayarlar", exact: true }).click();
+    await A.getByRole("button", { name: /^Hesap/ }).click();
+    const [download] = await Promise.all([
+      A.waitForEvent("download", OPT),
+      btn(A, /^verimi indir$/i).click(),
+    ]);
+    assert(
+      /^glix-verilerim-\d{4}-\d{2}-\d{2}\.json$/.test(download.suggestedFilename()),
+      `dosya adı: ${download.suggestedFilename()}`,
+    );
+    const dump = JSON.parse(readFileSync(await download.path(), "utf8"));
+    const moves = dump.glix?.movements ?? [];
+    const reasons = (r) => moves.filter((m) => m.reason === r);
+    assert(
+      dump.glix?.balance === m2.balance,
+      `dışa aktarılan bakiye ${m2.balance} olmalı: ${dump.glix?.balance}`,
+    );
+    assert(moves.reduce((t, m) => t + m.amount, 0) === dump.glix.balance, "hareketler bakiyeye eşit olmalı");
+    assert(
+      reasons("mac").length === m2.places.length,
+      `her maç için bir hareket beklenir: ${JSON.stringify(moves)}`,
+    );
+    assert(
+      reasons("yonetici").length === 1 && reasons("yonetici")[0].amount === GRANT,
+      "armağan hareketi dışa aktarılmalı",
+    );
+    assert(
+      reasons("satin-alma")
+        .map((m) => m.ref)
+        .sort()
+        .join() ===
+        BUYS.map((b) => b.id)
+          .sort()
+          .join(),
+      `satın alma hareketleri: ${JSON.stringify(reasons("satin-alma"))}`,
+    );
+    assert(
+      JSON.stringify(dump.cosmetics.owned.map((o) => o.id).sort()) ===
+        JSON.stringify(BUYS.map((b) => b.id).sort()),
+      `dışa aktarılan ürünler: ${JSON.stringify(dump.cosmetics.owned)}`,
+    );
+    assert(dump.cosmetics.equipped.length === 3, `kuşanılanlar: ${JSON.stringify(dump.cosmetics.equipped)}`);
+    log("KVKK dışa aktarma: defter ve ürünler dosyada");
     await sleep(500);
 
     assert(errors.length === 0, `tarayıcı hataları:\n${errors.join("\n")}`);

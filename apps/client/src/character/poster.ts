@@ -4,6 +4,7 @@
  * üretilir, iş bitince (kısa bir bekleme sonra) çizim bağlamı bırakılır.
  */
 import type { Application } from "pixi.js";
+import { APP_VIEW_ONLY, loadPixi } from "../fx/pixiLoad.js";
 import { posterTime, sampleDance } from "./dance.js";
 import { loadDance, loadKit } from "./kit.js";
 import { createContext, createPuppet, destroyContext, type PuppetContext } from "./puppet.js";
@@ -65,7 +66,7 @@ let idle: ReturnType<typeof setTimeout> | undefined;
 let pending = 0;
 
 async function open(): Promise<Shared> {
-  const [kit, pixi] = await Promise.all([loadKit(), import("pixi.js")]);
+  const [kit, pixi] = await Promise.all([loadKit(), loadPixi()]);
   const app = new pixi.Application();
   await app.init({
     width: 240,
@@ -87,7 +88,7 @@ function scheduleClose(): void {
     const s = shared;
     shared = null;
     void s.then((v) => {
-      v.app.destroy(true, { children: true, texture: true });
+      v.app.destroy(APP_VIEW_ONLY, { children: true, texture: true });
       destroyContext(v.ctx);
     });
   }, 4000);
