@@ -43,7 +43,8 @@ if (!existsSync(ENGINE) || !existsSync(TESTING)) {
   console.error("packages/engine/dist bulunamadı. Önce `pnpm build` çalıştırın.");
   process.exit(2);
 }
-const { applyMerge, createRng, GAMES } = await import(pathToFileURL(ENGINE).href);
+const { applyMerge, BUTONA_BAS_ROUND_MS, butonaBasRoundOffset, butonaBasWindowMs, createRng, GAMES } =
+  await import(pathToFileURL(ENGINE).href);
 const { BOTS } = await import(pathToFileURL(TESTING).href);
 
 // ---- Ayarlar ---------------------------------------------------------------------------------
@@ -148,7 +149,15 @@ const GAME_POOL = (() => {
 const EMOJIS = ["👋", "😂", "🔥", "😱", "👏", "❤️"];
 
 // ---- Sayaçlar --------------------------------------------------------------------------------
-const lat = { action: [], ping: [], broadcast: [], broadcastAny: [], reaction: [], resume: [] };
+const lat = {
+  action: [],
+  ping: [],
+  broadcast: [],
+  broadcastAny: [],
+  windowResult: [],
+  reaction: [],
+  resume: [],
+};
 const http = {}; // uç -> { lat: [], status: {} }
 const rejected = {};
 const errorsByCode = {};
@@ -490,6 +499,7 @@ class Bot {
 
   afterSnapshot() {
     const s = this.snap;
+    if (s) this.room.windowResultsSeen(s);
     if (!s || this.room.done || this.kind === "stage") {
       return;
     }
@@ -654,13 +664,38 @@ class Room {
     this.pending = { from, t0, seen: new Set(), game: from.snap?.match?.gameId };
   }
 
+  // Butona Bas pencere sonucu gecikmesi: pencerenin kapandığı an (sunucu saati: startedAt + tur ofseti + pencere) ile
+  // sonucun (`recent` girdisi) odadaki ilk anlık görüntüde göründüğü an arasındaki fark. Bir basışın kendisi herkese açık
+  // görünümü değiştirmez; görünür değişiklik pencere kapanınca gelir, bu yüzden doğru ölçüt budur. Sunucu saati ile bu
+  // sürecin saati aynı makinede (ya da NTP'li) olmalıdır; ±birkaç ms'den büyük sapma sonucu bozar.
+  windowResultsSeen(snap) {
+    const view = snap.match?.gameId === "butona-bas" ? snap.match.publicView : null;
+    if (!view || !Array.isArray(view.recent)) return;
+    const receivedAt = Date.now();
+    this.seenWindows ??= new Set();
+    for (const w of view.recent) {
+      const key = `${view.startedAt}:${w.round}:${w.index}`;
+      if (this.seenWindows.has(key)) continue;
+      this.seenWindows.add(key);
+      const closesAt =
+        view.startedAt +
+        butonaBasRoundOffset(w.round) +
+        Math.min((w.index + 1) * butonaBasWindowMs(w.round), BUTONA_BAS_ROUND_MS);
+      const lag = receivedAt - closesAt;
+      // Oda ilk kez ortaya çıkan eski girdileri (yeniden bağlanma, geç katılım) sayma.
+      if (lag >= -50 && lag < 3000) lat.windowResult.push(Math.max(0, lag));
+    }
+  }
+
+  // Eski ölçüt: bir eylem kabul edilince diğer botların o andan sonraki İLK anlık görüntüsüne kadar süre. Butona Bas'ta
+  // basış artık herkese açık görünümü değiştirmediği için bu, herhangi bir yayına (çoğu zaman alakasız) kadar geçen
+  // süredir; gerçek sonuç gecikmesi için `windowResultsSeen` kullanılır. Karşılaştırma için raporda kalır.
   snapshotSeen(bot) {
     const p = this.pending;
     if (!p || bot === p.from || bot.kind === "stage" || p.seen.has(bot)) return;
     p.seen.add(bot);
     const d = performance.now() - p.t0;
-    // Butona Bas'ta her kabul edilen basış herkese açık görünümü değiştirir: temiz yayın gecikmesi. Diğer oyunlarda
-    // eylem yalnız gönderene özel görünümü değiştirebilir; ilk anlık görüntü başka bir nedenden gelir (üst sınır).
+    // Diğer oyunlarda eylem yalnız gönderene özel görünümü değiştirebilir; ilk anlık görüntü başka bir nedenden gelir.
     if (p.game === "butona-bas" && d < 1000) lat.broadcast.push(d);
     lat.broadcastAny.push(d);
     if (p.seen.size >= 2 || performance.now() - p.t0 > 2000) this.pending = null;
@@ -884,7 +919,15 @@ function collect() {
 
 function merge(parts) {
   const out = {
-    lat: { action: [], ping: [], broadcast: [], broadcastAny: [], reaction: [], resume: [] },
+    lat: {
+      action: [],
+      ping: [],
+      broadcast: [],
+      broadcastAny: [],
+      windowResult: [],
+      reaction: [],
+      resume: [],
+    },
     http: {},
     rejected: {},
     errorsByCode: {},
@@ -949,6 +992,7 @@ function buildReport(m, wallMs, steady) {
     },
     broadcastLatencyMs: summarize(m.lat.broadcast),
     broadcastLatencyAnyGameMs: summarize(m.lat.broadcastAny),
+    butonaBasWindowResultLagMs: summarize(m.lat.windowResult),
     reactionLatencyMs: summarize(m.lat.reaction),
     resumeToSnapshotMs: summarize(m.lat.resume),
     pingRttMs: (({ p50, p95, count }) => ({ p50, p95, count }))(summarize(m.lat.ping)),
@@ -1015,9 +1059,13 @@ function printSummary(r, verdict) {
   console.log(
     `eylem RTT ms: p50 ${f(L.p50)} p95 ${f(L.p95)} p99 ${f(L.p99)} max ${f(L.max)} (n=${L.count}, reddedilen ${L.rejectedTotal} ${JSON.stringify(L.rejectedByReason)})`,
   );
+  const W = r.butonaBasWindowResultLagMs;
+  console.log(
+    `butona-bas pencere sonucu gecikmesi ms (kapanış -> ilk anlık görüntü): p50 ${f(W.p50)} p95 ${f(W.p95)} p99 ${f(W.p99)} (n=${W.count})`,
+  );
   const B = r.broadcastLatencyMs;
   console.log(
-    `yayın gecikmesi (butona-bas) ms: p50 ${f(B.p50)} p95 ${f(B.p95)} p99 ${f(B.p99)} (n=${B.count})`,
+    `eski ölçüt (butona-bas, basış -> sonraki ilk anlık görüntü) ms: p50 ${f(B.p50)} p95 ${f(B.p95)} p99 ${f(B.p99)} (n=${B.count})`,
   );
   const R = r.reactionLatencyMs;
   console.log(`emoji gecikmesi ms: p50 ${f(R.p50)} p95 ${f(R.p95)} p99 ${f(R.p99)} (n=${R.count})`);
