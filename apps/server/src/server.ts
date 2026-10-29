@@ -388,6 +388,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         google,
         mail,
         bannedWords: rt.bannedWords,
+        adminIds,
         onRenamed: (id, username) => rt.social.accountRenamed(id, username),
         onSessionsRevoked: (id, revoked) => rt.social.sessionsRevoked(id, revoked),
       });

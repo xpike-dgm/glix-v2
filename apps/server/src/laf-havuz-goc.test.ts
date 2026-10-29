@@ -11,16 +11,16 @@ afterAll(() => rmSync(dir, { recursive: true, force: true }));
 describe("Laf Sokma ton havuzlarının tek havuza taşınması (göç)", () => {
   it("üç eski havuzun satırları laf-sokma/sorular'a taşınır; çakışmada en eski kayıt kalır", () => {
     const path = join(dir, "hesap.db");
-    // Göçten önceki duruma getir: Laf göçünü ve ondan sonraki Glix (tablo + sütun), mağaza (iki tablo), ekonomi (iki indeks) ve günlük görev (tablo + defter yeniden kurulumu) ve kapsayıcı indeks göçlerini geri al, eski kimlikli
+    // Göçten önceki duruma getir: Laf göçünü ve ondan sonraki Glix (tablo + sütun), mağaza (iki tablo), ekonomi (iki indeks) ve günlük görev (tablo + defter yeniden kurulumu) kapsayıcı indeks ve oyuncu listesi indeks göçlerini geri al, eski kimlikli
     // satırları ekle.
     createAccounts(path).close();
     const { DatabaseSync: Db } = loadSqlite();
     const raw = new Db(path);
     raw.exec(
-      "DELETE FROM account_schema_version WHERE version >= (SELECT MAX(version) - 6 FROM account_schema_version)",
+      "DELETE FROM account_schema_version WHERE version >= (SELECT MAX(version) - 7 FROM account_schema_version)",
     );
     raw.exec(
-      "DROP INDEX account_games_cover; DROP INDEX account_matches_cover; DROP TABLE quest_rewards; DROP TABLE cosmetic_equipped; DROP TABLE cosmetic_owned; DROP TABLE glix_ledger; ALTER TABLE accounts DROP COLUMN glix;",
+      "DROP INDEX sessions_seen; DROP INDEX accounts_suspended; DROP INDEX accounts_created; DROP INDEX accounts_glix; DROP INDEX account_games_cover; DROP INDEX account_matches_cover; DROP TABLE quest_rewards; DROP TABLE cosmetic_equipped; DROP TABLE cosmetic_owned; DROP TABLE glix_ledger; ALTER TABLE accounts DROP COLUMN glix;",
     );
     const put = raw.prepare(
       "INSERT INTO content_overrides (pool_id, entry_key, action, value, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",

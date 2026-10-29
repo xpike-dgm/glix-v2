@@ -202,6 +202,8 @@ export interface AuthEnv {
   mail: MailService | null;
   /** Yönetici yasaklı kelime listesi (kayıt, ad değiştirme, Google kaydı); verilmezse denetim yok. */
   bannedWords?: BannedWords;
+  /** Yönetici hesap kimlikleri; `me` yanıtındaki `admin` işareti içindir (yalnız kolaylık: yetkiyi yönetici uçları verir). */
+  adminIds?: ReadonlySet<number>;
   /** Kullanıcı adı değişince çalışma zamanını (oda adı, arkadaş listeleri) günceller; testlerde verilmeyebilir. */
   onRenamed?: (accountId: number, username: string) => void;
   /** Oturum iptal edilince o oturumun canlı soketlerini misafire çevirir (`revoked`: oturum özeti iptal mi). */
@@ -458,6 +460,8 @@ function me(req: IncomingMessage, res: ServerResponse, env: AuthEnv): void {
       password: account ? env.accounts.passwordHash(account.id) !== null : false,
     },
     verified: account ? env.accounts.isVerified(account.id) : false,
+    // Ayarlar'daki "Yönetim paneli" girişi için; kendi hesabının bilgisidir, panel yine sunucuda denetlenir.
+    admin: account ? (env.adminIds?.has(account.id) ?? false) : false,
     // Kullanıcı adı değişikliği bu ana dek kapalıysa açılacağı an (ms); serbestse null.
     usernameAvailableAt: account ? env.accounts.usernameAvailableAt(account.id, env.now) : null,
   });

@@ -330,6 +330,14 @@ export function Settings() {
                 }}
               </For>
             </ul>
+            <Show when={state.account && state.isAdmin}>
+              <div class="set__card">
+                <a class="set__row set__row--link" href="/admin" rel="external">
+                  <span class="set__label">Yönetim paneli</span>
+                  <ChevronRightIcon size={20} class="hub__chev" />
+                </a>
+              </div>
+            </Show>
             <Show when={state.account}>
               <div class="set__card set__logout">
                 <button

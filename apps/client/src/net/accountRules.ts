@@ -103,3 +103,8 @@ export function usernameNote(availableAt: number | null, now: number): string {
 export function parseAvailableAt(v: unknown): number | null {
   return typeof v === "number" && Number.isFinite(v) && v > 0 ? v : null;
 }
+
+/** `me` yanıtındaki `admin` işareti: yalnız `true` ise yönetici sayılır (kolaylık; yetkiyi sunucu verir). */
+export function parseAdminFlag(v: unknown): boolean {
+  return v === true;
+}

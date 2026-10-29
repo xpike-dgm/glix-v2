@@ -76,6 +76,8 @@ interface AppState {
   pushKey: string | null;
   /** Oturumu açık hesap; misafirde ya da henüz bilinmiyorsa null. */
   account: AccountInfo | null;
+  /** Hesap yönetici listesinde mi (yalnız Ayarlar'daki "Yönetim paneli" girişi için; panelin yetkisini sunucu verir). */
+  isAdmin: boolean;
   /** Kullanıcı adı değişikliği bu ana dek kapalı (ms); serbestse ya da bilinmiyorsa null. */
   usernameAvailableAt: number | null;
   /** Sunucuda Google ile giriş açık mı; hesaba Google bağlı mı. Bilinmiyorsa kapalı sayılır. */
@@ -109,6 +111,7 @@ export const [state, setState] = createStore<AppState>({
   stage: null,
   pushKey: null,
   account: null,
+  isAdmin: false,
   usernameAvailableAt: null,
   google: { enabled: false, linked: false },
   mail: { enabled: false, verified: false, hasPassword: false },

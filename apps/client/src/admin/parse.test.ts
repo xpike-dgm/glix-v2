@@ -11,6 +11,7 @@ import {
   parseGameList,
   parseLive,
   parseMaintenance,
+  parsePlayerPage,
   parsePushStatus,
   parseReportDetail,
   parseReportPage,
@@ -161,8 +162,68 @@ const detailReply = {
     equipped: { unvan: "unvan-sansli" },
   },
   protected: false,
+  live: { online: true, room: { code: "AB3DE", role: "host", playerId: "0123456789ab" } },
   suspension: null,
 };
+const playerRow = {
+  id: 2,
+  username: "Ali",
+  createdAt: 1,
+  verified: true,
+  google: false,
+  password: true,
+  lastSeen: 5,
+  matches: 2,
+  suspended: true,
+  glix: 40,
+  suspendedUntil: 99,
+  admin: false,
+  live: { online: false, room: null },
+};
+
+describe("oyuncu listesi ve canlı durum yanıtları", () => {
+  it("geçerli sayfa kabul edilir; imleç boş ya da güvenli metin olmalı", () => {
+    const page = parsePlayerPage({ rows: [playerRow], next: "WzUsMl0", total: 9 });
+    expect(page.rows[0]).toMatchObject({ username: "Ali", glix: 40, suspendedUntil: 99, admin: false });
+    expect(page.next).toBe("WzUsMl0");
+    expect(parsePlayerPage({ rows: [], next: null, total: 0 }).rows).toEqual([]);
+    for (const next of ["a b", "<x>", 5, "x".repeat(201)])
+      expect(tryParse(parsePlayerPage, { rows: [], next, total: 0 }), String(next)).toBeNull();
+  });
+
+  it("bozuk satır, bozuk canlı durum ve fazla satır reddedilir", () => {
+    const bad = (row: unknown) => tryParse(parsePlayerPage, { rows: [row], next: null, total: 1 });
+    expect(bad({ ...playerRow, glix: "5" })).toBeNull();
+    expect(bad({ ...playerRow, admin: undefined })).toBeNull();
+    expect(
+      bad({ ...playerRow, live: { online: true, room: { code: "ab", role: "host", playerId: "x" } } }),
+    ).toBeNull();
+    expect(
+      bad({
+        ...playerRow,
+        live: { online: true, room: { code: "AB3DE", role: "kral", playerId: "0123456789ab" } },
+      }),
+    ).toBeNull();
+    expect(bad({ ...playerRow, live: { online: true } })).toBeNull();
+    expect(
+      tryParse(parsePlayerPage, {
+        rows: Array.from({ length: 101 }, () => playerRow),
+        next: null,
+        total: 101,
+      }),
+    ).toBeNull();
+  });
+
+  it("döküm canlı durumu doğrulanır", () => {
+    expect(parseDetail(detailReply).live.room).toEqual({
+      code: "AB3DE",
+      role: "host",
+      playerId: "0123456789ab",
+    });
+    expect(tryParse(parseDetail, { ...detailReply, live: undefined })).toBeNull();
+    expect(parseDetail({ ...detailReply, live: { online: false, room: null } }).live.online).toBe(false);
+  });
+});
 
 describe("hesap yanıtları", () => {
   it("geçerli yanıtlar kabul edilir", () => {

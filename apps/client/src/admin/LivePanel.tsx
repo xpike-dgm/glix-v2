@@ -150,7 +150,7 @@ export function LivePanel(props: { onOtp: () => void }) {
             <h3 class="adm-h3">Açık odalar</h3>
             <Show when={d().roomList.length > 0} fallback={<p class="adm-muted">Şu an açık oda yok.</p>}>
               <div class="adm-table-wrap">
-                <table class="adm-table">
+                <table class="adm-table adm-stack">
                   <thead>
                     <tr>
                       <th>Kod</th>
@@ -167,19 +167,27 @@ export function LivePanel(props: { onOtp: () => void }) {
                     <For each={d().roomList}>
                       {(r) => (
                         <tr>
-                          <td class="mono">{r.code}</td>
-                          <td>{phaseLabel(r.phase)}</td>
-                          <td class="num">
+                          <td data-label="Kod" class="mono">
+                            {r.code}
+                          </td>
+                          <td data-label="Aşama">{phaseLabel(r.phase)}</td>
+                          <td data-label="Oyuncu" class="num">
                             {r.players}
                             <Show when={r.connected < r.players + r.spectators}>
                               <small class="adm-muted"> ({r.connected} bağlı)</small>
                             </Show>
                           </td>
-                          <td class="num">{r.spectators}</td>
-                          <td class="num">{r.stages}</td>
-                          <td>{r.gameId ?? "—"}</td>
-                          <td class="num">{fmtDuration(r.ageSec)}</td>
-                          <td>
+                          <td data-label="İzleyici" class="num">
+                            {r.spectators}
+                          </td>
+                          <td data-label="Sahne" class="num">
+                            {r.stages}
+                          </td>
+                          <td data-label="Oyun">{r.gameId ?? "—"}</td>
+                          <td data-label="Yaş" class="num">
+                            {fmtDuration(r.ageSec)}
+                          </td>
+                          <td data-label="İşlem">
                             <button
                               type="button"
                               class="adm-btn adm-btn--ghost adm-btn--small"

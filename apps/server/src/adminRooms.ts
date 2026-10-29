@@ -16,6 +16,8 @@ export interface AdminRoomOps {
   close(code: string): boolean;
   /** Oyuncuyu çıkarır ("Odadan çıkarıldın."), o odaya 10 dakika girmesini engeller. */
   kick(code: string, playerId: string): KickResult;
+  /** Oyuncunun hesap kimliği; oda/oyuncu yoksa ya da misafirse null (yönetici hesabı koruması için). */
+  accountIdOf(code: string, playerId: string): number | null;
   /** Oda hâlâ açık mı ve oyuncu içinde mi (bildirim ayrıntısı için). */
   hasPlayer(code: string, playerId: string): boolean;
 }
@@ -56,6 +58,9 @@ export function createAdminRoomOps(rt: Runtime): AdminRoomOps {
       removePlayer(rt, room, player);
       conn?.send({ type: "left", reason: "removed" });
       return "ok";
+    },
+    accountIdOf(code, playerId) {
+      return rt.rooms.get(code)?.players.get(playerId)?.accountId ?? null;
     },
     hasPlayer(code, playerId) {
       return rt.rooms.get(code)?.players.has(playerId) ?? false;

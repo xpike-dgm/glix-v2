@@ -3,6 +3,7 @@ import type { DatabaseSync } from "node:sqlite";
 import type {
   AdminAccountDetail,
   AdminAccountRow,
+  AdminPlayerSort,
   ReportEvidence,
   ReportReason,
   ReportStatus,
@@ -208,6 +209,11 @@ export interface GlixMatchCredit {
 
 export type GlixAdjustResult = { ok: true; balance: number } | { ok: false; reason: "missing" | "negative" };
 
+/** "Bakiyeyi şuna ayarla" sonucu: defterde `amount` (işaretli fark) olarak yazılır. */
+export type GlixSetResult =
+  | { ok: true; balance: number; amount: number }
+  | { ok: false; reason: "missing" | "same" | "too_big" };
+
 /** Sahip olunan kozmetik (mağaza M2). `pricePaid` 0: yönetici armağanı. */
 export interface OwnedCosmetic {
   itemId: string;
@@ -266,6 +272,73 @@ export type AdminSearchQuery = { kind: "prefix"; value: string } | { kind: "emai
 
 /** Yönetici aramasında en çok bu kadar satır döner. */
 export const ADMIN_SEARCH_LIMIT = 20;
+
+/** Yönetici oyuncu listesi sorgusu (imleçli). `ids` doluysa yalnız bu hesaplar (çevrimiçi/yönetici süzgeci). */
+export interface AdminPlayerListQuery {
+  suspendedOnly: boolean;
+  ids: readonly number[] | null;
+  /** Küçük harf kullanıcı adı öneki; yok = hepsi. */
+  prefix: string | null;
+  sort: AdminPlayerSort;
+  dir: "asc" | "desc";
+  /** Önceki sayfanın son satırının (sıralama değeri, kimlik) çifti. Değer: ad sıralamasında metin, diğerlerinde sayı. */
+  cursor: { value: number | string; id: number } | null;
+  limit: number;
+}
+
+export type AdminPlayerListRow = AdminAccountRow & { glix: number; suspendedUntil: number | null };
+
+export interface AdminPlayerListPage {
+  rows: AdminPlayerListRow[];
+  /** Sonraki sayfa varsa son satırın imleci. */
+  next: { value: number | string; id: number } | null;
+  total: number;
+}
+
+/**
+ * Oyuncu listesinin SQL'i (imleçli sayfalama). Sıralama anahtarı + kimlik çifti satır değeri karşılaştırmasıyla sürer;
+ * glix, kayıt tarihi ve ad sıralamaları indeksle (`accounts_glix`, `accounts_created`, `username_lc`) okunur.
+ * Yalnız değerler `?` ile bağlanır; sıralama/yön sabit listeden gelir.
+ */
+export function playerListSql(
+  q: AdminPlayerListQuery,
+  now: number,
+): { countSql: string; countArgs: (string | number)[]; pageSql: string; pageArgs: (string | number)[] } {
+  const keyExpr = {
+    seen: "COALESCE((SELECT MAX(s.last_seen) FROM sessions s WHERE s.account_id = a.id), 0)",
+    created: "a.created_at",
+    glix: "a.glix",
+    name: "a.username_lc",
+  }[q.sort];
+  const where: string[] = [];
+  const args: (string | number)[] = [];
+  if (q.prefix !== null) {
+    where.push("a.username_lc >= ? AND a.username_lc < ?");
+    args.push(q.prefix, `${q.prefix}\u{10FFFF}`);
+  }
+  if (q.suspendedOnly) {
+    where.push("a.suspended_at IS NOT NULL AND (a.suspended_until IS NULL OR a.suspended_until > ?)");
+    args.push(now);
+  }
+  if (q.ids !== null) {
+    where.push("a.id IN (SELECT value FROM json_each(?))");
+    args.push(JSON.stringify(q.ids));
+  }
+  const clause = (parts: string[]): string => (parts.length === 0 ? "" : ` WHERE ${parts.join(" AND ")}`);
+  const pageWhere = [...where];
+  const pageArgs = [...args];
+  if (q.cursor !== null) {
+    pageWhere.push(`(${keyExpr}, a.id) ${q.dir === "asc" ? ">" : "<"} (?, ?)`);
+    pageArgs.push(q.cursor.value, q.cursor.id);
+  }
+  const dir = q.dir === "asc" ? "ASC" : "DESC";
+  return {
+    countSql: `SELECT COUNT(*) AS n FROM accounts a${clause(where)}`,
+    countArgs: args,
+    pageSql: `SELECT a.id AS id, ${keyExpr} AS k FROM accounts a${clause(pageWhere)} ORDER BY k ${dir}, a.id ${dir} LIMIT ?`,
+    pageArgs: [...pageArgs, q.limit + 1],
+  };
+}
 
 /** Askı bitmişse (ya da hiç yoksa) false. `until` null = süresiz. */
 function suspensionActive(at: number | null, until: number | null, now: number): boolean {
@@ -437,6 +510,17 @@ export interface AccountStore extends FriendStore {
   ): { paid: { id: string; reward: number }[]; balance: number } | null;
   /** Yönetici düzeltmesi: işaretli tutar, bakiye 0'ın altına inemez. Defter ve bakiye tek işlemde yazılır. */
   adjustGlix(accountId: number, amount: number, note: string, at: number): GlixAdjustResult;
+  /**
+   * Yönetici "bakiyeyi şuna ayarla": fark (hedef - şimdiki) deftere `yonetici` satırı olarak yazılır, böylece bakiye her
+   * zaman defter toplamına eşit kalır. Fark 0 ise `same`, |fark| > `maxDelta` ise `too_big`; hiçbir şey yazılmaz.
+   */
+  setGlixBalance(
+    accountId: number,
+    target: number,
+    note: string,
+    at: number,
+    maxDelta: number,
+  ): GlixSetResult;
   /** Glix bakiyesi; hesap yoksa 0. */
   glixBalance(accountId: number): number;
   /** Son hareketler, yeniden eskiye. */
@@ -521,8 +605,10 @@ export interface AccountStore extends FriendStore {
   scanUsernames(afterId: number, limit: number): { id: number; username: string }[];
   /** Kullanıcı adı önekiyle ya da tam e-postayla arama (en çok `ADMIN_SEARCH_LIMIT`); satırlarda e-posta yoktur. */
   adminSearch(query: AdminSearchQuery, now: number): AdminAccountRow[];
+  /** Tüm hesaplar üzerinde imleçli oyuncu listesi (süzgeç, sıralama, ad öneki); e-posta içermez. */
+  adminPlayerPage(query: AdminPlayerListQuery, now: number): AdminPlayerListPage;
   /** Tek hesabın yönetici dökümü (e-posta dahil); `protected` alanını çağıran doldurur. */
-  adminAccountDetail(accountId: number, now: number): Omit<AdminAccountDetail, "protected"> | null;
+  adminAccountDetail(accountId: number, now: number): Omit<AdminAccountDetail, "protected" | "live"> | null;
   /** Hesap şu an askıdaysa bilgisi; süresi dolmuşsa ya da hiç askıya alınmamışsa null. */
   suspension(accountId: number, now: number): Suspension | null;
   /**
@@ -845,6 +931,12 @@ export const ACCOUNT_MIGRATIONS: readonly string[] = [
   // satırlarını okutmaz. Geçmiş büyüdükçe maç sonu olay döngüsünü tutmasın diye (INCELEME-3).
   `CREATE INDEX account_games_cover ON account_games (account_id, game_id, won);
    CREATE INDEX account_matches_cover ON account_matches (account_id, ended_at, won);`,
+  // Yönetici oyuncu listesi (imleçli sayfalama): Glix ve kayıt tarihi sıralaması, askıdakiler süzgeci ve son görülme
+  // (hesap + son hareket) sıralaması tablo taramasına düşmesin diye.
+  `CREATE INDEX accounts_glix ON accounts (glix, id);
+   CREATE INDEX accounts_created ON accounts (created_at, id);
+   CREATE INDEX accounts_suspended ON accounts (id) WHERE suspended_at IS NOT NULL;
+   CREATE INDEX sessions_seen ON sessions (account_id, last_seen);`,
 ];
 
 /** Yönetici hesap dökümünde gösterilen son Glix hareketi sayısı. */
@@ -1249,6 +1341,9 @@ export function createAccounts(path: string): AccountStore {
   const searchPrefix = db.prepare(
     `${searchColumns} WHERE a.username_lc >= ? AND a.username_lc < ? ORDER BY a.username_lc LIMIT ${ADMIN_SEARCH_LIMIT}`,
   );
+  const playerRow = db.prepare(
+    `${searchColumns.replace("FROM accounts a", ", a.glix AS glix FROM accounts a")} WHERE a.id = ?`,
+  );
   const searchEmail = db.prepare(`${searchColumns} WHERE a.email = ? LIMIT ${ADMIN_SEARCH_LIMIT}`);
   const adminDetailRow = db.prepare(
     `SELECT username, email, email_verified, google_sub IS NOT NULL AS g, pass_hash IS NOT NULL AS p, created_at,
@@ -1649,6 +1744,30 @@ export function createAccounts(path: string): AccountStore {
         glixInsert.run(accountId, at, amount, "yonetici", note);
         glixAdd.run(amount, accountId);
         result = { ok: true, balance: acc.glix + amount };
+      });
+      return result;
+    },
+    setGlixBalance(accountId, target, note, at, maxDelta) {
+      let result: GlixSetResult = { ok: false, reason: "missing" };
+      inTransaction(() => {
+        const acc = glixAccount.get(accountId) as { glix: number } | undefined;
+        if (!acc) return;
+        const amount = target - acc.glix;
+        if (!Number.isSafeInteger(amount) || target < 0) {
+          result = { ok: false, reason: "too_big" };
+          return;
+        }
+        if (amount === 0) {
+          result = { ok: false, reason: "same" };
+          return;
+        }
+        if (Math.abs(amount) > maxDelta) {
+          result = { ok: false, reason: "too_big" };
+          return;
+        }
+        glixInsert.run(accountId, at, amount, "yonetici", note);
+        glixAdd.run(amount, accountId);
+        result = { ok: true, balance: target, amount };
       });
       return result;
     },
@@ -2180,6 +2299,38 @@ export function createAccounts(path: string): AccountStore {
         matches: r.matches,
         suspended: suspensionActive(r.sus_at, r.sus_until, now),
       }));
+    },
+    adminPlayerPage(q, now) {
+      const built = playerListSql(q, now);
+      const total = (db.prepare(built.countSql).get(...built.countArgs) as { n: number }).n;
+      const keyed = db.prepare(built.pageSql).all(...built.pageArgs) as unknown as {
+        id: number;
+        k: number | string;
+      }[];
+      const more = keyed.length > q.limit;
+      const pageKeys = more ? keyed.slice(0, q.limit) : keyed;
+      const rows = pageKeys.flatMap((kr) => {
+        const r = playerRow.get(kr.id) as unknown as (SearchDbRow & { glix: number }) | undefined;
+        if (!r) return [];
+        const active = suspensionActive(r.sus_at, r.sus_until, now);
+        return [
+          {
+            id: r.id,
+            username: r.username,
+            createdAt: r.created_at,
+            verified: r.verified === 1,
+            google: r.g === 1,
+            password: r.p === 1,
+            lastSeen: r.last_seen,
+            matches: r.matches,
+            suspended: active,
+            glix: r.glix,
+            suspendedUntil: active ? r.sus_until : null,
+          },
+        ];
+      });
+      const last = pageKeys.at(-1);
+      return { rows, next: more && last ? { value: last.k, id: last.id } : null, total };
     },
     adminAccountDetail(accountId, now) {
       const r = adminDetailRow.get(accountId) as

@@ -215,7 +215,7 @@ describe("yönetici hesap girdileri", () => {
 
 describe("hesap uçları: erişim denetimi", () => {
   useServer({ adminAccountIds: ADMIN, mail: MAIL, mailFetch, statsDb: ":memory:" });
-  const GETS = ["accounts", "accounts/search?q=ali", "accounts/detail?id=2", "audit"];
+  const GETS = ["accounts", "accounts/search?q=ali", "accounts/list", "accounts/detail?id=2", "audit"];
   const POSTS: [string, unknown][] = [
     ["accounts/rename", { id: 2, username: "Yeni_Ad" }],
     ["accounts/suspend", { id: 2, duration: "1d", reason: "x" }],
@@ -225,6 +225,8 @@ describe("hesap uçları: erişim denetimi", () => {
     ["accounts/glix", { id: 2, amount: 10, reason: "x" }],
     ["accounts/cosmetic-grant", { id: 2, itemId: "unvan-sansli" }],
     ["accounts/cosmetic-revoke", { id: 2, itemId: "unvan-sansli" }],
+    ["accounts/cosmetic-unequip", { id: 2, slot: "unvan" }],
+    ["accounts/glix-set", { id: 2, balance: 5, reason: "x" }],
   ];
 
   it("oturum yoksa 401; yönetici olmayan 404; yönetici çerezi yoksa 403", async () => {
@@ -696,7 +698,7 @@ describe("askıya alma", () => {
     expect(k.srv.accounts.suspension(t.id, k.clock.now())).toMatchObject({ until: null, reason: "ikinci" });
   });
 
-  it("canlı soket misafire döner (odada kalır), arkadaşlar çevrimdışı görür, istek bulunamadı", async () => {
+  it("canlı soket hemen kapanır (4003), arkadaşlar çevrimdışı görür, istek bulunamadı", async () => {
     const cookie = await adminLogin();
     const t = await register("Askili_5");
     const friend = loginCookie("Dost_5");
@@ -714,16 +716,12 @@ describe("askıya alma", () => {
 
     expect((await suspend(cookie, t.id)).status).toBe(200);
     await until(() => watcher.of("friendsChanged").length > friendsBefore, "dost haber aldı");
-    // Soket açık, oyuncu odada mevcut adıyla duruyor; ama artık hesapla bağı yok.
-    expect(player.ws.readyState).toBe(player.ws.OPEN);
-    expect(player.room.players.map((p) => p.nickname)).toEqual(["Askili_5"]);
+    // Soket hemen kapatılır; hesap bağı kopar (artık hesaba bağlı bir bağlantı yok).
+    await until(() => player.closeCode === 4003, "soket kapandı");
     const list = (await (await friendsApi(friend, "")).json()) as {
       friends: { username: string; status: string }[];
     };
     expect(list.friends).toEqual([expect.objectContaining({ username: "Askili_5", status: "offline" })]);
-    // Hesap bağı koptuğu için odadaki oyuncu artık hesaplı değildir: yeniden takma ad değiştirebilir.
-    player.send({ type: "rename", nickname: "Misafir_Ad" });
-    await until(() => player.room.players.some((p) => p.nickname === "Misafir_Ad"), "misafir takma adı");
 
     // Başkası arkadaş isteği atamaz ve kabul edemez: "bulunamadı".
     const req = await friendsApi(stranger, "/request", { username: "askili_5" });

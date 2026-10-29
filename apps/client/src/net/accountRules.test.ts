@@ -3,6 +3,7 @@ import {
   emailError,
   loginError,
   normalizeEmail,
+  parseAdminFlag,
   parseAvailableAt,
   passwordError,
   registerError,
@@ -85,5 +86,12 @@ describe("kullanıcı adı değiştirme tarihi", () => {
     expect(parseAvailableAt(1_700_000_000_000)).toBe(1_700_000_000_000);
     for (const bad of [null, undefined, "5", 0, -1, Number.NaN, Number.POSITIVE_INFINITY])
       expect(parseAvailableAt(bad), String(bad)).toBeNull();
+  });
+});
+
+describe("yönetici işareti", () => {
+  it("yalnız true yönetici sayılır", () => {
+    expect(parseAdminFlag(true)).toBe(true);
+    for (const v of [false, undefined, null, 1, "true", "1", {}, []]) expect(parseAdminFlag(v)).toBe(false);
   });
 });

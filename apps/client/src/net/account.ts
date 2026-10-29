@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 import { isStandalone } from "../pwa/packPolicy.js";
-import { parseAvailableAt } from "./accountRules.js";
+import { parseAdminFlag, parseAvailableAt } from "./accountRules.js";
 import { reconnectForAccount, sendPushUnsubscribe } from "./client.js";
 import { looksTechnical, NETWORK_ERROR, playerErrorText } from "./errorText.js";
 import { loadFriends, resetFriends } from "./friends.js";
@@ -59,6 +59,7 @@ export async function refreshAccount(): Promise<void> {
     const data = await call("me", "GET");
     const account = isRecord(data) ? parseAccount(data.account) : null;
     setState("account", account);
+    setState("isAdmin", account !== null && isRecord(data) && parseAdminFlag(data.admin));
     setState(
       "usernameAvailableAt",
       account && isRecord(data) ? parseAvailableAt(data.usernameAvailableAt) : null,
@@ -131,6 +132,7 @@ export async function logout(): Promise<void> {
     // çevrimdışıysa da yerel durum temizlenir; çerez sunucuda süresiyle düşer
   }
   setState("account", null);
+  setState("isAdmin", false);
   setState("usernameAvailableAt", null);
   setState("google", "linked", false);
   setState("mail", { verified: false, hasPassword: false });
@@ -408,6 +410,7 @@ export async function deleteMyAccount(form: DeleteForm): Promise<AccountReply> {
   resetQuests();
   resetShop();
   setState("account", null);
+  setState("isAdmin", false);
   setState("usernameAvailableAt", null);
   setState("google", "linked", false);
   setState("mail", { verified: false, hasPassword: false });
