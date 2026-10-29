@@ -230,7 +230,10 @@ export function Shop() {
     setBusy(true);
     const r = await buyItem(item.id);
     setBusy(false);
+    // Başarı ekran okuyucuya da duyurulsun (bildirim alanı canlı bölgedir).
+    if (r.ok) toast(`${item.name} satın alındı`, "success");
     if (stillOpen(item)) setMsg(r.ok ? null : r.message);
+    else if (!r.ok) toast(r.message, "error");
   }
 
   async function equip(item: CosmeticItem): Promise<void> {
