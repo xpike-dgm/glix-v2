@@ -265,7 +265,7 @@ describe("resimli türler (M3)", () => {
       zafer: "kart-elektrik",
     });
     expect(s?.equipped).toEqual({ "kart-arkasi": "kart-elektrik", giris: "giris-duman" });
-    const parti = itemsOfType("tepki")[1];
+    const parti = itemsOfType("tepki").find((p) => p.id === "tepki-parti");
     if (!parti || !s) throw new Error("hazırlık");
     expect(itemStatus(s, parti)).toBe("owned");
   });

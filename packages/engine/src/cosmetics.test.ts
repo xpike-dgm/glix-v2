@@ -47,7 +47,7 @@ describe("kozmetik kataloğu", () => {
     // Giysi yuvalarından henüz ürünü olmayanlar olabilir (arayüz onları göstermez); diğer türlerin hepsinde ürün var.
     for (const t of COSMETIC_TYPES.filter((x) => x.group !== "giysi"))
       expect(COSMETIC_ITEMS.some((i) => i.type === t.id)).toBe(true);
-    expect(COSMETIC_ITEMS).toHaveLength(92);
+    expect(COSMETIC_ITEMS).toHaveLength(95);
   });
 
   it("parseCosmetics: bilinmeyen ya da yanlış türdeki kimlik atılır", () => {
@@ -284,7 +284,7 @@ describe("resimli mağaza türleri (M3)", () => {
       "efsanevi",
     ]);
     expect(by("zafer")).toEqual(["siradan", "siradan", "nadir", "nadir", "efsanevi"]);
-    expect(by("tepki")).toEqual(["siradan", "nadir", "efsanevi"]);
+    expect(by("tepki")).toEqual(["siradan", "siradan", "nadir", "nadir", "efsanevi", "efsanevi"]);
     expect(by("giris")).toEqual(["siradan", "siradan", "nadir", "nadir", "efsanevi"]);
   });
 
@@ -312,8 +312,13 @@ describe("resimli mağaza türleri (M3)", () => {
     expect(COSMETIC_TYPES.filter((t) => !isEquippable(t)).map((t) => t.id)).toEqual(["tepki"]);
   });
 
+  it("her tepki paketinin 6 çıkartma adı var", () => {
+    for (const p of itemsOfType("tepki"))
+      expect(STICKER_NAMES[p.asset ?? ""], p.id).toHaveLength(STICKERS_PER_PACK);
+  });
+
   it("çıkartma kimlikleri: geçerli biçim çözülür, bozuk olanlar reddedilir", () => {
-    const pack = itemsOfType("tepki")[1];
+    const pack = itemsOfType("tepki").find((p) => p.id === "tepki-parti");
     if (!pack) throw new Error("paket yok");
     expect(STICKER_NAMES[pack.asset ?? ""]).toHaveLength(STICKERS_PER_PACK);
     for (let n = 1; n <= STICKERS_PER_PACK; n++) {

@@ -13,7 +13,7 @@ describe("tepki sayfaları", () => {
     const packs = itemsOfType("tepki");
     const pages = reactionPages(
       LOBBY_EMOJIS,
-      [packs[0], packs[2]].filter((p) => p !== undefined),
+      packs.filter((p) => p.id === "tepki-neon-yuzler" || p.id === "tepki-efsane"),
     );
     expect(pages.map((p) => p.id)).toEqual(["emoji", "tepki-neon-yuzler", "tepki-efsane"]);
     const stickers = pages[2]?.items ?? [];

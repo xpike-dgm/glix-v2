@@ -308,7 +308,23 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     "Altı neon yüz ifadesi: gülen, şaşkın, sinirli…",
     "neon-yuzler",
   ),
+  item(
+    "tepki-hayvanlar",
+    "tepki",
+    "siradan",
+    "Neon Hayvanlar",
+    "Gülen kedi, şaşkın baykuş, uykucu panda…",
+    "hayvanlar",
+  ),
   item("tepki-parti", "tepki", "nadir", "Parti", "Şapka, disko topu, kadeh ve daha fazlası.", "parti"),
+  item(
+    "tepki-oyun-ani",
+    "tepki",
+    "nadir",
+    "Oyun Anı",
+    "Düşünen avatar, kum saati, zar, şans yoncası…",
+    "oyun-ani",
+  ),
   item(
     "tepki-efsane",
     "tepki",
@@ -317,6 +333,7 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     "Taç, ateş topu, roket, elmas…",
     "efsane-tepkiler",
   ),
+  item("tepki-kozmik", "tepki", "efsanevi", "Kozmik", "Gezegen, kuyruklu yıldız, UFO, kara delik…", "kozmik"),
   item(
     "giris-isinlanma",
     "giris",
@@ -683,6 +700,16 @@ export const STICKER_NAMES: Readonly<Record<string, readonly string[]>> = {
   "neon-yuzler": ["Gülüyor", "Şaşkın", "Sinirli", "Ağlıyor", "Göz kırpıyor", "Uykulu"],
   parti: ["Parti şapkası", "Disko topu", "Kadeh tokuşturma", "Havai fişek", "Dans eden avatar", "Alkış"],
   "efsane-tepkiler": ["Altın taç", "Ateş topu", "Mikrofonu bırak", "Roket", "Elmas", "Şimşekli kupa"],
+  hayvanlar: [
+    "Gülen kedi",
+    "Şaşkın baykuş",
+    "Uykucu panda",
+    "Kızgın tavuk",
+    "Göz kırpan tilki",
+    "Ağlayan köpek",
+  ],
+  "oyun-ani": ["Düşünüyorum", "Ter damlası", "Kum saati", "Şans yoncası", "Zar", "Tam isabet"],
+  kozmik: ["Gezegen", "Kuyruklu yıldız", "UFO", "Astronot kaskı", "Kara delik", "Yıldız patlaması"],
 };
 
 /** Tepki paketi çıkartmasının kimliği: `pack:<paketKimliği>:<1..6>` (`react` ve `reaction` mesajlarında). */
