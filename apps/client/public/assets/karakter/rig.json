@@ -578,6 +578,156 @@
      "sourceOrigin": [342.5, 304.5]
     }
    ]
+  },
+  "kimono": {
+   "visible": true,
+   "slot": "ust",
+   "pieces": [
+    {
+     "file": "giysi/kimono_torso.webp",
+     "size": [239, 226],
+     "pivot": [119.5, 188],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [136.5, 203]
+    },
+    {
+     "file": "giysi/kimono_left_upper_arm.webp",
+     "size": [106, 137],
+     "pivot": [84, 21.5],
+     "parent": "left_upper_arm",
+     "bone": "left_upper_arm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_upper_arm",
+     "layer": "on",
+     "sourceOrigin": [99, 219]
+    },
+    {
+     "file": "giysi/kimono_left_forearm.webp",
+     "size": [95, 107],
+     "pivot": [73, 21.5],
+     "parent": "left_forearm",
+     "bone": "left_forearm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_forearm",
+     "layer": "on",
+     "sourceOrigin": [75, 304.5]
+    },
+    {
+     "file": "giysi/kimono_right_upper_arm.webp",
+     "size": [106, 137],
+     "pivot": [21.5, 21.5],
+     "parent": "right_upper_arm",
+     "bone": "right_upper_arm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_upper_arm",
+     "layer": "on",
+     "sourceOrigin": [307.5, 219]
+    },
+    {
+     "file": "giysi/kimono_right_forearm.webp",
+     "size": [96, 107],
+     "pivot": [21.5, 21.5],
+     "parent": "right_forearm",
+     "bone": "right_forearm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_forearm",
+     "layer": "on",
+     "sourceOrigin": [342.5, 304.5]
+    }
+   ]
+  },
+  "yagmurluk": {
+   "visible": true,
+   "slot": "ust",
+   "pieces": [
+    {
+     "file": "giysi/yagmurluk_torso.webp",
+     "size": [185, 204],
+     "pivot": [92, 201],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [164, 190]
+    },
+    {
+     "file": "giysi/yagmurluk_left_upper_arm.webp",
+     "size": [86, 139],
+     "pivot": [63.5, 29],
+     "parent": "left_upper_arm",
+     "bone": "left_upper_arm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_upper_arm",
+     "layer": "on",
+     "sourceOrigin": [119.5, 211.5]
+    },
+    {
+     "file": "giysi/yagmurluk_left_forearm.webp",
+     "size": [94, 109],
+     "pivot": [71.5, 21.5],
+     "parent": "left_forearm",
+     "bone": "left_forearm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "left_forearm",
+     "layer": "on",
+     "sourceOrigin": [76.5, 304.5]
+    },
+    {
+     "file": "giysi/yagmurluk_right_upper_arm.webp",
+     "size": [86, 140],
+     "pivot": [21.5, 29],
+     "parent": "right_upper_arm",
+     "bone": "right_upper_arm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_upper_arm",
+     "layer": "on",
+     "sourceOrigin": [307.5, 211.5]
+    },
+    {
+     "file": "giysi/yagmurluk_right_forearm.webp",
+     "size": [94, 109],
+     "pivot": [21.5, 21.5],
+     "parent": "right_forearm",
+     "bone": "right_forearm",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "right_forearm",
+     "layer": "on",
+     "sourceOrigin": [342.5, 304.5]
+    }
+   ]
+  },
+  "zirh-yelek": {
+   "visible": true,
+   "slot": "ust",
+   "pieces": [
+    {
+     "file": "giysi/zirh_yelek_torso.webp",
+     "size": [137, 182],
+     "pivot": [68, 187.5],
+     "parent": "torso",
+     "bone": "torso",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "torso",
+     "layer": "on",
+     "sourceOrigin": [188, 203.5]
+    }
+   ]
   }
  },
  "scale": 0.5,

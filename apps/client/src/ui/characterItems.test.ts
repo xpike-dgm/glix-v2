@@ -17,7 +17,7 @@ const item = (id: string) => {
 
 describe("karakter ürünleri önizlemesi", () => {
   it("yalnız dans ve giysi karakter üzerinde gösterilir", () => {
-    expect(COSMETIC_ITEMS.filter(isCharacterItem)).toHaveLength(21);
+    expect(COSMETIC_ITEMS.filter(isCharacterItem)).toHaveLength(24);
     expect(isCharacterItem(item("cerceve-cift"))).toBe(false);
   });
 
