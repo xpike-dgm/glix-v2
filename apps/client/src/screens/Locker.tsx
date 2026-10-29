@@ -32,16 +32,9 @@ import { defaultDancePoster, isCharacterItem, posterSpec } from "../ui/character
 import { GhostButton } from "../ui/GhostButton.js";
 import { BackIcon, CheckIcon } from "../ui/Icons.js";
 import { Screen } from "../ui/Screen.js";
-import { ColourSwatches, colourName, ShopTabBar, SlotChips } from "../ui/ShopBits.js";
+import { ColourSwatches, colourName, ShopTabBar } from "../ui/ShopBits.js";
 import { CardBackArt, CelebrationCollage, EntryLayers, PackCollage } from "../ui/ShopPreview.js";
 import { boxSrc } from "../ui/shopArt.js";
-
-/** Atlama çiplerinde uzun tür adları kısalır. */
-const SHORT_NAME: Partial<Record<CosmeticTypeId, string>> = {
-  zafer: "Zafer",
-  tepki: "Tepki",
-  giris: "Giriş",
-};
 
 const isArtType = (t: CosmeticTypeId): boolean => ART_TYPES.includes(t);
 
@@ -285,22 +278,6 @@ export function Locker() {
   });
   const name = () => state.account?.username ?? "Sen";
 
-  /** Bölüme atlama çipleri: giysi yuvaları tek "Giysiler" çipinde toplanır (ilk yuvaya atlar). */
-  const jumpChips = () => {
-    const chips: { id: CosmeticTypeId; label: string }[] = [];
-    for (const t of SHOP_TYPES) {
-      if (isClothingType(t.id)) {
-        if (!chips.some((c) => c.label === "Giysiler")) chips.push({ id: t.id, label: "Giysiler" });
-      } else chips.push({ id: t.id, label: SHORT_NAME[t.id] ?? t.name });
-    }
-    return chips;
-  };
-  const jumpTo = (id: CosmeticTypeId): void => {
-    document
-      .querySelector(`.locker-sec[data-type="${id}"]`)
-      ?.scrollIntoView({ block: "start", behavior: "smooth" });
-  };
-
   async function pick(type: CosmeticTypeId, itemId: string | null): Promise<void> {
     const r = await equipItem(type, itemId);
     if (!r.ok) toast(r.message, "error");
@@ -363,7 +340,6 @@ export function Locker() {
                 </h2>
                 <PlayerTitle cosmetics={ownCosmetics()} plate />
               </section>
-              <SlotChips label="Bölüme git" items={jumpChips()} onPick={jumpTo} />
               <For each={SHOP_TYPES}>
                 {(t) => {
                   const owned = () => ownedOfType(s(), t.id, itemsOfType(t.id));
