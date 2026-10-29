@@ -34,6 +34,8 @@ export interface Connection {
   lastSent: RoomSnapshot | null;
   /** `lastSent`'in dayandığı ortak oda sürümü (broadcast.ts); hızlı yama yolu yalnız güncel sürümde çalışır. */
   sentVer: number;
+  /** Bu bağlantıya son hesaplanan tam `room` metninin uzunluğu; yama bunun çok altındaysa tam metin yeniden kodlanmaz. */
+  fullLenHint?: number;
   close(code: number, reason: string): void;
   player: Player | null;
   /** Sahne (TV) olarak bağlandığı oda; oyuncu değildir (`player` null kalır). */

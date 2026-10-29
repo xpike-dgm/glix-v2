@@ -29,6 +29,7 @@ import {
 } from "./mail.js";
 import { runTick, TICK_MS } from "./match.js";
 import { errorMessage } from "./messages.js";
+import { TICK_BUCKETS_MS } from "./metrics.js";
 import { type BannedWords, createBannedWords, createReportDesk } from "./moderation.js";
 import { handleProfile, PROFILE_PATH } from "./profile.js";
 import { createPushBroadcaster } from "./pushBroadcast.js";
@@ -305,6 +306,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const server = createServer((req, res) => {
     const path = (req.url ?? "/").split("?")[0] ?? "/";
     if (path === "/health") {
+      const detail = (req.url ?? "").includes("detail=1");
       res.writeHead(rt.draining ? 503 : 200, {
         "Content-Type": "application/json",
         "Cache-Control": "no-store",
@@ -323,6 +325,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
           tickMsP95: Math.round(rt.metrics.tickMsP95() * 100) / 100,
           bytesOutPerSec: Math.round(rt.metrics.bytesOutPerSec(clock.now())),
           memoryRssMb: Math.round(process.memoryUsage().rss / 1048576),
+          ...(detail ? { tickHistogram: { edgesMs: TICK_BUCKETS_MS, ...rt.metrics.tickHistogram() } } : {}),
         }),
       );
       return;

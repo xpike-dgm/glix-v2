@@ -87,6 +87,18 @@ const jsonValue = fc.letrec((tie) => ({
 })).v;
 const jsonObject = fc.dictionary(key, jsonValue, { maxKeys: 4 });
 
+describe("diffMerge: eşitlik", () => {
+  it("tanımsız alanlar yok sayılır, iç içe diziler ve nesneler değer olarak karşılaştırılır", () => {
+    expect(diffMerge({ a: [{ x: 1, y: undefined }] }, { a: [{ x: 1 }] })).toEqual({});
+    expect(diffMerge({ a: { x: 1, y: [1, { z: 2 }] } }, { a: { x: 1, y: [1, { z: 2 }] } })).toEqual({});
+    expect(diffMerge({ a: [1, 2] }, { a: [1, 2, 3] })).toEqual({ a: [1, 2, 3] });
+    expect(diffMerge({ a: [{ x: 1 }] }, { a: [{ x: 2 }] })).toEqual({ a: [{ x: 2 }] });
+    expect(diffMerge({ a: [{ x: 1 }] }, { a: [{ x: 1, y: 2 }] })).toEqual({ a: [{ x: 1, y: 2 }] });
+    expect(diffMerge({ a: [{ x: 1, y: 2 }] }, { a: [{ x: 1 }] })).toEqual({ a: [{ x: 1 }] });
+    expect(diffMerge({ a: [{ x: 1, y: undefined }] }, { a: [{ x: 1, z: undefined }] })).toEqual({});
+  });
+});
+
 describe("diffMerge / applyMerge: özellikler", () => {
   it("diff üretildiyse apply(prev, diff) === next", () => {
     fc.assert(

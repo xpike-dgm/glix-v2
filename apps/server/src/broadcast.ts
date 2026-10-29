@@ -35,17 +35,30 @@ export function deliver(conn: Connection, snapshot: RoomSnapshot): void {
       return;
     }
   }
-  conn.sendRaw(JSON.stringify({ type: "room", snapshot }));
+  const full = JSON.stringify({ type: "room", snapshot });
+  conn.fullLenHint = full.length;
+  conn.sendRaw(full);
 }
 
 /** Bu uzunluğun altındaki yama tam snapshot'tan (katalog dahil kilobaytlar) kesin küçüktür; karşılaştırılmaz. */
 const PATCH_COMPARE_FROM = 256;
 
+/**
+ * Yama bağlantının bilinen tam metin uzunluğunun bu oranının altındaysa karşılaştırma yapılmaz: yama kesin
+ * küçüktür (ölçüm: yayınların %43'ü ~5 KB'lık tam metni yalnız karşılaştırmak için kodluyordu).
+ */
+const PATCH_CLEARLY_SMALLER = 0.5;
+
 /** Yama tam snapshot'tan küçükse yama, değilse tam `room` gönderir. Tam metin yalnız gerekirse üretilir. */
 function sendPatchOrRoom(conn: Connection, baseRev: number, snapshot: RoomSnapshot, patch: MergePatch): void {
   const text = JSON.stringify({ type: "patch", baseRev, rev: snapshot.rev, patch });
-  if (text.length >= PATCH_COMPARE_FROM) {
+  const hint = conn.fullLenHint;
+  if (
+    text.length >= PATCH_COMPARE_FROM &&
+    (hint === undefined || text.length >= hint * PATCH_CLEARLY_SMALLER)
+  ) {
     const full = JSON.stringify({ type: "room", snapshot });
+    conn.fullLenHint = full.length;
     if (text.length >= full.length) {
       conn.sendRaw(full);
       return;

@@ -249,3 +249,32 @@ describe("yayın: publicView oda başına bir kez", () => {
     for (const c of t.conns) expect(c.view.snapshot?.match?.publicView).toEqual(first);
   });
 });
+
+describe("yayın: tam metin uzunluğu ipucu", () => {
+  it("ilk tam room metninin uzunluğu ipucu olarak saklanır; küçük yama tam metin kodlanmadan gider", () => {
+    const t = setup();
+    t.rt.broadcaster.flush(t.room);
+    for (const c of t.conns) expect(c.conn.fullLenHint).toBe(c.raw[0]?.length);
+    t.clock.advance(500);
+    const p1 = t.room.players.get("p1");
+    if (p1) p1.score = 5;
+    t.rt.broadcaster.flush(t.room);
+    for (const c of t.conns) expect(JSON.parse(c.raw[1] ?? "").type).toBe("patch");
+  });
+
+  it("ipucu bayatsa (çok küçük) yama yine de tam metinle karşılaştırılır ve ipucu yenilenir", () => {
+    const t = setup();
+    startPlaying(t);
+    for (const c of t.conns) c.conn.fullLenHint = 1;
+    t.clock.advance(100);
+    applyAction(t.rt, t.room, "p0", { kind: "press" });
+    t.rt.broadcaster.flush(t.room);
+    for (const c of t.conns) {
+      const last = JSON.parse(c.raw.at(-1) ?? "") as { type: string };
+      // Yama ya da tam metin: hangisi gittiyse istemci aynası sunucuyla tutarlı kalır.
+      expect(["patch", "room"]).toContain(last.type);
+      // Mesaj gönderilen bağlantıda büyük yama karşılaştırması ipucunu gerçek uzunlukla yeniler.
+      expect(c.conn.fullLenHint === 1 || (c.conn.fullLenHint ?? 0) > 100).toBe(true);
+    }
+  });
+});

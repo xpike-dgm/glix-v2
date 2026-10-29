@@ -30,12 +30,22 @@ function has(obj: Rec, key: string): boolean {
 function deepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
   if (Array.isArray(a)) {
-    return Array.isArray(b) && a.length === b.length && a.every((x, i) => deepEqual(x, b[i]));
+    if (!Array.isArray(b) || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (!deepEqual(a[i], b[i])) return false;
+    return true;
   }
   if (isRec(a) && isRec(b)) {
-    const ak = Object.keys(a).filter((k) => a[k] !== undefined);
-    const bk = Object.keys(b).filter((k) => b[k] !== undefined);
-    return ak.length === bk.length && ak.every((k) => has(b, k) && deepEqual(a[k], b[k]));
+    // Yayın başına binlerce kez çalışır: ara dizi/kapanış üretmeden, tanımsız alanlar yok sayılarak karşılaştırır.
+    let countA = 0;
+    for (const k of Object.keys(a)) {
+      const v = a[k];
+      if (v === undefined) continue;
+      countA++;
+      if (!has(b, k) || !deepEqual(v, b[k])) return false;
+    }
+    let countB = 0;
+    for (const k of Object.keys(b)) if (b[k] !== undefined) countB++;
+    return countA === countB;
   }
   return false;
 }
@@ -49,6 +59,11 @@ function unsafeInPatchValue(v: unknown): boolean {
     if (v[key] !== undefined && unsafeInPatchValue(v[key])) return true;
   }
   return false;
+}
+
+function isEmpty(obj: Rec): boolean {
+  for (const _ in obj) return false;
+  return true;
 }
 
 function diffObjects(prev: Rec, next: Rec): MergePatch | null {
@@ -70,7 +85,7 @@ function diffObjects(prev: Rec, next: Rec): MergePatch | null {
       if (isRec(p)) {
         const sub = diffObjects(p, n);
         if (sub === null) return null;
-        if (Object.keys(sub).length > 0) patch[key] = sub;
+        if (!isEmpty(sub)) patch[key] = sub;
       } else {
         if (unsafeInPatchValue(n)) return null;
         patch[key] = n;

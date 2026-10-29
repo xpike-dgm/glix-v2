@@ -2,8 +2,22 @@
 export const TICK_SAMPLES = 600;
 export const BYTES_WINDOW_S = 10;
 
+/** Birikimli tick süresi kovalarının üst sınırları (ms); sonuncusu "sonsuz". Yük testi adım başına yüzdelik hesaplar. */
+export const TICK_BUCKETS_MS: readonly number[] = [
+  0.25, 0.5, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 100, 150, 250, 500, 1000,
+];
+
+export interface TickHistogram {
+  /** `TICK_BUCKETS_MS` ile aynı sırada, sondaki "sonsuz" kovası dahil sayaçlar (sunucu açılışından beri). */
+  counts: number[];
+  /** Açılıştan beri görülen en uzun tick (ms). */
+  maxMs: number;
+}
+
 export interface Metrics {
   recordTick(ms: number): void;
+  /** Açılıştan beri tüm tick'lerin kova sayaçları (sağlık ucunda `?detail=1`). */
+  tickHistogram(): TickHistogram;
   /** Son TICK_SAMPLES tick'in %95'lik süresi (ms); örnek yoksa 0. */
   tickMsP95(): number;
   recordBytes(bytes: number, nowMs: number): void;
@@ -13,6 +27,8 @@ export interface Metrics {
 
 export function createMetrics(): Metrics {
   const ticks = new Float64Array(TICK_SAMPLES);
+  const hist = new Array<number>(TICK_BUCKETS_MS.length + 1).fill(0);
+  let maxMs = 0;
   let tickCount = 0;
   let tickPos = 0;
   // Saniye kovaları: kova numarası ile toplam bayt.
@@ -21,9 +37,16 @@ export function createMetrics(): Metrics {
 
   return {
     recordTick(ms) {
+      let b = 0;
+      while (b < TICK_BUCKETS_MS.length && ms > (TICK_BUCKETS_MS[b] ?? 0)) b++;
+      hist[b] = (hist[b] ?? 0) + 1;
+      if (ms > maxMs) maxMs = ms;
       ticks[tickPos] = ms;
       tickPos = (tickPos + 1) % TICK_SAMPLES;
       tickCount = Math.min(tickCount + 1, TICK_SAMPLES);
+    },
+    tickHistogram() {
+      return { counts: [...hist], maxMs };
     },
     tickMsP95() {
       if (tickCount === 0) return 0;
