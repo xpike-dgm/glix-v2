@@ -258,12 +258,17 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const scheduleTick = (): void => {
     cancelTick = clock.setTimeout(() => {
       if (stopTicking) return;
-      const t0 = performance.now();
-      runTick(rt);
-      rt.social.tick(clock.now());
-      site.tick(clock.now());
-      rt.metrics.recordTick(performance.now() - t0);
-      if (rt.draining && countActiveMatches(rt) === 0) finishDrain();
+      // Bir adım hata atsa da döngü sürer: aksi hâlde tüm odaların saati sessizce durur.
+      try {
+        const t0 = performance.now();
+        runTick(rt);
+        rt.social.tick(clock.now());
+        site.tick(clock.now());
+        rt.metrics.recordTick(performance.now() - t0);
+        if (rt.draining && countActiveMatches(rt) === 0) finishDrain();
+      } catch (err) {
+        log.error("tick_failed", { error: String(err) });
+      }
       scheduleTick();
     }, TICK_MS);
   };
