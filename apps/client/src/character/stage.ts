@@ -4,6 +4,7 @@
  * karede kemik dönüşümleriyle yeniden hesaplanır (bkz. rig.ts). Kimlik rengi için karaktere renk dönüşü uygulanır.
  */
 import type { Application } from "pixi.js";
+import { APP_VIEW_ONLY, loadPixi } from "../fx/pixiLoad.js";
 import { clapClip } from "./clap.js";
 import { clipSeconds, type DanceClip, mapBones, sampleDance, wrapDelta } from "./dance.js";
 import { type CharacterKit, loadDance, loadKit } from "./kit.js";
@@ -81,7 +82,7 @@ const smooth01 = (x: number): number => {
 };
 
 export async function mountCharacterStage(host: HTMLElement, opts: StageOptions): Promise<CharacterStage> {
-  const [kit, pixi] = await Promise.all([loadKit(), import("pixi.js")]);
+  const [kit, pixi] = await Promise.all([loadKit(), loadPixi()]);
   const dpr = Math.min(window.devicePixelRatio || 1, opts.maxDpr ?? 2);
   const app: Application = new pixi.Application();
   await app.init({
@@ -309,7 +310,7 @@ export async function mountCharacterStage(host: HTMLElement, opts: StageOptions)
       app.ticker.stop();
       for (const l of lives.values()) l.puppet.destroy();
       lives.clear();
-      app.destroy(true, { children: true, texture: true });
+      app.destroy(APP_VIEW_ONLY, { children: true, texture: true });
       destroyContext(ctx);
     },
   };

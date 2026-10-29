@@ -1,4 +1,5 @@
 import { reducedMotion } from "./motion.js";
+import { APP_VIEW_ONLY, loadPixi } from "./pixiLoad.js";
 
 const lowEnd = (): boolean =>
   (navigator.hardwareConcurrency ?? 8) <= 4 ||
@@ -12,7 +13,7 @@ const COLORS = [0x2ef2ff, 0xff2bd6, 0xffc23b, 0xb6ff3b, 0x8b5cff, 0xff8a3b, 0x2b
 /** 2 sn'lik Pixi konfetisi; bitince kendini yok eder. Pixi tembel yüklenir. Durdurma işlevi döner. */
 export async function playConfetti(host: HTMLElement): Promise<() => void> {
   if (reducedMotion()) return () => {};
-  const { Application, Assets, Graphics, Rectangle, Sprite, Texture } = await import("pixi.js");
+  const { Application, Assets, Graphics, Rectangle, Sprite, Texture } = await loadPixi();
   const app = new Application();
   await app.init({
     resizeTo: host,
@@ -67,7 +68,7 @@ export async function playConfetti(host: HTMLElement): Promise<() => void> {
   const dispose = (): void => {
     if (disposed) return;
     disposed = true;
-    app.destroy(true, { children: true });
+    app.destroy(APP_VIEW_ONLY, { children: true });
     // Eski iPhone belleği: parçalar ve şerit görseli GPU'dan bırakılır (bir sonraki finalde yeniden yüklenir).
     for (const piece of pieces) piece.destroy(false);
     if (sheetLoaded) void Assets.unload(SHEET).catch(() => undefined);

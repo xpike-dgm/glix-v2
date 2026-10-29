@@ -98,7 +98,7 @@ describe("Pixi temizliği", () => {
     const { mountBackdrop } = await import("../backdrop/hero.js");
     const stop = await mountBackdrop(dom.host);
     stop();
-    expect(f.apps[0]?.destroy).toHaveBeenCalledWith(true, { children: true, texture: true });
+    expect(f.apps[0]?.destroy).toHaveBeenCalledWith({ removeView: true }, { children: true, texture: true });
     expect(dom.removeEventListener).toHaveBeenCalledWith("visibilitychange", expect.any(Function));
   });
 });

@@ -1,3 +1,5 @@
+import { APP_VIEW_ONLY, loadPixi } from "../fx/pixiLoad.js";
+
 /** Az çekirdekli / az belekli cihazlarda parçacık sayısı düşer. */
 const lowEnd = (): boolean =>
   (navigator.hardwareConcurrency ?? 8) <= 4 ||
@@ -10,7 +12,7 @@ const COLORS = [0x2ef2ff, 0xff2bd6, 0x8b5cff, 0x2ef2ff, 0xb6ff3b];
  * Pixi tembel yüklenir. Durdurma işlevi döner.
  */
 export async function mountBackdrop(host: HTMLElement): Promise<() => void> {
-  const { Application, Graphics, Sprite } = await import("pixi.js");
+  const { Application, Graphics, Sprite } = await loadPixi();
   const app = new Application();
   await app.init({
     resizeTo: host,
@@ -95,6 +97,6 @@ export async function mountBackdrop(host: HTMLElement): Promise<() => void> {
 
   return () => {
     document.removeEventListener("visibilitychange", onVis);
-    app.destroy(true, { children: true, texture: true });
+    app.destroy(APP_VIEW_ONLY, { children: true, texture: true });
   };
 }
