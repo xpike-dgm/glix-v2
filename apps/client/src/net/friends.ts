@@ -1,5 +1,6 @@
 import type { FriendStatus } from "@glix/engine";
 import { createSignal } from "solid-js";
+import { NETWORK_ERROR, playerErrorText } from "./errorText.js";
 import {
   addInvite,
   EMPTY_FRIENDS,
@@ -22,8 +23,6 @@ export { friendsData, friendsLoad, invites };
 
 /** Bekleyen gelen istek sayısı (ana sayfadaki rozet). */
 export const incomingCount = (): number => friendsData()?.incoming.length ?? 0;
-
-const NETWORK_ERROR = "Bağlantı kurulamadı, tekrar dene.";
 
 /** Yalnız geliştirme önizlemesi: veri sabitlenir, ağdan okuma yapılmaz. */
 let frozen = false;
@@ -97,7 +96,7 @@ export async function friendAction(action: FriendAction, username: string): Prom
     }
     // Hata da listeyi eskitmiş olabilir (ör. istek artık yok).
     if (res.status === 404 || res.status === 409) void loadFriends();
-    return { ok: false, message: typeof rec?.message === "string" ? rec.message : NETWORK_ERROR };
+    return { ok: false, message: playerErrorText(rec?.code, rec?.message) };
   } catch {
     return { ok: false, message: NETWORK_ERROR };
   }

@@ -2,6 +2,7 @@ import { createSignal } from "solid-js";
 import { isStandalone } from "../pwa/packPolicy.js";
 import { parseAvailableAt } from "./accountRules.js";
 import { reconnectForAccount, sendPushUnsubscribe } from "./client.js";
+import { looksTechnical, NETWORK_ERROR, playerErrorText } from "./errorText.js";
 import { loadFriends, resetFriends } from "./friends.js";
 import { type GoogleReturn, parseGoogleReturn } from "./googleRules.js";
 import {
@@ -20,7 +21,6 @@ import { resetShop } from "./shop.js";
 import { goHome, setNickname, setState, state, toast } from "./store.js";
 
 const BASE = "/api/auth/";
-const NETWORK_ERROR = "Bağlantı kurulamadı, tekrar dene.";
 
 export interface AccountReply {
   ok: boolean;
@@ -96,7 +96,7 @@ async function enter(path: "login" | "register", body: unknown): Promise<Account
   if (!isRecord(data)) return { ok: false, message: NETWORK_ERROR };
   const account = data.ok === true ? parseAccount(data.account) : null;
   if (!account) {
-    return { ok: false, message: typeof data.message === "string" ? data.message : NETWORK_ERROR };
+    return { ok: false, message: playerErrorText(data.code, data.message) };
   }
   // Önceki hesabın (ya da aynı sekmede başka hesabın) mağaza durumu yeni hesaba sızmasın.
   resetShop();
@@ -108,7 +108,7 @@ async function enter(path: "login" | "register", body: unknown): Promise<Account
   reconnectForAccount();
   goHome();
   if (path === "register" && state.mail.enabled)
-    toast("Doğrulama maili gönderildi. Gelmezse spam klasörüne bak.");
+    toast("Doğrulama e-postası gönderildi. Gelmezse spam klasörüne bak.");
   return { ok: true, message: "" };
 }
 
@@ -192,10 +192,12 @@ export async function completeGoogle(username: string): Promise<AccountReply> {
     // Süresi dolan ya da kullanılmış kayıt geri alınamaz; kullanıcı girişe döner.
     if (data.code === "google_expired" || data.code === "email_taken" || data.code === "google_linked") {
       setGooglePending(null);
-      setGoogleNotice(typeof data.message === "string" ? data.message : null);
+      setGoogleNotice(
+        typeof data.message === "string" && !looksTechnical(data.message) ? data.message : null,
+      );
       setState("nav", "login");
     }
-    return { ok: false, message: typeof data.message === "string" ? data.message : NETWORK_ERROR };
+    return { ok: false, message: playerErrorText(data.code, data.message) };
   }
   setGooglePending(null);
   setState("account", account);
@@ -236,7 +238,7 @@ async function plain(path: string, body: unknown): Promise<{ ok: boolean; messag
   }
   if (!isRecord(data)) return { ok: false, message: NETWORK_ERROR, data };
   if (data.ok === true) return { ok: true, message: "", data };
-  return { ok: false, message: typeof data.message === "string" ? data.message : NETWORK_ERROR, data };
+  return { ok: false, message: playerErrorText(data.code, data.message), data };
 }
 
 /** Doğrulama e-postasını yeniden ister (Ayarlar). */
@@ -247,7 +249,7 @@ export async function resendVerification(): Promise<void> {
     setState("mail", "verified", true);
     return toast("E-postan zaten doğrulanmış.");
   }
-  toast("Doğrulama maili gönderildi. Gelmezse spam klasörüne bak.", "success");
+  toast("Doğrulama e-postası gönderildi. Gelmezse spam klasörüne bak.", "success");
 }
 
 /** Şifre sıfırlama bağlantısı ister. Hesap olsun olmasın sunucu aynı yanıtı verir. */
@@ -269,7 +271,7 @@ export async function confirmReset(password: string): Promise<AccountReply> {
   if (!isRecord(data)) return { ok: false, message: NETWORK_ERROR };
   const account = data.ok === true ? parseAccount(data.account) : null;
   if (!account) {
-    return { ok: false, message: typeof data.message === "string" ? data.message : NETWORK_ERROR };
+    return { ok: false, message: playerErrorText(data.code, data.message) };
   }
   setResetToken(null);
   setState("account", account);
@@ -357,7 +359,7 @@ export async function downloadMyData(): Promise<void> {
       let message = NETWORK_ERROR;
       try {
         const body: unknown = await res.json();
-        if (isRecord(body) && typeof body.message === "string") message = body.message;
+        if (isRecord(body)) message = playerErrorText(body.code, body.message);
       } catch {
         // gövde okunamadı
       }
@@ -399,8 +401,7 @@ export async function deleteMyAccount(form: DeleteForm): Promise<AccountReply> {
     return { ok: false, message: NETWORK_ERROR };
   }
   if (!isRecord(data)) return { ok: false, message: NETWORK_ERROR };
-  if (data.ok !== true)
-    return { ok: false, message: typeof data.message === "string" ? data.message : NETWORK_ERROR };
+  if (data.ok !== true) return { ok: false, message: playerErrorText(data.code, data.message) };
   sendPushUnsubscribe();
   resetFriends();
   resetLeaderboard();
