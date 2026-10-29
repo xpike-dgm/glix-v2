@@ -4,6 +4,7 @@
  */
 
 import { type DanceClip, parseDance } from "./dance.js";
+import { Lru } from "./lru.js";
 import {
   assembleMesh,
   buildPieceGeometry,
@@ -28,6 +29,8 @@ export interface CharacterKit {
   meshFor(layers: readonly string[]): MeshData;
 }
 
+/** Kıyafet birleşimi ağı önbelleği: parti boyunca görülen birleşimler sınırsız birikmesin (kullanan kukla ağı kendi tutar). */
+export const MESH_CACHE_MAX = 48;
 const PAD = 12;
 const ATLAS_W = 1024;
 
@@ -152,7 +155,7 @@ async function buildKit(): Promise<CharacterKit> {
     right = Math.max(right, s.ox + s.w);
   }
 
-  const meshes = new Map<string, MeshData>();
+  const meshes = new Lru<string, MeshData>(MESH_CACHE_MAX);
   return {
     skeleton: sk,
     atlas,

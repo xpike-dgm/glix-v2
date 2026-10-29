@@ -14,16 +14,26 @@ const COLORS = [0x2ef2ff, 0xff2bd6, 0x8b5cff, 0x2ef2ff, 0xb6ff3b];
 export async function mountBackdrop(host: HTMLElement): Promise<() => void> {
   const { Application, Graphics, Sprite } = await loadPixi();
   const app = new Application();
-  await app.init({
-    resizeTo: host,
-    backgroundAlpha: 0,
-    antialias: false,
-    preference: "webgl",
-    powerPreference: "low-power",
-    // Bulanık noktalar ve ince çizgiler için 1,5x yeter; 3x ekranlarda dolgu maliyeti 4 kat azalır.
-    resolution: Math.min(window.devicePixelRatio || 1, 1.5),
-    autoDensity: true,
-  });
+  try {
+    await app.init({
+      resizeTo: host,
+      backgroundAlpha: 0,
+      antialias: false,
+      preference: "webgl",
+      powerPreference: "low-power",
+      // Bulanık noktalar ve ince çizgiler için 1,5x yeter; 3x ekranlarda dolgu maliyeti 4 kat azalır.
+      resolution: Math.min(window.devicePixelRatio || 1, 1.5),
+      autoDensity: true,
+    });
+  } catch (err) {
+    // Başlatma yarıda kaldıysa çizim bağlamı (GPU) sızmasın.
+    try {
+      app.destroy(APP_VIEW_ONLY, { children: true });
+    } catch {
+      // başlatılamamış uygulama zaten yıkılmış olabilir
+    }
+    throw err;
+  }
   app.ticker.maxFPS = 30;
   host.appendChild(app.canvas);
 

@@ -149,13 +149,14 @@ export function createPuppet(ctx: PuppetContext, layers: readonly string[]): Pup
   let tint: Float32Array | null = null;
   let tintBuffer: Buffer | null = null;
   let shader: Shader | null = null;
+  let geometry: MeshGeometry | null = null;
   let filter: Filter | null = null;
   let hue = 0;
   let tints: Readonly<Record<string, number>> = {};
 
   if (ctx.webgl) {
     const { Buffer, BufferUsage, GlProgram, Mesh, MeshGeometry, Shader } = ctx.pixi;
-    const geometry = new MeshGeometry({ positions: verts, uvs: data.uvs, indices: data.indices });
+    geometry = new MeshGeometry({ positions: verts, uvs: data.uvs, indices: data.indices });
     tint = new Float32Array(data.skin.count * 2);
     const buffer = new Buffer({ data: tint, usage: BufferUsage.VERTEX | BufferUsage.COPY_DST });
     geometry.addAttribute("aTint", { buffer, format: "float32x2", stride: 8, offset: 0 });
@@ -221,6 +222,9 @@ export function createPuppet(ctx: PuppetContext, layers: readonly string[]): Pup
       container.destroy({ children: true });
       shader?.destroy();
       shader = null;
+      // Ağ yok edilince kendi geometrisi bırakılmaz; GPU tamponları bağlam kapanana dek kalırdı.
+      geometry?.destroy(true);
+      geometry = null;
     },
   };
 }

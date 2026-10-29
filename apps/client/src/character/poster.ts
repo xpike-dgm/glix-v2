@@ -7,6 +7,7 @@ import type { Application } from "pixi.js";
 import { APP_VIEW_ONLY, loadPixi } from "../fx/pixiLoad.js";
 import { posterTime, sampleDance } from "./dance.js";
 import { loadDance, loadKit } from "./kit.js";
+import { Lru } from "./lru.js";
 import { createContext, createPuppet, destroyContext, type Puppet, type PuppetContext } from "./puppet.js";
 
 /** Kadraj: tüm boy, yalnız baş ve omuz (şapka), gövde (üst giysi), bacaklar (alt), ayaklar (ayakkabı). */
@@ -54,7 +55,15 @@ const tintKey = (t: Readonly<Record<string, number>> | undefined): string =>
     .map(([k, v]) => `${k}:${Math.round(v)}`)
     .join(",");
 
-const cache = new Map<string, Promise<string>>();
+/**
+ * Afiş önbelleği sınırlıdır: giysi x renk x kadraj birleşimleri (dolapta renk seçimi) oturum boyunca sınırsız
+ * artabilir ve her kayıt bir nesne URL'si (PNG) tutar. En eski afiş düşerken URL'si de bırakılır; sınır, ekranda
+ * aynı anda görünen afişlerden (mağaza ızgarası) çok büyüktür.
+ */
+export const POSTER_CACHE_MAX = 160;
+const cache = new Lru<string, Promise<string>>(POSTER_CACHE_MAX, (_key, job) => {
+  void job.then((url) => URL.revokeObjectURL(url)).catch(() => undefined);
+});
 let chain: Promise<unknown> = Promise.resolve();
 
 interface Shared {
