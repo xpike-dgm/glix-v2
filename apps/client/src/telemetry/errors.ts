@@ -29,6 +29,15 @@ export function buildReport(reason: unknown, path: string, ua: string): ErrorRep
 }
 
 let installed = false;
+let report: ((reason: unknown) => void) | null = null;
+
+/**
+ * Yakalanmış (örn. ekran hata sınırının tuttuğu) bir hatayı da aynı kanaldan bildirir. Bildirim kurulmadıysa
+ * (geliştirme, test) hiçbir şey yapmaz.
+ */
+export function reportClientError(reason: unknown): void {
+  report?.(reason);
+}
 
 /** window 'error' ve 'unhandledrejection' dinleyicilerini kurar. Geliştirme önizlemesinde (mock) hiçbir şey yapmaz. */
 export function installErrorReporting(): void {
@@ -37,7 +46,7 @@ export function installErrorReporting(): void {
   installed = true;
   const seen = new Set<string>();
   let sent = 0;
-  const report = (reason: unknown): void => {
+  report = (reason: unknown): void => {
     if (sent >= MAX_REPORTS) return;
     const body = buildReport(reason, window.location.pathname, navigator.userAgent);
     const key = `${body.message}\n${body.stack.split("\n")[1] ?? ""}`;
@@ -57,6 +66,6 @@ export function installErrorReporting(): void {
       // fetch yok ya da engelli
     }
   };
-  window.addEventListener("error", (ev) => report(ev.error ?? ev.message));
-  window.addEventListener("unhandledrejection", (ev) => report(ev.reason));
+  window.addEventListener("error", (ev) => reportClientError(ev.error ?? ev.message));
+  window.addEventListener("unhandledrejection", (ev) => reportClientError(ev.reason));
 }
