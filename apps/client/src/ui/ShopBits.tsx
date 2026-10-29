@@ -69,6 +69,39 @@ export function ShopTabBar(props: { active: "shop" | "locker" }) {
   );
 }
 
+/** Renk kimliğinden okunur ad ("Pembe"); bilinmiyorsa boş. */
+export const colourName = (id: ClothingColourId): string =>
+  CLOTHING_COLOURS.find((c) => c.id === id)?.name ?? "";
+
+/**
+ * Yuva çipleri: mağazada giysi yuvası seçimi, dolapta bölüme atlama. Kaydırma yok: dar ekranda 3 sütunlu
+ * ızgara (3x2), genişte tek satır. Her çip en az 48 px yüksekliğindedir.
+ */
+export function SlotChips<T extends string>(props: {
+  label: string;
+  items: readonly { id: T; label: string }[];
+  /** Seçili çip (yoksa hiçbiri seçili görünmez; dolapta atlama çipleri seçili tutulmaz). */
+  value?: T | undefined;
+  onPick: (id: T) => void;
+}) {
+  return (
+    <fieldset class="slot-chips" aria-label={props.label}>
+      <For each={props.items}>
+        {(it) => (
+          <button
+            type="button"
+            class="slot-chip"
+            aria-pressed={props.value === undefined ? undefined : props.value === it.id}
+            onClick={() => props.onPick(it.id)}
+          >
+            {it.label}
+          </button>
+        )}
+      </For>
+    </fieldset>
+  );
+}
+
 /**
  * Giysi rengi seçici: beş neon renk topu (camgöbeği, pembe, altın, yeşil, mor). Seçili olan halkalıdır; her top
  * en az 44 px dokunma alanıdır. `onPick` verilen rengi bildirir (sahiplik/kuşanma çağıranın işi).

@@ -207,32 +207,6 @@ export function Final(props: { snap: RoomSnapshot }) {
         </div>
 
         <div class="fin__b">
-          <Show when={state.account}>
-            <GlixSummary place={myPlace()} />
-            <QuestsDone />
-          </Show>
-
-          <Show when={titles().length > 0}>
-            <section class="fin__titles rise" style={{ "--i": 6 }} aria-label="Unvanlar">
-              <p class="overline">Unvanlar</p>
-              <ul class="fin__chips">
-                <For each={titles()}>
-                  {(t) => (
-                    <li class="fin__chip">
-                      <Show when={playerOf(t.playerId)}>
-                        {(p) => <Avatar index={p().avatar} size={28} mood="idle" connected={p().connected} />}
-                      </Show>
-                      <span class="fin__chiptext">
-                        <span class="fin__chiplabel">{t.label}</span>
-                        <span class="fin__chipnick">{playerOf(t.playerId)?.nickname}</span>
-                      </span>
-                    </li>
-                  )}
-                </For>
-              </ul>
-            </section>
-          </Show>
-
           <Show when={rest().length > 0}>
             <ul class="rows fin__rows" aria-label="Sıralama">
               <For each={rest()}>
@@ -267,6 +241,32 @@ export function Final(props: { snap: RoomSnapshot }) {
                 )}
               </For>
             </ul>
+          </Show>
+
+          <Show when={state.account}>
+            <GlixSummary place={myPlace()} />
+            <QuestsDone />
+          </Show>
+
+          <Show when={titles().length > 0}>
+            <section class="fin__titles rise" style={{ "--i": 6 }} aria-label="Unvanlar">
+              <p class="overline">Unvanlar</p>
+              <ul class="fin__chips">
+                <For each={titles()}>
+                  {(t) => (
+                    <li class="fin__chip">
+                      <Show when={playerOf(t.playerId)}>
+                        {(p) => <Avatar index={p().avatar} size={28} mood="idle" connected={p().connected} />}
+                      </Show>
+                      <span class="fin__chiptext">
+                        <span class="fin__chiplabel">{t.label}</span>
+                        <span class="fin__chipnick">{playerOf(t.playerId)?.nickname}</span>
+                      </span>
+                    </li>
+                  )}
+                </For>
+              </ul>
+            </section>
           </Show>
 
           <MatchGallery players={props.snap.players} />

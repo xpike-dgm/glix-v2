@@ -191,7 +191,7 @@ const single = (id: CosmeticTypeId, section: ShopSection, label?: string): ShopT
 });
 
 /**
- * Mağaza sekmeleri iki bölümde (dar ekranda her bölüm tek satıra sığar): Görünüş = çerçeve, lakap, ad efekti,
+ * Mağaza sekmeleri iki bölümde (her bölümde en çok beş sekme; dar ekranda 3+2 ızgaraya dizilir): Görünüş = çerçeve, lakap, ad efekti,
  * dans, giysiler; Efektler = kart arkası, zafer, tepki, giriş.
  */
 export const SHOP_TABS: readonly ShopTab[] = [

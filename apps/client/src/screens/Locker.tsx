@@ -32,7 +32,7 @@ import { defaultDancePoster, isCharacterItem, posterSpec } from "../ui/character
 import { GhostButton } from "../ui/GhostButton.js";
 import { BackIcon, CheckIcon } from "../ui/Icons.js";
 import { Screen } from "../ui/Screen.js";
-import { ColourSwatches, ShopTabBar } from "../ui/ShopBits.js";
+import { ColourSwatches, colourName, ShopTabBar } from "../ui/ShopBits.js";
 import { CardBackArt, CelebrationCollage, EntryLayers, PackCollage } from "../ui/ShopPreview.js";
 import { boxSrc } from "../ui/shopArt.js";
 
@@ -384,7 +384,7 @@ export function Locker() {
                       <Show when={isClothingType(t.id) && equippedId(s(), t.id)}>
                         {(id) => (
                           <div class="locker-colours">
-                            <p class="swatches__label">Renk</p>
+                            <p class="swatches__label">Renk: {colourName(equippedColour(s(), t.id))}</p>
                             <ColourSwatches
                               value={equippedColour(s(), t.id)}
                               onPick={(c) => void pick(t.id, equippedValue(id(), c))}
