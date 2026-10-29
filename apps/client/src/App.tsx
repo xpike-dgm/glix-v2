@@ -1,9 +1,11 @@
 import { createEffect, createMemo, createSignal, Match, onCleanup, onMount, Show, Switch } from "solid-js";
+import { lookOf } from "./character/look.js";
 import { installMusic, setLobbyMusic } from "./fx/music.js";
 import { consumeGoogleReturn, consumeMailReturn, refreshAccount } from "./net/account.js";
 import { startNet } from "./net/client.js";
 import { normalizeCode } from "./net/code.js";
 import { collectRounds } from "./net/matchHistory.js";
+import { ownCosmetics } from "./net/shop.js";
 import { setState, state } from "./net/store.js";
 import { PackScreen } from "./pwa/PackScreen.js";
 import {
@@ -87,9 +89,18 @@ export function App() {
   });
 
   // Maça girince kürsü karakterlerinin takımı da boşta önden hazırlanır (sonuç/final ilk kez açılırken beklenmez).
+  // Giysi görselleri tembel iner: kürsüde görünmesi olası katmanlar (odadaki oyuncuların kuşandıkları, kendininkiler
+  // dahil) kit ile birlikte önden istenir. Katman kümesi değişmedikçe bir şey yapılmaz.
+  const podiumLayers = createMemo(() => {
+    const snap = state.snapshot;
+    if (!snap || snap.phase === "lobby") return "";
+    const set = new Set<string>(lookOf(ownCosmetics()).layers);
+    for (const p of snap.players) for (const l of lookOf(p.cosmetics).layers) set.add(l);
+    return [...set].sort().join("+");
+  });
   createEffect(() => {
     const snap = state.snapshot;
-    if (snap && snap.phase !== "lobby") preloadCharacters();
+    if (snap && snap.phase !== "lobby") preloadCharacters(podiumLayers() ? podiumLayers().split("+") : []);
   });
 
   // Karalama / Bozuk Telefon çizimleri (sunucunun herkese açık gönderdikleri) maç sonu galerisi için birikir.

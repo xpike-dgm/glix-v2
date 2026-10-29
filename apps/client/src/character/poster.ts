@@ -146,6 +146,8 @@ async function draw(req: PosterRequest): Promise<string> {
       if (ix !== undefined) angles[ix] = tmp[i] ?? 0;
     });
   }
+  // Yalnız bu afişin giysi görselleri iner (yüklüyse hemen döner); yüklenemeyen katman çizilmeden bırakılır.
+  await kit.ensureLayers(req.layers);
   const puppet = createPuppet(ctx, req.layers);
   try {
     return await snapshot(puppet, req, app, ctx, angles);
@@ -194,6 +196,11 @@ export function renderPoster(req: PosterRequest): Promise<string> {
   const hit = cache.get(key);
   if (hit) return hit;
   pending++;
+  // Giysi görselleri çizim sırası beklenmeden, hemen ve paralel inmeye başlar; sıradaki afişler çizilmeye geldiğinde
+  // çoğu hazırdır ve atlas dokusu her afiş için değil, topluca tazelenir.
+  void loadKit()
+    .then((kit) => kit.ensureLayers(req.layers))
+    .catch(() => undefined);
   const job = chain
     .catch(() => undefined)
     .then(() => draw(req))

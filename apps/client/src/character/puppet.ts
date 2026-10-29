@@ -30,6 +30,8 @@ export interface PuppetContext {
   atlas: Texture;
   webgl: boolean;
   pose: BonePose;
+  /** GPU dokusuna en son yüklenen `kit.atlasVersion()`; atlasa yeni giysi çizilince doku tazelenir. */
+  atlasSeen: number;
   /** Karakter kapsayıcısının yerel uzayında (x = 0 gövde ekseni, y = 0 ayak çizgisi) çizim sınırı. */
   bounds: Rectangle;
 }
@@ -49,7 +51,23 @@ export function createContext(app: Application, kit: CharacterKit, pixi: Pixi): 
     figW + 320,
     figH + 160 + 320,
   );
-  return { pixi, kit, atlas, webgl, pose: createBonePose(kit.skeleton.parent.length), bounds };
+  return {
+    pixi,
+    kit,
+    atlas,
+    webgl,
+    atlasSeen: kit.atlasVersion(),
+    pose: createBonePose(kit.skeleton.parent.length),
+    bounds,
+  };
+}
+
+/** Atlasa sonradan giysi çizildiyse dokuyu (ve mipmap'lerini) yeniden yükler; ağ kurmadan önce çağrılır. */
+function syncAtlas(ctx: PuppetContext): void {
+  const v = ctx.kit.atlasVersion();
+  if (v === ctx.atlasSeen) return;
+  ctx.atlasSeen = v;
+  ctx.atlas.source.update();
 }
 
 export function destroyContext(ctx: PuppetContext): void {
@@ -140,11 +158,12 @@ export function createPuppet(ctx: PuppetContext, layers: readonly string[]): Pup
   const { Container, MeshSimple } = ctx.pixi;
   const { kit } = ctx;
   const sk = kit.skeleton;
+  syncAtlas(ctx);
   const data: MeshData = kit.meshFor(layers);
   const verts = new Float32Array(data.rest);
   const container = new Container();
   container.boundsArea = ctx.bounds;
-  const layerId = layerIdOf(layers.filter((l) => sk.rig.wardrobe[l] !== undefined));
+  const layerId = layerIdOf(kit.drawable(layers));
   let mesh: PuppetMesh;
   let tint: Float32Array | null = null;
   let tintBuffer: Buffer | null = null;

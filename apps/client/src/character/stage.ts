@@ -270,7 +270,12 @@ export async function mountCharacterStage(host: HTMLElement, opts: StageOptions)
       l.puppet.container.alpha = (opts.reduced ? 1 : smooth01(l.age / FADE_S)) * alphaOf(l);
       pickPose(l, dtS);
     }
-    if (!shown && lives.size > 0 && [...lives.values()].every((l) => l.age >= FADE_S || opts.reduced)) {
+    if (
+      !shown &&
+      waiting === 0 &&
+      lives.size > 0 &&
+      [...lives.values()].every((l) => l.age >= FADE_S || opts.reduced)
+    ) {
       shown = true;
       opts.onShown?.();
     }
@@ -313,6 +318,63 @@ export async function mountCharacterStage(host: HTMLElement, opts: StageOptions)
     if (!document.hidden) app.ticker.start();
   }
 
+  /** Son verilen yerleşim; giysi görselleri inerken yenisi gelirse eskisi uygulanmaz. */
+  let latest: readonly StageSlot[] = [];
+  /** Giysisi henüz inmemiş (belirmesi bekleyen) karakter sayısı. */
+  let waiting = 0;
+
+  /**
+   * Yuvaları sahneye uygular. Giysi görselleri tembel iner: görselleri hazır olmayan yuvanın karakteri hazır olana
+   * dek kurulmaz (varsa eskisi kalır; yarım giyinmiş karakter belirip sonra değişmez). `force`: indirme bitti,
+   * yüklenemeyen katmanlar çizilmeden sahnede kalsın; sonraki `update` onları yeniden dener.
+   */
+  function apply(slots: readonly StageSlot[], force: boolean): void {
+    const keep = new Set<string>();
+    const missing = new Set<string>();
+    waiting = 0;
+    for (const slot of slots) {
+      keep.add(slot.key);
+      let l = lives.get(slot.key);
+      if (!force && !kit.layersReady(slot.layers)) {
+        for (const x of slot.layers) missing.add(x);
+        if (l) {
+          l.slot = slot;
+          l.puppet.setHue(slot.hue);
+          l.puppet.setTints(slot.tints);
+          ensureClip(l);
+        } else waiting++;
+        continue;
+      }
+      if (l && l.puppet.layerId !== layerIdOf(kit.drawable(slot.layers))) {
+        l.puppet.destroy();
+        lives.delete(slot.key);
+        l = undefined;
+      }
+      if (!l) {
+        l = makeLive(slot);
+        lives.set(slot.key, l);
+      } else l.slot = slot;
+      l.puppet.setHue(slot.hue);
+      l.puppet.setTints(slot.tints);
+      ensureClip(l);
+    }
+    for (const [key, l] of lives) {
+      if (keep.has(key)) continue;
+      l.puppet.destroy();
+      lives.delete(key);
+    }
+    if (missing.size > 0) {
+      const job: Promise<void> = kit
+        .ensureLayers([...missing])
+        .then(() => {
+          if (!disposed && latest === slots) apply(slots, true);
+        })
+        .finally(() => pending.delete(job));
+      pending.add(job);
+    }
+    if (opts.reduced) renderOnce();
+  }
+
   return {
     canvas: app.canvas,
     settled: async () => {
@@ -325,32 +387,8 @@ export async function mountCharacterStage(host: HTMLElement, opts: StageOptions)
     },
     update(slots) {
       if (disposed) return;
-      const keep = new Set<string>();
-      for (const slot of slots) {
-        keep.add(slot.key);
-        let l = lives.get(slot.key);
-        if (
-          l &&
-          l.puppet.layerId !== layerIdOf(slot.layers.filter((x) => sk.rig.wardrobe[x] !== undefined))
-        ) {
-          l.puppet.destroy();
-          lives.delete(slot.key);
-          l = undefined;
-        }
-        if (!l) {
-          l = makeLive(slot);
-          lives.set(slot.key, l);
-        } else l.slot = slot;
-        l.puppet.setHue(slot.hue);
-        l.puppet.setTints(slot.tints);
-        ensureClip(l);
-      }
-      for (const [key, l] of lives) {
-        if (keep.has(key)) continue;
-        l.puppet.destroy();
-        lives.delete(key);
-      }
-      if (opts.reduced) renderOnce();
+      latest = slots;
+      apply(slots, false);
     },
     perf: () => ({ frames, avgMs: frames ? sum / frames : 0, maxMs: max }),
     destroy() {
