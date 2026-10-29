@@ -3,476 +3,343 @@
  "units": "pixels",
  "coordinates": "x right, y down; positive angles clockwise; left means viewer left",
  "root": {
-  "position": [
-   256.0,
-   391.0
-  ]
+  "position": [256, 391]
  },
  "parts": {
   "torso": {
    "file": "govde/torso.webp",
-   "size": [
-    179,
-    234
-   ],
-   "pivot": [
-    89.0,
-    166.5
-   ],
+   "size": [179, 234],
+   "pivot": [89, 166.5],
    "parent": "root",
-   "position": [
-    0.0,
-    0.0
-   ],
+   "position": [0, 0],
    "rotation": 0,
-   "sourceOrigin": [
-    167.0,
-    224.5
-   ]
+   "sourceOrigin": [167, 224.5]
   },
   "head": {
    "file": "govde/head.webp",
-   "size": [
-    168,
-    175
-   ],
-   "pivot": [
-    84.0,
-    169.0
-   ],
+   "size": [168, 175],
+   "pivot": [84, 169],
    "parent": "torso",
-   "position": [
-    0.0,
-    -159.0
-   ],
+   "position": [0, -159],
    "rotation": 0,
-   "sourceOrigin": [
-    172.0,
-    63.0
-   ]
+   "sourceOrigin": [172, 63]
   },
   "left_upper_arm": {
    "file": "govde/left_upper_arm.webp",
-   "size": [
-    81,
-    120
-   ],
-   "pivot": [
-    60.0,
-    17.5
-   ],
+   "size": [81, 120],
+   "pivot": [60, 17.5],
    "parent": "torso",
-   "position": [
-    -73.0,
-    -150.5
-   ],
+   "position": [-73, -150.5],
    "rotation": 0,
-   "sourceOrigin": [
-    123.0,
-    223.0
-   ]
+   "sourceOrigin": [123, 223]
   },
   "left_forearm": {
    "file": "govde/left_forearm.webp",
-   "size": [
-    84,
-    100
-   ],
-   "pivot": [
-    63.5,
-    19.5
-   ],
+   "size": [84, 100],
+   "pivot": [63.5, 19.5],
    "parent": "left_upper_arm",
-   "position": [
-    -35.0,
-    85.5
-   ],
+   "position": [-35, 85.5],
    "rotation": 0,
-   "sourceOrigin": [
-    84.5,
-    306.5
-   ]
+   "sourceOrigin": [84.5, 306.5]
   },
   "left_hand": {
    "file": "govde/left_hand.webp",
-   "size": [
-    58,
-    65
-   ],
-   "pivot": [
-    39.0,
-    12.5
-   ],
+   "size": [58, 65],
+   "pivot": [39, 12.5],
    "parent": "left_forearm",
-   "position": [
-    -53.5,
-    70.0
-   ],
+   "position": [-53.5, 70],
    "rotation": 0,
-   "sourceOrigin": [
-    55.5,
-    383.5
-   ]
+   "sourceOrigin": [55.5, 383.5]
   },
   "left_thigh": {
    "file": "govde/left_thigh.webp",
-   "size": [
-    65,
-    159
-   ],
-   "pivot": [
-    35.0,
-    23.0
-   ],
+   "size": [65, 159],
+   "pivot": [35, 23],
    "parent": "torso",
-   "position": [
-    -45.5,
-    -1.0
-   ],
+   "position": [-45.5, -1],
    "rotation": 0,
-   "sourceOrigin": [
-    175.5,
-    367.0
-   ]
+   "sourceOrigin": [175.5, 367]
   },
   "left_shin": {
    "file": "govde/left_shin.webp",
-   "size": [
-    63,
-    155
-   ],
-   "pivot": [
-    38.0,
-    21.5
-   ],
+   "size": [63, 155],
+   "pivot": [38, 21.5],
    "parent": "left_thigh",
-   "position": [
-    -11.0,
-    114.5
-   ],
+   "position": [-11, 114.5],
    "rotation": 0,
-   "sourceOrigin": [
-    161.5,
-    483.0
-   ]
+   "sourceOrigin": [161.5, 483]
   },
   "left_foot": {
    "file": "govde/left_foot.webp",
-   "size": [
-    82,
-    106
-   ],
-   "pivot": [
-    51.0,
-    23.0
-   ],
+   "size": [82, 106],
+   "pivot": [51, 23],
    "parent": "left_shin",
-   "position": [
-    -21.0,
-    116.5
-   ],
+   "position": [-21, 116.5],
    "rotation": 0,
-   "sourceOrigin": [
-    127.5,
-    598.0
-   ]
+   "sourceOrigin": [127.5, 598]
   },
   "right_upper_arm": {
    "file": "govde/right_upper_arm.webp",
-   "size": [
-    81,
-    120
-   ],
-   "pivot": [
-    20.0,
-    17.5
-   ],
+   "size": [81, 120],
+   "pivot": [20, 17.5],
    "parent": "torso",
-   "position": [
-    73.0,
-    -150.5
-   ],
+   "position": [73, -150.5],
    "rotation": 0,
-   "sourceOrigin": [
-    309.0,
-    223.0
-   ]
+   "sourceOrigin": [309, 223]
   },
   "right_forearm": {
    "file": "govde/right_forearm.webp",
-   "size": [
-    84,
-    100
-   ],
-   "pivot": [
-    19.5,
-    19.5
-   ],
+   "size": [84, 100],
+   "pivot": [19.5, 19.5],
    "parent": "right_upper_arm",
-   "position": [
-    35.0,
-    85.5
-   ],
+   "position": [35, 85.5],
    "rotation": 0,
-   "sourceOrigin": [
-    344.5,
-    306.5
-   ]
+   "sourceOrigin": [344.5, 306.5]
   },
   "right_hand": {
    "file": "govde/right_hand.webp",
-   "size": [
-    57,
-    65
-   ],
-   "pivot": [
-    18.0,
-    12.5
-   ],
+   "size": [57, 65],
+   "pivot": [18, 12.5],
    "parent": "right_forearm",
-   "position": [
-    53.5,
-    70.0
-   ],
+   "position": [53.5, 70],
    "rotation": 0,
-   "sourceOrigin": [
-    399.5,
-    383.5
-   ]
+   "sourceOrigin": [399.5, 383.5]
   },
   "right_thigh": {
    "file": "govde/right_thigh.webp",
-   "size": [
-    65,
-    159
-   ],
-   "pivot": [
-    29.5,
-    23.0
-   ],
+   "size": [65, 159],
+   "pivot": [29.5, 23],
    "parent": "torso",
-   "position": [
-    45.5,
-    -1.0
-   ],
+   "position": [45.5, -1],
    "rotation": 0,
-   "sourceOrigin": [
-    272.0,
-    367.0
-   ]
+   "sourceOrigin": [272, 367]
   },
   "right_shin": {
    "file": "govde/right_shin.webp",
-   "size": [
-    63,
-    155
-   ],
-   "pivot": [
-    25.0,
-    21.5
-   ],
+   "size": [63, 155],
+   "pivot": [25, 21.5],
    "parent": "right_thigh",
-   "position": [
-    11.0,
-    114.5
-   ],
+   "position": [11, 114.5],
    "rotation": 0,
-   "sourceOrigin": [
-    287.5,
-    483.0
-   ]
+   "sourceOrigin": [287.5, 483]
   },
   "right_foot": {
    "file": "govde/right_foot.webp",
-   "size": [
-    82,
-    105
-   ],
-   "pivot": [
-    31.0,
-    22.0
-   ],
+   "size": [82, 105],
+   "pivot": [31, 22],
    "parent": "right_shin",
-   "position": [
-    21.0,
-    116.5
-   ],
+   "position": [21, 116.5],
    "rotation": 0,
-   "sourceOrigin": [
-    302.5,
-    599.0
-   ]
+   "sourceOrigin": [302.5, 599]
   }
  },
- "drawOrder": [
-  "head",
-  "torso",
-  "left_upper_arm",
-  "left_forearm",
-  "left_hand",
-  "right_upper_arm",
-  "right_forearm",
-  "right_hand",
-  "left_thigh",
-  "left_shin",
-  "left_foot",
-  "right_thigh",
-  "right_shin",
-  "right_foot"
- ],
+ "drawOrder": ["head", "torso", "left_upper_arm", "left_forearm", "left_hand", "right_upper_arm", "right_forearm", "right_hand", "left_thigh", "left_shin", "left_foot", "right_thigh", "right_shin", "right_foot"],
  "wardrobe": {
   "sapka": {
    "visible": true,
+   "slot": "sapka",
    "pieces": [
     {
      "file": "giysi/sapka.webp",
-     "size": [
-      149,
-      81
-     ],
-     "pivot": [
-      74.0,
-      179.5
-     ],
+     "size": [149, 81],
+     "pivot": [74, 179.5],
      "parent": "head",
      "bone": "head",
-     "position": [
-      0.0,
-      0.0
-     ],
+     "position": [0, 0],
      "rotation": 0,
      "drawAfter": "head",
-     "sourceOrigin": [
-      182.0,
-      52.5
-     ]
+     "sourceOrigin": [182, 52.5]
     }
    ]
   },
   "ceket": {
    "visible": true,
+   "slot": "ust",
    "pieces": [
     {
      "file": "giysi/ceket_torso.webp",
-     "size": [
-      182,
-      164
-     ],
-     "pivot": [
-      90.5,
-      186.0
-     ],
+     "size": [182, 164],
+     "pivot": [90.5, 186],
      "parent": "torso",
      "bone": "torso",
-     "position": [
-      0.0,
-      0.0
-     ],
+     "position": [0, 0],
      "rotation": 0,
      "drawAfter": "torso",
-     "sourceOrigin": [
-      165.5,
-      205.0
-     ]
+     "sourceOrigin": [165.5, 205]
     },
     {
      "file": "giysi/ceket_left_upper_arm.webp",
-     "size": [
-      89,
-      127
-     ],
-     "pivot": [
-      65.5,
-      25.0
-     ],
+     "size": [89, 127],
+     "pivot": [65.5, 25],
      "parent": "left_upper_arm",
      "bone": "left_upper_arm",
-     "position": [
-      0.0,
-      0.0
-     ],
+     "position": [0, 0],
      "rotation": 0,
      "drawAfter": "left_upper_arm",
-     "sourceOrigin": [
-      117.5,
-      215.5
-     ]
+     "sourceOrigin": [117.5, 215.5]
     },
     {
      "file": "giysi/ceket_left_forearm.webp",
-     "size": [
-      90,
-      101
-     ],
-     "pivot": [
-      68.5,
-      21.0
-     ],
+     "size": [90, 101],
+     "pivot": [68.5, 21],
      "parent": "left_forearm",
      "bone": "left_forearm",
-     "position": [
-      0.0,
-      0.0
-     ],
+     "position": [0, 0],
      "rotation": 0,
      "drawAfter": "left_forearm",
-     "sourceOrigin": [
-      79.5,
-      305.0
-     ]
+     "sourceOrigin": [79.5, 305]
     },
     {
      "file": "giysi/ceket_right_upper_arm.webp",
-     "size": [
-      87,
-      137
-     ],
-     "pivot": [
-      23.0,
-      24.0
-     ],
+     "size": [87, 137],
+     "pivot": [23, 24],
      "parent": "right_upper_arm",
      "bone": "right_upper_arm",
-     "position": [
-      0.0,
-      0.0
-     ],
+     "position": [0, 0],
      "rotation": 0,
      "drawAfter": "right_upper_arm",
-     "sourceOrigin": [
-      306.0,
-      216.5
-     ]
+     "sourceOrigin": [306, 216.5]
     },
     {
      "file": "giysi/ceket_right_forearm.webp",
-     "size": [
-      88,
-      100
-     ],
-     "pivot": [
-      21.0,
-      21.0
-     ],
+     "size": [88, 100],
+     "pivot": [21, 21],
      "parent": "right_forearm",
      "bone": "right_forearm",
-     "position": [
-      0.0,
-      0.0
-     ],
+     "position": [0, 0],
      "rotation": 0,
      "drawAfter": "right_forearm",
-     "sourceOrigin": [
-      343.0,
-      305.0
-     ]
+     "sourceOrigin": [343, 305]
+    }
+   ]
+  },
+  "bere": {
+   "visible": true,
+   "slot": "sapka",
+   "pieces": [
+    {
+     "file": "giysi/bere_head.webp",
+     "size": [152, 109],
+     "pivot": [77, 204],
+     "parent": "head",
+     "bone": "head",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "head",
+     "layer": "on",
+     "sourceOrigin": [179, 28]
+    }
+   ]
+  },
+  "fotr": {
+   "visible": true,
+   "slot": "sapka",
+   "pieces": [
+    {
+     "file": "giysi/fotr_head.webp",
+     "size": [181, 87],
+     "pivot": [93, 191.5],
+     "parent": "head",
+     "bone": "head",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "head",
+     "layer": "on",
+     "sourceOrigin": [163, 40.5]
+    }
+   ]
+  },
+  "korsan": {
+   "visible": true,
+   "slot": "sapka",
+   "pieces": [
+    {
+     "file": "giysi/korsan_head.webp",
+     "size": [251, 109],
+     "pivot": [125, 204],
+     "parent": "head",
+     "bone": "head",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "head",
+     "layer": "on",
+     "sourceOrigin": [131, 28]
+    }
+   ]
+  },
+  "kovboy": {
+   "visible": true,
+   "slot": "sapka",
+   "pieces": [
+    {
+     "file": "giysi/kovboy_head.webp",
+     "size": [219, 101],
+     "pivot": [111, 206],
+     "parent": "head",
+     "bone": "head",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "head",
+     "layer": "on",
+     "sourceOrigin": [145, 26]
+    }
+   ]
+  },
+  "kulaklikli-kask": {
+   "visible": true,
+   "slot": "sapka",
+   "pieces": [
+    {
+     "file": "giysi/kulaklikli_kask_head.webp",
+     "size": [207, 175],
+     "pivot": [103.5, 181.5],
+     "parent": "head",
+     "bone": "head",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "head",
+     "layer": "on",
+     "sourceOrigin": [152.5, 50.5]
+    }
+   ]
+  },
+  "parti": {
+   "visible": true,
+   "slot": "sapka",
+   "pieces": [
+    {
+     "file": "giysi/parti_head.webp",
+     "size": [89, 94],
+     "pivot": [44.5, 223],
+     "parent": "head",
+     "bone": "head",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "head",
+     "layer": "on",
+     "sourceOrigin": [211.5, 9]
+    }
+   ]
+  },
+  "tac": {
+   "visible": true,
+   "slot": "sapka",
+   "pieces": [
+    {
+     "file": "giysi/tac_head.webp",
+     "size": [167, 106],
+     "pivot": [83.5, 223],
+     "parent": "head",
+     "bone": "head",
+     "position": [0, 0],
+     "rotation": 0,
+     "drawAfter": "head",
+     "layer": "on",
+     "sourceOrigin": [172.5, 9]
     }
    ]
   }
  },
  "scale": 0.5,
- "canvas": [
-  512,
-  768
- ]
+ "canvas": [512, 768]
 }
