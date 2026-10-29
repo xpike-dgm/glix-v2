@@ -92,7 +92,18 @@ function sizesFor(scr) {
 
 /** Kürsü karakterleri tümüyle görününce (Pixi + varlıklar yüklendi, belirme bitti) devam eder. */
 const karakterHazir = async (page) => {
-  await page.waitForSelector("[data-chars-shown]", { timeout: 25_000 });
+  // Belirme (0,35 sn) sahne kurulduktan sonra ticker karelerine bağlıdır. Sahte saatte kareler yalnız saat
+  // ilerleyince gelir; yükte gerçek zaman karesi seyrek olduğundan sahne hazır olur olmaz saati biz sürüp belirmeyi
+  // gerçek zamandan bağımsız bitiririz. Asıl bekleme (Pixi + varlık yükü) gerçek zamandır: pay 60 sn
+  // (denetim başına üst sınır 90 sn).
+  const end = Date.now() + 60_000;
+  while (Date.now() < end) {
+    if (await page.locator("[data-chars-shown]").count()) return;
+    if (USE_CLOCK && (await page.locator("[data-chars=ready]").count()))
+      await page.clock.runFor(250).catch(() => {});
+    else await sleep(100);
+  }
+  await page.waitForSelector("[data-chars-shown]", { timeout: 1000 });
 };
 
 const clickText = (text) => async (page) => {
@@ -2900,7 +2911,9 @@ async function checkOneInner(page, st, scr, [w, h]) {
     await page.setViewportSize({ width: w, height: h });
     await page.goto(`${URL_BASE}/?${scr.q}`, { waitUntil: "load" });
     // Uygulamanın hazır işareti (yalnız geliştirmede; App.tsx devReady), yazı tipleri, ağ.
-    await page.waitForSelector("html[data-ready]", { state: "attached", timeout: 15000 });
+    // Soğuk Vite dönüşümü (ekranın modül zinciri) birkaç işçi + yükte 15 sn'yi aşabiliyordu; üst sınır denetim
+    // başına 90 sn'dir (CHECK_TIMEOUT_MS), pay 60 sn.
+    await page.waitForSelector("html[data-ready]", { state: "attached", timeout: 60000 });
     await page.evaluate(() => document.fonts.ready);
     await netQuiet(st.net);
     // geri sayım rakamı sabit kalsın (örn. 1700 ms sonra "2" ve orada durur)

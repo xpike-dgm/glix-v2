@@ -14,11 +14,16 @@ async function toResults(cs: Client[], games: string[] = ["butona-bas", "kor-bom
   await until(() => host.room.phase === "results", "results");
 }
 
-/** Bitiş, şu andan en çok 1 sn sonraya kurulmuş olmalı (sahte saat yayın beklerken ilerler). */
-function expectGrace(c: Client): void {
-  const left = (c.room.match?.phaseEndsAt ?? 0) - k.clock.now();
-  expect(left).toBeGreaterThan(CONTINUE_GRACE_MS - 400);
-  expect(left).toBeLessThanOrEqual(CONTINUE_GRACE_MS);
+/**
+ * Bitiş, son onayın işlendiği andan 1 sn sonraya kurulmuş olmalı. Onay `sentAt` (sahte saat) anında gönderilir ve
+ * saat yalnız bizim `sync` turlarımızla ilerler; sunucu onayı gönderimden sonraki bir turda işler, yani bitiş
+ * `sentAt + 1 sn` ile `şimdi + 1 sn` arasındadır. (Eskiden "şimdi + 1 sn − 400 ms" alt sınırı vardı: yükte yayın
+ * 6'dan çok turda geldiğinde sahte saat bu payı aşıp test boşuna düşüyordu.)
+ */
+function expectGrace(c: Client, sentAt: number): void {
+  const ends = c.room.match?.phaseEndsAt ?? 0;
+  expect(ends).toBeGreaterThanOrEqual(sentAt + CONTINUE_GRACE_MS);
+  expect(ends - k.clock.now()).toBeLessThanOrEqual(CONTINUE_GRACE_MS);
 }
 
 const wait = async (): Promise<void> => {
@@ -40,9 +45,10 @@ describe("sonuç ekranında Devam (erken bitiş)", () => {
     // Biri eksik: bitiş ertelenmez.
     expect(a.room.match?.phaseEndsAt).toBe(endsBefore);
 
+    const sentAt = k.clock.now();
     c.send({ type: "continue" });
     await until(() => (a.room.match?.phaseEndsAt ?? endsBefore) < endsBefore, "erken bitiş kuruldu");
-    expectGrace(a);
+    expectGrace(a, sentAt);
     expect(a.room.match?.continueIds.sort()).toEqual([a, b, c].map((x) => x.session.playerId).sort());
 
     k.clock.advance(300);
@@ -75,9 +81,10 @@ describe("sonuç ekranında Devam (erken bitiş)", () => {
     a.send({ type: "continue" });
     await until(() => a.room.match?.continueIds.length === 1);
     expect(a.room.match?.phaseEndsAt).toBe(endsBefore);
+    const sentAt = k.clock.now();
     b.send({ type: "continue" });
     await until(() => (a.room.match?.phaseEndsAt ?? endsBefore) < endsBefore, "erken bitiş");
-    expectGrace(a);
+    expectGrace(a, sentAt);
   });
 
   it("son bekleneni kopma Devam sayımını tamamlar", async () => {

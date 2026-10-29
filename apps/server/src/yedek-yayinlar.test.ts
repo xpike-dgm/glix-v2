@@ -73,6 +73,20 @@ async function emptied(dir: string): Promise<boolean> {
   return false;
 }
 
+/**
+ * `emptied` klasörün boşaldığını görür; ama hizmetin "meşgul" bayrağı silme bitince bir sonraki olay döngüsü
+ * turunda (rm geri çağrısı) düşer. Bayrak düşene dek `attempt` null dönerse yeniden dener: gözlem dosya
+ * sisteminden, bayrak bellekten olduğu için yük altında arada bir pencere açılıyordu.
+ */
+async function whenFree<T>(attempt: () => Promise<T | null>): Promise<T | null> {
+  for (let i = 0; i < 500; i++) {
+    const got = await attempt();
+    if (got !== null) return got;
+    await sleep(10);
+  }
+  return null;
+}
+
 function openDb(file: string) {
   const { DatabaseSync } = loadSqlite();
   return new DatabaseSync(file, { readOnly: true });
@@ -133,7 +147,7 @@ describe("yedek servisi", () => {
     expect(db.prepare("SELECT email FROM accounts").all()).toEqual([{ email: "ayse@ornek.com" }]);
     db.close();
     // Temizlik sonrası yeniden alınabilir.
-    const again = await svc.create(2);
+    const again = await whenFree(() => svc.create(2));
     expect(again).not.toBeNull();
     again?.stream.destroy();
     await again?.cleanup();
@@ -224,8 +238,13 @@ describe("yedek ucu: ayrı veritabanları", () => {
   it("günde en çok 3 yedek; 24 saat sonra yeniden alınır; sayaç bakım ekranında", async () => {
     const cookie = await adminLogin();
     for (let i = 0; i < BACKUP_PER_DAY; i++) {
-      expect((await download(cookie)).res.status).toBe(200);
-      expect(await emptied(tmp)).toBe(true); // temizlik bitmeden ikinci yedek başlamaz
+      // Temizlik bitmeden ikinci yedek başlamaz (409); bitince alınır.
+      const got = await whenFree(async () => {
+        const r = await download(cookie);
+        return r.res.status === 409 ? null : r;
+      });
+      expect(got?.res.status).toBe(200);
+      expect(await emptied(tmp)).toBe(true);
     }
     const blocked = await download(cookie);
     expect(blocked.res.status).toBe(429);
@@ -238,7 +257,9 @@ describe("yedek ucu: ayrı veritabanları", () => {
     const cookie2 = await adminLogin("yonetici_1");
     expect((await download(cookie2)).res.status).toBe(200);
     expect(await emptied(tmp)).toBe(true);
-  });
+    // Dört gerçek yedek + her birinin temizliği beklenir; yük altında vitest'in 5 sn varsayılanını aşıyordu
+    // (neden yalnızca makine yükü).
+  }, 60_000);
 });
 
 describe("yedek ucu: tek dosya (üretim düzeni)", () => {
