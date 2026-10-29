@@ -1,14 +1,22 @@
 import { describe, expect, it } from "vitest";
 import {
+  CLOTHING_COLOURS,
+  COLOUR_MODE,
   COSMETIC_ITEMS,
   COSMETIC_PRICES,
   COSMETIC_TYPES,
+  cleanEquipped,
+  colourUnlocked,
   cosmeticAssetFiles,
   cosmeticsFromEquipped,
+  coveredSlots,
   currentPrice,
+  DEFAULT_COLOUR,
   DEFAULT_DANCE,
   dailyDeals,
   dealPrice,
+  equippedValue,
+  GIYSI_SIRASI,
   isEquippable,
   istanbulDayNumber,
   itemsOfType,
@@ -18,6 +26,8 @@ import {
   parseStickerId,
   STICKER_NAMES,
   STICKERS_PER_PACK,
+  slotOfBone,
+  splitEquipped,
   stickerFile,
   stickerId,
 } from "./cosmetics.js";
@@ -34,8 +44,10 @@ describe("kozmetik kataloğu", () => {
       expect(i.price).toBe(COSMETIC_PRICES[i.rarity]);
       expect(i.name.length).toBeGreaterThan(0);
     }
-    for (const t of COSMETIC_TYPES) expect(COSMETIC_ITEMS.some((i) => i.type === t.id)).toBe(true);
-    expect(COSMETIC_ITEMS).toHaveLength(45);
+    // Giysi yuvalarından henüz ürünü olmayanlar olabilir (arayüz onları göstermez); diğer türlerin hepsinde ürün var.
+    for (const t of COSMETIC_TYPES.filter((x) => x.group !== "giysi"))
+      expect(COSMETIC_ITEMS.some((i) => i.type === t.id)).toBe(true);
+    expect(COSMETIC_ITEMS).toHaveLength(52);
   });
 
   it("parseCosmetics: bilinmeyen ya da yanlış türdeki kimlik atılır", () => {
@@ -83,8 +95,8 @@ describe("kürsü karakteri ürünleri", () => {
 
   it("dans ve giysi ürünlerinin karakter varlığı adı var; varsayılan ve selam satılmaz", () => {
     for (const d of itemsOfType("dans")) expect(d.asset).toMatch(/^[a-z]{2,16}$/);
-    for (const t of ["sapka", "ust"] as const)
-      for (const i of itemsOfType(t)) expect(i.asset).toMatch(/^[a-z]+$/);
+    for (const t of COSMETIC_TYPES.filter((x) => x.group === "giysi"))
+      for (const i of itemsOfType(t.id)) expect(i.asset).toMatch(/^[a-z]+(-[a-z]+)*$/);
     // selam satılmaz, varsayılan dans katalogda ürün değildir
     expect(itemsOfType("dans").some((d) => d.asset === PLACE_DANCE || d.asset === DEFAULT_DANCE)).toBe(false);
     expect(DEFAULT_DANCE).toBe("sevinc");
@@ -92,8 +104,24 @@ describe("kürsü karakteri ürünleri", () => {
   });
 
   it("her giysi yuvası ayrı bir türdür ve giysi grubundadır", () => {
-    expect(COSMETIC_TYPES.filter((t) => t.group === "giysi").map((t) => t.id)).toEqual(["sapka", "ust"]);
-    expect(itemsOfType("sapka").map((i) => [i.id, i.rarity])).toEqual([["sapka-neon-kep", "siradan"]]);
+    expect(COSMETIC_TYPES.filter((t) => t.group === "giysi").map((t) => t.id)).toEqual([
+      "sapka",
+      "ust",
+      "alt",
+      "ayakkabi",
+      "aksesuar",
+      "kostum",
+    ]);
+    expect(itemsOfType("sapka").map((i) => [i.id, i.rarity])).toEqual([
+      ["sapka-neon-kep", "siradan"],
+      ["sapka-bere", "siradan"],
+      ["sapka-fotr", "siradan"],
+      ["sapka-parti", "siradan"],
+      ["sapka-kovboy", "nadir"],
+      ["sapka-kulaklikli-kask", "nadir"],
+      ["sapka-korsan", "nadir"],
+      ["sapka-tac", "efsanevi"],
+    ]);
     expect(itemsOfType("ust").map((i) => [i.id, i.rarity])).toEqual([["ust-neon-bomber", "nadir"]]);
   });
 
@@ -103,6 +131,75 @@ describe("kürsü karakteri ürünleri", () => {
     expect(cosmeticsFromEquipped(eq)).toEqual(want);
     expect(parseCosmetics(want)).toEqual(want);
     expect(parseCosmetics({ dance: "sapka-neon-kep", hat: "dans-twist", top: "yok-boyle" })).toBeUndefined();
+  });
+});
+
+describe("giysi yuvaları ve renkleri", () => {
+  it("kemikten yuva: kostümün kapladığı yuvalar parçalarının kemiklerinden türer, aksesuar kaplanmaz", () => {
+    expect(slotOfBone("head")).toBe("sapka");
+    expect(slotOfBone("left_forearm")).toBe("ust");
+    expect(slotOfBone("right_hand")).toBe("ust");
+    expect(slotOfBone("right_shin")).toBe("alt");
+    expect(slotOfBone("left_foot")).toBe("ayakkabi");
+    expect(slotOfBone("root")).toBeNull();
+    expect(coveredSlots(["torso", "head", "left_upper_arm", "left_foot"])).toEqual([
+      "ayakkabi",
+      "ust",
+      "sapka",
+    ]);
+    expect(coveredSlots([])).toEqual([]);
+    expect(GIYSI_SIRASI).not.toContain("dans");
+    // aynı kemikte: alt < ayakkabı < üst < aksesuar < şapka
+    expect(GIYSI_SIRASI.indexOf("alt")).toBeLessThan(GIYSI_SIRASI.indexOf("ust"));
+    expect(GIYSI_SIRASI.indexOf("ust")).toBeLessThan(GIYSI_SIRASI.indexOf("aksesuar"));
+  });
+
+  it("kostüm ürünlerinin covers alanı vardır; diğer türlerde yoktur", () => {
+    for (const i of COSMETIC_ITEMS) {
+      if (i.type === "kostum") expect(i.covers?.length ?? 0).toBeGreaterThan(0);
+      else expect(i.covers).toBeUndefined();
+    }
+  });
+
+  it("renkler: beş neon renk, ilki varsayılan; kimlik~renk ayrıştırılır ve kanonikleşir", () => {
+    expect(CLOTHING_COLOURS.map((c) => c.id)).toEqual(["camgobegi", "pembe", "altin", "yesil", "mor"]);
+    expect(DEFAULT_COLOUR).toBe("camgobegi");
+    expect(splitEquipped("sapka-bere~pembe")).toEqual({ id: "sapka-bere", colour: "pembe" });
+    expect(splitEquipped("sapka-bere")).toEqual({ id: "sapka-bere", colour: "camgobegi" });
+    expect(splitEquipped("sapka-bere~kirmizi")).toBeNull();
+    expect(splitEquipped("~pembe")).toBeNull();
+    expect(equippedValue("sapka-bere", "camgobegi")).toBe("sapka-bere");
+    expect(equippedValue("sapka-bere", "mor")).toBe("sapka-bere~mor");
+  });
+
+  it("cleanEquipped: yalnız giysi türlerinde ve bilinen renkle; varsayılan renk yazılmaz", () => {
+    expect(cleanEquipped("sapka", "sapka-bere~altin")).toBe("sapka-bere~altin");
+    expect(cleanEquipped("sapka", "sapka-bere~camgobegi")).toBe("sapka-bere");
+    expect(cleanEquipped("sapka", "sapka-bere~kirmizi")).toBeNull();
+    expect(cleanEquipped("sapka", "sapka-bere~")).toBeNull();
+    expect(cleanEquipped("ust", "sapka-bere~altin")).toBeNull();
+    expect(cleanEquipped("cerceve", "cerceve-cift~pembe")).toBeNull();
+    expect(cleanEquipped("cerceve", "cerceve-cift")).toBe("cerceve-cift");
+    expect(cleanEquipped("sapka", 5)).toBeNull();
+    expect(cleanEquipped("sapka", `${"x".repeat(70)}`)).toBeNull();
+  });
+
+  it("renkli değer Cosmetics'e taşınır, bilinmeyen renkli değer atılır", () => {
+    expect(cosmeticsFromEquipped({ sapka: "sapka-tac~mor", ust: "ust-neon-bomber~pembe" })).toEqual({
+      hat: "sapka-tac~mor",
+      top: "ust-neon-bomber~pembe",
+    });
+    expect(parseCosmetics({ hat: "sapka-tac~mor" })).toEqual({ hat: "sapka-tac~mor" });
+    expect(parseCosmetics({ hat: "sapka-tac~turuncu" })).toBeUndefined();
+    expect(parseCosmetics({ hat: "sapka-tac~camgobegi" })).toEqual({ hat: "sapka-tac" });
+  });
+
+  it("colourUnlocked: serbest kipte ürüne sahip olmak tüm renkleri açar", () => {
+    expect(COLOUR_MODE).toBe("free");
+    const owns = (id: string) => id === "sapka-bere";
+    expect(colourUnlocked(owns, "sapka-bere", "pembe")).toBe(true);
+    expect(colourUnlocked(owns, "sapka-fotr", "camgobegi")).toBe(false);
+    expect(colourUnlocked(owns, "sapka-fotr", "pembe")).toBe(false);
   });
 });
 

@@ -26,7 +26,17 @@ describe("iskelet", () => {
     rig.parts.forEach((p, i) => {
       if (p.parent !== "root") expect(ix(p.parent)).toBeLessThan(i);
     });
-    expect(Object.keys(rig.wardrobe).sort()).toEqual(["ceket", "sapka"]);
+    expect(Object.keys(rig.wardrobe).sort()).toEqual([
+      "bere",
+      "ceket",
+      "fotr",
+      "korsan",
+      "kovboy",
+      "kulaklikli-kask",
+      "parti",
+      "sapka",
+      "tac",
+    ]);
   });
 
   it("bozuk iskelet reddedilir", () => {
@@ -41,6 +51,21 @@ describe("iskelet", () => {
     const nobone = JSON.parse(JSON.stringify(rigRaw));
     nobone.wardrobe.sapka.pieces[0].bone = "yok";
     expect(parseRig(nobone)).toBeNull();
+    const noslot = JSON.parse(JSON.stringify(rigRaw));
+    delete noslot.wardrobe.sapka.slot;
+    expect(parseRig(noslot)).toBeNull();
+    const nolayer = JSON.parse(JSON.stringify(rigRaw));
+    nolayer.wardrobe.sapka.pieces[0].layer = "yan";
+    expect(parseRig(nolayer)).toBeNull();
+  });
+
+  it("arka katman parçası behind olur, varsayılan on", () => {
+    const raw = JSON.parse(JSON.stringify(rigRaw));
+    raw.wardrobe.sapka.pieces[0].layer = "arka";
+    expect(parseRig(raw)?.wardrobe.sapka?.[0]?.behind).toBe(true);
+    expect(rig.wardrobe.sapka?.[0]?.behind).toBe(false);
+    expect(rig.wardrobe.sapka?.[0]?.slot).toBe("sapka");
+    expect(rig.wardrobe.ceket?.[0]?.slot).toBe("ust");
   });
 
   it("dinlenme duruşu: açılar sıfırken eklemler dinlenme konumunda", () => {

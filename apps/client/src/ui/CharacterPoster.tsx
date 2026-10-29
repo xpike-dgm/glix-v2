@@ -11,6 +11,8 @@ export function CharacterPoster(props: {
   /** Kimlik renginin kaynağı (avatar sırası). */
   avatar: number;
   layers: readonly string[];
+  /** Giysi katmanı -> neon renk dönüşü (derece). */
+  tints?: Readonly<Record<string, number>>;
   dance: string | null;
   focus: PosterFocus;
   /** Ekran okuyucu için kısa ad. */
@@ -25,6 +27,7 @@ export function CharacterPoster(props: {
   createEffect(() => {
     const req = {
       layers: [...props.layers],
+      tints: props.tints ?? {},
       dance: props.dance,
       hue: hueShiftFor(look(props.avatar).color),
       focus: props.focus,

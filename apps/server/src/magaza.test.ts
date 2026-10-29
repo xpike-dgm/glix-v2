@@ -2,7 +2,7 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { COSMETIC_ITEMS, dailyDeals, nextIstanbulMidnight, parseCosmetics } from "@glix/engine";
+import { COSMETIC_ITEMS, currentPrice, dailyDeals, nextIstanbulMidnight, parseCosmetics } from "@glix/engine";
 import { afterAll, describe, expect, it } from "vitest";
 import { type AccountStore, createAccounts } from "./accountStore.js";
 import { parseBuy, parseEquip } from "./shopApi.js";
@@ -165,10 +165,10 @@ describe("kürsü karakteri: dans, şapka, üst", () => {
   it("satın alma ve kuşanma yuva başına tek; yuvalar birbirini bozmaz", () => {
     const { db, mk } = setup();
     const id = mk("Ali", 5000);
-    for (const item of ["dans-twist", "dans-makarena", "sapka-neon-kep", "ust-neon-bomber"]) {
-      expect(db.purchaseCosmetic(id, item, NOON).ok).toBe(true);
-    }
-    expect(db.glixBalance(id)).toBe(5000 - 150 - 400 - 150 - 400);
+    const items = ["dans-twist", "dans-makarena", "sapka-neon-kep", "ust-neon-bomber"];
+    for (const item of items) expect(db.purchaseCosmetic(id, item, NOON).ok).toBe(true);
+    // Fiyat o günün fırsatına göre değişebilir: beklenen toplam sunucunun kendi fiyat işlevinden.
+    expect(db.glixBalance(id)).toBe(5000 - items.reduce((n, i) => n + (currentPrice(i, NOON) ?? 0), 0));
     expect(db.equipCosmetic(id, "dans", "dans-twist")).toBe("ok");
     expect(db.equipCosmetic(id, "dans", "dans-makarena")).toBe("ok");
     expect(db.equipCosmetic(id, "sapka", "sapka-neon-kep")).toBe("ok");
@@ -184,6 +184,35 @@ describe("kürsü karakteri: dans, şapka, üst", () => {
     expect(db.equipCosmetic(id, "dans", "dans-kazacok")).toBe("not_owned");
     expect(db.equipCosmetic(id, "dans", null)).toBe("ok");
     expect(db.cosmetics(id).equipped).toEqual({ sapka: "sapka-neon-kep", ust: "ust-neon-bomber" });
+  });
+
+  it("giysi rengi: sahip olunan ürün tüm renklerde kuşanılır; bilinmeyen renk ve sahipsiz ürün reddedilir", () => {
+    const { db, mk } = setup();
+    const id = mk("Ali", 5000);
+    // sahip olmadan renkli de kuşanılamaz
+    expect(db.equipCosmetic(id, "sapka", "sapka-tac~pembe")).toBe("not_owned");
+    expect(db.purchaseCosmetic(id, "sapka-tac", NOON).ok).toBe(true);
+    for (const c of ["pembe", "altin", "yesil", "mor"]) {
+      expect(db.equipCosmetic(id, "sapka", `sapka-tac~${c}`)).toBe("ok");
+      expect(db.cosmetics(id).equipped).toEqual({ sapka: `sapka-tac~${c}` });
+    }
+    // varsayılan renk kanonik yazılır (ek yok)
+    expect(db.equipCosmetic(id, "sapka", "sapka-tac~camgobegi")).toBe("ok");
+    expect(db.cosmetics(id).equipped).toEqual({ sapka: "sapka-tac" });
+    // bilinmeyen / bozuk renk
+    db.equipCosmetic(id, "sapka", "sapka-tac~mor");
+    for (const bad of ["sapka-tac~turuncu", "sapka-tac~", "sapka-tac~Pembe", "sapka-tac~mor~mor"])
+      expect(db.equipCosmetic(id, "sapka", bad)).toBe("unknown_colour");
+    expect(db.cosmetics(id).equipped).toEqual({ sapka: "sapka-tac~mor" });
+    // renk giysi olmayan türde olmaz; yanlış yuva yine "unknown"
+    db.grantCosmetic(id, "cerceve-cift", NOON);
+    expect(db.equipCosmetic(id, "cerceve", "cerceve-cift~pembe")).toBe("unknown_colour");
+    expect(db.equipCosmetic(id, "ust", "sapka-tac~pembe")).toBe("unknown");
+    // alınmamış başka şapka renkli de olsa sahipsiz
+    expect(db.equipCosmetic(id, "sapka", "sapka-bere~pembe")).toBe("not_owned");
+    // armağanı geri almak renkli kuşanılanı da çıkarır
+    expect(db.revokeCosmetic(id, "sapka-tac")).toBe(true);
+    expect(db.cosmetics(id).equipped).toEqual({});
   });
 
   it("efsanevi dans 600 Glix ile alınamaz; varsayılan dans satılmaz", () => {
@@ -215,7 +244,8 @@ describe("kürsü karakteri: dans, şapka, üst", () => {
     });
     expect(parseEquip({ type: "sapka", itemId: null })).toEqual({ type: "sapka", itemId: null });
     expect(parseEquip({ type: "ust", itemId: "ust-neon-bomber" })?.type).toBe("ust");
-    expect(parseEquip({ type: "alt", itemId: null })).toBeNull();
+    expect(parseEquip({ type: "alt", itemId: null })).toEqual({ type: "alt", itemId: null });
+    expect(parseEquip({ type: "pantolon", itemId: null })).toBeNull();
   });
 });
 
@@ -311,6 +341,10 @@ describe("mağaza uçları", () => {
     expect((await call("POST", "/buy", c, { itemId: "yok-boyle" })).status).toBe(404);
     expect((await call("POST", "/equip", c, { type: "kart", itemId: null })).status).toBe(400);
     expect((await call("POST", "/equip", c, { type: "unvan", itemId: "yok-boyle" })).status).toBe(404);
+    expect(parseEquip({ type: "sapka", itemId: "sapka-tac~mor" })).toEqual({
+      type: "sapka",
+      itemId: "sapka-tac~mor",
+    });
     const raw = await fetch(`${base()}/api/shop/buy`, {
       method: "POST",
       headers: { Origin: base(), Cookie: c, "Content-Type": "text/plain" },
@@ -446,5 +480,22 @@ describe("kuşanılanlar odadaki herkese görünür", () => {
       top: "ust-neon-bomber",
     });
     expect((await equip(cookie, { type: "dans", itemId: "dans-twist" })).status).toBe(409);
+  });
+
+  it("renkli giysi: sunucu doğrular, odadaki herkese renkle gider; bilinmeyen renk 400", async () => {
+    const cookie = loginCookie("Kz_Renk");
+    const id = k.srv.accounts.findByUsername("Kz_Renk")?.id as number;
+    k.srv.accounts.grantCosmetic(id, "sapka-korsan", k.clock.now());
+    const ali = await enter(cookie, "Kz_Renk");
+    const bora = await enter(loginCookie("Kz_Renk2"), "Renk2", ali.session.roomCode);
+    await sync();
+    const bad = await equip(cookie, { type: "sapka", itemId: "sapka-korsan~turuncu" });
+    expect(bad.status).toBe(400);
+    expect(((await bad.json()) as { code: string }).code).toBe("unknown_colour");
+    expect((await equip(cookie, { type: "sapka", itemId: "sapka-tac~mor" })).status).toBe(409);
+    const ok = await equip(cookie, { type: "sapka", itemId: "sapka-korsan~pembe" });
+    expect(ok.status).toBe(200);
+    expect(((await ok.json()) as { equipped: unknown }).equipped).toEqual({ sapka: "sapka-korsan~pembe" });
+    await until(() => me(bora, "Kz_Renk")?.cosmetics?.hat === "sapka-korsan~pembe", "renkli şapka");
   });
 });

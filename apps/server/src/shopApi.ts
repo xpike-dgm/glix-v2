@@ -64,7 +64,10 @@ export function parseBuy(data: unknown): { itemId: string } | null {
   return typeof id === "string" && id.length > 0 && id.length <= 64 ? { itemId: id } : null;
 }
 
-/** `{type, itemId}` gövdesi; `itemId: null` temel (yok) seçimi. */
+/**
+ * `{type, itemId}` gövdesi; `itemId: null` temel (yok) seçimi. Giysilerde `itemId` `kimlik~renk` olabilir (renk
+ * doğrulaması kuşanma sırasında: bilinmeyen renk 400 `unknown_colour`).
+ */
 export function parseEquip(data: unknown): { type: CosmeticTypeId; itemId: string | null } | null {
   if (!isRecord(data)) return null;
   const keys = Object.keys(data).sort();
@@ -146,6 +149,8 @@ export function createShopApi(env: ShopEnv): (req: IncomingMessage, res: ServerR
         return { status: 200, body: { ok: true, equipped: accounts.cosmetics(me.id).equipped } };
       case "unknown":
         return fail(404, "unknown_item", "Bu ürün bulunamadı.");
+      case "unknown_colour":
+        return fail(400, "unknown_colour", "Bu renk seçilemez.");
       case "not_owned":
         return fail(409, "not_owned", "Bu ürüne sahip değilsin.");
       case "missing":

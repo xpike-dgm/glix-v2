@@ -1,8 +1,17 @@
-import { COSMETIC_ITEMS, dailyDeals, itemsOfType, nextIstanbulMidnight } from "@glix/engine";
+import {
+  COSMETIC_ITEMS,
+  type CosmeticItem,
+  cosmeticItem,
+  dailyDeals,
+  itemsOfType,
+  nextIstanbulMidnight,
+} from "@glix/engine";
 import { describe, expect, it } from "vitest";
 import {
   buyText,
   dealViews,
+  equippedColour,
+  equippedId,
   formatCountdown,
   itemStatus,
   ownedOfType,
@@ -206,6 +215,33 @@ describe("kürsü karakteri ürünleri (dans, şapka, üst)", () => {
     };
     const owned = ownedOfType(st, "dans", COSMETIC_ITEMS);
     expect(owned.map((i) => i.id)).toEqual(["dans-twist", "dans-lambada"]);
+  });
+});
+
+describe("giysi renkleri ve boş yuvalar", () => {
+  it("kuşanılan renkli değer kabul edilir, bilinmeyen renk atılır", () => {
+    const s = parseShopState(
+      {
+        ...good,
+        owned: ["sapka-tac", "ust-neon-bomber"],
+        equipped: { sapka: "sapka-tac~mor", ust: "ust-neon-bomber~turuncu", cerceve: "cerceve-cift~pembe" },
+      },
+      NOW,
+    );
+    expect(s?.equipped).toEqual({ sapka: "sapka-tac~mor" });
+    if (!s) throw new Error("durum");
+    expect(equippedId(s, "sapka")).toBe("sapka-tac");
+    expect(equippedColour(s, "sapka")).toBe("mor");
+    expect(equippedColour(s, "ust")).toBe("camgobegi");
+    expect(itemStatus(s, cosmeticItem("sapka-tac") as CosmeticItem)).toBe("equipped");
+    expect(itemStatus(s, cosmeticItem("sapka-bere") as CosmeticItem)).toBe("buy");
+  });
+
+  it("katalogda ürünü olmayan giysi yuvası mağaza sekmesinde ve dolapta gösterilmez", () => {
+    expect(SHOP_TYPES.map((t) => t.id)).not.toContain("alt");
+    expect(SHOP_TYPES.map((t) => t.id)).not.toContain("kostum");
+    for (const t of SHOP_TABS.find((x) => x.id === "giysi")?.types ?? [])
+      expect(itemsOfType(t).length).toBeGreaterThan(0);
   });
 });
 

@@ -1,27 +1,81 @@
 /** Oyuncunun kozmetiklerinden karakter görünümü ve kimlik rengi (saf). */
-import { type Cosmetics, cosmeticItem, DEFAULT_DANCE } from "@glix/engine";
+import {
+  type ClothingColourId,
+  COSMETIC_TYPES,
+  type Cosmetics,
+  type CosmeticTypeId,
+  clothingColour,
+  cosmeticItem,
+  DEFAULT_DANCE,
+  isClothingType,
+  splitEquipped,
+} from "@glix/engine";
 
 export interface CharacterLook {
-  /** Giyilen giysi katmanları (`rig.json` wardrobe adları). */
+  /** Giyilen giysi katmanları (`rig.json` wardrobe adları); sıra önemsizdir, çizim sırasını yuva belirler. */
   layers: string[];
+  /**
+   * Katman -> neon renk dönüşü (derece, `hueShiftFor`); yalnız varsayılan dışı renkler yazılır.
+   * Giysinin neon vurgusu bu rengi alır, gövdenin neonu oyuncunun kimlik rengidir (bkz. docs/HESAP.md).
+   */
+  tints: Record<string, number>;
   /** Kazananın oynayacağı dans dosyası. */
   dance: string;
 }
 
 /** Katalogdaki geçerli ve doğru türdeki ürünün karakter varlığı; bilinmeyen kimlik yok sayılır. */
-function assetOf(id: string | undefined, type: "dans" | "sapka" | "ust"): string | undefined {
+function assetOf(id: string | undefined, type: "dans"): string | undefined {
   if (id === undefined) return undefined;
   const it = cosmeticItem(id);
   return it && it.type === type ? it.asset : undefined;
 }
 
+export interface Worn {
+  type: CosmeticTypeId;
+  layer: string;
+  colour: ClothingColourId;
+  covers: readonly CosmeticTypeId[];
+}
+
+/** Bir giysi yuvasındaki kuşanılan değer; geçersiz kimlik, yanlış tür ya da görseli olmayan ürün yok sayılır. */
+function worn(type: CosmeticTypeId, value: string | undefined): Worn | null {
+  if (value === undefined) return null;
+  const e = splitEquipped(value);
+  const it = e ? cosmeticItem(e.id) : undefined;
+  if (!e || !it || it.type !== type || !it.asset) return null;
+  return { type, layer: it.asset, colour: e.colour, covers: it.covers ?? [] };
+}
+
+/** Katmanın dönüş açısı: oyuncunun hanesinde seçilen giysi rengine göre. */
+export const tintHue = (colour: ClothingColourId): number => {
+  const c = clothingColour(colour);
+  return c ? hueShiftFor(c.hex) : 0;
+};
+
+/** Kostüm kuralı: kostüm varsa kapladığı yuvalardaki giysiler elenir. */
+export function withCostume(all: readonly Worn[]): Worn[] {
+  const costume = all.find((w) => w.type === "kostum");
+  return all.filter((w) => !costume || w === costume || !costume.covers.includes(w.type));
+}
+
+/**
+ * Kuşanılanlardan görünüm. Kostüm kuralı: kostüm kuşanıldıysa KAPLADIĞI yuvalardaki giysiler giyilmez (kostüm
+ * onların yerini alır); kapsamadığı yuvalar (ör. aksesuar) olduğu gibi kalır.
+ */
 export function lookOf(c: Cosmetics | undefined): CharacterLook {
-  const layers: string[] = [];
-  const hat = assetOf(c?.hat, "sapka");
-  const top = assetOf(c?.top, "ust");
-  if (hat) layers.push(hat);
-  if (top) layers.push(top);
-  return { layers, dance: assetOf(c?.dance, "dans") ?? DEFAULT_DANCE };
+  const all: Worn[] = [];
+  for (const t of COSMETIC_TYPES) {
+    if (t.key === null || !isClothingType(t.id)) continue;
+    const w = worn(t.id, c?.[t.key]);
+    if (w) all.push(w);
+  }
+  const shown = withCostume(all);
+  const tints: Record<string, number> = {};
+  for (const w of shown) {
+    const deg = tintHue(w.colour);
+    if (deg !== 0) tints[w.layer] = deg;
+  }
+  return { layers: shown.map((w) => w.layer), tints, dance: assetOf(c?.dance, "dans") ?? DEFAULT_DANCE };
 }
 
 /** Karakter çiziminin ana neon rengi (camgöbeği); oyuncu renginin hedefi buna göre döndürülür. */

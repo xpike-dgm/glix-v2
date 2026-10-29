@@ -1,6 +1,15 @@
-import { DEFAULT_DANCE } from "@glix/engine";
+import { CLOTHING_COLOURS, DEFAULT_DANCE } from "@glix/engine";
 import { describe, expect, it } from "vitest";
-import { BASE_ACCENT, chromaAngle, hueMatrix, hueShiftFor, lookOf } from "./look.js";
+import {
+  BASE_ACCENT,
+  chromaAngle,
+  hueMatrix,
+  hueShiftFor,
+  lookOf,
+  tintHue,
+  type Worn,
+  withCostume,
+} from "./look.js";
 
 const COLORS = ["#2EF2FF", "#FF2BD6", "#FFC23B", "#B6FF3B", "#8B5CFF", "#FF8A3B", "#2BFFA8", "#3B7BFF"];
 const rgb = (hex: string): [number, number, number] => {
@@ -41,13 +50,14 @@ describe("kimlik rengi", () => {
 
 describe("görünüm", () => {
   it("kozmetik yoksa çıplak karakter ve varsayılan dans", () => {
-    expect(lookOf(undefined)).toEqual({ layers: [], dance: DEFAULT_DANCE });
-    expect(lookOf({})).toEqual({ layers: [], dance: DEFAULT_DANCE });
+    expect(lookOf(undefined)).toEqual({ layers: [], tints: {}, dance: DEFAULT_DANCE });
+    expect(lookOf({})).toEqual({ layers: [], tints: {}, dance: DEFAULT_DANCE });
   });
 
   it("kuşanılan dans ve giysiler karakter varlıklarına çevrilir", () => {
     expect(lookOf({ dance: "dans-makarena", hat: "sapka-neon-kep", top: "ust-neon-bomber" })).toEqual({
       layers: ["sapka", "ceket"],
+      tints: {},
       dance: "makarena",
     });
     expect(lookOf({ dance: "dans-cizgi-film" }).dance).toBe("mickey");
@@ -56,7 +66,52 @@ describe("görünüm", () => {
   it("bilinmeyen ya da yanlış türdeki kimlik yok sayılır", () => {
     expect(lookOf({ dance: "yok-boyle", hat: "ust-neon-bomber", top: "sapka-neon-kep" })).toEqual({
       layers: [],
+      tints: {},
       dance: DEFAULT_DANCE,
     });
+  });
+
+  it("renk: giysinin neon rengi seçilen renge döner; varsayılan renkte dönüş yazılmaz", () => {
+    const l = lookOf({ hat: "sapka-tac~mor", top: "ust-neon-bomber", dance: "dans-twist" });
+    expect(l.layers).toEqual(["tac", "ceket"]);
+    expect(l.tints).toEqual({ tac: hueShiftFor("#8B5CFF") });
+    expect(lookOf({ hat: "sapka-bere~camgobegi" }).tints).toEqual({});
+    // bilinmeyen renk: değer geçersiz sayılır, giysi giyilmez
+    expect(lookOf({ hat: "sapka-bere~turuncu" }).layers).toEqual([]);
+  });
+
+  it("renk eşlemesi: her renk camgöbeği vurguyu kendi jetonuna çevirir", () => {
+    expect(tintHue("camgobegi")).toBeCloseTo(0, 5);
+    for (const c of CLOTHING_COLOURS) {
+      const m = hueMatrix(tintHue(c.id));
+      const [r, g, b] = rgb(BASE_ACCENT);
+      const out = [
+        m[0] * r + m[1] * g + m[2] * b,
+        m[3] * r + m[4] * g + m[5] * b,
+        m[6] * r + m[7] * g + m[8] * b,
+      ].map((v) => Math.min(255, Math.max(0, Math.round(v * 255))));
+      const hex = `#${out.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+      expect(Math.abs(((chromaAngle(hex) - chromaAngle(c.hex) + 540) % 360) - 180)).toBeLessThan(8);
+    }
+  });
+
+  it("kostüm kapladığı yuvaların giysisini ezer, kapsamadıklarını (aksesuar) bırakır", () => {
+    const w = (type: Worn["type"], layer: string, covers: Worn["covers"] = []): Worn => ({
+      type,
+      layer,
+      colour: "camgobegi",
+      covers,
+    });
+    const hat = w("sapka", "bere");
+    const top = w("ust", "ceket");
+    const shoes = w("ayakkabi", "bot");
+    const bag = w("aksesuar", "canta");
+    const suit = w("kostum", "astronot", ["sapka", "ust", "alt"]);
+    expect(withCostume([hat, top, shoes, bag, suit]).map((x) => x.layer)).toEqual([
+      "bot",
+      "canta",
+      "astronot",
+    ]);
+    expect(withCostume([hat, top]).map((x) => x.layer)).toEqual(["bere", "ceket"]);
   });
 });
