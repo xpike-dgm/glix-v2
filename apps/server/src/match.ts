@@ -250,6 +250,7 @@ export function clearMatch(rt: Runtime, room: Room, outcome: "aborted" | "failed
     // Veto / Oyunu Seç yalnız o maçı etkiler: manuel seçimde host'un listesi geri gelir.
     if (room.selection.mode === "manual") room.gameIds = [...room.match.originalGameIds];
   }
+  cancelWake(room);
   room.match = null;
   room.phase = "lobby";
   // Maç bitti: izleyiciler normal oyuncu olur.
@@ -354,6 +355,7 @@ function startPlaying(rt: Runtime, room: Room, match: Match): void {
 }
 
 function finishGame(rt: Runtime, room: Room, match: Match): void {
+  cancelWake(room);
   const now = rt.clock.now();
   const baseResult = guard("result", () => currentGame(match).result(match.state));
   // Kartlar: oyunun ham puanları kart etkileriyle nihai genel skor puanlarına çevrilir (docs/KURALLAR.md K6).
@@ -483,8 +485,68 @@ function nextGameOrFinal(rt: Runtime, room: Room, match: Match): void {
 export function stepMatch(rt: Runtime, room: Room): void {
   try {
     stepMatchUnsafe(rt, room);
+    armWake(rt, room);
   } catch (err) {
     abortMatch(rt, room, err);
+  }
+}
+
+export function cancelWake(room: Room): void {
+  if (room.wakeCancel) room.wakeCancel();
+  room.wakeCancel = null;
+  room.wakeAt = null;
+}
+
+/** Sunucunun kendi başına ilerleyeceği en erken an: geri sayım sonu ya da oyunun `nextWake`i (yoksa null). */
+function wakeTime(rt: Runtime, room: Room, match: Match): number | null {
+  if (room.phase === "countdown") return match.phaseEndsAt;
+  if (room.phase !== "playing") return null;
+  const game = currentGame(match);
+  if (game.nextWake === undefined) return null;
+  const ctx = ctxFor(rt, room, match);
+  return guard("nextWake", () => game.nextWake?.(match.state, ctx) ?? null);
+}
+
+/**
+ * Görünür bir geçişin tam anına tek bir uyandırma kurar; 100 ms'lik tick'i beklemek yerine o anda `stepMatch`
+ * çalışır. Yalnız gecikmeyi azaltır: tick her durumda yedek olarak sürer. Vadesi gelmiş/geçmiş an için kurulmaz
+ * (sıfır gecikmeli döngü olmaz); tick onu işler. Aşama değişince ya da maç bitince iptal edilir.
+ */
+function armWake(rt: Runtime, room: Room): void {
+  const match = room.match;
+  const now = rt.clock.now();
+  const at = match ? wakeTime(rt, room, match) : null;
+  if (!match || at === null || at <= now) {
+    cancelWake(room);
+    return;
+  }
+  if (room.wakeCancel && room.wakeAt === at) return;
+  cancelWake(room);
+  room.wakeAt = at;
+  room.wakeCancel = rt.clock.setTimeout(
+    () => {
+      room.wakeCancel = null;
+      room.wakeAt = null;
+      if (room.match !== match) return;
+      stepMatch(rt, room);
+    },
+    Math.max(1, at - now),
+  );
+}
+
+/** Oyunun zamana bağlı adımı: tick, ardından bitti mi (bitti ise sonuç aşamasına geçer). */
+function stepPlaying(rt: Runtime, room: Room, match: Match): void {
+  const game = currentGame(match);
+  const ctx = ctxFor(rt, room, match);
+  const next = guard("tick", () => game.tick(match.state, ctx));
+  const changed = next !== match.state;
+  match.state = next;
+  if (guard("isFinished", () => game.isFinished(match.state, ctx))) {
+    finishGame(rt, room, match);
+    rt.broadcaster.markDirty(room);
+  } else if (changed) {
+    notifyTurns(rt, room, match);
+    rt.broadcaster.markDirty(room);
   }
 }
 
@@ -515,21 +577,9 @@ function stepMatchUnsafe(rt: Runtime, room: Room): void {
       }
       return;
     }
-    case "playing": {
-      const game = currentGame(match);
-      const ctx = ctxFor(rt, room, match);
-      const next = guard("tick", () => game.tick(match.state, ctx));
-      const changed = next !== match.state;
-      match.state = next;
-      if (guard("isFinished", () => game.isFinished(match.state, ctx))) {
-        finishGame(rt, room, match);
-        rt.broadcaster.markDirty(room);
-      } else if (changed) {
-        notifyTurns(rt, room, match);
-        rt.broadcaster.markDirty(room);
-      }
+    case "playing":
+      stepPlaying(rt, room, match);
       return;
-    }
     case "results": {
       // Erken bitiş (docs/ERKEN-BITIS.md): bağlı katılımcıların hepsi "Devam" dediyse 1 sn sonra biter.
       // Bu bir oyun kuralı değil, sunucunun sonuç ekranı hızıdır; bağlantıya bakmak burada serbesttir.
@@ -589,6 +639,10 @@ function applyActionUnsafe(rt: Runtime, room: Room, playerId: string, payload: u
     match.state = next;
     notifyTurns(rt, room, match);
     rt.broadcaster.markDirty(room);
+    // Eylem oyunu bitirdiyse sonucu bir sonraki tick'i beklemeden işle (tick ile aynı adım; tick bağımsızlığı
+    // gereği sonuç değişmez, yalnız sonuç ekranı 0-100 ms erken görünür).
+    if (guard("isFinished", () => game.isFinished(match.state, ctx))) stepPlaying(rt, room, match);
+    armWake(rt, room);
   }
   return { ok: true };
 }

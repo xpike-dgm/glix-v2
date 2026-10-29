@@ -13,7 +13,7 @@ import { createBroadcaster } from "./broadcast.js";
 import { type Clock, systemClock } from "./clock.js";
 import { noContent } from "./contentStore.js";
 import { openIds } from "./gameSwitches.js";
-import { clearMatch, endMatchStats, recordPresence } from "./match.js";
+import { cancelWake, clearMatch, endMatchStats, recordPresence } from "./match.js";
 import { createMetrics } from "./metrics.js";
 import { noBannedWords, noReportDesk, RoomKicks } from "./moderation.js";
 import { IpLimiter } from "./ratelimit.js";
@@ -128,6 +128,8 @@ export function createRoom(rt: Runtime): Room {
     nextJoinOrder: 0,
     lastFlushAt: Number.NEGATIVE_INFINITY,
     flushCancel: null,
+    wakeCancel: null,
+    wakeAt: null,
     deleteCancel: null,
     hostGraceCancel: null,
     createdAt: rt.clock.now(),
@@ -297,6 +299,7 @@ export function deleteRoom(rt: Runtime, room: Room, reason: LeftReason = "closed
   // Sunucu kapanırken / oda silinirken süren maç yarıda kalmış sayılır.
   if (room.match) endMatchStats(rt, room.match, "aborted");
   rt.broadcaster.cancel(room);
+  cancelWake(room);
   clearHostGrace(room);
   if (room.deleteCancel) {
     room.deleteCancel();

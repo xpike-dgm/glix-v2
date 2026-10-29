@@ -169,6 +169,14 @@ export const butonaBas: GameDefinition<ButonaBasState, ButonaBasAction, ButonaBa
       return stage === settled.stage ? settled : { ...settled, stage };
     },
 
+    nextWake(state, ctx): number | null {
+      const candidates = [state.endsAt, phaseAt(state, ctx.now).phaseEndsAt];
+      for (const key of Object.keys(state.pending)) candidates.push(windowClosesAt(state, Number(key)));
+      let best: number | null = null;
+      for (const at of candidates) if (at > ctx.now && (best === null || at < best)) best = at;
+      return best;
+    },
+
     publicView(state, ctx): ButonaBasPublicView {
       const { round, phase, phaseEndsAt } = phaseAt(state, ctx.now);
       return {

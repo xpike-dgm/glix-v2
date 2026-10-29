@@ -537,3 +537,41 @@ describe("rankAwards (ortak)", () => {
     expect(rankAwards({ a: 4, b: 0, c: 0 }, { positiveOnly: true })).toEqual({ a: 2 });
   });
 });
+
+describe("butona-bas nextWake", () => {
+  const wake = (s: ButonaBasState, at: number) => butonaBas.nextWake?.(s, ctx(T0 + at)) ?? null;
+
+  it("basış yokken evre sonunu (tur bitişi) bildirir", () => {
+    expect(wake(start(), 0)).toBe(T0 + BUTONA_BAS_ROUND_MS);
+  });
+
+  it("bekleyen pencerenin kapanışı evre sonundan önceyse onu bildirir", () => {
+    const s = press(start(), "a", 10);
+    expect(wake(s, 10)).toBe(T0 + butonaBasWindowMs(0));
+  });
+
+  it("her zaman şimdiden sonra: vadesi gelen pencere puanlanınca bir sonraki an döner", () => {
+    let s = press(start(), "a", 10);
+    const closes = butonaBasWindowMs(0);
+    s = settleAt(s, closes);
+    const next = wake(s, closes);
+    expect(next).not.toBeNull();
+    expect(next as number).toBeGreaterThan(T0 + closes);
+  });
+
+  it("tur arasında bir sonraki turun başını, oyun sonunda null bildirir", () => {
+    const s = start();
+    const gapAt = BUTONA_BAS_ROUND_MS + 1;
+    expect(wake(s, gapAt)).toBe(T0 + butonaBasRoundOffset(1));
+    expect(wake(s, BUTONA_BAS_DURATION_MS)).toBeNull();
+  });
+
+  it("uyandırma anında tick görünür bir şeyi gerçekten değiştirir (bekleyen pencere puanlanır)", () => {
+    const s = press(start(), "a", 10);
+    const at = wake(s, 10) as number;
+    const before = butonaBas.tick(s, ctx(at - 1));
+    const after = butonaBas.tick(s, ctx(at));
+    expect(before.scores.a).toBe(0);
+    expect(after.scores.a).toBe(-1);
+  });
+});
