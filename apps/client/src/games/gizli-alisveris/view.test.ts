@@ -11,6 +11,7 @@ import {
   productValueText,
   ranking,
   SONUC_ZAMANI,
+  sameShelf,
   sepetAcilis,
   sonucSahne,
   urunAcilis,
@@ -134,6 +135,21 @@ describe("Gizli Alışveriş görünümü", () => {
     expect(ranking(reveal, ["c", "a", "b"])).toEqual(["b", "a", "c"]);
     expect(ranking({ ...reveal, values: { a: 5, b: 5, c: 5 } }, ["c", "a", "b"])).toEqual(["c", "a", "b"]);
     expect(buyersOf(reveal, ["a", "b", "c"])).toEqual({ "7": ["a", "b"], "4": ["b"] });
+  });
+
+  it("aynı raf yeniden ayrıştırılınca sameShelf eşit sayar (düğmeler yeniden kurulmaz)", () => {
+    const a = parseAlisverisView(pub, priv)?.products ?? [];
+    const b = parseAlisverisView({ ...pub, ready: ["a"] }, { ...priv, basket: [5] })?.products ?? [];
+    expect(a).not.toBe(b);
+    expect(sameShelf(a, b)).toBe(true);
+    expect(
+      sameShelf(
+        a,
+        b.map((p, i) => (i === 0 ? { ...p, price: p.price + 1 } : p)),
+      ),
+    ).toBe(false);
+    expect(sameShelf(a, [...b].reverse())).toBe(false);
+    expect(sameShelf(a, b.slice(1))).toBe(false);
   });
 
   it("talep ateşi adı sayı içermez", () => {

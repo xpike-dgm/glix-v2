@@ -1,4 +1,6 @@
+import { existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import solid from "vite-plugin-solid";
@@ -68,7 +70,21 @@ function collectShellChunks(): Plugin {
   };
 }
 
+/**
+ * Gizli Alışveriş ürün görsellerinden gerçekten var olanlar (dosya adı, uzantısız). Önyükleme yalnız bunları ister;
+ * yeni görsel `public/assets/props/gizli-alisveris/` altına konunca bir sonraki derlemede kendiliğinden listeye girer.
+ */
+function alisverisPropFiles(): string[] {
+  const dir = fileURLToPath(new URL("./public/assets/props/gizli-alisveris", import.meta.url));
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".webp"))
+    .map((f) => f.slice(0, -".webp".length))
+    .sort();
+}
+
 export default defineConfig({
+  define: { __ALISVERIS_PROPS__: JSON.stringify(alisverisPropFiles()) },
   plugins: [
     solid(),
     emitAssetManifest(),

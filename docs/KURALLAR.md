@@ -1046,7 +1046,7 @@ kaç kişinin aldığına göre ürünün oyuncuya sağladığı değer değişi
 5. Alışverişler gizli mi; ürün seçimleri ne zaman açılır?: [gizli , tur sonunda. İstisna: 15. saniyedeki vitrin fısıltısı (madde 15) yalnız ürün başına talep seviyesini açar]
 6. Ürün değeri alıcı sayısına göre tam olarak nasıl hesaplanır?: [bir ürünü kaç kişi seçtiyse değeri o seçilen sayıya bölünür örnek : 30 tl ye bir ürün var 2 kişi bu ürünü seçmiş değeri artık 15 oldu. Bölünen her zaman bu maçtaki **tam** fiyattır; kupon değeri değiştirmez]
 7. Aşamalar ve süreler: [tek aşama - 30 saniye; 15. saniyede vitrin fısıltısı; ardından 8 sn sonuç açılışı]
-8. Bütçe aşma veya sepet göndermeme sonucu: [bütçe aşılamaz - sepet göndermezse sepetinin değeri direkt 0 olarak kabul edilir]
+8. Bütçe aşma veya sepet göndermeme sonucu: [bütçe aşılamaz. Ayrı bir "sepet gönderme" adımı yoktur: sepet canlı olarak sunucuda tutulur ve süre bittiğinde (ya da herkes Tamam dediğinde) sunucudaki son sepet geçerlidir. Hiç ürün almayan oyuncunun sepet değeri 0 kabul edilir]
 9. Mini oyun puanı ve en değerli sepet eşitliği: [en değerli sepet **+2**, ikinci en değerli sepet **+1**, diğerleri 0; **eksi puan yoktur**. Birincide eşitlik varsa eşit olanların hepsi +2 alır ve sonraki farklı değer +1 alır; ikincide eşitlik varsa hepsi +1. Değeri 0 olan (boş sepet) ödül almaz. Herkesin sepet değeri aynıysa kimse puan almaz]
 10. Genel skora aktarım ve final bonusu: [direkt genel puana eklenir]
 11. Turun bitiş koşulu: [sürenin dolması]
@@ -1065,8 +1065,8 @@ kaç kişinin aldığına göre ürünün oyuncuya sağladığı değer değişi
     ya da "TEK BAŞINA!" → sepetler en değersizden en değerliye → puanlar üstteki
     puan yazısına uçar; herkesin kuponu satırında görünür.
 14. Özel durumlar: Sepet bütçe aşımına izin vermez; son geçerli sepet sunucuda
-    tutulur. Sepet göndermeyen veya hiç ürün almayan oyuncunun sepet değeri 0
-    kabul edilir ve ödül almaz. Ürün değerleri tam olmayan sayılarda iki ondalık
+    tutulur ve süre bittiğindeki hâli geçerlidir (Tamam demek şart değildir).
+    Hiç ürün almayan oyuncunun sepet değeri 0 kabul edilir ve ödül almaz. Ürün değerleri tam olmayan sayılarda iki ondalık
     basamakla gösterilir ancak sıralama yuvarlanmamış sunucu değeriyle yapılır.
 15. Vitrin fısıltısı: Alışverişin **15. saniyesinde** raftaki her ürünün üstünde
     talep ateşi belirir. Seviye, o ürünü o anda sepetinde tutan oyuncuların

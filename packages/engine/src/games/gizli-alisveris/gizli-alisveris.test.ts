@@ -650,6 +650,30 @@ describe("gizli-alisveris vitrin fısıltısı", () => {
     expect(g.publicView(s, ctx(T0 + ALISVERIS_HEAT_AT_MS)).heat).toBeNull();
   });
 
+  it("herkes 14,9. saniyede Tamam derse kapanış penceresi 15. saniyeyi geçse de ateş gösterilmez", () => {
+    let s = shop([[7], [7], [1]]);
+    for (const id of ids(3)) {
+      const r = g.reduce(s, id, { kind: "lock" }, ctx(T0 + 14_900, 1, ids(3)));
+      if (isRejected(r)) throw new Error(r.rejected);
+      s = r;
+    }
+    expect(s.endsAt).toBe(T0 + 15_900);
+    expect(s.closedAt).toBe(T0 + 14_900);
+    for (const at of [ALISVERIS_HEAT_AT_MS, ALISVERIS_HEAT_AT_MS + 500, 15_899, 15_900]) {
+      expect(g.tick(s, ctx(T0 + at)).heat).toBeNull();
+      expect(g.publicView(s, ctx(T0 + at)).heat).toBeNull();
+    }
+    expect(g.nextWake?.(s, ctx(T0 + 14_900))).toBe(T0 + 15_900);
+    // Tam 15. saniyede kapanırsa ateş, kilitten önceki sepetlerle donar (ortak görünümde kalır).
+    let t = shop([[7], [7], [1]]);
+    for (const id of ids(3)) {
+      const r = g.reduce(t, id, { kind: "lock" }, ctx(T0 + ALISVERIS_HEAT_AT_MS, 1, ids(3)));
+      if (isRejected(r)) throw new Error(r.rejected);
+      t = r;
+    }
+    expect(g.publicView(t, ctx(T0 + ALISVERIS_HEAT_AT_MS)).heat?.["7"]).toBe(3);
+  });
+
   it("nextWake: önce vitrin anı, sonra alışveriş sonu, sonra oyun sonu", () => {
     const s = start();
     expect(g.nextWake?.(s, ctx(T0 + 1))).toBe(T0 + ALISVERIS_HEAT_AT_MS);

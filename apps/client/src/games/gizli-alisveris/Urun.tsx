@@ -1,5 +1,5 @@
 import { createSignal, Show } from "solid-js";
-import { ALISVERIS_PROP_FILES, type PropPath, propSrc } from "../../ui/props.js";
+import { ALISVERIS_PROP_FILES, alisverisPropExists, type PropPath, propSrc } from "../../ui/props.js";
 import { productInitials } from "./view.js";
 
 /** Yüklenemeyen ürün görselleri (henüz üretilmemiş): bir kez denenir, sonra doğrudan yer tutucu çizilir. */
@@ -8,7 +8,8 @@ const missing = new Set<string>();
 /** Ürün görselinin adresi; havuz dışı numarada yok. */
 export function urunSrc(id: number): string | null {
   const file = ALISVERIS_PROP_FILES[id];
-  return file ? propSrc(`gizli-alisveris/${file}` as PropPath) : null;
+  // Derlemede dosyası olmayan (henüz üretilmemiş) ürün için istek atılmaz: doğrudan yer tutucu.
+  return file && alisverisPropExists(file) ? propSrc(`gizli-alisveris/${file}` as PropPath) : null;
 }
 
 /**

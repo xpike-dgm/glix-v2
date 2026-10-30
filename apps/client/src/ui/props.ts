@@ -54,11 +54,22 @@ export const ALISVERIS_PROP_FILES: readonly string[] = [
   "vr-gozluk",
 ];
 
+/**
+ * Görsel dosyası gerçekten var mı (derleme anındaki liste)? Liste yoksa (testler) yalnız ilk 12 ürünün dosyası
+ * var sayılır. Önyükleme olmayan dosyayı istemez (404 yok); ekran yine dosyayı dener, yoksa yer tutucu çizer.
+ */
+export function alisverisPropExists(file: string): boolean {
+  const built = typeof __ALISVERIS_PROPS__ === "undefined" ? undefined : __ALISVERIS_PROPS__;
+  return built ? built.includes(file) : ALISVERIS_PROP_FILES.indexOf(file) < 12;
+}
+
 const BOMBA: PropPath[] = ["bomba/govde", "bomba/fitil", "bomba/kivilcim", "bomba/patlama"];
 
 /** Oyun kimliği -> o oyunun nesneleri (anlatım başlarken önden indirilir). */
 const GAME_PROPS: Record<string, readonly PropPath[]> = {
-  "gizli-alisveris": ALISVERIS_PROP_FILES.map((f): PropPath => `gizli-alisveris/${f}`),
+  "gizli-alisveris": ALISVERIS_PROP_FILES.filter(alisverisPropExists).map(
+    (f): PropPath => `gizli-alisveris/${f}`,
+  ),
   "kara-borsa": [
     "kara-borsa/kutu-ahsap",
     "kara-borsa/kutu-antika",

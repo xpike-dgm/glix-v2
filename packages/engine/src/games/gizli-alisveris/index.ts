@@ -33,6 +33,8 @@ export interface AlisverisState {
   locked: string[];
   /** Herkes kilitlediyse true: bitiş anı `endsAt`'e yazılmıştır, yeni eylem kabul edilmez. */
   closing: boolean;
+  /** Herkesin Tamam dediği an (erken kapanış); yoksa null. Vitrin fısıltısı bu andan önceyse hiç gösterilmez. */
+  closedAt: number | null;
   /** Bu maçın rafı (raf sırasıyla, maçın fiyatlarıyla); herkes için aynı. */
   shelf: AlisverisProduct[];
   /** Oyuncu → kuponlu ürün numarası (herkesinki farklı). Gizli: yalnız sahibinin `view`'ında, sonuçta açılır. */
@@ -67,8 +69,14 @@ const paidIn = (state: AlisverisState, playerId: string, id: number): number => 
 const costOf = (state: AlisverisState, playerId: string, basket: readonly number[]): number =>
   basket.reduce((s, id) => s + paidIn(state, playerId, id), 0);
 
-/** Vitrin fısıltısı gösterilir mi: an alışveriş bitmeden önceyse. */
-const heatShown = (state: AlisverisState): boolean => state.startedAt + ALISVERIS_HEAT_AT_MS < state.endsAt;
+/**
+ * Vitrin fısıltısı gösterilir mi: an alışveriş bitmeden önceyse ve herkes o andan önce Tamam dememişse
+ * (14,9. saniyede kapanan alışverişte, kapanış penceresi 15. saniyeyi geçse bile ateş çıkmaz).
+ */
+const heatShown = (state: AlisverisState): boolean => {
+  const heatAt = state.startedAt + ALISVERIS_HEAT_AT_MS;
+  return heatAt < state.endsAt && (state.closedAt === null || state.closedAt >= heatAt);
+};
 
 /** Talep ateşi: raftaki her ürün için o anki sepetlerden seviye (kimin aldığı ve sayı yok). */
 export function alisverisHeat(state: AlisverisState): Record<string, number> {
@@ -191,6 +199,7 @@ export const gizliAlisveris: GameDefinition<
       coupons,
       locked: [],
       closing: false,
+      closedAt: null,
       baskets: {},
       heat: null,
       revealed: false,
@@ -213,7 +222,14 @@ export const gizliAlisveris: GameDefinition<
       const active = base.players.filter((id) => ctx.connected.includes(id));
       if (active.length === 0 || !active.every((id) => locked.includes(id))) return { ...base, locked };
       const endsAt = Math.min(base.endsAt, ctx.now + ALISVERIS_LOCK_GRACE_MS);
-      return { ...base, locked, closing: true, endsAt, revealEndsAt: endsAt + ALISVERIS_REVEAL_MS };
+      return {
+        ...base,
+        locked,
+        closing: true,
+        closedAt: ctx.now,
+        endsAt,
+        revealEndsAt: endsAt + ALISVERIS_REVEAL_MS,
+      };
     }
     const basket = base.baskets[playerId] ?? [];
     if (action.kind === "add") {

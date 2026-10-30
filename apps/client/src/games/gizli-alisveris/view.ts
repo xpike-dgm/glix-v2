@@ -141,6 +141,17 @@ export function parseAlisverisView(publicView: unknown, view: unknown): Alisveri
   return priv ? { ...pub, ...priv } : null;
 }
 
+/** İki raf aynı mı (numara, ad, fiyat ve sıra)? Ekranın raf düğmelerini yeniden kurmaması için. */
+export function sameShelf(a: readonly AlisverisProduct[], b: readonly AlisverisProduct[]): boolean {
+  return (
+    a.length === b.length &&
+    a.every((p, i) => {
+      const q = b[i];
+      return q !== undefined && p.id === q.id && p.name === q.name && p.price === q.price;
+    })
+  );
+}
+
 /** Bu oyuncunun ödediği fiyat: kuponlu ürün yarı fiyat (yukarı yuvarlı). */
 export function paidPrice(p: AlisverisProduct, coupon: number | null): number {
   return coupon === p.id ? couponPrice(p.price) : p.price;

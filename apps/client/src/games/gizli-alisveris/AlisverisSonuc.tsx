@@ -95,6 +95,8 @@ export function AlisverisSonuc(props: Props) {
   // Ürün başına ses: bölünme cam kırığı, tek başına altın çınlama (yalnız canlı geçişte).
   const playedProducts = new Set<number>();
   createEffect(() => {
+    // Hepsi çalındıktan sonra (ya da geç bağlananda geçildikten sonra) her karede dönmez.
+    if (playedProducts.size >= props.products.length) return;
     props.products.forEach((p, i) => {
       const at = urunAcilis(i, props.products.length);
       if (playedProducts.has(p.id) || elapsed() < at) return;

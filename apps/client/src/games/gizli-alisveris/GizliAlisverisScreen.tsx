@@ -16,7 +16,7 @@ import { fly } from "./fly.js";
 import { Alev, Kupon, Poset } from "./Parcalar.js";
 import { bip, fisilti, geri, kasa, sonTik } from "./sounds.js";
 import { UrunArt } from "./Urun.js";
-import { basketCost, heatLabel, paidPrice, parseAlisverisView } from "./view.js";
+import { basketCost, heatLabel, paidPrice, parseAlisverisView, sameShelf } from "./view.js";
 
 /** Son bu kadar ms: süre şeridi kızarır, saniye tiki, bekleten avatarlar sallanır. */
 const TENSE_MS = 10_000;
@@ -66,6 +66,13 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
     }),
   );
   const spectator = () => props.spectator === true;
+  /**
+   * Raf: ürünler (numara, ad, fiyat) değişmedikçe aynı dizi döner; böylece her sunucu güncellemesinde ürün
+   * düğmeleri yeniden kurulmaz ve nefes/alev animasyonları başa sarmaz.
+   */
+  const products = createMemo<AlisverisProduct[]>(() => view()?.products ?? [], [], {
+    equals: sameShelf,
+  });
   const coupon = () => view()?.coupon ?? null;
 
   // Dokunuşa anında yanıt: istenen durum sunucu onaylayana kadar yerelde tutulur.
@@ -166,12 +173,13 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
     }
     setWant((w) => ({ ...w, [id]: !has }));
     void sendActionAck({ kind: has ? "remove" : "add", product: id }).then((ack) => {
-      if (ack.ok || ack.reason === "timeout") return;
-      // Reddedildi: yerel istek geri alınır.
+      if (ack.ok) return;
+      // Reddedildi ya da onay gelmedi: yerel tahmin bırakılır, sunucunun yetkili sepetine dönülür.
       setWant((w) => {
         const { [id]: _drop, ...rest } = w;
         return rest;
       });
+      if (ack.reason === "timeout") return;
       bip();
       hapticError();
     });
@@ -328,7 +336,7 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
                   }
                 >
                   <div class="ashelf gashelf" data-off={spectator() || v().locked ? "1" : undefined}>
-                    <For each={v().products}>
+                    <For each={products()}>
                       {(p, i) => {
                         const inCart = () => basket().includes(p.id);
                         const mine = () => coupon() === p.id;
@@ -406,7 +414,7 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
             {(r) => (
               <AlisverisSonuc
                 reveal={r()}
-                products={v().products}
+                products={products()}
                 anchor={v().endsAt}
                 entries={entries()}
                 selfId={props.selfId}
