@@ -27,7 +27,10 @@ export type PropPath =
 
 export const propSrc = (p: PropPath): string => `/assets/props/${p}.webp`;
 
-/** Gizli Alışveriş ürün kimliği (motor kataloğu sırası) -> dosya adı. */
+/**
+ * Gizli Alışveriş ürün kimliği (motor havuzu sırası, 0..19) -> dosya adı. Son 8 ürünün görseli henüz yoksa ekran
+ * kendi yer tutucusunu çizer; dosya `gizli-alisveris/<ad>.webp` olarak gelince kendiliğinden kullanılır.
+ */
 export const ALISVERIS_PROP_FILES: readonly string[] = [
   "hologram-sticker",
   "enerji-icecegi",
@@ -41,6 +44,14 @@ export const ALISVERIS_PROP_FILES: readonly string[] = [
   "holo-kask",
   "mini-drone",
   "gizli-sandik",
+  "lazer-kalem",
+  "ses-karti",
+  "retro-joystick",
+  "plazma-lamba",
+  "mini-robot",
+  "hologram-saat",
+  "neon-kaykay",
+  "vr-gozluk",
 ];
 
 const BOMBA: PropPath[] = ["bomba/govde", "bomba/fitil", "bomba/kivilcim", "bomba/patlama"];
