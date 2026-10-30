@@ -50,8 +50,8 @@ Beğenmediğin bir ayrıntı olursa yalnız onu yaz.
 **Ayrıntılar:**
 - 8 yeni ürün eklenir (oyunun neon/arcade temasına uygun, ör. Lazer Kalem, Mini Robot, Neon Kaykay, Hologram Saat,
   Ses Kartı, Retro Joystick, VR Gözlük, Plazma Lamba). Görselleri mevcut 12 ürünle aynı tarzda üretilir.
-- Fiyatlar her zaman tam sayı, 6–40 arası. Raftaki en ucuz 5 ürünün toplamı her zaman 60'ı geçer (en çok 4 ürün
-  kuralı korunur).
+- Fiyatlar her zaman tam sayı, 6–40 arası. **Sahip kararı (uygulamada):** ürün sayısı sınırı yok; tek sınır bütçe
+  (60 kredi) ve her üründen bir tane. Önerideki "en ucuz 5 ürünün toplamı 60'ı geçer" şartı kaldırıldı.
 - Raf herkes için aynıdır (adalet bozulmaz).
 
 ### GA-M2 · Gizli kupon — **önerim: EVET**
