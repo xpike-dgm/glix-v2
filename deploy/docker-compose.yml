@@ -29,6 +29,8 @@ services:
       GLIX_MAIL_FROM: ${GLIX_MAIL_FROM:-}
       # Yönetici paneli (/admin): virgülle ayrılmış hesap kimlikleri. Boşsa panel kapalı (404). Giriş kodu e-postayla gelir (Resend gerekir).
       GLIX_ADMIN_ACCOUNT_IDS: ${GLIX_ADMIN_ACCOUNT_IDS:-}
+      # Oyun sonu yorumu (dil modeli servisi anahtarı; boşsa özellik tamamen kapalı).
+      GLIX_AI_KEY: ${GLIX_AI_KEY:-}
     volumes:
       - glix-data:/data
     mem_limit: 512m

@@ -23,7 +23,7 @@ import "./stage-view.css";
 
 /**
  * Zaman Bombası Hafızası, büyük ekran (ZB-U8): tuş takımı sol yarıda, sağda büyük oyuncu sütunu (avatar, ad,
- * durum). Bomba sırası gelenin kartında durur (giriş evresinde fitili yanar) ve atışta seçilen karta uçar.
+ * durum, genel skor; kabuğun "Oyuncular" paneli bu oyunda gizlidir, `tvOwnBoard`). Bomba sırası gelenin kartında durur (giriş evresinde fitili yanar) ve atışta seçilen karta uçar.
  * Yalnız herkese açık görünüm kullanılır.
  */
 export default function ZamanBombasiStageView(props: GameScreenProps) {
@@ -266,6 +266,10 @@ export default function ZamanBombasiStageView(props: GameScreenProps) {
                       <span class="zbtv__name">{p.nickname}</span>
                       <span class="zbtv__state">{st().label}</span>
                     </div>
+                    <span class="zbtv__score" role="img" aria-label={`Genel skor ${p.score}`}>
+                      <b>{p.score}</b>
+                      <small>puan</small>
+                    </span>
                     <span class="zbtv__bombslot" aria-hidden="true">
                       <Show when={holder() && !flying()}>
                         <FuseBomb class="zbtv__bomb" burnt={burnt} live={phase() === "input"} rush={rush()} />

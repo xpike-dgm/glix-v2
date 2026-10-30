@@ -1,10 +1,13 @@
 /**
  * Yalnız geliştirme önizlemesi: Zehirli Kadeh ekranları (`&n=2..8` oyuncu sayısı).
  *   ?mock=zehirli-briefing    anlatım
- *   ?mock=zehirli-play        takas hakkın duruyor
- *   ?mock=zehirli-used        takasını yaptın, geçmiş görünüyor
- *   ?mock=zehirli-spectator   katılımcı değilsin
- *   ?mock=zehirli-reveal      sonuç (sen temiz kadehli); `&poison=1` sen zehirli
+ *   ?mock=zehirli-play        haklar duruyor (kadehe dokun: "Kontrol et" / "Takas et" çalışır)
+ *   ?mock=zehirli-checked     kontrol hakkını kullandın: kontrol ettiğin kadehte sana özel rozet
+ *   ?mock=zehirli-used        takas ve kontrol yapıldı, geçmiş görünüyor (rozet kadehle birlikte yer değiştirdi)
+ *   ?mock=zehirli-tense       son 5 saniye: mum titrer, masa kararır
+ *   ?mock=zehirli-spectator   katılımcı değilsin (TV ile aynı görünüm; kontrol/zehir bilgisi yok)
+ *   ?mock=zehirli-reveal      "Şerefe!" açılış evresi, tam ekran (sen temiz kadehli); `&poison=1` sen zehirli;
+ *                             `&t=<ms>` açılışın o anından başlar (ör. `t=900` tokuşturma, `t=20000` son hâl)
  */
 import type {
   GameInfo,
@@ -14,8 +17,8 @@ import type {
   RoomSnapshot,
   ZehirliKadehPublicView,
 } from "@glix/engine";
-import { zehirliKadeh, zehirliKadehPoisonCount } from "@glix/engine";
-import { useMockSender } from "../net/client.js";
+import { LATE_ACTION_GRACE_MS, zehirliKadeh, zehirliKadehPoisonCount } from "@glix/engine";
+import { mockAck, useMockSender } from "../net/client.js";
 import { applySnapshot, setState } from "../net/store.js";
 
 const NAMES = ["Cihad", "Elif", "Mert", "Zeynep", "Kaan", "Defne", "Burak", "Ayşe"];
@@ -44,7 +47,10 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
   let now = Date.now();
   const briefing = kind === "zehirli-briefing";
   const reveal = kind === "zehirli-reveal";
-  const phase: RoomPhase = briefing ? "briefing" : reveal ? "results" : "playing";
+  const tense = kind === "zehirli-tense";
+  const revealAt = Math.max(0, Number(params.get("t")) || 0);
+  // "Şerefe!" açılışı oyunun kendi evresidir: faz hâlâ "playing", sonuç görünümü açık.
+  const phase: RoomPhase = briefing ? "briefing" : "playing";
   let startedAt = now - 7_000;
 
   const holdings: Record<string, number> = Object.fromEntries(ids.map((id, i) => [id, i]));
@@ -57,7 +63,7 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
     swaps = [...swaps, { seq: swaps.length + 1, from, to, at }];
     swapped = [...swapped, from];
   };
-  if (kind === "zehirli-used" || kind === "zehirli-spectator" || reveal) {
+  if (kind === "zehirli-used" || kind === "zehirli-spectator" || tense || reveal) {
     swap(SELF === ids[0] && !spectator ? SELF : "p1", "p2", now - 4_000);
     if (n > 3) swap("p3", "p1", now - 2_000);
   }
@@ -65,13 +71,20 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
     params.get("poison") === "1"
       ? ids.slice(0, zehirliKadehPoisonCount(n)).map((_, i) => i)
       : ids.map((_, i) => i).slice(n - zehirliKadehPoisonCount(n));
+  // Kontrol: "checked" ve "used" ekranlarında sen (p0) p1'in başlangıçtaki kadehini (1) kontrol etmişsin.
+  let check: { cup: number; poisoned: boolean } | null =
+    kind === "zehirli-checked" || kind === "zehirli-used" || tense
+      ? { cup: 1, poisoned: poisonedCups.includes(1) }
+      : null;
 
+  // Her yayın yeni sürüm: aynı saniyedeki iki yayın da uygulanır (kontrol yanıtı gibi).
+  let rev = Math.floor(Date.now() / 1000);
   const publish = (): void => {
     const endsAt = startedAt + 20_000 + swaps.length * 5_000;
     const poisoned = ids.filter((id) => poisonedCups.includes(holdings[id] as number));
     const pub: ZehirliKadehPublicView = {
       startedAt: reveal ? now - 40_000 : startedAt,
-      endsAt: reveal ? now - 10_000 : endsAt + 8_000,
+      endsAt: reveal ? now - revealAt - LATE_ACTION_GRACE_MS : tense ? now + 4_600 : endsAt + 8_000,
       players: ids,
       holdings,
       swapped,
@@ -80,7 +93,6 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
       ended: reveal,
       result: reveal ? { clean: ids.filter((id) => !poisoned.includes(id)), poisoned, poisonedCups } : null,
     };
-    const scores = Object.fromEntries(participants.map((id) => [id, poisoned.includes(id) ? 0 : 1]));
     const match: MatchSnapshot = {
       round: 0,
       total: 3,
@@ -91,14 +103,14 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
       participants,
       readyIds: briefing ? ["p1", "p2"] : [],
       continueIds: [],
-      phaseStartedAt: startedAt,
-      phaseEndsAt: briefing ? now + 40_000 : reveal ? now + 60_000 : null,
+      phaseStartedAt: reveal ? now - 40_000 : startedAt,
+      phaseEndsAt: briefing ? now + 40_000 : null,
       publicView: briefing ? null : pub,
-      view: briefing ? null : { role: spectator ? "spectator" : "player" },
-      result: reveal ? { miniScores: scores, awards: scores } : null,
+      view: briefing ? null : spectator ? { role: "spectator", check: null } : { role: "player", check },
+      result: null,
     };
     const snapshot: RoomSnapshot = {
-      rev: Math.floor(Date.now() / 1000) + 1,
+      rev: ++rev,
       serverNow: Date.now(),
       code: "KX7QP",
       hostId: SELF,
@@ -120,8 +132,20 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
   useMockSender((msg) => {
     if (msg.type !== "action") return;
     const p = msg.payload as { kind?: string; target?: string } | null;
-    if (p?.kind !== "swap" || typeof p.target !== "string" || swapped.includes(SELF)) return;
+    if (typeof p?.target !== "string") return;
+    if (p.kind === "check" && check === null && p.target !== SELF) {
+      const cup = holdings[p.target] as number;
+      // Gerçek ağ gecikmesi gibi: kapak biraz titresin.
+      setTimeout(() => {
+        check = { cup, poisoned: poisonedCups.includes(cup) };
+        mockAck(msg.seq, { ok: true });
+        publish();
+      }, 450);
+      return;
+    }
+    if (p.kind !== "swap" || swapped.includes(SELF)) return;
     swap(SELF, p.target, Date.now());
+    mockAck(msg.seq, { ok: true });
     publish();
   });
   setState("session", { token: "mock", playerId: SELF, roomCode: "KX7QP" });

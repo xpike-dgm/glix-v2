@@ -1013,46 +1013,85 @@ kaç kişinin aldığına göre ürünün oyuncuya sağladığı değer değişi
 1. Minimum oyuncu / maksimum oyuncu: [3-8]
 2. Her oyuncunun başlangıç bütçesi: [Her oyuncuya 60 kredi verilir. Kredi
    gerçek para değildir; yalnızca bu mini oyunun gizli alışveriş bütçesidir.]
-3. Ürün havuzu, ürün fiyatları ve ürün sayısı nasıl belirlenir?: [İlk sürümde
-   bütün oyuncuların gördüğü sabit 12 ürünlük havuz kullanılır; ürün sırası her
-   maçta karıştırılır. Fiyatlar kombinasyon bırakacak şekilde belirlenmiştir:]
+3. Ürün havuzu, ürün fiyatları ve ürün sayısı nasıl belirlenir?: [20 ürünlük
+   havuz. Her maçta bunlardan **12'si** rafa gelir (sunucu rastgeleliğiyle; aynı
+   tohum aynı rafı verir) ve fiyatları maç başına **taban fiyatın ±%30'u** içinde
+   oynar: her zaman tam sayı, **6–40** arası. Raf herkes için aynıdır (ürünler,
+   fiyatlar ve sıra). **Ürün sayısı sınırı yoktur:** tek sınır bütçedir (60
+   kredi) ve her üründen bir tane alınır; parası yettiği kadar ürün alınabilir.]
 
-   | Ürün | Fiyat (kredi) |
-   |---|---:|
-   | Hologram Sticker | 8 |
-   | Enerji İçeceği | 10 |
-   | Neon Rozet | 12 |
-   | Retro Kartuş | 15 |
-   | Mini Hoparlör | 18 |
-   | Arcade Eldiveni | 20 |
-   | Piksel Kamera | 22 |
-   | Jet Çanta | 24 |
-   | Kristal Kulaklık | 26 |
-   | Holo Kask | 28 |
-   | Mini Drone | 32 |
-   | Gizli Sandık | 36 |
-4. Her oyuncu kaç ürün seçebilir; aynı üründen birden fazla alınabilir mi?: [bütcesi dahilinde istediği kadar ürün alabilir bir üründen sadece bir kez alabilir]
-5. Alışverişler gizli mi; ürün seçimleri ne zaman açılır?: [gizli , tur sonunda]
-6. Ürün değeri alıcı sayısına göre tam olarak nasıl hesaplanır?: [bir ürünü kaç kişi seçtiyse değeri o seçilen sayıya bölünür örnek : 30 tl ye bir ürün var 2 kişi bu ürünü seçmiş değeri artık 15 oldu]
-7. Aşamalar ve süreler: [tek aşama - 30 saniye]
-8. Bütçeyi aşma veya sepet göndermeme sonucu: [bütçe aşılamaz - sepet göndermezse sepetinin değeri direkt 0 olarak kabul edilir]
-9. Mini oyun puanı ve en değerli sepet eşitliği: [en yüksek değerde ki sepet +1 puan alır - en değerli sepetler de birden fazla aynı varsa bunların hepsi +1 alır]
+   | No | Ürün | Taban fiyat | Maçtaki aralık |
+   |---:|---|---:|---|
+   | 0 | Hologram Sticker | 8 | 6–10 |
+   | 1 | Enerji İçeceği | 10 | 7–13 |
+   | 2 | Neon Rozet | 12 | 9–15 |
+   | 3 | Retro Kartuş | 15 | 11–19 |
+   | 4 | Mini Hoparlör | 18 | 13–23 |
+   | 5 | Arcade Eldiveni | 20 | 14–26 |
+   | 6 | Piksel Kamera | 22 | 16–28 |
+   | 7 | Jet Çanta | 24 | 17–31 |
+   | 8 | Kristal Kulaklık | 26 | 19–33 |
+   | 9 | Holo Kask | 28 | 20–36 |
+   | 10 | Mini Drone | 32 | 23–40 |
+   | 11 | Gizli Sandık | 36 | 26–40 |
+   | 12 | Lazer Kalem | 11 | 8–14 |
+   | 13 | Ses Kartı | 13 | 10–16 |
+   | 14 | Retro Joystick | 17 | 12–22 |
+   | 15 | Plazma Lamba | 19 | 14–24 |
+   | 16 | Mini Robot | 23 | 17–29 |
+   | 17 | Hologram Saat | 25 | 18–32 |
+   | 18 | Neon Kaykay | 30 | 21–39 |
+   | 19 | VR Gözlük | 34 | 24–40 |
+4. Her oyuncu kaç ürün seçebilir; aynı üründen birden fazla alınabilir mi?: [bütcesi dahilinde istediği kadar ürün alabilir bir üründen sadece bir kez alabilir; yalnız raftaki ürünler alınabilir; ürün sayısı sınırı yoktur]
+5. Alışverişler gizli mi; ürün seçimleri ne zaman açılır?: [gizli , tur sonunda. İstisna: 15. saniyedeki vitrin fısıltısı (madde 15) yalnız ürün başına talep seviyesini açar]
+6. Ürün değeri alıcı sayısına göre tam olarak nasıl hesaplanır?: [bir ürünü kaç kişi seçtiyse değeri o seçilen sayıya bölünür örnek : 30 tl ye bir ürün var 2 kişi bu ürünü seçmiş değeri artık 15 oldu. Bölünen her zaman bu maçtaki **tam** fiyattır; kupon değeri değiştirmez]
+7. Aşamalar ve süreler: [tek aşama - 30 saniye; 15. saniyede vitrin fısıltısı; ardından 8 sn sonuç açılışı]
+8. Bütçe aşma veya sepet göndermeme sonucu: [bütçe aşılamaz. Ayrı bir "sepet gönderme" adımı yoktur: sepet canlı olarak sunucuda tutulur ve süre bittiğinde (ya da herkes Tamam dediğinde) sunucudaki son sepet geçerlidir. Hiç ürün almayan oyuncunun sepet değeri 0 kabul edilir]
+9. Mini oyun puanı ve en değerli sepet eşitliği: [en değerli sepet **+2**, ikinci en değerli sepet **+1**, diğerleri 0; **eksi puan yoktur**. Birincide eşitlik varsa eşit olanların hepsi +2 alır ve sonraki farklı değer +1 alır; ikincide eşitlik varsa hepsi +1. Değeri 0 olan (boş sepet) ödül almaz. Herkesin sepet değeri aynıysa kimse puan almaz]
 10. Genel skora aktarım ve final bonusu: [direkt genel puana eklenir]
 11. Turun bitiş koşulu: [sürenin dolması]
 12. Tutorialda gösterilecek üç adım:
-    1. 60 kredilik gizli bütçeni gör.
-    2. İstediğin ürünleri sepetine koy; aynı üründen bir tane alabilirsin.
-    3. Az kişinin seçtiği pahalı ürünler daha değerli olur; en değerli sepet +1.
+    1. Raf ve fiyatlar her maç değişir; gizli kuponunla bir ürün yarı fiyat.
+    2. Bir ürünü kaç kişi aldıysa değeri o sayıya bölünür; 15. saniyede vitrin fısıldar.
+    3. En değerli sepet +2, ikinci +1 alır.
 13. Neon market, ürün kartları, kasa ve sepet animasyonları: Telefon ekranında
-    yatay kaydırılabilir neon raflar, her üründe fiyat ve kapalı alıcı rozeti
-    bulunur. Sepete eklenen ürünler küçük kredi jetonlarıyla kasaya akar. Tur
-    bitince raf kepengi açılır; her ürünün fiyatı kaç kişi aldıysa ona bölünür,
-    sepet değerleri hesaplanırken ürün kartları ilgili oyunculara ışınlanır.
+    gerçek bir mağaza rafı: renkli ürünler, büyük görseller, her sıranın altında
+    neon raf tahtası, iple asılı fiyat etiketi. Yalnız bütçenin yetmediği ürün
+    soluktur. Dokunulan ürünün küçük kopyası üstteki sepet şeridine uçar, bütçe
+    sayısı dönerek değişir. Son 10 saniyede süre şeridi kızarır, son 3 saniyede
+    "Kasa kapanıyor!" yazısıyla kepenk biraz iner (raf kullanılabilir kalır).
+    Tamam diyenin ekranında paketlenmiş poşet görünür. Tur bitince sonuç sahne
+    sahne açılır: kepenk kalkar → ürün ürün alıcıların avatarları, bölünen fiyat
+    ya da "TEK BAŞINA!" → sepetler en değersizden en değerliye → puanlar üstteki
+    puan yazısına uçar; herkesin kuponu satırında görünür.
 14. Özel durumlar: Sepet bütçe aşımına izin vermez; son geçerli sepet sunucuda
-    tutulur. Sepet göndermeyen veya hiç ürün almayan oyuncunun sepet değeri 0
-    kabul edilir. En yüksek toplam değer eşitse o oyuncuların tamamı +1 alır;
-    ürün değerleri tam olmayan sayılarda iki ondalık basamakla hesaplanır ancak
-    sıralama yuvarlanmamış sunucu değeriyle yapılır.
+    tutulur ve süre bittiğindeki hâli geçerlidir (Tamam demek şart değildir).
+    Hiç ürün almayan oyuncunun sepet değeri 0 kabul edilir ve ödül almaz. Ürün değerleri tam olmayan sayılarda iki ondalık
+    basamakla gösterilir ancak sıralama yuvarlanmamış sunucu değeriyle yapılır.
+15. Vitrin fısıltısı: Alışverişin **15. saniyesinde** raftaki her ürünün üstünde
+    talep ateşi belirir. Seviye, o ürünü o anda sepetinde tutan oyuncuların
+    oranıdır (bütün katılımcılar içinde; kendi seçimin dahil): kimse yoksa ateş
+    yok, **≤%25** bir alev, **≤%50** iki alev, **>%50** üç alev. Ateş 15.
+    saniyedeki sepetlere göre bir kez hesaplanır ve **donar** (sonraki
+    değişikliklerle güncellenmez; tam 15. saniyede gelen eylem sayılmaz). Herkes
+    (izleyici ve TV dahil) yalnız seviyeyi görür; kimin aldığı ve tam sayı asla
+    gösterilmez. Herkes 15. saniyeden önce Tamam derse ateş gösterilmez.
+16. Gizli kupon: Alışveriş başında her oyuncuya raftaki bir üründe **%50
+    indirim** kuponu verilir; iki oyuncuya aynı ürün düşmez. Kupon yalnız
+    **ödenen fiyatı** düşürür: indirimli fiyat **tam sayıya yukarı yuvarlanır**
+    (15 → 8, 27 → 14) ve bütçe kontrolü bu fiyatla yapılır. Ürünün **değeri**
+    yine tam fiyat ÷ alıcı sayısıdır. Kuponu kullanmak zorunlu değildir. Kupon
+    yalnız sahibinin ekranında görünür; sonuçta herkesin kuponu açılır.
+17. Maç kartlarıyla etkileşim (K5–K7): Mini oyun puanı ham puanla aynıdır
+    (+2 / +1 / 0); "birinci" +2 alanlar, "sonuncu" 0 alanlardır (en az bir kişi
+    ödül aldıysa). Herkes 0 aldıysa herkes birincidir, kimse sonuncu değildir.
+    Örnekler: Çift Puan +2'yi +4, +1'i +2 yapar; Altın Dokunuş +2'yi +6 yapar;
+    Kendine Güven birinciye +2 (toplam +4), ikinciye ve diğerlerine −1; Sigorta
+    0 alana +1 (ikinci sonuncu sayılmaz); Ters Köşe sıralamayı tersine çevirir
+    (0 alanlar +2 ve +1'in toplamını paylaşır); Lanet artı puanı 0'a çeker;
+    Vergi/Hırsız 1 puan geçirir; Çelme ve kötü kartlar puanı eksiye
+    düşürebilir, Kalkan bunu 0'a çeker. Oyunun kendisi eksi puan vermez. Maç
+    listesi kartları (K7) bu oyundan etkilenmez.
 
 ## 20. Aşırı Yükleme — `asiri-yukleme`
 
@@ -1072,8 +1111,9 @@ Eski faz 18 saniyedir.
    (kişisel, ortak, izleyici) gösterilmez, toplam yalnız sonuç ekranında açılır]
 5. Aşamalar ve süreler: [görünür süre yok; enerji barı 100 olana kadar devam eder. 100 olunca oyunculara
    gözükmeyecek bir 3 saniyelik tehlike penceresi başlar (amaç: yanlışlıkla birisi barı patlatabilir). Tur, 100'ü
-   aşan ilk tıkta bitmez; pencere sonuna kadar sürer, 3 saniye dolunca tur biter. Teknik üst sınır: oyunun
-   başından 90 sn.]
+   aşan ilk tıkta bitmez; pencere sonuna kadar sürer, 3 saniye dolunca tur biter. Bar dolduysa pencere her zaman
+   tam 3 saniye sürer. Teknik üst sınır: oyunun başından 90 sn; yalnız bar dolmadıysa uygulanır (bar 89,5. sn'de
+   dolarsa pencere 92,5. sn'de biter ve 90. sn'deki tık "sonra" sayılır).]
 6. Kapasiteyi aşan tıklamada ne olur?: [tur bitmez; bar 100'ü geçtikten sonra (pencerede) basan herkes patlar.
    Her oyuncunun 100'den önceki ve sonraki tık sayıları ayrı tutulur. Toplu mesajda 100'e kadar olan kısım
    "önce", aşan kısım "sonra" sayılır.]
@@ -1111,6 +1151,7 @@ Eski faz 18 saniyedir.
   tık patlatır ve tur o anda biterdi).
 - Patlama cezası: 100'den sonra en çok basan tek kişi -2, diğer patlayanlar -1 (eşitlikte hepsi -1; tek patlayan -1).
 - O7'deki "patlamayanlar arasında en az tıklayana -1" cezası tamamen kaldırıldı: kimse patlamazsa hiç eksi puan yok.
+- Bar dolduysa tehlike penceresi her zaman tam 3 saniye sürer; 90 sn teknik sınır yalnız bar dolmadıysa uygulanır.
 - Tek turlu oyundur ve mini→genel dönüşümü değişmez: puanlar doğrudan genel skora eklenir.
 
 ## 21. Kontrol Paneli Kaosu — `kontrol-paneli-kaosu`
@@ -1149,10 +1190,10 @@ yani birbirlerinin ne yapcağı birbirinde yazıyor birbirlerinde çözümü alm
 13. Kontrol panelleri, kablolar, ışıklar ve kaos animasyonları: Dört kablo
     `mavi`, `yeşil`, `kırmızı`, `sarı` olarak metalik neon kanallarda görünür.
     Her panelin sırası oyuncuya özel ve mümkün olduğunca benzersizdir. Not
-    kağıdı kabloların altında kısa bir hologram metni olarak yalnızca ipucu
-    sahibine görünür. Oyuncular doğru koşulu sesli söylediğinde hedef panelde
-    ilgili kablo nabız atar; kesme anında enerji akışı doğruysa yeşil, yanlışsa
-    kesik kırmızı kıvılcım oynar.
+    kağıdı kabloların altında yalnızca ipucu sahibine görünür. Kesme anında
+    kablo kopar ve kıvılcım çıkar; doğru/yanlış bilgisi dalga sonucunda açılır
+    (doğruysa yeşil, yanlışsa kırmızı). Yanlış kesimin tek anlık tepkisi ortak
+    bomba saatinin 5 sn atlamasıdır (aşağıdaki dalga değişikliği).
 14. Özel durumlar: Her oyuncu kendi paneli hakkında ipucunun kimde olduğunu
     bilmez. Her ipucu, başka bir oyuncunun panelindeki dizilimi tarif eder ve
     kesilecek kablo rengini söyler; ipucu metni hedef oyuncunun adını doğrudan
@@ -1164,6 +1205,47 @@ yani birbirlerinin ne yapcağı birbirinde yazıyor birbirlerinde çözümü alm
 **Değişiklik (sahip onayı, Ekim 2026):** Kesim tek seferlik ve gizli olduğundan, **bağlı bütün katılımcılar
 kestiğinde** oyun 1 saniye sonra erken biter; bağlantısı kopan oyuncu beklenmez (eskiden kopuk oyuncu da beklenirdi). Kopuk
 oyuncunun kesimi yoksa o oyuncu için sonuç süre bitmiş gibi hesaplanır (kesmemiş = puan yok).
+
+**Değişiklik (sahip onayı, Ekim 2026 — üç dalga, KP-M1…M5):** Bu bölüm yukarıdaki tek aşama, süre ve puan
+cevaplarının yerine geçer; geri kalanı (2–8 oyuncu, ipucu zinciri, gizlilik, renk körlüğü modu) aynen geçerlidir.
+
+1. **Üç dalga:** Dalga 1 "Isınma" 25 sn (4 kablo, 2 koşullu "N. kablo R ise" ipucu), dalga 2 "Karmaşa" 25 sn
+   (4 kablo, yeni ipucu türleri), dalga 3 "Kaos" 20 sn (**5 kablo**, 5. renk **mor**; üç koşullu ya da karma ipucu).
+   Her dalgada yeni paneller (her oyuncuda farklı dizilim; dalga 1 ve 2 dizilimleri de birbirinden farklı) ve
+   yeniden karıştırılmış ipucu zinciri gelir: 3+ oyuncuda hiçbir taşıyıcı önceki dalgada taşıdığı kişinin notunu
+   taşımaz (2 oyuncuda tek döngü olduğundan eşleşme aynı kalır).
+2. **Kesim:** Her dalgada herkesin **tek ve geri alınamaz** bir kesim hakkı vardır; yeni dalgada hak yenilenir. 4
+   kablolu dalgada mor kesilemez. Dalga bittikten sonra (arada ya da sonda) gelen kesim reddedilir; bir dalga için
+   gönderilip sonraki dalgada ulaşan kesim de yeni dalgaya sayılmaz.
+3. **Dalga başına erken bitiş:** Bağlı bütün katılımcılar o dalgada kestiyse dalga 1 sn sonra biter; kopuk oyuncu
+   beklenmez.
+4. **Ara:** Dalga 1 ve 2'den sonra 4 sn'lik kısa sonuç: herkesin o dalgadaki kesimi (renk, ✓/✗), ipucu taşıyıcısı ve
+   o dalganın imha puanı. Biten dalganın panelleri ve ipuçları bu andan itibaren herkese açıktır.
+5. **Yeni ipucu türleri (dalga 2 ve 3):** olumsuz ("2. kablo kırmızı değil ve 4. kablo sarıysa maviyi kes"),
+   komşuluk ("Mavi ile sarı yan yanaysa yeşili kes"), konum hedefi ("1. kablo yeşilse en alttaki kabloyu kes";
+   en üstteki ya da en alttaki), sıra ("Kırmızı maviden yukarıdaysa sarıyı kes"). Dalga 2'de bu dört türden biri,
+   dalga 3'te üç "N. kablo R" koşulu ya da en az bir yeni türü içeren 2–3 koşullu karma ipucu rastgele seçilir;
+   dalga 3'te ipuçlarının yaklaşık üçte biri konum hedeflidir. Her ipucu hedef panelde doğrudur ve o dalganın
+   panelleri arasında **yalnız hedef paneli** tanımlar (üretimde denetlenir). İstenen tür bunu sağlayamazsa
+   daha basit türe düşülür ("N. kablo R" koşulları ve renk hedefi). Doğru kablo sistemce kesin hesaplanır (konum
+   hedefinde o konumdaki kablonun rengi). İpucu oyuncu adı içermez.
+6. **Ortak bomba saati:** Dalganın süresi herkesin gördüğü bomba saatidir. **Yanlış kesim saatten herkes için 5 sn
+   düşer**; saat 3 sn'nin altına inmez (kalan 3 sn ya da daha azken gelen yanlış kesim süre düşürmez). Hangi
+   kablonun yanlış olduğu söylenmez; herkes yalnız saat atlamasını görür. Doğru/yanlış bilgisi kesen kişiye de
+   dalga sonucuna kadar gösterilmez; saat atlaması herkese göründüğü için kesen kişi dolaylı anlayabilir (kabul
+   edilmiş durum). Saat sıfıra inince dalga biter; kesmeyenler kesmemiş sayılır. Ceza süre olduğundan eksi puan yoktur.
+7. **Puan:** Her dalgada imha puanı toplanır: doğru kesen +1, o panelin ipucunu taşıyan +1. Oyun sonunda mini oyun
+   puanı (genel skora eklenen) toplam imha puanından verilir: en yüksek toplam **+2**, ikinci farklı toplam **+1**,
+   diğerleri 0. Birincide eşitlikte hepsi +2 ve sonraki farklı değer +1. Toplamı 0 olan ödül almaz. Herkesin
+   toplamı aynı ve 0'dan büyükse **herkes +1** alır. Eksi puan yoktur.
+8. **Zaman çizelgesi:** 25 + 4 + 25 + 4 + 20 sn ve sonda 8 sn sonuç açılışı (en çok 86 sn; erken bitiş ve saat
+   atlamaları sonraki dalgaları öne çeker). Sonuç açılışında üç dalganın kesimleri, toplam imha puanı ve ödül
+   görünür; oyun bu 8 sn'nin sonunda biter.
+9. **Kartlar:** Kart hesabı mini oyun puanına (+2 / +1 / 0) bakar: "birinci" +2 alanlardır (herkes +1 aldıysa ya
+   da herkes 0 ise herkes birincidir), "sonuncu" en düşük mini puanlılardır (genellikle 0 alanlar; toplamı 0'dan
+   büyük ama ödül almayanlar da dahil). Herkes eşitse kimse sonuncu sayılmaz.
+10. Eski "doğru koşul sesli söylenince kablo nabız atar" maddesi kaldırıldı (sistem konuşmayı duymaz); yerine
+    6. maddedeki saat tepkisi geçer.
 
 ## 22. Zehirli Kadeh — `zehirli-kadeh`
 
@@ -1179,6 +1261,14 @@ olmayanlar +1, zehirli kadehi olan oyuncu 0 alır; eski faz 30 saniyedir.
 1. Minimum oyuncu / maksimum oyuncu: [2-8]
 2. Kaç zehirli kadeh vardır; başlangıçta nasıl dağıtılır?: [2-3 oyuncu da 1 tane 4-5 oyuncuda 2 tane 6-8 oyuncuda 3 tane zehirli kadeh vardır]
 3. Her oyuncu kendi kadehinin zehirli olup olmadığını görür mü?: [yok göremez]
+   - **Kontrol hakkı (sahip kararı, ZK-M2 değiştirilmiş):** her oyuncunun **1 kontrol hakkı** vardır. Süre
+     içinde istediği an, kendisi dışındaki bir oyuncunun **o anki** kadehini seçip gizlice kontrol eder; sonuç
+     (zehirli/temiz) yalnız kendisine görünür ve oyun boyunca hatırlanır. Bilgi **kadeh numarasına** bağlıdır:
+     kadeh sonra takasla yer değiştirse de "bu kadeh temiz/zehirli" bilgisi doğru kalır ve kadehi izler. Kendi
+     kadehini kontrol edemez. Kontrol edilen oyuncunun bağlı olması gerekmez. Kimin kimi kontrol ettiği ve kontrol
+     hakkının kullanılıp kullanılmadığı hiçbir ortak görünümde, izleyicide, TV'de ya da başka oyuncuda yoktur;
+     sonuçta da açılmaz. Kontrol süreyi uzatmaz, takas hakkını harcamaz; süre bitince yapılan kontrol reddedilir
+     (takastaki geç gelen eylem payı burada da geçerlidir). Kendi kadehini bilmek yoktur.
 4. Takas kime yapılabilir; kendinle takas mümkün mü?: [kendinle nasıl takas yapıcan akıllı]
 5. Her oyuncunun kaç takas hakkı vardır?: [1 takas hakkı var]
 6. Takas anında mı gerçekleşir; herkes takas geçmişini görür mü?: [takas anlık olarak yapılır süre bitmeden]
@@ -1189,19 +1279,32 @@ olmayanlar +1, zehirli kadehi olan oyuncu 0 alır; eski faz 30 saniyedir.
 11. Genel skora aktarım ve beraberlik: [bu oyunda beraberlik yok temiz kadehi olan herkes puan alır]
 12. Turun bitiş koşulu: [sürenin bitmesi]
 13. Tutorialda gösterilecek üç adım:
-    1. Hangi kadehin zehirli olduğunu göremezsin.
-    2. İstersen bir arkadaşınla tek takas hakkını kullan.
+    1. Bir arkadaşının kadehini gizlice kontrol et (1 hak).
+    2. İstersen biriyle tek takas hakkını kullan; her takas süreyi uzatır.
     3. Süre bittiğinde temiz kadeh +1, zehirli kadeh 0 alır.
-14. Kadeh, zehir, takas, ışık ve patlama animasyonları: Oyuncuların önünde
-    renkli sıvıyla dolu, dışı aynalı neon kadehler durur; kadehin içindeki
-    zehirli durum hiçbir oyuncuya görsel ipucu vermez. Takas düğmesinde iki
-    kadeh arasında kısa bir ışık tüneli oluşur ve her takas sonrası sahne
-    saatinin çevresine 5 saniyelik amber halka eklenir. Sonuçta temiz kadehler
-    altın, zehirliler mor-siyah dumanla işaretlenir.
+14. Kadeh, zehir, takas, ışık ve patlama animasyonları: Ekranın ortasında uzun
+    bir ziyafet masası vardır; kadehler masanın üstünde büyük, her kadehin
+    arkasında sahibinin avatarı ve adı durur. Süre, ekranın üstünde eriyen bir
+    mumdur; her takasta mum biraz uzar ve alev parlar, son 5 saniyede mum
+    titrer, masa kararır, kalp atışı duyulur. Kadehin içindeki zehirli durum
+    hiçbir oyuncuya görsel ipucu vermez. Takasta iki kadeh masanın üstünden yay
+    çizerek yer değiştirir, üstte 2 sn "Ad ⇄ Ad" şeridi çıkar ve masanın altındaki
+    takas geçmişine ok olarak eklenir. Kontrolde seçilen kadeh yalnız kontrol
+    edene gizlice açılır ve üstünde ona özel küçük rozet kalır. Sonuçta önce
+    "Şerefe!" ile kadehler tokuşur, sonra rastgele sırayla tek tek açılır
+    (temiz: altın parıltı, +1; zehirli: avatar yeşile döner, mor duman, 0);
+    oyuncunun kendi kadehi en son açılır.
 15. Özel durumlar: Takas anında sunucu tarafından tek işlem olarak uygulanır;
     aynı anda gelen iki takasta sunucu sırası geçerlidir. Her oyuncu en fazla
     bir kez takas yapabilir ve takas zorunlu değildir. Başlangıç süresi 20
     saniyedir; toplam süre takaslarla uzar ve süre bitince sonuç hemen açılır.
+    Herkes takas hakkını kullandıysa takas süresi son takastan 1 sn sonra
+    biter; kullanılmamış kontrol hakları bu erken bitişi engellemez. Süre
+    bitince (erken bitişte de) oyun hemen bitmez: sabit süreli (8,5 sn)
+    "Şerefe!" açılış evresi başlar, sonuç bu evrenin başında açılır, evrede
+    takas ve kontrol reddedilir; oyun evrenin sonunda biter ve ardından genel
+    sonuç ekranı gelir. Kontrol hakkı
+    her oyuncuda en fazla bir kezdir ve zorunlu değildir.
 
 ## 23. Çapraz Ateş — `capraz-ates`
 

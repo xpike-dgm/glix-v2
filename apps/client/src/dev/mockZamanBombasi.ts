@@ -57,7 +57,7 @@ export function startZamanBombasiMock(kind: string, params: URLSearchParams): vo
     nickname: NAMES[i] ?? `Oyuncu${i}`,
     avatar: i,
     connected: true,
-    score: 0,
+    score: [7, 5, 9, 3, 4, 6, 2, 8][i] ?? 0,
     spectator: false,
   }));
   const spectator = kind === "zaman-spectator";

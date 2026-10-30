@@ -19,7 +19,7 @@ import { createInflow, type Inflow } from "./inflow.js";
 import { createTapRhythm, hapticMs } from "./rhythm.js";
 import { alarm, beat, blast, zap } from "./sounds.js";
 import { revealSchedule } from "./timeline.js";
-import { barParts, parseAsiriYuklemeView, pointsText, resultRows } from "./view.js";
+import { barRatio, parseAsiriYuklemeView, pointsText, resultRows, shortName } from "./view.js";
 
 /** Ses/titreşim ve ağır görsel efektlerin en sık aralığı (ms); tıklamaların kendisi sınırlanmaz. */
 const FX_GAP_MS = 55;
@@ -55,9 +55,19 @@ export default function AsiriYuklemeScreen(props: GameScreenProps) {
   let lastFx = 0;
   onCleanup(() => inflow?.dispose());
 
+  // Efektler kendi düğümlerine bağlıdır: sahne yeniden kurulursa (ref değişir) yenileri kurulur, eskiler bırakılır.
+  let fxCore: HTMLElement | undefined;
+  let fxMotes: HTMLElement | undefined;
   const ensureFx = (): void => {
-    if (!coreFx && coreEl) coreFx = createCoreFx(coreEl);
-    if (!inflow && motesEl) inflow = createInflow(motesEl);
+    if (coreEl && (coreFx === null || fxCore !== coreEl)) {
+      coreFx = createCoreFx(coreEl);
+      fxCore = coreEl;
+    }
+    if (motesEl && (inflow === null || fxMotes !== motesEl)) {
+      inflow?.dispose();
+      inflow = createInflow(motesEl);
+      fxMotes = motesEl;
+    }
   };
 
   /** Bir dokunuşun yerel tepkisi: çekirdek, parçacıklar, vınlama, ritim, titreşim (yalnız kendi hızın). */
@@ -239,6 +249,7 @@ export default function AsiriYuklemeScreen(props: GameScreenProps) {
   });
 
   const avatarOf = (id: string) => props.players.find((p) => p.id === id)?.avatar ?? 0;
+  const nameOf = (id: string) => props.players.find((p) => p.id === id)?.nickname ?? "";
   const connectedOf = (id: string) => props.players.find((p) => p.id === id)?.connected ?? true;
   const myPoints = () => reveal()?.points[props.selfId] ?? 0;
   const isRowShown = (i: number) => shownRows() > i;
@@ -271,7 +282,9 @@ export default function AsiriYuklemeScreen(props: GameScreenProps) {
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        if (props.spectator) return;
+                        // Basılı tutulan tuşun otomatik tekrarı tıklama sayılmaz.
+                        if (e.repeat || props.spectator || reveal()) return;
+                        unlockAudio();
                         batcher.tap();
                         feel(null, null);
                       }
@@ -326,7 +339,6 @@ export default function AsiriYuklemeScreen(props: GameScreenProps) {
                 <ol class="ay__rows">
                   <For each={rows()}>
                     {(row, i) => {
-                      const parts = () => barParts(row, rows());
                       return (
                         <li
                           class="ay__row"
@@ -334,29 +346,34 @@ export default function AsiriYuklemeScreen(props: GameScreenProps) {
                           data-me={row.playerId === props.selfId ? "1" : undefined}
                           data-boom={row.exploded ? "1" : undefined}
                         >
-                          <span class="ay__av">
-                            <Avatar
-                              index={avatarOf(row.playerId)}
-                              size="var(--ay-av, 36px)"
-                              connected={connectedOf(row.playerId)}
-                              mood={row.exploded && isRowShown(i()) ? "out" : undefined}
-                            />
-                            <Show when={row.exploded}>
-                              <svg class="ay__crack" viewBox="0 0 40 40" aria-hidden="true">
-                                <path d="M21 2 L18 13 L24 18 L16 26 L20 38" />
-                                <path d="M24 18 L34 14 M18 13 L8 9 M16 26 L6 30" />
-                              </svg>
-                              <span class="ay__stamp">PATLATTI</span>
+                          <Avatar
+                            index={avatarOf(row.playerId)}
+                            size="var(--ay-av, 36px)"
+                            connected={connectedOf(row.playerId)}
+                            mood={row.exploded && isRowShown(i()) ? "out" : undefined}
+                          />
+                          <div class="ay__mid">
+                            <span class="ay__name">{shortName(nameOf(row.playerId))}</span>
+                            <Show
+                              when={row.exploded}
+                              fallback={
+                                <div class="ay__bar" aria-hidden="true">
+                                  <i
+                                    class="ay__bar-before"
+                                    style={{ width: `${barRatio(row, rows()) * 100}%` }}
+                                  />
+                                </div>
+                              }
+                            >
+                              <span class="ay__boomline">
+                                <span class="ay__stamp">PATLATTI</span>
+                                <span class="ay__over">aşan {row.after}</span>
+                              </span>
                             </Show>
-                          </span>
-                          <div class="ay__bar" aria-hidden="true">
-                            <i class="ay__bar-before" style={{ width: `${parts().before * 100}%` }} />
-                            <i class="ay__bar-after" style={{ width: `${parts().after * 100}%` }} />
                           </div>
                           <span class="ay__clicks">
                             {row.before}
                             <Show when={row.exploded}>
-                              <b class="ay__over">+{row.after}</b>
                               <CbState kind="bad" size={14} />
                             </Show>
                           </span>

@@ -33,7 +33,9 @@ Sahibin kararları:
 4. **Patlayanlar sıralamaya girmez:** 100'den önce ne kadar basmış olursa olsun yalnız patlama cezasını alır.
 5. **Kimse 100'ü geçmezse:** eksi puan yok (bugünkü "en az tıklayana -1" cezası tamamen kalkar). Bar hiç dolmadan
    süre biterse de sıralama ödülü aynı şekilde verilir.
-6. Oyun sırasında toplam yine gösterilmez; toplam yalnız sonuç ekranında (sıralı açılışta) görünür.
+6. **Tehlike penceresi her zaman tam 3 sn:** bar dolduysa tur, 90 sn teknik sınıra takılmadan pencere sonunda
+   biter (90 sn sınırı yalnız bar dolmadıysa uygulanır).
+7. Oyun sırasında toplam yine gösterilmez; toplam yalnız sonuç ekranında (sıralı açılışta) görünür.
 
 ### Kabul edilen arayüz önerileri
 
@@ -68,7 +70,8 @@ Sahibin kararları:
 
 Ayrıntılar: `docs/oneriler/gizli-alisveris.md`. Onaylananlar (dosyadaki ayrıntılarıyla):
 
-- **GA-M1** Her maç farklı raf: 20 ürünlük havuzdan 12'si, fiyatlar maç başına ±%30.
+- **GA-M1** Her maç farklı raf: 20 ürünlük havuzdan 12'si, fiyatlar maç başına ±%30. **Ürün alma limiti yok**
+  (sahip kararı): oyuncu parası yettiği kadar alır; tek sınır bütçe (60 kredi) ve her üründen bir tane.
 - **GA-M2** Gizli kupon: herkese kendine özel bir üründe %50 indirim (yalnız ödenen fiyat düşer, değer değişmez).
 - **GA-M3** Vitrin fısıltısı: 15. saniyede ürünlerin üstünde talep ateşi (🔥/🔥🔥/🔥🔥🔥), 15. saniyedeki duruma göre
   donar.
@@ -172,3 +175,43 @@ Ayrıntılar: `docs/oneriler/zaman-bombasi-hafizasi.md`. Onaylananlar (dosyadaki
 - Onaylanmayanlar: ZB-M4 (tahmin), ZB-M5 (ters dizi), ZB-U6 (ani ölüm girişi), ZB-U7 (tahmin ekranı), ZB-AI1.
 
 **Yeni görsel gerekenler:** fitilli bomba (gövde + fitil + kıvılcım).
+
+## Bozuk Telefon
+
+Ayrıntılar: `docs/oneriler/bozuk-telefon.md`. Onaylananlar (dosyadaki ayrıntılarıyla):
+
+- **BT-M1** Daha hızlı akış: yazma 20 sn, çizme 45 sn, en çok 5 adım, gösteri adımı 2 sn, oylama son adım görününce
+  açılır ve 6 sn, zincir sonucu 2 sn.
+- **BT-M2** İsimsiz oylama: gösteri ve oylamada yazarlar gizli, sonuçta açılır.
+- **BT-M3** Kahkaha puanı (oy +1, sağlam zincir +1) toplanır; mini puan +2 / +1 / 0 (eşitlikler dosyadaki gibi).
+- **BT-U1** Hikâye akışı açılış + çizimlerin çiziliş sırasıyla yeniden çizilmesi.
+- **BT-U2** Kelime ortasından bölünme düzeltmesi, sığdırma.
+- **BT-U3** Çizim tahtası: 10 renk, 4 kalınlık, büyük tuval.
+- **BT-U4** İlk cümle ekranı (telefon kulübesi çizimi, kablodan gönderme animasyonu).
+- **BT-U5** Oylama ekranı (tam ekran büyütme, 😂 damgası).
+- **BT-U6** Zincir sonucu (👑 EN KOMİK, 😂 yığını, sağlam zincir halkası).
+- **BT-U7** "Gecenin en komikleri" galerisi + "Zinciri kaydet" (telefonda PNG).
+- **BT-U8** Ses ve titreşim seti.
+- **BT-U9** TV ekranı.
+- **BT-AI1** "💡 İlham ver" düğmesi (anlık 3 öneri, saklanmaz; ortak yapay zekâ altyapısıyla, API bağlanınca açılır).
+- Onaylanmayanlar: BT-M4 (kör çizim), BT-AI2 (anlamca sağlam zincir), BT-AI3 (zincir anlatıcısı).
+
+**Yeni görsel gerekenler:** eski telefon / telefon kulübesi illüstrasyonu.
+
+## Laf Sokma Düellosu
+
+Ayrıntılar: `docs/oneriler/laf-sokma.md`. Onaylananlar (dosyadaki ayrıntılarıyla):
+
+- **LS-M1** Kahkaha puanı (oy +1, Laf Ustası +1) toplanır; mini puan +2 / +1 / 0 (eşitlikler dosyadaki gibi).
+- **LS-M3** Oylamada önce dokun-seç, sonra "BU DAHA KOMİK" ile onayla (onaydan önce değiştirilebilir).
+- **LS-U1** Düello sahnesi: kırmızı köşe – mavi köşe, ortada VS, spot ışıkları.
+- **LS-U2** Yazma akışı: sorular sırayla tam ekran, boş ikinci soru uyarısı, klavye uyumu, mikrofon.
+- **LS-U4** Açılış: kartlar dönerek yazarı açar, oylar tek tek sayılır, kazanana spot; "LAF USTASI!" gong ve konfeti;
+  "Berabere!".
+- **LS-U5** Final açılışı en az oydan en çoğa, "GECENİN EN KOMİĞİ" tacı (×2 rozeti yok).
+- **LS-U6** Ses ve titreşim seti.
+- **LS-U7** TV sahnesi.
+- Onaylanmayanlar: LS-M2 (final ×2), LS-M4 (3 kişide seyirci oyu), LS-M5, LS-U3 (oylama anı efektleri; seç-onayla
+  davranışı M3 ile gelir, 😂 damgası/kahkaha sesi yok), LS-AI1, LS-AI2.
+
+**Yeni görsel gerekenler:** isteğe bağlı "VS" amblemi ve ring/köşe süsü (CSS ile yapılabilir).

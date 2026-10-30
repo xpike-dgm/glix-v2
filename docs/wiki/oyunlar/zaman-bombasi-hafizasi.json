@@ -289,7 +289,7 @@
     "60. saniyeden sonra dizi ikişer uzar; hayatta kalmak +2, elenmek 0: sona kadar dayanmak tek hedef.",
     "Seçim süresi 4 sn; seçmezsen rastgele seçilir, bu da bombayı sana atmış olanı kurtarabilir."
   ],
-  "tv": "TV/sahne ekranı oyuna özel görünüm (StageView) kullanır: sol yarıda başlık ('<ad> basıyor', 'TEMİZ!', '<ad> seçiyor', '<ad> elendi', 'Süre doldu!'), kalan toplam süre, dört dev renkli tuş (oynatmada sırayla yanar, girişte doğru basışın yankısı) ve 'DİZİ N' ile noktalar; sağ yarıda büyük oyuncu sütunu (avatar, ad, durum: Aktif / Sırada / Basıyor / Bombayı atıyor / Elendi / Hayatta; 6+ oyuncuda iki sütun). Bomba sırası gelenin kartında durur, giriş evresinde fitili yanar ve atışta seçilen karta yay çizerek uçar. Ani ölümde ekran kenarı kırmızı.",
+  "tv": "TV/sahne ekranı oyuna özel görünüm (StageView) kullanır: sol yarıda başlık ('<ad> basıyor', 'TEMİZ!', '<ad> seçiyor', '<ad> elendi', 'Süre doldu!'), kalan toplam süre, dört dev renkli tuş (oynatmada sırayla yanar, girişte doğru basışın yankısı) ve 'DİZİ N' ile noktalar; sağ yarıda büyük oyuncu sütunu (avatar, ad, durum: Aktif / Sırada / Basıyor / Bombayı atıyor / Elendi / Hayatta, ve genel skor). Bu oyunda kabuğun sağdaki 'Oyuncular' paneli gizlidir (kayıtta `tvOwnBoard`); oyun alanı tüm genişliği kullanır. Bomba sırası gelenin kartında durur, giriş evresinde fitili yanar ve atışta seçilen karta yay çizerek uçar. Ani ölümde ekran kenarı kırmızı.",
   "ekranlar": [
     {
       "ad": "zaman-briefing",

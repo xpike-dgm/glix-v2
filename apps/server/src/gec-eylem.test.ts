@@ -1,4 +1,4 @@
-import type { ZehirliKadehPublicView } from "@glix/engine";
+import { ZEHIRLI_KADEH_REVEAL, type ZehirliKadehPublicView } from "@glix/engine";
 import { describe, expect, it } from "vitest";
 import { type Client, k, setupRoom, sleep, startPlaying, until, useServer } from "./testkit.js";
 
@@ -47,7 +47,7 @@ describe("geç gelen eylem payı (250 ms)", () => {
     for (const x of cs) expect(JSON.stringify(x.msgs)).not.toMatch(/poisonedCups|"poisoned"|"clean"/);
   });
 
-  it("faz özgün bitişte değil, 250 ms sonra değişir; sonrasında eylem reddedilir", async () => {
+  it("sonuç özgün bitişte değil, 250 ms sonra açılır; sonrasında eylem reddedilir", async () => {
     const { cs } = await kadehOdasi();
     const [a, b] = cs as [Client, Client, Client, Client];
     const endsAt = pub(a).endsAt;
@@ -55,10 +55,14 @@ describe("geç gelen eylem payı (250 ms)", () => {
     k.clock.advance(endsAt + 249 - k.clock.now());
     await sleep(30);
     expect(a.room.phase).toBe("playing");
+    expect(pub(a).ended).toBe(false);
 
     k.clock.advance(1);
-    await until(() => a.room.phase === "results", "sonuç");
+    // Zehirli Kadeh'te süre bitince önce "Şerefe!" açılış evresi gelir (sonuç görünümü açılır), sonra sonuç fazı.
+    await until(() => pub(a).ended, "açılış evresi");
     expect(await send(b, { kind: "swap", target: a.session.playerId })).toMatchObject({ ok: false });
+    k.clock.advance(ZEHIRLI_KADEH_REVEAL.totalMs);
+    await until(() => a.room.phase === "results", "sonuç");
     expect(a.room.match?.result).not.toBeNull();
   });
 
