@@ -197,3 +197,21 @@ Ayrıntılar: `docs/oneriler/bozuk-telefon.md`. Onaylananlar (dosyadaki ayrınt�
 - Onaylanmayanlar: BT-M4 (kör çizim), BT-AI2 (anlamca sağlam zincir), BT-AI3 (zincir anlatıcısı).
 
 **Yeni görsel gerekenler:** eski telefon / telefon kulübesi illüstrasyonu.
+
+## Laf Sokma Düellosu
+
+Ayrıntılar: `docs/oneriler/laf-sokma.md`. Onaylananlar (dosyadaki ayrıntılarıyla):
+
+- **LS-M1** Kahkaha puanı (oy +1, Laf Ustası +1) toplanır; mini puan +2 / +1 / 0 (eşitlikler dosyadaki gibi).
+- **LS-M3** Oylamada önce dokun-seç, sonra "BU DAHA KOMİK" ile onayla (onaydan önce değiştirilebilir).
+- **LS-U1** Düello sahnesi: kırmızı köşe – mavi köşe, ortada VS, spot ışıkları.
+- **LS-U2** Yazma akışı: sorular sırayla tam ekran, boş ikinci soru uyarısı, klavye uyumu, mikrofon.
+- **LS-U4** Açılış: kartlar dönerek yazarı açar, oylar tek tek sayılır, kazanana spot; "LAF USTASI!" gong ve konfeti;
+  "Berabere!".
+- **LS-U5** Final açılışı en az oydan en çoğa, "GECENİN EN KOMİĞİ" tacı (×2 rozeti yok).
+- **LS-U6** Ses ve titreşim seti.
+- **LS-U7** TV sahnesi.
+- Onaylanmayanlar: LS-M2 (final ×2), LS-M4 (3 kişide seyirci oyu), LS-M5, LS-U3 (oylama anı efektleri; seç-onayla
+  davranışı M3 ile gelir, 😂 damgası/kahkaha sesi yok), LS-AI1, LS-AI2.
+
+**Yeni görsel gerekenler:** isteğe bağlı "VS" amblemi ve ring/köşe süsü (CSS ile yapılabilir).
