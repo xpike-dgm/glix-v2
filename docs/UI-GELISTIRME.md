@@ -175,3 +175,25 @@ Ayrıntılar: `docs/oneriler/zaman-bombasi-hafizasi.md`. Onaylananlar (dosyadaki
 - Onaylanmayanlar: ZB-M4 (tahmin), ZB-M5 (ters dizi), ZB-U6 (ani ölüm girişi), ZB-U7 (tahmin ekranı), ZB-AI1.
 
 **Yeni görsel gerekenler:** fitilli bomba (gövde + fitil + kıvılcım).
+
+## Bozuk Telefon
+
+Ayrıntılar: `docs/oneriler/bozuk-telefon.md`. Onaylananlar (dosyadaki ayrıntılarıyla):
+
+- **BT-M1** Daha hızlı akış: yazma 20 sn, çizme 45 sn, en çok 5 adım, gösteri adımı 2 sn, oylama son adım görününce
+  açılır ve 6 sn, zincir sonucu 2 sn.
+- **BT-M2** İsimsiz oylama: gösteri ve oylamada yazarlar gizli, sonuçta açılır.
+- **BT-M3** Kahkaha puanı (oy +1, sağlam zincir +1) toplanır; mini puan +2 / +1 / 0 (eşitlikler dosyadaki gibi).
+- **BT-U1** Hikâye akışı açılış + çizimlerin çiziliş sırasıyla yeniden çizilmesi.
+- **BT-U2** Kelime ortasından bölünme düzeltmesi, sığdırma.
+- **BT-U3** Çizim tahtası: 10 renk, 4 kalınlık, büyük tuval.
+- **BT-U4** İlk cümle ekranı (telefon kulübesi çizimi, kablodan gönderme animasyonu).
+- **BT-U5** Oylama ekranı (tam ekran büyütme, 😂 damgası).
+- **BT-U6** Zincir sonucu (👑 EN KOMİK, 😂 yığını, sağlam zincir halkası).
+- **BT-U7** "Gecenin en komikleri" galerisi + "Zinciri kaydet" (telefonda PNG).
+- **BT-U8** Ses ve titreşim seti.
+- **BT-U9** TV ekranı.
+- **BT-AI1** "💡 İlham ver" düğmesi (anlık 3 öneri, saklanmaz; ortak yapay zekâ altyapısıyla, API bağlanınca açılır).
+- Onaylanmayanlar: BT-M4 (kör çizim), BT-AI2 (anlamca sağlam zincir), BT-AI3 (zincir anlatıcısı).
+
+**Yeni görsel gerekenler:** eski telefon / telefon kulübesi illüstrasyonu.
