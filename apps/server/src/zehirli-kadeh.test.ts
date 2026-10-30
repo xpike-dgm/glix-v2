@@ -1,6 +1,6 @@
 import type { ZehirliKadehPublicView, ZehirliKadehView } from "@glix/engine";
 import { describe, expect, it } from "vitest";
-import { type Client, k, setupRoom, sleep, startPlaying, sync, until, useServer } from "./testkit.js";
+import { Client, k, setupRoom, sleep, startPlaying, sync, until, useServer } from "./testkit.js";
 
 useServer();
 
@@ -29,7 +29,7 @@ describe("zehirli-kadeh tam maç", () => {
 
     expect(pub(a)).toMatchObject({ endsAt: startedAt + 20_000, poisonCount: 2, ended: false, result: null });
     expect(pub(a).holdings).toEqual({ [ia]: 0, [ib]: 1, [ic]: 2, [id]: 3 });
-    for (const x of cs) expect(view(x)).toEqual({ role: "player" });
+    for (const x of cs) expect(view(x)).toEqual({ role: "player", check: null });
 
     // Reddedilenler: kendiyle, bilinmeyen hedef, çöp.
     expect(await send(a, { kind: "swap", target: ia })).toEqual({ ok: false, reason: "self_target" });
@@ -97,5 +97,61 @@ describe("zehirli-kadeh tam maç", () => {
     expect(pub(a).poisonCount).toBe(1);
     expect(pub(a).swaps).toEqual([]);
     expect(Object.values(a.room.match?.result?.awards ?? {}).sort()).toEqual([0, 1, 1]);
+  });
+});
+
+describe("zehirli-kadeh kontrol hakkı", () => {
+  it("doğrulanır, sonucu yalnız kontrol edene gider; başka oyunculara ve sahneye hiçbir ileti gitmez", async () => {
+    const cs = await setupRoom(["A", "B", "C"]);
+    const [a, b, c] = cs as [Client, Client, Client];
+    a.send({ type: "setGames", gameIds: ["zehirli-kadeh"] });
+    await until(() => a.room.gameIds[0] === "zehirli-kadeh", "oyun seçildi");
+    const tv = await Client.connect();
+    tv.send({ type: "joinStage", code: a.session.roomCode });
+    await until(() => tv.updates.length > 0, "sahne katılımı");
+    const { startedAt } = await startPlaying(cs);
+    await until(() => tv.room.phase === "playing", "sahne oyunda");
+    const [ia, ib] = cs.map((x) => x.session.playerId) as [string, string, string];
+
+    // Bozuk ve kurala aykırı kontroller reddedilir.
+    expect(await send(a, { kind: "check" })).toMatchObject({ ok: false });
+    expect(await send(a, { kind: "check", target: 5 })).toMatchObject({ ok: false });
+    expect(await send(a, { kind: "check", target: ib, extra: 1 })).toMatchObject({ ok: false });
+    expect(await send(a, { kind: "check", target: ia })).toEqual({ ok: false, reason: "self_target" });
+    expect(await send(a, { kind: "check", target: "yok" })).toEqual({ ok: false, reason: "bad_target" });
+    await sync();
+
+    const marks = [b, c, tv].map((x) => x.mark());
+    const before = JSON.stringify([b, c, tv].map((x) => x.room.match));
+    expect(await send(a, { kind: "check", target: ib })).toEqual({ ok: true });
+    await until(() => view(a).check !== null, "kontrol sonucu");
+    const result = view(a).check;
+    expect(result?.cup).toBe(1);
+    expect(typeof result?.poisoned).toBe("boolean");
+    expect(await send(a, { kind: "check", target: ib })).toEqual({ ok: false, reason: "already_checked" });
+    await sync();
+    await sync();
+    // b, c ve TV: kontrolden sonra hiçbir ileti almadı, görüntüleri aynı.
+    [b, c, tv].forEach((x, i) => {
+      expect(x.since(marks[i] as number)).toEqual([]);
+    });
+    expect(JSON.stringify([b, c, tv].map((x) => x.room.match))).toBe(before);
+    for (const x of [b, c, tv]) expect(JSON.stringify(x.msgs)).not.toMatch(/"check":\{/);
+    expect(view(b).check).toBeNull();
+
+    // Kopuk oyuncunun kadehi de kontrol edilebilir.
+    c.ws.close();
+    await until(() => a.room.players.find((p) => p.nickname === "C")?.connected === false, "C koptu");
+    expect(await send(b, { kind: "check", target: c.session.playerId })).toEqual({ ok: true });
+    await until(() => view(b).check !== null, "b kontrol sonucu");
+    expect(view(b).check?.cup).toBe(2);
+
+    // Süre bitince kontrol reddedilir; kontrol sonuçta da kimseye açılmaz.
+    k.clock.advance(startedAt + 20_000 + 250 - k.clock.now());
+    await until(() => a.room.phase === "results", "sonuç");
+    expect(view(a).check).toEqual(result);
+    const r = pub(a).result;
+    expect(r?.poisonedCups.includes(1)).toBe(result?.poisoned);
+    for (const x of [tv]) expect(JSON.stringify(x.msgs)).not.toMatch(/"check":\{/);
   });
 });

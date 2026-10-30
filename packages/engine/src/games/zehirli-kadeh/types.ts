@@ -11,7 +11,20 @@ export function zehirliKadehPoisonCount(players: number): number {
   return players <= 3 ? 1 : players <= 5 ? 2 : 3;
 }
 
-export type ZehirliKadehAction = { kind: "swap"; target: string };
+/**
+ * `swap`: elindeki kadehi hedefin kadehiyle değiştir (kişi başı 1, hedef bağlı olmalı).
+ * `check`: hedefin o anki kadehini gizlice kontrol et (kişi başı 1; hedefin bağlı olması gerekmez).
+ */
+export type ZehirliKadehAction = { kind: "swap"; target: string } | { kind: "check"; target: string };
+
+/**
+ * Kontrol sonucu: yalnız kontrol edenin kişisel görünümünde. Bilgi kadeh NUMARASINA bağlıdır; kadeh sonra takasla
+ * yer değiştirse de doğru kalır. Kimin elindeyken kontrol edildiği bilinçli olarak tutulmaz.
+ */
+export interface ZehirliKadehCheck {
+  cup: number;
+  poisoned: boolean;
+}
 
 /** Herkese açık takas olayı: kim kiminle takas etti (kadeh içeriği yok). */
 export interface ZehirliKadehSwap {
@@ -49,7 +62,11 @@ export interface ZehirliKadehPublicView {
   result: ZehirliKadehResult | null;
 }
 
-/** Kişiye özel görünüm: yalnız rol (kendi kadehin dahil hiçbir kadeh bilgisi yoktur). */
+/**
+ * Kişiye özel görünüm: rol ve (yalnız kendi yaptığın) kontrolün sonucu. Kendi kadehinin durumu hiçbir zaman yoktur.
+ * Kontrol hakkını kullanıp kullanmadığın da yalnız burada (yalnız sana) görünür. İzleyicide `check` hep null.
+ */
 export interface ZehirliKadehView {
   role: "player" | "spectator";
+  check: ZehirliKadehCheck | null;
 }

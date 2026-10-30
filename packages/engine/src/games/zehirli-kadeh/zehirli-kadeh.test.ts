@@ -18,6 +18,8 @@ const start = (n = 4, seed = 1, over: Partial<ZehirliKadehState> = {}): ZehirliK
 });
 const swap = (s: ZehirliKadehState, who: string, target: string, now: number, connected = IDS) =>
   zehirliKadeh.reduce(s, who, { kind: "swap", target }, ctx(now, connected));
+const check = (s: ZehirliKadehState, who: string, target: string, now: number, connected = IDS) =>
+  zehirliKadeh.reduce(s, who, { kind: "check", target }, ctx(now, connected));
 function ok(r: ZehirliKadehState | { rejected: string }): ZehirliKadehState {
   if (isRejected(r)) throw new Error(`reddedildi: ${r.rejected}`);
   return r;
@@ -228,7 +230,7 @@ describe("zehirli-kadeh: gizlilik (yapısal)", () => {
     const s = start(4, 2);
     const mine = JSON.stringify(zehirliKadeh.view(s, "a", ctx(T0)));
     expect(JSON.stringify(zehirliKadeh.view(s, "b", ctx(T0)))).toBe(mine);
-    expect(mine).toBe(JSON.stringify({ role: "player" }));
+    expect(mine).toBe(JSON.stringify({ role: "player", check: null }));
   });
 
   it("zehirli kadeh sayısı herkese açık (kurala göre), hangileri olduğu değil", () => {
@@ -245,6 +247,7 @@ describe("zehirli-kadeh: gizlilik (yapısal)", () => {
 describe("zehirli-kadeh: eylem doğrulama", () => {
   it("geçerli eylemi okur, bozukları reddeder", () => {
     expect(zehirliKadeh.parseAction({ kind: "swap", target: "b" })).toEqual({ kind: "swap", target: "b" });
+    expect(zehirliKadeh.parseAction({ kind: "check", target: "b" })).toEqual({ kind: "check", target: "b" });
     for (const bad of [
       { kind: "swap" },
       { kind: "swap", target: "" },
@@ -252,6 +255,10 @@ describe("zehirli-kadeh: eylem doğrulama", () => {
       { kind: "swap", target: "b", x: 1 },
       { kind: "swap", target: "y".repeat(65) },
       { kind: "trade", target: "b" },
+      { kind: "check" },
+      { kind: "check", target: "" },
+      { kind: "check", target: 3 },
+      { kind: "check", target: "b", cup: 1 },
       [],
       null,
     ]) {
@@ -318,5 +325,168 @@ describe("zehirli-kadeh: erken bitiş (herkes takas hakkını kullandı)", () =>
   it("(f) tick bağlantıya bakmaz", () => {
     const s = everyone();
     expect(zehirliKadeh.tick(s, ctx(T0 + 6_000, []))).toEqual(zehirliKadeh.tick(s, ctx(T0 + 6_000, IDS)));
+  });
+});
+
+describe("zehirli-kadeh: kontrol hakkı", () => {
+  const priv = (s: ZehirliKadehState, who: string | null, now = T0 + 100) =>
+    zehirliKadeh.view(s, who, ctx(now));
+
+  it("hedefin o anki kadehini doğru bildirir (zehirli ve temiz)", () => {
+    const s0 = start(4, 1, { poisoned: [1, 3] });
+    const a = ok(check(s0, "a", "b", T0 + 1000));
+    expect(priv(a, "a").check).toEqual({ cup: 1, poisoned: true });
+    const c = ok(check(a, "c", "a", T0 + 1100));
+    expect(priv(c, "c").check).toEqual({ cup: 0, poisoned: false });
+  });
+
+  it("kontrol hakkı bir kez kullanılır; ikinci kontrol reddedilir", () => {
+    const s = ok(check(start(4), "a", "b", T0 + 1000));
+    expect(reason(check(s, "a", "c", T0 + 2000))).toBe("already_checked");
+    expect(reason(check(s, "a", "b", T0 + 2000))).toBe("already_checked");
+  });
+
+  it("kendi kadehini kontrol edemez; hedef katılımcı olmalı; yalnız katılımcı kontrol eder", () => {
+    const s = start(4);
+    expect(reason(check(s, "a", "a", T0 + 1000))).toBe("self_target");
+    expect(reason(check(s, "a", "zz", T0 + 1000, [...IDS, "zz"]))).toBe("bad_target");
+    expect(reason(check(s, "ghost", "a", T0 + 1000))).toBe("not_participant");
+  });
+
+  it("kopuk oyuncunun kadehi de kontrol edilebilir (bağlı olma şartı yok)", () => {
+    const s = start(4, 1, { poisoned: [1] });
+    const r = ok(check(s, "a", "b", T0 + 1000, ["a", "c", "d"]));
+    expect(priv(r, "a").check).toEqual({ cup: 1, poisoned: true });
+  });
+
+  it("süre bitince reddedilir; son ms'de kabul edilir; başlamadan reddedilir", () => {
+    const s = start(4);
+    expect(reason(check(s, "a", "b", T0 + 19_999))).toBe("kabul");
+    expect(reason(check(s, "a", "b", T0 + 20_000))).toBe("ended");
+    expect(reason(check(finish(s), "a", "b", T0 + 1000))).toBe("ended");
+    expect(reason(check(s, "a", "b", T0 - 1))).toBe("not_started");
+  });
+
+  it("kontrol süreyi, kadehleri ve takas hakkını değiştirmez", () => {
+    const s = start(4);
+    const r = ok(check(s, "a", "b", T0 + 1000));
+    expect(r.endsAt).toBe(s.endsAt);
+    expect(r.holds).toEqual(s.holds);
+    expect(r.swapped).toEqual([]);
+    // Kontrolden sonra takas hakkı durur; takastan sonra kontrol hakkı durur.
+    const t = ok(swap(r, "a", "c", T0 + 2000));
+    expect(reason(check(ok(swap(start(4), "b", "c", T0 + 500)), "b", "a", T0 + 600))).toBe("kabul");
+    expect(t.swapped).toEqual(["a"]);
+  });
+
+  it("bilgi kadeh NUMARASINA bağlıdır: kadeh takasla yer değiştirse de doğru kalır", () => {
+    const s0 = start(4, 1, { poisoned: [1] });
+    // a, b'nin kadehini (1, zehirli) kontrol eder; sonra b c ile takas eder: kadeh 1 artık c'de.
+    let s = ok(check(s0, "a", "b", T0 + 1000));
+    s = ok(swap(s, "b", "c", T0 + 2000));
+    expect(s.holds[2]).toBe(1);
+    expect(priv(s, "a").check).toEqual({ cup: 1, poisoned: true });
+    // a kadeh 1'i kendisi alırsa da bilgi aynı kalır.
+    s = ok(swap(s, "a", "c", T0 + 3000));
+    expect(s.holds[0]).toBe(1);
+    expect(priv(s, "a").check).toEqual({ cup: 1, poisoned: true });
+    // Sonuç bunu doğrular: a zehirli kadehte kaldı.
+    expect(zehirliKadeh.result(finish(s)).miniScores.a).toBe(0);
+  });
+
+  it("aynı kadehi iki kişi kontrol edebilir; ikisi de aynı sonucu görür", () => {
+    const s0 = start(3, 1, { poisoned: [2] });
+    const s = ok(check(ok(check(s0, "a", "c", T0 + 1000)), "b", "c", T0 + 1200));
+    expect(priv(s, "a").check).toEqual({ cup: 2, poisoned: true });
+    expect(priv(s, "b").check).toEqual({ cup: 2, poisoned: true });
+  });
+});
+
+describe("zehirli-kadeh: kontrol gizliliği", () => {
+  const others = (s: ZehirliKadehState, n: number, except: string, now: number) =>
+    JSON.stringify([
+      zehirliKadeh.publicView(s, ctx(now)),
+      ...[...ids(n), null].filter((p) => p !== except).map((p) => zehirliKadeh.view(s, p, ctx(now))),
+    ]);
+
+  it("kontrol eden dışında hiçbir görünüm değişmez (kontrolün yapıldığı bile görünmez)", () => {
+    const n = 5;
+    const s = start(n, 2);
+    const checked = ok(check(s, "a", "c", T0 + 1000));
+    expect(others(checked, n, "a", T0 + 1500)).toBe(others(s, n, "a", T0 + 1500));
+    expect(zehirliKadeh.view(checked, "a", ctx(T0 + 1500))).not.toEqual(
+      zehirliKadeh.view(s, "a", ctx(T0 + 1500)),
+    );
+    // Takaslardan sonra ve süre bitiminden hemen önce de aynı.
+    const sw = (x: ZehirliKadehState) => ok(swap(x, "b", "c", T0 + 2000));
+    expect(others(sw(checked), n, "a", T0 + 2500)).toBe(others(sw(s), n, "a", T0 + 2500));
+    // Sonuç açıldıktan sonra da kontrol izi yok.
+    const end = (x: ZehirliKadehState) => finish(sw(x));
+    expect(others(end(checked), n, "a", end(s).endsAt)).toBe(others(end(s), n, "a", end(s).endsAt));
+    expect(JSON.stringify(zehirliKadeh.publicView(end(checked), ctx(end(s).endsAt)))).not.toContain("check");
+  });
+
+  it("izleyici ve başka oyuncular kontrol sonucunu almaz; kontrol eden alır", () => {
+    const s = ok(check(start(4, 1, { poisoned: [2] }), "a", "c", T0 + 1000));
+    expect(zehirliKadeh.view(s, null, ctx(T0 + 1100))).toEqual({ role: "spectator", check: null });
+    for (const p of ["b", "c", "d"]) expect(zehirliKadeh.view(s, p, ctx(T0 + 1100)).check).toBeNull();
+    expect(zehirliKadeh.view(s, "a", ctx(T0 + 1100)).check).toEqual({ cup: 2, poisoned: true });
+  });
+
+  it("secrets kontrol sonucunu yalnız kontrol edene ait bildirir; zehir bilgisi sonuçta boşalır", () => {
+    let s = start(4, 1, { poisoned: [1, 2] });
+    s = ok(check(s, "a", "b", T0 + 1000));
+    s = ok(check(s, "c", "b", T0 + 1000));
+    s = ok(check(s, "d", "a", T0 + 1000));
+    const sec = zehirliKadeh.secrets(s);
+    const checks = sec.filter((e) => e.ownerIds.length > 0);
+    expect(checks).toHaveLength(2);
+    expect(checks.find((e) => e.ownerIds.includes("a"))?.ownerIds).toEqual(["a", "c"]);
+    expect(checks.find((e) => e.ownerIds.includes("d"))?.ownerIds).toEqual(["d"]);
+    for (const e of checks) {
+      for (const p of ["a", "b", "c", "d", null]) {
+        const json = JSON.stringify(zehirliKadeh.view(s, p, ctx(T0 + 1100)));
+        expect(json.includes(e.value)).toBe(p !== null && e.ownerIds.includes(p));
+      }
+      expect(JSON.stringify(zehirliKadeh.publicView(s, ctx(T0 + 1100))).includes(e.value)).toBe(false);
+    }
+    // Sonuçta zehir kayıtları boşalır, kontrol kayıtları sahiplerine bağlı kalır.
+    const done = zehirliKadeh.secrets(finish(s));
+    expect(done.every((e) => e.ownerIds.length > 0)).toBe(true);
+    expect(done).toHaveLength(2);
+  });
+});
+
+describe("zehirli-kadeh: erken bitiş kontrolden etkilenmez", () => {
+  it("herkes takas edince kontrol hakkı kullanılmamış olsa da 1 sn sonra biter", () => {
+    let s = start(3);
+    s = ok(swap(s, "a", "b", T0 + 2_000));
+    s = ok(swap(s, "b", "c", T0 + 3_000));
+    s = ok(swap(s, "c", "a", T0 + 4_000));
+    expect(s.checks).toEqual([]);
+    expect(s.endsAt).toBe(T0 + 5_000);
+  });
+
+  it("herkes kontrol etse de takas etmeyen varken erken bitmez, süre uzamaz", () => {
+    let s = start(3);
+    s = ok(check(s, "a", "b", T0 + 1_000));
+    s = ok(check(s, "b", "c", T0 + 1_100));
+    s = ok(check(s, "c", "a", T0 + 1_200));
+    expect(s.endsAt).toBe(T0 + 20_000);
+    s = ok(swap(s, "a", "b", T0 + 2_000));
+    s = ok(swap(s, "b", "c", T0 + 3_000));
+    expect(s.endsAt).toBe(T0 + 30_000);
+    s = ok(swap(s, "c", "a", T0 + 4_000));
+    expect(s.endsAt).toBe(T0 + 5_000);
+  });
+
+  it("herkes takas ettikten sonra kalan 1 sn içinde kontrol hâlâ yapılabilir ve bitişi değiştirmez", () => {
+    let s = start(2);
+    s = ok(swap(s, "a", "b", T0 + 2_000));
+    s = ok(swap(s, "b", "a", T0 + 3_000));
+    expect(s.endsAt).toBe(T0 + 4_000);
+    const r = ok(check(s, "a", "b", T0 + 3_500));
+    expect(r.endsAt).toBe(T0 + 4_000);
+    expect(reason(check(s, "a", "b", T0 + 4_000))).toBe("ended");
   });
 });
