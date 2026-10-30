@@ -128,3 +128,23 @@ Ayrıntılar: `docs/oneriler/zehirli-kadeh.md`. Onaylananlar:
 
 **Yeni görsel gerekenler:** ziyafet masası arka planı, mum; kontrol anı için kadehin gizlice açıldığı küçük bir
 görünüm (mevcut kadeh görselleriyle, CSS ile yapılabilir).
+
+## Çapraz Ateş
+
+Ayrıntılar: `docs/oneriler/capraz-ates.md`. Onaylananlar (dosyadaki ayrıntılarıyla):
+
+- **CA-M1** Siper al: hedef yerine siper seçilebilir; siperde hedeflenme cezası yok, +1 de yok; siperdekini
+  hedefleyen "ateş etti" sayılır.
+- **CA-M2** İki tur (20 sn + 20 sn), tur 1 sonrası 5 sn kısa açılış, puanlar toplanır (−2…+2). Eksi puan bu oyunda
+  korunur.
+- **CA-U1** Nişan alma anı (kayarak kilitlenen nişangâh, alttaki kendi avatarın, lazer çizgisi, siper düğmesi).
+- **CA-U2** "Tamam" → "ATEŞE HAZIR" (silah kurma sesi, mermi simgeleri).
+- **CA-U3** Son 5 saniye düello anı ("3 · 2 · 1 · ATEŞ!", ıslık).
+- **CA-U4** Ağır çekim mermili tam ekran açılış; "Seni vuranlar" satırı; "En çok hedeflenen" özeti.
+- **CA-U5** İkinci turda tur 1 bilgisi (rozetler, mini halka).
+- **CA-U6** Ses ve titreşim seti.
+- **CA-U7** İzleyici ve TV.
+- **CA-AI1** Düello spikeri yorumu (ortak yapay zekâ yorum altyapısıyla; API anahtarı bağlanınca açılır).
+- Onaylanmayanlar: CA-M3 (döngü kuralı; bugünkü kural kalır), CA-M4 (eksisiz puanlama), CA-M5 (hedef sayacı).
+
+**Yeni görsel gerekenler:** namlu ateşi, mermi parıltısı, kalkan, cam çatlağı katmanı; isteğe bağlı silah/el.
