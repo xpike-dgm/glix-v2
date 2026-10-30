@@ -4,6 +4,16 @@ Sahiple oyun oyun konuşulan, kabul edilen arayüz önerileri ve kural değişik
 yapıma geçilir; o zamana kadar kod değişmez. Kural değişiklikleri yapılırken `docs/KURALLAR.md` ve wiki içeriği de
 güncellenir.
 
+## Tüm oyunlar (genel kararlar)
+
+- **Sonuç ekranı oyuncu onayıyla geçer:** her oyunun sonuç ekranında "Devam et" düğmesi olur; bağlı oyuncuların
+  hepsi bastığında bir sonraki aşamaya geçilir. Süre sınırı yine vardır ama uzundur (60 sn), böylece kimse sonucu
+  tam görmeden geçmez. Ayrıntılar (yapımda uygulanacak varsayılanlar): yalnız bağlı oyuncular beklenir; kopan
+  oyuncu beklenmez; izleyiciler beklenmez; kimin bastığı avatarlarla gösterilir; sonuç animasyonu bitmeden düğme
+  basılabilir ama animasyon atlanmaz, sayılır. Sahip, sonuç süresi kısalsın derse bu tek ayardan değişir.
+- **Öneri dosyaları:** her oyunun önerileri `docs/oneriler/<oyun>.md` dosyasındadır; onaylananlar bu deftere işlenir.
+  Yeni görsel (asset) üretimi gereken maddeler öneride ayrıca belirtilir.
+
 ## Aşırı Yükleme
 
 ### Kural değişikliği (sahip isteği)
@@ -53,3 +63,27 @@ Sahibin kararları:
 - Sıralı sonuç açılışı ve patlama sahnesi bugünkü 5 sn sonuç süresine sığmayabilir (7-8 sn gerekebilir).
 - Kabul edilmeyenler (şimdilik): tehlike anı efektleri (siren, çatlama, kalp atışı), geri sayımın reaktör
   ateşlemesine dönmesi, izleyici ekranı, diğer oyuncuların kıvılcımları, yanıltıcı uyarılar.
+
+## Gizli Alışveriş
+
+Ayrıntılar: `docs/oneriler/gizli-alisveris.md`. Onaylananlar (dosyadaki ayrıntılarıyla):
+
+- **GA-M1** Her maç farklı raf: 20 ürünlük havuzdan 12'si, fiyatlar maç başına ±%30.
+- **GA-M2** Gizli kupon: herkese kendine özel bir üründe %50 indirim (yalnız ödenen fiyat düşer, değer değişmez).
+- **GA-M3** Vitrin fısıltısı: 15. saniyede ürünlerin üstünde talep ateşi (🔥/🔥🔥/🔥🔥🔥), 15. saniyedeki duruma göre
+  donar.
+- **GA-M4 (değiştirilmiş)** Puanlama: en değerli sepet **+2**, ikinci **+1**, diğerleri **0**. **Eksi puan yok**
+  (önerideki "en değersiz −1" kaldırıldı). Birincide eşitlik varsa hepsi +2, sonraki farklı değer +1. Herkesin
+  değeri aynıysa kimse puan almaz. Değeri 0 olan (boş sepet) ödül almaz.
+- **GA-U1** Gerçek mağaza rafı (renkli ürünler, büyük görseller, raf tahtası, etiket).
+- **GA-U2** Ürün sepete uçsun, üstte sepet şeridi, dönen bütçe sayacı.
+- **GA-U3** Son 10 saniye gerilimi ("Kasa kapanıyor!").
+- **GA-U4** Tamam sonrası paketlenmiş sepet bekleme ekranı.
+- **GA-U5** Sahne sahne sonuç açılışı (kepenk → ürün ürün çakışma → sepetler sondan başa → puanlar). Sonuç süresi
+  genel karara bağlanır: herkes "Devam et" deyince geçer, en çok 60 sn.
+- **GA-U6** Mağazaya özel ses ve titreşim seti.
+- **GA-U7** İzleyici ve TV vitrini (talep ateşi dahil).
+- Onaylanmayanlar: GA-M5 (tekel bonusu), GA-M6 (sabotaj etiketi), GA-AI1, GA-AI2.
+
+**Yeni görsel gerekenler:** 8 yeni ürün görseli (GA-M1; mevcut 12 ürünle aynı tarz), kupon etiketi (GA-M2),
+alışveriş poşeti (GA-U4), metal kepenk (GA-U5), raf tahtası ve fiyat etiketi (GA-U1; CSS ile de çizilebilir).
