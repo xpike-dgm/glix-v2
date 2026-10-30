@@ -1,0 +1,348 @@
+{
+  "id": "kule-ustasi",
+  "ad": "Kule Ustası",
+  "slogan": "Kayan bloğu kulenin tam üstüne bırak; taşan kısım kesilir, ıskalayan kuleyi yıkar ve çıkar.",
+  "kategori": "Refleks",
+  "etiketler": ["sıra tabanlı", "zamanlama", "eleme", "90 sn sınır", "ortak kule"],
+  "oyuncu": {
+    "min": 2,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 90,
+    "not": "Toplam süre sınırı 90 sn (oyun kurulduğu andan). Oyun, başlangıç oyuncularının yarısı (yukarı yuvarlanmış) çıkınca ya da 90 sn dolunca, hangisi önce olursa biter. Her sıra en çok 6 sn sürer; bırakıştan sonra 0,9 sn (başarılı) ya da 2,2 sn (ıska) ara vardır. Oyuncu sayısı yalnız 'kaç çıkış gerekir' sayısını değiştirir."
+  },
+  "ozet": "Oyuncular sabit bir sırayla ortak bir kuleye blok bırakır. Sırası gelen oyuncunun ekranında blok kulenin üstünde sağa sola gidip gelir; doğru anda dokunup bırakır. Alttaki bloğun dışına taşan kısım kesilir ve kule daralır; hiç denk gelmezse kule yıkılır, o oyuncu oyundan çıkar (-1). Kalanlar +1 alır; en çok 'Kusursuz' bırakan ek +1 kazanır.",
+  "akis": [
+    {
+      "ad": "Anlatım",
+      "sureSn": 40,
+      "kim": "herkes",
+      "aciklama": "Tam ekran anlatım: 'Bloğu kulenin tam üstüne bırak, kuleyi düşürme!' ve üç madde (blok kulenin üstünde kayar, sıran gelince dokunup bırak; taşan kısım kesilir, kule daralır, tam oturtursan Kusursuz!; ıskalayan kuleyi yıkar ve çıkar, kalanlar puan alır). Herkes hazırsa ya da 40 sn dolunca 3 sn geri sayım; kartlar bu ekranda oynanır.",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Hazırlık",
+      "sureSn": 1.5,
+      "kim": "herkes",
+      "aciklama": "Oyun başlar başlamaz 90 sn'lik toplam saat işler (üstte 'd:ss' sayaç ve ilerleme çubuğu). İlk sıra 1,5 sn sonra başlar; 'Hazır ol! / Blok kulenin üstünde kayacak'. Ortada kule: 400 birim genişliğinde taban blok pistin ortasında durur (pist 1000 birim).",
+      "gizli": "Yok; her şey herkese açıktır."
+    },
+    {
+      "ad": "Sıra (kayan blok)",
+      "sureSn": 6,
+      "kim": "yalnız sırası gelen oyuncu bırakır; diğerleri izler",
+      "aciklama": "Sırası gelen oyuncuya 'Sıra sende! / Dokun ve bırak' yazar, kule alanına dokunmak bloğu bırakır ('BIRAK'). Blok kulenin üstündeki pistte sol uçtan çıkıp sabit hızla sağa-sola gider (kule daraldıkça daha uzun yol alır). Dokununca blok donar ('Bırakıldı…') ve sunucu onaylar. Sıra süresi 6 sn'dir: dokunmayan oyuncu süre dolduğu anda bırakmış sayılır (aynı kuralla hesaplanır). Diğerleri '<ad> bırakıyor' ve 'Sıran N sıra sonra' görür; sıra çubuğu 6 sn'yi gösterir.",
+      "gizli": "Yok; konum zaman fonksiyonudur, herkes aynı hareketi görür."
+    },
+    {
+      "ad": "Sonuç ve ara",
+      "sureSn": 0.9,
+      "kim": "herkes",
+      "aciklama": "Başarılı bırakışta ara 0,9 sn: 'Oturdu!' (ya da '<ad> oturttu', kesilen parça düşerse 'Taşan kısım kesildi'), kusursuzda 'Kusursuz!' parlaması ve 'tam oturttu'. Iskada ara 2,2 sn: sarsıntı, kule bloklar halinde yıkılır, '<ad> ıskaladı / Kule yıkıldı, oyundan çıktı' (çıkan oyuncunun kendisinde 'Iskaladın!' ve 'Oyundan çıktın'). Iskada kule başlangıç taban bloğuna sıfırlanır ve hız başa döner. Sonra sıra çevrimdeki sonraki çıkmamış oyuncuya geçer.",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Bitiş ve sonuç",
+      "sureSn": 30,
+      "kim": "herkes",
+      "aciklama": "Çıkış sayısı gerekli sayıya ulaşınca (son ıskanın anında) ya da 90. saniyede oyun biter ('Oyun bitti' / 'Süre doldu'). Sonra mini oyun sonuç/podyum ekranı gelir.",
+      "gizli": "Yok."
+    }
+  ],
+  "kurallar": [
+    "Oyuncu sayısı 2 ile 8 arasındadır. Oyun rastgele seçim havuzundadır (randomPool kapatılmamış).",
+    "Oyuncu sırası oyun başında bir kez karıştırılır ve aynı çevrimle tekrar eder; çıkan oyuncular atlanır ve bir daha sıraya girmez.",
+    "Pist 1000 birimdir. Taban blok 400 birim genişliğinde ve pistin ortasındadır (sol kenar 300). Kayan blok her zaman kulenin en üstteki bloğuyla aynı genişliktedir.",
+    "Blok, sıra başladığı anda pistin sol ucundan çıkar ve [0, 1000 − genişlik] aralığında üçgen dalga biçiminde sabit hızla sağa-sola gider. Başlangıç hızı saniyede 450 birimdir. Konum yalnızca (sıra başlangıcı, hız, genişlik, an) fonksiyonudur ve tam sayıyla hesaplanır; sunucu ve istemci aynı sonucu bulur.",
+    "Bırakma: oyuncu dokunduğu anı sunucu saatiyle gönderir. Bu an sıranın başlangıcından önce, sunucunun şimdisinden ileride ya da 400 ms'den eski ise yok sayılır ve sunucu saati kullanılır (gecikme hilesine karşı). Sıra başlamadan (hazırlık ve ara evrelerinde) gelen bırakış reddedilir.",
+    "Sıra süresi 6 sn'dir. Dokunmayan oyuncunun bloğu süre dolduğu anda (sıra başlangıcı + 6 sn) otomatik bırakılır; sonuç o andaki konuma göre hesaplanır, ceza olarak değil normal bırakış olarak (genelde kesme ya da ıska olur).",
+    "Kesme: bırakılan bloğun alttaki bloğun dışına taşan kısmı kesilip düşer; kalan genişlik yeni bloğun genişliği olur. Yeni blok, alttaki bloğun ve bırakılanın örtüşen kısmıdır (sol kenar = örtüşmenin sol ucu).",
+    "Kusursuz: taşma (bırakılan blok ile alttaki bloğun sol kenar farkı) bloğun genişliğinin %4'ünden KESİN küçükse blok kesilmez, alttaki bloğa tam oturur (konum ve genişlik alttakiyle aynı olur) ve 'Kusursuz!' sayılır. Tam %4 taşma kusursuz değildir ve kesilir (örn. 400 genişlikte 15 birim kusursuz, 16 birim değil).",
+    "Iska: bırakılan blok alttaki bloğa hiç denk gelmezse (örtüşme 0 ya da yalnız kenarı değerse) kule yıkılır, o oyuncu oyundan çıkar, kule başlangıç genişliğindeki ortalanmış taban bloğa sıfırlanır ve hız da başlangıca döner; sıra kalan oyuncularla sürer. Ayrıca kat sayısı sıfırlanır.",
+    "Hız: her başarılı katta (kusursuz dahil) hız çarpanı %6 artar (bileşik, binde cinsinden, aşağı yuvarlanır: 1000 → 1060 → 1123 → 1190 → 1261 → 1336 → 1416 → 1500 …). En çok başlangıcın 2,5 katı olur (2500); 16 başarılı katta tavana ulaşılır.",
+    "Bitiş: başlangıç oyuncularının yarısı (yukarı yuvarlanmış) çıkınca ya da 90 sn dolunca. Gerekli çıkış: 2 oyuncuda 1, 3'te 2, 4'te 2, 5'te 3, 6'da 3, 7'de 4, 8'de 4. Son çıkış anında oyun hemen biter.",
+    "Süre dolarken sırası gelmiş (ya da arada olan) oyuncunun bırakışı iptal edilir ve cezası olmaz. Süre ile sıra bitişi aynı anda olursa da iptal sayılır.",
+    "Puan: oyun sonunda çıkanlar -1, kalanlar +1. En çok 'Kusursuz' bırakışı olan oyuncu(lar)a (en az 1 kusursuz gerekir) ek +1; eşitlikte eşit sayıdaki hepsi alır. Çıkan oyuncu da en çok kusursuzu yaptıysa +1 alır (-1+1 = 0).",
+    "Kusursuz sayısı oyun boyunca tutulur ve çıkış sonrası korunur. Oyun sürerken ekranda gösterilen puan 'şimdi bitseydi' puanıdır.",
+    "Gizli bilgi yoktur; kule, sıra, puanlar ve kusursuz sayıları herkese açıktır.",
+    "Kusursuz sayısı sunucu rozet muhasebesi için tutulur ('Kule Ustası' rozeti: tek oyunda 3 kusursuz bırakış), istemciye gönderilmez."
+  ],
+  "puanlama": {
+    "ozet": "Oyun sonunda kalanlar +1, çıkanlar -1; en çok Kusursuz yapan(lar) ek +1.",
+    "kalemler": [
+      {
+        "olay": "Oyunun sonunda hâlâ oyundasın",
+        "puan": "+1",
+        "not": "Tüm kalanlar."
+      },
+      {
+        "olay": "Iskalayıp çıktın",
+        "puan": "-1",
+        "not": "Çıkış anında kule sıfırlanır."
+      },
+      {
+        "olay": "En çok Kusursuz bırakışı yaptın (en az 1)",
+        "puan": "+1",
+        "not": "Eşitlikte eşit sayıdaki hepsi; çıkmış olsan da alırsın."
+      },
+      {
+        "olay": "Süre doldu, sıran iptal oldu",
+        "puan": "0",
+        "not": "Ceza yok, çıkış yok."
+      }
+    ],
+    "ornek": "4 oyuncu (A, B, C, D), sıra A-B-C-D, gerekli çıkış 2. A kusursuz bırakır (A: 1 kusursuz, kule 2 kat, hız 1060). B kesilerek oturtur (hız 1123). C ıskalar: C çıkar (-1), kule 400 genişlikte sıfırlanır, hız 1000. D oturtur. Sıra A'ya geçer (C atlanır); A ıskalar, A da çıkar. 2 çıkış tamam, oyun biter. Puanlar: A: -1 (çıktı) +1 (tek kusursuz yapan) = 0; B +1; C -1; D +1.",
+    "beraberlik": "Beraberlik özel bir kural değildir: kusursuz sayısında eşitlik varsa en çok kusursuz yapanların hepsi ek +1 alır. Puan eşitliği sıralamada eşit sayılır."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Kopan oyuncu katılımcı ve çevrimin parçası kalır. Sırası gelirse hiçbir şey yapamayacağından blok süre dolunca (6 sn) otomatik bırakılır; sonuç o anki konuma göredir (genelde kesilir ya da ıskalar). Tick bağlantıya bakmaz; geri dönerse kaldığı yerden izler."
+    },
+    {
+      "baslik": "Dokunmayan oyuncu",
+      "aciklama": "6. saniyede blok otomatik bırakılır; dar kulede bu çoğunlukla ıska olur (oyuncu çıkar), geniş kulede kesme olabilir."
+    },
+    {
+      "baslik": "Süre sınırı",
+      "aciklama": "90 sn dolduğunda sırası gelmiş oyuncunun bırakışı iptal edilir, ceza yok. Ekranda 'Süre doldu' yazar. Kalanlar +1, daha önce çıkanlar -1 alır; kusursuz bonusu uygulanır."
+    },
+    {
+      "baslik": "2 oyuncu",
+      "aciklama": "Gerekli çıkış 1: ilk ıska oyunu bitirir; ıskalayan -1, diğeri +1 alır (kusursuz bonusu eklenebilir). Iska olmazsa 90 sn'de biter ve ikisi de +1 alır (en çok kusursuz yapan +1 daha)."
+    },
+    {
+      "baslik": "8 oyuncu",
+      "aciklama": "4 çıkış gerekir. Sıran uzak olabilir ('Sıran N sıra sonra'); kule sıfırlanınca yeniden başlar. 90 sn içinde bütün oyuncuların sırası dönmeyebilir."
+    },
+    {
+      "baslik": "İzleyici ve TV",
+      "aciklama": "İzleyici kuleyi, kayan bloğu ve oyuncu şeridini canlı izler; dokunamaz. Puan almaz."
+    },
+    {
+      "baslik": "Çıkan oyuncu",
+      "aciklama": "'Oyundan çıktın / Arkadaşlarını izle' görür; dokunması etkisizdir, bir daha sıraya girmez. Oyun bitene kadar izler."
+    },
+    {
+      "baslik": "Geç gelen eylem payı",
+      "aciklama": "Bu oyunda yoktur (graceMs tanımlı değil, zamanlama oyunları kapsam dışı): süre bitiminden sonra gelen bırakış reddedilir; sıra süresi dolunca otomatik bırakış önce işlenir."
+    },
+    {
+      "baslik": "Reddedilen bırakış",
+      "aciklama": "İstemci bloğu hemen dondurur; sunucu reddederse (ör. sıra değil) blok yeniden hareket eder."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Genel",
+      "etki": "Kod bu oyun için özel kart dalı içermez; genel K6 hesabı çalışır ve kartlar yalnız genel skora giden puanları (awards) değiştirir. Bu oyunda awards = miniScores (+1 / -1 / kusursuz bonusu)."
+    },
+    {
+      "kart": "Kendine Güven / Sigorta / Tahmin",
+      "etki": "'Birinci' en yüksek mini oyun puanlı oyuncu(lar) (kalan ve kusursuz yapan: +2), 'sonuncu' en düşük puanlı (çıkanlar: -1) oyuncu(lar)dır. Sigorta bu yüzden çıkanlara +1 verir."
+    },
+    {
+      "kart": "Kalkan",
+      "etki": "Çıkmış ve kusursuzu olmayan oyuncunun -1'ini 0'a çeker."
+    },
+    {
+      "kart": "Çift Puan / Altın Dokunuş",
+      "etki": "Kalanın +1'i ×2/×3; Çift Puan çıkanın -1'ini de ×2 yapar (-2), Altın Dokunuş eksi puanı etkilemez."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Pist genişliği",
+      "deger": "1000 birim",
+      "kaynak": "packages/engine/src/games/kule-ustasi/types.ts:4"
+    },
+    {
+      "ad": "Başlangıç/sıfırlanan taban blok genişliği",
+      "deger": "400 birim (ortada, sol kenar 300)",
+      "kaynak": "packages/engine/src/games/kule-ustasi/types.ts:6; index.ts:48-52"
+    },
+    {
+      "ad": "Başlangıç hızı",
+      "deger": "450 birim/sn (çarpan 1000 = 1,0×)",
+      "kaynak": "packages/engine/src/games/kule-ustasi/types.ts:8,10"
+    },
+    {
+      "ad": "Hız artışı (başarılı kat başına)",
+      "deger": "%6 (×106/100, aşağı yuvarlanır)",
+      "kaynak": "packages/engine/src/games/kule-ustasi/types.ts:12; types.ts:43-45"
+    },
+    {
+      "ad": "Hız tavanı",
+      "deger": "2 500 (2,5×)",
+      "kaynak": "packages/engine/src/games/kule-ustasi/types.ts:14"
+    },
+    {
+      "ad": "Kusursuz eşiği",
+      "deger": "taşma × 100 < genişlik × 4 (%4'ten kesin küçük)",
+      "kaynak": "packages/engine/src/games/kule-ustasi/types.ts:16, 80"
+    },
+    {
+      "ad": "Sıra süresi",
+      "deger": "6 000 ms",
+      "kaynak": "packages/engine/src/games/kule-ustasi/types.ts:18"
+    },
+    {
+      "ad": "Bırakış anı en çok yaş",
+      "deger": "400 ms",
+      "kaynak": "packages/engine/src/games/kule-ustasi/types.ts:20; index.ts:157-159"
+    },
+    {
+      "ad": "Toplam süre",
+      "deger": "90 000 ms",
+      "kaynak": "packages/engine/src/games/kule-ustasi/types.ts:22"
+    },
+    {
+      "ad": "İlk sıra öncesi hazırlık",
+      "deger": "1 500 ms",
+      "kaynak": "packages/engine/src/games/kule-ustasi/types.ts:24"
+    },
+    {
+      "ad": "Başarılı bırakıştan sonra ara",
+      "deger": "900 ms",
+      "kaynak": "packages/engine/src/games/kule-ustasi/types.ts:26"
+    },
+    {
+      "ad": "Iskadan sonra ara",
+      "deger": "2 200 ms",
+      "kaynak": "packages/engine/src/games/kule-ustasi/types.ts:28"
+    },
+    {
+      "ad": "Gerekli çıkış sayısı",
+      "deger": "⌈oyuncu sayısı / 2⌉",
+      "kaynak": "packages/engine/src/games/kule-ustasi/index.ts:204"
+    },
+    {
+      "ad": "Puanlama (çıkan -1, kalan +1, kusursuz bonusu +1)",
+      "deger": "scoresOf",
+      "kaynak": "packages/engine/src/games/kule-ustasi/index.ts:71-80"
+    },
+    {
+      "ad": "Oyuncu sayısı",
+      "deger": "2 - 8",
+      "kaynak": "packages/engine/src/games/kule-ustasi/index.ts:168-169"
+    },
+    {
+      "ad": "Bırakış reddi nedenleri",
+      "deger": "ended, not_participant, eliminated, not_your_turn, not_started",
+      "kaynak": "packages/engine/src/games/kule-ustasi/index.ts:215-219"
+    },
+    {
+      "ad": "Süre dolumunda otomatik bırakış",
+      "deger": "deadline = sıra başlangıcı + 6 sn",
+      "kaynak": "packages/engine/src/games/kule-ustasi/index.ts:140-154"
+    },
+    {
+      "ad": "Ekranda görünen kat sayısı",
+      "deger": "8 (taban dahil); kule yükselince pencere kayar",
+      "kaynak": "apps/client/src/games/kule-ustasi/KuleUstasiScreen.tsx:29"
+    },
+    {
+      "ad": "Efekt parçası ekranda kalma",
+      "deger": "1 100 ms",
+      "kaynak": "apps/client/src/games/kule-ustasi/KuleUstasiScreen.tsx:31"
+    }
+  ],
+  "strateji": [
+    "Kule daraldıkça blok daha uzun yol alır ve aynı hızda daha çabuk gidip gelir; geniş kulede sabırlı ol, dar kulede ilk fırsatı yakala.",
+    "Kusursuz eşiği bloğun %4'ü (400 genişlikte 16 birimin altı); kusursuz kule daralmaz, yani geniş kalır ve sonraki oyuncular için kolaylaştırır. En çok kusursuz yapan +1 alır.",
+    "Hız her başarılı katta %6 artar ve 16 katta 2,5 katına çıkar; kule sıfırlanınca hız da sıfırlanır. Iska yapan sonrakilere kolay bir kule bırakır.",
+    "Dokunmak zorunlu: 6 sn sonunda blok otomatik bırakılır ve sonuç şansa kalır; bu yüzden önceden hazırlanıp doğru anda dokun.",
+    "Gerekli çıkış sayısı yarıya yakındır; hayatta kalmak +1, çıkmak -1 olduğundan her ıska iki puan sallanır.",
+    "Sırası gelmeyen oyuncu kuleyi izleyip hız/konum ritmini öğrenebilir: konum zamanın saf fonksiyonudur."
+  ],
+  "tv": "TV/sahne ekranı oyun ekranını izleyici kipinde büyütülmüş gösterir (Kule Ustası'na özel StageView yoktur): ortada kule ve kayan blok, üstte kalan toplam süre sayacı, sıra çubuğu, durum başlığı ('<ad> bırakıyor', 'Kusursuz!', '<ad> ıskaladı') ve altta oyuncu şeridi (puan ve çıkanlar soluk). Sağdaki sütunda oyuncular ve puanlar bulunur.",
+  "ekranlar": [
+    {
+      "ad": "kule-briefing",
+      "mock": "kule-briefing",
+      "q": "mock=kule-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Tam ekran anlatım ve üç madde.",
+      "dosya": "kule-briefing"
+    },
+    {
+      "ad": "kule-turn",
+      "mock": "kule-turn",
+      "q": "mock=kule-turn",
+      "baslik": "Sıra sende",
+      "aciklama": "Kule, kayan blok, 'Dokun ve bırak', 'BIRAK' ipucu, sıra çubuğu ve oyuncu şeridi.",
+      "dosya": "kule-turn"
+    },
+    {
+      "ad": "kule-turn-8",
+      "mock": "kule-turn",
+      "q": "mock=kule-turn&n=8",
+      "baslik": "Sıra sende (8 oyuncu)",
+      "aciklama": "8 oyunculu alt şerit.",
+      "dosya": "kule-turn-n-8"
+    },
+    {
+      "ad": "kule-watching",
+      "mock": "kule-watching",
+      "q": "mock=kule-watching",
+      "baslik": "Başkası bırakıyor",
+      "aciklama": "'<ad> bırakıyor', 'Sıran N sıra sonra'; dokunma kapalı.",
+      "dosya": "kule-watching"
+    },
+    {
+      "ad": "kule-perfect",
+      "mock": "kule-perfect",
+      "q": "mock=kule-perfect",
+      "baslik": "Kusursuz",
+      "aciklama": "'Kusursuz!' parlaması ve altın blok; sıra arası.",
+      "dosya": "kule-perfect"
+    },
+    {
+      "ad": "kule-miss",
+      "mock": "kule-miss",
+      "q": "mock=kule-miss&n=8",
+      "baslik": "Iska",
+      "aciklama": "Kule yıkılıyor, sarsıntı, '<ad> ıskaladı / Kule yıkıldı, oyundan çıktı'.",
+      "dosya": "kule-miss-n-8"
+    },
+    {
+      "ad": "kule-out",
+      "mock": "kule-out",
+      "q": "mock=kule-out",
+      "baslik": "Çıktın",
+      "aciklama": "'Oyundan çıktın / Arkadaşlarını izle', dokunma kapalı.",
+      "dosya": "kule-out"
+    },
+    {
+      "ad": "kule-reveal",
+      "mock": "kule-reveal",
+      "q": "mock=kule-reveal&n=6",
+      "baslik": "Sonuç",
+      "aciklama": "Mini oyun sonuç ekranı: kalanlar +1, çıkanlar -1.",
+      "dosya": "kule-reveal-n-6"
+    }
+  ],
+  "bilinenSorunlar": [
+    "Kusursuz bonusu çıkmış oyuncuya da verilir (çıkış -1 + bonus +1 = 0); KURALLAR.md 'en çok Kusursuz yapan' der, çıkma durumu ayrıca belirtilmemiştir.",
+    "Blok genişliği 1 birime kadar inebilir; alt sınır yoktur (örtüşme 1 birim bile olsa blok kalır).",
+    "Iska yapan oyuncu çıkar ama kusursuz sayısı korunur; yalnız sunucu rozet muhasebesinde (Kule Ustası rozeti) kullanılır, istemciye gitmez."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-29: Zaman Bombası ile ortak saat eşitleme düzeltmesi (giriş evresinin açılmadan kalması).",
+    "2026-10-27: Kule Ustası ve Kâhin rozetleri (yalnız sunucu muhasebesi olan oyun sonucu istatistikleri) eklendi.",
+    "2026-10-27: Kule oyunu rastgele havuza alındı; zaman aşımı testi düzeltildi.",
+    "2026-10-27: Akıcı kayan blok (kare kare saat, yuvarlamasız konum).",
+    "2026-10-27: Kule Ustası istemci ekranı, anlatım çizimi, mock, ui-check girdileri ve lobi havuz yönetimi eklendi.",
+    "2026-10-27: Kule Ustası motoru ve havuz dışı bırakma bayrağı (randomPool) ile sunucu testleri eklendi."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/kule-ustasi/index.ts",
+    "packages/engine/src/games/kule-ustasi/types.ts",
+    "packages/engine/src/games/kule-ustasi/kule-ustasi.test.ts",
+    "docs/KURALLAR.md#29-kule-ustası",
+    "apps/client/src/games/kule-ustasi/KuleUstasiScreen.tsx",
+    "apps/client/src/games/kule-ustasi/view.ts",
+    "apps/server/src/badges.ts"
+  ]
+}

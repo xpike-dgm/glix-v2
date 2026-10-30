@@ -1,0 +1,334 @@
+{
+  "id": "son-kisi",
+  "ad": "Son Kişi",
+  "slogan": "Alarm çalmadan kaç, ama herkesten sonra!",
+  "kategori": "Zamanlama",
+  "etiketler": ["gizli bitiş", "zamanlama", "cesaret", "tek düğme"],
+  "oyuncu": {
+    "min": 2,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 15,
+    "not": "Süre gizlidir: oyun, başladığı andan 10 ile 20 sn arasında (milisaniye çözünürlüğünde rastgele) bir anda biter; ortalama yaklaşık 15 sn. Hiçbir ekranda sayaç, süre çubuğu ya da kalan süre yoktur. Bütün katılımcılar kaçarsa oyun son kaçıştan 1 sn sonra erken biter. Süre oyuncu sayısına göre değişmez. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 30 sn) gelir."
+  },
+  "ozet": "Herkesin ekranında tek bir büyük KAÇ düğmesi vardır. Oyun, kimsenin bilmediği rastgele bir anda alarmla biter. İstediğin anda bir kez KAÇ'a basabilirsin; alarmdan önce kaçan herkes kurtulur, ama kaçanlar arasında en geç basan +1 alır. Hiç kaçmayan (alarm onu yakalayan) -1 alır, erken kaçan ve son olmayan 0 alır. Cesaretle bekle, ama alarmı kaçırma.",
+  "akis": [
+    {
+      "ad": "Anlatım",
+      "sureSn": 40,
+      "kim": "herkes",
+      "aciklama": "Tam ekran anlatım: 'Alarm çalmadan kaç, ama herkesten geç!' ve üç madde (bitiş zamanı gizli, alarmı bekle; istediğin anda bir kez KAÇ'a bas; son kaçan +1 alır, hiç kaçmayan -1 alır). Bağlı herkes hazır olunca ya da 40 sn dolunca biter. Maç kartları burada oynanır."
+    },
+    {
+      "ad": "Geri sayım",
+      "sureSn": 3,
+      "kim": "herkes",
+      "aciklama": "3 sn geri sayım, oynanan kartlar açıklanır. Geri sayımın bitişi oyunun başladığı andır; gizli bitiş bu andan 10-20 sn sonrasına çekilir."
+    },
+    {
+      "ad": "Kaçış bekleme",
+      "sureSn": 15,
+      "kim": "herkes (izleyici hariç)",
+      "aciklama": "Sakin neon bir koridor, sonunda kaçış kolu; ortada oyuncunun kendi avatarı ve gölgesi, altta yan yana tüm katılımcıların küçük avatarları, en altta büyük KAÇ düğmesi. Başlık 'Alarmı bekle', alt başlık 'Herkesten geç kaç, alarmdan önce'. Süre sayacı yoktur. Gerilim yükseldikçe (3 gizli eşik) ışık ve gölge nabzı hızlanır (2,8 sn → 1,7 sn → 1,0 sn → 0,52 sn aralıkla) ve hâlâ koridorda olanlara kısa bir 'kalp atışı' sesi ve hafif titreşim gelir. KAÇ'a basınca (düğme parmak değer değmez çalışır) başlık 'Kaçtın!', alt başlık 'Şimdi diğerlerini bekle' olur, düğme 'KAÇTIN' yazar ve pasifleşir; kendi avatarın koridorda küçülüp kapıya doğru kaybolur, gölge söner. Başkası kaçınca onun avatarı alttaki şeritte soluklaşır, gri olur ve yukarı kayar.",
+      "gizli": "Bitiş zamanı, kalan süre ve gerilim eşiklerinin gerçek anları hiçbir görünümde yoktur; yalnız 0-3 arası gerilim düzeyi (kaba bir ipucu) ve 'kimler kaçtı' (sırasıyla) herkese açıktır. Kaçanların kaç ms'de kaçtığı sonuç açılana kadar kimseye gösterilmez. Kaçmak isteyen herkes kimlerin kaçtığını görebilir."
+    },
+    {
+      "ad": "Alarm ve sonuç açılışı",
+      "sureSn": 30,
+      "kim": "herkes",
+      "aciklama": "Gizli an gelince oyun biter, alarm flaşı oynar (siren sesi) ve sonuç ekranının üstüne açılış girer: 'Son kaçan' (ya da eşitlikte 'Son kaçanlar') başlığı, son kaçanların altın çerçeveli avatar kartları (+1 ve kaçış süresi, örn. '12,4 sn'), altında 'Kaçmayan: -1' ve kaçmayanların silik avatarları; kimse kaçmadıysa 'Kimse kaçmadı' ve 'Herkes -1'. Son kaçan varsa kısa bir altın çınlama sesi çalar. Sonuç ekranı en çok 30 sn kalır.",
+      "gizli": "Artık kimlerin ne zaman kaçtığı (ms) açıktır; hâlâ gerçek bitiş zamanı gösterilmez."
+    }
+  ],
+  "kurallar": [
+    "2-8 oyuncu katılır (dikey oyun). 2 kişide bile oynanır.",
+    "Tek aşamadır. Oyun kurulurken sunucu gizli bitiş anını belirler: oyunun başlangıcından 10 000 ile 20 000 ms arasında (uç değerler dahil, ms çözünürlüğünde, düzgün rastgele). Bu an hiçbir oyuncuya ve izleyiciye gösterilmez, hiçbir görünümde (ortak ya da kişisel) yer almaz.",
+    "Herkes oyun boyunca en çok bir kez KAÇ'a basabilir; istediği anda basabilir (erken basış da geçerlidir). Sunucu basışın zaman damgasını (sunucu saati, ms) kaydeder. İkinci basış yok sayılır; zaman damgası ilk basıştan kalır.",
+    "Gizli bitiş anında ve sonrasında gelen basış kabul edilmez ('ended'); bitişten 1 ms önceki basış geçerlidir. Oyun başlamadan önce gelen basış reddedilir ('not_started'). Katılımcı olmayan (izleyici) basamaz.",
+    "Kaçanların kimler olduğu herkese açıktır ve kaçış sırasıyla listelenir (alttaki avatar şeridinde kaçanlar soluk görünür); ne kadar sürede kaçtıkları sonuç açılana dek gizlidir.",
+    "Gerilim düzeyi (0-3) yalnız ışık/gölge nabzını ve ses/titreşimi etkiler ve puana etkisi yoktur. Üç düzey de bitişe göre gizli, rastgele eşiklerle belirlenir: düzey 1 bitişten 5-8 sn önce, düzey 2 bitişten 2,5-4,5 sn önce, düzey 3 bitişten 0,8-2,2 sn önce başlar (her biri başlangıçtan en az 1 sn sonra ve artan sırada). Eşikler bitişin deterministik bir işlevi değildir; yani düzey 1 anından bitişi hesaplamak mümkün değildir. Bitiş anında düzey 3 gösterilir.",
+    "Herkes (tüm katılımcılar) kaçtıysa sonuç kesinleşmiştir: oyun son kaçıştan 1 sn sonra erken biter (bitiş anı öne çekilir ve gizli kalır). Bu kontrol bağlantıya bakmaz: kopuk bir oyuncu kaçmadıysa oyun erken bitmez.",
+    "Oyun bitince sonuç hesaplanır. Kaçanlar arasında en geç kaçan (en büyük zaman damgası) +1 alır; eşit damgalı (aynı milisaniye) birden çok son kaçan varsa hepsi +1 alır. Son olmayan kaçanlar 0 alır. Hiç kaçmayan -1 alır. Kimse kaçmazsa herkes -1 alır.",
+    "İlk kaçan ödül almaz; yalnız son kaçan(lar) ödüllendirilir. Tek kişi kaçarsa o kişi son kaçandır ve +1 alır, diğerleri -1.",
+    "Mini oyun puanı doğrudan genel skora eklenir (awards = miniScores).",
+    "Oyun, gizli bitişte (ya da erken bitişte) biter; sonuç hemen açılır (ortak görünümde finished=true, result dolu)."
+  ],
+  "puanlama": {
+    "ozet": "Alarmdan önce kaçanlar arasında en geç basan +1; diğer kaçanlar 0; hiç kaçmayan -1. Kimse kaçmazsa herkes -1.",
+    "kalemler": [
+      {
+        "olay": "Kaçanlar arasında en geç kaçan (en büyük zaman damgası)",
+        "puan": "+1",
+        "not": "Aynı ms'de kaçan birden çok son kaçan varsa hepsi +1."
+      },
+      {
+        "olay": "Kaçtı ama son kaçan değil",
+        "puan": "0",
+        "not": "Erken kaçmak ödül ya da ceza getirmez."
+      },
+      {
+        "olay": "Hiç kaçmadı (alarm onu yakaladı)",
+        "puan": "-1",
+        "not": "Bağlantısı kopmuş ve kaçmamış oyuncu da -1 alır."
+      },
+      {
+        "olay": "Kimse kaçmadı",
+        "puan": "herkes -1",
+        "not": "'Kimse kaçmadı' / 'Herkes -1'."
+      },
+      {
+        "olay": "Herkes kaçtı",
+        "puan": "son kaçan +1, diğerleri 0",
+        "not": "Oyun son kaçıştan 1 sn sonra biter."
+      }
+    ],
+    "ornek": "4 oyuncu: A, B, C, D; gizli bitiş 14,2 sn. A 3,1 sn'de, B 9,8 sn'de, C 13,9 sn'de kaçtı; D hiç basmadı. En geç kaçan C: C +1. A ve B 0. D alarmı yakaladı: -1. İkinci örnek: 3 oyuncu, A ve B aynı ms'de (7,420 sn) kaçtı, C 2 sn'de kaçtı; kimse sonrasında basmadı: A ve B son kaçan (eşit damga): ikisi +1, C 0. Üçüncü örnek: herkes kaçtıysa (D 12,0 sn'de en son) oyun D'nin basışından 1 sn sonra biter: D +1, diğerleri 0.",
+    "beraberlik": "Zaman damgası milisaniye çözünürlüğündedir; aynı ms'de basan en son kaçanların hepsi +1 alır (olasılık düşük ama mümkündür). Başka bir eşitlik bozma yoktur."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Kopmadan önce bastığı KAÇ geçerlidir ve zaman damgası korunur; kopuk oyuncunun basışı da sonuca dahildir (bağlı listesi sonucu etkilemez). Kopuk oyuncu sonradan basamaz; hiç kaçmadıysa -1 alır. Diğer oyunlardan farklı olarak erken bitiş denetimi bağlantıya bakmaz: kopuk ve kaçmamış bir oyuncu varsa 'herkes kaçtı' koşulu sağlanmaz ve oyun gizli bitişe kadar sürer. 120 sn içinde dönmezse oyuncu odadan çıkarılır."
+    },
+    {
+      "baslik": "Süre bitişi ve geç eylem",
+      "aciklama": "Bu oyunda geç gelen eylem payı (graceMs) bilinçli olarak YOKTUR (zamanlamayı puanlayan oyun): gizli bitiş anında gelen basış reddedilir. İstemci basışı anında 'KAÇTIN' gösterir ama sunucu reddederse (bitiş sonrası) sonuçta yine 'kaçmayan' sayılırsın."
+    },
+    {
+      "baslik": "İzleyici / geç katılan",
+      "aciklama": "Maç sırasında giren izleyici KAÇ düğmesi görmez. 'Koridoru izliyorsun' başlığını, 'Son kaçan kazanır' alt başlığını, koridoru, nabız animasyonunu ve oyuncu şeridini (kaçanlar soluk) görür. Eylemi sunucuca 'not_participant' ile reddedilir. Sonuçta kimin son kaçtığı ve kaçmayanlar görünür."
+    },
+    {
+      "baslik": "Herkes erken bitirirse",
+      "aciklama": "Bütün katılımcılar (bağlantı durumuna bakılmaksızın) kaçtıysa oyun, son kaçıştan 1 sn sonra biter; son kaçan +1 alır. Erken bitiş anı hiçbir görünümde gösterilmez, yalnız oyunun bittiği görünür. 1 sn'lik pencerede gelen tekrar basışlar yok sayılır; pencere dolunca basış 'ended' ile reddedilir."
+    },
+    {
+      "baslik": "Tek kişi kalırsa",
+      "aciklama": "Kaçmamış tek oyuncu varsa, kaçması onu hemen son kaçan yapar (+1) ve oyunu erken bitirir; kaçmamayı seçerse alarm onu yakalar ve -1 alır. Bu oyunun asıl gerilimi budur."
+    },
+    {
+      "baslik": "2 vs 8 oyuncu",
+      "aciklama": "2 oyuncuda: biri kaçarsa öbürü ancak ondan sonra kaçarak +1 alabilir; öbürü hiç kaçmazsa kaçan +1 alır ve kaçmayan -1. 8 oyuncuda alttaki avatar şeridi dar ekrana sığacak kadar küçülür (avatar boyutu min(44px, (100vw-82px)/8))."
+    },
+    {
+      "baslik": "Gizlilik",
+      "aciklama": "secrets() gizli bitişi ve üç gerilim eşiğini bildirir ve sahibi yoktur (kimse göremez): testler bu değerlerin hiçbir görünümde (çok sayıda tohum) geçmediğini, görünümün yalnız 0-3 gerilim düzeyiyle ilerlediğini ve erken bitiş anının da görünümlere girmediğini doğrular."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Genel hesap",
+      "etki": "Bu oyunda mini oyun puanı = ham genel puan ve -1, 0, +1 değerlerini alır. 'Birinci' en yüksek puanlı (son kaçan(lar); kimse kaçmadıysa ya da hepsi aynı ms'de kaçtıysa herkes), 'sonuncu' en düşük puanlıdır (kaçmayanlar; hiç kaçmayan yoksa son olmayan kaçanlar). Herkes eşitse (kimse kaçmadı / hepsi aynı ms) herkes birincidir ve kimse sonuncu değildir."
+    },
+    {
+      "kart": "Kalkan",
+      "etki": "Eksiye düşersen 0 sayılır: bu oyunda doğrudan işe yarar; hiç kaçmasan bile -1 yerine 0 alırsın (kimse kaçmadıysa herkesin Kalkan'ı varsa -1 → 0)."
+    },
+    {
+      "kart": "Sigorta",
+      "etki": "Sonuncu olursan +1: kaçmayanlar sonuncudur (-1 → 0). Herkes kaçtıysa son kaçan dışındaki herkes sonuncudur. Herkes eşitse kimse sonuncu sayılmaz."
+    },
+    {
+      "kart": "Kendine Güven",
+      "etki": "Birinciysen +2, değilsen -1: son kaçansan +3 (1+2); son olmayan kaçansan -1; kaçmadıysan -2. Kimse kaçmadıysa herkes birincidir (-1 + 2 = +1)."
+    },
+    {
+      "kart": "Tahmin",
+      "etki": "Hedefin birinciyse +2: hedefin son kaçan olacağını tahmin edersin. Kimse kaçmazsa herkes birinci olduğundan tutar."
+    },
+    {
+      "kart": "Çift Puan",
+      "etki": "Puanın x2, eksi de x2: son kaçan +2, kaçmayan -2."
+    },
+    {
+      "kart": "Altın Dokunuş",
+      "etki": "Puanın x3 (yalnız pozitif): son kaçan +3; kaçmayan -1 olarak kalır."
+    },
+    {
+      "kart": "Ağır Yük (kötü)",
+      "etki": "Puan yarıya iner, sıfıra doğru yuvarlanır: +1 → 0 ve -1 → 0 (kaçmayanı da kurtarır)."
+    },
+    {
+      "kart": "Ters Köşe",
+      "etki": "Sıralama tersine döner: son kaçan(lar) ile kaçmayanlar puan değiştirir. Örn. 4 kişi: son kaçan A (+1), B ve C (0), kaçmayan D (-1) → A -1, B ve C 0, D +1."
+    },
+    {
+      "kart": "Takas",
+      "etki": "Sahip ile hedef ham puanlarını (örneğin +1 ile -1) değiştirir. Takas oyun bittikten sonra uygulandığı için hedefi son kaçan olan sahibine +1 getirir; hedef kaçmayan ise sahibi -1 yer."
+    },
+    {
+      "kart": "Çelme / Lanet / Vergi / Hırsız",
+      "etki": "Çelme hedefi -1 yapar (kaçanın 0'ı -1 olur). Lanet hedefin +1'ini 0'a çeker (son kaçan(ı) cezalandırır). Vergi hedef puan aldıysa (son kaçansa) 1 puanı sana geçirir. Hırsız birinci olan son kaçandan (birden çoksa sahibi dışındaki, puanı en yüksekten) 1 puan alır; sahibi tek birinciyse etkisiz."
+    },
+    {
+      "kart": "Diğer kartlar",
+      "etki": "Takviye, Ortaklık, Koruma, Ayna, Veto, Geniş Seçim, Oyunu Seç, Kart Çal, Açık Hedef, Talihsizlik, Hayırsever, Boş El, Kör Seçim, Sessizlik, Kumarbaz, Lanetli Hediye oyunun kuralından bağımsız, KURALLAR K5-K7'deki gibi çalışır; Son Kişi'ye özel istisna kodda yoktur."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Gizli bitiş en erken",
+      "deger": "10 000 ms",
+      "kaynak": "packages/engine/src/games/son-kisi/types.ts:4"
+    },
+    {
+      "ad": "Gizli bitiş en geç",
+      "deger": "20 000 ms",
+      "kaynak": "packages/engine/src/games/son-kisi/types.ts:5"
+    },
+    {
+      "ad": "Herkes kaçınca bitişe kalan süre",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/games/son-kisi/types.ts:8"
+    },
+    {
+      "ad": "Gerilim düzeyi 1 / 2 / 3 bitişten kaç ms önce",
+      "deger": "5 000-8 000 / 2 500-4 500 / 800-2 200 ms (rastgele)",
+      "kaynak": "packages/engine/src/games/son-kisi/index.ts:48-50"
+    },
+    {
+      "ad": "Eşiklerin başlangıçtan en erken uzaklığı",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/games/son-kisi/index.ts:47"
+    },
+    {
+      "ad": "Bitiş anının çekilişi (ms çözünürlükte)",
+      "deger": "ctx.now + 10 000 + rng.int(10 001)",
+      "kaynak": "packages/engine/src/games/son-kisi/index.ts:104-105"
+    },
+    {
+      "ad": "Oyuncu sayısı",
+      "deger": "2-8",
+      "kaynak": "packages/engine/src/games/son-kisi/index.ts:84-85"
+    },
+    {
+      "ad": "Nabız süresi (gerilim 0/1/2/3)",
+      "deger": "2 800 / 1 700 / 1 000 / 520 ms",
+      "kaynak": "apps/client/src/games/son-kisi/view.ts:70-72"
+    },
+    {
+      "ad": "Puan: son kaçan / diğer kaçan / kaçmayan",
+      "deger": "+1 / 0 / -1",
+      "kaynak": "packages/engine/src/games/son-kisi/index.ts:58-69"
+    },
+    {
+      "ad": "Geç eylem payı (graceMs)",
+      "deger": "yok (tanımlı değil)",
+      "kaynak": "packages/engine/src/games/son-kisi/index.ts (graceMs alanı yok)"
+    },
+    {
+      "ad": "Kabuk saati",
+      "deger": "noClock: çizilmez",
+      "kaynak": "apps/client/src/games/registry.ts:106"
+    },
+    {
+      "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
+      "deger": "40 000 / 3 000 / 30 000 ms",
+      "kaynak": "apps/server/src/match.ts:40-42"
+    }
+  ],
+  "strateji": [
+    "Hiç kaçmamak -1'dir, erken kaçmak 0: asıl amaç son kaçmak ama bitiş zamanını bilemediğin için her saniye bekleme riski artar.",
+    "Sayaç yok ama kendi içinden sayabilirsin: oyun 10 ile 20 sn arasında biter. 10 sn'den önce kaçmak çoğu zaman gereksiz erkendir; 18-19 sn'den sonra beklemek çok risklidir.",
+    "Gerilim arttıkça (ışık ve gölge hızlanır, kalp atışı sesi) bitiş yakındır; düzey 3 bitişten en çok 2,2 sn önce başlar. Düzey 3'ü görünce hemen bas.",
+    "Başkalarının kaçışını izle: avatarlar soluklaşır. Kaç kişi kaldığını bilirsin; herkes kaçmışsa oyun 1 sn'de biter, yani son kalan sensen hemen basman gerekir (basarsan +1).",
+    "Tek bir rakip kalmışsa kimin önce basacağı bir 'kim önce göz kırpar' oyunudur; sonuncu olmak isteyen basmaz ama alarm gelirse -1 yer.",
+    "Kart oynayacaksan Kalkan (eksiye düşersen 0) ve Sigorta bu oyunda en değerli kartlardır."
+  ],
+  "tv": "Son Kişi'nin TV'ye özel sahnesi yoktur: TV görünümü oyun içi ekranın izleyici kipinde büyütülmüş hâlidir ('Koridoru izliyorsun', koridor, nabız animasyonu, oyuncu avatar şeridi). Kaçanlar soluk görünür; gizli bitiş, süre ve kaçış zamanları gösterilmez (noClock: kabuk saati de çizilmez). Sonuç açılışında alarm flaşı, 'Son kaçan(lar)' altın kartları ve 'Kaçmayan: -1' görünür.",
+  "ekranlar": [
+    {
+      "mock": "sonkisi-briefing",
+      "name": "sonkisi-briefing",
+      "q": "mock=sonkisi-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Oyun öncesi anlatım: koridor, kapı ve koşan gölge çizimi; amaç ve üç madde.",
+      "dosya": "sonkisi-briefing"
+    },
+    {
+      "mock": "sonkisi-idle",
+      "name": "sonkisi-idle",
+      "q": "mock=sonkisi-idle",
+      "baslik": "KAÇ bekliyor (sakin)",
+      "aciklama": "'Alarmı bekle' başlığı, sakin koridor, avatar şeridi ve büyük KAÇ düğmesi; sayaç yok.",
+      "dosya": "sonkisi-idle"
+    },
+    {
+      "mock": "sonkisi-tense",
+      "name": "sonkisi-tense",
+      "q": "mock=sonkisi-tense&n=8",
+      "baslik": "Gerilim yüksek (8 oyuncu)",
+      "aciklama": "Gerilim düzeyi 2: nabız hızlı, iki kişi kaçmış (soluk avatarlar), KAÇ hâlâ açık.",
+      "dosya": "sonkisi-tense-n-8"
+    },
+    {
+      "mock": "sonkisi-escaped",
+      "name": "sonkisi-escaped",
+      "q": "mock=sonkisi-escaped",
+      "baslik": "Kaçtın",
+      "aciklama": "'Kaçtın!' / 'Şimdi diğerlerini bekle', düğme 'KAÇTIN' ve pasif; gerilim 3.",
+      "dosya": "sonkisi-escaped"
+    },
+    {
+      "mock": "sonkisi-spectator",
+      "name": "sonkisi-spectator",
+      "q": "mock=sonkisi-spectator",
+      "baslik": "İzleyici",
+      "aciklama": "'Koridoru izliyorsun' / 'Son kaçan kazanır'; düğme yok.",
+      "dosya": "sonkisi-spectator"
+    },
+    {
+      "mock": "sonkisi-reveal",
+      "name": "sonkisi-reveal",
+      "q": "mock=sonkisi-reveal&n=5",
+      "baslik": "Sonuç: tek son kaçan",
+      "aciklama": "Alarm flaşı, 'Son kaçan' altın kartı (+1 ve süre), 'Kaçmayan: -1' ve silik avatarlar.",
+      "dosya": "sonkisi-reveal-n-5"
+    },
+    {
+      "mock": "sonkisi-reveal-tie",
+      "name": "sonkisi-reveal-tie",
+      "q": "mock=sonkisi-reveal-tie&n=8",
+      "baslik": "Sonuç: eşit zaman",
+      "aciklama": "'Son kaçanlar': aynı ms'de kaçan iki oyuncunun altın kartları (+1).",
+      "dosya": "sonkisi-reveal-tie-n-8"
+    },
+    {
+      "mock": "sonkisi-reveal-none",
+      "name": "sonkisi-reveal-none",
+      "q": "mock=sonkisi-reveal-none&n=3",
+      "baslik": "Sonuç: kimse kaçmadı",
+      "aciklama": "'Kimse kaçmadı' başlığı ve 'Herkes -1' notu.",
+      "dosya": "sonkisi-reveal-none-n-3"
+    }
+  ],
+  "bilinenSorunlar": [
+    "Erken bitiş (herkes kaçınca 1 sn) KURALLAR.md §17'de yoktur; kod bunu ekledi. Ayrıca bu erken bitiş denetimi bağlantıya bakmaz (diğer oyunların çoğunda bağlı olmayan oyuncu beklenmez ama Son Kişi'de beklenir): kopuk ve kaçmamış bir oyuncu erken bitişi engeller.",
+    "KURALLAR.md §17 'sayaç hiç çizilmez' der ve kod noClock ile kabuk saatini de gizler; ancak 'karakterin gölgesi arada bir titreşir' ifadesi kodda gerilim düzeyine bağlı sabit nabız süreleriyle (2,8/1,7/1,0/0,52 sn) uygulanmıştır.",
+    "KURALLAR.md gerilim eşiklerinden (üç düzey) söz etmez; düzey değişiminde kalp atışı sesi/titreşimi yalnız hâlâ koridorda olanlara gelir (kod).",
+    "İstemci KAÇ'a basınca sunucu cevabını beklemeden 'KAÇTIN' gösterir; basış bitişten sonra sunucuya ulaşırsa reddedilir ve oyuncu sonuçta kaçmayan (-1) sayılır, ekran bunu önceden bilemez.",
+    "Gizli bitiş için KURALLAR 'rastgele 10-20 sn' der; kodda uç değerler dahildir (10,000 ve 20,000 ms mümkündür) ve bitiş anında gelen basış reddedilir."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-27: Oyunlar kabuk saatine, Status ve hazır noktalarına taşındı (Son Kişi 'noClock').",
+    "2026-10-27: Tüm oyunlar için tur özeti (summarize): 'X en son kaçtı, N kişi kaçamadı'.",
+    "2026-10-26: İstemci: kasa kapısı, kaçış kolu, el sıkışma ve nişangâh çizimleri (kaçış kolu görseli); avatar ruh halleri.",
+    "2026-10-19: Son Kişi: herkes kaçınca erken biter (1 sn).",
+    "2026-10-18: Son Kişi: bitişe göre rastgele, gizli gerilim eşikleri (sabit oran yok).",
+    "2026-10-18: Son Kişi oyunu eklendi (motor, bot, testler, sunucu testi, istemci)."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/son-kisi/index.ts",
+    "packages/engine/src/games/son-kisi/types.ts",
+    "packages/engine/src/games/son-kisi/bots.ts",
+    "packages/engine/src/games/son-kisi/summary.ts",
+    "packages/engine/src/games/son-kisi/son-kisi.test.ts",
+    "docs/KURALLAR.md#17-son-kişi",
+    "apps/client/src/games/son-kisi/ (SonKisiScreen.tsx, Corridor.tsx, Reveal.tsx, view.ts, sounds.ts, son-kisi.css)",
+    "apps/client/src/games/registry.ts (noClock)",
+    "apps/server/src/match.ts",
+    "apps/server/src/son-kisi.test.ts",
+    "scripts/ui-check.mjs"
+  ]
+}

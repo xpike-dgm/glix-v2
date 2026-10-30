@@ -1,0 +1,324 @@
+{
+  "id": "zehirli-kadeh",
+  "ad": "Zehirli Kadeh",
+  "slogan": "Hangi kadeh zehirli, kimse bilmez; tek takas hakkınla şansını değiştir ya da bekle.",
+  "kategori": "Şans",
+  "etiketler": ["eşzamanlı", "blöfsüz şans", "tek hamle", "herkes puan alabilir"],
+  "oyuncu": {
+    "min": 2,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 30,
+    "not": "Oyun 20 sn başlar; her takas süre bitişini 5 sn uzatır. Hiç takas olmazsa tam 20 sn sürer. Herkes (tüm katılımcılar) takas hakkını kullanırsa son takastan 1 sn sonra biter. Bunun öncesinde anlatım ekranı (en çok 40 sn, herkes hazırsa daha erken) ve 3 sn geri sayım, sonrasında 30 sn'ye kadar sonuç ekranı vardır."
+  },
+  "ozet": "Her oyuncunun önünde bir kadeh durur; bazı kadehler zehirlidir ama hangileri olduğunu, kendi kadehin dahil, hiçbir oyuncu göremez. İstersen tek takas hakkınla bir arkadaşının kadehiyle kadehini değiştirirsin; takas zorunlu değildir. Süre bitince elinde zehirsiz (temiz) kadeh olan herkes +1, zehirli kadeh olan 0 alır. Beraberlik yoktur; temiz kadehi olan herkes puan alır.",
+  "akis": [
+    {
+      "ad": "Anlatım",
+      "sureSn": 40,
+      "kim": "herkes",
+      "aciklama": "Oyun öncesi tam ekran anlatım: amaç 'Zehirli kadehle kalma!' ve üç madde (hangi kadeh zehirli kimse göremez; istersen bir arkadaşınla tek takas yap, her takas süreyi uzatır; süre bitince temiz kadeh +1, zehirli kadeh 0). Bağlı bütün katılımcılar hazır olunca ya da 40 sn dolunca geri sayıma geçilir. Maç düzeyi kartlar bu ekranda oynanır.",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Geri sayım",
+      "sureSn": 3,
+      "kim": "herkes",
+      "aciklama": "Kesinleşen kartlar herkese açık duyurulur (Ayna ve Koruma gizli kalır), sonra oyun başlar.",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Takas",
+      "sureSn": 20,
+      "kim": "herkes (oyuncular eşzamanlı)",
+      "aciklama": "Ekranda her oyuncunun kadehi ve takma adı bir ızgarada görünür (4 ve altı oyuncuda 2 sütun, 5-6'da 3 sütun, 7-8'de 4 sütun). Süre halkası kalan süreyi gösterir; her takas halkaya amber bir 5 sn'lik pay ekler. Oyuncu bir başka oyuncunun kadehine dokunup seçer (tekrar dokunursa seçim kalkar), sonra 'TAKAS ET'e basar; takas anında uygulanır: iki kadeh yer değiştirir, ışık tüneli ve ses çalar, 'Ad ⇄ Ad' satırında son takas görünür. Takasını yapan oyuncu 'Takasını yaptın / Şimdi sonucu bekle' görür ve düğme kalkar. Süre bitince 'Süre doldu' yazar.",
+      "gizli": "Hangi kadehlerin zehirli olduğu hiçbir görünümde yoktur (sahibi dahil). Herkes kimin kiminle takas ettiğini, kimin takas hakkını kullandığını ve kimin elinde hangi kadeh numarası olduğunu görür; ama kadehin zehirli olup olmadığı görünmez. Görünümde yalnız zehirli kadeh SAYISI vardır."
+    },
+    {
+      "ad": "Sonuç",
+      "sureSn": 30,
+      "kim": "herkes",
+      "aciklama": "Süre bitince zehirli kadehler açılır: temiz kadehler altın renkli ve '+1', zehirli kadehler mor-siyah dumanlı ve '0' olarak gösterilir. Oyuncu kendi sonucuna göre 'Kadehin temiz!' ya da 'Kadehin zehirliydi' başlığını görür; izleyici 'Kadehler açıldı' görür. Sonuç ekranı bağlı herkes 'Devam'a basınca 1 sn sonra, basmayan olursa 30 sn sonra kapanır.",
+      "gizli": "Zehirli kadehlerin numaraları ilk kez burada açılır."
+    }
+  ],
+  "kurallar": [
+    "Oyuncu sayısı 2 ile 8 arasındadır.",
+    "Her oyuncuya bir kadeh verilir; kadeh numarası başlangıçtaki sahibinin sırasıdır (renk de bu numaraya göre sabittir, kadehin rengi zehir ipucu vermez).",
+    "Zehirli kadeh sayısı oyuncu sayısına bağlıdır: 2-3 oyuncuda 1, 4-5 oyuncuda 2, 6-8 oyuncuda 3. Hangi kadehlerin zehirli olduğu oyun başında maç tohumundan rastgele seçilir; bu yüzden her kadeh zehirli çıkabilir. Hiçbir zaman tüm kadehler zehirli olmaz, en az bir temiz kadeh vardır.",
+    "Hiçbir oyuncu, kendi kadehi dahil, hiçbir kadehin zehirli olup olmadığını görmez. Görünümde yalnız zehirli kadeh sayısı bulunur.",
+    "Oyun 20 saniye sürer. Her takas bitiş zamanını 5 saniye uzatır.",
+    "Her oyuncunun yalnız 1 takas hakkı vardır. Takas zorunlu değildir; hiç takas yapmayabilirsin.",
+    "Takas, iki oyuncunun elindeki kadehlerin anında yer değiştirmesidir. Takas isteği sunucuda tek işlem olarak uygulanır; aynı anda gelen iki takasta sunucuya ulaşma sırası geçerlidir.",
+    "Kendinle takas yapılamaz (reddedilir).",
+    "Takas yapılacak hedef oyunun katılımcısı olmalı ve takas anında bağlı olmalıdır; bağlantısı kopuk oyuncuyla takas yapılamaz (reddedilir).",
+    "Hedef olmak takas hakkını harcamaz: seni seçen biri olduysa kadehin değişir ama sen sonra kendi takasını yapabilirsin. Takası başlatan hakkını harcar.",
+    "Takasın kimden kimeye yapıldığı (kadeh içeriği olmadan), sırasıyla herkese açık takas geçmişinde tutulur.",
+    "Yalnız oyunun katılımcıları takas yapabilir. İzleyici ve TV hiçbir şey gönderemez, sadece izler.",
+    "Süre bittikten sonra gelen takas reddedilir. Geç gelen eylem payı: süre dolmadan gönderilip ağ gecikmesiyle sunucuya en fazla 250 ms geç ulaşan takas kabul edilir; bu yüzden sonuç ekranın sayacından yaklaşık 250 ms geç açılır.",
+    "Tüm katılımcılar (bağlantıdan bağımsız) takas hakkını kullandıysa sonuç değişemez, bu yüzden oyun son takastan 1 sn sonra biter (süre uzamaz, hatta kısalır). Bağlantısı kopmuş ve takas etmemiş bir oyuncu varsa bu erken bitiş olmaz.",
+    "Sonuç, süre bittiği an kimin elinde hangi kadeh olduğuna göre belirlenir (başlangıçtaki değil, takaslardan sonraki kadeh).",
+    "Puan: temiz kadeh +1, zehirli kadeh 0. Eksi puan yoktur. Hem mini oyun puanı hem genel skora giden puan aynıdır.",
+    "Zehirli kadehlerin numaraları süre bitene kadar hiçbir görünümde (herkese açık ya da kişiye özel) bulunmaz; yalnız sonuç açılınca gelir."
+  ],
+  "puanlama": {
+    "ozet": "Süre bitince elindeki kadeh temizse +1, zehirliyse 0. Başka puan yok.",
+    "kalemler": [
+      {
+        "olay": "Süre bitiminde elinde temiz kadeh var",
+        "puan": "+1",
+        "not": "Her temiz kadeh sahibine; kaç kişi olursa olsun hepsi alır."
+      },
+      {
+        "olay": "Süre bitiminde elinde zehirli kadeh var",
+        "puan": "0",
+        "not": "Eksi puan yok."
+      },
+      {
+        "olay": "Takas yapmamak",
+        "puan": "0 (ceza yok)",
+        "not": "Takas zorunlu değil; kadehin takas yapılmadıysa başlangıçta aldığın kadehle puanlanırsın (başkası seninle takas ettiyse o kadehin)."
+      }
+    ],
+    "ornek": "5 oyuncu (Ali, Bora, Ceren, Deniz, Ece) => 2 zehirli kadeh; diyelim zehirliler kadeh 1 (Bora'nın başlangıç kadehi) ve kadeh 3 (Deniz'in). Ali Bora ile takas eder: Ali artık kadeh 1'de (zehirli), Bora kadeh 0'da (temiz); süre 20 sn'den 25 sn'ye uzar. Ceren Ece ile takas eder (kadeh 2 ve 4, ikisi de temiz); süre 30 sn olur. Deniz hiç takas yapmaz, kadeh 3'te kalır. Süre bitince: Ali 0 (zehirli), Bora +1, Ceren +1, Deniz 0 (zehirli), Ece +1.",
+    "beraberlik": "Beraberlik kavramı yoktur; temiz kadehi olan herkes +1 alır. Maç düzeyi kartlarda 'birinci' = +1 alanların hepsi, 'sonuncu' = 0 alanların hepsi sayılır (herkes eşitse herkes birincidir)."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Kopan oyuncu katılımcı olmaya devam eder ve kadehi sonuçta puanlanır. Bağlı biri onunla takas yapamaz (hedef bağlı olmalı), ama kopuk oyuncu geri dönerse kendi hakkını kullanabilir. Takas hakkını kullanmamış kopuk bir oyuncu varsa 'herkes takas etti' erken bitişi tetiklenmez; oyun süresi dolana kadar sürer."
+    },
+    {
+      "baslik": "İzleyici ve TV",
+      "aciklama": "İzleyici 'Kadehleri izliyorsun / Zehir sonda açılır' görür, takasları ve kadehlerin yer değiştirmesini canlı izler, 'Takaslar herkese açık' notunu görür. Puan almaz ve takas yapamaz."
+    },
+    {
+      "baslik": "2 oyuncu",
+      "aciklama": "1 zehirli kadeh vardır. Bir oyuncu diğeriyle takas ederse kadehler yer değiştirir; diğer de kendi hakkını kullanıp geri takas edebilir. İkisi de takas edince oyun 1 sn sonra biter. Her zaman tam bir temiz kadeh vardır: bir oyuncu +1, diğeri 0 alır."
+    },
+    {
+      "baslik": "8 oyuncu",
+      "aciklama": "3 zehirli, 5 temiz kadeh vardır; ızgara 4 sütunludur. En fazla 8 takas olabileceğinden süre en fazla 20 + 8×5 = 60 sn'ye uzar (herkes takas edince son takastan 1 sn sonra biter)."
+    },
+    {
+      "baslik": "Herkes erken takas ederse",
+      "aciklama": "Son takas yapıldığında bitiş zamanı, mevcut bitiş + 5 sn ile 'şimdi + 1 sn' değerlerinden küçük olanı olur; yani 1 sn sonra biter. Bu, süreyi kısaltabilir ya da (son 1 sn'den azı kalmışsa) 1 sn'ye uzatabilir."
+    },
+    {
+      "baslik": "Süre sınırına denk gelen takas",
+      "aciklama": "Süre dolmadan gönderilip 250 ms içinde ulaşan takas kabul edilir (geç gelen eylem payı). Bundan sonrası 'bitti' diye reddedilir. Oyun sonuç ekranına sunucu saatiyle geçer."
+    },
+    {
+      "baslik": "Aynı anda iki takas",
+      "aciklama": "Sunucu sırası geçerlidir. İki oyuncu aynı kişiyi hedeflerse ikisi de uygulanır (kadehler sırayla yer değiştirir); ikisi de kendi hakkını harcar."
+    },
+    {
+      "baslik": "Reddedilen takas",
+      "aciklama": "İstemci takası hemen göstermeyi dener (iyimser güncelleme); sunucu reddederse kadehler geri döner, hata sesi ve titreşim çalar ve takas hakkı geri gelir."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Genel (tüm kartlar)",
+      "etki": "Kartlar yalnız oyun sonu genel skora giden puanları (awards) değiştirir; kod bu oyun için özel bir dal içermez, genel K6 hesabı çalışır. Bu oyunda mini oyun puanı = genel puan olduğundan ham ödül 0 ya da +1'dir."
+    },
+    {
+      "kart": "Kendine Güven / Sigorta / Tahmin / Ters Köşe / Hırsız",
+      "etki": "'Birinci' = temiz kadehi olan herkes (hepsi birinci), 'sonuncu' = zehirli kadehi olanlar. Sonuncu olmak için zehirli kadehte kalmak gerekir. Tahmin ettiğin oyuncu temiz kadehle biterse (+1 alırsa) o birinci sayılır ve +2 kazanırsın. Ters Köşe'de 0 alanlar +1, +1 alanlar 0 ödülünü alacak şekilde ödüller aynadaki sıraya göre yer değiştirir."
+    },
+    {
+      "kart": "Çift Puan / Altın Dokunuş / Ağır Yük",
+      "etki": "Ham ödül 0 ya da 1 olduğu için Çift Puan +1'i +2, Altın Dokunuş +1'i +3 yapar; zehirli kadehte (0) çarpanların etkisi yoktur. Ağır Yük +1'i 0'a düşürür."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Başlangıç süresi",
+      "deger": "20 000 ms (20 sn)",
+      "kaynak": "packages/engine/src/games/zehirli-kadeh/types.ts:4"
+    },
+    {
+      "ad": "Her takasın eklediği süre",
+      "deger": "5 000 ms (5 sn)",
+      "kaynak": "packages/engine/src/games/zehirli-kadeh/types.ts:5"
+    },
+    {
+      "ad": "Herkes takas edince kalan süre",
+      "deger": "1 000 ms (1 sn)",
+      "kaynak": "packages/engine/src/games/zehirli-kadeh/types.ts:7"
+    },
+    {
+      "ad": "Zehirli kadeh sayısı",
+      "deger": "2-3 oyuncu: 1; 4-5: 2; 6-8: 3",
+      "kaynak": "packages/engine/src/games/zehirli-kadeh/types.ts:10"
+    },
+    {
+      "ad": "Oyuncu sayısı",
+      "deger": "2 - 8",
+      "kaynak": "packages/engine/src/games/zehirli-kadeh/index.ts:50"
+    },
+    {
+      "ad": "Geç gelen eylem payı",
+      "deger": "250 ms (LATE_ACTION_GRACE_MS)",
+      "kaynak": "packages/engine/src/game.ts:166 ve packages/engine/src/games/zehirli-kadeh/index.ts:48"
+    },
+    {
+      "ad": "Zehirli kadehlerin rastgele seçimi",
+      "deger": "oyuncu sırası karıştırılır, ilk N kadeh zehirli",
+      "kaynak": "packages/engine/src/games/zehirli-kadeh/index.ts:72-73"
+    },
+    {
+      "ad": "Takas kuralları (hak, kendin, bağlı hedef)",
+      "deger": "already_swapped, self_target, target_offline reddi",
+      "kaynak": "packages/engine/src/games/zehirli-kadeh/index.ts:91-95"
+    },
+    {
+      "ad": "Erken bitiş hesabı",
+      "deger": "min(bitiş+5 sn, şimdi+1 sn)",
+      "kaynak": "packages/engine/src/games/zehirli-kadeh/index.ts:105-108"
+    },
+    {
+      "ad": "Puanlar (temiz/zehirli)",
+      "deger": "+1 / 0 (miniScores = awards)",
+      "kaynak": "packages/engine/src/games/zehirli-kadeh/index.ts:159-162"
+    },
+    {
+      "ad": "Anlatım üst süresi",
+      "deger": "40 000 ms",
+      "kaynak": "apps/server/src/match.ts:40"
+    },
+    {
+      "ad": "Geri sayım",
+      "deger": "3 000 ms",
+      "kaynak": "apps/server/src/match.ts:41"
+    },
+    {
+      "ad": "Sonuç ekranı",
+      "deger": "30 000 ms (herkes Devam deyince 1 sn)",
+      "kaynak": "apps/server/src/match.ts:42; packages/engine/src/protocol.ts:29"
+    },
+    {
+      "ad": "Izgara sütun sayısı",
+      "deger": "n≤4: 2, n≤6: 3, aksi 4",
+      "kaynak": "apps/client/src/games/zehirli-kadeh/view.ts:109-111"
+    },
+    {
+      "ad": "Takas ışık tüneli gösterim süresi",
+      "deger": "1 400 ms",
+      "kaynak": "apps/client/src/games/zehirli-kadeh/ZehirliKadehScreen.tsx:79,99"
+    },
+    {
+      "ad": "Kadeh renk paleti",
+      "deger": "8 renk, kadeh numarasına göre",
+      "kaynak": "apps/client/src/games/zehirli-kadeh/view.ts:15-24"
+    }
+  ],
+  "strateji": [
+    "Hangi kadehin zehirli olduğunu bilmediğin için bilgi yok: takas ederek şansın değişmez ama kadehin başkasına geçebilir. Başkasının seninle takas edip etmediğini takas geçmişinden izle.",
+    "Zehirli oranı yüksektir (8 kişide 3/8, 4-5 kişide 2/5-2/4). Rastgele bir kadehin zehirli olma olasılığı hep aynıdır; takas beklenen değeri artırmaz, yalnız varyansı oynatır.",
+    "Süre bitimine yakın yapılan takasın etkisi tek taraflıdır: kimse tepki veremez. Ama her takas süreyi 5 sn uzatır, bu da diğerlerine yeniden takas fırsatı verir.",
+    "Birinin takas hakkını kullanmadığını görürsen hedef olmaktan çekinme: hedef olmak hakkını harcatmaz, sonra kendi takasını yapabilir.",
+    "Herkes takas hakkını kullanınca oyun 1 sn sonra biter; son hamleyi yapan kişi sonradan tepki alamaz.",
+    "Kartlar tutuyorsan (ör. Tahmin, Kendine Güven) ham ödül yalnız 0/1 olduğundan çarpan kartlar zehirli kadehte işe yaramaz."
+  ],
+  "tv": "TV/sahne ekranı oyun ekranını izleyici kipinde büyütülmüş olarak gösterir (selfId boş, takas yapılamaz): kadeh ızgarası, süre halkası, son takas satırı ve sonuçta altın/mor kadehler; sağda oyuncular ve puanlar bulunur. Zehirli Kadeh'e özel bir StageView yoktur.",
+  "ekranlar": [
+    {
+      "ad": "zehirli-briefing",
+      "mock": "zehirli-briefing",
+      "q": "mock=zehirli-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Oyun öncesi anlatım: amaç ve üç madde.",
+      "dosya": "zehirli-briefing"
+    },
+    {
+      "ad": "zehirli-play-5",
+      "mock": "zehirli-play",
+      "q": "mock=zehirli-play&n=5",
+      "baslik": "Takas (5 oyuncu)",
+      "aciklama": "Süre halkası, 'Henüz takas yok' ve 3 sütunlu kadeh ızgarası; altta 'Takas için bir kadeh seç' düğmesi.",
+      "dosya": "zehirli-play-n-5"
+    },
+    {
+      "ad": "zehirli-play-8",
+      "mock": "zehirli-play",
+      "q": "mock=zehirli-play&n=8",
+      "baslik": "Takas (8 oyuncu)",
+      "aciklama": "8 kadehlik 4 sütunlu ızgara.",
+      "dosya": "zehirli-play-n-8"
+    },
+    {
+      "ad": "zehirli-play-2",
+      "mock": "zehirli-play",
+      "q": "mock=zehirli-play&n=2",
+      "baslik": "Takas (2 oyuncu)",
+      "aciklama": "İki oyunculu en küçük ızgara.",
+      "dosya": "zehirli-play-n-2"
+    },
+    {
+      "ad": "zehirli-picked",
+      "mock": "zehirli-play",
+      "q": "mock=zehirli-play&n=6",
+      "baslik": "Kadeh seçildi",
+      "aciklama": "Bir kadehe dokunulmuş: amber çerçeve, düğme 'Takas: <ad>' ve etkin.",
+      "dosya": "zehirli-play-n-6"
+    },
+    {
+      "ad": "zehirli-used",
+      "mock": "zehirli-used",
+      "q": "mock=zehirli-used&n=6",
+      "baslik": "Takas yapıldı",
+      "aciklama": "'Takasını yaptın / Şimdi sonucu bekle' ve 'Takas hakkın bitti' notu; son takas satırı görünür.",
+      "dosya": "zehirli-used-n-6"
+    },
+    {
+      "ad": "zehirli-spectator",
+      "mock": "zehirli-spectator",
+      "q": "mock=zehirli-spectator&n=5",
+      "baslik": "İzleyici",
+      "aciklama": "'Kadehleri izliyorsun / Zehir sonda açılır', 'Takaslar herkese açık'.",
+      "dosya": "zehirli-spectator-n-5"
+    },
+    {
+      "ad": "zehirli-reveal-6",
+      "mock": "zehirli-reveal",
+      "q": "mock=zehirli-reveal&n=6",
+      "baslik": "Sonuç (temiz)",
+      "aciklama": "Kadehler açılır; temiz olanlar altın '+1', zehirliler mor-siyah '0'; başlık 'Kadehin temiz!'.",
+      "dosya": "zehirli-reveal-n-6"
+    },
+    {
+      "ad": "zehirli-reveal-poison-8",
+      "mock": "zehirli-reveal",
+      "q": "mock=zehirli-reveal&n=8&poison=1",
+      "baslik": "Sonuç (zehirli, 8 oyuncu)",
+      "aciklama": "Benim kadehim zehirli: 'Kadehin zehirliydi'; 3 zehirli, 5 temiz kadeh.",
+      "dosya": "zehirli-reveal-n-8-poison-1"
+    }
+  ],
+  "bilinenSorunlar": [
+    "KURALLAR.md 'Takas kime yapılabilir' cevabı yalnız kendinle takasın olmadığını söyler; kod ek olarak hedefin takas anında BAĞLI olmasını şart koşar (target_offline). Kuralda geçmez.",
+    "KURALLAR.md 'toplam süre takaslarla uzar' der; kod yalnız herkes takas ettiğinde sonu 'şimdi+1 sn'ye çeker (süre kısalabilir). Bu kural dosyasında yoktur (docs ERKEN-BITIS kapsamında).",
+    "Hiç takas olmazsa ilk 20 sn içinde oyuncu sayısından bağımsız olarak sonuç açılır; bitişten sonra tick 250 ms gecikmeli olduğundan sonuç ekrandaki sayaçtan biraz geç gelir."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-29: Geç gelen eylem payı: Zehirli Kadeh dahil 3 oyunda oyun saati 250 ms geriden verilir.",
+    "2026-10-27: Renk körlüğü modu: kadeh için ek işaretler.",
+    "2026-10-27: Kabuk saati, Status bileşeni ve hazır noktalarına taşındı (arayüz iskeleti).",
+    "2026-10-27: Tüm oyunlar için tur özeti (summarize) ve kayıt defteri eklendi.",
+    "2026-10-26: Kadeh çizimi sahibine göre zehirli çizimler ve sonuç efektleri.",
+    "2026-10-25: Anında geri bildirim (iyimser arayüz) kadeh takası dahil.",
+    "2026-10-19: Herkes takas hakkını kullanınca oyun erken biter.",
+    "2026-10-19: Düzen, kontrast ve ui-check kapsamı tamamlandı."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/zehirli-kadeh/index.ts",
+    "packages/engine/src/games/zehirli-kadeh/types.ts",
+    "packages/engine/src/games/zehirli-kadeh/zehirli-kadeh.test.ts",
+    "docs/KURALLAR.md#22-zehirli-kadeh",
+    "apps/client/src/games/zehirli-kadeh/ZehirliKadehScreen.tsx",
+    "apps/client/src/games/zehirli-kadeh/Reveal.tsx",
+    "apps/client/src/games/zehirli-kadeh/view.ts"
+  ]
+}

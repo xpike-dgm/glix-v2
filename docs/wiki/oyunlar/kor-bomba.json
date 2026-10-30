@@ -1,0 +1,393 @@
+{
+  "id": "kor-bomba",
+  "ad": "Kör Bomba",
+  "slogan": "Bomba sende patlamasın: taşıyan süreyi göremez, herkes görür, kandır ya da ikna et.",
+  "kategori": "Blöf",
+  "etiketler": ["blöf", "sözlü ikna", "yatay ekran", "pas", "tahmin"],
+  "oyuncu": {
+    "min": 2,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 28,
+    "not": "Fitil ilk verilişten 15 ile 20 sn sonra patlar; her başarılı pas bu süreye 1 ile 4 sn ekler (sınırsız pas). 5 pas yapılırsa ortalama 15-20 + yaklaşık 12,5 sn. Patlamadan sonra 2 sn patlama gösterisi vardır. Oyuncu sayısı süreyi doğrudan değiştirmez; kalabalık odada pas sayısı artabilir."
+  },
+  "ozet": "Bomba rastgele bir oyuncuda başlar. Bombayı taşıyan, ne zaman patlayacağını göremez; diğerleri gerçek kalan süreyi görür ve ona yalan ya da doğru söyleyerek pas verdirmeye veya tutturmaya çalışır. Taşıyan istediği anda bağlı başka birine pas verir; her pas fitili 1-4 sn uzatır. Bomba kimin elinde patlarsa o oyuncu −1 alır. Bombayı taşımayanlar her el için gizlice patlar ya da patlamaz diye tahmin edebilir; son elde patlar diye doğru bilenler +1 alır.",
+  "akis": [
+    {
+      "ad": "Anlatım",
+      "sureSn": 40,
+      "kim": "herkes",
+      "aciklama": "Amaç: Bomba sende patlamasın! Üç madde: Bomba rastgele birinde başlar; Taşıyan süreyi görmez, kandır ya da ikna et; Pas ver, süreyi uzat, patlayan −1 alır. Bağlı bütün katılımcılar hazır olunca ya da 40 sn dolunca biter. Kart bu ekranda oynanır.",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Geri sayım",
+      "sureSn": 3,
+      "kim": "herkes",
+      "aciklama": "3 saniyelik geri sayım; kartlar duyurulur (Ayna ve Koruma hariç).",
+      "gizli": "Ayna ve Koruma gizli kalır."
+    },
+    {
+      "ad": "Bomba oyunu",
+      "sureSn": 20,
+      "kim": "herkes (taşıyıcı pas verir; diğerleri izler ve tahmin eder)",
+      "aciklama": "Oyun başlarken bomba rastgele bir bağlı katılımcıya verilir ve fitil 15 ile 20 sn arasında (ms çözünürlüğünde rastgele) seçilir. Ekran yataydır: ortada yeşil bir masa ve bomba, oyuncular masanın çevresinde koltuklarda oturur; kendi koltuğun altta, diğerleri saat yönündedir. Bomba taşıyıcının önünde durur ve taşıyıcının avatarı kırmızı halkalıdır. Taşıyıcı kendi ekranında bomba için opak siyah bir çekirdek görür, süre yoktur; alt kısımda PAS VER yazısı çıkar ve masadaki diğer (bağlı) oyuncuların koltuklarına dokunarak pas verir. Pas anında bomba yeni taşıyıcıya gider (ışık kablodan akar, kısa bir tak sesi ve titreşim). Taşıyıcı olmayanlar bombayı parlak bir küre olarak ve üzerinde patlamaya kalan süreyi ondalıklı (örn. 12,4) görür; süre 5 saniyenin altına inince bomba ve sayaç acil (kırmızı) görünüme geçer. Her pastan 0,2 sn sonra (süreyi görenlerde) eklenen süre kıvılcım olarak çıkar (örn. +2,5) ve 1 sn kalır. Taşıyıcı olmayanlarda ayrıca her el için Patlar / Patlamaz düğmeleri vardır.",
+      "gizli": "Gerçek patlama anı ve son pasın eklediği süre yalnız taşıyıcı olmayan katılımcılara gider; taşıyıcıda ve izleyicide hiçbir süre alanı yoktur. Herkese açık: kimin taşıdığı, kaç pas yapıldığı, son pasın kimden kime olduğu. Tahminler gizlidir: herkes yalnız kendi tahminini görür, taşıyıcı hiçbir tahmini öğrenmez."
+    },
+    {
+      "ad": "Patlama gösterisi",
+      "sureSn": 2,
+      "kim": "herkes",
+      "aciklama": "Fitil bittiği anda kurallar biter. Taşıyıcının avatarı beyaz bir siluete döner, kısa sarsıntı ve gürleme sesi olur. Patlamada puan alanların adları herkese yazılır: örn. Elif bildi! (kendin bildiysen Sen bildin!). 2 saniye sonra sonuç ekranı açılır. Bu 2 saniye boyunca pas, tahmin ve taşıyıcı sabittir.",
+      "gizli": "Patlama zamanı ve doğru bilenler artık herkese açıktır."
+    },
+    {
+      "ad": "Sonuç ekranı",
+      "sureSn": 30,
+      "kim": "herkes",
+      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 30 sn sonra kapanır.",
+      "gizli": "Yok."
+    }
+  ],
+  "kurallar": [
+    "2 ile 8 oyuncu katılır; ekran yataydır. Dikey tutulan telefonda Telefonunu yan çevir örtüsü çıkar ve oyun arkada çalışmaya devam eder.",
+    "Bomba oyun başında rastgele bir katılımcıya verilir. Seçim yalnız bağlı katılımcılar arasından yapılır; hiçbiri bağlı değilse katılımcılardan biri seçilir.",
+    "Patlama zamanı oyunun başından itibaren 15 000 ile 20 000 ms arasında rastgele (ms çözünürlükte) seçilir.",
+    "Taşıyıcı bombayı istediği anda, sınırsız sayıda pas vererek başka birine geçirebilir. Pas yalnız o anki taşıyıcıdan yapılabilir (not_holder).",
+    "Kendine pas verilemez (self_target). Katılımcı olmayana pas verilemez (bad_target). Bağlantısı kopuk bir oyuncuya pas verilemez (target_offline); istemcide kopuk oyuncunun koltuğu dokunulamaz.",
+    "Geri pas serbesttir (A'dan B'ye, B'den hemen A'ya). Pas sayısında sınır yoktur.",
+    "Her başarılı pas, patlama zamanına 1 000 ile 4 000 ms arasında rastgele bir süre ekler (ms çözünürlükte). Patlama anı bu miktar kadar ileri kayar; taşıyıcı olmayanlar yeni zamanı görür.",
+    "Pas anında gerçekleşir. Patlama ile aynı milisaniyedeki ya da sonraki pas reddedilir (ended): patlama önce işlenir. Patlamadan 1 ms önceki pas kabul edilir ve fitili uzatır.",
+    "Patlama ana geldiğinde bomba kimdeyse o oyuncu −1 alır. Hiç pas verilmezse ilk taşıyıcı −1 alır. Bu oyunda +puan yoktur; tek istisna doğru tahmin bonusudur.",
+    "Bağlantısı kopan taşıyıcı bombayı tutar; pas veremez, patlayınca o −1 alır.",
+    "Tahmin (O9): bombayı o an taşımayan her katılımcı, bombanın her taşıyıcı eli için bir kez Patlar ya da Patlamaz diye tahmin verebilir. Tahmin değiştirilemez; ikinci tahmin reddedilir (already_predicted).",
+    "Eski el tahmini (bu elde değil, daha önceki pas sayısını taşıyan) reddedilir (stale_turn). Bombayı o an taşıyan tahmin veremez (holder_cannot_predict); bombayı yeni alan o elde tahmin veremez. Pas verince eski taşıyıcı sonraki elde yeniden tahmin hakkı kazanır.",
+    "Tahmin düğmeleri süreye bağlı değildir: kalan süreye göre açılmaz, kapanmaz, değişmez; sunucu tahmini süreden bağımsız işler. Tahmin patlama anında (ve sonrasında) kabul edilmez; patlamadan önce her an kabul edilir.",
+    "Pas gelince o eldeki tahminler çözülür: Patlamaz diyen doğru bilmiş, Patlar diyen bilememiştir (pas = o elde patlamadı). Çözülen sonucu yalnız tahmin sahibi görür (Bildin! ya da Bilemedin bildirimi). Pasla biten elde Patlar diyen puan alamaz.",
+    "Patlamada yalnız son (patlayan) eldeki Patlar tahminleri sayılır. Taşıyıcı sayılmaz. Doğru bilen her tahminci +1 alır; bu ödül oyun başına oyuncu başına zaten en çok +1'dir (eski ellerin tahminleri pasla silinir). Patlamaz diyenler ve yanlış bilenler puan almaz ve kaybetmez.",
+    "Tahminler patlayana ya da pasa kadar gizlidir. Taşıyıcının görünümü diğer oyuncuların tahmin gönderdiği anlarda değişmez (zamanlama sızıntısı yoktur). Patlamada puan alanların adı herkese açılır (yanlış bilenler ve Patlamaz diyenler açılmaz).",
+    "İzleyici oyuna ve tahmine katılamaz, süreyi görmez; puan almaz.",
+    "Bu oyunda geç gelen eylem payı yoktur ve erken bitiş yoktur: oyun, fitil ve patlama gösterisi bitince sona erer (fitil + 2 sn).",
+    "Mini oyun puanı doğrudan genel skora gider (taşıyıcı −1, doğru bilenler +1, diğerleri 0)."
+  ],
+  "puanlama": {
+    "ozet": "Bomba patladığında elinde olan −1 alır; son elde patlar diye doğru bilen taşıyıcı olmayanlar +1 alır; diğer herkes 0. Beraberlik kuralı yoktur.",
+    "kalemler": [
+      {
+        "olay": "Patlama anında bombayı taşımak",
+        "puan": "−1",
+        "not": "Tek kişi; sonuncu olan odur."
+      },
+      {
+        "olay": "Son elde Patlar diyip bilmek",
+        "puan": "+1",
+        "not": "Taşıyıcı olmayan, aynı el için Patlar demiş her oyuncu; hepsi alır. Oyun başına oyuncu başına en çok +1."
+      },
+      {
+        "olay": "Patlamaz demek ya da yanlış bilmek",
+        "puan": "0",
+        "not": "Ceza yok."
+      },
+      {
+        "olay": "Bombayı hiç taşımayıp tahmin vermemek",
+        "puan": "0",
+        "not": ""
+      },
+      {
+        "olay": "Pasla biten elde Patlar demek",
+        "puan": "0",
+        "not": "O el patlamadığı için puan yok; yalnız Bilemedin bildirimi görülür."
+      }
+    ],
+    "ornek": "4 oyuncu: Ali, Bora, Cem, Deniz. Bomba Ali'de başlar (patlama 17,0 sn'de). Ali Bora'ya pas verir, +2,5 sn eklenir (19,5). Bora Cem'e pas verir, +1,2 sn eklenir (20,7). Cem'de iken Deniz Patlar, Ali Patlamaz der. Bomba Cem'de 20,7 sn'de patlar: Cem −1, Deniz +1 (Patlar dedi ve bildi), Ali 0 (Patlamaz dedi), Bora 0. Önceki ellerdeki tahminler pasla çözülüp silinmiştir.",
+    "beraberlik": "Beraberlik kuralı yoktur. Mini oyun sıralamasında taşıyıcı tek sonuncudur; doğru bilen varsa onlar birinci, yoksa taşıyıcı dışındaki herkes 0 puanla birinci grubu paylaşır."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan taşıyıcı",
+      "aciklama": "Bomba onda kalır, fitil işlemeye devam eder ve patlarsa o −1 alır. Pas veremez. Geri dönerse bombayı hâlâ taşıyorsa pas verebilir."
+    },
+    {
+      "baslik": "Bağlantısı kopan hedef",
+      "aciklama": "Bağlı olmayan oyuncuya pas verilemez. Bağlantısı kopan oyuncu katılımcı olarak kalır; tahmin hakkı ve puan hesabı sürer."
+    },
+    {
+      "baslik": "Tek bağlı kalan taşıyıcı",
+      "aciklama": "Pas verecek bağlı oyuncu yoksa taşıyıcı pas veremez; bomba patlayana kadar onda kalır."
+    },
+    {
+      "baslik": "Patlama ile pas yarışı",
+      "aciklama": "Sunucu sırasına göre değerlendirilir. Fitilin bittiği ms'de ya da sonrasında gelen pas ve tahmin reddedilir. İstemci pası iyimser gösterir (bomba hemen yeni taşıyıcıya gider); sunucu reddederse bomba geri döner ve hata sesi ile titreşim olur."
+    },
+    {
+      "baslik": "Pas sonrası bilgi",
+      "aciklama": "Pas verince eski taşıyıcı süreyi görmeye başlar (yeni, uzamış patlama anıyla), yeni taşıyıcı görmez. Böylece her el ayrı bir bilgi dengesidir."
+    },
+    {
+      "baslik": "İzleyici ve TV",
+      "aciklama": "İzleyici (ve TV) taşıyıcıyı, pasları ve koltukları görür; kalan süreyi, tahmin düğmelerini ve PAS VER yazısını görmez. Patlamada sonucu ve doğru bilenlerin adlarını görür."
+    },
+    {
+      "baslik": "2 ve 8 oyuncu",
+      "aciklama": "2 oyuncuda tek taşıyıcı olmayan oyuncu vardır; bomba ikisi arasında gider gelir, o tek kişi tahmin edebilir. 8 oyuncuda 7 kişi tahmin edebilir, koltuklar masanın çevresine dizilir."
+    },
+    {
+      "baslik": "Arka plandaki taşıyıcı",
+      "aciklama": "Oyun bildirim desteği kurulmuş odalarda uygulamadan çıkmış taşıyıcıya Sıra sende! bildirimi gider (bomba kendisine geçtiğinde); gizli bilgi taşımaz."
+    },
+    {
+      "baslik": "Ekran döndürme",
+      "aciklama": "Oyun yataydır. Dikey telefonda tam ekran Telefonunu yan çevir örtüsü çıkar, geçilemez; oyun arkada işler (fitil beklemez)."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Sigorta",
+      "etki": "Sonuncu olursan +1. Bu oyunda sonuncu tek kişidir: patlayan taşıyıcı (−1). Sigorta sahibi taşıyıcıysa −1 + 1 = 0 olur."
+    },
+    {
+      "kart": "Kalkan",
+      "etki": "Eksiye düşersen 0 sayılır: patlayan taşıyıcı −1 alıyorsa Kalkan sahibi 0 alır (en doğrudan kullanım)."
+    },
+    {
+      "kart": "Kendine Güven",
+      "etki": "Birinci olursan +2, olamazsan −1. Birinci, en yüksek mini oyun puanlı oyuncudur: doğru bilen varsa yalnız onlar (+1) birincidir; kimse doğru bilmediyse taşıyıcı dışındaki herkes 0 ile eşit birincidir. Taşıyıcı (−1) tek sonuncudur ve birinci olamaz."
+    },
+    {
+      "kart": "Tahmin (kart)",
+      "etki": "Seçtiğin oyuncu birinci olursa +2. Hedef taşıyıcı olmadığında genelde tutar (herkes 0 ile eşit birincidir ya da doğru bilen +1 ile birincidir)."
+    },
+    {
+      "kart": "Çift Puan / Altın Dokunuş",
+      "etki": "Taşıyıcının −1'i Çift Puan ile −2 olur; Altın Dokunuş eksiyi etkilemez. Doğru bilenin +1'i Çift Puan ile +2, Altın Dokunuş ile +3 olur."
+    },
+    {
+      "kart": "Çelme / Vergi / Hırsız / Lanet",
+      "etki": "Genel kurallarla çalışır (K6): Çelme −1, Lanet artıyı sıfırlar (doğru bilenin +1'i silinir), Vergi ve Hırsız doğru bilenin ya da birincinin puanından alır."
+    },
+    {
+      "kart": "Ters Köşe",
+      "etki": "Sıralama tersine döner: taşıyıcının −1'i ile birinci gruptaki ödüller yer değiştirir; bu oyunda sonuncu tek kişi olduğundan en büyük etki taşıyıcıda görülür."
+    },
+    {
+      "kart": "Diğer kartlar",
+      "etki": "Ortaklık, Takas, Takviye, Koruma, Ayna, Kart Çal ve kötü kartlar bu oyunun ham ödülleri (−1/0/+1) üzerinde genel kurallarla çalışır. Oyun karta özel bir kural uygulamaz."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Fitil alt sınırı (oyun başından)",
+      "deger": "15 000 ms",
+      "kaynak": "packages/engine/src/games/kor-bomba/types.ts:4"
+    },
+    {
+      "ad": "Fitil üst sınırı (oyun başından)",
+      "deger": "20 000 ms",
+      "kaynak": "packages/engine/src/games/kor-bomba/types.ts:5"
+    },
+    {
+      "ad": "Pas başına eklenen süre (en az)",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/games/kor-bomba/types.ts:7"
+    },
+    {
+      "ad": "Pas başına eklenen süre (en çok)",
+      "deger": "4 000 ms",
+      "kaynak": "packages/engine/src/games/kor-bomba/types.ts:8"
+    },
+    {
+      "ad": "Patlama gösterisi (sonuç ekranına geçmeden)",
+      "deger": "2 000 ms",
+      "kaynak": "packages/engine/src/games/kor-bomba/types.ts:14"
+    },
+    {
+      "ad": "Doğru tahmin bonusu",
+      "deger": "+1 (oyun başına oyuncu başına en çok)",
+      "kaynak": "packages/engine/src/games/kor-bomba/types.ts:27"
+    },
+    {
+      "ad": "Taşıyıcı puanı",
+      "deger": "−1",
+      "kaynak": "packages/engine/src/games/kor-bomba/index.ts:63"
+    },
+    {
+      "ad": "Başlangıç taşıyıcısı (bağlılar arasından rastgele)",
+      "deger": "ctx.connected ∩ katılımcılar",
+      "kaynak": "packages/engine/src/games/kor-bomba/index.ts:100"
+    },
+    {
+      "ad": "Pas reddi nedenleri",
+      "deger": "not_holder, self_target, bad_target, target_offline, ended",
+      "kaynak": "packages/engine/src/games/kor-bomba/index.ts:120"
+    },
+    {
+      "ad": "Tahmin reddi nedenleri",
+      "deger": "holder_cannot_predict, stale_turn, already_predicted",
+      "kaynak": "packages/engine/src/games/kor-bomba/index.ts:126"
+    },
+    {
+      "ad": "Oyunun bitişi",
+      "deger": "ctx.now >= patlama anı + 2 000 ms",
+      "kaynak": "packages/engine/src/games/kor-bomba/index.ts:186"
+    },
+    {
+      "ad": "Oyuncu sınırları / yön",
+      "deger": "2 - 8, yatay",
+      "kaynak": "packages/engine/src/games/kor-bomba/index.ts:72"
+    },
+    {
+      "ad": "Geç gelen eylem payı",
+      "deger": "yok (graceMs tanımlı değil)",
+      "kaynak": "packages/engine/src/games/kor-bomba/index.ts:69"
+    },
+    {
+      "ad": "Acil görünüm eşiği (kırmızı bomba)",
+      "deger": "5 000 ms kalan",
+      "kaynak": "apps/client/src/games/kor-bomba/KorBombaScreen.tsx:87"
+    },
+    {
+      "ad": "Sayaç biçimi",
+      "deger": "bir ondalık, Türkçe virgül (12,4)",
+      "kaynak": "apps/client/src/games/kor-bomba/view.ts:91"
+    },
+    {
+      "ad": "Pas kıvılcımı / kablo ışığı süresi",
+      "deger": "460 ms (kıvılcım) / 520 ms (kablo ışığı, satır 131)",
+      "kaynak": "apps/client/src/games/kor-bomba/KorBombaScreen.tsx:139"
+    },
+    {
+      "ad": "Eklenen süre kıvılcımı gecikmesi / ekranda kalış",
+      "deger": "200 ms / 1 000 ms",
+      "kaynak": "apps/client/src/games/kor-bomba/KorBombaScreen.tsx:149"
+    },
+    {
+      "ad": "Bildi yazısı (en çok iki ad)",
+      "deger": "names.slice(0, 2)",
+      "kaynak": "apps/client/src/games/kor-bomba/KorBombaScreen.tsx:75"
+    },
+    {
+      "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
+      "deger": "40 000 / 3 000 / 30 000 ms",
+      "kaynak": "apps/server/src/match.ts:40"
+    },
+    {
+      "ad": "Devam ile kapanma gecikmesi",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/protocol.ts:29"
+    }
+  ],
+  "strateji": [
+    "Taşıyansan süreyi bilmediğin için paslamak çoğu zaman en iyi savunmadır; her pas fitili ortalama 2,5 sn uzatır ama bir sonraki taşıyıcıyı da riske atar.",
+    "Süreyi görenlerdensen yalan söylemekten çekinme: ‘daha çok var’ diyerek bombanın elinde kalmasını sağlayabilir ya da ‘hemen ver’ diyerek yanıltabilirsin. Taşıyıcı sözlere güvenmek zorunda.",
+    "Taşıyıcı olarak sana kimin güvenilir bilgi verdiğini izle: sürekli aynı kişiye geri pas vermek ya da panikle koşuşturmak bilgi sızdırır.",
+    "Patlar tahmini yalnız bomba senin tahmin ettiğin elde gerçekten patlarsa işe yarar. Süreyi görüyorsun: kalan süre azsa ve taşıyıcı geç paslıyorsa Patlar demek mantıklıdır; ama taşıyıcı pas verirse tahminin boşa gider.",
+    "Patlamaz tahmini hem ceza hem ödül getirmez; yanlış Patlar tahmini de ceza getirmez, yani Patlar demek her zaman riski sıfır bir bahistir.",
+    "Taşıyıcı hiçbir tahmini göremez ve düğmeler süreye bağlı değildir; tahminini ne zaman vereceğin taşıyıcıya bilgi taşımaz."
+  ],
+  "tv": "Özel bir TV görünümü yoktur; büyük ekranda oyun ekranı izleyici kipinde yatay çerçevede gösterilir. TV'de masa, koltuklar, taşıyıcının halkası, pas ışığı ve patlama görünür; kalan süre, tahmin düğmeleri ve PAS VER yazısı yoktur (süre ve tahminler gizli bilgidir). Bu oyunda kabuk süre saati kapalıdır. Patlamada doğru bilenlerin adları (örn. Elif bildi!) TV'de de görünür.",
+  "ekranlar": [
+    {
+      "mock": "kor-bomba-briefing",
+      "name": "kor-bomba-briefing",
+      "q": "mock=kor-bomba-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Bomba sende patlamasın! ve üç madde.",
+      "dosya": "kor-bomba-briefing"
+    },
+    {
+      "mock": "kor-bomba-holder",
+      "name": "kor-bomba-holder",
+      "q": "mock=kor-bomba-holder",
+      "baslik": "Bomba sende",
+      "aciklama": "Yatay masa; bomba opak siyah çekirdek, süre yok, PAS VER yazısı; koltuklara dokunarak pas verilir. Bağlantısı kopuk koltuk dokunulamaz.",
+      "dosya": "kor-bomba-holder"
+    },
+    {
+      "mock": "kor-bomba-watch",
+      "name": "kor-bomba-watch",
+      "q": "mock=kor-bomba-watch",
+      "baslik": "Bomba başkasında",
+      "aciklama": "Parlak bomba üzerinde gerçek kalan süre (ondalıklı); taşıyıcı olmayanın görünümü. Botlar kendi aralarında pas verir.",
+      "dosya": "kor-bomba-watch"
+    },
+    {
+      "mock": "kor-bomba-urgent",
+      "name": "kor-bomba-urgent",
+      "q": "mock=kor-bomba-urgent",
+      "baslik": "Son saniyeler",
+      "aciklama": "5 saniyenin altı: kırmızı acil görünüm.",
+      "dosya": "kor-bomba-urgent"
+    },
+    {
+      "mock": "kor-bomba-blast",
+      "name": "kor-bomba-blast",
+      "q": "mock=kor-bomba-blast",
+      "baslik": "Patlama",
+      "aciklama": "Taşıyıcı avatarı beyaz siluet, patlama efekti.",
+      "dosya": "kor-bomba-blast"
+    },
+    {
+      "mock": "kor-bomba-predict",
+      "name": "kor-bomba-tahmin",
+      "q": "mock=kor-bomba-predict",
+      "baslik": "Tahmin",
+      "aciklama": "Taşıyıcı olmayan oyuncuya Patlar / Patlamaz düğmeleri.",
+      "dosya": "kor-bomba-predict"
+    },
+    {
+      "mock": "kor-bomba-predicted",
+      "name": "kor-bomba-tahmin-alindi",
+      "q": "mock=kor-bomba-predicted&n=8",
+      "baslik": "Tahmin alındı",
+      "aciklama": "Seçimden sonra düğmeler Tahminin alındı yazısına dönüşür.",
+      "dosya": "kor-bomba-predicted-n-8"
+    },
+    {
+      "mock": "kor-bomba-bildi",
+      "name": "kor-bomba-bildi",
+      "q": "mock=kor-bomba-bildi&n=6",
+      "baslik": "Doğru bildin",
+      "aciklama": "Patlamada Elif bildi! yazısı ve Bildin! bildirimi.",
+      "dosya": "kor-bomba-bildi-n-6"
+    },
+    {
+      "mock": "kor-bomba-spectator",
+      "name": "kor-bomba-spectator",
+      "q": "mock=kor-bomba-spectator",
+      "baslik": "İzleyici",
+      "aciklama": "Süre ve tahmin yok; masayı ve taşıyıcıyı izler.",
+      "dosya": "kor-bomba-spectator"
+    }
+  ],
+  "bilinenSorunlar": [
+    "KURALLAR.md §10 cevap 7 (ekranda yazılı bilgi yok) ve cevap 9-10 eski sürümdür; O9 değişikliği tahmin ve +1 bonusunu ekler. Kod O9'a göredir. Cevap 14 (taşıyıcının avatarı beyaz silüete dönüşür) uygulanmıştır.",
+    "KURALLAR.md cevap 12 (Elenen veya puansız kalan oyuncu) yanıtı: bomba tek seferliktir, eleme yoktur; kodda da eleme yoktur.",
+    "Bildi yazısı en çok iki ad gösterir (names.slice(0, 2)): üç ya da daha çok kişi doğru bildiyse üçüncü ve sonrasının adı ekranda yazılmaz, ama puanları verilir.",
+    "Tahmin düğmesi sunucuda sürenin tamamından bağımsızdır; patlamaya çok yakın (ör. son 100 ms) anlarda düğmeye basılması sunucuya patlamadan sonra ulaşırsa reddedilir. İstemci iyimser gösterdiği için Tahminin alındı yazısı görünüp sonradan geri dönebilir.",
+    "Kuralların 'bomba tek sefer sonra diğer oyuna geçilir' ifadesi dışında, oyunun toplam süresi pas sayısına bağlı olduğundan üst sınırı yoktur (sınırsız pas).",
+    "Bildirim sistemi (Sıra sende!) oyun kuralı değildir; yalnız arka plandaki taşıyıcıya tetiklenir."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-17: Kör Bomba (motor, bot, test, yatay ekran) eklendi.",
+    "2026-10-25: İyimser arayüz yardımcısı eklendi; bomba pası anında yeni taşıyıcıya gider.",
+    "2026-10-26: Bomba görselleri (BombArt) ve ürün sanatı eklendi.",
+    "2026-10-27: O9 tahmin sistemi: Patlar / Patlamaz tahmini, doğru bilene +1, istemci tahmin satırı, Kahin rozeti ve testler.",
+    "2026-10-27: Tur özeti ve kayıt defteri; sonuç ekranında Devam ile erken geçiş; sahne (TV) rolü; bildirim (Sıra sende!) altyapısı.",
+    "2026-10-28: Kart arayüzünde çerçeve ve illüstrasyon; Kör Bomba adı kontrast düzeltmesi; TV arka plan bulanıklığı kaldırıldı ve parlama animasyonları sadeleşti (performans)."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/kor-bomba/index.ts",
+    "packages/engine/src/games/kor-bomba/types.ts",
+    "packages/engine/src/games/kor-bomba/kor-bomba.test.ts",
+    "packages/engine/src/games/kor-bomba/kor-bomba-tahmin.test.ts",
+    "packages/engine/src/games/kor-bomba/summary.ts",
+    "docs/KURALLAR.md#10-kör-bomba",
+    "apps/client/src/games/kor-bomba/KorBombaScreen.tsx",
+    "apps/client/src/games/kor-bomba/view.ts",
+    "apps/client/src/ui/PredictRow.tsx",
+    "apps/client/src/ui/RotateOverlay.tsx",
+    "apps/server/src/kor-bomba.test.ts",
+    "scripts/ui-check.mjs"
+  ]
+}

@@ -1,0 +1,376 @@
+{
+  "id": "ittifak",
+  "ad": "İttifak",
+  "slogan": "60 saniye boyunca sesli pazarlık yap, sonra tek gizli oyunu kime vereceğine karar ver: aldığın her oy bir puan!",
+  "kategori": "Sosyal",
+  "etiketler": ["sözlü pazarlık", "gizli oylama", "blöf", "güven"],
+  "oyuncu": {
+    "min": 3,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 83,
+    "not": "Oyun aşaması en çok 83 sn sürer: 60 sn pazarlık + 15 sn gizli oylama + 8 sn oy akışı (süreler oyuncu sayısına göre değişmez). Pazarlıkta bağlı herkes 'Oylamaya geç' derse pazarlık 1 sn sonra biter, oylamada bağlı herkes 'Tamam' derse oylama 1 sn sonra biter (sonraki aşamalar bu kadar öne çekilir). Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 30 sn) gelir."
+  },
+  "ozet": "Uygulamada hiçbir teklif ya da anlaşma yoktur: oyuncular odada yüz yüze (sesli) pazarlık eder, birbirinden oy ister ya da oy vaat eder. 60 sn sonra herkes tek bir gizli oyu kendisi dışında birine verir; aldığın her oy genel skora +1 olarak eklenir. İsteğe bağlı olarak pazarlık sırasında en çok 2 kişiye gizli bir 'söz işareti' koyabilirsin; sonuçta kimin sözünü tuttuğu ✓/✗ ile açılır, ama işaretin puanı ya da cezası yoktur.",
+  "akis": [
+    {
+      "ad": "Anlatım",
+      "sureSn": 40,
+      "kim": "herkes",
+      "aciklama": "Tam ekran anlatım: 'Arkadaşlarından oy topla, her oy bir puan!' ve üç madde (60 saniye oy iste/vaatte bulun, istersen gizlice söz işareti koy; tek gizli oyun var, kendine veremezsin; kim sözünü tuttu? sonuç ekranında gör). Bağlı herkes hazır olunca ya da 40 sn dolunca biter. Maç kartları burada oynanır."
+    },
+    {
+      "ad": "Geri sayım",
+      "sureSn": 3,
+      "kim": "herkes",
+      "aciklama": "3 sn geri sayım, oynanan kartlar açıklanır; oyun kurulur (gizli tohum çekilir)."
+    },
+    {
+      "ad": "Pazarlık",
+      "sureSn": 60,
+      "kim": "herkes",
+      "aciklama": "'Pazarlık zamanı - Oy iste, söz ver' başlığı. Ekranda katılımcıların portreleri bir halka üzerinde (ilk oyuncu üstte, saat yönünde) dizilir; aralarında geçici, süs amaçlı neon bağlar ve konuşma balonları belirip söner (hiçbir şey kaydedilmez). Ortada el sıkışma görseli ve kalan saniye sayacı vardır. Kendi dışındaki bir portreye dokunmak o oyuncuya 'söz' mührü koyar/kaldırır (en çok 2); altta 'Dokun: söz işareti N/2 · yalnız sen görürsün' ipucu ve 'Oylamaya geç' düğmesi bulunur. Bu aşamada oy verilemez.",
+      "gizli": "Söz işaretlerini yalnız sözü veren görür; alıcı dahil kimse başkasının işaretini, hatta sayısını bile göremez. 'Oylamaya geç' diyenler herkese açıktır (avatar halkası)."
+    },
+    {
+      "ad": "Gizli oylama",
+      "sureSn": 15,
+      "kim": "herkes",
+      "aciklama": "'Gizli oyun - Kime oy veriyorsun?' başlığı; kendi portren soluk ve dokunulmaz, bağlı olmayanlar seçilemez. Bir portreye dokunmak oy verir (başlık seçilen oyuncunun adına döner); oy kesinleşene dek değiştirilebilir. 'Tamam' düğmesi oy verildikten sonra etkinleşir ve oyu kilitler. Bağlı herkes Tamam derse oylama 1 sn sonra biter. İzleyici 'Gizli oylama - Herkes oy veriyor' ekranını ve hazır sayacını görür.",
+      "gizli": "Kimin kime oy verdiği ve alınan oy sayıları sonuç açılana kadar kimseye (kendi oyun hariç) gösterilmez. Kimlerin 'Tamam' dediği herkese açıktır."
+    },
+    {
+      "ad": "Oy akışı (sonuç açılışı)",
+      "sureSn": 8,
+      "kim": "herkes",
+      "aciklama": "Oylama biter bitmez eksik oylar sunucuca rastgele tamamlanır ve oylar açılır: her oy bir enerji ipiyle hedefin portresine akar (ip başına 0,52 sn animasyon, ipler arası 0,11 sn gecikme), sonra her portrenin yanında '+N' rozeti belirir. Üstte katılımcıya kendi sonucu ('+N', 'N oy aldın' ya da 'Kimse sana oy vermedi', 'Oyun: <ad>'); altta 'Sözler · N tutuldu, M bozuldu' listesi (kendi sözlerin üstte) ve '✓ tutuldu / ✗ bozuldu' işaretleri. Alt not: 'Alınan her oy genel skora eklenir'. Oyun bu 8 sn'nin sonunda biter, ardından sonuç ekranı gelir.",
+      "gizli": "Artık oylar, sözler ve skorlar herkese açıktır."
+    }
+  ],
+  "kurallar": [
+    "3-8 oyuncu katılır (dikey oyun). 2 kişiyle oynanmaz.",
+    "Sistemde 'ittifak', 'teklif', 'söz' ya da 'anlaşma' nesnesi yoktur: pazarlık tamamen sözlüdür (oyuncular aynı ortamda ya da sesli konuşur). Ekrandaki neon bağlar ve konuşma balonları yalnız süstür.",
+    "Pazarlık aşaması 60 sn sürer ve bu aşamada yalnız iki eylem vardır: söz işareti koy/kaldır ve 'Oylamaya geç'. Oy bu aşamada verilemez (sunucu 'not_voting_yet' ile reddeder).",
+    "Söz işareti: pazarlık sırasında her oyuncu kendisi dışındaki en çok 2 kişiye gizlice 'söz' işareti koyabilir (anlamı: 'sana oy vereceğim'). İşareti istediği zaman kaldırabilir (kaldırınca yeniden yer açılır), aynı işareti tekrar koymak/kaldırmak durumu değiştirmez; kendine, listede olmayan kişiye ya da 2'nin üstünde işaret koymak reddedilir. Kopuk bir oyuncuya da işaret konabilir. İşaret oyu bağlamaz ve puanı yoktur; pazarlık bitince kilitlenir (pazarlık dışında koymak/kaldırmak reddedilir).",
+    "Söz işaretleri sonuç açılana kadar yalnız sözü verene görünür: alıcı da dahil kimse başkasının işaretini ve işaret sayısını görmez; ortak görünümde hiç söz bilgisi yoktur.",
+    "'Oylamaya geç' (pazarlıkta atlama): bağlı herkes dediğinde pazarlık şimdiden itibaren 1 sn sonra biter; oylama süresi (15 sn) kısalmaz, yani oylama 'yeni pazarlık bitişi + 15 sn' olur. 1 sn'lik kapanış penceresinde yeni söz/atlama eylemi reddedilir ('closed'); tekrar basmak zararsızdır. Atlayan oyuncuların kimler olduğu herkese açıktır.",
+    "Oylama aşaması 15 sn sürer. Her oyuncunun 1 oyu vardır. Kendine oy veremezsin ('self_target'), hedef bu maçın katılımcısı olmalı ve o an bağlı olmalıdır (kopuk oyuncuya oy verilemez: 'target_offline').",
+    "Oy oylama bitene ya da 'Tamam'a kadar değiştirilebilir (son oy geçerli); aynı oyu tekrar vermek durumu değiştirmez. Verilmiş bir oy, hedef sonradan koparsa da geçerli kalır ve kopuk oyuncu oy alabilir.",
+    "'Tamam' (oy kilidi): önce bir oy verilmiş olmalı (oysuz Tamam 'nothing_to_lock' ile reddedilir). Tamam'dan sonra oy değiştirilemez ('locked'). Bağlı herkes Tamam derse oylama 1 sn sonra biter; bu 1 sn'lik kapanış penceresinde yeni oy kabul edilmez ('closed').",
+    "Oy vermeyen ya da Tamam demeden süre bitenler: oy vermemiş oyuncunun oyu sunucuca, kendisi dışındaki rastgele bir katılımcıya atanır (hedef bağlı olmak zorunda değildir). Seçim sunucunun gizli tohumundan türer (oyuncu başına belirli, replay'de aynı çıkar); en az bir kişiye oy vermek zorunludur, yani her oyuncu tam bir oy kullanmış sayılır.",
+    "Toplam puan her zaman oyuncu sayısı kadardır (n oy, n puan). Bir oyuncunun alabileceği en çok puan n-1'dir.",
+    "Alınan oy sayısı doğrudan o oyunun mini puanı ve genel skora eklenen puandır (awards = miniScores). Oy eşitliği önemli değildir; sıralama bonusu, ceza ya da negatif puan yoktur.",
+    "Sonuç açılışında her söz gerçek oyla karşılaştırılır: söz verdiğin kişiye gerçekten oy verdiysen tutuldu (✓), vermediysen bozuldu (✗). Oy vermeyip sunucunun atadığı oy da bu karşılaştırmada gerçek oy sayılır. Sözlerin cezası yoktur; yalnız itibar ölçüsüdür.",
+    "Sonuç ekranında tüm sözler (kim kime verdi, tutuldu mu) herkese açılır; kendi sözlerin listenin başında gösterilir.",
+    "Oyun, oy akışı süresi (8 sn) dolunca biter. Oylama bitiminden sonra gelen hiçbir eylem kabul edilmez ('ended')."
+  ],
+  "puanlama": {
+    "ozet": "Aldığın her oy +1. Herkes tam bir oy kullandığı için toplam dağıtılan puan oyuncu sayısı kadardır. Sıralama bonusu, ceza ya da tur çarpanı yoktur; söz işaretlerinin puanı yoktur.",
+    "kalemler": [
+      {
+        "olay": "Başka bir oyuncunun oyunu almak",
+        "puan": "+1 (oy başına)",
+        "not": "Oyu kim verirse versin; oy ister gönüllü ister sunucunun atadığı oy olsun."
+      },
+      {
+        "olay": "Hiç oy almamak",
+        "puan": "0",
+        "not": "Negatif puan yoktur."
+      },
+      {
+        "olay": "Söz işareti koymak / sözü tutmak / bozmak",
+        "puan": "0",
+        "not": "Yalnız sonuç ekranında ✓/✗ olarak gösterilir."
+      },
+      {
+        "olay": "Oy vermemek",
+        "puan": "0 (kendi puanını etkilemez)",
+        "not": "Sunucu kendin dışında rastgele birine oy verir; o kişi +1 alır."
+      }
+    ],
+    "ornek": "5 oyuncu: A, B, C, D, E. Pazarlıkta A, B ve C'ye söz işareti koydu. Oylama: A→B, B→A, C→B, D→B; E hiç oy vermedi, sunucu E'nin oyunu rastgele D'ye atadı. Sayım: B 3, A 1, D 1, C 0, E 0. Genel skora: B +3, A +1, D +1, C 0, E 0 (toplam 5). A'nın sözleri: A→B tutuldu (✓), A→C bozuldu (✗, A oyunu B'ye vermişti). Başka bir örnek: herkes aynı oyuncuya oy verirse o oyuncu hariç herkes ona oy verir: 5 oyuncuda en çok 4 oy alınabilir; 8 oyuncuda 7.",
+    "beraberlik": "Oy eşitliği sorun değildir; her oyuncu aldığı oy kadar puan alır. Eşitlik bozma, ikinci tur ya da ortak puan yoktur."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Katılımcı olarak kalır. Kopmadan önce verdiği oy, söz işaretleri ve 'Tamam'/'atla' durumu geçerlidir; kopuk oyuncuya yeni oy verilemez ama verilmiş oy kalır ve kopuk oyuncu sunucunun rastgele atadığı oyları alabilir. Kopuk oyuncu oy vermemişse oyu sunucuca rastgele atanır. 'Oylamaya geç' ve 'Tamam' erken bitiş denetimi yalnız bağlı oyunculara bakar: kopuk oyuncu beklenmez. Bir oyuncuya söz işareti koymak için o oyuncunun bağlı olması gerekmez; ama kopuk oyuncuya oy verilemediği için oraya konan söz çoğunlukla bozulur. 120 sn içinde dönmezse oyuncu odadan çıkarılır."
+    },
+    {
+      "baslik": "Süre bitişi ve geç eylem",
+      "aciklama": "Bu oyunda 'geç gelen eylem payı' (graceMs) yoktur. Oylamanın bittiği anda (ya da sonrasında) gelen oy/Tamam reddedilir ('ended'); bitişten 1 ms önceki oy kabul edilir. Oy son anda geldiyse ve değişmediyse hiçbir şey olmaz."
+    },
+    {
+      "baslik": "İzleyici / geç katılan",
+      "aciklama": "Maç sürerken odaya giren izleyici olur (oda 'kapalı' ise giremez). İzleyici pazarlıkta halkayı, süreyi ve hazır avatarlarını görür; söz işareti koyamaz ve oy veremez ('not_participant'). Oylamada 'Herkes oy veriyor' ekranını ve Tamam sayacını görür; sonuçta oy akışını ve sözleri görür (kendi puanı yoktur)."
+    },
+    {
+      "baslik": "Herkes erken bitirirse",
+      "aciklama": "Pazarlıkta bağlı herkes 'Oylamaya geç' derse pazarlık 1 sn sonra biter ve oylama yine 15 sn sürer. Oylamada bağlı herkes (oy vermiş olarak) Tamam derse oylama 1 sn sonra biter; oy akışı süresi (8 sn) değişmez, yalnız öne kayar. Erken bitiş denetimi yalnız bir atlama/kilit eylemi geldiğinde yapılır; son bekleyen oyuncu eylem göndermeden bağlantısını kaybederse erken bitiş tetiklenmez ve oyun zamanlayıcıyla ilerler."
+    },
+    {
+      "baslik": "Hiç kimse oy vermezse",
+      "aciklama": "Tüm oylar sunucuca rastgele atanır (her oyuncu kendisi dışında birine). Toplam puan yine oyuncu sayısı kadardır; dağılım rastgeledir (sabit değildir)."
+    },
+    {
+      "baslik": "2 vs 8 oyuncu",
+      "aciklama": "3 oyuncuda her oyuncunun yalnızca 2 olası hedefi vardır (en çok 2 oy alınabilir; söz işareti 2'ye kadar olduğundan hepsine söz verilebilir). 8 oyuncuda 7 hedef vardır, halka 8 portreyle dolar ve en çok 6 süslü bağ çizilir."
+    },
+    {
+      "baslik": "Gizlilik",
+      "aciklama": "secrets() boştur çünkü oylar oyuncu kimlikleridir (kısa metin); gizlilik yapısaldır ve testlerle doğrulanır: ortak görünümde oylama bitene kadar hiçbir oy, sayı ya da söz yoktur; her oyuncunun görünümü yalnız kendi oyunu ve kendi söz işaretlerini içerir; başkasının oyu JSON taramasıyla hiçbir başka görünümde bulunmaz."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Genel hesap",
+      "etki": "Bu oyunda mini oyun puanı = ham genel puan = alınan oy sayısı (0 ile n-1 arası). 'Birinci' en çok oy alanlardır (eşitler birlikte birincidir), 'sonuncu' en az oy alanlardır; herkes eşitse (örneğin herkes 1'er oy aldıysa) herkes birincidir ve kimse sonuncu değildir. Bu oyunda eşitlik çok yaygın olduğu için 'birinci/sonuncu' kartları sık sık birden çok kişiyi kapsar."
+    },
+    {
+      "kart": "Kendine Güven",
+      "etki": "Birinci olursan +2, olamazsan -1. Eşit en çok oy alanların hepsi birincidir. Herkes 1'er oy aldıysa herkes birinci olur ve +2 alır."
+    },
+    {
+      "kart": "Sigorta",
+      "etki": "Sonuncu olursan (en az oy alanlardan biri) +1. Herkes eşitse kimse sonuncu sayılmaz, kart işlemez."
+    },
+    {
+      "kart": "Tahmin",
+      "etki": "Hedefin birinci olursa (en çok oy alanlardan biriyse) +2; eşit birincilerden biri olması yeter."
+    },
+    {
+      "kart": "Çift Puan",
+      "etki": "Aldığın oy sayısı x2 (3 oy → 6 puan). Hiç oy almadıysan 0 kalır."
+    },
+    {
+      "kart": "Altın Dokunuş",
+      "etki": "Aldığın oy sayısı x3 (pozitif puanda); 0 oyda etkisiz."
+    },
+    {
+      "kart": "Ağır Yük (kötü)",
+      "etki": "Puan yarıya iner (sıfıra doğru yuvarlanır): 3 oy → 1, 2 oy → 1, 1 oy → 0."
+    },
+    {
+      "kart": "Ters Köşe",
+      "etki": "Sıralama tersine döner: en çok oy alan en az oy alanın ham puanını, en az oy alan en çok oy alanın ham puanını alır; eşit gruplar toplam puanı kendi aralarında paylaşır, artan puan katılım sırasındaki ilk üyelerden başlayarak +1 verilir."
+    },
+    {
+      "kart": "Takas",
+      "etki": "Sahip ile hedef, oy sayılarını (ham puanlarını) değiştirir; oy sayıları oylama bitince belli olduğundan takasın kime yaradığı sonuçta ortaya çıkar."
+    },
+    {
+      "kart": "Ortaklık",
+      "etki": "Sahip ve hedefin oy toplamı ikiye bölünür (tek kalan puan mini puanı yüksek olana, eşitse kartı oynayana gider). Toplam korunur."
+    },
+    {
+      "kart": "Vergi",
+      "etki": "Hedef puan aldıysa (oy aldıysa) 1 puanı sana geçer; hedef 0 oyla bittiyse etkisizdir."
+    },
+    {
+      "kart": "Hırsız",
+      "etki": "Bu oyunun birincisinden 1 puan alır; birinci birden çoksa sahibi dışındaki birinciler arasında o ana kadarki puanı en yüksek olandan (eşitse katılım sırasındaki ilkinden) alınır. Sahibi tek birinciyse etkisizdir."
+    },
+    {
+      "kart": "Çelme / Lanet",
+      "etki": "Çelme hedefi -1 yapar (0 oy alan -1'e düşer). Lanet hedefin pozitif puanını 0'a çeker (hedefin tüm oyları silinir)."
+    },
+    {
+      "kart": "Kalkan",
+      "etki": "Bu oyun ham puanı hiç eksi yapmaz; kart yalnız Çelme, Hırsız, Talihsizlik, Kumarbaz gibi kartlarla eksiye düşersen 0'a çeker."
+    },
+    {
+      "kart": "Diğer kartlar",
+      "etki": "Takviye, Koruma, Ayna, Veto, Geniş Seçim, Oyunu Seç, Kart Çal, Açık Hedef ve kötü kartlar oyunun kuralından bağımsız, KURALLAR K5-K7'deki gibi çalışır; İttifak'a özel bir istisna kodda yoktur. Kartlar anlatım ekranında oynandığı için pazarlıktan önce herkes açık kartları (Ayna/Koruma hariç) bilir."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Pazarlık süresi",
+      "deger": "60 000 ms",
+      "kaynak": "packages/engine/src/games/ittifak/types.ts:4"
+    },
+    {
+      "ad": "Oylama süresi",
+      "deger": "15 000 ms",
+      "kaynak": "packages/engine/src/games/ittifak/types.ts:5"
+    },
+    {
+      "ad": "Oy akışı (açılış) süresi; oyun bunun sonunda biter",
+      "deger": "8 000 ms",
+      "kaynak": "packages/engine/src/games/ittifak/types.ts:7"
+    },
+    {
+      "ad": "Toplam oyun süresi",
+      "deger": "83 000 ms",
+      "kaynak": "packages/engine/src/games/ittifak/types.ts:8"
+    },
+    {
+      "ad": "Bir oyuncunun verebileceği en çok söz işareti",
+      "deger": "2",
+      "kaynak": "packages/engine/src/games/ittifak/types.ts:24"
+    },
+    {
+      "ad": "Herkes hazırsa aşamanın bitişine kalan süre",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/games/ittifak/types.ts:27"
+    },
+    {
+      "ad": "Oyuncu sayısı",
+      "deger": "3-8",
+      "kaynak": "packages/engine/src/games/ittifak/index.ts:110-111"
+    },
+    {
+      "ad": "Pazarlıkta oy reddi",
+      "deger": "talkEndsAt öncesi 'not_voting_yet'",
+      "kaynak": "packages/engine/src/games/ittifak/index.ts:199"
+    },
+    {
+      "ad": "Söz limiti reddi",
+      "deger": "'too_many_promises'",
+      "kaynak": "packages/engine/src/games/ittifak/index.ts:177"
+    },
+    {
+      "ad": "Oy vermeyene rastgele oy (kendisi hariç, tohumdan)",
+      "deger": "ittifakFillVotes",
+      "kaynak": "packages/engine/src/games/ittifak/index.ts:51-70"
+    },
+    {
+      "ad": "Söz tutuldu mu karşılaştırması",
+      "deger": "gerçek (doldurulmuş) oy = söz hedefi",
+      "kaynak": "packages/engine/src/games/ittifak/index.ts:87"
+    },
+    {
+      "ad": "Oy akışı animasyonu (ip başına / ipler arası / rozet gecikmesi)",
+      "deger": "520 ms / 110 ms / 1 300 ms",
+      "kaynak": "apps/client/src/games/ittifak/Sonuc.tsx:10-12"
+    },
+    {
+      "ad": "Pazarlıkta çizilen en çok süs bağı",
+      "deger": "6",
+      "kaynak": "apps/client/src/games/ittifak/view.ts:136"
+    },
+    {
+      "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
+      "deger": "40 000 / 3 000 / 30 000 ms",
+      "kaynak": "apps/server/src/match.ts:40-42"
+    }
+  ],
+  "strateji": [
+    "Pazarlık sırasında herkesten oy iste ama kimseye gerçekten bağlanma: sözün bir cezası yok, ancak sonuç ekranında herkes kimin sözünü tuttuğunu görür (sosyal itibar).",
+    "Oy vermek bir tek kişiye gider: aynı anda iki kişiye 'sana oy vereceğim' demek en az birini kandırmak demektir. Söz işaretini hatırlatma olarak kullan (en çok 2), işaretlediğin kişilerden en az biriyle gerçekten anlaş.",
+    "Karşılıklı oy en güvenli iştir: A, B'ye; B, A'ya oy verirse ikisi de +1 alır. Üçlü döngü (A→B→C→A) herkese +1 verir.",
+    "Pazarlık süresi dolmadan herkes hazırsa 'Oylamaya geç' ile süreyi kısaltabilirsin; ama oylamada yeterince düşünmek için 15 sn'yi hatırla (erken geçmek oylamayı kısaltmaz).",
+    "Oy vermeyi unutma: vermezsen sunucu rastgele birine verir ve bu senin lehine olmayabilir. Ayrıca 'Tamam' demek oyunu kilitler; son anda fikir değiştireceksen Tamam'a basma.",
+    "En çok oyu almak tek hedef değil, toplam puan n sabit: biri çok alırsa diğerleri az alır. Kartın varsa (Çift Puan, Altın Dokunuş) oy sayını artırmak için ittifak kurmak daha değerli olur."
+  ],
+  "tv": "İttifak'ın TV'ye özel sahnesi yoktur: TV görünümü oyun içi ekranın izleyici kipinde büyütülmüş hâlidir. Pazarlıkta portre halkası, ortada saniye sayacı ve 'Oylamaya geç' diyenlerin hazır halkaları görünür; söz işareti ve oylar hiç gösterilmez. Oylamada 'Gizli oylama - Herkes oy veriyor' ve Tamam sayacı, sonuçta oy akışı iplerinin portrelere aktığı animasyon, '+N' rozetleri ve '✓/✗' söz listesi gösterilir. TV yalnız ortak görünümü kullanır; sonuç açılana kadar oy ve söz bilgisi hiçbir yerde yoktur.",
+  "ekranlar": [
+    {
+      "mock": "ittifak-briefing",
+      "name": "ittifak-briefing",
+      "q": "mock=ittifak-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Oyun öncesi anlatım: amaç ve üç madde, el sıkışma görseli.",
+      "dosya": "ittifak-briefing"
+    },
+    {
+      "mock": "ittifak-talk",
+      "name": "ittifak-talk-5",
+      "q": "mock=ittifak-talk&n=5",
+      "baslik": "Pazarlık (5 oyuncu)",
+      "aciklama": "Portre halkası, ortada saniye sayacı ve el sıkışma görseli, aralarda geçici neon bağlar; altta söz işareti ipucu ve 'Oylamaya geç' düğmesi.",
+      "dosya": "ittifak-talk-n-5"
+    },
+    {
+      "mock": "ittifak-talk",
+      "name": "ittifak-talk-promised-5",
+      "q": "mock=ittifak-talk&n=5&promised=1,2",
+      "baslik": "Söz işaretli pazarlık",
+      "aciklama": "İki portrede 'söz' mührü; ipucu 'söz işareti 2/2 · yalnız sen görürsün'.",
+      "dosya": "ittifak-talk-n-5-promised-1-2"
+    },
+    {
+      "mock": "ittifak-talk-locked",
+      "name": "ittifak-talk-locked-5",
+      "q": "mock=ittifak-talk-locked&n=5",
+      "baslik": "Oylamaya geç dendi",
+      "aciklama": "Kendi 'Oylamaya geç' kararın verildi; Hazırsın durumu ve kaç kişinin hazır olduğu.",
+      "dosya": "ittifak-talk-locked-n-5"
+    },
+    {
+      "mock": "ittifak-vote",
+      "name": "ittifak-vote-5",
+      "q": "mock=ittifak-vote&n=5",
+      "baslik": "Gizli oylama",
+      "aciklama": "'Gizli oyun - Kime oy veriyorsun?' başlığı, kendi portren soluk, diğerleri seçilebilir; Tamam pasif.",
+      "dosya": "ittifak-vote-n-5"
+    },
+    {
+      "mock": "ittifak-vote",
+      "name": "ittifak-vote-8",
+      "q": "mock=ittifak-vote&n=8&chosen=3",
+      "baslik": "Oy seçildi (8 oyuncu)",
+      "aciklama": "Seçilen portre halkalı ve tik'li, başlık seçilen kişinin adı; Tamam etkin.",
+      "dosya": "ittifak-vote-n-8-chosen-3"
+    },
+    {
+      "mock": "ittifak-vote-locked",
+      "name": "ittifak-vote-locked-5",
+      "q": "mock=ittifak-vote-locked&n=5",
+      "baslik": "Oy kilitlendi",
+      "aciklama": "Tamam sonrası: oy değiştirilemez, diğerleri bekleniyor sayacı.",
+      "dosya": "ittifak-vote-locked-n-5"
+    },
+    {
+      "mock": "ittifak-reveal",
+      "name": "ittifak-reveal-promises-8",
+      "q": "mock=ittifak-reveal&n=8&promises=many",
+      "baslik": "Oy akışı ve sözler (8 oyuncu)",
+      "aciklama": "Oyların portrelere akışı, '+N' rozetleri, kendi sonucu ve 'Sözler · N tutuldu, M bozuldu' ✓/✗ listesi.",
+      "dosya": "ittifak-reveal-n-8-promises-many"
+    },
+    {
+      "mock": "ittifak-spectator-vote",
+      "name": "ittifak-spectator-vote",
+      "q": "mock=ittifak-spectator-vote&n=5",
+      "baslik": "İzleyici: oylama",
+      "aciklama": "İzleyici ekranı: 'Gizli oylama - Herkes oy veriyor' ve Tamam sayacı; oy verilemez.",
+      "dosya": "ittifak-spectator-vote-n-5"
+    }
+  ],
+  "bilinenSorunlar": [
+    "KURALLAR.md §16 ana metni 'sözlü pazarlık, işaret yok' der; sonradan eklenen 'Değişiklik (O4)' bloğu söz işaretlerini ekler ve kod bu bloğa uyar. Kodda ayrıca KURALLAR'da yazmayan 8 sn'lik oy akışı süresi (sonuç açılışı) vardır; oyun bu 8 sn dolunca biter.",
+    "KURALLAR.md 'pazarlıkta oy' hakkında bir şey demez; kodda pazarlık süresince oy tamamen reddedilir ('not_voting_yet'), oy yalnız oylama aşamasında verilir.",
+    "Söz işareti kopuk oyuncuya da konabilir ama kopuk oyuncuya oy verilemez ('target_offline'), bu yüzden o söz pratikte bozulur (KURALLAR'da yazmaz).",
+    "Oy vermeyen oyuncunun oyu bağlı olmayan birine de atanabilir (hedef bağlı olma şartı yalnız gönüllü oyda aranır).",
+    "Erken bitiş denetimi yalnız bir atlama/kilit eylemi geldiğinde yapılır; son bekleyen oyuncunun bağlantısı eylem göndermeden kopsa erken bitiş tetiklenmez.",
+    "Oylamada 'Tamam' yalnız gerçekten verilmiş bir oyla yapılabilir; sunucuca sonradan atanan rastgele oy 'Tamam' için sayılmaz.",
+    "Oy akışı fazında kendi 'myVote' alanı sunucunun doldurduğu oyu da içerir (sonuç ekranı 'Oyun: <ad>' bunu gösterebilir; oy vermeyen oyuncu da gerçekte oy verdiği kişiyi görür)."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-29: Oyun ekranları: tutarlı durum, tek satır başlık, okunur sonuçlar.",
+    "2026-10-27: Söz rozeti yatayda gizlenir (kontrast denetimi).",
+    "2026-10-27: O3/O4/O10/O11 istemci ekranları, mock durumları ve ui-check girdileri; sunucu testleri.",
+    "2026-10-27: O4 söz işaretleri motor kuralı ve testleri (en çok 2 söz, gizli, sonuçta ✓/✗).",
+    "2026-10-27: Tüm oyunlar için tur özeti (summarize): 'X oyla önde / oyları paylaştı'.",
+    "2026-10-26: İstemci: kasa kapısı, kaçış kolu, el sıkışma ve nişangâh çizimleri (el sıkışma görseli).",
+    "2026-10-25: Anlık (iyimser) arayüz yardımcısı; oyuncu seçici (PlayerPicker) ortak bileşeni.",
+    "2026-10-19: İttifak: pazarlıkta 'Oylamaya geç' ve oylamada 'Tamam' ile erken bitiş.",
+    "2026-10-18: İttifak oyunu eklendi (motor, testler, istemci ekranları, ortak oyuncu seçici)."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/ittifak/index.ts",
+    "packages/engine/src/games/ittifak/types.ts",
+    "packages/engine/src/games/ittifak/bots.ts",
+    "packages/engine/src/games/ittifak/summary.ts",
+    "packages/engine/src/games/ittifak/ittifak.test.ts",
+    "docs/KURALLAR.md#16-ittifak (O4 değişiklik bloğu dahil)",
+    "apps/client/src/games/ittifak/ (IttifakScreen.tsx, Pazarlik.tsx, Sonuc.tsx, view.ts)",
+    "apps/client/src/ui/PlayerPicker.tsx",
+    "apps/client/src/ui/TamamBar.tsx",
+    "apps/server/src/match.ts",
+    "apps/server/src/ittifak.test.ts",
+    "scripts/ui-check.mjs"
+  ]
+}

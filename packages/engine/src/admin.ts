@@ -511,3 +511,56 @@ export interface AdminEconomy {
   deals: AdminEconomyDeal[];
   dealEndsAt: number;
 }
+
+/** Oyun ansiklopedisi (wiki) geri bildirimleri: yalnız yöneticinin gördüğü notlar ve ekran işaretleri. */
+export const WIKI_FEEDBACK_STATUSES = ["acik", "isleniyor", "cozuldu"] as const;
+export type WikiFeedbackStatus = (typeof WIKI_FEEDBACK_STATUSES)[number];
+export const isWikiFeedbackStatus = (v: unknown): v is WikiFeedbackStatus =>
+  typeof v === "string" && (WIKI_FEEDBACK_STATUSES as readonly string[]).includes(v);
+export const WIKI_FEEDBACK_SECTIONS = [
+  "Genel",
+  "Kurallar",
+  "Puanlama",
+  "Akış ve süre",
+  "Arayüz",
+  "Hata",
+  "Fikir",
+] as const;
+export type WikiFeedbackSection = (typeof WIKI_FEEDBACK_SECTIONS)[number];
+export const isWikiFeedbackSection = (v: unknown): v is WikiFeedbackSection =>
+  typeof v === "string" && (WIKI_FEEDBACK_SECTIONS as readonly string[]).includes(v);
+/** Not metni en çok bu kadar karakter. */
+export const WIKI_FEEDBACK_TEXT_MAX = 2000;
+/** Eklenen görsel en çok bu kadar bayt (istemci göndermeden önce küçültür). */
+export const WIKI_IMAGE_MAX_BYTES = 1_500_000;
+export const WIKI_IMAGE_TYPES = ["image/webp", "image/jpeg", "image/png"] as const;
+export type WikiImageType = (typeof WIKI_IMAGE_TYPES)[number];
+
+/** Ekran görüntüsü üstünde işaretlenen alan; değerler ekranın 0..1 oranıdır. */
+export interface WikiBox {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface WikiFeedback {
+  id: number;
+  gameId: string;
+  section: WikiFeedbackSection;
+  text: string;
+  status: WikiFeedbackStatus;
+  /** İşaretlenen ekranın dosya adı (uzantısız); genel notta null. */
+  screen: string | null;
+  box: WikiBox | null;
+  hasImage: boolean;
+  /** Notu işleyenin yanıtı; yoksa boş. */
+  reply: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** `GET /api/admin/wiki/feedback`. */
+export interface WikiFeedbackList {
+  items: WikiFeedback[];
+}

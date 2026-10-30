@@ -222,6 +222,9 @@ export function AdminApp() {
                 </button>
               ))}
             </div>
+            <a class="adm-btn adm-btn--ghost adm-btn--small adm-top-link" href="/wiki">
+              Ansiklopedi
+            </a>
             <button
               type="button"
               class="adm-btn adm-btn--ghost adm-btn--small"

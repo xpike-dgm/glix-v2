@@ -1,0 +1,322 @@
+{
+  "id": "kendim",
+  "ad": "Kendim",
+  "slogan": "Seni anlatan tek kelimeyi yaz, karışık kelime kartlarının kime ait olduğunu bul.",
+  "kategori": "Sosyal",
+  "etiketler": ["tanıma", "kelime", "eşleştirme", "gizli kartlar"],
+  "oyuncu": {
+    "min": 3,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 69,
+    "not": "Oyuncu sayısına göre değişmez: 30 sn yazma + 30 sn eşleştirme + 9 sn sonuç = 69 sn. Bağlı herkes 'Tamam' derse yazma ve eşleştirme aşamaları 1 sn sonra biter; en kısası yaklaşık 1 + 1 + 9 = 11 sn'ye kadar inebilir. Anlatım (en çok 40 sn), 3 sn geri sayım ve sonuç ekranı (en çok 30 sn) bunun dışındadır."
+  },
+  "ozet": "Herkes kendini anlatan tek bir kelime yazar. Kelimeler sahipsiz, karışık kartlara dönüşür; herkes kendi kartı dışındaki kartları oyuncularla eşleştirir. Doğru eşleşme +1, yanlış -1, boş bırakılan kart 0'dır; kelimesini yalnız bir kişinin bulduğu oyuncu +1 bonus alır. Mini oyunda en yüksek (ve 0'dan büyük) puana sahip olan genel skorda +1 kazanır.",
+  "akis": [
+    {
+      "ad": "Kelime yazma",
+      "sureSn": 30,
+      "kim": "herkes",
+      "aciklama": "Başlık 'Kendini anlat / Tek kelime yaz'. Tek satırlık neon yazı panosuna 'Ben…' ipucuyla kelime yazılır (24 karakter sınırı, otomatik büyük harf); altta 'Seni en iyi anlatan tek kelime' yazar. Alt şeritte oyuncu portreleri ve Tamam düğmesi bulunur; portrede kimin 'Gönderildi' dediği görünür. Yazılan metin 350 ms gecikmeyle sunucuya gider. Tamam (ya da klavyede Enter) kelimeyi kilitler.",
+      "gizli": "Başkalarının kelimesi bu aşamada hiçbir yerde görünmez; yalnız kimin Tamam dediği herkese açıktır."
+    },
+    {
+      "ad": "Eşleştirme",
+      "sureSn": 30,
+      "kim": "herkes (kelime yazanlar)",
+      "aciklama": "Üstte 'x/y eşleşti' sayacı ve 'Kim yazdı?' başlığı. Karışık hologram kelime kartları listelenir (kendi kartın yoktur). Kartı alttaki oyuncu avatarına sürükleyerek ya da karta dokunup açılan alt sayfada 'Bu kelime kimin?' sorusuna oyuncuyu seçerek eşleştirirsin; 'Boş bırak' eşi kaldırır. Aynı oyuncuyu başka bir karta verirsen önceki karttan alınır. Eşleştirme sayısı sınırsızdır ama her kart en çok bir kişiye, her kişi en çok bir karta bağlanır. Tamam kilitler; hiç eşleştirme yapmadan da Tamam denebilir.",
+      "gizli": "Kartların sahipleri ve herkesin eşleştirmeleri sonuç açılana kadar kimsede yoktur. Herkese açık görünümde yalnız kimin kelime yazıp kart sahibi olduğu (kartla ilişkisiz) ve kimin Tamam dediği bulunur."
+    },
+    {
+      "ad": "Sonuç açılışı",
+      "sureSn": 9,
+      "kim": "herkes",
+      "aciklama": "Üstte kendi toplamın (+2, −1, 0 gibi) ve hüküm yazısı ('Doğru bildin!', 'N doğru, M yanlış', 'Eşleştirme yapmadın', 'Kelimeni biri buldu'). Altta her kartın kelimesi ve sahibi (kendi eşleştirmen doğru/yanlış işaretli, bonus alan sahipte '+1'), ardından puana göre sıralı oyuncu listesi; kazananlarda '+1' tacı. İzleyici 'Kartlar açıldı' başlığını görür.",
+      "gizli": "Bu aşamada her şey açıktır. Ses/titreşim yaklaşık 0,9 sn sonra çalar (toplam > 0 ise eşleşme, değilse yalnız efekt)."
+    }
+  ],
+  "kurallar": [
+    "En az 3, en çok 8 oyuncu. Rol yoktur; herkes aynı işi yapar.",
+    "Yazma aşamasında herkes kendini anlatan tek bir kelime yazar. Giriş sunucuda temizlenir: boşluklar teke indirilir ve kırpılır, Türkçe kurallarla büyük harfe çevrilir; harf/rakam içermeyen, 24 karakterden uzun, görünmez karakterli metin geçersizdir. 'Tek kelime' kuralı kod tarafından zorlanmaz: boşluklu kısa bir ifade de (24 karakter içinde) kabul edilir.",
+    "Yazma 'Tamam'a kadar değiştirilebilir. Hiçbir şey yazmadan 'Tamam' olmaz. Aynı kelimeyi birden fazla oyuncu yazabilir.",
+    "Kelime yazmayan oyuncunun kartı olmaz; ama o oyuncu eşleştirme aşamasında diğer kartları eşleştirebilir. Kelimesi olmayan bir oyuncu bir karta hedef gösterilemez ('no_word' ile reddedilir) ve avatarı eşleştirme tepsisinde çıkmaz.",
+    "Yazma bitince kelimeler kartlara dönüşür ve maç tohumuyla karıştırılır (kart numarası sahibi hakkında bilgi taşımaz, katılım sırasına bağlı değildir). Herkes kendi kartı hariç diğerlerini görür; n kelime yazıldıysa her yazan n-1 kart görür.",
+    "Eşleştirme: bir kartı kendin dışında, kelime yazmış bir oyuncuyla eşleştirirsin. Kendi kartını eşleştiremez, kendini hedef seçemezsin. Bir kart en çok bir kişiye bağlanır; bir kişi en çok bir karta bağlanır (aynı kişiyi başka kartta seçersen önceki eşleşme düşer).",
+    "Tüm kartları eşleştirmek zorunlu değildir. Boş kart 0 puandır. Eşleştirme 'Tamam'a kadar değiştirilebilir ya da kaldırılabilir; boş 'Tamam' serbesttir.",
+    "Bir eşleştirme, eşlediğin oyuncunun yazdığı kelime kartın kelimesiyle klavyeden bağımsız aynıysa doğrudur (büyük/küçük harf, ç/c, ğ/g, ı/İ/i/I, ö/o, ş/s, ü/u ve noktalama farkı yok sayılır). Yani aynı kelimeyi yazan iki oyuncu birbirinin yerine geçer; o kelimenin kartını ikisine de eşlemek doğru sayılır.",
+    "Doğru eşleştirme mini puana +1, yanlış eşleştirme -1.",
+    "Bir kartı doğru eşleştiren TAM OLARAK bir kişi varsa kartın sahibi +1 bonus alır. İki ya da daha fazla kişi doğru bulursa ya da kimse bulamazsa bonus yoktur. Başkalarının o karta yaptığı yanlış eşleştirmeler sayıyı etkilemez.",
+    "Sessiz oyuncu kuralı: Hiçbir eşleştirme yapmamış (ya da hepsini kaldırmış) oyuncu kelimesini bir kişi bulsa bile bonus alamaz; toplamı 0 kalır (KENDIM_SILENT_GETS_BONUS = false). Bir tane bile eşleştirme (yanlış da olsa) bırakırsa bonus hakkı doğar.",
+    "Süre dolunca ya da herkes Tamam deyince puanlar hesaplanır. Mini oyun puanı negatif olabilir.",
+    "Genel skor: mini puanı en yüksek VE 0'dan büyük olan oyuncu(lar) genel skora +1 alır. Eşitlikte eşit olanların hepsi +1 alır. En yüksek puan 0 ya da altındaysa kimse puan almaz.",
+    "Bağlı bütün katılımcılar 'Tamam' derse ilgili aşama 1 sn sonra biter. Yazma erken biterse eşleştirme yine tam 30 sn sürer."
+  ],
+  "puanlama": {
+    "ozet": "Mini oyun puanı = doğru eşleştirme sayısı - yanlış eşleştirme sayısı + (kelimeni yalnız tek kişi bulduysa ve en az bir eşleştirme yaptıysan) 1. Genel skora yalnız birinciler (0'ın üstünde en yüksek) +1 alır.",
+    "kalemler": [
+      {
+        "olay": "Doğru eşleştirme",
+        "puan": "+1 (mini)",
+        "not": "Eşlediğin oyuncunun kelimesi kartla aynı (klavyeden bağımsız)."
+      },
+      {
+        "olay": "Yanlış eşleştirme",
+        "puan": "-1 (mini)",
+        "not": "Eşlediğin oyuncunun kelimesi farklı."
+      },
+      {
+        "olay": "Boş bırakılan kart",
+        "puan": "0",
+        "not": "Eşleştirmesen de ceza yok."
+      },
+      {
+        "olay": "Kelime sahibi bonusu",
+        "puan": "+1 (mini)",
+        "not": "Kartı doğru eşleştiren tam bir kişi varsa kart sahibine; sahibin en az bir eşleştirmesi olmalı."
+      },
+      {
+        "olay": "Mini oyun birincisi",
+        "puan": "+1 (genel skor)",
+        "not": "En yüksek mini puan ve puan > 0; eşitlikte hepsi."
+      }
+    ],
+    "ornek": "4 oyuncu: A kelimesi SESSİZ, B KEDİ, C NEŞELİ, D GÜNEŞ. A: KEDİ kartını B'ye (doğru +1), NEŞELİ kartını C'ye (doğru +1), GÜNEŞ'i boş bırakır: +2. B: SESSİZ kartını A'ya (+1), NEŞELİ kartını D'ye (yanlış -1), GÜNEŞ'i boş: 0. C: SESSİZ'i A'ya (+1), KEDİ'yi D'ye (-1), GÜNEŞ'i B'ye (-1): -1. D hiç eşleştirme yapmaz: 0. Kart bulucuları: SESSİZ'i B ve C buldu (2 kişi: bonus yok); KEDİ'yi yalnız A buldu: B +1; NEŞELİ'yi yalnız A buldu: C +1; GÜNEŞ'i kimse bulamadı. Mini puanlar: A +2, B +1 (0+1), C 0 (-1+1), D 0. En yüksek A (+2): genel skora A +1, diğerleri 0.",
+    "beraberlik": "En yüksek mini puan eşitse eşit olanların tamamı genel skorda +1 alır. En yüksek puan 0 ya da negatifse kimse genel skor almaz."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Katılımcı olmaya devam eder (oda 120 sn bekler). 'Tamam' sayımında bağlı olmayan beklenmez, ancak bu değerlendirme yalnız biri Tamam dediği anda yapılır; kopan son eksik oyuncu için aşama başka birinin Tamam'ına ya da süreye kadar bekler. Yazdığı kelime kartı olarak kalır, kopmuş oyuncu da eşleştirme hedefi olabilir."
+    },
+    {
+      "baslik": "Geri dönen oyuncu",
+      "aciklama": "Yazdığı kelime, kilit durumu ve eşleştirmeleri sunucuda durur; geri dönünce alanlar dolu gelir."
+    },
+    {
+      "baslik": "Süre aşımı",
+      "aciklama": "Yazma bitince yazma/kilitleme, eşleştirme bitince eşleştirme/kilitleme reddedilir. Bu oyunda geç gelen eylem payı yoktur: bitişten 1 ms sonra gelen eylem reddedilir. 'Tamam' demeyen oyuncunun o anki kelimesi ve eşleştirmeleri sayılır."
+    },
+    {
+      "baslik": "Herkes erken gönderirse",
+      "aciklama": "Bağlı herkes Tamam derse aşamanın bitişi 1 sn sonraya çekilir; bu pencerede yazma/eşleştirme 'closed' ile reddedilir. Yazma erken biterse eşleştirme aşaması tam 30 sn sürer."
+    },
+    {
+      "baslik": "Kimse kelime yazmazsa / tek kişi yazarsa",
+      "aciklama": "Kartlar yalnız kelime yazanlardan oluşur. Hiç kelime yazılmadıysa kart yoktur, eşleştirme boş geçer, herkes 0 alır ve kimse genel skor almaz (en yüksek puan 0)."
+    },
+    {
+      "baslik": "3 oyuncu / 8 oyuncu",
+      "aciklama": "3 oyuncuda herkes 2 kart görür; en çok +2 (doğru) +1 (bonus) = 3 puan alınabilir. 8 oyuncuda 7 kart görülür; en çok 7 doğru + 1 bonus = 8 puan. Kart listesi ve avatar tepsisi 8 kişiye göre küçülür."
+    },
+    {
+      "baslik": "İzleyici",
+      "aciklama": "İzleyicinin görünümü boştur: kendi kelimesi, kartı ve eşleştirmesi yoktur; kart listesini göremez. Yazmada 'Herkes yazıyor', eşleştirmede 'Herkes eşleştiriyor' ve hazır sayacı, sonuçta 'Kartlar açıldı' ve kartların sahipleri görünür. Puan almaz."
+    },
+    {
+      "baslik": "Geç katılan",
+      "aciklama": "Maç sürerken gelen (varsayılan ayarda izleyici olan) kişi bu oyuna katılamaz."
+    },
+    {
+      "baslik": "Aynı kelimeyi yazan oyuncular",
+      "aciklama": "Kartlar ayrı ayrı vardır; ama doğrulukta kelime eşitliği baktığı için iki kartın hangisi hangi sahibe ait olursa olsun kelimesi aynı oyuncuya eşlemek doğru sayılır. Bonusta kart başına bulucu sayısı ayrı sayılır."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Genel hesap",
+      "etki": "Bu oyunda ham genel skor puanı (awards) yalnız birinci(ler)e verilen +1'dir; mini puan (miniScores) kartlara 'birinci/sonuncu' tanımı için bakılan değerdir. Dolayısıyla ham ödülü 1 ya da 0 olan oyuncuya kartlar ekler/çıkarır. 'Birinci' en yüksek mini puanlı oyuncudur (puanı 0 ya da altında olsa bile); herkesin mini puanı eşitse herkes birinci sayılır ve kimse sonuncu değildir. Bu yüzden Kendim'de 'birinci' olup genel skor alamayan (ham ödül 0) oyuncu olabilir."
+    },
+    {
+      "kart": "Kendine Güven / Sigorta / Tahmin",
+      "etki": "Mini puana göre birinci/sonuncu sayılırlar. Örn. herkes 0 ise herkes birincidir: Kendine Güven herkese +2 verir; Sigorta kimseye işlemez."
+    },
+    {
+      "kart": "Çift Puan / Altın Dokunuş / Ağır Yük",
+      "etki": "Ham ödül 1 ya da 0 olduğu için: Çift Puan birinciyi +2'ye, Altın Dokunuş +3'e çıkarır; Ağır Yük birincinin +1'ini 0'a indirir (1→0). Ödülü 0 olan oyuncuda çarpanlar işlemez."
+    },
+    {
+      "kart": "Kalkan",
+      "etki": "Ham ödül negatif olmaz; yalnız başka kartlardan gelen eksiyi (Çelme, Talihsizlik, Kumarbaz, Kendine Güven'in -1'i) 0'a çeker."
+    },
+    {
+      "kart": "Ters Köşe",
+      "etki": "Mini puana göre sıra tersine döner ve ham ödüller aynalanır: en düşük puanlı oyuncu birincinin +1 ödülünü alır, birinci 0 alır; beraberlikte grup içinde bölünüp artan puan katılım sırasındaki ilk üyelere +1 olarak verilir."
+    },
+    {
+      "kart": "Diğer kartlar",
+      "etki": "Takas, Ortaklık, Hırsız, Vergi, Çelme, Lanet, Koruma, Ayna, Kart Çal, Veto, Oyunu Seç, Geniş Seçim bu oyuna özgü bir değişiklik içermez; genel hesap sırasıyla (docs/KURALLAR.md K6) 0-1 aralığındaki ham ödüllere uygulanır."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Yazma süresi",
+      "deger": "30 000 ms (30 sn)",
+      "kaynak": "packages/engine/src/games/kendim/types.ts:3"
+    },
+    {
+      "ad": "Eşleştirme süresi",
+      "deger": "30 000 ms (30 sn)",
+      "kaynak": "packages/engine/src/games/kendim/types.ts:4"
+    },
+    {
+      "ad": "Sonuç gösterim süresi (oyunun bitişi)",
+      "deger": "9 000 ms (9 sn)",
+      "kaynak": "packages/engine/src/games/kendim/types.ts:6"
+    },
+    {
+      "ad": "Erken bitiş payı (herkes Tamam)",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/games/kendim/types.ts:9"
+    },
+    {
+      "ad": "Oyuncu sayısı",
+      "deger": "min 3, max 8",
+      "kaynak": "packages/engine/src/games/kendim/index.ts:128"
+    },
+    {
+      "ad": "Sessiz oyuncu bonus bayrağı",
+      "deger": "false (eşleştirme yapmayan bonus alamaz)",
+      "kaynak": "packages/engine/src/games/kendim/index.ts:25"
+    },
+    {
+      "ad": "Bonus koşulu (tek bulucu)",
+      "deger": "bulucu sayısı === 1",
+      "kaynak": "packages/engine/src/games/kendim/index.ts:108"
+    },
+    {
+      "ad": "Doğru / yanlış eşleştirme",
+      "deger": "+1 / -1",
+      "kaynak": "packages/engine/src/games/kendim/index.ts:100"
+    },
+    {
+      "ad": "Genel skor: en yüksek ve > 0",
+      "deger": "+1",
+      "kaynak": "packages/engine/src/games/kendim/index.ts:112-113, 319-321"
+    },
+    {
+      "ad": "Kart numarası üst sınırı (ağ doğrulaması)",
+      "deger": "0-64",
+      "kaynak": "packages/engine/src/games/kendim/index.ts:155"
+    },
+    {
+      "ad": "Kelime en çok uzunluk",
+      "deger": "24 karakter",
+      "kaynak": "packages/engine/src/games/text.ts:3"
+    },
+    {
+      "ad": "İstemci yazı gecikmesi (sunucuya gönderim)",
+      "deger": "350 ms",
+      "kaynak": "apps/client/src/ui/wordDraft.ts (delayMs ?? 350)"
+    },
+    {
+      "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
+      "deger": "40 sn / 3 sn / 30 sn",
+      "kaynak": "apps/server/src/match.ts:40-42"
+    },
+    {
+      "ad": "Geç gelen eylem payı",
+      "deger": "yok (graceMs tanımlı değil)",
+      "kaynak": "packages/engine/src/games/kendim/index.ts:125-130"
+    }
+  ],
+  "strateji": [
+    "Çok genel bir kelime (ör. 'İYİ') seni anlatmaz ama kolay bulunur; kelimen herkes tarafından bulunursa bonus alamazsın. Tek kişinin bileceği bir kelime bonus getirir.",
+    "Yanlış eşleştirme -1 olduğu için emin olmadığın kartı boş bırakmak 0 getirir; ama hiçbir eşleştirme yapmazsan kelimen bulunsa da bonus alamazsın. En az bir güvenli eşleştirme yapıp bonus hakkını açık tut.",
+    "Elemeyle ilerle: önce kesin bildiklerini eşleştir, kalan kartlar kalan oyunculara kalırsa tahmin et. Aynı kişiyi başka karta verirsen eskisi düşer.",
+    "Kartları herkes aynı sırada görür (kendi kartın hariç). Yazma aşamasında arkadaşlarının yazdıklarını duyduysan fark kapatmak için kelimeni değiştirebilirsin; Tamam'a kadar serbestsin.",
+    "Genel skor yalnız en yüksek puana (ve > 0) +1 verir: yarışta riskli eşleştirmeler sadece gerektiğinde mantıklı.",
+    "Aynı kelimeyi yazan iki kişi birbirinin yerine geçer; böyle bir çiftte kartı ikisinden herhangi birine vermek doğrudur."
+  ],
+  "tv": "TV/sahne ekranı bu oyun için özel görünüm kullanmaz: oyun ekranı izleyici kipinde, dokunmaya kapalı büyütülmüş bir dikey çerçevede gösterilir. Yazmada 'Herkes yazıyor' ve hazır sayacı; eşleştirmede 'Herkes eşleştiriyor' (izleyicinin kart listesi boştur); sonuçta 'Kartlar açıldı' başlığı, kelime kartları ile sahipleri, bonus +1'leri ve puana göre sıralı oyuncular görünür. Sağ tarafta oyuncular ve bu oyundaki puanlar bulunur.",
+  "ekranlar": [
+    {
+      "mock": "kendim-briefing",
+      "q": "mock=kendim-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Amaç ve üç adım: tek kelime yaz, karışık kartları eşleştir, doğru +1 yanlış -1.",
+      "dosya": "kendim-briefing"
+    },
+    {
+      "mock": "kendim-write",
+      "q": "mock=kendim-write&n=5",
+      "baslik": "Kelime yazma",
+      "aciklama": "'Tek kelime yaz' başlığı, yazı panosu, portre şeridi ve Tamam.",
+      "dosya": "kendim-write-n-5"
+    },
+    {
+      "mock": "kendim-write-locked",
+      "q": "mock=kendim-write-locked&n=6",
+      "baslik": "Yazma kilitli",
+      "aciklama": "Kelime kilitlendi; Gönderildi durumu ve hazır sayacı.",
+      "dosya": "kendim-write-locked-n-6"
+    },
+    {
+      "mock": "kendim-match",
+      "q": "mock=kendim-match&n=5",
+      "baslik": "Eşleştirme",
+      "aciklama": "Karışık kelime kartları ve altta avatar tepsisi; 'Kartı avatara sürükle ya da karta dokun' ipucu.",
+      "dosya": "kendim-match-n-5"
+    },
+    {
+      "mock": "kendim-match",
+      "q": "mock=kendim-match&n=8&paired=2",
+      "baslik": "Eşleştirme alt sayfası",
+      "aciklama": "Karta dokununca açılan 'Bu kelime kimin?' alt sayfası, oyuncu seçenekleri ve 'Boş bırak' (ekran kaydı: kendim-match-sheet).",
+      "dosya": "kendim-match-n-8-paired-2"
+    },
+    {
+      "mock": "kendim-match",
+      "q": "mock=kendim-match&n=6&paired=1",
+      "baslik": "Sürükle-bırak",
+      "aciklama": "Kart parmakla avatarın üstüne taşınırken kalkık hayalet kart ve vurgulu avatar (ekran kaydı: kendim-match-drag-6).",
+      "dosya": "kendim-match-n-6-paired-1"
+    },
+    {
+      "mock": "kendim-match-locked",
+      "q": "mock=kendim-match-locked&n=6",
+      "baslik": "Eşleştirme kilitli",
+      "aciklama": "Kartlar kilitli, Tamam'dan sonra bekleme sayacı.",
+      "dosya": "kendim-match-locked-n-6"
+    },
+    {
+      "mock": "kendim-reveal",
+      "q": "mock=kendim-reveal&n=5",
+      "baslik": "Sonuç",
+      "aciklama": "Kartların sahipleri ve bonuslar, kendi eşleştirmelerin doğru/yanlış, sıralı puan listesi ve +1 tacı.",
+      "dosya": "kendim-reveal-n-5"
+    },
+    {
+      "mock": "kendim-reveal-negative",
+      "q": "mock=kendim-reveal-negative&n=6",
+      "baslik": "Eksi puanlı sonuç",
+      "aciklama": "Yanlış eşleştirmeler yüzünden negatif toplam (−1 gibi) gösterimi.",
+      "dosya": "kendim-reveal-negative-n-6"
+    }
+  ],
+  "bilinenSorunlar": [
+    "KURALLAR.md 'Hiç tahmin yapmayan oyuncu 0 alır' der. Kodda bu, kelimesi tek kişi tarafından bulunsa bile bonusun verilmemesi olarak uygulanır (KENDIM_SILENT_GETS_BONUS = false); kodda bu belirsizlik yorum olarak not edilmiştir.",
+    "KURALLAR.md 'tek bir kelime' der; sunucu yalnızca uzunluk (24) ve karakter denetimi yapar, boşluklu ifadeyi (ör. 'ÇOK NEŞELİ') kabul eder.",
+    "KURALLAR.md 'Oyuncu kendi kelimesini kendisiyle eşleştiremez' der; kodda hem kendi kartı görünmez hem sunucu 'own_card'/'self_target' ile reddeder. Aynı kelimeyi yazan başka biri varsa onun kartını (aynı kelime) görürsün ama kendine bağlayamazsın.",
+    "Erken bitiş değerlendirmesi yalnız bir Tamam eylemi geldiğinde yapılır; son eksik oyuncu bağlantısını yitirirse aşama kendiliğinden erken bitmez.",
+    "Kimse kelime yazmazsa (kart yok) oyun yine tam süre ilerler; sunucu bunu özel olarak kısaltmaz."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-29: Oyun ekranları: tutarlı durum, tek satır başlık, okunur sonuçlar.",
+    "2026-10-27: Renk körlüğü modu için işaretler; oyun CSS sınıf çakışmaları giderildi.",
+    "2026-10-27: Açılış sahneleri ve Kendim sürükle-bırak cilası (kartı avatara sürükle; dokunma alt sayfası yedek).",
+    "2026-10-27: Oyunlar kabuk saatine, Status ve hazır noktalarına taşındı; tüm oyunlar için tur özeti (Kendim: 'N puanla herkesi en iyi tanıdı').",
+    "2026-10-25: Klavyeden bağımsız kelime eşleşmesi; iyimser arayüz yardımcıları (eşleştirme dokununca hemen görünür).",
+    "2026-10-19: İlk sürüm: kelime kartlarıyla eşleştirme oyunu, ortak kelime alanı, istemci ekranları."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/kendim/index.ts",
+    "packages/engine/src/games/kendim/types.ts",
+    "packages/engine/src/games/kendim/kendim.test.ts",
+    "packages/engine/src/games/text.ts",
+    "apps/client/src/games/kendim/",
+    "apps/server/src/match.ts",
+    "docs/KURALLAR.md#2-kendim--kendim",
+    "scripts/ui-check.mjs"
+  ]
+}

@@ -1,0 +1,359 @@
+{
+  "id": "rus-ruleti",
+  "ad": "Rus Ruleti",
+  "slogan": "Silah sende: kendini ya da bir arkadaşını seç, riskin her güvenli atışta yükselir.",
+  "kategori": "Şans",
+  "etiketler": ["eleme", "risk", "sıra tabanlı", "şans"],
+  "oyuncu": {
+    "min": 2,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 75,
+    "not": "Sabit süre ve sabit tur sayısı yoktur; oyun, hayatta kalan sayısı başlangıcın yarısına inene kadar sürer. Süre elenme sayısına ve atışların kaç saniyede yapıldığına bağlıdır. Her atış en az 2,5 sn sonuç bekleme + en çok 18 sn karar süresi alır (ilk atışta bekleme yoktur). Bir elenme için ortalama yaklaşık 3,2 atış gerekir (riskten hesaplanan beklenti); 8 oyuncuda 4 elenme gerekir. İnsanlar ~5 sn'de karar verirse 5-8 kişide yaklaşık 1-2 dk; herkes süreyi sonuna kadar beklerse (her atış 20,5 sn) 8 kişide 4-5 dk'ya çıkabilir. 2 kişide ~30 sn. Bu sürelerin çoğu varsayımdır."
+  },
+  "ozet": "Silah rastgele bir oyuncuya verilir. Silahı tutan, hayatta olan kendisini ya da bir başkasını hedef alıp ateş eder. Patlama riski %16'dan başlar, her güvenli atışta 10 puan artar (en çok %76). Patlarsa hedef elenir, risk %16'ya döner. Hayatta kalan sayısı başlangıcın yarısına ya da altına inince oyun biter; hayatta kalanlar +1, elenenler 0 alır. Elenenler izleyici olur ve her atış öncesi 'Patlar mı?' diye tahmin verip 'Kâhin' rozeti kazanabilir.",
+  "akis": [
+    {
+      "ad": "Başlangıç",
+      "sureSn": 0,
+      "kim": "sunucu",
+      "aciklama": "Herkes hayattadır, risk %16'dır. Silahın ilk sahibi, bağlı katılımcılar arasından rastgele seçilir (bağlı kimse yoksa tüm katılımcılar). Ilk karar penceresi oyunun başladığı anda açıktır (beklemesiz) ve 18 sn sürer.",
+      "gizli": "Atış sonuçları atış anında gizli bir tohumdan çıkar; hiçbir ekranda önceden görünmez."
+    },
+    {
+      "ad": "Karar (silah sahibi)",
+      "sureSn": 18,
+      "kim": "silah sahibi",
+      "aciklama": "Ekranda ortada risk halkası ('%16 patlama riski') ve altında oyuncu portreleri; silah sahibinin portresinde tabanca rozeti vardır. Silah sahibi 'Silah sende! Kendini ya da birini seç' ipucuyla bir portreye dokunur (hedef halkası belirir), sonra 'ATEŞ ET' düğmesine basar. Hayatta olan, bağlı bir oyuncu ya da kendisi seçilebilir. Diğer hayattakiler 'Silah başkasında · X karar veriyor' ve 'Silah sahibini bekle' görür. Süre çubuğu karar süresini gösterir.",
+      "gizli": "Hedef seçimi (düğmeye basılmadan önceki dokunuş) yalnız silah sahibinin ekranındadır."
+    },
+    {
+      "ad": "Atış sonucu",
+      "sureSn": 2.5,
+      "kim": "herkes",
+      "aciklama": "Güvenli atışta 'Klik!' ('Boş! Sıradaki: X' ya da 'X kendine sıktı, boş'), patlayan atışta 'BAM!' ('Elendi: X' / 'Elendin') görünür; patlamada kamera sarsıntısı, ses ve titreşim vardır. Bu 2,5 sn boyunca hiçbir eylem (atış) kabul edilmez; altta 'Silah el değiştiriyor…'. Güvenli atışta silah hedefe geçer (kendine sıkıldıysa aynı kişide kalır) ve risk 10 artar; patlamada hedef elenir, risk %16'ya döner, silah hayatta kalanlardan rastgele birine verilir.",
+      "gizli": ""
+    },
+    {
+      "ad": "Elenenin tahmini",
+      "sureSn": 0,
+      "kim": "elenenler",
+      "aciklama": "Elenen oyuncunun ekranında 'Elendin · Oyunun sonunu izle' yazar ve her atış için 'Patlar mı?' sorusu (Evet / Hayır) çıkar. Seçince 'Tahminin alındı' görünür ve değiştirilemez. Atıştan sonra yalnız sahibine 'Bildin!' ya da 'Bilemedin' bildirimi çıkar. Tahmin zamanlayıcısızdır: sıradaki atış gerçekleşene kadar verilebilir.",
+      "gizli": "Tahminler ve doğru sayıları oyun bitene kadar yalnız sahibinin ekranındadır; başkalarına ve herkese açık görünüme geçmez. Tahmin atışın sonucunu etkilemez."
+    },
+    {
+      "ad": "Bitiş ve sonuç",
+      "sureSn": 2.5,
+      "kim": "herkes",
+      "aciklama": "Hayatta kalan sayısı başlangıçtaki oyuncu sayısının yarısına ya da altına düşünce (alive × 2 ≤ başlangıç) oyun biter; son atışın sonucu 2,5 sn gösterilir, sonra oyun kapanır. Hayattakiler 'Hayattasın!' görür; elenenler 'Oyun bitti · Elendin, bu sefer olmadı'. Sonuç ekranının üstünde 'Hayatta kalanlar' (ya da tek kişi kaldıysa 'Tek hayatta kalan') altın halkalı avatarlarla '+1', 'Kâhin' rozeti kazananlar ve elenenler (sönük) gösterilir.",
+      "gizli": "Kâhin rozeti yalnız mini oyun sonuç ekranında herkese açık gösterilir."
+    }
+  ],
+  "kurallar": [
+    "En az 2, en çok 8 oyuncu. Rol yoktur; herkes hayattadır.",
+    "Silahın ilk sahibi bağlı katılımcılar arasından rastgele seçilir. Yalnızca silahı tutan, hayatta olan oyuncu ateş edebilir.",
+    "Silah sahibi kendisini ya da hayatta olan başka bir oyuncuyu hedefleyebilir. Başka bir oyuncuyu hedeflemek için o oyuncunun o anda bağlı olması gerekir (bağlı olmayan birine atış 'target_offline' ile reddedilir); kendini hedeflemek bağlantı durumundan bağımsız her zaman geçerlidir. Elenmiş oyuncu ne ateş eder ne hedeflenebilir.",
+    "Patlama olasılığı tam olarak 'risk' yüzdesidir: 0-99 arası rastgele sayı riskten küçükse patlar. Zar atış anında maç tohumundan ve atış sıra numarasından türetilir.",
+    "Risk %16'dan başlar. Her patlamayan atışta 10 artar (16, 26, 36, 46, 56, 66, 76) ve en çok %76 olur. Patlama olduğunda risk %16'ya döner.",
+    "Atış patlamazsa silah doğrudan hedefe geçer; kişi kendini hedeflediyse silah aynı kişide kalır (risk yine 10 artar).",
+    "Atış patlarsa hedef elenir (kendini vuran kendini eler). Oyun sürüyorsa silah hayatta kalan oyunculardan rastgele birine verilir (önceki sahip yeniden seçilebilir).",
+    "Oyun bitişi: hayatta kalan sayısı başlangıçtaki oyuncu sayısının yarısına ya da altına düşünce (alive × 2 ≤ başlangıç sayısı). Gereken elenme sayısı: 2 kişide 1, 3 kişide 2, 4 kişide 2, 5 kişide 3, 6 kişide 3, 7 kişide 4, 8 kişide 4. Sabit tur sayısı yoktur; güvenli atışlar süresiz sürebilir.",
+    "Her karar 18 sn sürer. Süre dolarsa sunucu otomatik ateş eder: silah sahibi dışındaki hayattaki bir oyuncu rastgele seçilir (bağlı olup olmadığına bakılmaz); ondan başka hayatta kimse yoksa sahibin kendisine ateş edilir. Atışın zamanı gerçek bitiş anıdır.",
+    "Her atıştan sonra 2,5 sn sonuç gösterilir; bu süre boyunca atış eylemi kabul edilmez ('not_open'). Sonraki 18 sn'lik karar süresi bu bekleme bittiğinde başlar. Oyunun ilk karar penceresi bekleme olmadan başlar.",
+    "Elenen oyuncular oyun bitene kadar izleyicidir. Her atıştan önce o atış için tek bir tahmin ('Patlar mı?' Evet/Hayır) verebilir; tahmin değiştirilemez. Hayatta olanlar ve oyuna katılmayan izleyiciler tahmin veremez. Eski atışa ait (sıra numarası geçmiş) tahmin 'stale_turn' ile reddedilir.",
+    "Tahmin puan vermez. 'Kâhin' rozeti: elenmiş olup en az bir kez 'Evet, patlar' deyip bilen ve 'Evet' tahminlerinin en az yarısı doğru çıkan oyuncuya verilir. 'Hayır' tahminleri rozete sayılmaz.",
+    "Oyun sonunda hayatta kalanların her biri +1, elenenler 0 alır (mini oyun puanı = genel skor)."
+  ],
+  "puanlama": {
+    "ozet": "Oyun sonunda hayatta olana +1, elenene 0. Mini oyun puanı genel skora aynen eklenir.",
+    "kalemler": [
+      {
+        "olay": "Oyun sonunda hayatta olmak",
+        "puan": "+1",
+        "not": "Birden çok kişi hayatta kalabilir; hepsi +1 alır."
+      },
+      {
+        "olay": "Elenmek",
+        "puan": "0",
+        "not": "Eksi puan yoktur."
+      },
+      {
+        "olay": "Kâhin rozeti",
+        "puan": "0 (puan yok)",
+        "not": "Yalnız ekranda rozet; sunucu bunu hesap rozet sayacı için ('kahin: 1') kaydeder."
+      }
+    ],
+    "ornek": "5 oyuncu (A-E): bitiş koşulu hayattaki sayı ≤ 2 (3 elenme). A silahı tutar, B'ye ateş eder: %16 riskle güvenli (klik), silah B'ye geçer, risk %26. B kendine ateş eder: güvenli, silah B'de, risk %36. B, C'ye ateş eder: patlar, C elenir, risk %16'ya döner, silah A/B/D/E'den rastgele birine geçer. Böyle devam edip toplam 3 kişi elenince oyun biter: kalan 2 kişi +1, elenen 3 kişi 0 alır. C elendikten sonra 'Evet, patlar' deyip bilen bir tahmin verirse ve Evet tahminlerinin yarısı tutarsa Kâhin olur.",
+    "beraberlik": "Beraberlik kuralı yoktur: oyun biter bitmez hayatta olan herkes eşit +1 alır."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan silah sahibi",
+      "aciklama": "Oyun beklemez: 18 sn dolunca sunucu, bağlı olup olmadığına bakmadan sahip dışındaki rastgele bir hayatta oyuncuya ateş eder. Kopan oyuncu hedef de alınabilir (otomatik atışta) ama diğerleri onu elle hedefleyemez."
+    },
+    {
+      "baslik": "Bağlantısı kopan hedef",
+      "aciklama": "Silah sahibi bağlı olmayan başka bir oyuncuyu elle hedefleyemez ('target_offline'); portre pasif görünür. Kendini hedefleyebilir. Otomatik atış bağlantıya bakmadan rastgele seçer."
+    },
+    {
+      "baslik": "Geri dönen oyuncu",
+      "aciklama": "Aynı oturumla dönen oyuncu mevcut durumu görür: hayattaysa silahın kimde olduğunu ve kalan süreyi, elenmişse izleyici/tahmin ekranını."
+    },
+    {
+      "baslik": "Süre aşımı",
+      "aciklama": "Karar süresi dolunca sunucu otomatik ateş eder; gecikmiş tick'ler olsa bile bekleyen tüm süre aşımları sırayla işlenir ve sonuç tick sıklığına bağlı değildir. Bu oyunda geç gelen eylem payı yoktur: süre dolmadan önceki son milisaniyede gelen atış kabul edilir, süre dolduğu anda önce otomatik atış işlenir; ondan sonra gelen elle atış 2,5 sn'lik bekleme ('not_open') ya da artık sahip olmadığı için ('not_holder') reddedilir."
+    },
+    {
+      "baslik": "Herkes erken gönderirse",
+      "aciklama": "Erken bitiş yoktur; her atış ya elle yapılır ya 18 sn dolunca otomatik gerçekleşir. Atış sonrası 2,5 sn bekleme kısaltılmaz."
+    },
+    {
+      "baslik": "2 oyuncu",
+      "aciklama": "İlk elenmede (hayatta 1 kişi kalır, 1×2 ≤ 2) oyun biter; yani oyun en çok bir patlamayla sona erer. Silah sahibi ya rakibine ya kendine ateş eder; rakibe ateş patlarsa rakip elenir, kendine ateş patlarsa kendisi elenir. Kazanan +1, elenen 0 alır."
+    },
+    {
+      "baslik": "8 oyuncu",
+      "aciklama": "4 elenme gerekir. Portreler 4 sütunlu ızgarada gösterilir; 5-8 kişide dört sütun, 2-4 kişide tek sıra."
+    },
+    {
+      "baslik": "Elenen oyuncular",
+      "aciklama": "Elendikten sonra oyun bitene kadar izleyicidir, portresi sönük ve çarpılıdır. Tahmin verebilir (yalnız elenenler). Puan kaybetmez, almaz."
+    },
+    {
+      "baslik": "İzleyici",
+      "aciklama": "Maça katılmayan izleyici 'Oyunu izliyorsun · X karar veriyor' görür; tahmin veremez, atış yapamaz; sonuç ekranında 'Hayatta kalanlar +1 alır' yazısını görür."
+    },
+    {
+      "baslik": "Geç katılan",
+      "aciklama": "Maç sürerken gelen kişi (varsayılan ayarda izleyici) bu oyuna katılamaz."
+    },
+    {
+      "baslik": "Kendine ateş",
+      "aciklama": "Kendine ateş eden oyuncu patlarsa kendisi elenir (silah rastgele hayatta birine geçer); patlamazsa silah onda kalır ve risk yine 10 artar. Bu yolla riski tek başına yükseltmek mümkündür."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Genel hesap",
+      "etki": "Bu oyunda miniScores = awards: hayatta kalan 1, elenen 0. Kartlar 'birinci/sonuncu' için bu puanlara bakar: hayatta kalanlar birinci, elenenler sonuncudur."
+    },
+    {
+      "kart": "Sigorta",
+      "etki": "Elenirsen (sonuncu olursan) +1."
+    },
+    {
+      "kart": "Kendine Güven",
+      "etki": "Hayatta kalırsan (birinci olursan) +2, elenirsen -1."
+    },
+    {
+      "kart": "Tahmin",
+      "etki": "Seçtiğin oyuncu hayatta kalırsa (birinci olursa) +2."
+    },
+    {
+      "kart": "Çift Puan / Altın Dokunuş / Ağır Yük",
+      "etki": "Hayatta kalanın +1'i Çift Puan ile +2, Altın Dokunuş ile +3 olur; Ağır Yük +1'i 0'a indirir. Elenenin 0 puanında çarpanlar işlemez."
+    },
+    {
+      "kart": "Ters Köşe",
+      "etki": "Sıra tersine döner: elenenler hayatta kalanların ödülünü (+1), hayatta kalanlar 0 alır (eşit gruplarda bölüşüm ve artan puan kuralları geçerli)."
+    },
+    {
+      "kart": "Kalkan",
+      "etki": "Ham puan eksi olmaz; Kalkan başka kartlardan gelen eksiyi 0'a çeker."
+    },
+    {
+      "kart": "Diğer kartlar",
+      "etki": "Koruma, Ayna, Vergi, Çelme, Lanet, Hırsız, Takas, Ortaklık, Veto, Oyunu Seç, Geniş Seçim, Kart Çal bu oyuna özgü bir değişiklik içermez; genel hesap sırasıyla (docs/KURALLAR.md K6) 0-1 aralığındaki puanlara uygulanır. Oyun başladıktan sonra kartlarla oyun etkilenmez; kartlar yalnız oyun sonu genel skoru etkiler."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Başlangıç patlama riski",
+      "deger": "%16",
+      "kaynak": "packages/engine/src/games/rus-ruleti/types.ts:4"
+    },
+    {
+      "ad": "Güvenli atış başına risk artışı",
+      "deger": "+10",
+      "kaynak": "packages/engine/src/games/rus-ruleti/types.ts:5"
+    },
+    {
+      "ad": "Risk tavanı",
+      "deger": "%76",
+      "kaynak": "packages/engine/src/games/rus-ruleti/types.ts:6"
+    },
+    {
+      "ad": "Karar süresi",
+      "deger": "18 000 ms (18 sn)",
+      "kaynak": "packages/engine/src/games/rus-ruleti/types.ts:8"
+    },
+    {
+      "ad": "Her atıştan sonra sonuç bekleme penceresi (eylem kabul edilmez)",
+      "deger": "2 500 ms (2,5 sn)",
+      "kaynak": "packages/engine/src/games/rus-ruleti/types.ts:10"
+    },
+    {
+      "ad": "Kâhin için en az doğru 'Evet' tahmini",
+      "deger": "1 (ve Evet'lerin ≥ yarısı doğru)",
+      "kaynak": "packages/engine/src/games/rus-ruleti/types.ts:13, index.ts:75"
+    },
+    {
+      "ad": "Bitiş koşulu",
+      "deger": "hayatta × 2 ≤ başlangıç oyuncu sayısı",
+      "kaynak": "packages/engine/src/games/rus-ruleti/index.ts:90-92"
+    },
+    {
+      "ad": "Patlama koşulu",
+      "deger": "rng.int(100) < risk",
+      "kaynak": "packages/engine/src/games/rus-ruleti/index.ts:100"
+    },
+    {
+      "ad": "Patlamadan sonra yeni sahip",
+      "deger": "hayatta kalanlardan rastgele (önceki sahip dahil)",
+      "kaynak": "packages/engine/src/games/rus-ruleti/index.ts:129"
+    },
+    {
+      "ad": "Süre dolunca otomatik hedef",
+      "deger": "sahip dışı rastgele hayatta oyuncu; yoksa sahibin kendisi (bağlantıya bakılmaz)",
+      "kaynak": "packages/engine/src/games/rus-ruleti/index.ts:149-158"
+    },
+    {
+      "ad": "Tahmin sıra numarası üst sınırı (ağ doğrulaması)",
+      "deger": "0-100 000",
+      "kaynak": "packages/engine/src/games/rus-ruleti/index.ts:190"
+    },
+    {
+      "ad": "Oyuncu sayısı",
+      "deger": "min 2, max 8",
+      "kaynak": "packages/engine/src/games/rus-ruleti/index.ts:172-173"
+    },
+    {
+      "ad": "Puan: hayatta / elenen",
+      "deger": "+1 / 0",
+      "kaynak": "packages/engine/src/games/rus-ruleti/index.ts:291"
+    },
+    {
+      "ad": "Oyun bitiş gecikmesi (son atıştan sonra)",
+      "deger": "2 500 ms",
+      "kaynak": "packages/engine/src/games/rus-ruleti/index.ts:87"
+    },
+    {
+      "ad": "Gönderilen atış yerel bekleme düşüşü (istemci)",
+      "deger": "1 800 ms",
+      "kaynak": "apps/client/src/games/rus-ruleti/RusRuletiScreen.tsx:20 (PENDING_MS)"
+    },
+    {
+      "ad": "Geç gelen eylem payı",
+      "deger": "yok (zamanlama/tepki oyunu kapsam dışı)",
+      "kaynak": "packages/engine/src/games/rus-ruleti/index.ts:168-173"
+    },
+    {
+      "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
+      "deger": "40 sn / 3 sn / 30 sn",
+      "kaynak": "apps/server/src/match.ts:40-42"
+    }
+  ],
+  "strateji": [
+    "Risk tüm oyuncular için aynı basamaklarla tırmanır: %16, 26, 36, 46, 56, 66, 76 (sonra %76'da kalır). Silahı elinde tutan, patlamazsa riski bir sonraki sahip için yükseltmiş olur; riskin yüksek olduğu anlarda silahın sende olmaması istenir.",
+    "Kendine ateş etmek patlamazsa silahı sende tutar ve riski yine 10 artırır; yani kendine sıkarak riski sıfırlayamazsın, yalnızca bir sonraki atışı daha tehlikeli yaparsın. Patlarsa kendin elenirsin.",
+    "Süre dolarsa sistem senin yerine sen dışındaki rastgele bir hayatta oyuncuya ateş eder; karar vermekte geç kalmak seni korumaz ama hedefi de belirlemez. Kimi hedef alacağına süre bitmeden sen karar ver.",
+    "Hayatta kalma, oyuncu sayısının yarısına kadar eleme gerektirir; 8 kişilik oyunda 4 kişi elenir. Erken elenirsen 'Patlar mı?' tahminleriyle Kâhin olmaya çalışabilirsin (puan vermez, rozet verir).",
+    "Kâhin için 'Evet' tahminlerinin en az yarısı tutmalı: yüksek riskli (%56 ve üstü) atışlarda 'Evet', düşük riskli atışlarda 'Hayır' demek rozeti güvenceye alır; 'Hayır' tahminleri rozete hiç sayılmaz, o yüzden riski bilerek 'Evet' sayısını az tutmak da bir yoldur.",
+    "Bağlantını koru: bağlantın koparsa sıra sende geldiğinde 18 sn sonra rastgele biri vurulur ve diğer oyuncular seni elle hedefleyemez."
+  ],
+  "tv": "TV/sahne ekranı bu oyun için özel görünüm kullanmaz: oyun ekranı izleyici kipinde, dokunmaya kapalı büyütülmüş bir dikey çerçevede gösterilir. Ortada risk halkası ('%N patlama riski'), silah sahibinin portresinde tabanca rozeti, elenenlerin sönük ve çarpılı portreleri, süre çubuğu ve her atışta 'Klik!' / 'BAM!' sonucu görünür. Sağda oyuncular ve bu oyundaki puanları bulunur. Oyun bitince hayatta kalanlar +1 ve Kâhin rozeti sonuç ekranında gösterilir.",
+  "ekranlar": [
+    {
+      "mock": "rus-briefing",
+      "q": "mock=rus-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Kırmızı risk halkası ve dönen neon tabanca; amaç ve üç adım.",
+      "dosya": "rus-briefing"
+    },
+    {
+      "mock": "rus-hold",
+      "q": "mock=rus-hold&n=5",
+      "baslik": "Silah sende",
+      "aciklama": "'Silah sende! Kendini ya da birini seç': portreler, risk halkası ve 'ATEŞ ET' (hedef seçilmeden pasif).",
+      "dosya": "rus-hold-n-5"
+    },
+    {
+      "mock": "rus-hold",
+      "q": "mock=rus-hold&n=6",
+      "baslik": "Hedef seçildi",
+      "aciklama": "Bir portreye dokununca hedef halkası belirir, düğmede 'Hedef: X' (ekran kaydı: rus-hold-picked).",
+      "dosya": "rus-hold-n-6"
+    },
+    {
+      "mock": "rus-safe",
+      "q": "mock=rus-safe&n=5",
+      "baslik": "Klik (güvenli atış)",
+      "aciklama": "'Klik! Boş! Sıradaki: X' sonucu ve yükselen risk.",
+      "dosya": "rus-safe-n-5"
+    },
+    {
+      "mock": "rus-boom-me",
+      "q": "mock=rus-boom-me&n=8",
+      "baslik": "BAM (sen elendin)",
+      "aciklama": "Patlama, sarsıntı ve 'Elendin' sonucu.",
+      "dosya": "rus-boom-me-n-8"
+    },
+    {
+      "mock": "rus-out",
+      "q": "mock=rus-out&n=5",
+      "baslik": "Elendin",
+      "aciklama": "Elenen oyuncunun sönük ekranı; 'Oyunun sonunu izle'.",
+      "dosya": "rus-out-n-5"
+    },
+    {
+      "mock": "rus-predict",
+      "q": "mock=rus-predict&n=5",
+      "baslik": "Tahmin",
+      "aciklama": "Elenenin 'Patlar mı?' Evet / Hayır satırı.",
+      "dosya": "rus-predict-n-5"
+    },
+    {
+      "mock": "rus-kahin",
+      "q": "mock=rus-kahin&n=6",
+      "baslik": "Kâhin rozeti",
+      "aciklama": "Sonuç açılışında hayatta kalanların altına 'X · Kâhin' rozeti.",
+      "dosya": "rus-kahin-n-6"
+    },
+    {
+      "mock": "rus-reveal",
+      "q": "mock=rus-reveal&n=6",
+      "baslik": "Sonuç",
+      "aciklama": "'Hayatta kalanlar' altın halkalı avatarlar +1, elenenler sönük.",
+      "dosya": "rus-reveal-n-6"
+    }
+  ],
+  "bilinenSorunlar": [
+    "KURALLAR.md 'Tur başında bütün oyuncular hayattadır ve silahın ilk sahibi rastgele seçilir' der; kodda ilk sahip yalnız BAĞLI katılımcılar arasından seçilir (bağlı kimse yoksa tümü). KURALLAR.md bundan söz etmez.",
+    "KURALLAR.md 'Süre dolarsa ... otomatik ateş' der; kodda hedef bağlantı durumuna bakılmadan seçilir, oysa elle atışta bağlı olmayan oyuncu hedeflenemez.",
+    "KURALLAR.md 'Her karar süresi 18 saniye' der; kodda her atıştan sonra 2,5 sn'lik sonuç bekleme penceresi de vardır, yani fiilî aralık en çok 20,5 sn'dir (ilk karar penceresi hariç, o 18 sn'dir).",
+    "KURALLAR.md ilk metninde Kâhin tanımı yoktur; O9 değişikliği ve sonraki 'eşik güncellemesi'yle belirlenmiştir. Kodda eşik: en az 1 doğru 'Evet' ve Evet'lerin ≥ yarısı doğru.",
+    "Tahmin penceresi zamanlayıcısızdır: elenen oyuncu atıştan hemen önce (örneğin deadline'a çok yakın) tahmin verebilir; yalnızca atış anında sıra numarası eşleşmezse reddedilir."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-29: Oyun ekranları: tutarlı durum, tek satır başlık, okunur sonuçlar.",
+    "2026-10-27: Kâhin ve Kule Ustası rozetleri sunucuya özel oyun sonucu sayaçlarıyla (stats) eklendi.",
+    "2026-10-27: Kâhin rozeti yalnız patlayan atışı bilen izleyicilere gidecek şekilde güncellendi (sahip onayı).",
+    "2026-10-27: O9 kuralı: elenenler her atıştan önce 'Patlar mı?' tahmini verebilir; Kâhin rozeti ve ilgili istemci/mock/ui-check çalışmaları.",
+    "2026-10-27: Oyunlar kabuk saatine, Status ve hazır noktalarına taşındı; tüm oyunlar için tur özeti (Rus Ruleti: 'N kişi elendi, M kişi kurtuldu').",
+    "2026-10-26: Tabanca ve tambur çizimleri; avatar ruh halleri.",
+    "2026-10-25: Anında geri bildirim yardımcıları.",
+    "2026-10-18: İlk sürüm: Rus Ruleti ve Zehirli Kadeh motorları, testleri ve istemci ekranları."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/rus-ruleti/index.ts",
+    "packages/engine/src/games/rus-ruleti/types.ts",
+    "packages/engine/src/games/rus-ruleti/rus-ruleti.test.ts",
+    "packages/engine/src/games/rus-ruleti/rus-ruleti-tahmin.test.ts",
+    "apps/client/src/games/rus-ruleti/",
+    "apps/client/src/ui/PredictRow.tsx",
+    "apps/server/src/match.ts",
+    "docs/KURALLAR.md#7-rus-ruleti--rus-ruleti",
+    "docs/HESAP.md"
+  ]
+}

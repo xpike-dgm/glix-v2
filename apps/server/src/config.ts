@@ -8,6 +8,8 @@ export interface Config {
   host: string;
   port: number;
   clientDir: string;
+  /** Oyun ansiklopedisi içerik klasörü (`WIKI_DIR`; yönetici wiki'si). */
+  wikiDir: string;
   allowedOrigins: string[] | null;
   revision: string;
   /** SIGTERM sonrası maçların bitmesi için en çok beklenecek süre (ms). */
@@ -146,6 +148,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     host: env.HOST || "0.0.0.0",
     port,
     clientDir: env.CLIENT_DIR || resolve(fileURLToPath(new URL("../../client/dist", import.meta.url))),
+    wikiDir: env.WIKI_DIR || resolve(fileURLToPath(new URL("../../../docs/wiki", import.meta.url))),
     allowedOrigins,
     revision: env.GIT_SHA || env.REVISION || "dev",
     vapid: loadVapid(env),

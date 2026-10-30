@@ -1,0 +1,334 @@
+{
+  "id": "gizli-hirsiz",
+  "ad": "Gizli Hırsız",
+  "slogan": "Kasayı yalnız bir kişi soyabilir: herkes aynı anda ÇAL derse hepsi yanar.",
+  "kategori": "Blöf",
+  "etiketler": ["eşzamanlı", "gizli hamle", "tek basış", "risk"],
+  "oyuncu": {
+    "min": 2,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 30,
+    "not": "Oyun aşaması en çok 30 sn sürer. Bütün katılımcılar basarsa son basıştan 1 sn sonra erken biter. Oyuncu sayısı süreyi değiştirmez. Önüne anlatım (en çok 40 sn), 3 sn geri sayım, arkasına sonuç ekranı (en çok 30 sn) gelir."
+  },
+  "ozet": "Herkesin ekranında tek bir ÇAL düğmesi vardır. Her oyuncu 30 saniye içinde yalnız bir kez basabilir ya da hiç basmayabilir. Kimin bastığı süre bitene kadar kimseye gösterilmez. Sonunda tam bir kişi basmışsa o kişi +1 alır; iki ya da daha çok kişi basmışsa basanların her biri −1 alır; basmayanlar her zaman 0 alır.",
+  "akis": [
+    {
+      "ad": "Anlatım",
+      "sureSn": 40,
+      "kim": "herkes",
+      "aciklama": "Oyun öncesi tam ekran anlatım: amaç cümlesi (Kasayı yalnız bir kişi soyabilir!) ve üç madde. Bağlı bütün katılımcılar hazır olunca ya da 40 sn dolunca biter. Bu ekranda eldeki bir kart oynanabilir (kartlar bölümüne bak).",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Geri sayım",
+      "sureSn": 3,
+      "kim": "herkes",
+      "aciklama": "3 saniyelik geri sayım. Anlatımda kesinleşen kartlar bu ekranda herkese açık duyurulur (Ayna ve Koruma hariç).",
+      "gizli": "Ayna ve Koruma kartları gizli kalır."
+    },
+    {
+      "ad": "Çalma aşaması",
+      "sureSn": 30,
+      "kim": "herkes (katılımcılar basar, izleyici yalnız bakar)",
+      "aciklama": "Tek aşama. Ekranda karanlık bir güvenlik çekirdeği (halkalar ve kasa kapısı), üstte süre çubuğu, altta ÇAL düğmesi vardır. Başlık Doğru anı bekle, alt yazı Yalnız bir kez basabilirsin. Basınca düğme BASTIN olur ve kilitlenir, çekirdekte yalnız basanın kendi ekranında sessiz bir parmak izi belirir, başlık Parmak izin kayıtta olur, alt yazı Sonucu sonda göreceksin. Ekranda basış sesi (kısık tık) ve hafif titreşim yalnız basanın telefonunda olur. Süre dolunca ya da herkes bastıktan 1 sn sonra aşama biter.",
+      "gizli": "Oyuncu yalnız kendi basıp basmadığını bilir (kişisel görünüm pressed). Başkalarının bastığına dair hiçbir ipucu gönderilmez: ne kimlik, ne sayı, ne zaman damgası, ne sıra. İzleyici hiçbir şey görmez (pressed hep false)."
+    },
+    {
+      "ad": "Kasa açılışı (sonuç üstü)",
+      "sureSn": 0.52,
+      "kim": "herkes",
+      "aciklama": "Sonuç ekranının üstüne giren kısa açılış: çekirdek kapağı açılır. Tek basış yeşil ışık, yüksek iki nota ve eşleşme titreşimiyle Kasa soyuldu! başlığıyla gösterilir; çoklu basış kırmızı alarm, siren sesi ve Alarm! Birden çok hırsız başlığıyla; kimse basmadıysa alçak boş ses ve Kimse çalmadı başlığıyla. Hırsızların avatarları sırayla +1 (tek hırsız, yeşil halka) ya da −1 (çok hırsız, kırmızı halka) rozetiyle listelenir. Kapak açılış animasyonu yaklaşık 520 ms sürer; açılış sonuç ekranının üstünde kalır.",
+      "gizli": "Bu anda kimlerin bastığı herkese açılır."
+    },
+    {
+      "ad": "Sonuç ekranı",
+      "sureSn": 30,
+      "kim": "herkes",
+      "aciklama": "Genel sonuç ekranı (puanlar, podyum). Bağlı bütün katılımcılar Devam deyince 1 sn sonra kapanır; yoksa 30 sn sonra kendiliğinden kapanır.",
+      "gizli": "Yok."
+    }
+  ],
+  "kurallar": [
+    "2 ile 8 oyuncu katılır. Tek bir aşama vardır ve en çok 30 saniye sürer; kimse kısaltmazsa süre dolduğu anda biter.",
+    "Her katılımcının ekranında tek bir düğme vardır: ÇAL. Başka seçenek, hedef, miktar ya da zamanlama puanı yoktur.",
+    "Her oyuncu en çok bir kez basabilir. Sunucu oyuncunun ilk geçerli basışını zaman damgasıyla kaydeder. Aynı oyuncunun sonraki basışları yok sayılır; bu bir hata olarak da dönmez (başarılı onay verilir), böylece gizlilik için cevap hep aynıdır.",
+    "Bir oyuncu hiç basmayabilir; basmamak serbesttir ve puanı 0 bırakır. Süre dolunca ya da bir şey yapmayınca puan değişmez.",
+    "Tam olarak 1 oyuncu basmışsa o oyuncu +1 alır.",
+    "2 ya da daha çok oyuncu basmışsa basanların her biri −1 alır. Herkes basarsa herkes −1 alır.",
+    "Kimse basmamışsa herkes 0 alır.",
+    "Basmayanlar hiçbir durumda puan almaz ve kaybetmez (0).",
+    "Basış zamanı puanı etkilemez: ilk basan ile son basan arasında fark yoktur. Süre dolmadan önceki son milisaniyedeki basış da geçerlidir.",
+    "Katılımcı olmayan (izleyici ya da başka odanın) kimse basamaz; basış reddedilir (not_participant).",
+    "Süre dolduğu anda (ya da dolduktan sonra) gelen basış reddedilir (ended). Bu oyunda geç gelen eylem payı yoktur: bitişten 1 ms sonra gelen basış kabul edilmez.",
+    "Erken bitiş: oyunun bütün katılımcıları basarsa, son basıştan 1 saniye sonra aşama biter (sonuç zaten kesindir: herkes −1). Bu denetim bağlantı durumuna bakmaz: bağlantısı kopuk bir oyuncu basmadıkça erken bitiş olmaz. Herkes bastıktan sonra gelen yeni basış kabul edilmez.",
+    "Süre dolana kadar kimin bastığı hiçbir görünümde yer almaz. Sonuç (kimler bastı, sonuç türü, puanlar) yalnız aşama bittiğinde herkese açık görünümle verilir.",
+    "Mini oyun puanı doğrudan genel skora aktarılır: puanlar ile genel skora giden ödüller aynıdır (kartlar yoksa +1, −1 ya da 0 olduğu gibi eklenir).",
+    "Yanlış hamle diye bir şey yoktur; geçerli tek eylem ÇAL basışıdır. Başka biçimde gelen veri (başka alan ya da başka tür) geçersiz sayılır ve reddedilir."
+  ],
+  "puanlama": {
+    "ozet": "Puan yalnız kaç kişinin bastığına bağlıdır: tek basan +1, birden çok basan her biri −1, basmayan 0. Basış sırası ve zamanı önemsizdir.",
+    "kalemler": [
+      {
+        "olay": "Tek başına basmak",
+        "puan": "+1",
+        "not": "Yalnız o oyuncuya; diğerleri 0."
+      },
+      {
+        "olay": "Başkalarıyla birlikte basmak (2 ya da daha çok kişi)",
+        "puan": "−1",
+        "not": "Basanların her birine ayrı ayrı."
+      },
+      {
+        "olay": "Herkesin basması",
+        "puan": "−1",
+        "not": "Herkes basanların içindedir; herkes −1 alır, oyun erken biter."
+      },
+      {
+        "olay": "Hiç basmamak",
+        "puan": "0",
+        "not": "Başka kimse bassa da basmasa da 0."
+      },
+      {
+        "olay": "Kimsenin basmaması",
+        "puan": "0",
+        "not": "Herkes 0 alır."
+      }
+    ],
+    "ornek": "4 oyuncu: Ali, Bora, Cem, Deniz. Bora 5. saniyede, Deniz 22. saniyede basar; Ali ve Cem basmaz. İki kişi bastığı için Bora −1, Deniz −1, Ali 0, Cem 0. Başka bir tur: yalnız Cem basarsa Cem +1, diğerleri 0. Üçüncü tur: kimse basmazsa herkes 0.",
+    "beraberlik": "Beraberlik kuralı yoktur; oyun yalnız puan ekler. Mini oyun sıralamasında en yüksek puan birinci, en düşük sonuncudur; puanı eşit olanlar sırayı paylaşır. Bu yüzden kimse basmazsa herkes eşit (hepsi birinci, kimse sonuncu); iki kişi basarsa basmayanlar birinci, basanlar sonuncu olur."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Oyuncu katılımcı olmaya devam eder. Kopmadan önce bastıysa basışı geçerlidir ve sayılır. Kopukken basamaz ama oyunun puanı hesabında yine yer alır. Sonuç, bağlı listesine bakılmadan hesaplanır. Geri dönen oyuncu kendi basış durumunu (pressed) yeniden alır; basmışsa düğme BASTIN kilitli görünür."
+    },
+    {
+      "baslik": "Erken bitişte kopuk oyuncu",
+      "aciklama": "Herkes bastı kontrolü bağlantıya bakmaz. Genel erken bitiş kuralındaki (yalnız bağlı olanlar sayılır) davranıştan farklı olarak, bağlantısı kopuk ve basmamış bir oyuncu varsa oyun 30 saniyeyi bekler."
+    },
+    {
+      "baslik": "Çift dokunma ve ağ gecikmesi",
+      "aciklama": "İstemci ilk dokunuşta eylemi bir kez gönderir ve düğmeyi hemen kilitler (sunucu onayını beklemeden). Sunucu da ikinci basışı yok sayar. Süre bitişine çok yakın basış, sunucuya bitişten sonra ulaşırsa reddedilir; ekranda BASTIN görünse bile sonuçta sayılmayabilir."
+    },
+    {
+      "baslik": "İzleyici ve geç katılan",
+      "aciklama": "Maç sürerken giren izleyici düğmeyi görmez. Başlık Kasayı izliyorsun, alt yazı Kimin bastığı sonda belli olur. Puan almaz, sonuç açılışını herkes gibi görür."
+    },
+    {
+      "baslik": "2 ve 8 oyuncu",
+      "aciklama": "2 oyuncuda ikisi de basarsa ikisi de −1, biri basarsa +1 olur. 8 oyuncuda kural aynıdır; çoklu basış riski doğal olarak artar. Süre ve kural oyuncu sayısına göre değişmez."
+    },
+    {
+      "baslik": "Kimse basmazsa",
+      "aciklama": "Herkes 0 alır, sonuç açılışı Kimse çalmadı başlığıyla boş kasa sesi çalar. Süre 30 saniyeyi tam doldurur."
+    },
+    {
+      "baslik": "Sonuç ekranından erken çıkma",
+      "aciklama": "Sonuç ekranı bağlı bütün katılımcılar Devam'a basınca 1 sn sonra, aksi halde 30 sn sonra kapanır."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Kendine Güven",
+      "etki": "Birinci olmak için en yüksek mini oyun puanı gerekir. Bu oyunda birinci, tek hırsız (+1) ya da (iki ya da daha çok kişi basmışsa) basmayan herkestir; kimse basmadıysa herkes eşit olduğu için herkes birincidir ve +2 alır."
+    },
+    {
+      "kart": "Sigorta",
+      "etki": "Sonuncu olursan +1: bu oyunda sonuncular çoklu basışta basanlardır (−1). Kimse basmadıysa ya da herkes eşitse kimse sonuncu sayılmaz."
+    },
+    {
+      "kart": "Tahmin",
+      "etki": "Seçtiğin oyuncu birinci olursa +2. Hedef tek hırsızsa ya da (çoklu basışta) basmamışsa, kimse basmadıysa herkes birinci olduğundan her zaman tutar."
+    },
+    {
+      "kart": "Kalkan",
+      "etki": "Eksiye düşersen 0 sayılır: çoklu basışta −1 alan Kalkan sahibi 0 olur."
+    },
+    {
+      "kart": "Çift Puan / Altın Dokunuş",
+      "etki": "Tek hırsız +1 → ×2 = +2 ya da ×3 = +3. Çoklu basışta −1 → Çift Puan ile −2, Altın Dokunuş eksiyi etkilemez (−1 kalır). Basmayan 0 kalır."
+    },
+    {
+      "kart": "Ters Köşe",
+      "etki": "Sıralama tamamen tersine döner: oyuncular mini oyun puanına göre dizilir ve her biri aynadaki sıranın ham ödülünü alır (genel kural K6 adım 1). Bu oyunda ham ödüller yalnız +1, 0 ve −1 olduğundan etki, sonucun kaç kişi bastığına göre değişir; tüm oyuncular eşitse (kimse basmadıysa) sıralama tek gruptur ve sonuç değişmez."
+    },
+    {
+      "kart": "Hırsız (kart)",
+      "etki": "Oyunun birincisinden 1 puan alır. Tek hırsız varsa o birincidir; çoklu basışta basmayanlar birincidir (eşitse o ana kadarki ödülü en yüksek olandan alınır). Kartın adı oyunla aynıdır ama ayrı bir etkidir."
+    },
+    {
+      "kart": "Diğer kartlar",
+      "etki": "Çelme, Vergi, Lanet, Ortaklık, Takas, Takviye, Koruma, Ayna, Kart Çal ve kötü kartlar bu oyunun ham ödülleri (+1/−1/0) üzerinde genel kurallarla (K6) çalışır. Oyun kendi içinde karta özel bir kural uygulamaz."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Oyun süresi (tek aşama)",
+      "deger": "30 000 ms",
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/types.ts:3"
+    },
+    {
+      "ad": "Herkes bastıktan sonra kalan süre",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/types.ts:6"
+    },
+    {
+      "ad": "Tek hırsız puanı",
+      "deger": "+1",
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts:27"
+    },
+    {
+      "ad": "Çoklu hırsız puanı (her biri)",
+      "deger": "−1",
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts:27"
+    },
+    {
+      "ad": "Basmayanın puanı",
+      "deger": "0",
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts:29"
+    },
+    {
+      "ad": "Oyuncu sınırları",
+      "deger": "2 - 8",
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts:50"
+    },
+    {
+      "ad": "Süre bitişi / bitişten sonraki basış",
+      "deger": "ctx.now >= endsAt ise reddedilir (ended)",
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts:80"
+    },
+    {
+      "ad": "Erken bitiş (bütün katılımcılar bastı)",
+      "deger": "endsAt = min(endsAt, şimdi + 1 000 ms)",
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts:86"
+    },
+    {
+      "ad": "Geç gelen eylem payı",
+      "deger": "yok (graceMs tanımlı değil)",
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts:42"
+    },
+    {
+      "ad": "Anlatım zaman aşımı",
+      "deger": "40 000 ms",
+      "kaynak": "apps/server/src/match.ts:40"
+    },
+    {
+      "ad": "Geri sayım",
+      "deger": "3 000 ms",
+      "kaynak": "apps/server/src/match.ts:41"
+    },
+    {
+      "ad": "Sonuç ekranı",
+      "deger": "30 000 ms",
+      "kaynak": "apps/server/src/match.ts:42"
+    },
+    {
+      "ad": "Devam ile kapanma gecikmesi",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/protocol.ts:29"
+    }
+  ],
+  "strateji": [
+    "Hiç basmamak güvenli ama puansızdır; yarışta geriden gelen oyuncunun risk alması gerekir.",
+    "Kaç kişinin bastığını bilemezsin; oda ne kadar kalabalıksa tek başına basma ihtimali o kadar düşer. 2-3 kişilik odada basmak çok daha mantıklıdır.",
+    "Basış zamanı önemsiz olduğu için 'erken mi geç mi' diye kasılma; tek önemli karar basıp basmamaktır.",
+    "Rakiplerin geçmiş turlardaki alışkanlıklarını izle: hep basan ya da hiç basmayan oyuncuları tanırsan çoklu basış olasılığını tahmin edersin.",
+    "Skor tablosunda öndeysen basmayarak −1 riskini sıfırlarsın; gerideysen +1 için kumar oynamak isteyebilirsin.",
+    "Kart oynayabiliyorsan Kalkan ya da Çift Puan gibi kartlar riski dengeler: Kalkan çoklu basışta −1'i 0 yapar."
+  ],
+  "tv": "Bu oyunun özel bir TV (sahne) görünümü yoktur; büyük ekranda telefon ekranı izleyici kipinde büyütülerek gösterilir. TV'de ÇAL düğmesi bulunmaz, süre çubuğu ve çekirdek görünür, kimin bastığı süre bitene kadar gösterilmez. Sonuç açılışında hırsızların avatarları ve +1 / −1 rozetleri herkesle birlikte TV'de de görünür.",
+  "ekranlar": [
+    {
+      "mock": "gizli-briefing",
+      "q": "mock=gizli-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Oyun öncesi anlatım: Kasayı yalnız bir kişi soyabilir! ve üç madde (doğru anı bekle, kimin bastığı belli olmaz, tek hırsız +1 / çok hırsız −1).",
+      "name": "gizli-briefing",
+      "dosya": "gizli-briefing"
+    },
+    {
+      "mock": "gizli-idle",
+      "q": "mock=gizli-idle",
+      "baslik": "ÇAL bekliyor",
+      "aciklama": "Karanlık güvenlik çekirdeği, üstte süre çubuğu, Doğru anı bekle başlığı ve altta ÇAL düğmesi.",
+      "name": "gizli-idle",
+      "dosya": "gizli-idle"
+    },
+    {
+      "mock": "gizli-idle",
+      "q": "mock=gizli-idle",
+      "baslik": "Basış anı",
+      "aciklama": "ÇAL'a dokunulduktan sonra: çekirdekte dalga efekti, düğme kilitleniyor.",
+      "name": "gizli-tap",
+      "dosya": "gizli-idle"
+    },
+    {
+      "mock": "gizli-pressed",
+      "q": "mock=gizli-pressed",
+      "baslik": "Bastın",
+      "aciklama": "Parmak izi çekirdekte belirir, düğme BASTIN, Parmak izin kayıtta / Sonucu sonda göreceksin.",
+      "name": "gizli-pressed",
+      "dosya": "gizli-pressed"
+    },
+    {
+      "mock": "gizli-spectator",
+      "q": "mock=gizli-spectator",
+      "baslik": "İzleyici",
+      "aciklama": "Düğme yok; Kasayı izliyorsun / Kimin bastığı sonda belli olur.",
+      "name": "gizli-spectator",
+      "dosya": "gizli-spectator"
+    },
+    {
+      "mock": "gizli-reveal-solo",
+      "q": "mock=gizli-reveal-solo&n=5",
+      "baslik": "Tek hırsız",
+      "aciklama": "Kasa açılır, yeşil ışık, Kasa soyuldu! ve tek hırsızın avatarı +1 ile.",
+      "name": "gizli-reveal-solo",
+      "dosya": "gizli-reveal-solo-n-5"
+    },
+    {
+      "mock": "gizli-reveal-multi",
+      "q": "mock=gizli-reveal-multi&n=8",
+      "baslik": "Çok hırsız",
+      "aciklama": "Kırmızı alarm, Alarm! Birden çok hırsız ve basanların avatarları −1 ile.",
+      "name": "gizli-reveal-multi",
+      "dosya": "gizli-reveal-multi-n-8"
+    },
+    {
+      "mock": "gizli-reveal-none",
+      "q": "mock=gizli-reveal-none&n=3",
+      "baslik": "Kimse çalmadı",
+      "aciklama": "Boş kasa, Kimse çalmadı; kimse puan almaz.",
+      "name": "gizli-reveal-none",
+      "dosya": "gizli-reveal-none-n-3"
+    }
+  ],
+  "bilinenSorunlar": [
+    "Erken bitişte (herkes bastı) oyunun bitiş zamanı (endsAt) herkese açık görünümde 'son basıştan 1 sn sonra' olarak güncellenir; süre çubuğu bu anda sıçrar. Bu, süre dolmadan 'herkes bastı' bilgisinin çubuktan anlaşılmasına izin verebilir; ancak kimin bastığı sızmaz (gizlilik testleri yalnız kimlik/sıra/zaman damgası sızıntısına bakar).",
+    "KURALLAR.md genel erken bitiş kuralı (yalnız bağlı katılımcılar sayılır) zamanlama/bekleme oyunlarını kapsam dışı bırakır; Gizli Hırsız yine de kodda bağlantıya bakmayan (tüm katılımcılar bastı) bir erken bitişe sahiptir. docs/ERKEN-BITIS.md Tür 2 ve docs/ONERI-KURAL.md bunu bilinçli bir seçim olarak yazar (kopuk oyuncu geri dönüp basabilir).",
+    "KURALLAR.md §8 madde 15 'Süre dolduğunda kimse basmadıysa bütün oyuncular 0 alır' der; kod uyumludur. Aynı bölüm 'beraberlik olayı yok' der ama mini oyun sıralaması ve kartlar için eşit puanlar sırayı paylaşır (özellikle kimse basmazsa herkes birincidir).",
+    "Oyun, Bot yok kuralına rağmen testler için bir simülasyon botu (bots.ts) içerir; bu yalnız test/yük aracıdır, oyunda bot oynamaz."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-18: Gizli Hırsız oyunu (motor, test, sunucu testi, istemci) eklendi.",
+    "2026-10-19: Herkes bastığında oyun son basıştan 1 sn sonra erken bitecek şekilde güncellendi.",
+    "2026-10-26: Kasa kapısı, kaçış kolu, el sıkışma ve nişangâh görselleri eklendi (istemci).",
+    "2026-10-27: Tüm oyunlar için tur özeti (summary) ve kayıt defteri eklendi; sonuç ekranında Devam ile erken geçiş geldi.",
+    "2026-10-27: Oyun ekranı kabuk saatine, Status bileşenine ve hazır noktalarına taşındı; TV (sahne) rolü eklendi.",
+    "2026-10-28: Lobi ton (aile/arkadaş/ofis) özelliği kaldırıldı."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/gizli-hirsiz/index.ts",
+    "packages/engine/src/games/gizli-hirsiz/types.ts",
+    "packages/engine/src/games/gizli-hirsiz/gizli-hirsiz.test.ts",
+    "packages/engine/src/games/gizli-hirsiz/summary.ts",
+    "docs/KURALLAR.md#8-gizli-hırsız",
+    "apps/client/src/games/gizli-hirsiz/GizliHirsizScreen.tsx",
+    "apps/client/src/games/gizli-hirsiz/Reveal.tsx",
+    "apps/client/src/games/gizli-hirsiz/view.ts",
+    "apps/server/src/gizli-hirsiz.test.ts",
+    "scripts/ui-check.mjs"
+  ]
+}

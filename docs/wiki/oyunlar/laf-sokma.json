@@ -1,0 +1,397 @@
+{
+  "id": "laf-sokma",
+  "ad": "Laf Sokma Düellosu",
+  "slogan": "Aynı soruya rakibinden daha komik cevap yaz; isimsiz kartlarda oyları topla.",
+  "kategori": "Kelime",
+  "etiketler": ["yazı", "oylama", "komedi", "düello", "final turu"],
+  "oyuncu": {
+    "min": 3,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 220,
+    "not": "En uzun süre = 60 sn yazma + oyuncu sayısı × (10 sn oylama + 7 sn açılış) + 45 sn final yazma + 20 sn final oylama + 12 sn final açılış = 137 + 17 × oyuncu sayısı (3 oyuncu 188 sn, 5 oyuncu 222 sn, 8 oyuncu 273 sn). Herkes 'Tamam' derse yazma, bağlı herkes oy verirse oylama 1 sn sonra biter; cevapsız düellolarda oylama atlanır ve açılış 2,5 sn sürer."
+  },
+  "ozet": "Oyuncu sayısı kadar düello vardır; her düelloda iki oyuncu aynı soruya cevap yazar ve herkes iki soru alır. Cevaplar isimsiz kartlar olarak gösterilir, cevap sahibi olmayanlar daha komik buldukları karta oy verir. Aldığın her oy +1, rakibinin tüm oylarını (en az 2) alırsan 'Laf Ustası' olup +1 daha kazanırsın. Son turda herkes aynı finalde yarışır; aldığın her oy +1.",
+  "akis": [
+    {
+      "ad": "Anlatım",
+      "sureSn": 40,
+      "kim": "herkes",
+      "aciklama": "Tam ekran anlatım: 'Aynı soruya rakibinden daha komik cevap yaz, oyları topla!' ve üç madde (sana verilen iki soruya kısa ve komik cevaplar yaz; isimsiz iki cevaptan hangisi daha komikse ona oy ver; son soruda herkes yarışır, en çok oyu alan güler). Herkes hazırsa ya da 40 sn dolunca 3 sn geri sayım.",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Cevap yazma",
+      "sureSn": 60,
+      "kim": "herkes (eşzamanlı)",
+      "aciklama": "Herkes aynı anda iki soruya cevap yazar (üstte 'Soru 1/2' ve 'Soru 2/2' sekmeleri, her sorunun yanında cevap yazılmışsa onay işareti). Cevap alanı üç satırlık, 'Komik cevabını yaz…' ipucuyla; sayaç 'k/80' (70'ten sonra uyarı rengi, 80'i aşınca kırmızı). Yazdıkça 700 ms sonra kaydedilir ('Kaydedildi'); başka soruya geçince ya da alan odaktan çıkınca da kaydedilir; Enter alanı kaydedip bırakır (satır eklemez). 'Tamam' tüm cevapları kesinleştirir ('Gönderildi'). Altta 'Hazır olanlar' avatar şeridi vardır.",
+      "gizli": "Hangi soruları aldığını, rakibini ve cevaplarını yalnız sen bilirsin; başka oyuncunun sorusu ya da cevabı hiçbir görünümde yoktur."
+    },
+    {
+      "ad": "Düello oylaması (her soru için)",
+      "sureSn": 10,
+      "kim": "cevap sahibi olmayanlar oy verir",
+      "aciklama": "Sorular sırayla gelir ('Soru k/N'). Soru ve iki isimsiz cevap kartı yan yana gösterilir. Karta dokunmak oyu hemen verir ve değiştirilemez ('Oyun verildi · diğerleri bekleniyor'); diğer kart soluklaşır. Cevap sahipleri kendi kartlarında 'Senin cevabın' etiketi görür ve 'Bu soruda cevap yazdın · oylar bekleniyor' yazar, oy veremez. 'Cevap yok' kartı oylanamaz. Altta 'Oy verenler' şeridi. Oy verebilen bağlı herkes oy verince oylama 1 sn sonra biter.",
+      "gizli": "Kartlarda yazar bilgisi yoktur (isimsiz); kart sırası sabit ve karışıktır. Kimin kime oy verdiği açılışa kadar gizlidir; herkese açık görünümde yalnız kimlerin oy verdiği görünür."
+    },
+    {
+      "ad": "Düello açılışı (her soru için)",
+      "sureSn": 7,
+      "kim": "herkes",
+      "aciklama": "Cevap sahipleri, her kartın oy veren avatarları ve puanları açılır. Kartta '+puan', en çok puanı alan kartta yıldız, Laf Ustası ise 'Laf Ustası · +1' satırı. Oyuncu kendi puanını '+n' ve bir cümleyle görür ('Laf Ustası sensin!', 'Oy aldın!', 'Bu sefer oy gelmedi'). Hiç cevap gelmeyen soruda açılış 2,5 sn sürer ('Cevap yok' kartları).",
+      "gizli": "Yok; bu aşamada eşleşme ve oylar herkese açıktır."
+    },
+    {
+      "ad": "Final yazma",
+      "sureSn": 45,
+      "kim": "herkes (eşzamanlı)",
+      "aciklama": "Herkes aynı 'Final sorusu'na tek cevap yazar (45 sn). Yazma ekranı düellodakiyle aynı; 'Tamam' ve erken bitiş geçerlidir.",
+      "gizli": "Cevabını yalnız sen görürsün."
+    },
+    {
+      "ad": "Final oylaması",
+      "sureSn": 20,
+      "kim": "herkes (kendi kartı hariç)",
+      "aciklama": "'Final · en komik hangisi?'. Cevap yazan herkesin kartı isimsiz gösterilir. Herkes (cevap yazmayanlar dahil) kendisi dışında bir karta oy verir ('En komik cevaba dokun'); oy tek seferliktir. Bağlı herkes oy verince 1 sn sonra biter.",
+      "gizli": "Yazar bilgisi ve kim kime oy verdi açılışa kadar gizlidir."
+    },
+    {
+      "ad": "Final açılışı",
+      "sureSn": 12,
+      "kim": "herkes",
+      "aciklama": "Final cevapları, yazarlar, oy verenler ve puanlar açılır ('Final sonucu', 'Oy topladın!'). Bu aşama bitince oyun biter.",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Sonuç ekranı",
+      "sureSn": 30,
+      "kim": "herkes",
+      "aciklama": "Mini oyun sonuç/podyum ekranı.",
+      "gizli": "Yok."
+    }
+  ],
+  "kurallar": [
+    "Oyuncu sayısı 3 ile 8 arasındadır. Düello sayısı oyuncu sayısı kadardır (q1..qN) ve ayrıca bir final sorusu vardır.",
+    "Sorular tek bir elle hazırlanmış havuzdan (yaklaşık 318 soru; ton seçimi yok) tohumdan rastgele seçilir; N düello sorusu + 1 final sorusu birbirinden farklıdır. Yönetici panelinden havuz değiştirilebilir (en az 20 soru, 12-90 karakter, '?' ile biten).",
+    "Her soru tam iki oyuncuya verilir ve her oyuncu tam iki soru alır; hiçbir oyuncu çifti iki kez eşleşmez. Eşleşme karışık bir halkada belli bir adım uzaktaki oyuncular arasındadır; 3 oyuncuda üçgen oluşur (üç farklı çift). Çiftin sırası (hangisi A/B) rastgeledir.",
+    "Yazma aşaması 60 sn sürer ve iki soruya birden cevap yazılır. Cevap en çok 80 karakterdir (Unicode karakter sayılır; sunucu 400 ham karakterden uzun metni baştan reddeder). Cevabın büyük/küçük harfi korunur; boşluklar teke iner, satır sonu boşluğa dönüşür.",
+    "Cevap en az bir harf, rakam ya da emoji içermelidir (yalnız noktalama sayılmaz). Görünmez/yön değiştiren karakterler ve 3'ten fazla birleştirici işaret geçersizdir. Kaba/küfürlü/nefret içeren cevap moderasyon süzgecinden geçmez ve reddedilir ('Bu cevap pek uygun değil').",
+    "Boş metin göndermek o soruya yazdığın cevabı siler. Cevap, 'Tamam' denene ya da süre bitene kadar değiştirilebilir; son hali geçerlidir. Yalnız kendine verilen sorulara cevap yazabilirsin.",
+    "'Tamam' cevapları kesinleştirir: en az bir sorunun cevabı dolu olmalıdır (iki sorudan yalnız birini yazmak yeterlidir). Kilitlendikten sonra değişiklik ve ikinci kilit reddedilir.",
+    "Bağlı bütün katılımcılar 'Tamam' derse yazma aşaması 1 sn sonra biter; kopuk oyuncu beklenmez. Süre bitince yazılmış cevaplar geçerlidir; yazılmayan soru için 'Cevap yok' kartı oluşur.",
+    "Oylama her düello için sırayla yapılır (düello sırası karıştırılmıştır). İki kart yan yana, isimsizdir ve kart sırası tohumdan sabittir. Oy verebilenler yalnız o sorunun iki cevap sahibi OLMAYAN oyuncular (N-2 kişi; 3 oyuncuda tek kişi).",
+    "Oy tek seferliktir ve değiştirilemez. Cevap sahibi olmayan bir oyuncu kendi kartına zaten sahip olmadığı için kendi cevabına oy veremez; 'Cevap yok' kartına oy verilemez. Geçersiz kart kimliği reddedilir.",
+    "Oy verebilen bağlı herkes oy verince oylama 1 sn sonra biter (kopuk oy verici beklenmez). Süre biterse oy vermeyenin oyu sayılmaz, ceza yoktur.",
+    "Hiçbir kartta cevap yoksa ya da oy verebilecek kimse yoksa oylama atlanır (süre 0) ve açılış 2,5 sn sürer. Tek kartta cevap varsa o karta oy verilebilir, cevapsız kart 0 alır.",
+    "Düello puanı: kartın aldığı oy sayısı kadar +1. 'Laf Ustası': düelloda toplam en az 2 oy verilmişse ve bunların hepsi tek karta gitmişse o kart +1 daha alır. Tek oy verilmişse Laf Ustası olunmaz; oylar bölünürse kimse Laf Ustası olmaz.",
+    "Final: Herkes aynı soruya tek cevap yazar (45 sn); cevap yazanların kartları isimsiz ve karıştırılmış gösterilir. Herkes (cevap yazmayanlar dahil) kendi kartı dışında bir karta oy verir; yalnız tek kart varsa yazarı dışındakiler oy verir. Aldığın her oy +1; Laf Ustası finalde yoktur. Final oylaması süresi 20 sn, açılışı 12 sn'dir (kuralda yazmaz; sahip onayına bırakılmış varsayım).",
+    "Puanlar mini oyun puanıdır ve doğrudan genel skora gider. Puan tablosu yalnız açılmış sorulardan birikir.",
+    "Kimlerin hangi kartı yazdığı, ilgili sorunun açılışına kadar hiçbir yerde (herkese açık ve kişisel görünüm) bulunmaz; cevap metinleri henüz oylamaya girmemiş sorularda yalnız sahibinin görünümündedir."
+  ],
+  "puanlama": {
+    "ozet": "Düelloda aldığın her oy +1; rakibinin hiç oy almadığı ve toplam en az 2 oy aldığın durumda +1 Laf Ustası. Finalde her oy +1. Eksi puan yoktur.",
+    "kalemler": [
+      {
+        "olay": "Düelloda kartın bir oy aldı",
+        "puan": "+1 (oy başına)",
+        "not": "Oy veren: o soruda cevap sahibi olmayan oyuncular."
+      },
+      {
+        "olay": "Laf Ustası: düellonun tüm oylarını (en az 2) aldın",
+        "puan": "+1",
+        "not": "Yalnız düello sorularında; finalde yok."
+      },
+      {
+        "olay": "Final sorusunda kartın bir oy aldı",
+        "puan": "+1 (oy başına)",
+        "not": "Herkes kendi kartı dışında bir karta oy verir."
+      },
+      {
+        "olay": "Cevap yazmadın ('Cevap yok')",
+        "puan": "0",
+        "not": "Ceza yok; karta oy verilemez."
+      }
+    ],
+    "ornek": "5 oyuncu (Ali, Bora, Ceren, Deniz, Ece). Soru 3: 'Kedinin gizli mesleği ne?' Ali ve Bora yazar; oy verebilenler Ceren, Deniz, Ece. Üçü de Ali'ye oy verir: Ali 3 oy + Laf Ustası 1 = +4, Bora 0. Başka bir soruda Ali ile Ceren yazar; Bora, Deniz, Ece oy verir; Bora ve Deniz Ali'ye, Ece Ceren'e oy verir: Ali +2, Ceren +1 (oylar bölündü, Laf Ustası yok). Finalde 5 kişi yazar, herkes kendi dışında birine oy verir; Ali 3 oy alırsa +3. Ali toplam: 4 + 2 + (diğer soruları) + 3.",
+    "beraberlik": "Beraberlik kuralı yoktur; oylar bölünürse her kart aldığı kadar puan alır (eşit oyda ikisi de kazanır, Laf Ustası kimseye gitmez). Sonuç ekranındaki kart yıldızı en çok puan alan karta (eşitse hepsine) verilir."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Kopan oyuncu katılımcıdır: yazdığı cevaplar kalır, yazmadıysa 'Cevap yok'. Erken bitiş için kopuk oyuncu beklenmez (yazma ve oylamada). Kopuk oyuncu oy veremez ama oy vermemesi cezalandırılmaz. Herkes kopuksa erken bitiş olmaz."
+    },
+    {
+      "baslik": "Cevap yazmayan oyuncu",
+      "aciklama": "O kart 'Cevap yok' olarak gösterilir, oylanamaz ve 0 alır. İki taraf da cevap yazmadıysa oylama atlanır ve açılış 2,5 sn'lik kısa açılışla geçer."
+    },
+    {
+      "baslik": "Tek cevaplı düello",
+      "aciklama": "Yalnız bir kart doluysa tüm oy verenler ona oy verir; 2+ oyla Laf Ustası olur ('tek cevaplı soruda tüm oyları alan Laf Ustası olur')."
+    },
+    {
+      "baslik": "3 oyuncu",
+      "aciklama": "Üç düello vardır (üç farklı çift); her düelloda oy verebilen yalnız 1 kişidir. Tek oy verildiğinden Laf Ustası hiç olmaz; o soruda aldığın puan en çok +1'dir. Final: 3 kişi yazar, herkes kendi dışında bir karta oy verir."
+    },
+    {
+      "baslik": "8 oyuncu",
+      "aciklama": "Sekiz düello, her düelloda 6 kişi oy verir. Toplam süre en çok 273 sn."
+    },
+    {
+      "baslik": "İzleyici ve TV",
+      "aciklama": "İzleyici yazma sırasında 'Arkadaşların cevap yazıyor · k/n hazır' görür; oylamada 'Oylama sürüyor' ve isimsiz kartları görür; açılışlarda tüm sonuçları görür. Oy veremez, puan almaz."
+    },
+    {
+      "baslik": "Klavye açıkken",
+      "aciklama": "Telefon klavyesi açılınca görünür alan hesaplanır; yükseklik 440 pikselin altına inerse düzen sıkışık kipine geçer."
+    },
+    {
+      "baslik": "Geç gelen eylem payı",
+      "aciklama": "Bu oyunda yoktur (graceMs tanımlı değil): süre bitişinden sonra gelen cevap/oy reddedilir."
+    },
+    {
+      "baslik": "Reddedilen cevap",
+      "aciklama": "Sunucu reddeden cevaplar dostça bir cümleyle bildirilir ('Bu cevap pek uygun değil. Başka bir şey dene!', 'Biraz kısalt, en çok 80 karakter.', 'Önce bir şeyler yaz.', 'Bu karakterleri kullanamayız.'). Reddedilen oyda seçim geri açılır ('Oyun gitmedi, tekrar dene.')."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Genel",
+      "etki": "Kod bu oyun için özel kart dalı içermez; genel K6 hesabı çalışır ve kartlar yalnız genel skora giden puanları (awards) değiştirir. Bu oyunda awards = miniScores (düello + final oy puanları)."
+    },
+    {
+      "kart": "Kendine Güven / Sigorta / Tahmin / Hırsız",
+      "etki": "'Birinci' en yüksek toplam puanlı oyuncu(lar), 'sonuncu' en düşük puanlı oyuncu(lar)dır; birden çok oyuncu aynı puanda olabilir. Hırsız birincilerden 1 puan alır."
+    },
+    {
+      "kart": "Kalkan",
+      "etki": "Bu oyunda eksi puan oluşmadığı için tek başına etkisizdir (başka kartlar eksiye düşürürse korur)."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Düello yazma süresi (iki soru birlikte)",
+      "deger": "60 000 ms",
+      "kaynak": "packages/engine/src/games/laf-sokma/types.ts:4"
+    },
+    {
+      "ad": "Düello oylama süresi",
+      "deger": "10 000 ms",
+      "kaynak": "packages/engine/src/games/laf-sokma/types.ts:6"
+    },
+    {
+      "ad": "Düello açılış süresi",
+      "deger": "7 000 ms",
+      "kaynak": "packages/engine/src/games/laf-sokma/types.ts:8"
+    },
+    {
+      "ad": "Cevapsız soru açılışı",
+      "deger": "2 500 ms",
+      "kaynak": "packages/engine/src/games/laf-sokma/types.ts:10"
+    },
+    {
+      "ad": "Final yazma süresi",
+      "deger": "45 000 ms",
+      "kaynak": "packages/engine/src/games/laf-sokma/types.ts:11"
+    },
+    {
+      "ad": "Final oylama süresi (sahip onayına bırakılmış varsayım)",
+      "deger": "20 000 ms",
+      "kaynak": "packages/engine/src/games/laf-sokma/types.ts:13"
+    },
+    {
+      "ad": "Final açılış süresi",
+      "deger": "12 000 ms",
+      "kaynak": "packages/engine/src/games/laf-sokma/types.ts:14"
+    },
+    {
+      "ad": "Herkes hazırsa kalan süre",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/games/laf-sokma/types.ts:16"
+    },
+    {
+      "ad": "Cevap en çok uzunluk",
+      "deger": "80 karakter",
+      "kaynak": "packages/engine/src/games/laf-sokma/types.ts:18"
+    },
+    {
+      "ad": "Ham metin ağ koruması",
+      "deger": "400 karakter",
+      "kaynak": "packages/engine/src/games/laf-sokma/types.ts:20"
+    },
+    {
+      "ad": "Oyuncu sayısı",
+      "deger": "3 - 8",
+      "kaynak": "packages/engine/src/games/laf-sokma/index.ts:331-332"
+    },
+    {
+      "ad": "Soru dağıtımı (her soru 2 kişi, her kişi 2 soru, çift tekrarı yok)",
+      "deger": "halka + adım",
+      "kaynak": "packages/engine/src/games/laf-sokma/index.ts:69-81"
+    },
+    {
+      "ad": "Oy verebilecekler (düello)",
+      "deger": "iki cevap sahibi dışındaki herkes",
+      "kaynak": "packages/engine/src/games/laf-sokma/index.ts:141-148"
+    },
+    {
+      "ad": "Laf Ustası koşulu",
+      "deger": "toplam oy ≥ 2 ve tüm oylar tek kartta; yalnız düello",
+      "kaynak": "packages/engine/src/games/laf-sokma/index.ts:167"
+    },
+    {
+      "ad": "Kart puanı",
+      "deger": "oy sayısı + (Laf Ustası ? 1 : 0)",
+      "kaynak": "packages/engine/src/games/laf-sokma/index.ts:173"
+    },
+    {
+      "ad": "Adım süreleri (oylama cevap yoksa 0; açılış cevapsızsa 2,5 sn)",
+      "deger": "stepDuration",
+      "kaynak": "packages/engine/src/games/laf-sokma/index.ts:205-226"
+    },
+    {
+      "ad": "Oy reddi nedenleri",
+      "deger": "not_voting, cannot_vote, already_voted, unknown_card, no_answer, own_card",
+      "kaynak": "packages/engine/src/games/laf-sokma/index.ts:433-441"
+    },
+    {
+      "ad": "Yazma erken bitişi",
+      "deger": "min(bitiş, şimdi+1 sn)",
+      "kaynak": "packages/engine/src/games/laf-sokma/index.ts:423-429"
+    },
+    {
+      "ad": "Oylama erken bitişi",
+      "deger": "min(bitiş, şimdi+1 sn)",
+      "kaynak": "packages/engine/src/games/laf-sokma/index.ts:442-445"
+    },
+    {
+      "ad": "En uzun oyun süresi",
+      "deger": "60 + N×17 + 45 + 20 + 12 sn",
+      "kaynak": "packages/engine/src/games/laf-sokma/types.ts:25-33"
+    },
+    {
+      "ad": "Soru havuzu (tür/sınır)",
+      "deger": "en az 20 soru, 12-90 karakter, '?' ile biter; 9 soru gerekli",
+      "kaynak": "packages/engine/src/games/laf-sokma/pool.ts:6,17-18"
+    },
+    {
+      "ad": "Cevap kaydetme gecikmesi (istemci)",
+      "deger": "700 ms",
+      "kaynak": "apps/client/src/games/laf-sokma/Write.tsx:17"
+    },
+    {
+      "ad": "Sıkışık düzen eşiği",
+      "deger": "görünür yükseklik < 440 px",
+      "kaynak": "apps/client/src/games/laf-sokma/LafSokmaScreen.tsx:14"
+    }
+  ],
+  "strateji": [
+    "Kısa ve vurucu cevap yaz: sınır 80 karakter ama okuyucuyu 10 sn içinde güldürmen gerekiyor.",
+    "İki sorunun ikisine de cevap yaz; yalnız birini yazmak 'Tamam' için yeterli ama diğer soruda 'Cevap yok' kartıyla 0 alırsın.",
+    "Rakibin cevap yazmazsa oyların hepsi sana gider ve 2+ oyla Laf Ustası bonusu alırsın.",
+    "Büyük/küçük harfi vurgu için kullanabilirsin; cevap yazdığın gibi görünür.",
+    "Finalde herkes yarıştığı için herkesin kartı oylanır: en komik cevabı yaz, kendi kartına oy veremezsin; oyunu düşünerek ver.",
+    "Aynı oyuncuyla iki kez eşleşmezsin; her düelloda rakibin farklıdır."
+  ],
+  "tv": "TV/sahne ekranı oyun ekranını izleyici kipinde büyütülmüş gösterir (Laf Sokma'ya özel StageView yoktur): yazma sırasında 'Arkadaşların cevap yazıyor · k/n hazır', oylamada soru ve isimsiz kartlar, açılışta cevap sahipleri, oy veren avatarları ve puanlar; sağdaki sütunda oyuncular ve puanlar bulunur.",
+  "ekranlar": [
+    {
+      "ad": "laf-briefing",
+      "mock": "laf-briefing",
+      "q": "mock=laf-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Tam ekran anlatım ve üç madde.",
+      "dosya": "laf-briefing"
+    },
+    {
+      "ad": "laf-write-5",
+      "mock": "laf-write",
+      "q": "mock=laf-write&n=5",
+      "baslik": "Cevap yazma",
+      "aciklama": "Soru 1/2 kartı, iki soru sekmesi, cevap alanı, sayaç, Tamam ve hazır şeridi.",
+      "dosya": "laf-write-n-5"
+    },
+    {
+      "ad": "laf-write-locked-5",
+      "mock": "laf-write-locked",
+      "q": "mock=laf-write-locked&n=5",
+      "baslik": "Tamam denildi",
+      "aciklama": "Cevaplar kilitli, 'Gönderildi' ve hazır sayacı.",
+      "dosya": "laf-write-locked-n-5"
+    },
+    {
+      "ad": "laf-vote-5",
+      "mock": "laf-vote",
+      "q": "mock=laf-vote&n=5",
+      "baslik": "Oylama",
+      "aciklama": "Soru ve iki isimsiz cevap kartı; 'Hangisi daha komik?'.",
+      "dosya": "laf-vote-n-5"
+    },
+    {
+      "ad": "laf-vote-author",
+      "mock": "laf-vote-author",
+      "q": "mock=laf-vote-author&n=5",
+      "baslik": "Oylama (cevap sahibi)",
+      "aciklama": "Kendi cevabına 'Senin cevabın' etiketi; oy veremez.",
+      "dosya": "laf-vote-author-n-5"
+    },
+    {
+      "ad": "laf-reveal-master-6",
+      "mock": "laf-reveal-master",
+      "q": "mock=laf-reveal-master&n=6",
+      "baslik": "Laf Ustası açılışı",
+      "aciklama": "Cevap sahipleri, oy avatarları, '+n' puanları ve 'Laf Ustası · +1' satırı.",
+      "dosya": "laf-reveal-master-n-6"
+    },
+    {
+      "ad": "laf-final-write-5",
+      "mock": "laf-final-write",
+      "q": "mock=laf-final-write&n=5",
+      "baslik": "Final yazma",
+      "aciklama": "Tek final sorusu, tek cevap alanı.",
+      "dosya": "laf-final-write-n-5"
+    },
+    {
+      "ad": "laf-final-vote-5",
+      "mock": "laf-final-vote",
+      "q": "mock=laf-final-vote&n=5",
+      "baslik": "Final oylaması",
+      "aciklama": "Herkesin isimsiz kartları; 'En komik cevaba dokun'.",
+      "dosya": "laf-final-vote-n-5"
+    },
+    {
+      "ad": "laf-final-reveal-5",
+      "mock": "laf-final-reveal",
+      "q": "mock=laf-final-reveal&n=5",
+      "baslik": "Final açılışı",
+      "aciklama": "Final cevapları, yazarlar, oylar ve puanlar.",
+      "dosya": "laf-final-reveal-n-5"
+    }
+  ],
+  "bilinenSorunlar": [
+    "KURALLAR.md Final oylamasının ve açılışının süresini yazmaz; kod 20 sn ve 12 sn kullanır (kodda 'sahip onayına bırakılan varsayım' notu var).",
+    "KURALLAR.md 'Cevabı olmayan iki oyuncu 10 sn içinde birine oy verir' der; kod bu cümleyi 'cevap sahibi olmayanlar' olarak uygular. 3 oyuncuda oy verebilen yalnız bir kişi kalır.",
+    "KURALLAR.md 'Laf Ustası' için 'en az 2 oy' der; kod ek olarak tüm oyların tek karta gitmesi şartını arar ve yalnız düelloda uygular.",
+    "Cevap alanı 80 karakter sınırından 20 fazlasına izin verir (maxlength 100); fazlası sunucuda 'çok uzun' hatasıyla reddedilir.",
+    "Yönetici panelinde soru havuzu düzenlenebilir; en az 20 soru olmalıdır, ama oyun için en çok 9 soru gerekir (8 düello + final)."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-29: Oyun ekranları: tutarlı durum, tek satır başlık, okunur sonuçlar.",
+    "2026-10-28: Lobi 'ton' özelliği kaldırıldı; Laf Sokma tek soru havuzuna birleştirildi.",
+    "2026-10-27: Yönetici içerik havuzları: soruları panelden görüntüleme/düzenleme.",
+    "2026-10-27: Renk körlüğü modu: kazanan yıldızı ve paylaşılan işaretler.",
+    "2026-10-27: Kabuk saati, Status ve hazır noktalarına taşıma; tüm oyunlar için tur özeti.",
+    "2026-10-25: Lobi ton ayarı (aile/arkadaş/ofis) eklenmişti (sonradan kaldırıldı)."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/laf-sokma/index.ts",
+    "packages/engine/src/games/laf-sokma/types.ts",
+    "packages/engine/src/games/laf-sokma/pool.ts",
+    "packages/engine/src/games/laf-sokma/text.ts",
+    "packages/engine/src/games/laf-sokma/laf-sokma.test.ts",
+    "docs/KURALLAR.md#27-laf-sokma-düellosu",
+    "apps/client/src/games/laf-sokma/Write.tsx",
+    "apps/client/src/games/laf-sokma/Vote.tsx",
+    "apps/client/src/games/laf-sokma/Reveal.tsx"
+  ]
+}

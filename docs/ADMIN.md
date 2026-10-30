@@ -147,3 +147,17 @@ Havuz seç -> arama (aksan duyarsız), süzgeç (Tümü / Hazır / Eklenen / Kap
 
 ### Uçlar ve işlem kaydı
 GET `pools`, `pools/entries?pool=&q=&filter=&page=`. POST (Origin + işlem hız sınırı + onay + kayıt): `pools/toggle`, `pools/add`, `pools/edit`, `pools/delete`, `pools/bulk`; `pools/check` yazmaz (arama kovası). İşlem kaydı eylemleri: `pool_disable`, `pool_enable`, `pool_add`, `pool_edit`, `pool_delete`, `pool_bulk`; ayrıntıya yalnız havuz kimliği ve girdi anahtarının 8 haneli özeti (toplu: sayılar) yazılır, **girdi metni yazılmaz**.
+
+## Oyun ansiklopedisi (`/wiki`)
+
+Masaüstü için yönetici sayfası: her oyunun kuralları, puanlaması, aşama aşama akışı, özel durumları, koddaki
+sabitleri, bilinen sorunları ve oyunun kendi ekran görüntüleri. Yönetim panelinin üst çubuğundaki **Ansiklopedi**
+bağlantısından açılır. Erişim panelle aynıdır (oturum + yönetici hesabı + e-posta kodu); sayfanın kendisi boş bir
+kabuktur, bütün içerik `/api/admin/wiki/...` uçlarından gelir.
+
+- İçerik `docs/wiki/` klasöründedir: `sira.json` (oyun sırası), `oyunlar/<id>.json`, `ekran/<ad>.webp`. İmajda
+  `/app/wiki` altına kopyalanır (`WIKI_DIR`). Kart görselleri oyunun kendi `/assets/cards/<id>.webp` dosyalarıdır.
+- Notlar `wiki_feedback` tablosundadır: oyun, bölüm, metin, durum (`acik`/`isleniyor`/`cozuldu`), isteğe bağlı ekran +
+  işaret kutusu (0..1 oranları) ya da görsel (tarayıcıda küçültülür, en çok 1,5 MB; imzası türüyle uyuşmalı), yanıt.
+- Uçlar: `GET wiki/data`, `wiki/image?f=`, `wiki/feedback`, `wiki/feedback/image?id=`; `POST wiki/feedback/add`,
+  `wiki/feedback/status`, `wiki/feedback/delete`. Yazma uçları Origin denetimi ve yönetici başına hız sınırı taşır.

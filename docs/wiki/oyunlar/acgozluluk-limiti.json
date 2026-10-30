@@ -1,0 +1,356 @@
+{
+  "id": "acgozluluk-limiti",
+  "ad": "Açgözlülük Limiti",
+  "slogan": "Gizli bir sayı seç; hepimizin toplamı limiti aşarsa kimse puan alamaz.",
+  "kategori": "Strateji",
+  "etiketler": ["gizli seçim", "ortak limit", "açgözlülük", "eşzamanlı"],
+  "oyuncu": {
+    "min": 3,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 25,
+    "not": "Seçim aşaması en çok 20 sn, ardından seçimler açılır ve sonuç hazne animasyonuyla 5 sn gösterilir (toplam en çok 25 sn). Bağlı bütün katılımcılar Tamam derse seçim son Tamam'dan 1 sn sonra biter ve sonuç 5 sn sürer. Oyuncu sayısı süreyi değiştirmez, limiti değiştirir. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasında sonuç ekranı (en çok 30 sn) vardır."
+  },
+  "ozet": "Herkes aynı anda gizlice 0 ile oyuncu sayısı arasında bir sayı seçer. Bütün seçimlerin toplamı ortak limiti aşmazsa herkes seçtiği sayı kadar puan alır; limiti aşarsa herkes 0 alır. Limit oyuncu sayısına göre sabit bir tablodan gelir ve herkese açıktır. Amaç: limiti aşırmadan olabildiğince büyük sayı seçmek.",
+  "akis": [
+    {
+      "ad": "Anlatım",
+      "sureSn": 40,
+      "kim": "herkes",
+      "aciklama": "Amaç: Ortak hazneyi taşırma, ama olabildiğince çok jeton koy! Üç madde: Gizli olarak 0 ile oyuncu sayısı arasında bir sayı seç; Hepinizin toplamı limit çizgisinin altında kalsın; Taşarsa herkes 0 alır, taşmazsa seçtiğin kadar puan kazanırsın. Bağlı bütün katılımcılar hazır olunca ya da 40 sn dolunca biter. Kart bu ekranda oynanır.",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Geri sayım",
+      "sureSn": 3,
+      "kim": "herkes",
+      "aciklama": "3 saniyelik geri sayım; kartlar duyurulur (Ayna ve Koruma hariç).",
+      "gizli": "Ayna ve Koruma gizli kalır."
+    },
+    {
+      "ad": "Sayı seçimi",
+      "sureSn": 20,
+      "kim": "herkes (katılımcılar seçer)",
+      "aciklama": "Oyun başında (yeni açıldıysa) yaklaşık 1,9 sn'lik bir açılış sahnesi çıkar: jetonlar haznenin içine yağar; sahne dokunmayı engellemez. Ekranın üstünde Limit değeri ve Seçimin (seçtiğin sayı, seçmediysen –) görünür. Ortada ortak neon hazne vardır; üstünde limit çizgisi ve etiketi; içinde her oyuncunun avatar renginde kapalı bir jeton (? işareti) durur; kendi jetonun seçtiğin sayıyı gösterir. Altta 0'dan oyuncu sayısına kadar sayı düğmeleri (3 oyuncuda 0-3, 8 oyuncuda 0-8) vardır; bir düğmeye dokununca seçim anında yerelde görünür. Süre bitene ya da Tamam'a basana kadar seçimini istediğin kadar değiştirebilirsin. Başlangıç ipucu Bir sayı seç; seçtikten sonra Değiştirebilir ya da Tamam diyebilirsin; Tamam'a basınca Seçimin kesinleşti. Tamam düğmesi bir sayı seçilmeden pasiftir. Kilitleyenlerin jetonu ? yerine bir onay işareti (✓) gösterir ve k/n hazır sayacı artar. Süre çubuğu en üstte akar.",
+      "gizli": "Kimsenin seçtiği sayı ve toplam, süre bitene kadar başkasına gösterilmez; yalnız sen kendi seçimini görürsün (myChoice). Herkese açık olanlar: limit, seçilebilecek en büyük sayı, kimlerin Tamam dediği (seçimleri değil). İzleyici Sayılar 0–N ve Herkes gizlice seçiyor… görür."
+    },
+    {
+      "ad": "Seçimlerin açılışı",
+      "sureSn": 5,
+      "kim": "herkes",
+      "aciklama": "Süre bitince (ya da son Tamam'dan 1 sn sonra) bütün seçimler aynı anda açılır. Hazne açılır: oyuncuların jetonları sırayla (300 ms arayla, alttan üste) dolar, ardından limit çizgisiyle karşılaştırılır. Üstte Toplam değeri görünür. Limit aşılmadıysa Altın! başlığı, altın ışık ve eşleşme sesi/titreşimi; aşıldıysa Taştı! başlığı, kırmızı çatlak, sarsıntı ve düşük ses. Kişisel puan: +N puan ya da Bu sefer puan yok. Altta her oyuncunun avatarı ve seçtiği sayı sıralanır. 5 sn sonra oyun biter.",
+      "gizli": "Bu anda bütün seçimler ve toplam herkese açılır."
+    },
+    {
+      "ad": "Sonuç ekranı",
+      "sureSn": 30,
+      "kim": "herkes",
+      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 30 sn sonra kapanır.",
+      "gizli": "Yok."
+    }
+  ],
+  "kurallar": [
+    "3 ile 8 oyuncu katılır (2 oyuncuyla oynanmaz).",
+    "Tek aşama: sayı seçimi 20 saniyedir. Süre dolunca seçimler açılır ve sonuç 5 saniye gösterilir.",
+    "Her oyuncu 0 ile oyuncu sayısı (maxChoice = katılımcı sayısı) arasında bir tam sayı seçer. Örnek: 5 oyuncuda 0, 1, 2, 3, 4 ya da 5. Aralık dışı sayı reddedilir (out_of_range). Ağdan gelen değer 64'ten büyük, negatif ya da tam sayı değilse biçim hatasıdır.",
+    "Ortak limit, oyun başında katılımcı sayısına göre sabit tablodan gelir ve herkese açıktır: 3 oyuncu 6, 4 oyuncu 11, 5 oyuncu 17, 6 oyuncu 24, 7 oyuncu 33, 8 oyuncu 43. Limit maç içinde değişmez.",
+    "Seçim gizlidir. Süre bitene ya da Tamam'a kadar seçim istendiği kadar değiştirilebilir; son seçim geçerlidir. Aynı sayıyı yeniden seçmek durumu değiştirmez.",
+    "Tamam (lock) seçimi kesinleştirir. Seçim yapmadan Tamam'a basılamaz (nothing_to_lock). Kilitlendikten sonra seçim değiştirilemez ve ikinci kilit reddedilir (locked).",
+    "Erken bitiş: bağlı katılımcıların hepsi Tamam derse seçim aşaması son Tamam'dan 1 sn sonra biter, sonuç gösterimi 5 sn sürer. Bağlantısı kopan oyuncu beklenmez. Bağlı bir oyuncu hiç seçim yapmadıysa (ve dolayısıyla kilitleyemiyorsa) erken bitiş olmaz, süre 20 sn'ye kadar bekler. Hiç bağlı kimse yokken tek bir Tamam aşamayı bitirmez.",
+    "Seçim göndermeyen oyuncunun değeri 0 sayılır (toplama 0 katar). Bir kez seçim yapmış ama kilitlememiş oyuncunun son seçimi geçerlidir.",
+    "Toplam = bütün oyuncuların değerleri toplamı. Toplam limitten büyükse (toplam > limit) limit aşılmıştır. Toplam limite eşitse aşılmış sayılmaz.",
+    "Limit aşılmadıysa herkes seçtiği sayı kadar puan alır. Limit aşıldıysa herkes 0 alır; en yüksek seçenlere özel ceza uygulanmaz (eksi puan yoktur).",
+    "Süre dolduğunda (20. sn dahil) ve sonrasında gelen seçim ve kilit reddedilir (ended). Bu oyunda geç gelen eylem payı yoktur.",
+    "Katılımcı olmayan seçim ya da kilit yapamaz (not_participant).",
+    "Süre dolmadan seçimler, toplam ve oyuncu başına bilgi herkese açık görünümde yer almaz; yalnız kimin Tamam dediği görünür.",
+    "Mini oyun puanı doğrudan genel skora gider (awards = miniScores)."
+  ],
+  "puanlama": {
+    "ozet": "Toplam limiti aşmazsa herkes seçtiği sayı kadar puan alır; aşarsa herkes 0 alır. Puan eksiye düşmez. Eşit toplam (toplam = limit) aşım sayılmaz.",
+    "kalemler": [
+      {
+        "olay": "Toplam ≤ limit",
+        "puan": "+seçilen sayı",
+        "not": "Her oyuncuya kendi seçtiği sayı kadar; seçmeyen 0."
+      },
+      {
+        "olay": "Toplam > limit",
+        "puan": "0",
+        "not": "Herkese; en yüksek seçene ek ceza yok."
+      },
+      {
+        "olay": "Seçim göndermemek",
+        "puan": "0",
+        "not": "Değeri 0 sayılır; toplama bir şey katmaz."
+      }
+    ],
+    "ornek": "5 oyuncu, limit 17. Seçimler: Ali 5, Bora 3, Cem 4, Deniz 3, Ece 2: toplam 17, limiti aşmaz (17 > 17 değil). Puanlar: Ali 5, Bora 3, Cem 4, Deniz 3, Ece 2. Başka tur: Ali 5, Bora 5, Cem 4, Deniz 3, Ece 2: toplam 19 > 17, herkes 0 alır.",
+    "beraberlik": "Beraberlik kuralı yoktur. Eşit puanlar mini oyun sıralamasında sırayı paylaşır. Taşma durumunda herkes eşit (hepsi 0) olduğu için herkes birinci grupta sayılır."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Önceden seçim yaptıysa son seçimi geçerli kalır ve toplama girer. Hiç seçim yapmadıysa 0 sayılır. Kopukken seçim gönderemez ama süre dolmadan geri dönüp seçebilir. Erken bitiş değerlendirmesinde kopuk oyuncu beklenmez."
+    },
+    {
+      "baslik": "Hiç seçmeyen bağlı oyuncu",
+      "aciklama": "Bağlı olup seçim yapmayan bir oyuncu Tamam diyemediği için, diğerleri Tamam dese de erken bitiş olmaz; seçim süresi 20 sn'ye kadar bekler."
+    },
+    {
+      "baslik": "Herkes erken Tamam derse",
+      "aciklama": "Seçim son Tamam'dan 1 sn sonra biter; sonuç aynıdır, yalnız beklemeyi kısaltır. Seçimlerin açıldığı anı da öne çeker."
+    },
+    {
+      "baslik": "İzleyici",
+      "aciklama": "Sayı düğmelerini görmez. Üstte Sayılar 0–N, Herkes gizlice seçiyor… ve hazır sayacı; sonuçta Taştı! ya da Altın!, Toplam ve oyuncuların seçimleri görünür. Puan almaz, kişisel puan satırı çıkmaz."
+    },
+    {
+      "baslik": "3 ve 8 oyuncu",
+      "aciklama": "3 oyuncuda limit 6 ve seçim aralığı 0-3: herkes 2 seçerse toplam 6 (limit) aşılmaz. Herkes 3 seçerse 9 > 6 taşar. 8 oyuncuda limit 43 ve aralık 0-8: herkes 5 seçerse 40, herkes 6 seçerse 48 taşar. Kişi başı adil pay (limit/oyuncu): 3 oyuncu 2,0; 4 oyuncu 2,75; 5 oyuncu 3,4; 6 oyuncu 4,0; 7 oyuncu 4,71; 8 oyuncu 5,375."
+    },
+    {
+      "baslik": "Kimse seçmezse",
+      "aciklama": "Herkes 0 alır; toplam 0, taşma yok. Hazne boş açılır ve Altın! gösterilir."
+    },
+    {
+      "baslik": "Ekran açılış sahnesi",
+      "aciklama": "Aşama başında taze (en çok 2,5 sn geç kalmış) bağlananlara 1,9 sn'lik jeton yağmuru oynatılır; geç bağlananlara ya da hareket azaltma açıksa oynatılmaz. Girişi engellemez."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Kendine Güven",
+      "etki": "Birinci olmak için mini oyun puanı en yüksek olmalıdır: limit aşılmadıysa en büyük sayıyı seçen (eşitse hepsi) birincidir; aşıldıysa herkes 0 ile eşittir ve herkes birincidir (+2 alırlar)."
+    },
+    {
+      "kart": "Sigorta",
+      "etki": "Sonuncu olursan +1. Limit aşılmadıysa en küçük sayıyı seçen sonuncudur (hepsi aynıysa kimse değil); limit aşıldıysa herkes eşit olduğundan kimse sonuncu değildir."
+    },
+    {
+      "kart": "Tahmin",
+      "etki": "Seçtiğin oyuncu birinci olursa +2. Limit aşılmadıysa en yüksek seçen birincidir; aşılırsa herkes birincidir ve tahmin tutar."
+    },
+    {
+      "kart": "Çift Puan / Altın Dokunuş",
+      "etki": "Seçtiğin sayı puanın olur; ×2 ya da ×3 uygulanır (örn. 4 seçtin, limit aşılmadı: 8 ya da 12). Limit aşıldıysa puanın 0'dır ve çarpanlar etkisizdir."
+    },
+    {
+      "kart": "Kalkan / Çelme / Lanet / Talihsizlik",
+      "etki": "Bu oyunda ham ödül eksiye düşmez; Çelme −1 ya da Talihsizlik gibi kartlar puanı eksiye çekebilir, Kalkan bunu 0'a çeker. Lanet, hedefin artı puanını sıfırlar."
+    },
+    {
+      "kart": "Hırsız / Vergi",
+      "etki": "Birinciden (en büyük sayıyı seçenden, taşmada herkesten) 1 puan alır; limit taşmışsa herkes 0 olduğundan Vergi ve Hırsız genelde etkisiz kalır (alınacak puan yok)."
+    },
+    {
+      "kart": "Ters Köşe",
+      "etki": "Sıralama tersine döner: en büyük sayıyı seçenin ödülü en küçük sayıyı seçenle yer değiştirir. Taşma durumunda herkes eşit olduğundan etkisizdir."
+    },
+    {
+      "kart": "Diğer kartlar",
+      "etki": "Ortaklık, Takas, Takviye, Koruma, Ayna, Kart Çal ve kötü kartlar genel kurallarla (K6) çalışır. Oyun kartlara özel kural uygulamaz."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Seçim süresi",
+      "deger": "20 000 ms",
+      "kaynak": "packages/engine/src/games/acgozluluk-limiti/types.ts:4"
+    },
+    {
+      "ad": "Sonuç gösterimi (seçimler açıldıktan sonra)",
+      "deger": "5 000 ms",
+      "kaynak": "packages/engine/src/games/acgozluluk-limiti/types.ts:6"
+    },
+    {
+      "ad": "Toplam oyun süresi",
+      "deger": "25 000 ms",
+      "kaynak": "packages/engine/src/games/acgozluluk-limiti/types.ts:7"
+    },
+    {
+      "ad": "Limit tablosu",
+      "deger": "3→6, 4→11, 5→17, 6→24, 7→33, 8→43",
+      "kaynak": "packages/engine/src/games/acgozluluk-limiti/types.ts:10"
+    },
+    {
+      "ad": "Ağdan gelen sayı üst sınırı (teknik)",
+      "deger": "64",
+      "kaynak": "packages/engine/src/games/acgozluluk-limiti/types.ts:20"
+    },
+    {
+      "ad": "Son Tamam'dan sonra kalan süre",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/games/acgozluluk-limiti/types.ts:32"
+    },
+    {
+      "ad": "Seçim aralığı",
+      "deger": "0 .. katılımcı sayısı",
+      "kaynak": "packages/engine/src/games/acgozluluk-limiti/index.ts:86"
+    },
+    {
+      "ad": "Taşma koşulu",
+      "deger": "toplam > limit",
+      "kaynak": "packages/engine/src/games/acgozluluk-limiti/index.ts:45"
+    },
+    {
+      "ad": "Puan",
+      "deger": "taşmazsa seçilen sayı, taşarsa 0",
+      "kaynak": "packages/engine/src/games/acgozluluk-limiti/index.ts:151"
+    },
+    {
+      "ad": "Erken bitiş (bağlı herkes kilitledi)",
+      "deger": "endsAt = min(endsAt, şimdi + 1 000 ms); revealEndsAt = endsAt + 5 000 ms",
+      "kaynak": "packages/engine/src/games/acgozluluk-limiti/index.ts:104"
+    },
+    {
+      "ad": "Reddedilen durumlar",
+      "deger": "not_participant, ended, not_started, locked, nothing_to_lock, out_of_range",
+      "kaynak": "packages/engine/src/games/acgozluluk-limiti/index.ts:94"
+    },
+    {
+      "ad": "Oyuncu sınırları",
+      "deger": "3 - 8, dikey",
+      "kaynak": "packages/engine/src/games/acgozluluk-limiti/index.ts:56"
+    },
+    {
+      "ad": "Geç gelen eylem payı",
+      "deger": "yok (graceMs tanımlı değil)",
+      "kaynak": "packages/engine/src/games/acgozluluk-limiti/index.ts:54"
+    },
+    {
+      "ad": "Hazne kapasitesi",
+      "deger": "limit × 1,5",
+      "kaynak": "apps/client/src/games/acgozluluk-limiti/view.ts:61"
+    },
+    {
+      "ad": "Jeton doldurma aralığı (açılışta)",
+      "deger": "oyuncu başına 300 ms; çizgi karşılaştırması +250 ms",
+      "kaynak": "apps/client/src/games/acgozluluk-limiti/Tank.tsx:34"
+    },
+    {
+      "ad": "Açılış sahnesi süresi / taze sayılma eşiği",
+      "deger": "1 900 ms / 2 500 ms",
+      "kaynak": "apps/client/src/fx/opening.ts:6"
+    },
+    {
+      "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
+      "deger": "40 000 / 3 000 / 30 000 ms",
+      "kaynak": "apps/server/src/match.ts:40"
+    },
+    {
+      "ad": "Devam ile kapanma gecikmesi",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/protocol.ts:29"
+    }
+  ],
+  "strateji": [
+    "Limitin kişi başı payına bak: 3 oyuncuda 2, 4 oyuncuda 2,75, 5 oyuncuda 3,4, 8 oyuncuda 5,375. Herkes payı seçerse toplam limite çok yakın ya da altında kalır.",
+    "Çok yüksek seçmek (oyuncu sayısı kadar) hem kendi puanını hem herkesin puanını sıfırlama riskini artırır; bir tek açgözlü bile herkesi 0'a çeker.",
+    "Tamam'a erken basmak seni kilitler, ama diğerleri hâlâ seçim yapabilir; kilit listesinden kimlerin kararını verdiğini görebilirsin (seçimleri görmezsin).",
+    "Başkalarının geçmiş turlardaki alışkanlıklarını izle: hep en yükseği seçen biri varsa güvenli tarafta kal.",
+    "Taşma herkesi 0'a eşitler; geride olan bir oyuncu riski bilerek artırıp tabloyu karıştırmak isteyebilir. Öndeysen düşük ama güvenli bir sayı seç.",
+    "Hiç seçmemek 0 verir ve toplama bir şey katmaz; ama bağlı olup seçim yapmayan biri erken bitişi engeller."
+  ],
+  "tv": "Bu oyunun özel bir TV (sahne) görünümü yoktur; büyük ekranda telefon ekranı izleyici kipinde büyütülerek gösterilir. TV'de limit, ortak hazne, kapalı jetonlar (Tamam diyenlerde onay işareti) ve süre çubuğu görünür; seçilen sayılar süre bitene kadar görünmez. Seçimler açılınca hazne dolar, Altın! ya da Taştı! ve toplam büyük ekranda gösterilir.",
+  "ekranlar": [
+    {
+      "mock": "acgozluluk-briefing",
+      "name": "acgozluluk-briefing",
+      "q": "mock=acgozluluk-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Ortak hazneyi taşırma, ama olabildiğince çok jeton koy! ve üç madde.",
+      "dosya": "acgozluluk-briefing"
+    },
+    {
+      "mock": "acgozluluk-choosing",
+      "name": "acgozluluk-choosing-5",
+      "q": "mock=acgozluluk-choosing&n=5",
+      "baslik": "Sayı seçimi",
+      "aciklama": "Limit 17, 0-5 sayı düğmeleri, ortada kapalı jetonlarla hazne ve limit çizgisi.",
+      "dosya": "acgozluluk-choosing-n-5"
+    },
+    {
+      "mock": "acgozluluk-choosing",
+      "name": "acgozluluk-choosing-8",
+      "q": "mock=acgozluluk-choosing&n=8",
+      "baslik": "Sayı seçimi (8 oyuncu)",
+      "aciklama": "Limit 43, 0-8 sayı düğmeleri iki satırda.",
+      "dosya": "acgozluluk-choosing-n-8"
+    },
+    {
+      "mock": "acgozluluk-choosing",
+      "name": "acgozluluk-choosing-3",
+      "q": "mock=acgozluluk-choosing&n=3&chosen=0",
+      "baslik": "Seçimsiz başlangıç (3 oyuncu)",
+      "aciklama": "Limit 6, henüz sayı seçilmedi: Bir sayı seç, Tamam pasif.",
+      "dosya": "acgozluluk-choosing-n-3-chosen-0"
+    },
+    {
+      "mock": "acgozluluk-choosing",
+      "name": "acgozluluk-choosing-tap",
+      "q": "mock=acgozluluk-choosing&n=6&chosen=0",
+      "baslik": "Sayıya dokunma",
+      "aciklama": "Bir sayı düğmesine dokununca seçimin ve kendi jetonun güncellenmesi.",
+      "dosya": "acgozluluk-choosing-n-6-chosen-0"
+    },
+    {
+      "mock": "acgozluluk-locked",
+      "name": "acgozluluk-locked-5",
+      "q": "mock=acgozluluk-locked&n=5",
+      "baslik": "Kilitlendi",
+      "aciklama": "Seçimin kesinleşti, düğmeler pasif; kilitleyenlerin jetonunda onay işareti, k/n hazır.",
+      "dosya": "acgozluluk-locked-n-5"
+    },
+    {
+      "mock": "acgozluluk-reveal-ok",
+      "name": "acgozluluk-reveal-ok-5",
+      "q": "mock=acgozluluk-reveal-ok&n=5",
+      "baslik": "Altın! (limit aşılmadı)",
+      "aciklama": "Hazne dolar, altın ışık; Toplam ve her oyuncunun seçimi; +N puan.",
+      "dosya": "acgozluluk-reveal-ok-n-5"
+    },
+    {
+      "mock": "acgozluluk-reveal-over",
+      "name": "acgozluluk-reveal-over-8",
+      "q": "mock=acgozluluk-reveal-over&n=8",
+      "baslik": "Taştı! (limit aşıldı)",
+      "aciklama": "Kırmızı çatlak ve sarsıntı; herkes 0 aldı: Bu sefer puan yok.",
+      "dosya": "acgozluluk-reveal-over-n-8"
+    },
+    {
+      "mock": "acgozluluk-spectator",
+      "name": "acgozluluk-spectator",
+      "q": "mock=acgozluluk-spectator&n=5",
+      "baslik": "İzleyici",
+      "aciklama": "Sayı düğmesi yok; Sayılar 0–5, Herkes gizlice seçiyor… ve hazır sayacı.",
+      "dosya": "acgozluluk-spectator-n-5"
+    }
+  ],
+  "bilinenSorunlar": [
+    "KURALLAR.md §12 cevap 3, limitin oyun başında oyuncu sayısına göre sabit tablodan geldiğini söyler; kod bunu tablodan alır, ama tablo dışı (3-8 dışı) oyuncu sayısında en yakın satırı kullanır (3'ün altı 3'e, 8'in üstü 8'e kenetlenir); mevcut min/max sınırları nedeniyle bu durum oynanışta oluşmaz.",
+    "Bağlı bir oyuncu hiç seçim yapmazsa Tamam diyemediği için erken bitişi engeller (kod: waiting = bağlı ve kilitlememiş olan herkes). KURALLAR.md erken bitiş kuralı 'bağlı bütün katılımcılar gönderdiğinde' der; hiç seçim yapmayan bağlı oyuncu bu durumda seçim süresinin tamamını bekletir.",
+    "Hazne kapasitesi limitin 1,5 katı olarak çizilir (en kötü toplam N×N her oyuncu sayısında sığsın diye); bu yalnız görsel ölçektir, kural değildir.",
+    "Sayı seçimi istemcide anında (sunucu onayı beklenmeden) gösterilir; sunucu reddederse (örn. süre dolmuşsa) ekranda seçili görünen sayı sunucudaki gerçek seçimden farklı olabilir."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-25: İyimser arayüz yardımcısı eklendi (kilit ve seçimlerde anlık geri bildirim).",
+    "2026-10-27: Açılış sahneleri eklendi (hazneye jeton yağmuru); oyun kabuk saatine, Status ve hazır noktalarına taşındı; tur özeti ve kayıt defteri; sonuç ekranında Devam ile erken geçiş.",
+    "2026-10-27: Sahne (TV) rolü; renk körlüğü modu ekranları (&cb=1) ve örüntü dolguları.",
+    "2026-10-28: Lobi ton özelliği kaldırıldı."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/acgozluluk-limiti/index.ts",
+    "packages/engine/src/games/acgozluluk-limiti/types.ts",
+    "packages/engine/src/games/acgozluluk-limiti/acgozluluk-limiti.test.ts",
+    "packages/engine/src/games/acgozluluk-limiti/summary.ts",
+    "docs/KURALLAR.md#12-açgözlülük-limiti",
+    "docs/ERKEN-BITIS.md",
+    "apps/client/src/games/acgozluluk-limiti/AcgozlulukLimitiScreen.tsx",
+    "apps/client/src/games/acgozluluk-limiti/Tank.tsx",
+    "apps/client/src/games/acgozluluk-limiti/view.ts",
+    "apps/client/src/fx/opening.ts",
+    "apps/server/src/acgozluluk-limiti.test.ts",
+    "scripts/ui-check.mjs"
+  ]
+}

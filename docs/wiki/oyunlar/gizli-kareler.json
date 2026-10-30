@@ -1,0 +1,418 @@
+{
+  "id": "gizli-kareler",
+  "ad": "Gizli Kareler",
+  "slogan": "Gizlice bir kare seç; aynı kareyi seçenler elenir, tek kalan puan alır. İkinci aşamada gizli bir ödül karesi var.",
+  "kategori": "Strateji",
+  "etiketler": ["gizli seçim", "çakışma", "2 aşama", "eleme", "ödül karesi"],
+  "oyuncu": {
+    "min": 2,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 49,
+    "not": "En uzun hali: 1. aşama seçimi 20 sn + sonuç 4 sn + 2. aşama seçimi 20 sn + son sonuç 5 sn = 49 sn. 1. aşamada tek kişiden az kaldıysa (ya da yalnız bir kişi kaldıysa) 2. aşama oynanmaz ve oyun 1. aşama bitiminden 5 sn sonra biter (yaklaşık 25 sn). Herkes Tamam derse seçim aşamaları 1 sn sonra biter. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasında sonuç ekranı (en çok 30 sn) vardır."
+  },
+  "ozet": "Herkes gizlice bir kare seçer (2-4 oyuncuda 3×3, 5-8 oyuncuda 4×4 ızgara). Aynı kareyi seçenler çakışıp elenir; kareyi tek başına seçen +1 alır ve 2. aşamaya geçer. 2. aşamada yalnız hayatta kalanlar yine gizlice seçer; tek kalan bir +1 daha alır. Bu aşamada gizli bir ödül karesi vardır: onu tek başına seçen ek olarak +2 alır.",
+  "akis": [
+    {
+      "ad": "Anlatım",
+      "sureSn": 40,
+      "kim": "herkes",
+      "aciklama": "Amaç: Kimseyle çakışmayan karede tek başına kal! Üç madde: Gizli karelerden yalnızca birini seç; Aynı kareyi seçen arkadaşların birlikte elenir; Tek kalan +1 alır, 2. aşamadaki gizli ödül karesi +2 verir. Bağlı bütün katılımcılar hazır olunca ya da 40 sn dolunca biter. Kart bu ekranda oynanır.",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Geri sayım",
+      "sureSn": 3,
+      "kim": "herkes",
+      "aciklama": "3 saniyelik geri sayım; kartlar duyurulur (Ayna ve Koruma hariç).",
+      "gizli": "Ayna ve Koruma gizli kalır."
+    },
+    {
+      "ad": "1. aşama seçimi",
+      "sureSn": 20,
+      "kim": "herkes (katılımcılar seçer)",
+      "aciklama": "Üstte süre çubuğu ve 1. aşama / 2 etiketi; başlık Bir kare seç (seçince Karen hazır), alt yazı Seçmezsen pasif kalırsın / Tamam'a basana kadar değiştirebilirsin. Ortada koyu neon ızgara: her hücrede titreşen boş bir enerji çekirdeği; dokunduğun hücrede kendi avatarın görünür. Seçimi Tamam'a basana ya da süre bitene kadar istediğin kadar değiştirebilirsin. Tamam, bir kare seçilmeden pasiftir; basınca seçim kesinleşir (Seçimin kesinleşti) ve k/n hazır sayacı artar. Bağlı herkes Tamam derse aşama 1 sn sonra biter. Süre sonunda seçmeyen pasif sayılır (puan yok, çakışmaya girmez).",
+      "gizli": "Kimsenin seçtiği kare süre bitene kadar başkasına gösterilmez. Herkese açık olan yalnız kimlerin Tamam dediğidir (seçimleri değil). İzleyici Herkes gizlice seçiyor ve hazır sayacı görür."
+    },
+    {
+      "ad": "1. aşama sonucu",
+      "sureSn": 4,
+      "kim": "herkes",
+      "aciklama": "Seçimler açılır. Animasyon: 0 sn'de Kareler açılıyor, 1,1 sn'de avatarlar karelere iner ve çakışanlar kırmızıya döner (Çakıştı! başlığı, ya da hiç çakışma yoksa Temiz!; çakışma sesi ve titreşimi), 2,2 sn'de tek kalanlar altın sütunla yükselir (+1) ve kişisel sonuç görünür (Tek kaldın +1 / Çakıştın Elendin / Seçmedin Pasif). Alt şeritte Seçmedi başlığıyla pasif oyuncular listelenir. Alt yazı: Tek kalanlar 2. aşamaya geçti. 4 sn sonra 2. aşama başlar.",
+      "gizli": "Bütün 1. aşama seçimleri ve her oyuncunun durumu (tek, çakıştı, pasif) herkese açılır."
+    },
+    {
+      "ad": "2. aşama seçimi",
+      "sureSn": 20,
+      "kim": "yalnız 1. aşamada tek kalanlar seçer; diğerleri izler",
+      "aciklama": "Hayatta kalanlar yine bir kare seçer; sunucu bu aşama için gizlice bir ödül karesi belirlemiştir. Alt yazı: Gizli ödül karesi var: tek başına basarsan +2. Elenenler ve pasifler Elendin / Kalanlar 2. aşamada yarışıyor görür, ızgara pasiftir; alt şeritte Yarışanlar avatarları listelenir. Izgara aynı boyuttadır (3×3 ya da 4×4). Tamam sayacı yalnız hayatta kalanları sayar. Hayatta kalanların hepsi (bağlı olanlar) Tamam derse aşama 1 sn sonra biter.",
+      "gizli": "Ödül karesinin yeri ve 2. aşama seçimleri, aşama bitene kadar kimseye gösterilmez (ödül karesi hiçbir görünümde, hiçbir reddedilen/kabul edilen yanıtta yoktur). Yalnız ödül karesinin var olduğu söylenir."
+    },
+    {
+      "ad": "Son sonuç",
+      "sureSn": 5,
+      "kim": "herkes",
+      "aciklama": "2. aşamanın seçimleri açılır; aynı çakışma ve altın sütun animasyonu. Ödül karesi parlama efektiyle gösterilir (yıldız işareti). Tek kalan +1; ödül karesini tek başına bulan Ödül karesi! +3 (aşamada +1 ve ödül +2) ve Tek kaldın +1, ödül karesi +2 notu; ödül karesinde birden çok kişi varsa Ödül karesinde çakışma: ödül yok; başkası bulduysa X ödül karesini buldu: +2. Kişisel toplam: Toplam +N ya da Bu sefer puan yok. 5 sn sonra oyun biter.",
+      "gizli": "Ödül karesi ve kimin bulduğu açılır."
+    },
+    {
+      "ad": "Sonuç ekranı",
+      "sureSn": 30,
+      "kim": "herkes",
+      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 30 sn sonra kapanır.",
+      "gizli": "Yok."
+    }
+  ],
+  "kurallar": [
+    "2 ile 8 oyuncu katılır. Izgara boyutu oyuncu sayısına göre belirlenir: 2-4 oyuncuda 3×3 (9 kare), 5-8 oyuncuda 4×4 (16 kare). Kareler soldan sağa, satır satır 0'dan başlayarak numaralanır; ekran okuyucuda A1, A2... D4 olarak adlandırılır.",
+    "Oyun iki aşamadır; her aşamanın seçim süresi 20 saniyedir. 1. aşama sonucu 4 sn gösterilir, son sonuç 5 sn gösterilir.",
+    "Her oyuncu aşamada yalnız bir kare seçer. Seçim, süre bitene ya da Tamam'a kadar değiştirilebilir (son seçim geçerlidir); aynı kareyi yeniden seçmek durumu değiştirmez.",
+    "Seçimler gizlidir. Başka oyuncunun seçtiği kare, aşama bitene kadar görünmez. Aralık dışı kare numarası reddedilir (out_of_range; 3×3'te 9 ve üstü).",
+    "Tamam (lock) seçimi kesinleştirir. Kare seçmeden Tamam'a basılamaz (nothing_to_lock). Kilitlendikten sonra seçim değiştirilemez (locked).",
+    "Seçim yapmayan (geç ya da boş bırakan) oyuncu o aşamada pasif sayılır: kare çakışmasına dahil edilmez ve puan alamaz. Pasif bir oyuncu 1. aşamada pasifse 2. aşamaya geçemez.",
+    "Aynı kareyi seçen oyuncular (iki ya da daha çok) çakışır; hepsi o aşamada elenir ve puan alamaz. Birbirinden bağımsız birden çok çakışma grubu olabilir.",
+    "Bir kareyi tek başına seçen oyuncu (tek kalan) aşamada +1 alır. 1. aşamada tek kalanlar 2. aşamaya geçer.",
+    "2. aşamayı yalnız 1. aşamada tek kalanlar oynar. Çakışanlar ve pasifler 2. aşamada seçemez (eliminated). 2. aşamada da tek kalan bir +1 daha alır (toplam 2). 1. aşama puanı korunur.",
+    "1. aşamadan sonra 2'den az oyuncu hayattaysa 2. aşama oynanmaz: herkes çakıştıysa/pasifse kimse puan almaz. Tam bir oyuncu hayattaysa (rakipsiz) otomatik bir +1 daha alır (toplam 2) ve oyun 1. aşama bitiminden 5 sn sonra kapanır. Bu durumda ödül karesi yoktur.",
+    "Ödül karesi (O10): oyun kurulurken sunucu ızgaradan gizlice rastgele bir kare belirler. Yalnız 2. aşamada geçerlidir. 2. aşamada ödül karesini tek başına seçen oyuncu, aşamadaki +1'e ek olarak +2 alır (toplam +3 o aşamadan). Ödül karesini birden fazla oyuncu seçtiyse kimse ödül almaz (çakışanlar zaten elenir). Kimse seçmediyse ödül verilmez ama kare yine açıklanır. 1. aşamada o kareye basmak ödül getirmez. 2. aşama hiç oynanmazsa ödül karesi yoktur.",
+    "Ödül karesinin yeri 2. aşamanın sonucu açılana kadar hiçbir oyuncuya, ekrana, izleyiciye, TV'ye, kabul/ret yanıtına ve puan görünümüne verilmez.",
+    "Erken bitiş: seçim yapan ve bağlı olan bütün oyuncular (1. aşamada herkes, 2. aşamada hayatta kalanlar) Tamam derse aşama son Tamam'dan 1 sn sonra biter (ya da özgün bitiş daha yakınsa o). Bağlantısı kopan oyuncu beklenmez. Bağlı bir oyuncu hiç seçim yapmadıysa Tamam diyemez ve aşama beklenir. Aşama kapanmaya başladıktan sonra gelen eylem reddedilir (closed). 1. aşamanın erken bitişi 2. aşamanın başlangıcını da öne alır.",
+    "Aşamalar arasında (4 sn sonuç penceresi, son sonuç) gelen seçim ve kilit reddedilir (closed); oyun bittikten sonra ended.",
+    "Bu oyunda geç gelen eylem payı yoktur.",
+    "Puanlar doğrudan genel skora eklenir (awards = miniScores): 1. aşama tek kalan +1, 2. aşama tek kalan +1, rakipsiz kalan +1, ödül karesi +2. Bir oyuncunun en çok alabileceği: 1 + 1 + 2 = 4 (1. aşama +1, 2. aşama +1, ödül +2)."
+  ],
+  "puanlama": {
+    "ozet": "Her aşamada kareyi tek başına seçen +1 alır. Rakipsiz kalan +1 daha alır. 2. aşamada ödül karesini tek başına bulan +2 ek alır. Puan eksiye düşmez; çakışan ve pasif 0 alır.",
+    "kalemler": [
+      {
+        "olay": "1. aşamada tek kalmak",
+        "puan": "+1",
+        "not": "Kareyi tek başına seçen; 2. aşamaya geçer."
+      },
+      {
+        "olay": "2. aşamada tek kalmak",
+        "puan": "+1",
+        "not": "Yalnız 1. aşamada tek kalanlar arasında."
+      },
+      {
+        "olay": "Rakipsiz kalmak (1. aşamadan sonra tek hayatta)",
+        "puan": "+1",
+        "not": "1. aşama +1'ine ek; toplam 2. 2. aşama oynanmaz."
+      },
+      {
+        "olay": "2. aşamada ödül karesini tek başına seçmek",
+        "puan": "+2 ek (aşamada toplam +3)",
+        "not": "Aşamadaki +1'e ek."
+      },
+      {
+        "olay": "Çakışmak",
+        "puan": "0",
+        "not": "Aynı kareyi seçenlerin hepsi elenir."
+      },
+      {
+        "olay": "Seçmemek (pasif)",
+        "puan": "0",
+        "not": "Çakışmaya girmez."
+      }
+    ],
+    "ornek": "5 oyuncu (4×4). 1. aşama: Ali 3, Bora 3, Cem 7, Deniz 9, Ece seçmedi. Ali ve Bora çakışır (elenir, 0); Cem +1 ve Deniz +1 tek kalır; Ece pasif (0). 2. aşamaya Cem ve Deniz geçer; ödül karesi 12 (gizli). 2. aşama: Cem 12, Deniz 5: ikisi de tek kalır, Cem +1 ve ödül karesini tek başına bulduğu için +2: Cem toplam 1 + 1 + 2 = 4, Deniz 1 + 1 = 2. Başka tur: 1. aşamada Cem tek kalıp diğerleri çakışırsa Cem rakipsiz kalır: 1 + 1 = 2 ve oyun orada biter.",
+    "beraberlik": "Beraberlik kuralı yoktur; eşitlik çakışma olarak ele alınır (aynı kareyi seçenler elenir). Mini oyun sıralamasında eşit puanlılar sırayı paylaşır."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Herkes aynı kareyi seçerse",
+      "aciklama": "Hepsi çakışır ve elenir; kimse puan almaz. 2. aşama oynanmaz; sonuç 1. aşama bitiminden 5 sn gösterilir ve oyun biter."
+    },
+    {
+      "baslik": "Kimse hayatta kalmazsa",
+      "aciklama": "Çift çakışmalar ve pasifler nedeniyle kimse tek kalmazsa 2. aşama oynanmaz ve oyun puansız kapanır. Kimse hiç seçmezse de aynıdır."
+    },
+    {
+      "baslik": "Yalnız bir oyuncu hayatta kalırsa",
+      "aciklama": "O oyuncu 2. aşamada rakipsiz kabul edilir ve otomatik +1 alır (toplam 2). 2. aşama oynanmaz, ödül karesi yoktur. Ekranda Rakipsiz kaldın +2 ve İkinci aşama rakipsiz: bir +1 daha! yazılır."
+    },
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Katılımcı olarak kalır. Önceden seçim yaptıysa seçimi geçerlidir ve çakışmaya girer. Seçmediyse pasiftir. Erken bitiş kontrolünde beklenmez. Kopuk oyuncu geri dönüp süre içinde seçebilir."
+    },
+    {
+      "baslik": "Hiç seçim yapmayan bağlı oyuncu",
+      "aciklama": "Tamam diyemediği için, diğerleri Tamam dese de aşama erken bitmez; süre sonunu bekler."
+    },
+    {
+      "baslik": "2. aşamada elenenler",
+      "aciklama": "Izgarayı görür ama seçemez, Tamam düğmesi yoktur; Elendin ve Kalanlar 2. aşamada yarışıyor yazılır, yarışanların avatarları listelenir. Sonuçta puanı yalnız 1. aşamadaki gibi kalır (çakışanlar 0)."
+    },
+    {
+      "baslik": "2 oyuncu",
+      "aciklama": "3×3 ızgara. İki oyuncu farklı karelerdeki seçimle ikisi de 2. aşamaya geçer. Biri seçmezse diğeri rakipsiz kalır ve +2 alır. İkisi aynı kareyi seçerse kimse puan almaz."
+    },
+    {
+      "baslik": "8 oyuncu",
+      "aciklama": "4×4, 16 kare. Sekiz kişi farklı kareleri seçerse hepsi tek kalır (+1) ve hepsi 2. aşamaya geçer."
+    },
+    {
+      "baslik": "İzleyici",
+      "aciklama": "Seçemez; Herkes gizlice seçiyor ve Sonuç süre bitince açılır yazılır, hazır sayacı görünür. Sonuçlarda her oyuncunun yerini görür."
+    },
+    {
+      "baslik": "Ödül karesinde çakışma ya da kimsenin basmaması",
+      "aciklama": "Birden fazla kişi ödül karesini seçerse kimse ödül almaz (Ödül karesinde çakışma: ödül yok). Kimse seçmezse ödül yok; kare yine yıldız ve parlama ile gösterilir."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Kendine Güven",
+      "etki": "Birinci olmak için mini oyun puanı en yüksek olmalıdır: ödül karesini bulan ya da iki aşamada da tek kalan genelde birinci olur. Kimse puan almadıysa herkes eşit olduğu için herkes birincidir ve +2 alır."
+    },
+    {
+      "kart": "Sigorta",
+      "etki": "Sonuncu olursan +1. Bu oyunda 0 puanlı çakışanlar ve pasifler sonuncudur; herkes aynı puandaysa (örn. herkes aynı kareyi seçtiyse) kimse sonuncu değildir."
+    },
+    {
+      "kart": "Tahmin",
+      "etki": "Seçtiğin oyuncu birinci olursa +2. Birinci, mini oyun puanı en yüksek olandır (çoğunlukla 2 aşamada da tek kalan ya da ödül karesini bulan)."
+    },
+    {
+      "kart": "Çift Puan / Altın Dokunuş",
+      "etki": "Toplam puanın çarpılır: örn. 2 aşamada tek kalıp +2 alan Çift Puan ile 4, Altın Dokunuş ile 6; ödül karesiyle 4 puan alan Çift Puan ile 8, Altın Dokunuş ile 12."
+    },
+    {
+      "kart": "Kalkan / Çelme / Talihsizlik",
+      "etki": "Bu oyunun ham ödülü eksiye düşmez; Çelme −1 ve Talihsizlik −1 kartları puanı eksiye çekebilir, Kalkan bunu 0'a çeker."
+    },
+    {
+      "kart": "Hırsız / Vergi / Lanet",
+      "etki": "Genel kurallarla çalışır: Hırsız ve Vergi mini oyun puanı en yüksek olandan alır; Lanet hedefin artı puanını sıfırlar."
+    },
+    {
+      "kart": "Ters Köşe",
+      "etki": "Sıralama tersine döner: en çok puanı alanın ödülü en az puanlıya gider. Çoğu zaman çakışanlar/pasifler (0) üst grupta, tek kalanlar alt grupta olur."
+    },
+    {
+      "kart": "Diğer kartlar",
+      "etki": "Ortaklık, Takas, Takviye, Koruma, Ayna, Kart Çal ve kötü kartlar genel kurallarla (K6) çalışır. Oyun kartlara özel kural uygulamaz."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Her aşamanın seçim süresi",
+      "deger": "20 000 ms",
+      "kaynak": "packages/engine/src/games/gizli-kareler/types.ts:4"
+    },
+    {
+      "ad": "1. aşama sonucu (2. aşamaya kadar)",
+      "deger": "4 000 ms",
+      "kaynak": "packages/engine/src/games/gizli-kareler/types.ts:6"
+    },
+    {
+      "ad": "Son sonuç gösterimi",
+      "deger": "5 000 ms",
+      "kaynak": "packages/engine/src/games/gizli-kareler/types.ts:8"
+    },
+    {
+      "ad": "En uzun oyun",
+      "deger": "20 + 4 + 20 + 5 = 49 sn",
+      "kaynak": "packages/engine/src/games/gizli-kareler/types.ts:10"
+    },
+    {
+      "ad": "Izgara boyutu",
+      "deger": "2-4 oyuncu 3×3, 5-8 oyuncu 4×4",
+      "kaynak": "packages/engine/src/games/gizli-kareler/types.ts:14"
+    },
+    {
+      "ad": "Son Tamam'dan sonra kalan süre",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/games/gizli-kareler/types.ts:27"
+    },
+    {
+      "ad": "Ödül karesi ek puanı",
+      "deger": "+2",
+      "kaynak": "packages/engine/src/games/gizli-kareler/types.ts:74"
+    },
+    {
+      "ad": "Aşama puanı (tek kalan)",
+      "deger": "+1 (1. ve 2. aşama)",
+      "kaynak": "packages/engine/src/games/gizli-kareler/index.ts:108"
+    },
+    {
+      "ad": "Rakipsiz (walkover) ek puanı",
+      "deger": "+1",
+      "kaynak": "packages/engine/src/games/gizli-kareler/index.ts:112"
+    },
+    {
+      "ad": "2. aşama tek kalan puanı",
+      "deger": "+1",
+      "kaynak": "packages/engine/src/games/gizli-kareler/index.ts:127"
+    },
+    {
+      "ad": "Ödül karesi puanı",
+      "deger": "+2 (yalnız tek başına seçene)",
+      "kaynak": "packages/engine/src/games/gizli-kareler/index.ts:129"
+    },
+    {
+      "ad": "Ödül karesinin seçimi",
+      "deger": "kurulumda ctx.rng ile ızgaradan rastgele",
+      "kaynak": "packages/engine/src/games/gizli-kareler/index.ts:181"
+    },
+    {
+      "ad": "2. aşama için en az hayatta kalan",
+      "deger": "2 (aksi halde 2. aşama yok)",
+      "kaynak": "packages/engine/src/games/gizli-kareler/index.ts:109"
+    },
+    {
+      "ad": "Reddedilen durumlar",
+      "deger": "not_participant, not_started, out_of_range, closed, ended, eliminated, locked, nothing_to_lock",
+      "kaynak": "packages/engine/src/games/gizli-kareler/index.ts:194"
+    },
+    {
+      "ad": "Erken bitiş (bağlı herkes kilitledi)",
+      "deger": "bitiş = min(şimdi + 1 000 ms, özgün bitiş)",
+      "kaynak": "packages/engine/src/games/gizli-kareler/index.ts:220"
+    },
+    {
+      "ad": "Oyuncu sınırları",
+      "deger": "2 - 8, dikey",
+      "kaynak": "packages/engine/src/games/gizli-kareler/index.ts:155"
+    },
+    {
+      "ad": "Geç gelen eylem payı",
+      "deger": "yok (graceMs tanımlı değil)",
+      "kaynak": "packages/engine/src/games/gizli-kareler/index.ts:153"
+    },
+    {
+      "ad": "Sonuç animasyonu zaman çizelgesi",
+      "deger": "çakışma 1 100 ms; altın sütun 2 200 ms",
+      "kaynak": "apps/client/src/games/gizli-kareler/KareSonuc.tsx:39"
+    },
+    {
+      "ad": "Ekranın aşama geçiş saati",
+      "deger": "200 ms aralıkla yoklanır",
+      "kaynak": "apps/client/src/games/gizli-kareler/GizliKarelerScreen.tsx:139"
+    },
+    {
+      "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
+      "deger": "40 000 / 3 000 / 30 000 ms",
+      "kaynak": "apps/server/src/match.ts:40"
+    },
+    {
+      "ad": "Devam ile kapanma gecikmesi",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/protocol.ts:29"
+    }
+  ],
+  "strateji": [
+    "Oyuncu sayısı kadar kareden birini seçiyorsun: 3×3'te 9, 4×4'te 16 kare. Çok oyunculu odalarda çakışma ihtimali yüksek; kenar ve köşeler genelde daha az seçilir diye düşünen çok kişi olur, bu yüzden en 'mantıklı' kare de kalabalıklaşır.",
+    "Rakiplerin geçmiş turlardaki alışkanlıklarını izle (hep ortayı seçen ya da hep köşeyi seçen oyuncular).",
+    "2. aşamada ödül karesi var; tek başına basarsan +2 ek alırsın. Kimin hangi kareyi seçeceği bilinmediğinden, ödül karesini tahmin etmeye çalışmak yerine kimsenin seçmeyeceği bir kare bulmak daha güvenlidir.",
+    "Seçmemek puan getirmez ama çakışmayı da önler; yine de pasif kalan 2. aşamaya geçemez. Bu yüzden her zaman bir kare seç.",
+    "İki oyuncuyla oynuyorsan ve diğeri seçmezse rakipsiz kalıp 2 puan alırsın.",
+    "Tamam'a erken basmak seni kilitler ama aşamayı hızlandırır; kararından eminsen bas."
+  ],
+  "tv": "Bu oyunun özel bir TV (sahne) görünümü yoktur; büyük ekranda telefon ekranı izleyici kipinde büyütülerek gösterilir. TV'de ızgara, aşama etiketi (1. aşama / 2), süre çubuğu ve kimlerin Tamam dediği görünür; seçilen kareler aşama bitene kadar görünmez. Sonuç açılışında avatarlar karelere iner, çakışanlar söner, tek kalanlar altın sütunla yükselir; 2. aşamada ödül karesi parlama efektiyle açılır.",
+  "ekranlar": [
+    {
+      "mock": "kareler-briefing",
+      "name": "kareler-briefing",
+      "q": "mock=kareler-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Kimseyle çakışmayan karede tek başına kal! ve üç madde.",
+      "dosya": "kareler-briefing"
+    },
+    {
+      "mock": "kareler-choosing",
+      "name": "kareler-choosing-4",
+      "q": "mock=kareler-choosing&n=4",
+      "baslik": "1. aşama seçimi (3×3)",
+      "aciklama": "2-4 oyuncuda 9 kareli ızgara, Bir kare seç, Tamam.",
+      "dosya": "kareler-choosing-n-4"
+    },
+    {
+      "mock": "kareler-choosing",
+      "name": "kareler-choosing-5",
+      "q": "mock=kareler-choosing&n=5&chosen=0",
+      "baslik": "1. aşama seçimi (4×4)",
+      "aciklama": "5-8 oyuncuda 16 kareli ızgara; Tamam pasif; Seçmezsen pasif kalırsın.",
+      "dosya": "kareler-choosing-n-5-chosen-0"
+    },
+    {
+      "mock": "kareler-locked",
+      "name": "kareler-locked-5",
+      "q": "mock=kareler-locked&n=5",
+      "baslik": "Kilitlendi",
+      "aciklama": "Seçimin kesinleşti; diğerleri bekleniyor, k/n hazır.",
+      "dosya": "kareler-locked-n-5"
+    },
+    {
+      "mock": "kareler-reveal",
+      "name": "kareler-reveal-5",
+      "q": "mock=kareler-reveal&n=5",
+      "baslik": "1. aşama sonucu",
+      "aciklama": "Çakışanlar kırmızı, tek kalanlar altın sütunla +1; Tek kalanlar 2. aşamaya geçti.",
+      "dosya": "kareler-reveal-n-5"
+    },
+    {
+      "mock": "kareler-reveal-walkover",
+      "name": "kareler-reveal-walkover-5",
+      "q": "mock=kareler-reveal-walkover&n=5",
+      "baslik": "Rakipsiz kalan",
+      "aciklama": "Tek canlı kaldı: Rakipsiz kaldın +2 / İkinci aşama rakipsiz: bir +1 daha!",
+      "dosya": "kareler-reveal-walkover-n-5"
+    },
+    {
+      "mock": "kareler-choosing2-out",
+      "name": "kareler-choosing2-out-6",
+      "q": "mock=kareler-choosing2-out&n=6",
+      "baslik": "2. aşama (elenen)",
+      "aciklama": "Elendin, Kalanlar 2. aşamada yarışıyor; ızgara pasif, Yarışanlar avatarları.",
+      "dosya": "kareler-choosing2-out-n-6"
+    },
+    {
+      "mock": "kareler-final-bonus",
+      "name": "kareler-final-bonus-5",
+      "q": "mock=kareler-final-bonus&n=5",
+      "baslik": "Ödül karesi bulundu",
+      "aciklama": "Ödül karesi parlıyor; tek başına basan Ödül karesi! +3.",
+      "dosya": "kareler-final-bonus-n-5"
+    },
+    {
+      "mock": "kareler-final-bonus-clash",
+      "name": "kareler-final-bonus-clash-5",
+      "q": "mock=kareler-final-bonus-clash&n=5",
+      "baslik": "Ödül karesinde çakışma",
+      "aciklama": "Ödül karesinde çakışma: ödül yok.",
+      "dosya": "kareler-final-bonus-clash-n-5"
+    }
+  ],
+  "bilinenSorunlar": [
+    "KURALLAR.md §14 cevap 9 ('1. ve 2. aşamada da tek kalırlarsa +1 genel puana eklenir') ve cevap 11'in özeti net değildir; kodda her aşamada tek kalan +1 alır, yani iki aşamada tek kalan 2 puan, rakipsiz kalan toplam 2, ödül karesiyle en çok 4 puan olur.",
+    "KURALLAR.md özel durum maddesi 'İlk aşamada bütün oyuncular aynı kareyi seçerse sonuç hemen açıklanır ve oyun biter' der; kodda sonuç seçim süresi bitince açılır, 5 sn gösterilir ve ancak sonra oyun biter (hemen değildir).",
+    "KURALLAR.md cevap 7 ('aynı kareyi seçenler o mini oyunda elenir') kodda yalnız o aşamada elenme olarak uygulanır; 1. aşamada çakışanlar 2. aşamaya geçemez ama zaten 0 puanla kalır.",
+    "Erken bitiş yalnız seçim yapmış (ve dolayısıyla Tamam diyebilen) bağlı oyuncuları bekler: bağlı olup hiç seçmemiş bir oyuncu aşama süresinin tamamını bekletir. KURALLAR.md genel kuralı 'bağlı bütün katılımcılar gönderdiğinde' der; hiç seçim yapmayanın nasıl sayılacağı yazılı değildir.",
+    "index.ts içindeki parseAction üst sınırı 15'tir (4×4 için), 3×3 ızgarada 9 ve üstü hücre reduce içinde out_of_range olarak reddedilir; yani biçim denetimi ve aralık denetimi iki katmanlıdır.",
+    "Ödül karesi KURALLAR.md O10'a göre yalnız 2. aşamada geçerlidir. Test 'ödül karesi 1. aşamada geçerli değildir' bunu doğrular; 1. aşamada o kareye basanlar yalnız normal +1 alır."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-19: Gizli Kareler motoru (Tamam kilidi, erken bitiş) ve istemci ekranları ile sunucu testi.",
+    "2026-10-25: İyimser arayüz yardımcısı; seçim ve kilitlerde anlık geri bildirim.",
+    "2026-10-27: O10 ödül karesi kuralı eklendi (2. aşamada gizli kare, tek başına seçene +2, motor, test, istemci, mock, ui-check girdileri).",
+    "2026-10-27: Oyun kabuk saatine, Status ve hazır noktalarına taşındı; tur özeti ve kayıt defteri; sonuç ekranında Devam ile erken geçiş; sahne (TV) rolü.",
+    "2026-10-27: Renk körlüğü modu: kazanan yıldızı ve kare işaretleri.",
+    "2026-10-28: Lobi ton özelliği kaldırıldı.",
+    "2026-10-28: Kart arayüzü güncellemesi sırasında Gizli Kareler puan metni kontrastı düzeltildi."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/gizli-kareler/index.ts",
+    "packages/engine/src/games/gizli-kareler/types.ts",
+    "packages/engine/src/games/gizli-kareler/gizli-kareler.test.ts",
+    "packages/engine/src/games/gizli-kareler/summary.ts",
+    "docs/KURALLAR.md#14-gizli-kareler",
+    "docs/ERKEN-BITIS.md",
+    "apps/client/src/games/gizli-kareler/GizliKarelerScreen.tsx",
+    "apps/client/src/games/gizli-kareler/KareSonuc.tsx",
+    "apps/client/src/games/gizli-kareler/view.ts",
+    "apps/server/src/gizli-kareler.test.ts",
+    "scripts/ui-check.mjs"
+  ]
+}

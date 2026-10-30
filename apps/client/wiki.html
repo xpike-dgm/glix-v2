@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#060816" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>GLIX Oyun Ansiklopedisi</title>
+    <link rel="icon" type="image/png" sizes="64x64" href="/icons/favicon-64.png" />
+  </head>
+  <body>
+    <div class="yukleniyor-tam" id="yukleniyor">Ansiklopedi açılıyor…</div>
+<div class="uyg" id="uyg" hidden>
+  <aside class="raf" aria-label="Oyunlar">
+    <div class="raf__bas">
+      <button class="logo" id="logo" type="button" aria-label="Genel bakış"><b>GLIX</b><span>Oyun ansiklopedisi</span></button>
+      <input class="ara" id="ara" type="search" placeholder="Oyun ara…" autocomplete="off">
+      <div class="ciplar" id="kategoriler"></div>
+    </div>
+    <nav class="liste" id="liste"></nav>
+  </aside>
+
+  <main class="dosya" id="dosya"></main>
+
+  <aside class="gor" id="gor" aria-label="Ekran görüntüleyici">
+    <div class="gor__bas">
+      <div><b id="gor-baslik">Ekranlar</b><small id="gor-alt">Bir oyun seç</small></div>
+      <button class="isaret-dug" id="isaret" type="button" aria-pressed="false" title="Ekranın üstüne kutu çizip not bırak">✎ İşaretle</button>
+    </div>
+    <div class="sahne"><div class="telefon" id="telefon"><div class="ekran" id="ekran"><div class="bos">Ekran görüntüsü yok</div></div></div></div>
+    <div class="serit" id="serit"></div>
+    <div class="gor__alt" id="gor-aciklama"></div>
+  </aside>
+</div>
+
+    <script type="module" src="/src/wiki/main.ts"></script>
+  </body>
+</html>

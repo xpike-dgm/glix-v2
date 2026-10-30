@@ -1,0 +1,418 @@
+{
+  "id": "ortalamanin-yarisi",
+  "ad": "Ortalamaya En Yakın",
+  "slogan": "Gizli sayı seç; hedef herkesin ortalamasının ½'si, ⅔'si, ¾'ü: üç turda en yakın olan kazanır.",
+  "kategori": "Strateji",
+  "etiketler": ["gizli seçim", "3 tur", "sayı tahmini", "eşzamanlı", "güzellik yarışması"],
+  "oyuncu": {
+    "min": 3,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 47,
+    "not": "3 tur: her turda 10 sn seçim; 1. ve 2. turdan sonra 5 sn sonuç, son turdan sonra 7 sn sonuç. Toplam 3×10 + 2×5 + 7 = 47 sn. Her turda bağlı herkes Tamam derse o tur 1 sn sonra biter ve sonraki turlar o kadar öne çekilir. Oyuncu sayısı süreyi değiştirmez. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasında sonuç ekranı (en çok 30 sn) vardır."
+  },
+  "ozet": "Oyun 3 kısa turdur. Her turda herkes aynı anda gizlice 0 ile 100 arasında bir tam sayı seçer. Hedef, o turun seçimlerinin ortalaması çarpı bir çarpandır (1. tur ½, 2. tur ⅔, 3. tur ¾). Hedefe en yakın seçim tur puanını alır. Tur puanları üç tur boyunca toplanır ve oyun sonunda toplamı en yüksek +2, ikinci en yüksek +1 genel skor alır.",
+  "akis": [
+    {
+      "ad": "Anlatım",
+      "sureSn": 40,
+      "kim": "herkes",
+      "aciklama": "Amaç: Ortalamanın katını tahmin et: 3 tur, her turda hedef değişir! Üç madde: Her tur gizlice 0 ile 100 arasında bir sayı seç; Hedef sırayla ortalamanın ½'si, ⅔'si, ¾'ü olur; Hedefe yakınlık puanları toplanır, toplamı en yüksek +2, ikinci +1. Bağlı bütün katılımcılar hazır olunca ya da 40 sn dolunca biter. Kart bu ekranda oynanır.",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Geri sayım",
+      "sureSn": 3,
+      "kim": "herkes",
+      "aciklama": "3 saniyelik geri sayım; kartlar duyurulur (Ayna ve Koruma hariç).",
+      "gizli": "Ayna ve Koruma gizli kalır."
+    },
+    {
+      "ad": "Tur 1, 2, 3 seçim aşaması",
+      "sureSn": 10,
+      "kim": "herkes (katılımcılar seçer)",
+      "aciklama": "Her turda üstte süre çubuğu, Tur N/3 ve Hedef: ½ · ortalamanın yarısı (2. tur ⅔ · ortalamanın üçte ikisi, 3. tur ¾ · ortalamanın dörtte üçü) görünür. 2. turdan itibaren Önceki tur · ortalama X · hedef Y satırı çıkar. Ortada büyük bir kapsülde seçtiğin gizli sayı (seçmediysen ?), altında ipucu: Seçmezsen sana rastgele bir sayı verilir; seçtikten sonra Değiştirebilir ya da Tamam diyebilirsin; Tamam'dan sonra Sayın kesinleşti. Sayıyı bir kaydırma çubuğu (her yere dokun, sürükle) ve −10 / −1 / +1 / +10 düğmeleri (basılı tutunca tekrar eder) belirler; çubuk ilk dokunuşta 30'dan başlar. Tamam düğmesi sayı seçilmeden pasiftir. Her oyuncunun bir '?' kapsülü sıralanır; Tamam diyenin kapsülünde ✓ olur. Bağlı herkes Tamam derse tur 1 sn sonra biter.",
+      "gizli": "Seçimler, ortalama ve hedef sayısı tur süresi dolana kadar kimseye gösterilmez. Kişi yalnız o turdaki kendi seçimini görür; göndermeyene sunucunun atayacağı rastgele sayı tur açılana kadar kendisine bile gösterilmez. Herkese açık: kimlerin Tamam dediği, önceki turların ortalama ve hedefi, çarpan."
+    },
+    {
+      "ad": "Tur sonucu (açılış)",
+      "sureSn": 5,
+      "kim": "herkes",
+      "aciklama": "Seçim süresi bitince (ya da son Tamam'dan 1 sn sonra) animasyonlu açılış: 0'da başlayan sayı doğrusunda önce seçimler (1. sn'ye kadar başlıkta ?), 1,0 sn'de Ortalama çizgisi ve değeri, 2,1 sn'de hedef ışını ve Hedef · ... değeri, 3,1 sn'den itibaren oyuncu kapsülleri hedefe uzaklık sırasıyla (her biri 320 ms arayla) hedefe bağlanır. En yakın kapsüllere altın, ikinci dereceye mavi ışık. Altta sıralı liste: derece, avatar, ad, seçim, ±uzaklık, +puan. Başlık sonunda Tur puanın +N ya da Bu sefer puan yok ve Toplam: N puan. Alt yazı Sonraki tur: hedef ... 1. ve 2. turdan sonra bu ekran 5 sn kalır, sonra sonraki tur başlar.",
+      "gizli": "Bütün seçimler (göndermeyene atanan sayılar dahil, normal seçim gibi), ortalama, hedef, uzaklıklar, dereceler ve tur puanları herkese açılır."
+    },
+    {
+      "ad": "Son tur sonucu",
+      "sureSn": 7,
+      "kim": "herkes",
+      "aciklama": "3. turun sonucu 7 sn kalır. Başlıkta bu kez genel skora eklenen puan gösterilir (Genel skora eklenen +2 / +1 ya da Genel skor puan yok) ve 3 turun toplamı: N puan. Bu 7 saniye bitince oyun biter.",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Sonuç ekranı",
+      "sureSn": 30,
+      "kim": "herkes",
+      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 30 sn sonra kapanır.",
+      "gizli": "Yok."
+    }
+  ],
+  "kurallar": [
+    "3 ile 8 oyuncu katılır (2 oyuncuyla oynanmaz). Oyun 3 turdur.",
+    "Sayı aralığı 0-100, yalnız tam sayı. Ondalık, aralık dışı sayılar geçersizdir (komut biçim hatası olarak reddedilir).",
+    "Her turun seçim süresi 10 saniyedir. Tur sonucu 1. ve 2. turdan sonra 5 sn, 3. turdan sonra 7 sn ekranda kalır. Toplam: 47 sn.",
+    "Hedef, o turun ortalaması (bütün katılımcıların seçimlerinin aritmetik ortalaması; göndermeyene atanan sayı dahil) çarpı çarpandır. Çarpanlar sırayla: 1. tur ½, 2. tur ⅔, 3. tur ¾. Çarpan her turun başında herkese gösterilir.",
+    "Seçimler gizlidir ve her tur yeniden başlar: önceki turun seçimi ve kilidi sonraki ture taşınmaz.",
+    "Seçim, tur süresi bitene ya da Tamam'a kadar değiştirilebilir; son seçim geçerlidir. Aynı sayıyı tekrar göndermek durumu değiştirmez.",
+    "Tamam (lock) seçimi kesinleştirir. Seçim yapmadan kilitlenemez (nothing_to_lock). Kilitlendikten sonra seçim ve ikinci kilit reddedilir (locked).",
+    "Erken bitiş (her tur için ayrı): bağlı katılımcıların hepsi o turda Tamam derse tur son Tamam'dan 1 sn sonra biter; sonuç gösterimi başlar ve sonraki turlar aynı süre kadar öne çekilir. Bağlantısı kopan oyuncu beklenmez. Bağlı bir oyuncu hiç seçim yapmadıysa kilitleyemez ve tur süresinin tamamı beklenir.",
+    "Seçim göndermeyen (ya da süre bitene kadar seçmeyen) oyuncuya sunucu o tur için 0-100 arası rastgele bir tam sayı atar. Sayı oyun başında her tur için ayrı çekilir (gizli); tur açılana kadar hiçbir görünümde yoktur ve sonuçta normal seçim gibi gösterilir. Hiç kimse göndermezse herkese atanır.",
+    "Uzaklık = |seçim − hedef|. Karşılaştırma tam sayı aritmetiğiyle yapılır (ondalık hata yok); hedefin altı ve üstündeki aynı uzaklık gerçekten eşittir.",
+    "Tur puanı: en yakın tek kişiyse +2; ardından ikinci en yakın derecedekilerin (eşitse hepsi) her biri +1. En yakınlar eşitse hepsi +1 alır ve ikinci derece ödülü verilmez (+2 de verilmez). Üçüncü ve sonraki derecelerde 0.",
+    "Tur puanları mini oyun puanına üç tur boyunca toplanır; tur başına genel skor yazılmaz.",
+    "Genel skor yalnız oyun sonunda bir kez, 3 turun mini toplamına göre verilir: en yüksek toplam +2, ikinci en yüksek toplam +1. En yüksek toplam eşitse paylaşanların hepsi +1 alır (+2 verilmez ve ikinci ödül olmaz). İkinci sırada eşitlik varsa paylaşanların hepsi +1 alır. Negatif puan yoktur. Genel skora en çok +2 gider.",
+    "Tur süresi dolduğunda ve sonuç gösterilirken gelen seçim ve kilit reddedilir (ended). Bu oyunda geç gelen eylem payı yoktur.",
+    "Katılımcı olmayan seçim ya da kilit yapamaz (not_participant). Bağlantısı kopan oyuncu katılımcı kalır: göndermediyse ona sayı atanır ve puanlamaya girer.",
+    "2. turdan itibaren seçim ekranında bir önceki turun ortalaması ve hedefi görünür."
+  ],
+  "puanlama": {
+    "ozet": "Her turda hedefe en yakın tek kişi +2, ikinci yakın +1 (en yakınlar eşitse hepsi +1). Tur puanları toplanır; toplamı en yüksek +2, ikinci +1 genel skor alır (eşitlikte hepsi +1).",
+    "kalemler": [
+      {
+        "olay": "Turda en yakın tek kişi",
+        "puan": "+2 (tur puanı)",
+        "not": "Hedefe |seçim − hedef| en küçük olan tek oyuncu."
+      },
+      {
+        "olay": "Turda ikinci en yakın derece",
+        "puan": "+1 (tur puanı)",
+        "not": "Tek en yakın varsa; ikinci derecede eşit olanların hepsi +1."
+      },
+      {
+        "olay": "Turda en yakınlar eşit",
+        "puan": "+1 (tur puanı, hepsine)",
+        "not": "+2 ve ikinci derece ödülü verilmez."
+      },
+      {
+        "olay": "Turda diğer dereceler",
+        "puan": "0",
+        "not": ""
+      },
+      {
+        "olay": "Oyun sonunda toplamı en yüksek tek oyuncu",
+        "puan": "+2 (genel skor)",
+        "not": "3 turun tur puanları toplamı."
+      },
+      {
+        "olay": "Oyun sonunda ikinci en yüksek toplam",
+        "puan": "+1 (genel skor)",
+        "not": "Eşit olanların hepsi +1."
+      },
+      {
+        "olay": "Oyun sonunda en yüksek toplam eşit",
+        "puan": "+1 (genel skor, hepsine)",
+        "not": "+2 ve ikinci ödül verilmez."
+      }
+    ],
+    "ornek": "4 oyuncu, 1. tur (çarpan ½). Seçimler: Ali 20, Bora 30, Cem 10, Deniz 40. Ortalama 25, hedef 12,5. Uzaklıklar: Ali 7,5; Bora 17,5; Cem 2,5; Deniz 27,5. Cem +2, Ali +1, diğerleri 0. 2. tur (çarpan ⅔): Ali +2, Bora +1. 3. tur (çarpan ¾): Cem +1, Deniz +1 (en yakınlar eşit: ikisi +1). Toplamlar: Ali 1+2+0 = 3, Bora 0+1+0 = 1, Cem 2+0+1 = 3, Deniz 0+0+1 = 1. En yüksek toplam eşit (Ali ve Cem 3): ikisi +1 genel skor alır, +2 ve ikinci ödül verilmez; Bora ve Deniz 0.",
+    "beraberlik": "Tur içi: en yakınlar eşitse hepsi +1 (ikinci ödül yok); ikinci derecede eşitlikte hepsi +1. Oyun sonu: en yüksek toplam eşitse paylaşanların hepsi +1 alır, ikinci sıra ödülü olmaz; ikinci sırada eşitlik varsa hepsi +1."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Seçim göndermeyen oyuncu",
+      "aciklama": "Sunucu o tur için 0-100 arası rastgele bir sayı atar; sonuçta normal seçim gibi görünür, ortalamayı ve hedefi etkiler ve puanlamaya girer. Her tur ayrı bir sayı çekilir. Atanan sayı tur açılana kadar kendisine bile gösterilmez."
+    },
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Katılımcı olarak kalır. Seçtiyse seçimi geçerlidir; seçmediyse sayı atanır. Erken bitiş değerlendirmesinde beklenmez. Kopukken seçim gönderemez ama süre içinde dönüp gönderebilir."
+    },
+    {
+      "baslik": "Hiç seçim yapmayan bağlı oyuncu",
+      "aciklama": "Tamam diyemediği için, diğerleri Tamam dese de tur erken bitmez; 10 sn beklenir."
+    },
+    {
+      "baslik": "Erken bitişte sonraki turlar",
+      "aciklama": "Bir turun erken bitmesi o turun sonuç gösterimini de öne alır; sonraki turların başlangıç ve bitişleri aynı süre kadar kayar. Her tur için ayrı uygulanır, erken bitiş 1. turda olabilir ve 2. ve 3. turlar yine tam süre ile oynanır."
+    },
+    {
+      "baslik": "Tur sonucu gösterilirken",
+      "aciklama": "Sonuç gösterimi sırasında (seçim süresi bitti, sonraki tur henüz başlamadı) gelen seçim ve kilit reddedilir. Geç gelen eylem payı yoktur."
+    },
+    {
+      "baslik": "İzleyici",
+      "aciklama": "Seçici yoktur; kapsülde ?, Herkes gizlice seçiyor ve Sonuç süre bitince açılır yazılır, hazır sayacı görünür. Sonuç animasyonunu izler; kişisel tur puanı ve genel skor satırı çıkmaz, başlık Ortalama ve Hedef değerlerinde kalır. Puan almaz."
+    },
+    {
+      "baslik": "Geç bağlanan oyuncu",
+      "aciklama": "Sonuç animasyonu seçim süresinin bitişinden sayılır (en çok 6 sn atlama): geç açılan ekran animasyona kaldığı yerden devam eder."
+    },
+    {
+      "baslik": "3 ve 8 oyuncu",
+      "aciklama": "Kurallar aynıdır. 3 oyuncuda ortalama üç kişiye bağlıdır; bir tek aşırı sayı ortalamayı çok oynatır. 8 oyuncuda ortalama daha kararlıdır; 3. derece ve ötesi daha sık sıfır alır."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Kartların kullandığı puan",
+      "etki": "Bu oyunda mini oyun puanı 3 turun tur puanı toplamıdır (0-6); genel skora giden ham ödül ise oyun sonu dönüşümünden gelir (+2, +1 ya da 0). Kartlar yalnız bu ham ödülleri (awards) değiştirir; birinci ve sonuncu tanımı ise mini oyun puanına (tur toplamına) göredir."
+    },
+    {
+      "kart": "Kendine Güven",
+      "etki": "Birinci olursan +2, olamazsan −1. Birinci, 3 turun tur puanı toplamı en yüksek olandır (eşitse hepsi birincidir)."
+    },
+    {
+      "kart": "Sigorta",
+      "etki": "Sonuncu (tur toplamı en düşük) olursan +1. Herkesin toplamı eşitse kimse sonuncu değildir."
+    },
+    {
+      "kart": "Tahmin",
+      "etki": "Seçtiğin oyuncu tur toplamında birinci olursa +2."
+    },
+    {
+      "kart": "Çift Puan / Altın Dokunuş",
+      "etki": "Oyun sonu genel skor ödülünü çarpar: +2 alan Çift Puan ile +4, Altın Dokunuş ile +6; +1 alan +2 ya da +3 olur. Turlarda verilen tur puanları çarpılmaz, çünkü kartlar yalnız oyun sonu ödülünü etkiler."
+    },
+    {
+      "kart": "Kalkan / Çelme / Talihsizlik",
+      "etki": "Bu oyunun ham ödülü eksiye düşmez; Çelme −1 ve Talihsizlik −1 gibi kartlar eksiye düşürebilir, Kalkan bunu 0'a çeker."
+    },
+    {
+      "kart": "Ters Köşe",
+      "etki": "Sıralama (3 tur toplamına göre) tersine döner: +2, +1, 0 ödülleri aynadaki sıraya göre yeniden dağıtılır; toplamı en yüksek olanın +2'si en düşük toplamlıya gider. Eşit toplamlar bir grup sayılır, ödüller grup içinde bölünür."
+    },
+    {
+      "kart": "Hırsız / Vergi / Lanet / Ortaklık / Takas",
+      "etki": "Genel kurallarla (K6) çalışır ve ham ödüller (+2/+1/0) üzerinde işler."
+    },
+    {
+      "kart": "Diğer kartlar",
+      "etki": "Takviye, Koruma, Ayna, Kart Çal ve kötü kartlar genel kurallarla çalışır. Oyun kartlara özel kural uygulamaz."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Tur sayısı",
+      "deger": "3",
+      "kaynak": "packages/engine/src/games/ortalamanin-yarisi/types.ts:4"
+    },
+    {
+      "ad": "Hedef çarpanları",
+      "deger": "1/2, 2/3, 3/4 (sırasıyla)",
+      "kaynak": "packages/engine/src/games/ortalamanin-yarisi/types.ts:9"
+    },
+    {
+      "ad": "Seçim süresi (her tur)",
+      "deger": "10 000 ms",
+      "kaynak": "packages/engine/src/games/ortalamanin-yarisi/types.ts:16"
+    },
+    {
+      "ad": "Tur sonucu gösterimi (1. ve 2. tur)",
+      "deger": "5 000 ms",
+      "kaynak": "packages/engine/src/games/ortalamanin-yarisi/types.ts:18"
+    },
+    {
+      "ad": "Son tur sonucu gösterimi",
+      "deger": "7 000 ms",
+      "kaynak": "packages/engine/src/games/ortalamanin-yarisi/types.ts:20"
+    },
+    {
+      "ad": "Toplam süre",
+      "deger": "3×10 000 + 2×5 000 + 7 000 = 47 000 ms",
+      "kaynak": "packages/engine/src/games/ortalamanin-yarisi/types.ts:22"
+    },
+    {
+      "ad": "Sayı aralığı",
+      "deger": "0 - 100 (tam sayı)",
+      "kaynak": "packages/engine/src/games/ortalamanin-yarisi/types.ts:34"
+    },
+    {
+      "ad": "Son Tamam'dan sonra kalan süre",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/games/ortalamanin-yarisi/types.ts:41"
+    },
+    {
+      "ad": "Göndermeyene rastgele sayı (her tur ayrı, kurulumda)",
+      "deger": "rng.int(101)",
+      "kaynak": "packages/engine/src/games/ortalamanin-yarisi/index.ts:175"
+    },
+    {
+      "ad": "Uzaklık anahtarı (tam sayı aritmetiği)",
+      "deger": "|den·n·seçim − num·toplam|",
+      "kaynak": "packages/engine/src/games/ortalamanin-yarisi/index.ts:67"
+    },
+    {
+      "ad": "Tur puanı kuralı (+2 / +1 / eşitte +1)",
+      "deger": "tek en yakın +2 ve ikinci derece +1; eşit en yakın hepsi +1",
+      "kaynak": "packages/engine/src/games/ortalamanin-yarisi/index.ts:89"
+    },
+    {
+      "ad": "Oyun sonu genel skor dönüşümü",
+      "deger": "rankAwards: tek lider +2, sıradaki +1; lider eşit hepsi +1",
+      "kaynak": "packages/engine/src/games/scoring.ts:10"
+    },
+    {
+      "ad": "Seçim reddi nedenleri",
+      "deger": "ended (süre/sonuç gösterimi), locked, nothing_to_lock, out_of_range, not_participant, not_started",
+      "kaynak": "packages/engine/src/games/ortalamanin-yarisi/index.ts:194"
+    },
+    {
+      "ad": "Erken bitiş (bağlı herkes kilitledi)",
+      "deger": "endsAt = min(endsAt, şimdi + 1 000 ms); sonraki turlar aynı kadar kayar",
+      "kaynak": "packages/engine/src/games/ortalamanin-yarisi/index.ts:219"
+    },
+    {
+      "ad": "Oyuncu sınırları",
+      "deger": "3 - 8, dikey",
+      "kaynak": "packages/engine/src/games/ortalamanin-yarisi/index.ts:146"
+    },
+    {
+      "ad": "Geç gelen eylem payı",
+      "deger": "yok (graceMs tanımlı değil)",
+      "kaynak": "packages/engine/src/games/ortalamanin-yarisi/index.ts:144"
+    },
+    {
+      "ad": "Sayı seçici başlangıç değeri",
+      "deger": "30",
+      "kaynak": "apps/client/src/games/ortalamanin-yarisi/OrtalamaninYarisiScreen.tsx:143"
+    },
+    {
+      "ad": "Sayı seçici adımları / basılı tutma",
+      "deger": "−10, −1, +1, +10; 380 ms sonra 75 ms'de bir",
+      "kaynak": "apps/client/src/ui/NumberPicker.tsx:23"
+    },
+    {
+      "ad": "Seçimin sunucuya gönderilme aralığı (sürüklerken)",
+      "deger": "en çok ~7/sn (140 ms)",
+      "kaynak": "apps/client/src/ui/numberPicker.ts:28"
+    },
+    {
+      "ad": "Sonuç animasyonu zaman çizelgesi",
+      "deger": "ortalama 1 000 ms; hedef 2 100 ms; bağlanma 3 100 ms (+320 ms/oyuncu)",
+      "kaynak": "apps/client/src/games/ortalamanin-yarisi/Sonuc.tsx:46"
+    },
+    {
+      "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
+      "deger": "40 000 / 3 000 / 30 000 ms",
+      "kaynak": "apps/server/src/match.ts:40"
+    },
+    {
+      "ad": "Devam ile kapanma gecikmesi",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/protocol.ts:29"
+    }
+  ],
+  "strateji": [
+    "Herkes 50 seçse 1. tur hedefi 25 olur; bu yüzden akıllı tahminler genelde ortalamanın yarısını hesaba katan düşük sayılardır. Başkalarının da aynısını düşündüğünü hesaba kat.",
+    "Hedef her tur değişir (½, ⅔, ¾). Çarpan büyüdükçe hedef ortalamaya yaklaşır; 3. turda hedef ortalamanın dörtte üçüdür.",
+    "2. turdan itibaren önceki turun ortalaması ve hedefi ekranda. Oda nasıl düşündüyse bir sonraki turda onu bir adım ileri taşıyabilirsin.",
+    "Seçmezsen sunucu sana 0-100 arası rastgele bir sayı atar ve bu sayı ortalamayı da etkiler; kendi sayını seçmek bu rastgeleliği ortadan kaldırır.",
+    "Tamam seçimini kilitler; erken bitişi hızlandırır ama değiştirme hakkını bırakırsın. Kararından eminsen bas.",
+    "Genel skora yalnız 3 turun toplamında ilk iki sıradaki oyuncular puan alır; her turda +1 toplamak bile ikincilik getirebilir. Tur başına +2 peşinde koşmak şart değildir."
+  ],
+  "tv": "Bu oyunun özel bir TV (sahne) görünümü yoktur; büyük ekranda telefon ekranı izleyici kipinde büyütülerek gösterilir. TV'de tur numarası, hedef çarpanı, süre çubuğu, kimlerin Tamam dediği (✓) ve önceki tur bilgisi; sonuçta sayı doğrusu, ortalama çizgisi, hedef ışını, bağlanan kapsüller ve sıralı liste (derece, ad, seçim, uzaklık, puan) görünür. Seçimler tur süresi dolana kadar TV'de de görünmez.",
+  "ekranlar": [
+    {
+      "mock": "ortalama-briefing",
+      "name": "ortalama-briefing",
+      "q": "mock=ortalama-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Ortalamanın katını tahmin et: 3 tur, her turda hedef değişir! ve üç madde.",
+      "dosya": "ortalama-briefing"
+    },
+    {
+      "mock": "ortalama-choosing",
+      "name": "ortalama-choosing-5",
+      "q": "mock=ortalama-choosing&n=5",
+      "baslik": "1. tur seçim",
+      "aciklama": "Tur 1/3, Hedef ½ · ortalamanın yarısı, gizli sayı kapsülü, kaydırma çubuğu ve ±1/±10 düğmeleri, Tamam.",
+      "dosya": "ortalama-choosing-n-5"
+    },
+    {
+      "mock": "ortalama-choosing",
+      "name": "ortalama-choosing-r2-5",
+      "q": "mock=ortalama-choosing&n=5&tur=2",
+      "baslik": "2. tur seçim",
+      "aciklama": "Tur 2/3, Hedef ⅔ · ortalamanın üçte ikisi; Önceki tur · ortalama ... · hedef ... satırı.",
+      "dosya": "ortalama-choosing-n-5-tur-2"
+    },
+    {
+      "mock": "ortalama-locked",
+      "name": "ortalama-locked-5",
+      "q": "mock=ortalama-locked&n=5",
+      "baslik": "Kilitlendi",
+      "aciklama": "Sayın kesinleşti; hazır olanların kapsülünde ✓.",
+      "dosya": "ortalama-locked-n-5"
+    },
+    {
+      "mock": "ortalama-reveal",
+      "name": "ortalama-reveal-mid",
+      "q": "mock=ortalama-reveal&n=5",
+      "baslik": "Sonuç (animasyon ortası)",
+      "aciklama": "Sayılar doğrusu üzerinde ortalama çizgisi ve hedef ışını ortaya çıkıyor.",
+      "dosya": "ortalama-reveal-n-5"
+    },
+    {
+      "mock": "ortalama-reveal",
+      "name": "ortalama-reveal-5",
+      "q": "mock=ortalama-reveal&n=5",
+      "baslik": "1. tur sonucu",
+      "aciklama": "Kapsüller hedefe bağlanır, altın ve mavi ışık; sıralı liste ve tur puanı.",
+      "dosya": "ortalama-reveal-n-5"
+    },
+    {
+      "mock": "ortalama-reveal-tie",
+      "name": "ortalama-reveal-tie-8",
+      "q": "mock=ortalama-reveal-tie&n=8",
+      "baslik": "Eşit en yakınlar",
+      "aciklama": "En yakınlar eşit: hepsi +1, ikinci ödül yok.",
+      "dosya": "ortalama-reveal-tie-n-8"
+    },
+    {
+      "mock": "ortalama-reveal",
+      "name": "ortalama-reveal-r3-8",
+      "q": "mock=ortalama-reveal&n=8&tur=3",
+      "baslik": "Son tur sonucu",
+      "aciklama": "3. tur, 8 oyuncu; başlıkta genel skora eklenen puan ve 3 turun toplamı.",
+      "dosya": "ortalama-reveal-n-8-tur-3"
+    },
+    {
+      "mock": "ortalama-spectator",
+      "name": "ortalama-spectator",
+      "q": "mock=ortalama-spectator&n=5",
+      "baslik": "İzleyici",
+      "aciklama": "Seçici yok; ? kapsülü ve Herkes gizlice seçiyor, hazır sayacı.",
+      "dosya": "ortalama-spectator-n-5"
+    }
+  ],
+  "bilinenSorunlar": [
+    "KURALLAR.md §13'ün gövdesi (cevap 3: hedef ortalamanın yarısı, cevap 5: tek aşama 20 sn, cevap 6: rastgele sayı) O5 değişikliğiyle yer değiştirmiştir: kod 3 tur, 10 sn, çarpan ½ ⅔ ¾ ile çalışır. Rastgele sayı atama kuralı korunmuştur.",
+    "KURALLAR.md §13 cevap 8 ve özel durum maddesi (en yakınlar eşitse hepsi +1, ikinci yakın puanı olmaz) kodda hem tur puanı hem oyun sonu dönüşümü için uygulanır; yalnız KURALLAR.md ikinci derecedeki eşitliği \"aynı ödülü paylaşır\" diye yazar, kodda bu hepsinin +1 alması anlamındadır.",
+    "Tur puanı kuralında ikinci derece yalnız tek en yakın varsa verilir; ikinci derecede eşitlik varsa hepsi +1 alır (3. dereceden sonrası 0).",
+    "Oyun sonu genel skor dönüşümü yalnız son tur açıldığında publicView.final olarak görünür; tur sonuç ekranları boyunca genel skor yazılmaz. Kartlar ise oyun sonunda ham ödüller üzerine uygulanır, tur puanlarına değil.",
+    "Briefing, 'Ortalamanın katını tahmin et' diye yazar ('kat' sözcüğü çarpan için kullanılır); ekranda hedefin adı ortalamanın yarısı / üçte ikisi / dörtte üçü olarak yazılır.",
+    "Bağlı bir oyuncu hiç seçim yapmazsa kilitleyemeyeceği için erken bitiş engellenir (kod: bağlı ve kilitlememiş herkes beklenir); bu davranış KURALLAR.md'de açıkça yazılı değildir."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-27: O5 değişikliği: oyun 3 tura, 10 sn'lik tur süresine ve ½ ⅔ ¾ çarpanlarına çevrildi; tur puanları toplanıp genel skor oyun sonunda tek sefer verilir (motor, test, istemci, sunucu testleri, mock).",
+    "2026-10-27: Sonuç listesi kısa telefonlarda satırlar üst üste binmek yerine kaydırılır hale geldi.",
+    "2026-10-27: Oyun kabuk saatine, Status ve hazır noktalarına taşındı; tur özeti ve kayıt defteri; sonuç ekranında Devam ile erken geçiş; sahne (TV) rolü.",
+    "2026-10-27: Renk körlüğü modu: kazanan yıldızı ve işaretler eklendi (&cb=1 ekranları).",
+    "2026-10-28: Lobi ton özelliği kaldırıldı.",
+    "2026-10-29: Oyun ekranları tutarlı durum, tek satır başlık ve okunur sonuçlar için güncellendi."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/ortalamanin-yarisi/index.ts",
+    "packages/engine/src/games/ortalamanin-yarisi/types.ts",
+    "packages/engine/src/games/ortalamanin-yarisi/ortalamanin-yarisi.test.ts",
+    "packages/engine/src/games/ortalamanin-yarisi/summary.ts",
+    "packages/engine/src/games/scoring.ts",
+    "docs/KURALLAR.md#13-ortalamaya-en-yakın",
+    "docs/ERKEN-BITIS.md",
+    "apps/client/src/games/ortalamanin-yarisi/OrtalamaninYarisiScreen.tsx",
+    "apps/client/src/games/ortalamanin-yarisi/Sonuc.tsx",
+    "apps/client/src/games/ortalamanin-yarisi/view.ts",
+    "apps/client/src/ui/NumberPicker.tsx",
+    "apps/server/src/ortalamanin-yarisi.test.ts",
+    "scripts/ui-check.mjs"
+  ]
+}

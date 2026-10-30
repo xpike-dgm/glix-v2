@@ -1,0 +1,349 @@
+{
+  "id": "kara-borsa",
+  "ad": "Kara Borsa",
+  "slogan": "Gizemli kutuları ipuçlarıyla doğru fiyata al; jetonlar ile kutuların toplam değeri en yüksek olan kazanır.",
+  "kategori": "Strateji",
+  "etiketler": ["açık artırma", "gizli teklif", "blöf", "ipucu", "5 tur"],
+  "oyuncu": {
+    "min": 3,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 125,
+    "not": "5 tur × (20 sn teklif + 5 sn açılış) = 125 sn. Bağlı herkes teklif verirse (jetonu bitenler dahil) o turun teklif aşaması son tekliften 1 sn sonra biter, bu yüzden oyun daha kısa sürebilir. Oyuncu sayısı süreyi değiştirmez."
+  },
+  "ozet": "Herkes 100 jetonla başlar. Her tur gizemli bir kutu gelir; değeri 0-60 arasındadır ya da %15 olasılıkla lanetlidir (-20). Her oyuncu yalnız kendine özel, her zaman doğru bir ipucu alır; sözlü blöf serbesttir. Herkes gizli ve tek seferlik bir teklif verir: en yüksek teklif kutuyu alır ve teklifini öder. Sonunda puanın = kalan jeton + aldığın kutuların değeri toplamıdır; ilk üçe genel skor verilir.",
+  "akis": [
+    {
+      "ad": "Anlatım",
+      "sureSn": 40,
+      "kim": "herkes",
+      "aciklama": "Tam ekran anlatım: 'Gizemli kutuları doğru fiyata al, en zengin sen ol!' ve üç madde (her tur bir kutu gelir; değerini yalnız sana özel ipucu anlatır; gizli bir teklif ver: en yükseği kutuyu alır ve öder; sonunda jetonların ile kutuların değeri puanındır). Herkes hazırsa ya da 40 sn dolunca 3 sn geri sayım.",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Teklif (her tur)",
+      "sureSn": 20,
+      "kim": "herkes (eşzamanlı)",
+      "aciklama": "Üstte 'TUR k/5' rozeti, 'Teklifini ver' başlığı ve süre çubuğu. Ortada tura göre sabit bir kutu görseli, 'Sana özel ipucu' kartı (ör. 'Değeri 30'dan büyük', 'Değeri çift sayı', 'Değeri 5'in katı değil', 'Kutu lanetli değil'), 'Jetonun N' cüzdanı. Teklif sayı seçiciyle 0 ile mevcut jetonun arasında seçilir ('Teklif ver' düğmesi seçilen değer 1 ya da fazlaysa açıktır); 'Bu turu geç' 0 teklif verir. Teklif hemen mühürlenir: 'Teklifin gizli: N · k/n hazır' ya da 'Bu turu geçtin'. Altta tüm oyuncuların avatarı, teklif verenler işaretli ve herkesin kalan jetonu görünür. Jetonu bitenler 'Jetonun kalmadı, bu turu izle' görür.",
+      "gizli": "İpucunu yalnız sen görürsün (ipucu hiçbir zaman herkese açık görünümde ve başkasının görünümünde yoktur; tur sonunda da açılmaz). Teklif miktarları kimseye gösterilmez; herkese açık yalnız KİMLERİN teklif verdiği (jetonu bitenler dahil) bilinir. Kutunun değeri tur sonuna kadar hiçbir yerde yoktur."
+    },
+    {
+      "ad": "Açılış (her tur)",
+      "sureSn": 5,
+      "kim": "herkes",
+      "aciklama": "Kutu açılır: 'Kutu açıldı' başlığı, 'Kutunun değeri' (lanetliyse 'Lanetli kutu') büyük sayıyla ve lanetli kutu görseliyle gösterilir. '<ad> aldı · N jeton' ya da 'Kimse almadı, kutu kapandı'. Tüm teklifler yüksekten düşüğe sıralanır (verilmeyen ya da 0 olan 'geçti' yazar), kazananda yıldız. Altta herkesin servet (jeton + kutu değeri) toplamı.",
+      "gizli": "Yok; bu aşamada teklifler ve değer herkese açıktır."
+    },
+    {
+      "ad": "Sonuç ekranı",
+      "sureSn": 30,
+      "kim": "herkes",
+      "aciklama": "5 tur bitince mini oyun sonuç/podyum ekranı (herkes 'Devam'a basınca 1 sn sonra, aksi halde 30 sn sonra kapanır).",
+      "gizli": "Yok."
+    }
+  ],
+  "kurallar": [
+    "Oyuncu sayısı 3 ile 8 arasındadır. Oyun tam 5 turdur; her turda bir gizemli kutu vardır.",
+    "Herkes 100 jetonla başlar. Jetonlar yalnız teklif ödemek için kullanılır ve harcanan jeton geri gelmez; kutuyu alınca kutunun değeri jetona değil puana eklenir.",
+    "Kutu değeri her tur oyun başında önceden belirlenir: olasılık %15 ile lanetli (-20), aksi halde 0 ile 60 arasında (60 dahil) eşit olasılıklı bir tam sayı. Beklenen değer yaklaşık 22,5'tur.",
+    "Her tur her oyuncu kendine özel bir ipucu alır; ipucu her zaman doğrudur. Çeşitler: 'Değeri n'den büyük', 'Değeri n'den küçük', 'Değeri a ile b arasında' (uçlar dahil), 'Değeri çift/tek sayı', 'Değeri 3'ün/5'in/10'un katı' ya da 'katı değil', 'Kutu lanetli!' ya da 'Kutu lanetli değil'. Sözlü blöf serbesttir, ama ipucu yalan olamaz.",
+    "Lanetli kutuda ipucu havuzu: 'Kutu lanetli!', 'Değeri n'den küçük' (n 1..40), 'çift', '5'in katı', '10'un katı', '3'ün katı değil'. Lanetli olmayan kutuda: 'Kutu lanetli değil', 'büyük/küçük' (gerçek değere yakın rastgele eşikle), 'arasında', çift/tek, 3/5/10 katı mı değil mi. Mümkün olduğunca farklı oyunculara farklı ipuçları verilir (6 denemeden sonra tekrar edebilir).",
+    "Teklif gizli ve tek seferliktir: 0 ile mevcut jeton sayısı arasında bir tam sayı. 0 = turu geç. Mevcut jetondan fazla teklif reddedilir (kırpılmaz). İkinci teklif reddedilir.",
+    "Teklif süresi 20 sn'dir. Süre bittikten sonra gelen teklif reddedilir (geç gelen eylem payı yoktur). Açılış aşamasında teklif reddedilir.",
+    "En yüksek teklif (0'dan büyük) kutuyu alır ve TEKLİFİNİ öder (ikinci fiyat değil, kendi teklifi). Eşitlikte önce teklif veren (sunucuya önce ulaşan) kazanır. Kimse 0'dan büyük teklif vermezse kutu kimseye gitmez, kimse jeton kaybetmez.",
+    "Kutuyu alan, kutunun değerini puanına ekler: lanetli kutu alan -20 ekler (ve teklifini ayrıca öder). Kutunun değeri jetona çevrilmez; yalnız puana eklenir.",
+    "Teklifler ve kutunun değeri tur sonunda (açılışta) herkese açılır. Açılıştan sonra tur sonucu geçmişe eklenir; ilerleyen turlarda teklifler sıfırlanır ve yeni ipuçları verilir.",
+    "Bağlı bütün katılımcılar teklif verince (jetonu bitenler zaten verilmiş sayılır) tur 1 sn sonra biter. Bağlantısı kopan oyuncu beklenmez (teklifi 0 sayılır). Bağlı kimse yoksa erken bitiş olmaz.",
+    "Mini oyun puanı = kalan jeton + alınan kutuların değer toplamı (lanetli kutular eksi). Eksi puan olabilir.",
+    "Genel skor ödülü sıralamaya göredir: 1. +2, 2. ve 3. +1, kalanlar 0. Eşit puan aynı derecede ve aynı ödülü paylaşır; sonraki derece atlanır (örneğin iki kişi birinci olursa ikisi +2, sıradaki dördüncü sayılır ve 0 alır).",
+    "Herkese açık görünümde herkesin kalan jetonu, aldığı kutuların toplam değeri (kapanmış turlara göre), kimlerin teklif verdiği ve geçmiş turların sonuçları vardır. Henüz açılmamış turun değeri ve başka oyuncunun ipucu/teklifi hiçbir yerde yoktur."
+  ],
+  "puanlama": {
+    "ozet": "Mini oyun puanı = kalan jeton + kutuların toplam değeri. Genel skor: 1. +2, 2. +1, 3. +1.",
+    "kalemler": [
+      {
+        "olay": "Kutuyu en yüksek teklifle aldın",
+        "puan": "+kutu değeri − teklif",
+        "not": "Teklifin kadar jeton kaybedersin, kutunun değeri puanına eklenir; net kazanç değer − teklif."
+      },
+      {
+        "olay": "Lanetli kutuyu aldın",
+        "puan": "−20 − teklif",
+        "not": "Kutunun değeri −20'dir; teklifini de ödersin."
+      },
+      {
+        "olay": "Turu geçtin / kaybettin",
+        "puan": "0",
+        "not": "Jetonun azalmaz."
+      },
+      {
+        "olay": "Maç sonu 1. sıra",
+        "puan": "+2 (genel skor)",
+        "not": "Eşitlikte tüm eşitler +2."
+      },
+      {
+        "olay": "Maç sonu 2. ve 3. sıra",
+        "puan": "+1 (genel skor)",
+        "not": "Eşitlikte aynı derece aynı ödülü alır, sonraki derece atlanır."
+      },
+      {
+        "olay": "4. ve sonrası",
+        "puan": "0 (genel skor)",
+        "not": ""
+      }
+    ],
+    "ornek": "4 oyuncu (Ali, Bora, Ceren, Deniz) 100'er jetonla başlar. Tur 1: değer 40; Ali 35, Bora 25, diğerleri geçer: Ali kazanır, 35 öder, +40 puan: Ali 65 jeton + 40 kutu = 105. Tur 2: değer −20 (lanetli); Bora 30, Ceren 10 verir: Bora kazanır, 30 öder, −20: Bora 70 jeton + (−20) = 50. Tur 3-5'te kimse teklif vermezse oyun biter: Ali 105 (65+40), Ceren 100, Deniz 100, Bora 50. Genel skor: Ali +2, Ceren ve Deniz (eşit 2.) +1 ikisi de, Bora 4. sıra 0.",
+    "beraberlik": "Eşit mini oyun puanı aynı dereceyi ve aynı genel skor ödülünü paylaşır; sonraki derece atlanır. Teklif eşitliğinde ise önce teklif veren kutuyu alır."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Kopan oyuncu katılımcı kalır; teklif vermezse teklifi 0 sayılır. Erken bitişte kopuk oyuncu beklenmez. Geri dönerse kaldığı turdan devam eder; jetonları ve kutuları korunur."
+    },
+    {
+      "baslik": "Jetonu biten oyuncu",
+      "aciklama": "Jeton 0'a inen oyuncu yalnız 0 teklif verebilir; erken bitişte teklif vermiş sayılır (beklenmez). Ekranında 'Jetonun kalmadı, bu turu izle' yazar. Puanı kutu değerlerine bağlı kalır."
+    },
+    {
+      "baslik": "Kimse teklif vermezse",
+      "aciklama": "Kutu açılır ama kimseye gitmez: 'Kimse almadı, kutu kapandı'. Jeton ve puan değişmez."
+    },
+    {
+      "baslik": "3 oyuncu",
+      "aciklama": "3 oyuncuda herkes ödül alır (1. +2, 2. +1, 3. +1). Üç farklı ipucu dağıtılır; ipucu havuzu dar olduğundan tekrar da olabilir."
+    },
+    {
+      "baslik": "8 oyuncu",
+      "aciklama": "Teklif şeridi 8 kişiyi sığdırmak için sıkışır; açılışta teklifler yüksekten düşüğe listelenir. İlk 3 +2/+1/+1 alır, 5 kişi 0."
+    },
+    {
+      "baslik": "İzleyici ve TV",
+      "aciklama": "İzleyici 'Arkadaşların teklif veriyor' görür, ipucu görmez, teklif veremez; açılışları tam görür."
+    },
+    {
+      "baslik": "Reddedilen teklif",
+      "aciklama": "İstemci teklifi hemen mühürler; sunucu reddederse (ör. jeton yetersiz, süre bitti) mühür açılır ve hata sesi çalar."
+    },
+    {
+      "baslik": "Geç gelen eylem payı",
+      "aciklama": "Bu oyunda yoktur (graceMs tanımlı değil): süre dolduktan sonra gelen teklif reddedilir; son milisaniyede gelen kabul edilir."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Genel",
+      "etki": "Kod bu oyun için özel kart dalı içermez; genel K6 hesabı çalışır ve kartlar yalnız genel skora giden puanları (awards) değiştirir. Bu oyunda awards = 2/1/1/0 rank ödülü, miniScores = jeton + kutu değeri."
+    },
+    {
+      "kart": "Kendine Güven / Sigorta / Tahmin / Hırsız",
+      "etki": "'Birinci' ve 'sonuncu' MİNİ oyun puanına (jeton + kutu) göre belirlenir, genel skor ödülüne göre değil. Hırsız birinciden 1 puan (genel skor ödülünden) alır."
+    },
+    {
+      "kart": "Çift Puan / Altın Dokunuş",
+      "etki": "Bu oyunun genel skor ödülünü (2, 1, 1) çarpar: birinci Çift Puan ile +4, Altın Dokunuş ile +6 alır."
+    },
+    {
+      "kart": "Ters Köşe",
+      "etki": "Sıralama tersine döner: ödüller mini oyun puanına göre aynadaki sıraya verilir (en zenginin +2'si en fakire gider)."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Tur sayısı",
+      "deger": "5",
+      "kaynak": "packages/engine/src/games/kara-borsa/types.ts:3"
+    },
+    {
+      "ad": "Başlangıç jetonu",
+      "deger": "100",
+      "kaynak": "packages/engine/src/games/kara-borsa/types.ts:4"
+    },
+    {
+      "ad": "Teklif süresi",
+      "deger": "20 000 ms",
+      "kaynak": "packages/engine/src/games/kara-borsa/types.ts:5"
+    },
+    {
+      "ad": "Açılış süresi",
+      "deger": "5 000 ms",
+      "kaynak": "packages/engine/src/games/kara-borsa/types.ts:6"
+    },
+    {
+      "ad": "Herkes teklif verince kalan süre",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/games/kara-borsa/types.ts:8"
+    },
+    {
+      "ad": "Toplam süre",
+      "deger": "125 000 ms",
+      "kaynak": "packages/engine/src/games/kara-borsa/types.ts:9"
+    },
+    {
+      "ad": "En büyük kutu değeri",
+      "deger": "60 (0-60 tam sayı)",
+      "kaynak": "packages/engine/src/games/kara-borsa/types.ts:12"
+    },
+    {
+      "ad": "Lanetli kutu değeri / olasılığı",
+      "deger": "-20 / %15",
+      "kaynak": "packages/engine/src/games/kara-borsa/types.ts:13-14"
+    },
+    {
+      "ad": "Oyuncu sayısı",
+      "deger": "3 - 8",
+      "kaynak": "packages/engine/src/games/kara-borsa/index.ts:133-134"
+    },
+    {
+      "ad": "Teklif sınırı (ayrıştırma)",
+      "deger": "0 - 1 000 000 tam sayı; ayrıca ≤ mevcut jeton",
+      "kaynak": "packages/engine/src/games/kara-borsa/index.ts:145-151, 192"
+    },
+    {
+      "ad": "Tur sonucu (en yüksek teklif, eşitlikte ilk veren)",
+      "deger": "settleRound",
+      "kaynak": "packages/engine/src/games/kara-borsa/index.ts:51-66"
+    },
+    {
+      "ad": "Jetonu bitenler teklif vermiş sayılır",
+      "deger": "coins ≤ 0",
+      "kaynak": "packages/engine/src/games/kara-borsa/index.ts:69-70"
+    },
+    {
+      "ad": "Genel skor ödülü: 1. +2, 2-3. +1",
+      "deger": "rank = 1 + kendinden yüksek puanlı sayısı",
+      "kaynak": "packages/engine/src/games/kara-borsa/index.ts:120-128"
+    },
+    {
+      "ad": "Mini oyun puanı",
+      "deger": "jeton + kutu değerleri",
+      "kaynak": "packages/engine/src/games/kara-borsa/index.ts:113-117"
+    },
+    {
+      "ad": "Kutu değeri belirleme",
+      "deger": "rng < 0,15 ise -20, değilse int(61)",
+      "kaynak": "packages/engine/src/games/kara-borsa/index.ts:157-158"
+    },
+    {
+      "ad": "Erken bitiş",
+      "deger": "min(bitiş, şimdi + 1 sn)",
+      "kaynak": "packages/engine/src/games/kara-borsa/index.ts:195-198"
+    },
+    {
+      "ad": "İpucu havuzu (eşik rastgeleliği)",
+      "deger": "gt/lt/between/çift-tek/3-5-10 katı/lanetli",
+      "kaynak": "packages/engine/src/games/kara-borsa/hints.ts:33-65"
+    },
+    {
+      "ad": "Farklı ipucu deneme sayısı",
+      "deger": "6",
+      "kaynak": "packages/engine/src/games/kara-borsa/hints.ts:73"
+    }
+  ],
+  "strateji": [
+    "İpucun yalnız seni bağlar; başkaları farklı ipucu alır. 'Değeri n'den büyük' ve 'arasında' ipuçları kutunun lanetli olmadığını da kanıtlar; 'Kutu lanetli!' ipucu alan kutunun -20 olduğunu bilir.",
+    "Kutunun beklenen değeri yaklaşık 22,5'tur. Kutuyu alınca net kazancın değer − teklif olur; ipucun yüksek bir değer göstermiyorsa düşük teklif ver ya da turu geç.",
+    "Kazanan kendi teklifini öder (ikinci fiyat yok); eşitlikte önce teklif veren kazanır, bu yüzden hızlı olmak eşitlikte avantajdır.",
+    "Blöf serbest: 'Çok iyi bir kutu' diyerek rakiplerin teklifini şişirebilir ya da lanetli kutuyu birine aldırtabilirsin. Ama ipuçları doğru olduğundan çelişkili ipuçlarını karşılaştırmak değeri daraltır.",
+    "Jetonlar bittiğinde teklif veremezsin; son turlara jeton bırakmak önemlidir.",
+    "Genel skor yalnız ilk üçe (+2/+1/+1) verilir; 4 ve üstü oyuncu sayılarında son sıralar 0 alır. Eşit puan aynı ödülü paylaşır."
+  ],
+  "tv": "TV/sahne ekranı oyun ekranını izleyici kipinde büyütülmüş gösterir (Kara Borsa'ya özel StageView yoktur): teklif sırasında kutu görseli, 'Arkadaşların teklif veriyor', teklif verenlerin işaretli avatarları ve herkesin jetonu; açılışta kutunun değeri, kazanan, fiyat ve tüm tekliflerin dökümü; sağda oyuncular ve puanlar.",
+  "ekranlar": [
+    {
+      "ad": "kb-briefing",
+      "mock": "kara-briefing",
+      "q": "mock=kara-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Tam ekran anlatım ve üç madde.",
+      "dosya": "kara-briefing"
+    },
+    {
+      "ad": "kb-bid-5",
+      "mock": "kara-bid",
+      "q": "mock=kara-bid",
+      "baslik": "Teklif",
+      "aciklama": "Kutu görseli, 'Sana özel ipucu' kartı, cüzdan, sayı seçici, 'Teklif ver' ve 'Bu turu geç'.",
+      "dosya": "kara-bid"
+    },
+    {
+      "ad": "kb-bid-sent",
+      "mock": "kara-bid-sent",
+      "q": "mock=kara-bid-sent",
+      "baslik": "Teklif verildi",
+      "aciklama": "'Teklifin gizli: N · k/n hazır' ve oyuncu şeridinde hazır işaretleri.",
+      "dosya": "kara-bid-sent"
+    },
+    {
+      "ad": "kb-bid-broke",
+      "mock": "kara-bid-broke",
+      "q": "mock=kara-bid-broke",
+      "baslik": "Jetonu bitti",
+      "aciklama": "'Jetonun kalmadı, bu turu izle'.",
+      "dosya": "kara-bid-broke"
+    },
+    {
+      "ad": "kb-bid-spectator",
+      "mock": "kara-bid-spectator",
+      "q": "mock=kara-bid-spectator",
+      "baslik": "İzleyici",
+      "aciklama": "'Arkadaşların teklif veriyor'; ipucu ve teklif araçları yok.",
+      "dosya": "kara-bid-spectator"
+    },
+    {
+      "ad": "kb-reveal-5",
+      "mock": "kara-reveal",
+      "q": "mock=kara-reveal",
+      "baslik": "Açılış",
+      "aciklama": "Kutunun değeri, kazanan, fiyat, tüm teklifler ve servet şeridi.",
+      "dosya": "kara-reveal"
+    },
+    {
+      "ad": "kb-reveal-me",
+      "mock": "kara-reveal-me",
+      "q": "mock=kara-reveal-me",
+      "baslik": "Açılış (sen aldın)",
+      "aciklama": "Kutuyu sen kazandın: 'Sen aldı' ve yıldızlı satır.",
+      "dosya": "kara-reveal-me"
+    },
+    {
+      "ad": "kb-reveal-cursed",
+      "mock": "kara-reveal-cursed",
+      "q": "mock=kara-reveal-cursed",
+      "baslik": "Lanetli kutu",
+      "aciklama": "'Lanetli kutu' etiketi, -20 ve lanet kutu görseli.",
+      "dosya": "kara-reveal-cursed"
+    },
+    {
+      "ad": "kb-reveal-none",
+      "mock": "kara-reveal-none",
+      "q": "mock=kara-reveal-none&n=3",
+      "baslik": "Kimse almadı",
+      "aciklama": "'Kimse almadı, kutu kapandı' ve tüm teklifler 'geçti'.",
+      "dosya": "kara-reveal-none-n-3"
+    }
+  ],
+  "bilinenSorunlar": [
+    "Jetonu 0'a inen oyuncunun yalnız 0 verebilmesi ve bunun 'teklif vermiş' sayılması (erken bitişte beklenmez) kodda ve testte vardır; KURALLAR.md'de yazmaz.",
+    "İpucu çeşitliliği garanti değildir: mümkünse her oyuncuya farklı ipucu verilir, 6 denemede bulunamazsa aynı ipucu tekrarlanır.",
+    "İstemcide 'Teklif ver' düğmesi seçilen değer 0 iken kapalıdır; 0 teklif yalnız 'Bu turu geç' ile verilir (sunucu 0'ı kabul eder).",
+    "Kutu görseli tura göre sabittir ve değeri ele vermez; lanetli kutu görseli yalnız açılışta çıkar."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-29: Klavye uyumlu görünüm ve yalnız bağlı oyuncuları sayan erken bitiş.",
+    "2026-10-27: Renk körlüğü modu: kazanan yıldızı ve paylaşılan işaretler.",
+    "2026-10-27: Kabuk saati, Status ve hazır noktalarına taşıma; tüm oyunlar için tur özeti.",
+    "2026-10-26: Ayarlar ekranı; kutu ve bomba görselleri, tema önbelleği.",
+    "2026-10-25: Anında geri bildirim (teklifler için iyimser arayüz).",
+    "2026-10-25: Bozuk Telefon ve Kara Borsa oyunları eklendi."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/kara-borsa/index.ts",
+    "packages/engine/src/games/kara-borsa/types.ts",
+    "packages/engine/src/games/kara-borsa/hints.ts",
+    "packages/engine/src/games/kara-borsa/kara-borsa.test.ts",
+    "docs/KURALLAR.md#28-kara-borsa",
+    "apps/client/src/games/kara-borsa/KaraBorsaScreen.tsx",
+    "apps/client/src/games/kara-borsa/view.ts"
+  ]
+}

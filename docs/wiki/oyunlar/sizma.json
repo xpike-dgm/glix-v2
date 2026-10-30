@@ -1,0 +1,335 @@
+{
+  "id": "sizma",
+  "ad": "Sızma",
+  "slogan": "Herkes aynı kelimeyi görüyor; biri hariç. Sesli ipuçlarından sızmayı yakala.",
+  "kategori": "Blöf",
+  "etiketler": ["sosyal çıkarım", "gizli rol", "sesli ipucu", "oylama"],
+  "oyuncu": {
+    "min": 3,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 90,
+    "not": "İpucu aşaması zamanlayıcısızdır (teknik üst sınır 5 dk); süre oyuncuların 'Oylamaya geç' demesine bağlıdır. Sabit kısım: oylama 30 sn + 'fark ettin mi?' 8 sn + sonuç 8 sn = 46 sn. Gerçekte ipucu turları yaklaşık 30-90 sn sürdüğünde toplam 1,5-2,5 dk olur. Herkes erken ilerlerse oylama ve 'fark ettin mi' aşamaları 1 sn sonra biter."
+  },
+  "ozet": "Sistem gündelik kelime çiftlerinden birini seçer: çoğunluk bir kelimeyi, tam bir 'sızma' oyuncusu ise ona yakın ama farklı bir kelimeyi görür. Kimse sızma olduğunu bilmez. Herkes sırayla ve yüksek sesle iki turda ipucu verir (uygulamada yazılı ipucu yoktur), sonra gizli oylamayla sızma aranır. Sızma yakalanırsa diğerleri +1, kurtulursa sızma +2 alır; sızma ayrıca 'Sızma sen miydin?' sorusuna 'Evet' derse +1 daha kazanır.",
+  "akis": [
+    {
+      "ad": "Kelime dağıtımı (gizli)",
+      "sureSn": 0,
+      "kim": "sunucu",
+      "aciklama": "Oyun başlarken havuzdan rastgele bir kelime çifti seçilir (160 yerleşik çift), taraf yazı-tura ile belirlenir. Oyunculardan biri rastgele sızma olur. Söyleme sırası da rastgele karıştırılır ve herkese açık gösterilir.",
+      "gizli": "Herkes yalnız kendi kelimesini 'Senin kelimen' olarak görür. Hiçbir ekranda 'sızma' ya da 'ortak kelime' etiketi yoktur: sızma da kendisinin sızma olduğunu bilmez, yalnız kelimesi diğerlerinden farklıdır."
+    },
+    {
+      "ad": "İpucu turları",
+      "sureSn": 0,
+      "kim": "herkes, sırayla",
+      "aciklama": "Ekranda kendi kelimen büyük bir kristalin içinde, altında 'Sırayla yüksek sesle ipucu ver · 2 tur' ve numaralı söyleme sırası (portreler 1, 2, 3…) görünür. İpucu uygulamaya yazılmaz; oyuncular aynı ortamda sırayla sesli söyler, iki tur boyunca aynı sırayla. Zamanlayıcı gösterilmez. Herkes 'Oylamaya geç' düğmesine basınca oylama 1 sn sonra başlar; düğmeye basanların portresinde hazır işareti çıkar.",
+      "gizli": "Kelimeler yalnız sahibinin telefonundadır. Kim 'Oylamaya geç' dediği herkese açıktır."
+    },
+    {
+      "ad": "Gizli oylama",
+      "sureSn": 30,
+      "kim": "herkes",
+      "aciklama": "'Sızma kim?' başlığı, oyuncu seçici (kendin dahil), seçilince başlık seçilen oyuncunun adına döner; altta kendi kelimen ve Tamam düğmesi. Oy Tamam'a kadar değiştirilebilir (son oy geçerli). Oy seçmeden Tamam olmaz. Herkes Tamam derse oylama 1 sn sonra biter.",
+      "gizli": "Kimin kime oy verdiği sonuç açılana kadar kapalıdır; yalnız kimin Tamam dediği görünür."
+    },
+    {
+      "ad": "Sızma sen miydin? (fark ettin mi?)",
+      "sureSn": 8,
+      "kim": "herkes",
+      "aciklama": "Sızma açıklanmadan önce herkese aynı soru sorulur: 'Sızma sen miydin?' Evet / Hayır düğmeleri. Cevap tek seferliktir ve yalnız sana görünür; sayaç 'N/M cevapladı' gösterir. Cevap vermeyen 'Hayır' sayılır. Herkes cevaplarsa aşama 1 sn sonra biter.",
+      "gizli": "Cevabın ne olduğu kimseye gösterilmez; yalnız cevap verenlerin sayısı herkese açıktır. Sızmanın cevabı sonuçta açılır, diğer oyuncuların cevapları hiçbir zaman açılmaz."
+    },
+    {
+      "ad": "Sonuç açılışı",
+      "sureSn": 8,
+      "kim": "herkes",
+      "aciklama": "Oylar azdan çoğa doğru sırayla sayılır (aynı oy sayısındakiler birlikte açılır), sonda sızmanın maskesi düşer ve kimliği, iki kelime ('Ortak' / 'Sızma') gösterilir. Üstte 'Yakalandı!' ya da 'Kurtuldu!' ve kişiye özel hüküm yazısı: sızma için 'Yakalandın' / 'Kimse seni yakalayamadı'; diğerleri için 'Sızmayı yakaladınız' / 'Sızma aranızdan kaçtı'; izleyici için 'Sızma yakalandı' / 'Sızma kurtuldu'. Sızmanın fark etme cevabı 'Sızma kendini fark etti! +1' ya da 'Sızma kendini fark etmedi' olarak açılır. Alt satır 'N genel skora eklendi'.",
+      "gizli": "Bu aşamada rol, kelimeler ve oy sayıları açıktır; kimin kime oy verdiği ham olarak da herkese açık görünümdedir (votes alanı). Fark etme cevaplarından yalnız sızmanınki açılır."
+    }
+  ],
+  "kurallar": [
+    "En az 3, en çok 8 oyuncu. Tam bir sızma vardır; seçim tamamen rastgeledir (her oyuncu eşit olasılıkla).",
+    "Kelime çifti 160 yerleşik çiftten (yönetici paneliyle değiştirilebilir havuz) rastgele seçilir; hangi kelimenin çoğunluğa, hangisinin sızmaya gideceği yazı-tura ile belirlenir. Kelimeler Türkçe büyük harfle gösterilir.",
+    "Yazılı ipucu yoktur. İpuçları aynı ortamda yüksek sesle, herkese açık sırayla söylenir; uygulama iki tur olduğunu hatırlatır ama turları, sırayı ya da ipucunun içeriğini denetlemez.",
+    "İpucu aşamasında süre yoktur; oylamaya yalnız bağlı bütün katılımcıların 'Oylamaya geç' demesiyle geçilir. Teknik güvenlik olarak aşama 5 dk'da kendiliğinden biter (oda takılı kalmasın diye).",
+    "Herkes 'Oylamaya geç' dediğinde ipucu aşaması 1 sn sonra kapanır ve 30 sn'lik oylama başlar. Oylama süresi her durumda 30 sn'dir.",
+    "Her oyuncu bir kişiye oy verir. Kendine oy vermek serbesttir. Başkasına oy ancak o kişi o anda bağlıysa verilebilir (bağlantısı kopmuş birine oy 'target_offline' ile reddedilir; kendine oy her zaman geçerlidir).",
+    "Oy 'Tamam'a kadar değiştirilebilir (son oy geçerli). Oy vermeden 'Tamam' olmaz. 'Tamam' diyen oyunu değiştiremez. Tamam demeden süre dolarsa o anki oy geçerlidir; hiç oy vermeyenin oyu yoktur.",
+    "Bağlı bütün katılımcılar 'Tamam' derse oylama 1 sn sonra biter.",
+    "Sızma, yalnızca TEK BAŞINA en çok oyu alırsa yakalanır. Oylar eşitse (sızma da eşit adaylar arasında olsa) ve hiç oy yoksa sızma kurtulur.",
+    "Oylamadan sonra 8 sn'lik 'Sızma sen miydin?' aşaması gelir. Herkes Evet ya da Hayır der; cevap tek seferliktir, cevap vermeyen Hayır sayılır. Bağlı herkes cevaplarsa aşama 1 sn sonra biter.",
+    "Yanlış oylar eksi puan doğurmaz; eksik ipucu ya da geçiş düğmesine basmamak için ceza yoktur.",
+    "Puanlama sonuçtan hemen sonra hesaplanır; sonuç ekranı 8 sn sürer ve oyun biter."
+  ],
+  "puanlama": {
+    "ozet": "Sızma yakalanırsa sızma olmayan her oyuncu +1, sızma 0. Sızma kurtulursa sızma +2, diğerleri 0. Sızma 'Sızma sen miydin?' sorusuna Evet derse +1 daha alır (yakalansa da kurtulsa da). Mini oyun puanı genel skora aynen eklenir (awards = miniScores).",
+    "kalemler": [
+      {
+        "olay": "Sızma yakalandı",
+        "puan": "+1 (sızma olmayan her oyuncu), 0 (sızma)",
+        "not": "Sızma tek başına en çok oyu aldı."
+      },
+      {
+        "olay": "Sızma kurtuldu",
+        "puan": "+2 (sızma), 0 (diğerleri)",
+        "not": "Sızma tek başına en çok oyu almadı: oylar eşitse (sızma dahil ya da değil) ya da kimse oy almadıysa."
+      },
+      {
+        "olay": "Sızma kendini fark etti (Evet)",
+        "puan": "+1 (yalnız sızmaya)",
+        "not": "Yakalansa 0+1 = 1, kurtulsa 2+1 = 3. Sızma olmayanlar hangi cevabı verirse versin puan almaz, kaybetmez."
+      },
+      {
+        "olay": "Yanlış oy",
+        "puan": "0",
+        "not": "Eksi puan yoktur."
+      }
+    ],
+    "ornek": "5 oyuncu: Ali sızma (KAHVE görür), diğerleri ÇAY görür. Oylar: Ali→Ceren, Bora→Ali, Ceren→Ali, Deniz→Ali, Ece→Ceren. Sayım: Ali 3, Ceren 2: sızma tek başına en çok oyu aldı, yakalandı. Ali 'Evet' dediyse puanlar Ali 0+1 = 1, Bora/Ceren/Deniz/Ece +1'er; Ali 'Hayır' dediyse Ali 0, diğerleri +1. Başka bir oyunda oylar Ali 2, Ceren 2 olarak eşit çıksaydı sızma kurtulurdu: Ali +2 (Evet dediyse 3), diğerleri 0.",
+    "beraberlik": "Oylarda eşitlik sızma lehinedir: sızma en çok oyu tek başına almadıysa kurtulur (eşit adaylar arasında sızma olsa da olmasa da). Genel skorda ayrıca bir beraberlik kuralı yoktur."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Katılımcı olmaya devam eder (oda 120 sn bekler). 'Oylamaya geç', 'Tamam' ve 'Sızma sen miydin?' sayımlarında bağlı olmayan beklenmez; ancak bu değerlendirme yalnız bir oyuncu eylem yaptığında yapılır. Bağlantısı kopan birine başkaları oy veremez (seçicide pasif görünür); kopan oyuncu sızmaysa pratikte yakalanması imkânsızlaşır."
+    },
+    {
+      "baslik": "Geri dönen oyuncu",
+      "aciklama": "Kelime, oy ve cevap durumu sunucuda durduğundan ekran eski durumuyla gelir."
+    },
+    {
+      "baslik": "Süre aşımı",
+      "aciklama": "Oylama bitince oy/kilit eylemleri reddedilir (bu oyunda geç gelen eylem payı yoktur). Oy veren ama Tamam demeyen oyuncunun oyu sayılır. 'Fark ettin mi?' süresi dolarsa cevap vermeyen Hayır sayılır."
+    },
+    {
+      "baslik": "Herkes erken gönderirse",
+      "aciklama": "İpucu aşamasında bağlı herkes 'Oylamaya geç' derse oylama 1 sn sonra başlar (oylama süresi yine 30 sn). Oylamada herkes Tamam derse, 'Fark ettin mi?'de herkes cevaplarsa aşama 1 sn sonra biter. Sonraki aşamaların süresi kısalmaz."
+    },
+    {
+      "baslik": "Sızma kendini fark ederse",
+      "aciklama": "Evet cevabı yakalanma durumuna bakmadan +1 verir. Sızma yakalandıktan ve diğerleri +1 aldıktan sonra sızma da 1 puanla (0+1) herkesle eşitlenir; bu durumda mini puanlar herkeste 1'dir."
+    },
+    {
+      "baslik": "3 oyuncu / 8 oyuncu",
+      "aciklama": "3 oyuncuda iki oyuncu aynı kelimeyi görür, biri farklısını; ipucu turları çok kısa sürer. 8 oyuncuda söyleme sırası 8 kişilik olur, oylama seçicisi 8 portre gösterir."
+    },
+    {
+      "baslik": "İzleyici",
+      "aciklama": "İzleyici kelime görmez (kristalde maske simgesi, 'Kelimeler gizli'), oy veremez, cevap veremez; sıra, hazır sayacı, 'Herkes oy veriyor', 'Oyuncular cevap veriyor' ve sonuç ekranını izler. Sonuçta kuralı hatırlatan satır görür: 'Yakalanırsa herkes +1, kurtulursa sızma +2; fark ederse sızma +1 daha'."
+    },
+    {
+      "baslik": "Geç katılan",
+      "aciklama": "Maç sürerken gelen kişi (varsayılan ayarda izleyici) bu oyuna katılamaz."
+    },
+    {
+      "baslik": "Sızmanın kimliği gizliliği",
+      "aciklama": "Sızma da herkes gibi yalnızca 'Senin kelimen' görür. Hiçbir görünümde (herkese açık ya da kişisel) sızmanın kimliği sonuç açılana kadar yoktur."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Genel hesap",
+      "etki": "Bu oyunda miniScores = awards. Yakalandıysa sızma dışındaki herkes 1, sızma 0 (Evet dediyse 1); kurtulduysa sızma 2 (Evet dediyse 3), diğerleri 0. Kartlar 'birinci/sonuncu' için bu puanlara bakar."
+    },
+    {
+      "kart": "Sigorta / Kendine Güven",
+      "etki": "Sızma kurtulduysa sızma tek birincidir ve diğerleri eşit en düşüktedir: diğerleri 'sonuncu' sayılır (Sigorta +1 alır) ve Kendine Güven sızmaya +2, diğerlerine -1 verir. Sızma yakalandıysa ve Evet demediyse sızma tek sonuncu, diğerleri birincidir. Yakalanıp Evet dediyse herkes 1 puandadır: herkes birinci, kimse sonuncu değildir."
+    },
+    {
+      "kart": "Çift Puan / Altın Dokunuş / Ağır Yük",
+      "etki": "Ham puana uygulanır: kurtulan sızmanın +2'si Çift Puan ile +4, Altın Dokunuş ile +6 olur; 1 puanlı oyuncuda Çift Puan 2, Altın Dokunuş 3, Ağır Yük 0 verir. 0 puanlıda çarpanlar işlemez."
+    },
+    {
+      "kart": "Tahmin",
+      "etki": "Seçtiğin oyuncu birinci olursa +2: sızma kurtulursa birinci sızmadır; yakalanırsa (ve Evet demediyse) sızma dışındaki herkes birincidir."
+    },
+    {
+      "kart": "Diğer kartlar",
+      "etki": "Koruma, Ayna, Vergi, Çelme, Lanet, Hırsız, Takas, Ortaklık, Ters Köşe, Veto, Oyunu Seç, Geniş Seçim, Kart Çal bu oyuna özgü bir değişiklik içermez; genel hesap sırasıyla (docs/KURALLAR.md K6) 0-3 aralığındaki ham puanlara uygulanır."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "İpucu aşaması teknik üst sınırı",
+      "deger": "300 000 ms (5 dk)",
+      "kaynak": "packages/engine/src/games/sizma/types.ts:4"
+    },
+    {
+      "ad": "Oylama süresi",
+      "deger": "30 000 ms (30 sn)",
+      "kaynak": "packages/engine/src/games/sizma/types.ts:5"
+    },
+    {
+      "ad": "'Sızma sen miydin?' süresi",
+      "deger": "8 000 ms (8 sn)",
+      "kaynak": "packages/engine/src/games/sizma/types.ts:7"
+    },
+    {
+      "ad": "Kendini fark eden sızmanın ek puanı",
+      "deger": "+1",
+      "kaynak": "packages/engine/src/games/sizma/types.ts:9"
+    },
+    {
+      "ad": "Sonuç gösterim süresi",
+      "deger": "8 000 ms (8 sn)",
+      "kaynak": "packages/engine/src/games/sizma/types.ts:11"
+    },
+    {
+      "ad": "Erken bitiş payı (herkes hazır)",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/games/sizma/types.ts:13"
+    },
+    {
+      "ad": "En uzun oyun süresi",
+      "deger": "346 000 ms",
+      "kaynak": "packages/engine/src/games/sizma/types.ts:15"
+    },
+    {
+      "ad": "Oyuncu sayısı",
+      "deger": "min 3, max 8",
+      "kaynak": "packages/engine/src/games/sizma/index.ts:96-97"
+    },
+    {
+      "ad": "Yakalanma puanları (diğerleri / sızma)",
+      "deger": "+1 / 0",
+      "kaynak": "packages/engine/src/games/sizma/index.ts:69"
+    },
+    {
+      "ad": "Kurtulma puanları (sızma / diğerleri)",
+      "deger": "+2 / 0",
+      "kaynak": "packages/engine/src/games/sizma/index.ts:69"
+    },
+    {
+      "ad": "Yakalanma koşulu",
+      "deger": "en çok oyu tek başına alan = sızma",
+      "kaynak": "packages/engine/src/games/sizma/index.ts:67"
+    },
+    {
+      "ad": "Kelime çifti havuzu",
+      "deger": "160 yerleşik çift; en az 10 etkin çift gerekir (yönetici değiştirebilir)",
+      "kaynak": "packages/engine/src/games/sizma/words.ts, pool.ts:16"
+    },
+    {
+      "ad": "Geç gelen eylem payı",
+      "deger": "yok",
+      "kaynak": "packages/engine/src/games/sizma/index.ts:93-98"
+    },
+    {
+      "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
+      "deger": "40 sn / 3 sn / 30 sn",
+      "kaynak": "apps/server/src/match.ts:40-42"
+    }
+  ],
+  "strateji": [
+    "Sızma olabilirsin ama bunu bilmezsin: ekranda yalnız 'Senin kelimen' yazar. İlk oyuncuların sesli ipuçları kelimene uymuyorsa sızma sen olabilirsin; o zaman ortak kelimeyi tahmin edip ona uygun ipucu ver.",
+    "İpucu verirken çok açık olma: sızma ortak kelimeyi anlarsa blöf yapabilir. Ama çok belirsiz olursan sana şüphelenirler.",
+    "'Sızma sen miydin?' sorusunda sızmaysan Evet de: yakalansan da kurtulsan da +1 alırsın. Sızma değilsen cevabın puana etkisi yoktur. Herkes aynı soruyu yanıtladığı için cevabın gizli kalır.",
+    "Oylar eşitse sızma kurtulur: oy birliği için kararı ortak ver (sözlü) ve 'Tamam'ı birlikte bas.",
+    "Kendine oy vermek serbest ama genelde işe yaramaz; yalnızca sızma kendisine şüphe çekmek isterse kullanılır.",
+    "Kopan bir oyuncuya oy veremezsin; sızma bağlantısını kaybederse oylama şansı azalır, bu yüzden bağlantıyı koru."
+  ],
+  "tv": "TV/sahne ekranı bu oyun için özel görünüm kullanmaz: oyun ekranı izleyici kipinde, dokunmaya kapalı büyütülmüş bir dikey çerçevede gösterilir. İpucu aşamasında 'Kelimeler gizli' ve maske simgeli kristal, numaralı söyleme sırası ve hazır sayacı; oylamada 'Herkes oy veriyor'; fark ettin mi aşamasında 'Oyuncular cevap veriyor' ve kaç kişinin cevapladığı; sonuçta oylar sayılırken sızmanın maskesi düşer, iki kelime ve 'Sızma kendini fark etti!/etmedi' görünür. Sağda oyuncular ve bu oyundaki puanları bulunur.",
+  "ekranlar": [
+    {
+      "mock": "sizma-briefing",
+      "q": "mock=sizma-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Ortak kelime kristali ve maskeler; amaç ve üç adım (farklı kelime, iki tur sesli ipucu, oylama + 'Sızma sen miydin?').",
+      "dosya": "sizma-briefing"
+    },
+    {
+      "mock": "sizma-clue",
+      "q": "mock=sizma-clue&n=5",
+      "baslik": "İpucu turları",
+      "aciklama": "Kendi kelimen kristalde, numaralı söyleme sırası, 'Oylamaya geç' düğmesi.",
+      "dosya": "sizma-clue-n-5"
+    },
+    {
+      "mock": "sizma-clue-locked",
+      "q": "mock=sizma-clue-locked&n=5",
+      "baslik": "Oylamaya geç dendi",
+      "aciklama": "Düğmeye basıldı; diğerleri bekleniyor sayacı ve hazır portreleri.",
+      "dosya": "sizma-clue-locked-n-5"
+    },
+    {
+      "mock": "sizma-vote",
+      "q": "mock=sizma-vote&n=5",
+      "baslik": "Gizli oylama",
+      "aciklama": "'Sızma kim?' başlığı, kendin dahil oyuncu seçici, kelimen ve Tamam.",
+      "dosya": "sizma-vote-n-5"
+    },
+    {
+      "mock": "sizma-vote",
+      "q": "mock=sizma-vote&n=8&chosen=3",
+      "baslik": "Oy seçildi (8 kişi)",
+      "aciklama": "8 oyunculu seçici; başlık seçilen oyuncunun adına döner.",
+      "dosya": "sizma-vote-n-8-chosen-3"
+    },
+    {
+      "mock": "sizma-vote-locked",
+      "q": "mock=sizma-vote-locked&n=5",
+      "baslik": "Oy kilitli",
+      "aciklama": "Tamam sonrası kilitli durum.",
+      "dosya": "sizma-vote-locked-n-5"
+    },
+    {
+      "mock": "sizma-notice",
+      "q": "mock=sizma-notice&n=5",
+      "baslik": "Sızma sen miydin?",
+      "aciklama": "Herkese aynı Evet / Hayır sorusu; cevabın yalnız sana görünür.",
+      "dosya": "sizma-notice-n-5"
+    },
+    {
+      "mock": "sizma-notice-answered",
+      "q": "mock=sizma-notice-answered&n=5",
+      "baslik": "Cevap verildi",
+      "aciklama": "'Cevabın gizli · N/M cevapladı' durumu.",
+      "dosya": "sizma-notice-answered-n-5"
+    },
+    {
+      "mock": "sizma-reveal",
+      "q": "mock=sizma-reveal&n=5",
+      "baslik": "Sonuç (yakalandı)",
+      "aciklama": "Oylar sayılır, sızmanın maskesi düşer, iki kelime ve genel skor satırı.",
+      "dosya": "sizma-reveal-n-5"
+    },
+    {
+      "mock": "sizma-reveal-escaped",
+      "q": "mock=sizma-reveal-escaped&n=6",
+      "baslik": "Sonuç (kurtuldu)",
+      "aciklama": "Sızma kurtulduğunda 'Kurtuldu!' başlığı ve hüküm.",
+      "dosya": "sizma-reveal-escaped-n-6"
+    }
+  ],
+  "bilinenSorunlar": [
+    "KURALLAR.md ('Oylar eşitse sızma kazanır') ile kod uyumlu: eşitlikte ya da hiç oy yokken sızma kurtulur; KURALLAR.md'nin 'sızma +2' ifadesi, 'fark ettin mi' ek puanıyla (O11) birlikte 3'e çıkabilir.",
+    "KURALLAR.md 'İpucu verme aşaması zamanlayıcısızdır' der; kodda teknik üst sınır olarak 5 dk (300 000 ms) vardır ve aşırı durumda aşama bu sınırda oylamaya geçer.",
+    "Bağlantısı kopmuş bir oyuncuya oy verilemez (KURALLAR.md bundan söz etmez); kopan oyuncu sızmaysa yakalanma olasılığı düşer.",
+    "İki ipucu turu, söyleme sırası ve ipuçlarının içeriği uygulama tarafından denetlenmez; yalnızca hatırlatılır.",
+    "Erken bitiş değerlendirmesi yalnız bir oyuncu eylem yaptığında yapılır; son eksik oyuncu bağlantısını yitirirse aşama kendiliğinden erken bitmez.",
+    "Herkese açık sonuç görünümü 'votes' alanıyla kimin kime oy verdiğini ham olarak içerir; arayüz yalnızca oy sayılarını gösterir."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-27: Yönetici içerik havuzları: kelime çiftleri panelden görüntülenip düzenlenebilir.",
+    "2026-10-27: 'Fark ettin mi?' (O11) kuralı: oylamadan sonra 8 sn'lik 'Sızma sen miydin?' aşaması, Evet diyen sızmaya +1.",
+    "2026-10-27: O3/O4/O10/O11 istemci ekranları, mock durumları ve ui-check girdileri.",
+    "2026-10-27: Sıralı açılış: oylar azdan çoğa sayılır, sonda sızmanın maskesi düşer.",
+    "2026-10-27: Oyunlar kabuk saatine, Status ve hazır noktalarına taşındı; tüm oyunlar için tur özeti (Sızma: '… sızmaydı ve yakalandı / kimse anlamadı').",
+    "2026-10-26: Dünya arka planı üzerinde sonuç metni okunur hâle getirildi.",
+    "2026-10-25: İyimser arayüz yardımcıları (kilit, seçici).",
+    "2026-10-19: İlk sürüm: motor, bot, testler, sunucu entegrasyonu ve istemci ekranları."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/sizma/index.ts",
+    "packages/engine/src/games/sizma/types.ts",
+    "packages/engine/src/games/sizma/pool.ts",
+    "packages/engine/src/games/sizma/words.ts",
+    "packages/engine/src/games/sizma/sizma.test.ts",
+    "apps/client/src/games/sizma/",
+    "docs/KURALLAR.md#3-sızma--sizma",
+    "scripts/ui-check.mjs"
+  ]
+}

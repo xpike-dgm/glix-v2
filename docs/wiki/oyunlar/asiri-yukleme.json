@@ -1,0 +1,382 @@
+{
+  "id": "asiri-yukleme",
+  "ad": "Aşırı Yükleme",
+  "slogan": "Ortak reaktörü hızla doldur ama 100'ü aşan son tıkı sen atma!",
+  "kategori": "Refleks",
+  "etiketler": ["ortak bar", "gizli sayaç", "refleks", "riskli tıklama"],
+  "oyuncu": {
+    "min": 2,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 90,
+    "not": "Görünür süre ya da sayaç yoktur. Bar 100'e ulaşana kadar herkes tıklar; bar 100'e ulaşınca başlayan gizli 3 sn'lik pencerede kimse kapasiteyi aşmazsa tur normal biter, biri aşarsa (patlatırsa) tur hemen biter. Teknik üst sınır: oyunun başından en çok 90 sn (kimse tıklamazsa oda takılmasın diye); sonra 5 sn sonuç gösterimi. Gerçek süre tıklama hızına bağlıdır (8 oyuncu hızlı tıklarsa birkaç saniyede 100'e ulaşılabilir). Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 30 sn) gelir."
+  },
+  "ozet": "Herkesin ekranında tek bir büyük reaktör çekirdeği vardır; ona dokunmak ortak enerji barını 1 doldurur. Bar kapasitesi 100'dür ve doluluk kimseye gösterilmez (kendi tıklama sayın bile gizlidir). Bar 100'e ulaşınca ekranın kenarları kırmızıya döner ve gizli 3 sn'lik tehlike başlar: bu sürede 100'ü aşan ilk tıkı atan patlatır (-1) ve tur biter. Patlamayanlar arasında en çok tıklayan +2, ikinci +1, en az tıklayan -1 alır.",
+  "akis": [
+    {
+      "ad": "Anlatım",
+      "sureSn": 40,
+      "kim": "herkes",
+      "aciklama": "Tam ekran anlatım: 'Reaktörü doldur ama sen patlatma!' ve üç madde (ortak çekirdeği hızlıca tıkla, sayılar gizli; kenarlar kızarınca tehlike başladı, sakın taşırma; 100'ü aşan patlar (-1), diğerlerinde en çok tıklayan +2, ikinci +1, en az tıklayan -1). Bağlı herkes hazır olunca ya da 40 sn dolunca biter. Maç kartları burada oynanır."
+    },
+    {
+      "ad": "Geri sayım",
+      "sureSn": 3,
+      "kim": "herkes",
+      "aciklama": "3 sn geri sayım, oynanan kartlar açıklanır. Geri sayımın bitişi oyunun başladığı andır (90 sn'lik teknik sınır buradan sayılır)."
+    },
+    {
+      "ad": "Tıklama",
+      "sureSn": null,
+      "kim": "herkes (izleyici hariç)",
+      "aciklama": "Koyu ekranda ortada büyük reaktör çekirdeği (halo, iki halka, enerji küresi) ve altında 'Çekirdeğe hızlıca dokun!'. Her dokunuş yerelde anında kıvılcım, ses ve titreşim üretir (ses/titreşim en sık 55 ms'de bir; en çok 24 kıvılcım aynı anda); tıklamalar sunucuya ilk tıklamada hemen, sonrakilerde en az 80 ms aralıkla ve en çok 10'luk toplu mesajlarla gider. Kapasite doluluk göstergesi, sayaç ve süre çubuğu yoktur. Herkes aynı ortak çekirdeği doldurur. İzleyici 'Herkes çekirdeği dolduruyor…' yazısını görür ve tıklayamaz.",
+      "gizli": "Bar toplamı, hiç kimsenin tıklama sayısı (kendi sayın dahil) ve tehlike penceresinin bitişi tur bitene kadar kimseye gösterilmez. Herkesin ekranında yalnız bir bayrak vardır: bar 100'e ulaşınca ekranın kenarı kırmızıya döner, çekirdek aşırı yüklenmiş görünür ve katılımcılara kısa bir alarm sesi ve titreşim gelir."
+    },
+    {
+      "ad": "Tehlike penceresi (gizli 3 sn)",
+      "sureSn": 3,
+      "kim": "herkes",
+      "aciklama": "Bar tam 100 olunca başlar. Bu süre herkes için aynı kırmızı kenarlı ekrandır; görünür geri sayım yoktur. 100'ü aşan ilk tık patlamayı belirler ve tur hemen biter; kimse tıklamazsa 3 sn sonunda tur normal biter. Bu pencerede atılan her tık, bar zaten dolu olduğu için doğrudan patlamadır.",
+      "gizli": "Pencerenin ne zaman biteceği gösterilmez; patlayan kişi tur bitene kadar bilinmez."
+    },
+    {
+      "ad": "Sonuç ve patlama",
+      "sureSn": 5,
+      "kim": "herkes",
+      "aciklama": "Tur biter bitmez sonuç açılır: çekirdek beyaz parlar, ekran 0,42 sn sarsılır ve patlama sesi çalar (patlama varsa). Başlık: 'Patlattın!' (patlatan sensen), 'Çekirdek patladı!' (başkası patlattıysa) ya da 'Reaktör dayandı' (patlama yoksa). Alt başlıkta kendi puanın ('+2 puan', '−1 puan', 'Puan yok'), izleyicide 'Toplam N tık'. Altında her oyuncunun tıklama sayısı, çubuğu ve puanı: en çok tıklayandan aza sıralı, patlatan en sonda ve kırmızı işaretli (çubuğu tam dolu). Oyun, tur bitiminden 5 sn sonra biter ve sonuç ekranına geçer.",
+      "gizli": "Artık bar toplamı (patlamada 101), her oyuncunun tıklama sayısı ve patlatan herkese açıktır."
+    }
+  ],
+  "kurallar": [
+    "2-8 oyuncu katılır (dikey oyun).",
+    "Ortak enerji barı 0'dan başlar ve kapasitesi 100'dür; her tıklama bara 1 ekler ve tıklayan oyuncunun sayacına 1 yazar. Herkes istediği kadar, istediği hızda tıklayabilir; oyuncu başına tıklama sınırı yoktur.",
+    "Tıklamalar tek tek ya da 1 ile 10 arası toplu mesajla ({kind:'tap', count}) gelir; count yoksa 1 sayılır. 0, 11 ve üstü, tam sayı olmayan count geçersizdir. Toplu mesaj sunucuda sırayla tek tek işlenir.",
+    "Bar tam 100'e ulaştığında (100'ü aşmadan) tur BİTMEZ; yalnız gizli 3 sn'lik tehlike penceresi başlar. Ekranda yalnız kenar kızarır; sayı, geri sayım ya da kapasite gösterilmez.",
+    "Bar zaten 100 iken (ya da tek mesajdaki toplu tıklar 100'ü aşarsa) kapasiteyi aşan İLK tık patlamayı belirler: o oyuncu patlatandır ve tur hemen biter (aynı mesajdaki kalan tıklar sayılmaz). Aşan tık da patlatanın sayacına yazılır ve toplam 101'e çıkar; patlayan tık sayısına dahildir (örneğin 95 iken 10'luk toplu mesajda 5 tık dolar, 6. tık aşar: patlatan olur, toplam 101, patlatanın sayacı +6).",
+    "Kapasiteyi aşan bir tık yoksa tehlike penceresi dolunca (bar 100'e ulaştığı andan 3 sn sonra) tur normal biter; patlama yoktur ve herkes sıralamaya girer.",
+    "Teknik üst sınır: oyunun başından 90 sn sonra tur patlamasız biter (kimse tıklamazsa oda takılmasın diye); gizli pencere bu sınırdan önce başlamış ama sınıra taşıyorsa 90. sn'de kesilir. Bar 100'ün altındaysa da bu durumda tur patlamasız kapanır ve tıklama sayıları sıralanır.",
+    "Tur bittiği anda (patlama anı, pencere bitişi ya da 90. sn) ve sonrasında gelen tık kabul edilmez ('ended'). Oyun, turun bitişinden 5 sn sonra (sonuç gösterimi) biter.",
+    "Hiçbir tıklama anında görünmez: bar toplamı, sayılar ve gizli pencerenin bitişi tur bitene kadar yoktur; kendi tıklama sayın bile kendi ekranında gösterilmez.",
+    "Patlayan oyuncu sıralamaya girmez ve -1 alır. Patlamayanlar tıklama sayısına göre sıralanır: tek lider +2, onun hemen altındaki (en yüksek tıklamalı ikinci değer) oyuncu(lar) +1; liderler eşitse yalnız liderlerin hepsi +1 alır ve +2 ya da ikinci sıra verilmez. Hiç tıklamayan sıralama ödülü alamaz (yalnız pozitif tıklama sayısı olanlar ödül alır).",
+    "Ek ceza (O7): patlamayanlar arasında en az tıklayan oyuncu(lar) ayrıca -1 alır (hiç tıklamayan da en az sayılır). Eşitlikte en az sayıda tıklayanların hepsi -1 alır. Patlamayan herkesin tıklama sayısı aynıysa kimse bu cezayı almaz. Patlayan bu cezaya girmez ve ikinci bir -1 almaz. Ceza, sıralama ödülüne eklenir (ikinci sırada +1 alan ve aynı zamanda en az tıklayan oyuncu toplamda 0 alır).",
+    "Mini oyun puanı doğrudan genel skora eklenir (awards = miniScores)."
+  ],
+  "puanlama": {
+    "ozet": "Patlatan -1; patlamayanlar arasında en çok tıklayan +2, ikinci +1, en az tıklayan ayrıca -1. Liderler eşitse hepsi +1 (+2 yok). Patlama yoksa herkes sıralanır.",
+    "kalemler": [
+      {
+        "olay": "Kapasiteyi aşan ilk tıkı atmak (patlatmak)",
+        "puan": "-1",
+        "not": "Sıralamaya ve en-az cezasına girmez."
+      },
+      {
+        "olay": "Patlamayanlar içinde tek lider (en çok tıklayan)",
+        "puan": "+2",
+        "not": "Tıklama sayısı 0'dan büyük olmalı."
+      },
+      {
+        "olay": "Lider tek ise, ikinci en çok tıklayan (eşitlerin hepsi)",
+        "puan": "+1",
+        "not": "İkinci sıra yalnız tek lider varken verilir."
+      },
+      {
+        "olay": "Liderler eşit (iki ya da daha çok)",
+        "puan": "liderlerin hepsi +1",
+        "not": "+2 ve ikinci sıra verilmez."
+      },
+      {
+        "olay": "Patlamayanlar içinde en az tıklayan (eşitlerin hepsi)",
+        "puan": "-1 (ek)",
+        "not": "Hiç tıklamayan da en az sayılır; herkes eşitse ceza yok; sıralama ödülüne eklenir (+1 ve en az → 0)."
+      },
+      {
+        "olay": "Diğer patlamayanlar",
+        "puan": "0",
+        "not": ""
+      }
+    ],
+    "ornek": "4 oyuncu: A, B, C, D. Tıklama sayıları bar 100'e ulaşırken: A 40, B 31, C 20, D 9 (toplam 100). Kenarlar kızarır. Gizli pencerede D bir tık daha atar: bu tık kapasiteyi aşar, D patlatır, toplam 101, D'nin sayacı 10. Patlamayanlar: A 40, B 31, C 20. A tek lider +2, B ikinci +1, en az tıklayan C ek -1 → C -1. D -1. Sonuç: A +2, B +1, C -1, D -1. İkinci örnek (patlama yok): 3 oyuncu A 50, B 30, C 20 (toplam 100), pencerede kimse tıklamaz, 3 sn sonra tur biter: A +2, B +1, C -1. Üçüncü örnek (lider eşitliği): A 40, B 40, C 5, D 5: A ve B +1 (liderler eşit), C ve D en az olduklarından -1; sonuç A +1, B +1, C -1, D -1.",
+    "beraberlik": "Liderler eşitse tüm liderler +1 alır, +2 verilmez ve ikinci sıra yoktur. İkinci sırada eşitlik varsa eşit olan herkes +1 alır. En az tıklayanlarda eşitlik varsa hepsi -1 alır; patlamayan herkesin sayısı aynıysa kimseye ceza verilmez."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Katılımcı olarak kalır; kopmadan önceki tıkları sayılır (kopuk oyuncunun tıkı da işlenir, hedef/bağlı kontrolü yoktur). Kopuk oyuncu yeni tık gönderemez. Hiç tıklamadan kopan oyuncu en az tıklayan olur ve -1 alabilir. 120 sn içinde dönmezse oyuncu odadan çıkarılır. Bu oyunda 'herkes hazır' erken bitişi yoktur."
+    },
+    {
+      "baslik": "Süre bitişi ve geç eylem",
+      "aciklama": "Geç gelen eylem payı (graceMs) yoktur: tur bittiği anda (ctx.now >= bitiş) gelen tık reddedilir ('ended'). Bu, ağda bekleyen tıkların patlamaya yol açtığı anlamına gelir: bar dolduktan sonra yoldaki tıklar sunucuya ulaştığında ilk ulaşan patlatır. İstemci tur bitince bekleyen (henüz gönderilmemiş) tıklarını atar."
+    },
+    {
+      "baslik": "İzleyici / geç katılan",
+      "aciklama": "Maç sırasında giren izleyici tıklayamaz ('not_participant'); düğme pasiftir. Tehlike başladığında ekran kenarı kırmızılanır (ortak bayrak); izleyici sonucu ve tıklama sayılarını görür ('Toplam N tık')."
+    },
+    {
+      "baslik": "Hiç kimse tıklamazsa",
+      "aciklama": "90 sn'lik teknik sınırda tur patlamasız kapanır; kimse tıklamadığı için sıralama ödülü yoktur ve patlamayanlar hepsi eşit olduğundan (hepsi 0) en-az cezası da yoktur: kimse puan almaz."
+    },
+    {
+      "baslik": "Tek patlamayan oyuncu",
+      "aciklama": "Bir oyuncu patlatır ve patlamayan tek kişi kalırsa o kişi tek lider olduğunda +2 alır (tıklamışsa); en-az cezası uygulanmaz çünkü karşılaştırılacak başka patlamayan yoktur. 2 oyuncuda patlatan -1, öbürü tıkladıysa +2."
+    },
+    {
+      "baslik": "2 vs 8 oyuncu",
+      "aciklama": "2 oyuncuda bar iki kişiyle dolar, aynı anda tıklayan iki kişiden ilk ulaşan tık patlatır. 8 oyuncuda bar birkaç saniyede 100'e ulaşabilir; çok sayıda mesaj gelir ama istemci toplu gönderim (80 ms'de en çok 10 tık, ≈12,5 mesaj/sn) kullanır; sunucunun soket başına sınırı 30 ani + saniyede 20 mesajdır."
+    },
+    {
+      "baslik": "Gizlilik",
+      "aciklama": "secrets() boştur (değerler kısa sayılardır); gizlilik yapısaldır ve testlerle doğrulanır: tur bitmeden ortak görünümde yalnız 'danger' bayrağı vardır (toplam, tıklamalar, pencere bitişi yok); kişisel görünüm yalnız 'participant' bayrağını taşır; patlatan tur bitmeden hiçbir görünümde yoktur."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Genel hesap",
+      "etki": "Bu oyunda mini oyun puanı = ham genel puan ve -1, 0, +1, +2 (ve +1 ile -1 birleşince 0) değerlerini alır. 'Birinci' en yüksek puanlıdır (genellikle +2 alan tek lider; liderler eşitse +1 alanlar), 'sonuncu' en düşük puanlıdır (genellikle -1 alanlar: patlatan ve en az tıklayan). Herkes eşitse kimse sonuncu sayılmaz."
+    },
+    {
+      "kart": "Kalkan",
+      "etki": "Eksiye düşersen 0 sayılır: bu oyunda çok işe yarar; patlatsan bile ya da en az tıklasan bile -1 yerine 0 alırsın."
+    },
+    {
+      "kart": "Sigorta",
+      "etki": "Sonuncu olursan +1: patlatan ve/veya en az tıklayan (-1 alanlar) sonuncudur; -1 → 0. Herkes eşitse kart işlemez."
+    },
+    {
+      "kart": "Kendine Güven",
+      "etki": "Birinci olursan +2, olamazsan -1: tek lider +2+2 = +4, diğerleri 1 eksik (ör. ikinci +1 → 0, patlatan -1 → -2)."
+    },
+    {
+      "kart": "Tahmin",
+      "etki": "Hedefin birinci olursa +2: hedefin en çok tıklayan (patlamayan) olacağını tahmin edersin."
+    },
+    {
+      "kart": "Çift Puan",
+      "etki": "Puan x2, eksi de x2: +2 → +4, +1 → +2, patlatan -1 → -2."
+    },
+    {
+      "kart": "Altın Dokunuş",
+      "etki": "Puan x3 (eksi etkilenmez): +2 → +6, +1 → +3; patlatan -1 olarak kalır."
+    },
+    {
+      "kart": "Ağır Yük (kötü)",
+      "etki": "Puan yarıya iner, sıfıra yuvarlanır: +2 → +1, +1 → 0, -1 → 0 (patlatanı da kurtarır)."
+    },
+    {
+      "kart": "Ters Köşe",
+      "etki": "Sıralama tersine döner: en çok tıklayan(lar) en düşük puanlı grubun ham puanını (örn. patlatan -1), en düşük grup en yüksek puanı alır; eşit gruplar toplamı kendi aralarında paylaşır, artan tam bölünmeyen puan katılım sırasındaki ilk üyelere +1 olarak verilir."
+    },
+    {
+      "kart": "Takas",
+      "etki": "Sahip ile hedef ham puanlarını (örneğin patlatanın -1'i ile liderin +2'si) değiştirir."
+    },
+    {
+      "kart": "Ortaklık",
+      "etki": "Sahip ve hedefin puanı toplanıp ikiye bölünür (tek puan mini puanı yüksek olana gider, eksi toplamda iyi oynayan daha az kaybeder: -3 → iyi taraf -1, kötü taraf -2). Patlatanla ortaklık puan paylaşımı için ilginçtir."
+    },
+    {
+      "kart": "Lanet / Vergi / Hırsız",
+      "etki": "Lanet hedefin pozitif puanını 0'a çeker (lideri durdurur). Vergi: hedef pozitif puan aldıysa 1 puan sana geçer. Hırsız: bu oyunun birincisinden 1 puan alır; birinci birden çok ise sahibi dışındakilerden en yüksek puanlıdan alınır; sahibi tek birinciyse etkisiz."
+    },
+    {
+      "kart": "Çelme",
+      "etki": "Hedef -1: lider +2 → +1, patlatan -1 → -2."
+    },
+    {
+      "kart": "Diğer kartlar",
+      "etki": "Takviye, Koruma, Ayna, Veto, Geniş Seçim, Oyunu Seç, Kart Çal, Açık Hedef, Hayırsever, Boş El, Kör Seçim, Sessizlik, Kumarbaz, Lanetli Hediye ve diğer kötü kartlar oyunun kuralından bağımsız, KURALLAR K5-K7'deki gibi çalışır; Aşırı Yükleme'ye özel istisna kodda yoktur."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Bar kapasitesi (her tık 1)",
+      "deger": "100",
+      "kaynak": "packages/engine/src/games/asiri-yukleme/types.ts:4"
+    },
+    {
+      "ad": "Gizli tehlike penceresi",
+      "deger": "3 000 ms",
+      "kaynak": "packages/engine/src/games/asiri-yukleme/types.ts:6"
+    },
+    {
+      "ad": "Teknik üst sınır (oyun başından)",
+      "deger": "90 000 ms",
+      "kaynak": "packages/engine/src/games/asiri-yukleme/types.ts:8"
+    },
+    {
+      "ad": "Tur sonu sonuç gösterimi",
+      "deger": "5 000 ms",
+      "kaynak": "packages/engine/src/games/asiri-yukleme/types.ts:10"
+    },
+    {
+      "ad": "Toplam üst sınır (üst sınır + sonuç)",
+      "deger": "95 000 ms",
+      "kaynak": "packages/engine/src/games/asiri-yukleme/types.ts:11"
+    },
+    {
+      "ad": "Tek mesajda en çok tık (count)",
+      "deger": "10",
+      "kaynak": "packages/engine/src/games/asiri-yukleme/types.ts:16"
+    },
+    {
+      "ad": "Turun bitiş anı (patlama / pencere sonu / üst sınır, hangisi önceyse)",
+      "deger": "asiriYuklemeEndAt",
+      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:34-39"
+    },
+    {
+      "ad": "Puan hesabı (patlatan -1; rankAwards; en az -1)",
+      "deger": "asiriYuklemePoints",
+      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:48-65"
+    },
+    {
+      "ad": "Toplu tık işlenişi (room/fill/boom)",
+      "deger": "kapasiteyi aşan ilk tık patlatır; total=101",
+      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:132-146"
+    },
+    {
+      "ad": "Oyun bitişi",
+      "deger": "tur sonu + 5 000 ms",
+      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:167-169"
+    },
+    {
+      "ad": "Sıralama ödülü (rankAwards positiveOnly)",
+      "deger": "tek lider +2, sıradaki +1; lider eşitse liderler +1",
+      "kaynak": "packages/engine/src/games/scoring.ts:10-30"
+    },
+    {
+      "ad": "Oyuncu sayısı",
+      "deger": "2-8",
+      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:86-87"
+    },
+    {
+      "ad": "İstemci tık toplayıcı aralığı",
+      "deger": "80 ms",
+      "kaynak": "apps/client/src/games/asiri-yukleme/batcher.ts:28"
+    },
+    {
+      "ad": "Efekt (ses/titreşim) sıklık sınırı / en çok kıvılcım",
+      "deger": "55 ms / 24",
+      "kaynak": "apps/client/src/games/asiri-yukleme/AsiriYuklemeScreen.tsx:17-18"
+    },
+    {
+      "ad": "Soket mesaj sınırı",
+      "deger": "30 ani + saniyede 20",
+      "kaynak": "apps/server/src/ratelimit.ts:10-11"
+    },
+    {
+      "ad": "Kabuk saati",
+      "deger": "noClock: çizilmez",
+      "kaynak": "apps/client/src/games/registry.ts:56"
+    },
+    {
+      "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
+      "deger": "40 000 / 3 000 / 30 000 ms",
+      "kaynak": "apps/server/src/match.ts:40-42"
+    }
+  ],
+  "strateji": [
+    "Bar ekranda görünmez: erken tıklayarak sayacını yükselt (en çok tıklayan +2, en az tıklayan -1), ama ekran kenarı kızarır kızarmaz DUR; kızaran ekrandaki ilk tık patlamadır.",
+    "Bar 100'e ulaşınca ekran kızarır ama bar tam 100'dür: sonraki her tık (herkesinki) patlatır. Parmaklarını çekmek 3 sn sürer; 3 sn kimse dokunmazsa tur biter ve en çok tıklayan kazanır.",
+    "Hiç tıklamamak -1 getirir (en az tıklayan olursun); bir iki tık atıp geri çekilmek de aynı. Dengeli ol: en az tıklayan olmamak için ortalamanın üstünde tıkla.",
+    "Dokunmaların toplu gönderildiğini unutma: kızarma anında zaten yolda olan tıkların ulaşırsa patlatır; ritmi kaybetmeden ama kızarmayı fark eder etmez durmayı çalış.",
+    "Tek lider +2 alır, liderler eşitse hepsi yalnız +1 alır: sayılar gizli olduğundan liderliğin kesin olup olmadığını bilemezsin, bu yüzden güvenli bir fark için bol tıkla.",
+    "Patlatmak -1'dir ama patlatan sıralamaya ve en-az cezasına girmez; Kalkan gibi bir kartın varsa bedeli 0'a iner."
+  ],
+  "tv": "Aşırı Yükleme'nin TV'ye özel sahnesi yoktur: TV görünümü oyun içi ekranın izleyici kipinde büyütülmüş hâlidir ('Herkes çekirdeği dolduruyor…', çekirdek, tehlike başlayınca kırmızı kenar). Kabuk saati (noClock) çizilmez. Sonuçta çekirdek parlaması/patlaması, sıralı tıklama listesi, patlatan (kırmızı işaretli) ve puanlar herkese açılır. Bar toplamı ve tıklama sayıları sonuç açılana kadar TV'de de yoktur.",
+  "ekranlar": [
+    {
+      "mock": "asiri-yukleme-briefing",
+      "name": "asiri-briefing",
+      "q": "mock=asiri-yukleme-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Oyun öncesi anlatım: enerji çekirdeği çizimi, amaç ve üç madde.",
+      "dosya": "asiri-yukleme-briefing"
+    },
+    {
+      "mock": "asiri-yukleme-playing",
+      "name": "asiri-playing",
+      "q": "mock=asiri-yukleme-playing",
+      "baslik": "Tıklama",
+      "aciklama": "Ortada reaktör çekirdeği, altında 'Çekirdeğe hızlıca dokun!'; sayaç ve doluluk yok.",
+      "dosya": "asiri-yukleme-playing"
+    },
+    {
+      "mock": "asiri-yukleme-danger",
+      "name": "asiri-danger",
+      "q": "mock=asiri-yukleme-danger",
+      "baslik": "Tehlike başladı",
+      "aciklama": "Bar 100'e ulaştı: ekran kenarı kırmızı, çekirdek aşırı yüklenmiş; yine sayı veya süre yok.",
+      "dosya": "asiri-yukleme-danger"
+    },
+    {
+      "mock": "asiri-yukleme-reveal-boom",
+      "name": "asiri-reveal-boom-5",
+      "q": "mock=asiri-yukleme-reveal-boom&n=5",
+      "baslik": "Sonuç: başkası patlattı",
+      "aciklama": "'Çekirdek patladı!'; tıklama sıralaması, patlatan en sonda kırmızı, puanlar.",
+      "dosya": "asiri-yukleme-reveal-boom-n-5"
+    },
+    {
+      "mock": "asiri-yukleme-reveal-boom",
+      "name": "asiri-reveal-boom-me-8",
+      "q": "mock=asiri-yukleme-reveal-boom&n=8&me=1",
+      "baslik": "Sonuç: sen patlattın (8 oyuncu)",
+      "aciklama": "'Patlattın!' ve '−1 puan'; 8 satırlı tıklama listesi.",
+      "dosya": "asiri-yukleme-reveal-boom-n-8-me-1"
+    },
+    {
+      "mock": "asiri-yukleme-reveal-safe",
+      "name": "asiri-reveal-safe-8",
+      "q": "mock=asiri-yukleme-reveal-safe&n=8",
+      "baslik": "Sonuç: patlama yok",
+      "aciklama": "'Reaktör dayandı': kimse aşmadı; +2/+1/-1 dağılımı.",
+      "dosya": "asiri-yukleme-reveal-safe-n-8"
+    },
+    {
+      "mock": "asiri-yukleme-reveal-boom",
+      "name": "asiri-reveal-2",
+      "q": "mock=asiri-yukleme-reveal-boom&n=2",
+      "baslik": "Sonuç: 2 oyuncu",
+      "aciklama": "İki oyunculu sonuç: patlatan -1, diğeri tıklamışsa +2.",
+      "dosya": "asiri-yukleme-reveal-boom-n-2"
+    },
+    {
+      "mock": "asiri-yukleme-spectator",
+      "name": "asiri-spectator",
+      "q": "mock=asiri-yukleme-spectator",
+      "baslik": "İzleyici",
+      "aciklama": "'Herkes çekirdeği dolduruyor…'; tıklanamaz.",
+      "dosya": "asiri-yukleme-spectator"
+    }
+  ],
+  "bilinenSorunlar": [
+    "KURALLAR.md §20 cevap 5: bar 100 olduktan sonra gizli 3 sn 'arka planda oyunculara gözükmeyecek şekilde' denir, madde 13 ise kenarın kırmızıya döndüğünü söyler. Kod ikisini birlikte uygular: kenar kırmızı ve alarm sesi/titreşimi gelir (tehlikenin başladığı bilinir) ama süre ya da sayaç gösterilmez.",
+    "KURALLAR.md 'süre yok' der; kodda 90 sn'lik teknik üst sınır vardır (kimse tıklamazsa/yetmezse tur patlamasız kapanır). Ayrıca turdan sonra 5 sn sonuç gösterimi vardır ve oyun bu süre dolunca biter.",
+    "Patlayan tık patlatanın sayacına yazılır ve ekranda 'tıklama sayısı' olarak görünür; toplu mesajda aşan kısmın sonrası sayılmaz (örneğin 10'luk mesajın 6. tıkı aşarsa 4 tık sayılmaz).",
+    "Danger bayrağı bar 100'e ulaşınca true olur; bar 100'ün altındayken 90. sn dolarsa danger hiç true olmaz ve reveal total 100'ün altındadır ('Bar dolmadan süre bitti' özeti).",
+    "En az tıklayana verilen -1 cezası (O7) KURALLAR'daki 'Değişiklik' bloğunda yazar ve kod uygular; ana metindeki eski cevap 8-9 ('en çok tıklayan +2, ikinci +1') ceza içermez.",
+    "Bu oyunda erken bitiş (herkes hazır) yoktur; Tamam/kilit eylemi tanımlı değildir."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-27: Renk körlüğü modu: kalan oyunlar ve ui-check &cb=1 ekranları (patlatan işareti).",
+    "2026-10-27: Tur geçişi yayını; sunucu testleri yeni sürelere uyarlandı.",
+    "2026-10-27: O7 (sahip onayı): patlamayanlar arasında en az tıklayan -1 cezası; motor ve testler (KURALLAR değişiklik bloğu).",
+    "2026-10-27: Tüm oyunlar için tur özeti (summarize): 'X barı patlattı / Bar patlamadan 100'e ulaştı / Bar dolmadan süre bitti'.",
+    "2026-10-26: Sonuç metni arka planda okunur kalır (kontrast düzeltmesi); enerji çekirdeği ve kronometre çizimleri.",
+    "2026-10-18: Aşırı Yükleme oyunu eklendi (motor, bot, testler, istemci ekranı)."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/asiri-yukleme/index.ts",
+    "packages/engine/src/games/asiri-yukleme/types.ts",
+    "packages/engine/src/games/asiri-yukleme/bots.ts",
+    "packages/engine/src/games/asiri-yukleme/summary.ts",
+    "packages/engine/src/games/asiri-yukleme/asiri-yukleme.test.ts",
+    "packages/engine/src/games/scoring.ts",
+    "docs/KURALLAR.md#20-aşırı-yükleme (O7 değişiklik bloğu dahil)",
+    "apps/client/src/games/asiri-yukleme/ (AsiriYuklemeScreen.tsx, batcher.ts, Core.tsx, view.ts, sounds.ts)",
+    "apps/server/src/ratelimit.ts",
+    "apps/server/src/match.ts",
+    "apps/server/src/asiri-yukleme.test.ts",
+    "scripts/ui-check.mjs"
+  ]
+}

@@ -65,6 +65,8 @@ export interface ServerOptions {
   host: string;
   port: number;
   clientDir: string;
+  /** Oyun ansiklopedisi içerik klasörü; verilmezse wiki uçları 404 verir. */
+  wikiDir?: string;
   allowedOrigins: readonly string[] | null;
   revision: string;
   /** Zaman kaynağı (testlerde sahte saat). Varsayılan: sistem saati. */
@@ -353,6 +355,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         rooms: createAdminRoomOps(rt),
         banned: rt.bannedWords,
         content: rt.content,
+        wikiDir: opts.wikiDir ?? null,
         live: () => {
           let withAccount = 0;
           for (const c of connections) if (c.account) withAccount += 1;

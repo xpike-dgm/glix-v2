@@ -28,6 +28,7 @@ import { log } from "./log.js";
 import { loadSqlite } from "./statsStore.js";
 import { startWalCheckpointer } from "./walCheckpoint.js";
 import type { PushTarget } from "./webpush.js";
+import { createWikiStore, WIKI_SCHEMA, type WikiStore } from "./wikiStore.js";
 
 /** Oturum bu süre sonra kendiliğinden düşer (çerez Max-Age ile aynı). */
 export const SESSION_TTL_MS = 180 * 24 * 3600 * 1000;
@@ -413,7 +414,7 @@ export type CreateResult = { ok: true; account: Account } | { ok: false; field: 
  * aynı SQLite dosyasını paylaşabilir. Dosya yolu verilmezse bellekte açılır (yeniden başlatınca silinir).
  * Hata fırlatabilir: çağıran (auth.ts) 500 döner, sunucu çökmez.
  */
-export interface AccountStore extends FriendStore {
+export interface AccountStore extends FriendStore, WikiStore {
   create(username: string, email: string, passHash: string, now: number): CreateResult;
   /** Kullanıcı adı ya da e-posta (küçük harfe çevrilmiş) ile bulur. */
   findByLogin(login: string): AccountWithHash | null;
@@ -937,6 +938,8 @@ export const ACCOUNT_MIGRATIONS: readonly string[] = [
    CREATE INDEX accounts_created ON accounts (created_at, id);
    CREATE INDEX accounts_suspended ON accounts (id) WHERE suspended_at IS NOT NULL;
    CREATE INDEX sessions_seen ON sessions (account_id, last_seen);`,
+  // Oyun ansiklopedisi (yalnız yönetici) notları ve ekran işaretleri.
+  WIKI_SCHEMA,
 ];
 
 /** Yönetici hesap dökümünde gösterilen son Glix hareketi sayısı. */
@@ -1494,6 +1497,7 @@ export function createAccounts(path: string): AccountStore {
   let closed = false;
   return {
     ...createFriendStore(db, inTransaction),
+    ...createWikiStore(db),
     changeUsername(accountId, username, now) {
       const lc = username.toLowerCase();
       let result: RenameResult = { ok: false, reason: "missing" };

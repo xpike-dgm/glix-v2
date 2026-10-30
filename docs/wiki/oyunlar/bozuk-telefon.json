@@ -1,0 +1,375 @@
+{
+  "id": "bozuk-telefon",
+  "ad": "Bozuk Telefon",
+  "slogan": "Bir cümle yaz, arkadaşın çizsin, bir sonraki anlatsın; zincir bozulurken en komik adıma oy ver.",
+  "kategori": "Çizim",
+  "etiketler": ["zincir", "çizim", "yazı", "oylama", "gösteri"],
+  "oyuncu": {
+    "min": 3,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 335,
+    "not": "Girdi aşamaları: yazma adımı 25 sn, çizme adımı 60 sn. Adım sayısı = oyuncu sayısı (en çok 6). Her zincir için gösteri (adım başına 3 sn) + oylama 10 sn + sonuç 3 sn. Erken bitiş olmazsa toplam: 3 oyuncu 176 sn, 4 oyuncu 270 sn, 5 oyuncu 335 sn, 6 oyuncu 441 sn, 7 oyuncu 472 sn, 8 oyuncu 503 sn. Herkes 'Tamam' derse adımlar (ve herkes oy verirse oylamalar) 1 sn sonra biter."
+  },
+  "ozet": "Herkes bir cümle yazarak kendi zincirini başlatır. Zincirler her adımda bir sonraki oyuncuya geçer: yazılan cümleyi çizersin, gördüğün çizimi tek cümleyle anlatırsın. Her adımda yalnız bir önceki adımı görürsün. Sonunda her zincir baştan sona açılır ve herkes o zincirin en komik adımına oy verir; aldığın her oy +1, 'sağlam zincir' (ilk ve son yazı aynı anlamda) kalırsa zincirdeki herkes +1 kazanır.",
+  "akis": [
+    {
+      "ad": "Anlatım",
+      "sureSn": 40,
+      "kim": "herkes",
+      "aciklama": "Tam ekran anlatım: 'Cümle çizimde ve tahminde bozulsun, birlikte gülelim!' ve üç madde (bir cümle yaz, zincirler her adımda el değiştirir; elindeki zincirin yalnız bir önceki adımını görür, çizer ya da yazarsın; sonunda zincirleri izle, en komik adıma oy ver). Herkes hazırsa ya da 40 sn dolunca 3 sn geri sayım.",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Adım 1: Cümle yaz",
+      "sureSn": 25,
+      "kim": "herkes (eşzamanlı)",
+      "aciklama": "Üstte 'ADIM 1/n' rozeti, 'Bir cümle yaz' başlığı ve süre çubuğu. Altta 'Sıradaki arkadaşın bunu çizecek. Kısa ve komik tut!' notu, en çok 2 satır görünen cümle alanı ('Örn. Kedi uzayda pizza yiyor'), 'k/60' karakter sayacı, oyuncu avatar şeridi (hazır olanlar işaretli) ve 'Tamam' düğmesi. Yazdıkça metin Türkçe büyük harfe çevrilir ve 350 ms bekleyip sunucuya gider; Enter 'Tamam' demektir.",
+      "gizli": "Yazdığın cümleyi yalnız sen ve (adım bitince) zinciri sıradaki tutan oyuncu görür."
+    },
+    {
+      "ad": "Çizme adımı",
+      "sureSn": 60,
+      "kim": "herkes (eşzamanlı)",
+      "aciklama": "Elinde olan zincirin bir önceki yazısını görürsün ('Cümleyi çiz' başlığı, cümle üstte büyük yazıyla). Eğer gelen cümle boşsa ('…') 'Cümle gelmedi, aklına geleni çiz!' yazar. Ortak çizim tahtasında 6 renk kalem (beyaz, pembe, sarı, yeşil, mavi, turuncu), silgi, 3 kalınlık, geri al, temizle (ikinci dokunuşla onaylanır) ve 'Tamam' vardır. Çizim yapıp 'Tamam' demek çizimi kilitler.",
+      "gizli": "Çizimini yalnız sen görürsün; adım bitince zinciri tutan sıradaki oyuncu görür. Başkaları görmez."
+    },
+    {
+      "ad": "Yazma adımı (çizimi anlat)",
+      "sureSn": 25,
+      "kim": "herkes (eşzamanlı)",
+      "aciklama": "'Çizimi tek cümleyle anlat' başlığıyla, elindeki zincirin bir önceki adımı olan çizim kare tuvalde gösterilir (boşsa 'Boş tuval'). Altta cümle alanı ('Gördüğünü yaz…'), sayaç ve 'Tamam'. Adımlar yaz → çiz → yaz → çiz → yaz → çiz sırasıyla sürer (3 oyuncuda yaz → çiz → yaz).",
+      "gizli": "Yalnız bir önceki adımı görürsün; zincirin daha öncesini ve başlangıç cümlesini görmezsin."
+    },
+    {
+      "ad": "Gösteri",
+      "sureSn": 9,
+      "kim": "herkes izler",
+      "aciklama": "Her zincir sırayla açılır: 'ZİNCİR k/n', 'Zincir açılıyor', 'X başlattı'. Tüm adımlar bir ızgarada kare kartlar olarak durur; henüz açılmayanlar '?' gösterir. İlk adım hemen açılır, sonrakiler her 3 sn'de bir; yeni açılan adım parlar. Her kartta yazarın avatarı görünür. Gösteri süresi adım sayısı × 3 sn'dir (3 oyuncuda 9 sn, 6'da 18 sn).",
+      "gizli": "Zincirlerin sıradaki (henüz gösterilmeyen) adımları ve sonraki zincirler hiçbir görünümde yoktur."
+    },
+    {
+      "ad": "Oylama",
+      "sureSn": 10,
+      "kim": "herkes (kendi adımın hariç)",
+      "aciklama": "'En komik adım hangisi?' başlığı. Bir adıma dokunup seçersin ('Emin misin? Onaylayınca değişmez'), sonra 'EN KOMİK BU' ile onaylarsın; oy hemen mühürlenir ('OY VERİLDİ') ve değiştirilemez. Kendi adımına dokunulamaz ('kendi adımına oy yok'). Bağlı herkes oy verince oylama 1 sn sonra biter. İzleyici yalnız 'k/n oy verdi' sayacını görür.",
+      "gizli": "Kimin kime oy verdiği sonuç aşamasına kadar gizlidir; herkese açık görünümde yalnız kimlerin oy verdiği listelenir. Kendi oyunu yalnız sen görürsün."
+    },
+    {
+      "ad": "Zincir sonucu",
+      "sureSn": 3,
+      "kim": "herkes",
+      "aciklama": "Her adımda aldığı oy sayısı '+n' olarak gösterilir; en çok oy alan adımda yıldız işareti vardır ('En komik adım seçildi'); kimse oy vermediyse 'Kimse oy vermedi'. Sağlam zincirse 'Sağlam +1' rozeti ve 'Sağlam zincir! Zincirdeki herkes +1'. Altta oyuncuların o ana kadar biriken puanları. Sonra sonraki zincirin gösterisi hemen başlar.",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Sonuç ekranı",
+      "sureSn": 30,
+      "kim": "herkes",
+      "aciklama": "Mini oyun sonuç/podyum ekranı (herkes 'Devam'a basınca 1 sn sonra, aksi halde 30 sn sonra kapanır).",
+      "gizli": "Yok."
+    }
+  ],
+  "kurallar": [
+    "Oyuncu sayısı 3 ile 8 arasındadır.",
+    "Zincir sayısı oyuncu sayısı kadardır; her oyuncu bir zinciri başlatır. Başlatma sırası ve zincirlerin el değiştirme düzeni maç başında bir kez karıştırılmış tek bir döngüdür: adım s'de zincir c'yi döngüdeki (c + s). oyuncu tutar. Hiçbir zincir sona kadar başlatıcısına dönmez; her adımda herkes tam bir zincir tutar.",
+    "Adım sayısı = oyuncu sayısı, en çok 6 (3 oyuncuda 3 adım, 4'te 4, 5'te 5, 6-8'de 6). Çift sıra adımlar (ilk adım dahil) yazmadır (25 sn), tek sıra adımlar çizmedir (60 sn). Yani 6 oyuncuda yaz, çiz, yaz, çiz, yaz, çiz.",
+    "Adım 6'dan büyük oyuncu sayısında (7-8 oyuncu) zincir her oyuncudan geçmez: her zincirde 6 farklı yazar olur, kalan oyuncular o zincirde adım yazmaz (ama yine de oy verebilir).",
+    "İlk adımda oyuncu kendi cümlesini yazar: en çok 60 karakter (kod noktası), boş olamaz, en az bir harf ya da rakam içermelidir; Türkçe büyük harfe çevrilir, satır sonu/sekme boşluğa dönüşür, birden fazla boşluk teke iner, görünmez/yön değiştiren karakterler ve 3'ten fazla art arda birleştirici işaret geçersizdir (eylem reddedilir).",
+    "Yazma adımlarında cümle süre bitene ya da 'Tamam'a kadar istenildiği kadar değiştirilebilir; son gönderilen geçerlidir.",
+    "Çizme adımında darbe, geri al ve temizle kullanılabilir. Çizim sınırları: en çok 150 darbe, toplam 1 500 nokta, 400 çizim eylemi (darbe + geri al + temizle). Her darbe 2 ile 120 nokta arasında, renk geçerli kalem (6 renk ya da silgi) ve kalınlık 1-3 olmalıdır. Geri al son darbeyi siler ve kotadaki noktayı iade eder; temizle tüm darbeleri siler; boş çizimde ikisi de reddedilir ('empty'). Eylem kotası (400) iade edilmez.",
+    "Her adımda oyuncu yalnız elindeki zincirin bir önceki adımını görür (yazarı gösterilmez, çizim ve yazı olarak). Zincirin geri kalanı gösteriye kadar gizlidir.",
+    "'Tamam' girdiyi kesinleştirir: yazmada en az bir cümle, çizmede en az bir darbe gerekir (girdisiz 'Tamam' reddedilir). Kilitlendikten sonra yazı/çizim değiştirilemez ('locked').",
+    "Bağlı bütün katılımcılar 'Tamam' derse adım son kilitten 1 sn sonra biter. Bağlantısı kopan oyuncu beklenmez; kopuk olup 'Tamam' demeyenler yüzünden erken bitiş engellenmez. Herkes kopuksa erken bitiş olmaz. Erken bitişte sonraki adım erken başlar ve adım süresi sonraki adımın bitiş zamanına yansır.",
+    "Süre dolduğunda 'Tamam' demeyenlerin o anki taslağı zincire geçer. Hiç yazı yazılmadıysa zincire '…' geçer; hiç darbe çizilmediyse boş çizim ('Boş tuval') geçer. Zincir ilk cümle '…' ise sağlam sayılmaz.",
+    "Gösteri: zincirler döngü sırasına göre (zincir 1'den n'ye) tek tek açılır. Her zincirde ilk adım hemen görünür, sonrakiler 3 sn aralıkla açılır. Gösteri bitince 10 sn'lik oylama, ardından 3 sn'lik sonuç penceresi gelir; sonra sonraki zincir başlar.",
+    "Oylama yalnız o zincirin gösterisi bittikten sonra, oylama aşamasında yapılır (gösterim sırasında oy reddedilir). Herkes (oyuncu) her zincirde bir kez oy verir; oy tek seferliktir, değiştirilemez. Kendi yazdığın/çizdiğin adıma oy verilemez; adım numarası geçerli olmalıdır.",
+    "Bağlı bütün katılımcılar oy verince oylama 1 sn sonra biter ve sonuç aşaması başlar; kopuk oyuncular beklenmez. Oy vermeyenin oyu sayılmaz.",
+    "Puan: bir adımın aldığı her oy o adımın yazarına +1 verir (çizimler ve yazılar için aynı). Birden çok adım oy alabilir; en çok oy alanın özel bir ödülü yoktur, her oy +1'dir.",
+    "Sağlam zincir: zincirin ilk cümlesi ile en son yazı adımı (son 'yazma' adımı) Türkçe normalize edilmiş kelimelerle karşılaştırılır (büyük/küçük harf, aksan ve noktalama yok sayılır; '…' kelime sayılmaz). Ortak kelime sayısı × 2 ≥ iki cümlenin kelime kümesinden büyüğünün boyutuysa zincir 'sağlam'dır ve o zincirde adımı olan HER yazar +1 alır. Son yazma adımı: çift adım sayısında (4) 3. adım, tek sayıda (3, 5) son adımdır; 6 adımda 5. adım.",
+    "Hiç ya da yalnız '…' olan ilk ya da son yazı sağlam sayılmaz; zincirin tüm adımları tamamlanmamışsa sağlam sayılmaz.",
+    "Puanlar yalnız katılımcılara verilir, tam sayıdır; kopuk oyuncular da puanlanır. Mini oyun puanı = genel skora giden puan.",
+    "Gösteri sırasında ekranda toplam puanlar yalnız sonucu açılmış zincirlerden birikir."
+  ],
+  "puanlama": {
+    "ozet": "Aldığın oy kadar +1 ve zincirin 'sağlam' çıkarsa o zincirdeki herkese +1. Eksi puan yoktur.",
+    "kalemler": [
+      {
+        "olay": "Yazdığın/çizdiğin adım 'en komik' diye oy aldı",
+        "puan": "+1 (oy başına)",
+        "not": "Her oy adımın yazarına; kendi adımına oy veremezsin."
+      },
+      {
+        "olay": "Sağlam zincir (ilk cümle ile son yazı en az yarı ortak kelime)",
+        "puan": "+1",
+        "not": "Zincirde adımı olan herkese, oy almasa bile."
+      },
+      {
+        "olay": "Oy vermedin / süre bitti",
+        "puan": "0",
+        "not": "Ceza yok."
+      }
+    ],
+    "ornek": "4 oyuncu (A, B, C, D). A'nın zinciri: A 'KEDİ UZAYDA PİZZA YİYOR' yazar, B çizer, C 'UZAYDA PİZZA YİYEN KEDİ' diye anlatır, D onu çizer. Zincirde 4 adım var; son yazma adımı 3. adım (C). Ortak kelime: UZAYDA, PİZZA, KEDİ (3); büyük küme 4 kelime; 3×2 ≥ 4 → sağlam. Oylamada B'nin çizimi 2 oy, D'nin çizimi 1 oy, A'nın cümlesi 0 oy alır (A kendi adımına oy veremez). Puanlar: B +2, D +1, sağlam olduğu için A, B, C, D hepsi +1: A +1, B +3, C +1, D +2.",
+    "beraberlik": "Beraberlik kuralı yoktur; her oy +1 olarak yazılır. Eşit toplam puanlar sıralamada eşit sayılır."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Kopan oyuncu katılımcı kalır: tuttuğu zincirdeki adımı süre dolunca boş ('…' ya da 'Boş tuval') geçer ya da en son gönderilen taslak geçer. Erken bitiş ve oylama erken bitişi için kopuk oyuncu beklenmez. Herkes kopuksa erken bitiş olmaz. Kopuk oyuncu da puanlanır (kendi adımları oy aldıysa)."
+    },
+    {
+      "baslik": "Süre dolması / boş girdi",
+      "aciklama": "Boş yazı zincire '…' olarak geçer; sonraki oyuncu çizerken 'Cümle gelmedi, aklına geleni çiz!' görür. Boş çizim 'Boş tuval' olarak geçer ve sonraki oyuncu boş tuval görür."
+    },
+    {
+      "baslik": "3 oyuncu",
+      "aciklama": "3 adım: yaz → çiz → yaz. 3 zincir, her zincirde 3 farklı yazar (herkes tüm zincirlerde). Gösteri zinciri başına 9 sn + 10 sn oylama + 3 sn sonuç. Oylamada üç adımdan kendi adımın hariç ikisini seçebilirsin."
+    },
+    {
+      "baslik": "7-8 oyuncu",
+      "aciklama": "Adım sayısı 6'da kalır; her zincirde 6 yazar vardır, 1-2 oyuncu o zincirde adım yazmaz ama yine oy verir. Gösteri her zincir için 18 sn, toplam oyun 8 oyuncuda 503 sn'ye kadar uzar."
+    },
+    {
+      "baslik": "İzleyici ve TV",
+      "aciklama": "İzleyici girdi aşamalarında yalnız 'Arkadaşların yazıyor/çiziyor' ve kimlerin 'Tamam' dediğini görür; içerik görmez. Gösteri ve sonuçları katılımcılarla aynı görür; oy veremez, 'k/n oy verdi' sayacını görür."
+    },
+    {
+      "baslik": "Klavye açıkken",
+      "aciklama": "Telefon klavyesi açılınca ekran görünür alana sığacak şekilde yeniden boyutlanır; alçak ekranda düzen sıkılaşır."
+    },
+    {
+      "baslik": "Geç gelen eylem payı",
+      "aciklama": "Bu oyunda yoktur (graceMs tanımlı değil): adım süresi bittikten sonra gelen eylem kabul edilmez; son milisaniyede gelen kabul edilir."
+    },
+    {
+      "baslik": "Oy reddedilirse",
+      "aciklama": "İstemci oyu hemen mühürler; sunucu reddederse seçim geri açılır, hata sesi çalar."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Genel",
+      "etki": "Kod bu oyun için özel kart dalı içermez; genel K6 hesabı çalışır ve kartlar yalnız genel skora giden puanları (awards) değiştirir. Bu oyunda awards = miniScores (oy + sağlam zincir puanları)."
+    },
+    {
+      "kart": "Kendine Güven / Sigorta / Tahmin / Hırsız",
+      "etki": "'Birinci' en yüksek toplam puanlı oyuncu(lar), 'sonuncu' en düşük puanlı oyuncu(lar)dır. Bozuk Telefon'da düşük puan 0 civarında kümelenebilir; birden çok sonuncu olabilir."
+    },
+    {
+      "kart": "Kalkan",
+      "etki": "Bu oyunda eksi puan olmadığı için etkisizdir (puan eksiye düşmez)."
+    },
+    {
+      "kart": "Çarpanlar",
+      "etki": "Çift Puan / Altın Dokunuş oyuncunun toplam mini oyun puanını ×2 / ×3 yapar; puanlar zincir başına değil oyun sonunda hesaplanır."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Yazma adımı süresi",
+      "deger": "25 000 ms",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/types.ts:5"
+    },
+    {
+      "ad": "Çizme adımı süresi",
+      "deger": "60 000 ms",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/types.ts:6"
+    },
+    {
+      "ad": "Gösteride adım başına süre",
+      "deger": "3 000 ms",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/types.ts:8"
+    },
+    {
+      "ad": "Oylama süresi",
+      "deger": "10 000 ms",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/types.ts:9"
+    },
+    {
+      "ad": "Zincir sonuç penceresi",
+      "deger": "3 000 ms",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/types.ts:11"
+    },
+    {
+      "ad": "Herkes Tamam deyince kalan süre",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/types.ts:13"
+    },
+    {
+      "ad": "En çok adım",
+      "deger": "6",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/types.ts:14"
+    },
+    {
+      "ad": "Cümle uzunluğu",
+      "deger": "en çok 60 karakter (kod noktası)",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/types.ts:16"
+    },
+    {
+      "ad": "Boş yazı yerine geçen metin",
+      "deger": "…",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/types.ts:18"
+    },
+    {
+      "ad": "Çizim kotaları",
+      "deger": "150 darbe / 1 500 nokta / 400 eylem",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/types.ts:21-23"
+    },
+    {
+      "ad": "Darbe başına nokta sayısı",
+      "deger": "2 - 120",
+      "kaynak": "packages/engine/src/games/drawing.ts:9-10"
+    },
+    {
+      "ad": "Kalem renkleri",
+      "deger": "beyaz, pembe, sarı, yeşil, mavi, turuncu + silgi; kalınlık 1-3",
+      "kaynak": "packages/engine/src/games/drawing.ts:13-16"
+    },
+    {
+      "ad": "Adım sayısı / adım türü",
+      "deger": "min(oyuncu, 6); çift adım yazma, tek adım çizme",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/types.ts:26-30"
+    },
+    {
+      "ad": "Sağlam zincir eşiği",
+      "deger": "ortak × 2 ≥ büyük kümenin kelime sayısı",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/index.ts:108-115"
+    },
+    {
+      "ad": "Oy reddi nedenleri",
+      "deger": "voted, bad_step, own_step, wrong_phase, ended",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/index.ts:358-368"
+    },
+    {
+      "ad": "Erken bitiş hesabı (adım)",
+      "deger": "min(bitiş, şimdi+1 sn)",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/index.ts:398-402"
+    },
+    {
+      "ad": "Erken bitiş hesabı (oylama)",
+      "deger": "min(oylama bitişi, şimdi+1 sn)",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/index.ts:374-378"
+    },
+    {
+      "ad": "Gösteri zaman çizelgesi",
+      "deger": "showStart → +adım×3 sn → oylama +10 sn → sonuç +3 sn",
+      "kaynak": "packages/engine/src/games/bozuk-telefon/index.ts:176-189"
+    },
+    {
+      "ad": "Yazma alanı bekleme",
+      "deger": "350 ms sonra sunucuya gider",
+      "kaynak": "apps/client/src/games/bozuk-telefon/SentenceField.tsx:64"
+    }
+  ],
+  "strateji": [
+    "İlk cümleyi çizilebilir ve tek yoruma açık yaz: sağlam zincir için son anlatımın kelimeleri seninkiyle yarı yarıya örtüşmeli. Kısa, somut isim ve fiillerle ('Kedi uzayda pizza yiyor') zincir daha sağlam kalır.",
+    "Sağlam zincir zincirdeki HERKESE +1 verir; çizerken ve anlatırken sadık kalmak herkesin işine yarar, ama komik bozulma oy getirir.",
+    "Çizimde en belirgin 2-3 şeyi çiz, süre 60 sn ama kota (150 darbe) var; çok ayrıntı seni yavaşlatır.",
+    "Boş çizim 'Boş tuval', boş yazı '…' olur; bu sıradakinin işini imkânsız kılar. Süre sonunu beklemeden 'Tamam' demek diğerlerinin erken geçmesini sağlar.",
+    "Oyda adımların yazarı avatarla görünür; kendi adımına oy veremezsin, o yüzden gerçekten en komik olana ver.",
+    "7-8 oyuncuda her zincirde sen yazar olmayabilirsin: o zincirde yalnız oy verirsin."
+  ],
+  "tv": "TV/sahne ekranı oyun ekranını izleyici kipinde büyütülmüş gösterir (Bozuk Telefon'a özel StageView yoktur): girdi aşamalarında 'Arkadaşların yazıyor/çiziyor' ve hazır avatarları; gösteri ve oylamada zincirin kare kartları, oy sayacı; sonuçta oy dağılımı, 'Sağlam +1' rozeti ve puanlar. Sağdaki sütunda oyuncular ve puanlar bulunur.",
+  "ekranlar": [
+    {
+      "ad": "bt-briefing",
+      "mock": "bozuk-briefing",
+      "q": "mock=bozuk-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Tam ekran anlatım ve üç madde.",
+      "dosya": "bozuk-briefing"
+    },
+    {
+      "ad": "bt-write",
+      "mock": "bozuk-write",
+      "q": "mock=bozuk-write",
+      "baslik": "Cümle yaz (adım 1)",
+      "aciklama": "'ADIM 1/n', 'Bir cümle yaz', cümle alanı, sayaç ve Tamam.",
+      "dosya": "bozuk-write"
+    },
+    {
+      "ad": "bt-draw-ink",
+      "mock": "bozuk-draw-ink",
+      "q": "mock=bozuk-draw-ink",
+      "baslik": "Çizme",
+      "aciklama": "Cümle üstte, çizim tahtası, kalem araçları ve Tamam.",
+      "dosya": "bozuk-draw-ink"
+    },
+    {
+      "ad": "bt-write-late",
+      "mock": "bozuk-write-late",
+      "q": "mock=bozuk-write-late",
+      "baslik": "Çizimi anlat",
+      "aciklama": "Önceki oyuncunun çizimi gösterilir; altta anlatım cümlesi alanı.",
+      "dosya": "bozuk-write-late"
+    },
+    {
+      "ad": "bt-write-locked",
+      "mock": "bozuk-write-locked",
+      "q": "mock=bozuk-write-locked",
+      "baslik": "Tamam denildi",
+      "aciklama": "Cümle kilitli, 'Gönderildi' ve hazır sayacı.",
+      "dosya": "bozuk-write-locked"
+    },
+    {
+      "ad": "bt-show-2",
+      "mock": "bozuk-show",
+      "q": "mock=bozuk-show&n=5&shown=2",
+      "baslik": "Gösteri",
+      "aciklama": "Zincirin ilk iki adımı açık, kalanlar '?' ile kapalı.",
+      "dosya": "bozuk-show-n-5-shown-2"
+    },
+    {
+      "ad": "bt-vote-5",
+      "mock": "bozuk-vote",
+      "q": "mock=bozuk-vote&n=5",
+      "baslik": "Oylama",
+      "aciklama": "Tüm adımlar açık; 'EN KOMİK BU' düğmesi.",
+      "dosya": "bozuk-vote-n-5"
+    },
+    {
+      "ad": "bt-vote-voted",
+      "mock": "bozuk-vote-voted",
+      "q": "mock=bozuk-vote-voted&n=5",
+      "baslik": "Oy verildi",
+      "aciklama": "'OY VERİLDİ' ve 'k/n' sayacı.",
+      "dosya": "bozuk-vote-voted-n-5"
+    },
+    {
+      "ad": "bt-result-robust-3",
+      "mock": "bozuk-result-robust",
+      "q": "mock=bozuk-result-robust&n=3",
+      "baslik": "Sağlam zincir sonucu",
+      "aciklama": "Oy dağılımı (+n), 'Sağlam +1' rozeti ve biriken puanlar.",
+      "dosya": "bozuk-result-robust-n-3"
+    }
+  ],
+  "bilinenSorunlar": [
+    "KURALLAR.md 'Adım sayısı: oyuncu sayısı (en çok 6) — 3 oyuncuda 3 adım, 6+ oyuncuda 6 adım' der; kodda 7-8 oyuncuda her zincirde yalnız 6 yazar vardır ve kalan oyuncular o zincire adım katmaz (kuralla uyumlu ama açık yazılmamış).",
+    "KURALLAR.md 'Herkes Tamam derse adım erken biter' der; kod ek olarak yalnız BAĞLI katılımcıları sayar (kopuk oyuncu beklenmez) ve girdisiz Tamam'ı reddeder. Kural dosyasında bu ayrıntılar yoktur.",
+    "KURALLAR.md 'sağlam zincir' için 'kelimelerin en az yarısı ortak' der; kod ortak sayıyı iki cümlenin KÜME boyutunun büyüğüne böler (kelime sayısı değil, tekrarsız kelime kümesi). Çok kısa ya da tekrarlı cümlelerde fark eder.",
+    "Cümle girişi sunucuda Türkçe büyük harfe çevrilir; ekrandaki tüm cümleler büyük harfle görünür.",
+    "Oylama sırasında kart, yazarın avatarını gösterir (oylama isimsiz değildir); KURALLAR.md 'isimsiz' demez, yalnız Laf Sokma isimsizdir."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-29: Oyun ekranları: tek satır oyun adı, sakin 'Gönderildi' durumu, tek hazır şeridi, tutarlı düğmeler.",
+    "2026-10-29: Klavye uyumlu görünüm ve yalnız bağlı oyuncuları sayan erken bitiş.",
+    "2026-10-27: Renk körlüğü modu: kazanan yıldızı ve paylaşılan işaretler.",
+    "2026-10-27: Kabuk saati, Status ve hazır noktalarına taşıma; tüm oyunlar için tur özeti.",
+    "2026-10-26: Ayarlar ekranı (ses, titreşim vb.).",
+    "2026-10-25: Anında geri bildirim: oylar ve birincil düğmeler."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/bozuk-telefon/index.ts",
+    "packages/engine/src/games/bozuk-telefon/types.ts",
+    "packages/engine/src/games/bozuk-telefon/bozuk-telefon.test.ts",
+    "packages/engine/src/games/drawing.ts",
+    "docs/KURALLAR.md#26-bozuk-telefon",
+    "apps/client/src/games/bozuk-telefon/BozukTelefonScreen.tsx",
+    "apps/client/src/games/bozuk-telefon/Gosteri.tsx",
+    "apps/client/src/games/bozuk-telefon/Yazma.tsx",
+    "apps/client/src/games/bozuk-telefon/Cizme.tsx"
+  ]
+}

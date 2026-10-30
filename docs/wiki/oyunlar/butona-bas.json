@@ -1,0 +1,328 @@
+{
+  "id": "butona-bas",
+  "ad": "Butona Bas",
+  "slogan": "Büyük kırmızı butona arkadaşlarınla aynı anda bas; tek başına basarsan geri teper.",
+  "kategori": "Zamanlama",
+  "etiketler": ["refleks", "eşzamanlı", "zamanlama", "3 tur"],
+  "oyuncu": {
+    "min": 2,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 51,
+    "not": "Süre oyuncu sayısına ve oyuncu hızına göre değişmez, erken bitiş yoktur: 3 tur × 15 sn + 2 ara × 3 sn = 51 sn (puanlanan süre 45 sn). Anlatım (en çok 40 sn), geri sayım (3 sn) ve sonuç ekranı (en çok 30 sn) bunun dışındadır."
+  },
+  "ozet": "Ekranın ortasında büyük kırmızı bir buton var ve oyun sabit uzunlukta 'zaman pencerelerine' bölünmüş. Aynı pencerede en az iki farklı oyuncu basarsa basanların her biri +1, tek başına basan -1 alır. Oyun 3 turdan oluşur ve pencere turdan tura daralır (300 → 200 → 120 ms). Mini puan 3 tur boyunca toplanır; genel skor oyun sonunda bir kez toplama göre verilir.",
+  "akis": [
+    {
+      "ad": "Tur 1 (pencere 300 ms)",
+      "sureSn": 15,
+      "kim": "herkes",
+      "aciklama": "Üstte tur göstergesi 'Tur 1/3 · Pencere 300 ms', süre çubuğu, ortada büyük puanın ve dev kırmızı 'BAS' butonu, altta tüm oyuncuların avatarı ve canlı puanı. Butona her basışta 300 ms'lik halka dalgası yayılır. Pencere kapanıp puanlanınca kendi basışın için '+1' (yeşil) ya da '−1' (kırmızı) yüzer ve ses/titreşim çalar; solo basışta buton sarsılır. Pencerede basanların avatarları kısa süre eşleşme/solo rengiyle parlar.",
+      "gizli": "Gizli bilgi yoktur. Herkesin puanı ve son kapanan pencerelerde kimin bastığı (kapandıktan sonra) herkese açıktır. Açık (henüz kapanmamış) pencerede kimin bastığı kişiye özel görünümde yalnız 'bu pencerede bastın mı' olarak gelir."
+    },
+    {
+      "ad": "Ara 1",
+      "sureSn": 3,
+      "kim": "herkes",
+      "aciklama": "'Tur 2/3 · Pencere daralıyor · 300 ms → 200 ms' yazısı görünür, buton devre dışıdır; bu sırada basışlar sayılmaz ve sunucu 'between_rounds' ile reddeder.",
+      "gizli": ""
+    },
+    {
+      "ad": "Tur 2 (pencere 200 ms)",
+      "sureSn": 15,
+      "kim": "herkes",
+      "aciklama": "Aynı oyun, pencere 200 ms. Tur göstergesinde 'Pencere daralıyor · 200 ms' yazar. Pencereler yine turun başından itibaren sayılır.",
+      "gizli": ""
+    },
+    {
+      "ad": "Ara 2",
+      "sureSn": 3,
+      "kim": "herkes",
+      "aciklama": "'Tur 3/3 · Pencere daralıyor · 200 ms → 120 ms'.",
+      "gizli": ""
+    },
+    {
+      "ad": "Tur 3 (pencere 120 ms)",
+      "sureSn": 15,
+      "kim": "herkes",
+      "aciklama": "Son tur, pencere 120 ms. Oyun, son pencere kapandığında biter; sonuç ekranına geçilir.",
+      "gizli": ""
+    }
+  ],
+  "kurallar": [
+    "En az 2, en çok 8 oyuncu. Rol yoktur.",
+    "Oyun 3 turdan oluşur. Her tur 15 sn sürer; turlar arasında 3 sn ara vardır. Toplam oyun süresi 51 sn (45 sn puanlanan süre + 2 × 3 sn ara).",
+    "Pencere uzunluğu: 1. tur 300 ms, 2. tur 200 ms, 3. tur 120 ms. Pencereler her turun başından itibaren art arda dizilir (sabit ızgara): pencere numarası = (turun başından geçen süre) ÷ pencere uzunluğu, aşağı yuvarlanır. Bu yüzden 299 ms aralıklı iki basış aynı pencerede olabilir, 2 ms aralıklı iki basış sınırın iki yanında kalıp ayrı pencerelere düşebilir.",
+    "Bir basış, sunucuya ulaştığı andaki pencereye yazılır (sunucu saati). Geç gelen eylem payı bu oyunda yoktur: ağ gecikmesi pencereyi etkileyebilir.",
+    "Aynı pencerede en az iki FARKLI oyuncu basarsa basanların her biri +1 alır (üç, dört… kişi basarsa hepsi +1).",
+    "Bir pencerede yalnız tek oyuncu basarsa o oyuncu -1 alır.",
+    "Aynı oyuncunun aynı pencerede tekrar basması tek sayılır (ne ekstra puan ne eşleşme verir; tekrar basış kendisiyle eşleşme sayılmaz).",
+    "Hiç kimse basmayan pencere puansızdır; basışları olmayan pencereler kaydedilmez.",
+    "Puanlama pencere kapandığında yapılır; açık pencere puanlanmaz. Turun son penceresi tur biterken, oyunun son penceresi oyun biterken puanlanır.",
+    "Turlar arası arada ve oyun bittikten sonra gelen basış reddedilir ve hiçbir ceza ya da puan doğurmaz. Buton ara sırasında devre dışıdır.",
+    "İstemci tek pencerede en fazla bir basış gönderir (yerel saatle pencere numarası aynıysa ikinci basışı göndermez), fazlası sunucuda zaten tek sayılırdı.",
+    "Mini oyun puanı 3 tur boyunca toplanır (negatife düşebilir). Genel skor tur başına değil, oyun sonunda bir kez toplama göre verilir.",
+    "Genel skor: toplam mini puanı en yüksek olan TEK oyuncu +2, bir sonraki puan basamağındaki oyuncular (eşitse hepsi) +1 alır. En yüksek puan eşitse en yüksek puanı paylaşanların hepsi +1 alır, +2 verilmez. Kimse hiç basmasa bile herkes 0'da eşit olduğundan herkes +1 alır (0 puanlı eşit liderler de dahil)."
+  ],
+  "puanlama": {
+    "ozet": "Pencere başına: eşleşme +1 (basanların her birine), tek başına basış -1. 3 tur toplanır. Sonra sıralamaya göre genel skor: tek lider +2, sıradaki +1; lider eşitse liderler +1.",
+    "kalemler": [
+      {
+        "olay": "Eşleşen pencerede basmak (≥ 2 farklı oyuncu)",
+        "puan": "+1 (mini)",
+        "not": "Pencerede basan herkese ayrı ayrı."
+      },
+      {
+        "olay": "Tek başına basmak",
+        "puan": "-1 (mini)",
+        "not": "Pencerede başka kimse basmadıysa."
+      },
+      {
+        "olay": "Basmamak / aynı pencerede tekrar basmak",
+        "puan": "0",
+        "not": "Tekrar basış tek sayılır."
+      },
+      {
+        "olay": "Toplam mini puanda tek lider",
+        "puan": "+2 (genel)",
+        "not": "Lider eşit değilse."
+      },
+      {
+        "olay": "Toplam mini puanda sıradaki basamak",
+        "puan": "+1 (genel)",
+        "not": "Liderin hemen altındaki puanı paylaşan herkes."
+      },
+      {
+        "olay": "Toplam mini puanda lider eşit",
+        "puan": "+1 (genel, liderlere)",
+        "not": "+2 verilmez; lider olmayanlara ödül yoktur."
+      }
+    ],
+    "ornek": "3 oyuncu A, B, C. Tur 1'de A, B, C aynı pencerede basar: üçü de +1. Tur 2'de A ve B aynı pencerede basar: A +1, B +1. Tur 3'te A tek başına basar: A -1; sonra A ve B birlikte basar: A +1, B +1. Toplam mini puan: A = 1+1-1+1 = 2, B = 1+1+1 = 3, C = 1. Genel skor: B (3) tek lider +2, A (2) sıradaki +1, C 0. (Motor testindeki örnekle aynı.)",
+    "beraberlik": "En yüksek toplam eşitse paylaşanların hepsi genel skorda +1 alır (+2 yok); sıradaki basamak eşitse hepsi +1 alır. Örnek: 4 oyuncunun da toplamı 5 ise dördü +1 alır; toplamlar 5, 3, 3, 1 ise 5 olan +2, 3 olan ikisi +1. Negatif puanlar da sıralanır (0, -2, -2 → +2, +1, +1)."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Katılımcı olmaya devam eder; basamayacağı için puanı değişmez ve avatarı sönük görünür. Oda 120 sn bekler. Oyun kopanları beklemez, sabit saatte akar."
+    },
+    {
+      "baslik": "Geri dönen oyuncu",
+      "aciklama": "Oyun kaldığı yerden izlenir; skorlar ve tur/ara durumu sunucudan gelir, buton o anki tura göre açılır."
+    },
+    {
+      "baslik": "Süre aşımı / geç gelen eylem",
+      "aciklama": "Bitişten 1 ms sonra gelen basış reddedilir (51 000 ms sınırı: 50 999 ms kabul, 51 000 ms ret). Geç gelen eylem payı yoktur; zamanlama oyunları kapsam dışıdır. Ağ gecikmesi nedeniyle basış yanlış pencereye yazılabilir."
+    },
+    {
+      "baslik": "Herkes erken gönderirse",
+      "aciklama": "Erken bitiş yoktur; oyun hep tam 51 sn sürer."
+    },
+    {
+      "baslik": "Hiç kimse basmazsa",
+      "aciklama": "Mini puanlar hepsi 0 kalır. Genel skorda herkes 0'da eşit lider olduğundan (positiveOnly kapalı) herkes +1 alır; yani bu durum pasif oyuna genel skor kazandırır."
+    },
+    {
+      "baslik": "2 oyuncu / 8 oyuncu",
+      "aciklama": "2 oyuncuda eşleşme için ikisinin de aynı pencerede basması gerekir; biri basıp öteki basmazsa tek basan -1 alır. 8 oyuncuda avatar şeridi 8 kişilik olur; pencereler aynı kalır."
+    },
+    {
+      "baslik": "İzleyici",
+      "aciklama": "İzleyici katılımcı olmadığı için basışı sunucuda 'not_participant' ile reddedilir ve hiçbir puan etkisi olmaz. İzleyici ekranı 'En yüksek puan' (en yüksek canlı puan), tur, pencere uzunluğu, süre çubuğu ve oyuncuların canlı puanlarını gösterir. Puan almaz."
+    },
+    {
+      "baslik": "Geç katılan",
+      "aciklama": "Maç sürerken gelen kişi (varsayılan ayarda izleyici) bu oyuna katılamaz."
+    },
+    {
+      "baslik": "Pencere sınırı",
+      "aciklama": "Pencereler sabit ızgaradır: bir oyuncu pencerenin son milisaniyesinde, diğeri bir sonraki pencerenin ilk milisaniyesinde basarsa ayrı pencereler sayılır ve ikisi de tek başına basış (-1) olur."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Genel hesap",
+      "etki": "Bu oyunda miniScores 3 turun toplamıdır (negatif olabilir); awards bu toplamdan rankAwards ile (tek lider +2, sıradaki +1; lider eşitse liderler +1) üretilir. Kartlar 'birinci/sonuncu' için toplam mini puana bakar; herkes eşitse herkes birinci olur ve kimse sonuncu sayılmaz."
+    },
+    {
+      "kart": "Kendine Güven / Sigorta / Tahmin",
+      "etki": "Birinci = en yüksek toplamlı oyuncu(lar), sonuncu = en düşük toplamlı. Tüm oyuncular eşitse (ör. hiç kimse basmadıysa) herkes birinci sayılır."
+    },
+    {
+      "kart": "Kalkan",
+      "etki": "Ham genel ödül (awards) eksi olmaz ve hiçbir zaman 0'ın altına düşmez; Kalkan yalnız başka kartlardan gelen eksiyi 0'a çeker. Mini puanın negatif olması Kalkan'ı tetiklemez (Kalkan genel skor ödülüne bakar)."
+    },
+    {
+      "kart": "Çift Puan / Altın Dokunuş / Ağır Yük",
+      "etki": "Ham ödül (0, 1 ya da 2) üzerinden çalışır: lider +2 ise Çift Puan +4, Altın Dokunuş +6; +1 olan oyuncuda Çift Puan +2; Ağır Yük +2'yi +1'e, +1'i 0'a indirir."
+    },
+    {
+      "kart": "Ters Köşe",
+      "etki": "Mini puana göre sıra tersine döner ve ham ödüller aynalanır: lider 0, en düşük toplamlı oyuncu +2 vb. Eşit puanlı gruplarda toplam ödül grup içinde bölünür."
+    },
+    {
+      "kart": "Diğer kartlar",
+      "etki": "Koruma, Ayna, Vergi, Çelme, Lanet, Hırsız, Takas, Ortaklık, Veto, Oyunu Seç, Geniş Seçim, Kart Çal bu oyuna özgü bir değişiklik içermez; genel hesap sırasıyla (docs/KURALLAR.md K6) uygulanır."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Tur sayısı",
+      "deger": "3",
+      "kaynak": "packages/engine/src/games/butona-bas/types.ts:4"
+    },
+    {
+      "ad": "Pencere uzunlukları (1., 2., 3. tur)",
+      "deger": "300 / 200 / 120 ms",
+      "kaynak": "packages/engine/src/games/butona-bas/types.ts:6"
+    },
+    {
+      "ad": "Tur süresi",
+      "deger": "15 000 ms (15 sn)",
+      "kaynak": "packages/engine/src/games/butona-bas/types.ts:8"
+    },
+    {
+      "ad": "Turlar arası ara",
+      "deger": "3 000 ms (3 sn)",
+      "kaynak": "packages/engine/src/games/butona-bas/types.ts:10"
+    },
+    {
+      "ad": "Oyun süresi",
+      "deger": "51 000 ms (3×15 sn + 2×3 sn)",
+      "kaynak": "packages/engine/src/games/butona-bas/types.ts:12"
+    },
+    {
+      "ad": "Oyuncu sayısı",
+      "deger": "min 2, max 8",
+      "kaynak": "packages/engine/src/games/butona-bas/index.ts:121-122"
+    },
+    {
+      "ad": "Eşleşme puanı / tek basış puanı",
+      "deger": "+1 / -1",
+      "kaynak": "packages/engine/src/games/butona-bas/index.ts:98-100"
+    },
+    {
+      "ad": "Pencere anahtarı çarpanı (tur × 1000 + sıra)",
+      "deger": "1000",
+      "kaynak": "packages/engine/src/games/butona-bas/index.ts:21"
+    },
+    {
+      "ad": "Görünümde tutulan son kapanan pencere sayısı",
+      "deger": "8",
+      "kaynak": "packages/engine/src/games/butona-bas/index.ts:19"
+    },
+    {
+      "ad": "Genel skor dönüşümü",
+      "deger": "rankAwards (positiveOnly kapalı): tek lider +2, sıradaki basamak +1; lider eşitse liderler +1",
+      "kaynak": "packages/engine/src/games/butona-bas/index.ts:113-115, scoring.ts:10-31"
+    },
+    {
+      "ad": "Geç gelen eylem payı",
+      "deger": "yok (zamanlama oyunu kapsam dışı)",
+      "kaynak": "packages/engine/src/games/butona-bas/index.ts:117-122"
+    },
+    {
+      "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
+      "deger": "40 sn / 3 sn / 30 sn",
+      "kaynak": "apps/server/src/match.ts:40-42"
+    },
+    {
+      "ad": "İstemci basış tutma süresi (görsel)",
+      "deger": "en az 90 ms basılı görünür",
+      "kaynak": "apps/client/src/games/butona-bas/ButonaBasScreen.tsx (release)"
+    }
+  ],
+  "strateji": [
+    "Pencere ızgarası sabit olduğundan arkadaşlarınla ortak bir ritim kur: aynı anda 'üç, iki, bir, bas' demek, sınırdaki ayrı pencerelere düşme riskini azaltır.",
+    "Tek başına basmak -1'dir: kimsenin basmadığını düşünüyorsan hiç basmak (0) basıp -1 yemekten iyidir; ama hiç basmayan genel skorda büyük avantaj sağlamaz.",
+    "Pencere daraldıkça (120 ms) senkron yakalamak zorlaşır; 3. turda rastgele spam yerine hazır olduğun anı seç. Aynı pencerede tekrar basmak ne ceza ne ödül getirir.",
+    "Arkadaşlarınla aynı ortamdaysan sesli geri sayımla (ör. 'şimdi') eşleşme yakalama olasılığı en çok artar.",
+    "Genel skor toplam puana bakar: 1. turda bol eşleşmeyle fark aç, sonraki turlarda koru.",
+    "Bağlantını koru: ağ gecikmesi basışını bir sonraki pencereye taşıyabilir."
+  ],
+  "tv": "TV/sahne ekranı bu oyun için özel görünüm kullanmaz: oyun ekranı izleyici kipinde, dokunmaya kapalı büyütülmüş bir dikey çerçevede gösterilir (büyük 'BAS' butonu, 'En yüksek puan', tur ve pencere uzunluğu, süre çubuğu). Altta tüm oyuncuların avatarları ve canlı puanları, her pencere puanlandığında eşleşenlerin parlaması görünür. Sağda oyuncular ve bu oyundaki puanları bulunur.",
+  "ekranlar": [
+    {
+      "mock": "briefing",
+      "q": "mock=briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Nabız atan kırmızı buton ve aynı anda yanan avatarlar; amaç ve üç adım (aynı anda bas, tek başına −1, 3 tur: pencere 300/200/120 ms).",
+      "dosya": "briefing"
+    },
+    {
+      "mock": "countdown",
+      "q": "mock=countdown",
+      "baslik": "Geri sayım",
+      "aciklama": "Oyun başlamadan önceki 3 sn'lik geri sayım.",
+      "dosya": "countdown"
+    },
+    {
+      "mock": "playing",
+      "q": "mock=playing",
+      "baslik": "Oyun (Tur 1/3)",
+      "aciklama": "Tur 1/3 · Pencere 300 ms, büyük puan, BAS butonu ve avatar şeridi.",
+      "dosya": "playing"
+    },
+    {
+      "mock": "playing",
+      "q": "mock=playing",
+      "baslik": "Basış anı",
+      "aciklama": "Butona basılıyken halka dalgası ve basılı buton görünümü (ekran kaydı: playing-press).",
+      "dosya": "playing"
+    },
+    {
+      "mock": "playing",
+      "q": "mock=playing&tur=2",
+      "baslik": "Tur 2/3",
+      "aciklama": "'Pencere daralıyor · 200 ms' göstergesi (ekran kaydı: playing-tur2).",
+      "dosya": "playing-tur-2"
+    },
+    {
+      "mock": "playing",
+      "q": "mock=playing&tur=3",
+      "baslik": "Tur 3/3",
+      "aciklama": "'Pencere daralıyor · 120 ms' (ekran kaydı: playing-tur3).",
+      "dosya": "playing-tur-3"
+    },
+    {
+      "mock": "playing",
+      "q": "mock=playing&ara=1",
+      "baslik": "Tur arası",
+      "aciklama": "'Pencere daralıyor · 300 ms → 200 ms' ara ekranı; buton devre dışı (ekran kaydı: playing-ara).",
+      "dosya": "playing-ara-1"
+    },
+    {
+      "mock": "spectator-playing",
+      "q": "mock=spectator-playing",
+      "baslik": "İzleyici",
+      "aciklama": "İzleyici görünümü: 'En yüksek puan' ve canlı avatar şeridi.",
+      "dosya": "spectator-playing"
+    }
+  ],
+  "bilinenSorunlar": [
+    "KURALLAR.md ana metni 'toplam süre 45 saniye' der; O8 değişikliği 'toplam 45 saniye oyun süresi' demeye devam eder ama turlar arası 3 sn'lik iki ara da eklenir. Kodda oyun 51 sn sürer (45 sn puanlanan süre + 2 × 3 sn ara); 45 sn yalnızca basışların sayıldığı süredir.",
+    "Hiç kimse basmazsa mini puanlar 0 kalır (KURALLAR.md ile uyumlu) ama rankAwards positiveOnly kullanılmadığından herkes 0'da eşit lider sayılır ve genel skorda +1 alır. KURALLAR.md'nin 'dört oyuncunun da puanı 5 ise dördü +1' örneğinin 0 puan için de geçerli olması anlamına gelir; pasif oynamak genel skor kazandırabilir.",
+    "Basışın hangi pencereye düştüğünü sunucu varış anına göre belirler; geç gelen eylem payı yoktur, bu yüzden ağ gecikmesi eşleşmeyi bozabilir (zamanlama oyunları payın kapsamı dışındadır).",
+    "İstemci aynı pencerede ikinci basışı sunucuya göndermez (yerel saate göre); sunucu zaten tekrarı tek sayar.",
+    "Buton ekranında izleyici için ayrıca devre dışı bırakma yoktur (yalnız ara ve oyun sonrası kilitlenir); izleyici basışı sunucuda reddedilir."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-29: Sunucu: oyunu bitiren eylem hemen işlenir; tam zamanlı uyandırma (nextWake) ile pencere kapanışları gecikmesiz puanlanır.",
+    "2026-10-27: O8 kuralı: 3 tur, daralan pencere (300/200/120 ms), turlar arası 3 sn ara, 'Pencere daralıyor' ekranı; genel skor yalnız oyun sonunda.",
+    "2026-10-27: Tur geçişi yayını; sunucu testleri yeni sürelere uyarlandı.",
+    "2026-10-27: Oyunlar kabuk saatine, Status ve hazır noktalarına taşındı; tüm oyunlar için tur özeti (Butona Bas: 'N puanla … turun yıldızı').",
+    "2026-10-27: iOS için titreşim yedek yolu.",
+    "2026-10-26: Arcade buton görselleri.",
+    "2026-10-17: İlk sürüm (A1 dikey dilim): odalar, maç akışı, Butona Bas, ortak rankAwards."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/butona-bas/index.ts",
+    "packages/engine/src/games/butona-bas/types.ts",
+    "packages/engine/src/games/butona-bas/butona-bas.test.ts",
+    "packages/engine/src/games/scoring.ts",
+    "apps/client/src/games/butona-bas/",
+    "docs/KURALLAR.md#6-butona-bas--butona-bas",
+    "scripts/ui-check.mjs"
+  ]
+}

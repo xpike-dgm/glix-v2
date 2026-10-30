@@ -62,12 +62,14 @@ export function cacheControl(urlPath: string): string {
 }
 
 export interface StaticOptions {
-  /** Yönetici paneli açık mı (`GLIX_ADMIN_ACCOUNT_IDS` dolu). Kapalıyken `/admin` ve `admin.html` 404 verir. */
+  /** Yönetici paneli açık mı (`GLIX_ADMIN_ACCOUNT_IDS` dolu). Kapalıyken `/admin`, `/wiki` ve sayfaları 404 verir. */
   adminEnabled?: boolean;
 }
 
 /** `/admin` (ve sonundaki eğik çizgi) yönetici sayfasıdır; geri kalan `/admin/...` yolları yoktur. */
 const ADMIN_PAGE = /^\/admin\/?$/;
+/** `/wiki`: yöneticinin oyun ansiklopedisi (içeriği yönetici uçlarından gelir; sayfanın kendisi boş kabuktur). */
+const WIKI_PAGE = /^\/wiki\/?$/;
 
 /** İstemci dosyalarını sunar. İstek işlendiyse true döner. */
 export async function serveStatic(
@@ -103,7 +105,17 @@ export async function serveStatic(
     notFound(res);
     return;
   }
+  const wikiPage = WIKI_PAGE.test(urlPath) || urlPath === "/wiki.html";
+  if ((wikiPage || urlPath.startsWith("/wiki/")) && !options.adminEnabled) {
+    notFound(res);
+    return;
+  }
+  if (urlPath.startsWith("/wiki/") && !wikiPage) {
+    notFound(res);
+    return;
+  }
   if (ADMIN_PAGE.test(urlPath)) urlPath = "/admin.html";
+  if (WIKI_PAGE.test(urlPath)) urlPath = "/wiki.html";
 
   let file = resolve(join(root, normalize(urlPath)));
   if (file !== root && !file.startsWith(root + sep)) {
@@ -138,7 +150,7 @@ export async function serveStatic(
     "Cache-Control": isShell ? "no-cache" : cacheControl(servedPath),
     ...SECURITY_HEADERS,
     // Yönetici sayfası arama motorlarına açık değildir.
-    ...(servedPath === "/admin.html" ? { "X-Robots-Tag": "noindex" } : {}),
+    ...(servedPath === "/admin.html" || servedPath === "/wiki.html" ? { "X-Robots-Tag": "noindex" } : {}),
   };
   res.writeHead(200, headers);
   if (req.method === "HEAD") {

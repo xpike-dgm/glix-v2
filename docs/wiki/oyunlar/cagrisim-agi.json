@@ -1,0 +1,297 @@
+{
+  "id": "cagrisim-agi",
+  "ad": "Çağrışım Ağı",
+  "slogan": "Ortadaki kelime aklına ne getiriyor? Arkadaşlarınla aynı şeyi düşün, ağ kur.",
+  "kategori": "Kelime",
+  "etiketler": ["çağrışım", "ortak düşünme", "hızlı", "kelime"],
+  "oyuncu": {
+    "min": 2,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 36,
+    "not": "Oyun yalnız iki bölümden oluşur: 30 sn cevap + 6 sn açılış = 36 sn. Bağlı herkes cevabını gönderirse cevap bölümü 1 sn sonra biter; en kısası yaklaşık 1 + 6 = 7 sn. Oyuncu sayısı süreyi değiştirmez."
+  },
+  "ozet": "Herkesin gördüğü ortak bir ana kelime çıkar. Herkes aklına gelen TEK bir çağrışımı yazar ve gönderir. Süre bitince (ya da herkes gönderince) cevaplar açılır: aynı cevabı veren en az iki kişi bir 'ağ' (grup) kurar ve her üye grubun büyüklüğü kadar mini oyun puanı alır. En kalabalık grubun üyeleri genel skorda +1 kazanır; tek kalan cevap 0'dır.",
+  "akis": [
+    {
+      "ad": "Cevap yazma",
+      "sureSn": 30,
+      "kim": "herkes",
+      "aciklama": "Ortada elektrikli bir merkezde (şimşek çizgileri) ana kelime büyük harfle görünür. Altta oyuncu portre şeridi, tek satırlık yazı alanı ('Aklına ne geliyor?', en çok 60 karakter) ve 'Gönder' düğmesi bulunur. Gönderilen cevap kesindir; ayrı bir 'Tamam' yoktur, göndermek Tamam'dır. Gönderince alan 'Cevabın kilitlendi' kartına döner (cevabın gösterilir, 'Diğerleri bekleniyor · n/m hazır'). Cevabını gönderenin portresinde hazır işareti ve yeşil halka çıkar.",
+      "gizli": "Kimsenin cevabı süre bitene kadar görünmez; yalnız kimlerin cevap gönderdiği herkese açıktır. Kendi cevabını yalnız sen görürsün."
+    },
+    {
+      "ad": "Açılış",
+      "sureSn": 6,
+      "kim": "herkes",
+      "aciklama": "Cevaplar açılır. Sıralı gösterim: önce tek kalanlar ve yazmayanlar (silik, 'Yazmadı'), sonra kümeler küçükten büyüğe; en büyük ağ en son açılır. Her kümede cevap yazısı (küçük harf), '+n' puan ve üyelerin renkli halkalı avatarları görünür. Üstte kendi sonucun: ağdaysan '+n' ve 'Ağ kurdun!', tek kaldıysan '0' ve 'Bu sefer tek kaldın', cevap vermediysen '0' ve 'Süre doldu'. Ağ kurduysan eşleşme sesi, kurmadıysan alçak ses ve titreşim çalar.",
+      "gizli": "Bu aşamada tüm cevaplar ve kimin kimle eşleştiği açıktır."
+    }
+  ],
+  "kurallar": [
+    "En az 2, en çok 8 oyuncu (bu oyun 2 kişiyle de oynanır).",
+    "Maç başına havuzdan rastgele bir ana kelime seçilir (321 yerleşik kelime; yönetici paneliyle değiştirilebilir). Herkes aynı kelimeyi görür.",
+    "Her oyuncu yalnız BİR çağrışım gönderir. Gönderilen cevap değiştirilemez ('already_answered'). Yazmak zorunludur ama yazmayana ceza yoktur: yazmayan 0 alır.",
+    "Cevap serbest metindir; sunucu baştaki/sondaki boşlukları kırpar. Sınır 60 karakterdir (teknik ağ koruması: 60'tan uzun ham metin ayrıştırılmaz). Yalnız boşluk veya yalnız noktalama içeren cevap ('empty') reddedilir.",
+    "Gruplama klavyeden bağımsızdır: büyük/küçük harf, ç/c, ğ/g, ı/İ/i/I, ö/o, ş/s, ü/u, noktalama farkı ve fazla boşluk yok sayılır (kaşık = kasik = KASIK). Aynı grup içinde farklı yazılışlar varsa ekranda Türkçe harf (ç ğ ı ö ş ü) içeren yazılış gösterilir; eşitlikte ilk cevap veren. Gösterim biçimi Türkçe kurallarıyla küçük harftir.",
+    "En az iki kişinin aynı (normalleştirilmiş) cevabı vermesi grup oluşturur. Grup üyelerinin her biri grubun üye sayısı kadar mini oyun puanı alır.",
+    "Tek kalan cevap ve cevap vermeyen 0 alır. Yanlış cevap diye bir şey yoktur; negatif puan yoktur.",
+    "Bağlı bütün katılımcılar cevap gönderirse cevap bölümü 1 sn sonra biter ve açılış başlar (açılış yine 6 sn).",
+    "Açılış 6 sn sürer, ardından oyun biter ve genel sonuç ekranı gelir.",
+    "Genel skor ödülü (sahip kararı, rankAwards): mini puanı pozitif olanlar arasında tek lider +2, bir alt puan basamağındakiler +1; lider eşitse yalnız liderler +1 alır. Bu oyunda grup en az 2 kişi olduğundan lider her zaman eşit çıkar: pratikte yalnız EN KALABALIK grup(lar)ın üyeleri +1 alır; ikinci sıradakiler ödül almaz.",
+    "Kimse grup kuramadıysa (tüm mini puanlar 0) kimse genel skor almaz."
+  ],
+  "puanlama": {
+    "ozet": "Mini oyun puanı = bulunduğun grubun üye sayısı (grup yoksa 0). Genel skora yalnız en kalabalık grubun üyeleri +1 ekler.",
+    "kalemler": [
+      {
+        "olay": "n kişilik grupta olmak",
+        "puan": "+n (mini)",
+        "not": "n ≥ 2; her üye aynı puanı alır."
+      },
+      {
+        "olay": "Tek kalan cevap / cevap vermemek",
+        "puan": "0",
+        "not": "Eksi puan yoktur."
+      },
+      {
+        "olay": "En kalabalık grupta olmak",
+        "puan": "+1 (genel skor)",
+        "not": "Birden çok grup aynı büyüklükteyse hepsinin üyeleri +1 alır."
+      },
+      {
+        "olay": "Daha küçük gruplar",
+        "puan": "0 (genel skor)",
+        "not": "Mini puanı olsa da genel skora puan eklemez."
+      }
+    ],
+    "ornek": "6 oyuncu, ana kelime DENİZ. Cevaplar: Ali 'mavi', Bora 'kırmızı', Ceren 'Mavi', Deniz 'kırmızı', Ece 'MAVİ', Fatma 'yeşil'. Gruplar: mavi (Ali, Ceren, Ece) = 3 kişi; kırmızı (Bora, Deniz) = 2 kişi; Fatma tek kaldı. Mini puanlar: Ali 3, Bora 2, Ceren 3, Deniz 2, Ece 3, Fatma 0. Genel skor: en yüksek puan 3 ve üç kişi eşit lider olduğundan Ali, Ceren ve Ece +1; diğerleri 0.",
+    "beraberlik": "Eşit büyüklükte birden çok grup varsa hepsinin üyeleri genel skorda +1 alır. Başka bir beraberlik kuralı yoktur."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Katılımcı olmaya devam eder (oda 120 sn bekler). 'Herkes cevapladı' sayımında bağlı olmayan beklenmez; ancak bu değerlendirme yalnız bir oyuncu cevap gönderdiği anda yapılır. Cevabını göndermeden kopan oyuncu 'yazmadı' sayılır ve 0 alır; kopmadan önce gönderdiği cevap geçerlidir ve gruplanır."
+    },
+    {
+      "baslik": "Geri dönen oyuncu",
+      "aciklama": "Cevabını gönderdiyse kilitli kartı, göndermediyse boş yazı alanı görür."
+    },
+    {
+      "baslik": "Süre aşımı",
+      "aciklama": "Cevap süresi bitince cevap gönderme reddedilir ('ended'); bu oyunda geç gelen eylem payı yoktur. Yazı alanındaki gönderilmemiş metin sayılmaz."
+    },
+    {
+      "baslik": "Herkes erken gönderirse",
+      "aciklama": "Bağlı herkes cevaplayınca cevap bölümü 1 sn sonra biter, açılış tam 6 sn sürer."
+    },
+    {
+      "baslik": "2 oyuncu / 8 oyuncu",
+      "aciklama": "2 oyuncuda ikisi aynı cevabı yazarsa grup kurar: ikisi 2 mini puan, ikisi +1 genel skor alır; farklı yazarlarsa kimse puan almaz. 8 oyuncuda 4 farklı kümeye kadar ayrışabilir; avatar halkaları sığacak şekilde küçülür, renk körlüğü modunda küme işaretleri çıkar."
+    },
+    {
+      "baslik": "İzleyici",
+      "aciklama": "İzleyici cevap yazamaz; ana kelimeyi, hazır sayacını ('Cevaplar açılınca görünür · n/m hazır') ve açılışı görür. Puan almaz."
+    },
+    {
+      "baslik": "Geç katılan",
+      "aciklama": "Maç sürerken gelen kişi (varsayılan ayarda izleyici) bu oyuna katılamaz."
+    },
+    {
+      "baslik": "Çok kısa / tek harfli cevaplar",
+      "aciklama": "Harf içeren her cevap geçerlidir (ör. 'x'). Yalnız boşluk/noktalama içeren (ör. '!!!') cevap 'empty' ile reddedilir."
+    },
+    {
+      "baslik": "Aynı kişinin farklı yazılışları",
+      "aciklama": "'kasik' ve 'kaşık' aynı grupta birleşir; açılışta Türkçe harfli 'kaşık' gösterilir."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Genel hesap",
+      "etki": "Kartlar mini puana (grup büyüklüğü) bakar; ham genel skor ödülü (awards) 0 ya da 1'dir (yalnız en kalabalık grubun üyeleri 1). 'Birinci' en büyük grubun üyeleridir; 'sonuncu' en az bir grup varsa tek kalan ve yazmayan oyunculardır. Kimse grup kuramadıysa herkesin mini puanı 0'dır: herkes birinci sayılır ve kimse sonuncu olmaz."
+    },
+    {
+      "kart": "Kendine Güven / Sigorta / Tahmin",
+      "etki": "En büyük gruptaki oyuncular birinci olur; tek kalan/sessiz oyuncular sonuncu olur (Sigorta +1). Hiç grup yoksa herkes birinci sayıldığı için Kendine Güven herkese +2 verir."
+    },
+    {
+      "kart": "Çift Puan / Altın Dokunuş / Ağır Yük",
+      "etki": "Ham ödül 0 ya da 1 olduğundan: Çift Puan en büyük gruptaki oyuncunun +1'ini +2, Altın Dokunuş +3 yapar; Ağır Yük +1'i 0'a indirir. Ödülü 0 olanlarda çarpanlar işlemez."
+    },
+    {
+      "kart": "Kalkan",
+      "etki": "Ham ödül eksi olmaz; yalnız diğer kartlardan gelen eksiyi 0'a çeker."
+    },
+    {
+      "kart": "Diğer kartlar",
+      "etki": "Koruma, Ayna, Vergi, Çelme, Lanet, Hırsız, Takas, Ortaklık, Ters Köşe, Veto, Oyunu Seç, Geniş Seçim, Kart Çal bu oyuna özgü bir değişiklik içermez; genel hesap sırasıyla (docs/KURALLAR.md K6) uygulanır."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Cevap süresi",
+      "deger": "30 000 ms (30 sn)",
+      "kaynak": "packages/engine/src/games/cagrisim-agi/types.ts:4"
+    },
+    {
+      "ad": "Açılış (sonuç) süresi",
+      "deger": "6 000 ms (6 sn)",
+      "kaynak": "packages/engine/src/games/cagrisim-agi/types.ts:6"
+    },
+    {
+      "ad": "Toplam oyun süresi",
+      "deger": "36 000 ms",
+      "kaynak": "packages/engine/src/games/cagrisim-agi/types.ts:7"
+    },
+    {
+      "ad": "Cevap uzunluk sınırı",
+      "deger": "60 karakter (teknik koruma)",
+      "kaynak": "packages/engine/src/games/cagrisim-agi/types.ts:9"
+    },
+    {
+      "ad": "Erken bitiş payı (herkes cevapladı)",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/games/cagrisim-agi/types.ts:12"
+    },
+    {
+      "ad": "Oyuncu sayısı",
+      "deger": "min 2, max 8",
+      "kaynak": "packages/engine/src/games/cagrisim-agi/index.ts:91-92"
+    },
+    {
+      "ad": "Grup puanı",
+      "deger": "üye sayısı (≥ 2), tek kalan 0",
+      "kaynak": "packages/engine/src/games/cagrisim-agi/index.ts:72, 189"
+    },
+    {
+      "ad": "Genel skor ödülü",
+      "deger": "rankAwards(positiveOnly): lider +2 / ikinci basamak +1; lider eşitse liderler +1 (bu oyunda lider hep eşit)",
+      "kaynak": "packages/engine/src/games/cagrisim-agi/index.ts:191, scoring.ts:10-31"
+    },
+    {
+      "ad": "Ana kelime havuzu",
+      "deger": "321 yerleşik kelime; en az 10 etkin kelime gerekir (yönetici değiştirebilir)",
+      "kaynak": "packages/engine/src/games/cagrisim-agi/words.ts, pool.ts:15"
+    },
+    {
+      "ad": "Havuz kelime uzunluğu",
+      "deger": "2-16 karakter",
+      "kaynak": "packages/engine/src/games/cagrisim-agi/pool.ts:12"
+    },
+    {
+      "ad": "Geç gelen eylem payı",
+      "deger": "yok",
+      "kaynak": "packages/engine/src/games/cagrisim-agi/index.ts:83-93"
+    },
+    {
+      "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
+      "deger": "40 sn / 3 sn / 30 sn",
+      "kaynak": "apps/server/src/match.ts:40-42"
+    }
+  ],
+  "strateji": [
+    "Çoğunluğun aklına ilk gelen şeyi yaz: ana kelimenin en sık çağrışımı en kalabalık ağı kurar.",
+    "Çok yaratıcı olmak ağı bozar. Amaç kazanmak değil, uyumlu olmaktır; kelimeyi görünce içgüdüsel ilk kelimeyi yaz.",
+    "Yazılışı düşünme: kaşık/kasik, büyük/küçük harf ve noktalama fark etmez. Ama farklı kelime biçimleri (çoğul ek, sıfat hali) ayrı sayılır: 'deniz' ile 'denizler' farklıdır.",
+    "Tek kelime ve kısa yaz; uzun ifadeler başkalarıyla eşleşmez.",
+    "İki kişilikte arkadaşını iyi tanıyorsan birebir eşleşmek kolaydır; kalabalıkta en büyük ağa ortak ‘klişe’ ile girilir.",
+    "Süre kısa olsa da hızlı göndermek herkes cevapladığında oyunu erken bitirir; ama acele edip boş bırakma, yazmayan 0 alır."
+  ],
+  "tv": "TV/sahne ekranı bu oyun için özel görünüm kullanmaz: oyun ekranı izleyici kipinde, dokunmaya kapalı büyütülmüş bir dikey çerçevede gösterilir. Cevap bölümünde ortadaki elektrikli merkezde ana kelime, altında portre şeridi ve 'Cevaplar açılınca görünür · n/m hazır'; açılışta tek kalanlar, sonra kümeler küçükten büyüğe (en kalabalık ağ en son) cevap metni, '+n' ve üye avatarlarıyla gösterilir. Sağda oyuncular ve bu oyundaki puanları bulunur.",
+  "ekranlar": [
+    {
+      "mock": "cagrisim-briefing",
+      "q": "mock=cagrisim-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "Ana kelimeden yayılan elektrikli merkez ve neon düğümler; amaç ve üç adım.",
+      "dosya": "cagrisim-briefing"
+    },
+    {
+      "mock": "cagrisim",
+      "q": "mock=cagrisim",
+      "baslik": "Cevap yazma",
+      "aciklama": "Ana kelime merkezde, portre şeridi, 'Aklına ne geliyor?' alanı ve Gönder.",
+      "dosya": "cagrisim"
+    },
+    {
+      "mock": "cagrisim",
+      "q": "mock=cagrisim",
+      "baslik": "Cevap yazılırken",
+      "aciklama": "Alana 'deniz kenarı' yazılmış hali (ekran kaydı: cagrisim-typed).",
+      "dosya": "cagrisim"
+    },
+    {
+      "mock": "cagrisim-locked",
+      "q": "mock=cagrisim-locked",
+      "baslik": "Cevap kilitli",
+      "aciklama": "'Cevabın kilitlendi' kartı, cevabın ve 'Diğerleri bekleniyor · n/m hazır'.",
+      "dosya": "cagrisim-locked"
+    },
+    {
+      "mock": "cagrisim-spectator",
+      "q": "mock=cagrisim-spectator",
+      "baslik": "İzleyici",
+      "aciklama": "Yazı alanı yok; 'Cevaplar açılınca görünür · n/m hazır'.",
+      "dosya": "cagrisim-spectator"
+    },
+    {
+      "mock": "cagrisim-reveal",
+      "q": "mock=cagrisim-reveal&n=5",
+      "baslik": "Açılış (5 kişi)",
+      "aciklama": "Kümeler ('+n' ve avatarlar), tek kalanlar ve üstte kendi sonucun.",
+      "dosya": "cagrisim-reveal-n-5"
+    },
+    {
+      "mock": "cagrisim-reveal",
+      "q": "mock=cagrisim-reveal&n=8",
+      "baslik": "Açılış (8 kişi)",
+      "aciklama": "Daha çok küme; kompakt yerleşim.",
+      "dosya": "cagrisim-reveal-n-8"
+    },
+    {
+      "mock": "cagrisim-reveal-single",
+      "q": "mock=cagrisim-reveal-single&n=7",
+      "baslik": "Tek kalan",
+      "aciklama": "'0 · Bu sefer tek kaldın' sonucu.",
+      "dosya": "cagrisim-reveal-single-n-7"
+    },
+    {
+      "mock": "cagrisim-reveal-silent",
+      "q": "mock=cagrisim-reveal-silent&n=8",
+      "baslik": "Yazmayanlar",
+      "aciklama": "Cevap vermeyenler silik 'Yazmadı' satırlarında; 'Süre doldu' sonucu.",
+      "dosya": "cagrisim-reveal-silent-n-8"
+    }
+  ],
+  "bilinenSorunlar": [
+    "Genel skor ödülünde +2 (tek lider) ve ikinci basamak +1 dalları bu oyunda ulaşılamazdır: grup en az 2 kişi olduğundan en yüksek mini puana her zaman en az iki oyuncu sahiptir. Pratikte yalnız en kalabalık grup(lar)ın üyeleri +1 alır. Kod yorumu ('sıralamaya göre +2/+1') bu yüzden yanıltıcıdır.",
+    "docs/KURALLAR.md genel skora aktarımı (awards) tanımlamaz, yalnız mini puanı tarif eder; genel skor kuralı 'sahip kararı' olarak kodda (rankAwards) durur.",
+    "KURALLAR.md 'karakter sınırı yoktur' der; kodda teknik ağ koruması olarak 60 karakter sınırı vardır (ağ mesajı için). 60'tan uzun ham metin hiç ayrıştırılmaz (eylem sessizce düşer); istemci alanı zaten 60 ile sınırlar.",
+    "KURALLAR.md 'Türkçe büyük/küçük harf ve fazla boşluk normalizasyonu' der; kod bunun ötesinde klavyeden bağımsız katlama (foldKey) ve noktalama yok sayma uygular ('sahip onayı, Ekim 2026' değişikliği).",
+    "Cevap uzunluğu istemcide 60 karakterle (maxlength), sunucuda ise `trim()` sonrası UTF-16 uzunluğu 60 ile sınırlanır; emoji gibi iki kod birimli karakterler sınırı daha erken tüketir.",
+    "Erken bitiş değerlendirmesi yalnız bir cevap geldiği anda yapılır; son eksik oyuncu bağlantısını yitirirse aşama kendiliğinden erken bitmez."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-29: Klavyeden bağımsız gösterim ve yalnız bağlı oyuncuları bekleyen erken bitiş (öneri).",
+    "2026-10-27: Yönetici içerik havuzları: ana kelime havuzu panelden görüntülenip düzenlenebilir.",
+    "2026-10-27: Renk körlüğü modu için küme işaretleri.",
+    "2026-10-27: Sıralı açılış: önce tek kalanlar, sonra kümeler küçükten büyüğe, en büyük ağ en son.",
+    "2026-10-27: Tüm oyunlar için tur özeti (Çağrışım Ağı: '“…” cevabında N kişi buluştu').",
+    "2026-10-25: Cevap, blöf ve oylar için anında geri bildirim; klavyeden bağımsız kelime eşleşmesi.",
+    "2026-10-19: Herkes (bağlı) cevaplayınca cevap aşaması erken biter.",
+    "2026-10-17: İlk sürüm; genel skor ödülü sıralamaya göre (+2/+1, ortak rankAwards); 321 kelimelik havuz."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/cagrisim-agi/index.ts",
+    "packages/engine/src/games/cagrisim-agi/types.ts",
+    "packages/engine/src/games/cagrisim-agi/pool.ts",
+    "packages/engine/src/games/cagrisim-agi/words.ts",
+    "packages/engine/src/games/cagrisim-agi/cagrisim-agi.test.ts",
+    "packages/engine/src/games/scoring.ts",
+    "apps/client/src/games/cagrisim-agi/",
+    "docs/KURALLAR.md#5-çağrışım-ağı--cagrisim-agi",
+    "scripts/ui-check.mjs"
+  ]
+}

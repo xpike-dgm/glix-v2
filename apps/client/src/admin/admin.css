@@ -1003,3 +1003,10 @@ fieldset.adm-seg {
   font-weight: 700;
   cursor: pointer;
 }
+
+/* Üst çubuktaki ansiklopedi bağlantısı düğme görünümünde. */
+.adm-top-link {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}

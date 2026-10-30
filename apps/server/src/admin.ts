@@ -84,6 +84,7 @@ import { type IpLimiter, TokenBucket } from "./ratelimit.js";
 import type { SiteSettings } from "./siteSettings.js";
 import type { Social } from "./social.js";
 import type { StatsStore } from "./statsStore.js";
+import { handleWiki, WIKI_GET_ROUTES, WIKI_POST_ROUTES, type WikiRoute } from "./wiki.js";
 
 export const ADMIN_PREFIX = "/api/admin/";
 export const ADMIN_COOKIE = "glix_admin";
@@ -114,6 +115,8 @@ export interface AdminLimits {
   action(adminId: number): boolean;
   search(adminId: number): boolean;
   detail(adminId: number): boolean;
+  /** Ansiklopedi notları (ekran işaretleri art arda bırakılır). */
+  wiki(adminId: number): boolean;
 }
 
 export function createAdminLimits(clock: Clock): AdminLimits {
@@ -128,8 +131,13 @@ export function createAdminLimits(clock: Clock): AdminLimits {
       return b.take();
     };
   };
-  // İşlem: 10 ani, 6 sn'de 1. Arama: 30 ani, 2 sn'de 1. Döküm (e-posta görünür): 20 ani, 3 sn'de 1.
-  return { action: make(10, 1 / 6), search: make(30, 1 / 2), detail: make(20, 1 / 3) };
+  // İşlem: 10 ani, 6 sn'de 1. Arama: 30 ani, 2 sn'de 1. Döküm (e-posta görünür): 20 ani, 3 sn'de 1. Wiki notu: 30 ani, 2 sn'de 1.
+  return {
+    action: make(10, 1 / 6),
+    search: make(30, 1 / 2),
+    detail: make(20, 1 / 3),
+    wiki: make(30, 1 / 2),
+  };
 }
 export interface AdminEnv {
   accounts: AccountStore;
@@ -162,6 +170,8 @@ export interface AdminEnv {
   banned: BannedWords;
   /** A4: içerik havuzları (kelime/soru listeleri). */
   content: ContentStore;
+  /** Oyun ansiklopedisi içerik klasörü; null ise wiki uçları 404. */
+  wikiDir: string | null;
   /** Bu sunucu sürecinin başlangıç kaydı (`server_starts`); kayıt yazılamadıysa null. */
   runId: number | null;
 }
@@ -171,6 +181,23 @@ function fail(res: ServerResponse, status: number, code: string, message: string
 }
 
 const notFound = (res: ServerResponse): void => fail(res, 404, "not_found", "Bulunamadı");
+
+function wikiRoute(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: AdminEnv,
+  adminId: number,
+  name: WikiRoute,
+  query: URLSearchParams,
+): Promise<void> {
+  return handleWiki(
+    req,
+    res,
+    { dir: env.wikiDir, store: env.accounts, now: env.now, allowWrite: () => env.limits.wiki(adminId) },
+    name,
+    query,
+  );
+}
 
 function adminCookie(token: string, secure: boolean, maxAgeSec: number): string {
   return `${ADMIN_COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/api/admin; Max-Age=${maxAgeSec}${secure ? "; Secure" : ""}`;
@@ -281,6 +308,7 @@ const POST_ROUTES: ReadonlySet<string> = new Set([
   "pools/delete",
   "pools/check",
   "pools/bulk",
+  ...WIKI_POST_ROUTES,
 ]);
 const GET_ROUTES: ReadonlySet<string> = new Set([
   "status",
@@ -303,6 +331,7 @@ const GET_ROUTES: ReadonlySet<string> = new Set([
   "banned-words/accounts",
   "pools",
   "pools/entries",
+  ...WIKI_GET_ROUTES,
 ]);
 
 async function route(req: IncomingMessage, res: ServerResponse, env: AdminEnv): Promise<void> {
@@ -403,6 +432,14 @@ async function route(req: IncomingMessage, res: ServerResponse, env: AdminEnv): 
       return send(res, 200, { pools: env.content.summaries(), customMax: CONTENT_CUSTOM_MAX });
     case "pools/entries":
       return poolEntries(res, env, account.id, url.searchParams);
+    case "wiki/data":
+    case "wiki/image":
+    case "wiki/feedback":
+    case "wiki/feedback/image":
+    case "wiki/feedback/add":
+    case "wiki/feedback/status":
+    case "wiki/feedback/delete":
+      return wikiRoute(req, res, env, account.id, name, url.searchParams);
     case "pools/toggle":
     case "pools/add":
     case "pools/edit":

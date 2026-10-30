@@ -1,0 +1,382 @@
+{
+  "id": "kor-kronometre",
+  "ad": "Kör Kronometre",
+  "slogan": "Sayaç görünmez: hedef süreyi içinden say, tek bir kez bas, hedefe en yakın basan kazansın.",
+  "kategori": "Zamanlama",
+  "etiketler": ["zamanlama", "içsel sayım", "tek basış", "eşzamanlı"],
+  "oyuncu": {
+    "min": 2,
+    "max": 8
+  },
+  "sure": {
+    "tahminiSn": 24,
+    "not": "Basış süresi hedefe bağlıdır: hedef + 8 sn (hedef 7 sn ise 15 sn, 13 sn ise 21 sn). Ardından sonuç gösterimi 6 sn sürer. Yani oyun aşaması 21 ile 27 sn arasıdır. Herkes basarsa son basıştan 1 sn sonra sonuç açılır. Oyuncu sayısı süreyi değiştirmez. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasında sonuç ekranı (en çok 30 sn) vardır."
+  },
+  "ozet": "Ekranda yalnız bir hedef yazar (örneğin Hedef: 11 saniye). Gerçek sayaç yoktur; oyuncu içinden sayar ve BAS düğmesine yalnız bir kez basar. Süre bitince herkesin basış anı açılır; hedefe en yakın basan +2, ikinci en yakın basan +1 alır. Hiç basmayan sıralamaya girmez ve puan almaz.",
+  "akis": [
+    {
+      "ad": "Anlatım",
+      "sureSn": 40,
+      "kim": "herkes",
+      "aciklama": "Amaç: İçinden say, hedef saniyede bas! Üç madde: Sayaç görünmez, yalnız hedef süre yazılı; İçinden hedef süreyi say; Tek basışını doğru anda yap, en yakın +2, ikinci +1. Bağlı bütün katılımcılar hazır olunca ya da 40 sn dolunca biter. Kart bu ekranda oynanır.",
+      "gizli": "Yok."
+    },
+    {
+      "ad": "Geri sayım",
+      "sureSn": 3,
+      "kim": "herkes",
+      "aciklama": "3 saniyelik geri sayım; kesinleşen kartlar herkese açık duyurulur (Ayna ve Koruma hariç).",
+      "gizli": "Ayna ve Koruma gizli kalır."
+    },
+    {
+      "ad": "Sayma ve basış",
+      "sureSn": 18,
+      "kim": "herkes (katılımcılar basar, izleyici bakar)",
+      "aciklama": "Oyun başlar başlamaz o turun hedefi (7 ile 13 arası rastgele tam saniye) herkese gösterilir: Hedef: N saniye. Karanlık bir kronometre kadranı görünür; rakam ve ibre yoktur, yalnız 2,4 sn'lik bir nabız döngüsü akar (zamandan bağımsız, hedef anı hakkında ipucu vermez). Altta İçinden say… yazısı ve büyük BAS düğmesi vardır. Basınca düğme BASTIN olur, kadran donar ve parıltı yeşile döner, kısa ekran ışığı ve hafif titreşim olur, yazı Bastın! Diğerleri bekleniyor olur. Süre: hedef + 8 sn (aşağıda sabitler). Kabuk saati (süre çubuğu) çizilmez; süre hiçbir yerde gösterilmez.",
+      "gizli": "Hedef herkese açıktır. Kimin bastığı, ne zaman bastığı ve kaç kişinin bastığı süre bitene kadar kimseye (basanın kendisine bile basış anı) gösterilmez; oyuncu yalnız kendi bastı mı bilgisini alır. Kalan süre sayacı hiçbir yerde gönderilmez."
+    },
+    {
+      "ad": "Sonuç gösterimi",
+      "sureSn": 6,
+      "kim": "herkes",
+      "aciklama": "Basış süresi bitince (ya da herkes bastıktan 1 sn sonra) açılır. Üstte Hedef: N saniye, kişisel sonuç (+2 puan / +1 puan / Puan yok), kendi süren ve hedefe farkın (örn. 9,85 sn · −0,15 sn, ya da tam isabet, ya da Basmadın). Altında yakından uzağa sıralı satırlar: avatar, hedef işaretli bir çizgi üzerinde basış noktası, saniye değeri ve puan (+2, +1, 0; basmayanda basmadı ve –). Satırlar sırayla belirir. Puan alan oyuncunun telefonunda eşleşme sesi ve titreşimi, almayanın telefonunda hafif ses ve titreşim olur. Bu 6 saniye bitince oyun biter ve sonuç ekranına geçilir.",
+      "gizli": "Bu anda bütün basış anları, mesafeler, dereceler herkese açılır."
+    },
+    {
+      "ad": "Sonuç ekranı",
+      "sureSn": 30,
+      "kim": "herkes",
+      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 30 sn sonra kapanır.",
+      "gizli": "Yok."
+    }
+  ],
+  "kurallar": [
+    "2 ile 8 oyuncu katılır. Tek bir oyun aşaması vardır.",
+    "Hedef süre her turda 7, 8, 9, 10, 11, 12 ya da 13 saniyeden biridir (yedi olasılık, hepsi eşit olasılıklı). Hedef oyun başlarken maçın tohumlu rastgeleliğiyle seçilir ve herkese Hedef: N saniye diye gösterilir.",
+    "Basış süresi hedef + 8 saniyedir. Örnek: hedef 10 sn ise 18 sn, hedef 7 sn ise 15 sn, hedef 13 sn ise 21 sn.",
+    "Gerçek sayaç tamamen gizlidir: ekranda rakam, ibre, kalan süre çubuğu ya da yüzde yoktur. Yalnız zamandan bağımsız tekrarlayan bir nabız animasyonu vardır.",
+    "Her oyuncu yalnız bir kez basabilir. İkinci basış reddedilir (already_pressed) ve ilk kayıt korunur. İstemci de ilk dokunuştan sonra düğmeyi kilitler.",
+    "Basış anı sunucu saatiyle ölçülür: basış anı = sunucunun eylemi aldığı an − oyunun başladığı an (ms). Telefonun saati ya da ekran animasyonu önemli değildir; ağ gecikmesi basışı o kadar geç gösterir.",
+    "Her oyuncunun hedefe uzaklığı = |basış anı − hedef an| (ms). İki yandan basış (hedeften erken ya da geç) aynı biçimde sayılır; −300 ms ile +300 ms eşit uzaklıktır.",
+    "Yalnız basanlar sıralanır. Sıralama yakından uzağa doğrudur.",
+    "Derece: en yakın 1. derecedir. Eşit uzaklıktaki oyuncular aynı dereceyi paylaşır ve sonraki derece atlanır (1, 1, 3 gibi; iki birinci varsa ikinci derece yoktur).",
+    "1. derece +2, 2. derece +1, diğer dereceler 0 puan alır. Eşit birincilerin hepsi +2 alır; iki birinci varsa kimse +1 almaz. Tek birinci ve iki ikinci varsa ikinciler +1 alır.",
+    "Hiç basmayan oyuncu sıralamaya girmez, puan almaz ve hedefe en yakın sayılmaz (eski 18. saniyede basmış sayılma kuralı kaldırılmıştır). Basmayan, uzakta da olsa basandan geride sayılır; sonuç listesinde en sonda katılım sırasıyla yer alır.",
+    "Yalnız bir kişi bastıysa o +2 alır. Hiç kimse basmazsa kimse puan almaz ve liste yalnız basmadı satırlarından oluşur.",
+    "Basış süresi bittiği anda (ctx.now >= bitiş) ya da sonrasında gelen basış reddedilir (ended). Bu oyunda geç gelen eylem payı yoktur: bitişten 1 ms sonra gelen basış kabul edilmez. Bitişten bir milisaniye önceki basış (örn. 17 999 ms) kabul edilir.",
+    "Katılımcı olmayan kimse basamaz (not_participant); oyun başlamadan önceki basış reddedilir (not_started).",
+    "Erken bitiş: oyunun bütün katılımcıları basarsa, basış süresi son basıştan 1 sn sonra biter; sonuç gösterimi de buna göre öne çekilir (ve yine 6 sn sürer). Bu denetim bağlantıya bakmaz; bağlantısı kopuk ve basmamış bir oyuncu varsa oyun tam süreyi bekler. Herkes bastıktan sonra yeni basış kabul edilmez.",
+    "Süre dolmadan kimin bastığı, ne zaman bastığı ve basıp basmadığı başkalarına hiçbir yerde gösterilmez. Kişiye özel görünüm yalnız bastın mı (evet/hayır) söyler; kendi basış anın bile sonuç açılana kadar sana gösterilmez.",
+    "Mini oyun puanı doğrudan genel skora gider: ödüller mini oyun puanıyla aynıdır (+2, +1, 0)."
+  ],
+  "puanlama": {
+    "ozet": "Hedefe en yakın basan +2, ikinci en yakın basan +1; diğerleri ve basmayanlar 0. Puan eksiye düşmez. Eşit uzaklıkta derece paylaşılır.",
+    "kalemler": [
+      {
+        "olay": "Hedefe en yakın basış (1. derece)",
+        "puan": "+2",
+        "not": "Eşit uzaklıkta birden çok kişi varsa hepsi +2 alır."
+      },
+      {
+        "olay": "İkinci en yakın basış (2. derece)",
+        "puan": "+1",
+        "not": "Yalnız tek birinci varsa bir 2. derece vardır; birden çok kişi eşitse hepsi +1 alır."
+      },
+      {
+        "olay": "Diğer dereceler",
+        "puan": "0",
+        "not": "3. ve sonrası; iki birinci varsa üçüncü dereceden başlar."
+      },
+      {
+        "olay": "Hiç basmamak",
+        "puan": "0",
+        "not": "Sıralamaya girmez, sonuç listesinde basmadı olarak en sonda yer alır."
+      }
+    ],
+    "ornek": "Hedef 10 sn, 4 oyuncu. Ali 10,40 sn'de (uzaklık 400 ms), Bora 9,70 sn'de (300 ms), Cem 12,00 sn'de (2000 ms) basar, Deniz hiç basmaz. Sıralama: Bora 1. (+2), Ali 2. (+1), Cem 3. (0), Deniz sıralamada yok (0). Eşitlik örneği: Ali ve Bora ikisi de 300 ms uzakta ise ikisi de 1. derece, ikisi de +2 alır; Cem 3. derece olur ve 0 alır.",
+    "beraberlik": "Eşit uzaklıkta basanlar aynı dereceyi ve aynı ödülü paylaşır; sonraki derece atlanır (1, 1, 3). Hedefin iki yanındaki iki basış aynı uzaklıktaysa yine eşittir. Sıralama listesinde eşitler katılım sırasına göre dizilir ama puanları aynıdır. Bire bir milisaniye eşitliği pratikte seyrektir ama kural bunu tanımlar."
+  },
+  "ozelDurumlar": [
+    {
+      "baslik": "Hiç basmayan oyuncu",
+      "aciklama": "Sıralamaya girmez, puan almaz, hedefe en yakın sayılmaz. Sonuç ekranında Basmadın yazısı, satırında basmadı ve puan yerine – görünür. Kimse basmazsa tur puansız biter."
+    },
+    {
+      "baslik": "Herkes erken basarsa",
+      "aciklama": "Herkes bastığı anda bile (hedef anından önce olsa da) son basıştan 1 sn sonra sonuç açılır. Örneğin 4 oyuncu 3. saniyede basarsa sonuç yaklaşık 4. saniyede açılır; hedeften uzak ama hepsinin puanı yine mesafeye göre verilir."
+    },
+    {
+      "baslik": "Bağlantısı kopan oyuncu",
+      "aciklama": "Katılımcı olmaya devam eder. Kopmadan önce bastıysa basışı geçerlidir. Kopukken basmadıysa basmamış sayılır ve sıralanmaz. Kopuk bir oyuncu geri gelip süre içinde basabilir. Erken bitiş bağlantıya bakmaz: kopuk ve basmamış biri varsa oyun tam süreyi bekler."
+    },
+    {
+      "baslik": "Ağ gecikmesi",
+      "aciklama": "Basış, eylemin sunucuya ulaştığı anda ölçülür. Yavaş bağlantıdaki oyuncunun basışı gecikme kadar geç kaydedilir. Süre bitimine yakın basış ağda gecikip bitişten sonra ulaşırsa reddedilir (pay yoktur). İstemci basışı pointerdown anında gönderir ve başka hiçbir işi öne almaz."
+    },
+    {
+      "baslik": "İzleyici",
+      "aciklama": "Maç sırasında giren izleyici BAS düğmesini görmez; Herkes içinden sayıyor… yazısı ve hedefi görür. Sonuçta Sonuç başlığı ve tüm sıra satırları görünür. Puan almaz."
+    },
+    {
+      "baslik": "2 ve 8 oyuncu",
+      "aciklama": "2 oyuncuda ikisi de basarsa yakın olan +2, uzak olan +1 alır (ikinci derece). 8 oyuncuda yalnız ilk iki derece puan alır; 6 kişi 0 alabilir. Kurallar oyuncu sayısına göre değişmez."
+    },
+    {
+      "baslik": "Süre saati yok",
+      "aciklama": "Bu oyunda kabuk süre saati kapalıdır (noClock): ekranda kalan süre gösterilmez. Süre bitince sonuç kendiliğinden açılır; istemci bitiş anından sonra düğmeyi devre dışı bırakır."
+    }
+  ],
+  "kartlar": [
+    {
+      "kart": "Kendine Güven",
+      "etki": "Birinci olmak için mini oyun puanı en yüksek olmalıdır: 1. derece (+2) alan(lar) birincidir; eşitse hepsi birincidir. Kimse basmadıysa herkes 0 olduğundan herkes birincidir ve +2 alır."
+    },
+    {
+      "kart": "Sigorta",
+      "etki": "Sonuncu (en düşük puan) olursan +1. Bu oyunda sonuncular 0 puanlılardır: basmayanlar ve 3. ve sonraki dereceler. Yalnız iki oyuncu bastıysa ve diğerleri hiç basmadıysa basmayanlar sonuncudur. Herkes aynı puandaysa kimse sonuncu değildir."
+    },
+    {
+      "kart": "Tahmin",
+      "etki": "Seçtiğin oyuncu birinci olursa +2. Hedef 1. derecede (+2) ise tutar; kimse basmadıysa herkes birinci olduğundan tutar."
+    },
+    {
+      "kart": "Çift Puan / Altın Dokunuş",
+      "etki": "Hedefe en yakın basışın +2'si Çift Puan ile +4, Altın Dokunuş ile +6 olur; ikinci derecenin +1'i +2 ya da +3 olur. Puan hiç eksiye düşmediği için ×2'nin eksi tarafı bu oyunda görülmez."
+    },
+    {
+      "kart": "Kalkan",
+      "etki": "Bu oyunda ham ödül eksiye düşmediği için tek başına etkisizdir; yalnız diğer kart etkileri (Çelme, Talihsizlik gibi) puanı eksiye düşürürse devreye girer."
+    },
+    {
+      "kart": "Hırsız (kart)",
+      "etki": "Oyunun birincisinden (en yüksek mini oyun puanlısından, yani 1. derece) 1 puan alır. Birinci birden çoksa sahibi dışındaki birinciler arasında o ana kadarki ödülü en yüksek olandan (eşitse katılım sırasındaki ilkinden) alınır. Kimse basmadıysa herkes eşit olduğu için herkes birincidir."
+    },
+    {
+      "kart": "Ters Köşe",
+      "etki": "Oyuncular mini oyun puanına göre dizilir ve her biri aynadaki sıranın ham ödülünü alır (K6 adım 1). Bu oyunda ham ödüller +2, +1 ve 0 olduğundan en yakın basanın +2'si en alttaki gruba kayar; beraberlik grubunun toplamı eşit bölünür, artan puan katılım sırasındaki ilk üyelere verilir (toplam korunur)."
+    },
+    {
+      "kart": "Diğer kartlar",
+      "etki": "Çelme, Vergi, Lanet, Ortaklık, Takas, Takviye, Koruma, Ayna, Kart Çal ve kötü kartlar bu oyunun ham ödülleri (+2/+1/0) üzerinde genel kurallarla (K6) çalışır. Oyun kartlara özel kural uygulamaz."
+    }
+  ],
+  "sabitler": [
+    {
+      "ad": "Hedef süre aralığı (en az)",
+      "deger": "7 sn",
+      "kaynak": "packages/engine/src/games/kor-kronometre/types.ts:4"
+    },
+    {
+      "ad": "Hedef süre aralığı (en çok)",
+      "deger": "13 sn",
+      "kaynak": "packages/engine/src/games/kor-kronometre/types.ts:5"
+    },
+    {
+      "ad": "Basış süresi payı (hedefe eklenir)",
+      "deger": "8 000 ms",
+      "kaynak": "packages/engine/src/games/kor-kronometre/types.ts:7"
+    },
+    {
+      "ad": "Basış süresi",
+      "deger": "hedef + 8 000 ms",
+      "kaynak": "packages/engine/src/games/kor-kronometre/types.ts:13"
+    },
+    {
+      "ad": "Sonuç gösterim süresi (oyun içi)",
+      "deger": "6 000 ms",
+      "kaynak": "packages/engine/src/games/kor-kronometre/types.ts:9"
+    },
+    {
+      "ad": "Herkes bastıysa sonucun açılmasına kalan süre",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/games/kor-kronometre/types.ts:11"
+    },
+    {
+      "ad": "En uzun toplam süre (bot/simülasyon penceresi)",
+      "deger": "13 000 + 8 000 + 6 000 = 27 000 ms",
+      "kaynak": "packages/engine/src/games/kor-kronometre/types.ts:15"
+    },
+    {
+      "ad": "Hedefin seçimi",
+      "deger": "7 + rng.int(7) saniye",
+      "kaynak": "packages/engine/src/games/kor-kronometre/index.ts:94"
+    },
+    {
+      "ad": "1. derece puanı",
+      "deger": "+2",
+      "kaynak": "packages/engine/src/games/kor-kronometre/index.ts:55"
+    },
+    {
+      "ad": "2. derece puanı",
+      "deger": "+1",
+      "kaynak": "packages/engine/src/games/kor-kronometre/index.ts:55"
+    },
+    {
+      "ad": "Derece (eşitlerde paylaşılır, sonraki atlanır)",
+      "deger": "rank = ilk eşit uzaklığın sırası + 1",
+      "kaynak": "packages/engine/src/games/kor-kronometre/index.ts:48"
+    },
+    {
+      "ad": "Basış reddi (süre bitti / başlamadı / ikinci basış)",
+      "deger": "ended / not_started / already_pressed",
+      "kaynak": "packages/engine/src/games/kor-kronometre/index.ts:111"
+    },
+    {
+      "ad": "Erken bitiş",
+      "deger": "endsAt = min(endsAt, şimdi + 1 000 ms); revealEndsAt = endsAt + 6 000 ms",
+      "kaynak": "packages/engine/src/games/kor-kronometre/index.ts:117"
+    },
+    {
+      "ad": "Oyunun bitişi",
+      "deger": "ctx.now >= revealEndsAt",
+      "kaynak": "packages/engine/src/games/kor-kronometre/index.ts:142"
+    },
+    {
+      "ad": "Oyuncu sınırları",
+      "deger": "2 - 8",
+      "kaynak": "packages/engine/src/games/kor-kronometre/index.ts:73"
+    },
+    {
+      "ad": "Geç gelen eylem payı",
+      "deger": "yok (graceMs tanımlı değil)",
+      "kaynak": "packages/engine/src/games/kor-kronometre/index.ts:71"
+    },
+    {
+      "ad": "Kadran nabız döngüsü",
+      "deger": "2,4 sn",
+      "kaynak": "apps/client/src/games/kor-kronometre/kor-kronometre.css:70"
+    },
+    {
+      "ad": "Basış ekran ışığı",
+      "deger": "420 ms",
+      "kaynak": "apps/client/src/games/kor-kronometre/KorKronometreScreen.tsx:45"
+    },
+    {
+      "ad": "Sonuç sesi gecikmesi",
+      "deger": "420 ms",
+      "kaynak": "apps/client/src/games/kor-kronometre/KorKronometreScreen.tsx:65"
+    },
+    {
+      "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
+      "deger": "40 000 / 3 000 / 30 000 ms",
+      "kaynak": "apps/server/src/match.ts:40"
+    },
+    {
+      "ad": "Devam ile kapanma gecikmesi",
+      "deger": "1 000 ms",
+      "kaynak": "packages/engine/src/protocol.ts:29"
+    }
+  ],
+  "strateji": [
+    "Hedef her tur değişir; önceki turun ritmini yeni hedefe uyarla (7 saniyelik ritimle 13 saniyeyi sayarsan kayarsın).",
+    "İç saatin genelde hızlı ya da yavaş işler; birkaç tur sonra hangisi olduğunu öğren ve bilinçli telafi et.",
+    "Hiç basmamak her zaman 0 verir; basarsan en kötü ihtimalle yine 0 alırsın. Geç de olsa süre bitmeden bas: yalnız bir kişi bastıysa o +2 alır.",
+    "Hedefin iki yanı aynı değerde sayılır (300 ms erken ile 300 ms geç eşittir); erken ya da geç yönünde alışkanlığın varsa onu dengele.",
+    "Nabız animasyonu zamandan bağımsızdır, hedef hakkında ipucu vermez; ona bakarak sayma, ritmine odaklan.",
+    "Herkes bastığında sonuç 1 sn sonra açılır; ağ gecikmesi basışını geç gösterir, bu yüzden basışı biraz erken vermek isteyebilirsin."
+  ],
+  "tv": "Bu oyunun özel bir TV (sahne) görünümü yoktur; büyük ekranda telefon ekranı izleyici kipinde büyütülerek gösterilir. TV'de hedef (Hedef: N saniye), kadran ve İçinden say… yazısı görünür; BAS düğmesi yoktur. Sonuçta sıra satırları (avatar, çizgi üzerinde basış noktası, süre ve puan) herkesle birlikte görünür.",
+  "ekranlar": [
+    {
+      "mock": "kor-kronometre-briefing",
+      "q": "mock=kor-kronometre-briefing",
+      "baslik": "Anlatım",
+      "aciklama": "İçinden say, hedef saniyede bas! ve üç madde.",
+      "name": "kronometre-briefing",
+      "dosya": "kor-kronometre-briefing"
+    },
+    {
+      "mock": "kor-kronometre-counting",
+      "q": "mock=kor-kronometre-counting",
+      "baslik": "Sayma",
+      "aciklama": "Hedef yazısı, karanlık kronometre kadranı, İçinden say… ve BAS düğmesi.",
+      "name": "kronometre-counting",
+      "dosya": "kor-kronometre-counting"
+    },
+    {
+      "mock": "kor-kronometre-counting",
+      "q": "mock=kor-kronometre-counting&target=7",
+      "baslik": "Hedef 7 saniye",
+      "aciklama": "En kısa hedef: 7 saniye (basış süresi 15 sn).",
+      "name": "kronometre-target",
+      "dosya": "kor-kronometre-counting-target-7"
+    },
+    {
+      "mock": "kor-kronometre-counting",
+      "q": "mock=kor-kronometre-counting",
+      "baslik": "Basış anı",
+      "aciklama": "BAS'a basıldıktan sonra kadran donar, parıltı yeşile döner.",
+      "name": "kronometre-press",
+      "dosya": "kor-kronometre-counting"
+    },
+    {
+      "mock": "kor-kronometre-pressed",
+      "q": "mock=kor-kronometre-pressed",
+      "baslik": "Bastın",
+      "aciklama": "BASTIN düğmesi ve Bastın! Diğerleri bekleniyor yazısı.",
+      "name": "kronometre-pressed",
+      "dosya": "kor-kronometre-pressed"
+    },
+    {
+      "mock": "kor-kronometre-spectator",
+      "q": "mock=kor-kronometre-spectator",
+      "baslik": "İzleyici",
+      "aciklama": "BAS düğmesi yok; Herkes içinden sayıyor…",
+      "name": "kronometre-spectator",
+      "dosya": "kor-kronometre-spectator"
+    },
+    {
+      "mock": "kor-kronometre-reveal",
+      "q": "mock=kor-kronometre-reveal&n=5&rank=1",
+      "baslik": "Sonuç: kazandın",
+      "aciklama": "5 oyuncu; kendi derecen 1: +2 puan, çizgi üzerinde basış noktaları.",
+      "name": "kronometre-reveal-win-5",
+      "dosya": "kor-kronometre-reveal-n-5-rank-1"
+    },
+    {
+      "mock": "kor-kronometre-reveal",
+      "q": "mock=kor-kronometre-reveal&n=8&rank=6&nopress=1",
+      "baslik": "Sonuç: puansız ve basmayanlar",
+      "aciklama": "8 oyuncu; son iki oyuncu basmadı (basmadı ve –), kendin 6. sırada Puan yok.",
+      "name": "kronometre-reveal-lose-8",
+      "dosya": "kor-kronometre-reveal-n-8-rank-6-nopress-1"
+    },
+    {
+      "mock": "kor-kronometre-reveal",
+      "q": "mock=kor-kronometre-reveal&n=2&rank=2",
+      "baslik": "Sonuç: 2 oyuncu",
+      "aciklama": "İki kişilik tur; ikinci olan +1 alır.",
+      "name": "kronometre-reveal-2",
+      "dosya": "kor-kronometre-reveal-n-2-rank-2"
+    }
+  ],
+  "bilinenSorunlar": [
+    "KURALLAR.md §9 cevap 7 ve özel durum maddesi (hiç basmayan 18. saniyede basmış sayılır) O6 değişikliğiyle geçersizdir; kod yeni kuralı uygular: basmayan sıralamaya girmez ve puan almaz. Aynı bölümdeki cevap 2 (hedef 10) ve cevap 6 (18 saniye) de O6 ile hedef 7-13 ve hedef + 8 sn olarak değişmiştir.",
+    "Erken bitiş genel kuralı (KURALLAR.md) Kör Kronometre'yi kapsam dışı bırakır, ama kodda herkes basınca 1 sn sonra açılan bir erken bitiş vardır; bağlantıya bakmaz (docs/ERKEN-BITIS.md Tür 2, docs/ONERI-KURAL.md bilinçli kopuk oyuncu beklemesi). Herkes hedeften çok önce basarsa sonuç hedef anından önce açılabilir.",
+    "KURALLAR.md §9 madde 13 (kadran/tutorial) ve cevap 4 gerçek sayacın gizli olduğunu söyler; eski tutorial adımı 1 Sayaç ve hedef zaman ekranda görünmez der. Kodda hedef süre herkese açık gösterilir (O6), yalnız gerçek sayaç gizlidir.",
+    "Bu oyunda kabuk süre saati kapalıdır: oyuncu toplam sürenin ne zaman biteceğini göremez. Sürenin bittiği ancak sonuç açılınca anlaşılır; son saniyelerde basmak isteyen oyuncu bitiş anını bilemez.",
+    "Basış anı sunucu saatiyle ölçüldüğünden ağ gecikmesi basışı geç gösterir (hedef 10 sn iken 150 ms gecikme tam isabeti bile 150 ms uzak yapar). Gecikme telafisi (graceMs) kasıtlı olarak yoktur."
+  ],
+  "sonDegisiklikler": [
+    "2026-10-26: Enerji çekirdeği ve kronometre görselleri istemciye eklendi.",
+    "2026-10-27: O6 değişikliği uygulandı: hedef 7-13 sn rastgele ve herkese açık, süre hedef + 8 sn, basmayan sıralamaya girmez (motor, test, istemci, sunucu testi, mock).",
+    "2026-10-27: Herkes basınca 1 sn sonra erken bitiş; sonuç ekranında Devam ile erken geçiş.",
+    "2026-10-27: Tüm oyunlar için tur özeti ve kayıt defteri; oyun kabuk saatine/Status'a taşındı (Kör Kronometre saatsiz bırakıldı); CSS sınıf çakışmaları giderildi.",
+    "2026-10-27: Sahne (TV) rolü, sunucu ve gizlilik testleri eklendi.",
+    "2026-10-28: Lobi ton özelliği kaldırıldı."
+  ],
+  "kaynaklar": [
+    "packages/engine/src/games/kor-kronometre/index.ts",
+    "packages/engine/src/games/kor-kronometre/types.ts",
+    "packages/engine/src/games/kor-kronometre/kor-kronometre.test.ts",
+    "packages/engine/src/games/kor-kronometre/summary.ts",
+    "docs/KURALLAR.md#9-kör-kronometre",
+    "docs/ERKEN-BITIS.md",
+    "docs/ONERI-KURAL.md",
+    "apps/client/src/games/kor-kronometre/KorKronometreScreen.tsx",
+    "apps/client/src/games/kor-kronometre/view.ts",
+    "apps/client/src/games/kor-kronometre/Dial.tsx",
+    "apps/server/src/kor-kronometre.test.ts",
+    "scripts/ui-check.mjs"
+  ]
+}

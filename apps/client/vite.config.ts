@@ -34,9 +34,14 @@ function emitAssetManifest(): Plugin {
   };
 }
 
-/** `admin.html` girişinin parçası mı (yönetici paneli oyun kabuğundan ayrıdır). */
+/** Yönetici sayfası girişi mi (`admin.html` ve `wiki.html` oyun kabuğundan ayrıdır). */
 function isAdminEntry(facadeModuleId: string | null, name: string): boolean {
-  return name === "admin" || (facadeModuleId?.endsWith("/admin.html") ?? false);
+  return (
+    name === "admin" ||
+    name === "wiki" ||
+    (facadeModuleId?.endsWith("/admin.html") ?? false) ||
+    (facadeModuleId?.endsWith("/wiki.html") ?? false)
+  );
 }
 
 function collectShellChunks(): Plugin {
@@ -92,6 +97,9 @@ export default defineConfig({
           "**/chunks/**",
           "**/assets/admin-*",
           "admin.html",
+          // Oyun ansiklopedisi (wiki.html, assets/wiki-*) de yöneticinin ayrı sayfasıdır.
+          "**/assets/wiki-*",
+          "wiki.html",
           "**/assets/avatars/moods/**",
           "**/assets/mascot/**",
           "**/assets/badges/**",
@@ -115,6 +123,7 @@ export default defineConfig({
           /^\/(gizlilik|kosullar)\.html$/,
           // Yönetici paneli ayrı sayfadır: hizmet çalışanı /admin gezintisini oyun kabuğuyla yanıtlamaz.
           /^\/admin/,
+          /^\/wiki/,
         ],
         // Web bildirimleri: `push` ve `notificationclick` işleyicileri public/sw-push.js içinde; oluşturulan sw.js
         // bunu başta `importScripts` ile yükler. Tarayıcı içe aktarılan betikleri de güncelleme denetimine katar
@@ -165,10 +174,11 @@ export default defineConfig({
     // Küçük .woff2 dosyaları (Türkçe harf alt kümeleri) satır içi veri adresi olmasın: CSP `font-src 'self'` veri adresini engeller.
     assetsInlineLimit: (file) => (file.endsWith(".woff2") ? false : undefined),
     rollupOptions: {
-      // İki sayfa: oyun (index) ve yönetici paneli (admin; kendi küçük paketi).
+      // Üç sayfa: oyun (index), yönetici paneli (admin) ve oyun ansiklopedisi (wiki); son ikisi kendi küçük paketleri.
       input: {
         index: resolve(import.meta.dirname, "index.html"),
         admin: resolve(import.meta.dirname, "admin.html"),
+        wiki: resolve(import.meta.dirname, "wiki.html"),
       },
       // Tembel parçalar ayrı klasörde: hizmet çalışanı kabuğu (giriş) ile bunları ayırt eder.
       output: { chunkFileNames: "assets/chunks/[name]-[hash].js" },
