@@ -150,3 +150,25 @@ Ayrıntılar: `docs/oneriler/capraz-ates.md`. Onaylananlar (dosyadaki ayrıntıl
 - Onaylanmayanlar: CA-M3 (döngü kuralı; bugünkü kural kalır), CA-M4 (eksisiz puanlama), CA-M5 (hedef sayacı).
 
 **Yeni görsel gerekenler:** namlu ateşi, mermi parıltısı, kalkan, cam çatlağı katmanı; isteğe bağlı silah/el.
+
+## Zaman Bombası Hafızası
+
+Ayrıntılar: `docs/oneriler/zaman-bombasi-hafizasi.md`. Onaylananlar (dosyadaki ayrıntılarıyla):
+
+- **ZB-M1** Bombayı at: diziyi doğru giren, sırayı kime geçireceğini seçer (4 sn; seçmezse rastgele); kendine ve
+  bombayı az önce kendisine atana hemen geri atamaz (3+ oyuncuda); elenmeden sonra yeni kurbanı bombayı atan seçer.
+- **ZB-M2** Rengi sen eklersin: doğru giren, eklenecek rengi seçer (ani ölümde biri oyuncu, biri rastgele;
+  elenme sonrası yeni 2 renk rastgele; seçmezse rastgele).
+- **ZB-M3 (değiştirilmiş, eksi puan yok)** Puan: oyun sonunda hayatta kalanlar **+2**, bütün elenenler **0**
+  (ilk elenen dahil; −1 yok). Kimse elenmeden 90 sn dolarsa herkes **+1**. Biriken "+1"ler kalkar. Kartlarda
+  "birinci" = hayatta kalanlar, "sonuncu" = elenenler.
+- **ZB-U1** Fitilli gerçek bomba; bomba seçilen kişiye fırlatılır.
+- **ZB-U2** Sıra sana geçtiğinde güçlü titreşim, kenar ışığı, "SIRA SENDE!" bandı; oynatma uyarıdan sonra başlar.
+- **ZB-U3** Dolgun oynatma ve büyük "DİZİ 7" sayacı.
+- **ZB-U4** Doğru giriş anı ("TEMİZ!", yeni nokta, ardından renk ve hedef seçimi).
+- **ZB-U5** Elenme anı (avatar savrulur, sarsıntı).
+- **ZB-U8** TV ekranı yeni düzen.
+- **ZB-U9** Ses ve titreşim seti.
+- Onaylanmayanlar: ZB-M4 (tahmin), ZB-M5 (ters dizi), ZB-U6 (ani ölüm girişi), ZB-U7 (tahmin ekranı), ZB-AI1.
+
+**Yeni görsel gerekenler:** fitilli bomba (gövde + fitil + kıvılcım).
