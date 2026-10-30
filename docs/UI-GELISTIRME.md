@@ -83,6 +83,8 @@ Ayrıntılar: `docs/oneriler/gizli-alisveris.md`. Onaylananlar (dosyadaki ayrın
   genel karara bağlanır: herkes "Devam et" deyince geçer, en çok 60 sn.
 - **GA-U6** Mağazaya özel ses ve titreşim seti.
 - **GA-U7** İzleyici ve TV vitrini (talep ateşi dahil).
+- **Ürün sınırı yok (sahip kararı):** oyuncu bütçesiyle alabildiği kadar ürün alır; tek sınır 60 kredi ve her
+  üründen bir tane. Raftaki "en ucuz 5 ürünün toplamı 60'ı geçmeli" şartı kalkar.
 - Onaylanmayanlar: GA-M5 (tekel bonusu), GA-M6 (sabotaj etiketi), GA-AI1, GA-AI2.
 
 **Yeni görsel gerekenler:** 8 yeni ürün görseli (GA-M1; mevcut 12 ürünle aynı tarz), kupon etiketi (GA-M2),
