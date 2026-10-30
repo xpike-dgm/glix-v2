@@ -68,7 +68,8 @@ Sahibin kararları:
 
 Ayrıntılar: `docs/oneriler/gizli-alisveris.md`. Onaylananlar (dosyadaki ayrıntılarıyla):
 
-- **GA-M1** Her maç farklı raf: 20 ürünlük havuzdan 12'si, fiyatlar maç başına ±%30.
+- **GA-M1** Her maç farklı raf: 20 ürünlük havuzdan 12'si, fiyatlar maç başına ±%30. **Ürün alma limiti yok**
+  (sahip kararı): oyuncu parası yettiği kadar alır; tek sınır bütçe (60 kredi) ve her üründen bir tane.
 - **GA-M2** Gizli kupon: herkese kendine özel bir üründe %50 indirim (yalnız ödenen fiyat düşer, değer değişmez).
 - **GA-M3** Vitrin fısıltısı: 15. saniyede ürünlerin üstünde talep ateşi (🔥/🔥🔥/🔥🔥🔥), 15. saniyedeki duruma göre
   donar.

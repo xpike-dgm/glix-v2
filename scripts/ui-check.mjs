@@ -1682,6 +1682,8 @@ const SCREENS = [
     act: async (p) => p.getByRole("button", { name: "Tamam" }).click(),
   },
   { name: "alisveris-low", q: "mock=alisveris-low&n=5" },
+  { name: "alisveris-many", q: "mock=alisveris-many&n=5" },
+  { name: "alisveris-many-locked", q: "mock=alisveris-many&n=5&lock=1", settle: 1200 },
   {
     name: "alisveris-tap",
     q: "mock=alisveris-shop&n=5&empty=1",

@@ -8,6 +8,7 @@
  *   ?mock=alisveris-closing    son 3 saniye: "Kasa kapanıyor!", kepenk biraz iner
  *   ?mock=alisveris-locked     sen "Tamam" dedin (paketlenmiş sepet), diğerleri bekleniyor
  *   ?mock=alisveris-low        bütçe neredeyse bitmiş
+ *   ?mock=alisveris-many       ucuz raf: sepette 7 ürün (ürün sayısı sınırı yok; `&lock=1` paketlenmiş poşet)
  *   ?mock=alisveris-reveal     sonuç: kepenk → ürün ürün çakışma → sepetler sondan başa → puanlar
  *   ?mock=alisveris-reveal-tie sonuç: en değerli sepetler eşit (ikisi +2, sonraki +1)
  *   ?mock=alisveris-spectator  katılımcı değilsin (vitrin; `&heat=1` talep ateşiyle)
@@ -47,6 +48,21 @@ const SHELF: [number, number][] = [
   [15, 17],
   [14, 14],
   [12, 9],
+];
+/** Ucuz raf (her ürün kendi aralığının en altında): ürün sayısı sınırı olmadığını göstermek için. */
+const CHEAP_SHELF: [number, number][] = [
+  [0, 6],
+  [1, 7],
+  [2, 9],
+  [3, 11],
+  [12, 8],
+  [13, 10],
+  [14, 12],
+  [4, 13],
+  [5, 14],
+  [15, 14],
+  [6, 16],
+  [7, 17],
 ];
 /** Oyuncu sırasıyla kuponlar (hepsi farklı). Senin kuponun Mini Drone (27 → 14). */
 const COUPONS = [10, 19, 7, 12, 8, 15, 16, 9];
@@ -108,14 +124,22 @@ export function startAlisverisMock(kind: string, params: URLSearchParams): void 
   players.forEach((p, i) => {
     if (participants.includes(p.id)) coupons[p.id] = COUPONS[i] ?? 0;
   });
+  const many = kind === "alisveris-many";
+  if (many) coupons[SELF] = 14;
   const base: AlisverisState = {
     ...setup,
-    shelf: SHELF.map(([id, price]) => ({ id, name: ALISVERIS_POOL[id]?.name ?? "", price })),
+    shelf: (many ? CHEAP_SHELF : SHELF).map(([id, price]) => ({
+      id,
+      name: ALISVERIS_POOL[id]?.name ?? "",
+      price,
+    })),
     coupons,
   };
+  // Ucuz rafta 7 ürün: 6 + 7 + 9 + 11 + 8 + 10 + 6 (Retro Joystick kuponlu, 12 → 6) = 57.
+  if (many) baskets[SELF] = [0, 1, 2, 3, 12, 13, 14];
   const ctx = () => ({ now: Date.now(), rng: createRng(1), connected: participants });
   // "Tamam" diyenler (mock): kilitli ekranda sen ve birkaç kişi; izleyici ekranında birkaç kişi.
-  let myLocked = kind === "alisveris-locked";
+  let myLocked = kind === "alisveris-locked" || (kind === "alisveris-many" && params.get("lock") === "1");
   const lockedIds = (): string[] => {
     if (kind === "alisveris-locked")
       return participants.slice(0, Math.max(1, Math.ceil(participants.length / 2)));

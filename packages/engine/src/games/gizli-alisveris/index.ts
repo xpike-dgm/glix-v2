@@ -5,10 +5,8 @@ import {
   ALISVERIS_DURATION_MS,
   ALISVERIS_HEAT_AT_MS,
   ALISVERIS_LOCK_GRACE_MS,
-  ALISVERIS_MAX_ITEMS,
   ALISVERIS_POOL,
   ALISVERIS_POOL_SIZE,
-  ALISVERIS_PRICE_MAX,
   ALISVERIS_REVEAL_MS,
   ALISVERIS_SCALE,
   ALISVERIS_SHELF_SIZE,
@@ -47,43 +45,16 @@ export interface AlisverisState {
   revealed: boolean;
 }
 
-/** Rafın en ucuz 5 ürününün toplamı bütçeyi aşıyor mu (en çok 4 ürün kuralı)? */
-export function shelfKeepsItemLimit(prices: readonly number[]): boolean {
-  const cheapest = [...prices].sort((a, b) => a - b).slice(0, ALISVERIS_MAX_ITEMS + 1);
-  return cheapest.length <= ALISVERIS_MAX_ITEMS || cheapest.reduce((s, p) => s + p, 0) > ALISVERIS_BUDGET;
-}
-
-/** Bir raf denemesi kaç kez tekrarlanır; çok nadiren yetmezse en ucuzlar aralık içinde yükseltilir. */
-const SHELF_TRIES = 64;
-
 /**
- * Maçın rafı: 20 ürünlük havuzdan 12'si, fiyatlar ±%30 (tam sayı, 6–40). En ucuz 5 ürünün toplamı 60'ı aşmayan
- * raf atılır ve yeniden çekilir; yalnız sunucu rng'si kullanılır (aynı tohum aynı raf).
+ * Maçın rafı: 20 ürünlük havuzdan 12'si, fiyatlar ±%30 (tam sayı, 6–40). Ürün sayısı sınırı yoktur (tek sınır
+ * bütçe); yalnız sunucu rng'si kullanılır (aynı tohum aynı raf).
  */
 export function rollShelf(rng: Rng): AlisverisProduct[] {
-  let shelf: AlisverisProduct[] = [];
-  for (let attempt = 0; attempt < SHELF_TRIES; attempt++) {
-    const picked = rng.shuffle(ALISVERIS_POOL).slice(0, ALISVERIS_SHELF_SIZE);
-    shelf = picked.map((p) => {
-      const { min, max } = alisverisPriceRange(p.base);
-      return { id: p.id, name: p.name, price: min + rng.int(max - min + 1) };
-    });
-    if (shelfKeepsItemLimit(shelf.map((p) => p.price))) return shelf;
-  }
-  // Güvenlik ağı (pratikte erişilmez): en ucuz ürün, kendi aralığı içinde (yoksa 40'a kadar) birer artırılır.
-  const out = shelf.map((p) => ({ ...p }));
-  while (!shelfKeepsItemLimit(out.map((p) => p.price))) {
-    const room = (p: AlisverisProduct): number => {
-      const base = ALISVERIS_POOL[p.id]?.base ?? p.price;
-      return alisverisPriceRange(base).max - p.price;
-    };
-    const sorted = [...out].sort((a, b) => a.price - b.price || a.id - b.id);
-    const target =
-      sorted.find((p) => room(p) > 0) ?? sorted.find((p) => p.price < ALISVERIS_PRICE_MAX) ?? sorted[0];
-    if (!target || target.price >= ALISVERIS_PRICE_MAX) break;
-    target.price += 1;
-  }
-  return out;
+  const picked = rng.shuffle(ALISVERIS_POOL).slice(0, ALISVERIS_SHELF_SIZE);
+  return picked.map((p) => {
+    const { min, max } = alisverisPriceRange(p.base);
+    return { id: p.id, name: p.name, price: min + rng.int(max - min + 1) };
+  });
 }
 
 const priceIn = (state: AlisverisState, id: number): number =>

@@ -277,7 +277,11 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
                           <circle cx="9" cy="18.5" r="1.6" />
                           <circle cx="16" cy="18.5" r="1.6" />
                         </svg>
-                        <ul class="gacart__items" aria-label={`Sepetinde ${basket().length} ürün`}>
+                        <ul
+                          class="gacart__items"
+                          data-many={basket().length >= 5 ? "1" : undefined}
+                          aria-label={`Sepetinde ${basket().length} ürün`}
+                        >
                           <For each={basket()}>
                             {(id) => (
                               <li
@@ -305,7 +309,7 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
                     <div class="gapack" role="status">
                       <div class="gapack__bag">
                         <Poset class="gapack__poset" />
-                        <div class="gapack__items">
+                        <div class="gapack__items" data-many={basket().length >= 5 ? "1" : undefined}>
                           <For each={basket()}>
                             {(id, i) => (
                               <span style={{ "--i": i() }}>

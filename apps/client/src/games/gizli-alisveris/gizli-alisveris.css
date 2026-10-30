@@ -580,7 +580,8 @@ button.aitem:active:not(:disabled) {
   display: flex;
   align-items: center;
   gap: 4px;
-  max-width: calc(50% - 60px);
+  max-width: calc(50% - 52px);
+  overflow: hidden;
   padding: 3px 6px;
   border-radius: 10px;
   border: 1px solid rgba(46, 242, 255, 0.35);
@@ -634,6 +635,16 @@ button.aitem:active:not(:disabled) {
 .gacart__items .uart {
   --u: 20px;
   animation: none;
+}
+/* Çok ürün (5+): minikler üst üste biner, şerit küçük ekranda taşmaz. */
+.gacart__items[data-many="1"] {
+  gap: 0;
+}
+.gacart__items[data-many="1"] li + li {
+  margin-left: -10px;
+}
+.gacart__items[data-many="1"] .uart {
+  --u: 19px;
 }
 .abudget[data-low="1"] .abudget__num {
   animation: ga-jitter 1.4s ease-in-out infinite;
@@ -953,6 +964,12 @@ button.aitem:active:not(:disabled) {
 .gapack__items .uart {
   --u: clamp(48px, 16vw, 72px);
 }
+.gapack__items[data-many="1"] > span {
+  margin: 0 -12px;
+}
+.gapack__items[data-many="1"] .uart {
+  --u: clamp(36px, 11vw, 50px);
+}
 @keyframes ga-pack {
   from {
     opacity: 0;
@@ -1241,6 +1258,14 @@ button.aitem:active:not(:disabled) {
   }
   .gahint {
     display: none;
+  }
+  /* Küçük kartta kupon etiketi adı örtmesin: sağ kenara, onay işaretinin altına. */
+  .gaitem__coupon {
+    left: auto;
+    right: 1px;
+    bottom: auto;
+    top: 22px;
+    width: 28px;
   }
 }
 @media (max-height: 460px) {

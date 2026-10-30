@@ -15,8 +15,6 @@ export const ALISVERIS_SHELF_SIZE = 12;
 export const ALISVERIS_PRICE_SWING = 0.3;
 export const ALISVERIS_PRICE_MIN = 6;
 export const ALISVERIS_PRICE_MAX = 40;
-/** Raftaki en ucuz bu kadar ürünün toplamı bütçeyi her zaman aşar (en çok 4 ürün sığar). */
-export const ALISVERIS_MAX_ITEMS = 4;
 /** Vitrin fısıltısı: alışverişin başından bu kadar sonra talep ateşi belirir ve o anki sepetlere göre donar. */
 export const ALISVERIS_HEAT_AT_MS = 15_000;
 

@@ -9,7 +9,6 @@ import {
   alisverisSettle,
   gizliAlisveris as g,
   rollShelf,
-  shelfKeepsItemLimit,
 } from "./index.js";
 import {
   ALISVERIS_BUDGET,
@@ -432,27 +431,38 @@ describe("gizli-alisveris her maç farklı raf", () => {
     }
   });
 
-  it("en çok 4 ürün kuralı her rafta korunur: en ucuz 5 ürünün toplamı 60'ı geçer", () => {
-    for (let seed = 1; seed <= 2_000; seed++) {
-      const prices = shelfOf(seed).map((x) => x.price);
-      const five = [...prices].sort((a, b) => a - b).slice(0, 5);
-      expect(five.reduce((s, x) => s + x, 0)).toBeGreaterThan(60);
-    }
-    expect(shelfKeepsItemLimit([6, 7, 8, 9, 30, 40])).toBe(false);
-    expect(shelfKeepsItemLimit([12, 12, 12, 12, 13])).toBe(true);
-    expect(shelfKeepsItemLimit([12, 12, 12, 12, 12])).toBe(false); // tam 60: 5 ürün sığar
+  it("ürün sayısı sınırı yok: tek sınır bütçe; ucuz rafta 5+ ürün alınabilir", () => {
+    // Ucuz raf: 12 ürün 6–12 kredi.
+    const cheap = [6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 12];
+    let s: AlisverisState = {
+      ...start(3),
+      shelf: CLASSIC.map((p, i) => ({ ...p, price: cheap[i] ?? 6 })),
+    };
+    for (const id of [0, 1, 2, 3, 4, 5, 6]) s = ok(s, "p1", "add", id); // 6+6+7+7+8+8+9 = 51
+    expect(priv(s, "p1").basket).toHaveLength(7);
+    expect(priv(s, "p1").remaining).toBe(9);
+    s = ok(s, "p1", "add", 7); // 60
+    expect(priv(s, "p1").remaining).toBe(0);
+    expect(act(s, "p1", "add", 8)).toEqual({ rejected: "over_budget" });
+    expect(reveal(s).baskets.p1).toHaveLength(8);
   });
 
-  it("güvenlik ağı: rng hep en ucuz rafı verse bile kural korunur ve fiyatlar sınırda kalır", () => {
-    // next() hep 0: shuffle sırası sabit, fiyatlar hep aralığın en altı.
+  it("kuponla 5 ürün sığabilir (en ucuz 5'in tam fiyatı 60'ı geçse bile)", () => {
+    // Klasik raf: en ucuz 5 = 8+10+12+15+18 = 63; kupon Mini Hoparlör'de (18 → 9) → 54.
+    let s = start(3, 1, { p1: 4, p2: 5, p3: 6 });
+    for (const id of [0, 1, 2, 3, 4]) s = ok(s, "p1", "add", id);
+    expect(priv(s, "p1")).toMatchObject({ basket: [0, 1, 2, 3, 4], remaining: 6 });
+    // Kuponsuz oyuncu aynı 5'liyi alamaz.
+    let t = start(3, 1, { p1: 4, p2: 5, p3: 6 });
+    for (const id of [0, 1, 2, 3]) t = ok(t, "p2", "add", id);
+    expect(act(t, "p2", "add", 4)).toEqual({ rejected: "over_budget" });
+  });
+
+  it("raf üretimi rng'yi yeniden çekme döngüsü olmadan bir kez kullanır", () => {
     const zero = { next: () => 0, int: () => 0, shuffle: <T>(xs: readonly T[]) => [...xs].reverse() };
     const shelf = rollShelf(zero);
     expect(shelf).toHaveLength(12);
-    expect(shelfKeepsItemLimit(shelf.map((p) => p.price))).toBe(true);
-    for (const p of shelf) {
-      expect(p.price).toBeGreaterThanOrEqual(6);
-      expect(p.price).toBeLessThanOrEqual(40);
-    }
+    for (const p of shelf) expect(p.price).toBe(alisverisPriceRange(ALISVERIS_POOL[p.id]?.base ?? 0).min);
   });
 
   it("fiyat aralığı: ±%30, 6'nın altına ve 40'ın üstüne çıkmaz", () => {

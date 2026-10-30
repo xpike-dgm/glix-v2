@@ -24,7 +24,7 @@
       "ad": "Geri sayım",
       "sureSn": 3,
       "kim": "herkes",
-      "aciklama": "3 sn geri sayım, oynanan kartlar açıklanır; oyun kurulurken sunucu rastgeleliğiyle raf (20'den 12 ürün, ±%30 fiyat, en çok 4 ürün kuralı) ve herkesin farklı kuponu belirlenir."
+      "aciklama": "3 sn geri sayım, oynanan kartlar açıklanır; oyun kurulurken sunucu rastgeleliğiyle raf (20'den 12 ürün, ±%30 fiyat) ve herkesin farklı kuponu belirlenir."
     },
     {
       "ad": "Alışveriş",
@@ -45,7 +45,7 @@
     "3-8 oyuncu katılır (dikey oyun). 2 kişiyle oynanmaz.",
     "Her oyuncuya 60 kredilik bütçe verilir. Kredi gerçek para değildir; yalnız bu oyunun gizli alışveriş bütçesidir.",
     "Ürün havuzu 20 üründür (ilk 12: Hologram Sticker 8, Enerji İçeceği 10, Neon Rozet 12, Retro Kartuş 15, Mini Hoparlör 18, Arcade Eldiveni 20, Piksel Kamera 22, Jet Çanta 24, Kristal Kulaklık 26, Holo Kask 28, Mini Drone 32, Gizli Sandık 36; yeni 8: Lazer Kalem 11, Ses Kartı 13, Retro Joystick 17, Plazma Lamba 19, Mini Robot 23, Hologram Saat 25, Neon Kaykay 30, VR Gözlük 34 — taban fiyatlar). Her maçta 12'si rafa gelir; her ürünün fiyatı taban fiyatın ±%30'u içinde rastgele, tam sayı ve 6-40 arasıdır. Raf, fiyatlar ve sıra herkes için aynıdır; sunucunun tohumlu rastgeleliğiyle belirlenir (kayıttan tekrar oynatma aynı rafı verir). Ürün numarası (0-19) değişmez.",
-    "En çok 4 ürün kuralı: raftaki en ucuz 5 ürünün tam fiyatları toplamı her zaman 60'ı geçer; geçmeyen raf atılıp yeniden çekilir (pratikte hiç erişilmeyen bir güvenlik ağı en ucuzları kendi aralığında yükseltir).",
+    "Ürün sayısı sınırı yoktur: tek sınır 60 kredilik bütçe ve her üründen bir tane. Ucuz bir rafta ya da kuponla 5 ve daha çok ürün alınabilir (sahip kararı).",
     "Gizli kupon: her oyuncuya raftaki bir üründe %50 indirim kuponu verilir; iki oyuncuya aynı ürün düşmez (8 oyuncu ≤ 12 ürün). İndirimli fiyat tam sayıya yukarı yuvarlanır (15 → 8). Kupon yalnız ödenen fiyatı ve bütçe kontrolünü etkiler; ürünün değeri yine tam fiyat ÷ alıcı sayısıdır. Kuponu kullanmak zorunlu değildir. Kupon yalnız sahibinin kişisel görünümündedir; sonuçta herkesinki açılır.",
     "Alışveriş 30 sn sürer. Bütçen dahilinde istediğin kadar ürün alabilirsin ama her üründen yalnız BİR tane ('already_in_basket'), yalnız raftaki ürünlerden ('not_on_shelf'). Bütçe aşılamaz: ödenen toplam 60'ı geçemez ('over_budget'; tam 60 kabul).",
     "Sepete ekleme ve çıkarma sınırsız tekrarlanabilir (sepette olmayan ürünü çıkarmak 'not_in_basket' ile reddedilir); süre bittiğindeki ya da Tamam anındaki sepet geçerlidir.",
@@ -111,10 +111,6 @@
     {
       "baslik": "Gizlilik",
       "aciklama": "secrets() boştur (ürün numaraları ve adları herkese açık rafta bulunduğundan metin araması sepeti ve kuponu koruyamaz); gizlilik yapısaldır ve testlerle doğrulanır: süre dolmadan ortak görünümde sepet, alıcı sayısı, değer ve kupon yoktur; kişisel görünüm yalnız sahibinin sepetini ve kuponunu taşır; talep ateşi yalnız seviye taşır ve aynı seviyeye düşen farklı sepet dağılımları aynı ortak görünümü verir; rakibin eylemi ya da kuponu başkasının görünümünü değiştirmez."
-    },
-    {
-      "baslik": "Kupon ile 5 ürün",
-      "aciklama": "En çok 4 ürün kuralı raftaki tam fiyatlarla sağlanır. Kupon bir ürünün ödenen fiyatını yarıya indirdiği için nadiren 5 ürün bütçeye sığabilir; kural bunu yasaklamaz (karar bekleyen açık soru)."
     }
   ],
   "kartlar": [
@@ -200,8 +196,8 @@
       "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts (alisverisPriceRange)"
     },
     {
-      "ad": "Raf üretimi (en çok 4 ürün kuralı)",
-      "deger": "rollShelf: en çok 64 deneme + güvenlik ağı",
+      "ad": "Raf üretimi",
+      "deger": "rollShelf: havuzu karıştır, ilk 12, fiyat aralıkta rastgele (ürün sayısı sınırı yok)",
       "kaynak": "packages/engine/src/games/gizli-alisveris/index.ts (rollShelf)"
     },
     {
@@ -259,7 +255,7 @@
     "Raf her maç değişir: önceki maçın 'güvenli' hesabı bu maçta tutmayabilir; fiyatlara yeniden bak.",
     "Kuponun sana özel bir avantaj: kuponlu pahalı ürünü yarı fiyata alıp yanına bir pahalı daha sığdırabilirsin. Ama değer tam fiyattan bölünür; o ürünü başkaları da alırsa kupon değeri kurtarmaz.",
     "15. saniyedeki talep ateşini kullan: üç alevli ürün kalabalıktır, bırakıp ateşsiz pahalı bir ürüne geçmek çoğu zaman değerini artırır. Ateş 15. saniyede donar; ilk 15 saniyede bilerek popüler ürünü alıp sonra bırakmak blöf olabilir.",
-    "Pahalı ürünler tek başına alınırsa çok değerlidir ama herkes aynı düşünürse bölünür. En çok 4 ürün alınabilir (kuponla nadiren 5).",
+    "Pahalı ürünler tek başına alınırsa çok değerlidir ama herkes aynı düşünürse bölünür. Ürün sayısı sınırı yok: ucuz ürünleri toplamak da bir yol, ama çok kişinin aldığı ucuz ürün hızla bölünür.",
     "İkinci olmak da +1 getirir: en değerli sepeti kovalamak riskliyse sağlam bir ikinci sepet kur. Eksi puan yok, boş sepet 0'dır.",
     "Süre içinde fikrini değiştirebilirsin; 'Tamam' geri alınamaz. Son 10 saniyede bekleyenlerin avatarları sallanır."
   ],
@@ -376,11 +372,10 @@
     "İstemci bütçesi yetmeyen ürüne dokunulunca isteği sunucuya hiç göndermez (bip + sarsılma); yalnız sunucuya ulaşan istekler 'over_budget' ile reddedilir.",
     "Kodda 'sepet gönderme' kavramı yoktur: sepet canlı sunucuda tutulur ve süre bitince olduğu gibi kullanılır; Tamam yalnız erken bitiş ve kilit içindir.",
     "Yeni 8 ürünün görseli henüz yoktur: ekran ürünün baş harflerini taşıyan neon kutu yer tutucusu çizer; apps/client/public/assets/props/gizli-alisveris/<ad>.webp eklenince kendiliğinden kullanılır (tarifler: docs/oneriler/gizli-alisveris-gorsel.md).",
-    "Kuponla nadiren 5 ürün bütçeye sığabilir (en çok 4 ürün kuralı tam fiyatlarla sağlanır); sahip kararı bekliyor.",
     "Sonuç açılışı bugünkü 8 sn'ye sığdırıldı; sonuç süresi/Devam mekanizması değişirse yalnız SONUC_ZAMANI sabitleri uzatılır."
   ],
   "sonDegisiklikler": [
-    "2026-10-30: Gizli Alışveriş geliştirmeleri: her maç farklı raf (20 ürün havuzu, ±%30 fiyat), gizli kupon, 15. saniyede vitrin fısıltısı, puan +2/+1/0, mağaza rafı, sepete uçan ürün, son 10 sn gerilimi, paketlenmiş sepet, sahne sahne sonuç, mağaza sesleri, izleyici vitrini.",
+    "2026-10-30: Gizli Alışveriş geliştirmeleri: her maç farklı raf (20 ürün havuzu, ±%30 fiyat), gizli kupon, 15. saniyede vitrin fısıltısı, puan +2/+1/0, ürün sayısı sınırı yok (yalnız bütçe), mağaza rafı, sepete uçan ürün, son 10 sn gerilimi, paketlenmiş sepet, sahne sahne sonuç, mağaza sesleri, izleyici vitrini.",
     "2026-10-29: Oyun ekranları: tutarlı durum, tek satır başlık, okunur sonuçlar.",
     "2026-10-27: Renk körlüğü modu: kalan oyunlar ve ui-check &cb=1 ekranları (kazanan ★ işareti).",
     "2026-10-27: Tüm oyunlar için tur özeti (summarize): 'X N,NN kredilik sepetle önde'.",

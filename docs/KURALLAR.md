@@ -1017,8 +1017,8 @@ kaç kişinin aldığına göre ürünün oyuncuya sağladığı değer değişi
    havuz. Her maçta bunlardan **12'si** rafa gelir (sunucu rastgeleliğiyle; aynı
    tohum aynı rafı verir) ve fiyatları maç başına **taban fiyatın ±%30'u** içinde
    oynar: her zaman tam sayı, **6–40** arası. Raf herkes için aynıdır (ürünler,
-   fiyatlar ve sıra). **En çok 4 ürün kuralı:** raftaki en ucuz 5 ürünün (tam
-   fiyatlarla) toplamı her zaman 60'ı geçer; geçmeyen raf atılıp yeniden çekilir.]
+   fiyatlar ve sıra). **Ürün sayısı sınırı yoktur:** tek sınır bütçedir (60
+   kredi) ve her üründen bir tane alınır; parası yettiği kadar ürün alınabilir.]
 
    | No | Ürün | Taban fiyat | Maçtaki aralık |
    |---:|---|---:|---|
@@ -1042,7 +1042,7 @@ kaç kişinin aldığına göre ürünün oyuncuya sağladığı değer değişi
    | 17 | Hologram Saat | 25 | 18–32 |
    | 18 | Neon Kaykay | 30 | 21–39 |
    | 19 | VR Gözlük | 34 | 24–40 |
-4. Her oyuncu kaç ürün seçebilir; aynı üründen birden fazla alınabilir mi?: [bütcesi dahilinde istediği kadar ürün alabilir bir üründen sadece bir kez alabilir; yalnız raftaki ürünler alınabilir]
+4. Her oyuncu kaç ürün seçebilir; aynı üründen birden fazla alınabilir mi?: [bütcesi dahilinde istediği kadar ürün alabilir bir üründen sadece bir kez alabilir; yalnız raftaki ürünler alınabilir; ürün sayısı sınırı yoktur]
 5. Alışverişler gizli mi; ürün seçimleri ne zaman açılır?: [gizli , tur sonunda. İstisna: 15. saniyedeki vitrin fısıltısı (madde 15) yalnız ürün başına talep seviyesini açar]
 6. Ürün değeri alıcı sayısına göre tam olarak nasıl hesaplanır?: [bir ürünü kaç kişi seçtiyse değeri o seçilen sayıya bölünür örnek : 30 tl ye bir ürün var 2 kişi bu ürünü seçmiş değeri artık 15 oldu. Bölünen her zaman bu maçtaki **tam** fiyattır; kupon değeri değiştirmez]
 7. Aşamalar ve süreler: [tek aşama - 30 saniye; 15. saniyede vitrin fısıltısı; ardından 8 sn sonuç açılışı]
@@ -1081,9 +1081,7 @@ kaç kişinin aldığına göre ürünün oyuncuya sağladığı değer değişi
     **ödenen fiyatı** düşürür: indirimli fiyat **tam sayıya yukarı yuvarlanır**
     (15 → 8, 27 → 14) ve bütçe kontrolü bu fiyatla yapılır. Ürünün **değeri**
     yine tam fiyat ÷ alıcı sayısıdır. Kuponu kullanmak zorunlu değildir. Kupon
-    yalnız sahibinin ekranında görünür; sonuçta herkesin kuponu açılır. Not: en
-    çok 4 ürün kuralı tam fiyatlarla sağlanır; kuponlu ürünle nadiren 5 ürün
-    bütçeye sığabilir.
+    yalnız sahibinin ekranında görünür; sonuçta herkesin kuponu açılır.
 17. Maç kartlarıyla etkileşim (K5–K7): Mini oyun puanı ham puanla aynıdır
     (+2 / +1 / 0); "birinci" +2 alanlar, "sonuncu" 0 alanlardır (en az bir kişi
     ödül aldıysa). Herkes 0 aldıysa herkes birincidir, kimse sonuncu değildir.
