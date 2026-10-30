@@ -5,7 +5,16 @@ import { look } from "../../ui/avatars.js";
 import { cxArtSrc, hasArt } from "./art.js";
 import { OutcomeIcon } from "./Icons.js";
 import type { RevealTimeline } from "./timeline.js";
-import { type Outcome, outcomeOf, ringPosition, scoreText, tracersOf } from "./view.js";
+import {
+  type Outcome,
+  outcomeOf,
+  RING,
+  ringAvatar,
+  ringAvatarPct,
+  ringPosition,
+  scoreText,
+  tracersOf,
+} from "./view.js";
 
 interface Props {
   /** Halkadaki oyuncular (katılım sırasıyla; ilk oyuncu üstte). */
@@ -40,7 +49,11 @@ function Shield() {
 export function Arena(props: Props) {
   const ids = () => props.crew.map((p) => p.id);
   const nodes = () =>
-    props.crew.map((p, i) => ({ p, pos: ringPosition(i, props.crew.length), color: look(p.avatar).color }));
+    props.crew.map((p, i) => ({
+      p,
+      pos: ringPosition(i, props.crew.length, RING.radius, RING.cy),
+      color: look(p.avatar).color,
+    }));
   const at = (id: string) => nodes().find((n) => n.p.id === id);
 
   const shots = () =>
@@ -53,8 +66,9 @@ export function Arena(props: Props) {
       const len = Math.hypot(dx, dy) || 1;
       const ux = dx / len;
       const uy = dy / len;
-      const start = 10;
-      const stop = t.cover ? 14 : 9;
+      const half = ringAvatarPct(props.crew.length) / 2;
+      const start = half + 2;
+      const stop = t.cover ? half * 1.5 + 1 : half + 1;
       const x1 = a.pos.x + ux * start;
       const y1 = a.pos.y + uy * start;
       const x2 = t.mutual ? (a.pos.x + b.pos.x) / 2 - ux * 1.2 : b.pos.x - ux * stop;
@@ -74,6 +88,7 @@ export function Arena(props: Props) {
   const vars = (): JSX.CSSProperties => {
     const t = props.timeline;
     return {
+      "--cx-rav": ringAvatar(props.crew.length),
       "--el": `${props.mode === "still" ? 600_000 : Math.max(0, props.elapsed)}ms`,
       "--grow": `${t.growMs}ms`,
       "--muzzle": `${t.muzzleAt}ms`,
@@ -168,21 +183,23 @@ export function Arena(props: Props) {
               <Show when={o() === "hit"}>
                 <i class="cx__impact" aria-hidden="true" />
               </Show>
-              <span class="cx__rname">{n.p.nickname}</span>
-              <span
-                class="cx__chip"
-                data-s={sign(score())}
-                data-has-total={total() !== undefined ? "1" : undefined}
-              >
-                <span class="cx__chip-r">
-                  <OutcomeIcon outcome={o()} />
-                  {scoreText(score())}
-                </span>
-                <Show when={total() !== undefined}>
-                  <span class="cx__chip-t" data-s={sign(total() ?? 0)}>
-                    Σ{scoreText(total() ?? 0)}
+              <span class="cx__rname">
+                <span class="cx__rname-t">{n.p.nickname}</span>
+                <span
+                  class="cx__chip"
+                  data-s={sign(score())}
+                  data-has-total={total() !== undefined ? "1" : undefined}
+                >
+                  <span class="cx__chip-r">
+                    <OutcomeIcon outcome={o()} />
+                    {scoreText(score())}
                   </span>
-                </Show>
+                  <Show when={total() !== undefined}>
+                    <span class="cx__chip-t" data-s={sign(total() ?? 0)}>
+                      {scoreText(total() ?? 0)}
+                    </span>
+                  </Show>
+                </span>
               </span>
             </div>
           );

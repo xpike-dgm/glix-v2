@@ -9,7 +9,7 @@ import { MiniRing } from "./Arena.js";
 import { Duel } from "./Fx.js";
 import { BulletIcon, LockIcon, ReticleRing, ShieldIcon } from "./Icons.js";
 import { Sight } from "./Sight.js";
-import { badgesOf, gridColumns, ringPosition } from "./view.js";
+import { badgesOf, gridColumns, RING, ringAvatar, ringPosition } from "./view.js";
 
 const LOCK_RED = "#FF3B5C";
 
@@ -351,10 +351,10 @@ export function Pick(props: Props) {
 /** İzleyici/TV: büyük halka; her portrede dönen nişangâh (kimin kimi hedeflediği yok), hazırlarda mermi. */
 function WatchRing(props: { crew: readonly PlayerInfo[]; ready: (id: string) => boolean }) {
   return (
-    <div class="cx__arena cx__arena--watch">
+    <div class="cx__arena cx__arena--watch" style={{ "--cx-rav": ringAvatar(props.crew.length) }}>
       <For each={props.crew}>
         {(p, i) => {
-          const pos = () => ringPosition(i(), props.crew.length);
+          const pos = () => ringPosition(i(), props.crew.length, RING.radius, RING.cy);
           return (
             <div
               class="cx__node"

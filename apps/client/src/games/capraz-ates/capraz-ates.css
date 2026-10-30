@@ -799,7 +799,7 @@
 }
 /* Namlu ateşi: atanın önünde, hedefe dönük kısa alev. */
 .cx__muzzle {
-  z-index: 3;
+  z-index: 4;
 }
 .cx__muzzle::before,
 .cx__muzzle-art {
@@ -926,8 +926,10 @@
   }
 }
 
+/* Oyuncular mermilerin ve izlerin üstünde: mermi hedefe varınca avatarın/adın altına girer, adı örtmez. */
 .cx__node {
   position: absolute;
+  z-index: 3;
   transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
@@ -1068,34 +1070,41 @@ img.cx__shield--art {
   top: calc(100% + 3px);
   left: 50%;
   transform: translateX(-50%);
-  max-width: max(32cqw, 66px);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: max(40cqw, 116px);
   font-size: var(--fs-13);
   font-weight: 600;
   line-height: 1.2;
   color: #e4e8ff;
   background: rgba(5, 8, 26, 0.86);
-  padding: 1px 6px;
+  padding: 1px 3px 1px 7px;
   border-radius: 999px;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
+.cx__rname-t {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cx__rname:not(:has(.cx__chip)) {
+  padding-right: 7px;
+}
+/* Puan rozeti ad etiketinin içinde, adın sağında (yüzü örtmez, havada durmaz). */
 .cx__chip {
-  position: absolute;
-  z-index: 4;
-  top: -6px;
-  right: -12px;
+  flex: none;
   display: grid;
-  min-width: 30px;
-  padding: 2px 6px;
+  min-width: 26px;
+  padding: 0 5px;
   border-radius: 999px;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: var(--fs-15);
-  line-height: 1.2;
+  font-size: var(--fs-13);
+  line-height: 1.35;
   text-align: center;
   background: #05081a;
-  border: 2px solid currentColor;
+  border: 1.5px solid currentColor;
   animation: cx-pop 420ms var(--ease) calc(var(--chips) - var(--el)) both;
 }
 .cx__chip-r,
@@ -1111,6 +1120,7 @@ img.cx__shield--art {
 }
 .cx__chip-t {
   opacity: 0;
+  text-shadow: 0 0 8px rgb(255 194 59 / 0.6);
   animation: cx-in 300ms var(--ease) calc(var(--total) - var(--el)) both;
 }
 .cx__chip[data-s="up"],
@@ -1210,6 +1220,9 @@ img.cx__shield--art {
   }
 }
 .cx__chip--ammo {
+  position: absolute;
+  top: -8px;
+  right: -12px;
   min-width: 28px;
   padding: 3px;
   color: var(--amber);
@@ -1271,10 +1284,17 @@ img.cx__shield--art {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  min-height: 92px;
-  padding: 4px 0 8px;
+  gap: 6px;
+  min-height: 112px;
+  padding: 2px 0 8px;
   text-align: center;
+}
+/* Açılışta halka ile özet bir blok olarak ortalanır (aralarında boşluk kalmaz). */
+.cx__reveal {
+  justify-content: center;
+}
+.cx__reveal > .cx__stage {
+  flex: 0 1 min(calc(100vw - 2 * var(--gutter, 20px)), 460px);
 }
 .cx__reveal[data-kind="interval"] .cx__panel {
   min-height: 48px;
@@ -1283,7 +1303,7 @@ img.cx__shield--art {
 .cx__line {
   margin: 0;
   max-width: 100%;
-  font-size: var(--fs-15);
+  font-size: clamp(15px, 4.6vw, var(--fs-18));
   font-weight: 600;
   line-height: 1.3;
   color: #d5daf6;
@@ -1301,14 +1321,22 @@ img.cx__shield--art {
 .cx__line--big {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(16px, 5vw, var(--fs-24));
+  font-size: clamp(17px, 5.2vw, 26px);
+  line-height: 1.2;
   color: var(--text);
 }
 .cx__line--big[data-o="hit"] {
   color: #ff8a9d;
 }
 .cx__line--total {
+  margin-top: 2px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgb(255 194 59 / 0.55);
+  background: rgb(255 194 59 / 0.1);
   font-weight: 800;
+  font-size: clamp(16px, 4.8vw, 20px);
+  white-space: nowrap;
   color: var(--amber);
 }
 .cx__line--dim {
@@ -1716,7 +1744,7 @@ img.cx__shield--art {
   }
   .cx__reveal {
     display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
     column-gap: 14px;
   }
@@ -1750,6 +1778,19 @@ img.cx__shield--art {
   }
   .cx__reveal .cx__line {
     font-size: var(--fs-13);
+  }
+  .cx__reveal .cx__line--total {
+    white-space: normal;
+  }
+  /* Alçak ekranda halka küçük: puan rozeti adın altına geçer, etiket daralır. */
+  .cx__arena {
+    --cx-rav-k: 0.82;
+  }
+  .cx .cx__rname {
+    flex-direction: column;
+    gap: 1px;
+    padding: 1px 6px 3px;
+    border-radius: 10px;
   }
   .cx__reveal .cx__head .cx__title {
     font-size: 20px;

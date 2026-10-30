@@ -171,9 +171,21 @@ export function badgesOf(first: CaprazAtesRoundReveal | undefined, selfId: strin
 }
 
 /** Daire üzerinde yerleşim (yüzde): ilk oyuncu üstte, saat yönünde. */
-export function ringPosition(index: number, count: number, radius = 38): { x: number; y: number } {
+export function ringPosition(index: number, count: number, radius = 38, cy = 50): { x: number; y: number } {
   const angle = (index / Math.max(1, count)) * Math.PI * 2 - Math.PI / 2;
-  return { x: 50 + Math.cos(angle) * radius, y: 50 + Math.sin(angle) * radius };
+  return { x: 50 + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius };
+}
+
+/**
+ * Açılış halkası yerleşimi: eşit aralıklı gerçek çember. Merkez biraz yukarıda, çünkü adlar avatarın altındadır;
+ * avatar boyu oyuncu sayısına göre küçülür, böylece komşu avatar ve adlar çakışmaz.
+ */
+export const RING = { radius: 38, cy: 47.5 } as const;
+export function ringAvatarPct(count: number): number {
+  return count >= 7 ? 15 : count >= 5 ? 17 : 19;
+}
+export function ringAvatar(count: number): string {
+  return `clamp(34px, calc(${ringAvatarPct(count)}cqw * var(--cx-rav-k, 1)), 84px)`;
 }
 
 /** Izgara sütun sayısı. Alçak (yatay telefon) ekranda 7 kişi 4 sütuna, dik ekranda 3 sütuna yerleşir. */
