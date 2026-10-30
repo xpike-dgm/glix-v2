@@ -135,6 +135,8 @@ const registry: Record<string, GameEntry> = {
     Art: lazy(() => import("./rusvet-darbe/BriefingArt.js")),
   },
   "kontrol-paneli-kaosu": {
+    // Ortak bomba saatini oyun kendisi çizer (cezalarla atlar); kabuk saati çizilmez.
+    noClock: true,
     Screen: lazy(() => import("./kontrol-paneli-kaosu/KontrolScreen.js")),
     Art: lazy(() => import("./kontrol-paneli-kaosu/BriefingArt.js")),
   },

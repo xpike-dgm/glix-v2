@@ -21,7 +21,16 @@ export type PropPath =
       | "tuval"}`
   | `gizli-alisveris/${string}`
   | `kara-borsa/${"kutu-ahsap" | "kutu-antika" | "kutu-celik" | "kutu-hediye" | "kutu-lanet"}`
-  | `kontrol-paneli-kaosu/${"kablo-kirmizi" | "kablo-mavi" | "kablo-sari" | "kablo-yesil" | "kablo-kesik" | "kivilcim"}`
+  | `kontrol-paneli-kaosu/${
+      | "kablo-kirmizi"
+      | "kablo-mavi"
+      | "kablo-sari"
+      | "kablo-yesil"
+      | "kablo-mor"
+      | "kablo-kesik"
+      | "kivilcim"
+      | "bomba-govde"
+      | "not-kagidi"}`
   | `rus-ruleti/${"tabanca" | "tambur"}`
   | `zehirli-kadeh/${"efekt-temiz" | "efekt-zehir" | `kadeh-${string}`}`;
 

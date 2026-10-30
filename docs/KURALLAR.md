@@ -1141,10 +1141,10 @@ yani birbirlerinin ne yapcağı birbirinde yazıyor birbirlerinde çözümü alm
 13. Kontrol panelleri, kablolar, ışıklar ve kaos animasyonları: Dört kablo
     `mavi`, `yeşil`, `kırmızı`, `sarı` olarak metalik neon kanallarda görünür.
     Her panelin sırası oyuncuya özel ve mümkün olduğunca benzersizdir. Not
-    kağıdı kabloların altında kısa bir hologram metni olarak yalnızca ipucu
-    sahibine görünür. Oyuncular doğru koşulu sesli söylediğinde hedef panelde
-    ilgili kablo nabız atar; kesme anında enerji akışı doğruysa yeşil, yanlışsa
-    kesik kırmızı kıvılcım oynar.
+    kağıdı kabloların altında yalnızca ipucu sahibine görünür. Kesme anında
+    kablo kopar ve kıvılcım çıkar; doğru/yanlış bilgisi dalga sonucunda açılır
+    (doğruysa yeşil, yanlışsa kırmızı). Yanlış kesimin tek anlık tepkisi ortak
+    bomba saatinin 5 sn atlamasıdır (aşağıdaki dalga değişikliği).
 14. Özel durumlar: Her oyuncu kendi paneli hakkında ipucunun kimde olduğunu
     bilmez. Her ipucu, başka bir oyuncunun panelindeki dizilimi tarif eder ve
     kesilecek kablo rengini söyler; ipucu metni hedef oyuncunun adını doğrudan
@@ -1156,6 +1156,46 @@ yani birbirlerinin ne yapcağı birbirinde yazıyor birbirlerinde çözümü alm
 **Değişiklik (sahip onayı, Ekim 2026):** Kesim tek seferlik ve gizli olduğundan, **bağlı bütün katılımcılar
 kestiğinde** oyun 1 saniye sonra erken biter; bağlantısı kopan oyuncu beklenmez (eskiden kopuk oyuncu da beklenirdi). Kopuk
 oyuncunun kesimi yoksa o oyuncu için sonuç süre bitmiş gibi hesaplanır (kesmemiş = puan yok).
+
+**Değişiklik (sahip onayı, Ekim 2026 — üç dalga, KP-M1…M5):** Bu bölüm yukarıdaki tek aşama, süre ve puan
+cevaplarının yerine geçer; geri kalanı (2–8 oyuncu, ipucu zinciri, gizlilik, renk körlüğü modu) aynen geçerlidir.
+
+1. **Üç dalga:** Dalga 1 "Isınma" 25 sn (4 kablo, 2 koşullu "N. kablo R ise" ipucu), dalga 2 "Karmaşa" 25 sn
+   (4 kablo, yeni ipucu türleri), dalga 3 "Kaos" 20 sn (**5 kablo**, 5. renk **mor**; üç koşullu ya da karma ipucu).
+   Her dalgada yeni paneller (her oyuncuda farklı dizilim; dalga 1 ve 2 dizilimleri de birbirinden farklı) ve
+   yeniden karıştırılmış ipucu zinciri gelir: 3+ oyuncuda hiçbir taşıyıcı önceki dalgada taşıdığı kişinin notunu
+   taşımaz (2 oyuncuda tek döngü olduğundan eşleşme aynı kalır).
+2. **Kesim:** Her dalgada herkesin **tek ve geri alınamaz** bir kesim hakkı vardır; yeni dalgada hak yenilenir. 4
+   kablolu dalgada mor kesilemez. Dalga bittikten sonra (arada ya da sonda) gelen kesim reddedilir.
+3. **Dalga başına erken bitiş:** Bağlı bütün katılımcılar o dalgada kestiyse dalga 1 sn sonra biter; kopuk oyuncu
+   beklenmez.
+4. **Ara:** Dalga 1 ve 2'den sonra 4 sn'lik kısa sonuç: herkesin o dalgadaki kesimi (renk, ✓/✗), ipucu taşıyıcısı ve
+   o dalganın imha puanı. Biten dalganın panelleri ve ipuçları bu andan itibaren herkese açıktır.
+5. **Yeni ipucu türleri (dalga 2 ve 3):** olumsuz ("2. kablo kırmızı değil ve 4. kablo sarı ise maviyi kes"),
+   komşuluk ("Mavi ile sarı yan yana ise yeşili kes"), konum hedefi ("1. kablo yeşil ise en alttaki kabloyu kes";
+   en üstteki ya da en alttaki), sıra ("Kırmızı maviden yukarıda ise sarıyı kes"). Dalga 2'de bu dört türden biri,
+   dalga 3'te üç "N. kablo R" koşulu ya da en az bir yeni türü içeren 2–3 koşullu karma ipucu rastgele seçilir;
+   dalga 3'te ipuçlarının yaklaşık üçte biri konum hedeflidir. Her ipucu hedef panelde doğrudur ve o dalganın
+   panelleri arasında **yalnız hedef paneli** tanımlar (üretimde denetlenir). İstenen tür bunu sağlayamazsa
+   daha basit türe düşülür ("N. kablo R" koşulları ve renk hedefi). Doğru kablo sistemce kesin hesaplanır (konum
+   hedefinde o konumdaki kablonun rengi). İpucu oyuncu adı içermez.
+6. **Ortak bomba saati:** Dalganın süresi herkesin gördüğü bomba saatidir. **Yanlış kesim saatten herkes için 5 sn
+   düşer**; saat 3 sn'nin altına inmez (kalan 3 sn ya da daha azken gelen yanlış kesim süre düşürmez). Hangi
+   kablonun yanlış olduğu söylenmez; herkes yalnız saat atlamasını görür. Doğru/yanlış bilgisi kesen kişiye de
+   dalga sonucuna kadar gösterilmez; saat atlaması herkese göründüğü için kesen kişi dolaylı anlayabilir (kabul
+   edilmiş durum). Saat sıfıra inince dalga biter; kesmeyenler kesmemiş sayılır. Ceza süre olduğundan eksi puan yoktur.
+7. **Puan:** Her dalgada imha puanı toplanır: doğru kesen +1, o panelin ipucunu taşıyan +1. Oyun sonunda mini oyun
+   puanı (genel skora eklenen) toplam imha puanından verilir: en yüksek toplam **+2**, ikinci farklı toplam **+1**,
+   diğerleri 0. Birincide eşitlikte hepsi +2 ve sonraki farklı değer +1. Toplamı 0 olan ödül almaz. Herkesin
+   toplamı aynı ve 0'dan büyükse **herkes +1** alır. Eksi puan yoktur.
+8. **Zaman çizelgesi:** 25 + 4 + 25 + 4 + 20 sn ve sonda 8 sn sonuç açılışı (en çok 86 sn; erken bitiş ve saat
+   atlamaları sonraki dalgaları öne çeker). Sonuç açılışında üç dalganın kesimleri, toplam imha puanı ve ödül
+   görünür; oyun bu 8 sn'nin sonunda biter.
+9. **Kartlar:** Kart hesabı mini oyun puanına (+2 / +1 / 0) bakar: "birinci" +2 alanlardır (herkes +1 aldıysa ya
+   da herkes 0 ise herkes birincidir), "sonuncu" en düşük mini puanlılardır (genellikle 0 alanlar; toplamı 0'dan
+   büyük ama ödül almayanlar da dahil). Herkes eşitse kimse sonuncu sayılmaz.
+10. Eski "doğru koşul sesli söylenince kablo nabız atar" maddesi kaldırıldı (sistem konuşmayı duymaz); yerine
+    6. maddedeki saat tepkisi geçer.
 
 ## 22. Zehirli Kadeh — `zehirli-kadeh`
 
