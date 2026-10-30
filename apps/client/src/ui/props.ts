@@ -23,7 +23,7 @@ export type PropPath =
   | `kara-borsa/${"kutu-ahsap" | "kutu-antika" | "kutu-celik" | "kutu-hediye" | "kutu-lanet"}`
   | `kontrol-paneli-kaosu/${"kablo-kirmizi" | "kablo-mavi" | "kablo-sari" | "kablo-yesil" | "kablo-kesik" | "kivilcim"}`
   | `rus-ruleti/${"tabanca" | "tambur"}`
-  | `zehirli-kadeh/${"efekt-temiz" | "efekt-zehir" | `kadeh-${string}`}`;
+  | `zehirli-kadeh/${"efekt-temiz" | "efekt-zehir" | "masa" | "mum" | `kadeh-${string}`}`;
 
 export const propSrc = (p: PropPath): string => `/assets/props/${p}.webp`;
 

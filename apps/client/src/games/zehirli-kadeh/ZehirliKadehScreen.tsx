@@ -1,20 +1,28 @@
-import { createEffect, createMemo, createSignal, For, on, onCleanup, Show, untrack } from "solid-js";
+import { createEffect, createMemo, createSignal, on, onCleanup, Show, untrack } from "solid-js";
 import { hapticError, hapticReady, hapticTap, hapticTick } from "../../fx/haptics.js";
 import { fail, tap, unlockAudio } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
-import { Avatar } from "../../ui/Avatar.js";
 import { createOptimistic } from "../../ui/optimistic.js";
-import { PrimaryButton } from "../../ui/PrimaryButton.js";
 import { pressable } from "../../ui/press.js";
 import { Screen } from "../../ui/Screen.js";
 import { Status } from "../../ui/Status.js";
 import type { GameScreenProps } from "../registry.js";
-import { Cup } from "./Cup.js";
-import { swapSound } from "./sounds.js";
+import { Candle } from "./Candle.js";
+import { SwapHistory } from "./SwapHistory.js";
+import { heartbeatSound, peekSound, swapSound } from "./sounds.js";
+import { Table } from "./Table.js";
 import "./zehirli-kadeh.css";
-import { clockFractions, gridColumns, parseZehirliKadehView, secondsLeft } from "./view.js";
+import {
+  candleLeft,
+  isTense,
+  parseZehirliKadehView,
+  secondsLeft,
+  ZK_PEEK_MS,
+  ZK_SWAP_BANNER_MS,
+} from "./view.js";
 
-const AMBER = "#FFC23B";
+/** Kontrol sonucu bildirimi (yalnız bu ekranda) bu kadar kalır; rozet kadehin üstünde kalıcıdır. */
+const PEEK_NOTE_MS = 4_000;
 
 export default function ZehirliKadehScreen(props: GameScreenProps) {
   const view = createMemo(() => parseZehirliKadehView(props.match.publicView, props.match.view));
@@ -31,10 +39,15 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
     });
   });
   const nameOf = (id: string): string =>
-    id === props.selfId ? "Sen" : (crew().find((p) => p.id === id)?.nickname ?? "Oyuncu");
+    id === props.selfId && !props.spectator ? "Sen" : (crew().find((p) => p.id === id)?.nickname ?? "Oyuncu");
 
   const player = () => !props.spectator && view()?.priv.role === "player";
-  // Takas: dokununca kadehler hemen yer değiştirir; sunucu aynı takası onaylar, reddederse geri döner.
+  const closed = () => {
+    const v = view();
+    return !v || v.pub.ended || clock() >= v.pub.endsAt;
+  };
+
+  // ---- Takas: dokununca kadehler hemen yer değiştirir; sunucu aynı takası onaylar, reddederse geri döner.
   const serverSwap = (): string | null =>
     view()?.pub.swaps.find((w) => w.from === props.selfId)?.to ??
     (view()?.pub.swapped.includes(props.selfId) ? props.selfId : null);
@@ -42,7 +55,7 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
   const [mySwap, setMySwap] = createOptimistic<string | null>(serverSwap, {
     onReject: () => {
       localSwapDone = false;
-      setFlash(null);
+      setBanner(null);
       fail();
       hapticError();
     },
@@ -52,17 +65,64 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
     const t = mySwap();
     return t !== null && serverSwap() === null ? t : null;
   };
-  const used = () => (view()?.pub.swapped.includes(props.selfId) ?? false) || mySwap() !== null;
-  const closed = () => {
-    const v = view();
-    return !v || v.pub.ended || clock() >= v.pub.endsAt;
+  const swapUsed = () => (view()?.pub.swapped.includes(props.selfId) ?? false) || mySwap() !== null;
+  const shownHoldings = createMemo(() => {
+    const h = { ...(view()?.pub.holdings ?? {}) };
+    const t = swapOverlay();
+    if (t !== null && h[t] !== undefined && h[props.selfId] !== undefined) {
+      const a = h[props.selfId] as number;
+      h[props.selfId] = h[t] as number;
+      h[t] = a;
+    }
+    return h;
+  });
+  const shownSwapped = () => {
+    const s = view()?.pub.swapped ?? [];
+    return swapUsed() && !s.includes(props.selfId) ? [...s, props.selfId] : s;
   };
-  const canSwap = () => player() && !used() && !closed();
 
+  // ---- Kontrol: sonucu yalnız sunucu bilir; bekleme sırasında kadeh "açılıyor" görünür.
+  const [checking, setChecking] = createSignal<string | null>(null);
+  const check = () => view()?.priv.check ?? null;
+  const checkUsed = () => check() !== null || checking() !== null;
+  const [peek, setPeek] = createSignal<number | null>(null);
+  const [peekNote, setPeekNote] = createSignal<string | null>(null);
+  let peekTimer: ReturnType<typeof setTimeout> | undefined;
+  let noteTimer: ReturnType<typeof setTimeout> | undefined;
+  onCleanup(() => {
+    clearTimeout(peekTimer);
+    clearTimeout(noteTimer);
+  });
+  createEffect(
+    on(
+      check,
+      (c, before) => {
+        // İlk çizimde (yeniden bağlanınca) animasyon yok; rozet doğrudan görünür.
+        if (!c || before) return;
+        const target = untrack(checking);
+        setChecking(null);
+        if (target === null) return;
+        peekSound();
+        hapticReady();
+        setPeek(c.cup);
+        clearTimeout(peekTimer);
+        peekTimer = setTimeout(() => setPeek(null), ZK_PEEK_MS);
+        setPeekNote(`Kontrol ettiğin kadeh (${nameOf(target)}) ${c.poisoned ? "zehirli ☠" : "temiz ✓"}`);
+        clearTimeout(noteTimer);
+        noteTimer = setTimeout(() => setPeekNote(null), PEEK_NOTE_MS);
+      },
+      { defer: true },
+    ),
+  );
+
+  const canAct = () => player() && !closed() && (!swapUsed() || !checkUsed());
   const [sel, setSel] = createSignal<string | null>(null);
+  createEffect(() => {
+    if (!canAct()) setSel(null);
+  });
 
   const pick = (id: string): void => {
-    if (!canSwap() || id === props.selfId) return;
+    if (!canAct() || id === props.selfId) return;
     unlockAudio();
     tap();
     hapticTap();
@@ -70,21 +130,41 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
   };
   const doSwap = (): void => {
     const target = sel();
-    if (!canSwap() || target === null) return;
+    if (!canAct() || swapUsed() || target === null) return;
     localSwapDone = true;
     swapSound();
     hapticReady();
     setSel(null);
-    setFlash({ seq: -1, from: props.selfId, to: target });
-    flashTimer = setTimeout(() => setFlash(null), 1400);
+    showBanner({ seq: -1, from: props.selfId, to: target });
     setMySwap(target, () => sendActionAck({ kind: "swap", target }));
   };
+  const doCheck = (): void => {
+    const target = sel();
+    if (!canAct() || checkUsed() || target === null) return;
+    unlockAudio();
+    hapticTap();
+    setSel(null);
+    setChecking(target);
+    void sendActionAck({ kind: "check", target }).then((ack) => {
+      if (ack.ok || untrack(check) !== null) return;
+      setChecking(null);
+      fail();
+      hapticError();
+    });
+  };
+  const swapPress = pressable(doSwap);
+  const checkPress = pressable(doCheck);
 
-  // Yeni takas: ses ve ışık tüneli; ilk açılışta tekrar çalmaz.
+  // ---- Takas anı: üstte "Mert ⇄ Elif" şeridi (2 sn), ses; ilk açılışta tekrar çalmaz.
   let seen: number | null = null;
-  const [flash, setFlash] = createSignal<{ seq: number; from: string; to: string } | null>(null);
-  let flashTimer: ReturnType<typeof setTimeout> | undefined;
-  onCleanup(() => clearTimeout(flashTimer));
+  const [banner, setBanner] = createSignal<{ seq: number; from: string; to: string } | null>(null);
+  let bannerTimer: ReturnType<typeof setTimeout> | undefined;
+  onCleanup(() => clearTimeout(bannerTimer));
+  const showBanner = (b: { seq: number; from: string; to: string }): void => {
+    setBanner(b);
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => setBanner(null), ZK_SWAP_BANNER_MS);
+  };
   createEffect(
     on(
       () => view()?.pub.swaps.length ?? 0,
@@ -93,148 +173,146 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
         seen = count;
         const last = untrack(view)?.pub.swaps[count - 1];
         if (prev === null || !last || count <= prev) return;
-        if (last.from === props.selfId) setSel(null);
-        setFlash({ seq: last.seq, from: last.from, to: last.to });
-        clearTimeout(flashTimer);
-        flashTimer = setTimeout(() => setFlash(null), 1400);
-        // Kendi takasımın sesi dokunuşta zaten çalındı.
+        // Kendi takasımın sesi ve şeridi dokunuşta zaten oynadı.
         if (last.from === props.selfId && localSwapDone) {
           localSwapDone = false;
+          setBanner((b) => (b ? { ...b, seq: last.seq } : b));
           return;
         }
+        showBanner({ seq: last.seq, from: last.from, to: last.to });
         swapSound();
+        if (props.spectator) return;
         if (last.from === props.selfId || last.to === props.selfId) hapticReady();
         else hapticTick();
       },
     ),
   );
 
-  const fractions = () => {
+  // ---- Son saniyeler: mum titrer, masa kararır, her saniye kalp atışı ve hafif titreşim.
+  const secs = () => secondsLeft(view()?.pub.endsAt ?? 0, clock());
+  const tense = () => {
     const v = view();
-    return v
-      ? clockFractions(v.pub.startedAt, v.pub.endsAt, v.pub.swaps.length, clock())
-      : { left: 0, bonus: 0 };
+    return v ? isTense(v.pub.endsAt, clock(), v.pub.ended) : false;
   };
-  const lastSwap = () => {
-    const swaps = view()?.pub.swaps ?? [];
-    return swaps[swaps.length - 1] ?? null;
+  createEffect(
+    on(secs, (s, before) => {
+      if (before === undefined || s === before || !untrack(tense)) return;
+      heartbeatSound();
+      if (!props.spectator) hapticTick();
+    }),
+  );
+
+  const left = () => {
+    const v = view();
+    return v ? candleLeft(v.pub.startedAt, v.pub.endsAt, clock()) : 0;
   };
 
   const head = (): { text: string; sub: string } => {
     if (props.spectator) return { text: "Kadehleri izliyorsun", sub: "Zehir sonda açılır" };
-    if (used()) return { text: "Takasını yaptın", sub: "Şimdi sonucu bekle" };
-    return { text: "Zehir kimde?", sub: "İstersen bir takas yap, istersen bekle" };
+    if (closed()) return { text: "Süre doldu", sub: "Kadehler açılıyor…" };
+    if (swapUsed() && checkUsed()) return { text: "Haklarını kullandın", sub: "Şimdi sonucu bekle" };
+    const s = sel();
+    if (s !== null) return { text: "Ne yapacaksın?", sub: `Seçtiğin kadeh: ${nameOf(s)}` };
+    return { text: "Zehir kimde?", sub: "Bir kadehe dokun: kontrol et ya da takas et" };
+  };
+
+  const rights = () => {
+    const out: string[] = [];
+    out.push(checkUsed() ? "Kontrol hakkın bitti" : "Kontrol hakkın: 1");
+    out.push(swapUsed() ? "Takas hakkın bitti" : "Takas hakkın: 1");
+    return out.join(" · ");
   };
 
   return (
     <Screen class="game zk">
-      <Status class="zk__text" titleClass="zk__head" subClass="zk__sub" sub={head().sub}>
-        {head().text}
-      </Status>
+      <header class="zk__top">
+        <Candle
+          left={left()}
+          secs={secs()}
+          tense={tense()}
+          bump={banner() ? String(banner()?.seq) : undefined}
+        />
+        <Status class="zk__text" titleClass="zk__head" subClass="zk__sub" sub={head().sub}>
+          {head().text}
+        </Status>
+      </header>
 
       <div class="zk__stage">
-        <div class="zk__clock" data-bump={flash() ? String(flash()?.seq) : undefined}>
-          <svg viewBox="0 0 128 128" aria-hidden="true" role="presentation">
-            <title>Süre</title>
-            <circle class="zk__track" cx="64" cy="64" r="52" />
-            <circle
-              class="zk__left"
-              cx="64"
-              cy="64"
-              r="52"
-              pathLength="100"
-              stroke-dasharray={`${(fractions().left * 100).toFixed(1)} 100`}
-              transform="rotate(-90 64 64)"
-            />
-            <circle
-              class="zk__bonus"
-              cx="64"
-              cy="64"
-              r="60"
-              pathLength="100"
-              stroke-dasharray={`${(fractions().bonus * 100).toFixed(1)} 100`}
-              transform="rotate(-90 64 64)"
-            />
-          </svg>
-          <span class="zk__secs">{secondsLeft(view()?.pub.endsAt ?? 0, clock())}</span>
-        </div>
-        <p class="zk__last" role="status">
-          <Show when={lastSwap()} fallback="Henüz takas yok">
-            {(s) => `${nameOf(s().from)} ⇄ ${nameOf(s().to)}`}
-          </Show>
-        </p>
+        <Table
+          crew={crew()}
+          holdings={shownHoldings()}
+          swapped={shownSwapped()}
+          selfId={props.selfId}
+          spectator={props.spectator === true}
+          nameOf={nameOf}
+          selected={sel()}
+          canPick={() => canAct()}
+          onPick={pick}
+          check={props.spectator ? null : check()}
+          peek={peek()}
+          checking={checking()}
+          tense={tense()}
+        />
+        <Show when={banner()}>
+          {(b) => (
+            <p class="zk__banner" role="status">
+              <span>{nameOf(b().from)}</span>
+              <b aria-hidden="true">⇄</b>
+              <span class="sr-only">ile takas etti</span>
+              <span>{nameOf(b().to)}</span>
+            </p>
+          )}
+        </Show>
       </div>
 
-      <div
-        class="zk__grid"
-        data-cols={gridColumns(crew().length)}
-        style={{ "--cols": gridColumns(crew().length) }}
-      >
-        <For each={crew()}>
-          {(p) => {
-            const mine = () => p.id === props.selfId && !props.spectator;
-            const cup = () => {
-              const h = view()?.pub.holdings ?? {};
-              const t = swapOverlay();
-              const id =
-                t !== null && p.id === props.selfId ? t : t !== null && p.id === t ? props.selfId : p.id;
-              return h[id] ?? 0;
-            };
-            const swapFx = () => {
-              const f = flash();
-              return f !== null && (f.from === p.id || f.to === p.id) ? String(f.seq) : undefined;
-            };
-            const picked = () => sel() === p.id;
-            const press = pressable(() => pick(p.id));
-            return (
-              <button
-                type="button"
-                class="zk__cell"
-                data-me={mine() ? "1" : undefined}
-                data-picked={picked() ? "1" : undefined}
-                data-swap={swapFx()}
-                data-used={
-                  view()?.pub.swapped.includes(p.id) || (p.id === props.selfId && used()) ? "1" : undefined
-                }
-                disabled={!canSwap() || mine()}
-                aria-pressed={picked()}
-                aria-label={`${nameOf(p.id)} ile takas`}
-                onPointerDown={press.onPointerDown}
-                onClick={press.onClick}
-              >
-                <Cup cup={cup()} class="zk__cup" />
-                <span class="zk__who">
-                  <Avatar
-                    index={p.avatar}
-                    size={24}
-                    connected={p.connected}
-                    ring={picked() ? AMBER : undefined}
-                  />
-                  <span class="zk__name">{nameOf(p.id)}</span>
-                </span>
-              </button>
-            );
-          }}
-        </For>
-      </div>
+      <SwapHistory swaps={view()?.pub.swaps ?? []} nameOf={nameOf} />
 
       <footer class="zk__foot">
         <Show
-          when={player() && !used() && !closed()}
+          when={canAct() && sel() !== null}
           fallback={
-            <p class="zk__note" role="status">
-              {props.spectator ? "Takaslar herkese açık" : used() ? "Takas hakkın bitti" : "Süre doldu"}
+            <p class="zk__note" role="status" data-peek={peekNote() ? "1" : undefined}>
+              {peekNote() ??
+                (props.spectator
+                  ? "Takaslar herkese açık"
+                  : !player() || closed()
+                    ? "Süre doldu"
+                    : checking() !== null
+                      ? "Kadeh gizlice açılıyor…"
+                      : canAct()
+                        ? rights()
+                        : "Haklarını kullandın")}
             </p>
           }
         >
-          <PrimaryButton
-            instant
-            disabled={sel() === null}
-            reason={sel() === null ? "Takas için bir kadeh seç" : `Takas: ${nameOf(sel() as string)}`}
-            onClick={doSwap}
-          >
-            TAKAS ET
-          </PrimaryButton>
+          <div class="zk__acts">
+            <Show when={!checkUsed()}>
+              <button
+                type="button"
+                class="zk__act zk__act--check"
+                onPointerDown={(e) => {
+                  unlockAudio();
+                  tap();
+                  checkPress.onPointerDown(e);
+                }}
+                onClick={checkPress.onClick}
+              >
+                Kontrol et
+                <small>Yalnız sen görürsün</small>
+              </button>
+            </Show>
+            <Show when={!swapUsed()}>
+              <button
+                type="button"
+                class="zk__act zk__act--swap"
+                onPointerDown={swapPress.onPointerDown}
+                onClick={swapPress.onClick}
+              >
+                Takas et
+                <small>Herkes görür · +5 sn</small>
+              </button>
+            </Show>
+          </div>
         </Show>
       </footer>
     </Screen>
