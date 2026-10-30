@@ -12,12 +12,20 @@ güncellenir.
   Bugünkü kural: 100'ü aşan ilk tık patlatır ve tur o anda biter.
 - Oyun sırasında toplam basılan sayı yine **gösterilmez** (kimse doluluğu bilmez).
 
-Yapıma geçmeden sahiple netleşecek ayrıntılar:
-1. Tur, 100'den sonraki ilk tıkta mı biter, yoksa gizli pencere (bugün 3 sn) sonuna kadar sürer ve o sürede basan
-   herkes mi patlar? (İsteğe göre önerilen: pencere sonuna kadar sürer; pencerede basan herkes patlar.)
-2. Ceza kişi başına bir kez mi (-1), yoksa aşan tık sayısıyla mı artar?
-3. Patlayanlar bugünkü gibi sıralama ödüllerinden (+2/+1) ve "en az tıklayan -1" cezasından çıkar mı?
-4. Kimse patlamazsa bugünkü kural (sıralama ve en az tıklayana -1) aynen kalır mı?
+Sahibin kararları:
+1. **Tur akışı:** bar 100'e ulaşınca gizli tehlike penceresi (3 sn) başlar ve tur ilk aşan tıkta bitmez; pencere
+   sonuna kadar sürer. Pencerede (100'ü geçtikten sonra) basan herkes patlar.
+2. **Patlama cezası:** 100'den sonra en çok basan -2, diğer patlayanlar -1. Yalnız bir kişi 100'den sonra bastıysa
+   o kişi -1 alır.
+3. **Sıralama ödülü:** 100'ü geçmeden (bar dolana kadar) en çok tıklayan +2, ikinci +1, diğerleri 0.
+4. **Kimse 100'ü geçmezse:** eksi puan yok (bugünkü "en az tıklayana -1" cezası kalkar). Bar hiç dolmazsa da
+   sıralama ödülü aynı şekilde verilir.
+
+Netleşecek küçük ayrıntılar:
+- 100'den sonra en çok basanlar eşitse: hepsi -2 mi, hepsi -1 mi?
+- Patlayan oyuncu 100'den önceki tıklamalarıyla sıralamada ilk ikiye girdiyse ödülünü de alır mı (ör. +2 ve -1 =
+  +1), yoksa patlayan sıralamadan çıkar mı?
+- Sıralamada liderler eşitse bugünkü kural (eşit liderlerin hepsi +1, +2 verilmez) kalsın mı?
 
 ### Kabul edilen arayüz önerileri
 
