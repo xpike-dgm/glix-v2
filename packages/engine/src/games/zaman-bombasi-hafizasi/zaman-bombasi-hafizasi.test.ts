@@ -3,10 +3,14 @@ import { isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
 import {
   zamanBombasiHafizasi as game,
+  validTargets,
+  ZAMAN_BOMBASI_ALERT_MS,
   ZAMAN_BOMBASI_COLORS,
+  ZAMAN_BOMBASI_FAIL_SHOW_MS,
   ZAMAN_BOMBASI_INTRO_MS,
-  ZAMAN_BOMBASI_PAUSE_FAIL_MS,
-  ZAMAN_BOMBASI_PAUSE_OK_MS,
+  ZAMAN_BOMBASI_OK_SHOW_MS,
+  ZAMAN_BOMBASI_PICK_MS,
+  type ZamanBombasiAction,
   type ZamanBombasiColor,
   type ZamanBombasiState,
 } from "./index.js";
@@ -22,26 +26,46 @@ const start = (n = 4, seed = 1): ZamanBombasiState => game.setup(ids(n), ctx(T0,
 /** Giriş evresinin başlangıcı (mutlak). */
 const inputAt = (s: ZamanBombasiState) => s.turnStart + s.sequence.length * 350;
 const deadlineAt = (s: ZamanBombasiState) => inputAt(s) + 1500 + s.sequence.length * 1000;
-const active = (s: ZamanBombasiState) => s.order[s.turnIndex] as string;
+const active = (s: ZamanBombasiState) => s.active;
+const pickOf = (s: ZamanBombasiState) => {
+  if (!s.pick) throw new Error("seçim evresi değil");
+  return s.pick;
+};
 
-function press(s: ZamanBombasiState, id: string, color: ZamanBombasiColor, at: number): ZamanBombasiState {
-  const r = game.reduce(s, id, { kind: "press", color }, ctx(at));
+function act(s: ZamanBombasiState, id: string, a: ZamanBombasiAction, at: number): ZamanBombasiState {
+  const r = game.reduce(s, id, a, ctx(at));
   if (isRejected(r)) throw new Error(`reddedildi: ${r.rejected}`);
   return r;
 }
-const rejection = (s: ZamanBombasiState, id: string, color: ZamanBombasiColor, at: number) => {
-  const r = game.reduce(s, id, { kind: "press", color }, ctx(at));
+const rejectionOf = (s: ZamanBombasiState, id: string, a: ZamanBombasiAction, at: number) => {
+  const r = game.reduce(s, id, a, ctx(at));
   return isRejected(r) ? r.rejected : null;
 };
+const press = (s: ZamanBombasiState, id: string, color: ZamanBombasiColor, at: number) =>
+  act(s, id, { kind: "press", color }, at);
+const rejection = (s: ZamanBombasiState, id: string, color: ZamanBombasiColor, at: number) =>
+  rejectionOf(s, id, { kind: "press", color }, at);
 const wrongColor = (c: ZamanBombasiColor): ZamanBombasiColor =>
   ZAMAN_BOMBASI_COLORS[(ZAMAN_BOMBASI_COLORS.indexOf(c) + 1) % 4] as ZamanBombasiColor;
 
-/** Aktif oyuncu diziyi giriş evresinin başında doğru girer. */
+/** Aktif oyuncu diziyi giriş evresinin başında doğru girer (sonuç: seçim evresi). */
 function solve(s: ZamanBombasiState, at = inputAt(s)): ZamanBombasiState {
   let cur = s;
   const who = active(s);
   for (const c of s.sequence) cur = press(cur, who, c, at);
   return cur;
+}
+/** Doğru girer, rengi seçer ve bombayı atar (verilmezse ilk geçerli hedef). */
+function solveThrow(
+  s: ZamanBombasiState,
+  opts: { color?: ZamanBombasiColor; target?: string; at?: number } = {},
+): ZamanBombasiState {
+  const at = opts.at ?? inputAt(s);
+  const who = active(s);
+  let cur = solve(s, at);
+  cur = act(cur, who, { kind: "color", color: opts.color ?? "mavi" }, at);
+  const target = opts.target ?? (validTargets(cur, pickOf(cur))[0] as string);
+  return act(cur, who, { kind: "target", target }, at);
 }
 /** Aktif oyuncu ilk basışta yanlış basar. */
 function failTurn(s: ZamanBombasiState, at = inputAt(s)): ZamanBombasiState {
@@ -49,34 +73,33 @@ function failTurn(s: ZamanBombasiState, at = inputAt(s)): ZamanBombasiState {
 }
 
 describe("kurulum", () => {
-  it("4 renk, ilk dizi 2 eleman, herkes 0 puanda, sıra karıştırılmış tüm oyuncular", () => {
+  it("4 renk, ilk dizi 2 eleman, herkes 0 puanda, ilk sıra karıştırılmış sıranın ilki", () => {
     const s = start(5);
     expect(s.sequence).toHaveLength(2);
     for (const c of s.sequence) expect(ZAMAN_BOMBASI_COLORS).toContain(c);
     expect([...s.order].sort()).toEqual(ids(5));
     expect(Object.values(s.scores)).toEqual([0, 0, 0, 0, 0]);
     expect(s.turnStart).toBe(T0 + ZAMAN_BOMBASI_INTRO_MS);
+    expect(s.active).toBe(s.order[0]);
+    expect([s.pick, s.thrower, s.lastThrow]).toEqual([null, null, null]);
   });
 
-  it("sıra ctx.rng ile karıştırılır: aynı tohum aynı sıra, farklı tohumlar farklı sıralar verir", () => {
-    expect(start(8, 3).order).toEqual(start(8, 3).order);
-    const orders = new Set<string>();
-    for (let seed = 1; seed <= 20; seed++) orders.add(start(8, seed).order.join());
-    expect(orders.size).toBeGreaterThan(5);
+  it("ilk oyuncu ctx.rng ile rastgele: aynı tohum aynı, farklı tohumlar farklı ilk oyuncu verir", () => {
+    expect(start(8, 3).active).toBe(start(8, 3).active);
+    const firsts = new Set<string>();
+    for (let seed = 1; seed <= 40; seed++) firsts.add(start(8, seed).active);
+    expect(firsts.size).toBeGreaterThan(3);
   });
 
-  it("aynı renk art arda gelebilir (dizi tekrarlı olabilir)", () => {
+  it("aynı renk art arda gelebilir; dört rengin hepsi üretilir", () => {
     let repeated = false;
-    for (let seed = 1; seed <= 200 && !repeated; seed++) {
+    const seen = new Set<string>();
+    for (let seed = 1; seed <= 200; seed++) {
       const q = start(2, seed).sequence;
-      repeated = q[0] === q[1];
+      repeated ||= q[0] === q[1];
+      for (const c of q) seen.add(c);
     }
     expect(repeated).toBe(true);
-  });
-
-  it("dört rengin hepsi üretilir", () => {
-    const seen = new Set<string>();
-    for (let seed = 1; seed <= 60; seed++) for (const c of start(2, seed).sequence) seen.add(c);
     expect(seen.size).toBe(4);
   });
 
@@ -87,13 +110,21 @@ describe("kurulum", () => {
 });
 
 describe("eylem ayrıştırma", () => {
-  it("yalnız {kind:'press', color} kabul edilir", () => {
+  it("yalnız press/color {kind, color} ve target {kind, target} kabul edilir", () => {
     expect(game.parseAction({ kind: "press", color: "mavi" })).toEqual({ kind: "press", color: "mavi" });
+    expect(game.parseAction({ kind: "color", color: "sari" })).toEqual({ kind: "color", color: "sari" });
+    expect(game.parseAction({ kind: "target", target: "p2" })).toEqual({ kind: "target", target: "p2" });
     for (const raw of [
       { kind: "press" },
       { kind: "press", color: "mor" },
       { kind: "press", color: 1 },
       { kind: "press", color: "mavi", extra: 1 },
+      { kind: "color", color: "mor" },
+      { kind: "color", target: "p2" },
+      { kind: "target", target: "" },
+      { kind: "target", target: 3 },
+      { kind: "target", target: "x".repeat(65) },
+      { kind: "target", target: "p2", color: "mavi" },
       { kind: "tap", color: "mavi" },
       [],
       null,
@@ -113,18 +144,16 @@ describe("evreler ve süreler (mutlak zamandan türer)", () => {
     expect([p0.phase, p0.playbackIndex]).toEqual(["playback", 0]);
     expect(game.publicView(s, ctx(t + 349)).playbackIndex).toBe(0);
     expect(game.publicView(s, ctx(t + 350)).playbackIndex).toBe(1);
-    expect(game.publicView(s, ctx(t + 699)).playbackIndex).toBe(1);
     const inp = game.publicView(s, ctx(t + 700));
     expect([inp.phase, inp.playbackIndex]).toEqual(["input", -1]);
   });
 
-  it("süre = 1,5 sn + dizi uzunluğu × 1 sn; görünüm mutlak zamanları verir", () => {
+  it("giriş süresi = 1,5 sn + dizi uzunluğu × 1 sn; görünüm mutlak zamanları verir", () => {
     const s = start(3);
     const v = game.publicView(s, ctx(s.turnStart));
     expect(v.inputStart).toBe(s.turnStart + 700);
     expect(v.deadline).toBe(v.inputStart + 3500);
-    expect(v.stepMs).toBe(350);
-    expect(v.length).toBe(2);
+    expect([v.stepMs, v.length]).toEqual([350, 2]);
   });
 
   it("oynatma ve hazırlık evresinde basış reddedilir; giriş başlangıcında kabul edilir", () => {
@@ -132,7 +161,6 @@ describe("evreler ve süreler (mutlak zamandan türer)", () => {
     const who = active(s);
     const c = s.sequence[0] as ZamanBombasiColor;
     expect(rejection(s, who, c, s.turnStart - 10)).toBe("not_input_yet");
-    expect(rejection(s, who, c, s.turnStart + 100)).toBe("not_input_yet");
     expect(rejection(s, who, c, inputAt(s) - 1)).toBe("not_input_yet");
     expect(rejection(s, who, c, inputAt(s))).toBeNull();
   });
@@ -140,216 +168,324 @@ describe("evreler ve süreler (mutlak zamandan türer)", () => {
   it("süre bitiminden 1 ms önceki basış geçerli, bitiş anındaki basış zaman aşımı sayılır", () => {
     const s = start(4);
     const who = active(s);
-    const ok = press(s, who, s.sequence[0] as ZamanBombasiColor, deadlineAt(s) - 1);
-    expect(ok.entered).toHaveLength(1);
+    expect(press(s, who, s.sequence[0] as ZamanBombasiColor, deadlineAt(s) - 1).entered).toHaveLength(1);
     expect(rejection(s, who, s.sequence[0] as ZamanBombasiColor, deadlineAt(s))).toBe("eliminated");
   });
 });
 
-describe("doğru cevap", () => {
-  it("dizi 1 uzar, önceki dizi değişmeden başta kalır, sıra sonraki oyuncuya geçer", () => {
+describe("doğru giriş → bombayı at (ZB-M1/M2)", () => {
+  it("doğru giren seçim evresine geçer: 0,9 sn TEMİZ, sonra 4 sn seçim; dizi henüz uzamaz", () => {
     const s = start(4);
-    const first = active(s);
-    const before = [...s.sequence];
+    const who = active(s);
     const t = inputAt(s) + 500;
     const n = solve(s, t);
-    expect(n.sequence).toHaveLength(3);
-    expect(n.sequence.slice(0, 2)).toEqual(before);
-    expect(active(n)).toBe(s.order[1]);
-    expect(active(n)).not.toBe(first);
-    expect(n.turnStart).toBe(t + ZAMAN_BOMBASI_PAUSE_OK_MS);
-    expect(n.eliminated).toEqual([]);
-    expect(n.scores).toEqual(s.scores);
-    expect(n.last).toMatchObject({ kind: "ok", player: first, at: t });
-  });
-
-  it("giriş süresi uzayan diziyle 1,5 sn + uzunluk × 1 sn olur", () => {
-    const n = solve(start(4));
-    expect(n.sequence).toHaveLength(3);
-    expect(deadlineAt(n) - inputAt(n)).toBe(4500);
-  });
-
-  it("kısmi doğru basış yankılanır, sıra değişmez", () => {
-    const s = start(3);
-    const t = inputAt(s);
-    const n = press(s, active(s), s.sequence[0] as ZamanBombasiColor, t);
-    expect(n.entered).toEqual([s.sequence[0]]);
-    expect(active(n)).toBe(active(s));
-    expect(game.publicView(n, ctx(t + 10)).pressed).toEqual([s.sequence[0]]);
-  });
-
-  it("sıra sabit çevrimde döner: a-c-b-d-a-c-b-d", () => {
-    let s = start(4, 7);
-    const order = [...s.order];
-    const seen: string[] = [];
-    for (let i = 0; i < 8; i++) {
-      seen.push(active(s));
-      s = solve(s);
+    expect(n.sequence).toEqual(s.sequence);
+    expect(n.pick).toMatchObject({ by: who, kind: "throw", color: null, growth: 1 });
+    expect(pickOf(n).opensAt).toBe(t + ZAMAN_BOMBASI_OK_SHOW_MS);
+    expect(pickOf(n).deadline).toBe(t + ZAMAN_BOMBASI_OK_SHOW_MS + ZAMAN_BOMBASI_PICK_MS);
+    expect(n.last).toMatchObject({ kind: "ok", player: who, at: t });
+    const pv = game.publicView(n, ctx(t + 10));
+    expect(pv.phase).toBe("pick");
+    expect(pv.active).toBe(who);
+    expect(pv.pick).toMatchObject({ by: who, kind: "throw", colorDone: false, blocked: null });
+    expect(pv.sequence).toBeNull();
+    for (const id of ids(4)) {
+      const v = game.view(n, id, ctx(t + 10));
+      expect(v.myPick).toBe(id === who);
+      expect(v.myTurn).toBe(false);
     }
-    expect(seen).toEqual([...order, ...order]);
-  });
-});
-
-describe("yanlış basış", () => {
-  it("ilk yanlış basış anında eler: −1, diğer aktifler +1, dizi yeni 2 renge döner", () => {
-    let s = start(4);
-    const who = active(s);
-    s = solve(s);
-    s = solve(s); // dizi 4 uzunluğa çıktı
-    expect(s.sequence).toHaveLength(4);
-    const victim = active(s);
-    const t = inputAt(s) + 700;
-    const expected = s.sequence[0] as ZamanBombasiColor;
-    const wrong = wrongColor(expected);
-    const n = press(s, victim, wrong, t);
-    expect(n.eliminated).toEqual([victim]);
-    expect(n.scores[victim]).toBe(-1);
-    for (const id of ids(4)) if (id !== victim) expect(n.scores[id]).toBe(1);
-    expect(n.sequence).toHaveLength(2);
-    expect(n.last).toMatchObject({ kind: "fail", player: victim, color: wrong, expected, at: t });
-    expect(n.turnStart).toBe(t + ZAMAN_BOMBASI_PAUSE_FAIL_MS);
-    expect(who).not.toBe(victim);
   });
 
-  it("yeni dizi 2 elemanlıdır ve eskisinin devamı değildir (yeniden rastgele)", () => {
-    let differs = false;
-    for (let seed = 1; seed <= 30; seed++) {
-      let s = start(4, seed);
-      const first = [...s.sequence];
-      s = solve(s);
-      s = failTurn(s);
-      expect(s.sequence).toHaveLength(2);
-      if (s.sequence.join() !== first.join()) differs = true;
-    }
-    expect(differs).toBe(true);
-  });
-
-  it("elenen oyuncu sıraya bir daha girmez ve basışı reddedilir", () => {
-    let s = start(6);
-    const victim = active(s);
-    s = failTurn(s);
-    const seen = new Set<string>();
-    for (let i = 0; i < 10; i++) {
-      seen.add(active(s));
-      s = solve(s);
-    }
-    expect(seen.has(victim)).toBe(false);
-    expect(seen.size).toBe(5);
-    expect(rejection(s, victim, "mavi", inputAt(s))).toBe("eliminated");
-  });
-
-  it("elenenden sonra sıra çevrimdeki bir sonraki aktif oyuncuya geçer (atlama)", () => {
-    let s = start(6, 4);
-    s = solve(s); // order[0] doğru
-    const victim = active(s); // order[1]
-    expect(victim).toBe(s.order[1]);
-    s = failTurn(s);
-    expect(active(s)).toBe(s.order[2]);
-    // sıra tekrar order[0]'a geldiğinde order[1] atlanır
-    s = solve(s); // order[2]
-    s = solve(s); // order[3]
-    s = solve(s); // order[4]
-    s = solve(s); // order[5]
-    expect(active(s)).toBe(s.order[0]);
-    s = solve(s);
-    expect(active(s)).toBe(s.order[2]);
-  });
-
-  it("puanlar her elenmede birikir: sonradan elenen daha önce kazandığı +1'leri korur", () => {
-    let s = start(6);
-    const a = active(s);
-    s = failTurn(s); // a elenir, diğer 5 kişi +1
-    const b = active(s);
-    s = failTurn(s); // b elenir: kalan 4 kişi +1 daha
-    expect(s.scores[a]).toBe(-1);
-    expect(s.scores[b]).toBe(1 - 1);
-    const rest = ids(6).filter((x) => x !== a && x !== b);
-    for (const id of rest) expect(s.scores[id]).toBe(2);
-  });
-
-  it("yanlıştan sonra yeni sıra hazırlık evresiyle başlar (çatlama/pasif gösterimi için)", () => {
-    let s = start(4);
-    const t = inputAt(s);
-    s = failTurn(s, t);
-    const v = game.publicView(s, ctx(t + 1));
-    expect(v.phase).toBe("pause");
-    expect(v.sequence).toHaveLength(2);
-    expect(game.publicView(s, ctx(t + ZAMAN_BOMBASI_PAUSE_FAIL_MS)).phase).toBe("playback");
-  });
-});
-
-describe("zaman aşımı", () => {
-  it("hiç cevap gelmezse süre bitiminde yanlışla aynı sonuç uygulanır (tick ile)", () => {
+  it("seçilen renk dizinin sonuna eklenir; hedef seçilince bomba atılır ve uyarı payından sonra oynatma başlar", () => {
     const s = start(4);
+    const who = active(s);
+    const t = inputAt(s);
+    let n = solve(s, t);
+    n = act(n, who, { kind: "color", color: "sari" }, t + 300);
+    expect(game.view(n, who, ctx(t + 301)).pickColor).toBe("sari");
+    const target = validTargets(n, pickOf(n))[1] as string;
+    n = act(n, who, { kind: "target", target }, t + 800);
+    expect(n.sequence).toEqual([...s.sequence, "sari"]);
+    expect(n.active).toBe(target);
+    expect(n.thrower).toBe(who);
+    expect(n.pick).toBeNull();
+    expect(n.lastThrow).toEqual({ from: who, to: target, at: t + 800, auto: false });
+    expect(n.turnStart).toBe(t + 800 + ZAMAN_BOMBASI_ALERT_MS);
+    expect(n.turn).toBe(s.turn + 1);
+    expect(deadlineAt(n) - inputAt(n)).toBe(4500);
+    const pv = game.publicView(n, ctx(t + 801));
+    expect(pv.phase).toBe("pause");
+    expect(pv.sequence).toEqual([...s.sequence, "sari"]);
+    expect(game.view(n, target, ctx(t + 801)).myTurn).toBe(true);
+  });
+
+  it("seçim TEMİZ gösterimi sırasında da kabul edilir (alt sınır yok, yalnız üst sınır)", () => {
+    const s = start(3);
+    const who = active(s);
+    const t = inputAt(s);
+    const n = solve(s, t);
+    const c = act(n, who, { kind: "color", color: "kirmizi" }, t + 1);
+    expect(
+      act(c, who, { kind: "target", target: validTargets(c, pickOf(c))[0] as string }, t + 2).pick,
+    ).toBeNull();
+  });
+
+  it("önce renk, sonra hedef; renk bir kez seçilir; yalnız seçen, yalnız seçim evresinde", () => {
+    const s = start(4);
+    const who = active(s);
+    const t = inputAt(s);
+    const n = solve(s, t);
+    const other = validTargets(n, pickOf(n))[0] as string;
+    expect(rejectionOf(n, who, { kind: "target", target: other }, t)).toBe("color_first");
+    expect(rejectionOf(n, other, { kind: "color", color: "mavi" }, t)).toBe("not_your_pick");
+    expect(rejectionOf(n, "yok", { kind: "color", color: "mavi" }, t)).toBe("not_participant");
+    expect(rejection(n, who, "mavi", t)).toBe("picking");
+    const c = act(n, who, { kind: "color", color: "mavi" }, t);
+    expect(rejectionOf(c, who, { kind: "color", color: "sari" }, t)).toBe("color_done");
+    expect(rejectionOf(s, who, { kind: "color", color: "mavi" }, inputAt(s))).toBe("not_picking");
+    expect(rejectionOf(s, who, { kind: "target", target: other }, inputAt(s))).toBe("not_picking");
+  });
+
+  it("kendine, elenmişe ya da olmayan oyuncuya atılamaz", () => {
+    let s = start(5);
+    s = failTurn(s); // ilk sıra: atan yok, rastgele yeni kurban
+    const out = s.eliminated[0] as string;
+    const who = active(s);
+    const t = inputAt(s);
+    const c = act(solve(s, t), who, { kind: "color", color: "mavi" }, t);
+    for (const target of [who, out, "yok"]) {
+      expect(rejectionOf(c, who, { kind: "target", target }, t)).toBe("bad_target");
+    }
+  });
+
+  it("3+ aktif oyuncuda bombayı az önce atana hemen geri atılamaz; başkasına atılabilir", () => {
+    const s = start(4);
+    const a = active(s);
+    const b = s.order[2] as string;
+    const n = solveThrow(s, { target: b });
+    const t = inputAt(n);
+    const c = act(solve(n, t), b, { kind: "color", color: "yesil" }, t);
+    expect(pickOf(c).blocked).toBe(a);
+    expect(game.publicView(c, ctx(t)).pick?.blocked).toBe(a);
+    expect(validTargets(c, pickOf(c))).not.toContain(a);
+    expect(rejectionOf(c, b, { kind: "target", target: a }, t)).toBe("bad_target");
+    const third = ids(4).find((id) => id !== a && id !== b) as string;
+    expect(act(c, b, { kind: "target", target: third }, t).active).toBe(third);
+  });
+
+  it("engel yalnız bir sonraki atış içindir: araya biri girince bombayı atana atılabilir", () => {
+    const s = start(4);
+    const [a, b, c] = s.order as [string, string, string];
+    let n = solveThrow(s, { target: b });
+    n = solveThrow(n, { target: c });
+    const t = inputAt(n);
+    const p = act(solve(n, t), c, { kind: "color", color: "yesil" }, t);
+    expect(pickOf(p).blocked).toBe(b);
+    expect(act(p, c, { kind: "target", target: a }, t).active).toBe(a);
+  });
+
+  it("2 aktif oyuncuda engel yok: bombayı atana geri atılır (2 oyunculu oyun)", () => {
+    let s = start(2);
+    const [a, b] = s.order as [string, string];
+    s = solveThrow(s, { target: b });
+    const t = inputAt(s);
+    const p = act(solve(s, t), b, { kind: "color", color: "mavi" }, t);
+    expect(pickOf(p).blocked).toBeNull();
+    expect(validTargets(p, pickOf(p))).toEqual([a]);
+    expect(act(p, b, { kind: "target", target: a }, t).active).toBe(a);
+  });
+
+  it("3 oyuncudan biri elenince (2 aktif) engel kalkar", () => {
+    let s = start(3, 4);
+    s = failTurn(s); // ilk sıra elenir, rastgele yeni kurban
+    expect(s.eliminated).toHaveLength(1);
+    const x = active(s);
+    const y = s.order.find((id) => id !== x && !s.eliminated.includes(id)) as string;
+    s = solveThrow(s, { target: y });
+    const t = inputAt(s);
+    const p = act(solve(s, t), y, { kind: "color", color: "mavi" }, t);
+    expect(pickOf(p).blocked).toBeNull();
+    expect(act(p, y, { kind: "target", target: x }, t).active).toBe(x);
+  });
+
+  it("art arda doğru sıralar diziyi 1'er uzatır (önceki dizi başta kalır)", () => {
+    let s = start(4, 7);
+    const first = [...s.sequence];
+    s = solveThrow(s, { color: "kirmizi" });
+    s = solveThrow(s, { color: "kirmizi" });
+    s = solveThrow(s, { color: "yesil" });
+    expect(s.sequence).toEqual([...first, "kirmizi", "kirmizi", "yesil"]);
+  });
+});
+
+describe("seçilmezse rastgele (maç tohumundan, belirleyici)", () => {
+  it("hiç seçim yoksa süre bitiminde renk ve geçerli hedef rastgele; atış anı seçim bitişi", () => {
+    const s = start(4);
+    const who = active(s);
+    const n = solve(s);
+    const due = pickOf(n).deadline;
+    expect(game.tick(n, ctx(due - 1))).toBe(n);
+    const r = game.tick(n, ctx(due));
+    expect(r.pick).toBeNull();
+    expect(r.sequence).toHaveLength(3);
+    expect(r.sequence.slice(0, 2)).toEqual(s.sequence);
+    expect(validTargets(n, pickOf(n))).toContain(r.active);
+    expect(r.lastThrow).toEqual({ from: who, to: r.active, at: due, auto: true });
+    expect(r.turnStart).toBe(due + ZAMAN_BOMBASI_ALERT_MS);
+    expect(game.tick(n, ctx(due + 3000))).toEqual(r);
+  });
+
+  it("renk seçildi ama hedef seçilmediyse renk korunur, yalnız hedef rastgele", () => {
+    const s = start(4);
+    const who = active(s);
+    const n = act(solve(s), who, { kind: "color", color: "sari" }, inputAt(s));
+    const r = game.tick(n, ctx(pickOf(n).deadline));
+    expect(r.sequence).toEqual([...s.sequence, "sari"]);
+    expect(r.active).not.toBe(who);
+  });
+
+  it("seçim süresi bitiş anında kapanır: 1 ms önce kabul, bitişte reddedilir", () => {
+    const s = start(4);
+    const who = active(s);
+    const n = act(solve(s), who, { kind: "color", color: "sari" }, inputAt(s));
+    const due = pickOf(n).deadline;
+    const target = validTargets(n, pickOf(n))[0] as string;
+    expect(rejectionOf(n, who, { kind: "target", target }, due - 1)).toBeNull();
+    expect(rejectionOf(n, who, { kind: "target", target }, due)).toBe("not_picking");
+  });
+
+  it("rastgele hedef hiçbir zaman kendisi, elenmiş ya da engelli değildir; dağılır; aynı tohumda aynıdır", () => {
+    const seen = new Set<string>();
+    for (let seed = 1; seed <= 80; seed++) {
+      let s = start(5, seed);
+      s = solveThrow(s);
+      const n = solve(s);
+      const p = pickOf(n);
+      const r = game.tick(n, ctx(p.deadline));
+      expect(r.active).not.toBe(p.by);
+      expect(r.active).not.toBe(p.blocked);
+      expect(validTargets(n, p)).toContain(r.active);
+      expect(game.tick(n, ctx(p.deadline))).toEqual(r);
+      seen.add(`${s.order.indexOf(r.active)}`);
+    }
+    expect(seen.size).toBeGreaterThanOrEqual(3);
+  });
+
+  it("bağlantısı kopan seçicide süre dolunca rastgele (tick connected'a bakmaz); kopuk oyuncu hedef olabilir", () => {
+    const s = start(4);
+    const who = active(s);
+    const n = solve(s);
+    const due = pickOf(n).deadline;
+    expect(game.tick(n, ctx(due, []))).toEqual(game.tick(n, ctx(due, ids(4))));
+    const target = validTargets(n, pickOf(n))[0] as string;
+    const c = act(n, who, { kind: "color", color: "mavi" }, inputAt(s));
+    const r = game.reduce(c, who, { kind: "target", target }, ctx(inputAt(s), [who]));
+    expect(isRejected(r) ? r.rejected : (r as ZamanBombasiState).active).toBe(target);
+  });
+});
+
+describe("elenme", () => {
+  it("yanlış basış anında eler; dizi yeni 2 renge döner; yeni kurbanı bombayı ona atan seçer", () => {
+    let s = start(4);
+    const a = active(s);
+    s = solveThrow(s);
+    s = solveThrow(s); // dizi 4
+    const victim = active(s);
+    const thrower = s.thrower as string;
+    const t = inputAt(s) + 200;
+    const n = failTurn(s, t);
+    expect(n.eliminated).toEqual([victim]);
+    expect(n.sequence).toHaveLength(2);
+    expect(n.active).toBe(thrower);
+    expect(n.pick).toMatchObject({ by: thrower, kind: "restart", growth: 0, blocked: null, color: null });
+    expect(pickOf(n).opensAt).toBe(t + ZAMAN_BOMBASI_FAIL_SHOW_MS);
+    expect(pickOf(n).deadline).toBe(t + ZAMAN_BOMBASI_FAIL_SHOW_MS + ZAMAN_BOMBASI_PICK_MS);
+    expect(n.last).toMatchObject({ kind: "fail", player: victim, at: t });
+    const pv = game.publicView(n, ctx(t + 1));
+    expect(pv.pick?.colorDone).toBe(true);
+    expect(pv.sequence).toBeNull();
+    // Renk seçimi yok; hedef doğrudan seçilir. Bombayı az önce atan engeli bu seçimde yoktur.
+    expect(rejectionOf(n, thrower, { kind: "color", color: "mavi" }, t + 1)).toBe("no_color_pick");
+    expect(validTargets(n, pickOf(n))).toContain(
+      a === thrower ? (s.order.find((id) => id !== a) as string) : a,
+    );
+    const target = validTargets(n, pickOf(n))[0] as string;
+    const r = act(n, thrower, { kind: "target", target }, t + 500);
+    expect(r.sequence).toEqual(n.sequence);
+    expect(r.active).toBe(target);
+    expect(r.thrower).toBe(thrower);
+    expect(r.turnStart).toBe(t + 500 + ZAMAN_BOMBASI_ALERT_MS);
+  });
+
+  it("yeni dizi eskisinin devamı değildir (yeniden rastgele) ve elenme sonrası seçilmezse hedef rastgele", () => {
+    let s = start(5, 9);
+    s = solveThrow(s, { color: "kirmizi" });
+    const n = failTurn(s);
+    const r = game.tick(n, ctx(pickOf(n).deadline));
+    expect(r.sequence).toEqual(n.sequence);
+    expect(r.lastThrow).toMatchObject({ from: n.pick?.by, auto: true });
+    expect(r.eliminated).not.toContain(r.active);
+    expect(r.active).not.toBe(n.pick?.by);
+  });
+
+  it("ilk sırada (bombayı atan yok) elenince yeni kurban rastgele; patlama gösteriminden sonra atılır", () => {
+    const s = start(4);
+    const t = inputAt(s);
+    const n = failTurn(s, t);
+    expect(n.pick).toBeNull();
+    expect(n.eliminated).toEqual([s.active]);
+    expect(n.eliminated).not.toContain(n.active);
+    expect(n.lastThrow).toEqual({ from: null, to: n.active, at: t + ZAMAN_BOMBASI_FAIL_SHOW_MS, auto: true });
+    expect(n.turnStart).toBe(t + ZAMAN_BOMBASI_FAIL_SHOW_MS + ZAMAN_BOMBASI_ALERT_MS);
+    expect(n.thrower).toBeNull();
+  });
+
+  it("elenen oyuncu sıraya bir daha girmez ve eylemleri reddedilir", () => {
+    const s = start(4);
+    const victim = active(s);
+    const n = failTurn(s);
+    expect(rejection(n, victim, "mavi", inputAt(n))).toBe("eliminated");
+    expect(rejectionOf(n, victim, { kind: "target", target: "p1" }, inputAt(n))).toBe("eliminated");
+    expect(game.view(n, victim, ctx(inputAt(n)))).toEqual({
+      isOut: true,
+      myTurn: false,
+      myPick: false,
+      pickColor: null,
+    });
+  });
+
+  it("zaman aşımı (tick ile) yanlışla aynı sonucu verir ve kesin an olarak deadline'a işlenir", () => {
+    let s = start(4);
+    s = solveThrow(s);
     const victim = active(s);
     const at = deadlineAt(s);
     expect(game.tick(s, ctx(at - 1))).toBe(s);
     const n = game.tick(s, ctx(at));
     expect(n.eliminated).toEqual([victim]);
-    expect(n.scores[victim]).toBe(-1);
-    for (const id of ids(4)) if (id !== victim) expect(n.scores[id]).toBe(1);
     expect(n.last).toMatchObject({ kind: "timeout", player: victim, at });
-    expect(n.turnStart).toBe(at + ZAMAN_BOMBASI_PAUSE_FAIL_MS);
-    expect(n.sequence).toHaveLength(2);
+    expect(n.pick?.by).toBe(s.thrower);
+    expect(game.tick(s, ctx(at + 1500))).toEqual(n);
   });
 
-  it("yarım girilmiş dizi de süre bitince elenir", () => {
-    let s = start(4);
-    const who = active(s);
-    s = press(s, who, s.sequence[0] as ZamanBombasiColor, inputAt(s));
-    const n = game.tick(s, ctx(deadlineAt(s)));
-    expect(n.eliminated).toEqual([who]);
-    expect(n.entered).toEqual([]);
-  });
-
-  it("zaman aşımı kesin an olarak deadline'a işlenir; geç tick sonucu değiştirmez", () => {
-    const s = start(5);
-    const early = game.tick(s, ctx(deadlineAt(s)));
-    const late = game.tick(s, ctx(deadlineAt(s) + 1500));
-    expect(late).toEqual(early);
-  });
-
-  it("uzun süre tick gelmese de ardışık zaman aşımları sırayla işlenir (tick takviminden bağımsız)", () => {
+  it("uzun süre tick gelmese de ardışık zaman aşımları ve seçimler sırayla işlenir (tick takviminden bağımsız)", () => {
     const s = start(8);
-    const jump = game.tick(s, ctx(T0 + 20_000));
+    const jump = game.tick(s, ctx(T0 + 40_000));
     let step = s;
-    for (let t = T0; t <= T0 + 20_000; t += 250) step = game.tick(step, ctx(t));
+    for (let t = T0; t <= T0 + 40_000; t += 250) step = game.tick(step, ctx(t));
     expect(jump).toEqual(step);
     expect(jump.eliminated.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("bağlantısı kopan aktif oyuncu yalnız zamanla elenir (tick connected'a bakmaz)", () => {
+  it("bağlantısı kopan aktif oyuncu yalnız zamanla elenir", () => {
     const s = start(4);
     const victim = active(s);
-    const connectedWithout = ids(4).filter((x) => x !== victim);
-    const a = game.tick(s, ctx(deadlineAt(s), connectedWithout));
-    const b = game.tick(s, ctx(deadlineAt(s), ids(4)));
-    expect(a).toEqual(b);
-    expect(a.eliminated).toEqual([victim]);
-    // zaman dolmadan kopma sıra atlatmaz
-    expect(game.tick(s, ctx(deadlineAt(s) - 1, connectedWithout))).toBe(s);
-  });
-
-  it("kopuk oyuncunun sırasından sonra çevrim devam eder", () => {
-    const s = start(4);
-    const n = game.tick(s, ctx(deadlineAt(s), []));
-    expect(active(n)).toBe(s.order[1]);
-  });
-
-  it("zaman aşımından sonra gelen eski basış reddedilir, yeni sıranın sahibi önce basamaz", () => {
-    const s = start(4);
-    const first = active(s);
-    const at = deadlineAt(s) + 100;
-    expect(rejection(s, first, "mavi", at)).toBe("eliminated");
-    const next = s.order[1] as string;
-    // yeni sıranın hazırlık evresi: henüz giriş yok
-    expect(rejection(s, next, "mavi", at)).toBe("not_input_yet");
+    const without = ids(4).filter((x) => x !== victim);
+    expect(game.tick(s, ctx(deadlineAt(s), without))).toEqual(game.tick(s, ctx(deadlineAt(s), ids(4))));
+    expect(game.tick(s, ctx(deadlineAt(s) - 1, without))).toBe(s);
   });
 });
 
-describe("bitiş", () => {
-  const needFor = (n: number) => Math.ceil(n / 2);
-
+describe("bitiş ve puanlama (ZB-M3: hayatta kalan +2, elenen 0, kimse elenmezse herkes +1)", () => {
   it.each([
     [2, 1],
     [3, 2],
@@ -358,183 +494,203 @@ describe("bitiş", () => {
     [6, 3],
     [7, 4],
     [8, 4],
-  ])("%i oyuncu: %i eleme olunca biter (⌈n/2⌉)", (n, need) => {
-    expect(needFor(n)).toBe(need);
+  ])("%i oyuncuda %i elenme ile anında biter", (n, need) => {
     let s = start(n);
+    expect(s.need).toBe(need);
     for (let i = 0; i < need; i++) {
-      expect(game.isFinished(s, ctx(inputAt(s)))).toBe(false);
+      expect(s.finished).toBe(false);
+      s = game.tick(s, ctx(Math.max(s.pick?.deadline ?? 0, s.turnStart)));
       s = failTurn(s);
     }
     expect(s.finished).toBe(true);
     expect(s.eliminated).toHaveLength(need);
-    expect(game.isFinished(s, ctx(s.endedAt ?? 0))).toBe(true);
+    for (const id of ids(n)) expect(s.scores[id]).toBe(s.eliminated.includes(id) ? 0 : 2);
+    expect(game.result(s)).toEqual({ miniScores: s.scores, awards: s.scores });
   });
 
-  it("son elenme anında biter: sonuç o hatadan hemen sonra açılır", () => {
+  it("oyun sırasında puan birikmez (herkes 0); son elenmede bitişte verilir", () => {
     let s = start(4);
     s = failTurn(s);
-    const t = inputAt(s) + 123;
-    s = failTurn(s, t);
-    expect(s.endedAt).toBe(t);
-    const v = game.publicView(s, ctx(t));
-    expect(v.phase).toBe("over");
-    expect(v.active).toBeNull();
-    expect(v.last?.kind).toBe("fail");
+    expect(Object.values(s.scores)).toEqual([0, 0, 0, 0]);
+    expect(game.publicView(s, ctx(inputAt(s))).scores).toEqual(s.scores);
+    const at = inputAt(s);
+    s = failTurn(s, at);
+    expect(s.finished).toBe(true);
+    expect(s.endedAt).toBe(at);
+    expect(Object.values(s.scores).sort()).toEqual([0, 0, 2, 2]);
   });
 
-  it("son elenmede kalan aktifler yine +1 alır", () => {
-    let s = start(4);
-    const a = active(s);
-    s = failTurn(s);
-    const b = active(s);
-    s = failTurn(s);
-    expect(s.scores[a]).toBe(-1); // a ilk elendi; b'nin elenmesinde a aktif değil, puan almaz
-    expect(s.scores[b]).toBe(0); // elenmeden önce +1 almıştı, sonra −1
-    const rest = ids(4).filter((x) => x !== a && x !== b);
-    for (const id of rest) expect(s.scores[id]).toBe(2);
-  });
-
-  it("zaman aşımıyla da biter", () => {
+  it("2 oyuncuda hayatta kalan +2, elenen 0", () => {
     let s = start(2);
-    const victim = active(s);
-    s = game.tick(s, ctx(deadlineAt(s)));
-    expect(game.isFinished(s, ctx(deadlineAt(s)))).toBe(true);
-    expect(s.scores[victim]).toBe(-1);
+    const [a, b] = s.order as [string, string];
+    s = solveThrow(s, { target: b });
+    s = failTurn(s);
+    expect(s.finished).toBe(true);
+    expect(s.scores).toEqual({ [a]: 2, [b]: 0 });
   });
 
-  it("isFinished tick'siz de fark eder (zaman aşımı bekleyen son eleme)", () => {
+  it("bitişten sonra eylem reddedilir (tick edilmemiş olsa da); isFinished tick'siz fark eder", () => {
     let s = start(2);
+    s = solveThrow(s);
     expect(game.isFinished(s, ctx(deadlineAt(s) - 1))).toBe(false);
     expect(game.isFinished(s, ctx(deadlineAt(s)))).toBe(true);
-    s = game.tick(s, ctx(deadlineAt(s)));
-    expect(s.finished).toBe(true);
-  });
-
-  it("bitişten sonra eylem reddedilir (tick edilmemiş olsa da)", () => {
-    const s = start(2);
-    const late = deadlineAt(s) + 1;
-    const who = active(s);
-    const other = ids(2).find((x) => x !== who) as string;
-    expect(rejection(s, other, "mavi", late)).toBe("ended");
-    const done = game.tick(s, ctx(late));
-    expect(rejection(done, other, "mavi", late + 5000)).toBe("ended");
-  });
-
-  it("katılımcı olmayan reddedilir; sırası olmayan katılımcı reddedilir", () => {
-    const s = start(4);
-    expect(rejection(s, "ghost", "mavi", inputAt(s))).toBe("not_participant");
-    const other = s.order[1] as string;
-    expect(rejection(s, other, "mavi", inputAt(s))).toBe("not_your_turn");
-  });
-
-  it("awards = miniScores = puanlar; toplamı tutarlı", () => {
-    let s = start(4);
-    s = failTurn(s);
-    s = failTurn(s);
-    const r = game.result(s);
-    expect(r.awards).toEqual(r.miniScores);
-    expect(r.awards).toEqual(s.scores);
-    expect(Object.values(r.awards).sort()).toEqual([-1, 0, 2, 2]);
-  });
-
-  it("8 oyuncuda dört eleme: elenenin puanı = (öncesinde aldığı +1 sayısı) − 1, kalanlar 4", () => {
-    let s = start(8);
-    const victims: string[] = [];
-    for (let i = 0; i < 4; i++) {
-      victims.push(active(s));
-      s = failTurn(s);
-    }
-    expect(s.finished).toBe(true);
-    // i. elenen (0 tabanlı), elenmeden önce aktifken i kez +1 aldı, sonra −1.
-    for (const [i, v] of victims.entries()) expect(s.scores[v]).toBe(i - 1);
-    for (const id of ids(8).filter((x) => !victims.includes(x))) expect(s.scores[id]).toBe(4);
+    expect(rejection(s, active(s), "mavi", deadlineAt(s) + 1)).toBe("ended");
   });
 });
 
-describe("gizlilik ve hafıza oyunu", () => {
-  it("gizli bilgi yok", () => {
+/** `startedAt`'i kaydırarak toplam süre/ani ölüm sınırlarını istenen ana getirir (kalan her şey aynı kalır). */
+const withStart = (s: ZamanBombasiState, startedAt: number): ZamanBombasiState => ({ ...s, startedAt });
+
+describe("toplam süre sınırı (90 sn)", () => {
+  it("toplam süre kurulumdan 90 sn; görünüm mutlak zamanları verir", () => {
+    const v = game.publicView(start(4), ctx(T0));
+    expect([v.startedAt, v.endsAt, v.suddenDeathAt]).toEqual([T0, T0 + 90_000, T0 + 60_000]);
+  });
+
+  it("kimse elenmeden 90 sn dolarsa herkes +1", () => {
+    let s = start(3);
+    for (let i = 0; i < 6; i++) s = solveThrow(s);
+    s = withStart(s, inputAt(s) + 100 - 90_000);
+    const done = game.tick(s, ctx(inputAt(s) + 100));
+    expect(done.finished).toBe(true);
+    expect(done.timeUp).toBe(true);
+    expect(done.endedAt).toBe(inputAt(s) + 100);
+    expect(Object.values(done.scores)).toEqual([1, 1, 1]);
+  });
+
+  it("giriş sırasında süre dolarsa giriş yapanın sırası cezasız iptal edilir; o kişi hayatta sayılır (+2)", () => {
+    let s = start(5);
+    s = failTurn(s); // biri elendi
+    const out = s.eliminated[0] as string;
+    const who = active(s);
+    s = press(s, who, s.sequence[0] as ZamanBombasiColor, inputAt(s));
+    s = withStart(s, inputAt(s) + 500 - 90_000);
+    const done = game.tick(s, ctx(inputAt(s) + 500));
+    expect(done.finished).toBe(true);
+    expect(done.timeUp).toBe(true);
+    expect(done.eliminated).toEqual([out]);
+    for (const id of ids(5)) expect(done.scores[id]).toBe(id === out ? 0 : 2);
+  });
+
+  it("seçim sırasında süre dolarsa seçim iptal, oyun biter", () => {
+    let s = solve(start(4));
+    s = withStart(s, pickOf(s).deadline - 1000 - 90_000);
+    const end = s.startedAt + 90_000;
+    expect(game.tick(s, ctx(end - 1)).finished).toBe(false);
+    const done = game.tick(s, ctx(end));
+    expect(done).toMatchObject({ finished: true, timeUp: true, endedAt: end, pick: null });
+    expect(Object.values(done.scores)).toEqual([1, 1, 1, 1]);
+  });
+
+  it("süre dolmadan önce zaman aşımına uğrayan sıra yine cezalandırılır; aynı anda dolarsa iptal", () => {
+    const s = start(4);
+    const early = withStart(s, deadlineAt(s) + 1 - 90_000);
+    expect(game.tick(early, ctx(deadlineAt(s) + 1)).eliminated).toEqual([s.active]);
+    const same = withStart(s, deadlineAt(s) - 90_000);
+    const done = game.tick(same, ctx(deadlineAt(s)));
+    expect(done).toMatchObject({ finished: true, timeUp: true, eliminated: [] });
+  });
+
+  it("seçim süresi (4 sn) oyun saatinden düşer", () => {
+    const s = start(3);
+    const t = inputAt(s);
+    const n = solve(s, t);
+    const who = active(n);
+    const c = act(n, who, { kind: "color", color: "mavi" }, t + 3000);
+    const r = act(c, who, { kind: "target", target: validTargets(c, pickOf(c))[0] as string }, t + 3900);
+    expect(r.turnStart).toBe(t + 3900 + ZAMAN_BOMBASI_ALERT_MS);
+    expect(game.publicView(r, ctx(t + 3901)).endsAt).toBe(T0 + 90_000);
+  });
+});
+
+describe("ani ölüm (60 sn sonrası +2: biri seçilen, biri rastgele)", () => {
+  it("doğru bitiş anı tam 60 sn ise hâlâ +1", () => {
+    const s = start(4);
+    const t = inputAt(s);
+    const n = solve(withStart(s, t - 60_000), t);
+    expect(pickOf(n).growth).toBe(1);
+  });
+
+  it("60 sn'yi 1 ms aşınca +2: seçilen renk önce, ikinci renk rastgele; giriş süresi yeni uzunluğa göre", () => {
+    const s = start(4);
+    const t = inputAt(s);
+    const n = solve(withStart(s, t - 60_001), t);
+    expect(pickOf(n).growth).toBe(2);
+    const who = active(n);
+    const c = act(n, who, { kind: "color", color: "sari" }, t);
+    const r = act(c, who, { kind: "target", target: validTargets(c, pickOf(c))[0] as string }, t);
+    expect(r.sequence).toHaveLength(4);
+    expect(r.sequence.slice(0, 3)).toEqual([...s.sequence, "sari"]);
+    expect(ZAMAN_BOMBASI_COLORS).toContain(r.sequence[3]);
+    expect(deadlineAt(r) - inputAt(r)).toBe(1500 + 4000);
+    // seçilmezse ikisi de rastgele; aynı tohumda belirli
+    const auto = game.tick(n, ctx(pickOf(n).deadline));
+    expect(auto.sequence).toHaveLength(4);
+    expect(game.tick(n, ctx(pickOf(n).deadline))).toEqual(auto);
+  });
+
+  it("ani ölümde elenme dizi uzunluğunu yine 2'ye sıfırlar", () => {
+    const s = start(4);
+    const n = failTurn(withStart(s, inputAt(s) - 70_000));
+    expect(n.sequence).toHaveLength(2);
+  });
+});
+
+describe("gizlilik", () => {
+  it("metin olarak aranacak gizli bilgi yok", () => {
     expect(game.secrets(start(4))).toEqual([]);
   });
 
-  it("oynatma evresinde dizi herkese görünür (izleyici dahil, aynı publicView)", () => {
+  it("oynatma evresinde dizi herkese görünür; giriş evresinde hiçbir görünümde yok", () => {
     const s = start(4);
-    const v = game.publicView(s, ctx(s.turnStart + 10));
-    expect(v.sequence).toEqual(s.sequence);
-    expect(v.phase).toBe("playback");
-  });
-
-  it("giriş evresinde publicView diziyi göstermeye devam etmez", () => {
-    let s = start(4);
-    s = solve(s); // uzunluk 3
-    const t = inputAt(s);
-    const v = game.publicView(s, ctx(t + 50));
-    expect(v.phase).toBe("input");
-    expect(v.sequence).toBeNull();
-    expect(JSON.stringify(v)).not.toContain(JSON.stringify(s.sequence));
-    expect(v.pressed).toEqual([]);
-    // kısmi girişte yalnız basılan önek görünür, tam dizi asla
-    const n = press(s, active(s), s.sequence[0] as ZamanBombasiColor, t + 100);
-    const v2 = game.publicView(n, ctx(t + 150));
-    expect(v2.sequence).toBeNull();
-    expect(v2.pressed).toEqual([s.sequence[0]]);
-    expect(v2.pressed.length).toBeLessThan(v2.length);
-  });
-
-  it("kişisel görünüm de diziyi içermez", () => {
-    const s = start(4);
-    for (const now of [s.turnStart + 10, inputAt(s) + 10]) {
-      for (const id of [...ids(4), null]) {
-        const json = JSON.stringify(game.view(s, id, ctx(now)));
-        expect(json).not.toContain('"sequence"');
-        for (const c of s.sequence) expect(json).not.toContain(`"${c}"`);
-      }
+    expect(game.publicView(s, ctx(s.turnStart)).sequence).toEqual(s.sequence);
+    const pv = game.publicView(s, ctx(inputAt(s)));
+    expect(pv.sequence).toBeNull();
+    for (const id of [...ids(4), null]) {
+      const v = game.view(s, id, ctx(inputAt(s)));
+      expect(Object.keys(v).sort()).toEqual(["isOut", "myPick", "myTurn", "pickColor"]);
+      expect(v.pickColor).toBeNull();
     }
   });
 
-  it("zaman aşımı/hata özeti yalnız tek beklenen rengi verir, tam diziyi değil", () => {
-    let s = start(4);
-    s = failTurn(s);
-    const v = game.publicView(s, ctx(s.last?.at ?? 0));
-    expect(v.last?.expected).toBeDefined();
-    expect(JSON.stringify(v.last)).not.toContain("[");
+  it("seçilen renk yalnız seçenin görünümünde; herkese açık görünümde yalnız 'seçildi' bilgisi", () => {
+    const s = start(4);
+    const who = active(s);
+    const t = inputAt(s);
+    const n = act(solve(s, t), who, { kind: "color", color: "sari" }, t);
+    const pv = game.publicView(n, ctx(t + 1));
+    expect(pv.pick?.colorDone).toBe(true);
+    expect(pv.sequence).toBeNull();
+    expect(JSON.stringify(pv)).not.toContain("sari");
+    for (const id of [...ids(4), null]) {
+      expect(game.view(n, id, ctx(t + 1)).pickColor).toBe(id === who ? "sari" : null);
+    }
   });
 
-  it("sıra gelmeden önce dizi hazırlıkta görünür ve giriş başlayınca kaybolur", () => {
-    const s = start(3);
-    expect(game.publicView(s, ctx(s.turnStart - 100)).sequence).toEqual(s.sequence);
-    expect(game.publicView(s, ctx(inputAt(s))).sequence).toBeNull();
+  it("hata özeti yalnız tek beklenen rengi verir, tam diziyi değil", () => {
+    let s = start(4);
+    s = solveThrow(s);
+    const n = failTurn(s);
+    expect(n.last?.expected).toBe(s.sequence[0]);
+    expect(Object.keys(n.last ?? {}).sort()).toEqual(["at", "color", "expected", "kind", "player", "turn"]);
   });
 });
 
-describe("özel görünüm", () => {
-  it("sıra, elenme ve kaç sıra sonra durumu", () => {
+describe("bildirim ve uyanma", () => {
+  it("'Sıra sende!' yalnız diziyi girecek oyuncuya; seçim evresinde kimseye", () => {
     const s = start(4);
-    const t = s.turnStart + 1;
-    s.order.forEach((id, i) => {
-      expect(game.view(s, id, ctx(t))).toEqual({ isOut: false, myTurn: i === 0, turnsAway: i });
-    });
-    expect(game.view(s, null, ctx(t))).toEqual({ isOut: false, myTurn: false, turnsAway: null });
-    expect(game.view(s, "ghost", ctx(t))).toEqual({ isOut: false, myTurn: false, turnsAway: null });
+    expect(game.notify?.(s, ctx(T0))).toEqual([s.active]);
+    const n = solve(s);
+    expect(game.notify?.(n, ctx(inputAt(s)))).toEqual([]);
+    const r = game.tick(n, ctx(pickOf(n).deadline));
+    expect(game.notify?.(r, ctx(pickOf(n).deadline))).toEqual([r.active]);
   });
 
-  it("elenen oyuncu pasif; çevrim eleneni atlayarak sayılır", () => {
-    let s = start(6, 2);
-    s = solve(s);
-    const victim = active(s);
-    s = failTurn(s);
-    expect(game.view(s, victim, ctx(s.turnStart))).toEqual({
-      isOut: true,
-      myTurn: false,
-      turnsAway: null,
-    });
-    // order[0] şimdi sıranın en sonunda: order[2..5] sonra o → 4 sıra uzakta
-    expect(game.view(s, s.order[0] as string, ctx(s.turnStart))).toMatchObject({ turnsAway: 4 });
-  });
-
-  it("oyun bitince kimsenin sırası yok", () => {
-    let s = start(2);
-    s = failTurn(s);
-    for (const id of ids(2)) expect(game.view(s, id, ctx(s.endedAt ?? 0)).myTurn).toBe(false);
+  it("nextWake: giriş/seçim süresinin bitişi ya da toplam süre", () => {
+    const s = start(4);
+    expect(game.nextWake?.(s, ctx(T0))).toBe(deadlineAt(s));
+    const n = solve(s);
+    expect(game.nextWake?.(n, ctx(inputAt(s)))).toBe(pickOf(n).deadline);
   });
 });
 
@@ -542,14 +698,14 @@ describe("saflık ve belirlilik", () => {
   it("reduce girdi durumunu değiştirmez", () => {
     const s = start(4);
     const snap = JSON.stringify(s);
-    press(s, active(s), s.sequence[0] as ZamanBombasiColor, inputAt(s));
+    solveThrow(s);
     failTurn(s);
     game.tick(s, ctx(deadlineAt(s) + 5000));
     game.publicView(s, ctx(deadlineAt(s) + 5000));
     expect(JSON.stringify(s)).toBe(snap);
   });
 
-  it("görünümler ctx.rng tüketmez (tohum bağımsız, tick takvimi bağımsız)", () => {
+  it("görünümler ctx.rng tüketmez", () => {
     const s = start(4);
     const rng = createRng(9);
     const before = createRng(9).next();
@@ -558,10 +714,9 @@ describe("saflık ve belirlilik", () => {
     expect(rng.next()).toBe(before);
   });
 
-  it("rastgele renkler setup tohumundan türer: aynı tohumla aynı oyun, ardışık diziler tutarlı", () => {
-    const a = start(4, 11);
-    const b = start(4, 11);
-    expect(solve(solve(a)).sequence).toEqual(solve(solve(b)).sequence);
+  it("aynı tohumla aynı oyun", () => {
+    const run = () => game.tick(solve(game.tick(solve(start(4, 11)), ctx(T0 + 20_000))), ctx(T0 + 40_000));
+    expect(run()).toEqual(run());
   });
 });
 
@@ -585,194 +740,10 @@ describe("bot takvimi", () => {
       });
       const st = out.state as ZamanBombasiState;
       ended += st.finished ? 1 : 0;
-      if (st.turn > st.eliminated.length) withOk++;
+      // Sıra sayacı = 1 + atış sayısı; doğru giriş olmadan atış yalnız (bitirmeyen) elenmelerden gelir.
+      if (st.turn > st.eliminated.length + (st.timeUp ? 1 : 0)) withOk++;
     }
     expect(ended).toBe(150);
     expect(withOk).toBeGreaterThan(0);
-  });
-});
-
-/** `startedAt`'i kaydırarak toplam süre/ani ölüm sınırlarını istenen ana getirir (kalan her şey aynı kalır). */
-const withStart = (s: ZamanBombasiState, startedAt: number): ZamanBombasiState => ({ ...s, startedAt });
-
-describe("toplam süre sınırı (O1, 90 sn)", () => {
-  it("toplam süre kurulumdan 90 sn; görünüm mutlak zamanları verir", () => {
-    const s = start(4);
-    const v = game.publicView(s, ctx(T0));
-    expect(v.endsAt).toBe(T0 + 90_000);
-    expect(v.suddenDeathAt).toBe(T0 + 60_000);
-    expect(v.timeUp).toBe(false);
-  });
-
-  it("hiç elenme olmadan 90. saniyede biter; süre dolmadan bitmez; puanlar değişmez", () => {
-    let s = start(4);
-    const endsAt = T0 + 90_000;
-    while (inputAt(s) < endsAt && deadlineAt(s) < endsAt) s = solve(s);
-    // Son tam sıra bitti; kalan sıra ya yeni başlamamış ya da giriş penceresi sınırı aşıyor.
-    expect(s.eliminated).toEqual([]);
-    const before = game.isFinished(s, ctx(endsAt - 1));
-    expect(before).toBe(false);
-    const done = game.tick(s, ctx(endsAt));
-    expect(done.finished).toBe(true);
-    expect(done.timeUp).toBe(true);
-    expect(done.endedAt).toBe(endsAt);
-    expect(done.eliminated).toEqual([]);
-    expect(game.isFinished(s, ctx(endsAt))).toBe(true);
-    const res = game.result(done);
-    expect(Object.values(res.miniScores).every((p) => p === 0)).toBe(true);
-  });
-
-  it("geç tick sonucu değiştirmez: bitiş anı endsAt'a işlenir", () => {
-    const s = start(4);
-    const late = game.tick(s, ctx(T0 + 500_000));
-    // Hiç cevap yok: 4 oyuncudan 2 elenince oyun biter (elenme bitişi, süre bitişi değil).
-    expect(late.finished).toBe(true);
-    expect(late.timeUp).toBe(false);
-    expect(late.eliminated).toHaveLength(2);
-  });
-
-  it("giriş sırasında süre dolarsa aktif oyuncunun sırası cezasız iptal edilir", () => {
-    const s0 = start(4);
-    const endsAt = inputAt(s0) + 100;
-    const s = withStart(s0, endsAt - 90_000);
-    const who = active(s);
-    const half = press(s, who, s.sequence[0] as ZamanBombasiColor, inputAt(s));
-    expect(game.isFinished(half, ctx(endsAt - 1))).toBe(false);
-    const view = game.publicView(half, ctx(endsAt));
-    expect(view.timeUp).toBe(true);
-    expect(view.phase).toBe("over");
-    expect(view.active).toBeNull();
-    const done = game.tick(half, ctx(endsAt));
-    expect(done.finished).toBe(true);
-    expect(done.eliminated).toEqual([]);
-    expect(done.scores).toEqual(s.scores);
-    expect(done.last).toBeNull();
-    expect(game.view(done, who, ctx(endsAt))).toEqual({ isOut: false, myTurn: false, turnsAway: null });
-    // Süre dolduktan sonra basış kabul edilmez, 1 ms önce kabul edilir.
-    expect(rejection(half, who, s.sequence[1] as ZamanBombasiColor, endsAt)).toBe("ended");
-    expect(rejection(half, who, s.sequence[1] as ZamanBombasiColor, endsAt - 1)).toBeNull();
-  });
-
-  it("süre dolmadan önce zaman aşımına uğrayan sıra yine cezalandırılır", () => {
-    const s0 = start(4);
-    const endsAt = deadlineAt(s0) + 1;
-    const s = withStart(s0, endsAt - 90_000);
-    const who = active(s);
-    const done = game.tick(s, ctx(endsAt));
-    expect(done.eliminated).toEqual([who]);
-    expect(done.scores[who]).toBe(-1);
-    expect(done.finished).toBe(true);
-    expect(done.timeUp).toBe(true);
-    expect(done.endedAt).toBe(endsAt);
-  });
-
-  it("süre ile aynı anda dolan giriş penceresi iptal sayılır, ceza yok", () => {
-    const s0 = start(4);
-    const endsAt = deadlineAt(s0);
-    const done = game.tick(withStart(s0, endsAt - 90_000), ctx(endsAt));
-    expect(done.eliminated).toEqual([]);
-    expect(done.timeUp).toBe(true);
-  });
-
-  it("süre bitişi elenme bitişiyle birleşirse elenme önce (daha erken) olandır", () => {
-    const s0 = start(2);
-    const who = active(s0);
-    const at = inputAt(s0);
-    const s = withStart(s0, at + 1000 - 90_000);
-    const r = failTurn(s, at);
-    expect(r.finished).toBe(true);
-    expect(r.timeUp).toBe(false);
-    expect(r.eliminated).toEqual([who]);
-  });
-});
-
-describe("ani ölüm (O1, 60 sn sonrası +2)", () => {
-  it("dizi kurulduğu an oyun başından tam 60 sn geçmişse hâlâ +1", () => {
-    const s0 = start(4);
-    const at = inputAt(s0);
-    const s = withStart(s0, at - 60_000);
-    const n = solve(s, at);
-    expect(n.sequence).toHaveLength(3);
-    expect(n.draws).toBe(s.draws + 1);
-  });
-
-  it("60 sn'yi 1 ms aşınca +2: önceki dizi başta kalır, giriş süresi yeni uzunluğa göre", () => {
-    const s0 = start(4);
-    const at = inputAt(s0);
-    const s = withStart(s0, at - 60_001);
-    const n = solve(s, at);
-    expect(n.sequence).toHaveLength(4);
-    expect(n.sequence.slice(0, 2)).toEqual(s.sequence);
-    expect(n.draws).toBe(s.draws + 2);
-    expect(deadlineAt(n) - inputAt(n)).toBe(1500 + 4 * 1000);
-    expect(game.publicView(n, ctx(n.turnStart)).length).toBe(4);
-  });
-
-  it("ölçüt sıranın dizisinin kurulduğu andır (cevap anı), sıranın başladığı an değil", () => {
-    const s0 = start(4);
-    const t0 = inputAt(s0);
-    const s = withStart(s0, t0 - 59_000);
-    expect(solve(s, t0).sequence).toHaveLength(3);
-    // Aynı sıra 2 sn sonra (60 sn'yi aşınca) çözülürse dizi +2 uzar.
-    expect(solve(s, t0 + 2000).sequence).toHaveLength(4);
-  });
-
-  it("ani ölüm aynı tohumda belirlidir ve renkler tohumdan türer", () => {
-    const s0 = start(4, 9);
-    const at = inputAt(s0);
-    const a = solve(withStart(s0, at - 70_000), at);
-    const b = solve(withStart(start(4, 9), at - 70_000), at);
-    expect(a.sequence).toEqual(b.sequence);
-    expect(a.sequence).toHaveLength(4);
-  });
-
-  it("ani ölümde elenme dizi uzunluğunu yine 2'ye sıfırlar", () => {
-    const s0 = start(4);
-    const at = inputAt(s0);
-    const n = failTurn(withStart(s0, at - 70_000), at);
-    expect(n.sequence).toHaveLength(2);
-  });
-
-  it("art arda doğru sıralarda ani ölüm +2'şer büyütür (2 → 3 → 5 → 7)", () => {
-    const s0 = start(4);
-    let s = withStart(s0, inputAt(s0) - 59_000);
-    const lens = [s.sequence.length];
-    for (let i = 0; i < 3; i++) {
-      s = solve(s, Math.max(inputAt(s), s.startedAt + 60_000 + i * 100));
-      lens.push(s.sequence.length);
-    }
-    expect(lens).toEqual([2, 3, 5, 7]);
-  });
-});
-
-describe("3 oyunculu sıra akışı (canlı hata: sıra arkadaşta, tuşları kapalı)", () => {
-  it("her sırada yalnız aktif oyuncu myTurn; oynatma → giriş sınırı mutlak ve basış tam o anda kabul edilir", () => {
-    let s = start(3, 11);
-    const players = [...s.order];
-    for (let i = 0; i < 9; i++) {
-      const who = active(s);
-      expect(who).toBe(players[i % 3]);
-      const pv = game.publicView(s, ctx(s.turnStart));
-      expect(pv.phase).toBe("playback");
-      expect(pv.active).toBe(who);
-      expect(pv.inputStart).toBe(inputAt(s));
-      for (const id of players) {
-        const mine = game.view(s, id, ctx(pv.inputStart)).myTurn;
-        expect(mine).toBe(id === who);
-      }
-      // Sınırdan 1 ms önce reddedilir, sınırda kabul edilir (istemci tuşları tam bu anda açar).
-      expect(rejection(s, who, s.sequence[0] as ZamanBombasiColor, pv.inputStart - 1)).toBe("not_input_yet");
-      expect(game.publicView(s, ctx(pv.inputStart)).phase).toBe("input");
-      s = solve(s, pv.inputStart);
-      expect(s.sequence.length).toBe(3 + i);
-    }
-  });
-
-  it("yayın yalnız durum değişince: oynatma evresinde hesaplanan görünüm, giriş anında bile tick'te değişmez", () => {
-    const s = start(3, 11);
-    const during = s.turnStart + 10;
-    // Sunucu tick'i durumu değiştirmez (aynı nesne) → yeni yayın yok; istemci girişi kendi saatinden açmalı.
-    expect(game.tick(s, ctx(inputAt(s)))).toBe(s);
-    expect(game.publicView(s, ctx(during)).phase).toBe("playback");
   });
 });

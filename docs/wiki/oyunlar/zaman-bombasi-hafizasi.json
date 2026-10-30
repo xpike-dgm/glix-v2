@@ -1,284 +1,295 @@
 {
   "id": "zaman-bombasi-hafizasi",
   "ad": "Zaman Bombası Hafızası",
-  "slogan": "Işık dizisini ezberle, sıra sende bomba patlamadan tekrarla; dizi her doğru cevapta uzar.",
+  "slogan": "Işık dizisini ezberle, bomba patlamadan tekrarla, rengi ekle ve bombayı birine fırlat.",
   "kategori": "Hafıza",
-  "etiketler": ["sıra tabanlı", "eleme", "hafıza", "90 sn sınır", "ani ölüm"],
+  "etiketler": ["sıra tabanlı", "eleme", "hafıza", "hedef seçimi", "90 sn sınır", "ani ölüm"],
   "oyuncu": {
     "min": 2,
     "max": 8
   },
   "sure": {
     "tahminiSn": 90,
-    "not": "Toplam süre sınırı 90 sn (oyun kurulduğu andan itibaren). Oyun, başlangıç oyuncularının yarısı (yukarı yuvarlanmış) elenince ya da 90 sn dolunca, hangisi önce olursa biter. Elenmeler hızlıysa 90 sn'den çok önce bitebilir (örn. 2 oyuncuda ilk hatada). Oyuncu sayısı yalnız 'kaç eleme gerekir' sayısını değiştirir."
+    "not": "Toplam süre sınırı 90 sn (oyun kurulduğu andan itibaren; seçim süreleri ve uyarı payları dahil). Oyun, başlangıç oyuncularının yarısı (yukarı yuvarlanmış) elenince ya da 90 sn dolunca, hangisi önce olursa biter. Elenmeler hızlıysa 90 sn'den çok önce bitebilir (örn. 2 oyuncuda ilk hatada)."
   },
-  "ozet": "Oyuncular sabit bir sırayla dönerek ışıklı 4 renkli tuş dizisini sırayla tekrarlar. Önce dizi herkese oynatılır (2 renkle başlar); sırası gelen oyuncu hafızadan aynı sırayla basar. Doğru bilirse dizi 1 renk uzar ve sıra sonrakine geçer; yanlış basan ya da geç kalan elenir (-1), sırada kalan herkes +1 alır ve dizi yeni 2 renge döner. Oyuncuların yarısı elenince ya da 90 sn dolunca oyun biter.",
+  "ozet": "Bomba kimdeyse ışıklı 4 renkli tuş dizisini hafızadan tekrarlar. Önce dizi herkese oynatılır (2 renkle başlar); sırası gelen aynı sırayla basar. Doğru girerse diziye ekleyeceği rengi seçer ve bombayı kime atacağını seçer (kendine ve bombayı az önce kendisine atana hemen geri atamaz; 2 kişide serbest). Yanlış basan ya da geç kalan elenir; dizi yeni 2 renge döner ve yeni kurbanı elenene bombayı atan seçer. Oyuncuların yarısı elenince ya da 90 sn dolunca biter: hayatta kalanlar +2, elenenler 0; kimse elenmediyse herkes +1.",
   "akis": [
     {
       "ad": "Anlatım",
       "sureSn": 40,
       "kim": "herkes",
-      "aciklama": "Tam ekran anlatım: 'Işık dizisini ezberle, sıra sende bomba patlamadan tekrarla!' ve üç madde (yanan renkleri sırasıyla ezberle; sıran gelince aynı renklere aynı sırayla bas; yanlış basan ya da geç kalan elenir). Herkes hazırsa ya da 40 sn dolunca 3 sn geri sayım; kartlar bu ekranda oynanır.",
+      "aciklama": "Tam ekran anlatım: 'Işık dizisini ezberle, bomba patlamadan tekrarla ve bombayı birine at!' ve üç madde (yanan renkleri ezberle, sıran gelince aynı sırayla bas; doğru girersen diziye renk ekle ve bombayı kime atacağını seç; yanlış basan ya da geç kalan elenir, sonda hayatta kalanlar kazanır). Herkes hazırsa ya da 40 sn dolunca 3 sn geri sayım; kartlar bu ekranda oynanır.",
       "gizli": "Yok."
     },
     {
-      "ad": "Hazırlık",
+      "ad": "Hazırlık ve uyarı",
       "sureSn": 1.5,
       "kim": "herkes",
-      "aciklama": "Oyun başlar başlamaz 90 sn'lik toplam saat işler. İlk sıra 1,5 sn sonra başlar ('Hazır ol! / Işıkları ezberle'). Her elenmeden sonra 2,2 sn, her doğru cevaptan sonra 0,9 sn benzer bir ara vardır; bu aralarda önceki sıranın sonucu ('Doğru!', '<ad> elendi', 'Süre doldu!') ve 'Sıradaki: <ad>' görünür, elenme sonrası panel çatlar ve bomba patlama çizimi çıkar.",
-      "gizli": "Yok; ara evresinde dizi zaten herkese görünür (sıra başlamadan önce 'hazırlık' evresinde dizi gönderilir)."
+      "aciklama": "Oyun başlar başlamaz 90 sn'lik toplam saat işler. İlk sıranın sahibi rastgeledir ve ilk sıra 1,5 sn sonra başlar; bu sürede ilk oyuncunun ekranında 'SIRA SENDE!' uyarısı çıkar. Sonraki her sırada bomba hedefe yay çizerek fırlatılır; hedef belli olduktan 1,4 sn sonra dizi oynatılır (uyarı payı). Hedefin ekranında kenarlar yanar, telefon güçlü titrer, büyük 'SIRA SENDE!' bandı iner ve şeritteki avatarı büyür; dizi oynatması bu uyarıdan sonra başlar.",
+      "gizli": "Yok; bu evrede dizi (seçilen renk dahil) herkese açıktır, oynatılacak olan odur."
     },
     {
       "ad": "Oynatma",
       "sureSn": 0.7,
       "kim": "herkes izler",
-      "aciklama": "Dizi, eleman başına 350 ms ile 4 renkli tuşun sırayla yanıp sönmesiyle oynatılır (kısa dizide ışık 350 ms'nin %80'i, 4-5 elemanda %66'sı, 6 ve üstünde %55'i kadar yanık kalır, ışık uzadıkça daha ritmik). Her renk kendi notasıyla çalar. Ekranda izle başlığı (sırası gelen için 'İzle ve ezberle', diğerleri için 'İzle' ve '<ad> bunu tekrarlayacak') ve dizi uzunluğu kadar nokta görünür. 2 elemanlık dizi 0,7 sn, n elemanlıkta n × 0,35 sn sürer.",
+      "aciklama": "Dizi, eleman başına 350 ms ile 4 renkli tuşun sırayla yanıp sönmesiyle oynatılır (kısa dizide ışık 350 ms'nin %80'i, 4-5 elemanda %66'sı, 6 ve üstünde %55'i kadar yanık kalır). Yanan tuş büyür ve tüm panel o renkte kısa parlar; her renk kendi dolgun notasıyla çalar. Üstte büyük 'DİZİ N' sayacı (8 ve üstü turuncu, 12 ve üstü kırmızı) ve büyük noktalar görünür. n elemanlık dizi n × 0,35 sn sürer.",
       "gizli": "Dizi herkese (izleyici ve TV dahil) oynatma boyunca açıktır."
     },
     {
       "ad": "Giriş",
       "sureSn": 3.5,
-      "kim": "yalnız sırası gelen oyuncu",
-      "aciklama": "Sırası gelen oyuncunun tuşları açılır ('Sıra sende! / Aynı sırayla bas'), ortadaki bomba halkası kalan süreyi geri sayar (kalan süre kırmızıya dönerken uyarı). Giriş süresi = 1,5 sn + dizi uzunluğu × 1 sn (2 renkte 3,5 sn, 5 renkte 6,5 sn, 10 renkte 11,5 sn). Her doğru basış sunucuda onaylanır, nokta yeşile döner, panelde yeşil bir iz yanar; diğer oyuncuların ekranında da o tuş kısa süre yanar. Yanlış basış ya da süre dolması elenmedir. Doğru dizi tamamlanınca sıra sonraki aktif oyuncuya geçer.",
-      "gizli": "Giriş evresinde dizinin kendisi HİÇBİR görünümde yoktur (herkese açık görünümde sequence null). Yalnız o sıradaki doğru basışlar (yankı) görünür. Yanlış basış olursa yalnız basılan ve beklenen TEK renk açıklanır, dizinin tamamı değil."
+      "kim": "yalnız bombası olan oyuncu",
+      "aciklama": "Sırası gelenin tuşları açılır ('Sıra sende! / Aynı sırayla bas'). Ortadaki fitilli bomba kalan süreyi gösterir: fitil yanar, kıvılcım ilerler; son 2 sn'de kıvılcım iki kat hızlanır ve tik sıklaşır. Giriş süresi = 1,5 sn + dizi uzunluğu × 1 sn. Her doğru basış sunucuda onaylanır; tuş nabız atar ve nota çalar, nokta yeşil dolar, diğer ekranlarda o tuş kısa yanar. Yanlış basış ya da süre dolması elenmedir.",
+      "gizli": "Giriş evresinde dizinin kendisi HİÇBİR görünümde yoktur (herkese açık görünümde sequence null). Yalnız o sıradaki doğru basışlar (yankı) görünür. Yanlış basışta yalnız basılan ve beklenen TEK renk açıklanır."
+    },
+    {
+      "ad": "Bombayı at (seçim)",
+      "sureSn": 4.9,
+      "kim": "diziyi doğru giren (elenmeden sonra: elenene bombayı atan)",
+      "aciklama": "Doğru giriş tamamlanınca yeşil şok dalgası, 'TEMİZ!' ve zil (0,9 sn); ardından 4 sn'lik seçim: önce dört tuştan birine dokunarak diziye eklenecek rengi seçer (diziye yeni nokta eklenir), sonra panelin içinde açılan oyuncu ızgarasından bombayı kime atacağını seçer. Kendisi, elenenler ve (3+ aktif oyuncuda) bombayı az önce kendisine atan seçilemez. Seçmezse süre dolunca sunucu rastgele seçer. Elenmeden sonra (1,6 sn patlama gösteriminin ardından) aynı 4 sn'lik seçimi elenene bombayı atan yapar; renk seçimi yoktur. Diğerleri '<ad> seçiyor' görür.",
+      "gizli": "Seçilen renk hedef belli olana dek yalnız seçenin kişisel görünümündedir (herkese açık görünümde yalnız 'renk seçildi'). Hedef seçilince dizinin parçası olarak herkese oynatılır."
     },
     {
       "ad": "Ani ölüm (60. sn sonrası)",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Oyunun 60. saniyesinden sonra kurulan her yeni sırada dizi 1 yerine 2 renk uzar. Ekranda toplam süre sayacının yanında 'Ani ölüm' rozeti görünür.",
+      "aciklama": "Oyunun 60. saniyesinden sonra doğru biten her sırada dizi 1 yerine 2 renk uzar: birini doğru giren seçer, ikincisi rastgele eklenir. Ekranda toplam süre sayacının yanında 'Ani ölüm' rozeti görünür.",
       "gizli": "Yok."
     },
     {
       "ad": "Bitiş ve sonuç",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Oyun elenen sayısı gerekli sayıya ulaşınca (son elenmenin anında) ya da 90. saniyede biter; 'Oyun bitti' ya da süre dolduysa 'Süre doldu' yazar. Sonra sonuç ekranı gelir.",
+      "aciklama": "Oyun elenen sayısı gerekli sayıya ulaşınca (son elenmenin anında) ya da 90. saniyede biter; 'Oyun bitti' ya da süre dolduysa 'Süre doldu' yazar. Puanlar bu anda verilir. Sonra sonuç ekranı gelir.",
       "gizli": "Yok."
     }
   ],
   "kurallar": [
-    "Oyuncu sayısı 2 ile 8 arasındadır. Tuşlar 4 renktir: kırmızı, mavi, yeşil, sarı (Tuşların renk körü modu için ayrıca şekil simgesi vardır).",
-    "Oyuncu sırası oyun başında bir kez rastgele karıştırılır ve oyun boyunca aynı çevrimle tekrar eder (örn. 4 oyuncuda a-c-b-d-a-c-b-d). Sıradaki oyuncu çevrimdeki bir sonraki ELENMEMİŞ oyuncudur; elenenler atlanır ve bir daha sıraya girmez.",
-    "İlk dizi 2 renklidir; 4 renkten rastgele seçilir ve aynı renk art arda gelebilir. Renkler maç tohumundan türetilir (belirleyicidir).",
-    "Sıra başladığında dizi önce oynatılır (eleman başına 350 ms). Oynatma ve hazırlık evresinde gelen basış reddedilir (ceza yok, oyuncu yalnız erken basmış olur); basış ancak giriş evresi başlayınca kabul edilir.",
-    "Giriş süresi = 1,5 sn + dizi uzunluğu × 1 sn. Sıra sahibi dizinin tamamını bu süre içinde, sırayla ve doğru girmelidir. Süre dolduğunda (bitiş anındaki basış dahil; yalnız bitişten 1 ms önceki basış geçerlidir) yarım girilmiş olsa bile sıra yanlışla aynı sonuçla biter.",
-    "Yalnız sırası gelen oyuncu basabilir. Başkasının sırasında, elenmişken, katılımcı değilken ya da oyun bittikten sonra gelen basış reddedilir (ceza yok).",
-    "Yanlış renge basmak sıra sahibini anında eler: eleme zamanı basış anıdır.",
-    "Zaman aşımı elemesi sıranın bitiş anına (deadline) işlenir: sunucu geç fark etse bile sonuç aynıdır ve sonraki sıra hep o ana göre planlanır.",
-    "Doğru ve tam bitirilen sırada dizi 1 renk uzar (önceki dizi aynen başta kalır, sonuna rastgele yeni renk eklenir) ve sıra sonraki aktif oyuncuya geçer. Sıradaki sıra 0,9 sn sonra başlar.",
-    "Ani ölüm: yeni dizi kurulduğu an (yani önceki sıranın doğru bittiği an) oyun başından 60 sn'den daha fazla (kesin büyük) geçmişse dizi 1 değil 2 renk uzar. Tam 60,000 sn'de hâlâ +1'dir, 60,001'de +2'dir.",
-    "Bir elenme olduğunda: elenen -1 alır, elenmemiş diğer her oyuncu +1 alır (daha önce elenmiş olanlar bir daha puan almaz ya da kaybetmez), dizi eski dizinin devamı olmaksızın YENİ rastgele 2 renge sıfırlanır, sıra çevrimdeki bir sonraki aktif oyuncuya geçer ve yeni sıra 2,2 sn sonra başlar. Ani ölümde bile elenme dizi uzunluğunu 2'ye sıfırlar.",
-    "Gerekli eleme sayısı ⌈başlangıç oyuncu sayısı / 2⌉'dir: 2 oyuncuda 1, 3'te 2, 4'te 2, 5'te 3, 6'da 3, 7'de 4, 8'de 4. Bu sayıya ulaşıldığı anda (son elenmeden hemen sonra) oyun biter; kalan aktifler o son elenme için de +1 alır.",
-    "Toplam süre sınırı 90 sn'dir (oyunun kurulduğu andan, hazırlık ve oynatma dahil). Süre dolarsa oyun biter; giriş yapmakta olan oyuncunun sırası CEZASIZ iptal edilir (elenmez, puan almaz). Sınır aynı anda dolan giriş penceresiyle çakışırsa da iptal sayılır. Süre dolmadan önce kendi süresi dolan sıra yine cezalandırılır.",
-    "Elenme ile süre bitişi aynı anda olursa önce gerçekleşen (daha erken) olay geçerlidir.",
-    "Bağlantısı kopan oyuncu sırası geldiğinde hiçbir şey yapamayacağı için yalnızca zaman aşımıyla elenir; tick bağlantıya bakmaz. Çevrim onun sırasından sonra normal devam eder.",
-    "Puanlar mini oyun puanıdır ve doğrudan genel skora gider.",
-    "Sıra sende bildirimi: arka plandaki (uygulamayı açık tutmayan) aktif oyuncuya, push açıksa 'Sıra sende!' bildirimi gider (kimin sırası olduğu zaten herkese açık bilgidir)."
+    "Oyuncu sayısı 2 ile 8 arasındadır. Tuşlar 4 renktir: kırmızı, mavi, yeşil, sarı (renk körü modu için tuşlarda ayrıca şekil simgesi vardır).",
+    "İlk sıranın sahibi rastgeledir (maç başında karıştırılan sıranın ilki). Sabit sıra yoktur: bombayı kimin alacağını diziyi doğru giren seçer.",
+    "İlk dizi 2 renklidir; 4 renkten rastgele seçilir ve aynı renk art arda gelebilir. Rastgele renk ve hedefler maç tohumundan türetilir (belirleyicidir; kayıttan tekrar birebir aynıdır).",
+    "Sıra başladığında dizi önce oynatılır (eleman başına 350 ms). Oynatma, uyarı ve seçim evresinde gelen basış reddedilir (ceza yok); basış ancak giriş evresi başlayınca kabul edilir.",
+    "Giriş süresi = 1,5 sn + dizi uzunluğu × 1 sn. Bitiş anındaki basış zaman aşımı sayılır (yalnız bitişten 1 ms önceki basış geçerlidir).",
+    "Yalnız bombası olan oyuncu basabilir. Başkasının sırasında, elenmişken, katılımcı değilken ya da oyun bittikten sonra gelen basış reddedilir (ceza yok).",
+    "Yanlış renge basmak sıra sahibini anında eler; zaman aşımı elemesi sıranın bitiş anına işlenir (geç tick sonucu değiştirmez).",
+    "Doğru ve tam bitirilen sırada seçim evresi başlar: 0,9 sn sonuç gösterimi + 4 sn seçim. Önce renk (eklenecek renk), sonra hedef seçilir; hedef renkten önce gönderilirse reddedilir, renk bir kez seçilir. Seçim gösterim sırasında da kabul edilir; seçim süresinin bitiş anında ve sonra reddedilir.",
+    "Hedef aktif (elenmemiş) bir oyuncudur; kendine atılamaz. 3 ve daha çok aktif oyuncu varken bombayı az önce kendisine atan kişiye hemen geri atılamaz; 2 aktif oyuncuda bu engel yoktur. Engel yalnız bir sonraki atış içindir.",
+    "Seçim süresi dolarsa sunucu eksik seçimleri rastgele yapar: renk seçilmediyse rastgele renk, hedef seçilmediyse geçerli hedeflerden rastgele biri. Bağlantısı kopan seçici için de aynısı olur; bağlantısı kopan oyuncu hedef olabilir.",
+    "Hedef belli olunca bomba atılır; 1,4 sn uyarı payından sonra yeni dizi oynatılır. Önceki dizi aynen başta kalır, seçilen renk sona eklenir.",
+    "Ani ölüm: doğru girişin tamamlandığı an oyun başından 60 sn'den daha fazla (kesin büyük) geçmişse dizi 2 renk uzar: önce seçilen renk, sonra rastgele bir renk. Tam 60,000 sn'de hâlâ +1'dir.",
+    "Bir elenme olduğunda dizi eski dizinin devamı olmaksızın YENİ rastgele 2 renge sıfırlanır (ani ölümde de). 1,6 sn patlama gösteriminden sonra yeni kurbanı elenene bombayı atan seçer (4 sn, renk seçimi yok, 'hemen geri atma' engeli yok). Elenene atan yoksa (ilk sıra) yeni kurban rastgeledir ve gösterimden sonra atılır.",
+    "Gerekli eleme sayısı ⌈başlangıç oyuncu sayısı / 2⌉'dir: 2 oyuncuda 1, 3'te 2, 4'te 2, 5'te 3, 6'da 3, 7'de 4, 8'de 4. Bu sayıya ulaşıldığı anda oyun biter.",
+    "Toplam süre sınırı 90 sn'dir (oyunun kurulduğu andan; seçim, uyarı, oynatma dahil). Süre dolarsa oyun biter; giriş yapmakta olan oyuncunun sırası ya da o anki seçim CEZASIZ iptal edilir (giriş yapan hayatta sayılır). Sınır aynı anda dolan giriş penceresiyle çakışırsa da iptal sayılır. Süre dolmadan önce kendi süresi dolan sıra yine cezalandırılır.",
+    "Puan oyun sonunda verilir: hayatta kalanlar +2, bütün elenenler 0. Kimse elenmeden 90 sn dolarsa herkes +1. Oyun sırasında puan birikmez. Puanlar mini oyun puanıdır ve doğrudan genel skora gider.",
+    "Sıra sende bildirimi: arka plandaki aktif oyuncuya, push açıksa 'Sıra sende!' bildirimi bomba ona atıldığında gider (seçim evresinde kimseye gitmez)."
   ],
   "puanlama": {
-    "ozet": "Her elenmede elenen -1, hâlâ oyunda olan herkes +1. Yani bir oyuncunun puanı: kendi elenmesinden ÖNCE yaşanan elenme sayısı - 1; hiç elenmeyen için toplam elenme sayısı.",
+    "ozet": "Oyun sonunda hayatta kalanlar +2, bütün elenenler 0 (ilk elenen dahil; eksi puan yok). Kimse elenmeden 90 sn dolarsa herkes +1. Oyun sırasında puan birikmez.",
     "kalemler": [
       {
-        "olay": "Başka biri elendiğinde sen hâlâ oyundasın",
-        "puan": "+1",
-        "not": "Her elenme olayında bir kez; oyun boyunca biriken."
+        "olay": "Oyun sonunda hayattasın",
+        "puan": "+2",
+        "not": "Elenme sayısı dolunca ya da 90 sn'de (en az bir elenme olduysa)."
       },
       {
-        "olay": "Sen elendin (yanlış basış ya da zaman aşımı)",
-        "puan": "-1",
-        "not": "Daha önce biriktirdiğin +1'leri korursun."
+        "olay": "Elendin (yanlış basış ya da zaman aşımı)",
+        "puan": "0",
+        "not": "Ne zaman elendiğin fark etmez."
+      },
+      {
+        "olay": "Kimse elenmeden 90 sn doldu",
+        "puan": "+1",
+        "not": "Herkes."
       },
       {
         "olay": "Süre dolduğunda giriş yapıyordun",
-        "puan": "0",
-        "not": "Sıra cezasız iptal edilir."
-      },
-      {
-        "olay": "Elenmeden önce kazanılan +1'ler",
-        "puan": "korunur",
-        "not": "Sonradan elenen oyuncu önceki +1'leri kaybetmez."
+        "puan": "+2 (hayatta)",
+        "not": "Sıra cezasız iptal edilir; hayatta sayılırsın (hiç elenme yoksa herkes gibi +1)."
       }
     ],
-    "ornek": "4 oyuncu (Ali, Cem, Bora, Deniz), çevrim sırası Ali-Cem-Bora-Deniz; gereken eleme ⌈4/2⌉ = 2. Sıra 1: Ali doğru (dizi 3 renge uzar). Sıra 2: Cem doğru (dizi 4). Sıra 3: Bora yanlış basar: Bora -1; Ali, Cem, Deniz +1 (Ali 1, Cem 1, Deniz 1, Bora -1); dizi yeni 2 renge döner. Sıra 4: Deniz süreyi kaçırır: Deniz -1 (1-1 = 0), kalan aktifler Ali ve Cem +1 daha alır (2 ve 2). İkinci eleme tamam, oyun biter. Sonuç: Ali +2, Cem +2, Deniz 0, Bora -1.",
-    "beraberlik": "Beraberlik için özel kural yoktur; puanlar mini oyun puanı olarak aynen genel skora eklenir. Eşit puanlılar sıralamada eşit sayılır (kartlarda 'birinci/sonuncu' ortak). Hiç elenme olmadan 90 sn dolarsa herkes 0 alır."
+    "ornek": "4 oyuncu (Ali, Cem, Bora, Deniz); gereken eleme ⌈4/2⌉ = 2. İlk sıra rastgele Ali'de. Ali doğru girer, sarıyı ekler ve bombayı Cem'e atar. Cem doğru girer, Ali'ye hemen geri atamaz; maviyi ekleyip Bora'ya atar. Bora yanlış basar ve elenir; dizi yeni 2 renge döner, yeni kurbanı bombayı Bora'ya atan Cem seçer: Deniz. Deniz süreyi kaçırır ve elenir; ikinci eleme tamam, oyun biter. Sonuç: Ali +2, Cem +2, Bora 0, Deniz 0.",
+    "beraberlik": "Beraberlik için özel kural yoktur; puanlar mini oyun puanı olarak aynen genel skora eklenir. Hayatta kalanların hepsi +2 ile eşit birinci, elenenlerin hepsi 0 ile eşit sonuncudur. Hiç elenme olmadan 90 sn dolarsa herkes +1 alır ve herkes eşit birincidir (sonuncu yoktur)."
   },
   "ozelDurumlar": [
     {
       "baslik": "Bağlantısı kopan oyuncu",
-      "aciklama": "Kopan oyuncu katılımcı ve çevrimin bir parçası kalır. Sırası gelirse hiç basış gelmeyeceğinden giriş süresi dolunca elenir (-1) ve diğerleri +1 alır. Kopuk oyuncu geri dönerse kaldığı yerden izler/oynar. Sunucu zamanı ilerlemesi bağlantıya bakmaz."
+      "aciklama": "Kopan oyuncu katılımcı kalır ve hedef olarak seçilebilir. Bomba ona atılırsa hiç basış gelmeyeceğinden giriş süresi dolunca elenir. Seçim sırası kopan oyuncudaysa 4 sn dolunca sunucu rengi ve hedefi rastgele seçer. Sunucu zamanı ilerlemesi bağlantıya bakmaz."
     },
     {
-      "baslik": "Hiç cevap gelmezse",
-      "aciklama": "Süre dolunca sıra sahibi elenir; zaman aşımı elemesi tam bitiş anına işlenir ve ekranda 'Süre doldu!' ve '<ad> elendi' yazar."
+      "baslik": "Hiç cevap ya da seçim gelmezse",
+      "aciklama": "Giriş süresi dolunca sıra sahibi elenir (zaman aşımı tam bitiş anına işlenir; ekranda 'Süre doldu!'). Seçim süresi dolunca renk ve hedef rastgele seçilir ('Rastgele seçildi')."
     },
     {
       "baslik": "2 oyuncu",
-      "aciklama": "Gerekli eleme 1'dir: ilk hata (yanlış basış ya da zaman aşımı) oyunu bitirir; hatalı oyuncu -1, diğeri +1 alır. Hata olmazsa oyun 90. sn'de biter ve ikisi de 0 alır."
+      "aciklama": "Gerekli eleme 1'dir: ilk hata oyunu bitirir; hayatta kalan +2, elenen 0. Hemen geri atma engeli yoktur: bomba iki oyuncu arasında gider gelir. Hata olmazsa oyun 90. sn'de biter ve ikisi de +1 alır."
+    },
+    {
+      "baslik": "3 oyuncu",
+      "aciklama": "3 aktif oyuncuda bombayı az önce atana geri atılamaz, yani tek seçenek üçüncü kişidir. Biri elenince 2 aktif kalır ve engel kalkar."
     },
     {
       "baslik": "8 oyuncu",
-      "aciklama": "4 eleme gerekir. Alt şeritte 8 avatar ve puanları görünür; elenenler soluk gösterilir. Sıran uzun zaman sonra gelir ('Sıran N sıra sonra'), bu sürede dizi uzayacağı için ezberlemek zorlaşır."
+      "aciklama": "4 eleme gerekir. Alt şerit iki sıra (4 + 4) avatar ve ad gösterir; bombası olanın yanında küçük bomba durur, elenenler gri ve × işaretlidir. Hedef ızgarası 8 oyuncuyu panelin içinde gösterir."
     },
     {
       "baslik": "Toplam süre dolarsa",
-      "aciklama": "Oyun 90. saniyede biter; giriş yapan oyuncunun sırası iptal edilir ve ceza almaz. Ekranda 'Süre doldu' yazar. Elenmeyenler birikmiş +1'leriyle kalır."
+      "aciklama": "Oyun 90. saniyede biter; giriş yapan oyuncunun sırası ya da o anki seçim iptal edilir, ceza yoktur. Ekranda 'Süre doldu' yazar."
     },
     {
       "baslik": "Ani ölüm",
-      "aciklama": "60. saniyeden sonra kurulan her doğru dizi 2 renk uzar (örn. 2 → 3 → 5 → 7); bu yüzden son 30 sn'de elenme olasılığı çok artar. Elenme ani ölümde de diziyi 2 renge sıfırlar."
+      "aciklama": "60. saniyeden sonra doğru biten her sırada dizi 2 renk uzar (biri seçilen, biri rastgele); son 30 sn'de elenme olasılığı çok artar. Elenme ani ölümde de diziyi 2 renge sıfırlar."
     },
     {
       "baslik": "İzleyici ve TV",
-      "aciklama": "İzleyici ('katılımcı değilsin') dizi oynatmasını izler, giriş evresinde dizi görünmez; kimin basıyor olduğunu ve doğru basışları (yankı) görür. Puan almaz."
+      "aciklama": "İzleyici dizi oynatmasını izler, giriş evresinde dizi görünmez; kimin bastığını, doğru basışları ve bomba atışlarını görür. Seçilen rengi hedef belli olana dek görmez. Puan almaz."
     },
     {
       "baslik": "Elenen oyuncu",
-      "aciklama": "'Elendin / Arkadaşlarını izle' görür; tuşları kapalıdır ve bir daha sıraya girmez, ama oyun bitene kadar izler ve diziyi görmeye devam eder."
+      "aciklama": "'Elendin / Arkadaşlarını izle' görür; tuşları kapalıdır, hedef olamaz ve seçim yapamaz, ama oyun bitene kadar izler."
     },
     {
       "baslik": "Geç gelen eylem payı",
-      "aciklama": "Bu oyunda yoktur (graceMs tanımlı değil): bitiş anından 1 ms sonraki basış reddedilir, bitiş anındaki basış zaman aşımı sayılır."
+      "aciklama": "Bu oyunda yoktur (graceMs tanımlı değil): giriş ya da seçim bitiş anındaki eylem reddedilir."
     }
   ],
   "kartlar": [
     {
       "kart": "Genel",
-      "etki": "Kod bu oyun için özel bir kart dalı içermez; genel K6 hesabı çalışır ve kartlar yalnız genel skora giden puanları (awards) değiştirir. Bu oyunda awards = miniScores (elenme puanları)."
+      "etki": "Kod bu oyun için özel bir kart dalı içermez; genel K6 hesabı çalışır. awards = miniScores (hayatta kalan +2, elenen 0; kimse elenmezse herkes +1)."
     },
     {
       "kart": "Kalkan",
-      "etki": "Eksiye düşen oyuncunun (-1 ile elenen ve başka +1 almamış) puanı 0 sayılır; ilk elenen için özellikle değerlidir."
+      "etki": "Bu oyunda eksi puan olmadığı için hiçbir zaman devreye girmez."
     },
     {
       "kart": "Kendine Güven / Sigorta / Tahmin",
-      "etki": "'Birinci' = en yüksek mini oyun puanlı (en çok eleme sırasında hayatta kalan) oyuncu(lar); 'sonuncu' = en düşük puanlı (genelde ilk elenen) oyuncu(lar). Herkes eşitse (hiç elenme olmadı, hepsi 0) herkes birinci sayılır ve kimse sonuncu değildir."
+      "etki": "'Birinci' = hayatta kalanlar (+2, hepsi birlikte); 'sonuncu' = elenenler (0, hepsi birlikte). Kimse elenmezse herkes +1 ile eşittir: herkes birinci sayılır, kimse sonuncu değildir (Sigorta işlemez, Kendine Güven herkese +2)."
     },
     {
       "kart": "Çift Puan / Altın Dokunuş",
-      "etki": "Çarpan olarak pozitif puanı ×2 (Çift Puan) ya da ×3 (Altın Dokunuş) çarpar; Çift Puan eksi puanı da ×2'ler, Altın Dokunuş eksiyi etkilemez."
+      "etki": "Hayatta kalanın +2'si ×2 (4) ya da ×3 (6) olur; elenenin 0'ı değişmez."
     },
     {
       "kart": "Ters Köşe",
-      "etki": "Mini oyun sıralaması tersine döner; en iyi oyuncunun ödülünü en kötü olan alır."
+      "etki": "Mini oyun sıralaması tersine döner: elenenler hayatta kalanların ödülünü alır."
     }
   ],
   "sabitler": [
     {
       "ad": "Renkler",
       "deger": "kırmızı, mavi, yeşil, sarı (4)",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts:3"
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts"
     },
     {
       "ad": "Başlangıç (ve eleme sonrası) dizi uzunluğu",
       "deger": "2",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts:7"
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts"
     },
     {
       "ad": "Oynatmada eleman başına süre",
       "deger": "350 ms",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts:9"
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts"
     },
     {
-      "ad": "Giriş süresi taban",
-      "deger": "1 500 ms",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts:11"
-    },
-    {
-      "ad": "Giriş süresi eleman başına",
-      "deger": "1 000 ms",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts:12"
+      "ad": "Giriş süresi",
+      "deger": "1 500 ms + uzunluk × 1 000 ms",
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts"
     },
     {
       "ad": "Toplam süre sınırı",
       "deger": "90 000 ms",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts:14"
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts"
     },
     {
-      "ad": "Ani ölüm eşiği",
-      "deger": "60 000 ms (kesin büyükse)",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts:16"
-    },
-    {
-      "ad": "Ani ölümde dizi büyümesi",
-      "deger": "2 (normalde 1)",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts:18"
+      "ad": "Ani ölüm eşiği / büyümesi",
+      "deger": "60 000 ms (kesin büyükse) / 2 renk (1 seçilen + 1 rastgele)",
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts"
     },
     {
       "ad": "İlk sıra öncesi hazırlık",
       "deger": "1 500 ms",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts:20"
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts (ZAMAN_BOMBASI_INTRO_MS)"
     },
     {
-      "ad": "Doğru cevaptan sonra ara",
+      "ad": "Doğru girişten sonra 'TEMİZ!' gösterimi",
       "deger": "900 ms",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts:22"
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts (ZAMAN_BOMBASI_OK_SHOW_MS)"
     },
     {
-      "ad": "Elenmeden sonra ara",
-      "deger": "2 200 ms",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts:24"
+      "ad": "Elenmeden sonra patlama gösterimi",
+      "deger": "1 600 ms",
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts (ZAMAN_BOMBASI_FAIL_SHOW_MS)"
+    },
+    {
+      "ad": "Renk/hedef seçim süresi",
+      "deger": "4 000 ms",
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts (ZAMAN_BOMBASI_PICK_MS)"
+    },
+    {
+      "ad": "Atıştan oynatmaya uyarı payı",
+      "deger": "1 400 ms",
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts (ZAMAN_BOMBASI_ALERT_MS)"
     },
     {
       "ad": "Gerekli eleme sayısı",
       "deger": "⌈oyuncu sayısı / 2⌉",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/index.ts:212"
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/index.ts (setup)"
     },
     {
-      "ad": "Puan: elenen -1, aktifler +1",
-      "deger": "-1 / +1",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/index.ts:89-92"
+      "ad": "Puan: hayatta kalan / elenen / kimse elenmezse",
+      "deger": "+2 / 0 / +1",
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/index.ts (finish)"
     },
     {
-      "ad": "Eleme sonrası yeni dizi",
-      "deger": "2 yeni rastgele renk",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/index.ts:105-106"
+      "ad": "Hemen geri atma engeli",
+      "deger": "3+ aktif oyuncuda, yalnız doğru giriş sonrası seçimde",
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/index.ts (succeed)"
     },
     {
-      "ad": "Zaman aşımı eleme anı",
-      "deger": "deadline = inputStart + 1,5 sn + uzunluk × 1 sn",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/index.ts:58-62, 145-159"
-    },
-    {
-      "ad": "Ani ölüm kararı (kesin >)",
-      "deger": "at - startedAt > 60 000",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/index.ts:125-126"
-    },
-    {
-      "ad": "Basış reddi nedenleri",
-      "deger": "ended, not_participant, eliminated, not_your_turn, not_input_yet",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/index.ts:221-227"
+      "ad": "Eylem reddi nedenleri",
+      "deger": "ended, not_participant, eliminated, not_picking, not_your_pick, no_color_pick, color_done, color_first, bad_target, picking, not_your_turn, not_input_yet",
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/index.ts (reduce)"
     },
     {
       "ad": "Işık yanık kalma oranı",
       "deger": "len≤3: %80; ≤5: %66; üstü %55",
-      "kaynak": "apps/client/src/games/zaman-bombasi-hafizasi/view.ts:140-143"
+      "kaynak": "apps/client/src/games/zaman-bombasi-hafizasi/view.ts (litMs)"
+    },
+    {
+      "ad": "Fitil",
+      "deger": "son 2 sn iki kat hızlı yanar; tik 500 → 250 → 160 ms",
+      "kaynak": "apps/client/src/games/zaman-bombasi-hafizasi/view.ts (fuseBurnt, fuseTickMs)"
+    },
+    {
+      "ad": "'DİZİ N' sayacı rengi",
+      "deger": "8+ turuncu, 12+ kırmızı",
+      "kaynak": "apps/client/src/games/zaman-bombasi-hafizasi/view.ts (lengthTone)"
+    },
+    {
+      "ad": "Bomba uçuşu",
+      "deger": "650 ms",
+      "kaynak": "apps/client/src/games/zaman-bombasi-hafizasi/flight.ts"
     },
     {
       "ad": "Ses frekansları",
       "deger": "Mavi 262, Kırmızı 330, Yeşil 392, Sarı 494 Hz",
-      "kaynak": "apps/client/src/games/zaman-bombasi-hafizasi/pads.tsx:16-19"
-    },
-    {
-      "ad": "Toplam süre göstergesi yenileme",
-      "deger": "250 ms (sunucu saatiyle)",
-      "kaynak": "apps/client/src/games/zaman-bombasi-hafizasi/ZamanBombasiScreen.tsx:44"
+      "kaynak": "apps/client/src/games/zaman-bombasi-hafizasi/pads.tsx"
     },
     {
       "ad": "Bot süre aralığı",
       "deger": "95 000 ms (yalnız test)",
-      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts:26"
+      "kaynak": "packages/engine/src/games/zaman-bombasi-hafizasi/types.ts"
     }
   ],
   "strateji": [
-    "Dizi giriş evresinde HİÇ gösterilmez ve her sıra dizi 1 uzar: önceki oyuncuların doğru basışlarını izleyerek (tuşlar başkalarında da yanar) diziyi güncel tut.",
-    "Elenme olursa dizi yeni 2 renge döner, sana fazla ezber yükü yok; hatta eleme hemen sonrası sıra gelirse en kolay anındasın.",
-    "Dizi uzadıkça giriş süresi de uzar ama hata ihtimali artar. Süre bitmeden 'zaman aşımı' ile elenmemek için dizi uzunluğuna göre hızlı bas: 2 renkte 3,5 sn, 5 renkte 6,5 sn var.",
-    "60. saniyeden sonra dizi iki iki uzar; ani ölümde sıran geliyorsa daha çok hata beklenir, hayatta kalanlar puan kazanır.",
-    "Erken basma cezasızdır ama giriş hakkını yakmaz: oynatma bitmeden basamazsın.",
-    "Kendi sıran uzaktaysa ('Sıran N sıra sonra') yalnızca ezberlemeye çalış, kalan hata sayısını hesapla: ⌈n/2⌉ eleme olunca oyun biter."
+    "Dizi giriş evresinde HİÇ gösterilmez: başkalarının doğru basışlarını izleyerek (tuşlar herkeste yanar) diziyi güncel tut; bomba her an sana gelebilir.",
+    "Rengi seçerken tuzak kur: aynı rengi tekrar etmek ya da az önce kullanılmamış bir renge geçmek, hafızası zayıf olanı zorlar.",
+    "Bombayı kime atacağını seç: zor diziyi sıranın en zayıf halkasına at; az önce sana atana hemen geri atamazsın (3+ kişide).",
+    "Biri elenirse yeni kurbanı bombayı ona atan seçer: zor bir atış seni bir hamle daha öne geçirir.",
+    "60. saniyeden sonra dizi ikişer uzar; hayatta kalmak +2, elenmek 0: sona kadar dayanmak tek hedef.",
+    "Seçim süresi 4 sn; seçmezsen rastgele seçilir, bu da bombayı sana atmış olanı kurtarabilir."
   ],
-  "tv": "TV/sahne ekranı oyuna özel büyük görünüm (StageView) kullanır: dört dev renkli tuş, oynatmada tuşlar sırayla yanar; girişte son doğru basışın yankısı kısa yanar. Üstte sırası olan oyuncunun büyük avatarı ve başlık ('<ad> basıyor', 'Doğru!', '<ad> elendi', 'Süre doldu!'), altta 'k / n renk' alt satırı, 'Dizi uzunluğu: N', kalan toplam süre sayacı ve ani ölümde 'Ani ölüm' rozeti. Sağdaki sütunda oyuncular ve puanlar görünür.",
+  "tv": "TV/sahne ekranı oyuna özel görünüm (StageView) kullanır: sol yarıda başlık ('<ad> basıyor', 'TEMİZ!', '<ad> seçiyor', '<ad> elendi', 'Süre doldu!'), kalan toplam süre, dört dev renkli tuş (oynatmada sırayla yanar, girişte doğru basışın yankısı) ve 'DİZİ N' ile noktalar; sağ yarıda büyük oyuncu sütunu (avatar, ad, durum: Aktif / Sırada / Basıyor / Bombayı atıyor / Elendi / Hayatta, ve genel skor). Bu oyunda kabuğun sağdaki 'Oyuncular' paneli gizlidir (kayıtta `tvOwnBoard`); oyun alanı tüm genişliği kullanır. Bomba sırası gelenin kartında durur, giriş evresinde fitili yanar ve atışta seçilen karta yay çizerek uçar. Ani ölümde ekran kenarı kırmızı.",
   "ekranlar": [
     {
       "ad": "zaman-briefing",
@@ -293,15 +304,23 @@
       "mock": "zaman-playback",
       "q": "mock=zaman-playback",
       "baslik": "Dizi oynatılıyor",
-      "aciklama": "Dört tuş, ikinci ışık yanık; üstte toplam süre, 'İzle ve ezberle', altta noktalar ve oyuncu şeridi.",
+      "aciklama": "Dört tuş, ikinci ışık yanık ve panel o renkte parlar; üstte 'DİZİ 4' sayacı ve noktalar, altta avatar ve adlar.",
       "dosya": "zaman-playback"
+    },
+    {
+      "ad": "zaman-alert",
+      "mock": "zaman-alert",
+      "q": "mock=zaman-alert",
+      "baslik": "Sıra sana geçti",
+      "aciklama": "Bomba sana atıldı: kenar ışığı, 'SIRA SENDE!' bandı, avatarın büyür.",
+      "dosya": "zaman-alert"
     },
     {
       "ad": "zaman-mine",
       "mock": "zaman-mine",
       "q": "mock=zaman-mine",
       "baslik": "Sıra sende",
-      "aciklama": "Tuşlar açık, ortada bomba halkasında geri sayım, iki doğru basış işaretli.",
+      "aciklama": "Tuşlar açık, ortada fitilli bomba yanıyor, iki doğru basış yeşil.",
       "dosya": "zaman-mine"
     },
     {
@@ -309,7 +328,7 @@
       "mock": "zaman-mine",
       "q": "mock=zaman-mine&n=8",
       "baslik": "Sıra sende (8 oyuncu)",
-      "aciklama": "8 oyunculu şerit; avatar ve puanlar.",
+      "aciklama": "8 oyunculu iki sıralı şerit; avatar ve adlar.",
       "dosya": "zaman-mine-n-8"
     },
     {
@@ -317,16 +336,48 @@
       "mock": "zaman-other",
       "q": "mock=zaman-other",
       "baslik": "Başkası basıyor",
-      "aciklama": "'<ad> basıyor', tuşlar kapalı, 'Sıran N sıra sonra'.",
+      "aciklama": "'<ad> basıyor', tuşlar kapalı; bomba onun yanında.",
       "dosya": "zaman-other"
     },
     {
       "ad": "zaman-ok",
       "mock": "zaman-ok",
       "q": "mock=zaman-ok",
-      "baslik": "Doğru cevap",
-      "aciklama": "'Doğru!' ve 'Sıradaki: <ad>'.",
+      "baslik": "Doğru giriş",
+      "aciklama": "'TEMİZ!', noktalar yeşil; ardından seçim ekranı açılır.",
       "dosya": "zaman-ok"
+    },
+    {
+      "ad": "zaman-pick-color",
+      "mock": "zaman-pick-color",
+      "q": "mock=zaman-pick-color",
+      "baslik": "Rengi seç",
+      "aciklama": "Tuşlar açık: diziye eklenecek renge dokun; üstte seçim süresi çubuğu.",
+      "dosya": "zaman-pick-color"
+    },
+    {
+      "ad": "zaman-pick-target",
+      "mock": "zaman-pick-target",
+      "q": "mock=zaman-pick-target&n=8",
+      "baslik": "Kime atıyorsun?",
+      "aciklama": "Panelin içinde oyuncu ızgarası; sen, elenen ve bombayı az önce atan seçilemez (soluk).",
+      "dosya": "zaman-pick-target-n-8"
+    },
+    {
+      "ad": "zaman-pick-other",
+      "mock": "zaman-pick-other",
+      "q": "mock=zaman-pick-other",
+      "baslik": "Başkası seçiyor",
+      "aciklama": "'<ad> seçiyor / Bombayı kime atacak?'.",
+      "dosya": "zaman-pick-other"
+    },
+    {
+      "ad": "zaman-restart",
+      "mock": "zaman-restart",
+      "q": "mock=zaman-restart",
+      "baslik": "Elenme sonrası seçim",
+      "aciklama": "Elenene bombayı sen attın: yeni kurbanı seç.",
+      "dosya": "zaman-restart"
     },
     {
       "ad": "zaman-fail",
@@ -366,16 +417,26 @@
       "q": "mock=tv-zaman-playback&n=6",
       "tv": true,
       "baslik": "TV: Oynatma",
-      "aciklama": "Sahne ekranında dev tuşlar, sırası gelen oyuncu ve dizi uzunluğu.",
+      "aciklama": "Solda dev tuşlar ve dizi, sağda büyük oyuncu sütunu; bomba sırası gelenin kartında.",
       "dosya": "tv-zaman-playback-n-6"
+    },
+    {
+      "ad": "tv-zaman-bombasi-sira",
+      "mock": "tv-zaman-mine",
+      "q": "mock=tv-zaman-mine&n=6",
+      "tv": true,
+      "baslik": "TV: Giriş",
+      "aciklama": "Sırası gelenin kartında fitili yanan bomba.",
+      "dosya": "tv-zaman-mine-n-6"
     }
   ],
   "bilinenSorunlar": [
-    "KURALLAR.md 5. cevap '(oyun) baştan başlar... elenenler -1, geri kalanlar +1' yazar; kod her elenmede ayrı ayrı puanlar: kalan aktifler her eleme olayında +1 alır, bu yüzden sonradan elenenlerin ya da son kalanların puanları +1'den fazla olabilir (örn. 8 oyuncuda hayatta kalan 4 kişi +4 alır).",
-    "KURALLAR.md ilk cevaplarda 'hiç cevap gelmezse elenir' ve süre 'renk uzunluğu × 3' der; O1 değişikliği (1,5 sn + uzunluk × 1 sn) kodda uygulanmıştır, eski cevaplar geçersizdir.",
-    "KURALLAR.md ani ölümü '60. saniyeden sonra' diye anlatır; kod tam eşiği 'sıra dizisi kurulduğu an' ile ölçer (bir sıranın doğru bittiği an), sıranın başladığı an değil. Ekrandaki 'Ani ölüm' rozeti ise saatten (60 sn geçince) gösterilir; yani rozet görünüp ilk +2 büyüme bir sonraki sıra sonunda gerçekleşebilir."
+    "KURALLAR.md'nin ilk cevapları (sabit çevrim, -1/+1 puan, 'renk uzunluğu × 3' süre) O1 ve ZB değişiklikleriyle geçersizdir; kanonik kurallar bu sayfadaki ve KURALLAR.md'deki ZB değişiklik bloğundaki kurallardır.",
+    "Ani ölüm kararı doğru girişin tamamlandığı anla ölçülür; ekrandaki 'Ani ölüm' rozeti ise saatten (60 sn geçince) gösterilir, yani rozet görünüp ilk +2 büyüme bir sonraki doğru girişte gerçekleşebilir.",
+    "Ani ölümde seçim ekranı yalnız bir renk seçtirir; ikinci (rastgele) renk oynatmada görünür."
   ],
   "sonDegisiklikler": [
+    "2026-10-30: ZB kararları: bombayı at (hedef seçimi), rengi sen eklersin, yeni puanlama (+2/0, kimse elenmezse +1), fitilli bomba, 'SIRA SENDE!' uyarısı, 'DİZİ N' sayacı, TEMİZ/patlama anları, yeni TV düzeni ve ses seti.",
     "2026-10-29: Saat eşitlemesi sırasında giriş evresi açılmadan kalma hatası düzeltildi.",
     "2026-10-28: TV arka planı bulanıklığı kaldırıldı, ışıma animasyonları bileşik katmana taşındı (performans).",
     "2026-10-27: Renk körlüğü modu: tuşlara şekil işaretleri.",
@@ -392,6 +453,9 @@
     "apps/client/src/games/zaman-bombasi-hafizasi/ZamanBombasiScreen.tsx",
     "apps/client/src/games/zaman-bombasi-hafizasi/StageView.tsx",
     "apps/client/src/games/zaman-bombasi-hafizasi/view.ts",
-    "apps/client/src/games/zaman-bombasi-hafizasi/pads.tsx"
+    "apps/client/src/games/zaman-bombasi-hafizasi/pads.tsx",
+    "apps/client/src/games/zaman-bombasi-hafizasi/FuseBomb.tsx",
+    "apps/client/src/games/zaman-bombasi-hafizasi/sfx.ts",
+    "docs/oneriler/zaman-bombasi-hafizasi-gorsel.md"
   ]
 }

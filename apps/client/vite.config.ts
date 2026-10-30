@@ -71,6 +71,15 @@ function collectShellChunks(): Plugin {
 }
 
 /**
+ * Zaman Bombası Hafızası'nın fitilsiz bomba gövdesi görseli (sahip üretecek; docs/oneriler/zaman-bombasi-hafizasi-gorsel.md).
+ * Dosya varsa ekran onu kullanır, yoksa yerleşik SVG gövdeyi çizer: böylece olmayan dosya istenmez (404 yok).
+ * Dosya eklendikten sonra geliştirme sunucusu yeniden başlatılır.
+ */
+const ZB_BOMBA_GORSEL = existsSync(
+  resolve(import.meta.dirname, "public/assets/props/zaman-bombasi-hafizasi/bomba.webp"),
+);
+
+/**
  * Gizli Alışveriş ürün görsellerinden gerçekten var olanlar (dosya adı, uzantısız). Önyükleme yalnız bunları ister;
  * yeni görsel `public/assets/props/gizli-alisveris/` altına konunca bir sonraki derlemede kendiliğinden listeye girer.
  */
@@ -84,7 +93,10 @@ function alisverisPropFiles(): string[] {
 }
 
 export default defineConfig({
-  define: { __ALISVERIS_PROPS__: JSON.stringify(alisverisPropFiles()) },
+  define: {
+    __ALISVERIS_PROPS__: JSON.stringify(alisverisPropFiles()),
+    __ZB_BOMBA_GORSEL__: JSON.stringify(ZB_BOMBA_GORSEL),
+  },
   plugins: [
     solid(),
     emitAssetManifest(),
