@@ -40,6 +40,11 @@ export function deliver(conn: Connection, snapshot: RoomSnapshot): void {
   conn.sendRaw(full);
 }
 
+/** Yama yalnız `rev` ve `serverNow` taşıyor mu (içerik değişmemiş). */
+export function clockOnly(patch: MergePatch): boolean {
+  return Object.keys(patch).every((k) => k === "rev" || k === "serverNow");
+}
+
 /** Bu uzunluğun altındaki yama tam snapshot'tan (katalog dahil kilobaytlar) kesin küçüktür; karşılaştırılmaz. */
 const PATCH_COMPARE_FROM = 256;
 
@@ -283,7 +288,19 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
     }
     for (const conn of [...room.stages]) {
       try {
-        deliver(conn, snapshotForStage(rt, room, rev, serverNow, content));
+        const snap = snapshotForStage(rt, room, rev, serverNow, content);
+        // Oyuncu hızlı yolundaki gibi: yalnız rev/serverNow değiştiyse gönderilmez. Aksi hâlde gizli bir sayaç
+        // (örn. Aşırı Yükleme'de kabul edilen her tık) sahneye boş yama sayısı olarak sızar. `lastSent` olduğu
+        // gibi kalır; sonraki yama sahnenin bildiği rev'e dayanır. Saat eşitlemesi ping/pong ile ayrıca yapılır.
+        const last = conn.lastSent;
+        if (last && last.code === snap.code && last.selfId === snap.selfId) {
+          const patch = diffMerge(last, snap);
+          if (patch !== null && clockOnly(patch)) {
+            conn.sentVer = cache.ver;
+            continue;
+          }
+        }
+        deliver(conn, snap);
         conn.sentVer = cache.ver;
       } catch (err) {
         if (err instanceof GameFault) {
