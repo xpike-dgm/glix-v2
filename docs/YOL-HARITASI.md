@@ -268,7 +268,7 @@ Sahip kararları (Ekim 2026). Yalnız görünüş satılır, oyunda avantaj yok;
 | O4 | İttifak | Pazarlıkta puansız "söz" işaretleri; sonda tutulan/bozulan sözler açılır | ✓ uygulandı |
 | O5 | Ortalamaya En Yakın | 3 kısa tur, çarpan her tur değişir (½, ⅔, ¾), önceki ortalama görünür | ✓ uygulandı |
 | O6 | Kör Kronometre | Hedef 7–13 sn arası rastgele, başta gösterilir; basmayan sıralamaya girmez | ✓ uygulandı |
-| O7 | Aşırı Yükleme | En az tıklayan da −1 (risksiz pasifliği kırar) — sahip kararı | ✓ uygulandı |
+| O7 | Aşırı Yükleme | En az tıklayan da −1 (risksiz pasifliği kırar) — sahip kararı | ✓ uygulandı; Ekim 2026 sahip kararıyla kaldırıldı (bkz. KURALLAR §20 değişiklik bloğu) |
 | O8 | Butona Bas | 3 tur, pencere 300→200→120 ms | ✓ uygulandı |
 | O9 | Kör Bomba / Rus Ruleti | İzleyen tahmini ("patlar mı?") doğru +1 (Rus Ruleti'nde rozet) | ✓ uygulandı |
 | O10 | Gizli Kareler | 2. aşamada bir "ödül karesi" (+2) | ✓ uygulandı |
