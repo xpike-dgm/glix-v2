@@ -33,7 +33,9 @@ Sahibin kararları:
 4. **Patlayanlar sıralamaya girmez:** 100'den önce ne kadar basmış olursa olsun yalnız patlama cezasını alır.
 5. **Kimse 100'ü geçmezse:** eksi puan yok (bugünkü "en az tıklayana -1" cezası tamamen kalkar). Bar hiç dolmadan
    süre biterse de sıralama ödülü aynı şekilde verilir.
-6. Oyun sırasında toplam yine gösterilmez; toplam yalnız sonuç ekranında (sıralı açılışta) görünür.
+6. **Tehlike penceresi her zaman tam 3 sn:** bar dolduysa tur, 90 sn teknik sınıra takılmadan pencere sonunda
+   biter (90 sn sınırı yalnız bar dolmadıysa uygulanır).
+7. Oyun sırasında toplam yine gösterilmez; toplam yalnız sonuç ekranında (sıralı açılışta) görünür.
 
 ### Kabul edilen arayüz önerileri
 
