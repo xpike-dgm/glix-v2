@@ -87,3 +87,24 @@ Ayrıntılar: `docs/oneriler/gizli-alisveris.md`. Onaylananlar (dosyadaki ayrın
 
 **Yeni görsel gerekenler:** 8 yeni ürün görseli (GA-M1; mevcut 12 ürünle aynı tarz), kupon etiketi (GA-M2),
 alışveriş poşeti (GA-U4), metal kepenk (GA-U5), raf tahtası ve fiyat etiketi (GA-U1; CSS ile de çizilebilir).
+
+## Kontrol Paneli Kaosu
+
+Ayrıntılar: `docs/oneriler/kontrol-paneli-kaosu.md`. Onaylananlar (dosyadaki ayrıntılarıyla):
+
+- **KP-M1** Üç dalga, artan zorluk (25 / 25 / 20 sn; dalga 3'te 5 kablo, 5. renk mor; dalgalar arası 4 sn kısa sonuç).
+- **KP-M2** Yeni ipucu türleri (değilse, yan yana, konum hedefi, sıra); her ipucu yalnız hedef panele uyar.
+- **KP-M3** Ortak bomba saati: yanlış kesim herkesin saatinden 5 sn düşer (en az 3 sn kalır).
+- **KP-M4** Puan: dalgalarda toplanan imha puanına göre +2 / +1 / 0; herkes eşitse herkes +1; eksi yok.
+- **KP-M5** KURALLAR'daki "kablo nabız atar" maddesi kaldırılır.
+- **KP-U1** Gerçek bomba (gövde, 7 segmentli kırmızı saat, hızlanan tik, yanlış kesimde "bzzzt").
+- **KP-U3** İpucu notu buruşuk kâğıt, "🎤 Sesli oku" rozeti, dokununca büyür.
+- **KP-U5** İzleyici ve TV: büyük bomba saati, dalga numarası, kimin kestiği.
+- **KP-U6** Bombaya özel ses ve titreşim seti.
+- **KP-AI2** Bomba uzmanı yorumu (oyun sonunda tek cümlelik esprili özet; yapay zekâ yalnız metin yazar, hata olursa
+  yorum görünmez, oyun beklemez, yasaklı kelime süzgeci, API anahtarı yoksa özellik kapalı).
+- Onaylanmayanlar: KP-U2 (basılı tutarak pense; bugünkü seç + KES düğmesi kalır), KP-U4 (çember zincir sonuç; bugünkü
+  liste düzeni kalır, dalga bilgisiyle genişler), KP-M6 (sabotajcı), KP-AI1 (yapay zekâ ipucu).
+
+**Yeni görsel gerekenler:** bomba gövdesi (KP-U1), kâğıt not dokusu ve bant (KP-U3), mor kablo (KP-M1; mevcut kablo
+görselinin renk varyantı).
