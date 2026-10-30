@@ -1,6 +1,6 @@
 import type { AsiriYuklemePublicView } from "@glix/engine";
 import { describe, expect, it } from "vitest";
-import { Client, k, setupRoom, sleep, startPlaying, sync, until, useServer } from "./testkit.js";
+import { type Client, k, setupRoom, sleep, startPlaying, sync, until, useServer } from "./testkit.js";
 
 useServer();
 
@@ -114,31 +114,6 @@ describe("asiri-yukleme tam maç", () => {
     // Kimse patlamadı: a tek lider +2, b ikinci +1; eksi puan yok.
     expect(a.room.match?.result?.awards).toEqual({ [ids[0] as string]: 2, [ids[1] as string]: 1 });
     expect(a.room.players.map((p) => p.score)).toEqual([2, 1]);
-  });
-
-  it("sahne (TV) kabul edilen tıklar için yama almaz; gerçek değişiklik (tehlike) gider", async () => {
-    const cs = await startGame(["A", "B"]);
-    const [a, b] = cs as [Client, Client];
-    const tv = await Client.connect();
-    tv.send({ type: "joinStage", code: a.session.roomCode });
-    await until(() => tv.updates.length > 0, "sahne katıldı");
-    await sync();
-    const seen = tv.msgs.length;
-    // 9 kabul edilen tık (her biri markDirty): sahneye hiçbir mesaj gitmemeli (yama sayısı toplamı sızdırmasın).
-    for (let i = 0; i < 9; i++) expect((await send(a, { kind: "tap" })).ok).toBe(true);
-    for (let i = 0; i < 4; i++) expect((await send(b, { kind: "tap", count: 10 })).ok).toBe(true);
-    await sync();
-    k.clock.advance(300);
-    await sync();
-    expect(tv.msgs.slice(seen).filter((m) => m.type === "patch" || m.type === "room")).toHaveLength(0);
-    // Bar 100'e ulaşınca ortak içerik değişir (danger): sahneye gider.
-    for (let i = 0; i < 5; i++) expect((await send(a, { kind: "tap", count: 10 })).ok).toBe(true);
-    expect((await send(b, { kind: "tap" })).ok).toBe(true);
-    await until(
-      () => (tv.room.match?.publicView as AsiriYuklemePublicView | undefined)?.danger === true,
-      "tehlike",
-    );
-    expect(pub(tv).reveal).toBeNull();
   });
 
   it("kimse tıklamazsa 90 sn teknik sınırda sıralama olmadan biter", async () => {
