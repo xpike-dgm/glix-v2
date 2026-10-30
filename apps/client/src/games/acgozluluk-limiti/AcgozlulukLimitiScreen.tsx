@@ -10,6 +10,7 @@ import { Screen } from "../../ui/Screen.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./acgozluluk-limiti.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Opening } from "./Opening.js";
 import { Tank, type TankEntry } from "./Tank.js";
 import { chipColumns, parseAcgozlulukView, pointsOf } from "./view.js";
@@ -225,6 +226,14 @@ export default function AcgozlulukLimitiScreen(props: GameScreenProps) {
           </>
         )}
       </Show>
+      <div class="lim__devam">
+        <RevealContinue
+          match={props.match}
+          selfId={props.selfId}
+          now={props.now}
+          spectator={props.spectator}
+        />
+      </div>
     </Screen>
   );
 }

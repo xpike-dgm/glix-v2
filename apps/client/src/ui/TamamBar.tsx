@@ -23,6 +23,8 @@ interface Props {
   doneLabel?: string;
   /** `false`: oyun kendi hazır şeridini çiziyorsa alttaki nokta şeridi çıkmaz (tek şerit kalır). */
   dots?: boolean;
+  /** Noktalar yalnız bu kişiler için çizilir (ör. yalnız bağlı katılımcılar); yoksa oyunun tüm katılımcıları. */
+  crewIds?: readonly string[];
   /** Basınca düğme hemen "Hazırsın"a döner; dönen yanıt reddedilirse geri alınır. */
   /** `false`: yerelde reddedildi; `sendActionAck` sözü: reddedilirse kilit geri açılır. */
   onLock: () => AckLike;
@@ -39,7 +41,8 @@ export function TamamBar(props: Props) {
   // Noktalar yalnız sayaçla aynı kişi kümesini gösterebiliyorsa çizilir.
   const dots = () => {
     const ids = props.readyIds;
-    const crew = shell.crew();
+    const among = props.crewIds;
+    const crew = among ? shell.crew().filter((p) => among.includes(p.id)) : shell.crew();
     if (props.dots === false || !ids || crew.length === 0 || crew.length !== props.total) return [];
     return crew.map((p) => ({ id: p.id, avatar: p.avatar, on: ids.includes(p.id) }));
   };

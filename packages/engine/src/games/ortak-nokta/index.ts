@@ -220,6 +220,12 @@ export const ortakNokta: GameDefinition<OrtakState, OrtakAction, OrtakView, Orta
     };
   },
 
+  /** Sonuç açılışı son turun açılışıyla başlar. */
+  revealAt(state, ctx): number | null {
+    const s = advance(state, ctx.now);
+    return isLastReveal(s) ? s.phaseStartedAt : null;
+  },
+
   isFinished(state, ctx): boolean {
     const s = advance(state, ctx.now);
     return isLastReveal(s) && ctx.now >= s.phaseEndsAt;

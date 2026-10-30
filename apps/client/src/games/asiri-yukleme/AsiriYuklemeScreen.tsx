@@ -8,6 +8,7 @@ import { Screen } from "../../ui/Screen.js";
 import type { GameScreenProps } from "../registry.js";
 import "./asiri-yukleme.css";
 import { reducedMotion } from "../../fx/motion.js";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { createTapBatcher } from "./batcher.js";
 import { Core } from "./Core.js";
 import { alarm, blast, zap } from "./sounds.js";
@@ -234,6 +235,7 @@ export default function AsiriYuklemeScreen(props: GameScreenProps) {
           )}
         </Show>
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

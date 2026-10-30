@@ -12,6 +12,7 @@ import type { GameScreenProps } from "../registry.js";
 import { Cup } from "./Cup.js";
 import { swapSound } from "./sounds.js";
 import "./zehirli-kadeh.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { clockFractions, gridColumns, parseZehirliKadehView, secondsLeft } from "./view.js";
 
 const AMBER = "#FFC23B";
@@ -237,6 +238,7 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
           </PrimaryButton>
         </Show>
       </footer>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

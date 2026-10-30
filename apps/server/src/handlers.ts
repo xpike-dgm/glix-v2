@@ -19,6 +19,7 @@ import {
   currentGame,
   markContinue,
   markReady,
+  markRevealContinue,
   pickRandomGames,
   recordPresence,
   requiredPlayers,
@@ -674,6 +675,30 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       conn.player.lastContinueAt = now;
       // İzleyici ve katılımcı olmayan sessizce yok sayılır (sayıma girmez, hata yok).
       if (!markContinue(room, conn.player.id)) return;
+      stepMatch(rt, room);
+      rt.broadcaster.markDirty(room);
+      return;
+    }
+    case "revealContinue": {
+      const room = requireRoom(conn);
+      if (!room || !conn.player) return;
+      const now = rt.clock.now();
+      if (
+        room.phase === "playing" &&
+        room.match?.reveal &&
+        now - conn.player.lastContinueAt < CONTINUE_MIN_GAP_MS
+      ) {
+        fail(conn, "rate_limited");
+        return;
+      }
+      const outcome = markRevealContinue(room, conn.player.id, msg.round);
+      if (outcome === "wrong_phase") {
+        fail(conn, "wrong_phase");
+        return;
+      }
+      conn.player.lastContinueAt = now;
+      // İzleyici, katılımcı olmayan ve tekrar onay sessizce yok sayılır (sayıma girmez, hata yok).
+      if (outcome === "ignored") return;
       stepMatch(rt, room);
       rt.broadcaster.markDirty(room);
       return;

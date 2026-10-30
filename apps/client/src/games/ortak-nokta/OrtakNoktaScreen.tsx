@@ -10,6 +10,7 @@ import { Screen } from "../../ui/Screen.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./ortak-nokta.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { type OrtakScreenView, parseOrtakView, partnersOf, pointsOf, tileColor } from "./view.js";
 
 function Shape(props: { tile: OrtakTile }) {
@@ -226,6 +227,7 @@ function RoundScreen(props: GameScreenProps) {
           </>
         )}
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

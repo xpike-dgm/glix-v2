@@ -4,6 +4,7 @@ import { go } from "../../fx/sound.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";
 import type { GameScreenProps } from "../registry.js";
 import "./laf.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Reveal } from "./Reveal.js";
 import { Vote } from "./Vote.js";
 import { type CrewMember, parseLafView } from "./view.js";
@@ -85,6 +86,12 @@ export default function LafSokmaScreen(props: GameScreenProps) {
             </Show>
           )}
         </Show>
+        <RevealContinue
+          match={props.match}
+          selfId={props.selfId}
+          now={props.now}
+          spectator={props.spectator}
+        />
       </div>
     </section>
   );

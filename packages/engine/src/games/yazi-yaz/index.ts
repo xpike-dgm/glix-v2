@@ -317,6 +317,11 @@ export const yaziYaz: GameDefinition<YaziYazState, YaziYazAction, YaziYazView, Y
     };
   },
 
+  /** Sonuç açılışı tahmin süresinin bittiği an başlar. */
+  revealAt(state): number | null {
+    return state.guessEndsAt;
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= state.finishAt;
   },

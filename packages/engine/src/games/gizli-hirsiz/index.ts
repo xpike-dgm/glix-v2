@@ -105,6 +105,11 @@ export const gizliHirsiz: GameDefinition<
     return { pressed: playerId !== null && state.presses.some((p) => p.id === playerId) };
   },
 
+  /** Sonuç ekranı süre bittiği (ya da herkes bastığı) an başlar. */
+  revealAt(state): number | null {
+    return state.endsAt;
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= state.endsAt;
   },

@@ -25,6 +25,7 @@ import {
   statusOf,
 } from "./view.js";
 import "./zaman-bombasi.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 
 const fmtScore = (n: number): string => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : "0");
 
@@ -455,6 +456,7 @@ export default function ZamanBombasiScreen(props: GameScreenProps) {
           }}
         </For>
       </footer>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

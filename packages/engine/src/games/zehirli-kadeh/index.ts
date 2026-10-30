@@ -141,6 +141,11 @@ export const zehirliKadeh: GameDefinition<
     return { role: playerId !== null && state.players.includes(playerId) ? "player" : "spectator" };
   },
 
+  /** Sonuç açılışı (kadehler) süre bittiği an başlar. */
+  revealAt(state): number | null {
+    return state.endsAt;
+  },
+
   isFinished(state, ctx): boolean {
     return over(state, ctx.now);
   },

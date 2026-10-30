@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { GAMES, type PerfSample } from "@glix/engine";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { RESULTS_MS } from "./match.js";
 import { createStats, loadSqlite, RETENTION_MS } from "./statsStore.js";
 import { summarize } from "./statsSummary.js";
 import { type Client, k, press, setupRoom, startPlaying, sync, until, useServer } from "./testkit.js";
@@ -31,7 +32,7 @@ async function finishMatch(cs: Client[]): Promise<void> {
   await press(cs[0] as Client);
   k.clock.advance(51_100);
   await until(() => (cs[0] as Client).room.phase === "results", "sonuç");
-  k.clock.advance(30_100);
+  k.clock.advance(RESULTS_MS + 100);
   await until(() => (cs[0] as Client).room.phase === "final", "final");
 }
 
@@ -61,7 +62,8 @@ describe("istatistik kaydı", () => {
       outcome: "finished",
     });
     expect(Number(g[0]?.duration_ms)).toBeGreaterThanOrEqual(50_900);
-    expect(Number(g[0]?.duration_ms)).toBeLessThanOrEqual(52_000);
+    // Süre oyun içi sonuç ekranını da kapsar (herkes "Devam et" dedi: oyun bitiminden ~1 sn sonra).
+    expect(Number(g[0]?.duration_ms)).toBeLessThanOrEqual(53_000);
 
     // Geri bildirim: temizlenmiş metin, oyuncu başına bir kez.
     a.send({ type: "feedback", rating: 5, text: "  çok\u0007 eğlenceli \n" });
@@ -277,7 +279,7 @@ describe("performans özeti", () => {
     expect(JSON.stringify(r)).not.toContain(a.session.playerId);
 
     // final'de de yok sayılır.
-    k.clock.advance(30_100);
+    k.clock.advance(RESULTS_MS + 100);
     await until(() => a.room.phase === "final", "final");
     a.send(perfMsg("butona-bas"));
     a.send({ type: "ping", t: 2 });

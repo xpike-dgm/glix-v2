@@ -13,6 +13,7 @@ import { Screen } from "../../ui/Screen.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./capraz-ates.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Opening } from "./Opening.js";
 import { Sight } from "./Sight.js";
 import {
@@ -353,6 +354,7 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
           );
         }}
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

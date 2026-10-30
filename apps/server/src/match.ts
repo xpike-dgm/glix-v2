@@ -14,6 +14,7 @@ import {
   gameClock,
   isRejected,
   type MatchSnapshot,
+  REVEAL_HOLD_MS,
   type Rng,
 } from "@glix/engine";
 import { buildGameRecord, buildMatchRecord, type Entrant } from "./accountStats.js";
@@ -39,7 +40,7 @@ import { isConnected } from "./runtime.js";
 export const TICK_MS = 100;
 export const BRIEFING_TIMEOUT_MS = 40_000;
 export const COUNTDOWN_MS = 3_000;
-export const RESULTS_MS = 30_000;
+export const RESULTS_MS = 60_000;
 /** Bellekte tutulan son oyun kaydı sayısı (docs/PROTOKOL.md "Maç kaydı"). */
 export const RECENT_LOGS = 20;
 
@@ -77,8 +78,24 @@ export interface Match {
   cards: CardsState | null;
   cardRec: CardRecorder | null;
   cardLogArchived: boolean;
+  /**
+   * Oyun içi sonuç ekranı (docs/ERKEN-BITIS.md "Oyun içi sonuç ekranı"): oyunun `revealAt`'i geldiyse dolu, her oyun
+   * başında sıfırlanır. Zamanlar sunucu saatiyle (gerçek saat).
+   */
+  reveal: RevealHold | null;
   /** Maç başındaki oyun listesi: manuel seçimde lobiye dönünce host'un listesi geri gelir (Veto / Oyunu Seç yalnız maçı etkiler). */
   originalGameIds: string[];
+}
+
+/** Oyun içi sonuç ekranının sunucu tarafı: "Devam et" diyenler ve bitişi belirleyen anlar. */
+export interface RevealHold {
+  /** Açılışın başladığı an (gerçek saat). */
+  startedAt: number;
+  /** Oyunun `isFinished`'i ilk kez true döndüğü an (açılış animasyonu bitti); henüz değilse null. */
+  doneAt: number | null;
+  /** Bağlı katılımcıların hepsinin "Devam et" dediği ilk an; henüz değilse null. */
+  everyoneAt: number | null;
+  continueIds: Set<string>;
 }
 
 /** Bir oyun fonksiyonu hata fırlattı; `fn` hangisi olduğunu söyler (setup, reduce, tick, view, result...). */
@@ -152,6 +169,7 @@ function enterBriefing(rt: Runtime, room: Room, match: Match): void {
   match.readyIds = new Set();
   match.perfBy = new Set();
   match.turnHolders = new Set();
+  match.reveal = null;
   match.state = null;
   match.rng = null;
   match.result = null;
@@ -214,6 +232,7 @@ export function beginMatch(rt: Runtime, room: Room): void {
     cards: null,
     cardRec: null,
     cardLogArchived: false,
+    reveal: null,
     originalGameIds: [...room.gameIds],
   };
   startCards(rt, room, match);
@@ -279,6 +298,24 @@ export function markContinue(room: Room, playerId: string): boolean {
   if (match.continueIds.has(playerId)) return false;
   match.continueIds.add(playerId);
   return true;
+}
+
+/**
+ * Oyun içi sonuç ekranında "Devam et": yalnız `playing` aşamasında, oyunun açılışı başladıysa ve `round` geçerli oyunsa.
+ * Katılımcı olmayan (izleyici) sessizce sayılmaz. Sonuç: "wrong_phase" (yanlış aşama / oyun), "ignored" (izleyici ya da
+ * tekrar), "counted" (yeni kaydedildi).
+ */
+export function markRevealContinue(
+  room: Room,
+  playerId: string,
+  round: number,
+): "wrong_phase" | "ignored" | "counted" {
+  const match = room.match;
+  if (!match || room.phase !== "playing" || !match.reveal || match.index !== round) return "wrong_phase";
+  if (!match.participants.includes(playerId) || room.players.get(playerId)?.spectator) return "ignored";
+  if (match.reveal.continueIds.has(playerId)) return "ignored";
+  match.reveal.continueIds.add(playerId);
+  return "counted";
 }
 
 /** Katılımcılardan şu an canlı bağlantısı olanlar (katılımcı sırasıyla). */
@@ -359,6 +396,7 @@ function startPlaying(rt: Runtime, room: Room, match: Match): void {
       ...(content !== undefined ? { content } : {}),
     }),
   );
+  match.reveal = null;
   match.phaseStartedAt = now;
   match.phaseEndsAt = null;
   room.phase = "playing";
@@ -388,6 +426,7 @@ function finishGame(rt: Runtime, room: Room, match: Match): void {
   recordGameStats(rt, room, match, result, now);
   match.result = result;
   captureEvidence(rt, room, match);
+  match.reveal = null;
   match.continueIds = new Set();
   match.phaseStartedAt = now;
   match.phaseEndsAt = now + RESULTS_MS;
@@ -511,6 +550,8 @@ export function cancelWake(room: Room): void {
 function wakeTime(rt: Runtime, room: Room, match: Match): number | null {
   if (room.phase === "countdown") return match.phaseEndsAt;
   if (room.phase !== "playing") return null;
+  // Sonuç ekranı animasyonu bittiyse sıradaki an onun bitişidir ("Devam et" ya da tavan).
+  if (match.reveal && match.reveal.doneAt !== null) return revealEndAt(match.reveal);
   const game = currentGame(match);
   if (game.nextWake === undefined) return null;
   const ctx = ctxFor(rt, room, match);
@@ -546,14 +587,64 @@ function armWake(rt: Runtime, room: Room): void {
   );
 }
 
-/** Oyunun zamana bağlı adımı: tick, ardından bitti mi (bitti ise sonuç aşamasına geçer). */
+/**
+ * Oyun içi sonuç ekranının bitiş anı (gerçek saat): animasyon bitmeden asla; bağlı herkes "Devam et" dediyse
+ * `CONTINUE_GRACE_MS` sonra, değilse açılış başından `REVEAL_HOLD_MS` sonra. Animasyon henüz bitmediyse null.
+ */
+function revealEndAt(hold: RevealHold): number | null {
+  if (hold.doneAt === null) return null;
+  const cap = Math.max(hold.startedAt + REVEAL_HOLD_MS, hold.doneAt);
+  if (hold.everyoneAt === null) return cap;
+  return Math.min(cap, Math.max(hold.everyoneAt, hold.doneAt) + CONTINUE_GRACE_MS);
+}
+
+/**
+ * Oyun içi sonuç ekranı (docs/ERKEN-BITIS.md): oyunun `revealAt`'i geldiyse açılır; oyun bittiğinde (`isFinished`)
+ * bitiş, "Devam et" kuralına bağlanır. Bu bir oyun kuralı değil, sunucunun sonuç ekranı hızıdır (oyun durumu ve kayıt
+ * etkilenmez); bağlantıya bakmak burada serbesttir. Sonuç true ise oyun şimdi bitmeli.
+ */
+function stepReveal(
+  rt: Runtime,
+  room: Room,
+  match: Match,
+  game: AnyGame,
+  ctx: GameContext,
+  finished: boolean,
+): boolean {
+  const now = rt.clock.now();
+  if (!match.reveal && game.revealAt) {
+    const at = guard("revealAt", () => game.revealAt?.(match.state, ctx) ?? null);
+    if (at !== null && at <= ctx.now) {
+      // Oyun saati gerçek saatten `graceMs` geridedir: açılış anı gerçek saate geri çevrilir.
+      match.reveal = {
+        startedAt: Math.min(now, at + (game.graceMs ?? 0)),
+        doneAt: null,
+        everyoneAt: null,
+        continueIds: new Set(),
+      };
+      rt.broadcaster.markDirty(room);
+    }
+  }
+  const hold = match.reveal;
+  if (!hold) return finished;
+  if (finished && hold.doneAt === null) hold.doneAt = now;
+  if (hold.everyoneAt === null) {
+    const connected = connectedParticipants(room, match);
+    if (connected.length > 0 && connected.every((id) => hold.continueIds.has(id))) hold.everyoneAt = now;
+  }
+  const end = revealEndAt(hold);
+  return finished && end !== null && now >= end;
+}
+
+/** Oyunun zamana bağlı adımı: tick, ardından bitti mi (bitti ise — sonuç ekranı kuralıyla — sonuç aşamasına geçer). */
 function stepPlaying(rt: Runtime, room: Room, match: Match): void {
   const game = currentGame(match);
   const ctx = ctxFor(rt, room, match);
   const next = guard("tick", () => game.tick(match.state, ctx));
   const changed = next !== match.state;
   match.state = next;
-  if (guard("isFinished", () => game.isFinished(match.state, ctx))) {
+  const finished = guard("isFinished", () => game.isFinished(match.state, ctx));
+  if (stepReveal(rt, room, match, game, ctx, finished)) {
     finishGame(rt, room, match);
     rt.broadcaster.markDirty(room);
   } else if (changed) {
@@ -687,6 +778,14 @@ export function sharedMatchSnapshot(rt: Runtime, room: Room): Omit<MatchSnapshot
     participants: [...match.participants],
     readyIds: [...match.readyIds],
     continueIds: room.phase === "results" ? [...match.continueIds] : [],
+    reveal:
+      room.phase === "playing" && match.reveal
+        ? {
+            startedAt: match.reveal.startedAt,
+            endsAt: match.reveal.startedAt + REVEAL_HOLD_MS,
+            continueIds: [...match.reveal.continueIds],
+          }
+        : null,
     phaseStartedAt: match.phaseStartedAt,
     phaseEndsAt: match.phaseEndsAt,
     publicView,

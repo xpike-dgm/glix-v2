@@ -164,6 +164,11 @@ export const asiriYukleme: GameDefinition<
     return { participant: playerId !== null && state.players.includes(playerId) };
   },
 
+  /** Sonuç açılışı (patlama ya da süre sonu) turun bittiği an başlar. */
+  revealAt(state): number | null {
+    return asiriYuklemeEndAt(state);
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= asiriYuklemeEndAt(state) + ASIRI_YUKLEME_OUTRO_MS;
   },

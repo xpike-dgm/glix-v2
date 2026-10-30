@@ -7,6 +7,7 @@ import { Sonuc } from "./Sonuc.js";
 import { parseKendimView } from "./view.js";
 import { Yazma } from "./Yazma.js";
 import "./kendim.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 
 export interface Crew {
   id: string;
@@ -64,6 +65,12 @@ export default function KendimScreen(props: GameScreenProps) {
             </Show>
           )}
         </Show>
+        <RevealContinue
+          match={props.match}
+          selfId={props.selfId}
+          now={props.now}
+          spectator={props.spectator}
+        />
       </div>
     </section>
   );

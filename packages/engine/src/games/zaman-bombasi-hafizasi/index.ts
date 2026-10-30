@@ -283,6 +283,11 @@ export const zamanBombasiHafizasi: GameDefinition<
     return { isOut: false, myTurn: away === 0, turnsAway: away };
   },
 
+  /** Sonuç ekranı oyunun bittiği an (yeterli elenme ya da süre sonu) başlar. */
+  revealAt(state, ctx): number | null {
+    return advance(state, ctx.now).endedAt;
+  },
+
   isFinished(state, ctx): boolean {
     return advance(state, ctx.now).finished;
   },

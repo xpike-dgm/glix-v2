@@ -243,6 +243,11 @@ export const kontrolPaneliKaosu: GameDefinition<KontrolState, KontrolAction, Kon
       };
     },
 
+    /** Sonuç açılışı kesim süresinin bittiği an başlar. */
+    revealAt(state): number | null {
+      return state.endsAt;
+    },
+
     isFinished(state, ctx): boolean {
       return ctx.now >= state.finishAt;
     },

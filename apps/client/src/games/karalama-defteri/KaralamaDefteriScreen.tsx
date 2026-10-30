@@ -5,6 +5,7 @@ import { Screen } from "../../ui/Screen.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./karalama.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { DrawBoard } from "./DrawBoard.js";
 import { Header } from "./Header.js";
 import { VoteWall } from "./VoteWall.js";
@@ -77,6 +78,7 @@ export default function KaralamaDefteriScreen(props: GameScreenProps) {
           </Switch>
         )}
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

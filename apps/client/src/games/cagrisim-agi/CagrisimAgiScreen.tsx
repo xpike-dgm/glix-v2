@@ -29,6 +29,7 @@ import { PhaseClock } from "../../ui/PhaseClock.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
 import type { GameScreenProps } from "../registry.js";
 import "./cagrisim.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Hub } from "./Hub.js";
 import { canSubmit, type MyOutcome, outcomeOf, parseCagrisimView, revealPlan } from "./view.js";
 
@@ -391,6 +392,12 @@ export default function CagrisimAgiScreen(props: GameScreenProps) {
             </Show>
           )}
         </Show>
+        <RevealContinue
+          match={props.match}
+          selfId={props.selfId}
+          now={props.now}
+          spectator={props.spectator}
+        />
       </div>
     </section>
   );

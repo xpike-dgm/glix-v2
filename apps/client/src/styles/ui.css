@@ -1244,3 +1244,34 @@
     padding-block: 6px;
   }
 }
+
+/* ---- Oyun içi sonuç ekranı: ortak "Devam et" şeridi (RevealContinue) ---- */
+.rdevam {
+  flex: none;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding-bottom: max(4px, env(safe-area-inset-bottom));
+}
+.rdevam .tamam {
+  padding-top: 6px;
+}
+.rdevam .tamam__count {
+  margin-top: 4px;
+}
+@media (max-height: 640px) {
+  .rdevam .tamam {
+    padding-top: 2px;
+  }
+  .rdevam .tamam__dots {
+    margin-top: 2px;
+  }
+}
+.rdevam .pbtn {
+  height: 54px;
+}
+@media (max-height: 680px) {
+  .rdevam .pbtn {
+    height: 48px;
+  }
+}

@@ -10,6 +10,7 @@ import { Screen } from "../../ui/Screen.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./cizgiyi-gecme.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Sonuc, type SonucEntry } from "./Sonuc.js";
 import { isDense, parseCizgiView, zoneCount, zoneFill, zoneLabel, zoneOf, zonesTopDown } from "./view.js";
 
@@ -176,6 +177,7 @@ export default function CizgiyiGecmeScreen(props: GameScreenProps) {
           </Show>
         )}
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

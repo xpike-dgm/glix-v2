@@ -280,6 +280,13 @@ export const gizliKareler: GameDefinition<KarelerState, KarelerAction, KarelerVi
     return { myChoice: null, locked: false };
   },
 
+  /** Sonuç açılışı son aşamanın (ikinci aşama yoksa ilkinin) bitişiyle başlar. */
+  revealAt(state, ctx): number | null {
+    if (ctx.now < stage1End(state)) return null;
+    const p = plan(state);
+    return p.stage2 ? p.stage2.endsAt : stage1End(state);
+  },
+
   isFinished(state, ctx): boolean {
     return karelerPhase(state, ctx.now) === 4;
   },

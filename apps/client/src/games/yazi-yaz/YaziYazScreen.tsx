@@ -8,6 +8,7 @@ import { Tartisma } from "./Tartisma.js";
 import { parseYaziYazView } from "./view.js";
 import { Yazma } from "./Yazma.js";
 import "./yazi-yaz.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 
 export interface Crew {
   id: string;
@@ -79,6 +80,12 @@ export default function YaziYazScreen(props: GameScreenProps) {
             </Show>
           )}
         </Show>
+        <RevealContinue
+          match={props.match}
+          selfId={props.selfId}
+          now={props.now}
+          spectator={props.spectator}
+        />
       </div>
     </section>
   );

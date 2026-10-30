@@ -24,6 +24,7 @@ import {
   pct,
 } from "./view.js";
 import "./kule.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 
 /** Ekranda aynı anda görünen kat sayısı (taban dahil); kule yükselince pencere yukarı kayar. */
 const VISIBLE_ROWS = 8;
@@ -440,6 +441,7 @@ export default function KuleUstasiScreen(props: GameScreenProps) {
           }}
         </For>
       </footer>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

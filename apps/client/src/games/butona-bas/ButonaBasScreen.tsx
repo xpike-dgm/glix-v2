@@ -6,6 +6,7 @@ import { sendAction } from "../../net/client.js";
 import { serverNow } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Screen } from "../../ui/Screen.js";
 import type { GameScreenProps } from "../registry.js";
 import { ArcadeButton, type ArcadeFx } from "./ArcadeButton.js";
@@ -235,6 +236,7 @@ export default function ButonaBasScreen(props: GameScreenProps) {
           )}
         </For>
       </footer>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }
