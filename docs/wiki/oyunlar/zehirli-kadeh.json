@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 30,
-    "not": "Oyun 20 sn başlar; her takas süre bitişini 5 sn uzatır. Hiç takas olmazsa tam 20 sn sürer. Herkes (tüm katılımcılar) takas hakkını kullanırsa son takastan 1 sn sonra biter. Bunun öncesinde anlatım ekranı (en çok 40 sn, herkes hazırsa daha erken) ve 3 sn geri sayım, sonrasında 30 sn'ye kadar sonuç ekranı vardır."
+    "not": "Oyun 20 sn başlar; her takas süre bitişini 5 sn uzatır. Hiç takas olmazsa tam 20 sn sürer. Herkes (tüm katılımcılar) takas hakkını kullanırsa son takastan 1 sn sonra biter. Bunun öncesinde anlatım ekranı (en çok 40 sn, herkes hazırsa daha erken) ve 3 sn geri sayım, sonrasında 30 sn'ye kadar sonuç ekranı vardır. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Her oyuncunun önünde bir kadeh durur; bazı kadehler zehirlidir ama hangileri olduğunu, kendi kadehin dahil, hiçbir oyuncu göremez. İstersen tek takas hakkınla bir arkadaşının kadehiyle kadehini değiştirirsin; takas zorunlu değildir. Süre bitince elinde zehirsiz (temiz) kadeh olan herkes +1, zehirli kadeh olan 0 alır. Beraberlik yoktur; temiz kadehi olan herkes puan alır.",
   "akis": [
@@ -39,7 +39,7 @@
       "ad": "Sonuç",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Süre bitince zehirli kadehler açılır: temiz kadehler altın renkli ve '+1', zehirli kadehler mor-siyah dumanlı ve '0' olarak gösterilir. Oyuncu kendi sonucuna göre 'Kadehin temiz!' ya da 'Kadehin zehirliydi' başlığını görür; izleyici 'Kadehler açıldı' görür. Sonuç ekranı bağlı herkes 'Devam'a basınca 1 sn sonra, basmayan olursa 30 sn sonra kapanır.",
+      "aciklama": "Süre bitince zehirli kadehler açılır: temiz kadehler altın renkli ve '+1', zehirli kadehler mor-siyah dumanlı ve '0' olarak gösterilir. Oyuncu kendi sonucuna göre 'Kadehin temiz!' ya da 'Kadehin zehirliydi' başlığını görür; izleyici 'Kadehler açıldı' görür. Sonuç ekranı bağlı herkes 'Devam'a basınca 1 sn sonra, basmayan olursa 30 sn sonra kapanır. Son ekran oyun bitince kalır; altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca 1 sn sonra, basmayan olursa en geç 60 sn sonra genel sonuç ekranına geçilir. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Zehirli kadehlerin numaraları ilk kez burada açılır."
     }
   ],

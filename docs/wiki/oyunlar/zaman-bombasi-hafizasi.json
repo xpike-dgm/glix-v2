@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 90,
-    "not": "Toplam süre sınırı 90 sn (oyun kurulduğu andan itibaren). Oyun, başlangıç oyuncularının yarısı (yukarı yuvarlanmış) elenince ya da 90 sn dolunca, hangisi önce olursa biter. Elenmeler hızlıysa 90 sn'den çok önce bitebilir (örn. 2 oyuncuda ilk hatada). Oyuncu sayısı yalnız 'kaç eleme gerekir' sayısını değiştirir."
+    "not": "Toplam süre sınırı 90 sn (oyun kurulduğu andan itibaren). Oyun, başlangıç oyuncularının yarısı (yukarı yuvarlanmış) elenince ya da 90 sn dolunca, hangisi önce olursa biter. Elenmeler hızlıysa 90 sn'den çok önce bitebilir (örn. 2 oyuncuda ilk hatada). Oyuncu sayısı yalnız 'kaç eleme gerekir' sayısını değiştirir. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Oyuncular sabit bir sırayla dönerek ışıklı 4 renkli tuş dizisini sırayla tekrarlar. Önce dizi herkese oynatılır (2 renkle başlar); sırası gelen oyuncu hafızadan aynı sırayla basar. Doğru bilirse dizi 1 renk uzar ve sıra sonrakine geçer; yanlış basan ya da geç kalan elenir (-1), sırada kalan herkes +1 alır ve dizi yeni 2 renge döner. Oyuncuların yarısı elenince ya da 90 sn dolunca oyun biter.",
   "akis": [
@@ -53,7 +53,7 @@
       "ad": "Bitiş ve sonuç",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Oyun elenen sayısı gerekli sayıya ulaşınca (son elenmenin anında) ya da 90. saniyede biter; 'Oyun bitti' ya da süre dolduysa 'Süre doldu' yazar. Sonra sonuç ekranı gelir.",
+      "aciklama": "Oyun elenen sayısı gerekli sayıya ulaşınca (son elenmenin anında) ya da 90. saniyede biter; 'Oyun bitti' ya da süre dolduysa 'Süre doldu' yazar. Sonra sonuç ekranı gelir. Son ekran oyun bitince kalır; altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca 1 sn sonra, basmayan olursa en geç 60 sn sonra genel sonuç ekranına geçilir. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Yok."
     }
   ],

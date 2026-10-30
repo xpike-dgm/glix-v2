@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 25,
-    "not": "Seçim aşaması en çok 20 sn, ardından seçimler açılır ve sonuç hazne animasyonuyla 5 sn gösterilir (toplam en çok 25 sn). Bağlı bütün katılımcılar Tamam derse seçim son Tamam'dan 1 sn sonra biter ve sonuç 5 sn sürer. Oyuncu sayısı süreyi değiştirmez, limiti değiştirir. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasında sonuç ekranı (en çok 30 sn) vardır."
+    "not": "Seçim aşaması en çok 20 sn, ardından seçimler açılır ve sonuç hazne animasyonuyla 5 sn gösterilir (toplam en çok 25 sn). Bağlı bütün katılımcılar Tamam derse seçim son Tamam'dan 1 sn sonra biter ve sonuç 5 sn sürer. Oyuncu sayısı süreyi değiştirmez, limiti değiştirir. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasında sonuç ekranı (en çok 60 sn) vardır. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Herkes aynı anda gizlice 0 ile oyuncu sayısı arasında bir sayı seçer. Bütün seçimlerin toplamı ortak limiti aşmazsa herkes seçtiği sayı kadar puan alır; limiti aşarsa herkes 0 alır. Limit oyuncu sayısına göre sabit bir tablodan gelir ve herkese açıktır. Amaç: limiti aşırmadan olabildiğince büyük sayı seçmek.",
   "akis": [
@@ -39,14 +39,14 @@
       "ad": "Seçimlerin açılışı",
       "sureSn": 5,
       "kim": "herkes",
-      "aciklama": "Süre bitince (ya da son Tamam'dan 1 sn sonra) bütün seçimler aynı anda açılır. Hazne açılır: oyuncuların jetonları sırayla (300 ms arayla, alttan üste) dolar, ardından limit çizgisiyle karşılaştırılır. Üstte Toplam değeri görünür. Limit aşılmadıysa Altın! başlığı, altın ışık ve eşleşme sesi/titreşimi; aşıldıysa Taştı! başlığı, kırmızı çatlak, sarsıntı ve düşük ses. Kişisel puan: +N puan ya da Bu sefer puan yok. Altta her oyuncunun avatarı ve seçtiği sayı sıralanır. 5 sn sonra oyun biter.",
+      "aciklama": "Süre bitince (ya da son Tamam'dan 1 sn sonra) bütün seçimler aynı anda açılır. Hazne açılır: oyuncuların jetonları sırayla (300 ms arayla, alttan üste) dolar, ardından limit çizgisiyle karşılaştırılır. Üstte Toplam değeri görünür. Limit aşılmadıysa Altın! başlığı, altın ışık ve eşleşme sesi/titreşimi; aşıldıysa Taştı! başlığı, kırmızı çatlak, sarsıntı ve düşük ses. Kişisel puan: +N puan ya da Bu sefer puan yok. Altta her oyuncunun avatarı ve seçtiği sayı sıralanır. Açılış en az 5 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Bu anda bütün seçimler ve toplam herkese açılır."
     },
     {
       "ad": "Sonuç ekranı",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 30 sn sonra kapanır.",
+      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 60 sn sonra kapanır.",
       "gizli": "Yok."
     }
   ],

@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 15,
-    "not": "Süre gizlidir: oyun, başladığı andan 10 ile 20 sn arasında (milisaniye çözünürlüğünde rastgele) bir anda biter; ortalama yaklaşık 15 sn. Hiçbir ekranda sayaç, süre çubuğu ya da kalan süre yoktur. Bütün katılımcılar kaçarsa oyun son kaçıştan 1 sn sonra erken biter. Süre oyuncu sayısına göre değişmez. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 30 sn) gelir."
+    "not": "Süre gizlidir: oyun, başladığı andan 10 ile 20 sn arasında (milisaniye çözünürlüğünde rastgele) bir anda biter; ortalama yaklaşık 15 sn. Hiçbir ekranda sayaç, süre çubuğu ya da kalan süre yoktur. Bütün katılımcılar kaçarsa oyun son kaçıştan 1 sn sonra erken biter. Süre oyuncu sayısına göre değişmez. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 60 sn) gelir. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Herkesin ekranında tek bir büyük KAÇ düğmesi vardır. Oyun, kimsenin bilmediği rastgele bir anda alarmla biter. İstediğin anda bir kez KAÇ'a basabilirsin; alarmdan önce kaçan herkes kurtulur, ama kaçanlar arasında en geç basan +1 alır. Hiç kaçmayan (alarm onu yakalayan) -1 alır, erken kaçan ve son olmayan 0 alır. Cesaretle bekle, ama alarmı kaçırma.",
   "akis": [
@@ -37,7 +37,7 @@
       "ad": "Alarm ve sonuç açılışı",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Gizli an gelince oyun biter, alarm flaşı oynar (siren sesi) ve sonuç ekranının üstüne açılış girer: 'Son kaçan' (ya da eşitlikte 'Son kaçanlar') başlığı, son kaçanların altın çerçeveli avatar kartları (+1 ve kaçış süresi, örn. '12,4 sn'), altında 'Kaçmayan: -1' ve kaçmayanların silik avatarları; kimse kaçmadıysa 'Kimse kaçmadı' ve 'Herkes -1'. Son kaçan varsa kısa bir altın çınlama sesi çalar. Sonuç ekranı en çok 30 sn kalır.",
+      "aciklama": "Gizli an gelince oyun biter, alarm flaşı oynar (siren sesi) ve sonuç ekranının üstüne açılış girer: 'Son kaçan' (ya da eşitlikte 'Son kaçanlar') başlığı, son kaçanların altın çerçeveli avatar kartları (+1 ve kaçış süresi, örn. '12,4 sn'), altında 'Kaçmayan: -1' ve kaçmayanların silik avatarları; kimse kaçmadıysa 'Kimse kaçmadı' ve 'Herkes -1'. Son kaçan varsa kısa bir altın çınlama sesi çalar. Sonuç ekranı en çok 60 sn kalır. Son ekran oyun bitince kalır; altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca 1 sn sonra, basmayan olursa en geç 60 sn sonra genel sonuç ekranına geçilir. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Artık kimlerin ne zaman kaçtığı (ms) açıktır; hâlâ gerçek bitiş zamanı gösterilmez."
     }
   ],

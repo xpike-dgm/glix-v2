@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 32,
-    "not": "Hedef seçme 25 sn + izlerin gösterildiği 7 sn = 32 sn. Bağlı herkes 'Tamam'la hedefini kilitlerse hedef aşaması son kilitten 1 sn sonra biter (en geç 25. sn'de) ve izleme yine 7 sn sürer. Oyuncu sayısı süreyi değiştirmez."
+    "not": "Hedef seçme 25 sn + izlerin gösterildiği 7 sn = 32 sn. Bağlı herkes 'Tamam'la hedefini kilitlerse hedef aşaması son kilitten 1 sn sonra biter (en geç 25. sn'de) ve izleme yine 7 sn sürer. Oyuncu sayısı süreyi değiştirmez. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Herkes kendisi dışında bir oyuncuyu gizlice hedef alır. Süre bitince bütün hedefler birden açılır: kimse tarafından hedeflenmeyen ve birine ateş eden +1 alır, hedeflenen -1 alır, birbirini karşılıklı hedefleyen iki kişi 0 alır. Puanlar doğrudan genel skora eklenir; beraberlik kuralı yoktur.",
   "akis": [
@@ -32,14 +32,14 @@
       "ad": "Hedeflerin açılması ve izleme",
       "sureSn": 7,
       "kim": "herkes",
-      "aciklama": "Süre dolunca (ya da herkes kilitleyince 1 sn sonra) bütün hedefler birden açılır. Oyuncular bir halkada dizilir (ilk oyuncu üstte, saat yönünde); her hedef için ateş eden renginde neon bir iz çizilir (izler 110 ms arayla, her biri 520 ms'de), karşılıklı izler ortada çarpışıp patlar. Yaklaşık 1,3 sn sonra her oyuncunun yanında puan çipi (+1, −1, 0) belirir. Oyuncu kendi sonucunu başlıkta görür: '−1 Seni hedef aldılar', '+1 Kimse seni seçmedi', '0 Mermiler çarpıştı' ya da '0 Ateş etmedin, seçilmedin'. İzleyici 'Hedefler açıldı' görür. Altta 'Puanlar genel skora eklenir' yazar.",
+      "aciklama": "Süre dolunca (ya da herkes kilitleyince 1 sn sonra) bütün hedefler birden açılır. Oyuncular bir halkada dizilir (ilk oyuncu üstte, saat yönünde); her hedef için ateş eden renginde neon bir iz çizilir (izler 110 ms arayla, her biri 520 ms'de), karşılıklı izler ortada çarpışıp patlar. Yaklaşık 1,3 sn sonra her oyuncunun yanında puan çipi (+1, −1, 0) belirir. Oyuncu kendi sonucunu başlıkta görür: '−1 Seni hedef aldılar', '+1 Kimse seni seçmedi', '0 Mermiler çarpıştı' ya da '0 Ateş etmedin, seçilmedin'. İzleyici 'Hedefler açıldı' görür. Altta 'Puanlar genel skora eklenir' yazar. Açılış en az 7 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Yok; hedefler ve puanlar herkese açıktır."
     },
     {
       "ad": "Sonuç ekranı",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Mini oyun sonuç/podyum ekranı (herkes 'Devam'a basınca 1 sn sonra, aksi halde 30 sn sonra kapanır).",
+      "aciklama": "Mini oyun sonuç/podyum ekranı (herkes 'Devam'a basınca 1 sn sonra, aksi halde 60 sn sonra kapanır).",
       "gizli": "Yok."
     }
   ],
@@ -203,7 +203,7 @@
     },
     {
       "ad": "Anlatım üst süresi / geri sayım / sonuç ekranı",
-      "deger": "40 sn / 3 sn / 30 sn",
+      "deger": "40 sn / 3 sn / 60 sn",
       "kaynak": "apps/server/src/match.ts:40-42"
     }
   ],

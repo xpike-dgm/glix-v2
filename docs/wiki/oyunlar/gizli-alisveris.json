@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 38,
-    "not": "Oyun aşaması en çok 38 sn sürer: 30 sn alışveriş + 8 sn sonuç (raf kepengi) animasyonu. Bağlı herkes 'Tamam' derse alışveriş 1 sn sonra biter ve 8 sn'lik sonuç buna göre öne gelir. Süre oyuncu sayısına göre değişmez. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 30 sn) gelir."
+    "not": "Oyun aşaması en çok 38 sn sürer: 30 sn alışveriş + 8 sn sonuç (raf kepengi) animasyonu. Bağlı herkes 'Tamam' derse alışveriş 1 sn sonra biter ve 8 sn'lik sonuç buna göre öne gelir. Süre oyuncu sayısına göre değişmez. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 60 sn) gelir. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Herkese 60 kredilik gizli bir bütçe verilir ve herkes aynı 12 ürünlük raftan alışveriş yapar. Bir ürünün değeri 'fiyatı ÷ onu kaç kişinin aldığı'dır: çok kişinin seçtiği ürün değer kaybeder, tek başına aldığın pahalı ürün tam değerini korur. Sepetler süre bitince açılır; toplam değeri en yüksek sepet (eşitlikte hepsi) +1 alır.",
   "akis": [
@@ -37,7 +37,7 @@
       "ad": "Sonuç (raf kepengi)",
       "sureSn": 8,
       "kim": "herkes",
-      "aciklama": "Süre dolunca (ya da erken bitişte 1 sn sonra) sonuç açılır. Zaman çizelgesi: 0-0,9 sn 'Raf kepengi - Açılıyor'; 0,9 sn'de kepenk açılır, 'Kaç kişi aldı? - Bölünüyor': her ürün kartında kaç kişinin aldığı ('kimse' ya da 'N kişi') ve birden çok kişi aldıysa üstü çizili fiyatın yanında yeni değeri görünür; 4,6 sn'de sıralama listesi: her satırda avatar, ad (kazananda ★), sepetteki ürün resimleri (ya da 'Sepet boş'), sepet değeri (iki ondalık, Türkçe virgül: örn. 42,00) ve kazananda '+1'. Üst başlıkta kazanana 'En değerli sepet +1', diğerlerine 'Sepetin <değer>'. Oyun bu 8 sn'nin sonunda biter, ardından sonuç ekranı gelir.",
+      "aciklama": "Süre dolunca (ya da erken bitişte 1 sn sonra) sonuç açılır. Zaman çizelgesi: 0-0,9 sn 'Raf kepengi - Açılıyor'; 0,9 sn'de kepenk açılır, 'Kaç kişi aldı? - Bölünüyor': her ürün kartında kaç kişinin aldığı ('kimse' ya da 'N kişi') ve birden çok kişi aldıysa üstü çizili fiyatın yanında yeni değeri görünür; 4,6 sn'de sıralama listesi: her satırda avatar, ad (kazananda ★), sepetteki ürün resimleri (ya da 'Sepet boş'), sepet değeri (iki ondalık, Türkçe virgül: örn. 42,00) ve kazananda '+1'. Üst başlıkta kazanana 'En değerli sepet +1', diğerlerine 'Sepetin <değer>'. Oyun bu 8 sn'nin sonunda biter, ardından sonuç ekranı gelir. Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Artık tüm sepetler, ürün başına alıcı sayıları ve sepet değerleri herkese açıktır."
     }
   ],

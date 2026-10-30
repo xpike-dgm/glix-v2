@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 90,
-    "not": "Görünür süre ya da sayaç yoktur. Bar 100'e ulaşana kadar herkes tıklar; bar 100'e ulaşınca başlayan gizli 3 sn'lik pencerede kimse kapasiteyi aşmazsa tur normal biter, biri aşarsa (patlatırsa) tur hemen biter. Teknik üst sınır: oyunun başından en çok 90 sn (kimse tıklamazsa oda takılmasın diye); sonra 5 sn sonuç gösterimi. Gerçek süre tıklama hızına bağlıdır (8 oyuncu hızlı tıklarsa birkaç saniyede 100'e ulaşılabilir). Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 30 sn) gelir."
+    "not": "Görünür süre ya da sayaç yoktur. Bar 100'e ulaşana kadar herkes tıklar; bar 100'e ulaşınca başlayan gizli 3 sn'lik pencerede kimse kapasiteyi aşmazsa tur normal biter, biri aşarsa (patlatırsa) tur hemen biter. Teknik üst sınır: oyunun başından en çok 90 sn (kimse tıklamazsa oda takılmasın diye); sonra 5 sn sonuç gösterimi. Gerçek süre tıklama hızına bağlıdır (8 oyuncu hızlı tıklarsa birkaç saniyede 100'e ulaşılabilir). Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 60 sn) gelir. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Herkesin ekranında tek bir büyük reaktör çekirdeği vardır; ona dokunmak ortak enerji barını 1 doldurur. Bar kapasitesi 100'dür ve doluluk kimseye gösterilmez (kendi tıklama sayın bile gizlidir). Bar 100'e ulaşınca ekranın kenarları kırmızıya döner ve gizli 3 sn'lik tehlike başlar: bu sürede 100'ü aşan ilk tıkı atan patlatır (-1) ve tur biter. Patlamayanlar arasında en çok tıklayan +2, ikinci +1, en az tıklayan -1 alır.",
   "akis": [
@@ -44,7 +44,7 @@
       "ad": "Sonuç ve patlama",
       "sureSn": 5,
       "kim": "herkes",
-      "aciklama": "Tur biter bitmez sonuç açılır: çekirdek beyaz parlar, ekran 0,42 sn sarsılır ve patlama sesi çalar (patlama varsa). Başlık: 'Patlattın!' (patlatan sensen), 'Çekirdek patladı!' (başkası patlattıysa) ya da 'Reaktör dayandı' (patlama yoksa). Alt başlıkta kendi puanın ('+2 puan', '−1 puan', 'Puan yok'), izleyicide 'Toplam N tık'. Altında her oyuncunun tıklama sayısı, çubuğu ve puanı: en çok tıklayandan aza sıralı, patlatan en sonda ve kırmızı işaretli (çubuğu tam dolu). Oyun, tur bitiminden 5 sn sonra biter ve sonuç ekranına geçer.",
+      "aciklama": "Tur biter bitmez sonuç açılır: çekirdek beyaz parlar, ekran 0,42 sn sarsılır ve patlama sesi çalar (patlama varsa). Başlık: 'Patlattın!' (patlatan sensen), 'Çekirdek patladı!' (başkası patlattıysa) ya da 'Reaktör dayandı' (patlama yoksa). Alt başlıkta kendi puanın ('+2 puan', '−1 puan', 'Puan yok'), izleyicide 'Toplam N tık'. Altında her oyuncunun tıklama sayısı, çubuğu ve puanı: en çok tıklayandan aza sıralı, patlatan en sonda ve kırmızı işaretli (çubuğu tam dolu). Açılış en az 5 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Artık bar toplamı (patlamada 101), her oyuncunun tıklama sayısı ve patlatan herkese açıktır."
     }
   ],

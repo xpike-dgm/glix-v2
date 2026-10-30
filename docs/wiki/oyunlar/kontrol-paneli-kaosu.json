@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 68,
-    "not": "Oyun aşaması en çok 68 sn sürer: 60 sn oynanış + 8 sn sonuç. Bağlı herkes kablosunu keserse oyun son kesimden 1 sn sonra biter ve 8 sn'lik sonuç gösterimi buna göre öne gelir. Süre oyuncu sayısına göre değişmez. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 30 sn) gelir."
+    "not": "Oyun aşaması en çok 68 sn sürer: 60 sn oynanış + 8 sn sonuç. Bağlı herkes kablosunu keserse oyun son kesimden 1 sn sonra biter ve 8 sn'lik sonuç gösterimi buna göre öne gelir. Süre oyuncu sayısına göre değişmez. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 60 sn) gelir. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Her oyuncunun telefonunda aynı dört renkte (mavi, yeşil, kırmızı, sarı) kablo vardır ama herkesin dizilimi farklıdır. Herkes ayrıca başka bir oyuncunun panelini tarif eden gizli bir ipucu notu taşır: 'şu kablolar şu renkse şu rengi kes'. Kimin paneli tarif edildiği yazmaz; oyuncular ipuçlarını sesli okuyup kendi panellerine uyanı bulur. Herkes yalnız bir kez ve geri alınamaz biçimde bir kablo keser. Doğru kabloyu kesen +1, o panelin ipucunu taşıyan oyuncu da +1 alır.",
   "akis": [
@@ -37,7 +37,7 @@
       "ad": "Sonuç (paneller açılır)",
       "sureSn": 8,
       "kim": "herkes",
-      "aciklama": "Süre dolunca (ya da erken bitişte) paneller açılır. Üstte kendi puanın ('+N') ve yorum ('İkisi de doğru!', 'Doğru kabloyu kestin', 'İpucun arkadaşına yaradı', 'Bu sefer olmadı', 'Kablo kesmedin'); altında kendi panelin mini olarak (kestiğin kablo kopuk, doğruysa yeşil, yanlışsa kırmızı kıvılcım); altta herkesin satırı: avatar, ad, kestiği kablo (renk, şekil, ad ve ✓ ya da ✗; kesmediyse 'kesmedi'), o panelin ipucunu taşıyan oyuncunun küçük portresi ve '+N' puan. 'Küçük portre: o panelin ipucunu taşıyan' notu. Oyun bu 8 sn'nin sonunda biter, ardından sonuç ekranı gelir. İzleyici 'Paneller açıldı' başlığını ve aynı listeyi görür.",
+      "aciklama": "Süre dolunca (ya da erken bitişte) paneller açılır. Üstte kendi puanın ('+N') ve yorum ('İkisi de doğru!', 'Doğru kabloyu kestin', 'İpucun arkadaşına yaradı', 'Bu sefer olmadı', 'Kablo kesmedin'); altında kendi panelin mini olarak (kestiğin kablo kopuk, doğruysa yeşil, yanlışsa kırmızı kıvılcım); altta herkesin satırı: avatar, ad, kestiği kablo (renk, şekil, ad ve ✓ ya da ✗; kesmediyse 'kesmedi'), o panelin ipucunu taşıyan oyuncunun küçük portresi ve '+N' puan. 'Küçük portre: o panelin ipucunu taşıyan' notu. Oyun bu 8 sn'nin sonunda biter, ardından sonuç ekranı gelir. İzleyici 'Paneller açıldı' başlığını ve aynı listeyi görür. Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Artık tüm paneller, ipuçları, doğru kablolar, kesimler ve ipucu taşıyıcıları herkese açıktır."
     }
   ],
