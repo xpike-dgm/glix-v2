@@ -1514,6 +1514,8 @@ const SCREENS = [
   { name: "asiri-danger", q: "mock=asiri-yukleme-danger" },
   { name: "asiri-reveal-boom-5", q: "mock=asiri-yukleme-reveal-boom&n=5", settle: 1800 },
   { name: "asiri-reveal-boom-me-8", q: "mock=asiri-yukleme-reveal-boom&n=8&me=1", settle: 2200 },
+  { name: "asiri-reveal-multi-8", q: "mock=asiri-yukleme-reveal-boom&n=8&multi=1", settle: 2200 },
+  { name: "asiri-reveal-anim-5", q: "mock=asiri-yukleme-reveal-boom&n=5&multi=1&anim=1", settle: 7000 },
   { name: "asiri-reveal-safe-8", q: "mock=asiri-yukleme-reveal-safe&n=8", settle: 2200 },
   { name: "asiri-reveal-2", q: "mock=asiri-yukleme-reveal-boom&n=2", settle: 1800 },
   { name: "asiri-spectator", q: "mock=asiri-yukleme-spectator" },

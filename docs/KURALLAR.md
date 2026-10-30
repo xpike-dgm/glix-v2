@@ -1068,42 +1068,50 @@ Eski faz 18 saniyedir.
 1. Minimum oyuncu / maksimum oyuncu: [2-8]
 2. Bar kapasitesi ve her tıklamanın doldurduğu miktar: [100 , her tıklama 1]
 3. Tıklama hangi ortak hamleyi temsil eder; herkes istediği kadar tıklayabilir mi?: [herkes istediği kadar tıklar tıkladıkca ortak enerji barı dolar]
-4. Tıklamalar anlık görünür mü, toplam sayı gizli mi?: [gizli tur sonunda gözükür]
-5. Aşamalar ve süreler: [süre yok enerji barı 100 olana kadar devam eder 100 olduktan sonra arkaplanda oyunculara gözükmicek şekilde 3 saniye daha bekelnir (amaç yanlışlıkla birisi barı patlatabilir) 3 saniye dolduktan sonra tur biter]
-6. Kapasiteyi aşan son tıklamada ne olur?: [tur direkt biter ]
-7. Patlayan oyuncunun mini oyun puanı: [-1 puan]
-8. Patlamayan oyuncuların sıralama ve puanlama kuralı: [en çok tıklayan oyuncu +2 ikinci +1]
-9. Aynı tıklama sayısında eşitlik: [+2 almazlar direkt +1 alırlar]
-10. Bar hiç taşmadan süre biterse ne olur?: [Bar 100'e ulaştıktan sonraki
-    gizli 3 saniye içinde hiçbir tıklama kapasiteyi aşmazsa tur normal şekilde
-    kapanır ve patlamayan oyuncuların tıklama sayıları sıralanır.]
+4. Tıklamalar anlık görünür mü, toplam sayı gizli mi?: [gizli; oyun sırasında toplam ve sayılar hiçbir ekranda
+   (kişisel, ortak, izleyici) gösterilmez, toplam yalnız sonuç ekranında açılır]
+5. Aşamalar ve süreler: [görünür süre yok; enerji barı 100 olana kadar devam eder. 100 olunca oyunculara
+   gözükmeyecek bir 3 saniyelik tehlike penceresi başlar (amaç: yanlışlıkla birisi barı patlatabilir). Tur, 100'ü
+   aşan ilk tıkta bitmez; pencere sonuna kadar sürer, 3 saniye dolunca tur biter. Teknik üst sınır: oyunun
+   başından 90 sn.]
+6. Kapasiteyi aşan tıklamada ne olur?: [tur bitmez; bar 100'ü geçtikten sonra (pencerede) basan herkes patlar.
+   Her oyuncunun 100'den önceki ve sonraki tık sayıları ayrı tutulur. Toplu mesajda 100'e kadar olan kısım
+   "önce", aşan kısım "sonra" sayılır.]
+7. Patlayan oyuncunun mini oyun puanı: [100'den sonra en çok basan tek kişi -2, diğer patlayanlar -1. Yalnız bir
+   kişi patladıysa -1. 100'den sonra en çok basanlar eşitse hepsi -1 (kimse -2 almaz).]
+8. Patlamayan oyuncuların sıralama ve puanlama kuralı: [yalnız patlamayanlar, 100'ü geçmeden (bar dolana kadar)
+   yaptıkları tıklamalara göre sıralanır: tek lider +2, ikinci (en yüksek ikinci değer) +1, diğerleri 0. Hiç
+   tıklamayan ödül almaz. Patlayanlar sıralamaya girmez; 100'den önce ne kadar basmış olursa olsun yalnız
+   cezasını alır.]
+9. Aynı tıklama sayısında eşitlik: [liderler eşitse hepsi +1 alır, +2 ve ikinci sıra verilmez; ikinci sırada
+   eşitlik varsa eşitlerin hepsi +1]
+10. Bar hiç taşmadan süre biterse ne olur?: [kimse 100'ü geçmezse eksi puan yoktur; pencere dolunca tur normal
+    kapanır ve sıralama ödülü verilir. Bar hiç dolmadan 90 sn teknik sınır dolarsa da sıralama aynı şekilde
+    verilir.]
 11. Genel skora aktarım: [direkt genel puana eklenir]
 12. Tutorialda gösterilecek üç adım:
     1. Ortak enerji barını gizlice tıklayarak doldur.
     2. Bar 100'e ulaştıktan sonra görünmeyen 3 saniyelik tehlike başlar.
-    3. 100'ü aşan son tıkı atan patlar; diğerleri tıklama sırasına göre puan alır.
-13. Bar, uyarı, titreşim, kıvılcım ve patlama animasyonları: Ortak bar büyük
-    bir reaktör çekirdeği olarak görünür; tıklamalar oyuncunun kendi ekranında
-    küçük elektrik kıvılcımları bırakır, toplam tıklama sayısı gizli kalır.
-    100'e ulaşınca ekranın kenarı kırmızıya döner fakat görünür sayaç başlamaz.
-    Aşan tıkta çekirdek beyaz parlar, ilgili avatarın ekranı kısa sarsılır ve
-    patlama gerçekleşir.
-14. Özel durumlar: 100'e ulaşan tıklama turu bitirmez; yalnızca gizli 3 saniye
-    penceresini başlatır. Bu pencerede kapasiteyi aşan ilk sunucu sıralı tık
-    patlamayı belirler. Patlayan oyuncu sıralamaya girmez. Patlamayanlar içinde
-    tıklama liderleri eşitse liderlerin tamamı +1 alır ve +2 verilmez; ikinci
-    sıra yalnızca tek lider olduğunda +1 alır.
+    3. 100'ü aşınca basan herkes patlar (en çok basan -2, diğerleri -1); kalanlarda en çok tıklayan +2, ikinci +1.
+13. Bar, uyarı, titreşim, kıvılcım ve patlama animasyonları: Ortak bar büyük bir reaktör çekirdeği olarak
+    görünür; dokunuşta çekirdek içe çöküp geri esner, halkalar dokunulan yönden dalgalanır ve dokunulan yerden
+    çekirdeğe ışık parçacıkları akar. Oyuncunun kendi hızına göre yükselen bir vınlama sesi ve titreşim vardır
+    (barı yansıtmaz). Arka plandaki reaktör tüpü zamana bağlı canlanır (doluluğu göstermez). Toplam tıklama sayısı
+    gizli kalır. 100'e ulaşınca ekranın kenarı kırmızıya döner fakat görünür sayaç başlamaz. Tur bitince patlama
+    varsa beyaz flaş, çekirdeğin parçalanması, şok dalgası ve sarsıntı oynar; sonuçlar sırayla açılır (önce
+    toplam, sonra oyuncular, patlayanlar en son "PATLATTI" damgasıyla).
+14. Özel durumlar: 100'e ulaşan tıklama turu bitirmez; yalnızca gizli 3 saniye penceresini başlatır. Pencerede
+    basan herkes patlar; tur pencere sonunda biter. Patlayanlar sıralamaya girmez. Patlamayanlar içinde tıklama
+    liderleri eşitse liderlerin tamamı +1 alır ve +2 verilmez; ikinci sıra yalnızca tek lider olduğunda +1 alır.
+    Herkes patlarsa sıralama ödülü verilmez.
 
-**Değişiklik (O7, Ekim 2026, sahip onayı) — aşağıdaki cevapların önüne geçer:**
+**Değişiklik (Ekim 2026, sahip onayı) — yukarıdaki cevaplara işlendi:**
 
-- Patlamayan oyuncular arasında **en az tıklayan** oyuncu(lar) ayrıca **−1** alır (hiç tıklamayan da en az sayılır).
-  Eşitlikte en az sayıda tıklayanların **hepsi** −1 alır. Patlamayan herkesin tıklama sayısı aynıysa **kimse bu cezayı
-  almaz**.
-- Patlayan oyuncu bu cezaya girmez ve ikinci bir −1 almaz (yalnız kendi −1'ini alır).
-- Bu −1, mevcut puanlara eklenir (örneğin ikinci sırada +1 alan ve aynı zamanda en az tıklayan oyuncu toplamda 0 alır).
-  Tıklamalar eskisi gibi tur sonuna kadar gizlidir; değişiklik yalnız tur sonu puanlamasını etkiler.
+- Tur ilk aşan tıkta bitmez; pencere sonuna kadar sürer ve pencerede basan herkes patlar (eskiden yalnız aşan ilk
+  tık patlatır ve tur o anda biterdi).
+- Patlama cezası: 100'den sonra en çok basan tek kişi -2, diğer patlayanlar -1 (eşitlikte hepsi -1; tek patlayan -1).
+- O7'deki "patlamayanlar arasında en az tıklayana -1" cezası tamamen kaldırıldı: kimse patlamazsa hiç eksi puan yok.
 - Tek turlu oyundur ve mini→genel dönüşümü değişmez: puanlar doğrudan genel skora eklenir.
-- Tutorial adım 3: "100'ü aşan son tıkı atan patlar (−1); diğerlerinde en çok tıklayan +2, ikinci +1, en az tıklayan −1."
 
 ## 21. Kontrol Paneli Kaosu — `kontrol-paneli-kaosu`
 

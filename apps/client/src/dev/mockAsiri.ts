@@ -3,14 +3,17 @@
  *   ?mock=asiri-yukleme-briefing     anlatım
  *   ?mock=asiri-yukleme-playing      tıklama sahnesi (dokununca kıvılcım)
  *   ?mock=asiri-yukleme-danger       bar 100'de: kenarlar kırmızı
- *   ?mock=asiri-yukleme-reveal-boom  sonuç, patlama (`&me=1` patlayan sensin)
+ *   ?mock=asiri-yukleme-reveal-boom  sonuç, patlama (`&me=1` patlayan sensin; `&multi=1` iki kişi patlar,
+ *                                    100'den sonra en çok basan −2)
  *   ?mock=asiri-yukleme-reveal-safe  sonuç, patlama yok
+ *   Sonuç mock'larında `&anim=1`: önce oyun sahnesi, kısa süre sonra sonuç gelir (sıralı açılış oynar).
  *   ?mock=asiri-yukleme-spectator    katılımcı değilsin
  */
 import {
   type AsiriYuklemePublicView,
   type AsiriYuklemeView,
   asiriYukleme,
+  asiriYuklemeExploders,
   asiriYuklemePoints,
   type GameInfo,
   type MatchSnapshot,
@@ -56,22 +59,36 @@ export function startAsiriMock(kind: string, params: URLSearchParams): void {
   const revealed = boom || safe;
 
   const buildReveal = () => {
-    const clicks: Record<string, number> = {};
-    const base = [34, 27, 19, 12, 9, 6, 4, 2];
+    const before: Record<string, number> = {};
+    const after: Record<string, number> = {};
+    const base = [30, 22, 16, 11, 8, 6, 4, 3]; // 8 oyuncuda tam 100
     participants.forEach((id, i) => {
-      clicks[id] = base[i] ?? 1;
+      before[id] = base[i] ?? 1;
+      after[id] = 0;
     });
-    // Patlayan: `&me=1` ise sen, değilse listedeki ikinci oyuncu.
-    const exploder = boom ? (params.get("me") === "1" ? SELF : (participants[1] ?? null)) : null;
-    if (exploder) clicks[exploder] = (clicks[exploder] ?? 0) + 1;
-    const total = Object.values(clicks).reduce((a, b) => a + b, 0);
+    // Bar doldu: 100'e kadarki tıklamalar toplamı tam 100 olsun (eksik kısım ilk oyuncuya yazılır).
+    const lead = participants[0];
+    const sum = Object.values(before).reduce((a, b) => a + b, 0);
+    if (lead && sum < 100) before[lead] = (before[lead] ?? 0) + 100 - sum;
+    // Patlayan: `&me=1` ise sen, değilse listedeki ikinci oyuncu; `&multi=1` ile sonuncu oyuncu da (en çok basan).
+    if (boom) {
+      const first = params.get("me") === "1" ? SELF : participants[1];
+      if (first) after[first] = 1;
+      const last = participants[participants.length - 1];
+      if (params.get("multi") === "1" && last && last !== first) after[last] = 3;
+    }
+    const total = [...Object.values(before), ...Object.values(after)].reduce((a, b) => a + b, 0);
     return {
-      total: boom ? 101 : total,
-      exploder,
-      clicks,
-      points: asiriYuklemePoints(participants, clicks, exploder),
+      total,
+      before,
+      after,
+      exploders: asiriYuklemeExploders(participants, after),
+      points: asiriYuklemePoints(participants, before, after),
     };
   };
+
+  // `&anim=1`: sonuç ilk anda değil, oyun sahnesinden sonra gelir (gerçek akıştaki gibi açılış oynar).
+  let showReveal = revealed && params.get("anim") !== "1";
 
   const snapshot = (): RoomSnapshot => {
     if (kind === "asiri-yukleme-briefing") {
@@ -82,7 +99,7 @@ export function startAsiriMock(kind: string, params: URLSearchParams): void {
     const pub: AsiriYuklemePublicView = {
       startedAt,
       danger: kind.endsWith("danger") || revealed,
-      reveal: revealed ? buildReveal() : null,
+      reveal: showReveal ? buildReveal() : null,
     };
     const priv: AsiriYuklemeView = { participant: !spectator };
     const match: MatchSnapshot = {
@@ -133,4 +150,10 @@ export function startAsiriMock(kind: string, params: URLSearchParams): void {
   });
   setState("session", { token: "mock", playerId: SELF, roomCode: "KX7QP" });
   applySnapshot(snapshot());
+  if (revealed && !showReveal) {
+    setTimeout(() => {
+      showReveal = true;
+      applySnapshot(snapshot());
+    }, 1_200);
+  }
 }
