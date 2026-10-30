@@ -188,6 +188,11 @@ button.aitem:active:not(:disabled) {
   line-height: 1.2;
   animation: a-pop 320ms var(--ease) both;
 }
+.ares__sub {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--text-dim);
+}
 .ares__val[data-k="gold"] {
   color: var(--gold);
   text-shadow: 0 0 22px rgba(255, 194, 59, 0.7);
@@ -328,14 +333,6 @@ button.aitem:active:not(:disabled) {
   font-variant-numeric: tabular-nums;
 }
 .arow[data-win="1"] .arow__val {
-  color: var(--gold);
-}
-.arow__pts {
-  position: absolute;
-  right: 0;
-  top: -12px;
-  font-style: normal;
-  font-size: var(--fs-13);
   color: var(--gold);
 }
 @keyframes a-row {
@@ -1124,35 +1121,59 @@ button.aitem:active:not(:disabled) {
   background: var(--magenta);
   border: 1px solid #1a1030;
 }
-.garow__pts[data-fly="1"] {
-  opacity: 0.45;
+/* Puan rozeti: +2 altın, +1 gümüş; 0 için boş yer (değerler hizalı kalır). */
+.garow__badge {
+  flex: none;
+  display: inline-flex;
+  justify-content: center;
+  min-width: 34px;
+}
+.garow__badge b {
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: var(--fs-15);
+  font-weight: 800;
+  line-height: 1.2;
+  color: #1a1030;
+  animation: ga-drop 360ms cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+.garow__badge[data-p="2"] b {
+  background: linear-gradient(180deg, #ffe08a, var(--gold));
+  box-shadow: 0 0 12px rgba(255, 194, 59, 0.6);
+}
+.garow__badge[data-p="1"] b {
+  background: linear-gradient(180deg, #f3f5ff, #aab3d0);
+  box-shadow: 0 0 10px rgba(200, 210, 240, 0.45);
+}
+/* "EN DEĞERLİ SEPET" damgası: satırın içinde, ürünlerin yanında (değerin solunda), eğik; hiçbir yazıyı örtmez. */
+.arow__items {
+  align-items: center;
 }
 .garow__stamp {
-  position: absolute;
-  z-index: 1;
-  left: 64%;
-  top: 0;
-  padding: 1px 6px;
+  flex: none;
+  margin-left: auto;
+  padding: 1px 5px;
   border: 2px solid var(--gold);
   border-radius: 6px;
   color: var(--gold);
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 10px;
+  line-height: 1.15;
   white-space: nowrap;
-  pointer-events: none;
-  background: rgba(10, 16, 48, 0.92);
-  transform: translate(-50%, -78%) rotate(-4deg);
+  background: rgba(10, 16, 48, 0.85);
+  transform: rotate(-5deg);
   animation: ga-stamp-row 360ms cubic-bezier(0.3, 1.5, 0.5, 1) both;
 }
 @keyframes ga-stamp-row {
   from {
     opacity: 0;
-    transform: translate(-50%, -78%) rotate(-4deg) scale(1.8);
+    transform: rotate(-5deg) scale(1.8);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -78%) rotate(-4deg) scale(1);
+    transform: rotate(-5deg) scale(1);
   }
 }
 .gaconfetti {

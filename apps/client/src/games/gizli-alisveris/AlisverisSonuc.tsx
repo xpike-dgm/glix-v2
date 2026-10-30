@@ -117,6 +117,14 @@ export function AlisverisSonuc(props: Props) {
     }),
   );
 
+  /** Kendi sıran (eşit değerler aynı sırayı paylaşır) ve puanın: "2. sıra · +1" / "4. sıra · puan yok". */
+  const mySub = (): string | null => {
+    if (stage() < 3 || props.spectator || !inGame()) return null;
+    const mine = r().values[props.selfId] ?? 0;
+    const rank = 1 + desc().filter((id) => (r().values[id] ?? 0) > mine).length;
+    return `${rank}. sıra · ${myPoints() > 0 ? `+${myPoints()}` : "puan yok"}`;
+  };
+
   const head = (): { label: string; value: string; kind: string } => {
     const s = stage();
     if (s === 0) return { label: "Raf kepengi", value: "Açılıyor", kind: "n" };
@@ -152,6 +160,7 @@ export function AlisverisSonuc(props: Props) {
         >
           {head().value}
         </span>
+        <Show when={mySub()}>{(t) => <span class="ares__sub">{t()}</span>}</Show>
       </div>
 
       <Show
@@ -256,26 +265,25 @@ export function AlisverisSonuc(props: Props) {
                           )}
                         </For>
                       </Show>
+                      <Show when={open() && win()}>
+                        <span class="garow__stamp">EN DEĞERLİ SEPET</span>
+                      </Show>
                     </span>
                   </span>
-                  <span class="arow__val">
-                    {open() ? formatKredi(r().values[id] ?? 0) : "?"}
+                  <span class="garow__badge" data-p={open() ? pts() : 0}>
                     <Show when={open() && pts() > 0}>
-                      <em
-                        class="arow__pts garow__pts"
-                        data-fly={stage() >= 3 ? "1" : undefined}
+                      <b
                         ref={(el) => {
                           chipEls.set(id, el);
                         }}
                       >
                         +{pts()}
-                      </em>
+                      </b>
+                      <span class="sr-only"> puan</span>
                     </Show>
                   </span>
+                  <span class="arow__val">{open() ? formatKredi(r().values[id] ?? 0) : "?"}</span>
                   <Show when={open() && win()}>
-                    <span class="garow__stamp" aria-hidden="true">
-                      EN DEĞERLİ SEPET
-                    </span>
                     <span class="gaconfetti" aria-hidden="true">
                       <i />
                       <i />
