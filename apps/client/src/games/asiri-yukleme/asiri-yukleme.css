@@ -241,13 +241,13 @@
   width: calc(230 * var(--u));
   height: calc(255 * var(--u));
   border-radius: 46% / 38%;
+  will-change: opacity;
   background: radial-gradient(
     ellipse 50% 50% at 50% 60%,
     rgba(150, 245, 255, 0.34),
     rgba(46, 242, 255, 0.14) 55%,
     transparent 100%
   );
-  mix-blend-mode: screen;
   animation: ay-amb-pulse 2.6s ease-in-out infinite;
 }
 /* Tüp tabanındaki çıkışlardan ince buhar. */
@@ -258,7 +258,7 @@
   border-radius: 50%;
   background: radial-gradient(closest-side, rgba(210, 230, 245, 0.32), transparent);
   opacity: 0;
-  filter: blur(3px);
+  will-change: transform, opacity;
   animation: ay-amb-steam 8s ease-out infinite;
 }
 .ay-amb__steam--l {
@@ -270,22 +270,25 @@
   animation-duration: 10s;
   animation-delay: 5.2s;
 }
-/* Kırmızı ışık şeridinde aşağıdan yukarı geçen lamba yansıması (dönen lambanın süpürmesi). */
+/* Kırmızı ışık şeridinde aşağıdan yukarı geçen lamba yansıması (dönen lambanın süpürmesi). Şerit kutusu
+   kırpar; içindeki parlak bant yalnız transform ile kayar (her karede boyama yok). */
 .ay-amb__sweep {
   top: calc(165 * var(--u));
   width: calc(14 * var(--u));
   height: calc(135 * var(--u));
   border-radius: calc(7 * var(--u));
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    transparent 38%,
-    rgba(255, 150, 150, 0.55) 50%,
-    transparent 62%,
-    transparent 100%
-  );
-  background-size: 100% 300%;
-  mix-blend-mode: screen;
+  overflow: hidden;
+}
+.ay-amb__sweep::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 40%;
+  background: linear-gradient(180deg, transparent, rgba(255, 150, 150, 0.5), transparent);
+  transform: translateY(260%);
+  will-change: transform;
   animation: ay-amb-sweep 3.2s linear infinite;
 }
 .ay-amb__sweep--l {
@@ -295,6 +298,8 @@
 .ay-amb__sweep--r {
   left: calc(50% + (623 - 360) * var(--u));
   transform: rotate(-4deg);
+}
+.ay-amb__sweep--r::before {
   animation-delay: -1.6s;
 }
 @keyframes ay-amb-pulse {
@@ -308,12 +313,13 @@
 }
 @keyframes ay-amb-sweep {
   from {
-    background-position: 0 0;
+    transform: translateY(260%);
   }
   to {
-    background-position: 0 100%;
+    transform: translateY(-110%);
   }
 }
+
 @keyframes ay-amb-steam {
   0%,
   70% {
@@ -775,7 +781,8 @@
 
 /* Hareket azaltma: sürekli arka plan döngüleri durur; sıralı açılış kayma yerine yalnız belirir. */
 @media (prefers-reduced-motion: reduce) {
-  :root:not([data-motion="full"]) .ay-amb > i {
+  :root:not([data-motion="full"]) .ay-amb > i,
+  :root:not([data-motion="full"]) .ay-amb > i::before {
     animation: none;
   }
   :root:not([data-motion="full"]) .ay__row {
@@ -786,7 +793,8 @@
     animation-duration: 1400ms;
   }
 }
-:root[data-motion="reduce"] .ay-amb > i {
+:root[data-motion="reduce"] .ay-amb > i,
+:root[data-motion="reduce"] .ay-amb > i::before {
   animation: none;
 }
 :root[data-motion="reduce"] .ay__row {

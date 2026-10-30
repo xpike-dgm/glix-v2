@@ -55,9 +55,19 @@ export default function AsiriYuklemeScreen(props: GameScreenProps) {
   let lastFx = 0;
   onCleanup(() => inflow?.dispose());
 
+  // Efektler kendi düğümlerine bağlıdır: sahne yeniden kurulursa (ref değişir) yenileri kurulur, eskiler bırakılır.
+  let fxCore: HTMLElement | undefined;
+  let fxMotes: HTMLElement | undefined;
   const ensureFx = (): void => {
-    if (!coreFx && coreEl) coreFx = createCoreFx(coreEl);
-    if (!inflow && motesEl) inflow = createInflow(motesEl);
+    if (coreEl && (coreFx === null || fxCore !== coreEl)) {
+      coreFx = createCoreFx(coreEl);
+      fxCore = coreEl;
+    }
+    if (motesEl && (inflow === null || fxMotes !== motesEl)) {
+      inflow?.dispose();
+      inflow = createInflow(motesEl);
+      fxMotes = motesEl;
+    }
   };
 
   /** Bir dokunuşun yerel tepkisi: çekirdek, parçacıklar, vınlama, ritim, titreşim (yalnız kendi hızın). */
@@ -272,7 +282,9 @@ export default function AsiriYuklemeScreen(props: GameScreenProps) {
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        if (props.spectator) return;
+                        // Basılı tutulan tuşun otomatik tekrarı tıklama sayılmaz.
+                        if (e.repeat || props.spectator || reveal()) return;
+                        unlockAudio();
                         batcher.tap();
                         feel(null, null);
                       }
