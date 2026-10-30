@@ -575,7 +575,7 @@ function stepPlaying(rt: Runtime, room: Room, match: Match): void {
 
 /**
  * Oyun sonu yorumu (aiComment.ts): oyunun sonucu herkese açık görünümde açıldığı ilk anda tek istek başlatılır;
- * oyun beklemez. Yanıt aynı oyun sürerken (oyun içi sonuç ya da sonuç ekranı) gelirse ortak görünüme eklenir.
+ * oyun beklemez. Yanıt aynı oyunun içi sürerken (oyunun kendi sonuç açılışı) gelirse ortak görünüme eklenir.
  * Kapalıysa ya da oyun yorum desteklemiyorsa hiçbir şey hesaplanmaz. Hata maçı asla etkilemez.
  */
 function askComment(rt: Runtime, room: Room, match: Match): void {
@@ -591,7 +591,7 @@ function askComment(rt: Runtime, room: Room, match: Match): void {
     const index = match.index;
     rt.aiComment.request(prompt, (text) => {
       if (room.match !== match || match.index !== index) return;
-      if (room.phase !== "playing" && room.phase !== "results") return;
+      if (room.phase !== "playing") return;
       match.comment = text;
       rt.broadcaster.markDirty(room);
     });
@@ -730,9 +730,8 @@ export function sharedMatchSnapshot(rt: Runtime, room: Room): Omit<MatchSnapshot
     publicView,
     result: room.phase === "results" || room.phase === "final" ? publicResult(match.result) : null,
     cards: cardsPublicOf(room, match),
-    ...(match.comment !== null && (room.phase === "playing" || room.phase === "results")
-      ? { comment: match.comment }
-      : {}),
+    // Yorum yalnız oyunun kendi sonuç açılışında gösterilir: sonuç ekranına gönderilmez.
+    ...(match.comment !== null && room.phase === "playing" ? { comment: match.comment } : {}),
   };
 }
 

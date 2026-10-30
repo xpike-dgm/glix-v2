@@ -46,8 +46,11 @@ export function waveColors(wave: number): WireColor[] {
   return WIRE_COLORS.slice(0, n);
 }
 
-/** Kesim geri alınamaz; dalga başına tek kesim. */
-export type KontrolAction = { kind: "cut"; color: WireColor };
+/**
+ * Kesim geri alınamaz; dalga başına tek kesim. `wave` (0 tabanlı) oyuncunun kestiği dalgadır: dalga değişirken
+ * yolda kalan eski kesim yeni dalgaya sayılmaz ("wrong_wave").
+ */
+export type KontrolAction = { kind: "cut"; color: WireColor; wave: number };
 
 /** play: dalga sürüyor; break: dalgalar arası kısa sonuç; reveal: oyun sonu açılışı. */
 export type KontrolStage = "play" | "break" | "reveal";

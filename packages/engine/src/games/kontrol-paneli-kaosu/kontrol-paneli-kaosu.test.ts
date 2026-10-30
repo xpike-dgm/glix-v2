@@ -43,14 +43,20 @@ const priv = (s: State, who: string | null, at: number) =>
   game.view(tick(s, at), who, ctx(at, s.players)) as KontrolView;
 
 function cut(s: State, who: string, color: WireColor, at = T0 + 1_000, connected?: readonly string[]): State {
-  const parsed = game.parseAction({ kind: "cut", color });
+  const parsed = game.parseAction({ kind: "cut", color, wave: phaseAt(s, at).wave });
   if (parsed === null) throw new Error("geçersiz");
   const r = game.reduce(s, who, parsed, ctx(at, connected ?? s.players));
   if (isRejected(r)) throw new Error(`reddedildi: ${r.rejected}`);
   return r;
 }
-function reject(s: State, who: string, color: WireColor, at = T0 + 1_000): string {
-  const parsed = game.parseAction({ kind: "cut", color });
+function reject(
+  s: State,
+  who: string,
+  color: WireColor,
+  at = T0 + 1_000,
+  wave = phaseAt(s, at).wave,
+): string {
+  const parsed = game.parseAction({ kind: "cut", color, wave });
   if (parsed === null) throw new Error("geçersiz");
   const r = game.reduce(s, who, parsed, ctx(at, s.players));
   if (!isRejected(r)) throw new Error("kabul edildi");
@@ -181,11 +187,24 @@ describe("dalga akışı", () => {
     const s = start();
     expect(reject(s, "p1", "purple")).toBe("no_wire");
     expect(cut(s, "p1", "purple", inWave(s, 2)).waves[2]?.cuts.p1).toBe("purple");
-    expect(game.parseAction({ kind: "cut", color: "orange" })).toBeNull();
-    expect(game.parseAction({ kind: "cut", color: "blue", extra: 1 })).toBeNull();
+    expect(game.parseAction({ kind: "cut", color: "orange", wave: 0 })).toBeNull();
+    expect(game.parseAction({ kind: "cut", color: "blue", wave: 0, extra: 1 })).toBeNull();
+    expect(game.parseAction({ kind: "cut", color: "blue" })).toBeNull();
+    expect(game.parseAction({ kind: "cut", color: "blue", wave: 3 })).toBeNull();
+    expect(game.parseAction({ kind: "cut", color: "blue", wave: 0.5 })).toBeNull();
     expect(game.parseAction(null)).toBeNull();
     expect(reject(s, "x", "blue")).toBe("not_participant");
     expect(reject(s, "p1", "blue", T0 - 1)).toBe("not_started");
+  });
+});
+
+describe("kesimin dalgası", () => {
+  it("kesim yalnız sürmekte olan dalgaya sayılır; başka dalga için gönderilen kesim reddedilir ('wrong_wave')", () => {
+    const s = start();
+    expect(reject(s, "p1", answerOf(s, "p1"), T0 + 1_000, 1)).toBe("wrong_wave");
+    expect(reject(s, "p1", answerOf(s, "p1", 1), inWave(s, 1), 0)).toBe("wrong_wave");
+    expect(reject(s, "p1", "blue", inWave(s, 2), 1)).toBe("wrong_wave");
+    expect(cut(s, "p1", answerOf(s, "p1", 1), inWave(s, 1)).waves[1]?.cuts.p1).toBe(answerOf(s, "p1", 1));
   });
 });
 

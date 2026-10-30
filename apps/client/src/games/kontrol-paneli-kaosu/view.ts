@@ -191,33 +191,46 @@ export function cutText(cut: ClueCut, wires: number): string {
   return `${cut.position}. kabloyu`;
 }
 
-/** Tek koşul cümlesi: "2. kablo kırmızı değil", "mavi ile sarı yan yana", "kırmızı maviden yukarıda". */
-export function conditionText(c: ClueCondition): string {
+/** Şart kipi ("maviyse", "yeşilse", "morsa"): ünlü uyumlu ek. */
+const COLOR_IF: Record<WireColor, string> = {
+  blue: "maviyse",
+  green: "yeşilse",
+  red: "kırmızıysa",
+  yellow: "sarıysa",
+  purple: "morsa",
+};
+
+/**
+ * Tek koşul: "2. kablo kırmızı değil", "mavi ile sarı yan yana", "kırmızı maviden yukarıda". `last` cümlenin son
+ * koşulu ise şart ekiyle: "2. kablo kırmızı değilse", "mavi ile sarı yan yanaysa", "kırmızı maviden yukarıdaysa",
+ * "4. kablo sarıysa".
+ */
+export function conditionText(c: ClueCondition, last = false): string {
   switch (c.kind) {
     case "at":
-      return `${c.position}. kablo ${COLOR_NAME[c.color]}`;
+      return `${c.position}. kablo ${last ? COLOR_IF[c.color] : COLOR_NAME[c.color]}`;
     case "notAt":
-      return `${c.position}. kablo ${COLOR_NAME[c.color]} değil`;
+      return `${c.position}. kablo ${COLOR_NAME[c.color]} ${last ? "değilse" : "değil"}`;
     case "adjacent":
-      return `${COLOR_NAME[c.a]} ile ${COLOR_NAME[c.b]} yan yana`;
+      return `${COLOR_NAME[c.a]} ile ${COLOR_NAME[c.b]} ${last ? "yan yanaysa" : "yan yana"}`;
     case "above":
-      return `${COLOR_NAME[c.a]} ${COLOR_ABLATIVE[c.b]} yukarıda`;
+      return `${COLOR_NAME[c.a]} ${COLOR_ABLATIVE[c.b]} ${last ? "yukarıdaysa" : "yukarıda"}`;
   }
 }
 
 const capitalize = (s: string): string => (s ? s.charAt(0).toLocaleUpperCase("tr") + s.slice(1) : s);
 
 /**
- * İpucu cümlesi: "1. kablo mavi ve 3. kablo sarı ise maviyi kes". İlişki koşulları ("mavi ile sarı yan yana")
- * başa alınır; "3. kablo yeşil ve mavi ile sarı" gibi yanlış okunabilecek dizilişler olmaz.
+ * İpucu cümlesi: "1. kablo mavi ve 3. kablo sarıysa maviyi kes". Şart eki yalnız son koşulda. İlişki koşulları
+ * ("mavi ile sarı yan yana") başa alınır; "3. kablo yeşil ve mavi ile sarı" gibi yanlış okunabilecek dizilişler olmaz.
  */
 export function clueText(clue: Clue): string {
   const relation = (c: ClueCondition): boolean => c.kind === "adjacent" || c.kind === "above";
   const ordered = [...clue.conditions.filter(relation), ...clue.conditions.filter((c) => !relation(c))];
-  const parts = ordered.map(conditionText);
+  const parts = ordered.map((c, i) => conditionText(c, i === ordered.length - 1));
   const last = parts.pop() ?? "";
   const cond = parts.length === 0 ? last : `${parts.join(", ")} ve ${last}`;
-  return capitalize(`${cond} ise ${cutText(clue.cut, clue.wires)} kes`);
+  return capitalize(`${cond} ${cutText(clue.cut, clue.wires)} kes`);
 }
 
 /** Dalga adları. */

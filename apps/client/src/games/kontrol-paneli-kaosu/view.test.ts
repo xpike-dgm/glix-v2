@@ -143,7 +143,7 @@ describe("Kontrol Paneli Kaosu görünümü", () => {
     expect(parseClue("x")).toBeNull();
   });
   it("ipucu Türkçe cümleye çevrilir: her tür, belirtme ve ayrılma hâli renge göre", () => {
-    expect(clueText(parseClue(clue) as never)).toBe("1. kablo mavi ve 3. kablo sarı ise maviyi kes");
+    expect(clueText(parseClue(clue) as never)).toBe("1. kablo mavi ve 3. kablo sarıysa maviyi kes");
     const c = (conditions: unknown[], cut: unknown, wires = 4) => {
       const p = parseClue({ wave: 2, wires, conditions, cut });
       if (!p) throw new Error("ipucu okunmadı");
@@ -157,15 +157,15 @@ describe("Kontrol Paneli Kaosu görünümü", () => {
         ],
         { kind: "color", color: "blue" },
       ),
-    ).toBe("2. kablo kırmızı değil ve 4. kablo sarı ise maviyi kes");
+    ).toBe("2. kablo kırmızı değil ve 4. kablo sarıysa maviyi kes");
     expect(c([{ kind: "adjacent", a: "blue", b: "yellow" }], { kind: "color", color: "green" })).toBe(
-      "Mavi ile sarı yan yana ise yeşili kes",
+      "Mavi ile sarı yan yanaysa yeşili kes",
     );
     expect(c([{ kind: "at", position: 1, color: "green" }], { kind: "position", position: 4 })).toBe(
-      "1. kablo yeşil ise en alttaki kabloyu kes",
+      "1. kablo yeşilse en alttaki kabloyu kes",
     );
     expect(c([{ kind: "above", a: "red", b: "blue" }], { kind: "color", color: "yellow" })).toBe(
-      "Kırmızı maviden yukarıda ise sarıyı kes",
+      "Kırmızı maviden yukarıdaysa sarıyı kes",
     );
     expect(
       c(
@@ -177,10 +177,27 @@ describe("Kontrol Paneli Kaosu görünümü", () => {
         { kind: "color", color: "purple" },
         5,
       ),
-    ).toBe("Sarı mordan yukarıda, 2. kablo mor ve 5. kablo kırmızı değil ise moru kes");
+    ).toBe("Sarı mordan yukarıda, 2. kablo mor ve 5. kablo kırmızı değilse moru kes");
     expect(cutText({ kind: "position", position: 1 }, 5)).toBe("en üstteki kabloyu");
     expect(cutText({ kind: "position", position: 5 }, 5)).toBe("en alttaki kabloyu");
     expect(conditionText({ kind: "above", a: "green", b: "red" })).toBe("yeşil kırmızıdan yukarıda");
+    // Şart eki ünlü uyumuyla: maviyse, yeşilse, kırmızıysa, sarıysa, morsa; değilse, yan yanaysa, yukarıdaysa.
+    const at = (color: "blue" | "green" | "red" | "yellow" | "purple") =>
+      conditionText({ kind: "at", position: 1, color }, true);
+    expect(["blue", "green", "red", "yellow", "purple"].map((c) => at(c as never))).toEqual([
+      "1. kablo maviyse",
+      "1. kablo yeşilse",
+      "1. kablo kırmızıysa",
+      "1. kablo sarıysa",
+      "1. kablo morsa",
+    ]);
+    expect(conditionText({ kind: "notAt", position: 2, color: "red" }, true)).toBe(
+      "2. kablo kırmızı değilse",
+    );
+    expect(conditionText({ kind: "adjacent", a: "blue", b: "red" }, true)).toBe(
+      "mavi ile kırmızı yan yanaysa",
+    );
+    expect(conditionText({ kind: "above", a: "red", b: "purple" }, true)).toBe("kırmızı mordan yukarıdaysa");
     // İpucu metni teknik kelime içermez.
     expect(c([{ kind: "at", position: 1, color: "red" }], { kind: "color", color: "red" })).not.toMatch(
       /notAt|adjacent|above|position/,

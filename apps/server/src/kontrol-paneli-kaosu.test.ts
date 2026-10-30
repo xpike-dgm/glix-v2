@@ -5,8 +5,10 @@ import type { AiFetch } from "./aiComment.js";
 import { type Client, k, setupRoom, sleep, sync, until, useServer } from "./testkit.js";
 
 let seq = 13000;
-async function send(c: Client, payload: unknown): Promise<boolean> {
+async function send(c: Client, raw: Record<string, unknown>): Promise<boolean> {
   const n = ++seq;
+  // Kesim, o an sürmekte olan dalgayı taşır (verilmediyse görünümdeki dalga).
+  const payload = "wave" in raw ? raw : { ...raw, wave: pub(c).wave };
   c.send({ type: "action", seq: n, payload });
   for (let i = 0; i < 100 && !c.of("actionAck").some((a) => a.seq === n); i++) await sleep(5);
   return c.of("actionAck").find((a) => a.seq === n)?.ok === true;
@@ -54,10 +56,13 @@ async function clearWave(cs: Client[], wave: number): Promise<void> {
 }
 
 const okFetch = (text: string) =>
-  vi.fn<AiFetch>(async () => ({ status: 200, json: async () => ({ content: [{ type: "text", text }] }) }));
+  vi.fn<AiFetch>(async () => ({
+    status: 200,
+    json: async () => ({ stop_reason: "end_turn", content: [{ type: "text", text }] }),
+  }));
 
 describe("kontrol paneli kaosu: oda içinde tam maç (üç dalga)", () => {
-  const aiFetch = okFetch("A üç dalgada da kabloları bir cerrah gibi kesti.");
+  const aiFetch = okFetch("Oyuncu1 üç dalgada da kabloları bir cerrah gibi kesti.");
   useServer({ aiKey: "test-anahtar", aiFetch });
 
   it("paneller ve ipuçları kişiye özel, kesimler gizli; yanlış kesim saati 5 sn atlatır; dalgalar ilerler; puan +2/+1/0", async () => {
@@ -85,6 +90,7 @@ describe("kontrol paneli kaosu: oda içinde tam maç (üç dalga)", () => {
     const endsAt = pub(host).endsAt;
     expect(await send(a, { kind: "cut", color: "orange" })).toBe(false);
     expect(await send(a, { kind: "cut", color: "purple" })).toBe(false); // 4 kablolu dalgada mor yok
+    expect(await send(a, { kind: "cut", color: ans.get(a), wave: 1 })).toBe(false); // yanlış dalga
     expect(await send(a, { kind: "cut", color: ans.get(a) })).toBe(true);
     expect(await send(a, { kind: "cut", color: wrong(a) })).toBe(false); // geri alınamaz
     await sync();
@@ -137,13 +143,16 @@ describe("kontrol paneli kaosu: oda içinde tam maç (üç dalga)", () => {
     const body = JSON.parse(init?.body ?? "{}") as { model: string; messages: { content: string }[] };
     expect(body.model).toBe("claude-haiku-5-5");
     const prompt = body.messages[0]?.content ?? "";
-    expect(prompt).toContain("- A:");
+    expect(prompt).toContain("- Oyuncu1:");
+    expect(prompt).not.toMatch(/- [ABC]:/);
     expect(prompt).toContain("dalga 3:");
     for (const id of ids) expect(prompt).not.toContain(id as string);
     for (const x of cs) expect(JSON.stringify(x.room)).not.toContain("test-anahtar");
 
     k.clock.advance(8_000);
     await until(() => host.room.phase === "results", "sonuç");
+    // Yorum yalnız oyunun kendi açılışında yollanır; sonuç ekranında anlık görüntüde yok.
+    expect(host.room.match?.comment).toBeUndefined();
     const awards = host.room.match?.result?.awards ?? {};
     const sorted = [...new Set(Object.values(totals))].filter((v) => v > 0).sort((x, y) => y - x);
     for (const id of ids) {

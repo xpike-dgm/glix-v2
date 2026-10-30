@@ -35,6 +35,11 @@ export type AiFetch = (
 export interface AiPrompt {
   system: string;
   user: string;
+  /**
+   * Yer tutucu -> gerçek ad ("Oyuncu1" -> "Mert"). Modele gerçek adlar gitmez (istem enjeksiyonuna karşı); doğrulanmış
+   * yanıttaki yer tutucular bu tabloyla değiştirilir ve metin yeniden doğrulanır.
+   */
+  names?: Readonly<Record<string, string>>;
 }
 
 export interface AiCommenter {
@@ -67,7 +72,7 @@ export function cleanComment(raw: unknown, isBanned: (text: string) => boolean):
   if (typeof raw !== "string") return null;
   let text = raw.trim();
   if (/[\r\n]/.test(text)) return null;
-  text = text.replace(/^["'“”‘’«»]+|["'“”‘’«»]+$/g, "").trim();
+  text = text.replace(/^["'“”‘’«»„\s]+|["'“”‘’«»„\s]+$/g, "");
   if (text.length === 0 || Array.from(text).length > GAME_COMMENT_MAX) return null;
   // Denetim karakteri, işaretleme ya da bağlantı içeren metin "düz metin" değildir.
   if (/\p{Cc}/u.test(text) || /[<>`*#_[\]{}|\\]/.test(text) || /https?:|www\./i.test(text)) return null;
@@ -75,9 +80,13 @@ export function cleanComment(raw: unknown, isBanned: (text: string) => boolean):
   return text;
 }
 
-/** Messages API yanıtından metin bloklarını birleştirir; biçim tutmuyorsa null. */
+/**
+ * Messages API yanıtından metin bloklarını birleştirir; biçim tutmuyorsa ya da yanıt kendiliğinden bitmediyse
+ * (`stop_reason` "end_turn" değil: yarım cümle olabilir) null.
+ */
 export function responseText(body: unknown): string | null {
   if (typeof body !== "object" || body === null) return null;
+  if ((body as { stop_reason?: unknown }).stop_reason !== "end_turn") return null;
   const content = (body as { content?: unknown }).content;
   if (!Array.isArray(content)) return null;
   const parts: string[] = [];
@@ -87,6 +96,26 @@ export function responseText(body: unknown): string | null {
     if (b.type === "text" && typeof b.text === "string") parts.push(b.text);
   }
   return parts.length > 0 ? parts.join("") : null;
+}
+
+/**
+ * Yer tutucuları ("Oyuncu3") gerçek adlarla değiştirir ve sonucu yeniden doğrular (uzunluk, süzgeç). Bilinmeyen yer
+ * tutucu kalırsa ya da ad değişiminden sonra metin geçmezse null (kısaltılmaz, gösterilmez).
+ */
+export function withNames(
+  text: string,
+  names: Readonly<Record<string, string>> | undefined,
+  isBanned: (text: string) => boolean,
+): string | null {
+  if (!names) return text;
+  let unknown = false;
+  const replaced = text.replace(/Oyuncu\d+/g, (m) => {
+    const name = Object.hasOwn(names, m) ? names[m] : undefined;
+    if (name === undefined) unknown = true;
+    return name ?? m;
+  });
+  if (unknown) return null;
+  return cleanComment(replaced, isBanned) === replaced ? replaced : null;
 }
 
 export function createAiCommenter(opts: AiCommenterOptions): AiCommenter {
@@ -116,6 +145,8 @@ export function createAiCommenter(opts: AiCommenterOptions): AiCommenter {
       body: JSON.stringify({
         model: AI_COMMENT_MODEL,
         max_tokens: MAX_TOKENS,
+        // Düşünme kapalı: açıkken kısa sınırda yalnız düşünme bloğu gelir, metin hiç çıkmaz.
+        thinking: { type: "disabled" },
         system: prompt.system,
         messages: [{ role: "user", content: prompt.user }],
       }),
@@ -126,7 +157,8 @@ export function createAiCommenter(opts: AiCommenterOptions): AiCommenter {
       log.warn("ai_comment_failed", { status: res.status });
       return null;
     }
-    return cleanComment(responseText(await res.json()), opts.isBanned);
+    const text = cleanComment(responseText(await res.json()), opts.isBanned);
+    return text === null ? null : withNames(text, prompt.names, opts.isBanned);
   }
 
   return {

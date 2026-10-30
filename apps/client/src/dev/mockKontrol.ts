@@ -25,6 +25,7 @@ import {
   kontrolPaneliKaosu as game,
   isRejected,
   KONTROL_TIMELINE,
+  phaseAt,
   waveColors,
 } from "@glix/engine";
 import { useMockSender } from "../net/client.js";
@@ -99,7 +100,7 @@ export function startKontrolMock(kind: string, params: URLSearchParams): void {
       const r = game.reduce(
         s,
         c.who,
-        { kind: "cut", color: c.color },
+        { kind: "cut", color: c.color, wave: phaseAt(s, t0 + c.at).wave },
         { now: t0 + c.at, rng: createRng(1), connected: [] },
       );
       if (!isRejected(r)) s = r;

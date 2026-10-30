@@ -1166,14 +1166,15 @@ cevaplarının yerine geçer; geri kalanı (2–8 oyuncu, ipucu zinciri, gizlili
    yeniden karıştırılmış ipucu zinciri gelir: 3+ oyuncuda hiçbir taşıyıcı önceki dalgada taşıdığı kişinin notunu
    taşımaz (2 oyuncuda tek döngü olduğundan eşleşme aynı kalır).
 2. **Kesim:** Her dalgada herkesin **tek ve geri alınamaz** bir kesim hakkı vardır; yeni dalgada hak yenilenir. 4
-   kablolu dalgada mor kesilemez. Dalga bittikten sonra (arada ya da sonda) gelen kesim reddedilir.
+   kablolu dalgada mor kesilemez. Dalga bittikten sonra (arada ya da sonda) gelen kesim reddedilir; bir dalga için
+   gönderilip sonraki dalgada ulaşan kesim de yeni dalgaya sayılmaz.
 3. **Dalga başına erken bitiş:** Bağlı bütün katılımcılar o dalgada kestiyse dalga 1 sn sonra biter; kopuk oyuncu
    beklenmez.
 4. **Ara:** Dalga 1 ve 2'den sonra 4 sn'lik kısa sonuç: herkesin o dalgadaki kesimi (renk, ✓/✗), ipucu taşıyıcısı ve
    o dalganın imha puanı. Biten dalganın panelleri ve ipuçları bu andan itibaren herkese açıktır.
-5. **Yeni ipucu türleri (dalga 2 ve 3):** olumsuz ("2. kablo kırmızı değil ve 4. kablo sarı ise maviyi kes"),
-   komşuluk ("Mavi ile sarı yan yana ise yeşili kes"), konum hedefi ("1. kablo yeşil ise en alttaki kabloyu kes";
-   en üstteki ya da en alttaki), sıra ("Kırmızı maviden yukarıda ise sarıyı kes"). Dalga 2'de bu dört türden biri,
+5. **Yeni ipucu türleri (dalga 2 ve 3):** olumsuz ("2. kablo kırmızı değil ve 4. kablo sarıysa maviyi kes"),
+   komşuluk ("Mavi ile sarı yan yanaysa yeşili kes"), konum hedefi ("1. kablo yeşilse en alttaki kabloyu kes";
+   en üstteki ya da en alttaki), sıra ("Kırmızı maviden yukarıdaysa sarıyı kes"). Dalga 2'de bu dört türden biri,
    dalga 3'te üç "N. kablo R" koşulu ya da en az bir yeni türü içeren 2–3 koşullu karma ipucu rastgele seçilir;
    dalga 3'te ipuçlarının yaklaşık üçte biri konum hedeflidir. Her ipucu hedef panelde doğrudur ve o dalganın
    panelleri arasında **yalnız hedef paneli** tanımlar (üretimde denetlenir). İstenen tür bunu sağlayamazsa

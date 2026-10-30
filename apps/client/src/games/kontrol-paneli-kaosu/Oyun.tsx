@@ -27,8 +27,11 @@ export function Oyun(props: Props) {
     const color = picked();
     if (closed() || color === null) return false;
     unlockAudio();
-    wireSnap();
-    const ack = sendActionAck({ kind: "cut", color });
+    const ack = sendActionAck({ kind: "cut", color, wave: props.view.wave });
+    // Kablo görselde hemen kopar (iyimser); kopma sesi ve titreşimi yalnız sunucu kabul edince.
+    void ack.then((r) => {
+      if (r.ok) wireSnap();
+    });
     setMyCut(color, () => ack);
     return ack;
   };

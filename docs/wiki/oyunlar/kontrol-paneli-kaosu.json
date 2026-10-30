@@ -30,7 +30,7 @@
       "ad": "Dalga 1 · Isınma (kablo kesme)",
       "sureSn": 25,
       "kim": "herkes (izleyici hariç)",
-      "aciklama": "Üstte bomba: gövde, yanıp sönen LED, 'Dalga 1/3 Isınma' yazısı ve 7 segmentli kırmızı dijital saat (saniye ve salise); altında kesenlerin avatarlarında makas işareti. Saat her saniye tik eder; son 10 sn'de tik hızlanır, saat kırmızı nabız atar ve telefon her saniye hafif titrer. Ortada kendi panelin: dört kablo yukarıdan aşağıya numaralı, neon renkte ve renk adıyla (renk körlüğü modunda her renge ayrı şekil ve desen). Kabloya dokunmak onu seçer. Altında bantla tutturulmuş buruşuk kâğıt ipucu notu: yanıp sönen '🎤 Sesli oku' rozeti, mini panel çizimi ve el yazısına yakın cümle ('1. kablo mavi ve 3. kablo sarı ise maviyi kes'); nota dokununca masada okunacak kadar büyür. Altta 'Kes' düğmesi ve 'N/M hazır' sayacı; Kes'e basınca kablo kopar (kopma sesi, kıvılcım, titreşim) ve geri alınamaz. Biri yanlış keserse herkesin saati 5 sn atlar: 'bzzzt' sesi, kısa kırmızı flaş ve '−5'. Bağlı herkes kestiğinde dalga 1 sn sonra biter. İzleyici/TV büyük bomba saatini, dalga numarasını, kimin kestiğini ve saat atlamasını görür; panel ya da ipucu görmez.",
+      "aciklama": "Üstte bomba: gövde, yanıp sönen LED, 'Dalga 1/3 Isınma' yazısı ve 7 segmentli kırmızı dijital saat (saniye ve salise); altında kesenlerin avatarlarında makas işareti. Saat her saniye tik eder; son 10 sn'de tik hızlanır, saat kırmızı nabız atar ve telefon her saniye hafif titrer. Ortada kendi panelin: dört kablo yukarıdan aşağıya numaralı, neon renkte ve renk adıyla (renk körlüğü modunda her renge ayrı şekil ve desen). Kabloya dokunmak onu seçer. Altında bantla tutturulmuş buruşuk kâğıt ipucu notu: yanıp sönen '🎤 Sesli oku' rozeti, mini panel çizimi ve el yazısına yakın cümle ('1. kablo mavi ve 3. kablo sarıysa maviyi kes'); nota dokununca masada okunacak kadar büyür. Altta 'Kes' düğmesi ve 'N/M hazır' sayacı; Kes'e basınca kablo kopar (kopma sesi, kıvılcım, titreşim) ve geri alınamaz. Biri yanlış keserse herkesin saati 5 sn atlar: 'bzzzt' sesi, kısa kırmızı flaş ve '−5'. Bağlı herkes kestiğinde dalga 1 sn sonra biter. İzleyici/TV büyük bomba saatini, dalga numarasını, kimin kestiğini ve saat atlamasını görür; panel ya da ipucu görmez.",
       "gizli": "Kendi paneli yalnız sahibi görür. İpucu yalnız taşıyıcısında; hangi panelin tarif edildiği, doğru kablo ve kesim rengi dalga bitene kadar kimseye (kesen ve taşıyıcı dahil) söylenmez. Kimin kestiği ve saat atlaması herkese açıktır; hangi kesimin yanlış olduğu söylenmez."
     },
     {
@@ -71,7 +71,7 @@
     "Dalga 1: 2 konumlu 'N. kablo R' koşulları (hedefi ayırmazsa 3 konum) ve renk hedefi. Dalga 2: değil, yan yana, yukarıda ya da konum hedefi türlerinden biri rastgele. Dalga 3: üç 'N. kablo R' koşulu ya da en az bir yeni tür içeren 2-3 koşullu karma ipucu; ipuçlarının yaklaşık üçte biri konum hedefli. Koşul kümeleri çelişkisiz ve gereksizsizdir (aynı konum iki kez geçmez, sabitlenmiş renk için 'değil' ya da ilişki koşulu kurulmaz, konum hedefinde o konum koşul olmaz).",
     "Her ipucu hedef panelde doğrudur ve o dalganın panelleri arasında yalnız hedef paneli tanımlar (üretimde denetlenir; en kısa uygun koşul kümesi seçilir). İstenen tür bunu sağlayamazsa daha basit türe düşülür ('N. kablo R' koşulları ve renk hedefi). İpucu oyuncu adı içermez.",
     "Doğru kablo sistemce kesin hesaplanır: renk hedefinde sunucunun rastgele seçtiği renk, konum hedefinde o konumdaki kablonun rengi.",
-    "Her dalgada her oyuncu yalnız BİR kablo keser; kesim geri alınamaz, değiştirilemez (ikinci kesim 'already_cut'). 4 kablolu dalgada mor kesilemez ('no_wire'). Dalga dışında (arada, sonuçta) gelen kesim reddedilir ('ended').",
+    "Her dalgada her oyuncu yalnız BİR kablo keser; kesim geri alınamaz, değiştirilemez (ikinci kesim 'already_cut'). 4 kablolu dalgada mor kesilemez ('no_wire'). Dalga dışında (arada, sonuçta) gelen kesim reddedilir ('ended'). Kesim hangi dalga için yapıldığını taşır; dalga değişirken yolda kalan eski dalganın kesimi yeni dalgaya sayılmaz ('wrong_wave').",
     "Ortak bomba saati: yanlış kesim dalga saatinden herkes için 5 sn düşer; saat 3 sn'nin altına inmez (kalan 3 sn ya da daha azken yanlış kesim süre düşürmez). Hangi kesimin yanlış olduğu söylenmez; ortak görünüm yalnız atlama sayısını ve son atlama anını taşır. Doğru/yanlış bilgisi kesen kişiye de dalga sonucuna kadar gösterilmez (saat atlamasından dolaylı anlaşılabilir; kabul edilmiş durum).",
     "Dalga başına erken bitiş: bağlı bütün katılımcılar o dalgada kestiğinde dalga 1 sn sonra biter; bağlantısı kopan oyuncu beklenmez. Hiç bağlı oyuncu yoksa erken bitiş olmaz. Erken bitiş ve saat atlamaları sonraki dalgaları ve sonucu öne çeker.",
     "İmha puanı (her dalga): kesimi kendi panelinin doğru kablosuyla aynı renkte olan +1, o panelin ipucunu taşıyan +1. Yanlış ya da boş kesim 0; ceza yoktur.",
@@ -107,7 +107,7 @@
         "not": "Toplamı 0 olan almaz. Herkes eşit ve > 0 ise herkes +1."
       }
     ],
-    "ornek": "4 oyuncu A, B, C, D. Toplam imha puanları: A 4, B 4, C 2, D 0 → A +2, B +2 (birincide eşitlik), C +1 (sonraki farklı toplam), D 0. Başka maç: A 3, B 2, C 1, D 0 → A +2, B +1, C 0, D 0. Herkes üç dalgada da doğru keserse herkes 6 imha puanı alır ve herkes +1 olur. Örnek ipuçları: '2. kablo kırmızı değil ve 4. kablo sarı ise maviyi kes', 'Mavi ile sarı yan yana ise yeşili kes', '1. kablo yeşil ise en alttaki kabloyu kes', 'Kırmızı maviden yukarıda ise sarıyı kes'.",
+    "ornek": "4 oyuncu A, B, C, D. Toplam imha puanları: A 4, B 4, C 2, D 0 → A +2, B +2 (birincide eşitlik), C +1 (sonraki farklı toplam), D 0. Başka maç: A 3, B 2, C 1, D 0 → A +2, B +1, C 0, D 0. Herkes üç dalgada da doğru keserse herkes 6 imha puanı alır ve herkes +1 olur. Örnek ipuçları: '2. kablo kırmızı değil ve 4. kablo sarıysa maviyi kes', 'Mavi ile sarı yan yanaysa yeşili kes', '1. kablo yeşilse en alttaki kabloyu kes', 'Kırmızı maviden yukarıdaysa sarıyı kes'.",
     "beraberlik": "Eşitlikler yukarıdaki kuralla çözülür (birinciler hep +2, sonraki farklı değer +1). Zaman rekabeti yoktur."
   },
   "ozelDurumlar": [
@@ -129,7 +129,7 @@
     },
     {
       "baslik": "2 vs 8 oyuncu",
-      "aciklama": "2 oyuncuda iki oyuncu birbirinin panelini tarif eder ve zincir her dalgada aynı kalır; dalga 1'de ipucu en az iki konumludur, dalga 2'de tek koşullu yeni tür ('Mavi ile sarı yan yana ise yeşili kes') sık görülür. 8 oyuncuda iki koşul hedefi ayırmayabilir; o zaman üç koşul kullanılır ya da yeni tür daha basit türe düşer."
+      "aciklama": "2 oyuncuda iki oyuncu birbirinin panelini tarif eder ve zincir her dalgada aynı kalır; dalga 1'de ipucu en az iki konumludur, dalga 2'de tek koşullu yeni tür ('Mavi ile sarı yan yanaysa yeşili kes') sık görülür. 8 oyuncuda iki koşul hedefi ayırmayabilir; o zaman üç koşul kullanılır ya da yeni tür daha basit türe düşer."
     },
     {
       "baslik": "Yalan söyleyen taşıyıcı",
@@ -304,7 +304,7 @@
       "name": "kontrol-play-4",
       "q": "mock=kontrol-play&n=4",
       "baslik": "Dalga 1 (4 oyuncu)",
-      "aciklama": "Üstte bomba saati, kendi panelin (4 kablo), buruşuk kâğıt ipucu notu ve Kes düğmesi.",
+      "aciklama": "Üstte bomba (dalga, LED, 7 segmentli saat, kesenlerde makas), kendi panelin, buruşuk kâğıt ipucu notu ve Kes düğmesi.",
       "dosya": "kontrol-play-n-4"
     },
     {
@@ -316,12 +316,76 @@
       "dosya": "kontrol-play-n-8-clue-3"
     },
     {
+      "mock": "kontrol-play",
+      "name": "kontrol-play-wave2-not",
+      "q": "mock=kontrol-play&n=5&wave=2&kind=notAt",
+      "baslik": "Dalga 2: 'değilse' ipucu",
+      "aciklama": "Şemada üstü çizili renk yuvası.",
+      "dosya": "kontrol-play-n-5-wave-2-kind-notAt"
+    },
+    {
+      "mock": "kontrol-play",
+      "name": "kontrol-play-wave2-adjacent",
+      "q": "mock=kontrol-play&n=4&wave=2&kind=adjacent",
+      "baslik": "Dalga 2: 'yan yanaysa' ipucu",
+      "aciklama": "Şemada iki renk arasında bağ işareti.",
+      "dosya": "kontrol-play-n-4-wave-2-kind-adjacent"
+    },
+    {
+      "mock": "kontrol-play",
+      "name": "kontrol-play-wave2-above",
+      "q": "mock=kontrol-play&n=4&wave=2&kind=above",
+      "baslik": "Dalga 2: 'yukarıdaysa' ipucu",
+      "aciklama": "Şemada üstteki renkten alttakine ok.",
+      "dosya": "kontrol-play-n-4-wave-2-kind-above"
+    },
+    {
+      "mock": "kontrol-play",
+      "name": "kontrol-play-wave2-position",
+      "q": "mock=kontrol-play&n=5&wave=2&kind=position",
+      "baslik": "Dalga 2: konum hedefi",
+      "aciklama": "'En alttaki/en üstteki kabloyu kes': şemada yuvayı gösteren ok.",
+      "dosya": "kontrol-play-n-5-wave-2-kind-position"
+    },
+    {
+      "mock": "kontrol-play",
+      "name": "kontrol-play-wave3",
+      "q": "mock=kontrol-play&n=6&wave=3&kind=mixed",
+      "baslik": "Dalga 3: 5 kablo ve mor",
+      "aciklama": "Beş kablo, mor kablo ve karma ipucu.",
+      "dosya": "kontrol-play-n-6-wave-3-kind-mixed"
+    },
+    {
+      "mock": "kontrol-play",
+      "name": "kontrol-note-zoom",
+      "q": "mock=kontrol-play&n=4&wave=2",
+      "baslik": "İpucu notu büyütüldü",
+      "aciklama": "Nota dokununca kâğıt masada okunacak kadar büyür.",
+      "dosya": "kontrol-note-zoom-n-4"
+    },
+    {
       "mock": "kontrol-cut",
       "name": "kontrol-play-cut",
       "q": "mock=kontrol-cut&n=6",
       "baslik": "Kablo kesildi",
-      "aciklama": "Kes sonrası: kablo kopuk, 'Kestin' durumu, kesenlerde makas.",
+      "aciklama": "Kes sonrası: kablo kopuk, 'Kestin' durumu.",
       "dosya": "kontrol-cut-n-6"
+    },
+    {
+      "mock": "kontrol-jump",
+      "name": "kontrol-jump",
+      "q": "mock=kontrol-jump&n=5",
+      "baslik": "Saat atlaması (son saniyeler)",
+      "aciklama": "Biri yanlış kesti: saat 5 sn atladı (en az 3 sn kalır); son 10 sn kırmızı nabız.",
+      "dosya": "kontrol-jump-n-5"
+    },
+    {
+      "mock": "kontrol-break",
+      "name": "kontrol-break",
+      "q": "mock=kontrol-break&n=5",
+      "baslik": "Dalgalar arası sonuç",
+      "aciklama": "Kim doğru kesti (✓/✗), ipucu taşıyıcısı ve dalga imha puanı; 'Dalga 2 geliyor'.",
+      "dosya": "kontrol-break-n-5"
     },
     {
       "mock": "kontrol-reveal",
@@ -338,6 +402,14 @@
       "baslik": "Sonuç: yanlış kesimler",
       "aciklama": "Kendi kesimlerin yanlış: +0.",
       "dosya": "kontrol-reveal-wrong-n-4"
+    },
+    {
+      "mock": "kontrol-reveal-clear",
+      "name": "kontrol-reveal-clear",
+      "q": "mock=kontrol-reveal-clear&n=4",
+      "baslik": "Sonuç: bomba tamamen imha edildi",
+      "aciklama": "Herkes her dalgada doğru: herkes +1.",
+      "dosya": "kontrol-reveal-clear-n-4"
     },
     {
       "mock": "kontrol-reveal",
@@ -365,7 +437,7 @@
     }
   ],
   "bilinenSorunlar": [
-    "Erken bitiş yalnız bir kesim eylemi geldiğinde denetlenir; son bekleyen bağlı oyuncu kopsa tetiklenmez (dalga saatine kalır).",
+    "Erken bitiş yalnız bir kesim eylemi geldiğinde denetlenir; son bekleyen bağlı oyuncu kopsa tetiklenmez (dalga saatine kalır). Bunu tick'te denetlemek oyun çatısının kuralına aykırıdır: tick bağlantı listesine bakamaz, aksi hâlde kayıttan tekrar oynatma (replay) canlı oyunla aynı sonucu vermez.",
     "Oyuncu 'hangi ipucunun kendi paneline ait olduğunu' yalnız sesli konuşmayla çözebilir; sistem içinde ipucu paylaşma/okuma eylemi yoktur.",
     "2 oyuncuda ipucu zinciri her dalgada aynı eşleşmedir (tek döngü vardır).",
     "Saat atlaması herkese göründüğünden yanlış kesen kişi (ve kimin kestiğini izleyenler) yanlışlığı dolaylı anlayabilir; bu kabul edilmiş bir durumdur.",

@@ -269,8 +269,11 @@ export const kontrolPaneliKaosu: GameDefinition<KontrolState, KontrolAction, Kon
     parseAction(raw: unknown): KontrolAction | null {
       if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
       const r = raw as Record<string, unknown>;
-      if (Object.keys(r).length !== 2 || r.kind !== "cut" || !isColor(r.color)) return null;
-      return { kind: "cut", color: r.color };
+      if (Object.keys(r).length !== 3 || r.kind !== "cut" || !isColor(r.color)) return null;
+      const wave = r.wave;
+      if (typeof wave !== "number" || !Number.isInteger(wave) || wave < 0 || wave >= KONTROL_WAVES)
+        return null;
+      return { kind: "cut", color: r.color, wave };
     },
 
     setup(players: readonly string[], ctx: GameContext): KontrolState {
@@ -303,6 +306,7 @@ export const kontrolPaneliKaosu: GameDefinition<KontrolState, KontrolAction, Kon
       if (ctx.now < state.startedAt) return { rejected: "not_started" };
       const phase = phaseAt(state, ctx.now);
       if (phase.stage !== "play") return { rejected: "ended" };
+      if (action.wave !== phase.wave) return { rejected: "wrong_wave" };
       const cur = state.waves[phase.wave] as KontrolWave;
       if (has(cur.cuts, playerId)) return { rejected: "already_cut" };
       if (!waveColors(phase.wave).includes(action.color)) return { rejected: "no_wire" };
