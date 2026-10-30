@@ -108,3 +108,23 @@ Ayrıntılar: `docs/oneriler/kontrol-paneli-kaosu.md`. Onaylananlar (dosyadaki a
 
 **Yeni görsel gerekenler:** bomba gövdesi (KP-U1), kâğıt not dokusu ve bant (KP-U3), mor kablo (KP-M1; mevcut kablo
 görselinin renk varyantı).
+
+## Zehirli Kadeh
+
+Ayrıntılar: `docs/oneriler/zehirli-kadeh.md`. Onaylananlar:
+
+- **ZK-M2 (değiştirilmiş) Kontrol hakkı:** her oyuncunun **1 kontrol hakkı** vardır: süre içinde istediği zaman,
+  kendisi dışındaki bir oyuncunun **o anki** kadehini seçip gizlice kontrol eder (zehirli mi temiz mi; sonuç yalnız
+  kendisine görünür ve oyun boyunca hatırlanır). Kendi kadehini kontrol edemez. Kontrol rastgele değildir, oyuncu
+  seçer. Kontrol edilen kadeh daha sonra takasla yer değiştirirse oyuncunun bilgisi o kadehe (kadeh numarasına) bağlı
+  kalır. Kimin kimi kontrol ettiği herkese açık değildir; kontrol hakkını kullanıp kullanmadığın da gizlidir.
+  Takas hakkı (kişi başı 1) ve puanlama (temiz +1, zehirli 0) aynen kalır. Kendi kadehini bilmek (ZK-M1) yoktur.
+- **ZK-U1** Ziyafet masası sahnesi (büyük kadehler, avatarlar, eriyen mum sayaç, belirgin seçili kadeh).
+- **ZK-U3** Takas anı (yay animasyonu, "Mert ⇄ Elif" şeridi, takas geçmişi okları, hakkı kullananın işareti).
+- **ZK-U4** "Şerefe!" sonuç açılışı (kadehler tek tek, kendi kadehin en son; altın kadeh yok).
+- **ZK-U5** Son 5 saniye gerilimi (mum titrer, kalp atışı, titreşim).
+- **ZK-U6** İzleyici ve TV ziyafet masası (zehir bilgisi sonuca kadar yok).
+- Onaylanmayanlar: ZK-M1, ZK-M3 (altın kadeh), ZK-M4, ZK-M5, ZK-U2, ZK-U7 (ses seti), ZK-AI1.
+
+**Yeni görsel gerekenler:** ziyafet masası arka planı, mum; kontrol anı için kadehin gizlice açıldığı küçük bir
+görünüm (mevcut kadeh görselleriyle, CSS ile yapılabilir).
