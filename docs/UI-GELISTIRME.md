@@ -15,17 +15,15 @@ güncellenir.
 Sahibin kararları:
 1. **Tur akışı:** bar 100'e ulaşınca gizli tehlike penceresi (3 sn) başlar ve tur ilk aşan tıkta bitmez; pencere
    sonuna kadar sürer. Pencerede (100'ü geçtikten sonra) basan herkes patlar.
-2. **Patlama cezası:** 100'den sonra en çok basan -2, diğer patlayanlar -1. Yalnız bir kişi 100'den sonra bastıysa
-   o kişi -1 alır.
-3. **Sıralama ödülü:** 100'ü geçmeden (bar dolana kadar) en çok tıklayan +2, ikinci +1, diğerleri 0.
-4. **Kimse 100'ü geçmezse:** eksi puan yok (bugünkü "en az tıklayana -1" cezası kalkar). Bar hiç dolmazsa da
-   sıralama ödülü aynı şekilde verilir.
-
-Netleşecek küçük ayrıntılar:
-- 100'den sonra en çok basanlar eşitse: hepsi -2 mi, hepsi -1 mi?
-- Patlayan oyuncu 100'den önceki tıklamalarıyla sıralamada ilk ikiye girdiyse ödülünü de alır mı (ör. +2 ve -1 =
-  +1), yoksa patlayan sıralamadan çıkar mı?
-- Sıralamada liderler eşitse bugünkü kural (eşit liderlerin hepsi +1, +2 verilmez) kalsın mı?
+2. **Patlama cezası:** 100'den sonra en çok basan tek kişi -2, diğer patlayanlar -1. Yalnız bir kişi 100'den
+   sonra bastıysa o kişi -1 alır. 100'den sonra en çok basanlar eşitse hepsi -1 alır (kimse -2 almaz).
+3. **Sıralama ödülü:** yalnız patlamayanlar sıralanır; sayılan, 100'ü geçmeden (bar dolana kadar) yapılan
+   tıklamalardır. Tek lider +2, ikinci +1, diğerleri 0. Liderler eşitse hepsi +1 alır (bugünkü kuraldaki gibi bu
+   durumda +2 ve ikinci sıra ödülü verilmez). Hiç tıklamayan ödül almaz.
+4. **Patlayanlar sıralamaya girmez:** 100'den önce ne kadar basmış olursa olsun yalnız patlama cezasını alır.
+5. **Kimse 100'ü geçmezse:** eksi puan yok (bugünkü "en az tıklayana -1" cezası tamamen kalkar). Bar hiç dolmadan
+   süre biterse de sıralama ödülü aynı şekilde verilir.
+6. Oyun sırasında toplam yine gösterilmez; toplam yalnız sonuç ekranında (sıralı açılışta) görünür.
 
 ### Kabul edilen arayüz önerileri
 
