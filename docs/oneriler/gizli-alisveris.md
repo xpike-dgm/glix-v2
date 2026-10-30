@@ -158,9 +158,43 @@ tik, kepenk, değer bölünmesi (cam kırılması), tek başına (altın çınla
 
 ---
 
-## 5. Önerilen paket
+## 5. Yapay zekâ (AI) ile yapılabilecekler
 
-**GA-M1, GA-M2, GA-M3, GA-M4 ve GA-U1 … GA-U7 hepsi.**
+Bu bölüm isteğe bağlıdır; önerilen pakete dahil değildir. Hepsi sunucuda, maç sırasında çağrılan hızlı bir Claude
+modeliyle (Haiku sınıfı) çalışır. Ortak kurallar:
+- Yapay zekâ **puanı ve kuralı asla belirlemez**; yalnız metin üretir. Puanlar bugünkü gibi kesin hesapla verilir.
+- Yanıt 2 sn içinde gelmezse ya da hata olursa hazır şablon metin gösterilir; oyun hiç beklemez.
+- Modele yalnız oyun bilgisi gider (takma adlar, ürünler, değerler); e-posta ya da hesap bilgisi gitmez.
+- Üretilen metin, mevcut yasaklı kelime süzgecinden geçer; uygunsuzsa şablon metin kullanılır.
+- Gereken: sunucuya bir Claude API anahtarı (yalnız sunucudaki gizli ayar dosyasında durur). Maliyet maç başına
+  kuruşlar düzeyindedir.
+
+### GA-AI1 · Esnaf yorumcu — **önerim: EVET (AI açılırsa)**
+**Ne:** Sonuçta, sepetler açılırken her oyuncunun satırına mağazanın esnafından **tek cümlelik esprili yorum**
+gelir. Örnekler: "Kaan yine Gizli Sandık'a çöktü, üç kişiyle paylaştı, sandık boş çıktı." · "Elif tek başına Drone
+aldı, cesaretin bedeli 32 kredi." · "Mert'in sepeti boş: vitrine bakıp çıktı."
+**Neden:** Sonuç ekranını kişiselleştirir, her maç farklı konuşulacak bir an yaratır. Grup içi şakaya dönüşür.
+**Ayrıntılar:** sonuç hesaplanır hesaplanmaz tek istekte tüm oyuncuların yorumu istenir (sepetler açılmadan önceki
+1–2 sn içinde hazır olur). Ton: şakacı, kırıcı değil; küfür ve kişisel hakaret yok. Yorum en çok 90 karakter.
+Gelmezse satırda yorum alanı hiç görünmez.
+
+### GA-AI2 · Fısıldayan vitrin (GA-M3'ün sözlü hâli) — **önerim: İSTEĞE BAĞLI**
+**Ne:** GA-M3'teki 15. saniye ipucu, ateş simgelerine ek olarak esnafın **muğlak bir cümlesiyle** gelir: "Bugün
+herkes elektronik peşinde…" · "Pahalı raf pek ilgi görmüyor, ucuzlar kapış kapış."
+**Neden:** İpucunu oyunun içine yerleştirir; aynı veri her maç farklı söylenir.
+**Ayrıntılar:** modele yalnız ürün başına ateş seviyesi gider (kim ne aldı gitmez), yani bilgi sızıntısı GA-M3'ten
+fazla olmaz. Cümle gelmezse yalnız ateş simgeleri görünür.
+
+### Yapay zekâ gerektirmeyenler (bilgi)
+- **Boş koltuğa bot:** oyun 3 kişiyle başlıyor; 2 kişi kaldığında bir bot alışveriş yapsa oyun oynanabilir.
+  Bunun için yapay zekâ gerekmez, basit kurallı bir bot yeterli ve daha güvenilir. İstersen ayrıca önerilir.
+- **Ürün adı/görsel üretimi:** GA-M1'deki yeni ürünler bir kez tasarlanıp oyuna eklenir; maç sırasında üretmeye
+  gerek yok.
+
+## 6. Önerilen paket
+
+**GA-M1, GA-M2, GA-M3, GA-M4 ve GA-U1 … GA-U7 hepsi.** Yapay zekâ maddeleri (GA-AI1, GA-AI2) pakete dahil değildir;
+istersen ayrıca onaylarsın.
 
 Bu paketle oyun şöyle akar: her maç farklı bir raf ve herkesin kendi gizli kuponu → ilk 15 saniye tahmin →
 "vitrin fısıldıyor" ile hangi ürünün kalabalık olduğu kabaca belli olur → son 15 saniye blöf ve sepeti değiştirme
