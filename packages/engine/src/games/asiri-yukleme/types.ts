@@ -4,11 +4,15 @@
 export const ASIRI_YUKLEME_CAPACITY = 100;
 /** Bar 100'e ulaşınca başlayan gizli pencere (ms); tur pencere sonuna kadar sürer, içinde basan herkes patlar. */
 export const ASIRI_YUKLEME_DANGER_MS = 3_000;
-/** Teknik üst sınır (ms): kimse tıklamazsa oda takılmasın; bar dolmadan biterse sıralama aynı kurala göre verilir. */
+/**
+ * Teknik üst sınır (ms): kimse tıklamazsa oda takılmasın; bar dolmadan biterse sıralama aynı kurala göre verilir.
+ * Yalnız bar dolmadıysa uygulanır: bar sınırdan hemen önce dolarsa pencere yine tam 3 sn sürer.
+ */
 export const ASIRI_YUKLEME_CAP_MS = 90_000;
 /** Tur bittikten sonra sonucun ekranda kaldığı süre (ms). */
 export const ASIRI_YUKLEME_OUTRO_MS = 5_000;
-export const ASIRI_YUKLEME_TOTAL_MS = ASIRI_YUKLEME_CAP_MS + ASIRI_YUKLEME_OUTRO_MS;
+/** Oyunun en uzun süresi: bar sınırdan hemen önce dolarsa üst sınır + tam pencere + sonuç. */
+export const ASIRI_YUKLEME_TOTAL_MS = ASIRI_YUKLEME_CAP_MS + ASIRI_YUKLEME_DANGER_MS + ASIRI_YUKLEME_OUTRO_MS;
 /**
  * Tek mesajda gönderilebilecek en çok tıklama. İstemci hızlı tıklamaları kısa aralıkla toplu gönderir
  * (sunucunun soket başına mesaj sınırını aşmamak için). Toplu mesajda 100'e kadar olan kısım "önce", aşan kısım

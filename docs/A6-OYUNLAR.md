@@ -27,7 +27,8 @@ Kısa oyun içi açılış penceresi (≤ 7 sn) açılış animasyonu için kull
   sürer (aşan tık turu bitirmez). Pencerede (100'den sonra) basan herkes patlar: 100'den sonra en çok basan tek kişi
   −2, diğer patlayanlar −1 (eşitlikte hepsi −1). Patlayanlar sıralamaya girmez. Patlamayanlar 100'e kadarki
   tıklamalarına göre: tek lider +2, sonraki +1; liderler eşitse hepsi +1, +2 yok. Başka eksi puan yok.
-  **Teknik üst sınır 90 sn** (kimse tıklamazsa oda takılmasın): dolarsa sıralama aynı kuralla. Tık başına hız
+  **Teknik üst sınır 90 sn** (kimse tıklamazsa oda takılmasın): yalnız bar dolmadıysa uygulanır, dolarsa
+  sıralama aynı kuralla; bar dolduysa pencere her zaman tam 3 sn sürer. Tık başına hız
   sınırı sunucunun genel mesaj sınırıdır.
 
 ## Grup 2 — hedef, takas ve gizli seçim

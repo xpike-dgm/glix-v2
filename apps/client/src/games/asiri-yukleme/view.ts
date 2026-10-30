@@ -84,12 +84,10 @@ export function resultRows(reveal: AsiriYuklemeReveal, order: readonly string[])
   });
 }
 
-/** Satır çubuğunun parçaları (0..1): önce (mavi) ve sonra (kırmızı); en uzun satır tam dolu. */
-export function barParts(row: ResultRow, rows: readonly ResultRow[]): { before: number; after: number } {
-  const max = Math.max(1, ...rows.map((r) => r.before + r.after));
-  const clamp = (x: number) => Math.max(0, Math.min(1, x));
-  const before = clamp(row.before / max);
-  return { before, after: clamp(Math.min(row.after / max, 1 - before)) };
+/** Satır çubuğunun uzunluğu (0..1): 100'e kadarki tıklar; patlamayanlardan en çok tıklayan tam dolu. */
+export function barRatio(row: ResultRow, rows: readonly ResultRow[]): number {
+  const max = Math.max(1, ...rows.filter((r) => !r.exploded).map((r) => r.before));
+  return Math.max(0, Math.min(1, row.before / max));
 }
 
 /** Puan yazısı: "+2", "0", "−1" (gerçek eksi işareti). */
@@ -97,4 +95,12 @@ export function pointsText(points: number): string {
   if (points > 0) return `+${points}`;
   if (points < 0) return `−${-points}`;
   return "0";
+}
+
+/** Sonuç satırında takma adın en çok uzunluğu (karakter); uzunsa kırpılıp "…" eklenir (8 oyuncu, 320 px'e sığar). */
+export const NAME_MAX = 10;
+
+export function shortName(name: string, max = NAME_MAX): string {
+  const chars = Array.from(name);
+  return chars.length > max ? `${chars.slice(0, max - 1).join("")}…` : name;
 }

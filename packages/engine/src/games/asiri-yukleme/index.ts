@@ -29,10 +29,14 @@ export interface AsiriYuklemeState {
   over: boolean;
 }
 
-/** Turun bittiği an: gizli pencerenin sonu ya da teknik üst sınır (hangisi önce). Patlama turu bitirmez. */
+/**
+ * Turun bittiği an. Bar dolduysa tehlike penceresi her zaman tam 3 sn sürer (90 sn sınırından bağımsız; sahip
+ * kararı); bar dolmadıysa teknik üst sınır (90 sn). Patlama turu bitirmez.
+ */
 export function asiriYuklemeEndAt(state: AsiriYuklemeState): number {
-  const cap = state.startedAt + ASIRI_YUKLEME_CAP_MS;
-  return state.dangerAt === null ? cap : Math.min(cap, state.dangerAt + ASIRI_YUKLEME_DANGER_MS);
+  return state.dangerAt === null
+    ? state.startedAt + ASIRI_YUKLEME_CAP_MS
+    : state.dangerAt + ASIRI_YUKLEME_DANGER_MS;
 }
 
 /** Patlayanlar: bar 100'ü geçtikten sonra en az bir kez basanlar, katılım sırasıyla. */

@@ -1072,8 +1072,9 @@ Eski faz 18 saniyedir.
    (kişisel, ortak, izleyici) gösterilmez, toplam yalnız sonuç ekranında açılır]
 5. Aşamalar ve süreler: [görünür süre yok; enerji barı 100 olana kadar devam eder. 100 olunca oyunculara
    gözükmeyecek bir 3 saniyelik tehlike penceresi başlar (amaç: yanlışlıkla birisi barı patlatabilir). Tur, 100'ü
-   aşan ilk tıkta bitmez; pencere sonuna kadar sürer, 3 saniye dolunca tur biter. Teknik üst sınır: oyunun
-   başından 90 sn.]
+   aşan ilk tıkta bitmez; pencere sonuna kadar sürer, 3 saniye dolunca tur biter. Bar dolduysa pencere her zaman
+   tam 3 saniye sürer. Teknik üst sınır: oyunun başından 90 sn; yalnız bar dolmadıysa uygulanır (bar 89,5. sn'de
+   dolarsa pencere 92,5. sn'de biter ve 90. sn'deki tık "sonra" sayılır).]
 6. Kapasiteyi aşan tıklamada ne olur?: [tur bitmez; bar 100'ü geçtikten sonra (pencerede) basan herkes patlar.
    Her oyuncunun 100'den önceki ve sonraki tık sayıları ayrı tutulur. Toplu mesajda 100'e kadar olan kısım
    "önce", aşan kısım "sonra" sayılır.]
@@ -1111,6 +1112,7 @@ Eski faz 18 saniyedir.
   tık patlatır ve tur o anda biterdi).
 - Patlama cezası: 100'den sonra en çok basan tek kişi -2, diğer patlayanlar -1 (eşitlikte hepsi -1; tek patlayan -1).
 - O7'deki "patlamayanlar arasında en az tıklayana -1" cezası tamamen kaldırıldı: kimse patlamazsa hiç eksi puan yok.
+- Bar dolduysa tehlike penceresi her zaman tam 3 saniye sürer; 90 sn teknik sınır yalnız bar dolmadıysa uygulanır.
 - Tek turlu oyundur ve mini→genel dönüşümü değişmez: puanlar doğrudan genel skora eklenir.
 
 ## 21. Kontrol Paneli Kaosu — `kontrol-paneli-kaosu`
