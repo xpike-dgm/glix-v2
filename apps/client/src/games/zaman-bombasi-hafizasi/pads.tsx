@@ -1,7 +1,7 @@
 // biome-ignore-all lint/a11y/noSvgWithoutTitle: şekiller dekoratif (aria-hidden); anlamı tuşun aria-label değeri taşır
 import { ZAMAN_BOMBASI_COLORS, type ZamanBombasiColor } from "@glix/engine";
 import type { JSX } from "solid-js";
-import { play } from "../../fx/sound.js";
+import { padNote } from "./sfx.js";
 
 export interface PadInfo {
   color: ZamanBombasiColor;
@@ -64,12 +64,7 @@ export function PadSymbol(props: { color: ZamanBombasiColor }): JSX.Element {
   }
 }
 
-/** Bir tuşun sesi: ışık süresine göre kısa ya da uzun. */
+/** Bir tuşun sesi (dolgun nota, ZB-U9): ışık süresine göre kısa ya da uzun. */
 export function padSound(color: ZamanBombasiColor, durMs: number): void {
-  const f = freqOf(color);
-  const dur = Math.min(0.5, Math.max(0.12, durMs / 1000));
-  play([
-    { freq: f, dur, type: "triangle", gain: 0.13 },
-    { freq: f * 2, dur: dur * 0.6, type: "sine", gain: 0.035 },
-  ]);
+  padNote(freqOf(color), durMs);
 }

@@ -74,6 +74,10 @@ const SHARED_ALLOWED = new Set<string>([
   "col", // ortak dikey yerleşim
   "gbtn--small", // küçük ortak düğme
   "npick", // sayı seçici (ui/number-picker.css)
+  // Oyuncu seçici (ui/player-picker.css): Zaman Bombası hedef ızgarasını panelin içinde geniş düzende kurar.
+  "ppick",
+  "ppick__cell",
+  "ppick__portrait",
   "wfield", // kelime alanı (ui/word-field.css)
   "game__tools", // oyun araç şeridi
   "pbar__fill", // ilerleme çubuğu dolgusu

@@ -137,3 +137,5 @@ export const hapticSolo = (): void => vibrate(45);
 export const hapticResult = (): void => vibrate([10, 50, 10, 50, 22]);
 export const hapticFinal = (): void => vibrate([20, 60, 20, 60, 20, 60, 70]);
 export const hapticError = (): void => vibrate([30, 60, 30]);
+/** Sıra sana geçti (ör. bomba sana atıldı): kaçırılmasın diye güçlü, üç vuruşlu titreşim. */
+export const hapticAlarm = (): void => vibrate([90, 50, 90, 50, 160]);

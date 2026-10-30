@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   clientPhase,
   formatClock,
+  fuseBurnt,
+  fuseTickMs,
   isNewResult,
   isSuddenDeath,
+  lengthTone,
   litIndexAt,
   litMs,
   parseZamanBombasiView,
@@ -15,6 +18,8 @@ const pub = {
   eliminated: [],
   scores: { a: 0, b: 1, c: 0 },
   active: "a",
+  pick: null,
+  lastThrow: { from: "b", to: "a", at: 600, auto: false },
   length: 3,
   phase: "playback",
   turn: 2,
@@ -32,14 +37,22 @@ const pub = {
   timeUp: false,
   last: { turn: 1, player: "b", kind: "ok", at: 900 },
 };
-const priv = { isOut: false, myTurn: false, turnsAway: 1 };
+const priv = { isOut: false, myTurn: false, myPick: false, pickColor: null };
+const pickPub = {
+  ...pub,
+  phase: "pick",
+  sequence: null,
+  pick: { by: "a", kind: "throw", opensAt: 3000, deadline: 7000, colorDone: false, blocked: "b" },
+  last: { turn: 2, player: "a", kind: "ok", at: 2100 },
+};
 
 describe("Zaman Bombası Hafızası görünümü", () => {
   it("geçerli görünümleri birleştirir", () => {
     const v = parseZamanBombasiView(pub, priv);
     expect(v?.sequence).toEqual(["kirmizi", "mavi", "sari"]);
-    expect(v?.turnsAway).toBe(1);
+    expect(v?.myPick).toBe(false);
     expect(v?.last?.kind).toBe("ok");
+    expect(v?.lastThrow).toEqual({ from: "b", to: "a", at: 600, auto: false });
   });
 
   it("giriş evresinde dizi null olabilir", () => {
@@ -59,6 +72,24 @@ describe("Zaman Bombası Hafızası görünümü", () => {
     expect(parseZamanBombasiView({ ...pub, last: { turn: 1 } }, priv)).toBeNull();
     expect(parseZamanBombasiView({ ...pub, pressed: [1] }, priv)).toBeNull();
     expect(parseZamanBombasiView(pub, { ...priv, myTurn: 1 })).toBeNull();
+    expect(parseZamanBombasiView(pub, { ...priv, pickColor: "mor" })).toBeNull();
+    expect(parseZamanBombasiView(pub, { isOut: false, myTurn: false })).toBeNull();
+    expect(parseZamanBombasiView({ ...pub, lastThrow: { to: "a" } }, priv)).toBeNull();
+    // Seçim evresi ile seçim bilgisi birlikte gelir.
+    expect(parseZamanBombasiView({ ...pub, phase: "pick" }, priv)).toBeNull();
+    expect(parseZamanBombasiView({ ...pickPub, pick: null }, priv)).toBeNull();
+    expect(parseZamanBombasiView({ ...pickPub, pick: { ...pickPub.pick, kind: "x" } }, priv)).toBeNull();
+    expect(parseZamanBombasiView({ ...pickPub, pick: { ...pickPub.pick, deadline: 1 } }, priv)).toBeNull();
+  });
+
+  it("seçim görünümü: seçim bilgisi ve yalnız seçende seçilen renk", () => {
+    const v = parseZamanBombasiView(pickPub, { ...priv, myPick: true, pickColor: "sari" });
+    expect(v?.pick).toEqual(pickPub.pick);
+    expect(v?.pickColor).toBe("sari");
+    expect(clientPhase(pickPub as never, 2500)).toBe("pick");
+    expect(clientPhase(pickPub as never, 6999)).toBe("pick");
+    expect(clientPhase(pickPub as never, 7000)).toBe("expired");
+    expect(clientPhase({ ...pickPub, endsAt: 5000 } as never, 5000)).toBe("expired");
   });
 
   it("evreyi mutlak zamandan türetir", () => {
@@ -104,23 +135,85 @@ describe("Zaman Bombası Hafızası görünümü", () => {
     expect(isNewResult({ turn: 3, player: "a", kind: "fail", at: 1 }, 3)).toBe(false);
   });
 
+  it("seçim durumları: önce sonuç (TEMİZ/patlama), sonra renk → hedef; diğerleri bekler", () => {
+    const own = parseZamanBombasiView(pickPub, { ...priv, myPick: true });
+    const other = parseZamanBombasiView(pickPub, priv);
+    if (!own || !other) throw new Error("görünüm okunamadı");
+    const st = (v: typeof own, now: number, spectator = false) =>
+      statusOf({ v, phase: clientPhase(v, now), spectator, now });
+    expect(st(own, 2500)).toBe("ok");
+    expect(st(own, 3000)).toBe("pickColor");
+    expect(st({ ...own, pick: { ...own.pick, colorDone: true } as never }, 3000)).toBe("pickTarget");
+    expect(st(other, 3000)).toBe("pickOther");
+    expect(st(own, 3000, true)).toBe("pickOther");
+    const restart = { ...own, pick: { ...own.pick, kind: "restart", colorDone: true } as never };
+    expect(st({ ...restart, last: { turn: 2, player: "c", kind: "fail", at: 2000 } }, 2500)).toBe("fail");
+    expect(st(restart, 3500)).toBe("pickTarget");
+  });
+
+  it("atış sonrası: hedef için uyarı, diğerleri için 'atıldı'; atanı olmayan elenmede önce patlama", () => {
+    const paused = { ...pub, phase: "pause", turnStart: 2000, inputStart: 3050, deadline: 7550 };
+    const mineV = parseZamanBombasiView(paused, { ...priv, myTurn: true });
+    const otherV = parseZamanBombasiView(paused, priv);
+    if (!mineV || !otherV) throw new Error("görünüm okunamadı");
+    expect(statusOf({ v: mineV, phase: "pause", spectator: false, now: 1000 })).toBe("alert");
+    expect(statusOf({ v: otherV, phase: "pause", spectator: false, now: 1000 })).toBe("thrown");
+    expect(statusOf({ v: { ...otherV, lastThrow: null }, phase: "pause", spectator: false, now: 1000 })).toBe(
+      "intro",
+    );
+    const blast = {
+      ...mineV,
+      lastThrow: { from: null, to: "a", at: 1500, auto: true },
+      last: { turn: 1, player: "c", kind: "timeout" as const, at: 0 },
+    };
+    expect(statusOf({ v: blast, phase: "pause", spectator: false, now: 1000 })).toBe("timeout");
+    expect(statusOf({ v: blast, phase: "pause", spectator: false, now: 1500 })).toBe("alert");
+  });
+
+  it("fitil: son 2 sn iki kat hızlı yanar; tik sıklaşır; dizi sayacı 8+ turuncu, 12+ kırmızı", () => {
+    expect(fuseBurnt(6000, 6000)).toBe(0);
+    expect(fuseBurnt(6000, 0)).toBe(1);
+    // 4 sn sakin + 2 sn hızlı: sakin kısım toplam payın 4/8'i, hızlı kısım 4/8'i.
+    expect(fuseBurnt(6000, 2000)).toBeCloseTo(0.5);
+    const calmRate = fuseBurnt(6000, 5000) - fuseBurnt(6000, 6000);
+    const rushRate = fuseBurnt(6000, 1000) - fuseBurnt(6000, 2000);
+    expect(rushRate).toBeCloseTo(calmRate * 2);
+    expect(fuseBurnt(1500, 0)).toBe(1);
+    expect(fuseTickMs(5000)).toBeGreaterThan(fuseTickMs(1500));
+    expect(fuseTickMs(1500)).toBeGreaterThan(fuseTickMs(500));
+    expect([lengthTone(7), lengthTone(8), lengthTone(11), lengthTone(12)]).toEqual([
+      "",
+      "amber",
+      "amber",
+      "red",
+    ]);
+  });
+
   it("durum başlığı", () => {
-    const base = parseZamanBombasiView(pub, priv);
-    if (!base) throw new Error("görünüm okunamadı");
-    expect(statusOf({ v: base, phase: "playback", spectator: false })).toBe("watch");
-    expect(statusOf({ v: { ...base, myTurn: true }, phase: "playback", spectator: false })).toBe("watchMine");
-    expect(statusOf({ v: { ...base, myTurn: true }, phase: "input", spectator: false })).toBe("mine");
-    expect(statusOf({ v: { ...base, myTurn: true }, phase: "input", spectator: true })).toBe("other");
-    expect(statusOf({ v: { ...base, isOut: true }, phase: "input", spectator: false })).toBe("eliminated");
-    expect(statusOf({ v: base, phase: "pause", spectator: false })).toBe("ok");
+    const base0 = parseZamanBombasiView(pub, priv);
+    if (!base0) throw new Error("görünüm okunamadı");
+    const base = base0;
+    expect(statusOf({ v: base, phase: "playback", spectator: false, now: 0 })).toBe("watch");
+    expect(statusOf({ v: { ...base, myTurn: true }, phase: "playback", spectator: false, now: 0 })).toBe(
+      "watchMine",
+    );
+    expect(statusOf({ v: { ...base, myTurn: true }, phase: "input", spectator: false, now: 0 })).toBe("mine");
+    expect(statusOf({ v: { ...base, myTurn: true }, phase: "input", spectator: true, now: 0 })).toBe("other");
+    expect(statusOf({ v: { ...base, isOut: true }, phase: "input", spectator: false, now: 0 })).toBe(
+      "eliminated",
+    );
+    expect(statusOf({ v: base, phase: "pause", spectator: false, now: 0 })).toBe("ok");
     expect(
       statusOf({
         v: { ...base, last: { turn: 1, player: "b", kind: "timeout", at: 1 } },
         phase: "pause",
         spectator: false,
+        now: 0,
       }),
     ).toBe("timeout");
-    expect(statusOf({ v: { ...base, last: null }, phase: "pause", spectator: false })).toBe("intro");
-    expect(statusOf({ v: base, phase: "over", spectator: false })).toBe("over");
+    expect(
+      statusOf({ v: { ...base, last: null, lastThrow: null }, phase: "pause", spectator: false, now: 0 }),
+    ).toBe("intro");
+    expect(statusOf({ v: base, phase: "over", spectator: false, now: 0 })).toBe("over");
   });
 });

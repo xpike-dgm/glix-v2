@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig, type Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
@@ -68,7 +69,17 @@ function collectShellChunks(): Plugin {
   };
 }
 
+/**
+ * Zaman Bombası Hafızası'nın fitilsiz bomba gövdesi görseli (sahip üretecek; docs/oneriler/zaman-bombasi-hafizasi-gorsel.md).
+ * Dosya varsa ekran onu kullanır, yoksa yerleşik SVG gövdeyi çizer: böylece olmayan dosya istenmez (404 yok).
+ * Dosya eklendikten sonra geliştirme sunucusu yeniden başlatılır.
+ */
+const ZB_BOMBA_GORSEL = existsSync(
+  resolve(import.meta.dirname, "public/assets/props/zaman-bombasi-hafizasi/bomba.webp"),
+);
+
 export default defineConfig({
+  define: { __ZB_BOMBA_GORSEL__: JSON.stringify(ZB_BOMBA_GORSEL) },
   plugins: [
     solid(),
     emitAssetManifest(),
