@@ -6,6 +6,7 @@ import { type AccountStore, createAccounts } from "./accountStore.js";
 import { ADMIN_PREFIX, createAdminLimits, handleAdmin } from "./admin.js";
 import { buildLive, createHealthSampler } from "./adminData.js";
 import { createAdminRoomOps } from "./adminRooms.js";
+import { type AiFetch, createAiCommenter } from "./aiComment.js";
 import { AUTH_PREFIX, accountFromCookie, handleAuth, hashToken, readSessionToken } from "./auth.js";
 import { createBackupService } from "./backup.js";
 import { CLIENT_ERROR_PATH, handleClientError } from "./clientError.js";
@@ -103,6 +104,10 @@ export interface ServerOptions {
   broadcastPerSecond?: number;
   /** TASLAK oyunları açar (yalnız geliştirme/test; bkz. `taslak.ts`). Varsayılan kapalı. */
   draftGames?: boolean;
+  /** Oyun sonu yorumu anahtarı; verilmezse/null ise yorum tamamen kapalı (hiç istek yok). */
+  aiKey?: string | null;
+  /** Yorum servisine giden istek (testlerde sahte); varsayılan: yerleşik `fetch`. */
+  aiFetch?: AiFetch;
 }
 
 function resolvePush(opts: ServerOptions): PushGateway {
@@ -201,6 +206,12 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   rt.bannedWords = createBannedWords(accounts);
   rt.content = createContentStore(accounts, rt.bannedWords);
   rt.reports = createReportDesk(accounts, clock);
+  rt.aiComment = createAiCommenter({
+    apiKey: opts.aiKey ?? null,
+    clock,
+    isBanned: (text) => rt.bannedWords.matches(text),
+    ...(opts.aiFetch ? { fetch: opts.aiFetch } : {}),
+  });
   const friendsApi = createFriendsApi({
     accounts,
     social: rt.social,

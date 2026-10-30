@@ -21,13 +21,25 @@ export type PropPath =
       | "tuval"}`
   | `gizli-alisveris/${string}`
   | `kara-borsa/${"kutu-ahsap" | "kutu-antika" | "kutu-celik" | "kutu-hediye" | "kutu-lanet"}`
-  | `kontrol-paneli-kaosu/${"kablo-kirmizi" | "kablo-mavi" | "kablo-sari" | "kablo-yesil" | "kablo-kesik" | "kivilcim"}`
+  | `kontrol-paneli-kaosu/${
+      | "kablo-kirmizi"
+      | "kablo-mavi"
+      | "kablo-sari"
+      | "kablo-yesil"
+      | "kablo-mor"
+      | "kablo-kesik"
+      | "kivilcim"
+      | "bomba-govde"
+      | "not-kagidi"}`
   | `rus-ruleti/${"tabanca" | "tambur"}`
-  | `zehirli-kadeh/${"efekt-temiz" | "efekt-zehir" | `kadeh-${string}`}`;
+  | `zehirli-kadeh/${"efekt-temiz" | "efekt-zehir" | "masa" | "mum" | `kadeh-${string}`}`;
 
 export const propSrc = (p: PropPath): string => `/assets/props/${p}.webp`;
 
-/** Gizli Alışveriş ürün kimliği (motor kataloğu sırası) -> dosya adı. */
+/**
+ * Gizli Alışveriş ürün kimliği (motor havuzu sırası, 0..19) -> dosya adı. Son 8 ürünün görseli henüz yoksa ekran
+ * kendi yer tutucusunu çizer; dosya `gizli-alisveris/<ad>.webp` olarak gelince kendiliğinden kullanılır.
+ */
 export const ALISVERIS_PROP_FILES: readonly string[] = [
   "hologram-sticker",
   "enerji-icecegi",
@@ -41,13 +53,32 @@ export const ALISVERIS_PROP_FILES: readonly string[] = [
   "holo-kask",
   "mini-drone",
   "gizli-sandik",
+  "lazer-kalem",
+  "ses-karti",
+  "retro-joystick",
+  "plazma-lamba",
+  "mini-robot",
+  "hologram-saat",
+  "neon-kaykay",
+  "vr-gozluk",
 ];
+
+/**
+ * Görsel dosyası gerçekten var mı (derleme anındaki liste)? Liste yoksa (testler) yalnız ilk 12 ürünün dosyası
+ * var sayılır. Önyükleme olmayan dosyayı istemez (404 yok); ekran yine dosyayı dener, yoksa yer tutucu çizer.
+ */
+export function alisverisPropExists(file: string): boolean {
+  const built = typeof __ALISVERIS_PROPS__ === "undefined" ? undefined : __ALISVERIS_PROPS__;
+  return built ? built.includes(file) : ALISVERIS_PROP_FILES.indexOf(file) < 12;
+}
 
 const BOMBA: PropPath[] = ["bomba/govde", "bomba/fitil", "bomba/kivilcim", "bomba/patlama"];
 
 /** Oyun kimliği -> o oyunun nesneleri (anlatım başlarken önden indirilir). */
 const GAME_PROPS: Record<string, readonly PropPath[]> = {
-  "gizli-alisveris": ALISVERIS_PROP_FILES.map((f): PropPath => `gizli-alisveris/${f}`),
+  "gizli-alisveris": ALISVERIS_PROP_FILES.filter(alisverisPropExists).map(
+    (f): PropPath => `gizli-alisveris/${f}`,
+  ),
   "kara-borsa": [
     "kara-borsa/kutu-ahsap",
     "kara-borsa/kutu-antika",

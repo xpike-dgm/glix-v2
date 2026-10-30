@@ -1,11 +1,11 @@
 import type { WireColor } from "@glix/engine";
-import { For, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { CbMarker } from "../../ui/CbMarker.js";
 import { propSrc } from "../../ui/props.js";
 import { COLOR_CSS, COLOR_MARK, COLOR_NAME, COLOR_PATTERN } from "./view.js";
 
-const WIRE_FILE = { blue: "mavi", green: "yesil", red: "kirmizi", yellow: "sari" } as const;
+const WIRE_FILE = { blue: "mavi", green: "yesil", red: "kirmizi", yellow: "sari", purple: "mor" } as const;
 
 export type CutVerdict = "right" | "wrong";
 
@@ -23,13 +23,17 @@ interface Props {
   onPick: (color: WireColor) => void;
 }
 
-/** Dört kablo, yukarıdan aşağıya numaralı; her biri metalik bir kanalda neon renkte. */
+/**
+ * Kablolar (4 ya da 5), yukarıdan aşağıya numaralı; her biri metalik bir kanalda neon renkte. Kablo görseli yoksa
+ * (ör. mor kablo henüz üretilmediyse) görsel gizlenir ve CSS ile çizilen neon hat görünür.
+ */
 export function Panel(props: Props) {
   return (
-    <ul class="kp__panel" aria-label="Kablolar">
+    <ul class="kp__panel" aria-label="Kablolar" data-wires={props.panel.length}>
       <For each={props.panel}>
         {(color, i) => {
           const isCut = () => props.cut === color;
+          const [noArt, setNoArt] = createSignal(false);
           return (
             <li>
               <Dynamic
@@ -62,6 +66,8 @@ export function Panel(props: Props) {
                     draggable={false}
                     width="384"
                     height="384"
+                    hidden={noArt() && !isCut()}
+                    onError={() => setNoArt(true)}
                   />
                   <Show when={isCut()}>
                     <img

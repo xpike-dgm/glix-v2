@@ -151,15 +151,30 @@ describe("asiri-yukleme akış", () => {
     expect(rev).toMatchObject({ total: 11, exploders: [] });
   });
 
-  it("üst sınır gizli pencereyi de keser (pencere 89 sn'de başlarsa 90. sn'de biter)", () => {
+  it("bar dolduysa pencere her zaman tam 3 sn: 89,5 sn'de dolan bar 92,5 sn'de biter", () => {
     let s = start();
-    s = tap(s, "a", 89_000, 10);
-    for (let i = 0; i < 9; i++) s = tap(s, "b", 89_000, 10); // 100
-    expect(s.dangerAt).toBe(T0 + 89_000);
+    s = tap(s, "a", 89_500, 10);
+    for (let i = 0; i < 9; i++) s = tap(s, "b", 89_500, 10); // 100
+    expect(s.dangerAt).toBe(T0 + 89_500);
+    expect(asiriYuklemeEndAt(s)).toBe(T0 + 92_500);
+    // 90. sn sınırı bar dolduğu için uygulanmaz: 90. sn'deki tık kabul edilir ve "sonra" sayılır.
+    expect(rejection(s, "c", ASIRI_YUKLEME_CAP_MS)).toBeNull();
+    s = tap(s, "c", ASIRI_YUKLEME_CAP_MS);
+    expect(s.after.c).toBe(1);
+    s = tap(s, "a", 92_499);
+    expect(rejection(s, "c", 92_500)).toBe("ended");
+    expect(asiriYukleme.tick(s, ctx(T0 + 92_499)).over).toBe(false);
+    expect(asiriYukleme.isFinished(s, ctx(T0 + 92_500 + ASIRI_YUKLEME_OUTRO_MS - 1))).toBe(false);
+    expect(asiriYukleme.isFinished(s, ctx(T0 + 92_500 + ASIRI_YUKLEME_OUTRO_MS))).toBe(true);
+    // a ve c patladı, sonra 1'er: eşit → ikisi de −1; b tek patlamayan lider +2.
+    expect(awards(s, 92_500)).toEqual({ a: -1, b: 2, c: -1 });
+  });
+
+  it("bar 90. sn'de hâlâ dolmadıysa tur 90. sn'de biter (sonraki tık dolduramaz)", () => {
+    let s = start();
+    for (let i = 0; i < 9; i++) s = tap(s, "a", 89_900, 10); // 90
+    expect(rejection(s, "b", ASIRI_YUKLEME_CAP_MS, 10)).toBe("ended");
     expect(asiriYuklemeEndAt(s)).toBe(T0 + ASIRI_YUKLEME_CAP_MS);
-    s = tap(s, "c", ASIRI_YUKLEME_CAP_MS - 1);
-    expect(rejection(s, "c", ASIRI_YUKLEME_CAP_MS)).toBe("ended");
-    expect(awards(s)).toEqual({ a: 1, b: 2, c: -1 });
   });
 
   it("katılımcı olmayan reddedilir; başlangıçtan önce reddedilir", () => {

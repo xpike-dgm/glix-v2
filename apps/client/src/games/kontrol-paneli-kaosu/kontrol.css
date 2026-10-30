@@ -78,8 +78,7 @@ button.kp__wire:active:not(:disabled) {
 }
 .kp__main > .kp__panel {
   --wire-h: auto;
-  flex: 1;
-  min-height: 0;
+  flex: 1 0 auto;
   justify-content: center;
 }
 .kp__main > .kp__panel li {
@@ -205,37 +204,7 @@ button.kp__wire:active:not(:disabled) {
   }
 }
 
-/* ---- İpucu notu ---- */
-.kp__note {
-  flex: none;
-  padding: 10px 14px 12px;
-  border-radius: 14px;
-  border: 1.5px dashed rgba(46, 242, 255, 0.55);
-  background:
-    repeating-linear-gradient(0deg, rgba(46, 242, 255, 0.05) 0 2px, transparent 2px 6px),
-    rgba(10, 16, 48, 0.7);
-  box-shadow: 0 0 14px rgba(46, 242, 255, 0.18);
-}
-.kp__note-tag {
-  display: block;
-  font-size: var(--fs-13);
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--cyan);
-}
-.kp__note-text {
-  margin: 0;
-  font-size: var(--fs-18);
-  font-weight: 600;
-  line-height: 1.35;
-}
-.kp__note-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
+/* ---- İpucu şeması ---- */
 .kp__diagram {
   width: min(220px, 62vw);
   height: auto;
@@ -413,6 +382,10 @@ button.kp__wire:active:not(:disabled) {
 .kp__cutchip span {
   color: #e4e8ff;
 }
+.kp__cutchip .kp__cbm {
+  display: inline-flex;
+  color: inherit;
+}
 .kp__dot {
   width: 10px;
   height: 10px;
@@ -524,9 +497,8 @@ button.kp__wire:active:not(:disabled) {
     gap: 6px;
     align-self: start;
   }
-  .kp__main > .kp__note {
+  .kp__main > .kpn {
     grid-area: n;
-    padding: 8px 10px;
   }
   .kp__main > .tamam {
     grid-area: t;
@@ -535,12 +507,14 @@ button.kp__wire:active:not(:disabled) {
   .kp__main > .kp__panel {
     --wire-h: auto;
   }
-  .kp__note-text {
+  .kpn__text {
     font-size: var(--fs-15);
-    margin-top: 0;
   }
   .kp__diagram {
     width: min(150px, 100%);
+  }
+  .kpb__cutters {
+    display: none;
   }
   .kp__head--res {
     min-height: 44px;
@@ -558,17 +532,77 @@ button.kp__wire:active:not(:disabled) {
 }
 
 /* Kısa dikey ekran (320x568): çizim ve ipucu metni yan yana, not kısa kalsın. */
-@media (max-height: 640px) and (orientation: portrait) {
-  .kp__note-body {
+@media (max-height: 700px) and (orientation: portrait) {
+  .kpn__paper:not([data-big]) .kpn__body {
     flex-direction: row;
     gap: 10px;
   }
-  .kp__diagram {
-    width: 104px;
+  .kpn__paper:not([data-big]) .kp__diagram {
+    width: 84px;
   }
-  .kp__note-text {
+  .kpn__paper:not([data-big]) .kpn__text {
     font-size: var(--fs-15);
     text-align: left;
+  }
+  .kpn__paper:not([data-big]) {
+    padding: 12px 12px 8px;
+  }
+  .kp__main {
+    gap: 6px;
+  }
+  .kp__panel {
+    gap: 4px;
+  }
+}
+/* Kısa ekran (320x568) ve yatay telefon: şema yalnız büyütülen notta; yazılı cümle her zaman görünür. */
+@media (max-height: 600px) {
+  .kpn__paper:not([data-big]) .kp__diagram {
+    display: none;
+  }
+}
+
+/* Telefon (dikey <= 700 px ya da yatay): bomba tek satır; kesenler makası yalnız izleyici/TV'de (sayaç altta). */
+@media (max-height: 700px) {
+  .kpb:not([data-big]) {
+    margin-top: 2px;
+  }
+  .kpb:not([data-big]) .kpb__body {
+    flex-direction: row;
+    justify-content: space-between;
+    width: min(100%, 360px);
+    padding: 4px 12px 4px 16px;
+  }
+  .kpb:not([data-big]) .kpb[data-art="1"] .kpb__body {
+    background: none;
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .kpb[data-art="1"] .kpb__screw,
+  .kpb[data-art="1"] .kpb__lead {
+    display: none;
+  }
+  .kpb__top {
+    width: auto;
+    flex-direction: row-reverse;
+  }
+  .kpb:not([data-big]) .kpb__wave {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    line-height: 1.15;
+  }
+  .kpb:not([data-big]) .kpb__screen {
+    padding: 4px 10px;
+  }
+  .kpb:not([data-big]) .kp7 {
+    --dh: 28px;
+  }
+  .kpb:not([data-big]) .kpb__lead,
+  .kpb:not([data-big]) .kpb__screw {
+    display: none;
+  }
+  .kpb:not([data-big]) .kpb__cutters {
+    display: none;
   }
 }
 
@@ -588,4 +622,631 @@ button.kp__wire:active:not(:disabled) {
 }
 :root[data-cb="1"] .kp__mini .kp__wire {
   grid-template-columns: 26px minmax(0, 1fr) 80px;
+}
+
+/* ---- Bomba (KP-U1) ---- */
+.kpb {
+  --bomb-red: #ff2a3d;
+  flex: none;
+  position: relative;
+  margin-top: clamp(4px, 1.6dvh, 14px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+/* Gövde görseli varsa üstte durur; CSS gövdesinin süsleri gizlenir (ekran ve yazılar kalır). */
+.kpb__art {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  height: calc(100% - 32px);
+  object-fit: contain;
+  pointer-events: none;
+  opacity: 0;
+}
+.kpb[data-art="1"] .kpb__art {
+  opacity: 1;
+}
+.kpb__body {
+  position: relative;
+  width: min(100%, 300px);
+  padding: 8px 16px 10px;
+  border-radius: 18px;
+  border: 2px solid #2a3157;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0 8%, transparent 30%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 5px),
+    linear-gradient(160deg, #3a4066 0%, #1b1f3d 55%, #10132a 100%);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.55),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.45),
+    inset 0 2px 0 rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.kpb[data-big="1"] .kpb__body {
+  width: min(100%, 420px);
+  padding: 14px 24px 18px;
+}
+.kpb__screw {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #c9cfe6, #59607f 60%, #2a2f4a);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+}
+.kpb__screw::after {
+  content: "";
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: 4px;
+  height: 1px;
+  background: #23283f;
+  transform: rotate(35deg);
+}
+.kpb__screw[data-at="tl"] {
+  left: 7px;
+  top: 7px;
+}
+.kpb__screw[data-at="tr"] {
+  right: 7px;
+  top: 7px;
+}
+.kpb__screw[data-at="bl"] {
+  left: 7px;
+  bottom: 7px;
+}
+.kpb__screw[data-at="br"] {
+  right: 7px;
+  bottom: 7px;
+}
+/* Gövdeden yanlara çıkan kablo uçları. */
+.kpb__lead {
+  position: absolute;
+  top: 52%;
+  width: 18px;
+  height: 22px;
+  border: 3px solid;
+  border-color: #3b7bff #ff3b5c #ffc23b #2bffa8;
+  border-radius: 10px;
+  opacity: 0.9;
+}
+.kpb__lead[data-side="l"] {
+  left: -12px;
+  border-right-color: transparent;
+}
+.kpb__lead[data-side="r"] {
+  right: -12px;
+  border-left-color: transparent;
+}
+.kpb__top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.kpb__wave {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-13);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #d5daf6;
+  white-space: nowrap;
+}
+.kpb__wave b {
+  font-weight: 700;
+  color: #ff8a95;
+}
+.kpb[data-big="1"] .kpb__wave {
+  font-size: var(--fs-18);
+}
+.kpb__led {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--bomb-red);
+  box-shadow: 0 0 8px var(--bomb-red);
+  animation: kpb-blink 1s steps(1, end) infinite;
+}
+.kpb[data-urgent="1"] .kpb__led {
+  animation-duration: 0.4s;
+}
+.kpb[data-stage="break"] .kpb__led,
+.kpb[data-stage="reveal"] .kpb__led {
+  animation: none;
+  background: var(--lime);
+  box-shadow: 0 0 8px var(--lime);
+}
+@keyframes kpb-blink {
+  50% {
+    opacity: 0.15;
+  }
+}
+.kpb__screen {
+  position: relative;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: #12020a;
+  border: 2px solid #3b0c18;
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.9);
+}
+.kpb[data-urgent="1"] .kpb__screen {
+  animation: kpb-pulse 0.5s ease-in-out infinite alternate;
+}
+@keyframes kpb-pulse {
+  to {
+    box-shadow:
+      inset 0 0 14px rgba(0, 0, 0, 0.9),
+      0 0 20px rgba(255, 42, 61, 0.75);
+  }
+}
+.kpb[data-urgent="1"] .kpb__body {
+  animation: kpb-shake 0.5s linear infinite;
+}
+@keyframes kpb-shake {
+  0%,
+  100% {
+    transform: none;
+  }
+  25% {
+    transform: translateX(-1px) rotate(-0.4deg);
+  }
+  75% {
+    transform: translateX(1px) rotate(0.4deg);
+  }
+}
+/* Saat atlaması: kısa kırmızı flaş (yalnız atlama anında çizilir) ve "−5". */
+.kpb__flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(255, 30, 50, 0.32);
+  z-index: 5;
+  animation: kpb-flash 0.6s ease-out both;
+}
+@keyframes kpb-flash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.kpb__jump {
+  position: absolute;
+  right: -6px;
+  top: -12px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--bomb-red);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+  animation: kpb-jump 0.7s var(--ease) both;
+}
+@keyframes kpb-jump {
+  from {
+    transform: translateY(6px) scale(0.6);
+    opacity: 0;
+  }
+  30% {
+    transform: none;
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+}
+.kpb__cutters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  min-height: 24px;
+}
+.kpb__who {
+  position: relative;
+  display: inline-grid;
+  opacity: 0.45;
+  transition: opacity 200ms;
+}
+.kpb__who[data-cut="1"] {
+  opacity: 1;
+}
+.kpb__snip {
+  position: absolute;
+  right: -4px;
+  bottom: -3px;
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--bomb-red);
+  color: #fff;
+  animation: kp-pop 300ms var(--ease) both;
+}
+.kpb[data-big="1"] .kpb__snip {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---- 7 segmentli saat (CSS) ---- */
+.kp7 {
+  --dh: 38px;
+  --dw: calc(var(--dh) * 0.56);
+  --st: calc(var(--dh) * 0.12);
+  --seg: #ff2a3d;
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--dh) * 0.14);
+  direction: ltr;
+}
+.kpb[data-big="1"] .kp7 {
+  --dh: clamp(56px, 12vw, 96px);
+}
+.kp7__d {
+  position: relative;
+  width: var(--dw);
+  height: var(--dh);
+  transform: skewX(-6deg);
+}
+.kp7__s {
+  position: absolute;
+  border-radius: calc(var(--st) / 2);
+  background: var(--seg);
+  opacity: 0.08;
+}
+.kp7__s[data-on="1"] {
+  opacity: 1;
+  box-shadow: 0 0 6px rgba(255, 42, 61, 0.8);
+}
+.kp7__s--a,
+.kp7__s--d,
+.kp7__s--g {
+  left: var(--st);
+  right: var(--st);
+  height: var(--st);
+}
+.kp7__s--a {
+  top: 0;
+}
+.kp7__s--g {
+  top: calc(50% - var(--st) / 2);
+}
+.kp7__s--d {
+  bottom: 0;
+}
+.kp7__s--b,
+.kp7__s--c,
+.kp7__s--e,
+.kp7__s--f {
+  width: var(--st);
+  height: calc(50% - var(--st) * 0.9);
+}
+.kp7__s--b,
+.kp7__s--c {
+  right: 0;
+}
+.kp7__s--e,
+.kp7__s--f {
+  left: 0;
+}
+.kp7__s--b,
+.kp7__s--f {
+  top: calc(var(--st) * 0.6);
+}
+.kp7__s--c,
+.kp7__s--e {
+  bottom: calc(var(--st) * 0.6);
+}
+.kp7__dp {
+  align-self: flex-end;
+  width: var(--st);
+  height: var(--st);
+  margin: 0 calc(var(--st) * -0.3);
+  border-radius: 50%;
+  background: var(--seg);
+  box-shadow: 0 0 6px rgba(255, 42, 61, 0.8);
+}
+.kpb[data-stage="break"] .kp7,
+.kpb[data-stage="reveal"] .kp7 {
+  --seg: #8a1825;
+}
+
+/* ---- İpucu notu: buruşuk kâğıt (KP-U3) ---- */
+.kpn {
+  flex: none;
+  display: block;
+  width: 100%;
+  padding: 6px 4px 2px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: zoom-in;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.kpn__paper {
+  --ink: #23263f;
+  position: relative;
+  padding: 16px 14px 12px;
+  border-radius: 3px 6px 4px 7px;
+  color: var(--ink);
+  transform: rotate(-1.2deg);
+  background:
+    /* buruşukluk: kırışık izleri ve ışık */
+    linear-gradient(115deg, transparent 0 38%, rgba(0, 0, 0, 0.06) 39%, transparent 41% 100%),
+    linear-gradient(65deg, transparent 0 62%, rgba(255, 255, 255, 0.35) 63%, transparent 65% 100%),
+    linear-gradient(170deg, transparent 0 70%, rgba(0, 0, 0, 0.05) 71%, transparent 73% 100%),
+    radial-gradient(120% 90% at 20% 10%, rgba(255, 255, 255, 0.6), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 21px, rgba(60, 90, 160, 0.13) 21px 22px), #f4ead0;
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.45),
+    inset 0 0 26px rgba(120, 90, 40, 0.22);
+}
+.kpn__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+}
+.kpn__paper[data-art="1"] {
+  background: none;
+}
+.kpn__paper[data-art="1"] .kpn__art {
+  opacity: 1;
+}
+.kpn__tape {
+  position: absolute;
+  left: 50%;
+  top: -9px;
+  width: 74px;
+  height: 20px;
+  margin-left: -37px;
+  transform: rotate(3deg);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.25),
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0.25)
+  );
+  background-color: rgba(222, 214, 170, 0.62);
+  clip-path: polygon(3% 0, 100% 6%, 97% 100%, 0 92%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.kpn__paper[data-art="1"] .kpn__tape {
+  display: none;
+}
+.kpn__badge {
+  position: absolute;
+  right: 8px;
+  top: -10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #b8102a;
+  color: #fff;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  animation: kpn-badge 1.2s ease-in-out infinite;
+}
+@keyframes kpn-badge {
+  50% {
+    transform: scale(1.08);
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.35),
+      0 0 12px rgba(255, 60, 80, 0.9);
+  }
+}
+.kpn__body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+/* El yazısına yakın: sistemde varsa el yazısı yazı tipi, yoksa eğik ve kalın yazı (yeni dosya yok). */
+.kpn__text {
+  margin: 0;
+  font-family: "Segoe Print", "Bradley Hand", "Chalkboard SE", "Comic Sans MS", "Marker Felt", cursive;
+  font-size: var(--fs-18);
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.kpn__paper .kp__dg-frame {
+  fill: rgba(16, 20, 48, 0.88);
+}
+.kpn-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  border: 0;
+  background: rgba(4, 6, 20, 0.78);
+  cursor: zoom-out;
+  animation: kp-fade 160ms ease-out both;
+}
+.kpn-zoom .kpn__paper {
+  width: min(100%, 560px);
+  padding: 26px 20px 20px;
+  transform: rotate(-0.6deg);
+  animation: kpn-grow 220ms var(--ease) both;
+}
+.kpn-zoom .kp__diagram {
+  width: min(320px, 80vw);
+}
+.kpn-zoom .kpn__text {
+  font-size: clamp(26px, 7.5vw, 44px);
+}
+@keyframes kpn-grow {
+  from {
+    transform: scale(0.6) rotate(-1.2deg);
+    opacity: 0;
+  }
+}
+
+/* ---- İpucu şeması: yeni türler ---- */
+.kp__dg-slot--not {
+  stroke: #fff;
+  stroke-width: 2.2;
+  stroke-dasharray: none;
+  opacity: 0.85;
+}
+.kp__dg-strike {
+  stroke: #fff;
+  stroke-width: 4;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 1px #000);
+}
+.kp__dg-chip {
+  stroke: #fff;
+  stroke-width: 1.6;
+}
+.kp__dg-rel {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.kp__dg-cut--pos {
+  fill: #f3f5ff;
+}
+.kp__dg-scissors--pos {
+  stroke: #0a1030;
+}
+
+/* ---- Kablolar: 5 kablolu dalga ---- */
+.kp__panel[data-wires="5"] {
+  gap: 6px;
+}
+.kp__wire img[hidden] {
+  display: none;
+}
+
+/* ---- Sonuç: dalga bilgisiyle genişleyen liste ---- */
+.kp__res {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.kp__score-sm {
+  color: var(--lime);
+  font-family: var(--font-display);
+}
+.kp__waves {
+  flex: none;
+  display: inline-flex;
+  gap: 3px;
+}
+.kp__cutchip[data-compact="1"] {
+  gap: 3px;
+  padding: 2px 5px;
+  min-width: 34px;
+  justify-content: center;
+}
+.kp__total {
+  flex: none;
+  min-width: 18px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-13);
+  color: #d5daf6;
+}
+.kp__expert {
+  flex: none;
+  margin: 6px 0 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 42, 61, 0.12);
+  border: 1.5px solid rgba(255, 42, 61, 0.45);
+  font-size: var(--fs-15);
+  font-weight: 600;
+  line-height: 1.35;
+  animation: kp-fade 300ms var(--ease) both;
+}
+.kp__expert-tag {
+  display: block;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ff8a96;
+}
+.kp[data-spectator="1"] .kp__idle {
+  font-size: var(--fs-15);
+}
+
+/* Dar telefon (360 px): son sütunlar sığsın. */
+@media (max-width: 380px) {
+  .kp__rows--final .kp__row {
+    gap: 5px;
+    padding: 4px 6px;
+  }
+  .kp__rows--final .kp__cutchip[data-compact="1"] {
+    min-width: 0;
+    padding: 2px 3px;
+  }
+}
+/* Çok dar telefon (320 px): son listede portre yerine ad (üç dalga sütunu sığsın). */
+@media (max-width: 340px) {
+  .kp__rows--final .kp__row > :first-child {
+    display: none;
+  }
+}
+/* Renk körlüğü modunda dar kesim işaretinde renk noktası yerine renkli şekil (yer kazanır). */
+:root[data-cb="1"] .kp__cutchip[data-compact="1"] .kp__dot {
+  display: none;
+}
+
+/* Hareket azaltma: yanıp sönme, titreme, nabız ve flaş yok (bilgi yazıda ve saatte kalır). */
+@media (prefers-reduced-motion: reduce) {
+  .kpb__led,
+  .kpb[data-urgent="1"] .kpb__led,
+  .kpb[data-urgent="1"] .kpb__screen,
+  .kpb[data-urgent="1"] .kpb__body,
+  .kpn__badge,
+  .kpn-zoom,
+  .kpn-zoom .kpn__paper,
+  .kpb__jump,
+  .kpb__snip {
+    animation: none;
+  }
+  .kpb__flash {
+    animation: none;
+    opacity: 0.18;
+  }
+  .kpb[data-urgent="1"] .kpb__screen {
+    box-shadow:
+      inset 0 0 14px rgba(0, 0, 0, 0.9),
+      0 0 0 2px var(--bomb-red);
+  }
 }

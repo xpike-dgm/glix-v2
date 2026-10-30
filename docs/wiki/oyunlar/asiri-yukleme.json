@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 90,
-    "not": "Görünür süre ya da sayaç yoktur. Bar 100'e ulaşana kadar herkes tıklar; bar 100'e ulaşınca gizli 3 sn'lik pencere başlar ve tur, biri 100'ü aşsa bile pencere sonuna kadar sürer. Teknik üst sınır: oyunun başından en çok 90 sn (kimse tıklamazsa oda takılmasın diye); sonra 5 sn sonuç gösterimi (sıralı açılış bu süreye sığar). Gerçek süre tıklama hızına bağlıdır (8 oyuncu hızlı tıklarsa birkaç saniyede 100'e ulaşılabilir). Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 30 sn) gelir."
+    "not": "Görünür süre ya da sayaç yoktur. Bar 100'e ulaşana kadar herkes tıklar; bar 100'e ulaşınca gizli 3 sn'lik pencere başlar ve tur, biri 100'ü aşsa bile pencere sonuna kadar sürer. Teknik üst sınır: bar dolmadıysa oyunun başından 90 sn (kimse tıklamazsa oda takılmasın diye); bar dolduysa pencere her zaman tam 3 sn sürer (en geç 93. sn); sonra 5 sn sonuç gösterimi (sıralı açılış bu süreye sığar). Gerçek süre tıklama hızına bağlıdır (8 oyuncu hızlı tıklarsa birkaç saniyede 100'e ulaşılabilir). Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 30 sn) gelir."
   },
   "ozet": "Herkesin ekranında tek bir büyük reaktör çekirdeği vardır; ona dokunmak ortak enerji barını 1 doldurur. Bar kapasitesi 100'dür ve doluluk kimseye gösterilmez (kendi tıklama sayın bile gizlidir). Bar 100'e ulaşınca ekranın kenarları kırmızıya döner ve gizli 3 sn'lik tehlike başlar: bu sürede basan herkes patlar ve tur pencere sonuna kadar sürer. 100'den sonra en çok basan tek kişi -2, diğer patlayanlar -1 alır. Patlamayanlar 100'e kadarki tıklamalarına göre sıralanır: en çok tıklayan +2, ikinci +1. Kimse patlamazsa eksi puan yoktur.",
   "akis": [
@@ -30,7 +30,7 @@
       "ad": "Tıklama",
       "sureSn": null,
       "kim": "herkes (izleyici hariç)",
-      "aciklama": "Koyu ekranda ortada büyük reaktör çekirdeği (halo, iki halka, enerji küresi) ve altında 'Çekirdeğe hızlıca dokun!'. Her dokunuşta çekirdek kısa bir an içe çöküp geri esner, halkalar dokunulan yönden dalgalanır ve dokunulan noktadan çekirdeğe küçük ışık parçacıkları akar (havuzdan en çok 24 parçacık). Oyuncunun kendi hızına göre yükselen bir vınlama sesi çalar (hızlandıkça incelir, durunca söner; barı yansıtmaz); 8 dokunuşluk her seride küçük bir 'ritim' halkası ve sesi çıkar. Titreşim yavaş basışta yumuşak, seride daha serttir (ses/titreşim en sık 55 ms'de bir). Arka plandaki üst reaktör tüpünde borular nabız gibi parlar, ara ara buhar çıkar, uyarı lambaları döner; bunlar yalnız zamana bağlıdır, doluluğu göstermez. Tıklamalar sunucuya ilk tıklamada hemen, sonrakilerde en az 80 ms aralıkla ve en çok 10'luk toplu mesajlarla gider. Kapasite doluluk göstergesi, sayaç ve süre çubuğu yoktur. İzleyici 'Herkes çekirdeği dolduruyor…' yazısını görür ve tıklayamaz.",
+      "aciklama": "Koyu ekranda ortada büyük reaktör çekirdeği (halo, iki halka, enerji küresi) ve altında 'Çekirdeğe hızlıca dokun!'. Her dokunuşta çekirdek kısa bir an içe çöküp geri esner, halkalar dokunulan yönden dalgalanır ve dokunulan noktadan çekirdeğe küçük ışık parçacıkları akar (havuzdan en çok 24 parçacık). Oyuncunun kendi hızına göre yükselen bir vınlama sesi çalar (hızlandıkça incelir, durunca söner; barı yansıtmaz); 8 dokunuşluk her seride küçük bir 'ritim' halkası ve sesi çıkar. Titreşim yavaş basışta yumuşak, seride daha serttir (ses/titreşim en sık 55 ms'de bir). Arka plan görselinin kendi öğeleri canlanır: reaktör tüpünün camında yumuşak nabız parıltısı, tüp tabanındaki çıkışlardan ara ara ince buhar, yan sütunlardaki kırmızı ışık şeritlerinde dönen lamba yansıması (yalnız dikey ekranda, görsele hizalı); bunlar yalnız zamana bağlıdır, doluluğu göstermez. Tıklamalar sunucuya ilk tıklamada hemen, sonrakilerde en az 80 ms aralıkla ve en çok 10'luk toplu mesajlarla gider. Kapasite doluluk göstergesi, sayaç ve süre çubuğu yoktur. İzleyici 'Herkes çekirdeği dolduruyor…' yazısını görür ve tıklayamaz.",
       "gizli": "Bar toplamı, hiç kimsenin tıklama sayısı (kendi sayın dahil), kimin patladığı ve tehlike penceresinin bitişi tur bitene kadar kimseye gösterilmez (kişisel, ortak ve izleyici görünümü). Herkesin ekranında yalnız bir bayrak vardır: bar 100'e ulaşınca ekranın kenarı kırmızıya döner, çekirdek aşırı yüklenmiş görünür ve katılımcılara kısa bir alarm sesi ve titreşim gelir."
     },
     {
@@ -44,7 +44,7 @@
       "ad": "Sonuç ve patlama",
       "sureSn": 5,
       "kim": "herkes",
-      "aciklama": "Tur biter bitmez sonuç açılır. Patlama varsa önce patlama sahnesi oynar (1 sn): beyaz flaş, çekirdek parçalara ayrılıp kısa bir yavaş çekimden sonra savrulur, ekranı kaplayan şok dalgası, güçlü sarsıntı ve derin patlama sesi (hareket azaltmada sarsıntı yok, flaş yarı güçte). Sonra sonuçlar sırayla açılır: küçük çekirdeğin üstünde toplam sayaç 0'dan gerçek toplama hızla yükselir (doluluk ilk kez burada görünür); ardından oyuncular tek tek gelir: patlamayanlar 100'e kadarki tıklamalarına göre çoktan aza, patlayanlar en sonda (100'den sonra en çok basan en son), avatarlarında çatlak ve 'PATLATTI' damgasıyla. Her satırda 100'e kadarki tık sayısı ve çubuğu, patlayanda kırmızı '+N' (100'den sonraki tıklar) ve puan. Kendi satırın parlar; en sonda kendi puanın satırdan üstteki puan yazısına ('+2 puan', '−1 puan', 'Puan yok') uçar. Başlık: 'Patlattın!' (patlayanlardan biri sensen), 'Çekirdek patladı!' (başkası patladıysa) ya da 'Reaktör dayandı'. Bütün açılış 5 sn'lik sonuç süresine sığar (zaman çizelgesi tek sabitte: REVEAL_TIMELINE). Sonuç ekranı zaten açıkken bağlanan oyuncu açılışı görmez, her şey bir arada gösterilir. Oyun, tur bitiminden 5 sn sonra biter.",
+      "aciklama": "Tur biter bitmez sonuç açılır. Patlama varsa önce patlama sahnesi oynar (1 sn): beyaz flaş, çekirdek parçalara ayrılıp kısa bir yavaş çekimden sonra savrulur, ekranı kaplayan şok dalgası, güçlü sarsıntı ve derin patlama sesi (hareket azaltmada sarsıntı yok, flaş yarı güçte). Sonra sonuçlar sırayla açılır: küçük çekirdeğin üstünde toplam sayaç 0'dan gerçek toplama hızla yükselir (doluluk ilk kez burada görünür); ardından oyuncular tek tek gelir: patlamayanlar 100'e kadarki tıklamalarına göre çoktan aza, patlayanlar en sonda (100'den sonra en çok basan en son), avatarları tanınır kalarak hafif çatlakla. Her satırda avatar, takma ad (uzunsa kırpılır), 100'e kadarki tık sayısı ve puan; patlamayanda altta çubuk, patlayanda çubuğun yerinde küçük eğik 'PATLATTI' damgası ve 'aşan N' (100'den sonraki tık sayısı; puanla karışmasın diye '+' yok). Kendi satırın parlar; en sonda kendi puanın satırdan üstteki puan yazısına ('+2 puan', '−1 puan', 'Puan yok') uçar. Başlık: 'Patlattın!' (patlayanlardan biri sensen), 'Çekirdek patladı!' (başkası patladıysa) ya da 'Reaktör dayandı'. Bütün açılış 5 sn'lik sonuç süresine sığar (zaman çizelgesi tek sabitte: REVEAL_TIMELINE). Sonuç ekranı zaten açıkken bağlanan oyuncu açılışı görmez, her şey bir arada gösterilir. Oyun, tur bitiminden 5 sn sonra biter.",
       "gizli": "Artık bar toplamı (100'ü aşan tıklar dahil), her oyuncunun 100'den önceki ve sonraki tık sayısı, patlayanlar ve puanlar herkese açıktır."
     }
   ],
@@ -55,8 +55,8 @@
     "Her oyuncunun bar 100'e ulaşana kadarki ('önce') ve 100'ü geçtikten sonraki ('sonra') tık sayıları ayrı tutulur. Toplu mesajda 100'e kadar olan kısım 'önce', aşan kısım 'sonra' sayılır (örneğin bar 95 iken 10'luk mesaj: 5 önce, 5 sonra).",
     "Bar tam 100'e ulaştığında gizli 3 sn'lik tehlike penceresi başlar. Ekranda yalnız kenar kızarır; sayı, geri sayım ya da kapasite gösterilmez.",
     "Tur 100'ü aşan ilk tıkta BİTMEZ; pencere sonuna kadar sürer. Pencerede (100'ü geçtikten sonra) en az bir kez basan herkes patlar.",
-    "Teknik üst sınır: oyunun başından 90 sn sonra tur biter (kimse tıklamazsa oda takılmasın diye); gizli pencere bu sınıra taşıyorsa 90. sn'de kesilir. Bar hiç dolmadan sınır dolarsa da sıralama aynı kuralla verilir.",
-    "Tur bittiği anda (pencere bitişi ya da 90. sn) ve sonrasında gelen tık kabul edilmez ('ended'). Oyun, turun bitişinden 5 sn sonra (sonuç gösterimi) biter.",
+    "Teknik üst sınır: bar dolmadıysa oyunun başından 90 sn sonra tur biter (kimse tıklamazsa oda takılmasın diye); sıralama aynı kuralla verilir. Bar dolduysa sınır uygulanmaz: tehlike penceresi her zaman tam 3 sn sürer (örneğin bar 89,5. sn'de dolarsa pencere 92,5. sn'de biter ve 90. sn'deki tık 'sonra' sayılır).",
+    "Tur bittiği anda (pencere bitişi ya da bar dolmadıysa 90. sn) ve sonrasında gelen tık kabul edilmez ('ended'). Oyun, turun bitişinden 5 sn sonra (sonuç gösterimi) biter.",
     "Oyun sırasında hiçbir sayı görünmez: bar toplamı, tık sayıları, patlayanlar ve gizli pencerenin bitişi tur bitene kadar hiçbir görünümde (kişisel, ortak, izleyici) yoktur; kendi tıklama sayın bile gösterilmez. Toplam yalnız sonuçta açılır.",
     "Patlama cezası: 100'den sonra en çok basan TEK kişi -2, diğer patlayanlar -1. Yalnız bir kişi patladıysa -1. 100'den sonra en çok basanlar eşitse hepsi -1 (kimse -2 almaz).",
     "Patlayanlar sıralamaya girmez; 100'den önce ne kadar basmış olursa olsun yalnız cezasını alır.",
@@ -201,49 +201,49 @@
       "kaynak": "packages/engine/src/games/asiri-yukleme/types.ts:6"
     },
     {
-      "ad": "Teknik üst sınır (oyun başından)",
+      "ad": "Teknik üst sınır (oyun başından; yalnız bar dolmadıysa)",
       "deger": "90 000 ms",
-      "kaynak": "packages/engine/src/games/asiri-yukleme/types.ts:8"
+      "kaynak": "packages/engine/src/games/asiri-yukleme/types.ts:11"
     },
     {
       "ad": "Tur sonu sonuç gösterimi",
       "deger": "5 000 ms",
-      "kaynak": "packages/engine/src/games/asiri-yukleme/types.ts:10"
+      "kaynak": "packages/engine/src/games/asiri-yukleme/types.ts:13"
     },
     {
-      "ad": "Toplam üst sınır (üst sınır + sonuç)",
-      "deger": "95 000 ms",
-      "kaynak": "packages/engine/src/games/asiri-yukleme/types.ts:11"
+      "ad": "Toplam üst sınır (üst sınır + tam pencere + sonuç)",
+      "deger": "98 000 ms",
+      "kaynak": "packages/engine/src/games/asiri-yukleme/types.ts:15"
     },
     {
       "ad": "Tek mesajda en çok tık (count)",
       "deger": "10",
-      "kaynak": "packages/engine/src/games/asiri-yukleme/types.ts:17"
+      "kaynak": "packages/engine/src/games/asiri-yukleme/types.ts:21"
     },
     {
-      "ad": "Turun bitiş anı (pencere sonu / üst sınır, hangisi önceyse)",
+      "ad": "Turun bitiş anı (bar dolduysa pencere sonu, dolmadıysa üst sınır)",
       "deger": "asiriYuklemeEndAt",
-      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:33"
+      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:36"
     },
     {
       "ad": "Patlayanlar (100'den sonra basanlar)",
       "deger": "asiriYuklemeExploders",
-      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:39"
+      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:43"
     },
     {
       "ad": "Puan hesabı (en çok basan tek patlayan -2, diğerleri -1; rankAwards)",
       "deger": "asiriYuklemePoints",
-      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:50"
+      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:54"
     },
     {
       "ad": "Toplu tık işlenişi (önce/sonra bölünmesi)",
       "deger": "100'e kadar 'önce', aşan 'sonra'",
-      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:138"
+      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:142"
     },
     {
       "ad": "Oyun bitişi",
       "deger": "tur sonu + 5 000 ms",
-      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:175"
+      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:179"
     },
     {
       "ad": "Sıralama ödülü (rankAwards positiveOnly)",
@@ -253,7 +253,7 @@
     {
       "ad": "Oyuncu sayısı",
       "deger": "2-8",
-      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:95"
+      "kaynak": "packages/engine/src/games/asiri-yukleme/index.ts:99"
     },
     {
       "ad": "İstemci tık toplayıcı aralığı",
@@ -320,7 +320,7 @@
       "name": "asiri-playing",
       "q": "mock=asiri-yukleme-playing",
       "baslik": "Tıklama",
-      "aciklama": "Ortada reaktör çekirdeği, arkada canlanan reaktör tüpü (borular, buhar, uyarı lambaları), altında 'Çekirdeğe hızlıca dokun!'; sayaç ve doluluk yok.",
+      "aciklama": "Ortada reaktör çekirdeği; arkada tüp camında nabız parıltısı, buhar ve kırmızı şeritlerde lamba yansıması; altında 'Çekirdeğe hızlıca dokun!'; sayaç ve doluluk yok.",
       "dosya": "asiri-yukleme-playing"
     },
     {
@@ -336,7 +336,7 @@
       "name": "asiri-reveal-boom-5",
       "q": "mock=asiri-yukleme-reveal-boom&n=5",
       "baslik": "Sonuç: başkası patlattı",
-      "aciklama": "'Çekirdek patladı!'; küçük çekirdek üstünde toplam, 100'e kadarki tıklama sıralaması, patlayan en sonda kırmızı '+N', çatlak ve 'PATLATTI' damgası, puanlar.",
+      "aciklama": "'Çekirdek patladı!'; küçük çekirdek üstünde toplam, adlarla 100'e kadarki tıklama sıralaması, patlayan en sonda 'PATLATTI' damgası ve 'aşan N', puanlar.",
       "dosya": "asiri-yukleme-reveal-boom-n-5"
     },
     {
@@ -352,7 +352,7 @@
       "name": "asiri-reveal-multi-8",
       "q": "mock=asiri-yukleme-reveal-boom&n=8&multi=1",
       "baslik": "Sonuç: çoklu patlama",
-      "aciklama": "İki kişi patladı: 100'den sonra en çok basan -2, diğeri -1; ikisi de en sonda 'PATLATTI' damgasıyla.",
+      "aciklama": "İki kişi patladı: 100'den sonra en çok basan -2, diğeri -1; ikisi de en sonda, satırlarında 'PATLATTI' damgası ve 'aşan N'.",
       "dosya": "asiri-yukleme-reveal-boom-n-8-multi-1"
     },
     {
@@ -389,6 +389,8 @@
     "Bu oyunda erken bitiş (herkes hazır) yoktur; Tamam/kilit eylemi tanımlı değildir."
   ],
   "sonDegisiklikler": [
+    "2026-10-30: Sahip kararı: bar dolduysa tehlike penceresi her zaman tam 3 sn sürer; 90 sn teknik sınır yalnız bar dolmadıysa uygulanır.",
+    "2026-10-30: Sonuç satırlarına takma ad eklendi; 'PATLATTI' damgası avatardan satıra taşındı, 100'den sonraki tıklar 'aşan N' olarak gösterilir; arka plan canlılığı görseldeki tüp camı, taban çıkışları ve kırmızı şeritlere hizalandı (dünya görseli kutusunda çizilir).",
     "2026-10-30: Sahip kararı (Ekim 2026): tur ilk aşan tıkta bitmez, pencerede basan herkes patlar; 100'den sonra en çok basan tek kişi -2, diğer patlayanlar -1; patlayanlar sıralamaya girmez; 'en az tıklayan -1' (O7) kaldırıldı. Sonuç görünümü önce/sonra tık sayıları ve patlayanlar listesini taşır.",
     "2026-10-30: Oyun hissi: çekirdek dokunuşa tepki verir, dokunulan yerden çekirdeğe parçacık akar, kendi hızına göre vınlama ve ritim, seride sertleşen titreşim, canlı reaktör tüpü arka planı, patlama sahnesi (flaş, parçalanma, şok dalgası, sarsıntı, yavaş çekim, derin ses), sıralı sonuç açılışı ve puanın üstteki yazıya uçması.",
     "2026-10-27: Renk körlüğü modu: kalan oyunlar ve ui-check &cb=1 ekranları (patlatan işareti).",

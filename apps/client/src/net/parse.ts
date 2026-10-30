@@ -3,6 +3,7 @@ import {
   type CardsPublic,
   DEFAULT_JOIN_POLICY,
   type ErrorCode,
+  GAME_COMMENT_MAX,
   type GameInfo,
   type GameResult,
   isFriendStatus,
@@ -147,6 +148,7 @@ function parseMatch(v: unknown): MatchSnapshot | null {
     cards = parseCardsPublic(v.cards);
     if (!cards) return null;
   }
+  const comment = parseComment(v.comment);
   let mine: CardsMine | null = null;
   if (v.mine !== null && v.mine !== undefined) {
     mine = parseCardsMine(v.mine);
@@ -169,7 +171,17 @@ function parseMatch(v: unknown): MatchSnapshot | null {
     result,
     cards,
     mine,
+    ...(comment !== null ? { comment } : {}),
   };
+}
+
+/** Oyun sonu yorumu: tek satır düz metin, en çok `GAME_COMMENT_MAX` karakter; aksi hâlde yok sayılır. */
+export function parseComment(v: unknown): string | null {
+  if (!isStr(v)) return null;
+  const text = v.trim();
+  if (text.length === 0 || Array.from(text).length > GAME_COMMENT_MAX || /\p{Cc}|[<>]/u.test(text))
+    return null;
+  return text;
 }
 
 function parseSelection(v: unknown): RoomSnapshot["selection"] | null {

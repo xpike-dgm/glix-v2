@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
-  barParts,
+  barRatio,
   parseAsiriYuklemePrivateView,
   parseAsiriYuklemePublicView,
   parseAsiriYuklemeView,
   phaseOf,
   pointsText,
   resultRows,
+  shortName,
 } from "./view.js";
 
 const pub = { startedAt: 10, danger: false, reveal: null };
@@ -81,21 +82,26 @@ describe("Aşırı Yükleme görünümü", () => {
     expect(resultRows(r, ["a", "b", "c"]).map((x) => x.playerId)).toEqual(["c", "a", "b"]);
   });
 
-  it("çubuk: önce ve sonra parçaları 0..1 içinde ve toplamı en çok 1", () => {
+  it("çubuk: patlamayanlardan en çok tıklayan tam dolu, 0..1 içinde", () => {
     const rows = resultRows(reveal, ["a", "b", "c", "d"]);
     const a = rows.find((r) => r.playerId === "a");
-    const d = rows.find((r) => r.playerId === "d");
-    if (!a || !d) throw new Error("satır yok");
-    expect(barParts(a, rows)).toEqual({ before: 1, after: 0 });
-    const pd = barParts(d, rows);
-    expect(pd.before).toBeCloseTo(0.25);
-    expect(pd.after).toBeCloseTo(0.125);
-    expect(barParts({ ...d, before: 0, after: 0 }, [])).toEqual({ before: 0, after: 0 });
+    const c = rows.find((r) => r.playerId === "c");
+    if (!a || !c) throw new Error("satır yok");
+    expect(barRatio(a, rows)).toBe(1);
+    expect(barRatio(c, rows)).toBe(0.5);
+    expect(barRatio({ ...c, before: 999 }, rows)).toBe(1);
+    expect(barRatio({ ...c, before: 0 }, [])).toBe(0);
   });
 
   it("puan yazısı gerçek eksi işareti kullanır", () => {
     expect(pointsText(2)).toBe("+2");
     expect(pointsText(0)).toBe("0");
     expect(pointsText(-2)).toBe("−2");
+  });
+
+  it("uzun takma ad kırpılır (harf sayısıyla, emoji güvenli)", () => {
+    expect(shortName("Elif")).toBe("Elif");
+    expect(shortName("Abdurrahmanxyz")).toBe("Abdurrahm…");
+    expect(Array.from(shortName("😀😀😀😀😀😀😀😀😀😀😀😀")).length).toBe(10);
   });
 });
