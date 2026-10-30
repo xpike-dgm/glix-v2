@@ -8,6 +8,7 @@
  *   tv-zaman-*                Zaman Bombası Hafızası evreleri (özel TV görünümü)
  *   tv-karalama-*             Karalama Defteri evreleri (özel TV görünümü)
  *   tv-kart-*                 Kart sistemi ekranları (seçim, geri sayım, sonuç)
+ *   tv-zehirli-*              Zehirli Kadeh evreleri (ör. tv-zehirli-spectator, tv-zehirli-reveal&t=2500)
  */
 import { setState } from "../net/store.js";
 
@@ -20,6 +21,9 @@ export async function startTvMock(mock: string, params: URLSearchParams): Promis
     } else if (kind.startsWith("karalama-")) {
       const m = await import("./mockKaralama.js");
       m.startKaralamaMock(kind, params);
+    } else if (kind.startsWith("zehirli-")) {
+      const m = await import("./mockZehirli.js");
+      m.startZehirliMock(kind, params);
     } else if (kind.startsWith("kart-")) {
       const m = await import("./mockKartlar.js");
       m.startKartMock(kind, params);

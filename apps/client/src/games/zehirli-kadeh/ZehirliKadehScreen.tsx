@@ -8,6 +8,7 @@ import { Screen } from "../../ui/Screen.js";
 import { Status } from "../../ui/Status.js";
 import type { GameScreenProps } from "../registry.js";
 import { Candle } from "./Candle.js";
+import { createOpening } from "./opening.js";
 import { SwapHistory } from "./SwapHistory.js";
 import { heartbeatSound, peekSound, swapSound } from "./sounds.js";
 import { Table } from "./Table.js";
@@ -223,98 +224,135 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
     return out.join(" · ");
   };
 
+  // ---- "Şerefe!" açılış evresi: süre bitince oyun ekranı tam ekran açılışa döner (masa büyür, kadehler açılır).
+  const opening = createOpening(() => view()?.pub ?? null, props.selfId, props.spectator === true, clock);
+
   return (
-    <Screen class="game zk">
-      <header class="zk__top">
-        <Candle
-          left={left()}
-          secs={secs()}
-          tense={tense()}
-          bump={banner() ? String(banner()?.seq) : undefined}
-        />
-        <Status class="zk__text" titleClass="zk__head" subClass="zk__sub" sub={head().sub}>
-          {head().text}
-        </Status>
-      </header>
-
-      <div class="zk__stage">
-        <Table
-          crew={crew()}
-          holdings={shownHoldings()}
-          swapped={shownSwapped()}
-          selfId={props.selfId}
-          spectator={props.spectator === true}
-          nameOf={nameOf}
-          selected={sel()}
-          canPick={() => canAct()}
-          onPick={pick}
-          check={props.spectator ? null : check()}
-          peek={peek()}
-          checking={checking()}
-          tense={tense()}
-        />
-        <Show when={banner()}>
-          {(b) => (
-            <p class="zk__banner" role="status">
-              <span>{nameOf(b().from)}</span>
-              <b aria-hidden="true">⇄</b>
-              <span class="sr-only">ile takas etti</span>
-              <span>{nameOf(b().to)}</span>
-            </p>
-          )}
-        </Show>
-      </div>
-
-      <SwapHistory swaps={view()?.pub.swaps ?? []} nameOf={nameOf} />
-
-      <footer class="zk__foot">
-        <Show
-          when={canAct() && sel() !== null}
-          fallback={
-            <p class="zk__note" role="status" data-peek={peekNote() ? "1" : undefined}>
-              {peekNote() ??
-                (props.spectator
-                  ? "Takaslar herkese açık"
-                  : !player() || closed()
-                    ? "Süre doldu"
-                    : checking() !== null
-                      ? "Kadeh gizlice açılıyor…"
-                      : canAct()
-                        ? rights()
-                        : "Haklarını kullandın")}
-            </p>
-          }
-        >
-          <div class="zk__acts">
-            <Show when={!checkUsed()}>
-              <button
-                type="button"
-                class="zk__act zk__act--check"
-                onPointerDown={(e) => {
-                  unlockAudio();
-                  tap();
-                  checkPress.onPointerDown(e);
-                }}
-                onClick={checkPress.onClick}
-              >
-                Kontrol et
-                <small>Yalnız sen görürsün</small>
-              </button>
-            </Show>
-            <Show when={!swapUsed()}>
-              <button
-                type="button"
-                class="zk__act zk__act--swap"
-                onPointerDown={swapPress.onPointerDown}
-                onClick={swapPress.onClick}
-              >
-                Takas et
-                <small>Herkes görür · +5 sn</small>
-              </button>
-            </Show>
-          </div>
-        </Show>
-      </footer>
-    </Screen>
+    <Show when={!opening.active()} fallback={<OpeningView />}>
+      <PlayView />
+    </Show>
   );
+
+  function OpeningView() {
+    return (
+      <Screen class="game zk zk--open">
+        <header class="zk__opentop">
+          <h2 class="zk__title" data-tone={opening.tone()} data-cheers={opening.cheers() ? "1" : undefined}>
+            {opening.title()}
+          </h2>
+        </header>
+        <div class="zk__stage">
+          <Table
+            crew={crew()}
+            holdings={view()?.pub.holdings ?? {}}
+            swapped={view()?.pub.swapped ?? []}
+            selfId={props.selfId}
+            spectator={props.spectator === true}
+            nameOf={nameOf}
+            outcome={opening.outcome}
+            cheers={opening.cheers()}
+            clink={opening.clink()}
+          />
+        </div>
+        <SwapHistory swaps={view()?.pub.swaps ?? []} nameOf={nameOf} />
+      </Screen>
+    );
+  }
+
+  function PlayView() {
+    return (
+      <Screen class="game zk">
+        <header class="zk__top">
+          <Candle
+            left={left()}
+            secs={secs()}
+            tense={tense()}
+            bump={banner() ? String(banner()?.seq) : undefined}
+          />
+          <Status class="zk__text" titleClass="zk__head" subClass="zk__sub" sub={head().sub}>
+            {head().text}
+          </Status>
+        </header>
+
+        <div class="zk__stage">
+          <Table
+            crew={crew()}
+            holdings={shownHoldings()}
+            swapped={shownSwapped()}
+            selfId={props.selfId}
+            spectator={props.spectator === true}
+            nameOf={nameOf}
+            selected={sel()}
+            canPick={() => canAct()}
+            onPick={pick}
+            check={props.spectator ? null : check()}
+            peek={peek()}
+            checking={checking()}
+            tense={tense()}
+          />
+          <Show when={banner()}>
+            {(b) => (
+              <p class="zk__banner" role="status">
+                <span>{nameOf(b().from)}</span>
+                <b aria-hidden="true">⇄</b>
+                <span class="sr-only">ile takas etti</span>
+                <span>{nameOf(b().to)}</span>
+              </p>
+            )}
+          </Show>
+        </div>
+
+        <SwapHistory swaps={view()?.pub.swaps ?? []} nameOf={nameOf} />
+
+        <footer class="zk__foot">
+          <Show
+            when={canAct() && sel() !== null}
+            fallback={
+              <p class="zk__note" role="status" data-peek={peekNote() ? "1" : undefined}>
+                {peekNote() ??
+                  (props.spectator
+                    ? "Takaslar herkese açık"
+                    : !player() || closed()
+                      ? "Süre doldu"
+                      : checking() !== null
+                        ? "Kadeh gizlice açılıyor…"
+                        : canAct()
+                          ? rights()
+                          : "Haklarını kullandın")}
+              </p>
+            }
+          >
+            <div class="zk__acts">
+              <Show when={!checkUsed()}>
+                <button
+                  type="button"
+                  class="zk__act zk__act--check"
+                  onPointerDown={(e) => {
+                    unlockAudio();
+                    tap();
+                    checkPress.onPointerDown(e);
+                  }}
+                  onClick={checkPress.onClick}
+                >
+                  Kontrol et
+                  <small>Yalnız sen görürsün</small>
+                </button>
+              </Show>
+              <Show when={!swapUsed()}>
+                <button
+                  type="button"
+                  class="zk__act zk__act--swap"
+                  onPointerDown={swapPress.onPointerDown}
+                  onClick={swapPress.onClick}
+                >
+                  Takas et
+                  <small>Herkes görür · +5 sn</small>
+                </button>
+              </Show>
+            </div>
+          </Show>
+        </footer>
+      </Screen>
+    );
+  }
 }

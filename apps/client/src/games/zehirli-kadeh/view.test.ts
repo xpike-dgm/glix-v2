@@ -145,7 +145,13 @@ describe("Zehirli Kadeh açılışı", () => {
     const times = p.order.map((id) => p.at[id] as number);
     expect(times[0]).toBe(ZK_REVEAL.cheersMs);
     for (let i = 1; i < times.length; i++) expect(times[i]).toBeGreaterThan(times[i - 1] as number);
-    expect(p.doneMs).toBeLessThan(10_000);
+    expect(p.doneMs + ZK_REVEAL.holdMs).toBeLessThanOrEqual(ZK_REVEAL.totalMs);
+  });
+  it.each([2, 3, 5, 8])("%i kadehte de açılış evreye sığar; az kadehte ağır çekim", (n) => {
+    const p = revealPlan(ids.slice(0, n), "a", 1);
+    expect(p.doneMs + ZK_REVEAL.holdMs).toBeLessThanOrEqual(ZK_REVEAL.totalMs);
+    const t = p.order.map((id) => p.at[id] as number);
+    if (n >= 3 && n <= 4) expect((t[1] as number) - (t[0] as number)).toBe(ZK_REVEAL.maxStepMs);
   });
   it("izleyicide herkes sırayla açılır", () => {
     const p = revealPlan(["a", "b"], "", 3);

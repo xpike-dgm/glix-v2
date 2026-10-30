@@ -8,6 +8,7 @@ import {
 import {
   ZEHIRLI_KADEH_BASE_MS,
   ZEHIRLI_KADEH_LOCK_GRACE_MS,
+  ZEHIRLI_KADEH_REVEAL,
   ZEHIRLI_KADEH_SWAP_BONUS_MS,
   type ZehirliKadehAction,
   type ZehirliKadehCheck,
@@ -48,7 +49,10 @@ function resultOf(state: ZehirliKadehState): ZehirliKadehResult {
   return { clean, poisoned, poisonedCups: [...state.poisoned].sort((a, b) => a - b) };
 }
 
+/** Eylem süresi bitti (açılış evresi başladı ya da başlamak üzere): yeni eylem kabul edilmez. */
 const over = (state: ZehirliKadehState, now: number): boolean => state.ended || now >= state.endsAt;
+/** Açılış evresinin sonu: oyun burada biter. Takas süresi kapandığı için `endsAt` artık değişmez. */
+const revealEndsAt = (state: ZehirliKadehState): number => state.endsAt + ZEHIRLI_KADEH_REVEAL.totalMs;
 
 function checkOf(state: ZehirliKadehState, playerId: string): ZehirliKadehCheck | null {
   const c = state.checks.find((x) => x.by === playerId);
@@ -170,8 +174,16 @@ export const zehirliKadeh: GameDefinition<
     return { role: "player", check: checkOf(state, playerId) };
   },
 
+  /** Süre bitince değil, ardından gelen "Şerefe!" açılış evresinin sonunda biter. */
   isFinished(state, ctx): boolean {
-    return over(state, ctx.now);
+    return ctx.now >= revealEndsAt(state);
+  },
+
+  /** Görünür geçişler: süre bitişi (sonuç açılır) ve açılış evresinin sonu (oyun biter). */
+  nextWake(state, ctx): number | null {
+    if (ctx.now < state.endsAt) return state.endsAt;
+    const end = revealEndsAt(state);
+    return ctx.now < end ? end : null;
   },
 
   /**

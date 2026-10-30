@@ -30,6 +30,12 @@ export interface TableProps {
   /** Kontrol isteği gönderildi, sonuç bekleniyor: hedef oyuncu. */
   checking?: string | null;
   tense?: boolean;
+  /** "Şerefe!" açılışı: oyuncunun kadehi açıldıysa sonucu, açılmadıysa null. Verilmezse oyun sürüyor demektir. */
+  outcome?: ((id: string) => "clean" | "poison" | null) | undefined;
+  /** Açılışın ilk anı: bütün kadehler kalkar ve ortaya eğilir. */
+  cheers?: boolean;
+  /** Tokuşturma parlaması. */
+  clink?: boolean;
 }
 
 /**
@@ -70,12 +76,15 @@ export function Table(props: TableProps) {
       class="zkt"
       data-n={props.crew.length}
       data-tense={props.tense ? "1" : undefined}
+      data-reveal={props.outcome ? "1" : undefined}
+      data-cheers={props.cheers ? "1" : undefined}
       data-art={art() ? "1" : undefined}
       style={{ "--rows": rows(), "--masa": artUrl("zehirli-kadeh/masa", art()) }}
     >
       <div class="zkt__board" data-head={props.crew.length % 2 === 1 ? "1" : undefined} aria-hidden="true">
+        <i class="zkt__cloth" />
         <i class="zkt__runner" />
-        <i class="zkt__candles" />
+        <i class="zkt__clink" data-on={props.clink ? "1" : undefined} />
       </div>
 
       <For each={props.crew}>
@@ -83,6 +92,7 @@ export function Table(props: TableProps) {
           const seat = () => seats()[i()];
           const mine = () => p.id === props.selfId && !props.spectator;
           const used = () => props.swapped.includes(p.id);
+          const out = () => props.outcome?.(p.id) ?? null;
           return (
             <Show when={seat()}>
               {(s) => (
@@ -90,6 +100,7 @@ export function Table(props: TableProps) {
                   class="zkt__seat"
                   data-side={s().side}
                   data-me={mine() ? "1" : undefined}
+                  data-out={out() ?? undefined}
                   style={{ left: `${s().ax}%`, top: `${s().ay}%` }}
                 >
                   <span class="zkt__av">
@@ -99,16 +110,35 @@ export function Table(props: TableProps) {
                       connected={p.connected}
                       ring={props.selected === p.id ? AMBER : mine() ? CYAN : undefined}
                     />
-                    <span
-                      class="zkt__right"
-                      data-used={used() ? "1" : undefined}
-                      title={used() ? "Takas hakkını kullandı" : "Takas hakkı duruyor"}
+                    <Show
+                      when={props.outcome}
+                      fallback={
+                        <span
+                          class="zkt__right"
+                          data-used={used() ? "1" : undefined}
+                          title={used() ? "Takas hakkını kullandı" : "Takas hakkı duruyor"}
+                        >
+                          {used() ? "✓" : "⇄"}
+                        </span>
+                      }
                     >
-                      {used() ? "✓" : "⇄"}
-                    </span>
+                      <Show when={out()}>
+                        {(o) => <span class="zkt__pts">{o() === "clean" ? "+1" : "0"}</span>}
+                      </Show>
+                    </Show>
                   </span>
                   <span class="zkt__name">{props.nameOf(p.id)}</span>
-                  <span class="sr-only">{used() ? "takas hakkını kullandı" : "takas hakkı duruyor"}</span>
+                  <span class="sr-only">
+                    {props.outcome
+                      ? out() === "clean"
+                        ? "temiz kadeh, artı bir"
+                        : out() === "poison"
+                          ? "zehirli kadeh, sıfır"
+                          : "kadehi henüz açılmadı"
+                      : used()
+                        ? "takas hakkını kullandı"
+                        : "takas hakkı duruyor"}
+                  </span>
                 </div>
               )}
             </Show>
@@ -130,6 +160,7 @@ export function Table(props: TableProps) {
           return (
             <div
               class="zkt__slot"
+              data-side={seat()?.side}
               data-fly={flying().has(cup) ? "1" : undefined}
               style={{ "--x": seat()?.cx ?? 50, "--y": seat()?.cy ?? 50 }}
             >
@@ -140,6 +171,7 @@ export function Table(props: TableProps) {
                 data-picked={props.selected === holder() ? "1" : undefined}
                 data-peek={props.peek === cup ? (known()?.poisoned ? "poison" : "clean") : undefined}
                 data-checking={props.checking === holder() ? "1" : undefined}
+                data-out={props.outcome?.(holder()) ?? undefined}
                 disabled={!enabled()}
                 aria-pressed={props.selected === holder()}
                 aria-label={`${mineCup() ? "Senin kadehin" : `Kadeh: ${props.nameOf(holder())}`}${
@@ -151,11 +183,11 @@ export function Table(props: TableProps) {
                 <span class="zkt__arrow" aria-hidden="true" />
                 <span class="zkt__ring" aria-hidden="true" />
                 <span class="zkt__lift">
-                  <Cup cup={cup} class="zkt__img" />
+                  <Cup cup={cup} mode={props.outcome?.(holder()) ?? "unknown"} class="zkt__img" />
                   <span class="zkt__cloche" aria-hidden="true" />
                   <span class="zkt__liquid" aria-hidden="true" />
                 </span>
-                <Show when={known()}>
+                <Show when={known() && !props.outcome ? known() : null}>
                   {(k) => (
                     <span class="zkt__badge" data-poison={k().poisoned ? "1" : undefined} aria-hidden="true">
                       {k().poisoned ? "☠ zehirli" : "✓ temiz"}

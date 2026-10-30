@@ -6,7 +6,7 @@
  *   ?mock=zehirli-used        takas ve kontrol yapıldı, geçmiş görünüyor (rozet kadehle birlikte yer değiştirdi)
  *   ?mock=zehirli-tense       son 5 saniye: mum titrer, masa kararır
  *   ?mock=zehirli-spectator   katılımcı değilsin (TV ile aynı görünüm; kontrol/zehir bilgisi yok)
- *   ?mock=zehirli-reveal      "Şerefe!" açılışı (sen temiz kadehli); `&poison=1` sen zehirli;
+ *   ?mock=zehirli-reveal      "Şerefe!" açılış evresi, tam ekran (sen temiz kadehli); `&poison=1` sen zehirli;
  *                             `&t=<ms>` açılışın o anından başlar (ör. `t=900` tokuşturma, `t=20000` son hâl)
  */
 import type {
@@ -17,7 +17,7 @@ import type {
   RoomSnapshot,
   ZehirliKadehPublicView,
 } from "@glix/engine";
-import { zehirliKadeh, zehirliKadehPoisonCount } from "@glix/engine";
+import { LATE_ACTION_GRACE_MS, zehirliKadeh, zehirliKadehPoisonCount } from "@glix/engine";
 import { mockAck, useMockSender } from "../net/client.js";
 import { applySnapshot, setState } from "../net/store.js";
 
@@ -49,7 +49,8 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
   const reveal = kind === "zehirli-reveal";
   const tense = kind === "zehirli-tense";
   const revealAt = Math.max(0, Number(params.get("t")) || 0);
-  const phase: RoomPhase = briefing ? "briefing" : reveal ? "results" : "playing";
+  // "Şerefe!" açılışı oyunun kendi evresidir: faz hâlâ "playing", sonuç görünümü açık.
+  const phase: RoomPhase = briefing ? "briefing" : "playing";
   let startedAt = now - 7_000;
 
   const holdings: Record<string, number> = Object.fromEntries(ids.map((id, i) => [id, i]));
@@ -83,7 +84,7 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
     const poisoned = ids.filter((id) => poisonedCups.includes(holdings[id] as number));
     const pub: ZehirliKadehPublicView = {
       startedAt: reveal ? now - 40_000 : startedAt,
-      endsAt: reveal ? now - 10_000 : tense ? now + 4_600 : endsAt + 8_000,
+      endsAt: reveal ? now - revealAt - LATE_ACTION_GRACE_MS : tense ? now + 4_600 : endsAt + 8_000,
       players: ids,
       holdings,
       swapped,
@@ -92,7 +93,6 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
       ended: reveal,
       result: reveal ? { clean: ids.filter((id) => !poisoned.includes(id)), poisoned, poisonedCups } : null,
     };
-    const scores = Object.fromEntries(participants.map((id) => [id, poisoned.includes(id) ? 0 : 1]));
     const match: MatchSnapshot = {
       round: 0,
       total: 3,
@@ -103,11 +103,11 @@ export function startZehirliMock(kind: string, params: URLSearchParams): void {
       participants,
       readyIds: briefing ? ["p1", "p2"] : [],
       continueIds: [],
-      phaseStartedAt: reveal ? now - revealAt : startedAt,
-      phaseEndsAt: briefing ? now + 40_000 : reveal ? now + 60_000 : null,
+      phaseStartedAt: reveal ? now - 40_000 : startedAt,
+      phaseEndsAt: briefing ? now + 40_000 : null,
       publicView: briefing ? null : pub,
       view: briefing ? null : spectator ? { role: "spectator", check: null } : { role: "player", check },
-      result: reveal ? { miniScores: scores, awards: scores } : null,
+      result: null,
     };
     const snapshot: RoomSnapshot = {
       rev: ++rev,

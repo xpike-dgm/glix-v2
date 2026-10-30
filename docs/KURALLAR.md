@@ -1208,8 +1208,12 @@ olmayanlar +1, zehirli kadehi olan oyuncu 0 alır; eski faz 30 saniyedir.
     aynı anda gelen iki takasta sunucu sırası geçerlidir. Her oyuncu en fazla
     bir kez takas yapabilir ve takas zorunlu değildir. Başlangıç süresi 20
     saniyedir; toplam süre takaslarla uzar ve süre bitince sonuç hemen açılır.
-    Herkes takas hakkını kullandıysa oyun son takastan 1 sn sonra biter;
-    kullanılmamış kontrol hakları bu erken bitişi engellemez. Kontrol hakkı
+    Herkes takas hakkını kullandıysa takas süresi son takastan 1 sn sonra
+    biter; kullanılmamış kontrol hakları bu erken bitişi engellemez. Süre
+    bitince (erken bitişte de) oyun hemen bitmez: sabit süreli (8,5 sn)
+    "Şerefe!" açılış evresi başlar, sonuç bu evrenin başında açılır, evrede
+    takas ve kontrol reddedilir; oyun evrenin sonunda biter ve ardından genel
+    sonuç ekranı gelir. Kontrol hakkı
     her oyuncuda en fazla bir kezdir ve zorunlu değildir.
 
 ## 23. Çapraz Ateş — `capraz-ates`

@@ -1,4 +1,4 @@
-import type { ZehirliKadehPublicView, ZehirliKadehView } from "@glix/engine";
+import { ZEHIRLI_KADEH_REVEAL, type ZehirliKadehPublicView, type ZehirliKadehView } from "@glix/engine";
 import { describe, expect, it } from "vitest";
 import { Client, k, setupRoom, sleep, startPlaying, sync, until, useServer } from "./testkit.js";
 
@@ -66,8 +66,15 @@ describe("zehirli-kadeh tam maç", () => {
     await sleep(30);
     expect(a.room.phase).toBe("playing");
     k.clock.advance(250);
-    await until(() => a.room.phase === "results", "sonuç");
-    expect(await send(c, { kind: "swap", target: ia })).toMatchObject({ ok: false });
+    // Süre bitti: "Şerefe!" açılış evresi başlar. Sonuç görünümü hemen açılır, faz oyunda kalır, eylem reddedilir.
+    await until(() => pub(a).ended && pub(a).result !== null, "açılış evresi");
+    expect(a.room.phase).toBe("playing");
+    expect(await send(c, { kind: "swap", target: ia })).toEqual({ ok: false, reason: "ended" });
+    expect(await send(c, { kind: "check", target: ia })).toEqual({ ok: false, reason: "ended" });
+    k.clock.advance(ZEHIRLI_KADEH_REVEAL.totalMs - 300);
+    await sleep(30);
+    expect(a.room.phase).toBe("playing");
+    k.clock.advance(300);
     await until(() => a.room.phase === "results", "sonuç");
 
     const r = pub(a).result;
@@ -93,6 +100,9 @@ describe("zehirli-kadeh tam maç", () => {
     await sync();
     expect(a.room.phase).toBe("playing");
     k.clock.advance(300);
+    await until(() => pub(a).ended, "açılış evresi");
+    expect(a.room.phase).toBe("playing");
+    k.clock.advance(ZEHIRLI_KADEH_REVEAL.totalMs);
     await until(() => a.room.phase === "results", "sonuç");
     expect(pub(a).poisonCount).toBe(1);
     expect(pub(a).swaps).toEqual([]);
@@ -148,6 +158,12 @@ describe("zehirli-kadeh kontrol hakkı", () => {
 
     // Süre bitince kontrol reddedilir; kontrol sonuçta da kimseye açılmaz.
     k.clock.advance(startedAt + 20_000 + 250 - k.clock.now());
+    await until(() => pub(a).ended, "açılış evresi");
+    expect(await send(b, { kind: "check", target: a.session.playerId })).toEqual({
+      ok: false,
+      reason: "ended",
+    });
+    k.clock.advance(ZEHIRLI_KADEH_REVEAL.totalMs);
     await until(() => a.room.phase === "results", "sonuç");
     expect(view(a).check).toEqual(result);
     const r = pub(a).result;

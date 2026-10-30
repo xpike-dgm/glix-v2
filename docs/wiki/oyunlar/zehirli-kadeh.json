@@ -9,8 +9,8 @@
     "max": 8
   },
   "sure": {
-    "tahminiSn": 30,
-    "not": "Oyun 20 sn başlar; her takas süre bitişini 5 sn uzatır. Hiç takas olmazsa tam 20 sn sürer. Herkes (tüm katılımcılar) takas hakkını kullanırsa son takastan 1 sn sonra biter. Bunun öncesinde anlatım ekranı (en çok 40 sn, herkes hazırsa daha erken) ve 3 sn geri sayım, sonrasında 30 sn'ye kadar sonuç ekranı vardır."
+    "tahminiSn": 38,
+    "not": "Oyun 20 sn başlar; her takas süre bitişini 5 sn uzatır. Hiç takas olmazsa tam 20 sn sürer. Herkes (tüm katılımcılar) takas hakkını kullanırsa son takastan 1 sn sonra biter. Bunun öncesinde anlatım ekranı (en çok 40 sn, herkes hazırsa daha erken) ve 3 sn geri sayım, sonrasında 8,5 sn'lik 'Şerefe!' açılış evresi ve genel sonuç ekranı vardır."
   },
   "ozet": "Ziyafet masasında her oyuncunun önünde bir kadeh durur; bazı kadehler zehirlidir ama hangileri olduğunu, kendi kadehin dahil, kimse göremez. Her oyuncunun 1 kontrol hakkı vardır: kendisi dışındaki birinin o anki kadehini gizlice kontrol eder ve sonucu yalnız kendisi görür (bilgi kadehe bağlıdır, kadeh takasla yer değiştirse de doğru kalır). Ayrıca 1 takas hakkıyla bir arkadaşının kadehiyle kendi kadehini değiştirebilir; takaslar herkese açıktır, kontroller tamamen gizlidir. Süre bitince elinde temiz kadeh olan herkes +1, zehirli kadeh olan 0 alır.",
   "akis": [
@@ -36,11 +36,18 @@
       "gizli": "Hangi kadehlerin zehirli olduğu hiçbir ortak görünümde yoktur (sahibi dahil). Kontrol sonucu yalnız kontrol edenin kişisel görünümündedir (`check: { cup, poisoned }`); kimin kimi kontrol ettiği ve kontrol hakkının kullanılıp kullanılmadığı ortak görünümde, izleyicide, TV'de ve başka oyuncularda yoktur (sunucu bu eylemden sonra başka hiçbir bağlantıya ileti göndermez). Herkes kimin kiminle takas ettiğini, kimin takas hakkını kullandığını ve kimin elinde hangi kadeh numarası olduğunu görür. Görünümde zehirli kadeh SAYISI vardır."
     },
     {
+      "ad": "\"Şerefe!\" açılışı",
+      "sureSn": 8.5,
+      "kim": "herkes (TV dahil)",
+      "aciklama": "Süre bitince (erken bitişte de) oyunun kendi tam ekran açılış evresi başlar; faz hâlâ oyun, genel sonuç ekranı henüz gelmez. Masa büyür, mum ve düğmeler kalkar. 0–1,5 sn bütün kadehler kalkar ve masanın ortasına eğilip tokuşur ('Şerefe!' ve tokuşturma sesi); sonra kadehler rastgele sırayla tek tek açılır: temiz kadehte altın parıltı ve avatarda '+1', zehirli kadehte avatar yeşile döner, mor duman ve '0'. Oyuncunun kendi kadehi en son açılır ve başlık 'Kadehin temiz!' ya da 'Zehri sen içtin!' olur; izleyici ve TV sonunda 'Kadehler açıldı' görür. Takas geçmişi oklarla altta kalır. Kadehler arası aralık evreye sığacak biçimde ayarlanır (az oyuncuda en çok 1 sn, 8 oyuncuda ~0,6 sn). Zaman çizelgesi tek sabittedir (ZEHIRLI_KADEH_REVEAL); hareketi azalt açıksa son hâl hemen görünür.",
+      "gizli": "Zehirli kadehlerin numaraları bu evrenin başında açılır (sonuç görünümü). Kontrol bilgisi (kimin kimi kontrol ettiği) burada da açılmaz. Bu evrede takas ve kontrol reddedilir."
+    },
+    {
       "ad": "Sonuç",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "'Şerefe!' açılışı: 0–1,5 sn bütün kadehler kalkar ve tokuşur ('Şerefe!' ve tokuşturma sesi); sonra kadehler rastgele sırayla tek tek açılır: temiz kadehte altın parıltı ve '+1', zehirli kadehte avatar yeşile döner, mor duman ve '0'. Oyuncunun kendi kadehi en son açılır ve başlık 'Kadehin temiz!' ya da 'Zehri sen içtin!' olur; izleyici sonunda 'Kadehler açıldı' görür. Takas geçmişi oklarla altta kalır. Açılış zamanı sonuç aşamasının başından sayılır (en çok 8 kadehte ~7,5 sn) ve sonuç ekranının süresine sığar; hareketi azalt açıksa son hâl hemen görünür. Sonuç ekranının bitişi genel 'Devam' kuralına bağlıdır.",
-      "gizli": "Zehirli kadehlerin numaraları ilk kez burada açılır. Kontrol bilgisi (kimin kimi kontrol ettiği) sonuçta da açılmaz."
+      "aciklama": "Açılış evresi bitince genel sonuç ekranı gelir: tur özeti, bu oyunun sıralaması (temiz kadehliler +1) ve genel sıralama. Oyuna özel ek açılış yoktur. Sonuç ekranının bitişi genel 'Devam' kuralına bağlıdır.",
+      "gizli": "Zehir zaten açılmıştır. Kontrol bilgisi açılmaz."
     }
   ],
   "kurallar": [
@@ -63,7 +70,8 @@
     "Tüm katılımcılar (bağlantıdan bağımsız) takas hakkını kullandıysa sonuç değişemez, bu yüzden oyun son takastan 1 sn sonra biter (süre uzamaz, hatta kısalır). Bağlantısı kopmuş ve takas etmemiş bir oyuncu varsa bu erken bitiş olmaz. Kullanılmamış kontrol hakları bu erken bitişi engellemez (erken bitiş yalnız takaslara bakar).",
     "Sonuç, süre bittiği an kimin elinde hangi kadeh olduğuna göre belirlenir (başlangıçtaki değil, takaslardan sonraki kadeh).",
     "Puan: temiz kadeh +1, zehirli kadeh 0. Eksi puan yoktur. Hem mini oyun puanı hem genel skora giden puan aynıdır.",
-    "Zehirli kadehlerin numaraları süre bitene kadar hiçbir ortak görünümde bulunmaz; kişisel görünümde yalnız kontrol edenin kontrol ettiği tek kadehin durumu bulunur. Tamamı sonuç açılınca gelir."
+    "Zehirli kadehlerin numaraları süre bitene kadar hiçbir ortak görünümde bulunmaz; kişisel görünümde yalnız kontrol edenin kontrol ettiği tek kadehin durumu bulunur. Tamamı sonuç açılınca gelir.",
+    "Süre bitince (erken bitişte de) sabit süreli (8,5 sn) 'Şerefe!' açılış evresi başlar: sonuç görünümü evrenin başında açılır, evrede takas ve kontrol reddedilir, oyun evrenin sonunda biter."
   ],
   "puanlama": {
     "ozet": "Süre bitince elindeki kadeh temizse +1, zehirliyse 0. Başka puan yok.",
@@ -235,14 +243,14 @@
       "kaynak": "apps/client/src/games/zehirli-kadeh/view.ts (ZK_TENSE_SECS)"
     },
     {
-      "ad": "'Şerefe!' açılış çizelgesi",
-      "deger": "şerefe 1 500 ms, kadeh başına 650 ms, kendi kadehinden önce +600 ms (8 kadehte ~7,5 sn)",
-      "kaynak": "apps/client/src/games/zehirli-kadeh/view.ts (ZK_REVEAL)"
-    },
-    {
       "ad": "Masa düzeni",
       "deger": "sol-sağ karşılıklı; tek sayıda sonuncu masanın başında",
       "kaynak": "apps/client/src/games/zehirli-kadeh/view.ts (seatLayout)"
+    },
+    {
+      "ad": "Açılış evresi",
+      "deger": "8 500 ms (şerefe 1 500 ms; kadehler arası en çok 1 000 ms; kendi kadehinden önce +600 ms; son başlık en az 1 400 ms)",
+      "kaynak": "packages/engine/src/games/zehirli-kadeh/types.ts (ZEHIRLI_KADEH_REVEAL)"
     }
   ],
   "strateji": [
@@ -255,7 +263,7 @@
     "Herkes takas hakkını kullanınca oyun 1 sn sonra biter (kullanılmamış kontroller beklemez); son hamleyi yapan kişi sonradan tepki alamaz.",
     "Kartlar tutuyorsan (ör. Tahmin, Kendine Güven) ham ödül yalnız 0/1 olduğundan çarpan kartlar zehirli kadehte işe yaramaz."
   ],
-  "tv": "TV/sahne ekranı oyun ekranını izleyici kipinde büyütülmüş olarak gösterir (selfId boş, takas ve kontrol yapılamaz): ziyafet masası, eriyen mum, takasların canlı yay animasyonu, 'Ad ⇄ Ad' şeridi ve takas geçmişi; sağda oyuncular ve puanlar bulunur. Zehir ve kontrol bilgisi yoktur; sunucu bir oyuncunun kontrolünden sonra sahneye ileti göndermez. Zehirli Kadeh'e özel bir StageView yoktur.",
+  "tv": "TV/sahne ekranı oyuna özel geniş bir kutuda (StageView) aynı ziyafet masasını izleyici kipinde gösterir (takas ve kontrol yapılamaz): eriyen mum, takasların canlı yay animasyonu, 'Ad ⇄ Ad' şeridi, takas geçmişi; süre bitince aynı 'Şerefe!' açılışı TV'de de tam boy oynar. Sağda oyuncular ve puanlar bulunur. Zehir bilgisi açılışa kadar, kontrol bilgisi hiçbir zaman yoktur; sunucu bir oyuncunun kontrolünden sonra sahneye ileti göndermez.",
   "ekranlar": [
     {
       "ad": "zehirli-briefing",
@@ -333,34 +341,41 @@
       "ad": "zehirli-reveal-6",
       "mock": "zehirli-reveal",
       "q": "mock=zehirli-reveal&n=6&t=20000",
-      "baslik": "Sonuç (temiz)",
-      "aciklama": "'Şerefe!' açılışının son hâli: temiz kadehler altın '+1', zehirliler mor dumanlı '0' ve yeşil avatar; başlık 'Kadehin temiz!'.",
+      "baslik": "Açılış (temiz)",
+      "aciklama": "'Şerefe!' açılış evresinin son hâli, tam ekran masa: temiz kadehler altın '+1', zehirliler mor dumanlı '0' ve yeşil avatar; başlık 'Kadehin temiz!'.",
       "dosya": "zehirli-reveal-n-6"
     },
     {
       "ad": "zehirli-reveal-poison-8",
       "mock": "zehirli-reveal",
       "q": "mock=zehirli-reveal&n=8&poison=1&t=20000",
-      "baslik": "Sonuç (zehirli, 8 oyuncu)",
+      "baslik": "Açılış (zehirli, 8 oyuncu)",
       "aciklama": "Benim kadehim zehirli: 'Zehri sen içtin!'; 3 zehirli, 5 temiz kadeh.",
       "dosya": "zehirli-reveal-n-8-poison-1"
     },
     {
       "ad": "zehirli-reveal-acilis",
       "mock": "zehirli-reveal",
-      "q": "mock=zehirli-reveal&n=6&t=100",
+      "q": "mock=zehirli-reveal&n=6&t=2500",
       "baslik": "Kadehler tek tek açılıyor",
       "aciklama": "Açılış sürüyor: 'Şerefe!'den sonra kadehler rastgele sırayla açılıyor, senin kadehin henüz kapalı (en son açılır).",
       "dosya": "zehirli-reveal-n-6-acilis"
+    },
+    {
+      "ad": "zehirli-reveal-serefe",
+      "mock": "zehirli-reveal",
+      "q": "mock=zehirli-reveal&n=6&t=0",
+      "baslik": "Şerefe!",
+      "aciklama": "Açılışın ilk anı: bütün kadehler kalkar, masanın ortasına eğilip tokuşur.",
+      "dosya": "zehirli-reveal-n-6-serefe"
     }
   ],
   "bilinenSorunlar": [
     "Hiç takas olmazsa ilk 20 sn içinde oyuncu sayısından bağımsız olarak sonuç açılır; bitişten sonra tick 250 ms gecikmeli olduğundan sonuç ekrandaki sayaçtan biraz geç gelir.",
-    "Sonuç ekranının üstündeki genel tur özeti ('X zehirli kadehte kaldı') açılış sırasından önce görünür; 'kendi kadehin en son' gerilimini azaltır (özet ortak mekanizmadır, değiştirilmedi).",
     "Ziyafet masası ve mum için görsel dosyası (props/zehirli-kadeh/masa.webp, mum.webp) henüz yok; ekran CSS karşılığıyla çizilir, dosya eklenince kendiliğinden kullanılır."
   ],
   "sonDegisiklikler": [
-    "2026-10-30: Kontrol hakkı (kişi başı 1, gizli, kadeh numarasına bağlı); ziyafet masası, eriyen mum, takas yay animasyonu ve geçmiş okları, son 5 sn gerilimi, 'Şerefe!' sonuç açılışı.",
+    "2026-10-30: Kontrol hakkı (kişi başı 1, gizli, kadeh numarasına bağlı); ziyafet masası, eriyen mum, takas yay animasyonu ve geçmiş okları, son 5 sn gerilimi; süre bitince oyunun kendi 8,5 sn'lik tam ekran 'Şerefe!' açılış evresi (TV dahil).",
     "2026-10-29: Geç gelen eylem payı: Zehirli Kadeh dahil 3 oyunda oyun saati 250 ms geriden verilir.",
     "2026-10-27: Renk körlüğü modu: kadeh için ek işaretler.",
     "2026-10-27: Kabuk saati, Status bileşeni ve hazır noktalarına taşındı (arayüz iskeleti).",
@@ -376,9 +391,10 @@
     "packages/engine/src/games/zehirli-kadeh/zehirli-kadeh.test.ts",
     "docs/KURALLAR.md#22-zehirli-kadeh",
     "apps/client/src/games/zehirli-kadeh/ZehirliKadehScreen.tsx",
-    "apps/client/src/games/zehirli-kadeh/Reveal.tsx",
     "apps/client/src/games/zehirli-kadeh/view.ts",
     "apps/client/src/games/zehirli-kadeh/Table.tsx",
-    "apps/client/src/games/zehirli-kadeh/Candle.tsx"
+    "apps/client/src/games/zehirli-kadeh/Candle.tsx",
+    "apps/client/src/games/zehirli-kadeh/opening.ts",
+    "apps/client/src/games/zehirli-kadeh/StageView.tsx"
   ]
 }

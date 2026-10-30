@@ -1,9 +1,11 @@
-import type {
-  ZehirliKadehCheck,
-  ZehirliKadehPublicView,
-  ZehirliKadehResult,
-  ZehirliKadehSwap,
-  ZehirliKadehView,
+import {
+  LATE_ACTION_GRACE_MS,
+  ZEHIRLI_KADEH_REVEAL,
+  type ZehirliKadehCheck,
+  type ZehirliKadehPublicView,
+  type ZehirliKadehResult,
+  type ZehirliKadehSwap,
+  type ZehirliKadehView,
 } from "@glix/engine";
 
 type Rec = Record<string, unknown>;
@@ -150,20 +152,27 @@ export function seatLayout(n: number): Seat[] {
   const pairs = Math.floor(count / 2);
   const head = count % 2 === 1;
   const rows = pairs + (head ? 1 : 0);
-  const top = 6;
-  const span = 88;
-  const rowH = rows > 0 ? span / rows : span;
+  // Kadehler sahiplerinin hemen önünde (masanın kenarında); az oyuncuda kadehler daha büyük olduğundan biraz içeride.
+  const cupX = count <= 3 ? 32 : 30;
+  const top = 3;
+  const span = head ? 86 : 94;
+  const rowH = rows > 0 ? span / (head ? rows - 0.35 : rows) : span;
   const seats: Seat[] = [];
   for (let i = 0; i < count; i++) {
     if (head && i === count - 1) {
-      const y = top + (rows - 0.5) * rowH;
-      seats.push({ cx: 50, cy: Math.min(y - rowH * 0.12, 84), ax: 50, ay: 95, side: "head" });
+      seats.push({
+        cx: 50,
+        cy: Math.min(top + (rows - 1) * rowH + rowH * 0.32, 80),
+        ax: 50,
+        ay: 94,
+        side: "head",
+      });
       continue;
     }
     const row = Math.floor(i / 2);
     const left = i % 2 === 0;
     const y = top + (row + 0.5) * rowH;
-    seats.push({ cx: left ? 37 : 63, cy: y, ax: left ? 11 : 89, ay: y, side: left ? "l" : "r" });
+    seats.push({ cx: left ? cupX : 100 - cupX, cy: y, ax: left ? 9 : 91, ay: y, side: left ? "l" : "r" });
   }
   return seats;
 }
@@ -184,19 +193,13 @@ export function candleLeft(startedAt: number, endsAt: number, now: number): numb
 }
 
 /**
- * "Şerefe!" sonuç açılışının zaman çizelgesi (ms, sonuç aşamasının başından). Tek sabit: süre burada değişir.
- * En çok 8 kadehte toplam ~7,5 sn; sonuç ekranının bugünkü süresine (30 sn) rahatça sığar.
+ * "Şerefe!" açılış evresinin zaman çizelgesi: motordaki tek sabit (`ZEHIRLI_KADEH_REVEAL`). Evre süre bitişinde
+ * başlar ve sabit sürer; oyun evrenin sonunda biter.
  */
-export const ZK_REVEAL = {
-  /** 0 – cheersMs: kadehler kalkar, ortada tokuşturma, "Şerefe!". */
-  cheersMs: 1_500,
-  /** Tokuşturma sesinin/parlamasının anı. */
-  clinkMs: 800,
-  /** Kadehler arası açılma aralığı. */
-  stepMs: 650,
-  /** Senin kadehin (en son) açılmadan önceki ek bekleme (gerilim). */
-  selfPauseMs: 600,
-} as const;
+export const ZK_REVEAL = ZEHIRLI_KADEH_REVEAL;
+
+/** Açılış evresinin başı (sunucu saatiyle): oyun saati geç eylem payı kadar geriden gelir. */
+export const revealStart = (endsAt: number): number => endsAt + LATE_ACTION_GRACE_MS;
 
 /** Küçük, belirli (her cihazda aynı) karıştırma: maçtan türetilen tohumla. */
 function seeded(seed: number): () => number {
@@ -238,11 +241,14 @@ export function revealPlan(
   const mine = players.includes(selfId);
   const order = mine ? [...others, selfId] : others;
   const at: Record<string, number> = {};
+  // Kadehler arası aralık: evreye sığacak kadar; az oyuncuda daha ağır çekim (en çok maxStepMs).
+  const room = ZK_REVEAL.totalMs - ZK_REVEAL.cheersMs - ZK_REVEAL.selfPauseMs - ZK_REVEAL.holdMs;
+  const step = Math.min(ZK_REVEAL.maxStepMs, Math.floor(room / Math.max(1, order.length)));
   let t = ZK_REVEAL.cheersMs;
   order.forEach((id, i) => {
     if (mine && i === order.length - 1 && i > 0) t += ZK_REVEAL.selfPauseMs;
     at[id] = t;
-    t += ZK_REVEAL.stepMs;
+    t += step;
   });
   return { order, at, doneMs: t };
 }

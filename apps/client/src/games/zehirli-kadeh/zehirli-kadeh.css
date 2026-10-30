@@ -189,72 +189,128 @@
   flex: 1 1 auto;
   min-height: 0;
 }
+/* Kadeh boyu: kapsayıcıya göre (genişlik ve satır yüksekliğinin küçüğü); az oyuncuda çok büyük. */
 @supports (width: 1cqh) {
   .zkt {
-    --zk-cup: min(17cqw, calc(80cqh / var(--rows) * 0.74), 96px);
-    --zk-av: min(10cqw, calc(80cqh / var(--rows) * 0.46), 46px);
+    --zk-cup: min(25cqw, calc(94cqh / var(--rows) * 0.98), 124px);
+    --zk-av: min(11cqw, calc(94cqh / var(--rows) * 0.42), 46px);
   }
   .zkt[data-n="2"],
   .zkt[data-n="3"] {
-    --zk-cup: min(24cqw, calc(80cqh / var(--rows) * 0.6), 124px);
+    --zk-cup: min(35cqw, calc(94cqh / var(--rows) * 0.62), 180px);
+    --zk-av: min(12cqw, 52px);
+  }
+  .zkt[data-n="4"] {
+    --zk-cup: min(28cqw, calc(94cqh / var(--rows) * 0.7), 150px);
+  }
+  .zkt[data-n="5"],
+  .zkt[data-n="6"] {
+    --zk-cup: min(26cqw, calc(94cqh / var(--rows) * 0.86), 136px);
   }
 }
+/* Masa: koyu ceviz kalaslar (uzunlamasına damar), altın kenar pervazı, yumuşak kenar gölgesi. */
 .zkt__board {
   position: absolute;
-  left: 23%;
-  right: 23%;
-  top: 2%;
-  bottom: 2%;
-  border-radius: 22px;
+  left: 16%;
+  right: 16%;
+  top: 0.5%;
+  bottom: 0.5%;
+  border-radius: 18px;
   background:
     var(--masa, none) center / cover no-repeat,
-    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 22px),
-    linear-gradient(
+    linear-gradient(180deg, rgba(255, 220, 160, 0.08), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.25)),
+    repeating-linear-gradient(
       90deg,
-      var(--zk-wood-b),
-      var(--zk-wood-a) 30%,
-      #4a2e19 50%,
-      var(--zk-wood-a) 70%,
-      var(--zk-wood-b)
-    );
+      rgba(0, 0, 0, 0.32) 0 1px,
+      transparent 1px 19%,
+      rgba(0, 0, 0, 0.32) 19% calc(19% + 1px),
+      transparent calc(19% + 1px) 20%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 210, 150, 0.05) 0 3px,
+      transparent 3px 7px,
+      rgba(0, 0, 0, 0.07) 7px 9px,
+      transparent 9px 16px
+    ),
+    linear-gradient(90deg, #2a170b, #4a2b15 22%, #5a3519 48%, #4a2b15 78%, #2a170b);
   box-shadow:
-    inset 0 0 0 3px rgba(201, 162, 74, 0.55),
-    inset 0 0 24px rgba(0, 0, 0, 0.6),
-    0 10px 30px rgba(0, 0, 0, 0.55);
+    inset 0 0 0 2px #8a6a2a,
+    inset 0 0 0 5px rgba(20, 10, 4, 0.9),
+    inset 0 0 0 6px rgba(201, 162, 74, 0.45),
+    inset 0 2px 10px rgba(255, 220, 160, 0.12),
+    inset 0 -14px 24px rgba(0, 0, 0, 0.45),
+    0 14px 28px rgba(0, 0, 0, 0.6),
+    0 2px 0 #1a0d05;
 }
 .zkt__board[data-head="1"] {
-  bottom: 9%;
+  bottom: 11%;
 }
 .zkt[data-art="1"] .zkt__board {
   background: var(--masa) center / cover no-repeat;
 }
-.zkt[data-art="1"] .zkt__runner,
-.zkt[data-art="1"] .zkt__candles {
+.zkt[data-art="1"] .zkt__cloth,
+.zkt[data-art="1"] .zkt__runner {
   display: none;
 }
-/* Masa örtüsü şeridi ve uzun masanın ortasındaki sönük mumlar */
+/* Masa örtüsü: ortada uzanan kadife örtü; kenarlarında altın sırma, uçlarında saçak, masanın kenarından sarkar. */
+.zkt__cloth {
+  position: absolute;
+  left: 38%;
+  right: 38%;
+  top: -1.5%;
+  bottom: -1.5%;
+  border-radius: 3px;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 194, 59, 0.85) 0 2px, transparent 2px 5px) top / 100% 7px
+    no-repeat,
+    repeating-linear-gradient(90deg, rgba(255, 194, 59, 0.85) 0 2px, transparent 2px 5px) bottom / 100% 7px
+    no-repeat,
+    linear-gradient(90deg, rgba(0, 0, 0, 0.35), transparent 22%, transparent 78%, rgba(0, 0, 0, 0.35)),
+    linear-gradient(180deg, #3b1d5e, #4b2475 50%, #3b1d5e);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 3px 8px rgba(0, 0, 0, 0.45);
+}
 .zkt__runner {
   position: absolute;
-  left: 41%;
-  right: 41%;
-  top: 4%;
-  bottom: 4%;
-  border-radius: 6px;
-  background: linear-gradient(
-    90deg,
-    rgba(139, 92, 255, 0.35),
-    rgba(255, 43, 214, 0.22),
-    rgba(139, 92, 255, 0.35)
-  );
-  box-shadow: 0 0 0 1px rgba(255, 194, 59, 0.35);
+  left: calc(38% + 5px);
+  right: calc(38% + 5px);
+  top: 2%;
+  bottom: 2%;
+  border-left: 1.5px solid rgba(255, 194, 59, 0.6);
+  border-right: 1.5px solid rgba(255, 194, 59, 0.6);
+  background: repeating-linear-gradient(180deg, transparent 0 14px, rgba(255, 194, 59, 0.12) 14px 15px);
 }
-.zkt__candles {
+/* Tokuşturma parlaması (masanın ortası) */
+.zkt__clink {
   position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 50% 12%, rgba(255, 194, 59, 0.35), transparent 14%),
-    radial-gradient(circle at 50% 50%, rgba(255, 194, 59, 0.3), transparent 12%),
-    radial-gradient(circle at 50% 88%, rgba(255, 194, 59, 0.35), transparent 14%);
+  left: 50%;
+  top: 45%;
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 8%, rgba(255, 213, 107, 0.9) 22%, rgba(255, 194, 59, 0) 70%);
+  opacity: 0;
+  z-index: 5;
+}
+.zkt__clink[data-on="1"] {
+  animation: zk-clink 700ms var(--ease) both;
+}
+@keyframes zk-clink {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
 }
 /* Son saniyeler: masa hafifçe kararır (masanın üstünde tek katman, yalnız opaklık). */
 .zkt__board::after {
@@ -273,7 +329,7 @@
 /* Koltuk: avatar + ad, masanın dışında, kadehin arkasında */
 .zkt__seat {
   position: absolute;
-  width: 23%;
+  width: 18%;
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
@@ -688,35 +744,37 @@
   transform: scale(0.97);
 }
 
-/* ---- Sonuç: "Şerefe!" açılışı ---- */
-.zkr {
-  --zkr-av: clamp(20px, 6.4vw, 30px);
-  --zkr-cup: clamp(30px, 10vw, 48px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 0 6px;
+/* ---- "Şerefe!" açılış evresi (tam ekran) ---- */
+.zk__opentop {
+  flex: none;
+  min-height: 64px;
+  display: grid;
+  place-items: center;
+  margin-top: clamp(2px, 1dvh, 10px);
 }
-.zkr__head {
+.zk__title {
   margin: 0;
+  text-align: center;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: var(--fs-18);
+  font-size: clamp(22px, 6.8vw, 38px);
+  white-space: nowrap;
+  line-height: 1.1;
 }
-.zkr__head[data-cheers="1"] {
+.zk__title[data-cheers="1"] {
   color: var(--amber);
+  text-shadow: 0 0 18px rgba(255, 194, 59, 0.6);
   animation: zk-cheer 1.5s var(--ease) both;
 }
-.zkr__head[data-ok="1"] {
+.zk__title[data-tone="ok"] {
   color: var(--amber);
-  text-shadow: 0 0 14px rgba(255, 194, 59, 0.45);
-  animation: rise var(--t-slow) var(--ease) both;
+  text-shadow: 0 0 18px rgba(255, 194, 59, 0.55);
+  animation: zk-cheer 700ms var(--ease) both;
 }
-.zkr__head[data-bad="1"] {
+.zk__title[data-tone="bad"] {
   color: #c6a2ff;
-  text-shadow: 0 0 14px rgba(139, 92, 255, 0.55);
-  animation: rise var(--t-slow) var(--ease) both;
+  text-shadow: 0 0 18px rgba(139, 92, 255, 0.65);
+  animation: zk-cheer 700ms var(--ease) both;
 }
 @keyframes zk-cheer {
   0% {
@@ -724,143 +782,83 @@
     opacity: 0;
   }
   40% {
-    transform: scale(1.15);
+    transform: scale(1.12);
     opacity: 1;
   }
   100% {
     transform: scale(1);
   }
 }
-.zkr__table {
-  position: relative;
-  width: 100%;
-  padding: 2px 6px 6px;
-  border-radius: 16px;
-  background:
-    var(--masa, none) center / cover no-repeat,
-    linear-gradient(180deg, rgba(74, 46, 25, 0.55), rgba(35, 21, 12, 0.75));
-  box-shadow: inset 0 0 0 2px rgba(201, 162, 74, 0.35);
+/* Masa büyür: açılış evresine girerken */
+.zkt[data-reveal="1"] {
+  animation: zk-grow 600ms var(--ease) both;
 }
-.zkr__clink {
-  position: absolute;
-  left: 50%;
-  top: 46%;
-  width: 70px;
-  height: 70px;
-  margin: -35px 0 0 -35px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff 0 8%, rgba(255, 213, 107, 0.9) 22%, rgba(255, 194, 59, 0) 70%);
-  opacity: 0;
-  pointer-events: none;
-  z-index: 2;
-}
-.zkr__clink[data-on="1"] {
-  animation: zk-clink 700ms var(--ease) both;
-}
-@keyframes zk-clink {
-  0% {
-    opacity: 0;
-    transform: scale(0.3);
-  }
-  30% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.6);
+@keyframes zk-grow {
+  from {
+    transform: scale(0.9);
+    opacity: 0.6;
   }
 }
-.zkr__row {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: center;
-  gap: clamp(2px, 1.4vw, 12px);
-}
-.zkr__item {
-  min-width: 0;
-  flex: 0 1 auto;
-  display: grid;
-  justify-items: center;
-  gap: 1px;
-  padding-top: 6px;
-}
-.zkr__av {
-  display: block;
-  transition: filter 300ms var(--ease);
-}
-.zkr__item[data-bad="1"] .zkr__av {
-  filter: sepia(1) hue-rotate(50deg) saturate(3.2) brightness(0.9);
-}
-.zkr__lift {
-  display: block;
-  transition: transform 260ms var(--ease);
-}
-/* Şerefe: bütün kadehler kalkar ve ortaya doğru eğilir (tokuşturma) */
-.zkr__table[data-cheers="1"] .zkr__lift {
+/* Şerefe: bütün kadehler kalkar ve masanın ortasına doğru eğilir */
+.zkt[data-cheers="1"] .zkt__lift {
   animation: zk-toast 1.5s var(--ease) both;
+}
+.zkt__slot[data-side="l"] {
+  --tilt: 1;
+}
+.zkt__slot[data-side="r"] {
+  --tilt: -1;
+}
+.zkt__slot[data-side="head"] {
+  --tilt: 0;
 }
 @keyframes zk-toast {
   0% {
     transform: none;
   }
   45%,
-  60% {
-    transform: translate(calc(var(--side) * -4px), -12px) rotate(calc(var(--side) * -8deg));
+  62% {
+    transform: translate(calc(var(--tilt, 0) * 10%), -16%) rotate(calc(var(--tilt, 0) * 14deg)) scale(1.06);
   }
   100% {
     transform: none;
   }
 }
-.zkr__item[data-open="1"] .zkr__lift {
-  animation: zk-open 520ms var(--ease) both;
+.zkt__cup[data-out] .zkt__lift {
+  animation: zk-open 560ms var(--ease) both;
 }
 @keyframes zk-open {
   40% {
-    transform: translateY(-8px) scale(1.12);
+    transform: translateY(-10%) scale(1.14);
   }
 }
-.zkr__cup {
-  width: var(--zkr-cup);
-  height: auto;
+.zkt__seat .av {
+  transition: filter 300ms var(--ease);
 }
-.zkr__item[data-me="1"] .zkr__cup {
-  filter: drop-shadow(0 0 8px rgba(46, 242, 255, 0.6));
+.zkt__seat[data-out="poison"] .av {
+  filter: sepia(1) hue-rotate(50deg) saturate(3.2) brightness(0.9);
 }
-.zkr__pts {
-  min-height: 1.2em;
+.zkt__pts {
+  position: absolute;
+  right: -12px;
+  top: -10px;
+  min-width: 26px;
+  padding: 0 5px;
+  border-radius: 999px;
+  text-align: center;
   font-family: var(--font-display);
   font-weight: 800;
-  line-height: 1.2;
-  color: var(--text);
-}
-.zkr__item[data-open="1"] .zkr__pts {
+  font-size: 14px;
+  line-height: 22px;
+  color: #1a1206;
+  background: var(--amber);
+  box-shadow: 0 0 12px rgba(255, 194, 59, 0.75);
   animation: rise var(--t-slow) var(--ease) both;
 }
-.zkr__item[data-ok="1"] .zkr__pts {
-  color: var(--amber);
-  text-shadow: 0 0 10px rgba(255, 194, 59, 0.6);
-}
-.zkr__item[data-bad="1"] .zkr__pts {
-  color: #c6a2ff;
-}
-.zkr__name {
-  max-width: 9ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-dim);
-}
-.zkr__item[data-me="1"] .zkr__name {
-  color: var(--cyan);
-}
-.zkr .zkh {
-  min-height: 24px;
+.zkt__seat[data-out="poison"] .zkt__pts {
+  color: #fff;
+  background: #6b2bd6;
+  box-shadow: 0 0 12px rgba(139, 92, 255, 0.8);
 }
 
 /* ---- Hareket azaltma ---- */
@@ -875,10 +873,10 @@
   :root:not([data-motion="full"]) .zkt__cloche,
   :root:not([data-motion="full"]) .zkt__badge,
   :root:not([data-motion="full"]) .zk__banner,
-  :root:not([data-motion="full"]) .zkr__lift,
-  :root:not([data-motion="full"]) .zkr__head,
-  :root:not([data-motion="full"]) .zkr__pts,
-  :root:not([data-motion="full"]) .zkr__clink {
+  :root:not([data-motion="full"]) .zk__title,
+  :root:not([data-motion="full"]) .zkt,
+  :root:not([data-motion="full"]) .zkt__pts,
+  :root:not([data-motion="full"]) .zkt__clink {
     animation: none;
   }
   :root:not([data-motion="full"]) .zkt__slot {
@@ -896,10 +894,10 @@
 :root[data-motion="reduce"] .zkt__cloche,
 :root[data-motion="reduce"] .zkt__badge,
 :root[data-motion="reduce"] .zk__banner,
-:root[data-motion="reduce"] .zkr__lift,
-:root[data-motion="reduce"] .zkr__head,
-:root[data-motion="reduce"] .zkr__pts,
-:root[data-motion="reduce"] .zkr__clink {
+:root[data-motion="reduce"] .zk__title,
+:root[data-motion="reduce"] .zkt,
+:root[data-motion="reduce"] .zkt__pts,
+:root[data-motion="reduce"] .zkt__clink {
   animation: none;
 }
 :root[data-motion="reduce"] .zkt__slot {
@@ -941,9 +939,14 @@
 }
 @media (orientation: landscape) and (max-height: 520px) {
   .zk__text,
-  .zkr__head,
-  .zkr .zkh {
+  .zk--open .zkh {
     display: none;
+  }
+  .zk__opentop {
+    min-height: 40px;
+  }
+  .zk__title {
+    font-size: 22px;
   }
   .zk__top {
     min-height: 44px;
@@ -956,9 +959,6 @@
   }
   .zk__act {
     min-height: 46px;
-  }
-  .zkr__cup {
-    width: 26px;
   }
 }
 
@@ -1071,4 +1071,9 @@
   justify-content: center;
   border-radius: 50%;
   background: #0a1030;
+}
+
+/* Büyük ekran (TV): masa telefon sütunundan geniş kutuyu doldurur. */
+.zktv .zk > .col {
+  max-width: none;
 }

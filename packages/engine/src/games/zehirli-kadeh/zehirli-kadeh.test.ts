@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { type GameContext, isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
 import { type ZehirliKadehState, zehirliKadeh } from "./index.js";
-import { zehirliKadehPoisonCount } from "./types.js";
+import { ZEHIRLI_KADEH_REVEAL, zehirliKadehPoisonCount } from "./types.js";
 
 const T0 = 1_000_000;
 const IDS = ["a", "b", "c", "d", "e", "f", "g", "h"];
@@ -99,10 +99,11 @@ describe("zehirli-kadeh: takas", () => {
     expect(s.holds).toEqual([1, 2, 0, 3]);
   });
 
-  it("takas zorunlu değil: hiç takas olmadan süre 20 sn'de biter", () => {
+  it("takas zorunlu değil: hiç takas olmadan süre 20 sn'de biter (ardından açılış evresi)", () => {
     const s = start(4);
-    expect(zehirliKadeh.isFinished(s, ctx(T0 + 19_999))).toBe(false);
-    expect(zehirliKadeh.isFinished(s, ctx(T0 + 20_000))).toBe(true);
+    expect(reason(swap(s, "a", "b", T0 + 20_000))).toBe("ended");
+    expect(zehirliKadeh.isFinished(s, ctx(T0 + 20_000))).toBe(false);
+    expect(zehirliKadeh.isFinished(s, ctx(T0 + 20_000 + ZEHIRLI_KADEH_REVEAL.totalMs))).toBe(true);
   });
 
   it("hedef başka bir bağlı katılımcı olmalı", () => {
@@ -284,7 +285,7 @@ describe("zehirli-kadeh: erken bitiş (herkes takas hakkını kullandı)", () =>
     const s = everyone();
     expect(s.endsAt).toBe(T0 + 5_000);
     expect(zehirliKadeh.isFinished(s, ctx(T0 + 4_999))).toBe(false);
-    expect(zehirliKadeh.isFinished(s, ctx(T0 + 5_000))).toBe(true);
+    expect(zehirliKadeh.isFinished(s, ctx(T0 + 5_000 + ZEHIRLI_KADEH_REVEAL.totalMs))).toBe(true);
     const t = zehirliKadeh.tick(s, ctx(T0 + 5_000));
     expect(t.ended).toBe(true);
     expect(zehirliKadeh.publicView(t, ctx(T0 + 5_000)).result).not.toBeNull();
@@ -488,5 +489,55 @@ describe("zehirli-kadeh: erken bitiş kontrolden etkilenmez", () => {
     const r = ok(check(s, "a", "b", T0 + 3_500));
     expect(r.endsAt).toBe(T0 + 4_000);
     expect(reason(check(s, "a", "b", T0 + 4_000))).toBe("ended");
+  });
+});
+
+describe('zehirli-kadeh: "Şerefe!" açılış evresi', () => {
+  const R = ZEHIRLI_KADEH_REVEAL;
+
+  it("süre bitince sonuç görünümü evrenin başında açılır, oyun evre sonunda biter", () => {
+    const s = start(5, 3);
+    const atEnd = zehirliKadeh.tick(s, ctx(s.endsAt));
+    const v = zehirliKadeh.publicView(atEnd, ctx(s.endsAt));
+    expect(v.ended).toBe(true);
+    expect(v.result?.poisonedCups).toEqual(s.poisoned);
+    expect(zehirliKadeh.isFinished(atEnd, ctx(s.endsAt))).toBe(false);
+    expect(zehirliKadeh.isFinished(atEnd, ctx(s.endsAt + R.totalMs - 1))).toBe(false);
+    expect(zehirliKadeh.isFinished(atEnd, ctx(s.endsAt + R.totalMs))).toBe(true);
+  });
+
+  it("evre süresi sabittir ve 8 kadehlik çizelgeye yeter", () => {
+    expect(R.totalMs).toBe(8_500);
+    const minStep = (R.totalMs - R.cheersMs - R.selfPauseMs - R.holdMs) / 8;
+    expect(minStep).toBeGreaterThanOrEqual(500);
+    expect(R.clinkMs).toBeLessThan(R.cheersMs);
+  });
+
+  it("evrede takas ve kontrol reddedilir; durum değişmez", () => {
+    const s = finish(start(4));
+    for (const t of [s.endsAt, s.endsAt + 1000, s.endsAt + R.totalMs - 1]) {
+      expect(reason(swap(s, "a", "b", t))).toBe("ended");
+      expect(reason(check(s, "a", "b", t))).toBe("ended");
+    }
+    expect(zehirliKadeh.tick(s, ctx(s.endsAt + 4000))).toBe(s);
+  });
+
+  it("erken bitişte de evre son takastan 1 sn sonra başlar", () => {
+    let s = start(2);
+    s = ok(swap(s, "a", "b", T0 + 2_000));
+    s = ok(swap(s, "b", "a", T0 + 3_000));
+    expect(s.endsAt).toBe(T0 + 4_000);
+    expect(zehirliKadeh.isFinished(s, ctx(T0 + 4_000 + R.totalMs))).toBe(true);
+    expect(zehirliKadeh.isFinished(s, ctx(T0 + 4_000 + R.totalMs - 1))).toBe(false);
+  });
+
+  it("uyanma anları: süre bitişi, sonra evre sonu, sonra yok", () => {
+    const s = start(3);
+    const wake = zehirliKadeh.nextWake;
+    if (!wake) throw new Error("nextWake yok");
+    expect(wake(s, ctx(T0 + 100))).toBe(s.endsAt);
+    const done = finish(s);
+    expect(wake(done, ctx(s.endsAt))).toBe(s.endsAt + R.totalMs);
+    expect(wake(done, ctx(s.endsAt + R.totalMs))).toBeNull();
   });
 });
