@@ -2175,15 +2175,27 @@ const SCREENS = [
   {
     name: "zehirli-picked",
     q: "mock=zehirli-play&n=6",
-    act: async (p) => p.locator(".zk__cell:not(:disabled)").nth(1).click(),
+    act: async (p) => p.locator(".zkt__cup:not(:disabled)").nth(1).click(),
     settle: 600,
   },
+  {
+    name: "zehirli-check-peek",
+    q: "mock=zehirli-play&n=5",
+    act: async (p) => {
+      await p.locator(".zkt__cup:not(:disabled)").nth(0).click();
+      await p.locator(".zk__act--check").click();
+    },
+    settle: 1300,
+  },
+  { name: "zehirli-checked", q: "mock=zehirli-checked&n=5" },
+  { name: "zehirli-tense", q: "mock=zehirli-tense&n=6", settle: 900 },
   { name: "zehirli-used", q: "mock=zehirli-used&n=6" },
   { name: "zehirli-spectator", q: "mock=zehirli-spectator&n=5" },
-  { name: "zehirli-reveal-6", q: "mock=zehirli-reveal&n=6", settle: 2400 },
+  { name: "zehirli-reveal-cheers", q: "mock=zehirli-reveal&n=6&t=900", settle: 300 },
+  { name: "zehirli-reveal-6", q: "mock=zehirli-reveal&n=6&t=20000", settle: 2400 },
   {
     name: "zehirli-reveal-poison-8",
-    q: "mock=zehirli-reveal&n=8&poison=1",
+    q: "mock=zehirli-reveal&n=8&poison=1&t=20000",
     settle: 2400,
     sizes: [
       [390, 844],
@@ -2192,8 +2204,8 @@ const SCREENS = [
       [667, 375],
     ],
   },
-  { name: "zehirli-reveal-poison-5", q: "mock=zehirli-reveal&n=5&poison=1", settle: 2400 },
-  { name: "zehirli-reveal-2", q: "mock=zehirli-reveal&n=2", settle: 2400 },
+  { name: "zehirli-reveal-poison-5", q: "mock=zehirli-reveal&n=5&poison=1&t=20000", settle: 2400 },
+  { name: "zehirli-reveal-2", q: "mock=zehirli-reveal&n=2&t=20000", settle: 2400 },
   // Maç sürerken katılım: izleyici görünümü, sonuç/final izleyenler, lobiye dönen izleyici, host ayarı.
   { name: "izleyici-izliyor", q: "mock=spectator-playing" },
   { name: "izleyici-sonuc", q: "mock=results&n=6&watch=2", settle: 2400 },
@@ -2486,7 +2498,7 @@ const SCREENS = [
   { name: "kontrol-reveal-renk-korlugu", q: "mock=kontrol-reveal&n=5&cb=1", settle: 2500 },
   { name: "kontrol-reveal-wrong-renk-korlugu", q: "mock=kontrol-reveal-wrong&n=4&cb=1", settle: 2500 },
   { name: "zehirli-play-renk-korlugu", q: "mock=zehirli-play&n=5&cb=1" },
-  { name: "zehirli-reveal-renk-korlugu", q: "mock=zehirli-reveal&n=6&poison=1&cb=1", settle: 2400 },
+  { name: "zehirli-reveal-renk-korlugu", q: "mock=zehirli-reveal&n=6&poison=1&cb=1&t=20000", settle: 2400 },
   { name: "kd-draw-renk-korlugu", q: "mock=karalama-draw&cb=1" },
   { name: "kareler-reveal-renk-korlugu", q: "mock=kareler-reveal&n=5&cb=1", settle: 3200 },
   { name: "kareler-final-renk-korlugu", q: "mock=kareler-final&n=5&cb=1", settle: 3200 },

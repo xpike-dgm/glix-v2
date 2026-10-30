@@ -1,9 +1,17 @@
-import { type GameContext, type GameDefinition, LATE_ACTION_GRACE_MS, type Rejected } from "../../game.js";
+import {
+  type GameContext,
+  type GameDefinition,
+  LATE_ACTION_GRACE_MS,
+  type Rejected,
+  type SecretEntry,
+} from "../../game.js";
 import {
   ZEHIRLI_KADEH_BASE_MS,
   ZEHIRLI_KADEH_LOCK_GRACE_MS,
+  ZEHIRLI_KADEH_REVEAL,
   ZEHIRLI_KADEH_SWAP_BONUS_MS,
   type ZehirliKadehAction,
+  type ZehirliKadehCheck,
   type ZehirliKadehPublicView,
   type ZehirliKadehResult,
   type ZehirliKadehSwap,
@@ -23,6 +31,11 @@ export interface ZehirliKadehState {
   holds: number[];
   swapped: string[];
   swaps: ZehirliKadehSwap[];
+  /**
+   * GİZLİ: kontroller (kim, hangi kadeh numarası). Her biri yalnız `by` oyuncusunun `view`'ında görünür; ortak
+   * görünümde, izleyicide ve başka oyuncularda hiçbir iz bırakmaz (kontrol hakkının kullanıldığı bile).
+   */
+  checks: { by: string; cup: number }[];
   /** `tick` süre bitişini fark edince true; sonuç yalnız o zaman açılır. */
   ended: boolean;
 }
@@ -36,7 +49,24 @@ function resultOf(state: ZehirliKadehState): ZehirliKadehResult {
   return { clean, poisoned, poisonedCups: [...state.poisoned].sort((a, b) => a - b) };
 }
 
+/** Eylem süresi bitti (açılış evresi başladı ya da başlamak üzere): yeni eylem kabul edilmez. */
 const over = (state: ZehirliKadehState, now: number): boolean => state.ended || now >= state.endsAt;
+/** Açılış evresinin sonu: oyun burada biter. Takas süresi kapandığı için `endsAt` artık değişmez. */
+const revealEndsAt = (state: ZehirliKadehState): number => state.endsAt + ZEHIRLI_KADEH_REVEAL.totalMs;
+
+function checkOf(state: ZehirliKadehState, playerId: string): ZehirliKadehCheck | null {
+  const c = state.checks.find((x) => x.by === playerId);
+  return c ? { cup: c.cup, poisoned: state.poisoned.includes(c.cup) } : null;
+}
+
+/** Kontrol: hedefin O ANKİ kadeh numarası kaydedilir; hedefin bağlı olması gerekmez, süre ve takaslar değişmez. */
+function check(state: ZehirliKadehState, playerId: string, target: string): ZehirliKadehState | Rejected {
+  if (state.checks.some((c) => c.by === playerId)) return { rejected: "already_checked" };
+  if (target === playerId) return { rejected: "self_target" };
+  const them = state.players.indexOf(target);
+  if (them < 0) return { rejected: "bad_target" };
+  return { ...state, checks: [...state.checks, { by: playerId, cup: state.holds[them] as number }] };
+}
 
 export const zehirliKadeh: GameDefinition<
   ZehirliKadehState,
@@ -53,8 +83,8 @@ export const zehirliKadeh: GameDefinition<
   briefing: {
     goal: "Zehirli kadehle kalma!",
     steps: [
-      "Hangi kadeh zehirli, kimse göremez",
-      "İstersen bir arkadaşınla tek takas yap; her takas süreyi uzatır",
+      "Bir arkadaşının kadehini gizlice kontrol et (1 hak)",
+      "İstersen biriyle tek takas yap; her takas süreyi uzatır",
       "Süre bitince temiz kadeh +1, zehirli kadeh 0",
     ],
   },
@@ -62,10 +92,10 @@ export const zehirliKadeh: GameDefinition<
   parseAction(raw: unknown): ZehirliKadehAction | null {
     if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
     const rec = raw as Record<string, unknown>;
-    if (Object.keys(rec).length !== 2 || rec.kind !== "swap") return null;
+    if (Object.keys(rec).length !== 2 || (rec.kind !== "swap" && rec.kind !== "check")) return null;
     const target = rec.target;
     if (typeof target !== "string" || target.length === 0 || target.length > 64) return null;
-    return { kind: "swap", target };
+    return { kind: rec.kind, target };
   },
 
   setup(players: readonly string[], ctx: GameContext): ZehirliKadehState {
@@ -79,6 +109,7 @@ export const zehirliKadeh: GameDefinition<
       holds: players.map((_, i) => i),
       swapped: [],
       swaps: [],
+      checks: [],
       ended: false,
     };
   },
@@ -88,6 +119,7 @@ export const zehirliKadeh: GameDefinition<
     if (me < 0) return { rejected: "not_participant" };
     if (over(state, ctx.now)) return { rejected: "ended" };
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
+    if (action.kind === "check") return check(state, playerId, action.target);
     if (state.swapped.includes(playerId)) return { rejected: "already_swapped" };
     if (action.target === playerId) return { rejected: "self_target" };
     const them = state.players.indexOf(action.target);
@@ -138,21 +170,42 @@ export const zehirliKadeh: GameDefinition<
   },
 
   view(state, playerId): ZehirliKadehView {
-    return { role: playerId !== null && state.players.includes(playerId) ? "player" : "spectator" };
+    if (playerId === null || !state.players.includes(playerId)) return { role: "spectator", check: null };
+    return { role: "player", check: checkOf(state, playerId) };
   },
 
+  /** Süre bitince değil, ardından gelen "Şerefe!" açılış evresinin sonunda biter. */
   isFinished(state, ctx): boolean {
-    return over(state, ctx.now);
+    return ctx.now >= revealEndsAt(state);
   },
 
-  /** Zehirli kadeh numaraları: sonuç açılana kadar kimsenin (sahipleri dahil) görünümünde olamaz. */
+  /** Görünür geçişler: süre bitişi (sonuç açılır) ve açılış evresinin sonu (oyun biter). */
+  nextWake(state, ctx): number | null {
+    if (ctx.now < state.endsAt) return state.endsAt;
+    const end = revealEndsAt(state);
+    return ctx.now < end ? end : null;
+  },
+
+  /**
+   * Zehirli kadeh numaraları: sonuç açılana kadar kimsenin (sahipleri dahil) görünümünde olamaz.
+   * Kontrol sonuçları (görünümdeki `check` nesnesi): yalnız o kadehi kontrol edenlerde; sonuçtan sonra da gizli.
+   */
   secrets(state) {
-    if (state.ended) return [];
-    return state.poisoned.map((cup) => ({
-      ownerIds: [] as string[],
-      value: `zehirli-kadeh-no-${cup}`,
-      label: `zehirli kadeh ${cup}`,
-    }));
+    const entries: SecretEntry[] = state.ended
+      ? []
+      : state.poisoned.map((cup) => ({
+          ownerIds: [] as string[],
+          value: `zehirli-kadeh-no-${cup}`,
+          label: `zehirli kadeh ${cup}`,
+        }));
+    const byValue = new Map<string, string[]>();
+    for (const c of state.checks) {
+      const value = JSON.stringify(checkOf(state, c.by));
+      byValue.set(value, [...(byValue.get(value) ?? []), c.by]);
+    }
+    for (const [value, ownerIds] of byValue)
+      entries.push({ ownerIds, value, label: `kontrol sonucu ${value}` });
+    return entries;
   },
 
   result(state) {

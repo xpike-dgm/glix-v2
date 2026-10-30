@@ -116,7 +116,8 @@ const registry: Record<string, GameEntry> = {
   "zehirli-kadeh": {
     Screen: lazy(() => import("./zehirli-kadeh/ZehirliKadehScreen.js")),
     Art: lazy(() => import("./zehirli-kadeh/BriefingArt.js")),
-    Reveal: lazy(() => import("./zehirli-kadeh/Reveal.js")),
+    // "Şerefe!" açılışı oyun ekranının kendi evresidir (tam ekran, TV dahil); sonuç ekranında ayrı açılış yok.
+    StageView: lazy(() => import("./zehirli-kadeh/StageView.js")),
   },
   ittifak: {
     Screen: lazy(() => import("./ittifak/IttifakScreen.js")),

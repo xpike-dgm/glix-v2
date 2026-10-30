@@ -1220,6 +1220,14 @@ olmayanlar +1, zehirli kadehi olan oyuncu 0 alır; eski faz 30 saniyedir.
 1. Minimum oyuncu / maksimum oyuncu: [2-8]
 2. Kaç zehirli kadeh vardır; başlangıçta nasıl dağıtılır?: [2-3 oyuncu da 1 tane 4-5 oyuncuda 2 tane 6-8 oyuncuda 3 tane zehirli kadeh vardır]
 3. Her oyuncu kendi kadehinin zehirli olup olmadığını görür mü?: [yok göremez]
+   - **Kontrol hakkı (sahip kararı, ZK-M2 değiştirilmiş):** her oyuncunun **1 kontrol hakkı** vardır. Süre
+     içinde istediği an, kendisi dışındaki bir oyuncunun **o anki** kadehini seçip gizlice kontrol eder; sonuç
+     (zehirli/temiz) yalnız kendisine görünür ve oyun boyunca hatırlanır. Bilgi **kadeh numarasına** bağlıdır:
+     kadeh sonra takasla yer değiştirse de "bu kadeh temiz/zehirli" bilgisi doğru kalır ve kadehi izler. Kendi
+     kadehini kontrol edemez. Kontrol edilen oyuncunun bağlı olması gerekmez. Kimin kimi kontrol ettiği ve kontrol
+     hakkının kullanılıp kullanılmadığı hiçbir ortak görünümde, izleyicide, TV'de ya da başka oyuncuda yoktur;
+     sonuçta da açılmaz. Kontrol süreyi uzatmaz, takas hakkını harcamaz; süre bitince yapılan kontrol reddedilir
+     (takastaki geç gelen eylem payı burada da geçerlidir). Kendi kadehini bilmek yoktur.
 4. Takas kime yapılabilir; kendinle takas mümkün mü?: [kendinle nasıl takas yapıcan akıllı]
 5. Her oyuncunun kaç takas hakkı vardır?: [1 takas hakkı var]
 6. Takas anında mı gerçekleşir; herkes takas geçmişini görür mü?: [takas anlık olarak yapılır süre bitmeden]
@@ -1230,19 +1238,32 @@ olmayanlar +1, zehirli kadehi olan oyuncu 0 alır; eski faz 30 saniyedir.
 11. Genel skora aktarım ve beraberlik: [bu oyunda beraberlik yok temiz kadehi olan herkes puan alır]
 12. Turun bitiş koşulu: [sürenin bitmesi]
 13. Tutorialda gösterilecek üç adım:
-    1. Hangi kadehin zehirli olduğunu göremezsin.
-    2. İstersen bir arkadaşınla tek takas hakkını kullan.
+    1. Bir arkadaşının kadehini gizlice kontrol et (1 hak).
+    2. İstersen biriyle tek takas hakkını kullan; her takas süreyi uzatır.
     3. Süre bittiğinde temiz kadeh +1, zehirli kadeh 0 alır.
-14. Kadeh, zehir, takas, ışık ve patlama animasyonları: Oyuncuların önünde
-    renkli sıvıyla dolu, dışı aynalı neon kadehler durur; kadehin içindeki
-    zehirli durum hiçbir oyuncuya görsel ipucu vermez. Takas düğmesinde iki
-    kadeh arasında kısa bir ışık tüneli oluşur ve her takas sonrası sahne
-    saatinin çevresine 5 saniyelik amber halka eklenir. Sonuçta temiz kadehler
-    altın, zehirliler mor-siyah dumanla işaretlenir.
+14. Kadeh, zehir, takas, ışık ve patlama animasyonları: Ekranın ortasında uzun
+    bir ziyafet masası vardır; kadehler masanın üstünde büyük, her kadehin
+    arkasında sahibinin avatarı ve adı durur. Süre, ekranın üstünde eriyen bir
+    mumdur; her takasta mum biraz uzar ve alev parlar, son 5 saniyede mum
+    titrer, masa kararır, kalp atışı duyulur. Kadehin içindeki zehirli durum
+    hiçbir oyuncuya görsel ipucu vermez. Takasta iki kadeh masanın üstünden yay
+    çizerek yer değiştirir, üstte 2 sn "Ad ⇄ Ad" şeridi çıkar ve masanın altındaki
+    takas geçmişine ok olarak eklenir. Kontrolde seçilen kadeh yalnız kontrol
+    edene gizlice açılır ve üstünde ona özel küçük rozet kalır. Sonuçta önce
+    "Şerefe!" ile kadehler tokuşur, sonra rastgele sırayla tek tek açılır
+    (temiz: altın parıltı, +1; zehirli: avatar yeşile döner, mor duman, 0);
+    oyuncunun kendi kadehi en son açılır.
 15. Özel durumlar: Takas anında sunucu tarafından tek işlem olarak uygulanır;
     aynı anda gelen iki takasta sunucu sırası geçerlidir. Her oyuncu en fazla
     bir kez takas yapabilir ve takas zorunlu değildir. Başlangıç süresi 20
     saniyedir; toplam süre takaslarla uzar ve süre bitince sonuç hemen açılır.
+    Herkes takas hakkını kullandıysa takas süresi son takastan 1 sn sonra
+    biter; kullanılmamış kontrol hakları bu erken bitişi engellemez. Süre
+    bitince (erken bitişte de) oyun hemen bitmez: sabit süreli (8,5 sn)
+    "Şerefe!" açılış evresi başlar, sonuç bu evrenin başında açılır, evrede
+    takas ve kontrol reddedilir; oyun evrenin sonunda biter ve ardından genel
+    sonuç ekranı gelir. Kontrol hakkı
+    her oyuncuda en fazla bir kezdir ve zorunlu değildir.
 
 ## 23. Çapraz Ateş — `capraz-ates`
 
