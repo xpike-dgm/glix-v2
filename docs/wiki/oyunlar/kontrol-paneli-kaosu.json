@@ -37,7 +37,7 @@
       "ad": "Sonuç (paneller açılır)",
       "sureSn": 8,
       "kim": "herkes",
-      "aciklama": "Süre dolunca (ya da erken bitişte) paneller açılır. Üstte kendi puanın ('+N') ve yorum ('İkisi de doğru!', 'Doğru kabloyu kestin', 'İpucun arkadaşına yaradı', 'Bu sefer olmadı', 'Kablo kesmedin'); altında kendi panelin mini olarak (kestiğin kablo kopuk, doğruysa yeşil, yanlışsa kırmızı kıvılcım); altta herkesin satırı: avatar, ad, kestiği kablo (renk, şekil, ad ve ✓ ya da ✗; kesmediyse 'kesmedi'), o panelin ipucunu taşıyan oyuncunun küçük portresi ve '+N' puan. 'Küçük portre: o panelin ipucunu taşıyan' notu. Oyun bu 8 sn'nin sonunda biter, ardından sonuç ekranı gelir. İzleyici 'Paneller açıldı' başlığını ve aynı listeyi görür. Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
+      "aciklama": "Süre dolunca (ya da erken bitişte) paneller açılır. Üstte kendi puanın ('+N') ve yorum ('İkisi de doğru!', 'Doğru kabloyu kestin', 'İpucun arkadaşına yaradı', 'Bu sefer olmadı', 'Kablo kesmedin'); altında kendi panelin mini olarak (kestiğin kablo kopuk, doğruysa yeşil, yanlışsa kırmızı kıvılcım); altta herkesin satırı: avatar, ad, kestiği kablo (renk, şekil, ad ve ✓ ya da ✗; kesmediyse 'kesmedi'), o panelin ipucunu taşıyan oyuncunun küçük portresi ve '+N' puan. 'Küçük portre: o panelin ipucunu taşıyan' notu. Ardından genel sonuç ekranı gelir. İzleyici 'Paneller açıldı' başlığını ve aynı listeyi görür. Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Artık tüm paneller, ipuçları, doğru kablolar, kesimler ve ipucu taşıyıcıları herkese açıktır."
     }
   ],
@@ -164,7 +164,7 @@
       "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts:3"
     },
     {
-      "ad": "Sonuç gösterimi süresi (oyun bunun sonunda biter)",
+      "ad": "Sonuç gösterimi süresi (en az gösterim; ardından 'Devam et', en çok 60 sn)",
       "deger": "8 000 ms",
       "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts:5"
     },

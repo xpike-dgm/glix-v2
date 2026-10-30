@@ -4,15 +4,23 @@ import { parseNumberRecord } from "../../net/parse.js";
 type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === "object" && v !== null && !Array.isArray(v);
 const isNum = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
+const isCount = (v: unknown): v is number => isNum(v) && Number.isInteger(v) && v >= 0;
 
 function parseReveal(v: unknown): AsiriYuklemeReveal | null | undefined {
   if (v === null) return null;
   if (!isRec(v)) return undefined;
-  const clicks = parseNumberRecord(v.clicks);
+  const before = parseNumberRecord(v.before);
+  const after = parseNumberRecord(v.after);
   const points = parseNumberRecord(v.points);
-  if (!clicks || !points || !isNum(v.total)) return undefined;
-  if (v.exploder !== null && (typeof v.exploder !== "string" || v.exploder.length === 0)) return undefined;
-  return { total: v.total, exploder: v.exploder, clicks, points };
+  if (!before || !after || !points || !isCount(v.total)) return undefined;
+  if (![...Object.values(before), ...Object.values(after)].every(isCount)) return undefined;
+  if (!Array.isArray(v.exploders)) return undefined;
+  const exploders: string[] = [];
+  for (const id of v.exploders) {
+    if (typeof id !== "string" || id.length === 0 || exploders.includes(id)) return undefined;
+    exploders.push(id);
+  }
+  return { total: v.total, before, after, exploders, points };
 }
 
 /** Ekranın okuduğu birleşik görünüm: ortak (`publicView`) + kişiye özel (`view`). */
@@ -45,25 +53,54 @@ export function phaseOf(view: AsiriYuklemeScreenView | null): Phase {
 
 export interface ResultRow {
   playerId: string;
-  clicks: number;
+  /** 100'e kadar yapılan tıklamalar (sıralamada sayılan). */
+  before: number;
+  /** 100'ü geçtikten sonra yapılan tıklamalar. */
+  after: number;
   points: number;
   exploded: boolean;
 }
 
-/** En çok tıklayandan aza; patlayan en sonda. Eşit tıklamada katılım sırası korunur. */
+/**
+ * Sonuç sırası (aynı zamanda açılış sırası): patlamayanlar 100'e kadarki tıklamalarına göre çoktan aza; patlayanlar
+ * en sonda, 100'den sonra az basandan çok basana (en ağır ceza en son açılır). Eşitlikte katılım sırası korunur.
+ */
 export function resultRows(reveal: AsiriYuklemeReveal, order: readonly string[]): ResultRow[] {
-  const ids = Object.keys(reveal.clicks).sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  const pos = (id: string) => {
+    const i = order.indexOf(id);
+    return i < 0 ? order.length : i;
+  };
+  const ids = Object.keys(reveal.before).sort((a, b) => pos(a) - pos(b));
   const rows = ids.map((playerId) => ({
     playerId,
-    clicks: reveal.clicks[playerId] ?? 0,
+    before: reveal.before[playerId] ?? 0,
+    after: reveal.after[playerId] ?? 0,
     points: reveal.points[playerId] ?? 0,
-    exploded: playerId === reveal.exploder,
+    exploded: reveal.exploders.includes(playerId),
   }));
-  return rows.sort((a, b) => Number(a.exploded) - Number(b.exploded) || b.clicks - a.clicks);
+  return rows.sort((a, b) => {
+    if (a.exploded !== b.exploded) return Number(a.exploded) - Number(b.exploded);
+    return a.exploded ? a.after - b.after : b.before - a.before;
+  });
 }
 
-/** Satır çubuğunun uzunluğu (0..1): en çok tıklayan tam dolu. */
-export function barRatio(clicks: number, rows: readonly ResultRow[]): number {
-  const max = Math.max(1, ...rows.filter((r) => !r.exploded).map((r) => r.clicks));
-  return Math.max(0, Math.min(1, clicks / max));
+/** Satır çubuğunun uzunluğu (0..1): 100'e kadarki tıklar; patlamayanlardan en çok tıklayan tam dolu. */
+export function barRatio(row: ResultRow, rows: readonly ResultRow[]): number {
+  const max = Math.max(1, ...rows.filter((r) => !r.exploded).map((r) => r.before));
+  return Math.max(0, Math.min(1, row.before / max));
+}
+
+/** Puan yazısı: "+2", "0", "−1" (gerçek eksi işareti). */
+export function pointsText(points: number): string {
+  if (points > 0) return `+${points}`;
+  if (points < 0) return `−${-points}`;
+  return "0";
+}
+
+/** Sonuç satırında takma adın en çok uzunluğu (karakter); uzunsa kırpılıp "…" eklenir (8 oyuncu, 320 px'e sığar). */
+export const NAME_MAX = 10;
+
+export function shortName(name: string, max = NAME_MAX): string {
+  const chars = Array.from(name);
+  return chars.length > max ? `${chars.slice(0, max - 1).join("")}…` : name;
 }

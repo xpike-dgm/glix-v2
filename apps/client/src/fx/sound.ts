@@ -61,6 +61,14 @@ export function musicBus(): { ctx: AudioContext; out: GainNode } | null {
   return ctx && musicGain ? { ctx, out: musicGain } : null;
 }
 
+/**
+ * Efekt katmanı: sürekli sesler (örn. vınlama) için bağlam ve efekt düzeyi düğümü. Bağlam yalnız kullanıcı jestiyle
+ * açılır; açılmadıysa ya da sessizdeyse null.
+ */
+export function effectsBus(): { ctx: AudioContext; out: GainNode } | null {
+  return ctx && master && !muted() ? { ctx, out: master } : null;
+}
+
 const musicTarget = (): number => (muted() ? 0 : musicVolume());
 function applyMusicGain(): void {
   if (musicGain && ctx) musicGain.gain.setTargetAtTime(musicTarget(), ctx.currentTime, 0.05);

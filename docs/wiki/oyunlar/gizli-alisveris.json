@@ -1,7 +1,7 @@
 {
   "id": "gizli-alisveris",
   "ad": "Gizli Alışveriş",
-  "slogan": "60 kredilik bütçenle gizlice alışveriş yap: az kişinin seçtiği ürünler daha değerli, en değerli sepet +1!",
+  "slogan": "60 kredilik bütçenle gizlice alışveriş yap: raf her maç değişir, kuponun gizli, az kişinin seçtiği ürün daha değerli; en değerli sepet +2, ikinci +1!",
   "kategori": "Strateji",
   "etiketler": ["gizli seçim", "bütçe", "çoğunluğa karşı", "alışveriş"],
   "oyuncu": {
@@ -12,69 +12,76 @@
     "tahminiSn": 38,
     "not": "Oyun aşaması en çok 38 sn sürer: 30 sn alışveriş + 8 sn sonuç (raf kepengi) animasyonu. Bağlı herkes 'Tamam' derse alışveriş 1 sn sonra biter ve 8 sn'lik sonuç buna göre öne gelir. Süre oyuncu sayısına göre değişmez. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 60 sn) gelir. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
-  "ozet": "Herkese 60 kredilik gizli bir bütçe verilir ve herkes aynı 12 ürünlük raftan alışveriş yapar. Bir ürünün değeri 'fiyatı ÷ onu kaç kişinin aldığı'dır: çok kişinin seçtiği ürün değer kaybeder, tek başına aldığın pahalı ürün tam değerini korur. Sepetler süre bitince açılır; toplam değeri en yüksek sepet (eşitlikte hepsi) +1 alır.",
+  "ozet": "Herkese 60 kredilik gizli bir bütçe verilir. Her maçta 20 ürünlük havuzdan 12'si rafa gelir ve fiyatları ±%30 oynar; raf herkes için aynıdır. Herkesin kendine özel, gizli bir %50 indirim kuponu vardır (yalnız ödenen fiyatı düşürür). Bir ürünün değeri 'tam fiyatı ÷ onu kaç kişinin aldığı'dır. 15. saniyede vitrin fısıldar: her ürünün üstünde talep ateşi (kim aldığı ve sayı olmadan) belirir ve donar. Sepetler süre bitince sahne sahne açılır; en değerli sepet +2, ikinci +1 alır, eksi puan yoktur.",
   "akis": [
     {
       "ad": "Anlatım",
       "sureSn": 40,
       "kim": "herkes",
-      "aciklama": "Tam ekran anlatım: '60 kredilik bütçenle en değerli sepeti kur!' ve üç madde (istediğin ürünleri sepete koy, her üründen bir tane alabilirsin; bir ürünü kaç kişi aldıysa değeri o sayıya bölünür; sepetler süre bitince açılır, en değerli sepet +1 alır). Bağlı herkes hazır olunca ya da 40 sn dolunca biter. Maç kartları burada oynanır."
+      "aciklama": "Tam ekran anlatım: '60 kredilik bütçenle en değerli sepeti kur!' ve üç madde (raf ve fiyatlar her maç değişir, gizli kuponunla bir ürün yarı fiyat; bir ürünü kaç kişi aldıysa değeri o sayıya bölünür, 15. saniyede vitrin fısıldar; en değerli sepet +2, ikinci +1 alır). Bağlı herkes hazır olunca ya da 40 sn dolunca biter. Maç kartları burada oynanır."
     },
     {
       "ad": "Geri sayım",
       "sureSn": 3,
       "kim": "herkes",
-      "aciklama": "3 sn geri sayım, oynanan kartlar açıklanır; oyun kurulurken raf sırası karıştırılır."
+      "aciklama": "3 sn geri sayım, oynanan kartlar açıklanır; oyun kurulurken sunucu rastgeleliğiyle raf (20'den 12 ürün, ±%30 fiyat) ve herkesin farklı kuponu belirlenir."
     },
     {
       "ad": "Alışveriş",
       "sureSn": 30,
       "kim": "herkes (izleyici hariç)",
-      "aciklama": "Üstte süre çubuğu; 'Kalan bütçen' başlığı ve büyük kalan kredi sayısı (60'tan başlar), sağda sepetteki ürün sayısı (her dokunuşta '+fiyat' ya da '−fiyat' bildirimi), altında kalan bütçe çubuğu (kalan %20'nin altına inince uyarı rengi). Ortada 12 ürünlük neon raf: her kartta ürün resmi, adı ve fiyatı; sepetteki ürün işaretli. Dokunmak ürünü sepete koyar ya da sepetten çıkarır (açma-kapama). Bütçe yetmeyen ürünün kartı soluktur; ona dokunursan hata sesi, titreşim ve bütçe çubuğu sarsılır, sunucuya istek gitmez. 'Tamam' sepeti kesinleştirir (boş sepet de kesinleştirilebilir); kilitlenince 'Sepetin kesinleşti' yazar. Bağlı herkes Tamam derse alışveriş 1 sn sonra biter. İzleyici 'Herkes gizlice alışveriş yapıyor' yazısını, rafı (pasif) ve kaç kişinin Tamam dediğini görür.",
-      "gizli": "Sepetler, alıcı sayıları ve değerler süre bitene kadar kimseye (ortak görünüm, izleyici, TV) gösterilmez; herkes yalnız kendi sepetini ve kalan bütçesini görür. Raf (ürün adları, fiyatlar) herkese açıktır; ürün sırası herkes için aynıdır (maç başına karıştırılır). Kimlerin 'Tamam' dediği herkese açıktır."
+      "aciklama": "Üstte süre çubuğu; 'Kalan bütçen' başlığı ve dönerek değişen kalan kredi sayısı (azalınca turuncu ve hafif titrer), sağda sepet şeridi (aldığın ürünlerin minik görselleri), altında bütçe çubuğu. Ortada gerçek bir mağaza rafı: 12 renkli ürün, büyük görseller, her sıranın altında neon raf tahtası, iple asılı fiyat etiketi; ürünler yavaşça nefes alır. Yalnız bütçenin yetmediği ürün soluktur; ona dokunursan boğuk 'bip', titreşim ve bütçe sarsılır, sunucuya istek gitmez. Dokunmak ürünü sepete koyar (görselin kopyası sepete uçar, kasa sesi) ya da çıkarır (rafa geri süzülür). Kuponlu ürünün kartı macenta kesik çerçeveli, '%50' etiketli ve fiyatı 'üstü çizili tam fiyat → indirimli' gösterir; altında 'Kuponun: <ürün> yarı fiyat' yazar. 15. saniyede 'Vitrin fısıldıyor…' geçişi ve sesiyle her ürünün köşesinde 0-3 alev belirir. Son 10 sn: üstte kırmızı nabız şeridi, her saniye hafif tik, Tamam dememiş oyuncuların avatarları alttaki şeritte sallanır; son 3 sn 'Kasa kapanıyor!' ve kepenk ekranın üstünden biraz iner (raf kullanılabilir kalır). 'Tamam' sepeti kesinleştirir (boş sepet de); sonra raf yerine paketlenmiş poşet ve 'Sepetin kesinleşti' damgası görünür; Tamam diyenin avatarına poşet düşer. Bağlı herkes Tamam derse alışveriş 1 sn sonra biter. İzleyici/TV rafı vitrin olarak (nefes alan ürünler, talep ateşi, poşetli avatarlar) görür.",
+      "gizli": "Sepetler, alıcı sayıları, değerler ve kuponlar süre bitene kadar kimseye (ortak görünüm, izleyici, TV) gösterilmez; herkes yalnız kendi sepetini, kalan bütçesini ve kendi kuponunu görür. Raf (ürünler, bu maçın fiyatları, sıra) herkese açıktır ve herkes için aynıdır. 15. saniyedeki talep ateşi yalnız ürün başına seviyedir (0-3); kim aldığı ve tam sayı yoktur. Kimlerin 'Tamam' dediği herkese açıktır."
     },
     {
       "ad": "Sonuç (raf kepengi)",
       "sureSn": 8,
       "kim": "herkes",
-      "aciklama": "Süre dolunca (ya da erken bitişte 1 sn sonra) sonuç açılır. Zaman çizelgesi: 0-0,9 sn 'Raf kepengi - Açılıyor'; 0,9 sn'de kepenk açılır, 'Kaç kişi aldı? - Bölünüyor': her ürün kartında kaç kişinin aldığı ('kimse' ya da 'N kişi') ve birden çok kişi aldıysa üstü çizili fiyatın yanında yeni değeri görünür; 4,6 sn'de sıralama listesi: her satırda avatar, ad (kazananda ★), sepetteki ürün resimleri (ya da 'Sepet boş'), sepet değeri (iki ondalık, Türkçe virgül: örn. 42,00) ve kazananda '+1'. Üst başlıkta kazanana 'En değerli sepet +1', diğerlerine 'Sepetin <değer>'. Oyun bu 8 sn'nin sonunda biter, ardından sonuç ekranı gelir. Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
-      "gizli": "Artık tüm sepetler, ürün başına alıcı sayıları ve sepet değerleri herkese açıktır."
+      "aciklama": "Süre dolunca (ya da erken bitişte 1 sn sonra) sonuç sahne sahne açılır; zaman çizelgesi tek sabitte (SONUC_ZAMANI) ve bugünkü 8 sn'ye sığar: 0 sn metal kepenk sesle kalkar; 0,9 sn'den itibaren ürün ürün alıcıların avatarları belirir: birden çok kişinin aldığı üründe fiyat etiketi '÷N' ile kırılır (cam kırığı sesi) ve yeni değer görünür, tek kişinin aldığında etiket altın parlar 'TEK BAŞINA!', kimsenin almadığı ürün tozlu kalır; 4,3 sn'de sepetler en değersizden en değerliye tek tek açılır (ürünler satıra düşer, değer görünür; her satırda kuponun ürünü), en son açılan en değerli sepete 'EN DEĞERLİ SEPET' damgası ve konfeti; 7 sn'de puan çipleri (+2/+1) üstteki puan yazısına uçar ('Puanın +2'). Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez. Ardından genel sonuç ekranı gelir.",
+      "gizli": "Artık tüm sepetler, ürün başına alıcı sayıları, sepet değerleri, puanlar ve herkesin kuponu herkese açıktır."
     }
   ],
   "kurallar": [
     "3-8 oyuncu katılır (dikey oyun). 2 kişiyle oynanmaz.",
     "Her oyuncuya 60 kredilik bütçe verilir. Kredi gerçek para değildir; yalnız bu oyunun gizli alışveriş bütçesidir.",
-    "Ürün havuzu sabit 12 üründür ve herkes aynı rafı görür. Fiyatlar (kredi): Hologram Sticker 8, Enerji İçeceği 10, Neon Rozet 12, Retro Kartuş 15, Mini Hoparlör 18, Arcade Eldiveni 20, Piksel Kamera 22, Jet Çanta 24, Kristal Kulaklık 26, Holo Kask 28, Mini Drone 32, Gizli Sandık 36. Ürünlerin raf sırası her maçta rastgele karıştırılır (herkes için aynı sıra); ürün numarası (0-11) değişmez.",
-    "Alışveriş 30 sn sürer. Bütçen dahilinde istediğin kadar ürün alabilirsin ama her üründen yalnız BİR tane (aynı ürün ikinci kez eklenemez: 'already_in_basket'). Bütçe aşılamaz: toplam fiyat 60'ı geçemez ('over_budget'; tam 60 kabul, 61 reddedilir). 60 kredilik bütçeyle en çok 4 ürün alınabilir (en ucuz 5 ürünün toplamı 8+10+12+15+18 = 63 > 60).",
-    "Sepete ekleme ve çıkarma sınırsız tekrarlanabilir (sepette olmayan ürünü çıkarmak 'not_in_basket' ile reddedilir); süre bittiğindeki ya da Tamam anındaki sepet geçerlidir. Eklenip çıkarılan ürünler sayılmaz.",
-    "'Tamam' sepeti kesinleştirir; boş sepetle de kilitlenebilir (kilit için ürün şartı yoktur). Tamam'dan sonra sepet değiştirilemez ('locked'). Bağlı herkes Tamam deyince alışveriş şimdiden 1 sn sonra biter; bu 1 sn'lik kapanış penceresinde kimse eylem yapamaz ('closed').",
-    "Süre dolduğu anda (ya da sonrasında) gelen ekleme/çıkarma/kilit reddedilir ('ended'); sepet göndermeyen ya da hiç ürün almayan oyuncunun sepet değeri 0 sayılır.",
-    "Sonuç değerlendirmesi: her ürün için o ürünü alan oyuncu sayısı (alıcı sayısı) bulunur. Ürünün oyuncuya değeri = fiyat ÷ alıcı sayısı. Sepet değeri, sepetteki ürünlerin bu değerlerinin toplamıdır. Değerler kesirli olabilir (10 ÷ 3 = 3,33…); sunucu bunları 840 ile çarpılmış tam sayıyla hesaplar (840, 1-8 alıcının hepsine tam bölünür), böylece eşitlik hatası olmaz; ekranda iki ondalık basamakla ve Türkçe virgülle (12,50) gösterilir, sıralama yuvarlanmamış değerle yapılır.",
-    "Sepeti en değerli olan oyuncu +1 alır. En yüksek değerde birden çok sepet varsa hepsi +1 alır. En yüksek değer 0 ise (kimse ürün almadıysa) kimse puan almaz.",
-    "Mini oyun puanı tam sayıdır (kazanan 1, diğerleri 0) ve doğrudan genel skora eklenir; sepet değerleri (kesirli) yalnız sonuç ekranında gösterilir.",
-    "Hiç alınmayan ürünün alıcı sayısı 0'dır ve kimseye değer sağlamaz."
+    "Ürün havuzu 20 üründür (ilk 12: Hologram Sticker 8, Enerji İçeceği 10, Neon Rozet 12, Retro Kartuş 15, Mini Hoparlör 18, Arcade Eldiveni 20, Piksel Kamera 22, Jet Çanta 24, Kristal Kulaklık 26, Holo Kask 28, Mini Drone 32, Gizli Sandık 36; yeni 8: Lazer Kalem 11, Ses Kartı 13, Retro Joystick 17, Plazma Lamba 19, Mini Robot 23, Hologram Saat 25, Neon Kaykay 30, VR Gözlük 34 — taban fiyatlar). Her maçta 12'si rafa gelir; her ürünün fiyatı taban fiyatın ±%30'u içinde rastgele, tam sayı ve 6-40 arasıdır. Raf, fiyatlar ve sıra herkes için aynıdır; sunucunun tohumlu rastgeleliğiyle belirlenir (kayıttan tekrar oynatma aynı rafı verir). Ürün numarası (0-19) değişmez.",
+    "Ürün sayısı sınırı yoktur: tek sınır 60 kredilik bütçe ve her üründen bir tane. Ucuz bir rafta ya da kuponla 5 ve daha çok ürün alınabilir (sahip kararı).",
+    "Gizli kupon: her oyuncuya raftaki bir üründe %50 indirim kuponu verilir; iki oyuncuya aynı ürün düşmez (8 oyuncu ≤ 12 ürün). İndirimli fiyat tam sayıya yukarı yuvarlanır (15 → 8). Kupon yalnız ödenen fiyatı ve bütçe kontrolünü etkiler; ürünün değeri yine tam fiyat ÷ alıcı sayısıdır. Kuponu kullanmak zorunlu değildir. Kupon yalnız sahibinin kişisel görünümündedir; sonuçta herkesinki açılır.",
+    "Alışveriş 30 sn sürer. Bütçen dahilinde istediğin kadar ürün alabilirsin ama her üründen yalnız BİR tane ('already_in_basket'), yalnız raftaki ürünlerden ('not_on_shelf'). Bütçe aşılamaz: ödenen toplam 60'ı geçemez ('over_budget'; tam 60 kabul).",
+    "Sepete ekleme ve çıkarma sınırsız tekrarlanabilir (sepette olmayan ürünü çıkarmak 'not_in_basket' ile reddedilir); süre bittiğindeki ya da Tamam anındaki sepet geçerlidir.",
+    "Vitrin fısıltısı: 15. saniyede her raf ürünü için talep ateşi seviyesi belirir: o ürünü sepetinde tutan oyuncuların bütün katılımcılara oranı; 0 kişi: yok, ≤%25: 1, ≤%50: 2, >%50: 3 (kendi seçimin dahil). Seviye 15. saniyedeki sepetlerle bir kez hesaplanır ve donar; tam 15. saniyede ya da sonra gelen eylem saymaz. Yalnız seviye gösterilir (kim aldığı ve sayı yok). Herkes 15. saniyeden önce bitirirse ateş gösterilmez.",
+    "'Tamam' sepeti kesinleştirir; boş sepetle de kilitlenebilir. Tamam'dan sonra sepet değiştirilemez ('locked'). Bağlı herkes Tamam deyince alışveriş 1 sn sonra biter; bu pencerede kimse eylem yapamaz ('closed').",
+    "Süre dolduğu anda (ya da sonrasında) gelen eylem reddedilir ('ended'); hiç ürün almayan oyuncunun sepet değeri 0 sayılır.",
+    "Sonuç değerlendirmesi: ürünün oyuncuya değeri = bu maçtaki tam fiyat ÷ alıcı sayısı; sepet değeri bunların toplamıdır. Değerler 840 ile çarpılmış tam sayıyla hesaplanır (eşitlik hatası olmaz), ekranda iki ondalıkla (12,50) gösterilir, sıralama yuvarlanmamış değerle yapılır.",
+    "Puan: en değerli sepet +2, ikinci en değerli +1, diğerleri 0; eksi puan yoktur. Birincide eşitlikte hepsi +2 ve sonraki farklı değer +1; ikincide eşitlikte hepsi +1. Değeri 0 olan ödül almaz. Herkesin değeri aynıysa kimse puan almaz.",
+    "Mini oyun puanı ham genel puanla aynıdır (+2/+1/0) ve doğrudan genel skora eklenir; sepet değerleri yalnız sonuç ekranında gösterilir."
   ],
   "puanlama": {
-    "ozet": "Toplam sepet değeri en yüksek olan +1 (eşitlikte hepsi +1); diğerleri 0. Ceza yoktur. Ürün değeri = fiyat ÷ o ürünü alan kişi sayısı.",
+    "ozet": "En değerli sepet +2, ikinci +1, diğerleri 0; eksi puan yok. Ürün değeri = tam fiyat ÷ o ürünü alan kişi sayısı (kupon değeri değiştirmez).",
     "kalemler": [
       {
         "olay": "En değerli sepet",
+        "puan": "+2",
+        "not": "Değer 0'dan büyük olmalı. Eşitlikte hepsi +2."
+      },
+      {
+        "olay": "İkinci en değerli sepet",
         "puan": "+1",
-        "not": "Değer 0'dan büyük olmalı. Eşit en yüksek değerde birden çok kişi varsa hepsi +1."
+        "not": "Birinciden sonraki farklı değer (0'dan büyük). Eşitlikte hepsi +1."
       },
       {
         "olay": "Diğer sepetler",
         "puan": "0",
-        "not": "Ceza yok; boş sepet ya da hiç göndermeme de 0."
+        "not": "Ceza yok; boş sepet de 0."
       },
       {
-        "olay": "Kimse ürün almadı",
+        "olay": "Herkesin değeri aynı",
         "puan": "0",
-        "not": "En yüksek değer 0 olduğu için kimse kazanmaz."
+        "not": "Kimse ödül almaz (kimse ürün almadıysa da)."
       }
     ],
-    "ornek": "4 oyuncu: A, B, C, D. A: Gizli Sandık (36) + Jet Çanta (24) = 60 kredi. B: Gizli Sandık (36) + Enerji İçeceği (10) + Neon Rozet (12) = 58 kredi. C: Mini Drone (32) + Holo Kask (28) = 60 kredi. D: Mini Drone (32) + Retro Kartuş (15) + Hologram Sticker (8) = 55 kredi. Alıcı sayıları: Gizli Sandık 2 (A, B) → 18; Mini Drone 2 (C, D) → 16; diğerleri 1 alıcı → tam fiyat. Değerler: A = 18 + 24 = 42,00; B = 18 + 10 + 12 = 40,00; C = 16 + 28 = 44,00; D = 16 + 15 + 8 = 39,00. En değerli sepet C: C +1, diğerleri 0. Eşitlik örneği: iki oyuncu birbirinin aynı sepetini alıp (ör. her ikisi de yalnız Mini Drone ve Holo Kask) başka kimse almazsa ikisinin değeri 16+28 = 44 eşittir ve en yüksekse ikisi de +1 alır.",
-    "beraberlik": "En yüksek sepet değerinde eşitlik varsa eşit olanların hepsi +1 alır (bölme yok). Değer karşılaştırması 840 ölçekli tam sayıyla yapıldığından 'yaklaşık eşit' durumu olmaz: yalnız gerçekten eşit olanlar eşittir."
+    "ornek": "4 oyuncu, raf fiyatları bu maçta: Gizli Sandık 36, Jet Çanta 24, Mini Drone 32, Holo Kask 28, Enerji İçeceği 10, Neon Rozet 12, Retro Kartuş 15, Hologram Sticker 8. A: Gizli Sandık + Jet Çanta (A'nın kuponu Gizli Sandık'ta: 18 + 24 = 42 kredi ödedi). B: Gizli Sandık + Enerji İçeceği + Neon Rozet. C: Mini Drone + Holo Kask. D: Mini Drone + Retro Kartuş + Hologram Sticker. Alıcı sayıları: Gizli Sandık 2 → 18; Mini Drone 2 → 16; diğerleri tam fiyat. Değerler (kupon değeri düşürmez): A = 18 + 24 = 42,00; B = 18 + 10 + 12 = 40,00; C = 16 + 28 = 44,00; D = 16 + 15 + 8 = 39,00. C +2, A +1, B ve D 0. Eşitlik örneği: A ve C 44 ile eşit olsaydı ikisi +2, sonraki değer (B) +1 alırdı.",
+    "beraberlik": "Birincide eşitlikte eşit olanların hepsi +2, sonraki farklı değer +1; ikincide eşitlikte hepsi +1. Herkes eşitse kimse almaz. Karşılaştırma 840 ölçekli tam sayıyla yapılır: yalnız gerçekten eşit olanlar eşittir."
   },
   "ozelDurumlar": [
     {
@@ -87,7 +94,7 @@
     },
     {
       "baslik": "İzleyici / geç katılan",
-      "aciklama": "Maç sırasında giren izleyici alışveriş yapamaz ('not_participant'); kendi görünümünde sepeti boştur ve kalan bütçe 60'tır. 'Herkes gizlice alışveriş yapıyor' ve pasif rafı görür. Sonuçta tüm sepetleri, alıcı sayılarını ve değerleri görür."
+      "aciklama": "Maç sırasında giren izleyici alışveriş yapamaz ('not_participant'); kendi görünümünde sepeti boş, bütçesi 60, kuponu yoktur. Rafı vitrin olarak, 15. saniyeden sonra talep ateşini ve Tamam diyenleri görür. Sonuçta tüm sepetleri, alıcı sayılarını, değerleri, puanları ve kuponları görür. Sonuç açılışına geç bağlanan, kaldığı sahneden görür (geçmiş sahnelerin sesi çalmaz)."
     },
     {
       "baslik": "Herkes erken bitirirse",
@@ -95,7 +102,7 @@
     },
     {
       "baslik": "Kimse ürün almazsa / tek kişi alırsa",
-      "aciklama": "Kimse ürün almazsa en yüksek değer 0'dır, kimse +1 almaz. Yalnız bir kişi ürün alırsa değeri her zaman tam fiyatıdır ve o kişi kazanır (değer 0'dan büyükse)."
+      "aciklama": "Kimse ürün almazsa herkesin değeri 0'dır, kimse puan almaz. Yalnız bir kişi ürün alırsa o +2 alır; değeri 0 olanlar ikincilik almaz."
     },
     {
       "baslik": "3 vs 8 oyuncu",
@@ -103,132 +110,135 @@
     },
     {
       "baslik": "Gizlilik",
-      "aciklama": "secrets() boştur (ürün numaraları ve adları herkese açık rafta bulunduğundan metin araması sepeti koruyamaz); gizlilik yapısaldır ve testlerle doğrulanır: süre dolmadan ortak görünümde sepet, alıcı sayısı ya da değer yoktur, kişisel görünüm yalnız sahibinin sepetini taşır, rakibin eylemi başkasının görünümünü değiştirmez."
+      "aciklama": "secrets() boştur (ürün numaraları ve adları herkese açık rafta bulunduğundan metin araması sepeti ve kuponu koruyamaz); gizlilik yapısaldır ve testlerle doğrulanır: süre dolmadan ortak görünümde sepet, alıcı sayısı, değer ve kupon yoktur; kişisel görünüm yalnız sahibinin sepetini ve kuponunu taşır; talep ateşi yalnız seviye taşır ve aynı seviyeye düşen farklı sepet dağılımları aynı ortak görünümü verir; rakibin eylemi ya da kuponu başkasının görünümünü değiştirmez."
     }
   ],
   "kartlar": [
     {
       "kart": "Genel hesap",
-      "etki": "Bu oyunda mini oyun puanı = ham genel puan ve yalnız 0 ya da +1'dir (en değerli sepet(ler) 1). 'Birinci' en değerli sepet sahipleridir, 'sonuncu' diğer herkestir; kimse ürün almadıysa herkes eşittir (herkes birinci, kimse sonuncu değil)."
+      "etki": "Mini oyun puanı = ham genel puan: +2 (en değerli), +1 (ikinci), 0. 'Birinci' +2 alanlar, 'sonuncu' 0 alanlardır (en az biri ödül aldıysa). Herkes 0 aldıysa herkes birinci, kimse sonuncu değil."
+    },
+    {
+      "kart": "Çift Puan / Altın Dokunuş",
+      "etki": "Çift Puan: +2 → +4, +1 → +2. Altın Dokunuş: +2 → +6, +1 → +3. 0 değişmez."
     },
     {
       "kart": "Kendine Güven",
-      "etki": "Birinci olursan +2, olmazsan -1: en değerli sepetse 1+2 = +3; değilse 0-1 = -1. Kimse ürün almadıysa herkes birinci olduğundan herkes +2 alır."
+      "etki": "Birinciysen +2 daha (+2 → +4); değilsen −1 (ikinci +1 → 0, diğerleri 0 → −1). Herkes 0 ise herkes birinci, herkes +2."
     },
     {
       "kart": "Sigorta",
-      "etki": "Sonuncu olursan +1: en değerli sepet dışındaki herkes sonuncudur (0 → +1). Herkes eşitse kimse sonuncu sayılmaz."
+      "etki": "Sonuncuysan (0 aldıysan) +1. İkinci (+1) sonuncu sayılmaz. Herkes eşitse etkisiz."
     },
     {
       "kart": "Tahmin",
-      "etki": "Hedefin birinciyse +2: hedefin en değerli sepeti kuracağını tahmin edersin. Kimse ürün almazsa herkes birinci olduğundan tutar."
-    },
-    {
-      "kart": "Çift Puan",
-      "etki": "Puan x2: kazanan +1 → +2; 0 x2 = 0."
-    },
-    {
-      "kart": "Altın Dokunuş",
-      "etki": "Puan x3: kazanan +1 → +3."
+      "etki": "Hedefin +2 alırsa sen +2."
     },
     {
       "kart": "Ağır Yük (kötü)",
-      "etki": "Puan yarıya iner, sıfıra yuvarlanır: kazanan 1 → 0 (kazanmak boşa gider)."
+      "etki": "Puan yarıya iner, sıfıra yuvarlanır: +2 → +1, +1 → 0."
     },
     {
       "kart": "Ters Köşe",
-      "etki": "Sıralama tersine döner: tek kazanan varsa kazanan 0 olur ve +1'i, kaybedenler grubu paylaşır (n-1 kişiye bölünen 1 puan katılım sırasındaki ilk oyuncuya +1 olarak verilir)."
+      "etki": "Sıralama tersine döner: 0 alanlar grubu birinci ve ikincinin puanlarını (ör. 2 + 1 = 3) paylaşır, birinci ve ikinci aynadaki sıranın puanını (çoğunlukla 0) alır."
     },
     {
-      "kart": "Takas",
-      "etki": "Sahip ile hedef ham puanlarını (kazananın +1'i ile 0) değiştirir; sonuçlar belli olduktan sonra uygulanır."
-    },
-    {
-      "kart": "Ortaklık",
-      "etki": "Sahip ve hedefin puanı toplanıp bölünür: biri kazandıysa toplam 1 olduğundan tek puan mini puanı yüksek olana (kazanana) kalır ve diğerine geçmez."
+      "kart": "Takas / Ortaklık",
+      "etki": "Takas: sahip ile hedef puanlarını değiştirir. Ortaklık: toplam ikiye bölünür; tek puan mini puanı yüksek olana kalır (ör. +2 ile 0 → 1 ve 1, +1 ile 0 → 1 ve 0)."
     },
     {
       "kart": "Lanet / Vergi / Hırsız",
-      "etki": "Lanet kazananın +1'ini 0'a çeker. Vergi: hedef kazandıysa 1 puanı sana geçer. Hırsız: bu oyunun birincisinden (en değerli sepet) 1 puan alır; birinci birden çoksa sahibi dışındakilerden en yüksek ham puanlıdan alınır, sahibi tek birinciyse etkisiz."
+      "etki": "Lanet hedefin artı puanını 0'a çeker. Vergi: hedef puan aldıysa 1 puanı sana geçer. Hırsız: birinciden (+2 alan) 1 puan alır."
     },
     {
-      "kart": "Çelme",
-      "etki": "Hedef -1: kazananın +1'i 0'a, kaybedenin 0'ı -1'e iner."
-    },
-    {
-      "kart": "Kalkan",
-      "etki": "Bu oyun ham puanı hiç eksi yapmaz; kart yalnız Çelme, Hırsız, Talihsizlik, Kumarbaz gibi kartlarla eksiye düşersen 0'a çeker."
+      "kart": "Çelme / Kalkan",
+      "etki": "Çelme hedefi −1 yapar (0 → −1). Oyun kendisi eksi vermez; Kalkan yalnız kartlarla eksiye düşeni 0'a çeker."
     },
     {
       "kart": "Diğer kartlar",
-      "etki": "Takviye, Koruma, Ayna, Veto, Geniş Seçim, Oyunu Seç, Kart Çal, Açık Hedef, Hayırsever, Boş El, Kör Seçim, Sessizlik, Kumarbaz, Lanetli Hediye ve diğer kötü kartlar oyunun kuralından bağımsız, KURALLAR K5-K7'deki gibi çalışır; Gizli Alışveriş'e özel istisna kodda yoktur."
+      "etki": "Takviye, Koruma, Ayna, Veto, Geniş Seçim, Oyunu Seç, Kart Çal, Açık Hedef, Hayırsever, Boş El, Kör Seçim, Sessizlik, Kumarbaz, Lanetli Hediye KURALLAR K5-K7'deki gibi çalışır; Gizli Alışveriş'e özel istisna kodda yoktur. Maç listesi kartları (K7) bu oyunun kuralından etkilenmez."
     }
   ],
   "sabitler": [
     {
       "ad": "Alışveriş süresi",
       "deger": "30 000 ms",
-      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts:4"
+      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts (ALISVERIS_SHOP_MS)"
     },
     {
-      "ad": "Sonuç (raf kepengi) süresi; oyun bunun sonunda biter",
+      "ad": "Sonuç açılışı süresi; en az gösterim süresi, ardından 'Devam et' (en çok 60 sn)",
       "deger": "8 000 ms",
-      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts:6"
+      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts (ALISVERIS_REVEAL_MS)"
     },
     {
       "ad": "Toplam oyun süresi",
       "deger": "38 000 ms",
-      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts:7"
+      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts (ALISVERIS_DURATION_MS)"
     },
     {
       "ad": "Başlangıç bütçesi",
       "deger": "60 kredi",
-      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts:9"
+      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts (ALISVERIS_BUDGET)"
     },
     {
       "ad": "Değer ölçeği (tam sayı hesabı)",
       "deger": "840",
-      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts:11"
+      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts (ALISVERIS_SCALE)"
     },
     {
-      "ad": "Ürün kataloğu (12 ürün, fiyatlar 8-36)",
-      "deger": "8, 10, 12, 15, 18, 20, 22, 24, 26, 28, 32, 36",
-      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts:21-34"
+      "ad": "Ürün havuzu / raf",
+      "deger": "20 ürün / maç başına 12",
+      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts (ALISVERIS_POOL, ALISVERIS_SHELF_SIZE)"
+    },
+    {
+      "ad": "Fiyat oynaması",
+      "deger": "±%30, tam sayı, 6-40",
+      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts (alisverisPriceRange)"
+    },
+    {
+      "ad": "Raf üretimi",
+      "deger": "rollShelf: havuzu karıştır, ilk 12, fiyat aralıkta rastgele (ürün sayısı sınırı yok)",
+      "kaynak": "packages/engine/src/games/gizli-alisveris/index.ts (rollShelf)"
+    },
+    {
+      "ad": "Kupon indirimi",
+      "deger": "%50, yukarı yuvarlı",
+      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts (couponPrice)"
+    },
+    {
+      "ad": "Vitrin fısıltısı anı ve eşikler",
+      "deger": "15 000 ms; ≤%25 / ≤%50 / >%50",
+      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts (ALISVERIS_HEAT_AT_MS, heatLevel)"
     },
     {
       "ad": "Herkes Tamam deyince alışverişin bitişine kalan süre",
       "deger": "1 000 ms",
-      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts:42"
+      "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts (ALISVERIS_LOCK_GRACE_MS)"
     },
     {
-      "ad": "Raf sırası",
-      "deger": "ctx.rng.shuffle (maç başına rastgele)",
-      "kaynak": "packages/engine/src/games/gizli-alisveris/index.ts:101"
-    },
-    {
-      "ad": "Sepet değeri hesabı (fiyat × 840 ÷ alıcı)",
-      "deger": "alisverisSettle",
-      "kaynak": "packages/engine/src/games/gizli-alisveris/index.ts:43-60"
+      "ad": "Puanlama",
+      "deger": "+2 / +1 / 0",
+      "kaynak": "packages/engine/src/games/gizli-alisveris/index.ts (alisverisPoints)"
     },
     {
       "ad": "Reddedilme nedenleri",
-      "deger": "already_in_basket / over_budget / not_in_basket / locked / closed / ended",
-      "kaynak": "packages/engine/src/games/gizli-alisveris/index.ts:109-128"
-    },
-    {
-      "ad": "Kazanan puanı",
-      "deger": "+1 (değer > 0 olan en yüksek sepetler)",
-      "kaynak": "packages/engine/src/games/gizli-alisveris/index.ts:59,175"
+      "deger": "not_on_shelf / already_in_basket / over_budget / not_in_basket / locked / closed / ended",
+      "kaynak": "packages/engine/src/games/gizli-alisveris/index.ts (reduce)"
     },
     {
       "ad": "Oyuncu sayısı",
       "deger": "3-8",
-      "kaynak": "packages/engine/src/games/gizli-alisveris/index.ts:71-72"
+      "kaynak": "packages/engine/src/games/gizli-alisveris/index.ts"
     },
     {
-      "ad": "Sonuç zaman çizelgesi (kepenk açılış / sıralama)",
-      "deger": "900 / 4 600 ms",
-      "kaynak": "apps/client/src/games/gizli-alisveris/AlisverisSonuc.tsx:31-32"
+      "ad": "Sonuç zaman çizelgesi (kepenk / çakışma / sepetler / puanlar)",
+      "deger": "0 / 900 / 4 300 / 7 000 ms",
+      "kaynak": "apps/client/src/games/gizli-alisveris/view.ts (SONUC_ZAMANI)"
+    },
+    {
+      "ad": "Son saniyeler (istemci)",
+      "deger": "son 10 sn gerilim, son 3 sn 'Kasa kapanıyor!'",
+      "kaynak": "apps/client/src/games/gizli-alisveris/GizliAlisverisScreen.tsx (TENSE_MS, CLOSING_MS)"
     },
     {
       "ad": "Bütçe uyarı eşiği (istemci)",
@@ -242,14 +252,14 @@
     }
   ],
   "strateji": [
-    "Çoğunluğun alacağı ürünlerden kaçın: ucuz ürünler (sticker, içecek, rozet) herkes için güvenli görünür ve en çok çakışan ürünlerdir; değerleri hızla bölünür.",
-    "Pahalı ürünler (Mini Drone 32, Gizli Sandık 36) tek başına alınırsa çok değerlidir ama herkes aynı düşünürse bölünür. İki pahalı ürün (36 + 24 = 60) tek başına alınırsa 60 değer demektir.",
-    "60 krediyi tam kullanma zorunluluğu yok: en çok 4 ürün alınabilir; az sayıda ama az kişinin seçtiği ürünler, çok sayıda ama çok kişinin seçtiği ürünlerden değerli olabilir.",
-    "Ürün sayısı değil değer önemlidir: yalnız senin aldığın tek bir ürün (örn. Mini Drone 32), üç ucuz ürünün çakışarak bölünmüş değerinden büyük çıkabilir.",
-    "Rakiplerin ne alacağını tahmin et: herkes aynı 12 ürünü aynı sırayla görür; en ucuz ve en pahalı ürünler en çok ilgi çeken (dolayısıyla en çok bölünen) ürünler olabilir.",
-    "Süre içinde fikrini değiştirebilirsin (çıkar/ekle); 'Tamam' demeden önce sepeti son kez kontrol et, Tamam geri alınamaz. Boş sepet 0 değerdir ama ceza yoktur."
+    "Raf her maç değişir: önceki maçın 'güvenli' hesabı bu maçta tutmayabilir; fiyatlara yeniden bak.",
+    "Kuponun sana özel bir avantaj: kuponlu pahalı ürünü yarı fiyata alıp yanına bir pahalı daha sığdırabilirsin. Ama değer tam fiyattan bölünür; o ürünü başkaları da alırsa kupon değeri kurtarmaz.",
+    "15. saniyedeki talep ateşini kullan: üç alevli ürün kalabalıktır, bırakıp ateşsiz pahalı bir ürüne geçmek çoğu zaman değerini artırır. Ateş 15. saniyede donar; ilk 15 saniyede bilerek popüler ürünü alıp sonra bırakmak blöf olabilir.",
+    "Pahalı ürünler tek başına alınırsa çok değerlidir ama herkes aynı düşünürse bölünür. Ürün sayısı sınırı yok: ucuz ürünleri toplamak da bir yol, ama çok kişinin aldığı ucuz ürün hızla bölünür.",
+    "İkinci olmak da +1 getirir: en değerli sepeti kovalamak riskliyse sağlam bir ikinci sepet kur. Eksi puan yok, boş sepet 0'dır.",
+    "Süre içinde fikrini değiştirebilirsin; 'Tamam' geri alınamaz. Son 10 saniyede bekleyenlerin avatarları sallanır."
   ],
-  "tv": "Gizli Alışveriş'in TV'ye özel sahnesi yoktur: TV görünümü oyun içi ekranın izleyici kipinde büyütülmüş hâlidir. Alışveriş sırasında 'Herkes gizlice alışveriş yapıyor', pasif raf ve Tamam diyenlerin sayacı; sonuçta kepenk açılışı, ürün başına alıcı sayıları, değer bölünmesi ve sepet sıralaması (kazanan ★ ve +1) gösterilir. Sepetler ve alıcı sayıları sonuç açılana kadar TV'de de yoktur.",
+  "tv": "Gizli Alışveriş'in TV'ye özel sahnesi yoktur: TV görünümü oyun içi ekranın izleyici kipinde büyütülmüş hâlidir ve bir vitrin gibi çizilir: renkli raf, nefes alan ürünler, iple asılı fiyat etiketleri, 15. saniyeden sonra talep ateşi (kim aldığı yok), alttaki şeritte Tamam diyenlerin avatarlarına düşen poşet ve son 10 sn'de bekleyenlerin sallanması. Sonuçta sahne sahne açılış (kepenk, ürün ürün çakışma, sepetler sondan başa, puanlar ve kuponlar) TV'de de görünür. Sepetler, alıcı sayıları ve kuponlar sonuç açılana kadar TV'de yoktur.",
   "ekranlar": [
     {
       "mock": "alisveris-briefing",
@@ -264,7 +274,7 @@
       "name": "alisveris-shop-8",
       "q": "mock=alisveris-shop&n=8",
       "baslik": "Alışveriş (8 oyuncu)",
-      "aciklama": "Kalan bütçe 60, 12 ürünlük raf, sepetteki ürün sayısı ve Tamam düğmesi.",
+      "aciklama": "Kalan bütçe, sepet şeridi, 12 ürünlük renkli mağaza rafı (yeni ürünler yer tutucuyla), kuponlu ürün macenta etiketli, hazır şeridi ve Tamam düğmesi.",
       "dosya": "alisveris-shop-n-8"
     },
     {
@@ -272,7 +282,7 @@
       "name": "alisveris-shop-empty",
       "q": "mock=alisveris-shop&n=5&empty=1",
       "baslik": "Boş sepet",
-      "aciklama": "Henüz ürün seçilmemiş: 60 kredi, 0 ürün, tüm kartlar seçilebilir.",
+      "aciklama": "Henüz ürün seçilmemiş: 60 kredi, boş sepet şeridi, tüm kartlar seçilebilir.",
       "dosya": "alisveris-shop-n-5-empty-1"
     },
     {
@@ -288,23 +298,47 @@
       "name": "alisveris-locked-5",
       "q": "mock=alisveris-locked&n=5",
       "baslik": "Sepet kesinleşti",
-      "aciklama": "Tamam sonrası: 'Sepetin kesinleşti', raf pasif, diğerleri bekleniyor.",
+      "aciklama": "Tamam sonrası: raf yerine paketlenmiş poşet ve 'Sepetin kesinleşti' damgası; Tamam diyenlerin avatarlarında poşet.",
       "dosya": "alisveris-locked-n-5"
+    },
+    {
+      "mock": "alisveris-heat",
+      "name": "alisveris-heat",
+      "q": "mock=alisveris-heat&n=6",
+      "baslik": "Vitrin fısıltısı",
+      "aciklama": "15. saniye: 'Vitrin fısıldıyor…' ve ürünlerin köşesinde 0-3 alev.",
+      "dosya": "alisveris-heat-n-6"
+    },
+    {
+      "mock": "alisveris-tense",
+      "name": "alisveris-tense",
+      "q": "mock=alisveris-tense&n=5",
+      "baslik": "Son 10 saniye",
+      "aciklama": "Kırmızı nabız şeridi; Tamam dememiş oyuncuların avatarları sallanır.",
+      "dosya": "alisveris-tense-n-5"
+    },
+    {
+      "mock": "alisveris-closing",
+      "name": "alisveris-closing",
+      "q": "mock=alisveris-closing&n=5",
+      "baslik": "Kasa kapanıyor",
+      "aciklama": "Son 3 saniye: 'Kasa kapanıyor!' ve kepenk biraz iner; raf kullanılabilir.",
+      "dosya": "alisveris-closing-n-5"
     },
     {
       "mock": "alisveris-reveal",
       "name": "alisveris-reveal-shelf",
       "q": "mock=alisveris-reveal&n=5",
-      "baslik": "Raf kepengi açılıyor",
-      "aciklama": "Sonucun ilk aşaması: ürün başına alıcı sayıları ve bölünen değerler.",
-      "dosya": "alisveris-reveal-n-5"
+      "baslik": "Ürün ürün çakışma",
+      "aciklama": "Kepenk kalktı: ürünlerin üstünde alanların avatarları, bölünen fiyat (÷N) ya da altın 'TEK BAŞINA!'.",
+      "dosya": "alisveris-reveal-cakisma-n-5"
     },
     {
       "mock": "alisveris-reveal",
       "name": "alisveris-reveal-5",
       "q": "mock=alisveris-reveal&n=5",
-      "baslik": "Sepet sıralaması",
-      "aciklama": "Her oyuncunun sepeti, ürün resimleri, değeri (iki ondalık); kazananda ★ ve +1.",
+      "baslik": "Sepetler ve puanlar",
+      "aciklama": "Sepetler en değersizden en değerliye açılır; satırlarda kupon, en değerliye damga ve konfeti; puanlar üste uçar.",
       "dosya": "alisveris-reveal-n-5"
     },
     {
@@ -312,7 +346,7 @@
       "name": "alisveris-reveal-tie",
       "q": "mock=alisveris-reveal-tie&n=6",
       "baslik": "Sonuç: eşit değer",
-      "aciklama": "En yüksek değerde birden çok sepet: hepsi +1.",
+      "aciklama": "En yüksek değerde birden çok sepet: hepsi +2 ve EN DEĞERLİ SEPET damgası, sonraki değer +1.",
       "dosya": "alisveris-reveal-tie-n-6"
     },
     {
@@ -320,18 +354,28 @@
       "name": "alisveris-spectator",
       "q": "mock=alisveris-spectator&n=5",
       "baslik": "İzleyici",
-      "aciklama": "'Herkes gizlice alışveriş yapıyor'; raf pasif, Tamam sayacı görünür.",
+      "aciklama": "İzleyici vitrini: 'Herkes gizlice alışveriş yapıyor', renkli raf, hazır şeridi.",
       "dosya": "alisveris-spectator-n-5"
+    },
+    {
+      "mock": "alisveris-spectator",
+      "name": "alisveris-spectator-heat",
+      "q": "mock=alisveris-spectator&n=8&heat=1",
+      "baslik": "İzleyici vitrini: talep ateşi",
+      "aciklama": "İzleyici/TV: vitrinde talep ateşi (yalnız seviye) ve hazır şeridi.",
+      "dosya": "alisveris-spectator-n-8-heat-1"
     }
   ],
   "bilinenSorunlar": [
-    "KURALLAR.md §19 erken bitişi ve 8 sn'lik sonuç animasyonu süresini anlatmaz; kod ekledi. Erken bitiş yalnız Tamam eylemi anında denetlenir (son bekleyen bağlı oyuncu kopsa tetiklenmez).",
-    "KURALLAR.md '2 ondalık' der; kod değerleri 840 ile çarpılmış tam sayıyla tutar ve gösterimde yarım yukarı yuvarlar. Yuvarlanmış iki değer ekranda aynı görünse bile (ör. 3, 6 ya da 7 alıcıyla bölünen ürünlerde) sıralama gerçek değerle yapılır, bu yüzden aynı görünen iki sepetten yalnız biri kazanabilir.",
-    "İstemci bütçesi yetmeyen ürüne dokunulunca isteği sunucuya hiç göndermez (hata sesi + sarsılma); yalnız sunucuya ulaşan istekler 'over_budget' ile reddedilir.",
-    "KURALLAR.md 'sepet göndermeyen oyuncunun değeri 0' der: kodda 'sepet gönderme' kavramı yoktur, sepet canlı sunucuda tutulur ve süre bitince olduğu gibi kullanılır; Tamam yalnız erken bitiş ve kilit içindir.",
-    "mini oyun puanı (miniScores) tam sayı 0/1'dir; sepet değerleri miniScores'a yazılmaz (commit 2026-10-19), yalnız sonuç görünümünde bulunur."
+    "Erken bitiş yalnız Tamam eylemi anında denetlenir (son bekleyen bağlı oyuncu kopsa tetiklenmez).",
+    "Yuvarlanmış iki değer ekranda aynı görünse bile (3, 6 ya da 7 alıcıyla bölünen ürünlerde) sıralama gerçek değerle yapılır; aynı görünen iki sepetten yalnız biri ödül alabilir.",
+    "İstemci bütçesi yetmeyen ürüne dokunulunca isteği sunucuya hiç göndermez (bip + sarsılma); yalnız sunucuya ulaşan istekler 'over_budget' ile reddedilir.",
+    "Kodda 'sepet gönderme' kavramı yoktur: sepet canlı sunucuda tutulur ve süre bitince olduğu gibi kullanılır; Tamam yalnız erken bitiş ve kilit içindir.",
+    "Yeni 8 ürünün görseli henüz yoktur: ekran ürünün baş harflerini taşıyan neon kutu yer tutucusu çizer; apps/client/public/assets/props/gizli-alisveris/<ad>.webp eklenince kendiliğinden kullanılır (tarifler: docs/oneriler/gizli-alisveris-gorsel.md).",
+    "Sonuç açılışı bugünkü 8 sn'ye sığdırıldı; sonuç süresi/Devam mekanizması değişirse yalnız SONUC_ZAMANI sabitleri uzatılır."
   ],
   "sonDegisiklikler": [
+    "2026-10-30: Gizli Alışveriş geliştirmeleri: her maç farklı raf (20 ürün havuzu, ±%30 fiyat), gizli kupon, 15. saniyede vitrin fısıltısı, puan +2/+1/0, ürün sayısı sınırı yok (yalnız bütçe), mağaza rafı, sepete uçan ürün, son 10 sn gerilimi, paketlenmiş sepet, sahne sahne sonuç, mağaza sesleri, izleyici vitrini.",
     "2026-10-29: Oyun ekranları: tutarlı durum, tek satır başlık, okunur sonuçlar.",
     "2026-10-27: Renk körlüğü modu: kalan oyunlar ve ui-check &cb=1 ekranları (kazanan ★ işareti).",
     "2026-10-27: Tüm oyunlar için tur özeti (summarize): 'X N,NN kredilik sepetle önde'.",

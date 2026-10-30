@@ -37,7 +37,7 @@
       "ad": "Sonuç animasyonu",
       "sureSn": 7,
       "kim": "herkes",
-      "aciklama": "Süre dolunca (ya da erken bitişte 1 sn sonra) seçimler herkese açılır. Animasyon zaman çizelgesi: 0-1,7 sn 'Pinler iniyor ?'; 1,7 sn'de pinler platformlarına iner, aynı platformdakiler söner ('Aynı platformdakiler - Söndü!') ya da çarpışma yoksa 'Platformlar - Temiz!'; 3,2 sn'de 'En yüksek tek kalan' (ad); 4,4 sn'de oyuncuya kendi sonucu: '+2' / '+1' ya da 'Bu sefer - puan yok'. Seçmeyenler altta 'Seçmedi' şeridinde gösterilir. Çarpışanlar ✗ işaretiyle, birinci ★ ve +2 ile, ikinci +1 ile görünür. Oyun bu 7 sn'nin sonunda biter, ardından sonuç ekranı gelir. Açılış en az 7 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
+      "aciklama": "Süre dolunca (ya da erken bitişte 1 sn sonra) seçimler herkese açılır. Animasyon zaman çizelgesi: 0-1,7 sn 'Pinler iniyor ?'; 1,7 sn'de pinler platformlarına iner, aynı platformdakiler söner ('Aynı platformdakiler - Söndü!') ya da çarpışma yoksa 'Platformlar - Temiz!'; 3,2 sn'de 'En yüksek tek kalan' (ad); 4,4 sn'de oyuncuya kendi sonucu: '+2' / '+1' ya da 'Bu sefer - puan yok'. Seçmeyenler altta 'Seçmedi' şeridinde gösterilir. Çarpışanlar ✗ işaretiyle, birinci ★ ve +2 ile, ikinci +1 ile görünür. Ardından genel sonuç ekranı gelir. Açılış en az 7 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Artık tüm seçimler, bölgeler, durumlar ve puanlar herkese açıktır."
     }
   ],
@@ -178,7 +178,7 @@
       "kaynak": "packages/engine/src/games/cizgiyi-gecme/types.ts:4"
     },
     {
-      "ad": "Sonuç animasyonu süresi (oyun bunun sonunda biter)",
+      "ad": "Sonuç animasyonu süresi (en az gösterim; ardından 'Devam et', en çok 60 sn)",
       "deger": "7 000 ms",
       "kaynak": "packages/engine/src/games/cizgiyi-gecme/types.ts:6"
     },

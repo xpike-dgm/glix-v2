@@ -27,7 +27,7 @@ async function startGame(names: string[]): Promise<Client[]> {
 }
 
 describe("asiri-yukleme tam maç", () => {
-  it("toplam ve tıklamalar gizli kalır, 100'de yalnız danger açılır, aşan tık patlar", async () => {
+  it("toplam ve tıklamalar gizli kalır, 100'de yalnız danger açılır, pencerede basan herkes patlar", async () => {
     const cs = await startGame(["A", "B", "C"]);
     const [a, b, c] = cs as [Client, Client, Client];
     const ids = cs.map((x) => x.session.playerId);
@@ -52,42 +52,48 @@ describe("asiri-yukleme tam maç", () => {
     expect((await send(c, { kind: "tap", count: 4 })).ok).toBe(true); // tam 100
     await until(() => pub(a).danger, "tehlike");
     expect(pub(a).reveal).toBeNull();
+    expect(a.room.phase).toBe("playing");
+
+    // Pencerede 2 sn sonra hâlâ oyun sürer; b ve c basar (patlar) ama tur bitmez.
+    k.clock.advance(2_000);
+    await sync();
+    expect(a.room.phase).toBe("playing");
+    expect((await send(b, { kind: "tap" })).ok).toBe(true);
+    expect((await send(c, { kind: "tap", count: 2 })).ok).toBe(true);
+    await sync();
+    expect(pub(a).reveal).toBeNull();
     for (const x of cs) {
       // Oyun görünümleri (yama dahil, tüm geçmiş): sayaç, tıklama ya da patlayan yok.
       const seen = JSON.stringify(
         x.updates.map((u) => [u.snapshot.match?.publicView, u.snapshot.match?.view]),
       );
-      expect(seen).not.toContain("clicks");
-      expect(seen).not.toContain("exploder");
-      expect(seen).not.toContain("total");
       const patches = JSON.stringify(x.msgs.filter((m) => m.type === "patch"));
-      expect(patches).not.toContain("clicks");
-      expect(patches).not.toContain("exploder");
+      for (const word of ["before", "after", "exploders", "total", "points"]) {
+        expect(seen).not.toContain(`"${word}"`);
+        expect(patches).not.toContain(`"${word}"`);
+      }
     }
-    expect(a.room.phase).toBe("playing");
 
-    // Pencerede 2 sn sonra hâlâ oyun sürer; sonra ilk tık patlatır ve tur hemen biter.
-    k.clock.advance(2_000);
-    await sync();
-    expect(a.room.phase).toBe("playing");
-    expect(pub(b).reveal).toBeNull();
-    expect((await send(b, { kind: "tap" })).ok).toBe(true);
-    await until(() => pub(a).reveal !== null, "patlama");
+    // Pencere dolunca sonuç açılır: iki patlayan, en çok basan c −2, b −1.
+    k.clock.advance(1_100);
+    await until(() => pub(a).reveal !== null, "pencere bitti");
     const rev = pub(c).reveal;
-    expect(rev?.exploder).toBe(ids[1]);
-    expect(rev?.total).toBe(101);
+    expect(rev?.exploders).toEqual([ids[1], ids[2]]);
+    expect(rev?.total).toBe(103);
+    expect(rev?.before).toEqual({ [ids[0] as string]: 40, [ids[1] as string]: 35, [ids[2] as string]: 25 });
+    expect(rev?.after).toEqual({ [ids[0] as string]: 0, [ids[1] as string]: 1, [ids[2] as string]: 2 });
     expect(await send(a, { kind: "tap" })).toEqual({ ok: false, reason: "ended" });
 
     k.clock.advance(5_100);
     await until(() => a.room.phase === "results", "sonuç");
-    // a ve c patlamadı: a (40) tek lider +2, c (25) +1 ama en az tıklayan olduğu için −1 (O7) = 0; b patladı -1.
+    // a tek patlamayan ve tıkladı: +2. b −1, c (100'den sonra en çok) −2.
     expect(a.room.match?.result?.awards).toEqual({
       [ids[0] as string]: 2,
       [ids[1] as string]: -1,
-      [ids[2] as string]: 0,
+      [ids[2] as string]: -2,
     });
-    expect(a.room.players.map((p) => p.score)).toEqual([2, -1, 0]);
-    expect(c.room.players.map((p) => p.score)).toEqual([2, -1, 0]);
+    expect(a.room.players.map((p) => p.score)).toEqual([2, -1, -2]);
+    expect(c.room.players.map((p) => p.score)).toEqual([2, -1, -2]);
   });
 
   it("pencere taşmadan biterse patlama olmaz ve tıklamalar sıralanır; 3 sn dolana kadar tur sürer", async () => {
@@ -102,12 +108,12 @@ describe("asiri-yukleme tam maç", () => {
     expect(pub(a).reveal).toBeNull();
     k.clock.advance(200);
     await until(() => pub(a).reveal !== null, "pencere bitti");
-    expect(pub(b).reveal).toMatchObject({ exploder: null, total: 100 });
+    expect(pub(b).reveal).toMatchObject({ exploders: [], total: 100 });
     k.clock.advance(5_100);
     await until(() => a.room.phase === "results", "sonuç");
-    // b ikinci sırada +1 alır ama en az tıklayan olduğu için −1 (O7) = 0.
-    expect(a.room.match?.result?.awards).toEqual({ [ids[0] as string]: 2, [ids[1] as string]: 0 });
-    expect(a.room.players.map((p) => p.score)).toEqual([2, 0]);
+    // Kimse patlamadı: a tek lider +2, b ikinci +1; eksi puan yok.
+    expect(a.room.match?.result?.awards).toEqual({ [ids[0] as string]: 2, [ids[1] as string]: 1 });
+    expect(a.room.players.map((p) => p.score)).toEqual([2, 1]);
   });
 
   it("kimse tıklamazsa 90 sn teknik sınırda sıralama olmadan biter", async () => {

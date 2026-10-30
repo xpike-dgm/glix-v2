@@ -1275,3 +1275,26 @@
     height: 48px;
   }
 }
+/* Alçak yatay ekran: düğme ve avatarlar yan yana (dikey yer kazanılır). */
+@media (orientation: landscape) and (max-height: 520px) {
+  .rdevam {
+    max-width: 640px;
+  }
+  .rdevam .tamam {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding-top: 4px;
+  }
+  .rdevam .pbtn-wrap {
+    flex: 0 1 260px;
+  }
+  .rdevam .tamam__count {
+    margin: 0;
+    min-height: 0;
+  }
+  .rdevam .tamam__dots {
+    margin: 0;
+  }
+}

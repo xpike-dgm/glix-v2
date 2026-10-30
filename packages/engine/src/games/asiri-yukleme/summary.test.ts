@@ -9,30 +9,39 @@ const players = [
   { id: "d", nickname: "Deniz" },
 ];
 const result = { miniScores: { a: 4, b: 1, c: 0 }, awards: { a: 2, b: 1, c: 0 } };
+const reveal = (total: number, exploders: string[]) => ({
+  reveal: { total, before: {}, after: {}, exploders, points: {} },
+});
+const short = (line: string | null) =>
+  expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
 
 describe("asiri-yukleme tur özeti", () => {
-  it("cümle kurar (1)", () => {
-    const line = summarizeAsiriYukleme(result, players, {
-      reveal: { total: 101, exploder: "b", clicks: {}, points: {} },
-    });
+  it("tek patlayan", () => {
+    const line = summarizeAsiriYukleme(result, players, reveal(101, ["b"]));
     expect(line).toBe("Can barı patlattı");
-    expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
+    short(line);
   });
-  it("cümle kurar (2)", () => {
-    const line = summarizeAsiriYukleme(result, players, {
-      reveal: { total: 100, exploder: null, clicks: {}, points: {} },
-    });
+  it("iki patlayan", () => {
+    const line = summarizeAsiriYukleme(result, players, reveal(104, ["b", "d"]));
+    expect(line).toBe("Can ve Deniz barı patlattı");
+    short(line);
+  });
+  it("üç ve daha çok patlayan", () => {
+    const line = summarizeAsiriYukleme(result, players, reveal(110, ["a", "b", "d"]));
+    expect(line).toBe("Elif ve 2 kişi barı patlattı");
+    short(line);
+  });
+  it("patlama yok, bar doldu", () => {
+    const line = summarizeAsiriYukleme(result, players, reveal(100, []));
     expect(line).toBe("Bar patlamadan 100'e ulaştı");
-    expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
+    short(line);
   });
-  it("cümle kurar (3)", () => {
-    const line = summarizeAsiriYukleme(result, players, {
-      reveal: { total: 60, exploder: null, clicks: {}, points: {} },
-    });
+  it("bar dolmadan süre bitti", () => {
+    const line = summarizeAsiriYukleme(result, players, reveal(60, []));
     expect(line).toBe("Bar dolmadan süre bitti");
-    expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
+    short(line);
   });
-  it("veri yoksa ya da eksikse cümle kurmaz (4)", () => {
+  it("veri yoksa ya da eksikse cümle kurmaz", () => {
     expect(summarizeAsiriYukleme(result, players, { reveal: null })).toBeNull();
   });
 });

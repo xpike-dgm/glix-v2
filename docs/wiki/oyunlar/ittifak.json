@@ -44,7 +44,7 @@
       "ad": "Oy akışı (sonuç açılışı)",
       "sureSn": 8,
       "kim": "herkes",
-      "aciklama": "Oylama biter bitmez eksik oylar sunucuca rastgele tamamlanır ve oylar açılır: her oy bir enerji ipiyle hedefin portresine akar (ip başına 0,52 sn animasyon, ipler arası 0,11 sn gecikme), sonra her portrenin yanında '+N' rozeti belirir. Üstte katılımcıya kendi sonucu ('+N', 'N oy aldın' ya da 'Kimse sana oy vermedi', 'Oyun: <ad>'); altta 'Sözler · N tutuldu, M bozuldu' listesi (kendi sözlerin üstte) ve '✓ tutuldu / ✗ bozuldu' işaretleri. Alt not: 'Alınan her oy genel skora eklenir'. Oyun bu 8 sn'nin sonunda biter, ardından sonuç ekranı gelir. Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
+      "aciklama": "Oylama biter bitmez eksik oylar sunucuca rastgele tamamlanır ve oylar açılır: her oy bir enerji ipiyle hedefin portresine akar (ip başına 0,52 sn animasyon, ipler arası 0,11 sn gecikme), sonra her portrenin yanında '+N' rozeti belirir. Üstte katılımcıya kendi sonucu ('+N', 'N oy aldın' ya da 'Kimse sana oy vermedi', 'Oyun: <ad>'); altta 'Sözler · N tutuldu, M bozuldu' listesi (kendi sözlerin üstte) ve '✓ tutuldu / ✗ bozuldu' işaretleri. Alt not: 'Alınan her oy genel skora eklenir'. Ardından genel sonuç ekranı gelir. Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Artık oylar, sözler ve skorlar herkese açıktır."
     }
   ],
@@ -196,7 +196,7 @@
       "kaynak": "packages/engine/src/games/ittifak/types.ts:5"
     },
     {
-      "ad": "Oy akışı (açılış) süresi; oyun bunun sonunda biter",
+      "ad": "Oy akışı (açılış) süresi; en az gösterim süresi, ardından 'Devam et' (en çok 60 sn)",
       "deger": "8 000 ms",
       "kaynak": "packages/engine/src/games/ittifak/types.ts:7"
     },

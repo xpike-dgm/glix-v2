@@ -17,61 +17,74 @@ export * from "./types.js";
 export interface AsiriYuklemeState {
   players: string[];
   startedAt: number;
-  /** Oyuncu → tıklama sayısı (patlatan tık dahil). */
-  clicks: Record<string, number>;
-  /** Ortak bar toplamı (patlamada 101). */
+  /** Oyuncu → bar 100'e ulaşana kadar yaptığı tıklamalar (sıralamada sayılan). */
+  before: Record<string, number>;
+  /** Oyuncu → bar 100'ü geçtikten sonra yaptığı tıklamalar (> 0 ise patladı). */
+  after: Record<string, number>;
+  /** Ortak bar toplamı: bütün tıklamalar (100'ü aşanlar dahil). */
   total: number;
   /** Bar 100'e ulaştığı an (gizli pencerenin başı); ulaşmadıysa null. */
   dangerAt: number | null;
-  exploder: string | null;
-  /** Patlamanın sunucu anı. */
-  explodedAt: number | null;
   /** Tur bitti mi. Görünümler bundan değil `ctx.now`'dan türetilir; bayrak yalnız "durum değişti" sinyalidir. */
   over: boolean;
 }
 
-/** Turun bittiği an: patlama anı, gizli pencerenin sonu ya da teknik üst sınır (hangisi önce). */
+/**
+ * Turun bittiği an. Bar dolduysa tehlike penceresi her zaman tam 3 sn sürer (90 sn sınırından bağımsız; sahip
+ * kararı); bar dolmadıysa teknik üst sınır (90 sn). Patlama turu bitirmez.
+ */
 export function asiriYuklemeEndAt(state: AsiriYuklemeState): number {
-  if (state.explodedAt !== null) return state.explodedAt;
-  const cap = state.startedAt + ASIRI_YUKLEME_CAP_MS;
-  return state.dangerAt === null ? cap : Math.min(cap, state.dangerAt + ASIRI_YUKLEME_DANGER_MS);
+  return state.dangerAt === null
+    ? state.startedAt + ASIRI_YUKLEME_CAP_MS
+    : state.dangerAt + ASIRI_YUKLEME_DANGER_MS;
+}
+
+/** Patlayanlar: bar 100'ü geçtikten sonra en az bir kez basanlar, katılım sırasıyla. */
+export function asiriYuklemeExploders(players: readonly string[], after: Record<string, number>): string[] {
+  return players.filter((id) => (after[id] ?? 0) > 0);
 }
 
 /**
- * Genel skor: patlayan −1 ve sıralamaya girmez; patlamayanlar tıklama sayısına göre (tek lider +2, sıradaki +1;
- * liderler eşitse hepsi +1, +2 yok). Hiç tıklamayan sıralamaya girmez.
- *
- * O7: patlamayanlar arasında en az tıklayan(lar) ayrıca −1 alır (hiç tıklamayan da en az sayılır). Eşitlikte en azı
- * yapanların hepsi −1 alır; patlamayanların hepsinin sayısı aynıysa kimse almaz. Patlayan bu cezaya girmez, yani
- * ikinci bir −1 almaz. Ceza sıralama ödülüne eklenir (ikinci sırada +1 alan en az tıklayan net 0 alır).
+ * Genel skor (KURALLAR §20, sahip kararı Ekim 2026):
+ * - Patlayanlar (100'den sonra basanlar) sıralamaya girmez, yalnız ceza alır: 100'den sonra en çok basan TEK kişi
+ *   −2, diğer patlayanlar −1. Tek patlayan −1; en çok basanlar eşitse hepsi −1 (kimse −2 almaz).
+ * - Patlamayanlar 100'e kadar yaptıkları tıklamalara göre sıralanır: tek lider +2, ikinci (en yüksek ikinci değer)
+ *   +1; liderler eşitse hepsi +1 ve +2/ikinci sıra yok. Hiç tıklamayan ödül almaz. Başka eksi puan yoktur.
  */
 export function asiriYuklemePoints(
   players: readonly string[],
-  clicks: Record<string, number>,
-  exploder: string | null,
+  before: Record<string, number>,
+  after: Record<string, number>,
 ): Record<string, number> {
+  const exploders = asiriYuklemeExploders(players, after);
+  const most = Math.max(0, ...exploders.map((id) => after[id] ?? 0));
+  const atMost = exploders.filter((id) => (after[id] ?? 0) === most);
+  const heavy = exploders.length > 1 && atMost.length === 1 ? atMost[0] : undefined;
   const ranked: Record<string, number> = {};
-  for (const id of players) if (id !== exploder) ranked[id] = clicks[id] ?? 0;
+  for (const id of players) if (!exploders.includes(id)) ranked[id] = before[id] ?? 0;
   const awards = rankAwards(ranked, { positiveOnly: true });
-  const counts = Object.values(ranked);
-  const fewest = Math.min(...counts);
-  const allEqual = counts.every((c) => c === fewest);
   const points: Record<string, number> = {};
   for (const id of players) {
-    if (id === exploder) points[id] = -1;
-    else points[id] = (awards[id] ?? 0) + (!allEqual && ranked[id] === fewest ? -1 : 0);
+    if (id === heavy) points[id] = -2;
+    else if (exploders.includes(id)) points[id] = -1;
+    else points[id] = awards[id] ?? 0;
   }
   return points;
 }
 
 function settle(state: AsiriYuklemeState): AsiriYuklemeReveal {
-  const clicks: Record<string, number> = {};
-  for (const id of state.players) clicks[id] = state.clicks[id] ?? 0;
+  const before: Record<string, number> = {};
+  const after: Record<string, number> = {};
+  for (const id of state.players) {
+    before[id] = state.before[id] ?? 0;
+    after[id] = state.after[id] ?? 0;
+  }
   return {
     total: state.total,
-    exploder: state.exploder,
-    clicks,
-    points: asiriYuklemePoints(state.players, clicks, state.exploder),
+    before,
+    after,
+    exploders: asiriYuklemeExploders(state.players, after),
+    points: asiriYuklemePoints(state.players, before, after),
   };
 }
 
@@ -91,7 +104,7 @@ export const asiriYukleme: GameDefinition<
     steps: [
       "Ortak çekirdeği hızlıca tıkla; sayılar gizli",
       "Kenarlar kızarınca tehlike başladı; sakın taşırma",
-      "100'ü aşan patlar (−1); diğerlerinde en çok tıklayan +2, ikinci +1, en az tıklayan −1",
+      "100'ü aşınca basan herkes patlar (en çok basan −2, diğerleri −1); kalanlarda en çok tıklayan +2, ikinci +1",
     ],
   },
 
@@ -109,40 +122,39 @@ export const asiriYukleme: GameDefinition<
   },
 
   setup(players: readonly string[], ctx: GameContext): AsiriYuklemeState {
-    const clicks: Record<string, number> = {};
-    for (const id of players) clicks[id] = 0;
+    const before: Record<string, number> = {};
+    const after: Record<string, number> = {};
+    for (const id of players) {
+      before[id] = 0;
+      after[id] = 0;
+    }
     return {
       players: [...players],
       startedAt: ctx.now,
-      clicks,
+      before,
+      after,
       total: 0,
       dangerAt: null,
-      exploder: null,
-      explodedAt: null,
       over: false,
     };
   },
 
   reduce(state, playerId, action, ctx): AsiriYuklemeState | Rejected {
     if (!state.players.includes(playerId)) return { rejected: "not_participant" };
-    // Patlama, gizli pencerenin sonu ve üst sınır `ctx.now`'a göre denetlenir (tick'e bağlı değil).
+    // Pencerenin sonu ve üst sınır `ctx.now`'a göre denetlenir (tick'e bağlı değil).
     if (ctx.now >= asiriYuklemeEndAt(state)) return { rejected: "ended" };
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
-    // Toplu mesaj sunucu sırasıyla tek tek işlenir: kapasiteyi aşan ilk tık patlamayı belirler.
+    // Toplu mesaj: 100'e kadar olan kısım "önce", aşan kısım "sonra" sayılır. Aşan tık turu bitirmez.
     const room = Math.max(0, ASIRI_YUKLEME_CAPACITY - state.total);
     const fill = Math.min(action.count, room);
-    const boom = action.count > room;
-    const total = state.total + fill + (boom ? 1 : 0);
-    const mine = (state.clicks[playerId] ?? 0) + fill + (boom ? 1 : 0);
+    const over = action.count - fill;
     const reachedCapacity = state.dangerAt === null && state.total + fill >= ASIRI_YUKLEME_CAPACITY;
     return {
       ...state,
-      clicks: { ...state.clicks, [playerId]: mine },
-      total,
+      before: { ...state.before, [playerId]: (state.before[playerId] ?? 0) + fill },
+      after: over > 0 ? { ...state.after, [playerId]: (state.after[playerId] ?? 0) + over } : state.after,
+      total: state.total + action.count,
       dangerAt: reachedCapacity ? ctx.now : state.dangerAt,
-      exploder: boom ? playerId : null,
-      explodedAt: boom ? ctx.now : null,
-      over: boom,
     };
   },
 
@@ -174,16 +186,16 @@ export const asiriYukleme: GameDefinition<
   },
 
   /**
-   * Gizli değerler (bar toplamı, tıklama sayıları, pencere bitişi) kısa sayılardır; alt dizgi sızıntı denetimi
-   * bunları koruyamaz. Gizlilik yapısal olarak sağlanır: `publicView` tur bitmeden yalnız `danger` taşır, `view`
-   * yalnız katılımcı olup olmadığını söyler (bkz. asiri-yukleme.test.ts, "gizlilik").
+   * Gizli değerler (bar toplamı, önce/sonra tıklama sayıları, patlayanlar, pencere bitişi) kısa sayılardır; alt
+   * dizgi sızıntı denetimi bunları koruyamaz. Gizlilik yapısal olarak sağlanır: `publicView` tur bitmeden yalnız
+   * `danger` taşır, `view` yalnız katılımcı olup olmadığını söyler (bkz. asiri-yukleme.test.ts, "gizlilik").
    */
   secrets() {
     return [];
   },
 
   result(state) {
-    const points = asiriYuklemePoints(state.players, state.clicks, state.exploder);
+    const points = asiriYuklemePoints(state.players, state.before, state.after);
     return { miniScores: { ...points }, awards: { ...points } };
   },
 };

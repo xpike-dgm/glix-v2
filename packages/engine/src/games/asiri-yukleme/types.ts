@@ -2,16 +2,21 @@
 
 /** Ortak barın kapasitesi; her tıklama 1 doldurur. */
 export const ASIRI_YUKLEME_CAPACITY = 100;
-/** Bar 100'e ulaşınca başlayan gizli pencere (ms). */
+/** Bar 100'e ulaşınca başlayan gizli pencere (ms); tur pencere sonuna kadar sürer, içinde basan herkes patlar. */
 export const ASIRI_YUKLEME_DANGER_MS = 3_000;
-/** Teknik üst sınır (ms): kimse tıklamazsa oda takılmasın; dolarsa patlama olmadan sıralama. */
+/**
+ * Teknik üst sınır (ms): kimse tıklamazsa oda takılmasın; bar dolmadan biterse sıralama aynı kurala göre verilir.
+ * Yalnız bar dolmadıysa uygulanır: bar sınırdan hemen önce dolarsa pencere yine tam 3 sn sürer.
+ */
 export const ASIRI_YUKLEME_CAP_MS = 90_000;
 /** Tur bittikten sonra sonucun ekranda kaldığı süre (ms). */
 export const ASIRI_YUKLEME_OUTRO_MS = 5_000;
-export const ASIRI_YUKLEME_TOTAL_MS = ASIRI_YUKLEME_CAP_MS + ASIRI_YUKLEME_OUTRO_MS;
+/** Oyunun en uzun süresi: bar sınırdan hemen önce dolarsa üst sınır + tam pencere + sonuç. */
+export const ASIRI_YUKLEME_TOTAL_MS = ASIRI_YUKLEME_CAP_MS + ASIRI_YUKLEME_DANGER_MS + ASIRI_YUKLEME_OUTRO_MS;
 /**
  * Tek mesajda gönderilebilecek en çok tıklama. İstemci hızlı tıklamaları kısa aralıkla toplu gönderir
- * (sunucunun soket başına mesaj sınırını aşmamak için); sunucu toplu mesajı sırayla tek tek işler.
+ * (sunucunun soket başına mesaj sınırını aşmamak için). Toplu mesajda 100'e kadar olan kısım "önce", aşan kısım
+ * "sonra" sayılır.
  */
 export const ASIRI_YUKLEME_MAX_BATCH = 10;
 
@@ -20,13 +25,15 @@ export type AsiriYuklemeAction = { kind: "tap"; count: number };
 
 /** Tur bitince herkese açılan sonuç. */
 export interface AsiriYuklemeReveal {
-  /** Bar toplamı (patlamada 101: kapasiteyi aşan tıklama dahil). */
+  /** Bar toplamı: bütün tıklamalar (100'ü aşanlar dahil; patlama varsa 100'ün üstündedir). */
   total: number;
-  /** Patlayan oyuncu; patlama yoksa null. */
-  exploder: string | null;
-  /** Her katılımcının tıklama sayısı. */
-  clicks: Record<string, number>;
-  /** Genel skora eklenen puanlar (patlayan −1). */
+  /** Her katılımcının bar 100'e ulaşana kadar yaptığı tıklamalar (sıralamada sayılan). */
+  before: Record<string, number>;
+  /** Her katılımcının bar 100'ü geçtikten sonra yaptığı tıklamalar (> 0 ise patladı). */
+  after: Record<string, number>;
+  /** Patlayanlar (100'den sonra en az bir kez basanlar), katılım sırasıyla; patlama yoksa boş. */
+  exploders: string[];
+  /** Genel skora eklenen puanlar. */
   points: Record<string, number>;
 }
 

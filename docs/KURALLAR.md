@@ -1023,46 +1023,85 @@ kaç kişinin aldığına göre ürünün oyuncuya sağladığı değer değişi
 1. Minimum oyuncu / maksimum oyuncu: [3-8]
 2. Her oyuncunun başlangıç bütçesi: [Her oyuncuya 60 kredi verilir. Kredi
    gerçek para değildir; yalnızca bu mini oyunun gizli alışveriş bütçesidir.]
-3. Ürün havuzu, ürün fiyatları ve ürün sayısı nasıl belirlenir?: [İlk sürümde
-   bütün oyuncuların gördüğü sabit 12 ürünlük havuz kullanılır; ürün sırası her
-   maçta karıştırılır. Fiyatlar kombinasyon bırakacak şekilde belirlenmiştir:]
+3. Ürün havuzu, ürün fiyatları ve ürün sayısı nasıl belirlenir?: [20 ürünlük
+   havuz. Her maçta bunlardan **12'si** rafa gelir (sunucu rastgeleliğiyle; aynı
+   tohum aynı rafı verir) ve fiyatları maç başına **taban fiyatın ±%30'u** içinde
+   oynar: her zaman tam sayı, **6–40** arası. Raf herkes için aynıdır (ürünler,
+   fiyatlar ve sıra). **Ürün sayısı sınırı yoktur:** tek sınır bütçedir (60
+   kredi) ve her üründen bir tane alınır; parası yettiği kadar ürün alınabilir.]
 
-   | Ürün | Fiyat (kredi) |
-   |---|---:|
-   | Hologram Sticker | 8 |
-   | Enerji İçeceği | 10 |
-   | Neon Rozet | 12 |
-   | Retro Kartuş | 15 |
-   | Mini Hoparlör | 18 |
-   | Arcade Eldiveni | 20 |
-   | Piksel Kamera | 22 |
-   | Jet Çanta | 24 |
-   | Kristal Kulaklık | 26 |
-   | Holo Kask | 28 |
-   | Mini Drone | 32 |
-   | Gizli Sandık | 36 |
-4. Her oyuncu kaç ürün seçebilir; aynı üründen birden fazla alınabilir mi?: [bütcesi dahilinde istediği kadar ürün alabilir bir üründen sadece bir kez alabilir]
-5. Alışverişler gizli mi; ürün seçimleri ne zaman açılır?: [gizli , tur sonunda]
-6. Ürün değeri alıcı sayısına göre tam olarak nasıl hesaplanır?: [bir ürünü kaç kişi seçtiyse değeri o seçilen sayıya bölünür örnek : 30 tl ye bir ürün var 2 kişi bu ürünü seçmiş değeri artık 15 oldu]
-7. Aşamalar ve süreler: [tek aşama - 30 saniye]
-8. Bütçeyi aşma veya sepet göndermeme sonucu: [bütçe aşılamaz - sepet göndermezse sepetinin değeri direkt 0 olarak kabul edilir]
-9. Mini oyun puanı ve en değerli sepet eşitliği: [en yüksek değerde ki sepet +1 puan alır - en değerli sepetler de birden fazla aynı varsa bunların hepsi +1 alır]
+   | No | Ürün | Taban fiyat | Maçtaki aralık |
+   |---:|---|---:|---|
+   | 0 | Hologram Sticker | 8 | 6–10 |
+   | 1 | Enerji İçeceği | 10 | 7–13 |
+   | 2 | Neon Rozet | 12 | 9–15 |
+   | 3 | Retro Kartuş | 15 | 11–19 |
+   | 4 | Mini Hoparlör | 18 | 13–23 |
+   | 5 | Arcade Eldiveni | 20 | 14–26 |
+   | 6 | Piksel Kamera | 22 | 16–28 |
+   | 7 | Jet Çanta | 24 | 17–31 |
+   | 8 | Kristal Kulaklık | 26 | 19–33 |
+   | 9 | Holo Kask | 28 | 20–36 |
+   | 10 | Mini Drone | 32 | 23–40 |
+   | 11 | Gizli Sandık | 36 | 26–40 |
+   | 12 | Lazer Kalem | 11 | 8–14 |
+   | 13 | Ses Kartı | 13 | 10–16 |
+   | 14 | Retro Joystick | 17 | 12–22 |
+   | 15 | Plazma Lamba | 19 | 14–24 |
+   | 16 | Mini Robot | 23 | 17–29 |
+   | 17 | Hologram Saat | 25 | 18–32 |
+   | 18 | Neon Kaykay | 30 | 21–39 |
+   | 19 | VR Gözlük | 34 | 24–40 |
+4. Her oyuncu kaç ürün seçebilir; aynı üründen birden fazla alınabilir mi?: [bütcesi dahilinde istediği kadar ürün alabilir bir üründen sadece bir kez alabilir; yalnız raftaki ürünler alınabilir; ürün sayısı sınırı yoktur]
+5. Alışverişler gizli mi; ürün seçimleri ne zaman açılır?: [gizli , tur sonunda. İstisna: 15. saniyedeki vitrin fısıltısı (madde 15) yalnız ürün başına talep seviyesini açar]
+6. Ürün değeri alıcı sayısına göre tam olarak nasıl hesaplanır?: [bir ürünü kaç kişi seçtiyse değeri o seçilen sayıya bölünür örnek : 30 tl ye bir ürün var 2 kişi bu ürünü seçmiş değeri artık 15 oldu. Bölünen her zaman bu maçtaki **tam** fiyattır; kupon değeri değiştirmez]
+7. Aşamalar ve süreler: [tek aşama - 30 saniye; 15. saniyede vitrin fısıltısı; ardından 8 sn sonuç açılışı]
+8. Bütçe aşma veya sepet göndermeme sonucu: [bütçe aşılamaz. Ayrı bir "sepet gönderme" adımı yoktur: sepet canlı olarak sunucuda tutulur ve süre bittiğinde (ya da herkes Tamam dediğinde) sunucudaki son sepet geçerlidir. Hiç ürün almayan oyuncunun sepet değeri 0 kabul edilir]
+9. Mini oyun puanı ve en değerli sepet eşitliği: [en değerli sepet **+2**, ikinci en değerli sepet **+1**, diğerleri 0; **eksi puan yoktur**. Birincide eşitlik varsa eşit olanların hepsi +2 alır ve sonraki farklı değer +1 alır; ikincide eşitlik varsa hepsi +1. Değeri 0 olan (boş sepet) ödül almaz. Herkesin sepet değeri aynıysa kimse puan almaz]
 10. Genel skora aktarım ve final bonusu: [direkt genel puana eklenir]
 11. Turun bitiş koşulu: [sürenin dolması]
 12. Tutorialda gösterilecek üç adım:
-    1. 60 kredilik gizli bütçeni gör.
-    2. İstediğin ürünleri sepetine koy; aynı üründen bir tane alabilirsin.
-    3. Az kişinin seçtiği pahalı ürünler daha değerli olur; en değerli sepet +1.
+    1. Raf ve fiyatlar her maç değişir; gizli kuponunla bir ürün yarı fiyat.
+    2. Bir ürünü kaç kişi aldıysa değeri o sayıya bölünür; 15. saniyede vitrin fısıldar.
+    3. En değerli sepet +2, ikinci +1 alır.
 13. Neon market, ürün kartları, kasa ve sepet animasyonları: Telefon ekranında
-    yatay kaydırılabilir neon raflar, her üründe fiyat ve kapalı alıcı rozeti
-    bulunur. Sepete eklenen ürünler küçük kredi jetonlarıyla kasaya akar. Tur
-    bitince raf kepengi açılır; her ürünün fiyatı kaç kişi aldıysa ona bölünür,
-    sepet değerleri hesaplanırken ürün kartları ilgili oyunculara ışınlanır.
+    gerçek bir mağaza rafı: renkli ürünler, büyük görseller, her sıranın altında
+    neon raf tahtası, iple asılı fiyat etiketi. Yalnız bütçenin yetmediği ürün
+    soluktur. Dokunulan ürünün küçük kopyası üstteki sepet şeridine uçar, bütçe
+    sayısı dönerek değişir. Son 10 saniyede süre şeridi kızarır, son 3 saniyede
+    "Kasa kapanıyor!" yazısıyla kepenk biraz iner (raf kullanılabilir kalır).
+    Tamam diyenin ekranında paketlenmiş poşet görünür. Tur bitince sonuç sahne
+    sahne açılır: kepenk kalkar → ürün ürün alıcıların avatarları, bölünen fiyat
+    ya da "TEK BAŞINA!" → sepetler en değersizden en değerliye → puanlar üstteki
+    puan yazısına uçar; herkesin kuponu satırında görünür.
 14. Özel durumlar: Sepet bütçe aşımına izin vermez; son geçerli sepet sunucuda
-    tutulur. Sepet göndermeyen veya hiç ürün almayan oyuncunun sepet değeri 0
-    kabul edilir. En yüksek toplam değer eşitse o oyuncuların tamamı +1 alır;
-    ürün değerleri tam olmayan sayılarda iki ondalık basamakla hesaplanır ancak
-    sıralama yuvarlanmamış sunucu değeriyle yapılır.
+    tutulur ve süre bittiğindeki hâli geçerlidir (Tamam demek şart değildir).
+    Hiç ürün almayan oyuncunun sepet değeri 0 kabul edilir ve ödül almaz. Ürün değerleri tam olmayan sayılarda iki ondalık
+    basamakla gösterilir ancak sıralama yuvarlanmamış sunucu değeriyle yapılır.
+15. Vitrin fısıltısı: Alışverişin **15. saniyesinde** raftaki her ürünün üstünde
+    talep ateşi belirir. Seviye, o ürünü o anda sepetinde tutan oyuncuların
+    oranıdır (bütün katılımcılar içinde; kendi seçimin dahil): kimse yoksa ateş
+    yok, **≤%25** bir alev, **≤%50** iki alev, **>%50** üç alev. Ateş 15.
+    saniyedeki sepetlere göre bir kez hesaplanır ve **donar** (sonraki
+    değişikliklerle güncellenmez; tam 15. saniyede gelen eylem sayılmaz). Herkes
+    (izleyici ve TV dahil) yalnız seviyeyi görür; kimin aldığı ve tam sayı asla
+    gösterilmez. Herkes 15. saniyeden önce Tamam derse ateş gösterilmez.
+16. Gizli kupon: Alışveriş başında her oyuncuya raftaki bir üründe **%50
+    indirim** kuponu verilir; iki oyuncuya aynı ürün düşmez. Kupon yalnız
+    **ödenen fiyatı** düşürür: indirimli fiyat **tam sayıya yukarı yuvarlanır**
+    (15 → 8, 27 → 14) ve bütçe kontrolü bu fiyatla yapılır. Ürünün **değeri**
+    yine tam fiyat ÷ alıcı sayısıdır. Kuponu kullanmak zorunlu değildir. Kupon
+    yalnız sahibinin ekranında görünür; sonuçta herkesin kuponu açılır.
+17. Maç kartlarıyla etkileşim (K5–K7): Mini oyun puanı ham puanla aynıdır
+    (+2 / +1 / 0); "birinci" +2 alanlar, "sonuncu" 0 alanlardır (en az bir kişi
+    ödül aldıysa). Herkes 0 aldıysa herkes birincidir, kimse sonuncu değildir.
+    Örnekler: Çift Puan +2'yi +4, +1'i +2 yapar; Altın Dokunuş +2'yi +6 yapar;
+    Kendine Güven birinciye +2 (toplam +4), ikinciye ve diğerlerine −1; Sigorta
+    0 alana +1 (ikinci sonuncu sayılmaz); Ters Köşe sıralamayı tersine çevirir
+    (0 alanlar +2 ve +1'in toplamını paylaşır); Lanet artı puanı 0'a çeker;
+    Vergi/Hırsız 1 puan geçirir; Çelme ve kötü kartlar puanı eksiye
+    düşürebilir, Kalkan bunu 0'a çeker. Oyunun kendisi eksi puan vermez. Maç
+    listesi kartları (K7) bu oyundan etkilenmez.
 
 ## 20. Aşırı Yükleme — `asiri-yukleme`
 
@@ -1078,42 +1117,52 @@ Eski faz 18 saniyedir.
 1. Minimum oyuncu / maksimum oyuncu: [2-8]
 2. Bar kapasitesi ve her tıklamanın doldurduğu miktar: [100 , her tıklama 1]
 3. Tıklama hangi ortak hamleyi temsil eder; herkes istediği kadar tıklayabilir mi?: [herkes istediği kadar tıklar tıkladıkca ortak enerji barı dolar]
-4. Tıklamalar anlık görünür mü, toplam sayı gizli mi?: [gizli tur sonunda gözükür]
-5. Aşamalar ve süreler: [süre yok enerji barı 100 olana kadar devam eder 100 olduktan sonra arkaplanda oyunculara gözükmicek şekilde 3 saniye daha bekelnir (amaç yanlışlıkla birisi barı patlatabilir) 3 saniye dolduktan sonra tur biter]
-6. Kapasiteyi aşan son tıklamada ne olur?: [tur direkt biter ]
-7. Patlayan oyuncunun mini oyun puanı: [-1 puan]
-8. Patlamayan oyuncuların sıralama ve puanlama kuralı: [en çok tıklayan oyuncu +2 ikinci +1]
-9. Aynı tıklama sayısında eşitlik: [+2 almazlar direkt +1 alırlar]
-10. Bar hiç taşmadan süre biterse ne olur?: [Bar 100'e ulaştıktan sonraki
-    gizli 3 saniye içinde hiçbir tıklama kapasiteyi aşmazsa tur normal şekilde
-    kapanır ve patlamayan oyuncuların tıklama sayıları sıralanır.]
+4. Tıklamalar anlık görünür mü, toplam sayı gizli mi?: [gizli; oyun sırasında toplam ve sayılar hiçbir ekranda
+   (kişisel, ortak, izleyici) gösterilmez, toplam yalnız sonuç ekranında açılır]
+5. Aşamalar ve süreler: [görünür süre yok; enerji barı 100 olana kadar devam eder. 100 olunca oyunculara
+   gözükmeyecek bir 3 saniyelik tehlike penceresi başlar (amaç: yanlışlıkla birisi barı patlatabilir). Tur, 100'ü
+   aşan ilk tıkta bitmez; pencere sonuna kadar sürer, 3 saniye dolunca tur biter. Bar dolduysa pencere her zaman
+   tam 3 saniye sürer. Teknik üst sınır: oyunun başından 90 sn; yalnız bar dolmadıysa uygulanır (bar 89,5. sn'de
+   dolarsa pencere 92,5. sn'de biter ve 90. sn'deki tık "sonra" sayılır).]
+6. Kapasiteyi aşan tıklamada ne olur?: [tur bitmez; bar 100'ü geçtikten sonra (pencerede) basan herkes patlar.
+   Her oyuncunun 100'den önceki ve sonraki tık sayıları ayrı tutulur. Toplu mesajda 100'e kadar olan kısım
+   "önce", aşan kısım "sonra" sayılır.]
+7. Patlayan oyuncunun mini oyun puanı: [100'den sonra en çok basan tek kişi -2, diğer patlayanlar -1. Yalnız bir
+   kişi patladıysa -1. 100'den sonra en çok basanlar eşitse hepsi -1 (kimse -2 almaz).]
+8. Patlamayan oyuncuların sıralama ve puanlama kuralı: [yalnız patlamayanlar, 100'ü geçmeden (bar dolana kadar)
+   yaptıkları tıklamalara göre sıralanır: tek lider +2, ikinci (en yüksek ikinci değer) +1, diğerleri 0. Hiç
+   tıklamayan ödül almaz. Patlayanlar sıralamaya girmez; 100'den önce ne kadar basmış olursa olsun yalnız
+   cezasını alır.]
+9. Aynı tıklama sayısında eşitlik: [liderler eşitse hepsi +1 alır, +2 ve ikinci sıra verilmez; ikinci sırada
+   eşitlik varsa eşitlerin hepsi +1]
+10. Bar hiç taşmadan süre biterse ne olur?: [kimse 100'ü geçmezse eksi puan yoktur; pencere dolunca tur normal
+    kapanır ve sıralama ödülü verilir. Bar hiç dolmadan 90 sn teknik sınır dolarsa da sıralama aynı şekilde
+    verilir.]
 11. Genel skora aktarım: [direkt genel puana eklenir]
 12. Tutorialda gösterilecek üç adım:
     1. Ortak enerji barını gizlice tıklayarak doldur.
     2. Bar 100'e ulaştıktan sonra görünmeyen 3 saniyelik tehlike başlar.
-    3. 100'ü aşan son tıkı atan patlar; diğerleri tıklama sırasına göre puan alır.
-13. Bar, uyarı, titreşim, kıvılcım ve patlama animasyonları: Ortak bar büyük
-    bir reaktör çekirdeği olarak görünür; tıklamalar oyuncunun kendi ekranında
-    küçük elektrik kıvılcımları bırakır, toplam tıklama sayısı gizli kalır.
-    100'e ulaşınca ekranın kenarı kırmızıya döner fakat görünür sayaç başlamaz.
-    Aşan tıkta çekirdek beyaz parlar, ilgili avatarın ekranı kısa sarsılır ve
-    patlama gerçekleşir.
-14. Özel durumlar: 100'e ulaşan tıklama turu bitirmez; yalnızca gizli 3 saniye
-    penceresini başlatır. Bu pencerede kapasiteyi aşan ilk sunucu sıralı tık
-    patlamayı belirler. Patlayan oyuncu sıralamaya girmez. Patlamayanlar içinde
-    tıklama liderleri eşitse liderlerin tamamı +1 alır ve +2 verilmez; ikinci
-    sıra yalnızca tek lider olduğunda +1 alır.
+    3. 100'ü aşınca basan herkes patlar (en çok basan -2, diğerleri -1); kalanlarda en çok tıklayan +2, ikinci +1.
+13. Bar, uyarı, titreşim, kıvılcım ve patlama animasyonları: Ortak bar büyük bir reaktör çekirdeği olarak
+    görünür; dokunuşta çekirdek içe çöküp geri esner, halkalar dokunulan yönden dalgalanır ve dokunulan yerden
+    çekirdeğe ışık parçacıkları akar. Oyuncunun kendi hızına göre yükselen bir vınlama sesi ve titreşim vardır
+    (barı yansıtmaz). Arka plandaki reaktör tüpü zamana bağlı canlanır (doluluğu göstermez). Toplam tıklama sayısı
+    gizli kalır. 100'e ulaşınca ekranın kenarı kırmızıya döner fakat görünür sayaç başlamaz. Tur bitince patlama
+    varsa beyaz flaş, çekirdeğin parçalanması, şok dalgası ve sarsıntı oynar; sonuçlar sırayla açılır (önce
+    toplam, sonra oyuncular, patlayanlar en son "PATLATTI" damgasıyla).
+14. Özel durumlar: 100'e ulaşan tıklama turu bitirmez; yalnızca gizli 3 saniye penceresini başlatır. Pencerede
+    basan herkes patlar; tur pencere sonunda biter. Patlayanlar sıralamaya girmez. Patlamayanlar içinde tıklama
+    liderleri eşitse liderlerin tamamı +1 alır ve +2 verilmez; ikinci sıra yalnızca tek lider olduğunda +1 alır.
+    Herkes patlarsa sıralama ödülü verilmez.
 
-**Değişiklik (O7, Ekim 2026, sahip onayı) — aşağıdaki cevapların önüne geçer:**
+**Değişiklik (Ekim 2026, sahip onayı) — yukarıdaki cevaplara işlendi:**
 
-- Patlamayan oyuncular arasında **en az tıklayan** oyuncu(lar) ayrıca **−1** alır (hiç tıklamayan da en az sayılır).
-  Eşitlikte en az sayıda tıklayanların **hepsi** −1 alır. Patlamayan herkesin tıklama sayısı aynıysa **kimse bu cezayı
-  almaz**.
-- Patlayan oyuncu bu cezaya girmez ve ikinci bir −1 almaz (yalnız kendi −1'ini alır).
-- Bu −1, mevcut puanlara eklenir (örneğin ikinci sırada +1 alan ve aynı zamanda en az tıklayan oyuncu toplamda 0 alır).
-  Tıklamalar eskisi gibi tur sonuna kadar gizlidir; değişiklik yalnız tur sonu puanlamasını etkiler.
+- Tur ilk aşan tıkta bitmez; pencere sonuna kadar sürer ve pencerede basan herkes patlar (eskiden yalnız aşan ilk
+  tık patlatır ve tur o anda biterdi).
+- Patlama cezası: 100'den sonra en çok basan tek kişi -2, diğer patlayanlar -1 (eşitlikte hepsi -1; tek patlayan -1).
+- O7'deki "patlamayanlar arasında en az tıklayana -1" cezası tamamen kaldırıldı: kimse patlamazsa hiç eksi puan yok.
+- Bar dolduysa tehlike penceresi her zaman tam 3 saniye sürer; 90 sn teknik sınır yalnız bar dolmadıysa uygulanır.
 - Tek turlu oyundur ve mini→genel dönüşümü değişmez: puanlar doğrudan genel skora eklenir.
-- Tutorial adım 3: "100'ü aşan son tıkı atan patlar (−1); diğerlerinde en çok tıklayan +2, ikinci +1, en az tıklayan −1."
 
 ## 21. Kontrol Paneli Kaosu — `kontrol-paneli-kaosu`
 

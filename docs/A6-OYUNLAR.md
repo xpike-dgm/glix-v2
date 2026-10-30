@@ -23,10 +23,12 @@ Kısa oyun içi açılış penceresi (≤ 7 sn) açılış animasyonu için kull
 - **Çizgiyi Geçme** (2–8, 30 sn): 0–100 tam sayı, değiştirilebilir, gizli. Bölgeler 0–9, 10–19, …, 90–99, 100.
   Aynı bölgede ≥2 kişi → hepsi pasif (0). Seçmeyen pasif. Tek kalanlar sayıya göre: en yüksek +2, ikinci +1.
 - **Aşırı Yükleme** (2–8): ortak bar 100; her tık +1; toplam ve tıklama sayıları gizli. Bar 100'e ulaşınca
-  publicView'da `danger: true` (kenar kırmızı) ama sayaç yok; 3 sn gizli pencere başlar. Pencerede 101. tık
-  (sunucu sırası) patlamayı belirler, tur hemen biter: patlayan −1 ve sıralamaya girmez. Pencere taşmadan biterse
-  normal kapanır. Patlamayanlar tıklama sayısına göre: tek lider +2, sonraki +1; liderler eşitse hepsi +1, +2 yok.
-  **Teknik üst sınır 90 sn** (kimse tıklamazsa oda takılmasın): dolarsa patlama olmadan sıralama. Tık başına hız
+  publicView'da `danger: true` (kenar kırmızı) ama sayaç yok; 3 sn gizli pencere başlar ve tur pencere sonuna kadar
+  sürer (aşan tık turu bitirmez). Pencerede (100'den sonra) basan herkes patlar: 100'den sonra en çok basan tek kişi
+  −2, diğer patlayanlar −1 (eşitlikte hepsi −1). Patlayanlar sıralamaya girmez. Patlamayanlar 100'e kadarki
+  tıklamalarına göre: tek lider +2, sonraki +1; liderler eşitse hepsi +1, +2 yok. Başka eksi puan yok.
+  **Teknik üst sınır 90 sn** (kimse tıklamazsa oda takılmasın): yalnız bar dolmadıysa uygulanır, dolarsa
+  sıralama aynı kuralla; bar dolduysa pencere her zaman tam 3 sn sürer. Tık başına hız
   sınırı sunucunun genel mesaj sınırıdır.
 
 ## Grup 2 — hedef, takas ve gizli seçim
