@@ -62,6 +62,10 @@ describe("Kule Ustası: gerçek oda akışı", () => {
     expect(pub().tower).toHaveLength(1);
     expect(pub().endsAt - pub().startedAt).toBe(90_000);
     expect(pub().deadline - pub().turnStart).toBe(6_000);
+    // Hazırlık 1,5 sn + "Sıra sende!" uyarısı 0,6 sn: blok uyarıdan sonra kaymaya başlar.
+    expect(pub().turnStart - pub().startedAt).toBe(2_100);
+    expect(pub().usta).toEqual({ [o0]: 0, [o1]: 0, [o2]: 0, [o3]: 0 });
+    expect(pub().awards).toBeNull();
     // Gözlemci: sonda bağlantısı kesilecek (o2) ve ilk oynayan (o0) dışında bir oyuncu.
     viewer = byId.get(o3) as Client;
     await sync();
@@ -121,12 +125,13 @@ describe("Kule Ustası: gerçek oda akışı", () => {
     expect((await act(byId.get(o0) as Client, pub().turnStart)).ok).toBe(true);
     await until(() => viewer.room.phase === "results", "sonuçlar");
 
-    // o1, o0 çıktı (−1); o2, o3 kaldı (+1); en çok kusursuz yapan o2 ek +1.
+    // Usta puanı: o0 1 kat (+1, çıktı, korunur); o1 0 (çıktı); o2 kusursuz (+2) + ayakta (+3);
+    // o3 1 kat (+1) + ayakta (+3). Genel skora sıralama: o2 +2, o3 +1, diğerleri 0 (eksi yok).
     const result = viewer.room.match?.result;
-    expect(result?.miniScores).toEqual({ [o0]: -1, [o1]: -1, [o2]: 2, [o3]: 1 });
-    expect(result?.awards).toEqual(result?.miniScores);
+    expect(result?.miniScores).toEqual({ [o0]: 1, [o1]: 0, [o2]: 5, [o3]: 4 });
+    expect(result?.awards).toEqual({ [o0]: 0, [o1]: 0, [o2]: 2, [o3]: 1 });
     const scoreOf = (id: string) => viewer.room.players.find((p) => p.id === id)?.score;
-    expect([scoreOf(o0), scoreOf(o1), scoreOf(o2), scoreOf(o3)]).toEqual([-1, -1, 2, 1]);
+    expect([scoreOf(o0), scoreOf(o1), scoreOf(o2), scoreOf(o3)]).toEqual([0, 0, 2, 1]);
     // Sonuç ekranında bırakış kabul edilmez.
     expect((await act(byId.get(o3) as Client, k.clock.now())).ok).toBe(false);
   });
@@ -148,13 +153,12 @@ describe("Kule Ustası: gerçek oda akışı", () => {
     }
     expect(host.room.phase).toBe("results");
     const scores = host.room.match?.result?.miniScores ?? {};
+    const awards = host.room.match?.result?.awards ?? {};
     expect(Object.keys(scores)).toHaveLength(3);
-    // Çıkan −1, kalan +1, kusursuz yapana ek +1: hiçbir puan bu aralığın dışına çıkamaz.
-    for (const v of Object.values(scores)) {
-      expect(v).toBeGreaterThanOrEqual(-1);
-      expect(v).toBeLessThanOrEqual(2);
-    }
-    for (const p of host.room.players) expect(p.score).toBe(scores[p.id]);
+    // Usta puanı eksiye düşmez; genel skora yalnız +2 / +1 / 0 gider.
+    for (const v of Object.values(scores)) expect(v).toBeGreaterThanOrEqual(0);
+    for (const v of Object.values(awards)) expect([0, 1, 2]).toContain(v);
+    for (const p of host.room.players) expect(p.score).toBe(awards[p.id]);
     await sync();
     expect(tv.room.match?.result?.miniScores).toEqual(scores);
     for (const c of [...cs, tv]) {

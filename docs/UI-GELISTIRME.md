@@ -225,6 +225,12 @@ Ayrıntılar: `docs/oneriler/kule-ustasi.md`. Onaylananlar (dosyadaki ayrıntıl
 KU-U4, KU-U5, KU-U6, KU-U7, KU-U9, KU-U10.**
 Onaylanmayanlar: KU-M2 (sırayı sen seç; bugünkü sıra düzeni kalır), KU-M4 (kusursuz kuleyi onarır), KU-M5, KU-U8
 ("neden" satırı), KU-AI1.
+**Uygulandı (Ekim 2026):** usta puanı ve +2 / +1 / 0 sıralama ödülü (`kuleAwards`), adil kusursuz eşiği
+(`kuleIsPerfect`), 0,6 sn "Sıra sende!" uyarısı (`KULE_WARN_MS`, sıra süresi uyarıdan sonra işler), vinç kancası ve
+düşen blok, 14 kat / kat sayacı / rekor çizgisi / hız rozeti, halka sayaç, kesilme-kusursuz-yıkılış gösterileri, ses
+seti, oyuncu şeridi ve TV görünümü (`StageView`). Zamanlamalar tek yerde: `apps/client/src/games/kule-ustasi/timeline.ts`.
+Gereken görseller (vinç kancası, kristal blok dokusu): `docs/oneriler/kule-ustasi-gorsel.md`; dosya yokken CSS/SVG
+karşılığı çizilir. KU-M2 olmadığı için 2 oyunculu puanlama ve toplam süre (90 sn) bugünkü sıra düzenine göre kaldı.
 
 ## Yazı Yaz
 

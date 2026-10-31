@@ -1554,36 +1554,50 @@ BT-M1/M2/M3: `docs/oneriler/bozuk-telefon.md`, `docs/UI-GELISTIRME.md`)
 
 ## 29. Kule Ustası — `kule-ustasi`
 
-**Durum: KİLİTLİ** (Ekim 2026; sahip "yap" dedi, testler geçti; ayrıntılar asistan önerisi — sahip itiraz ederse güncellenir)
+**Durum: KİLİTLİ** (Ekim 2026; sahip "yap" dedi, testler geçti. 31 Ekim 2026: KU-M1 usta puanı ve KU-M3 adil kusursuz
+eşiği onaylandı ve uygulandı — `docs/oneriler/kule-ustasi.md`, karar defteri `docs/UI-GELISTIRME.md`.)
 
-**Fikir:** Herkes sırayla ortak bir kuleye blok bırakır. Blok, kulenin üstünde sağa sola kayar; oyuncu doğru anda
-dokunup bırakır. Alttaki bloğun dışına taşan kısım kesilip düşer, kule daralır. Hiç üstüne denk getiremeyen kuleyi
-düşürür ve oyundan çıkar.
+**Fikir:** Herkes sırayla ortak bir kuleye blok bırakır. Blok, vinç kancasına asılı olarak kulenin bir kat yukarısında
+sağa-sola kayar; oyuncu doğru anda dokunup bırakır. Alttaki bloğun dışına taşan kısım kesilip düşer, kule daralır. Hiç
+üstüne denk getiremeyen kuleyi düşürür ve oyundan çıkar.
 
 1. Minimum oyuncu / maksimum oyuncu: [2-8]
 2. Sıra: maç başında bir kez karıştırılır, çıkan oyuncular atlanarak aynı çevrim tekrarlanır.
 3. Sırası gelen oyuncunun ekranında blok, kulenin üstünde **sabit hızla sağa-sola gidip gelir**; oyuncu **bir kez
    dokunarak** bırakır. Konum sunucu saatine bağlı bir fonksiyondur (herkes aynı hareketi görür). Diğerleri izler.
+   Blok kaymaya başlamadan önce **0,6 sn "Sıra sende!" uyarısı** vardır (vinç yeni bloğu indirir); sıra süresi bu
+   uyarıdan sonra işler, uyarı sırasında bırakılamaz.
 4. Bırakma anı: istemci dokunduğu anı sunucu saatiyle gönderir; sunucu, sıranın başlangıcından önceki ya da 400 ms'den
    eski anları kabul etmez (gecikme hilesine karşı). Sıra süresi **6 saniye**; dokunmayan oyuncu süre dolduğu anda
    bırakmış sayılır.
 5. **Kesme:** Bırakılan bloğun alttaki bloğun dışına taşan kısmı kesilir; kalan genişlik yeni bloğun genişliğidir.
-   **Kusursuz:** taşma bloğun genişliğinin %4'ünden azsa kesilmez, blok tam oturur ve "Kusursuz!" sayılır.
+   **Kusursuz:** önce ıskaya bakılır; sonra taşma, eşikten **kesin küçükse** kesilmez, blok tam oturur ve "Kusursuz!"
+   sayılır. Eşik **bloğun genişliğinin %4'ü ya da 12 birim, hangisi büyükse**; ama en çok bloğun yarısı (çok dar
+   blokta yarısı kullanılır). Örnek: 400 genişlikte 15 kusursuz, 16 değil; 100 genişlikte 11 kusursuz, 12 değil;
+   20 genişlikte 9 kusursuz, 10 değil.
 6. **Iska:** Blok alttakinin üstüne hiç denk gelmezse kule yıkılır: o oyuncu **çıkar**, kule **başlangıç genişliğine
    sıfırlanır** (yeni taban) ve sıra kalanlarla sürer.
 7. **Hız:** Her başarılı katta kayma hızı %6 artar (en çok başlangıcın 2,5 katı). Kule sıfırlanınca hız da sıfırlanır.
 8. **Bitiş:** Başlangıç oyuncularının yarısı çıkınca ya da **90 saniye** dolunca (hangisi önce gelirse). Süre dolarken
-   sırası gelmiş oyuncunun bırakışı iptal edilir, cezası olmaz.
-9. **Puan (genel skor):** Çıkanlar **−1**, kalanlar **+1**. En çok "Kusursuz" yapan oyuncu(lar) ek **+1** (en az 1
-   kusursuz gerekir; eşitlikte hepsi alır).
+   sırası gelmiş oyuncunun bırakışı iptal edilir, cezası olmaz (ayakta sayılır).
+9. **Usta puanı (oyun içi puan, KU-M1):** oturttuğun her kat **+1**, kusursuz kat **+2** (+1 yerine); oyun bittiğinde
+   **hâlâ oyunda olan +3** ("ayakta kaldın"). Iskalayıp çıkanın usta puanı korunur (eksiye düşmez), yalnız +3'ü
+   alamaz. **Genel skora giden puan:** usta puanı sıralaması — en yüksek **+2**, ikinci **+1**, diğerleri **0**; eksi
+   yok. Birincide eşitlikte hepsi +2, sonraki farklı toplam +1; usta puanı 0 olan ödül almaz; herkesin toplamı aynı ve
+   0'dan büyükse herkes +1. **2 oyuncuda:** ıskalayıp çıkan, usta puanı ne olursa olsun **0**, kalan **+2**; ıska
+   olmadan süre dolarsa usta puanı yüksek olan +2, diğeri +1 (eşitse ikisi de +2). Kartlarda "birinci" en yüksek usta
+   puanlı(lar), "sonuncu" en düşük usta puanlı(lar)dır (ortak kural: kartlar mini puanı okur).
 10. Gizli bilgi yoktur; her şey herkese açıktır.
 11. Tutorialda gösterilecek üç adım:
     1. Blok kulenin üstünde kayar; sıran gelince dokunup bırak.
-    2. Taşan kısım kesilir, kule daralır; tam oturtursan "Kusursuz!"
-    3. Iskalayan kuleyi yıkar ve çıkar (−1); kalanlar +1.
+    2. Taşan kısım kesilir, kule daralır; tam oturtursan Kusursuz! (altın kat)
+    3. Iskalayan kuleyi yıkar ve çıkar; ayakta kalan ve çok kat koyan kazanır.
 12. Rastgele seçime girer (Ekim 2026: testler çalıştırıldı ve geçti; o zamana dek `randomPool: false` ile yalnız
     elle seçilebiliyordu). Bayrak genel olarak duruyor: yeni bir oyun onay bekleyecekse aynı yolla havuz dışında
     tutulur (`pickRandomGames` havuza almaz, katalogda `GameInfo.randomPool` görünür).
+13. Ekranda gösterilen (kural değiştirmeyen) bilgiler: kat sayacı, bu oyunda yıkılmış en yüksek kulenin rekor çizgisi,
+    hız rozeti, art arda kusursuz serisi ("SERİ ×3"); şeritte usta puanı ve ★ kusursuz sayısı. "Kule Ustası" rozeti
+    (tek oyunda 3 kusursuz) aynen kalır.
 
 ---
 

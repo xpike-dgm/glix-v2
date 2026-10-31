@@ -4,11 +4,15 @@ import {
   KULE_INTRO_MS,
   KULE_PAUSE_MISS_MS,
   KULE_PAUSE_OK_MS,
+  KULE_POINTS_FLOOR,
+  KULE_POINTS_PERFECT,
+  KULE_POINTS_STANDING,
   KULE_SPEED_START,
   KULE_START_WIDTH,
   KULE_TOTAL_MS,
   KULE_TRACK,
   KULE_TURN_MS,
+  KULE_WARN_MS,
   type KuleAction,
   type KuleBlock,
   type KuleLast,
@@ -27,6 +31,12 @@ export interface KuleState {
   /** Çıkanlar, çıkış sırasıyla. */
   eliminated: string[];
   perfects: Record<string, number>;
+  /** Usta puanı (oyun sürerken; ayakta kalma +3'ü sonda eklenir). */
+  usta: Record<string, number>;
+  /** Yıkılan kulelerin en yükseği (kat). */
+  record: number;
+  /** Art arda kusursuz sayısı (oyuncudan bağımsız). */
+  streak: number;
   /** Kule, alttan üste (ilk eleman taban). */
   tower: KuleBlock[];
   /** Hız çarpanı (binde); kule sıfırlanınca başa döner. */
@@ -65,18 +75,60 @@ function nextActiveIndex(order: readonly string[], eliminated: readonly string[]
 }
 
 /**
- * Puanlar (kural 9): çıkanlar −1, kalanlar +1; en çok kusursuz yapan (en az 1) hepsi ek +1.
- * Oyun sürerken de aynı formül "şu an bitse" puanını verir.
+ * Usta puanı (KU-M1): kat +1, kusursuz kat +2; oyun bittiyse hâlâ oyunda olanlara +3 ("ayakta kaldın").
+ * Oyun sürerken +3 eklenmez (şerit yalnız kazanılmış puanı gösterir).
  */
-function scoresOf(s: KuleState): Record<string, number> {
-  const best = Math.max(0, ...s.order.map((id) => s.perfects[id] ?? 0));
-  const scores: Record<string, number> = {};
+function ustaOf(s: KuleState, final = s.finished): Record<string, number> {
+  const out: Record<string, number> = {};
   for (const id of s.order) {
-    let v = s.eliminated.includes(id) ? -1 : 1;
-    if (best >= 1 && (s.perfects[id] ?? 0) === best) v += 1;
-    scores[id] = v;
+    const standing = final && !s.eliminated.includes(id) ? KULE_POINTS_STANDING : 0;
+    out[id] = (s.usta[id] ?? 0) + standing;
   }
-  return scores;
+  return out;
+}
+
+/**
+ * Usta puanından genel skora giden sıralama ödülü (+2 / +1 / 0; eksi yok). Birincide eşitlikte hepsi +2, sonraki
+ * farklı toplam +1; usta puanı 0 olan ödül almaz; herkesin toplamı aynı ve 0'dan büyükse herkes +1.
+ * 2 oyuncuda: ıskalayıp çıkan (usta puanı ne olursa olsun) 0, kalan +2; ıska olmadan süre dolarsa yüksek olan +2,
+ * diğeri +1, eşitse ikisi de +2.
+ */
+export function kuleAwards(
+  order: readonly string[],
+  usta: Readonly<Record<string, number>>,
+  eliminated: readonly string[],
+): Record<string, number> {
+  const awards: Record<string, number> = Object.fromEntries(order.map((id) => [id, 0]));
+  const value = (id: string): number => usta[id] ?? 0;
+  if (order.length === 2) {
+    const [a, b] = order as [string, string];
+    const out = order.filter((id) => eliminated.includes(id));
+    if (out.length > 0) {
+      for (const id of order) awards[id] = out.includes(id) ? 0 : 2;
+      return awards;
+    }
+    if (value(a) === value(b)) {
+      awards[a] = 2;
+      awards[b] = 2;
+    } else {
+      awards[value(a) > value(b) ? a : b] = 2;
+      awards[value(a) > value(b) ? b : a] = 1;
+    }
+    return awards;
+  }
+  const positive = [...new Set(order.map(value).filter((v) => v > 0))].sort((x, y) => y - x);
+  const top = positive[0];
+  if (top === undefined) return awards;
+  if (order.every((id) => value(id) === top)) {
+    for (const id of order) awards[id] = 1;
+    return awards;
+  }
+  const second = positive[1];
+  for (const id of order) {
+    if (value(id) === top) awards[id] = 2;
+    else if (second !== undefined && value(id) === second) awards[id] = 1;
+  }
+  return awards;
 }
 
 /** Aktif oyuncu `at` anında bloğu bırakır; kesme/ıska uygulanır, sıra ilerler (ya da oyun biter). */
@@ -108,6 +160,8 @@ function drop(s: KuleState, at: number, auto: boolean): KuleState {
       tower: freshTower(),
       speed: KULE_SPEED_START,
       floors: 0,
+      record: Math.max(s.record, s.floors),
+      streak: 0,
       last,
     };
     if (eliminated.length >= s.need) return { ...reset, finished: true, endedAt: at };
@@ -115,20 +169,23 @@ function drop(s: KuleState, at: number, auto: boolean): KuleState {
       ...reset,
       turnIndex: nextActiveIndex(s.order, eliminated, s.turnIndex),
       turn: s.turn + 1,
-      turnStart: at + KULE_PAUSE_MISS_MS,
+      turnStart: at + KULE_PAUSE_MISS_MS + KULE_WARN_MS,
     };
   }
   const perfect = cut.kind === "perfect";
   const perfects = perfect ? { ...s.perfects, [player]: (s.perfects[player] ?? 0) + 1 } : s.perfects;
+  const gain = perfect ? KULE_POINTS_PERFECT : KULE_POINTS_FLOOR;
   return {
     ...s,
     perfects,
+    usta: { ...s.usta, [player]: (s.usta[player] ?? 0) + gain },
+    streak: perfect ? s.streak + 1 : 0,
     tower: [...s.tower, cut.block],
     speed: kuleNextSpeed(s.speed),
     floors: s.floors + 1,
     turnIndex: nextActiveIndex(s.order, s.eliminated, s.turnIndex),
     turn: s.turn + 1,
-    turnStart: at + KULE_PAUSE_OK_MS,
+    turnStart: at + KULE_PAUSE_OK_MS + KULE_WARN_MS,
     last: { ...base, kind: cut.kind, cutLeft: cut.cutLeft, cutWidth: cut.cutWidth },
   };
 }
@@ -172,8 +229,8 @@ export const kuleUstasi: GameDefinition<KuleState, KuleAction, KuleView, KulePub
     goal: "Bloğu kulenin tam üstüne bırak, kuleyi düşürme!",
     steps: [
       "Blok kulenin üstünde kayar; sıran gelince dokunup bırak",
-      "Taşan kısım kesilir, kule daralır; tam oturtursan Kusursuz!",
-      "Iskalayan kuleyi yıkar ve çıkar; kalanlar puan alır",
+      "Taşan kısım kesilir, kule daralır; tam oturtursan Kusursuz! (altın kat)",
+      "Iskalayan kuleyi yıkar ve çıkar; ayakta kalan ve çok kat koyan kazanır",
     ],
   },
 
@@ -195,12 +252,15 @@ export const kuleUstasi: GameDefinition<KuleState, KuleAction, KuleView, KulePub
       order,
       eliminated: [],
       perfects,
+      usta: { ...perfects },
+      record: 0,
+      streak: 0,
       tower: freshTower(),
       speed: KULE_SPEED_START,
       floors: 0,
       turnIndex: 0,
       turn: 1,
-      turnStart: ctx.now + KULE_INTRO_MS,
+      turnStart: ctx.now + KULE_INTRO_MS + KULE_WARN_MS,
       need: Math.ceil(players.length / 2),
       startedAt: ctx.now,
       timeUp: false,
@@ -229,8 +289,11 @@ export const kuleUstasi: GameDefinition<KuleState, KuleAction, KuleView, KulePub
     return {
       order: [...s.order],
       eliminated: [...s.eliminated],
-      scores: scoresOf(s),
+      usta: ustaOf(s),
       perfects: { ...s.perfects },
+      awards: s.finished ? kuleAwards(s.order, ustaOf(s), s.eliminated) : null,
+      record: s.record,
+      streak: s.streak,
       active: s.finished ? null : (s.order[s.turnIndex] ?? null),
       turn: s.turn,
       turnStart: s.turnStart,
@@ -275,11 +338,14 @@ export const kuleUstasi: GameDefinition<KuleState, KuleAction, KuleView, KulePub
   },
 
   result(state) {
-    const scores = scoresOf(state);
-    // Kusursuz bırakış sayısı sunucuda "Kule Ustası" rozeti için tutulur; istemciye gitmez.
+    // Oyun içi puan (miniScores) usta puanıdır; genel skora sıralama ödülü (+2 / +1 / 0) gider. Kartlardaki
+    // "birinci/sonuncu" usta puanına göredir.
+    // Sonuç her zaman bitmiş oyun gibi hesaplanır (erken bitişte de hâlâ oyunda olanlar "ayakta" sayılır).
+    const usta = ustaOf(state, true);
+    // Kusursuz bırakış sayısı sunucuda "Kule Ustası" rozeti için de tutulur (`stats`; yalnız sunucu muhasebesi).
     const stats: Record<string, Record<string, number>> = {};
     for (const id of state.order) stats[id] = { perfects: state.perfects[id] ?? 0 };
-    return { miniScores: { ...scores }, awards: { ...scores }, stats };
+    return { miniScores: { ...usta }, awards: kuleAwards(state.order, usta, state.eliminated), stats };
   },
 
   secrets() {
