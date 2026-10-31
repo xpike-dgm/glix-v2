@@ -22,12 +22,12 @@ describe("laf-sokma tur özeti", () => {
   });
   it("cümle kurar (2)", () => {
     const line = summarizeLafSokma(result, players, { history: [], reveal: null, scores: { a: 3, b: 2 } });
-    expect(line).toBe("Elif 3 puanla lafı gediğine koydu");
+    expect(line).toBe("Elif 3 kahkahayla lafı gediğine koydu");
     expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
   });
   it("cümle kurar (3)", () => {
     const line = summarizeLafSokma(result, players, undefined);
-    expect(line).toBe("Elif 4 puanla lafı gediğine koydu");
+    expect(line).toBe("Elif 4 kahkahayla lafı gediğine koydu");
     expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
   });
 });

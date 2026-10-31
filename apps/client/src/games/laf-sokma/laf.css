@@ -1,6 +1,8 @@
 /* ---- Laf Sokma Düellosu ---- */
 .lf {
   /* Klavye açıkken ekran, görünen alana oturtulur (LafSokmaScreen inline stil verir). */
+  --red-c: #ff3b5c;
+  --blue-c: #3b8bff;
   overflow: hidden;
 }
 @supports (overflow: clip) {
@@ -10,6 +12,7 @@
 }
 .lf .col {
   gap: 0;
+  position: relative;
 }
 .lf__head {
   flex: none;
@@ -21,7 +24,7 @@
   text-align: center;
 }
 
-/* ---- Soru balonu ---- */
+/* ---- Soru balonu (yazma) ---- */
 .lf__prompt {
   position: relative;
   width: 100%;
@@ -29,7 +32,6 @@
   border-radius: 22px;
   background: linear-gradient(135deg, var(--magenta), var(--cyan));
   box-shadow: 0 0 18px color-mix(in srgb, var(--magenta) 32%, transparent);
-  animation: lf-in 340ms var(--ease) both;
 }
 .lf__prompt[data-final="1"] {
   background: linear-gradient(135deg, var(--amber), var(--magenta));
@@ -55,20 +57,19 @@
 }
 .lf__q {
   margin: 0;
-  padding: 18px 18px 14px;
+  padding: 20px 18px 16px;
   border-radius: 19px;
   background: radial-gradient(circle at 50% 20%, #1b2765, #0a1030 85%);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(19px, 6vw, 27px);
+  font-size: clamp(20px, 6.2vw, 27px);
   line-height: 1.22;
   color: var(--text);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   text-wrap: balance;
-}
-.lf__prompt[data-small="1"] .lf__q {
-  padding: 16px 16px 12px;
-  font-size: clamp(17px, 5.2vw, 22px);
+  transition:
+    font-size 160ms var(--ease),
+    padding 160ms var(--ease);
 }
 @keyframes lf-in {
   from {
@@ -81,47 +82,152 @@
   }
 }
 
-/* ---- Yazma ---- */
+/* ---- Yazma akışı ---- */
+.lf__head--write {
+  gap: 4px;
+}
+.lf__dots {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin: -8px 0 -8px;
+}
+.lf__dot {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.lf__dot i {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(160, 175, 255, 0.35);
+  transition:
+    width 200ms var(--ease),
+    background 200ms;
+}
+.lf__dot[data-done="1"] i {
+  background: var(--lime);
+}
+.lf__dot[data-on="1"] i {
+  width: 28px;
+  background: var(--cyan);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--cyan) 60%, transparent);
+}
+.lf__slide {
+  width: 100%;
+  margin-top: 12px;
+  animation: lf-slide-next 300ms var(--ease) both;
+}
+.lf__slide[data-dir="back"] {
+  animation-name: lf-slide-back;
+}
+@keyframes lf-slide-next {
+  from {
+    transform: translateX(48px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes lf-slide-back {
+  from {
+    transform: translateX(-48px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
 .lf__mid {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 10px;
-}
-.lf__chips {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-.lf__chip {
-  min-width: 56px;
-  min-height: 48px;
-  padding: 0 16px;
-  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  border-radius: 999px;
-  border: 1.5px solid rgba(160, 175, 255, 0.35);
-  background: rgba(18, 26, 69, 0.7);
-  color: var(--text);
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: var(--fs-18);
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
+  gap: 10px;
+  padding: 8px 0;
+  container-type: size;
 }
-.lf__chip[data-on="1"] {
-  border-color: var(--cyan);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--cyan) 40%, transparent);
+/* Mikrofona yer kalmadıysa (uzun soru, uyarı) hiç çizilmez; kırpılmış küçük bir simge kalmasın. */
+@container (max-height: 72px) {
+  .lf__mic {
+    display: none;
+  }
 }
-.lf__chip[data-done="1"] {
-  color: var(--lime);
+.lf__mid > .lf__locked {
+  align-self: stretch;
+}
+
+/* Sahne mikrofonu: boş alanda hafifçe sallanır, yazarken ses dalgaları çıkar. */
+.lf__mic {
+  flex: 0 1 auto;
+  min-height: 0;
+  height: clamp(56px, 17dvh, 140px);
+  aspect-ratio: 3 / 4;
+  opacity: 0.9;
+}
+.lf__mic svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.lf__mic-body {
+  transform-box: view-box;
+  transform-origin: 60px 150px;
+  animation: lf-mic-sway 3.4s ease-in-out infinite;
+}
+.lf__mic-waves path {
+  opacity: 0;
+  transform-box: view-box;
+  transform-origin: 60px 55px;
+}
+.lf__mic[data-live="1"] .lf__mic-waves path {
+  animation: lf-wave 900ms ease-out infinite;
+}
+.lf__mic[data-live="1"] .lf__mic-waves path:nth-child(even) {
+  animation-delay: 220ms;
+}
+.lf__mic[data-live="1"] .lf__mic-body {
+  animation-duration: 1.2s;
+}
+@keyframes lf-mic-sway {
+  0%,
+  100% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+}
+@keyframes lf-wave {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  35% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.12);
+  }
 }
 .lf__form {
+  flex: none;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -169,12 +275,77 @@
 .lf__count[data-over="1"] {
   color: #ff8aa0;
 }
+.lf__warn {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 4px 4px 4px 14px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid color-mix(in srgb, var(--amber) 60%, transparent);
+  background: rgba(40, 30, 6, 0.85);
+  color: var(--text);
+  font-weight: 700;
+  font-size: var(--fs-15);
+  line-height: 1.25;
+  animation: lf-in 220ms var(--ease) both;
+}
+.lf__warn span {
+  flex: 1;
+}
+.lf__warn-fix {
+  flex: none;
+  min-width: 64px;
+  min-height: 48px;
+  border-radius: 10px;
+  border: 1.5px solid var(--amber);
+  background: none;
+  color: var(--amber);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.lf__actions {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.lf__actions > .tamam,
+.lf__nextwrap {
+  flex: 1;
+  min-width: 0;
+}
+.lf__nextwrap {
+  padding-top: 8px;
+}
+.lf__back {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  margin-top: 8px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-btn);
+  border: 1.5px solid rgba(160, 175, 255, 0.34);
+  background: rgba(5, 8, 26, 0.55);
+  color: var(--text);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.lf__back:active {
+  transform: scale(0.95);
+}
 .lf__watch {
   margin: 0;
   text-align: center;
   color: var(--text-dim);
   font-size: var(--fs-15);
-  padding: 20px 0;
+  padding: 8px 0;
 }
 .lf__locked {
   list-style: none;
@@ -193,52 +364,253 @@
   font-weight: 600;
   font-size: var(--fs-18);
   line-height: 1.3;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .lf__locked li[data-empty="1"] {
   border-style: dashed;
   border-color: rgba(160, 175, 255, 0.3);
   color: var(--text-dim);
 }
+
+/* ---- Alt şerit: avatarlar ve kahkaha puanı ---- */
 .lf__crew {
   flex: none;
   list-style: none;
-  margin: 8px 0 6px;
+  margin: 8px 0 4px;
   padding: 0;
   display: flex;
   justify-content: center;
   gap: 6px;
 }
 .lf__crewp {
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: opacity 200ms;
+}
+/* Oy veremeyenler (düellonun iki yazarı): avatar soluk, kahkaha puanı okunur kalır. */
+.lf__crewp[data-dim="1"] .av {
+  opacity: 0.45;
+}
+.lf__laugh {
+  min-width: 24px;
+  padding: 0 6px;
+  border-radius: 999px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--amber);
+  background: #05081a;
+  border: 1.5px solid color-mix(in srgb, var(--amber) 60%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+.lf__laugh[data-zero="1"] {
+  color: #b8bfe6;
+  border-color: rgba(160, 175, 255, 0.3);
+}
+.lf__crewp[data-me="1"] .lf__laugh {
+  border-color: var(--cyan);
+}
+.lf__laugh[data-bump="1"] {
+  animation: lf-bump 520ms var(--ease) both;
+}
+@keyframes lf-bump {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
-/* ---- Oylama: isimsiz kartlar ---- */
+/* ---- Ring tabelası (oylama ve açılış) ---- */
 .lf__head--vote {
-  gap: 4px;
+  gap: 0;
+}
+.lf__sign {
+  position: relative;
+  width: 100%;
+  padding-top: 12px;
+  animation: lf-sign 420ms var(--ease) both;
+}
+@keyframes lf-sign {
+  from {
+    transform: translateY(-16px) rotate(-1.5deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.lf__chain {
+  position: absolute;
+  top: 0;
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(180deg, #c8cdf0 0 4px, #6d74a8 4px 6px);
+}
+.lf__chain--l {
+  left: 18%;
+}
+.lf__chain--r {
+  right: 18%;
+}
+.lf__plate {
+  position: relative;
+  padding: 8px 18px 12px;
+  border-radius: 14px;
+  border: 3px solid transparent;
+  background:
+    radial-gradient(circle at 10px 10px, #e4e8ff 2px, transparent 3px),
+    radial-gradient(circle at calc(100% - 10px) 10px, #e4e8ff 2px, transparent 3px),
+    radial-gradient(circle at 10px calc(100% - 10px), #e4e8ff 2px, transparent 3px),
+    radial-gradient(circle at calc(100% - 10px) calc(100% - 10px), #e4e8ff 2px, transparent 3px),
+    linear-gradient(180deg, #1a2160, #0b1036) padding-box,
+    linear-gradient(90deg, var(--red-c), #f3f5ff 50%, var(--blue-c)) border-box;
+  box-shadow:
+    0 6px 0 rgba(0, 0, 0, 0.35),
+    0 0 22px rgba(255, 255, 255, 0.08);
+}
+.lf__sign[data-final="1"] .lf__plate {
+  background:
+    radial-gradient(circle at 10px 10px, #fff3cf 2px, transparent 3px),
+    radial-gradient(circle at calc(100% - 10px) 10px, #fff3cf 2px, transparent 3px),
+    radial-gradient(circle at 10px calc(100% - 10px), #fff3cf 2px, transparent 3px),
+    radial-gradient(circle at calc(100% - 10px) calc(100% - 10px), #fff3cf 2px, transparent 3px),
+    linear-gradient(180deg, #2a1d48, #120a26) padding-box,
+    linear-gradient(90deg, var(--amber), var(--magenta)) border-box;
+}
+.lf__plate-tag {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.lf__plate-q {
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(16px, 4.8vw, 21px);
+  line-height: 1.22;
+  color: var(--text);
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+
+/* ---- Ring: kartlar, spotlar, VS ---- */
+.lf__ring {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 10px 0 4px;
+}
+.lf__spots {
+  position: absolute;
+  inset: -10px -12px 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.lf__spot {
+  position: absolute;
+  top: -20px;
+  width: 62%;
+  height: 120%;
+  transform-origin: 50% 0;
+  clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%);
+  opacity: 0.8;
+  transition: opacity 400ms;
+  animation: lf-spot-a 6s ease-in-out infinite;
+}
+.lf__spot--a {
+  left: -8%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 140, 160, 0.55),
+    rgba(255, 59, 92, 0.16) 45%,
+    transparent 70%
+  );
+  rotate: -16deg;
+}
+.lf__spot--b {
+  right: -8%;
+  background: linear-gradient(180deg, rgba(140, 185, 255, 0.55), rgba(59, 139, 255, 0.16) 70%, transparent);
+  rotate: 16deg;
+  animation-name: lf-spot-b;
+}
+@keyframes lf-spot-a {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes lf-spot-b {
+  0%,
+  100% {
+    transform: rotate(3deg);
+  }
+  50% {
+    transform: rotate(-3deg);
+  }
+}
+.lf__spots[data-win="a"] .lf__spot--a,
+.lf__spots[data-win="b"] .lf__spot--b,
+.lf__spots[data-win="both"] .lf__spot {
+  opacity: 1;
+}
+.lf__spots[data-win="a"] .lf__spot--b,
+.lf__spots[data-win="b"] .lf__spot--a {
+  opacity: 0.12;
 }
 .lf__cards {
+  position: relative;
   flex: 1;
   min-height: 0;
   list-style: none;
-  margin: 16px 0 6px;
-  padding: 4px;
+  margin: 0;
+  padding: 6px 4px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+}
+.lf__cards[data-scroll="1"] {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 .lf__cards > li {
-  flex: 1 0 auto;
-  min-height: 64px;
+  flex: none;
   display: flex;
-  animation: lf-rise 320ms var(--ease) calc(min(var(--i, 0), 5) * 70ms) both;
+  animation: lf-rise 320ms var(--ease) calc(min(var(--i, 0), 7) * 60ms) both;
 }
-.lf__cards[data-n="2"] > li {
+.lf__ring[data-pair="1"] .lf__cards {
+  gap: 34px;
+  justify-content: center;
+}
+.lf__ring[data-pair="1"] .lf__cards > li {
   flex: 1 1 0;
-  max-height: 190px;
+  min-height: 0;
+  max-height: 210px;
+}
+.lf__ring[data-pair="1"] .lf__cards > li[data-side="a"] {
+  animation-name: lf-in-a;
+}
+.lf__ring[data-pair="1"] .lf__cards > li[data-side="b"] {
+  animation-name: lf-in-b;
 }
 @keyframes lf-rise {
   from {
@@ -250,34 +622,88 @@
     transform: none;
   }
 }
+@keyframes lf-in-a {
+  from {
+    opacity: 0;
+    transform: translateX(-36px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes lf-in-b {
+  from {
+    opacity: 0;
+    transform: translateX(36px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 .lf__card {
   --ac: var(--cyan);
+  --sc: var(--amber);
   position: relative;
   width: 100%;
   min-height: 64px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
-  padding: 12px 54px 12px 16px;
+  gap: 6px;
+  padding: 12px 16px;
   text-align: left;
   color: var(--text);
   border-radius: 18px;
-  border: 2px solid color-mix(in srgb, var(--ac) 70%, transparent);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--ac) 14%, #0e1640), rgba(18, 26, 69, 0.85));
+  border: 2.5px solid color-mix(in srgb, var(--sc) 70%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--sc) 16%, #0e1640), rgba(14, 20, 58, 0.94) 70%);
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   transition:
-    transform 80ms var(--ease),
-    opacity 160ms,
-    border-color 120ms;
+    transform 180ms var(--ease),
+    scale 220ms var(--ease),
+    opacity 180ms,
+    border-color 160ms;
+}
+.lf__ring[data-pair="1"] .lf__card {
+  height: 100%;
+  padding-top: 26px;
+}
+/* Ring köşeleri çaprazda: kırmızı sol üstte, mavi sağ altta (ortadaki VS ile çakışmaz). */
+.lf__ring[data-pair="1"] .lf__card[data-side="b"] {
+  padding-top: 12px;
+  padding-bottom: 26px;
+}
+.lf__corner[data-side="b"] {
+  top: auto;
+  bottom: -1px;
+  left: auto;
+  right: 14px;
+  border-radius: 10px 10px 0 0;
+}
+.lf__card[data-side="a"] {
+  --sc: var(--red-c);
 }
 .lf__card[data-side="b"] {
-  --ac: var(--magenta);
+  --sc: var(--blue-c);
+}
+/* Seçim parlaması: yalnız opaklığı değişen bir katman. */
+.lf__card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 3px var(--sc),
+    0 0 26px 4px color-mix(in srgb, var(--sc) 70%, transparent);
+  opacity: 0;
+  transition: opacity 180ms;
 }
 .lf__card:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 .lf__card:disabled {
   cursor: default;
@@ -285,15 +711,54 @@
 .lf__card-text {
   font-family: var(--font-text);
   font-weight: 700;
-  font-size: clamp(17px, 5.2vw, 22px);
+  font-size: clamp(16px, 4.9vw, 21px);
   line-height: 1.25;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: none;
+  text-wrap: pretty;
 }
 .lf__card-tag {
   align-self: flex-start;
   font-size: var(--fs-13);
   font-weight: 600;
   color: var(--cyan);
+}
+.lf__corner {
+  position: absolute;
+  top: -1px;
+  left: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px 3px 4px;
+  border-radius: 0 0 10px 10px;
+  background: var(--sc);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+.lf__corner[data-side="a"] {
+  background: #a8173a;
+}
+.lf__corner[data-side="b"] {
+  background: #174aa6;
+}
+.lf__corner[data-master="1"] {
+  gap: 5px;
+  padding-left: 8px;
+  background: var(--amber);
+  color: #3a2800;
+  animation: lf-pop 320ms var(--ease) both;
+}
+.lf__corner i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.35));
 }
 .lf__card[data-own="1"] {
   border-style: dashed;
@@ -302,26 +767,42 @@
 .lf__card[data-empty="1"] {
   border-style: dashed;
   border-color: rgba(160, 175, 255, 0.3);
-  background: rgba(18, 26, 69, 0.35);
+  background: rgba(18, 26, 69, 0.55);
 }
 .lf__card[data-empty="1"] .lf__card-text {
   color: #c9cff0;
   font-weight: 600;
 }
 .lf__card[data-dim="1"] {
-  opacity: 0.45;
+  opacity: 0.72;
+  scale: 0.97;
 }
 .lf__card[data-picked="1"] {
-  border-color: var(--lime);
-  box-shadow: 0 0 18px rgba(182, 255, 59, 0.4);
+  scale: 1.035;
+  z-index: 1;
+}
+.lf__card[data-picked="1"]::after {
+  opacity: 1;
+  animation: lf-glow 1.4s ease-in-out infinite;
+}
+.lf__card[data-locked="1"]::after {
+  animation: none;
+}
+@keyframes lf-glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
 }
 .lf__card-tick {
   position: absolute;
-  right: 12px;
-  top: 50%;
+  right: 10px;
+  bottom: 10px;
   width: 32px;
   height: 32px;
-  margin-top: -16px;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -329,6 +810,65 @@
   color: var(--lime);
   border: 2px solid var(--lime);
   animation: lf-in 260ms var(--ease) both;
+}
+
+/* VS amblemi: iki kartın ortasında, kenarlarına biner. */
+.lf__vs {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background:
+    linear-gradient(#0a0f2e, #0a0f2e) padding-box,
+    conic-gradient(from 0deg, var(--red-c), var(--amber), var(--blue-c), var(--amber), var(--red-c))
+    border-box;
+  border: 3px solid transparent;
+  box-shadow:
+    0 0 0 4px rgba(5, 8, 26, 0.85),
+    0 0 24px rgba(255, 194, 59, 0.45);
+  pointer-events: none;
+  animation: lf-vs 520ms cubic-bezier(0.3, 1.6, 0.5, 1) 240ms both;
+}
+.lf__vs-bolt {
+  position: absolute;
+  width: 70%;
+  height: 70%;
+  fill: color-mix(in srgb, var(--amber) 35%, transparent);
+}
+.lf__vs-text {
+  position: relative;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-shadow:
+    -2px 0 0 var(--red-c),
+    2px 0 0 var(--blue-c);
+}
+@keyframes lf-vs {
+  from {
+    transform: scale(0) rotate(-40deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.lf__actions--vote,
+.lf__actions--res {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-height: 48px;
+  justify-content: center;
 }
 .lf__status {
   flex: none;
@@ -345,73 +885,83 @@
 }
 
 /* ---- Açılış ---- */
-.lf__head--res {
-  gap: 10px;
+.lf__card--res {
+  cursor: default;
+  justify-content: flex-start;
 }
-.lf__me {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  animation: lf-in 420ms var(--ease) 500ms both;
+.lf__ring[data-pair="1"] .lf__card--res {
+  justify-content: center;
 }
-.lf__score {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(38px, 12vw, 52px);
-  line-height: 1;
-  color: var(--lime);
-  text-shadow: 0 0 18px color-mix(in srgb, var(--lime) 55%, transparent);
+/* Kısa ekranda açılış kartı sıkılaşır: yazar, metin ve oy verenler kart boyunu aşmasın. */
+@media (max-height: 600px) {
+  .lf__sign {
+    padding-top: 8px;
+  }
+  .lf__plate {
+    padding: 5px 14px 8px;
+  }
+  .lf__plate-q {
+    font-size: 15px;
+  }
+  .lf__ring {
+    margin: 6px 0 2px;
+  }
+  .lf__ring[data-pair="1"] .lf__cards {
+    gap: 24px;
+  }
+  .lf__ring[data-pair="1"] .lf__card--res {
+    justify-content: flex-start;
+    gap: 2px;
+    padding-top: 21px;
+  }
+  .lf__ring[data-pair="1"] .lf__card--res[data-side="b"] {
+    padding-top: 8px;
+    padding-bottom: 22px;
+  }
+  .lf__ring[data-pair="1"] .lf__card--res .lf__card-text {
+    font-size: 14px;
+  }
+  .lf__ring[data-pair="1"] .lf__card--res .lf__author,
+  .lf__ring[data-pair="1"] .lf__card--res .lf__voters {
+    zoom: 0.8;
+  }
 }
-.lf__me[data-zero="1"] .lf__score {
-  color: var(--text);
-  text-shadow: none;
+.lf__card[data-flip="1"] {
+  animation: lf-flip 520ms var(--ease) both;
 }
-.lf__says {
-  font-weight: 700;
-  font-size: var(--fs-18);
-  text-align: left;
+@keyframes lf-flip {
+  0% {
+    transform: perspective(700px) rotateY(0);
+  }
+  45% {
+    transform: perspective(700px) rotateY(88deg);
+  }
+  55% {
+    transform: perspective(700px) rotateY(-88deg);
+  }
+  100% {
+    transform: perspective(700px) rotateY(0);
+  }
 }
-.lf__res {
-  flex: 1;
-  min-height: 0;
-  list-style: none;
-  margin: 12px 0 6px;
-  padding: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-.lf__rcard {
-  --ac: var(--cyan);
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
-  border-radius: var(--r-sm);
-  border: 1.5px solid color-mix(in srgb, var(--ac) 55%, transparent);
-  background: rgba(18, 26, 69, 0.7);
-  animation: lf-rise 360ms var(--ease) calc(300ms + min(var(--i, 0), 6) * 160ms) both;
-}
-.lf__rcard[data-win="1"] {
-  border-color: var(--lime);
-  background: rgba(182, 255, 59, 0.1);
-  box-shadow: 0 0 16px rgba(182, 255, 59, 0.3);
-}
-.lf__rcard[data-me="1"] {
-  background: color-mix(in srgb, var(--ac) 14%, rgba(18, 26, 69, 0.7));
-}
-.lf__rcard[data-empty="1"] {
-  border-style: dashed;
-  opacity: 0.8;
-}
-.lf__rtop {
+.lf__author {
   display: flex;
   align-items: center;
   gap: 8px;
   min-height: 28px;
+}
+.lf__author[data-hidden="1"] {
+  color: var(--text-dim);
+}
+.lf__qmark {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(160, 175, 255, 0.5);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 14px;
 }
 .lf__who {
   flex: 1;
@@ -425,7 +975,7 @@
 .lf__pts {
   flex: none;
   margin-left: auto;
-  min-width: 36px;
+  min-width: 40px;
   padding: 1px 9px;
   border-radius: 999px;
   text-align: center;
@@ -435,68 +985,474 @@
   background: #05081a;
   color: var(--amber);
   border: 2px solid currentColor;
+  font-variant-numeric: tabular-nums;
 }
 .lf__pts[data-zero="1"] {
   color: #c9cff0;
 }
-.lf__rtext {
-  margin: 0;
-  font-size: 17px;
+.lf__voters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+}
+.lf__fly {
+  --fy: 0px;
+  display: inline-flex;
+  animation: lf-fly 440ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+}
+.lf__voters[data-from="a"] .lf__fly {
+  --fy: 90px;
+}
+.lf__voters[data-from="b"] .lf__fly {
+  --fy: -90px;
+}
+.lf__voters[data-from="f"] .lf__fly {
+  --fy: -16px;
+}
+@keyframes lf-fly {
+  from {
+    transform: translateY(var(--fy)) scale(1.9);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.lf__card[data-win="1"] {
+  scale: 1.04;
+  z-index: 1;
+  border-color: var(--amber);
+}
+.lf__card[data-win="1"]::after {
+  --sc: var(--amber);
+  opacity: 1;
+}
+.lf__card[data-lose="1"] {
+  opacity: 0.78;
+  scale: 0.96;
+}
+.lf__card[data-ko="1"] {
+  animation: lf-ko 700ms var(--ease) both;
+}
+@keyframes lf-ko {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+  15% {
+    transform: translateX(-10px) rotate(-2deg);
+  }
+  30% {
+    transform: translateX(9px) rotate(2deg);
+  }
+  45% {
+    transform: translateX(-6px) rotate(-1deg);
+  }
+  60% {
+    transform: translateX(3px);
+  }
+  100% {
+    transform: translateY(6px) rotate(-1.5deg) scale(0.94);
+    opacity: 0.78;
+  }
+}
+.lf__card[data-me="1"] .lf__who {
+  color: var(--cyan);
+}
+
+/* Damga: "LAF USTASI!" / "Berabere!" — ringin ortasında, kartların üstünde. */
+.lf__stamp {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 4;
+  translate: -50% -50%;
+  rotate: -8deg;
+  padding: 8px 20px;
+  border-radius: 14px;
+  border: 4px solid var(--amber);
+  background: rgba(20, 12, 2, 0.88);
+  box-shadow:
+    0 0 0 3px rgba(20, 12, 2, 0.88),
+    0 0 40px rgba(255, 194, 59, 0.55);
+  white-space: nowrap;
+  /* Örter (altındaki metin o an okunmaz); dokunma açılışta zaten yok. */
+  pointer-events: auto;
+  animation: lf-stamp 460ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.lf__stamp span {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(26px, 9vw, 40px);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.lf__stamp[data-kind="tie"] {
+  border-color: var(--cyan);
+  background: rgba(2, 16, 22, 0.88);
+  box-shadow:
+    0 0 0 3px rgba(2, 16, 22, 0.88),
+    0 0 40px rgba(46, 242, 255, 0.5);
+}
+.lf__stamp[data-kind="tie"] span {
+  color: var(--cyan);
+}
+@keyframes lf-stamp {
+  from {
+    transform: scale(2.6);
+  }
+  to {
+    transform: none;
+  }
+}
+/* TV: damga tüm ekranı kaplar. */
+.lf-tvstamp {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle, rgba(5, 8, 26, 0.55), rgba(5, 8, 26, 0.85));
+  pointer-events: auto;
+  animation: lf-fade 240ms ease-out both;
+}
+.lf-tvstamp .lf__stamp {
+  position: relative;
+  left: auto;
+  top: auto;
+  translate: none;
+  padding: 2vh 4vw;
+  border-width: 0.6vw;
+}
+.lf-tvstamp .lf__stamp span {
+  font-size: 9vw;
+}
+@keyframes lf-fade {
+  from {
+    opacity: 0;
+  }
+}
+/* Kapsayıcılar ortak `confetti` sınıfını da taşır (denetim konfetiyi gizler); konumu buradan, daha özgül seçiciyle. */
+.lf .lf__fx,
+body .lf-tvfx {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+body .lf-tvfx {
+  position: fixed;
+  z-index: 61;
+}
+.lf__fx canvas,
+.lf-tvfx canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.lf__me {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  animation: lf-pop 360ms var(--ease) both;
+}
+/* Yalnız ölçek: metin belirirken hiç saydamlaşmaz (okunurluk). */
+@keyframes lf-pop {
+  from {
+    transform: scale(0.6);
+  }
+  to {
+    transform: none;
+  }
+}
+/* Damga ortadayken altında kalan köşe şeridi gizlenir. */
+.lf__ring:has(.lf__stamp) .lf__corner {
+  visibility: hidden;
+}
+.lf__score {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(32px, 10vw, 44px);
+  line-height: 1;
+  color: var(--lime);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--lime) 55%, transparent);
+}
+.lf__me[data-zero="1"] .lf__score {
+  color: var(--text);
+  text-shadow: none;
+}
+.lf__says {
   font-weight: 700;
-  line-height: 1.3;
-  overflow-wrap: anywhere;
+  font-size: var(--fs-18);
+  text-align: left;
 }
-.lf__rcard[data-empty="1"] .lf__rtext {
-  color: #c9cff0;
-  font-weight: 600;
+
+/* ---- Final: herkesin kartı ---- */
+.lf__cards--final {
+  gap: 8px;
+  padding: 10px 12px;
+  margin: 0 -8px;
 }
-.lf__master {
+/* Kayan listede alttaki kartın kesik kenarı yumuşak bitsin. */
+.lf__cards[data-scroll="1"] {
+  mask-image: linear-gradient(180deg, #000 calc(100% - 14px), transparent);
+}
+.lf__cards--final .lf__card {
+  min-height: 0;
+  padding: 10px 14px;
+  gap: 4px;
+}
+.lf__cards--final .lf__card-text {
+  font-size: clamp(15px, 4.4vw, 19px);
+}
+.lf__ring[data-n="6"] .lf__cards--final .lf__card-text,
+.lf__ring[data-n="7"] .lf__cards--final .lf__card-text,
+.lf__ring[data-n="8"] .lf__cards--final .lf__card-text {
+  font-size: clamp(14px, 4vw, 17px);
+}
+.lf__card[data-side="f"] {
+  --sc: color-mix(in srgb, var(--amber) 70%, var(--magenta));
+}
+.lf__card[data-side="f"][data-picked="1"] {
+  --sc: var(--lime);
+}
+.lf__card[data-crown="1"] {
+  scale: 1.02;
+  z-index: 1;
+  border-color: var(--amber);
+  animation: lf-crowned 620ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.lf__card[data-crown="1"]::after {
+  --sc: var(--amber);
+  opacity: 1;
+}
+@keyframes lf-crowned {
+  from {
+    scale: 0.9;
+  }
+  to {
+    scale: 1.02;
+  }
+}
+.lf__crown {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin: 0;
-  padding: 2px 10px;
+  padding: 3px 12px;
   border-radius: 999px;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: var(--fs-13);
-  background: var(--amber);
+  background: linear-gradient(180deg, #ffe08a, var(--amber));
   color: #3a2800;
-  animation: lf-in 360ms var(--ease) calc(700ms + var(--i, 0) * 160ms) both;
-}
-.lf__voters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  animation: lf-stamp 420ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
 }
 
 /* ---- Sıkışık (klavye açık / alçak ekran) ---- */
 .lf[data-tight="1"] .lf__crew,
-.lf[data-tight="1"] .lf__tag {
+.lf[data-tight="1"] .lf__tag,
+.lf[data-tight="1"] .lf__mic,
+.lf[data-tight="1"] .lf__meta,
+.lf[data-tight="1"] .tamam__count {
   display: none;
 }
 .lf[data-tight="1"] .lf__head {
   margin-top: 2px;
-  gap: 4px;
+  gap: 2px;
+}
+/* Klavye açıkken noktalar gizlenir (geri düğmesi kalır); soru alanı küçülür. */
+.lf[data-tight="1"] .lf__dots {
+  display: none;
+}
+.lf[data-tight="1"] .lf__slide {
+  margin-top: 0;
 }
 .lf[data-tight="1"] .lf__q {
-  padding: 10px 14px;
-  font-size: 16px;
+  padding: 6px 12px;
+  font-size: 15px;
+}
+.lf[data-tight="1"] .lf__mid {
+  padding: 0;
 }
 .lf[data-tight="1"] .lf__field {
-  min-height: 48px;
-  height: 48px;
+  min-height: 52px;
+  height: 52px;
   font-size: 16px;
   padding: 8px 12px;
 }
-.lf[data-tight="1"] .lf__mid {
-  justify-content: flex-start;
-  gap: 2px;
-  overflow: auto;
+.lf[data-tight="1"] .lf__warn {
+  margin-top: 4px;
 }
-.lf[data-tight="1"] .lf__meta {
-  display: none;
+.lf[data-tight="1"] .lf__actions .pbtn,
+.lf[data-tight="1"] .lf__back {
+  height: 52px;
+}
+.lf[data-tight="1"] .lf__back {
+  width: 52px;
+}
+.lf[data-tight="1"] .lf__nextwrap,
+.lf[data-tight="1"] .tamam {
+  padding-top: 6px;
+}
+@media (max-height: 600px) {
+  .lf__tag {
+    display: none;
+  }
+  .lf__q {
+    font-size: clamp(18px, 5.6vw, 24px);
+    padding: 16px 16px 12px;
+  }
+  .lf__ring[data-pair="1"] .lf__cards {
+    gap: 26px;
+  }
+  .lf__vs {
+    width: 54px;
+    height: 54px;
+    margin: -27px 0 0 -27px;
+  }
+  .lf__vs-text {
+    font-size: 18px;
+  }
+}
+@media (max-height: 460px) {
+  .lf__crew,
+  .lf__meta,
+  .lf__mic {
+    display: none;
+  }
+  .lf__field {
+    min-height: 56px;
+    height: 56px;
+  }
+  .lf__q {
+    padding: 8px 14px;
+    font-size: 16px;
+  }
+}
+@media (max-height: 460px) and (min-width: 600px) {
+  .lf .lf__head,
+  .lf[data-tight="1"] .lf__head {
+    margin-top: 44px;
+  }
+}
+/* Alçak ekranda damga küçülür. */
+@media (max-height: 460px) {
+  .lf__stamp span {
+    font-size: clamp(22px, 8dvh, 34px);
+  }
+}
+/* Yatay alçak ekranda düello kartları yan yana. */
+@media (max-height: 460px) and (min-width: 560px) {
+  .lf__ring[data-pair="1"] .lf__cards {
+    flex-direction: row;
+    gap: 40px;
+  }
+  .lf__ring[data-pair="1"] .lf__cards > li {
+    max-height: none;
+  }
+}
+
+/* ---- TV (StageView): kartlar yan yana, ortada büyük VS ---- */
+.lftv .lf > .col {
+  max-width: none;
+}
+.lftv .lf__head {
+  margin-top: 10px;
+}
+.lf[data-tv="1"] .lf__plate {
+  padding: 10px 28px 16px;
+}
+.lf[data-tv="1"] .lf__plate-tag {
+  font-size: 15px;
+}
+.lf[data-tv="1"] .lf__plate-q {
+  font-size: 30px;
+}
+.lf[data-tv="1"] .lf__q {
+  font-size: 32px;
+}
+.lf[data-tv="1"] .lf__ring[data-pair="1"] .lf__cards {
+  flex-direction: row;
+  gap: 120px;
+  padding: 12px 24px;
+}
+.lf[data-tv="1"] .lf__ring[data-pair="1"] .lf__cards > li {
+  max-height: 300px;
+  align-self: center;
+  height: 100%;
+}
+.lf[data-tv="1"] .lf__card-text {
+  font-size: 28px;
+}
+.lf[data-tv="1"] .lf__ring[data-pair="1"] .lf__card {
+  padding: 40px 26px;
+}
+.lf[data-tv="1"] .lf__corner {
+  font-size: 14px;
+  padding: 3px 14px 4px 6px;
+}
+.lf[data-tv="1"] .lf__vs {
+  width: 104px;
+  height: 104px;
+  margin: -52px 0 0 -52px;
+  border-width: 5px;
+}
+.lf[data-tv="1"] .lf__vs-text {
+  font-size: 38px;
+}
+.lf[data-tv="1"] .lf__spot {
+  width: 48%;
+}
+.lf[data-tv="1"] .lf__spot--a {
+  left: 2%;
+  rotate: -8deg;
+}
+.lf[data-tv="1"] .lf__spot--b {
+  right: 2%;
+  rotate: 8deg;
+}
+.lf[data-tv="1"] .lf__voters[data-from="a"] .lf__fly,
+.lf[data-tv="1"] .lf__voters[data-from="b"] .lf__fly {
+  --fy: -60px;
+}
+.lf[data-tv="1"] .lf__cards--final,
+.lf[data-tv="1"] .lf__ring:not([data-pair]) .lf__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 12px 18px;
+}
+.lf[data-tv="1"] .lf__ring[data-n="3"]:not([data-pair]) .lf__cards,
+.lf[data-tv="1"] .lf__ring[data-n="5"]:not([data-pair]) .lf__cards,
+.lf[data-tv="1"] .lf__ring[data-n="6"]:not([data-pair]) .lf__cards {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.lf[data-tv="1"] .lf__cards--final .lf__card-text,
+.lf[data-tv="1"] .lf__ring:not([data-pair]) .lf__card-text {
+  font-size: 20px;
+}
+.lf[data-tv="1"] .lf__laugh {
+  font-size: 15px;
+  line-height: 21px;
+  min-width: 30px;
+}
+.lf[data-tv="1"] .lf__mic {
+  height: 200px;
+}
+.lf[data-tv="1"] .lf__watch {
+  font-size: 22px;
 }
 
 /* ---- Anlatım görseli (kap yüksekliğine göre ölçeklenir) ---- */
@@ -576,63 +1532,67 @@
   }
 }
 
+/* Hareket azaltma: canlandırmalar durur, son hâl hemen görünür (açılış zaman çizelgesi de atlanır). */
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-motion="full"]) .lf__prompt,
+  :root:not([data-motion="full"]) .lf__slide,
+  :root:not([data-motion="full"]) .lf__mic-body,
+  :root:not([data-motion="full"]) .lf__mic-waves path,
+  :root:not([data-motion="full"]) .lf__sign,
+  :root:not([data-motion="full"]) .lf__spot,
   :root:not([data-motion="full"]) .lf__cards > li,
-  :root:not([data-motion="full"]) .lf__rcard,
-  :root:not([data-motion="full"]) .lf__me,
-  :root:not([data-motion="full"]) .lf__master,
-  :root:not([data-motion="full"]) .lf__locked,
+  :root:not([data-motion="full"]) .lf__card,
+  :root:not([data-motion="full"]) .lf__card::after,
   :root:not([data-motion="full"]) .lf__card-tick,
+  :root:not([data-motion="full"]) .lf__vs,
+  :root:not([data-motion="full"]) .lf__fly,
+  :root:not([data-motion="full"]) .lf__corner,
+  :root:not([data-motion="full"]) .lf__stamp,
+  :root:not([data-motion="full"]) .lf-tvstamp,
+  :root:not([data-motion="full"]) .lf__me,
+  :root:not([data-motion="full"]) .lf__crown,
+  :root:not([data-motion="full"]) .lf__laugh,
+  :root:not([data-motion="full"]) .lf__warn,
+  :root:not([data-motion="full"]) .lf__locked,
   :root:not([data-motion="full"]) .lfart__bubble {
     animation: none;
   }
 }
-
-/* Ayarlar > Hareketi azalt: Açık */
 :root[data-motion="reduce"] .lf__prompt,
+:root[data-motion="reduce"] .lf__slide,
+:root[data-motion="reduce"] .lf__mic-body,
+:root[data-motion="reduce"] .lf__mic-waves path,
+:root[data-motion="reduce"] .lf__sign,
+:root[data-motion="reduce"] .lf__spot,
 :root[data-motion="reduce"] .lf__cards > li,
-:root[data-motion="reduce"] .lf__rcard,
-:root[data-motion="reduce"] .lf__me,
-:root[data-motion="reduce"] .lf__master,
-:root[data-motion="reduce"] .lf__locked,
+:root[data-motion="reduce"] .lf__card,
+:root[data-motion="reduce"] .lf__card::after,
 :root[data-motion="reduce"] .lf__card-tick,
+:root[data-motion="reduce"] .lf__vs,
+:root[data-motion="reduce"] .lf__fly,
+:root[data-motion="reduce"] .lf__corner,
+:root[data-motion="reduce"] .lf__stamp,
+:root[data-motion="reduce"] .lf-tvstamp,
+:root[data-motion="reduce"] .lf__me,
+:root[data-motion="reduce"] .lf__crown,
+:root[data-motion="reduce"] .lf__laugh,
+:root[data-motion="reduce"] .lf__warn,
+:root[data-motion="reduce"] .lf__locked,
 :root[data-motion="reduce"] .lfart__bubble {
   animation: none;
 }
-@media (max-height: 460px) {
-  .lf__tag {
-    display: none;
-  }
+
+/* TV: küçük ölçülü öğeler uzaktan okunur olsun (avatarlar, adlar, oy verenler, durum yazısı). */
+.lf[data-tv="1"] .lf__crew,
+.lf[data-tv="1"] .lf__author,
+.lf[data-tv="1"] .lf__voters,
+.lf[data-tv="1"] .lf__status,
+.lf[data-tv="1"] .lf__crown,
+.lf[data-tv="1"] .tamam__count {
+  zoom: 1.45;
 }
-.lf[data-tight="1"] .tamam__count {
+
+/* Uyarı çıkınca sayaç satırı yer açar (küçük ekranda sığsın). */
+.lf__form:has(+ .lf__warn) .lf__meta {
   display: none;
-}
-.lf[data-tight="1"] .lf__q {
-  padding: 6px 12px;
-  font-size: 14px;
-}
-@media (max-height: 460px) {
-  .lf__crew,
-  .lf__meta {
-    display: none;
-  }
-  .lf__field {
-    min-height: 56px;
-    height: 56px;
-  }
-  .lf__q {
-    padding: 8px 14px;
-    font-size: 16px;
-  }
-  .lf__mid {
-    justify-content: flex-start;
-    overflow: auto;
-  }
-}
-@media (max-height: 460px) and (min-width: 600px) {
-  .lf .lf__head,
-  .lf[data-tight="1"] .lf__head {
-    margin-top: 44px;
-  }
 }

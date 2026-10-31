@@ -158,6 +158,8 @@ const registry: Record<string, GameEntry> = {
   "laf-sokma": {
     Screen: lazy(() => import("./laf-sokma/LafSokmaScreen.js")),
     Art: lazy(() => import("./laf-sokma/BriefingArt.js")),
+    // TV oyunun asıl sahnesi: soru ve iki kart büyük, ortada VS; açılış ve Laf Ustası tüm ekranda.
+    StageView: lazy(() => import("./laf-sokma/StageView.js")),
   },
   // TASLAK oyunlar (sahip onayı bekliyor): sunucu bunları yalnız taslak yolu açıksa gönderir (docs/TASLAK-OYUNLAR.md).
   "ortak-nokta": {

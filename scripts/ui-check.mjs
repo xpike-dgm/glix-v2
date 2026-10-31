@@ -2079,6 +2079,39 @@ const SCREENS = [
     },
   },
   { name: "laf-write-filled", q: "mock=laf-write-filled&n=5" },
+  {
+    name: "laf-write-next",
+    q: "mock=laf-write-filled&n=5",
+    settle: 800,
+    act: async (p) => p.locator(".lf__next").click(),
+  },
+  {
+    name: "laf-write-warn",
+    q: "mock=laf-write-filled&n=5",
+    settle: 800,
+    act: async (p) => {
+      await p.locator(".lf__next").click();
+      await p.locator(".tamam .pbtn").click();
+    },
+  },
+  {
+    name: "laf-write-keyboard-ios",
+    q: "mock=laf-write&n=8",
+    sizes: [
+      [390, 844],
+      [360, 640],
+    ],
+    act: async (p) => {
+      await p.locator(".lf__field").fill("Annemin terliği");
+      // iOS Safari: klavye yerleşimi küçültmez, yalnız görünen alan (visualViewport) küçülür.
+      await p.evaluate(() => {
+        const vv = window.visualViewport;
+        if (!vv) return;
+        Object.defineProperty(vv, "height", { get: () => Math.round(window.innerHeight * 0.5) });
+        vv.dispatchEvent(new Event("resize"));
+      });
+    },
+  },
   { name: "laf-write-locked-5", q: "mock=laf-write-locked&n=5" },
   { name: "laf-write-locked-8", q: "mock=laf-write-locked&n=8" },
   { name: "laf-vote-3", q: "mock=laf-vote&n=3" },
@@ -2093,12 +2126,31 @@ const SCREENS = [
     settle: 800,
     act: async (p) => p.locator(".lf__card:not(:disabled)").first().click(),
   },
+  {
+    name: "laf-vote-confirm",
+    q: "mock=laf-vote&n=6",
+    settle: 800,
+    act: async (p) => {
+      await p.locator(".lf__card:not(:disabled)").last().click();
+      await p.locator(".lf__confirm").click();
+    },
+  },
+  {
+    name: "laf-final-vote-pick",
+    q: "mock=laf-final-vote&n=8",
+    settle: 800,
+    act: async (p) => p.locator(".lf__card:not(:disabled)").nth(1).click(),
+  },
   { name: "laf-reveal-3", q: "mock=laf-reveal&n=3", settle: 3000 },
   { name: "laf-reveal-5", q: "mock=laf-reveal&n=5", settle: 3000 },
   { name: "laf-reveal-8", q: "mock=laf-reveal&n=8", settle: 3000 },
   { name: "laf-reveal-master-6", q: "mock=laf-reveal-master&n=6", settle: 3000 },
   { name: "laf-reveal-none-6", q: "mock=laf-reveal-none&n=6", settle: 3000 },
   { name: "laf-reveal-empty-5", q: "mock=laf-reveal-empty&n=5", settle: 3000 },
+  { name: "laf-reveal-tie-6", q: "mock=laf-reveal-tie&n=6", settle: 3000 },
+  { name: "laf-reveal-flip-8", q: "mock=laf-reveal&n=8&t=100", settle: 900 },
+  { name: "laf-reveal-count-8", q: "mock=laf-reveal&n=8&t=1500", settle: 900 },
+  { name: "laf-reveal-stamp-6", q: "mock=laf-reveal-master&n=6&t=3000", settle: 900 },
   { name: "laf-final-write-5", q: "mock=laf-final-write&n=5" },
   { name: "laf-final-write-locked", q: "mock=laf-final-write-locked&n=5" },
   { name: "laf-final-vote-5", q: "mock=laf-final-vote&n=5" },
@@ -2106,6 +2158,13 @@ const SCREENS = [
   { name: "laf-final-vote-done", q: "mock=laf-final-vote-done&n=5" },
   { name: "laf-final-reveal-5", q: "mock=laf-final-reveal&n=5", settle: 3600 },
   { name: "laf-final-reveal-8", q: "mock=laf-final-reveal&n=8", settle: 4200 },
+  { name: "laf-final-reveal-open-8", q: "mock=laf-final-reveal&n=8&t=2200", settle: 900 },
+  { name: "laf-tv-write", q: "mock=tv-laf-write&n=5", sizes: TV, settle: 1600 },
+  { name: "laf-tv-vote", q: "mock=tv-laf-vote&n=6", sizes: TV, settle: 1600 },
+  { name: "laf-tv-reveal", q: "mock=tv-laf-reveal&n=6", sizes: TV, settle: 1600 },
+  { name: "laf-tv-stamp", q: "mock=tv-laf-reveal-master&n=6&t=3000", sizes: TV, settle: 900 },
+  { name: "laf-tv-final-vote", q: "mock=tv-laf-final-vote&n=8", sizes: TV, settle: 1600 },
+  { name: "laf-tv-final-reveal", q: "mock=tv-laf-final-reveal&n=8", sizes: TV, settle: 1600 },
   { name: "laf-spectator-write", q: "mock=laf-spectator-write&n=5" },
   { name: "laf-spectator-vote", q: "mock=laf-spectator-vote&n=5" },
   { name: "laf-spectator-reveal", q: "mock=laf-spectator-reveal&n=5", settle: 3000 },

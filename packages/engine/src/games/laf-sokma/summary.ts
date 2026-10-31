@@ -1,6 +1,6 @@
 import { leadLine, list, names, numRec, rec, type Summarize, str } from "../summary.js";
 
-/** Laf Sokma Düellosu: Laf Ustası olanlar, yoksa en çok puan. */
+/** Laf Sokma Düellosu: Laf Ustası olanlar, yoksa en çok kahkaha puanı. */
 export const summarizeLafSokma: Summarize = (result, players, publicView) => {
   const pv = rec(publicView);
   const duels = [...list(pv.history), pv.reveal];
@@ -14,5 +14,5 @@ export const summarizeLafSokma: Summarize = (result, players, publicView) => {
   if (masters.length > 0) return `${names(players, masters)} Laf Ustası oldu`;
   const pvScores = numRec(pv.scores);
   const scores = Object.keys(pvScores).length > 0 ? pvScores : result.miniScores;
-  return leadLine(scores, players, (v) => `${v} puanla`, "lafı gediğine koydu", "düelloyu paylaştı");
+  return leadLine(scores, players, (v) => `${v} kahkahayla`, "lafı gediğine koydu", "düelloyu paylaştı");
 };

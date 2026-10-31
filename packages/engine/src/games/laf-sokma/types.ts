@@ -37,7 +37,7 @@ export type LafAction =
   | { kind: "answer"; prompt: string; text: string }
   /** Yazmada "Tamam": cevapların kesinleşir. */
   | { kind: "lock" }
-  /** Oylamada bir karta oy ver; tek seferlik. */
+  /** Oylamada bir karta oy ver; tek seferlik (istemci seçimi yerelde tutar, yalnız onayda gönderir). */
   | { kind: "vote"; card: string };
 
 export type LafPhase = "write" | "vote" | "reveal" | "finalWrite" | "finalVote" | "finalReveal";
@@ -96,7 +96,7 @@ export interface LafPublicView {
   reveal: LafDuelReveal | null;
   /** Önceki açılışlar (şimdiki hariç). */
   history: LafDuelReveal[];
-  /** Açılmış sorulardan toplanan puanlar. */
+  /** Açılmış sorulardan toplanan kahkaha puanları (oy +1, Laf Ustası +1); mini puan bunların sıralamasıdır. */
   scores: Record<string, number>;
 }
 

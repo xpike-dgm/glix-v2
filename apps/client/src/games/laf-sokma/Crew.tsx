@@ -1,29 +1,54 @@
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
 import { Avatar } from "../../ui/Avatar.js";
 import type { CrewMember } from "./view.js";
 
-/** Avatar şeridi: hazır olanlar tikli ve lime halkalı. `only` verilirse yalnız bu oyuncular görünür. */
+/**
+ * Alt şerit: herkesin avatarı ve altında kahkaha puanı. Hazır olanlar (yazmada "Tamam", oylamada oy verenler)
+ * tikli ve lime halkalı; `dim` verilenler (ör. oylamada düellonun iki yazarı) soluk.
+ */
 export function CrewStrip(props: {
   crew: CrewMember[];
   ready: readonly string[];
   label: string;
-  only?: readonly string[];
+  scores: Readonly<Record<string, number>>;
+  dim?: readonly string[];
+  selfId?: string;
+  /** Puanı yeni artanlar: kısa bir sıçrama. */
+  bumped?: readonly string[];
 }) {
-  const shown = () => (props.only ? props.crew.filter((m) => props.only?.includes(m.id)) : props.crew);
   return (
     <ul class="lf__crew" aria-label={props.label}>
-      <For each={shown()}>
+      <For each={props.crew}>
         {(p) => {
           const done = () => props.ready.includes(p.id);
+          const score = () => props.scores[p.id] ?? 0;
           return (
-            <li class="lf__crewp" data-done={done() ? "1" : undefined}>
+            <li
+              class="lf__crewp"
+              data-done={done() ? "1" : undefined}
+              data-dim={props.dim?.includes(p.id) ? "1" : undefined}
+              data-me={props.selfId === p.id ? "1" : undefined}
+              aria-label={`${p.nickname}: ${score()} kahkaha`}
+            >
               <Avatar
                 index={p.avatar}
-                size="min(40px, calc((100vw - 40px - 56px) / 8))"
+                size="min(36px, calc((100vw - 40px - 56px) / 8))"
                 connected={p.connected}
                 ready={done()}
                 ring={done() ? "var(--lime)" : undefined}
               />
+              {/* Puan değişince yeniden çizilir: artan puan kısa bir sıçramayla görünür. */}
+              <Show when={String(score())} keyed>
+                {(s) => (
+                  <span
+                    class="lf__laugh"
+                    data-zero={s === "0" ? "1" : undefined}
+                    data-bump={props.bumped?.includes(p.id) ? "1" : undefined}
+                  >
+                    {s}
+                  </span>
+                )}
+              </Show>
             </li>
           );
         }}
