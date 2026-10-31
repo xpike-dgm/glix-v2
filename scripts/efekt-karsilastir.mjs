@@ -193,7 +193,7 @@ async function compare(before, after, diffDir) {
     });
   }
   await browser.close();
-  writeFileSync(join(diffDir, "rapor.json"), JSON.stringify(report, null, 2));
+  writeFileSync(join(diffDir, "rapor.json"), `${JSON.stringify(report, null, 2)}\n`);
   for (const r of report)
     console.log(
       `${r.dosya}: ${r.ayniBoyut ? "" : "BOYUT FARKLI "}${r.farkliPiksel} piksel (%${(r.oran * 100).toFixed(3)}), en büyük kanal farkı ${r.enBuyukFark}`,
