@@ -8,3 +8,5 @@ declare const __ZB_BOMBA_GORSEL__: boolean | undefined;
 declare const __KULE_PROPS__: readonly string[] | undefined;
 /** Yazı Yaz görsellerinden derlemede var olanlar (`public/assets/props/yazi-yaz/<ad>.webp`, uzantısız). */
 declare const __YAZI_YAZ_PROPS__: readonly string[] | undefined;
+/** Kendim görsellerinden derlemede var olanlar (`public/assets/props/kendim/<ad>.webp`, uzantısız). */
+declare const __KENDIM_PROPS__: readonly string[] | undefined;

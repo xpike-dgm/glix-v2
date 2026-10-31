@@ -310,35 +310,59 @@ Oyuncunun genel skoru bu sonuçlarla artar; hesap istatistiğindeki maç puanı 
 
 ## 2. Kendim — `kendim`
 
-**Durum: KİLİTLİ**
+**Durum: KİLİTLİ** (Ekim 2026 sahip onayı: KN-M1 … KN-M4, KN-U1 … KN-U7; ayrıntı `docs/oneriler/kendim.md`)
 
-- Amaç: Herkesin kendisini anlatan bir kelime yazması ve karıştırılan kelime
-  kartlarını doğru oyuncularla eşleştirmesi.
+- Amaç: Herkesin konu kartına göre kendisini anlatan bir kelime yazması ve
+  karıştırılan kelime kartlarını doğru oyuncularla eşleştirmesi.
 - Minimum oyuncu: **3**.
 - Maksimum oyuncu: **8**.
-- Aşamalar: **30 saniye kelime yazma → 30 saniye eşleştirme**.
-- Her oyuncu kendisini anlatan tek bir kelime yazar.
+- Aşamalar: **30 saniye kelime yazma → eşleştirme (3–5 oyuncuda 30 saniye,
+  6–8 oyuncuda 40 saniye) → kart kart açılış**.
+- **Konu:** her oyunda bir konu kartı çekilir (ör. "Hayvan olsaydın?"); herkes
+  kendini o konuyla tek kelimeyle anlatır. Liste yönetici panelindeki "Kendim
+  konuları" içerik havuzundadır (her satır: konu ve yazı kutusundaki ipucu);
+  sahip yazar, yapay zekâyla üretilmez. Yerleşik listede yalnız bugünkü konu
+  vardır ("Kendini anlat", ipucu "Ben…"); liste boşsa da bu kullanılır. Konu
+  maç tohumuyla seçilir; aynı odada son 5 oyunda çıkan konu tekrar seçilmez
+  (liste 5'ten kısaysa yalnız bir önceki tekrar edilmez). Konu yazma ekranında
+  büyük, eşleştirme ve sonuçta üstte küçük görünür.
+- Her oyuncu kendisini anlatan **tek bir kelime** yazar: boşluk kabul edilmez
+  (boşluk tuşu çalışmaz, yapıştırılan boşluklu yazı bitişik hâle getirilir;
+  sunucu boşluklu yazıyı reddeder). Tire (-) serbesttir; sınır 24 harftir.
 - Kelimeler kart olarak karıştırılır; kartın sahibi doğrudan gösterilmez.
 - Tüm kartları eşleştirmek zorunlu değildir.
 - Oyuncu kendi kelimesini kendisiyle eşleştiremez.
-- Aynı kelimeyi birden fazla oyuncu yazabilir.
-- Doğru eşleştirme mini oyun puanına **+1**.
-- Her yanlış eşleştirme mini oyun puanına **-1**.
-- Boş bırakılan veya eşleştirilmeyen kart **0**.
+- Aynı kelimeyi birden fazla oyuncu yazabilir; birbirinin yerine geçer.
+- **Tanıma puanı:** doğru eşleştirme **+1**, yanlış eşleştirme **0** (ceza yok),
+  boş bırakılan kart **0**.
 - Bir kelimeyi yalnızca bir oyuncu doğru sahibine eşleştirirse kelime sahibi
-  mini oyun puanına **+1 bonus** alır.
-- Aynı kelimeyi iki veya daha fazla oyuncu doğru eşleştirirse kelime sahibi
-  bonus alamaz. Kimse bulamazsa da bonus alamaz.
-- Hiç tahmin yapmayan oyuncu **0** mini oyun puanı alır; eksi veya artı almaz.
-- Mini oyun puanı en yüksek olan oyuncu/oyuncular genel skorda **+1** alır.
-- En yüksek mini oyun puanı eşitse, eşit olanların tamamı genel skorda **+1**
-  alır.
+  tanıma puanına **+1 bonus** alır. İki ya da daha fazla oyuncu bulursa ya da
+  kimse bulamazsa bonus yoktur. Hiç eşleştirme yapmayan oyuncu da bonusu alır
+  (sessiz oyuncu kuralı yoktur). Kelime yazmayan oyuncu eşleyip puan toplar ama
+  kartı olmadığı için bonus alamaz.
+- **Genel skor:** en yüksek tanıma puanı **+2**, sonraki farklı toplam **+1**,
+  diğerleri 0. Birincide eşitlik varsa hepsi +2 alır ve sonraki farklı toplam +1
+  alır. Tanıma puanı 0 olan ödül almaz; herkesin toplamı aynı ve 0'dan büyükse
+  herkes +1, hepsi 0 ise kimse almaz.
+- Kartlarda "birinci" en yüksek tanıma puanı, "sonuncu" en düşüktür; herkes
+  eşitse kimse sonuncu değildir.
+- Bağlı herkes Tamam derse yazma ve eşleştirme aşamaları 1 sn sonra biter.
+- Eşleştirmeden itibaren kelime kartları sahipsiz olarak izleyiciye ve TV'ye de
+  görünür; kimin kimi seçtiği açılışa kadar kimseye görünmez, yalnız kimin Tamam
+  dediği görünür.
+- **Açılış (kart kart):** her kart 3 sn: kart ortada büyür ve kelime okunur →
+  kimin kimi tahmin ettiği görünür → kart döner, sahibi açılır, doğru bilenler
+  yanar → kartı tek kişi bulduysa "TEK BULAN" şeridi. Kartlar karışık sırayla,
+  oyuncunun kendi kartı en son ("Seni kim tanıdı?"; izleyicide en son kart
+  rastgele). Aynı kelimeyi yazanların kartlarında "İkiz kelime!" etiketi.
+  Açılış süresi = kart sayısı × 3 sn + 3 sn; ardından özet ekranı ve "Devam et"
+  (en çok 60 sn, açılış kesilmez).
 - Tutorial/görsel ayrıntıları:
-  1. Herkes kendini anlatan tek kelimeyi gizlice yazar.
-  2. Karıştırılmış kelime kartlarını oyuncu portreleriyle eşleştir.
-  3. Doğru eşleşmeler puan ışığı yakar; yanlış seçimler tahtada kırmızı iz bırakır.
-  Görsel: Havada dönen hologram kelime kartları, portrelere bağlanan neon ipler
-  ve doğru bağlantıda yumuşak enerji patlamaları.
+  1. Konu kartına göre kendini tek kelimeyle anlat (aynaya yaz).
+  2. Karışık kelime kartlarını oyuncu portreleriyle eşleştir.
+  3. Doğru eşleme +1, yanlış ceza yok.
+  Görsel: buğulu, gotik mor-altın çerçeveli ayna; havada duran hologram kelime
+  kartları, portrelere bağlanan neon ipler ve kart kart açılış.
 
 ## 3. Sızma — `sizma`
 

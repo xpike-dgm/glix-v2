@@ -115,7 +115,7 @@ describe("İngilizce klavye senaryoları (reduce üzerinden)", () => {
     act("d", cCard.id, "a");
     const minis = kendim.result(s).miniScores;
     expect(minis.c).toBe(1);
-    expect(minis.d).toBe(-1);
+    expect(minis.d).toBe(0); // yanlış eşleme ceza almaz (KN-M1)
   });
 
   it("Çağrışım: İngilizce ve Türkçe yazılış aynı grupta; ekranda Türkçe harfli yazılış görünür (sıradan bağımsız)", () => {

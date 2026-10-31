@@ -29,7 +29,10 @@ describe("kendim: oda içinde tam maç", () => {
     const id = (x: Client) => x.session.playerId;
     expect(pub(host).stage).toBe("write");
 
+    expect(pub(host).topic).toBe("Kendini anlat");
+    expect(pub(host).hint).toBe("Ben…");
     expect(await send(a, { kind: "lock" })).toBe(false); // yazmadan Tamam yok
+    expect(await send(a, { kind: "write", text: "çok neşeli" })).toBe(false); // KN-M3: boşluk yok
     const words = ["elma", "armut", "kiraz", "üzüm"];
     for (const [i, x] of cs.entries()) expect(await send(x, { kind: "write", text: words[i] })).toBe(true);
     await sync();
@@ -57,6 +60,12 @@ describe("kendim: oda içinde tam maç", () => {
           .sort(),
       );
       expect(JSON.stringify(x.room.match)).not.toContain('"owner"');
+      // KN-U7: bütün kartlar sahipsiz olarak herkese açık.
+      expect(
+        pub(x)
+          .cards.map((card) => card.text)
+          .sort(),
+      ).toEqual(words.map((w) => w.toLocaleUpperCase("tr-TR")).sort());
     }
     const cardId = (viewer: Client, word: string) =>
       mine(viewer).cards.find((card) => card.text === word.toLocaleUpperCase("tr-TR"))?.id as number;
@@ -89,15 +98,17 @@ describe("kendim: oda içinde tam maç", () => {
         .sort(),
     ).toEqual(cs.map(id).sort());
 
-    k.clock.advance(9_000);
+    // Açılış: 4 kart × 3 sn + 3 sn.
+    expect(pub(host).finishAt - pub(host).matchEndsAt).toBe(15_000);
+    k.clock.advance(15_000);
     await until(() => host.room.phase === "results", "sonuç");
-    // a: +1 −1 = 0 (kartı b buldu: a'nın kartını yalnız b buldu → +1) = 1
-    // b: +1 (a'yı buldu) ; kartını a ve c buldu → bonus yok = 1
-    // c: +1 (b) −1 = 0; kartı (kiraz) kimse bulamadı = 0 ; d: sessiz = 0
-    const expectedMini: Record<string, number> = { [id(a)]: 1, [id(b)]: 1, [id(c)]: 0, [id(d)]: 0 };
+    // Tanıma puanı (yanlış 0): a: +1 (armut) + bonus (a'nın kartını yalnız b buldu) = 2
+    // b: +1 (a'yı buldu); kartını a ve c buldu → bonus yok = 1
+    // c: +1 (b); kartı (kiraz) kimse bulamadı = 1 ; d: 0
+    const expectedMini: Record<string, number> = { [id(a)]: 2, [id(b)]: 1, [id(c)]: 1, [id(d)]: 0 };
     expect(host.room.match?.result?.miniScores).toEqual(expectedMini);
-    // En yüksek puan eşit (1): a ve b +1
-    expect(host.room.match?.result?.awards).toEqual({ [id(a)]: 1, [id(b)]: 1 });
-    expect(host.room.players.map((p) => p.score)).toEqual([1, 1, 0, 0]);
+    // +2 / +1 / 0: a birinci, b ve c ikinci (eşit), d 0.
+    expect(host.room.match?.result?.awards).toEqual({ [id(a)]: 2, [id(b)]: 1, [id(c)]: 1, [id(d)]: 0 });
+    expect(host.room.players.map((p) => p.score)).toEqual([2, 1, 1, 0]);
   });
 });

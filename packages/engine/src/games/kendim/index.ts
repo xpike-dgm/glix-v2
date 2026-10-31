@@ -1,10 +1,14 @@
+import { poolEntries } from "../../content.js";
 import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
 import { derivedRng, drawSeed } from "../seeded.js";
 import { foldKey, sanitizeWord } from "../text.js";
+import { KENDIM_TOPIC_POOL } from "./pool.js";
 import {
+  KENDIM_BONUS_POINT,
+  KENDIM_DEFAULT_TOPIC,
   KENDIM_LOCK_GRACE_MS,
-  KENDIM_MATCH_MS,
-  KENDIM_REVEAL_MS,
+  KENDIM_RIGHT_POINT,
+  KENDIM_TOPIC_MEMORY,
   KENDIM_WRITE_MS,
   type KendimAction,
   type KendimCard,
@@ -13,19 +17,23 @@ import {
   type KendimRevealCard,
   type KendimRevealPair,
   type KendimStage,
+  type KendimTopic,
   type KendimView,
+  kendimAwards,
+  kendimMatchMs,
+  kendimRevealMs,
 } from "./types.js";
 
+export * from "./pool.js";
+export * from "./topics.js";
 export * from "./types.js";
-
-/**
- * Kuralda belirsiz: hiç eşleştirme yapmayan oyuncu "0 alır, eksi veya artı almaz". `false`: bu oyuncu kelimesi
- * tek kişi tarafından bulunsa da bonus almaz (toplam 0). `true` olsaydı yalnız eşleştirme puanı 0 sayılırdı.
- */
-export const KENDIM_SILENT_GETS_BONUS = false;
 
 export interface KendimState {
   players: string[];
+  /** Havuzdan çekilen konu (KN-M2; herkese açık). */
+  topic: KendimTopic;
+  /** Konunun çekildiği etkin havuzun boyu (tekrar belleği için). */
+  topicCount: number;
   /** Kart karıştırma tohumu (görünümlere girmez). */
   seed: number;
   startedAt: number;
@@ -57,15 +65,24 @@ function everyoneReady(state: KendimState, list: readonly string[], connected: r
   return active.length > 0 && active.every((id) => list.includes(id));
 }
 
+/** Kart sayısı yazma bitince sabittir: yazma sürerken o ana kadar yazılanlar sayılır (bitiş tick ile düzeltilir). */
+function cardCount(state: Pick<KendimState, "players" | "texts">): number {
+  return state.players.filter((id) => has(state.texts, id)).length;
+}
+
+function finishOf(state: Pick<KendimState, "players" | "texts">, matchEndsAt: number): number {
+  return matchEndsAt + kendimRevealMs(cardCount(state));
+}
+
 function retime(state: KendimState, stage: "write" | "match", endsAt: number): KendimState {
   let { writeEndsAt, matchEndsAt } = state;
   if (stage === "write") {
     writeEndsAt = Math.min(writeEndsAt, endsAt);
-    matchEndsAt = writeEndsAt + KENDIM_MATCH_MS;
+    matchEndsAt = writeEndsAt + kendimMatchMs(state.players.length);
   } else {
     matchEndsAt = Math.min(matchEndsAt, endsAt);
   }
-  return { ...state, writeEndsAt, matchEndsAt, finishAt: matchEndsAt + KENDIM_REVEAL_MS };
+  return { ...state, writeEndsAt, matchEndsAt, finishAt: finishOf(state, matchEndsAt) };
 }
 
 /** Kartlar: kelime yazanların kelimeleri, tohumdan karıştırılmış sırada (numara = sıra). Yazma bittikten sonra sabittir. */
@@ -97,29 +114,33 @@ function buildReveal(state: KendimState): KendimReveal {
       if (target === undefined) continue;
       const ok = isCorrect(state, card.text, target);
       list.push({ card: card.id, target, ok });
-      total += ok ? 1 : -1;
+      if (ok) total += KENDIM_RIGHT_POINT;
       if (ok) finders.set(card.id, [...(finders.get(card.id) ?? []), id]);
     }
     pairs[id] = list;
     scores[id] = total;
   }
+  // KN-M1: sessiz oyuncu kuralı yok; hiç eşleme yapmasan da kelimeni tek kişi bulursa bonus alırsın.
   const revealCards: KendimRevealCard[] = cards.map((c) => {
     const found = finders.get(c.id) ?? [];
-    const bonus = found.length === 1 && (KENDIM_SILENT_GETS_BONUS || (pairs[c.owner]?.length ?? 0) > 0);
-    if (bonus) scores[c.owner] = (scores[c.owner] ?? 0) + 1;
-    return { id: c.id, text: c.text, owner: c.owner, finders: found, bonus };
+    const bonus = found.length === 1;
+    if (bonus) scores[c.owner] = (scores[c.owner] ?? 0) + KENDIM_BONUS_POINT;
+    const twin = cards.some((o) => o.id !== c.id && foldKey(o.text) === foldKey(c.text));
+    return { id: c.id, text: c.text, owner: c.owner, finders: found, bonus, twin };
   });
-  const top = Math.max(...state.players.map((id) => scores[id] ?? 0));
-  const winners = top > 0 ? state.players.filter((id) => scores[id] === top) : [];
-  return { cards: revealCards, pairs, scores, winners };
+  const order = derivedRng(state.seed, "reveal").shuffle(cards.map((c) => c.id));
+  return { cards: revealCards, order, pairs, scores, awards: kendimAwards(scores) };
 }
 
 function jsonHas(json: string, value: string): boolean {
   return json.includes(value) || json.includes(JSON.stringify(value).slice(1, -1));
 }
 
+/** KN-M3: gerçekten tek kelime; boşluklu yazı reddedilir (tire serbest). */
 function parseText(raw: unknown): string | null {
-  return typeof raw === "string" ? sanitizeWord(raw) : null;
+  if (typeof raw !== "string") return null;
+  const text = sanitizeWord(raw);
+  return text === null || /\s/u.test(text) ? null : text;
 }
 
 export const kendim: GameDefinition<KendimState, KendimAction, KendimView, KendimPublicView> = {
@@ -131,9 +152,9 @@ export const kendim: GameDefinition<KendimState, KendimAction, KendimView, Kendi
   briefing: {
     goal: "Kelimeleri sahipleriyle eşleştir!",
     steps: [
-      "Kendini anlatan tek bir kelime yaz",
+      "Konu kartına göre kendini tek kelimeyle anlat",
       "Karışık kartları oyuncularla eşleştir",
-      "Doğru +1, yanlış −1, boş bırakmak serbest",
+      "Doğru eşleme +1, yanlış ceza yok",
     ],
   },
 
@@ -165,14 +186,21 @@ export const kendim: GameDefinition<KendimState, KendimAction, KendimView, Kendi
 
   setup(players: readonly string[], ctx: GameContext): KendimState {
     const writeEndsAt = ctx.now + KENDIM_WRITE_MS;
-    const matchEndsAt = writeEndsAt + KENDIM_MATCH_MS;
+    const matchEndsAt = writeEndsAt + kendimMatchMs(players.length);
+    // Tohum önce çekilir (kart sırası eski kayıtlarla aynı kalır), konu sonra.
+    const seed = drawSeed(ctx.rng);
+    const topics = poolEntries(KENDIM_TOPIC_POOL, ctx.content);
+    const topic =
+      topics.length > 0 ? (topics[ctx.rng.int(topics.length)] ?? KENDIM_DEFAULT_TOPIC) : KENDIM_DEFAULT_TOPIC;
     return {
       players: [...players],
-      seed: drawSeed(ctx.rng),
+      topic: { topic: topic.topic, hint: topic.hint },
+      topicCount: topics.length,
+      seed,
       startedAt: ctx.now,
       writeEndsAt,
       matchEndsAt,
-      finishAt: matchEndsAt + KENDIM_REVEAL_MS,
+      finishAt: matchEndsAt + kendimRevealMs(0),
       stage: "write",
       texts: {},
       writeLocked: [],
@@ -249,9 +277,20 @@ export const kendim: GameDefinition<KendimState, KendimAction, KendimView, Kendi
   },
 
   // Aşama değişimi durumu bir kez değiştirir: sunucu değişiklikte yayın yapar, geçişler tam zamanında görünür.
+  // Yazma bitince kart sayısı sabitlenir; açılış süresi (kart × 3 sn + 3 sn) bitişe yazılır.
+  // Yazma sürerken bitiş değişmez (kaç kişinin yazdığı görünmesin).
   tick(state, ctx): KendimState {
     const stage = stageAt(state, ctx.now);
-    return stage === state.stage ? state : { ...state, stage };
+    const finishAt = stage === "write" ? state.finishAt : finishOf(state, state.matchEndsAt);
+    if (stage === state.stage && finishAt === state.finishAt) return state;
+    return { ...state, stage, finishAt };
+  },
+
+  contentUsed(state) {
+    const n = state.topicCount;
+    // Havuz 5'ten uzunsa son 5 konu, kısaysa yalnız bir önceki tekrar edilmez.
+    const memory = n > KENDIM_TOPIC_MEMORY ? KENDIM_TOPIC_MEMORY : n === KENDIM_TOPIC_MEMORY ? n - 1 : 1;
+    return [{ poolId: KENDIM_TOPIC_POOL.id, key: KENDIM_TOPIC_POOL.key(state.topic), memory }];
   },
 
   publicView(state): KendimPublicView {
@@ -260,12 +299,16 @@ export const kendim: GameDefinition<KendimState, KendimAction, KendimView, Kendi
     return {
       players: [...state.players],
       stage: state.stage,
+      topic: state.topic.topic,
+      hint: state.topic.hint,
       startedAt: state.startedAt,
       writeEndsAt: state.writeEndsAt,
       matchEndsAt: state.matchEndsAt,
       finishAt: state.finishAt,
       ready: [...ready],
       owners: state.stage === "write" ? [] : state.players.filter((id) => has(state.texts, id)),
+      // KN-U7: eşleştirmeden itibaren kelime kartları sahipsiz olarak herkese (izleyici ve TV dahil) açıktır.
+      cards: state.stage === "write" ? [] : kendimCards(state).map(({ id, text }) => ({ id, text })),
       reveal: state.stage === "reveal" ? buildReveal(state) : null,
     };
   },
@@ -299,7 +342,8 @@ export const kendim: GameDefinition<KendimState, KendimAction, KendimView, Kendi
   },
 
   isFinished(state, ctx): boolean {
-    return ctx.now >= state.finishAt;
+    // Kelimeler yazma bitince sabittir: bitiş her zaman kart sayısından hesaplanır (tick beklenmez).
+    return ctx.now >= state.matchEndsAt && ctx.now >= finishOf(state, state.matchEndsAt);
   },
 
   // Kelimeler yazma aşamasında yalnız sahibinde; eşleştirmeden itibaren kartlar herkese (sahipsiz) görünür.
@@ -311,6 +355,9 @@ export const kendim: GameDefinition<KendimState, KendimAction, KendimView, Kendi
     for (const id of state.players) {
       const value = state.texts[id];
       if (value === undefined || value.length < 3) continue;
+      // Konu ve ipucu herkese açık: aynı metni taşıyan kelime sızıntı sayılmaz.
+      const open = `${state.topic.topic} ${state.topic.hint}`.toLocaleUpperCase("tr-TR");
+      if (open.includes(value.toLocaleUpperCase("tr-TR"))) continue;
       const owners = state.players.filter(
         (other) => other === id || jsonHas(JSON.stringify({ t: state.texts[other] ?? null }), value),
       );
@@ -320,9 +367,7 @@ export const kendim: GameDefinition<KendimState, KendimAction, KendimView, Kendi
   },
 
   result(state) {
-    const { scores, winners } = buildReveal(state);
-    const awards: Record<string, number> = {};
-    for (const id of winners) awards[id] = 1;
-    return { miniScores: { ...scores }, awards };
+    const { scores, awards } = buildReveal(state);
+    return { miniScores: { ...scores }, awards: { ...awards } };
   },
 };

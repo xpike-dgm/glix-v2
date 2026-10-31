@@ -116,6 +116,16 @@ function bozukPhoneArt(): boolean {
  * Yazı Yaz görselleri (`public/assets/props/yazi-yaz/*.webp`; sahip üretecek: docs/oneriler/yazi-yaz-gorsel.md).
  * Yalnız var olanlar istenir; yoksa ekran CSS çizimini kullanır (404 yok). Yeni dosya bir sonraki derlemede girer.
  */
+/** Kendim görsellerinden derlemede var olanlar (ayna çerçevesi, kart arka yüzü). */
+function kendimPropFiles(): string[] {
+  const dir = fileURLToPath(new URL("./public/assets/props/kendim", import.meta.url));
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".webp"))
+    .map((f) => f.slice(0, -".webp".length))
+    .sort();
+}
+
 function yaziYazPropFiles(): string[] {
   const dir = fileURLToPath(new URL("./public/assets/props/yazi-yaz", import.meta.url));
   if (!existsSync(dir)) return [];
@@ -131,6 +141,7 @@ export default defineConfig({
     __ALISVERIS_PROPS__: JSON.stringify(alisverisPropFiles()),
     __BOZUK_PHONE_ART__: JSON.stringify(bozukPhoneArt()),
     __KULE_PROPS__: JSON.stringify(kulePropFiles()),
+    __KENDIM_PROPS__: JSON.stringify(kendimPropFiles()),
     __ZB_BOMBA_GORSEL__: JSON.stringify(ZB_BOMBA_GORSEL),
   },
   plugins: [
