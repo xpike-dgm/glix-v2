@@ -5,7 +5,7 @@
  * E-posta, hesap ya da oyuncu kimliği gitmez.
  * Bir oyun buraya eklenmediyse o oyunda yorum yoktur. Sonuç henüz açılmadıysa kurucu null döner.
  */
-import { GAME_COMMENT_MAX } from "@glix/engine";
+import { BORSA_START_COINS, GAME_COMMENT_MAX } from "@glix/engine";
 import type { AiPrompt } from "./aiComment.js";
 
 /** Oyuncunun oyundaki takma adı (kimlik -> ad); bilinmiyorsa null. */
@@ -113,9 +113,62 @@ export const caprazPrompt: PromptBuilder = (publicView, nickname) => {
   };
 };
 
+/**
+ * Kara Borsa: tur tur kutunun değeri, kim kaça aldı ya da kimse almadı; oyuncu başına kaç kutu aldığı ve kârı.
+ * İpuçları gitmez (yalnız sahibinin görünümündedir, ortak görünümde zaten yoktur). Son tur açılınca kurulur.
+ */
+export const karaBorsaPrompt: PromptBuilder = (publicView, nickname) => {
+  if (!isRec(publicView) || !Array.isArray(publicView.history) || !Array.isArray(publicView.players))
+    return null;
+  const rounds = typeof publicView.rounds === "number" ? publicView.rounds : 0;
+  if (rounds <= 0 || publicView.history.length < rounds || publicView.phase === "bid") return null;
+  const players = publicView.players;
+  if (players.length === 0 || !players.every((id): id is string => typeof id === "string")) return null;
+  const coins = isRec(publicView.coins) ? publicView.coins : {};
+  const boxes = isRec(publicView.boxes) ? publicView.boxes : {};
+  const alias = new Map(players.map((id, i) => [id, `Oyuncu${i + 1}`]));
+  const names: Record<string, string> = {};
+  for (const [id, name] of alias) names[name] = promptName(nickname(id) ?? name);
+  const won: Record<string, number> = {};
+  const passed: Record<string, number> = {};
+  const roundLines: string[] = [];
+  for (const [i, raw] of publicView.history.slice(0, rounds).entries()) {
+    if (!isRec(raw) || typeof raw.value !== "number" || typeof raw.price !== "number") return null;
+    const big = i === rounds - 1 ? " (büyük final kutusu)" : "";
+    const what = raw.value < 0 ? `lanetli kutu (${raw.value})` : `kutu değeri ${raw.value}`;
+    const winner = typeof raw.winner === "string" ? alias.get(raw.winner) : undefined;
+    const bids = isRec(raw.bids) ? raw.bids : {};
+    for (const id of players) {
+      if (typeof bids[id] !== "number" || bids[id] <= 0) passed[id] = (passed[id] ?? 0) + 1;
+    }
+    if (winner && typeof raw.winner === "string") {
+      won[raw.winner] = (won[raw.winner] ?? 0) + 1;
+      const net = raw.value - raw.price;
+      const verdict = net > 0 ? `kâr ${signed(net)}` : net < 0 ? `zarar ${net}` : "başa baş";
+      roundLines.push(`- tur ${i + 1}${big}: ${what}; ${winner} ${raw.price} jetona aldı (${verdict})`);
+    } else roundLines.push(`- tur ${i + 1}${big}: ${what}; kimse almadı`);
+  }
+  const playerLines = players.map((id) => {
+    const c = typeof coins[id] === "number" ? coins[id] : 0;
+    const b = typeof boxes[id] === "number" ? boxes[id] : 0;
+    return `- ${alias.get(id)}: ${won[id] ?? 0} kutu aldı, ${passed[id] ?? 0} tur teklif vermedi; toplam kâr ${signed(c + b - BORSA_START_COINS)}`;
+  });
+  return {
+    system: system(
+      "mezatçısın; oyuncular gizli tekliflerle değeri bilinmeyen kutular aldı (kâr = kutu değeri − ödenen jeton, " +
+        "lanetli kutu eksi değerlidir, en çok kâr eden kazanır)",
+    ),
+    user:
+      `Oyun: Kara Borsa (gizli teklifli mezat, ${rounds} kutu). Turlar:\n${roundLines.join("\n")}\n` +
+      `Oyuncular:\n${playerLines.join("\n")}`,
+    names,
+  };
+};
+
 const BUILDERS: Record<string, PromptBuilder> = {
   "kontrol-paneli-kaosu": kontrolPrompt,
   "capraz-ates": caprazPrompt,
+  "kara-borsa": karaBorsaPrompt,
 };
 
 /** Bu oyunun yorum özeti (oyun yorum desteklemiyorsa ya da sonuç açılmadıysa null). */

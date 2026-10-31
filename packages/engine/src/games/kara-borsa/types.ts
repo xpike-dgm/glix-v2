@@ -3,7 +3,8 @@
 export const BORSA_ROUNDS = 5;
 export const BORSA_START_COINS = 100;
 export const BORSA_BID_MS = 20_000;
-export const BORSA_REVEAL_MS = 5_000;
+/** Açılış: tokmak, sırayla açılan teklifler, kutunun kapağı ve kâr/zarar damgası (KB-U1). */
+export const BORSA_REVEAL_MS = 8_000;
 /** Herkes teklif verince turun bitmesine kalan süre (ms). */
 export const BORSA_EARLY_MS = 1_000;
 export const BORSA_DURATION_MS = BORSA_ROUNDS * (BORSA_BID_MS + BORSA_REVEAL_MS);
@@ -12,6 +13,17 @@ export const BORSA_DURATION_MS = BORSA_ROUNDS * (BORSA_BID_MS + BORSA_REVEAL_MS)
 export const BORSA_MAX_VALUE = 60;
 export const BORSA_CURSED_VALUE = -20;
 export const BORSA_CURSED_CHANCE = 0.15;
+/** Son tur "Büyük Kutu": değer ve ipucu eşikleri bu kat (0..120 ya da lanetli −40). */
+export const BORSA_FINAL_SCALE = 2;
+
+/** Tura göre ölçek: son tur Büyük Kutu (2), diğerleri 1. */
+export const borsaScale = (round: number): number => (round === BORSA_ROUNDS - 1 ? BORSA_FINAL_SCALE : 1);
+/** Turun en büyük kutu değeri (60; son turda 120). */
+export const borsaMaxValue = (round: number): number => BORSA_MAX_VALUE * borsaScale(round);
+/** Turun lanetli kutu değeri (−20; son turda −40). */
+export const borsaCursedValue = (round: number): number => BORSA_CURSED_VALUE * borsaScale(round);
+/** Oyun içi puan kârdır: (kalan jeton + kutu değerleri) − başlangıç jetonu. */
+export const borsaProfit = (coins: number, boxes: number): number => coins + boxes - BORSA_START_COINS;
 
 export type BorsaAction = { kind: "bid"; amount: number };
 
@@ -30,6 +42,12 @@ export type BorsaHint =
   | { kind: "notMultiple"; n: number }
   | { kind: "cursed" }
   | { kind: "notCursed" };
+
+/** Oyuncunun bir turdaki ipuçları: değeri daraltan ana ipucu ve küçük ek ipucu (KB-M3). */
+export interface BorsaHintPair {
+  main: BorsaHint;
+  extra: BorsaHint;
+}
 
 export type BorsaPhase = "bid" | "reveal" | "done";
 
@@ -69,8 +87,8 @@ export interface BorsaPublicView {
 }
 
 export interface BorsaView {
-  /** Bu turdaki ipucun; izleyicide null. */
-  hint: BorsaHint | null;
+  /** Bu turdaki ipuçların (ana + ek); izleyicide null. */
+  hint: BorsaHintPair | null;
   /** Bu turda verdiğin teklif; vermediysen null. */
   myBid: number | null;
 }

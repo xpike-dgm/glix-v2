@@ -4,3 +4,5 @@ declare const __ALISVERIS_PROPS__: readonly string[] | undefined;
 declare const __BOZUK_PHONE_ART__: boolean | undefined;
 /** Yapı anında `vite.config.ts` `define` ile verilen görsel bayrakları (testlerde tanımsız olabilir). */
 declare const __ZB_BOMBA_GORSEL__: boolean | undefined;
+/** Kara Borsa nesne görsellerinden derlemede var olanlar (`public/assets/props/kara-borsa/*.webp`, uzantısız). */
+declare const __KARA_BORSA_PROPS__: readonly string[] | undefined;

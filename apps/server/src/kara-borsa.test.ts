@@ -39,9 +39,15 @@ describe("kara-borsa sunucu entegrasyonu", () => {
     expect(pub(a).phase).toBe("bid");
     expect(pub(a).reveal).toBeNull();
     expect(pub(a).coins[ids[0] as string]).toBe(100);
-    for (const x of cs) expect(mine(x).hint).not.toBeNull();
+    for (const x of cs) {
+      expect(mine(x).hint?.main).toBeDefined();
+      expect(mine(x).hint?.extra).toBeDefined();
+    }
+    // İpuçları ortak görünümde yok.
+    expect(JSON.stringify(pub(a))).not.toContain("kind");
 
-    const wealth: Record<string, number> = Object.fromEntries(ids.map((id) => [id, 100]));
+    // Oyun içi puan kârdır: (jeton + kutu değerleri) − 100.
+    const wealth: Record<string, number> = Object.fromEntries(ids.map((id) => [id, 0]));
     for (let round = 0; round < 5; round++) {
       await until(() => pub(a).round === round && pub(a).phase === "bid", `tur ${round} teklif`);
       expect(await send(a, { kind: "bid", amount: 101 })).toEqual({ ok: false, reason: "insufficient" });
@@ -70,15 +76,26 @@ describe("kara-borsa sunucu entegrasyonu", () => {
       });
       wealth[ids[0] as string] = (wealth[ids[0] as string] ?? 0) - (bids[0] ?? 0) + (reveal?.value ?? 0);
       expect(await send(a, { kind: "bid", amount: 1 })).toEqual({ ok: false, reason: "wrong_phase" });
-      k.clock.advance(5_000);
+      expect(reveal?.value).toBeGreaterThanOrEqual(round === 4 ? -40 : -20);
+      expect(reveal?.value).toBeLessThanOrEqual(round === 4 ? 120 : 60);
+      // Son tur açılışı sırasında oyun sürer ("Devam et" ve açılış); 8 sn sonra biter.
+      if (round === 4) {
+        k.clock.advance(7_000);
+        await sync();
+        expect(a.room.phase).toBe("playing");
+        k.clock.advance(1_000);
+      } else k.clock.advance(8_000);
       if (round < 4) await until(() => pub(a).round === round + 1, "sonraki tur");
     }
     await until(() => a.room.phase === "results", "sonuç");
     const mini = a.room.match?.result?.miniScores ?? {};
     for (const id of ids) expect(mini[id]).toBe(wealth[id]);
     const awards = a.room.match?.result?.awards ?? {};
-    const total = Object.values(awards).reduce((x, y) => x + y, 0);
-    expect(total).toBeGreaterThanOrEqual(3);
+    for (const id of ids) {
+      const profit = mini[id] ?? 0;
+      if (profit <= 0) expect(awards[id]).toBe(0);
+      else expect([1, 2]).toContain(awards[id]);
+    }
     await sync();
     for (const x of cs) {
       const me = x.room.players.find((p) => p.id === x.session.playerId);
@@ -87,14 +104,15 @@ describe("kara-borsa sunucu entegrasyonu", () => {
     expect((await send(a, { kind: "bid", amount: 1 })).ok).toBe(false);
   });
 
-  it("kimse teklif vermezse kutu kimseye gitmez ve oyun süreyle biter", async () => {
+  it("kimse teklif vermezse kutu kimseye gitmez, oyun süreyle biter ve kimse ödül almaz", async () => {
     const cs = await startBorsa(["A", "B", "C"]);
     const a = cs[0] as Client;
     k.clock.advance(20_000);
     await until(() => pub(a).phase === "reveal", "açılış");
     expect(pub(a).reveal?.winner).toBeNull();
-    k.clock.advance(5_000 + 4 * 25_000);
+    k.clock.advance(8_000 + 4 * 28_000);
     await until(() => a.room.phase === "results", "sonuç");
-    expect(Object.values(a.room.match?.result?.awards ?? {})).toEqual([2, 2, 2]);
+    expect(Object.values(a.room.match?.result?.miniScores ?? {})).toEqual([0, 0, 0]);
+    expect(Object.values(a.room.match?.result?.awards ?? {})).toEqual([0, 0, 0]);
   });
 });

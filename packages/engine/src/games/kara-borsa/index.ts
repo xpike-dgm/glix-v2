@@ -5,18 +5,20 @@ import { makeHints } from "./hints.js";
 import {
   BORSA_BID_MS,
   BORSA_CURSED_CHANCE,
-  BORSA_CURSED_VALUE,
   BORSA_EARLY_MS,
-  BORSA_MAX_VALUE,
   BORSA_REVEAL_MS,
   BORSA_ROUNDS,
   BORSA_START_COINS,
   type BorsaAction,
-  type BorsaHint,
+  type BorsaHintPair,
   type BorsaPhase,
   type BorsaPublicView,
   type BorsaRoundResult,
   type BorsaView,
+  borsaCursedValue,
+  borsaMaxValue,
+  borsaProfit,
+  borsaScale,
 } from "./types.js";
 
 export * from "./hints.js";
@@ -33,7 +35,7 @@ export interface BorsaState {
   startedAt: number;
   /** Önceden belirlenmiş gizli kutu değerleri (tur başına) ve oyuncu başına ipuçları. */
   values: number[];
-  hints: Record<string, BorsaHint>[];
+  hints: Record<string, BorsaHintPair>[];
   /** Geçerli tur ve aşama; yalnız `advance` ilerletir. */
   round: number;
   stage: BorsaPhase;
@@ -110,19 +112,22 @@ function advance(state: BorsaState, now: number): BorsaState {
   return s;
 }
 
+/** Oyun içi puan: kâr = (kalan jeton + kutu değerleri) − 100 (KB-M1; eksi olabilir). */
 export function borsaScores(s: BorsaState): Record<string, number> {
   const out: Record<string, number> = {};
-  for (const id of s.players) out[id] = (s.coins[id] ?? 0) + (s.boxes[id] ?? 0);
+  for (const id of s.players) out[id] = borsaProfit(s.coins[id] ?? 0, s.boxes[id] ?? 0);
   return out;
 }
 
-/** İlk üç derece +2 / +1 / +1; eşit puan aynı dereceyi (ve ödülü) paylaşır, sonraki derece atlanır. */
+/**
+ * Genel skor (KB-M1): yalnız kârı 0'dan büyük olanlar ödül alır. En yüksek kâr +2 (eşitlerin hepsi), sonraki farklı
+ * kâr +1 (eşitlerin hepsi), diğerleri 0. Kimse kâr etmediyse kimse ödül almaz; eksi ödül yoktur.
+ */
 export function borsaAwards(scores: Record<string, number>): Record<string, number> {
   const awards: Record<string, number> = {};
-  const values = Object.values(scores);
+  const levels = [...new Set(Object.values(scores).filter((v) => v > 0))].sort((a, b) => b - a);
   for (const [id, v] of Object.entries(scores)) {
-    const rank = 1 + values.filter((o) => o > v).length;
-    awards[id] = rank === 1 ? 2 : rank <= 3 ? 1 : 0;
+    awards[id] = v > 0 && v === levels[0] ? 2 : v > 0 && v === levels[1] ? 1 : 0;
   }
   return awards;
 }
@@ -134,11 +139,11 @@ export const karaBorsa: GameDefinition<BorsaState, BorsaAction, BorsaView, Borsa
   maxPlayers: 8,
   orientation: "portrait",
   briefing: {
-    goal: "Gizemli kutuları doğru fiyata al, en zengin sen ol!",
+    goal: "Gizemli kutuları ucuza kap, en çok kârı sen et!",
     steps: [
-      "Her tur bir kutu gelir; değerini yalnız sana özel ipucu anlatır",
-      "Gizli bir teklif ver: en yükseği kutuyu alır ve öder",
-      "Sonunda jetonların ile kutuların değeri puanındır",
+      "Her tur bir kutu gelir: 0–60 değerinde ya da lanetli (−20). Değerini yalnız sana özel ipucu anlatır. Son kutu iki kat!",
+      "Gizli bir teklif ver: en yükseği kutuyu alır ve teklifini öder",
+      "Kutunun değeri ödediğinden fazlaysa kâr edersin; en çok kâr eden kazanır",
     ],
   },
 
@@ -152,12 +157,13 @@ export const karaBorsa: GameDefinition<BorsaState, BorsaAction, BorsaView, Borsa
 
   setup(players: readonly string[], ctx: GameContext): BorsaState {
     const values: number[] = [];
-    const hints: Record<string, BorsaHint>[] = [];
+    const hints: Record<string, BorsaHintPair>[] = [];
     for (let r = 0; r < BORSA_ROUNDS; r++) {
+      // Son tur Büyük Kutu (KB-M2): 0..120 ya da lanetli −40; ipucu eşikleri de iki kat.
       const value =
-        ctx.rng.next() < BORSA_CURSED_CHANCE ? BORSA_CURSED_VALUE : ctx.rng.int(BORSA_MAX_VALUE + 1);
+        ctx.rng.next() < BORSA_CURSED_CHANCE ? borsaCursedValue(r) : ctx.rng.int(borsaMaxValue(r) + 1);
       values.push(value);
-      hints.push(makeHints(value, players, ctx.rng));
+      hints.push(makeHints(value, players, ctx.rng, borsaScale(r)));
     }
     const coins: Record<string, number> = {};
     const boxes: Record<string, number> = {};
@@ -226,8 +232,9 @@ export const karaBorsa: GameDefinition<BorsaState, BorsaAction, BorsaView, Borsa
     if (playerId === null || !s.players.includes(playerId) || s.stage === "done") {
       return { hint: null, myBid: null };
     }
+    const pair = s.hints[s.round]?.[playerId];
     return {
-      hint: s.hints[s.round]?.[playerId] ?? null,
+      hint: pair ? { main: { ...pair.main }, extra: { ...pair.extra } } : null,
       myBid: s.bids[playerId]?.amount ?? null,
     };
   },

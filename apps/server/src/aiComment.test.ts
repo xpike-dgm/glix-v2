@@ -233,6 +233,62 @@ describe("oyun sonu yorumu: Çapraz Ateş özeti", () => {
   });
 });
 
+describe("oyun sonu yorumu: Kara Borsa özeti", () => {
+  const round = (value: number, winner: string | null, price: number, bids: Record<string, number>) => ({
+    value,
+    winner,
+    price,
+    bids,
+  });
+  const history = [
+    round(37, "id-2", 44, { "id-1": 12, "id-2": 44, "id-3": 0 }),
+    round(-20, "id-1", 30, { "id-1": 30, "id-2": 0, "id-3": 0 }),
+    round(50, "id-2", 20, { "id-1": 0, "id-2": 20, "id-3": 0 }),
+    round(10, null, 0, { "id-1": 0, "id-2": 0, "id-3": 0 }),
+    round(100, "id-1", 40, { "id-1": 40, "id-2": 39, "id-3": 0 }),
+  ];
+  const view = {
+    phase: "reveal",
+    round: 4,
+    rounds: 5,
+    players: ["id-1", "id-2", "id-3"],
+    coins: { "id-1": 30, "id-2": 36, "id-3": 100 },
+    boxes: { "id-1": 80, "id-2": 87, "id-3": 0 },
+    history,
+    reveal: history[4],
+  };
+  const names: Record<string, string> = { "id-1": "Mert", "id-2": "Elif", "id-3": "Kaan" };
+
+  it("tur tur değer ve kim kaça aldı, oyuncu başına kâr; yer tutucu adlar, kimlik ve ad yok", () => {
+    const p = commentPrompt("kara-borsa", view, (id) => names[id] ?? null);
+    const user = p?.user ?? "";
+    expect(user).toContain("Kara Borsa");
+    expect(user).toContain("- tur 1: kutu değeri 37; Oyuncu2 44 jetona aldı (zarar -7)");
+    expect(user).toContain("- tur 2: lanetli kutu (-20); Oyuncu1 30 jetona aldı (zarar -50)");
+    expect(user).toContain("- tur 3: kutu değeri 50; Oyuncu2 20 jetona aldı (kâr +30)");
+    expect(user).toContain("- tur 4: kutu değeri 10; kimse almadı");
+    expect(user).toContain("- tur 5 (büyük final kutusu): kutu değeri 100; Oyuncu1 40 jetona aldı (kâr +60)");
+    expect(user).toContain("- Oyuncu1: 2 kutu aldı, 2 tur teklif vermedi; toplam kâr +10");
+    expect(user).toContain("- Oyuncu2: 2 kutu aldı, 2 tur teklif vermedi; toplam kâr +23");
+    expect(user).toContain("- Oyuncu3: 0 kutu aldı, 5 tur teklif vermedi; toplam kâr 0");
+    for (const n of ["Mert", "Elif", "Kaan", "id-1", "id-2", "id-3"]) expect(user).not.toContain(n);
+    expect(user).not.toMatch(/ipucu|hint/i);
+    expect(p?.names).toEqual({ Oyuncu1: "Mert", Oyuncu2: "Elif", Oyuncu3: "Kaan" });
+    expect(p?.system).toMatch(/mezatçı/);
+    expect(p?.system).toMatch(/Kimseyi aşağılama/);
+  });
+
+  it("son tur açılmadan, teklif sırasında ya da bozuk görünümde özet yok", () => {
+    expect(commentPrompt("kara-borsa", { ...view, history: history.slice(0, 4) }, () => "x")).toBeNull();
+    expect(commentPrompt("kara-borsa", { ...view, phase: "bid" }, () => "x")).toBeNull();
+    expect(
+      commentPrompt("kara-borsa", { ...view, history: [null, ...history.slice(1)] }, () => "x"),
+    ).toBeNull();
+    expect(commentPrompt("kara-borsa", { ...view, players: [1, 2] }, () => "x")).toBeNull();
+    expect(commentPrompt("kara-borsa", null, () => "x")).toBeNull();
+  });
+});
+
 describe("oyun sonu yorumu: canlı yanıt biçimi ve adlar", () => {
   const raw = (body: unknown) => vi.fn<AiFetch>(async () => ({ status: 200, json: async () => body }));
 

@@ -20,7 +20,7 @@ export type PropPath =
       | "taht"
       | "tuval"}`
   | `gizli-alisveris/${string}`
-  | `kara-borsa/${"kutu-ahsap" | "kutu-antika" | "kutu-celik" | "kutu-hediye" | "kutu-lanet"}`
+  | `kara-borsa/${string}`
   | `kontrol-paneli-kaosu/${
       | "kablo-kirmizi"
       | "kablo-mavi"
@@ -72,6 +72,28 @@ export function alisverisPropExists(file: string): boolean {
   return built ? built.includes(file) : ALISVERIS_PROP_FILES.indexOf(file) < 12;
 }
 
+/** Kara Borsa'da bugün depoda olan görseller (derleme listesi yoksa, örn. testlerde, bunlar var sayılır). */
+const KARA_BORSA_BASE = ["kutu-ahsap", "kutu-antika", "kutu-celik", "kutu-hediye", "kutu-lanet"];
+
+/**
+ * Kara Borsa görseli derlemede var mıydı? Yeni görseller (açık kutular `<kutu>-acik`, `tokmak`, `buyuk-sandik`)
+ * sahip tarafından üretilip `public/assets/props/kara-borsa/<ad>.webp` olarak konunca kod değişmeden kullanılır;
+ * yokken ekran CSS/SVG karşılığını çizer ve dosyayı hiç istemez (404 ve konsol hatası olmaz).
+ */
+export function karaBorsaPropExists(name: string): boolean {
+  const built = typeof __KARA_BORSA_PROPS__ === "undefined" ? undefined : __KARA_BORSA_PROPS__;
+  return built ? built.includes(name) : KARA_BORSA_BASE.includes(name);
+}
+
+/** Kara Borsa'nın önden indirilecek, gerçekten var olan görselleri. */
+export const KARA_BORSA_PROP_FILES: readonly string[] = [
+  ...KARA_BORSA_BASE,
+  ...["kutu-ahsap", "kutu-celik", "kutu-hediye", "kutu-antika", "kutu-lanet"].map((b) => `${b}-acik`),
+  "tokmak",
+  "buyuk-sandik",
+  "buyuk-sandik-acik",
+];
+
 const BOMBA: PropPath[] = ["bomba/govde", "bomba/fitil", "bomba/kivilcim", "bomba/patlama"];
 
 /** Oyun kimliği -> o oyunun nesneleri (anlatım başlarken önden indirilir). */
@@ -79,13 +101,7 @@ const GAME_PROPS: Record<string, readonly PropPath[]> = {
   "gizli-alisveris": ALISVERIS_PROP_FILES.filter(alisverisPropExists).map(
     (f): PropPath => `gizli-alisveris/${f}`,
   ),
-  "kara-borsa": [
-    "kara-borsa/kutu-ahsap",
-    "kara-borsa/kutu-antika",
-    "kara-borsa/kutu-celik",
-    "kara-borsa/kutu-hediye",
-    "kara-borsa/kutu-lanet",
-  ],
+  "kara-borsa": KARA_BORSA_PROP_FILES.filter(karaBorsaPropExists).map((f): PropPath => `kara-borsa/${f}`),
   "kor-bomba": BOMBA,
   "zaman-bombasi-hafizasi": BOMBA,
   "rus-ruleti": ["rus-ruleti/tabanca", "rus-ruleti/tambur"],

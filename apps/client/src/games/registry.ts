@@ -163,6 +163,8 @@ const registry: Record<string, GameEntry> = {
   "kara-borsa": {
     Screen: lazy(() => import("./kara-borsa/KaraBorsaScreen.js")),
     Art: lazy(() => import("./kara-borsa/BriefingArt.js")),
+    // TV: solda büyük kutu ve pazar defteri, sağda oyuncu sütunu; açılış tüm sahnede (KB-U6).
+    StageView: lazy(() => import("./kara-borsa/StageView.js")),
   },
   "laf-sokma": {
     Screen: lazy(() => import("./laf-sokma/LafSokmaScreen.js")),

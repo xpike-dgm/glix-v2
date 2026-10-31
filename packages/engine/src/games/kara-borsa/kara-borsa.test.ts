@@ -3,17 +3,18 @@ import { describe, expect, it } from "vitest";
 import { isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
 import { BOTS, buildActions, buildTicks, runSimulation } from "../../testing/index.js";
-import { hintHolds, makeHints } from "./hints.js";
+import { cursedSeerLimit, hintHolds, makeHints } from "./hints.js";
 import { type BorsaState, borsaAwards, karaBorsa as game, settleRound } from "./index.js";
 import {
   BORSA_BID_MS,
   BORSA_CURSED_VALUE,
   BORSA_DURATION_MS,
+  BORSA_FINAL_SCALE,
   BORSA_REVEAL_MS,
   BORSA_ROUNDS,
   BORSA_START_COINS,
   type BorsaAction,
-  type BorsaHint,
+  type BorsaHintPair,
 } from "./types.js";
 
 const T0 = 1_000_000;
@@ -53,14 +54,14 @@ function playRounds(s: BorsaState, plan: Record<string, number>[]): BorsaState {
 }
 
 describe("kara-borsa kurulum", () => {
-  it("3-8 oyuncu, 5 tur, herkes 100 jetonla başlar; teklif 20 sn, açılış 5 sn", () => {
+  it("3-8 oyuncu, 5 tur, herkes 100 jetonla başlar; teklif 20 sn, açılış 8 sn", () => {
     expect(game.minPlayers).toBe(3);
     expect(game.maxPlayers).toBe(8);
     expect(BORSA_ROUNDS).toBe(5);
     expect(BORSA_START_COINS).toBe(100);
     expect(BORSA_BID_MS).toBe(20_000);
-    expect(BORSA_REVEAL_MS).toBe(5_000);
-    expect(BORSA_DURATION_MS).toBe(125_000);
+    expect(BORSA_REVEAL_MS).toBe(8_000);
+    expect(BORSA_DURATION_MS).toBe(140_000);
     const s = game.setup(PLAYERS, ctx(0));
     expect(s.coins).toEqual({ a: 100, b: 100, c: 100, d: 100 });
     expect(s.stageEndsAt).toBe(T0 + 20_000);
@@ -73,13 +74,13 @@ describe("kara-borsa kurulum", () => {
     for (const w of ["debug", "protocol", "server", "stage"]) expect(all).not.toContain(w);
   });
 
-  it("kutu değeri 0-60 tam sayı ya da lanetli (-20); lanetli oranı ~%15", () => {
+  it("1-4. tur kutu değeri 0-60 tam sayı ya da lanetli (-20); lanetli oranı ~%15", () => {
     let cursed = 0;
     let total = 0;
     const seen = new Set<number>();
     for (let seed = 1; seed <= 1500; seed++) {
       const s = game.setup(PLAYERS, { now: 0, rng: createRng(seed), connected: PLAYERS });
-      for (const v of s.values) {
+      for (const v of s.values.slice(0, 4)) {
         total++;
         if (v === BORSA_CURSED_VALUE) cursed++;
         else {
@@ -91,6 +92,26 @@ describe("kara-borsa kurulum", () => {
     expect(cursed / total).toBeGreaterThan(0.13);
     expect(cursed / total).toBeLessThan(0.17);
     expect(seen.size).toBe(61);
+  });
+
+  it("son tur Büyük Kutu: değer 0-120 ya da lanetli (-40), lanetli oranı ~%15", () => {
+    expect(BORSA_FINAL_SCALE).toBe(2);
+    let cursed = 0;
+    let high = 0;
+    const seen = new Set<number>();
+    for (let seed = 1; seed <= 3000; seed++) {
+      const v = game.setup(PLAYERS, { now: 0, rng: createRng(seed), connected: PLAYERS }).values[4] as number;
+      if (v === -40) cursed++;
+      else {
+        expect(Number.isInteger(v) && v >= 0 && v <= 120).toBe(true);
+        seen.add(v);
+        if (v > 60) high++;
+      }
+    }
+    expect(cursed / 3000).toBeGreaterThan(0.12);
+    expect(cursed / 3000).toBeLessThan(0.18);
+    expect(seen.size).toBe(121);
+    expect(high).toBeGreaterThan(1000);
   });
 
   it("aynı tohum aynı kurulum", () => {
@@ -110,7 +131,10 @@ describe("kara-borsa ipuçları", () => {
           const players = Array.from({ length: n }, (_, i) => `p${i}`);
           const hints = makeHints(value, players, createRng(seed));
           expect(Object.keys(hints)).toHaveLength(n);
-          for (const h of Object.values(hints)) expect(hintHolds(h, value), JSON.stringify(h)).toBe(true);
+          for (const h of Object.values(hints)) {
+            expect(hintHolds(h.main, value), JSON.stringify(h)).toBe(true);
+            expect(hintHolds(h.extra, value), JSON.stringify(h)).toBe(true);
+          }
         },
       ),
       { numRuns: 2000 },
@@ -122,7 +146,11 @@ describe("kara-borsa ipuçları", () => {
       const players = ["a", "b", "c", "d", "e", "f"];
       const s = game.setup(players, { now: 0, rng: createRng(seed), connected: players });
       s.hints.forEach((round, r) => {
-        for (const id of players) expect(hintHolds(round[id] as BorsaHint, s.values[r] as number)).toBe(true);
+        for (const id of players) {
+          const pair = round[id] as BorsaHintPair;
+          expect(hintHolds(pair.main, s.values[r] as number)).toBe(true);
+          expect(hintHolds(pair.extra, s.values[r] as number)).toBe(true);
+        }
       });
     }
   });
@@ -144,13 +172,82 @@ describe("kara-borsa ipuçları", () => {
     expect(hintHolds({ kind: "odd" }, -20)).toBe(false);
   });
 
-  it("oyuncular çoğunlukla farklı ipuçları alır", () => {
+  it("oyuncular çoğunlukla farklı ana ipuçları alır", () => {
     let distinct = 0;
     for (let seed = 1; seed <= 100; seed++) {
       const hints = makeHints(33, PLAYERS, createRng(seed));
-      distinct += new Set(Object.values(hints).map((h) => JSON.stringify(h))).size;
+      distinct += new Set(Object.values(hints).map((h) => JSON.stringify(h.main))).size;
     }
     expect(distinct / 100).toBeGreaterThan(3.2);
+  });
+
+  it("ana ipucu lanetsiz kutuda değeri daraltır: büyük / küçük / arasında (aralık en çok 30 geniş)", () => {
+    fc.assert(
+      fc.property(fc.integer({ min: 0, max: 60 }), fc.integer({ min: 0, max: 2 ** 30 }), (value, seed) => {
+        for (const { main } of Object.values(makeHints(value, ["a", "b", "c", "d", "e"], createRng(seed)))) {
+          expect(["gt", "lt", "between"]).toContain(main.kind);
+          if (main.kind === "between") expect(main.hi - main.lo).toBeLessThanOrEqual(30);
+          if (main.kind === "gt" || main.kind === "lt") expect(main.n).toBeLessThanOrEqual(60);
+        }
+      }),
+      { numRuns: 1000 },
+    );
+  });
+
+  it("ek ipucu: çift/tek, 3/5/10 katı mı, ya da (lanetsizde) 'lanetli değil'", () => {
+    const kinds = new Set<string>();
+    for (let seed = 1; seed <= 300; seed++) {
+      for (const value of [0, 7, 30, 45, 60, -20]) {
+        for (const { main, extra } of Object.values(makeHints(value, PLAYERS, createRng(seed)))) {
+          kinds.add(extra.kind);
+          expect(["even", "odd", "multiple", "notMultiple", "notCursed"]).toContain(extra.kind);
+          if (value < 0) expect(extra.kind).not.toBe("notCursed");
+          // "Lanetli değil" yalnız ana ipucu bunu zaten söylemiyorsa (ana ipucu "küçük") verilir.
+          if (extra.kind === "notCursed") expect(main.kind).toBe("lt");
+        }
+      }
+    }
+    expect(kinds).toEqual(new Set(["even", "odd", "multiple", "notMultiple", "notCursed"]));
+  });
+
+  it("lanetli kutu: en az 1, en çok yarısı (yukarı) 'Kutu lanetli!' görür; diğerleri 'n'den küçük' (n 1-40)", () => {
+    expect([3, 4, 5, 8].map(cursedSeerLimit)).toEqual([2, 2, 3, 4]);
+    for (const n of [3, 4, 5, 8]) {
+      const players = Array.from({ length: n }, (_, i) => `p${i}`);
+      const counts = new Set<number>();
+      for (let seed = 1; seed <= 200; seed++) {
+        const hints = Object.values(makeHints(BORSA_CURSED_VALUE, players, createRng(seed)));
+        const seers = hints.filter((h) => h.main.kind === "cursed").length;
+        expect(seers).toBeGreaterThanOrEqual(1);
+        expect(seers).toBeLessThanOrEqual(Math.ceil(n / 2));
+        counts.add(seers);
+        for (const { main } of hints) {
+          if (main.kind === "cursed") continue;
+          expect(main.kind).toBe("lt");
+          if (main.kind === "lt") expect(main.n >= 1 && main.n <= 40).toBe(true);
+        }
+      }
+      expect(counts.size).toBe(Math.ceil(n / 2));
+    }
+  });
+
+  it("Büyük Kutu ipuçları ölçekli: eşikler 0-120, aralık en çok 60, lanetlide n 1-80", () => {
+    for (let seed = 1; seed <= 400; seed++) {
+      for (const value of [0, 15, 70, 119, 120]) {
+        for (const { main } of Object.values(makeHints(value, PLAYERS, createRng(seed), 2))) {
+          expect(hintHolds(main, value)).toBe(true);
+          if (main.kind === "between") expect(main.hi - main.lo).toBeLessThanOrEqual(60);
+          if (main.kind === "gt" || main.kind === "lt") expect(main.n).toBeLessThanOrEqual(120);
+        }
+      }
+      for (const { main, extra } of Object.values(makeHints(-40, PLAYERS, createRng(seed), 2))) {
+        expect(hintHolds(main, -40) && hintHolds(extra, -40)).toBe(true);
+        if (main.kind === "lt") expect(main.n >= 1 && main.n <= 80).toBe(true);
+      }
+    }
+    // Ölçek gerçekten büyür: yüksek eşikler görülür.
+    const big = Array.from({ length: 200 }, (_, seed) => makeHints(110, PLAYERS, createRng(seed), 2));
+    expect(big.some((h) => Object.values(h).some((p) => p.main.kind === "gt" && p.main.n > 60))).toBe(true);
   });
 
   it("her oyuncu yalnız kendi ipucunu görür; izleyici ipucu görmez", () => {
@@ -276,7 +373,8 @@ describe("kara-borsa tur sonucu", () => {
     const s = playRounds(start([BORSA_CURSED_VALUE, 0, 0, 0, 0]), [{ a: 30 }]);
     expect(s.coins.a).toBe(70);
     expect(s.boxes.a).toBe(-20);
-    expect(game.result(s).miniScores.a).toBe(50);
+    // Kâr: (70 + (−20)) − 100 = −50.
+    expect(game.result(s).miniScores.a).toBe(-50);
   });
 
   it("jeton teklif kadar azalır; sonraki turda yeni bakiye sınırdır", () => {
@@ -317,27 +415,46 @@ describe("kara-borsa tur sonucu", () => {
   });
 });
 
-describe("kara-borsa puanlama", () => {
-  it("mini puan = kalan jeton + alınan kutuların değeri", () => {
+describe("kara-borsa puanlama (kâr, +2 / +1 / 0)", () => {
+  it("oyun içi puan kâr = kalan jeton + alınan kutuların değeri − 100", () => {
     const s = playRounds(start([40, 10, 0, 0, 0]), [{ a: 30 }, { a: 5, b: 20 }, {}, {}, {}]);
     const r = game.result(s);
-    expect(r.miniScores).toEqual({ a: 100 - 30 + 40, b: 100 - 20 + 10, c: 100, d: 100 });
+    expect(r.miniScores).toEqual({ a: 40 - 30, b: 10 - 20, c: 0, d: 0 });
   });
 
-  it("genel skor: 1. +2, 2. +1, 3. +1", () => {
-    expect(borsaAwards({ a: 150, b: 120, c: 110, d: 90 })).toEqual({ a: 2, b: 1, c: 1, d: 0 });
+  it("genel skor: en yüksek kâr +2, ikinci +1, diğerleri 0", () => {
+    expect(borsaAwards({ a: 50, b: 20, c: 10, d: -10 })).toEqual({ a: 2, b: 1, c: 0, d: 0 });
   });
 
-  it("eşitlikte aynı derece aynı ödülü alır, sonraki derece atlanır", () => {
-    expect(borsaAwards({ a: 150, b: 150, c: 110, d: 90 })).toEqual({ a: 2, b: 2, c: 1, d: 0 });
-    expect(borsaAwards({ a: 150, b: 120, c: 120, d: 90 })).toEqual({ a: 2, b: 1, c: 1, d: 0 });
-    expect(borsaAwards({ a: 150, b: 120, c: 100, d: 100 })).toEqual({ a: 2, b: 1, c: 1, d: 1 });
-    expect(borsaAwards({ a: 150, b: 150, c: 150, d: 90 })).toEqual({ a: 2, b: 2, c: 2, d: 0 });
-    expect(borsaAwards({ a: 100, b: 100, c: 100, d: 100 })).toEqual({ a: 2, b: 2, c: 2, d: 2 });
+  it("birincide eşitlik: hepsi +2, sonraki farklı kâr +1 (eşitleri de)", () => {
+    expect(borsaAwards({ a: 50, b: 50, c: 10, d: 5 })).toEqual({ a: 2, b: 2, c: 1, d: 0 });
+    expect(borsaAwards({ a: 50, b: 20, c: 20, d: 5 })).toEqual({ a: 2, b: 1, c: 1, d: 0 });
+    expect(borsaAwards({ a: 50, b: 50, c: 50, d: 1 })).toEqual({ a: 2, b: 2, c: 2, d: 1 });
   });
 
-  it("negatif puan da sıralanır", () => {
-    expect(borsaAwards({ a: -5, b: -20, c: -30, d: -40 })).toEqual({ a: 2, b: 1, c: 1, d: 0 });
+  it("kârı 0 ya da eksi olan ödül almaz; tek kârlı oyuncu yalnız +2 alır", () => {
+    expect(borsaAwards({ a: 7, b: 0, c: 0, d: -20 })).toEqual({ a: 2, b: 0, c: 0, d: 0 });
+    expect(borsaAwards({ a: 7, b: 3, c: 0, d: 0 })).toEqual({ a: 2, b: 1, c: 0, d: 0 });
+  });
+
+  it("kimse kâr etmediyse (herkes geçti ya da zararda) kimse ödül almaz; eksi ödül yok", () => {
+    expect(borsaAwards({ a: 0, b: 0, c: 0, d: 0 })).toEqual({ a: 0, b: 0, c: 0, d: 0 });
+    expect(borsaAwards({ a: -5, b: -20, c: -30, d: -40 })).toEqual({ a: 0, b: 0, c: 0, d: 0 });
+    const allPass = game.result(playRounds(start(), [{}, {}, {}, {}, {}]));
+    expect(allPass.miniScores).toEqual({ a: 0, b: 0, c: 0, d: 0 });
+    expect(allPass.awards).toEqual({ a: 0, b: 0, c: 0, d: 0 });
+  });
+
+  it("8 oyuncu: en çok iki farklı derece ödül alır", () => {
+    const scores = { a: 30, b: 25, c: 20, d: 15, e: 10, f: 5, g: 0, h: -5 };
+    expect(borsaAwards(scores)).toEqual({ a: 2, b: 1, c: 0, d: 0, e: 0, f: 0, g: 0, h: 0 });
+  });
+
+  it("Büyük Kutu kârı iki kat sayılır: son turda 120'lik kutuyu 50'ye alan +70", () => {
+    const s = playRounds(start([0, 0, 0, 0, 120]), [{}, {}, {}, {}, { b: 50, c: 49 }]);
+    const r = game.result(s);
+    expect(r.miniScores).toEqual({ a: 0, b: 70, c: 0, d: 0 });
+    expect(r.awards).toEqual({ a: 0, b: 2, c: 0, d: 0 });
   });
 
   it("result tick gelmeden de aynı (kalan turlar teklifsiz kapanır)", () => {
@@ -345,14 +462,25 @@ describe("kara-borsa puanlama", () => {
     const lazy = game.result(s);
     const ticked = game.result(tickAt(s, roundStart(5)));
     expect(lazy).toEqual(ticked);
-    expect(lazy.miniScores.a).toBe(110);
-    expect(lazy.awards).toEqual({ a: 2, b: 1, c: 1, d: 1 });
+    expect(lazy.miniScores.a).toBe(10);
+    expect(lazy.awards).toEqual({ a: 2, b: 0, c: 0, d: 0 });
   });
 
-  it("awards katılımcılara, tam sayı", () => {
+  it("awards katılımcılara, tam sayı, eksi değil", () => {
     const r = game.result(playRounds(start(), [{ a: 5, b: 7 }]));
     expect(Object.keys(r.awards).sort()).toEqual(PLAYERS);
-    for (const v of Object.values(r.awards)) expect(Number.isInteger(v)).toBe(true);
+    for (const v of Object.values(r.awards)) expect(Number.isInteger(v) && v >= 0).toBe(true);
+  });
+
+  it("revealAt: son turun açılışının gerçek başlangıcı (erken bitişte öne çekilmiş an); öncesinde null", () => {
+    let s = start();
+    s = tickAt(s, roundStart(4));
+    expect(game.revealAt?.(s, ctx(roundStart(4) + 100))).toBeNull();
+    for (const id of PLAYERS) s = act(s, id, bid(0), roundStart(4) + 2_000);
+    // Herkes verdi: teklif 1 sn sonra biter; açılış o anda başlar.
+    expect(game.revealAt?.(s, ctx(roundStart(4) + 3_000))).toBe(T0 + roundStart(4) + 3_000);
+    expect(game.isFinished(s, ctx(roundStart(4) + 3_000 + BORSA_REVEAL_MS - 1))).toBe(false);
+    expect(game.isFinished(s, ctx(roundStart(4) + 3_000 + BORSA_REVEAL_MS))).toBe(true);
   });
 });
 
@@ -458,10 +586,12 @@ describe("kara-borsa gizlilik (yapısal)", () => {
     expect(pub).not.toContain("hint");
     expect(pub).not.toContain('"kind"');
     for (const id of PLAYERS) {
-      const own = game.view(s, id, ctx(0)).hint as BorsaHint;
+      const own = game.view(s, id, ctx(0)).hint;
       expect(own).toEqual(s.hints[0]?.[id]);
     }
-    // Her görünüm tek bir ipucu taşır: kendisininki.
+    // Her görünüm tek bir ipucu çifti taşır: kendisininki (ana + ek).
+    for (const id of PLAYERS)
+      expect(Object.keys(game.view(s, id, ctx(0)).hint ?? {}).sort()).toEqual(["extra", "main"]);
     for (const id of PLAYERS) expect(Object.keys(game.view(s, id, ctx(0))).sort()).toEqual(["hint", "myBid"]);
   });
 
