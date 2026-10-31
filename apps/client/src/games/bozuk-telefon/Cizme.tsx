@@ -3,8 +3,11 @@ import { For, Show } from "solid-js";
 import { Avatar } from "../../ui/Avatar.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import { DrawBoard } from "../karalama-defteri/DrawBoard.js";
+import { FULL_PENS } from "../karalama-defteri/draw.js";
 import type { Crew } from "./BozukTelefonScreen.js";
+import { FitText } from "./FitText.js";
 import { StepHeader } from "./StepHeader.js";
+import { penScratch } from "./sounds.js";
 import type { BozukScreenView } from "./view.js";
 
 interface Props {
@@ -31,7 +34,7 @@ export function Cizme(props: Props) {
       <Show when={!props.spectator}>
         <p class="bt__say" data-blank={sentence() === "…" ? "1" : undefined}>
           <Show when={sentence() !== "…"} fallback={<span>Cümle gelmedi, aklına geleni çiz!</span>}>
-            <span>{sentence()}</span>
+            <FitText text={sentence()} max={20} min={12} class="bt__saytext" />
           </Show>
         </p>
       </Show>
@@ -83,6 +86,13 @@ export function Cizme(props: Props) {
         maxPoints={BOZUK_MAX_TOTAL_POINTS}
         header={header()}
         now={props.now}
+        pens={FULL_PENS}
+        sizes={[1, 2, 3, 4]}
+        compact
+        inset={2}
+        onInk={(k) => {
+          if (k !== "end") penScratch();
+        }}
       />
     </Show>
   );

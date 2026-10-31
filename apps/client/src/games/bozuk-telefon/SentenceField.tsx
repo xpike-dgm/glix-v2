@@ -8,6 +8,12 @@ export function typedSentence(value: string): string {
     .join("");
 }
 
+/** Uzun cümlede alan yazısı küçülür (kelimeler bölünmeden sığsın). */
+export const sentenceLen = (value: string): "s" | "m" | "l" => {
+  const n = Array.from(value).length;
+  return n > 40 ? "l" : n > 24 ? "m" : "s";
+};
+
 /** Gönderilebilir mi (en az bir harf ya da rakam). */
 export const hasSentence = (value: string): boolean => /[\p{L}\p{N}]/u.test(value);
 
@@ -54,10 +60,12 @@ export function SentenceField(props: Props) {
         aria-label={props.label}
         disabled={props.locked}
         value={untrack(() => props.value)}
+        data-len={sentenceLen(untrack(() => props.value))}
         onInput={(e) => {
           const el = e.currentTarget;
           const value = typedSentence(el.value);
           if (value !== el.value) el.value = value;
+          el.dataset.len = sentenceLen(value);
           current = value;
           props.onType(value);
           clearTimeout(timer);

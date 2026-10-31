@@ -1,11 +1,12 @@
 // biome-ignore-all lint/a11y/noSvgWithoutTitle: simgeler dekoratif (aria-hidden)
 import {
-  KARALAMA_COLORS,
+  type DrawSize,
+  KARALAMA_ERASER_INDEX,
   KARALAMA_MAX_STROKES,
   KARALAMA_MAX_TOTAL_POINTS,
   type KaralamaStroke,
 } from "@glix/engine";
-import { createEffect, createSignal, For, type JSX, onCleanup, onMount, untrack } from "solid-js";
+import { createEffect, createSignal, For, type JSX, onCleanup, onMount, Show, untrack } from "solid-js";
 import { hapticReady, hapticTap, hapticTick } from "../../fx/haptics.js";
 import { tap, tick, unlockAudio } from "../../fx/sound.js";
 import { sendAction, sendActionAck } from "../../net/client.js";
@@ -14,6 +15,7 @@ import { CbMarker } from "../../ui/CbMarker.js";
 import type { AckLike } from "../../ui/optimistic.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import {
+  CLASSIC_PENS,
   MIN_STEP,
   PEN_COLORS,
   PEN_NAMES,
@@ -29,7 +31,8 @@ import { penIdOf } from "./view.js";
 
 /** Bir çizgi bu kadar noktaya ulaşınca (sadeleştirmeden önce) parça parça gönderilir. */
 const FLUSH_AT = 600;
-const ERASER = KARALAMA_COLORS.length;
+const ERASER = KARALAMA_ERASER_INDEX;
+const CLASSIC_SIZES: readonly DrawSize[] = [1, 2, 3];
 
 /**
  * Ortak çizim tahtası (Karalama Defteri ve Bozuk Telefon): üst şerit dışarıdan verilir, kotalar ve kilit durumu
@@ -51,6 +54,19 @@ export interface DrawBoardProps {
   /** Tahtanın üstündeki şerit (başlık + süre). */
   header: JSX.Element;
   now: () => number;
+  /** Araç çubuğundaki kalemler (kalem dizinleri, `DRAW_PENS` sırası); verilmezse ilk palet (6 renk). */
+  pens?: readonly number[];
+  /** Seçilebilen kalınlıklar; verilmezse 1-3. */
+  sizes?: readonly DrawSize[];
+  /**
+   * Sıkı araç çubuğu: renk ve kalınlık tek düğmede, dokununca çubuğun üstünde açılan panelden seçilir; tuvale en çok
+   * yer kalır. Seçili kalınlık, kalem renginde gerçek boyuyla önizlenir.
+   */
+  compact?: boolean;
+  /** Tahtanın ekran kenarından içeride kalma payı (px); verilmezse 8. */
+  inset?: number;
+  /** Çizim olayları (ses/titreşim için): darbe başladı, sürüyor, bitti. */
+  onInk?: (kind: "start" | "move" | "end") => void;
 }
 
 const EraserIcon = () => (
@@ -100,7 +116,7 @@ const TrashIcon = () => (
   </svg>
 );
 
-/** Çizim tahtası: tek parmakla/kalemle çizim, 6 renk + silgi, 3 kalınlık, geri al, temizle. */
+/** Çizim tahtası: tek parmakla/kalemle çizim, renkler + silgi, kalınlıklar, geri al, temizle. */
 /** Tahtanın ekran kenarından en az bu kadar (px) içeride kalması için ayrılan pay. */
 const EDGE_INSET = 8;
 
@@ -111,7 +127,10 @@ export function DrawBoard(props: DrawBoardProps) {
   let board: HTMLDivElement | undefined;
 
   const [pen, setPen] = createSignal(0);
-  const [size, setSize] = createSignal<1 | 2 | 3>(2);
+  const [size, setSize] = createSignal<DrawSize>(2);
+  const [panel, setPanel] = createSignal<"color" | "size" | null>(null);
+  const pens = (): readonly number[] => props.pens ?? CLASSIC_PENS;
+  const sizes = (): readonly DrawSize[] => props.sizes ?? CLASSIC_SIZES;
   const [count, setCount] = createSignal(0);
   const [confirmClear, setConfirmClear] = createSignal(false);
   const [box, setBox] = createSignal(0);
@@ -140,7 +159,8 @@ export function DrawBoard(props: DrawBoardProps) {
   const resizeBoard = (): void => {
     if (!stage || !base || !live) return;
     // Yanlardan küçük pay: Safari'nin kenardan "geri" kaydırması çizgiyi alıp götürmesin.
-    const side = Math.floor(Math.min(stage.clientWidth - EDGE_INSET * 2, stage.clientHeight));
+    const inset = props.inset ?? EDGE_INSET;
+    const side = Math.floor(Math.min(stage.clientWidth - inset * 2, stage.clientHeight));
     if (side < 2) return;
     setBox(side);
     const backing = Math.round(side * dpr());
@@ -321,7 +341,9 @@ export function DrawBoard(props: DrawBoardProps) {
     painted = 0;
     addPoint(e.clientX, e.clientY);
     if (cur.length === 0) return;
+    setPanel(null);
     hapticTick();
+    props.onInk?.("start");
     schedule();
   };
   const onMove = (e: PointerEvent): void => {
@@ -329,6 +351,7 @@ export function DrawBoard(props: DrawBoardProps) {
     e.preventDefault();
     const list = typeof e.getCoalescedEvents === "function" ? e.getCoalescedEvents() : [];
     for (const ev of list.length > 0 ? list : [e]) addPoint(ev.clientX, ev.clientY);
+    props.onInk?.("move");
     if (cur.length / 2 >= FLUSH_AT) {
       const lastTwo = cur.slice(-2);
       commitPoints(cur, false);
@@ -348,6 +371,7 @@ export function DrawBoard(props: DrawBoardProps) {
     const pts = cur;
     cur = [];
     painted = 0;
+    props.onInk?.("end");
     if (pts.length >= 2 && e.type === "pointerup") commitPoints(pts, true);
     else clearLive();
   };
@@ -390,19 +414,53 @@ export function DrawBoard(props: DrawBoardProps) {
     if (locked()) return;
     unlockAudio();
     setPen(i);
+    setPanel(null);
     tap();
     hapticTap();
   };
-  const chooseSize = (s: 1 | 2 | 3): void => {
+  const chooseSize = (s: DrawSize): void => {
     if (locked()) return;
     unlockAudio();
     setSize(s);
+    setPanel(null);
     tap();
     hapticTap();
   };
+  const togglePanel = (which: "color" | "size"): void => {
+    if (locked()) return;
+    unlockAudio();
+    setPanel((p) => (p === which ? null : which));
+    tap();
+    hapticTap();
+  };
+  createEffect(() => {
+    if (locked()) setPanel(null);
+  });
 
   const penColor = (): string => PEN_COLORS[pen()] ?? "#8E97C7";
   const dot = (s: number): string => `${Math.round((SIZE_UNITS[s] ?? 15) * 0.55 + 4)}px`;
+  /** Kalınlığın tuvaldeki gerçek çapı (px), düğmeye sığacak kadar. */
+  const trueDot = (s: number): string => {
+    const unit = (SIZE_UNITS[s] ?? 15) * (pen() === ERASER ? 1.8 : 1);
+    return `${Math.round(Math.min(34, Math.max(4, (unit / 1000) * Math.max(box(), 240))))}px`;
+  };
+  /** Rengin kendi işaretli (renk körlüğü) düğmesi. */
+  const Swatch = (sp: { index: number; onPick: () => void }) => (
+    <button
+      type="button"
+      class="kd__tool kd__swatch"
+      style={{ "--sw": PEN_COLORS[sp.index] ?? "#8E97C7" }}
+      data-on={pen() === sp.index ? "1" : undefined}
+      aria-label={PEN_NAMES[sp.index]}
+      aria-pressed={pen() === sp.index}
+      disabled={locked()}
+      onClick={sp.onPick}
+    >
+      <i class="cbpat" data-p={(sp.index % 7) + 1}>
+        <CbMarker index={sp.index} size={14} class="kd__swmark" />
+      </i>
+    </button>
+  );
 
   return (
     <>
@@ -427,76 +485,150 @@ export function DrawBoard(props: DrawBoardProps) {
         </div>
       </div>
       <div class="kd__side">
-        <div
-          class="kd__tools"
-          role="toolbar"
-          aria-label="Kalem araçları"
-          data-frozen={locked() ? "1" : undefined}
+        <Show
+          when={props.compact}
+          fallback={
+            <div
+              class="kd__tools"
+              role="toolbar"
+              aria-label="Kalem araçları"
+              data-frozen={locked() ? "1" : undefined}
+            >
+              <For each={pens()}>{(i) => <Swatch index={i} onPick={() => choosePen(i)} />}</For>
+              <button
+                type="button"
+                class="kd__tool"
+                data-on={pen() === ERASER ? "1" : undefined}
+                aria-label="Silgi"
+                aria-pressed={pen() === ERASER}
+                disabled={locked()}
+                onClick={() => choosePen(ERASER)}
+              >
+                <EraserIcon />
+              </button>
+              <For each={sizes()}>
+                {(s) => (
+                  <button
+                    type="button"
+                    class="kd__tool kd__size"
+                    data-on={size() === s ? "1" : undefined}
+                    aria-label={`Kalınlık ${s}`}
+                    aria-pressed={size() === s}
+                    disabled={locked()}
+                    onClick={() => chooseSize(s)}
+                  >
+                    <i style={{ width: dot(s), height: dot(s) }} />
+                  </button>
+                )}
+              </For>
+              <button
+                type="button"
+                class="kd__tool"
+                aria-label="Geri al"
+                disabled={count() === 0 || locked()}
+                onClick={undo}
+              >
+                <UndoIcon />
+              </button>
+              <button
+                type="button"
+                class="kd__tool kd__tool--clear"
+                data-on={confirmClear() ? "1" : undefined}
+                aria-label={confirmClear() ? "Silmek için tekrar dokun" : "Temizle"}
+                disabled={count() === 0 || locked()}
+                onClick={clearAll}
+              >
+                <TrashIcon />
+              </button>
+            </div>
+          }
         >
-          <For each={PEN_COLORS}>
-            {(c, i) => (
+          <div
+            class="kd__dock"
+            style={{ "--pen": penColor() }}
+            data-eraser={pen() === ERASER ? "1" : undefined}
+            data-frozen={locked() ? "1" : undefined}
+          >
+            <Show when={panel() === "color"}>
+              <div class="kd__panel kd__panel--color" role="toolbar" aria-label="Renkler">
+                <For each={pens()}>{(i) => <Swatch index={i} onPick={() => choosePen(i)} />}</For>
+              </div>
+            </Show>
+            <Show when={panel() === "size"}>
+              <div class="kd__panel kd__panel--size" role="toolbar" aria-label="Kalınlık">
+                <For each={sizes()}>
+                  {(s) => (
+                    <button
+                      type="button"
+                      class="kd__tool kd__size kd__size--true"
+                      data-on={size() === s ? "1" : undefined}
+                      aria-label={s === 4 ? "Kalınlık 4 (çok kalın)" : `Kalınlık ${s}`}
+                      aria-pressed={size() === s}
+                      disabled={locked()}
+                      onClick={() => chooseSize(s)}
+                    >
+                      <i style={{ width: trueDot(s), height: trueDot(s) }} />
+                    </button>
+                  )}
+                </For>
+              </div>
+            </Show>
+            <div class="kd__tools kd__tools--compact" role="toolbar" aria-label="Kalem araçları">
               <button
                 type="button"
-                class="kd__tool kd__swatch"
-                style={{ "--sw": c }}
-                data-on={pen() === i() ? "1" : undefined}
-                aria-label={PEN_NAMES[i()]}
-                aria-pressed={pen() === i()}
+                class="kd__tool kd__pick"
+                data-on={panel() === "color" ? "1" : undefined}
+                aria-label={`Renk: ${pen() === ERASER ? "silgi" : (PEN_NAMES[pen()] ?? "")}`}
+                aria-expanded={panel() === "color"}
                 disabled={locked()}
-                onClick={() => choosePen(i())}
+                onClick={() => togglePanel("color")}
               >
-                <i class="cbpat" data-p={(i() % 7) + 1}>
-                  <CbMarker index={i()} size={14} class="kd__swmark" />
-                </i>
+                <i class="kd__pickdot" />
               </button>
-            )}
-          </For>
-          <button
-            type="button"
-            class="kd__tool"
-            data-on={pen() === ERASER ? "1" : undefined}
-            aria-label="Silgi"
-            aria-pressed={pen() === ERASER}
-            disabled={locked()}
-            onClick={() => choosePen(ERASER)}
-          >
-            <EraserIcon />
-          </button>
-          <For each={[1, 2, 3] as const}>
-            {(s) => (
               <button
                 type="button"
-                class="kd__tool kd__size"
-                data-on={size() === s ? "1" : undefined}
-                aria-label={`Kalınlık ${s}`}
-                aria-pressed={size() === s}
+                class="kd__tool kd__pick kd__size kd__size--true"
+                data-on={panel() === "size" ? "1" : undefined}
+                aria-label={`Kalınlık: ${size()}`}
+                aria-expanded={panel() === "size"}
                 disabled={locked()}
-                onClick={() => chooseSize(s)}
+                onClick={() => togglePanel("size")}
               >
-                <i style={{ width: dot(s), height: dot(s) }} />
+                <i style={{ width: trueDot(size()), height: trueDot(size()) }} />
               </button>
-            )}
-          </For>
-          <button
-            type="button"
-            class="kd__tool"
-            aria-label="Geri al"
-            disabled={count() === 0 || locked()}
-            onClick={undo}
-          >
-            <UndoIcon />
-          </button>
-          <button
-            type="button"
-            class="kd__tool kd__tool--clear"
-            data-on={confirmClear() ? "1" : undefined}
-            aria-label={confirmClear() ? "Silmek için tekrar dokun" : "Temizle"}
-            disabled={count() === 0 || locked()}
-            onClick={clearAll}
-          >
-            <TrashIcon />
-          </button>
-        </div>
+              <button
+                type="button"
+                class="kd__tool"
+                data-on={pen() === ERASER ? "1" : undefined}
+                aria-label="Silgi"
+                aria-pressed={pen() === ERASER}
+                disabled={locked()}
+                onClick={() => choosePen(ERASER)}
+              >
+                <EraserIcon />
+              </button>
+              <button
+                type="button"
+                class="kd__tool"
+                aria-label="Geri al"
+                disabled={count() === 0 || locked()}
+                onClick={undo}
+              >
+                <UndoIcon />
+              </button>
+              <button
+                type="button"
+                class="kd__tool kd__tool--clear"
+                data-on={confirmClear() ? "1" : undefined}
+                aria-label={confirmClear() ? "Silmek için tekrar dokun" : "Temizle"}
+                disabled={count() === 0 || locked()}
+                onClick={clearAll}
+              >
+                <TrashIcon />
+              </button>
+            </div>
+          </div>
+        </Show>
         <TamamBar
           label="Bitti"
           locked={locked()}

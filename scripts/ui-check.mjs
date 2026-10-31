@@ -1406,16 +1406,23 @@ const SCREENS = [
   { name: "bt-vote-5", q: "mock=bozuk-vote&n=5" },
   { name: "bt-vote-8", q: "mock=bozuk-vote&n=8" },
   {
-    name: "bt-vote-tap",
+    name: "bt-vote-zoom",
     q: "mock=bozuk-vote&n=5",
-    act: async (p) => p.locator(".bt__card:not(:disabled)").first().click(),
+    act: async (p) => p.locator(".btf button.btc:not(:disabled):not([data-mine])").first().click(),
+    settle: 600,
+  },
+  {
+    name: "bt-vote-zoom-own",
+    q: "mock=bozuk-vote&n=5",
+    act: async (p) => p.locator(".btf button.btc[data-mine]").first().click(),
+    settle: 600,
   },
   {
     name: "bt-vote-confirm",
     q: "mock=bozuk-vote&n=5",
     act: async (p) => {
-      await p.locator(".bt__card:not(:disabled)").first().click();
-      await p.locator(".pbtn:not(:disabled)").click();
+      await p.locator(".btf button.btc:not(:disabled):not([data-mine])").first().click();
+      await p.locator(".btz .pbtn:not(:disabled)").click();
     },
     settle: 800,
   },
@@ -1426,6 +1433,24 @@ const SCREENS = [
   { name: "bt-result-robust-8", q: "mock=bozuk-result-robust&n=8" },
   { name: "bt-result-quiet-6", q: "mock=bozuk-result-quiet&n=6" },
   { name: "bt-results-5", q: "mock=bozuk-results&n=3", settle: 2400 },
+  { name: "bt-results-gallery-8", q: "mock=bozuk-results&n=8", settle: 2400 },
+  {
+    name: "bt-results-chain",
+    q: "mock=bozuk-results&n=5",
+    act: async (p) => p.locator(".btg__card").first().click(),
+    settle: 800,
+  },
+  { name: "bt-write-sent", q: "mock=bozuk-write-sent", settle: 1800 },
+  {
+    name: "bt-draw-palette",
+    q: "mock=bozuk-draw",
+    act: async (p) => p.locator(".kd__pick").first().click(),
+  },
+  {
+    name: "bt-draw-sizes",
+    q: "mock=bozuk-draw",
+    act: async (p) => p.locator(".kd__pick").nth(1).click(),
+  },
   { name: "kb-briefing", q: "mock=kara-briefing" },
   { name: "kb-bid-5", q: "mock=kara-bid" },
   { name: "kb-bid-8", q: "mock=kara-bid&n=8" },
@@ -2464,6 +2489,10 @@ const SCREENS = [
   { name: "tv-karalama-cizim", q: "mock=tv-karalama-draw&n=6", sizes: TV, settle: 1400 },
   { name: "tv-karalama-oylama", q: "mock=tv-karalama-vote&n=6", sizes: TV, settle: 2600 },
   { name: "tv-karalama-sonuc", q: "mock=tv-karalama-results&n=6", sizes: TV, settle: 2600 },
+  { name: "tv-bozuk-cizim", q: "mock=tv-bozuk-draw&n=6", sizes: TV, settle: 1400 },
+  { name: "tv-bozuk-gosteri", q: "mock=tv-bozuk-show&n=6&shown=3", sizes: TV, settle: 2600 },
+  { name: "tv-bozuk-oylama", q: "mock=tv-bozuk-vote&n=8", sizes: TV, settle: 2600 },
+  { name: "tv-bozuk-sonuc", q: "mock=tv-bozuk-result-robust&n=5", sizes: TV, settle: 2600 },
   // U8: tablet/masaüstü iki sütun (oyun solda, oyuncular/puan sağda).
   { name: "tablet-iki-sutun-oyun", q: "mock=spectator-playing&n=6", sizes: [[1024, 768]], settle: 1200 },
   { name: "tablet-iki-sutun-yatay", q: "mock=landscape&n=6", sizes: [[1024, 768]], settle: 1200 },

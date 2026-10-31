@@ -1,11 +1,54 @@
 import { KARALAMA_ERASER_INDEX, KARALAMA_GRID, KARALAMA_MAX_POINTS, type KaralamaStroke } from "@glix/engine";
 
-/** Palet: sıra `KARALAMA_COLORS` ile aynı. Neon kalem rengi + çevresindeki koyu hale. */
-export const PEN_COLORS = ["#F3F5FF", "#FF2BD6", "#FFC23B", "#B6FF3B", "#2EF2FF", "#FF8A3B"] as const;
-export const PEN_HALOS = ["#5B6396", "#7D1B6B", "#8A6414", "#5C8A1B", "#157C85", "#8A4A1B"] as const;
-export const PEN_NAMES = ["Beyaz", "Pembe", "Sarı", "Yeşil", "Mavi", "Turuncu"] as const;
-/** Kalınlık kademesi -> ızgara birimi (1000 üzerinden). */
-export const SIZE_UNITS: Record<number, number> = { 1: 7, 2: 15, 3: 30 };
+/**
+ * Palet: dizin = sıkıştırılmış darbedeki kalem dizini (`DRAW_PENS`): 0..5 ilk renkler, 6 silgi (rengi kullanılmaz),
+ * 7..10 sonradan eklenen renkler. Neon kalem rengi + çevresindeki koyu hale.
+ */
+export const PEN_COLORS = [
+  "#F3F5FF",
+  "#FF2BD6",
+  "#FFC23B",
+  "#B6FF3B",
+  "#2EF2FF",
+  "#FF8A3B",
+  "#F3F5FF",
+  "#FF4157",
+  "#A66BFF",
+  "#C0814F",
+  "#9AA3BF",
+] as const;
+export const PEN_HALOS = [
+  "#5B6396",
+  "#7D1B6B",
+  "#8A6414",
+  "#5C8A1B",
+  "#157C85",
+  "#8A4A1B",
+  "#5B6396",
+  "#8A1B2B",
+  "#4B2A8A",
+  "#5A3720",
+  "#454B63",
+] as const;
+export const PEN_NAMES = [
+  "Beyaz",
+  "Pembe",
+  "Sarı",
+  "Yeşil",
+  "Mavi",
+  "Turuncu",
+  "Silgi",
+  "Kırmızı",
+  "Mor",
+  "Kahverengi",
+  "Gri",
+] as const;
+/** Karalama Defteri araç çubuğundaki kalemler (ilk palet). */
+export const CLASSIC_PENS: readonly number[] = [0, 1, 2, 3, 4, 5];
+/** Tam palet (10 renk) araç çubuğu sırası: ilk 6 renk, sonra kırmızı, mor, kahverengi, gri. */
+export const FULL_PENS: readonly number[] = [0, 7, 1, 8, 4, 3, 2, 5, 9, 10];
+/** Kalınlık kademesi -> ızgara birimi (1000 üzerinden). 4: çok kalın. */
+export const SIZE_UNITS: Record<number, number> = { 1: 7, 2: 15, 3: 30, 4: 54 };
 export const ERASER_FACTOR = 1.8;
 /** Çizerken yeni nokta için en küçük uzaklık (ızgara birimi). */
 export const MIN_STEP = 3;

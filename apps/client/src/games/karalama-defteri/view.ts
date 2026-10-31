@@ -1,6 +1,6 @@
 import {
-  KARALAMA_COLORS,
-  KARALAMA_ERASER_INDEX,
+  DRAW_PENS,
+  type DrawPen,
   KARALAMA_GRID,
   type KaralamaPhase,
   type KaralamaPublicView,
@@ -51,8 +51,8 @@ export function parseStroke(v: unknown): KaralamaStroke | null {
   if (!Array.isArray(v) || v.length < 6 || v.length % 2 !== 0) return null;
   const color = v[0];
   const size = v[1];
-  if (!isNum(color) || !Number.isInteger(color) || color < 0 || color > KARALAMA_ERASER_INDEX) return null;
-  if (size !== 1 && size !== 2 && size !== 3) return null;
+  if (!isNum(color) || !Number.isInteger(color) || color < 0 || color >= DRAW_PENS.length) return null;
+  if (size !== 1 && size !== 2 && size !== 3 && size !== 4) return null;
   const out: number[] = [color, size];
   for (let i = 2; i < v.length; i++) {
     const n: unknown = v[i];
@@ -173,7 +173,7 @@ export function parseKaralamaView(publicView: unknown, view: unknown): KaralamaS
 /** Kelimeyi ekranda büyük harfle, Türkçe kurallarıyla göster. */
 export const shownWord = (w: string): string => w.toLocaleUpperCase("tr-TR");
 
-/** Palet dizinini (0..5) kimliğe çevirir; silgi için "eraser". */
-export function penIdOf(index: number): (typeof KARALAMA_COLORS)[number] | "eraser" {
-  return KARALAMA_COLORS[index] ?? "eraser";
+/** Kalem dizinini (`DRAW_PENS` sırası; silgi 6) kimliğe çevirir; bilinmeyen dizin silgi sayılmaz, beyaz olur. */
+export function penIdOf(index: number): DrawPen {
+  return DRAW_PENS[index] ?? "beyaz";
 }
