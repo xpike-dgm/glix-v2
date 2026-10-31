@@ -12,8 +12,10 @@ export const KULE_SPEED_START = 1_000;
 export const KULE_SPEED_GROWTH_PERCENT = 6;
 /** Hız en çok başlangıcın 2,5 katı. */
 export const KULE_SPEED_CAP = 2_500;
-/** Kusursuz: taşma, bloğun genişliğinin %4'ünden azsa (kesin küçük) kesilmez. */
+/** Kusursuz: taşma, eşikten (bloğun %4'ü ya da 12 birim, büyük olan; en çok bloğun yarısı) kesin küçükse kesilmez. */
 export const KULE_PERFECT_PERCENT = 4;
+/** Kusursuz eşiğinin alt sınırı (birim): dar kulede de kusursuz beceriyle yapılabilsin (KU-M3). */
+export const KULE_PERFECT_MIN = 12;
 /** Bir sıranın süresi; dokunmayan oyuncu süre dolduğu anda bırakmış sayılır. */
 export const KULE_TURN_MS = 6_000;
 /** Bırakış anı bu süreden eskiyse kabul edilmez (gecikme hilesine karşı). */
@@ -26,6 +28,17 @@ export const KULE_INTRO_MS = 1_500;
 export const KULE_PAUSE_OK_MS = 900;
 /** Iskadan sonra (kule yıkılışı gösterilsin diye) sonraki sıranın başlamasına kadar pay. */
 export const KULE_PAUSE_MISS_MS = 2_200;
+/**
+ * "Sıra sende!" uyarısı: aradan (ya da hazırlıktan) sonra blok kaymaya başlamadan önceki pay. Sıra süresi (6 sn)
+ * bu uyarıdan sonra işler; sıranın başlangıcı = ara bitişi + uyarı (KU-U4).
+ */
+export const KULE_WARN_MS = 600;
+/** Usta puanı (KU-M1): oturtulan her kat. */
+export const KULE_POINTS_FLOOR = 1;
+/** Usta puanı: kusursuz kat (+1 yerine). */
+export const KULE_POINTS_PERFECT = 2;
+/** Usta puanı: oyun bittiğinde hâlâ oyunda olan ("ayakta kaldın"). */
+export const KULE_POINTS_STANDING = 3;
 /** Simülasyon/bot süre sınırı (toplam süreden biraz uzun). */
 export const KULE_BOT_SPAN_MS = 95_000;
 
@@ -71,13 +84,23 @@ export interface KuleCut {
   cutWidth: number;
 }
 
+/**
+ * Kusursuz mu (KU-M3): taşma, eşikten KESİN küçük. Eşik = max(bloğun %4'ü, 12 birim), en çok bloğun yarısı.
+ * Tam sayı aritmetiği: `taşma < max(4w/100, 12)` ve `taşma < w/2`.
+ */
+export function kuleIsPerfect(overhang: number, width: number): boolean {
+  const underShare = overhang * 100 < width * KULE_PERFECT_PERCENT || overhang < KULE_PERFECT_MIN;
+  return underShare && overhang * 2 < width;
+}
+
 export function kuleCut(top: KuleBlock, dropLeft: number, width: number): KuleCut {
   const overlapLeft = Math.max(dropLeft, top.left);
   const overlapRight = Math.min(dropLeft + width, top.left + top.width);
   const overlap = overlapRight - overlapLeft;
+  // Önce ıska (hiç örtüşme yok), sonra kusursuz eşiği.
   if (overlap <= 0) return { kind: "miss", block: null, cutLeft: dropLeft, cutWidth: width };
   const overhang = width - overlap;
-  if (overhang * 100 < width * KULE_PERFECT_PERCENT) {
+  if (kuleIsPerfect(overhang, width)) {
     return {
       kind: "perfect",
       block: { left: top.left, width: top.width, perfect: true },
@@ -121,10 +144,19 @@ export interface KulePublicView {
   order: string[];
   /** Çıkanlar, çıkış sırasıyla. */
   eliminated: string[];
-  /** Şu ana kadarki puanlar (oyun biterse aynen genel skora aktarılır). */
-  scores: Record<string, number>;
+  /**
+   * Usta puanı (KU-M1): oturtulan kat +1, kusursuz kat +2; oyun bitince ayakta kalanlara +3 eklenmiş olarak gelir.
+   * Çıkanın puanı korunur.
+   */
+  usta: Record<string, number>;
   /** Oyuncu başına kusursuz sayısı. */
   perfects: Record<string, number>;
+  /** Oyun bitince genel skora giden sıralama ödülü (+2 / +1 / 0); oyun sürerken null. */
+  awards: Record<string, number> | null;
+  /** Bu oyunda yıkılmış kulelerin en yükseği (kat; taban hariç). Henüz yıkılan yoksa 0. */
+  record: number;
+  /** Art arda kusursuz bırakış sayısı (kim yaparsa yapsın); kesme ya da ıska sıfırlar. */
+  streak: number;
   /** Sırası olan oyuncu; oyun bitince null. */
   active: string | null;
   turn: number;

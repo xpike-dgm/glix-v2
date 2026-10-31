@@ -1,3 +1,4 @@
+import { poolEntries } from "../../content.js";
 import {
   type GameContext,
   type GameDefinition,
@@ -6,12 +7,19 @@ import {
   type SecretEntry,
 } from "../../game.js";
 import { foldKey, sanitizeWord } from "../text.js";
+import { YAZI_YAZ_TOPIC_POOL } from "./pool.js";
 import {
+  YAZI_YAZ_FREE_TOPIC,
   YAZI_YAZ_GUESS_MS,
+  YAZI_YAZ_HIDDEN_POINT,
   YAZI_YAZ_INNOCENT_WORD,
   YAZI_YAZ_LOCK_GRACE_MS,
+  YAZI_YAZ_PERSON_POINT,
   YAZI_YAZ_REVEAL_MS,
   YAZI_YAZ_TALK_MS,
+  YAZI_YAZ_TOPIC_MEMORY,
+  YAZI_YAZ_TYPO_MIN_LETTERS,
+  YAZI_YAZ_WORD_POINT,
   YAZI_YAZ_WRITE_MS,
   YAZI_YAZ_WRITER_COUNT,
   type YaziYazAction,
@@ -21,14 +29,21 @@ import {
   type YaziYazRole,
   type YaziYazStage,
   type YaziYazView,
+  yaziYazAwards,
+  yaziYazLetterCount,
 } from "./types.js";
 
+export * from "./pool.js";
 export * from "./types.js";
 
 export interface YaziYazState {
   players: string[];
   /** Gizli: rastgele seçilen iki yazan (katılım sırasıyla). */
   writers: string[];
+  /** Havuzdan çekilen konu kaydı (tekrar denetimi için; "SERBEST" dahil). */
+  topicEntry: string;
+  /** Herkese açık konu; konusuz turda null. */
+  topic: string | null;
   startedAt: number;
   writeEndsAt: number;
   talkEndsAt: number;
@@ -80,9 +95,37 @@ function retime(state: YaziYazState, stage: "write" | "talk" | "guess", endsAt: 
   return { ...state, writeEndsAt, talkEndsAt, guessEndsAt, finishAt: guessEndsAt + YAZI_YAZ_REVEAL_MS };
 }
 
-/** Yazanın kelimesi (yazmadıysa boş). */
+const isInnocentWord = (text: string): boolean => foldKey(text) === foldKey(YAZI_YAZ_INNOCENT_WORD);
+
+/**
+ * Yazanın geçerli kelimesi: yazmadıysa ya da MASUM bıraktıysa boş (YY-M5: yazan MASUM yazamaz; MASUM bırakan
+ * yazan "kelime yazmadı" sayılır).
+ */
+function writerWord(texts: Readonly<Record<string, string>>, writer: string): string {
+  const text = Object.hasOwn(texts, writer) ? (texts[writer] ?? "") : "";
+  return text === "" || isInnocentWord(text) ? "" : text;
+}
+
 function wordOf(state: YaziYazState, writer: string): string {
-  return has(state.texts, writer) ? (state.texts[writer] as string) : "";
+  return writerWord(state.texts, writer);
+}
+
+/**
+ * Kelime eşleşmesi: klavyeden bağımsız; YY-M7 ile en az 6 harfli kelimede, harf sayısı aynıysa tek harf farkı da
+ * doğru sayılır (eksik/fazla harf kabul edilmez).
+ */
+export function yaziYazWordMatch(guess: string, real: string): boolean {
+  const a = foldKey(guess);
+  const b = foldKey(real);
+  if (a === "" || b === "") return false;
+  if (a === b) return true;
+  if (yaziYazLetterCount(real) < YAZI_YAZ_TYPO_MIN_LETTERS) return false;
+  const x = Array.from(a.replace(/ /g, ""));
+  const y = Array.from(b.replace(/ /g, ""));
+  if (x.length !== y.length) return false;
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) diff++;
+  return diff === 1;
 }
 
 /**
@@ -96,25 +139,60 @@ export function yaziYazJudge(
   word: string,
 ): YaziYazGuessResult {
   const personOk = target !== null && target !== playerId && state.writers.includes(target);
-  const real =
-    personOk && target !== null && Object.hasOwn(state.texts, target) ? (state.texts[target] ?? "") : "";
-  const wordOk = personOk && real !== "" && word !== "" && foldKey(word) === foldKey(real);
+  const real = personOk && target !== null ? writerWord(state.texts, target) : "";
+  const wordOk = personOk && real !== "" && word !== "" && yaziYazWordMatch(word, real);
   return { target, word, personOk, wordOk };
+}
+
+/** Harf sayısı ipucu: küçükten büyüğe, yazılmamış kelime (null) sonda. */
+function lettersOf(state: YaziYazState): (number | null)[] {
+  const counts = state.writers.map((w) => {
+    const word = wordOf(state, w);
+    return word === "" ? null : yaziYazLetterCount(word);
+  });
+  return counts.sort((x, y) => (x === null ? 1 : y === null ? -1 : x - y));
 }
 
 function buildReveal(state: YaziYazState): YaziYazReveal {
   const words: Record<string, string> = {};
   for (const w of state.writers) words[w] = wordOf(state, w);
   const guesses: Record<string, YaziYazGuessResult> = {};
-  const scores: Record<string, number> = {};
   for (const id of state.players) {
     const target = has(state.guessTarget, id) ? (state.guessTarget[id] as string) : null;
     const word = has(state.guessWord, id) ? (state.guessWord[id] as string) : "";
-    const g = yaziYazJudge(state, id, target, word);
-    guesses[id] = g;
-    scores[id] = (g.personOk ? 1 : 0) + (g.wordOk ? 1 : 0);
+    guesses[id] = yaziYazJudge(state, id, target, word);
   }
-  return { writers: [...state.writers], words, guesses, scores };
+  // YY-M3: yalnız masumların seçimi sayılır; kelime yazmamış yazan bu ödülü alamaz.
+  const innocents = state.players.filter((id) => !state.writers.includes(id));
+  const hidden = state.writers.filter(
+    (w) => words[w] !== "" && !innocents.some((id) => guesses[id]?.target === w),
+  );
+  const scores: Record<string, number> = {};
+  for (const id of state.players) {
+    const g = guesses[id];
+    scores[id] =
+      (g?.personOk ? YAZI_YAZ_PERSON_POINT : 0) +
+      (g?.wordOk ? YAZI_YAZ_WORD_POINT : 0) +
+      (hidden.includes(id) ? YAZI_YAZ_HIDDEN_POINT : 0);
+  }
+  return { writers: [...state.writers], words, guesses, hidden, scores, awards: yaziYazAwards(scores) };
+}
+
+/** Bağlantı değişince (ya da eylemde) bulunulan aşamada bağlı herkes hazırsa aşamayı 1 sn sonraya çeker. */
+function closeIfReady(state: YaziYazState, ctx: GameContext): YaziYazState {
+  const now = ctx.now;
+  if (now < state.startedAt || now >= state.guessEndsAt) return state;
+  const end = now + YAZI_YAZ_LOCK_GRACE_MS;
+  if (now < state.writeEndsAt) {
+    if (state.writeClosing || !everyoneReady(state, state.writeLocked, ctx.connected)) return state;
+    return { ...retime(state, "write", end), writeClosing: true };
+  }
+  if (now < state.talkEndsAt) {
+    if (state.talkClosing || !everyoneReady(state, state.skipped, ctx.connected)) return state;
+    return { ...retime(state, "talk", end), talkClosing: true };
+  }
+  if (state.guessClosing || !everyoneReady(state, state.guessLocked, ctx.connected)) return state;
+  return { ...retime(state, "guess", end), guessClosing: true };
 }
 
 function jsonHas(json: string, value: string): boolean {
@@ -137,9 +215,9 @@ export const yaziYaz: GameDefinition<YaziYazState, YaziYazAction, YaziYazView, Y
   briefing: {
     goal: "İki gizli yazanı ve kelimelerini bul!",
     steps: [
-      "Yazan olursan gizli kelimeni yaz, diğerleri MASUM yazar",
-      "60 saniye konuş, kimin yazan olduğunu sez",
-      "Bir yazanı ve kelimesini seç: kişi +1, kelime +1",
+      "Rol kartına basılı tut; yazansan konudan bir kelime yaz, masumsan MASUM",
+      "60 sn konuş: harf ipucuyla kelimeyi, davranışlarla yazanı bul; yazansan saklan",
+      "Kişi +1, kelime +1, hiç bulunmayan yazan +1",
     ],
   },
 
@@ -174,12 +252,20 @@ export const yaziYaz: GameDefinition<YaziYazState, YaziYazAction, YaziYazView, Y
 
   setup(players: readonly string[], ctx: GameContext): YaziYazState {
     const writers = new Set(ctx.rng.shuffle(players).slice(0, YAZI_YAZ_WRITER_COUNT));
+    // Konu yazanlar seçildikten sonra çekilir (rastgele sayı sırası eski kayıtlarla aynı kalır).
+    const topics = poolEntries(YAZI_YAZ_TOPIC_POOL, ctx.content);
+    const topicEntry = topics.length > 0 ? (topics[ctx.rng.int(topics.length)] ?? "") : "";
+    const free =
+      topicEntry === "" ||
+      YAZI_YAZ_TOPIC_POOL.key(topicEntry) === YAZI_YAZ_TOPIC_POOL.key(YAZI_YAZ_FREE_TOPIC);
     const writeEndsAt = ctx.now + YAZI_YAZ_WRITE_MS;
     const talkEndsAt = writeEndsAt + YAZI_YAZ_TALK_MS;
     const guessEndsAt = talkEndsAt + YAZI_YAZ_GUESS_MS;
     return {
       players: [...players],
       writers: players.filter((id) => writers.has(id)),
+      topicEntry,
+      topic: free ? null : topicEntry,
       startedAt: ctx.now,
       writeEndsAt,
       talkEndsAt,
@@ -210,9 +296,7 @@ export const yaziYaz: GameDefinition<YaziYazState, YaziYazAction, YaziYazView, Y
       if (!talking) return { rejected: "not_talking" };
       if (state.talkClosing) return { rejected: "closed" };
       if (state.skipped.includes(playerId)) return state;
-      const skipped = [...state.skipped, playerId];
-      if (!everyoneReady(state, skipped, ctx.connected)) return { ...state, skipped };
-      return { ...retime(state, "talk", ctx.now + YAZI_YAZ_LOCK_GRACE_MS), skipped, talkClosing: true };
+      return closeIfReady({ ...state, skipped: [...state.skipped, playerId] }, ctx);
     }
 
     if (action.kind === "write") {
@@ -230,25 +314,21 @@ export const yaziYaz: GameDefinition<YaziYazState, YaziYazAction, YaziYazView, Y
       if (writing) {
         if (state.writeLocked.includes(playerId)) return { rejected: "locked" };
         if (state.writeClosing) return { rejected: "closed" };
-        if (!has(state.texts, playerId)) return { rejected: "nothing_to_lock" };
-        const writeLocked = [...state.writeLocked, playerId];
-        if (!everyoneReady(state, writeLocked, ctx.connected)) return { ...state, writeLocked };
-        return {
-          ...retime(state, "write", ctx.now + YAZI_YAZ_LOCK_GRACE_MS),
-          writeLocked,
-          writeClosing: true,
-        };
+        const isWriter = state.writers.includes(playerId);
+        let texts = state.texts;
+        if (!has(texts, playerId)) {
+          // YY-M5: boş "Tamam" diyen masumun panosu MASUM ile dolar; yazan önce kelimesini yazmalı.
+          if (isWriter) return { rejected: "nothing_to_lock" };
+          texts = { ...texts, [playerId]: YAZI_YAZ_INNOCENT_WORD };
+        } else if (isWriter && isInnocentWord(texts[playerId] ?? "")) {
+          return { rejected: "writer_innocent" };
+        }
+        return closeIfReady({ ...state, texts, writeLocked: [...state.writeLocked, playerId] }, ctx);
       }
       if (state.guessLocked.includes(playerId)) return { rejected: "locked" };
       if (state.guessClosing) return { rejected: "closed" };
       if (!has(state.guessTarget, playerId)) return { rejected: "nothing_to_lock" };
-      const guessLocked = [...state.guessLocked, playerId];
-      if (!everyoneReady(state, guessLocked, ctx.connected)) return { ...state, guessLocked };
-      return {
-        ...retime(state, "guess", ctx.now + YAZI_YAZ_LOCK_GRACE_MS),
-        guessLocked,
-        guessClosing: true,
-      };
+      return closeIfReady({ ...state, guessLocked: [...state.guessLocked, playerId] }, ctx);
     }
 
     // guessPlayer / guessWord
@@ -271,8 +351,24 @@ export const yaziYaz: GameDefinition<YaziYazState, YaziYazAction, YaziYazView, Y
     return stage === state.stage ? state : { ...state, stage };
   },
 
+  // YY-M5: son eksik oyuncu koparsa "herkes hazır mı" yeniden denetlenir.
+  onPresence(state, ctx): YaziYazState {
+    return closeIfReady(state, ctx);
+  },
+
+  contentUsed(state) {
+    if (state.topicEntry === "") return [];
+    return [
+      {
+        poolId: YAZI_YAZ_TOPIC_POOL.id,
+        key: YAZI_YAZ_TOPIC_POOL.key(state.topicEntry),
+        memory: YAZI_YAZ_TOPIC_MEMORY,
+      },
+    ];
+  },
+
   publicView(state): YaziYazPublicView {
-    const ready =
+    const done =
       state.stage === "write"
         ? state.writeLocked
         : state.stage === "talk"
@@ -283,12 +379,16 @@ export const yaziYaz: GameDefinition<YaziYazState, YaziYazAction, YaziYazView, Y
     return {
       players: [...state.players],
       stage: state.stage,
+      topic: state.topic,
+      letters: state.stage === "write" ? null : lettersOf(state),
       startedAt: state.startedAt,
       writeEndsAt: state.writeEndsAt,
       talkEndsAt: state.talkEndsAt,
       guessEndsAt: state.guessEndsAt,
       finishAt: state.finishAt,
-      ready: [...ready],
+      // YY-M6: yazmada kimin Tamam dediği gizli; yalnız sayı.
+      ready: state.stage === "write" ? [] : [...done],
+      readyCount: done.length,
       reveal: state.stage === "reveal" ? buildReveal(state) : null,
     };
   },
@@ -334,6 +434,9 @@ export const yaziYaz: GameDefinition<YaziYazState, YaziYazAction, YaziYazView, Y
     for (const w of state.writers) {
       const value = wordOf(state, w);
       if (value.length < 3) continue;
+      // Konu herkese açıktır: kelime konunun içinde geçiyorsa (ör. DENİZ / "DENİZ CANLISI") metin araması onu
+      // ayırt edemez; o kelime için metin denetimi yapılmaz (gizliliği yapısal testler korur).
+      if (state.topic?.toLocaleUpperCase("tr-TR").includes(value.toLocaleUpperCase("tr-TR"))) continue;
       // Aynı metni kendi girdisinde/tahmininde gören oyuncunun da görmeye hakkı var (ör. "MASUM" ya da doğru tahmin).
       const owners = state.players.filter(
         (id) =>
@@ -346,7 +449,7 @@ export const yaziYaz: GameDefinition<YaziYazState, YaziYazAction, YaziYazView, Y
   },
 
   result(state) {
-    const { scores } = buildReveal(state);
-    return { miniScores: { ...scores }, awards: { ...scores } };
+    const { scores, awards } = buildReveal(state);
+    return { miniScores: { ...scores }, awards: { ...awards } };
   },
 };

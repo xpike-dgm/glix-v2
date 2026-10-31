@@ -140,10 +140,25 @@ describe("yazma aşaması", () => {
     expect(s.texts[a]).toBe(s.texts[b]);
   });
 
-  it("yazan MASUM da yazabilir", () => {
+  it("yazan MASUM yazınca kilitleyemez (YY-M5); süre dolarsa kelime yazmamış sayılır", () => {
     const s = start();
     const w = s.writers[0] as string;
-    expect(priv(act(s, w, { kind: "write", text: "MASUM" }, T0 + 1), w, T0 + 2).myText).toBe("MASUM");
+    const r = act(s, w, { kind: "write", text: "masum" }, T0 + 1);
+    expect(priv(r, w, T0 + 2).myText).toBe("MASUM");
+    expect(reject(r, w, { kind: "lock" }, T0 + 2)).toBe("writer_innocent");
+    const rev = pub(r, r.guessEndsAt).reveal;
+    expect(rev?.words[w]).toBe("");
+    expect(pub(r, TALK_AT).letters).toContain(null);
+    // Düzeltip kelime yazınca kilitler.
+    const ok = act(act(r, w, { kind: "write", text: "KİRAZ" }, T0 + 3), w, { kind: "lock" }, T0 + 4);
+    expect(priv(ok, w, T0 + 5).locked).toBe(true);
+  });
+
+  it("boş Tamam diyen masumun panosu MASUM ile dolar ve kilitlenir (YY-M5)", () => {
+    const s = start();
+    const c = innocentsOf(s)[0] as string;
+    const r = act(s, c, { kind: "lock" }, T0 + 1);
+    expect(priv(r, c, T0 + 2)).toMatchObject({ myText: "MASUM", locked: true });
   });
 
   it("kelime girişi sunucuda temizlenir ve sınırlanır", () => {
@@ -205,7 +220,9 @@ describe("erken bitiş: yazma", () => {
     const last = s.players[s.players.length - 1] as string;
     for (const id of s.players.filter((p) => p !== last)) r = act(r, id, { kind: "lock" }, T0 + 2_000);
     expect(r.writeEndsAt).toBe(T0 + YAZI_YAZ_WRITE_MS);
-    expect(pub(r, T0 + 2_000).ready).toHaveLength(s.players.length - 1);
+    // YY-M6: yazmada kimin Tamam dediği gizli; yalnız sayı.
+    expect(pub(r, T0 + 2_000).ready).toEqual([]);
+    expect(pub(r, T0 + 2_000).readyCount).toBe(s.players.length - 1);
   });
 
   it("(c) bağlantısı kopan oyuncu beklenmez", () => {
@@ -227,7 +244,8 @@ describe("erken bitiş: yazma", () => {
     const [w] = s.writers as [string];
     const r = act(s, w, { kind: "lock" }, T0 + 2_000);
     const json = JSON.stringify(pub(r, T0 + 2_100));
-    expect(pub(r, T0 + 2_100).ready).toEqual([w]);
+    expect(pub(r, T0 + 2_100).ready).toEqual([]);
+    expect(pub(r, T0 + 2_100).readyCount).toBe(1);
     expect(json).not.toContain("ELMASIZ");
     expect(json).not.toContain("writer");
     expect(json).not.toContain("MASUM");
@@ -317,23 +335,25 @@ describe("tahmin aşaması ve puanlama", () => {
     expect(scoresOf(guess(fixed(), "c", "d", "MASUM")).c).toBe(0);
   });
 
-  it("yazan, diğer yazanı ve kelimesini bilirse aynı puanı alır", () => {
+  it("yazan, diğer yazanı ve kelimesini bilirse aynı puanı alır (+ hiçbir masum seçmediyse iz bırakmama)", () => {
     const s = guess(fixed(), "a", "b", "armut");
-    expect(scoresOf(s).a).toBe(2);
-    expect(scoresOf(guess(fixed(), "b", "a", "elma")).b).toBe(2);
+    expect(scoresOf(s).a).toBe(3);
+    // Diğer yazanın seçmesi "İz bırakmadın"ı bozmaz: b de +1 alır.
+    expect(scoresOf(s).b).toBe(1);
+    expect(scoresOf(guess(guess(fixed(), "b", "a", "elma"), "c", "a", "")).b).toBe(3);
   });
 
-  it("yazan masumu seçerse 0; kendini seçemez", () => {
+  it("yazan masumu seçerse kişi/kelime puanı 0; kendini seçemez", () => {
     const s = fixed();
-    expect(scoresOf(guess(s, "a", "c", "elma")).a).toBe(0);
+    expect(scoresOf(guess(guess(s, "a", "c", "elma"), "d", "a", "")).a).toBe(0);
     expect(reject(s, "a", { kind: "guessPlayer", target: "a" }, GUESS_AT)).toBe("self_target");
   });
 
-  it("tahmin vermeyen 0 alır, eksi puan yok", () => {
+  it("tahmin vermeyen 0 alır, eksi puan yok; hiçbir masum seçmediyse kelime yazmış iki yazan +1", () => {
     const s = fixed();
-    for (const v of Object.values(scoresOf(s))) expect(v).toBe(0);
+    expect(scoresOf(s)).toEqual({ a: 1, b: 1, c: 0, d: 0, e: 0 });
     const only = guess(s, "c", "a", "");
-    expect(scoresOf(only)).toEqual({ a: 0, b: 0, c: 1, d: 0, e: 0 });
+    expect(scoresOf(only)).toEqual({ a: 0, b: 1, c: 1, d: 0, e: 0 });
   });
 
   it("kelime tahmini boş bırakılırsa yalnız kişi puanı", () => {
@@ -389,15 +409,19 @@ describe("tahmin aşaması ve puanlama", () => {
     expect(scoresOf(r).c).toBe(1);
   });
 
-  it("awards = miniScores ve ayrı bonus yok", () => {
+  it("dedektif puanı miniScores; genel skora sıralama gider (+2 / +1 / 0)", () => {
     let s = fixed();
     s = guess(s, "c", "a", "elma");
-    s = guess(s, "d", "b", "armut");
+    s = guess(s, "d", "b", "x1");
     s = guess(s, "e", "d", "x1");
     s = guess(s, "a", "b", "armut");
     const res = yaziYaz.result(s);
-    expect(res.awards).toEqual(res.miniScores);
-    expect(res.miniScores).toEqual({ a: 2, b: 0, c: 2, d: 2, e: 0 });
+    expect(res.miniScores).toEqual({ a: 2, b: 0, c: 2, d: 1, e: 0 });
+    expect(res.awards).toEqual({ a: 2, b: 0, c: 2, d: 1, e: 0 });
+    const rev = pub(s, s.guessEndsAt).reveal;
+    expect(rev?.scores).toEqual(res.miniScores);
+    expect(rev?.awards).toEqual(res.awards);
+    expect(rev?.hidden).toEqual([]);
   });
 });
 
@@ -517,12 +541,11 @@ describe("açılış ve gizlilik", () => {
     expect(yaziYaz.secrets(tick(s, s.guessEndsAt))).toEqual([]);
   });
 
-  it("MASUM yazan yazan için gizli kelime olarak innocentlara sızmış sayılmaz", () => {
+  it("MASUM bırakan yazanın kelimesi yoktur (gizli kelime olarak da sayılmaz)", () => {
     const s0 = start();
     const w = s0.writers[0] as string;
     const s = act(s0, w, { kind: "write", text: "MASUM" }, T0 + 1);
-    const e = yaziYaz.secrets(s).find((x) => x.value === "MASUM");
-    expect(e).toBeDefined();
+    expect(yaziYaz.secrets(s).find((x) => x.value === "MASUM")).toBeUndefined();
   });
 });
 

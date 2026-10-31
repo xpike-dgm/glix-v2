@@ -7,10 +7,10 @@ import { warmImage } from "../../ui/imageWarm.js";
  * denemek konsola 404 yazdırır; bu yüzden kendiliğinden yoklanmaz.)
  */
 export const CX_ART = {
-  "namlu-atesi": false,
-  "mermi-parilti": false,
-  kalkan: false,
-  "cam-catlagi": false,
+  "namlu-atesi": true,
+  "mermi-parilti": true,
+  kalkan: true,
+  "cam-catlagi": true,
 } as const satisfies Record<string, boolean>;
 
 export type CxArtName = keyof typeof CX_ART;

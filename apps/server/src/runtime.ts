@@ -125,6 +125,11 @@ export interface Room {
    * için (bkz. packages/engine/src/moderation/evidence.ts). Yayına girmez.
    */
   evidence: { gameId: string; texts: Record<string, string[]> } | null;
+  /**
+   * Bu odada son oyunlarda içerik havuzlarından çekilen girdiler (havuz kimliği -> `pool.key` listesi, en yeni sonda);
+   * aynı girdi kısa sürede tekrar gelmesin (`GameDefinition.contentUsed`). Yalnız bellekte.
+   */
+  recentContent?: Map<string, string[]>;
 }
 
 export interface Runtime {

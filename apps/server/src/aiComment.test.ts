@@ -286,6 +286,66 @@ describe("oyun sonu yorumu: Sızma özeti", () => {
   });
 });
 
+describe("oyun sonu yorumu: Yazı Yaz özeti", () => {
+  const guess = (target: string | null, personOk: boolean, wordOk: boolean) => ({
+    target,
+    word: "",
+    personOk,
+    wordOk,
+  });
+  const view = {
+    players: ["id-1", "id-2", "id-3", "id-4"],
+    topic: "MEYVE",
+    reveal: {
+      writers: ["id-1", "id-2"],
+      words: { "id-1": "KİRAZ", "id-2": "" },
+      guesses: {
+        "id-1": guess("id-2", true, false),
+        "id-2": guess(null, false, false),
+        "id-3": guess("id-1", true, true),
+        "id-4": guess("id-3", false, false),
+      },
+      hidden: [],
+      scores: { "id-1": 1, "id-2": 0, "id-3": 2, "id-4": 0 },
+      awards: { "id-1": 1, "id-2": 0, "id-3": 2, "id-4": 0 },
+    },
+  };
+  const names: Record<string, string> = { "id-1": "Mert", "id-2": "Elif", "id-3": "Kaan", "id-4": "Ece" };
+
+  it("konu, kelimeler, kimin kimi seçtiği ve puanlar; yer tutucu adlar, kimlik ve ad yok", () => {
+    const p = commentPrompt("yazi-yaz", view, (id) => names[id] ?? null);
+    const user = p?.user ?? "";
+    expect(user).toContain("Konu: MEYVE");
+    expect(user).toContain('- Yazan Oyuncu1: kelimesi "KİRAZ"; 1 kişi onu seçti');
+    expect(user).toContain("- Yazan Oyuncu2: kelimesi yok (yazmadı); 1 kişi onu seçti");
+    expect(user).toContain(
+      "- Masum Oyuncu3: Oyuncu1 kişisini seçti (doğru), kelimeyi de bildi; dedektif puanı 2",
+    );
+    expect(user).toContain("- Masum Oyuncu4: Oyuncu3 kişisini seçti (yanlış); dedektif puanı 0");
+    for (const n of ["Mert", "Elif", "Kaan", "Ece", "id-1", "id-2"]) expect(user).not.toContain(n);
+    expect(p?.names).toEqual({ Oyuncu1: "Mert", Oyuncu2: "Elif", Oyuncu3: "Kaan", Oyuncu4: "Ece" });
+    expect(p?.system).toMatch(/Kimseyi aşağılama/);
+  });
+
+  it("iz bırakmayan yazan, konusuz tur ve işaretli kelime", () => {
+    const v = {
+      ...view,
+      topic: null,
+      reveal: { ...view.reveal, words: { "id-1": "**<b>KİRAZ</b>**", "id-2": "ELMA" }, hidden: ["id-2"] },
+    };
+    const user = commentPrompt("yazi-yaz", v, () => null)?.user ?? "";
+    expect(user).toContain("Konu: serbest");
+    expect(user).toContain("hiçbir masum bulamadı (iz bırakmadı)");
+    expect(user).not.toMatch(/[<>*]/);
+  });
+
+  it("sonuç açılmadan ya da bozuk görünümde özet yok", () => {
+    expect(commentPrompt("yazi-yaz", { ...view, reveal: null }, () => "x")).toBeNull();
+    expect(commentPrompt("yazi-yaz", null, () => "x")).toBeNull();
+    expect(commentPrompt("yazi-yaz", { ...view, players: [1] }, () => "x")).toBeNull();
+  });
+});
+
 describe("oyun sonu yorumu: canlı yanıt biçimi ve adlar", () => {
   const raw = (body: unknown) => vi.fn<AiFetch>(async () => ({ status: 200, json: async () => body }));
 

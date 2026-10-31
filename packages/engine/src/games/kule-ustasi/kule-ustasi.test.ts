@@ -14,12 +14,15 @@ import {
   KULE_TOTAL_MS,
   KULE_TRACK,
   KULE_TURN_MS,
+  KULE_WARN_MS,
   type KuleBlock,
   type KulePublicView,
   type KuleState,
+  kuleAwards,
   kuleBlockLeft,
   kuleCut,
   kuleDropTime,
+  kuleIsPerfect,
   kuleNextSpeed,
 } from "./index.js";
 
@@ -76,7 +79,7 @@ describe("kurulum", () => {
     expect(s.eliminated).toEqual([]);
     expect(s.tower).toEqual([{ left: 300, width: KULE_START_WIDTH, perfect: false }]);
     expect(s.speed).toBe(KULE_SPEED_START);
-    expect(s.turnStart).toBe(T0 + KULE_INTRO_MS);
+    expect(s.turnStart).toBe(T0 + KULE_INTRO_MS + KULE_WARN_MS);
     expect(s.need).toBe(3);
     expect(game.minPlayers).toBe(2);
     expect(game.maxPlayers).toBe(8);
@@ -201,10 +204,42 @@ describe("kesme matematiği ve kusursuz toleransı", () => {
     expect(miss.cutWidth).toBe(100);
   });
 
-  it("kusursuz eşiği bloğun genişliğine göre ölçülür (100 genişlikte 3 < 4)", () => {
+  it("KU-M3: dar blokta eşik en az 12 birim (100 genişlikte 11 kusursuz, 12 değil)", () => {
     const narrow = block(400, 100);
     expect(kuleCut(narrow, 403, 100).kind).toBe("perfect");
-    expect(kuleCut(narrow, 404, 100).kind).toBe("ok");
+    expect(kuleCut(narrow, 411, 100).kind).toBe("perfect");
+    expect(kuleCut(narrow, 389, 100).kind).toBe("perfect");
+    expect(kuleCut(narrow, 412, 100).kind).toBe("ok");
+    expect(kuleCut(narrow, 388, 100).kind).toBe("ok");
+  });
+
+  it("KU-M3: geniş blokta eşik bugünkü gibi %4 (400'de 16, 300'de 12, 500'de 20)", () => {
+    expect(kuleIsPerfect(15, 400)).toBe(true);
+    expect(kuleIsPerfect(16, 400)).toBe(false);
+    expect(kuleIsPerfect(11, 300)).toBe(true);
+    expect(kuleIsPerfect(12, 300)).toBe(false);
+    expect(kuleIsPerfect(19, 500)).toBe(true);
+    expect(kuleIsPerfect(20, 500)).toBe(false);
+    // 200 genişlikte %4 = 8 < 12: eşik 12'dir.
+    expect(kuleIsPerfect(11, 200)).toBe(true);
+    expect(kuleIsPerfect(12, 200)).toBe(false);
+  });
+
+  it("KU-M3: eşik bloğun yarısını geçemez (20 genişlikte 9 kusursuz, 10 değil)", () => {
+    expect(kuleIsPerfect(9, 20)).toBe(true);
+    expect(kuleIsPerfect(10, 20)).toBe(false);
+    expect(kuleIsPerfect(0, 1)).toBe(true);
+    const tiny = block(500, 20);
+    expect(kuleCut(tiny, 509, 20).kind).toBe("perfect");
+    expect(kuleCut(tiny, 510, 20)).toMatchObject({ kind: "ok", cutWidth: 10 });
+  });
+
+  it("KU-M3: önce ıska bakılır; eşik ıskayı kusursuza çevirmez", () => {
+    const tiny = block(500, 10);
+    expect(kuleCut(tiny, 490, 10).kind).toBe("miss");
+    expect(kuleCut(tiny, 510, 10).kind).toBe("miss");
+    expect(kuleCut(tiny, 504, 10).kind).toBe("perfect");
+    expect(kuleCut(tiny, 505, 10).kind).toBe("ok");
   });
 });
 
@@ -219,7 +254,7 @@ describe("bırakış: kesme, kusursuz, ıska", () => {
     expect(n.speed).toBe(1060);
     expect(n.turn).toBe(2);
     expect(active(n)).toBe(s.order[1]);
-    expect(n.turnStart).toBe(s.turnStart + KULE_PAUSE_OK_MS);
+    expect(n.turnStart).toBe(s.turnStart + KULE_PAUSE_OK_MS + KULE_WARN_MS);
     expect(n.last).toMatchObject({ kind: "ok", player: who, auto: false, cutLeft: 0, cutWidth: 300 });
     expect(n.eliminated).toEqual([]);
   });
@@ -244,7 +279,7 @@ describe("bırakış: kesme, kusursuz, ıska", () => {
     expect(n.floors).toBe(0);
     expect(n.last).toMatchObject({ kind: "miss", player: who });
     expect(n.last?.fallen).toHaveLength(2);
-    expect(n.turnStart).toBe(s.turnStart + KULE_PAUSE_MISS_MS);
+    expect(n.turnStart).toBe(s.turnStart + KULE_PAUSE_MISS_MS + KULE_WARN_MS);
     expect(active(n)).toBe(s.order[1]);
     expect(n.finished).toBe(false);
   });
@@ -471,7 +506,9 @@ describe("bitiş", () => {
     expect(n.timeUp).toBe(true);
     expect(n.endedAt).toBe(limit);
     expect(n.eliminated).toEqual([]);
-    expect(game.result(n).miniScores).toEqual(Object.fromEntries(ids(3).map((id) => [id, 1])));
+    // Hiç kat yok: herkes yalnız "ayakta kaldın" +3 alır; toplamlar eşit ve 0'dan büyük -> herkes +1.
+    expect(game.result(n).miniScores).toEqual(Object.fromEntries(ids(3).map((id) => [id, 3])));
+    expect(game.result(n).awards).toEqual(Object.fromEntries(ids(3).map((id) => [id, 1])));
     expect(game.isFinished(s, ctx(limit))).toBe(true);
     expect(game.isFinished(s, ctx(limit - 1))).toBe(false);
   });
@@ -508,62 +545,64 @@ describe("bitiş", () => {
   });
 });
 
-describe("puanlama", () => {
-  it("çıkanlar −1, kalanlar +1 (kusursuz yoksa ek puan yok)", () => {
+describe("puanlama (KU-M1: usta puanı, sonunda +2 / +1 / 0)", () => {
+  it("kat +1, kusursuz kat +2; çıkanın usta puanı korunur, yalnız ayakta kalan +3 alır", () => {
     let s = start(4);
     const [a, b, c, d] = s.order as [string, string, string, string];
-    for (let i = 0; i < 4; i++) s = dropAtStart(s);
+    s = dropPerfect(s); // a: kusursuz +2
+    s = dropAtStart(s); // b: keser +1 (kule 400 -> 100)
+    s = dropAtStart(s); // c: ıska (sol uç, 100 genişlik ortada değil) -> çıkar
+    expect(s.eliminated).toEqual([c]);
+    expect(s.usta).toEqual({ [a]: 2, [b]: 1, [c]: 0, [d]: 0 });
+    s = dropAtStart(s); // d: taban 400 -> 100, +1
+    s = dropAtStart(s); // a: ıska -> 2. çıkış, oyun biter
+    expect(s.finished).toBe(true);
+    expect(s.eliminated).toEqual([c, a]);
     const r = game.result(s);
-    expect(r.miniScores).toEqual({ [a]: 1, [b]: -1, [c]: 1, [d]: -1 });
-    expect(r.awards).toEqual(r.miniScores);
+    // a: 2 (çıktı, korunur) · b: 1 + 3 · c: 0 · d: 1 + 3
+    expect(r.miniScores).toEqual({ [a]: 2, [b]: 4, [c]: 0, [d]: 4 });
+    expect(r.awards).toEqual({ [a]: 1, [b]: 2, [c]: 0, [d]: 2 });
+    expect(Object.values(r.awards).every((v) => v >= 0)).toBe(true);
   });
 
-  it("en çok kusursuz yapan ek +1 alır (en az 1 gerekir)", () => {
+  it("süre dolunca hâlâ oyunda olan herkes ayakta sayılır (+3); en yüksek +2, sonraki farklı toplam +1", () => {
     let s = start(3);
     const [a, b, c] = s.order as [string, string, string];
-    s = dropPerfect(s); // a
-    const r = game.result(finishByTime(s));
-    expect(r.miniScores).toEqual({ [a]: 2, [b]: 1, [c]: 1 });
-  });
-
-  it("kusursuzda eşitlik: eşit sayıdakilerin hepsi ek puan alır", () => {
-    let s = start(3);
-    const [a, b, c] = s.order as [string, string, string];
-    s = dropPerfect(s); // a
-    s = dropPerfect(s); // b
-    const r = game.result(finishByTime(s));
-    expect(r.miniScores).toEqual({ [a]: 2, [b]: 2, [c]: 1 });
-  });
-
-  it("daha çok kusursuz yapan tek başına alır; kusursuz yapan sonradan çıksa da bonus alır", () => {
-    let s = start(4);
-    const [a, b, c, d] = s.order as [string, string, string, string];
-    s = dropPerfect(s); // a: 1
-    s = dropPerfect(s); // b: 1
-    s = dropPerfect(s); // c: 1
-    s = dropPerfect(s); // d: 1
     s = dropPerfect(s); // a: 2
-    expect(s.perfects[a]).toBe(2);
-    // a'dan sonra b'nin sırası: tabanı daralt, b ıskalasın.
-    const narrow: KuleState = { ...s, tower: [block(300, 400), block(400, 100)] };
-    const out = dropAtStart(narrow); // b ıskalar
-    expect(out.eliminated).toEqual([b]);
-    const r = game.result(finishByTime(out));
-    expect(r.miniScores).toEqual({ [a]: 2, [b]: -1, [c]: 1, [d]: 1 });
+    s = dropPerfect(s); // b: 2
+    s = dropAtStart(s); // c: kesme +1
+    const r = game.result(finishByTime(s));
+    expect(r.miniScores).toEqual({ [a]: 5, [b]: 5, [c]: 4 });
+    expect(r.awards).toEqual({ [a]: 2, [b]: 2, [c]: 1 });
   });
 
-  it("çıkan oyuncu en çok kusursuz yaptıysa o da ek +1 alır", () => {
-    let s = start(4);
-    const [a, , c] = s.order as [string, string, string, string];
-    s = dropPerfect(s); // a: 1
-    // a'nın ıskalayacağı sıra: önce diğerlerini geç
-    // Sıra yeniden a'da; kule dar, a ıskalar.
-    const narrow: KuleState = { ...s, turnIndex: 0, tower: [block(300, 400), block(400, 100)] };
-    const out = dropAtStart(narrow);
-    expect(out.eliminated).toEqual([a]);
-    const r = game.result(finishByTime(out));
-    expect(r.miniScores[a]).toBe(0); // −1 + 1
-    expect(r.miniScores[c]).toBe(1);
+  it("süre dolarken sırası iptal olan cezasızdır ve ayakta sayılır", () => {
+    const s: KuleState = { ...narrowTower(start(3)), turnStart: T0 + KULE_TOTAL_MS - 2_000 };
+    const n = game.tick(s, ctx(T0 + KULE_TOTAL_MS + 10_000));
+    expect(n.eliminated).toEqual([]);
+    expect(game.result(n).miniScores[active(s)]).toBe(3);
+  });
+
+  it("publicView usta puanını oyun sürerken +3'süz, bitince +3'lü gösterir; ödül yalnız bitince", () => {
+    let s = start(3);
+    const [a, b, c] = s.order as [string, string, string];
+    s = dropPerfect(s);
+    const pv = game.publicView(s, ctx(s.turnStart)) as KulePublicView;
+    expect(pv.usta).toEqual({ [a]: 2, [b]: 0, [c]: 0 });
+    expect(pv.perfects).toEqual({ [a]: 1, [b]: 0, [c]: 0 });
+    expect(pv.awards).toBeNull();
+    const done = finishByTime(s);
+    const end = game.publicView(done, ctx(T0 + KULE_TOTAL_MS)) as KulePublicView;
+    expect(end.usta).toEqual({ [a]: 5, [b]: 3, [c]: 3 });
+    expect(end.awards).toEqual({ [a]: 2, [b]: 1, [c]: 1 });
+    expect(end.awards).toEqual(game.result(done).awards);
+  });
+
+  it("erken bitişte (oyun sürerken sonuç istenirse) hâlâ oyunda olanlar ayakta sayılır", () => {
+    let s = start(3);
+    const [a, b, c] = s.order as [string, string, string];
+    s = dropPerfect(s);
+    expect(game.result(s).miniScores).toEqual({ [a]: 5, [b]: 3, [c]: 3 });
   });
 
   it("sonuç, oyuncu başına kusursuz sayısını `stats.perfects` olarak taşır (yalnız sunucu muhasebesi)", () => {
@@ -575,7 +614,6 @@ describe("puanlama", () => {
     s = dropPerfect(s); // a: 2
     const r = game.result(finishByTime(s));
     expect(r.stats).toEqual({ [a]: { perfects: 2 }, [b]: { perfects: 1 }, [c]: { perfects: 1 } });
-    // Kural değişmez: puanlar stats olmadan da aynı; saf ve belirleyici.
     expect(game.result(finishByTime(s))).toEqual(r);
     expect(game.result(start(3)).stats).toEqual({
       p1: { perfects: 0 },
@@ -584,13 +622,82 @@ describe("puanlama", () => {
     });
   });
 
-  it("publicView puanları oyun sürerken de aynı formülle gösterir", () => {
-    let s = start(3);
-    const [a, b, c] = s.order as [string, string, string];
+  it("2 oyuncu, ıska: çıkan usta puanı ne olursa olsun 0, kalan +2", () => {
+    let s = start(2);
+    const [a, b] = s.order as [string, string];
+    s = dropPerfect(s); // a: 2
+    s = dropPerfect(s); // b: 2
+    s = dropPerfect(s); // a: 4
+    s = dropPerfect(s); // b: 4
+    s = dropPerfect(s); // a: 6
+    s = dropAtStart(narrowTower(s)); // b ıskalar, oyun biter
+    expect(s.finished).toBe(true);
+    expect(s.eliminated).toEqual([b]);
+    const r = game.result(s);
+    expect(r.miniScores).toEqual({ [a]: 9, [b]: 4 });
+    expect(r.awards).toEqual({ [a]: 2, [b]: 0 });
+    // Çıkanın usta puanı kalanınkinden yüksek olsa bile 0.
+    expect(kuleAwards([a, b], { [a]: 3, [b]: 10 }, [b])).toEqual({ [a]: 2, [b]: 0 });
+  });
+
+  it("2 oyuncu, ıska olmadan süre doldu: yüksek +2, diğeri +1; eşitse ikisi de +2", () => {
+    expect(kuleAwards(["a", "b"], { a: 7, b: 5 }, [])).toEqual({ a: 2, b: 1 });
+    expect(kuleAwards(["a", "b"], { a: 4, b: 6 }, [])).toEqual({ a: 1, b: 2 });
+    expect(kuleAwards(["a", "b"], { a: 5, b: 5 }, [])).toEqual({ a: 2, b: 2 });
+    const n = game.tick({ ...start(2), turnStart: T0 + KULE_TOTAL_MS - 1_000 }, ctx(T0 + KULE_TOTAL_MS));
+    expect(game.result(n).awards).toEqual({ p1: 2, p2: 2 });
+  });
+});
+
+describe("kuleAwards: eşitlikler (3+ oyuncu)", () => {
+  const order = ["a", "b", "c", "d"];
+  it("en yüksek +2, sonraki farklı toplam +1, diğerleri 0", () => {
+    expect(kuleAwards(order, { a: 9, b: 6, c: 4, d: 0 }, [])).toEqual({ a: 2, b: 1, c: 0, d: 0 });
+  });
+  it("birincide eşitlik: hepsi +2, sonraki farklı toplam +1", () => {
+    expect(kuleAwards(order, { a: 7, b: 7, c: 5, d: 2 }, [])).toEqual({ a: 2, b: 2, c: 1, d: 0 });
+  });
+  it("ikincide eşitlik: hepsi +1", () => {
+    expect(kuleAwards(order, { a: 8, b: 4, c: 4, d: 1 }, [])).toEqual({ a: 2, b: 1, c: 1, d: 0 });
+  });
+  it("usta puanı 0 olan ödül almaz", () => {
+    expect(kuleAwards(order, { a: 3, b: 0, c: 0, d: 0 }, ["b", "c"])).toEqual({ a: 2, b: 0, c: 0, d: 0 });
+    expect(kuleAwards(order, { a: 0, b: 0, c: 0, d: 0 }, [])).toEqual({ a: 0, b: 0, c: 0, d: 0 });
+  });
+  it("herkesin toplamı aynı ve 0'dan büyükse herkes +1", () => {
+    expect(kuleAwards(order, { a: 3, b: 3, c: 3, d: 3 }, [])).toEqual({ a: 1, b: 1, c: 1, d: 1 });
+  });
+  it("çıkmak 3+ oyuncuda ödülü kendiliğinden düşürmez; sıralama usta puanıyla", () => {
+    expect(kuleAwards(order, { a: 6, b: 4, c: 4, d: 2 }, ["a"])).toEqual({ a: 2, b: 1, c: 1, d: 0 });
+  });
+});
+
+describe("rekor, seri ve uyarı", () => {
+  it("rekor yıkılan kulelerin en yükseğidir; seri art arda kusursuzu sayar", () => {
+    let s = start(4);
     s = dropPerfect(s);
+    s = dropPerfect(s);
+    expect(s.streak).toBe(2);
+    expect(s.record).toBe(0);
+    s = dropAtStart(s); // kesme: seri sıfırlanır
+    expect(s.streak).toBe(0);
+    expect(s.floors).toBe(3);
+    s = dropAtStart(s); // ıska (dar kule): kule yıkılır, rekor 3
+    expect(s.last?.kind).toBe("miss");
+    expect(s.record).toBe(3);
+    expect(s.floors).toBe(0);
     const pv = game.publicView(s, ctx(s.turnStart)) as KulePublicView;
-    expect(pv.scores).toEqual({ [a]: 2, [b]: 1, [c]: 1 });
-    expect(pv.perfects).toEqual({ [a]: 1, [b]: 0, [c]: 0 });
+    expect(pv.record).toBe(3);
+    expect(pv.streak).toBe(0);
+  });
+
+  it("uyarı süresinde (sıra başlamadan) bırakış reddedilir; sıra süresi uyarıdan sonra işler", () => {
+    const s = start(3);
+    const warnStart = s.turnStart - KULE_WARN_MS;
+    expect(warnStart).toBe(T0 + KULE_INTRO_MS);
+    expect(rejection(s, active(s), warnStart + 100, warnStart + 100)).toBe("not_started");
+    const pv = game.publicView(s, ctx(warnStart)) as KulePublicView;
+    expect(pv.deadline - pv.turnStart).toBe(KULE_TURN_MS);
   });
 });
 

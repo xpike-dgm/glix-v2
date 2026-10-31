@@ -4,5 +4,9 @@ declare const __ALISVERIS_PROPS__: readonly string[] | undefined;
 declare const __BOZUK_PHONE_ART__: boolean | undefined;
 /** Yapı anında `vite.config.ts` `define` ile verilen görsel bayrakları (testlerde tanımsız olabilir). */
 declare const __ZB_BOMBA_GORSEL__: boolean | undefined;
+/** Kule Ustası görsellerinden derlemede var olanlar (`public/assets/props/kule-ustasi/<ad>.webp`, uzantısız). */
+declare const __KULE_PROPS__: readonly string[] | undefined;
+/** Yazı Yaz görsellerinden derlemede var olanlar (`public/assets/props/yazi-yaz/<ad>.webp`, uzantısız). */
+declare const __YAZI_YAZ_PROPS__: readonly string[] | undefined;
 /** Sızma görsellerinden derlemede var olanlar (`public/assets/props/sizma/<ad>.webp`, uzantısız). */
 declare const __SIZMA_PROPS__: readonly string[] | undefined;

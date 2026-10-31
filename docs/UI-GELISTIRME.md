@@ -6,6 +6,10 @@ güncellenir.
 
 ## Tüm oyunlar (genel kararlar)
 
+- **Test ertelendi (31 Ekim 2026, sahip kararı):** bitmiş oyunlar (Aşırı Yükleme, Gizli Alışveriş, Kontrol Paneli,
+  Zehirli Kadeh, Çapraz Ateş, Zaman Bombası, Bozuk Telefon, Laf Sokma, Kule Ustası, Yazı Yaz) uçtan uca teste
+  sokulmadan hızlıca canlıya alındı. Uçtan uca test (`e2e`, `pwa-check`, telefonla elle tur) **yalnız sahip
+  istediğinde** yapılacak; o güne kadar bu madde açık kalır.
 - **Sonuç ekranı oyuncu onayıyla geçer:** her oyunun sonuç ekranında "Devam et" düğmesi olur; bağlı oyuncuların
   hepsi bastığında bir sonraki aşamaya geçilir. Süre sınırı yine vardır ama uzundur (60 sn), böylece kimse sonucu
   tam görmeden geçmez. Ayrıntılar (yapımda uygulanacak varsayılanlar): yalnız bağlı oyuncular beklenir; kopan
@@ -225,6 +229,12 @@ Ayrıntılar: `docs/oneriler/kule-ustasi.md`. Onaylananlar (dosyadaki ayrıntıl
 KU-U4, KU-U5, KU-U6, KU-U7, KU-U9, KU-U10.**
 Onaylanmayanlar: KU-M2 (sırayı sen seç; bugünkü sıra düzeni kalır), KU-M4 (kusursuz kuleyi onarır), KU-M5, KU-U8
 ("neden" satırı), KU-AI1.
+**Uygulandı (Ekim 2026):** usta puanı ve +2 / +1 / 0 sıralama ödülü (`kuleAwards`), adil kusursuz eşiği
+(`kuleIsPerfect`), 0,6 sn "Sıra sende!" uyarısı (`KULE_WARN_MS`, sıra süresi uyarıdan sonra işler), vinç kancası ve
+düşen blok, 14 kat / kat sayacı / rekor çizgisi / hız rozeti, halka sayaç, kesilme-kusursuz-yıkılış gösterileri, ses
+seti, oyuncu şeridi ve TV görünümü (`StageView`). Zamanlamalar tek yerde: `apps/client/src/games/kule-ustasi/timeline.ts`.
+Gereken görseller (vinç kancası, kristal blok dokusu): `docs/oneriler/kule-ustasi-gorsel.md`; dosya yokken CSS/SVG
+karşılığı çizilir. KU-M2 olmadığı için 2 oyunculu puanlama ve toplam süre (90 sn) bugünkü sıra düzenine göre kaldı.
 
 ## Yazı Yaz
 
@@ -237,6 +247,11 @@ Onaylanmayanlar: YY-M8 (iki tur), YY-AI1 (anlam hakemi).
 Ayrıntılar: `docs/oneriler/sizma.md`. Onaylananlar: **SZ-M1 … SZ-M6, SZ-U1 … SZ-U9, SZ-AI1.**
 Onaylanmayanlar: SZ-M7 (kelimesiz sızma), SZ-M8 (iki raunt). Puan dosyadaki gibi (0…+3, eksi yok; +2/+1/0
 sıralamaya çevrilmez).
+**Uygulandı (Ekim 2026):** "Söyledim" ile ilerleyen konuşma sırası (15 sn, iki tur, 3 sn geri sayım), kopan oyuncuya oy,
+eşitlikte 15 sn ikinci oylama, "Sızma sen miydin?" 10 sn ve Evet'in bedeli, yalnız doğru oya +1, son şans (ortak
+kelimeyi yaz, +1); gözetleme koruması, oyların uçuşu, kırılan maske, ses/titreşim seti, TV görünümü (`StageView`),
+spiker yorumu (`sizmaPrompt`). Zamanlamalar tek yerde: `apps/client/src/games/sizma/timeline.ts`. Gereken görseller
+(maske ve iki kırık parçası): `docs/oneriler/sizma-gorsel.md`; dosya yokken SVG karşılığı çizilir.
 
 ## Kara Borsa
 

@@ -247,37 +247,66 @@ Oyuncunun genel skoru bu sonuçlarla artar; hesap istatistiğindeki maç puanı 
 
 ## 1. Yazı Yaz — `yazi-yaz`
 
-**Durum: KİLİTLİ**
+**Durum: KİLİTLİ** (Ekim 2026 sahip onayı: YY-M1 … YY-M7, YY-U1 … YY-U8, YY-AI2; ayrıntı
+`docs/oneriler/yazi-yaz.md`)
 
-- Amaç: İki yazanın kendi kelimelerini gizlice yazdığı, diğer oyuncuların
-  `MASUM` yazarak doğal görünmeye çalıştığı ve sonrasında yazan/kelime
-  tahminlerinin yapıldığı sosyal çıkarım oyunu.
+- Amaç: İki yazanın herkese açık bir konudan gizlice birer kelime yazdığı, diğer
+  oyuncuların `MASUM` yazarak doğal görünmeye çalıştığı ve sonrasında yazan/kelime
+  tahminlerinin yapıldığı sosyal çıkarım oyunu. Yazan bulunmamaya çalışır.
 - Minimum oyuncu: **3**.
 - Maksimum oyuncu: **8**.
-- Yazma aşamasında tam **iki yazan** bulunur; her yazan kendi gizli kelimesini
-  yazar.
+- Yazma aşamasında tam **iki yazan** bulunur; maç tohumuyla rastgele seçilir.
+- **Konu:** her oyunda herkese açık bir konu çıkar (ör. MEYVE). Liste yönetici
+  panelindeki "Yazı Yaz konuları" içerik havuzundadır; sahip yazar, yapay zekâyla
+  üretilmez. Yerleşik listede 100 konu vardır (sahibin isteğiyle hazırlandı; panelden kapatılıp düzenlenebilir); panelden `SERBEST` eklenirse o çıkınca oyun konusuz oynanır.
+  Konu maç tohumuyla seçilir; aynı odada son 10 oyunda çıkan konu, havuz yetiyorsa
+  tekrar gelmez. İki yazan aynı konuyu alır; konuya uymak zorunlu değildir (sistem
+  denetleyemez), konu dışı kelime kural ihlali sayılmaz.
+- Rol, yazma aşamasının başında ters duran rol kartına basılı tutulunca görünür;
+  kart bir kez çevrilene kadar pano kapalıdır. Basılı tutmayan biri için iki kart
+  aynıdır.
 - Diğer oyuncular girişe `masum` yazar. Giriş otomatik büyük harfe çevrilir;
   küçük/büyük harf farkı oynanışı etkilemez.
+- **Yazan MASUM yazamaz:** yazan MASUM yazıp Tamam derse yalnız kendi ekranında
+  uyarı çıkar ve kilitlenmez; süre dolduğunda MASUM bırakan yazan "kelime
+  yazmadı" sayılır.
+- **Unutkan masum:** boş "Tamam" diyen masumun girişi MASUM olur ve kilitlenir;
+  hiç yazmayan masum süre dolunca MASUM sayılır.
+- Pano gizlidir: yazılan her harf kısa süre görünür, sonra ● olur; basılı tutunca
+  kelimenin tamamı görünür.
 - Aşamalar: **30 saniye yazma → 60 saniye sözlü tartışma → 30 saniye tahmin**.
+- Yazma aşamasında kimin "Tamam" dediği gösterilmez; yalnız hazır sayısı
+  ("3/6 hazır") görünür. Tartışmada ve tahminde kimin hazır olduğu görünür.
+- **Harf ipucu:** tartışma başlarken iki kelimenin harf sayısı, kimin olduğu
+  söylenmeden, küçükten büyüğe gösterilir ("5 harf · 7 harf"); yalnız harf ve
+  rakam sayılır, boşluk sayılmaz. Kelime yazmamış yazan için "yazılmadı". İpucu
+  tartışma ve tahmin boyunca görünür; başka ipucu (ilk harf vb.) verilmez.
 - Masum oyuncu yalnızca **bir yazanı ve o yazanın kelimesini** tahmin eder.
 - Her yazan, diğer yazanı ve diğer yazanın kelimesini tahmin eder.
-- Doğru kelime tahmini genel skora **+1**.
-- Doğru yazan tahmini genel skora **+1**.
-- Yazan oyuncu da diğer yazanın kişisini ve kelimesini doğru bilirse aynı
-  `+1 kelime / +1 yazan` mantığıyla puan alır.
+- Oyun içi **dedektif puanı:** doğru yazan tahmini **+1**, doğru kelime tahmini
+  **+1** (yalnız kişi doğruysa), **"İz bırakmadın" +1:** hiçbir masumun seçmediği,
+  kelime yazmış yazan. Diğer yazanın seçmesi bu ödülü bozmaz; hiçbir masum seçim
+  yapmadıysa kelime yazmış iki yazan da +1 alır. Yazanın en yüksek dedektif puanı 3,
+  masumun 2'dir.
+- Kelime eşleşmesi klavyeden bağımsızdır; **6 ve daha uzun** kelimelerde, harf sayısı
+  aynıysa **tek harf farkı** da doğru sayılır (eksik/fazla harf kabul edilmez).
+- Genel skora **sıralama** gider: en yüksek dedektif puanı **+2**, sonraki farklı
+  toplam **+1**, diğerleri 0. Birincide eşitlikte hepsi +2; toplamı 0 olan ödül
+  almaz; herkesin toplamı aynı ve 0'dan büyükse herkes +1; herkes 0 ise kimse puan
+  almaz. Eksi puan yoktur.
 - Tahmin göndermeyen oyuncu eksi almaz; yalnızca artı puan alamaz.
 - Kelimeler oyuncular tarafından yazılır; iki yazanın aynı kelimeyi yazmasına
   izin verilir.
-- Ayrı bir beraberlik veya final bonusu yoktur; puanlar genel skora doğrudan
-  eklenir.
-- Tutorial/görsel ayrıntıları:
-  1. İki oyuncunun gizli yazan rozeti yanar; diğer oyuncular `MASUM` kartını
-     doldurur.
-  2. Neon yazı panoları kapanır ve herkes sözlü tartışmaya geçer.
-  3. Oyuncular bir yazanı ve onun kelimesini seçer; doğru kişi ve doğru kelime
-     ayrı ayrı parlayan puan jetonlarına dönüşür.
-  Görsel: Ortada iki kilitli neon yazı makinesi, çevrede sekiz karakter portresi;
-  sonuçta doğru kartta yeşil tarama, yanlış kartta kısa kırmızı glitch kullanılır.
+- Bağlı herkes hazırsa aşama 1 sn sonra biter; son eksik oyuncu bağlantısını
+  yitirirse de bu yeniden denetlenir.
+- Sonuç ("Yazanlar…" açılışı, en az 8 sn): yazan kartları döner, kelimeler daktilo
+  gibi yazılır, bulanların avatarları kartlara uçar, "n kişi buldu" ya da
+  "İZ BIRAKMADI" damgası; ardından herkesin satırı (dedektif puanı ve +2/+1/0).
+  Ekran "Devam et" ile geçer (en çok 60 sn). İsteğe bağlı tek cümlelik spiker
+  yorumu (yapay zekâ bağlıysa; gelmezse görünmez, oyun beklemez).
+- Görsel: ters rol kartı (YAZAN: daktilo ve kalem / MASUM: boş kâğıt), daktiloya
+  takılı kâğıtta konu, gizli neon pano, portre halkası; sonuçta doğru seçim yeşil,
+  yanlış kelime kısa kırmızı titreme.
 
 ## 2. Kendim — `kendim`
 
@@ -1584,36 +1613,50 @@ BT-M1/M2/M3: `docs/oneriler/bozuk-telefon.md`, `docs/UI-GELISTIRME.md`)
 
 ## 29. Kule Ustası — `kule-ustasi`
 
-**Durum: KİLİTLİ** (Ekim 2026; sahip "yap" dedi, testler geçti; ayrıntılar asistan önerisi — sahip itiraz ederse güncellenir)
+**Durum: KİLİTLİ** (Ekim 2026; sahip "yap" dedi, testler geçti. 31 Ekim 2026: KU-M1 usta puanı ve KU-M3 adil kusursuz
+eşiği onaylandı ve uygulandı — `docs/oneriler/kule-ustasi.md`, karar defteri `docs/UI-GELISTIRME.md`.)
 
-**Fikir:** Herkes sırayla ortak bir kuleye blok bırakır. Blok, kulenin üstünde sağa sola kayar; oyuncu doğru anda
-dokunup bırakır. Alttaki bloğun dışına taşan kısım kesilip düşer, kule daralır. Hiç üstüne denk getiremeyen kuleyi
-düşürür ve oyundan çıkar.
+**Fikir:** Herkes sırayla ortak bir kuleye blok bırakır. Blok, vinç kancasına asılı olarak kulenin bir kat yukarısında
+sağa-sola kayar; oyuncu doğru anda dokunup bırakır. Alttaki bloğun dışına taşan kısım kesilip düşer, kule daralır. Hiç
+üstüne denk getiremeyen kuleyi düşürür ve oyundan çıkar.
 
 1. Minimum oyuncu / maksimum oyuncu: [2-8]
 2. Sıra: maç başında bir kez karıştırılır, çıkan oyuncular atlanarak aynı çevrim tekrarlanır.
 3. Sırası gelen oyuncunun ekranında blok, kulenin üstünde **sabit hızla sağa-sola gidip gelir**; oyuncu **bir kez
    dokunarak** bırakır. Konum sunucu saatine bağlı bir fonksiyondur (herkes aynı hareketi görür). Diğerleri izler.
+   Blok kaymaya başlamadan önce **0,6 sn "Sıra sende!" uyarısı** vardır (vinç yeni bloğu indirir); sıra süresi bu
+   uyarıdan sonra işler, uyarı sırasında bırakılamaz.
 4. Bırakma anı: istemci dokunduğu anı sunucu saatiyle gönderir; sunucu, sıranın başlangıcından önceki ya da 400 ms'den
    eski anları kabul etmez (gecikme hilesine karşı). Sıra süresi **6 saniye**; dokunmayan oyuncu süre dolduğu anda
    bırakmış sayılır.
 5. **Kesme:** Bırakılan bloğun alttaki bloğun dışına taşan kısmı kesilir; kalan genişlik yeni bloğun genişliğidir.
-   **Kusursuz:** taşma bloğun genişliğinin %4'ünden azsa kesilmez, blok tam oturur ve "Kusursuz!" sayılır.
+   **Kusursuz:** önce ıskaya bakılır; sonra taşma, eşikten **kesin küçükse** kesilmez, blok tam oturur ve "Kusursuz!"
+   sayılır. Eşik **bloğun genişliğinin %4'ü ya da 12 birim, hangisi büyükse**; ama en çok bloğun yarısı (çok dar
+   blokta yarısı kullanılır). Örnek: 400 genişlikte 15 kusursuz, 16 değil; 100 genişlikte 11 kusursuz, 12 değil;
+   20 genişlikte 9 kusursuz, 10 değil.
 6. **Iska:** Blok alttakinin üstüne hiç denk gelmezse kule yıkılır: o oyuncu **çıkar**, kule **başlangıç genişliğine
    sıfırlanır** (yeni taban) ve sıra kalanlarla sürer.
 7. **Hız:** Her başarılı katta kayma hızı %6 artar (en çok başlangıcın 2,5 katı). Kule sıfırlanınca hız da sıfırlanır.
 8. **Bitiş:** Başlangıç oyuncularının yarısı çıkınca ya da **90 saniye** dolunca (hangisi önce gelirse). Süre dolarken
-   sırası gelmiş oyuncunun bırakışı iptal edilir, cezası olmaz.
-9. **Puan (genel skor):** Çıkanlar **−1**, kalanlar **+1**. En çok "Kusursuz" yapan oyuncu(lar) ek **+1** (en az 1
-   kusursuz gerekir; eşitlikte hepsi alır).
+   sırası gelmiş oyuncunun bırakışı iptal edilir, cezası olmaz (ayakta sayılır).
+9. **Usta puanı (oyun içi puan, KU-M1):** oturttuğun her kat **+1**, kusursuz kat **+2** (+1 yerine); oyun bittiğinde
+   **hâlâ oyunda olan +3** ("ayakta kaldın"). Iskalayıp çıkanın usta puanı korunur (eksiye düşmez), yalnız +3'ü
+   alamaz. **Genel skora giden puan:** usta puanı sıralaması — en yüksek **+2**, ikinci **+1**, diğerleri **0**; eksi
+   yok. Birincide eşitlikte hepsi +2, sonraki farklı toplam +1; usta puanı 0 olan ödül almaz; herkesin toplamı aynı ve
+   0'dan büyükse herkes +1. **2 oyuncuda:** ıskalayıp çıkan, usta puanı ne olursa olsun **0**, kalan **+2**; ıska
+   olmadan süre dolarsa usta puanı yüksek olan +2, diğeri +1 (eşitse ikisi de +2). Kartlarda "birinci" en yüksek usta
+   puanlı(lar), "sonuncu" en düşük usta puanlı(lar)dır (ortak kural: kartlar mini puanı okur).
 10. Gizli bilgi yoktur; her şey herkese açıktır.
 11. Tutorialda gösterilecek üç adım:
     1. Blok kulenin üstünde kayar; sıran gelince dokunup bırak.
-    2. Taşan kısım kesilir, kule daralır; tam oturtursan "Kusursuz!"
-    3. Iskalayan kuleyi yıkar ve çıkar (−1); kalanlar +1.
+    2. Taşan kısım kesilir, kule daralır; tam oturtursan Kusursuz! (altın kat)
+    3. Iskalayan kuleyi yıkar ve çıkar; ayakta kalan ve çok kat koyan kazanır.
 12. Rastgele seçime girer (Ekim 2026: testler çalıştırıldı ve geçti; o zamana dek `randomPool: false` ile yalnız
     elle seçilebiliyordu). Bayrak genel olarak duruyor: yeni bir oyun onay bekleyecekse aynı yolla havuz dışında
     tutulur (`pickRandomGames` havuza almaz, katalogda `GameInfo.randomPool` görünür).
+13. Ekranda gösterilen (kural değiştirmeyen) bilgiler: kat sayacı, bu oyunda yıkılmış en yüksek kulenin rekor çizgisi,
+    hız rozeti, art arda kusursuz serisi ("SERİ ×3"); şeritte usta puanı ve ★ kusursuz sayısı. "Kule Ustası" rozeti
+    (tek oyunda 3 kusursuz) aynen kalır.
 
 ---
 

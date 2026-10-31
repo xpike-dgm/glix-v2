@@ -98,6 +98,8 @@ const registry: Record<string, GameEntry> = {
     noClock: true,
     Screen: lazy(() => import("./kule-ustasi/KuleUstasiScreen.js")),
     Art: lazy(() => import("./kule-ustasi/BriefingArt.js")),
+    StageView: lazy(() => import("./kule-ustasi/StageView.js")),
+    tvOwnBoard: true,
   },
   "capraz-ates": {
     Screen: lazy(() => import("./capraz-ates/CaprazAtesScreen.js")),
@@ -155,6 +157,7 @@ const registry: Record<string, GameEntry> = {
   "yazi-yaz": {
     Screen: lazy(() => import("./yazi-yaz/YaziYazScreen.js")),
     Art: lazy(() => import("./yazi-yaz/BriefingArt.js")),
+    StageView: lazy(() => import("./yazi-yaz/StageView.js")),
   },
   "bozuk-telefon": {
     Screen: lazy(() => import("./bozuk-telefon/BozukTelefonScreen.js")),

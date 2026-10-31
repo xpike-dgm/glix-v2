@@ -2,9 +2,11 @@ import type { YaziYazRole } from "@glix/engine";
 import { createSignal, onCleanup, Show } from "solid-js";
 import { hapticTap } from "../../fx/haptics.js";
 import { tap, unlockAudio } from "../../fx/sound.js";
+import { roleLine } from "./RoleCard.js";
 
 interface Props {
   role: YaziYazRole | null;
+  hasTopic: boolean;
 }
 
 /**
@@ -49,7 +51,7 @@ export function RolePeek(props: Props) {
             }
           >
             <span class="yy__peek-role">
-              {role() === "writer" ? "Yazansın · kelimeni yaz" : "Masumsun · MASUM yaz"}
+              {role() === "writer" ? "Yazansın" : "Masumsun"} · {roleLine(role(), props.hasTopic)}
             </span>
           </Show>
         </button>

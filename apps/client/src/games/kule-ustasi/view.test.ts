@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { formatClock, isNewResult, kulePhase, kuleStatus, parseKuleView, pct } from "./view.js";
+import {
+  formatClock,
+  isNewResult,
+  kulePhase,
+  kuleStatus,
+  nextPlayer,
+  parseKuleView,
+  pct,
+  speedLabel,
+  speedTone,
+  windowStart,
+} from "./view.js";
 
 const tower = [
   { left: 300, width: 400, perfect: false },
@@ -8,8 +19,11 @@ const tower = [
 const pub = {
   order: ["a", "b", "c"],
   eliminated: [],
-  scores: { a: 1, b: 2, c: 1 },
+  usta: { a: 1, b: 2, c: 1 },
   perfects: { a: 0, b: 1, c: 0 },
+  awards: null,
+  record: 0,
+  streak: 1,
   active: "a",
   turn: 3,
   turnStart: 10_000,
@@ -55,7 +69,13 @@ describe("Kule Ustası görünümü", () => {
     expect(parseKuleView({ ...pub, tower: [] }, priv)).toBeNull();
     expect(parseKuleView({ ...pub, tower: [{ left: 900, width: 400, perfect: false }] }, priv)).toBeNull();
     expect(parseKuleView({ ...pub, tower: [{ left: 1, width: 0, perfect: false }] }, priv)).toBeNull();
-    expect(parseKuleView({ ...pub, scores: { a: "x" } }, priv)).toBeNull();
+    expect(parseKuleView({ ...pub, usta: { a: "x" } }, priv)).toBeNull();
+    expect(parseKuleView({ ...pub, usta: undefined }, priv)).toBeNull();
+    expect(parseKuleView({ ...pub, awards: { a: "x" } }, priv)).toBeNull();
+    expect(parseKuleView({ ...pub, awards: undefined }, priv)).toBeNull();
+    expect(parseKuleView({ ...pub, record: -1 }, priv)).toBeNull();
+    expect(parseKuleView({ ...pub, record: "3" }, priv)).toBeNull();
+    expect(parseKuleView({ ...pub, streak: undefined }, priv)).toBeNull();
     expect(parseKuleView({ ...pub, blockWidth: 0 }, priv)).toBeNull();
     expect(parseKuleView({ ...pub, speed: 0 }, priv)).toBeNull();
     expect(parseKuleView({ ...pub, endsAt: 0 }, priv)).toBeNull();
@@ -70,6 +90,9 @@ describe("Kule Ustası görünümü", () => {
     const v = parseKuleView(pub, priv);
     if (!v) throw new Error("görünüm yok");
     expect(kulePhase(v, 9_000)).toBe("pause");
+    expect(kulePhase(v, 9_399)).toBe("pause");
+    expect(kulePhase(v, 9_400)).toBe("warn");
+    expect(kulePhase(v, 9_999)).toBe("warn");
     expect(kulePhase(v, 10_000)).toBe("moving");
     expect(kulePhase(v, 15_999)).toBe("moving");
     expect(kulePhase(v, 16_000)).toBe("expired");
@@ -84,6 +107,12 @@ describe("Kule Ustası görünümü", () => {
     expect(kuleStatus({ v, phase: "pause", spectator: false })).toBe("perfect");
     expect(kuleStatus({ v: { ...v, turn: 9 }, phase: "pause", spectator: false })).toBe("intro");
     expect(kuleStatus({ v, phase: "moving", spectator: false })).toBe("mine");
+    // Uyarı: "Sıra sende!" bandı inerken başlık da sıraya geçer.
+    expect(kuleStatus({ v, phase: "warn", spectator: false })).toBe("mine");
+    expect(kuleStatus({ v, phase: "warn", spectator: true })).toBe("other");
+    expect(kuleStatus({ v: { ...v, isOut: true, myTurn: false }, phase: "warn", spectator: false })).toBe(
+      "eliminated",
+    );
     expect(kuleStatus({ v, phase: "moving", spectator: true })).toBe("other");
     expect(kuleStatus({ v: { ...v, myTurn: false }, phase: "moving", spectator: false })).toBe("other");
     expect(kuleStatus({ v: { ...v, isOut: true, myTurn: false }, phase: "moving", spectator: false })).toBe(
@@ -98,6 +127,37 @@ describe("Kule Ustası görünümü", () => {
     expect(isNewResult(v?.last ?? null, 1)).toBe(true);
     expect(isNewResult(v?.last ?? null, 2)).toBe(false);
     expect(isNewResult(null, 1)).toBe(false);
+  });
+
+  it("oyun sonu ödülünü okur", () => {
+    const v = parseKuleView({ ...pub, active: null, awards: { a: 0, b: 2, c: 1 } }, priv);
+    expect(v?.awards).toEqual({ a: 0, b: 2, c: 1 });
+    expect(v?.usta).toEqual({ a: 1, b: 2, c: 1 });
+  });
+
+  it("sıradaki oyuncu çıkanları atlar; oyun bitince yok", () => {
+    expect(nextPlayer({ order: ["a", "b", "c"], eliminated: [], active: "a" })).toBe("b");
+    expect(nextPlayer({ order: ["a", "b", "c"], eliminated: ["b"], active: "a" })).toBe("c");
+    expect(nextPlayer({ order: ["a", "b", "c"], eliminated: ["a"], active: "c" })).toBe("b");
+    expect(nextPlayer({ order: ["a", "b"], eliminated: ["b"], active: "a" })).toBeNull();
+    expect(nextPlayer({ order: ["a", "b"], eliminated: [], active: null })).toBeNull();
+  });
+
+  it("hız rozeti: ×1,0 … ×2,5; 2'yi geçince turuncu, tavanda kırmızı", () => {
+    expect(speedLabel(1000)).toBe("×1,0");
+    expect(speedLabel(1416)).toBe("×1,4");
+    expect(speedLabel(2500)).toBe("×2,5");
+    expect(speedTone(1999)).toBe("calm");
+    expect(speedTone(2000)).toBe("calm");
+    expect(speedTone(2050)).toBe("hot");
+    expect(speedTone(2500)).toBe("max");
+  });
+
+  it("pencere: en çok 14 kat görünür, kule yükselince yukarı kayar", () => {
+    expect(windowStart(1, 14)).toBe(0);
+    expect(windowStart(14, 14)).toBe(0);
+    expect(windowStart(15, 14)).toBe(1);
+    expect(windowStart(30, 14)).toBe(16);
   });
 
   it("süre ve yüzde biçimi", () => {
