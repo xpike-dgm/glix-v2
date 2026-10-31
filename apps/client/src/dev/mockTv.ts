@@ -11,6 +11,7 @@
  *   tv-kart-*                 Kart sistemi ekranları (seçim, geri sayım, sonuç)
  *   tv-zehirli-*              Zehirli Kadeh evreleri (ör. tv-zehirli-spectator, tv-zehirli-reveal&t=2500)
  *   tv-laf-*                  Laf Sokma evreleri (ör. tv-laf-vote, tv-laf-reveal-master&t=4800)
+ *   tv-sizma-*                Sızma evreleri (ör. tv-sizma-clue, tv-sizma-runoff, tv-sizma-unmask&t=5200)
  */
 import { setState } from "../net/store.js";
 
@@ -32,6 +33,9 @@ export async function startTvMock(mock: string, params: URLSearchParams): Promis
     } else if (kind.startsWith("laf-")) {
       const m = await import("./mockLaf.js");
       m.startLafMock(kind, params);
+    } else if (kind.startsWith("sizma-")) {
+      const m = await import("./mockSizma.js");
+      m.startSizmaMock(kind, params);
     } else if (kind.startsWith("kart-")) {
       const m = await import("./mockKartlar.js");
       m.startKartMock(kind, params);

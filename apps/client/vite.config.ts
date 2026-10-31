@@ -99,11 +99,25 @@ function bozukPhoneArt(): boolean {
   );
 }
 
+/**
+ * Sızma görsellerinden gerçekten var olanlar (`public/assets/props/sizma/*.webp`, uzantısız ad). Ekran yalnız
+ * bunları ister; olmayanın yerine kendi SVG maskesini çizer (404 yok). Tarifler: docs/oneriler/sizma-gorsel.md.
+ */
+function sizmaPropFiles(): string[] {
+  const dir = fileURLToPath(new URL("./public/assets/props/sizma", import.meta.url));
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".webp"))
+    .map((f) => f.slice(0, -".webp".length))
+    .sort();
+}
+
 export default defineConfig({
   define: {
     __ALISVERIS_PROPS__: JSON.stringify(alisverisPropFiles()),
     __BOZUK_PHONE_ART__: JSON.stringify(bozukPhoneArt()),
     __ZB_BOMBA_GORSEL__: JSON.stringify(ZB_BOMBA_GORSEL),
+    __SIZMA_PROPS__: JSON.stringify(sizmaPropFiles()),
   },
   plugins: [
     solid(),

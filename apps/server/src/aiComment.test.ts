@@ -233,6 +233,59 @@ describe("oyun sonu yorumu: Çapraz Ateş özeti", () => {
   });
 });
 
+describe("oyun sonu yorumu: Sızma özeti", () => {
+  const final = {
+    commonWord: "ÇAY",
+    infiltratorWord: "KAHVE",
+    guess: "KAHVE",
+    stole: false,
+    scores: { "id-1": 1, "id-2": 0, "id-3": 0 },
+    rightVoters: ["id-1"],
+  };
+  const reveal = {
+    infiltrator: "id-3",
+    votes: { "id-1": "id-3", "id-2": "id-1", "id-3": "id-3" },
+    tally: { "id-1": 1, "id-2": 0, "id-3": 2 },
+    caught: true,
+    runoff: ["id-1", "id-3"],
+    selfNoticed: false,
+    final,
+  };
+  const view = { players: ["id-1", "id-2", "id-3"], reveal };
+  const names: Record<string, string> = { "id-1": "Mert", "id-2": "Elif", "id-3": "Kaan" };
+
+  it("oylar yer tutucu adlarla, iki kelime, eşitlik, sonuç ve son şans; kimlik ve ad yok", () => {
+    const p = commentPrompt("sizma", view, (id) => names[id] ?? null);
+    const user = p?.user ?? "";
+    expect(user).toContain("- Oyuncu1: Oyuncu3 adlı oyuncuya oy verdi");
+    expect(user).toContain("- Oyuncu3 (sızma): Oyuncu3 adlı oyuncuya oy verdi");
+    expect(user).toContain("Ortak kelime: ÇAY; sızmanın kelimesi: KAHVE.");
+    expect(user).toContain("ikinci oylama yapıldı");
+    expect(user).toContain("Oyuncu3 yakalandı.");
+    expect(user).toContain("ortak kelimeyi bilemedi");
+    for (const n of ["Mert", "Elif", "Kaan", "id-1", "id-2", "id-3"]) expect(user).not.toContain(n);
+    expect(p?.names).toEqual({ Oyuncu1: "Mert", Oyuncu2: "Elif", Oyuncu3: "Kaan" });
+    expect(p?.system).toMatch(/sızma oyununun spikeri/);
+  });
+
+  it("kurtulma: eşitlik ve son şans satırı yok", () => {
+    const p = commentPrompt(
+      "sizma",
+      { ...view, reveal: { ...reveal, caught: false, runoff: null, selfNoticed: true } },
+      () => "x",
+    );
+    expect(p?.user).toContain("yakalanmadan kurtuldu");
+    expect(p?.user).toContain("fark etti");
+    expect(p?.user).not.toMatch(/ikinci oylama|son şans|çaldı|bilemedi/i);
+  });
+
+  it("son açılış gelmeden (son şans sürerken) ya da bozuk görünümde özet yok", () => {
+    expect(commentPrompt("sizma", { ...view, reveal: { ...reveal, final: null } }, () => "x")).toBeNull();
+    expect(commentPrompt("sizma", { players: [], reveal }, () => "x")).toBeNull();
+    expect(commentPrompt("sizma", null, () => "x")).toBeNull();
+  });
+});
+
 describe("oyun sonu yorumu: canlı yanıt biçimi ve adlar", () => {
   const raw = (body: unknown) => vi.fn<AiFetch>(async () => ({ status: 200, json: async () => body }));
 

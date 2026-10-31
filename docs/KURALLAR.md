@@ -354,6 +354,36 @@ Oyuncunun genel skoru bu sonuçlarla artar; hesap istatistiğindeki maç puanı 
   **"Sızma kendini fark etmedi"**. Diğer oyuncuların cevapları hiçbir zaman açılmaz.
 - Tutorial adımı 3: "Oylamaya geç, sızmayı bul; sonda 'Sızma sen miydin?' sorusunu yanıtla."
 
+**Değişiklik (Ekim 2026, sahip onayı: SZ-M1 … SZ-M6; ayrıntı `docs/oneriler/sizma.md`) — yukarıdaki cevapların önüne geçer:**
+
+- **Konuşma sırası uygulamada ilerler.** Ekranda "TUR 1 / 2" ve konuşan oyuncu vurgulanır. Konuşan, ipucunu söyleyince
+  kendi ekranındaki **"Söyledim"** düğmesine basar; sıra bir sonrakine geçer. Her konuşma hakkı en çok **15 saniyedir**;
+  dolarsa sıra kendiliğinden geçer (ceza yok). "Söyledim"e yalnız sırası gelen basabilir. Bağlantısı kopuk oyuncunun
+  sırası atlanır. Sıra iki turda da aynıdır. İki tur bitince **3 saniyelik geri sayımla** oylama kendiliğinden başlar.
+  "Oylamaya geç" erken çıkış olarak kalır: bağlı herkes basarsa kalan sıralar atlanır, oylama 1 sn sonra başlar.
+  İpucu aşamasının 5 dakikalık teknik üst sınırı değişmez. Uygulama ipucunun içeriğini denetlemez (yazılı ipucu yok).
+- **Bağlantısı kopan oyuncuya da oy verilebilir.** Oyun başında oyuncu olan herkes oylanabilir; kopan oyuncu oy
+  veremez, cevap veremez ve bekleme sayımlarında beklenmez.
+- **Eşitlikte ikinci oylama.** İlk oylamada en çok oyu alanlar eşitse (en az bir oy verilmişse), yalnız eşit adaylar
+  arasında **15 saniyelik** tek bir ikinci oylama yapılır. İlk oylamanın oyları silinir; herkes (adaylar dahil, kendine
+  de) yeniden oy verir. Ekranda yalnız adayların adları görünür, oy sayıları gösterilmez. Sızma adaylar arasında olmasa
+  da ikinci oylama yapılır. İkinci oylamada da eşitlik olursa ya da kimse oy vermezse sızma kurtulur. İlk oylamada hiç
+  oy yoksa ikinci oylama olmaz. Herkes "Oyumu ver" derse 1 sn sonra biter.
+- **"Sızma sen miydin?" süresi 10 saniyedir** ve artık bedava değildir: **Evet diyen ama sızma olmayan oyuncu yakalama
+  puanını alamaz.** Sızmanın Evet bonusu (+1) aynen kalır. Cevap vermeyen Hayır sayılır. Diğer oyuncuların cevapları
+  hiçbir zaman açılmaz; yalnız kendi sonucun ("Evet dedin, yakalama puanı alamadın") sana gösterilir.
+- **Puan:** sızma tek başına en çok oyu alırsa (ikinci oylama olduysa onda) yakalanır. Yakalanırsa **yalnız sızmaya oy
+  veren** (sayılan oylamanın son geçerli oyu) ve Evet demeyen sızma olmayan oyuncular **+1**, diğerleri 0; sızma kendine
+  oy verse de bu puanı almaz. Kurtulursa sızma **+2**, diğerleri 0. Puan aralığı 0…+3, eksi yok; +2/+1/0 sıralamaya
+  çevrilmez. Kartlarda "birinci" en yüksek puanlılar, "sonuncu" en düşüklerdir.
+- **Son şans:** yakalanan sızmanın maskesi düşer ve **15 saniye** içinde **ortak kelimeyi yazarak** tek bir tahmin
+  yapar. Bu sırada ortak kelime kimsenin ekranında görünmez (sızma yalnız kendi kelimesini görür). Karşılaştırmada
+  Türkçe büyük harf kullanılır; baştaki/sondaki boşluk ve noktalama atılır; şapkalı harf düz sayılır (Â = A). Ek almış
+  hâl (ÇAYI) doğru sayılmaz. Bilirse "KELİMEYİ ÇALDI!" ve sızma **+1**; yakalayanların puanı değişmez. Süre dolar ya da
+  sızmanın bağlantısı koparsa tahmin yok sayılır. Kurtulan sızmaya bu aşama gelmez. Tahminden sonra iki kelime açılır;
+  sonuç ekranının "Devam et" düğmesi bu aşama bitince açılır.
+- Tutorial adımları: 2 "İki turda sırayla sesli ipucu ver"; 3 "Sızmayı oyla; eşitlikte yeniden oylanır".
+
 ## 4. Sözlük Blöfü — `sozluk-blofu`
 
 **Durum: KİLİTLİ**
