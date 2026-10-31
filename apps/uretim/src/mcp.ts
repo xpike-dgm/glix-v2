@@ -205,6 +205,7 @@ export async function aracCalistir(
       const id = tamsayi(args.id, 1, 1e12);
       const is = id ? m.is(id, alan) : null;
       if (!is) throw new AracHatasi("Bu iş bulunamadı.");
+      m.isBasladi(is.id, now);
       return is;
     }
     case "katalog_oku":

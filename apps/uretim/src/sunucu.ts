@@ -12,6 +12,7 @@ import { Denetim } from "./denetim.js";
 import { Depo } from "./depo.js";
 import { Giris, type Postaci, resendPostaci } from "./giris.js";
 import { GUVENLIK_BASLIKLARI, gonder, sayfaCsp } from "./http.js";
+import { type AiFetch, donusturucuKur } from "./istekYaz.js";
 import { Depoayna, Katalog } from "./katalog.js";
 import { mcpIstek } from "./mcp.js";
 import { Merkez } from "./merkez.js";
@@ -40,6 +41,7 @@ export interface Bagimliliklar {
   now?: () => number;
   sshYetkiDir?: string | null;
   sshKok?: string | null;
+  aiFetch?: AiFetch;
 }
 
 export interface Uretim {
@@ -74,6 +76,11 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
   const bildirim = new Bildirim(db, push, config.saatDilimi);
   const merkez = new Merkez(db, depo, denetim, katalog, oyun, anahtarlar, {
     kirmizi: (m) => void bildirim.kirmizi(m, now()),
+    bilgi: (m, url) => void bildirim.bilgi(m, url, now()),
+  });
+  const donusturucu = donusturucuKur(db, config.aiKey, {
+    ...(b.aiFetch ? { fetch: b.aiFetch } : {}),
+    gunluk: config.aiGunluk,
   });
   const postaci =
     b.postaci !== undefined
@@ -132,7 +139,18 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
         return mcpIstek(req, res, { merkez, anahtarlar, publicUrl: config.publicUrl, surum, now });
       if (yol === "/saglik") return gonder(res, 200, { ok: true, surum });
       if (yol.startsWith("/api/"))
-        return apiIstek(req, res, { config, merkez, giris, anahtarlar, denetim, bildirim, ssh, surum, now });
+        return apiIstek(req, res, {
+          config,
+          merkez,
+          giris,
+          anahtarlar,
+          denetim,
+          bildirim,
+          ssh,
+          donusturucu,
+          surum,
+          now,
+        });
       if (req.method !== "GET" && req.method !== "HEAD") return gonder(res, 405, { ok: false });
       return statik(req, res, yol === "/" ? "/index.html" : yol);
     };
@@ -183,6 +201,12 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
         setInterval(
           guvenli("dakika", async () => {
             await ssh.gelenTara(now());
+            for (const b of merkez.baslamayanlar(now()))
+              await bildirim.bilgi(
+                `${b.sayi} iş bekliyor — istemi kopyala`,
+                `/alan/${b.alan}?sekme=isler`,
+                now(),
+              );
             const p = merkez.pano(now(), { kullanilan: depo.kullanilan(), sinir: config.kota });
             const bekleyen = p.alanlar.reduce((t, a) => t + a.bekleyen, 0);
             await bildirim.tik(

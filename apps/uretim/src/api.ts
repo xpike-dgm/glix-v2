@@ -26,6 +26,7 @@ import {
   tamsayi,
   tarih,
 } from "./http.js";
+import { type Donusturucu, gizliVarMi, istemUret } from "./istekYaz.js";
 import { IsHatasi, type Merkez } from "./merkez.js";
 import { ALANLAR, type AlanId, alanTanimi, isAlanId } from "./ortak/alanlar.js";
 import { isDurum, isHazirNot } from "./ortak/durum.js";
@@ -41,6 +42,7 @@ export interface ApiOrtami {
   denetim: Denetim;
   bildirim: Bildirim;
   ssh: SshKanal;
+  donusturucu: Donusturucu;
   surum: string;
   now(): number;
 }
@@ -163,7 +165,14 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
     if (!yaz) {
       switch (yol) {
         case "pano":
-          return ok(200, m.pano(now, { kullanilan: m.depo.kullanilan(), sinir: o.config.kota }));
+          return ok(
+            200,
+            m.pano(
+              now,
+              { kullanilan: m.depo.kullanilan(), sinir: o.config.kota },
+              { acik: o.donusturucu.acik, ...o.donusturucu.kullanim(now) },
+            ),
+          );
         case "alanlar":
           return ok(200, { alanlar: ALANLAR });
         case "kuyruk": {
@@ -216,6 +225,17 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
         const s = idParam(p3);
         const t = s ? m.talimatSurumu(p1, s) : null;
         return t ? ok(200, t) : hata(res, 404, "yok", "Bu sürüm bulunamadı.");
+      }
+      if (p0 === "alan" && isAlanId(p1) && p2 === "istem") {
+        const b = url.searchParams.get("baglanti") === "ssh" ? "ssh" : "mcp";
+        const isId = idParam(url.searchParams.get("is"));
+        const acik = m.isler(p1, ["acik"]);
+        const secili = isId
+          ? [...acik.filter((i) => i.id === isId), ...acik.filter((i) => i.id !== isId)]
+          : acik;
+        const istem = istemUret(p1, b, secili, o.config.sshSunucu);
+        if (gizliVarMi(istem)) return hata(res, 500, "istem", "İstem hazırlanamadı.");
+        return ok(200, { istem, isSayisi: acik.length, uygulama: m.ayar(`uygulama:${p1}`) ?? "" });
       }
       if (p0 === "alan" && isAlanId(p1) && p2 === "zevk")
         return ok(200, { ornekler: m.zevkGalerisi(p1), talimatEki: m.zevkBolumu(p1) });
@@ -313,6 +333,26 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
         }
       }
       return ok(200, { sonuc });
+    }
+    if (yol === "istek-yaz") {
+      const b = await govde();
+      const metinH = metin(b.metin, 5, 2000);
+      const sonTarih =
+        b.sonTarih === undefined || b.sonTarih === null || b.sonTarih === "" ? null : tarih(b.sonTarih);
+      if (
+        !metinH ||
+        !isAlanId(b.alan) ||
+        (b.baglanti !== "mcp" && b.baglanti !== "ssh") ||
+        (b.sonTarih && !sonTarih)
+      )
+        return hata(res, 400, "girdi", "İsteğini birkaç kelimeyle yaz ve alanı seç.");
+      return ok(
+        200,
+        await o.donusturucu.taslak(
+          { metin: metinH, alan: b.alan, baglanti: b.baglanti, fikirTuru: b.fikirTuru === true, sonTarih },
+          now,
+        ),
+      );
     }
     if (yol === "elle-teslim") {
       const b = await govde();
@@ -471,10 +511,24 @@ async function alanYaz(
     const varyant = g.varyant === undefined || g.varyant === null ? null : tamsayi(g.varyant, 1, 2);
     if (g.varyant !== undefined && g.varyant !== null && varyant === null)
       return hata(res, 400, "girdi", "Görsel varyant en çok 2 olabilir.");
+    const liste = (v: unknown): string[] | null =>
+      v === undefined
+        ? []
+        : Array.isArray(v) && v.length <= 10 && v.every((x) => metin(x, 1, 200) !== null)
+          ? (v as string[]).map((x) => x.trim())
+          : null;
+    const kisitlar = liste(g.kisitlar);
+    const kabul = liste(g.kabul);
+    const ozet = g.ozet === undefined ? "" : metin(g.ozet, 0, 140);
+    if (!kisitlar || !kabul || ozet === null)
+      return hata(res, 400, "girdi", "Kısıt ve kabul ölçütleri en çok 10 kısa madde olabilir.");
     return ok({
       is: m.isEkle(alan, { baslik, aciklama, adet, sonTarih, ornek }, "sahip", "acik", kim, now, null, {
         varyant,
         fikirTuru: g.fikirTuru === true,
+        kisitlar,
+        kabul,
+        ozet,
       }),
     });
   }
@@ -521,6 +575,15 @@ async function alanYaz(
   }
   if (a === "ssh-yenile") {
     await o.ssh.kanalAnahtariYenile(alan, kim, now);
+    return ok({ ok: true });
+  }
+  if (a === "uygulama") {
+    const g = await govde();
+    const not = metin(g.not ?? "", 0, 80);
+    if (not === null || (g.baglanti !== "mcp" && g.baglanti !== "ssh"))
+      return hata(res, 400, "girdi", "Not en çok 80 karakter.");
+    m.ayarYaz(`uygulama:${alan}`, not);
+    m.ayarYaz(`baglanti:${alan}`, g.baglanti);
     return ok({ ok: true });
   }
   if (a === "sinirlar") {

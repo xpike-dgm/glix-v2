@@ -513,6 +513,10 @@ sahibin notlarına uy. Kendi alanının dışına hiçbir şey yazamazsın; site
   gerekce). Sahip birini seçince yalnız seçilen fikri bir kez üret (\`isleri_listele\` seçilen fikri gösterir).
 - Görsel varyantı yalnız işte açıkça istenmişse üret (en çok 2).
 
+## "devam" kısayolu
+Sahip yalnız "devam" yazarsa: \`isleri_listele\` ile açık işlere bak, sırayla bitir ve \`geri_bildirim_oku\` ile notları
+oku. Açık iş yoksa kısa bir durum özeti ver ve istersen kendi alanın için iş öner.
+
 ## Çalışma sırası
 1. \`talimat_oku\`, sonra \`isleri_listele\` ve \`geri_bildirim_oku\`.
 2. En üstteki işten başla; dosyaları \`dosya_yukle\` ile yükle.

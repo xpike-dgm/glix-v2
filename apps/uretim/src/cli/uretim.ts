@@ -44,6 +44,8 @@ export class CliHatasi extends Error {}
 export function komutAyristir(ham: string): { komut: string; args: string[] } {
   if (ham.length > 400 || /[\0\r\n]/.test(ham)) throw new CliHatasi("Komut geçersiz.");
   const parca = ham.trim().split(/\s+/).filter(Boolean);
+  // "uretim talimat-oku" ile "talimat-oku" aynıdır (istemler ikisini de kullanabilir).
+  if (parca[0] === "uretim") parca.shift();
   const [komut, ...args] = parca;
   if (!komut || !(komut in ALT_KOMUTLAR))
     throw new CliHatasi(`Bilinmeyen komut. Kullanılabilir: ${Object.keys(ALT_KOMUTLAR).join(", ")}.`);

@@ -68,6 +68,8 @@ export class IsHatasi extends Error {
 export interface Olaylar {
   /** Kırmızı uyarı (bildirim). */
   kirmizi(metin: string): void;
+  /** Sıradan bilgi bildirimi (iş açıldı, iş bekliyor). */
+  bilgi?(metin: string, url: string): void;
 }
 
 interface OgeSatiri {
@@ -476,6 +478,9 @@ export class Merkez {
           const is = this.db.prepare("SELECT istek_id FROM isler WHERE id = ?").get(g.isId) as
             | { istek_id: number | null }
             | undefined;
+          this.db
+            .prepare("UPDATE isler SET teslim_edildi = COALESCE(teslim_edildi, ?) WHERE id = ?")
+            .run(now, g.isId);
           if (is?.istek_id)
             this.db.prepare("UPDATE istek_karti SET sonuc_oge = ? WHERE id = ?").run(ogeId, is.istek_id);
         }
@@ -903,6 +908,12 @@ export class Merkez {
       varyant: r.varyant === null || r.varyant === undefined ? null : Number(r.varyant),
       fikirTuru: Number(r.fikir_turu) === 1,
       secilenFikir: this.secilenFikir(r),
+      kisitlar: json<string[]>(typeof r.kisitlar === "string" ? r.kisitlar : null, []),
+      kabul: json<string[]>(typeof r.kabul === "string" ? r.kabul : null, []),
+      ozet: typeof r.ozet === "string" ? r.ozet : "",
+      basladi: r.basladi === null || r.basladi === undefined ? null : Number(r.basladi),
+      teslimEdildi:
+        r.teslim_edildi === null || r.teslim_edildi === undefined ? null : Number(r.teslim_edildi),
     };
   }
 
@@ -931,7 +942,13 @@ export class Merkez {
     kim: string,
     now: number,
     istekId: number | null = null,
-    secenek: { varyant?: number | null; fikirTuru?: boolean } = {},
+    secenek: {
+      varyant?: number | null;
+      fikirTuru?: boolean;
+      kisitlar?: string[];
+      kabul?: string[];
+      ozet?: string;
+    } = {},
   ): IsKaydi {
     const sira = Number(
       (
@@ -961,7 +978,20 @@ export class Merkez {
           secenek.fikirTuru ? 1 : 0,
         ).lastInsertRowid,
     );
+    this.db
+      .prepare("UPDATE isler SET kisitlar = ?, kabul = ?, ozet = ? WHERE id = ?")
+      .run(
+        JSON.stringify(secenek.kisitlar ?? []),
+        JSON.stringify(secenek.kabul ?? []),
+        secenek.ozet ?? "",
+        id,
+      );
     this.denetim.yaz(now, kim, "is", alan, `iş ${id} açıldı`);
+    if (durum === "acik")
+      this.olaylar.bilgi?.(
+        `${alanTanimi(alan).ad}: yeni iş açıldı — istemi kopyala`,
+        `/alan/${alan}?sekme=isler`,
+      );
     const is = this.is(id);
     if (!is) throw new IsHatasi(500, "İş okunamadı.");
     return is;
@@ -1287,7 +1317,11 @@ export class Merkez {
 
   // ---- Pano ve alan sayfası (UM-U1, U2) -------------------------------------------------------------------
 
-  pano(now: number, kota: { kullanilan: number; sinir: number }): Pano {
+  pano(
+    now: number,
+    kota: { kullanilan: number; sinir: number },
+    ai: Pano["ai"] = { acik: false, bugun: 0, sinir: 0 },
+  ): Pano {
     const alanlar: AlanKarti[] = ALAN_IDLERI.map((alan) => {
       const sayi = (sql: string, ...p: (string | number)[]): number =>
         Number((this.db.prepare(sql).get(alan, ...p) as { n: number | null }).n ?? 0);
@@ -1373,6 +1407,7 @@ export class Merkez {
       geriDonen24s: this.geriDonenSay(now - GUN),
       kota,
       bugun: this.bugun(now),
+      ai,
       denetimBekleyen: Number(
         (this.db.prepare("SELECT COUNT(*) AS n FROM oge WHERE denetim = 1").get() as { n: number }).n,
       ),
@@ -1486,6 +1521,10 @@ export class Merkez {
         geriDonen: sayi("SELECT COUNT(*) AS n FROM oge WHERE alan = ? AND durum = 'kaldi'"),
       },
       kalanlariGoster,
+      uygulama: {
+        not: this.ayar(`uygulama:${alan}`) ?? "",
+        baglanti: this.ayar(`baglanti:${alan}`) === "ssh" ? "ssh" : "mcp",
+      },
       sinir: {
         ...this.sinir(alan),
         bugun: this.bugunTeslim(alan, now),
@@ -1504,6 +1543,28 @@ export class Merkez {
         };
       }),
     };
+  }
+
+  /** Yapay zekâ işi ilk kez okudu (UM-R2 "başladı"). */
+  isBasladi(id: number, now: number): void {
+    this.db.prepare("UPDATE isler SET basladi = COALESCE(basladi, ?) WHERE id = ?").run(now, id);
+  }
+
+  /** Açılalı 6 saati geçmiş, hiç başlamamış işleri olan alanlar (günde bir hatırlatma). */
+  baslamayanlar(now: number): { alan: AlanId; sayi: number }[] {
+    const r = this.db
+      .prepare(
+        "SELECT alan, COUNT(*) AS n FROM isler WHERE durum = 'acik' AND basladi IS NULL AND olusturma < ? GROUP BY alan",
+      )
+      .all(now - 6 * 3600_000) as { alan: AlanId; n: number }[];
+    const out: { alan: AlanId; sayi: number }[] = [];
+    for (const x of r) {
+      const son = Number(this.ayar(`hatirlatma:${x.alan}`) ?? 0);
+      if (now - son < GUN) continue;
+      this.ayarYaz(`hatirlatma:${x.alan}`, String(now));
+      out.push({ alan: x.alan, sayi: Number(x.n) });
+    }
+    return out;
   }
 
   // ---- Sel önleme (UM-F5) ---------------------------------------------------------------------------------

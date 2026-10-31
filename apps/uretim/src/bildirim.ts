@@ -185,6 +185,13 @@ export class Bildirim {
     }
   }
 
+  /** Sıradan bilgi (iş açıldı, iş bekliyor): sessiz saatte gönderilmez. */
+  async bilgi(metin: string, url: string, now: number): Promise<void> {
+    const a = this.ayar();
+    if (!a.acik || sessizMi(yerelZaman(now, this.saatDilimi).dakika, a)) return;
+    await this.herkese("Üretim Merkezi", metin, "is", url);
+  }
+
   async dene(): Promise<void> {
     await this.herkese(
       "Üretim Merkezi",

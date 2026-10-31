@@ -185,6 +185,13 @@ export interface IsKaydi {
   /** Fikir turu: önce metinle 2–3 fikir, sahip birini seçince tek üretim. */
   fikirTuru: boolean;
   secilenFikir: { ogeId: number; ad: string; aciklama: string; gorunus: string; not: string } | null;
+  kisitlar: string[];
+  kabul: string[];
+  /** İstemde görünen kısa özet (UM-R1). */
+  ozet: string;
+  /** Yapay zekâ işi ilk kez okuduğunda (UM-R2 "başladı"). */
+  basladi: number | null;
+  teslimEdildi: number | null;
 }
 
 export interface IstekKarti {
@@ -245,6 +252,7 @@ export interface Pano {
   kota: { kullanilan: number; sinir: number };
   bugun: { gelen: number; onaylanan: number; reddedilen: number; geriDonen: number };
   denetimBekleyen: number;
+  ai: { acik: boolean; bugun: number; sinir: number };
 }
 
 export interface PaketKaydi {
@@ -288,6 +296,7 @@ export interface AlanSayfasi {
     geriDonen: number;
   };
   kalanlariGoster: boolean;
+  uygulama: { not: string; baglanti: "mcp" | "ssh" };
   sinir: {
     bekleyenTavan: number;
     gunlukKota: number;

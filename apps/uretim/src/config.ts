@@ -26,6 +26,11 @@ export interface UretimConfig {
   kota: number;
   /** Saat dilimi (günlük özet ve sessiz saatler). */
   saatDilimi: string;
+  /** İstek → iş dönüştürücü modelin anahtarı (UM-R1); boşsa sabit kalıp. */
+  aiKey: string | null;
+  aiGunluk: number;
+  /** SSH istemlerinde görünen sunucu adı (sır değil). */
+  sshSunucu: string;
 }
 
 const bos = (v: string | undefined): string | null => (v && v.trim() !== "" ? v.trim() : null);
@@ -62,5 +67,8 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): UretimConfig {
         : null,
     kota: (Number.isFinite(kotaGb) && kotaGb > 0 ? kotaGb : 20) * 1024 ** 3,
     saatDilimi: env.URETIM_SAAT_DILIMI ?? "Europe/Istanbul",
+    aiKey: bos(env.URETIM_AI_KEY),
+    aiGunluk: Number(env.URETIM_AI_GUNLUK ?? "") > 0 ? Number(env.URETIM_AI_GUNLUK) : 200,
+    sshSunucu: bos(env.URETIM_SSH_SUNUCU) ?? "dgmcraft.online",
   };
 }
