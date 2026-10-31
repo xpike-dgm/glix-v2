@@ -96,6 +96,9 @@ const GAME_PROPS: Record<string, readonly PropPath[]> = {
     "kontrol-paneli-kaosu/kablo-yesil",
     "kontrol-paneli-kaosu/kablo-kesik",
     "kontrol-paneli-kaosu/kivilcim",
+    "kontrol-paneli-kaosu/kablo-mor",
+    "kontrol-paneli-kaosu/bomba-govde",
+    "kontrol-paneli-kaosu/not-kagidi",
   ],
   "butona-bas": ["genel/arcade-dugme", "genel/arcade-dugme-basili"],
   "rusvet-darbe": ["genel/taht", "genel/rusvet-jetonu", "genel/el-tas", "genel/el-kagit", "genel/el-makas"],
@@ -109,6 +112,8 @@ const GAME_PROPS: Record<string, readonly PropPath[]> = {
   "zehirli-kadeh": [
     "zehirli-kadeh/efekt-temiz",
     "zehirli-kadeh/efekt-zehir",
+    "zehirli-kadeh/masa",
+    "zehirli-kadeh/mum",
     ...["cyan", "magenta", "amber", "lime", "violet", "orange", "emerald", "cobalt"].map(
       (c): PropPath => `zehirli-kadeh/kadeh-${c}`,
     ),
