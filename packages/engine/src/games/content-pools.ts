@@ -4,6 +4,7 @@ import { KARALAMA_POOL } from "./karalama-defteri/pool.js";
 import { LAF_POOL_LIST } from "./laf-sokma/pool.js";
 import { SIZMA_POOL } from "./sizma/pool.js";
 import { SOZLUK_POOL } from "./sozluk-blofu/pool.js";
+import { YAZI_YAZ_TOPIC_POOL } from "./yazi-yaz/pool.js";
 
 // biome-ignore lint/suspicious/noExplicitAny: kayıt defteri farklı girdi tiplerindeki havuzları birlikte tutar.
 export type AnyPool = ContentPool<any>;
@@ -15,6 +16,7 @@ export const CONTENT_POOLS: readonly AnyPool[] = [
   SIZMA_POOL,
   KARALAMA_POOL,
   ...LAF_POOL_LIST,
+  YAZI_YAZ_TOPIC_POOL,
 ];
 
 export function poolById(id: string): AnyPool | null {

@@ -5,6 +5,7 @@ import {
   type CardsMine,
   type CardsState,
   CONTINUE_GRACE_MS,
+  type ContentSet,
   collectPublicTexts,
   createRng,
   GAMES,
@@ -16,6 +17,8 @@ import {
   type InspireMine,
   isRejected,
   type MatchSnapshot,
+  parseEntry,
+  poolById,
   REVEAL_HOLD_MS,
   type Rng,
 } from "@glix/engine";
@@ -377,6 +380,63 @@ export function recordPresence(rt: Runtime, room: Room, playerId: string, connec
   } catch (err) {
     log.warn("recorder_failed", { room: room.code, error: String(err) });
   }
+  applyPresence(rt, room, match);
+}
+
+/**
+ * Oyunun `onPresence` kancası (ör. son eksik oyuncu koptu: "herkes hazır" yeniden denetlenir). `replay` ile aynı sıra:
+ * kayıttan sonra, o anki tick'in üstüne. Hata maçı iptal eder (eylem hatası gibi).
+ */
+function applyPresence(rt: Runtime, room: Room, match: Match): void {
+  const game = currentGame(match);
+  if (!game.onPresence || !match.rng) return;
+  try {
+    const ctx = ctxFor(rt, room, match);
+    const ticked = guard("tick", () => game.tick(match.state, ctx));
+    const next = guard("onPresence", () => game.onPresence?.(ticked, ctx) ?? ticked);
+    if (next === match.state) return;
+    match.state = next;
+    rt.broadcaster.markDirty(room);
+    armWake(rt, room);
+  } catch (err) {
+    abortMatch(rt, room, err);
+  }
+}
+
+/**
+ * İçerik tekrarını önleme (`GameDefinition.contentUsed`): odada son oyunlarda çıkan girdiler, yeterli kalıyorsa bu oyuna
+ * verilen havuzdan çıkarılır. Yalnız yöneticinin değiştirdiği (verilen) havuzlara uygulanır; süzülmüş havuz kayda yazılır.
+ */
+export function withoutRecent(room: Room, content: ContentSet | undefined): ContentSet | undefined {
+  const recent = room.recentContent;
+  if (content === undefined || recent === undefined || recent.size === 0) return content;
+  const out: Record<string, readonly unknown[]> = {};
+  for (const [poolId, list] of Object.entries(content)) {
+    const pool = poolById(poolId);
+    const used = recent.get(poolId);
+    if (!pool || !used || used.length === 0) {
+      out[poolId] = list;
+      continue;
+    }
+    const kept = list.filter((raw) => {
+      const entry = parseEntry(pool, raw);
+      return entry === null || !used.includes(pool.key(entry));
+    });
+    out[poolId] = kept.length >= Math.max(1, pool.min) ? kept : list;
+  }
+  return out;
+}
+
+export function rememberContent(room: Room, game: AnyGame, state: unknown): void {
+  if (!game.contentUsed) return;
+  const used = guard("contentUsed", () => game.contentUsed?.(state) ?? []);
+  if (used.length === 0) return;
+  room.recentContent ??= new Map();
+  for (const u of used) {
+    const list = (room.recentContent.get(u.poolId) ?? []).filter((k) => k !== u.key);
+    list.push(u.key);
+    room.recentContent.set(u.poolId, list.slice(-Math.max(1, u.memory)));
+  }
 }
 
 /**
@@ -406,7 +466,7 @@ function startPlaying(rt: Runtime, room: Room, match: Match): void {
   match.rng = createRng(seed);
   const rng = match.rng;
   // Havuz değişiklikleri yalnız bu andan sonra başlayan oyunlara uygulanır; etkin havuz kayda da yazılır (replay birebir).
-  const content = rt.content.forGame(game.id);
+  const content = withoutRecent(room, rt.content.forGame(game.id));
   match.recorder = new GameRecorder(game.id, seed, match.participants, now, content);
   // Briefing sırasında kopanlar başlangıçta bağlı değildir.
   const connected = connectedParticipants(room, match);
@@ -421,6 +481,7 @@ function startPlaying(rt: Runtime, room: Room, match: Match): void {
       ...(content !== undefined ? { content } : {}),
     }),
   );
+  rememberContent(room, game, match.state);
   match.reveal = null;
   match.phaseStartedAt = now;
   match.phaseEndsAt = null;

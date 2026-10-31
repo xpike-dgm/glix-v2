@@ -134,6 +134,19 @@ export interface GameDefinition<State, Action, View, PublicView = unknown> {
    * `ctx.connected`'a bakmamalı. Verilmezse oyun `isFinished` anında biter (eski davranış).
    */
   revealAt?(state: State, ctx: GameContext): number | null;
+  /**
+   * İsteğe bağlı: bir katılımcının bağlantısı değiştiğinde (kopma ya da dönüş) çağrılır; `ctx.connected` yeni listedir.
+   * Erken bitiş kuralı "bağlı herkes hazır mı"yı yalnız eylemde değil kopmada da denetlemek isteyen oyun içindir
+   * (ör. son eksik oyuncu koptu: aşama 1 sn sonra biter). Sunucu ve `replay` her bağlantı kaydında, o anki `tick`ten
+   * sonra aynı sırayla çağırır; böylece sonuç tick zamanlamasından bağımsız kalır. Değişiklik yoksa aynı nesneyi döner.
+   */
+  onPresence?(state: State, ctx: GameContext): State;
+  /**
+   * İsteğe bağlı: `setup`'ın içerik havuzlarından seçtiği girdilerin anahtarları (havuz kimliği -> `pool.key`).
+   * Sunucu bunları odada kısa süre hatırlar ve aynı odadaki sonraki oyunlara verilen havuzdan çıkarır (tekrar gelmesin);
+   * havuz yetmezse çıkarmaz. Verilen havuz kayda yazıldığı için `replay` aynı kalır. Saf olmalı.
+   */
+  contentUsed?(state: State): readonly { poolId: string; key: string; memory: number }[];
 }
 
 export interface SecretEntry {
