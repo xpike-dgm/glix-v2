@@ -105,6 +105,7 @@ Kurallar:
 | `URETIM_SAHIP_EPOSTA` | site | Girişe izinli e-postalar (virgülle) |
 | `GLIX_RESEND_API_KEY`, `GLIX_MAIL_FROM` | site | Giriş kodu e-postası (oyunla aynı servis) |
 | `URETIM_PUBLIC_URL` | site | `https://uretim.dgmcraft.online` |
+| `URETIM_AI_KEY` | site | İstek → iş/istem dönüştürücü (UM-R1) için model anahtarı; boşsa sabit kalıp kullanılır |
 
 ## 7. Yapay zekâ bağlantı kanalları (ek karar)
 
