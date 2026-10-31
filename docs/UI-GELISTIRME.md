@@ -257,6 +257,13 @@ spiker yorumu (`sizmaPrompt`). Zamanlamalar tek yerde: `apps/client/src/games/si
 
 Ayrıntılar: `docs/oneriler/kara-borsa.md`. Onaylananlar: **KB-M1, KB-M2, KB-M3, KB-U1 … KB-U8, KB-AI1.**
 Onaylanmayanlar: KB-M4 (tezgâh söylentisi), KB-M5 (ikinci fiyat).
+**Uygulandı (Ekim 2026):** kâr puanı ve +2/+1/0 ödül, son tur Büyük Kutu (0–120 / −40), ana + ek ipucu; 8 sn
+açılış (tokmak, sıralı teklifler, kapak, kâr/zarar damgası; zaman çizelgesi `apps/client/src/games/kara-borsa/timeline.ts`),
+mühürlü zarf, isimli şerit, pazar defteri, izleyici/jetonu biten/TV görünümleri, ses seti, mezatçı yorumu
+(`apps/server/src/aiCommentGames.ts`). Görsel tarifleri: `docs/oneriler/kara-borsa-gorsel.md`. Tutucu yorumlar:
+"Kutu lanetli değil" ek ipucu yalnız ana ipucu "küçük" iken verilir (diğer ana ipuçları bunu zaten söyler); açılışta
+damgaya kadar şerit bu turdan önceki kârı gösterir (değeri ele vermesin); kısa ekranda son açılışta kalabalık masada
+kâr şeridi özet ve yorum için çekilir.
 
 ## Kendim
 

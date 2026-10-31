@@ -1597,19 +1597,41 @@ BT-M1/M2/M3: `docs/oneriler/bozuk-telefon.md`, `docs/UI-GELISTIRME.md`)
 
 ## 28. Kara Borsa — `kara-borsa`
 
-**Durum: KİLİTLİ** (sahip onayı; uygulama yorumları `docs/A8-OYUNLAR.md`, `docs/A8-LAF-SOKMA.md`)
+**Durum: KİLİTLİ** (sahip onayı; uygulama yorumları `docs/A8-OYUNLAR.md`, `docs/A8-LAF-SOKMA.md`; Ekim 2026
+geliştirmeleri KB-M1, KB-M2, KB-M3, KB-U1…U8, KB-AI1: `docs/oneriler/kara-borsa.md`, `docs/UI-GELISTIRME.md`)
 
-- Amaç: Gizli değerli kutuları blöf ve ipuçlarıyla doğru fiyata almak; en zengin olmak.
+- Amaç: Gizli değerli kutuları blöf ve ipuçlarıyla ucuza almak; en çok kâr eden olmak.
 - Minimum oyuncu: **3**. Maksimum oyuncu: **8**.
 - Herkes **100 jetonla** başlar. **5 tur**; her turda bir gizemli kutu.
-- Kutunun gerçek değeri gizli: 0–60 arası tam sayı, ya da **%15 olasılıkla lanetli** (değer −20).
-- Her turda her oyuncu **yalnız kendine özel bir ipucu** alır (ör. "değeri 30'dan büyük", "çift sayı",
-  "lanetli değil", "değeri 10'un katı değil"). İpucu her zaman doğrudur; sözlü blöf serbesttir.
+- Kutunun gerçek değeri gizli: 1–4. turda 0–60 arası tam sayı, ya da **%15 olasılıkla lanetli** (değer −20).
+  **5. tur "Büyük Kutu"** (KB-M2): değer iki kat, 0–120 arası ya da %15 olasılıkla lanetli **−40**. Teklif üst sınırı
+  (o anki jeton) ve süre aynı.
+- Her turda her oyuncu **yalnız kendine özel iki ipucu** alır (KB-M3); ipuçları her zaman doğrudur, sözlü blöf
+  serbesttir:
+  - **Ana ipucu** (değeri daraltır). Lanetsiz kutuda "değeri n'den büyük", "n'den küçük" ya da "a ile b arasında"
+    (eşikler gerçek değere yakın rastgele; "arasında" aralığı en çok 30 geniş). Lanetli kutuda oyuncuların **en az 1,
+    en çok yarısı** (yukarı yuvarlanır) "Kutu lanetli!" görür; diğerleri doğru ama yanıltıcı "değeri n'den küçük"
+    görür (n 1–40).
+  - **Ek ipucu** (küçük): çift/tek, 3/5/10'un katı ya da katı değil, ya da "Kutu lanetli değil" (yalnız lanetsiz
+    kutuda ve ana ipucu bunu zaten söylemiyorsa, yani ana ipucu "küçük" iken).
+  - Büyük Kutu'da eşikler ölçeğe göre iki katıdır (aralık en çok 60; lanetlide n 1–80).
+  - Farklı oyunculara mümkün olduğunca farklı ana (ve ek) ipucu verilir (6 deneme; seçenek kalmazsa tekrar eder).
 - Teklif: 20 sn, gizli, **tek seferlik** (0 ile mevcut jeton arası; 0 = geç). Bağlı herkes teklif verince erken biter (sahip onayı): bağlantısı kopan oyuncu beklenmez (teklifi 0 sayılır); eskiden kopuk oyuncu da beklenirdi.
-- En yüksek teklif kutuyu alır ve teklifini öder; eşitlikte önce teklif veren kazanır. Kimse teklif vermezse kutu
-  kimseye gitmez. Teklifler ve kutunun değeri tur sonunda açılır (5 sn).
-- Mini puan: kalan jeton + aldığı kutuların değerleri toplamı.
-- Genel skora: en yüksek **+2**, ikinci **+1**, üçüncü **+1** (eşitlikte aynı derece aynı ödülü alır).
+  Jetonu biten oyuncu teklif vermiş sayılır; ipucunu görmeye devam eder.
+- En yüksek teklif kutuyu alır ve **kendi teklifini öder**; eşitlikte önce teklif veren kazanır. Kimse teklif vermezse
+  kutu kimseye gitmez. Teklifler ve kutunun değeri tur sonunda açılır: **8 sn** (KB-U1; tokmak "SATILDI!", teklifler
+  düşükten yükseğe tek tek, kazanan en son; kapak kalkar, değer sayarak çıkar, kazananın satırında kâr/zarar damgası).
+- **Oyun içi puan kârdır** (KB-M1): (kalan jeton + aldığı kutuların değerleri) − 100. Eksi olabilir (yalnız oyun
+  içi gösterge).
+- Genel skora (KB-M1): yalnız **kârı 0'dan büyük** olanlar ödül alır. En yüksek kâr **+2** (eşitse hepsi), sonraki
+  farklı kâr **+1** (eşitse hepsi), diğerleri 0. Kimse kâr etmediyse kimse ödül almaz. Eksi genel puan yok.
+  Kartlarda "birinci" ve "sonuncu" kâra göre belirlenir.
+- Oyun sonu yorumu (KB-AI1): son kutu açılınca ortak yapay zekâ altyapısıyla tek cümlelik "mezatçı" yorumu istenir
+  (modele yalnız tur sonuçları ve yer tutucu adlar gider, ipuçları gitmez); gelirse son açılışta görünür, gelmezse
+  hiçbir şey görünmez. Puanı etkilemez.
+- Anlatım: "Her tur bir kutu gelir: 0–60 değerinde ya da lanetli (−20). Değerini yalnız sana özel ipucu anlatır. Son
+  kutu iki kat!" · "Gizli bir teklif ver: en yükseği kutuyu alır ve teklifini öder" · "Kutunun değeri ödediğinden
+  fazlaysa kâr edersin; en çok kâr eden kazanır".
 
 ## 29. Kule Ustası — `kule-ustasi`
 

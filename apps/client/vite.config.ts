@@ -105,6 +105,20 @@ function kulePropFiles(): string[] {
     .sort();
 }
 
+/**
+ * Kara Borsa nesne görsellerinden gerçekten var olanlar (dosya adı, uzantısız). Açık kutular, tokmak ve büyük sandık
+ * sahip tarafından üretilecek (docs/oneriler/kara-borsa-gorsel.md); dosya yokken ekran CSS/SVG karşılığını çizer ve
+ * olmayan dosyayı istemez (404 yok). Dosya eklendikten sonra geliştirme sunucusu yeniden başlatılır.
+ */
+function karaBorsaPropFiles(): string[] {
+  const dir = fileURLToPath(new URL("./public/assets/props/kara-borsa", import.meta.url));
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".webp"))
+    .map((f) => f.slice(0, -".webp".length))
+    .sort();
+}
+
 /** Bozuk Telefon ilk cümle ekranının telefon görseli var mı (yoksa ekran kendi SVG çizimini kullanır). */
 function bozukPhoneArt(): boolean {
   return existsSync(
@@ -143,6 +157,7 @@ export default defineConfig({
     __YAZI_YAZ_PROPS__: JSON.stringify(yaziYazPropFiles()),
     __ALISVERIS_PROPS__: JSON.stringify(alisverisPropFiles()),
     __BOZUK_PHONE_ART__: JSON.stringify(bozukPhoneArt()),
+    __KARA_BORSA_PROPS__: JSON.stringify(karaBorsaPropFiles()),
     __KULE_PROPS__: JSON.stringify(kulePropFiles()),
     __ZB_BOMBA_GORSEL__: JSON.stringify(ZB_BOMBA_GORSEL),
     __SIZMA_PROPS__: JSON.stringify(sizmaPropFiles()),
