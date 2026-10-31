@@ -434,6 +434,9 @@ export const yaziYaz: GameDefinition<YaziYazState, YaziYazAction, YaziYazView, Y
     for (const w of state.writers) {
       const value = wordOf(state, w);
       if (value.length < 3) continue;
+      // Konu herkese açıktır: kelime konunun içinde geçiyorsa (ör. DENİZ / "DENİZ CANLISI") metin araması onu
+      // ayırt edemez; o kelime için metin denetimi yapılmaz (gizliliği yapısal testler korur).
+      if (state.topic?.toLocaleUpperCase("tr-TR").includes(value.toLocaleUpperCase("tr-TR"))) continue;
       // Aynı metni kendi girdisinde/tahmininde gören oyuncunun da görmeye hakkı var (ör. "MASUM" ya da doğru tahmin).
       const owners = state.players.filter(
         (id) =>

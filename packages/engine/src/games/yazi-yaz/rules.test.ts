@@ -58,9 +58,15 @@ const pick = (s: State, who: string, target: string, word = ""): State => {
 const scores = (s: State) => yaziYaz.result(s).miniScores;
 
 describe("konu kartı (YY-M1)", () => {
-  it("havuz yoksa yerleşik tek kayıt SERBEST: konusuz oynanır (bugünkü oyun)", () => {
-    expect(YAZI_YAZ_TOPIC_POOL.builtin).toEqual([YAZI_YAZ_FREE_TOPIC]);
-    const s = yaziYaz.setup(ALL, ctx(T0));
+  it("yerleşik liste: 100 benzersiz, geçerli konu (SERBEST yok)", () => {
+    const list = YAZI_YAZ_TOPIC_POOL.builtin;
+    expect(list).toHaveLength(100);
+    expect(new Set(list.map((t) => YAZI_YAZ_TOPIC_POOL.key(t))).size).toBe(100);
+    expect(list).not.toContain(YAZI_YAZ_FREE_TOPIC);
+    for (const t of list) expect(YAZI_YAZ_TOPIC_POOL.fromFields({ text: t })).toEqual({ ok: true, entry: t });
+  });
+  it("SERBEST konusu çıkarsa konusuz oynanır (bugünkü oyun)", () => {
+    const s = yaziYaz.setup(ALL, ctx(T0, ALL, 1, { [YAZI_YAZ_TOPIC_POOL.id]: [YAZI_YAZ_FREE_TOPIC] }));
     expect(s.topic).toBeNull();
     expect(pub(s, T0 + 1).topic).toBeNull();
     expect(yaziYaz.contentUsed?.(s)).toEqual([{ poolId: "yazi-yaz/konular", key: "serbest", memory: 10 }]);

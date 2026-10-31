@@ -258,7 +258,7 @@ Oyuncunun genel skoru bu sonuçlarla artar; hesap istatistiğindeki maç puanı 
 - Yazma aşamasında tam **iki yazan** bulunur; maç tohumuyla rastgele seçilir.
 - **Konu:** her oyunda herkese açık bir konu çıkar (ör. MEYVE). Liste yönetici
   panelindeki "Yazı Yaz konuları" içerik havuzundadır; sahip yazar, yapay zekâyla
-  üretilmez. Başlangıçtaki tek kayıt `SERBEST`tir: o çıkınca oyun konusuz oynanır.
+  üretilmez. Yerleşik listede 100 konu vardır (sahibin isteğiyle hazırlandı; panelden kapatılıp düzenlenebilir); panelden `SERBEST` eklenirse o çıkınca oyun konusuz oynanır.
   Konu maç tohumuyla seçilir; aynı odada son 10 oyunda çıkan konu, havuz yetiyorsa
   tekrar gelmez. İki yazan aynı konuyu alır; konuya uymak zorunlu değildir (sistem
   denetleyemez), konu dışı kelime kural ihlali sayılmaz.

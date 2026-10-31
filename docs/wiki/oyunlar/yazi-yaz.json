@@ -18,7 +18,7 @@
       "ad": "Rol ve konu (gizli / açık)",
       "sureSn": 0,
       "kim": "sunucu",
-      "aciklama": "Katılımcılar maç tohumuyla karıştırılır, ilk iki kişi yazan olur. Ardından konu havuzundan ('yazi-yaz/konular') bir konu çekilir; aynı odada son 10 oyunda çıkan konu, havuz yetiyorsa tekrar gelmez. Havuzdaki 'SERBEST' kaydı konusuz tur demektir (başlangıçta tek kayıt budur).",
+      "aciklama": "Katılımcılar maç tohumuyla karıştırılır, ilk iki kişi yazan olur. Ardından konu havuzundan ('yazi-yaz/konular') bir konu çekilir; aynı odada son 10 oyunda çıkan konu, havuz yetiyorsa tekrar gelmez. Yerleşik havuzda 100 konu vardır; panelden eklenen 'SERBEST' kaydı konusuz tur demektir.",
       "gizli": "Rol yalnız sahibinin görünümündedir. Konu herkese açıktır (herkese açık görünümde 'topic')."
     },
     {
@@ -52,7 +52,7 @@
   ],
   "kurallar": [
     "En az 3, en çok 8 oyuncu. Her oyunda tam 2 yazan vardır (3 oyunculu odada 2 yazan + 1 masum). Yazanlar maç tohumuna bağlı rastgele seçilir.",
-    "Her oyunda herkese açık bir konu vardır; liste yönetici panelindeki 'Yazı Yaz konuları' havuzundandır (sahip yazar, yapay zekâyla üretilmez). 'SERBEST' kaydı konusuz turdur; havuzda yalnız o varken oyun bugünkü gibi konusuz oynanır. Aynı odada son 10 oyunda çıkan konu, havuz yetiyorsa tekrar gelmez. Konuya uymak zorunlu değildir; sistem denetlemez.",
+    "Her oyunda herkese açık bir konu vardır; liste yönetici panelindeki 'Yazı Yaz konuları' havuzundandır (yerleşik 100 konu, sahibin isteğiyle hazırlandı; panelden kapatılır, düzenlenir, eklenir). Panelden eklenen 'SERBEST' kaydı konusuz turdur. Aynı odada son 10 oyunda çıkan konu, havuz yetiyorsa tekrar gelmez. Konuya uymak zorunlu değildir; sistem denetlemez.",
     "Yazan olup olmadığın yalnız senin gizli görünümünde bulunur; sunucu rolü başka hiçbir oyuncuya ya da izleyiciye göndermez.",
     "Yazma aşaması 30 sn sürer. Yazan istediği kelimeyi yazar; masum yalnızca 'MASUM' yazabilir (başka bir şeyi sunucu reddeder, istemci uyarır).",
     "Yazan MASUM yazamaz: MASUM yazıp Tamam derse yalnız kendi ekranında 'Yazansın, MASUM yazamazsın' uyarısı çıkar ve kilitlenmez (sunucu 'writer_innocent' ile reddeder). Süre dolduğunda MASUM bırakan yazan 'kelime yazmadı' sayılır.",

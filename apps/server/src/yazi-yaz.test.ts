@@ -41,8 +41,8 @@ describe("yazı yaz: oda içinde tam maç", () => {
     expect(writers).toHaveLength(2);
     expect(innocents).toHaveLength(2);
     expect(pub(host).stage).toBe("write");
-    // Panelde konu yokken yerleşik tek kayıt (SERBEST): konusuz tur.
-    expect(pub(host).topic).toBeNull();
+    // Yerleşik konu listesinden bir konu çıkar ve herkese açıktır.
+    expect(typeof pub(host).topic).toBe("string");
 
     // Rol yalnız sahibine gider: ortak görünümde ve diğerlerinin görünümünde yok.
     for (const c of cs) {
