@@ -4,5 +4,8 @@ glix.dgmcraft.online {
 	# Sağlık uç noktası yalnız sunucunun kendisinden (deploy.sh 127.0.0.1:3900'ü doğrudan kullanır).
 	@health path /health
 	respond @health 404
+	# Üretim Merkezi uçları (docs/uretim/SOZLESME.md bölüm 3) yalnız sunucunun kendi ağından: dışarıya 404.
+	@uretim path /api/uretim /api/uretim/*
+	respond @uretim 404
 	reverse_proxy 127.0.0.1:3900
 }

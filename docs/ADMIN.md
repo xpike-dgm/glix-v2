@@ -116,7 +116,7 @@ Mevcut adlar kendiliğinden değişmez; "Listeye takılan mevcut hesaplar" salt 
 **Oyun içi metin maskeleme uygulanmadı:** oyuncu metninin sunucuya girdiği tek merkez `applyAction` yükü, ama yük oyuna özgü ve `unknown` (alan adı oyuna göre değişir); orada `***` yapmak oyun anlamını bozar (ör. yalnız yasaklı kelimeden oluşan Kendim/Yazı Yaz girdisi harf içermediğinden reddedilir = fiilen engel, Yazı Yaz tahmin eşitliği) ve oyun başına bilgi gerektirir. Laf Sokma zaten kendi küçük süzgecini (`blocklist.ts`) uygular.
 
 ### İşlem kaydı eylemleri
-`report_status`, `room_view`, `room_close`, `room_kick`, `banned_word_add`, `banned_word_remove`.
+`report_status`, `room_view`, `room_close`, `room_kick`, `banned_word_add`, `banned_word_remove`; Üretim Merkezi aktarımında `uretim_moderasyon_ekle` ve `uretim_geri_al` (aşağıda).
 
 ## İçerik havuzları (A4)
 **İçerik havuzları** sekmesi: oyunların seçtiği kelime/soru listelerini görür ve düzenlersin. Yapay zekâ içerik üretmez; girdileri yönetici (insan) yazar. Hazır havuz kodda durur (`packages/engine/src/games/<oyun>/pool.ts`).
@@ -147,6 +147,14 @@ Havuz seç -> arama (aksan duyarsız), süzgeç (Tümü / Hazır / Eklenen / Kap
 
 ### Uçlar ve işlem kaydı
 GET `pools`, `pools/entries?pool=&q=&filter=&page=`. POST (Origin + işlem hız sınırı + onay + kayıt): `pools/toggle`, `pools/add`, `pools/edit`, `pools/delete`, `pools/bulk`; `pools/check` yazmaz (arama kovası). İşlem kaydı eylemleri: `pool_disable`, `pool_enable`, `pool_add`, `pool_edit`, `pool_delete`, `pool_bulk`; ayrıntıya yalnız havuz kimliği ve girdi anahtarının 8 haneli özeti (toplu: sayılar) yazılır, **girdi metni yazılmaz**.
+
+## Üretim Merkezi aktarımları (UM-İ8, MG-7)
+Üretim Merkezi sitesi oyunun yönetici paneline girmez; kendi dar uçlarını kullanır: `/api/uretim/*` (sözleşme `docs/uretim/SOZLESME.md` bölüm 3, kod `apps/server/src/uretim.ts`).
+- **Açma:** `GLIX_URETIM_TOKEN` (uzun rastgele değer) doluysa açılır; boşsa bütün uçlar 404. İstek `Authorization: Bearer <token>`; karşılaştırma sabit sürede (özetlerin `timingSafeEqual`'ı). Caddy `/api/uretim/*`'i dışarıya 404 ile kapatır; vekilden geçmiş (`X-Forwarded-For` taşıyan) istek de 404 alır. Site oyuna Docker ağı ya da `127.0.0.1:3900` üzerinden ulaşır.
+- **Okuma:** `GET havuzlar` (canlıdaki etkin liste: yerleşik + panel, `acik`), `GET moderasyon` (yerleşik süzgecin kalıpları + paneldeki yasaklı kelimeler), `GET magaza/istatistik` (son 30 gün ürün başına satış ve fırsat satışı; `kusanan` = şu an kuşanan hesap sayısı; armağanlar sayılmaz), `GET saglik`.
+- **Yazma (dakikada en çok 30 istek, istekte en çok 500 satır):** `POST havuzlar/<havuz>/ekle {satirlar}` (havuzun kendi `fromFields` kuralı, yasaklı kelime ve tekrar denetimi; geçersizler `atlanan`), `POST havuzlar/<havuz>/kapat {anahtarlar}` (yalnız yerleşik girdiler, silmez), `POST moderasyon/ekle {kaliplar}`, `POST aktarim/<id>/geri-al` (o aktarımın eklediklerini kaldırır, kapattıklarını açar; ikinci kez 409). Havuz kimliği `oyun/havuz` biçiminde eğik çizgi taşır; düz ya da `%2F` ile yazılabilir.
+- **İşlem kaydı:** `uretim_havuz_ekle`, `uretim_havuz_kapat`, `uretim_moderasyon_ekle`, `uretim_geri_al`; yapan "Üretim Merkezi" (hesap kimliği 0, gerçek hesap değil), ayrıntıda havuz, sayı ve aktarım kimliği (girdi metni yazılmaz).
+- **Gizlilik:** yanıtlarda hesap kimliği, takma ad, e-posta yok (testle güvenceli).
 
 ## Oyun ansiklopedisi (`/wiki`)
 

@@ -115,8 +115,14 @@ const AUDIT_LABELS: Record<string, string> = {
   room_kick: "Oyuncu odadan atıldı",
   banned_word_add: "Yasaklı kelime eklendi",
   banned_word_remove: "Yasaklı kelime silindi",
+  uretim_havuz_ekle: "Üretim Merkezi: havuza eklendi",
+  uretim_havuz_kapat: "Üretim Merkezi: havuzda kapatıldı",
+  uretim_moderasyon_ekle: "Üretim Merkezi: yasaklı kelime eklendi",
+  uretim_geri_al: "Üretim Merkezi: aktarım geri alındı",
 };
 export const auditLabel = (action: string): string => AUDIT_LABELS[action] ?? action;
+/** İşlemi yapan: yönetici hesabı `#kimlik`; 0 Üretim Merkezi'nin anahtarla yaptığı aktarımdır (hesap değildir). */
+export const actorLabel = (actorId: number): string => (actorId === 0 ? "Üretim Merkezi" : `#${actorId}`);
 
 const DURATION_LABELS: Record<string, string> = { "1d": "1 gün", "7d": "7 gün", forever: "süresiz" };
 const MAIL_STATE: Record<string, string> = {

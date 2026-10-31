@@ -16,7 +16,7 @@
 ## Dosyalar
 
 - `Dockerfile`, `docker-compose.yml` — imaj, çalışma sınırları (512 MB, 2 CPU, salt okunur) ve `glix-data` birimi.
-- `.env.example` — `/srv/glix/shared/.env` için örnek (`GLIX_ALLOWED_ORIGINS`, isteğe bağlı `GLIX_VAPID_*`, `GLIX_AI_KEY`).
+- `.env.example` — `/srv/glix/shared/.env` için örnek (`GLIX_ALLOWED_ORIGINS`, isteğe bağlı `GLIX_VAPID_*`, `GLIX_AI_KEY`, `GLIX_URETIM_TOKEN`).
 - `Caddyfile.glix` — Caddy'ye eklenecek blok.
 - `deploy.sh` — sunucu dağıtım betiği.
 

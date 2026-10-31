@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  actorLabel,
   auditDetail,
   auditLabel,
   confirmMatches,
@@ -64,6 +65,9 @@ describe("hesap ve işlem kaydı biçimleyicileri", () => {
     expect(auditLabel("account_view")).toBe("Hesap ayrıntısı görüntülendi");
     expect(auditLabel("otp_ok")).toBe("Panele giriş yapıldı");
     expect(auditLabel("yeni_bir_sey")).toBe("yeni_bir_sey");
+    expect(auditLabel("uretim_havuz_ekle")).toBe("Üretim Merkezi: havuza eklendi");
+    expect(actorLabel(0)).toBe("Üretim Merkezi");
+    expect(actorLabel(12)).toBe("#12");
   });
 
   it("auditDetail: süre, oturum sayısı, e-posta durumu okunur; boş kalır", () => {

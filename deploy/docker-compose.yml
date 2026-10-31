@@ -31,6 +31,8 @@ services:
       GLIX_ADMIN_ACCOUNT_IDS: ${GLIX_ADMIN_ACCOUNT_IDS:-}
       # Oyun sonu yorumu (dil modeli servisi anahtarı; boşsa özellik tamamen kapalı).
       GLIX_AI_KEY: ${GLIX_AI_KEY:-}
+      # Üretim Merkezi uçları (/api/uretim/*; Caddy dışarıya kapatır). Boşsa uçlar kapalı (404). Site aynı anahtarı taşır.
+      GLIX_URETIM_TOKEN: ${GLIX_URETIM_TOKEN:-}
     volumes:
       - glix-data:/data
     mem_limit: 512m
