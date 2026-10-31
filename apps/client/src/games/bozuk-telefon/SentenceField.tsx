@@ -8,6 +8,12 @@ export function typedSentence(value: string): string {
     .join("");
 }
 
+/** Uzun cümlede alan yazısı küçülür (kelimeler bölünmeden sığsın). */
+export const sentenceLen = (value: string): "s" | "m" | "l" => {
+  const n = Array.from(value).length;
+  return n > 40 ? "l" : n > 24 ? "m" : "s";
+};
+
 /** Gönderilebilir mi (en az bir harf ya da rakam). */
 export const hasSentence = (value: string): boolean => /[\p{L}\p{N}]/u.test(value);
 
@@ -23,6 +29,8 @@ interface Props {
   onType: (text: string) => void;
   /** Bekleyen metni hemen sunucuya yollayan işlevi verir. */
   onFlush: (flush: () => void) => void;
+  /** Alanı dışarıdan dolduran işlevi verir (ör. "İlham ver" önerisine dokununca); hemen sunucuya gider. */
+  onSetter?: (set: (text: string) => void) => void;
 }
 
 /** Çok satırlı (en çok 2 satır görünür) cümle alanı: yazdıkça kısa gecikmeyle sunucuya gider. */
@@ -38,9 +46,20 @@ export function SentenceField(props: Props) {
     props.onChange(current);
   };
   props.onFlush(flush);
+  let area: HTMLTextAreaElement | undefined;
+  props.onSetter?.((raw) => {
+    if (props.locked || !area) return;
+    const value = typedSentence(raw);
+    area.value = value;
+    area.dataset.len = sentenceLen(value);
+    current = value;
+    props.onType(value);
+    flush();
+  });
   return (
     <div class="bt__field" data-locked={props.locked ? "1" : undefined}>
       <textarea
+        ref={area}
         class="bt__input"
         lang="tr"
         rows={2}
@@ -54,10 +73,12 @@ export function SentenceField(props: Props) {
         aria-label={props.label}
         disabled={props.locked}
         value={untrack(() => props.value)}
+        data-len={sentenceLen(untrack(() => props.value))}
         onInput={(e) => {
           const el = e.currentTarget;
           const value = typedSentence(el.value);
           if (value !== el.value) el.value = value;
+          el.dataset.len = sentenceLen(value);
           current = value;
           props.onType(value);
           clearTimeout(timer);

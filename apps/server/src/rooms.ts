@@ -9,7 +9,7 @@ import {
   ROOM_CODE_LENGTH,
 } from "@glix/engine";
 import { type AccountStatsRecorder, noopAccountStats } from "./accountStats.js";
-import { disabledAiCommenter } from "./aiComment.js";
+import { disabledAiCommenter, disabledAiText } from "./aiComment.js";
 import { createBroadcaster } from "./broadcast.js";
 import { type Clock, systemClock } from "./clock.js";
 import { noContent } from "./contentStore.js";
@@ -66,6 +66,7 @@ export function createRuntime(
     defaultGameIds: defaultGameIds ? [...defaultGameIds] : null,
     randomInt: pickInt,
     aiComment: disabledAiCommenter,
+    aiInspire: disabledAiText,
   };
   return rt;
 }

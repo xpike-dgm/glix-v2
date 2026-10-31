@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { snapshot } from "./fixtures.js";
-import { parseComment, parseServerMessage } from "./parse.js";
+import { parseComment, parseInspire, parseServerMessage } from "./parse.js";
 
 const wire = (v: unknown): string => JSON.stringify(v);
 
@@ -390,5 +390,25 @@ describe("oyun sonu yorumu", () => {
     expect(parseComment("")).toBeNull();
     expect(parseComment(5)).toBeNull();
     expect(parseComment(undefined)).toBeNull();
+  });
+});
+
+describe("İlham ver (kişisel) ayrıştırma", () => {
+  it("geçerli durum okunur; uzun/işaretli öneri atılır, en çok 3, hak 0..3", () => {
+    expect(
+      parseInspire({
+        left: 9,
+        pending: false,
+        failed: false,
+        ideas: ["A", "B", "C", "D", "x".repeat(61), "<b>"],
+      }),
+    ).toEqual({ left: 3, pending: false, failed: false, ideas: ["A", "B", "C"] });
+    expect(parseInspire({ left: 1, pending: true, failed: false, ideas: [] })?.pending).toBe(true);
+  });
+  it("bozuk ya da yok: null (düğme görünmez)", () => {
+    expect(parseInspire(null)).toBeNull();
+    expect(parseInspire(undefined)).toBeNull();
+    expect(parseInspire({ left: "3", pending: false, failed: false, ideas: [] })).toBeNull();
+    expect(parseInspire({ left: 3, pending: false, failed: false, ideas: [1] })).toBeNull();
   });
 });

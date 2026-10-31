@@ -92,9 +92,17 @@ function alisverisPropFiles(): string[] {
     .sort();
 }
 
+/** Bozuk Telefon ilk cümle ekranının telefon görseli var mı (yoksa ekran kendi SVG çizimini kullanır). */
+function bozukPhoneArt(): boolean {
+  return existsSync(
+    fileURLToPath(new URL("./public/assets/props/bozuk-telefon/telefon.webp", import.meta.url)),
+  );
+}
+
 export default defineConfig({
   define: {
     __ALISVERIS_PROPS__: JSON.stringify(alisverisPropFiles()),
+    __BOZUK_PHONE_ART__: JSON.stringify(bozukPhoneArt()),
     __ZB_BOMBA_GORSEL__: JSON.stringify(ZB_BOMBA_GORSEL),
   },
   plugins: [

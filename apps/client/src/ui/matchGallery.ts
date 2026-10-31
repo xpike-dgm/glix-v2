@@ -1,6 +1,6 @@
 import type { KaralamaStroke, RoomSnapshot } from "@glix/engine";
 import { createSignal } from "solid-js";
-import { parseBozukPublicView } from "../games/bozuk-telefon/view.js";
+import { type ParsedStep, parseBozukPublicView } from "../games/bozuk-telefon/view.js";
 import { parseKaralamaPublicView } from "../games/karalama-defteri/view.js";
 
 /** Maç sonu galerisine girebilecek en çok çizim sayısı (en yeniler kalır). */
@@ -81,19 +81,25 @@ export function collectGallery(snap: RoomSnapshot | null): void {
     }
     add(found);
   } else if (m.gameId === "bozuk-telefon") {
+    // Yazarlar yalnız zincir sonucunda açılır (isimsiz oylama); galeriye o anda ve oyun sonu özetinden girer.
     const pv = parseBozukPublicView(m.publicView);
-    if (!pv?.reveal) return;
+    if (!pv) return;
     const found: GalleryItem[] = [];
-    pv.reveal.steps.forEach((step, i) => {
-      if (step.kind === "draw" && step.drawing.strokes.length > 0)
+    const push = (chain: number, i: number, step: ParsedStep): void => {
+      if (step.kind === "draw" && step.author !== null && step.drawing.strokes.length > 0)
         found.push({
-          key: `bt:${m.round}:${pv.reveal?.chain ?? 0}:${i}`,
+          key: `bt:${m.round}:${chain}:${i}`,
           game: "bozuk",
           playerId: step.author,
           strokes: step.drawing.strokes,
           version: sig(step.drawing.strokes),
         });
-    });
+    };
+    if (pv.reveal?.stage === "result") {
+      const chain = pv.reveal.chain;
+      for (const [i, step] of pv.reveal.steps.entries()) push(chain, i, step);
+    }
+    for (const r of pv.recap ?? []) for (const [i, step] of r.steps.entries()) push(r.chain, i, step);
     add(found);
   }
 }

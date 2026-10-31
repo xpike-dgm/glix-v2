@@ -11,7 +11,7 @@ import type {
   ServerMessage,
 } from "@glix/engine";
 import type { AccountStatsRecorder } from "./accountStats.js";
-import type { AiCommenter } from "./aiComment.js";
+import type { AiCommenter, AiText } from "./aiComment.js";
 import type { Broadcaster } from "./broadcast.js";
 import type { Cancel, Clock } from "./clock.js";
 import type { ContentStore } from "./contentStore.js";
@@ -175,6 +175,8 @@ export interface Runtime {
   randomInt: (max: number) => number;
   /** Oyun sonu yorumu (aiComment.ts); anahtar yoksa ve testlerde varsayılan kapalı. */
   aiComment: AiCommenter;
+  /** "İlham ver" kısa metin üretimi (aiInspire.ts); anahtar yoksa ve testlerde varsayılan kapalı. */
+  aiInspire: AiText;
 }
 
 export function isConnected(player: Player): boolean {

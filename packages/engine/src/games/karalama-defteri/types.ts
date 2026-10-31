@@ -27,7 +27,8 @@ export const KARALAMA_MAX_TOTAL_POINTS = 6_000;
 /** Oyuncu başına kabul edilen toplam çizim eylemi (darbe + geri al + temizle); kayıt boyutunu sınırlar. */
 export const KARALAMA_MAX_DRAW_ACTIONS = 1_000;
 
-export const KARALAMA_COLORS = DRAW_COLORS;
+/** Karalama Defteri yalnız ilk paletin 6 rengini kullanır. */
+export const KARALAMA_COLORS: readonly DrawColor[] = DRAW_COLORS.slice(0, 6);
 export type KaralamaColor = DrawColor;
 export type KaralamaPen = DrawPen;
 export type KaralamaSize = DrawSize;
@@ -45,7 +46,8 @@ export type KaralamaAction =
 export const KARALAMA_LOCK_GRACE_MS = 1_000;
 
 /**
- * Sıkıştırılmış darbe: `[renkDizini (0..5, silgi 6), kalınlık (1..3), x0, y0, x1, y1, …]`.
+ * Sıkıştırılmış darbe: `[renkDizini (0..5; silgi `KARALAMA_ERASER_INDEX`), kalınlık (1..3), x0, y0, x1, y1, …]`.
+ * Karalama Defteri ortak paletin ilk 6 rengini ve 3 kalınlığını kullanır (`DRAW_PALETTE_CLASSIC`).
  */
 export type KaralamaStroke = DrawStroke;
 

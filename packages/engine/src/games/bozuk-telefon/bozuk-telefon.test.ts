@@ -13,11 +13,14 @@ import {
   BOZUK_MAX_TOTAL_POINTS,
   BOZUK_RESULT_MS,
   BOZUK_SHOW_STEP_MS,
+  BOZUK_TIMELINE,
   BOZUK_VOTE_MS,
   BOZUK_WRITE_MS,
   type BozukAction,
   type BozukStep,
+  bozukChainMs,
   bozukDurationMs,
+  bozukRankAwards,
   bozukStepCount,
   bozukStepKind,
 } from "./types.js";
@@ -75,7 +78,10 @@ const stepStart = (n: number, step: number): number => {
   void n;
   return t;
 };
-const chainMs = (steps: number) => steps * BOZUK_SHOW_STEP_MS + BOZUK_VOTE_MS + BOZUK_RESULT_MS;
+/** Gösteri: son adım (steps-1) aralık sonra görünür ve oylama o an açılır. */
+const showMs = (steps: number) => (steps - 1) * BOZUK_SHOW_STEP_MS;
+const chainMs = (steps: number) => showMs(steps) + BOZUK_VOTE_MS + BOZUK_RESULT_MS;
+const voteStart = (n: number, c: number) => chainStart(n, c) + showMs(bozukStepCount(n));
 const revealStart = (n: number) => stepStart(n, bozukStepCount(n));
 const chainStart = (n: number, c: number) => revealStart(n) + c * chainMs(bozukStepCount(n));
 const endAt = (n: number) => chainStart(n, n);
@@ -105,39 +111,48 @@ function toReveal(players = PLAYERS, fill = true): BozukState {
 }
 
 describe("bozuk-telefon kurulum", () => {
-  it("3-8 oyuncu; yazma 25 sn, çizme 60 sn; ilk adım yazma", () => {
+  it("3-8 oyuncu; yazma 20 sn, çizme 45 sn, gösteri adımı 2 sn, oylama 6 sn, sonuç 2 sn; ilk adım yazma", () => {
     expect(game.minPlayers).toBe(3);
     expect(game.maxPlayers).toBe(8);
-    expect(BOZUK_WRITE_MS).toBe(25_000);
-    expect(BOZUK_DRAW_MS).toBe(60_000);
-    expect(BOZUK_SHOW_STEP_MS).toBe(3_000);
-    expect(BOZUK_VOTE_MS).toBe(10_000);
+    expect(BOZUK_WRITE_MS).toBe(20_000);
+    expect(BOZUK_DRAW_MS).toBe(45_000);
+    expect(BOZUK_SHOW_STEP_MS).toBe(2_000);
+    expect(BOZUK_VOTE_MS).toBe(6_000);
+    expect(BOZUK_RESULT_MS).toBe(2_000);
+    expect(BOZUK_TIMELINE).toEqual({
+      writeMs: 20_000,
+      drawMs: 45_000,
+      showStepMs: 2_000,
+      voteMs: 6_000,
+      resultMs: 2_000,
+      lockGraceMs: 1_000,
+      maxSteps: 5,
+    });
     const s = start();
-    expect(s.endAt).toEqual([T0 + 25_000]);
+    expect(s.endAt).toEqual([T0 + 20_000]);
     expect(bozukStepKind(0)).toBe("write");
     expect(bozukStepKind(1)).toBe("draw");
     expect(bozukStepKind(2)).toBe("write");
     expect(game.publicView(s, ctx(0)).phase).toBe("write");
   });
 
-  it("adım sayısı = oyuncu sayısı, en çok 6", () => {
-    expect([3, 4, 5, 6, 7, 8].map(bozukStepCount)).toEqual([3, 4, 5, 6, 6, 6]);
+  it("adım sayısı = oyuncu sayısı, en çok 5 (7-8 kişide de 5)", () => {
+    expect([3, 4, 5, 6, 7, 8].map(bozukStepCount)).toEqual([3, 4, 5, 5, 5, 5]);
     for (const n of [3, 4, 5, 6, 7, 8]) {
       const players = Array.from({ length: n }, (_, i) => `p${i}`);
       expect(game.setup(players, ctx(0, players)).steps).toBe(bozukStepCount(n));
     }
   });
 
-  it("3 oyuncuda yaz -> çiz -> yaz; 6 oyuncuda yaz, çiz, yaz, çiz, yaz, çiz", () => {
+  it("3 oyuncuda yaz -> çiz -> yaz; 5+ oyuncuda yaz, çiz, yaz, çiz, yaz", () => {
     expect([0, 1, 2].map(bozukStepKind)).toEqual(["write", "draw", "write"]);
-    expect([0, 1, 2, 3, 4, 5].map(bozukStepKind)).toEqual([
-      "write",
-      "draw",
-      "write",
-      "draw",
-      "write",
-      "draw",
-    ]);
+    expect([0, 1, 2, 3, 4].map(bozukStepKind)).toEqual(["write", "draw", "write", "draw", "write"]);
+  });
+
+  it("erken bitişsiz toplam süre: 3 oyuncu 121 sn, 4 oyuncu 186 sn, 5 oyuncu 230 sn, 8 oyuncu 278 sn", () => {
+    expect([3, 4, 5, 6, 7, 8].map((n) => bozukDurationMs(n) / 1000)).toEqual([121, 186, 230, 246, 262, 278]);
+    expect(bozukChainMs(5)).toBe(4 * 2_000 + 6_000 + 2_000);
+    expect(bozukChainMs(3)).toBe(2 * 2_000 + 6_000 + 2_000);
   });
 
   it("süre üst sınırı: en uzun oyun BOZUK_MAX_DURATION_MS içinde bitiş", () => {
@@ -219,8 +234,8 @@ describe("bozuk-telefon yazma adımı", () => {
 
   it("süre bitene kadar değiştirilebilir (son cümle geçerli)", () => {
     let s = act(start(), "a", text("birinci cümle"), 1_000);
-    s = act(s, "a", text("ikinci cümle"), 20_000);
-    s = tickAt(s, 25_000);
+    s = act(s, "a", text("ikinci cümle"), 19_000);
+    s = tickAt(s, 20_000);
     expect(s.chains.a?.[0]).toEqual({ kind: "write", author: "a", text: "İKİNCİ CÜMLE" });
   });
 
@@ -328,8 +343,9 @@ describe("bozuk-telefon çizme adımı ve önceki adımı görme", () => {
     expect(game.parseAction({ kind: "stroke", color: "beyaz", size: 2, points: [1, 2, 3] })).toBeNull();
     expect(game.parseAction({ kind: "stroke", color: "beyaz", size: 2, points: [1, 2] })).toBeNull();
     expect(game.parseAction({ kind: "stroke", color: "beyaz", size: 2, points: [0, 0, 1001, 5] })).toBeNull();
-    expect(game.parseAction({ kind: "stroke", color: "kirmizi", size: 2, points: [0, 0, 1, 5] })).toBeNull();
-    expect(game.parseAction({ kind: "stroke", color: "beyaz", size: 4, points: [0, 0, 1, 5] })).toBeNull();
+    expect(game.parseAction({ kind: "stroke", color: "lacivert", size: 2, points: [0, 0, 1, 5] })).toBeNull();
+    expect(game.parseAction({ kind: "stroke", color: "beyaz", size: 5, points: [0, 0, 1, 5] })).toBeNull();
+    expect(game.parseAction({ kind: "stroke", color: "beyaz", size: 0, points: [0, 0, 1, 5] })).toBeNull();
     expect(game.parseAction({ kind: "stroke", color: "beyaz", size: 2, points: [0, 0, 1.5, 5] })).toBeNull();
     expect(
       game.parseAction({ kind: "stroke", color: "eraser", size: 3, points: Array(240).fill(5) }),
@@ -337,6 +353,38 @@ describe("bozuk-telefon çizme adımı ve önceki adımı görme", () => {
     expect(
       game.parseAction({ kind: "stroke", color: "beyaz", size: 2, points: Array(242).fill(5) }),
     ).toBeNull();
+  });
+
+  it("10 renk (kırmızı, mor, kahverengi, gri dahil) ve 4 kalınlık (çok kalın) kabul edilir; sınırlar aynı", () => {
+    for (const color of [
+      "beyaz",
+      "pembe",
+      "sari",
+      "yesil",
+      "mavi",
+      "turuncu",
+      "kirmizi",
+      "mor",
+      "kahverengi",
+      "gri",
+      "eraser",
+    ])
+      for (const size of [1, 2, 3, 4])
+        expect(game.parseAction({ kind: "stroke", color, size, points: [0, 0, 1, 5] })).not.toBeNull();
+    // Yeni renk ve kalınlık sunucuda saklanır; silgi dizini (6) değişmez, yeni renkler 7..10.
+    let s = tickAt(inputAll(start()), stepStart(4, 1));
+    const t = stepStart(4, 1) + 1;
+    s = act(s, "a", { kind: "stroke", color: "gri", size: 4, points: [1, 2, 3, 4] }, t);
+    s = act(s, "a", { kind: "stroke", color: "kirmizi", size: 1, points: [1, 2, 3, 4] }, t);
+    s = act(s, "a", { kind: "stroke", color: "eraser", size: 4, points: [1, 2, 3, 4] }, t);
+    expect(Object.values(game.view(s, "a", ctx(t)).strokes)).toEqual([
+      [10, 4, 1, 2, 3, 4],
+      [7, 1, 1, 2, 3, 4],
+      [6, 4, 1, 2, 3, 4],
+    ]);
+    expect(BOZUK_MAX_STROKES).toBe(150);
+    expect(BOZUK_MAX_TOTAL_POINTS).toBe(1_500);
+    expect(BOZUK_MAX_DRAW_ACTIONS).toBe(400);
   });
 
   it("çizim ve yazının sonu: süresi dolan boş çizim 'boş tuval' (strokes: []) olarak geçer", () => {
@@ -475,14 +523,167 @@ describe("bozuk-telefon gizlilik (yapısal)", () => {
   });
 
   it("gösteri: oylar sonuç aşamasına kadar kime verildiğiyle birlikte yok", () => {
-    let s = tickAt(toReveal(), chainStart(4, 0) + 4 * BOZUK_SHOW_STEP_MS + 100);
-    s = act(s, "b", vote(2), chainStart(4, 0) + 4 * BOZUK_SHOW_STEP_MS + 200);
-    const pub = JSON.stringify(game.publicView(s, ctx(chainStart(4, 0) + 4 * BOZUK_SHOW_STEP_MS + 200)));
+    let s = tickAt(toReveal(), chainStart(4, 0) + showMs(4) + 100);
+    s = act(s, "b", vote(2), chainStart(4, 0) + showMs(4) + 200);
+    const pub = JSON.stringify(game.publicView(s, ctx(chainStart(4, 0) + showMs(4) + 200)));
     expect(pub).toContain('"voted":["b"]');
     expect(game.publicView(s, ctx(0)).reveal?.tally).toBeNull();
     for (const id of ["a", "c", "d"]) expect(game.view(s, id, ctx(0)).myVote).toBeNull();
     expect(game.view(s, "b", ctx(0)).myVote).toBe(2);
     expect(game.view(s, null, ctx(0)).myVote).toBeNull();
+  });
+});
+
+describe("bozuk-telefon isimsiz oylama (gizlilik)", () => {
+  /** Ortak görünümde ya da başkasının görünümünde yazar kimliği var mı (yapısal: "author" alanı ve başlatan). */
+  const authorsIn = (v: {
+    reveal: { steps: { author: string | null }[]; starter: string | null } | null;
+  }) => [...(v.reveal?.steps.map((x) => x.author) ?? []), v.reveal?.starter ?? null];
+
+  it("gösteri ve oylama boyunca ortak görünümde hiçbir adımın yazarı ve başlatan yok", () => {
+    for (const n of [3, 4, 5, 8]) {
+      const players = Array.from({ length: n }, (_, i) => `p${i}`);
+      const s = toReveal(players);
+      const steps = bozukStepCount(n);
+      for (let c = 0; c < n; c++) {
+        for (let t = 0; t < showMs(steps) + BOZUK_VOTE_MS; t += 500) {
+          const at = chainStart(n, c) + t;
+          const pub = game.publicView(tickAt(s, at, players), ctx(at, players));
+          expect(pub.reveal?.stage === "show" || pub.reveal?.stage === "vote").toBe(true);
+          expect(authorsIn(pub).every((x) => x === null)).toBe(true);
+          expect(pub.recap).toBeNull();
+          // Kişisel görünümler de yazar taşımaz (yalnız kendi adımının numarası).
+          for (const id of [...players, null]) {
+            const view = game.view(tickAt(s, at, players), id, ctx(at, players));
+            expect(Object.keys(view).sort()).toEqual(
+              ["done", "myStep", "myVote", "pointsLeft", "prompt", "role", "strokes", "text"].sort(),
+            );
+          }
+        }
+      }
+    }
+  });
+
+  it("sonuç aşamasında yazarlar ve başlatan açılır", () => {
+    const s = toReveal();
+    const pub = game.publicView(tickAt(s, chainStart(4, 2) + showMs(4) + BOZUK_VOTE_MS), ctx(0));
+    expect(pub.reveal?.stage).toBe("result");
+    expect(pub.reveal?.starter).toBe("c");
+    expect(pub.reveal?.steps.map((x) => x.author)).toEqual(["c", "d", "a", "b"]);
+  });
+
+  it("kendi adımın yalnız sana işaretlenir (myStep); başkasında ve izleyicide null", () => {
+    const s = toReveal();
+    // Zincir 1: yazarlar b,c,d,a. Gösteride yalnız görünen adımlar sayılır.
+    const at = (ms: number) => tickAt(s, chainStart(4, 1) + ms);
+    expect(game.view(at(100), "b", ctx(0)).myStep).toBe(0);
+    expect(game.view(at(100), "c", ctx(0)).myStep).toBeNull(); // c'nin adımı (1) henüz açılmadı
+    expect(game.view(at(2_100), "c", ctx(0)).myStep).toBe(1);
+    expect(game.view(at(6_100), "a", ctx(0)).myStep).toBe(3);
+    expect(game.view(at(6_100), null, ctx(0)).myStep).toBeNull();
+    expect(game.view(at(6_100), "zed", ctx(0)).myStep).toBeNull();
+    // 7-8 oyuncuda bir zincirde adımı olmayan oyuncu: null.
+    const p7 = Array.from({ length: 7 }, (_, i) => `p${i}`);
+    const s7 = tickAt(toReveal(p7), voteStart(7, 0), p7);
+    const withStep = p7.filter((id) => game.view(s7, id, ctx(0, p7)).myStep !== null);
+    expect(withStep).toHaveLength(5);
+  });
+
+  it("oylama sırasında kendi adımına oy reddedilir ama ortak görünüm bunu ele vermez", () => {
+    const s = tickAt(toReveal(), voteStart(4, 0) + 100);
+    expect(reasonOf(s, "b", vote(1), voteStart(4, 0) + 200)).toBe("own_step");
+    const pub = JSON.stringify(game.publicView(s, ctx(0)));
+    expect(pub).not.toContain('"author":"');
+    expect(pub).toContain('"starter":null');
+  });
+
+  it("oyun sonu özeti (recap): yalnız son zincirin sonucu açılınca, tüm zincirler yazar/oy/taçlarıyla", () => {
+    let s = toReveal();
+    s = act(tickAt(s, voteStart(4, 0) + 100), "a", vote(1), voteStart(4, 0) + 200);
+    const last = chainStart(4, 3);
+    expect(game.publicView(tickAt(s, last + showMs(4) + 100), ctx(0)).recap).toBeNull();
+    const atResult = game.publicView(tickAt(s, last + showMs(4) + BOZUK_VOTE_MS), ctx(0));
+    expect(atResult.recap).toHaveLength(4);
+    const done = game.publicView(tickAt(s, endAt(4)), ctx(0));
+    expect(done.phase).toBe("done");
+    const recap = done.recap ?? [];
+    expect(recap.map((r) => r.starter)).toEqual(["a", "b", "c", "d"]);
+    expect(recap[0]?.tally).toEqual([0, 1, 0, 0]);
+    expect(recap[0]?.crowned).toEqual([1]);
+    expect(recap[0]?.steps.map((x) => x.author)).toEqual(["a", "b", "c", "d"]);
+    expect(recap[1]?.crowned).toEqual([]);
+  });
+});
+
+describe("bozuk-telefon sonuç açılışı (revealAt)", () => {
+  const revealAt = (s: BozukState, at: number) => game.revealAt?.(s, ctx(at)) ?? null;
+  it("girdi sürerken belli değil; gösteride son zincirin oylama bitişi (sonuç açılışı)", () => {
+    expect(revealAt(start(), 1_000)).toBeNull();
+    const s = toReveal();
+    expect(revealAt(s, chainStart(4, 0))).toBe(T0 + voteStart(4, 3) + BOZUK_VOTE_MS);
+    // Açılıştan 2 sn sonra (sonuç penceresi) oyun biter; açılış anı kaymaz.
+    expect(game.isFinished(s, ctx(voteStart(4, 3) + BOZUK_VOTE_MS + BOZUK_RESULT_MS))).toBe(true);
+    expect(revealAt(s, endAt(4) + 5_000)).toBe(T0 + voteStart(4, 3) + BOZUK_VOTE_MS);
+  });
+  it("son zincirde herkes oy verince açılış öne çekilir (1 sn sonra)", () => {
+    let s = tickAt(toReveal(), voteStart(4, 3) + 100);
+    // Zincir 3 yazarları d,a,b,c.
+    for (const [id, step] of [
+      ["a", 0],
+      ["b", 0],
+      ["c", 0],
+      ["d", 1],
+    ] as const)
+      s = act(s, id, vote(step), voteStart(4, 3) + 200);
+    expect(revealAt(s, voteStart(4, 3) + 300)).toBe(T0 + voteStart(4, 3) + 1_200);
+  });
+});
+
+describe("bozuk-telefon kahkaha puanı -> mini puan (+2 / +1 / 0)", () => {
+  const P = ["a", "b", "c", "d"];
+  it("en yüksek +2, sonraki farklı toplam +1, diğerleri 0", () => {
+    expect(bozukRankAwards({ a: 5, b: 3, c: 1, d: 0 }, P)).toEqual({ a: 2, b: 1, c: 0, d: 0 });
+  });
+  it("birincide eşitlik: hepsi +2, sonraki farklı toplam +1", () => {
+    expect(bozukRankAwards({ a: 4, b: 4, c: 2, d: 2 }, P)).toEqual({ a: 2, b: 2, c: 1, d: 1 });
+    expect(bozukRankAwards({ a: 4, b: 4, c: 4, d: 1 }, P)).toEqual({ a: 2, b: 2, c: 2, d: 1 });
+  });
+  it("toplamı 0 olan ödül almaz", () => {
+    expect(bozukRankAwards({ a: 2, b: 0, c: 0, d: 0 }, P)).toEqual({ a: 2, b: 0, c: 0, d: 0 });
+    expect(bozukRankAwards({ a: 0, b: 0, c: 0, d: 0 }, P)).toEqual({ a: 0, b: 0, c: 0, d: 0 });
+    expect(bozukRankAwards({}, P)).toEqual({ a: 0, b: 0, c: 0, d: 0 });
+  });
+  it("herkesin toplamı aynı ve 0'dan büyükse herkes +1", () => {
+    expect(bozukRankAwards({ a: 3, b: 3, c: 3, d: 3 }, P)).toEqual({ a: 1, b: 1, c: 1, d: 1 });
+  });
+  it("eksi yok; ödüller yalnız 0, 1, 2", () => {
+    fc.assert(
+      fc.property(fc.array(fc.integer({ min: 0, max: 30 }), { minLength: 3, maxLength: 8 }), (vals) => {
+        const ids = vals.map((_, i) => `p${i}`);
+        const laugh = Object.fromEntries(ids.map((id, i) => [id, vals[i] ?? 0]));
+        const out = bozukRankAwards(laugh, ids);
+        const top = Math.max(...vals);
+        for (const id of ids) {
+          const v = out[id] ?? -1;
+          expect([0, 1, 2]).toContain(v);
+          if ((laugh[id] ?? 0) === 0) expect(v).toBe(0);
+          if (top > 0 && (laugh[id] ?? 0) === top && new Set(vals).size > 1) expect(v).toBe(2);
+        }
+      }),
+    );
+  });
+  it("tam oyunda miniScores = kahkaha puanı, awards = sıralama", () => {
+    let s = toReveal();
+    // Zincir 0 yazarları a,b,c,d: b'ye 2, c'ye 1 oy.
+    for (const [id, step] of [
+      ["a", 1],
+      ["c", 1],
+      ["d", 2],
+    ] as const)
+      s = act(tickAt(s, voteStart(4, 0) + 100), id, vote(step), voteStart(4, 0) + 200);
+    const r = game.result(tickAt(s, endAt(4)));
+    expect(r.miniScores).toEqual({ a: 0, b: 2, c: 1, d: 0 });
+    expect(r.awards).toEqual({ a: 0, b: 2, c: 1, d: 0 });
   });
 });
 
@@ -529,7 +730,7 @@ describe("bozuk-telefon erken bitiş", () => {
       s = act(s, id, lock, 2_500);
     }
     expect(s.endAt[0]).toBe(T0 + BOZUK_WRITE_MS);
-    expect(tickAt(s, 20_000).step).toBe(0);
+    expect(tickAt(s, BOZUK_WRITE_MS - 1).step).toBe(0);
   });
 
   it("(c) bağlantısı kopan oyuncu beklenmez", () => {
@@ -602,7 +803,7 @@ describe("bozuk-telefon erken bitiş", () => {
 
   it("oylamada herkes oy verince zincir 1 sn sonra sonuca geçer; sonraki zincir hemen kayar", () => {
     let s = tickAt(toReveal(), chainStart(4, 0));
-    const v0 = chainStart(4, 0) + 4 * BOZUK_SHOW_STEP_MS;
+    const v0 = chainStart(4, 0) + showMs(4);
     s = tickAt(s, v0);
     // Zincir 0 yazarları a,b,c,d (adım sırası). Herkes kendi dışında bir adıma oy verir.
     const picks: Record<string, number> = { a: 1, b: 0, c: 0, d: 0 };
@@ -623,7 +824,7 @@ describe("bozuk-telefon erken bitiş", () => {
   });
 
   it("oylamada bir kişi eksikken ve kopuk oyuncu varken", () => {
-    const v0 = chainStart(4, 0) + 4 * BOZUK_SHOW_STEP_MS;
+    const v0 = chainStart(4, 0) + showMs(4);
     let s = tickAt(toReveal(), v0);
     for (const id of ["a", "b", "c"]) s = act(s, id, vote(id === "a" ? 1 : 0), v0 + 1_000);
     expect(s.voteEnds["0"]).toBeUndefined();
@@ -636,7 +837,7 @@ describe("bozuk-telefon erken bitiş", () => {
 });
 
 describe("bozuk-telefon gösteri", () => {
-  it("girdi bitince gösteri başlar: zincirler sırayla, her adım 3 sn", () => {
+  it("girdi bitince gösteri başlar: adımlar 2 sn arayla; son adım görünür görünmez 6 sn oylama, 2 sn sonuç", () => {
     const s = toReveal();
     expect(game.publicView(s, ctx(0)).phase).toBe("reveal");
     const c0 = chainStart(4, 0);
@@ -644,24 +845,49 @@ describe("bozuk-telefon gösteri", () => {
     expect(at(0)?.stage).toBe("show");
     expect(at(0)?.shown).toBe(1);
     expect(at(0)?.chain).toBe(0);
-    expect(at(0)?.starter).toBe("a");
-    expect(at(2_999)?.shown).toBe(1);
-    expect(at(3_000)?.shown).toBe(2);
-    expect(at(6_000)?.shown).toBe(3);
-    expect(at(9_000)?.shown).toBe(4);
-    expect(at(11_999)?.shown).toBe(4);
-    expect(at(12_000)?.stage).toBe("vote");
-    expect(at(12_000)?.steps).toHaveLength(4);
-    expect(at(22_000)?.stage).toBe("result");
-    expect(at(25_000)?.chain).toBe(1);
-    expect(at(25_000)?.shown).toBe(1);
+    expect(at(1_999)?.shown).toBe(1);
+    expect(at(2_000)?.shown).toBe(2);
+    expect(at(4_000)?.shown).toBe(3);
+    expect(at(5_999)?.shown).toBe(3);
+    expect(at(5_999)?.stage).toBe("show");
+    // Son (4.) adım 6. saniyede görünür ve oylama aynı anda açılır.
+    expect(at(6_000)?.stage).toBe("vote");
+    expect(at(6_000)?.shown).toBe(4);
+    expect(at(6_000)?.steps).toHaveLength(4);
+    expect(at(6_000)?.voteStartsAt).toBe(T0 + c0 + 6_000);
+    expect(at(6_000)?.stageEndsAt).toBe(T0 + c0 + 12_000);
+    expect(at(11_999)?.stage).toBe("vote");
+    expect(at(12_000)?.stage).toBe("result");
+    expect(at(12_000)?.stageEndsAt).toBe(T0 + c0 + 14_000);
+    expect(at(13_999)?.chain).toBe(0);
+    expect(at(14_000)?.chain).toBe(1);
+    expect(at(14_000)?.shown).toBe(1);
+    expect(chainStart(4, 1) - c0).toBe(14_000);
   });
 
-  it("gösteri adımları yazarlarıyla gelir ve zincirin sırasını korur", () => {
-    const s = tickAt(toReveal(), chainStart(4, 1) + 20_000);
-    const steps = game.publicView(s, ctx(0)).reveal?.steps as BozukStep[];
-    expect(steps.map((x) => x.author)).toEqual(["b", "c", "d", "a"]);
-    expect(steps.map((x) => x.kind)).toEqual(["write", "draw", "write", "draw"]);
+  it("gösteri sırasında son adım hiç 'show' aşamasında görünmez (oylama onunla açılır)", () => {
+    for (const n of [3, 5, 8]) {
+      const players = Array.from({ length: n }, (_, i) => `p${i}`);
+      const s = toReveal(players);
+      const steps = bozukStepCount(n);
+      for (let t = 0; t < showMs(steps); t += 250) {
+        const r = game.publicView(tickAt(s, chainStart(n, 0) + t, players), ctx(0)).reveal;
+        expect(r?.stage).toBe("show");
+        expect(r?.shown).toBeLessThan(steps);
+      }
+      const v = game.publicView(tickAt(s, voteStart(n, 0), players), ctx(0)).reveal;
+      expect(v?.stage).toBe("vote");
+      expect(v?.shown).toBe(steps);
+    }
+  });
+
+  it("gösteri adımları zincirin sırasını korur; yazarlar yalnız sonuçta açılır", () => {
+    const steps = (ms: number) =>
+      game.publicView(tickAt(toReveal(), chainStart(4, 1) + ms), ctx(0)).reveal?.steps ?? [];
+    expect(steps(13_000).map((x) => x.author)).toEqual(["b", "c", "d", "a"]);
+    expect(steps(13_000).map((x) => x.kind)).toEqual(["write", "draw", "write", "draw"]);
+    expect(steps(8_000).map((x) => x.author)).toEqual([null, null, null, null]);
+    expect(steps(2_000).map((x) => x.author)).toEqual([null, null]);
   });
 
   it("tüm zincirler bitince oyun biter; sondan sonra eylem reddedilir", () => {
@@ -675,15 +901,17 @@ describe("bozuk-telefon gösteri", () => {
     expect(reasonOf(done, "a", vote(1), endAt(4))).toBe("ended");
   });
 
-  it("izleyici ve oyuncuların ortak görünümü aynıdır; yalnız oy/prompt özel", () => {
+  it("izleyici ve oyuncuların ortak görünümü aynıdır; yalnız oy/prompt ve kendi adımın özel", () => {
     const s = tickAt(toReveal(), chainStart(4, 0) + 100);
-    expect(game.view(s, null, ctx(0))).toEqual(game.view(s, "a", ctx(0)));
+    // Zincir 0'ın ilk adımı a'nın: yalnız a'nın kendi görünümünde işaretli.
+    expect(game.view(s, "a", ctx(0))).toEqual({ ...game.view(s, null, ctx(0)), myStep: 0 });
+    expect(game.view(s, "b", ctx(0))).toEqual(game.view(s, null, ctx(0)));
   });
 
   it("gösteri hiç tick almadan da (reduce ile) doğru ilerler: oy kabul edilir", () => {
     // Yalnız son girdi adımının tick'i; sonrası yalnız eylem.
     const s = toReveal();
-    const v0 = chainStart(4, 0) + 4 * BOZUK_SHOW_STEP_MS;
+    const v0 = chainStart(4, 0) + showMs(4);
     expect(reasonOf(s, "b", vote(0), v0 + 10)).toBeNull();
     expect(reasonOf(s, "b", vote(0), v0 - 1)).toBe("wrong_phase");
     expect(reasonOf(s, "b", vote(0), v0 + BOZUK_VOTE_MS)).toBe("wrong_phase");
@@ -701,7 +929,7 @@ describe("bozuk-telefon gösteri", () => {
 });
 
 describe("bozuk-telefon oylama", () => {
-  const v0 = chainStart(4, 0) + 4 * BOZUK_SHOW_STEP_MS;
+  const v0 = chainStart(4, 0) + showMs(4);
   const voting = () => tickAt(toReveal(), v0 + 100);
 
   it("yazılar gösteri sırasında oylanamaz (yalnız oylama aşaması)", () => {
@@ -743,7 +971,7 @@ describe("bozuk-telefon oylama", () => {
     const c1 = chainStart(4, 1);
     s = tickAt(s, c1);
     expect(game.view(s, "a", ctx(0)).myVote).toBeNull();
-    const v1 = c1 + 4 * BOZUK_SHOW_STEP_MS + 100;
+    const v1 = c1 + showMs(4) + 100;
     // Zincir 1 adım yazarları b,c,d,a: a'nın kendi adımı 3.
     expect(reasonOf(s, "a", vote(3), v1)).toBe("own_step");
     expect(reasonOf(s, "a", vote(0), v1)).toBeNull();
@@ -759,6 +987,19 @@ describe("bozuk-telefon oylama", () => {
     expect(reveal?.stage).toBe("result");
     expect(reveal?.tally).toEqual([0, 2, 1, 0]);
     expect(reveal?.robust).toBe(false);
+    expect(reveal?.crowned).toEqual([1]);
+    expect(reveal?.starter).toBe("a");
+  });
+
+  it("taç: en çok oy alan adım(lar); eşitlikte hepsi, oy yoksa boş", () => {
+    let s = voting();
+    s = act(s, "a", vote(1), v0 + 200);
+    s = act(s, "b", vote(2), v0 + 200);
+    const tied = game.publicView(tickAt(s, v0 + BOZUK_VOTE_MS), ctx(0)).reveal;
+    expect(tied?.crowned).toEqual([1, 2]);
+    const none = game.publicView(tickAt(voting(), v0 + BOZUK_VOTE_MS), ctx(0)).reveal;
+    expect(none?.crowned).toEqual([]);
+    expect(game.publicView(voting(), ctx(0)).reveal?.crowned).toBeNull();
   });
 
   it("oy vermeyenin oyu sayılmaz", () => {
@@ -770,10 +1011,10 @@ describe("bozuk-telefon oylama", () => {
 describe("bozuk-telefon puanlama", () => {
   const voteAt = (s: BozukState, chain: number, id: string, step: number, connected?: readonly string[]) =>
     act(
-      tickAt(s, chainStart(4, chain) + 4 * BOZUK_SHOW_STEP_MS + 100, connected),
+      tickAt(s, chainStart(4, chain) + showMs(4) + 100, connected),
       id,
       vote(step),
-      chainStart(4, chain) + 4 * BOZUK_SHOW_STEP_MS + 200,
+      chainStart(4, chain) + showMs(4) + 200,
       connected,
     );
 
@@ -786,14 +1027,15 @@ describe("bozuk-telefon puanlama", () => {
     expect(game.result(tickAt(s, endAt(4))).miniScores).toEqual({ a: 0, b: 2, c: 1, d: 0 });
   });
 
-  it("birden çok zincirin oyları toplanır; awards = miniScores", () => {
+  it("birden çok zincirin oyları kahkaha puanında toplanır; genel skora sıralama (+2/+1/0) gider", () => {
     let s = toReveal();
     s = voteAt(s, 0, "a", 1);
     s = voteAt(s, 1, "b", 3); // zincir 1: b,c,d,a -> a'nın adımı
     s = voteAt(s, 2, "a", 0); // zincir 2: c,d,a,b -> c'nin adımı
     const r = game.result(tickAt(s, endAt(4)));
     expect(r.miniScores).toEqual({ a: 1, b: 1, c: 1, d: 0 });
-    expect(r.awards).toEqual(r.miniScores);
+    // a, b, c eşit birinci -> +2; d'nin toplamı 0 -> ödül yok.
+    expect(r.awards).toEqual({ a: 2, b: 2, c: 2, d: 0 });
   });
 
   it("sağlam zincir: ilk cümle ve son yazı adımı aynı anlamdaysa zincirdeki herkes +1", () => {
@@ -811,8 +1053,7 @@ describe("bozuk-telefon puanlama", () => {
     // Zincir 0 yazarları a,b,c,d -> hepsi +1; diğer zincirler sağlam değil.
     expect(r.miniScores).toEqual({ a: 1, b: 1, c: 1, d: 1 });
     expect(
-      game.publicView(tickAt(s, chainStart(4, 0) + 4 * BOZUK_SHOW_STEP_MS + BOZUK_VOTE_MS), ctx(0)).reveal
-        ?.robust,
+      game.publicView(tickAt(s, chainStart(4, 0) + showMs(4) + BOZUK_VOTE_MS), ctx(0)).reveal?.robust,
     ).toBe(true);
   });
 
@@ -879,9 +1120,9 @@ describe("bozuk-telefon puanlama", () => {
   it("gösterideki toplam puanlar yalnız sonucu açılmış zincirlerden birikir", () => {
     let s = toReveal();
     s = voteAt(s, 0, "a", 1);
-    const before = game.publicView(tickAt(s, chainStart(4, 0) + 20_000), ctx(0));
+    const before = game.publicView(tickAt(s, chainStart(4, 0) + 11_000), ctx(0));
     expect(before.scores).toEqual({ a: 0, b: 0, c: 0, d: 0 });
-    const after = game.publicView(tickAt(s, chainStart(4, 0) + 22_000), ctx(0));
+    const after = game.publicView(tickAt(s, chainStart(4, 0) + 12_000), ctx(0));
     expect(after.scores).toEqual({ a: 0, b: 1, c: 0, d: 0 });
   });
 
@@ -895,7 +1136,7 @@ describe("bozuk-telefon puanlama", () => {
         s = tickAt(s, stepStart(n, i + 1), players);
       }
       // Zincir 0'da p1'in adımına p0 oy verir.
-      const t = chainStart(n, 0) + steps * BOZUK_SHOW_STEP_MS + 100;
+      const t = chainStart(n, 0) + showMs(steps) + 100;
       s = tickAt(s, t, players);
       s = act(s, players[0] as string, vote(1), t + 50, players);
       const r = game.result(tickAt(s, endAt(n), players));

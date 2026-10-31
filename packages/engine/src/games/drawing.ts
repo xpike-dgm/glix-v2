@@ -1,6 +1,8 @@
 /**
  * Ortak çizim tuvali: Karalama Defteri ve Bozuk Telefon aynı darbe biçimini ve aynı sunucu tarafı doğrulamayı kullanır.
- * Darbe biçimi: `[renkDizini (0..5, silgi 6), kalınlık (1..3), x0, y0, x1, y1, …]`, koordinatlar 0..GRID tam sayı.
+ * Darbe biçimi: `[kalemDizini (DRAW_PENS sırası: 0..5 ilk renkler, 6 silgi, 7..10 yeni renkler), kalınlık (1..4),
+ * x0, y0, x1, y1, …]`, koordinatlar 0..GRID tam sayı. Silgi dizini (6) ilk sürümden beri değişmez.
+ * Her oyun kendi paletini (`DrawPalette`: ilk kaç renk, en büyük kalınlık) seçer; sunucu yalnız onu kabul eder.
  */
 
 /** Çizim ızgarası: 0..GRID tam sayı, kare. */
@@ -9,13 +11,54 @@ export const DRAW_GRID = 1000;
 export const DRAW_MIN_POINTS = 2;
 export const DRAW_MAX_POINTS = 120;
 
-/** Palet kimlikleri; sıra sıkıştırılmış darbedeki renk dizinidir. */
-export const DRAW_COLORS = ["beyaz", "pembe", "sari", "yesil", "mavi", "turuncu"] as const;
+/** Renk kimlikleri, araç çubuğu sırasıyla (ilk 6'sı ilk palet). */
+export const DRAW_COLORS = [
+  "beyaz",
+  "pembe",
+  "sari",
+  "yesil",
+  "mavi",
+  "turuncu",
+  "kirmizi",
+  "mor",
+  "kahverengi",
+  "gri",
+] as const;
 export type DrawColor = (typeof DRAW_COLORS)[number];
 export type DrawPen = DrawColor | "eraser";
-export type DrawSize = 1 | 2 | 3;
+/**
+ * Sıkıştırılmış darbedeki kalem dizini = bu dizideki sıra. İlk palet (0..5) ve silgi (6) eski biçimle aynı kalır;
+ * sonradan eklenen renkler silgiden sonra gelir.
+ */
+export const DRAW_PENS: readonly DrawPen[] = [
+  "beyaz",
+  "pembe",
+  "sari",
+  "yesil",
+  "mavi",
+  "turuncu",
+  "eraser",
+  "kirmizi",
+  "mor",
+  "kahverengi",
+  "gri",
+];
+/** Kalem kimliğinin sıkıştırılmış darbedeki dizini. */
+export const drawPenIndex = (pen: DrawPen): number => DRAW_PENS.indexOf(pen);
+/** Kalınlık kademesi: 1 ince … 4 çok kalın. */
+export type DrawSize = 1 | 2 | 3 | 4;
+
+/** Bir oyunun kabul ettiği kalemler: paletin ilk `colors` rengi (+ silgi) ve 1..`maxSize` kalınlık. */
+export interface DrawPalette {
+  colors: number;
+  maxSize: DrawSize;
+}
+/** Tam palet: 10 renk, 4 kalınlık (Bozuk Telefon). */
+export const DRAW_PALETTE_FULL: DrawPalette = { colors: DRAW_COLORS.length, maxSize: 4 };
+/** İlk palet: 6 renk, 3 kalınlık (Karalama Defteri; kuralı değişmedi). */
+export const DRAW_PALETTE_CLASSIC: DrawPalette = { colors: 6, maxSize: 3 };
 /** Sıkıştırılmış darbede silgi dizini. */
-export const DRAW_ERASER_INDEX = DRAW_COLORS.length;
+export const DRAW_ERASER_INDEX = 6;
 export type DrawStroke = number[];
 
 export interface StrokeFields {
@@ -47,8 +90,6 @@ export interface PlayerDrawing {
 
 export const EMPTY_DRAWING: PlayerDrawing = { next: 0, strokes: {}, points: 0, actions: 0 };
 
-const PEN_IDS: readonly string[] = [...DRAW_COLORS, "eraser"];
-
 export function isPlainObject(raw: unknown): raw is Record<string, unknown> {
   return typeof raw === "object" && raw !== null && !Array.isArray(raw);
 }
@@ -71,16 +112,27 @@ function parsePoints(raw: unknown): number[] | null {
   return out;
 }
 
-/** `{kind:"stroke", color, size, points}` eyleminin alanlarını doğrular (tam anahtar kümesi); geçersizse null. */
-export function parseStrokeFields(raw: Record<string, unknown>): StrokeFields | null {
+/** Paletteki kalem kimlikleri (renkler + silgi). */
+export function penIdsOf(palette: DrawPalette): DrawPen[] {
+  return [...DRAW_COLORS.slice(0, palette.colors), "eraser"];
+}
+
+/**
+ * `{kind:"stroke", color, size, points}` eyleminin alanlarını doğrular (tam anahtar kümesi); geçersizse null.
+ * Renk ve kalınlık oyunun paletiyle sınırlıdır.
+ */
+export function parseStrokeFields(raw: Record<string, unknown>, palette: DrawPalette): StrokeFields | null {
   if (!hasExactKeys(raw, ["kind", "color", "size", "points"])) return null;
   const color = raw.color;
-  if (typeof color !== "string" || !PEN_IDS.includes(color)) return null;
+  if (typeof color !== "string") return null;
+  const pen = penIdsOf(palette).find((p) => p === color);
+  if (pen === undefined) return null;
   const size = raw.size;
-  if (size !== 1 && size !== 2 && size !== 3) return null;
+  if (size !== 1 && size !== 2 && size !== 3 && size !== 4) return null;
+  if (size > palette.maxSize) return null;
   const points = parsePoints(raw.points);
   if (points === null) return null;
-  return { color: color as DrawPen, size, points };
+  return { color: pen, size, points };
 }
 
 export type DrawResult = { drawing: PlayerDrawing } | { rejected: string };
@@ -91,7 +143,7 @@ export function addStroke(mine: PlayerDrawing, stroke: StrokeFields, limits: Dra
   if (Object.keys(mine.strokes).length >= limits.maxStrokes) return { rejected: "too_many_strokes" };
   const pointCount = stroke.points.length / 2;
   if (mine.points + pointCount > limits.maxTotalPoints) return { rejected: "too_many_points" };
-  const colorIndex = stroke.color === "eraser" ? DRAW_ERASER_INDEX : DRAW_COLORS.indexOf(stroke.color);
+  const colorIndex = drawPenIndex(stroke.color);
   const packed: DrawStroke = [colorIndex, stroke.size, ...stroke.points];
   return {
     drawing: {

@@ -609,6 +609,8 @@ export const sendReady = (): boolean => rawSend({ type: "ready" });
 export const sendContinue = (): boolean => rawSend({ type: "continue" });
 /** Oyun içi sonuç ekranında "Devam et" (`round`: o anki oyunun sırası). */
 export const sendRevealContinue = (round: number): boolean => rawSend({ type: "revealContinue", round });
+/** "💡 İlham ver" (Bozuk Telefon ilk cümle adımı): öneriler kişisel anlık görüntüye gelir. */
+export const sendInspire = (round: number): boolean => rawSend({ type: "inspire", round });
 export const returnToLobby = (): boolean => rawSend({ type: "returnToLobby" });
 export const sendFeedback = (rating: number, text: string): boolean => {
   const clean = text.trim();

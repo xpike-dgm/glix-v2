@@ -3,8 +3,10 @@ import { createVisibleArea } from "../../ui/keyboardArea.js";
 import type { GameScreenProps } from "../registry.js";
 import "../karalama-defteri/karalama.css";
 import "./bozuk-telefon.css";
+import { sendInspire } from "../../net/client.js";
 import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Cizme } from "./Cizme.js";
+import { Galeri } from "./Galeri.js";
 import { Gosteri } from "./Gosteri.js";
 import { parseBozukView } from "./view.js";
 import { Yazma } from "./Yazma.js";
@@ -45,13 +47,33 @@ export default function BozukTelefonScreen(props: GameScreenProps) {
             <Switch>
               <Match when={v().phase === "write"}>
                 <For each={[v().step]}>
-                  {() => <Yazma view={v()} crew={crew()} spectator={spectator()} now={props.now} />}
+                  {() => (
+                    <Yazma
+                      view={v()}
+                      crew={crew()}
+                      spectator={spectator()}
+                      now={props.now}
+                      inspire={props.match.inspire}
+                      onInspire={() => sendInspire(props.match.round)}
+                    />
+                  )}
                 </For>
               </Match>
               <Match when={v().phase === "draw"}>
                 <For each={[v().step]}>
                   {() => <Cizme view={v()} crew={crew()} spectator={spectator()} now={props.now} />}
                 </For>
+              </Match>
+              <Match when={v().phase === "done" ? v().recap : null}>
+                {(recap) => (
+                  <Galeri
+                    recap={recap()}
+                    players={props.players}
+                    selfId={props.selfId}
+                    startedAt={props.match.reveal?.startedAt ?? props.now()}
+                    endsAt={props.match.reveal?.endsAt ?? props.now()}
+                  />
+                )}
               </Match>
               <Match when={v().reveal}>
                 {(rv) => (

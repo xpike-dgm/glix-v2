@@ -22,6 +22,7 @@ import {
   markRevealContinue,
   pickRandomGames,
   recordPresence,
+  requestInspire,
   requiredPlayers,
   stepMatch,
 } from "./match.js";
@@ -676,6 +677,21 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       // İzleyici ve katılımcı olmayan sessizce yok sayılır (sayıma girmez, hata yok).
       if (!markContinue(room, conn.player.id)) return;
       stepMatch(rt, room);
+      rt.broadcaster.markDirty(room);
+      return;
+    }
+    case "inspire": {
+      const room = requireRoom(conn);
+      if (!room || !conn.player) return;
+      const outcome = requestInspire(rt, room, conn.player.id, msg.round);
+      if (outcome === "wrong_phase") {
+        fail(conn, "wrong_phase");
+        return;
+      }
+      if (outcome === "limit" || outcome === "busy") {
+        fail(conn, "rate_limited");
+        return;
+      }
       rt.broadcaster.markDirty(room);
       return;
     }

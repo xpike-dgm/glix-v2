@@ -83,8 +83,11 @@ describe("Karalama Defteri görünümü", () => {
   it("bozuk darbeleri atar, koordinatları ızgaraya sıkıştırır", () => {
     expect(parseStroke([0, 2, 0, 0])).toBeNull();
     expect(parseStroke([0, 2, 0, 0, 1])).toBeNull();
-    expect(parseStroke([7, 2, 0, 0, 1, 1])).toBeNull();
-    expect(parseStroke([0, 4, 0, 0, 1, 1])).toBeNull();
+    // Ortak kalem dizini: 0..10 (6 silgi), kalınlık 1..4; dışı atılır.
+    expect(parseStroke([11, 2, 0, 0, 1, 1])).toBeNull();
+    expect(parseStroke([-1, 2, 0, 0, 1, 1])).toBeNull();
+    expect(parseStroke([0, 5, 0, 0, 1, 1])).toBeNull();
+    expect(parseStroke([10, 4, 0, 0, 1, 1])).toEqual([10, 4, 0, 0, 1, 1]);
     expect(parseStroke([0, 2, 0, 0, "1", 1])).toBeNull();
     expect(parseStroke([6, 3, -50, 2000, 1.4, 1])).toEqual([6, 3, 0, 1000, 1, 1]);
     const v = parseKaralamaPublicView({ ...pub, drawings: { a: [[0, 2, 0, 0, 10, 10], "x", [9]] } });

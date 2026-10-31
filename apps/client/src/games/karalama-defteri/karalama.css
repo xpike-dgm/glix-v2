@@ -196,6 +196,79 @@
   background: currentColor;
 }
 
+/* sıkı araç çubuğu (Bozuk Telefon): renk ve kalınlık çubuğun üstünde açılan panelden seçilir */
+.kd__dock {
+  position: relative;
+  flex: none;
+}
+.kd__tools--compact {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0 -8px 2px;
+}
+.kd__dock[data-frozen="1"] .kd__tools--compact {
+  opacity: 0.6;
+}
+.kd__pickdot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--pen);
+  box-shadow:
+    0 0 0 3px var(--bg-0),
+    0 0 0 5px color-mix(in srgb, var(--pen) 70%, transparent),
+    0 0 12px color-mix(in srgb, var(--pen) 60%, transparent);
+}
+.kd__size--true i {
+  display: block;
+  border-radius: 50%;
+  background: var(--pen, currentColor);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--pen, currentColor) 55%, transparent);
+}
+.kd__dock[data-eraser="1"] .kd__pickdot,
+.kd__dock[data-eraser="1"] .kd__size--true i {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--text-dim);
+}
+.kd__panel {
+  position: absolute;
+  z-index: 3;
+  left: -8px;
+  right: -8px;
+  bottom: calc(100% + 6px);
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--pen) 45%, var(--line));
+  background: color-mix(in srgb, var(--bg-1) 94%, transparent);
+  box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.5);
+  transform-origin: 50% 100%;
+  animation: kd-panel 160ms var(--ease) both;
+}
+.kd__panel--color {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.kd__panel--size {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.kd__panel .kd__tool {
+  height: 52px;
+}
+@keyframes kd-panel {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .kd__panel {
+    animation: none;
+  }
+}
+:root[data-motion="reduce"] .kd__panel {
+  animation: none;
+}
+
 /* sergi duvarı: düzeni (sütun, hücre) VoteWall hesaplar */
 .kd__wall {
   flex: 1;
@@ -577,6 +650,21 @@
   }
   .kd__tools[data-frozen="1"] {
     opacity: 0.6;
+  }
+  .kd__tools--compact {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .kd__panel {
+    left: auto;
+    right: calc(100% + 8px);
+    bottom: auto;
+    top: 50%;
+    width: 224px;
+    translate: 0 -50%;
+    transform-origin: 100% 50%;
+  }
+  .kd__panel--color {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .kd__side .tamam {
     padding-top: 6px;

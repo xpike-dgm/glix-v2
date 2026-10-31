@@ -36,6 +36,7 @@ const priv = {
   pointsLeft: 0,
   done: false,
   myVote: null,
+  myStep: null,
 };
 
 describe("Bozuk Telefon görünümü", () => {
@@ -112,5 +113,73 @@ describe("Bozuk Telefon görünümü", () => {
       reveal: { ...reveal, stage: "result", tally: [0, 2], robust: true },
     });
     expect(p?.reveal).toMatchObject({ stage: "result", tally: [0, 2], robust: true });
+  });
+
+  it("isimsiz gösteri/oylama: yazarı ve başlatanı null olan adımlar okunur; kendi adımın kişisel görünümde", () => {
+    const v = parseBozukView(
+      {
+        ...pub,
+        reveal: {
+          ...reveal,
+          starter: null,
+          voteStartsAt: 1,
+          crowned: null,
+          steps: [
+            { ...writeStep, author: null },
+            { ...drawStep, author: null },
+          ],
+        },
+      },
+      { ...priv, myStep: 1 },
+    );
+    expect(v?.reveal?.starter).toBeNull();
+    expect(v?.reveal?.steps.map((x) => x.author)).toEqual([null, null]);
+    expect(v?.myStep).toBe(1);
+    expect(parseBozukPrivateView({ ...priv, myStep: "1" })).toBeNull();
+    expect(parseBozukPublicView({ ...pub, reveal: { ...reveal, starter: 5 } })).toBeNull();
+    expect(
+      parseBozukPublicView({ ...pub, reveal: { ...reveal, steps: [{ ...writeStep, author: 3 }] } }),
+    ).toBeNull();
+  });
+
+  it("taçlar okunur; eski sunucuda oy dağılımından hesaplanır", () => {
+    const withCrown = parseBozukPublicView({
+      ...pub,
+      reveal: { ...reveal, stage: "result", tally: [2, 2], robust: false, crowned: [0, 1] },
+    });
+    expect(withCrown?.reveal?.crowned).toEqual([0, 1]);
+    const legacy = parseBozukPublicView({
+      ...pub,
+      reveal: { ...reveal, stage: "result", tally: [0, 3], robust: false },
+    });
+    expect(legacy?.reveal?.crowned).toEqual([1]);
+    expect(parseBozukPublicView({ ...pub, reveal: { ...reveal, crowned: [-1] } })).toBeNull();
+  });
+
+  it("oyun sonu özeti (recap): yazarlı zincirler okunur; yazarsız adım ya da bozuk alan reddedilir", () => {
+    const recap = [
+      { chain: 0, starter: "a", steps: [writeStep, drawStep], tally: [0, 1], robust: false, crowned: [1] },
+    ];
+    const p = parseBozukPublicView({ ...pub, phase: "done", recap });
+    expect(p?.recap?.[0]).toMatchObject({ chain: 0, starter: "a", crowned: [1], robust: false });
+    expect(p?.recap?.[0]?.steps.map((x) => x.author)).toEqual(["a", "b"]);
+    expect(parseBozukPublicView({ ...pub, recap: null })?.recap).toBeNull();
+    expect(
+      parseBozukPublicView({ ...pub, recap: [{ ...recap[0], steps: [{ ...writeStep, author: null }] }] }),
+    ).toBeNull();
+    expect(parseBozukPublicView({ ...pub, recap: [{ ...recap[0], tally: ["1"] }] })).toBeNull();
+    expect(parseBozukPublicView({ ...pub, recap: "x" })).toBeNull();
+  });
+
+  it("10 renk ve çok kalın darbeler okunur", () => {
+    const p = parseBozukPrivateView({
+      ...priv,
+      role: "draw",
+      strokes: { "0": [7, 4, 0, 0, 5, 5], "1": [10, 1, 1, 1, 2, 2], "2": [11, 1, 0, 0, 1, 1] },
+    });
+    expect(p?.strokes).toEqual([
+      [7, 4, 0, 0, 5, 5],
+      [10, 1, 1, 1, 2, 2],
+    ]);
   });
 });

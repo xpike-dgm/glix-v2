@@ -12,6 +12,8 @@ import {
   GameRecorder,
   type GameResult,
   gameClock,
+  INSPIRE_MAX_REQUESTS,
+  type InspireMine,
   isRejected,
   type MatchSnapshot,
   REVEAL_HOLD_MS,
@@ -19,6 +21,16 @@ import {
 } from "@glix/engine";
 import { buildGameRecord, buildMatchRecord, type Entrant } from "./accountStats.js";
 import { commentPrompt, hasCommentPrompt } from "./aiCommentGames.js";
+import {
+  freshInspire,
+  INSPIRE_GAME_ID,
+  INSPIRE_MAX_TOKENS,
+  type InspireEntry,
+  inspireMine,
+  inspirePrompt,
+  isFirstWriteStep,
+  parseIdeas,
+} from "./aiInspire.js";
 import {
   archiveCardLog,
   cardPhaseDue,
@@ -90,6 +102,8 @@ export interface Match {
   commentAsked: boolean;
   /** Geçerli oyunun sonu yorumu (aiComment.ts; doğrulanmış tek satır); yoksa null. */
   comment: string | null;
+  /** Geçerli oyunda "İlham ver" kişisel durumları (aiInspire.ts; yalnız bellekte, oyun değişince silinir). */
+  inspire: Map<string, InspireEntry>;
 }
 
 /** Oyun içi sonuç ekranının sunucu tarafı: "Devam et" diyenler ve bitişi belirleyen anlar. */
@@ -182,6 +196,7 @@ function enterBriefing(rt: Runtime, room: Room, match: Match): void {
   match.gameStartedAt = null;
   match.commentAsked = false;
   match.comment = null;
+  match.inspire = new Map();
   match.phaseStartedAt = now;
   match.phaseEndsAt = now + BRIEFING_TIMEOUT_MS;
   room.phase = "briefing";
@@ -243,6 +258,7 @@ export function beginMatch(rt: Runtime, room: Room): void {
     originalGameIds: [...room.gameIds],
     commentAsked: false,
     comment: null,
+    inspire: new Map(),
   };
   startCards(rt, room, match);
   room.match = match;
@@ -848,6 +864,65 @@ export function matchViewFor(rt: Runtime, room: Room, playerId: string | null): 
   const game = currentGame(match);
   const ctx = ctxFor(rt, room, match);
   return guard("view", () => game.view(match.state, who, ctx));
+}
+
+/** "İlham ver" bu oyuncu için şu an kullanılabilir mi: özellik açık, Bozuk Telefon ilk cümle adımı, katılımcı. */
+function inspireOpen(rt: Runtime, room: Room, match: Match, playerId: string | null): playerId is string {
+  if (!rt.aiInspire.enabled || playerId === null || room.phase !== "playing" || !match.rng) return false;
+  const game = currentGame(match);
+  if (game.id !== INSPIRE_GAME_ID) return false;
+  if (!match.participants.includes(playerId) || room.players.get(playerId)?.spectator) return false;
+  const view = guard("publicView", () => game.publicView(match.state, ctxFor(rt, room, match)));
+  return isFirstWriteStep(view);
+}
+
+/** Yalnız bu oyuncunun "İlham ver" durumu; kullanılamıyorsa null (düğme görünmez). */
+export function matchInspireFor(rt: Runtime, room: Room, playerId: string | null): InspireMine | null {
+  const match = room.match;
+  if (!match || !inspireOpen(rt, room, match, playerId)) return null;
+  return inspireMine(match.inspire.get(playerId));
+}
+
+/**
+ * "İlham ver" isteği. Yalnız ilk cümle adımında, yalnız katılımcı, kişi başı oyun başına en çok
+ * `INSPIRE_MAX_REQUESTS`; aynı anda tek istek. Yanıt (ya da hata) yalnız bu oyuncunun kişisel görünümüne yazılır.
+ */
+export function requestInspire(
+  rt: Runtime,
+  room: Room,
+  playerId: string,
+  round: number,
+): "ok" | "wrong_phase" | "limit" | "busy" {
+  const match = room.match;
+  if (!match || match.index !== round || !inspireOpen(rt, room, match, playerId)) return "wrong_phase";
+  const entry = match.inspire.get(playerId) ?? freshInspire();
+  if (entry.pending) return "busy";
+  if (entry.used >= INSPIRE_MAX_REQUESTS) return "limit";
+  const index = match.index;
+  const sent = rt.aiInspire.generate(
+    {
+      prompt: inspirePrompt(),
+      maxTokens: INSPIRE_MAX_TOKENS,
+      tag: "ai_inspire",
+      parse: (raw) => parseIdeas(raw, (text) => rt.bannedWords.matches(text)),
+    },
+    (ideas) => {
+      if (room.match !== match || match.index !== index) return;
+      const cur = match.inspire.get(playerId);
+      if (!cur) return;
+      cur.pending = false;
+      cur.failed = ideas === null;
+      if (ideas !== null) cur.ideas = ideas;
+      rt.broadcaster.markDirty(room);
+    },
+  );
+  if (!sent) {
+    // Sunucu genelindeki hız sınırı: hak harcanmaz, "Şu an ilham yok".
+    match.inspire.set(playerId, { ...entry, failed: true });
+    return "ok";
+  }
+  match.inspire.set(playerId, { ...entry, used: entry.used + 1, pending: true, failed: false });
+  return "ok";
 }
 
 /** Oyuncuya özel kart bilgisi (el, seçenekler, oynadığı kart); izleyicide ve sahnede null. */

@@ -3,6 +3,7 @@ import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../g
 import {
   addStroke,
   clearStrokes,
+  DRAW_PALETTE_CLASSIC,
   type DrawLimits,
   EMPTY_DRAWING,
   hasExactKeys,
@@ -134,7 +135,7 @@ export const karalamaDefteri: GameDefinition<
         return { kind: "vote", target };
       }
       case "stroke": {
-        const fields = parseStrokeFields(raw);
+        const fields = parseStrokeFields(raw, DRAW_PALETTE_CLASSIC);
         return fields === null ? null : { kind: "stroke", ...fields };
       }
       default:

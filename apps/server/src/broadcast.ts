@@ -2,7 +2,14 @@ import { diffMerge, type MergePatch, type RoomSnapshot } from "@glix/engine";
 import type { Clock } from "./clock.js";
 import { catalogFor } from "./gameSwitches.js";
 import { log } from "./log.js";
-import { abortMatch, GameFault, matchMineFor, matchViewFor, sharedMatchSnapshot } from "./match.js";
+import {
+  abortMatch,
+  GameFault,
+  matchInspireFor,
+  matchMineFor,
+  matchViewFor,
+  sharedMatchSnapshot,
+} from "./match.js";
 import type { Connection, Player, Room, Runtime } from "./runtime.js";
 
 /** Birleştirme penceresi: bir eylemin yayını en çok bu kadar gecikir (tick 100 ms olduğundan tick yayınları zaten seyrek). */
@@ -162,6 +169,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
             ...content.match,
             view: matchViewFor(rt, room, player.id),
             mine: matchMineFor(rt, room, player.id),
+            inspire: matchInspireFor(rt, room, player.id),
           }
         : null,
     };
@@ -183,7 +191,9 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       rev,
       serverNow,
       selfId: "",
-      match: content.match ? { ...content.match, view: matchViewFor(rt, room, null), mine: null } : null,
+      match: content.match
+        ? { ...content.match, view: matchViewFor(rt, room, null), mine: null, inspire: null }
+        : null,
     };
   }
 
@@ -233,14 +243,20 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
     let viewPatch: MergePatch | null = null;
     let view: unknown = null;
     let mine: ReturnType<typeof matchMineFor> = null;
+    let inspire: ReturnType<typeof matchInspireFor> = null;
     if (content.match && last.match) {
       view = matchViewFor(rt, room, player.id);
       mine = matchMineFor(rt, room, player.id);
-      viewPatch = diffMerge({ view: last.match.view, mine: last.match.mine ?? null }, { view, mine });
+      inspire = matchInspireFor(rt, room, player.id);
+      viewPatch = diffMerge(
+        { view: last.match.view, mine: last.match.mine ?? null, inspire: last.match.inspire ?? null },
+        { view, mine, inspire },
+      );
       if (viewPatch === null) return false;
     }
     const sharedChanged = cache.ver !== prevVer;
-    const viewChanged = viewPatch !== null && ("view" in viewPatch || "mine" in viewPatch);
+    const viewChanged =
+      viewPatch !== null && ("view" in viewPatch || "mine" in viewPatch || "inspire" in viewPatch);
     if (!sharedChanged && !viewChanged) return true; // yalnız rev/serverNow değişti: gönderilmez
     const patch: MergePatch = { rev, serverNow, ...(sharedChanged ? cache.patch : null) };
     if (viewChanged && content.match && viewPatch) {
@@ -248,6 +264,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       const own: MergePatch = {};
       if ("view" in viewPatch) own.view = viewPatch.view;
       if ("mine" in viewPatch) own.mine = viewPatch.mine;
+      if ("inspire" in viewPatch) own.inspire = viewPatch.inspire;
       patch.match = { ...(typeof m === "object" && m !== null ? m : null), ...own };
     }
     const snapshot: RoomSnapshot = {
@@ -255,7 +272,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       rev,
       serverNow,
       selfId: player.id,
-      match: content.match ? { ...content.match, view, mine } : null,
+      match: content.match ? { ...content.match, view, mine, inspire } : null,
     };
     conn.lastSent = snapshot;
     conn.sentVer = cache.ver;

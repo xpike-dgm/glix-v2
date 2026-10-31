@@ -1,23 +1,20 @@
 // biome-ignore-all lint/a11y/noSvgWithoutTitle: simgeler dekoratif (aria-hidden)
-import { BOZUK_VOTE_MS, type PlayerInfo } from "@glix/engine";
+import type { PlayerInfo } from "@glix/engine";
 import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show } from "solid-js";
-import { hapticError, hapticMatch, hapticReady, hapticResult, hapticSolo } from "../../fx/haptics.js";
-import {
-  fail,
-  match as matchSound,
-  ready as readySound,
-  roundResult,
-  solo as soloSound,
-  tick,
-} from "../../fx/sound.js";
+import { Portal } from "solid-js/web";
+import { hapticError, hapticReady, hapticSolo } from "../../fx/haptics.js";
+import { reducedMotion } from "../../fx/motion.js";
+import { fail, solo as soloSound } from "../../fx/sound.js";
 import { sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
-import { CbState } from "../../ui/CbState.js";
-import { CheckIcon } from "../../ui/Icons.js";
+import { GhostButton } from "../../ui/GhostButton.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
-import { DrawingCanvas } from "../karalama-defteri/DrawingCanvas.js";
+import { ChainLock } from "./ChainLock.js";
+import { StepCard } from "./StepCard.js";
 import { StepHeader } from "./StepHeader.js";
-import type { BozukScreenView, ParsedDrawing, ParsedReveal, ParsedStep } from "./view.js";
+import { chainClink, laugh, paperSlide } from "./sounds.js";
+import { robustPair } from "./story.js";
+import type { BozukScreenView, ParsedReveal } from "./view.js";
 
 interface Props {
   view: BozukScreenView;
@@ -28,95 +25,108 @@ interface Props {
   now: () => number;
 }
 
-const GAP = 10;
-
-/** Kare hücrelerin en büyük çıkacağı sütun düzeni. */
-export function cellLayout(count: number, w: number, h: number): { cols: number; cell: number } {
-  let best = { cols: 1, cell: 0 };
-  if (count <= 0 || w <= 0 || h <= 0) return best;
-  for (let cols = 1; cols <= count; cols++) {
-    const rows = Math.ceil(count / cols);
-    const cell = Math.floor(Math.min((w - (cols - 1) * GAP) / cols, (h - (rows - 1) * GAP) / rows));
-    if (cell > best.cell) best = { cols, cell };
-  }
-  return { ...best, cell: Math.max(0, best.cell) };
-}
-
-const drawOf = (s: ParsedStep): ParsedDrawing | null => (s.kind === "draw" ? s.drawing : null);
-const textOf = (s: ParsedStep): string => (s.kind === "write" ? s.text : "");
-
-const lenOf = (t: string): "s" | "m" | "l" => {
-  const n = Array.from(t).length;
-  return n > 38 ? "l" : n > 20 ? "m" : "s";
-};
-
 /**
- * Gösteri: zincir adım adım açılır (3 sn), sonra herkes en komik adıma oy verir (tek seferlik), en sonda oy
- * dağılımı ve "sağlam zincir" görünür. Tüm adımlar sabit bir ızgarada durur; yeni açılan adım parlar.
+ * Gösteri (BT-U1, BT-U5, BT-U6): zincir dikey bir hikâye akışı olarak açılır (mesajlaşma gibi, büyük kartlar,
+ * otomatik kaydırma); yazılar daktiloyla, çizimler çiziliş sırasıyla gelir. Son adım görünür görünmez oylama açılır:
+ * karta dokununca tam ekran büyür, oradan "😂 EN KOMİK BU". Gösteri ve oylamada yazarlar gizli; sonuçta 👑, 😂
+ * yığını, yazarlar ve (varsa) sağlam zincir halkası.
  */
 export function Gosteri(props: Props) {
   const r = () => props.reveal;
-  const total = () => props.view.steps;
-  const person = (id: string): PlayerInfo | undefined => props.players.find((p) => p.id === id);
-  const mine = (i: number): boolean => r().steps[i]?.author === props.selfId;
+  const person = (id: string | null): PlayerInfo | undefined =>
+    id === null ? undefined : props.players.find((p) => p.id === id);
+  const result = () => r().stage === "result";
 
-  const [picked, setPicked] = createSignal<number | null>(null);
-  const [sent, setSent] = createSignal(false);
-  // Zincir değişince seçim sıfırlanır.
+  const [sent, setSent] = createSignal<number | null>(null);
+  const [zoom, setZoom] = createSignal<number | null>(null);
   createEffect(
     on(
       () => r().chain,
       () => {
-        setPicked(null);
-        setSent(false);
+        setSent(null);
+        setZoom(null);
       },
     ),
   );
-  const myVote = () => props.view.myVote ?? (sent() ? picked() : null);
-  const voted = () => myVote() !== null;
-  const canVote = () => !props.spectator && r().stage === "vote" && !voted();
-  const pick = (i: number): void => {
-    if (!canVote() || mine(i)) return;
-    tick();
-    setPicked(i);
-  };
-  const confirm = (): void => {
-    const i = picked();
-    if (i === null || !canVote()) return;
-    // Oy hemen mühürlenir; sunucu reddederse seçim geri açılır.
-    setSent(true);
-    readySound();
+  createEffect(() => {
+    if (r().stage !== "vote") setZoom(null);
+  });
+  const zoomAt = (): number => zoom() ?? 0;
+  const zoomOwn = (): boolean => props.view.myStep === zoomAt();
+  const myVote = () => props.view.myVote ?? sent();
+  const canVote = () => !props.spectator && r().stage === "vote" && myVote() === null;
+  const vote = (i: number): void => {
+    if (!canVote() || i === props.view.myStep) return;
+    setSent(i);
+    setZoom(null);
+    laugh();
     hapticReady();
     void sendActionAck({ kind: "vote", step: i }).then((ack) => {
       if (ack.ok || ack.reason === "timeout") return;
-      setSent(false);
+      setSent(null);
       fail();
       hapticError();
     });
   };
 
-  // Sesler: her yeni adımda tık; sonuçta sağlam zincir fanfarı.
+  // İlk görünüş (daktilo/yeniden çizim) her adım için bir kez; ekrana sonradan girilirse eski adımlar hazır gelir.
+  const seen = new Set<string>();
+  {
+    const shown = props.reveal.steps.length;
+    for (let i = 0; i < shown - 1; i++) seen.add(`${props.reveal.chain}:${i}`);
+    if (props.reveal.stage === "result") seen.add(`${props.reveal.chain}:${shown - 1}`);
+  }
+  const freshOnce = (i: number): boolean => {
+    const key = `${r().chain}:${i}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  };
+
+  // Akış: yeni adımda kâğıt kayması ve aşağı kaydırma; sonuçta taçlı karta kaydırma.
+  let feed: HTMLDivElement | undefined;
+  const scrollFeed = (to: "end" | number): void => {
+    const el = feed;
+    if (!el) return;
+    const behavior: ScrollBehavior = reducedMotion() ? "auto" : "smooth";
+    requestAnimationFrame(() => {
+      if (to === "end") {
+        el.scrollTo({ top: el.scrollHeight, behavior });
+        return;
+      }
+      const card = el.querySelector<HTMLElement>(`[data-i="${to}"]`);
+      if (card) el.scrollTo({ top: Math.max(0, card.offsetTop - 8), behavior });
+    });
+  };
   createEffect(
     on(
-      () => `${r().chain}:${r().stage === "show" ? r().shown : "x"}`,
+      () => `${r().chain}:${r().steps.length}`,
       () => {
-        if (r().stage === "show") tick();
+        if (!result()) {
+          paperSlide();
+          scrollFeed("end");
+        }
       },
       { defer: true },
     ),
   );
+  onMount(() => {
+    const top =
+      props.reveal.stage === "result" && !props.reveal.robust ? props.reveal.crowned?.[0] : undefined;
+    scrollFeed(top ?? "end");
+  });
   createEffect(
     on(
       () => `${r().chain}:${r().stage}`,
       () => {
-        if (r().stage !== "result") return;
-        if (r().robust) {
-          matchSound();
-          hapticMatch();
-        } else if ((r().tally ?? []).some((n) => n > 0)) {
-          roundResult();
-          hapticResult();
-        } else {
+        if (!result()) return;
+        const top = r().crowned?.[0];
+        // Sağlam zincirde halka paneli akışın sonunda: son kart ve panel görünsün; değilse taçlı karta kay.
+        if (r().robust) scrollFeed("end");
+        else if (top !== undefined) scrollFeed(top);
+        if (r().robust) chainClink();
+        else if (top !== undefined) laugh();
+        else {
           soloSound();
           hapticSolo();
         }
@@ -124,49 +134,26 @@ export function Gosteri(props: Props) {
       { defer: true },
     ),
   );
+  onCleanup(() => setZoom(null));
 
-  // Izgara boyutu
-  let grid: HTMLDivElement | undefined;
-  const [size, setSize] = createSignal({ w: 0, h: 0 });
-  onMount(() => {
-    if (!grid) return;
-    const read = (): void => {
-      setSize({ w: grid?.clientWidth ?? 0, h: grid?.clientHeight ?? 0 });
-    };
-    read();
-    const ro = new ResizeObserver(read);
-    ro.observe(grid);
-    onCleanup(() => ro.disconnect());
-  });
-  const layout = createMemo(() => cellLayout(total(), size().w, size().h));
-
-  const winner = createMemo(() => {
-    const t = r().tally;
-    if (!t) return -1;
-    const top = Math.max(...t);
-    return top > 0 ? t.indexOf(top) : -1;
-  });
-  const starter = () => person(r().starter);
-  const stageStart = () => (r().stage === "vote" ? r().stageEndsAt - BOZUK_VOTE_MS : r().chainStartedAt);
-  const title = () =>
-    r().stage === "show" ? "Zincir açılıyor" : r().stage === "vote" ? "En komik adım hangisi?" : "Sonuç";
-  const hint = (): string => {
-    if (r().stage === "show")
-      return `${Math.min(r().shown, total())}. adım · ${person(r().steps[r().shown - 1]?.author ?? "")?.nickname ?? ""}`;
-    if (r().stage === "vote") {
-      if (props.spectator) return `${r().voted.length}/${props.players.length} oy verdi`;
-      if (voted()) return `Oyun verdin · ${r().voted.length}/${props.players.length}`;
-      if (picked() !== null) return "Emin misin? Onaylayınca değişmez";
-      return "Bir adıma dokun (kendi adımına oy yok)";
-    }
-    return r().robust
-      ? "Sağlam zincir! Zincirdeki herkes +1"
-      : winner() >= 0
-        ? "En komik adım seçildi"
-        : "Kimse oy vermedi";
+  const crowned = (i: number): boolean => result() && (r().crowned ?? []).includes(i);
+  const stageStart = () => (r().stage === "show" ? r().chainStartedAt : r().voteStartsAt);
+  const title = (): string => {
+    if (r().stage === "show") return "Zincir açılıyor";
+    if (r().stage === "vote") return "En komik hangisi?";
+    return (r().crowned ?? []).length > 0 ? "En komik seçildi" : "Kimse oy vermedi";
   };
-
-  const totalVotes = () => (r().tally ?? []).reduce((a, b) => a + b, 0);
+  const starter = () => person(r().starter);
+  const hint = (): string => {
+    if (r().stage === "show") return `${r().steps.length}/${props.view.steps}. adım · sonunda oylama`;
+    if (r().stage === "vote") {
+      if (props.spectator) return `${r().voted.length}/${props.view.players.length} oy verdi`;
+      if (myVote() !== null) return `Oyun verildi · ${r().voted.length}/${props.view.players.length}`;
+      return "En komik karta dokun, büyüt ve seç";
+    }
+    return r().robust ? "" : `Kahkaha puanı`;
+  };
+  const pair = createMemo(() => (result() && r().robust ? robustPair(r().steps) : null));
 
   return (
     <>
@@ -177,135 +164,133 @@ export function Gosteri(props: Props) {
         endsAt={r().stageEndsAt}
       />
       <div class="bt__who">
-        <Show when={starter()}>
-          {(p) => <Avatar index={p().avatar} size={34} connected={p().connected} />}
-        </Show>
-        <span class="bt__whotext">
-          <b>{r().starter === props.selfId ? "Sen" : (starter()?.nickname ?? "?")}</b> başlattı
-        </span>
-        <Show when={r().stage === "result" && r().robust}>
-          <span class="bt__robust rise">Sağlam +1</span>
+        <Show
+          when={result() ? starter() : undefined}
+          fallback={
+            <>
+              <span class="bt__mask" aria-hidden="true">
+                ?
+              </span>
+              <span class="bt__whotext">Kimin yazıp çizdiği sonda açılır</span>
+            </>
+          }
+        >
+          {(p) => (
+            <>
+              <Avatar index={p().avatar} size={34} connected={p().connected} />
+              <span class="bt__whotext rise">
+                <b>{p().id === props.selfId ? "Sen" : p().nickname}</b> başlattı
+              </span>
+            </>
+          )}
         </Show>
       </div>
-      <div
-        class="bt__grid"
-        ref={grid}
-        style={{
-          "--cols": layout().cols,
-          "--cell": `${layout().cell}px`,
-          visibility: layout().cell > 0 ? "visible" : "hidden",
-        }}
-      >
-        <For each={Array.from({ length: total() }, (_, i) => i)}>
-          {(i) => {
-            const step = () => r().steps[i];
-            const author = () => person(step()?.author ?? "");
-            const votes = () => r().tally?.[i] ?? 0;
-            return (
-              <button
-                type="button"
-                class="bt__card"
-                data-hidden={step() ? undefined : "1"}
-                data-fresh={r().stage === "show" && r().shown === i + 1 ? "1" : undefined}
-                data-mine={mine(i) ? "1" : undefined}
-                data-picked={(myVote() ?? picked()) === i ? "1" : undefined}
-                data-win={r().stage === "result" && winner() === i ? "1" : undefined}
-                data-kind={step()?.kind}
-                disabled={!canVote() || mine(i) || !step()}
-                aria-pressed={(myVote() ?? picked()) === i}
-                aria-label={
-                  step()
-                    ? `${i + 1}. adım, ${author()?.nickname ?? ""}${mine(i) ? " (sen)" : ""}`
-                    : `${i + 1}. adım henüz açılmadı`
-                }
-                onPointerDown={(e) => e.preventDefault()}
-                onClick={() => pick(i)}
-              >
-                <Show
-                  when={step()}
-                  fallback={
-                    <span class="bt__q" aria-hidden="true">
-                      ?
-                    </span>
-                  }
-                >
-                  {(s) => (
-                    <>
-                      <Show
-                        when={drawOf(s())}
-                        fallback={
-                          <span class="bt__text" data-len={lenOf(textOf(s()))}>
-                            {textOf(s())}
+      <For each={[r().chain]}>
+        {() => (
+          <div class="btf" data-scroll ref={feed} data-stage={r().stage}>
+            <For each={r().steps.map((_, i) => i)}>
+              {(i) => {
+                const step = () => r().steps[i];
+                const fresh = freshOnce(i);
+                return (
+                  <Show when={step()}>
+                    {(s) => (
+                      <div class="btf__item" data-i={i}>
+                        <Show when={i > 0}>
+                          <span class="btf__link" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" width="18" height="18">
+                              <path d="M12 4v14M6 12l6 6 6-6" />
+                            </svg>
+                            sonra şuna dönüştü
                           </span>
-                        }
-                      >
-                        {(d) => (
-                          <>
-                            <DrawingCanvas strokes={d().strokes} version={d().key} />
-                            <Show when={d().strokes.length === 0}>
-                              <span class="bt__blank">Boş tuval</span>
-                            </Show>
-                          </>
-                        )}
-                      </Show>
-                      <span class="bt__by">
-                        <Show when={author()}>
-                          {(a) => <Avatar index={a().avatar} size={26} connected={a().connected} />}
                         </Show>
-                      </span>
-                      <Show when={r().stage === "result" && winner() === i}>
-                        <CbState kind="star" size={18} class="bt__cb" />
-                      </Show>
-                      <Show when={(myVote() ?? picked()) === i && r().stage !== "result"}>
-                        <span class="bt__tick">
-                          <CheckIcon size={16} />
-                        </span>
-                      </Show>
-                      <Show when={r().stage === "result" && votes() > 0}>
-                        <span class="bt__votes rise">+{votes()}</span>
-                      </Show>
-                    </>
-                  )}
-                </Show>
-              </button>
-            );
-          }}
-        </For>
-      </div>
-      <p class="bt__hint" role="status">
-        {hint()}
-      </p>
-      <Show
-        when={r().stage === "result"}
-        fallback={
-          <Show when={r().stage === "vote" && !props.spectator} fallback={<div class="bt__spacer" />}>
-            <PrimaryButton
-              disabled={voted() || picked() === null}
-              variant={voted() ? "done" : "cyan"}
-              instant
-              onClick={confirm}
-            >
-              {voted() ? "OY VERİLDİ" : "EN KOMİK BU"}
-            </PrimaryButton>
-          </Show>
-        }
-      >
-        <ul class="bt__scores" aria-label="Puanlar">
-          <For each={props.view.players}>
-            {(id) => {
-              const p = () => person(id);
-              return (
-                <li data-me={id === props.selfId ? "1" : undefined}>
-                  <Show when={p()}>
-                    {(pp) => <Avatar index={pp().avatar} size={30} connected={pp().connected} />}
+                        <StepCard
+                          step={s()}
+                          index={i}
+                          fresh={fresh}
+                          sound={fresh}
+                          author={result() ? person(s().author) : undefined}
+                          mine={props.view.myStep === i}
+                          crowned={crowned(i)}
+                          votes={result() ? (r().tally?.[i] ?? 0) : null}
+                          stamped={myVote() === i}
+                          selfId={props.selfId}
+                          disabled={r().stage !== "vote"}
+                          onOpen={() => setZoom(i)}
+                        />
+                      </div>
+                    )}
                   </Show>
-                  <b>{props.view.scores?.[id] ?? 0}</b>
-                </li>
-              );
-            }}
-          </For>
-        </ul>
-        <span class="sr-only">{totalVotes()} oy</span>
+                );
+              }}
+            </For>
+            <Show when={pair()}>
+              {(p) => (
+                <div class="btf__item btf__lock">
+                  <ChainLock first={p()[0]} last={p()[1]} />
+                </div>
+              )}
+            </Show>
+          </div>
+        )}
+      </For>
+      <div class="bt__foot">
+        <Show
+          when={result()}
+          fallback={
+            <p class="bt__hint" role="status">
+              {hint()}
+            </p>
+          }
+        >
+          <ul class="bt__scores" aria-label="Kahkaha puanı">
+            <For each={props.view.players}>
+              {(id) => {
+                const p = () => person(id);
+                return (
+                  <li data-me={id === props.selfId ? "1" : undefined}>
+                    <Show when={p()}>
+                      {(pp) => <Avatar index={pp().avatar} size={28} connected={pp().connected} />}
+                    </Show>
+                    <b>{props.view.scores?.[id] ?? 0}</b>
+                    <span class="sr-only">{p()?.nickname} kahkaha puanı</span>
+                  </li>
+                );
+              }}
+            </For>
+          </ul>
+        </Show>
+      </div>
+      <Show when={zoom() !== null ? r().steps[zoomAt()] : undefined}>
+        {(s) => (
+          <Portal>
+            <div
+              class="btz kd bt"
+              role="dialog"
+              aria-modal="true"
+              aria-label={`${zoomAt() + 1}. adım büyütüldü`}
+            >
+              <div class="btz__card">
+                <StepCard step={s()} index={zoomAt()} variant="big" mine={zoomOwn()} selfId={props.selfId} />
+              </div>
+              <div class="btz__actions">
+                <GhostButton size="small" class="btz__back" onClick={() => setZoom(null)}>
+                  Geri
+                </GhostButton>
+                <Show when={canVote()}>
+                  <PrimaryButton
+                    instant
+                    disabled={zoomOwn()}
+                    reason={zoomOwn() ? "Kendi kartına oy yok" : undefined}
+                    onClick={() => vote(zoomAt())}
+                  >
+                    😂 EN KOMİK BU
+                  </PrimaryButton>
+                </Show>
+              </div>
+            </div>
+          </Portal>
+        )}
       </Show>
     </>
   );

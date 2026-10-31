@@ -1,6 +1,7 @@
 import type { ActionGenerator, GameBot } from "../../testing/simulate.js";
+import { DRAW_PALETTE_FULL } from "../drawing.js";
 import { randomStroke } from "../drawing-bot.js";
-import { BOZUK_MAX_DURATION_MS, type BozukStep } from "./types.js";
+import { BOZUK_MAX_DURATION_MS, type BozukShownStep } from "./types.js";
 
 const WORDS = [
   "KEDİ",
@@ -20,7 +21,7 @@ const WORDS = [
 interface PublicLike {
   phase?: unknown;
   step?: unknown;
-  reveal?: { stage?: unknown; steps?: BozukStep[] } | null;
+  reveal?: { stage?: unknown; steps?: BozukShownStep[] } | null;
 }
 
 /** Her (yazar, adım) çifti için ayırt edici bir kuyruk simgesi: farklı zincirlerdeki cümleler birbirinin alt dizgisi olmaz. */
@@ -34,13 +35,10 @@ export const generate: ActionGenerator = (rng, playerId, publicView) => {
   const pub = (publicView ?? {}) as PublicLike;
   if (pub.phase === "reveal") {
     const reveal = pub.reveal;
-    if (reveal?.stage === "vote" && Array.isArray(reveal.steps)) {
-      const options = reveal.steps.map((s, i) => ({ s, i })).filter((x) => x.s.author !== playerId);
-      // Ara sıra kendi adımına da dener (reddedilmeli).
-      const pool = rng.int(10) === 0 ? reveal.steps.map((s, i) => ({ s, i })) : options;
-      const pick = pool[rng.int(pool.length)];
-      if (pick) return { kind: "vote", step: pick.i };
-    }
+    // Oylama isimsiz: bot hangi adımın kendisinin olduğunu ortak görünümden bilemez; rastgele dener
+    // (kendi adımına denk gelirse sunucu reddeder).
+    if (reveal?.stage === "vote" && Array.isArray(reveal.steps) && reveal.steps.length > 0)
+      return { kind: "vote", step: rng.int(reveal.steps.length) };
     return { kind: "vote", step: rng.int(6) };
   }
   if (rng.int(25) === 0) return { kind: "lock" };
@@ -55,7 +53,7 @@ export const generate: ActionGenerator = (rng, playerId, publicView) => {
   const roll = rng.int(30);
   if (roll === 0) return { kind: "clear" };
   if (roll <= 3) return { kind: "undo" };
-  return randomStroke(rng);
+  return randomStroke(rng, DRAW_PALETTE_FULL);
 };
 
 export const bozukTelefonBot: GameBot = {

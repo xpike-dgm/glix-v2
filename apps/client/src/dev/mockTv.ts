@@ -7,6 +7,7 @@
  *   tv-landscape              yatay oyun (Neon Masa) oynanıyor
  *   tv-zaman-*                Zaman Bombası Hafızası evreleri (özel TV görünümü)
  *   tv-karalama-*             Karalama Defteri evreleri (özel TV görünümü)
+ *   tv-bozuk-*                Bozuk Telefon evreleri (özel TV görünümü; ör. tv-bozuk-show, tv-bozuk-vote)
  *   tv-kart-*                 Kart sistemi ekranları (seçim, geri sayım, sonuç)
  *   tv-zehirli-*              Zehirli Kadeh evreleri (ör. tv-zehirli-spectator, tv-zehirli-reveal&t=2500)
  *   tv-laf-*                  Laf Sokma evreleri (ör. tv-laf-vote, tv-laf-reveal-master&t=4800)
@@ -22,6 +23,9 @@ export async function startTvMock(mock: string, params: URLSearchParams): Promis
     } else if (kind.startsWith("karalama-")) {
       const m = await import("./mockKaralama.js");
       m.startKaralamaMock(kind, params);
+    } else if (kind.startsWith("bozuk-")) {
+      const m = await import("./mockBozuk.js");
+      m.startBozukMock(kind, params);
     } else if (kind.startsWith("zehirli-")) {
       const m = await import("./mockZehirli.js");
       m.startZehirliMock(kind, params);

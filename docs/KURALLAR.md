@@ -1475,21 +1475,41 @@ doğru cevaplarla tur uzayabilir.
 
 ## 26. Bozuk Telefon — `bozuk-telefon`
 
-**Durum: KİLİTLİ** (sahip onayı; uygulama yorumları `docs/A8-OYUNLAR.md`, `docs/A8-LAF-SOKMA.md`)
+**Durum: KİLİTLİ** (sahip onayı; uygulama yorumları `docs/A8-OYUNLAR.md`, `docs/A8-LAF-SOKMA.md`; Ekim 2026 güncellemesi
+BT-M1/M2/M3: `docs/oneriler/bozuk-telefon.md`, `docs/UI-GELISTIRME.md`)
 
 - Amaç: Bir cümlenin çizim ve tahmin zincirinde nasıl bozulduğunu izleyip gülmek; zinciri sağlam tutmak.
 - Minimum oyuncu: **3**. Maksimum oyuncu: **8**.
-- Her oyuncu bir **zincir** başlatır: ilk adımda kısa bir cümle yazar (en çok 60 karakter, 25 sn).
+- Her oyuncu bir **zincir** başlatır: ilk adımda kısa bir cümle yazar (en çok 60 karakter, 20 sn).
 - Zincirler her adımda bir sonraki oyuncuya geçer (sabit, karıştırılmış döngü; kimse kendi zincirine dönmeden
-  önce herkesten geçer). Adımlar sırayla **çiz** (60 sn) ve **yaz** (25 sn: gördüğün çizimi tek cümleyle anlat).
-- Adım sayısı: oyuncu sayısı (en çok 6) — 3 oyuncuda 3 adım (yaz→çiz→yaz), 6+ oyuncuda 6 adım.
+  önce herkesten geçer). Adımlar sırayla **çiz** (45 sn) ve **yaz** (20 sn: gördüğün çizimi tek cümleyle anlat).
+- Adım sayısı: oyuncu sayısı (en çok **5**) — 3 oyuncuda 3 adım (yaz→çiz→yaz), 4'te 4, 5–8 oyuncuda 5 adım
+  (yaz→çiz→yaz→çiz→yaz). 6–8 oyuncuda her zincirde 5 yazar olur; kalanlar o zincirde adım yazmaz ama oy verir.
 - Her adımda oyuncu **yalnız bir önceki adımı** görür; zincirin geri kalanı sonuna kadar gizlidir.
-- Süre dolduğunda: boş çizim "boş tuval", boş yazı "…" olarak zincire geçer. Herkes "Tamam" derse adım erken biter.
-- Gösteri: zincirler tek tek baştan sona açılır (her adım ~3 sn). Her zincirden sonra 10 sn içinde herkes o zincirin
-  **en komik adımına** oy verir (kendi adımına veremez).
-- Puan: en komik adım seçilen her oy için adımın sahibine **+1**. Zincirin ilk cümlesi ile son yazı adımı aynı
-  anlamdaysa (Türkçe normalize edilmiş kelimelerin en az yarısı ortak) o zincirdeki herkes **+1** ("sağlam zincir").
-- Genel skora: mini puanlar doğrudan.
+- Süre dolduğunda: boş çizim "boş tuval", boş yazı "…" olarak zincire geçer. Bağlı herkes "Tamam" derse adım 1 sn
+  sonra erken biter.
+- Çizim: 10 renk (beyaz, pembe, sarı, yeşil, mavi, turuncu, kırmızı, mor, kahverengi, gri) + silgi, 4 kalınlık
+  (4: çok kalın). Sınırlar aynı: en çok 150 darbe, 1 500 nokta, 400 çizim eylemi.
+- Gösteri: zincirler tek tek açılır; ilk adım hemen, sonrakiler **2 sn** arayla. **Oylama, zincirin son adımı
+  görünür görünmez açılır** ve **6 sn** sürer: herkes o zincirin **en komik adımına** oy verir (kendi adımına
+  veremez; tek seferlik). Bağlı herkes oy verirse 1 sn sonra biter. Ardından **2 sn** zincir sonucu.
+- **İsimsiz oylama:** gösteri ve oylama boyunca adımların yazarı (ve zinciri başlatan) kimseye gösterilmez; herkes
+  yalnız kendi adımını "senin" olarak görür. Yazarlar zincir sonucunda açılır.
+- **Kahkaha puanı** (oyun içi): en komik seçilen her oy için adımın sahibine **+1**; zincirin ilk cümlesi ile son yazı
+  adımı aynı anlamdaysa (Türkçe normalize edilmiş kelimelerin en az yarısı ortak) o zincirdeki herkes **+1**
+  ("sağlam zincir"). Kahkaha puanı oyun boyunca ekranda görünür; mini oyun puanı (sonuç ekranındaki sıralama) budur.
+- Genel skora: kahkaha puanı sırasına göre en yüksek **+2**, ondan sonraki farklı toplam **+1**, diğerleri 0.
+  Birincide eşitlik varsa hepsi +2 ve sonraki farklı toplam +1; toplamı 0 olan ödül almaz; herkesin toplamı aynı ve
+  0'dan büyükse herkes +1. Eksi puan yoktur.
+- Kartlar (K6): "birinci/sonuncu" kahkaha puanına göre belirlenir; çarpanlar +2/+1 ödülünü katlar (Altın Dokunuş ile en
+  çok +6); eksi olmadığından Kalkan etkisizdir.
+- Oyunun kendi sonuç açılışı son zincirin oylaması bitince başlar: 2 sn zincir sonucu, ardından "Gecenin en komikleri"
+  (her zincirin en çok oy alan adımı) ve altta ortak "Devam et". Her zincir telefonda tek uzun görsel olarak
+  kaydedilebilir (görsel cihazda oluşturulur, hiçbir yere gönderilmez).
+- **"💡 İlham ver"** (yalnız ilk cümle adımında): yapay zekâ o an 3 kısa, çizilebilir, komik cümle önerir; yalnız isteyen
+  oyuncu görür, dokununca kutuya yazılır (değiştirilebilir). Kişi başı oyun başına en çok 3 istek; öneriler saklanmaz,
+  havuz değildir; modele kişisel bilgi gitmez; yasaklı kelime süzgecinden geçer. Hata/zaman aşımında "Şu an ilham yok";
+  özellik kapalıysa düğme görünmez. Kural ve puanı etkilemez.
 
 ## 27. Laf Sokma Düellosu — `laf-sokma`
 
