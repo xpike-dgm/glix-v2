@@ -35,7 +35,7 @@ const SEMA: readonly string[] = [
   CREATE TABLE anahtar (
     id INTEGER PRIMARY KEY, alan TEXT NOT NULL, ozet TEXT NOT NULL UNIQUE, onek TEXT NOT NULL,
     olusturma INTEGER NOT NULL, iptal INTEGER, son_kullanim INTEGER, kanal TEXT NOT NULL DEFAULT 'mcp',
-    ad TEXT NOT NULL DEFAULT ''
+    ad TEXT NOT NULL DEFAULT '', sifreli TEXT
   );
   CREATE TABLE ssh_anahtar (
     id INTEGER PRIMARY KEY, alan TEXT NOT NULL, acik TEXT NOT NULL, parmak_izi TEXT NOT NULL, aciklama TEXT NOT NULL,
@@ -115,6 +115,9 @@ const SEMA: readonly string[] = [
     endpoint TEXT PRIMARY KEY, p256dh TEXT NOT NULL, auth TEXT NOT NULL, olusturma INTEGER NOT NULL
   );
   CREATE TABLE ayar (anahtar TEXT PRIMARY KEY, deger TEXT NOT NULL);
+  CREATE TABLE ssh_parola (
+    alan TEXT PRIMARY KEY, ozet TEXT NOT NULL, sifreli TEXT NOT NULL, olusturma INTEGER NOT NULL, yenileme_gun INTEGER
+  );
   CREATE TABLE zevk (
     id INTEGER PRIMARY KEY, alan TEXT NOT NULL, oge_id INTEGER NOT NULL UNIQUE, tur TEXT NOT NULL, ad TEXT NOT NULL,
     not_metni TEXT NOT NULL DEFAULT '', onemli INTEGER NOT NULL DEFAULT 0, cikarildi INTEGER NOT NULL DEFAULT 0,

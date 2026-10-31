@@ -31,6 +31,10 @@ export interface UretimConfig {
   aiGunluk: number;
   /** SSH istemlerinde görünen sunucu adı (sır değil). */
   sshSunucu: string;
+  /** Sırların şifreli kaydı için anahtar (bölüm 9); boşsa SSH parolası ve istemde anahtar doldurma kapalı. */
+  gizliAnahtar: string | null;
+  /** Sunucudaki giriş kayıtları (yalnız uretim-* satırları; ssh/girisler.sh yazar). */
+  sshGunluk: string | null;
 }
 
 const bos = (v: string | undefined): string | null => (v && v.trim() !== "" ? v.trim() : null);
@@ -70,5 +74,7 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): UretimConfig {
     aiKey: bos(env.URETIM_AI_KEY),
     aiGunluk: Number(env.URETIM_AI_GUNLUK ?? "") > 0 ? Number(env.URETIM_AI_GUNLUK) : 200,
     sshSunucu: bos(env.URETIM_SSH_SUNUCU) ?? "dgmcraft.online",
+    gizliAnahtar: bos(env.URETIM_GIZLI_ANAHTAR),
+    sshGunluk: bos(env.URETIM_SSH_GUNLUK),
   };
 }

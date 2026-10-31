@@ -15,6 +15,8 @@ import type { Anahtarlar } from "./anahtar.js";
 import type { Db } from "./db.js";
 import type { Denetim } from "./denetim.js";
 import { kayit } from "./http.js";
+import { cryptTuzu, Kasa, parolaUret, sha512Crypt } from "./gizli.js";
+import { ozet } from "./giris.js";
 import { IsHatasi, type Merkez } from "./merkez.js";
 import { ALAN_IDLERI, type AlanId, alanTanimi } from "./ortak/alanlar.js";
 import { teslimAyristir } from "./teslimGirdisi.js";
@@ -55,11 +57,36 @@ export function acikAnahtarAyristir(metin: string): AcikAnahtar | null {
   };
 }
 
+export const YENILEME_GUNLERI = [7, 30, 90] as const;
+const GUN_MS = 24 * 3600 * 1000;
+
+export interface GirisKaydi {
+  zaman: string;
+  basarili: boolean;
+  yontem: string;
+  ip: string;
+}
+
+/**
+ * `ssh/girisler.sh` satırı: `ISO_ZAMAN|basarili|başarısız|kullanıcı|yöntem|ip`. IP'nin son parçası gizlenir.
+ * Biçime uymayan satır yok sayılır.
+ */
+export function girisSatiri(satir: string, kullanici: string): GirisKaydi | null {
+  const p = satir.trim().split("|");
+  if (p.length !== 5) return null;
+  const [zaman, sonuc, k, yontem, ip] = p as [string, string, string, string, string];
+  if (k !== kullanici || !/^\d{4}-\d{2}-\d{2}T[\d:.+\-Z]+$/.test(zaman) || (sonuc !== "basarili" && sonuc !== "basarisiz")) return null;
+  const maske = /^\d{1,3}(\.\d{1,3}){3}$/.test(ip) ? ip.replace(/\.\d{1,3}$/, ".x") : /^[0-9a-f:]+$/i.test(ip) ? `${ip.split(":").slice(0, 3).join(":")}::x` : "";
+  return { zaman, basarili: sonuc === "basarili", yontem: /^(password|publickey)$/.test(yontem) ? yontem : "", ip: maske };
+}
+
 export interface SshAyar {
   /** Sitenin anahtar dosyalarını yazdığı klasör (eşitleme betiği okur). Boşsa SSH kanalı kapalı. */
   yetkiDir: string | null;
   /** Chroot kökü: `<alan>/gelen`, `<alan>/okunur`. */
   kok: string | null;
+  /** Sunucudaki giriş kayıtları dosyası (salt okunur). */
+  gunluk?: string | null;
 }
 
 export class SshKanal {
@@ -69,7 +96,84 @@ export class SshKanal {
     private readonly anahtarlar: Anahtarlar,
     private readonly merkez: Merkez,
     readonly ayar: SshAyar,
+    private readonly kasa: Kasa = new Kasa(null),
   ) {}
+
+  // ---- SSH parolası (sözleşme bölüm 9) --------------------------------------------------------------------
+
+  get parolaAcik(): boolean {
+    return this.acik && this.kasa.acik;
+  }
+
+  parolaDurumu(alan: AlanId): { var: boolean; olusturma: number | null; yenilemeGun: number | null } {
+    const r = this.db.prepare("SELECT olusturma, yenileme_gun FROM ssh_parola WHERE alan = ?").get(alan) as
+      | { olusturma: number; yenileme_gun: number | null }
+      | undefined;
+    return { var: !!r, olusturma: r?.olusturma ?? null, yenilemeGun: r?.yenileme_gun ?? null };
+  }
+
+  /** Yeni parola: özet + şifreli kayıt; sistem için yalnız SHA-512 crypt özeti eşitleyiciye yazılır. */
+  async parolaYenile(alan: AlanId, kim: string, now: number): Promise<void> {
+    if (!this.parolaAcik || !this.ayar.yetkiDir) throw new IsHatasi(503, "SSH parolası bu sunucuda ayarlı değil.");
+    const p = parolaUret(28);
+    const gun = this.parolaDurumu(alan).yenilemeGun;
+    this.db
+      .prepare(
+        "INSERT INTO ssh_parola (alan, ozet, sifreli, olusturma, yenileme_gun) VALUES (?, ?, ?, ?, ?) ON CONFLICT(alan) DO UPDATE SET ozet = excluded.ozet, sifreli = excluded.sifreli, olusturma = excluded.olusturma",
+      )
+      .run(alan, ozet(p), this.kasa.sifrele(p), now, gun);
+    await mkdir(this.ayar.yetkiDir, { recursive: true });
+    await atomikYaz(join(this.ayar.yetkiDir, `${alan}.parola`), `uretim-${alan}:${sha512Crypt(p, cryptTuzu())}\n`, 0o600);
+    this.denetim.yaz(now, kim, "ssh_anahtari_eklendi", alan, "SSH parolası yenilendi");
+  }
+
+  parolaYenilemeAyarla(alan: AlanId, gun: number | null, kim: string, now: number): void {
+    if (gun !== null && !(YENILEME_GUNLERI as readonly number[]).includes(gun)) throw new IsHatasi(400, "Yenileme 7, 30 ya da 90 gün olabilir.");
+    const r = this.db.prepare("UPDATE ssh_parola SET yenileme_gun = ? WHERE alan = ?").run(gun, alan);
+    if (r.changes === 0) throw new IsHatasi(409, "Önce bir parola oluştur.");
+    this.denetim.yaz(now, kim, "ayar", alan, `SSH parolası kendiliğinden yenileme: ${gun ?? "kapalı"}`);
+  }
+
+  /** Açık parola: yalnız kopyalama anında, sahip oturumunda. */
+  parolaCoz(alan: AlanId): string | null {
+    const r = this.db.prepare("SELECT sifreli FROM ssh_parola WHERE alan = ?").get(alan) as { sifreli: string } | undefined;
+    return r ? this.kasa.coz(r.sifreli) : null;
+  }
+
+  /** Süresi dolan parolaları kendiliğinden yeniler. Yenilenen alan sayısı. */
+  async parolalariYenile(now: number): Promise<number> {
+    if (!this.parolaAcik) return 0;
+    const r = this.db.prepare("SELECT alan, olusturma, yenileme_gun FROM ssh_parola WHERE yenileme_gun IS NOT NULL").all() as {
+      alan: AlanId;
+      olusturma: number;
+      yenileme_gun: number;
+    }[];
+    let n = 0;
+    for (const x of r)
+      if (now - x.olusturma >= x.yenileme_gun * GUN_MS) {
+        await this.parolaYenile(x.alan, "otomatik", now);
+        n += 1;
+      }
+    return n;
+  }
+
+  /** Alan kullanıcısının son girişleri (en yeni üstte). */
+  async girisler(alan: AlanId, sinir = 30): Promise<GirisKaydi[]> {
+    if (!this.ayar.gunluk) return [];
+    let metin: string;
+    try {
+      metin = await readFile(this.ayar.gunluk, "utf8");
+    } catch {
+      return [];
+    }
+    const out: GirisKaydi[] = [];
+    for (const s of metin.split("\n").slice(-5000).reverse()) {
+      const g = girisSatiri(s, `uretim-${alan}`);
+      if (g) out.push(g);
+      if (out.length >= sinir) break;
+    }
+    return out;
+  }
 
   get acik(): boolean {
     return this.ayar.yetkiDir !== null;

@@ -111,7 +111,7 @@ describe("CSRF (çerezli yazma)", () => {
         Origin: "http://uretim.test",
         "X-Uretim": "1",
       },
-      body: "{}",
+      body: JSON.stringify({ ad: "Deneme" }),
     });
     expect(r4.status).toBe(200);
   });

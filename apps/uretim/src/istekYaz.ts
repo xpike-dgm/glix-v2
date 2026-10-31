@@ -216,45 +216,56 @@ export function donusturucuKur(
   };
 }
 
+/** İstemdeki yer tutucular (sözleşme bölüm 9): sırlar yalnız kopyalama anında, sitede doldurulur. */
+export const YER_TUTUCULAR = ["{{SSH_ADRES}}", "{{SSH_KULLANICI}}", "{{SSH_PAROLA}}", "{{MCP_ADRES}}", "{{MCP_ANAHTAR}}"] as const;
+export type YerTutucu = (typeof YER_TUTUCULAR)[number];
+
 /**
- * Yapay zekâya yapıştırılacak istem (UM-R1, R2). Yalnız iş numaraları ve kısa özetler; anahtar ya da adres sırrı yok.
- * Birden çok açık iş varsa hepsini sırayla kapsar.
+ * Yapay zekâya yapıştırılacak istem (UM-R1, R2, bölüm 8–9): yalnız iş numaraları, kısa özetler ve yer tutucular.
+ * Birden çok açık iş varsa hepsini sırayla kapsar. Bu metin modele gitse bile sır içermez.
  */
-export function istemUret(
-  alan: AlanId,
-  baglanti: "mcp" | "ssh",
-  isler: readonly IsKaydi[],
-  sshSunucu: string,
-): string {
+export function istemUret(alan: AlanId, baglanti: "mcp" | "ssh", isler: readonly IsKaydi[]): string {
   const a = alanTanimi(alan);
   const ilk = isler[0];
   const ozet = (i: IsKaydi): string => `#${i.id} ${i.ozet || i.baslik}`;
   const sira =
     isler.length > 1
-      ? `\nSırada ${isler.length} iş var: ${isler.slice(0, 8).map(ozet).join("; ")}. Birini bitirince sıradakine geç.`
+      ? `Sırada ${isler.length} iş var: ${isler.slice(0, 8).map(ozet).join("; ")}. Birini bitirince sıradakine geç.`
       : "";
-  const kullanici = `uretim-${alan}`;
+  const devam = 'Bundan sonra yalnız "devam" yazarsam açık işleri sırayla bitir ve geri bildirimleri oku.';
   if (baglanti === "ssh") {
-    const k = (c: string): string => `ssh ${kullanici}@${sshSunucu} ${c}`;
+    const k = (c: string): string => `ssh {{SSH_KULLANICI}}@{{SSH_ADRES}} ${c}`;
     return [
       `${a.ad} alanındaki işin için Üretim Merkezi'ne SSH ile bağlan.`,
+      "Sunucu: {{SSH_ADRES}} · Kullanıcı: {{SSH_KULLANICI}} · Parola: {{SSH_PAROLA}}",
       `Önce \`${k("uretim talimat-oku")}\`, sonra ${ilk ? `\`${k(`uretim is-oku ${ilk.id}`)}\`` : `\`${k("uretim isleri-listele")}\``} ve \`${k("uretim geri-bildirim-oku")}\`.`,
       ilk ? `İş: ${ozet(ilk)}.` : "Açık işleri sırayla bitir.",
-      "Dosyalarını gelen/<paket>/ klasörüne koy; `uretim on-kontrol <paket>` ile denetle, geçince `uretim teslim-et <paket>`.",
-      sira.trim(),
-      'Bundan sonra yalnız "devam" yazarsam açık işleri sırayla bitir ve geri bildirimleri oku.',
+      "Dosyalarını SFTP ile gelen/<paket>/ klasörüne koy; `uretim on-kontrol <paket>` ile denetle, geçince `uretim teslim-et <paket>`.",
+      sira,
+      devam,
     ]
       .filter(Boolean)
       .join("\n");
   }
   return [
     `${a.ad} alanındaki işin için Üretim Merkezi bağlantını kullan.`,
+    "Uç adresi: {{MCP_ADRES}} — bağlantı ayarına şu anahtarı gir (Authorization: Bearer): {{MCP_ANAHTAR}}",
     `Önce talimat_oku, sonra ${ilk ? `is_oku (id: ${ilk.id})` : "isleri_listele"} ve geri_bildirim_oku.`,
     ilk ? `İş: ${ozet(ilk)}.` : "Açık işleri sırayla bitir.",
     "Dosyaları dosya_yukle ile yükle; on_kontrol ile denetle, geçince teslim_et.",
-    sira.trim(),
-    'Bundan sonra yalnız "devam" yazarsam açık işleri sırayla bitir ve geri bildirimleri oku.',
+    sira,
+    devam,
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+/** Yer tutucuları doldurur; değeri verilmeyen yer tutucu olduğu gibi kalır. */
+export function istemDoldur(metin: string, degerler: Partial<Record<YerTutucu, string>>): string {
+  let out = metin;
+  for (const y of YER_TUTUCULAR) {
+    const d = degerler[y];
+    if (d !== undefined) out = out.split(y).join(d);
+  }
+  return out;
 }

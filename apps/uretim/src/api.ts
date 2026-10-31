@@ -26,7 +26,7 @@ import {
   tamsayi,
   tarih,
 } from "./http.js";
-import { type Donusturucu, gizliVarMi, istemUret } from "./istekYaz.js";
+import { type Donusturucu, gizliVarMi, istemDoldur, istemUret } from "./istekYaz.js";
 import { IsHatasi, type Merkez } from "./merkez.js";
 import { ALANLAR, type AlanId, alanTanimi, isAlanId } from "./ortak/alanlar.js";
 import { isDurum, isHazirNot } from "./ortak/durum.js";
@@ -222,7 +222,14 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
           break;
       }
       if (p0 === "alan" && isAlanId(p1) && p2 === undefined)
-        return ok(200, { ...m.alanSayfasi(p1, now), ssh: o.ssh.liste(p1), sshAcik: o.ssh.acik });
+        return ok(200, {
+          ...m.alanSayfasi(p1, now),
+          ssh: o.ssh.liste(p1),
+          sshAcik: o.ssh.acik,
+          sshParola: o.ssh.parolaDurumu(p1),
+          parolaAcik: o.ssh.parolaAcik,
+          girisler: await o.ssh.girisler(p1),
+        });
       if (p0 === "alan" && isAlanId(p1) && p2 === "talimat" && p3) {
         const s = idParam(p3);
         const t = s ? m.talimatSurumu(p1, s) : null;
@@ -231,14 +238,13 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
       if (p0 === "alan" && isAlanId(p1) && p2 === "istem") {
         const b = url.searchParams.get("baglanti") === "ssh" ? "ssh" : "mcp";
         const isId = idParam(url.searchParams.get("is"));
-        const acik = m.isler(p1, ["acik"]);
-        const secili = isId
-          ? [...acik.filter((i) => i.id === isId), ...acik.filter((i) => i.id !== isId)]
-          : acik;
-        const istem = istemUret(p1, b, secili, o.config.sshSunucu);
-        const istemler = { mcp: istemUret(p1, "mcp", secili, o.config.sshSunucu), ssh: istemUret(p1, "ssh", secili, o.config.sshSunucu) };
-        if (gizliVarMi(istemler.mcp) || gizliVarMi(istemler.ssh)) return hata(res, 500, "istem", "İstem hazırlanamadı.");
-        return ok(200, { istem, istemler, isSayisi: acik.length, uygulama: m.ayar(`uygulama:${p1}`) ?? "" });
+        const { mcp, ssh } = istemSablonlari(m, p1, isId);
+        if (gizliVarMi(mcp) || gizliVarMi(ssh)) return hata(res, 500, "istem", "İstem hazırlanamadı.");
+        // Ekranda sırlar •••• görünür; açık hâli yalnız "Kopyala"da (POST istem-kopyala).
+        const gorunum = (t: string): string =>
+          istemDoldur(t, { "{{SSH_ADRES}}": o.config.sshSunucu, "{{SSH_KULLANICI}}": `uretim-${p1}`, "{{SSH_PAROLA}}": "••••", "{{MCP_ADRES}}": `${o.config.publicUrl}/mcp`, "{{MCP_ANAHTAR}}": "••••" });
+        const istemler = { mcp: gorunum(mcp), ssh: gorunum(ssh) };
+        return ok(200, { istem: istemler[b], istemler, sablonlar: { mcp, ssh }, isSayisi: m.isler(p1, ["acik"]).length, uygulama: m.ayar(`uygulama:${p1}`) ?? "" });
       }
       if (p0 === "alan" && isAlanId(p1) && p2 === "zevk")
         return ok(200, { ornekler: m.zevkGalerisi(p1), talimatEki: m.zevkBolumu(p1) });
@@ -596,6 +602,41 @@ async function alanYaz(
     await o.ssh.kanalAnahtariYenile(alan, kim, now);
     return ok({ ok: true });
   }
+  if (a === "istem-kopyala") {
+    const g = await govde();
+    const b = g.baglanti === "ssh" ? "ssh" : g.baglanti === "mcp" ? "mcp" : null;
+    const isId = g.is === undefined || g.is === null ? null : tamsayi(g.is, 1, 1e12);
+    const anahtarId = g.anahtarId === undefined || g.anahtarId === null ? null : tamsayi(g.anahtarId, 1, 1e12);
+    if (!b) return hata(res, 400, "girdi", "Bağlantı türü MCP ya da SSH olmalı.");
+    const sablon = istemSablonlari(m, alan, isId)[b];
+    const parola = b === "ssh" ? o.ssh.parolaCoz(alan) : null;
+    const anahtar = b === "mcp" && anahtarId ? o.anahtarlar.coz(anahtarId, alan) : null;
+    const metinD = istemDoldur(sablon, {
+      "{{SSH_ADRES}}": o.config.sshSunucu,
+      "{{SSH_KULLANICI}}": `uretim-${alan}`,
+      "{{SSH_PAROLA}}": parola ?? "(parola henüz yok; Bağlantı sekmesinden oluştur)",
+      "{{MCP_ADRES}}": `${o.config.publicUrl}/mcp`,
+      "{{MCP_ANAHTAR}}": anahtar ?? "(bağlantı ayarında kayıtlı anahtarını kullan)",
+    });
+    o.denetim.yaz(now, kim, "istem_kopyalandi", alan, `${b}${isId ? ` iş ${isId}` : ""}`);
+    return ok({ metin: metinD, sirVar: parola !== null || anahtar !== null });
+  }
+  if (a === "parola-kopyala") {
+    const p = o.ssh.parolaCoz(alan);
+    if (!p) return hata(res, 404, "yok", "Bu alanın SSH parolası yok.");
+    o.denetim.yaz(now, kim, "istem_kopyalandi", alan, "SSH parolası kopyalandı");
+    return ok({ parola: p });
+  }
+  if (a === "ssh-parola") {
+    const g = await govde();
+    if (g.yenile === true) await o.ssh.parolaYenile(alan, kim, now);
+    if (g.yenilemeGun !== undefined) {
+      const gun = g.yenilemeGun === null ? null : tamsayi(g.yenilemeGun, 1, 365);
+      if (g.yenilemeGun !== null && gun === null) return hata(res, 400, "girdi", "Yenileme süresi geçersiz.");
+      o.ssh.parolaYenilemeAyarla(alan, gun, kim, now);
+    }
+    return ok({ durum: o.ssh.parolaDurumu(alan) });
+  }
   if (a === "uygulama") {
     const g = await govde();
     const not = metin(g.not ?? "", 0, 80);
@@ -638,6 +679,12 @@ async function alanYaz(
     return ok({ ok: true });
   }
   return hata(res, 404, "yok", "Bulunamadı.");
+}
+
+function istemSablonlari(m: Merkez, alan: AlanId, isId: number | null): { mcp: string; ssh: string } {
+  const acik = m.isler(alan, ["acik"]);
+  const secili = isId ? [...acik.filter((i) => i.id === isId), ...acik.filter((i) => i.id !== isId)] : acik;
+  return { mcp: istemUret(alan, "mcp", secili), ssh: istemUret(alan, "ssh", secili) };
 }
 
 async function dosyaGonder(res: ServerResponse, m: Merkez, ogeId: number, ozet: string): Promise<void> {

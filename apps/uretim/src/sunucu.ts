@@ -11,6 +11,7 @@ import { openDb } from "./db.js";
 import { Denetim } from "./denetim.js";
 import { Depo } from "./depo.js";
 import { Giris, type Postaci, resendPostaci } from "./giris.js";
+import { Kasa } from "./gizli.js";
 import { GUVENLIK_BASLIKLARI, gonder, sayfaCsp } from "./http.js";
 import { type AiFetch, donusturucuKur } from "./istekYaz.js";
 import { Depoayna, Katalog } from "./katalog.js";
@@ -64,7 +65,8 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
   const depo = new Depo(config.depoDir, db);
   const oyun = new OyunIstemcisi(config.oyunUrl, config.oyunToken, b.oyunFetch);
   const katalog = new Katalog(db, new Depoayna(config.repoDir), oyun);
-  const anahtarlar = new Anahtarlar(db, denetim);
+  const kasa = new Kasa(config.gizliAnahtar);
+  const anahtarlar = new Anahtarlar(db, denetim, kasa);
   let push: PushGateway = b.push ?? disabledPush;
   if (!b.push && config.vapid) {
     try {
@@ -92,7 +94,8 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
   const ssh = new SshKanal(db, denetim, anahtarlar, merkez, {
     yetkiDir: b.sshYetkiDir !== undefined ? b.sshYetkiDir : (process.env.URETIM_SSH_YETKI_DIR ?? null),
     kok: b.sshKok !== undefined ? b.sshKok : (process.env.URETIM_SSH_KOK ?? null),
-  });
+    gunluk: config.sshGunluk,
+  }, kasa);
   const surum = process.env.GIT_SHA ?? "gelistirme";
   const web = resolve(config.webDir);
   const csp = sayfaCsp(config.onizlemeUrl);
@@ -201,6 +204,7 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
         setInterval(
           guvenli("dakika", async () => {
             await ssh.gelenTara(now());
+            await ssh.parolalariYenile(now());
             for (const b of merkez.baslamayanlar(now()))
               await bildirim.bilgi(
                 `${b.sayi} iş bekliyor — istemi kopyala`,

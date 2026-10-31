@@ -12,6 +12,7 @@ import { readConfig, type UretimConfig } from "../config.js";
 import type { Postaci } from "../giris.js";
 import type { AlanId } from "../ortak/alanlar.js";
 import { pngYaz, type Rgba } from "../png.js";
+import type { AiFetch } from "../istekYaz.js";
 import { type Uretim, uretimKur } from "../sunucu.js";
 
 export const SAHIP = "sahip@ornek.com";
@@ -125,7 +126,7 @@ export interface Ortam {
   kapat(): Promise<void>;
 }
 
-export async function ortamKur(ek: { ssh?: boolean; oyun?: boolean } = {}): Promise<Ortam> {
+export async function ortamKur(ek: { ssh?: boolean; oyun?: boolean; gizli?: boolean; aiFetch?: AiFetch } = {}): Promise<Ortam> {
   girisSayaciniSifirla();
   const dir = mkdtempSync(join(tmpdir(), "uretim-test-"));
   const oyun = await sahteOyun();
@@ -149,12 +150,16 @@ export async function ortamKur(ek: { ssh?: boolean; oyun?: boolean } = {}): Prom
     oyunToken: ek.oyun === false ? null : TOKEN,
     webDir: join(dir, "web"),
     yedekDir: join(dir, "yedek"),
+    gizliAnahtar: ek.gizli ? "test-gizli-anahtar-0123456789" : null,
+    sshGunluk: join(dir, "girisler.log"),
+    aiKey: ek.aiFetch ? "test-model-anahtari" : null,
   };
   const u = uretimKur(config, {
     postaci,
     now: () => saat.simdi,
     sshYetkiDir: ek.ssh ? join(dir, "ssh-yetki") : null,
     sshKok: ek.ssh ? join(dir, "ssh") : null,
+    ...(ek.aiFetch ? { aiFetch: ek.aiFetch } : {}),
   });
   await new Promise<void>((r) => u.server.listen(0, "127.0.0.1", () => r()));
   const url = `http://127.0.0.1:${(u.server.address() as AddressInfo).port}`;

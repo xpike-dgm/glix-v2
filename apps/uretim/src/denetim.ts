@@ -28,7 +28,8 @@ export type DenetimEylemi =
   | "talimat"
   | "istek_karti"
   | "kod_istegi"
-  | "ayar";
+  | "ayar"
+  | "istem_kopyalandi";
 
 export class Denetim {
   constructor(private readonly db: Db) {}
