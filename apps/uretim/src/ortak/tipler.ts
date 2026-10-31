@@ -110,6 +110,26 @@ export interface OgeOzeti {
   sonuc: KontrolSonucu;
   olusturma: number;
   karar: number | null;
+  /** Kademeli güvenle otomatik onaylandı (UM-F4). */
+  otomatik: boolean;
+  /** Otomatik onaylananlardan sahibe denetime gelen. */
+  denetim: boolean;
+  /** Seçenek turunun işi (UM-F2). */
+  varyantIs: number | null;
+}
+
+/** Köken kaydı (UM-F7). */
+export interface Koken {
+  alan: AlanId;
+  talimatSurum: number | null;
+  teslimId: number;
+  isId: number | null;
+  varyantIs: number | null;
+  kaynak: "mcp" | "elle";
+  onaylayan: string | null;
+  otomatik: boolean;
+  karar: number | null;
+  paket: { id: number; klasor: string; revizyon: string | null } | null;
 }
 
 export interface OgeAyrinti extends OgeOzeti {
@@ -123,6 +143,7 @@ export interface OgeAyrinti extends OgeOzeti {
   /** Onaylanan satırların sırası (liste teslimi); null = hepsi. */
   onayliSatirlar: number[] | null;
   notlar: NotKaydi[];
+  koken: Koken;
   /** Aynı öğenin diğer sürümleri (en yeni üstte). */
   surumler: { id: number; surum: number; durum: Durum; olusturma: number }[];
 }
@@ -148,6 +169,8 @@ export interface IsKaydi {
   durum: "oneri" | "acik" | "tamam" | "iptal";
   sira: number;
   olusturma: number;
+  /** Seçenek turu: kaç varyant istendi (UM-F2). */
+  varyant: number | null;
 }
 
 export interface IstekKarti {
@@ -207,6 +230,7 @@ export interface Pano {
   geriDonen24s: number;
   kota: { kullanilan: number; sinir: number };
   bugun: { gelen: number; onaylanan: number; reddedilen: number; geriDonen: number };
+  denetimBekleyen: number;
 }
 
 export interface PaketKaydi {
@@ -250,4 +274,17 @@ export interface AlanSayfasi {
     geriDonen: number;
   };
   kalanlariGoster: boolean;
+  sinir: { bekleyenTavan: number; gunlukKota: number; bugun: number };
+  guven: { tur: TeslimTuru; acik: boolean; engel: string | null; oran: number | null; karar: number; uygun: boolean }[];
+}
+
+export interface ZevkOrnegi {
+  id: number;
+  ogeId: number;
+  tur: "onay" | "ret";
+  ad: string;
+  not: string;
+  onemli: boolean;
+  olusturma: number;
+  kucuk: Kucuk | null;
 }

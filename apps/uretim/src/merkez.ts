@@ -31,6 +31,7 @@ import type {
   IstekKarti,
   KodIstegi,
   KontrolRaporu,
+  Koken,
   Kucuk,
   NotKaydi,
   OgeAyrinti,
@@ -39,7 +40,9 @@ import type {
   Pano,
   TeslimTuru,
   Uyari,
+  ZevkOrnegi,
 } from "./ortak/tipler.js";
+import { aslaOtomatik, DENETIM_ARALIGI, GUVEN_ORAN, GUVEN_PENCERE, VARSAYILAN_SINIR } from "./ortak/guven.js";
 import { OyunHatasi, type OyunIstemcisi, SATIR_SINIRI } from "./oyun.js";
 import { type OgeGirdisi, ogeAnahtari, type TeslimGirdisi } from "./teslimGirdisi.js";
 
@@ -61,6 +64,11 @@ export interface Olaylar {
 }
 
 interface OgeSatiri {
+  talimat_surum: number | null;
+  onaylayan: string | null;
+  otomatik: number;
+  denetim: number;
+  varyant_is: number | null;
   id: number;
   teslim_id: number;
   alan: string;
@@ -108,6 +116,9 @@ function ozetle(r: OgeSatiri): OgeOzeti {
     sonuc: r.sonuc === "kaldi" ? "kaldi" : r.sonuc === "uyari" ? "uyari" : "gecti",
     olusturma: r.olusturma,
     karar: r.karar,
+    otomatik: r.otomatik === 1,
+    denetim: r.denetim === 1,
+    varyantIs: r.varyant_is,
   };
 }
 
@@ -361,6 +372,9 @@ export class Merkez {
         })),
       };
 
+    if (kaynak === "mcp") this.selDenetle(alan, sonuclar.filter((s) => s.rapor.sonuc !== "kaldi").length, now);
+    const isVaryant = g.isId !== null ? ((this.db.prepare("SELECT varyant FROM isler WHERE id = ?").get(g.isId) as { varyant: number | null } | undefined)?.varyant ?? null) : null;
+    const talimatSurum = this.talimat(alan, now).surum;
     const out = islem(this.db, () => {
       const teslimId = Number(
         this.db
@@ -390,8 +404,9 @@ export class Merkez {
         const r = this.db
           .prepare(
             `INSERT INTO oge (teslim_id, alan, is_id, tur, ad, anahtar, aciklama, gerekce, durum, gorunum, surum, onceki_id, kaynak,
-             dosyalar, satirlar, degisiklikler, kaldirilacaklar, onizleme, rapor, kontrol, sonuc, olusturma, guncelleme)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             dosyalar, satirlar, degisiklikler, kaldirilacaklar, onizleme, rapor, kontrol, sonuc, olusturma, guncelleme,
+             talimat_surum, varyant_is)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           )
           .run(
             teslimId,
@@ -417,6 +432,8 @@ export class Merkez {
             s.rapor.sonuc,
             now,
             now,
+            talimatSurum,
+            isVaryant ? g.isId : null,
           );
         const ogeId = Number(r.lastInsertRowid);
         if (son === "kaldi") {
@@ -443,7 +460,8 @@ export class Merkez {
           if (is?.istek_id)
             this.db.prepare("UPDATE istek_karti SET sonuc_oge = ? WHERE id = ?").run(ogeId, is.istek_id);
         }
-        ogeler.push({ ad: s.girdi.ad, ogeId, durum: son, sonuc: s.rapor.sonuc, satirlar: s.rapor.satirlar });
+        const otomatik = son === "bekliyor" && !isVaryant && s.rapor.sonuc === "gecti" && this.otomatikOnayla(ogeId, alan, g.tur, now);
+        ogeler.push({ ad: s.girdi.ad, ogeId, durum: otomatik ? "havuzda" : son, sonuc: s.rapor.sonuc, satirlar: s.rapor.satirlar });
       }
       return { teslimId, ogeler };
     });
@@ -554,6 +572,25 @@ export class Merkez {
       onayliSatirlar: json<number[] | null>(r.onayli_satirlar, null),
       notlar,
       surumler,
+      koken: this.koken(r),
+    };
+  }
+
+  private koken(r: OgeSatiri): Koken {
+    const p = r.paket_id
+      ? (this.db.prepare("SELECT id, klasor, revizyon FROM paket WHERE id = ?").get(r.paket_id) as { id: number; klasor: string; revizyon: string | null } | undefined)
+      : undefined;
+    return {
+      alan: r.alan as AlanId,
+      talimatSurum: r.talimat_surum,
+      teslimId: r.teslim_id,
+      isId: r.is_id,
+      varyantIs: r.varyant_is,
+      kaynak: r.kaynak === "elle" ? "elle" : "mcp",
+      onaylayan: r.onaylayan,
+      otomatik: r.otomatik === 1,
+      karar: r.karar,
+      paket: p ?? null,
     };
   }
 
@@ -565,12 +602,13 @@ export class Merkez {
 
   bekleyenler(alan: AlanId | null, kalanlarDahil = false): OgeOzeti[] {
     const durumlar = kalanlarDahil ? "('bekliyor','kaldi')" : "('bekliyor')";
+    const denetim = " OR denetim = 1";
     const r = (alan
       ? this.db
-          .prepare(`SELECT * FROM oge WHERE alan = ? AND durum IN ${durumlar} ORDER BY olusturma, id`)
+          .prepare(`SELECT * FROM oge WHERE alan = ? AND (durum IN ${durumlar}${denetim}) ORDER BY olusturma, id`)
           .all(alan)
       : this.db
-          .prepare(`SELECT * FROM oge WHERE durum IN ${durumlar} ORDER BY olusturma, id`)
+          .prepare(`SELECT * FROM oge WHERE (durum IN ${durumlar}${denetim}) ORDER BY olusturma, id`)
           .all()) as unknown as OgeSatiri[];
     return r.map(ozetle);
   }
@@ -651,6 +689,8 @@ export class Merkez {
           .run(secili && secili.length < satirSayisi ? JSON.stringify(secili) : null, id);
         this.durumYaz(id, "onaylandi", now, { karar: now });
         this.durumYaz(id, "havuzda", now);
+        this.db.prepare("UPDATE oge SET onaylayan = ? WHERE id = ?").run(kim, id);
+        this.zevkEkle(alan, id, r.ad, "onay", metin, now);
         if (metin) notId = this.notEkle(alan, id, "yorum", null, metin, now);
         // Bağlı istek kartı tamamlanır.
         this.db
@@ -659,6 +699,7 @@ export class Merkez {
       } else {
         this.durumYaz(id, karar === "ret" ? "reddedildi" : "duzeltme_istendi", now, { karar: now });
         notId = this.notEkle(alan, id, karar === "ret" ? "ret" : "duzeltme", not.hazir, metin, now);
+        if (karar === "ret") this.zevkEkle(alan, id, r.ad, "ret", metin, now);
       }
     });
     this.sonKararlar.set(id, { zaman: now, eski, notId });
@@ -689,6 +730,8 @@ export class Merkez {
         )
         .run(k.eski, now, id);
       if (k.notId !== null) this.db.prepare("DELETE FROM notlar WHERE id = ?").run(k.notId);
+      this.db.prepare("DELETE FROM zevk WHERE oge_id = ?").run(id);
+      this.db.prepare("UPDATE oge SET onaylayan = NULL WHERE id = ?").run(id);
     });
     this.sonKararlar.delete(id);
     this.denetim.yaz(now, kim, "onay", r.alan, `öğe ${id} kararı geri alındı`);
@@ -809,6 +852,7 @@ export class Merkez {
       durum: r.durum as IsKaydi["durum"],
       sira: Number(r.sira),
       olusturma: Number(r.olusturma),
+      varyant: r.varyant === null || r.varyant === undefined ? null : Number(r.varyant),
     };
   }
 
@@ -837,6 +881,7 @@ export class Merkez {
     kim: string,
     now: number,
     istekId: number | null = null,
+    varyant: number | null = null,
   ): IsKaydi {
     const sira = Number(
       (
@@ -848,9 +893,9 @@ export class Merkez {
     const id = Number(
       this.db
         .prepare(
-          "INSERT INTO isler (alan, baslik, aciklama, adet, son_tarih, ornek, kaynak, durum, sira, olusturma, istek_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          "INSERT INTO isler (alan, baslik, aciklama, adet, son_tarih, ornek, kaynak, durum, sira, olusturma, istek_id, varyant) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )
-        .run(alan, v.baslik, v.aciklama, v.adet, v.sonTarih, v.ornek, kaynak, durum, sira, now, istekId)
+        .run(alan, v.baslik, v.aciklama, v.adet, v.sonTarih, v.ornek, kaynak, durum, sira, now, istekId, varyant)
         .lastInsertRowid,
     );
     this.denetim.yaz(now, kim, "is", alan, `iş ${id} açıldı`);
@@ -1265,6 +1310,7 @@ export class Merkez {
       geriDonen24s: this.geriDonenSay(now - GUN),
       kota,
       bugun: this.bugun(now),
+      denetimBekleyen: Number((this.db.prepare("SELECT COUNT(*) AS n FROM oge WHERE denetim = 1").get() as { n: number }).n),
     };
   }
 
@@ -1365,7 +1411,183 @@ export class Merkez {
         geriDonen: sayi("SELECT COUNT(*) AS n FROM oge WHERE alan = ? AND durum = 'kaldi'"),
       },
       kalanlariGoster,
+      sinir: { ...this.sinir(alan), bugun: this.bugunTeslim(alan, now) },
+      guven: (["yeni", "duzenleme", "kaldirma-onerisi", "rapor"] as const).map((tur) => {
+        const st = this.guvenIstatistigi(alan);
+        const engel = aslaOtomatik(alan, tur)?.neden ?? null;
+        return { tur, acik: this.guvenAcik(alan, tur), engel, oran: st.oran, karar: st.karar, uygun: !engel && st.uygun };
+      }),
     };
+  }
+
+  // ---- Sel önleme (UM-F5) ---------------------------------------------------------------------------------
+
+  sinir(alan: AlanId): { bekleyenTavan: number; gunlukKota: number } {
+    const j = json<{ bekleyenTavan?: unknown; gunlukKota?: unknown }>(this.ayar(`sinir:${alan}`), {});
+    const t = typeof j.bekleyenTavan === "number" ? j.bekleyenTavan : VARSAYILAN_SINIR.bekleyenTavan;
+    const k = typeof j.gunlukKota === "number" ? j.gunlukKota : VARSAYILAN_SINIR.gunlukKota;
+    return { bekleyenTavan: t, gunlukKota: k };
+  }
+
+  sinirYaz(alan: AlanId, bekleyenTavan: number, gunlukKota: number, kim: string, now: number): void {
+    this.ayarYaz(`sinir:${alan}`, JSON.stringify({ bekleyenTavan, gunlukKota }));
+    this.denetim.yaz(now, kim, "ayar", alan, `sınır ${bekleyenTavan}/${gunlukKota}`);
+  }
+
+  private bugunTeslim(alan: AlanId, now: number): number {
+    return Number((this.db.prepare("SELECT COUNT(*) AS n FROM oge WHERE alan = ? AND olusturma > ? AND kaynak = 'mcp'").get(alan, now - GUN) as { n: number }).n);
+  }
+
+  /** Kuyruk doluysa ya da günlük kota aşılacaksa teslim reddedilir. */
+  private selDenetle(alan: AlanId, yeni: number, now: number): void {
+    const s = this.sinir(alan);
+    const bekleyen = Number((this.db.prepare("SELECT COUNT(*) AS n FROM oge WHERE alan = ? AND durum = 'bekliyor'").get(alan) as { n: number }).n);
+    if (bekleyen + yeni > s.bekleyenTavan && yeni > 0)
+      throw new IsHatasi(429, `Kuyruk dolu (${bekleyen}/${s.bekleyenTavan}). Sahip incelemeyi bitirene kadar yeni teslim alınmıyor; bu sırada iş önerisi açabilir ya da alanını inceleyebilirsin.`);
+    if (this.bugunTeslim(alan, now) + yeni > s.gunlukKota)
+      throw new IsHatasi(429, `Günlük teslim kotası (${s.gunlukKota} öğe) doldu. Yarın yeniden dene.`);
+  }
+
+  // ---- Kademeli güven (UM-F4) -----------------------------------------------------------------------------
+
+  guvenAcik(alan: AlanId, tur: TeslimTuru): boolean {
+    return this.ayar(`guven:${alan}:${tur}`) === "1" && !aslaOtomatik(alan, tur);
+  }
+
+  guvenIstatistigi(alan: AlanId): { oran: number | null; karar: number; uygun: boolean } {
+    const r = this.db
+      .prepare("SELECT durum FROM oge WHERE alan = ? AND karar IS NOT NULL AND otomatik = 0 ORDER BY karar DESC LIMIT ?")
+      .all(alan, GUVEN_PENCERE) as { durum: string }[];
+    const onay = r.filter((x) => ["havuzda", "pakette", "oyuna_eklendi", "canlida"].includes(x.durum)).length;
+    const oran = r.length ? onay / r.length : null;
+    return { oran, karar: r.length, uygun: r.length >= GUVEN_PENCERE && (oran ?? 0) >= GUVEN_ORAN };
+  }
+
+  guvenYaz(alan: AlanId, tur: TeslimTuru, acik: boolean, kim: string, now: number): void {
+    if (acik) {
+      const engel = aslaOtomatik(alan, tur);
+      if (engel) throw new IsHatasi(400, engel.neden);
+      if (!this.guvenIstatistigi(alan).uygun) throw new IsHatasi(409, "Otomatik onay için son 50 kararda en az %90 onay gerekir.");
+    }
+    this.ayarYaz(`guven:${alan}:${tur}`, acik ? "1" : "0");
+    this.denetim.yaz(now, kim, "ayar", alan, `otomatik onay ${tur}: ${acik ? "açık" : "kapalı"}`);
+  }
+
+  /** Koşullar tutarsa öğeyi otomatik onaylar; her 10'uncuyu denetime işaretler. */
+  private otomatikOnayla(id: number, alan: AlanId, tur: TeslimTuru, now: number): boolean {
+    if (!this.guvenAcik(alan, tur) || !this.guvenIstatistigi(alan).uygun) return false;
+    const sayi = Number((this.db.prepare("SELECT COUNT(*) AS n FROM oge WHERE alan = ? AND otomatik = 1").get(alan) as { n: number }).n) + 1;
+    this.db
+      .prepare("UPDATE oge SET durum = 'havuzda', karar = ?, otomatik = 1, onaylayan = 'otomatik', denetim = ?, guncelleme = ? WHERE id = ?")
+      .run(now, sayi % DENETIM_ARALIGI === 0 ? 1 : 0, now, id);
+    return true;
+  }
+
+  /** Denetim kararı: uygunsa kapanır; değilse öğe reddedilir ve alanın otomatik onayı kapanır. */
+  denetimKarar(id: number, uygun: boolean, not: string, kim: string, now: number): void {
+    const r = this.ogeSatiri(id);
+    if (!r || r.denetim !== 1) throw new IsHatasi(404, "Denetim bulunamadı.");
+    const alan = r.alan as AlanId;
+    islem(this.db, () => {
+      if (uygun) this.db.prepare("UPDATE oge SET denetim = 2 WHERE id = ?").run(id);
+      else {
+        if (r.durum !== "havuzda") throw new IsHatasi(409, "Öğe artık havuzda değil; elle geri çekilmeli.");
+        this.db.prepare("UPDATE oge SET denetim = 2, durum = 'reddedildi', guncelleme = ? WHERE id = ?").run(now, id);
+        this.notEkle(alan, id, "ret", null, not || "Denetimde uygun bulunmadı.", now);
+        this.zevkEkle(alan, id, r.ad, "ret", not, now);
+        this.db.prepare("UPDATE ayar SET deger = '0' WHERE anahtar LIKE ?").run(`guven:${alan}:%`);
+      }
+    });
+    this.denetim.yaz(now, kim, uygun ? "onay" : "ret", alan, `denetim öğe ${id}${uygun ? "" : " — otomatik onay kapandı"}`);
+  }
+
+  // ---- Seçenek turu (UM-F2) -------------------------------------------------------------------------------
+
+  varyantlar(isId: number): OgeOzeti[] {
+    return (this.db.prepare("SELECT * FROM oge WHERE varyant_is = ? AND durum != 'kaldi' ORDER BY id").all(isId) as unknown as OgeSatiri[]).map(ozetle);
+  }
+
+  /** Sahip bir varyantı seçer; karışım isterse seçilen düzeltmeye döner. Seçilmeyenler gerekçesiz arşive. */
+  varyantSec(isId: number, ogeId: number, karisim: string, kim: string, now: number): void {
+    const v = this.varyantlar(isId);
+    const secilen = v.find((x) => x.id === ogeId);
+    if (!secilen || secilen.durum !== "bekliyor") throw new IsHatasi(404, "Seçilecek varyant bulunamadı.");
+    if (karisim.trim()) this.karar(ogeId, "duzeltme", { hazir: null, metin: `Bu varyantı al; ${karisim.trim()}`, satirlar: null }, kim, now);
+    else this.karar(ogeId, "onay", { hazir: null, metin: "", satirlar: null }, kim, now);
+    islem(this.db, () => {
+      for (const x of v) if (x.id !== ogeId && x.durum === "bekliyor") this.durumYaz(x.id, "arsiv", now);
+      if (!karisim.trim()) this.db.prepare("UPDATE isler SET durum = 'tamam' WHERE id = ? AND durum = 'acik'").run(isId);
+    });
+  }
+
+  // ---- Zevk profili (UM-F3) -------------------------------------------------------------------------------
+
+  private zevkEkle(alan: AlanId, ogeId: number, ad: string, tur: "onay" | "ret", not: string, now: number): void {
+    this.db
+      .prepare("INSERT INTO zevk (alan, oge_id, tur, ad, not_metni, olusturma) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(oge_id) DO UPDATE SET tur = excluded.tur, not_metni = excluded.not_metni")
+      .run(alan, ogeId, tur, ad, not, now);
+  }
+
+  zevkGalerisi(alan: AlanId): ZevkOrnegi[] {
+    const r = this.db.prepare("SELECT * FROM zevk WHERE alan = ? AND cikarildi = 0 ORDER BY onemli DESC, id DESC LIMIT 200").all(alan) as {
+      id: number;
+      oge_id: number;
+      tur: "onay" | "ret";
+      ad: string;
+      not_metni: string;
+      onemli: number;
+      olusturma: number;
+    }[];
+    return r.map((z) => {
+      const o = this.ogeSatiri(z.oge_id);
+      const g = o ? json<OgeDosyasi[]>(o.dosyalar, []).find((d) => d.tur === "png") : undefined;
+      return { id: z.id, ogeId: z.oge_id, tur: z.tur, ad: z.ad, not: z.not_metni, onemli: z.onemli === 1, olusturma: z.olusturma, kucuk: g ? { tur: "gorsel", ogeId: z.oge_id, ozet: g.ozet } : null };
+    });
+  }
+
+  zevkDuzenle(id: number, v: { onemli?: boolean; cikar?: boolean }, kim: string, now: number): void {
+    const r = this.db.prepare("SELECT alan FROM zevk WHERE id = ?").get(id) as { alan: string } | undefined;
+    if (!r) throw new IsHatasi(404, "Örnek bulunamadı.");
+    if (v.onemli !== undefined) this.db.prepare("UPDATE zevk SET onemli = ? WHERE id = ?").run(v.onemli ? 1 : 0, id);
+    if (v.cikar) this.db.prepare("UPDATE zevk SET cikarildi = 1 WHERE id = ?").run(id);
+    this.denetim.yaz(now, kim, "talimat", r.alan, `zevk örneği ${id}`);
+  }
+
+  /** Talimata kendiliğinden eklenen zevk bölümü: özet + en çok 20 temsilî örnek (önemliler önce, onay/ret dengeli). */
+  zevkBolumu(alan: AlanId): string {
+    const g = this.zevkGalerisi(alan);
+    if (!g.length) return "";
+    const onay = g.filter((x) => x.tur === "onay");
+    const ret = g.filter((x) => x.tur === "ret");
+    const sec = (l: ZevkOrnegi[], n: number): ZevkOrnegi[] => [...l.filter((x) => x.onemli), ...l.filter((x) => !x.onemli)].slice(0, n);
+    const yarim = Math.min(10, Math.max(20 - Math.min(10, ret.length), 0));
+    const ornekler = [...sec(onay, yarim), ...sec(ret, 20 - Math.min(yarim, onay.length))].slice(0, 20);
+    const notlar = new Map<string, number>();
+    for (const r of ret) if (r.not) notlar.set(r.not, (notlar.get(r.not) ?? 0) + 1);
+    const sik = [...notlar.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+    return [
+      "",
+      "## Zevk profili (kendiliğinden güncellenir)",
+      `Sahip bu alanda ${onay.length} öğeyi onayladı, ${ret.length} öğeyi reddetti.${sik.length ? ` En sık ret nedenleri: ${sik.map(([n, s]) => `“${n}” (${s})`).join(", ")}.` : ""}`,
+      "Temsilî örnekler (★ = sahip önemli işaretledi):",
+      ...ornekler.map((x) => `- ${x.tur === "onay" ? "Onaylandı" : "Reddedildi"}${x.onemli ? " ★" : ""}: ${x.ad}${x.not ? ` — ${x.not}` : ""}`),
+      "",
+    ].join("\n");
+  }
+
+  /** Yapay zekânın okuduğu talimat: kayıtlı sürüm + zevk profili. */
+  yzTalimati(alan: AlanId, now: number): { surum: number; metin: string } {
+    const t = this.talimat(alan, now);
+    return { surum: t.surum, metin: `${t.metin.trimEnd()}\n${this.zevkBolumu(alan)}` };
+  }
+
+  // ---- Köken (UM-F7) --------------------------------------------------------------------------------------
+
+  canlidakiler(alan: AlanId | null): (OgeOzeti & { koken: Koken })[] {
+    const r = (alan
+      ? this.db.prepare("SELECT * FROM oge WHERE durum = 'canlida' AND alan = ? ORDER BY guncelleme DESC LIMIT 200").all(alan)
+      : this.db.prepare("SELECT * FROM oge WHERE durum = 'canlida' ORDER BY guncelleme DESC LIMIT 200").all()) as unknown as OgeSatiri[];
+    return r.map((x) => ({ ...ozetle(x), koken: this.koken(x) }));
   }
 
   ayar(anahtar: string): string | null {
