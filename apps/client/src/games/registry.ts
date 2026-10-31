@@ -134,6 +134,7 @@ const registry: Record<string, GameEntry> = {
   sizma: {
     Screen: lazy(() => import("./sizma/SizmaScreen.js")),
     Art: lazy(() => import("./sizma/BriefingArt.js")),
+    StageView: lazy(() => import("./sizma/StageView.js")),
   },
   "sozluk-blofu": {
     Screen: lazy(() => import("./sozluk-blofu/SozlukBlofuScreen.js")),

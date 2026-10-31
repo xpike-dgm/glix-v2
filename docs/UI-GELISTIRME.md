@@ -247,6 +247,11 @@ Onaylanmayanlar: YY-M8 (iki tur), YY-AI1 (anlam hakemi).
 Ayrıntılar: `docs/oneriler/sizma.md`. Onaylananlar: **SZ-M1 … SZ-M6, SZ-U1 … SZ-U9, SZ-AI1.**
 Onaylanmayanlar: SZ-M7 (kelimesiz sızma), SZ-M8 (iki raunt). Puan dosyadaki gibi (0…+3, eksi yok; +2/+1/0
 sıralamaya çevrilmez).
+**Uygulandı (Ekim 2026):** "Söyledim" ile ilerleyen konuşma sırası (15 sn, iki tur, 3 sn geri sayım), kopan oyuncuya oy,
+eşitlikte 15 sn ikinci oylama, "Sızma sen miydin?" 10 sn ve Evet'in bedeli, yalnız doğru oya +1, son şans (ortak
+kelimeyi yaz, +1); gözetleme koruması, oyların uçuşu, kırılan maske, ses/titreşim seti, TV görünümü (`StageView`),
+spiker yorumu (`sizmaPrompt`). Zamanlamalar tek yerde: `apps/client/src/games/sizma/timeline.ts`. Gereken görseller
+(maske ve iki kırık parçası): `docs/oneriler/sizma-gorsel.md`; dosya yokken SVG karşılığı çizilir.
 
 ## Kara Borsa
 

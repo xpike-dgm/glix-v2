@@ -113,6 +113,49 @@ export const caprazPrompt: PromptBuilder = (publicView, nickname) => {
   };
 };
 
+/** Sızma: kim sızmaydı, iki kelime, kimin kime oy verdiği, eşitlik, sonuç, fark etme ve son şans. */
+export const sizmaPrompt: PromptBuilder = (publicView, nickname) => {
+  if (!isRec(publicView) || !isRec(publicView.reveal) || !isRec(publicView.reveal.final)) return null;
+  const r = publicView.reveal;
+  const final = publicView.reveal.final;
+  const players = publicView.players;
+  if (!Array.isArray(players) || players.length === 0 || !isRec(r.votes)) return null;
+  if (typeof r.infiltrator !== "string" || typeof final.commonWord !== "string") return null;
+  if (typeof final.infiltratorWord !== "string") return null;
+  const ids = players.filter((p): p is string => typeof p === "string");
+  const alias = new Map(ids.map((id, i) => [id, `Oyuncu${i + 1}`]));
+  const names: Record<string, string> = {};
+  const lines: string[] = [];
+  for (const id of ids) {
+    const name = alias.get(id) ?? "Oyuncu";
+    names[name] = promptName(nickname(id) ?? name);
+    const to = r.votes[id];
+    const vote =
+      typeof to === "string" && alias.has(to) ? `${alias.get(to)} adlı oyuncuya oy verdi` : "oy vermedi";
+    lines.push(`- ${name}${id === r.infiltrator ? " (sızma)" : ""}: ${vote}`);
+  }
+  const who = alias.get(r.infiltrator) ?? "sızma";
+  const facts = [
+    `Ortak kelime: ${promptName(final.commonWord)}; sızmanın kelimesi: ${promptName(final.infiltratorWord)}.`,
+    Array.isArray(r.runoff) ? "İlk oylama eşitlikle bitti, ikinci oylama yapıldı." : "",
+    r.caught === true ? `${who} yakalandı.` : `${who} yakalanmadan kurtuldu.`,
+    r.selfNoticed === true ? "Sızma kendisinin sızma olduğunu fark etti." : "Sızma kendini fark etmedi.",
+    r.caught === true
+      ? final.stole === true
+        ? "Yakalanınca ortak kelimeyi bilip çaldı."
+        : "Son şansında ortak kelimeyi bilemedi."
+      : "",
+  ].filter((x) => x !== "");
+  return {
+    system: system(
+      "sızma oyununun spikerisin; herkes aynı kelimeyi gördü, biri (sızma) farklı ama yakın bir kelimeyi gördü, " +
+        "sesli ipuçlarından sonra sızmayı oyladılar",
+    ),
+    user: `Oyun: Sızma. Oylar:\n${lines.join("\n")}\n${facts.join(" ")}`,
+    names,
+  };
+};
+
 /** Kelimeyi modele güvenle verir: tek satır, kısa, işaretlemesiz (oyuncunun yazdığı metindir; talimat değil). */
 const promptWord = (raw: unknown): string =>
   typeof raw === "string"
@@ -182,6 +225,7 @@ const BUILDERS: Record<string, PromptBuilder> = {
   "yazi-yaz": yaziPrompt,
   "kontrol-paneli-kaosu": kontrolPrompt,
   "capraz-ates": caprazPrompt,
+  sizma: sizmaPrompt,
 };
 
 /** Bu oyunun yorum özeti (oyun yorum desteklemiyorsa ya da sonuç açılmadıysa null). */

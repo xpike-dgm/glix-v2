@@ -13,6 +13,7 @@
  *   tv-laf-*                  Laf Sokma evreleri (ör. tv-laf-vote, tv-laf-reveal-master&t=4800)
  *   tv-kule-*                 Kule Ustası evreleri (ör. tv-kule-turn, tv-kule-perfect, tv-kule-miss, tv-kule-end)
  *   tv-yazi-*                 Yazı Yaz evreleri (ör. tv-yazi-write, tv-yazi-talk, tv-yazi-reveal&t=3000)
+ *   tv-sizma-*                Sızma evreleri (ör. tv-sizma-clue, tv-sizma-runoff, tv-sizma-unmask&t=5200)
  */
 import { setState } from "../net/store.js";
 
@@ -40,6 +41,9 @@ export async function startTvMock(mock: string, params: URLSearchParams): Promis
     } else if (kind.startsWith("yazi-")) {
       const m = await import("./mockYazi.js");
       m.startYaziMock(`${kind}-spectator`, params);
+    } else if (kind.startsWith("sizma-")) {
+      const m = await import("./mockSizma.js");
+      m.startSizmaMock(kind, params);
     } else if (kind.startsWith("kart-")) {
       const m = await import("./mockKartlar.js");
       m.startKartMock(kind, params);
