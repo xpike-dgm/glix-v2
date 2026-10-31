@@ -10,6 +10,7 @@ import { Screen } from "../../ui/Screen.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./ortalamanin-yarisi.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Sonuc, type SonucEntry } from "./Sonuc.js";
 import { formatNumber, multiplierLabel, parseOrtalamaView, targetName } from "./view.js";
 
@@ -181,6 +182,7 @@ function RoundScreen(props: GameScreenProps) {
           </Show>
         )}
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

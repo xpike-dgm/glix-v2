@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 86,
-    "not": "Oyun aşaması en çok 86 sn sürer: dalga 1 (25 sn) + ara (4 sn) + dalga 2 (25 sn) + ara (4 sn) + dalga 3 (20 sn) + sonuç açılışı (8 sn). Bağlı herkes keserse dalga son kesimden 1 sn sonra biter; yanlış kesim saati 5 sn öne çeker (en az 3 sn kalır). Sonraki dalgalar ve sonuç buna göre öne kayar. Süre oyuncu sayısına göre değişmez. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı gelir."
+    "not": "Oyun aşaması en çok 86 sn sürer: dalga 1 (25 sn) + ara (4 sn) + dalga 2 (25 sn) + ara (4 sn) + dalga 3 (20 sn) + sonuç açılışı (8 sn). Bağlı herkes keserse dalga son kesimden 1 sn sonra biter; yanlış kesim saati 5 sn öne çeker (en az 3 sn kalır). Sonraki dalgalar ve sonuç buna göre öne kayar. Süre oyuncu sayısına göre değişmez. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı gelir. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra; genel sonuç ekranı en çok 60 sn."
   },
   "ozet": "Üç dalgalı bomba imhası. Her dalgada herkesin telefonunda kablolar farklı sıradadır (dalga 1-2'de mavi, yeşil, kırmızı, sarı; dalga 3'te mor da eklenir). Herkes başka bir oyuncunun panelini tarif eden gizli bir ipucu notu taşır: 'şu koşullar doğruysa şu kabloyu kes'. Kimin paneli olduğu yazmaz; oyuncular notları sesli okuyup kendilerine uyanı bulur. Her dalgada herkes yalnız bir kez ve geri alınamaz biçimde bir kablo keser. Yanlış kesim herkesin ortak bomba saatinden 5 sn düşer. Dalgalarda doğru kesen +1, o panelin ipucunu taşıyan +1 imha puanı alır; oyun sonunda en çok imha eden +2, ikinci +1 alır.",
   "akis": [
@@ -58,7 +58,7 @@
       "ad": "Sonuç (bomba açılır)",
       "sureSn": 8,
       "kim": "herkes",
-      "aciklama": "Üstte kendi ödülün ('+2', '+1' ya da '+0') ve yorum ('En çok imha eden sensin!', 'İmhada ikincisin', 'Ekip başarısı: herkes eşit', 'İmha ettin ama ödül çıkmadı', 'Bu sefer olmadı'; üç dalganın hepsinde bütün paneller doğru kesildiyse 'Bomba tamamen imha edildi!' ve kısa zafer müziği). Varsa 'Bomba uzmanı' kutusunda tek cümlelik esprili özet (sunucunun yapay zekâ yorumu; gelmezse kutu çıkmaz). Altta herkesin satırı: avatar, ad, üç dalganın kesim işaretleri (renk ve ✓/✗; kesmediyse '–'), toplam imha puanı ve '+N' ödül. Oyun bu 8 sn'nin sonunda biter, ardından sonuç ekranı gelir. İzleyici aynı listeyi görür.",
+      "aciklama": "Üstte kendi ödülün ('+2', '+1' ya da '+0') ve yorum ('En çok imha eden sensin!', 'İmhada ikincisin', 'Ekip başarısı: herkes eşit', 'İmha ettin ama ödül çıkmadı', 'Bu sefer olmadı'; üç dalganın hepsinde bütün paneller doğru kesildiyse 'Bomba tamamen imha edildi!' ve kısa zafer müziği). Varsa 'Bomba uzmanı' kutusunda tek cümlelik esprili özet (sunucunun yapay zekâ yorumu; gelmezse kutu çıkmaz). Altta herkesin satırı: avatar, ad, üç dalganın kesim işaretleri (renk ve ✓/✗; kesmediyse '–'), toplam imha puanı ve '+N' ödül. Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez. Ardından genel sonuç ekranı gelir. İzleyici aynı listeyi görür.",
       "gizli": "Artık tüm dalgaların panelleri, ipuçları, doğru kabloları, kesimleri ve ipucu taşıyıcıları herkese açıktır."
     }
   ],

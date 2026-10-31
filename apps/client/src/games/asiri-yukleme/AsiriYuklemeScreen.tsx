@@ -9,6 +9,7 @@ import { CbState } from "../../ui/CbState.js";
 import { Screen } from "../../ui/Screen.js";
 import type { GameScreenProps } from "../registry.js";
 import "./asiri-yukleme.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Ambience } from "./Ambience.js";
 import { BoomScene } from "./BoomScene.js";
 import { createTapBatcher } from "./batcher.js";
@@ -399,6 +400,7 @@ export default function AsiriYuklemeScreen(props: GameScreenProps) {
       <Show when={boomOn()}>
         <BoomScene />
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

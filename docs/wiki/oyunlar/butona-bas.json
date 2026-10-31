@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 51,
-    "not": "Süre oyuncu sayısına ve oyuncu hızına göre değişmez, erken bitiş yoktur: 3 tur × 15 sn + 2 ara × 3 sn = 51 sn (puanlanan süre 45 sn). Anlatım (en çok 40 sn), geri sayım (3 sn) ve sonuç ekranı (en çok 30 sn) bunun dışındadır."
+    "not": "Süre oyuncu sayısına ve oyuncu hızına göre değişmez, erken bitiş yoktur: 3 tur × 15 sn + 2 ara × 3 sn = 51 sn (puanlanan süre 45 sn). Anlatım (en çok 40 sn), geri sayım (3 sn) ve sonuç ekranı (en çok 60 sn) bunun dışındadır. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Ekranın ortasında büyük kırmızı bir buton var ve oyun sabit uzunlukta 'zaman pencerelerine' bölünmüş. Aynı pencerede en az iki farklı oyuncu basarsa basanların her biri +1, tek başına basan -1 alır. Oyun 3 turdan oluşur ve pencere turdan tura daralır (300 → 200 → 120 ms). Mini puan 3 tur boyunca toplanır; genel skor oyun sonunda bir kez toplama göre verilir.",
   "akis": [
@@ -46,7 +46,7 @@
       "ad": "Tur 3 (pencere 120 ms)",
       "sureSn": 15,
       "kim": "herkes",
-      "aciklama": "Son tur, pencere 120 ms. Oyun, son pencere kapandığında biter; sonuç ekranına geçilir.",
+      "aciklama": "Son tur, pencere 120 ms. Oyun, son pencere kapandığında biter. Son ekran oyun bitince kalır; altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca 1 sn sonra, basmayan olursa en geç 60 sn sonra genel sonuç ekranına geçilir. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": ""
     }
   ],
@@ -224,7 +224,7 @@
     },
     {
       "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
-      "deger": "40 sn / 3 sn / 30 sn",
+      "deger": "40 sn / 3 sn / 60 sn",
       "kaynak": "apps/server/src/match.ts:40-42"
     },
     {

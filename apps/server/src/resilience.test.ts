@@ -1,5 +1,6 @@
 import { type AnyGame, GAMES } from "@glix/engine";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { RESULTS_MS } from "./match.js";
 import {
   Client,
   create,
@@ -176,7 +177,7 @@ describe("oyun hatası: maç zarifçe iptal edilir", () => {
     await until(() => a.room.phase === "results", "sonuç");
     expect(a.room.players.map((p) => p.score)).toEqual([3, 3]);
     mode = "setup";
-    k.clock.advance(30_000);
+    k.clock.advance(RESULTS_MS);
     await until(() => a.room.phase === "briefing", "ikinci oyun anlatımı");
     for (const c of [a, b]) c.send({ type: "ready" });
     await until(() => a.room.phase === "countdown", "geri sayım");
@@ -265,9 +266,9 @@ describe("zarif kapanış (drain)", () => {
     k.clock.advance(4_000);
     await sync();
     expect(drained).toBe(false);
-    k.clock.advance(41_000);
+    k.clock.advance(44_000);
     await until(() => a.room.phase === "results", "sonuç");
-    k.clock.advance(30_000);
+    k.clock.advance(RESULTS_MS);
     await until(() => a.room.phase === "final", "final");
     a.send({ type: "returnToLobby" });
     await until(() => a.room.phase === "lobby", "lobi");

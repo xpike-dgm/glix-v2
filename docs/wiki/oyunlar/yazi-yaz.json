@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 128,
-    "not": "Süre oyuncu sayısına göre değişmez: 30 sn yazma + 60 sn tartışma + 30 sn tahmin + 8 sn sonuç = 128 sn. Bağlı herkes 'Tamam' / 'Tahmine geç' derse her aşama 1 sn sonra biter; en kısa oyun yaklaşık 3 + 1 + 1 + 1 + 8 sn sürebilir. Anlatım (en çok 40 sn), geri sayım (3 sn) ve sonuç ekranı (en çok 30 sn) bunun dışındadır."
+    "not": "Süre oyuncu sayısına göre değişmez: 30 sn yazma + 60 sn tartışma + 30 sn tahmin + 8 sn sonuç = 128 sn. Bağlı herkes 'Tamam' / 'Tahmine geç' derse her aşama 1 sn sonra biter; en kısa oyun yaklaşık 3 + 1 + 1 + 1 + 8 sn sürebilir. Anlatım (en çok 40 sn), geri sayım (3 sn) ve sonuç ekranı (en çok 60 sn) bunun dışındadır. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Her turda sunucu rastgele tam iki oyuncuyu gizli 'yazan' yapar. Yazanlar kendi kelimelerini yazar, diğer herkes yalnızca MASUM yazar; ekranlar birebir aynı görünür. 60 saniyelik sözlü tartışmadan sonra herkes bir yazanı ve o yazanın kelimesini tahmin eder. Doğru kişi +1, doğru kelime +1; en çok 2 puan alınır, eksi puan yoktur.",
   "akis": [
@@ -46,7 +46,7 @@
       "ad": "Sonuç açılışı",
       "sureSn": 8,
       "kim": "herkes",
-      "aciklama": "İki yazan ve kelimeleri neon panoda gösterilir (kelime yazmamışsa '—'). Altında her oyuncunun seçtiği kişi (doğruysa onay, yanlışsa çarpı), yazdığı kelime tahmini (doğru/yanlış işareti) ve aldığı puan listelenir. Üstte kendi puanın ve bir hüküm yazısı ('Tam isabet!', 'Yazanı buldun', 'Yazanı buldun, kelime tutmadı', 'Bu sefer olmadı', 'Tahmin vermedin') görünür. İzleyici 'Yazanlar belli oldu' başlığını görür.",
+      "aciklama": "İki yazan ve kelimeleri neon panoda gösterilir (kelime yazmamışsa '—'). Altında her oyuncunun seçtiği kişi (doğruysa onay, yanlışsa çarpı), yazdığı kelime tahmini (doğru/yanlış işareti) ve aldığı puan listelenir. Üstte kendi puanın ve bir hüküm yazısı ('Tam isabet!', 'Yazanı buldun', 'Yazanı buldun, kelime tutmadı', 'Bu sefer olmadı', 'Tahmin vermedin') görünür. İzleyici 'Yazanlar belli oldu' başlığını görür. Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Bu aşamada her şey açıktır. Puan sesi/titreşimi yaklaşık 0,9 sn sonra çalar (puan > 0 ise eşleşme, değilse yalnız efekt)."
     }
   ],

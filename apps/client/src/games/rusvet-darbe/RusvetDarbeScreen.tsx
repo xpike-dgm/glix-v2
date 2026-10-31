@@ -12,6 +12,7 @@ import { Darbe } from "./Darbe.js";
 import { type CrewMember, Duello } from "./Duello.js";
 import { Sonuc } from "./Sonuc.js";
 import "./rusvet-darbe.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { parseRusvetView } from "./view.js";
 
 const SEAL = "#FFC23B";
@@ -122,6 +123,7 @@ export default function RusvetDarbeScreen(props: GameScreenProps) {
           </Switch>
         )}
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

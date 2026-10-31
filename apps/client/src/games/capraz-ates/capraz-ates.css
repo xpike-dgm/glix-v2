@@ -1929,3 +1929,21 @@ img.cx__shield--art {
 :root[data-motion="reduce"] .cx-open {
   display: none;
 }
+
+/* Final açılışının "Devam et" şeridi: dikeyde altta; alçak yatay ekranda sağ sütunun altında (arena kapanmaz). */
+.cx__devam {
+  flex: none;
+  width: 100%;
+}
+.cx__devam:empty {
+  display: none;
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .cx__devam {
+    position: absolute;
+    right: 0;
+    bottom: 4px;
+    width: min(320px, 38%);
+    z-index: 3;
+  }
+}

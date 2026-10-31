@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 36,
-    "not": "Oyun yalnız iki bölümden oluşur: 30 sn cevap + 6 sn açılış = 36 sn. Bağlı herkes cevabını gönderirse cevap bölümü 1 sn sonra biter; en kısası yaklaşık 1 + 6 = 7 sn. Oyuncu sayısı süreyi değiştirmez."
+    "not": "Oyun yalnız iki bölümden oluşur: 30 sn cevap + 6 sn açılış = 36 sn. Bağlı herkes cevabını gönderirse cevap bölümü 1 sn sonra biter; en kısası yaklaşık 1 + 6 = 7 sn. Oyuncu sayısı süreyi değiştirmez. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Herkesin gördüğü ortak bir ana kelime çıkar. Herkes aklına gelen TEK bir çağrışımı yazar ve gönderir. Süre bitince (ya da herkes gönderince) cevaplar açılır: aynı cevabı veren en az iki kişi bir 'ağ' (grup) kurar ve her üye grubun büyüklüğü kadar mini oyun puanı alır. En kalabalık grubun üyeleri genel skorda +1 kazanır; tek kalan cevap 0'dır.",
   "akis": [
@@ -25,7 +25,7 @@
       "ad": "Açılış",
       "sureSn": 6,
       "kim": "herkes",
-      "aciklama": "Cevaplar açılır. Sıralı gösterim: önce tek kalanlar ve yazmayanlar (silik, 'Yazmadı'), sonra kümeler küçükten büyüğe; en büyük ağ en son açılır. Her kümede cevap yazısı (küçük harf), '+n' puan ve üyelerin renkli halkalı avatarları görünür. Üstte kendi sonucun: ağdaysan '+n' ve 'Ağ kurdun!', tek kaldıysan '0' ve 'Bu sefer tek kaldın', cevap vermediysen '0' ve 'Süre doldu'. Ağ kurduysan eşleşme sesi, kurmadıysan alçak ses ve titreşim çalar.",
+      "aciklama": "Cevaplar açılır. Sıralı gösterim: önce tek kalanlar ve yazmayanlar (silik, 'Yazmadı'), sonra kümeler küçükten büyüğe; en büyük ağ en son açılır. Her kümede cevap yazısı (küçük harf), '+n' puan ve üyelerin renkli halkalı avatarları görünür. Üstte kendi sonucun: ağdaysan '+n' ve 'Ağ kurdun!', tek kaldıysan '0' ve 'Bu sefer tek kaldın', cevap vermediysen '0' ve 'Süre doldu'. Ağ kurduysan eşleşme sesi, kurmadıysan alçak ses ve titreşim çalar. Açılış en az 6 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Bu aşamada tüm cevaplar ve kimin kimle eşleştiği açıktır."
     }
   ],
@@ -187,7 +187,7 @@
     },
     {
       "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
-      "deger": "40 sn / 3 sn / 30 sn",
+      "deger": "40 sn / 3 sn / 60 sn",
       "kaynak": "apps/server/src/match.ts:40-42"
     }
   ],

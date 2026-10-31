@@ -6,6 +6,7 @@ import { PrimaryButton } from "../../ui/PrimaryButton.js";
 import { Screen } from "../../ui/Screen.js";
 import type { GameScreenProps } from "../registry.js";
 import "./sessiz-sira.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { beatsOf, parseSessizView, roundVerdict } from "./view.js";
 
 function Heart(props: { off: boolean }) {
@@ -174,6 +175,7 @@ export default function SessizSiraScreen(props: GameScreenProps) {
           </>
         )}
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

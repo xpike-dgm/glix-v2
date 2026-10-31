@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { RESULTS_MS } from "./match.js";
 import {
   Client,
   create,
@@ -295,7 +296,7 @@ describe("hız sınırı ve geçersiz mesaj", () => {
     const c = await Client.connect();
     c.send({ type: "hello", clientVersion: "x" });
     await until(() => c.of("welcome").length > 0);
-    expect(c.of("welcome")[0]).toMatchObject({ protocolVersion: 3 });
+    expect(c.of("welcome")[0]).toMatchObject({ protocolVersion: 4 });
   });
 });
 
@@ -459,12 +460,12 @@ describe("maç akışı", () => {
     // B tek lider +2, A ikinci +1
     expect(result?.awards).toEqual({ [b.session.playerId]: 2, [a.session.playerId]: 1 });
     expect(a.room.players.map((p) => p.score)).toEqual([1, 2]);
-    expect(b.room.match?.phaseEndsAt).toBe((b.room.match?.phaseStartedAt ?? 0) + 30_000);
+    expect(b.room.match?.phaseEndsAt).toBe((b.room.match?.phaseStartedAt ?? 0) + RESULTS_MS);
     v = a.room.match?.publicView as typeof v;
     expect(v.scores[b.session.playerId]).toBe(0);
 
-    // Sonuç ekranı 30 sn sürer, sonra final.
-    k.clock.advance(29_800);
+    // Sonuç ekranı 60 sn sürer, sonra final.
+    k.clock.advance(RESULTS_MS - 200);
     await sync();
     expect(a.room.phase).toBe("results");
     k.clock.advance(400);
@@ -490,7 +491,8 @@ describe("maç akışı", () => {
     await until(() => a.room.players[2]?.connected === false);
     k.clock.advance(121_000);
     await until(() => a.room.players.length === 2);
-    // 121 sn içinde oyun (45 sn) ve sonuç ekranı (7 sn) de tamamlanmış olur.
+    // Oyun (51 sn) 121 sn içinde biter; oyun içi sonuç ekranı (herkes Devam et dedi: 1 sn) ve puan tablosu (60 sn) kalır.
+    k.clock.advance(RESULTS_MS + 2_000);
     await until(() => a.room.phase === "final");
     expect(a.room.players.map((p) => p.score)).toEqual([1, 1]);
     a.send({ type: "returnToLobby" });

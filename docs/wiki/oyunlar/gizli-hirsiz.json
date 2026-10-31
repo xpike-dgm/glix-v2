@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 30,
-    "not": "Oyun aşaması en çok 30 sn sürer. Bütün katılımcılar basarsa son basıştan 1 sn sonra erken biter. Oyuncu sayısı süreyi değiştirmez. Önüne anlatım (en çok 40 sn), 3 sn geri sayım, arkasına sonuç ekranı (en çok 30 sn) gelir."
+    "not": "Oyun aşaması en çok 30 sn sürer. Bütün katılımcılar basarsa son basıştan 1 sn sonra erken biter. Oyuncu sayısı süreyi değiştirmez. Önüne anlatım (en çok 40 sn), 3 sn geri sayım, arkasına sonuç ekranı (en çok 60 sn) gelir. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Herkesin ekranında tek bir ÇAL düğmesi vardır. Her oyuncu 30 saniye içinde yalnız bir kez basabilir ya da hiç basmayabilir. Kimin bastığı süre bitene kadar kimseye gösterilmez. Sonunda tam bir kişi basmışsa o kişi +1 alır; iki ya da daha çok kişi basmışsa basanların her biri −1 alır; basmayanlar her zaman 0 alır.",
   "akis": [
@@ -39,14 +39,14 @@
       "ad": "Kasa açılışı (sonuç üstü)",
       "sureSn": 0.52,
       "kim": "herkes",
-      "aciklama": "Sonuç ekranının üstüne giren kısa açılış: çekirdek kapağı açılır. Tek basış yeşil ışık, yüksek iki nota ve eşleşme titreşimiyle Kasa soyuldu! başlığıyla gösterilir; çoklu basış kırmızı alarm, siren sesi ve Alarm! Birden çok hırsız başlığıyla; kimse basmadıysa alçak boş ses ve Kimse çalmadı başlığıyla. Hırsızların avatarları sırayla +1 (tek hırsız, yeşil halka) ya da −1 (çok hırsız, kırmızı halka) rozetiyle listelenir. Kapak açılış animasyonu yaklaşık 520 ms sürer; açılış sonuç ekranının üstünde kalır.",
+      "aciklama": "Sonuç ekranının üstüne giren kısa açılış: çekirdek kapağı açılır. Tek basış yeşil ışık, yüksek iki nota ve eşleşme titreşimiyle Kasa soyuldu! başlığıyla gösterilir; çoklu basış kırmızı alarm, siren sesi ve Alarm! Birden çok hırsız başlığıyla; kimse basmadıysa alçak boş ses ve Kimse çalmadı başlığıyla. Hırsızların avatarları sırayla +1 (tek hırsız, yeşil halka) ya da −1 (çok hırsız, kırmızı halka) rozetiyle listelenir. Kapak açılış animasyonu yaklaşık 520 ms sürer; açılış sonuç ekranının üstünde kalır. Son ekran oyun bitince kalır; altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca 1 sn sonra, basmayan olursa en geç 60 sn sonra genel sonuç ekranına geçilir. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Bu anda kimlerin bastığı herkese açılır."
     },
     {
       "ad": "Sonuç ekranı",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Genel sonuç ekranı (puanlar, podyum). Bağlı bütün katılımcılar Devam deyince 1 sn sonra kapanır; yoksa 30 sn sonra kendiliğinden kapanır.",
+      "aciklama": "Genel sonuç ekranı (puanlar, podyum). Bağlı bütün katılımcılar Devam deyince 1 sn sonra kapanır; yoksa 60 sn sonra kendiliğinden kapanır.",
       "gizli": "Yok."
     }
   ],
@@ -126,7 +126,7 @@
     },
     {
       "baslik": "Sonuç ekranından erken çıkma",
-      "aciklama": "Sonuç ekranı bağlı bütün katılımcılar Devam'a basınca 1 sn sonra, aksi halde 30 sn sonra kapanır."
+      "aciklama": "Sonuç ekranı bağlı bütün katılımcılar Devam'a basınca 1 sn sonra, aksi halde 60 sn sonra kapanır."
     }
   ],
   "kartlar": [

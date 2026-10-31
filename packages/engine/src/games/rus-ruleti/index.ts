@@ -277,6 +277,11 @@ export const rusRuleti: GameDefinition<RusRuletiState, RusRuletiAction, RusRulet
       };
     },
 
+    /** Sonuç açılışı oyunu bitiren son atışla başlar. */
+    revealAt(state): number | null {
+      return state.over ? (state.last?.at ?? state.startedAt) : null;
+    },
+
     isFinished(state, ctx): boolean {
       return state.over && ctx.now >= outroEnd(state);
     },

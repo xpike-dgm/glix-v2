@@ -62,6 +62,7 @@ describe("parseClientMessage fuzz", () => {
       "leaveRoom",
       "returnToLobby",
       "continue",
+      "revealContinue",
       "action",
       "feedback",
     ];

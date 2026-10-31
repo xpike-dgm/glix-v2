@@ -201,6 +201,11 @@ export const butonaBas: GameDefinition<ButonaBasState, ButonaBasAction, ButonaBa
       };
     },
 
+    /** Sonuç ekranı son turun bittiği an başlar. */
+    revealAt(state): number | null {
+      return state.endsAt;
+    },
+
     isFinished(state, ctx): boolean {
       return ctx.now >= state.endsAt;
     },

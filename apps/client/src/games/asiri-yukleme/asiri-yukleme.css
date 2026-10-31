@@ -804,3 +804,41 @@
 :root[data-motion="reduce"] .ay-boom__wave {
   animation-duration: 1400ms;
 }
+
+/* Oyun içi sonuç ekranı: altta "Devam et" şeridi varken çekirdek küçülür, satırlar ezilmez. */
+.ay .col:has(.rdevam) .ay__core-small .ay-core {
+  --size: clamp(52px, 9dvh, 130px);
+}
+.ay .col:has(.rdevam) .ay__rows {
+  gap: 4px;
+  margin-top: clamp(4px, 1dvh, 16px);
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  /* Başlık ve toplam solda, satırlar sağda tam boy. */
+  .ay .col:has(.rdevam) .ay__result {
+    display: grid;
+    grid-template-columns: minmax(150px, 30%) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 12px;
+  }
+  .ay .col:has(.rdevam) .ay__head {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: end;
+  }
+  .ay .col:has(.rdevam) .ay__meter {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+  }
+  .ay .col:has(.rdevam) .ay__rows {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    margin: 0;
+  }
+  .ay .col:has(.rdevam) .ay__verdict {
+    font-size: 22px;
+    text-align: center;
+    white-space: normal;
+  }
+}

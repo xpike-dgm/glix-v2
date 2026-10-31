@@ -275,6 +275,11 @@ export const ortalamaninYarisi: GameDefinition<
     };
   },
 
+  /** Sonuç açılışı son turun seçim süresi bittiği an başlar. */
+  revealAt(state): number | null {
+    return state.rounds[state.rounds.length - 1]?.endsAt ?? null;
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= gameEndsAt(state);
   },

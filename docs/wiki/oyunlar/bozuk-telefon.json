@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 335,
-    "not": "Girdi aşamaları: yazma adımı 25 sn, çizme adımı 60 sn. Adım sayısı = oyuncu sayısı (en çok 6). Her zincir için gösteri (adım başına 3 sn) + oylama 10 sn + sonuç 3 sn. Erken bitiş olmazsa toplam: 3 oyuncu 176 sn, 4 oyuncu 270 sn, 5 oyuncu 335 sn, 6 oyuncu 441 sn, 7 oyuncu 472 sn, 8 oyuncu 503 sn. Herkes 'Tamam' derse adımlar (ve herkes oy verirse oylamalar) 1 sn sonra biter."
+    "not": "Girdi aşamaları: yazma adımı 25 sn, çizme adımı 60 sn. Adım sayısı = oyuncu sayısı (en çok 6). Her zincir için gösteri (adım başına 3 sn) + oylama 10 sn + sonuç 3 sn. Erken bitiş olmazsa toplam: 3 oyuncu 176 sn, 4 oyuncu 270 sn, 5 oyuncu 335 sn, 6 oyuncu 441 sn, 7 oyuncu 472 sn, 8 oyuncu 503 sn. Herkes 'Tamam' derse adımlar (ve herkes oy verirse oylamalar) 1 sn sonra biter. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Herkes bir cümle yazarak kendi zincirini başlatır. Zincirler her adımda bir sonraki oyuncuya geçer: yazılan cümleyi çizersin, gördüğün çizimi tek cümleyle anlatırsın. Her adımda yalnız bir önceki adımı görürsün. Sonunda her zincir baştan sona açılır ve herkes o zincirin en komik adımına oy verir; aldığın her oy +1, 'sağlam zincir' (ilk ve son yazı aynı anlamda) kalırsa zincirdeki herkes +1 kazanır.",
   "akis": [
@@ -60,14 +60,14 @@
       "ad": "Zincir sonucu",
       "sureSn": 3,
       "kim": "herkes",
-      "aciklama": "Her adımda aldığı oy sayısı '+n' olarak gösterilir; en çok oy alan adımda yıldız işareti vardır ('En komik adım seçildi'); kimse oy vermediyse 'Kimse oy vermedi'. Sağlam zincirse 'Sağlam +1' rozeti ve 'Sağlam zincir! Zincirdeki herkes +1'. Altta oyuncuların o ana kadar biriken puanları. Sonra sonraki zincirin gösterisi hemen başlar.",
+      "aciklama": "Her adımda aldığı oy sayısı '+n' olarak gösterilir; en çok oy alan adımda yıldız işareti vardır ('En komik adım seçildi'); kimse oy vermediyse 'Kimse oy vermedi'. Sağlam zincirse 'Sağlam +1' rozeti ve 'Sağlam zincir! Zincirdeki herkes +1'. Altta oyuncuların o ana kadar biriken puanları. Sonra sonraki zincirin gösterisi hemen başlar. Son zincirin sonucunda: Açılış en az 3 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Yok."
     },
     {
       "ad": "Sonuç ekranı",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Mini oyun sonuç/podyum ekranı (herkes 'Devam'a basınca 1 sn sonra, aksi halde 30 sn sonra kapanır).",
+      "aciklama": "Mini oyun sonuç/podyum ekranı (herkes 'Devam'a basınca 1 sn sonra, aksi halde 60 sn sonra kapanır).",
       "gizli": "Yok."
     }
   ],

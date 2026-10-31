@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 90,
-    "not": "Toplam süre sınırı 90 sn (oyun kurulduğu andan itibaren; seçim süreleri ve uyarı payları dahil). Oyun, başlangıç oyuncularının yarısı (yukarı yuvarlanmış) elenince ya da 90 sn dolunca, hangisi önce olursa biter. Elenmeler hızlıysa 90 sn'den çok önce bitebilir (örn. 2 oyuncuda ilk hatada)."
+    "not": "Toplam süre sınırı 90 sn (oyun kurulduğu andan itibaren; seçim süreleri ve uyarı payları dahil). Oyun, başlangıç oyuncularının yarısı (yukarı yuvarlanmış) elenince ya da 90 sn dolunca, hangisi önce olursa biter. Elenmeler hızlıysa 90 sn'den çok önce bitebilir (örn. 2 oyuncuda ilk hatada). Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Bomba kimdeyse ışıklı 4 renkli tuş dizisini hafızadan tekrarlar. Önce dizi herkese oynatılır (2 renkle başlar); sırası gelen aynı sırayla basar. Doğru girerse diziye ekleyeceği rengi seçer ve bombayı kime atacağını seçer (kendine ve bombayı az önce kendisine atana hemen geri atamaz; 2 kişide serbest). Yanlış basan ya da geç kalan elenir; dizi yeni 2 renge döner ve yeni kurbanı elenene bombayı atan seçer. Oyuncuların yarısı elenince ya da 90 sn dolunca biter: hayatta kalanlar +2, elenenler 0; kimse elenmediyse herkes +1.",
   "akis": [
@@ -60,7 +60,7 @@
       "ad": "Bitiş ve sonuç",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Oyun elenen sayısı gerekli sayıya ulaşınca (son elenmenin anında) ya da 90. saniyede biter; 'Oyun bitti' ya da süre dolduysa 'Süre doldu' yazar. Puanlar bu anda verilir. Sonra sonuç ekranı gelir.",
+      "aciklama": "Oyun elenen sayısı gerekli sayıya ulaşınca (son elenmenin anında) ya da 90. saniyede biter; 'Oyun bitti' ya da süre dolduysa 'Süre doldu' yazar. Puanlar bu anda verilir. Son ekran oyun bitince kalır; altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca 1 sn sonra, basmayan olursa en geç 60 sn sonra genel sonuç ekranına geçilir. Kopan oyuncu ve izleyiciler beklenmez. Sonra genel sonuç ekranı gelir.",
       "gizli": "Yok."
     }
   ],

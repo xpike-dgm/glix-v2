@@ -288,3 +288,27 @@
 .kroart .kro-dial {
   --size: 140px;
 }
+
+/* Alçak yatay ekran: başlık solda, satırlar sağda tam boy (altta sonuç ekranının "Devam et" şeridi kalır). */
+@media (orientation: landscape) and (max-height: 520px) {
+  .kro__result {
+    display: grid;
+    grid-template-columns: minmax(150px, 32%) minmax(0, 1fr);
+    column-gap: 16px;
+  }
+  .kro__head {
+    justify-content: center;
+    margin-top: 0;
+  }
+  .kro__verdict {
+    white-space: normal;
+    text-align: center;
+  }
+  .kro__rows {
+    margin: 4px 0;
+    gap: 4px;
+  }
+  .kro__row .av {
+    --s: 28px !important;
+  }
+}

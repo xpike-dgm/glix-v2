@@ -293,6 +293,11 @@ export const kendim: GameDefinition<KendimState, KendimAction, KendimView, Kendi
     };
   },
 
+  /** Sonuç açılışı eşleştirme süresinin bittiği an başlar. */
+  revealAt(state): number | null {
+    return state.matchEndsAt;
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= state.finishAt;
   },

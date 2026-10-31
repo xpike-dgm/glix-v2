@@ -6,6 +6,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { createAccountRecorder, type GlixEarned } from "./accountStats.js";
 import { type AccountStore, createAccounts } from "./accountStore.js";
 import { BADGES, istanbulDayStart } from "./badges.js";
+import { RESULTS_MS } from "./match.js";
 import { Client, k, loginCookie, press, sync, until, useServer } from "./testkit.js";
 
 /** 2026-10-26 12:00 İstanbul. */
@@ -319,7 +320,7 @@ describe("Glix canlı akış", () => {
     k.clock.advance(startedAt + 51_000 - k.clock.now());
     await until(() => host.room.phase === "results", "results");
     expect(host.of("glixEarned")).toEqual([]);
-    k.clock.advance(30_100);
+    k.clock.advance(RESULTS_MS + 100);
     await until(() => host.room.phase === "final", "final");
     await until(() => host.of("glixEarned").length > 0 && ikinci.of("glixEarned").length > 0, "glix");
 

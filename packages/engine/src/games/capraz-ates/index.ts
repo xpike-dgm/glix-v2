@@ -250,6 +250,12 @@ export const caprazAtes: GameDefinition<
     };
   },
 
+  /** Final açılışı 2. turun atış süresinin bittiği an başlar (1. turun kısa açılışı süreyle geçer). */
+  revealAt(state, ctx): number | null {
+    const s = advance(state, ctx.now);
+    return s.round === 2 ? s.endsAt : null;
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= advance(state, ctx.now).finishAt;
   },

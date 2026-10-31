@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 28,
-    "not": "Fitil ilk verilişten 15 ile 20 sn sonra patlar; her başarılı pas bu süreye 1 ile 4 sn ekler (sınırsız pas). 5 pas yapılırsa ortalama 15-20 + yaklaşık 12,5 sn. Patlamadan sonra 2 sn patlama gösterisi vardır. Oyuncu sayısı süreyi doğrudan değiştirmez; kalabalık odada pas sayısı artabilir."
+    "not": "Fitil ilk verilişten 15 ile 20 sn sonra patlar; her başarılı pas bu süreye 1 ile 4 sn ekler (sınırsız pas). 5 pas yapılırsa ortalama 15-20 + yaklaşık 12,5 sn. Patlamadan sonra 2 sn patlama gösterisi vardır. Oyuncu sayısı süreyi doğrudan değiştirmez; kalabalık odada pas sayısı artabilir. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Bomba rastgele bir oyuncuda başlar. Bombayı taşıyan, ne zaman patlayacağını göremez; diğerleri gerçek kalan süreyi görür ve ona yalan ya da doğru söyleyerek pas verdirmeye veya tutturmaya çalışır. Taşıyan istediği anda bağlı başka birine pas verir; her pas fitili 1-4 sn uzatır. Bomba kimin elinde patlarsa o oyuncu −1 alır. Bombayı taşımayanlar her el için gizlice patlar ya da patlamaz diye tahmin edebilir; son elde patlar diye doğru bilenler +1 alır.",
   "akis": [
@@ -39,14 +39,14 @@
       "ad": "Patlama gösterisi",
       "sureSn": 2,
       "kim": "herkes",
-      "aciklama": "Fitil bittiği anda kurallar biter. Taşıyıcının avatarı beyaz bir siluete döner, kısa sarsıntı ve gürleme sesi olur. Patlamada puan alanların adları herkese yazılır: örn. Elif bildi! (kendin bildiysen Sen bildin!). 2 saniye sonra sonuç ekranı açılır. Bu 2 saniye boyunca pas, tahmin ve taşıyıcı sabittir.",
+      "aciklama": "Fitil bittiği anda kurallar biter. Taşıyıcının avatarı beyaz bir siluete döner, kısa sarsıntı ve gürleme sesi olur. Patlamada puan alanların adları herkese yazılır: örn. Elif bildi! (kendin bildiysen Sen bildin!). 2 saniye sonra sonuç ekranı açılır. Bu 2 saniye boyunca pas, tahmin ve taşıyıcı sabittir. Açılış en az 2 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Patlama zamanı ve doğru bilenler artık herkese açıktır."
     },
     {
       "ad": "Sonuç ekranı",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 30 sn sonra kapanır.",
+      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 60 sn sonra kapanır.",
       "gizli": "Yok."
     }
   ],

@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 220,
-    "not": "En uzun süre = 60 sn yazma + oyuncu sayısı × (10 sn oylama + 7 sn açılış) + 45 sn final yazma + 20 sn final oylama + 12 sn final açılış = 137 + 17 × oyuncu sayısı (3 oyuncu 188 sn, 5 oyuncu 222 sn, 8 oyuncu 273 sn). Herkes 'Tamam' derse yazma, bağlı herkes oy verirse oylama 1 sn sonra biter; cevapsız düellolarda oylama atlanır ve açılış 2,5 sn sürer."
+    "not": "En uzun süre = 60 sn yazma + oyuncu sayısı × (10 sn oylama + 7 sn açılış) + 45 sn final yazma + 20 sn final oylama + 12 sn final açılış = 137 + 17 × oyuncu sayısı (3 oyuncu 188 sn, 5 oyuncu 222 sn, 8 oyuncu 273 sn). Herkes 'Tamam' derse yazma, bağlı herkes oy verirse oylama 1 sn sonra biter; cevapsız düellolarda oylama atlanır ve açılış 2,5 sn sürer. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Oyuncu sayısı kadar düello vardır; her düelloda iki oyuncu aynı soruya cevap yazar ve herkes iki soru alır. Cevaplar isimsiz kartlar olarak gösterilir, cevap sahibi olmayanlar daha komik buldukları karta oy verir. Aldığın her oy +1, rakibinin tüm oylarını (en az 2) alırsan 'Laf Ustası' olup +1 daha kazanırsın. Son turda herkes aynı finalde yarışır; aldığın her oy +1.",
   "akis": [
@@ -60,7 +60,7 @@
       "ad": "Final açılışı",
       "sureSn": 12,
       "kim": "herkes",
-      "aciklama": "Final cevapları, yazarlar, oy verenler ve puanlar açılır ('Final sonucu', 'Oy topladın!'). Bu aşama bitince oyun biter.",
+      "aciklama": "Final cevapları, yazarlar, oy verenler ve puanlar açılır ('Final sonucu', 'Oy topladın!'). Açılış en az 12 (boş finalde 2,5) sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Yok."
     },
     {

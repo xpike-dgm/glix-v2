@@ -182,6 +182,11 @@ export const korBomba: GameDefinition<KorBombaState, KorBombaAction, KorBombaVie
     };
   },
 
+  /** Sonuç açılışı patlama anında başlar (patlamadan önce sunucu bu anı yayınlamaz). */
+  revealAt(state): number | null {
+    return state.explodeAt;
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= state.explodeAt + KOR_BOMBA_OUTRO_MS;
   },

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildGameRecord, buildMatchRecord, type Entrant, rankEntrants } from "./accountStats.js";
 import { type AccountStore, createAccounts } from "./accountStore.js";
+import { RESULTS_MS } from "./match.js";
 import { Client, k, loginCookie, press, sync, until, useServer } from "./testkit.js";
 
 const e = (playerId: string, accountId: number | null, score: number): Entrant => ({
@@ -366,7 +367,7 @@ describe("maç akışı kaydı", () => {
     expect(mid?.perGame).toEqual([{ gameId: "butona-bas", plays: 1, wins: 1, bestMini: 1, avgMini: 1 }]);
     expect(mid?.recent).toEqual([]);
 
-    k.clock.advance(30_100);
+    k.clock.advance(RESULTS_MS + 100);
     await until(() => host.room.phase === "final", "final");
 
     const h = k.srv.accounts.profile(hostId, true);

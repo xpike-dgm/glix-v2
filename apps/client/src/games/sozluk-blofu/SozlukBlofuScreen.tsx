@@ -5,6 +5,7 @@ import { PhaseClock } from "../../ui/PhaseClock.js";
 import type { GameScreenProps } from "../registry.js";
 import { Pick } from "./Pick.js";
 import "./sozluk.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Sonuc } from "./Sonuc.js";
 import { type CrewMember, parseSozlukView } from "./view.js";
 import { createVisibleArea } from "./visibleArea.js";
@@ -79,6 +80,12 @@ export default function SozlukBlofuScreen(props: GameScreenProps) {
             </Show>
           )}
         </Show>
+        <RevealContinue
+          match={props.match}
+          selfId={props.selfId}
+          now={props.now}
+          spectator={props.spectator}
+        />
       </div>
     </section>
   );

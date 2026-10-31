@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 47,
-    "not": "3 tur: her turda 10 sn seçim; 1. ve 2. turdan sonra 5 sn sonuç, son turdan sonra 7 sn sonuç. Toplam 3×10 + 2×5 + 7 = 47 sn. Her turda bağlı herkes Tamam derse o tur 1 sn sonra biter ve sonraki turlar o kadar öne çekilir. Oyuncu sayısı süreyi değiştirmez. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasında sonuç ekranı (en çok 30 sn) vardır."
+    "not": "3 tur: her turda 10 sn seçim; 1. ve 2. turdan sonra 5 sn sonuç, son turdan sonra 7 sn sonuç. Toplam 3×10 + 2×5 + 7 = 47 sn. Her turda bağlı herkes Tamam derse o tur 1 sn sonra biter ve sonraki turlar o kadar öne çekilir. Oyuncu sayısı süreyi değiştirmez. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasında sonuç ekranı (en çok 60 sn) vardır. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Oyun 3 kısa turdur. Her turda herkes aynı anda gizlice 0 ile 100 arasında bir tam sayı seçer. Hedef, o turun seçimlerinin ortalaması çarpı bir çarpandır (1. tur ½, 2. tur ⅔, 3. tur ¾). Hedefe en yakın seçim tur puanını alır. Tur puanları üç tur boyunca toplanır ve oyun sonunda toplamı en yüksek +2, ikinci en yüksek +1 genel skor alır.",
   "akis": [
@@ -46,14 +46,14 @@
       "ad": "Son tur sonucu",
       "sureSn": 7,
       "kim": "herkes",
-      "aciklama": "3. turun sonucu 7 sn kalır. Başlıkta bu kez genel skora eklenen puan gösterilir (Genel skora eklenen +2 / +1 ya da Genel skor puan yok) ve 3 turun toplamı: N puan. Bu 7 saniye bitince oyun biter.",
+      "aciklama": "3. turun sonucu 7 sn kalır. Başlıkta bu kez genel skora eklenen puan gösterilir (Genel skora eklenen +2 / +1 ya da Genel skor puan yok) ve 3 turun toplamı: N puan. Açılış en az 7 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Yok."
     },
     {
       "ad": "Sonuç ekranı",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 30 sn sonra kapanır.",
+      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 60 sn sonra kapanır.",
       "gizli": "Yok."
     }
   ],

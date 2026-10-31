@@ -11,6 +11,9 @@ güncellenir.
   tam görmeden geçmez. Ayrıntılar (yapımda uygulanacak varsayılanlar): yalnız bağlı oyuncular beklenir; kopan
   oyuncu beklenmez; izleyiciler beklenmez; kimin bastığı avatarlarla gösterilir; sonuç animasyonu bitmeden düğme
   basılabilir ama animasyon atlanmaz, sayılır. Sahip, sonuç süresi kısalsın derse bu tek ayardan değişir.
+  **Uygulandı (Ekim 2026):** çatıda `revealAt` kancası + sunucu "Devam et" kuralı + ortak `RevealContinue` bileşeni;
+  tek ayar `REVEAL_HOLD_MS` (60 sn), düğmenin ilk pasif süresi `REVEAL_CONTINUE_ARM_MS` (1,5 sn); genel puan tablosu
+  da 60 sn (`RESULTS_MS`). Ayrıntı: `docs/ERKEN-BITIS.md` "Oyun içi sonuç ekranı".
 - **Öneri dosyaları:** her oyunun önerileri `docs/oneriler/<oyun>.md` dosyasındadır; onaylananlar bu deftere işlenir.
   Yeni görsel (asset) üretimi gereken maddeler öneride ayrıca belirtilir.
 

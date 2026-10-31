@@ -8,6 +8,7 @@ import { Status } from "../../ui/Status.js";
 import type { GameScreenProps } from "../registry.js";
 import { Core } from "./Core.js";
 import "./gizli-hirsiz.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { prick } from "./sounds.js";
 import { parseGizliHirsizView } from "./view.js";
 
@@ -80,6 +81,7 @@ export default function GizliHirsizScreen(props: GameScreenProps) {
           </button>
         </Show>
       </footer>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }
