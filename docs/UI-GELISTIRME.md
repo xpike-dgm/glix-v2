@@ -6,6 +6,10 @@ güncellenir.
 
 ## Tüm oyunlar (genel kararlar)
 
+- **Test ertelendi (31 Ekim 2026, sahip kararı):** bitmiş oyunlar (Aşırı Yükleme, Gizli Alışveriş, Kontrol Paneli,
+  Zehirli Kadeh, Çapraz Ateş, Zaman Bombası, Bozuk Telefon, Laf Sokma, Kule Ustası, Yazı Yaz) uçtan uca teste
+  sokulmadan hızlıca canlıya alındı. Uçtan uca test (`e2e`, `pwa-check`, telefonla elle tur) **yalnız sahip
+  istediğinde** yapılacak; o güne kadar bu madde açık kalır.
 - **Sonuç ekranı oyuncu onayıyla geçer:** her oyunun sonuç ekranında "Devam et" düğmesi olur; bağlı oyuncuların
   hepsi bastığında bir sonraki aşamaya geçilir. Süre sınırı yine vardır ama uzundur (60 sn), böylece kimse sonucu
   tam görmeden geçmez. Ayrıntılar (yapımda uygulanacak varsayılanlar): yalnız bağlı oyuncular beklenir; kopan
