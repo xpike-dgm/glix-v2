@@ -38,6 +38,8 @@ export function TvPlaying(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
   );
   const crew = () => playersOnly(props.snap.players).filter((p) => props.match.participants.includes(p.id));
   const box = () => gameBox(props.match.orientation);
+  /** Oyun kendi oyuncu/skor sütununu çiziyorsa (yalnız `StageView` ile) kabuk paneli gizlenir, alan genişler. */
+  const ownBoard = () => entry()?.tvOwnBoard === true && entry()?.StageView !== undefined;
   const rows = createMemo(() =>
     scoreRows(crew(), (p) => {
       const inGame = hud()?.scores[p.id];
@@ -55,7 +57,7 @@ export function TvPlaying(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
   });
   return (
     <ShellContext.Provider value={{ setClock, crew }}>
-      <div class="tv__cols">
+      <div class="tv__cols" data-own-board={ownBoard() ? "1" : undefined}>
         <main class="tv__play">
           <header class="tv__head">
             <div>
@@ -110,7 +112,9 @@ export function TvPlaying(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
             )}
           </Show>
         </main>
-        <TvBoard title="Oyuncular" hostId={props.snap.hostId} rows={rows()} />
+        <Show when={!ownBoard()}>
+          <TvBoard title="Oyuncular" hostId={props.snap.hostId} rows={rows()} />
+        </Show>
       </div>
     </ShellContext.Provider>
   );

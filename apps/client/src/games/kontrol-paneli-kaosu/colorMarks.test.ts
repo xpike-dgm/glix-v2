@@ -15,7 +15,8 @@ describe("kablo renkleri için renk körlüğü işaretleri", () => {
     for (const p of patterns) expect(p).toBeGreaterThan(0);
   });
 
-  it("Zaman Bombası tuşlarıyla tutarlı: yeşil kare, kırmızı üçgen, sarı yıldız, mavi daire", () => {
+  it("Zaman Bombası tuşlarıyla tutarlı: yeşil kare, kırmızı üçgen, sarı yıldız, mavi daire; mor baklava", () => {
+    expect(cbShape(COLOR_MARK.purple).name).toBe("baklava");
     expect(cbShape(COLOR_MARK.green).name).toBe("kare");
     expect(cbShape(COLOR_MARK.red).name).toBe("üçgen");
     expect(cbShape(COLOR_MARK.yellow).name).toBe("yıldız");

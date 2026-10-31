@@ -9,6 +9,7 @@
  *   tv-karalama-*             Karalama Defteri evreleri (özel TV görünümü)
  *   tv-bozuk-*                Bozuk Telefon evreleri (özel TV görünümü; ör. tv-bozuk-show, tv-bozuk-vote)
  *   tv-kart-*                 Kart sistemi ekranları (seçim, geri sayım, sonuç)
+ *   tv-zehirli-*              Zehirli Kadeh evreleri (ör. tv-zehirli-spectator, tv-zehirli-reveal&t=2500)
  */
 import { setState } from "../net/store.js";
 
@@ -24,6 +25,9 @@ export async function startTvMock(mock: string, params: URLSearchParams): Promis
     } else if (kind.startsWith("bozuk-")) {
       const m = await import("./mockBozuk.js");
       m.startBozukMock(kind, params);
+    } else if (kind.startsWith("zehirli-")) {
+      const m = await import("./mockZehirli.js");
+      m.startZehirliMock(kind, params);
     } else if (kind.startsWith("kart-")) {
       const m = await import("./mockKartlar.js");
       m.startKartMock(kind, params);

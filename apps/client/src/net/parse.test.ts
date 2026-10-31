@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { snapshot } from "./fixtures.js";
-import { parseServerMessage } from "./parse.js";
+import { parseComment, parseServerMessage } from "./parse.js";
 
 const wire = (v: unknown): string => JSON.stringify(v);
 
@@ -359,5 +359,18 @@ describe("glixEarned", () => {
     expect(parseServerMessage(wire({ ...msg, parts: [{ kind: "mac", amount: -10 }] }))).toBeNull();
     expect(parseServerMessage(wire({ ...msg, balance: "60" }))).toBeNull();
     expect(parseServerMessage(wire({ ...msg, capped: 1 }))).toBeNull();
+  });
+});
+
+describe("oyun sonu yorumu", () => {
+  it("tek satır, en çok 90 karakter düz metin kabul edilir; aksi yok sayılır (anlık görüntü yine okunur)", () => {
+    expect(parseComment("  Bomba uzmanı şaşkın.  ")).toBe("Bomba uzmanı şaşkın.");
+    expect(parseComment("a".repeat(90))).toBe("a".repeat(90));
+    expect(parseComment("a".repeat(91))).toBeNull();
+    expect(parseComment("iki\nsatır")).toBeNull();
+    expect(parseComment("<b>x</b>")).toBeNull();
+    expect(parseComment("")).toBeNull();
+    expect(parseComment(5)).toBeNull();
+    expect(parseComment(undefined)).toBeNull();
   });
 });

@@ -32,6 +32,11 @@ export interface Config {
    * elle seçilebilir olur, yine de rastgele havuza girmez. Varsayılan kapalı; üretimde ayarlanmaz.
    */
   draftGames: boolean;
+  /**
+   * Oyun sonu yorumu için dil modeli servisinin anahtarı (`GLIX_AI_KEY`); yoksa null ve özellik tamamen kapalı.
+   * Hiçbir yere yazılmaz, istemciye gitmez.
+   */
+  aiKey: string | null;
 }
 
 export interface ServerLimits {
@@ -156,6 +161,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     mail: loadMail(env),
     adminAccountIds: loadAdminIds(env),
     draftGames: env.GLIX_TASLAK_OYUNLAR === "1",
+    aiKey: env.GLIX_AI_KEY?.trim() || null,
     statsDb,
     accountsDb: env.ACCOUNTS_DB || statsDb,
   };
