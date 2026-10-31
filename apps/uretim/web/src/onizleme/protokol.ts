@@ -21,7 +21,7 @@ export function varsayilanEkran(o: Pick<OgeAyrinti, "alan" | "onizleme">): strin
 export interface GosterIletisi {
   tur: "goster";
   ekran: string;
-  katalogSatiri?: object;
+  katalogSatiri?: object | object[];
   dosyalar: Record<string, string>;
   secenekler: { tema: "koyu"; oyun?: string; an?: string };
 }

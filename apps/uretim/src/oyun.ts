@@ -77,9 +77,26 @@ export class OyunIstemcisi {
     } catch {
       throw new OyunHatasi("Oyuna ulaşılamadı.");
     }
-    if (r.status === 404) throw new OyunHatasi("Oyunda bu uç kapalı.");
-    if (r.status === 429) throw new OyunHatasi("Oyun şu an çok istek alıyor; biraz sonra dene.");
-    if (r.status < 200 || r.status >= 300) throw new OyunHatasi("Oyun isteği kabul etmedi.");
+    if (r.status < 200 || r.status >= 300) {
+      // Sözleşme bölüm 3: hatalar { ok: false, code, message }.
+      let kod = "";
+      try {
+        const j = await r.json();
+        if (kayit(j) && typeof j.code === "string") kod = j.code;
+      } catch {
+        kod = "";
+      }
+      if (r.status === 409 && kod === "already_undone")
+        throw new OyunHatasi("Bu aktarım oyunda zaten geri alınmış.");
+      if (r.status === 404 && kod === "unknown_pool") throw new OyunHatasi("Oyunda bu havuz yok.");
+      if (r.status === 404 && kod === "unknown_transfer")
+        throw new OyunHatasi("Oyunda bu aktarım bulunamadı.");
+      if (r.status === 404) throw new OyunHatasi("Oyunda bu uç kapalı.");
+      if (r.status === 401) throw new OyunHatasi("Oyun anahtarı (GLIX_URETIM_TOKEN) iki tarafta aynı değil.");
+      if (r.status === 413) throw new OyunHatasi("Bir aktarımda en çok 500 satır gönderilebilir.");
+      if (r.status === 429) throw new OyunHatasi("Oyun şu an çok istek alıyor; biraz sonra dene.");
+      throw new OyunHatasi("Oyun isteği kabul etmedi.");
+    }
     let j: unknown;
     try {
       j = await r.json();

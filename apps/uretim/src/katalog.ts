@@ -26,6 +26,8 @@ export const LISTE_KLASORLERI = [
   "apps/client/public/assets/karakter/",
   "docs/wiki/",
 ];
+/** Karakter iskeleti (`glix-parts-1`). */
+export const RIG_YOLU = "apps/client/public/assets/karakter/rig.json";
 const EN_COK_DOSYA = 2 * 1024 * 1024;
 
 export class Depoayna {
@@ -113,6 +115,9 @@ export class Katalog {
       const icerik = await this.ayna.oku(rev, yol);
       if (icerik !== null) yaz(yol, icerik);
     }
+    // Karakter iskeleti: dans ve giysi doğrulayıcıları bunu ister.
+    const rig = await this.ayna.oku(rev, RIG_YOLU);
+    if (rig !== null) yaz(RIG_YOLU, rig);
     for (const k of LISTE_KLASORLERI) yaz(`liste:${k}`, JSON.stringify(await this.ayna.listele(rev, k)));
     return n;
   }

@@ -127,7 +127,14 @@ export interface Ortam {
 }
 
 export async function ortamKur(
-  ek: { ssh?: boolean; oyun?: boolean; gizli?: boolean; aiFetch?: AiFetch } = {},
+  ek: {
+    ssh?: boolean;
+    oyun?: boolean;
+    gizli?: boolean;
+    aiFetch?: AiFetch;
+    oyunUrl?: string;
+    oyunToken?: string;
+  } = {},
 ): Promise<Ortam> {
   girisSayaciniSifirla();
   const dir = mkdtempSync(join(tmpdir(), "uretim-test-"));
@@ -148,8 +155,8 @@ export async function ortamKur(
     aktarimDir: join(dir, "aktarim"),
     sahipEpostalar: [SAHIP],
     publicUrl: "http://uretim.test",
-    oyunUrl: ek.oyun === false ? null : oyun.url,
-    oyunToken: ek.oyun === false ? null : TOKEN,
+    oyunUrl: ek.oyun === false ? null : (ek.oyunUrl ?? oyun.url),
+    oyunToken: ek.oyun === false ? null : (ek.oyunToken ?? TOKEN),
     webDir: join(dir, "web"),
     yedekDir: join(dir, "yedek"),
     gizliAnahtar: ek.gizli ? "test-gizli-anahtar-0123456789" : null,

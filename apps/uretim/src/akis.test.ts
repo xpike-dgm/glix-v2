@@ -64,12 +64,18 @@ describe("mağaza: teslim → ön kontrol → onay → paket", () => {
           ],
           satirlar: [
             {
-              id: "neon-gece",
+              id: "cerceve-neon-gece",
               type: "cerceve",
               rarity: "nadir",
               price: 450,
               name: "Neon Gece",
               description: "Gece yarısı parıltısı.",
+              satista: true,
+              koleksiyon: "Neon Gece",
+              efekt: {
+                motor: "donen-halka",
+                parametreler: { doku: "cerceve/neon-gece.webp", donusHizi: 12 },
+              },
             },
           ],
           onizleme: { ekran: "magaza-kart" },
@@ -80,12 +86,56 @@ describe("mağaza: teslim → ön kontrol → onay → paket", () => {
             { dosyaId: dolu.veri.dosyaId, hedefYol: "apps/client/public/assets/shop/cerceve/kotu.webp" },
           ],
         },
+        {
+          // Görseli düzgün, satırı kurala aykırı: fiyat aralık dışı, asset yasak, ad efekti tarifsiz.
+          ad: "Kurala aykırı ad efekti",
+          satirlar: [
+            {
+              id: "ad-kural-disi",
+              type: "ad-efekti",
+              rarity: "siradan",
+              price: 9000,
+              name: "Kural Dışı",
+              description: "Olmaz.",
+              satista: true,
+              asset: "shop/ad/kural-disi.webp",
+            },
+          ],
+        },
+        {
+          // Tarif motoru bu türde kullanılamaz (dönen halka yalnız çerçevede).
+          ad: "Yanlış motor",
+          satirlar: [
+            {
+              id: "ad-yanlis-motor",
+              type: "ad-efekti",
+              rarity: "siradan",
+              price: 150,
+              name: "Yanlış Motor",
+              description: "Halka adda dönmez.",
+              satista: true,
+              efekt: {
+                motor: "donen-halka",
+                parametreler: { doku: "cerceve/neon-gece.webp", donusHizi: 12 },
+              },
+            },
+          ],
+        },
       ],
     };
     const on = await o.arac(k, "on_kontrol", teslim);
     const onOgeler = on.veri.ogeler as OgeSonucu[];
     expect(onOgeler[0]?.sonuc).not.toBe("kaldi");
     expect(onOgeler[1]?.sonuc).toBe("kaldi");
+    // Gerçek motor doğrulayıcıları: fiyat aralığı, yasak alan, zorunlu tarif, motor-tür uyumu.
+    const nedenler = (x?: OgeSonucu) => JSON.stringify(x?.satirlar.filter((r) => r.sonuc === "kaldi"));
+    expect(onOgeler[2]?.sonuc).toBe("kaldi");
+    expect(nedenler(onOgeler[2])).toMatch(/Fiyat 100–250 Glix/);
+    expect(nedenler(onOgeler[2])).toMatch(/asset/);
+    expect(nedenler(onOgeler[2])).toMatch(/efekt/);
+    expect(onOgeler[3]?.sonuc).toBe("kaldi");
+    expect(nedenler(onOgeler[3])).toMatch(/donen-halka motoru ad-efekti türünde kullanılamaz/);
+    expect(JSON.stringify(onOgeler[0]?.satirlar)).not.toMatch(/henüz yok/i);
     expect(onOgeler[0]?.ogeId).toBeNull();
     expect(o.u.merkez.bekleyenler("magaza")).toHaveLength(0);
 
@@ -93,6 +143,7 @@ describe("mağaza: teslim → ön kontrol → onay → paket", () => {
     const ogeler = t.veri.ogeler as OgeSonucu[];
     expect(ogeler[0]?.durum).toBe("bekliyor");
     expect(ogeler[1]?.durum).toBe("kaldi");
+    expect(ogeler[2]?.durum).toBe("kaldi");
     // "Kaldı" sahibe gitmez, yapay zekâya döner.
     const kuyruk = await o.api("GET", "/api/kuyruk?alan=magaza", undefined, c);
     expect((kuyruk.json.ogeler as unknown[]).length).toBe(1);
@@ -135,7 +186,7 @@ describe("mağaza: teslim → ön kontrol → onay → paket", () => {
     const yama = JSON.parse(
       readFileSync(join(klasor, "dosyalar/packages/engine/src/katalog/magaza.json.yama"), "utf8"),
     ) as { ekle: { id: string }[] };
-    expect(yama.ekle[0]?.id).toBe("neon-gece");
+    expect(yama.ekle[0]?.id).toBe("cerceve-neon-gece");
     expect(o.u.merkez.oge(ogeId)?.durum).toBe("pakette");
 
     // Oyuna eklendi → sağlık ucu aynı revizyonu verince canlıda.

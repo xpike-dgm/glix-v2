@@ -7,6 +7,7 @@
 import * as motor from "@glix/engine";
 import { CARD_RARITIES, COSMETIC_TYPES, GAMES } from "@glix/engine";
 import { kayit } from "../http.js";
+import { RIG_YOLU } from "../katalog.js";
 import type { AlanId } from "../ortak/alanlar.js";
 import { svgTemizle } from "../svg.js";
 import { type KontrolBaglami, type Satir, satir } from "./baglam.js";
@@ -117,7 +118,16 @@ const magaza: AlanModulu = {
       if (tekUrun) s.push(...guvenliCagir(tekUrun, [ham, katalog], "urun", e, "Ürün satırı"));
       const tarif = motorIslevi("validateEffectRecipe");
       if (ham.efekt !== undefined) {
-        if (tarif) s.push(...guvenliCagir(tarif, [ham.efekt], "efekt-tarifi", e, "Efekt tarifi"));
+        if (tarif)
+          s.push(
+            ...guvenliCagir(
+              tarif,
+              [ham.efekt, typeof ham.type === "string" ? ham.type : undefined],
+              "efekt-tarifi",
+              e,
+              "Efekt tarifi",
+            ),
+          );
         else s.push(henuzYok("efekt-tarifi", "Efekt tarifi"));
       }
     });
@@ -156,8 +166,18 @@ const magaza: AlanModulu = {
         );
       else s.push(satir("alan", "kare-sayisi", "gecti", `${ad}: kare sayısı doğru.`));
     }
+    // İskelet: teslimde yeni rig.json varsa o, yoksa oyun deposundaki.
+    const rigDosyasi = b.dosyalar.find((d) => d.hedefYol === RIG_YOLU);
+    let rig: unknown = null;
+    try {
+      rig = JSON.parse(
+        rigDosyasi ? rigDosyasi.veri.toString("utf8") : (b.katalog.dosya(RIG_YOLU)?.icerik ?? "null"),
+      );
+    } catch {
+      rig = null;
+    }
     for (const d of b.dosyalar) {
-      if (d.tur !== "json" || !d.hedefYol) continue;
+      if (d.tur !== "json" || !d.hedefYol || d.hedefYol === RIG_YOLU) continue;
       const ek = { dosya: d.ad };
       let j: unknown;
       try {
@@ -166,18 +186,26 @@ const magaza: AlanModulu = {
         s.push(satir("alan", "json", "kaldi", "JSON okunamadı.", ek));
         continue;
       }
-      if (d.hedefYol.includes("/karakter/dans/")) {
+      if (d.hedefYol.includes("/karakter/") && rig === null) {
+        s.push(
+          satir(
+            "alan",
+            "iskelet",
+            "uyari",
+            "Karakter iskeleti okunamadı; dans ve giysi denetimi yapılamadı.",
+            ek,
+          ),
+        );
+      } else if (d.hedefYol.includes("/karakter/dans/")) {
         const f = motorIslevi("validateDance");
         s.push(
-          ...(f
-            ? guvenliCagir(f, [j, motorDegeri("RIG") ?? null], "dans", ek, "Dans")
-            : [henuzYok("dans", "Dans iskelet uyumu")]),
+          ...(f ? guvenliCagir(f, [j, rig], "dans", ek, "Dans") : [henuzYok("dans", "Dans iskelet uyumu")]),
         );
       } else if (d.hedefYol.includes("/karakter/")) {
         const f = motorIslevi("validateWardrobeLayer");
         s.push(
           ...(f
-            ? guvenliCagir(f, [j, motorDegeri("RIG") ?? null], "giysi", ek, "Giysi katmanı")
+            ? guvenliCagir(f, [j, rig], "giysi", ek, "Giysi katmanı")
             : [henuzYok("giysi", "Giysi katmanı")]),
         );
       }

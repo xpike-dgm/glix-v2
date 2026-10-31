@@ -26,11 +26,16 @@ async function dataUrl(url: string): Promise<string> {
 export async function gosterIletisi(o: OgeAyrinti, ekran: string): Promise<GosterIletisi> {
   const dosyalar: Record<string, string> = {};
   for (const d of o.dosyalar) if (d.hedefYol) dosyalar[d.hedefYol] = await dataUrl(dosyaUrl(o.id, d.ozet));
-  const satir = o.satirlar[0];
+  // Sözleşme: tek satır nesne, birden çok satır dizi (en çok 12; ilki ekranın ürünü).
+  const satirlar = o.satirlar.filter((x): x is object => typeof x === "object" && x !== null).slice(0, 12);
   return {
     tur: "goster",
     ekran,
-    ...(satir && typeof satir === "object" ? { katalogSatiri: satir } : {}),
+    ...(satirlar.length > 1
+      ? { katalogSatiri: satirlar }
+      : satirlar[0]
+        ? { katalogSatiri: satirlar[0] }
+        : {}),
     dosyalar,
     secenekler: { tema: "koyu" },
   };

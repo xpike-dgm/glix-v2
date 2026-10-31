@@ -1,11 +1,16 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { RIG_YOLU } from "../katalog.js";
 import { ffmpegVar, lufsOlc, sesAc } from "../medya.js";
+import { ALANLAR } from "../ortak/alanlar.js";
 import { gecisOlur } from "../ortak/durum.js";
 import type { CanliHavuz } from "../oyun.js";
 import { pngAc } from "../png.js";
 import { gorsel } from "../test/ortam.js";
 import { wavYaz } from "../wav.js";
-import { motorIslevi } from "./alan.js";
+import { alanKontrolleri, motorIslevi } from "./alan.js";
+import type { KontrolBaglami, KontrolDosyasi } from "./baglam.js";
 import { alfaAnalizi, GORSEL_PROFILLERI, gorselKontrol, profilBul } from "./gorsel.js";
 import { benzerlik, havuzKontrolleri, kalipKontrolleri } from "./metin.js";
 import { ornekAnalizi, sesProfili, sesSatirlari } from "./ses.js";
@@ -232,6 +237,62 @@ describe("havuz kontrolleri (oyunun kendi kuralları)", () => {
 describe("motor doğrulayıcıları", () => {
   it("motorda olmayan işlev null döner (henüz yok)", () => {
     expect(motorIslevi("boyleBirIslevYok")).toBeNull();
+  });
+
+  // Gerçek iskelet ve gerçek dans/giysi dosyaları ile motorun `validateDance` / `validateWardrobeLayer`'ı.
+  const kok = resolve(import.meta.dirname, "../../../..");
+  const rigMetni = readFileSync(resolve(kok, RIG_YOLU), "utf8");
+  const dosya = (hedefYol: string, veri: string): KontrolDosyasi => ({
+    dosyaId: hedefYol,
+    ad: hedefYol.split("/").pop() ?? "",
+    tur: "json",
+    veri: Buffer.from(veri),
+    ozet: "x",
+    meta: null,
+    hedefYol,
+    rol: null,
+    dahaOnce: false,
+  });
+  const baglam = (dosyalar: KontrolDosyasi[], rig: string | null): KontrolBaglami =>
+    ({
+      alan: ALANLAR.find((a) => a.id === "magaza"),
+      tur: "yeni",
+      oge: { ad: "x", satirlar: [] },
+      dosyalar,
+      ayniTeslimAdlari: [],
+      alandakiAdlar: new Set(),
+      katalog: {
+        dosya: (y: string) => (y === RIG_YOLU && rig ? { icerik: rig, revizyon: "r", zaman: 0 } : null),
+        magazaUrunleri: () => ({ kaynak: "motor", urunler: [] }),
+      },
+      now: 0,
+    }) as unknown as KontrolBaglami;
+  const dans = readFileSync(resolve(kok, "apps/client/public/assets/karakter/dans/lambada.json"), "utf8");
+  const rig = JSON.parse(rigMetni) as { wardrobe: Record<string, unknown> };
+
+  it("dans: gerçek iskeletle geçer, bilinmeyen kemikte kalır", async () => {
+    const yol = "apps/client/public/assets/karakter/dans/yeni.json";
+    expect(sonuc(await alanKontrolleri(baglam([dosya(yol, dans)], rigMetni)), "dans")).toBe("gecti");
+    const bozuk = JSON.parse(dans) as { bones: string[] };
+    bozuk.bones[0] = "kuyruk";
+    const s = await alanKontrolleri(baglam([dosya(yol, JSON.stringify(bozuk))], rigMetni));
+    expect(sonuc(s, "dans")).toBe("kaldi");
+    expect(JSON.stringify(s)).toMatch(/kuyruk/);
+  });
+
+  it("giysi: iskeletteki katman geçer, yuvasız katman kalır; iskelet yoksa uyarır", async () => {
+    const yol = "apps/client/public/assets/karakter/giysi/sapka.json";
+    expect(
+      sonuc(
+        await alanKontrolleri(baglam([dosya(yol, JSON.stringify(rig.wardrobe.sapka))], rigMetni)),
+        "giysi",
+      ),
+    ).toBe("gecti");
+    const s = await alanKontrolleri(
+      baglam([dosya(yol, JSON.stringify({ slot: "kanat", pieces: [] }))], rigMetni),
+    );
+    expect(sonuc(s, "giysi")).toBe("kaldi");
+    expect(sonuc(await alanKontrolleri(baglam([dosya(yol, "{}")], null)), "iskelet")).toBe("uyari");
   });
 });
 

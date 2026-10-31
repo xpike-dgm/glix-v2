@@ -83,6 +83,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/engine
     devDependencies:
+      '@glix/server':
+        specifier: workspace:*
+        version: link:../server
       '@types/node':
         specifier: ^22.20.5
         version: 22.20.5
