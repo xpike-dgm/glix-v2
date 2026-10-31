@@ -116,3 +116,22 @@ Kurallar:
 | `URETIM_SAHIP_EPOSTA` | site | Girişe izinli e-postalar (virgülle) |
 | `GLIX_RESEND_API_KEY`, `GLIX_MAIL_FROM` | site | Giriş kodu e-postası (oyunla aynı servis) |
 | `URETIM_PUBLIC_URL` | site | `https://uretim.dgmcraft.online` |
+
+## 7. Yapay zekâ bağlantı kanalları (ek karar)
+
+Yapay zekâlara sunucunun genel MCP'si verilmez. İki kanal vardır, ikisi de aynı alan anahtarı ve aynı yetkiyle
+sitenin iç API'sine gider:
+
+| Kanal | Adres | Kimlik | Ne görür |
+|---|---|---|---|
+| MCP | `https://uretim.dgmcraft.online/mcp` (Streamable HTTP) | `Authorization: Bearer <alan anahtarı>` | Yalnız alanın araçları |
+| SSH | `uretim-<alan>@<vds>` | Alanın SSH açık anahtarı (sitede alana eklenir) | `ForceCommand` → `uretim` komut aracı; SFTP yalnız `/srv/glix/uretim/ssh/<alan>/{gelen,okunur}` (chroot) |
+
+- SSH kullanıcıları `uretim-alanlari` grubundadır; `sshd_config` içinde ayrı `Match Group uretim-alanlari` bloğu:
+  `ChrootDirectory`, `ForceCommand`, `AllowTcpForwarding no`, `X11Forwarding no`, `AllowAgentForwarding no`,
+  `PermitTTY no`, `PasswordAuthentication no`.
+- `uretim` komut aracının alt komutları MCP araçlarıyla birebir aynıdır: `talimat-oku`, `isleri-listele`, `is-oku`,
+  `katalog-oku`, `geri-bildirim-oku`, `dosya-yukle`, `on-kontrol`, `teslim-et`, `istek-karti-ac`, `kod-istegi-ac`.
+  Çıktı JSON'dur.
+- `gelen/` klasörüne bırakılan paket site tarafından alınır, ön kontrolden geçer ve klasörden kaldırılır.
+- Kurulum betikleri `deploy/uretim/ssh/` altında durur. Sunucuya uygulamayı yönetici, sahibin onayıyla yapar.
