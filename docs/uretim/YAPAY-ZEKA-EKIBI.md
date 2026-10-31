@@ -801,3 +801,46 @@ başlamadan kontrol edilir.
 **Video (Text-to-Video Arena, Elo):** Wan 3.0 1175, Utopai X 1166 (API yok), MiniMax H3 (768p) 1161,
 Dreamina Seedance 2.5 1157, FLUX 3 Max 1157. Video (rol 47) önerisi: **Wan 3.0** (dakikası 12 $); ucuz alternatif
 **MiniMax H3** (dakikası 4,8 $).
+
+### Kesinleşen kadro (sahip kararı, 31 Ekim 2026)
+
+Otomasyonlarda ve üretim rollerinde **Claude kullanılmaz** (yöneticinin kendi kullanım sınırı ayrı tutulur; Claude
+yalnız yönetici olarak çalışır). Kullanılacak modeller: **Gemini 3.8 (High)**, **GPT-6.1 Sol (Medium / High)**,
+**GPT-6 Sol (Max)** ve **OpenCode Go** üyeliğindeki ücretsiz ve normal modeller. Görselde bugünkü gibi **ChatGPT**
+(GPT Image) kullanılır.
+
+Tablodaki karşılıkları (Intelligence Index v5.0; sıra 275 model içinde):
+
+| Model | Nereden | Endeks | Sıra | Basamak | Not |
+|---|---|---|---|---|---|
+| GPT-6.1 Sol (Max) | OpenAI | 54,5 | 7 | **S** | GPT-6 Sol (Max)'ın yeni sürümü; tabloda GPT-6 Sol için puan yok. Erişim varsa 6.1 tercih edilir |
+| GPT-6 Sol (Max) | OpenAI | — | — | S (varsayım) | Tabloda puanı yayımlanmamış; 6.1 Sol ile aynı rollerde yedek |
+| GPT-6.1 Sol (High) | OpenAI | 50,2 | 14 | **S / A** | Günlük işlerin ana modeli |
+| GPT-6.1 Sol (Medium) | OpenAI | 46,1 | 21 | **A** | Toplu ve tekrar eden işler |
+| Gemini 4 Argon (High) | OpenCode Go | 50,4 | 13 | **S denetçi** | Go'da var; Gemini 3.8'den çok daha güçlü. OpenAI'dan farklı aile olduğu için **çift denetimin** denetçisi. Go sınırı ~440 istek/5 sa |
+| Kimi K3.1 Pro | OpenCode Go | 46,0 | 22 | **A** (farklı aile) | Türkçe denemesinde iyi çıkarsa A rollerinde Sol'un yedeği. Go sınırı ~147 istek/5 sa (düşük) |
+| Gemini 3.8 Flash (High) | Google | 30,5 | 41 | **B** | Hızlı ve ucuz; görsel okuyabilir |
+| DeepSeek V4.1 Flash (Max) | OpenCode Go | 32,5 | 38 | **B** (toplu) | Go sınırı çok yüksek (~43 bin istek/5 sa); büyük listelerin ilk taslağı. Go'da "Global" bölge açılmadan çalışmaz |
+| GLM-5.3-Flash, MiMo-V2.6-Flash | OpenCode Go | 27,8 / 26,7 | 52 / 53 | **B** | Yedek B modelleri |
+| Beam Free, Iceman Contributor Free | OpenCode Go (ücretsiz, süreli) | 17,7 / — | 70 / — | **Ücretsiz taslak** | Yalnız ön eleme ve kaba taslak; hiçbir teslim doğrudan bunlardan çıkmaz. Ücretsiz modeller yalnız OpenCode istemcisinden çalışır |
+
+**Gizlilik kuralı:** oyuncu verisi gören rollerde (31, 32, 36–44) yalnız ücretli ve "istek verisiyle eğitim yapmayan"
+uç noktalar kullanılır. Ücretsiz modeller ve Go'da "veriyle eğitim yapan uç noktalar" ayarı gereken modeller (ör. Muse
+Spark) bu rollere verilmez. Bu rollere giden veri zaten anonim ve topludur.
+
+**Rol → model eşlemesi:**
+
+| Basamak | Model | Roller |
+|---|---|---|
+| S üretici | GPT-6.1 Sol (Max), yedek GPT-6 Sol (Max) | 8 (kart kuralı), 18, 29, 30, 33, 37, 49 |
+| S denetçi | Gemini 4 Argon (High) | 18, 21, 29, 49'un teslimlerini denetler; 30'da ikinci görüş |
+| A | GPT-6.1 Sol (High) | 19, 20, 22, 24, 25, 26, 27, 31, 32, 34, 35, 43, 44, 50 |
+| A (toplu) | GPT-6.1 Sol (Medium), yedek Kimi K3.1 Pro | 2 (metin kısmı), 11 (metin), 21, 45, 46, 48 |
+| B | Gemini 3.8 Flash (High) | 23, 28, 36, 38, 39, 42; görsel okuma gereken hafif işler (41 yorumu) |
+| B (toplu) | DeepSeek V4.1 Flash | 17'nin ilk taslağı (sonra A ile elenir) |
+| Ücretsiz | Beam Free / Iceman | 17 ve 28 için kaba fikir listesi; yalnız ön eleme |
+| Görsel | ChatGPT (GPT Image 2.5) | 1–12 |
+| Ses / müzik / video | Eleven v4 Turbo, ElevenLabs ses efektleri, Suno v6, Wan 3.0 | 13–16, 47 (ayrı abonelikler; sahip karar verir) |
+
+Basamak yükseltme kuralı: bir rolün teslimlerinin onay oranı üst üste iki hafta %60'ın altına düşerse o rol bir üst
+basamağa alınır; %90'ın üstündeyse bir alt basamak denenir (maliyet düşer).
