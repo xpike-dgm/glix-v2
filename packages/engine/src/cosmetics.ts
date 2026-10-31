@@ -1,11 +1,10 @@
 /**
- * Kozmetik mağaza kataloğu ve günün fırsatı (saf). Sunucu (satın alma, kuşanma, fiyat) ve istemci (görünüm,
+ * Kozmetik mağaza kuralları ve günün fırsatı (saf). Sunucu (satın alma, kuşanma, fiyat) ve istemci (görünüm,
  * geri sayım) aynı tabloyu kullanır. Sahip kararları: `docs/YOL-HARITASI.md` U18, ayrıntı `docs/HESAP.md`.
  *
- * Yeni bir tür eklemek: `COSMETIC_TYPES`'a satır, `Cosmetics`'e anahtar, `ITEMS`'a ürünler; istemcide türün çizicisi.
- * M2'de yalnız kodla çizilen üç tür var (unvan, ad efekti, çerçeve). M4'te kürsü karakteri gelir: `dans` (tek yuva) ve
- * her giysi yuvası kendi türüdür (`sapka`, `ust`; ileride alt, ayakkabı, aksesuar). Giysi türlerinin `group` alanı
- * `"giysi"`dir: mağaza hepsini tek "Giysiler" sekmesinde toplar, dolap yuva başına bölüm gösterir.
+ * Ürünler kodda değil, `katalog/magaza.json` dosyasındadır (MG-1; doğrulama `shopCatalog.ts`). Türler ve ürün
+ * satırının biçimi `cosmeticTypes.ts`'tedir. Yeni bir tür eklemek: `COSMETIC_TYPES`'a satır, `Cosmetics`'e anahtar,
+ * katalog dosyasına ürünler; istemcide türün çizicisi.
  *
  * Giysi yuvaları: şapka, üst, alt, ayakkabı, aksesuar ve tam kostüm (`GIYSI_SIRASI`). Boş yuva (katalogda ürünü
  * olmayan tür) arayüzde gösterilmez. Kostüm kuşanılınca kapladığı yuvaların giysisi çıkar (`covers`, bkz. `lookRules`).
@@ -13,537 +12,41 @@
  * Renk seçeneği: her giysi beş neon renkle giyilir (`CLOTHING_COLOURS`; çizimin camgöbeği varsayılandır). Kuşanılan
  * değer `kimlik` (varsayılan renk) ya da `kimlik~renk`tir; `cosmetic_equipped.item_id` metindir, şema değişmez.
  * Renk yalnız giysinin neon vurgusunu boyar (istemci süzgeci). Sahiplik kuralı `COLOUR_MODE` ile tek yerden seçilir.
+ *
+ * Satış (MG-3): `satista: false` ya da çıkış tarihi (`cikis`) gelmemiş ürün mağazada görünmez ve satın alınamaz
+ * (`isOnSale`); sahibi kuşanmaya devam eder (kimlik doğrulaması tüm katalogla yapılır).
  */
+import {
+  COSMETIC_TYPES,
+  type CosmeticItem,
+  type Cosmetics,
+  type CosmeticType,
+  type CosmeticTypeId,
+} from "./cosmeticTypes.js";
 import { createRng } from "./rng.js";
+import { SHOP_CATALOG_ITEMS } from "./shopCatalog.js";
 
-export type CosmeticRarity = "siradan" | "nadir" | "efsanevi";
+export * from "./cosmeticTypes.js";
 
-/** Nadirliğe göre fiyat (Glix). */
-export const COSMETIC_PRICES: Readonly<Record<CosmeticRarity, number>> = {
-  siradan: 150,
-  nadir: 400,
-  efsanevi: 1000,
-};
-
-/** Oyunculara görünen kuşanılmış kozmetikler; yalnız dolu olanlar yazılır. Anahtarlar tür tablosundadır. */
-export interface Cosmetics {
-  title?: string;
-  nameFx?: string;
-  frame?: string;
-  /** Kürsü dansı (`dans` türü); kuşanılmadıysa varsayılan dans. */
-  dance?: string;
-  /** Giysi yuvaları (kürsü karakteri); değer `kimlik` ya da `kimlik~renk`. */
-  hat?: string;
-  top?: string;
-  bottom?: string;
-  shoes?: string;
-  accessory?: string;
-  /** Tam kostüm: kapladığı yuvaların giysisini ezer. */
-  costume?: string;
-  /** Kart arkası (`kart-arkasi` türü); kuşanılmadıysa klasik sırt. */
-  cardBack?: string;
-  /** Zafer kutlaması (`zafer` türü); kazanan kuşandıysa final ekranında herkese oynar. */
-  celebration?: string;
-  /** Lobi giriş efekti (`giris` türü); lobiye girişte koltukta oynar. */
-  entry?: string;
-}
-export type CosmeticKey = keyof Cosmetics;
-
-export type CosmeticTypeId =
-  | "unvan"
-  | "ad-efekti"
-  | "cerceve"
-  | "dans"
-  | "sapka"
-  | "ust"
-  | "alt"
-  | "ayakkabi"
-  | "aksesuar"
-  | "kostum"
-  | "kart-arkasi"
-  | "zafer"
-  | "tepki"
-  | "giris";
-
-/** Varsayılan kürsü dansı (ücretsiz, kuşanılmadığında oynar). Dans dosyası `karakter/dans/<kimlik>.json`. */
-export const DEFAULT_DANCE = "sevinc";
-/** İkinci ve üçüncü için selam hareketi; satılmaz. */
-export const PLACE_DANCE = "selam";
-
-export interface CosmeticType {
-  id: CosmeticTypeId;
-  /**
-   * `Cosmetics` içindeki anahtar. `null`: tür kuşanılmaz, sahip olmak yeter (tepki paketleri); sunucu kuşanmayı
-   * reddeder ve oyunculara kuşanılan olarak gitmez.
-   */
-  key: CosmeticKey | null;
-  /** Tekil ad ("Lakap"), çoğul ad (sekme: "Lakaplar") ve ücretsiz temel seçeneğin adı. */
-  name: string;
-  plural: string;
-  none: string;
-  /** Mağazada aynı sekmeyi paylaşan türler ("giysi"); yoksa tür kendi sekmesidir. */
-  group?: "giysi";
-}
-
-/** Kuşanılabilir mi (tek yuvalı)? Tepki paketleri değildir: alınan paket hep kullanılabilir. */
-export const isEquippable = (type: CosmeticType): boolean => type.key !== null;
-
-export const COSMETIC_TYPES: readonly CosmeticType[] = [
-  { id: "unvan", key: "title", name: "Lakap", plural: "Lakaplar", none: "Yok" },
-  { id: "ad-efekti", key: "nameFx", name: "Ad efekti", plural: "Ad efektleri", none: "Yok" },
-  { id: "cerceve", key: "frame", name: "Çerçeve", plural: "Çerçeveler", none: "Yok" },
-  // Dansın "yok" seçeneği varsayılan dans Sevinç'tir (ücretsiz; katalogda ürün olarak yer almaz).
-  { id: "dans", key: "dance", name: "Dans", plural: "Danslar", none: "Sevinç" },
-  { id: "sapka", key: "hat", name: "Şapka", plural: "Şapkalar", none: "Yok", group: "giysi" },
-  { id: "ust", key: "top", name: "Üst", plural: "Üstler", none: "Yok", group: "giysi" },
-  { id: "alt", key: "bottom", name: "Alt", plural: "Altlar", none: "Yok", group: "giysi" },
-  { id: "ayakkabi", key: "shoes", name: "Ayakkabı", plural: "Ayakkabılar", none: "Yok", group: "giysi" },
-  { id: "aksesuar", key: "accessory", name: "Aksesuar", plural: "Aksesuarlar", none: "Yok", group: "giysi" },
-  { id: "kostum", key: "costume", name: "Kostüm", plural: "Kostümler", none: "Yok", group: "giysi" },
-  // Kart arkasının "yok" seçeneği klasik sırttır (ücretsiz, katalogda ürün olarak yer almaz).
-  { id: "kart-arkasi", key: "cardBack", name: "Kart arkası", plural: "Kart arkaları", none: "Klasik" },
-  // Zaferin "yok" seçeneği her finaldeki klasik konfetidir.
-  {
-    id: "zafer",
-    key: "celebration",
-    name: "Zafer kutlaması",
-    plural: "Zafer kutlamaları",
-    none: "Klasik konfeti",
-  },
-  // Paketler kuşanılmaz: sahip olunan her paketin çıkartmaları tepki yelpazesine eklenir.
-  { id: "tepki", key: null, name: "Tepki paketi", plural: "Tepki paketleri", none: "Yok" },
-  { id: "giris", key: "entry", name: "Giriş efekti", plural: "Giriş efektleri", none: "Yok" },
-];
-
-export interface CosmeticItem {
-  id: string;
-  type: CosmeticTypeId;
-  rarity: CosmeticRarity;
-  /** Liste fiyatı (Glix); nadirlikten türer. Fırsat indirimi `dailyDeals` ile ayrıca hesaplanır. */
-  price: number;
-  name: string;
-  description: string;
-  /**
-   * Karakter varlığı: `dans` için dans dosyasının kimliği (`karakter/dans/<asset>.json`), giysi için `rig.json`
-   * `wardrobe` katmanının adı (şapka `sapka`, ceket `ceket`). Resimli türlerde `public/assets/shop/` altındaki
-   * dosya öneki: kart arkası `kart-arkasi/<asset>.webp`, zafer `zafer/<asset>-1..4.webp`, tepki paketi
-   * `tepki/<asset>-1..6.webp` (paket kimliği de budur), giriş `giris/<asset>-zemin|isik.webp`.
-   */
-  asset?: string;
-  /**
-   * Yalnız kostüm: kapladığı giysi yuvaları. Kuşanılınca bu yuvalardaki giysiler çıkar (kostüm onların yerini
-   * tutar). Parçalarının kemiklerinden türer (`coveredSlots`); katalog testi rig.json ile eşitliği denetler.
-   */
-  covers?: readonly CosmeticTypeId[];
-}
-
-function item(
-  id: string,
-  type: CosmeticTypeId,
-  rarity: CosmeticRarity,
-  name: string,
-  description: string,
-  asset?: string,
-  covers?: readonly CosmeticTypeId[],
-): CosmeticItem {
-  return {
-    id,
-    type,
-    rarity,
-    price: COSMETIC_PRICES[rarity],
-    name,
-    description,
-    ...(asset ? { asset } : {}),
-    ...(covers ? { covers } : {}),
-  };
-}
-
-export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
-  item("unvan-parti-canavari", "unvan", "siradan", "Parti Canavarı", "Adının altında herkes görsün."),
-  item("unvan-sessiz-tehlike", "unvan", "siradan", "Sessiz Tehlike", "Az konuşur, çok kazanır."),
-  item("unvan-sansli", "unvan", "siradan", "Şanslı", "Zar hep senin yanında."),
-  item("unvan-taktikci", "unvan", "siradan", "Taktikçi", "Her hamle hesaplı."),
-  item("unvan-bluf-ustasi", "unvan", "nadir", "Blöf Ustası", "Yüzünden hiçbir şey anlaşılmaz."),
-  item("unvan-son-saniyeci", "unvan", "nadir", "Son Saniyeci", "İş son saniyede biter."),
-  item("unvan-efsane", "unvan", "efsanevi", "Efsane", "Masanın en büyük adı."),
-  item("ad-neon-mavi", "ad-efekti", "siradan", "Neon Mavi", "Adın mavi neon gibi parlar."),
-  item("ad-neon-pembe", "ad-efekti", "siradan", "Neon Pembe", "Adın pembe neon gibi parlar."),
-  item("ad-gokkusagi", "ad-efekti", "nadir", "Gökkuşağı", "Adının renkleri yavaşça akar."),
-  item("ad-kivilcim", "ad-efekti", "nadir", "Kıvılcım", "Adın hafifçe kıvılcım saçar."),
-  item("ad-altin-parilti", "ad-efekti", "efsanevi", "Altın Parıltı", "Adın altın gibi parlar."),
-  item("cerceve-camgobegi", "cerceve", "siradan", "Camgöbeği Halka", "Avatarını camgöbeği halka sarar."),
-  item("cerceve-pembe", "cerceve", "siradan", "Pembe Halka", "Avatarını pembe halka sarar."),
-  item("cerceve-cift", "cerceve", "nadir", "Çift Halka", "İç içe iki ince halka."),
-  item("cerceve-donen-neon", "cerceve", "nadir", "Dönen Neon", "Avatarının çevresinde dönen neon."),
-  item("cerceve-altin-tac", "cerceve", "efsanevi", "Altın Taç Halkası", "Taçlı altın halka."),
-  item("cerceve-yesil-sarmasik", "cerceve", "siradan", "Yeşil Sarmaşık", "Neon yapraklı sarmaşık halka."),
-  item(
-    "cerceve-buz-kristali",
-    "cerceve",
-    "siradan",
-    "Buz Kristali",
-    "Sivri buz kristalleriyle soğuk parıltı.",
-  ),
-  item(
-    "cerceve-ates-halkasi",
-    "cerceve",
-    "nadir",
-    "Ateş Halkası",
-    "Avatarının çevresini neon alevler sarar.",
-  ),
-  item("cerceve-devre-karti", "cerceve", "nadir", "Devre Kartı", "Işıklı düğümlü elektronik devre yolları."),
-  item("cerceve-galaksi", "cerceve", "efsanevi", "Galaksi", "Yıldızlar ve dönen küçük bir gezegen."),
-  item("cerceve-ejderha", "cerceve", "efsanevi", "Ejderha", "Halkaya dolanmış altın-kırmızı neon ejderha."),
-  item("dans-twist", "dans", "siradan", "Twist", "Kalçalar sağa sola, ayaklar yerde.", "twist"),
-  item("dans-tavuk", "dans", "siradan", "Tavuk Dansı", "Kanatlar çırpılır, kuyruk sallanır.", "tavuk"),
-  item("dans-mutlu", "dans", "siradan", "Neşeli Adım", "Gülümseten, hafif adımlı bir dans.", "mutlu"),
-  item("dans-charleston", "dans", "nadir", "Charleston", "Eski zaman, yeni neon.", "charleston"),
-  item("dans-lambada", "dans", "nadir", "Lambada", "Kalçalar dalgalanır.", "lambada"),
-  item("dans-makarena", "dans", "nadir", "Makarena", "Kollar sırayla, sonra bir dönüş.", "makarena"),
-  item("dans-kazacok", "dans", "efsanevi", "Kazaçok", "Çömel, tekmele, zıpla.", "kazacok"),
-  item(
-    "dans-cizgi-film",
-    "dans",
-    "efsanevi",
-    "Çizgi Film Dansı",
-    "Eski bir çizgi filmden fırlamış gibi.",
-    "mickey",
-  ),
-  item(
-    "kart-neon-izgara",
-    "kart-arkasi",
-    "siradan",
-    "Neon Izgara",
-    "Kart sırtında neon bir ızgara.",
-    "neon-izgara",
-  ),
-  item(
-    "kart-gece-sehri",
-    "kart-arkasi",
-    "siradan",
-    "Gece Şehri",
-    "Kartların sırtında ışıl ışıl bir şehir.",
-    "gece-sehri",
-  ),
-  item(
-    "kart-retro-oyun",
-    "kart-arkasi",
-    "siradan",
-    "Retro Oyun",
-    "Piksel piksel neon oyun salonu.",
-    "retro-oyun",
-  ),
-  item(
-    "kart-okyanus",
-    "kart-arkasi",
-    "siradan",
-    "Derin Okyanus",
-    "Su altında parlayan denizanaları.",
-    "okyanus",
-  ),
-  item(
-    "kart-mor-girdap",
-    "kart-arkasi",
-    "nadir",
-    "Mor Girdap",
-    "Sırttaki mor girdap seni içine çeker.",
-    "mor-girdap",
-  ),
-  item("kart-elektrik", "kart-arkasi", "nadir", "Elektrik", "Kartın sırtında elektrik akar.", "elektrik"),
-  item(
-    "kart-ejderha-pulu",
-    "kart-arkasi",
-    "nadir",
-    "Ejderha Pulu",
-    "Kırmızı-altın pullar, ortada parlayan göz.",
-    "ejderha-pulu",
-  ),
-  item(
-    "kart-kozmik-tac",
-    "kart-arkasi",
-    "efsanevi",
-    "Kozmik Taç",
-    "Galaksinin ortasında yıldızlardan taç.",
-    "kozmik-tac",
-  ),
-  item(
-    "kart-altin-kraliyet",
-    "kart-arkasi",
-    "efsanevi",
-    "Altın Kraliyet",
-    "Kraliyete yakışır altın sırt.",
-    "altin-kraliyet",
-  ),
-  item(
-    "zafer-konfeti",
-    "zafer",
-    "siradan",
-    "Konfeti Patlaması",
-    "Kazanınca renkli konfeti patlar.",
-    "konfeti",
-  ),
-  item("zafer-balon", "zafer", "siradan", "Neon Balonlar", "Kazanınca neon balonlar yükselir.", "balon"),
-  item(
-    "zafer-havai-fisek",
-    "zafer",
-    "nadir",
-    "Havai Fişek",
-    "Kazanınca gökyüzü havai fişekle dolar.",
-    "havai-fisek",
-  ),
-  item("zafer-simsek", "zafer", "nadir", "Şimşek Fırtınası", "Kazanınca şimşekler çakar.", "simsek"),
-  item(
-    "zafer-altin-yagmur",
-    "zafer",
-    "efsanevi",
-    "Altın Yağmur",
-    "Kazanınca altın ve yıldız yağar.",
-    "altin-yagmur",
-  ),
-  item(
-    "tepki-neon-yuzler",
-    "tepki",
-    "siradan",
-    "Neon Yüzler",
-    "Altı neon yüz ifadesi: gülen, şaşkın, sinirli ve daha fazlası.",
-    "neon-yuzler",
-  ),
-  item(
-    "tepki-hayvanlar",
-    "tepki",
-    "siradan",
-    "Neon Hayvanlar",
-    "Gülen kedi, şaşkın baykuş, uykucu panda ve daha fazlası.",
-    "hayvanlar",
-  ),
-  item("tepki-parti", "tepki", "nadir", "Parti", "Şapka, disko topu, kadeh ve daha fazlası.", "parti"),
-  item(
-    "tepki-oyun-ani",
-    "tepki",
-    "nadir",
-    "Oyun Anı",
-    "Düşünen avatar, kum saati, zar, şans yoncası ve daha fazlası.",
-    "oyun-ani",
-  ),
-  item(
-    "tepki-efsane",
-    "tepki",
-    "efsanevi",
-    "Efsane Tepkiler",
-    "Taç, ateş topu, roket, elmas ve daha fazlası.",
-    "efsane-tepkiler",
-  ),
-  item(
-    "tepki-kozmik",
-    "tepki",
-    "efsanevi",
-    "Kozmik",
-    "Gezegen, kuyruklu yıldız, UFO, kara delik ve daha fazlası.",
-    "kozmik",
-  ),
-  item(
-    "giris-isinlanma",
-    "giris",
-    "siradan",
-    "Işınlanma",
-    "Lobiye ışık huzmesiyle ışınlanırsın.",
-    "isinlanma",
-  ),
-  item("giris-duman", "giris", "siradan", "Duman", "Lobiye dumanın içinden çıkarsın.", "duman"),
-  item("giris-simsek", "giris", "nadir", "Şimşek", "Lobiye şimşek çakarak girersin.", "simsek"),
-  item("giris-portal", "giris", "nadir", "Portal", "Lobiye bir portaldan geçersin.", "portal"),
-  item(
-    "giris-altin-isik",
-    "giris",
-    "efsanevi",
-    "Altın Işık Sütunu",
-    "Lobiye altın bir ışık sütunuyla inersin.",
-    "altin-isik",
-  ),
-  item("sapka-neon-kep", "sapka", "siradan", "Neon Kep", "Kürsüde başında neon bir kep.", "sapka"),
-  item("sapka-bere", "sapka", "siradan", "Bere", "Ponponlu, neon çizgili sıcak bir bere.", "bere"),
-  item("sapka-fotr", "sapka", "siradan", "Fötr", "Neon şeritli klasik fötr şapka.", "fotr"),
-  item("sapka-parti", "sapka", "siradan", "Parti Şapkası", "Neon zikzaklı külah: parti başlasın!", "parti"),
-  item("sapka-kasket", "sapka", "siradan", "Kasket", "Düz siperli işçi kasketi, neon şeritli.", "kasket"),
-  item("sapka-boynuz", "sapka", "siradan", "Neon Boynuz", "Parlak uçlu sevimli şeytan boynuzları.", "boynuz"),
-  item(
-    "sapka-kovboy",
-    "sapka",
-    "nadir",
-    "Kovboy Şapkası",
-    "Neon dikişli, geniş kenarlı kovboy şapkası.",
-    "kovboy",
-  ),
-  item(
-    "sapka-kulaklikli-kask",
-    "sapka",
-    "nadir",
-    "Kulaklıklı Kask",
-    "Neon ışıklı kulaklıkla gelen fütüristik kask.",
-    "kulaklikli-kask",
-  ),
-  item(
-    "sapka-korsan",
-    "sapka",
-    "nadir",
-    "Korsan Şapkası",
-    "Ortasında neon yıldız parlayan korsan şapkası.",
-    "korsan",
-  ),
-  item(
-    "sapka-sihirbaz",
-    "sapka",
-    "nadir",
-    "Sihirbaz",
-    "Neon yıldızlı, hilalli uzun sivri şapka.",
-    "sihirbaz",
-  ),
-  item(
-    "sapka-samuray",
-    "sapka",
-    "efsanevi",
-    "Samuray Kaskı",
-    "Neon ön süslü, zırh plakalı kabuto.",
-    "samuray",
-  ),
-  item("sapka-tac", "sapka", "efsanevi", "Taç", "Neon kristallerle süslü altın taç.", "tac"),
-  item("ust-neon-bomber", "ust", "nadir", "Neon Bomber", "Kürsüde sırtında neon bomber ceket.", "ceket"),
-  item("ust-kapusonlu", "ust", "siradan", "Kapüşonlu", "Göğsünde neon şeritli bol kapüşonlu.", "kapusonlu"),
-  item("ust-forma", "ust", "siradan", "Forma", "Neon çizgili kısa kollu spor forması.", "forma"),
-  item("ust-deri-ceket", "ust", "nadir", "Deri Ceket", "Yakası neon kenarlı siyah deri ceket.", "deri-ceket"),
-  item("ust-smokin", "ust", "nadir", "Smokin", "Papyonlu, yakası neon smokin.", "smokin"),
-  item(
-    "ust-yagmurluk",
-    "ust",
-    "siradan",
-    "Yağmurluk",
-    "Parlak, neon şeritli kapüşonlu yağmurluk.",
-    "yagmurluk",
-  ),
-  item("ust-kimono", "ust", "nadir", "Kimono", "Geniş kollu, neon kuşaklı kimono ceket.", "kimono"),
-  item(
-    "ust-zirh-yelek",
-    "ust",
-    "efsanevi",
-    "Zırh Yelek",
-    "Neon panelli fütüristik zırh yelek.",
-    "zirh-yelek",
-  ),
-  item("alt-kot", "alt", "siradan", "Kot", "Dizleri hafif yıpranmış, yan dikişi neon kot.", "kot"),
-  item("alt-sort", "alt", "siradan", "Şort", "Neon kenarlı şort.", "sort"),
-  item("alt-esofman", "alt", "siradan", "Eşofman", "Yanında iki neon şerit olan eşofman altı.", "esofman"),
-  item("alt-kargo", "alt", "nadir", "Kargo", "Yan cepli, neon fermuarlı kargo pantolon.", "kargo"),
-  item("alt-etek", "alt", "nadir", "Etek", "Neon kenarlı pileli kısa etek.", "etek"),
-  item(
-    "alt-takim-pantolon",
-    "alt",
-    "nadir",
-    "Takım Pantolon",
-    "Ütü çizgisi ince neon kumaş pantolon.",
-    "takim-pantolon",
-  ),
-  item("ayakkabi-spor", "ayakkabi", "siradan", "Spor Ayakkabı", "Neon bağcıklı spor ayakkabı.", "spor"),
-  item("ayakkabi-terlik", "ayakkabi", "siradan", "Terlik", "Neon bantlı parmak arası terlik.", "terlik"),
-  item(
-    "ayakkabi-kaykay",
-    "ayakkabi",
-    "siradan",
-    "Kaykay Ayakkabısı",
-    "Yanı neon çizgili kaykay ayakkabısı.",
-    "kaykay",
-  ),
-  item("ayakkabi-bot", "ayakkabi", "nadir", "Bot", "Çapraz neon bağcıklı kalın tabanlı bot.", "bot"),
-  item("ayakkabi-paten", "ayakkabi", "nadir", "Paten", "Tekerlekleri parlayan neon paten.", "paten"),
-  item(
-    "ayakkabi-neon-cizme",
-    "ayakkabi",
-    "efsanevi",
-    "Neon Çizme",
-    "Dize kadar uzanan ışıl ışıl çizme.",
-    "neon-cizme",
-  ),
-  item("aksesuar-kolye", "aksesuar", "siradan", "Kolye", "Kalın zincir, parlayan neon madalyon.", "kolye"),
-  item("aksesuar-atki", "aksesuar", "siradan", "Atkı", "Ucu göğse düşen neon şeritli atkı.", "atki"),
-  item(
-    "aksesuar-gunes-gozlugu",
-    "aksesuar",
-    "nadir",
-    "Güneş Gözlüğü",
-    "Maskenin önüne geniş neon gözlük.",
-    "gunes-gozlugu",
-  ),
-  item(
-    "aksesuar-sirt-cantasi",
-    "aksesuar",
-    "nadir",
-    "Sırt Çantası",
-    "Askıları omuzda, ışıklı sırt çantası.",
-    "sirt-cantasi",
-  ),
-  item(
-    "aksesuar-pelerin",
-    "aksesuar",
-    "nadir",
-    "Pelerin",
-    "Omuzdan bacaklara uzanan neon kenarlı pelerin.",
-    "pelerin",
-  ),
-  item(
-    "aksesuar-kanat",
-    "aksesuar",
-    "efsanevi",
-    "Neon Kanat",
-    "Sırtta açılan ışıl ışıl tüy kanatlar.",
-    "kanat",
-  ),
-  item("kostum-ninja", "kostum", "efsanevi", "Ninja", "Başlıklı siyah ninja kıyafeti, neon kuşak.", "ninja", [
-    "sapka",
-    "ust",
-    "alt",
-    "ayakkabi",
-  ]),
-  item(
-    "kostum-robot",
-    "kostum",
-    "efsanevi",
-    "Robot",
-    "Metal plakalı zırh, parlayan neon eklemler.",
-    "robot",
-    ["sapka", "ust", "alt", "ayakkabi"],
-  ),
-  item(
-    "kostum-astronot",
-    "kostum",
-    "efsanevi",
-    "Astronot",
-    "Neon panelli uzay kıyafeti ve kask.",
-    "astronot",
-    ["sapka", "ust", "alt", "ayakkabi"],
-  ),
-  item(
-    "kostum-korsan-kaptan",
-    "kostum",
-    "efsanevi",
-    "Korsan Kaptan",
-    "Uzun ceket, kemer, çizme ve kaptan şapkası.",
-    "korsan-kaptan",
-    ["sapka", "ust", "alt", "ayakkabi"],
-  ),
-  item(
-    "kostum-super-kahraman",
-    "kostum",
-    "efsanevi",
-    "Süper Kahraman",
-    "Pelerinli kostüm, göğsünde neon simge.",
-    "super-kahraman",
-    ["sapka", "ust", "alt", "ayakkabi"],
-  ),
-];
+/** Bütün ürünler (satıştan kalkanlar dahil: sahipleri kullanmaya devam eder), katalog dosyası sırasıyla. */
+export const COSMETIC_ITEMS: readonly CosmeticItem[] = SHOP_CATALOG_ITEMS;
 
 const BY_ID: ReadonlyMap<string, CosmeticItem> = new Map(COSMETIC_ITEMS.map((i) => [i.id, i]));
 
+/**
+ * Önizleme katmanı (yalnız istemcinin `onizleme.html` sayfası): Üretim Merkezi'nden gelen taslak ürün satırları
+ * kataloğun üstüne bellekte eklenir, böylece oyunun gerçek bileşenleri taslağı çizebilir. Sunucu bunu hiç çağırmaz;
+ * satın alma ve kuşanma her zaman katalog dosyasıyla doğrulanır.
+ */
+let previewItems: ReadonlyMap<string, CosmeticItem> | null = null;
+
+/** Taslak satırları önizleme katmanına koyar (`null` temizler). Yalnız önizleme sayfası çağırır. */
+export function setPreviewItems(items: readonly CosmeticItem[] | null): void {
+  previewItems = items && items.length > 0 ? new Map(items.map((i) => [i.id, i])) : null;
+}
+
 export function cosmeticItem(id: string): CosmeticItem | undefined {
-  return BY_ID.get(id);
+  return previewItems?.get(id) ?? BY_ID.get(id);
 }
 
 export function cosmeticType(id: CosmeticTypeId): CosmeticType {
@@ -552,9 +55,54 @@ export function cosmeticType(id: CosmeticTypeId): CosmeticType {
   return t;
 }
 
-/** Bir türün ürünleri (katalog sırasıyla). */
+/** Bir türün ürünleri (katalog sırasıyla; satıştan kalkanlar dahil). Önizleme taslakları sona eklenir. */
 export function itemsOfType(type: CosmeticTypeId): CosmeticItem[] {
-  return COSMETIC_ITEMS.filter((i) => i.type === type);
+  const base = COSMETIC_ITEMS.filter((i) => i.type === type).map((i) => previewItems?.get(i.id) ?? i);
+  if (!previewItems) return base;
+  for (const p of previewItems.values()) if (p.type === type && !BY_ID.has(p.id)) base.push(p);
+  return base;
+}
+
+// ---- Satış, çıkış tarihi ve koleksiyon (MG-3) ----
+
+/** Çıkış gününün başladığı an: o İstanbul gününün gece yarısı (UTC ms). */
+export function releaseAt(cikis: string): number {
+  const [y, m, d] = cikis.split("-").map(Number);
+  return Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1) - ISTANBUL_OFFSET_MS;
+}
+
+/** Ürün `ms` anında mağazada mı (satışta ve çıkış günü gelmiş)? Satın alma da bu kuralla sınırlıdır. */
+export function isOnSale(item: CosmeticItem, ms: number): boolean {
+  return item.satista && (item.cikis === undefined || ms >= releaseAt(item.cikis));
+}
+
+/** Mağazada görünen ürünler (katalog sırasıyla). */
+export function shopItemsOfType(type: CosmeticTypeId, ms: number): CosmeticItem[] {
+  return itemsOfType(type).filter((i) => isOnSale(i, ms));
+}
+
+export interface ShopCollection {
+  /** Koleksiyon adı (katalogdaki gibi). */
+  name: string;
+  items: CosmeticItem[];
+}
+
+/** En az iki ürünü satışta olan koleksiyonlar (ilk ürünlerinin katalog sırasıyla). */
+export function shopCollections(ms: number): ShopCollection[] {
+  const groups = new Map<string, CosmeticItem[]>();
+  for (const t of COSMETIC_TYPES)
+    for (const it of shopItemsOfType(t.id, ms)) {
+      if (it.koleksiyon === undefined) continue;
+      const g = groups.get(it.koleksiyon);
+      if (g) g.push(it);
+      else groups.set(it.koleksiyon, [it]);
+    }
+  const order = (items: CosmeticItem[]): number =>
+    Math.min(...items.map((i) => COSMETIC_ITEMS.findIndex((c) => c.id === i.id) >>> 0));
+  return [...groups.entries()]
+    .filter(([, items]) => items.length >= 2)
+    .sort((a, b) => order(a[1]) - order(b[1]))
+    .map(([name, items]) => ({ name, items }));
 }
 
 // ---- Giysi yuvaları, kemik eşlemesi, kostüm kuralı ----
@@ -651,7 +199,7 @@ export function cleanEquipped(type: CosmeticTypeId, value: unknown): string | nu
   if (typeof value !== "string" || value.length > 64) return null;
   const e = splitEquipped(value);
   if (!e) return null;
-  const it = BY_ID.get(e.id);
+  const it = cosmeticItem(e.id);
   if (!it || it.type !== type) return null;
   if (value.includes("~") && !isClothingType(type)) return null;
   return equippedValue(e.id, e.colour);
@@ -795,10 +343,6 @@ export interface DailyDeal {
 }
 
 /**
- * O İstanbul gününün fırsatları: ücretli ürünlerden gün numarasıyla tohumlanan karıştırmadan ilk `DEAL_COUNT`
- * tanesi (farklı). Aynı gün her yerde aynı sonucu verir.
- */
-/**
  * Geçiş dönemi: canlıdaki eski uygulama (önbellekteki PWA) günün fırsatını kendi küçük kataloğundan hesaplar. Katalog
  * büyüdüğü için sunucu başka ürün seçerse oyuncu indirimli gördüğü ürüne tam fiyat öder. Bu tarihe dek fırsat havuzu
  * eski katalogdaki ücretli ürünlerdir (aynı sırayla); eski ve yeni istemci aynı fırsatı gösterir.
@@ -825,24 +369,33 @@ export const LEGACY_DEAL_POOL: readonly string[] = [
 /** Geçişin bittiği an: 12 Kasım 2026 00:00 İstanbul. */
 export const LEGACY_DEAL_POOL_UNTIL = Date.UTC(2026, 10, 11, 21, 0, 0);
 
+/**
+ * O İstanbul gününün fırsatları: satıştaki ücretli ürünlerden gün numarasıyla tohumlanan karıştırmadan ilk
+ * `DEAL_COUNT` tanesi (farklı). Aynı gün her yerde aynı sonucu verir.
+ */
 export function dailyDeals(ms: number): DailyDeal[] {
+  // Satışta olmayan ürün fırsata da çıkmaz (satın alınamayan ürün indirimli gösterilmesin).
   const paid =
     ms < LEGACY_DEAL_POOL_UNTIL
       ? LEGACY_DEAL_POOL.flatMap((id) => {
           const it = BY_ID.get(id);
-          return it && it.price > 0 ? [it] : [];
+          return it && it.price > 0 && isOnSale(it, ms) ? [it] : [];
         })
-      : COSMETIC_ITEMS.filter((i) => i.price > 0);
+      : COSMETIC_ITEMS.filter((i) => i.price > 0 && isOnSale(i, ms));
   const rng = createRng(Math.imul(istanbulDayNumber(ms), 0x9e3779b1) ^ 0x51ed270b);
+  // İndirim ürünün kendi fiyatından hesaplanır (MG-2).
   return rng
     .shuffle(paid)
     .slice(0, DEAL_COUNT)
     .map((i) => ({ itemId: i.id, price: dealPrice(i.price), listPrice: i.price }));
 }
 
-/** Ürünün o anda geçerli fiyatı (fırsattaysa indirimli); ürün yoksa null. */
+/**
+ * Ürünün o anda geçerli satış fiyatı (fırsattaysa indirimli, yoksa katalog fiyatı). Ürün yoksa ya da satışta
+ * değilse null. Sunucu satın almada bu fiyatı kullanır; istemciden fiyat alınmaz.
+ */
 export function currentPrice(itemId: string, ms: number): number | null {
-  const it = BY_ID.get(itemId);
-  if (!it) return null;
+  const it = cosmeticItem(itemId);
+  if (!it || !isOnSale(it, ms)) return null;
   return dailyDeals(ms).find((d) => d.itemId === itemId)?.price ?? it.price;
 }

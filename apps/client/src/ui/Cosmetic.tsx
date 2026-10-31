@@ -1,5 +1,7 @@
 import { type CosmeticItem, type Cosmetics, cosmeticItem } from "@glix/engine";
 import { Show } from "solid-js";
+import { FxParticles } from "./Effects.js";
+import { effectOf, nameFxLook } from "./effects.js";
 import { plateSrc } from "./shopArt.js";
 
 /** Katalogdaki ürünü ve türünü doğrular; bilinmeyen kimlik ya da yanlış tür yok sayılır (ağdan gelen veri). */
@@ -12,14 +14,24 @@ function pick(id: string | undefined, type: CosmeticItem["type"]): CosmeticItem 
 /** Avatar çerçevesi kimliği (geçerliyse). */
 export const frameOf = (c: Cosmetics | undefined): string | undefined => pick(c?.frame, "cerceve")?.id;
 
-/** Oyuncu adı: ad efekti varsa stillenir; yoksa düz metin (ek kutu yok denecek kadar hafif). */
+/**
+ * Oyuncu adı: ad efekti varsa ürünün efekt tarifiyle (MG-4) stillenir; yoksa düz metin (ek kutu yok denecek kadar
+ * hafif). Tarif geçersizse ad düz yazılır.
+ */
 export function PlayerName(props: { name: string; cosmetics?: Cosmetics | undefined }) {
-  const fx = () => pick(props.cosmetics?.nameFx, "ad-efekti");
+  const fx = () => {
+    const it = pick(props.cosmetics?.nameFx, "ad-efekti");
+    const e = effectOf(it);
+    return it && e ? { id: it.id, look: nameFxLook(e) } : null;
+  };
   return (
     <Show when={fx()} fallback={props.name}>
-      {(it) => (
-        <span class="cos-name" data-fx={it().id}>
+      {(f) => (
+        <span class={`cos-name ${f().look.class}`} data-fx={f().id} style={f().look.style}>
           {props.name}
+          <Show when={f().look.particles} keyed>
+            {(e) => <FxParticles effect={e} shape="box" />}
+          </Show>
         </span>
       )}
     </Show>

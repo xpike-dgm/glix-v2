@@ -133,6 +133,8 @@ export function createShopApi(env: ShopEnv): (req: IncomingMessage, res: ServerR
         return fail(404, "unknown_item", "Bu ürün bulunamadı.");
       case "owned":
         return fail(409, "already_owned", "Bu ürüne zaten sahipsin.");
+      case "not_for_sale":
+        return fail(409, "not_for_sale", "Bu ürün şu an satışta değil.");
       case "insufficient":
         return fail(409, "insufficient_glix", "Yeterli Glix yok.", { balance: r.balance, price: r.price });
       case "missing":

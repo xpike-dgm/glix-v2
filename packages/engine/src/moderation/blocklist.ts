@@ -118,3 +118,17 @@ export function moderateText(text: string): ModerationVerdict {
   if (PROFANITY_STEMS.some((s) => squashed.includes(s))) return { ok: false, reason: "profanity" };
   return { ok: true };
 }
+
+/** Yerleşik süzgecin kalıp türü: kök (ayraçsız metinde aranır), ön ek (kelime başı), tam kelime, nefret ön eki. */
+export type BuiltinPatternKind = "kufur-kok" | "kufur-onek" | "kufur-kelime" | "nefret-onek";
+
+/**
+ * Yerleşik süzgecin kalıpları (normalleşmiş hâlleriyle, salt okunur). Üretim Merkezi'nin moderasyon listesi
+ * (`GET /api/uretim/moderasyon`) bunları "yerlesik" kaynağıyla gösterir; değiştirmek kod işidir.
+ */
+export const MODERATION_BUILTIN_PATTERNS: readonly { kalip: string; tur: BuiltinPatternKind }[] = [
+  ...PROFANITY_STEMS.map((kalip) => ({ kalip, tur: "kufur-kok" as const })),
+  ...PROFANITY_PREFIXES.map((kalip) => ({ kalip, tur: "kufur-onek" as const })),
+  ...[...PROFANITY_WORDS].map((kalip) => ({ kalip, tur: "kufur-kelime" as const })),
+  ...HATE_PREFIXES.map((kalip) => ({ kalip, tur: "nefret-onek" as const })),
+];

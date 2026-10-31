@@ -1,0 +1,247 @@
+/* ---- Efekt motorları (MG-4): ürünün efekt tarifi CSS değişkenlerine çevrilir (ui/effects.ts) ----
+   Değişkenler: --fx-renk, --fx-isik, --fx-tepe, --fx-sure, --fx-yon, --fx-degrade, --fx-genislik, --fx-dolgu,
+   --fx-filtre, --fx-son. Hareket azaltmada (oyunun ayarı ya da sistemin tercihi) her motor sade sürümüne iner. */
+
+/* ---- Ad efekti: parlama ---- */
+.cos-name.fx-parlama {
+  color: var(--fx-renk);
+  text-shadow: var(--fx-isik);
+}
+/* Nabız: ışık iki katman dizisi arasında gidip gelir; hareket azaltmada ışık çizilmez (yalnız renk). */
+.cos-name.fx-parlama.fx-nabiz {
+  text-shadow: none;
+  animation: fx-nabiz var(--fx-sure) ease-in-out infinite;
+}
+@keyframes fx-nabiz {
+  0%,
+  100% {
+    text-shadow: var(--fx-isik);
+  }
+  50% {
+    text-shadow: var(--fx-tepe);
+  }
+}
+
+/* ---- Ad efekti: akan renk ---- */
+.cos-name.fx-akan {
+  background-image: var(--fx-degrade);
+  background-size: var(--fx-genislik);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: var(--fx-dolgu);
+  -webkit-text-fill-color: transparent;
+  filter: var(--fx-filtre);
+  animation: fx-akis var(--fx-sure) linear infinite var(--fx-yon);
+}
+.cos-name.fx-akan.fx-salinim {
+  animation: fx-salinim var(--fx-sure) ease-in-out infinite var(--fx-yon);
+}
+@keyframes fx-akis {
+  to {
+    background-position: var(--fx-son);
+  }
+}
+@keyframes fx-salinim {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+/* ---- Ad efekti: kıvılcım (parçacıklar adın kutusunda) ---- */
+.cos-name.fx-kivilcim {
+  position: relative;
+  color: var(--fx-renk);
+}
+
+/* ---- Parçacıklar (kıvılcım, parçacık yağmuru): yalnız transform/opacity ---- */
+.fx-parcaciklar {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+.fx-parcacik {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  animation-name: fx-kivilcim;
+  animation-timing-function: ease-out;
+  animation-iteration-count: infinite;
+}
+.fx-parcaciklar[data-motor="kivilcim"] .fx-parcacik:not(:has(img)) {
+  background: radial-gradient(circle, #fff 0 20%, var(--fx-renk) 45%, transparent 70%);
+}
+.fx-parcacik img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+@keyframes fx-kivilcim {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4) rotate(var(--fx-don));
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--fx-dx)), calc(-50% + var(--fx-dy))) scale(1) rotate(var(--fx-don));
+  }
+}
+.fx-parcaciklar[data-motor="parcacik-yagmuru"] .fx-parcacik {
+  border-radius: 0;
+  animation-name: fx-yagmur;
+  animation-timing-function: linear;
+}
+@keyframes fx-yagmur {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  10%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--fx-dx)), calc(-50% + var(--fx-dy))) rotate(var(--fx-don));
+  }
+}
+
+/* ---- Çerçeve: dönen halka, kayan/sallanan doku, nabızlı ışık, akan renk ---- */
+.av__frame.fx-don {
+  animation: fx-don var(--fx-sure) linear infinite var(--fx-yon);
+}
+@keyframes fx-don {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.av__frame.fx-kayma {
+  animation: fx-kayma var(--fx-sure) ease-in-out infinite alternate;
+}
+@keyframes fx-kayma {
+  from {
+    transform: translateX(-3%);
+  }
+  to {
+    transform: translateX(3%);
+  }
+}
+.av__frame.fx-sallan {
+  animation: fx-sallan var(--fx-sure) ease-in-out infinite alternate;
+}
+@keyframes fx-sallan {
+  from {
+    transform: rotate(-4deg);
+  }
+  to {
+    transform: rotate(4deg);
+  }
+}
+.av__frame.fx-nabiz-kat {
+  opacity: 0;
+  animation: fx-nabiz-kat var(--fx-sure) ease-in-out infinite;
+}
+@keyframes fx-nabiz-kat {
+  50% {
+    opacity: 1;
+  }
+}
+.av__frame.fx-akan-halka {
+  display: block;
+  overflow: hidden;
+  -webkit-mask: var(--fx-maske) center / 100% 100% no-repeat;
+  mask: var(--fx-maske) center / 100% 100% no-repeat;
+}
+.av__frame.fx-akan-halka i {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background-image: var(--fx-degrade);
+  animation: var(--fx-anim) var(--fx-sure) linear infinite var(--fx-yon);
+}
+@keyframes fx-akis-kay {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes fx-akis-sallan {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-50%);
+  }
+}
+.av__frame.fx-halka-parcacik {
+  display: block;
+}
+
+/* ---- Genel efekt kutusu (giriş/zafer ek katmanı, önizleme) ---- */
+.fx-kutu {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.fx-kutu__kat,
+.fx-kareler,
+.fx-kareler img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.fx-kutu__kat.fx-don {
+  animation: fx-don var(--fx-sure) linear infinite var(--fx-yon);
+}
+.av__entry-fx {
+  inset: -38%;
+  z-index: 3;
+}
+
+/* ---- Hareket azaltma: sade sürüm ---- */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .fx-parcaciklar[data-motor="kivilcim"],
+  :root:not([data-motion="full"]) .av__frame.fx-nabiz-kat {
+    display: none;
+  }
+  :root:not([data-motion="full"]) .fx-parcacik,
+  :root:not([data-motion="full"]) .fx-kutu__kat,
+  :root:not([data-motion="full"]) .av__frame.fx-akan-halka i {
+    animation: none;
+  }
+  :root:not([data-motion="full"]) .fx-parcaciklar[data-motor="parcacik-yagmuru"] .fx-parcacik {
+    opacity: 0.85;
+  }
+  :root:not([data-motion="full"])
+    .fx-parcaciklar[data-motor="parcacik-yagmuru"]
+    .fx-parcacik:nth-child(n + 7) {
+    display: none;
+  }
+}
+:root[data-motion="reduce"] .fx-parcaciklar[data-motor="kivilcim"],
+:root[data-motion="reduce"] .av__frame.fx-nabiz-kat {
+  display: none;
+}
+:root[data-motion="reduce"] .fx-parcacik,
+:root[data-motion="reduce"] .fx-kutu__kat,
+:root[data-motion="reduce"] .av__frame.fx-akan-halka i {
+  animation: none;
+}
+:root[data-motion="reduce"] .fx-parcaciklar[data-motor="parcacik-yagmuru"] .fx-parcacik {
+  opacity: 0.85;
+}
+:root[data-motion="reduce"] .fx-parcaciklar[data-motor="parcacik-yagmuru"] .fx-parcacik:nth-child(n + 7) {
+  display: none;
+}

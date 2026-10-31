@@ -7,6 +7,8 @@ import {
   itemsOfType,
   PLACE_DANCE,
   slotOfBone,
+  validateDance,
+  validateWardrobeLayer,
 } from "@glix/engine";
 import { describe, expect, it } from "vitest";
 import { BONE_SLOT, coversOfBones, pieceRelative } from "../../../../tools/karakter-deneme/giysiEkle.mjs";
@@ -101,5 +103,18 @@ describe("katalog ve karakter varlıkları", () => {
     expect(coversOfBones(["torso", "head", "left_foot"]).sort()).toEqual(
       coveredSlots(["torso", "head", "left_foot"]).sort(),
     );
+  });
+
+  it("MG-5: bütün dans dosyaları ve giysi katmanları ortak doğrulayıcılardan geçer", () => {
+    const rawRig: unknown = JSON.parse(readFileSync(file("rig.json"), "utf8"));
+    for (const f of readdirSync(file("dans/"))) {
+      const r = validateDance(JSON.parse(readFileSync(file(`dans/${f}`), "utf8")), rawRig);
+      expect(r.errors, f).toEqual([]);
+    }
+    for (const [name, layer] of Object.entries(rig.wardrobe)) {
+      const it = clothes.find((i) => i.asset === name);
+      const r = validateWardrobeLayer(layer, rawRig, it);
+      expect(r.errors, name).toEqual([]);
+    }
   });
 });

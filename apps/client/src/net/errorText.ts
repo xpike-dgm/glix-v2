@@ -6,6 +6,7 @@ const TEXTS: Readonly<Record<string, string>> = {
   // Mağaza ve dolap
   unknown_item: "Bu ürün artık yok.",
   already_owned: "Bu ürüne zaten sahipsin.",
+  not_for_sale: "Bu ürün şu an satışta değil.",
   insufficient_glix: "Yeterli Glix yok.",
   not_owned: "Bu ürüne sahip değilsin.",
   unknown_colour: "Bu renk seçilemez.",

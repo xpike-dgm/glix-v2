@@ -1,0 +1,1158 @@
+{
+  "surum": 1,
+  "urunler": [
+    {
+      "id": "unvan-parti-canavari",
+      "type": "unvan",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Parti Canavarı",
+      "description": "Adının altında herkes görsün.",
+      "satista": true
+    },
+    {
+      "id": "unvan-sessiz-tehlike",
+      "type": "unvan",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Sessiz Tehlike",
+      "description": "Az konuşur, çok kazanır.",
+      "satista": true
+    },
+    {
+      "id": "unvan-sansli",
+      "type": "unvan",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Şanslı",
+      "description": "Zar hep senin yanında.",
+      "satista": true
+    },
+    {
+      "id": "unvan-taktikci",
+      "type": "unvan",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Taktikçi",
+      "description": "Her hamle hesaplı.",
+      "satista": true
+    },
+    {
+      "id": "unvan-bluf-ustasi",
+      "type": "unvan",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Blöf Ustası",
+      "description": "Yüzünden hiçbir şey anlaşılmaz.",
+      "satista": true
+    },
+    {
+      "id": "unvan-son-saniyeci",
+      "type": "unvan",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Son Saniyeci",
+      "description": "İş son saniyede biter.",
+      "satista": true
+    },
+    {
+      "id": "unvan-efsane",
+      "type": "unvan",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Efsane",
+      "description": "Masanın en büyük adı.",
+      "satista": true
+    },
+    {
+      "id": "ad-neon-mavi",
+      "type": "ad-efekti",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Mavi",
+      "description": "Adın mavi neon gibi parlar.",
+      "satista": true,
+      "efekt": {
+        "motor": "parlama",
+        "parametreler": {
+          "renk": "#8dfaff",
+          "isiklar": [
+            {
+              "renk": "rgba(46, 242, 255, 0.7)",
+              "yaricap": 6
+            },
+            {
+              "renk": "rgba(46, 242, 255, 0.4)",
+              "yaricap": 14
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ad-neon-pembe",
+      "type": "ad-efekti",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Pembe",
+      "description": "Adın pembe neon gibi parlar.",
+      "satista": true,
+      "efekt": {
+        "motor": "parlama",
+        "parametreler": {
+          "renk": "#ff93e8",
+          "isiklar": [
+            {
+              "renk": "rgba(255, 43, 214, 0.7)",
+              "yaricap": 6
+            },
+            {
+              "renk": "rgba(255, 43, 214, 0.4)",
+              "yaricap": 14
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ad-gokkusagi",
+      "type": "ad-efekti",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Gökkuşağı",
+      "description": "Adının renkleri yavaşça akar.",
+      "satista": true,
+      "efekt": {
+        "motor": "akan-renk",
+        "parametreler": {
+          "renkler": ["#ff8080", "#ffd666", "#85ffa0", "#66ddff", "#bf9dff", "#ff8080"],
+          "aci": 90,
+          "genislik": 200,
+          "akisHizi": 7,
+          "hareket": "akis",
+          "yon": "ileri",
+          "dolgu": "#ffd666"
+        }
+      }
+    },
+    {
+      "id": "ad-kivilcim",
+      "type": "ad-efekti",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Kıvılcım",
+      "description": "Adın hafifçe kıvılcım saçar.",
+      "satista": true,
+      "efekt": {
+        "motor": "parlama",
+        "parametreler": {
+          "renk": "#fff6da",
+          "isiklar": [
+            {
+              "renk": "rgba(255, 226, 140, 0.55)",
+              "yaricap": 3
+            },
+            {
+              "renk": "rgba(255, 194, 59, 0.25)",
+              "yaricap": 8
+            }
+          ],
+          "tepeIsiklar": [
+            {
+              "renk": "rgba(255, 244, 200, 0.95)",
+              "yaricap": 5
+            },
+            {
+              "renk": "rgba(255, 194, 59, 0.6)",
+              "yaricap": 14
+            },
+            {
+              "renk": "rgba(46, 242, 255, 0.35)",
+              "yaricap": 22
+            }
+          ],
+          "nabizHizi": 2.6
+        }
+      }
+    },
+    {
+      "id": "ad-altin-parilti",
+      "type": "ad-efekti",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Altın Parıltı",
+      "description": "Adın altın gibi parlar.",
+      "satista": true,
+      "efekt": {
+        "motor": "akan-renk",
+        "parametreler": {
+          "renkler": ["#ffc233", "#ffe9a0", "#ffb81f", "#fff4c9", "#ffc233", "#ffe08a"],
+          "duraklar": [0, 22, 44, 52, 68, 100],
+          "aci": 100,
+          "genislik": 260,
+          "akisHizi": 4.2,
+          "hareket": "salinim",
+          "yon": "ileri",
+          "dolgu": "#ffc233",
+          "isik": {
+            "renk": "rgba(255, 194, 59, 0.45)",
+            "yaricap": 4
+          }
+        }
+      }
+    },
+    {
+      "id": "cerceve-camgobegi",
+      "type": "cerceve",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Camgöbeği Halka",
+      "description": "Avatarını camgöbeği halka sarar.",
+      "satista": true,
+      "efekt": {
+        "motor": "doku-katmani",
+        "parametreler": {
+          "doku": "cerceve/camgobegi-halka.webp",
+          "karisim": "normal",
+          "hareket": "yok"
+        }
+      }
+    },
+    {
+      "id": "cerceve-pembe",
+      "type": "cerceve",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Pembe Halka",
+      "description": "Avatarını pembe halka sarar.",
+      "satista": true,
+      "efekt": {
+        "motor": "doku-katmani",
+        "parametreler": {
+          "doku": "cerceve/pembe-halka.webp",
+          "karisim": "normal",
+          "hareket": "yok"
+        }
+      }
+    },
+    {
+      "id": "cerceve-cift",
+      "type": "cerceve",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Çift Halka",
+      "description": "İç içe iki ince halka.",
+      "satista": true,
+      "efekt": {
+        "motor": "doku-katmani",
+        "parametreler": {
+          "doku": "cerceve/cift-halka.webp",
+          "karisim": "normal",
+          "hareket": "yok"
+        }
+      }
+    },
+    {
+      "id": "cerceve-donen-neon",
+      "type": "cerceve",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Dönen Neon",
+      "description": "Avatarının çevresinde dönen neon.",
+      "satista": true,
+      "efekt": {
+        "motor": "donen-halka",
+        "parametreler": {
+          "doku": "cerceve/donen-neon.webp",
+          "donusHizi": 14,
+          "katman": 1,
+          "yon": "saat"
+        }
+      }
+    },
+    {
+      "id": "cerceve-altin-tac",
+      "type": "cerceve",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Altın Taç Halkası",
+      "description": "Taçlı altın halka.",
+      "satista": true,
+      "efekt": {
+        "motor": "doku-katmani",
+        "parametreler": {
+          "doku": "cerceve/altin-tac-halkasi.webp",
+          "karisim": "normal",
+          "hareket": "yok"
+        }
+      }
+    },
+    {
+      "id": "cerceve-yesil-sarmasik",
+      "type": "cerceve",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Yeşil Sarmaşık",
+      "description": "Neon yapraklı sarmaşık halka.",
+      "satista": true,
+      "efekt": {
+        "motor": "doku-katmani",
+        "parametreler": {
+          "doku": "cerceve/yesil-sarmasik.webp",
+          "karisim": "normal",
+          "hareket": "yok"
+        }
+      }
+    },
+    {
+      "id": "cerceve-buz-kristali",
+      "type": "cerceve",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Buz Kristali",
+      "description": "Sivri buz kristalleriyle soğuk parıltı.",
+      "satista": true,
+      "efekt": {
+        "motor": "doku-katmani",
+        "parametreler": {
+          "doku": "cerceve/buz-kristali.webp",
+          "karisim": "normal",
+          "hareket": "yok"
+        }
+      }
+    },
+    {
+      "id": "cerceve-ates-halkasi",
+      "type": "cerceve",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Ateş Halkası",
+      "description": "Avatarının çevresini neon alevler sarar.",
+      "satista": true,
+      "efekt": {
+        "motor": "doku-katmani",
+        "parametreler": {
+          "doku": "cerceve/ates-halkasi.webp",
+          "karisim": "normal",
+          "hareket": "yok"
+        }
+      }
+    },
+    {
+      "id": "cerceve-devre-karti",
+      "type": "cerceve",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Devre Kartı",
+      "description": "Işıklı düğümlü elektronik devre yolları.",
+      "satista": true,
+      "efekt": {
+        "motor": "doku-katmani",
+        "parametreler": {
+          "doku": "cerceve/devre-karti.webp",
+          "karisim": "normal",
+          "hareket": "yok"
+        }
+      }
+    },
+    {
+      "id": "cerceve-galaksi",
+      "type": "cerceve",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Galaksi",
+      "description": "Yıldızlar ve dönen küçük bir gezegen.",
+      "satista": true,
+      "efekt": {
+        "motor": "doku-katmani",
+        "parametreler": {
+          "doku": "cerceve/galaksi.webp",
+          "karisim": "normal",
+          "hareket": "yok"
+        }
+      }
+    },
+    {
+      "id": "cerceve-ejderha",
+      "type": "cerceve",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Ejderha",
+      "description": "Halkaya dolanmış altın-kırmızı neon ejderha.",
+      "satista": true,
+      "efekt": {
+        "motor": "doku-katmani",
+        "parametreler": {
+          "doku": "cerceve/ejderha.webp",
+          "karisim": "normal",
+          "hareket": "yok"
+        }
+      }
+    },
+    {
+      "id": "dans-twist",
+      "type": "dans",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Twist",
+      "description": "Kalçalar sağa sola, ayaklar yerde.",
+      "asset": "twist",
+      "satista": true
+    },
+    {
+      "id": "dans-tavuk",
+      "type": "dans",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Tavuk Dansı",
+      "description": "Kanatlar çırpılır, kuyruk sallanır.",
+      "asset": "tavuk",
+      "satista": true
+    },
+    {
+      "id": "dans-mutlu",
+      "type": "dans",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neşeli Adım",
+      "description": "Gülümseten, hafif adımlı bir dans.",
+      "asset": "mutlu",
+      "satista": true
+    },
+    {
+      "id": "dans-charleston",
+      "type": "dans",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Charleston",
+      "description": "Eski zaman, yeni neon.",
+      "asset": "charleston",
+      "satista": true
+    },
+    {
+      "id": "dans-lambada",
+      "type": "dans",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Lambada",
+      "description": "Kalçalar dalgalanır.",
+      "asset": "lambada",
+      "satista": true
+    },
+    {
+      "id": "dans-makarena",
+      "type": "dans",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Makarena",
+      "description": "Kollar sırayla, sonra bir dönüş.",
+      "asset": "makarena",
+      "satista": true
+    },
+    {
+      "id": "dans-kazacok",
+      "type": "dans",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Kazaçok",
+      "description": "Çömel, tekmele, zıpla.",
+      "asset": "kazacok",
+      "satista": true
+    },
+    {
+      "id": "dans-cizgi-film",
+      "type": "dans",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Çizgi Film Dansı",
+      "description": "Eski bir çizgi filmden fırlamış gibi.",
+      "asset": "mickey",
+      "satista": true
+    },
+    {
+      "id": "kart-neon-izgara",
+      "type": "kart-arkasi",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Izgara",
+      "description": "Kart sırtında neon bir ızgara.",
+      "asset": "neon-izgara",
+      "satista": true
+    },
+    {
+      "id": "kart-gece-sehri",
+      "type": "kart-arkasi",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Gece Şehri",
+      "description": "Kartların sırtında ışıl ışıl bir şehir.",
+      "asset": "gece-sehri",
+      "satista": true
+    },
+    {
+      "id": "kart-retro-oyun",
+      "type": "kart-arkasi",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Retro Oyun",
+      "description": "Piksel piksel neon oyun salonu.",
+      "asset": "retro-oyun",
+      "satista": true
+    },
+    {
+      "id": "kart-okyanus",
+      "type": "kart-arkasi",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Derin Okyanus",
+      "description": "Su altında parlayan denizanaları.",
+      "asset": "okyanus",
+      "satista": true
+    },
+    {
+      "id": "kart-mor-girdap",
+      "type": "kart-arkasi",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Mor Girdap",
+      "description": "Sırttaki mor girdap seni içine çeker.",
+      "asset": "mor-girdap",
+      "satista": true
+    },
+    {
+      "id": "kart-elektrik",
+      "type": "kart-arkasi",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Elektrik",
+      "description": "Kartın sırtında elektrik akar.",
+      "asset": "elektrik",
+      "satista": true
+    },
+    {
+      "id": "kart-ejderha-pulu",
+      "type": "kart-arkasi",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Ejderha Pulu",
+      "description": "Kırmızı-altın pullar, ortada parlayan göz.",
+      "asset": "ejderha-pulu",
+      "satista": true
+    },
+    {
+      "id": "kart-kozmik-tac",
+      "type": "kart-arkasi",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Kozmik Taç",
+      "description": "Galaksinin ortasında yıldızlardan taç.",
+      "asset": "kozmik-tac",
+      "satista": true
+    },
+    {
+      "id": "kart-altin-kraliyet",
+      "type": "kart-arkasi",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Altın Kraliyet",
+      "description": "Kraliyete yakışır altın sırt.",
+      "asset": "altin-kraliyet",
+      "satista": true
+    },
+    {
+      "id": "zafer-konfeti",
+      "type": "zafer",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Konfeti Patlaması",
+      "description": "Kazanınca renkli konfeti patlar.",
+      "asset": "konfeti",
+      "satista": true
+    },
+    {
+      "id": "zafer-balon",
+      "type": "zafer",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Balonlar",
+      "description": "Kazanınca neon balonlar yükselir.",
+      "asset": "balon",
+      "satista": true
+    },
+    {
+      "id": "zafer-havai-fisek",
+      "type": "zafer",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Havai Fişek",
+      "description": "Kazanınca gökyüzü havai fişekle dolar.",
+      "asset": "havai-fisek",
+      "satista": true
+    },
+    {
+      "id": "zafer-simsek",
+      "type": "zafer",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Şimşek Fırtınası",
+      "description": "Kazanınca şimşekler çakar.",
+      "asset": "simsek",
+      "satista": true
+    },
+    {
+      "id": "zafer-altin-yagmur",
+      "type": "zafer",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Altın Yağmur",
+      "description": "Kazanınca altın ve yıldız yağar.",
+      "asset": "altin-yagmur",
+      "satista": true
+    },
+    {
+      "id": "tepki-neon-yuzler",
+      "type": "tepki",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Yüzler",
+      "description": "Altı neon yüz ifadesi: gülen, şaşkın, sinirli ve daha fazlası.",
+      "asset": "neon-yuzler",
+      "satista": true
+    },
+    {
+      "id": "tepki-hayvanlar",
+      "type": "tepki",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Hayvanlar",
+      "description": "Gülen kedi, şaşkın baykuş, uykucu panda ve daha fazlası.",
+      "asset": "hayvanlar",
+      "satista": true
+    },
+    {
+      "id": "tepki-parti",
+      "type": "tepki",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Parti",
+      "description": "Şapka, disko topu, kadeh ve daha fazlası.",
+      "asset": "parti",
+      "satista": true
+    },
+    {
+      "id": "tepki-oyun-ani",
+      "type": "tepki",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Oyun Anı",
+      "description": "Düşünen avatar, kum saati, zar, şans yoncası ve daha fazlası.",
+      "asset": "oyun-ani",
+      "satista": true
+    },
+    {
+      "id": "tepki-efsane",
+      "type": "tepki",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Efsane Tepkiler",
+      "description": "Taç, ateş topu, roket, elmas ve daha fazlası.",
+      "asset": "efsane-tepkiler",
+      "satista": true
+    },
+    {
+      "id": "tepki-kozmik",
+      "type": "tepki",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Kozmik",
+      "description": "Gezegen, kuyruklu yıldız, UFO, kara delik ve daha fazlası.",
+      "asset": "kozmik",
+      "satista": true
+    },
+    {
+      "id": "giris-isinlanma",
+      "type": "giris",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Işınlanma",
+      "description": "Lobiye ışık huzmesiyle ışınlanırsın.",
+      "asset": "isinlanma",
+      "satista": true
+    },
+    {
+      "id": "giris-duman",
+      "type": "giris",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Duman",
+      "description": "Lobiye dumanın içinden çıkarsın.",
+      "asset": "duman",
+      "satista": true
+    },
+    {
+      "id": "giris-simsek",
+      "type": "giris",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Şimşek",
+      "description": "Lobiye şimşek çakarak girersin.",
+      "asset": "simsek",
+      "satista": true
+    },
+    {
+      "id": "giris-portal",
+      "type": "giris",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Portal",
+      "description": "Lobiye bir portaldan geçersin.",
+      "asset": "portal",
+      "satista": true
+    },
+    {
+      "id": "giris-altin-isik",
+      "type": "giris",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Altın Işık Sütunu",
+      "description": "Lobiye altın bir ışık sütunuyla inersin.",
+      "asset": "altin-isik",
+      "satista": true
+    },
+    {
+      "id": "sapka-neon-kep",
+      "type": "sapka",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Kep",
+      "description": "Kürsüde başında neon bir kep.",
+      "asset": "sapka",
+      "satista": true
+    },
+    {
+      "id": "sapka-bere",
+      "type": "sapka",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Bere",
+      "description": "Ponponlu, neon çizgili sıcak bir bere.",
+      "asset": "bere",
+      "satista": true
+    },
+    {
+      "id": "sapka-fotr",
+      "type": "sapka",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Fötr",
+      "description": "Neon şeritli klasik fötr şapka.",
+      "asset": "fotr",
+      "satista": true
+    },
+    {
+      "id": "sapka-parti",
+      "type": "sapka",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Parti Şapkası",
+      "description": "Neon zikzaklı külah: parti başlasın!",
+      "asset": "parti",
+      "satista": true
+    },
+    {
+      "id": "sapka-kasket",
+      "type": "sapka",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Kasket",
+      "description": "Düz siperli işçi kasketi, neon şeritli.",
+      "asset": "kasket",
+      "satista": true
+    },
+    {
+      "id": "sapka-boynuz",
+      "type": "sapka",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Boynuz",
+      "description": "Parlak uçlu sevimli şeytan boynuzları.",
+      "asset": "boynuz",
+      "satista": true
+    },
+    {
+      "id": "sapka-kovboy",
+      "type": "sapka",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Kovboy Şapkası",
+      "description": "Neon dikişli, geniş kenarlı kovboy şapkası.",
+      "asset": "kovboy",
+      "satista": true
+    },
+    {
+      "id": "sapka-kulaklikli-kask",
+      "type": "sapka",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Kulaklıklı Kask",
+      "description": "Neon ışıklı kulaklıkla gelen fütüristik kask.",
+      "asset": "kulaklikli-kask",
+      "satista": true
+    },
+    {
+      "id": "sapka-korsan",
+      "type": "sapka",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Korsan Şapkası",
+      "description": "Ortasında neon yıldız parlayan korsan şapkası.",
+      "asset": "korsan",
+      "satista": true
+    },
+    {
+      "id": "sapka-sihirbaz",
+      "type": "sapka",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Sihirbaz",
+      "description": "Neon yıldızlı, hilalli uzun sivri şapka.",
+      "asset": "sihirbaz",
+      "satista": true
+    },
+    {
+      "id": "sapka-samuray",
+      "type": "sapka",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Samuray Kaskı",
+      "description": "Neon ön süslü, zırh plakalı kabuto.",
+      "asset": "samuray",
+      "satista": true
+    },
+    {
+      "id": "sapka-tac",
+      "type": "sapka",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Taç",
+      "description": "Neon kristallerle süslü altın taç.",
+      "asset": "tac",
+      "satista": true
+    },
+    {
+      "id": "ust-neon-bomber",
+      "type": "ust",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Neon Bomber",
+      "description": "Kürsüde sırtında neon bomber ceket.",
+      "asset": "ceket",
+      "satista": true
+    },
+    {
+      "id": "ust-kapusonlu",
+      "type": "ust",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Kapüşonlu",
+      "description": "Göğsünde neon şeritli bol kapüşonlu.",
+      "asset": "kapusonlu",
+      "satista": true
+    },
+    {
+      "id": "ust-forma",
+      "type": "ust",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Forma",
+      "description": "Neon çizgili kısa kollu spor forması.",
+      "asset": "forma",
+      "satista": true
+    },
+    {
+      "id": "ust-deri-ceket",
+      "type": "ust",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Deri Ceket",
+      "description": "Yakası neon kenarlı siyah deri ceket.",
+      "asset": "deri-ceket",
+      "satista": true
+    },
+    {
+      "id": "ust-smokin",
+      "type": "ust",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Smokin",
+      "description": "Papyonlu, yakası neon smokin.",
+      "asset": "smokin",
+      "satista": true
+    },
+    {
+      "id": "ust-yagmurluk",
+      "type": "ust",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Yağmurluk",
+      "description": "Parlak, neon şeritli kapüşonlu yağmurluk.",
+      "asset": "yagmurluk",
+      "satista": true
+    },
+    {
+      "id": "ust-kimono",
+      "type": "ust",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Kimono",
+      "description": "Geniş kollu, neon kuşaklı kimono ceket.",
+      "asset": "kimono",
+      "satista": true
+    },
+    {
+      "id": "ust-zirh-yelek",
+      "type": "ust",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Zırh Yelek",
+      "description": "Neon panelli fütüristik zırh yelek.",
+      "asset": "zirh-yelek",
+      "satista": true
+    },
+    {
+      "id": "alt-kot",
+      "type": "alt",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Kot",
+      "description": "Dizleri hafif yıpranmış, yan dikişi neon kot.",
+      "asset": "kot",
+      "satista": true
+    },
+    {
+      "id": "alt-sort",
+      "type": "alt",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Şort",
+      "description": "Neon kenarlı şort.",
+      "asset": "sort",
+      "satista": true
+    },
+    {
+      "id": "alt-esofman",
+      "type": "alt",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Eşofman",
+      "description": "Yanında iki neon şerit olan eşofman altı.",
+      "asset": "esofman",
+      "satista": true
+    },
+    {
+      "id": "alt-kargo",
+      "type": "alt",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Kargo",
+      "description": "Yan cepli, neon fermuarlı kargo pantolon.",
+      "asset": "kargo",
+      "satista": true
+    },
+    {
+      "id": "alt-etek",
+      "type": "alt",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Etek",
+      "description": "Neon kenarlı pileli kısa etek.",
+      "asset": "etek",
+      "satista": true
+    },
+    {
+      "id": "alt-takim-pantolon",
+      "type": "alt",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Takım Pantolon",
+      "description": "Ütü çizgisi ince neon kumaş pantolon.",
+      "asset": "takim-pantolon",
+      "satista": true
+    },
+    {
+      "id": "ayakkabi-spor",
+      "type": "ayakkabi",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Spor Ayakkabı",
+      "description": "Neon bağcıklı spor ayakkabı.",
+      "asset": "spor",
+      "satista": true
+    },
+    {
+      "id": "ayakkabi-terlik",
+      "type": "ayakkabi",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Terlik",
+      "description": "Neon bantlı parmak arası terlik.",
+      "asset": "terlik",
+      "satista": true
+    },
+    {
+      "id": "ayakkabi-kaykay",
+      "type": "ayakkabi",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Kaykay Ayakkabısı",
+      "description": "Yanı neon çizgili kaykay ayakkabısı.",
+      "asset": "kaykay",
+      "satista": true
+    },
+    {
+      "id": "ayakkabi-bot",
+      "type": "ayakkabi",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Bot",
+      "description": "Çapraz neon bağcıklı kalın tabanlı bot.",
+      "asset": "bot",
+      "satista": true
+    },
+    {
+      "id": "ayakkabi-paten",
+      "type": "ayakkabi",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Paten",
+      "description": "Tekerlekleri parlayan neon paten.",
+      "asset": "paten",
+      "satista": true
+    },
+    {
+      "id": "ayakkabi-neon-cizme",
+      "type": "ayakkabi",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Neon Çizme",
+      "description": "Dize kadar uzanan ışıl ışıl çizme.",
+      "asset": "neon-cizme",
+      "satista": true
+    },
+    {
+      "id": "aksesuar-kolye",
+      "type": "aksesuar",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Kolye",
+      "description": "Kalın zincir, parlayan neon madalyon.",
+      "asset": "kolye",
+      "satista": true
+    },
+    {
+      "id": "aksesuar-atki",
+      "type": "aksesuar",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Atkı",
+      "description": "Ucu göğse düşen neon şeritli atkı.",
+      "asset": "atki",
+      "satista": true
+    },
+    {
+      "id": "aksesuar-gunes-gozlugu",
+      "type": "aksesuar",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Güneş Gözlüğü",
+      "description": "Maskenin önüne geniş neon gözlük.",
+      "asset": "gunes-gozlugu",
+      "satista": true
+    },
+    {
+      "id": "aksesuar-sirt-cantasi",
+      "type": "aksesuar",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Sırt Çantası",
+      "description": "Askıları omuzda, ışıklı sırt çantası.",
+      "asset": "sirt-cantasi",
+      "satista": true
+    },
+    {
+      "id": "aksesuar-pelerin",
+      "type": "aksesuar",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Pelerin",
+      "description": "Omuzdan bacaklara uzanan neon kenarlı pelerin.",
+      "asset": "pelerin",
+      "satista": true
+    },
+    {
+      "id": "aksesuar-kanat",
+      "type": "aksesuar",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Neon Kanat",
+      "description": "Sırtta açılan ışıl ışıl tüy kanatlar.",
+      "asset": "kanat",
+      "satista": true
+    },
+    {
+      "id": "kostum-ninja",
+      "type": "kostum",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Ninja",
+      "description": "Başlıklı siyah ninja kıyafeti, neon kuşak.",
+      "asset": "ninja",
+      "covers": ["sapka", "ust", "alt", "ayakkabi"],
+      "satista": true
+    },
+    {
+      "id": "kostum-robot",
+      "type": "kostum",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Robot",
+      "description": "Metal plakalı zırh, parlayan neon eklemler.",
+      "asset": "robot",
+      "covers": ["sapka", "ust", "alt", "ayakkabi"],
+      "satista": true
+    },
+    {
+      "id": "kostum-astronot",
+      "type": "kostum",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Astronot",
+      "description": "Neon panelli uzay kıyafeti ve kask.",
+      "asset": "astronot",
+      "covers": ["sapka", "ust", "alt", "ayakkabi"],
+      "satista": true
+    },
+    {
+      "id": "kostum-korsan-kaptan",
+      "type": "kostum",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Korsan Kaptan",
+      "description": "Uzun ceket, kemer, çizme ve kaptan şapkası.",
+      "asset": "korsan-kaptan",
+      "covers": ["sapka", "ust", "alt", "ayakkabi"],
+      "satista": true
+    },
+    {
+      "id": "kostum-super-kahraman",
+      "type": "kostum",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Süper Kahraman",
+      "description": "Pelerinli kostüm, göğsünde neon simge.",
+      "asset": "super-kahraman",
+      "covers": ["sapka", "ust", "alt", "ayakkabi"],
+      "satista": true
+    }
+  ]
+}

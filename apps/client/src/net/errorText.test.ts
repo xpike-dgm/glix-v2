@@ -12,6 +12,7 @@ import { shopErrorText } from "./shopRules.js";
 const SERVER_CODES = [
   "unknown_item",
   "already_owned",
+  "not_for_sale",
   "insufficient_glix",
   "not_owned",
   "unknown_colour",

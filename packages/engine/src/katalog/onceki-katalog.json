@@ -1,0 +1,1106 @@
+{
+  "aciklama": "MG-1 öncesi kod kataloğunun anlık görüntüsü (cosmetics.ts, 2026-10-31). Yalnız test okur: ürün kimlikleri, sıraları ve oyuncuya görünen alanlar aynı kalmalı.",
+  "urunler": [
+    {
+      "id": "unvan-parti-canavari",
+      "type": "unvan",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Parti Canavarı",
+      "description": "Adının altında herkes görsün."
+    },
+    {
+      "id": "unvan-sessiz-tehlike",
+      "type": "unvan",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Sessiz Tehlike",
+      "description": "Az konuşur, çok kazanır."
+    },
+    {
+      "id": "unvan-sansli",
+      "type": "unvan",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Şanslı",
+      "description": "Zar hep senin yanında."
+    },
+    {
+      "id": "unvan-taktikci",
+      "type": "unvan",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Taktikçi",
+      "description": "Her hamle hesaplı."
+    },
+    {
+      "id": "unvan-bluf-ustasi",
+      "type": "unvan",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Blöf Ustası",
+      "description": "Yüzünden hiçbir şey anlaşılmaz."
+    },
+    {
+      "id": "unvan-son-saniyeci",
+      "type": "unvan",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Son Saniyeci",
+      "description": "İş son saniyede biter."
+    },
+    {
+      "id": "unvan-efsane",
+      "type": "unvan",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Efsane",
+      "description": "Masanın en büyük adı."
+    },
+    {
+      "id": "ad-neon-mavi",
+      "type": "ad-efekti",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Mavi",
+      "description": "Adın mavi neon gibi parlar."
+    },
+    {
+      "id": "ad-neon-pembe",
+      "type": "ad-efekti",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Pembe",
+      "description": "Adın pembe neon gibi parlar."
+    },
+    {
+      "id": "ad-gokkusagi",
+      "type": "ad-efekti",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Gökkuşağı",
+      "description": "Adının renkleri yavaşça akar."
+    },
+    {
+      "id": "ad-kivilcim",
+      "type": "ad-efekti",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Kıvılcım",
+      "description": "Adın hafifçe kıvılcım saçar."
+    },
+    {
+      "id": "ad-altin-parilti",
+      "type": "ad-efekti",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Altın Parıltı",
+      "description": "Adın altın gibi parlar."
+    },
+    {
+      "id": "cerceve-camgobegi",
+      "type": "cerceve",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Camgöbeği Halka",
+      "description": "Avatarını camgöbeği halka sarar."
+    },
+    {
+      "id": "cerceve-pembe",
+      "type": "cerceve",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Pembe Halka",
+      "description": "Avatarını pembe halka sarar."
+    },
+    {
+      "id": "cerceve-cift",
+      "type": "cerceve",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Çift Halka",
+      "description": "İç içe iki ince halka."
+    },
+    {
+      "id": "cerceve-donen-neon",
+      "type": "cerceve",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Dönen Neon",
+      "description": "Avatarının çevresinde dönen neon."
+    },
+    {
+      "id": "cerceve-altin-tac",
+      "type": "cerceve",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Altın Taç Halkası",
+      "description": "Taçlı altın halka."
+    },
+    {
+      "id": "cerceve-yesil-sarmasik",
+      "type": "cerceve",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Yeşil Sarmaşık",
+      "description": "Neon yapraklı sarmaşık halka."
+    },
+    {
+      "id": "cerceve-buz-kristali",
+      "type": "cerceve",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Buz Kristali",
+      "description": "Sivri buz kristalleriyle soğuk parıltı."
+    },
+    {
+      "id": "cerceve-ates-halkasi",
+      "type": "cerceve",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Ateş Halkası",
+      "description": "Avatarının çevresini neon alevler sarar."
+    },
+    {
+      "id": "cerceve-devre-karti",
+      "type": "cerceve",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Devre Kartı",
+      "description": "Işıklı düğümlü elektronik devre yolları."
+    },
+    {
+      "id": "cerceve-galaksi",
+      "type": "cerceve",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Galaksi",
+      "description": "Yıldızlar ve dönen küçük bir gezegen."
+    },
+    {
+      "id": "cerceve-ejderha",
+      "type": "cerceve",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Ejderha",
+      "description": "Halkaya dolanmış altın-kırmızı neon ejderha."
+    },
+    {
+      "id": "dans-twist",
+      "type": "dans",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Twist",
+      "description": "Kalçalar sağa sola, ayaklar yerde.",
+      "asset": "twist"
+    },
+    {
+      "id": "dans-tavuk",
+      "type": "dans",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Tavuk Dansı",
+      "description": "Kanatlar çırpılır, kuyruk sallanır.",
+      "asset": "tavuk"
+    },
+    {
+      "id": "dans-mutlu",
+      "type": "dans",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neşeli Adım",
+      "description": "Gülümseten, hafif adımlı bir dans.",
+      "asset": "mutlu"
+    },
+    {
+      "id": "dans-charleston",
+      "type": "dans",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Charleston",
+      "description": "Eski zaman, yeni neon.",
+      "asset": "charleston"
+    },
+    {
+      "id": "dans-lambada",
+      "type": "dans",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Lambada",
+      "description": "Kalçalar dalgalanır.",
+      "asset": "lambada"
+    },
+    {
+      "id": "dans-makarena",
+      "type": "dans",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Makarena",
+      "description": "Kollar sırayla, sonra bir dönüş.",
+      "asset": "makarena"
+    },
+    {
+      "id": "dans-kazacok",
+      "type": "dans",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Kazaçok",
+      "description": "Çömel, tekmele, zıpla.",
+      "asset": "kazacok"
+    },
+    {
+      "id": "dans-cizgi-film",
+      "type": "dans",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Çizgi Film Dansı",
+      "description": "Eski bir çizgi filmden fırlamış gibi.",
+      "asset": "mickey"
+    },
+    {
+      "id": "kart-neon-izgara",
+      "type": "kart-arkasi",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Izgara",
+      "description": "Kart sırtında neon bir ızgara.",
+      "asset": "neon-izgara"
+    },
+    {
+      "id": "kart-gece-sehri",
+      "type": "kart-arkasi",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Gece Şehri",
+      "description": "Kartların sırtında ışıl ışıl bir şehir.",
+      "asset": "gece-sehri"
+    },
+    {
+      "id": "kart-retro-oyun",
+      "type": "kart-arkasi",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Retro Oyun",
+      "description": "Piksel piksel neon oyun salonu.",
+      "asset": "retro-oyun"
+    },
+    {
+      "id": "kart-okyanus",
+      "type": "kart-arkasi",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Derin Okyanus",
+      "description": "Su altında parlayan denizanaları.",
+      "asset": "okyanus"
+    },
+    {
+      "id": "kart-mor-girdap",
+      "type": "kart-arkasi",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Mor Girdap",
+      "description": "Sırttaki mor girdap seni içine çeker.",
+      "asset": "mor-girdap"
+    },
+    {
+      "id": "kart-elektrik",
+      "type": "kart-arkasi",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Elektrik",
+      "description": "Kartın sırtında elektrik akar.",
+      "asset": "elektrik"
+    },
+    {
+      "id": "kart-ejderha-pulu",
+      "type": "kart-arkasi",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Ejderha Pulu",
+      "description": "Kırmızı-altın pullar, ortada parlayan göz.",
+      "asset": "ejderha-pulu"
+    },
+    {
+      "id": "kart-kozmik-tac",
+      "type": "kart-arkasi",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Kozmik Taç",
+      "description": "Galaksinin ortasında yıldızlardan taç.",
+      "asset": "kozmik-tac"
+    },
+    {
+      "id": "kart-altin-kraliyet",
+      "type": "kart-arkasi",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Altın Kraliyet",
+      "description": "Kraliyete yakışır altın sırt.",
+      "asset": "altin-kraliyet"
+    },
+    {
+      "id": "zafer-konfeti",
+      "type": "zafer",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Konfeti Patlaması",
+      "description": "Kazanınca renkli konfeti patlar.",
+      "asset": "konfeti"
+    },
+    {
+      "id": "zafer-balon",
+      "type": "zafer",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Balonlar",
+      "description": "Kazanınca neon balonlar yükselir.",
+      "asset": "balon"
+    },
+    {
+      "id": "zafer-havai-fisek",
+      "type": "zafer",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Havai Fişek",
+      "description": "Kazanınca gökyüzü havai fişekle dolar.",
+      "asset": "havai-fisek"
+    },
+    {
+      "id": "zafer-simsek",
+      "type": "zafer",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Şimşek Fırtınası",
+      "description": "Kazanınca şimşekler çakar.",
+      "asset": "simsek"
+    },
+    {
+      "id": "zafer-altin-yagmur",
+      "type": "zafer",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Altın Yağmur",
+      "description": "Kazanınca altın ve yıldız yağar.",
+      "asset": "altin-yagmur"
+    },
+    {
+      "id": "tepki-neon-yuzler",
+      "type": "tepki",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Yüzler",
+      "description": "Altı neon yüz ifadesi: gülen, şaşkın, sinirli ve daha fazlası.",
+      "asset": "neon-yuzler"
+    },
+    {
+      "id": "tepki-hayvanlar",
+      "type": "tepki",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Hayvanlar",
+      "description": "Gülen kedi, şaşkın baykuş, uykucu panda ve daha fazlası.",
+      "asset": "hayvanlar"
+    },
+    {
+      "id": "tepki-parti",
+      "type": "tepki",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Parti",
+      "description": "Şapka, disko topu, kadeh ve daha fazlası.",
+      "asset": "parti"
+    },
+    {
+      "id": "tepki-oyun-ani",
+      "type": "tepki",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Oyun Anı",
+      "description": "Düşünen avatar, kum saati, zar, şans yoncası ve daha fazlası.",
+      "asset": "oyun-ani"
+    },
+    {
+      "id": "tepki-efsane",
+      "type": "tepki",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Efsane Tepkiler",
+      "description": "Taç, ateş topu, roket, elmas ve daha fazlası.",
+      "asset": "efsane-tepkiler"
+    },
+    {
+      "id": "tepki-kozmik",
+      "type": "tepki",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Kozmik",
+      "description": "Gezegen, kuyruklu yıldız, UFO, kara delik ve daha fazlası.",
+      "asset": "kozmik"
+    },
+    {
+      "id": "giris-isinlanma",
+      "type": "giris",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Işınlanma",
+      "description": "Lobiye ışık huzmesiyle ışınlanırsın.",
+      "asset": "isinlanma"
+    },
+    {
+      "id": "giris-duman",
+      "type": "giris",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Duman",
+      "description": "Lobiye dumanın içinden çıkarsın.",
+      "asset": "duman"
+    },
+    {
+      "id": "giris-simsek",
+      "type": "giris",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Şimşek",
+      "description": "Lobiye şimşek çakarak girersin.",
+      "asset": "simsek"
+    },
+    {
+      "id": "giris-portal",
+      "type": "giris",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Portal",
+      "description": "Lobiye bir portaldan geçersin.",
+      "asset": "portal"
+    },
+    {
+      "id": "giris-altin-isik",
+      "type": "giris",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Altın Işık Sütunu",
+      "description": "Lobiye altın bir ışık sütunuyla inersin.",
+      "asset": "altin-isik"
+    },
+    {
+      "id": "sapka-neon-kep",
+      "type": "sapka",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Kep",
+      "description": "Kürsüde başında neon bir kep.",
+      "asset": "sapka"
+    },
+    {
+      "id": "sapka-bere",
+      "type": "sapka",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Bere",
+      "description": "Ponponlu, neon çizgili sıcak bir bere.",
+      "asset": "bere"
+    },
+    {
+      "id": "sapka-fotr",
+      "type": "sapka",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Fötr",
+      "description": "Neon şeritli klasik fötr şapka.",
+      "asset": "fotr"
+    },
+    {
+      "id": "sapka-parti",
+      "type": "sapka",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Parti Şapkası",
+      "description": "Neon zikzaklı külah: parti başlasın!",
+      "asset": "parti"
+    },
+    {
+      "id": "sapka-kasket",
+      "type": "sapka",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Kasket",
+      "description": "Düz siperli işçi kasketi, neon şeritli.",
+      "asset": "kasket"
+    },
+    {
+      "id": "sapka-boynuz",
+      "type": "sapka",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Neon Boynuz",
+      "description": "Parlak uçlu sevimli şeytan boynuzları.",
+      "asset": "boynuz"
+    },
+    {
+      "id": "sapka-kovboy",
+      "type": "sapka",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Kovboy Şapkası",
+      "description": "Neon dikişli, geniş kenarlı kovboy şapkası.",
+      "asset": "kovboy"
+    },
+    {
+      "id": "sapka-kulaklikli-kask",
+      "type": "sapka",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Kulaklıklı Kask",
+      "description": "Neon ışıklı kulaklıkla gelen fütüristik kask.",
+      "asset": "kulaklikli-kask"
+    },
+    {
+      "id": "sapka-korsan",
+      "type": "sapka",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Korsan Şapkası",
+      "description": "Ortasında neon yıldız parlayan korsan şapkası.",
+      "asset": "korsan"
+    },
+    {
+      "id": "sapka-sihirbaz",
+      "type": "sapka",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Sihirbaz",
+      "description": "Neon yıldızlı, hilalli uzun sivri şapka.",
+      "asset": "sihirbaz"
+    },
+    {
+      "id": "sapka-samuray",
+      "type": "sapka",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Samuray Kaskı",
+      "description": "Neon ön süslü, zırh plakalı kabuto.",
+      "asset": "samuray"
+    },
+    {
+      "id": "sapka-tac",
+      "type": "sapka",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Taç",
+      "description": "Neon kristallerle süslü altın taç.",
+      "asset": "tac"
+    },
+    {
+      "id": "ust-neon-bomber",
+      "type": "ust",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Neon Bomber",
+      "description": "Kürsüde sırtında neon bomber ceket.",
+      "asset": "ceket"
+    },
+    {
+      "id": "ust-kapusonlu",
+      "type": "ust",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Kapüşonlu",
+      "description": "Göğsünde neon şeritli bol kapüşonlu.",
+      "asset": "kapusonlu"
+    },
+    {
+      "id": "ust-forma",
+      "type": "ust",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Forma",
+      "description": "Neon çizgili kısa kollu spor forması.",
+      "asset": "forma"
+    },
+    {
+      "id": "ust-deri-ceket",
+      "type": "ust",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Deri Ceket",
+      "description": "Yakası neon kenarlı siyah deri ceket.",
+      "asset": "deri-ceket"
+    },
+    {
+      "id": "ust-smokin",
+      "type": "ust",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Smokin",
+      "description": "Papyonlu, yakası neon smokin.",
+      "asset": "smokin"
+    },
+    {
+      "id": "ust-yagmurluk",
+      "type": "ust",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Yağmurluk",
+      "description": "Parlak, neon şeritli kapüşonlu yağmurluk.",
+      "asset": "yagmurluk"
+    },
+    {
+      "id": "ust-kimono",
+      "type": "ust",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Kimono",
+      "description": "Geniş kollu, neon kuşaklı kimono ceket.",
+      "asset": "kimono"
+    },
+    {
+      "id": "ust-zirh-yelek",
+      "type": "ust",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Zırh Yelek",
+      "description": "Neon panelli fütüristik zırh yelek.",
+      "asset": "zirh-yelek"
+    },
+    {
+      "id": "alt-kot",
+      "type": "alt",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Kot",
+      "description": "Dizleri hafif yıpranmış, yan dikişi neon kot.",
+      "asset": "kot"
+    },
+    {
+      "id": "alt-sort",
+      "type": "alt",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Şort",
+      "description": "Neon kenarlı şort.",
+      "asset": "sort"
+    },
+    {
+      "id": "alt-esofman",
+      "type": "alt",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Eşofman",
+      "description": "Yanında iki neon şerit olan eşofman altı.",
+      "asset": "esofman"
+    },
+    {
+      "id": "alt-kargo",
+      "type": "alt",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Kargo",
+      "description": "Yan cepli, neon fermuarlı kargo pantolon.",
+      "asset": "kargo"
+    },
+    {
+      "id": "alt-etek",
+      "type": "alt",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Etek",
+      "description": "Neon kenarlı pileli kısa etek.",
+      "asset": "etek"
+    },
+    {
+      "id": "alt-takim-pantolon",
+      "type": "alt",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Takım Pantolon",
+      "description": "Ütü çizgisi ince neon kumaş pantolon.",
+      "asset": "takim-pantolon"
+    },
+    {
+      "id": "ayakkabi-spor",
+      "type": "ayakkabi",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Spor Ayakkabı",
+      "description": "Neon bağcıklı spor ayakkabı.",
+      "asset": "spor"
+    },
+    {
+      "id": "ayakkabi-terlik",
+      "type": "ayakkabi",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Terlik",
+      "description": "Neon bantlı parmak arası terlik.",
+      "asset": "terlik"
+    },
+    {
+      "id": "ayakkabi-kaykay",
+      "type": "ayakkabi",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Kaykay Ayakkabısı",
+      "description": "Yanı neon çizgili kaykay ayakkabısı.",
+      "asset": "kaykay"
+    },
+    {
+      "id": "ayakkabi-bot",
+      "type": "ayakkabi",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Bot",
+      "description": "Çapraz neon bağcıklı kalın tabanlı bot.",
+      "asset": "bot"
+    },
+    {
+      "id": "ayakkabi-paten",
+      "type": "ayakkabi",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Paten",
+      "description": "Tekerlekleri parlayan neon paten.",
+      "asset": "paten"
+    },
+    {
+      "id": "ayakkabi-neon-cizme",
+      "type": "ayakkabi",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Neon Çizme",
+      "description": "Dize kadar uzanan ışıl ışıl çizme.",
+      "asset": "neon-cizme"
+    },
+    {
+      "id": "aksesuar-kolye",
+      "type": "aksesuar",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Kolye",
+      "description": "Kalın zincir, parlayan neon madalyon.",
+      "asset": "kolye"
+    },
+    {
+      "id": "aksesuar-atki",
+      "type": "aksesuar",
+      "rarity": "siradan",
+      "price": 150,
+      "name": "Atkı",
+      "description": "Ucu göğse düşen neon şeritli atkı.",
+      "asset": "atki"
+    },
+    {
+      "id": "aksesuar-gunes-gozlugu",
+      "type": "aksesuar",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Güneş Gözlüğü",
+      "description": "Maskenin önüne geniş neon gözlük.",
+      "asset": "gunes-gozlugu"
+    },
+    {
+      "id": "aksesuar-sirt-cantasi",
+      "type": "aksesuar",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Sırt Çantası",
+      "description": "Askıları omuzda, ışıklı sırt çantası.",
+      "asset": "sirt-cantasi"
+    },
+    {
+      "id": "aksesuar-pelerin",
+      "type": "aksesuar",
+      "rarity": "nadir",
+      "price": 400,
+      "name": "Pelerin",
+      "description": "Omuzdan bacaklara uzanan neon kenarlı pelerin.",
+      "asset": "pelerin"
+    },
+    {
+      "id": "aksesuar-kanat",
+      "type": "aksesuar",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Neon Kanat",
+      "description": "Sırtta açılan ışıl ışıl tüy kanatlar.",
+      "asset": "kanat"
+    },
+    {
+      "id": "kostum-ninja",
+      "type": "kostum",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Ninja",
+      "description": "Başlıklı siyah ninja kıyafeti, neon kuşak.",
+      "asset": "ninja",
+      "covers": ["sapka", "ust", "alt", "ayakkabi"]
+    },
+    {
+      "id": "kostum-robot",
+      "type": "kostum",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Robot",
+      "description": "Metal plakalı zırh, parlayan neon eklemler.",
+      "asset": "robot",
+      "covers": ["sapka", "ust", "alt", "ayakkabi"]
+    },
+    {
+      "id": "kostum-astronot",
+      "type": "kostum",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Astronot",
+      "description": "Neon panelli uzay kıyafeti ve kask.",
+      "asset": "astronot",
+      "covers": ["sapka", "ust", "alt", "ayakkabi"]
+    },
+    {
+      "id": "kostum-korsan-kaptan",
+      "type": "kostum",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Korsan Kaptan",
+      "description": "Uzun ceket, kemer, çizme ve kaptan şapkası.",
+      "asset": "korsan-kaptan",
+      "covers": ["sapka", "ust", "alt", "ayakkabi"]
+    },
+    {
+      "id": "kostum-super-kahraman",
+      "type": "kostum",
+      "rarity": "efsanevi",
+      "price": 1000,
+      "name": "Süper Kahraman",
+      "description": "Pelerinli kostüm, göğsünde neon simge.",
+      "asset": "super-kahraman",
+      "covers": ["sapka", "ust", "alt", "ayakkabi"]
+    }
+  ],
+  "turler": [
+    {
+      "id": "unvan",
+      "key": "title",
+      "name": "Lakap",
+      "plural": "Lakaplar",
+      "none": "Yok"
+    },
+    {
+      "id": "ad-efekti",
+      "key": "nameFx",
+      "name": "Ad efekti",
+      "plural": "Ad efektleri",
+      "none": "Yok"
+    },
+    {
+      "id": "cerceve",
+      "key": "frame",
+      "name": "Çerçeve",
+      "plural": "Çerçeveler",
+      "none": "Yok"
+    },
+    {
+      "id": "dans",
+      "key": "dance",
+      "name": "Dans",
+      "plural": "Danslar",
+      "none": "Sevinç"
+    },
+    {
+      "id": "sapka",
+      "key": "hat",
+      "name": "Şapka",
+      "plural": "Şapkalar",
+      "none": "Yok",
+      "group": "giysi"
+    },
+    {
+      "id": "ust",
+      "key": "top",
+      "name": "Üst",
+      "plural": "Üstler",
+      "none": "Yok",
+      "group": "giysi"
+    },
+    {
+      "id": "alt",
+      "key": "bottom",
+      "name": "Alt",
+      "plural": "Altlar",
+      "none": "Yok",
+      "group": "giysi"
+    },
+    {
+      "id": "ayakkabi",
+      "key": "shoes",
+      "name": "Ayakkabı",
+      "plural": "Ayakkabılar",
+      "none": "Yok",
+      "group": "giysi"
+    },
+    {
+      "id": "aksesuar",
+      "key": "accessory",
+      "name": "Aksesuar",
+      "plural": "Aksesuarlar",
+      "none": "Yok",
+      "group": "giysi"
+    },
+    {
+      "id": "kostum",
+      "key": "costume",
+      "name": "Kostüm",
+      "plural": "Kostümler",
+      "none": "Yok",
+      "group": "giysi"
+    },
+    {
+      "id": "kart-arkasi",
+      "key": "cardBack",
+      "name": "Kart arkası",
+      "plural": "Kart arkaları",
+      "none": "Klasik"
+    },
+    {
+      "id": "zafer",
+      "key": "celebration",
+      "name": "Zafer kutlaması",
+      "plural": "Zafer kutlamaları",
+      "none": "Klasik konfeti"
+    },
+    {
+      "id": "tepki",
+      "key": null,
+      "name": "Tepki paketi",
+      "plural": "Tepki paketleri",
+      "none": "Yok"
+    },
+    {
+      "id": "giris",
+      "key": "entry",
+      "name": "Giriş efekti",
+      "plural": "Giriş efektleri",
+      "none": "Yok"
+    }
+  ],
+  "firsatlar": [
+    [1790856000000, "unvan-parti-canavari", 105, 150, "unvan-taktikci", 105, 150],
+    [1790942400000, "unvan-efsane", 700, 1000, "unvan-sansli", 105, 150],
+    [1791028800000, "cerceve-pembe", 105, 150, "unvan-bluf-ustasi", 280, 400],
+    [1791115200000, "unvan-parti-canavari", 105, 150, "unvan-son-saniyeci", 280, 400],
+    [1791201600000, "cerceve-pembe", 105, 150, "cerceve-cift", 280, 400],
+    [1791288000000, "cerceve-camgobegi", 105, 150, "unvan-sessiz-tehlike", 105, 150],
+    [1791374400000, "cerceve-donen-neon", 280, 400, "ad-neon-mavi", 105, 150],
+    [1791460800000, "unvan-son-saniyeci", 280, 400, "unvan-efsane", 700, 1000],
+    [1791547200000, "unvan-taktikci", 105, 150, "unvan-sessiz-tehlike", 105, 150],
+    [1791633600000, "unvan-efsane", 700, 1000, "cerceve-altin-tac", 700, 1000],
+    [1791720000000, "unvan-bluf-ustasi", 280, 400, "cerceve-cift", 280, 400],
+    [1791806400000, "ad-altin-parilti", 700, 1000, "ad-gokkusagi", 280, 400],
+    [1791892800000, "cerceve-cift", 280, 400, "unvan-son-saniyeci", 280, 400],
+    [1791979200000, "unvan-sessiz-tehlike", 105, 150, "cerceve-camgobegi", 105, 150],
+    [1792065600000, "cerceve-pembe", 105, 150, "unvan-sansli", 105, 150],
+    [1792152000000, "ad-kivilcim", 280, 400, "ad-neon-mavi", 105, 150],
+    [1792238400000, "cerceve-camgobegi", 105, 150, "unvan-parti-canavari", 105, 150],
+    [1792324800000, "ad-neon-mavi", 105, 150, "unvan-bluf-ustasi", 280, 400],
+    [1792411200000, "ad-neon-pembe", 105, 150, "cerceve-donen-neon", 280, 400],
+    [1792497600000, "ad-neon-pembe", 105, 150, "ad-gokkusagi", 280, 400],
+    [1792584000000, "ad-kivilcim", 280, 400, "unvan-taktikci", 105, 150],
+    [1792670400000, "unvan-parti-canavari", 105, 150, "unvan-bluf-ustasi", 280, 400],
+    [1792756800000, "cerceve-donen-neon", 280, 400, "unvan-taktikci", 105, 150],
+    [1792843200000, "cerceve-donen-neon", 280, 400, "ad-neon-mavi", 105, 150],
+    [1792929600000, "cerceve-cift", 280, 400, "unvan-parti-canavari", 105, 150],
+    [1793016000000, "unvan-sansli", 105, 150, "ad-neon-pembe", 105, 150],
+    [1793102400000, "ad-altin-parilti", 700, 1000, "ad-neon-pembe", 105, 150],
+    [1793188800000, "ad-kivilcim", 280, 400, "cerceve-altin-tac", 700, 1000],
+    [1793275200000, "unvan-efsane", 700, 1000, "unvan-taktikci", 105, 150],
+    [1793361600000, "unvan-parti-canavari", 105, 150, "cerceve-cift", 280, 400],
+    [1793448000000, "cerceve-camgobegi", 105, 150, "unvan-bluf-ustasi", 280, 400],
+    [1793534400000, "cerceve-altin-tac", 700, 1000, "cerceve-pembe", 105, 150],
+    [1793620800000, "cerceve-altin-tac", 700, 1000, "ad-kivilcim", 280, 400],
+    [1793707200000, "ad-gokkusagi", 280, 400, "unvan-parti-canavari", 105, 150],
+    [1793793600000, "ad-neon-mavi", 105, 150, "ad-altin-parilti", 700, 1000],
+    [1793880000000, "unvan-sansli", 105, 150, "cerceve-pembe", 105, 150],
+    [1793966400000, "ad-kivilcim", 280, 400, "unvan-sessiz-tehlike", 105, 150],
+    [1794052800000, "unvan-sansli", 105, 150, "cerceve-pembe", 105, 150],
+    [1794139200000, "ad-altin-parilti", 700, 1000, "unvan-son-saniyeci", 280, 400],
+    [1794225600000, "cerceve-camgobegi", 105, 150, "ad-kivilcim", 280, 400],
+    [1794312000000, "cerceve-pembe", 105, 150, "unvan-efsane", 700, 1000],
+    [1794398400000, "ad-neon-mavi", 105, 150, "ad-altin-parilti", 700, 1000],
+    [1794484800000, "zafer-simsek", 280, 400, "sapka-kulaklikli-kask", 280, 400],
+    [1794571200000, "aksesuar-pelerin", 280, 400, "cerceve-yesil-sarmasik", 105, 150],
+    [1794657600000, "aksesuar-atki", 105, 150, "kart-neon-izgara", 105, 150],
+    [1794744000000, "zafer-simsek", 280, 400, "kostum-robot", 700, 1000],
+    [1794830400000, "tepki-oyun-ani", 280, 400, "sapka-fotr", 105, 150],
+    [1794916800000, "aksesuar-gunes-gozlugu", 280, 400, "kart-mor-girdap", 280, 400],
+    [1795003200000, "aksesuar-gunes-gozlugu", 280, 400, "aksesuar-kolye", 105, 150],
+    [1795089600000, "kostum-ninja", 700, 1000, "unvan-sansli", 105, 150],
+    [1795176000000, "dans-makarena", 280, 400, "kart-kozmik-tac", 700, 1000],
+    [1795262400000, "sapka-kulaklikli-kask", 280, 400, "zafer-konfeti", 105, 150],
+    [1795348800000, "alt-sort", 105, 150, "sapka-kulaklikli-kask", 280, 400],
+    [1795435200000, "giris-duman", 105, 150, "ad-neon-pembe", 105, 150],
+    [1795521600000, "ad-neon-pembe", 105, 150, "tepki-efsane", 700, 1000],
+    [1795608000000, "cerceve-yesil-sarmasik", 105, 150, "sapka-bere", 105, 150],
+    [1795694400000, "unvan-bluf-ustasi", 280, 400, "ust-zirh-yelek", 700, 1000],
+    [1795780800000, "ust-forma", 105, 150, "cerceve-pembe", 105, 150],
+    [1795867200000, "tepki-neon-yuzler", 105, 150, "giris-duman", 105, 150],
+    [1795953600000, "ayakkabi-kaykay", 105, 150, "ust-neon-bomber", 280, 400],
+    [1796040000000, "unvan-sansli", 105, 150, "zafer-altin-yagmur", 700, 1000],
+    [1796126400000, "ust-kimono", 280, 400, "zafer-balon", 105, 150],
+    [1796212800000, "cerceve-cift", 280, 400, "cerceve-ates-halkasi", 280, 400],
+    [1796299200000, "giris-duman", 105, 150, "sapka-tac", 700, 1000],
+    [1796385600000, "tepki-parti", 280, 400, "sapka-kovboy", 280, 400],
+    [1796472000000, "alt-takim-pantolon", 280, 400, "sapka-parti", 105, 150],
+    [1796558400000, "kostum-astronot", 700, 1000, "ad-neon-pembe", 105, 150],
+    [1796644800000, "sapka-samuray", 700, 1000, "sapka-kulaklikli-kask", 280, 400],
+    [1796731200000, "giris-isinlanma", 105, 150, "ust-forma", 105, 150],
+    [1796817600000, "ad-gokkusagi", 280, 400, "unvan-parti-canavari", 105, 150],
+    [1796904000000, "alt-takim-pantolon", 280, 400, "kart-elektrik", 280, 400],
+    [1796990400000, "ayakkabi-spor", 105, 150, "cerceve-ates-halkasi", 280, 400],
+    [1797076800000, "dans-lambada", 280, 400, "ayakkabi-kaykay", 105, 150],
+    [1797163200000, "ayakkabi-neon-cizme", 700, 1000, "unvan-parti-canavari", 105, 150],
+    [1797249600000, "cerceve-galaksi", 700, 1000, "ad-gokkusagi", 280, 400],
+    [1797336000000, "ad-gokkusagi", 280, 400, "ust-neon-bomber", 280, 400],
+    [1797422400000, "alt-takim-pantolon", 280, 400, "ust-kapusonlu", 105, 150],
+    [1797508800000, "kart-gece-sehri", 105, 150, "sapka-bere", 105, 150],
+    [1797595200000, "unvan-parti-canavari", 105, 150, "sapka-samuray", 700, 1000],
+    [1797681600000, "cerceve-devre-karti", 280, 400, "ust-kapusonlu", 105, 150],
+    [1797768000000, "alt-kot", 105, 150, "cerceve-yesil-sarmasik", 105, 150],
+    [1797854400000, "alt-kot", 105, 150, "ayakkabi-bot", 280, 400],
+    [1797940800000, "zafer-simsek", 280, 400, "cerceve-altin-tac", 700, 1000],
+    [1798027200000, "giris-simsek", 280, 400, "ad-neon-pembe", 105, 150],
+    [1798113600000, "cerceve-galaksi", 700, 1000, "tepki-hayvanlar", 105, 150],
+    [1798200000000, "unvan-bluf-ustasi", 280, 400, "dans-lambada", 280, 400],
+    [1798286400000, "ust-smokin", 280, 400, "zafer-konfeti", 105, 150],
+    [1798372800000, "ayakkabi-terlik", 105, 150, "unvan-efsane", 700, 1000],
+    [1798459200000, "giris-simsek", 280, 400, "kostum-robot", 700, 1000],
+    [1798545600000, "aksesuar-kanat", 700, 1000, "ayakkabi-kaykay", 105, 150],
+    [1798632000000, "sapka-boynuz", 105, 150, "giris-altin-isik", 700, 1000],
+    [1798718400000, "aksesuar-atki", 105, 150, "kostum-ninja", 700, 1000],
+    [1798804800000, "sapka-sihirbaz", 280, 400, "tepki-oyun-ani", 280, 400],
+    [1798891200000, "zafer-havai-fisek", 280, 400, "zafer-altin-yagmur", 700, 1000],
+    [1798977600000, "zafer-konfeti", 105, 150, "kart-altin-kraliyet", 700, 1000],
+    [1799064000000, "dans-mutlu", 105, 150, "ad-gokkusagi", 280, 400],
+    [1799150400000, "unvan-parti-canavari", 105, 150, "sapka-tac", 700, 1000],
+    [1799236800000, "ust-kimono", 280, 400, "sapka-kasket", 105, 150],
+    [1799323200000, "sapka-neon-kep", 105, 150, "kart-gece-sehri", 105, 150],
+    [1799409600000, "kart-okyanus", 105, 150, "cerceve-galaksi", 700, 1000],
+    [1799496000000, "sapka-kasket", 105, 150, "dans-mutlu", 105, 150],
+    [1799582400000, "kart-okyanus", 105, 150, "kostum-astronot", 700, 1000],
+    [1799668800000, "aksesuar-sirt-cantasi", 280, 400, "tepki-kozmik", 700, 1000],
+    [1799755200000, "dans-mutlu", 105, 150, "alt-takim-pantolon", 280, 400],
+    [1799841600000, "alt-etek", 280, 400, "sapka-kulaklikli-kask", 280, 400],
+    [1799928000000, "zafer-havai-fisek", 280, 400, "ayakkabi-terlik", 105, 150],
+    [1800014400000, "aksesuar-sirt-cantasi", 280, 400, "giris-portal", 280, 400],
+    [1800100800000, "dans-cizgi-film", 700, 1000, "kart-okyanus", 105, 150],
+    [1800187200000, "ust-kimono", 280, 400, "sapka-boynuz", 105, 150],
+    [1800273600000, "giris-isinlanma", 105, 150, "cerceve-camgobegi", 105, 150],
+    [1800360000000, "ust-zirh-yelek", 700, 1000, "ust-forma", 105, 150],
+    [1800446400000, "kart-mor-girdap", 280, 400, "ust-neon-bomber", 280, 400],
+    [1800532800000, "kart-elektrik", 280, 400, "tepki-oyun-ani", 280, 400],
+    [1800619200000, "zafer-simsek", 280, 400, "unvan-son-saniyeci", 280, 400],
+    [1800705600000, "ad-neon-mavi", 105, 150, "aksesuar-atki", 105, 150],
+    [1800792000000, "cerceve-donen-neon", 280, 400, "kostum-robot", 700, 1000],
+    [1800878400000, "ust-kimono", 280, 400, "ayakkabi-kaykay", 105, 150],
+    [1800964800000, "sapka-kulaklikli-kask", 280, 400, "sapka-kovboy", 280, 400],
+    [1801051200000, "alt-kargo", 280, 400, "cerceve-buz-kristali", 105, 150],
+    [1801137600000, "kart-ejderha-pulu", 280, 400, "dans-tavuk", 105, 150]
+  ]
+}

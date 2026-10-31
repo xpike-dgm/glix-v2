@@ -1,4 +1,4 @@
-/* ---- Kozmetikler: unvan, ad efekti, avatar çerçevesi (kod çizimi; katalog packages/engine/src/cosmetics.ts) ----
+/* ---- Kozmetikler: unvan, ad efekti, avatar çerçevesi (katalog packages/engine/src/katalog/magaza.json) ----
    Koyu zeminlerde (--bg-0 .. --bg-2) 4,5:1 üstü kontrast; hareket yalnız "Hareketi azalt" kapalıyken oynar. */
 
 /* ---- Ad efekti ---- */
@@ -6,76 +6,7 @@
   /* Düz metin gibi davranır; bulunduğu kutudaki kesme (ellipsis) üst öğede çalışır. */
   max-width: 100%;
 }
-.cos-name[data-fx="ad-neon-mavi"] {
-  color: #8dfaff;
-  text-shadow:
-    0 0 6px rgba(46, 242, 255, 0.7),
-    0 0 14px rgba(46, 242, 255, 0.4);
-}
-.cos-name[data-fx="ad-neon-pembe"] {
-  color: #ff93e8;
-  text-shadow:
-    0 0 6px rgba(255, 43, 214, 0.7),
-    0 0 14px rgba(255, 43, 214, 0.4);
-}
-.cos-name[data-fx="ad-gokkusagi"] {
-  background-image: linear-gradient(90deg, #ff8080, #ffd666, #85ffa0, #66ddff, #bf9dff, #ff8080);
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: #ffd666;
-  -webkit-text-fill-color: transparent;
-  animation: cos-flow 7s linear infinite;
-}
-.cos-name[data-fx="ad-kivilcim"] {
-  color: #fff6da;
-  animation: cos-spark 2.6s ease-in-out infinite;
-}
-.cos-name[data-fx="ad-altin-parilti"] {
-  background-image: linear-gradient(
-    100deg,
-    #ffc233 0%,
-    #ffe9a0 22%,
-    #ffb81f 44%,
-    #fff4c9 52%,
-    #ffc233 68%,
-    #ffe08a 100%
-  );
-  background-size: 260% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: #ffc233;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 4px rgba(255, 194, 59, 0.45));
-  animation: cos-sheen 4.2s ease-in-out infinite alternate;
-}
-@keyframes cos-flow {
-  to {
-    background-position: -200% 0;
-  }
-}
-@keyframes cos-sheen {
-  from {
-    background-position: 100% 0;
-  }
-  to {
-    background-position: 0 0;
-  }
-}
-@keyframes cos-spark {
-  0%,
-  100% {
-    text-shadow:
-      0 0 3px rgba(255, 226, 140, 0.55),
-      0 0 8px rgba(255, 194, 59, 0.25);
-  }
-  50% {
-    text-shadow:
-      0 0 5px rgba(255, 244, 200, 0.95),
-      0 0 14px rgba(255, 194, 59, 0.6),
-      0 0 22px rgba(46, 242, 255, 0.35);
-  }
-}
+/* Efektin kendisi ürünün tarifindedir (katalog, MG-4); çizim kuralları styles/effects.css. */
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-motion="full"]) .cos-name,
   :root:not([data-motion="full"]) .av__frame {
@@ -190,14 +121,6 @@
   max-width: none;
   pointer-events: none;
   user-select: none;
-}
-.av__frame[data-frame="cerceve-donen-neon"] {
-  animation: cos-spin 14s linear infinite;
-}
-@keyframes cos-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 /* Kazanan tacı çerçevenin üstüne çıkar (konum çerçeve tablosundan: shopArt.ts). */
 .av[data-framed] .av__crown {
