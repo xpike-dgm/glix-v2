@@ -10,6 +10,9 @@ bağlı tüm katılımcıların girdisi kesinleştiyse aşama beklemeden biter.*
 - Aşama bitişi: kilitleyen kümesi, o aşamada eylem yapabilecek **bağlı** katılımcıların hepsini kapsıyorsa (ve en az bir
   bağlı katılımcı varsa) aşama `ctx.now + 1000` anında biter (1 sn: son dokunuşun animasyonu). Karar `reduce` içinde,
   `ctx.connected` ile verilir; `tick` yalnız kaydedilmiş bitiş anına bakar (bağlantıya bakmaz).
+- Kopmada yeniden denetim (isteğe bağlı, Ekim 2026): oyun `GameDefinition.onPresence` tanımlarsa sunucu her bağlantı
+  değişiminde (kayıttan sonra, o anki tick'in üstüne) onu çağırır; `replay` ve simülasyon aynı sırayla çağırır. Son eksik
+  oyuncu koparsa aşama yine 1 sn sonra biter. Uygulanır: Yazı Yaz (YY-M5).
 - Herkese açık görünümde yalnız **kimlerin kilitlediği** (oyuncu id listesi) yer alır; seçimin kendisi gizli kalır.
   İstemci portrelerde "hazır" işareti gösterir. Kendi view'ında `locked: boolean`.
 - İstemci: birincil eylemin yanında/altında büyük "Tamam" düğmesi (≥ 64 px), seçim yokken pasif; kilitlenince seçim

@@ -247,37 +247,66 @@ Oyuncunun genel skoru bu sonuçlarla artar; hesap istatistiğindeki maç puanı 
 
 ## 1. Yazı Yaz — `yazi-yaz`
 
-**Durum: KİLİTLİ**
+**Durum: KİLİTLİ** (Ekim 2026 sahip onayı: YY-M1 … YY-M7, YY-U1 … YY-U8, YY-AI2; ayrıntı
+`docs/oneriler/yazi-yaz.md`)
 
-- Amaç: İki yazanın kendi kelimelerini gizlice yazdığı, diğer oyuncuların
-  `MASUM` yazarak doğal görünmeye çalıştığı ve sonrasında yazan/kelime
-  tahminlerinin yapıldığı sosyal çıkarım oyunu.
+- Amaç: İki yazanın herkese açık bir konudan gizlice birer kelime yazdığı, diğer
+  oyuncuların `MASUM` yazarak doğal görünmeye çalıştığı ve sonrasında yazan/kelime
+  tahminlerinin yapıldığı sosyal çıkarım oyunu. Yazan bulunmamaya çalışır.
 - Minimum oyuncu: **3**.
 - Maksimum oyuncu: **8**.
-- Yazma aşamasında tam **iki yazan** bulunur; her yazan kendi gizli kelimesini
-  yazar.
+- Yazma aşamasında tam **iki yazan** bulunur; maç tohumuyla rastgele seçilir.
+- **Konu:** her oyunda herkese açık bir konu çıkar (ör. MEYVE). Liste yönetici
+  panelindeki "Yazı Yaz konuları" içerik havuzundadır; sahip yazar, yapay zekâyla
+  üretilmez. Başlangıçtaki tek kayıt `SERBEST`tir: o çıkınca oyun konusuz oynanır.
+  Konu maç tohumuyla seçilir; aynı odada son 10 oyunda çıkan konu, havuz yetiyorsa
+  tekrar gelmez. İki yazan aynı konuyu alır; konuya uymak zorunlu değildir (sistem
+  denetleyemez), konu dışı kelime kural ihlali sayılmaz.
+- Rol, yazma aşamasının başında ters duran rol kartına basılı tutulunca görünür;
+  kart bir kez çevrilene kadar pano kapalıdır. Basılı tutmayan biri için iki kart
+  aynıdır.
 - Diğer oyuncular girişe `masum` yazar. Giriş otomatik büyük harfe çevrilir;
   küçük/büyük harf farkı oynanışı etkilemez.
+- **Yazan MASUM yazamaz:** yazan MASUM yazıp Tamam derse yalnız kendi ekranında
+  uyarı çıkar ve kilitlenmez; süre dolduğunda MASUM bırakan yazan "kelime
+  yazmadı" sayılır.
+- **Unutkan masum:** boş "Tamam" diyen masumun girişi MASUM olur ve kilitlenir;
+  hiç yazmayan masum süre dolunca MASUM sayılır.
+- Pano gizlidir: yazılan her harf kısa süre görünür, sonra ● olur; basılı tutunca
+  kelimenin tamamı görünür.
 - Aşamalar: **30 saniye yazma → 60 saniye sözlü tartışma → 30 saniye tahmin**.
+- Yazma aşamasında kimin "Tamam" dediği gösterilmez; yalnız hazır sayısı
+  ("3/6 hazır") görünür. Tartışmada ve tahminde kimin hazır olduğu görünür.
+- **Harf ipucu:** tartışma başlarken iki kelimenin harf sayısı, kimin olduğu
+  söylenmeden, küçükten büyüğe gösterilir ("5 harf · 7 harf"); yalnız harf ve
+  rakam sayılır, boşluk sayılmaz. Kelime yazmamış yazan için "yazılmadı". İpucu
+  tartışma ve tahmin boyunca görünür; başka ipucu (ilk harf vb.) verilmez.
 - Masum oyuncu yalnızca **bir yazanı ve o yazanın kelimesini** tahmin eder.
 - Her yazan, diğer yazanı ve diğer yazanın kelimesini tahmin eder.
-- Doğru kelime tahmini genel skora **+1**.
-- Doğru yazan tahmini genel skora **+1**.
-- Yazan oyuncu da diğer yazanın kişisini ve kelimesini doğru bilirse aynı
-  `+1 kelime / +1 yazan` mantığıyla puan alır.
+- Oyun içi **dedektif puanı:** doğru yazan tahmini **+1**, doğru kelime tahmini
+  **+1** (yalnız kişi doğruysa), **"İz bırakmadın" +1:** hiçbir masumun seçmediği,
+  kelime yazmış yazan. Diğer yazanın seçmesi bu ödülü bozmaz; hiçbir masum seçim
+  yapmadıysa kelime yazmış iki yazan da +1 alır. Yazanın en yüksek dedektif puanı 3,
+  masumun 2'dir.
+- Kelime eşleşmesi klavyeden bağımsızdır; **6 ve daha uzun** kelimelerde, harf sayısı
+  aynıysa **tek harf farkı** da doğru sayılır (eksik/fazla harf kabul edilmez).
+- Genel skora **sıralama** gider: en yüksek dedektif puanı **+2**, sonraki farklı
+  toplam **+1**, diğerleri 0. Birincide eşitlikte hepsi +2; toplamı 0 olan ödül
+  almaz; herkesin toplamı aynı ve 0'dan büyükse herkes +1; herkes 0 ise kimse puan
+  almaz. Eksi puan yoktur.
 - Tahmin göndermeyen oyuncu eksi almaz; yalnızca artı puan alamaz.
 - Kelimeler oyuncular tarafından yazılır; iki yazanın aynı kelimeyi yazmasına
   izin verilir.
-- Ayrı bir beraberlik veya final bonusu yoktur; puanlar genel skora doğrudan
-  eklenir.
-- Tutorial/görsel ayrıntıları:
-  1. İki oyuncunun gizli yazan rozeti yanar; diğer oyuncular `MASUM` kartını
-     doldurur.
-  2. Neon yazı panoları kapanır ve herkes sözlü tartışmaya geçer.
-  3. Oyuncular bir yazanı ve onun kelimesini seçer; doğru kişi ve doğru kelime
-     ayrı ayrı parlayan puan jetonlarına dönüşür.
-  Görsel: Ortada iki kilitli neon yazı makinesi, çevrede sekiz karakter portresi;
-  sonuçta doğru kartta yeşil tarama, yanlış kartta kısa kırmızı glitch kullanılır.
+- Bağlı herkes hazırsa aşama 1 sn sonra biter; son eksik oyuncu bağlantısını
+  yitirirse de bu yeniden denetlenir.
+- Sonuç ("Yazanlar…" açılışı, en az 8 sn): yazan kartları döner, kelimeler daktilo
+  gibi yazılır, bulanların avatarları kartlara uçar, "n kişi buldu" ya da
+  "İZ BIRAKMADI" damgası; ardından herkesin satırı (dedektif puanı ve +2/+1/0).
+  Ekran "Devam et" ile geçer (en çok 60 sn). İsteğe bağlı tek cümlelik spiker
+  yorumu (yapay zekâ bağlıysa; gelmezse görünmez, oyun beklemez).
+- Görsel: ters rol kartı (YAZAN: daktilo ve kalem / MASUM: boş kâğıt), daktiloya
+  takılı kâğıtta konu, gizli neon pano, portre halkası; sonuçta doğru seçim yeşil,
+  yanlış kelime kısa kırmızı titreme.
 
 ## 2. Kendim — `kendim`
 
