@@ -1,0 +1,12 @@
+magaza
+rozet
+kartlar
+ikon
+efekt
+ses
+muzik
+icerik
+moderasyon
+test
+uretim-arayuz
+panel-arayuz
