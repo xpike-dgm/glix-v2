@@ -1500,13 +1500,21 @@ doğru cevaplarla tur uzayabilir.
 - Sistem tek soru havuzundan (elle hazırlanmış; ton seçimi yok) sorular seçer; her soru tam
   **iki** oyuncuya verilir ve her oyuncu **iki** soru alır (eşleşmeler kendini tekrar etmeyecek şekilde dağıtılır).
 - Yazma: 60 sn; her cevap en çok 80 karakter. Cevaplar sunucuda temizlenir ve moderasyon filtresinden geçer.
-- Oylama: her soru sırayla gösterilir; iki cevap yan yana, **isimsiz**. Cevabı olmayan iki oyuncu 10 sn içinde
+- Oylama: her soru sırayla gösterilir; iki cevap karşı karşıya, **isimsiz**. Cevabı olmayan iki oyuncu 10 sn içinde
   birine oy verir (cevap sahipleri oy vermez). Oylar ve cevap sahipleri o soru açılınca görünür.
+- Oy verme (sahip onayı, LS-M3): karta dokunmak yalnız **seçer**; oy, altta "BU DAHA KOMİK" ile **onaylanınca**
+  gider. Onaydan önce seçim değiştirilebilir; onaydan sonra oy kesindir (değiştirilemez). Finalde de aynı.
 - Cevap yazmayan: "Cevap yok" kartı gösterilir, otomatik 0 oy.
-- Puan: bir soruda aldığın oy sayısı kadar **+1**; tüm oyları alırsan (en az 2 oy) ek **+1** ("Laf Ustası").
+- **Kahkaha puanı** (oyun içi puan): bir soruda aldığın oy sayısı kadar **+1**; tüm oyları alırsan (en az 2 oy) ek
+  **+1** ("Laf Ustası"). Kahkaha puanı oyun boyunca ekranda görünür.
 - **Final sorusu:** son turda herkes aynı soruya cevap yazar (45 sn); herkes kendisi dışında bir cevaba oy verir;
-  aldığın her oy **+1**.
-- Genel skora: mini puanlar doğrudan.
+  aldığın her oy **+1** kahkaha (final oyları iki kat sayılmaz).
+- Genel skora (sahip onayı, LS-M1): kahkaha puanı sıralaması. En yüksek toplam **+2**, sonraki farklı toplam **+1**,
+  diğerleri 0. Birincide eşitlik varsa hepsi +2, sonraki farklı toplam +1. Toplamı 0 olan ödül almaz. Herkesin
+  toplamı aynı ve 0'dan büyükse herkes **+1**. Eksi puan yoktur.
+- Kartlar: "birinci" ve "sonuncu" kahkaha puanına göre belirlenir (K6); kartlar sıralama ödülünü (+2 / +1 / 0)
+  değiştirir. Ör. kahkaha birincisinin Kendine Güven'i +2 → +4, Çift Puan +2 → +4; Ters Köşe'de 0 kahkahalılar
+  +2 ve +1'i paylaşır.
 
 ## 28. Kara Borsa — `kara-borsa`
 

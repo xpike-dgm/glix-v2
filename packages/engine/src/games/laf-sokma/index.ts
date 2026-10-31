@@ -189,7 +189,7 @@ function addPoints(scores: Record<string, number>, results: LafCardResult[]): vo
 const zeroScores = (players: readonly string[]): Record<string, number> =>
   Object.fromEntries(players.map((p) => [p, 0]));
 
-/** Açılmış sorulardan (`step` dahil) toplanan puanlar; `all` ise hepsi. */
+/** Açılmış sorulardan (`step` dahil) toplanan kahkaha puanları; `all` ise hepsi. */
 export function lafScores(state: LafState, all = false): Record<string, number> {
   const scores = zeroScores(state.players);
   const n = state.duels.length;
@@ -198,6 +198,30 @@ export function lafScores(state: LafState, all = false): Record<string, number> 
   });
   if (all || state.step >= finalRevealStep(n)) addPoints(scores, cardResults(state, LAF_FINAL_ID));
   return scores;
+}
+
+/**
+ * Mini puan (genel skora giden): kahkaha puanı sıralaması. En yüksek toplam +2 (birincide eşitlikte hepsi +2),
+ * sonraki farklı toplam +1, diğerleri 0. Toplamı 0 olan ödül almaz. Herkesin toplamı aynı ve 0'dan büyükse
+ * herkes +1. Eksi yoktur.
+ */
+export function lafAwards(laughs: Readonly<Record<string, number>>): Record<string, number> {
+  const ids = Object.keys(laughs);
+  const awards: Record<string, number> = Object.fromEntries(ids.map((id) => [id, 0]));
+  const value = (id: string): number => laughs[id] ?? 0;
+  const positive = [...new Set(ids.map(value).filter((v) => v > 0))].sort((x, y) => y - x);
+  const top = positive[0];
+  if (top === undefined) return awards;
+  if (ids.every((id) => value(id) === top)) {
+    for (const id of ids) awards[id] = 1;
+    return awards;
+  }
+  const second = positive[1];
+  for (const id of ids) {
+    if (value(id) === top) awards[id] = 2;
+    else if (second !== undefined && value(id) === second) awards[id] = 1;
+  }
+  return awards;
 }
 
 // ---- adım ilerletme (saf; tick ve reduce ortak kullanır) ----
@@ -336,7 +360,7 @@ export function createLafSokma(): GameDefinition<LafState, LafAction, LafView, L
       steps: [
         "Sana verilen iki soruya kısa ve komik cevaplar yaz",
         "İsimsiz iki cevaptan hangisi daha komikse ona oy ver",
-        "Son soruda herkes yarışır, en çok oyu alan güler",
+        "Her oy bir kahkaha; en çok kahkaha toplayan kazanır",
       ],
     },
 
@@ -518,9 +542,10 @@ export function createLafSokma(): GameDefinition<LafState, LafAction, LafView, L
       return entries;
     },
 
+    // Oyun içi puan (miniScores) kahkaha puanıdır; genel skora sıralama ödülü (+2 / +1 / 0) gider.
     result(state) {
-      const scores = lafScores(state, true);
-      return { miniScores: { ...scores }, awards: { ...scores } };
+      const laughs = lafScores(state, true);
+      return { miniScores: { ...laughs }, awards: lafAwards(laughs) };
     },
   };
 }

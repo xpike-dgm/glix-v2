@@ -24,6 +24,7 @@ import {
   type LafView,
   lafAdvance,
   lafAssign,
+  lafAwards,
   lafCards,
   lafMaxDurationMs,
   lafSokma,
@@ -575,7 +576,7 @@ describe("puanlama", () => {
     expect(r?.cards.find((c) => c.text !== null)?.points).toBe(3 + 1);
   });
 
-  it("toplam puan sonuçta: miniScores = awards (doğrudan genel skora)", () => {
+  it("sonuç: miniScores kahkaha puanıdır, genel skora sıralama ödülü (+2/+1/0) gider", () => {
     const players3 = ["a", "b", "c"];
     let s = writeAll(start(players3, 4));
     const total = (res: Record<string, number>) => Object.values(res).reduce((x, y) => x + y, 0);
@@ -589,8 +590,9 @@ describe("puanlama", () => {
     }
     s = goTo(s, 3, 2 * 3 + 3, LAF_FINAL_REVEAL_MS);
     const r = lafSokma.result(s);
-    expect(r.awards).toEqual(r.miniScores);
+    expect(r.awards).toEqual(lafAwards(r.miniScores));
     expect(total(r.miniScores)).toBe(3);
+    for (const v of Object.values(r.awards)) expect([0, 1, 2]).toContain(v);
   });
 });
 

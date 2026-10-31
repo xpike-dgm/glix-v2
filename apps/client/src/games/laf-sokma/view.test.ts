@@ -86,7 +86,9 @@ describe("Laf Sokma görünümü", () => {
     expect(parseLafPublicView({ ...pub, duel: { id: "q1", prompt: "S", cards: [{ id: 1 }] } })).toBeNull();
     expect(parseLafPrivateView({ ...priv, tasks: [{ id: "q1" }] })).toBeNull();
     expect(parseLafPrivateView({ ...priv, locked: "evet" })).toBeNull();
-    expect(parseLafView(pub, null)).toBeNull();
+    expect(parseLafView(pub, "bozuk")).toBeNull();
+    // İzleyici / TV: kişisel görünüm yok, boş sayılır.
+    expect(parseLafView(pub, null)?.tasks).toEqual([]);
   });
 
   it("açılış sıralaması: çok puan üstte, eşitte kart sırası", () => {

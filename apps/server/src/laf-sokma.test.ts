@@ -1,3 +1,4 @@
+import { lafAwards } from "@glix/engine";
 import { describe, expect, it } from "vitest";
 import { type Client, k, setupRoom, sleep, sync, until, useServer } from "./testkit.js";
 
@@ -55,7 +56,7 @@ async function startGame(cs: Client[]): Promise<void> {
 }
 
 describe("laf-sokma: oda içinde tam maç", () => {
-  it("yazma, düellolar, final ve puanlar genel skora eklenir; yazarlar açılışa kadar gizli", async () => {
+  it("yazma, düellolar, final; kahkaha puanının sıralaması genel skora eklenir; yazarlar açılışa kadar gizli", async () => {
     const cs = await setupRoom(["A", "B", "C", "D"]);
     const [a, b, , d] = cs as [Client, Client, Client, Client];
     await startGame(cs);
@@ -132,6 +133,9 @@ describe("laf-sokma: oda içinde tam maç", () => {
           if (voters.includes(pid)) {
             expect((await act(x, { kind: "vote", card: target?.id as string })).ok).toBe(true);
             expect((await act(x, { kind: "vote", card: target?.id as string })).reason).toBe("already_voted");
+            // Onaylanan oy kesindir: başka karta geçmek de reddedilir.
+            const other = duel.cards.find((c) => c.id !== target?.id)?.id as string;
+            expect((await act(x, { kind: "vote", card: other })).reason).toBe("already_voted");
           } else {
             expect((await act(x, { kind: "vote", card: target?.id as string })).reason).toBe("cannot_vote");
           }
@@ -182,9 +186,12 @@ describe("laf-sokma: oda içinde tam maç", () => {
 
     k.clock.advance(12_000);
     await until(() => a.room.phase === "results", "sonuç");
-    expect(a.room.match?.result?.awards).toEqual(expected);
+    // Oyun içi puan kahkaha puanıdır; genel skora sıralama ödülü (+2 / +1 / 0) gider.
+    const awards = lafAwards(expected);
     expect(a.room.match?.result?.miniScores).toEqual(expected);
-    expect(a.room.players.map((p) => p.score)).toEqual(ids.map((id) => expected[id]));
+    expect(a.room.match?.result?.awards).toEqual(awards);
+    for (const v of Object.values(a.room.match?.result?.awards ?? {})) expect([0, 1, 2]).toContain(v);
+    expect(a.room.players.map((p) => p.score)).toEqual(ids.map((id) => awards[id]));
     expect(d.room.players.map((p) => p.score)).toEqual(a.room.players.map((p) => p.score));
   });
 });

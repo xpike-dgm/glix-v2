@@ -4,11 +4,13 @@
  *   ?mock=laf-briefing            anlatım
  *   ?mock=laf-write               iki soruya cevap yazma (`-filled` biri yazılı, `-locked` Tamam dedin)
  *   ?mock=laf-vote                iki isimsiz karttan oy verme (`-author` cevap sahibisin, `-done` oy verdin, `-empty` Cevap yok kartı)
- *   ?mock=laf-reveal              düello açılışı (`-master` Laf Ustası, `-empty` iki taraf da cevapsız, `-none` sen oy almadın)
+ *   ?mock=laf-reveal              düello açılışı (`-master` Laf Ustası, `-tie` berabere, `-empty` iki taraf da cevapsız, `-none` sen oy almadın)
  *   ?mock=laf-final-write         final sorusu (`-locked` Tamam dedin)
  *   ?mock=laf-final-vote          final oylaması (`-done` oy verdin)
  *   ?mock=laf-final-reveal        final açılışı
  *   ?mock=laf-spectator-write | -vote | -reveal | -final-vote   katılımcı değilsin
+ *   `&t=<ms>`: açılışlarda evrenin başından geçen süre (zaman çizelgesinin o anı; varsayılan açılışın sonu).
+ *   TV: `?mock=tv-laf-vote`, `tv-laf-reveal-master&t=4800`, `tv-laf-final-reveal` … (aynı adlar, `tv-` önekiyle).
  */
 import type { GameInfo, MatchSnapshot, PlayerInfo, RoomPhase, RoomSnapshot } from "@glix/engine";
 import { createRng, isRejected, type LafState, lafAdvance, lafCards, lafSokma } from "@glix/engine";
@@ -44,11 +46,11 @@ interface Plan {
   elapsed: number;
 }
 
-function planOf(kind: string): Plan {
-  if (kind.includes("final-reveal")) return { stage: "finalReveal", elapsed: 400 };
+function planOf(kind: string, t: number | null): Plan {
+  if (kind.includes("final-reveal")) return { stage: "finalReveal", elapsed: t ?? 11_000 };
   if (kind.includes("final-vote")) return { stage: "finalVote", elapsed: 1_500 };
   if (kind.includes("final-write")) return { stage: "finalWrite", elapsed: 9_000 };
-  if (kind.includes("reveal")) return { stage: "reveal", elapsed: 400 };
+  if (kind.includes("reveal")) return { stage: "reveal", elapsed: t ?? 6_000 };
   if (kind.includes("vote")) return { stage: "vote", elapsed: 1_500 };
   return { stage: "write", elapsed: 8_000 };
 }
@@ -65,12 +67,14 @@ export function startLafMock(kind: string, params: URLSearchParams): void {
   }));
   const spectator = kind.includes("spectator");
   const participants = players.map((p) => p.id).filter((id) => !(spectator && id === SELF));
-  const plan = planOf(kind);
+  const tRaw = params.get("t");
+  const plan = planOf(kind, tRaw === null ? null : Math.max(0, Number(tRaw) || 0));
   const locked = kind.includes("locked");
   const filled = kind.includes("filled");
   const done = kind.includes("done");
   const empty = kind.includes("empty");
   const master = kind.includes("master");
+  const tie = kind.includes("tie");
   const none = kind.includes("none");
   const authorRole = kind.includes("author");
 
@@ -136,7 +140,8 @@ export function startLafMock(kind: string, params: URLSearchParams): void {
       const second = cards.find((c) => c.id !== first?.id && c.text !== null) ?? first;
       if (plan.stage === "reveal") {
         voters.forEach((v, i) => {
-          const pick = master || none ? first : i % 3 === 2 ? second : first;
+          const pick =
+            master || none ? first : tie ? (i % 2 === 1 ? second : first) : i % 3 === 2 ? second : first;
           const mine = cards.find((c) => c.author === SELF);
           const choose = none && mine && pick?.id === mine.id ? cards.find((c) => c.id !== mine.id) : pick;
           if (choose && choose.text !== null) run(v, { kind: "vote", card: choose.id }, at + i * 50);

@@ -124,9 +124,12 @@ export function parseLafPrivateView(v: unknown): LafView | null {
   return { tasks, locked: v.locked, myCard: v.myCard, myVote: v.myVote };
 }
 
+/** İzleyici ve TV: kişisel görünüm yok (null); boş kişisel görünüm sayılır. */
+const NO_PRIVATE: LafView = { tasks: [], locked: false, myCard: null, myVote: null };
+
 export function parseLafView(publicView: unknown, view: unknown): LafScreenView | null {
   const pub = parseLafPublicView(publicView);
-  const priv = parseLafPrivateView(view);
+  const priv = view === null || view === undefined ? NO_PRIVATE : parseLafPrivateView(view);
   return pub && priv ? { ...pub, ...priv } : null;
 }
 
@@ -187,3 +190,23 @@ export function myPoints(reveal: LafDuelReveal | null, selfId: string): number |
 
 /** Kartın görüntülenecek metni: cevap yoksa null. */
 export const hasText = (c: { text: string | null }): boolean => c.text !== null;
+
+/**
+ * Yazma akışı: "Tamam"a basılınca boş kalan soru varsa kısa uyarı ("2. soruyu boş bıraktın, emin misin?").
+ * Tek sorulu (final) yazmada ya da hiç cevap yokken uyarı yoktur (hiç cevap yoksa Tamam zaten basılamaz).
+ */
+export function emptyWarning(filled: readonly boolean[]): string | null {
+  if (filled.length < 2 || !filled.some(Boolean)) return null;
+  const i = filled.indexOf(false);
+  return i < 0 ? null : `${i + 1}. soruyu boş bıraktın, emin misin?`;
+}
+
+/** Kahkaha puanı açılış sırasında: bu açılışın puanları karar anına kadar eklenmemiş gösterilir. */
+export function scoresBefore(
+  scores: Readonly<Record<string, number>>,
+  reveal: LafDuelReveal | null,
+): Record<string, number> {
+  const out = { ...scores };
+  for (const c of reveal?.cards ?? []) out[c.author] = (out[c.author] ?? 0) - c.points;
+  return out;
+}
