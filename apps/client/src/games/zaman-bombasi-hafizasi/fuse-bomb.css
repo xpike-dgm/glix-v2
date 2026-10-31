@@ -1,0 +1,52 @@
+/* Fitilli bomba (ZB-U1): telefon ve TV ortak. */
+.zbomb {
+  position: relative;
+  display: block;
+}
+.zbomb__img,
+.zbomb__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.zbomb__fuse-base,
+.zbomb__fuse {
+  fill: none;
+  stroke-linecap: round;
+}
+.zbomb__fuse-base {
+  stroke: rgba(30, 20, 10, 0.55);
+  stroke-width: 6;
+  opacity: 0;
+}
+.zbomb__fuse {
+  stroke: #d8b071;
+  stroke-width: 5;
+  stroke-dasharray: 1000 1000;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.6));
+}
+.zbomb[data-live="1"] .zbomb__fuse-base {
+  opacity: 1;
+}
+.zbomb__spark {
+  opacity: 0;
+}
+.zbomb[data-live="1"] .zbomb__spark {
+  opacity: 1;
+}
+.zbomb__spark-in {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: zspark 220ms steps(2) infinite;
+}
+.zbomb[data-rush="1"] .zbomb__spark-in {
+  animation-duration: 110ms;
+  scale: 1.45;
+}
+@keyframes zspark {
+  50% {
+    transform: rotate(45deg) scale(0.8);
+  }
+}

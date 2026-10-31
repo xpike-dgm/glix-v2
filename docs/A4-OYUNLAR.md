@@ -21,6 +21,8 @@ Her oyun `packages/engine/src/games/<id>/` (types.ts, index.ts, bots.ts, words.t
   Hedeflenen −1 (kaç kişi hedeflese de bir kez); karşılıklı hedefleşen iki taraf 0 (hedeflenme cezası dahil, ikisine de
   uygulanmaz); hedeflenmeyen ve karşılıklı olmayan bir hedefe ateş eden +1. Hem ateş edip hem (karşılıklı olmayan biçimde)
   hedeflenen: −1 (hedeflenme baskın; +1 ve −1 toplanmaz). Hedefsiz oyuncu: hedeflenirse −1, değilse 0.
+  **2026-10-30 güncellemesi:** siper seçeneği ve iki tur (20 + 5 + 20 + 8 sn), puan iki turun toplamı; güncel kural
+  `docs/KURALLAR.md` §23.
 - **Çağrışım Ağı** (2–8, 30 sn): ana kelime havuzdan rastgele; tek cevap, gönderildikten sonra değiştirilemez; boş cevap
   reddedilir. Normalizasyon: Türkçe küçük harf (`toLocaleLowerCase("tr")`), baş/son boşluk kırp, iç boşlukları teke indir.
   Grup = aynı normalleştirilmiş cevap ≥ 2 kişi; her üye grup büyüklüğü kadar puan. Cevaplar süre bitene kadar gizli.

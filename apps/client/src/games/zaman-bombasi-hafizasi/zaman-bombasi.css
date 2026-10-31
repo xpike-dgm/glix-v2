@@ -1,4 +1,4 @@
-/* Zaman Bombası Hafızası: koyu hafıza paneli, yükseltilmiş dört tuş, geri sayım halkası. */
+/* Zaman Bombası Hafızası: koyu hafıza paneli, yükseltilmiş dört tuş, fitilli bomba, bomba atışı. */
 .zgame {
   --zc-yesil: #1fd470;
   --zc-kirmizi: #ff3b5c;
@@ -107,22 +107,76 @@
   text-shadow: 0 0 18px rgba(255, 59, 92, 0.5);
 }
 
-/* ---- Dizi izi: kaç renk, nereye geldin ---- */
-.ztrack {
+/* ---- "DİZİ 7" sayacı ve dizi izi (ZB-U3) ---- */
+.zlen {
   flex: none;
-  height: 14px;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 40px;
+  margin: 2px 0 8px;
+  padding: 0 4px;
+}
+.zlen__label {
+  flex: none;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.zlen__num {
+  flex: none;
+  min-width: 1.2em;
+  font-size: 34px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  animation: zlen-pop 420ms var(--ease) both;
+}
+.zlen[data-tone="amber"] .zlen__num,
+.zlen[data-tone="amber"] .zlen__label {
+  color: var(--amber);
+}
+.zlen[data-tone="red"] .zlen__num,
+.zlen[data-tone="red"] .zlen__label {
+  color: var(--red);
+}
+.zlen[data-tone="red"] .zlen__num {
+  text-shadow: 0 0 16px rgba(255, 59, 92, 0.55);
+}
+@keyframes zlen-pop {
+  from {
+    transform: scale(1.7);
+    opacity: 0.2;
+  }
+  60% {
+    transform: scale(0.94);
+    opacity: 1;
+  }
+  to {
+    transform: none;
+  }
+}
+.ztrack {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 6px;
-  margin: 2px 0 10px;
+  gap: 5px;
+  max-width: 230px;
 }
 .ztrack__dot {
-  flex: 0 1 14px;
-  min-width: 5px;
-  height: 8px;
-  border-radius: 99px;
-  background: rgba(140, 160, 255, 0.18);
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(140, 160, 255, 0.2);
+  box-shadow: inset 0 0 0 1.5px rgba(140, 160, 255, 0.3);
   transition:
     background 120ms,
     transform 120ms,
@@ -133,12 +187,43 @@
 }
 .ztrack__dot[data-s="now"] {
   background: var(--cyan);
-  transform: scaleY(1.5);
+  transform: scale(1.3);
   box-shadow: 0 0 10px var(--cyan);
 }
 .ztrack__dot[data-s="ok"] {
   background: var(--lime);
   box-shadow: 0 0 10px rgba(182, 255, 59, 0.7);
+}
+/* Doğru girişten sonra diziye eklenen yeni nokta (ZB-U4): seçende kendi rengi, diğerlerinde "seçildi". */
+.ztrack__dot--new {
+  background: #e6e9ff;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 12px rgba(255, 255, 255, 0.7);
+  animation: zdot-new 520ms var(--ease) both;
+}
+.ztrack__dot--new[data-c="yesil"] {
+  background: var(--zc-yesil);
+}
+.ztrack__dot--new[data-c="kirmizi"] {
+  background: var(--zc-kirmizi);
+}
+.ztrack__dot--new[data-c="sari"] {
+  background: var(--zc-sari);
+}
+.ztrack__dot--new[data-c="mavi"] {
+  background: var(--zc-mavi);
+}
+@keyframes zdot-new {
+  from {
+    transform: scale(0) translateY(-10px);
+  }
+  55% {
+    transform: scale(1.6);
+  }
+  to {
+    transform: none;
+  }
 }
 
 /* ---- Hafıza paneli ---- */
@@ -252,6 +337,7 @@
   opacity: 0.55;
 }
 .zpad[data-state="lit"] .zpad__face {
+  transform: scale(1.05);
   box-shadow:
     inset 0 3px 0 rgba(255, 255, 255, 0.6),
     0 0 34px 6px color-mix(in srgb, var(--pad) 75%, transparent);
@@ -272,6 +358,9 @@
 .zpad[data-pressed="1"] .zpad__face {
   transform: translateY(6px);
 }
+.zpad[data-state="lit"][data-pressed="1"] .zpad__face {
+  transform: translateY(6px) scale(1.03);
+}
 .zpad[data-pressed="1"] .zpad__side {
   opacity: 0.4;
 }
@@ -280,69 +369,71 @@
   outline-offset: 3px;
 }
 
-/* ---- Orta göbek: geri sayım halkası ---- */
+/* ---- Panel ışıması (oynatmada tüm panel o renkte kısa parlar) ve "TEMİZ!" şok dalgası ---- */
+.zpanel__tint {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 50% 50%, var(--tint, transparent) 0%, transparent 75%);
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.zshock {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 6px solid var(--lime);
+  box-shadow:
+    0 0 30px rgba(182, 255, 59, 0.8),
+    inset 0 0 30px rgba(182, 255, 59, 0.5);
+  transform: translate(-50%, -50%) scale(0.2);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---- Orta göbek: fitilli bomba (ZB-U1) ---- */
 .zhub {
   position: absolute;
   left: 50%;
   top: calc(50% - 4px);
-  width: clamp(64px, 23vw, 92px);
+  width: clamp(78px, 27vw, 116px);
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: #060922;
+  background: radial-gradient(circle, #0a0e2e 0%, #060922 70%);
   box-shadow:
     0 0 0 5px #060922,
     0 4px 14px rgba(0, 0, 0, 0.6);
   pointer-events: none;
   color: #c9cff0;
 }
-.zhub__ring {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
-}
-.zhub__track {
-  fill: none;
-  stroke: rgba(140, 160, 255, 0.2);
-  stroke-width: 7;
-}
-.zhub__fill {
-  fill: none;
-  stroke: var(--cyan);
-  stroke-width: 7;
-  stroke-linecap: round;
-  opacity: 0;
-}
-.zhub[data-live="1"] .zhub__fill {
-  opacity: 1;
-}
-.zhub[data-tone="amber"] .zhub__fill {
-  stroke: var(--amber);
-}
-.zhub[data-tone="red"] .zhub__fill {
-  stroke: var(--red);
-}
 .zhub .zhub__bomb {
-  width: 60%;
-  height: 60%;
-  margin-top: 14%;
+  width: 84%;
+  height: 84%;
+  margin: 6% 0 0 -4%;
 }
 .zhub .zhub__blast {
   z-index: 1;
 }
 .zhub__num {
-  position: relative;
-  font-size: clamp(24px, 8vw, 32px);
+  position: absolute;
+  left: 45%;
+  top: 58%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(20px, 6.6vw, 30px);
   line-height: 1;
-  color: var(--text);
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
   font-variant-numeric: tabular-nums;
 }
-.zhub[data-tone="red"] .zhub__num {
-  color: var(--red);
+.zhub__num[data-rush="1"] {
+  color: #ffb3c1;
 }
 
 /* ---- Çatlak ---- */
@@ -394,26 +485,37 @@
   }
 }
 
-/* ---- Avatar şeridi: sıra, aktif, elenen ---- */
+/* ---- Oyuncu şeridi: avatar + ad; bomba kimdeyse yanında (ZB-U1), elenen savrulup grileşir (ZB-U5) ---- */
 .zstrip {
+  --zs-cols: var(--zs-pcols, 5);
+  --zs-av: min(46px, calc((100vw - 32px) / var(--zs-cols, 5) - 22px));
   flex: none;
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  padding: 14px 0 2px;
+  display: grid;
+  grid-template-columns: repeat(var(--zs-cols, 5), minmax(0, 1fr));
+  justify-items: center;
+  row-gap: 6px;
+  column-gap: 4px;
+  padding: 12px 0 2px;
 }
 .zs {
   position: relative;
+  min-width: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+}
+.zs__av {
+  position: relative;
+  display: grid;
+  place-items: center;
 }
 .zs .av {
   transition: transform 180ms var(--ease);
 }
 .zs[data-active="1"] .av {
-  transform: translateY(-5px) scale(1.14);
+  transform: translateY(-3px) scale(1.12);
 }
 .zs[data-active="1"] .av__disc {
   border-color: var(--cyan);
@@ -423,10 +525,10 @@
   opacity: 0.62;
   filter: grayscale(1);
 }
-.zs[data-out="1"]::after {
+.zs[data-out="1"] .zs__av::after {
   content: "×";
   position: absolute;
-  top: -2px;
+  top: -4px;
   left: 50%;
   transform: translateX(-50%);
   width: 18px;
@@ -441,22 +543,224 @@
   background: var(--red);
   box-shadow: 0 0 0 2px var(--bg-0);
 }
-.zs__score {
+.zs__name {
+  max-width: 100%;
   font-size: var(--fs-13);
   font-weight: 700;
-  color: #c9cff0;
-  line-height: 1;
-  background: rgba(5, 8, 26, 0.88);
-  padding: 2px 6px;
-  border-radius: 999px;
-  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #d5daf6;
 }
-.zs[data-me="1"] .zs__score {
+.zs[data-me="1"] .zs__name {
   color: var(--text);
-  box-shadow: 0 0 0 1.5px var(--text);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
 }
-.zs[data-out="1"] .zs__score {
+.zs[data-active="1"] .zs__name {
+  color: var(--cyan);
+}
+.zs[data-out="1"] .zs__name {
   color: #9aa2d0;
+}
+/* Bomba sırası gelenin yanında: küçük bomba ve kıvılcım. */
+.zs__bomb,
+.zfly__bomb {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 34%, #5a6294 0%, #1b1f3d 48%, #05061a 100%);
+  border: 2px solid #05061a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+.zs__bomb::before,
+.zfly__bomb::before {
+  content: "";
+  position: absolute;
+  right: -3px;
+  top: -5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, #ffd34d 45%, rgba(255, 120, 40, 0) 75%);
+  animation: zspark 220ms steps(2) infinite;
+}
+.zs__bomb {
+  position: absolute;
+  right: -10px;
+  bottom: -4px;
+  animation: zbomb-in 260ms var(--ease) both;
+}
+@keyframes zbomb-in {
+  from {
+    transform: scale(0.3);
+  }
+  to {
+    transform: none;
+  }
+}
+/* Sıra sana geçti: avatarın büyür (ZB-U2). */
+.zs[data-alert="1"] .av {
+  transform: translateY(-6px) scale(1.32);
+}
+.zs[data-blast="1"] .zs__av {
+  animation: zs-blast 900ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+@keyframes zs-blast {
+  0% {
+    transform: none;
+  }
+  18% {
+    transform: translate(-6px, -16px) rotate(-22deg) scale(1.2);
+  }
+  45% {
+    transform: translate(5px, -4px) rotate(14deg) scale(0.96);
+  }
+  70% {
+    transform: translate(-2px, 2px) rotate(-5deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* ---- Bombayı at: hedef seçimi panelin içinde (ZB-M1) ---- */
+.zpick {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 8px 6px;
+  border-radius: inherit;
+  background: rgba(5, 8, 26, 0.94);
+  animation: zpick-in 220ms var(--ease) both;
+}
+/* Panel kare ya da yatay: ızgara geniş düzende (daha çok sütun, daha az sıra) kurulur ki 8 kişide de sığsın. */
+.zpick .ppick {
+  --cols: var(--cols-wide);
+  --rows: var(--rows-wide);
+  --gap: 6px;
+}
+.zpick .ppick__cell {
+  min-height: 0;
+  padding: 4px 0;
+  gap: 4px;
+}
+.zpick .ppick__cell:disabled:not([data-self="1"]):not([data-picked="1"]) .ppick__portrait {
+  opacity: 0.4;
+}
+.zpick .ppick__cell:disabled:not([data-self="1"]):not([data-picked="1"]) {
+  opacity: 1;
+}
+@keyframes zpick-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.zpanel .zpanel__picktime {
+  position: absolute;
+  width: auto;
+  left: 18px;
+  right: 18px;
+  top: 6px;
+  z-index: 4;
+}
+.zpanel[data-picking="1"] {
+  border-color: rgba(46, 242, 255, 0.85);
+  box-shadow:
+    inset 0 0 40px rgba(0, 0, 0, 0.6),
+    0 0 22px rgba(46, 242, 255, 0.35);
+}
+
+/* ---- Sıra sana geçti: kenar ışığı ve "SIRA SENDE!" bandı (ZB-U2); uçan bomba (ZB-U1) ---- */
+.zgame__fx {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+/* Ekranın kendi kenarları yanar (sütun değil, görünür alanın tamamı). */
+.zedge {
+  position: fixed;
+  inset: 0;
+  box-shadow:
+    inset 0 0 0 4px var(--cyan),
+    inset 0 0 50px rgba(46, 242, 255, 0.65);
+  opacity: 0;
+  transition: opacity 160ms;
+}
+.zedge[data-on="1"] {
+  opacity: 1;
+  animation: zedge-pulse 520ms ease-in-out infinite alternate;
+}
+@keyframes zedge-pulse {
+  to {
+    opacity: 0.45;
+  }
+}
+.zfly {
+  position: absolute;
+  left: -11px;
+  top: -11px;
+  opacity: 0;
+  will-change: transform;
+}
+.zfly[data-on="1"] {
+  opacity: 1;
+}
+.zfly__bomb {
+  position: relative;
+  width: 26px;
+  height: 26px;
+}
+.zband {
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  top: 26%;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  padding: 14px 0;
+  background: linear-gradient(
+    90deg,
+    rgba(46, 242, 255, 0) 0%,
+    rgba(8, 40, 70, 0.96) 18%,
+    rgba(8, 40, 70, 0.96) 82%,
+    rgba(46, 242, 255, 0) 100%
+  );
+  border-top: 2px solid var(--cyan);
+  border-bottom: 2px solid var(--cyan);
+  pointer-events: none;
+  animation: zband-in 360ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.zband__text {
+  font-size: clamp(32px, 11vw, 48px);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-shadow:
+    0 0 18px rgba(46, 242, 255, 0.9),
+    0 3px 0 rgba(0, 0, 0, 0.5);
+}
+@keyframes zband-in {
+  from {
+    transform: translateY(-160%);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
 }
 
 @media (max-height: 700px) and (orientation: portrait) {
@@ -473,7 +777,15 @@
     border-radius: 24px;
   }
   .zstrip {
-    padding-top: 10px;
+    padding-top: 8px;
+    row-gap: 4px;
+  }
+  .zlen {
+    min-height: 34px;
+    margin-bottom: 6px;
+  }
+  .zlen__num {
+    font-size: 28px;
   }
 }
 @media (orientation: landscape) and (max-height: 520px) {
@@ -500,13 +812,22 @@
     transform: translateY(6px);
   }
   .zstrip {
-    padding-top: 8px;
+    --zs-cols: var(--zs-n, 8);
+    --zs-av: 30px;
+    padding-top: 6px;
+  }
+  .zlen {
+    min-height: 28px;
+    margin: 0 0 4px;
+  }
+  .zlen__num {
+    font-size: 24px;
   }
   .zhub {
-    width: 56px;
+    width: 64px;
   }
   .zhub__num {
-    font-size: 20px;
+    font-size: 18px;
   }
 }
 
@@ -521,6 +842,30 @@
 :root[data-motion="reduce"] .zpanel[data-cracked="1"] .zpanel__flash {
   animation: none;
   opacity: 0.18;
+}
+
+/* Hareket azaltılmışsa: savrulma, bant inişi, kenar nabzı ve kıvılcım titreşimi durur; durum renk/yazıyla kalır. */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .zs[data-blast="1"] .zs__av,
+  :root:not([data-motion="full"]) .zband,
+  :root:not([data-motion="full"]) .zedge[data-on="1"],
+  :root:not([data-motion="full"]) .zbomb__spark-in,
+  :root:not([data-motion="full"]) .zs__bomb::before,
+  :root:not([data-motion="full"]) .zlen__num,
+  :root:not([data-motion="full"]) .ztrack__dot--new,
+  :root:not([data-motion="full"]) .zpick {
+    animation: none;
+  }
+}
+:root[data-motion="reduce"] .zs[data-blast="1"] .zs__av,
+:root[data-motion="reduce"] .zband,
+:root[data-motion="reduce"] .zedge[data-on="1"],
+:root[data-motion="reduce"] .zbomb__spark-in,
+:root[data-motion="reduce"] .zs__bomb::before,
+:root[data-motion="reduce"] .zlen__num,
+:root[data-motion="reduce"] .ztrack__dot--new,
+:root[data-motion="reduce"] .zpick {
+  animation: none;
 }
 
 /* ---- Anlatım görseli ---- */
@@ -643,5 +988,5 @@
 }
 :root[data-cb="1"] .ztrack__dot[data-s="on"] {
   background: rgba(46, 242, 255, 0.55);
-  height: 5px;
+  transform: scale(0.6);
 }

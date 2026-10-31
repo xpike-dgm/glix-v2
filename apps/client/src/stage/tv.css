@@ -154,6 +154,9 @@
   gap: 56px;
   padding: 72px 72px 56px;
 }
+.tv__cols[data-own-board="1"] {
+  grid-template-columns: minmax(0, 1fr);
+}
 .tv__cols > main {
   min-width: 0;
   min-height: 0;

@@ -1,6 +1,19 @@
 /* ---- Çapraz Ateş ---- */
 .cx {
   --cx-red: var(--red);
+  --cx-shield: 46 242 255;
+}
+.cx__pick,
+.cx__reveal {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.cx__pick > :not(.cx__laser, .cx__reticle, .cx__dome, .cx-duel) {
+  position: relative;
+  z-index: 1;
 }
 .cx__head {
   flex: none;
@@ -11,6 +24,63 @@
   margin-top: clamp(8px, 3dvh, 28px);
   min-height: 62px;
   text-align: center;
+}
+.cx__mini {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  position: relative;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(140, 160, 255, 0.35);
+  background: radial-gradient(circle, #121a45 0 60%, #0a1030);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 0 14px rgba(46, 242, 255, 0.18);
+}
+.cx__mini:active {
+  transform: scale(0.95);
+}
+.cx__mini-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.cx__mini-orbit {
+  fill: none;
+  stroke: rgba(140, 160, 255, 0.25);
+  stroke-width: 1.5;
+}
+.cx__mini-line {
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+.cx__mini-dot {
+  stroke: #05081a;
+  stroke-width: 2;
+}
+.cx__mini-shield {
+  fill: rgb(var(--cx-shield) / 0.18);
+  stroke: rgb(var(--cx-shield) / 0.9);
+  stroke-width: 2;
+}
+.cx__mini-tag {
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  transform: translateX(-50%);
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #05081a;
+  border: 1px solid rgba(140, 160, 255, 0.35);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 16px;
+  color: #d5daf6;
+  white-space: nowrap;
 }
 .cx__title {
   font-family: var(--font-display);
@@ -27,6 +97,11 @@
   text-shadow: 0 0 14px color-mix(in srgb, var(--tc, var(--red)) 55%, transparent);
   animation: cx-title-in 320ms var(--ease) both;
 }
+.cx__title--cover {
+  color: var(--cyan);
+  text-shadow: 0 0 14px rgb(var(--cx-shield) / 0.5);
+  animation: cx-title-in 320ms var(--ease) both;
+}
 @keyframes cx-title-in {
   from {
     transform: scale(1.18);
@@ -38,6 +113,29 @@
   }
 }
 
+/* Tur 2: sağda tur 1'in mini halkası, solda eşit boşluk (başlık ortada kalır). */
+.cx__head[data-ring="1"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 58px;
+  grid-template-rows: auto auto;
+  column-gap: 6px;
+  row-gap: 4px;
+  align-items: center;
+  justify-items: center;
+}
+.cx__head[data-ring="1"] > .overline,
+.cx__head[data-ring="1"] > .cx__title {
+  grid-column: 1;
+  max-width: 100%;
+}
+.cx__head[data-ring="1"] > .cx__title {
+  font-size: clamp(18px, 5.6vw, 30px);
+}
+.cx__head[data-ring="1"] > .overline {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .cx__stage {
   flex: 1;
   min-height: 0;
@@ -55,7 +153,7 @@
     44px,
     min(
       calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols) - 16px),
-      calc(100cqh / var(--rows) - 44px)
+      calc(100cqh / var(--rows) - var(--cx-label, 44px))
     ),
     120px
   );
@@ -110,6 +208,7 @@
 }
 .cx__portrait {
   position: relative;
+  isolation: isolate;
   display: grid;
   place-items: center;
   width: var(--cx-av);
@@ -129,6 +228,16 @@
 }
 .cx__cell[data-locked="1"] .cx__name {
   color: var(--text);
+}
+
+/* Portre zemini opak: lazer çizgisi portrelerin arkasından geçer. */
+.cx__portrait::before {
+  content: "";
+  position: absolute;
+  inset: 4%;
+  z-index: -1;
+  border-radius: 50%;
+  background: #0a1030;
 }
 
 /* İnce lazer nişangâhı: portre çevresinde yavaşça gezinir. */
@@ -167,37 +276,349 @@
     transform: translate(calc(var(--flip, 1) * -7%), 9%);
   }
 }
-/* Kilit: yalnız kendi ekranında; nişangâh ortaya oturur, kırmızıya döner ve döner. */
-.cx__slot[data-locked="1"] .cx__sight {
-  width: 124%;
-  height: 124%;
-  margin: -62% 0 0 -62%;
+.cx__slot[data-off="1"] .cx__sight,
+.cx__slot[data-idle="1"] .cx__sight {
+  opacity: 0.3;
+}
+
+.cx__grid[data-badges="1"] {
+  --cx-label: 50px;
+}
+.cx__grid[data-badges="1"] .cx__cell {
+  gap: 13px;
+}
+/* Tur 2 rozetleri: portrenin alt kenarında künye gibi (yüzü örtmez). */
+.cx__badges {
+  position: absolute;
+  left: 50%;
+  top: calc(8px + var(--cx-av) - 10px);
+  z-index: 2;
+  pointer-events: none;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  min-height: 18px;
+  max-width: 100%;
+}
+.cx__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  background: #05081a;
+  border: 1.5px solid currentColor;
+}
+.cx__badge[data-k="shot"] {
+  color: #ff6b85;
+  box-shadow: 0 0 8px rgba(255, 59, 92, 0.45);
+}
+.cx__badge[data-k="you"] {
+  color: var(--amber);
+}
+.cx__badge[data-k="both"] {
+  color: #ffb36b;
+}
+.cx__badge[data-k="cover"] {
+  width: 20px;
+  padding: 0;
+  color: var(--cyan);
+}
+.cx__ico {
+  display: block;
+  flex: none;
+}
+
+/* ---- Lazer: kendi avatarından hedefe (yalnız kendi ekranında), portrelerin arkasından ---- */
+.cx__laser {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 0;
+}
+.cx__laser-line {
+  stroke: var(--red);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 6 5;
+  opacity: 0.65;
+  filter: drop-shadow(0 0 3px var(--red));
+  animation: cx-laser 700ms linear infinite;
+}
+.cx__laser-line[data-locked="1"] {
+  stroke-dasharray: none;
+  opacity: 0.85;
+  animation: none;
+}
+@keyframes cx-laser {
+  to {
+    stroke-dashoffset: -22;
+  }
+}
+
+/* ---- Kayan nişangâh: seçilen portreye kayar, yakınlaşarak kilitlenir ---- */
+.cx__reticle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    transform 280ms var(--ease),
+    opacity 160ms linear;
+}
+.cx__reticle[data-on="1"] {
   opacity: 1;
+}
+.cx__reticle-in {
+  position: absolute;
+  left: calc(var(--rs, 100px) / -2);
+  top: calc(var(--rs, 100px) / -2);
+  width: var(--rs, 100px);
+  height: var(--rs, 100px);
   color: var(--red);
-  animation: cx-lock 380ms var(--ease) both;
 }
-.cx__slot[data-locked="1"] .cx__sight-svg {
-  animation: cx-spin 6s linear 380ms infinite;
-  filter: drop-shadow(0 0 5px var(--red));
+.cx__rring {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0 4px rgb(255 59 92 / 0.8));
 }
-@keyframes cx-lock {
+.cx__rring-orbit {
+  fill: none;
+  stroke: var(--rr, var(--red));
+  stroke-width: 1.4;
+  stroke-dasharray: 3 4;
+}
+.cx__rring-ticks {
+  fill: none;
+  stroke: var(--rr, #ff5a74);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transform-origin: 50% 50%;
+  animation: cx-spin-full 8s linear infinite;
+}
+.cx__reticle-in[data-k="a"] {
+  animation: cx-zoom-a 380ms var(--ease) both;
+}
+.cx__reticle-in[data-k="b"] {
+  animation: cx-zoom-b 380ms var(--ease) both;
+}
+@keyframes cx-zoom-a {
   from {
-    transform: translate(calc(var(--flip, 1) * -9%), -7%) scale(1.5) rotate(-80deg);
-    opacity: 0.5;
+    transform: scale(1.45) rotate(-50deg);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes cx-zoom-b {
+  from {
+    transform: scale(1.45) rotate(-50deg);
+  }
+  to {
+    transform: none;
+  }
+}
+/* Kırmızı lazer noktası: portrenin çevresinde titrer (yüzü örtmez, kenarda durur). */
+.cx__dot {
+  position: absolute;
+  left: 50%;
+  top: 9%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 50%;
+  background: #ff5a74;
+  box-shadow:
+    0 0 6px 2px rgba(255, 59, 92, 0.85),
+    0 0 1px #fff inset;
+  animation: cx-jitter 900ms steps(6) infinite;
+}
+@keyframes cx-jitter {
+  0% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(2px, -1px);
+  }
+  40% {
+    transform: translate(-1px, 2px);
+  }
+  60% {
+    transform: translate(1px, 1px);
+  }
+  80% {
+    transform: translate(-2px, -1px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+/* Ateşe hazır: nişangâh kilit simgesine döner (alt kenarda; yüzü örtmez). */
+.cx__reticle-lock {
+  position: absolute;
+  right: 4%;
+  top: 4%;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #05081a;
+  border: 2px solid var(--red);
+  color: var(--red);
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity 160ms linear,
+    transform 220ms var(--ease);
+}
+.cx__reticle[data-locked="1"] .cx__reticle-lock {
+  opacity: 1;
+  transform: none;
+}
+.cx__reticle[data-locked="1"] .cx__rring-ticks {
+  animation-play-state: paused;
+}
+.cx__reticle[data-locked="1"] .cx__dot {
+  animation: none;
+}
+/* Seçilen portrenin kendi gezinen nişangâhı gizlenir; yerine kayan nişangâh oturur. */
+.cx__slot[data-locked="1"] .cx__sight {
+  opacity: 0;
+}
+
+/* ---- Alt güverte: kendi avatarın (silahı kalkık) ve "Siper al" ---- */
+.cx__deck {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+.cx__me {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 52px;
+  justify-content: start;
+  transition: transform 260ms var(--ease);
+}
+/* Basit tabanca: avatarın sağında, namlu yukarı (hedefe doğru). */
+.cx__gun {
+  position: absolute;
+  right: 0;
+  top: 2px;
+  width: 22px;
+  height: 22px;
+  background:
+    no-repeat center / contain
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 9h13l1-2h2v4h-3v1h-4l-1 2h-2l-1 5H5l1.4-6H4z' fill='%23d5daf6' stroke='%2305081a' stroke-width='1.2' stroke-linejoin='round'/%3E%3Ccircle cx='20.5' cy='9' r='1.2' fill='%23ff3b5c'/%3E%3C/svg%3E");
+  transform: rotate(-32deg);
+  transform-origin: 30% 70%;
+  filter: drop-shadow(0 0 3px rgba(255, 59, 92, 0.6));
+  transition: transform 260ms var(--ease);
+}
+.cx__pick[data-cover="1"] .cx__me {
+  transform: translateY(5px) scale(0.9);
+}
+.cx__pick[data-cover="1"] .cx__gun {
+  transform: rotate(40deg) translate(-2px, 6px);
+  filter: none;
+  opacity: 0.6;
+}
+.cx__cover-btn {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  border-radius: var(--r-btn);
+  border: 1.5px solid rgb(var(--cx-shield) / 0.45);
+  background: rgb(var(--cx-shield) / 0.07);
+  color: var(--cyan);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 160ms linear,
+    box-shadow 160ms linear,
+    transform 80ms var(--ease);
+}
+.cx__cover-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.cx__cover-btn[aria-pressed="true"] {
+  background: rgb(var(--cx-shield) / 0.2);
+  border-color: var(--cyan);
+  box-shadow: 0 0 18px rgb(var(--cx-shield) / 0.35);
+  color: #e9feff;
+}
+.cx__cover-btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.cx__cover-btn[aria-pressed="true"]:disabled {
+  opacity: 1;
+}
+/* Siper: ekranın altı enerji kalkanıyla örtülür (düğmelerin arkasında). */
+.cx__dome {
+  position: absolute;
+  left: calc(var(--gutter, 20px) * -1);
+  right: calc(var(--gutter, 20px) * -1);
+  bottom: calc(var(--safe-bottom) * -1 - 8px);
+  height: min(34%, 220px);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 50% 50% 0 0 / 34% 34% 0 0;
+  background:
+    repeating-linear-gradient(60deg, rgb(var(--cx-shield) / 0.1) 0 1px, transparent 1px 14px),
+    repeating-linear-gradient(-60deg, rgb(var(--cx-shield) / 0.1) 0 1px, transparent 1px 14px),
+    radial-gradient(
+      120% 90% at 50% 100%,
+      rgb(var(--cx-shield) / 0.22),
+      rgb(var(--cx-shield) / 0.06) 70%,
+      transparent
+    );
+  border-top: 2px solid rgb(var(--cx-shield) / 0.75);
+  box-shadow: 0 -6px 22px rgb(var(--cx-shield) / 0.28);
+  transform-origin: 50% 100%;
+  animation: cx-dome-up 360ms var(--ease) both;
+}
+@keyframes cx-dome-up {
+  from {
+    transform: scaleY(0.2);
+    opacity: 0;
   }
   to {
     transform: none;
     opacity: 1;
   }
-}
-@keyframes cx-spin {
-  to {
-    transform: rotate(90deg);
-  }
-}
-.cx__slot[data-off="1"] .cx__sight,
-.cx__slot[data-idle="1"] .cx__sight {
-  opacity: 0.3;
 }
 
 .cx__hint {
@@ -207,43 +628,556 @@
   color: var(--text-dim);
   font-size: var(--fs-15);
   line-height: 1.3;
-  margin: 4px 0 6px;
+  margin: 6px 0 4px;
   min-height: 20px;
-  /* Alt ızgara çizgilerinin üstünde okunur kalsın. */
+  max-width: 100%;
   background: rgba(5, 8, 26, 0.88);
   padding: 2px 12px;
   border-radius: 999px;
 }
-
-/* ---- Açılış: ateş izleri ---- */
-.cx__head--reveal {
-  min-height: 74px;
-  gap: 2px;
+.cx__pick[data-cover="1"] .cx__hint {
+  color: #c6f9ff;
 }
-.cx__score {
+
+/* ---- Hazır listesi: hazır olanların yanında mermi ---- */
+.cx__ready {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 10px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cx__ready-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  opacity: 0.45;
+  transition: opacity 200ms linear;
+}
+.cx__ready-item[data-on="1"] {
+  opacity: 1;
+}
+.cx__ready-ammo {
+  position: absolute;
+  right: -6px;
+  bottom: -3px;
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #05081a;
+  color: var(--amber);
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 200ms linear,
+    transform 240ms var(--ease);
+  filter: drop-shadow(0 0 3px rgba(255, 194, 59, 0.7));
+}
+.cx__ready-item[data-on="1"] .cx__ready-ammo {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---- Açılış halkası ---- */
+.cx__arena {
+  --cx-rav: clamp(40px, 18cqw, 80px);
+  position: relative;
+  width: min(100cqw, 100cqh);
+  aspect-ratio: 1;
+  container-type: size;
+}
+.cx__arena[data-mode="final"],
+.cx__arena[data-mode="short"] {
+  animation: cx-grow var(--grow, 400ms) var(--ease) calc(0ms - var(--el, 0ms)) both;
+}
+@keyframes cx-grow {
+  from {
+    transform: scale(0.62);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.cx__lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.cx__lines line {
+  stroke: currentColor;
+  stroke-linecap: round;
+  fill: none;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation:
+    cx-draw var(--flight) cubic-bezier(0.25, 0.1, 0.35, 1) calc(var(--muzzle) - var(--el)) both,
+    cx-trail 700ms ease-out calc(var(--impact) + 500ms - var(--el)) forwards;
+}
+.cx__beam {
+  stroke-width: 0.7;
+}
+.cx__glow {
+  stroke-width: 2.4;
+  opacity: 0.25;
+}
+@keyframes cx-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes cx-trail {
+  to {
+    opacity: 0.35;
+  }
+}
+
+/* Mermi: parlak baş ve kuyruk, ağır çekimde hedefe. */
+.cx__bullet,
+.cx__muzzle,
+.cx__ricochet,
+.cx__burst {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.cx__bullet {
+  animation: cx-fly var(--flight) cubic-bezier(0.25, 0.1, 0.35, 1) calc(var(--muzzle) - var(--el)) both;
+}
+.cx__bullet::before {
+  content: "";
+  position: absolute;
+  left: -7cqw;
+  top: -0.8cqw;
+  width: 7.6cqw;
+  height: 1.6cqw;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, currentColor 62%, #fff 88%);
+  box-shadow: 0 0 6px currentColor;
+  transform: rotate(var(--ang));
+  transform-origin: 7cqw 50%;
+}
+.cx__bullet-art {
+  position: absolute;
+  left: -6cqw;
+  top: -3cqw;
+  width: 8cqw;
+  height: 6cqw;
+  object-fit: contain;
+  transform: rotate(var(--ang));
+  transform-origin: 6cqw 50%;
+}
+.cx__bullet:has(.cx__bullet-art)::before {
+  display: none;
+}
+@keyframes cx-fly {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  2% {
+    opacity: 1;
+  }
+  97% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty));
+  }
+}
+/* Namlu ateşi: atanın önünde, hedefe dönük kısa alev. */
+.cx__muzzle {
+  z-index: 4;
+}
+.cx__muzzle::before,
+.cx__muzzle-art {
+  content: "";
+  position: absolute;
+  left: -1cqw;
+  top: -3cqw;
+  width: 7cqw;
+  height: 6cqw;
+  transform-origin: 1cqw 50%;
+  transform: rotate(var(--ang)) scale(0);
+  opacity: 0;
+  animation: cx-muzzle 320ms ease-out calc(var(--muzzle) - var(--el)) forwards;
+}
+.cx__muzzle::before {
+  background:
+    radial-gradient(closest-side at 22% 50%, #fff 0 30%, rgb(255 236 170 / 0.95) 45%, transparent 100%),
+    radial-gradient(closest-side at 50% 50%, var(--amber), rgb(255 120 40 / 0.5) 60%, transparent);
+  clip-path: polygon(0 50%, 30% 10%, 42% 34%, 72% 0, 64% 38%, 100% 50%, 64% 62%, 72% 100%, 42% 66%, 30% 90%);
+  filter: drop-shadow(0 0 4px var(--amber));
+}
+.cx__muzzle:has(.cx__muzzle-art)::before {
+  display: none;
+}
+.cx__muzzle-art {
+  object-fit: contain;
+}
+@keyframes cx-muzzle {
+  0% {
+    transform: rotate(var(--ang)) scale(0.3);
+    opacity: 1;
+  }
+  35% {
+    transform: rotate(var(--ang)) scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--ang)) scale(0.7);
+    opacity: 0;
+  }
+}
+/* Sekme: mermi kalkandan yana savrulur. */
+.cx__ricochet::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -0.5cqw;
+  width: 6cqw;
+  height: 1cqw;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #fff, currentColor 40%, transparent);
+  transform-origin: 0 50%;
+  opacity: 0;
+  animation: cx-ricochet 520ms ease-out calc(var(--impact) - var(--el)) forwards;
+}
+@keyframes cx-ricochet {
+  0% {
+    transform: rotate(var(--ang)) translateX(0) scaleX(0.4);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--ang)) translateX(9cqw) scaleX(1);
+    opacity: 0;
+  }
+}
+/* Çarpışma kıvılcımı (karşılıklı hedeflerin ortasında). */
+.cx__burst::before,
+.cx__burst::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+}
+.cx__burst::before {
+  width: 16cqw;
+  height: 16cqw;
+  background:
+    conic-gradient(
+      from 10deg,
+      transparent 0 8%,
+      #fff 9% 10%,
+      transparent 11% 33%,
+      #fff 34% 35%,
+      transparent 36% 58%,
+      #fff 59% 60%,
+      transparent 61% 83%,
+      #fff 84% 85%,
+      transparent 86%
+    ),
+    radial-gradient(circle, #fff 0 12%, var(--amber) 14% 32%, rgb(255 194 59 / 0) 66%);
+  animation: cx-burst 600ms var(--ease) calc(var(--impact) - var(--el)) forwards;
+}
+.cx__burst::after {
+  width: 20cqw;
+  height: 20cqw;
+  border: 2px solid var(--amber);
+  animation: cx-burst-ring 680ms ease-out calc(var(--impact) - var(--el)) forwards;
+}
+@keyframes cx-burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.1) rotate(0);
+    opacity: 1;
+  }
+  45% {
+    transform: translate(-50%, -50%) scale(1) rotate(25deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.2) rotate(40deg);
+    opacity: 0;
+  }
+}
+@keyframes cx-burst-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Oyuncular mermilerin ve izlerin üstünde: mermi hedefe varınca avatarın/adın altına girer, adı örtmez. */
+.cx__node {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: var(--cx-rav);
+  height: var(--cx-rav);
+}
+.cx__body {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+.cx__node[data-me="1"] .cx__body {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}
+/* Vurulan: geri sarsılır. */
+.cx__node[data-o="hit"] .cx__body {
+  animation: cx-recoil 460ms ease-out calc(var(--impact) - var(--el)) both;
+}
+@keyframes cx-recoil {
+  0%,
+  100% {
+    transform: none;
+  }
+  15% {
+    transform: translate(3px, -2px) rotate(6deg) scale(0.94);
+  }
+  35% {
+    transform: translate(-3px, 1px) rotate(-5deg);
+  }
+  60% {
+    transform: translate(2px, 1px) rotate(2deg);
+  }
+}
+.cx__impact {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.cx__impact::before {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  border-radius: 50%;
+  border: 3px solid var(--red);
+  box-shadow: 0 0 14px var(--red);
+  opacity: 0;
+  animation: cx-hit-ring 560ms ease-out calc(var(--impact) - var(--el)) forwards;
+}
+@keyframes cx-hit-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+/* Sağ kaldı: avatar parlar. */
+.cx__node[data-o="free"] .cx__body {
+  animation: cx-survive 900ms ease-out calc(var(--impact) + 120ms - var(--el)) both;
+}
+@keyframes cx-survive {
+  0% {
+    box-shadow: 0 0 0 0 rgb(182 255 59 / 0);
+  }
+  40% {
+    box-shadow:
+      0 0 0 5px rgb(182 255 59 / 0.75),
+      0 0 26px 6px rgb(182 255 59 / 0.55);
+  }
+  100% {
+    box-shadow:
+      0 0 0 3px rgb(182 255 59 / 0.55),
+      0 0 16px 2px rgb(182 255 59 / 0.3);
+  }
+}
+/* Siper: avatarın çevresinde kalkan kabarcığı (yüzü örtmez: ortası saydam). */
+.cx__shield {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 150%;
+  height: 150%;
+  margin: -75% 0 0 -75%;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle,
+      transparent 0 60%,
+      rgb(var(--cx-shield) / 0.14) 64%,
+      rgb(var(--cx-shield) / 0.55) 70%,
+      transparent 73%
+    ),
+    repeating-conic-gradient(rgb(var(--cx-shield) / 0.12) 0 6deg, transparent 6deg 18deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 58%, #000 60% 72%, transparent 73%);
+  mask: radial-gradient(circle, transparent 0 58%, #000 60% 72%, transparent 73%);
+  filter: drop-shadow(0 0 6px rgb(var(--cx-shield) / 0.6));
+  animation: cx-shield-up 420ms var(--ease) calc(var(--muzzle) - 400ms - var(--el)) both;
+}
+img.cx__shield--art {
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+  object-fit: contain;
+}
+.cx__node[data-shot="1"] .cx__shield {
+  animation:
+    cx-shield-up 420ms var(--ease) calc(var(--muzzle) - 400ms - var(--el)) both,
+    cx-shield-hit 420ms ease-out calc(var(--impact) - var(--el)) both;
+}
+@keyframes cx-shield-up {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes cx-shield-hit {
+  0% {
+    filter: drop-shadow(0 0 6px rgb(var(--cx-shield) / 0.6)) brightness(1);
+  }
+  30% {
+    filter: drop-shadow(0 0 14px rgb(var(--cx-shield) / 1)) brightness(1.8);
+  }
+  100% {
+    filter: drop-shadow(0 0 6px rgb(var(--cx-shield) / 0.6)) brightness(1);
+  }
+}
+.cx__rname {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: max(40cqw, 116px);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  line-height: 1.2;
+  color: #e4e8ff;
+  background: rgba(5, 8, 26, 0.86);
+  padding: 1px 3px 1px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.cx__rname-t {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Puan rozeti ad etiketinin içinde, adın yanında (yüzü örtmez, havada durmaz). Rozet açılana kadar yer
+   kaplamaz; etiket adın altında ortalı kalır. */
+.cx__chip {
+  flex: none;
+  display: grid;
+  min-width: 0;
+  max-width: 64px;
+  overflow: hidden;
+  padding: 0 5px;
+  border-radius: 999px;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(40px, 13vw, 56px);
-  line-height: 1;
-  animation: cx-pop 420ms var(--ease) var(--at, 1300ms) both;
+  font-size: var(--fs-13);
+  line-height: 1.35;
+  text-align: center;
+  background: #05081a;
+  border: 1.5px solid currentColor;
+  animation: cx-chip-in 380ms var(--ease) calc(var(--chips) - var(--el)) both;
 }
-.cx__score[data-o="free"] {
+@keyframes cx-chip-in {
+  from {
+    max-width: 0;
+    padding: 0;
+    border-width: 0;
+    margin-left: -4px;
+    opacity: 0;
+  }
+  to {
+    max-width: 64px;
+    opacity: 1;
+  }
+}
+.cx__chip-r,
+.cx__chip-t {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.cx__chip[data-has-total="1"] .cx__chip-r {
+  animation: cx-out 260ms linear calc(var(--total) - var(--el)) both;
+}
+.cx__chip-t {
+  opacity: 0;
+  text-shadow: 0 0 8px rgb(255 194 59 / 0.6);
+  animation: cx-in 300ms var(--ease) calc(var(--total) - var(--el)) both;
+}
+.cx__chip[data-s="up"],
+.cx__chip-t[data-s="up"] {
   color: var(--lime);
-  text-shadow: 0 0 18px color-mix(in srgb, var(--lime) 55%, transparent);
 }
-.cx__score[data-o="hit"] {
-  color: var(--red);
-  text-shadow: 0 0 18px color-mix(in srgb, var(--red) 55%, transparent);
+.cx__chip[data-s="down"],
+.cx__chip-t[data-s="down"] {
+  color: #ff6b85;
 }
-.cx__score[data-o="clash"],
-.cx__score[data-o="idle"] {
-  color: var(--text);
+.cx__chip[data-s="zero"],
+.cx__chip-t[data-s="zero"] {
+  color: #c9cff0;
 }
-.cx__verdict {
-  font-size: var(--fs-15);
-  font-weight: 600;
-  color: #d5daf6;
-  animation: cx-fade 300ms var(--ease) var(--at, 1300ms) both;
+.cx__chip[data-has-total="1"] {
+  animation:
+    cx-chip-in 380ms var(--ease) calc(var(--chips) - var(--el)) both,
+    cx-total-ring 600ms ease-out calc(var(--total) - var(--el)) both;
+}
+@keyframes cx-total-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgb(255 194 59 / 0);
+  }
+  40% {
+    box-shadow: 0 0 0 4px rgb(255 194 59 / 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(255 194 59 / 0);
+  }
+}
+@keyframes cx-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes cx-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 @keyframes cx-pop {
   from {
@@ -267,159 +1201,358 @@
     opacity: 1;
   }
 }
+/* Hareketsiz halka (tur 1'in büyük hâli): her şey son hâlinde. */
+.cx__arena[data-mode="still"] .cx__bullet {
+  display: none;
+}
 
-.cx__arena {
-  --cx-rav: clamp(40px, 18cqw, 80px);
-  position: relative;
-  width: min(100cqw, 100cqh);
-  aspect-ratio: 1;
-  container-type: size;
-}
-.cx__lines {
+/* ---- İzleyici/TV: büyük halka, dönen nişangâhlar ---- */
+.cx__arena--watch .cx__wsight {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
+  left: 50%;
+  top: 50%;
+  width: 124%;
+  height: 124%;
+  margin: -62% 0 0 -62%;
+  opacity: 0.7;
   pointer-events: none;
+  animation: cx-spin-full 7s linear var(--delay, 0s) infinite;
 }
-.cx__lines line {
-  stroke: currentColor;
-  stroke-linecap: butt;
-  fill: none;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: cx-draw var(--beam-ms, 520ms) cubic-bezier(0.5, 0, 0.9, 0.6) var(--d, 0ms) both;
+.cx__arena--watch .cx__wsight .cx__rring {
+  filter: drop-shadow(0 0 4px rgb(var(--cx-shield) / 0.7));
 }
-.cx__beam {
-  stroke-width: 0.9;
+.cx__arena--watch .cx__node {
+  --rr: var(--cyan);
 }
-.cx__glow {
-  stroke-width: 2.8;
-  opacity: 0.28;
+.cx__arena--watch .cx__node[data-ready="1"] {
+  --rr: var(--red);
 }
-@keyframes cx-draw {
+@keyframes cx-spin-full {
   to {
-    stroke-dashoffset: 0;
+    transform: rotate(360deg);
   }
 }
-.cx__node {
+.cx__chip--ammo {
   position: absolute;
-  transform: translate(-50%, -50%);
+  top: -8px;
+  right: -12px;
+  min-width: 28px;
+  padding: 3px;
+  color: var(--amber);
   display: grid;
   place-items: center;
-  width: var(--cx-rav);
-  height: var(--cx-rav);
-}
-.cx__node[data-me="1"] .av {
-  outline: 2px solid var(--text);
-  outline-offset: 3px;
-  border-radius: 50%;
-}
-.cx__rname {
-  position: absolute;
-  top: calc(100% + 3px);
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: max(32cqw, 66px);
-  font-size: var(--fs-13);
-  font-weight: 600;
-  line-height: 1.2;
-  color: #e4e8ff;
-  background: rgba(5, 8, 26, 0.86);
-  padding: 1px 6px;
-  border-radius: 999px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.cx__chip {
-  position: absolute;
-  top: -6px;
-  right: -10px;
-  min-width: 30px;
-  padding: 3px 7px;
-  border-radius: 999px;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: var(--fs-15);
-  line-height: 1.2;
-  text-align: center;
-  background: #05081a;
-  border: 2px solid currentColor;
-  animation: cx-pop 420ms var(--ease) var(--chip-at, 1300ms) both;
-}
-.cx__chip[data-s="up"] {
-  color: var(--lime);
-}
-.cx__chip[data-s="down"] {
-  color: #ff6b85;
-}
-.cx__chip[data-s="zero"] {
-  color: #c9cff0;
+  animation: cx-pop 360ms var(--ease) both;
 }
 
-/* Çarpışma patlaması (karşılıklı hedeflerin ortasında) */
-.cx__burst,
-.cx__impact {
+/* ---- Açılış başlığı ve alt özet ---- */
+.cx__head--reveal {
+  min-height: 74px;
+  gap: 2px;
+}
+.cx__verdict-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  max-width: 100%;
+}
+.cx__late {
+  animation: cx-pop 420ms var(--ease) calc(var(--verdict) - var(--el)) both;
+}
+.cx__score {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(34px, 11vw, 52px);
+  line-height: 1;
+}
+.cx__verdict {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(18px, 5.6vw, 26px);
+  letter-spacing: 0.02em;
+  color: var(--text);
+  white-space: nowrap;
+}
+.cx__verdict-row[data-o="free"] {
+  color: var(--lime);
+  text-shadow: 0 0 18px rgb(182 255 59 / 0.5);
+}
+.cx__verdict-row[data-o="free"] .cx__verdict {
+  color: var(--lime);
+}
+.cx__verdict-row[data-o="hit"] {
+  color: var(--red);
+  text-shadow: 0 0 18px rgb(255 59 92 / 0.5);
+}
+.cx__verdict-row[data-o="hit"] .cx__verdict {
+  color: #ff8a9d;
+}
+.cx__verdict-row[data-o="cover"] .cx__verdict {
+  color: var(--cyan);
+}
+.cx__verdict-row[data-o="clash"] .cx__verdict {
+  color: var(--amber);
+}
+.cx__panel {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 112px;
+  padding: 2px 0 8px;
+  text-align: center;
+}
+/* Açılışta halka ile özet bir blok olarak ortalanır (aralarında boşluk kalmaz). */
+.cx__reveal {
+  justify-content: center;
+}
+.cx__reveal > .cx__stage {
+  flex: 0 1 min(calc(100vw - 2 * var(--gutter, 20px)), 460px);
+}
+.cx__reveal[data-kind="interval"] .cx__panel {
+  min-height: 48px;
+  justify-content: center;
+}
+.cx__line {
+  margin: 0;
+  max-width: 100%;
+  font-size: clamp(15px, 4.6vw, var(--fs-18));
+  font-weight: 600;
+  line-height: 1.3;
+  color: #d5daf6;
+  overflow-wrap: anywhere;
+}
+.cx__line[data-at="shooters"] {
+  animation: cx-rise 420ms var(--ease) calc(var(--shooters) - var(--el)) both;
+}
+.cx__line[data-at="summary"] {
+  animation: cx-rise 420ms var(--ease) calc(var(--summary) - var(--el)) both;
+}
+.cx__line[data-at="total"] {
+  animation: cx-rise 420ms var(--ease) calc(var(--total) - var(--el)) both;
+}
+.cx__line--big {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(17px, 5.2vw, 26px);
+  line-height: 1.2;
+  color: var(--text);
+}
+.cx__line--big[data-o="hit"] {
+  color: #ff8a9d;
+}
+.cx__line--total {
+  margin-top: 2px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgb(255 194 59 / 0.55);
+  background: rgb(255 194 59 / 0.1);
+  font-weight: 800;
+  font-size: clamp(16px, 4.8vw, 20px);
+  white-space: nowrap;
+  color: var(--amber);
+}
+.cx__line--dim {
+  color: var(--text-dim);
+}
+.cx__line--next {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--text);
+  animation: cx-rise 360ms var(--ease) calc(var(--next) - var(--el)) both;
+}
+.cx__next-n {
+  display: inline-block;
+  min-width: 1.2em;
+  color: var(--red);
+}
+/* Yapay zekâ yorumu (isteğe bağlı): boşken hiç çizilmez. */
+.cx__quip {
+  font-style: italic;
+  color: #c9cff0;
+}
+@keyframes cx-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- Düello anı: karartma ve büyük sayılar (dokunuşu geçirir) ---- */
+.cx-duel {
   position: absolute;
-  width: 0;
-  height: 0;
+  inset: -12px calc(var(--gutter, 20px) * -1) 0;
+  z-index: 1;
   pointer-events: none;
+  display: grid;
+  place-items: center;
 }
-.cx__burst::before,
-.cx__burst::after,
-.cx__impact::before {
-  content: "";
+.cx-duel__shade {
   position: absolute;
-  border-radius: 50%;
-  left: 0;
-  top: 0;
-  transform: translate(-50%, -50%) scale(0);
-  opacity: 0;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(2, 3, 12, 0.55) 100%);
+  animation: cx-fade 700ms linear both;
 }
-.cx__burst::before {
-  width: 22cqw;
-  height: 22cqw;
-  background: radial-gradient(circle, #fff 0 14%, var(--amber) 15% 34%, rgb(255 194 59 / 0) 66%);
-  animation: cx-burst 560ms var(--ease) var(--d, 600ms) both;
+.cx-duel__n {
+  position: relative;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: min(40vmin, 220px);
+  line-height: 1;
+  color: rgb(255 59 92 / 0.04);
+  -webkit-text-stroke: 3px rgb(255 59 92 / 0.7);
+  text-shadow: 0 0 28px rgb(255 59 92 / 0.45);
+  animation: cx-count 950ms var(--ease) both;
 }
-.cx__burst::after {
-  width: 26cqw;
-  height: 26cqw;
-  border: 2px solid var(--amber);
-  animation: cx-burst-ring 640ms ease-out var(--d, 600ms) both;
-}
-.cx__impact::before {
-  width: 18cqw;
-  height: 18cqw;
-  border: 3px solid var(--red);
-  box-shadow: 0 0 14px var(--red);
-  animation: cx-burst-ring 560ms ease-out var(--d, 600ms) both;
-}
-@keyframes cx-burst {
+@keyframes cx-count {
   0% {
-    transform: translate(-50%, -50%) scale(0.1);
-    opacity: 1;
-  }
-  45% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1.3);
-    opacity: 0.55;
-  }
-}
-@keyframes cx-burst-ring {
-  0% {
-    transform: translate(-50%, -50%) scale(0.2);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1.2);
+    transform: scale(1.6);
     opacity: 0;
   }
+  20% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  75% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+}
+/* "ATEŞ!": açılışın başında flaş ve yazı. */
+.cx-fire {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+}
+.cx-fire__flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, #fff, rgb(255 236 200 / 0.85) 45%, rgb(255 120 60 / 0.35));
+  opacity: 0;
+  animation: cx-flash 420ms ease-out calc(0ms - var(--el)) both;
+}
+.cx-fire__word {
+  position: relative;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: min(22vmin, 120px);
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-shadow:
+    0 0 24px var(--red),
+    0 4px 0 #05081a;
+  opacity: 0;
+  animation: cx-fire-word 750ms var(--ease) calc(0ms - var(--el)) both;
+}
+@keyframes cx-flash {
+  0% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes cx-fire-word {
+  0% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  20% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.08);
+    opacity: 0;
+  }
+}
+/* Seni vurdular: cam çatlağı (okumayı engellemeyecek kadar saydam). */
+.cx-glass {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+  opacity: 0;
+  animation: cx-glass 1400ms ease-out var(--d, 3000ms) both;
+}
+.cx-glass__svg,
+.cx-glass__art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cx-glass__lines path {
+  fill: none;
+  stroke: rgba(235, 245, 255, 0.8);
+  stroke-width: 0.22;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.9));
+}
+@keyframes cx-glass {
+  0% {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+  8% {
+    opacity: 0.6;
+    transform: none;
+  }
+  100% {
+    opacity: 0.16;
+  }
+}
+
+/* ---- Tur 1 halkasının büyük hâli ---- */
+.cx-ringview {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: max(16px, var(--safe-top)) 16px max(16px, var(--safe-bottom));
+  background: rgba(5, 8, 26, 0.9);
+  animation: cx-fade 200ms linear both;
+}
+.cx-ringview__box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: min(100%, 520px);
+  max-height: 100%;
+}
+.cx-ringview__stage {
+  width: 100%;
+  height: min(92vw, 60dvh, 520px);
+  container-type: size;
+  display: grid;
+  place-items: center;
+}
+.cx-ringview__close {
+  margin-top: 22px;
+  min-height: 48px;
+  min-width: 140px;
+  padding: 0 20px;
+  border-radius: var(--r-btn);
+  border: 1.5px solid rgba(140, 160, 255, 0.4);
+  background: rgba(18, 26, 69, 0.9);
+  color: var(--text);
+  font-weight: 700;
+  font-size: var(--fs-15);
+  cursor: pointer;
 }
 
 /* ---- Anlatım görseli ---- */
@@ -504,16 +1637,44 @@
   }
 }
 
+/* Kalabalık (7–8 kişi) ve kısa ekran: ipucu satırı kalkar, ızgara sıkılaşır. */
+@media (max-height: 720px) {
+  .cx__pick[data-crowd="1"] .cx__hint {
+    display: none;
+  }
+  .cx__pick[data-crowd="1"] .cx__grid {
+    --gap: 6px;
+  }
+  .cx__pick[data-crowd="1"] .cx__cell {
+    gap: 5px;
+    padding-top: 6px;
+  }
+  .cx__pick[data-crowd="1"] .cx__grid[data-badges="1"] .cx__cell {
+    gap: 11px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-motion="full"]) .cx__sight {
     animation: none;
     transform: translate(calc(var(--flip, 1) * -6%), -5%);
   }
-  :root:not([data-motion="full"]) .cx__slot[data-locked="1"] .cx__sight {
-    transform: none;
-  }
-  :root:not([data-motion="full"]) .cxart__sight {
+  :root:not([data-motion="full"]) .cxart__sight,
+  :root:not([data-motion="full"]) .cx__reticle-in,
+  :root:not([data-motion="full"]) .cx__rring-ticks,
+  :root:not([data-motion="full"]) .cx__dot,
+  :root:not([data-motion="full"]) .cx__laser-line,
+  :root:not([data-motion="full"]) .cx .cx__wsight,
+  :root:not([data-motion="full"]) .cx__arena,
+  :root:not([data-motion="full"]) .cx__node .cx__body,
+  :root:not([data-motion="full"]) .cx-duel__n {
     animation: none;
+  }
+  :root:not([data-motion="full"]) .cx__reticle {
+    transition: opacity 160ms linear;
+  }
+  :root:not([data-motion="full"]) .cx__bullet {
+    display: none;
   }
 }
 
@@ -522,28 +1683,140 @@
   animation: none;
   transform: translate(calc(var(--flip, 1) * -6%), -5%);
 }
-:root[data-motion="reduce"] .cx__slot[data-locked="1"] .cx__sight {
-  transform: none;
-}
-:root[data-motion="reduce"] .cxart__sight {
+:root[data-motion="reduce"] .cxart__sight,
+:root[data-motion="reduce"] .cx__reticle-in,
+:root[data-motion="reduce"] .cx__rring-ticks,
+:root[data-motion="reduce"] .cx__dot,
+:root[data-motion="reduce"] .cx__laser-line,
+:root[data-motion="reduce"] .cx .cx__wsight,
+:root[data-motion="reduce"] .cx__arena,
+:root[data-motion="reduce"] .cx__node .cx__body,
+:root[data-motion="reduce"] .cx-duel__n {
   animation: none;
 }
+:root[data-motion="reduce"] .cx__reticle {
+  transition: opacity 160ms linear;
+}
+:root[data-motion="reduce"] .cx__bullet {
+  display: none;
+}
 
+/* Alçak (yatay telefon) ekran: seçimde ızgara solda, güverte sağda; açılışta halka solda, özet sağda. */
 @media (max-height: 460px) {
   .cx__grid {
     --cols: var(--cols-wide);
     --rows: var(--rows-wide);
   }
-  .cx__hint {
+  .cx__pick {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+    column-gap: 14px;
+  }
+  .cx__pick > .cx__head {
+    grid-column: 1 / -1;
+  }
+  .cx__pick > .cx__stage {
+    grid-column: 1;
+    grid-row: 2 / 6;
+  }
+  .cx__pick > .cx__deck,
+  .cx__pick > .tamam,
+  .cx__pick > .cx__ready,
+  .cx__pick > .cx__hint {
+    grid-column: 2;
+  }
+  .cx__pick > .cx__deck {
+    grid-row: 2;
+    align-self: end;
+  }
+  .cx__pick > .tamam {
+    grid-row: 3;
+  }
+  .cx__pick > .cx__ready {
+    grid-row: 4;
+  }
+  .cx .cx__hint,
+  .cx .cx__head .overline {
     display: none;
   }
-  .cx__head {
+  .cx .cx__head {
     min-height: 52px;
     margin-top: 4px;
     justify-content: center;
   }
-  .cx__head .overline {
+  .cx__head[data-ring="1"] {
+    grid-template-rows: auto;
+  }
+  .cx__head[data-ring="1"] > .cx__title {
+    grid-row: 1;
+  }
+  .cx__dome {
+    left: 55%;
+    height: 70%;
+  }
+  .cx__reveal {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    column-gap: 14px;
+  }
+  .cx__reveal > .cx__head {
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 0;
+  }
+  .cx__reveal > .cx__stage {
+    grid-column: 1;
+    grid-row: 1 / 3;
+  }
+  .cx__reveal > .cx__panel {
+    grid-column: 2;
+    grid-row: 2;
+    justify-content: flex-start;
+  }
+  .cx__reveal .cx__score {
+    font-size: 30px;
+  }
+  .cx__reveal .cx__verdict {
+    font-size: 17px;
+  }
+  .cx__reveal .cx__verdict-row {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 2px;
+  }
+  .cx__reveal .cx__line--big {
+    font-size: var(--fs-15);
+  }
+  .cx__reveal .cx__line {
+    font-size: var(--fs-13);
+  }
+  .cx__reveal .cx__line--total {
+    white-space: normal;
+  }
+  /* Alçak ekranda halka küçük: puan rozeti adın altına geçer, etiket daralır. */
+  .cx__arena {
+    --cx-rav-k: 0.82;
+  }
+  .cx .cx__rname {
+    flex-direction: column;
+    gap: 1px;
+    padding: 1px 6px 3px;
+    border-radius: 10px;
+  }
+  .cx__reveal .cx__head .cx__title {
+    font-size: 20px;
+    white-space: normal;
+  }
+  .cx .cx-ringview .overline {
     display: none;
+  }
+  .cx-ringview__stage {
+    height: min(56dvh, 520px);
+  }
+  .cx-ringview__close {
+    margin-top: 12px;
   }
 }
 

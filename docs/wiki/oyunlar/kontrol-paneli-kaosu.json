@@ -1,81 +1,114 @@
 {
   "id": "kontrol-paneli-kaosu",
   "ad": "Kontrol Paneli Kaosu",
-  "slogan": "Her telefonda dört kablo farklı sırada; çözümü kendi ekranında değil arkadaşlarının notunda ara!",
+  "slogan": "Üç dalga, ortak bomba saati: çözümü kendi ekranında değil arkadaşlarının notunda ara!",
   "kategori": "Sosyal",
-  "etiketler": ["işbirliği", "konuşma", "bilgi paylaşımı", "tek hak"],
+  "etiketler": ["işbirliği", "konuşma", "bilgi paylaşımı", "tek hak", "zaman baskısı"],
   "oyuncu": {
     "min": 2,
     "max": 8
   },
   "sure": {
-    "tahminiSn": 68,
-    "not": "Oyun aşaması en çok 68 sn sürer: 60 sn oynanış + 8 sn sonuç. Bağlı herkes kablosunu keserse oyun son kesimden 1 sn sonra biter ve 8 sn'lik sonuç gösterimi buna göre öne gelir. Süre oyuncu sayısına göre değişmez. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 30 sn) gelir."
+    "tahminiSn": 86,
+    "not": "Oyun aşaması en çok 86 sn sürer: dalga 1 (25 sn) + ara (4 sn) + dalga 2 (25 sn) + ara (4 sn) + dalga 3 (20 sn) + sonuç açılışı (8 sn). Bağlı herkes keserse dalga son kesimden 1 sn sonra biter; yanlış kesim saati 5 sn öne çeker (en az 3 sn kalır). Sonraki dalgalar ve sonuç buna göre öne kayar. Süre oyuncu sayısına göre değişmez. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı gelir."
   },
-  "ozet": "Her oyuncunun telefonunda aynı dört renkte (mavi, yeşil, kırmızı, sarı) kablo vardır ama herkesin dizilimi farklıdır. Herkes ayrıca başka bir oyuncunun panelini tarif eden gizli bir ipucu notu taşır: 'şu kablolar şu renkse şu rengi kes'. Kimin paneli tarif edildiği yazmaz; oyuncular ipuçlarını sesli okuyup kendi panellerine uyanı bulur. Herkes yalnız bir kez ve geri alınamaz biçimde bir kablo keser. Doğru kabloyu kesen +1, o panelin ipucunu taşıyan oyuncu da +1 alır.",
+  "ozet": "Üç dalgalı bomba imhası. Her dalgada herkesin telefonunda kablolar farklı sıradadır (dalga 1-2'de mavi, yeşil, kırmızı, sarı; dalga 3'te mor da eklenir). Herkes başka bir oyuncunun panelini tarif eden gizli bir ipucu notu taşır: 'şu koşullar doğruysa şu kabloyu kes'. Kimin paneli olduğu yazmaz; oyuncular notları sesli okuyup kendilerine uyanı bulur. Her dalgada herkes yalnız bir kez ve geri alınamaz biçimde bir kablo keser. Yanlış kesim herkesin ortak bomba saatinden 5 sn düşer. Dalgalarda doğru kesen +1, o panelin ipucunu taşıyan +1 imha puanı alır; oyun sonunda en çok imha eden +2, ikinci +1 alır.",
   "akis": [
     {
       "ad": "Anlatım",
       "sureSn": 40,
       "kim": "herkes",
-      "aciklama": "Tam ekran anlatım: 'Doğru kabloyu kes, ipucunu arkadaşından al!' ve üç madde (her telefonda dört renk kablo farklı sıradadır; ipucunu sesli oku, panelin ipucunu kimin taşıdığını bul; tek kablo kes: doğruysa sen ve ipucu sahibi +1). Bağlı herkes hazır olunca ya da 40 sn dolunca biter. Maç kartları burada oynanır."
+      "aciklama": "Tam ekran anlatım: 'Üç dalgada bombayı imha et: doğru kabloyu kes!' ve üç madde (kablolar farklı sırada, ipucun başka birinin panelini anlatır; ipucunu sesli oku, her dalgada tek kablo kesersin; yanlış kesim ortak saatten 5 sn düşer, en çok imha eden kazanır). Bağlı herkes hazır olunca ya da 40 sn dolunca biter. Maç kartları burada oynanır."
     },
     {
       "ad": "Geri sayım",
       "sureSn": 3,
       "kim": "herkes",
-      "aciklama": "3 sn geri sayım, oynanan kartlar açıklanır; oyun kurulur: paneller, ipuçları ve doğru kablolar sunucuca gizlice belirlenir."
+      "aciklama": "3 sn geri sayım, oynanan kartlar açıklanır; oyun kurulur: üç dalganın panelleri, ipuçları ve doğru kabloları sunucuca gizlice belirlenir."
     },
     {
-      "ad": "Oynanış (kablo kesme)",
-      "sureSn": 60,
+      "ad": "Dalga 1 · Isınma (kablo kesme)",
+      "sureSn": 25,
       "kim": "herkes (izleyici hariç)",
-      "aciklama": "Üstte süre çubuğu ve 'Bir kablo kes' başlığı. Ortada kendi panelin: dört kablo yukarıdan aşağıya 1-4 numaralı, her biri metalik bir kanalda neon renkte (mavi, yeşil, kırmızı, sarı) ve renk adıyla; renk körlüğü modunda her renge ayrı şekil ve desen eklenir. Kabloya dokunmak onu seçer (henüz kesilmez). Panelin altında sana özel 'İpucu notu · sesli oku' kartı: sol tarafta mini panel çizimi (koşulu olan kablo yuvaları o renkte dolu, ötekiler sönük) ve sağda kesilecek rengin makas rozeti; hemen altında yazılı cümle ('1. kablo mavi ve 3. kablo sarı ise maviyi kes'). Altta 'Kes' düğmesi (seçim yokken pasif) ve 'N/M hazır' sayacı; Kes'e basınca seçilen kablo hemen kopar, düğme 'Kestin' olur ve geri alınamaz. Bağlı herkes kestiğinde oyun 1 sn sonra biter. İzleyici 'Herkes kablo kesiyor' başlığını, 'Paneller sessizce çalışıyor' yazısını ve kaç kişinin kestiğini görür; panel ya da ipucu görmez.",
-      "gizli": "Kendi paneli yalnız sahibi görür. İpucu yalnız taşıyıcısında görünür; hangi panelin tarif edildiği, o panelin sahibinin kim olduğu ve doğru kablo sonuç açılana kadar kimseye (taşıyıcı dahil) söylenmez; ipucu metni oyuncu adı içermez. Panelin sahibi kendi paneli için bir ipucu taşımaz (başkası taşır). Kimin kestiği herkese açıktır ama ne kestiği sonuca kadar gizlidir."
+      "aciklama": "Üstte bomba: gövde, yanıp sönen LED, 'Dalga 1/3 Isınma' yazısı ve 7 segmentli kırmızı dijital saat (saniye ve salise); altında kesenlerin avatarlarında makas işareti. Saat her saniye tik eder; son 10 sn'de tik hızlanır, saat kırmızı nabız atar ve telefon her saniye hafif titrer. Ortada kendi panelin: dört kablo yukarıdan aşağıya numaralı, neon renkte ve renk adıyla (renk körlüğü modunda her renge ayrı şekil ve desen). Kabloya dokunmak onu seçer. Altında bantla tutturulmuş buruşuk kâğıt ipucu notu: yanıp sönen '🎤 Sesli oku' rozeti, mini panel çizimi ve el yazısına yakın cümle ('1. kablo mavi ve 3. kablo sarıysa maviyi kes'); nota dokununca masada okunacak kadar büyür. Altta 'Kes' düğmesi ve 'N/M hazır' sayacı; Kes'e basınca kablo kopar (kopma sesi, kıvılcım, titreşim) ve geri alınamaz. Biri yanlış keserse herkesin saati 5 sn atlar: 'bzzzt' sesi, kısa kırmızı flaş ve '−5'. Bağlı herkes kestiğinde dalga 1 sn sonra biter. İzleyici/TV büyük bomba saatini, dalga numarasını, kimin kestiğini ve saat atlamasını görür; panel ya da ipucu görmez.",
+      "gizli": "Kendi paneli yalnız sahibi görür. İpucu yalnız taşıyıcısında; hangi panelin tarif edildiği, doğru kablo ve kesim rengi dalga bitene kadar kimseye (kesen ve taşıyıcı dahil) söylenmez. Kimin kestiği ve saat atlaması herkese açıktır; hangi kesimin yanlış olduğu söylenmez."
     },
     {
-      "ad": "Sonuç (paneller açılır)",
+      "ad": "Ara (kısa sonuç)",
+      "sureSn": 4,
+      "kim": "herkes",
+      "aciklama": "'Dalga 1 bitti' (bütün paneller doğru kesildiyse 'Bomba imha edildi!' ve imha zili), kendi imha puanın ve herkesin satırı: avatar, ad, kestiği kablo (renk, ✓/✗; kesmediyse 'kesmedi'), ipucu taşıyıcısının küçük portresi ve '+N'. Altta 'Dalga 2 geliyor'. Yeni dalga iki tonlu alarmla başlar.",
+      "gizli": "Biten dalganın panelleri, ipuçları, kesimleri ve doğru kabloları herkese açılır."
+    },
+    {
+      "ad": "Dalga 2 · Karmaşa",
+      "sureSn": 25,
+      "kim": "herkes (izleyici hariç)",
+      "aciklama": "Yeni paneller (4 kablo) ve yeniden karıştırılmış ipucu zinciri. İpuçları yeni türlerden gelir: 'değil' (şemada üstü çizili renk), 'yan yana' (şemada bağ işareti), 'yukarıda' (şemada aşağı ok) ve konum hedefi ('en alttaki kabloyu kes'; şemada yuvayı gösteren ok). Ardından 4 sn ara.",
+      "gizli": "Dalga 1 ile aynı."
+    },
+    {
+      "ad": "Dalga 3 · Kaos",
+      "sureSn": 20,
+      "kim": "herkes (izleyici hariç)",
+      "aciklama": "5 kablo (5. renk mor; renk körlüğü modunda baklava şekli ve çapraz kafes deseni). İpuçları üç koşullu ya da karma (yeni türlerden en az biri); yaklaşık üçte biri konum hedefli.",
+      "gizli": "Dalga 1 ile aynı."
+    },
+    {
+      "ad": "Sonuç (bomba açılır)",
       "sureSn": 8,
       "kim": "herkes",
-      "aciklama": "Süre dolunca (ya da erken bitişte) paneller açılır. Üstte kendi puanın ('+N') ve yorum ('İkisi de doğru!', 'Doğru kabloyu kestin', 'İpucun arkadaşına yaradı', 'Bu sefer olmadı', 'Kablo kesmedin'); altında kendi panelin mini olarak (kestiğin kablo kopuk, doğruysa yeşil, yanlışsa kırmızı kıvılcım); altta herkesin satırı: avatar, ad, kestiği kablo (renk, şekil, ad ve ✓ ya da ✗; kesmediyse 'kesmedi'), o panelin ipucunu taşıyan oyuncunun küçük portresi ve '+N' puan. 'Küçük portre: o panelin ipucunu taşıyan' notu. Oyun bu 8 sn'nin sonunda biter, ardından sonuç ekranı gelir. İzleyici 'Paneller açıldı' başlığını ve aynı listeyi görür.",
-      "gizli": "Artık tüm paneller, ipuçları, doğru kablolar, kesimler ve ipucu taşıyıcıları herkese açıktır."
+      "aciklama": "Üstte kendi ödülün ('+2', '+1' ya da '+0') ve yorum ('En çok imha eden sensin!', 'İmhada ikincisin', 'Ekip başarısı: herkes eşit', 'İmha ettin ama ödül çıkmadı', 'Bu sefer olmadı'; üç dalganın hepsinde bütün paneller doğru kesildiyse 'Bomba tamamen imha edildi!' ve kısa zafer müziği). Varsa 'Bomba uzmanı' kutusunda tek cümlelik esprili özet (sunucunun yapay zekâ yorumu; gelmezse kutu çıkmaz). Altta herkesin satırı: avatar, ad, üç dalganın kesim işaretleri (renk ve ✓/✗; kesmediyse '–'), toplam imha puanı ve '+N' ödül. Oyun bu 8 sn'nin sonunda biter, ardından sonuç ekranı gelir. İzleyici aynı listeyi görür.",
+      "gizli": "Artık tüm dalgaların panelleri, ipuçları, doğru kabloları, kesimleri ve ipucu taşıyıcıları herkese açıktır."
     }
   ],
   "kurallar": [
     "2-8 oyuncu katılır (dikey oyun).",
-    "Dört kablo rengi vardır: mavi, yeşil, kırmızı, sarı. Her panel bu dört rengin bir dizilimidir (24 olası dizilimden biri) ve yukarıdan aşağıya 1. (en üst) ile 4. (en alt) kablo diye numaralanır. Maçtaki bütün oyuncuların dizilimi farklıdır (en çok 8 oyuncu ve 24 dizilim olduğundan aynı panel çıkmaz).",
-    "Oyun kurulurken sunucu oyuncuları rastgele bir sıraya dizer ve tek yönlü bir döngü kurar: sıradaki her oyuncu, kendinden sonraki oyuncunun panelini tarif eden bir ipucu taşır; son oyuncu ilkini tarif eder. Böylece kimse kendi panelinin ipucunu taşımaz, her oyuncu tam bir ipucu taşır ve her panelin tam bir taşıyıcısı vardır. 2 oyuncuda iki oyuncu birbirinin panelini tarif eder.",
-    "Her panelin doğru kablosu (kesilmesi gereken renk) sunucuca rastgele seçilir (dört renkten biri; panelin dizilimiyle ilgisi yoktur). İpucu cümlesi: 'koşulların hepsi doğruysa şu rengi kes'; koşullar 'N. kablo R rengindeyse' biçimindedir ve hedef panelde her zaman doğrudur.",
-    "İpucu koşulu seçimi: önce 2 konumlu koşullar (dört konumdan ikisi; 6 olası küme) arasından hedef paneli oyuncular arasında tek başına tanımlayanlardan biri rastgele seçilir; böyle yoksa 3 konumlu koşullar arasında tek tanımlayan seçilir (3 konum dizilimi tam belirler); o da yoksa (gerçekte olmaz) en az panelin eşleştiği 3 konumlu koşul seçilir. Yani bir ipucuna uyan panel, oyuncular arasında yalnız hedef paneldir ve kural kimsenin adını yazmaz.",
-    "Oynanış 60 sn sürer. Her oyuncu yalnız BİR kablo keser ve kesim geri alınamaz, değiştirilemez (ikinci kesim 'already_cut' ile reddedilir). Kesilen renk paneldeki o renkli kablodur.",
-    "Süre dolduğu anda (ya da sonrasında) gelen kesim reddedilir ('ended'). Kesmeyen oyuncu için sonuç 'kesmemiş' sayılır (puan yok, ceza yok).",
-    "Bağlı bütün katılımcılar kesimini yaptığında oyun şimdiden 1 sn sonra biter; bağlantısı kopan oyuncu beklenmez. Hiç bağlı oyuncu yoksa erken bitiş olmaz.",
-    "Sonuç: bir oyuncunun kesimi, kendi panelinin doğru kablosuyla aynı renkteyse doğru kabul edilir. Doğru kesen oyuncu +1 alır ve o panelin ipucunu taşıyan oyuncu da +1 alır. Yanlış ya da boş kesim 0'dır; ceza yoktur ve taşıyıcı bir şey almaz.",
-    "Bir oyuncu en çok 2 puan alabilir (kendi doğru kesimi + taşıdığı ipucunun hedefinin doğru kesimi). Herkes doğru keserse herkes 2 alır.",
-    "Puanlar doğrudan genel skora eklenir (awards = miniScores).",
-    "Sonuçta tüm paneller, kesimler, doğru kablolar ve ipucu taşıyıcıları açılır."
+    "Oyun üç dalgadır: dalga 1 'Isınma' 25 sn, dalga 2 'Karmaşa' 25 sn, dalga 3 'Kaos' 20 sn. Dalga 1 ve 2'den sonra 4 sn kısa sonuç, dalga 3'ten sonra 8 sn sonuç açılışı gelir; oyun açılışın sonunda biter.",
+    "Dalga 1 ve 2'de dört kablo rengi vardır: mavi, yeşil, kırmızı, sarı (24 olası dizilim). Dalga 3'te beşinci renk mor eklenir (5 kablo, 120 dizilim). Kablolar yukarıdan aşağıya 1. (en üst) ile son (en alt) diye numaralanır. Bir dalgada bütün oyuncuların dizilimi farklıdır; dalga 1 ve 2'nin dizilimleri de birbirinden farklıdır (her dalgada yeni panel).",
+    "Her dalgada sunucu oyuncuları rastgele bir sıraya dizer ve tek yönlü bir döngü kurar: her oyuncu kendinden sonrakinin panelini tarif eden bir ipucu taşır. Kimse kendi panelinin ipucunu taşımaz. Zincir her dalgada yeniden karıştırılır: 3 ve daha çok oyuncuda hiçbir taşıyıcı önceki dalgada taşıdığı kişinin notunu taşımaz (2 oyuncuda tek döngü olduğundan eşleşme aynıdır).",
+    "İpucu: 'koşulların hepsi doğruysa şu kabloyu kes'. Koşul türleri: 'N. kablo R' (at), 'N. kablo R değil' (notAt), 'A ile B yan yana' (adjacent), 'A, B'den yukarıda' (above). Kesilecek kablo bir renk ya da konum ('en üstteki' / 'en alttaki kabloyu kes') olabilir.",
+    "Dalga 1: 2 konumlu 'N. kablo R' koşulları (hedefi ayırmazsa 3 konum) ve renk hedefi. Dalga 2: değil, yan yana, yukarıda ya da konum hedefi türlerinden biri rastgele. Dalga 3: üç 'N. kablo R' koşulu ya da en az bir yeni tür içeren 2-3 koşullu karma ipucu; ipuçlarının yaklaşık üçte biri konum hedefli. Koşul kümeleri çelişkisiz ve gereksizsizdir (aynı konum iki kez geçmez, sabitlenmiş renk için 'değil' ya da ilişki koşulu kurulmaz, konum hedefinde o konum koşul olmaz).",
+    "Her ipucu hedef panelde doğrudur ve o dalganın panelleri arasında yalnız hedef paneli tanımlar (üretimde denetlenir; en kısa uygun koşul kümesi seçilir). İstenen tür bunu sağlayamazsa daha basit türe düşülür ('N. kablo R' koşulları ve renk hedefi). İpucu oyuncu adı içermez.",
+    "Doğru kablo sistemce kesin hesaplanır: renk hedefinde sunucunun rastgele seçtiği renk, konum hedefinde o konumdaki kablonun rengi.",
+    "Her dalgada her oyuncu yalnız BİR kablo keser; kesim geri alınamaz, değiştirilemez (ikinci kesim 'already_cut'). 4 kablolu dalgada mor kesilemez ('no_wire'). Dalga dışında (arada, sonuçta) gelen kesim reddedilir ('ended'). Kesim hangi dalga için yapıldığını taşır; dalga değişirken yolda kalan eski dalganın kesimi yeni dalgaya sayılmaz ('wrong_wave').",
+    "Ortak bomba saati: yanlış kesim dalga saatinden herkes için 5 sn düşer; saat 3 sn'nin altına inmez (kalan 3 sn ya da daha azken yanlış kesim süre düşürmez). Hangi kesimin yanlış olduğu söylenmez; ortak görünüm yalnız atlama sayısını ve son atlama anını taşır. Doğru/yanlış bilgisi kesen kişiye de dalga sonucuna kadar gösterilmez (saat atlamasından dolaylı anlaşılabilir; kabul edilmiş durum).",
+    "Dalga başına erken bitiş: bağlı bütün katılımcılar o dalgada kestiğinde dalga 1 sn sonra biter; bağlantısı kopan oyuncu beklenmez. Hiç bağlı oyuncu yoksa erken bitiş olmaz. Erken bitiş ve saat atlamaları sonraki dalgaları ve sonucu öne çeker.",
+    "İmha puanı (her dalga): kesimi kendi panelinin doğru kablosuyla aynı renkte olan +1, o panelin ipucunu taşıyan +1. Yanlış ya da boş kesim 0; ceza yoktur.",
+    "Mini oyun puanı (= genel skora eklenen): toplam imha puanına göre en yüksek toplam +2, ikinci farklı toplam +1, diğerleri 0. Birincide eşitlikte hepsi +2, sonraki farklı değer +1. Toplamı 0 olan ödül almaz. Herkesin toplamı aynı ve 0'dan büyükse herkes +1. Eksi puan yoktur (awards = miniScores).",
+    "Biten dalganın panelleri, kesimleri, doğru kabloları ve ipucu taşıyıcıları herkese açılır; sonda üç dalga ve toplamlar açılır."
   ],
   "puanlama": {
-    "ozet": "Doğru kabloyu kesen +1, o panelin ipucunu taşıyan +1. Yanlış, boş ya da geç kesim 0 (ceza yok). Bir oyuncu en çok 2 alır.",
+    "ozet": "Dalgalarda imha puanı: doğru kesen +1, o panelin ipucunu taşıyan +1 (dalga başına en çok 2, toplam en çok 6). Oyun sonunda toplam imha puanına göre +2 / +1 / 0; herkes eşit ve > 0 ise herkes +1. Eksi yok.",
     "kalemler": [
       {
-        "olay": "Kendi panelinde doğru kabloyu kesmek",
-        "puan": "+1",
-        "not": "Kesilen renk = o panelin doğru rengi."
+        "olay": "Bir dalgada kendi panelinde doğru kabloyu kesmek",
+        "puan": "+1 imha",
+        "not": "Kesilen renk = o panelin doğru rengi (konum hedefinde o konumdaki kablo)."
       },
       {
-        "olay": "Taşıdığın ipucunun hedefi doğru kabloyu kesti",
-        "puan": "+1",
-        "not": "Hedef paneli kesenin doğru kesmesi gerekir; hedef kesmezse ya da yanlış keserse sana puan yok."
+        "olay": "Taşıdığın ipucunun hedefi o dalgada doğru kesti",
+        "puan": "+1 imha",
+        "not": "Hedef kesmezse ya da yanlış keserse sana puan yok."
       },
       {
         "olay": "Yanlış kablo / kesmeme",
         "puan": "0",
-        "not": "Ceza yok; taşıyıcı da puan alamaz."
+        "not": "Ceza puan değil süredir: yanlış kesim ortak saatten 5 sn düşer (en az 3 sn kalır)."
+      },
+      {
+        "olay": "Oyun sonu: en yüksek toplam imha puanı",
+        "puan": "+2",
+        "not": "Birincide eşitlikte hepsi +2."
+      },
+      {
+        "olay": "Oyun sonu: ikinci farklı toplam",
+        "puan": "+1",
+        "not": "Toplamı 0 olan almaz. Herkes eşit ve > 0 ise herkes +1."
       }
     ],
-    "ornek": "4 oyuncu: A, B, C, D. Gizli döngü A→B→C→D→A (A, B'nin panelini; B, C'nin panelini; C, D'nin panelini; D, A'nın panelini tarif eden ipucunu taşır). Kesimler: B doğru, C doğru, A doğru, D yanlış. B'nin doğru kesimi: B +1, taşıyıcı A +1. C'nin: C +1, taşıyıcı B +1. D'nin yanlış: D 0, taşıyıcı C 0. A'nın doğru kesimi: A +1, taşıyıcı D +1. Toplam: A = 1 (kendi) + 1 (B'nin ipucu) = 2; B = 1 + 1 = 2; C = 1 + 0 = 1; D = 0 + 1 = 1. Örnek ipucu: B'nin paneli sarı, mavi, yeşil, kırmızı ise A'nın notu '1. kablo sarı ve 2. kablo mavi ise yeşili kes' olabilir (başka kimsenin 1. kablosu sarı ve 2. kablosu mavi değilse); B bu notu duyunca kendi paneline bakıp yeşili keser.",
-    "beraberlik": "Zaman rekabeti ya da sıralama yoktur; eşitlik bozma gerekmez. Herkesin puanı bağımsız hesaplanır."
+    "ornek": "4 oyuncu A, B, C, D. Toplam imha puanları: A 4, B 4, C 2, D 0 → A +2, B +2 (birincide eşitlik), C +1 (sonraki farklı toplam), D 0. Başka maç: A 3, B 2, C 1, D 0 → A +2, B +1, C 0, D 0. Herkes üç dalgada da doğru keserse herkes 6 imha puanı alır ve herkes +1 olur. Örnek ipuçları: '2. kablo kırmızı değil ve 4. kablo sarıysa maviyi kes', 'Mavi ile sarı yan yanaysa yeşili kes', '1. kablo yeşilse en alttaki kabloyu kes', 'Kırmızı maviden yukarıdaysa sarıyı kes'.",
+    "beraberlik": "Eşitlikler yukarıdaki kuralla çözülür (birinciler hep +2, sonraki farklı değer +1). Zaman rekabeti yoktur."
   },
   "ozelDurumlar": [
     {
@@ -84,7 +117,7 @@
     },
     {
       "baslik": "Süre bitişi ve geç eylem",
-      "aciklama": "Geç gelen eylem payı (graceMs) yoktur: süre dolunca (ctx.now >= endsAt) gelen kesim reddedilir. İstemci kesimi sunucudan onay gelmeden yerelde gösterir (kablo hemen kopar); sunucu reddederse kesim geri alınır."
+      "aciklama": "Geç gelen eylem payı (graceMs) yoktur: dalga saati dolunca (ctx.now >= dalga bitişi) gelen kesim reddedilir ('ended'). İstemci kesimi sunucudan onay gelmeden yerelde gösterir (kablo hemen kopar); sunucu reddederse kesim geri alınır."
     },
     {
       "baslik": "İzleyici / geç katılan",
@@ -92,11 +125,11 @@
     },
     {
       "baslik": "Herkes erken bitirirse",
-      "aciklama": "Bağlı herkes kestiğinde oyun son kesimden 1 sn sonra biter; sonuç gösterimi (8 sn) buradan başlar. Kapanış penceresinde (1 sn) yeni kesim zaten kalmaz çünkü bağlı herkes kesmiştir; kopuk oyuncu yeniden bağlanırsa ve kesmediyse kesebilir (süre bitmediği sürece). Erken bitiş yalnız bir kesim eylemi anında denetlenir; son bekleyen bağlı oyuncu kopsa kendiliğinden tetiklenmez."
+      "aciklama": "Bağlı herkes o dalgada kestiğinde dalga son kesimden 1 sn sonra biter; 4 sn ara (son dalgada 8 sn sonuç) buradan başlar ve sonraki dalgalar öne kayar. Kopuk oyuncu yeniden bağlanırsa ve kesmediyse dalga bitmeden kesebilir. Erken bitiş yalnız bir kesim eylemi anında denetlenir; son bekleyen bağlı oyuncu kopsa kendiliğinden tetiklenmez."
     },
     {
       "baslik": "2 vs 8 oyuncu",
-      "aciklama": "2 oyuncuda iki oyuncu birbirinin panelini tarif eder; ipucu çoğunlukla 2 konumdur ve tek konum farkı yetse bile ipucu en az iki konumludur. 8 oyuncuda 8 farklı dizilim çıkar; iki konumlu koşul her hedefi ayırmayabilir, bu durumda 3 konumlu ipucu kullanılır ('kontrol-play-3clue' ekranı: ipucu üç koşullu)."
+      "aciklama": "2 oyuncuda iki oyuncu birbirinin panelini tarif eder ve zincir her dalgada aynı kalır; dalga 1'de ipucu en az iki konumludur, dalga 2'de tek koşullu yeni tür ('Mavi ile sarı yan yanaysa yeşili kes') sık görülür. 8 oyuncuda iki koşul hedefi ayırmayabilir; o zaman üç koşul kullanılır ya da yeni tür daha basit türe düşer."
     },
     {
       "baslik": "Yalan söyleyen taşıyıcı",
@@ -104,25 +137,29 @@
     },
     {
       "baslik": "Gizlilik",
-      "aciklama": "secrets() panelleri ve ipuçlarını (sahibine özel) bildirir; testler sonuç açılana kadar ortak görünümde panel, ipucu ve hedef eşlemesinin olmadığını, hedef panelin sahibinin kendi paneli için ipucu bilmediğini, kesim renklerinin yalnız sahibinde olduğunu ve izleyici görünümünün boş olduğunu doğrular."
+      "aciklama": "secrets() süren dalganın panellerini ve ipuçlarını (sahibine özel) bildirir; dalga 1 ve 2 dizilimleri ayrı ve ipucu dalga numarasını taşıdığından açılmış önceki dalgalar yanlış alarm vermez. Testler süren dalgada ortak görünümde panel, ipucu, hedef eşlemesi, doğru kablo ve kesim rengi olmadığını, hedefin kendi ipucunu bilmediğini, kesim renginin yalnız kesende olduğunu, doğru/yanlış bilgisinin kesene de gösterilmediğini ve izleyici görünümünün boş olduğunu doğrular."
+    },
+    {
+      "baslik": "Bomba uzmanı yorumu (isteğe bağlı)",
+      "aciklama": "Sunucuda GLIX_AI_KEY tanımlıysa sonuç açıldığı anda tek bir istekle dil modeli servisinden en çok 90 karakterlik tek cümlelik esprili Türkçe özet istenir. Modele yalnız oyundaki takma adlar, dalga dalga kesimler (renk, doğru/yanlış) ve puanlar gider. Zaman aşımı 2,5 sn; hata, boş ya da uygunsuz (çok satırlı, uzun, işaretlemeli, yasaklı kelimeli) yanıtta yorum görünmez. Oyun hiç beklemez; yorum gelirse ortak görünüme eklenir. Oyun başına en çok 1, sunucu genelinde dakikada en çok 20 istek. Anahtar yoksa özellik tamamen kapalıdır."
     }
   ],
   "kartlar": [
     {
       "kart": "Genel hesap",
-      "etki": "Bu oyunda mini oyun puanı = ham genel puan ve 0, 1 ya da 2'dir; negatif puan yoktur. 'Birinci' en yüksek puanlıdır (herkes 2 aldıysa herkes birinci; kimse puan almadıysa herkes birinci), 'sonuncu' en düşük puanlıdır (genellikle 0 alanlar). Herkes eşitse kimse sonuncu sayılmaz. Puanlar ikili bağlıdır (kesen + taşıyıcı), bu yüzden eşitlik çok sık görülür."
+      "etki": "Kartlar mini oyun puanına (+2 / +1 / 0) bakar. 'Birinci' +2 alanlardır (herkes +1 aldıysa ya da herkes 0 ise herkes birincidir). 'Sonuncu' en düşük mini puanlılardır: genellikle 0 alanlar; toplamı 0'dan büyük olup ödül alamayanlar da (ör. üçüncü ve sonrası) sonuncu sayılır. Herkes eşitse kimse sonuncu değildir. Ham imha toplamı kart hesabına girmez."
     },
     {
       "kart": "Kendine Güven",
-      "etki": "Birinci olursan +2, olmazsan -1: en çok puan alanlar (örn. 2 alanlar) +2 ek alır; geri kalanlar 1 eksik. Herkes 0 ya da herkes eşitse herkes birincidir ve +2 alır."
+      "etki": "Birinci olursan +2, olmazsan -1: +2 alanlar ek +2 alır; diğerleri 1 eksik. Herkes eşitse (hepsi +1 ya da hepsi 0) herkes birincidir ve +2 alır."
     },
     {
       "kart": "Sigorta",
-      "etki": "Sonuncu olursan +1: en az puanlı oyuncular (genellikle 0 alanlar) +1 alır. Herkes eşitse kimse sonuncu değildir."
+      "etki": "Sonuncu olursan +1: en düşük mini puanlılar (genellikle 0 alanlar) +1 alır. Herkes eşitse kimse sonuncu değildir."
     },
     {
       "kart": "Tahmin",
-      "etki": "Hedefin birinci olursa +2: hedef en yüksek ham puanı alanlardan biriyse (herkes eşitse herkes birinci sayılır) tutar; 2 puan almak için hedefin hem kendi kesimini doğru yapması hem de taşıdığı ipucunun hedefine doğru kestirmesi gerekir."
+      "etki": "Hedefin birinci olursa +2: hedef +2 alanlardan biriyse (herkes eşitse herkes birinci) tutar."
     },
     {
       "kart": "Çift Puan",
@@ -138,11 +175,11 @@
     },
     {
       "kart": "Ters Köşe",
-      "etki": "Sıralama tersine döner: yüksek puanlılar düşük puanlıların ham puanını, düşük puanlılar yüksek puanlıların ham puanını alır (eşit gruplar toplamı kendi aralarında paylaşır, kalan katılım sırasındaki ilk üyelere +1 olarak verilir)."
+      "etki": "Sıralama mini puana göre tersine döner: +2 alanlar en düşüklerin puanını, en düşükler +2'yi alır (eşit gruplar toplamı kendi aralarında paylaşır, kalan katılım sırasındaki ilk üyelere +1 olarak verilir)."
     },
     {
       "kart": "Ortaklık / Takas",
-      "etki": "Ortaklık: sahip ve hedefin puanı toplanıp bölünür (tek puan mini puanı yüksek olana). Takas: ham puanlar yer değiştirir. Taşıyıcı-hedef ilişkisi bu kartlara yansımaz; kartlar yalnız ham puanlara bakar."
+      "etki": "Ortaklık: sahip ve hedefin puanı toplanıp bölünür (tek puan mini puanı yüksek olana). Takas: puanlar yer değiştirir. Taşıyıcı-hedef ilişkisi ve imha toplamı bu kartlara yansımaz."
     },
     {
       "kart": "Lanet / Vergi / Hırsız / Çelme",
@@ -150,7 +187,7 @@
     },
     {
       "kart": "Kalkan",
-      "etki": "Bu oyun ham puanı hiç eksi yapmaz; kart yalnız Çelme, Hırsız, Talihsizlik, Kumarbaz gibi kartlarla eksiye düşersen 0'a çeker."
+      "etki": "Bu oyun puanı hiç eksi yapmaz; kart yalnız Çelme, Hırsız, Talihsizlik, Kumarbaz gibi kartlarla eksiye düşersen 0'a çeker."
     },
     {
       "kart": "Diğer kartlar",
@@ -159,90 +196,100 @@
   ],
   "sabitler": [
     {
-      "ad": "Oynanış süresi",
-      "deger": "60 000 ms",
-      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts:3"
+      "ad": "Zaman çizelgesi (tek sabit)",
+      "deger": "KONTROL_TIMELINE",
+      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts"
+    },
+    {
+      "ad": "Dalga süreleri",
+      "deger": "25 000 / 25 000 / 20 000 ms",
+      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts (KONTROL_TIMELINE.waveMs)"
+    },
+    {
+      "ad": "Dalga başına kablo sayısı",
+      "deger": "4 / 4 / 5",
+      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts (KONTROL_TIMELINE.wires)"
+    },
+    {
+      "ad": "Dalgalar arası kısa sonuç",
+      "deger": "4 000 ms",
+      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts (KONTROL_TIMELINE.breakMs)"
     },
     {
       "ad": "Sonuç gösterimi süresi (oyun bunun sonunda biter)",
       "deger": "8 000 ms",
-      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts:5"
+      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts (KONTROL_TIMELINE.revealMs)"
     },
     {
-      "ad": "Toplam oyun süresi",
-      "deger": "68 000 ms",
-      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts:6"
+      "ad": "Toplam oyun süresi (en çok)",
+      "deger": "86 000 ms",
+      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts (KONTROL_DURATION_MS)"
     },
     {
-      "ad": "Herkes kestiyse bitişe kalan süre",
+      "ad": "Herkes kestiyse dalga bitişine kalan süre",
       "deger": "1 000 ms",
-      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts:8"
+      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts (KONTROL_TIMELINE.lockGraceMs)"
+    },
+    {
+      "ad": "Yanlış kesim saat cezası / saat tabanı",
+      "deger": "5 000 ms / 3 000 ms",
+      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts (penaltyMs, floorMs)"
     },
     {
       "ad": "Kablo renkleri",
-      "deger": "mavi (blue), yeşil (green), kırmızı (red), sarı (yellow)",
-      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts:10"
+      "deger": "mavi (blue), yeşil (green), kırmızı (red), sarı (yellow), mor (purple; yalnız dalga 3)",
+      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/types.ts (WIRE_COLORS, waveColors)"
     },
     {
-      "ad": "Olası panel dizilimi sayısı",
-      "deger": "24 (4!)",
-      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/index.ts:47-58"
+      "ad": "Dalga ipucu türleri",
+      "deger": "1: basic; 2: notAt, adjacent, above, position; 3: three, mixed",
+      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/clues.ts (WAVE_STYLES)"
     },
     {
-      "ad": "Panel ataması (oyuncuya farklı dizilim)",
-      "deger": "perms[i % 24] (karıştırılmış)",
-      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/index.ts:173"
+      "ad": "İpucu üretimi ve 'yalnız hedef' denetimi",
+      "deger": "buildClue, identifiesOnly, basicConditions",
+      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/clues.ts"
     },
     {
-      "ad": "İpucu döngüsü (taşıyıcı → sonraki oyuncunun paneli)",
-      "deger": "rng.shuffle(players); order[(i+1) % n]",
-      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/index.ts:175-186"
+      "ad": "İpucu zinciri (yeniden karıştırma)",
+      "deger": "chain: en çok 40 deneme",
+      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/index.ts"
     },
     {
-      "ad": "Doğru kablo",
-      "deger": "rastgele (4 renkten biri)",
-      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/index.ts:183"
+      "ad": "Saat cezası ve erken bitiş",
+      "deger": "reduce",
+      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/index.ts"
     },
     {
-      "ad": "İpucu koşulu seçimi (önce 2 konum, sonra 3)",
-      "deger": "chooseCondition",
-      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/index.ts:97-120"
-    },
-    {
-      "ad": "Puan: doğru kesen / taşıyıcı",
-      "deger": "+1 / +1",
-      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/index.ts:121-142"
-    },
-    {
-      "ad": "Tek kesim hakkı",
-      "deger": "'already_cut' ile reddedilir",
-      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/index.ts:209"
-    },
-    {
-      "ad": "Erken bitiş (bağlı herkes kesti)",
-      "deger": "everyoneReady → 1 sn",
-      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/index.ts:205-215; packages/engine/src/games/ready.ts:6-13"
+      "ad": "Mini puan (+2 / +1 / 0)",
+      "deger": "rankAwards",
+      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/index.ts"
     },
     {
       "ad": "Oyuncu sayısı",
       "deger": "2-8",
-      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/index.ts:150-151"
+      "kaynak": "packages/engine/src/games/kontrol-paneli-kaosu/index.ts"
+    },
+    {
+      "ad": "Bomba uzmanı yorumu: zaman aşımı / hız sınırı / uzunluk",
+      "deger": "2 500 ms / dakikada 20 / 90 karakter",
+      "kaynak": "apps/server/src/aiComment.ts"
     },
     {
       "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
       "deger": "40 000 / 3 000 / 30 000 ms",
-      "kaynak": "apps/server/src/match.ts:40-42"
+      "kaynak": "apps/server/src/match.ts"
     }
   ],
   "strateji": [
-    "Kendi ipucu notunu yüksek sesle oku ve herkese sor: 'Kimde 1. kablo sarı, 2. kablo mavi?' Doğru kişi cevap verir; yalnız o oyuncu o rengi kesmelidir.",
-    "Hangi panelin tarif edildiğini sormadan, kendi panelini her ipucuyla karşılaştır: ipucuna uyan tek panel hedeftir. Sana uyan bir ipucu duyunca kesilecek renk o notta yazar.",
-    "Dürüst ol: taşıdığın ipucunun hedefi doğru keserse sen de +1 alırsın; yanlış renk söylersen kendi puanını kaybedersin.",
-    "Kesim geri alınamaz ve yanlış kesim ceza getirmez; emin değilsen yine de süre bitmeden bir kablo kesmek, hiç kesmemekten daha iyidir (sonuç hep 0 ya da daha iyi). Ama herkes beklerken erken kesmek de sorun değildir: erken bitiş yalnız herkes kesince olur.",
-    "İpucu iki ya da üç koşullu olabilir. Koşulları kendi panelinde sırayla kontrol et (konum numaraları yukarıdan aşağıya); bir tanesi tutmuyorsa o ipucu seninle ilgili değildir.",
-    "Aynı anda birden çok kişi ipucunu okuyorsa sırayla okuyun ve her ipucundan sonra 'bende uyuyor' / 'uymuyor' diye cevaplayın; herkes yalnız bir kez keser."
+    "Kendi ipucu notunu yüksek sesle oku (nota dokunup büyütebilirsin) ve herkese sor: 'Kimde 2. kablo kırmızı değil, 4. kablo sarı?' Doğru kişi cevap verir; yalnız o oyuncu kesmelidir.",
+    "Emin olmadan kesme: yanlış kesim herkesin saatinden 5 sn yer. Ama saat 3 sn'ye inmişse yanlış kesim artık süre düşürmez.",
+    "Saat atladıysa biri yanlış kesti demektir; kimlerin kestiği bombanın altındaki makaslardan görünür.",
+    "'Yan yana' ve 'yukarıda' ipuçlarında konum numarası yoktur: kendi panelinde iki rengin yerine bak. 'En alttaki kabloyu kes' diyorsa renk değil konum önemlidir.",
+    "Dürüst ol: taşıdığın ipucunun hedefi doğru keserse sen de +1 imha puanı alırsın.",
+    "Dalga 3'te mor kablo ve 20 sn var: ipuçlarını sırayla ve hızlı okuyun."
   ],
-  "tv": "Kontrol Paneli Kaosu'nun TV'ye özel sahnesi yoktur: TV görünümü oyun içi ekranın izleyici kipinde büyütülmüş hâlidir ('Herkes kablo kesiyor', 'Paneller sessizce çalışıyor', kimlerin kestiğini gösteren hazır sayacı). Paneller ve ipuçları süre dolana kadar TV'de de gösterilmez (izleyici görünümü boştur). Sonuçta 'Paneller açıldı' başlığı ve herkesin kesimi, doğru/yanlış işareti, ipucu taşıyıcısı portresi ve puanı listelenir.",
+  "tv": "Kontrol Paneli Kaosu'nun TV'ye özel sahnesi yoktur: TV görünümü oyun içi ekranın izleyici kipinde büyütülmüş hâlidir. Üstte büyük bomba saati (7 segmentli, son 10 sn'de kırmızı nabız), dalga numarası ve adı, kesenlerin avatarlarında makas işareti; yanlış kesimde saat atlaması (flaş ve '−5') TV'de de görünür. Paneller ve ipuçları dalga bitene kadar TV'de gösterilmez. Aralarda dalga sonucu, sonda üç dalganın listesi ve varsa bomba uzmanı yorumu görünür.",
   "ekranlar": [
     {
       "mock": "kontrol-briefing",
@@ -256,8 +303,8 @@
       "mock": "kontrol-play",
       "name": "kontrol-play-4",
       "q": "mock=kontrol-play&n=4",
-      "baslik": "Oynanış (4 oyuncu)",
-      "aciklama": "Kendi panelin (4 kablo, 1-4 numaralı), altında 'İpucu notu · sesli oku' (mini panel çizimi + yazılı cümle) ve Kes düğmesi.",
+      "baslik": "Dalga 1 (4 oyuncu)",
+      "aciklama": "Üstte bomba (dalga, LED, 7 segmentli saat, kesenlerde makas), kendi panelin, buruşuk kâğıt ipucu notu ve Kes düğmesi.",
       "dosya": "kontrol-play-n-4"
     },
     {
@@ -265,47 +312,119 @@
       "name": "kontrol-play-3clue",
       "q": "mock=kontrol-play&n=8&clue=3",
       "baslik": "Üç koşullu ipucu (8 oyuncu)",
-      "aciklama": "İki konum hedefi ayırmadığında üç konumlu ipucu: üç kablo yuvası dolu.",
+      "aciklama": "İki konum hedefi ayırmadığında üç konumlu ipucu.",
       "dosya": "kontrol-play-n-8-clue-3"
+    },
+    {
+      "mock": "kontrol-play",
+      "name": "kontrol-play-wave2-not",
+      "q": "mock=kontrol-play&n=5&wave=2&kind=notAt",
+      "baslik": "Dalga 2: 'değilse' ipucu",
+      "aciklama": "Şemada üstü çizili renk yuvası.",
+      "dosya": "kontrol-play-n-5-wave-2-kind-notAt"
+    },
+    {
+      "mock": "kontrol-play",
+      "name": "kontrol-play-wave2-adjacent",
+      "q": "mock=kontrol-play&n=4&wave=2&kind=adjacent",
+      "baslik": "Dalga 2: 'yan yanaysa' ipucu",
+      "aciklama": "Şemada iki renk arasında bağ işareti.",
+      "dosya": "kontrol-play-n-4-wave-2-kind-adjacent"
+    },
+    {
+      "mock": "kontrol-play",
+      "name": "kontrol-play-wave2-above",
+      "q": "mock=kontrol-play&n=4&wave=2&kind=above",
+      "baslik": "Dalga 2: 'yukarıdaysa' ipucu",
+      "aciklama": "Şemada üstteki renkten alttakine ok.",
+      "dosya": "kontrol-play-n-4-wave-2-kind-above"
+    },
+    {
+      "mock": "kontrol-play",
+      "name": "kontrol-play-wave2-position",
+      "q": "mock=kontrol-play&n=5&wave=2&kind=position",
+      "baslik": "Dalga 2: konum hedefi",
+      "aciklama": "'En alttaki/en üstteki kabloyu kes': şemada yuvayı gösteren ok.",
+      "dosya": "kontrol-play-n-5-wave-2-kind-position"
+    },
+    {
+      "mock": "kontrol-play",
+      "name": "kontrol-play-wave3",
+      "q": "mock=kontrol-play&n=6&wave=3&kind=mixed",
+      "baslik": "Dalga 3: 5 kablo ve mor",
+      "aciklama": "Beş kablo, mor kablo ve karma ipucu.",
+      "dosya": "kontrol-play-n-6-wave-3-kind-mixed"
+    },
+    {
+      "mock": "kontrol-play",
+      "name": "kontrol-note-zoom",
+      "q": "mock=kontrol-play&n=4&wave=2",
+      "baslik": "İpucu notu büyütüldü",
+      "aciklama": "Nota dokununca kâğıt masada okunacak kadar büyür.",
+      "dosya": "kontrol-note-zoom-n-4"
     },
     {
       "mock": "kontrol-cut",
       "name": "kontrol-play-cut",
       "q": "mock=kontrol-cut&n=6",
       "baslik": "Kablo kesildi",
-      "aciklama": "Kes sonrası: seçilen kablo kopuk, 'Kablo kesildi' başlığı, 'Kestin' durumu ve diğerleri bekleniyor.",
+      "aciklama": "Kes sonrası: kablo kopuk, 'Kestin' durumu.",
       "dosya": "kontrol-cut-n-6"
+    },
+    {
+      "mock": "kontrol-jump",
+      "name": "kontrol-jump",
+      "q": "mock=kontrol-jump&n=5",
+      "baslik": "Saat atlaması (son saniyeler)",
+      "aciklama": "Biri yanlış kesti: saat 5 sn atladı (en az 3 sn kalır); son 10 sn kırmızı nabız.",
+      "dosya": "kontrol-jump-n-5"
+    },
+    {
+      "mock": "kontrol-break",
+      "name": "kontrol-break",
+      "q": "mock=kontrol-break&n=5",
+      "baslik": "Dalgalar arası sonuç",
+      "aciklama": "Kim doğru kesti (✓/✗), ipucu taşıyıcısı ve dalga imha puanı; 'Dalga 2 geliyor'.",
+      "dosya": "kontrol-break-n-5"
     },
     {
       "mock": "kontrol-reveal",
       "name": "kontrol-reveal-right",
       "q": "mock=kontrol-reveal&n=5",
-      "baslik": "Sonuç: doğru kesim",
-      "aciklama": "'+N' puan, kendi panelinde yeşil kıvılcım, herkesin kesimi (✓/✗) ve ipucu taşıyıcıları.",
+      "baslik": "Sonuç",
+      "aciklama": "Kendi ödülün, bomba uzmanı yorumu ve üç dalganın kesimleri, toplam imha puanı, ödül.",
       "dosya": "kontrol-reveal-n-5"
     },
     {
       "mock": "kontrol-reveal-wrong",
       "name": "kontrol-reveal-wrong",
       "q": "mock=kontrol-reveal-wrong&n=4",
-      "baslik": "Sonuç: yanlış kesim",
-      "aciklama": "'Bu sefer olmadı': kendi panelinde kırmızı kıvılcım, +0 puan.",
+      "baslik": "Sonuç: yanlış kesimler",
+      "aciklama": "Kendi kesimlerin yanlış: +0.",
       "dosya": "kontrol-reveal-wrong-n-4"
+    },
+    {
+      "mock": "kontrol-reveal-clear",
+      "name": "kontrol-reveal-clear",
+      "q": "mock=kontrol-reveal-clear&n=4",
+      "baslik": "Sonuç: bomba tamamen imha edildi",
+      "aciklama": "Herkes her dalgada doğru: herkes +1.",
+      "dosya": "kontrol-reveal-clear-n-4"
     },
     {
       "mock": "kontrol-reveal",
       "name": "kontrol-reveal-8",
       "q": "mock=kontrol-reveal&n=8",
       "baslik": "Sonuç (8 oyuncu)",
-      "aciklama": "8 satırlı kesim ve puan listesi.",
+      "aciklama": "8 satırlı liste.",
       "dosya": "kontrol-reveal-n-8"
     },
     {
       "mock": "kontrol-spectator-play",
       "name": "kontrol-spectator-play",
       "q": "mock=kontrol-spectator-play&n=5",
-      "baslik": "İzleyici: oynanış",
-      "aciklama": "'Herkes kablo kesiyor' ve 'Paneller sessizce çalışıyor'; kesen sayısı görünür.",
+      "baslik": "İzleyici: dalga",
+      "aciklama": "Büyük bomba saati, dalga numarası ve kimin kestiği; panel ve ipucu yok.",
       "dosya": "kontrol-spectator-play-n-5"
     },
     {
@@ -313,19 +432,19 @@
       "name": "kontrol-spectator-reveal",
       "q": "mock=kontrol-spectator-reveal&n=5",
       "baslik": "İzleyici: sonuç",
-      "aciklama": "'Paneller açıldı' ve herkesin kesim/puan listesi.",
+      "aciklama": "Üç dalganın listesi.",
       "dosya": "kontrol-spectator-reveal-n-5"
     }
   ],
   "bilinenSorunlar": [
-    "KURALLAR.md §21 madde 13: 'Oyuncular doğru koşulu sesli söylediğinde hedef panelde ilgili kablo nabız atar' der; kodda böyle bir mekanik yoktur (sistem sesli konuşmayı bilemez). Yalnız kesim anında doğruysa yeşil, yanlışsa kırmızı kıvılcım sonuç ekranında oynar.",
-    "KURALLAR.md ipucunun kesilecek rengi söylediğini ve 'bir oyuncunun gördüğü ipucunun başka bir oyuncunun panelini tarif ettiğini' anlatır; doğru kablonun panelden bağımsız rastgele seçildiği (panel dizilimiyle ilgisiz) KURALLAR'da yazmaz, kodda öyledir.",
-    "İpucu koşulları 2 konumdan başlar ve gerekirse 3 konuma çıkar; KURALLAR'daki örnekler 2-3 koşuldur. Oyuncular arasında birden çok panele uyan 2 konumlu koşul seçilmez (yalnız hedef paneli tek başına tanımlayan koşul kabul edilir).",
-    "Erken bitiş (bağlı herkes kesince 1 sn) KURALLAR.md'de sahip onaylı bir değişiklik olarak yazar; kod buna uyar. Denetim yalnız bir kesim eylemi geldiğinde yapılır; son bekleyen bağlı oyuncu kopsa tetiklenmez (zamanlayıcıya kalır).",
-    "8 sn'lik sonuç gösterimi süresi KURALLAR'da yazmaz; oyun bu süre dolunca biter.",
-    "Hedef panel sahibinin ipucunu kendisinin taşımadığı garanti edilir, ancak oyuncu 'hangi ipucunun kendi paneline ait olduğunu' yalnız sesli konuşmayla çözebilir; sistem içinde ipucu paylaşma/okuma eylemi yoktur."
+    "Erken bitiş yalnız bir kesim eylemi geldiğinde denetlenir; son bekleyen bağlı oyuncu kopsa tetiklenmez (dalga saatine kalır). Bunu tick'te denetlemek oyun çatısının kuralına aykırıdır: tick bağlantı listesine bakamaz, aksi hâlde kayıttan tekrar oynatma (replay) canlı oyunla aynı sonucu vermez.",
+    "Oyuncu 'hangi ipucunun kendi paneline ait olduğunu' yalnız sesli konuşmayla çözebilir; sistem içinde ipucu paylaşma/okuma eylemi yoktur.",
+    "2 oyuncuda ipucu zinciri her dalgada aynı eşleşmedir (tek döngü vardır).",
+    "Saat atlaması herkese göründüğünden yanlış kesen kişi (ve kimin kestiğini izleyenler) yanlışlığı dolaylı anlayabilir; bu kabul edilmiş bir durumdur.",
+    "Bomba gövdesi, kâğıt not ve mor kablo görselleri henüz yoktur; yerlerine CSS çizimi kullanılır, dosya eklenince kendiliğinden görselle değişir (docs/oneriler/kontrol-paneli-kaosu-gorsel.md)."
   ],
   "sonDegisiklikler": [
+    "2026-10-30: Üç dalga (25/25/20 sn, dalga 3'te mor), yeni ipucu türleri, ortak bomba saati (yanlış kesim -5 sn, en az 3 sn), +2/+1/0 puan, gerçek bomba arayüzü, kâğıt not, bomba ses seti, izleyici/TV bomba saati ve isteğe bağlı bomba uzmanı yorumu; 'nabız' maddesi kaldırıldı.",
     "2026-10-29: Oyun ekranları arayüz düzeltmeleri: tek satır oyun adı, sakin gönderildi durumu, tek hazır şeridi, tutarlı düğmeler.",
     "2026-10-29: Oyun ekranları: tutarlı durum, tek satır başlık, okunur sonuçlar.",
     "2026-10-29: Kural önerisi (sahip onayı): bağlı bütün katılımcılar kesince oyun 1 sn sonra biter; bağlantısı kopan oyuncu beklenmez; klavye uyumlu görünüm.",
@@ -338,13 +457,16 @@
   ],
   "kaynaklar": [
     "packages/engine/src/games/kontrol-paneli-kaosu/index.ts",
+    "packages/engine/src/games/kontrol-paneli-kaosu/clues.ts",
     "packages/engine/src/games/kontrol-paneli-kaosu/types.ts",
     "packages/engine/src/games/kontrol-paneli-kaosu/bots.ts",
     "packages/engine/src/games/kontrol-paneli-kaosu/summary.ts",
     "packages/engine/src/games/kontrol-paneli-kaosu/kontrol-paneli-kaosu.test.ts",
     "packages/engine/src/games/ready.ts",
-    "docs/KURALLAR.md#21-kontrol-paneli-kaosu (sahip onaylı erken bitiş değişikliği dahil)",
-    "apps/client/src/games/kontrol-paneli-kaosu/ (KontrolScreen.tsx, Oyun.tsx, Panel.tsx, ClueDiagram.tsx, Sonuc.tsx, view.ts)",
+    "docs/KURALLAR.md#21-kontrol-paneli-kaosu (sahip onaylı dalga değişikliği dahil)",
+    "apps/client/src/games/kontrol-paneli-kaosu/ (KontrolScreen.tsx, Bomb.tsx, Oyun.tsx, Panel.tsx, Note.tsx, ClueDiagram.tsx, Ara.tsx, Sonuc.tsx, bombSounds.ts, view.ts)",
+    "apps/server/src/aiComment.ts",
+    "apps/server/src/aiCommentGames.ts",
     "apps/server/src/match.ts",
     "apps/server/src/kontrol-paneli-kaosu.test.ts",
     "scripts/ui-check.mjs"

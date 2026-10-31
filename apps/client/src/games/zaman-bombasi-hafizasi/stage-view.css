@@ -1,33 +1,45 @@
-/* Zaman Bombası Hafızası büyük ekran görünümü (TV). Sınıflar `zbtv` ile başlar. */
+/* Zaman Bombası Hafızası büyük ekran görünümü (TV, ZB-U8). Sınıflar `zbtv` ile başlar.
+   Sol yarı: başlık, toplam süre, dev tuşlar, dizi; sağ yarı: büyük oyuncu sütunu (bomba sırası gelenin kartında). */
 .zbtv {
+  --zbtv-av: clamp(64px, 9vh, 104px);
   position: relative;
   flex: 1;
   min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(20px, 2.4vw, 40px);
+  padding: 8px 0 0;
+}
+.zbtv[data-sudden="1"]::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 28px;
+  box-shadow:
+    inset 0 0 0 4px rgba(255, 59, 92, 0.75),
+    inset 0 0 60px rgba(255, 59, 92, 0.35);
+  pointer-events: none;
+}
+.zbtv__left {
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  padding: 8px 0 0;
+  gap: clamp(12px, 1.8vh, 22px);
 }
 .zbtv__top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 32px;
+  gap: 24px;
 }
-.zbtv__who {
-  display: flex;
-  align-items: center;
-  gap: 28px;
+.zbtv__headbox {
   min-width: 0;
-}
-.zbtv__bomb {
-  width: 150px;
-  height: 150px;
 }
 .zbtv__head {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 64px;
+  font-size: clamp(28px, 3.8vh, 46px);
   line-height: 1.05;
   color: var(--text);
 }
@@ -41,11 +53,12 @@
   color: var(--cyan);
 }
 .zbtv__sub {
-  margin-top: 8px;
-  font-size: 32px;
+  margin-top: 6px;
+  font-size: clamp(18px, 2.2vh, 26px);
   color: var(--text-dim);
 }
 .zbtv__total {
+  flex: none;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -54,7 +67,7 @@
 .zbtv__totalnum {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 88px;
+  font-size: clamp(48px, 7vh, 84px);
   line-height: 1;
   font-variant-numeric: tabular-nums;
   color: var(--text);
@@ -65,12 +78,12 @@
 .zbtv__badge {
   padding: 6px 18px;
   border-radius: 999px;
-  font-size: 26px;
+  font-size: clamp(18px, 2.2vh, 26px);
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #fff;
-  background: var(--red);
+  background: #b3152f;
 }
 .zbtv__pads {
   flex: 1;
@@ -78,7 +91,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 22px;
+  gap: clamp(14px, 1.8vh, 22px);
 }
 .zbtv__pad {
   position: relative;
@@ -87,16 +100,25 @@
   justify-content: center;
   flex-direction: column;
   gap: 8px;
-  border-radius: 40px;
+  min-height: 0;
+  border-radius: 36px;
   border: 6px solid color-mix(in srgb, var(--pad) 70%, #000);
   background: color-mix(in srgb, var(--pad) 26%, var(--bg-0));
   color: color-mix(in srgb, var(--pad) 70%, #fff);
   opacity: 0.55;
   transition:
     opacity 90ms,
-    background 90ms,
-    box-shadow 90ms,
     transform 90ms;
+}
+.zbtv__pad::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  box-shadow: 0 0 90px color-mix(in srgb, var(--pad) 80%, transparent);
+  opacity: 0;
+  transition: opacity 90ms;
+  pointer-events: none;
 }
 .zbtv__pad[data-c="yesil"] {
   --pad: #22d36b;
@@ -114,27 +136,53 @@
   opacity: 1;
   background: var(--pad);
   color: #0a1030;
-  transform: scale(1.02);
-  box-shadow:
-    0 0 90px color-mix(in srgb, var(--pad) 80%, transparent),
-    inset 0 0 60px rgba(255, 255, 255, 0.35);
+  transform: scale(1.04);
+}
+.zbtv__pad[data-state="lit"]::after {
+  opacity: 1;
 }
 .zbtv__pad svg {
-  width: 150px;
-  height: 150px;
+  width: clamp(80px, 12vh, 150px);
+  height: clamp(80px, 12vh, 150px);
 }
 .zbtv__padname {
-  font-size: 30px;
+  font-size: clamp(20px, 2.4vh, 30px);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+.zbtv__seq {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 48px;
+}
+.zbtv__len {
+  flex: none;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(22px, 2.8vh, 32px);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.zbtv__len b {
+  font-size: 1.6em;
+  letter-spacing: 0;
+  color: var(--text);
+}
+.zbtv__seq[data-tone="amber"] .zbtv__len,
+.zbtv__seq[data-tone="amber"] .zbtv__len b {
+  color: var(--amber);
+}
+.zbtv__seq[data-tone="red"] .zbtv__len,
+.zbtv__seq[data-tone="red"] .zbtv__len b {
+  color: var(--red);
+}
 .zbtv__track {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
-  min-height: 26px;
+  gap: 10px;
 }
 .zbtv__dot {
   width: 22px;
@@ -152,10 +200,131 @@
 .zbtv__dot[data-s="ok"] {
   background: var(--lime);
 }
-.zbtv__len {
-  text-align: center;
-  font-size: 26px;
+
+/* ---- Oyuncu sütunu ---- */
+.zbtv__right {
+  min-width: 0;
+  min-height: 0;
+  container-type: size;
+  display: grid;
+  grid-auto-rows: auto;
+  align-content: center;
+  gap: clamp(8px, 1.2vh, 16px);
+}
+.zbtv__card {
+  --zbtv-card-av: clamp(36px, calc((100cqh + 16px) / var(--n, 4) - 36px), 104px);
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 1.4vw, 24px);
+  padding: 8px clamp(14px, 1.4vw, 24px);
+  border-radius: 24px;
+  background: rgba(17, 24, 74, 0.72);
+  border: 2px solid rgba(140, 160, 255, 0.22);
+  transition:
+    border-color 160ms,
+    background 160ms;
+}
+.zbtv__card[data-s="turn"],
+.zbtv__card[data-s="pick"] {
+  border-color: var(--cyan);
+  background: rgba(10, 52, 82, 0.86);
+  box-shadow: 0 0 34px rgba(46, 242, 255, 0.35);
+}
+.zbtv__card[data-s="out"] {
+  background: rgba(17, 20, 44, 0.8);
+  border-color: rgba(255, 59, 92, 0.35);
+}
+.zbtv__card[data-s="out"] .av {
+  opacity: 0.6;
+  filter: grayscale(1);
+}
+.zbtv__card[data-s="out"] .zbtv__name {
+  color: #b9c0e6;
+}
+.zbtv__cardtext {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.zbtv__name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(20px, min(3.2vh, calc(100cqh / var(--n, 4) * 0.32)), 40px);
+  line-height: 1.3;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.zbtv__state {
+  font-size: clamp(14px, min(2vh, calc(100cqh / var(--n, 4) * 0.2)), 24px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--text-dim);
+}
+.zbtv__card[data-s="turn"] .zbtv__state,
+.zbtv__card[data-s="pick"] .zbtv__state {
+  color: var(--cyan);
+}
+.zbtv__card[data-s="out"] .zbtv__state {
+  color: #ff8aa0;
+}
+.zbtv__card[data-s="safe"] .zbtv__state {
+  color: var(--lime);
+}
+.zbtv__score {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1;
+  color: var(--text);
+}
+.zbtv__score b {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(24px, min(3.6vh, calc(100cqh / var(--n, 4) * 0.36)), 48px);
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.zbtv__score small {
+  font-size: clamp(13px, 1.6vh, 18px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.zbtv__bombslot {
+  flex: none;
+  width: calc(var(--zbtv-card-av) * 1.05);
+  height: calc(var(--zbtv-card-av) * 1.05);
+  display: grid;
+  place-items: center;
+}
+.zbtv__bomb,
+.zbtv__flybomb {
+  width: 100%;
+  height: 100%;
+}
+.zbtv__fly {
+  position: absolute;
+  left: calc(var(--zbtv-av) * -0.5);
+  top: calc(var(--zbtv-av) * -0.5);
+  width: var(--zbtv-av);
+  height: var(--zbtv-av);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+  z-index: 3;
+}
+.zbtv__fly[data-on="1"] {
+  opacity: 1;
 }
 
 /* Renk körlüğü dostu mod: TV'de de şekil her zaman tam görünür, ilerleme noktaları desenle ayrışır. */
