@@ -68,6 +68,14 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
   if (req.method !== "GET" && !yaz) return hata(res, 405, "yontem", "Yöntem desteklenmiyor.");
   if (yaz && !kaynakUygun(req, o.config.publicUrl))
     return hata(res, 403, "kaynak", "İstek reddedildi. Sayfayı yenileyip yeniden dene.");
+  if (
+    yaz &&
+    yol !== "yukle" &&
+    !String(req.headers["content-type"] ?? "")
+      .toLowerCase()
+      .startsWith("application/json")
+  )
+    return hata(res, 415, "tur", "JSON bekleniyor.");
   const ok: Yanit = (d, g, ek) => gonder(res, d, g, ek);
   try {
     const belirtec = cerezOku(req.headers.cookie, OTURUM_CEREZI);

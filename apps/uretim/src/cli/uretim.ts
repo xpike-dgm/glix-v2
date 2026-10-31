@@ -47,7 +47,10 @@ export function komutAyristir(ham: string): { komut: string; args: string[] } {
   const [komut, ...args] = parca;
   if (!komut || !(komut in ALT_KOMUTLAR))
     throw new CliHatasi(`Bilinmeyen komut. Kullanılabilir: ${Object.keys(ALT_KOMUTLAR).join(", ")}.`);
-  if (args.length > 2 || args.some((a) => !/^[A-Za-z0-9._/-]{1,200}$/.test(a)))
+  if (
+    args.length > 2 ||
+    args.some((a) => !/^[A-Za-z0-9._/-]{1,200}$/.test(a) || a.includes("..") || a.startsWith("/"))
+  )
     throw new CliHatasi("Argüman geçersiz.");
   return { komut, args };
 }
