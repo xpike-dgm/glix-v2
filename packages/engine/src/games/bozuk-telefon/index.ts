@@ -2,6 +2,7 @@ import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../g
 import {
   addStroke,
   clearStrokes,
+  DRAW_PALETTE_FULL,
   type DrawLimits,
   EMPTY_DRAWING,
   hasExactKeys,
@@ -22,13 +23,17 @@ import {
   BOZUK_TEXT_MAX,
   BOZUK_VOTE_MS,
   type BozukAction,
+  type BozukChainRecap,
   type BozukPhase,
   type BozukPrompt,
   type BozukPublicView,
   type BozukReveal,
   type BozukRevealStage,
+  type BozukShownStep,
   type BozukStep,
   type BozukView,
+  bozukRankAwards,
+  bozukShowMs,
   bozukStepCount,
   bozukStepKind,
   bozukStepMs,
@@ -178,7 +183,8 @@ function revealPlan(state: BozukState): { chains: ChainTiming[]; end: number } {
   const chains: ChainTiming[] = [];
   for (let c = 0; c < state.order.length; c++) {
     const showStart = t;
-    const voteStart = showStart + state.steps * BOZUK_SHOW_STEP_MS;
+    // Oylama, zincirin son adımı görünür görünmez açılır.
+    const voteStart = showStart + bozukShowMs(state.steps);
     const early = state.voteEnds[String(c)];
     const voteEnd = Math.min(voteStart + BOZUK_VOTE_MS, early ?? Number.POSITIVE_INFINITY);
     const resultEnd = voteEnd + BOZUK_RESULT_MS;
@@ -243,7 +249,14 @@ function tallyOf(state: BozukState, c: number): number[] {
   return tally;
 }
 
-/** Tek zincirin puanı: en komik adım oyları sahibine +1, sağlam zincirde yazarların her biri +1. */
+/** En çok oy alan adım(lar) (oy yoksa boş). */
+function crownedOf(tally: readonly number[]): number[] {
+  const top = Math.max(0, ...tally);
+  if (top === 0) return [];
+  return tally.flatMap((n, i) => (n === top ? [i] : []));
+}
+
+/** Tek zincirin kahkaha puanı: en komik adım oyları sahibine +1, sağlam zincirde yazarların her biri +1. */
 function chainScores(state: BozukState, c: number): Record<string, number> {
   const out: Record<string, number> = {};
   const steps = chainSteps(state, c);
@@ -279,8 +292,33 @@ function promptOf(state: BozukState, playerId: string): BozukPrompt | null {
   return prev.kind === "write" ? { kind: "write", text: prev.text } : { kind: "draw", strokes: prev.strokes };
 }
 
-function visibleSteps(state: BozukState, cursor: Cursor): BozukStep[] {
-  return chainSteps(state, cursor.chain).slice(0, cursor.shown);
+/** Görünen adımlar; isimsiz oylama: sonuç aşamasına kadar yazar alanı boş (null). */
+function visibleSteps(state: BozukState, cursor: Cursor): BozukShownStep[] {
+  const named = cursor.stage === "result";
+  return chainSteps(state, cursor.chain)
+    .slice(0, cursor.shown)
+    .map((step): BozukShownStep => {
+      const author = named ? step.author : null;
+      return step.kind === "write"
+        ? { kind: "write", author, text: step.text }
+        : { kind: "draw", author, strokes: step.strokes };
+    });
+}
+
+/** Oyun sonu özeti: her zincir yazarları, oyları ve taçlarıyla. Yalnız son zincirin sonucu açılınca. */
+function recapOf(state: BozukState): BozukChainRecap[] {
+  return state.order.map((starter, c) => {
+    const tally = tallyOf(state, c);
+    const steps = chainSteps(state, c);
+    return {
+      chain: c,
+      starter,
+      steps: steps.map((s) => ({ ...s })),
+      tally,
+      robust: chainRobust(steps, state.steps),
+      crowned: crownedOf(tally),
+    };
+  });
 }
 
 const MAX_STEP_INDEX = 64;
@@ -322,7 +360,7 @@ export const bozukTelefon: GameDefinition<BozukState, BozukAction, BozukView, Bo
         return { kind: "vote", step };
       }
       case "stroke": {
-        const fields = parseStrokeFields(raw);
+        const fields = parseStrokeFields(raw, DRAW_PALETTE_FULL);
         return fields === null ? null : { kind: "stroke", ...fields };
       }
       default:
@@ -430,19 +468,22 @@ export const bozukTelefon: GameDefinition<BozukState, BozukAction, BozukView, Bo
         ? "reveal"
         : bozukStepKind(state.step);
     let reveal: BozukReveal | null = null;
+    let recap: BozukChainRecap[] | null = null;
     if (state.step >= state.steps && cursor !== null) {
       const plan = revealPlan(state);
       const timing = plan.chains[cursor.chain] as ChainTiming;
       const result = cursor.stage === "result";
       const steps = chainSteps(state, cursor.chain);
+      const tally = result ? tallyOf(state, cursor.chain) : null;
       reveal = {
         chain: cursor.chain,
         chains: state.order.length,
-        starter: state.order[cursor.chain] as string,
+        starter: result ? (state.order[cursor.chain] as string) : null,
         stage: cursor.stage,
         shown: cursor.shown,
         steps: visibleSteps(state, cursor),
         chainStartedAt: timing.showStart,
+        voteStartsAt: timing.voteStart,
         stageEndsAt:
           cursor.stage === "show"
             ? timing.voteStart
@@ -450,9 +491,11 @@ export const bozukTelefon: GameDefinition<BozukState, BozukAction, BozukView, Bo
               ? timing.voteEnd
               : timing.resultEnd,
         voted: state.players.filter((id) => state.votes[String(cursor.chain)]?.[id] !== undefined),
-        tally: result ? tallyOf(state, cursor.chain) : null,
+        tally,
         robust: result ? chainRobust(steps, state.steps) : null,
+        crowned: tally ? crownedOf(tally) : null,
       };
+      if (state.over || (result && cursor.chain === state.order.length - 1)) recap = recapOf(state);
     }
     const resolved = resolvedChains(state);
     return {
@@ -466,6 +509,7 @@ export const bozukTelefon: GameDefinition<BozukState, BozukAction, BozukView, Bo
       doneIds: state.step < state.steps ? [...state.done] : [],
       reveal,
       scores: state.step >= state.steps ? totalScores(state, resolved) : null,
+      recap,
     };
   },
 
@@ -478,12 +522,17 @@ export const bozukTelefon: GameDefinition<BozukState, BozukAction, BozukView, Bo
       pointsLeft: 0,
       done: false,
       myVote: null,
+      myStep: null,
     };
     if (playerId === null || !state.players.includes(playerId)) return empty;
     if (state.step >= state.steps) {
-      const chain = state.cursor?.chain;
-      const mine = chain === undefined ? undefined : state.votes[String(chain)]?.[playerId];
-      return { ...empty, myVote: mine ?? null };
+      const cursor = state.cursor;
+      if (cursor === null) return empty;
+      const mine = state.votes[String(cursor.chain)]?.[playerId];
+      const own = chainSteps(state, cursor.chain)
+        .slice(0, cursor.shown)
+        .findIndex((s) => s.author === playerId);
+      return { ...empty, myVote: mine ?? null, myStep: own >= 0 ? own : null };
     }
     const kind = bozukStepKind(state.step);
     const draft = draftOf(state, playerId);
@@ -495,6 +544,7 @@ export const bozukTelefon: GameDefinition<BozukState, BozukAction, BozukView, Bo
       pointsLeft: kind === "draw" ? BOZUK_MAX_TOTAL_POINTS - draft.drawing.points : 0,
       done: state.done.includes(playerId),
       myVote: null,
+      myStep: null,
     };
   },
 
@@ -542,9 +592,10 @@ export const bozukTelefon: GameDefinition<BozukState, BozukAction, BozukView, Bo
     return out;
   },
 
+  /** Mini puan = kahkaha puanı (oy + sağlam zincir); genel skora giden = sıralamaya göre +2 / +1 / 0. */
   result(raw) {
     const state = settle(raw);
-    const scores = totalScores(state, state.order.length);
-    return { miniScores: { ...scores }, awards: { ...scores } };
+    const laugh = totalScores(state, state.order.length);
+    return { miniScores: { ...laugh }, awards: bozukRankAwards(laugh, state.players) };
   },
 };

@@ -1,4 +1,4 @@
-import type { BozukPublicView, BozukView } from "@glix/engine";
+import { type BozukPublicView, type BozukView, bozukRankAwards } from "@glix/engine";
 import { describe, expect, it } from "vitest";
 import { type Client, k, setupRoom, sleep, sync, until, useServer } from "./testkit.js";
 
@@ -39,7 +39,7 @@ const stroke = (n: number) => ({
 });
 
 describe("bozuk-telefon sunucu entegrasyonu", () => {
-  it("tam maç: yaz-çiz-yaz, erken bitiş, gösteri, oylama; puanlar genel skora eklenir", async () => {
+  it("tam maç: yaz-çiz-yaz, erken bitiş, isimsiz gösteri ve oylama; kahkaha puanı sıralaması genel skora eklenir", async () => {
     const cs = await startBozuk(["Ayşe", "Mehmet", "Zeynep"]);
     const [a, b, c] = cs as [Client, Client, Client];
     const ids = cs.map((x) => x.session.playerId);
@@ -108,13 +108,15 @@ describe("bozuk-telefon sunucu entegrasyonu", () => {
     expect(pub(a).reveal?.stage).toBe("show");
     expect(pub(a).reveal?.shown).toBe(1);
 
-    // Gösteri: 3 sn aralıkla adımlar açılır (tick'ler yayını tetikler).
-    k.clock.advance(3_000);
+    // Gösteri: 2 sn aralıkla adımlar açılır (tick'ler yayını tetikler); yazarlar gizli.
+    expect(pub(a).reveal?.starter).toBeNull();
+    expect(pub(a).reveal?.steps.every((s) => s.author === null)).toBe(true);
+    k.clock.advance(2_000);
     await until(() => pub(a).reveal?.shown === 2, "ikinci adım");
-    k.clock.advance(3_000);
-    await until(() => pub(a).reveal?.shown === 3, "üçüncü adım");
-    k.clock.advance(3_000);
+    // Son adım görünür görünmez oylama açılır.
+    k.clock.advance(2_000);
     await until(() => pub(a).reveal?.stage === "vote", "oylama");
+    expect(pub(a).reveal?.shown).toBe(3);
 
     const expected: Record<string, number> = {};
     for (const id of ids) expected[id] = 0;
@@ -125,12 +127,21 @@ describe("bozuk-telefon sunucu entegrasyonu", () => {
       );
       const steps = pub(a).reveal?.steps ?? [];
       expect(steps).toHaveLength(3);
-      // Kendi adımına oy verilemez; başkasına tek sefer.
-      const ownIndex = steps.findIndex((s) => s.author === ids[0]);
-      expect(await send(a, { kind: "vote", step: ownIndex })).toEqual({ ok: false, reason: "own_step" });
+      // İsimsiz: hiçbir istemcinin akışında bu zincirin yazarları yok; herkes yalnız kendi adımını bilir.
       for (const x of cs) {
-        const pid = x.session.playerId;
-        const target = steps.findIndex((s) => s.author !== pid);
+        expect(pub(x).reveal?.steps.every((s) => s.author === null)).toBe(true);
+        expect(pub(x).reveal?.starter).toBeNull();
+      }
+      const owns = cs.map((x) => mine(x).myStep);
+      expect([...owns].sort()).toEqual([0, 1, 2]);
+      // Kendi adımına oy verilemez; başkasına tek sefer.
+      expect(await send(a, { kind: "vote", step: owns[0] as number })).toEqual({
+        ok: false,
+        reason: "own_step",
+      });
+      for (const x of cs) {
+        const own = mine(x).myStep;
+        const target = [0, 1, 2].find((i) => i !== own) as number;
         expect(await send(x, { kind: "vote", step: target })).toEqual({ ok: true });
         expect(await send(x, { kind: "vote", step: target })).toEqual({ ok: false, reason: "voted" });
       }
@@ -142,26 +153,36 @@ describe("bozuk-telefon sunucu entegrasyonu", () => {
       await until(() => pub(a).reveal?.stage === "result", "sonuç penceresi");
       const reveal = pub(a).reveal;
       expect(reveal?.robust).toBe(true);
+      // Sonuçta yazarlar açılır.
+      expect(reveal?.starter).not.toBeNull();
       reveal?.steps.forEach((s, i) => {
-        expected[s.author] = (expected[s.author] ?? 0) + (reveal.tally?.[i] ?? 0) + 1;
+        expect(s.author).not.toBeNull();
+        const id = s.author as string;
+        expected[id] = (expected[id] ?? 0) + (reveal.tally?.[i] ?? 0) + 1;
       });
       if (chain < 2) {
-        k.clock.advance(3_000);
+        k.clock.advance(2_000);
         await until(() => pub(a).reveal?.chain === chain + 1, "sonraki zincir");
-        k.clock.advance(9_000);
+        k.clock.advance(4_000);
         await until(() => pub(a).reveal?.stage === "vote", "sonraki oylama");
       }
     }
     expect(pub(a).scores).toBeTruthy();
-    k.clock.advance(3_000);
+    k.clock.advance(2_000);
     await until(() => a.room.phase === "results", "sonuç");
-    expect(a.room.match?.result?.awards).toEqual(expected);
-    // Her zincir sağlam -> herkes en az 3; oylar da eklenmiş.
+    // Mini puan = kahkaha puanı; genel skora sıralama (+2 / +1 / 0) gider.
+    expect(a.room.match?.result?.miniScores).toEqual(expected);
+    const awards = bozukRankAwards(expected, ids);
+    expect(a.room.match?.result?.awards).toEqual(awards);
+    for (const v of Object.values(awards)) expect([0, 1, 2]).toContain(v);
+    // Her zincir sağlam -> herkes en az 3 kahkaha; oylar da eklenmiş.
     for (const id of ids) expect(expected[id]).toBeGreaterThanOrEqual(3);
+    // Oyun sonu özeti herkese aynı: tüm zincirler yazarlarıyla.
+    expect(pub(a).recap).toHaveLength(3);
     await sync();
     for (const x of cs) {
       const me = x.room.players.find((p) => p.id === x.session.playerId);
-      expect(me?.score).toBe(expected[x.session.playerId]);
+      expect(me?.score).toBe(awards[x.session.playerId]);
     }
     // Bitişten sonra eylem reddedilir.
     expect((await send(a, { kind: "vote", step: 1 })).ok).toBe(false);
@@ -170,15 +191,15 @@ describe("bozuk-telefon sunucu entegrasyonu", () => {
   it("kimse bir şey yapmazsa süreler dolar: boş yazı '…', boş tuval; oyun yine biter", async () => {
     const cs = await startBozuk(["A", "B", "C"]);
     const a = cs[0] as Client;
-    k.clock.advance(25_000);
+    k.clock.advance(20_000);
     await until(() => pub(a).step === 1, "çizme");
     expect(mine(a).prompt).toEqual({ kind: "write", text: "…" });
-    k.clock.advance(60_000);
+    k.clock.advance(45_000);
     await until(() => pub(a).step === 2, "yazma");
     expect(mine(a).prompt).toEqual({ kind: "draw", strokes: [] });
-    k.clock.advance(25_000);
+    k.clock.advance(20_000);
     await until(() => pub(a).phase === "reveal", "gösteri");
-    k.clock.advance(3 * (3 * 3_000 + 10_000 + 3_000));
+    k.clock.advance(3 * (2 * 2_000 + 6_000 + 2_000));
     await until(() => a.room.phase === "results", "sonuç");
     expect(Object.values(a.room.match?.result?.awards ?? {}).every((v) => v === 0)).toBe(true);
   });
