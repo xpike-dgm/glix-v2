@@ -43,7 +43,7 @@ ses ve havuz kontrolleri bağımsız çalışır.
 | `GET /api/uretim/havuzlar` | Bütün içerik havuzlarının **canlıdaki** etkin listesi (yerleşik + panel düzenlemeleri) | `{ havuzlar: [{ id, gameId, label, fields, kayitlar: [{ anahtar, alanlar, kaynak: "yerlesik"\|"panel", acik: bool }] }] }` |
 | `POST /api/uretim/havuzlar/:poolId/ekle` | Satır ekler (havuzun `fromFields` kuralıyla doğrular; tekrarları atlar) | `{ aktarimId, eklenen: n, atlanan: [{ satir, neden }] }` |
 | `POST /api/uretim/havuzlar/:poolId/kapat` | `{ anahtarlar: [...] }` kayıtları kapatır (silmez) | `{ aktarimId, kapatilan: n }` |
-| `POST /api/uretim/aktarim/:aktarimId/geri-al` | O aktarımın eklediklerini kapatır, kapattıklarını açar | `{ ok: true }` |
+| `POST /api/uretim/aktarim/:aktarimId/geri-al` | O aktarımın eklediği girdileri siler (yalnız o aktarımın eklediklerini), kapattıklarını yeniden açar; ikinci kez geri alma reddedilir | `{ ok: true }` |
 | `GET /api/uretim/moderasyon` | Yasaklı kelime listesi | `{ kaliplar: [{ kalip, tur, kaynak }] }` |
 | `POST /api/uretim/moderasyon/ekle` | Kalıp ekler | `{ aktarimId, eklenen, atlanan }` |
 | `GET /api/uretim/magaza/istatistik` | Son 30 gün, ürün başına toplu sayılar (anonim) | `{ donem: "30g", urunler: [{ id, satis, kusanan, firsatSatis }] }` |
