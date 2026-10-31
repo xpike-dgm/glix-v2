@@ -21,6 +21,13 @@ describe("sizma tur özeti", () => {
     expect(line).toBe("Mert sızmaydı, kimse anlamadı");
     expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
   });
+  it("yakalanan sızma kelimeyi çaldıysa söyler", () => {
+    const line = summarizeSizma(result, players, {
+      reveal: { infiltrator: "c", caught: true, final: { stole: true } },
+    });
+    expect(line).toBe("Mert yakalandı ama kelimeyi çaldı");
+    expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
+  });
   it("veri yoksa ya da eksikse cümle kurmaz (3)", () => {
     expect(summarizeSizma(result, players, { reveal: null })).toBeNull();
   });

@@ -407,6 +407,36 @@ Oyuncunun genel skoru bu sonuçlarla artar; hesap istatistiğindeki maç puanı 
   **"Sızma kendini fark etmedi"**. Diğer oyuncuların cevapları hiçbir zaman açılmaz.
 - Tutorial adımı 3: "Oylamaya geç, sızmayı bul; sonda 'Sızma sen miydin?' sorusunu yanıtla."
 
+**Değişiklik (Ekim 2026, sahip onayı: SZ-M1 … SZ-M6; ayrıntı `docs/oneriler/sizma.md`) — yukarıdaki cevapların önüne geçer:**
+
+- **Konuşma sırası uygulamada ilerler.** Ekranda "TUR 1 / 2" ve konuşan oyuncu vurgulanır. Konuşan, ipucunu söyleyince
+  kendi ekranındaki **"Söyledim"** düğmesine basar; sıra bir sonrakine geçer. Her konuşma hakkı en çok **15 saniyedir**;
+  dolarsa sıra kendiliğinden geçer (ceza yok). "Söyledim"e yalnız sırası gelen basabilir. Bağlantısı kopuk oyuncunun
+  sırası atlanır. Sıra iki turda da aynıdır. İki tur bitince **3 saniyelik geri sayımla** oylama kendiliğinden başlar.
+  "Oylamaya geç" erken çıkış olarak kalır: bağlı herkes basarsa kalan sıralar atlanır, oylama 1 sn sonra başlar.
+  İpucu aşamasının 5 dakikalık teknik üst sınırı değişmez. Uygulama ipucunun içeriğini denetlemez (yazılı ipucu yok).
+- **Bağlantısı kopan oyuncuya da oy verilebilir.** Oyun başında oyuncu olan herkes oylanabilir; kopan oyuncu oy
+  veremez, cevap veremez ve bekleme sayımlarında beklenmez.
+- **Eşitlikte ikinci oylama.** İlk oylamada en çok oyu alanlar eşitse (en az bir oy verilmişse), yalnız eşit adaylar
+  arasında **15 saniyelik** tek bir ikinci oylama yapılır. İlk oylamanın oyları silinir; herkes (adaylar dahil, kendine
+  de) yeniden oy verir. Ekranda yalnız adayların adları görünür, oy sayıları gösterilmez. Sızma adaylar arasında olmasa
+  da ikinci oylama yapılır. İkinci oylamada da eşitlik olursa ya da kimse oy vermezse sızma kurtulur. İlk oylamada hiç
+  oy yoksa ikinci oylama olmaz. Herkes "Oyumu ver" derse 1 sn sonra biter.
+- **"Sızma sen miydin?" süresi 10 saniyedir** ve artık bedava değildir: **Evet diyen ama sızma olmayan oyuncu yakalama
+  puanını alamaz.** Sızmanın Evet bonusu (+1) aynen kalır. Cevap vermeyen Hayır sayılır. Diğer oyuncuların cevapları
+  hiçbir zaman açılmaz; yalnız kendi sonucun ("Evet dedin, yakalama puanı alamadın") sana gösterilir.
+- **Puan:** sızma tek başına en çok oyu alırsa (ikinci oylama olduysa onda) yakalanır. Yakalanırsa **yalnız sızmaya oy
+  veren** (sayılan oylamanın son geçerli oyu) ve Evet demeyen sızma olmayan oyuncular **+1**, diğerleri 0; sızma kendine
+  oy verse de bu puanı almaz. Kurtulursa sızma **+2**, diğerleri 0. Puan aralığı 0…+3, eksi yok; +2/+1/0 sıralamaya
+  çevrilmez. Kartlarda "birinci" en yüksek puanlılar, "sonuncu" en düşüklerdir.
+- **Son şans:** yakalanan sızmanın maskesi düşer ve **15 saniye** içinde **ortak kelimeyi yazarak** tek bir tahmin
+  yapar. Bu sırada ortak kelime kimsenin ekranında görünmez (sızma yalnız kendi kelimesini görür). Karşılaştırmada
+  Türkçe büyük harf kullanılır; baştaki/sondaki boşluk ve noktalama atılır; şapkalı harf düz sayılır (Â = A). Ek almış
+  hâl (ÇAYI) doğru sayılmaz. Bilirse "KELİMEYİ ÇALDI!" ve sızma **+1**; yakalayanların puanı değişmez. Süre dolar ya da
+  sızmanın bağlantısı koparsa tahmin yok sayılır. Kurtulan sızmaya bu aşama gelmez. Tahminden sonra iki kelime açılır;
+  sonuç ekranının "Devam et" düğmesi bu aşama bitince açılır.
+- Tutorial adımları: 2 "İki turda sırayla sesli ipucu ver"; 3 "Sızmayı oyla; eşitlikte yeniden oylanır".
+
 ## 4. Sözlük Blöfü — `sozluk-blofu`
 
 **Durum: KİLİTLİ**
@@ -1591,19 +1621,41 @@ BT-M1/M2/M3: `docs/oneriler/bozuk-telefon.md`, `docs/UI-GELISTIRME.md`)
 
 ## 28. Kara Borsa — `kara-borsa`
 
-**Durum: KİLİTLİ** (sahip onayı; uygulama yorumları `docs/A8-OYUNLAR.md`, `docs/A8-LAF-SOKMA.md`)
+**Durum: KİLİTLİ** (sahip onayı; uygulama yorumları `docs/A8-OYUNLAR.md`, `docs/A8-LAF-SOKMA.md`; Ekim 2026
+geliştirmeleri KB-M1, KB-M2, KB-M3, KB-U1…U8, KB-AI1: `docs/oneriler/kara-borsa.md`, `docs/UI-GELISTIRME.md`)
 
-- Amaç: Gizli değerli kutuları blöf ve ipuçlarıyla doğru fiyata almak; en zengin olmak.
+- Amaç: Gizli değerli kutuları blöf ve ipuçlarıyla ucuza almak; en çok kâr eden olmak.
 - Minimum oyuncu: **3**. Maksimum oyuncu: **8**.
 - Herkes **100 jetonla** başlar. **5 tur**; her turda bir gizemli kutu.
-- Kutunun gerçek değeri gizli: 0–60 arası tam sayı, ya da **%15 olasılıkla lanetli** (değer −20).
-- Her turda her oyuncu **yalnız kendine özel bir ipucu** alır (ör. "değeri 30'dan büyük", "çift sayı",
-  "lanetli değil", "değeri 10'un katı değil"). İpucu her zaman doğrudur; sözlü blöf serbesttir.
+- Kutunun gerçek değeri gizli: 1–4. turda 0–60 arası tam sayı, ya da **%15 olasılıkla lanetli** (değer −20).
+  **5. tur "Büyük Kutu"** (KB-M2): değer iki kat, 0–120 arası ya da %15 olasılıkla lanetli **−40**. Teklif üst sınırı
+  (o anki jeton) ve süre aynı.
+- Her turda her oyuncu **yalnız kendine özel iki ipucu** alır (KB-M3); ipuçları her zaman doğrudur, sözlü blöf
+  serbesttir:
+  - **Ana ipucu** (değeri daraltır). Lanetsiz kutuda "değeri n'den büyük", "n'den küçük" ya da "a ile b arasında"
+    (eşikler gerçek değere yakın rastgele; "arasında" aralığı en çok 30 geniş). Lanetli kutuda oyuncuların **en az 1,
+    en çok yarısı** (yukarı yuvarlanır) "Kutu lanetli!" görür; diğerleri doğru ama yanıltıcı "değeri n'den küçük"
+    görür (n 1–40).
+  - **Ek ipucu** (küçük): çift/tek, 3/5/10'un katı ya da katı değil, ya da "Kutu lanetli değil" (yalnız lanetsiz
+    kutuda ve ana ipucu bunu zaten söylemiyorsa, yani ana ipucu "küçük" iken).
+  - Büyük Kutu'da eşikler ölçeğe göre iki katıdır (aralık en çok 60; lanetlide n 1–80).
+  - Farklı oyunculara mümkün olduğunca farklı ana (ve ek) ipucu verilir (6 deneme; seçenek kalmazsa tekrar eder).
 - Teklif: 20 sn, gizli, **tek seferlik** (0 ile mevcut jeton arası; 0 = geç). Bağlı herkes teklif verince erken biter (sahip onayı): bağlantısı kopan oyuncu beklenmez (teklifi 0 sayılır); eskiden kopuk oyuncu da beklenirdi.
-- En yüksek teklif kutuyu alır ve teklifini öder; eşitlikte önce teklif veren kazanır. Kimse teklif vermezse kutu
-  kimseye gitmez. Teklifler ve kutunun değeri tur sonunda açılır (5 sn).
-- Mini puan: kalan jeton + aldığı kutuların değerleri toplamı.
-- Genel skora: en yüksek **+2**, ikinci **+1**, üçüncü **+1** (eşitlikte aynı derece aynı ödülü alır).
+  Jetonu biten oyuncu teklif vermiş sayılır; ipucunu görmeye devam eder.
+- En yüksek teklif kutuyu alır ve **kendi teklifini öder**; eşitlikte önce teklif veren kazanır. Kimse teklif vermezse
+  kutu kimseye gitmez. Teklifler ve kutunun değeri tur sonunda açılır: **8 sn** (KB-U1; tokmak "SATILDI!", teklifler
+  düşükten yükseğe tek tek, kazanan en son; kapak kalkar, değer sayarak çıkar, kazananın satırında kâr/zarar damgası).
+- **Oyun içi puan kârdır** (KB-M1): (kalan jeton + aldığı kutuların değerleri) − 100. Eksi olabilir (yalnız oyun
+  içi gösterge).
+- Genel skora (KB-M1): yalnız **kârı 0'dan büyük** olanlar ödül alır. En yüksek kâr **+2** (eşitse hepsi), sonraki
+  farklı kâr **+1** (eşitse hepsi), diğerleri 0. Kimse kâr etmediyse kimse ödül almaz. Eksi genel puan yok.
+  Kartlarda "birinci" ve "sonuncu" kâra göre belirlenir.
+- Oyun sonu yorumu (KB-AI1): son kutu açılınca ortak yapay zekâ altyapısıyla tek cümlelik "mezatçı" yorumu istenir
+  (modele yalnız tur sonuçları ve yer tutucu adlar gider, ipuçları gitmez); gelirse son açılışta görünür, gelmezse
+  hiçbir şey görünmez. Puanı etkilemez.
+- Anlatım: "Her tur bir kutu gelir: 0–60 değerinde ya da lanetli (−20). Değerini yalnız sana özel ipucu anlatır. Son
+  kutu iki kat!" · "Gizli bir teklif ver: en yükseği kutuyu alır ve teklifini öder" · "Kutunun değeri ödediğinden
+  fazlaysa kâr edersin; en çok kâr eden kazanır".
 
 ## 29. Kule Ustası — `kule-ustasi`
 

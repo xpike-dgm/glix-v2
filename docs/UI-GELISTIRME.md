@@ -247,11 +247,23 @@ Onaylanmayanlar: YY-M8 (iki tur), YY-AI1 (anlam hakemi).
 Ayrıntılar: `docs/oneriler/sizma.md`. Onaylananlar: **SZ-M1 … SZ-M6, SZ-U1 … SZ-U9, SZ-AI1.**
 Onaylanmayanlar: SZ-M7 (kelimesiz sızma), SZ-M8 (iki raunt). Puan dosyadaki gibi (0…+3, eksi yok; +2/+1/0
 sıralamaya çevrilmez).
+**Uygulandı (Ekim 2026):** "Söyledim" ile ilerleyen konuşma sırası (15 sn, iki tur, 3 sn geri sayım), kopan oyuncuya oy,
+eşitlikte 15 sn ikinci oylama, "Sızma sen miydin?" 10 sn ve Evet'in bedeli, yalnız doğru oya +1, son şans (ortak
+kelimeyi yaz, +1); gözetleme koruması, oyların uçuşu, kırılan maske, ses/titreşim seti, TV görünümü (`StageView`),
+spiker yorumu (`sizmaPrompt`). Zamanlamalar tek yerde: `apps/client/src/games/sizma/timeline.ts`. Gereken görseller
+(maske ve iki kırık parçası): `docs/oneriler/sizma-gorsel.md`; dosya yokken SVG karşılığı çizilir.
 
 ## Kara Borsa
 
 Ayrıntılar: `docs/oneriler/kara-borsa.md`. Onaylananlar: **KB-M1, KB-M2, KB-M3, KB-U1 … KB-U8, KB-AI1.**
 Onaylanmayanlar: KB-M4 (tezgâh söylentisi), KB-M5 (ikinci fiyat).
+**Uygulandı (Ekim 2026):** kâr puanı ve +2/+1/0 ödül, son tur Büyük Kutu (0–120 / −40), ana + ek ipucu; 8 sn
+açılış (tokmak, sıralı teklifler, kapak, kâr/zarar damgası; zaman çizelgesi `apps/client/src/games/kara-borsa/timeline.ts`),
+mühürlü zarf, isimli şerit, pazar defteri, izleyici/jetonu biten/TV görünümleri, ses seti, mezatçı yorumu
+(`apps/server/src/aiCommentGames.ts`). Görsel tarifleri: `docs/oneriler/kara-borsa-gorsel.md`. Tutucu yorumlar:
+"Kutu lanetli değil" ek ipucu yalnız ana ipucu "küçük" iken verilir (diğer ana ipuçları bunu zaten söyler); açılışta
+damgaya kadar şerit bu turdan önceki kârı gösterir (değeri ele vermesin); kısa ekranda son açılışta kalabalık masada
+kâr şeridi özet ve yorum için çekilir.
 
 ## Kendim
 
