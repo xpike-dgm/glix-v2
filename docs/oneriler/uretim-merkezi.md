@@ -10,6 +10,10 @@
 > **Ek karar 2 (31 Ekim 2026):** iki yeni alan: **Üretim Merkezi Arayüzü** ve **Yönetim Paneli Arayüzü** yapay zekâları
 > (`YAPAY-ZEKA-EKIBI.md` 4.11, 4.12). Bunlar için UM-İ11 (kod yaması akışı) ve UM-K7 (yama ön kontrolü) eklendi;
 > site ilk sürümü oturduktan sonra yapılır.
+>
+> **Ek karar 3 (31 Ekim 2026):** iki test ortamı kurulacak: `test.glix.dgmcraft.online` (onaylananlar) ve
+> `test2.glix.dgmcraft.online` (yapay zekâların oyun alanı). Bkz. bölüm 8b (UM-O1…O7). Şu anki iki ajanın işinden
+> sonra, ayrı bir iş olarak yapılır; sunucu kurulumu ve DNS için ayrıca sahip onayı alınır.
 
 Bu dosya onay içindir. Her maddenin bir kodu var (ör. **UM-G2**). Cevabını tek satırda verebilirsin:
 
@@ -547,6 +551,64 @@ Model seçimi sende; istem modelden bağımsızdır.
 
 Her alanın kendi altyapısı (ALT-4…12) ayrı bir öneri dosyası olarak sırası gelince yazılır ve madde koduyla
 onaylanır.
+
+## 8b. Ortamlar (UM-O) — ek karar 3
+
+### UM-O1 · Onay ortamı: `test.glix.dgmcraft.online` — **karar: EVET**
+**Ne:**
+- Oyunun birebir kopyasıdır: ayrı kap, ayrı veritabanı. Sahte hesaplar kullanılır, içerik havuzları canlının kopyasıdır.
+- Ana dala giren her şey kendiliğinden buraya çıkar.
+- Sahip burada oynar ve bakar. "Canlıya al" denince **test edilen aynı derleme (aynı Docker imajı)** canlıya taşınır;
+  yeniden derleme yapılmaz.
+- Giriş yalnız sahibe ve davet ettiklerine açıktır, arama motorlarına kapalıdır.
+- E-posta ve telefon bildirimi kapalıdır; yapay zekâ yorumu düşük sınırla açıktır.
+
+### UM-O2 · Oyun alanı: `test2.glix.dgmcraft.online` — **karar: EVET**
+**Ne:** Yapay zekâların ve sahibin onaylanmamış taslakları gerçek oyunda denediği alan.
+- Ayrı kap, ayrı veritabanı, sahte hesaplar.
+- Her gece temiz hâline döner.
+- Canlıya buradan hiçbir şey geçmez.
+
+### UM-O3 · Oda başına taslak katmanı — **karar: EVET**
+**Ne:** Taslaklar (katalog satırları, görseller, sesler, efekt tarifleri, havuz satırları) oyunun koduna girmez.
+Oyun alanında çalışma anında yüklenen bir **katman** olarak durur. Her katman bir odaya bağlıdır:
+- Bir yapay zekânın taslakları yalnız onun açtığı odada görünür; aynı anda deneyen 12 alan birbirini bozmaz.
+- Sahip "bütün taslaklar" odası açabilir.
+
+Bunun koşulu, ilgili alanın veriyle yönetilir hâle gelmiş olmasıdır (ALT-1…12). Mağaza ilk alandır.
+
+### UM-O4 · Oyun alanı araçları (MCP ve SSH) — **karar: EVET**
+**Ne:** Her yapay zekânın kanalına şu araçlar eklenir (yalnız kendi alanının taslaklarıyla):
+- `oyun_alani_yukle`: taslağı odasına yükler;
+- `oyun_alani_oda_ac`: istenen oyunu istenen sayıda botla açar; bot stratejisi seçilebilir;
+- `oyun_alani_ekran`: istenen ekranda ve anda ekran görüntüsü alır (telefon, yatay, TV boyutları);
+- `oyun_alani_an_tetikle`: bir oyun anını (ses, efekt) tetikler;
+- `oyun_alani_kayit`: odanın olay ve hata kaydını okur;
+- `oyun_alani_kapat`.
+
+Yapay zekâ teslim etmeden önce işini gerçek oyunda kendi gözüyle görür. Teslime oyun alanı ekran görüntüleri eklenir.
+
+### UM-O5 · Arayüz yamalarının canlı denemesi — **karar: EVET (UM-İ11 ile)**
+**Ne:** Üretim Merkezi ve panel arayüzü yamaları oyun alanında kendi adreslerinde çalışır hâlde açılır
+(`test2.glix.dgmcraft.online/yama/<id>/`). Sahip tıklayıp dener.
+
+### UM-O6 · Yayın akışı — **karar: EVET**
+`taslak → test2'de deneme → Üretim Merkezi'nde onay → yönetici birleştirir → test'e kendiliğinden çıkar →
+sahip bakar → kimse oynamıyorken "al" → aynı imaj canlıya`
+
+**Ayrıntılar:** Canlıya alma betiği iki ek denetim yapar:
+1. Canlıda aktif maç varsa durur ve "şu an N maç var" der.
+2. Canlıya giden imaj test'te çalışan imajın aynısı mı, karşılaştırır.
+
+### UM-O7 · Güvenlik ve kaynak sınırları — **karar: EVET**
+**Ne:**
+- **Gerçek veri yok:** iki ortamda da gerçek oyuncu verisi bulunmaz.
+- **Dışarıya bağlantı kapalı:** e-posta, telefon bildirimi ve dış bağlantılar kapalıdır.
+- **Erişim:** yalnız sahip, davetliler ve yapay zekâ anahtarları girebilir. Arama motorlarına kapalıdır
+  (`noindex`, `robots.txt`).
+- **Kaynak sınırı:** her kabın bellek ve işlemci sınırı vardır (oyun alanı için 512 MB).
+- **Tahmini toplam:** iki ortam yaklaşık 1 GB bellek tutar. Kurulumdan önce sunucunun boş belleği ölçülür.
+- **Ayrı anahtarlar:** ortamların gizli anahtarları canlıdan ayrıdır; canlının anahtarları kullanılmaz.
 
 ---
 
