@@ -1,50 +1,56 @@
-/* Kule Ustası: karanlık sahne, istiflenen neon bloklar, kulenin üstünde kayan blok. */
-.kule {
-  --kule-bh: calc(100cqh / 10.4);
-}
+/* Kule Ustası: karanlık şantiye sahnesi, vinç kancasına asılı kayan blok, kristal katlar (KU-U1…U7). */
 
-/* ---- Toplam süre (90 sn) ---- */
+/* ---- Toplam süre: üstte küçük, ortalı sayaç (KU-U3) ---- */
 .kule__total {
   flex: none;
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 10px;
-  min-height: 26px;
+  min-height: 24px;
   margin-top: 8px;
-  padding: 0 40px 0 54px;
+  padding: 0 54px;
 }
 .kule__clock {
-  flex: none;
-  min-width: 38px;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: var(--fs-15);
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
   color: var(--text);
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: rgba(5, 8, 26, 0.72);
+  border: 1px solid rgba(140, 160, 255, 0.22);
+  transition: transform 200ms var(--ease);
 }
-.kule__bar {
-  flex: 1 1 auto;
-  min-width: 0;
+.kule__total[data-urgent="1"] .kule__clock {
+  color: #fff;
+  background: rgba(255, 59, 92, 0.85);
+  border-color: var(--red);
+  transform: scale(1.3);
+  box-shadow: 0 0 18px rgba(255, 59, 92, 0.6);
 }
 
 /* ---- Durum başlığı ---- */
 .kule__status {
   flex: none;
-  min-height: 72px;
-  margin-top: clamp(4px, 2dvh, 20px);
+  min-height: 64px;
+  margin-top: clamp(2px, 1.4dvh, 14px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
   text-align: center;
-  padding: 0 44px;
+  padding: 0 28px;
 }
 .kule__title {
   margin: 0;
-  font-size: clamp(20px, 6.4vw, 26px);
+  font-size: clamp(20px, 6.2vw, 26px);
   line-height: 1.15;
   color: var(--text);
+  overflow-wrap: normal;
+  word-break: normal;
   transition: color 160ms;
 }
 .kule__sub {
@@ -61,19 +67,13 @@
   color: var(--lime);
   text-shadow: 0 0 18px rgba(182, 255, 59, 0.5);
 }
+.kule__status[data-tone="amber"] .kule__title {
+  color: var(--amber);
+  text-shadow: 0 0 18px rgba(255, 194, 59, 0.55);
+}
 .kule__status[data-tone="red"] .kule__title {
   color: var(--red);
   text-shadow: 0 0 18px rgba(255, 59, 92, 0.5);
-}
-
-/* ---- Sıra süresi (6 sn) ---- */
-.kule__turn {
-  flex: none;
-  height: 6px;
-  margin: 4px 24px 8px;
-}
-.kule__turnbar {
-  width: 100%;
 }
 
 /* ---- Oyun alanı: her yerine dokunup bırakılır ---- */
@@ -82,320 +82,904 @@
   flex: 1 1 0;
   min-height: 0;
   width: 100%;
+  margin-top: 6px;
   padding: 0;
   display: block;
   border: 1px solid rgba(140, 160, 255, 0.18);
   border-radius: 24px;
   color: var(--text);
-  background: radial-gradient(120% 90% at 50% 0%, #11184a 0%, #070a24 72%);
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.55);
-  container-type: size;
+  background: transparent;
   overflow: hidden;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
   cursor: default;
+  transition:
+    border-color 200ms,
+    box-shadow 200ms;
 }
 .kule__stage[data-active="1"] {
-  border-color: rgba(46, 242, 255, 0.75);
+  border-color: rgba(46, 242, 255, 0.85);
   box-shadow:
-    inset 0 0 40px rgba(0, 0, 0, 0.55),
-    0 0 22px rgba(46, 242, 255, 0.35);
+    0 0 0 2px rgba(46, 242, 255, 0.35),
+    0 0 26px rgba(46, 242, 255, 0.45);
   cursor: pointer;
 }
 .kule__stage:disabled {
   opacity: 1;
 }
-.kule__stage[data-shake="0"] {
-  animation: kule-shake-a 420ms ease-out;
-}
-.kule__stage[data-shake="1"] {
-  animation: kule-shake-b 420ms ease-out;
-}
-.kule__track {
-  position: absolute;
-  inset: 0 16px 10px;
-}
 
-/* Bir kat: alttan --r kat yukarıda, yüksekliği --kule-bh. */
-.kule__blk,
-.kule__piece,
-.kule__mover {
-  position: absolute;
-  bottom: calc(var(--r, 0) * var(--kule-bh));
-  height: calc(var(--kule-bh) - 2px);
-  margin-bottom: 1px;
-  border-radius: 6px;
-  transition: bottom 260ms var(--ease);
-}
-.kule__blk {
-  display: block;
-  background: linear-gradient(
-    180deg,
-    hsl(calc(var(--h, 0) * 52 + 190) 90% 68%) 0%,
-    hsl(calc(var(--h, 0) * 52 + 190) 80% 52%) 100%
-  );
-  box-shadow: 0 0 10px hsl(calc(var(--h, 0) * 52 + 190) 90% 55% / 0.35);
-}
-.kule__blk[data-base="1"] {
-  background: linear-gradient(180deg, #5a64a8 0%, #353d78 100%);
-  box-shadow: none;
-}
-.kule__blk[data-perfect="1"] {
-  outline: 2px solid var(--amber);
-  outline-offset: -2px;
-  box-shadow: 0 0 14px rgba(255, 194, 59, 0.7);
-}
-.kule__blk[data-new="1"] {
-  animation: kule-land 360ms var(--ease);
-}
-
-/* Kayan blok */
-.kule__mover {
-  left: 0;
-  transition: none;
-  will-change: transform;
-}
-.kule__moverface {
+/* ---- Kule sahnesi (telefon ve TV ortak) ---- */
+.kt {
+  --kt-ground: clamp(30px, 7cqh, 44px);
   position: absolute;
   inset: 0;
+  container-type: size;
+  overflow: hidden;
   border-radius: inherit;
-  background: linear-gradient(180deg, #8ffbff 0%, var(--cyan) 100%);
+  background: radial-gradient(120% 90% at 50% 0%, #11184a 0%, #070a24 72%);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.55);
+}
+.kt[data-shake="0"] {
+  animation: kt-shake-a 520ms ease-out;
+}
+.kt[data-shake="1"] {
+  animation: kt-shake-b 520ms ease-out;
+}
+.kt__sky {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(140, 160, 255, 0.05) 1px, transparent 1px) 0 0 / 10% 100%,
+    linear-gradient(180deg, transparent 60%, rgba(139, 92, 255, 0.12) 100%);
+}
+
+/* Kat sayacı ve hız rozeti (KU-U2): sahnenin üst köşelerinde, halatın önünde. */
+.kt__hud {
+  position: absolute;
+  z-index: 3;
+  top: 8px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+}
+.kt__floor,
+.kt__speed {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(5, 8, 26, 0.78);
+  border: 1px solid rgba(140, 160, 255, 0.22);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.kt__floor small,
+.kt__speed small {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+.kt__floor b {
+  display: inline-block;
+  min-width: 1.2ch;
+  font-size: clamp(20px, 7cqw, 28px);
+  line-height: 1;
+  color: var(--cyan);
+  text-shadow: 0 0 12px rgba(46, 242, 255, 0.5);
+}
+.kt__floor b[data-bump="0"] {
+  animation: kt-bump-a 360ms var(--ease);
+}
+.kt__floor b[data-bump="1"] {
+  animation: kt-bump-b 360ms var(--ease);
+}
+.kt__speed {
+  font-size: var(--fs-15);
+}
+.kt__speed[data-tone="hot"] {
+  color: #ff9a3b;
+  border-color: rgba(255, 154, 59, 0.6);
+}
+.kt__speed[data-tone="max"] {
+  color: #fff;
+  background: rgba(255, 59, 92, 0.85);
+  border-color: var(--red);
+}
+
+/* Kule pisti: altta zemin şeridi; 14 kat + boşluk + kanca + halka payı. */
+.kt__track {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 0;
+  bottom: var(--kt-ground);
+  container-type: size;
+}
+.kt__blk,
+.kt__piece,
+.kt__mover,
+.kt__crane,
+.kt__wave,
+.kt__dust,
+.kt__record {
+  --kt-bh: calc(100cqh / 19.2);
+}
+.kt__blk,
+.kt__piece {
+  position: absolute;
+  bottom: calc(var(--r, 0) * var(--kt-bh));
+  height: calc(var(--kt-bh) - 2px);
+  margin-bottom: 1px;
+  border-radius: 4px;
+  transition: bottom 260ms var(--ease);
+}
+
+/* Kristal/cam blok: renk tonu --h; doku görseli varsa üstüne bindirilir. */
+.kt__blk {
+  display: block;
+  --c: hsl(calc(var(--h, 0) * 52 + 190) 92% 62%);
+  background:
+    linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.55) 0 14%,
+      transparent 15% 46%,
+      rgba(255, 255, 255, 0.18) 47% 52%,
+      transparent 53%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--c) 70%, #fff) 0%,
+      var(--c) 45%,
+      color-mix(in srgb, var(--c) 60%, #000) 100%
+    );
+  border: 1px solid color-mix(in srgb, var(--c) 50%, #fff);
+  box-shadow:
+    inset 0 -2px 0 rgba(0, 0, 0, 0.25),
+    0 0 10px color-mix(in srgb, var(--c) 45%, transparent);
+}
+.kt__blk[data-base="1"] {
+  --c: #4a5396;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+}
+.kt__blk[data-perfect="1"] {
+  --c: hsl(42 100% 58%);
+  border: 2px solid var(--amber);
+  box-shadow:
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2),
+    0 0 14px rgba(255, 194, 59, 0.7);
+}
+.kt__star {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  width: min(14px, calc(var(--kt-bh) * 0.7));
+  height: min(14px, calc(var(--kt-bh) * 0.7));
+  transform: translateY(-50%);
+  fill: #3a2600;
+}
+.kt__blk[data-land="1"] {
+  animation: kt-land 200ms cubic-bezier(0.55, 0, 1, 0.45) both;
+}
+.kt__blk[data-arrive="1"] {
+  animation: kt-arrive 700ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+/* Rekor çizgisi: kesik altın (KU-U2). */
+.kt__record {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--r) * var(--kt-bh));
+  height: 0;
+  border-top: 2px dashed rgba(255, 194, 59, 0.75);
+  pointer-events: none;
+  transition: bottom 260ms var(--ease);
+}
+.kt__recordlabel {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 800;
+  color: var(--amber);
+  background: rgba(5, 8, 26, 0.8);
+  white-space: nowrap;
+}
+.kt__record[data-beaten="1"] {
+  border-top-color: var(--amber);
+  box-shadow: 0 0 12px rgba(255, 194, 59, 0.85);
+}
+.kt__record[data-beaten="1"] .kt__recordlabel {
+  color: #2a1a00;
+  background: var(--amber);
+}
+
+/* ---- Vinç: halat, kanca, halka ve asılı blok ---- */
+.kt__crane {
+  position: absolute;
+  left: 0;
+  bottom: calc(var(--r, 0) * var(--kt-bh));
+  height: calc(var(--kt-bh) - 2px);
+  margin-bottom: 1px;
+  z-index: 2;
+  will-change: transform;
+  transition: bottom 260ms var(--ease);
+}
+.kt__rope {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + var(--kt-bh) * 0.9);
+  width: 3px;
+  height: 200cqh;
+  margin-left: -1.5px;
+  background: repeating-linear-gradient(180deg, #8c94c8 0 4px, #5c6396 4px 7px);
+  transition: transform 380ms var(--ease);
+}
+.kt__hook {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: calc(var(--kt-bh) * 1.05);
+  height: calc(var(--kt-bh) * 1.2);
+  transform: translateX(-50%);
+  transition: transform 380ms var(--ease);
+}
+.kt__hooksvg,
+.kt__hookimg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  overflow: visible;
+}
+.kt__hookblock {
+  fill: #ffc23b;
+  stroke: #1c1430;
+  stroke-width: 2;
+}
+.kt__claw {
+  fill: none;
+  stroke: #c9cff0;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 120ms var(--ease);
+}
+.kt__claw--l {
+  transform-origin: 18px 12px;
+}
+.kt__claw--r {
+  transform-origin: 22px 12px;
+}
+.kt__crane[data-state="open"] .kt__claw--l {
+  transform: rotate(28deg);
+}
+.kt__crane[data-state="open"] .kt__claw--r {
+  transform: rotate(-28deg);
+}
+.kt__ring {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + var(--kt-bh) * 1.25);
+  width: calc(var(--kt-bh) * 1.45);
+  height: calc(var(--kt-bh) * 1.45);
+  margin-left: calc(var(--kt-bh) * -0.725);
+  transform: rotate(-90deg);
+  border-radius: 50%;
+  background: rgba(5, 8, 26, 0.85);
+}
+.kt__ringbg,
+.kt__ringfg {
+  fill: none;
+  stroke-width: 5;
+}
+.kt__ringbg {
+  stroke: rgba(140, 160, 255, 0.25);
+}
+.kt__ringfg {
+  stroke: var(--cyan);
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+}
+.kt__crane[data-urgent] .kt__ringfg {
+  stroke: var(--red);
+}
+.kt__mover {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border-radius: 4px;
+  --c: #8ffbff;
+  background:
+    linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.6) 0 14%,
+      transparent 15% 46%,
+      rgba(255, 255, 255, 0.2) 47% 52%,
+      transparent 53%
+    ),
+    linear-gradient(180deg, #c9fdff 0%, var(--cyan) 60%, #0a9fb0 100%);
+  border: 1px solid #c9fdff;
   box-shadow: 0 0 16px rgba(46, 242, 255, 0.75);
 }
-.kule__mover[data-state="wait"] .kule__moverface {
-  opacity: 0.35;
-  box-shadow: none;
+.kt__crane[data-urgent] .kt__mover {
+  animation: kt-shiver 90ms linear infinite;
 }
-.kule__mover[data-state="frozen"] .kule__moverface {
+.kt__crane[data-state="open"] .kt__mover {
+  --c: var(--amber);
   background: linear-gradient(180deg, #ffe49a 0%, var(--amber) 100%);
   box-shadow: 0 0 16px rgba(255, 194, 59, 0.75);
 }
-.kule__mover[data-state="gone"] {
+/* Ara: blok kuleye geçti, kanca yukarı çekilir; uyarıda yeni blokla iner. */
+.kt__crane[data-state="up"] .kt__mover {
   visibility: hidden;
 }
-
-/* Kesilen parça ve yıkılan kule */
-.kule__piece {
-  display: block;
-  background: linear-gradient(180deg, #ffd0dc 0%, var(--red) 100%);
-  transition: none;
-  animation: kule-fall-cut 1000ms cubic-bezier(0.5, 0, 0.9, 0.6) forwards;
-  animation-delay: var(--d, 0ms);
+.kt__crane[data-state="up"] .kt__rope,
+.kt__crane[data-state="up"] .kt__hook {
+  transform: translate(-50%, -110cqh);
 }
-.kule__piece[data-kind="fall"] {
-  background: linear-gradient(180deg, #b9c0f2 0%, #6a72b8 100%);
-  animation-name: kule-fall-tower;
-  animation-duration: 1100ms;
+.kt__crane[data-state="up"] .kt__rope {
+  transform: translateY(-110cqh);
+}
+.kt__crane[data-state="lower"] .kt__mover,
+.kt__crane[data-state="lower"] .kt__hook,
+.kt__crane[data-state="lower"] .kt__rope,
+.kt__crane[data-state="lower"] .kt__ring {
+  animation: kt-lower 600ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
 }
 
-/* "Kusursuz!" parlaması */
-.kule__flash {
+/* Kesilen parça, ıskalanan blok, yıkılan katlar: kendi kırpılan katmanında (sahneyi taşırmaz). */
+.kt__fx {
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 22%;
-  text-align: center;
-  font-size: clamp(26px, 9vw, 38px);
-  color: var(--amber);
-  text-shadow:
-    0 0 22px rgba(255, 194, 59, 0.85),
-    0 2px 0 rgba(0, 0, 0, 0.5);
+  inset: 0;
+  overflow: hidden;
   pointer-events: none;
-  animation: kule-flash 1000ms var(--ease) both;
 }
-.kule__hint {
+.kt__piece {
+  display: block;
+  --c: hsl(calc(var(--h, 0) * 52 + 190) 92% 62%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 70%, #fff) 0%, var(--c) 100%);
+  transition: none;
+  animation: kt-fall-cut 1000ms cubic-bezier(0.5, 0, 0.9, 0.6) var(--d, 0ms) both;
+  z-index: 1;
+}
+.kt__piece[data-kind="cut"] {
+  --c: #ff6b86;
+}
+.kt__piece[data-kind="miss"] {
+  --c: var(--cyan);
+  animation: kt-fall-miss 900ms cubic-bezier(0.5, 0, 0.9, 0.6) var(--d, 0ms) both;
+}
+.kt__piece[data-base="1"] {
+  --c: #4a5396;
+}
+.kt__piece[data-kind="fall"] {
+  animation: kt-fall-tower 900ms cubic-bezier(0.45, 0, 0.85, 0.6) var(--d, 0ms) both;
+}
+.kt__cutlabel {
+  --kt-bh: calc(100cqh / 19.2);
+  position: absolute;
+  z-index: 3;
+  bottom: calc(var(--r, 0) * var(--kt-bh));
+  margin: 0 4px;
+  font-size: clamp(13px, 4cqw, 20px);
+  font-weight: 800;
+  font-style: normal;
+  color: #ff6b86;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+  animation: kt-label 1000ms ease-out var(--d, 0ms) both;
+}
+
+/* Kristal doku görseli varsa (sahip üretir) renk tonunun üstüne bindirilir. */
+.kt[data-tex="1"] .kt__blk,
+.kt[data-tex="1"] .kt__mover,
+.kt[data-tex="1"] .kt__piece {
+  background-image: var(--kt-tex), linear-gradient(180deg, var(--c), var(--c));
+  background-size:
+    auto 100%,
+    100% 100%;
+  background-repeat: repeat-x, no-repeat;
+  background-blend-mode: overlay, normal;
+}
+
+/* Kusursuz: altın dalga ve damga (KU-U5). */
+.kt__wave {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 12px;
-  text-align: center;
+  bottom: calc(var(--r) * var(--kt-bh));
+  height: var(--kt-bh);
+  pointer-events: none;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(255, 220, 120, 0.95),
+    rgba(255, 194, 59, 0.4) 50%,
+    transparent 70%
+  );
+  animation: kt-wave 700ms ease-out both;
+}
+.kt__dust {
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  bottom: calc(var(--r) * var(--kt-bh) - var(--kt-bh) * 0.4);
+  height: calc(var(--kt-bh) * 1.4);
+  pointer-events: none;
+  background:
+    radial-gradient(30% 60% at 25% 70%, rgba(200, 205, 240, 0.55), transparent 70%),
+    radial-gradient(30% 60% at 75% 70%, rgba(200, 205, 240, 0.55), transparent 70%),
+    radial-gradient(40% 70% at 50% 80%, rgba(200, 205, 240, 0.4), transparent 70%);
+  animation: kt-dust 600ms ease-out both;
+}
+.kt__stamp {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  top: 26%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+.kt__stampword {
+  padding: 4px 14px;
+  border: 3px solid var(--amber);
+  border-radius: 10px;
+  font-size: clamp(24px, 9cqw, 40px);
+  color: var(--amber);
+  background: rgba(5, 8, 26, 0.6);
+  text-shadow: 0 0 18px rgba(255, 194, 59, 0.85);
+  transform: rotate(-6deg);
+  animation: kt-stamp 900ms var(--ease) both;
+}
+.kt__streak {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: var(--fs-18);
-  letter-spacing: 0.12em;
-  color: var(--cyan);
-  text-shadow: 0 0 14px rgba(46, 242, 255, 0.6);
+  font-size: var(--fs-15);
+  color: #2a1a00;
+  background: var(--amber);
+  padding: 2px 10px;
+  border-radius: 999px;
+  animation: kt-stamp 900ms var(--ease) both;
+}
+.kt__newtower {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  top: 34%;
+  text-align: center;
+  font-size: clamp(22px, 8cqw, 34px);
+  color: var(--lime);
+  text-shadow: 0 0 16px rgba(182, 255, 59, 0.6);
   pointer-events: none;
-  animation: kule-hint 1100ms ease-in-out infinite;
+  animation: kt-flash 700ms var(--ease) both;
 }
 
-/* ---- Avatar şeridi: sıra, aktif, çıkan ---- */
-.kule__strip {
+/* "SIRA SENDE!" bandı: yukarıdan iner (KU-U4). */
+.kt__band {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  top: 0;
+  padding: 10px 0;
+  text-align: center;
+  background: linear-gradient(180deg, #5ef6ff, #12aac4);
+  color: #04202a;
+  box-shadow: 0 6px 24px rgba(46, 242, 255, 0.45);
+  transform: translateY(-110%);
+  visibility: hidden;
+  transition:
+    transform 220ms var(--ease),
+    visibility 0s linear 220ms;
+  pointer-events: none;
+}
+.kt__bandword {
+  font-size: clamp(22px, 8cqw, 32px);
+  letter-spacing: 0.04em;
+}
+.kt__band[data-on="1"] {
+  transform: none;
+  visibility: visible;
+  transition: transform 220ms var(--ease);
+}
+
+/* Zemin şeridi ve "DOKUN · BIRAK" bandı. */
+.kt__ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--kt-ground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    repeating-linear-gradient(-45deg, rgba(255, 194, 59, 0.16) 0 8px, transparent 8px 16px),
+    linear-gradient(180deg, #1a1f45, #0c1030);
+  border-top: 2px solid #2c3470;
+}
+.kt__tap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 14px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+  letter-spacing: 0.1em;
+  color: #04202a;
+  background: var(--cyan);
+  box-shadow: 0 0 18px rgba(46, 242, 255, 0.6);
+  animation: kt-pulse 900ms ease-in-out infinite;
+}
+.kt__finger {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---- Oyuncu şeridi (KU-U7) ---- */
+.kc {
   flex: none;
   display: flex;
   justify-content: center;
   gap: 6px;
-  padding: 12px 0 2px;
+  padding: 16px 0 2px;
 }
-.kule__p {
+.kc__p {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 3px;
+  min-width: 0;
 }
-.kule__p .av {
+.kc__av {
+  position: relative;
+  display: block;
+}
+.kc__p .av {
   transition: transform 180ms var(--ease);
 }
-.kule__p[data-active="1"] .av {
-  transform: translateY(-5px) scale(1.14);
+.kc__p[data-active="1"] .av {
+  transform: translateY(-4px) scale(1.12);
 }
-.kule__p[data-active="1"] .av__disc {
+.kc__p[data-active="1"] .av__disc {
   border-color: var(--cyan);
   box-shadow: 0 0 16px var(--cyan);
 }
-.kule__p[data-out="1"] .av {
-  opacity: 0.62;
+.kc__p[data-out="1"] .av {
+  opacity: 0.55;
   filter: grayscale(1);
 }
-.kule__p[data-out="1"]::after {
-  content: "×";
+.kc__crack {
   position: absolute;
-  top: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 18px;
-  height: 18px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  font-weight: 800;
-  font-size: 14px;
-  line-height: 1;
-  color: #fff;
-  background: var(--red);
-  box-shadow: 0 0 0 2px var(--bg-0);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: #f2f4ff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.9));
+  stroke-dasharray: 60;
+  animation: kc-crack 400ms ease-out both;
 }
-.kule__score {
+.kc__tag {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  transform: translateX(-50%);
+  padding: 0 4px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 15px;
+  color: #eef0ff;
+  background: #3a3f63;
+  white-space: nowrap;
+}
+.kc__next {
+  position: absolute;
+  left: 50%;
+  top: -12px;
+  width: 12px;
+  height: 8px;
+  transform: translateX(-50%);
+  fill: var(--cyan);
+  filter: drop-shadow(0 0 4px rgba(46, 242, 255, 0.8));
+}
+.kc__award {
+  position: absolute;
+  left: 50%;
+  top: -16px;
+  transform: translateX(-50%);
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 17px;
+  color: #e6e9fb;
+  background: #2c3260;
+}
+.kc__p[data-award="2"] .kc__award {
+  color: #2a1a00;
+  background: var(--amber);
+}
+.kc__p[data-award="1"] .kc__award {
+  color: #102000;
+  background: var(--lime);
+}
+.kc__usta {
   font-size: var(--fs-13);
-  font-weight: 700;
-  color: #c9cff0;
+  font-weight: 800;
   line-height: 1;
+  color: var(--text);
   background: rgba(5, 8, 26, 0.88);
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: 999px;
   font-variant-numeric: tabular-nums;
 }
-.kule__p[data-me="1"] .kule__score {
-  color: var(--text);
+.kc__p[data-me="1"] .kc__usta {
   box-shadow: 0 0 0 1.5px var(--text);
 }
-.kule__p[data-out="1"] .kule__score {
-  color: #9aa2d0;
+.kc__stars {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--amber);
+  font-variant-numeric: tabular-nums;
+}
+.kc__stars[data-zero="1"] {
+  color: #a3a9d6;
 }
 
-@keyframes kule-land {
+@keyframes kt-land {
+  from {
+    transform: translateY(calc(var(--kt-bh) * -1));
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes kt-arrive {
+  from {
+    transform: translateY(-70cqh);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes kt-lower {
+  from {
+    translate: 0 -40cqh;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes kt-fall-cut {
   0% {
-    transform: translateY(-14px) scaleY(1.12);
+    transform: translateY(calc(var(--kt-bh) * -1));
+    opacity: 1;
   }
-  60% {
-    transform: translateY(2px) scaleY(0.94);
+  20% {
+    transform: none;
+    opacity: 1;
   }
+  100% {
+    transform: translate(calc(var(--dir, 1) * 48px), calc(var(--kt-bh) * 12))
+      rotate(calc(var(--dir, 1) * 140deg));
+    opacity: 0;
+  }
+}
+@keyframes kt-fall-miss {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(var(--dir, 1) * 30px), 100cqh) rotate(calc(var(--dir, 1) * 90deg));
+    opacity: 0.2;
+  }
+}
+@keyframes kt-fall-tower {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(var(--dir, 1) * 46cqw), calc(var(--kt-bh) * 10))
+      rotate(calc(var(--dir, 1) * 75deg));
+    opacity: 0;
+  }
+}
+@keyframes kt-label {
+  0% {
+    opacity: 0;
+    transform: none;
+  }
+  20% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+@keyframes kt-wave {
+  from {
+    transform: scaleX(0.3);
+    opacity: 1;
+  }
+  to {
+    transform: scaleX(1.3) scaleY(2.4);
+    opacity: 0;
+  }
+}
+@keyframes kt-dust {
+  from {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.4) translateY(-6px);
+    opacity: 0;
+  }
+}
+@keyframes kt-stamp {
+  0% {
+    opacity: 0;
+    scale: 1.8;
+  }
+  20% {
+    opacity: 1;
+    scale: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes kt-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes kt-pulse {
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 28px rgba(46, 242, 255, 0.85);
+  }
+}
+@keyframes kt-shiver {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  25% {
+    translate: -1.5px 0;
+  }
+  75% {
+    translate: 1.5px 0;
+  }
+}
+@keyframes kt-bump-a {
+  40% {
+    transform: translateY(-6px) scale(1.25);
+  }
+}
+@keyframes kt-bump-b {
+  40% {
+    transform: translateY(-6px) scale(1.25);
+  }
+}
+@keyframes kt-shake-a {
+  0%,
   100% {
     transform: none;
   }
-}
-@keyframes kule-fall-cut {
-  to {
-    transform: translate(calc(var(--dir, 1) * 36px), calc(var(--kule-bh) * 6))
-      rotate(calc(var(--dir, 1) * 38deg));
-    opacity: 0;
+  20% {
+    transform: translateX(calc(-9px * var(--shake-gain, 1))) rotate(-0.8deg);
   }
-}
-@keyframes kule-fall-tower {
-  0% {
-    transform: none;
-    opacity: 1;
-  }
-  to {
-    transform: translate(calc(var(--dir, 1) * 60px), calc(var(--kule-bh) * 8))
-      rotate(calc(var(--dir, 1) * 62deg));
-    opacity: 0;
-  }
-}
-@keyframes kule-flash {
-  0% {
-    opacity: 0;
-    transform: scale(0.6);
-  }
-  25% {
-    opacity: 1;
-    transform: scale(1.12);
+  45% {
+    transform: translateX(calc(8px * var(--shake-gain, 1))) rotate(0.7deg);
   }
   70% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-16px);
+    transform: translateX(-4px);
   }
 }
-@keyframes kule-shake-a {
+@keyframes kt-shake-b {
   0%,
   100% {
     transform: none;
   }
-  25% {
-    transform: translateX(-9px) rotate(-0.8deg);
+  20% {
+    transform: translateX(calc(-9px * var(--shake-gain, 1))) rotate(-0.8deg);
   }
-  50% {
-    transform: translateX(8px) rotate(0.7deg);
+  45% {
+    transform: translateX(calc(8px * var(--shake-gain, 1))) rotate(0.7deg);
   }
-  75% {
+  70% {
     transform: translateX(-4px);
   }
 }
-@keyframes kule-shake-b {
-  0%,
-  100% {
-    transform: none;
+@keyframes kc-crack {
+  from {
+    stroke-dashoffset: 60;
   }
-  25% {
-    transform: translateX(-9px) rotate(-0.8deg);
-  }
-  50% {
-    transform: translateX(8px) rotate(0.7deg);
-  }
-  75% {
-    transform: translateX(-4px);
-  }
-}
-@keyframes kule-hint {
-  50% {
-    opacity: 0.45;
+  to {
+    stroke-dashoffset: 0;
   }
 }
 
 @media (max-height: 700px) and (orientation: portrait) {
   .kule__status {
-    min-height: 58px;
-    margin-top: 2px;
+    min-height: 52px;
+    margin-top: 0;
   }
-  .kule__strip {
-    padding-top: 8px;
+  .kule__sub {
+    font-size: var(--fs-13);
+  }
+  .kc {
+    padding-top: 14px;
   }
 }
 @media (orientation: landscape) and (max-height: 520px) {
+  .kule__total {
+    margin-top: 4px;
+    min-height: 20px;
+  }
   .kule__status {
-    min-height: 40px;
+    min-height: 36px;
     margin-top: 0;
   }
   .kule__sub {
     display: none;
   }
-  .kule__turn {
-    margin-bottom: 4px;
-  }
   .kule__stage {
     border-radius: 16px;
   }
-  .kule__strip {
-    padding-top: 6px;
+  .kc {
+    padding-top: 14px;
   }
-  .kule__hint {
-    bottom: 4px;
-    font-size: var(--fs-15);
+  .kc__stars {
+    display: none;
   }
 }
 

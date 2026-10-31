@@ -1,5 +1,5 @@
 import type { KuleBlock, KuleLast, KulePublicView, KuleView } from "@glix/engine";
-import { KULE_TRACK } from "@glix/engine";
+import { KULE_SPEED_CAP, KULE_TRACK, KULE_WARN_MS } from "@glix/engine";
 import { parseNumberRecord } from "../../net/parse.js";
 
 type Rec = Record<string, unknown>;
@@ -66,9 +66,14 @@ export type KuleScreenView = KulePublicView & KuleView;
 export function parseKulePublicView(v: unknown): KulePublicView | null {
   if (!isRec(v)) return null;
   if (!isStrArr(v.order) || !isStrArr(v.eliminated)) return null;
-  const scores = parseNumberRecord(v.scores);
+  const usta = parseNumberRecord(v.usta);
   const perfects = parseNumberRecord(v.perfects);
-  if (!scores || !perfects) return null;
+  if (!usta || !perfects) return null;
+  let awards: Record<string, number> | null = null;
+  if (v.awards !== null) {
+    awards = parseNumberRecord(v.awards);
+    if (!awards) return null;
+  }
   if (v.active !== null && typeof v.active !== "string") return null;
   if (
     !isNum(v.turn) ||
@@ -80,9 +85,12 @@ export function parseKulePublicView(v: unknown): KulePublicView | null {
     !isNum(v.need) ||
     !isNum(v.startedAt) ||
     !isNum(v.endsAt) ||
+    !isNum(v.record) ||
+    !isNum(v.streak) ||
     typeof v.timeUp !== "boolean"
   )
     return null;
+  if (v.record < 0 || v.streak < 0) return null;
   if (v.endsAt <= v.startedAt || v.speed < 1 || v.blockWidth <= 0 || v.blockWidth > KULE_TRACK) return null;
   const tower = parseBlocks(v.tower);
   if (!tower) return null;
@@ -91,8 +99,11 @@ export function parseKulePublicView(v: unknown): KulePublicView | null {
   return {
     order: v.order,
     eliminated: v.eliminated,
-    scores,
+    usta,
     perfects,
+    awards,
+    record: v.record,
+    streak: v.streak,
     active: v.active,
     turn: v.turn,
     turnStart: v.turnStart,
@@ -123,8 +134,11 @@ export function parseKuleView(publicView: unknown, view: unknown): KuleScreenVie
   return pub && priv ? { ...pub, ...priv } : null;
 }
 
-/** İstemcinin kendi saatinden türettiği evre; sunucu görünümü yalnız durum değişince gelir. */
-export type KulePhase = "pause" | "moving" | "expired" | "over";
+/**
+ * İstemcinin kendi saatinden türettiği evre; sunucu görünümü yalnız durum değişince gelir. `warn`: sıranın
+ * başlamasından önceki "Sıra sende!" uyarısı (vinç yeni bloğu indirir, blok henüz kaymaz).
+ */
+export type KulePhase = "pause" | "warn" | "moving" | "expired" | "over";
 
 export function kulePhase(
   v: Pick<KulePublicView, "turnStart" | "deadline" | "endsAt" | "active" | "timeUp">,
@@ -132,7 +146,8 @@ export function kulePhase(
 ): KulePhase {
   if (v.active === null || v.timeUp) return "over";
   if (now >= v.endsAt) return "expired";
-  if (now < v.turnStart) return "pause";
+  if (now < v.turnStart - KULE_WARN_MS) return "pause";
+  if (now < v.turnStart) return "warn";
   if (now < v.deadline) return "moving";
   return "expired";
 }
@@ -147,6 +162,7 @@ export function kuleStatus(args: { v: KuleScreenView; phase: KulePhase; spectato
     if (v.last && v.last.turn === v.turn - 1) return v.last.kind;
     return "intro";
   }
+  if (phase === "warn" && (spectator || !v.isOut)) return !spectator && v.myTurn ? "mine" : "other";
   if (!spectator && v.isOut) return "eliminated";
   return !spectator && v.myTurn ? "mine" : "other";
 }
@@ -164,3 +180,35 @@ export function formatClock(ms: number): string {
 
 /** Pist birimini yüzdeye çevirir (0..100). */
 export const pct = (units: number): number => (units / KULE_TRACK) * 100;
+
+/** Çevrimde etkin oyuncudan sonraki (çıkmamış) oyuncu; tek kişi kaldıysa ya da oyun bittiyse null. */
+export function nextPlayer(v: Pick<KulePublicView, "order" | "eliminated" | "active">): string | null {
+  if (v.active === null) return null;
+  const i = v.order.indexOf(v.active);
+  if (i < 0) return null;
+  for (let step = 1; step < v.order.length; step++) {
+    const id = v.order[(i + step) % v.order.length] as string;
+    if (!v.eliminated.includes(id)) return id;
+  }
+  return null;
+}
+
+/** Hız rozeti metni: "×1,4" (binde çarpandan, bir ondalığa yuvarlanır; en az ×1,0). */
+export function speedLabel(speed: number): string {
+  const x = Math.max(1, Math.round(speed / 100) / 10);
+  return `×${x.toFixed(1).replace(".", ",")}`;
+}
+
+/** Hız rozeti rengi: 2'yi geçince turuncu, tavanda kırmızı. */
+export function speedTone(speed: number): "calm" | "hot" | "max" {
+  if (speed >= KULE_SPEED_CAP) return "max";
+  return speed > 2_000 ? "hot" : "calm";
+}
+
+/**
+ * Ekrandaki pencere: kulenin en çok `rows` katı görünür; kayan blok kulenin bir kat (boşluk) yukarısında asılıdır.
+ * `start` pencerenin en alttaki katının mutlak indeksi.
+ */
+export function windowStart(towerLength: number, rows: number): number {
+  return Math.max(0, towerLength - rows);
+}
