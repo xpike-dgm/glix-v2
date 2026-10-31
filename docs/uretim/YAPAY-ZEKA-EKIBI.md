@@ -1,6 +1,6 @@
-# GLIX yapay zekâ ekibi: 10 alan yöneticisi
+# GLIX yapay zekâ ekibi: 12 alan yöneticisi
 
-GLIX'te sahip, her biri bir alanın tam sahibi olan 10 yapay zekâyla sürekli üretim yapar. Hiçbiri koda girmez.
+GLIX'te sahip, her biri bir alanın tam sahibi olan 12 yapay zekâyla sürekli üretim yapar. Hiçbiri koda girmez.
 Her yapay zekâ kendi alanındaki her şeyi uçtan uca yönetir:
 - yeni şey üretir;
 - var olanı düzenler, dengeler ya da emekliye ayırmayı önerir;
@@ -91,7 +91,7 @@ Yasaklar (hepsinde): gerçek marka, gerçek kişi, telifli karakter ya da müzik
 
 ---
 
-## 4. On alan yöneticisi
+## 4. Alan yöneticileri (12)
 
 Her alanda aynı başlıklar:
 - **Alanı:** neyin sahibi;
@@ -358,6 +358,69 @@ Her alanda aynı başlıklar:
   düğmesi.
 - **Örnek iş:** "Her gece 30 oyunu 3, 5 ve 8 oyuncuyla oynat; takılan evreleri ve sızıntıları raporla."
 
+### 4.11 Üretim Merkezi Arayüzü yapay zekâsı
+
+- **Alanı:** Üretim Merkezi sitesinin bütün arayüzü ve kullanım deneyimi:
+  - pano, alan sayfaları, inceleme ekranları;
+  - telefonda kaydırma, kısayollar, bildirim metinleri, boş ve hata durumları;
+  - tema, okunurluk, erişilebilirlik.
+- **Amaç:** Sahibin inceleme süresini sürekli kısaltmak ve siteyi kullanmayı keyifli hâle getirmek.
+- **Yapabildikleri:**
+  - **Arayüz önerisi:** sorun, öneri, önce/sonra ekran taslağı.
+  - **Kod yaması:** yalnız izinli dosyalarda (aşağıda).
+  - Kullanım verisinden darboğaz bulma (hangi ekranda ne kadar zaman geçiyor, hangi düğme hiç kullanılmıyor).
+- **Bir teslimde:**
+  - **Öneri:** madde kodlu belge + ekran taslağı.
+  - **Yama:** `git diff` biçiminde yama + açıklama + kendi aldığı önce/sonra ekran görüntüleri.
+- **İzinli dosyalar (yama yalnız bunlara dokunabilir):** `apps/uretim` içindeki istemci bileşenleri, stil dosyaları
+  ve arayüz metinleri.
+- **Yasak dosyalar:**
+  - sunucu kodu, giriş ve anahtar işleri, MCP ve SSH kanalları, veritabanı;
+  - ön kontrol kuralları, dağıtım dosyaları, bağımlılık listeleri (`package.json`, kilit dosyası).
+
+  Yama bunlardan birine dokunursa otomatik olarak reddedilir.
+- **Sınırlar:**
+  - Yeni bağımlılık ekleyemez.
+  - Güvenlik davranışını değiştiremez (onay penceresi kaldırmak gibi).
+  - Bir seferde tek konu: bir yama, bir iyileştirme.
+- **Ön kontrol (yamaya özel, UM-K7):**
+  1. Yama yalıtılmış bir kopyaya uygulanır.
+  2. `pnpm check`, `typecheck`, `test`, `build` çalışır.
+  3. 390x844, 360x640 ve 1440x900'de bütün ekranların görüntüsü alınır; önceki sürümle karşılaştırılır.
+  4. Dosya izin listesi denetlenir.
+- **Sahibin ekranı:** önce/sonra ekran görüntüleri yan yana, değişen dosyaların listesi, açıklama. Onaylanan yama
+  bana gelir; ben kodu okur, birleştirir, siteyi güncellerim.
+- **Girdi:** her gün sitenin bütün ekranlarının güncel görüntüleri, anonim kullanım ölçüleri (ekran başına süre,
+  tıklama sayıları), sahibin "şu zor" notları.
+- **Örnek iş:** "Telefonda listelerde toplu onay düğmesi başparmak bölgesine taşınsın; inceleme süresi ölçülsün."
+
+### 4.12 Yönetim Paneli Arayüzü yapay zekâsı
+
+- **Alanı:** Oyunun yönetim panelinin (`/admin`) bütün arayüzü ve kullanım deneyimi:
+  - hesaplar, içerik, havuzlar, moderasyon;
+  - ekonomi, istatistik, hatalar, canlı oyun, bakım, işlem kaydı ekranları.
+- **Amaç:** Paneli hızlı, anlaşılır ve telefonda da rahat kullanılır hâle getirmek.
+- **Yapabildikleri, teslim, ön kontrol ve sahibin ekranı:** 4.11 ile aynı (öneri ya da kod yaması).
+- **İzinli dosyalar:** `apps/client/src/admin/` altındaki bileşenler, `admin.css`, panel metinleri.
+- **Yasak dosyalar:**
+  - oyunun kendisi (oyun ekranları, oyun kuralları);
+  - sunucudaki panel uçları ve yetki denetimleri;
+  - giriş kodu akışı;
+  - `admin_audit` kaydı;
+  - bağımlılıklar.
+- **Sınırlar:**
+  - Panelin yetkisini ya da gördüğü veriyi genişletemez; yeni veri gerekiyorsa kod isteği açar.
+  - Tehlikeli işlemlerin onay adımlarını kaldıramaz (hesap askıya alma, silme, bakım modu).
+  - Panel canlı oyunla aynı uygulamada çalıştığı için onaylanan yamalar oyunla birlikte, kimse oynamıyorken
+    canlıya alınır.
+- **Girdi:** panelin bütün ekranlarının güncel görüntüleri (gerçek veri yerine örnek veriyle), sahibin notları.
+- **Örnek iş:** "Hesaplar ekranında arama, filtre ve toplu işlem tek satıra insin; telefonda kart görünümü."
+
+**Not (12 alanın içinde bir istisna):** Bu iki alan, kod yaması teslim edebilen tek alanlardır. Arayüz kodu veriyle
+yönetilemez. Bu yüzden yamalar dar bir dosya izin listesiyle sınırlanır, otomatik testten geçer, sahip ekran
+görüntüleriyle onaylar ve yönetici her yamayı okuyup birleştirir. Yapay zekâ depoya doğrudan yazamaz, dal açamaz,
+birleştiremez.
+
 ---
 
 ## 5. Alanlar arası sınırlar ve istek kartları
@@ -392,6 +455,7 @@ bugünkü gibi yöneticinin hazırladığı görev dosyası ve ChatGPT ile üret
 | 4 | ALT-12 → **Test, Hata ve Performans** | Canlı sağlığı ve yayın sonrası kontrol |
 | 5 | ALT-4 → **Rozet**; ALT-5 → **Maç Kartları** | Oyuncu ilerlemesi ve maç çeşitliliği |
 | 6 | ALT-6/7 → **İkon ve Süs**, **Efekt Dokuları** | Cila |
+| 7 | UM-K7 + UM-İ11 → **Üretim Merkezi Arayüzü**, **Yönetim Paneli Arayüzü** | Site ilk sürümüyle oturduktan sonra; kod yaması akışı gerekir |
 
 Her alan açılırken:
 1. Yönetici altyapıyı yapar.

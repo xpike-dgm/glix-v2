@@ -6,6 +6,10 @@
 > **Ek karar (31 Ekim 2026):** yapay zekâlara sunucunun genel MCP'si **verilmez** (tüm dosyalara erişir). Bazı yapay
 > zekâlar MCP ile, bazıları sahibin bilgisayarından **SSH** ile bağlanır. Bu yüzden UM-G3 **evet** oldu ve SSH kanalı
 > genişletildi (bkz. UM-G3). İki kanal da yalnız ilgili alanın verisini görür.
+>
+> **Ek karar 2 (31 Ekim 2026):** iki yeni alan: **Üretim Merkezi Arayüzü** ve **Yönetim Paneli Arayüzü** yapay zekâları
+> (`YAPAY-ZEKA-EKIBI.md` 4.11, 4.12). Bunlar için UM-İ11 (kod yaması akışı) ve UM-K7 (yama ön kontrolü) eklendi;
+> site ilk sürümü oturduktan sonra yapılır.
 
 Bu dosya onay içindir. Her maddenin bir kodu var (ör. **UM-G2**). Cevabını tek satırda verebilirsin:
 
@@ -266,6 +270,16 @@ eski ve yeni yan yana gösterilir. Arşivde arama vardır: alan, ad, tarih, duru
 ### UM-İ10 · "Benzerini daha üret" — **önerim: EVET**
 **Ne:** Beğendiğin bir teslimde tek düğmeyle o alana iş açılır: "Bunun gibi 5 tane daha; şu farkla …".
 
+### UM-İ11 · Kod yaması akışı (yalnız arayüz alanları) — **karar: EVET (ek karar 2, ikinci aşama)**
+**Ne:** Arayüz alanları (4.11, 4.12) `git diff` biçiminde yama teslim edebilir. Akış:
+
+`gelen → yama ön kontrolü (UM-K7) → bekliyor (önce/sonra görüntüleriyle) → onaylandı → yöneticiye → yönetici okur, birleştirir → canlı`
+
+**Ayrıntılar:**
+- Yapay zekâ depoya yazamaz; site yamayı yalnız yalıtılmış kopyada dener.
+- Onaylanan yamalar entegrasyon paketine `yamalar/<teslimId>.diff` olarak girer.
+- Yönetici her yamayı okur; güvenlik ya da kalite sorunu görürse notla geri çevirir.
+
 ---
 
 ## 5. Otomatik ön kontrol (UM-K)
@@ -318,6 +332,19 @@ hiç gelmez; nedeniyle birlikte yapay zekâya geri döner ve o düzeltip yeniden
 
 **Ayrıntılar:** Panoda "son 24 saatte kendiliğinden geri dönenler" sayısı görünür. İstersen alan başına "kalanları da
 göster" açılabilir.
+
+### UM-K7 · Yama ön kontrolü — **karar: EVET (ek karar 2, ikinci aşama)**
+**Ne:**
+1. **Dosya izin listesi:** alan başına denetlenir. İzin dışı bir dosya varsa yama "kaldı" sayılır.
+2. **Yalıtılmış deneme:** yama ağ erişimi olmayan, geçici bir kopyada uygulanır.
+3. **Komutlar:** `pnpm check`, `typecheck`, `test`, `build` çalışır.
+4. **Ekran görüntüleri:** ilgili uygulamanın bütün ekranları üç boyutta çekilir: 390x844, 360x640, 1440x900.
+5. **Karşılaştırma:** görüntüler önceki sürümle karşılaştırılır; değişen ekranlar işaretlenir.
+
+**Ayrıntılar:**
+- Deneme, sitenin kabında değil, kaynak sınırlı ayrı bir işçi kabında çalışır.
+- Bir yama en çok 15 dakika çalışabilir.
+- Aynı anda tek deneme yapılır.
 
 ---
 
@@ -529,7 +556,8 @@ onaylanır.
 | 5 | MG-4 | Efekt motorları; bugünkü ürünler tariflere çevrilmiş, görünüm aynı |
 | 6 | UM-U4, MG-6 | Gerçek oyun önizlemesi |
 | 7 | UM-Y1, UM-Y2 | Mağaza yapay zekâsı başlar |
-| 8 | UM-G6 | ChatGPT görsel akışı da siteye taşınınca root SSH kapatılır |
+| 8 | UM-İ11, UM-K7 | Arayüz alanlarının kod yaması akışı; ardından 4.11 ve 4.12 yapay zekâları başlar |
+| 9 | UM-G6 | ChatGPT görsel akışı da siteye taşınınca root SSH kapatılır |
 
 İşi bugünkü gibi alt ajanlarla paralel yürütürüm: site (adım 1–3) ile mağaza altyapısı (adım 4–5) birbirinden
 bağımsız ilerler.
