@@ -1412,6 +1412,26 @@ doğru cevaplarla tur uzayabilir.
   gelmezse yanlış cevapla aynı sonuç uygulanır.
 - Ekranda kalan toplam süre görünür; son 30 saniye ("ani ölüm") ayrıca belirtilir.
 
+**Değişiklik (ZB, Ekim 2026, sahip onayı; `docs/UI-GELISTIRME.md`) — yukarıdaki cevapların önüne geçer:**
+
+- **Bombayı at (ZB-M1):** sabit sıra kalkar. İlk sıranın sahibi rastgeledir. Diziyi doğru giren oyuncu 4 saniye içinde
+  bombayı kime atacağını seçer (önce renk, sonra hedef). Hedef aktif (elenmemiş) bir oyuncudur; kendine atılamaz;
+  3 ve daha çok aktif oyuncu varken bombayı az önce kendisine atan kişiye hemen geri atılamaz (2 aktif oyuncuda bu
+  engel yoktur). Engel yalnız bir sonraki atış içindir. Seçim yapılmazsa sunucu maç tohumundan rastgele seçer.
+  Bağlantısı kopan oyuncu da hedef olabilir (sırası gelince zaman aşımıyla elenir).
+- **Elenme sonrası:** dizi yeni rastgele 2 renge döner ve yeni kurbanı, elenene bombayı ATAN kişi seçer (aynı 4 sn,
+  renk seçimi yok; bu seçimde "hemen geri atma" engeli yoktur). Elenene atan yoksa (ilk sıra) yeni kurban rastgeledir.
+- **Rengi sen eklersin (ZB-M2):** doğru giren, diziye eklenecek rengi seçer. Ani ölümde (+2) birini oyuncu seçer,
+  ikincisi rastgele eklenir. Seçilmezse rastgele. Seçilen renk hedef belli olana dek yalnız seçenin ekranındadır;
+  sonra dizinin parçası olarak herkese oynatılır. Giriş evresinde dizi hiçbir görünümde yoktur.
+- **Zamanlama:** doğru girişten sonra 0,9 sn "TEMİZ!" gösterimi, sonra 4 sn seçim (gösterim sırasında gelen seçim de
+  kabul edilir); elenmeden sonra 1,6 sn patlama gösterimi, sonra 4 sn seçim. Hedef belli olunca 1,4 sn uyarı payı
+  (bomba fırlatılır, hedefte "SIRA SENDE!") ve ardından dizi oynatılır. Bu süreler 90 sn oyun saatinden düşer.
+  Toplam süre seçim sırasında dolarsa seçim iptal edilir, oyun biter.
+- **Puan (ZB-M3, eksi puan yok):** biriken +1'ler kalkar. Oyun sonunda hayatta kalanlar **+2**, bütün elenenler **0**.
+  Kimse elenmeden 90 sn dolarsa herkes **+1**. Süre dolduğunda giriş yapanın sırası cezasız iptal edilir; o kişi
+  hayatta sayılır.
+
 ## 25. Kusursuz Denge — `kusursuz-denge`
 
 **DURUM: KAPSAM DIŞI — BU OYUN EKLENMEYECEK**

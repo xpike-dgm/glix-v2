@@ -34,6 +34,11 @@ export interface GameEntry {
   noClock?: boolean;
   /** Büyük ekran (TV) için oyuna özel yatay görünüm; yoksa telefon ekranı izleyici kipinde büyütülerek gösterilir. */
   StageView?: Component<GameScreenProps>;
+  /**
+   * TV'de kabuğun sağdaki "Oyuncular" (genel skor) panelini gizler; oyunun `StageView`'i oyuncuları ve genel skoru
+   * kendi sütununda gösterir ve alan tüm genişliği kullanır. Verilmezse panel görünür (diğer oyunlar değişmez).
+   */
+  tvOwnBoard?: boolean;
   hud?: (match: MatchSnapshot, selfId: string) => HudInfo | null;
 }
 
@@ -87,6 +92,7 @@ const registry: Record<string, GameEntry> = {
     Screen: lazy(() => import("./zaman-bombasi-hafizasi/ZamanBombasiScreen.js")),
     Art: lazy(() => import("./zaman-bombasi-hafizasi/BriefingArt.js")),
     StageView: lazy(() => import("./zaman-bombasi-hafizasi/StageView.js")),
+    tvOwnBoard: true,
   },
   "kule-ustasi": {
     noClock: true,
