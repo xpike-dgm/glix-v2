@@ -1088,14 +1088,14 @@ img.cx__shield--art {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.cx__rname:not(:has(.cx__chip)) {
-  padding-right: 7px;
-}
-/* Puan rozeti ad etiketinin içinde, adın sağında (yüzü örtmez, havada durmaz). */
+/* Puan rozeti ad etiketinin içinde, adın yanında (yüzü örtmez, havada durmaz). Rozet açılana kadar yer
+   kaplamaz; etiket adın altında ortalı kalır. */
 .cx__chip {
   flex: none;
   display: grid;
-  min-width: 26px;
+  min-width: 0;
+  max-width: 64px;
+  overflow: hidden;
   padding: 0 5px;
   border-radius: 999px;
   font-family: var(--font-display);
@@ -1105,7 +1105,20 @@ img.cx__shield--art {
   text-align: center;
   background: #05081a;
   border: 1.5px solid currentColor;
-  animation: cx-pop 420ms var(--ease) calc(var(--chips) - var(--el)) both;
+  animation: cx-chip-in 380ms var(--ease) calc(var(--chips) - var(--el)) both;
+}
+@keyframes cx-chip-in {
+  from {
+    max-width: 0;
+    padding: 0;
+    border-width: 0;
+    margin-left: -4px;
+    opacity: 0;
+  }
+  to {
+    max-width: 64px;
+    opacity: 1;
+  }
 }
 .cx__chip-r,
 .cx__chip-t {
@@ -1137,7 +1150,7 @@ img.cx__shield--art {
 }
 .cx__chip[data-has-total="1"] {
   animation:
-    cx-pop 420ms var(--ease) calc(var(--chips) - var(--el)) both,
+    cx-chip-in 380ms var(--ease) calc(var(--chips) - var(--el)) both,
     cx-total-ring 600ms ease-out calc(var(--total) - var(--el)) both;
 }
 @keyframes cx-total-ring {

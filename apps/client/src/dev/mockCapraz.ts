@@ -10,7 +10,7 @@
  *   ?mock=capraz-closed            süre doldu, hedefler açılıyor
  *   ?mock=capraz-interval          tur 1'in kısa açılışı (`&at=ms` açılışın neresi)
  *   ?mock=capraz-round2            tur 2 seçimi: rozetler ve tur 1'in mini halkası (`&cover=1`)
- *   ?mock=capraz-reveal            final açılışı (`&me=hit|free|clash|cover|idle`, `&at=ms`)
+ *   ?mock=capraz-reveal            final açılışı (`&me=hit|free|clash|cover|idle`, `&at=ms`, `&quip=1` yorum)
  *   ?mock=capraz-spectator         katılımcı değilsin (tur 1 seçimi; büyük halka)
  *   ?mock=capraz-spectator-round2
  *   ?mock=capraz-spectator-reveal
@@ -165,6 +165,13 @@ export function startCaprazMock(kind: string, params: URLSearchParams): void {
               locked: !watching && locked,
             },
       result: null,
+      // `&quip=1`: düello spikeri yorumu (final açılışında).
+      ...(isFinal && params.has("quip")
+        ? {
+            comment:
+              "Elif ile Mert aynı anda tetiğe bastı; Cihad bu masada güvenin kısa ömürlü olduğunu öğrendi.",
+          }
+        : {}),
     };
     const snapshot: RoomSnapshot = {
       rev: ++rev,

@@ -70,8 +70,52 @@ export const kontrolPrompt: PromptBuilder = (publicView, nickname) => {
   };
 };
 
+const signed = (n: number): string => (n > 0 ? `+${n}` : String(n));
+
+/** Çapraz Ateş: iki turda kim kimi hedefledi, kim siperdeydi, tur puanları ve toplam. */
+export const caprazPrompt: PromptBuilder = (publicView, nickname) => {
+  if (!isRec(publicView) || !Array.isArray(publicView.rounds) || publicView.rounds.length < 2) return null;
+  if (!isRec(publicView.totals)) return null;
+  const totals = publicView.totals;
+  const rounds = publicView.rounds.slice(0, 2);
+  const last = rounds[1];
+  if (!isRec(last) || !isRec(last.targets)) return null;
+  const ids = Object.keys(last.targets);
+  if (ids.length === 0) return null;
+  const alias = new Map(ids.map((id, i) => [id, `Oyuncu${i + 1}`]));
+  const names: Record<string, string> = {};
+  const lines: string[] = [];
+  for (const id of ids) {
+    const name = alias.get(id) ?? "Oyuncu";
+    names[name] = promptName(nickname(id) ?? name);
+    const parts = rounds.map((r, i) => {
+      if (!isRec(r) || !isRec(r.targets) || !isRec(r.scores)) return `tur ${i + 1}: bilinmiyor`;
+      const cover = Array.isArray(r.cover) && r.cover.includes(id);
+      const t = r.targets[id];
+      const what = cover
+        ? "siper aldı"
+        : typeof t === "string" && alias.has(t)
+          ? `${alias.get(t)} hedefine ateş etti`
+          : "ateş etmedi";
+      const score = typeof r.scores[id] === "number" ? r.scores[id] : 0;
+      return `tur ${i + 1}: ${what} (${signed(score)})`;
+    });
+    const total = typeof totals[id] === "number" ? totals[id] : 0;
+    lines.push(`- ${name}: ${parts.join("; ")}; toplam ${signed(total)}`);
+  }
+  return {
+    system: system(
+      "düello spikerisin; oyuncular iki turda gizlice birbirine nişan aldı ya da sipere girdi " +
+        "(hedeflenen -1, hedeflenmeyen atıcı +1, karşılıklı ateş ve siper 0)",
+    ),
+    user: `Oyun: Çapraz Ateş (iki turluk gizli düello). Sonuçlar:\n${lines.join("\n")}`,
+    names,
+  };
+};
+
 const BUILDERS: Record<string, PromptBuilder> = {
   "kontrol-paneli-kaosu": kontrolPrompt,
+  "capraz-ates": caprazPrompt,
 };
 
 /** Bu oyunun yorum özeti (oyun yorum desteklemiyorsa ya da sonuç açılmadıysa null). */

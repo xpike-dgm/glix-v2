@@ -218,6 +218,7 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
             spectator={spectator()}
             now={props.now}
             start={revealStart}
+            comment={() => props.match.comment ?? null}
           />
         )}
       </Show>
@@ -265,6 +266,8 @@ interface RevealProps {
   spectator: boolean;
   now: () => number;
   start: () => number;
+  /** Oyun sonu yorumu (düello spikeri; sunucudan, doğrulanmış). Yoksa null; satır hiç çizilmez. */
+  comment: () => string | null;
 }
 
 /** Tur 1'in kısa açılışı ya da final açılışı: halka, başlıkta kendi sonucun, altta özet satırları. */
@@ -320,8 +323,11 @@ function RevealView(props: RevealProps) {
     const v = props.view();
     return v ? Math.max(1, Math.ceil((v.roundStartedAt - props.now()) / 1_000)) : 0;
   };
-  /** Yapay zekâ düello yorumu için yer (ortak yorum altyapısı bağlanınca dolar); boşken hiç görünmez. */
-  const quip = (): string | null => null;
+  /** Düello spikeri yorumu yalnız final açılışında; gelmezse ya da boşsa hiç görünmez. */
+  const quip = (): string | null => {
+    const text = props.comment();
+    return final && text !== null && text.trim() !== "" ? text : null;
+  };
 
   return (
     <div class="cx__reveal" data-kind={props.kind} style={vars()}>

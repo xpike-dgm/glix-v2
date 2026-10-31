@@ -46,7 +46,7 @@
       "ad": "Final açılışı",
       "sureSn": 8,
       "kim": "herkes",
-      "aciklama": "'ATEŞ!' flaşı; halka tam ekrana büyür, 1 sn sessizlik, sonra bütün namlular aynı anda ateş alır (toplu ateş sesi) ve mermiler ağır çekimde (2 sn) iz çizerek hedeflerine gider. 3. sn'de: vurulan geri sarsılır ve '−1' alır (seni vurdularsa ekranında kısa süreli cam çatlağı ve cam kırılma sesi), karşılıklı mermiler ortada çarpışır (kıvılcım, 0), siperdekine giden mermi kalkandan seker (0), vurulmayan atıcı parlar (+1). Puan rozetleri 3,3. sn'de, kendi sonucun başlıkta 3,6. sn'de görünür. 4,3. sn'de kendi ekranında büyük 'Seni vuranlar: …' satırı (siperdeysen 'Kalkanına ateş edenler: …', çarpıştıysan 'Sana ateş edenler: …', kimse yoksa 'Kimse sana ateş etmedi'), 4,9. sn'de 'En çok hedeflenen: X (N kişi)' özeti (eşitlikte 'En çok hedeflenenler: X ve Y (2'şer kişi)'), 5,6. sn'de rozetler iki turun toplamına (Σ) döner ve 'Toplam … · Tur 1 … · Tur 2 …' satırı görünür. İzleyici kendi satırı yerine 'Rozetler iki turun toplamını gösterir' görür.",
+      "aciklama": "'ATEŞ!' flaşı; halka tam ekrana büyür, 1 sn sessizlik, sonra bütün namlular aynı anda ateş alır (toplu ateş sesi) ve mermiler ağır çekimde (2 sn) iz çizerek hedeflerine gider. 3. sn'de: vurulan geri sarsılır ve '−1' alır (seni vurdularsa ekranında kısa süreli cam çatlağı ve cam kırılma sesi), karşılıklı mermiler ortada çarpışır (kıvılcım, 0), siperdekine giden mermi kalkandan seker (0), vurulmayan atıcı parlar (+1). Puan rozetleri 3,3. sn'de, kendi sonucun başlıkta 3,6. sn'de görünür. 4,3. sn'de kendi ekranında büyük 'Seni vuranlar: …' satırı (siperdeysen 'Kalkanına ateş edenler: …', çarpıştıysan 'Sana ateş edenler: …', kimse yoksa 'Kimse sana ateş etmedi'), 4,9. sn'de 'En çok hedeflenen: X (N kişi)' özeti (eşitlikte 'En çok hedeflenenler: X ve Y (2'şer kişi)'), 5,6. sn'de ad etiketlerindeki puan rozetleri iki turun toplamına döner ve 'Toplam … · Tur 1 … · Tur 2 …' satırı görünür. İzleyici kendi satırı yerine 'Rozetler iki turun toplamını gösterir' görür. Oyuncular eşit aralıklı bir çemberde durur; puan rozeti her oyuncunun ad etiketinin içindedir. Yapay zekâ yorumu açıksa (sunucuda anahtar varsa) açılış sırasında düello spikerinin tek cümlelik esprili yorumu en altta belirir; gelmezse ya da hata olursa hiç görünmez, oyun beklemez.",
       "gizli": "Yok; hedefler, siperler ve puanlar herkese açıktır."
     },
     {
@@ -384,9 +384,9 @@
     {
       "ad": "capraz-reveal",
       "mock": "capraz-reveal",
-      "q": "mock=capraz-reveal",
+      "q": "mock=capraz-reveal&quip=1",
       "baslik": "Final açılışı",
-      "aciklama": "'−1 VURULDUN', izler, toplam rozetleri (Σ), 'Seni vuranlar', 'En çok hedeflenen' ve kendi toplamın; hafif cam çatlağı.",
+      "aciklama": "'−1 VURULDUN', izler, ad etiketlerinde toplam puanlar, 'Seni vuranlar', 'En çok hedeflenen', 'Toplam …' şeridi ve düello spikeri yorumu; hafif cam çatlağı.",
       "dosya": "capraz-reveal"
     },
     {
@@ -425,10 +425,10 @@
   "bilinenSorunlar": [
     "Yeni görseller (namlu ateşi, mermi parıltısı, kalkan, cam çatlağı) henüz yok; CSS/SVG karşılıkları çizilir (docs/oneriler/capraz-ates-gorsel.md, apps/client/src/games/capraz-ates/art.ts).",
     "KURALLAR.md 'Boş veya geç hedef seçiminde boşa sıkmış olur' der; kod ayrıca hedefin seçim anında bağlı olmasını şart koşar (target_offline).",
-    "Hedef bağlı-olma denetimi yalnız seçim anındadır: hedef sonradan kopsa da seçim geçerli kalır (testle doğrulanmış).",
-    "Düello spikeri (yapay zekâ yorumu, CA-AI1) için final özetinde yer hazırdır; ortak yorum altyapısı bağlanınca dolar, boşken görünmez."
+    "Hedef bağlı-olma denetimi yalnız seçim anındadır: hedef sonradan kopsa da seçim geçerli kalır (testle doğrulanmış)."
   ],
   "sonDegisiklikler": [
+    "2026-10-30: Açılış halkası eşit aralıklı çembere dizildi, puan rozetleri ad etiketine taşındı, final özeti büyütüldü; düello spikeri yapay zekâ yorumu bağlandı (apps/server/src/aiCommentGames.ts).",
     "2026-10-30: Siper al ve iki tur (intikam turu); puan iki turun toplamı. Nişan alma anı, 'ATEŞE HAZIR', düello anı, ağır çekim final açılışı, tur 2 rozetleri ve mini halka, ses/titreşim seti, izleyici halkası.",
     "2026-10-27: Oyun CSS sınıf çakışmaları giderildi; çakışma koruma testi eklendi.",
     "2026-10-27: Oyun ekranları kabuk saatine, Status bileşenine ve hazır noktalarına taşındı.",
@@ -446,6 +446,7 @@
     "apps/client/src/games/capraz-ates/Arena.tsx",
     "apps/client/src/games/capraz-ates/timeline.ts",
     "apps/client/src/games/capraz-ates/view.ts",
-    "docs/oneriler/capraz-ates-gorsel.md"
+    "docs/oneriler/capraz-ates-gorsel.md",
+    "apps/server/src/aiCommentGames.ts"
   ]
 }

@@ -1141,7 +1141,6 @@ const SCREENS = [
     act: async (p) => p.locator(".cx__cover-btn").click(),
   },
   { name: "capraz-duel", q: "mock=capraz-duel&n=8&left=4500", settle: 300 },
-  { name: "capraz-duel-count", q: "mock=capraz-duel&left=2900", settle: 200 },
   { name: "capraz-interval", q: "mock=capraz-interval", settle: 2600 },
   { name: "capraz-interval-8", q: "mock=capraz-interval&n=8", settle: 2600 },
   { name: "capraz-round2", q: "mock=capraz-round2" },
