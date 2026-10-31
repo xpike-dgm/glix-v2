@@ -19,11 +19,17 @@ export const ASLA_OTOMATIK: readonly AslaOtomatik[] = [
   { alan: "rozet", tur: "yeni", neden: "Rozet koşulları her zaman sahip onayı ister." },
   { alan: "rozet", tur: "duzenleme", neden: "Rozet koşulları her zaman sahip onayı ister." },
   { alan: "*", tur: "yama", neden: "Kod yamaları her zaman sahip onayı ister." },
-  { alan: "moderasyon", tur: "kaldirma-onerisi", neden: "Moderasyon listesinden çıkarma her zaman sahip onayı ister." },
+  {
+    alan: "moderasyon",
+    tur: "kaldirma-onerisi",
+    neden: "Moderasyon listesinden çıkarma her zaman sahip onayı ister.",
+  },
 ];
 
 export function aslaOtomatik(alan: AlanId, tur: TeslimTuru): AslaOtomatik | null {
-  return ASLA_OTOMATIK.find((x) => (x.alan === "*" || x.alan === alan) && (x.tur === "*" || x.tur === tur)) ?? null;
+  return (
+    ASLA_OTOMATIK.find((x) => (x.alan === "*" || x.alan === alan) && (x.tur === "*" || x.tur === tur)) ?? null
+  );
 }
 
 /** Otomatik onay koşulu: son 50 kararda onay oranı en az %90 (en az 50 karar). */
@@ -34,3 +40,5 @@ export const DENETIM_ARALIGI = 10;
 
 /** Sel önleme (UM-F5) varsayılanları. */
 export const VARSAYILAN_SINIR = { bekleyenTavan: 30, gunlukKota: 100 };
+/** Görsel varyantın en çok sayısı (UM-F2). */
+export const EN_COK_VARYANT = 2;

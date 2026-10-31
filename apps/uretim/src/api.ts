@@ -203,6 +203,10 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
           return ok(200, { raporlar: raporlar(m) });
         case "ara":
           return ok(200, ara(m, url.searchParams.get("q") ?? ""));
+        case "canlidakiler": {
+          const alan = url.searchParams.get("alan");
+          return ok(200, { ogeler: m.canlidakiler(isAlanId(alan) ? alan : null) });
+        }
         default:
           break;
       }
@@ -212,6 +216,13 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
         const s = idParam(p3);
         const t = s ? m.talimatSurumu(p1, s) : null;
         return t ? ok(200, t) : hata(res, 404, "yok", "Bu sürüm bulunamadı.");
+      }
+      if (p0 === "alan" && isAlanId(p1) && p2 === "zevk")
+        return ok(200, { ornekler: m.zevkGalerisi(p1), talimatEki: m.zevkBolumu(p1) });
+      if (p0 === "is" && p1 && (p2 === "fikirler" || p2 === "varyantlar")) {
+        const id = idParam(p1);
+        if (!id) return hata(res, 404, "yok", "İş bulunamadı.");
+        return ok(200, { is: m.is(id), ogeler: p2 === "fikirler" ? m.fikirler(id) : m.varyantlar(id) });
       }
       if (p0 === "oge" && p1) {
         const id = idParam(p1);
@@ -264,6 +275,21 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
         }
         case "aktar":
           return ok(200, { aktarimlar: await m.aktar(id, kim, now) });
+        case "denetim": {
+          const b = await govde();
+          const not = metin(b.metin ?? "", 0, 1000);
+          if (typeof b.uygun !== "boolean" || not === null)
+            return hata(res, 400, "girdi", "Denetim kararı geçersiz.");
+          m.denetimKarar(id, b.uygun, not, kim, now);
+          return ok(200, { ok: true });
+        }
+        case "fikir-sec": {
+          const b = await govde();
+          const not = metin(b.not ?? "", 0, 600);
+          if (not === null) return hata(res, 400, "girdi", "Not en çok 600 karakter.");
+          m.fikirSec(id, not, kim, now);
+          return ok(200, { ok: true });
+        }
         default:
           return hata(res, 404, "yok", "Bulunamadı.");
       }
@@ -297,7 +323,31 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
       if (!p.ok) return hata(res, 400, "girdi", p.hatalar.join(" "));
       return ok(200, await m.teslimEt(alan, "elle", null, p.deger, false, now, kim));
     }
-    if (p0 === "alan" && isAlanId(p1)) return alanYaz(res, o, p1, parca.slice(2), govde, kim, now);
+    if (p0 === "alan" && isAlanId(p1)) return await alanYaz(res, o, p1, parca.slice(2), govde, kim, now);
+    if (p0 === "is" && p1 && p2 === "varyant-sec") {
+      const id = idParam(p1);
+      const b = await govde();
+      const ogeId = tamsayi(b.ogeId, 1, 1e12);
+      const karisim = metin(b.karisim ?? "", 0, 600);
+      if (!id || !ogeId || karisim === null) return hata(res, 400, "girdi", "Seçim geçersiz.");
+      m.varyantSec(id, ogeId, karisim, kim, now);
+      return ok(200, { ok: true });
+    }
+    if (p0 === "zevk" && p1) {
+      const id = idParam(p1);
+      const b = await govde();
+      if (!id) return hata(res, 404, "yok", "Örnek bulunamadı.");
+      m.zevkDuzenle(
+        id,
+        {
+          ...(typeof b.onemli === "boolean" ? { onemli: b.onemli } : {}),
+          ...(b.cikar === true ? { cikar: true } : {}),
+        },
+        kim,
+        now,
+      );
+      return ok(200, { ok: true });
+    }
     if (p0 === "is" && p1 && p2 === "durum") {
       const id = idParam(p1);
       const b = await govde();
@@ -418,7 +468,15 @@ async function alanYaz(
       ornek === null
     )
       return hata(res, 400, "girdi", "Başlık 3–120 karakter; adet 1–500; son tarih YYYY-AA-GG.");
-    return ok({ is: m.isEkle(alan, { baslik, aciklama, adet, sonTarih, ornek }, "sahip", "acik", kim, now) });
+    const varyant = g.varyant === undefined || g.varyant === null ? null : tamsayi(g.varyant, 1, 2);
+    if (g.varyant !== undefined && g.varyant !== null && varyant === null)
+      return hata(res, 400, "girdi", "Görsel varyant en çok 2 olabilir.");
+    return ok({
+      is: m.isEkle(alan, { baslik, aciklama, adet, sonTarih, ornek }, "sahip", "acik", kim, now, null, {
+        varyant,
+        fikirTuru: g.fikirTuru === true,
+      }),
+    });
   }
   if (a === "is-sira") {
     const g = await govde();
@@ -463,6 +521,33 @@ async function alanYaz(
   }
   if (a === "ssh-yenile") {
     await o.ssh.kanalAnahtariYenile(alan, kim, now);
+    return ok({ ok: true });
+  }
+  if (a === "sinirlar") {
+    const g = await govde();
+    const t = tamsayi(g.bekleyenTavan, 1, 500);
+    const k = tamsayi(g.gunlukKota, 1, 2000);
+    const h =
+      g.haftalikUst === null || g.haftalikUst === undefined ? null : tamsayi(g.haftalikUst, 1, 10_000);
+    if (!t || !k || (g.haftalikUst !== null && g.haftalikUst !== undefined && h === null))
+      return hata(
+        res,
+        400,
+        "girdi",
+        "Kuyruk tavanı 1–500, günlük kota 1–2000, haftalık sınır boş ya da 1–10000 olmalı.",
+      );
+    m.sinirYaz(alan, t, k, h, kim, now);
+    return ok({ ok: true });
+  }
+  if (a === "guven") {
+    const g = await govde();
+    const tur = g.tur;
+    if (
+      (tur !== "yeni" && tur !== "duzenleme" && tur !== "kaldirma-onerisi" && tur !== "rapor") ||
+      typeof g.acik !== "boolean"
+    )
+      return hata(res, 400, "girdi", "Seçim geçersiz.");
+    m.guvenYaz(alan, tur, g.acik, kim, now);
     return ok({ ok: true });
   }
   if (a === "kalanlar") {

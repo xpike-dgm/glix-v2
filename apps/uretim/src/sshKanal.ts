@@ -303,7 +303,7 @@ export class SshKanal {
       this.db.prepare("SELECT DISTINCT alan FROM ssh_anahtar").all() as { alan: AlanId }[]
     ).map((r) => r.alan);
     for (const alan of alanlar) {
-      const t = this.merkez.talimat(alan, now);
+      const t = this.merkez.yzTalimati(alan, now);
       await this.okunurYaz(alan, "talimat.md", t.metin);
       await this.okunurYaz(
         alan,

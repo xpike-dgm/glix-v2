@@ -19,7 +19,20 @@ export function ortakKontroller(b: KontrolBaglami, varOlanYollar: ReadonlySet<st
     oge.rapor === null &&
     !oge.degisiklikler.length &&
     !oge.kaldirilacaklar.length;
-  if (icerikYok) s.push(satir("ortak", "bicim", "kaldi", "Öğede dosya, satır, değişiklik ya da rapor yok."));
+  if (tur === "fikir") {
+    if ([...oge.aciklama].length < 10)
+      s.push(
+        satir(
+          "ortak",
+          "fikir",
+          "kaldi",
+          "Fikirde ne olacağını anlatan bir açıklama yaz (en az 10 karakter).",
+        ),
+      );
+    if (oge.dosyalar.length || oge.satirlar.length)
+      s.push(satir("ortak", "fikir", "kaldi", "Fikir teslimi yalnız metindir; dosya ve satır eklenmez."));
+  } else if (icerikYok)
+    s.push(satir("ortak", "bicim", "kaldi", "Öğede dosya, satır, değişiklik ya da rapor yok."));
   if (
     tur === "duzenleme" &&
     !oge.degisiklikler.length &&

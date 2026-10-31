@@ -28,6 +28,8 @@ export interface OgeGirdisi {
   onizleme: { ekran: string; not: string } | null;
   oncekiOge: number | null;
   rapor: unknown;
+  /** Fikir teslimi: nasıl görünecek, renk, hareket. */
+  gorunus: string;
 }
 
 export interface TeslimGirdisi {
@@ -51,6 +53,7 @@ const OGE_ANAHTARLARI = new Set([
   "onizleme",
   "oncekiOge",
   "rapor",
+  "gorunus",
 ]);
 
 export const ONIZLEME_EKRANLARI = [
@@ -172,7 +175,9 @@ function ogeAyristir(v: unknown, sira: number, alan: AlanTanimi, hatalar: string
   const rapor = v.rapor === undefined ? null : v.rapor;
   if (json(rapor) > 1_000_000) hatalar.push(`${yer}: rapor çok büyük.`);
 
-  if (!ad || aciklama === null || gerekce === null) return null;
+  const gorunus = v.gorunus === undefined ? "" : metin(v.gorunus, 0, 600);
+  if (gorunus === null) hatalar.push(`${yer}: "gorunus" en çok 600 karakter.`);
+  if (!ad || aciklama === null || gerekce === null || gorunus === null) return null;
   return {
     ad,
     aciklama,
@@ -184,6 +189,7 @@ function ogeAyristir(v: unknown, sira: number, alan: AlanTanimi, hatalar: string
     onizleme,
     oncekiOge,
     rapor,
+    gorunus,
   };
 }
 
@@ -195,7 +201,10 @@ export function teslimAyristir(v: unknown, alan: AlanTanimi): Ayrisma<TeslimGird
       hatalar.push(`Bilinmeyen alan "${k.slice(0, 30)}".`);
   const tur = v.tur;
   if (typeof tur !== "string" || !(TESLIM_TURLERI as readonly string[]).includes(tur))
-    return { ok: false, hatalar: ['"tur" şunlardan biri olmalı: yeni, duzenleme, kaldirma-onerisi, rapor.'] };
+    return {
+      ok: false,
+      hatalar: ['"tur" şunlardan biri olmalı: yeni, duzenleme, kaldirma-onerisi, rapor, fikir.'],
+    };
   if (!(DESTEKLENEN_TURLER as readonly string[]).includes(tur))
     return {
       ok: false,

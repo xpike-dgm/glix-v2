@@ -28,6 +28,7 @@ export function toplamSonuc(satirlar: readonly KontrolSatiri[]): KontrolSonucu {
 }
 
 export type Gorunum =
+  | "fikir"
   | "gorsel"
   | "animasyon"
   | "ses"
@@ -69,21 +70,29 @@ export interface OgeDosyasi {
   meta: DosyaMeta | null;
 }
 
-export type TeslimTuru = "yeni" | "duzenleme" | "kaldirma-onerisi" | "rapor" | "yama";
+export type TeslimTuru = "yeni" | "duzenleme" | "kaldirma-onerisi" | "rapor" | "fikir" | "yama";
 /** Bütün bilinen türler; `DESTEKLENEN_TURLER` dışındakiler kibarca reddedilir (yama: ikinci aşama, UM-İ11). */
 export const TESLIM_TURLERI: readonly TeslimTuru[] = [
   "yeni",
   "duzenleme",
   "kaldirma-onerisi",
   "rapor",
+  "fikir",
   "yama",
 ];
-export const DESTEKLENEN_TURLER: readonly TeslimTuru[] = ["yeni", "duzenleme", "kaldirma-onerisi", "rapor"];
+export const DESTEKLENEN_TURLER: readonly TeslimTuru[] = [
+  "yeni",
+  "duzenleme",
+  "kaldirma-onerisi",
+  "rapor",
+  "fikir",
+];
 export const TESLIM_TURU_ADI: Record<TeslimTuru, string> = {
   yeni: "Yeni",
   duzenleme: "Düzenleme",
   "kaldirma-onerisi": "Kaldırma önerisi",
   rapor: "Rapor",
+  fikir: "Fikir",
   yama: "Kod yaması",
 };
 
@@ -133,6 +142,8 @@ export interface Koken {
 }
 
 export interface OgeAyrinti extends OgeOzeti {
+  /** Fikir teslimlerinde görünüş, renk ve hareket tarifi. */
+  gorunus: string;
   dosyalar: OgeDosyasi[];
   satirlar: unknown[];
   degisiklikler: Degisiklik[];
@@ -169,8 +180,11 @@ export interface IsKaydi {
   durum: "oneri" | "acik" | "tamam" | "iptal";
   sira: number;
   olusturma: number;
-  /** Seçenek turu: kaç varyant istendi (UM-F2). */
+  /** Görsel varyant sayısı; yalnız sahip açıkça isterse (en çok 2, UM-F2). */
   varyant: number | null;
+  /** Fikir turu: önce metinle 2–3 fikir, sahip birini seçince tek üretim. */
+  fikirTuru: boolean;
+  secilenFikir: { ogeId: number; ad: string; aciklama: string; gorunus: string; not: string } | null;
 }
 
 export interface IstekKarti {
@@ -274,8 +288,21 @@ export interface AlanSayfasi {
     geriDonen: number;
   };
   kalanlariGoster: boolean;
-  sinir: { bekleyenTavan: number; gunlukKota: number; bugun: number };
-  guven: { tur: TeslimTuru; acik: boolean; engel: string | null; oran: number | null; karar: number; uygun: boolean }[];
+  sinir: {
+    bekleyenTavan: number;
+    gunlukKota: number;
+    haftalikUst: number | null;
+    bugun: number;
+    hafta: number;
+  };
+  guven: {
+    tur: TeslimTuru;
+    acik: boolean;
+    engel: string | null;
+    oran: number | null;
+    karar: number;
+    uygun: boolean;
+  }[];
 }
 
 export interface ZevkOrnegi {

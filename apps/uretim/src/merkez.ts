@@ -21,6 +21,14 @@ import {
   hazirNotMetni,
   TALIMAT_ONERI_ESIGI,
 } from "./ortak/durum.js";
+import {
+  aslaOtomatik,
+  DENETIM_ARALIGI,
+  EN_COK_VARYANT,
+  GUVEN_ORAN,
+  GUVEN_PENCERE,
+  VARSAYILAN_SINIR,
+} from "./ortak/guven.js";
 import type {
   AktarimKaydi,
   AlanKarti,
@@ -30,8 +38,8 @@ import type {
   IsKaydi,
   IstekKarti,
   KodIstegi,
-  KontrolRaporu,
   Koken,
+  KontrolRaporu,
   Kucuk,
   NotKaydi,
   OgeAyrinti,
@@ -42,7 +50,6 @@ import type {
   Uyari,
   ZevkOrnegi,
 } from "./ortak/tipler.js";
-import { aslaOtomatik, DENETIM_ARALIGI, GUVEN_ORAN, GUVEN_PENCERE, VARSAYILAN_SINIR } from "./ortak/guven.js";
 import { OyunHatasi, type OyunIstemcisi, SATIR_SINIRI } from "./oyun.js";
 import { type OgeGirdisi, ogeAnahtari, type TeslimGirdisi } from "./teslimGirdisi.js";
 
@@ -64,6 +71,7 @@ export interface Olaylar {
 }
 
 interface OgeSatiri {
+  gorunus: string;
   talimat_surum: number | null;
   onaylayan: string | null;
   otomatik: number;
@@ -129,6 +137,7 @@ export function gorunumBul(
   oge: OgeGirdisi,
   dosyalar: readonly { tur: string; hedefYol: string | null; ad: string }[],
 ): Gorunum {
+  if (tur === "fikir") return "fikir";
   if (tur === "rapor" || oge.rapor !== null) return "rapor";
   if (dosyalar.some((d) => d.hedefYol?.startsWith("docs/wiki/"))) return "wiki";
   if (dosyalar.some((d) => d.tur === "ogg" || d.tur === "wav")) return alan === "muzik" ? "muzik" : "ses";
@@ -280,6 +289,7 @@ export class Merkez {
         | { alan: string; durum: string }
         | undefined;
       if (!is || is.alan !== alan) throw new IsHatasi(404, "Bu iş bulunamadı.");
+      if (!kuru) this.isKurali(g);
       if (is.durum !== "acik") throw new IsHatasi(409, "Bu iş açık değil.");
     }
     const t = alanTanimi(alan);
@@ -372,8 +382,16 @@ export class Merkez {
         })),
       };
 
-    if (kaynak === "mcp") this.selDenetle(alan, sonuclar.filter((s) => s.rapor.sonuc !== "kaldi").length, now);
-    const isVaryant = g.isId !== null ? ((this.db.prepare("SELECT varyant FROM isler WHERE id = ?").get(g.isId) as { varyant: number | null } | undefined)?.varyant ?? null) : null;
+    if (kaynak === "mcp")
+      this.selDenetle(alan, sonuclar.filter((s) => s.rapor.sonuc !== "kaldi").length, now);
+    const isVaryant =
+      g.isId !== null && g.tur !== "fikir"
+        ? ((
+            this.db.prepare("SELECT varyant FROM isler WHERE id = ?").get(g.isId) as
+              | { varyant: number | null }
+              | undefined
+          )?.varyant ?? null)
+        : null;
     const talimatSurum = this.talimat(alan, now).surum;
     const out = islem(this.db, () => {
       const teslimId = Number(
@@ -405,8 +423,8 @@ export class Merkez {
           .prepare(
             `INSERT INTO oge (teslim_id, alan, is_id, tur, ad, anahtar, aciklama, gerekce, durum, gorunum, surum, onceki_id, kaynak,
              dosyalar, satirlar, degisiklikler, kaldirilacaklar, onizleme, rapor, kontrol, sonuc, olusturma, guncelleme,
-             talimat_surum, varyant_is)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             talimat_surum, varyant_is, gorunus)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           )
           .run(
             teslimId,
@@ -433,7 +451,8 @@ export class Merkez {
             now,
             now,
             talimatSurum,
-            isVaryant ? g.isId : null,
+            isVaryant && isVaryant > 1 ? g.isId : null,
+            s.girdi.gorunus,
           );
         const ogeId = Number(r.lastInsertRowid);
         if (son === "kaldi") {
@@ -460,8 +479,19 @@ export class Merkez {
           if (is?.istek_id)
             this.db.prepare("UPDATE istek_karti SET sonuc_oge = ? WHERE id = ?").run(ogeId, is.istek_id);
         }
-        const otomatik = son === "bekliyor" && !isVaryant && s.rapor.sonuc === "gecti" && this.otomatikOnayla(ogeId, alan, g.tur, now);
-        ogeler.push({ ad: s.girdi.ad, ogeId, durum: otomatik ? "havuzda" : son, sonuc: s.rapor.sonuc, satirlar: s.rapor.satirlar });
+        const otomatik =
+          son === "bekliyor" &&
+          !(isVaryant && isVaryant > 1) &&
+          g.tur !== "fikir" &&
+          s.rapor.sonuc === "gecti" &&
+          this.otomatikOnayla(ogeId, alan, g.tur, now);
+        ogeler.push({
+          ad: s.girdi.ad,
+          ogeId,
+          durum: otomatik ? "havuzda" : son,
+          sonuc: s.rapor.sonuc,
+          satirlar: s.rapor.satirlar,
+        });
       }
       return { teslimId, ogeler };
     });
@@ -566,6 +596,7 @@ export class Merkez {
       satirlar: json<unknown[]>(r.satirlar, []),
       degisiklikler: json<Degisiklik[]>(r.degisiklikler, []),
       kaldirilacaklar: json<string[]>(r.kaldirilacaklar, []),
+      gorunus: r.gorunus,
       onizleme: json<OgeAyrinti["onizleme"]>(r.onizleme, null),
       rapor: json<unknown>(r.rapor, null),
       kontrol: json<KontrolRaporu>(r.kontrol, { sonuc: "gecti", satirlar: [] }),
@@ -578,7 +609,9 @@ export class Merkez {
 
   private koken(r: OgeSatiri): Koken {
     const p = r.paket_id
-      ? (this.db.prepare("SELECT id, klasor, revizyon FROM paket WHERE id = ?").get(r.paket_id) as { id: number; klasor: string; revizyon: string | null } | undefined)
+      ? (this.db.prepare("SELECT id, klasor, revizyon FROM paket WHERE id = ?").get(r.paket_id) as
+          | { id: number; klasor: string; revizyon: string | null }
+          | undefined)
       : undefined;
     return {
       alan: r.alan as AlanId,
@@ -605,7 +638,9 @@ export class Merkez {
     const denetim = " OR denetim = 1";
     const r = (alan
       ? this.db
-          .prepare(`SELECT * FROM oge WHERE alan = ? AND (durum IN ${durumlar}${denetim}) ORDER BY olusturma, id`)
+          .prepare(
+            `SELECT * FROM oge WHERE alan = ? AND (durum IN ${durumlar}${denetim}) ORDER BY olusturma, id`,
+          )
           .all(alan)
       : this.db
           .prepare(`SELECT * FROM oge WHERE (durum IN ${durumlar}${denetim}) ORDER BY olusturma, id`)
@@ -676,7 +711,17 @@ export class Merkez {
     const metin = [not.hazir ? hazirNotMetni(not.hazir) : "", not.metin.trim()].filter(Boolean).join(" — ");
     let notId: number | null = null;
     islem(this.db, () => {
-      if (karar === "onay") {
+      if (karar === "onay" && r.tur === "fikir") {
+        this.durumYaz(id, "onaylandi", now, { karar: now });
+        this.db.prepare("UPDATE oge SET onaylayan = ? WHERE id = ?").run(kim, id);
+        this.zevkEkle(alan, id, r.ad, "onay", metin, now);
+        if (r.is_id !== null)
+          this.db
+            .prepare(
+              "UPDATE isler SET secilen_fikir = ?, secim_notu = ? WHERE id = ? AND secilen_fikir IS NULL",
+            )
+            .run(id, not.metin, r.is_id);
+      } else if (karar === "onay") {
         const satirSayisi = json<unknown[]>(r.satirlar, []).length;
         const secili = not.satirlar
           ? [...new Set(not.satirlar)]
@@ -721,7 +766,7 @@ export class Merkez {
     const k = this.sonKararlar.get(id);
     const r = this.ogeSatiri(id);
     if (!k || !r || now - k.zaman > GERI_AL_MS + 5_000) throw new IsHatasi(409, "Geri alma süresi geçti.");
-    if (!["havuzda", "reddedildi", "duzeltme_istendi"].includes(r.durum))
+    if (!["havuzda", "reddedildi", "duzeltme_istendi", "onaylandi"].includes(r.durum))
       throw new IsHatasi(409, "Bu karar artık geri alınamaz.");
     islem(this.db, () => {
       this.db
@@ -732,6 +777,9 @@ export class Merkez {
       if (k.notId !== null) this.db.prepare("DELETE FROM notlar WHERE id = ?").run(k.notId);
       this.db.prepare("DELETE FROM zevk WHERE oge_id = ?").run(id);
       this.db.prepare("UPDATE oge SET onaylayan = NULL WHERE id = ?").run(id);
+      this.db
+        .prepare("UPDATE isler SET secilen_fikir = NULL, secim_notu = NULL WHERE secilen_fikir = ?")
+        .run(id);
     });
     this.sonKararlar.delete(id);
     this.denetim.yaz(now, kim, "onay", r.alan, `öğe ${id} kararı geri alındı`);
@@ -853,6 +901,8 @@ export class Merkez {
       sira: Number(r.sira),
       olusturma: Number(r.olusturma),
       varyant: r.varyant === null || r.varyant === undefined ? null : Number(r.varyant),
+      fikirTuru: Number(r.fikir_turu) === 1,
+      secilenFikir: this.secilenFikir(r),
     };
   }
 
@@ -881,7 +931,7 @@ export class Merkez {
     kim: string,
     now: number,
     istekId: number | null = null,
-    varyant: number | null = null,
+    secenek: { varyant?: number | null; fikirTuru?: boolean } = {},
   ): IsKaydi {
     const sira = Number(
       (
@@ -893,10 +943,23 @@ export class Merkez {
     const id = Number(
       this.db
         .prepare(
-          "INSERT INTO isler (alan, baslik, aciklama, adet, son_tarih, ornek, kaynak, durum, sira, olusturma, istek_id, varyant) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          "INSERT INTO isler (alan, baslik, aciklama, adet, son_tarih, ornek, kaynak, durum, sira, olusturma, istek_id, varyant, fikir_turu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )
-        .run(alan, v.baslik, v.aciklama, v.adet, v.sonTarih, v.ornek, kaynak, durum, sira, now, istekId, varyant)
-        .lastInsertRowid,
+        .run(
+          alan,
+          v.baslik,
+          v.aciklama,
+          v.adet,
+          v.sonTarih,
+          v.ornek,
+          kaynak,
+          durum,
+          sira,
+          now,
+          istekId,
+          secenek.varyant && secenek.varyant > 1 ? Math.min(secenek.varyant, EN_COK_VARYANT) : null,
+          secenek.fikirTuru ? 1 : 0,
+        ).lastInsertRowid,
     );
     this.denetim.yaz(now, kim, "is", alan, `iş ${id} açıldı`);
     const is = this.is(id);
@@ -1310,7 +1373,9 @@ export class Merkez {
       geriDonen24s: this.geriDonenSay(now - GUN),
       kota,
       bugun: this.bugun(now),
-      denetimBekleyen: Number((this.db.prepare("SELECT COUNT(*) AS n FROM oge WHERE denetim = 1").get() as { n: number }).n),
+      denetimBekleyen: Number(
+        (this.db.prepare("SELECT COUNT(*) AS n FROM oge WHERE denetim = 1").get() as { n: number }).n,
+      ),
     };
   }
 
@@ -1319,15 +1384,21 @@ export class Merkez {
     const n = (sql: string): number => Number((this.db.prepare(sql).get(bas) as { n: number }).n);
     return {
       gelen: n("SELECT COUNT(*) AS n FROM oge WHERE olusturma > ? AND durum != 'kaldi'"),
-      onaylanan: n("SELECT COUNT(*) AS n FROM oge WHERE karar > ? AND durum IN ('havuzda','pakette','oyuna_eklendi','canlida')"),
-      reddedilen: n("SELECT COUNT(*) AS n FROM oge WHERE karar > ? AND durum IN ('reddedildi','duzeltme_istendi')"),
+      onaylanan: n(
+        "SELECT COUNT(*) AS n FROM oge WHERE karar > ? AND durum IN ('havuzda','pakette','oyuna_eklendi','canlida')",
+      ),
+      reddedilen: n(
+        "SELECT COUNT(*) AS n FROM oge WHERE karar > ? AND durum IN ('reddedildi','duzeltme_istendi')",
+      ),
       geriDonen: n("SELECT COUNT(*) AS n FROM oge WHERE olusturma > ? AND durum = 'kaldi'"),
     };
   }
 
   /** Alanın son teslimi (geri dönenler hariç) ve küçük önizlemesi. */
   private sonOnizleme(alan: AlanId): AlanKarti["son"] {
-    const r = this.db.prepare("SELECT * FROM oge WHERE alan = ? AND durum != 'kaldi' ORDER BY id DESC LIMIT 1").get(alan) as unknown as OgeSatiri | undefined;
+    const r = this.db
+      .prepare("SELECT * FROM oge WHERE alan = ? AND durum != 'kaldi' ORDER BY id DESC LIMIT 1")
+      .get(alan) as unknown as OgeSatiri | undefined;
     if (!r) return null;
     const dosyalar = json<OgeDosyasi[]>(r.dosyalar, []);
     const satirlar = json<unknown[]>(r.satirlar, []);
@@ -1335,14 +1406,18 @@ export class Merkez {
     const g = dosyalar.find((d) => d.tur === "png");
     const s = dosyalar.find((d) => d.meta?.tur === "ses");
     if (g) kucuk = { tur: "gorsel", ogeId: r.id, ozet: g.ozet };
-    else if (s && s.meta?.tur === "ses") kucuk = { tur: "dalga", dalga: s.meta.dalga.filter((_, i) => i % 4 === 0) };
+    else if (s && s.meta?.tur === "ses")
+      kucuk = { tur: "dalga", dalga: s.meta.dalga.filter((_, i) => i % 4 === 0) };
     else if (satirlar.length)
       kucuk = {
         tur: "satirlar",
         satirlar: satirlar.slice(0, 3).map((x) => {
           if (x && typeof x === "object") {
             const o = x as Record<string, unknown>;
-            const alanlar = o.alanlar && typeof o.alanlar === "object" ? Object.values(o.alanlar as Record<string, unknown>) : null;
+            const alanlar =
+              o.alanlar && typeof o.alanlar === "object"
+                ? Object.values(o.alanlar as Record<string, unknown>)
+                : null;
             if (alanlar) return alanlar.map(String).join(" · ").slice(0, 60);
             return String(o.name ?? o.kalip ?? o.ad ?? Object.values(o)[0] ?? "").slice(0, 60);
           }
@@ -1411,41 +1486,173 @@ export class Merkez {
         geriDonen: sayi("SELECT COUNT(*) AS n FROM oge WHERE alan = ? AND durum = 'kaldi'"),
       },
       kalanlariGoster,
-      sinir: { ...this.sinir(alan), bugun: this.bugunTeslim(alan, now) },
+      sinir: {
+        ...this.sinir(alan),
+        bugun: this.bugunTeslim(alan, now),
+        hafta: this.bugunTeslim(alan, now, 7),
+      },
       guven: (["yeni", "duzenleme", "kaldirma-onerisi", "rapor"] as const).map((tur) => {
         const st = this.guvenIstatistigi(alan);
         const engel = aslaOtomatik(alan, tur)?.neden ?? null;
-        return { tur, acik: this.guvenAcik(alan, tur), engel, oran: st.oran, karar: st.karar, uygun: !engel && st.uygun };
+        return {
+          tur,
+          acik: this.guvenAcik(alan, tur),
+          engel,
+          oran: st.oran,
+          karar: st.karar,
+          uygun: !engel && st.uygun,
+        };
       }),
     };
   }
 
   // ---- Sel önleme (UM-F5) ---------------------------------------------------------------------------------
 
-  sinir(alan: AlanId): { bekleyenTavan: number; gunlukKota: number } {
-    const j = json<{ bekleyenTavan?: unknown; gunlukKota?: unknown }>(this.ayar(`sinir:${alan}`), {});
+  sinir(alan: AlanId): { bekleyenTavan: number; gunlukKota: number; haftalikUst: number | null } {
+    const j = json<{ bekleyenTavan?: unknown; gunlukKota?: unknown; haftalikUst?: unknown }>(
+      this.ayar(`sinir:${alan}`),
+      {},
+    );
     const t = typeof j.bekleyenTavan === "number" ? j.bekleyenTavan : VARSAYILAN_SINIR.bekleyenTavan;
     const k = typeof j.gunlukKota === "number" ? j.gunlukKota : VARSAYILAN_SINIR.gunlukKota;
-    return { bekleyenTavan: t, gunlukKota: k };
+    const h = typeof j.haftalikUst === "number" ? j.haftalikUst : null;
+    return { bekleyenTavan: t, gunlukKota: k, haftalikUst: h };
   }
 
-  sinirYaz(alan: AlanId, bekleyenTavan: number, gunlukKota: number, kim: string, now: number): void {
-    this.ayarYaz(`sinir:${alan}`, JSON.stringify({ bekleyenTavan, gunlukKota }));
-    this.denetim.yaz(now, kim, "ayar", alan, `sınır ${bekleyenTavan}/${gunlukKota}`);
+  sinirYaz(
+    alan: AlanId,
+    bekleyenTavan: number,
+    gunlukKota: number,
+    haftalikUst: number | null,
+    kim: string,
+    now: number,
+  ): void {
+    this.ayarYaz(`sinir:${alan}`, JSON.stringify({ bekleyenTavan, gunlukKota, haftalikUst }));
+    this.denetim.yaz(now, kim, "ayar", alan, `sınır ${bekleyenTavan}/${gunlukKota}/${haftalikUst ?? "-"}`);
   }
 
-  private bugunTeslim(alan: AlanId, now: number): number {
-    return Number((this.db.prepare("SELECT COUNT(*) AS n FROM oge WHERE alan = ? AND olusturma > ? AND kaynak = 'mcp'").get(alan, now - GUN) as { n: number }).n);
+  /** Son `gun` günde yapay zekânın ürettiği (geri dönenler dahil) öğe sayısı: kullanım sayacı. */
+  private bugunTeslim(alan: AlanId, now: number, gun = 1): number {
+    return Number(
+      (
+        this.db
+          .prepare("SELECT COUNT(*) AS n FROM oge WHERE alan = ? AND olusturma > ? AND kaynak = 'mcp'")
+          .get(alan, now - gun * GUN) as { n: number }
+      ).n,
+    );
+  }
+
+  /**
+   * İş kuralları (UM-F2): fikir turu açık işte önce 2–3 metin fikri; seçimden sonra tek üretim. Varsayılan her iş tek
+   * teslim; sahip görsel varyant istediyse en çok o kadar. Düzeltmeler (her öğesi `oncekiOge` taşıyan teslim) serbesttir.
+   */
+  private isKurali(g: TeslimGirdisi): void {
+    if (g.isId === null) return;
+    const is = this.db
+      .prepare("SELECT fikir_turu, secilen_fikir, varyant FROM isler WHERE id = ?")
+      .get(g.isId) as { fikir_turu: number; secilen_fikir: number | null; varyant: number | null };
+    if (g.tur === "fikir") {
+      if (g.ogeler.length > 3) throw new IsHatasi(400, "Fikir turunda en çok 3 kısa fikir teslim edilir.");
+      if (is.secilen_fikir !== null)
+        throw new IsHatasi(409, "Bu işin fikri seçildi; artık yalnız seçilen fikri üret.");
+      return;
+    }
+    if (g.tur === "rapor") return;
+    if (is.fikir_turu === 1 && is.secilen_fikir === null)
+      throw new IsHatasi(
+        409,
+        "Bu iş fikir turuyla açıldı: önce 2–3 fikri yalnız metin olarak teslim et (tur: fikir). Sahip birini seçince üret.",
+      );
+    if (g.ogeler.every((o) => o.oncekiOge !== null)) return;
+    const yapilan = Number(
+      (
+        this.db
+          .prepare(
+            "SELECT COUNT(DISTINCT teslim_id) AS n FROM oge WHERE is_id = ? AND tur NOT IN ('fikir','rapor') AND durum != 'kaldi'",
+          )
+          .get(g.isId) as { n: number }
+      ).n,
+    );
+    if (yapilan >= (is.varyant ?? 1))
+      throw new IsHatasi(
+        409,
+        "Bu iş için teslim zaten yapıldı. Düzeltme gönderiyorsan her öğede oncekiOge yaz; yeni bir şey üretmek için iş önerisi aç.",
+      );
+  }
+
+  private secilenFikir(r: Record<string, unknown>): IsKaydi["secilenFikir"] {
+    if (r.secilen_fikir === null || r.secilen_fikir === undefined) return null;
+    const o = this.db
+      .prepare("SELECT id, ad, aciklama, gorunus FROM oge WHERE id = ?")
+      .get(Number(r.secilen_fikir)) as
+      | { id: number; ad: string; aciklama: string; gorunus: string }
+      | undefined;
+    return o
+      ? { ogeId: o.id, ad: o.ad, aciklama: o.aciklama, gorunus: o.gorunus, not: String(r.secim_notu ?? "") }
+      : null;
+  }
+
+  /** Fikir seçimi: seçilen işe bağlanır (isteğe bağlı "şunu değiştir" notuyla), diğer fikirler gerekçesiz arşive. */
+  fikirSec(ogeId: number, not: string, kim: string, now: number): void {
+    const r = this.ogeSatiri(ogeId);
+    if (!r || r.tur !== "fikir" || r.durum !== "bekliyor")
+      throw new IsHatasi(404, "Seçilecek fikir bulunamadı.");
+    const alan = r.alan as AlanId;
+    islem(this.db, () => {
+      this.db
+        .prepare("UPDATE oge SET durum = 'onaylandi', karar = ?, onaylayan = ?, guncelleme = ? WHERE id = ?")
+        .run(now, kim, now, ogeId);
+      this.zevkEkle(alan, ogeId, r.ad, "onay", not, now);
+      this.notEkle(
+        alan,
+        ogeId,
+        "yorum",
+        null,
+        `Seçilen fikir: ${r.ad}.${not ? ` Değiştir: ${not}` : ""} Yalnız bunu bir kez üret.`,
+        now,
+      );
+      if (r.is_id !== null) {
+        this.db
+          .prepare("UPDATE isler SET secilen_fikir = ?, secim_notu = ? WHERE id = ?")
+          .run(ogeId, not, r.is_id);
+        this.db
+          .prepare(
+            "UPDATE oge SET durum = 'arsiv', guncelleme = ? WHERE is_id = ? AND tur = 'fikir' AND durum = 'bekliyor' AND id != ?",
+          )
+          .run(now, r.is_id, ogeId);
+      }
+    });
+    this.denetim.yaz(now, kim, "onay", alan, `fikir ${ogeId} seçildi`);
+  }
+
+  /** Bir işin bekleyen fikirleri (yan yana karşılaştırma için). */
+  fikirler(isId: number): OgeOzeti[] {
+    return (
+      this.db
+        .prepare("SELECT * FROM oge WHERE is_id = ? AND tur = 'fikir' AND durum NOT IN ('kaldi') ORDER BY id")
+        .all(isId) as unknown as OgeSatiri[]
+    ).map(ozetle);
   }
 
   /** Kuyruk doluysa ya da günlük kota aşılacaksa teslim reddedilir. */
   private selDenetle(alan: AlanId, yeni: number, now: number): void {
     const s = this.sinir(alan);
-    const bekleyen = Number((this.db.prepare("SELECT COUNT(*) AS n FROM oge WHERE alan = ? AND durum = 'bekliyor'").get(alan) as { n: number }).n);
+    const bekleyen = Number(
+      (
+        this.db.prepare("SELECT COUNT(*) AS n FROM oge WHERE alan = ? AND durum = 'bekliyor'").get(alan) as {
+          n: number;
+        }
+      ).n,
+    );
     if (bekleyen + yeni > s.bekleyenTavan && yeni > 0)
-      throw new IsHatasi(429, `Kuyruk dolu (${bekleyen}/${s.bekleyenTavan}). Sahip incelemeyi bitirene kadar yeni teslim alınmıyor; bu sırada iş önerisi açabilir ya da alanını inceleyebilirsin.`);
+      throw new IsHatasi(
+        429,
+        `Kuyruk dolu (${bekleyen}/${s.bekleyenTavan}). Sahip incelemeyi bitirene kadar yeni teslim alınmıyor; bu sırada iş önerisi açabilir ya da alanını inceleyebilirsin.`,
+      );
     if (this.bugunTeslim(alan, now) + yeni > s.gunlukKota)
       throw new IsHatasi(429, `Günlük teslim kotası (${s.gunlukKota} öğe) doldu. Yarın yeniden dene.`);
+    if (s.haftalikUst !== null && this.bugunTeslim(alan, now, 7) + yeni > s.haftalikUst)
+      throw new IsHatasi(429, `Bu alanın haftalık üretim sınırı (${s.haftalikUst} öğe) doldu.`);
   }
 
   // ---- Kademeli güven (UM-F4) -----------------------------------------------------------------------------
@@ -1456,7 +1663,9 @@ export class Merkez {
 
   guvenIstatistigi(alan: AlanId): { oran: number | null; karar: number; uygun: boolean } {
     const r = this.db
-      .prepare("SELECT durum FROM oge WHERE alan = ? AND karar IS NOT NULL AND otomatik = 0 ORDER BY karar DESC LIMIT ?")
+      .prepare(
+        "SELECT durum FROM oge WHERE alan = ? AND karar IS NOT NULL AND otomatik = 0 ORDER BY karar DESC LIMIT ?",
+      )
       .all(alan, GUVEN_PENCERE) as { durum: string }[];
     const onay = r.filter((x) => ["havuzda", "pakette", "oyuna_eklendi", "canlida"].includes(x.durum)).length;
     const oran = r.length ? onay / r.length : null;
@@ -1467,7 +1676,8 @@ export class Merkez {
     if (acik) {
       const engel = aslaOtomatik(alan, tur);
       if (engel) throw new IsHatasi(400, engel.neden);
-      if (!this.guvenIstatistigi(alan).uygun) throw new IsHatasi(409, "Otomatik onay için son 50 kararda en az %90 onay gerekir.");
+      if (!this.guvenIstatistigi(alan).uygun)
+        throw new IsHatasi(409, "Otomatik onay için son 50 kararda en az %90 onay gerekir.");
     }
     this.ayarYaz(`guven:${alan}:${tur}`, acik ? "1" : "0");
     this.denetim.yaz(now, kim, "ayar", alan, `otomatik onay ${tur}: ${acik ? "açık" : "kapalı"}`);
@@ -1476,9 +1686,18 @@ export class Merkez {
   /** Koşullar tutarsa öğeyi otomatik onaylar; her 10'uncuyu denetime işaretler. */
   private otomatikOnayla(id: number, alan: AlanId, tur: TeslimTuru, now: number): boolean {
     if (!this.guvenAcik(alan, tur) || !this.guvenIstatistigi(alan).uygun) return false;
-    const sayi = Number((this.db.prepare("SELECT COUNT(*) AS n FROM oge WHERE alan = ? AND otomatik = 1").get(alan) as { n: number }).n) + 1;
+    const sayi =
+      Number(
+        (
+          this.db.prepare("SELECT COUNT(*) AS n FROM oge WHERE alan = ? AND otomatik = 1").get(alan) as {
+            n: number;
+          }
+        ).n,
+      ) + 1;
     this.db
-      .prepare("UPDATE oge SET durum = 'havuzda', karar = ?, otomatik = 1, onaylayan = 'otomatik', denetim = ?, guncelleme = ? WHERE id = ?")
+      .prepare(
+        "UPDATE oge SET durum = 'havuzda', karar = ?, otomatik = 1, onaylayan = 'otomatik', denetim = ?, guncelleme = ? WHERE id = ?",
+      )
       .run(now, sayi % DENETIM_ARALIGI === 0 ? 1 : 0, now, id);
     return true;
   }
@@ -1492,19 +1711,31 @@ export class Merkez {
       if (uygun) this.db.prepare("UPDATE oge SET denetim = 2 WHERE id = ?").run(id);
       else {
         if (r.durum !== "havuzda") throw new IsHatasi(409, "Öğe artık havuzda değil; elle geri çekilmeli.");
-        this.db.prepare("UPDATE oge SET denetim = 2, durum = 'reddedildi', guncelleme = ? WHERE id = ?").run(now, id);
+        this.db
+          .prepare("UPDATE oge SET denetim = 2, durum = 'reddedildi', guncelleme = ? WHERE id = ?")
+          .run(now, id);
         this.notEkle(alan, id, "ret", null, not || "Denetimde uygun bulunmadı.", now);
         this.zevkEkle(alan, id, r.ad, "ret", not, now);
         this.db.prepare("UPDATE ayar SET deger = '0' WHERE anahtar LIKE ?").run(`guven:${alan}:%`);
       }
     });
-    this.denetim.yaz(now, kim, uygun ? "onay" : "ret", alan, `denetim öğe ${id}${uygun ? "" : " — otomatik onay kapandı"}`);
+    this.denetim.yaz(
+      now,
+      kim,
+      uygun ? "onay" : "ret",
+      alan,
+      `denetim öğe ${id}${uygun ? "" : " — otomatik onay kapandı"}`,
+    );
   }
 
   // ---- Seçenek turu (UM-F2) -------------------------------------------------------------------------------
 
   varyantlar(isId: number): OgeOzeti[] {
-    return (this.db.prepare("SELECT * FROM oge WHERE varyant_is = ? AND durum != 'kaldi' ORDER BY id").all(isId) as unknown as OgeSatiri[]).map(ozetle);
+    return (
+      this.db
+        .prepare("SELECT * FROM oge WHERE varyant_is = ? AND durum != 'kaldi' ORDER BY id")
+        .all(isId) as unknown as OgeSatiri[]
+    ).map(ozetle);
   }
 
   /** Sahip bir varyantı seçer; karışım isterse seçilen düzeltmeye döner. Seçilmeyenler gerekçesiz arşive. */
@@ -1512,24 +1743,43 @@ export class Merkez {
     const v = this.varyantlar(isId);
     const secilen = v.find((x) => x.id === ogeId);
     if (!secilen || secilen.durum !== "bekliyor") throw new IsHatasi(404, "Seçilecek varyant bulunamadı.");
-    if (karisim.trim()) this.karar(ogeId, "duzeltme", { hazir: null, metin: `Bu varyantı al; ${karisim.trim()}`, satirlar: null }, kim, now);
+    if (karisim.trim())
+      this.karar(
+        ogeId,
+        "duzeltme",
+        { hazir: null, metin: `Bu varyantı al; ${karisim.trim()}`, satirlar: null },
+        kim,
+        now,
+      );
     else this.karar(ogeId, "onay", { hazir: null, metin: "", satirlar: null }, kim, now);
     islem(this.db, () => {
       for (const x of v) if (x.id !== ogeId && x.durum === "bekliyor") this.durumYaz(x.id, "arsiv", now);
-      if (!karisim.trim()) this.db.prepare("UPDATE isler SET durum = 'tamam' WHERE id = ? AND durum = 'acik'").run(isId);
+      if (!karisim.trim())
+        this.db.prepare("UPDATE isler SET durum = 'tamam' WHERE id = ? AND durum = 'acik'").run(isId);
     });
   }
 
   // ---- Zevk profili (UM-F3) -------------------------------------------------------------------------------
 
-  private zevkEkle(alan: AlanId, ogeId: number, ad: string, tur: "onay" | "ret", not: string, now: number): void {
+  private zevkEkle(
+    alan: AlanId,
+    ogeId: number,
+    ad: string,
+    tur: "onay" | "ret",
+    not: string,
+    now: number,
+  ): void {
     this.db
-      .prepare("INSERT INTO zevk (alan, oge_id, tur, ad, not_metni, olusturma) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(oge_id) DO UPDATE SET tur = excluded.tur, not_metni = excluded.not_metni")
+      .prepare(
+        "INSERT INTO zevk (alan, oge_id, tur, ad, not_metni, olusturma) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(oge_id) DO UPDATE SET tur = excluded.tur, not_metni = excluded.not_metni",
+      )
       .run(alan, ogeId, tur, ad, not, now);
   }
 
   zevkGalerisi(alan: AlanId): ZevkOrnegi[] {
-    const r = this.db.prepare("SELECT * FROM zevk WHERE alan = ? AND cikarildi = 0 ORDER BY onemli DESC, id DESC LIMIT 200").all(alan) as {
+    const r = this.db
+      .prepare("SELECT * FROM zevk WHERE alan = ? AND cikarildi = 0 ORDER BY onemli DESC, id DESC LIMIT 200")
+      .all(alan) as {
       id: number;
       oge_id: number;
       tur: "onay" | "ret";
@@ -1541,14 +1791,24 @@ export class Merkez {
     return r.map((z) => {
       const o = this.ogeSatiri(z.oge_id);
       const g = o ? json<OgeDosyasi[]>(o.dosyalar, []).find((d) => d.tur === "png") : undefined;
-      return { id: z.id, ogeId: z.oge_id, tur: z.tur, ad: z.ad, not: z.not_metni, onemli: z.onemli === 1, olusturma: z.olusturma, kucuk: g ? { tur: "gorsel", ogeId: z.oge_id, ozet: g.ozet } : null };
+      return {
+        id: z.id,
+        ogeId: z.oge_id,
+        tur: z.tur,
+        ad: z.ad,
+        not: z.not_metni,
+        onemli: z.onemli === 1,
+        olusturma: z.olusturma,
+        kucuk: g ? { tur: "gorsel", ogeId: z.oge_id, ozet: g.ozet } : null,
+      };
     });
   }
 
   zevkDuzenle(id: number, v: { onemli?: boolean; cikar?: boolean }, kim: string, now: number): void {
     const r = this.db.prepare("SELECT alan FROM zevk WHERE id = ?").get(id) as { alan: string } | undefined;
     if (!r) throw new IsHatasi(404, "Örnek bulunamadı.");
-    if (v.onemli !== undefined) this.db.prepare("UPDATE zevk SET onemli = ? WHERE id = ?").run(v.onemli ? 1 : 0, id);
+    if (v.onemli !== undefined)
+      this.db.prepare("UPDATE zevk SET onemli = ? WHERE id = ?").run(v.onemli ? 1 : 0, id);
     if (v.cikar) this.db.prepare("UPDATE zevk SET cikarildi = 1 WHERE id = ?").run(id);
     this.denetim.yaz(now, kim, "talimat", r.alan, `zevk örneği ${id}`);
   }
@@ -1559,7 +1819,8 @@ export class Merkez {
     if (!g.length) return "";
     const onay = g.filter((x) => x.tur === "onay");
     const ret = g.filter((x) => x.tur === "ret");
-    const sec = (l: ZevkOrnegi[], n: number): ZevkOrnegi[] => [...l.filter((x) => x.onemli), ...l.filter((x) => !x.onemli)].slice(0, n);
+    const sec = (l: ZevkOrnegi[], n: number): ZevkOrnegi[] =>
+      [...l.filter((x) => x.onemli), ...l.filter((x) => !x.onemli)].slice(0, n);
     const yarim = Math.min(10, Math.max(20 - Math.min(10, ret.length), 0));
     const ornekler = [...sec(onay, yarim), ...sec(ret, 20 - Math.min(yarim, onay.length))].slice(0, 20);
     const notlar = new Map<string, number>();
@@ -1570,7 +1831,10 @@ export class Merkez {
       "## Zevk profili (kendiliğinden güncellenir)",
       `Sahip bu alanda ${onay.length} öğeyi onayladı, ${ret.length} öğeyi reddetti.${sik.length ? ` En sık ret nedenleri: ${sik.map(([n, s]) => `“${n}” (${s})`).join(", ")}.` : ""}`,
       "Temsilî örnekler (★ = sahip önemli işaretledi):",
-      ...ornekler.map((x) => `- ${x.tur === "onay" ? "Onaylandı" : "Reddedildi"}${x.onemli ? " ★" : ""}: ${x.ad}${x.not ? ` — ${x.not}` : ""}`),
+      ...ornekler.map(
+        (x) =>
+          `- ${x.tur === "onay" ? "Onaylandı" : "Reddedildi"}${x.onemli ? " ★" : ""}: ${x.ad}${x.not ? ` — ${x.not}` : ""}`,
+      ),
       "",
     ].join("\n");
   }
@@ -1585,8 +1849,14 @@ export class Merkez {
 
   canlidakiler(alan: AlanId | null): (OgeOzeti & { koken: Koken })[] {
     const r = (alan
-      ? this.db.prepare("SELECT * FROM oge WHERE durum = 'canlida' AND alan = ? ORDER BY guncelleme DESC LIMIT 200").all(alan)
-      : this.db.prepare("SELECT * FROM oge WHERE durum = 'canlida' ORDER BY guncelleme DESC LIMIT 200").all()) as unknown as OgeSatiri[];
+      ? this.db
+          .prepare(
+            "SELECT * FROM oge WHERE durum = 'canlida' AND alan = ? ORDER BY guncelleme DESC LIMIT 200",
+          )
+          .all(alan)
+      : this.db
+          .prepare("SELECT * FROM oge WHERE durum = 'canlida' ORDER BY guncelleme DESC LIMIT 200")
+          .all()) as unknown as OgeSatiri[];
     return r.map((x) => ({ ...ozetle(x), koken: this.koken(x) }));
   }
 

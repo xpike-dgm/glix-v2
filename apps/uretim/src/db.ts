@@ -62,7 +62,7 @@ const SEMA: readonly string[] = [
     kontrol TEXT NOT NULL, sonuc TEXT NOT NULL, onayli_satirlar TEXT, paket_id INTEGER,
     olusturma INTEGER NOT NULL, karar INTEGER, guncelleme INTEGER NOT NULL,
     talimat_surum INTEGER, onaylayan TEXT, otomatik INTEGER NOT NULL DEFAULT 0, denetim INTEGER NOT NULL DEFAULT 0,
-    varyant_is INTEGER
+    varyant_is INTEGER, gorunus TEXT NOT NULL DEFAULT ''
   );
   CREATE INDEX oge_alan_durum ON oge(alan, durum, olusturma);
   CREATE INDEX oge_anahtar ON oge(alan, anahtar);
@@ -83,7 +83,7 @@ const SEMA: readonly string[] = [
     id INTEGER PRIMARY KEY, alan TEXT NOT NULL, baslik TEXT NOT NULL, aciklama TEXT NOT NULL,
     adet INTEGER, son_tarih TEXT, ornek TEXT NOT NULL DEFAULT '', kaynak TEXT NOT NULL, durum TEXT NOT NULL,
     sira INTEGER NOT NULL, olusturma INTEGER NOT NULL, istek_id INTEGER, ilgili_oge INTEGER,
-    varyant INTEGER
+    varyant INTEGER, fikir_turu INTEGER NOT NULL DEFAULT 0, secilen_fikir INTEGER, secim_notu TEXT
   );
   CREATE TABLE istek_karti (
     id INTEGER PRIMARY KEY, acan_alan TEXT NOT NULL, istenen_alan TEXT NOT NULL, ne TEXT NOT NULL,

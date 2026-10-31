@@ -28,7 +28,11 @@ const teslimSemasi = {
   required: ["tur", "ogeler"],
   properties: {
     isId: { type: "integer", description: "Bağlı iş (isleri_listele)" },
-    tur: { type: "string", enum: ["yeni", "duzenleme", "kaldirma-onerisi", "rapor"] },
+    tur: {
+      type: "string",
+      enum: ["yeni", "duzenleme", "kaldirma-onerisi", "rapor", "fikir"],
+      description: "fikir: yalnız metin (ad, aciklama, gorunus, gerekce); fikir turu açık işlerde önce bu",
+    },
     aciklama: { type: "string", maxLength: 1000 },
     ogeler: {
       type: "array",
@@ -65,6 +69,7 @@ const teslimSemasi = {
           onizleme: { type: "object", properties: { ekran: { type: "string" }, not: { type: "string" } } },
           oncekiOge: { type: "integer", description: "Düzeltilen öğenin kimliği" },
           rapor: { type: "object" },
+          gorunus: { type: "string", maxLength: 600, description: "Fikirde: nasıl görünecek, renk, hareket" },
         },
       },
     },
@@ -191,7 +196,7 @@ export async function aracCalistir(
   const alan = k.alan;
   switch (ad) {
     case "talimat_oku": {
-      const t = m.talimat(alan, now);
+      const t = m.yzTalimati(alan, now);
       return { alan, alanAdi: alanTanimi(alan).ad, surum: t.surum, metin: t.metin };
     }
     case "isleri_listele":
