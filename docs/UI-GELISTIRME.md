@@ -218,3 +218,33 @@ Ayrıntılar: `docs/oneriler/laf-sokma.md`. Onaylananlar (dosyadaki ayrıntılar
   davranışı M3 ile gelir, 😂 damgası/kahkaha sesi yok), LS-AI1, LS-AI2.
 
 **Yeni görsel gerekenler:** isteğe bağlı "VS" amblemi ve ring/köşe süsü (CSS ile yapılabilir).
+
+## Kule Ustası
+
+Ayrıntılar: `docs/oneriler/kule-ustasi.md`. Onaylananlar (dosyadaki ayrıntılarıyla): **KU-M1, KU-M3, KU-U1, KU-U2, KU-U3,
+KU-U4, KU-U5, KU-U6, KU-U7, KU-U9, KU-U10.**
+Onaylanmayanlar: KU-M2 (sırayı sen seç; bugünkü sıra düzeni kalır), KU-M4 (kusursuz kuleyi onarır), KU-M5, KU-U8
+("neden" satırı), KU-AI1.
+
+## Yazı Yaz
+
+Ayrıntılar: `docs/oneriler/yazi-yaz.md`. Onaylananlar: **YY-M1, YY-M2, YY-M3, YY-M4, YY-M5, YY-M6, YY-M7, YY-U1 … YY-U8,
+YY-AI2.** Konu listesini sahip yazar (yönetici panelindeki içerik havuzu); yapay zekâyla üretilmez.
+Onaylanmayanlar: YY-M8 (iki tur), YY-AI1 (anlam hakemi).
+
+## Sızma
+
+Ayrıntılar: `docs/oneriler/sizma.md`. Onaylananlar: **SZ-M1 … SZ-M6, SZ-U1 … SZ-U9, SZ-AI1.**
+Onaylanmayanlar: SZ-M7 (kelimesiz sızma), SZ-M8 (iki raunt). Puan dosyadaki gibi (0…+3, eksi yok; +2/+1/0
+sıralamaya çevrilmez).
+
+## Kara Borsa
+
+Ayrıntılar: `docs/oneriler/kara-borsa.md`. Onaylananlar: **KB-M1, KB-M2, KB-M3, KB-U1 … KB-U8, KB-AI1.**
+Onaylanmayanlar: KB-M4 (tezgâh söylentisi), KB-M5 (ikinci fiyat).
+
+## Kendim
+
+Ayrıntılar: `docs/oneriler/kendim.md`. Onaylananlar: **KN-M1, KN-M2, KN-M3, KN-M4, KN-U1 … KN-U7.** Konu listesini sahip
+yazar (yönetici panelindeki içerik havuzu); yapay zekâyla üretilmez.
+Onaylanmayanlar: KN-M5 (ayna turu), KN-M6 ("eminim" yıldızı), KN-AI1.
