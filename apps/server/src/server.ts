@@ -6,7 +6,8 @@ import { type AccountStore, createAccounts } from "./accountStore.js";
 import { ADMIN_PREFIX, createAdminLimits, handleAdmin } from "./admin.js";
 import { buildLive, createHealthSampler } from "./adminData.js";
 import { createAdminRoomOps } from "./adminRooms.js";
-import { type AiFetch, createAiCommenter } from "./aiComment.js";
+import { type AiFetch, createAiCommenter, createAiText } from "./aiComment.js";
+import { INSPIRE_PER_MINUTE, INSPIRE_TIMEOUT_MS } from "./aiInspire.js";
 import { AUTH_PREFIX, accountFromCookie, handleAuth, hashToken, readSessionToken } from "./auth.js";
 import { createBackupService } from "./backup.js";
 import { CLIENT_ERROR_PATH, handleClientError } from "./clientError.js";
@@ -210,6 +211,13 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     apiKey: opts.aiKey ?? null,
     clock,
     isBanned: (text) => rt.bannedWords.matches(text),
+    ...(opts.aiFetch ? { fetch: opts.aiFetch } : {}),
+  });
+  rt.aiInspire = createAiText({
+    apiKey: opts.aiKey ?? null,
+    clock,
+    timeoutMs: INSPIRE_TIMEOUT_MS,
+    perMinute: INSPIRE_PER_MINUTE,
     ...(opts.aiFetch ? { fetch: opts.aiFetch } : {}),
   });
   const friendsApi = createFriendsApi({

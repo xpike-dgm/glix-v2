@@ -236,6 +236,13 @@ describe("parseClientMessage: oda mesajları", () => {
     expect(parseClientMessage(j({ type: "revealContinue" }))).toBeNull();
     expect(parseClientMessage(j({ type: "revealContinue", round: 1, extra: 1 }))).toBeNull();
   });
+  it("inspire yalnız geçerli oyun sırasıyla kabul edilir; fazladan alan yok", () => {
+    expect(parseClientMessage(j({ type: "inspire", round: 2 }))).toEqual({ type: "inspire", round: 2 });
+    for (const round of [-1, 64, 0.5, "0", null])
+      expect(parseClientMessage(j({ type: "inspire", round })), String(round)).toBeNull();
+    expect(parseClientMessage(j({ type: "inspire" }))).toBeNull();
+    expect(parseClientMessage(j({ type: "inspire", round: 1, text: "x" }))).toBeNull();
+  });
   it("action seq ve payload doğrular", () => {
     expect(parseClientMessage(j({ type: "action", seq: 0, payload: { kind: "press" } }))).toEqual({
       type: "action",

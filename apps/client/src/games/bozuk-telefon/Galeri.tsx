@@ -1,4 +1,5 @@
-import { createMemo, createSignal, For, Show } from "solid-js";
+import type { PlayerInfo } from "@glix/engine";
+import { createSignal, For, Show } from "solid-js";
 import { Portal } from "solid-js/web";
 import { hapticReady } from "../../fx/haptics.js";
 import { toast } from "../../net/store.js";
@@ -6,20 +7,27 @@ import { clipFile, downloadCard, shareCard } from "../../share/shareFile.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { GhostButton } from "../../ui/GhostButton.js";
 import { PrimaryButton } from "../../ui/PrimaryButton.js";
-import type { GameScreenProps } from "../registry.js";
-import "../karalama-defteri/karalama.css";
-import "./bozuk-telefon.css";
 import { renderChainImage } from "./chainImage.js";
 import { StepCard } from "./StepCard.js";
+import { StepHeader } from "./StepHeader.js";
 import { galleryPick } from "./story.js";
-import { type ParsedRecap, parseBozukPublicView } from "./view.js";
+import type { ParsedRecap } from "./view.js";
 
 /**
- * Oyun sonu açılışı (BT-U7): "Gecenin en komikleri" — her zincirin taçlı adımı yan yana. Karta dokununca zincirin
+ * Oyunun kendi sonuç açılışı (BT-U7): "Gecenin en komikleri" — her zincirin taçlı adımı; altında ortak "Devam et" şeridi. Karta dokununca zincirin
  * tamamı açılır; oradan "Zinciri kaydet" zinciri telefonda tek uzun PNG olarak çizer (paylaşım menüsü ya da indirme).
  */
-export default function Reveal(props: GameScreenProps) {
-  const recap = createMemo(() => parseBozukPublicView(props.match.publicView)?.recap ?? null);
+interface Props {
+  recap: ParsedRecap[];
+  players: PlayerInfo[];
+  selfId: string;
+  /** Açılışın başladığı ve en geç biteceği an (süre çubuğu için). */
+  startedAt: number;
+  endsAt: number;
+}
+
+export function Galeri(props: Props) {
+  const recap = () => props.recap;
   const person = (id: string) => props.players.find((p) => p.id === id);
   const [open, setOpen] = createSignal<number | null>(null);
   const [busy, setBusy] = createSignal(false);
@@ -52,12 +60,16 @@ export default function Reveal(props: GameScreenProps) {
   };
 
   return (
-    <Show when={recap()?.length ? recap() : null}>
+    <Show when={recap().length ? recap() : null}>
       {(list) => (
-        <section class="btg rise" aria-label="Gecenin en komikleri">
-          <h2 class="btg__title">
-            <span aria-hidden="true">👑</span> Gecenin en komikleri
-          </h2>
+        <section class="btg" aria-label="Gecenin en komikleri">
+          <StepHeader
+            chip="SONUÇ"
+            title="👑 Gecenin en komikleri"
+            startedAt={props.startedAt}
+            endsAt={props.endsAt}
+          />
+          <p class="btg__hint">Karta dokun: zincirin tamamını gör ve kaydet</p>
           <ul class="btg__strip" data-scroll>
             <For each={list()}>
               {(r, k) => {

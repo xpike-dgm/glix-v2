@@ -1503,8 +1503,13 @@ BT-M1/M2/M3: `docs/oneriler/bozuk-telefon.md`, `docs/UI-GELISTIRME.md`)
   0'dan büyükse herkes +1. Eksi puan yoktur.
 - Kartlar (K6): "birinci/sonuncu" kahkaha puanına göre belirlenir; çarpanlar +2/+1 ödülünü katlar (Altın Dokunuş ile en
   çok +6); eksi olmadığından Kalkan etkisizdir.
-- Oyun sonunda "Gecenin en komikleri": her zincirin en çok oy alan adımı; her zincir telefonda tek uzun görsel olarak
+- Oyunun kendi sonuç açılışı son zincirin oylaması bitince başlar: 2 sn zincir sonucu, ardından "Gecenin en komikleri"
+  (her zincirin en çok oy alan adımı) ve altta ortak "Devam et". Her zincir telefonda tek uzun görsel olarak
   kaydedilebilir (görsel cihazda oluşturulur, hiçbir yere gönderilmez).
+- **"💡 İlham ver"** (yalnız ilk cümle adımında): yapay zekâ o an 3 kısa, çizilebilir, komik cümle önerir; yalnız isteyen
+  oyuncu görür, dokununca kutuya yazılır (değiştirilebilir). Kişi başı oyun başına en çok 3 istek; öneriler saklanmaz,
+  havuz değildir; modele kişisel bilgi gitmez; yasaklı kelime süzgecinden geçer. Hata/zaman aşımında "Şu an ilham yok";
+  özellik kapalıysa düğme görünmez. Kural ve puanı etkilemez.
 
 ## 27. Laf Sokma Düellosu — `laf-sokma`
 

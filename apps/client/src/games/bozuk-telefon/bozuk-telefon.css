@@ -138,8 +138,76 @@
   gap: 8px;
   margin-top: -4px;
 }
+.bt__slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
 .bt__slot:empty {
   display: none;
+}
+.bt__inspire {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 194, 59, 0.6);
+  background: rgba(255, 194, 59, 0.1);
+  color: var(--text);
+  font-weight: 700;
+  font-size: var(--fs-15);
+  white-space: nowrap;
+}
+.bt__inspire:disabled {
+  opacity: 0.6;
+}
+.bt__inspire:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.bt__noidea {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.bt__ideas {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  gap: 6px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  animation: bt-in 320ms var(--ease) both;
+}
+.bt__ideas p {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.bt__ideabtn {
+  flex: none;
+  height: 52px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  border: 1.5px solid rgba(255, 194, 59, 0.5);
+  background: rgba(255, 194, 59, 0.08);
+  color: var(--text);
+}
+.bt__ideabtn .fit {
+  height: 100%;
+}
+.bt__ideabtn .fit__in {
+  text-shadow: none;
+}
+.bt__ideabtn[data-on="1"] {
+  border-color: var(--lime);
+  background: rgba(182, 255, 59, 0.12);
 }
 .bt__limit {
   flex: none;
@@ -170,7 +238,9 @@
 }
 .bt[data-tight="1"] .bt__crew,
 .bt[data-tight="1"] .bt__idea,
-.bt[data-tight="1"] .bt__meta {
+.bt[data-tight="1"] .bt__ideas,
+.bt[data-tight="1"] .bt__limit,
+.bt[data-tight="1"] .bt__meta:has(.bt__slot:empty) {
   display: none;
 }
 .bt[data-tight="1"] .bt__stage {
@@ -275,6 +345,13 @@
   flex-direction: column;
   align-items: center;
   animation: bt-in 420ms var(--ease) both;
+}
+.btf__lock {
+  margin-top: 12px;
+}
+.btf__lock .btl {
+  width: 100%;
+  box-sizing: border-box;
 }
 .btf__link {
   display: flex;
@@ -784,25 +861,30 @@ button.btc:active:not(:disabled) {
   }
 }
 
-/* oyun sonu: gecenin en komikleri */
+/* oyunun kendi sonuç açılışı: gecenin en komikleri (altında ortak "Devam et" şeridi) */
 .btg {
-  margin: 4px 0 8px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
-.btg__title {
-  margin: 0 0 6px;
+.btg__hint {
+  flex: none;
+  margin: 8px 0 4px;
   text-align: center;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: var(--fs-15);
-  color: var(--amber);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--text-dim);
 }
 .btg__strip {
+  flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-  gap: 8px;
-  max-height: min(196px, 30vh);
-  margin: 0;
-  padding: 4px 2px 6px;
+  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+  align-content: start;
+  gap: 10px;
+  margin: 0 -16px;
+  padding: 6px 16px 10px;
   list-style: none;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -1267,4 +1349,7 @@ button.btc:active:not(:disabled) {
     min-height: 0;
     padding-bottom: 2px;
   }
+}
+.btf--recap {
+  gap: 12px;
 }

@@ -6,6 +6,8 @@
  *   ?mock=bozuk-show (&shown=2) | bozuk-vote | bozuk-vote-picked | bozuk-vote-voted | bozuk-vote-spectator
  *   ?mock=bozuk-result | bozuk-result-robust | bozuk-result-quiet | bozuk-results (oyun sonu: galeri + sıralama)
  *   ?mock=bozuk-write-sent (ilk cümle kablodan gitti)
+ *   ?mock=bozuk-write-ilham (İlham ver önerileri) | bozuk-write-ilham-yok ("Şu an ilham yok") | bozuk-write-ilham-kapali
+ *   ?mock=bozuk-gallery (&sonuc=1: altta "Devam et") — oyun içi sonuç: gecenin en komikleri
  * `&n=8` oyuncu sayısını değiştirir. Yazı ve çizim yerelde tutulur; oylar yerelde işlenir.
  * TV: ?mock=tv-bozuk-<aynı ad> (ör. tv-bozuk-show, tv-bozuk-vote, tv-bozuk-result-robust).
  */
@@ -22,6 +24,7 @@ import {
   type DrawPen,
   GAMES,
   type GameInfo,
+  type InspireMine,
   type KaralamaStroke,
   type MatchSnapshot,
   type PlayerInfo,
@@ -37,6 +40,11 @@ const SELF = "p0";
 const GAME_ID = "bozuk-telefon";
 const CATALOG: GameInfo[] = [
   { id: GAME_ID, name: "Bozuk Telefon", minPlayers: 3, maxPlayers: 8, orientation: "portrait" },
+];
+const IDEAS = [
+  "PENGUEN SAHİLDE DONDURMA SATIYOR",
+  "DİNOZOR OTOBÜSE YETİŞMEYE ÇALIŞIYOR",
+  "AY'IN ÜSTÜNDE PİKNİK YAPAN İNEK",
 ];
 const SENTENCES = [
   "KEDİ UZAYDA PİZZA YİYOR",
@@ -67,8 +75,10 @@ export function startBozukMock(kind: string, params: URLSearchParams): void {
 
   const isReveal = /bozuk-(show|vote|result)/.test(kind);
   const isVote = kind.includes("vote");
-  const isResult = kind.includes("result") && kind !== "bozuk-results";
-  const isFinal = kind === "bozuk-results";
+  // bozuk-gallery: oyunun kendi sonuç açılışı (galeri + "Devam et"; `&sonuc=1` şeridi gösterir).
+  const isGallery = kind.startsWith("bozuk-gallery");
+  const isResult = (kind.includes("result") && kind !== "bozuk-results") || isGallery;
+  const isFinal = kind === "bozuk-results" || isGallery;
   const isWrite = kind.startsWith("bozuk-write");
   const late = kind === "bozuk-write-late";
   const step = isWrite ? (late ? 2 : 0) : 1;
@@ -100,7 +110,7 @@ export function startBozukMock(kind: string, params: URLSearchParams): void {
     phaseEndsAt = now + 40_000;
     phaseStartedAt = now;
   }
-  if (isFinal) {
+  if (isFinal && !isGallery) {
     phase = "results";
     phaseStartedAt = now;
     phaseEndsAt = now + 60_000;
@@ -217,6 +227,12 @@ export function startBozukMock(kind: string, params: URLSearchParams): void {
     };
   };
 
+  // "İlham ver" (kişisel): bozuk-write-ilham öneriler gelmiş, bozuk-write-ilham-yok son istek sonuçsuz.
+  let inspire: InspireMine = kind.includes("ilham-yok")
+    ? { left: 1, pending: false, failed: true, ideas: [] }
+    : kind.includes("ilham")
+      ? { left: 2, pending: false, failed: false, ideas: IDEAS }
+      : { left: 3, pending: false, failed: false, ideas: [] };
   const publish = (): void => {
     const miniScores = scores();
     const snapshot: RoomSnapshot = {
@@ -247,7 +263,10 @@ export function startBozukMock(kind: string, params: URLSearchParams): void {
         phaseEndsAt,
         publicView: phase === "briefing" ? null : publicView(),
         view: phase === "briefing" ? null : view(),
-        result: isFinal ? { miniScores, awards: bozukRankAwards(miniScores, participants) } : null,
+        inspire:
+          isWrite && step === 0 && !spectator && !kind.includes("ilham-kapali") ? { ...inspire } : null,
+        result:
+          isFinal && !isGallery ? { miniScores, awards: bozukRankAwards(miniScores, participants) } : null,
       } satisfies MatchSnapshot,
     };
     applySnapshot(snapshot);
@@ -256,6 +275,16 @@ export function startBozukMock(kind: string, params: URLSearchParams): void {
   setState({ conn: "open", everOpen: true, nickname: "Cihad" });
   useMockSender((msg) => {
     if (msg.type === "ready") return;
+    if (msg.type === "inspire") {
+      if (inspire.pending || inspire.left === 0) return;
+      inspire = { ...inspire, pending: true, failed: false, left: inspire.left - 1 };
+      publish();
+      setTimeout(() => {
+        inspire = { ...inspire, pending: false, ideas: IDEAS };
+        publish();
+      }, 700);
+      return;
+    }
     if (msg.type !== "action") return;
     const a = msg.payload as {
       kind?: string;

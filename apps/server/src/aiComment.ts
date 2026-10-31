@@ -118,9 +118,39 @@ export function withNames(
   return cleanComment(replaced, isBanned) === replaced ? replaced : null;
 }
 
-export function createAiCommenter(opts: AiCommenterOptions): AiCommenter {
+/** Genel kısa metin üretimi: tek istek, düşünme kapalı, yalnız kendiliğinden biten yanıt, zaman aşımı, hız sınırı. */
+export interface AiTextOptions {
+  apiKey: string | null;
+  clock: Clock;
+  fetch?: AiFetch;
+  timeoutMs?: number;
+  perMinute?: number;
+}
+
+export interface AiTextRequest<T> {
+  prompt: AiPrompt;
+  maxTokens: number;
+  /** Ham yanıt metnini (`stop_reason` "end_turn" olmayan yanıtta null) doğrular/dönüştürür; geçmezse null. */
+  parse: (raw: string | null) => T | null;
+  /** Günlük kayıt öneki (ör. "ai_comment"). */
+  tag: string;
+}
+
+export interface AiText {
+  /** Anahtar tanımlı mı (değilse hiçbir şey denenmez). */
+  readonly enabled: boolean;
+  /**
+   * Tek istek başlatır ve hemen döner. `done` tam bir kez çağrılır: doğrulanmış değer ya da (hata, zaman aşımı,
+   * geçersiz yanıt) null. Kapalıysa ya da hız sınırı doluysa istek gönderilmez, `done` çağrılmaz ve false döner.
+   */
+  generate<T>(req: AiTextRequest<T>, done: (value: T | null) => void): boolean;
+}
+
+export const disabledAiText: AiText = { enabled: false, generate: () => false };
+
+export function createAiText(opts: AiTextOptions): AiText {
   const key = opts.apiKey?.trim() ?? "";
-  if (!key) return disabledAiCommenter;
+  if (!key) return disabledAiText;
   const doFetch: AiFetch = opts.fetch ?? (fetch as unknown as AiFetch);
   const timeoutMs = opts.timeoutMs ?? AI_COMMENT_TIMEOUT_MS;
   const perMinute = opts.perMinute ?? AI_COMMENT_PER_MINUTE;
@@ -134,7 +164,7 @@ export function createAiCommenter(opts: AiCommenterOptions): AiCommenter {
     return true;
   };
 
-  async function run(prompt: AiPrompt, signal: AbortSignal): Promise<string | null> {
+  async function run<T>(req: AiTextRequest<T>, signal: AbortSignal): Promise<T | null> {
     const res = await doFetch(AI_COMMENT_URL, {
       method: "POST",
       headers: {
@@ -144,55 +174,78 @@ export function createAiCommenter(opts: AiCommenterOptions): AiCommenter {
       },
       body: JSON.stringify({
         model: AI_COMMENT_MODEL,
-        max_tokens: MAX_TOKENS,
+        max_tokens: req.maxTokens,
         // Düşünme kapalı: açıkken kısa sınırda yalnız düşünme bloğu gelir, metin hiç çıkmaz.
         thinking: { type: "disabled" },
-        system: prompt.system,
-        messages: [{ role: "user", content: prompt.user }],
+        system: req.prompt.system,
+        messages: [{ role: "user", content: req.prompt.user }],
       }),
       redirect: "manual",
       signal,
     });
     if (res.status < 200 || res.status >= 300) {
-      log.warn("ai_comment_failed", { status: res.status });
+      log.warn(`${req.tag}_failed`, { status: res.status });
       return null;
     }
-    const text = cleanComment(responseText(await res.json()), opts.isBanned);
-    return text === null ? null : withNames(text, prompt.names, opts.isBanned);
+    return req.parse(responseText(await res.json()));
   }
 
   return {
     enabled: true,
-    request(prompt, onText) {
+    generate(req, done) {
       if (!allow()) {
-        log.warn("ai_comment_rate_limited");
+        log.warn(`${req.tag}_rate_limited`);
         return false;
       }
       const controller = new AbortController();
       let settled = false;
-      const cancelTimer = opts.clock.setTimeout(() => {
-        if (settled) return;
-        settled = true;
-        controller.abort();
-        log.warn("ai_comment_timeout");
-      }, timeoutMs);
-      const finish = (text: string | null): void => {
+      const finish = (value: Parameters<typeof done>[0]): void => {
         if (settled) return;
         settled = true;
         cancelTimer();
-        if (text === null) return;
         try {
-          onText(text);
+          done(value);
         } catch (err) {
-          log.warn("ai_comment_apply_failed", { error: String(err) });
+          log.warn(`${req.tag}_apply_failed`, { error: String(err) });
         }
       };
+      const cancelTimer = opts.clock.setTimeout(() => {
+        if (settled) return;
+        controller.abort();
+        log.warn(`${req.tag}_timeout`);
+        finish(null);
+      }, timeoutMs);
       // Hata metni anahtar ya da istek ayrıntısı içerebilir: yalnız genel kayıt.
-      run(prompt, controller.signal).then(finish, () => {
-        if (!settled) log.warn("ai_comment_failed");
+      run(req, controller.signal).then(finish, () => {
+        if (!settled) log.warn(`${req.tag}_failed`);
         finish(null);
       });
       return true;
+    },
+  };
+}
+
+/** Oyun sonu yorumu: genel kısa metin üretiminin üstünde tek satır, doğrulanmış, yer tutucuları adlarla değişmiş. */
+export function createAiCommenter(opts: AiCommenterOptions): AiCommenter {
+  const text = createAiText(opts);
+  if (!text.enabled) return disabledAiCommenter;
+  return {
+    enabled: true,
+    request(prompt, onText) {
+      return text.generate(
+        {
+          prompt,
+          maxTokens: MAX_TOKENS,
+          tag: "ai_comment",
+          parse: (raw) => {
+            const clean = cleanComment(raw, opts.isBanned);
+            return clean === null ? null : withNames(clean, prompt.names, opts.isBanned);
+          },
+        },
+        (value) => {
+          if (value !== null) onText(value);
+        },
+      );
     },
   };
 }

@@ -6,6 +6,10 @@ import {
   GAME_COMMENT_MAX,
   type GameInfo,
   type GameResult,
+  INSPIRE_IDEAS,
+  INSPIRE_MAX_REQUESTS,
+  INSPIRE_TEXT_MAX,
+  type InspireMine,
   isFriendStatus,
   isReactionId,
   JOIN_POLICIES,
@@ -174,6 +178,27 @@ function parseMatch(v: unknown): MatchSnapshot | null {
     cards,
     mine,
     ...(comment !== null ? { comment } : {}),
+    inspire: parseInspire(v.inspire),
+  };
+}
+
+/**
+ * Yalnız bu oyuncunun "İlham ver" durumu; yoksa ya da bozuksa null (düğme görünmez). Öneriler tek satır düz metin,
+ * en çok `INSPIRE_TEXT_MAX` karakter, en çok `INSPIRE_IDEAS` tane; uymayan öneri atılır.
+ */
+export function parseInspire(v: unknown): InspireMine | null {
+  if (!isRec(v) || !isNum(v.left) || typeof v.pending !== "boolean" || typeof v.failed !== "boolean")
+    return null;
+  if (!isStrArr(v.ideas)) return null;
+  const ideas = v.ideas
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0 && Array.from(t).length <= INSPIRE_TEXT_MAX && !/[\p{Cc}<>]/u.test(t))
+    .slice(0, INSPIRE_IDEAS);
+  return {
+    left: Math.max(0, Math.min(INSPIRE_MAX_REQUESTS, Math.floor(v.left))),
+    pending: v.pending,
+    failed: v.failed,
+    ideas,
   };
 }
 

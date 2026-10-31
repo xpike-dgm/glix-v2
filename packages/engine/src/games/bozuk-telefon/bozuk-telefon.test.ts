@@ -615,6 +615,30 @@ describe("bozuk-telefon isimsiz oylama (gizlilik)", () => {
   });
 });
 
+describe("bozuk-telefon sonuç açılışı (revealAt)", () => {
+  const revealAt = (s: BozukState, at: number) => game.revealAt?.(s, ctx(at)) ?? null;
+  it("girdi sürerken belli değil; gösteride son zincirin oylama bitişi (sonuç açılışı)", () => {
+    expect(revealAt(start(), 1_000)).toBeNull();
+    const s = toReveal();
+    expect(revealAt(s, chainStart(4, 0))).toBe(T0 + voteStart(4, 3) + BOZUK_VOTE_MS);
+    // Açılıştan 2 sn sonra (sonuç penceresi) oyun biter; açılış anı kaymaz.
+    expect(game.isFinished(s, ctx(voteStart(4, 3) + BOZUK_VOTE_MS + BOZUK_RESULT_MS))).toBe(true);
+    expect(revealAt(s, endAt(4) + 5_000)).toBe(T0 + voteStart(4, 3) + BOZUK_VOTE_MS);
+  });
+  it("son zincirde herkes oy verince açılış öne çekilir (1 sn sonra)", () => {
+    let s = tickAt(toReveal(), voteStart(4, 3) + 100);
+    // Zincir 3 yazarları d,a,b,c.
+    for (const [id, step] of [
+      ["a", 0],
+      ["b", 0],
+      ["c", 0],
+      ["d", 1],
+    ] as const)
+      s = act(s, id, vote(step), voteStart(4, 3) + 200);
+    expect(revealAt(s, voteStart(4, 3) + 300)).toBe(T0 + voteStart(4, 3) + 1_200);
+  });
+});
+
 describe("bozuk-telefon kahkaha puanı -> mini puan (+2 / +1 / 0)", () => {
   const P = ["a", "b", "c", "d"];
   it("en yüksek +2, sonraki farklı toplam +1, diğerleri 0", () => {

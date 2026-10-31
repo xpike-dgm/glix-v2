@@ -144,6 +144,11 @@ export type ClientMessage =
    * (açılış animasyonu bitmişse) biter; kimse basmazsa açılış başından en geç 60 sn sonra.
    */
   | { type: "revealContinue"; round: number }
+  /**
+   * "💡 İlham ver" (Bozuk Telefon ilk cümle adımı): sunucu, yapay zekâdan anlık kısa cümle önerileri ister; öneriler
+   * yalnız isteyen oyuncunun `MatchSnapshot.inspire` alanına gelir. `round`: o anki `MatchSnapshot.round`.
+   */
+  | { type: "inspire"; round: number }
   | { type: "action"; seq: number; payload: unknown }
   | { type: "returnToLobby" }
   /** İstemci elindeki snapshot'a yama uygulayamadığında tam snapshot ister. */
@@ -289,6 +294,23 @@ export interface MatchReveal {
 /** Oyun sonu yorumunun en çok uzunluğu (karakter). */
 export const GAME_COMMENT_MAX = 90;
 
+/** "İlham ver": kişi başı oyun başına en çok istek, öneri sayısı ve öneri uzunluğu (karakter). */
+export const INSPIRE_MAX_REQUESTS = 3;
+export const INSPIRE_IDEAS = 3;
+export const INSPIRE_TEXT_MAX = 60;
+
+/**
+ * Yalnız bu oyuncunun "İlham ver" durumu (Bozuk Telefon ilk cümle adımı; özellik kapalıysa ya da adım bu değilse
+ * yok). `left`: kalan istek hakkı; `pending`: istek sürüyor; `failed`: son istek sonuçsuz ("Şu an ilham yok");
+ * `ideas`: son gelen öneriler (Türkçe büyük harf, en çok `INSPIRE_TEXT_MAX`). Hiçbir yerde saklanmaz.
+ */
+export interface InspireMine {
+  left: number;
+  pending: boolean;
+  failed: boolean;
+  ideas: string[];
+}
+
 export interface MatchSnapshot {
   /** 0 tabanlı oyun sırası ve toplam oyun sayısı. */
   round: number;
@@ -326,6 +348,8 @@ export interface MatchSnapshot {
   cards?: CardsPublic | null;
   /** Yalnız bu oyuncunun kart bilgisi (izleyici ve sahnede null). */
   mine?: CardsMine | null;
+  /** Yalnız bu oyuncunun "İlham ver" durumu (bkz. `InspireMine`); kullanılamıyorsa yok/null. */
+  inspire?: InspireMine | null;
 }
 
 export interface RoomSnapshot {
@@ -727,6 +751,16 @@ export function parseClientMessage(raw: string): ClientMessage | null {
         out.gameId = g;
       }
       return out;
+    }
+    case "inspire": {
+      if (!hasExactKeys(data, ["type", "round"])) return null;
+      const round = data.round;
+      return typeof round === "number" &&
+        Number.isSafeInteger(round) &&
+        round >= 0 &&
+        round < MAX_SELECTED_GAMES
+        ? { type: "inspire", round }
+        : null;
     }
     case "revealContinue": {
       if (!hasExactKeys(data, ["type", "round"])) return null;

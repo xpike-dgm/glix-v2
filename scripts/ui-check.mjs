@@ -1462,11 +1462,26 @@ const SCREENS = [
   { name: "bt-result-robust-8", q: "mock=bozuk-result-robust&n=8" },
   { name: "bt-result-quiet-6", q: "mock=bozuk-result-quiet&n=6" },
   { name: "bt-results-5", q: "mock=bozuk-results&n=3", settle: 2400 },
-  { name: "bt-results-gallery-8", q: "mock=bozuk-results&n=8", settle: 2400 },
+  { name: "bt-gallery-5", q: "mock=bozuk-gallery&n=5&sonuc=1", settle: 1600 },
+  { name: "bt-gallery-8", q: "mock=bozuk-gallery&n=8&sonuc=1", settle: 1600 },
   {
-    name: "bt-results-chain",
-    q: "mock=bozuk-results&n=5",
+    name: "bt-gallery-chain",
+    q: "mock=bozuk-gallery&n=5&sonuc=1",
     act: async (p) => p.locator(".btg__card").first().click(),
+    settle: 800,
+  },
+  { name: "bt-result-robust-5-devam", q: "mock=bozuk-result-robust&n=5&sonuc=1", settle: 1600 },
+  { name: "bt-write-ilham", q: "mock=bozuk-write-ilham" },
+  { name: "bt-write-ilham-yok", q: "mock=bozuk-write-ilham-yok" },
+  {
+    name: "bt-write-ilham-tap",
+    q: "mock=bozuk-write",
+    sizes: PORTRAIT,
+    act: async (p) => {
+      await p.locator(".bt__inspire:not(:disabled)").click();
+      for (let i = 0; i < 20 && (await p.locator(".bt__ideabtn").count()) === 0; i++) await wait(p, 300);
+      await p.locator(".bt__ideabtn").first().click();
+    },
     settle: 800,
   },
   { name: "bt-write-sent", q: "mock=bozuk-write-sent", settle: 1800 },

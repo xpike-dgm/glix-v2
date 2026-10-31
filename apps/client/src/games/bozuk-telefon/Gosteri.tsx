@@ -111,7 +111,8 @@ export function Gosteri(props: Props) {
     ),
   );
   onMount(() => {
-    const top = props.reveal.stage === "result" ? props.reveal.crowned?.[0] : undefined;
+    const top =
+      props.reveal.stage === "result" && !props.reveal.robust ? props.reveal.crowned?.[0] : undefined;
     scrollFeed(top ?? "end");
   });
   createEffect(
@@ -120,7 +121,9 @@ export function Gosteri(props: Props) {
       () => {
         if (!result()) return;
         const top = r().crowned?.[0];
-        if (top !== undefined) scrollFeed(top);
+        // Sağlam zincirde halka paneli akışın sonunda: son kart ve panel görünsün; değilse taçlı karta kay.
+        if (r().robust) scrollFeed("end");
+        else if (top !== undefined) scrollFeed(top);
         if (r().robust) chainClink();
         else if (top !== undefined) laugh();
         else {
@@ -221,11 +224,17 @@ export function Gosteri(props: Props) {
                 );
               }}
             </For>
+            <Show when={pair()}>
+              {(p) => (
+                <div class="btf__item btf__lock">
+                  <ChainLock first={p()[0]} last={p()[1]} />
+                </div>
+              )}
+            </Show>
           </div>
         )}
       </For>
       <div class="bt__foot">
-        <Show when={pair()}>{(p) => <ChainLock first={p()[0]} last={p()[1]} />}</Show>
         <Show
           when={result()}
           fallback={

@@ -29,6 +29,8 @@ interface Props {
   onType: (text: string) => void;
   /** Bekleyen metni hemen sunucuya yollayan işlevi verir. */
   onFlush: (flush: () => void) => void;
+  /** Alanı dışarıdan dolduran işlevi verir (ör. "İlham ver" önerisine dokununca); hemen sunucuya gider. */
+  onSetter?: (set: (text: string) => void) => void;
 }
 
 /** Çok satırlı (en çok 2 satır görünür) cümle alanı: yazdıkça kısa gecikmeyle sunucuya gider. */
@@ -44,9 +46,20 @@ export function SentenceField(props: Props) {
     props.onChange(current);
   };
   props.onFlush(flush);
+  let area: HTMLTextAreaElement | undefined;
+  props.onSetter?.((raw) => {
+    if (props.locked || !area) return;
+    const value = typedSentence(raw);
+    area.value = value;
+    area.dataset.len = sentenceLen(value);
+    current = value;
+    props.onType(value);
+    flush();
+  });
   return (
     <div class="bt__field" data-locked={props.locked ? "1" : undefined}>
       <textarea
+        ref={area}
         class="bt__input"
         lang="tr"
         rows={2}

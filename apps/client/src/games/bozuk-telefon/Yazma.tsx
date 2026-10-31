@@ -1,13 +1,14 @@
 // biome-ignore-all lint/a11y/noSvgWithoutTitle: simgeler dekoratif (aria-hidden)
-import { BOZUK_TEXT_MAX } from "@glix/engine";
-import { createEffect, createSignal, For, type JSX, on, Show } from "solid-js";
+import { BOZUK_TEXT_MAX, type InspireMine } from "@glix/engine";
+import { createEffect, createSignal, For, on, Show } from "solid-js";
 import { hapticReady } from "../../fx/haptics.js";
-import { ready as readySound } from "../../fx/sound.js";
+import { ready as readySound, tap } from "../../fx/sound.js";
 import { sendAction, sendActionAck } from "../../net/client.js";
 import { Avatar } from "../../ui/Avatar.js";
 import type { AckLike } from "../../ui/optimistic.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { Crew } from "./BozukTelefonScreen.js";
+import { FitText } from "./FitText.js";
 import { PhoneArt } from "./PhoneArt.js";
 import { Replay } from "./Replay.js";
 import { hasSentence, SentenceField } from "./SentenceField.js";
@@ -21,15 +22,18 @@ interface Props {
   spectator: boolean;
   now: () => number;
   /**
-   * İlk cümle ekranında "💡 İlham ver" düğmesinin yeri (BT-AI1; ortak yapay zekâ altyapısı bağlanınca verilir).
-   * Karakter sayacının solunda durur; verilmezse yer boş kalır.
+   * "💡 İlham ver" (BT-AI1): yalnız bu oyuncunun durumu; sunucu özelliği açmadıysa ya da ilk cümle adımı değilse
+   * null/undefined (düğme hiç görünmez).
    */
-  inspire?: JSX.Element;
+  inspire?: InspireMine | null | undefined;
+  onInspire?: () => void;
 }
 
 /** Yazma adımı: ilk adımda kendi cümlen, sonrakilerde elindeki çizimi tek cümleyle anlat. */
 export function Yazma(props: Props) {
   const first = () => props.view.step === 0;
+  const ideas = (): string[] => (first() ? (props.inspire?.ideas ?? []) : []);
+  let setSentence: (text: string) => void = () => undefined;
   const [text, setText] = createSignal(props.view.text ?? "");
   let flush: () => void = () => undefined;
   const locked = () => props.view.done;
@@ -76,10 +80,36 @@ export function Yazma(props: Props) {
         <Show
           when={!first()}
           fallback={
-            <div class="bt__idea">
-              <PhoneArt sending={sending() || (props.view.done && !props.spectator)} />
-              <p>Sıradaki arkadaşın bunu çizecek. Kısa ve komik tut!</p>
-            </div>
+            <Show
+              when={ideas().length > 0 && !locked() ? ideas() : null}
+              fallback={
+                <div class="bt__idea">
+                  <PhoneArt sending={sending() || (props.view.done && !props.spectator)} />
+                  <p>Sıradaki arkadaşın bunu çizecek. Kısa ve komik tut!</p>
+                </div>
+              }
+            >
+              {(list) => (
+                <section class="bt__ideas" data-scroll aria-label="İlham önerileri">
+                  <p>Birine dokun, istersen değiştir:</p>
+                  <For each={list()}>
+                    {(idea) => (
+                      <button
+                        type="button"
+                        class="bt__ideabtn"
+                        data-on={text() === idea ? "1" : undefined}
+                        onClick={() => {
+                          tap();
+                          setSentence(idea);
+                        }}
+                      >
+                        <FitText text={idea} max={18} min={13} />
+                      </button>
+                    )}
+                  </For>
+                </section>
+              )}
+            </Show>
           }
         >
           <div class="bt__stage">
@@ -121,9 +151,47 @@ export function Yazma(props: Props) {
             onFlush={(f) => {
               flush = f;
             }}
+            onSetter={(set) => {
+              setSentence = set;
+            }}
           />
           <div class="bt__meta">
-            <span class="bt__slot">{first() ? props.inspire : null}</span>
+            <span class="bt__slot">
+              <Show when={first() && !locked() && !props.spectator ? props.inspire : null}>
+                {(ins) => (
+                  <>
+                    <button
+                      type="button"
+                      class="bt__inspire"
+                      disabled={ins().pending || ins().left === 0}
+                      aria-label={
+                        ins().pending
+                          ? "İlham geliyor"
+                          : ins().left === 0
+                            ? "İlham hakkın bitti"
+                            : `İlham ver, ${ins().left} hakkın var`
+                      }
+                      onClick={() => {
+                        tap();
+                        props.onInspire?.();
+                      }}
+                    >
+                      <span aria-hidden="true">💡</span>
+                      {ins().pending
+                        ? "Düşünüyor…"
+                        : ins().left === 0
+                          ? "İlham bitti"
+                          : `İlham ver · ${ins().left}`}
+                    </button>
+                    <Show when={ins().failed && !ins().pending}>
+                      <span class="bt__noidea" role="status">
+                        Şu an ilham yok
+                      </span>
+                    </Show>
+                  </>
+                )}
+              </Show>
+            </span>
             <p class="bt__limit" aria-hidden="true">
               {Array.from(text()).length}/{BOZUK_TEXT_MAX}
             </p>

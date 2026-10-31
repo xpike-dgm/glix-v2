@@ -25,8 +25,8 @@
       "ad": "Adım 1: Cümle yaz",
       "sureSn": 20,
       "kim": "herkes (eşzamanlı)",
-      "aciklama": "Üstte 'ADIM 1/n', 'Bir cümle yaz' ve süre çubuğu. Ortada büyük, eski çevirmeli bir telefon ve sağ kenara uzanan kıvrık kablosu; altında 'Sıradaki arkadaşın bunu çizecek. Kısa ve komik tut!'. Cümle alanı ('Örn. Kedi uzayda pizza yiyor'), 'k/60' sayacı, avatar şeridi ve 'Tamam'. Yazdıkça metin Türkçe büyük harfe çevrilir, uzun cümlede alan yazısı küçülür. 'Tamam' denince cümle parlayan bir not olarak kablodan sıradakine gider ('Sıradakine gitti!'). Sayacın solunda ileride '💡 İlham ver' düğmesi için ayrılmış yer vardır (şimdilik boş).",
-      "gizli": "Yazdığın cümleyi yalnız sen ve (adım bitince) zinciri sıradaki tutan oyuncu görür."
+      "aciklama": "Üstte 'ADIM 1/n', 'Bir cümle yaz' ve süre çubuğu. Ortada büyük, eski çevirmeli bir telefon ve sağ kenara uzanan kıvrık kablosu; altında 'Sıradaki arkadaşın bunu çizecek. Kısa ve komik tut!'. Cümle alanı ('Örn. Kedi uzayda pizza yiyor'), 'k/60' sayacı, avatar şeridi ve 'Tamam'. Yazdıkça metin Türkçe büyük harfe çevrilir, uzun cümlede alan yazısı küçülür. 'Tamam' denince cümle parlayan bir not olarak kablodan sıradakine gider ('Sıradakine gitti!'). Sayacın solunda '💡 İlham ver · k' düğmesi: basınca yapay zekâ anlık 3 kısa, çizilebilir cümle önerir; öneriler telefon çiziminin yerinde düğme olarak çıkar, dokununca kutuya yazılır. Kişi başı en çok 3 istek; hata olursa 'Şu an ilham yok'; özellik kapalıysa düğme görünmez.",
+      "gizli": "Yazdığın cümleyi yalnız sen ve (adım bitince) zinciri sıradaki tutan oyuncu görür. İlham önerileri yalnız isteyen oyuncunun kişisel görünümüne gider."
     },
     {
       "ad": "Çizme adımı",
@@ -92,7 +92,8 @@
     "Hiç ya da yalnız '…' olan ilk ya da son yazı sağlam sayılmaz; zincirin tüm adımları tamamlanmamışsa sağlam sayılmaz.",
     "Mini oyun puanı = kahkaha puanı toplamı. Genel skora giden: en yüksek kahkaha toplamı +2, ondan sonraki farklı toplam +1, diğerleri 0. Birincide eşitlik varsa hepsi +2 ve sonraki farklı toplam +1; toplamı 0 olan ödül almaz; herkesin toplamı aynı ve 0'dan büyükse herkes +1. Eksi puan yoktur.",
     "Gösteri sırasında ekrandaki kahkaha puanları yalnız sonucu açılmış zincirlerden birikir.",
-    "Oyun bitince (son zincirin sonucu açılınca) ortak görünüm tüm zincirleri yazarları, oyları ve taçlarıyla taşır (recap); sonuç ekranındaki galeri ve 'Zinciri kaydet' buradan çalışır. Kaydedilen görsel cihazda çizilir, sunucuya bir şey gitmez."
+    "Oyun bitince (son zincirin sonucu açılınca) ortak görünüm tüm zincirleri yazarları, oyları ve taçlarıyla taşır (recap); sonuç ekranındaki galeri ve 'Zinciri kaydet' buradan çalışır. Kaydedilen görsel cihazda çizilir, sunucuya bir şey gitmez.",
+    "'💡 İlham ver' yalnız ilk cümle adımında ve yalnız katılımcıya açıktır; kişi başı oyun başına en çok 3 istek, aynı anda tek istek. Sunucu sabit bir istemle (kişisel bilgi yok) en çok 3 öneri ister; her öneri tek satır, en çok 60 karakter, Türkçe büyük harf, yasaklı kelime süzgecinden geçer. Öneriler yalnız isteyen oyuncuya gider, saklanmaz, havuz değildir. Kural ve puanı etkilemez; öneriyi kullanmak normal yazma eylemidir."
   ],
   "puanlama": {
     "ozet": "Oylar (+1) ve sağlam zincir (+1) kahkaha puanında toplanır; genel skora kahkaha sırasına göre +2 / +1 / 0 gider. Eksi puan yoktur.",
@@ -175,6 +176,10 @@
     {
       "baslik": "Zinciri kaydet",
       "aciklama": "Paylaşım menüsü (Web Share API, dosyalı) varsa açılır; yoksa PNG indirilir. Görsel cihazda çizilir; ağa bir şey gönderilmez."
+    },
+    {
+      "baslik": "İlham ver",
+      "aciklama": "Yapay zekâ anahtarı yoksa düğme hiç görünmez. Hata, zaman aşımı (6 sn) ya da sunucu genelindeki dakikalık sınırda 'Şu an ilham yok' yazar (sınırda hak harcanmaz). Hak bitince 'İlham bitti'. Klavye açıkken öneri listesi gizlenir, düğme görünür kalır."
     }
   ],
   "kartlar": [
@@ -357,29 +362,37 @@
       "dosya": "bozuk-result-robust-n-3"
     },
     {
-      "ad": "bt-results-5",
-      "mock": "bozuk-results",
-      "q": "mock=bozuk-results&n=5",
-      "baslik": "Gecenin en komikleri",
-      "aciklama": "Sonuç ekranında her zincirin taçlı adımı.",
-      "dosya": "bozuk-results-n-5"
+      "ad": "bt-write-ilham",
+      "mock": "bozuk-write-ilham",
+      "q": "mock=bozuk-write-ilham",
+      "baslik": "İlham ver",
+      "aciklama": "Yapay zekânın 3 önerisi; dokununca kutuya yazılır.",
+      "dosya": "bozuk-write-ilham"
     },
     {
-      "ad": "bt-results-chain",
-      "mock": "bozuk-results",
-      "q": "mock=bozuk-results&n=5",
+      "ad": "bt-gallery-5",
+      "mock": "bozuk-gallery",
+      "q": "mock=bozuk-gallery&n=5&sonuc=1",
+      "baslik": "Gecenin en komikleri",
+      "aciklama": "Oyun içi sonuç: her zincirin taçlı adımı, altta 'Devam et'.",
+      "dosya": "bozuk-gallery-n-5"
+    },
+    {
+      "ad": "bt-gallery-chain",
+      "mock": "bozuk-gallery",
+      "q": "mock=bozuk-gallery&n=5&sonuc=1",
       "baslik": "Zinciri kaydet",
       "aciklama": "Zincirin tamamı ve 'ZİNCİRİ KAYDET'.",
-      "dosya": "bozuk-results-chain"
+      "dosya": "bozuk-gallery-chain"
     }
   ],
   "bilinenSorunlar": [
     "Döngü sabit olduğundan açılmış zincirlerin yazar sırasından sonraki zincirlerin yazarları çıkarılabilir; isimsizlik veri düzeyinde tam, çıkarıma karşı değil (zincir döngüsü kuralı değişmedi).",
     "Sağlam zincir kelime kümesine göre ölçülür (tekrarsız kelimeler); çok kısa ya da tekrarlı cümlelerde 'yarısı ortak' sezgisinden farklı sonuç çıkabilir.",
-    "Eşit oy alan adımların hepsi taç alır; galeride zincir başına ilk taçlı adım gösterilir.",
-    "'💡 İlham ver' (BT-AI1) henüz bağlı değil; ilk cümle ekranında yeri ayrılmıştır."
+    "Eşit oy alan adımların hepsi taç alır; galeride zincir başına ilk taçlı adım gösterilir."
   ],
   "sonDegisiklikler": [
+    "2026-10-31: '💡 İlham ver' (yapay zekâ önerileri), galeri oyun içi sonuç açılışına taşındı ve ortak 'Devam et' ile birleşti; sağlam zincir paneli akışın sonuna alındı.",
     "2026-10-31: Hızlı akış (20/45 sn, en çok 5 adım, 2 sn gösteri, son adımla açılan 6 sn oylama, 2 sn sonuç), isimsiz oylama, kahkaha puanı ve +2/+1/0 mini puan.",
     "2026-10-31: Hikâye akışı gösteri, yeniden çizim, daktilo, tam ekran oy kartı, 👑/😂 sonuç, sağlam zincir halkası, 10 renk/4 kalınlık, telefon çizimi, galeri ve zinciri kaydet, ses seti, TV görünümü.",
     "2026-10-29: Oyun ekranları: tek satır oyun adı, sakin 'Gönderildi' durumu, tek hazır şeridi, tutarlı düğmeler.",
@@ -398,7 +411,8 @@
     "apps/client/src/games/bozuk-telefon/StepCard.tsx",
     "apps/client/src/games/bozuk-telefon/Yazma.tsx",
     "apps/client/src/games/bozuk-telefon/Cizme.tsx",
-    "apps/client/src/games/bozuk-telefon/Reveal.tsx",
-    "apps/client/src/games/bozuk-telefon/StageView.tsx"
+    "apps/client/src/games/bozuk-telefon/Galeri.tsx",
+    "apps/client/src/games/bozuk-telefon/StageView.tsx",
+    "apps/server/src/aiInspire.ts"
   ]
 }
