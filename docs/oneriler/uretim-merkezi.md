@@ -412,12 +412,17 @@ Gerekçe her zaman üstte yazar.
 
 Bildirim saatleri ayarlanabilir; gece sessiz.
 
-### UM-U8 · Görünüm — **önerim: EVET**
-**Ne:**
-- **Tarz:** GLIX'in koyu neon tarzı ve aynı yazı tipleri. Ama oyun değil iş ekranı olduğu için daha sade: az efekt,
-  yüksek okunurluk.
-- **Telefona uygunluk:** telefonda tek elle kullanılır.
-- **Yazı boyutu:** ayarlanabilir.
+### UM-U8 · Görünüm — **karar: EVET (sahip düzeltmesiyle)**
+**Ne:** Üretim Merkezi GLIX'in görsel kimliğini **kullanmaz**: neon, ışıma, oyun yazı tipleri, maskot ve oyun görselleri
+yok. Burası ayrı ve profesyonel bir çalışma alanıdır. Modern, sakin, rafine bir profesyonel araç dili kullanılır:
+- **Palet:** nötr tabanlı; açık ve koyu tema ikisi de tam desteklenir, varsayılan olarak sistem tercihine uyar.
+- **Renk kullanımı:** tek ve sakin bir vurgu rengi var. Alan imza renkleri yalnız küçük etiketlerde ve düşük
+  doygunlukta kullanılır.
+- **Tipografi:** tek, okunaklı bir arayüz yazı tipi; sayılar sabit genişlikte.
+- **Biçim:** ince kenarlıklar, az gölge, düzenli boşluk ızgarası.
+- **İçerik öne çıkar:** sahnenin yıldızı önizlemelerdir (görseller, sesler, listeler). Şeffaf görseller açık, koyu
+  ya da dama zeminde görülebilir.
+- **Ekran:** telefonda tek elle kullanılır; yazı boyutu ayarlanabilir.
 
 ### UM-U9 · Rapor sayfası — **önerim: EVET**
 **Ne:** Test, hata ve performans alanının raporları:
