@@ -167,6 +167,18 @@ describe("yazı yaz: konu tekrarı (aynı odada son 10 oyun)", () => {
     expect(withoutRecent(r, undefined)).toBeUndefined();
   });
 
+  it("havuz panelden değiştirilmemişse yerleşik konular da süzülür", () => {
+    const r = room();
+    expect(withoutRecent(r, undefined, "yazi-yaz")).toBeUndefined();
+    const builtin = YAZI_YAZ_TOPIC_POOL.builtin as readonly string[];
+    r.recentContent = new Map([[id, [String(builtin[0]).toLocaleLowerCase("tr-TR")]]]);
+    const out = withoutRecent(r, undefined, "yazi-yaz")?.[id] as readonly string[] | undefined;
+    expect(out).toHaveLength(builtin.length - 1);
+    expect(out).not.toContain(builtin[0]);
+    // Başka oyunun havuzuna dokunulmaz.
+    expect(withoutRecent(r, undefined, "kendim")).toBeUndefined();
+  });
+
   it("en çok 10 konu hatırlanır", () => {
     const r = room();
     for (let i = 0; i < 12; i++) {

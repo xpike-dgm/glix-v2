@@ -4,6 +4,7 @@ import {
   type CardRecorder,
   type CardsMine,
   type CardsState,
+  CONTENT_POOLS,
   CONTINUE_GRACE_MS,
   type ContentSet,
   collectPublicTexts,
@@ -405,13 +406,26 @@ function applyPresence(rt: Runtime, room: Room, match: Match): void {
 
 /**
  * İçerik tekrarını önleme (`GameDefinition.contentUsed`): odada son oyunlarda çıkan girdiler, yeterli kalıyorsa bu oyuna
- * verilen havuzdan çıkarılır. Yalnız yöneticinin değiştirdiği (verilen) havuzlara uygulanır; süzülmüş havuz kayda yazılır.
+ * verilen havuzdan çıkarılır. Yönetici havuzu değiştirmediyse (`content`'te yoksa) `gameId` verildiğinde oyunun yerleşik
+ * listesi süzülür; böylece yerleşik konular (ör. Yazı Yaz, Kendim) da kısa sürede tekrar gelmez. Süzülmüş havuz kayda yazılır.
  */
-export function withoutRecent(room: Room, content: ContentSet | undefined): ContentSet | undefined {
+export function withoutRecent(
+  room: Room,
+  content: ContentSet | undefined,
+  gameId?: string,
+): ContentSet | undefined {
   const recent = room.recentContent;
-  if (content === undefined || recent === undefined || recent.size === 0) return content;
+  if (recent === undefined || recent.size === 0) return content;
+  const base: Record<string, readonly unknown[]> = { ...(content ?? {}) };
+  if (gameId !== undefined) {
+    for (const pool of CONTENT_POOLS) {
+      if (pool.gameId !== gameId || pool.id in base) continue;
+      if ((recent.get(pool.id)?.length ?? 0) > 0) base[pool.id] = pool.builtin;
+    }
+  }
+  if (Object.keys(base).length === 0) return content;
   const out: Record<string, readonly unknown[]> = {};
-  for (const [poolId, list] of Object.entries(content)) {
+  for (const [poolId, list] of Object.entries(base)) {
     const pool = poolById(poolId);
     const used = recent.get(poolId);
     if (!pool || !used || used.length === 0) {
@@ -466,7 +480,7 @@ function startPlaying(rt: Runtime, room: Room, match: Match): void {
   match.rng = createRng(seed);
   const rng = match.rng;
   // Havuz değişiklikleri yalnız bu andan sonra başlayan oyunlara uygulanır; etkin havuz kayda da yazılır (replay birebir).
-  const content = withoutRecent(room, rt.content.forGame(game.id));
+  const content = withoutRecent(room, rt.content.forGame(game.id), game.id);
   match.recorder = new GameRecorder(game.id, seed, match.participants, now, content);
   // Briefing sırasında kopanlar başlangıçta bağlı değildir.
   const connected = connectedParticipants(room, match);
