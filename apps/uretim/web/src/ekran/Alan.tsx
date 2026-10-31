@@ -9,6 +9,7 @@ import { AltSayfa, Bos, IskeletKartlar, Kopyala, Sekmeler, SonucEtiketi } from "
 import { alanRengi, git, hataTost, oturum, sorgu, tost } from "../durum.js";
 import { panoYenile } from "../Kabuk.js";
 import { Simge, type SimgeAdi } from "../simgeler.js";
+import { istemiKopyala } from "./Iste.js";
 
 type Sekme = "bekleyen" | "isler" | "talimat" | "zevk" | "baglanti" | "ayarlar";
 interface SshKaydi {
@@ -209,11 +210,21 @@ function Isler(p: { s: Sayfa; yenile: () => void }): JSX.Element {
   const kaynak: Record<IsKaydi["kaynak"], string> = { sahip: "Senin işin", yz: "Yapay zekâ önerisi", istek: "İstek kartından", benzer: "Benzerini üret" };
   return (
     <div class="yigin">
-      <div class="satir satir--ara">
-        <span class="soluk">Yapay zekâ en üstteki işten başlar.</span>
-        <button type="button" class="dg dg--birincil" onClick={() => setYeni(true)}>
-          <Simge ad="arti" /> Yeni iş
-        </button>
+      <div class="satir satir--ara" style={{ "flex-wrap": "wrap" }}>
+        <span class="soluk">Yapay zekâ en üstteki işten başlar.{p.s.uygulama.not ? ` Uygulama: ${p.s.uygulama.not}.` : ""}</span>
+        <div class="satir">
+          <Show when={p.s.isler.some((i) => i.durum === "acik")}>
+            <button type="button" class="dg" onClick={() => void istemiKopyala(p.s.alan, p.s.uygulama.baglanti)}>
+              <Simge ad="kopyala" /> İstemi kopyala
+            </button>
+          </Show>
+          <button type="button" class="dg dg--birincil" onClick={() => git(`/iste?alan=${p.s.alan}`)}>
+            <Simge ad="arti" /> İş iste
+          </button>
+          <button type="button" class="dg dg--hayalet" onClick={() => setYeni(true)}>
+            Ayrıntılı iş
+          </button>
+        </div>
       </div>
       <Show when={p.s.isler.length} fallback={<Bos simge="liste" baslik="Açık iş yok">Alanın ne üreteceğini bir işle söyle. Örnek: “{alanTanimi(p.s.alan).ornekIs}”</Bos>}>
         <ol class="is-listesi">
@@ -242,15 +253,30 @@ function Isler(p: { s: Sayfa; yenile: () => void }): JSX.Element {
                     <Show when={is.varyant}>
                       <span class="etiket">{is.varyant} varyant</span>
                     </Show>
+                    <Show when={is.durum === "acik"}>
+                      <span class={`etiket ${is.teslimEdildi ? "etiket--gecti" : is.basladi ? "etiket--vurgu" : ""}`}>
+                        {is.teslimEdildi ? "Teslim edildi" : is.basladi ? "Başladı" : "Başlamadı"}
+                      </span>
+                    </Show>
                   </div>
                   <Show when={is.aciklama}>
                     <p class="soluk">{is.aciklama}</p>
+                  </Show>
+                  <Show when={is.kabul.length || is.kisitlar.length}>
+                    <ul class="madde madde--kucuk">
+                      <For each={[...is.kisitlar, ...is.kabul]}>{(m) => <li>{m}</li>}</For>
+                    </ul>
                   </Show>
                   <span class="cok-soluk kucuk">
                     {[is.adet ? `${is.adet} adet` : "", is.sonTarih ? `son tarih ${is.sonTarih}` : "", goreliZaman(is.olusturma, Date.now())].filter(Boolean).join(" · ")}
                   </span>
                 </div>
                 <div class="is__eylem">
+                  <Show when={is.durum === "acik"}>
+                    <button type="button" class="dg dg--k" onClick={() => void istemiKopyala(p.s.alan, p.s.uygulama.baglanti, is.id)} aria-label="Bu işin istemini kopyala">
+                      <Simge ad="kopyala" /> İstem
+                    </button>
+                  </Show>
                   <Show when={is.durum === "oneri"} fallback={<button type="button" class="dg dg--k" onClick={() => void durum(is, "tamam")}>Tamamlandı</button>}>
                     <button type="button" class="dg dg--k dg--birincil" onClick={() => void durum(is, "acik")}>
                       İş yap

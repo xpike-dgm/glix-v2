@@ -572,7 +572,7 @@ export function Incele(): JSX.Element {
               <span class="cok-soluk"> / {toplam()}</span>
             </span>
             <div class="cubuk">
-              <span style={{ width: `${(bitenler() / Math.max(1, toplam())) * 100}%` }} />
+              <span style={{ width: `${(Math.min(toplam(), bitenler() + sira() + 1) / Math.max(1, toplam())) * 100}%` }} />
             </div>
           </div>
         </Show>
@@ -740,7 +740,8 @@ export function Incele(): JSX.Element {
                   <Show when={ayrinti()?.oge.gorunum !== "fikir"}>
                     <button type="button" class="dg dg--b karar karar--duzelt" disabled={mesgul() || ayrinti()?.oge.durum !== "bekliyor"} onClick={() => void kararVer("duzeltme")}>
                       <Simge ad="duzeltme" />
-                      <span>Düzeltme</span>
+                      <span class="uzun">Düzeltme</span>
+                      <span class="kisa">Düzelt</span>
                       <span class="kisayol">D</span>
                     </button>
                   </Show>

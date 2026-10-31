@@ -12,7 +12,7 @@ import { Simge } from "../simgeler.js";
 
 export function KucukOnizleme(p: { k: Kucuk | null; ad?: string }): JSX.Element {
   return (
-    <div class="kucuk-onizleme">
+    <div class="kucuk-onizleme" classList={{ "kucuk-onizleme--duz": p.k?.tur !== "gorsel" }}>
       <Switch fallback={<span class="cok-soluk kucuk">Önizleme yok</span>}>
         <Match when={p.k?.tur === "gorsel" && p.k}>
           {(k) => {
@@ -58,7 +58,7 @@ function AlanKartiGorunumu(p: { k: AlanKarti; simdi: number }): JSX.Element {
       <Show
         when={p.k.son}
         fallback={
-          <div class="kucuk-onizleme kucuk-onizleme--bos">
+          <div class="kucuk-onizleme kucuk-onizleme--duz">
             <span class="cok-soluk kucuk">Henüz teslim yok</span>
           </div>
         }
@@ -345,6 +345,8 @@ export function Pano(): JSX.Element {
               </Show>
               <p class="cok-soluk kucuk pano__kota">
                 Depo: {boyut(v().kota.kullanilan)} / {boyut(v().kota.sinir)}
+                <br />
+                {v().ai.acik ? `Yardımcı model: bugün ${v().ai.bugun}/${v().ai.sinir} istek` : "Yardımcı model kapalı; istemler kalıptan hazırlanır"}
               </p>
             </aside>
           </div>

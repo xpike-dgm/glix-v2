@@ -1459,7 +1459,18 @@ export class Merkez {
           return String(x).slice(0, 60);
         }),
       };
-    else if (r.aciklama) kucuk = { tur: "metin", metin: r.aciklama.slice(0, 120) };
+    else if (json<Degisiklik[]>(r.degisiklikler, []).length) {
+      const d = json<Degisiklik[]>(r.degisiklikler, []);
+      kucuk = {
+        tur: "satirlar",
+        satirlar: d.slice(0, 3).flatMap((x) =>
+          Object.keys(x.yeni)
+            .filter((k) => JSON.stringify(x.eski[k]) !== JSON.stringify(x.yeni[k]))
+            .slice(0, 2)
+            .map((k) => `${k}: ${String(x.eski[k] ?? "—").slice(0, 20)} → ${String(x.yeni[k] ?? "—").slice(0, 20)}`),
+        ),
+      };
+    } else if (r.aciklama) kucuk = { tur: "metin", metin: r.aciklama.slice(0, 120) };
     return { id: r.id, ad: r.ad, durum: r.durum as Durum, olusturma: r.olusturma, kucuk };
   }
 

@@ -627,6 +627,9 @@ textarea.girdi {
   color: var(--metin-3);
   flex: none;
 }
+.palet__ara input:focus-visible {
+  box-shadow: none;
+}
 .palet__ara input {
   flex: 1;
   height: 52px;
@@ -725,6 +728,14 @@ textarea.girdi {
   height: 18px;
   flex: none;
   margin-top: 1px;
+}
+.serit:has(> .dg) {
+  align-items: center;
+  padding-top: var(--s-2);
+  padding-bottom: var(--s-2);
+}
+.serit:has(> .dg) svg {
+  margin-top: 0;
 }
 .serit--kirmizi {
   background: var(--kaldi-zayif);

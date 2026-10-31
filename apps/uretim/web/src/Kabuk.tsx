@@ -4,15 +4,19 @@ import { ALANLAR } from "../../src/ortak/alanlar.js";
 import type { Pano } from "../../src/ortak/tipler.js";
 import { al, gonder } from "./api.js";
 import { AltSayfa } from "./bilesenler.js";
-import { alanRengi, git, hataTost, kisayolAcik, paletAcik, setKisayolAcik, setPaletAcik, setTema, tost, yolAdi } from "./durum.js";
+import { alanRengi, git, hataTost, kisayolAcik, oturum, paletAcik, setKisayolAcik, setPaletAcik, setTema, tost, yolAdi } from "./durum.js";
 import { Simge, type SimgeAdi } from "./simgeler.js";
 
-export const [panoVerisi, { refetch: panoYenile, mutate: panoDegistir }] = createResource(async () => al<Pano>("pano").catch(() => undefined));
+export const [panoVerisi, { refetch: panoYenile }] = createResource(
+  () => (oturum()?.giris ? true : null),
+  async () => al<Pano>("pano").catch(() => undefined),
+);
 export const bekleyenToplam = (): number => panoVerisi()?.alanlar.reduce((t, a) => t + a.bekleyen, 0) ?? 0;
 
 const GEZINME: { yol: string; ad: string; simge: SimgeAdi }[] = [
   { yol: "/", ad: "Pano", simge: "pano" },
   { yol: "/incele", ad: "İnceleme", simge: "incele" },
+  { yol: "/iste", ad: "İş iste", simge: "arti" },
   { yol: "/yukle", ad: "Yükle", simge: "yukle" },
   { yol: "/arsiv", ad: "Arşiv", simge: "arsiv" },
   { yol: "/raporlar", ad: "Raporlar", simge: "rapor" },
@@ -106,9 +110,9 @@ export function Kabuk(p: { children: JSX.Element; baslik?: string }): JSX.Elemen
           {p.children}
         </main>
         <nav class="alt-gezinme" aria-label="Alt gezinme">
-          <For each={GEZINME.filter((g) => g.yol !== "/raporlar")}>
+          <For each={GEZINME.filter((g) => g.yol !== "/raporlar" && g.yol !== "/yukle")}>
             {(g) => (
-              <a href={g.yol} class="alt-gezinme__oge" aria-current={etkin(g.yol) ? "page" : undefined} onClick={(e) => (e.preventDefault(), git(g.yol))}>
+              <a href={g.yol} class="alt-gezinme__oge" classList={{ "alt-gezinme__oge--ana": g.yol === "/iste" }} aria-current={etkin(g.yol) ? "page" : undefined} onClick={(e) => (e.preventDefault(), git(g.yol))}>
                 <span class="alt-gezinme__simge">
                   <Simge ad={g.simge} boyut={22} />
                   <Show when={g.yol === "/incele" && bekleyenToplam() > 0}>
@@ -152,7 +156,9 @@ function KomutPaleti(): JSX.Element {
   const [secili, setSecili] = createSignal(0);
   const [uzak, setUzak] = createSignal<AramaSonucu | null>(null);
   let zaman: ReturnType<typeof setTimeout> | undefined;
-  const kapat = (): void => setPaletAcik(false);
+  const kapat = (): void => {
+    setPaletAcik(false);
+  };
   const sabit: PaletOgesi[] = [
     ...GEZINME.map((g) => ({ grup: "Git", ad: g.ad, simge: g.simge, f: () => git(g.yol) })),
     { grup: "Eylemler", ad: "İncelemeye başla", simge: "incele", kisayol: "I", f: () => git("/incele") },

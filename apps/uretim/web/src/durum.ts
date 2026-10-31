@@ -98,7 +98,9 @@ export function tost(metin: string, o: { hata?: boolean; eylem?: { ad: string; f
   setTimeout(() => tostKapat(id), sure);
   return id;
 }
-export const tostKapat = (id: number): void => setTostlar((l) => l.filter((t) => t.id !== id));
+export const tostKapat = (id: number): void => {
+  setTostlar((l) => l.filter((t) => t.id !== id));
+};
 export const hataTost = (e: unknown): void => {
   tost(e instanceof Error ? e.message : "Bir sorun oldu.", { hata: true, sure: 5000 });
 };

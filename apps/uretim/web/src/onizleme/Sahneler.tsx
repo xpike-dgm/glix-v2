@@ -1,11 +1,11 @@
 /** İnceleme sahneleri (UM-U3): türüne göre görsel, animasyon, ses, müzik, liste, kart, wiki, rapor, metin, fikir. */
 import { createEffect, createMemo, createResource, createSignal, For, type JSX, Match, on, onCleanup, Show, Switch } from "solid-js";
-import { HAZIR_NOTLAR } from "../../../src/ortak/durum.js";
 import type { KontrolSatiri, OgeAyrinti, OgeDosyasi } from "../../../src/ortak/tipler.js";
 import { dosyaUrl, gonder } from "../api.js";
 import { saniye } from "../bicim.js";
 import { Bos, Iskelet } from "../bilesenler.js";
-import { hataTost, tost, yazTercih } from "../durum.js";
+import { Dynamic } from "solid-js/web";
+import { git, hataTost, tost, yazTercih } from "../durum.js";
 import { alanFarklari, degerMetni, kelimeFarki } from "../fark.js";
 import { Simge } from "../simgeler.js";
 
@@ -584,12 +584,15 @@ interface Rapor {
 const ONEM_SIRASI: Record<string, number> = { kritik: 0, yuksek: 1, orta: 2, dusuk: 3 };
 
 export function Kivilcim(p: { degerler: number[]; esik?: number | undefined }): JSX.Element {
-  const enb = (): number => Math.max(...p.degerler, p.esik ?? 0, 1);
-  const nokta = (): string => p.degerler.map((v, i) => `${(i / Math.max(1, p.degerler.length - 1)) * 100},${30 - (v / enb()) * 28}`).join(" ");
+  const tum = (): number[] => [...p.degerler, ...(p.esik === undefined ? [] : [p.esik])];
+  const enk = (): number => Math.min(...tum());
+  const enb = (): number => Math.max(...tum(), enk() + 1e-9);
+  const y = (v: number): number => 29 - ((v - enk()) / (enb() - enk())) * 26;
+  const nokta = (): string => p.degerler.map((v, i) => `${(i / Math.max(1, p.degerler.length - 1)) * 100},${y(v)}`).join(" ");
   return (
     <svg class="kivilcim" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true">
       <Show when={p.esik !== undefined}>
-        <line x1="0" x2="100" y1={30 - ((p.esik ?? 0) / enb()) * 28} y2={30 - ((p.esik ?? 0) / enb()) * 28} class="kivilcim__esik" />
+        <line x1="0" x2="100" y1={y(p.esik ?? 0)} y2={y(p.esik ?? 0)} class="kivilcim__esik" />
       </Show>
       <polyline points={nokta()} fill="none" class="kivilcim__cizgi" vector-effect="non-scaling-stroke" />
     </svg>
@@ -663,7 +666,7 @@ export function RaporSahne(p: { oge: OgeAyrinti }): JSX.Element {
                     <div class="satir satir--ara">
                       <span class="kucuk soluk">{pf.olcu}</span>
                       <strong>
-                        {son()}
+                        {son().toLocaleString("tr-TR")}
                         {pf.birim ?? ""}
                       </strong>
                     </div>
@@ -688,8 +691,12 @@ export function FikirSahne(p: { oge: OgeAyrinti; kardesler: OgeAyrinti[] }): JSX
       <div class="fikirler">
         <For each={[p.oge, ...p.kardesler.filter((k) => k.id !== p.oge.id)]}>
           {(f, i) => (
-            <article class={`fikir ${i() === 0 ? "fikir--secili" : ""}`}>
-              <span class="cok-soluk kucuk">{i() === 0 ? "İncelenen fikir" : "Diğer fikir"}</span>
+            <Dynamic
+              component={i() === 0 ? "article" : "button"}
+              class={`fikir ${i() === 0 ? "fikir--secili" : ""}`}
+              {...(i() === 0 ? {} : { type: "button", onClick: () => git(`/incele/${f.id}`, true) })}
+            >
+              <span class="cok-soluk kucuk">{i() === 0 ? "İncelenen fikir" : "Diğer fikir · incelemek için dokun"}</span>
               <h2>{f.ad}</h2>
               <p class="metin-govde">{f.aciklama}</p>
               <Show when={f.gorunus}>
@@ -704,7 +711,7 @@ export function FikirSahne(p: { oge: OgeAyrinti; kardesler: OgeAyrinti[] }): JSX
                   <p>{f.gerekce}</p>
                 </div>
               </Show>
-            </article>
+            </Dynamic>
           )}
         </For>
       </div>
@@ -752,5 +759,3 @@ export function FarkGorunumu(p: { oge: OgeAyrinti }): JSX.Element {
     </div>
   );
 }
-
-export const notMetinleri = HAZIR_NOTLAR;

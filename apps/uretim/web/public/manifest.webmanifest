@@ -1,0 +1,17 @@
+{
+  "id": "/",
+  "name": "GLIX Üretim Merkezi",
+  "short_name": "Üretim",
+  "description": "Yapay zekâ teslimlerini incele, onayla ve oyuna gönder.",
+  "lang": "tr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#111113",
+  "background_color": "#111113",
+  "icons": [
+    { "src": "/simge-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/simge-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/simge.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

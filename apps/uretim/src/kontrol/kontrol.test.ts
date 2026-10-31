@@ -40,6 +40,9 @@ describe("görsel kontrolleri", () => {
     expect(sonuc(gorselKontrol(pngAc(gorsel(64, 64, () => [10, 20, 30, 255])), null, "a"), "tek-renk")).toBe(
       "kaldi",
     );
+    const sekil = pngAc(gorsel(64, 64, (x) => (x < 32 ? [10, 20, 30, 255] : [0, 0, 0, 0])));
+    expect(sonuc(gorselKontrol(sekil, null, "a"), "tek-renk")).toBe("uyari");
+    expect(sonuc(gorselKontrol(sekil, profilBul("apps/client/public/assets/ikon/a.webp"), "a"), "tek-renk")).toBeUndefined();
   });
 
   it("düşük alfa kalıntısı uyarır", () => {
