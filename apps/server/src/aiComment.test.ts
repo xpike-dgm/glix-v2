@@ -193,6 +193,46 @@ describe("oyun sonu yorumu: oyun özeti", () => {
   });
 });
 
+describe("oyun sonu yorumu: Çapraz Ateş özeti", () => {
+  const round = (
+    targets: Record<string, string | null>,
+    cover: string[],
+    scores: Record<string, number>,
+  ) => ({ targets, cover, scores, mutual: [] });
+  const view = {
+    rounds: [
+      round({ "id-1": "id-2", "id-2": null, "id-3": "id-2" }, [], { "id-1": 1, "id-2": -1, "id-3": 1 }),
+      round({ "id-1": "id-2", "id-2": null, "id-3": "id-1" }, ["id-2"], { "id-1": -1, "id-2": 0, "id-3": 1 }),
+    ],
+    totals: { "id-1": 0, "id-2": -1, "id-3": 2 },
+  };
+  const names: Record<string, string> = { "id-1": "Mert", "id-2": "Elif", "id-3": "Kaan" };
+
+  it("iki tur: hedefler yer tutucu adlarla, siperler, tur puanları ve toplam; kimlik ve ad yok", () => {
+    const p = commentPrompt("capraz-ates", view, (id) => names[id] ?? null);
+    const user = p?.user ?? "";
+    expect(user).toContain(
+      "- Oyuncu1: tur 1: Oyuncu2 hedefine ateş etti (+1); tur 2: Oyuncu2 hedefine ateş etti (-1); toplam 0",
+    );
+    expect(user).toContain("- Oyuncu2: tur 1: ateş etmedi (-1); tur 2: siper aldı (0); toplam -1");
+    expect(user).toContain(
+      "- Oyuncu3: tur 1: Oyuncu2 hedefine ateş etti (+1); tur 2: Oyuncu1 hedefine ateş etti (+1); toplam +2",
+    );
+    for (const n of ["Mert", "Elif", "Kaan", "id-1", "id-2", "id-3"]) expect(user).not.toContain(n);
+    expect(p?.names).toEqual({ Oyuncu1: "Mert", Oyuncu2: "Elif", Oyuncu3: "Kaan" });
+    expect(p?.system).toMatch(/düello spikeri/);
+    expect(p?.system).toMatch(/Kimseyi aşağılama/);
+  });
+
+  it("final açılmadan (tek tur) ya da bozuk görünümde özet yok", () => {
+    expect(
+      commentPrompt("capraz-ates", { ...view, rounds: view.rounds.slice(0, 1), totals: null }, () => "x"),
+    ).toBeNull();
+    expect(commentPrompt("capraz-ates", { rounds: [], totals: null }, () => "x")).toBeNull();
+    expect(commentPrompt("capraz-ates", null, () => "x")).toBeNull();
+  });
+});
+
 describe("oyun sonu yorumu: canlı yanıt biçimi ve adlar", () => {
   const raw = (body: unknown) => vi.fn<AiFetch>(async () => ({ status: 200, json: async () => body }));
 

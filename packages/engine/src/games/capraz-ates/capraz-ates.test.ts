@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import { isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
 import { type CaprazAtesState, caprazAtes, caprazAtesReveal } from "./index.js";
-import { CAPRAZ_ATES_DURATION_MS, CAPRAZ_ATES_FIRE_MS, CAPRAZ_ATES_REVEAL_MS } from "./types.js";
+import {
+  CAPRAZ_ATES_DURATION_MS,
+  CAPRAZ_ATES_FIRE_MS,
+  CAPRAZ_ATES_INTERVAL_MS,
+  CAPRAZ_ATES_REVEAL_MS,
+} from "./types.js";
 
 const T0 = 1_000_000;
 const ALL = ["a", "b", "c", "d", "e"];
@@ -30,11 +35,16 @@ describe("capraz-ates meta", () => {
     expect(caprazAtes.briefing.steps.length).toBeLessThanOrEqual(3);
   });
 
-  it("setup 25 sn hedef süresi ve sonrasında izleme süresi kurar", () => {
+  it("setup tur 1'i kurar: 20 sn seçim; toplam 20 + 5 + 20 + 8 sn", () => {
     const s = start();
-    expect(s.endsAt - s.startedAt).toBe(25_000);
+    expect(s.round).toBe(1);
+    expect(s.endsAt - s.startedAt).toBe(20_000);
+    expect(CAPRAZ_ATES_INTERVAL_MS).toBe(5_000);
+    expect(CAPRAZ_ATES_REVEAL_MS).toBe(8_000);
     expect(s.finishAt - s.startedAt).toBe(CAPRAZ_ATES_DURATION_MS);
+    expect(CAPRAZ_ATES_DURATION_MS).toBe(53_000);
     expect(s.targets).toEqual({});
+    expect(s.cover).toEqual([]);
   });
 });
 
@@ -213,6 +223,124 @@ describe("capraz-ates puanlama tablosu", () => {
   });
 });
 
+const R1_END = CAPRAZ_ATES_FIRE_MS;
+const R2_START = R1_END + CAPRAZ_ATES_INTERVAL_MS;
+const R2_END = R2_START + CAPRAZ_ATES_FIRE_MS;
+const FINISH = R2_END + CAPRAZ_ATES_REVEAL_MS;
+
+function act(state: CaprazAtesState, from: string, action: unknown, at: number, connected = ALL) {
+  const parsed = caprazAtes.parseAction(action);
+  if (!parsed) throw new Error("geçersiz eylem");
+  const r = caprazAtes.reduce(state, from, parsed, ctx(T0 + at, connected));
+  if (isRejected(r)) throw new Error(`reddedildi: ${r.rejected}`);
+  return r;
+}
+const cover = (state: CaprazAtesState, from: string, at = 1_000, connected = ALL) =>
+  act(state, from, { kind: "cover" }, at, connected);
+const roundScores = (s: CaprazAtesState, at: number) =>
+  caprazAtes.publicView(s, ctx(T0 + at)).rounds.map((r) => r.scores);
+
+describe("capraz-ates siper", () => {
+  type Row = {
+    name: string;
+    players: string[];
+    edges: [string, string][];
+    cover: string[];
+    expected: Record<string, number>;
+  };
+  const rows: Row[] = [
+    {
+      name: "siperde ve hedeflenmiş: 0 (ceza yok)",
+      players: ["a", "b", "c"],
+      edges: [["a", "b"]],
+      cover: ["b"],
+      expected: { a: 1, b: 0, c: 0 },
+    },
+    {
+      name: "siperde ve hedeflenmemiş: 0 (+1 yok)",
+      players: ["a", "b", "c"],
+      edges: [],
+      cover: ["a"],
+      expected: { a: 0, b: 0, c: 0 },
+    },
+    {
+      name: "siperdekine ateş eden 'ateş etti' sayılır: hedeflenmediyse +1",
+      players: ["a", "b", "c"],
+      edges: [
+        ["a", "c"],
+        ["b", "c"],
+      ],
+      cover: ["c"],
+      expected: { a: 1, b: 1, c: 0 },
+    },
+    {
+      name: "siperdekine ateş eden kendisi hedeflendiyse −1",
+      players: ["a", "b", "c", "d"],
+      edges: [
+        ["a", "c"],
+        ["b", "a"],
+      ],
+      cover: ["c"],
+      expected: { a: -1, b: 1, c: 0, d: 0 },
+    },
+    {
+      name: "siper + karşılıklılık: A siperdeyse B→A karşılıklı değildir, B +1",
+      players: ["a", "b", "c"],
+      edges: [["b", "a"]],
+      cover: ["a"],
+      expected: { a: 0, b: 1, c: 0 },
+    },
+    {
+      name: "önce hedef sonra siper: siper geçerli, eski hedef sayılmaz",
+      players: ["a", "b", "c"],
+      edges: [
+        ["a", "b"],
+        ["b", "a"],
+      ],
+      cover: ["a"],
+      expected: { a: 0, b: 1, c: 0 },
+    },
+    {
+      name: "herkes siperde: herkes 0",
+      players: ["a", "b", "c"],
+      edges: [],
+      cover: ["a", "b", "c"],
+      expected: { a: 0, b: 0, c: 0 },
+    },
+  ];
+  it.each(rows)("$name", ({ players, edges, cover: sheltered, expected }) => {
+    let s = play(players, edges);
+    for (const id of sheltered) s = cover(s, id, 2_000, players);
+    expect(scoresOf(s)).toEqual(expected);
+    const pub = caprazAtes.publicView(s, ctx(T0 + R1_END, players));
+    expect(pub.rounds[0]?.cover).toEqual(players.filter((id) => sheltered.includes(id)));
+    for (const id of sheltered) expect(pub.rounds[0]?.targets[id]).toBeNull();
+    expect(pub.rounds[0]?.mutual.some((pair) => sheltered.some((id) => pair.includes(id)))).toBe(false);
+  });
+
+  it("siperden çıkıp hedef seçilebilir; aynı siperi tekrar seçmek durumu değiştirmez", () => {
+    let s = cover(start(), "a");
+    expect(cover(s, "a", 1_500)).toBe(s);
+    s = aim(s, "a", "b", 2_000);
+    expect(s.cover).toEqual([]);
+    expect(s.targets.a).toBe("b");
+    expect(scoresOf(s)).toEqual({ a: 1, b: -1, c: 0 });
+  });
+
+  it("siper ile Tamam: kilitlenince değiştirilemez", () => {
+    const s = act(cover(start(), "a"), "a", { kind: "lock" }, 2_000);
+    expect(caprazAtes.view(s, "a", ctx(T0 + 2_000))).toEqual({ myTarget: null, cover: true, locked: true });
+    expect(caprazAtes.reduce(s, "a", { kind: "target", target: "b" }, ctx(T0 + 3_000))).toEqual({
+      rejected: "locked",
+    });
+  });
+
+  it("parseAction siperi yalnız kind ile kabul eder", () => {
+    expect(caprazAtes.parseAction({ kind: "cover" })).toEqual({ kind: "cover" });
+    expect(caprazAtes.parseAction({ kind: "cover", target: "b" })).toBeNull();
+  });
+});
+
 describe("capraz-ates eylemler", () => {
   it("hedef değiştirilebilir: son seçim geçerli", () => {
     let s = start();
@@ -251,26 +379,13 @@ describe("capraz-ates eylemler", () => {
   it("hedef sonradan kopsa da önceki seçim geçerli kalır ve hedeflenme cezası uygulanır", () => {
     let s = start();
     s = aim(s, "a", "b", 1_000);
-    const later = caprazAtes.tick(s, ctx(T0 + 20_000, ["a", "c"]));
+    const later = caprazAtes.tick(s, ctx(T0 + 15_000, ["a", "c"]));
     expect(scoresOf(later)).toEqual({ a: 1, b: -1, c: 0 });
-  });
-
-  it("bağlantısı kopmuş oyuncu (kendi bağlantısı kayıtlıysa bile) bağlı birini hedefleyebilir", () => {
-    const r = caprazAtes.reduce(start(), "a", { kind: "target", target: "b" }, ctx(T0 + 10, ["b", "c"]));
-    expect(isRejected(r)).toBe(false);
   });
 
   it("katılımcı olmayan oyuncunun eylemi reddedilir", () => {
     const r = caprazAtes.reduce(start(), "ghost", { kind: "target", target: "a" }, ctx(T0 + 10));
     expect(r).toEqual({ rejected: "not_participant" });
-  });
-
-  it("süre bitiminde (25 sn) ve sonrasında eylem reddedilir; 1 ms önce kabul edilir", () => {
-    const s = start();
-    const act = { kind: "target", target: "b" } as const;
-    expect(isRejected(caprazAtes.reduce(s, "a", act, ctx(T0 + CAPRAZ_ATES_FIRE_MS - 1)))).toBe(false);
-    expect(caprazAtes.reduce(s, "a", act, ctx(T0 + CAPRAZ_ATES_FIRE_MS))).toEqual({ rejected: "ended" });
-    expect(isRejected(caprazAtes.reduce(s, "a", act, ctx(T0 + CAPRAZ_ATES_DURATION_MS + 10)))).toBe(true);
   });
 
   it("hedef göndermeyen oyuncu hedef sayılmaz, hedeflenmezse 0 alır", () => {
@@ -295,109 +410,193 @@ describe("capraz-ates eylemler", () => {
   });
 });
 
-describe("capraz-ates zamanlama ve sonuç", () => {
-  it("tick süre dolana kadar durumu değiştirmez; dolunca bir kez işaretler (yayın tetiklemek için)", () => {
-    const s = aim(start(), "a", "b");
-    expect(caprazAtes.tick(s, ctx(T0 + CAPRAZ_ATES_FIRE_MS - 1, []))).toBe(s);
-    const closed = caprazAtes.tick(s, ctx(T0 + CAPRAZ_ATES_FIRE_MS, []));
-    expect(closed).not.toBe(s);
-    expect(closed.targets).toEqual(s.targets);
-    expect(caprazAtes.tick(closed, ctx(T0 + 99_999, []))).toBe(closed);
-  });
+describe("capraz-ates iki tur", () => {
+  const three = ["a", "b", "c"];
 
-  it("izleme süresi dolana kadar bitmez", () => {
-    const s = start();
-    expect(caprazAtes.isFinished(s, ctx(T0 + CAPRAZ_ATES_FIRE_MS))).toBe(false);
-    expect(caprazAtes.isFinished(s, ctx(T0 + CAPRAZ_ATES_DURATION_MS - 1))).toBe(false);
-    expect(caprazAtes.isFinished(s, ctx(T0 + CAPRAZ_ATES_DURATION_MS))).toBe(true);
-  });
-
-  it("genel skora direkt eklenir: awards = miniScores, beraberlik yok", () => {
-    const s = play(
-      ["a", "b", "c"],
-      [
-        ["a", "b"],
-        ["b", "c"],
-      ],
-    );
-    const r = caprazAtes.result(s);
-    expect(r.awards).toEqual(r.miniScores);
-  });
-
-  it("süre bitiminde publicView hedefleri, puanları ve çiftleri açar", () => {
-    const s = play(
-      ["a", "b", "c"],
-      [
-        ["a", "b"],
-        ["b", "a"],
-        ["c", "a"],
-      ],
-    );
-    const pub = caprazAtes.publicView(s, ctx(T0 + CAPRAZ_ATES_FIRE_MS));
-    expect(pub.reveal).toEqual({
-      targets: { a: "b", b: "a", c: "a" },
-      scores: { a: 0, b: 0, c: 1 },
-      mutual: [["a", "b"]],
+  it("tur 1'in sonunda kısa açılış, sonra tur 2 boş seçimlerle başlar", () => {
+    let s = start(three);
+    s = aim(s, "a", "b", 1_000, three);
+    s = cover(s, "c", 1_000, three);
+    expect(caprazAtes.publicView(s, ctx(T0 + R1_END - 1)).rounds).toEqual([]);
+    const pub = caprazAtes.publicView(s, ctx(T0 + R1_END));
+    expect(pub.round).toBe(2);
+    expect(pub.roundStartedAt).toBe(T0 + R2_START);
+    expect(pub.endsAt).toBe(T0 + R2_END);
+    expect(pub.finishAt).toBe(T0 + FINISH);
+    expect(pub.rounds).toEqual([
+      { targets: { a: "b", b: null, c: null }, cover: ["c"], scores: { a: 1, b: -1, c: 0 }, mutual: [] },
+    ]);
+    expect(pub.totals).toBeNull();
+    // Tur 2'de herkes sıfırdan başlar.
+    expect(caprazAtes.view(s, "a", ctx(T0 + R2_START))).toEqual({
+      myTarget: null,
+      cover: false,
+      locked: false,
     });
+    expect(caprazAtes.view(s, "c", ctx(T0 + R2_START))).toEqual({
+      myTarget: null,
+      cover: false,
+      locked: false,
+    });
+  });
+
+  it("kısa açılış sırasında seçim reddedilir; tur 2 başlayınca kabul edilir", () => {
+    const s = aim(start(three), "a", "b", 1_000, three);
+    const act2 = { kind: "target", target: "c" } as const;
+    expect(caprazAtes.reduce(s, "a", act2, ctx(T0 + R1_END))).toEqual({ rejected: "not_started" });
+    expect(caprazAtes.reduce(s, "a", act2, ctx(T0 + R2_START - 1))).toEqual({ rejected: "not_started" });
+    const ok = caprazAtes.reduce(s, "a", act2, ctx(T0 + R2_START));
+    expect(isRejected(ok)).toBe(false);
+  });
+
+  it("tur 2'nin sonunda final açılış; puan iki turun toplamı (−2…+2)", () => {
+    const four = ["a", "b", "c", "d"];
+    let s = start(four);
+    s = aim(s, "a", "b", 1_000, four);
+    s = aim(s, "c", "b", 1_000, four);
+    s = aim(s, "d", "a", 1_000, four);
+    // Tur 1: a −1, b −1, c +1, d +1.
+    s = aim(s, "a", "b", R2_START + 1_000, four);
+    s = aim(s, "c", "d", R2_START + 1_000, four);
+    s = cover(s, "b", R2_START + 2_000, four);
+    // Tur 2: a +1 (siperdekine ateş), b 0 (siper), c +1, d −1.
+    expect(roundScores(s, R2_END - 1)).toEqual([{ a: -1, b: -1, c: 1, d: 1 }]);
+    const pub = caprazAtes.publicView(s, ctx(T0 + R2_END));
+    expect(pub.rounds.map((r) => r.scores)).toEqual([
+      { a: -1, b: -1, c: 1, d: 1 },
+      { a: 1, b: 0, c: 1, d: -1 },
+    ]);
+    expect(pub.totals).toEqual({ a: 0, b: -1, c: 2, d: 0 });
+    const r = caprazAtes.result(caprazAtes.tick(s, ctx(T0 + R2_END)));
+    expect(r.miniScores).toEqual({ a: 0, b: -1, c: 2, d: 0 });
+    expect(r.awards).toEqual(r.miniScores);
+    // Tick hiç çalışmasa da sonuç aynı.
+    expect(caprazAtes.result(s)).toEqual(r);
+  });
+
+  it("toplam en çok +2, en az −2", () => {
+    let s = start(three);
+    s = aim(s, "a", "b", 1_000, three);
+    s = aim(s, "c", "b", 1_000, three);
+    s = aim(s, "a", "b", R2_START + 1, three);
+    s = aim(s, "c", "b", R2_START + 1, three);
+    expect(caprazAtes.result(s).miniScores).toEqual({ a: 2, b: -2, c: 2 });
+  });
+
+  it("final açılışı bitene kadar oyun bitmez; tur 2 bitince eylem reddedilir", () => {
+    const s = start(three);
+    expect(caprazAtes.isFinished(s, ctx(T0 + R2_END))).toBe(false);
+    expect(caprazAtes.isFinished(s, ctx(T0 + FINISH - 1))).toBe(false);
+    expect(caprazAtes.isFinished(s, ctx(T0 + FINISH))).toBe(true);
+    const act2 = { kind: "target", target: "b" } as const;
+    expect(isRejected(caprazAtes.reduce(s, "a", act2, ctx(T0 + R2_END - 1)))).toBe(false);
+    expect(caprazAtes.reduce(s, "a", act2, ctx(T0 + R2_END))).toEqual({ rejected: "ended" });
+    expect(caprazAtes.reduce(s, "a", act2, ctx(T0 + FINISH + 10))).toEqual({ rejected: "ended" });
+  });
+
+  it("tick tur geçişlerinde bir kez değişir, aksi halde aynı nesneyi döner", () => {
+    const s = aim(start(three), "a", "b", 1_000, three);
+    expect(caprazAtes.tick(s, ctx(T0 + R1_END - 1, []))).toBe(s);
+    const second = caprazAtes.tick(s, ctx(T0 + R1_END, []));
+    expect(second.round).toBe(2);
+    expect(caprazAtes.tick(second, ctx(T0 + R2_START + 100, []))).toBe(second);
+    const closed = caprazAtes.tick(second, ctx(T0 + R2_END, []));
+    expect(closed.fireClosed).toBe(true);
+    expect(closed.rounds).toHaveLength(2);
+    expect(caprazAtes.tick(closed, ctx(T0 + 99_999, []))).toBe(closed);
+    // Arada tick olmadan doğrudan son ana atlamak aynı sonucu verir.
+    expect(caprazAtes.tick(s, ctx(T0 + R2_END, []))).toEqual(closed);
+  });
+
+  it("tur 1 bilgisi tur 2 boyunca herkese açık; tur 2'nin seçimleri gizli", () => {
+    let s = start(three);
+    s = aim(s, "a", "b", 1_000, three);
+    s = cover(s, "b", 1_000, three);
+    s = aim(s, "c", "a", R2_START + 1_000, three);
+    s = cover(s, "a", R2_START + 1_000, three);
+    const mid = ctx(T0 + R2_START + 2_000, three);
+    const pub = caprazAtes.publicView(s, mid);
+    expect(pub.rounds).toHaveLength(1);
+    expect(pub.rounds[0]?.targets).toEqual({ a: "b", b: null, c: null });
+    expect(pub.rounds[0]?.cover).toEqual(["b"]);
+    // Tur 2'nin seçimleri publicView'da yok: tur 1 bilgisi dışında herkese açık görünüm seçimle değişmez.
+    const blank = caprazAtes.publicView(
+      aim(cover(start(three), "b", 1_000, three), "a", "b", 1_000, three),
+      mid,
+    );
+    expect(pub).toEqual(blank);
+    expect(caprazAtes.view(s, "a", mid)).toEqual({ myTarget: null, cover: true, locked: false });
+    expect(caprazAtes.view(s, "b", mid)).toEqual({ myTarget: null, cover: false, locked: false });
+    expect(caprazAtes.view(s, "c", mid)).toEqual({ myTarget: "a", cover: false, locked: false });
+    expect(caprazAtes.view(s, null, mid)).toEqual({ myTarget: null, cover: false, locked: false });
   });
 });
 
 describe("capraz-ates gizlilik (yapısal)", () => {
   const players = ["p1", "p2", "p3", "p4"];
-  const s = play(players, [
-    ["p1", "p2"],
-    ["p2", "p3"],
-    ["p3", "p2"],
-  ]);
+  const s = cover(
+    play(players, [
+      ["p1", "p2"],
+      ["p2", "p3"],
+      ["p3", "p2"],
+    ]),
+    "p4",
+    2_000,
+    players,
+  );
   const before = ctx(T0 + CAPRAZ_ATES_FIRE_MS - 1, players);
 
-  it("süre bitmeden publicView yalnız zamanları içerir: hedef, sayı, puan yok", () => {
+  it("tur bitmeden publicView yalnız zamanları içerir: hedef, siper, sayı, puan yok", () => {
     const pub = caprazAtes.publicView(s, before);
-    expect(Object.keys(pub).sort()).toEqual(["endsAt", "finishAt", "lockedIds", "reveal", "startedAt"]);
-    expect(pub.reveal).toBeNull();
+    expect(Object.keys(pub).sort()).toEqual([
+      "endsAt",
+      "finishAt",
+      "lockedIds",
+      "round",
+      "roundStartedAt",
+      "rounds",
+      "startedAt",
+      "totals",
+    ]);
+    expect(pub.rounds).toEqual([]);
+    expect(pub.totals).toBeNull();
     const json = JSON.stringify(pub);
     for (const id of players) expect(json).not.toContain(id);
   });
 
-  it("publicView seçim yapıldıkça değişmez (kaç kişinin seçtiği bile sızmaz)", () => {
+  it("publicView seçim yapıldıkça değişmez (kaç kişinin seçtiği ya da siper aldığı bile sızmaz)", () => {
     const none = caprazAtes.publicView(start(players), before);
     const some = caprazAtes.publicView(s, before);
-    expect({ ...none, startedAt: 0, endsAt: 0, finishAt: 0 }).toEqual({
-      ...some,
-      startedAt: 0,
-      endsAt: 0,
-      finishAt: 0,
-    });
+    expect(none).toEqual(some);
   });
 
-  it("her özel görünüm yalnız o oyuncunun kendi hedefini içerir", () => {
-    expect(caprazAtes.view(s, "p1", before)).toEqual({ myTarget: "p2", locked: false });
-    expect(caprazAtes.view(s, "p2", before)).toEqual({ myTarget: "p3", locked: false });
-    expect(caprazAtes.view(s, "p3", before)).toEqual({ myTarget: "p2", locked: false });
-    expect(caprazAtes.view(s, "p4", before)).toEqual({ myTarget: null, locked: false });
+  it("her özel görünüm yalnız o oyuncunun kendi seçimini içerir", () => {
+    expect(caprazAtes.view(s, "p1", before)).toEqual({ myTarget: "p2", cover: false, locked: false });
+    expect(caprazAtes.view(s, "p2", before)).toEqual({ myTarget: "p3", cover: false, locked: false });
+    expect(caprazAtes.view(s, "p3", before)).toEqual({ myTarget: "p2", cover: false, locked: false });
+    expect(caprazAtes.view(s, "p4", before)).toEqual({ myTarget: null, cover: true, locked: false });
     for (const id of players) {
-      const v = caprazAtes.view(s, id, before);
-      expect(Object.keys(v)).toEqual(["myTarget", "locked"]);
+      expect(Object.keys(caprazAtes.view(s, id, before))).toEqual(["myTarget", "cover", "locked"]);
     }
   });
 
-  it("hiçbir görünüm başkasının hedefini ya da hedef sayısını taşımaz", () => {
-    // p4'ün görünümü: kimse onu hedeflemiyor ve kendi hedefi yok -> hiçbir kimlik içermemeli.
+  it("hiçbir görünüm başkasının hedefini, siperini ya da hedef sayısını taşımaz", () => {
     const p4 = JSON.stringify(caprazAtes.view(s, "p4", before));
     for (const id of players) expect(p4).not.toContain(id);
-    // p1 yalnız p2'yi görür; p3'ün p2'yi hedeflediğini (p2 iki kez hedeflendi) bilemez.
     const p1 = JSON.stringify(caprazAtes.view(s, "p1", before));
     expect(p1).not.toContain("p3");
     expect(p1).not.toContain("p4");
+    expect(caprazAtes.view(s, "p1", before).cover).toBe(false);
   });
 
-  it("izleyicinin görünümü hedef içermez", () => {
-    expect(caprazAtes.view(s, null, before)).toEqual({ myTarget: null, locked: false });
+  it("izleyicinin görünümü seçim içermez", () => {
+    expect(caprazAtes.view(s, null, before)).toEqual({ myTarget: null, cover: false, locked: false });
   });
 
-  it("süre bitince hedefler publicView'da açılır", () => {
+  it("tur bitince hedefler ve siperler publicView'da açılır", () => {
     const pub = caprazAtes.publicView(s, ctx(T0 + CAPRAZ_ATES_FIRE_MS, players));
-    expect(pub.reveal?.targets).toEqual({ p1: "p2", p2: "p3", p3: "p2", p4: null });
+    expect(pub.rounds[0]?.targets).toEqual({ p1: "p2", p2: "p3", p3: "p2", p4: null });
+    expect(pub.rounds[0]?.cover).toEqual(["p4"]);
   });
 
   it("secrets() boş: metin araması kimlikleri koruyamaz, yukarıdaki yapısal testler korur", () => {
@@ -421,30 +620,44 @@ describe("capraz-ates erken bitiş", () => {
     return aim(s, "c", "b", 1_000, three);
   };
 
-  it("(a) herkes kilitleyince hedef aşaması 1 sn sonra biter", () => {
+  it("(a) tur 1'de herkes kilitleyince seçim 1 sn sonra biter; kısa açılış ve tur 2 öne kayar", () => {
     let s = aimed();
     s = lockOk(lockOk(lockOk(s, "a", 2_000), "b", 3_000), "c", 4_000);
     expect(s.endsAt).toBe(T0 + 5_000);
-    expect(caprazAtes.publicView(s, ctx(T0 + 4_999, three)).reveal).toBeNull();
-    expect(caprazAtes.publicView(s, ctx(T0 + 5_000, three)).reveal?.targets).toEqual({
-      a: "b",
-      b: "c",
-      c: "b",
-    });
-    expect(caprazAtes.isFinished(s, ctx(T0 + 4_999 + CAPRAZ_ATES_REVEAL_MS, three))).toBe(false);
-    expect(caprazAtes.isFinished(s, ctx(T0 + 5_000 + CAPRAZ_ATES_REVEAL_MS, three))).toBe(true);
-    expect(caprazAtes.tick(s, ctx(T0 + 5_000, three)).fireClosed).toBe(true);
+    expect(caprazAtes.publicView(s, ctx(T0 + 4_999, three)).rounds).toEqual([]);
+    const pub = caprazAtes.publicView(s, ctx(T0 + 5_000, three));
+    expect(pub.rounds[0]?.targets).toEqual({ a: "b", b: "c", c: "b" });
+    expect(pub.roundStartedAt).toBe(T0 + 5_000 + CAPRAZ_ATES_INTERVAL_MS);
+    expect(pub.endsAt).toBe(pub.roundStartedAt + CAPRAZ_ATES_FIRE_MS);
+    expect(pub.finishAt).toBe(pub.endsAt + CAPRAZ_ATES_REVEAL_MS);
+    expect(pub.lockedIds).toEqual([]);
     expect(scoresOf(s)).toEqual({ a: 1, b: 0, c: 0 });
   });
 
-  it("(b) bir kişi eksikken bitmez", () => {
-    const s = lockOk(lockOk(aimed(), "a", 2_000), "b", 3_000);
-    expect(s.endsAt).toBe(T0 + CAPRAZ_ATES_FIRE_MS);
-    expect(caprazAtes.isFinished(s, ctx(T0 + 10_000, three))).toBe(false);
-    expect(caprazAtes.publicView(s, ctx(T0 + 10_000, three)).reveal).toBeNull();
+  it("(b) tur 2'de de ayrı çalışır: siperle de kilitlenebilir, final açılışı 1 sn sonra", () => {
+    let s = aimed();
+    const r2 = R2_START + 1_000;
+    s = act(s, "a", { kind: "target", target: "b" }, r2, three);
+    s = cover(s, "b", r2, three);
+    s = act(s, "c", { kind: "target", target: "a" }, r2, three);
+    s = lockOk(lockOk(s, "a", r2 + 100), "b", r2 + 200);
+    expect(s.endsAt).toBe(T0 + R2_END);
+    s = lockOk(s, "c", r2 + 300);
+    expect(s.endsAt).toBe(T0 + r2 + 1_300);
+    expect(s.finishAt).toBe(s.endsAt + CAPRAZ_ATES_REVEAL_MS);
+    expect(caprazAtes.isFinished(s, ctx(s.finishAt - 1))).toBe(false);
+    expect(caprazAtes.isFinished(s, ctx(s.finishAt))).toBe(true);
+    // Tur 1: a +1, b 0, c 0. Tur 2: a −1, b 0 (siper), c +1.
+    expect(caprazAtes.result(s).miniScores).toEqual({ a: 0, b: 0, c: 1 });
   });
 
-  it("(c) bağlantısı kopan oyuncu beklenmez", () => {
+  it("(c) bir kişi eksikken bitmez", () => {
+    const s = lockOk(lockOk(aimed(), "a", 2_000), "b", 3_000);
+    expect(s.endsAt).toBe(T0 + CAPRAZ_ATES_FIRE_MS);
+    expect(caprazAtes.publicView(s, ctx(T0 + 10_000, three)).rounds).toEqual([]);
+  });
+
+  it("(d) bağlantısı kopan oyuncu beklenmez", () => {
     const connected = ["a", "b"];
     let s = start(three);
     s = aim(s, "a", "b", 1_000, connected);
@@ -456,40 +669,60 @@ describe("capraz-ates erken bitiş", () => {
     expect(scoresOf(s)).toEqual({ a: 0, b: 0, c: 0 });
   });
 
-  it("(d) kilit sonrası hedef değişimi ve ikinci kilit reddedilir", () => {
+  it("(e) kilit sonrası değişim ve ikinci kilit reddedilir", () => {
     const s = lockOk(aimed(), "a", 2_000);
-    const change = caprazAtes.reduce(s, "a", { kind: "target", target: "c" }, ctx(T0 + 3_000, three));
-    expect(change).toEqual({ rejected: "locked" });
-    expect(caprazAtes.reduce(s, "a", { kind: "target", target: "b" }, ctx(T0 + 3_000, three))).toEqual({
+    expect(caprazAtes.reduce(s, "a", { kind: "target", target: "c" }, ctx(T0 + 3_000, three))).toEqual({
+      rejected: "locked",
+    });
+    expect(caprazAtes.reduce(s, "a", { kind: "cover" }, ctx(T0 + 3_000, three))).toEqual({
       rejected: "locked",
     });
     expect(lock(s, "a", 3_000)).toEqual({ rejected: "locked" });
-    expect(caprazAtes.view(s, "a", ctx(T0 + 3_000, three))).toEqual({ myTarget: "b", locked: true });
+    expect(caprazAtes.view(s, "a", ctx(T0 + 3_000, three))).toEqual({
+      myTarget: "b",
+      cover: false,
+      locked: true,
+    });
   });
 
-  it("hedefsiz kilitlenemez; erken bitişten sonra eylem reddedilir", () => {
+  it("seçimsiz kilitlenemez; tur 1 erken bittikten sonra kısa açılışta eylem reddedilir", () => {
     expect(lock(start(three), "a", 1_000)).toEqual({ rejected: "nothing_to_lock" });
     let s = aimed();
     for (const id of three) s = lockOk(s, id, 2_000);
     expect(lock(s, "a", 2_500)).toEqual({ rejected: "locked" });
-    expect(lock(s, "a", 3_000)).toEqual({ rejected: "ended" });
-    const fresh = start(three);
-    expect(lock(fresh, "a", CAPRAZ_ATES_FIRE_MS)).toEqual({ rejected: "ended" });
+    expect(lock(s, "a", 3_000)).toEqual({ rejected: "not_started" });
   });
 
-  it("(e) kilit listesi hedefleri sızdırmaz", () => {
+  it("(f) kilit listesi seçimleri sızdırmaz", () => {
     const s = lockOk(aimed(), "a", 2_000);
     const pub = caprazAtes.publicView(s, ctx(T0 + 3_000, three));
     expect(pub.lockedIds).toEqual(["a"]);
-    expect(pub.reveal).toBeNull();
+    expect(pub.rounds).toEqual([]);
     expect(JSON.stringify(pub)).not.toContain("target");
-    // b'nin görünümü yalnız kendi hedefi; a'nın hedefini taşımaz.
     expect(JSON.stringify(caprazAtes.view(s, "b", ctx(T0 + 3_000, three)))).not.toContain('"b"');
-    expect(caprazAtes.view(s, null, ctx(T0 + 3_000, three))).toEqual({ myTarget: null, locked: false });
   });
 
   it("parseAction lock yalnız kind ile kabul edilir", () => {
     expect(caprazAtes.parseAction({ kind: "lock" })).toEqual({ kind: "lock" });
     expect(caprazAtes.parseAction({ kind: "lock", target: "b" })).toBeNull();
+  });
+});
+
+describe("capraz-ates sonuç", () => {
+  it("genel skora direkt eklenir: awards = miniScores (toplam), beraberlik yok", () => {
+    const s = play(
+      ["a", "b", "c"],
+      [
+        ["a", "b"],
+        ["b", "c"],
+      ],
+    );
+    const r = caprazAtes.result(s);
+    expect(r.awards).toEqual(r.miniScores);
+    expect(r.miniScores).toEqual({ a: 1, b: -1, c: -1 });
+  });
+
+  it("caprazAtesReveal varsayılan olarak siper içermez", () => {
+    expect(caprazAtesReveal(["a", "b"], { a: "b" }).cover).toEqual([]);
   });
 });

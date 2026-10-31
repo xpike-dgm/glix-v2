@@ -1308,7 +1308,7 @@ olmayanlar +1, zehirli kadehi olan oyuncu 0 alır; eski faz 30 saniyedir.
 
 ## 23. Çapraz Ateş — `capraz-ates`
 
-**Durum: KİLİTLİ**
+**Durum: KİLİTLİ** (2026-10-30 güncellemesi: siper ve iki tur, `docs/UI-GELISTIRME.md` Çapraz Ateş kararları)
 
 **Eski kaynak özeti:** Her oyuncu gizlice başka bir oyuncuyu hedefler. Eski
 puanlamada hedefine ateş edip kimse tarafından hedeflenmeyen oyuncu +1 alır;
@@ -1319,31 +1319,64 @@ hedefleşirse mermiler çarpışır ve iki taraf 0 alır. Eski faz 20 saniyedir.
 
 1. Minimum oyuncu / maksimum oyuncu: [3-8]
 2. Oyuncu kendisini hedefleyebilir mi?: [hayır]
-3. Her oyuncu kaç hedef seçer; hedef değiştirilebilir mi?: [1 hedef seçebilir]
-4. Hedef seçimleri gizli mi, ne zaman açılır?: [gizli süre dolunca gözükür]
-5. Aşamalar ve süreler: [25 saniye]
-6. Hedefine ateş edip kimse tarafından hedeflenmeyen oyuncunun puanı: [+1]
-7. Hedeflenen oyuncunun puanı/cezası: [-1]
-8. Karşılıklı hedefleşme sonucu: [0 puan]
-9. Bir oyuncuyu birden fazla kişi hedeflerse ne olur?: [sadece -1 alır]
-10. Boş veya geç hedef seçiminde ne olur?: [boşa sıkmış olur]
-11. Genel skora aktarım ve beraberlik: [beraberlik diye birşey yok herkes puan alabilir , puanlar direkt genel puana eklenir]
-12. Turun bitiş koşulu: [sürenin bitmesi]
+3. Her oyuncu kaç hedef seçer; hedef değiştirilebilir mi?: [her turda ya 1 hedef ya da "Siper al"; süre bitene
+   ya da "Ateşe hazır" (kilit) denene kadar değiştirilebilir, son seçim geçerli. Hedef ile siper birbirinin yerine
+   geçer: siper alınca hedef silinir, hedef seçilince siperden çıkılır]
+4. Hedef seçimleri gizli mi, ne zaman açılır?: [gizli; hedef de siper de yalnız sahibine görünür, tur süresi
+   dolunca o turun hedefleri ve siperleri birden açılır. Tur 1'in hedefleri ve siperleri tur 2 boyunca herkese
+   açık kalır (artık gizli değildir)]
+5. Aşamalar ve süreler: [iki tur. Tur 1: 20 saniye seçim + 5 saniye kısa açılış (kim kimi vurdu, kim siperdeydi,
+   tur puanı). Tur 2: 20 saniye seçim + 8 saniye final açılışı. Toplam en çok 53 saniye. Her turda bağlı bütün
+   oyuncular "Ateşe hazır" derse o turun seçimi son kilitten 1 saniye sonra biter; sonraki süreler buna göre öne
+   kayar (kısa açılış yine 5 sn, final açılışı yine 8 sn). Tur 2'de herkes seçimine sıfırdan başlar (hedef, siper
+   ve kilit tur 1'den taşınmaz); kısa açılış sırasında seçim yapılamaz]
+6. Hedefine ateş edip kimse tarafından hedeflenmeyen oyuncunun puanı: [+1 (hedefi siperde olsa da: siperdekine
+   ateş eden "ateş etti" sayılır)]
+7. Hedeflenen oyuncunun puanı/cezası: [-1; siperdeyse 0]
+8. Karşılıklı hedefleşme sonucu: [0 puan. Siperdeki oyuncunun hedefi yoktur, bu yüzden siperdeki biriyle
+   karşılıklı çift oluşmaz]
+9. Bir oyuncuyu birden fazla kişi hedeflerse ne olur?: [sadece -1 alır; siperdeyse 0]
+10. Boş veya geç hedef seçiminde ne olur?: [boşa sıkmış olur (hedef de siper de seçmeyen: kendi saldırısından
+    puan almaz, hedeflenirse -1)]
+11. Genel skora aktarım ve beraberlik: [beraberlik diye birşey yok herkes puan alabilir , puanlar direkt genel puana eklenir.
+    Oyunun puanı iki turun toplamıdır (-2 ile +2 arası); eksi puan korunur]
+12. Turun bitiş koşulu: [her turda sürenin bitmesi ya da bağlı herkesin "Ateşe hazır" demesi (+1 sn); oyun final
+    açılışının sonunda biter]
 13. Tutorialda gösterilecek üç adım:
-    1. Kendin dışındaki bir oyuncuyu gizlice hedefle.
-    2. Hedefler süre bitene kadar görünmez; kimin seni seçtiğini bilemezsin.
-    3. Karşılıklı hedeflerde mermiler çarpışır; hedeflenmeyen saldırgan +1,
-       hedeflenen oyuncu -1 alır.
-14. Lazer nişangâhı, mermi, çarpışma ve karakter tepkileri: Her oyuncunun
-    ekranında portrelerin çevresinde hareket eden ince lazer nişangâhları
-    bulunur. Hedef seçilince nişangâh kısa süre kilitlenir ama diğer oyunculara
-    gösterilmez. Sonuçta mermiler hedefler arasında neon izler bırakır;
-    karşılıklı izler merkezde çarpışıp iki oyuncunun skorunu 0'a kilitler.
+    1. İki tur: birini hedefle ya da siper al, süre bitene kadar değiştirebilirsin.
+    2. Tur 1'in hedefleri açılır; tur 2'de kim kimi vurdu bilinir.
+    3. Seçilen −1, seçilmeyen atıcı +1; karşılıklı ateşte ve siperde 0.
+14. Lazer nişangâhı, mermi, çarpışma ve karakter tepkileri: Seçimde portreye
+    dokununca nişangâh kayarak kilitlenir; altta kendi avatarından hedefe ince
+    lazer çizgisi uzanır (yalnız kendi ekranında). Siper alınca ekranın altı
+    kalkanla örtülür. Her turun son 5 saniyesi düello anıdır (karartma, ıslık,
+    "3 · 2 · 1 · ATEŞ!"). Final açılışında halka tam ekran büyür, 1 sn sessizlik,
+    namlular aynı anda ateş alır, mermiler ağır çekimde (~2 sn) hedefe gider:
+    vurulan sarsılır ("−1"), karşılıklı mermiler ortada çarpışır ("ÇARPIŞTI · 0"),
+    siperdekine giden mermi kalkandan seker ("Siperde · 0"), vurulmayan atıcı
+    parlar ("SAĞ KALDI · +1"); ardından "Seni vuranlar: …", "En çok hedeflenen:
+    … (N kişi)" ve iki turun toplamı gösterilir. Bu sahneler kuralı değiştirmez.
 15. Özel durumlar: Oyuncu hedef göndermese de başkalarının hedefi olabilir ve
     hedeflenirse -1 alır. Bir oyuncu birden fazla kişi tarafından hedeflenirse
     yalnızca bir kez -1 alır. Karşılıklı hedefleşme iki taraf için 0 kuralını
     geçersiz kılar; boşa sıkmış oyuncu kendi saldırısından puan alamaz ancak
-    başka biri tarafından hedeflenmişse hedeflenme kuralı uygulanır.
+    başka biri tarafından hedeflenmişse hedeflenme kuralı uygulanır. Siperdeki
+    oyuncu ne ceza ne ödül alır (her durumda 0). Tam döngüde (A→B→C→A gibi)
+    özel kural yoktur: herkes hedeflendiği için herkes -1 alır.
+16. Bir turun puan tablosu (her oyuncu için yukarıdan aşağı ilk uyan satır):
+
+    | Durum | Tur puanı |
+    |---|---|
+    | Siperde (hedeflenmiş ya da hedeflenmemiş) | 0 |
+    | Karşılıklı çiftte (A→B ve B→A; ikisi de siperde değil) | 0 |
+    | En az bir kişi seni hedefledi (karşılıklı değil, siperde değil) | -1 |
+    | Kimse seni hedeflemedi ve birine (siperdekine de) ateş ettin | +1 |
+    | Kimse seni hedeflemedi ve ateş etmedin | 0 |
+
+    Oyunun puanı = tur 1 puanı + tur 2 puanı (-2…+2).
+17. Kartlarla etkileşim: Kartlar oyunun toplam puanına (iki turun toplamı; `miniScores` = `awards`) genel K6
+    hesabıyla uygulanır. "Birinci" toplamı en yüksek, "sonuncu" toplamı en düşük oyuncu(lar)dır; herkesin toplamı
+    eşitse herkes birincidir ve kimse sonuncu değildir. Turların tek tek puanı kartlar için kullanılmaz.
 
 ## 24. Zaman Bombası Hafızası — `zaman-bombasi-hafizasi`
 
