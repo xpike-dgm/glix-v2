@@ -114,16 +114,16 @@ describe("kendim meta", () => {
 });
 
 describe("konu kartı (KN-M2)", () => {
-  it("havuz verilmezse bugünkü konu: Kendini anlat | Ben…", () => {
+  it("havuz verilmezse yerleşik listeden konu çekilir; listenin başı bugünkü konu", () => {
     const s = start();
-    expect(s.topic).toEqual(KENDIM_DEFAULT_TOPIC);
-    expect(KENDIM_TOPIC_POOL.builtin).toEqual([KENDIM_DEFAULT_TOPIC]);
+    expect(KENDIM_TOPIC_POOL.builtin).toContainEqual(s.topic);
+    expect(KENDIM_TOPIC_POOL.builtin[0]).toEqual(KENDIM_DEFAULT_TOPIC);
     const p = pub(s, T0 + 1);
-    expect(p.topic).toBe("Kendini anlat");
-    expect(p.hint).toBe("Ben…");
+    expect(p.topic).toBe(s.topic.topic);
+    expect(p.hint).toBe(s.topic.hint);
   });
 
-  it("havuzdan konu çekilir; boş ya da bozuk havuzda bugünkü konu", () => {
+  it("havuzdan konu çekilir; boş ya da bozuk havuzda yerleşik liste", () => {
     const content: ContentSet = {
       [KENDIM_TOPIC_POOL.id]: [
         { topic: "Hayvan olsaydın?", hint: "Ben bir…" },
@@ -133,9 +133,9 @@ describe("konu kartı (KN-M2)", () => {
     const seen = new Set<string>();
     for (let seed = 1; seed <= 30; seed++) seen.add(start(ALL, seed, content).topic.topic);
     expect([...seen].sort()).toEqual(["Hayvan olsaydın?", "Sabah ilk ne yaparsın?"]);
-    expect(start(ALL, 3, { [KENDIM_TOPIC_POOL.id]: [] }).topic).toEqual(KENDIM_DEFAULT_TOPIC);
-    expect(start(ALL, 3, { [KENDIM_TOPIC_POOL.id]: [{ topic: "<x>", hint: "Ben" }, 5] }).topic).toEqual(
-      KENDIM_DEFAULT_TOPIC,
+    expect(KENDIM_TOPIC_POOL.builtin).toContainEqual(start(ALL, 3, { [KENDIM_TOPIC_POOL.id]: [] }).topic);
+    expect(KENDIM_TOPIC_POOL.builtin).toContainEqual(
+      start(ALL, 3, { [KENDIM_TOPIC_POOL.id]: [{ topic: "<x>", hint: "Ben" }, 5] }).topic,
     );
   });
 
@@ -164,7 +164,12 @@ describe("konu kartı (KN-M2)", () => {
     expect(used(start(ALL, 1, many(12)))[0]).toMatchObject({ poolId: KENDIM_TOPIC_POOL.id, memory: 5 });
     expect(used(start(ALL, 1, many(5)))[0]?.memory).toBe(4);
     expect(used(start(ALL, 1, many(3)))[0]?.memory).toBe(1);
-    expect(used(start())[0]).toEqual({ poolId: KENDIM_TOPIC_POOL.id, key: "kendini anlat", memory: 1 });
+    expect(used(start(ALL, 1, many(1)))[0]).toEqual({
+      poolId: KENDIM_TOPIC_POOL.id,
+      key: "konu numara 0",
+      memory: 1,
+    });
+    expect(used(start())[0]?.memory).toBe(5);
   });
 
   it("havuz girdisi doğrulanır: konu 3–40, ipucu 2–16 karakter", () => {

@@ -321,8 +321,9 @@ Oyuncunun genel skoru bu sonuçlarla artar; hesap istatistiğindeki maç puanı 
 - **Konu:** her oyunda bir konu kartı çekilir (ör. "Hayvan olsaydın?"); herkes
   kendini o konuyla tek kelimeyle anlatır. Liste yönetici panelindeki "Kendim
   konuları" içerik havuzundadır (her satır: konu ve yazı kutusundaki ipucu);
-  sahip yazar, yapay zekâyla üretilmez. Yerleşik listede yalnız bugünkü konu
-  vardır ("Kendini anlat", ipucu "Ben…"); liste boşsa da bu kullanılır. Konu
+  yerleşik listede 100 konu vardır (ilki bugünkü konu: "Kendini anlat", ipucu
+  "Ben…"); panelden kapatılır, düzenlenir, eklenir. Panelde liste boşsa ya da
+  geçersizse yerleşik liste kullanılır. Konu
   maç tohumuyla seçilir; aynı odada son 5 oyunda çıkan konu tekrar seçilmez
   (liste 5'ten kısaysa yalnız bir önceki tekrar edilmez). Konu yazma ekranında
   büyük, eşleştirme ve sonuçta üstte küçük görünür.

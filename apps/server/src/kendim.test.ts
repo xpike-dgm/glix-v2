@@ -29,8 +29,9 @@ describe("kendim: oda içinde tam maç", () => {
     const id = (x: Client) => x.session.playerId;
     expect(pub(host).stage).toBe("write");
 
-    expect(pub(host).topic).toBe("Kendini anlat");
-    expect(pub(host).hint).toBe("Ben…");
+    // Yerleşik konu listesinden bir konu çıkar ve herkese açıktır.
+    expect(typeof pub(host).topic).toBe("string");
+    expect(typeof pub(host).hint).toBe("string");
     expect(await send(a, { kind: "lock" })).toBe(false); // yazmadan Tamam yok
     expect(await send(a, { kind: "write", text: "çok neşeli" })).toBe(false); // KN-M3: boşluk yok
     const words = ["elma", "armut", "kiraz", "üzüm"];
