@@ -138,3 +138,23 @@ kullanır. Alanın sürekliliği sitededir (talimat, zevk profili, geri bildirim
 - **Araç bilgisi:** her teslimde kanal (mcp/ssh), anahtar adı ve yapay zekânın bildirdiği araç ve model (`arac`,
   `model` alanları, isteğe bağlı) saklanır. Alan sayfasında araç başına onay oranı gösterilir.
 - **Hazır istem (UM-R1):** her iş için MCP ve SSH kalıbı birlikte üretilir; iş kartında sekmeyle seçilir.
+
+## 9. SSH parolası ve istemde bağlantı bilgisi (sahip kararı)
+
+- Her alanın SSH kullanıcısının (`uretim-<alan>`) **kendi parolası** vardır: en az 24 karakter, rastgele, sitede
+  üretilir. Sitede yalnız özeti saklanır; açık hâli yalnız kopyalama anında, sahibin oturumunda bir kez çözülebilen
+  şifreli kayıttan üretilir. Sahip tek tıkla yeniler; eski parola hemen geçersiz olur. İsteğe bağlı kendiliğinden
+  yenileme süresi vardır (varsayılan kapalı; seçenekler 7/30/90 gün).
+- Parolayla giriş **yalnız** `Match Group uretim-alanlari` bloğunda açıktır (`PasswordAuthentication yes`,
+  `KbdInteractiveAuthentication no`). Sunucunun genel ayarı değiştirilmez. Anahtarla giriş de açık kalır.
+- Parola değişince site, sistem parolasını `chpasswd` ile günceller (kurulum betiğindeki eşitleyici; root olarak
+  çalışır, yalnız `uretim-*` kullanıcılarına dokunur).
+- Kaba kuvvet önlemi: bu kullanıcılar için art arda 5 başarısız denemede 15 dakika engel (fail2ban ya da sshd
+  `MaxAuthTries` + `PerSourcePenalties`; kurulumda sunucudaki sürüme göre seçilir). Başarılı ve başarısız girişler
+  sitede alan sayfasında görünür.
+- **İstem (UM-R1):** SSH seçildiğinde hazır istem sunucu adresi, kullanıcı adı ve parolayı içerir. **Parola modele
+  (Haiku) asla gönderilmez:** model metni `{{SSH_ADRES}}`, `{{SSH_KULLANICI}}`, `{{SSH_PAROLA}}` yer tutucularıyla
+  üretir. Site, sahip "Kopyala"ya bastığında yer tutucuları doldurur. Ekranda parola `••••` olarak görünür; yalnız
+  panoya giden metinde açıktır. MCP seçildiğinde istem uç adresini ve "bağlantı ayarına şu anahtarı gir" bilgisini
+  içerir; anahtar da modele gitmez, kopyalarken eklenir.
+- Kopyalama olayı (kim, ne zaman, hangi alan) denetim kaydına yazılır; parola ve anahtar kayda yazılmaz.
