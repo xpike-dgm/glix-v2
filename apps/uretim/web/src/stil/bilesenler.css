@@ -752,3 +752,12 @@ textarea.girdi {
   color: var(--metin);
   border-color: var(--vurgu-cizgi);
 }
+
+.tarih-secici {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.girdi--hatali {
+  border-color: var(--kaldi);
+}

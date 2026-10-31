@@ -217,7 +217,13 @@ export function donusturucuKur(
 }
 
 /** İstemdeki yer tutucular (sözleşme bölüm 9): sırlar yalnız kopyalama anında, sitede doldurulur. */
-export const YER_TUTUCULAR = ["{{SSH_ADRES}}", "{{SSH_KULLANICI}}", "{{SSH_PAROLA}}", "{{MCP_ADRES}}", "{{MCP_ANAHTAR}}"] as const;
+export const YER_TUTUCULAR = [
+  "{{SSH_ADRES}}",
+  "{{SSH_KULLANICI}}",
+  "{{SSH_PAROLA}}",
+  "{{MCP_ADRES}}",
+  "{{MCP_ANAHTAR}}",
+] as const;
 export type YerTutucu = (typeof YER_TUTUCULAR)[number];
 
 /**

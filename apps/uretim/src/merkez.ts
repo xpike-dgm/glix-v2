@@ -306,7 +306,14 @@ export class Merkez {
       if (g.isId !== null && anahtarId !== null) {
         const kl = this.kilit(g.isId, now);
         if (kl && kl.anahtarId !== anahtarId)
-          ek.push(satir("ortak", "kilit", "uyari", `Bu iş başka bir oturumun üzerinde (${kl.ad}); teslim yine de kabul edildi.`));
+          ek.push(
+            satir(
+              "ortak",
+              "kilit",
+              "uyari",
+              `Bu iş başka bir oturumun üzerinde (${kl.ad}); teslim yine de kabul edildi.`,
+            ),
+          );
       }
       const kd: KontrolDosyasi[] = [];
       const od: OgeDosyasi[] = [];
@@ -409,7 +416,19 @@ export class Merkez {
           .prepare(
             "INSERT INTO teslim (alan, is_id, tur, kaynak, anahtar_id, aciklama, olusturma, kanal, anahtar_ad, arac, model) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
           )
-          .run(alan, g.isId, g.tur, kaynak, anahtarId, g.aciklama, now, oturum?.kanal ?? "elle", oturum?.ad ?? "", g.arac, g.model).lastInsertRowid,
+          .run(
+            alan,
+            g.isId,
+            g.tur,
+            kaynak,
+            anahtarId,
+            g.aciklama,
+            now,
+            oturum?.kanal ?? "elle",
+            oturum?.ad ?? "",
+            g.arac,
+            g.model,
+          ).lastInsertRowid,
       );
       const ogeler: TeslimSonucu["ogeler"] = [];
       for (const s of sonuclar) {
@@ -923,7 +942,10 @@ export class Merkez {
       teslimEdildi:
         r.teslim_edildi === null || r.teslim_edildi === undefined ? null : Number(r.teslim_edildi),
       kilit:
-        r.kilit_anahtar === null || r.kilit_anahtar === undefined || r.kilit_zaman === null || r.kilit_zaman === undefined
+        r.kilit_anahtar === null ||
+        r.kilit_anahtar === undefined ||
+        r.kilit_zaman === null ||
+        r.kilit_zaman === undefined
           ? null
           : { ad: String(r.kilit_ad ?? ""), zaman: Number(r.kilit_zaman) },
     };
@@ -1581,10 +1603,13 @@ export class Merkez {
 
   /** Kilit sahibi; 2 saat hareketsizlikte kilit yok sayılır. */
   kilit(id: number, now: number): { anahtarId: number; ad: string; zaman: number } | null {
-    const r = this.db.prepare("SELECT kilit_anahtar, kilit_ad, kilit_zaman FROM isler WHERE id = ?").get(id) as
+    const r = this.db
+      .prepare("SELECT kilit_anahtar, kilit_ad, kilit_zaman FROM isler WHERE id = ?")
+      .get(id) as
       | { kilit_anahtar: number | null; kilit_ad: string | null; kilit_zaman: number | null }
       | undefined;
-    if (!r || r.kilit_anahtar === null || r.kilit_zaman === null || now - r.kilit_zaman > KILIT_SURESI_MS) return null;
+    if (!r || r.kilit_anahtar === null || r.kilit_zaman === null || now - r.kilit_zaman > KILIT_SURESI_MS)
+      return null;
     return { anahtarId: r.kilit_anahtar, ad: r.kilit_ad ?? "", zaman: r.kilit_zaman };
   }
 
@@ -1592,35 +1617,50 @@ export class Merkez {
   isKilitle(id: number, anahtarId: number, ad: string, now: number): boolean {
     const k = this.kilit(id, now);
     if (k && k.anahtarId !== anahtarId) return false;
-    this.db.prepare("UPDATE isler SET kilit_anahtar = ?, kilit_ad = ?, kilit_zaman = ? WHERE id = ?").run(anahtarId, ad, now, id);
+    this.db
+      .prepare("UPDATE isler SET kilit_anahtar = ?, kilit_ad = ?, kilit_zaman = ? WHERE id = ?")
+      .run(anahtarId, ad, now, id);
     return true;
   }
 
   /** Anahtarın her isteği tuttuğu kilitleri tazeler (hareketsizlik sayacı). */
   kilitTazele(anahtarId: number, now: number): void {
     this.db
-      .prepare("UPDATE isler SET kilit_zaman = ? WHERE kilit_anahtar = ? AND durum = 'acik' AND kilit_zaman > ?")
+      .prepare(
+        "UPDATE isler SET kilit_zaman = ? WHERE kilit_anahtar = ? AND durum = 'acik' AND kilit_zaman > ?",
+      )
       .run(now, anahtarId, now - KILIT_SURESI_MS);
   }
 
   kilitAc(id: number, kim: string, now: number): void {
     const is = this.is(id);
     if (!is) throw new IsHatasi(404, "İş bulunamadı.");
-    this.db.prepare("UPDATE isler SET kilit_anahtar = NULL, kilit_ad = NULL, kilit_zaman = NULL WHERE id = ?").run(id);
+    this.db
+      .prepare("UPDATE isler SET kilit_anahtar = NULL, kilit_ad = NULL, kilit_zaman = NULL WHERE id = ?")
+      .run(id);
     this.denetim.yaz(now, kim, "is", is.alan, `iş ${id} kilidi açıldı`);
   }
 
   /** Yapay zekânın göreceği iş listesi: kilitliler işaretli, sıradaki boş iş önerilir. */
-  yzIsListesi(alan: AlanId, anahtarId: number, now: number): { isler: (Omit<IsKaydi, "alan" | "kilit"> & { kilit: string | null })[]; siradaki: number | null } {
+  yzIsListesi(
+    alan: AlanId,
+    anahtarId: number,
+    now: number,
+  ): { isler: (Omit<IsKaydi, "alan" | "kilit"> & { kilit: string | null })[]; siradaki: number | null } {
     const l = this.isler(alan, ["acik"]).map(({ alan: _a, kilit: _k, ...i }) => {
       const k = this.kilit(i.id, now);
-      return { ...i, kilit: k ? (k.anahtarId === anahtarId ? "sende" : `üzerinde çalışılıyor (${k.ad})`) : null };
+      return {
+        ...i,
+        kilit: k ? (k.anahtarId === anahtarId ? "sende" : `üzerinde çalışılıyor (${k.ad})`) : null,
+      };
     });
     return { isler: l, siradaki: l.find((i) => i.kilit === null || i.kilit === "sende")?.id ?? null };
   }
 
   /** Araç başına onay oranı (anahtar adı ya da bildirilen araç). */
-  aracIstatistigi(alan: AlanId): { arac: string; kanal: string; teslim: number; onay: number; oran: number | null }[] {
+  aracIstatistigi(
+    alan: AlanId,
+  ): { arac: string; kanal: string; teslim: number; onay: number; oran: number | null }[] {
     const r = this.db
       .prepare(
         `SELECT COALESCE(t.arac, NULLIF(t.anahtar_ad, ''), 'Elle') AS arac, t.kanal AS kanal, COUNT(o.id) AS teslim,
@@ -1629,7 +1669,13 @@ export class Merkez {
          FROM oge o JOIN teslim t ON t.id = o.teslim_id WHERE o.alan = ? AND o.durum != 'kaldi' GROUP BY 1, 2 ORDER BY 3 DESC`,
       )
       .all(alan) as { arac: string; kanal: string; teslim: number; onay: number; karar: number }[];
-    return r.map((x) => ({ arac: x.arac, kanal: x.kanal, teslim: Number(x.teslim), onay: Number(x.onay), oran: Number(x.karar) ? Number(x.onay) / Number(x.karar) : null }));
+    return r.map((x) => ({
+      arac: x.arac,
+      kanal: x.kanal,
+      teslim: Number(x.teslim),
+      onay: Number(x.onay),
+      oran: Number(x.karar) ? Number(x.onay) / Number(x.karar) : null,
+    }));
   }
 
   /** Açılalı 6 saati geçmiş, hiç başlamamış işleri olan alanlar (günde bir hatırlatma). */

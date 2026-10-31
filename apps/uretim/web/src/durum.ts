@@ -12,6 +12,10 @@ export interface Oturum {
   oyunAcik: boolean;
   mcpUrl: string;
   surum: string;
+  /** Sahibin ayarlardan verdiği görünen ad (boş olabilir). */
+  gorunenAd: string;
+  saatDilimi: string;
+  sshSunucu: string;
 }
 
 export const [oturum, setOturum] = createSignal<Oturum | null>(null);
@@ -28,6 +32,9 @@ export async function oturumYukle(): Promise<void> {
       oyunAcik: false,
       mcpUrl: "",
       surum: "",
+      gorunenAd: "",
+      saatDilimi: "Europe/Istanbul",
+      sshSunucu: "",
     });
   }
 }

@@ -2,7 +2,18 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { boyut, goreliZaman, saniye, selam } from "./bicim.js";
+import {
+  boyut,
+  goreliZaman,
+  gunBasligi,
+  isoToTr,
+  istanbulSaati,
+  saniye,
+  selam,
+  tarihMaskesi,
+  tarihSaat,
+  trToIso,
+} from "./bicim.js";
 import { alanFarklari, kelimeFarki } from "./fark.js";
 import { jestIpucu, jestKarari } from "./jest.js";
 import { iletiAyristir, varsayilanEkran } from "./onizleme/protokol.js";
@@ -18,6 +29,23 @@ describe("biçim", () => {
     expect(boyut(3 * 1024 ** 2)).toBe("3,0 MB");
     expect(saniye(0.9)).toBe("0,90 sn");
     expect(selam(9)).toBe("Günaydın");
+  });
+});
+
+describe("Türkçe tarih ve İstanbul saati", () => {
+  it("gg.aa.yyyy ↔ YYYY-AA-GG, geçersiz tarih reddedilir", () => {
+    expect(isoToTr("2026-11-15")).toBe("15.11.2026");
+    expect(trToIso("15.11.2026")).toBe("2026-11-15");
+    expect(trToIso("31.02.2026")).toBeNull();
+    expect(trToIso("15/11/2026")).toBeNull();
+    expect(tarihMaskesi("15112026")).toBe("15.11.2026");
+    expect(tarihMaskesi("1511")).toBe("15.11");
+  });
+  it("gösterimler tarayıcının saat diliminden bağımsız İstanbul saatinde", () => {
+    const t = Date.parse("2026-10-31T21:30:00Z");
+    expect(istanbulSaati(t)).toBe(0);
+    expect(tarihSaat(t)).toMatch(/^1 Kas(ım)? 00:30$/);
+    expect(gunBasligi(t)).toBe("1 Kasım Pazar");
   });
 });
 

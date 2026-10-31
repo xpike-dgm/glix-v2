@@ -362,6 +362,46 @@ function Denetim(): JSX.Element {
   );
 }
 
+function GorunenAd(): JSX.Element {
+  const [ad, setAd] = createSignal(oturum()?.gorunenAd ?? "");
+  const kaydet = async (): Promise<void> => {
+    try {
+      await gonder("profil", { gorunenAd: ad().trim() });
+      await oturumYukle();
+      tost(ad().trim() ? `Panoda “${ad().trim()}” diye selamlanacaksın` : "Görünen ad kaldırıldı");
+    } catch (e) {
+      hataTost(e);
+    }
+  };
+  return (
+    <section class="kart kart--ic yigin">
+      <div class="satir">
+        <Simge ad="sohbet" />
+        <h2>Görünen ad</h2>
+      </div>
+      <p class="soluk kucuk">Panodaki selamlamada kullanılır. Boş bırakırsan yalnız selam yazar.</p>
+      <div class="satir">
+        <input
+          class="girdi esnek"
+          value={ad()}
+          onInput={(e) => setAd(e.currentTarget.value)}
+          placeholder="ör. Cihad"
+          maxlength="40"
+          aria-label="Görünen ad"
+        />
+        <button
+          type="button"
+          class="dg"
+          disabled={ad().trim() === (oturum()?.gorunenAd ?? "")}
+          onClick={() => void kaydet()}
+        >
+          Kaydet
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function Ayarlar(): JSX.Element {
   const ilk = sorgu().get("sekme");
   const [sekme, setSekme] = createSignal<Sekme>(
@@ -432,6 +472,7 @@ export function Ayarlar(): JSX.Element {
               </label>
             </section>
             <Bildirimler />
+            <GorunenAd />
             <section class="kart kart--ic yigin">
               <div class="satir">
                 <Simge ad="kalkan" />

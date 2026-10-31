@@ -29,12 +29,16 @@ services:
       URETIM_VAPID_PRIVATE: ${URETIM_VAPID_PRIVATE:-}
       URETIM_VAPID_SUBJECT: ${URETIM_VAPID_SUBJECT:-}
       URETIM_KOTA_GB: ${URETIM_KOTA_GB:-20}
+      # SSH parolası ve MCP anahtarlarının şifreli kaydı (bölüm 9). Boşsa parola ve istemde anahtar doldurma kapalı.
+      URETIM_GIZLI_ANAHTAR: ${URETIM_GIZLI_ANAHTAR:-}
+      URETIM_SSH_GUNLUK: /ssh-gunluk/girisler.log
     volumes:
       - /srv/glix/uretim/veri:/veri
       - /srv/glix/uretim/depo:/depo
       - /srv/glix/uretim/aktarim:/aktarim
       - /srv/glix/uretim/ssh-yetki:/ssh-yetki
       - /srv/glix/uretim/ssh:/ssh
+      - /srv/glix/uretim/ssh-gunluk:/ssh-gunluk:ro
       - /srv/glix/repo.git:/repo.git:ro
       - /srv/glix/yedek/uretim:/yedek
     # SSH gelen/okunur klasörlerine yazabilmek için (ssh/kur.sh `uretim-site` grubunu oluşturur).

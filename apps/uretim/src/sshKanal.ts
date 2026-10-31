@@ -14,9 +14,9 @@ import { join, resolve, sep } from "node:path";
 import type { Anahtarlar } from "./anahtar.js";
 import type { Db } from "./db.js";
 import type { Denetim } from "./denetim.js";
-import { kayit } from "./http.js";
-import { cryptTuzu, Kasa, parolaUret, sha512Crypt } from "./gizli.js";
 import { ozet } from "./giris.js";
+import { cryptTuzu, Kasa, parolaUret, sha512Crypt } from "./gizli.js";
+import { kayit } from "./http.js";
 import { IsHatasi, type Merkez } from "./merkez.js";
 import { ALAN_IDLERI, type AlanId, alanTanimi } from "./ortak/alanlar.js";
 import { teslimAyristir } from "./teslimGirdisi.js";
@@ -75,9 +75,23 @@ export function girisSatiri(satir: string, kullanici: string): GirisKaydi | null
   const p = satir.trim().split("|");
   if (p.length !== 5) return null;
   const [zaman, sonuc, k, yontem, ip] = p as [string, string, string, string, string];
-  if (k !== kullanici || !/^\d{4}-\d{2}-\d{2}T[\d:.+\-Z]+$/.test(zaman) || (sonuc !== "basarili" && sonuc !== "basarisiz")) return null;
-  const maske = /^\d{1,3}(\.\d{1,3}){3}$/.test(ip) ? ip.replace(/\.\d{1,3}$/, ".x") : /^[0-9a-f:]+$/i.test(ip) ? `${ip.split(":").slice(0, 3).join(":")}::x` : "";
-  return { zaman, basarili: sonuc === "basarili", yontem: /^(password|publickey)$/.test(yontem) ? yontem : "", ip: maske };
+  if (
+    k !== kullanici ||
+    !/^\d{4}-\d{2}-\d{2}T[\d:.+\-Z]+$/.test(zaman) ||
+    (sonuc !== "basarili" && sonuc !== "basarisiz")
+  )
+    return null;
+  const maske = /^\d{1,3}(\.\d{1,3}){3}$/.test(ip)
+    ? ip.replace(/\.\d{1,3}$/, ".x")
+    : /^[0-9a-f:]+$/i.test(ip)
+      ? `${ip.split(":").slice(0, 3).join(":")}::x`
+      : "";
+  return {
+    zaman,
+    basarili: sonuc === "basarili",
+    yontem: /^(password|publickey)$/.test(yontem) ? yontem : "",
+    ip: maske,
+  };
 }
 
 export interface SshAyar {
@@ -114,7 +128,8 @@ export class SshKanal {
 
   /** Yeni parola: özet + şifreli kayıt; sistem için yalnız SHA-512 crypt özeti eşitleyiciye yazılır. */
   async parolaYenile(alan: AlanId, kim: string, now: number): Promise<void> {
-    if (!this.parolaAcik || !this.ayar.yetkiDir) throw new IsHatasi(503, "SSH parolası bu sunucuda ayarlı değil.");
+    if (!this.parolaAcik || !this.ayar.yetkiDir)
+      throw new IsHatasi(503, "SSH parolası bu sunucuda ayarlı değil.");
     const p = parolaUret(28);
     const gun = this.parolaDurumu(alan).yenilemeGun;
     this.db
@@ -123,12 +138,17 @@ export class SshKanal {
       )
       .run(alan, ozet(p), this.kasa.sifrele(p), now, gun);
     await mkdir(this.ayar.yetkiDir, { recursive: true });
-    await atomikYaz(join(this.ayar.yetkiDir, `${alan}.parola`), `uretim-${alan}:${sha512Crypt(p, cryptTuzu())}\n`, 0o600);
+    await atomikYaz(
+      join(this.ayar.yetkiDir, `${alan}.parola`),
+      `uretim-${alan}:${sha512Crypt(p, cryptTuzu())}\n`,
+      0o600,
+    );
     this.denetim.yaz(now, kim, "ssh_anahtari_eklendi", alan, "SSH parolası yenilendi");
   }
 
   parolaYenilemeAyarla(alan: AlanId, gun: number | null, kim: string, now: number): void {
-    if (gun !== null && !(YENILEME_GUNLERI as readonly number[]).includes(gun)) throw new IsHatasi(400, "Yenileme 7, 30 ya da 90 gün olabilir.");
+    if (gun !== null && !(YENILEME_GUNLERI as readonly number[]).includes(gun))
+      throw new IsHatasi(400, "Yenileme 7, 30 ya da 90 gün olabilir.");
     const r = this.db.prepare("UPDATE ssh_parola SET yenileme_gun = ? WHERE alan = ?").run(gun, alan);
     if (r.changes === 0) throw new IsHatasi(409, "Önce bir parola oluştur.");
     this.denetim.yaz(now, kim, "ayar", alan, `SSH parolası kendiliğinden yenileme: ${gun ?? "kapalı"}`);
@@ -136,14 +156,18 @@ export class SshKanal {
 
   /** Açık parola: yalnız kopyalama anında, sahip oturumunda. */
   parolaCoz(alan: AlanId): string | null {
-    const r = this.db.prepare("SELECT sifreli FROM ssh_parola WHERE alan = ?").get(alan) as { sifreli: string } | undefined;
+    const r = this.db.prepare("SELECT sifreli FROM ssh_parola WHERE alan = ?").get(alan) as
+      | { sifreli: string }
+      | undefined;
     return r ? this.kasa.coz(r.sifreli) : null;
   }
 
   /** Süresi dolan parolaları kendiliğinden yeniler. Yenilenen alan sayısı. */
   async parolalariYenile(now: number): Promise<number> {
     if (!this.parolaAcik) return 0;
-    const r = this.db.prepare("SELECT alan, olusturma, yenileme_gun FROM ssh_parola WHERE yenileme_gun IS NOT NULL").all() as {
+    const r = this.db
+      .prepare("SELECT alan, olusturma, yenileme_gun FROM ssh_parola WHERE yenileme_gun IS NOT NULL")
+      .all() as {
       alan: AlanId;
       olusturma: number;
       yenileme_gun: number;
@@ -377,7 +401,10 @@ export class SshKanal {
     }
     const p = teslimAyristir(teslimJson, alanTanimi(alan));
     if (!p.ok) return { sonuc: "kaldi", hatalar: p.hatalar };
-    const r = await this.merkez.teslimEt(alan, "mcp", anahtarId, p.deger, false, now, `yz:${alan}:ssh`, { kanal: "ssh", ad: "SSH (gelen klasörü)" });
+    const r = await this.merkez.teslimEt(alan, "mcp", anahtarId, p.deger, false, now, `yz:${alan}:ssh`, {
+      kanal: "ssh",
+      ad: "SSH (gelen klasörü)",
+    });
     return {
       teslimId: r.teslimId,
       ogeler: r.ogeler.map((o) => ({

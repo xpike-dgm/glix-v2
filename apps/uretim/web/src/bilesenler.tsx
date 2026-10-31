@@ -3,6 +3,7 @@ import { createEffect, createSignal, For, type JSX, onCleanup, onMount, Show } f
 import { Portal } from "solid-js/web";
 import { DURUM_ADI, type Durum } from "../../src/ortak/durum.js";
 import type { KontrolSonucu } from "../../src/ortak/tipler.js";
+import { isoToTr, tarihMaskesi, trToIso } from "./bicim.js";
 import { alanBul, alanRengi, tostKapat, tostlar } from "./durum.js";
 import { Simge, type SimgeAdi } from "./simgeler.js";
 
@@ -314,5 +315,50 @@ export function Kopyala(p: { metin: string; etiket?: string }): JSX.Element {
       <Simge ad={oldu() ? "onay" : "kopyala"} />
       {oldu() ? "Kopyalandı" : (p.etiket ?? "Kopyala")}
     </button>
+  );
+}
+
+/**
+ * Türkçe tarih alanı (gg.aa.yyyy): tarayıcının yerel ayarından bağımsız. Değer YYYY-AA-GG (ya da boş/null) taşır.
+ */
+export function TarihSecici(p: {
+  deger: string | null;
+  degistir: (iso: string | null) => void;
+  etiket: string;
+}): JSX.Element {
+  const [metin, setMetin] = createSignal(isoToTr(p.deger));
+  const [hatali, setHatali] = createSignal(false);
+  return (
+    <span class="tarih-secici">
+      <input
+        class="girdi"
+        classList={{ "girdi--hatali": hatali() }}
+        lang="tr"
+        inputmode="numeric"
+        autocomplete="off"
+        placeholder="gg.aa.yyyy"
+        aria-label={p.etiket}
+        aria-invalid={hatali()}
+        maxlength="10"
+        value={metin()}
+        onInput={(e) => {
+          const v = tarihMaskesi(e.currentTarget.value);
+          e.currentTarget.value = v;
+          setMetin(v);
+          if (v === "") {
+            setHatali(false);
+            p.degistir(null);
+          } else if (v.length === 10) {
+            const iso = trToIso(v);
+            setHatali(iso === null);
+            p.degistir(iso);
+          } else setHatali(false);
+        }}
+        onBlur={() => setHatali(metin() !== "" && trToIso(metin()) === null)}
+      />
+      <Show when={hatali()}>
+        <span class="metin-kaldi kucuk">Geçerli bir tarih yaz (ör. 15.11.2026).</span>
+      </Show>
+    </span>
   );
 }

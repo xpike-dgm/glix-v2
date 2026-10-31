@@ -32,4 +32,17 @@ while read -r alan; do
   else
     rm -f "$ahedef"
   fi
+  # Parola: site yalnız SHA-512 crypt özetini yazar (`uretim-<alan>:$6$…`); açık parola diske hiç düşmez.
+  pkaynak="$YETKI/$alan.parola"
+  pdurum="/var/lib/uretim-ssh/$alan.parola"
+  if [ -f "$pkaynak" ] && [ ! -L "$pkaynak" ]; then
+    if grep -Eq "^${k}:"'\$6\$[./A-Za-z0-9]{1,16}\$[./A-Za-z0-9]{86}$' "$pkaynak" && [ "$(wc -l < "$pkaynak")" -eq 1 ]; then
+      if ! cmp -s "$pkaynak" "$pdurum" 2>/dev/null; then
+        chpasswd -e < "$pkaynak"
+        install -D -m 0600 -o root -g root "$pkaynak" "$pdurum"
+      fi
+    else
+      logger -t uretim-ssh "$alan: parola dosyası biçime uymuyor, uygulanmadı"
+    fi
+  fi
 done < "$BURASI/alanlar.txt"

@@ -7,7 +7,6 @@ import type { AiFetch } from "./istekYaz.js";
 import { girisSatiri } from "./sshKanal.js";
 import { type Ortam, ortamKur } from "./test/ortam.js";
 
-
 describe("kasa ve crypt", () => {
   it("şifreli kayıt yalnız aynı anahtarla çözülür; SHA-512 crypt glibc vektörüyle aynı", () => {
     const k = new Kasa("anahtar-0123456789abcdef");
@@ -22,13 +21,17 @@ describe("kasa ve crypt", () => {
   });
 
   it("giriş kaydı satırı ayrıştırılır, IP'nin sonu gizlenir", () => {
-    expect(girisSatiri("2026-10-31T21:00:00+03:00|basarisiz|uretim-magaza|password|203.0.113.45", "uretim-magaza")).toEqual({
+    expect(
+      girisSatiri("2026-10-31T21:00:00+03:00|basarisiz|uretim-magaza|password|203.0.113.45", "uretim-magaza"),
+    ).toEqual({
       zaman: "2026-10-31T21:00:00+03:00",
       basarili: false,
       yontem: "password",
       ip: "203.0.113.x",
     });
-    expect(girisSatiri("2026-10-31T21:00:00+03:00|basarili|uretim-rozet|publickey|1.2.3.4", "uretim-magaza")).toBeNull();
+    expect(
+      girisSatiri("2026-10-31T21:00:00+03:00|basarili|uretim-rozet|publickey|1.2.3.4", "uretim-magaza"),
+    ).toBeNull();
     expect(girisSatiri("bozuk satır", "uretim-magaza")).toBeNull();
   });
 });
@@ -54,17 +57,27 @@ describe("SSH parolası ve istem", () => {
     expect(sha512Crypt(parola, m?.[2] ?? "")).toBe(m?.[1]);
     expect(readFileSync(dosya, "utf8")).not.toContain(parola);
 
-    const is = ((await o.api("POST", "/api/alan/magaza/is", { baslik: "Neon Gece", ozet: "Neon Gece: 6 ürün" }, c)).json.is as { id: number }).id;
+    const is = (
+      (await o.api("POST", "/api/alan/magaza/is", { baslik: "Neon Gece", ozet: "Neon Gece: 6 ürün" }, c)).json
+        .is as { id: number }
+    ).id;
     const ekran = await o.api("GET", `/api/alan/magaza/istem?is=${is}`, undefined, c);
     const ist = ekran.json.istemler as { ssh: string; mcp: string };
     expect(ist.ssh).toContain("Parola: ••••");
     expect(ist.ssh).toContain("uretim-magaza@dgmcraft.online");
     expect(JSON.stringify(ekran.json)).not.toContain(parola);
     const k = String((await o.api("POST", "/api/alan/magaza/anahtar", { ad: "ChatGPT" }, c)).json.anahtar);
-    const kid = ((await o.api("GET", "/api/alan/magaza", undefined, c)).json.anahtarlar as { id: number; ad: string }[]).find((x) => x.ad === "ChatGPT")?.id;
+    const kid = (
+      (await o.api("GET", "/api/alan/magaza", undefined, c)).json.anahtarlar as { id: number; ad: string }[]
+    ).find((x) => x.ad === "ChatGPT")?.id;
     const ssh = await o.api("POST", "/api/alan/magaza/istem-kopyala", { baglanti: "ssh", is }, c);
     expect(String(ssh.json.metin)).toContain(`Parola: ${parola}`);
-    const mcp = await o.api("POST", "/api/alan/magaza/istem-kopyala", { baglanti: "mcp", is, anahtarId: kid }, c);
+    const mcp = await o.api(
+      "POST",
+      "/api/alan/magaza/istem-kopyala",
+      { baglanti: "mcp", is, anahtarId: kid },
+      c,
+    );
     expect(String(mcp.json.metin)).toContain(k);
     expect(String(mcp.json.metin)).toContain("http://uretim.test/mcp");
     const denetim = JSON.stringify(o.u.merkez.db.prepare("SELECT * FROM denetim").all());
@@ -73,14 +86,19 @@ describe("SSH parolası ve istem", () => {
     expect(denetim).not.toContain(k);
     // Yenileme eskisini geçersiz kılar.
     await o.api("POST", "/api/alan/magaza/ssh-parola", { yenile: true }, c);
-    expect(String((await o.api("POST", "/api/alan/magaza/parola-kopyala", {}, c)).json.parola)).not.toBe(parola);
+    expect(String((await o.api("POST", "/api/alan/magaza/parola-kopyala", {}, c)).json.parola)).not.toBe(
+      parola,
+    );
   });
 
   it("kendiliğinden yenileme (7/30/90, varsayılan kapalı)", async () => {
     o = await ortamKur({ ssh: true, gizli: true });
     const c = await o.giris();
     await o.api("POST", "/api/alan/ses/ssh-parola", { yenile: true }, c);
-    expect((await o.api("GET", "/api/alan/ses", undefined, c)).json.sshParola).toMatchObject({ var: true, yenilemeGun: null });
+    expect((await o.api("GET", "/api/alan/ses", undefined, c)).json.sshParola).toMatchObject({
+      var: true,
+      yenilemeGun: null,
+    });
     expect((await o.api("POST", "/api/alan/ses/ssh-parola", { yenilemeGun: 10 }, c)).durum).toBe(400);
     await o.api("POST", "/api/alan/ses/ssh-parola", { yenilemeGun: 7 }, c);
     const once = String((await o.api("POST", "/api/alan/ses/parola-kopyala", {}, c)).json.parola);
@@ -95,14 +113,35 @@ describe("SSH parolası ve istem", () => {
     const govdeler: string[] = [];
     const sahte: AiFetch = async (_u, init) => {
       govdeler.push(init.body);
-      return { status: 200, json: async () => ({ stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify({ baslik: "Neon Gece", ozet: "Neon Gece: 6 ürün", aciklama: "x" }) }] }) };
+      return {
+        status: 200,
+        json: async () => ({
+          stop_reason: "end_turn",
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ baslik: "Neon Gece", ozet: "Neon Gece: 6 ürün", aciklama: "x" }),
+            },
+          ],
+        }),
+      };
     };
     o = await ortamKur({ ssh: true, gizli: true, aiFetch: sahte });
     const c = await o.giris();
     await o.api("POST", "/api/alan/magaza/ssh-parola", { yenile: true }, c);
     const parola = String((await o.api("POST", "/api/alan/magaza/parola-kopyala", {}, c)).json.parola);
     const k = String((await o.api("POST", "/api/alan/magaza/anahtar", { ad: "ChatGPT" }, c)).json.anahtar);
-    const r = await o.api("POST", "/api/istek-yaz", { metin: "Neon gece için 6 ürün; SSH ile bağlanacak", alan: "magaza", baglanti: "ssh", fikirTuru: false }, c);
+    const r = await o.api(
+      "POST",
+      "/api/istek-yaz",
+      {
+        metin: "Neon gece için 6 ürün; SSH ile bağlanacak",
+        alan: "magaza",
+        baglanti: "ssh",
+        fikirTuru: false,
+      },
+      c,
+    );
     expect(r.json.kaynak).toBe("model");
     expect(govdeler).toHaveLength(1);
     expect(govdeler[0]).not.toContain(parola);
@@ -121,7 +160,10 @@ describe("SSH parolası ve istem", () => {
       ].join("\n"),
     );
     const c = await o.giris();
-    const g = (await o.api("GET", "/api/alan/magaza", undefined, c)).json.girisler as { basarili: boolean; ip: string }[];
+    const g = (await o.api("GET", "/api/alan/magaza", undefined, c)).json.girisler as {
+      basarili: boolean;
+      ip: string;
+    }[];
     expect(g).toEqual([
       { zaman: "2026-10-31T20:05:00+03:00", basarili: false, yontem: "password", ip: "198.51.100.x" },
       { zaman: "2026-10-31T20:00:00+03:00", basarili: true, yontem: "password", ip: "203.0.113.x" },

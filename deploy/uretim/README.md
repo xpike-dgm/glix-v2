@@ -21,6 +21,7 @@ onayıyla yapar. Oyunun kendi blokları ve kabı değişmez.
 install -d -m 0755 -o root -g root /srv/glix/uretim
 install -d -m 0750 -o 1000 -g 1000 /srv/glix/uretim/veri /srv/glix/uretim/depo /srv/glix/uretim/aktarim /srv/glix/uretim/ssh-yetki
 install -d -m 0750 -o 1000 -g 1000 /srv/glix/yedek/uretim
+install -d -m 0755 -o root -g root /srv/glix/uretim/ssh-gunluk
 ```
 
 `/srv/glix/uretim` ve `/srv/glix/uretim/ssh` root'a ait kalmalı (SSH chroot şartı). `1000`, kap içindeki `node`
@@ -38,6 +39,7 @@ değerler kaba girer.
 | `GLIX_RESEND_API_KEY`, `GLIX_MAIL_FROM` | Oyunla aynı; giriş kodu e-postası. |
 | `GLIX_AI_KEY` | Oyunun mevcut model anahtarı. Compose bunu `URETIM_AI_KEY: ${GLIX_AI_KEY:-}` olarak aktarır; değer hiçbir dosyaya kopyalanmaz, günlüğe yazılmaz. Boşsa istemler sabit kalıptan hazırlanır. |
 | `URETIM_VAPID_PUBLIC`, `URETIM_VAPID_PRIVATE`, `URETIM_VAPID_SUBJECT` | İsteğe bağlı; site bildirimleri için ayrı anahtar (`node scripts/vapid-keys.mjs mailto:…`). |
+| `URETIM_GIZLI_ANAHTAR` | SSH parolalarının ve MCP anahtarlarının şifreli kaydı için anahtar (en az 32 rastgele karakter: `openssl rand -base64 48`). Değişirse eski parolalar ve anahtarlar istemde doldurulamaz; parolayı sitede yenile. Boşsa SSH parolası kapalıdır. |
 | `URETIM_SSH_SUNUCU` | İstemlerde görünen SSH adresi (varsayılan `dgmcraft.online`). Sır değildir. |
 | `URETIM_SITE_GID` | `ssh/kur.sh`'ın oluşturduğu `uretim-site` grubunun numarası (varsayılan 3910). |
 | `GLIX_AG` | Oyunun Docker ağı (varsayılan `glix_default`, oyun `-p glix` ile çalışıyor). |
@@ -85,8 +87,29 @@ karşılığı) ya da SFTP ile yalnız kendi `gelen/` ve `okunur/` klasörünü 
    betik bunları `/etc/ssh/uretim/` ve chroot'taki `etc/uretim/anahtar` (0400) yerine koyar. Biçime uymayan satır varsa
    dosya hiç uygulanmaz.
 4. Ana `sshd_config` dosyasında `Include /etc/ssh/sshd_config.d/*.conf` satırı olmalı (Ubuntu'da varsayılan).
+5. **Parola (sözleşme bölüm 9):** `uretim.conf` parolayı yalnız `Match Group uretim-alanlari` bloğunda açar
+   (`PasswordAuthentication yes`, `KbdInteractiveAuthentication no`, `MaxAuthTries 3`); sunucunun genel ayarı
+   değişmez, anahtarla giriş de açık kalır. Sahip sitede parolayı oluşturunca/yenileyince site yalnız SHA-512 crypt
+   özetini `ssh-yetki/<alan>.parola` dosyasına yazar; `eslestir.sh` bunu `chpasswd -e` ile **yalnız** `uretim-<alan>`
+   kullanıcısına uygular. Açık parola diske hiç yazılmaz; sitede yalnız özeti ve `URETIM_GIZLI_ANAHTAR` ile şifreli
+   kaydı durur (kopyalama anında çözülür, kopyalama denetim kaydına sırsız yazılır).
+6. **Kaba kuvvet önlemi (5 başarısız denemede 15 dk engel):** sunucudaki sürüme göre biri seçilir.
+   - **fail2ban (önerilen, her sürümde):** `ssh/fail2ban/uretim-sshd.filter.conf` → `/etc/fail2ban/filter.d/uretim-sshd.conf`,
+     `ssh/fail2ban/uretim-jail.conf` → `/etc/fail2ban/jail.d/uretim.conf`, sonra `systemctl reload fail2ban`. Yalnız
+     `uretim-*` kullanıcılarının denemelerini sayar (15 dk içinde 5 → 15 dk engel).
+   - **OpenSSH 9.8+ `PerSourcePenalties`:** genel bir ayardır (Match içinde kullanılamaz), bu yüzden bütün kullanıcıları
+     etkiler; sahip onaylamadan açılmamalı. Örnek: `PerSourcePenalties authfail:90s max:15m` (`sshd -V` ile sürümü gör).
+7. **Giriş kayıtları:** `ssh/girisler.sh` her dakika cron ile journal'dan (yoksa `/var/log/auth.log`) yalnız `uretim-*`
+   satırlarını `/srv/glix/uretim/ssh-gunluk/girisler.log` dosyasına yazar; site bunu salt okunur okur ve alan
+   sayfasında son başarılı/başarısız girişleri gösterir (IP'nin son parçası gizlenir).
 
-Kullanım (yapay zekâ tarafı): `ssh uretim-magaza@dgmcraft.online uretim talimat-oku`; paket için
+Cron örneği (root):
+```
+* * * * * /srv/glix/current/deploy/uretim/ssh/eslestir.sh
+* * * * * /srv/glix/current/deploy/uretim/ssh/girisler.sh
+```
+
+Kullanım (yapay zekâ tarafı; istem bunları kopyalanınca doldurulmuş verir): `ssh uretim-magaza@dgmcraft.online uretim talimat-oku`; paket için
 `sftp uretim-magaza@…` ile `gelen/<paket>/` klasörüne dosyalar + `teslim.json` (dosyalar `{"dosya":"ad.png","hedefYol":…}`),
 sonra `ssh … uretim teslim-et <paket>` ya da klasöre boş bir `TAMAM` dosyası (site bir dakika içinde alır, sonucu
 `okunur/sonuclar/<paket>.json`a yazar).

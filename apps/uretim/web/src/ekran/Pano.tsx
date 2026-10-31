@@ -4,7 +4,7 @@ import { ALANLAR } from "../../../src/ortak/alanlar.js";
 import { hazirNotMetni } from "../../../src/ortak/durum.js";
 import type { AlanKarti, IstekKarti, KodIstegi, Kucuk } from "../../../src/ortak/tipler.js";
 import { dosyaUrl, gonder } from "../api.js";
-import { boyut, goreliZaman, selam } from "../bicim.js";
+import { boyut, goreliZaman, gunBasligi, istanbulSaati, selam } from "../bicim.js";
 import { AlanIsareti, Bos, Halka, Iskelet, IskeletKartlar } from "../bilesenler.js";
 import { alanBul, alanRengi, git, hataTost, oturum, tost } from "../durum.js";
 import { bekleyenToplam, panoVerisi, panoYenile } from "../Kabuk.js";
@@ -230,20 +230,14 @@ export function Pano(): JSX.Element {
       hataTost(e);
     }
   };
-  const ad = (): string => {
-    const e = oturum()?.eposta ?? "";
-    const ilk = e.split("@")[0]?.split(/[._-]/)[0] ?? "";
-    return ilk ? ilk.charAt(0).toLocaleUpperCase("tr-TR") + ilk.slice(1) : "";
-  };
+  const ad = (): string => oturum()?.gorunenAd ?? "";
   return (
     <div class="sayfa pano">
       <header class="sayfa__bas">
         <div>
-          <p class="cok-soluk kucuk">
-            {new Date(simdi).toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })}
-          </p>
+          <p class="cok-soluk kucuk">{gunBasligi(simdi)}</p>
           <h1>
-            {selam(new Date(simdi).getHours())}
+            {selam(istanbulSaati(simdi))}
             <Show when={ad()}>, {ad()}</Show>
           </h1>
         </div>

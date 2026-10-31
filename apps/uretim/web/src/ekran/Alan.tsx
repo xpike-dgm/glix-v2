@@ -5,11 +5,19 @@ import type { AlanSayfasi, Gorunum, IsKaydi, TeslimTuru, ZevkOrnegi } from "../.
 import { TESLIM_TURU_ADI } from "../../../src/ortak/tipler.js";
 import { al, dosyaUrl, gonder } from "../api.js";
 import { goreliZaman, sure, tarihSaat, yuzde } from "../bicim.js";
-import { AltSayfa, Bos, IskeletKartlar, Kopyala, Sekmeler, SonucEtiketi } from "../bilesenler.js";
+import {
+  AltSayfa,
+  Bos,
+  IskeletKartlar,
+  Kopyala,
+  Sekmeler,
+  SonucEtiketi,
+  TarihSecici,
+} from "../bilesenler.js";
 import { alanRengi, git, hataTost, oturum, sorgu, tost } from "../durum.js";
 import { panoYenile } from "../Kabuk.js";
 import { Simge, type SimgeAdi } from "../simgeler.js";
-import { istemiKopyala } from "./Iste.js";
+import { IstemKutusu, istemiKopyala, panoyaKopyala } from "./Iste.js";
 
 type Sekme = "bekleyen" | "isler" | "talimat" | "zevk" | "baglanti" | "ayarlar";
 interface SshKaydi {
@@ -19,7 +27,13 @@ interface SshKaydi {
   olusturma: number;
   tur: string;
 }
-type Sayfa = AlanSayfasi & { ssh: SshKaydi[]; sshAcik: boolean };
+type Sayfa = AlanSayfasi & {
+  ssh: SshKaydi[];
+  sshAcik: boolean;
+  sshParola: { var: boolean; olusturma: number | null; yenilemeGun: number | null };
+  parolaAcik: boolean;
+  girisler: { zaman: string; basarili: boolean; yontem: string; ip: string }[];
+};
 
 export const GORUNUM_SIMGE: Record<Gorunum, SimgeAdi> = {
   fikir: "pirilti",
@@ -180,15 +194,14 @@ function YeniIs(p: { alan: AlanId; kapat: () => void; tamam: () => void }): JSX.
               placeholder="ör. 6"
             />
           </label>
-          <label class="alan-giris">
+          <div class="alan-giris">
             <span>Son tarih</span>
-            <input
-              class="girdi"
-              type="date"
-              value={sonTarih()}
-              onInput={(e) => setSonTarih(e.currentTarget.value)}
+            <TarihSecici
+              etiket="Son tarih"
+              deger={sonTarih() || null}
+              degistir={(v) => setSonTarih(v ?? "")}
             />
-          </label>
+          </div>
         </div>
         <label class="alan-giris">
           <span>Örnek ya da referans (isteğe bağlı)</span>
@@ -234,6 +247,16 @@ function YeniIs(p: { alan: AlanId; kapat: () => void; tamam: () => void }): JSX.
 }
 
 function Isler(p: { s: Sayfa; yenile: () => void }): JSX.Element {
+  const [istemIs, setIstemIs] = createSignal<number | null>(null);
+  const kilitAc = async (id: number): Promise<void> => {
+    try {
+      await gonder(`is/${id}/kilit-ac`);
+      tost("Kilit açıldı; iş başka bir oturuma da açık");
+      p.yenile();
+    } catch (e) {
+      hataTost(e);
+    }
+  };
   const [yeni, setYeni] = createSignal(sorgu().get("yeni") === "1");
   const sirala = async (id: number, yon: -1 | 1): Promise<void> => {
     const l = p.s.isler.map((i) => i.id);
@@ -335,6 +358,11 @@ function Isler(p: { s: Sayfa; yenile: () => void }): JSX.Element {
                     <Show when={is.varyant}>
                       <span class="etiket">{is.varyant} varyant</span>
                     </Show>
+                    <Show when={is.kilit && Date.now() - (is.kilit?.zaman ?? 0) < 2 * 3600_000}>
+                      <span class="etiket etiket--uyari">
+                        <Simge ad="saat" boyut={12} /> Üzerinde çalışılıyor · {is.kilit?.ad}
+                      </span>
+                    </Show>
                     <Show when={is.durum === "acik"}>
                       <span
                         class={`etiket ${is.teslimEdildi ? "etiket--gecti" : is.basladi ? "etiket--vurgu" : ""}`}
@@ -366,10 +394,15 @@ function Isler(p: { s: Sayfa; yenile: () => void }): JSX.Element {
                     <button
                       type="button"
                       class="dg dg--k"
-                      onClick={() => void istemiKopyala(p.s.alan, p.s.uygulama.baglanti, is.id)}
-                      aria-label="Bu işin istemini kopyala"
+                      onClick={() => setIstemIs(is.id)}
+                      aria-label="Bu işin istemi"
                     >
                       <Simge ad="kopyala" /> İstem
+                    </button>
+                  </Show>
+                  <Show when={is.kilit && Date.now() - (is.kilit?.zaman ?? 0) < 2 * 3600_000}>
+                    <button type="button" class="dg dg--k dg--hayalet" onClick={() => void kilitAc(is.id)}>
+                      Kilidi aç
                     </button>
                   </Show>
                   <Show
@@ -396,6 +429,13 @@ function Isler(p: { s: Sayfa; yenile: () => void }): JSX.Element {
             )}
           </For>
         </ol>
+      </Show>
+      <Show when={istemIs()}>
+        {(id) => (
+          <AltSayfa baslik="İstem" kapat={() => setIstemIs(null)}>
+            <IstemKutusu alan={p.s.alan} isId={id()} ilkBaglanti={p.s.uygulama.baglanti} />
+          </AltSayfa>
+        )}
       </Show>
       <Show when={yeni()}>
         <YeniIs
@@ -608,128 +648,206 @@ function Zevk(p: { alan: AlanId }): JSX.Element {
 
 function Baglanti(p: { s: Sayfa; yenile: () => void }): JSX.Element {
   const [yeniAnahtar, setYeniAnahtar] = createSignal<string | null>(null);
+  const [anahtarAdi, setAnahtarAdi] = createSignal("");
   const [ssh, setSsh] = createSignal("");
   const [sshAd, setSshAd] = createSignal("");
   const ad = (): string => alanTanimi(p.s.alan).ad;
+  const istek = async (yol: string, govde: unknown, mesaj: string): Promise<void> => {
+    try {
+      await gonder(yol, govde);
+      if (mesaj) tost(mesaj);
+      p.yenile();
+    } catch (e) {
+      hataTost(e);
+    }
+  };
   const uret = async (): Promise<void> => {
     try {
-      const r = await gonder<{ anahtar: string }>(`alan/${p.s.alan}/anahtar`);
+      const r = await gonder<{ anahtar: string }>(`alan/${p.s.alan}/anahtar`, { ad: anahtarAdi().trim() });
       setYeniAnahtar(r.anahtar);
+      setAnahtarAdi("");
       p.yenile();
     } catch (e) {
       hataTost(e);
     }
   };
-  const iptal = async (id: number): Promise<void> => {
+  const parolaKopyala = async (): Promise<void> => {
     try {
-      await gonder(`alan/${p.s.alan}/anahtar/${id}/iptal`);
-      tost("Anahtar iptal edildi; bu anahtarla artık bağlanılamaz");
-      p.yenile();
-    } catch (e) {
-      hataTost(e);
-    }
-  };
-  const sshEkle = async (): Promise<void> => {
-    try {
-      await gonder(`alan/${p.s.alan}/ssh`, { acik: ssh(), aciklama: sshAd() });
-      setSsh("");
-      setSshAd("");
-      tost("SSH anahtarı eklendi; sunucuya birkaç dakika içinde işlenir");
-      p.yenile();
-    } catch (e) {
-      hataTost(e);
-    }
-  };
-  const sshKaldir = async (id: number): Promise<void> => {
-    try {
-      await gonder(`alan/${p.s.alan}/ssh/${id}/kaldir`);
-      tost("SSH anahtarı kaldırıldı");
-      p.yenile();
+      const r = await gonder<{ parola: string }>(`alan/${p.s.alan}/parola-kopyala`);
+      if (await panoyaKopyala(r.parola)) tost("Parola kopyalandı");
     } catch (e) {
       hataTost(e);
     }
   };
   const mcpUrl = (): string => oturum()?.mcpUrl ?? "/mcp";
   const kullanici = (): string => `uretim-${p.s.alan}`;
+  const mcpAnahtarlari = (): Sayfa["anahtarlar"] => p.s.anahtarlar.filter((k) => k.kanal === "mcp");
   return (
-    <div class="iki-sutun iki-sutun--genis">
-      <section class="kart kart--ic yigin">
-        <div class="satir">
-          <Simge ad="baglanti" />
-          <h2>MCP bağlantısı</h2>
-        </div>
-        <p class="soluk kucuk">
-          Yapay zekâ bu adrese alanın anahtarıyla bağlanır; yalnız bu alanın araçlarını görür.
-        </p>
-        <div class="kopyalanir">
-          <code class="mono tasma">{mcpUrl()}</code>
-          <Kopyala metin={mcpUrl()} />
-        </div>
-        <ul class="anahtar-listesi">
-          <For each={p.s.anahtarlar} fallback={<li class="cok-soluk">Henüz anahtar yok.</li>}>
-            {(k) => (
-              <li classList={{ "anahtar-listesi--iptal": k.iptal !== null }}>
-                <Simge ad="anahtar" boyut={16} />
-                <code class="mono">{k.onek}…</code>
-                <span class="esnek cok-soluk kucuk">
-                  {k.iptal
-                    ? "iptal edildi"
-                    : k.sonKullanim
-                      ? `son kullanım ${goreliZaman(k.sonKullanim, Date.now())}`
-                      : "hiç kullanılmadı"}
-                </span>
-                <Show when={k.iptal === null}>
-                  <button type="button" class="dg dg--k dg--tehlike" onClick={() => void iptal(k.id)}>
-                    İptal et
-                  </button>
-                </Show>
-              </li>
-            )}
-          </For>
-        </ul>
-        <button type="button" class="dg" onClick={() => void uret()}>
-          <Simge ad="arti" /> Yeni anahtar üret
-        </button>
-      </section>
-      <section class="kart kart--ic yigin">
-        <div class="satir">
-          <Simge ad="terminal" />
-          <h2>SSH bağlantısı</h2>
-        </div>
-        <Show
-          when={p.s.sshAcik}
-          fallback={
-            <p class="soluk kucuk">
-              SSH kanalı bu sunucuda henüz kurulmadı. Kurulum yönetici tarafından yapılır.
-            </p>
-          }
-        >
+    <div class="yigin yigin--genis">
+      <div class="iki-sutun iki-sutun--genis">
+        <section class="kart kart--ic yigin">
+          <div class="satir">
+            <Simge ad="baglanti" />
+            <h2>MCP</h2>
+          </div>
           <p class="soluk kucuk">
-            Bilgisayarında çalışan araçlar için. Kabuk açılmaz; yalnız <code class="mono">uretim</code>{" "}
-            komutları ve kendi klasörü.
+            Her araca ayrı, adlandırılmış bir anahtar ver; birini iptal etmek diğerlerini etkilemez.
           </p>
           <div class="kopyalanir">
-            <code class="mono tasma">ssh {kullanici()}@sunucu talimat-oku</code>
-            <Kopyala metin={`ssh ${kullanici()}@sunucu talimat-oku`} />
+            <code class="mono tasma">{mcpUrl()}</code>
+            <Kopyala metin={mcpUrl()} />
           </div>
           <ul class="anahtar-listesi">
-            <For each={p.s.ssh} fallback={<li class="cok-soluk">Henüz SSH anahtarı eklenmedi.</li>}>
+            <For each={mcpAnahtarlari()} fallback={<li class="cok-soluk">Henüz anahtar yok.</li>}>
               {(k) => (
-                <li>
+                <li classList={{ "anahtar-listesi--iptal": k.iptal !== null }}>
                   <Simge ad="anahtar" boyut={16} />
                   <span class="esnek">
-                    <span class="mono kucuk tasma">{k.parmakIzi}</span>
-                    <span class="cok-soluk kucuk">{[k.tur, k.aciklama].filter(Boolean).join(" · ")}</span>
+                    <strong class="tasma">{k.ad}</strong>
+                    <span class="cok-soluk kucuk">
+                      <code class="mono">{k.onek}…</code> ·{" "}
+                      {k.iptal
+                        ? "iptal edildi"
+                        : k.sonKullanim
+                          ? `son kullanım ${goreliZaman(k.sonKullanim, Date.now())}`
+                          : "hiç kullanılmadı"}
+                    </span>
                   </span>
-                  <button type="button" class="dg dg--k dg--tehlike" onClick={() => void sshKaldir(k.id)}>
-                    Kaldır
-                  </button>
+                  <Show when={k.iptal === null}>
+                    <button
+                      type="button"
+                      class="dg dg--k dg--tehlike"
+                      onClick={() =>
+                        void istek(
+                          `alan/${p.s.alan}/anahtar/${k.id}/iptal`,
+                          {},
+                          `“${k.ad}” anahtarı iptal edildi`,
+                        )
+                      }
+                    >
+                      İptal et
+                    </button>
+                  </Show>
                 </li>
               )}
             </For>
           </ul>
-          <label class="alan-giris">
-            <span>Açık anahtar</span>
+          <div class="satir">
+            <input
+              class="girdi esnek"
+              value={anahtarAdi()}
+              onInput={(e) => setAnahtarAdi(e.currentTarget.value)}
+              placeholder="Araç adı (ör. ChatGPT)"
+              maxlength="40"
+              aria-label="Anahtar adı"
+            />
+            <button type="button" class="dg" disabled={!anahtarAdi().trim()} onClick={() => void uret()}>
+              <Simge ad="arti" /> Üret
+            </button>
+          </div>
+        </section>
+        <section class="kart kart--ic yigin">
+          <div class="satir">
+            <Simge ad="terminal" />
+            <h2>SSH</h2>
+          </div>
+          <Show
+            when={p.s.sshAcik}
+            fallback={
+              <p class="soluk kucuk">
+                SSH kanalı bu sunucuda henüz kurulmadı. Kurulum yönetici tarafından yapılır.
+              </p>
+            }
+          >
+            <div class="kopyalanir">
+              <code class="mono tasma">
+                {kullanici()}@{oturum()?.sshSunucu || "sunucu"}
+              </code>
+              <Kopyala metin={kullanici()} etiket="Kullanıcı" />
+            </div>
+            <div class="parola-karti">
+              <div class="esnek">
+                <strong>Parola</strong>
+                <span class="cok-soluk kucuk">
+                  {!p.s.parolaAcik
+                    ? "Parola özelliği bu sunucuda ayarlı değil."
+                    : p.s.sshParola.var
+                      ? `•••••••• · ${p.s.sshParola.olusturma ? `oluşturuldu ${goreliZaman(p.s.sshParola.olusturma, Date.now())}` : ""}`
+                      : "Henüz parola yok."}
+                </span>
+              </div>
+              <Show when={p.s.parolaAcik}>
+                <Show when={p.s.sshParola.var}>
+                  <button type="button" class="dg dg--k" onClick={() => void parolaKopyala()}>
+                    <Simge ad="kopyala" /> Kopyala
+                  </button>
+                </Show>
+                <button
+                  type="button"
+                  class="dg dg--k"
+                  onClick={() =>
+                    void istek(
+                      `alan/${p.s.alan}/ssh-parola`,
+                      { yenile: true },
+                      p.s.sshParola.var
+                        ? "Parola yenilendi; eskisi birkaç dakika içinde geçersiz olur"
+                        : "Parola oluşturuldu",
+                    )
+                  }
+                >
+                  <Simge ad="tekrar" /> {p.s.sshParola.var ? "Yenile" : "Oluştur"}
+                </button>
+              </Show>
+            </div>
+            <Show when={p.s.parolaAcik && p.s.sshParola.var}>
+              <div class="anahtarli-satir">
+                <span class="esnek">
+                  <strong>Kendiliğinden yenile</strong>
+                  <span class="cok-soluk kucuk">Yenilenince istemi yeniden kopyalaman gerekir.</span>
+                </span>
+                <div class="secim">
+                  <For each={[null, 7, 30, 90] as const}>
+                    {(g) => (
+                      <button
+                        type="button"
+                        aria-pressed={p.s.sshParola.yenilemeGun === g}
+                        onClick={() => void istek(`alan/${p.s.alan}/ssh-parola`, { yenilemeGun: g }, "")}
+                      >
+                        {g === null ? "Kapalı" : `${g} gün`}
+                      </button>
+                    )}
+                  </For>
+                </div>
+              </div>
+            </Show>
+            <h3 class="ara-baslik">Açık anahtarlar</h3>
+            <ul class="anahtar-listesi">
+              <For
+                each={p.s.ssh}
+                fallback={
+                  <li class="cok-soluk">Henüz SSH anahtarı eklenmedi; parolayla da bağlanılabilir.</li>
+                }
+              >
+                {(k) => (
+                  <li>
+                    <Simge ad="anahtar" boyut={16} />
+                    <span class="esnek">
+                      <strong class="tasma">{k.aciklama || k.tur}</strong>
+                      <span class="mono cok-soluk kucuk tasma">{k.parmakIzi}</span>
+                    </span>
+                    <button
+                      type="button"
+                      class="dg dg--k dg--tehlike"
+                      onClick={() =>
+                        void istek(`alan/${p.s.alan}/ssh/${k.id}/kaldir`, {}, "SSH anahtarı kaldırıldı")
+                      }
+                    >
+                      Kaldır
+                    </button>
+                  </li>
+                )}
+              </For>
+            </ul>
             <textarea
               class="girdi mono"
               rows="2"
@@ -737,27 +855,93 @@ function Baglanti(p: { s: Sayfa; yenile: () => void }): JSX.Element {
               onInput={(e) => setSsh(e.currentTarget.value)}
               placeholder="ssh-ed25519 AAAA… bilgisayarim"
               spellcheck={false}
+              aria-label="Açık anahtar"
             />
-          </label>
-          <div class="satir">
-            <input
-              class="girdi esnek"
-              value={sshAd()}
-              onInput={(e) => setSshAd(e.currentTarget.value)}
-              placeholder="Açıklama (ör. dizüstü)"
-              maxlength="60"
-            />
-            <button
-              type="button"
-              class="dg"
-              disabled={!ssh().trim().startsWith("ssh-") && !ssh().trim().startsWith("ecdsa-")}
-              onClick={() => void sshEkle()}
-            >
-              Ekle
-            </button>
-          </div>
-        </Show>
-      </section>
+            <div class="satir">
+              <input
+                class="girdi esnek"
+                value={sshAd()}
+                onInput={(e) => setSshAd(e.currentTarget.value)}
+                placeholder="Ad (ör. OpenCode dizüstü)"
+                maxlength="60"
+                aria-label="Anahtar adı"
+              />
+              <button
+                type="button"
+                class="dg"
+                disabled={!ssh().trim().startsWith("ssh-") && !ssh().trim().startsWith("ecdsa-")}
+                onClick={() => {
+                  void istek(
+                    `alan/${p.s.alan}/ssh`,
+                    { acik: ssh(), aciklama: sshAd() },
+                    "SSH anahtarı eklendi; sunucuya birkaç dakika içinde işlenir",
+                  );
+                  setSsh("");
+                  setSshAd("");
+                }}
+              >
+                Ekle
+              </button>
+            </div>
+          </Show>
+        </section>
+      </div>
+      <div class="iki-sutun iki-sutun--genis">
+        <section class="kart kart--ic yigin">
+          <h2>Araçlara göre onay</h2>
+          <Show
+            when={p.s.araclar.length}
+            fallback={<p class="cok-soluk kucuk">Teslim geldikçe her aracın onay oranı burada görünür.</p>}
+          >
+            <table class="tablo">
+              <thead>
+                <tr>
+                  <th>Araç</th>
+                  <th>Kanal</th>
+                  <th>Teslim</th>
+                  <th>Onay oranı</th>
+                </tr>
+              </thead>
+              <tbody>
+                <For each={p.s.araclar}>
+                  {(a) => (
+                    <tr>
+                      <td>{a.arac}</td>
+                      <td>
+                        <span class="etiket">
+                          {a.kanal === "ssh" ? "SSH" : a.kanal === "mcp" ? "MCP" : "Elle"}
+                        </span>
+                      </td>
+                      <td>{a.teslim}</td>
+                      <td>{a.oran === null ? "–" : yuzde(a.oran)}</td>
+                    </tr>
+                  )}
+                </For>
+              </tbody>
+            </table>
+          </Show>
+        </section>
+        <section class="kart kart--ic yigin">
+          <h2>Son SSH girişleri</h2>
+          <Show when={p.s.girisler.length} fallback={<p class="cok-soluk kucuk">Kayıt yok.</p>}>
+            <ul class="giris-listesi">
+              <For each={p.s.girisler}>
+                {(g) => (
+                  <li>
+                    <span class={`etiket ${g.basarili ? "etiket--gecti" : "etiket--kaldi"}`}>
+                      {g.basarili ? "Başarılı" : "Başarısız"}
+                    </span>
+                    <span class="esnek kucuk">{tarihSaat(Date.parse(g.zaman))}</span>
+                    <span class="cok-soluk kucuk mono">
+                      {g.yontem === "password" ? "parola" : g.yontem === "publickey" ? "anahtar" : ""} {g.ip}
+                    </span>
+                  </li>
+                )}
+              </For>
+            </ul>
+          </Show>
+        </section>
+      </div>
       <Show when={yeniAnahtar()}>
         {(k) => (
           <AltSayfa
@@ -770,19 +954,15 @@ function Baglanti(p: { s: Sayfa; yenile: () => void }): JSX.Element {
             }
           >
             <div class="yigin">
-              <div class="serit serit--sari">
-                <Simge ad="uyari" />
-                <span>
-                  Bu anahtar yalnız bir kez gösterilir. Şimdi kopyala; kaybolursa iptal edip yenisini üret.
-                </span>
-              </div>
+              <p class="soluk kucuk">
+                Aracın bağlantı ayarına bu anahtarı gir. İş istemleri anahtarı kopyalama anında kendisi ekler.
+              </p>
               <div class="kopyalanir">
                 <code class="mono tasma">{k()}</code>
                 <Kopyala metin={k()} />
               </div>
               <h3>Başlangıç istemi</h3>
-              <p class="soluk kucuk">Yapay zekâ aracına bunu yapıştır:</p>
-              <pre class="kod-blogu">{baslangicIstemi(ad(), mcpUrl(), k())}</pre>
+              <pre class="kod-blogu">{baslangicIstemi(ad(), mcpUrl(), "••••")}</pre>
               <Kopyala metin={baslangicIstemi(ad(), mcpUrl(), k())} etiket="İstemi kopyala" />
             </div>
           </AltSayfa>

@@ -6,7 +6,7 @@ import { createResource, createSignal, For, type JSX, Show } from "solid-js";
 import { ALANLAR, type AlanId, alanTanimi } from "../../../src/ortak/alanlar.js";
 import type { AlanSayfasi, IsKaydi } from "../../../src/ortak/tipler.js";
 import { al, gonder } from "../api.js";
-import { AlanIsareti } from "../bilesenler.js";
+import { AlanIsareti, TarihSecici } from "../bilesenler.js";
 import { alanRengi, git, hataTost, sorgu, titret, tost } from "../durum.js";
 import { panoYenile } from "../Kabuk.js";
 import { Simge } from "../simgeler.js";
@@ -39,23 +39,108 @@ export async function panoyaKopyala(metin: string): Promise<boolean> {
   }
 }
 
-/** İstemi alır ve kopyalar; uygulama notu varsa hatırlatır. */
-export async function istemiKopyala(alan: AlanId, baglanti: "mcp" | "ssh", isId?: number): Promise<void> {
+/** İstemi sırlarıyla birlikte (yalnız panoya) kopyalar; uygulama notu varsa hatırlatır. */
+export async function istemiKopyala(
+  alan: AlanId,
+  baglanti: "mcp" | "ssh",
+  isId?: number,
+  anahtarId?: number | null,
+): Promise<void> {
   try {
-    const r = await al<{ istem: string; isSayisi: number; uygulama: string }>(
-      `alan/${alan}/istem?baglanti=${baglanti}${isId ? `&is=${isId}` : ""}`,
-    );
-    if (await panoyaKopyala(r.istem)) {
+    const r = await gonder<{ metin: string }>(`alan/${alan}/istem-kopyala`, {
+      baglanti,
+      ...(isId ? { is: isId } : {}),
+      ...(anahtarId ? { anahtarId } : {}),
+    });
+    const u = await al<{ uygulama: string }>(`alan/${alan}/istem`).catch(() => ({ uygulama: "" }));
+    if (await panoyaKopyala(r.metin)) {
       titret(12);
       tost(
-        r.uygulama
-          ? `İstem kopyalandı — ${r.uygulama} sohbetine yapıştır`
+        u.uygulama
+          ? `İstem kopyalandı — ${u.uygulama} sohbetine yapıştır`
           : "İstem kopyalandı — yapay zekâ sohbetine yapıştır",
       );
-    } else tost("Kopyalanamadı; metni elle seç.", { hata: true });
+    } else tost("Kopyalanamadı; tarayıcı panoya erişime izin vermedi.", { hata: true });
   } catch (e) {
     hataTost(e);
   }
+}
+
+interface IstemYaniti {
+  istemler: { mcp: string; ssh: string };
+  isSayisi: number;
+  uygulama: string;
+}
+
+/** İki kalıplı istem görünümü (bölüm 8–9): MCP ve SSH sekmeleri; sırlar ekranda ••••, yalnız kopyalanan metinde açık. */
+export function IstemKutusu(p: { alan: AlanId; isId?: number; ilkBaglanti: "mcp" | "ssh" }): JSX.Element {
+  const [b, setB] = createSignal<"mcp" | "ssh">(p.ilkBaglanti);
+  const [veri] = createResource(
+    () => `alan/${p.alan}/istem${p.isId ? `?is=${p.isId}` : ""}`,
+    (y) => al<IstemYaniti>(y),
+  );
+  const [sayfa] = createResource(
+    () => p.alan,
+    (a) => al<AlanSayfasi & { sshParola: { var: boolean }; parolaAcik: boolean }>(`alan/${a}`),
+  );
+  const anahtarlar = (): { id: number; ad: string }[] =>
+    (sayfa()?.anahtarlar ?? []).filter((k) => k.kanal === "mcp" && k.iptal === null);
+  const [anahtarId, setAnahtarId] = createSignal<number | null>(null);
+  const secili = (): number | null => anahtarId() ?? anahtarlar()[0]?.id ?? null;
+  return (
+    <div class="yigin">
+      <div class="istem-kutusu">
+        <div class="istem-kutusu__bas">
+          <fieldset class="secim" aria-label="Bağlantı">
+            <button type="button" aria-pressed={b() === "mcp"} onClick={() => setB("mcp")}>
+              MCP
+            </button>
+            <button type="button" aria-pressed={b() === "ssh"} onClick={() => setB("ssh")}>
+              SSH
+            </button>
+          </fieldset>
+          <span class="cok-soluk kucuk">•••• yalnız kopyalanınca açılır</span>
+        </div>
+        <Show when={veri()} fallback={<pre class="istem-kutusu__metin cok-soluk">Hazırlanıyor…</pre>}>
+          {(v) => <pre class="istem-kutusu__metin">{v().istemler[b()]}</pre>}
+        </Show>
+      </div>
+      <Show when={b() === "mcp" && anahtarlar().length > 1}>
+        <label class="alan-giris">
+          <span>Hangi anahtar?</span>
+          <select
+            class="girdi"
+            value={String(secili() ?? "")}
+            onChange={(e) => setAnahtarId(Number(e.currentTarget.value))}
+          >
+            <For each={anahtarlar()}>{(k) => <option value={String(k.id)}>{k.ad}</option>}</For>
+          </select>
+        </label>
+      </Show>
+      <Show when={b() === "mcp" && sayfa() && anahtarlar().length === 0}>
+        <p class="serit serit--sari">
+          <Simge ad="uyari" />
+          <span>
+            Bu alanda MCP anahtarı yok; istem anahtarsız kopyalanır. Bağlantı sekmesinden adlandırılmış bir
+            anahtar üret.
+          </span>
+        </p>
+      </Show>
+      <Show when={b() === "ssh" && sayfa() && !sayfa()?.sshParola.var}>
+        <p class="serit serit--sari">
+          <Simge ad="uyari" />
+          <span>Bu alanın SSH parolası henüz yok; Bağlantı sekmesinden oluştur.</span>
+        </p>
+      </Show>
+      <button
+        type="button"
+        class="dg dg--birincil dg--b dg--tam iste__kopyala"
+        onClick={() => void istemiKopyala(p.alan, b(), p.isId, b() === "mcp" ? secili() : null)}
+      >
+        <Simge ad="kopyala" /> İstemi kopyala
+      </button>
+    </div>
+  );
 }
 
 function MaddeListesi(p: {
@@ -127,7 +212,6 @@ export function Iste(): JSX.Element {
   const [kaynak, setKaynak] = createSignal<"model" | "kalip">("kalip");
   const [bekle, setBekle] = createSignal(false);
   const [is, setIs] = createSignal<IsKaydi | null>(null);
-  const [istem, setIstem] = createSignal("");
   const [uygulamaNotu, setUygulamaNotu] = createSignal<string | null>(null);
 
   const cevir = async (): Promise<void> => {
@@ -161,10 +245,7 @@ export function Iste(): JSX.Element {
         ornek: "",
       });
       setIs(r.is);
-      const i = await al<{ istem: string; uygulama: string }>(
-        `alan/${alan()}/istem?baglanti=${baglanti()}&is=${r.is.id}`,
-      );
-      setIstem(i.istem);
+      const i = await al<{ uygulama: string }>(`alan/${alan()}/istem?is=${r.is.id}`);
       setUygulamaNotu(i.uygulama);
       setAdim(3);
       void panoYenile();
@@ -173,16 +254,6 @@ export function Iste(): JSX.Element {
       hataTost(e);
     } finally {
       setBekle(false);
-    }
-  };
-  const kopyala = async (): Promise<void> => {
-    if (await panoyaKopyala(istem())) {
-      titret(12);
-      tost(
-        uygulamaNotu()
-          ? `Kopyalandı — ${uygulamaNotu()} sohbetine yapıştır`
-          : "Kopyalandı — yapay zekâ sohbetine yapıştır",
-      );
     }
   };
   const notKaydet = async (not: string): Promise<void> => {
@@ -204,7 +275,6 @@ export function Iste(): JSX.Element {
     setMetin("");
     setTaslak(null);
     setIs(null);
-    setIstem("");
   };
   const bekleyenIs = (): number => ayar()?.isler.filter((x) => x.durum === "acik").length ?? 0;
 
@@ -285,15 +355,14 @@ export function Iste(): JSX.Element {
                 </button>
               </div>
             </div>
-            <label class="alan-giris">
+            <div class="alan-giris">
               <span>Son tarih (isteğe bağlı)</span>
-              <input
-                class="girdi"
-                type="date"
-                value={sonTarih()}
-                onInput={(e) => setSonTarih(e.currentTarget.value)}
+              <TarihSecici
+                etiket="Son tarih"
+                deger={sonTarih() || null}
+                degistir={(v) => setSonTarih(v ?? "")}
               />
-            </label>
+            </div>
           </div>
           <label class="anahtarli-satir">
             <span class="esnek">
@@ -424,20 +493,7 @@ export function Iste(): JSX.Element {
                 </p>
               </div>
             </div>
-            <div class="istem-kutusu">
-              <div class="istem-kutusu__bas">
-                <span class="etiket">{baglanti() === "mcp" ? "MCP" : "SSH"}</span>
-                <span class="cok-soluk kucuk">Anahtar ya da şifre içermez</span>
-              </div>
-              <pre class="istem-kutusu__metin">{istem()}</pre>
-            </div>
-            <button
-              type="button"
-              class="dg dg--birincil dg--b dg--tam iste__kopyala"
-              onClick={() => void kopyala()}
-            >
-              <Simge ad="kopyala" /> İstemi kopyala
-            </button>
+            <IstemKutusu alan={alan()} isId={i().id} ilkBaglanti={baglanti()} />
             <label class="alan-giris">
               <span>Bu alanı hangi uygulamada kullanıyorsun?</span>
               <input

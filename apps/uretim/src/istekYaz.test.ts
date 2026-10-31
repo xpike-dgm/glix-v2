@@ -3,11 +3,11 @@ import { afterEach, describe, expect, it } from "vitest";
 import { komutAyristir } from "./cli/uretim.js";
 import { openDb } from "./db.js";
 import {
-  istemDoldur,
   AI_MODEL,
   type AiFetch,
   donusturucuKur,
   gizliVarMi,
+  istemDoldur,
   istemUret,
   kaliptanTaslak,
   taslakAyristir,
@@ -149,11 +149,7 @@ describe("istem", () => {
     }) as IsKaydi;
 
   it("MCP ve SSH kalıpları; birden çok iş kapsanır; sır yok", () => {
-    const m = istemUret(
-      "magaza",
-      "mcp",
-      [is(12, "Neon Gece: 6 ürün"), is(13, "Kış çerçeveleri")],
-    );
+    const m = istemUret("magaza", "mcp", [is(12, "Neon Gece: 6 ürün"), is(13, "Kış çerçeveleri")]);
     expect(m).toMatch(/talimat_oku/);
     expect(m).toMatch(/is_oku \(id: 12\)/);
     expect(m).toMatch(/Sırada 2 iş var: #12 Neon Gece: 6 ürün; #13 Kış çerçeveleri/);
@@ -162,7 +158,9 @@ describe("istem", () => {
     expect(s).toMatch(/ssh \{\{SSH_KULLANICI\}\}@\{\{SSH_ADRES\}\} uretim talimat-oku/);
     expect(s).toMatch(/Parola: \{\{SSH_PAROLA\}\}/);
     expect(m).toMatch(/\{\{MCP_ANAHTAR\}\}/);
-    expect(istemDoldur(s, { "{{SSH_KULLANICI}}": "uretim-magaza", "{{SSH_ADRES}}": "dgmcraft.online" })).toMatch(/ssh uretim-magaza@dgmcraft.online uretim talimat-oku/);
+    expect(
+      istemDoldur(s, { "{{SSH_KULLANICI}}": "uretim-magaza", "{{SSH_ADRES}}": "dgmcraft.online" }),
+    ).toMatch(/ssh uretim-magaza@dgmcraft.online uretim talimat-oku/);
     expect(s).toMatch(/uretim is-oku 12/);
     expect(gizliVarMi(m) || gizliVarMi(s)).toBe(false);
     expect(komutAyristir("uretim is-oku 12")).toEqual({ komut: "is-oku", args: ["12"] });

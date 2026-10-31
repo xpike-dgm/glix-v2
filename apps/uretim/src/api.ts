@@ -95,6 +95,7 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
         mcpUrl: `${o.config.publicUrl}/mcp`,
         gorunenAd: eposta ? (o.merkez.ayar(`gorunen_ad:${eposta}`) ?? "") : "",
         saatDilimi: o.config.saatDilimi,
+        sshSunucu: o.config.sshSunucu,
         surum: o.surum,
       });
     if (yol === "giris/kod" && yaz) {
@@ -242,9 +243,21 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
         if (gizliVarMi(mcp) || gizliVarMi(ssh)) return hata(res, 500, "istem", "İstem hazırlanamadı.");
         // Ekranda sırlar •••• görünür; açık hâli yalnız "Kopyala"da (POST istem-kopyala).
         const gorunum = (t: string): string =>
-          istemDoldur(t, { "{{SSH_ADRES}}": o.config.sshSunucu, "{{SSH_KULLANICI}}": `uretim-${p1}`, "{{SSH_PAROLA}}": "••••", "{{MCP_ADRES}}": `${o.config.publicUrl}/mcp`, "{{MCP_ANAHTAR}}": "••••" });
+          istemDoldur(t, {
+            "{{SSH_ADRES}}": o.config.sshSunucu,
+            "{{SSH_KULLANICI}}": `uretim-${p1}`,
+            "{{SSH_PAROLA}}": "••••",
+            "{{MCP_ADRES}}": `${o.config.publicUrl}/mcp`,
+            "{{MCP_ANAHTAR}}": "••••",
+          });
         const istemler = { mcp: gorunum(mcp), ssh: gorunum(ssh) };
-        return ok(200, { istem: istemler[b], istemler, sablonlar: { mcp, ssh }, isSayisi: m.isler(p1, ["acik"]).length, uygulama: m.ayar(`uygulama:${p1}`) ?? "" });
+        return ok(200, {
+          istem: istemler[b],
+          istemler,
+          sablonlar: { mcp, ssh },
+          isSayisi: m.isler(p1, ["acik"]).length,
+          uygulama: m.ayar(`uygulama:${p1}`) ?? "",
+        });
       }
       if (p0 === "alan" && isAlanId(p1) && p2 === "zevk")
         return ok(200, { ornekler: m.zevkGalerisi(p1), talimatEki: m.zevkBolumu(p1) });
@@ -606,11 +619,17 @@ async function alanYaz(
     const g = await govde();
     const b = g.baglanti === "ssh" ? "ssh" : g.baglanti === "mcp" ? "mcp" : null;
     const isId = g.is === undefined || g.is === null ? null : tamsayi(g.is, 1, 1e12);
-    const anahtarId = g.anahtarId === undefined || g.anahtarId === null ? null : tamsayi(g.anahtarId, 1, 1e12);
+    const anahtarId =
+      g.anahtarId === undefined || g.anahtarId === null ? null : tamsayi(g.anahtarId, 1, 1e12);
     if (!b) return hata(res, 400, "girdi", "Bağlantı türü MCP ya da SSH olmalı.");
     const sablon = istemSablonlari(m, alan, isId)[b];
     const parola = b === "ssh" ? o.ssh.parolaCoz(alan) : null;
-    const anahtar = b === "mcp" && anahtarId ? o.anahtarlar.coz(anahtarId, alan) : null;
+    const varsayilan =
+      o.anahtarlar.liste(alan).find((x) => x.kanal === "mcp" && x.iptal === null)?.id ?? null;
+    const anahtar =
+      b === "mcp" && (anahtarId ?? varsayilan)
+        ? o.anahtarlar.coz((anahtarId ?? varsayilan) as number, alan)
+        : null;
     const metinD = istemDoldur(sablon, {
       "{{SSH_ADRES}}": o.config.sshSunucu,
       "{{SSH_KULLANICI}}": `uretim-${alan}`,

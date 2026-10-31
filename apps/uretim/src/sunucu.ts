@@ -91,11 +91,18 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
         ? resendPostaci(config.resendKey, config.mailFrom)
         : null;
   const giris = new Giris(db, denetim, config.sahipEpostalar, postaci);
-  const ssh = new SshKanal(db, denetim, anahtarlar, merkez, {
-    yetkiDir: b.sshYetkiDir !== undefined ? b.sshYetkiDir : (process.env.URETIM_SSH_YETKI_DIR ?? null),
-    kok: b.sshKok !== undefined ? b.sshKok : (process.env.URETIM_SSH_KOK ?? null),
-    gunluk: config.sshGunluk,
-  }, kasa);
+  const ssh = new SshKanal(
+    db,
+    denetim,
+    anahtarlar,
+    merkez,
+    {
+      yetkiDir: b.sshYetkiDir !== undefined ? b.sshYetkiDir : (process.env.URETIM_SSH_YETKI_DIR ?? null),
+      kok: b.sshKok !== undefined ? b.sshKok : (process.env.URETIM_SSH_KOK ?? null),
+      gunluk: config.sshGunluk,
+    },
+    kasa,
+  );
   const surum = process.env.GIT_SHA ?? "gelistirme";
   const web = resolve(config.webDir);
   const csp = sayfaCsp(config.onizlemeUrl);

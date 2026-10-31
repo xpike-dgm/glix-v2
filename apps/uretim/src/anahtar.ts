@@ -6,8 +6,8 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import type { Db } from "./db.js";
 import { type Denetim, kisaOzet } from "./denetim.js";
-import { Kasa } from "./gizli.js";
 import { ozet } from "./giris.js";
+import { Kasa } from "./gizli.js";
 import { type AlanId, isAlanId } from "./ortak/alanlar.js";
 
 export const DAKIKA_ISTEK = 60;
@@ -33,18 +33,34 @@ export class Anahtarlar {
 
   /** Şifreli kaydı olan, iptal edilmemiş MCP anahtarının açık hâli (yalnız istem kopyalanırken). */
   coz(id: number, alan: AlanId): string | null {
-    const r = this.db.prepare("SELECT sifreli FROM anahtar WHERE id = ? AND alan = ? AND iptal IS NULL AND kanal = 'mcp'").get(id, alan) as
-      | { sifreli: string | null }
-      | undefined;
+    const r = this.db
+      .prepare("SELECT sifreli FROM anahtar WHERE id = ? AND alan = ? AND iptal IS NULL AND kanal = 'mcp'")
+      .get(id, alan) as { sifreli: string | null } | undefined;
     return r?.sifreli ? this.kasa.coz(r.sifreli) : null;
   }
 
-  uret(alan: AlanId, kanal: "mcp" | "ssh", now: number, kim: string, ad = ""): { id: number; anahtar: string } {
+  uret(
+    alan: AlanId,
+    kanal: "mcp" | "ssh",
+    now: number,
+    kim: string,
+    ad = "",
+  ): { id: number; anahtar: string } {
     const anahtar = `um_${alan}_${randomBytes(32).toString("base64url")}`;
     const o = ozet(anahtar);
     const r = this.db
-      .prepare("INSERT INTO anahtar (alan, ozet, onek, olusturma, kanal, ad, sifreli) VALUES (?, ?, ?, ?, ?, ?, ?)")
-      .run(alan, o, anahtar.slice(0, alan.length + 8), now, kanal, ad || (kanal === "ssh" ? "SSH" : "MCP"), kanal === "mcp" && this.kasa.acik ? this.kasa.sifrele(anahtar) : null);
+      .prepare(
+        "INSERT INTO anahtar (alan, ozet, onek, olusturma, kanal, ad, sifreli) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      )
+      .run(
+        alan,
+        o,
+        anahtar.slice(0, alan.length + 8),
+        now,
+        kanal,
+        ad || (kanal === "ssh" ? "SSH" : "MCP"),
+        kanal === "mcp" && this.kasa.acik ? this.kasa.sifrele(anahtar) : null,
+      );
     this.denetim.yaz(now, kim, "anahtar_uretildi", alan, `${kanal} ${ad} ${kisaOzet(o)}`);
     return { id: Number(r.lastInsertRowid), anahtar };
   }

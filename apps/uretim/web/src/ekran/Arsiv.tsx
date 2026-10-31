@@ -6,7 +6,7 @@ import type { AktarimKaydi, Koken, OgeOzeti } from "../../../src/ortak/tipler.js
 import { TESLIM_TURU_ADI } from "../../../src/ortak/tipler.js";
 import { al, gonder } from "../api.js";
 import { goreliZaman, tarihSaat } from "../bicim.js";
-import { AlanIsareti, Bos, DurumEtiketi, IskeletKartlar, Sekmeler } from "../bilesenler.js";
+import { AlanIsareti, Bos, DurumEtiketi, IskeletKartlar, Sekmeler, TarihSecici } from "../bilesenler.js";
 import { git, hataTost, sorgu, tost } from "../durum.js";
 import { Simge } from "../simgeler.js";
 import { GORUNUM_SIMGE } from "./Alan.js";
@@ -113,25 +113,21 @@ export function Arsiv(): JSX.Element {
                 <option value="">Bütün durumlar</option>
                 <For each={DURUMLAR}>{(d) => <option value={d}>{DURUM_ADI[d]}</option>}</For>
               </select>
-              <input
-                class="girdi"
-                type="date"
-                value={tarihten()}
-                onInput={(e) => {
-                  setTarihten(e.currentTarget.value);
+              <TarihSecici
+                etiket="Başlangıç tarihi"
+                deger={tarihten() || null}
+                degistir={(v) => {
+                  setTarihten(v ?? "");
                   setSayfa(0);
                 }}
-                aria-label="Başlangıç tarihi"
               />
-              <input
-                class="girdi"
-                type="date"
-                value={tarihe()}
-                onInput={(e) => {
-                  setTarihe(e.currentTarget.value);
+              <TarihSecici
+                etiket="Bitiş tarihi"
+                deger={tarihe() || null}
+                degistir={(v) => {
+                  setTarihe(v ?? "");
                   setSayfa(0);
                 }}
-                aria-label="Bitiş tarihi"
               />
             </Show>
           </div>

@@ -10,9 +10,9 @@ import { join } from "node:path";
 import { girisSayaciniSifirla } from "../api.js";
 import { readConfig, type UretimConfig } from "../config.js";
 import type { Postaci } from "../giris.js";
+import type { AiFetch } from "../istekYaz.js";
 import type { AlanId } from "../ortak/alanlar.js";
 import { pngYaz, type Rgba } from "../png.js";
-import type { AiFetch } from "../istekYaz.js";
 import { type Uretim, uretimKur } from "../sunucu.js";
 
 export const SAHIP = "sahip@ornek.com";
@@ -126,7 +126,9 @@ export interface Ortam {
   kapat(): Promise<void>;
 }
 
-export async function ortamKur(ek: { ssh?: boolean; oyun?: boolean; gizli?: boolean; aiFetch?: AiFetch } = {}): Promise<Ortam> {
+export async function ortamKur(
+  ek: { ssh?: boolean; oyun?: boolean; gizli?: boolean; aiFetch?: AiFetch } = {},
+): Promise<Ortam> {
   girisSayaciniSifirla();
   const dir = mkdtempSync(join(tmpdir(), "uretim-test-"));
   const oyun = await sahteOyun();

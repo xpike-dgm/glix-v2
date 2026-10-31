@@ -211,7 +211,13 @@ export async function aracCalistir(
       if (!m.isKilitle(is.id, k.id, k.ad, now)) {
         const kl = m.kilit(is.id, now);
         const siradaki = m.yzIsListesi(alan, k.id, now).siradaki;
-        return { ...is, uzerindeCalisiliyor: true, kilit: kl?.ad ?? "", siradaki, mesaj: `Bu iş üzerinde çalışılıyor (${kl?.ad ?? "başka oturum"}).${siradaki ? ` Sıradaki iş: ${siradaki}.` : ""}` };
+        return {
+          ...is,
+          uzerindeCalisiliyor: true,
+          kilit: kl?.ad ?? "",
+          siradaki,
+          mesaj: `Bu iş üzerinde çalışılıyor (${kl?.ad ?? "başka oturum"}).${siradaki ? ` Sıradaki iş: ${siradaki}.` : ""}`,
+        };
       }
       m.isBasladi(is.id, now);
       return { ...is, uzerindeCalisiliyor: false };
@@ -235,7 +241,10 @@ export async function aracCalistir(
     case "teslim_et": {
       const p = teslimAyristir(args, alanTanimi(alan));
       if (!p.ok) return { sonuc: "kaldi", hatalar: p.hatalar };
-      const r = await m.teslimEt(alan, "mcp", k.id, p.deger, ad === "on_kontrol", now, kim, { kanal: k.kanal, ad: k.ad });
+      const r = await m.teslimEt(alan, "mcp", k.id, p.deger, ad === "on_kontrol", now, kim, {
+        kanal: k.kanal,
+        ad: k.ad,
+      });
       return {
         teslimId: r.teslimId,
         ogeler: r.ogeler.map((o) => ({
