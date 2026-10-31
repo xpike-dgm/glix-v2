@@ -1012,6 +1012,8 @@ button.kp__wire:active:not(:disabled) {
 }
 .kpn__paper[data-art="1"] {
   background: none;
+  /* Kâğıt görselinin yırtık kenarları ve sol delikleri yazının dışında kalsın. */
+  padding: 22px 9% 9% 12%;
 }
 .kpn__paper[data-art="1"] .kpn__art {
   opacity: 1;

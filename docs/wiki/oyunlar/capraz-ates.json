@@ -1,39 +1,53 @@
 {
   "id": "capraz-ates",
   "ad": "Çapraz Ateş",
-  "slogan": "Gizlice birini hedef al; seçilmeyen kazanır, seçilen kaybeder, karşılıklı ateşte mermiler çarpışır.",
+  "slogan": "İki tur boyunca gizlice nişan al ya da sipere gir; seçilmeyen atıcı kazanır, seçilen kaybeder, karşılıklı ateşte mermiler çarpışır.",
   "kategori": "Strateji",
-  "etiketler": ["eşzamanlı", "gizli seçim", "tahmin", "kilitlenebilir"],
+  "etiketler": ["eşzamanlı", "gizli seçim", "tahmin", "blöf", "kilitlenebilir"],
   "oyuncu": {
     "min": 3,
     "max": 8
   },
   "sure": {
-    "tahminiSn": 32,
-    "not": "Hedef seçme 25 sn + izlerin gösterildiği 7 sn = 32 sn. Bağlı herkes 'Tamam'la hedefini kilitlerse hedef aşaması son kilitten 1 sn sonra biter (en geç 25. sn'de) ve izleme yine 7 sn sürer. Oyuncu sayısı süreyi değiştirmez. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
+    "tahminiSn": 53,
+    "not": "Tur 1 seçimi 20 sn + kısa açılış 5 sn + tur 2 seçimi 20 sn + final açılışı 8 sn = 53 sn. Bir turda bağlı herkes 'Ateşe hazır' derse o turun seçimi son kilitten 1 sn sonra biter (en geç 20. sn'de) ve sonraki aşamalar öne kayar; kısa açılış yine 5 sn, final açılışı yine 8 sn sürer. Oyuncu sayısı süreyi değiştirmez. Oyunun kendi final açılışı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra; genel sonuç ekranı en çok 60 sn."
   },
-  "ozet": "Herkes kendisi dışında bir oyuncuyu gizlice hedef alır. Süre bitince bütün hedefler birden açılır: kimse tarafından hedeflenmeyen ve birine ateş eden +1 alır, hedeflenen -1 alır, birbirini karşılıklı hedefleyen iki kişi 0 alır. Puanlar doğrudan genel skora eklenir; beraberlik kuralı yoktur.",
+  "ozet": "İki tur oynanır. Her turda herkes ya kendisi dışında bir oyuncuyu gizlice hedef alır ya da 'Siper al' der. Tur bitince seçimler birden açılır: kimse tarafından hedeflenmeyen ve birine (siperdekine de) ateş eden +1, hedeflenen -1, birbirini karşılıklı hedefleyen iki kişi 0, siperdeki 0 alır. Tur 1'in hedefleri tur 2 boyunca herkese açıktır; oyunun puanı iki turun toplamıdır (-2…+2) ve doğrudan genel skora eklenir.",
   "akis": [
     {
       "ad": "Anlatım",
       "sureSn": 40,
       "kim": "herkes",
-      "aciklama": "Tam ekran anlatım: 'Gizlice bir arkadaşına nişan al!' ve üç madde (kendin dışında birini hedefle, süre bitene kadar değiştirebilirsin; seni kimin seçtiğini göremezsin; seçilen −1, seçilmeyen +1, karşılıklı ateşte ikiniz 0). Herkes hazır olunca ya da 40 sn dolunca 3 sn'lik geri sayım başlar; kartlar bu ekranda oynanır.",
+      "aciklama": "Tam ekran anlatım: 'Gizlice nişan al ya da sipere gir!' ve üç madde (iki tur: birini hedefle ya da siper al, süre bitene kadar değiştirebilirsin; tur 1'in hedefleri açılır, tur 2'de kim kimi vurdu bilinir; seçilen −1, seçilmeyen atıcı +1, karşılıklı ateşte ve siperde 0). Herkes hazır olunca ya da 40 sn dolunca 3 sn'lik geri sayım başlar; kartlar bu ekranda oynanır.",
       "gizli": "Yok."
     },
     {
-      "ad": "Hedef seçme",
-      "sureSn": 25,
+      "ad": "Tur 1: hedef seçme",
+      "sureSn": 20,
       "kim": "herkes (eşzamanlı)",
-      "aciklama": "Başlangıçta yaklaşık 1,9 sn'lik süs sahnesi (nişangâhlar köşelerden süpürüp ortada kilitlenir) oynar; dokunuşu engellemez. Üstte süre çubuğu, 'Gizli hedefin' başlığı ve 'Kimi vuracaksın?' yazar. Ortada kendin dışındaki katılımcıların portreleri bir ızgarada (4 ve altı: 2 sütun, 5-6: 3 sütun, 7-8: dik ekranda 3, yatay alçak ekranda 4 sütun) süzülür, her portrede ince bir nişangâh gezinir. Bir portreye dokunmak hedefi hemen kilitlemeden seçer (başlık hedefin adına döner, halka kırmızı olur); başka birine dokununca hedef değişir. Altta yazı: seçmediysen 'Seçmezsen boşa sıkmış olursun', seçtiysen 'Değiştirebilir ya da Tamam diyebilirsin'. 'Tamam' düğmesi hedefi kesinleştirir ('Hedefin kesinleşti'), ardından 'k/n hazır' sayacı ve avatar noktaları görünür. Bağlantısı kopuk oyuncular soluk gösterilir ve seçilemez.",
-      "gizli": "Hiç kimse başkasının hedefini görmez. Herkese açık görünümde yalnız 'Tamam' diyenlerin kimlikleri vardır (hedefleri değil); kaç kişinin hedef seçtiği bile sızmaz. Kendi hedefini yalnız sen görürsün. İzleyici hiç hedef göremez, yalnız kimlerin kilitlendiğini görür."
+      "aciklama": "Başlangıçta yaklaşık 1,9 sn'lik süs sahnesi (nişangâhlar köşelerden süpürüp ortada kilitlenir) oynar; dokunuşu engellemez. Üstte süre çubuğu, 'Tur 1/2 · Gizli hedefin' ve 'Kimi vuracaksın?'. Ortada kendin dışındaki katılımcıların portreleri (4 ve altı: 2 sütun, 5-6: 3 sütun, 7-8: dik ekranda 3, yatay alçak ekranda 4 sütun); her portrede ince bir nişangâh gezinir. Portreye dokununca kırmızı nişangâh o portreye kayarak kilitlenir (yakınlaşma, klik sesi, kısa titreşim, kırmızı lazer noktası), başlık hedefin adına döner ve ekranın altındaki kendi avatarından hedefe ince kırmızı lazer çizgisi uzanır (yalnız kendi ekranında). Başka portreye dokununca nişangâh oraya kayar. Portrelerin altında ayrı 'Siper al' düğmesi: seçilince başlık 'Siperdesin' olur, ekranın altı kalkanla örtülür, avatarın çömelir, lazer söner. 'ATEŞE HAZIR' düğmesi (hedef ya da siper seçiliyken etkin) seçimi kesinleştirir: silah kurma sesi ve titreşim, nişangâh kilit simgesine döner, düğme 'Ateşe hazırsın' olur. Altta 'k/n hazır' sayacı ve oyuncu avatarları; hazır olanların yanında mermi simgesi. Bağlantısı kopuk oyuncular soluk gösterilir ve seçilemez. Son 5 sn düello anıdır: ekran hafifçe kararır, düello ıslığı çalar, son 3 sn'de büyük '3 · 2 · 1' (dokunuşu engellemez).",
+      "gizli": "Hiç kimse başkasının hedefini ya da siperini görmez. Herkese açık görünümde yalnız 'Ateşe hazır' diyenlerin kimlikleri vardır (seçimleri değil); kaç kişinin hedef seçtiği ya da siper aldığı bile sızmaz. Kendi seçimini yalnız sen görürsün. İzleyici hiç seçim göremez."
     },
     {
-      "ad": "Hedeflerin açılması ve izleme",
-      "sureSn": 7,
+      "ad": "Tur 1: kısa açılış",
+      "sureSn": 5,
       "kim": "herkes",
-      "aciklama": "Süre dolunca (ya da herkes kilitleyince 1 sn sonra) bütün hedefler birden açılır. Oyuncular bir halkada dizilir (ilk oyuncu üstte, saat yönünde); her hedef için ateş eden renginde neon bir iz çizilir (izler 110 ms arayla, her biri 520 ms'de), karşılıklı izler ortada çarpışıp patlar. Yaklaşık 1,3 sn sonra her oyuncunun yanında puan çipi (+1, −1, 0) belirir. Oyuncu kendi sonucunu başlıkta görür: '−1 Seni hedef aldılar', '+1 Kimse seni seçmedi', '0 Mermiler çarpıştı' ya da '0 Ateş etmedin, seçilmedin'. İzleyici 'Hedefler açıldı' görür. Altta 'Puanlar genel skora eklenir' yazar. Açılış en az 7 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
-      "gizli": "Yok; hedefler ve puanlar herkese açıktır."
+      "aciklama": "Süre dolunca (ya da herkes hazır olunca 1 sn sonra) 'ATEŞ!' flaşıyla tur 1'in seçimleri açılır. Oyuncular halkada (ilk oyuncu üstte, saat yönünde); her atış için namlu ateşi ve hızlı mermi izi (~0,65 sn), karşılıklı mermiler ortada çarpışır, siperdekinin çevresinde kalkan belirir ve mermi seker, vurulan sarsılır. Oyuncuların yanında tur puanı rozeti (simge + puan). Başlıkta kendi sonucun ('−1 VURULDUN', '+1 SAĞ KALDI', '0 ÇARPIŞTI', '0 Siperde', '0 Ateş etmedin'); izleyici 'Hedefler açıldı'. Altta 'Tur 2 başlıyor' ve geri sayım. Bu sırada seçim yapılamaz.",
+      "gizli": "Yok; tur 1'in hedefleri, siperleri ve puanları herkese açıktır ve tur 2 boyunca açık kalır."
+    },
+    {
+      "ad": "Tur 2: hedef seçme",
+      "sureSn": 20,
+      "kim": "herkes (eşzamanlı)",
+      "aciklama": "Herkes seçimine sıfırdan başlar (hedef, siper, kilit taşınmaz). Ekran tur 1 ile aynıdır; ek olarak üstte 'Tur 2/2 · İntikam' ve sağda tur 1'in mini halkası (dokununca büyük hâli açılır: kim kimi vurdu, kim siperdeydi, tur puanları; 'Kapat' ile kapanır). Portrelerin alt kenarında rozetler: tur 1'de seni hedefleyenin portresinde kırmızı 'seni vurdu', senin hedeflediğinde 'vurdun', ikisi birden ise 'karşılıklı', tur 1'de siperde olanın portresinde kalkan. Son 5 sn yine düello anıdır.",
+      "gizli": "Tur 1'deki gibi: tur 2'nin seçimleri yalnız sahibinde. Tur 1 bilgisi herkese açıktır."
+    },
+    {
+      "ad": "Final açılışı",
+      "sureSn": 8,
+      "kim": "herkes",
+      "aciklama": "'ATEŞ!' flaşı; halka tam ekrana büyür, 1 sn sessizlik, sonra bütün namlular aynı anda ateş alır (toplu ateş sesi) ve mermiler ağır çekimde (2 sn) iz çizerek hedeflerine gider. 3. sn'de: vurulan geri sarsılır ve '−1' alır (seni vurdularsa ekranında kısa süreli cam çatlağı ve cam kırılma sesi), karşılıklı mermiler ortada çarpışır (kıvılcım, 0), siperdekine giden mermi kalkandan seker (0), vurulmayan atıcı parlar (+1). Puan rozetleri 3,3. sn'de, kendi sonucun başlıkta 3,6. sn'de görünür. 4,3. sn'de kendi ekranında büyük 'Seni vuranlar: …' satırı (siperdeysen 'Kalkanına ateş edenler: …', çarpıştıysan 'Sana ateş edenler: …', kimse yoksa 'Kimse sana ateş etmedi'), 4,9. sn'de 'En çok hedeflenen: X (N kişi)' özeti (eşitlikte 'En çok hedeflenenler: X ve Y (2'şer kişi)'), 5,6. sn'de ad etiketlerindeki puan rozetleri iki turun toplamına döner ve 'Toplam … · Tur 1 … · Tur 2 …' satırı görünür. İzleyici kendi satırı yerine 'Rozetler iki turun toplamını gösterir' görür. Oyuncular eşit aralıklı bir çemberde durur; puan rozeti her oyuncunun ad etiketinin içindedir. Yapay zekâ yorumu açıksa (sunucuda anahtar varsa) açılış sırasında düello spikerinin tek cümlelik esprili yorumu en altta belirir; gelmezse ya da hata olursa hiç görünmez, oyun beklemez. Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez. Tur 1'in kısa açılışı düğmesiz, süreyle geçer.",
+      "gizli": "Yok; hedefler, siperler ve puanlar herkese açıktır."
     },
     {
       "ad": "Sonuç ekranı",
@@ -45,31 +59,34 @@
   ],
   "kurallar": [
     "Oyuncu sayısı 3 ile 8 arasındadır (iki kişiyle oynanmaz: iki kişide herkes karşılıklı kalırdı).",
-    "Her oyuncu en fazla 1 hedef seçer. Hedef kendin olamaz (reddedilir) ve oyunun katılımcısı olmalıdır.",
+    "Oyun iki turdan oluşur: tur 1 (20 sn seçim + 5 sn kısa açılış) ve tur 2 (20 sn seçim + 8 sn final açılışı).",
+    "Her turda her oyuncu ya en fazla 1 hedef seçer ya da 'Siper al' der. Hedef kendin olamaz (reddedilir) ve oyunun katılımcısı olmalıdır.",
     "Hedef, seçildiği anda BAĞLI olmalıdır; bağlantısı kopuk bir oyuncu hedef olarak seçilemez (reddedilir, bağlanınca seçilebilir). Hedef sonradan koparsa önceki seçim geçerli kalır ve hedeflenme sonucu uygulanır.",
-    "Hedef, süre bitene ya da 'Tamam'la kilitlenene kadar istenildiği kadar değiştirilebilir; son seçim geçerlidir. Aynı hedefi tekrar seçmek hiçbir şeyi değiştirmez.",
-    "'Tamam' (kilit) hedefi kesinleştirir: kilitlendikten sonra hedef değiştirilemez ve ikinci kez kilitlenemez (reddedilir). Hedef seçmemiş oyuncu kilitleyemez ('nothing_to_lock').",
-    "Bağlı bütün katılımcılar kilitlediğinde hedef aşaması son kilitten 1 sn sonra biter (bitiş zamanı hiçbir zaman 25. sn'den geç olmaz). Bağlantısı kopuk oyuncu beklenmez; bağlı olup henüz kilitlememiş (ya da hedef seçmemiş) biri varsa erken bitmez.",
-    "Hedef seçmeyen oyuncu 'boşa sıkmış' sayılır; yine de başkası tarafından hedeflenebilir.",
-    "Süre bitiminden sonra (25. sn ya da erken bitişte kilit anı +1 sn) gelen hiçbir eylem kabul edilmez; geç gelen eylem payı bu oyunda yoktur (bitişten 1 ms sonrası reddedilir, 1 ms öncesi kabul edilir).",
-    "Hedefler süre bitene kadar kimseye gösterilmez: herkese açık görünüm yalnız süreleri ve 'Tamam' diyenleri içerir; kişiye özel görünüm yalnız kendi hedefini ve kilitli olup olmadığını içerir.",
-    "Puanlama sırası: (1) Karşılıklı çift (A→B ve B→A): iki oyuncu da 0. (2) Karşılıklı çifte dahil olmayan ve en az bir kişi tarafından hedeflenen oyuncu: -1 (kaç kişi hedeflerse hedeflesin yalnız bir kez -1). (3) Kimse tarafından hedeflenmeyen ve birini hedef alan oyuncu: +1. (4) Kimse tarafından hedeflenmeyen ve hedef seçmeyen oyuncu: 0.",
-    "Hedeflenme baskındır: hedefi seçmiş olsan bile başkası seni hedefliyorsa (karşılıklı değilsen) -1 alırsın, ateş ettiğin için +1 alamazsın.",
-    "Karşılıklı çifte üçüncü bir kişi ateş ederse çift yine 0 alır (karşılıklılık hedeflenme cezasından önce gelir); üçüncü kişi kendisi hedeflenmiyorsa +1 alır.",
-    "Bir oyuncu hem karşılıklı bir çiftin üyesi hem de bir başkası tarafından hedeflenmişse yine 0 alır.",
-    "Puanlar doğrudan genel skora eklenir (mini oyun puanı = genel puan). Eksi puan genel skoru düşürür.",
-    "Mini oyun sıralaması puana göredir; kartlar için 'birinci' en yüksek puanlı, 'sonuncu' en düşük puanlı oyuncudur."
+    "Seçim (hedef ya da siper), süre bitene ya da 'Ateşe hazır' ile kilitlenene kadar istenildiği kadar değiştirilebilir; son seçim geçerlidir. Siper alınca hedef silinir; hedef seçilince siperden çıkılır. Aynı seçimi tekrar yapmak hiçbir şeyi değiştirmez.",
+    "'Ateşe hazır' (kilit) seçimi kesinleştirir: kilitlendikten sonra değiştirilemez ve ikinci kez kilitlenemez (reddedilir). Hedef de siper de seçmemiş oyuncu kilitleyemez ('nothing_to_lock').",
+    "Erken bitiş her turda ayrı çalışır: bağlı bütün katılımcılar kilitlediğinde o turun seçimi son kilitten 1 sn sonra biter (hiçbir zaman 20. sn'den geç olmaz). Bağlantısı kopuk oyuncu beklenmez. Tur 1 erken biterse kısa açılış, tur 2 ve final aynı sürelerle öne kayar.",
+    "Tur 2'de herkes seçimine sıfırdan başlar: tur 1'in hedefi, siperi ve kilidi taşınmaz. Kısa açılış sırasında gelen eylem reddedilir ('not_started').",
+    "Bir turun süre bitiminden sonra (20. sn ya da erken bitişte kilit anı +1 sn) o tura eylem kabul edilmez; geç gelen eylem payı bu oyunda yoktur. Tur 2 bittikten sonra gelen eylem 'ended' ile reddedilir.",
+    "Seçimler o turun süresi bitene kadar kimseye gösterilmez: herkese açık görünüm yalnız süreleri, açılmış turları ve 'Ateşe hazır' diyenleri içerir; kişiye özel görünüm yalnız bu turdaki kendi hedefini, siperini ve kilidini içerir. Tur 1'in hedefleri ve siperleri tur 1 açıldıktan sonra herkese açıktır.",
+    "Bir turun puanlama sırası: (1) Siperdeki oyuncu: 0 (hedeflense de; ateş etmediği için +1 de alamaz). (2) Karşılıklı çift (A→B ve B→A, ikisi de siperde değil): iki oyuncu da 0. (3) Karşılıklı çifte dahil olmayan ve en az bir kişi tarafından hedeflenen oyuncu: -1 (kaç kişi hedeflerse hedeflesin yalnız bir kez). (4) Kimse tarafından hedeflenmeyen ve birini hedef alan oyuncu: +1 (hedefi siperde olsa da). (5) Kimse tarafından hedeflenmeyen ve hedef seçmeyen oyuncu: 0.",
+    "Siperdekini hedefleyen 'ateş etti' sayılır: kendisi hedeflenmediyse +1 alır; atışı siperdekine ceza vermez.",
+    "Siperdeki oyuncunun hedefi yoktur; bu yüzden siperdeki biriyle karşılıklı çift oluşmaz (A siperdeyse B→A tek yönlüdür).",
+    "Hedeflenme baskındır: hedefi seçmiş olsan bile başkası seni hedefliyorsa (karşılıklı değilsen, siperde değilsen) -1 alırsın, ateş ettiğin için +1 alamazsın.",
+    "Karşılıklı çifte üçüncü bir kişi ateş ederse çift yine 0 alır; üçüncü kişi kendisi hedeflenmiyorsa +1 alır. Hem karşılıklı çiftin üyesi hem başkası tarafından hedeflenen oyuncu yine 0 alır.",
+    "Tam döngüde (A→B→C→A) özel kural yoktur: herkes hedeflendiği için herkes -1 alır.",
+    "Oyunun puanı iki turun puanlarının toplamıdır (-2 ile +2 arası) ve doğrudan genel skora eklenir (mini oyun puanı = genel puan). Eksi puan genel skoru düşürür.",
+    "Mini oyun sıralaması toplam puana göredir; kartlar için 'birinci' toplamı en yüksek, 'sonuncu' toplamı en düşük oyuncudur."
   ],
   "puanlama": {
-    "ozet": "Hedeflenen -1, hedeflenmeyen ve ateş eden +1, karşılıklı çift 0, ateş etmeyen ve hedeflenmeyen 0.",
+    "ozet": "Her turda: hedeflenen -1, hedeflenmeyen ve ateş eden +1, karşılıklı çift 0, siperde 0, ateş etmeyen ve hedeflenmeyen 0. Oyunun puanı iki turun toplamı (-2…+2).",
     "kalemler": [
       {
         "olay": "Hedeflenmedin ve birini hedef aldın",
         "puan": "+1",
-        "not": "Karşılıklı çift olmadığın sürece; kimse seni seçmediyse."
+        "not": "Karşılıklı çift olmadığın sürece; hedefin siperde olsa da."
       },
       {
-        "olay": "Biri ya da birkaçı seni hedef aldı (karşılıklı değil)",
+        "olay": "Biri ya da birkaçı seni hedef aldı (karşılıklı değil, siperde değilsin)",
         "puan": "-1",
         "not": "Kaç kişi hedeflerse hedeflesin yalnız bir kez."
       },
@@ -79,143 +96,186 @@
         "not": "İki taraf da 0; üçüncü biri bu çifti hedeflese bile çift 0 kalır."
       },
       {
-        "olay": "Hedef göndermedin ve kimse seni seçmedi",
+        "olay": "Siperdesin",
         "puan": "0",
-        "not": "Boşa sıkma: kendi saldırından puan alamazsın."
+        "not": "Hedeflensen de ceza yok; ateş etmediğin için +1 de yok."
       },
       {
-        "olay": "Hedef göndermedin ama biri seni seçti",
+        "olay": "Hedef göndermedin, siper almadın ve kimse seni seçmedi",
+        "puan": "0",
+        "not": "Boşa sıkma."
+      },
+      {
+        "olay": "Hedef göndermedin, siper almadın ama biri seni seçti",
         "puan": "-1",
         "not": "Hedeflenme kuralı yine uygulanır."
+      },
+      {
+        "olay": "Oyunun puanı",
+        "puan": "-2…+2",
+        "not": "Tur 1 puanı + tur 2 puanı; doğrudan genel skora eklenir."
       }
     ],
-    "ornek": "5 oyuncu: Ali→Bora, Bora→Ali (karşılıklı), Ceren→Ali, Deniz→Ceren, Ece hedef seçmedi. Ali ve Bora karşılıklı: 0 ve 0. Ceren, Deniz tarafından hedeflenmiş ve karşılıklı değil: -1 (Ali'ye ateş etmesi +1 getirmez). Deniz'i kimse seçmedi ve Ceren'e ateş etti: +1. Ece'yi kimse seçmedi, ateş de etmedi: 0. Sonuç: Ali 0, Bora 0, Ceren -1, Deniz +1, Ece 0.",
-    "beraberlik": "Beraberlik kuralı yoktur; herkes aldığı puanı alır. Puanlar doğrudan genel skora eklenir. Herkesin puanı eşitse (ör. kimse ateş etmediyse hepsi 0) kartlarda herkes 'birinci' sayılır."
+    "ornek": "4 oyuncu. Tur 1: Ali→Bora, Ceren→Bora, Deniz→Ali. Ali hedeflendi -1, Bora hedeflendi -1, Ceren +1, Deniz +1. Tur 2 (herkes tur 1'i biliyor): Ali yine Bora'yı hedefler, Bora siper alır, Ceren Deniz'i hedefler, Deniz seçmez. Ali hedeflenmedi ve (siperdeki) Bora'ya ateş etti +1, Bora siperde 0, Ceren +1, Deniz hedeflendi -1. Toplam: Ali 0, Bora -1, Ceren +2, Deniz 0.",
+    "beraberlik": "Beraberlik kuralı yoktur; herkes aldığı toplamı alır. Toplamlar doğrudan genel skora eklenir. Herkesin toplamı eşitse (ör. herkes iki turda da siperdeyse hepsi 0) kartlarda herkes 'birinci' sayılır."
   },
   "ozelDurumlar": [
     {
       "baslik": "Bağlantısı kopan oyuncu",
-      "aciklama": "Kopan oyuncu katılımcı kalır ve sonuçta puanlanır. Daha önce seçtiği hedef geçerlidir (kimse onu 'Tamam' sayımında beklemez). Başkaları artık onu YENİ hedef olarak seçemez; ama daha önce seçilmişse hedeflenme cezası sürer. Kopuk oyuncu ateş eden olarak +1 alabilir. Erken bitiş için bağlı olmayan oyuncu beklenmez."
+      "aciklama": "Kopan oyuncu katılımcı kalır ve iki turda da puanlanır. O turda daha önce seçtiği hedef ya da siper geçerlidir; tur 2'de seçimi sıfırlanır ve koptuğu sürece yeni seçim yapamaz (hedefsiz sayılır). Başkaları onu YENİ hedef olarak seçemez; ama daha önce seçilmişse hedeflenme cezası sürer. Erken bitiş için bağlı olmayan oyuncu beklenmez."
     },
     {
-      "baslik": "Herkes erken 'Tamam' derse",
-      "aciklama": "Son kilitten 1 sn sonra hedefler açılır ve 7 sn'lik izleme başlar; oyun toplam yaklaşık 8 sn + önceki süre kadar sürer. Erken bitiş yalnız süreyi kısaltır; puanlama ya da gizli bilginin ne zaman açıldığı değişmez."
+      "baslik": "Herkes erken 'Ateşe hazır' derse",
+      "aciklama": "O turun seçimi son kilitten 1 sn sonra biter. Tur 1'de kısa açılış (5 sn) hemen başlar ve tur 2 ardından gelir; tur 2'de final açılışı (8 sn) başlar. Erken bitiş yalnız süreyi kısaltır; puanlama ya da gizli bilginin ne zaman açıldığı değişmez."
     },
     {
-      "baslik": "Hedef seçmeyen oyuncu",
-      "aciklama": "Süre dolana kadar seçmezse 'boşa sıkmış' olur: hedefi yoktur, +1 alamaz. Kimse onu hedeflemediyse 0, hedeflediyse -1 alır. Hedefsiz oyuncu 'Tamam' diyemez; bu yüzden hedef seçmeyen bağlı biri varken erken bitiş olmaz."
+      "baslik": "Seçim yapmayan oyuncu",
+      "aciklama": "Süre dolana kadar hedef de siper de seçmezse 'boşa sıkmış' olur: hedefi yoktur, +1 alamaz, siper koruması da yoktur (hedeflenirse -1). Seçimsiz oyuncu 'Ateşe hazır' diyemez; bu yüzden seçim yapmayan bağlı biri varken o turda erken bitiş olmaz."
+    },
+    {
+      "baslik": "Herkes siperde",
+      "aciklama": "Kimse ateş etmez; o turda herkes 0 alır. Siper tek başına puan getirmez."
     },
     {
       "baslik": "3 oyuncu",
-      "aciklama": "En küçük oyun: herkes birini seçer. Örn. A→B, B→C, C→A (döngü) herkesin -1 almasına yol açar; A→B, B→A, C→A ise A,B 0, C +1 verir. Izgarada 2 portre görünür (2 sütun)."
+      "aciklama": "En küçük oyun. Örn. A→B, B→C, C→A (döngü) herkesin -1 almasına yol açar (döngü kuralı yoktur); A→B, B→A, C→A ise A,B 0, C +1 verir; A siperde, B→A, C→B ise A 0, B -1, C +1. Izgarada 2 portre görünür (2 sütun)."
     },
     {
       "baslik": "8 oyuncu",
-      "aciklama": "Her oyuncu 7 seçenek görür. Dik ekranda 3 sütun, yatay/alçak ekranda 4 sütun kullanılır. Sonuç halkasında 8 oyuncu ve en çok 8 iz çizilir."
+      "aciklama": "Her oyuncu 7 seçenek görür. Dik ekranda 3 sütun, yatay/alçak ekranda 4 sütun. Kısa ekranda (≤ 720 px yükseklik) 7-8 kişide ipucu satırı gizlenir ve ızgara sıkılaşır. Açılış halkasında 8 oyuncu ve en çok 8 iz çizilir."
     },
     {
       "baslik": "İzleyici ve TV",
-      "aciklama": "İzleyici tüm katılımcıları görür ('Gizli nişan / Herkes nişan alıyor'); portreler dokunulmaz; kimin 'Tamam' dediğini görür ('Hedefler süre bitince açılır'). Süre bitince izleri ve puanları görür. Hiçbir eylem gönderemez."
+      "aciklama": "İzleyici seçim sırasında tüm katılımcıları büyük bir halkada görür ('Gizli nişan / Herkes nişanda'); her portrede dönen bir nişangâh vardır ama kimin kimi hedeflediği gösterilmez; 'Ateşe hazır' diyenlerin portresinde mermi rozeti çıkar ve nişangâhı kırmızıya döner. Tur 1'in mini halkasını tur 2'de görebilir. Açılışları oyuncularla aynı sahneyle izler. Hiçbir eylem gönderemez."
     },
     {
       "baslik": "Reddedilen seçim",
-      "aciklama": "İstemci seçimi hemen gösterir (iyimser); sunucu reddederse (ör. hedef çevrimdışı ya da süre bitmiş) seçim eski haline döner."
+      "aciklama": "İstemci seçimi (hedef ya da siper) hemen gösterir (iyimser); sunucu reddederse (ör. hedef çevrimdışı ya da süre bitmiş) seçim eski haline döner."
+    },
+    {
+      "baslik": "Hareket azaltma",
+      "aciklama": "Hareket azaltılmışsa nişangâh kayması, lazer akışı, halka büyümesi, sarsıntı, düello sayılarının animasyonu ve uçan mermiler kapanır; izler, kalkan, rozetler ve satırlar aynı anlarda görünür. Titreşimler yarıya iner."
     }
   ],
   "kartlar": [
     {
       "kart": "Genel",
-      "etki": "Kod bu oyun için özel bir kart dalı içermez; genel K6 hesabı çalışır ve kartlar yalnız genel skora giden puanları (awards) değiştirir. Mini oyun puanı kartlardan etkilenmez."
+      "etki": "Kod bu oyun için özel bir kart dalı içermez; genel K6 hesabı oyunun toplam puanına (iki turun toplamı; miniScores = awards) uygulanır. Turların tek tek puanı kartlarda kullanılmaz."
     },
     {
       "kart": "Kalkan",
-      "etki": "-1 alan oyuncunun puanı 0'a çekilir (eksiye düşersen 0 sayılır)."
+      "etki": "Toplamı eksi olan oyuncunun ödülü 0'a çekilir (−1 ya da −2 → 0). Oyundaki 'Siper al' ile ilgisi yoktur."
     },
     {
       "kart": "Kendine Güven / Sigorta / Tahmin",
-      "etki": "'Birinci' = +1 alan tüm oyuncular, 'sonuncu' = -1 alan tüm oyuncular; herkes eşitse (ör. kimse ateş etmedi) herkes birinci sayılır ve kimse sonuncu değildir. Sigorta bu yüzden her zaman -1 alanlara +1 verir."
+      "etki": "'Birinci' = toplamı en yüksek olan(lar), 'sonuncu' = toplamı en düşük olan(lar); herkesin toplamı eşitse herkes birinci sayılır ve kimse sonuncu değildir."
     },
     {
       "kart": "Ters Köşe",
-      "etki": "Sıralama tersine döner: +1 alanlar -1'in, -1 alanlar +1'in ödülünü alır (aynadaki sıranın ödülü)."
+      "etki": "Toplam puana göre sıralama tersine döner: her oyuncu aynadaki sıranın ödülünü alır (K6 adım 1)."
+    },
+    {
+      "kart": "Çift Puan / Ağır Yük",
+      "etki": "Toplam üzerinde çalışır: Çift Puan −2'yi −4'e, +2'yi +4'e çıkarır; Ağır Yük ±1'i 0'a, ±2'yi ±1'e indirir."
     }
   ],
   "sabitler": [
     {
-      "ad": "Hedef seçme süresi",
-      "deger": "25 000 ms (25 sn)",
-      "kaynak": "packages/engine/src/games/capraz-ates/types.ts:4"
+      "ad": "Tur sayısı",
+      "deger": "2",
+      "kaynak": "packages/engine/src/games/capraz-ates/types.ts (CAPRAZ_ATES_ROUNDS)"
     },
     {
-      "ad": "İzleme (hedefler açıldıktan sonra) süresi",
-      "deger": "7 000 ms (7 sn)",
-      "kaynak": "packages/engine/src/games/capraz-ates/types.ts:6"
+      "ad": "Her turdaki seçim süresi",
+      "deger": "20 000 ms (20 sn)",
+      "kaynak": "packages/engine/src/games/capraz-ates/types.ts (CAPRAZ_ATES_FIRE_MS)"
     },
     {
-      "ad": "Toplam oyun süresi",
-      "deger": "32 000 ms",
-      "kaynak": "packages/engine/src/games/capraz-ates/types.ts:7"
+      "ad": "Tur 1 kısa açılışı",
+      "deger": "5 000 ms (5 sn)",
+      "kaynak": "packages/engine/src/games/capraz-ates/types.ts (CAPRAZ_ATES_INTERVAL_MS)"
+    },
+    {
+      "ad": "Final açılışı",
+      "deger": "8 000 ms (8 sn)",
+      "kaynak": "packages/engine/src/games/capraz-ates/types.ts (CAPRAZ_ATES_REVEAL_MS)"
+    },
+    {
+      "ad": "Toplam oyun süresi (erken bitiş yoksa)",
+      "deger": "53 000 ms",
+      "kaynak": "packages/engine/src/games/capraz-ates/types.ts (CAPRAZ_ATES_DURATION_MS)"
     },
     {
       "ad": "Herkes kilitleyince kalan süre",
       "deger": "1 000 ms",
-      "kaynak": "packages/engine/src/games/capraz-ates/types.ts:13"
+      "kaynak": "packages/engine/src/games/capraz-ates/types.ts (CAPRAZ_ATES_LOCK_GRACE_MS)"
     },
     {
       "ad": "Oyuncu sayısı",
       "deger": "3 - 8",
-      "kaynak": "packages/engine/src/games/capraz-ates/index.ts:72-73"
+      "kaynak": "packages/engine/src/games/capraz-ates/index.ts (minPlayers, maxPlayers)"
     },
     {
-      "ad": "Puanlama (karşılıklı 0, hedeflenen -1, ateş eden +1)",
-      "deger": "0 / -1 / +1",
-      "kaynak": "packages/engine/src/games/capraz-ates/index.ts:50-59"
+      "ad": "Puanlama (siper 0, karşılıklı 0, hedeflenen -1, ateş eden +1)",
+      "deger": "0 / 0 / -1 / +1; toplam -2…+2",
+      "kaynak": "packages/engine/src/games/capraz-ates/index.ts (caprazAtesReveal, caprazAtesTotals)"
+    },
+    {
+      "ad": "Eylemler",
+      "deger": "target, cover, lock",
+      "kaynak": "packages/engine/src/games/capraz-ates/types.ts (CaprazAtesAction)"
     },
     {
       "ad": "Eylem reddi nedenleri",
-      "deger": "locked, nothing_to_lock, self_target, unknown_target, target_offline, ended",
-      "kaynak": "packages/engine/src/games/capraz-ates/index.ts:108-123"
+      "deger": "not_participant, ended, not_started, locked, nothing_to_lock, self_target, unknown_target, target_offline",
+      "kaynak": "packages/engine/src/games/capraz-ates/index.ts (reduce)"
     },
     {
-      "ad": "Erken bitiş hesabı",
-      "deger": "min(bitiş, şimdi+1 sn); izleme +7 sn",
-      "kaynak": "packages/engine/src/games/capraz-ates/index.ts:114-119"
-    },
-    {
-      "ad": "Hedeflerin açılması",
-      "deger": "ctx.now >= endsAt ise publicView.reveal dolu",
-      "kaynak": "packages/engine/src/games/capraz-ates/index.ts:139"
+      "ad": "Tur geçişleri",
+      "deger": "tur 1 bitince sonucu dondurulur, tur 2 = bitiş + 5 sn; tur 2 bitince final açılır",
+      "kaynak": "packages/engine/src/games/capraz-ates/index.ts (advance)"
     },
     {
       "ad": "Açılış sahnesi süresi",
-      "deger": "1 900 ms (taze aşama için 2 500 ms içinde)",
-      "kaynak": "apps/client/src/fx/opening.ts:6-8"
+      "deger": "1 900 ms (taze aşama için 2 500 ms içinde; yalnız tur 1)",
+      "kaynak": "apps/client/src/fx/opening.ts"
     },
     {
-      "ad": "İz çizim süresi / iz aralığı / puan çipi gecikmesi",
-      "deger": "520 ms / 110 ms / 1 300 ms",
-      "kaynak": "apps/client/src/games/capraz-ates/CaprazAtesScreen.tsx:29-31"
+      "ad": "Final açılışı zaman çizelgesi",
+      "deger": "büyüme 500 ms, namlu 1 000 ms, uçuş 2 000 ms, isabet 3 000 ms, rozet 3 300 ms, sonuç 3 600 ms, 'Seni vuranlar' 4 300 ms, özet 4 900 ms, toplam 5 600 ms, bitiş 8 000 ms",
+      "kaynak": "apps/client/src/games/capraz-ates/timeline.ts (FINAL_TIMELINE)"
+    },
+    {
+      "ad": "Tur 1 kısa açılışı zaman çizelgesi",
+      "deger": "namlu 150 ms, uçuş 650 ms, isabet 800 ms, rozet 950 ms, sonuç 1 100 ms, 'Tur 2 başlıyor' 2 400 ms",
+      "kaynak": "apps/client/src/games/capraz-ates/timeline.ts (INTERVAL_TIMELINE)"
+    },
+    {
+      "ad": "Düello anı",
+      "deger": "son 5 sn karartma + ıslık, son 3 sn '3 · 2 · 1', 'ATEŞ!' 750 ms",
+      "kaynak": "apps/client/src/games/capraz-ates/timeline.ts (DUEL)"
     },
     {
       "ad": "Izgara sütunları",
       "deger": "n≤4: 2; n≤6: 3; n>6: dik 3, alçak ekran 4",
-      "kaynak": "apps/client/src/games/capraz-ates/view.ts:100-104"
+      "kaynak": "apps/client/src/games/capraz-ates/view.ts (gridColumns)"
     },
     {
-      "ad": "Anlatım üst süresi / geri sayım / sonuç ekranı",
-      "deger": "40 sn / 3 sn / 60 sn",
-      "kaynak": "apps/server/src/match.ts:40-42"
+      "ad": "Anlatım üst süresi / geri sayım",
+      "deger": "40 sn / 3 sn",
+      "kaynak": "apps/server/src/match.ts"
     }
   ],
   "strateji": [
     "Seçilmek -1, seçilmemek +1'dir: seni seçmeyecek kişiyi bulmaya çalış. Diğerleri de aynı şeyi düşünür.",
+    "Siper garanti 0'dır: kimse sana zarar veremez ama sen de +1 alamazsın. Herkes siperdeyse kimse kazanmaz.",
+    "Siperdekine ateş etmek boşa gitmez: kendin hedeflenmediysen yine +1 alırsın.",
+    "Tur 2'de kim kimi vurdu biliniyor: intikam almak mı, intikamdan kaçmak için sipere girmek mi? Rakibin de aynı şeyi düşünür.",
     "Karşılıklı hedefleşme güvenli 0'dır; bir arkadaşınla örtük anlaşma -1'den korur ama +1 ihtimalini de kaçırır.",
-    "'Tamam' hedefi kilitler, sonra değiştiremezsin. Herkes kilitlerse 1 sn sonra hedefler açılır.",
-    "Kimseyi hedeflememek (0) garanti değildir: seni hedef alan olursa yine -1 alırsın. Hedef seçmek +1 şansı verir.",
-    "Kalkan ve Sigorta gibi kartlar -1 riskini azaltır.",
-    "Çevrimdışı gözüken oyuncu yeni hedef olarak seçilemez."
+    "'Ateşe hazır' seçimi kilitler, sonra değiştiremezsin. Herkes kilitlerse 1 sn sonra o turun seçimleri açılır.",
+    "Çevrimdışı görünen oyuncu yeni hedef olarak seçilemez."
   ],
-  "tv": "TV/sahne ekranı oyun ekranını izleyici kipinde büyütülmüş gösterir: hedef seçme sırasında tüm portreler ve kimlerin 'Tamam' dediği, süre bitince halka üzerinde neon izler, çarpışmalar ve puan çipleri; sağda oyuncu listesi ve puanlar. Oyuna özel StageView yoktur.",
+  "tv": "TV/sahne ekranı oyun ekranını izleyici kipinde büyütülmüş gösterir: seçim sırasında tüm katılımcılar büyük bir halkada, portrelerde dönen nişangâhlar (kimin kimi hedeflediği yok) ve hazır olanlarda mermi rozeti; tur 1'in kısa açılışı ve final açılışı oyuncularla aynı ağır çekim sahne (namlu ateşi, mermiler, çarpışma, sekme, puan ve toplam rozetleri); sağda oyuncu listesi ve puanlar. Oyuna özel StageView yoktur.",
   "ekranlar": [
     {
       "ad": "capraz-briefing",
@@ -229,8 +289,8 @@
       "ad": "capraz-pick",
       "mock": "capraz-ates",
       "q": "mock=capraz-ates",
-      "baslik": "Hedef seçme",
-      "aciklama": "'Gizli hedefin / Kimi vuracaksın?' ve nişangâhlı portre ızgarası; altta pasif 'Tamam' düğmesi.",
+      "baslik": "Tur 1: hedef seçme",
+      "aciklama": "'Tur 1/2 · Gizli hedefin / Kimi vuracaksın?', nişangâhlı portre ızgarası, altta kendi avatarın, 'Siper al' ve pasif 'ATEŞE HAZIR'.",
       "dosya": "capraz-ates"
     },
     {
@@ -238,7 +298,7 @@
       "mock": "capraz-ates",
       "q": "mock=capraz-ates&n=8",
       "baslik": "Hedef seçme (8 oyuncu)",
-      "aciklama": "7 portre görünür; sütun düzeni 8 kişiye göre.",
+      "aciklama": "7 portre; kısa ekranda ipucu satırı gizlenir.",
       "dosya": "capraz-ates-n-8"
     },
     {
@@ -261,17 +321,33 @@
       "ad": "capraz-locked",
       "mock": "capraz-locked",
       "q": "mock=capraz-locked",
-      "baslik": "Hedef seçili",
-      "aciklama": "Hedef seçilmiş: başlık hedefin adı, halka kırmızı, 'Değiştirebilir ya da Tamam diyebilirsin'.",
+      "baslik": "Nişan alındı",
+      "aciklama": "Nişangâh hedefe kilitli, kendi avatarından hedefe kırmızı lazer, başlık hedefin adı.",
       "dosya": "capraz-locked"
+    },
+    {
+      "ad": "capraz-cover",
+      "mock": "capraz-cover",
+      "q": "mock=capraz-cover",
+      "baslik": "Siper alındı",
+      "aciklama": "'Siperdesin', ekranın altı kalkanla örtülü, avatar çömelmiş.",
+      "dosya": "capraz-cover"
     },
     {
       "ad": "capraz-tamam",
       "mock": "capraz-tamam",
-      "q": "mock=capraz-tamam",
-      "baslik": "Tamam denildi",
-      "aciklama": "Hedef kesinleşti; 'k/n hazır' sayacı ve hazır olanların avatar noktaları.",
+      "q": "mock=capraz-tamam&n=8",
+      "baslik": "Ateşe hazır",
+      "aciklama": "Seçim kesinleşti: nişangâhta kilit simgesi, 'Ateşe hazırsın', 'k/n hazır' ve hazır olanların yanında mermi.",
       "dosya": "capraz-tamam"
+    },
+    {
+      "ad": "capraz-duel",
+      "mock": "capraz-duel",
+      "q": "mock=capraz-duel&n=8",
+      "baslik": "Düello anı",
+      "aciklama": "Son saniyeler: ekran kararır, büyük '3 · 2 · 1'.",
+      "dosya": "capraz-duel"
     },
     {
       "ad": "capraz-closed",
@@ -282,34 +358,83 @@
       "dosya": "capraz-closed"
     },
     {
+      "ad": "capraz-interval",
+      "mock": "capraz-interval",
+      "q": "mock=capraz-interval",
+      "baslik": "Tur 1 kısa açılış",
+      "aciklama": "Halka, izler, kalkan, tur puanı rozetleri, kendi sonucun ve 'Tur 2 başlıyor'.",
+      "dosya": "capraz-interval"
+    },
+    {
+      "ad": "capraz-round2",
+      "mock": "capraz-round2",
+      "q": "mock=capraz-round2&n=8",
+      "baslik": "Tur 2: hedef seçme",
+      "aciklama": "'seni vurdu', 'vurdun', kalkan rozetleri ve üstte tur 1'in mini halkası.",
+      "dosya": "capraz-round2"
+    },
+    {
+      "ad": "capraz-round2-ring",
+      "mock": "capraz-round2",
+      "q": "mock=capraz-round2&n=8 (mini halkaya dokun)",
+      "baslik": "Tur 1 halkası (büyük)",
+      "aciklama": "Mini halkaya dokununca açılan büyük tur 1 halkası; 'Kapat'.",
+      "dosya": "capraz-round2-ring"
+    },
+    {
       "ad": "capraz-reveal",
       "mock": "capraz-reveal",
-      "q": "mock=capraz-reveal",
-      "baslik": "Hedefler açıldı",
-      "aciklama": "Halka üzerinde neon izler, karşılıklı çarpışma patlaması, puan çipleri ve kişisel sonuç başlığı.",
+      "q": "mock=capraz-reveal&quip=1",
+      "baslik": "Final açılışı",
+      "aciklama": "'−1 VURULDUN', izler, ad etiketlerinde toplam puanlar, 'Seni vuranlar', 'En çok hedeflenen', 'Toplam …' şeridi ve düello spikeri yorumu; hafif cam çatlağı.",
       "dosya": "capraz-reveal"
+    },
+    {
+      "ad": "capraz-reveal-cover",
+      "mock": "capraz-reveal",
+      "q": "mock=capraz-reveal&n=8&me=cover",
+      "baslik": "Final (siperde, 8 oyuncu)",
+      "aciklama": "'0 Siperde', 'Kalkanına ateş edenler'.",
+      "dosya": "capraz-reveal-cover"
+    },
+    {
+      "ad": "capraz-reveal-flight",
+      "mock": "capraz-reveal",
+      "q": "mock=capraz-reveal&n=8 (2. sn)",
+      "baslik": "Ağır çekim mermiler",
+      "aciklama": "Final açılışının 2. saniyesi: mermiler iz çizerek hedeflerine gidiyor.",
+      "dosya": "capraz-reveal-flight"
+    },
+    {
+      "ad": "capraz-spectator",
+      "mock": "capraz-spectator",
+      "q": "mock=capraz-spectator&n=8",
+      "baslik": "İzleyici seçimi",
+      "aciklama": "Büyük halka, dönen nişangâhlar, hazır olanlarda mermi.",
+      "dosya": "capraz-spectator"
     },
     {
       "ad": "capraz-spectator-reveal",
       "mock": "capraz-spectator-reveal",
-      "q": "mock=capraz-spectator-reveal",
-      "baslik": "İzleyici sonucu",
-      "aciklama": "İzleyici için 'Hedefler açıldı', izler ve puan çipleri.",
+      "q": "mock=capraz-spectator-reveal&n=8",
+      "baslik": "İzleyici final",
+      "aciklama": "İzleyici için 'Hedefler açıldı', izler, toplam rozetleri ve özet.",
       "dosya": "capraz-spectator-reveal"
     }
   ],
   "bilinenSorunlar": [
-    "KURALLAR.md 'Hedef seçimleri gizli, süre dolunca gözükür' ve '1 hedef seçebilir' der; 'Tamam' (kilit) düğmesi ve erken bitiş KURALLAR.md §23'te yoktur, genel 'Erken bitiş' kuralıyla gelir (docs/ONERI-KURAL.md).",
-    "KURALLAR.md 'Boş veya geç hedef seçiminde boşa sıkmış olur' der; kod ayrıca hedefin takas anında bağlı olmasını şart koşar (target_offline). Kural dosyasında bu yoktur.",
+    "Yeni görseller (namlu ateşi, mermi parıltısı, kalkan, cam çatlağı) henüz yok; CSS/SVG karşılıkları çizilir (docs/oneriler/capraz-ates-gorsel.md, apps/client/src/games/capraz-ates/art.ts).",
+    "KURALLAR.md 'Boş veya geç hedef seçiminde boşa sıkmış olur' der; kod ayrıca hedefin seçim anında bağlı olmasını şart koşar (target_offline).",
     "Hedef bağlı-olma denetimi yalnız seçim anındadır: hedef sonradan kopsa da seçim geçerli kalır (testle doğrulanmış)."
   ],
   "sonDegisiklikler": [
+    "2026-10-30: Açılış halkası eşit aralıklı çembere dizildi, puan rozetleri ad etiketine taşındı, final özeti büyütüldü; düello spikeri yapay zekâ yorumu bağlandı (apps/server/src/aiCommentGames.ts).",
+    "2026-10-30: Siper al ve iki tur (intikam turu); puan iki turun toplamı. Nişan alma anı, 'ATEŞE HAZIR', düello anı, ağır çekim final açılışı, tur 2 rozetleri ve mini halka, ses/titreşim seti, izleyici halkası.",
     "2026-10-27: Oyun CSS sınıf çakışmaları giderildi; çakışma koruma testi eklendi.",
     "2026-10-27: Oyun ekranları kabuk saatine, Status bileşenine ve hazır noktalarına taşındı.",
     "2026-10-27: Tüm oyunlar için tur özeti (summarize) ve kayıt defteri eklendi.",
     "2026-10-27: Açılış sahnesi (nişangâh süpürmesi) ve ui-check girdileri eklendi.",
-    "2026-10-26: Çizimler: kasa kapısı, kaçış kolu, el sıkışma ve nişangâh sanatı.",
-    "2026-10-25: Anında geri bildirim (iyimser arayüz): hedef seçimi ve kilit için."
+    "2026-10-26: Çizimler: kasa kapısı, kaçış kolu, el sıkışma ve nişangâh sanatı."
   ],
   "kaynaklar": [
     "packages/engine/src/games/capraz-ates/index.ts",
@@ -317,7 +442,11 @@
     "packages/engine/src/games/capraz-ates/capraz-ates.test.ts",
     "docs/KURALLAR.md#23-çapraz-ateş",
     "apps/client/src/games/capraz-ates/CaprazAtesScreen.tsx",
+    "apps/client/src/games/capraz-ates/Pick.tsx",
+    "apps/client/src/games/capraz-ates/Arena.tsx",
+    "apps/client/src/games/capraz-ates/timeline.ts",
     "apps/client/src/games/capraz-ates/view.ts",
-    "apps/client/src/ui/TamamBar.tsx"
+    "docs/oneriler/capraz-ates-gorsel.md",
+    "apps/server/src/aiCommentGames.ts"
   ]
 }

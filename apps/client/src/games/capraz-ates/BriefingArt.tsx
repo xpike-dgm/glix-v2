@@ -1,9 +1,13 @@
+import { onMount } from "solid-js";
 import { Avatar } from "../../ui/Avatar.js";
+import { preloadCxArt } from "./art.js";
 import "./capraz-ates.css";
 import { Sight } from "./Sight.js";
 
 /** Anlatım görseli: üç portre; yanlardakiler ortadakine ateş eder, ortadakinin üstünde nişangâh gezinir. */
 export default function BriefingArt() {
+  // Eklenmiş açılış görselleri anlatım sırasında önden indirilir.
+  onMount(preloadCxArt);
   return (
     <div class="cxart" aria-hidden="true">
       <div class="cxart__p">
