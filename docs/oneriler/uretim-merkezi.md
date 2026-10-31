@@ -628,9 +628,19 @@ sahip bakar → kimse oynamıyorken "al" → aynı imaj canlıya`
 Oyun alanı araçları (UM-O4) ve önizleme görüntüsü aracıyla yapay zekâ ürününü gerçek ekranda görüp düzeltir, sonra
 teslim eder. Teslime kendi ekran görüntüleri eklenir. (Oyun alanıyla birlikte.)
 
-### UM-F2 · Seçenek turu
-Bir iş "N varyant" olarak açılabilir (varsayılan 3). Sahip varyantlardan birini seçer, isterse "şunu al, rengi bunun
-gibi olsun" diye karışım ister. Seçilmeyenler gerekçe gerektirmeden arşive gider. (İlk sürüm.)
+### UM-F2 · Seçenek turu: önce ucuz fikir, sonra tek üretim (sahip düzeltmesi: kullanım limiti)
+**Ne:** Varyantlar pahalı üretimle (görsel, ses, müzik) yapılmaz.
+- **Varsayılan:** her iş **tek** teslimle yürür. Varyant yoktur, ek kullanım harcanmaz.
+- **Fikir turu (isteğe bağlı):** sahip bir işi açarken "fikir turu" seçerse yapay zekâ önce yalnız **metinle** 2–3
+  kısa fikir teslim eder: ne olacak, nasıl görünecek, hangi renk ve hareket, neden. Metin üretimi görsel ve sese göre
+  çok ucuzdur.
+- **Seçim:** sahip fikirlerden birini seçer ya da "bunu al, şunu değiştir" der. Yapay zekâ yalnız seçilen fikri
+  **bir kez** üretir.
+- **Görsel varyant:** yalnız sahip açıkça isterse yapılır (ör. önemli bir efsanevi ürün). Varsayılan sınır 2'dir.
+- **Kullanım sayacı:** alan sayfasında her alanın günlük ve haftalık üretim sayısı görünür. Sahip alan başına üst
+  sınır koyabilir (UM-F5 kotasına ek).
+
+(İlk sürüm.)
 
 ### UM-F3 · Zevk profili
 Her alanın onaylanan ve reddedilen örnekleri, notlarla birlikte bir "zevk galerisi"nde birikir. Galerinin özeti ve en
