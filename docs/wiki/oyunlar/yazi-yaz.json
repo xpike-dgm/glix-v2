@@ -1,105 +1,115 @@
 {
   "id": "yazi-yaz",
   "ad": "Yazı Yaz",
-  "slogan": "İki gizli yazanı ve yazdıkları kelimeyi sözlü tartışmayla ele ver.",
+  "slogan": "Konudan gizli kelime yazan iki kişiyi harf ipucu ve sözlü tartışmayla ele ver; yazansan iz bırakma.",
   "kategori": "Blöf",
-  "etiketler": ["sosyal çıkarım", "gizli rol", "yazma", "tartışma", "tahmin"],
+  "etiketler": ["sosyal çıkarım", "gizli rol", "yazma", "tartışma", "tahmin", "blöf"],
   "oyuncu": {
     "min": 3,
     "max": 8
   },
   "sure": {
     "tahminiSn": 128,
-    "not": "Süre oyuncu sayısına göre değişmez: 30 sn yazma + 60 sn tartışma + 30 sn tahmin + 8 sn sonuç = 128 sn. Bağlı herkes 'Tamam' / 'Tahmine geç' derse her aşama 1 sn sonra biter; en kısa oyun yaklaşık 3 + 1 + 1 + 1 + 8 sn sürebilir. Anlatım (en çok 40 sn), geri sayım (3 sn) ve sonuç ekranı (en çok 60 sn) bunun dışındadır. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
+    "not": "Süre oyuncu sayısına göre değişmez: 30 sn yazma + 60 sn tartışma + 30 sn tahmin + 8 sn 'Yazanlar…' açılışı = 128 sn. Bağlı herkes 'Tamam' / 'Tahmine geç' derse (ya da son eksik oyuncu koparsa) her aşama 1 sn sonra biter. Anlatım (en çok 40 sn), geri sayım (3 sn) ve genel sonuç ekranı (en çok 60 sn) bunun dışındadır. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
-  "ozet": "Her turda sunucu rastgele tam iki oyuncuyu gizli 'yazan' yapar. Yazanlar kendi kelimelerini yazar, diğer herkes yalnızca MASUM yazar; ekranlar birebir aynı görünür. 60 saniyelik sözlü tartışmadan sonra herkes bir yazanı ve o yazanın kelimesini tahmin eder. Doğru kişi +1, doğru kelime +1; en çok 2 puan alınır, eksi puan yoktur.",
+  "ozet": "Her oyunda herkese açık bir konu çıkar (ör. MEYVE; liste yönetici panelinde, boşsa konusuz). Sunucu gizlice tam iki oyuncuyu 'yazan' yapar; rol, ters rol kartına basılı tutulunca görünür. Yazanlar konudan bir kelime yazar, diğerleri MASUM; pano gizlidir (●●●●●). Tartışmada iki kelimenin harf sayısı sahibi söylenmeden gösterilir. Herkes bir yazanı ve kelimesini tahmin eder: kişi +1, kelime +1; hiçbir masumun bulamadığı yazan 'İz bırakmadın' +1. Bu dedektif puanı sıralamaya çevrilir: genel skora +2 / +1 / 0.",
   "akis": [
     {
-      "ad": "Rol atama (gizli)",
+      "ad": "Rol ve konu (gizli / açık)",
       "sureSn": 0,
       "kim": "sunucu",
-      "aciklama": "Oyun başlarken katılımcılar maç tohumuyla karıştırılır, ilk iki kişi yazan olur (setup). Yazanlar listede katılım sırasıyla tutulur. Rol, oyuncuya yalnızca kendi gizli görünümünde gelir.",
-      "gizli": "Herkese açık görünümde hiçbir aşamada rol ya da kelime yoktur; yalnızca kendi rolünü sahibi görür. Masum, yazanın kim olduğunu kendi görünümünden öğrenemez; yazan da diğer yazanı öğrenemez."
+      "aciklama": "Katılımcılar maç tohumuyla karıştırılır, ilk iki kişi yazan olur. Ardından konu havuzundan ('yazi-yaz/konular') bir konu çekilir; aynı odada son 10 oyunda çıkan konu, havuz yetiyorsa tekrar gelmez. Yerleşik havuzda 100 konu vardır; panelden eklenen 'SERBEST' kaydı konusuz tur demektir.",
+      "gizli": "Rol yalnız sahibinin görünümündedir. Konu herkese açıktır (herkese açık görünümde 'topic')."
     },
     {
       "ad": "Yazma",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Ekranda 'Gizli yazı / Kelimeni yaz' başlığı, tek satırlık neon yazı panosu (24 karakter sınırı, otomatik büyük harf), altta oyuncu portreleri ve 'Tamam' düğmesi bulunur. Yazan kendi gizli kelimesini yazar; masum 'MASUM' yazar. Yazılan metin kısa gecikmeyle (350 ms) sunucuya gider; 'Tamam' (ya da klavyede Enter) girdiyi kilitler. 'Rolüm · basılı tut' düğmesine basılı tutulduğu sürece rol görünür ('Yazansın · kelimeni yaz' / 'Masumsun · MASUM yaz').",
-      "gizli": "Yazan ve masumun ekranı birebir aynıdır; rol yalnızca basılı tutulan düğmede görünür. Başkalarının kelimesi hiçbir yerde görünmez; yalnızca kimin 'Gönderildi' dediği (portrede işaret) herkese açıktır."
+      "aciklama": "Ekran ters duran rol kartıyla açılır ('Rolünü görmek için basılı tut'); kart bir kez çevrilip bırakılınca gizli pano açılır ve kart 'Rolüm · basılı tut' düğmesine dönüşür. Üstte daktiloya takılı kâğıtta konu ve büyük kalan süre (son 5 sn kırmızı). Yazılan her harf 0,6 sn görünür, sonra ● olur; panoya basılı tutunca kelime görünür. Yazan konudan bir kelime yazar ('Konuya uygun tek kelime' hatırlatması kartta), masum MASUM. Altta kısa adlı oyuncu şeridi ve Tamam (daktilo zili).",
+      "gizli": "Yazan ve masumun ekranı birebir aynıdır; MASUM da 5 nokta görünür. Kimin Tamam dediği görünmez, yalnız 'n/m hazır' sayısı (YY-M6)."
     },
     {
       "ad": "Sözlü tartışma",
       "sureSn": 60,
       "kim": "herkes",
-      "aciklama": "Yazma panoları kapanır. Ekranda 'Sözlü tartışma / Yazanlar kim?' başlığı, portrelerin halka şeklinde dizildiği alan ve ortada geri sayan süre bulunur. Konuşma uygulama dışında sözlüdür (uygulamada sohbet yoktur). İstenirse 'Tahmine geç' düğmesiyle tartışma erken kapatılır. Her portre üzerinde yalnızca kendi cihazında görünen bir 'şüphe işareti' (?) açılıp kapatılabilir.",
-      "gizli": "Şüphe işareti sunucuya gitmez, kimse görmez, puanı ve kuralları etkilemez. Herkese açık olan tek şey kimlerin 'Tahmine geç' dediğidir."
+      "aciklama": "Portreler halkada, ortada büyük saat ve altında konu ile harf ipucu ('MEYVE · 5 harf · 7 harf'). Portreler herkeste aynı anda hafifçe nabız atar (kimseyi öne çıkarmaz). Portreye dokunmak yalnız bu cihazda işaret koyar: bir dokunuş '?' şüpheli, iki dokunuş '✓' temiz, üçüncü kapalı. Son 10 sn'de saat kırmızı, tik sesi ve hafif titreşim. 'Tahmine geç' ile erken bitirilebilir.",
+      "gizli": "İşaretler sunucuya gitmez. Herkese açık olan: konu, harf sayıları (sahibi belirtilmeden, küçükten büyüğe) ve kimlerin 'Tahmine geç' dediği."
     },
     {
       "ad": "Tahmin",
       "sureSn": 30,
       "kim": "herkes (yazanlar dahil)",
-      "aciklama": "Başlık 'Tahmin zamanı / Yazan kim?'. Oyuncu portrelerinden biri seçilir (başlık seçilen oyuncunun adına döner), altta 'Kelimesi ne?' alanına kelime tahmini yazılır ve 'Tamam' denir. Kişi seçimi ve kelime 'Tamam'a kadar serbestçe değiştirilir; son hâli geçerlidir. Kişi seçilmeden 'Tamam' olmaz. Kelime alanı boş bırakılabilir.",
-      "gizli": "Kimin kimi seçtiği ve ne yazdığı sonuç açılana kadar herkese kapalıdır; yalnızca kimin 'Tamam' dediği görünür."
+      "aciklama": "Üstte konu ve harf ipucu. Oyuncu ızgarası sayıya göre ortalanır (5 kişi 3+2, 7 kişi 4+3); seçilen kişi büyür, pembe halka ve 'YAZAN?' rozeti alır; hazır olanlarda köşede yeşil nokta; kendi kartın soluk ve 'Sen' etiketli. 'Kelimesi ne?' alanı da gizli panodur; altında harf kutucukları dolar ve sayı bir ipucuyla tutunca yeşile döner. Klavye açılınca portreler küçülür.",
+      "gizli": "Kimin kimi seçtiği ve ne yazdığı sonuç açılana kadar kapalıdır; yalnız kimin 'Tamam' dediği görünür."
     },
     {
-      "ad": "Sonuç açılışı",
+      "ad": "Sonuç açılışı: 'Yazanlar…'",
       "sureSn": 8,
       "kim": "herkes",
-      "aciklama": "İki yazan ve kelimeleri neon panoda gösterilir (kelime yazmamışsa '—'). Altında her oyuncunun seçtiği kişi (doğruysa onay, yanlışsa çarpı), yazdığı kelime tahmini (doğru/yanlış işareti) ve aldığı puan listelenir. Üstte kendi puanın ve bir hüküm yazısı ('Tam isabet!', 'Yazanı buldun', 'Yazanı buldun, kelime tutmadı', 'Bu sefer olmadı', 'Tahmin vermedin') görünür. İzleyici 'Yazanlar belli oldu' başlığını görür. Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
-      "gizli": "Bu aşamada her şey açıktır. Puan sesi/titreşimi yaklaşık 0,9 sn sonra çalar (puan > 0 ise eşleşme, değilse yalnız efekt)."
+      "aciklama": "Davul (1,5 sn) → yazan kartları tek tek döner, kelime daktilo gibi harf harf yazılır (kelime yazmayan için 'Kelime yazmadı') → onu seçenlerin avatarları karta uçar, 'n kişi buldu' ya da 'İZ BIRAKMADI' damgası → oyuncu satırları: seçilen kişinin avatarı (36 px, doğru/yanlış), kelime tahmini (yanlışsa kısa kırmızı titreme), 'İz bırakmadı' etiketi, dedektif puanı ve +2/+1/0 rozeti → kendi satırın parlar, üstte puanın ve hüküm. Yapay zekâ bağlıysa tek cümlelik spiker yorumu çıkar (gelmezse görünmez). Zamanlar sunucu saatine bağlıdır. Altta 'Devam et' (ilk 1,5 sn pasif); bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra biter.",
+      "gizli": "Bu aşamada her şey açıktır."
     }
   ],
   "kurallar": [
-    "En az 3, en çok 8 oyuncu. Her turda tam 2 yazan vardır (3 oyunculu odada 2 yazan + 1 masum). Yazanlar maç tohumuna bağlı rastgele seçilir.",
+    "En az 3, en çok 8 oyuncu. Her oyunda tam 2 yazan vardır (3 oyunculu odada 2 yazan + 1 masum). Yazanlar maç tohumuna bağlı rastgele seçilir.",
+    "Her oyunda herkese açık bir konu vardır; liste yönetici panelindeki 'Yazı Yaz konuları' havuzundandır (yerleşik 100 konu, sahibin isteğiyle hazırlandı; panelden kapatılır, düzenlenir, eklenir). Panelden eklenen 'SERBEST' kaydı konusuz turdur. Aynı odada son 10 oyunda çıkan konu, havuz yetiyorsa tekrar gelmez. Konuya uymak zorunlu değildir; sistem denetlemez.",
     "Yazan olup olmadığın yalnız senin gizli görünümünde bulunur; sunucu rolü başka hiçbir oyuncuya ya da izleyiciye göndermez.",
-    "Yazma aşaması 30 sn sürer. Yazan istediği kelimeyi yazar; masum yalnızca 'MASUM' yazabilir. Masum başka bir şey gönderirse sunucu reddeder; istemci de masuma 'Yalnız MASUM yazabilirsin' uyarısı gösterir ve kilitlemez.",
-    "Yazan da 'MASUM' yazabilir (sunucu bunu engellemez); bu durumda kelimesi MASUM olur.",
-    "Giriş sunucuda temizlenir: boşluklar teke indirilir ve kırpılır, Türkçe kurallarla büyük harfe çevrilir (i→İ, ı→I). Harf veya rakam içermeyen metin, 24 karakterden uzun metin, görünmez/yön değiştiren karakterler ve üçten fazla üst üste birleştirici işaret geçersizdir (eylem sessizce reddedilir). Ham metin 256 karakteri aşamaz.",
+    "Yazma aşaması 30 sn sürer. Yazan istediği kelimeyi yazar; masum yalnızca 'MASUM' yazabilir (başka bir şeyi sunucu reddeder, istemci uyarır).",
+    "Yazan MASUM yazamaz: MASUM yazıp Tamam derse yalnız kendi ekranında 'Yazansın, MASUM yazamazsın' uyarısı çıkar ve kilitlenmez (sunucu 'writer_innocent' ile reddeder). Süre dolduğunda MASUM bırakan yazan 'kelime yazmadı' sayılır.",
+    "Boş 'Tamam' diyen masumun girişi MASUM olur ve kilitlenir; yazan yazmadan Tamam diyemez.",
+    "Giriş sunucuda temizlenir: boşluklar teke indirilir ve kırpılır, Türkçe kurallarla büyük harfe çevrilir. Harf veya rakam içermeyen metin, 24 karakterden uzun metin, görünmez/yön değiştiren karakterler ve üçten fazla üst üste birleştirici işaret geçersizdir. Ham metin 256 karakteri aşamaz.",
     "İki yazan aynı kelimeyi yazabilir.",
-    "Yazma sırasında girdi 'Tamam'a kadar değiştirilebilir. Hiçbir şey yazmadan 'Tamam' denemek reddedilir. 'Tamam' diyen artık değiştiremez.",
-    "'Tamam' demeyen ama bir şey yazmış olan oyuncunun son yazdığı metin süre dolunca geçerli sayılır. Hiç yazmayan yazanın kelimesi boştur ve bilinemez (o yazanı bulan yalnız kişi puanı alabilir).",
-    "Tartışma 60 sn sürer; yazma ve tahmin eylemleri bu sürede reddedilir. Bağlı bütün katılımcılar 'Tahmine geç' derse tartışma 1 sn sonra biter.",
-    "Tahmin 30 sn sürer. Oyuncu kendi dışındaki herhangi bir katılımcıyı (yazan ya da masum, bağlantısı kopmuş olan dahil) seçebilir; kendini seçmek reddedilir. Kelime tahmini 'Tamam'a kadar değiştirilir; boş olabilir.",
-    "Masum yalnız BİR kişiyi ve onun kelimesini tahmin eder. Yazan da yalnız bir kişi seçer; doğrusu diğer yazandır.",
-    "Kişi tahmini yalnızca seçilen oyuncu yazanlardan biriyse ve kendin değilsen doğrudur. Yazan, kendini zaten seçemez; yani yazan için tek doğru kişi diğer yazandır. Masum için iki yazandan biri doğrudur.",
-    "Kelime tahmini yalnızca kişi doğruysa, seçilen yazan kelime yazmışsa ve tahmin boş değilse değerlendirilir. Karşılaştırma klavyeden bağımsızdır: büyük/küçük harf, ç/c, ğ/g, ı/İ/i/I, ö/o, ş/s, ü/u ve noktalama farkı yok sayılır; boşluk sayısı da teke indirgenir.",
-    "Yanlış kişiyi seçen, kelimesi tam doğru olsa bile kelime puanı alamaz.",
-    "Bağlı bütün katılımcılar 'Tamam' derse ilgili aşama 1 sn sonra biter. Yazma erken biterse sonraki aşamalar yine tam süreleriyle başlar (tartışma 60 sn, tahmin 30 sn) ve toplam oyun kısalır.",
-    "Tahmin süresi bitince (ya da herkes kilitlerse) puanlar hesaplanır, sonuç 8 sn gösterilir ve oyun biter; ardından genel sonuç ekranı gelir.",
-    "Tahmin göndermeyen oyuncu eksi puan almaz; yalnızca artı puan alamaz. Kişi seçip 'Tamam' demeden süre dolarsa o anki seçim ve kelime tahmini yine geçerlidir; kişi seçilmediyse o oyuncunun tahmini yoktur ve 0 alır."
+    "Yazmada kimin Tamam dediği gösterilmez; yalnız hazır sayısı görünür. Tartışmada ve tahminde kimin hazır olduğu görünür.",
+    "Tartışma 60 sn sürer; başında iki kelimenin harf sayısı (yalnız harf ve rakam), sahibi belirtilmeden küçükten büyüğe gösterilir; yazılmamış kelime için 'yazılmadı'. İpucu tahmin bitene kadar görünür.",
+    "Tahmin 30 sn sürer. Oyuncu kendi dışındaki herhangi bir katılımcıyı seçebilir; kendini seçmek reddedilir. Kelime tahmini boş olabilir. Tamam demeden süre dolarsa son seçim ve kelime geçerlidir.",
+    "Kişi tahmini yalnızca seçilen oyuncu yazanlardan biriyse ve kendin değilsen doğrudur (yazan için tek doğru kişi diğer yazandır). Kelime tahmini yalnızca kişi doğruysa, seçilen yazan kelime yazmışsa ve tahmin boş değilse değerlendirilir.",
+    "Kelime eşleşmesi klavyeden bağımsızdır (büyük/küçük harf, ç/c, ğ/g, ı/i, ö/o, ş/s, ü/u, noktalama). 6 ve daha uzun kelimelerde harf sayısı aynıysa tek harf farkı da doğrudur (KARPIZ = KARPUZ); eksik/fazla harf kabul edilmez (ELMAS ≠ ELMA).",
+    "'İz bırakmadın' +1: hiçbir masumun seçmediği, kelime yazmış yazan alır. Diğer yazanın seçmesi bozmaz; hiçbir masum seçim yapmadıysa kelime yazmış iki yazan da alır.",
+    "Bağlı bütün katılımcılar hazırsa ilgili aşama 1 sn sonra biter; bu, biri bağlantısını yitirdiğinde de yeniden denetlenir. Yazma erken biterse sonraki aşamalar tam süreleriyle başlar.",
+    "Tahmin süresi bitince (ya da herkes kilitlerse) sonuç açılır; açılış en az 8 sn sürer ve 'Devam et' ile geçilir.",
+    "Eksi puan yoktur."
   ],
   "puanlama": {
-    "ozet": "Doğru yazanı seçersen +1, o yazanın kelimesini de doğru yazarsan bir +1 daha. Oyuncu başına en çok 2 puan, en az 0. Mini oyun puanı genel skora aynen eklenir (awards = miniScores); ayrı beraberlik ya da final bonusu yoktur.",
+    "ozet": "Oyun içi dedektif puanı (miniScores): doğru kişi +1, doğru kelime +1, 'İz bırakmadın' +1 (masumun en çok 2, yazanın en çok 3). Genel skora sıralama gider (awards): en yüksek dedektif puanı +2, sonraki farklı toplam +1, diğerleri 0; birincide eşitlikte hepsi +2; toplamı 0 olan ödül almaz; herkesin toplamı aynı ve 0'dan büyükse herkes +1; herkes 0 ise kimse.",
     "kalemler": [
       {
         "olay": "Doğru yazan tahmini",
-        "puan": "+1",
+        "puan": "+1 dedektif",
         "not": "Masum: iki yazandan birini seçmek. Yazan: diğer yazanı seçmek."
       },
       {
         "olay": "Doğru kelime tahmini",
-        "puan": "+1",
-        "not": "Yalnız kişi doğruysa, seçilen yazan kelime yazdıysa ve tahmin boş değilse; klavyeden bağımsız eşleşmeyle."
+        "puan": "+1 dedektif",
+        "not": "Yalnız kişi doğruysa ve yazan kelime yazdıysa; klavyeden bağımsız, 6+ harfte tek harf toleransı."
       },
       {
-        "olay": "Yanlış kişi seçmek",
-        "puan": "0",
-        "not": "Eksi puan yoktur; kelime puanı da verilmez."
+        "olay": "İz bırakmadın",
+        "puan": "+1 dedektif",
+        "not": "Hiçbir masumun seçmediği, kelime yazmış yazan."
       },
       {
-        "olay": "Tahmin vermemek",
+        "olay": "En yüksek dedektif puanı",
+        "puan": "+2 genel skor",
+        "not": "Eşitlikte hepsi."
+      },
+      {
+        "olay": "Sonraki farklı dedektif puanı",
+        "puan": "+1 genel skor",
+        "not": "Toplamı 0 ise verilmez; herkes eşit ve >0 ise herkes +1."
+      },
+      {
+        "olay": "Diğerleri / tahmin vermemek",
         "puan": "0",
-        "not": "Sadece artı puan alamaz."
+        "not": "Eksi yok."
       }
     ],
-    "ornek": "5 oyuncu: Ali, Bora, Ceren, Deniz, Ece. Yazanlar Ali (kelime KEDİ) ve Bora (kelime ELMA); Ceren, Deniz, Ece masum. Ceren 'Ali' + 'kedi' seçer: +2. Deniz 'Bora' + 'armut' seçer: +1 (kişi doğru, kelime yanlış). Ece 'Ceren' + 'kedi' seçer: 0 (yanlış kişi). Ali 'Bora' + 'elma' seçer: +2. Bora hiç tahmin göndermez: 0. Genel skora: Ali +2, Bora 0, Ceren +2, Deniz +1, Ece 0.",
-    "beraberlik": "Ayrı bir beraberlik kuralı yoktur; puanlar doğrudan genel skora eklenir. Sıralamada eşit mini puan eşit sayılır (bkz. kartlar bölümündeki 'birinci/sonuncu' tanımı)."
+    "ornek": "5 oyuncu: Ali, Bora, Ceren, Deniz, Ece. Konu MEYVE. Yazanlar Ali (KİRAZ) ve Bora (KARPUZ). Ceren 'Ali' + 'kiraz': 2. Deniz 'Ali' + 'elma': 1. Ece 'Ceren': 0. Ali 'Bora' + 'karpız': 2 (tek harf toleransı) + İz bırakmadın yok (iki masum onu buldu) = 2. Bora 'Ece': 0 + hiçbir masum Bora'yı seçmedi: İz bırakmadın +1 = 1. Dedektif: Ali 2, Ceren 2, Deniz 1, Bora 1, Ece 0. Genel skor: Ali +2, Ceren +2, Deniz +1, Bora +1, Ece 0.",
+    "beraberlik": "Birincide eşitlik varsa hepsi +2, sonraki farklı toplam +1. Kartlar sıralamayı dedektif puanından okur."
   },
   "ozelDurumlar": [
     {
       "baslik": "Bağlantısı kopan oyuncu",
-      "aciklama": "Kopan oyuncu katılımcı olmaya devam eder (oda 120 sn bekler, sonra oyuncu çıkarılır). 'Tamam' / 'Tahmine geç' sayımında bağlı olmayan beklenmez; ama bu değerlendirme yalnızca bir oyuncu 'Tamam' dediği anda yapılır — son eksik oyuncu kopsa bile aşama, başka biri düğmeye basana ya da süre dolana kadar erken bitmez. Kopan bir yazan tahmin edilebilir; yazdığı kelime geçerlidir."
+      "aciklama": "Kopan oyuncu katılımcı olmaya devam eder (oda 120 sn bekler, sonra çıkarılır). 'Tamam' / 'Tahmine geç' sayımında bağlı olmayan beklenmez; son eksik oyuncu koparsa ve kalan herkes hazırsa aşama 1 sn sonra biter (çatının onPresence kancası; kayıttan tekrar oynatma aynı sırayı izler). Kopan bir yazan tahmin edilebilir; yazdığı kelime geçerlidir."
     },
     {
       "baslik": "Geri dönen oyuncu",
@@ -115,11 +125,11 @@
     },
     {
       "baslik": "3 oyuncu / 8 oyuncu",
-      "aciklama": "3 oyuncuda tek masum vardır ve diğer iki oyuncunun ikisi de yazandır: masum kimi seçerse seçsin kişi puanını (+1) garanti alır, yalnız kelimeyi bilmesi gerekir. Yazanlar ise iki kişiden yalnız biri doğru olduğu için kişi tahmininde 1/2 şansla başlar. 8 oyuncuda 6 masum vardır; portre halkası 8 kişiye göre dizilir ve alçak (yatay) ekranda şüphe işareti kapanır."
+      "aciklama": "3 oyuncuda tek masum vardır ve kimi seçerse seçsin kişi puanını alır; seçilmeyen yazan 'İz bırakmadın' +1 alır (denge). 8 oyuncuda 6 masum vardır; tahmin ızgarası 4+4, halka 8 kişiye göre dizilir; alçak (yatay) ekranda özel işaret kapanır."
     },
     {
       "baslik": "İzleyici",
-      "aciklama": "İzleyici kendi rolünü ve metnini görmez (rol boş), yazamaz, tahmin edemez. Yazma aşamasında 'Herkes yazıyor' ve üç noktalı boş pano, tartışmada halka ve süre, tahminde 'Tahmin ediyorlar', sonuçta 'Yazanlar belli oldu' görür; yalnızca hazır sayacını izler. Puan almaz, katılımcı sayımına girmez."
+      "aciklama": "İzleyici rolü ve metni görmez, yazamaz, tahmin edemez. Konu, harf ipucu, halka ve hazır sayacını izler; sonuçta 'Yazanlar belli oldu'. Puan almaz."
     },
     {
       "baslik": "Geç katılan",
@@ -127,21 +137,29 @@
     },
     {
       "baslik": "Hiç kelime yazmayan yazan",
-      "aciklama": "Kelimesi boş kalır; sonuçta '—' görünür. Onu seçenler yalnız +1 (kişi) alabilir, kelime puanı kimseye verilmez."
+      "aciklama": "Kelimesi boş kalır (MASUM bırakan da); harf ipucunda 'yazılmadı', sonuçta kartında 'Kelime yazmadı'. Onu seçenler yalnız kişi puanı alabilir; 'İz bırakmadın' alamaz."
     },
     {
       "baslik": "Masumun MASUM dışında yazmaya çalışması",
-      "aciklama": "Sunucu 'innocent_text' ile reddeder, hiçbir şey kaydedilmez; böylece masum yazan gibi davranıp kelime uyduramaz. İstemci bunu önceden engeller."
+      "aciklama": "Sunucu 'innocent_text' ile reddeder. Yazanın MASUM ile kilitlemesi de 'writer_innocent' ile reddedilir; uyarı yalnız kendi ekranında görünür."
     },
     {
       "baslik": "İki yazanın aynı kelimeyi yazması",
       "aciklama": "Serbesttir; bu durumda her iki yazanı da doğru seçenin tahmin ettiği kelime eşleşir."
+    },
+    {
+      "baslik": "Konu havuzu boş ya da yalnız SERBEST",
+      "aciklama": "Oyun konusuz oynanır: konu kartı ve ipucundaki konu görünmez, yalnız harf sayıları gösterilir. Havuzda yeterli konu yoksa tekrar engeli uygulanmaz."
+    },
+    {
+      "baslik": "Spiker yorumu",
+      "aciklama": "Yapay zekâ anahtarı tanımlıysa sonuç açılınca tek istek gider (oyuncular 'Oyuncu1…N' yer tutucusuyla; konu, kelimeler, kimin kimi seçtiği, puanlar). Gelmezse, gecikirse ya da süzgece takılırsa yorum hiç görünmez; oyun beklemez."
     }
   ],
   "kartlar": [
     {
       "kart": "Genel hesap",
-      "etki": "Kartlar mini oyun puanlarına (miniScores) bakar; bu oyunda miniScores = awards = oyuncu başına 0, 1 veya 2 puandır. 'Birinci' en yüksek puanlı (beraberlikte hepsi), 'sonuncu' en düşük puanlı oyuncudur; herkes eşitse (ör. kimse yazanı bulamadıysa herkes 0) herkes birincidir ve kimse sonuncu değildir."
+      "etki": "Kartlar mini oyun puanlarına (miniScores = dedektif puanı, 0-3) bakar; genel skora giden ham ödül (awards) +2/+1/0 sıralamadır. 'Birinci' en yüksek dedektif puanı (eşitlikte hepsi), 'sonuncu' en düşük; herkes eşitse kimse sonuncu değildir."
     },
     {
       "kart": "Kendine Güven",
@@ -153,11 +171,11 @@
     },
     {
       "kart": "Kalkan",
-      "etki": "Bu oyunda ham puan hiçbir zaman eksi olmaz; Kalkan yalnızca başka kartların (Çelme, Talihsizlik, Kumarbaz vb.) ya da Kendine Güven'in -1'inin yarattığı eksiyi 0'a çeker (en son uygulanır)."
+      "etki": "Bu oyunda ham ödül hiçbir zaman eksi olmaz; Kalkan yalnızca başka kartların yarattığı eksiyi 0'a çeker."
     },
     {
       "kart": "Çift Puan / Altın Dokunuş / Ağır Yük",
-      "etki": "Ham puan (0, 1, 2) çarpanlardan geçer: Çift Puan ×2, Altın Dokunuş ×3 (yalnız artıda), Ağır Yük ikiye bölünür (1→0, 2→1). 0 puanlıya çarpan işlemez."
+      "etki": "Sıralama ödülü (0, 1, 2) çarpanlardan geçer: Çift Puan ×2, Altın Dokunuş ×3, Ağır Yük ikiye bölünür. 0'a çarpan işlemez."
     },
     {
       "kart": "Ters Köşe",
@@ -169,7 +187,7 @@
     },
     {
       "kart": "Veto / Oyunu Seç / Geniş Seçim / Kart Çal / Koruma / Ayna / Vergi / Çelme / Lanet / Hırsız / Takas / Ortaklık",
-      "etki": "Bu oyuna özgü bir değişiklik yoktur; genel hesap sırasıyla (docs/KURALLAR.md K6) 0-2 aralığındaki puanlara uygulanır. Hırsız birinciden 1 puan alır; birinci 0 puanlıysa bile (herkes 0) bu puan alınabilir ve birinci eksiye düşer."
+      "etki": "Bu oyuna özgü bir değişiklik yoktur; genel hesap sırasıyla (docs/KURALLAR.md K6) 0-2 aralığındaki ödüllere uygulanır. Hırsız dedektif birincisinden 1 puan alır."
     }
   ],
   "sabitler": [
@@ -189,34 +207,64 @@
       "kaynak": "packages/engine/src/games/yazi-yaz/types.ts:5"
     },
     {
-      "ad": "Sonuç gösterim süresi (oyunun bitişi)",
+      "ad": "Sonuç açılışı en az",
       "deger": "8 000 ms (8 sn)",
-      "kaynak": "packages/engine/src/games/yazi-yaz/types.ts:7"
+      "kaynak": "packages/engine/src/games/yazi-yaz/types.ts (YAZI_YAZ_REVEAL_MS)"
     },
     {
       "ad": "Erken bitiş payı (herkes hazır)",
       "deger": "1 000 ms",
-      "kaynak": "packages/engine/src/games/yazi-yaz/types.ts:11"
+      "kaynak": "packages/engine/src/games/yazi-yaz/types.ts (YAZI_YAZ_LOCK_GRACE_MS)"
     },
     {
       "ad": "Yazan sayısı",
       "deger": "2",
-      "kaynak": "packages/engine/src/games/yazi-yaz/types.ts:12"
+      "kaynak": "packages/engine/src/games/yazi-yaz/types.ts (YAZI_YAZ_WRITER_COUNT)"
     },
     {
       "ad": "Masumun tek girişi",
       "deger": "\"MASUM\"",
-      "kaynak": "packages/engine/src/games/yazi-yaz/types.ts:14"
+      "kaynak": "packages/engine/src/games/yazi-yaz/types.ts (YAZI_YAZ_INNOCENT_WORD)"
+    },
+    {
+      "ad": "Konusuz tur kaydı",
+      "deger": "\"SERBEST\"",
+      "kaynak": "packages/engine/src/games/yazi-yaz/types.ts (YAZI_YAZ_FREE_TOPIC)"
+    },
+    {
+      "ad": "Konu tekrar belleği",
+      "deger": "aynı odada son 10 oyun",
+      "kaynak": "packages/engine/src/games/yazi-yaz/types.ts (YAZI_YAZ_TOPIC_MEMORY)"
+    },
+    {
+      "ad": "Konu havuzu",
+      "deger": "yazi-yaz/konular (2-24 karakter, büyük harf; en az 1)",
+      "kaynak": "packages/engine/src/games/yazi-yaz/pool.ts"
+    },
+    {
+      "ad": "Yazım hatası toleransı",
+      "deger": "6+ harfte tek harf",
+      "kaynak": "packages/engine/src/games/yazi-yaz/types.ts (YAZI_YAZ_TYPO_MIN_LETTERS)"
+    },
+    {
+      "ad": "Kişi / kelime / iz bırakmama",
+      "deger": "+1 / +1 / +1 dedektif",
+      "kaynak": "packages/engine/src/games/yazi-yaz/types.ts"
+    },
+    {
+      "ad": "Genel skor ödülü",
+      "deger": "+2 / +1 / 0 (sıralama)",
+      "kaynak": "packages/engine/src/games/yazi-yaz/types.ts (yaziYazAwards)"
     },
     {
       "ad": "Oyuncu sayısı",
       "deger": "min 3, max 8",
-      "kaynak": "packages/engine/src/games/yazi-yaz/index.ts:134"
+      "kaynak": "packages/engine/src/games/yazi-yaz/index.ts"
     },
     {
       "ad": "Geç gelen eylem payı",
       "deger": "250 ms",
-      "kaynak": "packages/engine/src/game.ts:166 (yazi-yaz/index.ts:132)"
+      "kaynak": "packages/engine/src/game.ts (LATE_ACTION_GRACE_MS)"
     },
     {
       "ad": "Kelime en çok uzunluk",
@@ -224,123 +272,155 @@
       "kaynak": "packages/engine/src/games/text.ts:3"
     },
     {
-      "ad": "Ham metin üst sınırı",
-      "deger": "256 karakter",
-      "kaynak": "packages/engine/src/games/text.ts:12"
+      "ad": "Harf maskesi / basılı tutma",
+      "deger": "0,6 sn görünür; 220 ms basılı tutunca kelime açılır; rol kartı 260 ms",
+      "kaynak": "apps/client/src/games/yazi-yaz/timeline.ts (YY_PLAN)"
+    },
+    {
+      "ad": "Açılış zaman çizelgesi",
+      "deger": "davul 1,5 sn; kartlar 1,9 sn arayla; harf 110 ms; satırlar ve kendi satır ~7 sn içinde",
+      "kaynak": "apps/client/src/games/yazi-yaz/timeline.ts (YY_REVEAL_PLAN)"
     },
     {
       "ad": "İstemci yazı gecikmesi (sunucuya gönderim)",
       "deger": "350 ms",
-      "kaynak": "apps/client/src/ui/wordDraft.ts (delayMs ?? 350)"
+      "kaynak": "apps/client/src/ui/wordDraft.ts"
     },
     {
-      "ad": "Doğru kişi / doğru kelime puanı",
-      "deger": "+1 / +1",
-      "kaynak": "packages/engine/src/games/yazi-yaz/index.ts:115"
-    },
-    {
-      "ad": "Anlatım zaman aşımı",
-      "deger": "40 sn",
-      "kaynak": "apps/server/src/match.ts:40"
-    },
-    {
-      "ad": "Geri sayım",
-      "deger": "3 sn",
-      "kaynak": "apps/server/src/match.ts:41"
-    },
-    {
-      "ad": "Sonuç ekranı en çok",
-      "deger": "30 sn",
-      "kaynak": "apps/server/src/match.ts:42"
-    },
-    {
-      "ad": "Bağlantı kopma bekleme süresi",
-      "deger": "120 sn",
-      "kaynak": "apps/server/src/rooms.ts:26"
+      "ad": "Oyun içi sonuç ekranı en çok",
+      "deger": "60 sn ('Devam et')",
+      "kaynak": "packages/engine/src/game.ts (REVEAL_HOLD_MS)"
     }
   ],
   "strateji": [
-    "Yazansan kelimeni ne çok bilindik ne çok tuhaf seç; tartışmada diğer yazanı da bulmaya çalışırsan 2 puana kadar çıkabilirsin.",
-    "Masumsan 'MASUM' yazmaktan başka seçeneğin yok; bu yüzden asıl bilgi tartışmadan gelir. Kim fazla rahat, kim gereğinden fazla ilgiyle davranıyor?",
-    "Tartışmada kelime tahmini için ipuçlarına bak; ama yanlış kişiyi seçersen kelime tutsa bile puan alamazsın, önce kişiyi doğru seç.",
-    "Şüphe işaretini notlarını tutmak için kullan; kimse görmediği için dürüstçe işaretleyebilirsin.",
-    "Tahminde kelime alanını boş bırakmak puan kaybettirmez ama kazanç da getirmez; emin olmasan da tahmin yazmanın cezası yoktur.",
-    "Tahmin süresi kısa (30 sn). 'Tamam' demeyi unutursan seçimin ve yazdığın kelime yine sayılır, ama herkesin erken bitirmesini geciktirirsin."
+    "Yazansan konudan ne çok bilindik ne çok tuhaf bir kelime seç; harf sayısı ipucu olarak açılacak. MASUM da 5 harflidir: 5 harfli kelime yazmak seni gizler.",
+    "Yazansan tartışmada masum rolü oyna: hiçbir masum seni seçmezse +1 alırsın. Diğer yazanı da bulursan 3 puana kadar çıkarsın.",
+    "Masumsan harf ipucuyla konuyu birleştir: '5 harfli meyve' listesi masada hızla daralır.",
+    "Özel işaretleri not için kullan: ? şüpheli, ✓ temiz; kimse görmez.",
+    "Yanlış kişiyi seçersen kelime tutsa da puan alamazsın; önce kişiyi doğru seç. Kelimede tek harf yazım hatası 6+ harfte affedilir.",
+    "Genel skora sıralama gider: bir puan fark bile +2 ile +1 arasındaki farktır."
   ],
-  "tv": "TV/sahne ekranı bu oyun için özel bir görünüm kullanmaz: oyun ekranı izleyici kipinde, büyütülmüş ve dokunmaya kapalı bir telefon çerçevesinde gösterilir. Solda 'Oyun x / y' ve oyunun adı, kabuk saati; sağda oyuncu listesi ve her oyuncunun bu oyundaki puanı. Yazmada 'Herkes yazıyor' ve boş pano, hazır sayacı; tartışmada portre halkası ve geri sayan süre; tahminde 'Tahmin ediyorlar'; sonuçta iki yazan, kelimeleri ve herkesin tahmin satırı görünür. Roller ve kelimeler sonuç açılana kadar sahnede de yoktur.",
+  "tv": "TV/sahne ekranı özel düzen kullanır (StageView): solda oyun aşaması, daktilo kâğıdında büyük konu, büyük saat (son saniyelerde kırmızı) ve tartışmadan itibaren harf ipucu, hazır sayısı; sağda büyük portre halkası (yazmada kimin hazır olduğu gösterilmez, tartışma ve tahminde gösterilir). Rol ve kelime sonuca kadar sahnede hiç yoktur; sahne kişisel görünüm taşımaz. 'Yazanlar…' açılışı sahnede büyük kartlar ve iki sütun satırla oynar; düğme yoktur.",
   "ekranlar": [
     {
       "mock": "yazi-briefing",
       "q": "mock=yazi-briefing",
       "baslik": "Anlatım",
-      "aciklama": "Orta neon yazı panosunda MASUM, ortada gizli '?????' panosu; amaç ve üç adım (gizli kelime yaz, 60 sn konuş, kişi +1 kelime +1).",
+      "aciklama": "Neon panolar; amaç ve üç adım (rol kartı ve konu, harf ipucuyla konuşma, kişi/kelime/iz bırakmama puanları).",
       "dosya": "yazi-briefing"
     },
     {
       "mock": "yazi-write",
       "q": "mock=yazi-write&n=5",
-      "baslik": "Yazma (masum)",
-      "aciklama": "'Kelimeni yaz' başlığı, yazı panosu, 'Rolüm · basılı tut' düğmesi, portre şeridi ve Tamam. Masum yalnız MASUM yazabilir.",
-      "dosya": "yazi-write-n-5"
+      "baslik": "Yazma: ters rol kartı",
+      "aciklama": "Konu kâğıdı, büyük süre ve 'Rolünü görmek için basılı tut' kartı; yazan ve masum için aynı.",
+      "dosya": "yazi-write-card"
     },
     {
       "mock": "yazi-write",
       "q": "mock=yazi-write&n=5&role=writer",
-      "baslik": "Yazma (yazan)",
-      "aciklama": "Aynı ekran; yazan kendi gizli kelimesini yazar, ekranda masumdan ayırt edilemez.",
+      "baslik": "Rol kartı çevrildi",
+      "aciklama": "Basılı tutarken kartın ön yüzü: YAZAN (daktilo ve kalem, 'Konudan bir kelime yaz').",
+      "dosya": "yazi-write-card-hold"
+    },
+    {
+      "mock": "yazi-write",
+      "q": "mock=yazi-write&n=5&seen=1",
+      "baslik": "Yazma (gizli pano)",
+      "aciklama": "Yazılan harf kısa süre görünür, sonra ●; altta kısa adlı oyuncu şeridi ve hazır sayısı.",
+      "dosya": "yazi-write-n-5"
+    },
+    {
+      "mock": "yazi-write",
+      "q": "mock=yazi-write&n=5&role=writer&seen=1",
+      "baslik": "Rolüm düğmesi",
+      "aciklama": "Kart 'Rolüm · basılı tut' düğmesine dönüştü; basılı tutunca rol ve kısa satır görünür.",
       "dosya": "yazi-write-n-5-role-writer"
     },
     {
       "mock": "yazi-write-locked",
       "q": "mock=yazi-write-locked&n=6",
       "baslik": "Yazma kilitli",
-      "aciklama": "Tamam'dan sonra 'Gönderildi' durumu ve hazır sayacı; metin kilitlenmiştir.",
+      "aciklama": "Panoda yalnız ●●●●●; 'Gönderildi' ve hazır sayısı (kimin hazır olduğu görünmez).",
       "dosya": "yazi-write-locked-n-6"
     },
     {
       "mock": "yazi-talk",
       "q": "mock=yazi-talk&n=5",
       "baslik": "Sözlü tartışma",
-      "aciklama": "Portreler halkada, ortada geri sayan süre; 'Tahmine geç' düğmesi ve rol göstergesi.",
+      "aciklama": "Halka, ortada saat ve altında 'MEYVE · 5 harf · 6 harf'; herkeste aynı anda nabız.",
       "dosya": "yazi-talk-n-5"
     },
     {
       "mock": "yazi-talk",
       "q": "mock=yazi-talk&n=5",
-      "baslik": "Şüphe işareti",
-      "aciklama": "Aynı tartışma ekranında dokunulan portrelerde yalnız bu cihazda görünen '?' işareti (ekran kaydı: yazi-talk-suphe).",
-      "dosya": "yazi-talk-n-5"
+      "baslik": "Özel işaretler",
+      "aciklama": "Bir dokunuş '?' şüpheli, iki dokunuş '✓' temiz; yalnız bu cihazda.",
+      "dosya": "yazi-talk-suphe"
+    },
+    {
+      "mock": "yazi-talk-end",
+      "q": "mock=yazi-talk-end&n=8",
+      "baslik": "Son 10 saniye",
+      "aciklama": "Saat kırmızı ve nabız atıyor; 8 kişilik halka.",
+      "dosya": "yazi-talk-end-n-8"
     },
     {
       "mock": "yazi-guess",
       "q": "mock=yazi-guess&n=5",
       "baslik": "Tahmin",
-      "aciklama": "'Yazan kim?' başlığı, oyuncu seçici ve 'Kelimesi ne?' alanı, Tamam düğmesi.",
+      "aciklama": "Ortalanmış ızgara (3+2), seçilen kişide pembe halka ve 'YAZAN?', hazır olanlarda yeşil nokta; gizli kelime alanı ve harf kutucukları.",
       "dosya": "yazi-guess-n-5"
     },
     {
       "mock": "yazi-guess-locked",
       "q": "mock=yazi-guess-locked&n=6",
       "baslik": "Tahmin kilitli",
-      "aciklama": "Seçim ve kelime kilitli, diğerleri bekleniyor sayacı.",
+      "aciklama": "Seçim ve kelime kilitli, diğerleri bekleniyor.",
       "dosya": "yazi-guess-locked-n-6"
     },
     {
       "mock": "yazi-reveal",
-      "q": "mock=yazi-reveal&n=5",
-      "baslik": "Sonuç açılışı",
-      "aciklama": "İki yazan ve kelimeleri neon panoda; her oyuncunun tahmin satırı, doğru/yanlış işaretleri ve +puan; üstte hüküm yazısı.",
+      "q": "mock=yazi-reveal&n=5&t=2400",
+      "baslik": "Yazanlar…",
+      "aciklama": "Açılışın başı: davul, kart dönüyor, kelime daktiloyla yazılıyor.",
+      "dosya": "yazi-reveal-drum"
+    },
+    {
+      "mock": "yazi-reveal",
+      "q": "mock=yazi-reveal&n=5&yorum=1",
+      "baslik": "Sonuç",
+      "aciklama": "Kartlarda bulanların avatarları ve damgalar; spiker yorumu; satırlarda seçim, kelime, dedektif puanı ve +2/+1/0.",
       "dosya": "yazi-reveal-n-5"
+    },
+    {
+      "mock": "yazi-reveal-hidden",
+      "q": "mock=yazi-reveal-hidden&n=6",
+      "baslik": "İz bırakmadın",
+      "aciklama": "Kendin yazansın ve hiçbir masum seni seçmedi: 'İZ BIRAKMADI' damgası, +1.",
+      "dosya": "yazi-reveal-hidden-n-6"
+    },
+    {
+      "mock": "tv-yazi-talk",
+      "q": "mock=tv-yazi-talk&n=8",
+      "baslik": "TV: tartışma",
+      "aciklama": "Solda konu, saat ve harf ipucu; sağda halka.",
+      "dosya": "yazi-tv-talk"
+    },
+    {
+      "mock": "tv-yazi-reveal",
+      "q": "mock=tv-yazi-reveal&n=8",
+      "baslik": "TV: sonuç",
+      "aciklama": "Büyük yazan kartları, iki sütun satır.",
+      "dosya": "yazi-tv-reveal"
     }
   ],
   "bilinenSorunlar": [
-    "KURALLAR.md 'Tahmin göndermeyen oyuncu eksi almaz' der; kod bunu doğrular ve ayrıca 'Tamam' demeden süre dolsa da seçili kişi/kelimenin sayıldığını (KURALLAR.md'nin belirtmediği bir ayrıntı) uygular.",
-    "KURALLAR.md '30 sn yazma → 60 sn sözlü tartışma → 30 sn tahmin' der; kod bunlara ek olarak 8 sn'lik sonuç açılışı ekler ve erken bitiş kısaltmasında sonraki aşamaların tam süreyle başlamasını sağlar.",
-    "Erken bitiş değerlendirmesi yalnız bir 'Tamam' / 'Tahmine geç' eylemi geldiğinde yapılır (ctx.connected yalnız reduce'ta okunur); son eksik oyuncu bağlantısını yitirirse aşama kendiliğinden erken bitmez.",
-    "Sunucu masuma 'MASUM' dışı yazmayı reddeder ama yazanın 'MASUM' yazmasını engellemez; böyle bir yazanın kelimesi MASUM olur ve onu doğru seçen yalnız kişi puanı alabilir (MASUM tahmin edilirse kelime de tutar).",
-    "Yazma aşamasında masum hiç 'MASUM' yazmadan süre dolarsa sunucuda girişi olmaz; bu, puanı etkilemez ama o oyuncu 'Tamam' diyemez (nothing_to_lock) ve herkesin erken bitirmesini engeller."
+    "'İz bırakmadın' masumların son seçimine bakar; seçim yapıp sonra bağlantısı kopan masumun seçimi de sayılır (öneri dosyasındaki 'masumların hepsi koptuysa' durumu yalnız hiç seçim yapılmadıysa iki yazana +1 verir).",
+    "Konu tekrar belleği oda bellekte tutulur; sunucu yeniden başlarsa sıfırlanır."
   ],
   "sonDegisiklikler": [
+    "2026-10-31: Konu kartı (yönetici havuzu), harf ipucu, 'İz bırakmadın', dedektif puanı → +2/+1/0, yazan MASUM yazamaz, boş Tamam MASUM, kopmada erken bitiş, yazmada gizli hazır, 6+ harf tek harf toleransı; ters rol kartı, gizli pano, yeni tartışma/tahmin ekranları, 'Yazanlar…' açılışı, ses seti, TV düzeni, spiker yorumu.",
     "2026-10-29: Oyun ekranları arayüz düzeltmeleri: tek satır oyun adı, sakin 'Gönderildi' durumu, tek hazır şeridi, tutarlı düğmeler.",
     "2026-10-29: Oyun ekranları: tutarlı durum, tek satır başlık, okunur sonuçlar.",
     "2026-10-29: Geç gelen eylem payı: Yazı Yaz dahil 3 oyunda oyun saati 250 ms geriden verilir.",
@@ -353,13 +433,17 @@
   "kaynaklar": [
     "packages/engine/src/games/yazi-yaz/index.ts",
     "packages/engine/src/games/yazi-yaz/types.ts",
+    "packages/engine/src/games/yazi-yaz/pool.ts",
+    "packages/engine/src/games/yazi-yaz/rules.test.ts",
     "packages/engine/src/games/yazi-yaz/yazi-yaz.test.ts",
     "packages/engine/src/games/text.ts",
     "packages/engine/src/game.ts",
     "apps/server/src/match.ts",
+    "apps/server/src/aiCommentGames.ts",
     "apps/client/src/games/yazi-yaz/",
-    "apps/client/src/stage/TvPlaying.tsx",
     "docs/KURALLAR.md#1-yazı-yaz--yazi-yaz",
+    "docs/oneriler/yazi-yaz.md",
+    "docs/oneriler/yazi-yaz-gorsel.md",
     "scripts/ui-check.mjs"
   ]
 }

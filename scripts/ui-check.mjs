@@ -1315,7 +1315,14 @@ const SCREENS = [
   { name: "kule-turn", q: "mock=kule-turn" },
   { name: "kule-turn-8", q: "mock=kule-turn&n=8" },
   { name: "kule-watching", q: "mock=kule-watching" },
-  { name: "kule-perfect", q: "mock=kule-perfect" },
+  { name: "kule-perfect", q: "mock=kule-perfect&fx=200", settle: 400 },
+  { name: "kule-warn", q: "mock=kule-warn&fx=1400", settle: 1100 },
+  { name: "kule-urgent", q: "mock=kule-urgent", settle: 300 },
+  { name: "kule-cut", q: "mock=kule-cut&fx=200", settle: 350 },
+  { name: "kule-record", q: "mock=kule-record&fx=200", settle: 400 },
+  { name: "kule-record-8", q: "mock=kule-record&n=8&fx=200", settle: 400 },
+  { name: "kule-end", q: "mock=kule-end&n=8", settle: 600 },
+  { name: "kule-end-2", q: "mock=kule-end&n=3", settle: 600 },
   { name: "kule-miss", q: "mock=kule-miss&n=8", settle: 1400 },
   { name: "kule-out", q: "mock=kule-out" },
   { name: "kule-reveal", q: "mock=kule-reveal&n=6", settle: 2400 },
@@ -1910,16 +1917,32 @@ const SCREENS = [
   { name: "kendim-spectator-match", q: "mock=kendim-spectator-match&n=5" },
   { name: "kendim-spectator-reveal", q: "mock=kendim-spectator-reveal&n=5", settle: 3000 },
   { name: "yazi-briefing", q: "mock=yazi-briefing" },
-  { name: "yazi-write-innocent", q: "mock=yazi-write&n=5" },
-  { name: "yazi-write-writer", q: "mock=yazi-write&n=5&role=writer" },
+  // Ters rol kartı (yazan ve masumun ekranı aynı), basılı tutunca döner.
+  { name: "yazi-write-card", q: "mock=yazi-write&n=5" },
+  { name: "yazi-write-card-8", q: "mock=yazi-write&n=8&role=writer" },
+  {
+    name: "yazi-write-card-hold",
+    q: "mock=yazi-write&n=5&role=writer",
+    act: async (p) => {
+      const box = await p.locator(".yyrc").boundingBox();
+      if (!box) throw new Error("rol kartı yok");
+      await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await p.mouse.down();
+      await p.waitForTimeout(500);
+    },
+    after: async (p) => p.mouse.up(),
+  },
+  { name: "yazi-write-innocent", q: "mock=yazi-write&n=5&seen=1" },
+  { name: "yazi-write-writer", q: "mock=yazi-write&n=5&role=writer&seen=1" },
+  { name: "yazi-write-konusuz", q: "mock=yazi-write&n=4&seen=1&topic=0" },
   {
     name: "yazi-write-typed",
-    q: "mock=yazi-write&n=8",
-    act: async (p) => p.locator(".wfield__input").fill("masum"),
+    q: "mock=yazi-write&n=8&seen=1",
+    act: async (p) => p.locator(".yyb__input").fill("masum"),
   },
   {
     name: "yazi-write-peek",
-    q: "mock=yazi-write&n=5",
+    q: "mock=yazi-write&n=5&seen=1",
     act: async (p) => {
       const box = await p.locator(".yy__peek").boundingBox();
       if (!box) throw new Error("rol düğmesi yok");
@@ -1931,55 +1954,66 @@ const SCREENS = [
   { name: "yazi-write-locked", q: "mock=yazi-write-locked&n=6" },
   {
     name: "yazi-write-keyboard",
-    q: "mock=yazi-write&n=5",
+    q: "mock=yazi-write&n=5&seen=1",
     sizes: [
       [390, 520],
       [360, 300],
       [320, 280],
     ],
-    act: async (p) => p.locator(".wfield__input").fill("masum"),
+    act: async (p) => p.locator(".yyb__input").fill("masum"),
   },
   { name: "yazi-talk-5", q: "mock=yazi-talk&n=5" },
   { name: "yazi-talk-8", q: "mock=yazi-talk&n=8&role=writer" },
   { name: "yazi-talk-3", q: "mock=yazi-talk&n=3" },
-  // Şüphe göstergesi: dokunulan oyuncuda yalnız bu cihazda görünen "?" işareti.
+  { name: "yazi-talk-end", q: "mock=yazi-talk-end&n=6" },
+  // Özel işaret: bir dokunuş "?" şüpheli, iki dokunuş "✓" temiz; yalnız bu cihazda.
   {
     name: "yazi-talk-suphe",
     q: "mock=yazi-talk&n=5",
     sizes: [[320, 568]],
     act: async (p) => {
-      await p
-        .getByRole("button", { name: /şüphe işareti/ })
-        .nth(0)
-        .click();
-      await p
-        .getByRole("button", { name: /şüphe işareti/ })
-        .nth(2)
-        .click();
+      const marks = p.getByRole("button", { name: /için işaret/ });
+      await marks.nth(0).click();
+      await marks.nth(2).click();
+      await marks.nth(2).click();
       await p.waitForTimeout(300);
     },
   },
   { name: "yazi-talk-locked", q: "mock=yazi-talk-locked&n=6" },
   { name: "yazi-guess-5", q: "mock=yazi-guess&n=5" },
   { name: "yazi-guess-8", q: "mock=yazi-guess&n=8&chosen=3" },
+  { name: "yazi-guess-7", q: "mock=yazi-guess&n=7&chosen=6" },
   { name: "yazi-guess-3", q: "mock=yazi-guess&n=3" },
   {
     name: "yazi-guess-tap",
     q: "mock=yazi-guess&n=6",
     act: async (p) => {
-      await p.locator(".ppick__cell:not(:disabled)").first().click();
-      await p.locator(".wfield__input").fill("kedi");
+      await p.locator(".yyg__cell:not(:disabled)").first().click();
+      await p.locator(".yyb__input").fill("kiraz");
     },
   },
+  {
+    name: "yazi-guess-keyboard",
+    q: "mock=yazi-guess&n=8&chosen=2",
+    sizes: [
+      [390, 520],
+      [360, 360],
+    ],
+    act: async (p) => p.locator(".yyb__input").fill("kiraz"),
+  },
   { name: "yazi-guess-locked", q: "mock=yazi-guess-locked&n=6" },
-  { name: "yazi-reveal-5", q: "mock=yazi-reveal&n=5", settle: 3000 },
-  { name: "yazi-reveal-8", q: "mock=yazi-reveal&n=8", settle: 3000 },
-  { name: "yazi-reveal-3", q: "mock=yazi-reveal&n=3", settle: 3000 },
-  { name: "yazi-reveal-zero", q: "mock=yazi-reveal-zero&n=6", settle: 3000 },
+  { name: "yazi-reveal-drum", q: "mock=yazi-reveal&n=5&t=600", settle: 300 },
+  { name: "yazi-reveal-cards", q: "mock=yazi-reveal&n=6&t=3600", settle: 300 },
+  { name: "yazi-reveal-5", q: "mock=yazi-reveal&n=5", settle: 1000 },
+  { name: "yazi-reveal-8", q: "mock=yazi-reveal&n=8", settle: 1000 },
+  { name: "yazi-reveal-3", q: "mock=yazi-reveal&n=3", settle: 1000 },
+  { name: "yazi-reveal-zero", q: "mock=yazi-reveal-zero&n=6", settle: 1000 },
+  { name: "yazi-reveal-hidden", q: "mock=yazi-reveal-hidden&n=6", settle: 1000 },
+  { name: "yazi-reveal-empty", q: "mock=yazi-reveal-empty&n=5", settle: 1000 },
   { name: "yazi-spectator-write", q: "mock=yazi-spectator-write&n=5" },
   { name: "yazi-spectator-talk", q: "mock=yazi-spectator-talk&n=5" },
   { name: "yazi-spectator-guess", q: "mock=yazi-spectator-guess&n=5" },
-  { name: "yazi-spectator-reveal", q: "mock=yazi-spectator-reveal&n=5", settle: 3000 },
+  { name: "yazi-spectator-reveal", q: "mock=yazi-spectator-reveal&n=5", settle: 1000 },
   { name: "rusvet-briefing", q: "mock=rusvet-briefing" },
   { name: "rusvet-vote-5", q: "mock=rusvet-vote&n=5" },
   { name: "rusvet-vote-8", q: "mock=rusvet-vote&n=8&chosen=3" },
@@ -2270,6 +2304,10 @@ const SCREENS = [
   { name: "laf-tv-stamp", q: "mock=tv-laf-reveal-master&n=6&t=3000", sizes: TV, settle: 900 },
   { name: "laf-tv-final-vote", q: "mock=tv-laf-final-vote&n=8", sizes: TV, settle: 1600 },
   { name: "laf-tv-final-reveal", q: "mock=tv-laf-final-reveal&n=8", sizes: TV, settle: 1600 },
+  { name: "yazi-tv-write", q: "mock=tv-yazi-write&n=6", sizes: TV, settle: 1200 },
+  { name: "yazi-tv-talk", q: "mock=tv-yazi-talk&n=8", sizes: TV, settle: 1200 },
+  { name: "yazi-tv-guess", q: "mock=tv-yazi-guess&n=6", sizes: TV, settle: 1200 },
+  { name: "yazi-tv-reveal", q: "mock=tv-yazi-reveal&n=8", sizes: TV, settle: 1200 },
   { name: "laf-spectator-write", q: "mock=laf-spectator-write&n=5" },
   { name: "laf-spectator-vote", q: "mock=laf-spectator-vote&n=5" },
   { name: "laf-spectator-reveal", q: "mock=laf-spectator-reveal&n=5", settle: 3000 },
@@ -2388,7 +2426,7 @@ const SCREENS = [
   { name: "kendim-sonuc-devam", q: "mock=kendim-reveal&n=8&sonuc=1", settle: 3000 },
   { name: "kontrol-sonuc-devam", q: "mock=kontrol-reveal&n=8&sonuc=1", settle: 2500 },
   { name: "kronometre-sonuc-devam", q: "mock=kor-kronometre-reveal&n=8&rank=1&sonuc=1", settle: 1800 },
-  { name: "kule-sonuc-devam", q: "mock=kule-reveal&n=8&sonuc=1", settle: 2400 },
+  { name: "kule-sonuc-devam", q: "mock=kule-end&n=8&sonuc=1", settle: 2400 },
   { name: "laf-sonuc-devam", q: "mock=laf-final-reveal&n=8&sonuc=1", settle: 3600 },
   { name: "ortak-nokta-sonuc-devam", q: "mock=ortak-nokta-reveal&n=8&sonuc=1", settle: 1500 },
   { name: "ortalama-sonuc-devam", q: "mock=ortalama-reveal&n=8&sonuc=1", settle: 6000 },
@@ -2681,6 +2719,10 @@ const SCREENS = [
     act: karakterHazir,
   },
   { name: "tv-zaman-bombasi-sira", q: "mock=tv-zaman-mine&n=6", sizes: TV, settle: 1400 },
+  { name: "tv-kule-sira", q: "mock=tv-kule-turn&n=8", sizes: TV, settle: 800 },
+  { name: "tv-kule-kusursuz", q: "mock=tv-kule-perfect&n=6&fx=200", sizes: TV, settle: 400 },
+  { name: "tv-kule-iska", q: "mock=tv-kule-miss&n=8&fx=0", sizes: TV, settle: 500 },
+  { name: "tv-kule-bitti", q: "mock=tv-kule-end&n=5", sizes: TV, settle: 800 },
   { name: "tv-zaman-bombasi-izle", q: "mock=tv-zaman-playback&n=6", sizes: TV, settle: 1400 },
   { name: "tv-zaman-bombasi-secim", q: "mock=tv-zaman-pick-other&n=8", sizes: TV, settle: 1400 },
   { name: "tv-karalama-cizim", q: "mock=tv-karalama-draw&n=6", sizes: TV, settle: 1400 },

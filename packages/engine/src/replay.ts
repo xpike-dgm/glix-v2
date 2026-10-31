@@ -89,6 +89,10 @@ export function replay(game: AnyGame, log: GameLog): GameResult {
   const rng = createRng(log.seed);
   const online = new Set(log.players);
   let next = 0;
+  // Bağlantı kayıtları sırayla uygulanır; oyunun `onPresence` kancası varsa her kayıtta, o anki tick'ten sonra çağrılır
+  // (sunucuyla aynı sıra). `state` kurulmadan önce (setup anında) yalnız liste güncellenir.
+  let state: unknown;
+  let ready = false;
   const ctxAt = (now: number): GameContext => {
     while (next < log.presence.length && (log.presence[next]?.t ?? Number.POSITIVE_INFINITY) <= now) {
       const p = log.presence[next++];
@@ -96,24 +100,31 @@ export function replay(game: AnyGame, log: GameLog): GameResult {
         throw new Error(`replay: bilinmeyen oyuncu bağlantı kaydı (${p?.playerId})`);
       if (p.connected) online.add(p.playerId);
       else online.delete(p.playerId);
+      if (ready && game.onPresence) {
+        const at: GameContext = { now: p.t, rng, connected: log.players.filter((id) => online.has(id)) };
+        state = game.onPresence(game.tick(state, at), at);
+      }
     }
     return { now, rng, connected: log.players.filter((id) => online.has(id)) };
   };
-  let state = game.setup(log.players, {
+  state = game.setup(log.players, {
     ...ctxAt(log.startedAt),
     ...(log.tone !== undefined ? { tone: log.tone } : {}),
     ...(log.content !== undefined ? { content: log.content } : {}),
   });
+  ready = true;
   for (const entry of log.actions) {
-    state = game.tick(state, ctxAt(entry.t));
+    const at = ctxAt(entry.t);
+    state = game.tick(state, at);
     const action = game.parseAction(entry.action);
     if (action === null) throw new Error(`replay: geçersiz eylem kaydı (t=${entry.t})`);
-    const result = game.reduce(state, entry.playerId, action, ctxAt(entry.t));
+    const result = game.reduce(state, entry.playerId, action, at);
     if (isRejected(result))
       throw new Error(`replay: kayıtlı eylem reddedildi (${result.rejected}, t=${entry.t})`);
     state = result;
   }
-  state = game.tick(state, ctxAt(log.endedAt));
+  const end = ctxAt(log.endedAt);
+  state = game.tick(state, end);
   return game.result(state);
 }
 

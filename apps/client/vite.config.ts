@@ -93,6 +93,19 @@ function alisverisPropFiles(): string[] {
 }
 
 /**
+ * Kule Ustası görselleri (vinç kancası, kristal blok dokusu; sahip üretecek: docs/oneriler/kule-ustasi-gorsel.md).
+ * Derlemede var olanların adları (uzantısız); yoksa ekran CSS/SVG karşılığını çizer, olmayan dosya istenmez.
+ */
+function kulePropFiles(): string[] {
+  const dir = fileURLToPath(new URL("./public/assets/props/kule-ustasi", import.meta.url));
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".webp"))
+    .map((f) => f.slice(0, -".webp".length))
+    .sort();
+}
+
+/**
  * Kara Borsa nesne görsellerinden gerçekten var olanlar (dosya adı, uzantısız). Açık kutular, tokmak ve büyük sandık
  * sahip tarafından üretilecek (docs/oneriler/kara-borsa-gorsel.md); dosya yokken ekran CSS/SVG karşılığını çizer ve
  * olmayan dosyayı istemez (404 yok). Dosya eklendikten sonra geliştirme sunucusu yeniden başlatılır.
@@ -113,11 +126,26 @@ function bozukPhoneArt(): boolean {
   );
 }
 
+/**
+ * Yazı Yaz görselleri (`public/assets/props/yazi-yaz/*.webp`; sahip üretecek: docs/oneriler/yazi-yaz-gorsel.md).
+ * Yalnız var olanlar istenir; yoksa ekran CSS çizimini kullanır (404 yok). Yeni dosya bir sonraki derlemede girer.
+ */
+function yaziYazPropFiles(): string[] {
+  const dir = fileURLToPath(new URL("./public/assets/props/yazi-yaz", import.meta.url));
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".webp"))
+    .map((f) => f.slice(0, -".webp".length))
+    .sort();
+}
+
 export default defineConfig({
   define: {
+    __YAZI_YAZ_PROPS__: JSON.stringify(yaziYazPropFiles()),
     __ALISVERIS_PROPS__: JSON.stringify(alisverisPropFiles()),
     __BOZUK_PHONE_ART__: JSON.stringify(bozukPhoneArt()),
     __KARA_BORSA_PROPS__: JSON.stringify(karaBorsaPropFiles()),
+    __KULE_PROPS__: JSON.stringify(kulePropFiles()),
     __ZB_BOMBA_GORSEL__: JSON.stringify(ZB_BOMBA_GORSEL),
   },
   plugins: [
