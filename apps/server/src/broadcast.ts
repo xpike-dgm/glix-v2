@@ -187,6 +187,24 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
     };
   }
 
+  /**
+   * Sahneye bu yayında yeni bir şey yok (ortak içerik ve `view(durum, null)` aynı): mesaj gönderilmez. Böylece
+   * yalnız bir oyuncunun kişisel görünümünü değiştiren gizli eylem (ör. Zehirli Kadeh kontrolü) sahnede boş bir
+   * yamayla bile iz bırakmaz; oyuncuların hızlı yolundaki "değişiklik yoksa gönderme" kuralının sahne eşi.
+   */
+  function stageUnchanged(
+    rt: Runtime,
+    room: Room,
+    conn: Connection,
+    cache: SharedCache,
+    prevVer: number,
+  ): boolean {
+    const last = conn.lastSent;
+    if (!last || conn.sentVer !== prevVer || cache.ver !== prevVer) return false;
+    const view = last.match ? matchViewFor(rt, room, null) : null;
+    return JSON.stringify(last.match?.view ?? null) === JSON.stringify(view ?? null);
+  }
+
   /** Oyunun view'ı/maç görüntüsü çöktü: maç iptal edilir, oda lobi görüntüsüyle yeniden yayınlanır. */
   function fail(rt: Runtime, room: Room, err: unknown): void {
     if (room.match) abortMatch(rt, room, err);
@@ -283,6 +301,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
     }
     for (const conn of [...room.stages]) {
       try {
+        if (stageUnchanged(rt, room, conn, cache, prevVer)) continue;
         deliver(conn, snapshotForStage(rt, room, rev, serverNow, content));
         conn.sentVer = cache.ver;
       } catch (err) {

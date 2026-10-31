@@ -1200,10 +1200,10 @@ yani birbirlerinin ne yapcağı birbirinde yazıyor birbirlerinde çözümü alm
 13. Kontrol panelleri, kablolar, ışıklar ve kaos animasyonları: Dört kablo
     `mavi`, `yeşil`, `kırmızı`, `sarı` olarak metalik neon kanallarda görünür.
     Her panelin sırası oyuncuya özel ve mümkün olduğunca benzersizdir. Not
-    kağıdı kabloların altında kısa bir hologram metni olarak yalnızca ipucu
-    sahibine görünür. Oyuncular doğru koşulu sesli söylediğinde hedef panelde
-    ilgili kablo nabız atar; kesme anında enerji akışı doğruysa yeşil, yanlışsa
-    kesik kırmızı kıvılcım oynar.
+    kağıdı kabloların altında yalnızca ipucu sahibine görünür. Kesme anında
+    kablo kopar ve kıvılcım çıkar; doğru/yanlış bilgisi dalga sonucunda açılır
+    (doğruysa yeşil, yanlışsa kırmızı). Yanlış kesimin tek anlık tepkisi ortak
+    bomba saatinin 5 sn atlamasıdır (aşağıdaki dalga değişikliği).
 14. Özel durumlar: Her oyuncu kendi paneli hakkında ipucunun kimde olduğunu
     bilmez. Her ipucu, başka bir oyuncunun panelindeki dizilimi tarif eder ve
     kesilecek kablo rengini söyler; ipucu metni hedef oyuncunun adını doğrudan
@@ -1215,6 +1215,47 @@ yani birbirlerinin ne yapcağı birbirinde yazıyor birbirlerinde çözümü alm
 **Değişiklik (sahip onayı, Ekim 2026):** Kesim tek seferlik ve gizli olduğundan, **bağlı bütün katılımcılar
 kestiğinde** oyun 1 saniye sonra erken biter; bağlantısı kopan oyuncu beklenmez (eskiden kopuk oyuncu da beklenirdi). Kopuk
 oyuncunun kesimi yoksa o oyuncu için sonuç süre bitmiş gibi hesaplanır (kesmemiş = puan yok).
+
+**Değişiklik (sahip onayı, Ekim 2026 — üç dalga, KP-M1…M5):** Bu bölüm yukarıdaki tek aşama, süre ve puan
+cevaplarının yerine geçer; geri kalanı (2–8 oyuncu, ipucu zinciri, gizlilik, renk körlüğü modu) aynen geçerlidir.
+
+1. **Üç dalga:** Dalga 1 "Isınma" 25 sn (4 kablo, 2 koşullu "N. kablo R ise" ipucu), dalga 2 "Karmaşa" 25 sn
+   (4 kablo, yeni ipucu türleri), dalga 3 "Kaos" 20 sn (**5 kablo**, 5. renk **mor**; üç koşullu ya da karma ipucu).
+   Her dalgada yeni paneller (her oyuncuda farklı dizilim; dalga 1 ve 2 dizilimleri de birbirinden farklı) ve
+   yeniden karıştırılmış ipucu zinciri gelir: 3+ oyuncuda hiçbir taşıyıcı önceki dalgada taşıdığı kişinin notunu
+   taşımaz (2 oyuncuda tek döngü olduğundan eşleşme aynı kalır).
+2. **Kesim:** Her dalgada herkesin **tek ve geri alınamaz** bir kesim hakkı vardır; yeni dalgada hak yenilenir. 4
+   kablolu dalgada mor kesilemez. Dalga bittikten sonra (arada ya da sonda) gelen kesim reddedilir; bir dalga için
+   gönderilip sonraki dalgada ulaşan kesim de yeni dalgaya sayılmaz.
+3. **Dalga başına erken bitiş:** Bağlı bütün katılımcılar o dalgada kestiyse dalga 1 sn sonra biter; kopuk oyuncu
+   beklenmez.
+4. **Ara:** Dalga 1 ve 2'den sonra 4 sn'lik kısa sonuç: herkesin o dalgadaki kesimi (renk, ✓/✗), ipucu taşıyıcısı ve
+   o dalganın imha puanı. Biten dalganın panelleri ve ipuçları bu andan itibaren herkese açıktır.
+5. **Yeni ipucu türleri (dalga 2 ve 3):** olumsuz ("2. kablo kırmızı değil ve 4. kablo sarıysa maviyi kes"),
+   komşuluk ("Mavi ile sarı yan yanaysa yeşili kes"), konum hedefi ("1. kablo yeşilse en alttaki kabloyu kes";
+   en üstteki ya da en alttaki), sıra ("Kırmızı maviden yukarıdaysa sarıyı kes"). Dalga 2'de bu dört türden biri,
+   dalga 3'te üç "N. kablo R" koşulu ya da en az bir yeni türü içeren 2–3 koşullu karma ipucu rastgele seçilir;
+   dalga 3'te ipuçlarının yaklaşık üçte biri konum hedeflidir. Her ipucu hedef panelde doğrudur ve o dalganın
+   panelleri arasında **yalnız hedef paneli** tanımlar (üretimde denetlenir). İstenen tür bunu sağlayamazsa
+   daha basit türe düşülür ("N. kablo R" koşulları ve renk hedefi). Doğru kablo sistemce kesin hesaplanır (konum
+   hedefinde o konumdaki kablonun rengi). İpucu oyuncu adı içermez.
+6. **Ortak bomba saati:** Dalganın süresi herkesin gördüğü bomba saatidir. **Yanlış kesim saatten herkes için 5 sn
+   düşer**; saat 3 sn'nin altına inmez (kalan 3 sn ya da daha azken gelen yanlış kesim süre düşürmez). Hangi
+   kablonun yanlış olduğu söylenmez; herkes yalnız saat atlamasını görür. Doğru/yanlış bilgisi kesen kişiye de
+   dalga sonucuna kadar gösterilmez; saat atlaması herkese göründüğü için kesen kişi dolaylı anlayabilir (kabul
+   edilmiş durum). Saat sıfıra inince dalga biter; kesmeyenler kesmemiş sayılır. Ceza süre olduğundan eksi puan yoktur.
+7. **Puan:** Her dalgada imha puanı toplanır: doğru kesen +1, o panelin ipucunu taşıyan +1. Oyun sonunda mini oyun
+   puanı (genel skora eklenen) toplam imha puanından verilir: en yüksek toplam **+2**, ikinci farklı toplam **+1**,
+   diğerleri 0. Birincide eşitlikte hepsi +2 ve sonraki farklı değer +1. Toplamı 0 olan ödül almaz. Herkesin
+   toplamı aynı ve 0'dan büyükse **herkes +1** alır. Eksi puan yoktur.
+8. **Zaman çizelgesi:** 25 + 4 + 25 + 4 + 20 sn ve sonda 8 sn sonuç açılışı (en çok 86 sn; erken bitiş ve saat
+   atlamaları sonraki dalgaları öne çeker). Sonuç açılışında üç dalganın kesimleri, toplam imha puanı ve ödül
+   görünür; oyun bu 8 sn'nin sonunda biter.
+9. **Kartlar:** Kart hesabı mini oyun puanına (+2 / +1 / 0) bakar: "birinci" +2 alanlardır (herkes +1 aldıysa ya
+   da herkes 0 ise herkes birincidir), "sonuncu" en düşük mini puanlılardır (genellikle 0 alanlar; toplamı 0'dan
+   büyük ama ödül almayanlar da dahil). Herkes eşitse kimse sonuncu sayılmaz.
+10. Eski "doğru koşul sesli söylenince kablo nabız atar" maddesi kaldırıldı (sistem konuşmayı duymaz); yerine
+    6. maddedeki saat tepkisi geçer.
 
 ## 22. Zehirli Kadeh — `zehirli-kadeh`
 
@@ -1230,6 +1271,14 @@ olmayanlar +1, zehirli kadehi olan oyuncu 0 alır; eski faz 30 saniyedir.
 1. Minimum oyuncu / maksimum oyuncu: [2-8]
 2. Kaç zehirli kadeh vardır; başlangıçta nasıl dağıtılır?: [2-3 oyuncu da 1 tane 4-5 oyuncuda 2 tane 6-8 oyuncuda 3 tane zehirli kadeh vardır]
 3. Her oyuncu kendi kadehinin zehirli olup olmadığını görür mü?: [yok göremez]
+   - **Kontrol hakkı (sahip kararı, ZK-M2 değiştirilmiş):** her oyuncunun **1 kontrol hakkı** vardır. Süre
+     içinde istediği an, kendisi dışındaki bir oyuncunun **o anki** kadehini seçip gizlice kontrol eder; sonuç
+     (zehirli/temiz) yalnız kendisine görünür ve oyun boyunca hatırlanır. Bilgi **kadeh numarasına** bağlıdır:
+     kadeh sonra takasla yer değiştirse de "bu kadeh temiz/zehirli" bilgisi doğru kalır ve kadehi izler. Kendi
+     kadehini kontrol edemez. Kontrol edilen oyuncunun bağlı olması gerekmez. Kimin kimi kontrol ettiği ve kontrol
+     hakkının kullanılıp kullanılmadığı hiçbir ortak görünümde, izleyicide, TV'de ya da başka oyuncuda yoktur;
+     sonuçta da açılmaz. Kontrol süreyi uzatmaz, takas hakkını harcamaz; süre bitince yapılan kontrol reddedilir
+     (takastaki geç gelen eylem payı burada da geçerlidir). Kendi kadehini bilmek yoktur.
 4. Takas kime yapılabilir; kendinle takas mümkün mü?: [kendinle nasıl takas yapıcan akıllı]
 5. Her oyuncunun kaç takas hakkı vardır?: [1 takas hakkı var]
 6. Takas anında mı gerçekleşir; herkes takas geçmişini görür mü?: [takas anlık olarak yapılır süre bitmeden]
@@ -1240,19 +1289,32 @@ olmayanlar +1, zehirli kadehi olan oyuncu 0 alır; eski faz 30 saniyedir.
 11. Genel skora aktarım ve beraberlik: [bu oyunda beraberlik yok temiz kadehi olan herkes puan alır]
 12. Turun bitiş koşulu: [sürenin bitmesi]
 13. Tutorialda gösterilecek üç adım:
-    1. Hangi kadehin zehirli olduğunu göremezsin.
-    2. İstersen bir arkadaşınla tek takas hakkını kullan.
+    1. Bir arkadaşının kadehini gizlice kontrol et (1 hak).
+    2. İstersen biriyle tek takas hakkını kullan; her takas süreyi uzatır.
     3. Süre bittiğinde temiz kadeh +1, zehirli kadeh 0 alır.
-14. Kadeh, zehir, takas, ışık ve patlama animasyonları: Oyuncuların önünde
-    renkli sıvıyla dolu, dışı aynalı neon kadehler durur; kadehin içindeki
-    zehirli durum hiçbir oyuncuya görsel ipucu vermez. Takas düğmesinde iki
-    kadeh arasında kısa bir ışık tüneli oluşur ve her takas sonrası sahne
-    saatinin çevresine 5 saniyelik amber halka eklenir. Sonuçta temiz kadehler
-    altın, zehirliler mor-siyah dumanla işaretlenir.
+14. Kadeh, zehir, takas, ışık ve patlama animasyonları: Ekranın ortasında uzun
+    bir ziyafet masası vardır; kadehler masanın üstünde büyük, her kadehin
+    arkasında sahibinin avatarı ve adı durur. Süre, ekranın üstünde eriyen bir
+    mumdur; her takasta mum biraz uzar ve alev parlar, son 5 saniyede mum
+    titrer, masa kararır, kalp atışı duyulur. Kadehin içindeki zehirli durum
+    hiçbir oyuncuya görsel ipucu vermez. Takasta iki kadeh masanın üstünden yay
+    çizerek yer değiştirir, üstte 2 sn "Ad ⇄ Ad" şeridi çıkar ve masanın altındaki
+    takas geçmişine ok olarak eklenir. Kontrolde seçilen kadeh yalnız kontrol
+    edene gizlice açılır ve üstünde ona özel küçük rozet kalır. Sonuçta önce
+    "Şerefe!" ile kadehler tokuşur, sonra rastgele sırayla tek tek açılır
+    (temiz: altın parıltı, +1; zehirli: avatar yeşile döner, mor duman, 0);
+    oyuncunun kendi kadehi en son açılır.
 15. Özel durumlar: Takas anında sunucu tarafından tek işlem olarak uygulanır;
     aynı anda gelen iki takasta sunucu sırası geçerlidir. Her oyuncu en fazla
     bir kez takas yapabilir ve takas zorunlu değildir. Başlangıç süresi 20
     saniyedir; toplam süre takaslarla uzar ve süre bitince sonuç hemen açılır.
+    Herkes takas hakkını kullandıysa takas süresi son takastan 1 sn sonra
+    biter; kullanılmamış kontrol hakları bu erken bitişi engellemez. Süre
+    bitince (erken bitişte de) oyun hemen bitmez: sabit süreli (8,5 sn)
+    "Şerefe!" açılış evresi başlar, sonuç bu evrenin başında açılır, evrede
+    takas ve kontrol reddedilir; oyun evrenin sonunda biter ve ardından genel
+    sonuç ekranı gelir. Kontrol hakkı
+    her oyuncuda en fazla bir kezdir ve zorunlu değildir.
 
 ## 23. Çapraz Ateş — `capraz-ates`
 

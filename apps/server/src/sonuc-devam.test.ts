@@ -1,4 +1,4 @@
-import { CONTINUE_GRACE_MS, CONTINUE_MIN_GAP_MS, KONTROL_PLAY_MS, REVEAL_HOLD_MS } from "@glix/engine";
+import { CONTINUE_GRACE_MS, CONTINUE_MIN_GAP_MS, KONTROL_REVEAL_MS, REVEAL_HOLD_MS } from "@glix/engine";
 import { describe, expect, it } from "vitest";
 import { RESULTS_MS } from "./match.js";
 import { type Client, join, k, setupRoom, startPlaying, sync, until, useServer } from "./testkit.js";
@@ -7,15 +7,18 @@ useServer();
 
 /**
  * Oyun içi sonuç ekranı "Devam et" kuralı (docs/ERKEN-BITIS.md "Oyun içi sonuç ekranı"). Kontrol Paneli Kaosu:
- * 60 sn kesim, ardından 8 sn açılış animasyonu (`finishAt`). Testteki istemciler kendiliğinden basmaz.
+ * üç dalga, ardından 8 sn final açılışı (`finishAt`). Testteki istemciler kendiliğinden basmaz.
  */
 interface Pub {
-  endsAt: number;
   finishAt: number;
 }
 
 const GAME = "kontrol-paneli-kaosu";
-const pub = (c: Client): Pub => c.room.match?.publicView as Pub;
+/** Son dalganın bitişi (final açılışının başı) ve açılış animasyonunun sonu. */
+const pub = (c: Client): { endsAt: number; finishAt: number } => {
+  const finishAt = (c.room.match?.publicView as Pub | undefined)?.finishAt ?? 0;
+  return { endsAt: finishAt - KONTROL_REVEAL_MS, finishAt };
+};
 
 async function toReveal(cs: Client[]): Promise<{ endsAt: number; finishAt: number }> {
   for (const c of cs) c.autoReveal = false;
@@ -182,7 +185,7 @@ describe("oyun içi sonuç ekranında Devam et", () => {
     await until(() => a.room.phase === "playing", "oyun");
     await expectWrongPhase();
 
-    k.clock.advance(KONTROL_PLAY_MS);
+    k.clock.advance(pub(a).endsAt - k.clock.now());
     await until(() => a.room.match?.reveal != null, "sonuç ekranı");
     // Başka oyunun sırası: eski/gelecek oyundan gecikmiş mesaj sayılmaz.
     await expectWrongPhase(1);

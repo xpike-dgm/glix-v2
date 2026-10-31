@@ -286,6 +286,8 @@ export interface MatchReveal {
   endsAt: number;
   continueIds: string[];
 }
+/** Oyun sonu yorumunun en çok uzunluğu (karakter). */
+export const GAME_COMMENT_MAX = 90;
 
 export interface MatchSnapshot {
   /** 0 tabanlı oyun sırası ve toplam oyun sayısı. */
@@ -315,6 +317,11 @@ export interface MatchSnapshot {
   view: unknown;
   /** results ve final aşamasında dolu. `awards` kart etkileri dahil nihai genel skor puanlarıdır. */
   result: GameResult | null;
+  /**
+   * Oyun sonu yorumu: sunucunun oyundan bağımsız ek katmanının yazdığı tek satırlık esprili özet (en çok
+   * `GAME_COMMENT_MAX` karakter, süzgeçten geçmiş düz metin). Özellik kapalıysa, gelmediyse ya da reddedildiyse yok.
+   */
+  comment?: string | null;
   /** Herkese açık kart bilgisi (kartlar kapalıysa yok). */
   cards?: CardsPublic | null;
   /** Yalnız bu oyuncunun kart bilgisi (izleyici ve sahnede null). */

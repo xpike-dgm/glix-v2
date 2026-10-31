@@ -116,7 +116,8 @@ const registry: Record<string, GameEntry> = {
   "zehirli-kadeh": {
     Screen: lazy(() => import("./zehirli-kadeh/ZehirliKadehScreen.js")),
     Art: lazy(() => import("./zehirli-kadeh/BriefingArt.js")),
-    Reveal: lazy(() => import("./zehirli-kadeh/Reveal.js")),
+    // "Şerefe!" açılışı oyun ekranının kendi evresidir (tam ekran, TV dahil); sonuç ekranında ayrı açılış yok.
+    StageView: lazy(() => import("./zehirli-kadeh/StageView.js")),
   },
   ittifak: {
     Screen: lazy(() => import("./ittifak/IttifakScreen.js")),
@@ -135,6 +136,8 @@ const registry: Record<string, GameEntry> = {
     Art: lazy(() => import("./rusvet-darbe/BriefingArt.js")),
   },
   "kontrol-paneli-kaosu": {
+    // Ortak bomba saatini oyun kendisi çizer (cezalarla atlar); kabuk saati çizilmez.
+    noClock: true,
     Screen: lazy(() => import("./kontrol-paneli-kaosu/KontrolScreen.js")),
     Art: lazy(() => import("./kontrol-paneli-kaosu/BriefingArt.js")),
   },

@@ -18,6 +18,7 @@ import {
   type Rng,
 } from "@glix/engine";
 import { buildGameRecord, buildMatchRecord, type Entrant } from "./accountStats.js";
+import { commentPrompt, hasCommentPrompt } from "./aiCommentGames.js";
 import {
   archiveCardLog,
   cardPhaseDue,
@@ -85,6 +86,10 @@ export interface Match {
   reveal: RevealHold | null;
   /** Maç başındaki oyun listesi: manuel seçimde lobiye dönünce host'un listesi geri gelir (Veto / Oyunu Seç yalnız maçı etkiler). */
   originalGameIds: string[];
+  /** Geçerli oyunun sonu için yorum istendi mi (oyun başına en çok bir istek). */
+  commentAsked: boolean;
+  /** Geçerli oyunun sonu yorumu (aiComment.ts; doğrulanmış tek satır); yoksa null. */
+  comment: string | null;
 }
 
 /** Oyun içi sonuç ekranının sunucu tarafı: "Devam et" diyenler ve bitişi belirleyen anlar. */
@@ -175,6 +180,8 @@ function enterBriefing(rt: Runtime, room: Room, match: Match): void {
   match.result = null;
   match.recorder = null;
   match.gameStartedAt = null;
+  match.commentAsked = false;
+  match.comment = null;
   match.phaseStartedAt = now;
   match.phaseEndsAt = now + BRIEFING_TIMEOUT_MS;
   room.phase = "briefing";
@@ -234,6 +241,8 @@ export function beginMatch(rt: Runtime, room: Room): void {
     cardLogArchived: false,
     reveal: null,
     originalGameIds: [...room.gameIds],
+    commentAsked: false,
+    comment: null,
   };
   startCards(rt, room, match);
   room.match = match;
@@ -644,12 +653,41 @@ function stepPlaying(rt: Runtime, room: Room, match: Match): void {
   const changed = next !== match.state;
   match.state = next;
   const finished = guard("isFinished", () => game.isFinished(match.state, ctx));
+  if (finished) askComment(rt, room, match);
   if (stepReveal(rt, room, match, game, ctx, finished)) {
     finishGame(rt, room, match);
     rt.broadcaster.markDirty(room);
   } else if (changed) {
     notifyTurns(rt, room, match);
+    askComment(rt, room, match);
     rt.broadcaster.markDirty(room);
+  }
+}
+
+/**
+ * Oyun sonu yorumu (aiComment.ts): oyunun sonucu herkese açık görünümde açıldığı ilk anda tek istek başlatılır;
+ * oyun beklemez. Yanıt aynı oyunun içi sürerken (oyunun kendi sonuç açılışı) gelirse ortak görünüme eklenir.
+ * Kapalıysa ya da oyun yorum desteklemiyorsa hiçbir şey hesaplanmaz. Hata maçı asla etkilemez.
+ */
+function askComment(rt: Runtime, room: Room, match: Match): void {
+  if (match.commentAsked || !rt.aiComment.enabled) return;
+  const game = currentGame(match);
+  if (!hasCommentPrompt(game.id)) return;
+  try {
+    const view = game.publicView(match.state, ctxFor(rt, room, match));
+    const nickname = (id: string): string | null => room.players.get(id)?.nickname ?? null;
+    const prompt = commentPrompt(game.id, view, nickname);
+    if (!prompt) return;
+    match.commentAsked = true;
+    const index = match.index;
+    rt.aiComment.request(prompt, (text) => {
+      if (room.match !== match || match.index !== index) return;
+      if (room.phase !== "playing") return;
+      match.comment = text;
+      rt.broadcaster.markDirty(room);
+    });
+  } catch (err) {
+    log.warn("ai_comment_prompt_failed", { room: room.code, error: String(err) });
   }
 }
 
@@ -791,6 +829,8 @@ export function sharedMatchSnapshot(rt: Runtime, room: Room): Omit<MatchSnapshot
     publicView,
     result: room.phase === "results" || room.phase === "final" ? publicResult(match.result) : null,
     cards: cardsPublicOf(room, match),
+    // Yorum yalnız oyunun kendi sonuç açılışında gösterilir: sonuç ekranına gönderilmez.
+    ...(match.comment !== null && room.phase === "playing" ? { comment: match.comment } : {}),
   };
 }
 
