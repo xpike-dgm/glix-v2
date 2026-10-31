@@ -6,6 +6,7 @@ import type {
   YaziYazStage,
   YaziYazView,
 } from "@glix/engine";
+import { YAZI_YAZ_INNOCENT_WORD } from "@glix/engine";
 import { parseNumberRecord } from "../../net/parse.js";
 
 type Rec = Record<string, unknown>;
@@ -39,8 +40,21 @@ function parseReveal(v: unknown): YaziYazReveal | null {
     guesses[id] = parsed;
   }
   const scores = parseNumberRecord(v.scores);
-  if (!scores) return null;
-  return { writers: [...v.writers], words, guesses, scores };
+  const awards = parseNumberRecord(v.awards);
+  if (!scores || !awards || !isStrArr(v.hidden)) return null;
+  return { writers: [...v.writers], words, guesses, hidden: [...v.hidden], scores, awards };
+}
+
+function parseLetters(v: unknown): (number | null)[] | null | undefined {
+  if (v === null) return null;
+  if (!Array.isArray(v) || v.length > 2) return undefined;
+  const out: (number | null)[] = [];
+  for (const x of v) {
+    if (x === null) out.push(null);
+    else if (isNum(x) && x >= 0 && Number.isInteger(x)) out.push(x);
+    else return undefined;
+  }
+  return out;
 }
 
 export function parseYaziYazPublicView(v: unknown): YaziYazPublicView | null {
@@ -48,17 +62,23 @@ export function parseYaziYazPublicView(v: unknown): YaziYazPublicView | null {
   if (!isStr(v.stage) || !STAGES.includes(v.stage as YaziYazStage)) return null;
   if (!isNum(v.startedAt) || !isNum(v.writeEndsAt) || !isNum(v.talkEndsAt)) return null;
   if (!isNum(v.guessEndsAt) || !isNum(v.finishAt) || !isStrArr(v.ready)) return null;
+  if (!isNum(v.readyCount) || (v.topic !== null && !isStr(v.topic))) return null;
+  const letters = parseLetters(v.letters);
+  if (letters === undefined) return null;
   const reveal = v.reveal === null || v.reveal === undefined ? null : parseReveal(v.reveal);
   if (v.reveal !== null && v.reveal !== undefined && reveal === null) return null;
   return {
     players: [...v.players],
     stage: v.stage as YaziYazStage,
+    topic: v.topic,
+    letters,
     startedAt: v.startedAt,
     writeEndsAt: v.writeEndsAt,
     talkEndsAt: v.talkEndsAt,
     guessEndsAt: v.guessEndsAt,
     finishAt: v.finishAt,
     ready: [...v.ready],
+    readyCount: v.readyCount,
     reveal,
   };
 }
@@ -80,7 +100,11 @@ export function parseYaziYazPrivateView(v: unknown): YaziYazView | null {
 
 export function parseYaziYazView(publicView: unknown, view: unknown): YaziYazScreenView | null {
   const pub = parseYaziYazPublicView(publicView);
-  const priv = parseYaziYazPrivateView(view);
+  // Sahne (TV) ve kişisel görünümü olmayan izleyici: rol ve metin yok.
+  const priv =
+    view === null
+      ? { role: null, myText: null, locked: false, myGuess: { target: null, word: "" } }
+      : parseYaziYazPrivateView(view);
   return pub && priv ? { ...pub, ...priv } : null;
 }
 
@@ -94,12 +118,59 @@ export interface MyOutcome {
   /** Kişi tahmini doğru mu; tahmin vermediyse null. */
   personOk: boolean | null;
   wordOk: boolean | null;
+  /** Dedektif puanı. */
   points: number;
+  /** Genel skora giden sıralama ödülü (+2 / +1 / 0). */
+  award: number;
+  /** "İz bırakmadın" aldı mı. */
+  hidden: boolean;
 }
 
 export function outcomeOf(reveal: YaziYazReveal, id: string): MyOutcome {
   const g = reveal.guesses[id];
   const points = reveal.scores[id] ?? 0;
-  if (!g || g.target === null) return { personOk: null, wordOk: null, points };
-  return { personOk: g.personOk, wordOk: g.word === "" ? null : g.wordOk, points };
+  const award = reveal.awards[id] ?? 0;
+  const hidden = reveal.hidden.includes(id);
+  if (!g || g.target === null) return { personOk: null, wordOk: null, points, award, hidden };
+  return { personOk: g.personOk, wordOk: g.word === "" ? null : g.wordOk, points, award, hidden };
 }
+
+/** Harf ipucu metni (YY-M2): "5 harf · 7 harf", yazılmamış kelime "yazılmadı". Yoksa boş. */
+export function lettersText(letters: readonly (number | null)[] | null): string {
+  if (!letters || letters.length === 0) return "";
+  return letters.map((n) => (n === null ? "yazılmadı" : `${n} harf`)).join(" · ");
+}
+
+/** Bir yazanı seçenler (katılım sırasıyla). */
+export function findersOf(reveal: YaziYazReveal, order: readonly string[], writer: string): string[] {
+  return order.filter((id) => reveal.guesses[id]?.target === writer);
+}
+
+/** Tahmin ızgarası satırları: 5 kişi 3 + 2, 7 kişi 4 + 3, boş hücre kalmaz (üst satır büyük). */
+export function gridRows(count: number): number[] {
+  if (count <= 0) return [];
+  if (count <= 3) return [count];
+  if (count === 4) return [2, 2];
+  const rows = count <= 8 ? 2 : Math.ceil(count / 4);
+  const base = Math.floor(count / rows);
+  const extra = count % rows;
+  return Array.from({ length: rows }, (_, i) => base + (i < extra ? 1 : 0));
+}
+
+/** Tahmin alanının altındaki harf kutucukları: yazılan harfler yerinde, kalanlar boş ("K İ R _ _"). */
+export function letterSlots(text: string, target: number | null): string[] {
+  const chars = Array.from(text.normalize("NFC")).filter((ch) => /[\p{L}\p{N}]/u.test(ch));
+  const n = Math.max(target ?? 0, chars.length);
+  return Array.from({ length: Math.min(24, n) }, (_, i) => chars[i] ?? "");
+}
+
+const fold = (t: string): string =>
+  t
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[ıI]/g, "i")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]/gu, "");
+
+/** Yazılan metin MASUM mu (klavyeden bağımsız): yazan bunu kilitleyemez. */
+export const isInnocentText = (text: string): boolean => fold(text) === fold(YAZI_YAZ_INNOCENT_WORD);

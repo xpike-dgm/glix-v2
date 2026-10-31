@@ -32,9 +32,24 @@ export type PropPath =
       | "bomba-govde"
       | "not-kagidi"}`
   | `rus-ruleti/${"tabanca" | "tambur"}`
+  | `yazi-yaz/${YaziYazProp}`
   | `zehirli-kadeh/${"efekt-temiz" | "efekt-zehir" | "masa" | "mum" | `kadeh-${string}`}`;
 
 export const propSrc = (p: PropPath): string => `/assets/props/${p}.webp`;
+
+/** Yazı Yaz görselleri (sahip üretecek; docs/oneriler/yazi-yaz-gorsel.md). Yoksa ekran CSS çizimini kullanır. */
+export type YaziYazProp = "kart-arka" | "kart-yazan" | "kart-masum" | "konu-kagit";
+export const YAZI_YAZ_PROPS: readonly YaziYazProp[] = ["kart-arka", "kart-yazan", "kart-masum", "konu-kagit"];
+
+/** Bu Yazı Yaz görseli derlemede var mıydı? Liste yoksa (testler) yok sayılır: olmayan dosya istenmez (404 yok). */
+export function yaziYazPropExists(name: YaziYazProp): boolean {
+  const built = typeof __YAZI_YAZ_PROPS__ === "undefined" ? undefined : __YAZI_YAZ_PROPS__;
+  return built ? built.includes(name) : false;
+}
+
+/** Var olan Yazı Yaz görselinin adresi; yoksa null. */
+export const yaziYazProp = (name: YaziYazProp): string | null =>
+  yaziYazPropExists(name) ? propSrc(`yazi-yaz/${name}`) : null;
 
 /**
  * Gizli Alışveriş ürün kimliği (motor havuzu sırası, 0..19) -> dosya adı. Son 8 ürünün görseli henüz yoksa ekran
@@ -108,6 +123,7 @@ const GAME_PROPS: Record<string, readonly PropPath[]> = {
   "son-kisi": ["genel/kacis-kolu"],
   ittifak: ["genel/el-sikisma"],
   "capraz-ates": ["genel/nisangah"],
+  "yazi-yaz": YAZI_YAZ_PROPS.filter(yaziYazPropExists).map((n): PropPath => `yazi-yaz/${n}`),
   "acgozluluk-limiti": ["genel/rusvet-jetonu"],
   "zehirli-kadeh": [
     "zehirli-kadeh/efekt-temiz",

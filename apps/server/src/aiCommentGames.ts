@@ -113,7 +113,73 @@ export const caprazPrompt: PromptBuilder = (publicView, nickname) => {
   };
 };
 
+/** Kelimeyi modele güvenle verir: tek satır, kısa, işaretlemesiz (oyuncunun yazdığı metindir; talimat değil). */
+const promptWord = (raw: unknown): string =>
+  typeof raw === "string"
+    ? Array.from(
+        raw
+          .replace(/[\p{Cc}<>`*#_[\]{}|\\"]/gu, " ")
+          .replace(/\s+/g, " ")
+          .trim(),
+      )
+        .slice(0, 24)
+        .join("")
+    : "";
+
+/** Yazı Yaz: konu, iki yazanın kelimesi, kimin kimi seçtiği, iz bırakmayanlar ve dedektif puanları. */
+export const yaziPrompt: PromptBuilder = (publicView, nickname) => {
+  if (!isRec(publicView) || !isRec(publicView.reveal)) return null;
+  const rev = publicView.reveal;
+  const players = publicView.players;
+  if (!Array.isArray(players) || players.length === 0 || !Array.isArray(rev.writers)) return null;
+  if (!isRec(rev.words) || !isRec(rev.guesses) || !isRec(rev.scores)) return null;
+  const alias = new Map<string, string>();
+  for (const [i, id] of players.entries()) {
+    if (typeof id !== "string") return null;
+    alias.set(id, `Oyuncu${i + 1}`);
+  }
+  const names: Record<string, string> = {};
+  for (const [id, name] of alias) names[name] = promptName(nickname(id) ?? name);
+  const hidden = Array.isArray(rev.hidden) ? rev.hidden : [];
+  const writers = rev.writers.filter((w): w is string => typeof w === "string" && alias.has(w));
+  const lines: string[] = [];
+  for (const w of writers) {
+    const word = promptWord(rev.words[w]);
+    const finders = players.filter((id) => {
+      const g = isRec(rev.guesses) ? rev.guesses[id] : undefined;
+      return isRec(g) && g.target === w;
+    });
+    lines.push(
+      `- Yazan ${alias.get(w)}: kelimesi ${word === "" ? "yok (yazmadı)" : `"${word}"`}; ` +
+        `${finders.length} kişi onu seçti${hidden.includes(w) ? "; hiçbir masum bulamadı (iz bırakmadı)" : ""}`,
+    );
+  }
+  for (const id of players) {
+    if (typeof id !== "string" || writers.includes(id)) continue;
+    const g = rev.guesses[id];
+    const target = isRec(g) && typeof g.target === "string" ? alias.get(g.target) : undefined;
+    const what = target
+      ? `${target} kişisini seçti (${g && isRec(g) && g.personOk === true ? "doğru" : "yanlış"})` +
+        (isRec(g) && g.wordOk === true ? ", kelimeyi de bildi" : "")
+      : "tahmin vermedi";
+    const pts = typeof rev.scores[id] === "number" ? rev.scores[id] : 0;
+    lines.push(`- Masum ${alias.get(id)}: ${what}; dedektif puanı ${pts}`);
+  }
+  const topic = typeof publicView.topic === "string" ? promptWord(publicView.topic) : "";
+  return {
+    system: system(
+      "gizli rol oyununda spikersin; iki gizli yazan gizlice bir kelime yazdı, diğerleri MASUM yazıp yazanları " +
+        "ve kelimelerini bulmaya çalıştı",
+    ),
+    user:
+      `Oyun: Yazı Yaz (gizli yazanları bul). Konu: ${topic === "" ? "serbest" : topic}. Sonuçlar:\n` +
+      lines.join("\n"),
+    names,
+  };
+};
+
 const BUILDERS: Record<string, PromptBuilder> = {
+  "yazi-yaz": yaziPrompt,
   "kontrol-paneli-kaosu": kontrolPrompt,
   "capraz-ates": caprazPrompt,
 };

@@ -6,3 +6,5 @@ declare const __BOZUK_PHONE_ART__: boolean | undefined;
 declare const __ZB_BOMBA_GORSEL__: boolean | undefined;
 /** Kule Ustası görsellerinden derlemede var olanlar (`public/assets/props/kule-ustasi/<ad>.webp`, uzantısız). */
 declare const __KULE_PROPS__: readonly string[] | undefined;
+/** Yazı Yaz görsellerinden derlemede var olanlar (`public/assets/props/yazi-yaz/<ad>.webp`, uzantısız). */
+declare const __YAZI_YAZ_PROPS__: readonly string[] | undefined;

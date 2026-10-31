@@ -362,6 +362,7 @@ export function runSimulation(game: AnyGame, opts: RunOptions): RunOutput {
       else online.delete(p.playerId);
       connected = f(players.filter((id) => online.has(id)));
       recorder.presence(gc(now), p.playerId, p.connected);
+      if (game.onPresence) state = f(game.onPresence(game.tick(state, ctxAt(now)), ctxAt(now)));
       opts.onStep?.({
         label: "presence",
         now: gc(now),

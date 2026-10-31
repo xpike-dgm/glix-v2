@@ -1,14 +1,15 @@
 import { createMemo, Show } from "solid-js";
 import { createVisibleArea } from "../../ui/keyboardArea.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import type { GameScreenProps } from "../registry.js";
 import { Sonuc } from "./Sonuc.js";
 import { Tahmin } from "./Tahmin.js";
 import { Tartisma } from "./Tartisma.js";
+import { TvBoard } from "./TvBoard.js";
 import { parseYaziYazView } from "./view.js";
 import { Yazma } from "./Yazma.js";
 import "./yazi-yaz.css";
-import { RevealContinue } from "../../ui/RevealContinue.js";
 
 export interface Crew {
   id: string;
@@ -17,7 +18,8 @@ export interface Crew {
   connected: boolean;
 }
 
-export default function YaziYazScreen(props: GameScreenProps) {
+/** `tv`: büyük ekran (StageView) yerleşimi; solda konu ve saat, sağda oyuncu halkası; açılış tüm ekranda. */
+export default function YaziYazScreen(props: GameScreenProps & { tv?: boolean }) {
   const view = createMemo(() => parseYaziYazView(props.match.publicView, props.match.view));
   const crew = createMemo<Crew[]>(() =>
     props.match.participants.flatMap((id) => {
@@ -27,6 +29,7 @@ export default function YaziYazScreen(props: GameScreenProps) {
   );
   const area = createVisibleArea();
   const spectator = () => props.spectator === true;
+  const tv = () => props.tv === true;
 
   const bar = () => {
     const v = view();
@@ -42,7 +45,12 @@ export default function YaziYazScreen(props: GameScreenProps) {
   };
 
   return (
-    <section class="screen game yy" data-tight={area().height < 440 ? "1" : undefined} style={areaStyle()}>
+    <section
+      class="screen game yy"
+      data-tight={!tv() && area().keyboard && area().height < 440 ? "1" : undefined}
+      data-tv={tv() ? "1" : undefined}
+      style={tv() ? undefined : areaStyle()}
+    >
       <div class="col">
         <Show when={view()}>
           <PhaseClock startedAt={bar().from} endsAt={bar().to} urgency={bar().urgency} />
@@ -53,39 +61,54 @@ export default function YaziYazScreen(props: GameScreenProps) {
             <Show
               when={v().reveal}
               fallback={
-                <Show
-                  when={v().stage === "write"}
-                  fallback={
-                    <Show
-                      when={v().stage === "talk"}
-                      fallback={
-                        <Tahmin view={v()} crew={crew()} selfId={props.selfId} spectator={spectator()} />
-                      }
-                    >
-                      <Tartisma
-                        view={v()}
-                        crew={crew()}
-                        selfId={props.selfId}
-                        now={props.now}
-                        spectator={spectator()}
-                      />
-                    </Show>
-                  }
-                >
-                  <Yazma view={v()} crew={crew()} spectator={spectator()} />
+                <Show when={!tv()} fallback={<TvBoard view={v()} crew={crew()} now={props.now} />}>
+                  <Show
+                    when={v().stage === "write"}
+                    fallback={
+                      <Show
+                        when={v().stage === "talk"}
+                        fallback={
+                          <Tahmin view={v()} crew={crew()} selfId={props.selfId} spectator={spectator()} />
+                        }
+                      >
+                        <Tartisma
+                          view={v()}
+                          crew={crew()}
+                          selfId={props.selfId}
+                          now={props.now}
+                          spectator={spectator()}
+                        />
+                      </Show>
+                    }
+                  >
+                    <Yazma view={v()} crew={crew()} now={props.now} spectator={spectator()} />
+                  </Show>
                 </Show>
               }
             >
-              {(r) => <Sonuc reveal={r()} crew={crew()} selfId={props.selfId} spectator={spectator()} />}
+              {(r) => (
+                <Sonuc
+                  reveal={r()}
+                  startAt={v().guessEndsAt}
+                  topic={v().topic}
+                  crew={crew()}
+                  selfId={props.selfId}
+                  now={props.now}
+                  spectator={spectator()}
+                  comment={props.match.comment ?? null}
+                />
+              )}
             </Show>
           )}
         </Show>
-        <RevealContinue
-          match={props.match}
-          selfId={props.selfId}
-          now={props.now}
-          spectator={props.spectator}
-        />
+        <Show when={!tv()}>
+          <RevealContinue
+            match={props.match}
+            selfId={props.selfId}
+            now={props.now}
+            spectator={props.spectator}
+          />
+        </Show>
       </div>
     </section>
   );
