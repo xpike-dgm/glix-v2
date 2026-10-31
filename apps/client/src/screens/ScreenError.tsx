@@ -1,6 +1,8 @@
 import { type Accessor, createEffect, on, onMount } from "solid-js";
 import { leaveRoom } from "../net/client.js";
 import { goHome, state } from "../net/store.js";
+import { forceUpdate } from "../pwa/pwa.js";
+import { isStaleChunkError, recoverFromStaleChunk } from "../pwa/staleChunk.js";
 import { reportClientError } from "../telemetry/errors.js";
 import { GhostButton } from "../ui/GhostButton.js";
 import { Mascot } from "../ui/Mascot.js";
@@ -14,13 +16,18 @@ import type { ScreenId } from "./route.js";
  * sınır kendiliğinden yeniden kurulur. Hata sessizce bildirilir; oyuncuya teknik metin gösterilmez.
  */
 export function ScreenError(props: { error: unknown; reset: () => void; screen: Accessor<ScreenId> }) {
-  onMount(() => reportClientError(props.error));
+  // Eski sürümün silinmiş parçası: hata ekranı yerine yeni sürüme yenilenir ve maça geri bağlanılır.
+  const stale = isStaleChunkError(props.error) && recoverFromStaleChunk(() => void forceUpdate());
+  onMount(() => {
+    if (!stale) reportClientError(props.error);
+  });
   createEffect(on(props.screen, () => props.reset(), { defer: true }));
   const home = (): void => {
     if (state.snapshot) leaveRoom();
     else goHome();
     props.reset();
   };
+  if (stale) return <Screen>{null}</Screen>;
   return (
     <Screen>
       <div class="center-stack">

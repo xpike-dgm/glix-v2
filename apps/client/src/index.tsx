@@ -4,7 +4,8 @@ import { applyHapticsCompensation } from "./fx/haptics.js";
 import { installNoZoom } from "./fx/noZoom.js";
 import { installAudioUnlock } from "./fx/sound.js";
 import { initPush } from "./pwa/push.js";
-import { initPwa } from "./pwa/pwa.js";
+import { forceUpdate, initPwa } from "./pwa/pwa.js";
+import { recoverFromStaleChunk } from "./pwa/staleChunk.js";
 import { applyRootSettings } from "./settings/settings.js";
 import { isTvRoute, TvApp } from "./stage/TvApp.js";
 import "./fonts.js";
@@ -36,6 +37,10 @@ applyHapticsCompensation();
 // iOS Safari `:active` basılı görünümünü yalnız sayfada bir dokunma dinleyicisi varsa gösterir.
 document.addEventListener("touchstart", () => undefined, { passive: true });
 initPwa();
+// Yeni sürüm canlıya alındıktan sonra eski sürümün parçası yüklenemezse: yeni sürüme yenile (pwa/staleChunk.ts).
+window.addEventListener("vite:preloadError", (e) => {
+  if (recoverFromStaleChunk(() => void forceUpdate())) e.preventDefault();
+});
 initPush();
 
 const root = document.getElementById("root");
