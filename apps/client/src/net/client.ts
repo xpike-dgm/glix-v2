@@ -607,6 +607,8 @@ export const unplayCard = (): boolean => rawSend({ type: "unplayCard" });
 export const startMatch = (): boolean => rawSend({ type: "startMatch" });
 export const sendReady = (): boolean => rawSend({ type: "ready" });
 export const sendContinue = (): boolean => rawSend({ type: "continue" });
+/** Oyun içi sonuç ekranında "Devam et" (`round`: o anki oyunun sırası). */
+export const sendRevealContinue = (round: number): boolean => rawSend({ type: "revealContinue", round });
 export const returnToLobby = (): boolean => rawSend({ type: "returnToLobby" });
 export const sendFeedback = (rating: number, text: string): boolean => {
   const clean = text.trim();

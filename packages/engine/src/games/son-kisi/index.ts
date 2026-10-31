@@ -145,6 +145,11 @@ export const sonKisi: GameDefinition<SonKisiState, SonKisiAction, SonKisiView, S
     return { escaped: playerId !== null && state.escapes.some((e) => e.id === playerId) };
   },
 
+  /** Sonuç ekranı gizli bitiş anında başlar (o ana kadar sunucu bu anı okumaz, görünüme girmez). */
+  revealAt(state): number | null {
+    return state.endsAt;
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= state.endsAt;
   },

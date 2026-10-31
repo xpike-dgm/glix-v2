@@ -232,6 +232,12 @@ export const karaBorsa: GameDefinition<BorsaState, BorsaAction, BorsaView, Borsa
     };
   },
 
+  /** Sonuç açılışı son turun açılışıyla başlar. */
+  revealAt(s, ctx): number | null {
+    const a = advance(s, ctx.now);
+    return a.round === BORSA_ROUNDS - 1 && a.stage !== "bid" ? a.stageStartedAt : null;
+  },
+
   isFinished(s, ctx): boolean {
     return advance(s, ctx.now).stage === "done";
   },

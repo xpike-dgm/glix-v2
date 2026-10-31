@@ -47,9 +47,19 @@ tasarladığı alanlar birlikte kilitlenir; kodlama bu kural seti üzerinden yap
   Kopya/yasak denetimi gibi kelimeleri **birleştirmemesi gereken** yerlerde (yönetici içerik havuzlarının tekrar denetimi) katı
   anahtar kullanılır: "göl" ile "gol" ayrı kelimedir.
 - Sonuç ekranı (KİLİTLİ, Ekim 2026, sahip onayı): her mini oyundan sonra gösterilir. **Bağlı bütün katılımcılar "Devam"a
-  basınca** hemen (1 saniye sonra) kapanır; basmayan olursa **30 saniye** sonra kendiliğinden kapanır (eskisi 7 saniyeydi).
+  basınca** hemen (1 saniye sonra) kapanır; basmayan olursa **60 saniye** sonra kendiliğinden kapanır (eskisi 30, ondan önce
+  7 saniyeydi; Ekim 2026 sahip kararı).
   Bağlantısı kopan oyuncu beklenmez. Podyumda sıra numarası yazmaz; sıra altın/gümüş/bronz bloklar ve madalya ile gösterilir.
   Sonuç ve final ekranlarında taç yalnız kazanana verilir (ev sahibi tacı bu ekranlarda gösterilmez).
+- Oyun içi sonuç ekranı (KİLİTLİ, Ekim 2026, sahip kararı: "sonuç ekranı tüm oyuncuların devam et tarzı bir butona
+  bastıktan sonra geçilsin; süre fazlaca artsın, örnek 60 sn; neyin ne olduğu tam görülsün"): her mini oyunun kendi son
+  açılışı (sonuçların, kartların, kepengin, panellerin… açıldığı ekran; açılışı olmayan oyunda oyunun bittiği andaki son
+  ekran) **"Devam et"** düğmesiyle geçilir. Açılış animasyonu her zaman sonuna kadar oynar (eskiden oyunun bittiği süre
+  artık "en az gösterim" süresidir); düğmeye animasyon bitmeden basılabilir ve sayılır ama animasyonu kesmez. Bağlı bütün
+  katılımcılar basınca oyun (animasyon bittiyse) 1 saniye sonra biter; basmayan olursa açılış başından **en geç 60 saniye**
+  sonra biter. Bağlantısı kopan oyuncu ve izleyiciler beklenmez; kimin bastığı avatarlarla gösterilir. Düğme açılışın ilk
+  1,5 saniyesinde pasiftir (yanlışlıkla geçilmesin). Puanlar, kurallar ve gizlilik değişmez; yalnız bitiş zamanı değişir.
+  Ardından genel sonuç ekranı (puan tablosu) gelir. Ayrıntı: `docs/ERKEN-BITIS.md` "Oyun içi sonuç ekranı".
 - Kartlar (KİLİTLİ, Ekim 2026): her 3. mini oyundan sonra kart seçimi, anlatımda kart oynama ve oyun sonu puan etkileri için bkz. "0. Maç düzeyi kuralları: Kartlar".
 - Bot bulunmaz.
 - Maç verileri maç bitince kalıcı olarak saklanmaz.

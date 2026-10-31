@@ -1,5 +1,6 @@
 import { GAMES } from "@glix/engine";
 import { describe, expect, it, vi } from "vitest";
+import { RESULTS_MS } from "./match.js";
 import { type Client, join, k, setupRoom, sleep, startPlaying, sync, until, useServer } from "./testkit.js";
 
 useServer();
@@ -103,9 +104,9 @@ describe("maç sürerken katılım: izleyici", () => {
     await startPlaying(cs);
     const c = await join(a.session.roomCode, "Can");
     await until(() => self(c)?.spectator === true, "izleyici");
-    k.clock.advance(46_000);
+    k.clock.advance(48_000);
     await until(() => a.room.phase === "results", "results");
-    k.clock.advance(31_000);
+    k.clock.advance(RESULTS_MS + 1_000);
     await until(() => a.room.phase === "final", "final");
     // Final'de hâlâ izleyici; sıralamaya girmez (bayrak sunucudan gelir).
     expect(c.room.players.find((p) => p.id === c.session.playerId)?.spectator).toBe(true);
@@ -128,7 +129,8 @@ describe("maç sürerken katılım: izleyici", () => {
     k.clock.advance(startedAt + 5_000 - k.clock.now());
     expect((await ack(a, { kind: "press" }, 1)).ok).toBe(true);
     expect((await ack(b, { kind: "press" }, 2)).ok).toBe(true);
-    k.clock.advance(1_500);
+    // Basış 1 sn sonra kapanır; açılış animasyonu (6 sn) kesilmez, herkes "Devam et" dedi: 1 sn sonra biter.
+    k.clock.advance(1_500 + 6_000);
     await until(() => a.room.match?.publicView !== null && a.room.phase !== "playing", "erken bitiş");
     expect(a.room.phase).toBe("results");
     // Süre 18 sn; izleyici beklenseydi oyun ancak o zaman biterdi.

@@ -161,6 +161,11 @@ export const cagrisimAgi: GameDefinition<
     return { myAnswer: mine ?? null };
   },
 
+  /** Sonuç açılışı cevap süresinin bittiği an başlar. */
+  revealAt(state): number | null {
+    return state.answerEndsAt;
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= state.endsAt;
   },

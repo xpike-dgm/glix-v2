@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 90,
-    "not": "İpucu aşaması zamanlayıcısızdır (teknik üst sınır 5 dk); süre oyuncuların 'Oylamaya geç' demesine bağlıdır. Sabit kısım: oylama 30 sn + 'fark ettin mi?' 8 sn + sonuç 8 sn = 46 sn. Gerçekte ipucu turları yaklaşık 30-90 sn sürdüğünde toplam 1,5-2,5 dk olur. Herkes erken ilerlerse oylama ve 'fark ettin mi' aşamaları 1 sn sonra biter."
+    "not": "İpucu aşaması zamanlayıcısızdır (teknik üst sınır 5 dk); süre oyuncuların 'Oylamaya geç' demesine bağlıdır. Sabit kısım: oylama 30 sn + 'fark ettin mi?' 8 sn + sonuç 8 sn = 46 sn. Gerçekte ipucu turları yaklaşık 30-90 sn sürdüğünde toplam 1,5-2,5 dk olur. Herkes erken ilerlerse oylama ve 'fark ettin mi' aşamaları 1 sn sonra biter. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Sistem gündelik kelime çiftlerinden birini seçer: çoğunluk bir kelimeyi, tam bir 'sızma' oyuncusu ise ona yakın ama farklı bir kelimeyi görür. Kimse sızma olduğunu bilmez. Herkes sırayla ve yüksek sesle iki turda ipucu verir (uygulamada yazılı ipucu yoktur), sonra gizli oylamayla sızma aranır. Sızma yakalanırsa diğerleri +1, kurtulursa sızma +2 alır; sızma ayrıca 'Sızma sen miydin?' sorusuna 'Evet' derse +1 daha kazanır.",
   "akis": [
@@ -46,7 +46,7 @@
       "ad": "Sonuç açılışı",
       "sureSn": 8,
       "kim": "herkes",
-      "aciklama": "Oylar azdan çoğa doğru sırayla sayılır (aynı oy sayısındakiler birlikte açılır), sonda sızmanın maskesi düşer ve kimliği, iki kelime ('Ortak' / 'Sızma') gösterilir. Üstte 'Yakalandı!' ya da 'Kurtuldu!' ve kişiye özel hüküm yazısı: sızma için 'Yakalandın' / 'Kimse seni yakalayamadı'; diğerleri için 'Sızmayı yakaladınız' / 'Sızma aranızdan kaçtı'; izleyici için 'Sızma yakalandı' / 'Sızma kurtuldu'. Sızmanın fark etme cevabı 'Sızma kendini fark etti! +1' ya da 'Sızma kendini fark etmedi' olarak açılır. Alt satır 'N genel skora eklendi'.",
+      "aciklama": "Oylar azdan çoğa doğru sırayla sayılır (aynı oy sayısındakiler birlikte açılır), sonda sızmanın maskesi düşer ve kimliği, iki kelime ('Ortak' / 'Sızma') gösterilir. Üstte 'Yakalandı!' ya da 'Kurtuldu!' ve kişiye özel hüküm yazısı: sızma için 'Yakalandın' / 'Kimse seni yakalayamadı'; diğerleri için 'Sızmayı yakaladınız' / 'Sızma aranızdan kaçtı'; izleyici için 'Sızma yakalandı' / 'Sızma kurtuldu'. Sızmanın fark etme cevabı 'Sızma kendini fark etti! +1' ya da 'Sızma kendini fark etmedi' olarak açılır. Alt satır 'N genel skora eklendi'. Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Bu aşamada rol, kelimeler ve oy sayıları açıktır; kimin kime oy verdiği ham olarak da herkese açık görünümdedir (votes alanı). Fark etme cevaplarından yalnız sızmanınki açılır."
     }
   ],
@@ -219,7 +219,7 @@
     },
     {
       "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
-      "deger": "40 sn / 3 sn / 30 sn",
+      "deger": "40 sn / 3 sn / 60 sn",
       "kaynak": "apps/server/src/match.ts:40-42"
     }
   ],

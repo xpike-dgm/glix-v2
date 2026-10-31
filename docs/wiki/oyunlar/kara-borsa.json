@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 125,
-    "not": "5 tur × (20 sn teklif + 5 sn açılış) = 125 sn. Bağlı herkes teklif verirse (jetonu bitenler dahil) o turun teklif aşaması son tekliften 1 sn sonra biter, bu yüzden oyun daha kısa sürebilir. Oyuncu sayısı süreyi değiştirmez."
+    "not": "5 tur × (20 sn teklif + 5 sn açılış) = 125 sn. Bağlı herkes teklif verirse (jetonu bitenler dahil) o turun teklif aşaması son tekliften 1 sn sonra biter, bu yüzden oyun daha kısa sürebilir. Oyuncu sayısı süreyi değiştirmez. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Herkes 100 jetonla başlar. Her tur gizemli bir kutu gelir; değeri 0-60 arasındadır ya da %15 olasılıkla lanetlidir (-20). Her oyuncu yalnız kendine özel, her zaman doğru bir ipucu alır; sözlü blöf serbesttir. Herkes gizli ve tek seferlik bir teklif verir: en yüksek teklif kutuyu alır ve teklifini öder. Sonunda puanın = kalan jeton + aldığın kutuların değeri toplamıdır; ilk üçe genel skor verilir.",
   "akis": [
@@ -32,14 +32,14 @@
       "ad": "Açılış (her tur)",
       "sureSn": 5,
       "kim": "herkes",
-      "aciklama": "Kutu açılır: 'Kutu açıldı' başlığı, 'Kutunun değeri' (lanetliyse 'Lanetli kutu') büyük sayıyla ve lanetli kutu görseliyle gösterilir. '<ad> aldı · N jeton' ya da 'Kimse almadı, kutu kapandı'. Tüm teklifler yüksekten düşüğe sıralanır (verilmeyen ya da 0 olan 'geçti' yazar), kazananda yıldız. Altta herkesin servet (jeton + kutu değeri) toplamı.",
+      "aciklama": "Kutu açılır: 'Kutu açıldı' başlığı, 'Kutunun değeri' (lanetliyse 'Lanetli kutu') büyük sayıyla ve lanetli kutu görseliyle gösterilir. '<ad> aldı · N jeton' ya da 'Kimse almadı, kutu kapandı'. Tüm teklifler yüksekten düşüğe sıralanır (verilmeyen ya da 0 olan 'geçti' yazar), kazananda yıldız. Altta herkesin servet (jeton + kutu değeri) toplamı. Son turun açılışında: Açılış en az 5 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Yok; bu aşamada teklifler ve değer herkese açıktır."
     },
     {
       "ad": "Sonuç ekranı",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "5 tur bitince mini oyun sonuç/podyum ekranı (herkes 'Devam'a basınca 1 sn sonra, aksi halde 30 sn sonra kapanır).",
+      "aciklama": "5 tur bitince mini oyun sonuç/podyum ekranı (herkes 'Devam'a basınca 1 sn sonra, aksi halde 60 sn sonra kapanır).",
       "gizli": "Yok."
     }
   ],

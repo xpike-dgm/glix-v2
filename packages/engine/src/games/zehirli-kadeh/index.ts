@@ -174,6 +174,11 @@ export const zehirliKadeh: GameDefinition<
     return { role: "player", check: checkOf(state, playerId) };
   },
 
+  /** Sonuç açılışı (kadehler) süre bittiği an başlar. */
+  revealAt(state): number | null {
+    return state.endsAt;
+  },
+
   /** Süre bitince değil, ardından gelen "Şerefe!" açılış evresinin sonunda biter. */
   isFinished(state, ctx): boolean {
     return ctx.now >= revealEndsAt(state);

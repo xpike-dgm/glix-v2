@@ -420,8 +420,12 @@
   .lim .col {
     display: grid;
     grid-template-columns: 128px minmax(0, 1fr);
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto auto 1fr auto;
     column-gap: 16px;
+  }
+  .lim__devam {
+    grid-column: 2;
+    grid-row: 4;
   }
   .lim .game__top {
     grid-column: 1 / -1;
@@ -559,5 +563,12 @@
   }
 }
 :root[data-motion="reduce"] .lim-open {
+  display: none;
+}
+.lim__devam {
+  flex: none;
+  width: 100%;
+}
+.lim__devam:empty {
   display: none;
 }

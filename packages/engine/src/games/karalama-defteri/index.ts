@@ -277,6 +277,11 @@ export const karalamaDefteri: GameDefinition<
     };
   },
 
+  /** Sonuç ekranı oylama süresinin bittiği an başlar. */
+  revealAt(state): number | null {
+    return state.voteEndsAt;
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= state.voteEndsAt;
   },

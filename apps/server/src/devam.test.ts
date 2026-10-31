@@ -1,5 +1,6 @@
 import { CONTINUE_GRACE_MS, CONTINUE_MIN_GAP_MS } from "@glix/engine";
 import { describe, expect, it } from "vitest";
+import { RESULTS_MS } from "./match.js";
 import { type Client, join, k, setupRoom, startPlaying, sync, until, useServer } from "./testkit.js";
 
 useServer();
@@ -10,7 +11,7 @@ async function toResults(cs: Client[], games: string[] = ["butona-bas", "kor-bom
   host.send({ type: "setGames", gameIds: games });
   await until(() => host.room.gameIds.length === games.length, "oyun seçimi");
   await startPlaying(cs);
-  k.clock.advance(45_000);
+  k.clock.advance(48_000);
   await until(() => host.room.phase === "results", "results");
 }
 
@@ -108,7 +109,7 @@ describe("sonuç ekranında Devam (erken bitiş)", () => {
     await startPlaying(cs);
     const w = await join(a.session.roomCode, "Can");
     await until(() => a.room.players.length === 3);
-    k.clock.advance(45_000);
+    k.clock.advance(48_000);
     await until(() => a.room.phase === "results");
     const endsBefore = a.room.match?.phaseEndsAt ?? 0;
 
@@ -146,9 +147,9 @@ describe("sonuç ekranında Devam (erken bitiş)", () => {
     await until(() => b.of("error").length === 3);
     expect(b.lastError?.code).toBe("wrong_phase");
 
-    k.clock.advance(45_000);
+    k.clock.advance(48_000);
     await until(() => a.room.phase === "results");
-    k.clock.advance(30_000);
+    k.clock.advance(RESULTS_MS);
     await until(() => a.room.phase === "final");
     await wait();
     b.send({ type: "continue" });

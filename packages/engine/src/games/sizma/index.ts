@@ -275,6 +275,11 @@ export const sizma: GameDefinition<SizmaState, SizmaAction, SizmaView, SizmaPubl
     };
   },
 
+  /** Sonuç açılışı "fark ettin mi?" aşamasının bittiği an başlar. */
+  revealAt(state): number | null {
+    return state.noticeEndsAt;
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= state.finishAt;
   },

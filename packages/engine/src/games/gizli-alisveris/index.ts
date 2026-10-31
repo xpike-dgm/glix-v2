@@ -286,6 +286,11 @@ export const gizliAlisveris: GameDefinition<
     return { basket, remaining: ALISVERIS_BUDGET - costOf(state, playerId, basket), locked, coupon };
   },
 
+  /** Sonuç açılışı (kepenk) alışveriş süresinin bittiği an başlar. */
+  revealAt(state): number | null {
+    return state.endsAt;
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= state.revealEndsAt;
   },

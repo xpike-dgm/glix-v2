@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 95,
-    "not": "Oyun aşaması en çok 95 sn sürer: 75 sn çizim + 20 sn oylama (süreler oyuncu sayısına göre değişmez). Bağlı herkes çizimde 'Bitti', oylamada 'Tamam' derse her aşama son basıştan 1 sn sonra biter; yani erken bitişle tur çok daha kısa sürebilir. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 30 sn; herkes Devam derse 1 sn) gelir."
+    "not": "Oyun aşaması en çok 95 sn sürer: 75 sn çizim + 20 sn oylama (süreler oyuncu sayısına göre değişmez). Bağlı herkes çizimde 'Bitti', oylamada 'Tamam' derse her aşama son basıştan 1 sn sonra biter; yani erken bitişle tur çok daha kısa sürebilir. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 60 sn; herkes Devam derse 1 sn) gelir. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Oyuncuların hepsi aynı gizli kelimeyi görür, yalnızca rastgele seçilen bir oyuncu (bilgisiz) ona çok benzeyen yakın bir kelime görür. Herkes 75 sn boyunca kelimesini kendi telefonunda çizer; çizimler oylamada hep birlikte duvara asılır ve 20 sn içinde herkes kelimeyi bilmediğini düşündüğü kişiye oy verir. Bilgisiz tek başına en çok oyu alırsa yakalanmıştır ve diğer herkes +1 alır; aksi halde bilgisiz +1 alır.",
   "akis": [
@@ -45,7 +45,7 @@
       "ad": "Açılış (sonuç)",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Oylama süresi biter bitmez oyun biter ve sonuç ekranının üstüne açılış girer: bilgisiz oyuncunun maskesi düşer ('Kelimeyi bilmeyen' + ad), 'Yakalandı!' ya da 'Kurtuldu!' rozeti, iki kelime ('Ortak' ve 'Yakın') yan yana gösterilir. Sonuç ekranı en çok 30 sn kalır (herkes Devam derse 1 sn sonra geçer); sıradaki aşama (kart seçimi ya da yeni oyun/final) ondan sonra gelir.",
+      "aciklama": "Oylama süresi biter bitmez oyun biter ve sonuç ekranının üstüne açılış girer: bilgisiz oyuncunun maskesi düşer ('Kelimeyi bilmeyen' + ad), 'Yakalandı!' ya da 'Kurtuldu!' rozeti, iki kelime ('Ortak' ve 'Yakın') yan yana gösterilir. Sonuç ekranı en çok 60 sn kalır (herkes Devam derse 1 sn sonra geçer); sıradaki aşama (kart seçimi ya da yeni oyun/final) ondan sonra gelir. Son ekran oyun bitince kalır; altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca 1 sn sonra, basmayan olursa en geç 60 sn sonra genel sonuç ekranına geçilir. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Artık hiçbir bilgi gizli değildir: oylar, oy sayımı, bilgisiz ve kelimeler herkese açıktır."
     }
   ],

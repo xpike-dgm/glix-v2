@@ -224,6 +224,12 @@ export const sessizSira: GameDefinition<SessizState, SessizAction, SessizView, S
     return { hand: playerId === null ? [] : [...(s.hands[playerId] ?? [])] };
   },
 
+  /** Sonuç açılışı son açılışla (son tur ya da takım battığında) başlar. */
+  revealAt(state, ctx): number | null {
+    const s = advance(state, ctx.now);
+    return isEnd(s) ? s.phaseStartedAt : null;
+  },
+
   isFinished(state, ctx): boolean {
     const s = advance(state, ctx.now);
     return isEnd(s) && ctx.now >= s.phaseEndsAt;

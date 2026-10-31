@@ -1,5 +1,6 @@
 import { allReady, LOBBY_EMOJIS } from "@glix/engine";
 import { describe, expect, it } from "vitest";
+import { RESULTS_MS } from "./match.js";
 import { Client, k, setupRoom, startPlaying, sync, until, useServer } from "./testkit.js";
 
 useServer();
@@ -134,7 +135,7 @@ describe("lobi emoji tepkisi", () => {
   it("sonuç ekranında herkese gider, hız sınırı ve izinli küme aynı kalır", async () => {
     const cs = (await setupRoom(["A", "B"], ["butona-bas", "kor-bomba"])) as [Client, Client];
     await startPlaying(cs);
-    k.clock.advance(45_000);
+    k.clock.advance(48_000);
     await until(() => cs[0].room.phase === "results", "results");
     k.clock.advance(1000);
     cs[1].send({ type: "react", emoji: "😱" });
@@ -156,9 +157,9 @@ describe("lobi emoji tepkisi", () => {
   it("final ekranında herkese gider", async () => {
     const cs = (await setupRoom(["A", "B"], ["butona-bas"])) as [Client, Client];
     await startPlaying(cs);
-    k.clock.advance(45_000);
+    k.clock.advance(48_000);
     await until(() => cs[0].room.phase === "results", "results");
-    k.clock.advance(31_000);
+    k.clock.advance(RESULTS_MS + 1_000);
     await until(() => cs[0].room.phase === "final", "final");
     k.clock.advance(1000);
     cs[0].send({ type: "react", emoji: "🔥" });
@@ -216,9 +217,9 @@ describe("lobide hazırım", () => {
     await startPlaying([a, b]);
     expect(a.room.lobbyReady).toEqual([]);
     // Bayrak maç boyunca açık kalmamalı: oyun bitip lobiye dönünce yine boş.
-    k.clock.advance(46_000);
+    k.clock.advance(48_000);
     await until(() => a.room.phase === "results");
-    k.clock.advance(31_000);
+    k.clock.advance(RESULTS_MS + 1_000);
     await until(() => a.room.phase === "final");
     a.send({ type: "returnToLobby" });
     await until(() => a.room.phase === "lobby");

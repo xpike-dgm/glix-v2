@@ -548,6 +548,13 @@ export const bozukTelefon: GameDefinition<BozukState, BozukAction, BozukView, Bo
     };
   },
 
+  /** Sonuç açılışı son zincirin oylaması bittiği an başlar. */
+  revealAt(state, ctx): number | null {
+    const s = advance(state, ctx.now);
+    if (s.step < s.steps) return null;
+    return revealPlan(s).chains[s.order.length - 1]?.voteEnd ?? null;
+  },
+
   isFinished(state, ctx): boolean {
     const s = advance(state, ctx.now);
     return s.step >= s.steps && ctx.now >= revealPlan(s).end;

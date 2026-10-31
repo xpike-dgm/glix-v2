@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 24,
-    "not": "Basış süresi hedefe bağlıdır: hedef + 8 sn (hedef 7 sn ise 15 sn, 13 sn ise 21 sn). Ardından sonuç gösterimi 6 sn sürer. Yani oyun aşaması 21 ile 27 sn arasıdır. Herkes basarsa son basıştan 1 sn sonra sonuç açılır. Oyuncu sayısı süreyi değiştirmez. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasında sonuç ekranı (en çok 30 sn) vardır."
+    "not": "Basış süresi hedefe bağlıdır: hedef + 8 sn (hedef 7 sn ise 15 sn, 13 sn ise 21 sn). Ardından sonuç gösterimi 6 sn sürer. Yani oyun aşaması 21 ile 27 sn arasıdır. Herkes basarsa son basıştan 1 sn sonra sonuç açılır. Oyuncu sayısı süreyi değiştirmez. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasında sonuç ekranı (en çok 60 sn) vardır. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Ekranda yalnız bir hedef yazar (örneğin Hedef: 11 saniye). Gerçek sayaç yoktur; oyuncu içinden sayar ve BAS düğmesine yalnız bir kez basar. Süre bitince herkesin basış anı açılır; hedefe en yakın basan +2, ikinci en yakın basan +1 alır. Hiç basmayan sıralamaya girmez ve puan almaz.",
   "akis": [
@@ -39,14 +39,14 @@
       "ad": "Sonuç gösterimi",
       "sureSn": 6,
       "kim": "herkes",
-      "aciklama": "Basış süresi bitince (ya da herkes bastıktan 1 sn sonra) açılır. Üstte Hedef: N saniye, kişisel sonuç (+2 puan / +1 puan / Puan yok), kendi süren ve hedefe farkın (örn. 9,85 sn · −0,15 sn, ya da tam isabet, ya da Basmadın). Altında yakından uzağa sıralı satırlar: avatar, hedef işaretli bir çizgi üzerinde basış noktası, saniye değeri ve puan (+2, +1, 0; basmayanda basmadı ve –). Satırlar sırayla belirir. Puan alan oyuncunun telefonunda eşleşme sesi ve titreşimi, almayanın telefonunda hafif ses ve titreşim olur. Bu 6 saniye bitince oyun biter ve sonuç ekranına geçilir.",
+      "aciklama": "Basış süresi bitince (ya da herkes bastıktan 1 sn sonra) açılır. Üstte Hedef: N saniye, kişisel sonuç (+2 puan / +1 puan / Puan yok), kendi süren ve hedefe farkın (örn. 9,85 sn · −0,15 sn, ya da tam isabet, ya da Basmadın). Altında yakından uzağa sıralı satırlar: avatar, hedef işaretli bir çizgi üzerinde basış noktası, saniye değeri ve puan (+2, +1, 0; basmayanda basmadı ve –). Satırlar sırayla belirir. Puan alan oyuncunun telefonunda eşleşme sesi ve titreşimi, almayanın telefonunda hafif ses ve titreşim olur. Açılış en az 6 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Bu anda bütün basış anları, mesafeler, dereceler herkese açılır."
     },
     {
       "ad": "Sonuç ekranı",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 30 sn sonra kapanır.",
+      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 60 sn sonra kapanır.",
       "gizli": "Yok."
     }
   ],

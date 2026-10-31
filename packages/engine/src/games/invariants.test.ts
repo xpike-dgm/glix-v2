@@ -18,6 +18,10 @@ describe.each(Object.values(GAMES).map((g) => [g.id, g] as const))("genel deği�
     expect(game.briefing.steps.length).toBeLessThanOrEqual(3);
   });
 
+  it('sonuç ekranı kancası (revealAt) tanımlı: sonuç ekranı "Devam et" kuralına bağlı', () => {
+    expect(typeof game.revealAt).toBe("function");
+  });
+
   it("parseAction çöp girdide null döner, hiç fırlatmaz", () => {
     fc.assert(
       fc.property(fc.anything(), fc.jsonValue(), (a, b) => {

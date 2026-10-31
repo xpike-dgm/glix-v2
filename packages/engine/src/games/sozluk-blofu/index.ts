@@ -251,6 +251,11 @@ export const sozlukBlofu: GameDefinition<SozlukState, SozlukAction, SozlukView, 
     };
   },
 
+  /** Sonuç açılışı seçme süresinin bittiği an başlar. */
+  revealAt(state): number | null {
+    return state.pickEndsAt;
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= state.finishAt;
   },

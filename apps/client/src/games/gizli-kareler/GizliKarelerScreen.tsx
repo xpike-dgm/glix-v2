@@ -10,6 +10,7 @@ import { Screen } from "../../ui/Screen.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./gizli-kareler.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { KareSonuc, type SonucEntry } from "./KareSonuc.js";
 import { cellName, type KarelerScreenView, parseKarelerView, screenPhase } from "./view.js";
 
@@ -245,6 +246,7 @@ export default function GizliKarelerScreen(props: GameScreenProps) {
           </Switch>
         )}
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

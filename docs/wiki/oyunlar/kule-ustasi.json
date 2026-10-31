@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 90,
-    "not": "Toplam süre sınırı 90 sn (oyun kurulduğu andan). Oyun, başlangıç oyuncularının yarısı (yukarı yuvarlanmış) çıkınca ya da 90 sn dolunca, hangisi önce olursa biter. Her sıra en çok 6 sn sürer; bırakıştan sonra 0,9 sn (başarılı) ya da 2,2 sn (ıska) ara vardır. Oyuncu sayısı yalnız 'kaç çıkış gerekir' sayısını değiştirir."
+    "not": "Toplam süre sınırı 90 sn (oyun kurulduğu andan). Oyun, başlangıç oyuncularının yarısı (yukarı yuvarlanmış) çıkınca ya da 90 sn dolunca, hangisi önce olursa biter. Her sıra en çok 6 sn sürer; bırakıştan sonra 0,9 sn (başarılı) ya da 2,2 sn (ıska) ara vardır. Oyuncu sayısı yalnız 'kaç çıkış gerekir' sayısını değiştirir. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Oyuncular sabit bir sırayla ortak bir kuleye blok bırakır. Sırası gelen oyuncunun ekranında blok kulenin üstünde sağa sola gidip gelir; doğru anda dokunup bırakır. Alttaki bloğun dışına taşan kısım kesilir ve kule daralır; hiç denk gelmezse kule yıkılır, o oyuncu oyundan çıkar (-1). Kalanlar +1 alır; en çok 'Kusursuz' bırakan ek +1 kazanır.",
   "akis": [
@@ -46,7 +46,7 @@
       "ad": "Bitiş ve sonuç",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Çıkış sayısı gerekli sayıya ulaşınca (son ıskanın anında) ya da 90. saniyede oyun biter ('Oyun bitti' / 'Süre doldu'). Sonra mini oyun sonuç/podyum ekranı gelir.",
+      "aciklama": "Çıkış sayısı gerekli sayıya ulaşınca (son ıskanın anında) ya da 90. saniyede oyun biter ('Oyun bitti' / 'Süre doldu'). Sonra mini oyun sonuç/podyum ekranı gelir. Son ekran oyun bitince kalır; altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca 1 sn sonra, basmayan olursa en geç 60 sn sonra genel sonuç ekranına geçilir. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Yok."
     }
   ],

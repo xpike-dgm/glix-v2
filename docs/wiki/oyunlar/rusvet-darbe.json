@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 63,
-    "not": "Tipik akış: seçim 20 sn + dağıtım 25 sn + darbe oylaması 10 sn + sonuç 8 sn = 63 sn. Oylar eşitse düello eklenir (her el 8 sn işaret + 2,5 sn açılış, en çok 6 el). Herkes Tamam, Bitti ya da işaret verince aşamalar erken biter. En uzun olası toplam süre 126 sn'dir. Kopuk oyuncular beklenmez. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasında sonuç ekranı (en çok 30 sn) vardır."
+    "not": "Tipik akış: seçim 20 sn + dağıtım 25 sn + darbe oylaması 10 sn + sonuç 8 sn = 63 sn. Oylar eşitse düello eklenir (her el 8 sn işaret + 2,5 sn açılış, en çok 6 el). Herkes Tamam, Bitti ya da işaret verince aşamalar erken biter. En uzun olası toplam süre 126 sn'dir. Kopuk oyuncular beklenmez. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasında sonuç ekranı (en çok 60 sn) vardır. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Herkes kendisi dışında birine gizlice başkanlık oyu verir. En çok oyu alan başkan olur, başkan olurken aldığı oy kadar jeton dağıtma hakkı kazanır (kişi başı en çok 2 jeton, kendine yok) ve +1 alır. Oylar eşitse eşit kalan adaylar gizli taş-kağıt-makas düellosuyla başkanı belirler. Dağıtımdan sonra başkan dışında hiç jeton almamış herkes gizli bir darbe oylaması yapar; hak sahiplerinin kesin çoğunluğu Darbe derse başkanın +1'i iptal olur. Jetonlar sahiplerinin puanıdır.",
   "akis": [
@@ -60,14 +60,14 @@
       "ad": "Sonuç açılışı",
       "sureSn": 8,
       "kim": "herkes",
-      "aciklama": "Dairesel yerleşimde oyuncular: önce herkesin oy verdiği kişiye ışın akışı (kim kime oy verdi artık açık), 1,1 sn'de oy sayıları (N oy), 3,3 sn'den itibaren jetonlar başkana doğru geri uçar (jeton sahiplerinden başkana akış), 4,7 sn'de puan çipleri (+puan) çıkar. Üstte kişisel sonuç (+puan; Başkan oldun / Darbe oldu, +1 gitti / 1 jeton aldın / N jeton aldın / Jeton gelmedi) ve Başkan: ad. Darbe oylaması yapıldıysa Darbe: x/y · Başkanın +1'i iptal oldu ya da Darbe tutmadı. Alt yazı Puanlar genel skora eklenir. Bu 8 saniye bitince oyun biter.",
+      "aciklama": "Dairesel yerleşimde oyuncular: önce herkesin oy verdiği kişiye ışın akışı (kim kime oy verdi artık açık), 1,1 sn'de oy sayıları (N oy), 3,3 sn'den itibaren jetonlar başkana doğru geri uçar (jeton sahiplerinden başkana akış), 4,7 sn'de puan çipleri (+puan) çıkar. Üstte kişisel sonuç (+puan; Başkan oldun / Darbe oldu, +1 gitti / 1 jeton aldın / N jeton aldın / Jeton gelmedi) ve Başkan: ad. Darbe oylaması yapıldıysa Darbe: x/y · Başkanın +1'i iptal oldu ya da Darbe tutmadı. Alt yazı Puanlar genel skora eklenir. Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Bütün başkanlık oyları (kim kime) ve jeton dağılımı açılır. Darbe oyları ise yalnız sayı olarak açılır."
     },
     {
       "ad": "Sonuç ekranı",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 30 sn sonra kapanır.",
+      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 60 sn sonra kapanır.",
       "gizli": "Yok."
     }
   ],

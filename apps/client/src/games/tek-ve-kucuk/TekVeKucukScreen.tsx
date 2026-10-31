@@ -8,6 +8,7 @@ import { Screen } from "../../ui/Screen.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./tek-ve-kucuk.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { columnOf, parseTekView, pickersOf, type TekScreenView } from "./view.js";
 
 /** Renge ek ikinci ipucu: kazanan ★, tek kalan ●, çakışan ✕. */
@@ -211,6 +212,7 @@ function RoundScreen(props: GameScreenProps) {
           </>
         )}
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

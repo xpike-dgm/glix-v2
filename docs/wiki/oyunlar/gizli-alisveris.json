@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 38,
-    "not": "Oyun aşaması en çok 38 sn sürer: 30 sn alışveriş + 8 sn sonuç (raf kepengi) animasyonu. Bağlı herkes 'Tamam' derse alışveriş 1 sn sonra biter ve 8 sn'lik sonuç buna göre öne gelir. Süre oyuncu sayısına göre değişmez. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 30 sn) gelir."
+    "not": "Oyun aşaması en çok 38 sn sürer: 30 sn alışveriş + 8 sn sonuç (raf kepengi) animasyonu. Bağlı herkes 'Tamam' derse alışveriş 1 sn sonra biter ve 8 sn'lik sonuç buna göre öne gelir. Süre oyuncu sayısına göre değişmez. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 60 sn) gelir. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Herkese 60 kredilik gizli bir bütçe verilir. Her maçta 20 ürünlük havuzdan 12'si rafa gelir ve fiyatları ±%30 oynar; raf herkes için aynıdır. Herkesin kendine özel, gizli bir %50 indirim kuponu vardır (yalnız ödenen fiyatı düşürür). Bir ürünün değeri 'tam fiyatı ÷ onu kaç kişinin aldığı'dır. 15. saniyede vitrin fısıldar: her ürünün üstünde talep ateşi (kim aldığı ve sayı olmadan) belirir ve donar. Sepetler süre bitince sahne sahne açılır; en değerli sepet +2, ikinci +1 alır, eksi puan yoktur.",
   "akis": [
@@ -37,7 +37,7 @@
       "ad": "Sonuç (raf kepengi)",
       "sureSn": 8,
       "kim": "herkes",
-      "aciklama": "Süre dolunca (ya da erken bitişte 1 sn sonra) sonuç sahne sahne açılır; zaman çizelgesi tek sabitte (SONUC_ZAMANI) ve bugünkü 8 sn'ye sığar: 0 sn metal kepenk sesle kalkar; 0,9 sn'den itibaren ürün ürün alıcıların avatarları belirir: birden çok kişinin aldığı üründe fiyat etiketi '÷N' ile kırılır (cam kırığı sesi) ve yeni değer görünür, tek kişinin aldığında etiket altın parlar 'TEK BAŞINA!', kimsenin almadığı ürün tozlu kalır; 4,3 sn'de sepetler en değersizden en değerliye tek tek açılır (ürünler satıra düşer, değer görünür; her satırda kuponun ürünü), en son açılan en değerli sepete 'EN DEĞERLİ SEPET' damgası ve konfeti; 7 sn'de puan çipleri (+2/+1) üstteki puan yazısına uçar ('Puanın +2'). Oyun bu 8 sn'nin sonunda biter, ardından sonuç ekranı gelir.",
+      "aciklama": "Süre dolunca (ya da erken bitişte 1 sn sonra) sonuç sahne sahne açılır; zaman çizelgesi tek sabitte (SONUC_ZAMANI) ve bugünkü 8 sn'ye sığar: 0 sn metal kepenk sesle kalkar; 0,9 sn'den itibaren ürün ürün alıcıların avatarları belirir: birden çok kişinin aldığı üründe fiyat etiketi '÷N' ile kırılır (cam kırığı sesi) ve yeni değer görünür, tek kişinin aldığında etiket altın parlar 'TEK BAŞINA!', kimsenin almadığı ürün tozlu kalır; 4,3 sn'de sepetler en değersizden en değerliye tek tek açılır (ürünler satıra düşer, değer görünür; her satırda kuponun ürünü), en son açılan en değerli sepete 'EN DEĞERLİ SEPET' damgası ve konfeti; 7 sn'de puan çipleri (+2/+1) üstteki puan yazısına uçar ('Puanın +2'). Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez. Ardından genel sonuç ekranı gelir.",
       "gizli": "Artık tüm sepetler, ürün başına alıcı sayıları, sepet değerleri, puanlar ve herkesin kuponu herkese açıktır."
     }
   ],
@@ -166,7 +166,7 @@
       "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts (ALISVERIS_SHOP_MS)"
     },
     {
-      "ad": "Sonuç açılışı süresi; oyun bunun sonunda biter",
+      "ad": "Sonuç açılışı süresi; en az gösterim süresi, ardından 'Devam et' (en çok 60 sn)",
       "deger": "8 000 ms",
       "kaynak": "packages/engine/src/games/gizli-alisveris/types.ts (ALISVERIS_REVEAL_MS)"
     },

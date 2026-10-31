@@ -138,6 +138,11 @@ export const korKronometre: GameDefinition<
     return { pressed: playerId !== null && state.presses[playerId] !== undefined };
   },
 
+  /** Sonuç açılışı basış süresinin bittiği an başlar. */
+  revealAt(state): number | null {
+    return state.endsAt;
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= state.revealEndsAt;
   },

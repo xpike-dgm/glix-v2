@@ -149,6 +149,11 @@ export const cizgiyiGecme: GameDefinition<CizgiState, CizgiAction, CizgiView, Ci
     return { myChoice: mine ?? null, locked: playerId !== null && state.locked.includes(playerId) };
   },
 
+  /** Sonuç açılışı seçim süresinin bittiği an başlar. */
+  revealAt(state): number | null {
+    return state.endsAt;
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= state.revealEndsAt;
   },

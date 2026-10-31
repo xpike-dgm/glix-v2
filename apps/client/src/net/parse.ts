@@ -10,6 +10,7 @@ import {
   isReactionId,
   JOIN_POLICIES,
   type LeftReason,
+  type MatchReveal,
   type MatchSnapshot,
   type PlayerInfo,
   parseCardSettings,
@@ -164,6 +165,7 @@ function parseMatch(v: unknown): MatchSnapshot | null {
     participants: v.participants,
     readyIds: v.readyIds,
     continueIds: isStrArr(v.continueIds) ? v.continueIds : [],
+    reveal: parseReveal(v.reveal),
     phaseStartedAt: v.phaseStartedAt,
     phaseEndsAt: ends,
     publicView: v.publicView ?? null,
@@ -173,6 +175,12 @@ function parseMatch(v: unknown): MatchSnapshot | null {
     mine,
     ...(comment !== null ? { comment } : {}),
   };
+}
+
+/** Oyun içi sonuç ekranı; yoksa ya da bozuksa null (eski sunucu alanı göndermez). */
+function parseReveal(v: unknown): MatchReveal | null {
+  if (!isRec(v) || !isNum(v.startedAt) || !isNum(v.endsAt) || !isStrArr(v.continueIds)) return null;
+  return { startedAt: v.startedAt, endsAt: v.endsAt, continueIds: v.continueIds };
 }
 
 /** Oyun sonu yorumu: tek satır düz metin, en çok `GAME_COMMENT_MAX` karakter; aksi hâlde yok sayılır. */

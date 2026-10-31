@@ -13,6 +13,7 @@ import type { GameScreenProps } from "../registry.js";
 import { Revolver } from "./Revolver.js";
 import { bang, click, cock, lock } from "./sounds.js";
 import "./rus-ruleti.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { crewColumns, parseRusRuletiView, riskFraction, stageOf } from "./view.js";
 
 const RED = "#FF3B5C";
@@ -294,6 +295,7 @@ export default function RusRuletiScreen(props: GameScreenProps) {
           </PrimaryButton>
         </Show>
       </footer>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

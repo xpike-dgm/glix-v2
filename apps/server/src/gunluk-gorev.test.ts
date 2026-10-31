@@ -15,6 +15,7 @@ import { createAccountRecorder } from "./accountStats.js";
 import { type AccountStore, createAccounts } from "./accountStore.js";
 import { istanbulDayStart } from "./badges.js";
 import { buildExport } from "./kvkk.js";
+import { RESULTS_MS } from "./match.js";
 import { settleQuests } from "./quests.js";
 import { noopSocial } from "./social.js";
 import { Client, k, loginCookie, press, sync, until, useServer } from "./testkit.js";
@@ -373,7 +374,7 @@ describe("canlı akış", () => {
     await press(ikinci);
     k.clock.advance(startedAt + 51_000 - k.clock.now());
     await until(() => host.room.phase === "results", "results");
-    k.clock.advance(30_100);
+    k.clock.advance(RESULTS_MS + 100);
     await until(() => host.room.phase === "final", "final");
     return { host, ikinci, hostId };
   }

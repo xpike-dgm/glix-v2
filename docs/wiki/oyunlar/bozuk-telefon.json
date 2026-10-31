@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 230,
-    "not": "Girdi aşamaları: yazma adımı 20 sn, çizme adımı 45 sn. Adım sayısı = oyuncu sayısı (en çok 5). Her zincir için gösteri (ilk adım hemen, sonrakiler 2 sn arayla; son adım görünür görünmez oylama) + oylama 6 sn + sonuç 2 sn. Erken bitiş olmazsa toplam: 3 oyuncu 121 sn, 4 oyuncu 186 sn, 5 oyuncu 230 sn, 6 oyuncu 246 sn, 7 oyuncu 262 sn, 8 oyuncu 278 sn. Herkes 'Tamam' derse adımlar (ve herkes oy verirse oylamalar) 1 sn sonra biter."
+    "not": "Girdi aşamaları: yazma adımı 20 sn, çizme adımı 45 sn. Adım sayısı = oyuncu sayısı (en çok 5). Her zincir için gösteri (ilk adım hemen, sonrakiler 2 sn arayla; son adım görünür görünmez oylama) + oylama 6 sn + sonuç 2 sn. Erken bitiş olmazsa toplam: 3 oyuncu 121 sn, 4 oyuncu 186 sn, 5 oyuncu 230 sn, 6 oyuncu 246 sn, 7 oyuncu 262 sn, 8 oyuncu 278 sn. Herkes 'Tamam' derse adımlar (ve herkes oy verirse oylamalar) 1 sn sonra biter. Son zincirin sonucundan sonra oyun içi galeri ('Gecenin en komikleri') 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç açılıştan 60 sn sonra."
   },
   "ozet": "Herkes bir cümle yazarak kendi zincirini başlatır. Zincirler her adımda bir sonraki oyuncuya geçer: yazılan cümleyi çizersin, gördüğün çizimi tek cümleyle anlatırsın. Her adımda yalnız bir önceki adımı görürsün. Sonunda her zincir bir hikâye gibi açılır (yazılar daktiloyla, çizimler çiziliş sırasıyla) ve son adım görünür görünmez herkes isimsiz olarak en komik adıma oy verir. Oy (+1) ve 'sağlam zincir' (+1) kahkaha puanında toplanır; genel skora kahkaha sırasına göre +2 / +1 / 0 gider.",
   "akis": [
@@ -64,10 +64,10 @@
       "gizli": "Yok."
     },
     {
-      "ad": "Sonuç ekranı",
+      "ad": "Gecenin en komikleri (oyun içi sonuç)",
       "sureSn": 60,
       "kim": "herkes",
-      "aciklama": "Mini oyun sonuç ekranı (sıralama kahkaha puanına göre, rozetlerde +2/+1). Üstte 'Gecenin en komikleri': her zincirin taçlı adımı (taç yoksa ilk cümle). Karta dokununca zincirin tamamı yazarları ve oylarıyla açılır; 'ZİNCİRİ KAYDET' zinciri telefonda tek uzun PNG olarak çizer, paylaşım menüsü varsa açar, yoksa indirir. Geçiş ortak 'Devam' kuralıyla.",
+      "aciklama": "Son zincirin oylaması bitince oyunun sonuç açılışı başlar (revealAt = son zincirin oylama bitişi): önce 2 sn zincir sonucu, sonra oyun ekranında 'Gecenin en komikleri' galerisi: her zincirin taçlı adımı (taç yoksa ilk cümle). Karta dokununca zincirin tamamı yazarları ve oylarıyla açılır; 'ZİNCİRİ KAYDET' zinciri telefonda tek uzun PNG olarak çizer, paylaşım menüsü varsa açar, yoksa indirir. Altta ortak 'Devam et' şeridi (ilk 1,5 sn pasif, kimin bastığı avatarlarla): bağlı bütün katılımcılar basınca 1 sn sonra, basmayan olursa açılıştan en geç 60 sn sonra oyun biter ve genel sonuç/podyum ekranı gelir (sıralama kahkaha puanına göre, rozetlerde +2/+1).",
       "gizli": "Yok."
     }
   ],

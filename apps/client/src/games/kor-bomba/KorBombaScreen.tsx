@@ -11,6 +11,7 @@ import { pressable } from "../../ui/press.js";
 import type { GameScreenProps } from "../registry.js";
 import "./kor-bomba.css";
 import { reducedMotion } from "../../fx/motion.js";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { boom, spark, tak } from "./sounds.js";
 import {
   canPredict,
@@ -291,6 +292,14 @@ export default function KorBombaScreen(props: GameScreenProps) {
           PAS VER
         </div>
       </Show>
+      <div class="kbo__devam">
+        <RevealContinue
+          match={props.match}
+          selfId={props.selfId}
+          now={props.now}
+          spectator={props.spectator}
+        />
+      </div>
     </div>
   );
 }
