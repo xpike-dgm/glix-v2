@@ -1,5 +1,8 @@
 # Üretim Merkezi — öneri dosyası
 
+> **Sahip kararı (31 Ekim 2026): önerilen paket onaylandı.** Yapılacaklar: UM-A1…A5, UM-G1, G2, G4, G5, G6 (geçişten
+> sonra), G7, UM-İ1…İ10, UM-K1…K6, UM-U1…U9, MG-1…MG-7, UM-Y1…Y3. Yapılmayacak: UM-G3.
+
 Bu dosya onay içindir. Her maddenin bir kodu var (ör. **UM-G2**). Cevabını tek satırda verebilirsin:
 
 > UM-A1 evet, UM-G3 hayır, MG-4 evet …
