@@ -192,6 +192,8 @@ export interface IsKaydi {
   /** Yapay zekâ işi ilk kez okuduğunda (UM-R2 "başladı"). */
   basladi: number | null;
   teslimEdildi: number | null;
+  /** İş kilidi (sözleşme bölüm 8): ham değer; 2 saat hareketsizlikte geçersiz sayılır. */
+  kilit: { ad: string; zaman: number } | null;
 }
 
 export interface IstekKarti {
@@ -287,6 +289,8 @@ export interface AlanSayfasi {
     olusturma: number;
     iptal: number | null;
     sonKullanim: number | null;
+    ad: string;
+    kanal: string;
   }[];
   istatistik: {
     teslim: number;
@@ -297,6 +301,7 @@ export interface AlanSayfasi {
   };
   kalanlariGoster: boolean;
   uygulama: { not: string; baglanti: "mcp" | "ssh" };
+  araclar: { arac: string; kanal: string; teslim: number; onay: number; oran: number | null }[];
   sinir: {
     bekleyenTavan: number;
     gunlukKota: number;

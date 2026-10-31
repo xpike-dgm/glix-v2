@@ -17,6 +17,8 @@ export interface AnahtarKimligi {
   id: number;
   alan: AlanId;
   kanal: "mcp" | "ssh";
+  /** Sahibin verdiği ad (ör. "ChatGPT", "OpenCode"); araç başına ayrı anahtar. */
+  ad: string;
 }
 
 export class Anahtarlar {
@@ -27,13 +29,13 @@ export class Anahtarlar {
     private readonly denetim: Denetim,
   ) {}
 
-  uret(alan: AlanId, kanal: "mcp" | "ssh", now: number, kim: string): { id: number; anahtar: string } {
+  uret(alan: AlanId, kanal: "mcp" | "ssh", now: number, kim: string, ad = ""): { id: number; anahtar: string } {
     const anahtar = `um_${alan}_${randomBytes(32).toString("base64url")}`;
     const o = ozet(anahtar);
     const r = this.db
-      .prepare("INSERT INTO anahtar (alan, ozet, onek, olusturma, kanal) VALUES (?, ?, ?, ?, ?)")
-      .run(alan, o, anahtar.slice(0, alan.length + 8), now, kanal);
-    this.denetim.yaz(now, kim, "anahtar_uretildi", alan, `${kanal} ${kisaOzet(o)}`);
+      .prepare("INSERT INTO anahtar (alan, ozet, onek, olusturma, kanal, ad) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(alan, o, anahtar.slice(0, alan.length + 8), now, kanal, ad || (kanal === "ssh" ? "SSH" : "MCP"));
+    this.denetim.yaz(now, kim, "anahtar_uretildi", alan, `${kanal} ${ad} ${kisaOzet(o)}`);
     return { id: Number(r.lastInsertRowid), anahtar };
   }
 
@@ -58,13 +60,13 @@ export class Anahtarlar {
     const m = ANAHTAR.exec(deger);
     if (!m) return null;
     const o = ozet(deger);
-    const r = this.db.prepare("SELECT id, alan, ozet, iptal, kanal FROM anahtar WHERE ozet = ?").get(o) as
-      | { id: number; alan: string; ozet: string; iptal: number | null; kanal: string }
+    const r = this.db.prepare("SELECT id, alan, ozet, iptal, kanal, ad FROM anahtar WHERE ozet = ?").get(o) as
+      | { id: number; alan: string; ozet: string; iptal: number | null; kanal: string; ad: string }
       | undefined;
     if (!r || r.iptal !== null || !isAlanId(r.alan)) return null;
     if (!timingSafeEqual(Buffer.from(r.ozet, "hex"), Buffer.from(o, "hex"))) return null;
     this.db.prepare("UPDATE anahtar SET son_kullanim = ? WHERE id = ?").run(now, r.id);
-    return { id: r.id, alan: r.alan, kanal: r.kanal === "ssh" ? "ssh" : "mcp" };
+    return { id: r.id, alan: r.alan, kanal: r.kanal === "ssh" ? "ssh" : "mcp", ad: r.ad };
   }
 
   /** Dakikada 60 istek (kayan pencere, bellekte). */
@@ -94,11 +96,12 @@ export class Anahtarlar {
     iptal: number | null;
     sonKullanim: number | null;
     kanal: string;
+    ad: string;
   }[] {
     return (
       this.db
         .prepare(
-          "SELECT id, onek, olusturma, iptal, son_kullanim, kanal FROM anahtar WHERE alan = ? ORDER BY id DESC",
+          "SELECT id, onek, olusturma, iptal, son_kullanim, kanal, ad FROM anahtar WHERE alan = ? ORDER BY id DESC",
         )
         .all(alan) as {
         id: number;
@@ -107,6 +110,7 @@ export class Anahtarlar {
         iptal: number | null;
         son_kullanim: number | null;
         kanal: string;
+        ad: string;
       }[]
     ).map((r) => ({
       id: r.id,
@@ -115,6 +119,7 @@ export class Anahtarlar {
       iptal: r.iptal,
       sonKullanim: r.son_kullanim,
       kanal: r.kanal,
+      ad: r.ad,
     }));
   }
 }

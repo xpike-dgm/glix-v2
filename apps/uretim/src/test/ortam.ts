@@ -220,7 +220,7 @@ export async function ortamKur(ek: { ssh?: boolean; oyun?: boolean } = {}): Prom
       return c.split(";")[0] ?? "";
     },
     async anahtarUret(alan, cerez) {
-      const r = await api("POST", `/api/alan/${alan}/anahtar`, {}, cerez);
+      const r = await api("POST", `/api/alan/${alan}/anahtar`, { ad: "Test aracı" }, cerez);
       return String(r.json.anahtar);
     },
     async kapat() {

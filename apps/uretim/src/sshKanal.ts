@@ -273,7 +273,7 @@ export class SshKanal {
     }
     const p = teslimAyristir(teslimJson, alanTanimi(alan));
     if (!p.ok) return { sonuc: "kaldi", hatalar: p.hatalar };
-    const r = await this.merkez.teslimEt(alan, "mcp", anahtarId, p.deger, false, now, `yz:${alan}:ssh`);
+    const r = await this.merkez.teslimEt(alan, "mcp", anahtarId, p.deger, false, now, `yz:${alan}:ssh`, { kanal: "ssh", ad: "SSH (gelen klasörü)" });
     return {
       teslimId: r.teslimId,
       ogeler: r.ogeler.map((o) => ({

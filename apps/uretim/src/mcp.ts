@@ -28,6 +28,8 @@ const teslimSemasi = {
   required: ["tur", "ogeler"],
   properties: {
     isId: { type: "integer", description: "Bağlı iş (isleri_listele)" },
+    arac: { type: "string", maxLength: 60, description: "Kullandığın araç (ör. ChatGPT, OpenCode)" },
+    model: { type: "string", maxLength: 80, description: "Kullandığın model" },
     tur: {
       type: "string",
       enum: ["yeni", "duzenleme", "kaldirma-onerisi", "rapor", "fikir"],
@@ -192,7 +194,8 @@ export async function aracCalistir(
   args: Record<string, unknown>,
   now: number,
 ): Promise<unknown> {
-  const kim = `yz:${k.alan}`;
+  const kim = `yz:${k.alan}:${k.ad}`;
+  m.kilitTazele(k.id, now);
   const alan = k.alan;
   switch (ad) {
     case "talimat_oku": {
@@ -200,13 +203,18 @@ export async function aracCalistir(
       return { alan, alanAdi: alanTanimi(alan).ad, surum: t.surum, metin: t.metin };
     }
     case "isleri_listele":
-      return { isler: m.isler(alan, ["acik"]).map(({ alan: _a, ...i }) => i) };
+      return m.yzIsListesi(alan, k.id, now);
     case "is_oku": {
       const id = tamsayi(args.id, 1, 1e12);
       const is = id ? m.is(id, alan) : null;
       if (!is) throw new AracHatasi("Bu iş bulunamadı.");
+      if (!m.isKilitle(is.id, k.id, k.ad, now)) {
+        const kl = m.kilit(is.id, now);
+        const siradaki = m.yzIsListesi(alan, k.id, now).siradaki;
+        return { ...is, uzerindeCalisiliyor: true, kilit: kl?.ad ?? "", siradaki, mesaj: `Bu iş üzerinde çalışılıyor (${kl?.ad ?? "başka oturum"}).${siradaki ? ` Sıradaki iş: ${siradaki}.` : ""}` };
+      }
       m.isBasladi(is.id, now);
-      return is;
+      return { ...is, uzerindeCalisiliyor: false };
     }
     case "katalog_oku":
       return m.katalog.alanKatalogu(alan, now);
@@ -227,7 +235,7 @@ export async function aracCalistir(
     case "teslim_et": {
       const p = teslimAyristir(args, alanTanimi(alan));
       if (!p.ok) return { sonuc: "kaldi", hatalar: p.hatalar };
-      const r = await m.teslimEt(alan, "mcp", k.id, p.deger, ad === "on_kontrol", now, kim);
+      const r = await m.teslimEt(alan, "mcp", k.id, p.deger, ad === "on_kontrol", now, kim, { kanal: k.kanal, ad: k.ad });
       return {
         teslimId: r.teslimId,
         ogeler: r.ogeler.map((o) => ({

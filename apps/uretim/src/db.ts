@@ -34,7 +34,8 @@ const SEMA: readonly string[] = [
   );
   CREATE TABLE anahtar (
     id INTEGER PRIMARY KEY, alan TEXT NOT NULL, ozet TEXT NOT NULL UNIQUE, onek TEXT NOT NULL,
-    olusturma INTEGER NOT NULL, iptal INTEGER, son_kullanim INTEGER, kanal TEXT NOT NULL DEFAULT 'mcp'
+    olusturma INTEGER NOT NULL, iptal INTEGER, son_kullanim INTEGER, kanal TEXT NOT NULL DEFAULT 'mcp',
+    ad TEXT NOT NULL DEFAULT ''
   );
   CREATE TABLE ssh_anahtar (
     id INTEGER PRIMARY KEY, alan TEXT NOT NULL, acik TEXT NOT NULL, parmak_izi TEXT NOT NULL, aciklama TEXT NOT NULL,
@@ -51,7 +52,8 @@ const SEMA: readonly string[] = [
   CREATE INDEX yukleme_anahtar ON yukleme(anahtar_id, olusturma);
   CREATE TABLE teslim (
     id INTEGER PRIMARY KEY, alan TEXT NOT NULL, is_id INTEGER, tur TEXT NOT NULL, kaynak TEXT NOT NULL,
-    anahtar_id INTEGER, aciklama TEXT NOT NULL DEFAULT '', olusturma INTEGER NOT NULL
+    anahtar_id INTEGER, aciklama TEXT NOT NULL DEFAULT '', olusturma INTEGER NOT NULL,
+    kanal TEXT NOT NULL DEFAULT 'elle', anahtar_ad TEXT NOT NULL DEFAULT '', arac TEXT, model TEXT
   );
   CREATE TABLE oge (
     id INTEGER PRIMARY KEY, teslim_id INTEGER NOT NULL REFERENCES teslim(id), alan TEXT NOT NULL,
@@ -84,7 +86,8 @@ const SEMA: readonly string[] = [
     adet INTEGER, son_tarih TEXT, ornek TEXT NOT NULL DEFAULT '', kaynak TEXT NOT NULL, durum TEXT NOT NULL,
     sira INTEGER NOT NULL, olusturma INTEGER NOT NULL, istek_id INTEGER, ilgili_oge INTEGER,
     varyant INTEGER, fikir_turu INTEGER NOT NULL DEFAULT 0, secilen_fikir INTEGER, secim_notu TEXT,
-    kisitlar TEXT, kabul TEXT, ozet TEXT, basladi INTEGER, teslim_edildi INTEGER
+    kisitlar TEXT, kabul TEXT, ozet TEXT, basladi INTEGER, teslim_edildi INTEGER,
+    kilit_anahtar INTEGER, kilit_ad TEXT, kilit_zaman INTEGER
   );
   CREATE TABLE istek_karti (
     id INTEGER PRIMARY KEY, acan_alan TEXT NOT NULL, istenen_alan TEXT NOT NULL, ne TEXT NOT NULL,

@@ -37,6 +37,9 @@ export interface TeslimGirdisi {
   tur: TeslimTuru;
   aciklama: string;
   ogeler: OgeGirdisi[];
+  /** Yapay zekânın bildirdiği araç ve model (isteğe bağlı, sözleşme bölüm 8). */
+  arac: string | null;
+  model: string | null;
 }
 
 export type Ayrisma<T> = { ok: true; deger: T } | { ok: false; hatalar: string[] };
@@ -197,7 +200,7 @@ export function teslimAyristir(v: unknown, alan: AlanTanimi): Ayrisma<TeslimGird
   const hatalar: string[] = [];
   if (!kayit(v)) return { ok: false, hatalar: ["Teslim bir nesne olmalı."] };
   for (const k of Object.keys(v))
-    if (!["isId", "tur", "aciklama", "ogeler"].includes(k))
+    if (!["isId", "tur", "aciklama", "ogeler", "arac", "model"].includes(k))
       hatalar.push(`Bilinmeyen alan "${k.slice(0, 30)}".`);
   const tur = v.tur;
   if (typeof tur !== "string" || !(TESLIM_TURLERI as readonly string[]).includes(tur))
@@ -221,8 +224,12 @@ export function teslimAyristir(v: unknown, alan: AlanTanimi): Ayrisma<TeslimGird
     const x = ogeAyristir(o, i, alan, hatalar);
     if (x) ogeler.push(x);
   });
+  const arac = v.arac === undefined ? null : metin(v.arac, 1, 60);
+  const model = v.model === undefined ? null : metin(v.model, 1, 80);
+  if (v.arac !== undefined && arac === null) hatalar.push('"arac" 1–60 karakter.');
+  if (v.model !== undefined && model === null) hatalar.push('"model" 1–80 karakter.');
   if (hatalar.length) return { ok: false, hatalar: hatalar.slice(0, 30) };
-  return { ok: true, deger: { isId, tur: tur as TeslimTuru, aciklama: aciklama ?? "", ogeler } };
+  return { ok: true, deger: { isId, tur: tur as TeslimTuru, aciklama: aciklama ?? "", ogeler, arac, model } };
 }
 
 /** Sürüm gruplaması için öğe anahtarı: ad (küçük harf, boşluksuz). */

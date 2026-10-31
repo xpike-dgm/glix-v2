@@ -93,6 +93,8 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
         sshAcik: o.ssh.acik,
         oyunAcik: o.merkez.oyun.acik,
         mcpUrl: `${o.config.publicUrl}/mcp`,
+        gorunenAd: eposta ? (o.merkez.ayar(`gorunen_ad:${eposta}`) ?? "") : "",
+        saatDilimi: o.config.saatDilimi,
         surum: o.surum,
       });
     if (yol === "giris/kod" && yaz) {
@@ -234,8 +236,9 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
           ? [...acik.filter((i) => i.id === isId), ...acik.filter((i) => i.id !== isId)]
           : acik;
         const istem = istemUret(p1, b, secili, o.config.sshSunucu);
-        if (gizliVarMi(istem)) return hata(res, 500, "istem", "İstem hazırlanamadı.");
-        return ok(200, { istem, isSayisi: acik.length, uygulama: m.ayar(`uygulama:${p1}`) ?? "" });
+        const istemler = { mcp: istemUret(p1, "mcp", secili, o.config.sshSunucu), ssh: istemUret(p1, "ssh", secili, o.config.sshSunucu) };
+        if (gizliVarMi(istemler.mcp) || gizliVarMi(istemler.ssh)) return hata(res, 500, "istem", "İstem hazırlanamadı.");
+        return ok(200, { istem, istemler, isSayisi: acik.length, uygulama: m.ayar(`uygulama:${p1}`) ?? "" });
       }
       if (p0 === "alan" && isAlanId(p1) && p2 === "zevk")
         return ok(200, { ornekler: m.zevkGalerisi(p1), talimatEki: m.zevkBolumu(p1) });
@@ -386,6 +389,19 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
         kim,
         now,
       );
+      return ok(200, { ok: true });
+    }
+    if (p0 === "is" && p1 && p2 === "kilit-ac") {
+      const id = idParam(p1);
+      if (!id) return hata(res, 404, "yok", "İş bulunamadı.");
+      m.kilitAc(id, kim, now);
+      return ok(200, { ok: true });
+    }
+    if (yol === "profil") {
+      const b = await govde();
+      const ad = metin(b.gorunenAd ?? "", 0, 40);
+      if (ad === null) return hata(res, 400, "girdi", "Ad en çok 40 karakter.");
+      m.ayarYaz(`gorunen_ad:${kim}`, ad);
       return ok(200, { ok: true });
     }
     if (p0 === "is" && p1 && p2 === "durum") {
@@ -553,7 +569,10 @@ async function alanYaz(
     return ok({ ok: true });
   }
   if (a === "anahtar" && b === undefined) {
-    const r = o.anahtarlar.uret(alan, "mcp", now, kim);
+    const g = await govde();
+    const ad = metin(g.ad ?? "", 1, 40);
+    if (!ad) return hata(res, 400, "girdi", "Anahtara bir ad ver (ör. ChatGPT).");
+    const r = o.anahtarlar.uret(alan, "mcp", now, kim, ad);
     return ok({ id: r.id, anahtar: r.anahtar, mcpUrl: `${o.config.publicUrl}/mcp` });
   }
   if (a === "anahtar" && b && c === "iptal") {
