@@ -1,0 +1,175 @@
+/*
+ * Üretim Merkezi tasarım belirteçleri. Oyunun görsel kimliğinden bağımsız, sakin ve nötr bir çalışma aracı dili:
+ * nötr taban, tek vurgu rengi, ölçülü durum renkleri, düşük doygunluklu alan imzaları. Açık ve koyu tema birinci
+ * sınıf; varsayılan sistem tercihi. Metin/zemin karşıtlıkları WCAG AA (≥ 4.5:1) için seçildi (web/src/kontrast.test.ts).
+ */
+:root {
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Tipografi ölçeği (1.2 oranlı, 4 px ızgarada satır yüksekliği) */
+  --fs-11: 11px;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-16: 16px;
+  --fs-20: 20px;
+  --fs-24: 24px;
+  --fs-32: 32px;
+  --lh-sik: 1.25;
+  --lh: 1.5;
+
+  /* Aralık ölçeği (4/8 px) */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+
+  --r-1: 6px;
+  --r-2: 10px;
+  --r-3: 14px;
+  --r-4: 20px;
+  --r-tam: 999px;
+
+  --dokunma: 44px;
+  --sure-hizli: 150ms;
+  --sure: 200ms;
+  --sure-yavas: 250ms;
+  --egri: cubic-bezier(0.2, 0, 0, 1);
+  --egri-cikis: cubic-bezier(0.3, 0, 0.8, 0.15);
+
+  --guvenli-alt: env(safe-area-inset-bottom, 0px);
+  --guvenli-ust: env(safe-area-inset-top, 0px);
+
+  /* Açık tema */
+  --bg: #f7f7f8;
+  --bg-ince: #f0f0f2;
+  --yuzey: #ffffff;
+  --yuzey-2: #fafafb;
+  --yuzey-ust: #ffffff;
+  --cizgi: #e4e4e8;
+  --cizgi-guclu: #cfcfd6;
+  --metin: #18181b;
+  --metin-2: #52525b;
+  --metin-3: #6b6b74;
+  --vurgu: #4f46e5;
+  --vurgu-metin: #ffffff;
+  --vurgu-zayif: #eef0ff;
+  --vurgu-cizgi: #c7cbfb;
+  --gecti: #1f7a4d;
+  --gecti-zayif: #e8f5ee;
+  --uyari: #8a5a00;
+  --uyari-zayif: #fdf4e3;
+  --kaldi: #b42318;
+  --kaldi-zayif: #fdecea;
+  --golge-1: 0 1px 2px rgba(16, 16, 24, 0.06);
+  --golge-2: 0 4px 16px -4px rgba(16, 16, 24, 0.1), 0 1px 3px rgba(16, 16, 24, 0.06);
+  --golge-3: 0 24px 48px -12px rgba(16, 16, 24, 0.22);
+  --perde: rgba(16, 16, 24, 0.32);
+  --dama-a: #ffffff;
+  --dama-b: #e9e9ee;
+  --odak: 0 0 0 3px color-mix(in srgb, var(--vurgu) 35%, transparent);
+
+  /* Alan imzaları: düşük doygunluk, yalnız küçük işaretler */
+  --a-magaza: #b06a8a;
+  --a-rozet: #b08a3e;
+  --a-kartlar: #6a7fb0;
+  --a-ikon: #5e9a8f;
+  --a-efekt: #a0775e;
+  --a-ses: #7d6ab0;
+  --a-muzik: #8f6aa6;
+  --a-icerik: #5f8f63;
+  --a-moderasyon: #9a6a6a;
+  --a-test: #6a8a9a;
+  --a-uretim-arayuz: #7a7f8f;
+  --a-panel-arayuz: #8a7a6a;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="acik"]) {
+    --bg: #111113;
+    --bg-ince: #18181b;
+    --yuzey: #1a1a1d;
+    --yuzey-2: #202024;
+    --yuzey-ust: #232327;
+    --cizgi: #2c2c31;
+    --cizgi-guclu: #3d3d44;
+    --metin: #ededef;
+    --metin-2: #b4b4bc;
+    --metin-3: #92929c;
+    --vurgu: #8b8cf8;
+    --vurgu-metin: #111113;
+    --vurgu-zayif: #22223a;
+    --vurgu-cizgi: #3d3d74;
+    --gecti: #5fc28d;
+    --gecti-zayif: #16261d;
+    --uyari: #e2b05a;
+    --uyari-zayif: #2a2113;
+    --kaldi: #f08a7e;
+    --kaldi-zayif: #2e1816;
+    --golge-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --golge-2: 0 6px 20px -6px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.4);
+    --golge-3: 0 28px 56px -12px rgba(0, 0, 0, 0.7);
+    --perde: rgba(0, 0, 0, 0.55);
+    --dama-a: #2a2a2f;
+    --dama-b: #202024;
+    color-scheme: dark;
+  }
+}
+
+:root[data-tema="koyu"] {
+  --bg: #111113;
+  --bg-ince: #18181b;
+  --yuzey: #1a1a1d;
+  --yuzey-2: #202024;
+  --yuzey-ust: #232327;
+  --cizgi: #2c2c31;
+  --cizgi-guclu: #3d3d44;
+  --metin: #ededef;
+  --metin-2: #b4b4bc;
+  --metin-3: #92929c;
+  --vurgu: #8b8cf8;
+  --vurgu-metin: #111113;
+  --vurgu-zayif: #22223a;
+  --vurgu-cizgi: #3d3d74;
+  --gecti: #5fc28d;
+  --gecti-zayif: #16261d;
+  --uyari: #e2b05a;
+  --uyari-zayif: #2a2113;
+  --kaldi: #f08a7e;
+  --kaldi-zayif: #2e1816;
+  --golge-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --golge-2: 0 6px 20px -6px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --golge-3: 0 28px 56px -12px rgba(0, 0, 0, 0.7);
+  --perde: rgba(0, 0, 0, 0.55);
+  --dama-a: #2a2a2f;
+  --dama-b: #202024;
+  color-scheme: dark;
+}
+
+/* Ayarlar > Yazı boyutu: Büyük */
+:root[data-yazi="buyuk"] {
+  --fs-11: 12px;
+  --fs-12: 13px;
+  --fs-13: 14px;
+  --fs-14: 16px;
+  --fs-16: 18px;
+  --fs-20: 22px;
+  --fs-24: 27px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sure-hizli: 0ms;
+    --sure: 0ms;
+    --sure-yavas: 0ms;
+  }
+}

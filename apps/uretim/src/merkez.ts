@@ -31,6 +31,7 @@ import type {
   IstekKarti,
   KodIstegi,
   KontrolRaporu,
+  Kucuk,
   NotKaydi,
   OgeAyrinti,
   OgeDosyasi,
@@ -1203,6 +1204,7 @@ export class Merkez {
           now - GUN,
         ),
         havuzda: sayi("SELECT COUNT(*) AS n FROM oge WHERE alan = ? AND durum = 'havuzda'"),
+        son: this.sonOnizleme(alan),
       };
     });
     const uyarilar: Uyari[] = [];
@@ -1262,7 +1264,47 @@ export class Merkez {
       havuz: { toplam: tekTik.length, tekTik: tt, paketlenecek: tekTik.length - tt },
       geriDonen24s: this.geriDonenSay(now - GUN),
       kota,
+      bugun: this.bugun(now),
     };
+  }
+
+  private bugun(now: number): Pano["bugun"] {
+    const bas = now - GUN;
+    const n = (sql: string): number => Number((this.db.prepare(sql).get(bas) as { n: number }).n);
+    return {
+      gelen: n("SELECT COUNT(*) AS n FROM oge WHERE olusturma > ? AND durum != 'kaldi'"),
+      onaylanan: n("SELECT COUNT(*) AS n FROM oge WHERE karar > ? AND durum IN ('havuzda','pakette','oyuna_eklendi','canlida')"),
+      reddedilen: n("SELECT COUNT(*) AS n FROM oge WHERE karar > ? AND durum IN ('reddedildi','duzeltme_istendi')"),
+      geriDonen: n("SELECT COUNT(*) AS n FROM oge WHERE olusturma > ? AND durum = 'kaldi'"),
+    };
+  }
+
+  /** Alanın son teslimi (geri dönenler hariç) ve küçük önizlemesi. */
+  private sonOnizleme(alan: AlanId): AlanKarti["son"] {
+    const r = this.db.prepare("SELECT * FROM oge WHERE alan = ? AND durum != 'kaldi' ORDER BY id DESC LIMIT 1").get(alan) as unknown as OgeSatiri | undefined;
+    if (!r) return null;
+    const dosyalar = json<OgeDosyasi[]>(r.dosyalar, []);
+    const satirlar = json<unknown[]>(r.satirlar, []);
+    let kucuk: Kucuk | null = null;
+    const g = dosyalar.find((d) => d.tur === "png");
+    const s = dosyalar.find((d) => d.meta?.tur === "ses");
+    if (g) kucuk = { tur: "gorsel", ogeId: r.id, ozet: g.ozet };
+    else if (s && s.meta?.tur === "ses") kucuk = { tur: "dalga", dalga: s.meta.dalga.filter((_, i) => i % 4 === 0) };
+    else if (satirlar.length)
+      kucuk = {
+        tur: "satirlar",
+        satirlar: satirlar.slice(0, 3).map((x) => {
+          if (x && typeof x === "object") {
+            const o = x as Record<string, unknown>;
+            const alanlar = o.alanlar && typeof o.alanlar === "object" ? Object.values(o.alanlar as Record<string, unknown>) : null;
+            if (alanlar) return alanlar.map(String).join(" · ").slice(0, 60);
+            return String(o.name ?? o.kalip ?? o.ad ?? Object.values(o)[0] ?? "").slice(0, 60);
+          }
+          return String(x).slice(0, 60);
+        }),
+      };
+    else if (r.aciklama) kucuk = { tur: "metin", metin: r.aciklama.slice(0, 120) };
+    return { id: r.id, ad: r.ad, durum: r.durum as Durum, olusturma: r.olusturma, kucuk };
   }
 
   /** Test alanının en son raporundaki kırmızı/sarı işaretler (UM-U1, U9). */

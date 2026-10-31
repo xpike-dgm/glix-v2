@@ -181,7 +181,15 @@ export interface AlanKarti {
   onayOrani7g: number | null;
   geriDonen24s: number;
   havuzda: number;
+  /** Son gelen (geri dönmemiş) teslimin küçük önizlemesi. */
+  son: { id: number; ad: string; durum: Durum; olusturma: number; kucuk: Kucuk | null } | null;
 }
+
+export type Kucuk =
+  | { tur: "gorsel"; ogeId: number; ozet: string }
+  | { tur: "dalga"; dalga: number[] }
+  | { tur: "satirlar"; satirlar: string[] }
+  | { tur: "metin"; metin: string };
 
 export interface Uyari {
   seviye: "kirmizi" | "sari";
@@ -198,6 +206,7 @@ export interface Pano {
   havuz: { toplam: number; tekTik: number; paketlenecek: number };
   geriDonen24s: number;
   kota: { kullanilan: number; sinir: number };
+  bugun: { gelen: number; onaylanan: number; reddedilen: number; geriDonen: number };
 }
 
 export interface PaketKaydi {
