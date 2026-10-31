@@ -23,7 +23,11 @@ async function istek<T>(yontem: "GET" | "POST", yol: string, govde?: unknown, ha
       credentials: "same-origin",
       headers: {
         ...(yontem === "POST" ? { "X-Uretim": "1" } : {}),
-        ...(ham ? { "Content-Type": "application/octet-stream" } : govde !== undefined || yontem === "POST" ? { "Content-Type": "application/json" } : {}),
+        ...(ham
+          ? { "Content-Type": "application/octet-stream" }
+          : govde !== undefined || yontem === "POST"
+            ? { "Content-Type": "application/json" }
+            : {}),
       },
       ...(ham ? { body: ham } : yontem === "POST" ? { body: JSON.stringify(govde ?? {}) } : {}),
     });
@@ -38,7 +42,10 @@ async function istek<T>(yontem: "GET" | "POST", yol: string, govde?: unknown, ha
   }
   if (r.status === 401 && yol !== "oturum") oturumKapandi();
   if (!r.ok) {
-    const m = j && typeof j === "object" && typeof (j as { mesaj?: unknown }).mesaj === "string" ? (j as { mesaj: string }).mesaj : "Bir sorun oldu. Biraz sonra yeniden dene.";
+    const m =
+      j && typeof j === "object" && typeof (j as { mesaj?: unknown }).mesaj === "string"
+        ? (j as { mesaj: string }).mesaj
+        : "Bir sorun oldu. Biraz sonra yeniden dene.";
     throw new ApiHatasi(r.status, m);
   }
   return j as T;
@@ -46,6 +53,7 @@ async function istek<T>(yontem: "GET" | "POST", yol: string, govde?: unknown, ha
 
 export const al = <T>(yol: string): Promise<T> => istek<T>("GET", yol);
 export const gonder = <T>(yol: string, govde?: unknown): Promise<T> => istek<T>("POST", yol, govde);
-export const dosyaGonder = <T>(yol: string, dosya: Blob): Promise<T> => istek<T>("POST", yol, undefined, dosya);
+export const dosyaGonder = <T>(yol: string, dosya: Blob): Promise<T> =>
+  istek<T>("POST", yol, undefined, dosya);
 
 export const dosyaUrl = (ogeId: number, ozet: string): string => `/api/oge/${ogeId}/dosya/${ozet}`;

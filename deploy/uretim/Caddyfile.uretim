@@ -1,0 +1,16 @@
+# Üretim Merkezi site bloğu (TASLAK). Var olan glix.dgmcraft.online bloğuna dokunulmaz.
+uretim.dgmcraft.online {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Robots-Tag "noindex, nofollow"
+	}
+	# Sağlık ucu yalnız sunucunun kendisinden (127.0.0.1:3910/saglik).
+	@saglik path /saglik
+	respond @saglik 404
+	# Büyük teslimler (30 MB ses, base64) için gövde sınırı.
+	request_body {
+		max_size 45MB
+	}
+	reverse_proxy 127.0.0.1:3910
+}

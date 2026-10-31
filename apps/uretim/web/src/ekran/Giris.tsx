@@ -17,7 +17,10 @@ export function Giris(): JSX.Element {
   const geriSay = (): void => {
     setKalan(60);
     clearInterval(sayac);
-    sayac = setInterval(() => setKalan((k) => (k <= 1 ? (clearInterval(sayac), 0) : k - 1)), 1000);
+    sayac = setInterval(() => {
+      if (kalan() <= 1) clearInterval(sayac);
+      setKalan((k) => Math.max(0, k - 1));
+    }, 1000);
   };
   const kodIste = async (e?: Event): Promise<void> => {
     e?.preventDefault();
@@ -57,16 +60,33 @@ export function Giris(): JSX.Element {
           </span>
         </div>
         <h1>Üretim Merkezi</h1>
-        <p class="soluk">{adim() === "eposta" ? "Devam etmek için e-postanı yaz; sana tek kullanımlık bir kod gönderelim." : `${eposta()} adresine gelen 6 haneli kodu yaz.`}</p>
+        <p class="soluk">
+          {adim() === "eposta"
+            ? "Devam etmek için e-postanı yaz; sana tek kullanımlık bir kod gönderelim."
+            : `${eposta()} adresine gelen 6 haneli kodu yaz.`}
+        </p>
         <Show
           when={adim() === "kod"}
           fallback={
             <form class="yigin" onSubmit={kodIste}>
               <label class="alan-giris">
                 <span>E-posta</span>
-                <input class="girdi" type="email" autocomplete="email" inputmode="email" required value={eposta()} onInput={(e) => setEposta(e.currentTarget.value)} placeholder="ad@ornek.com" />
+                <input
+                  class="girdi"
+                  type="email"
+                  autocomplete="email"
+                  inputmode="email"
+                  required
+                  value={eposta()}
+                  onInput={(e) => setEposta(e.currentTarget.value)}
+                  placeholder="ad@ornek.com"
+                />
               </label>
-              <button class="dg dg--birincil dg--b dg--tam" disabled={bekle() || !eposta().includes("@")}>
+              <button
+                type="submit"
+                class="dg dg--birincil dg--b dg--tam"
+                disabled={bekle() || !eposta().includes("@")}
+              >
                 {bekle() ? "Gönderiliyor…" : "Kod gönder"}
               </button>
             </form>
@@ -93,19 +113,41 @@ export function Giris(): JSX.Element {
               />
             </label>
             <label class="satir onay-satiri">
-              <input type="checkbox" class="onay-kutusu" checked={guven()} onChange={(e) => setGuven(e.currentTarget.checked)} />
+              <input
+                type="checkbox"
+                class="onay-kutusu"
+                checked={guven()}
+                onChange={(e) => setGuven(e.currentTarget.checked)}
+              />
               <span>
                 Bu cihaza güven <span class="cok-soluk">(30 gün açık kalır)</span>
               </span>
             </label>
-            <button class="dg dg--birincil dg--b dg--tam" disabled={bekle() || kod().length !== 6}>
+            <button
+              type="submit"
+              class="dg dg--birincil dg--b dg--tam"
+              disabled={bekle() || kod().length !== 6}
+            >
               {bekle() ? "Kontrol ediliyor…" : "Giriş yap"}
             </button>
             <div class="satir satir--ara kucuk" id="kod-not">
-              <button type="button" class="dg dg--hayalet dg--k" onClick={() => (setAdim("eposta"), setKod(""), setHata(""))}>
+              <button
+                type="button"
+                class="dg dg--hayalet dg--k"
+                onClick={() => {
+                  setAdim("eposta");
+                  setKod("");
+                  setHata("");
+                }}
+              >
                 <Simge ad="onceki" /> E-postayı değiştir
               </button>
-              <button type="button" class="dg dg--hayalet dg--k" disabled={kalan() > 0 || bekle()} onClick={() => void kodIste()}>
+              <button
+                type="button"
+                class="dg dg--hayalet dg--k"
+                disabled={kalan() > 0 || bekle()}
+                onClick={() => void kodIste()}
+              >
                 {kalan() > 0 ? `Yeni kod ${kalan()} sn` : "Yeni kod gönder"}
               </button>
             </div>

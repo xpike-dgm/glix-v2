@@ -2,19 +2,55 @@
  * İnceleme (UM-U3, U5, U6): tam ekran odak modu. Büyük önizleme + yan panel (bilgi, ön kontrol, geçmiş, fark),
  * başparmak bölgesinde karar çubuğu, klavye kısayolları, telefonda kaydırma jestleri, 10 sn geri al, "sıradaki" akışı.
  */
-import { batch, createEffect, createMemo, createResource, createSignal, For, type JSX, Match, on, onCleanup, onMount, Show, Switch } from "solid-js";
+import {
+  batch,
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  For,
+  type JSX,
+  Match,
+  on,
+  onCleanup,
+  onMount,
+  Show,
+  Switch,
+} from "solid-js";
 import { HAZIR_NOTLAR, type HazirNotKodu } from "../../../src/ortak/durum.js";
-import { TESLIM_TURU_ADI } from "../../../src/ortak/tipler.js";
 import type { KontrolSatiri, OgeAyrinti, OgeOzeti } from "../../../src/ortak/tipler.js";
+import { TESLIM_TURU_ADI } from "../../../src/ortak/tipler.js";
 import { al, gonder } from "../api.js";
 import { boyut, goreliZaman, tarihSaat } from "../bicim.js";
 import { AlanIsareti, AltSayfa, Bos, DurumEtiketi, Iskelet, Sekmeler, SonucEtiketi } from "../bilesenler.js";
-import { alanBul, git, hataTost, oturum, rehberGoruldu, rehberiKapat, sorgu, titret, tost, yolAdi } from "../durum.js";
+import {
+  alanBul,
+  git,
+  hataTost,
+  oturum,
+  rehberGoruldu,
+  rehberiKapat,
+  sorgu,
+  titret,
+  tost,
+  yolAdi,
+} from "../durum.js";
 import { jestIpucu, jestKarari } from "../jest.js";
-import { panoYenile } from "../Kabuk.js";
-import { yazmaAlaniMi } from "../Kabuk.js";
+import { panoYenile, yazmaAlaniMi } from "../Kabuk.js";
 import { OyunOnizleme, varsayilanEkran } from "../onizleme/OyunOnizleme.js";
-import { AnimasyonSahne, FarkGorunumu, FikirSahne, GorselSahne, KartSahne, ListeSahne, MetinSahne, RaporSahne, SesSahne, WikiSahne, zeminDondur } from "../onizleme/Sahneler.js";
+import {
+  AnimasyonSahne,
+  FarkGorunumu,
+  FikirSahne,
+  GorselSahne,
+  KartSahne,
+  ListeSahne,
+  MetinSahne,
+  RaporSahne,
+  SesSahne,
+  WikiSahne,
+  zeminDondur,
+} from "../onizleme/Sahneler.js";
 import { Simge, type SimgeAdi } from "../simgeler.js";
 
 interface Ayrinti {
@@ -26,8 +62,19 @@ interface Ayrinti {
 type Karar = "onay" | "ret" | "duzeltme";
 type Panel = "bilgi" | "kontrol" | "gecmis" | "fark";
 
-const GRUP_ADI: Record<KontrolSatiri["grup"], string> = { ortak: "Ortak", gorsel: "Görsel", ses: "Ses", metin: "Metin ve havuz", alan: "Alan kuralları" };
-const SONUC_SIMGE: Record<KontrolSatiri["sonuc"], SimgeAdi> = { gecti: "onay", uyari: "uyari", kaldi: "ret", atlandi: "saat" };
+const GRUP_ADI: Record<KontrolSatiri["grup"], string> = {
+  ortak: "Ortak",
+  gorsel: "Görsel",
+  ses: "Ses",
+  metin: "Metin ve havuz",
+  alan: "Alan kuralları",
+};
+const SONUC_SIMGE: Record<KontrolSatiri["sonuc"], SimgeAdi> = {
+  gecti: "onay",
+  uyari: "uyari",
+  kaldi: "ret",
+  atlandi: "saat",
+};
 
 function KontrolListesi(p: { satirlar: KontrolSatiri[] }): JSX.Element {
   const gruplar = createMemo(() => {
@@ -42,7 +89,13 @@ function KontrolListesi(p: { satirlar: KontrolSatiri[] }): JSX.Element {
           <section class="kontrol-grup">
             <h3>{GRUP_ADI[g]}</h3>
             <ul>
-              <For each={[...l].sort((a, b) => ["kaldi", "uyari", "atlandi", "gecti"].indexOf(a.sonuc) - ["kaldi", "uyari", "atlandi", "gecti"].indexOf(b.sonuc))}>
+              <For
+                each={[...l].sort(
+                  (a, b) =>
+                    ["kaldi", "uyari", "atlandi", "gecti"].indexOf(a.sonuc) -
+                    ["kaldi", "uyari", "atlandi", "gecti"].indexOf(b.sonuc),
+                )}
+              >
                 {(s) => (
                   <li class={`kontrol kontrol--${s.sonuc}`}>
                     <Simge ad={SONUC_SIMGE[s.sonuc]} boyut={16} />
@@ -147,7 +200,16 @@ function GecmisPaneli(p: { a: Ayrinti }): JSX.Element {
             <For each={p.a.oge.notlar}>
               {(n) => (
                 <li>
-                  <span class="cok-soluk kucuk">{n.tur === "otomatik" ? "Ön kontrol" : n.tur === "ret" ? "Ret" : n.tur === "duzeltme" ? "Düzeltme" : "Not"} · {goreliZaman(n.olusturma, Date.now())}</span>
+                  <span class="cok-soluk kucuk">
+                    {n.tur === "otomatik"
+                      ? "Ön kontrol"
+                      : n.tur === "ret"
+                        ? "Ret"
+                        : n.tur === "duzeltme"
+                          ? "Düzeltme"
+                          : "Not"}{" "}
+                    · {goreliZaman(n.olusturma, Date.now())}
+                  </span>
                   <p>{n.metin}</p>
                 </li>
               )}
@@ -169,7 +231,11 @@ function GecmisPaneli(p: { a: Ayrinti }): JSX.Element {
   );
 }
 
-function KararSayfasi(p: { tur: "ret" | "duzeltme"; kapat: () => void; gonder: (hazir: HazirNotKodu | null, metin: string) => void }): JSX.Element {
+function KararSayfasi(p: {
+  tur: "ret" | "duzeltme";
+  kapat: () => void;
+  gonder: (hazir: HazirNotKodu | null, metin: string) => void;
+}): JSX.Element {
   const [hazir, setHazir] = createSignal<HazirNotKodu | null>(null);
   const [metin, setMetin] = createSignal("");
   const hazirMi = (): boolean => hazir() !== null || metin().trim().length >= 2;
@@ -182,23 +248,36 @@ function KararSayfasi(p: { tur: "ret" | "duzeltme"; kapat: () => void; gonder: (
           <button type="button" class="dg dg--hayalet" onClick={p.kapat}>
             Vazgeç
           </button>
-          <button type="button" class={`dg esnek ${p.tur === "ret" ? "dg--tehlike" : "dg--birincil"}`} disabled={!hazirMi()} onClick={() => p.gonder(hazir(), metin())}>
+          <button
+            type="button"
+            class={`dg esnek ${p.tur === "ret" ? "dg--tehlike" : "dg--birincil"}`}
+            disabled={!hazirMi()}
+            onClick={() => p.gonder(hazir(), metin())}
+          >
             {p.tur === "ret" ? "Reddet" : "Düzeltme iste"}
           </button>
         </>
       }
     >
       <div class="yigin">
-        <p class="soluk kucuk">Not yapay zekâya gider; bir sonraki turda dikkate alır. Bir hazır not seç ya da kısaca yaz.</p>
-        <div class="cipler" role="group" aria-label="Hazır notlar">
+        <p class="soluk kucuk">
+          Not yapay zekâya gider; bir sonraki turda dikkate alır. Bir hazır not seç ya da kısaca yaz.
+        </p>
+        <fieldset class="cipler" aria-label="Hazır notlar">
           <For each={HAZIR_NOTLAR}>
             {(n, i) => (
-              <button type="button" class="cip" aria-pressed={hazir() === n.kod} onClick={() => setHazir(hazir() === n.kod ? null : n.kod)} data-ilk-odak={i() === 0 ? "" : undefined}>
+              <button
+                type="button"
+                class="cip"
+                aria-pressed={hazir() === n.kod}
+                onClick={() => setHazir(hazir() === n.kod ? null : n.kod)}
+                data-ilk-odak={i() === 0 ? "" : undefined}
+              >
                 {n.metin}
               </button>
             )}
           </For>
-        </div>
+        </fieldset>
         <textarea
           class="girdi"
           rows="3"
@@ -244,7 +323,7 @@ function BenzerSayfasi(p: { oge: OgeAyrinti; kapat: () => void }): JSX.Element {
     >
       <div class="yigin">
         <p class="soluk kucuk">“{p.oge.ad}” örnek alınarak alana yeni bir iş açılır.</p>
-        <label class="alan-giris">
+        <div class="alan-giris">
           <span>Kaç tane</span>
           <div class="secim">
             <For each={[1, 3, 5, 10]}>
@@ -255,10 +334,17 @@ function BenzerSayfasi(p: { oge: OgeAyrinti; kapat: () => void }): JSX.Element {
               )}
             </For>
           </div>
-        </label>
+        </div>
         <label class="alan-giris">
           <span>Şu farkla (isteğe bağlı)</span>
-          <textarea class="girdi" rows="2" value={fark()} onInput={(e) => setFark(e.currentTarget.value)} placeholder="ör. sıcak renklerle, kış temalı" maxlength="500" />
+          <textarea
+            class="girdi"
+            rows="2"
+            value={fark()}
+            onInput={(e) => setFark(e.currentTarget.value)}
+            placeholder="ör. sıcak renklerle, kış temalı"
+            maxlength="500"
+          />
         </label>
       </div>
     </AltSayfa>
@@ -294,7 +380,15 @@ function FikirSecSayfasi(p: { oge: OgeAyrinti; kapat: () => void; tamam: () => v
     >
       <div class="yigin">
         <p class="soluk kucuk">Diğer fikirler gerekçesiz arşive gider. İstersen küçük bir değişiklik iste.</p>
-        <textarea class="girdi" rows="3" value={not()} onInput={(e) => setNot(e.currentTarget.value)} placeholder="ör. bunu al ama rengi diğer fikirdeki gibi mor olsun" maxlength="600" data-ilk-odak />
+        <textarea
+          class="girdi"
+          rows="3"
+          value={not()}
+          onInput={(e) => setNot(e.currentTarget.value)}
+          placeholder="ör. bunu al ama rengi diğer fikirdeki gibi mor olsun"
+          maxlength="600"
+          data-ilk-odak
+        />
       </div>
     </AltSayfa>
   );
@@ -340,14 +434,21 @@ export function Incele(): JSX.Element {
     const m = /^\/incele\/(\d+)$/.exec(yolAdi());
     return m?.[1] ? Number(m[1]) : null;
   };
-  const [kuyruk, { refetch: kuyrukYenile }] = createResource(alanSuzgeci, async (a) => (await al<{ ogeler: OgeOzeti[] }>(`kuyruk${a ? `?alan=${a}` : ""}`)).ogeler, { initialValue: [] });
+  const [kuyruk, { refetch: kuyrukYenile }] = createResource(
+    alanSuzgeci,
+    async (a) => (await al<{ ogeler: OgeOzeti[] }>(`kuyruk${a ? `?alan=${a}` : ""}`)).ogeler,
+    { initialValue: [] },
+  );
   // `null` kaynakta tetiklenmez; bu yüzden ayrıca bir kez yüklenir.
-  const [kuyrukTum, { mutate: kuyrukTumMutate }] = createResource(async () => (alanSuzgeci() ? [] : (await al<{ ogeler: OgeOzeti[] }>("kuyruk")).ogeler));
+  const [kuyrukTum, { mutate: kuyrukTumMutate }] = createResource(async () =>
+    alanSuzgeci() ? [] : (await al<{ ogeler: OgeOzeti[] }>("kuyruk")).ogeler,
+  );
   const liste = (): OgeOzeti[] => (alanSuzgeci() ? kuyruk() : (kuyrukTum() ?? []));
   const [bitenler, setBitenler] = createSignal(0);
   const [baslangicToplam, setBaslangicToplam] = createSignal<number | null>(null);
   createEffect(() => {
-    if (baslangicToplam() === null && !kuyrukTum.loading && liste().length) setBaslangicToplam(liste().length);
+    if (baslangicToplam() === null && !kuyrukTum.loading && liste().length)
+      setBaslangicToplam(liste().length);
   });
   const etkinId = (): number | null => istenenId() ?? liste()[0]?.id ?? null;
   const [ayrinti, { mutate: ayrintiDegistir }] = createResource(etkinId, (id) => al<Ayrinti>(`oge/${id}`));
@@ -355,7 +456,11 @@ export function Incele(): JSX.Element {
     () => (ayrinti()?.oge.gorunum === "fikir" && ayrinti()?.oge.isId ? ayrinti()?.oge.isId : null),
     async (isId) => {
       const r = await al<{ ogeler: OgeOzeti[] }>(`is/${isId}/fikirler`);
-      return Promise.all(r.ogeler.filter((x) => x.durum === "bekliyor").map(async (x) => (await al<Ayrinti>(`oge/${x.id}`)).oge));
+      return Promise.all(
+        r.ogeler
+          .filter((x) => x.durum === "bekliyor")
+          .map(async (x) => (await al<Ayrinti>(`oge/${x.id}`)).oge),
+      );
     },
   );
   const [panel, setPanel] = createSignal<Panel>("bilgi");
@@ -374,7 +479,15 @@ export function Incele(): JSX.Element {
       () => ayrinti()?.oge.id,
       () => {
         const o = ayrinti()?.oge;
-        setSecili(new Set<number>(o ? o.satirlar.map((_, i) => i).filter((i) => !o.kontrol.satirlar.some((s) => s.satir === i && s.sonuc !== "gecti")) : []));
+        setSecili(
+          new Set<number>(
+            o
+              ? o.satirlar
+                  .map((_, i) => i)
+                  .filter((i) => !o.kontrol.satirlar.some((s) => s.satir === i && s.sonuc !== "gecti"))
+              : [],
+          ),
+        );
         setPanel(o && o.kontrol.sonuc !== "gecti" ? "kontrol" : "bilgi");
         setCikis(null);
       },
@@ -455,7 +568,12 @@ export function Incele(): JSX.Element {
       if (karar === "ret" && !hazir && !metin) return void setKararSayfa("ret");
       setMesgul(true);
       try {
-        await gonder(`oge/${o.id}/denetim`, { uygun: karar === "onay", metin: [hazir ? HAZIR_NOTLAR.find((n) => n.kod === hazir)?.metin : "", metin].filter(Boolean).join(" — ") });
+        await gonder(`oge/${o.id}/denetim`, {
+          uygun: karar === "onay",
+          metin: [hazir ? HAZIR_NOTLAR.find((n) => n.kod === hazir)?.metin : "", metin]
+            .filter(Boolean)
+            .join(" — "),
+        });
         setKararSayfa(null);
         kararSonrasi(o, karar);
       } catch (e) {
@@ -468,12 +586,19 @@ export function Incele(): JSX.Element {
     if (o.durum !== "bekliyor") return void tost("Bu teslim için karar verilmiş.");
     if (karar !== "onay" && !hazir && metin.trim().length < 2) return void setKararSayfa(karar);
     if (karar === "onay" && o.gorunum === "fikir") return void setFikirSayfa(true);
-    if (karar === "onay" && o.gorunum === "liste" && secili().size === 0) return void tost("Onaylanacak satır seçmedin.", { hata: true });
+    if (karar === "onay" && o.gorunum === "liste" && secili().size === 0)
+      return void tost("Onaylanacak satır seçmedin.", { hata: true });
     setMesgul(true);
     try {
-      const govde: Record<string, unknown> = { karar, ...(hazir ? { hazir } : {}), ...(metin.trim() ? { metin } : {}) };
-      if (karar === "onay" && o.gorunum === "liste" && secili().size < o.satirlar.length) govde.satirlar = [...secili()].sort((x, y) => x - y);
-      if (karar === "onay" && o.varyantIs) await gonder(`is/${o.varyantIs}/varyant-sec`, { ogeId: o.id, karisim: "" });
+      const govde: Record<string, unknown> = {
+        karar,
+        ...(hazir ? { hazir } : {}),
+        ...(metin.trim() ? { metin } : {}),
+      };
+      if (karar === "onay" && o.gorunum === "liste" && secili().size < o.satirlar.length)
+        govde.satirlar = [...secili()].sort((x, y) => x - y);
+      if (karar === "onay" && o.varyantIs)
+        await gonder(`is/${o.varyantIs}/varyant-sec`, { ogeId: o.id, karisim: "" });
       else await gonder(`oge/${o.id}/karar`, govde);
       setKararSayfa(null);
       kararSonrasi(o, karar);
@@ -485,7 +610,17 @@ export function Incele(): JSX.Element {
   };
 
   const tus = (e: KeyboardEvent): void => {
-    if (yazmaAlaniMi(e.target) || e.metaKey || e.ctrlKey || e.altKey || kararSayfa() || benzerAcik() || oyunAcik() || fikirSayfa()) return;
+    if (
+      yazmaAlaniMi(e.target) ||
+      e.metaKey ||
+      e.ctrlKey ||
+      e.altKey ||
+      kararSayfa() ||
+      benzerAcik() ||
+      oyunAcik() ||
+      fikirSayfa()
+    )
+      return;
     const k = e.key.toLowerCase();
     if (k === "o") void kararVer("onay");
     else if (k === "r") void kararVer("ret");
@@ -535,7 +670,11 @@ export function Incele(): JSX.Element {
   });
   const kartStili = (): JSX.CSSProperties => {
     const s = suruk();
-    if (s) return { transform: `translate(${s.dx}px, ${Math.min(0, s.dy)}px) rotate(${s.dx / 28}deg)`, transition: "none" };
+    if (s)
+      return {
+        transform: `translate(${s.dx}px, ${Math.min(0, s.dy)}px) rotate(${s.dx / 28}deg)`,
+        transition: "none",
+      };
     return {};
   };
 
@@ -566,21 +705,44 @@ export function Incele(): JSX.Element {
           )}
         </Show>
         <Show when={liste().length || bitenler()}>
-          <div class="odak__ilerleme" aria-label={`İlerleme ${bitenler() + sira() + 1} / ${toplam()}`}>
+          <div
+            class="odak__ilerleme"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={toplam()}
+            aria-valuenow={Math.min(toplam(), bitenler() + sira() + 1)}
+            aria-label="İnceleme ilerlemesi"
+          >
             <span class="kucuk">
               <strong>{Math.min(toplam(), bitenler() + sira() + 1)}</strong>
               <span class="cok-soluk"> / {toplam()}</span>
             </span>
             <div class="cubuk">
-              <span style={{ width: `${(Math.min(toplam(), bitenler() + sira() + 1) / Math.max(1, toplam())) * 100}%` }} />
+              <span
+                style={{
+                  width: `${(Math.min(toplam(), bitenler() + sira() + 1) / Math.max(1, toplam())) * 100}%`,
+                }}
+              />
             </div>
           </div>
         </Show>
         <div class="odak__gezinme">
-          <button type="button" class="dg-simge" disabled={sira() === 0} onClick={() => gec(-1)} aria-label="Önceki (←)">
+          <button
+            type="button"
+            class="dg-simge"
+            disabled={sira() === 0}
+            onClick={() => gec(-1)}
+            aria-label="Önceki (←)"
+          >
             <Simge ad="onceki" />
           </button>
-          <button type="button" class="dg-simge" disabled={sira() >= liste().length - 1} onClick={() => gec(1)} aria-label="Sıradaki (→)">
+          <button
+            type="button"
+            class="dg-simge"
+            disabled={sira() >= liste().length - 1}
+            onClick={() => gec(1)}
+            aria-label="Sıradaki (→)"
+          >
             <Simge ad="sonraki" />
           </button>
         </div>
@@ -598,13 +760,21 @@ export function Incele(): JSX.Element {
                 </button>
               }
             >
-              {bitenler() ? `${bitenler()} teslim için karar verdin. Yeni teslim gelince bildirim alırsın.` : "Yapay zekâlar teslim edince burada sıraya girer. Ön kontrolden kalanlar sana gelmez."}
+              {bitenler()
+                ? `${bitenler()} teslim için karar verdin. Yeni teslim gelince bildirim alırsın.`
+                : "Yapay zekâlar teslim edince burada sıraya girer. Ön kontrolden kalanlar sana gelmez."}
             </Bos>
           </div>
         </Match>
         <Match when={true}>
           <div class="odak__govde">
-            <div class="odak__sahne" onPointerDown={jestBasla} onPointerMove={jestHareket} onPointerUp={jestBitir} onPointerCancel={jestBitir}>
+            <div
+              class="odak__sahne"
+              onPointerDown={jestBasla}
+              onPointerMove={jestHareket}
+              onPointerUp={jestBitir}
+              onPointerCancel={jestBitir}
+            >
               <Show
                 when={!ayrinti.loading && ayrinti()}
                 fallback={
@@ -614,11 +784,23 @@ export function Incele(): JSX.Element {
                 }
               >
                 {(a) => (
-                  <div class={`odak__kart ${cikis() ? `odak__kart--cikis-${cikis()}` : ""}`} style={kartStili()}>
+                  <div
+                    class={`odak__kart ${cikis() ? `odak__kart--cikis-${cikis()}` : ""}`}
+                    style={kartStili()}
+                  >
                     <Show when={ipucu().karar}>
                       <div class={`jest-ipucu jest-ipucu--${ipucu().karar}`} style={{ opacity: ipucu().guc }}>
-                        <Simge ad={ipucu().karar === "onay" ? "onay" : ipucu().karar === "ret" ? "ret" : "duzeltme"} boyut={28} />
-                        {ipucu().karar === "onay" ? "Onayla" : ipucu().karar === "ret" ? "Reddet" : "Düzeltme"}
+                        <Simge
+                          ad={
+                            ipucu().karar === "onay" ? "onay" : ipucu().karar === "ret" ? "ret" : "duzeltme"
+                          }
+                          boyut={28}
+                        />
+                        {ipucu().karar === "onay"
+                          ? "Onayla"
+                          : ipucu().karar === "ret"
+                            ? "Reddet"
+                            : "Düzeltme"}
                       </div>
                     </Show>
                     <Show when={a().oge.durum !== "bekliyor" && !a().oge.denetim}>
@@ -632,7 +814,10 @@ export function Incele(): JSX.Element {
                     <Show when={a().oge.denetim}>
                       <div class="serit serit--bilgi">
                         <Simge ad="kalkan" />
-                        <span>Bu teslim kademeli güvenle kendiliğinden onaylandı. Uygun değilse bu alanın otomatik onayı kapanır.</span>
+                        <span>
+                          Bu teslim kademeli güvenle kendiliğinden onaylandı. Uygun değilse bu alanın otomatik
+                          onayı kapanır.
+                        </span>
                       </div>
                     </Show>
                     <Show when={a().oge.varyantIs}>
@@ -652,7 +837,12 @@ export function Incele(): JSX.Element {
                         <SesSahne oge={a().oge} onceki={a().onceki} muzik={a().oge.gorunum === "muzik"} />
                       </Match>
                       <Match when={a().oge.gorunum === "liste"}>
-                        <ListeSahne oge={a().oge} secili={secili()} setSecili={setSecili} karar={a().oge.durum === "bekliyor"} />
+                        <ListeSahne
+                          oge={a().oge}
+                          secili={secili()}
+                          setSecili={setSecili}
+                          karar={a().oge.durum === "bekliyor"}
+                        />
                       </Match>
                       <Match when={a().oge.gorunum === "kart"}>
                         <KartSahne oge={a().oge} />
@@ -684,7 +874,16 @@ export function Incele(): JSX.Element {
               </Show>
             </div>
             <aside class="odak__panel">
-              <Show when={ayrinti()} fallback={<div class="yigin"><Iskelet /><Iskelet g="80%" /><Iskelet g="60%" /></div>}>
+              <Show
+                when={ayrinti()}
+                fallback={
+                  <div class="yigin">
+                    <Iskelet />
+                    <Iskelet g="80%" />
+                    <Iskelet g="60%" />
+                  </div>
+                }
+              >
                 {(a) => (
                   <>
                     <Sekmeler<Panel>
@@ -693,7 +892,13 @@ export function Incele(): JSX.Element {
                       sec={setPanel}
                       secenekler={[
                         { id: "bilgi", ad: "Bilgi" },
-                        { id: "kontrol", ad: "Ön kontrol", sayi: a().oge.kontrol.satirlar.filter((s) => s.sonuc === "uyari" || s.sonuc === "kaldi").length },
+                        {
+                          id: "kontrol",
+                          ad: "Ön kontrol",
+                          sayi: a().oge.kontrol.satirlar.filter(
+                            (s) => s.sonuc === "uyari" || s.sonuc === "kaldi",
+                          ).length,
+                        },
                         { id: "gecmis", ad: "Geçmiş", sayi: a().oge.notlar.length },
                       ]}
                     />
@@ -732,25 +937,41 @@ export function Incele(): JSX.Element {
               when={ayrinti()?.oge.denetim}
               fallback={
                 <div class="karar-cubugu">
-                  <button type="button" class="dg dg--b karar karar--ret" disabled={mesgul() || ayrinti()?.oge.durum !== "bekliyor"} onClick={() => void kararVer("ret")}>
+                  <button
+                    type="button"
+                    class="dg dg--b karar karar--ret"
+                    disabled={mesgul() || ayrinti()?.oge.durum !== "bekliyor"}
+                    onClick={() => void kararVer("ret")}
+                  >
                     <Simge ad="ret" />
                     <span>Reddet</span>
                     <span class="kisayol">R</span>
                   </button>
                   <Show when={ayrinti()?.oge.gorunum !== "fikir"}>
-                    <button type="button" class="dg dg--b karar karar--duzelt" disabled={mesgul() || ayrinti()?.oge.durum !== "bekliyor"} onClick={() => void kararVer("duzeltme")}>
+                    <button
+                      type="button"
+                      class="dg dg--b karar karar--duzelt"
+                      disabled={mesgul() || ayrinti()?.oge.durum !== "bekliyor"}
+                      onClick={() => void kararVer("duzeltme")}
+                    >
                       <Simge ad="duzeltme" />
                       <span class="uzun">Düzeltme</span>
                       <span class="kisa">Düzelt</span>
                       <span class="kisayol">D</span>
                     </button>
                   </Show>
-                  <button type="button" class="dg dg--b dg--onay karar karar--onay" disabled={mesgul() || ayrinti()?.oge.durum !== "bekliyor"} onClick={() => void kararVer("onay")}>
+                  <button
+                    type="button"
+                    class="dg dg--b dg--onay karar karar--onay"
+                    disabled={mesgul() || ayrinti()?.oge.durum !== "bekliyor"}
+                    onClick={() => void kararVer("onay")}
+                  >
                     <Simge ad="onay" />
                     <span>
                       {ayrinti()?.oge.gorunum === "fikir"
                         ? "Bu fikri seç"
-                        : ayrinti()?.oge.gorunum === "liste" && secili().size < (ayrinti()?.oge.satirlar.length ?? 0)
+                        : ayrinti()?.oge.gorunum === "liste" &&
+                            secili().size < (ayrinti()?.oge.satirlar.length ?? 0)
                           ? `${secili().size} satırı onayla`
                           : "Onayla"}
                     </span>
@@ -760,10 +981,20 @@ export function Incele(): JSX.Element {
               }
             >
               <div class="karar-cubugu">
-                <button type="button" class="dg dg--b karar karar--ret" disabled={mesgul()} onClick={() => void kararVer("ret")}>
+                <button
+                  type="button"
+                  class="dg dg--b karar karar--ret"
+                  disabled={mesgul()}
+                  onClick={() => void kararVer("ret")}
+                >
                   <Simge ad="ret" /> <span>Uygun değil</span>
                 </button>
-                <button type="button" class="dg dg--b dg--onay karar karar--onay" disabled={mesgul()} onClick={() => void kararVer("onay")}>
+                <button
+                  type="button"
+                  class="dg dg--b dg--onay karar karar--onay"
+                  disabled={mesgul()}
+                  onClick={() => void kararVer("onay")}
+                >
                   <Simge ad="onay" /> <span>Uygun</span>
                 </button>
               </div>
@@ -772,8 +1003,18 @@ export function Incele(): JSX.Element {
         </Match>
       </Switch>
 
-      <Show when={kararSayfa()}>{(t) => <KararSayfasi tur={t()} kapat={() => setKararSayfa(null)} gonder={(h, m) => void kararVer(t(), h, m)} />}</Show>
-      <Show when={benzerAcik() && ayrinti()}>{(a) => <BenzerSayfasi oge={(a() as Ayrinti).oge} kapat={() => setBenzerAcik(false)} />}</Show>
+      <Show when={kararSayfa()}>
+        {(t) => (
+          <KararSayfasi
+            tur={t()}
+            kapat={() => setKararSayfa(null)}
+            gonder={(h, m) => void kararVer(t(), h, m)}
+          />
+        )}
+      </Show>
+      <Show when={benzerAcik() && ayrinti()}>
+        {(a) => <BenzerSayfasi oge={(a() as Ayrinti).oge} kapat={() => setBenzerAcik(false)} />}
+      </Show>
       <Show when={fikirSayfa() && ayrinti()}>
         {(a) => (
           <FikirSecSayfasi

@@ -32,14 +32,15 @@ export function iletiAyristir(
   beklenenKaynak: string,
   pencere: unknown,
 ): { tur: "hazir" } | { tur: "cizildi"; w: number; h: number } | { tur: "hata"; neden: string } | null {
-  if (e.origin !== beklenenKaynak || e.source !== pencere || !e.data || typeof e.data !== "object") return null;
+  if (e.origin !== beklenenKaynak || e.source !== pencere || !e.data || typeof e.data !== "object")
+    return null;
   const d = e.data as Record<string, unknown>;
   if (d.tur === "hazir" && d.surum === ONIZLEME_SURUMU) return { tur: "hazir" };
   if (d.tur === "cizildi" && d.boyut && typeof d.boyut === "object") {
     const b = d.boyut as Record<string, unknown>;
     if (typeof b.w === "number" && typeof b.h === "number") return { tur: "cizildi", w: b.w, h: b.h };
   }
-  if (d.tur === "hata") return { tur: "hata", neden: typeof d.neden === "string" ? d.neden.slice(0, 200) : "" };
+  if (d.tur === "hata")
+    return { tur: "hata", neden: typeof d.neden === "string" ? d.neden.slice(0, 200) : "" };
   return null;
 }
-

@@ -17,7 +17,15 @@ export function KucukOnizleme(p: { k: Kucuk | null; ad?: string }): JSX.Element 
         <Match when={p.k?.tur === "gorsel" && p.k}>
           {(k) => {
             const g = k() as Extract<Kucuk, { tur: "gorsel" }>;
-            return <img class="kucuk-onizleme__gorsel" src={dosyaUrl(g.ogeId, g.ozet)} alt={p.ad ?? ""} loading="lazy" decoding="async" />;
+            return (
+              <img
+                class="kucuk-onizleme__gorsel"
+                src={dosyaUrl(g.ogeId, g.ozet)}
+                alt={p.ad ?? ""}
+                loading="lazy"
+                decoding="async"
+              />
+            );
           }}
         </Match>
         <Match when={p.k?.tur === "dalga" && p.k}>
@@ -26,11 +34,15 @@ export function KucukOnizleme(p: { k: Kucuk | null; ad?: string }): JSX.Element 
         <Match when={p.k?.tur === "satirlar" && p.k}>
           {(k) => (
             <ul class="kucuk-onizleme__satirlar">
-              <For each={(k() as Extract<Kucuk, { tur: "satirlar" }>).satirlar}>{(s) => <li class="tasma">{s}</li>}</For>
+              <For each={(k() as Extract<Kucuk, { tur: "satirlar" }>).satirlar}>
+                {(s) => <li class="tasma">{s}</li>}
+              </For>
             </ul>
           )}
         </Match>
-        <Match when={p.k?.tur === "metin" && p.k}>{(k) => <p class="kucuk-onizleme__metin">{(k() as Extract<Kucuk, { tur: "metin" }>).metin}</p>}</Match>
+        <Match when={p.k?.tur === "metin" && p.k}>
+          {(k) => <p class="kucuk-onizleme__metin">{(k() as Extract<Kucuk, { tur: "metin" }>).metin}</p>}
+        </Match>
       </Switch>
     </div>
   );
@@ -40,7 +52,17 @@ export function MiniDalga(p: { dalga: number[] }): JSX.Element {
   const n = (): number => Math.max(1, p.dalga.length);
   return (
     <svg class="mini-dalga" viewBox={`0 0 ${n() * 4} 40`} preserveAspectRatio="none" aria-hidden="true">
-      <For each={p.dalga}>{(v, i) => <rect x={i() * 4 + 0.5} y={20 - Math.max(1, v * 18)} width="2.5" height={Math.max(2, v * 36)} rx="1.2" />}</For>
+      <For each={p.dalga}>
+        {(v, i) => (
+          <rect
+            x={i() * 4 + 0.5}
+            y={20 - Math.max(1, v * 18)}
+            width="2.5"
+            height={Math.max(2, v * 36)}
+            rx="1.2"
+          />
+        )}
+      </For>
     </svg>
   );
 }
@@ -48,7 +70,15 @@ export function MiniDalga(p: { dalga: number[] }): JSX.Element {
 function AlanKartiGorunumu(p: { k: AlanKarti; simdi: number }): JSX.Element {
   const a = alanBul(p.k.alan);
   return (
-    <a class="kart alan-karti" href={`/alan/${p.k.alan}`} style={{ "--alan-renk": alanRengi(p.k.alan) }} onClick={(e) => (e.preventDefault(), git(`/alan/${p.k.alan}`))}>
+    <a
+      class="kart alan-karti"
+      href={`/alan/${p.k.alan}`}
+      style={{ "--alan-renk": alanRengi(p.k.alan) }}
+      onClick={(e) => {
+        e.preventDefault();
+        git(`/alan/${p.k.alan}`);
+      }}
+    >
       <div class="alan-karti__bas">
         <AlanIsareti alan={p.k.alan} />
         <Show when={p.k.bekleyen > 0} fallback={<span class="cok-soluk kucuk">Bekleyen yok</span>}>
@@ -66,7 +96,16 @@ function AlanKartiGorunumu(p: { k: AlanKarti; simdi: number }): JSX.Element {
         {(s) => <KucukOnizleme k={s().kucuk} ad={s().ad} />}
       </Show>
       <div class="alan-karti__ayak">
-        <Halka oran={p.k.onayOrani7g} boyut={34} renk={alanRengi(p.k.alan)} etiket={p.k.onayOrani7g === null ? "Son 7 günde karar yok" : `Son 7 gün onay oranı %${Math.round(p.k.onayOrani7g * 100)}`} />
+        <Halka
+          oran={p.k.onayOrani7g}
+          boyut={34}
+          renk={alanRengi(p.k.alan)}
+          etiket={
+            p.k.onayOrani7g === null
+              ? "Son 7 günde karar yok"
+              : `Son 7 gün onay oranı %${Math.round(p.k.onayOrani7g * 100)}`
+          }
+        />
         <div class="esnek">
           <div class="tasma alan-karti__son">{p.k.son?.ad ?? a?.ornekIs ?? ""}</div>
           <div class="cok-soluk kucuk">
@@ -106,10 +145,20 @@ function IstekSatiri(p: { k: IstekKarti }): JSX.Element {
       <p class="istek__ne">{p.k.ne}</p>
       <p class="soluk kucuk">{p.k.neden}</p>
       <div class="satir">
-        <button type="button" class="dg dg--k dg--birincil" disabled={bekle()} onClick={() => void karar(true)}>
+        <button
+          type="button"
+          class="dg dg--k dg--birincil"
+          disabled={bekle()}
+          onClick={() => void karar(true)}
+        >
           {kendi ? "İş yap" : "Onayla"}
         </button>
-        <button type="button" class="dg dg--k dg--hayalet" disabled={bekle()} onClick={() => void karar(false)}>
+        <button
+          type="button"
+          class="dg dg--k dg--hayalet"
+          disabled={bekle()}
+          onClick={() => void karar(false)}
+        >
           Reddet
         </button>
         <Show when={p.k.sonTarih}>
@@ -162,7 +211,9 @@ export function Pano(): JSX.Element {
     setGonderiyor(true);
     try {
       const r = await gonder<{ paket: { klasor: string; ogeSayisi: number } }>("paket");
-      tost(`Paket hazırlandı: ${r.paket.ogeSayisi} öğe. Yöneticiye "onaylananları ekle" demen yeterli.`, { sure: 6000 });
+      tost(`Paket hazırlandı: ${r.paket.ogeSayisi} öğe. Yöneticiye "onaylananları ekle" demen yeterli.`, {
+        sure: 6000,
+      });
       void panoYenile();
     } catch (e) {
       hataTost(e);
@@ -188,13 +239,20 @@ export function Pano(): JSX.Element {
     <div class="sayfa pano">
       <header class="sayfa__bas">
         <div>
-          <p class="cok-soluk kucuk">{new Date(simdi).toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })}</p>
+          <p class="cok-soluk kucuk">
+            {new Date(simdi).toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })}
+          </p>
           <h1>
             {selam(new Date(simdi).getHours())}
             <Show when={ad()}>, {ad()}</Show>
           </h1>
         </div>
-        <button type="button" class="dg dg--birincil dg--b pano__basla" disabled={bekleyenToplam() === 0} onClick={() => git("/incele")}>
+        <button
+          type="button"
+          class="dg dg--birincil dg--b pano__basla"
+          disabled={bekleyenToplam() === 0}
+          onClick={() => git("/incele")}
+        >
           <Simge ad="incele" />
           {bekleyenToplam() > 0 ? `İncelemeye başla · ${bekleyenToplam()}` : "Bekleyen yok"}
         </button>
@@ -205,7 +263,14 @@ export function Pano(): JSX.Element {
         fallback={
           <div class="yigin yigin--genis">
             <div class="ozet-seridi">
-              <For each={[1, 2, 3, 4]}>{() => <div class="kart kart--ic"><Iskelet g="50%" y="12px" /><Iskelet g="30%" y="28px" /></div>}</For>
+              <For each={[1, 2, 3, 4]}>
+                {() => (
+                  <div class="kart kart--ic">
+                    <Iskelet g="50%" y="12px" />
+                    <Iskelet g="30%" y="28px" />
+                  </div>
+                )}
+              </For>
             </div>
             <div class="alan-izgara">
               <IskeletKartlar adet={6} />
@@ -239,11 +304,18 @@ export function Pano(): JSX.Element {
                 <section class="yigin" aria-label="Uyarılar">
                   <For each={v().uyarilar}>
                     {(u) => (
-                      <div class={`serit serit--${u.seviye}`} role={u.seviye === "kirmizi" ? "alert" : undefined}>
+                      <div
+                        class={`serit serit--${u.seviye}`}
+                        role={u.seviye === "kirmizi" ? "alert" : undefined}
+                      >
                         <Simge ad="uyari" />
                         <span class="esnek">{u.metin}</span>
                         <Show when={u.alan}>
-                          <button type="button" class="dg dg--k dg--hayalet" onClick={() => git(`/alan/${u.alan}`)}>
+                          <button
+                            type="button"
+                            class="dg dg--k dg--hayalet"
+                            onClick={() => git(`/alan/${u.alan}`)}
+                          >
                             Aç
                           </button>
                         </Show>
@@ -261,12 +333,21 @@ export function Pano(): JSX.Element {
                   <div class="esnek">
                     <h2>Onaylananlar havuzu: {v().havuz.toplam} öğe</h2>
                     <p class="soluk kucuk">
-                      <Show when={v().havuz.paketlenecek > 0}>{v().havuz.paketlenecek} öğe yöneticiye gönderilmeye hazır. </Show>
-                      <Show when={v().havuz.tekTik > 0}>{v().havuz.tekTik} öğe tek tıkla oyuna aktarılabilir.</Show>
+                      <Show when={v().havuz.paketlenecek > 0}>
+                        {v().havuz.paketlenecek} öğe yöneticiye gönderilmeye hazır.{" "}
+                      </Show>
+                      <Show when={v().havuz.tekTik > 0}>
+                        {v().havuz.tekTik} öğe tek tıkla oyuna aktarılabilir.
+                      </Show>
                     </p>
                   </div>
                   <Show when={v().havuz.paketlenecek > 0}>
-                    <button type="button" class="dg dg--birincil" disabled={gonderiyor()} onClick={() => void paketHazirla()}>
+                    <button
+                      type="button"
+                      class="dg dg--birincil"
+                      disabled={gonderiyor()}
+                      onClick={() => void paketHazirla()}
+                    >
                       {gonderiyor() ? "Hazırlanıyor…" : "Yöneticiye gönder"}
                     </button>
                   </Show>
@@ -297,7 +378,14 @@ export function Pano(): JSX.Element {
                     <span class="sayac sayac--sessiz">{v().istekKartlari.length}</span>
                   </Show>
                 </div>
-                <Show when={v().istekKartlari.length} fallback={<Bos simge="istek" baslik="Onay bekleyen istek yok">Alanlar birbirinden bir şey isteyince burada görürsün; sen onaylamadan iş açılmaz.</Bos>}>
+                <Show
+                  when={v().istekKartlari.length}
+                  fallback={
+                    <Bos simge="istek" baslik="Onay bekleyen istek yok">
+                      Alanlar birbirinden bir şey isteyince burada görürsün; sen onaylamadan iş açılmaz.
+                    </Bos>
+                  }
+                >
                   <ul class="istekler">
                     <For each={v().istekKartlari}>{(k) => <IstekSatiri k={k} />}</For>
                   </ul>
@@ -310,7 +398,14 @@ export function Pano(): JSX.Element {
                     <span class="sayac sayac--sessiz">{v().kodIstekleri.length}</span>
                   </Show>
                 </div>
-                <Show when={v().kodIstekleri.length} fallback={<Bos simge="kod" baslik="Kod isteği yok">Veriyle yapılamayan bir şey gerektiğinde yapay zekâlar gerekçeli istek açar.</Bos>}>
+                <Show
+                  when={v().kodIstekleri.length}
+                  fallback={
+                    <Bos simge="kod" baslik="Kod isteği yok">
+                      Veriyle yapılamayan bir şey gerektiğinde yapay zekâlar gerekçeli istek açar.
+                    </Bos>
+                  }
+                >
                   <ul class="istekler">
                     <For each={v().kodIstekleri}>{(k) => <KodSatiri k={k} />}</For>
                   </ul>
@@ -327,13 +422,22 @@ export function Pano(): JSX.Element {
                         <li class="istek">
                           <AlanIsareti alan={o.alan} />
                           <p class="istek__ne">
-                            Bu alanda {o.sayi} kez “{hazirNotMetni(o.hazir)}” notu verildi. Talimata eklensin mi?
+                            Bu alanda {o.sayi} kez “{hazirNotMetni(o.hazir)}” notu verildi. Talimata eklensin
+                            mi?
                           </p>
                           <div class="satir">
-                            <button type="button" class="dg dg--k dg--birincil" onClick={() => void oneriKarar(o.alan, o.hazir, true)}>
+                            <button
+                              type="button"
+                              class="dg dg--k dg--birincil"
+                              onClick={() => void oneriKarar(o.alan, o.hazir, true)}
+                            >
                               Talimata ekle
                             </button>
-                            <button type="button" class="dg dg--k dg--hayalet" onClick={() => void oneriKarar(o.alan, o.hazir, false)}>
+                            <button
+                              type="button"
+                              class="dg dg--k dg--hayalet"
+                              onClick={() => void oneriKarar(o.alan, o.hazir, false)}
+                            >
                               Gerek yok
                             </button>
                           </div>
@@ -346,7 +450,9 @@ export function Pano(): JSX.Element {
               <p class="cok-soluk kucuk pano__kota">
                 Depo: {boyut(v().kota.kullanilan)} / {boyut(v().kota.sinir)}
                 <br />
-                {v().ai.acik ? `Yardımcı model: bugün ${v().ai.bugun}/${v().ai.sinir} istek` : "Yardımcı model kapalı; istemler kalıptan hazırlanır"}
+                {v().ai.acik
+                  ? `Yardımcı model: bugün ${v().ai.bugun}/${v().ai.sinir} istek`
+                  : "Yardımcı model kapalı; istemler kalıptan hazırlanır"}
               </p>
             </aside>
           </div>

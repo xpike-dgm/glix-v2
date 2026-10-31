@@ -4,7 +4,9 @@
  * sınıf; varsayılan sistem tercihi. Metin/zemin karşıtlıkları WCAG AA (≥ 4.5:1) için seçildi (web/src/kontrast.test.ts).
  */
 :root {
-  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+    sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 
   /* Tipografi ölçeği (1.2 oranlı, 4 px ızgarada satır yüksekliği) */

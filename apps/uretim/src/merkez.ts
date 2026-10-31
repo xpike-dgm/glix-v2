@@ -1467,7 +1467,10 @@ export class Merkez {
           Object.keys(x.yeni)
             .filter((k) => JSON.stringify(x.eski[k]) !== JSON.stringify(x.yeni[k]))
             .slice(0, 2)
-            .map((k) => `${k}: ${String(x.eski[k] ?? "—").slice(0, 20)} → ${String(x.yeni[k] ?? "—").slice(0, 20)}`),
+            .map(
+              (k) =>
+                `${k}: ${String(x.eski[k] ?? "—").slice(0, 20)} → ${String(x.yeni[k] ?? "—").slice(0, 20)}`,
+            ),
         ),
       };
     } else if (r.aciklama) kucuk = { tur: "metin", metin: r.aciklama.slice(0, 120) };
@@ -1667,8 +1670,7 @@ export class Merkez {
   /** Fikir seçimi: seçilen işe bağlanır (isteğe bağlı "şunu değiştir" notuyla), diğer fikirler gerekçesiz arşive. */
   fikirSec(ogeId: number, not: string, kim: string, now: number): void {
     const r = this.ogeSatiri(ogeId);
-    if (!r || r.tur !== "fikir" || r.durum !== "bekliyor")
-      throw new IsHatasi(404, "Seçilecek fikir bulunamadı.");
+    if (r?.tur !== "fikir" || r.durum !== "bekliyor") throw new IsHatasi(404, "Seçilecek fikir bulunamadı.");
     const alan = r.alan as AlanId;
     islem(this.db, () => {
       this.db
@@ -1777,7 +1779,7 @@ export class Merkez {
   /** Denetim kararı: uygunsa kapanır; değilse öğe reddedilir ve alanın otomatik onayı kapanır. */
   denetimKarar(id: number, uygun: boolean, not: string, kim: string, now: number): void {
     const r = this.ogeSatiri(id);
-    if (!r || r.denetim !== 1) throw new IsHatasi(404, "Denetim bulunamadı.");
+    if (r?.denetim !== 1) throw new IsHatasi(404, "Denetim bulunamadı.");
     const alan = r.alan as AlanId;
     islem(this.db, () => {
       if (uygun) this.db.prepare("UPDATE oge SET denetim = 2 WHERE id = ?").run(id);
@@ -1814,7 +1816,7 @@ export class Merkez {
   varyantSec(isId: number, ogeId: number, karisim: string, kim: string, now: number): void {
     const v = this.varyantlar(isId);
     const secilen = v.find((x) => x.id === ogeId);
-    if (!secilen || secilen.durum !== "bekliyor") throw new IsHatasi(404, "Seçilecek varyant bulunamadı.");
+    if (secilen?.durum !== "bekliyor") throw new IsHatasi(404, "Seçilecek varyant bulunamadı.");
     if (karisim.trim())
       this.karar(
         ogeId,

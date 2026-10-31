@@ -4,7 +4,17 @@ import type { KodIstegi, PaketKaydi } from "../../../src/ortak/tipler.js";
 import { al, gonder } from "../api.js";
 import { tarihSaat } from "../bicim.js";
 import { AlanIsareti, AltSayfa, Bos, Sekmeler } from "../bilesenler.js";
-import { hataTost, oturum, oturumYukle, setTema, setYaziBuyuk, sorgu, tema, tost, yaziBuyuk } from "../durum.js";
+import {
+  hataTost,
+  oturum,
+  oturumYukle,
+  setTema,
+  setYaziBuyuk,
+  sorgu,
+  tema,
+  tost,
+  yaziBuyuk,
+} from "../durum.js";
 import { panoYenile } from "../Kabuk.js";
 import { Simge } from "../simgeler.js";
 
@@ -24,8 +34,12 @@ const b64uDizi = (s: string): Uint8Array => {
 };
 
 function Bildirimler(): JSX.Element {
-  const [veri, { refetch }] = createResource(() => al<{ ayar: BildirimAyari; acik: boolean; abone: number }>("bildirim/ayar"));
-  const [izin, setIzin] = createSignal(typeof Notification === "undefined" ? "denied" : Notification.permission);
+  const [veri, { refetch }] = createResource(() =>
+    al<{ ayar: BildirimAyari; acik: boolean; abone: number }>("bildirim/ayar"),
+  );
+  const [izin, setIzin] = createSignal(
+    typeof Notification === "undefined" ? "denied" : Notification.permission,
+  );
   const ayarYaz = async (a: BildirimAyari): Promise<void> => {
     try {
       await gonder("bildirim/ayar", a);
@@ -36,13 +50,18 @@ function Bildirimler(): JSX.Element {
   };
   const abone = async (): Promise<void> => {
     const anahtar = oturum()?.vapid;
-    if (!anahtar || !("serviceWorker" in navigator)) return void tost("Bu tarayıcı bildirimleri desteklemiyor.", { hata: true });
+    if (!anahtar || !("serviceWorker" in navigator))
+      return void tost("Bu tarayıcı bildirimleri desteklemiyor.", { hata: true });
     try {
       const k = await Notification.requestPermission();
       setIzin(k);
-      if (k !== "granted") return void tost("Bildirim izni verilmedi. Tarayıcı ayarlarından açabilirsin.", { hata: true });
+      if (k !== "granted")
+        return void tost("Bildirim izni verilmedi. Tarayıcı ayarlarından açabilirsin.", { hata: true });
       const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uDizi(anahtar) as BufferSource });
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: b64uDizi(anahtar) as BufferSource,
+      });
       await gonder("bildirim/abone", sub.toJSON());
       await gonder("bildirim/dene");
       tost("Bildirimler açıldı; bir deneme bildirimi gönderdik");
@@ -60,11 +79,20 @@ function Bildirimler(): JSX.Element {
       <Show when={veri()} fallback={<p class="cok-soluk">Yükleniyor…</p>}>
         {(v) => (
           <>
-            <Show when={v().acik} fallback={<p class="soluk kucuk">Bildirim gönderimi bu sunucuda ayarlı değil; yönetici açınca burada etkinleştirebilirsin.</p>}>
+            <Show
+              when={v().acik}
+              fallback={
+                <p class="soluk kucuk">
+                  Bildirim gönderimi bu sunucuda ayarlı değil; yönetici açınca burada etkinleştirebilirsin.
+                </p>
+              }
+            >
               <div class="anahtarli-satir">
                 <span class="esnek">
                   <strong>Bu cihaza bildirim</strong>
-                  <span class="cok-soluk kucuk">Kırmızı uyarı hemen, günlük özet seçtiğin saatte gelir. Kayıtlı cihaz: {v().abone}</span>
+                  <span class="cok-soluk kucuk">
+                    Kırmızı uyarı hemen, günlük özet seçtiğin saatte gelir. Kayıtlı cihaz: {v().abone}
+                  </span>
                 </span>
                 <button type="button" class="dg dg--k" onClick={() => void abone()}>
                   {izin() === "granted" ? "Yeniden bağla" : "Aç"}
@@ -76,23 +104,45 @@ function Bildirimler(): JSX.Element {
                 <strong>Bildirimler açık</strong>
                 <span class="cok-soluk kucuk">Kapatırsan hiçbir bildirim gönderilmez.</span>
               </span>
-              <input type="checkbox" class="anahtar-dugme" checked={v().ayar.acik} onChange={(e) => void ayarYaz({ ...v().ayar, acik: e.currentTarget.checked })} />
+              <input
+                type="checkbox"
+                class="anahtar-dugme"
+                checked={v().ayar.acik}
+                onChange={(e) => void ayarYaz({ ...v().ayar, acik: e.currentTarget.checked })}
+              />
             </label>
             <div class="uc-sutun">
               <label class="alan-giris">
                 <span>Günlük özet</span>
-                <input class="girdi" type="time" value={v().ayar.ozetSaati} onChange={(e) => void ayarYaz({ ...v().ayar, ozetSaati: e.currentTarget.value })} />
+                <input
+                  class="girdi"
+                  type="time"
+                  value={v().ayar.ozetSaati}
+                  onChange={(e) => void ayarYaz({ ...v().ayar, ozetSaati: e.currentTarget.value })}
+                />
               </label>
               <label class="alan-giris">
                 <span>Sessiz saat başı</span>
-                <input class="girdi" type="time" value={v().ayar.sessizBas} onChange={(e) => void ayarYaz({ ...v().ayar, sessizBas: e.currentTarget.value })} />
+                <input
+                  class="girdi"
+                  type="time"
+                  value={v().ayar.sessizBas}
+                  onChange={(e) => void ayarYaz({ ...v().ayar, sessizBas: e.currentTarget.value })}
+                />
               </label>
               <label class="alan-giris">
                 <span>Sessiz saat sonu</span>
-                <input class="girdi" type="time" value={v().ayar.sessizSon} onChange={(e) => void ayarYaz({ ...v().ayar, sessizSon: e.currentTarget.value })} />
+                <input
+                  class="girdi"
+                  type="time"
+                  value={v().ayar.sessizSon}
+                  onChange={(e) => void ayarYaz({ ...v().ayar, sessizSon: e.currentTarget.value })}
+                />
               </label>
             </div>
-            <p class="cok-soluk kucuk">Sessiz saatlerde gelen acil uyarılar sessiz saat bitince gönderilir.</p>
+            <p class="cok-soluk kucuk">
+              Sessiz saatlerde gelen acil uyarılar sessiz saat bitince gönderilir.
+            </p>
           </>
         )}
       </Show>
@@ -127,7 +177,11 @@ function Paketler(): JSX.Element {
       hataTost(e);
     }
   };
-  const DURUM: Record<PaketKaydi["durum"], string> = { hazir: "Yöneticiye hazır", oyuna_eklendi: "Oyuna eklendi", canlida: "Canlıda" };
+  const DURUM: Record<PaketKaydi["durum"], string> = {
+    hazir: "Yöneticiye hazır",
+    oyuna_eklendi: "Oyuna eklendi",
+    canlida: "Canlıda",
+  };
   return (
     <div class="yigin">
       <div class="satir satir--ara">
@@ -136,7 +190,14 @@ function Paketler(): JSX.Element {
           <Simge ad="paket" /> Paket hazırla
         </button>
       </div>
-      <Show when={veri()?.paketler.length} fallback={<Bos simge="paket" baslik="Henüz paket yok">Onaylanan görsel, ses ve katalog satırları birikince “Paket hazırla” ile yöneticiye gönderilir.</Bos>}>
+      <Show
+        when={veri()?.paketler.length}
+        fallback={
+          <Bos simge="paket" baslik="Henüz paket yok">
+            Onaylanan görsel, ses ve katalog satırları birikince “Paket hazırla” ile yöneticiye gönderilir.
+          </Bos>
+        }
+      >
         <ul class="oge-listesi">
           <For each={veri()?.paketler}>
             {(p) => (
@@ -151,7 +212,11 @@ function Paketler(): JSX.Element {
                     {p.revizyon ? ` · ${p.revizyon.slice(0, 7)}` : ""}
                   </span>
                 </span>
-                <span class={`etiket ${p.durum === "canlida" ? "etiket--gecti" : p.durum === "hazir" ? "etiket--vurgu" : ""}`}>{DURUM[p.durum]}</span>
+                <span
+                  class={`etiket ${p.durum === "canlida" ? "etiket--gecti" : p.durum === "hazir" ? "etiket--vurgu" : ""}`}
+                >
+                  {DURUM[p.durum]}
+                </span>
                 <Show when={p.durum === "hazir"}>
                   <button type="button" class="dg dg--k" onClick={() => setIsaret(p)}>
                     Oyuna eklendi
@@ -167,14 +232,25 @@ function Paketler(): JSX.Element {
           baslik="Hangi sürümde eklendi?"
           kapat={() => setIsaret(null)}
           ayak={
-            <button type="button" class="dg dg--birincil esnek" disabled={!/^[0-9a-f]{7,40}$/i.test(rev().trim())} onClick={() => void eklendi()}>
+            <button
+              type="button"
+              class="dg dg--birincil esnek"
+              disabled={!/^[0-9a-f]{7,40}$/i.test(rev().trim())}
+              onClick={() => void eklendi()}
+            >
               Kaydet
             </button>
           }
         >
           <label class="alan-giris">
             <span>Sürüm kimliği (git commit)</span>
-            <input class="girdi mono" value={rev()} onInput={(e) => setRev(e.currentTarget.value)} placeholder="ör. 3f9c2ab" data-ilk-odak />
+            <input
+              class="girdi mono"
+              value={rev()}
+              onInput={(e) => setRev(e.currentTarget.value)}
+              placeholder="ör. 3f9c2ab"
+              data-ilk-odak
+            />
           </label>
         </AltSayfa>
       </Show>
@@ -192,9 +268,21 @@ function KodIstekleri(): JSX.Element {
       hataTost(e);
     }
   };
-  const AD: Record<KodIstegi["durum"], string> = { bekliyor: "Bekliyor", onaylandi: "Yöneticide", reddedildi: "Reddedildi", yapildi: "Yapıldı" };
+  const AD: Record<KodIstegi["durum"], string> = {
+    bekliyor: "Bekliyor",
+    onaylandi: "Yöneticide",
+    reddedildi: "Reddedildi",
+    yapildi: "Yapıldı",
+  };
   return (
-    <Show when={veri()?.istekler.length} fallback={<Bos simge="kod" baslik="Kod isteği yok">Yapay zekâlar veriyle yapılamayan şeyler için gerekçeli istek açınca burada görünür.</Bos>}>
+    <Show
+      when={veri()?.istekler.length}
+      fallback={
+        <Bos simge="kod" baslik="Kod isteği yok">
+          Yapay zekâlar veriyle yapılamayan şeyler için gerekçeli istek açınca burada görünür.
+        </Bos>
+      }
+    >
       <ul class="oge-listesi">
         <For each={veri()?.istekler}>
           {(k) => (
@@ -208,10 +296,18 @@ function KodIstekleri(): JSX.Element {
                 <span class="soluk kucuk">{k.gerekce}</span>
               </span>
               <Show when={k.durum === "bekliyor"}>
-                <button type="button" class="dg dg--k dg--birincil" onClick={() => void durum(k, "onaylandi")}>
+                <button
+                  type="button"
+                  class="dg dg--k dg--birincil"
+                  onClick={() => void durum(k, "onaylandi")}
+                >
                   Yöneticiye ver
                 </button>
-                <button type="button" class="dg dg--k dg--hayalet" onClick={() => void durum(k, "reddedildi")}>
+                <button
+                  type="button"
+                  class="dg dg--k dg--hayalet"
+                  onClick={() => void durum(k, "reddedildi")}
+                >
                   Reddet
                 </button>
               </Show>
@@ -229,7 +325,11 @@ function KodIstekleri(): JSX.Element {
 }
 
 function Denetim(): JSX.Element {
-  const [veri] = createResource(() => al<{ kayitlar: { id: number; zaman: number; kim: string; eylem: string; hedef: string; ayrinti: string }[] }>("denetim"));
+  const [veri] = createResource(() =>
+    al<{
+      kayitlar: { id: number; zaman: number; kim: string; eylem: string; hedef: string; ayrinti: string }[];
+    }>("denetim"),
+  );
   return (
     <div class="tablo-kap">
       <table class="tablo">
@@ -264,7 +364,9 @@ function Denetim(): JSX.Element {
 
 export function Ayarlar(): JSX.Element {
   const ilk = sorgu().get("sekme");
-  const [sekme, setSekme] = createSignal<Sekme>(ilk === "paketler" || ilk === "kod" || ilk === "denetim" ? ilk : "genel");
+  const [sekme, setSekme] = createSignal<Sekme>(
+    ilk === "paketler" || ilk === "kod" || ilk === "denetim" ? ilk : "genel",
+  );
   const cikis = async (): Promise<void> => {
     try {
       await gonder("cikis");
@@ -321,7 +423,12 @@ export function Ayarlar(): JSX.Element {
                   <strong>Büyük yazı</strong>
                   <span class="cok-soluk kucuk">Bütün metinler biraz büyür.</span>
                 </span>
-                <input type="checkbox" class="anahtar-dugme" checked={yaziBuyuk()} onChange={(e) => setYaziBuyuk(e.currentTarget.checked)} />
+                <input
+                  type="checkbox"
+                  class="anahtar-dugme"
+                  checked={yaziBuyuk()}
+                  onChange={(e) => setYaziBuyuk(e.currentTarget.checked)}
+                />
               </label>
             </section>
             <Bildirimler />
@@ -330,7 +437,9 @@ export function Ayarlar(): JSX.Element {
                 <Simge ad="kalkan" />
                 <h2>Oturum</h2>
               </div>
-              <p class="soluk kucuk">Bu cihazdaki oturumu kapatır. Yeniden girmek için e-postana kod gelir.</p>
+              <p class="soluk kucuk">
+                Bu cihazdaki oturumu kapatır. Yeniden girmek için e-postana kod gelir.
+              </p>
               <button type="button" class="dg dg--tehlike" onClick={() => void cikis()}>
                 <Simge ad="cikis" /> Çıkış yap
               </button>

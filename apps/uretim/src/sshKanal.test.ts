@@ -45,6 +45,20 @@ describe("SSH açık anahtarı", () => {
   });
 });
 
+describe("kurulum betikleriyle uyum", () => {
+  it("alan listesi ve eşitleme betiğinin anahtar deseni siteyle aynı", async () => {
+    const { ALAN_IDLERI } = await import("./ortak/alanlar.js");
+    const kok = join(import.meta.dirname, "../../../deploy/uretim/ssh");
+    expect(readFileSync(join(kok, "alanlar.txt"), "utf8").trim().split("\n")).toEqual([...ALAN_IDLERI]);
+    const desen = /DESEN='([^']+)'/.exec(readFileSync(join(kok, "eslestir.sh"), "utf8"))?.[1] ?? "";
+    const c = await o.giris();
+    await o.api("POST", "/api/alan/ikon/ssh", { acik: ED }, c);
+    const satir = readFileSync(join(o.dir, "ssh-yetki/ikon.authorized_keys"), "utf8").trim();
+    expect(new RegExp(desen).test(satir)).toBe(true);
+    expect(new RegExp(desen).test(`command="sh" ${satir}`)).toBe(false);
+  });
+});
+
 describe("gelen/ klasörü", () => {
   it("TAMAM'lı paket alınır, ön kontrolden geçer, sonuç okunur/'a yazılır, paket kaldırılır", async () => {
     const c = await o.giris();

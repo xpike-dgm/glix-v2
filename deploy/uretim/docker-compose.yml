@@ -1,0 +1,68 @@
+# Üretim Merkezi. Oyundan ayrı kap, aynı Docker ağı (oyun sunucusuna http://glix:3900 ile iç ağdan gider).
+# Çalıştırma (kökten): docker compose --env-file /srv/glix/shared/.env -f deploy/uretim/docker-compose.yml -p uretim up -d --build
+# `--env-file` yalnız aşağıdaki ${...} değerlerini doldurur; dosyanın tamamı kaba aktarılmaz.
+services:
+  uretim:
+    image: glix-uretim:latest
+    build:
+      context: ../..
+      dockerfile: deploy/uretim/Dockerfile
+      args:
+        GIT_SHA: ${GIT_SHA:-dev}
+    ports:
+      - "127.0.0.1:3910:3910"
+    environment:
+      URETIM_PUBLIC_URL: ${URETIM_PUBLIC_URL:-https://uretim.dgmcraft.online}
+      URETIM_ONIZLEME_URL: ${URETIM_ONIZLEME_URL:-https://glix.dgmcraft.online/onizleme.html}
+      URETIM_OYUN_URL: ${URETIM_OYUN_URL:-http://glix:3900}
+      # Oyunla aynı anahtar (bölüm 3 uçları). Boşsa tek tık aktarım ve canlı havuz kapalı.
+      GLIX_URETIM_TOKEN: ${GLIX_URETIM_TOKEN:-}
+      URETIM_SAHIP_EPOSTA: ${URETIM_SAHIP_EPOSTA:-}
+      GLIX_RESEND_API_KEY: ${GLIX_RESEND_API_KEY:-}
+      GLIX_MAIL_FROM: ${GLIX_MAIL_FROM:-}
+      # İstek → iş dönüştürücü: oyunun mevcut model anahtarı aynı .env'den okunur, hiçbir dosyaya kopyalanmaz.
+      URETIM_AI_KEY: ${GLIX_AI_KEY:-}
+      URETIM_AI_GUNLUK: ${URETIM_AI_GUNLUK:-200}
+      URETIM_SSH_SUNUCU: ${URETIM_SSH_SUNUCU:-dgmcraft.online}
+      # Site bildirimleri (boşsa kapalı). Oyununkinden ayrı anahtar: node scripts/vapid-keys.mjs
+      URETIM_VAPID_PUBLIC: ${URETIM_VAPID_PUBLIC:-}
+      URETIM_VAPID_PRIVATE: ${URETIM_VAPID_PRIVATE:-}
+      URETIM_VAPID_SUBJECT: ${URETIM_VAPID_SUBJECT:-}
+      URETIM_KOTA_GB: ${URETIM_KOTA_GB:-20}
+    volumes:
+      - /srv/glix/uretim/veri:/veri
+      - /srv/glix/uretim/depo:/depo
+      - /srv/glix/uretim/aktarim:/aktarim
+      - /srv/glix/uretim/ssh-yetki:/ssh-yetki
+      - /srv/glix/uretim/ssh:/ssh
+      - /srv/glix/repo.git:/repo.git:ro
+      - /srv/glix/yedek/uretim:/yedek
+    # SSH gelen/okunur klasörlerine yazabilmek için (ssh/kur.sh `uretim-site` grubunu oluşturur).
+    group_add:
+      - ${URETIM_SITE_GID:-3910}
+    mem_limit: 768m
+    cpus: 1.5
+    pids_limit: 256
+    read_only: true
+    tmpfs:
+      - /tmp:size=512m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    networks:
+      - glix
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  glix:
+    external: true
+    # Oyun `-p glix` projesiyle çalışır; varsayılan ağı glix_default'tur.
+    name: ${GLIX_AG:-glix_default}

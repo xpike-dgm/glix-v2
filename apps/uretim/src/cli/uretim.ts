@@ -244,7 +244,7 @@ async function ana(): Promise<void> {
       process.stderr.write("Dosya aktarımı şu an kapalı.\n");
       process.exit(1);
     }
-    const c = spawn(sftp, ["-d", "/"], { stdio: "inherit" });
+    const c = spawn(sftp, ["-d", "/gelen", "-u", "0002"], { stdio: "inherit" });
     c.on("exit", (kod) => process.exit(kod ?? 1));
     return;
   }

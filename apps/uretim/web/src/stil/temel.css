@@ -39,6 +39,12 @@ ol {
   padding: 0;
   list-style: none;
 }
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
 h1 {
   font-size: var(--fs-24);
   line-height: var(--lh-sik);

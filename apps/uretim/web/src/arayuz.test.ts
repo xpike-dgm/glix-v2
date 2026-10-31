@@ -28,7 +28,9 @@ describe("fark", () => {
     expect(f.filter((x) => x.tur === "eklendi").map((x) => x.metin.trim())).toEqual(["zarif"]);
   });
   it("alan farkları yalnız değişenleri verir", () => {
-    expect(alanFarklari({ price: 400, name: "A" }, { price: 350, name: "A" })).toEqual([{ anahtar: "price", eski: 400, yeni: 350 }]);
+    expect(alanFarklari({ price: 400, name: "A" }, { price: 350, name: "A" })).toEqual([
+      { anahtar: "price", eski: 400, yeni: 350 },
+    ]);
   });
 });
 
@@ -48,12 +50,30 @@ describe("önizleme protokolü (sözleşme bölüm 4)", () => {
   const pencere = {};
   it("yalnız beklenen kaynak ve pencereden gelen ileti kabul edilir", () => {
     const k = "https://glix.dgmcraft.online";
-    expect(iletiAyristir({ origin: k, source: pencere, data: { tur: "hazir", surum: 1 } }, k, pencere)).toEqual({ tur: "hazir" });
-    expect(iletiAyristir({ origin: "https://kotu.example", source: pencere, data: { tur: "hazir", surum: 1 } }, k, pencere)).toBeNull();
+    expect(
+      iletiAyristir({ origin: k, source: pencere, data: { tur: "hazir", surum: 1 } }, k, pencere),
+    ).toEqual({ tur: "hazir" });
+    expect(
+      iletiAyristir(
+        { origin: "https://kotu.example", source: pencere, data: { tur: "hazir", surum: 1 } },
+        k,
+        pencere,
+      ),
+    ).toBeNull();
     expect(iletiAyristir({ origin: k, source: {}, data: { tur: "hazir", surum: 1 } }, k, pencere)).toBeNull();
-    expect(iletiAyristir({ origin: k, source: pencere, data: { tur: "hazir", surum: 2 } }, k, pencere)).toBeNull();
-    expect(iletiAyristir({ origin: k, source: pencere, data: { tur: "cizildi", boyut: { w: 390, h: 844 } } }, k, pencere)).toEqual({ tur: "cizildi", w: 390, h: 844 });
-    expect(iletiAyristir({ origin: k, source: pencere, data: { tur: "hata", neden: "yok" } }, k, pencere)).toEqual({ tur: "hata", neden: "yok" });
+    expect(
+      iletiAyristir({ origin: k, source: pencere, data: { tur: "hazir", surum: 2 } }, k, pencere),
+    ).toBeNull();
+    expect(
+      iletiAyristir(
+        { origin: k, source: pencere, data: { tur: "cizildi", boyut: { w: 390, h: 844 } } },
+        k,
+        pencere,
+      ),
+    ).toEqual({ tur: "cizildi", w: 390, h: 844 });
+    expect(
+      iletiAyristir({ origin: k, source: pencere, data: { tur: "hata", neden: "yok" } }, k, pencere),
+    ).toEqual({ tur: "hata", neden: "yok" });
   });
   it("ekran seçimi teslimdeki önizleme notundan, yoksa alandan", () => {
     expect(varsayilanEkran({ alan: "magaza", onizleme: null })).toBe("magaza-kart");
@@ -67,7 +87,9 @@ describe("önizleme protokolü (sözleşme bölüm 4)", () => {
 function belirtecler(css: string, secici: string): Record<string, string> {
   const i = css.indexOf(secici);
   const blok = css.slice(css.indexOf("{", i) + 1, css.indexOf("}", i));
-  return Object.fromEntries([...blok.matchAll(/--([a-z0-9-]+):\s*(#[0-9a-f]{6})/gi)].map((m) => [m[1] ?? "", m[2] ?? ""]));
+  return Object.fromEntries(
+    [...blok.matchAll(/--([a-z0-9-]+):\s*(#[0-9a-f]{6})/gi)].map((m) => [m[1] ?? "", m[2] ?? ""]),
+  );
 }
 const parlaklik = (hex: string): number => {
   const [r, g, b] = [1, 3, 5].map((i) => {

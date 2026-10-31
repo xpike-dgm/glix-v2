@@ -430,8 +430,8 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
-.alan-karti {
-  display: flex !important;
+a.kart.alan-karti {
+  display: flex;
   flex-direction: column;
   gap: var(--s-3);
   padding: var(--s-3);
@@ -492,8 +492,7 @@
   position: relative;
   height: 88px;
   border-radius: var(--r-2);
-  background:
-    repeating-conic-gradient(var(--dama-a) 0% 25%, var(--dama-b) 0% 50%) 0 0 / 14px 14px;
+  background: repeating-conic-gradient(var(--dama-a) 0% 25%, var(--dama-b) 0% 50%) 0 0 / 14px 14px;
   overflow: hidden;
   display: grid;
   place-items: center;
@@ -944,10 +943,10 @@ details[open] summary {
     border-color var(--sure) var(--egri),
     color var(--sure) var(--egri);
 }
-.adimlar--etkin,
-.adimlar--bitti {
-  border-color: var(--vurgu) !important;
-  color: var(--metin) !important;
+.adimlar li.adimlar--etkin,
+.adimlar li.adimlar--bitti {
+  border-color: var(--vurgu);
+  color: var(--metin);
 }
 .adimlar__no {
   display: grid;
@@ -1499,6 +1498,13 @@ details[open] summary {
   justify-content: center;
   box-shadow: var(--golge-2);
 }
+.karsilastir__aralik {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 12px;
+  accent-color: var(--vurgu);
+}
 .karsilastir__etiket {
   position: absolute;
   top: 10px;
@@ -1562,7 +1568,7 @@ details[open] summary {
   place-items: center;
   padding: 4px;
 }
-.kucuk-resim[aria-selected="true"] {
+.kucuk-resim[aria-pressed="true"] {
   border-color: var(--vurgu);
 }
 .kucuk-resim img {
@@ -1939,8 +1945,10 @@ button.fikir:hover {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .rehber__ok {
-    animation: none !important;
+  .rehber__ok--sag,
+  .rehber__ok--sol,
+  .rehber__ok--ust {
+    animation: none;
   }
 }
 
@@ -1979,8 +1987,12 @@ button.fikir:hover {
 select.girdi {
   appearance: none;
   -webkit-appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--metin-3) 50%), linear-gradient(135deg, var(--metin-3) 50%, transparent 50%);
-  background-position: calc(100% - 17px) 50%, calc(100% - 12px) 50%;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--metin-3) 50%),
+    linear-gradient(135deg, var(--metin-3) 50%, transparent 50%);
+  background-position:
+    calc(100% - 17px) 50%,
+    calc(100% - 12px) 50%;
   background-size: 5px 5px;
   background-repeat: no-repeat;
   padding-right: 32px;

@@ -69,7 +69,14 @@ function Bekleyenler(p: { s: Sayfa }): JSX.Element {
           <For each={p.s.bekleyenler}>
             {(o) => (
               <li>
-                <a class="oge-satiri" href={`/incele/${o.id}?alan=${p.s.alan}`} onClick={(e) => (e.preventDefault(), git(`/incele/${o.id}?alan=${p.s.alan}`))}>
+                <a
+                  class="oge-satiri"
+                  href={`/incele/${o.id}?alan=${p.s.alan}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    git(`/incele/${o.id}?alan=${p.s.alan}`);
+                  }}
+                >
                   <span class="oge-satiri__simge">
                     <Simge ad={GORUNUM_SIMGE[o.gorunum]} />
                   </span>
@@ -128,7 +135,12 @@ function YeniIs(p: { alan: AlanId; kapat: () => void; tamam: () => void }): JSX.
           <button type="button" class="dg dg--hayalet" onClick={p.kapat}>
             Vazgeç
           </button>
-          <button type="button" class="dg dg--birincil esnek" disabled={baslik().trim().length < 3} onClick={() => void kaydet()}>
+          <button
+            type="button"
+            class="dg dg--birincil esnek"
+            disabled={baslik().trim().length < 3}
+            onClick={() => void kaydet()}
+          >
             İşi aç
           </button>
         </>
@@ -137,32 +149,70 @@ function YeniIs(p: { alan: AlanId; kapat: () => void; tamam: () => void }): JSX.
       <div class="yigin">
         <label class="alan-giris">
           <span>Başlık</span>
-          <input class="girdi" value={baslik()} onInput={(e) => setBaslik(e.currentTarget.value)} placeholder={alanTanimi(p.alan).ornekIs.slice(0, 60)} maxlength="120" data-ilk-odak />
+          <input
+            class="girdi"
+            value={baslik()}
+            onInput={(e) => setBaslik(e.currentTarget.value)}
+            placeholder={alanTanimi(p.alan).ornekIs.slice(0, 60)}
+            maxlength="120"
+            data-ilk-odak
+          />
         </label>
         <label class="alan-giris">
           <span>Açıklama</span>
-          <textarea class="girdi" rows="3" value={aciklama()} onInput={(e) => setAciklama(e.currentTarget.value)} placeholder="Ne istiyorsun, hangi tarzda, neye dikkat etsin?" maxlength="2000" />
+          <textarea
+            class="girdi"
+            rows="3"
+            value={aciklama()}
+            onInput={(e) => setAciklama(e.currentTarget.value)}
+            placeholder="Ne istiyorsun, hangi tarzda, neye dikkat etsin?"
+            maxlength="2000"
+          />
         </label>
         <div class="iki-sutun">
           <label class="alan-giris">
             <span>Adet</span>
-            <input class="girdi" inputmode="numeric" value={adet()} onInput={(e) => setAdet(e.currentTarget.value.replace(/\D/g, "").slice(0, 3))} placeholder="ör. 6" />
+            <input
+              class="girdi"
+              inputmode="numeric"
+              value={adet()}
+              onInput={(e) => setAdet(e.currentTarget.value.replace(/\D/g, "").slice(0, 3))}
+              placeholder="ör. 6"
+            />
           </label>
           <label class="alan-giris">
             <span>Son tarih</span>
-            <input class="girdi" type="date" value={sonTarih()} onInput={(e) => setSonTarih(e.currentTarget.value)} />
+            <input
+              class="girdi"
+              type="date"
+              value={sonTarih()}
+              onInput={(e) => setSonTarih(e.currentTarget.value)}
+            />
           </label>
         </div>
         <label class="alan-giris">
           <span>Örnek ya da referans (isteğe bağlı)</span>
-          <input class="girdi" value={ornek()} onInput={(e) => setOrnek(e.currentTarget.value)} maxlength="2000" />
+          <input
+            class="girdi"
+            value={ornek()}
+            onInput={(e) => setOrnek(e.currentTarget.value)}
+            maxlength="2000"
+          />
         </label>
         <label class="anahtarli-satir">
           <span class="esnek">
             <strong>Fikir turu</strong>
-            <span class="cok-soluk kucuk">Önce yalnız metinle 2–3 kısa fikir gelir; sen birini seçince bir kez üretilir. Kullanım limitini korur.</span>
+            <span class="cok-soluk kucuk">
+              Önce yalnız metinle 2–3 kısa fikir gelir; sen birini seçince bir kez üretilir. Kullanım limitini
+              korur.
+            </span>
           </span>
-          <input type="checkbox" class="anahtar-dugme" checked={fikir()} onChange={(e) => setFikir(e.currentTarget.checked)} />
+          <input
+            type="checkbox"
+            class="anahtar-dugme"
+            checked={fikir()}
+            onChange={(e) => setFikir(e.currentTarget.checked)}
+          />
         </label>
         <div class="anahtarli-satir">
           <span class="esnek">
@@ -207,14 +257,25 @@ function Isler(p: { s: Sayfa; yenile: () => void }): JSX.Element {
       hataTost(e);
     }
   };
-  const kaynak: Record<IsKaydi["kaynak"], string> = { sahip: "Senin işin", yz: "Yapay zekâ önerisi", istek: "İstek kartından", benzer: "Benzerini üret" };
+  const kaynak: Record<IsKaydi["kaynak"], string> = {
+    sahip: "Senin işin",
+    yz: "Yapay zekâ önerisi",
+    istek: "İstek kartından",
+    benzer: "Benzerini üret",
+  };
   return (
     <div class="yigin">
       <div class="satir satir--ara" style={{ "flex-wrap": "wrap" }}>
-        <span class="soluk">Yapay zekâ en üstteki işten başlar.{p.s.uygulama.not ? ` Uygulama: ${p.s.uygulama.not}.` : ""}</span>
+        <span class="soluk">
+          Yapay zekâ en üstteki işten başlar.{p.s.uygulama.not ? ` Uygulama: ${p.s.uygulama.not}.` : ""}
+        </span>
         <div class="satir">
           <Show when={p.s.isler.some((i) => i.durum === "acik")}>
-            <button type="button" class="dg" onClick={() => void istemiKopyala(p.s.alan, p.s.uygulama.baglanti)}>
+            <button
+              type="button"
+              class="dg"
+              onClick={() => void istemiKopyala(p.s.alan, p.s.uygulama.baglanti)}
+            >
               <Simge ad="kopyala" /> İstemi kopyala
             </button>
           </Show>
@@ -226,17 +287,36 @@ function Isler(p: { s: Sayfa; yenile: () => void }): JSX.Element {
           </button>
         </div>
       </div>
-      <Show when={p.s.isler.length} fallback={<Bos simge="liste" baslik="Açık iş yok">Alanın ne üreteceğini bir işle söyle. Örnek: “{alanTanimi(p.s.alan).ornekIs}”</Bos>}>
+      <Show
+        when={p.s.isler.length}
+        fallback={
+          <Bos simge="liste" baslik="Açık iş yok">
+            Alanın ne üreteceğini bir işle söyle. Örnek: “{alanTanimi(p.s.alan).ornekIs}”
+          </Bos>
+        }
+      >
         <ol class="is-listesi">
           <For each={p.s.isler}>
             {(is, i) => (
               <li class="kart is">
                 <div class="is__sira">
-                  <button type="button" class="dg-simge" disabled={i() === 0} onClick={() => void sirala(is.id, -1)} aria-label="Yukarı taşı">
+                  <button
+                    type="button"
+                    class="dg-simge"
+                    disabled={i() === 0}
+                    onClick={() => void sirala(is.id, -1)}
+                    aria-label="Yukarı taşı"
+                  >
                     <Simge ad="yukari" boyut={16} />
                   </button>
                   <span class="cok-soluk kucuk">{i() + 1}</span>
-                  <button type="button" class="dg-simge" disabled={i() === p.s.isler.length - 1} onClick={() => void sirala(is.id, 1)} aria-label="Aşağı taşı">
+                  <button
+                    type="button"
+                    class="dg-simge"
+                    disabled={i() === p.s.isler.length - 1}
+                    onClick={() => void sirala(is.id, 1)}
+                    aria-label="Aşağı taşı"
+                  >
                     <Simge ad="yukari" boyut={16} style={{ transform: "rotate(180deg)" }} />
                   </button>
                 </div>
@@ -248,13 +328,17 @@ function Isler(p: { s: Sayfa; yenile: () => void }): JSX.Element {
                       <span class="etiket etiket--vurgu">Onay bekliyor</span>
                     </Show>
                     <Show when={is.fikirTuru}>
-                      <span class="etiket">{is.secilenFikir ? `Fikir: ${is.secilenFikir.ad}` : "Fikir turu"}</span>
+                      <span class="etiket">
+                        {is.secilenFikir ? `Fikir: ${is.secilenFikir.ad}` : "Fikir turu"}
+                      </span>
                     </Show>
                     <Show when={is.varyant}>
                       <span class="etiket">{is.varyant} varyant</span>
                     </Show>
                     <Show when={is.durum === "acik"}>
-                      <span class={`etiket ${is.teslimEdildi ? "etiket--gecti" : is.basladi ? "etiket--vurgu" : ""}`}>
+                      <span
+                        class={`etiket ${is.teslimEdildi ? "etiket--gecti" : is.basladi ? "etiket--vurgu" : ""}`}
+                      >
                         {is.teslimEdildi ? "Teslim edildi" : is.basladi ? "Başladı" : "Başlamadı"}
                       </span>
                     </Show>
@@ -268,17 +352,39 @@ function Isler(p: { s: Sayfa; yenile: () => void }): JSX.Element {
                     </ul>
                   </Show>
                   <span class="cok-soluk kucuk">
-                    {[is.adet ? `${is.adet} adet` : "", is.sonTarih ? `son tarih ${is.sonTarih}` : "", goreliZaman(is.olusturma, Date.now())].filter(Boolean).join(" · ")}
+                    {[
+                      is.adet ? `${is.adet} adet` : "",
+                      is.sonTarih ? `son tarih ${is.sonTarih}` : "",
+                      goreliZaman(is.olusturma, Date.now()),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </span>
                 </div>
                 <div class="is__eylem">
                   <Show when={is.durum === "acik"}>
-                    <button type="button" class="dg dg--k" onClick={() => void istemiKopyala(p.s.alan, p.s.uygulama.baglanti, is.id)} aria-label="Bu işin istemini kopyala">
+                    <button
+                      type="button"
+                      class="dg dg--k"
+                      onClick={() => void istemiKopyala(p.s.alan, p.s.uygulama.baglanti, is.id)}
+                      aria-label="Bu işin istemini kopyala"
+                    >
                       <Simge ad="kopyala" /> İstem
                     </button>
                   </Show>
-                  <Show when={is.durum === "oneri"} fallback={<button type="button" class="dg dg--k" onClick={() => void durum(is, "tamam")}>Tamamlandı</button>}>
-                    <button type="button" class="dg dg--k dg--birincil" onClick={() => void durum(is, "acik")}>
+                  <Show
+                    when={is.durum === "oneri"}
+                    fallback={
+                      <button type="button" class="dg dg--k" onClick={() => void durum(is, "tamam")}>
+                        Tamamlandı
+                      </button>
+                    }
+                  >
+                    <button
+                      type="button"
+                      class="dg dg--k dg--birincil"
+                      onClick={() => void durum(is, "acik")}
+                    >
                       İş yap
                     </button>
                   </Show>
@@ -292,7 +398,14 @@ function Isler(p: { s: Sayfa; yenile: () => void }): JSX.Element {
         </ol>
       </Show>
       <Show when={yeni()}>
-        <YeniIs alan={p.s.alan} kapat={() => setYeni(false)} tamam={() => (setYeni(false), p.yenile())} />
+        <YeniIs
+          alan={p.s.alan}
+          kapat={() => setYeni(false)}
+          tamam={() => {
+            setYeni(false);
+            p.yenile();
+          }}
+        />
       </Show>
     </div>
   );
@@ -301,7 +414,9 @@ function Isler(p: { s: Sayfa; yenile: () => void }): JSX.Element {
 function Talimat(p: { s: Sayfa; yenile: () => void }): JSX.Element {
   const [metin, setMetin] = createSignal(p.s.talimat?.metin ?? "");
   const [surum, setSurum] = createSignal<number | null>(null);
-  const [eski] = createResource(surum, (s) => al<{ surum: number; metin: string; olusturma: number }>(`alan/${p.s.alan}/talimat/${s}`));
+  const [eski] = createResource(surum, (s) =>
+    al<{ surum: number; metin: string; olusturma: number }>(`alan/${p.s.alan}/talimat/${s}`),
+  );
   const [zevk] = createResource(() => al<{ talimatEki: string }>(`alan/${p.s.alan}/zevk`));
   const degisti = (): boolean => metin() !== (p.s.talimat?.metin ?? "");
   const kaydet = async (): Promise<void> => {
@@ -322,20 +437,36 @@ function Talimat(p: { s: Sayfa; yenile: () => void }): JSX.Element {
           </span>
           <div class="satir">
             <Show when={degisti()}>
-              <button type="button" class="dg dg--hayalet dg--k" onClick={() => setMetin(p.s.talimat?.metin ?? "")}>
+              <button
+                type="button"
+                class="dg dg--hayalet dg--k"
+                onClick={() => setMetin(p.s.talimat?.metin ?? "")}
+              >
                 Değişiklikleri at
               </button>
             </Show>
-            <button type="button" class="dg dg--birincil dg--k" disabled={!degisti()} onClick={() => void kaydet()}>
+            <button
+              type="button"
+              class="dg dg--birincil dg--k"
+              disabled={!degisti()}
+              onClick={() => void kaydet()}
+            >
               Yeni sürüm olarak kaydet
             </button>
           </div>
         </div>
-        <textarea class="girdi talimat-metni" value={metin()} onInput={(e) => setMetin(e.currentTarget.value)} spellcheck={false} aria-label="Talimat" />
+        <textarea
+          class="girdi talimat-metni"
+          value={metin()}
+          onInput={(e) => setMetin(e.currentTarget.value)}
+          spellcheck={false}
+          aria-label="Talimat"
+        />
         <Show when={zevk()?.talimatEki}>
           <details class="kart kart--ic">
             <summary>
-              <strong>Kendiliğinden eklenen zevk profili</strong> <span class="cok-soluk kucuk">— Zevk sekmesinden yönetilir</span>
+              <strong>Kendiliğinden eklenen zevk profili</strong>{" "}
+              <span class="cok-soluk kucuk">— Zevk sekmesinden yönetilir</span>
             </summary>
             <pre class="kod-blogu">{zevk()?.talimatEki.trim()}</pre>
           </details>
@@ -347,7 +478,12 @@ function Talimat(p: { s: Sayfa; yenile: () => void }): JSX.Element {
           <For each={p.s.talimatSurumleri}>
             {(s) => (
               <li>
-                <button type="button" class="satir" aria-pressed={surum() === s.surum} onClick={() => setSurum(surum() === s.surum ? null : s.surum)}>
+                <button
+                  type="button"
+                  class="satir"
+                  aria-pressed={surum() === s.surum}
+                  onClick={() => setSurum(surum() === s.surum ? null : s.surum)}
+                >
                   <strong>{s.surum}.</strong>
                   <span class="cok-soluk kucuk">{tarihSaat(s.olusturma)}</span>
                 </button>
@@ -382,28 +518,75 @@ function Zevk(p: { alan: AlanId }): JSX.Element {
   };
   return (
     <div class="yigin">
-      <p class="soluk">Onayladığın ve reddettiğin örnekler notlarınla birlikte burada birikir. En temsilî 20 tanesi talimata kendiliğinden eklenir; ★ işaretlilere öncelik verilir.</p>
-      <Show when={!veri.loading} fallback={<div class="zevk-izgara"><IskeletKartlar adet={4} y="96px" /></div>}>
-        <Show when={veri()?.ornekler.length} fallback={<Bos simge="pirilti" baslik="Galeri henüz boş">İlk kararlarından sonra alanın zevk profili oluşmaya başlar.</Bos>}>
+      <p class="soluk">
+        Onayladığın ve reddettiğin örnekler notlarınla birlikte burada birikir. En temsilî 20 tanesi talimata
+        kendiliğinden eklenir; ★ işaretlilere öncelik verilir.
+      </p>
+      <Show
+        when={!veri.loading}
+        fallback={
+          <div class="zevk-izgara">
+            <IskeletKartlar adet={4} y="96px" />
+          </div>
+        }
+      >
+        <Show
+          when={veri()?.ornekler.length}
+          fallback={
+            <Bos simge="pirilti" baslik="Galeri henüz boş">
+              İlk kararlarından sonra alanın zevk profili oluşmaya başlar.
+            </Bos>
+          }
+        >
           <div class="zevk-izgara">
             <For each={veri()?.ornekler}>
               {(z) => (
                 <article class={`kart zevk zevk--${z.tur}`}>
-                  <Show when={z.kucuk?.tur === "gorsel" && z.kucuk} fallback={<div class="zevk__resim zevk__resim--bos"><Simge ad={z.tur === "onay" ? "onay" : "ret"} boyut={24} /></div>}>
+                  <Show
+                    when={z.kucuk?.tur === "gorsel" && z.kucuk}
+                    fallback={
+                      <div class="zevk__resim zevk__resim--bos">
+                        <Simge ad={z.tur === "onay" ? "onay" : "ret"} boyut={24} />
+                      </div>
+                    }
+                  >
                     {(k) => (
                       <div class="zevk__resim zemin--dama">
-                        <img src={dosyaUrl(z.ogeId, (k() as { ozet: string }).ozet)} alt={z.ad} loading="lazy" />
+                        <img
+                          src={dosyaUrl(z.ogeId, (k() as { ozet: string }).ozet)}
+                          alt={z.ad}
+                          loading="lazy"
+                        />
                       </div>
                     )}
                   </Show>
                   <div class="zevk__govde">
                     <div class="satir satir--ara">
-                      <span class={`etiket ${z.tur === "onay" ? "etiket--gecti" : "etiket--kaldi"}`}>{z.tur === "onay" ? "Onaylandı" : "Reddedildi"}</span>
+                      <span class={`etiket ${z.tur === "onay" ? "etiket--gecti" : "etiket--kaldi"}`}>
+                        {z.tur === "onay" ? "Onaylandı" : "Reddedildi"}
+                      </span>
                       <div class="satir" style={{ gap: "0" }}>
-                        <button type="button" class="dg-simge" aria-pressed={z.onemli} onClick={() => void duzenle(z, { onemli: !z.onemli })} aria-label={z.onemli ? "Önemli işaretini kaldır" : "Önemli işaretle"} title="Önemli">
-                          <Simge ad="pirilti" boyut={18} style={{ color: z.onemli ? "var(--uyari)" : undefined }} />
+                        <button
+                          type="button"
+                          class="dg-simge"
+                          aria-pressed={z.onemli}
+                          onClick={() => void duzenle(z, { onemli: !z.onemli })}
+                          aria-label={z.onemli ? "Önemli işaretini kaldır" : "Önemli işaretle"}
+                          title="Önemli"
+                        >
+                          <Simge
+                            ad="pirilti"
+                            boyut={18}
+                            style={{ color: z.onemli ? "var(--uyari)" : undefined }}
+                          />
                         </button>
-                        <button type="button" class="dg-simge" onClick={() => void duzenle(z, { cikar: true })} aria-label="Galeriden çıkar" title="Galeriden çıkar">
+                        <button
+                          type="button"
+                          class="dg-simge"
+                          onClick={() => void duzenle(z, { cikar: true })}
+                          aria-label="Galeriden çıkar"
+                          title="Galeriden çıkar"
+                        >
                           <Simge ad="sil" boyut={18} />
                         </button>
                       </div>
@@ -475,7 +658,9 @@ function Baglanti(p: { s: Sayfa; yenile: () => void }): JSX.Element {
           <Simge ad="baglanti" />
           <h2>MCP bağlantısı</h2>
         </div>
-        <p class="soluk kucuk">Yapay zekâ bu adrese alanın anahtarıyla bağlanır; yalnız bu alanın araçlarını görür.</p>
+        <p class="soluk kucuk">
+          Yapay zekâ bu adrese alanın anahtarıyla bağlanır; yalnız bu alanın araçlarını görür.
+        </p>
         <div class="kopyalanir">
           <code class="mono tasma">{mcpUrl()}</code>
           <Kopyala metin={mcpUrl()} />
@@ -486,7 +671,13 @@ function Baglanti(p: { s: Sayfa; yenile: () => void }): JSX.Element {
               <li classList={{ "anahtar-listesi--iptal": k.iptal !== null }}>
                 <Simge ad="anahtar" boyut={16} />
                 <code class="mono">{k.onek}…</code>
-                <span class="esnek cok-soluk kucuk">{k.iptal ? "iptal edildi" : k.sonKullanim ? `son kullanım ${goreliZaman(k.sonKullanim, Date.now())}` : "hiç kullanılmadı"}</span>
+                <span class="esnek cok-soluk kucuk">
+                  {k.iptal
+                    ? "iptal edildi"
+                    : k.sonKullanim
+                      ? `son kullanım ${goreliZaman(k.sonKullanim, Date.now())}`
+                      : "hiç kullanılmadı"}
+                </span>
                 <Show when={k.iptal === null}>
                   <button type="button" class="dg dg--k dg--tehlike" onClick={() => void iptal(k.id)}>
                     İptal et
@@ -505,9 +696,17 @@ function Baglanti(p: { s: Sayfa; yenile: () => void }): JSX.Element {
           <Simge ad="terminal" />
           <h2>SSH bağlantısı</h2>
         </div>
-        <Show when={p.s.sshAcik} fallback={<p class="soluk kucuk">SSH kanalı bu sunucuda henüz kurulmadı. Kurulum yönetici tarafından yapılır.</p>}>
+        <Show
+          when={p.s.sshAcik}
+          fallback={
+            <p class="soluk kucuk">
+              SSH kanalı bu sunucuda henüz kurulmadı. Kurulum yönetici tarafından yapılır.
+            </p>
+          }
+        >
           <p class="soluk kucuk">
-            Bilgisayarında çalışan araçlar için. Kabuk açılmaz; yalnız <code class="mono">uretim</code> komutları ve kendi klasörü.
+            Bilgisayarında çalışan araçlar için. Kabuk açılmaz; yalnız <code class="mono">uretim</code>{" "}
+            komutları ve kendi klasörü.
           </p>
           <div class="kopyalanir">
             <code class="mono tasma">ssh {kullanici()}@sunucu talimat-oku</code>
@@ -531,11 +730,29 @@ function Baglanti(p: { s: Sayfa; yenile: () => void }): JSX.Element {
           </ul>
           <label class="alan-giris">
             <span>Açık anahtar</span>
-            <textarea class="girdi mono" rows="2" value={ssh()} onInput={(e) => setSsh(e.currentTarget.value)} placeholder="ssh-ed25519 AAAA… bilgisayarim" spellcheck={false} />
+            <textarea
+              class="girdi mono"
+              rows="2"
+              value={ssh()}
+              onInput={(e) => setSsh(e.currentTarget.value)}
+              placeholder="ssh-ed25519 AAAA… bilgisayarim"
+              spellcheck={false}
+            />
           </label>
           <div class="satir">
-            <input class="girdi esnek" value={sshAd()} onInput={(e) => setSshAd(e.currentTarget.value)} placeholder="Açıklama (ör. dizüstü)" maxlength="60" />
-            <button type="button" class="dg" disabled={!ssh().trim().startsWith("ssh-") && !ssh().trim().startsWith("ecdsa-")} onClick={() => void sshEkle()}>
+            <input
+              class="girdi esnek"
+              value={sshAd()}
+              onInput={(e) => setSshAd(e.currentTarget.value)}
+              placeholder="Açıklama (ör. dizüstü)"
+              maxlength="60"
+            />
+            <button
+              type="button"
+              class="dg"
+              disabled={!ssh().trim().startsWith("ssh-") && !ssh().trim().startsWith("ecdsa-")}
+              onClick={() => void sshEkle()}
+            >
               Ekle
             </button>
           </div>
@@ -555,7 +772,9 @@ function Baglanti(p: { s: Sayfa; yenile: () => void }): JSX.Element {
             <div class="yigin">
               <div class="serit serit--sari">
                 <Simge ad="uyari" />
-                <span>Bu anahtar yalnız bir kez gösterilir. Şimdi kopyala; kaybolursa iptal edip yenisini üret.</span>
+                <span>
+                  Bu anahtar yalnız bir kez gösterilir. Şimdi kopyala; kaybolursa iptal edip yenisini üret.
+                </span>
               </div>
               <div class="kopyalanir">
                 <code class="mono tasma">{k()}</code>
@@ -579,7 +798,11 @@ function Ayarlar(p: { s: Sayfa; yenile: () => void }): JSX.Element {
   const [hafta, setHafta] = createSignal(p.s.sinir.haftalikUst === null ? "" : String(p.s.sinir.haftalikUst));
   const kaydet = async (): Promise<void> => {
     try {
-      await gonder(`alan/${p.s.alan}/sinirlar`, { bekleyenTavan: Number(tavan()), gunlukKota: Number(kota()), haftalikUst: hafta() ? Number(hafta()) : null });
+      await gonder(`alan/${p.s.alan}/sinirlar`, {
+        bekleyenTavan: Number(tavan()),
+        gunlukKota: Number(kota()),
+        haftalikUst: hafta() ? Number(hafta()) : null,
+      });
       tost("Sınırlar kaydedildi");
       p.yenile();
     } catch (e) {
@@ -620,34 +843,70 @@ function Ayarlar(p: { s: Sayfa; yenile: () => void }): JSX.Element {
         <div class="iki-sutun">
           <label class="alan-giris">
             <span>Bekleyen tavanı</span>
-            <input class="girdi" inputmode="numeric" value={tavan()} onInput={(e) => setTavan(e.currentTarget.value.replace(/\D/g, ""))} />
+            <input
+              class="girdi"
+              inputmode="numeric"
+              value={tavan()}
+              onInput={(e) => setTavan(e.currentTarget.value.replace(/\D/g, ""))}
+            />
           </label>
           <label class="alan-giris">
             <span>Günlük teslim kotası</span>
-            <input class="girdi" inputmode="numeric" value={kota()} onInput={(e) => setKota(e.currentTarget.value.replace(/\D/g, ""))} />
+            <input
+              class="girdi"
+              inputmode="numeric"
+              value={kota()}
+              onInput={(e) => setKota(e.currentTarget.value.replace(/\D/g, ""))}
+            />
           </label>
         </div>
         <label class="alan-giris">
           <span>Haftalık üretim sınırı (boş = sınırsız)</span>
-          <input class="girdi" inputmode="numeric" value={hafta()} onInput={(e) => setHafta(e.currentTarget.value.replace(/\D/g, ""))} placeholder="ör. 150" />
+          <input
+            class="girdi"
+            inputmode="numeric"
+            value={hafta()}
+            onInput={(e) => setHafta(e.currentTarget.value.replace(/\D/g, ""))}
+            placeholder="ör. 150"
+          />
         </label>
-        <p class="cok-soluk kucuk">Kuyruk dolunca yapay zekâ yeni teslim yapamaz; yalnız iş önerir ve alanını inceler.</p>
+        <p class="cok-soluk kucuk">
+          Kuyruk dolunca yapay zekâ yeni teslim yapamaz; yalnız iş önerir ve alanını inceler.
+        </p>
         <button type="button" class="dg dg--birincil" onClick={() => void kaydet()}>
           Kaydet
         </button>
       </section>
       <section class="kart kart--ic yigin">
         <h2>Kademeli güven</h2>
-        <p class="soluk kucuk">Son 50 kararda onay oranı %90 ve üstündeyse, ön kontrolden temiz geçen teslimler kendiliğinden onaylanabilir. Her 10 otomatik onaydan biri sana denetime gelir; denetimde reddedersen otomatik onay kapanır.</p>
+        <p class="soluk kucuk">
+          Son 50 kararda onay oranı %90 ve üstündeyse, ön kontrolden temiz geçen teslimler kendiliğinden
+          onaylanabilir. Her 10 otomatik onaydan biri sana denetime gelir; denetimde reddedersen otomatik onay
+          kapanır.
+        </p>
         <ul class="guven-listesi">
           <For each={p.s.guven}>
             {(g) => (
               <li class="anahtarli-satir">
                 <span class="esnek">
                   <strong>{TESLIM_TURU_ADI[g.tur]}</strong>
-                  <span class="cok-soluk kucuk">{g.engel ?? (g.uygun ? `Uygun: son ${g.karar} kararda ${yuzde(g.oran ?? 0)} onay` : g.karar < 50 ? `Henüz ${g.karar}/50 karar var` : `Onay oranı ${yuzde(g.oran ?? 0)} (en az %90 gerekir)`)}</span>
+                  <span class="cok-soluk kucuk">
+                    {g.engel ??
+                      (g.uygun
+                        ? `Uygun: son ${g.karar} kararda ${yuzde(g.oran ?? 0)} onay`
+                        : g.karar < 50
+                          ? `Henüz ${g.karar}/50 karar var`
+                          : `Onay oranı ${yuzde(g.oran ?? 0)} (en az %90 gerekir)`)}
+                  </span>
                 </span>
-                <input type="checkbox" class="anahtar-dugme" checked={g.acik} disabled={!!g.engel || (!g.uygun && !g.acik)} onChange={(e) => void guven(g.tur, e.currentTarget.checked)} aria-label={`${TESLIM_TURU_ADI[g.tur]} için otomatik onay`} />
+                <input
+                  type="checkbox"
+                  class="anahtar-dugme"
+                  checked={g.acik}
+                  disabled={!!g.engel || (!g.uygun && !g.acik)}
+                  onChange={(e) => void guven(g.tur, e.currentTarget.checked)}
+                  aria-label={`${TESLIM_TURU_ADI[g.tur]} için otomatik onay`}
+                />
               </li>
             )}
           </For>
@@ -657,7 +916,12 @@ function Ayarlar(p: { s: Sayfa; yenile: () => void }): JSX.Element {
             <strong>Geri dönenleri de göster</strong>
             <span class="cok-soluk kucuk">Ön kontrolden kalanlar normalde sana gelmez.</span>
           </span>
-          <input type="checkbox" class="anahtar-dugme" checked={p.s.kalanlariGoster} onChange={(e) => void kalanlar(e.currentTarget.checked)} />
+          <input
+            type="checkbox"
+            class="anahtar-dugme"
+            checked={p.s.kalanlariGoster}
+            onChange={(e) => void kalanlar(e.currentTarget.checked)}
+          />
         </label>
       </section>
     </div>
@@ -666,8 +930,14 @@ function Ayarlar(p: { s: Sayfa; yenile: () => void }): JSX.Element {
 
 export function Alan(p: { alan: AlanId }): JSX.Element {
   const ilk = sorgu().get("sekme");
-  const [sekme, setSekme] = createSignal<Sekme>((["bekleyen", "isler", "talimat", "zevk", "baglanti", "ayarlar"] as const).find((x) => x === ilk) ?? "bekleyen");
-  const [veri, { refetch }] = createResource(() => p.alan, (a) => al<Sayfa>(`alan/${a}`));
+  const [sekme, setSekme] = createSignal<Sekme>(
+    (["bekleyen", "isler", "talimat", "zevk", "baglanti", "ayarlar"] as const).find((x) => x === ilk) ??
+      "bekleyen",
+  );
+  const [veri, { refetch }] = createResource(
+    () => p.alan,
+    (a) => al<Sayfa>(`alan/${a}`),
+  );
   const yenile = (): void => {
     void refetch();
     void panoYenile();
@@ -707,7 +977,11 @@ export function Alan(p: { alan: AlanId }): JSX.Element {
               </div>
               <div>
                 <dt>Ort. inceleme</dt>
-                <dd>{v().istatistik.ortalamaInceleme === null ? "–" : sure(v().istatistik.ortalamaInceleme ?? 0)}</dd>
+                <dd>
+                  {v().istatistik.ortalamaInceleme === null
+                    ? "–"
+                    : sure(v().istatistik.ortalamaInceleme ?? 0)}
+                </dd>
               </div>
             </dl>
           )}
@@ -730,7 +1004,14 @@ export function Alan(p: { alan: AlanId }): JSX.Element {
         ]}
       />
       <div class="sayfa__govde">
-        <Show when={veri()} fallback={<div class="yigin"><IskeletKartlar adet={3} y="40px" /></div>}>
+        <Show
+          when={veri()}
+          fallback={
+            <div class="yigin">
+              <IskeletKartlar adet={3} y="40px" />
+            </div>
+          }
+        >
           {(v) => (
             <Switch>
               <Match when={sekme() === "bekleyen"}>

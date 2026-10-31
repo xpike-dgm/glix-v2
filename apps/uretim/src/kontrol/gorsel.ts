@@ -184,7 +184,9 @@ export function gorselKontrol(img: Rgba, profil: GorselProfili | null, dosya: st
   if (a.tekRenk && a.gorunur === a.toplam)
     s.push(satir("gorsel", "tek-renk", "kaldi", "Görsel tek renkli düz bir alan; içerik yok.", e));
   else if (a.tekRenk && profil?.ad !== "ikon")
-    s.push(satir("gorsel", "tek-renk", "uyari", "Görsel tek renkten oluşuyor; düz bir şekil gibi duruyor.", e));
+    s.push(
+      satir("gorsel", "tek-renk", "uyari", "Görsel tek renkten oluşuyor; düz bir şekil gibi duruyor.", e),
+    );
   if (profil?.oran !== undefined) {
     if (profil.serit) {
       // şerit profillerinde oran yok

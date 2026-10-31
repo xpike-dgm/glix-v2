@@ -1,10 +1,22 @@
 /** İnceleme sahneleri (UM-U3): türüne göre görsel, animasyon, ses, müzik, liste, kart, wiki, rapor, metin, fikir. */
-import { createEffect, createMemo, createResource, createSignal, For, type JSX, Match, on, onCleanup, Show, Switch } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  For,
+  type JSX,
+  Match,
+  on,
+  onCleanup,
+  Show,
+  Switch,
+} from "solid-js";
+import { Dynamic } from "solid-js/web";
 import type { KontrolSatiri, OgeAyrinti, OgeDosyasi } from "../../../src/ortak/tipler.js";
 import { dosyaUrl, gonder } from "../api.js";
 import { saniye } from "../bicim.js";
 import { Bos, Iskelet } from "../bilesenler.js";
-import { Dynamic } from "solid-js/web";
 import { git, hataTost, tost, yazTercih } from "../durum.js";
 import { alanFarklari, degerMetni, kelimeFarki } from "../fark.js";
 import { Simge } from "../simgeler.js";
@@ -23,7 +35,8 @@ export const setZemin = (z: Zemin): void => {
   setZeminSinyal(z);
   yazTercih("uretim:zemin", z);
 };
-export const zeminDondur = (): void => setZemin(zemin() === "koyu" ? "acik" : zemin() === "acik" ? "dama" : "koyu");
+export const zeminDondur = (): void =>
+  setZemin(zemin() === "koyu" ? "acik" : zemin() === "acik" ? "dama" : "koyu");
 
 const gorseller = (o: OgeAyrinti): OgeDosyasi[] => o.dosyalar.filter((d) => d.tur === "png");
 const sesler = (o: OgeAyrinti): OgeDosyasi[] => o.dosyalar.filter((d) => d.tur === "wav" || d.tur === "ogg");
@@ -31,17 +44,32 @@ const kareNo = (d: OgeDosyasi): number => Number(/-(\d+)\.(png|webp)$/.exec(d.he
 
 export function ZeminSecici(): JSX.Element {
   return (
-    <div class="secim secim--zemin" role="group" aria-label="Zemin">
-      <button type="button" aria-pressed={zemin() === "koyu"} onClick={() => setZemin("koyu")} title="Koyu zemin">
+    <fieldset class="secim secim--zemin" aria-label="Zemin">
+      <button
+        type="button"
+        aria-pressed={zemin() === "koyu"}
+        onClick={() => setZemin("koyu")}
+        title="Koyu zemin"
+      >
         <Simge ad="ay" boyut={16} />
       </button>
-      <button type="button" aria-pressed={zemin() === "acik"} onClick={() => setZemin("acik")} title="Açık zemin">
+      <button
+        type="button"
+        aria-pressed={zemin() === "acik"}
+        onClick={() => setZemin("acik")}
+        title="Açık zemin"
+      >
         <Simge ad="gunes" boyut={16} />
       </button>
-      <button type="button" aria-pressed={zemin() === "dama"} onClick={() => setZemin("dama")} title="Dama (şeffaflık)">
+      <button
+        type="button"
+        aria-pressed={zemin() === "dama"}
+        onClick={() => setZemin("dama")}
+        title="Dama (şeffaflık)"
+      >
         <Simge ad="dama" boyut={16} />
       </button>
-    </div>
+    </fieldset>
   );
 }
 
@@ -78,23 +106,31 @@ function KarsilastirmaKaydiraci(p: { eski: string; yeni: string }): JSX.Element 
       onPointerMove={(e) => {
         if (e.buttons) surukle(e);
       }}
-      role="slider"
-      aria-label="Eski ve yeni karşılaştırma"
-      aria-valuenow={Math.round(x())}
-      tabindex="0"
-      onKeyDown={(e) => {
-        if (e.key === "ArrowLeft") setX((v) => Math.max(0, v - 5));
-        if (e.key === "ArrowRight") setX((v) => Math.min(100, v + 5));
-      }}
     >
       <img src={p.yeni} alt="Yeni" draggable={false} />
-      <img src={p.eski} alt="Eski" draggable={false} class="karsilastir__eski" style={{ "clip-path": `inset(0 ${100 - x()}% 0 0)` }} />
+      <img
+        src={p.eski}
+        alt="Eski"
+        draggable={false}
+        class="karsilastir__eski"
+        style={{ "clip-path": `inset(0 ${100 - x()}% 0 0)` }}
+      />
       <div class="karsilastir__cizgi" style={{ left: `${x()}%` }}>
         <span>
           <Simge ad="onceki" boyut={12} />
           <Simge ad="sonraki" boyut={12} />
         </span>
       </div>
+      <input
+        type="range"
+        class="karsilastir__aralik"
+        min="0"
+        max="100"
+        value={Math.round(x())}
+        onInput={(e) => setX(Number(e.currentTarget.value))}
+        onPointerDown={(e) => e.stopPropagation()}
+        aria-label="Eski ve yeni karşılaştırma"
+      />
       <span class="karsilastir__etiket karsilastir__etiket--sol">Eski</span>
       <span class="karsilastir__etiket karsilastir__etiket--sag">Yeni</span>
     </div>
@@ -111,13 +147,26 @@ export function GorselSahne(p: { oge: OgeAyrinti; onceki: OgeAyrinti | null }): 
     return l.find((y) => x && y.hedefYol === x.hedefYol) ?? l[secili()];
   };
   const [karsilastir, setKarsilastir] = createSignal(false);
-  createEffect(on(() => p.oge.id, () => (setSecili(0), setKarsilastir(false))));
+  createEffect(
+    on(
+      () => p.oge.id,
+      () => {
+        setSecili(0);
+        setKarsilastir(false);
+      },
+    ),
+  );
   return (
     <div class="sahne sahne--gorsel">
       <div class="sahne__arac">
         <ZeminSecici />
         <Show when={eski()}>
-          <button type="button" class="dg dg--k" aria-pressed={karsilastir()} onClick={() => setKarsilastir(!karsilastir())}>
+          <button
+            type="button"
+            class="dg dg--k"
+            aria-pressed={karsilastir()}
+            onClick={() => setKarsilastir(!karsilastir())}
+          >
             <Simge ad="katman" /> {karsilastir() ? "Karşılaştırmayı kapat" : "Eskiyle karşılaştır"}
           </button>
         </Show>
@@ -143,7 +192,12 @@ export function GorselSahne(p: { oge: OgeAyrinti; onceki: OgeAyrinti | null }): 
                 </div>
               }
             >
-              {(e) => <KarsilastirmaKaydiraci eski={dosyaUrl(p.onceki?.id ?? 0, e().ozet)} yeni={dosyaUrl(p.oge.id, dd().ozet)} />}
+              {(e) => (
+                <KarsilastirmaKaydiraci
+                  eski={dosyaUrl(p.onceki?.id ?? 0, e().ozet)}
+                  yeni={dosyaUrl(p.oge.id, dd().ozet)}
+                />
+              )}
             </Show>
             <div class="gercek-boyut">
               <span class="cok-soluk kucuk">Oyundaki boyut</span>
@@ -152,10 +206,18 @@ export function GorselSahne(p: { oge: OgeAyrinti; onceki: OgeAyrinti | null }): 
                   {(b) => (
                     <div class="gercek-boyut__oge">
                       <div class={`gercek-boyut__kutu zemin--koyu`}>
-                        <img src={dosyaUrl(p.oge.id, dd().ozet)} alt="" style={{ width: `${b}px`, height: `${b}px` }} />
+                        <img
+                          src={dosyaUrl(p.oge.id, dd().ozet)}
+                          alt=""
+                          style={{ width: `${b}px`, height: `${b}px` }}
+                        />
                       </div>
                       <div class={`gercek-boyut__kutu zemin--acik`}>
-                        <img src={dosyaUrl(p.oge.id, dd().ozet)} alt="" style={{ width: `${b}px`, height: `${b}px` }} />
+                        <img
+                          src={dosyaUrl(p.oge.id, dd().ozet)}
+                          alt=""
+                          style={{ width: `${b}px`, height: `${b}px` }}
+                        />
                       </div>
                       <span class="cok-soluk kucuk">{b} px</span>
                     </div>
@@ -167,7 +229,13 @@ export function GorselSahne(p: { oge: OgeAyrinti; onceki: OgeAyrinti | null }): 
               <div class="kucuk-resimler" role="tablist" aria-label="Dosyalar">
                 <For each={liste()}>
                   {(x, i) => (
-                    <button type="button" class={`kucuk-resim zemin--${zemin()}`} aria-selected={i() === secili()} onClick={() => setSecili(i())} title={x.ad}>
+                    <button
+                      type="button"
+                      class={`kucuk-resim zemin--${zemin()}`}
+                      aria-pressed={i() === secili()}
+                      onClick={() => setSecili(i())}
+                      title={x.ad}
+                    >
                       <img src={dosyaUrl(p.oge.id, x.ozet)} alt={x.ad} loading="lazy" />
                     </button>
                   )}
@@ -189,7 +257,8 @@ export function AnimasyonSahne(p: { oge: OgeAyrinti }): JSX.Element {
   let zaman: ReturnType<typeof setInterval> | undefined;
   createEffect(() => {
     clearInterval(zaman);
-    if (oynuyor() && kareler().length > 1) zaman = setInterval(() => setKare((k) => (k + 1) % kareler().length), 125 / hiz());
+    if (oynuyor() && kareler().length > 1)
+      zaman = setInterval(() => setKare((k) => (k + 1) % kareler().length), 125 / hiz());
   });
   onCleanup(() => clearInterval(zaman));
   const tus = (e: KeyboardEvent): void => {
@@ -209,16 +278,39 @@ export function AnimasyonSahne(p: { oge: OgeAyrinti }): JSX.Element {
         </span>
       </div>
       <div class={`sahne__tuval zemin--${zemin()}`}>
-        <Show when={kareler()[kare()]}>{(k) => <img src={dosyaUrl(p.oge.id, k().ozet)} alt={`Kare ${kare() + 1}`} draggable={false} />}</Show>
+        <Show when={kareler()[kare()]}>
+          {(k) => <img src={dosyaUrl(p.oge.id, k().ozet)} alt={`Kare ${kare() + 1}`} draggable={false} />}
+        </Show>
       </div>
       <div class="oynatici">
-        <button type="button" class="dg-simge" onClick={() => (setOynuyor(false), setKare((k) => (k - 1 + kareler().length) % kareler().length))} aria-label="Önceki kare">
+        <button
+          type="button"
+          class="dg-simge"
+          onClick={() => {
+            setOynuyor(false);
+            setKare((k) => (k - 1 + kareler().length) % kareler().length);
+          }}
+          aria-label="Önceki kare"
+        >
           <Simge ad="adim" style={{ transform: "scaleX(-1)" }} />
         </button>
-        <button type="button" class="dg dg--birincil oynatici__ana" onClick={() => setOynuyor(!oynuyor())} aria-label={oynuyor() ? "Durdur" : "Oynat"}>
+        <button
+          type="button"
+          class="dg dg--birincil oynatici__ana"
+          onClick={() => setOynuyor(!oynuyor())}
+          aria-label={oynuyor() ? "Durdur" : "Oynat"}
+        >
           <Simge ad={oynuyor() ? "durdur" : "oynat"} />
         </button>
-        <button type="button" class="dg-simge" onClick={() => (setOynuyor(false), setKare((k) => (k + 1) % kareler().length))} aria-label="Sonraki kare">
+        <button
+          type="button"
+          class="dg-simge"
+          onClick={() => {
+            setOynuyor(false);
+            setKare((k) => (k + 1) % kareler().length);
+          }}
+          aria-label="Sonraki kare"
+        >
           <Simge ad="adim" />
         </button>
         <div class="secim">
@@ -234,7 +326,15 @@ export function AnimasyonSahne(p: { oge: OgeAyrinti }): JSX.Element {
       <div class="kucuk-resimler">
         <For each={kareler()}>
           {(k, i) => (
-            <button type="button" class={`kucuk-resim zemin--${zemin()}`} aria-selected={i() === kare()} onClick={() => (setOynuyor(false), setKare(i()))}>
+            <button
+              type="button"
+              class={`kucuk-resim zemin--${zemin()}`}
+              aria-pressed={i() === kare()}
+              onClick={() => {
+                setOynuyor(false);
+                setKare(i());
+              }}
+            >
               <img src={dosyaUrl(p.oge.id, k.ozet)} alt={`Kare ${i() + 1}`} loading="lazy" />
             </button>
           )}
@@ -275,9 +375,14 @@ function SesOynatici(p: { ogeId: number; d: OgeDosyasi; etiket?: string; dongu?:
     kalanDongu = dongu;
     void ses.play().catch(() => tost("Ses çalınamadı; cihazın sesini kontrol et.", { hata: true }));
   };
-  const meta = (): { sure: number; kanal: number; ornekleme: number; dalga: number[] } | null => (p.d.meta?.tur === "ses" ? p.d.meta : null);
+  const meta = (): { sure: number; kanal: number; ornekleme: number; dalga: number[] } | null =>
+    p.d.meta?.tur === "ses" ? p.d.meta : null;
   const tus = (e: KeyboardEvent): void => {
-    if (e.key === " " && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) && !p.etiket) {
+    if (
+      e.key === " " &&
+      !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) &&
+      !p.etiket
+    ) {
       e.preventDefault();
       cal();
     }
@@ -287,7 +392,12 @@ function SesOynatici(p: { ogeId: number; d: OgeDosyasi; etiket?: string; dongu?:
   return (
     <div class="ses">
       <div class="ses__bas">
-        <button type="button" class="dg dg--birincil ses__oynat" onClick={() => cal()} aria-label={caliyor() ? "Durdur" : "Oynat"}>
+        <button
+          type="button"
+          class="dg dg--birincil ses__oynat"
+          onClick={() => cal()}
+          aria-label={caliyor() ? "Durdur" : "Oynat"}
+        >
           <Simge ad={caliyor() ? "durdur" : "oynat"} />
         </button>
         <div class="esnek">
@@ -295,7 +405,8 @@ function SesOynatici(p: { ogeId: number; d: OgeDosyasi; etiket?: string; dongu?:
           <Show when={meta()}>
             {(m) => (
               <div class="cok-soluk kucuk">
-                {saniye(m().sure)} · {m().kanal === 1 ? "tek kanal" : `${m().kanal} kanal`} · {(m().ornekleme / 1000).toFixed(1).replace(".", ",")} kHz
+                {saniye(m().sure)} · {m().kanal === 1 ? "tek kanal" : `${m().kanal} kanal`} ·{" "}
+                {(m().ornekleme / 1000).toFixed(1).replace(".", ",")} kHz
               </div>
             )}
           </Show>
@@ -313,12 +424,28 @@ function SesOynatici(p: { ogeId: number; d: OgeDosyasi; etiket?: string; dongu?:
           if (ses.duration) ses.currentTime = ((e.clientX - r.left) / r.width) * ses.duration;
         }}
       >
-        <svg viewBox={`0 0 ${(meta()?.dalga.length ?? 1) * 4} 64`} preserveAspectRatio="none" aria-hidden="true">
+        <svg
+          viewBox={`0 0 ${(meta()?.dalga.length ?? 1) * 4} 64`}
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
           <For each={meta()?.dalga ?? []}>
-            {(v, i) => <rect x={i() * 4 + 0.6} y={32 - Math.max(1, v * 30)} width="2.8" height={Math.max(2, v * 60)} rx="1.2" class={i() / (meta()?.dalga.length ?? 1) < ilerleme() ? "dalga__calan" : ""} />}
+            {(v, i) => (
+              <rect
+                x={i() * 4 + 0.6}
+                y={32 - Math.max(1, v * 30)}
+                width="2.8"
+                height={Math.max(2, v * 60)}
+                rx="1.2"
+                class={i() / (meta()?.dalga.length ?? 1) < ilerleme() ? "dalga__calan" : ""}
+              />
+            )}
           </For>
         </svg>
-        <div class="dalga__imlec" style={{ left: `${ilerleme() * 100}%`, opacity: caliyor() || ilerleme() > 0 ? 1 : 0 }} />
+        <div
+          class="dalga__imlec"
+          style={{ left: `${ilerleme() * 100}%`, opacity: caliyor() || ilerleme() > 0 ? 1 : 0 }}
+        />
       </div>
     </div>
   );
@@ -329,14 +456,17 @@ export function SesSahne(p: { oge: OgeAyrinti; onceki: OgeAyrinti | null; muzik:
     <div class="sahne sahne--ses">
       <For each={sesler(p.oge)} fallback={<Bos simge="ses" baslik="Ses dosyası yok" />}>
         {(d) => {
-          const eski = (): OgeDosyasi | undefined => (p.onceki ? sesler(p.onceki).find((x) => x.hedefYol === d.hedefYol) : undefined);
+          const eski = (): OgeDosyasi | undefined =>
+            p.onceki ? sesler(p.onceki).find((x) => x.hedefYol === d.hedefYol) : undefined;
           return (
             <div class="ses-grup">
               <Show when={d.hedefYol}>
                 <div class="cok-soluk kucuk mono tasma">{d.hedefYol}</div>
               </Show>
               <SesOynatici ogeId={p.oge.id} d={d} {...(p.muzik ? { dongu: 3 } : {})} />
-              <Show when={eski()}>{(e) => <SesOynatici ogeId={p.onceki?.id ?? 0} d={e()} etiket={`Önceki sürüm · ${e().ad}`} />}</Show>
+              <Show when={eski()}>
+                {(e) => <SesOynatici ogeId={p.onceki?.id ?? 0} d={e()} etiket={`Önceki sürüm · ${e().ad}`} />}
+              </Show>
             </div>
           );
         }}
@@ -352,16 +482,35 @@ export function SesSahne(p: { oge: OgeAyrinti; onceki: OgeAyrinti | null; muzik:
 export function satirMetni(s: unknown): { ana: string; ek: string } {
   if (s && typeof s === "object") {
     const o = s as Record<string, unknown>;
-    if (o.alanlar && typeof o.alanlar === "object") return { ana: Object.values(o.alanlar as Record<string, unknown>).map(String).join(" · "), ek: [o.havuz, o.zorluk, o.tema].filter(Boolean).map(String).join(" · ") };
-    if (typeof o.kalip === "string") return { ana: o.kalip, ek: [o.tur, o.risk].filter(Boolean).map(String).join(" · ") };
-    if (typeof o.name === "string") return { ana: o.name, ek: [o.type, o.rarity, o.price === undefined ? "" : `${String(o.price)} Glix`].filter(Boolean).map(String).join(" · ") };
+    if (o.alanlar && typeof o.alanlar === "object")
+      return {
+        ana: Object.values(o.alanlar as Record<string, unknown>)
+          .map(String)
+          .join(" · "),
+        ek: [o.havuz, o.zorluk, o.tema].filter(Boolean).map(String).join(" · "),
+      };
+    if (typeof o.kalip === "string")
+      return { ana: o.kalip, ek: [o.tur, o.risk].filter(Boolean).map(String).join(" · ") };
+    if (typeof o.name === "string")
+      return {
+        ana: o.name,
+        ek: [o.type, o.rarity, o.price === undefined ? "" : `${String(o.price)} Glix`]
+          .filter(Boolean)
+          .map(String)
+          .join(" · "),
+      };
     if (typeof o.anahtar === "string") return { ana: o.anahtar, ek: String(o.neden ?? "") };
     return { ana: JSON.stringify(o).slice(0, 140), ek: "" };
   }
   return { ana: String(s), ek: "" };
 }
 
-export function ListeSahne(p: { oge: OgeAyrinti; secili: Set<number>; setSecili: (s: Set<number>) => void; karar: boolean }): JSX.Element {
+export function ListeSahne(p: {
+  oge: OgeAyrinti;
+  secili: Set<number>;
+  setSecili: (s: Set<number>) => void;
+  karar: boolean;
+}): JSX.Element {
   const [suzgec, setSuzgec] = createSignal<"hepsi" | "uyari" | "temiz">("hepsi");
   const satirSonucu = (i: number): KontrolSatiri["sonuc"] | null => {
     const l = p.oge.kontrol.satirlar.filter((s) => s.satir === i);
@@ -369,8 +518,16 @@ export function ListeSahne(p: { oge: OgeAyrinti; secili: Set<number>; setSecili:
     if (l.some((s) => s.sonuc === "uyari")) return "uyari";
     return null;
   };
-  const mesajlar = (i: number): string[] => p.oge.kontrol.satirlar.filter((s) => s.satir === i && s.sonuc !== "gecti").map((s) => s.mesaj);
-  const gorunen = createMemo(() => p.oge.satirlar.map((s, i) => ({ s, i })).filter(({ i }) => suzgec() === "hepsi" || (suzgec() === "uyari" ? satirSonucu(i) !== null : satirSonucu(i) === null)));
+  const mesajlar = (i: number): string[] =>
+    p.oge.kontrol.satirlar.filter((s) => s.satir === i && s.sonuc !== "gecti").map((s) => s.mesaj);
+  const gorunen = createMemo(() =>
+    p.oge.satirlar
+      .map((s, i) => ({ s, i }))
+      .filter(
+        ({ i }) =>
+          suzgec() === "hepsi" || (suzgec() === "uyari" ? satirSonucu(i) !== null : satirSonucu(i) === null),
+      ),
+  );
   const degistir = (i: number): void => {
     const y = new Set(p.secili);
     if (y.has(i)) y.delete(i);
@@ -381,7 +538,7 @@ export function ListeSahne(p: { oge: OgeAyrinti; secili: Set<number>; setSecili:
   return (
     <div class="sahne sahne--liste">
       <div class="sahne__arac">
-        <div class="secim" role="group" aria-label="Süzgeç">
+        <fieldset class="secim" aria-label="Süzgeç">
           <button type="button" aria-pressed={suzgec() === "hepsi"} onClick={() => setSuzgec("hepsi")}>
             Hepsi {p.oge.satirlar.length}
           </button>
@@ -391,7 +548,7 @@ export function ListeSahne(p: { oge: OgeAyrinti; secili: Set<number>; setSecili:
           <button type="button" aria-pressed={suzgec() === "temiz"} onClick={() => setSuzgec("temiz")}>
             Temiz {uyarisizlar().length}
           </button>
-        </div>
+        </fieldset>
         <Show when={p.karar}>
           <button type="button" class="dg dg--k" onClick={() => p.setSecili(new Set(uyarisizlar()))}>
             Uyarısızların hepsini seç
@@ -410,7 +567,11 @@ export function ListeSahne(p: { oge: OgeAyrinti; secili: Set<number>; setSecili:
                     class="onay-kutusu"
                     aria-label="Hepsini seç"
                     checked={p.secili.size === p.oge.satirlar.length && p.oge.satirlar.length > 0}
-                    onChange={(e) => p.setSecili(e.currentTarget.checked ? new Set(p.oge.satirlar.map((_, i) => i)) : new Set())}
+                    onChange={(e) =>
+                      p.setSecili(
+                        e.currentTarget.checked ? new Set(p.oge.satirlar.map((_, i) => i)) : new Set(),
+                      )
+                    }
                   />
                 </th>
               </Show>
@@ -424,10 +585,22 @@ export function ListeSahne(p: { oge: OgeAyrinti; secili: Set<number>; setSecili:
               {({ s, i }) => {
                 const m = satirMetni(s);
                 return (
-                  <tr data-secili={p.secili.has(i) ? "1" : "0"} data-uyari={satirSonucu(i) === "uyari" ? "1" : "0"} data-kaldi={satirSonucu(i) === "kaldi" ? "1" : "0"} onClick={() => p.karar && degistir(i)}>
+                  <tr
+                    data-secili={p.secili.has(i) ? "1" : "0"}
+                    data-uyari={satirSonucu(i) === "uyari" ? "1" : "0"}
+                    data-kaldi={satirSonucu(i) === "kaldi" ? "1" : "0"}
+                    onClick={() => p.karar && degistir(i)}
+                  >
                     <Show when={p.karar}>
                       <td>
-                        <input type="checkbox" class="onay-kutusu" checked={p.secili.has(i)} onClick={(e) => e.stopPropagation()} onChange={() => degistir(i)} aria-label={`${i + 1}. satırı seç`} />
+                        <input
+                          type="checkbox"
+                          class="onay-kutusu"
+                          checked={p.secili.has(i)}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={() => degistir(i)}
+                          aria-label={`${i + 1}. satırı seç`}
+                        />
                       </td>
                     </Show>
                     <td class="cok-soluk">{i + 1}</td>
@@ -438,7 +611,11 @@ export function ListeSahne(p: { oge: OgeAyrinti; secili: Set<number>; setSecili:
                       </Show>
                     </td>
                     <td class="kucuk">
-                      <For each={mesajlar(i)}>{(x) => <div class={satirSonucu(i) === "kaldi" ? "metin-kaldi" : "metin-uyari"}>{x}</div>}</For>
+                      <For each={mesajlar(i)}>
+                        {(x) => (
+                          <div class={satirSonucu(i) === "kaldi" ? "metin-kaldi" : "metin-uyari"}>{x}</div>
+                        )}
+                      </For>
                     </td>
                   </tr>
                 );
@@ -469,10 +646,18 @@ export function KartSahne(p: { oge: OgeAyrinti }): JSX.Element {
                 {(b) => (
                   <div class="gercek-boyut__oge">
                     <div class="gercek-boyut__kutu zemin--koyu">
-                      <img src={dosyaUrl(p.oge.id, d.ozet)} alt="" style={{ width: `${b}px`, height: `${b}px`, color: "#fff" }} />
+                      <img
+                        src={dosyaUrl(p.oge.id, d.ozet)}
+                        alt=""
+                        style={{ width: `${b}px`, height: `${b}px`, color: "#fff" }}
+                      />
                     </div>
                     <div class="gercek-boyut__kutu zemin--acik">
-                      <img src={dosyaUrl(p.oge.id, d.ozet)} alt="" style={{ width: `${b}px`, height: `${b}px` }} />
+                      <img
+                        src={dosyaUrl(p.oge.id, d.ozet)}
+                        alt=""
+                        style={{ width: `${b}px`, height: `${b}px` }}
+                      />
                     </div>
                     <span class="cok-soluk kucuk">{b} px</span>
                   </div>
@@ -516,7 +701,11 @@ export function MetinSahne(p: { oge: OgeAyrinti }): JSX.Element {
       <Show when={p.oge.aciklama}>
         <p class="metin-govde">{p.oge.aciklama}</p>
       </Show>
-      <For each={p.oge.dosyalar.filter((d) => d.tur === "md" || d.tur === "json" || d.tur === "csv" || d.tur === "svg")}>
+      <For
+        each={p.oge.dosyalar.filter(
+          (d) => d.tur === "md" || d.tur === "json" || d.tur === "csv" || d.tur === "svg",
+        )}
+      >
         {(d) => (
           <div class="yigin">
             <div class="cok-soluk kucuk mono">{d.hedefYol ?? d.ad}</div>
@@ -538,14 +727,22 @@ interface WikiSayfa {
 
 export function WikiSahne(p: { oge: OgeAyrinti; onceki: OgeAyrinti | null }): JSX.Element {
   const d = (): OgeDosyasi | undefined => p.oge.dosyalar.find((x) => x.tur === "json");
-  const e = (): OgeDosyasi | undefined => p.onceki?.dosyalar.find((x) => x.tur === "json" && x.hedefYol === d()?.hedefYol);
+  const e = (): OgeDosyasi | undefined =>
+    p.onceki?.dosyalar.find((x) => x.tur === "json" && x.hedefYol === d()?.hedefYol);
   const oku = async (id: number, oz: string): Promise<WikiSayfa> => {
     const r = await fetch(dosyaUrl(id, oz), { credentials: "same-origin" });
     return r.ok ? ((await r.json()) as WikiSayfa) : {};
   };
-  const [yeni] = createResource(() => d()?.ozet, (oz) => oku(p.oge.id, oz));
-  const [eski] = createResource(() => e()?.ozet, (oz) => oku(p.onceki?.id ?? 0, oz));
-  const metin = (w: WikiSayfa | undefined): string => (w ? [w.ozet ?? "", ...(w.kurallar ?? []).map(String), ...(w.strateji ?? []).map(String)].join("\n") : "");
+  const [yeni] = createResource(
+    () => d()?.ozet,
+    (oz) => oku(p.oge.id, oz),
+  );
+  const [eski] = createResource(
+    () => e()?.ozet,
+    (oz) => oku(p.onceki?.id ?? 0, oz),
+  );
+  const metin = (w: WikiSayfa | undefined): string =>
+    w ? [w.ozet ?? "", ...(w.kurallar ?? []).map(String), ...(w.strateji ?? []).map(String)].join("\n") : "";
   return (
     <div class="sahne sahne--metin">
       <Show when={yeni()} fallback={<Iskelet y="200px" r="10px" />}>
@@ -558,7 +755,9 @@ export function WikiSahne(p: { oge: OgeAyrinti; onceki: OgeAyrinti | null }): JS
             <Show when={eski()} fallback={<p class="metin-govde">{w().ozet}</p>}>
               {(es) => (
                 <p class="metin-govde fark-metni">
-                  <For each={kelimeFarki(metin(es()), metin(w()))}>{(f) => <span class={`fark--${f.tur}`}>{f.metin}</span>}</For>
+                  <For each={kelimeFarki(metin(es()), metin(w()))}>
+                    {(f) => <span class={`fark--${f.tur}`}>{f.metin}</span>}
+                  </For>
                 </p>
               )}
             </Show>
@@ -588,7 +787,8 @@ export function Kivilcim(p: { degerler: number[]; esik?: number | undefined }): 
   const enk = (): number => Math.min(...tum());
   const enb = (): number => Math.max(...tum(), enk() + 1e-9);
   const y = (v: number): number => 29 - ((v - enk()) / (enb() - enk())) * 26;
-  const nokta = (): string => p.degerler.map((v, i) => `${(i / Math.max(1, p.degerler.length - 1)) * 100},${y(v)}`).join(" ");
+  const nokta = (): string =>
+    p.degerler.map((v, i) => `${(i / Math.max(1, p.degerler.length - 1)) * 100},${y(v)}`).join(" ");
   return (
     <svg class="kivilcim" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true">
       <Show when={p.esik !== undefined}>
@@ -603,7 +803,10 @@ export function RaporSahne(p: { oge: OgeAyrinti }): JSX.Element {
   const r = (): Rapor => (p.oge.rapor && typeof p.oge.rapor === "object" ? (p.oge.rapor as Rapor) : {});
   const duzelt = async (baslik: string): Promise<void> => {
     try {
-      await gonder(`rapor/${p.oge.id}/duzelt`, { baslik: baslik.slice(0, 120), aciklama: `Rapor: ${p.oge.ad}` });
+      await gonder(`rapor/${p.oge.id}/duzelt`, {
+        baslik: baslik.slice(0, 120),
+        aciklama: `Rapor: ${p.oge.ad}`,
+      });
       tost("Yöneticiye iş açıldı");
     } catch (e) {
       hataTost(e);
@@ -637,17 +840,27 @@ export function RaporSahne(p: { oge: OgeAyrinti }): JSX.Element {
         <section class="yigin">
           <h3>Hata kartları</h3>
           <ul class="hata-listesi">
-            <For each={[...(r().hatalar ?? [])].sort((a, b) => (ONEM_SIRASI[a.onem ?? "orta"] ?? 2) - (ONEM_SIRASI[b.onem ?? "orta"] ?? 2))}>
+            <For
+              each={[...(r().hatalar ?? [])].sort(
+                (a, b) => (ONEM_SIRASI[a.onem ?? "orta"] ?? 2) - (ONEM_SIRASI[b.onem ?? "orta"] ?? 2),
+              )}
+            >
               {(h) => (
                 <li class="hata-karti">
                   <div class="satir satir--ara">
-                    <span class={`etiket ${h.onem === "kritik" || h.onem === "yuksek" ? "etiket--kaldi" : h.onem === "orta" ? "etiket--uyari" : ""}`}>{h.onem ?? "orta"}</span>
+                    <span
+                      class={`etiket ${h.onem === "kritik" || h.onem === "yuksek" ? "etiket--kaldi" : h.onem === "orta" ? "etiket--uyari" : ""}`}
+                    >
+                      {h.onem ?? "orta"}
+                    </span>
                     <button type="button" class="dg dg--k" onClick={() => void duzelt(h.baslik)}>
                       <Simge ad="duzeltme" /> Düzelt
                     </button>
                   </div>
                   <strong>{h.baslik}</strong>
-                  <span class="soluk kucuk">{[h.oyun, h.siklik ? `${h.siklik} kez` : "", h.neden].filter(Boolean).join(" · ")}</span>
+                  <span class="soluk kucuk">
+                    {[h.oyun, h.siklik ? `${h.siklik} kez` : "", h.neden].filter(Boolean).join(" · ")}
+                  </span>
                 </li>
               )}
             </For>
@@ -696,7 +909,9 @@ export function FikirSahne(p: { oge: OgeAyrinti; kardesler: OgeAyrinti[] }): JSX
               class={`fikir ${i() === 0 ? "fikir--secili" : ""}`}
               {...(i() === 0 ? {} : { type: "button", onClick: () => git(`/incele/${f.id}`, true) })}
             >
-              <span class="cok-soluk kucuk">{i() === 0 ? "İncelenen fikir" : "Diğer fikir · incelemek için dokun"}</span>
+              <span class="cok-soluk kucuk">
+                {i() === 0 ? "İncelenen fikir" : "Diğer fikir · incelemek için dokun"}
+              </span>
               <h2>{f.ad}</h2>
               <p class="metin-govde">{f.aciklama}</p>
               <Show when={f.gorunus}>
@@ -738,15 +953,24 @@ export function FarkGorunumu(p: { oge: OgeAyrinti }): JSX.Element {
                         <span class="fark--silindi">{degerMetni(f.eski)}</span>
                         <Simge ad="sonraki" boyut={14} />
                         <span class="fark--eklendi">{degerMetni(f.yeni)}</span>
-                        <span class={`etiket ${(f.yeni as number) < (f.eski as number) ? "etiket--gecti" : "etiket--uyari"}`}>
+                        <span
+                          class={`etiket ${(f.yeni as number) < (f.eski as number) ? "etiket--gecti" : "etiket--uyari"}`}
+                        >
                           {(f.yeni as number) > (f.eski as number) ? "+" : ""}
-                          {Math.round((((f.yeni as number) - (f.eski as number)) / Math.max(1, Math.abs(f.eski as number))) * 100)}%
+                          {Math.round(
+                            (((f.yeni as number) - (f.eski as number)) /
+                              Math.max(1, Math.abs(f.eski as number))) *
+                              100,
+                          )}
+                          %
                         </span>
                       </span>
                     </Match>
                     <Match when={true}>
                       <span class="fark-metni">
-                        <For each={kelimeFarki(degerMetni(f.eski), degerMetni(f.yeni))}>{(x) => <span class={`fark--${x.tur}`}>{x.metin}</span>}</For>
+                        <For each={kelimeFarki(degerMetni(f.eski), degerMetni(f.yeni))}>
+                          {(x) => <span class={`fark--${x.tur}`}>{x.metin}</span>}
+                        </For>
                       </span>
                     </Match>
                   </Switch>

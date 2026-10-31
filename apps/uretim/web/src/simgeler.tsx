@@ -3,7 +3,8 @@ import type { JSX } from "solid-js";
 
 const P: Record<string, string> = {
   pano: "M4 4h6v7H4zM14 4h6v4h-6zM14 12h6v8h-6zM4 15h6v5H4z",
-  incele: "M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7zM12 9.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6z",
+  incele:
+    "M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7zM12 9.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6z",
   yukle: "M12 15V4M7.5 8.5 12 4l4.5 4.5M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15",
   arsiv: "M3.5 5.5h17v4h-17zM5 9.5v9A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-9M10 13h4",
   rapor: "M4 20V10M10 20V4M16 20v-7M21 20H3",
@@ -36,18 +37,21 @@ const P: Record<string, string> = {
   menu: "M5 12h.01M12 12h.01M19 12h.01",
   arti: "M12 5v14M5 12h14",
   sil: "M4.5 7h15M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3",
-  gunes: "M12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4",
+  gunes:
+    "M12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4",
   ay: "M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z",
   cikis: "M10 4H5v16h5M15 8l4 4-4 4M19 12H9",
   zil: "M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15zM10 20.5h4",
   paket: "M12 3 4 7v10l8 4 8-4V7zM4 7l8 4 8-4M12 11v10",
-  pirilti: "M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z",
+  pirilti:
+    "M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z",
   tamam: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8 12.5l2.8 2.8L16.5 9.5",
   saat: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2",
   simsek: "M13 3 5 13.5h6L10 21l8-10.5h-6z",
   dama: "M4 4h8v8H4zM12 12h8v8h-8z",
   katman: "M12 4 3 9l9 5 9-5zM3 14l9 5 9-5",
-  baglanti: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",
+  baglanti:
+    "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",
   kod: "M8.5 7 3.5 12l5 5M15.5 7l5 5-5 5",
   istek: "M4 6h16v10H8l-4 4zM8 10h8M8 13h5",
   sohbet: "M4 5h16v11H9l-5 4zM8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01",
@@ -59,7 +63,12 @@ const P: Record<string, string> = {
 
 export type SimgeAdi = keyof typeof P;
 
-export function Simge(p: { ad: SimgeAdi; boyut?: number; class?: string; style?: JSX.CSSProperties }): JSX.Element {
+export function Simge(p: {
+  ad: SimgeAdi;
+  boyut?: number;
+  class?: string;
+  style?: JSX.CSSProperties;
+}): JSX.Element {
   return (
     <svg
       class={p.class}

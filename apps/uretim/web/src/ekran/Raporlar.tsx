@@ -15,16 +15,30 @@ export function Raporlar(): JSX.Element {
       <header class="sayfa__bas">
         <div>
           <h1>Raporlar</h1>
-          <p class="soluk">Gece testleri, hata kartları ve performans eğilimi. Bir sorunu düzelttirmek için “Düzelt”e dokun.</p>
+          <p class="soluk">
+            Gece testleri, hata kartları ve performans eğilimi. Bir sorunu düzelttirmek için “Düzelt”e dokun.
+          </p>
         </div>
       </header>
       <Show when={!veri.loading} fallback={<IskeletKartlar adet={2} y="160px" />}>
-        <Show when={veri()?.raporlar.length} fallback={<Bos simge="rapor" baslik="Henüz rapor yok">Test ve Performans alanı ilk raporunu teslim edince burada görünür.</Bos>}>
+        <Show
+          when={veri()?.raporlar.length}
+          fallback={
+            <Bos simge="rapor" baslik="Henüz rapor yok">
+              Test ve Performans alanı ilk raporunu teslim edince burada görünür.
+            </Bos>
+          }
+        >
           <div class="rapor-duzen">
             <aside class="kart rapor-listesi">
               <For each={veri()?.raporlar}>
                 {(r, i) => (
-                  <button type="button" class="rapor-listesi__oge" aria-pressed={i() === secili()} onClick={() => setSecili(i())}>
+                  <button
+                    type="button"
+                    class="rapor-listesi__oge"
+                    aria-pressed={i() === secili()}
+                    onClick={() => setSecili(i())}
+                  >
                     <strong class="tasma">{r.ad}</strong>
                     <span class="cok-soluk kucuk">{tarihSaat(r.olusturma)}</span>
                   </button>

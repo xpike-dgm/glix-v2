@@ -6,7 +6,12 @@ import type { KontrolSonucu } from "../../src/ortak/tipler.js";
 import { alanBul, alanRengi, tostKapat, tostlar } from "./durum.js";
 import { Simge, type SimgeAdi } from "./simgeler.js";
 
-export function Bos(p: { simge: SimgeAdi; baslik: string; children?: JSX.Element; eylem?: JSX.Element }): JSX.Element {
+export function Bos(p: {
+  simge: SimgeAdi;
+  baslik: string;
+  children?: JSX.Element;
+  eylem?: JSX.Element;
+}): JSX.Element {
   return (
     <div class="bos">
       <div class="bos__simge">
@@ -22,7 +27,13 @@ export function Bos(p: { simge: SimgeAdi; baslik: string; children?: JSX.Element
 }
 
 export function Iskelet(p: { g?: string; y?: string; r?: string; class?: string }): JSX.Element {
-  return <div class={`iskelet ${p.class ?? ""}`} style={{ width: p.g ?? "100%", height: p.y ?? "14px", "border-radius": p.r }} aria-hidden="true" />;
+  return (
+    <div
+      class={`iskelet ${p.class ?? ""}`}
+      style={{ width: p.g ?? "100%", height: p.y ?? "14px", "border-radius": p.r }}
+      aria-hidden="true"
+    />
+  );
 }
 
 export function IskeletKartlar(p: { adet: number; y?: string }): JSX.Element {
@@ -40,12 +51,25 @@ export function IskeletKartlar(p: { adet: number; y?: string }): JSX.Element {
 }
 
 /** İlerleme halkası (0..1). `null` ise boş halka ve tire. */
-export function Halka(p: { oran: number | null; boyut?: number; renk?: string; etiket?: string }): JSX.Element {
+export function Halka(p: {
+  oran: number | null;
+  boyut?: number;
+  renk?: string;
+  etiket?: string;
+}): JSX.Element {
   const b = (): number => p.boyut ?? 40;
   const r = (): number => b() / 2 - 4;
   const cevre = (): number => 2 * Math.PI * r();
   return (
-    <svg class="halka" width={b()} height={b()} viewBox={`0 0 ${b()} ${b()}`} style={{ "--alan-renk": p.renk }} role="img" aria-label={p.etiket ?? (p.oran === null ? "Veri yok" : `%${Math.round(p.oran * 100)}`)}>
+    <svg
+      class="halka"
+      width={b()}
+      height={b()}
+      viewBox={`0 0 ${b()} ${b()}`}
+      style={{ "--alan-renk": p.renk }}
+      role="img"
+      aria-label={p.etiket ?? (p.oran === null ? "Veri yok" : `%${Math.round(p.oran * 100)}`)}
+    >
       <circle class="halka__iz" cx={b() / 2} cy={b() / 2} r={r()} fill="none" stroke-width="4" />
       <circle
         class="halka__dolu"
@@ -104,12 +128,23 @@ export function SonucEtiketi(p: { sonuc: KontrolSonucu }): JSX.Element {
   );
 }
 
-export function Sekmeler<T extends string>(p: { secenekler: { id: T; ad: string; sayi?: number }[]; secili: T; sec: (t: T) => void; etiket: string }): JSX.Element {
+export function Sekmeler<T extends string>(p: {
+  secenekler: { id: T; ad: string; sayi?: number }[];
+  secili: T;
+  sec: (t: T) => void;
+  etiket: string;
+}): JSX.Element {
   return (
     <div class="sekmeler" role="tablist" aria-label={p.etiket}>
       <For each={p.secenekler}>
         {(s) => (
-          <button type="button" class="sekme" role="tab" aria-selected={p.secili === s.id} onClick={() => p.sec(s.id)}>
+          <button
+            type="button"
+            class="sekme"
+            role="tab"
+            aria-selected={p.secili === s.id}
+            onClick={() => p.sec(s.id)}
+          >
             {s.ad}
             <Show when={s.sayi}>
               <span class="sayac sayac--sessiz">{s.sayi}</span>
@@ -122,7 +157,13 @@ export function Sekmeler<T extends string>(p: { secenekler: { id: T; ad: string;
 }
 
 /** Telefonda alttan açılan sayfa, geniş ekranda ortada diyalog. Esc ve perdeye dokunma kapatır. */
-export function AltSayfa(p: { baslik: string; kapat: () => void; children: JSX.Element; ayak?: JSX.Element; genis?: boolean }): JSX.Element {
+export function AltSayfa(p: {
+  baslik: string;
+  kapat: () => void;
+  children: JSX.Element;
+  ayak?: JSX.Element;
+  genis?: boolean;
+}): JSX.Element {
   let kutu: HTMLDivElement | undefined;
   const tus = (e: KeyboardEvent): void => {
     if (e.key === "Escape") {
@@ -132,7 +173,9 @@ export function AltSayfa(p: { baslik: string; kapat: () => void; children: JSX.E
   };
   onMount(() => {
     document.addEventListener("keydown", tus, true);
-    const ilk = kutu?.querySelector<HTMLElement>("[data-ilk-odak], textarea, input, button:not([data-kapat])");
+    const ilk = kutu?.querySelector<HTMLElement>(
+      "[data-ilk-odak], textarea, input, button:not([data-kapat])",
+    );
     ilk?.focus({ preventScroll: true });
   });
   onCleanup(() => document.removeEventListener("keydown", tus, true));
@@ -141,7 +184,7 @@ export function AltSayfa(p: { baslik: string; kapat: () => void; children: JSX.E
   const [kayma, setKayma] = createSignal(0);
   return (
     <Portal>
-      <div class="perde" onClick={() => p.kapat()} />
+      <button type="button" class="perde" tabindex={-1} aria-label="Kapat" onClick={() => p.kapat()} />
       <div
         ref={kutu}
         class={`alt-sayfa ${p.genis ? "alt-sayfa--genis" : ""}`}
@@ -205,7 +248,13 @@ export function Tostlar(): JSX.Element {
               )}
             </Show>
             <Show when={!t.eylem}>
-              <button type="button" class="dg-simge" style={{ width: "32px", height: "32px", color: "inherit" }} onClick={() => tostKapat(t.id)} aria-label="Kapat">
+              <button
+                type="button"
+                class="dg-simge"
+                style={{ width: "32px", height: "32px", color: "inherit" }}
+                onClick={() => tostKapat(t.id)}
+                aria-label="Kapat"
+              >
                 <Simge ad="kapat" boyut={16} />
               </button>
             </Show>
@@ -223,8 +272,27 @@ function GeriSayim(p: { sure: number; baslangic: number }): JSX.Element {
   const c = 2 * Math.PI * 9;
   return (
     <svg class="tost__surec" viewBox="0 0 22 22" aria-hidden="true">
-      <circle cx="11" cy="11" r="9" fill="none" stroke="currentColor" stroke-opacity="0.25" stroke-width="2" />
-      <circle cx="11" cy="11" r="9" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray={String(c)} stroke-dashoffset={String(c * (1 - kalan()))} transform="rotate(-90 11 11)" stroke-linecap="round" />
+      <circle
+        cx="11"
+        cy="11"
+        r="9"
+        fill="none"
+        stroke="currentColor"
+        stroke-opacity="0.25"
+        stroke-width="2"
+      />
+      <circle
+        cx="11"
+        cy="11"
+        r="9"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-dasharray={String(c)}
+        stroke-dashoffset={String(c * (1 - kalan()))}
+        transform="rotate(-90 11 11)"
+        stroke-linecap="round"
+      />
     </svg>
   );
 }

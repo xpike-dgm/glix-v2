@@ -4,7 +4,19 @@ import { ALANLAR } from "../../src/ortak/alanlar.js";
 import type { Pano } from "../../src/ortak/tipler.js";
 import { al, gonder } from "./api.js";
 import { AltSayfa } from "./bilesenler.js";
-import { alanRengi, git, hataTost, kisayolAcik, oturum, paletAcik, setKisayolAcik, setPaletAcik, setTema, tost, yolAdi } from "./durum.js";
+import {
+  alanRengi,
+  git,
+  hataTost,
+  kisayolAcik,
+  oturum,
+  paletAcik,
+  setKisayolAcik,
+  setPaletAcik,
+  setTema,
+  tost,
+  yolAdi,
+} from "./durum.js";
 import { Simge, type SimgeAdi } from "./simgeler.js";
 
 export const [panoVerisi, { refetch: panoYenile }] = createResource(
@@ -49,7 +61,14 @@ export function Kabuk(p: { children: JSX.Element; baslik?: string }): JSX.Elemen
   return (
     <div class="kabuk">
       <aside class="kenar" aria-label="Gezinme">
-        <a class="marka" href="/" onClick={(e) => (e.preventDefault(), git("/"))}>
+        <a
+          class="marka"
+          href="/"
+          onClick={(e) => {
+            e.preventDefault();
+            git("/");
+          }}
+        >
           <span class="marka__simge" aria-hidden="true">
             <Simge ad="katman" boyut={18} />
           </span>
@@ -66,7 +85,15 @@ export function Kabuk(p: { children: JSX.Element; baslik?: string }): JSX.Elemen
         <nav class="kenar__gezinme">
           <For each={GEZINME}>
             {(g) => (
-              <a href={g.yol} class="kenar__baglanti" aria-current={etkin(g.yol) ? "page" : undefined} onClick={(e) => (e.preventDefault(), git(g.yol))}>
+              <a
+                href={g.yol}
+                class="kenar__baglanti"
+                aria-current={etkin(g.yol) ? "page" : undefined}
+                onClick={(e) => {
+                  e.preventDefault();
+                  git(g.yol);
+                }}
+              >
                 <Simge ad={g.simge} boyut={18} />
                 <span class="esnek">{g.ad}</span>
                 <Show when={g.yol === "/incele" && bekleyenToplam() > 0}>
@@ -82,7 +109,15 @@ export function Kabuk(p: { children: JSX.Element; baslik?: string }): JSX.Elemen
             {(a) => {
               const kart = () => panoVerisi()?.alanlar.find((x) => x.alan === a.id);
               return (
-                <a href={`/alan/${a.id}`} class="kenar__baglanti kenar__baglanti--alan" aria-current={yolAdi() === `/alan/${a.id}` ? "page" : undefined} onClick={(e) => (e.preventDefault(), git(`/alan/${a.id}`))}>
+                <a
+                  href={`/alan/${a.id}`}
+                  class="kenar__baglanti kenar__baglanti--alan"
+                  aria-current={yolAdi() === `/alan/${a.id}` ? "page" : undefined}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    git(`/alan/${a.id}`);
+                  }}
+                >
                   <span class="nokta" style={{ "--alan-renk": alanRengi(a.id) }} />
                   <span class="esnek tasma">{a.ad}</span>
                   <Show when={(kart()?.bekleyen ?? 0) > 0}>
@@ -96,10 +131,19 @@ export function Kabuk(p: { children: JSX.Element; baslik?: string }): JSX.Elemen
       </aside>
       <div class="ana">
         <header class="ust">
-          <a class="marka marka--kucuk" href="/" onClick={(e) => (e.preventDefault(), git("/"))} aria-label="Pano">
+          <a
+            class="marka marka--kucuk"
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              git("/");
+            }}
+            aria-label="Pano"
+          >
             <span class="marka__simge" aria-hidden="true">
               <Simge ad="katman" boyut={16} />
             </span>
+            <span class="gizli-gorsel">Pano</span>
           </a>
           <h1 class="ust__baslik tasma">{p.baslik ?? "Üretim Merkezi"}</h1>
           <button type="button" class="dg-simge" onClick={() => setPaletAcik(true)} aria-label="Ara">
@@ -112,7 +156,16 @@ export function Kabuk(p: { children: JSX.Element; baslik?: string }): JSX.Elemen
         <nav class="alt-gezinme" aria-label="Alt gezinme">
           <For each={GEZINME.filter((g) => g.yol !== "/raporlar" && g.yol !== "/yukle")}>
             {(g) => (
-              <a href={g.yol} class="alt-gezinme__oge" classList={{ "alt-gezinme__oge--ana": g.yol === "/iste" }} aria-current={etkin(g.yol) ? "page" : undefined} onClick={(e) => (e.preventDefault(), git(g.yol))}>
+              <a
+                href={g.yol}
+                class="alt-gezinme__oge"
+                classList={{ "alt-gezinme__oge--ana": g.yol === "/iste" }}
+                aria-current={etkin(g.yol) ? "page" : undefined}
+                onClick={(e) => {
+                  e.preventDefault();
+                  git(g.yol);
+                }}
+              >
                 <span class="alt-gezinme__simge">
                   <Simge ad={g.simge} boyut={22} />
                   <Show when={g.yol === "/incele" && bekleyenToplam() > 0}>
@@ -179,8 +232,20 @@ function KomutPaleti(): JSX.Element {
     { grup: "Eylemler", ad: "Açık tema", simge: "gunes", f: () => setTema("acik") },
     { grup: "Eylemler", ad: "Koyu tema", simge: "ay", f: () => setTema("koyu") },
     { grup: "Eylemler", ad: "Sistem teması", simge: "ayar", f: () => setTema("sistem") },
-    { grup: "Eylemler", ad: "Klavye kısayolları", simge: "klavye", kisayol: "?", f: () => setKisayolAcik(true) },
-    ...ALANLAR.map((a) => ({ grup: "Alanlar", ad: a.ad, simge: "katman" as SimgeAdi, renk: alanRengi(a.id), f: () => git(`/alan/${a.id}`) })),
+    {
+      grup: "Eylemler",
+      ad: "Klavye kısayolları",
+      simge: "klavye",
+      kisayol: "?",
+      f: () => setKisayolAcik(true),
+    },
+    ...ALANLAR.map((a) => ({
+      grup: "Alanlar",
+      ad: a.ad,
+      simge: "katman" as SimgeAdi,
+      renk: alanRengi(a.id),
+      f: () => git(`/alan/${a.id}`),
+    })),
   ];
   const liste = createMemo<PaletOgesi[]>(() => {
     const t = q().trim().toLocaleLowerCase("tr-TR");
@@ -188,8 +253,22 @@ function KomutPaleti(): JSX.Element {
     const u = uzak();
     const ek: PaletOgesi[] = u
       ? [
-          ...u.ogeler.map((o) => ({ grup: "Teslimler", ad: o.ad, alt: ALANLAR.find((a) => a.id === o.alan)?.ad ?? "", simge: "dosya" as SimgeAdi, renk: alanRengi(o.alan), f: () => git(`/incele/${o.id}`) })),
-          ...u.isler.map((i) => ({ grup: "İşler", ad: i.baslik, alt: ALANLAR.find((a) => a.id === i.alan)?.ad ?? "", simge: "liste" as SimgeAdi, renk: alanRengi(i.alan), f: () => git(`/alan/${i.alan}?sekme=isler`) })),
+          ...u.ogeler.map((o) => ({
+            grup: "Teslimler",
+            ad: o.ad,
+            alt: ALANLAR.find((a) => a.id === o.alan)?.ad ?? "",
+            simge: "dosya" as SimgeAdi,
+            renk: alanRengi(o.alan),
+            f: () => git(`/incele/${o.id}`),
+          })),
+          ...u.isler.map((i) => ({
+            grup: "İşler",
+            ad: i.baslik,
+            alt: ALANLAR.find((a) => a.id === i.alan)?.ad ?? "",
+            simge: "liste" as SimgeAdi,
+            renk: alanRengi(i.alan),
+            f: () => git(`/alan/${i.alan}?sekme=isler`),
+          })),
         ]
       : [];
     return [...yerel, ...ek].slice(0, 40);
@@ -200,7 +279,9 @@ function KomutPaleti(): JSX.Element {
     clearTimeout(zaman);
     if (v.trim().length < 2) return void setUzak(null);
     zaman = setTimeout(() => {
-      al<AramaSonucu>(`ara?q=${encodeURIComponent(v.trim())}`).then(setUzak).catch(() => setUzak(null));
+      al<AramaSonucu>(`ara?q=${encodeURIComponent(v.trim())}`)
+        .then(setUzak)
+        .catch(() => setUzak(null));
     }, 160);
   };
   const calistir = (o: PaletOgesi | undefined): void => {
@@ -224,22 +305,43 @@ function KomutPaleti(): JSX.Element {
   onMount(() => kutu?.focus());
   return (
     <>
-      <div class="perde" onClick={kapat} />
+      <button type="button" class="perde" tabindex={-1} aria-label="Kapat" onClick={kapat} />
       <div class="palet" role="dialog" aria-modal="true" aria-label="Komut paleti">
         <div class="palet__ara">
           <Simge ad="ara" />
-          <input ref={kutu} placeholder="Alan, iş, teslim ya da komut ara…" value={q()} onInput={(e) => ara(e.currentTarget.value)} onKeyDown={tus} aria-label="Ara" />
+          <input
+            ref={kutu}
+            placeholder="Alan, iş, teslim ya da komut ara…"
+            value={q()}
+            onInput={(e) => ara(e.currentTarget.value)}
+            onKeyDown={tus}
+            aria-label="Ara"
+          />
           <span class="kisayol">Esc</span>
         </div>
         <div class="palet__liste" role="listbox">
-          <Show when={liste().length} fallback={<div class="bos" style={{ padding: "32px 16px" }}><p>Sonuç yok. Başka bir kelime dene.</p></div>}>
+          <Show
+            when={liste().length}
+            fallback={
+              <div class="bos" style={{ padding: "32px 16px" }}>
+                <p>Sonuç yok. Başka bir kelime dene.</p>
+              </div>
+            }
+          >
             <For each={liste()}>
               {(o, i) => (
                 <>
                   <Show when={i() === 0 || liste()[i() - 1]?.grup !== o.grup}>
                     <div class="palet__grup">{o.grup}</div>
                   </Show>
-                  <button type="button" class="palet__oge" role="option" aria-selected={secili() === i()} onMouseMove={() => setSecili(i())} onClick={() => calistir(o)}>
+                  <button
+                    type="button"
+                    class="palet__oge"
+                    role="option"
+                    aria-selected={secili() === i()}
+                    onMouseMove={() => setSecili(i())}
+                    onClick={() => calistir(o)}
+                  >
                     <Show when={o.renk} fallback={<Simge ad={o.simge} />}>
                       <span class="nokta" style={{ "--alan-renk": o.renk }} />
                     </Show>

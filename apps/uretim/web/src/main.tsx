@@ -11,4 +11,5 @@ const kok = document.getElementById("kok");
 if (kok) render(() => <App />, kok);
 
 // Hizmet çalışanı: yalnız bildirimler ve kabuğun çevrimdışı açılışı (taslak dosyalar önbelleğe alınmaz).
-if ("serviceWorker" in navigator && location.protocol === "https:") void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+if ("serviceWorker" in navigator && location.protocol === "https:")
+  void navigator.serviceWorker.register("/sw.js").catch(() => undefined);

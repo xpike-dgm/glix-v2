@@ -33,7 +33,16 @@ export function App(): JSX.Element {
     const y = yolAdi();
     const a = alanId();
     if (a) return alanBul(a)?.ad ?? "Alan";
-    return { "/": "Pano", "/iste": "İş iste", "/yukle": "Elle yükle", "/arsiv": "Arşiv", "/raporlar": "Raporlar", "/ayarlar": "Ayarlar" }[y] ?? "Üretim Merkezi";
+    return (
+      {
+        "/": "Pano",
+        "/iste": "İş iste",
+        "/yukle": "Elle yükle",
+        "/arsiv": "Arşiv",
+        "/raporlar": "Raporlar",
+        "/ayarlar": "Ayarlar",
+      }[y] ?? "Üretim Merkezi"
+    );
   };
   return (
     <>
@@ -44,7 +53,9 @@ export function App(): JSX.Element {
               fallback={
                 <Kabuk baslik={yolAdi() === "/" ? "Üretim Merkezi" : baslik()}>
                   <Switch fallback={<Pano />}>
-                    <Match when={alanId() && isAlanId(alanId()) && alanId()}>{(a) => <Alan alan={a() as Parameters<typeof Alan>[0]["alan"]} />}</Match>
+                    <Match when={alanId() && isAlanId(alanId()) && alanId()}>
+                      {(a) => <Alan alan={a() as Parameters<typeof Alan>[0]["alan"]} />}
+                    </Match>
                     <Match when={yolAdi() === "/iste"}>
                       <Iste />
                     </Match>

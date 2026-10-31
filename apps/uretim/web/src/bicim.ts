@@ -14,7 +14,12 @@ export function goreliZaman(t: number, simdi: number): string {
 }
 
 export function tarihSaat(t: number): string {
-  return new Date(t).toLocaleString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  return new Date(t).toLocaleString("tr-TR", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export function boyut(b: number): string {

@@ -45,7 +45,9 @@ export function OyunOnizleme(p: { oge: OgeAyrinti; url: string }): JSX.Element {
     }
   })();
   const ekran = varsayilanEkran(p.oge);
-  const [durum, setDurum] = createSignal<"bekliyor" | "hazir" | "cizildi" | "yok" | "hata">(ekran && kaynak ? "bekliyor" : "yok");
+  const [durum, setDurum] = createSignal<"bekliyor" | "hazir" | "cizildi" | "yok" | "hata">(
+    ekran && kaynak ? "bekliyor" : "yok",
+  );
   const [neden, setNeden] = createSignal("");
   let cerceve: HTMLIFrameElement | undefined;
   let zaman: ReturnType<typeof setTimeout> | undefined;
@@ -57,7 +59,10 @@ export function OyunOnizleme(p: { oge: OgeAyrinti; url: string }): JSX.Element {
       setDurum("hazir");
       void gosterIletisi(p.oge, ekran)
         .then((m) => cerceve?.contentWindow?.postMessage(m, kaynak))
-        .catch(() => (setDurum("hata"), setNeden("Dosyalar hazırlanamadı.")));
+        .catch(() => {
+          setDurum("hata");
+          setNeden("Dosyalar hazırlanamadı.");
+        });
     } else if (i.tur === "cizildi") setDurum("cizildi");
     else if (i.tur === "hata") {
       setDurum("hata");
@@ -100,7 +105,11 @@ export function OyunOnizleme(p: { oge: OgeAyrinti; url: string }): JSX.Element {
             <Simge ad="incele" />
           </div>
           <h3>Önizleme henüz yok</h3>
-          <p>{ekran ? "Oyunun önizleme sayfası yanıt vermedi. Sayfa eklenince burada oyundaki gerçek görünümü göreceksin." : "Bu tür için oyun içi önizleme ekranı yok."}</p>
+          <p>
+            {ekran
+              ? "Oyunun önizleme sayfası yanıt vermedi. Sayfa eklenince burada oyundaki gerçek görünümü göreceksin."
+              : "Bu tür için oyun içi önizleme ekranı yok."}
+          </p>
         </div>
       </Show>
       <Show when={durum() === "hata"}>

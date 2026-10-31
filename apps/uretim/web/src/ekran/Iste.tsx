@@ -42,17 +42,28 @@ export async function panoyaKopyala(metin: string): Promise<boolean> {
 /** İstemi alır ve kopyalar; uygulama notu varsa hatırlatır. */
 export async function istemiKopyala(alan: AlanId, baglanti: "mcp" | "ssh", isId?: number): Promise<void> {
   try {
-    const r = await al<{ istem: string; isSayisi: number; uygulama: string }>(`alan/${alan}/istem?baglanti=${baglanti}${isId ? `&is=${isId}` : ""}`);
+    const r = await al<{ istem: string; isSayisi: number; uygulama: string }>(
+      `alan/${alan}/istem?baglanti=${baglanti}${isId ? `&is=${isId}` : ""}`,
+    );
     if (await panoyaKopyala(r.istem)) {
       titret(12);
-      tost(r.uygulama ? `İstem kopyalandı — ${r.uygulama} sohbetine yapıştır` : "İstem kopyalandı — yapay zekâ sohbetine yapıştır");
+      tost(
+        r.uygulama
+          ? `İstem kopyalandı — ${r.uygulama} sohbetine yapıştır`
+          : "İstem kopyalandı — yapay zekâ sohbetine yapıştır",
+      );
     } else tost("Kopyalanamadı; metni elle seç.", { hata: true });
   } catch (e) {
     hataTost(e);
   }
 }
 
-function MaddeListesi(p: { baslik: string; liste: string[]; setListe: (l: string[]) => void; yer: string }): JSX.Element {
+function MaddeListesi(p: {
+  baslik: string;
+  liste: string[];
+  setListe: (l: string[]) => void;
+  yer: string;
+}): JSX.Element {
   const [yeni, setYeni] = createSignal("");
   const ekle = (): void => {
     const t = yeni().trim();
@@ -68,7 +79,12 @@ function MaddeListesi(p: { baslik: string; liste: string[]; setListe: (l: string
           {(m, i) => (
             <li>
               <span class="esnek">{m}</span>
-              <button type="button" class="dg-simge" onClick={() => p.setListe(p.liste.filter((_, j) => j !== i()))} aria-label="Kaldır">
+              <button
+                type="button"
+                class="dg-simge"
+                onClick={() => p.setListe(p.liste.filter((_, j) => j !== i()))}
+                aria-label="Kaldır"
+              >
                 <Simge ad="kapat" boyut={16} />
               </button>
             </li>
@@ -76,7 +92,19 @@ function MaddeListesi(p: { baslik: string; liste: string[]; setListe: (l: string
         </For>
       </ul>
       <div class="satir">
-        <input class="girdi esnek" value={yeni()} onInput={(e) => setYeni(e.currentTarget.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), ekle())} placeholder={p.yer} maxlength="200" />
+        <input
+          class="girdi esnek"
+          value={yeni()}
+          onInput={(e) => setYeni(e.currentTarget.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              ekle();
+            }
+          }}
+          placeholder={p.yer}
+          maxlength="200"
+        />
         <button type="button" class="dg" onClick={ekle} disabled={!yeni().trim()}>
           Ekle
         </button>
@@ -105,7 +133,13 @@ export function Iste(): JSX.Element {
   const cevir = async (): Promise<void> => {
     setBekle(true);
     try {
-      const r = await gonder<{ taslak: Taslak; kaynak: "model" | "kalip" }>("istek-yaz", { metin: metin(), alan: alan(), baglanti: baglanti(), fikirTuru: fikir(), sonTarih: sonTarih() || null });
+      const r = await gonder<{ taslak: Taslak; kaynak: "model" | "kalip" }>("istek-yaz", {
+        metin: metin(),
+        alan: alan(),
+        baglanti: baglanti(),
+        fikirTuru: fikir(),
+        sonTarih: sonTarih() || null,
+      });
       setTaslak(r.taslak);
       setKaynak(r.kaynak);
       setAdim(2);
@@ -120,9 +154,16 @@ export function Iste(): JSX.Element {
     if (!t) return;
     setBekle(true);
     try {
-      const r = await gonder<{ is: IsKaydi }>(`alan/${alan()}/is`, { ...t, sonTarih: sonTarih() || null, fikirTuru: fikir(), ornek: "" });
+      const r = await gonder<{ is: IsKaydi }>(`alan/${alan()}/is`, {
+        ...t,
+        sonTarih: sonTarih() || null,
+        fikirTuru: fikir(),
+        ornek: "",
+      });
       setIs(r.is);
-      const i = await al<{ istem: string; uygulama: string }>(`alan/${alan()}/istem?baglanti=${baglanti()}&is=${r.is.id}`);
+      const i = await al<{ istem: string; uygulama: string }>(
+        `alan/${alan()}/istem?baglanti=${baglanti()}&is=${r.is.id}`,
+      );
       setIstem(i.istem);
       setUygulamaNotu(i.uygulama);
       setAdim(3);
@@ -137,7 +178,11 @@ export function Iste(): JSX.Element {
   const kopyala = async (): Promise<void> => {
     if (await panoyaKopyala(istem())) {
       titret(12);
-      tost(uygulamaNotu() ? `Kopyalandı — ${uygulamaNotu()} sohbetine yapıştır` : "Kopyalandı — yapay zekâ sohbetine yapıştır");
+      tost(
+        uygulamaNotu()
+          ? `Kopyalandı — ${uygulamaNotu()} sohbetine yapıştır`
+          : "Kopyalandı — yapay zekâ sohbetine yapıştır",
+      );
     }
   };
   const notKaydet = async (not: string): Promise<void> => {
@@ -149,7 +194,8 @@ export function Iste(): JSX.Element {
       hataTost(e);
     }
   };
-  const t = (): Taslak => taslak() ?? { baslik: "", aciklama: "", adet: null, kisitlar: [], kabul: [], ozet: "" };
+  const t = (): Taslak =>
+    taslak() ?? { baslik: "", aciklama: "", adet: null, kisitlar: [], kabul: [], ozet: "" };
   const guncelle = (p: Partial<Taslak>): void => {
     setTaslak({ ...t(), ...p });
   };
@@ -167,7 +213,9 @@ export function Iste(): JSX.Element {
       <header class="sayfa__bas">
         <div>
           <h1>İş iste</h1>
-          <p class="soluk">Ne istediğini kendi cümlenle yaz; site bunu net bir işe ve yapıştırılacak kısa bir isteme çevirir.</p>
+          <p class="soluk">
+            Ne istediğini kendi cümlenle yaz; site bunu net bir işe ve yapıştırılacak kısa bir isteme çevirir.
+          </p>
         </div>
       </header>
       <ol class="adimlar" aria-label="Adımlar">
@@ -188,7 +236,15 @@ export function Iste(): JSX.Element {
             <div class="alan-secici">
               <For each={ALANLAR}>
                 {(a) => (
-                  <button type="button" class="cip" aria-pressed={alan() === a.id} onClick={() => (setAlan(a.id), setBaglantiSecimi(null))}>
+                  <button
+                    type="button"
+                    class="cip"
+                    aria-pressed={alan() === a.id}
+                    onClick={() => {
+                      setAlan(a.id);
+                      setBaglantiSecimi(null);
+                    }}
+                  >
                     <AlanIsareti alan={a.id} />
                   </button>
                 )}
@@ -204,35 +260,63 @@ export function Iste(): JSX.Element {
               onInput={(e) => setMetin(e.currentTarget.value)}
               placeholder={`ör. ${alanTanimi(alan()).ornekIs}`}
               maxlength="2000"
-              onKeyDown={(e) => e.key === "Enter" && (e.metaKey || e.ctrlKey) && metin().trim().length >= 5 && void cevir()}
+              onKeyDown={(e) =>
+                e.key === "Enter" && (e.metaKey || e.ctrlKey) && metin().trim().length >= 5 && void cevir()
+              }
             />
           </label>
           <div class="iki-sutun">
             <div class="alan-giris">
               <span>Yapay zekâ nasıl bağlanıyor?</span>
               <div class="secim">
-                <button type="button" aria-pressed={baglanti() === "mcp"} onClick={() => setBaglantiSecimi("mcp")}>
+                <button
+                  type="button"
+                  aria-pressed={baglanti() === "mcp"}
+                  onClick={() => setBaglantiSecimi("mcp")}
+                >
                   MCP
                 </button>
-                <button type="button" aria-pressed={baglanti() === "ssh"} onClick={() => setBaglantiSecimi("ssh")}>
+                <button
+                  type="button"
+                  aria-pressed={baglanti() === "ssh"}
+                  onClick={() => setBaglantiSecimi("ssh")}
+                >
                   SSH
                 </button>
               </div>
             </div>
             <label class="alan-giris">
               <span>Son tarih (isteğe bağlı)</span>
-              <input class="girdi" type="date" value={sonTarih()} onInput={(e) => setSonTarih(e.currentTarget.value)} />
+              <input
+                class="girdi"
+                type="date"
+                value={sonTarih()}
+                onInput={(e) => setSonTarih(e.currentTarget.value)}
+              />
             </label>
           </div>
           <label class="anahtarli-satir">
             <span class="esnek">
               <strong>Önce fikir sor</strong>
-              <span class="cok-soluk kucuk">Yapay zekâ önce yalnız metinle 2–3 kısa fikir getirir; sen seçince bir kez üretir. Görsel ve seste kullanım limitini korur.</span>
+              <span class="cok-soluk kucuk">
+                Yapay zekâ önce yalnız metinle 2–3 kısa fikir getirir; sen seçince bir kez üretir. Görsel ve
+                seste kullanım limitini korur.
+              </span>
             </span>
-            <input type="checkbox" class="anahtar-dugme" checked={fikir()} onChange={(e) => setFikir(e.currentTarget.checked)} />
+            <input
+              type="checkbox"
+              class="anahtar-dugme"
+              checked={fikir()}
+              onChange={(e) => setFikir(e.currentTarget.checked)}
+            />
           </label>
           <div class="sabit-eylem">
-            <button type="button" class="dg dg--birincil dg--b dg--tam" disabled={metin().trim().length < 5 || bekle()} onClick={() => void cevir()}>
+            <button
+              type="button"
+              class="dg dg--birincil dg--b dg--tam"
+              disabled={metin().trim().length < 5 || bekle()}
+              onClick={() => void cevir()}
+            >
               {bekle() ? "Hazırlanıyor…" : "İşe çevir"}
               <Simge ad="sonraki" />
             </button>
@@ -244,33 +328,80 @@ export function Iste(): JSX.Element {
         <div class="yigin yigin--genis">
           <div class={`serit ${kaynak() === "model" ? "serit--bilgi" : "serit--sari"}`}>
             <Simge ad={kaynak() === "model" ? "pirilti" : "bilgi"} />
-            <span>{kaynak() === "model" ? "Taslak hazır. Göz at, gerekirse düzelt." : "Taslak sabit kalıptan hazırlandı (yardımcı model şu an kullanılamıyor). Göz at, gerekirse düzelt."}</span>
+            <span>
+              {kaynak() === "model"
+                ? "Taslak hazır. Göz at, gerekirse düzelt."
+                : "Taslak sabit kalıptan hazırlandı (yardımcı model şu an kullanılamıyor). Göz at, gerekirse düzelt."}
+            </span>
           </div>
           <label class="alan-giris">
             <span>Başlık</span>
-            <input class="girdi" value={t().baslik} onInput={(e) => guncelle({ baslik: e.currentTarget.value })} maxlength="120" />
+            <input
+              class="girdi"
+              value={t().baslik}
+              onInput={(e) => guncelle({ baslik: e.currentTarget.value })}
+              maxlength="120"
+            />
           </label>
           <label class="alan-giris">
             <span>Açıklama</span>
-            <textarea class="girdi" rows="4" value={t().aciklama} onInput={(e) => guncelle({ aciklama: e.currentTarget.value })} maxlength="2000" />
+            <textarea
+              class="girdi"
+              rows="4"
+              value={t().aciklama}
+              onInput={(e) => guncelle({ aciklama: e.currentTarget.value })}
+              maxlength="2000"
+            />
           </label>
           <div class="iki-sutun">
             <label class="alan-giris">
               <span>Adet</span>
-              <input class="girdi" inputmode="numeric" value={t().adet ?? ""} onInput={(e) => guncelle({ adet: e.currentTarget.value ? Math.min(500, Number(e.currentTarget.value.replace(/\D/g, "")) || 1) : null })} placeholder="—" />
+              <input
+                class="girdi"
+                inputmode="numeric"
+                value={t().adet ?? ""}
+                onInput={(e) =>
+                  guncelle({
+                    adet: e.currentTarget.value
+                      ? Math.min(500, Number(e.currentTarget.value.replace(/\D/g, "")) || 1)
+                      : null,
+                  })
+                }
+                placeholder="—"
+              />
             </label>
             <label class="alan-giris">
               <span>İstemdeki kısa özet</span>
-              <input class="girdi" value={t().ozet} onInput={(e) => guncelle({ ozet: e.currentTarget.value })} maxlength="140" />
+              <input
+                class="girdi"
+                value={t().ozet}
+                onInput={(e) => guncelle({ ozet: e.currentTarget.value })}
+                maxlength="140"
+              />
             </label>
           </div>
-          <MaddeListesi baslik="Kısıtlar" liste={t().kisitlar} setListe={(l) => guncelle({ kisitlar: l })} yer="ör. biri efsanevi olsun" />
-          <MaddeListesi baslik="Kabul ölçütleri" liste={t().kabul} setListe={(l) => guncelle({ kabul: l })} yer="ör. fiyatlar aralıkta" />
+          <MaddeListesi
+            baslik="Kısıtlar"
+            liste={t().kisitlar}
+            setListe={(l) => guncelle({ kisitlar: l })}
+            yer="ör. biri efsanevi olsun"
+          />
+          <MaddeListesi
+            baslik="Kabul ölçütleri"
+            liste={t().kabul}
+            setListe={(l) => guncelle({ kabul: l })}
+            yer="ör. fiyatlar aralıkta"
+          />
           <div class="sabit-eylem satir">
             <button type="button" class="dg dg--b" onClick={() => setAdim(1)}>
               <Simge ad="onceki" /> Geri
             </button>
-            <button type="button" class="dg dg--birincil dg--b esnek" disabled={t().baslik.trim().length < 3 || bekle()} onClick={() => void ac()}>
+            <button
+              type="button"
+              class="dg dg--birincil dg--b esnek"
+              disabled={t().baslik.trim().length < 3 || bekle()}
+              onClick={() => void ac()}
+            >
               {bekle() ? "Açılıyor…" : "İşi aç"}
             </button>
           </div>
@@ -286,7 +417,11 @@ export function Iste(): JSX.Element {
               </span>
               <div>
                 <h2>İş açıldı · #{i().id}</h2>
-                <p class="soluk">{bekleyenIs() > 1 ? `Bu alanda sırada ${bekleyenIs()} iş var; istem hepsini kapsar.` : "Şimdi istemi yapay zekâya yapıştır."}</p>
+                <p class="soluk">
+                  {bekleyenIs() > 1
+                    ? `Bu alanda sırada ${bekleyenIs()} iş var; istem hepsini kapsar.`
+                    : "Şimdi istemi yapay zekâya yapıştır."}
+                </p>
               </div>
             </div>
             <div class="istem-kutusu">
@@ -296,12 +431,22 @@ export function Iste(): JSX.Element {
               </div>
               <pre class="istem-kutusu__metin">{istem()}</pre>
             </div>
-            <button type="button" class="dg dg--birincil dg--b dg--tam iste__kopyala" onClick={() => void kopyala()}>
+            <button
+              type="button"
+              class="dg dg--birincil dg--b dg--tam iste__kopyala"
+              onClick={() => void kopyala()}
+            >
               <Simge ad="kopyala" /> İstemi kopyala
             </button>
             <label class="alan-giris">
               <span>Bu alanı hangi uygulamada kullanıyorsun?</span>
-              <input class="girdi" value={uygulamaNotu() ?? ""} onChange={(e) => void notKaydet(e.currentTarget.value)} placeholder="ör. ChatGPT – Mağaza sohbeti" maxlength="80" />
+              <input
+                class="girdi"
+                value={uygulamaNotu() ?? ""}
+                onChange={(e) => void notKaydet(e.currentTarget.value)}
+                placeholder="ör. ChatGPT – Mağaza sohbeti"
+                maxlength="80"
+              />
             </label>
             <div class="satir">
               <button type="button" class="dg" onClick={sifirla}>
@@ -315,7 +460,17 @@ export function Iste(): JSX.Element {
         )}
       </Show>
       <p class="cok-soluk kucuk iste__dip">
-        Dosyan hazırsa <a href="/yukle" onClick={(e) => (e.preventDefault(), git("/yukle"))}>elle yükle</a>.
+        Dosyan hazırsa{" "}
+        <a
+          href="/yukle"
+          onClick={(e) => {
+            e.preventDefault();
+            git("/yukle");
+          }}
+        >
+          elle yükle
+        </a>
+        .
       </p>
     </div>
   );

@@ -3,7 +3,12 @@
 const KABUK = "uretim-kabuk-v1";
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(KABUK).then((c) => c.addAll(["/", "/manifest.webmanifest", "/simge.svg"])).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches
+      .open(KABUK)
+      .then((c) => c.addAll(["/", "/manifest.webmanifest", "/simge.svg"]))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener("activate", (e) => {
@@ -67,7 +72,8 @@ self.addEventListener("push", (e) => {
 
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
-  const hedef = e.notification.data && typeof e.notification.data.url === "string" ? e.notification.data.url : "/";
+  const hedef =
+    e.notification.data && typeof e.notification.data.url === "string" ? e.notification.data.url : "/";
   e.waitUntil(
     (async () => {
       const w = await self.clients.matchAll({ type: "window", includeUncontrolled: true });

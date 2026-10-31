@@ -19,7 +19,16 @@ export async function oturumYukle(): Promise<void> {
   try {
     setOturum(await al<Oturum>("oturum"));
   } catch {
-    setOturum({ giris: false, eposta: null, vapid: null, onizlemeUrl: "", sshAcik: false, oyunAcik: false, mcpUrl: "", surum: "" });
+    setOturum({
+      giris: false,
+      eposta: null,
+      vapid: null,
+      onizlemeUrl: "",
+      sshAcik: false,
+      oyunAcik: false,
+      mcpUrl: "",
+      surum: "",
+    });
   }
 }
 
@@ -76,7 +85,8 @@ export function setYaziBuyuk(b: boolean): void {
   yazTercih("uretim:yazi", b ? "buyuk" : "normal");
   tercihleriUygula();
 }
-export const koyuMu = (): boolean => (tema() === "sistem" ? matchMedia("(prefers-color-scheme: dark)").matches : tema() === "koyu");
+export const koyuMu = (): boolean =>
+  tema() === "sistem" ? matchMedia("(prefers-color-scheme: dark)").matches : tema() === "koyu";
 export const rehberGoruldu = (): boolean => oku("uretim:rehber") === "1";
 export const rehberiKapat = (): void => yazTercih("uretim:rehber", "1");
 
@@ -91,10 +101,16 @@ export interface Tost {
 }
 export const [tostlar, setTostlar] = createSignal<Tost[]>([]);
 let tostNo = 0;
-export function tost(metin: string, o: { hata?: boolean; eylem?: { ad: string; f: () => void }; sure?: number } = {}): number {
+export function tost(
+  metin: string,
+  o: { hata?: boolean; eylem?: { ad: string; f: () => void }; sure?: number } = {},
+): number {
   const id = ++tostNo;
   const sure = o.sure ?? (o.eylem ? 10_000 : 3200);
-  setTostlar((l) => [...l.slice(-2), { id, metin, hata: o.hata ?? false, eylem: o.eylem ?? null, sure, baslangic: Date.now() }]);
+  setTostlar((l) => [
+    ...l.slice(-2),
+    { id, metin, hata: o.hata ?? false, eylem: o.eylem ?? null, sure, baslangic: Date.now() },
+  ]);
   setTimeout(() => tostKapat(id), sure);
   return id;
 }
