@@ -975,3 +975,20 @@
 .swatches__label {
   font-variant-numeric: normal;
 }
+
+/* ---- Koleksiyon şeridi (MG-3): aynı koleksiyondan iki ve üstü ürün satıştaysa; yana kayar ---- */
+.shop-coll .shop-h {
+  color: var(--violet, #8b5cff);
+}
+.shop-coll__row {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(140px, calc(50% - 6px));
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+}
+.shop-coll__row > * {
+  scroll-snap-align: start;
+}

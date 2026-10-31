@@ -1,10 +1,12 @@
 import { cosmeticItem } from "@glix/engine";
-import { createEffect, createSignal, on, Show } from "solid-js";
+import { createEffect, createSignal, For, on, Show } from "solid-js";
 import { colorBlind } from "../settings/settings.js";
 import { look, type Mood, moodSrc } from "./avatars.js";
+import { EffectView, FxParticles } from "./Effects.js";
+import { effectOf, frameLook } from "./effects.js";
 import { CheckIcon, CrownIcon } from "./Icons.js";
 import { HouseIcon } from "./LobbyIcons.js";
-import { entryLayers, frameCrownTop, frameSrc } from "./shopArt.js";
+import { entryLayers, frameCrownTop } from "./shopArt.js";
 
 interface Props {
   index: number;
@@ -46,7 +48,15 @@ export function Avatar(props: Props) {
   /** Geçerli çerçeve kimliği (katalogda ve doğru türde); yoksa undefined. */
   const framed = () =>
     props.frame !== undefined && cosmeticItem(props.frame)?.type === "cerceve" ? props.frame : undefined;
+  /** Çerçevenin görünümü: ürünün efekt tarifi (MG-4). */
+  const frame = () => {
+    const id = framed();
+    const e = id === undefined ? null : effectOf(cosmeticItem(id));
+    return id !== undefined && e ? { id, look: frameLook(e) } : null;
+  };
   const entry = () => entryLayers(props.entry);
+  /** Giriş efektinin ek tarifi (varsa): görsel katmanların üstünde bir kez oynar. */
+  const entryFx = () => (props.entry === undefined ? null : effectOf(cosmeticItem(props.entry)));
   const big = () => typeof props.size === "string" || props.size >= 56;
   const src = () => (props.mood ? moodSrc(props.index, props.mood) : null);
   // Ruh hâli görseli yüklenene kadar büst görünür; yüklenince çapraz geçiş olur.
@@ -107,18 +117,41 @@ export function Avatar(props: Props) {
           )}
         </Show>
       </div>
-      <Show when={framed()}>
-        {(id) => (
+      <Show when={frame()}>
+        {(f) => (
           <span class="av__frame-box" aria-hidden="true">
-            <img
-              class="av__frame"
-              data-frame={id()}
-              src={frameSrc(id())}
-              alt=""
-              draggable={false}
-              width="384"
-              height="384"
-            />
+            <For each={f().look.layers}>
+              {(l) => (
+                <img
+                  class={`av__frame ${l.class}`}
+                  data-frame={f().id}
+                  src={l.src}
+                  alt=""
+                  draggable={false}
+                  width="384"
+                  height="384"
+                  style={l.style}
+                />
+              )}
+            </For>
+            <Show when={f().look.flow}>
+              {(flow) => (
+                <span
+                  class="av__frame fx-akan-halka"
+                  data-frame={f().id}
+                  style={{ ...flow().style, "--fx-maske": `url("${flow().mask}")` }}
+                >
+                  <i />
+                </span>
+              )}
+            </Show>
+            <Show when={f().look.particles} keyed>
+              {(e) => (
+                <span class="av__frame fx-halka-parcacik">
+                  <FxParticles effect={e} shape="ring" />
+                </span>
+              )}
+            </Show>
           </span>
         )}
       </Show>
@@ -128,6 +161,9 @@ export function Avatar(props: Props) {
             <img src={art().front} alt="" draggable={false} />
           </span>
         )}
+      </Show>
+      <Show when={entryFx()} keyed>
+        {(e) => <EffectView effect={e} class="av__entry-fx" />}
       </Show>
       <Show when={props.live === "think" && props.connected !== false}>
         <span class="av__think" aria-hidden="true">

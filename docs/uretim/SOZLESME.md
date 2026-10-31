@@ -54,6 +54,17 @@ Kurallar:
 - Hız sınırı: dakikada 30 yazma isteği.
 - Hesap kimliği, takma ad ya da e-posta hiçbir yanıtta yer almaz.
 
+İstek gövdeleri ve hata yanıtları (oyun tarafının uyguladığı ayrıntı; yukarıdaki tabloyu değiştirmez):
+- `ekle`: `{ "satirlar": [ { "<alan>": "<değer>" } | "<satır>" ] }` — alan adları `havuzlar` yanıtındaki `fields[].key`;
+  düz metin satırda çok alanlı havuzlar `;` ile ayrılır. `atlanan[].satir` 1'den başlayan sıradır.
+- `kapat`: `{ "anahtarlar": [ "<anahtar>" ] }` — yalnız yerleşik ve açık girdiler sayılır.
+- `moderasyon/ekle`: `{ "kaliplar": [ "<kalıp>" | { "kalip": "<kalıp>" } ] }`. `moderasyon` yanıtında `tur`: yerleşik
+  süzgeçte `kufur-kok` / `kufur-onek` / `kufur-kelime` / `nefret-onek`, panel listesinde `kelime`.
+- `:poolId` eğik çizgi taşır (`cagrisim-agi/kelimeler`): düz ya da `%2F` ile yazılabilir. `aktarimId` biçimi `YYYYMMDD-<12 hex>`.
+- `magaza/istatistik`: `kusanan` şu an kuşanan hesap sayısıdır (30 günle sınırlı değildir); armağanlar satış sayılmaz.
+- Hatalar `{ ok: false, code, message }`: 401 anahtar yanlış/eksik, 404 uç ya da havuz yok (anahtar boşsa her şey),
+  409 aktarım zaten geri alındı, 413 satır sınırı, 415 gövde JSON değil, 429 hız sınırı.
+
 ## 4. Önizleme sayfası (UM-U4, MG-6)
 
 - Oyunun istemcisinde ayrı bir giriş sayfası olur: `apps/client/onizleme.html`, canlıda

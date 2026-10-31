@@ -42,9 +42,10 @@ import type { AccountRef, Connection, Runtime } from "./runtime.js";
 import { createShopApi, SHOP_PATH } from "./shopApi.js";
 import { createSiteSettings } from "./siteSettings.js";
 import { createSocial } from "./social.js";
-import { serveStatic } from "./static.js";
+import { DEV_PREVIEW_ANCESTORS, serveStatic } from "./static.js";
 import { createStats, PURGE_EVERY_MS } from "./statsStore.js";
 import { enableDraftGames } from "./taslak.js";
+import { createUretimApi, URETIM_PREFIX } from "./uretim.js";
 import { createWebPush, disabledPush, type PushGateway, type VapidConfig } from "./webpush.js";
 
 /** Bu kadar geçersiz mesajdan sonra bağlantı kapatılır. */
@@ -105,6 +106,10 @@ export interface ServerOptions {
   broadcastPerSecond?: number;
   /** TASLAK oyunları açar (yalnız geliştirme/test; bkz. `taslak.ts`). Varsayılan kapalı. */
   draftGames?: boolean;
+  /** Üretim Merkezi uçlarının anahtarı (`GLIX_URETIM_TOKEN`); boş/null ise `/api/uretim/*` 404. */
+  uretimToken?: string | null;
+  /** Önizleme sayfasını (`onizleme.html`) gömebilecek kaynaklar (CSP `frame-ancestors`). */
+  previewAncestors?: readonly string[];
   /** Oyun sonu yorumu anahtarı; verilmezse/null ise yorum tamamen kapalı (hiç istek yok). */
   aiKey?: string | null;
   /** Yorum servisine giden istek (testlerde sahte); varsayılan: yerleşik `fetch`. */
@@ -265,6 +270,14 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const adminIds: ReadonlySet<number> = opts.adminAccountIds ?? new Set<number>();
   const adminThrottle = new MailThrottle();
   const adminLimits = createAdminLimits(clock);
+  const uretimApi = createUretimApi({
+    token: opts.uretimToken ?? null,
+    accounts,
+    content: rt.content,
+    banned: rt.bannedWords,
+    clock,
+    revision: opts.revision,
+  });
   const healthSampler = adminIds.size > 0 ? createHealthSampler() : null;
   const perIp = new Map<string, number>();
   const aliveSockets = new WeakMap<WebSocket, boolean>();
@@ -349,6 +362,10 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
           ...(detail ? { tickHistogram: { edgesMs: TICK_BUCKETS_MS, ...rt.metrics.tickHistogram() } } : {}),
         }),
       );
+      return;
+    }
+    if (path === URETIM_PREFIX || path.startsWith(`${URETIM_PREFIX}/`)) {
+      uretimApi(req, res);
       return;
     }
     if (path.startsWith(ADMIN_PREFIX)) {
@@ -444,7 +461,10 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       });
       return;
     }
-    serveStatic(req, res, opts.clientDir, { adminEnabled: adminIds.size > 0 }).catch((err: unknown) => {
+    serveStatic(req, res, opts.clientDir, {
+      adminEnabled: adminIds.size > 0,
+      previewAncestors: opts.previewAncestors ?? DEV_PREVIEW_ANCESTORS,
+    }).catch((err: unknown) => {
       log.error("static_failed", { error: String(err) });
       if (!res.headersSent) res.writeHead(500);
       res.end();

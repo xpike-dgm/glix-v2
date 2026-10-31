@@ -7,8 +7,9 @@ import {
   DEFAULT_COLOUR,
   equippedValue,
   isClothingType,
-  itemsOfType,
   nextIstanbulMidnight,
+  shopCollections,
+  shopItemsOfType,
 } from "@glix/engine";
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { balanceText } from "../net/glixRules.js";
@@ -26,6 +27,7 @@ import {
   SHOP_SECTIONS,
   SHOP_TABS,
   type ShopState,
+  serverNow,
   shopErrorText,
   shortfall,
   shortfallText,
@@ -69,8 +71,11 @@ function previewParts(item: CosmeticItem): "avatar" | "name" | "title" {
   return item.type === "cerceve" ? "avatar" : item.type === "unvan" ? "title" : "name";
 }
 
-/** Ürün karosu: nadirliğe göre kutu görseli, büyük önizleme, ad, nadirlik çipi, fiyat ya da durum hapı. */
-function Card(props: {
+/**
+ * Ürün karosu: nadirliğe göre kutu görseli, büyük önizleme, ad, nadirlik çipi, fiyat ya da durum hapı. Önizleme
+ * sayfası (`onizleme.html`) da bunu çizer.
+ */
+export function Card(props: {
   item: CosmeticItem;
   s: ShopState;
   now: number;
@@ -217,11 +222,21 @@ export function Shop() {
     const at = now() + (s?.clockOffset ?? 0);
     return nextIstanbulMidnight(at) - at;
   };
-  /** Sekmenin ürünleri yuva başına gruplanır; ürünü olmayan yuva hiç görünmez. */
+  /** Sunucu saatine göre şimdi (satış ve çıkış tarihi bununla denetlenir). */
+  const at = () => {
+    const s = shop();
+    return s ? serverNow(s, now()) : now();
+  };
+  /**
+   * Sekmenin ürünleri yuva başına gruplanır; ürünü olmayan yuva hiç görünmez. Yalnız satıştaki ve çıkış günü gelmiş
+   * ürünler (MG-3); satıştan kalkan ürün Dolabım'da kalır.
+   */
   const tabGroups = () =>
     (SHOP_TABS.find((t) => t.id === tab())?.types ?? [])
-      .map((t) => ({ type: t, items: itemsOfType(t) }))
+      .map((t) => ({ type: t, items: shopItemsOfType(t, at()) }))
       .filter((g) => g.items.length > 0);
+  /** Koleksiyon şeritleri: aynı koleksiyondan en az iki ürün satıştaysa. */
+  const collections = createMemo(() => shopCollections(at()));
   /** Giysiler sekmesinde yalnız seçili yuva görünür (39 ürünlük tek uzun liste yerine); öteki sekmelerde tümü. */
   const slotChips = () =>
     tab() === "giysi" ? tabGroups().map((g) => ({ id: g.type, label: cosmeticType(g.type).name })) : [];
@@ -334,6 +349,30 @@ export function Shop() {
                   </div>
                 </section>
               </Show>
+
+              <For each={collections()}>
+                {(c) => (
+                  <section class="shop-deal shop-coll" aria-label={`${c.name} koleksiyonu`}>
+                    <div class="shop-deal__head">
+                      <h2 class="shop-h">{c.name}</h2>
+                      <span class="shop-deal__left">Koleksiyon</span>
+                    </div>
+                    <div class="shop-grid shop-grid--deal shop-coll__row">
+                      <For each={c.items}>
+                        {(item) => (
+                          <Card
+                            item={item}
+                            s={s()}
+                            now={now()}
+                            deal={deals().find((d) => d.item.id === item.id)}
+                            onOpen={open}
+                          />
+                        )}
+                      </For>
+                    </div>
+                  </section>
+                )}
+              </For>
 
               <div class="shop-sections" role="tablist" aria-label="Ürün bölümü">
                 <For each={SHOP_SECTIONS}>

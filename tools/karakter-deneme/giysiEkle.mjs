@@ -216,7 +216,10 @@ function main(argv) {
   for (const d of done) {
     const cov = d.covers ? `, covers: ${JSON.stringify(d.covers)}` : "";
     console.log(`+ ${d.id} (${d.layer.slot}): ${d.layer.pieces.length} parça${cov}`);
-    console.log(`  katalog: item("<tür>-${d.id}", "${d.layer.slot}", "<nadirlik>", "<Ad>", "<açıklama>", "${d.id}"${d.covers ? `, ${JSON.stringify(d.covers)}` : ""}),`);
+    // Katalog satırı (packages/engine/src/katalog/magaza.json; fiyat nadirliğin aralığında: SHOP_PRICE_RANGES).
+    console.log(
+      `  katalog: ${JSON.stringify({ id: `<tür>-${d.id}`, type: d.layer.slot, rarity: "<nadirlik>", price: 0, name: "<Ad>", description: "<açıklama>", asset: d.id, ...(d.covers ? { covers: d.covers } : {}), satista: true })}`,
+    );
   }
   if (tasi && readdirSync(src).length === 0) rmSync(src, { recursive: true });
 }

@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { GOOGLE_CALLBACK_PATH, type GoogleConfig } from "./google.js";
 import type { MailConfig } from "./mail.js";
+import { DEV_PREVIEW_ANCESTORS, PROD_PREVIEW_ANCESTOR } from "./static.js";
 import type { VapidConfig } from "./webpush.js";
 
 export interface Config {
@@ -37,6 +38,10 @@ export interface Config {
    * Hiçbir yere yazılmaz, istemciye gitmez.
    */
   aiKey: string | null;
+  /** Üretim Merkezi uçlarının anahtarı (`GLIX_URETIM_TOKEN`); boşsa null ve `/api/uretim/*` 404. Hiçbir yere yazılmaz. */
+  uretimToken: string | null;
+  /** `onizleme.html`'i gömebilen kaynaklar (CSP frame-ancestors). */
+  previewAncestors: readonly string[];
 }
 
 export interface ServerLimits {
@@ -162,6 +167,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     adminAccountIds: loadAdminIds(env),
     draftGames: env.GLIX_TASLAK_OYUNLAR === "1",
     aiKey: env.GLIX_AI_KEY?.trim() || null,
+    uretimToken: env.GLIX_URETIM_TOKEN?.trim() || null,
+    // Önizleme sayfası yalnız Üretim Merkezi'nin içinde açılır (canlıda tek kaynak; geliştirmede yerel de).
+    previewAncestors:
+      env.NODE_ENV === "production"
+        ? [PROD_PREVIEW_ANCESTOR]
+        : [PROD_PREVIEW_ANCESTOR, ...DEV_PREVIEW_ANCESTORS],
     statsDb,
     accountsDb: env.ACCOUNTS_DB || statsDb,
   };

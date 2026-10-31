@@ -52,6 +52,24 @@ export interface ContentStore {
   bulk(poolId: string, lines: readonly string[], now: number): AdminPoolBulk | null;
   /** Yeni maç için etkin havuzlar (yalnız değiştirilmiş ve yeterli boyda olanlar); yoksa undefined. */
   forGame(gameId: string): ContentSet | undefined;
+  /** Havuzun bütün girdileri (yerleşik + eklenen; sayfasız); havuz yoksa null. Üretim Merkezi okur. */
+  entries(poolId: string): AdminPoolEntry[] | null;
+  /**
+   * Alan değerleriyle satır ekler (Üretim Merkezi aktarımı): her satır `fromFields` ile doğrulanır, yasaklı kelime ve
+   * tekrar denetlenir; geçersizler atlanır. Eklenen anahtarları döner. Havuz yoksa null.
+   */
+  addRows(
+    poolId: string,
+    rows: readonly Readonly<Record<string, string>>[],
+    now: number,
+  ): { added: string[]; skipped: { index: number; reason: string }[] } | null;
+  /** Yerleşik girdileri kapatır (silmez). Açık olup kapatılanların anahtarlarını döner. Havuz yoksa null. */
+  disableKeys(poolId: string, keys: readonly string[], now: number): string[] | null;
+  /**
+   * Bir aktarımı geri alır: eklediği girdileri kaldırır (yalnız o aktarımın eklediği ve hâlâ aynı duranlar), kapattığı
+   * yerleşik girdileri yeniden açar. Havuz yoksa false.
+   */
+  revertTransfer(poolId: string, added: readonly string[], disabled: readonly string[], now: number): boolean;
 }
 
 /** Testler ve içeriksiz kurulum: hiçbir havuz değişmez. */
@@ -66,6 +84,10 @@ export const noContent: ContentStore = {
   check: () => null,
   bulk: () => null,
   forGame: () => undefined,
+  entries: () => null,
+  addRows: () => null,
+  disableKeys: () => null,
+  revertTransfer: () => false,
 };
 
 /** İşlem kaydı için girdi tanıtıcısı: metin yazılmaz, anahtarın kısa özeti yazılır. */
@@ -436,6 +458,82 @@ export function createContentStore(accounts: AccountStore, banned: BannedWords):
       const result = Object.keys(set).length > 0 ? set : undefined;
       cache.set(gameId, result);
       return result;
+    },
+    entries(poolId) {
+      const pool = poolById(poolId);
+      if (!pool) return null;
+      const st = states.get(pool.id) as PoolState;
+      const out: AdminPoolEntry[] = pool.builtin.map((e) => {
+        const key = pool.key(e);
+        return { key, source: "builtin", disabled: st.disabled.has(key), fields: pool.toFields(e) };
+      });
+      for (const c of st.customs)
+        out.push({ key: c.key, source: "custom", disabled: false, fields: c.fields });
+      return out;
+    },
+    addRows(poolId, rows, now) {
+      const pool = poolById(poolId);
+      if (!pool) return null;
+      const st = states.get(pool.id) as PoolState;
+      const taken = activeKeys(pool);
+      let room = CONTENT_CUSTOM_MAX - st.customs.length;
+      const adds: { key: string; entry: unknown }[] = [];
+      const skipped: { index: number; reason: string }[] = [];
+      rows.forEach((values, index) => {
+        const v = vet(pool, values, taken);
+        if (!v.ok) {
+          skipped.push({ index, reason: v.message });
+          return;
+        }
+        if (room <= 0) {
+          skipped.push({ index, reason: `Havuz dolu (en çok ${CONTENT_CUSTOM_MAX} eklenen girdi).` });
+          return;
+        }
+        room -= 1;
+        taken.add(v.key);
+        adds.push({ key: v.key, entry: v.entry });
+      });
+      if (adds.length === 0) return { added: [], skipped };
+      if (
+        !persist(
+          adds.map((a) => putAdd(pool, a.key, a.entry)),
+          now,
+        )
+      )
+        return { added: [], skipped: rows.map((_, index) => ({ index, reason: writeFailed.message })) };
+      return { added: adds.map((a) => a.key), skipped };
+    },
+    disableKeys(poolId, keys, now) {
+      const pool = poolById(poolId);
+      if (!pool) return null;
+      const st = states.get(pool.id) as PoolState;
+      const builtin = builtinKeys.get(pool.id);
+      const todo = [...new Set(keys)].filter((k) => builtin?.has(k) === true && !st.disabled.has(k));
+      if (todo.length === 0) return [];
+      const ops: ContentOverrideOp[] = todo.map((key) => ({
+        op: "put",
+        poolId: pool.id,
+        key,
+        action: "disable",
+        value: null,
+      }));
+      return persist(ops, now) ? todo : [];
+    },
+    revertTransfer(poolId, added, disabled, now) {
+      const pool = poolById(poolId);
+      if (!pool) return false;
+      const st = states.get(pool.id) as PoolState;
+      const ops: ContentOverrideOp[] = [];
+      for (const key of new Set(added))
+        if (st.customs.some((c) => c.key === key))
+          ops.push({ op: "delete", poolId: pool.id, key, action: "add" });
+      for (const key of new Set(disabled)) {
+        // Sonradan aynı anahtarla düzenlenmiş (eklenen girdisi olan) yerleşik açılmaz: iki kopya olurdu.
+        const editedLater = st.customs.some((c) => c.key === key) && !added.includes(key);
+        if (st.disabled.has(key) && !editedLater)
+          ops.push({ op: "delete", poolId: pool.id, key, action: "disable" });
+      }
+      return ops.length === 0 ? true : persist(ops, now);
     },
   };
 }

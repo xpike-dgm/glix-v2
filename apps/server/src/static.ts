@@ -35,6 +35,27 @@ export const SECURITY_HEADERS: Record<string, string> = {
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
 };
 
+/** Önizleme sayfasını (UM-U4) gömebilen kaynak: canlıda yalnız Üretim Merkezi. */
+export const PROD_PREVIEW_ANCESTOR = "https://uretim.dgmcraft.online";
+/** Geliştirmede yerel kaynaklar da gömebilir. */
+export const DEV_PREVIEW_ANCESTORS: readonly string[] = ["http://localhost:*", "http://127.0.0.1:*"];
+export const PREVIEW_PAGE = "/onizleme.html";
+
+/**
+ * Önizleme sayfasının başlıkları: yalnız izinli kaynak gömebilir (`frame-ancestors`; `X-Frame-Options` verilmez,
+ * yoksa her gömmeyi engellerdi). Taslak dosyalar `data:`/`blob:` adresiyle gelir: görsel, ses ve dans JSON'u için
+ * bu iki şemaya izin verilir. Sayfa önbelleğe alınmaz ve arama motorlarına kapalıdır.
+ */
+export function previewHeaders(ancestors: readonly string[]): Record<string, string> {
+  const { "X-Frame-Options": _xfo, ...rest } = SECURITY_HEADERS;
+  return {
+    ...rest,
+    "Content-Security-Policy": `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self'; connect-src 'self' data: blob:; worker-src 'self' blob:; frame-ancestors ${ancestors.length > 0 ? ancestors.join(" ") : "'none'"}; base-uri 'none'; form-action 'none'`,
+    "Cache-Control": "no-store",
+    "X-Robots-Tag": "noindex",
+  };
+}
+
 function notFound(res: ServerResponse): void {
   res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8", ...SECURITY_HEADERS });
   res.end("Bulunamadı");
@@ -64,6 +85,8 @@ export function cacheControl(urlPath: string): string {
 export interface StaticOptions {
   /** Yönetici paneli açık mı (`GLIX_ADMIN_ACCOUNT_IDS` dolu). Kapalıyken `/admin`, `/wiki` ve sayfaları 404 verir. */
   adminEnabled?: boolean;
+  /** `onizleme.html`'i gömebilen kaynaklar; verilmezse yalnız Üretim Merkezi. */
+  previewAncestors?: readonly string[];
 }
 
 /** `/admin` (ve sonundaki eğik çizgi) yönetici sayfasıdır; geri kalan `/admin/...` yolları yoktur. */
@@ -152,6 +175,10 @@ export async function serveStatic(
     // Yönetici sayfası arama motorlarına açık değildir.
     ...(servedPath === "/admin.html" || servedPath === "/wiki.html" ? { "X-Robots-Tag": "noindex" } : {}),
   };
+  if (servedPath === PREVIEW_PAGE) {
+    delete headers["X-Frame-Options"];
+    Object.assign(headers, previewHeaders(options.previewAncestors ?? [PROD_PREVIEW_ANCESTOR]));
+  }
   res.writeHead(200, headers);
   if (req.method === "HEAD") {
     res.end();

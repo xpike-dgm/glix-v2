@@ -1,4 +1,4 @@
-import type { RoomSnapshot } from "@glix/engine";
+import { cosmeticItem, type RoomSnapshot } from "@glix/engine";
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { playFinalFx, winnerCelebration } from "../fx/finalFx.js";
 import { hapticFinal } from "../fx/haptics.js";
@@ -20,7 +20,9 @@ import type { Mood } from "../ui/avatars.js";
 import { BottomSheet } from "../ui/BottomSheet.js";
 import { CharacterStage, type PodiumChar } from "../ui/CharacterStage.js";
 import { frameOf, PlayerName, PlayerTitle } from "../ui/Cosmetic.js";
+import { EffectView } from "../ui/Effects.js";
 import { EmojiFan } from "../ui/EmojiFan.js";
+import { effectOf } from "../ui/effects.js";
 import { FeedbackRow } from "../ui/FeedbackRow.js";
 import { GhostButton } from "../ui/GhostButton.js";
 import { GlixSummary } from "../ui/GlixSummary.js";
@@ -96,6 +98,10 @@ export function Final(props: { snap: RoomSnapshot }) {
     });
   });
 
+  const celebrationFx = () => {
+    const id = winnerCelebration(winners());
+    return id === undefined ? null : effectOf(cosmeticItem(id));
+  };
   const top = () => ranked().slice(0, 3);
   const rest = () => ranked().slice(3);
   /** Kürsü karakterleri: 1. sıradaki herkes (beraberlik dahil) dans eder, diğerleri alkışlar. */
@@ -147,6 +153,10 @@ export function Final(props: { snap: RoomSnapshot }) {
   return (
     <Screen class="final fin">
       <div class="confetti" ref={confetti} aria-hidden="true" />
+      {/* Zafer kutlamasının ek efekt tarifi (MG-4; varsa): görsel kutlamanın üstünde. */}
+      <Show when={celebrationFx()} keyed>
+        {(e) => <EffectView effect={e} class="confetti" />}
+      </Show>
       <p class="sr-only" role="status" aria-live="polite">
         {announce()}
       </p>

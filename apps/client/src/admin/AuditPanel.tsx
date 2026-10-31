@@ -1,7 +1,7 @@
 import type { AdminAuditEntry } from "@glix/engine";
 import { createSignal, For, onMount, Show } from "solid-js";
 import { fetchAudit } from "./api.js";
-import { auditDetail, auditLabel, fmtDateTime } from "./format.js";
+import { actorLabel, auditDetail, auditLabel, fmtDateTime } from "./format.js";
 
 export function AuditPanel(props: { onOtp: () => void }) {
   const [entries, setEntries] = createSignal<AdminAuditEntry[]>([]);
@@ -77,7 +77,7 @@ export function AuditPanel(props: { onOtp: () => void }) {
                       {e.targetId === null ? "—" : `#${e.targetId}`}
                     </td>
                     <td data-label="Yönetici" class="mono">
-                      #{e.actorId}
+                      {actorLabel(e.actorId)}
                     </td>
                     <td data-label="Ayrıntı">{auditDetail(e.action, e.detail) || "—"}</td>
                   </tr>

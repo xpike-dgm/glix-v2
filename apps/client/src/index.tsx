@@ -26,6 +26,7 @@ import "./styles/colorblind.css";
 import "./styles/cards.css";
 import "./styles/result.css";
 import "./styles/cosmetics.css";
+import "./styles/effects.css";
 import "./styles/shop.css";
 import "./styles/quests.css";
 import "./styles/character.css";

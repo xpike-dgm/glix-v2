@@ -20,7 +20,9 @@
     "ui:check": "node scripts/ui-check.mjs",
     "ui:check:hizli": "node scripts/ui-check.mjs --hizli",
     "ui:check:degisen": "node scripts/ui-check.mjs --degisen",
-    "perf:check": "node scripts/perf-check.mjs"
+    "perf:check": "node scripts/perf-check.mjs",
+    "onizleme:check": "node scripts/onizleme-check.mjs",
+    "efekt:karsilastir": "node scripts/efekt-karsilastir.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

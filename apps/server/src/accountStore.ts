@@ -224,7 +224,7 @@ export interface OwnedCosmetic {
 
 export type CosmeticPurchase =
   | { ok: true; balance: number; price: number }
-  | { ok: false; reason: "missing" | "unknown" | "owned" }
+  | { ok: false; reason: "missing" | "unknown" | "owned" | "not_for_sale" }
   | { ok: false; reason: "insufficient"; balance: number; price: number };
 
 /** Kuşanma sonucu: `unknown` katalogda yok ya da tür tutmuyor; `not_owned` sahip değil. */
@@ -400,6 +400,27 @@ export interface ContentOverrideRow {
 export type ContentOverrideOp =
   | { op: "put"; poolId: string; key: string; action: ContentOverrideAction; value: string | null }
   | { op: "delete"; poolId: string; key: string; action: ContentOverrideAction };
+
+/** Üretim Merkezi aktarımı (UM-İ8): geri alma için neyin eklendiği/kapatıldığı. Hesap verisi taşımaz. */
+export type UretimTransferKind = "havuz-ekle" | "havuz-kapat" | "moderasyon-ekle";
+export interface UretimTransferRow {
+  id: string;
+  at: number;
+  kind: UretimTransferKind;
+  /** İçerik havuzu kimliği; moderasyonda null. */
+  poolId: string | null;
+  /** Eklenen/kapatılan girdi anahtarları ya da eklenen yasaklı kelimeler. */
+  keys: string[];
+  undoneAt: number | null;
+}
+
+/** Mağaza istatistiği (MG-7) ham toplamları: hesap kimliği içermez. */
+export interface ShopStatsRaw {
+  /** Satın almalar: ürün, İstanbul günü, ödenen fiyat başına sayı (armağanlar, fiyat 0, sayılmaz). */
+  purchases: { itemId: string; day: number; pricePaid: number; n: number }[];
+  /** Şu an kuşanılan değerler (renk eki dahil) başına hesap sayısı. */
+  equipped: { value: string; n: number }[];
+}
 
 export interface BannedWordRow {
   word: string;
@@ -602,6 +623,13 @@ export interface AccountStore extends FriendStore, WikiStore {
   contentOverrideDelete(poolId: string, key: string, action: ContentOverrideAction): boolean;
   /** Birden çok yazma/silmeyi tek işlemde yapar (toplu ekleme, düzenleme). */
   contentOverrideBatch(ops: ContentOverrideOp[], now: number): void;
+  /** Üretim Merkezi aktarım kaydını yazar. */
+  uretimTransferInsert(row: UretimTransferRow): void;
+  uretimTransferGet(id: string): UretimTransferRow | null;
+  /** Aktarımı geri alındı işaretler; yoksa ya da zaten geri alınmışsa false. */
+  uretimTransferMarkUndone(id: string, at: number): boolean;
+  /** `since` anından beri satın almalar ve şu an kuşanılanlar (toplu, anonim; MG-7). */
+  shopStats(since: number): ShopStatsRaw;
   /** Hesapları kimlik sırasıyla tarar (listeye takılan mevcut hesaplar yardımcısı için): `afterId`'den büyük ilk `limit`. */
   scanUsernames(afterId: number, limit: number): { id: number; username: string }[];
   /** Kullanıcı adı önekiyle ya da tam e-postayla arama (en çok `ADMIN_SEARCH_LIMIT`); satırlarda e-posta yoktur. */
@@ -940,6 +968,17 @@ export const ACCOUNT_MIGRATIONS: readonly string[] = [
    CREATE INDEX sessions_seen ON sessions (account_id, last_seen);`,
   // Oyun ansiklopedisi (yalnız yönetici) notları ve ekran işaretleri.
   WIKI_SCHEMA,
+  // Üretim Merkezi aktarımları (UM-İ8): içerik havuzuna ve yasaklı kelimelere tek tık ekleme/kapatma; geri alma için
+  // eklenen/kapatılan anahtarlar JSON listesi olarak tutulur. Hesap verisi yoktur.
+  `CREATE TABLE uretim_transfers (
+     id TEXT PRIMARY KEY,
+     at INTEGER NOT NULL,
+     kind TEXT NOT NULL CHECK (kind IN ('havuz-ekle', 'havuz-kapat', 'moderasyon-ekle')),
+     pool_id TEXT,
+     keys TEXT NOT NULL,
+     undone_at INTEGER
+   );
+   CREATE INDEX uretim_transfers_at ON uretim_transfers (at);`,
 ];
 
 /** Yönetici hesap dökümünde gösterilen son Glix hareketi sayısı. */
@@ -1419,6 +1458,21 @@ export function createAccounts(path: string): AccountStore {
   const reportsDetachTarget = db.prepare(
     "UPDATE reports SET target_account_id = NULL WHERE target_account_id = ?",
   );
+  const uretimInsert = db.prepare(
+    "INSERT INTO uretim_transfers (id, at, kind, pool_id, keys, undone_at) VALUES (?, ?, ?, ?, ?, NULL)",
+  );
+  const uretimGet = db.prepare(
+    "SELECT id, at, kind, pool_id, keys, undone_at FROM uretim_transfers WHERE id = ?",
+  );
+  const uretimUndo = db.prepare(
+    "UPDATE uretim_transfers SET undone_at = ? WHERE id = ? AND undone_at IS NULL",
+  );
+  const statsPurchases = db.prepare(
+    `SELECT item_id, (acquired_at + 10800000) / 86400000 AS day, price_paid, COUNT(*) AS n
+       FROM cosmetic_owned WHERE acquired_at >= ? AND price_paid > 0
+      GROUP BY item_id, day, price_paid`,
+  );
+  const statsEquipped = db.prepare("SELECT item_id, COUNT(*) AS n FROM cosmetic_equipped GROUP BY item_id");
   const bannedList = db.prepare("SELECT word, folded, added_at FROM banned_words ORDER BY added_at, folded");
   const bannedCount = db.prepare("SELECT COUNT(*) AS n FROM banned_words");
   const bannedInsert = db.prepare(
@@ -1798,7 +1852,13 @@ export function createAccounts(path: string): AccountStore {
       inTransaction(() => {
         const acc = glixAccount.get(accountId) as { glix: number } | undefined;
         if (!acc) return;
-        const price = cosmeticItem(itemId) ? currentPrice(itemId, at) : null;
+        // Fiyat her zaman katalogdan (fırsat dahil); satışta olmayan ya da çıkış günü gelmemiş ürün satılmaz (MG-3).
+        const known = cosmeticItem(itemId) !== undefined;
+        const price = known ? currentPrice(itemId, at) : null;
+        if (known && price === null) {
+          result = { ok: false, reason: "not_for_sale" };
+          return;
+        }
         if (price === null || price <= 0) {
           result = { ok: false, reason: "unknown" };
           return;
@@ -2275,6 +2335,48 @@ export function createAccounts(path: string): AccountStore {
     },
     contentOverrideDelete(poolId, key, action) {
       return Number(contentDelete.run(poolId, key, action).changes) === 1;
+    },
+    uretimTransferInsert(row) {
+      uretimInsert.run(row.id, row.at, row.kind, row.poolId, JSON.stringify(row.keys));
+    },
+    uretimTransferGet(id) {
+      const r = uretimGet.get(id) as
+        | {
+            id: string;
+            at: number;
+            kind: UretimTransferKind;
+            pool_id: string | null;
+            keys: string;
+            undone_at: number | null;
+          }
+        | undefined;
+      if (!r) return null;
+      let keys: string[] = [];
+      try {
+        const parsed: unknown = JSON.parse(r.keys);
+        if (Array.isArray(parsed)) keys = parsed.filter((k): k is string => typeof k === "string");
+      } catch {
+        keys = [];
+      }
+      return { id: r.id, at: r.at, kind: r.kind, poolId: r.pool_id, keys, undoneAt: r.undone_at };
+    },
+    uretimTransferMarkUndone(id, at) {
+      return Number(uretimUndo.run(at, id).changes) > 0;
+    },
+    shopStats(since) {
+      const purchases = (
+        statsPurchases.all(since) as unknown as {
+          item_id: string;
+          day: number;
+          price_paid: number;
+          n: number;
+        }[]
+      ).map((r) => ({ itemId: r.item_id, day: Number(r.day), pricePaid: r.price_paid, n: Number(r.n) }));
+      const equipped = (statsEquipped.all() as unknown as { item_id: string; n: number }[]).map((r) => ({
+        value: r.item_id,
+        n: Number(r.n),
+      }));
+      return { purchases, equipped };
     },
     contentOverrideBatch(ops, now) {
       inTransaction(() => {
