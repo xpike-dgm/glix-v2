@@ -1,7 +1,11 @@
 # Üretim Merkezi — öneri dosyası
 
 > **Sahip kararı (31 Ekim 2026): önerilen paket onaylandı.** Yapılacaklar: UM-A1…A5, UM-G1, G2, G4, G5, G6 (geçişten
-> sonra), G7, UM-İ1…İ10, UM-K1…K6, UM-U1…U9, MG-1…MG-7, UM-Y1…Y3. Yapılmayacak: UM-G3.
+> sonra), G7, UM-İ1…İ10, UM-K1…K6, UM-U1…U9, MG-1…MG-7, UM-Y1…Y3. Yapılmayacak: —.
+>
+> **Ek karar (31 Ekim 2026):** yapay zekâlara sunucunun genel MCP'si **verilmez** (tüm dosyalara erişir). Bazı yapay
+> zekâlar MCP ile, bazıları sahibin bilgisayarından **SSH** ile bağlanır. Bu yüzden UM-G3 **evet** oldu ve SSH kanalı
+> genişletildi (bkz. UM-G3). İki kanal da yalnız ilgili alanın verisini görür.
 
 Bu dosya onay içindir. Her maddenin bir kodu var (ör. **UM-G2**). Cevabını tek satırda verebilirsin:
 
@@ -109,6 +113,8 @@ Canlıdaki havuz kayıtları (panelden eklenenler) için yönetici panelinin sal
 - Bütün girişler ve işlemler denetim kaydına yazılır (UM-G7).
 
 ### UM-G2 · Yapay zekâ erişimi: alan başına anahtar ve MCP ucu — **önerim: EVET**
+> Not (ek karar): bu MCP ucu **Üretim Merkezi'nin kendi ucudur** (`https://uretim.dgmcraft.online/mcp`), sunucunun
+> genel MCP'si değildir. Yalnız alanın araçlarını sunar; dosya sistemi, kabuk, Docker gibi hiçbir şeye erişim vermez.
 **Ne:** Her yapay zekâya kendi **teslim anahtarı** verilir. Anahtar yalnız o alana yetkilidir: mağaza anahtarıyla
 rozet teslim edilemez. Erişim, yapay zekâ araçlarının doğrudan bağlanabildiği bir **MCP ucu** üzerinden olur
 (ChatGPT bugün VDS'e de bir bağlantıyla erişiyor; OpenCode da MCP destekler). Yapay zekânın göreceği araçlar:
@@ -127,11 +133,23 @@ kutusunu görür: sunucuya, oyuna ve diğer alanlara erişemez.
 - Anahtarlar sitede üretilir, bir kez gösterilir, istenince iptal edilip yenilenir.
 - Anahtar başına hız sınırı: dakikada 60 istek, günde 500 dosya.
 
-### UM-G3 · Yedek kanal: alan başına kısıtlı SFTP — **önerim: İSTEĞE BAĞLI**
-**Ne:** MCP bağlayamayan araçlar için her alana kendi klasörüne kapalı (chroot) bir SFTP kullanıcısı açılır. Klasöre
-bırakılan paket site tarafından alınır.
+### UM-G3 · SSH kanalı: alan başına kısıtlı kullanıcı — **karar: EVET** (ek karar)
+**Ne:** Sahibin bilgisayarında çalışan ve SSH ile bağlanan yapay zekâlar için her alana VDS'te ayrı bir Linux
+kullanıcısı açılır (ör. `uretim-magaza`). Bu kullanıcı:
+- yalnız anahtarla girer (şifre yok); anahtarı sahip kendi bilgisayarında üretir, açık anahtarı sitede o alana ekler;
+- **kabuk açamaz**: her bağlantı zorunlu bir komuta (`ForceCommand`) gider; port yönlendirme, tünel, X11, ajan
+  yönlendirme kapalı;
+- yalnız iki şey yapabilir:
+  1. `uretim` komut aracı: MCP araçlarının birebir karşılığı (`ssh uretim-magaza@… talimat-oku`, `isleri-listele`,
+     `is-oku <id>`, `katalog-oku`, `geri-bildirim-oku`, `on-kontrol <paket>`, `teslim-et <paket>`,
+     `istek-karti-ac`, `kod-istegi-ac`). Komut aracı sitenin iç API'sine o alanın anahtarıyla gider; yetki MCP ile
+     aynıdır.
+  2. SFTP: yalnız kendi klasörüne kapalı (chroot) `gelen/` (paket bırakma) ve `okunur/` (talimat, geri bildirim,
+     katalog kopyası) klasörleri. Sunucunun başka hiçbir dosyasını göremez.
+- SSH ayarı ayrı bir `Match Group uretim-alanlari` bloğudur; sahibin ve yöneticinin bugünkü erişimine dokunmaz.
 
-**Önerim:** önce gerek yok. MCP ve elle yükleme (UM-G4) yeter. Bir araç ikisini de yapamazsa açarım.
+**Neden:** OpenCode gibi bilgisayarda çalışan araçlar en rahat SSH kullanır. Bu düzende SSH'tan gelen bir yapay zekâ,
+MCP'den gelenle tam aynı sınırlar içinde kalır.
 
 ### UM-G4 · Elle yükleme ekranı — **önerim: EVET**
 **Ne:** Sunucuya erişimi olmayan araçlar (ses, müzik, bazı görsel araçlar) için sitede sürükle-bırak yükleme olur.
@@ -504,7 +522,7 @@ onaylanır.
 
 | Adım | Maddeler | Sonuç |
 |---|---|---|
-| 1 | UM-A1…A5, UM-G1, UM-G2, UM-G4, UM-G5, UM-G7 | Site ayakta, giriş var, yapay zekâ teslim edebiliyor |
+| 1 | UM-A1…A5, UM-G1, UM-G2, UM-G3, UM-G4, UM-G5, UM-G7 | Site ayakta, giriş var, yapay zekâ teslim edebiliyor |
 | 2 | UM-İ1…İ10, UM-K1…K6 | Akış ve ön kontrol çalışıyor |
 | 3 | UM-U1…U3, UM-U5…U9 | İnceleme ekranları |
 | 4 | MG-1, MG-2, MG-3, MG-5, MG-7 | Mağaza veriyle yönetiliyor (oyuncuya görünen değişiklik yok) |
@@ -534,5 +552,4 @@ Canlıya alma kuralı aynı:
 - **Mağaza altyapısı:** MG-1 … MG-7
 - **Başlatma:** UM-Y1, UM-Y2, UM-Y3
 
-**İSTEĞE BAĞLI (şimdilik yapılmaz):**
-- UM-G3 (SFTP yedek kanalı)
+**Ek karar ile eklendi:** UM-G3 (SSH kanalı).
