@@ -219,7 +219,7 @@ async function playKendim(cs: Client[], words: string[], beforeReveal: () => Pro
   for (const x of cs) expect(await act(x, { kind: "lock" })).toBe(true);
   k.clock.advance(1_100);
   await until(() => stageOf(host) === "reveal", "sonuç açıldı");
-  k.clock.advance(9_000);
+  k.clock.advance(15_000); // açılış: 4 kart × 3 sn + 3 sn
   await until(() => host.room.phase === "results", "sonuç");
 }
 

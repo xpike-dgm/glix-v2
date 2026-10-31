@@ -1,26 +1,34 @@
 import { describe, expect, it } from "vitest";
+import type { ContentSet } from "../../content.js";
 import { isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
-import { KENDIM_SILENT_GETS_BONUS, kendim, kendimCards } from "./index.js";
+import { KENDIM_TOPIC_POOL, kendim, kendimCards } from "./index.js";
 import {
+  KENDIM_DEFAULT_TOPIC,
   KENDIM_DURATION_MS,
+  KENDIM_MATCH_LARGE_MS,
   KENDIM_MATCH_MS,
-  KENDIM_REVEAL_MS,
+  KENDIM_REVEAL_CARD_MS,
+  KENDIM_REVEAL_TAIL_MS,
   KENDIM_WRITE_MS,
   type KendimPublicView,
   type KendimView,
+  kendimAwards,
+  kendimRevealMs,
 } from "./types.js";
 
 type State = ReturnType<typeof start>;
 const T0 = 1_000_000;
 const ALL = ["a", "b", "c", "d"];
 const MATCH_AT = T0 + KENDIM_WRITE_MS + 1_000;
-const ctx = (now: number, connected: readonly string[] = ALL, seed = 1) => ({
+const ctx = (now: number, connected: readonly string[] = ALL, seed = 1, content?: ContentSet) => ({
   now,
   rng: createRng(seed),
   connected,
+  ...(content ? { content } : {}),
 });
-const start = (players: string[] = ALL, seed = 1) => kendim.setup(players, ctx(T0, players, seed));
+const start = (players: string[] = ALL, seed = 1, content?: ContentSet) =>
+  kendim.setup(players, ctx(T0, players, seed, content));
 
 function act(
   s: State,
@@ -68,31 +76,135 @@ const cardOf = (s: State, owner: string): number => {
 const pair = (s: State, who: string, owner: string, target: string, at = MATCH_AT): State =>
   act(s, who, { kind: "match", card: cardOf(s, owner), target }, at);
 const minis = (s: State) => kendim.result(s).miniScores;
+/** 4 kart: açılış 4 × 3 sn + 3 sn. */
+const REVEAL4 = kendimRevealMs(4);
 
 describe("kendim meta", () => {
-  it("3-8 oyuncu, dikey, briefing en çok 3 madde ve teknik kelime yok", () => {
+  it("3-8 oyuncu, dikey, briefing en çok 3 madde ve teknik kelime yok; anlatımda ceza yok", () => {
     expect(kendim.minPlayers).toBe(3);
     expect(kendim.maxPlayers).toBe(8);
     expect(kendim.orientation).toBe("portrait");
     expect(kendim.briefing.steps.length).toBeLessThanOrEqual(3);
     expect(JSON.stringify(kendim.briefing)).not.toMatch(/server|debug|protocol|stage/i);
+    expect(kendim.briefing.steps[2]).toBe("Doğru eşleme +1, yanlış ceza yok");
   });
 
-  it("süreler: 30 sn yazma, 30 sn eşleştirme", () => {
-    const s = start();
-    expect(s.writeEndsAt - s.startedAt).toBe(30_000);
-    expect(s.matchEndsAt - s.writeEndsAt).toBe(30_000);
-    expect(s.finishAt - s.startedAt).toBe(KENDIM_DURATION_MS);
-    expect(KENDIM_REVEAL_MS).toBeLessThanOrEqual(10_000);
+  it("KN-M4 süreler: 30 sn yazma; eşleştirme 3–5 oyuncuda 30 sn, 6–8 oyuncuda 40 sn", () => {
+    for (const n of [3, 4, 5, 6, 7, 8]) {
+      const ids = "abcdefgh".slice(0, n).split("");
+      const s = start(ids);
+      expect(s.writeEndsAt - s.startedAt).toBe(30_000);
+      expect(s.matchEndsAt - s.writeEndsAt).toBe(n >= 6 ? KENDIM_MATCH_LARGE_MS : KENDIM_MATCH_MS);
+    }
     expect(KENDIM_MATCH_MS).toBe(30_000);
+    expect(KENDIM_MATCH_LARGE_MS).toBe(40_000);
+    expect(KENDIM_DURATION_MS).toBe(30_000 + 40_000 + 27_000);
+  });
+
+  it("KN-U4 açılış süresi: kart sayısı × 3 sn + 3 sn", () => {
+    expect(KENDIM_REVEAL_CARD_MS).toBe(3_000);
+    expect(KENDIM_REVEAL_TAIL_MS).toBe(3_000);
+    expect(kendimRevealMs(0)).toBe(3_000);
+    expect(kendimRevealMs(3)).toBe(12_000);
+    expect(kendimRevealMs(8)).toBe(27_000);
+    const s = tick(writeAll({ a: "elma", b: "armut", c: "kiraz" }), T0 + KENDIM_WRITE_MS);
+    expect(s.finishAt).toBe(s.matchEndsAt + kendimRevealMs(3));
+    expect(kendim.revealAt?.(s, ctx(s.matchEndsAt))).toBe(s.matchEndsAt);
+  });
+});
+
+describe("konu kartı (KN-M2)", () => {
+  it("havuz verilmezse yerleşik listeden konu çekilir; listenin başı bugünkü konu", () => {
+    const s = start();
+    expect(KENDIM_TOPIC_POOL.builtin).toContainEqual(s.topic);
+    expect(KENDIM_TOPIC_POOL.builtin[0]).toEqual(KENDIM_DEFAULT_TOPIC);
+    const p = pub(s, T0 + 1);
+    expect(p.topic).toBe(s.topic.topic);
+    expect(p.hint).toBe(s.topic.hint);
+  });
+
+  it("havuzdan konu çekilir; boş ya da bozuk havuzda yerleşik liste", () => {
+    const content: ContentSet = {
+      [KENDIM_TOPIC_POOL.id]: [
+        { topic: "Hayvan olsaydın?", hint: "Ben bir…" },
+        { topic: "Sabah ilk ne yaparsın?", hint: "Ben…" },
+      ],
+    };
+    const seen = new Set<string>();
+    for (let seed = 1; seed <= 30; seed++) seen.add(start(ALL, seed, content).topic.topic);
+    expect([...seen].sort()).toEqual(["Hayvan olsaydın?", "Sabah ilk ne yaparsın?"]);
+    expect(KENDIM_TOPIC_POOL.builtin).toContainEqual(start(ALL, 3, { [KENDIM_TOPIC_POOL.id]: [] }).topic);
+    expect(KENDIM_TOPIC_POOL.builtin).toContainEqual(
+      start(ALL, 3, { [KENDIM_TOPIC_POOL.id]: [{ topic: "<x>", hint: "Ben" }, 5] }).topic,
+    );
+  });
+
+  it("konu kart sırasını değiştirmez (tohum önce çekilir)", () => {
+    const words = { a: "elma", b: "armut", c: "kiraz", d: "üzüm" };
+    const plain = writeAll(words, ALL, 9);
+    let other = start(ALL, 9, {
+      [KENDIM_TOPIC_POOL.id]: [
+        { topic: "Hayvan olsaydın?", hint: "Ben bir…" },
+        { topic: "Tatil yerin?", hint: "Ben…" },
+      ],
+    });
+    for (const [id, text] of Object.entries(words))
+      other = act(other, id, { kind: "write", text }, T0 + 1_000);
+    expect(kendimCards(other)).toEqual(kendimCards(plain));
+  });
+
+  it("tekrar belleği: havuz 5'ten uzunsa son 5, kısaysa yalnız bir önceki", () => {
+    const many = (n: number): ContentSet => ({
+      [KENDIM_TOPIC_POOL.id]: Array.from({ length: n }, (_, i) => ({
+        topic: `Konu numara ${i}`,
+        hint: "Ben…",
+      })),
+    });
+    const used = (s: State) => kendim.contentUsed?.(s) ?? [];
+    expect(used(start(ALL, 1, many(12)))[0]).toMatchObject({ poolId: KENDIM_TOPIC_POOL.id, memory: 5 });
+    expect(used(start(ALL, 1, many(5)))[0]?.memory).toBe(4);
+    expect(used(start(ALL, 1, many(3)))[0]?.memory).toBe(1);
+    expect(used(start(ALL, 1, many(1)))[0]).toEqual({
+      poolId: KENDIM_TOPIC_POOL.id,
+      key: "konu numara 0",
+      memory: 1,
+    });
+    expect(used(start())[0]?.memory).toBe(5);
+  });
+
+  it("havuz girdisi doğrulanır: konu 3–40, ipucu 2–16 karakter", () => {
+    expect(KENDIM_TOPIC_POOL.fromFields({ topic: "Hayvan olsaydın?", hint: "Ben bir…" })).toEqual({
+      ok: true,
+      entry: { topic: "Hayvan olsaydın?", hint: "Ben bir…" },
+    });
+    expect(KENDIM_TOPIC_POOL.fromFields({ topic: "ab", hint: "Ben" }).ok).toBe(false);
+    expect(KENDIM_TOPIC_POOL.fromFields({ topic: "Hayvan olsaydın?", hint: "" }).ok).toBe(false);
+    expect(KENDIM_TOPIC_POOL.fromFields({ topic: "a".repeat(41), hint: "Ben" }).ok).toBe(false);
+    expect(KENDIM_TOPIC_POOL.unpack({ topic: "x" })).toBeNull();
+  });
+
+  it("konuyla aynı kelime gizlilik denetiminde sızıntı sayılmaz", () => {
+    const s = act(start(), "a", { kind: "write", text: "anlat" }, T0 + 1);
+    expect(kendim.secrets(s).map((e) => e.value)).not.toContain("ANLAT");
   });
 });
 
 describe("yazma aşaması", () => {
   it("her oyuncu tek kelime yazar; giriş temizlenir ve Türkçe büyük harfe çevrilir", () => {
     const s = start();
-    const r = act(s, "a", { kind: "write", text: " ışık   evi " }, T0 + 1);
-    expect(priv(r, "a", T0 + 2).myText).toBe("IŞIK EVİ");
+    const r = act(s, "a", { kind: "write", text: "  ışıklı  " }, T0 + 1);
+    expect(priv(r, "a", T0 + 2).myText).toBe("IŞIKLI");
+  });
+
+  it("KN-M3: boşluklu yazı reddedilir; tire serbest; sınır 24 harf", () => {
+    expect(kendim.parseAction({ kind: "write", text: "çok neşeli" })).toBeNull();
+    expect(kendim.parseAction({ kind: "write", text: "ışık\tevi" })).toBeNull();
+    expect(kendim.parseAction({ kind: "write", text: "tatlı-sert" })).toEqual({
+      kind: "write",
+      text: "TATLI-SERT",
+    });
+    expect(kendim.parseAction({ kind: "write", text: "a".repeat(24) })).not.toBeNull();
+    expect(kendim.parseAction({ kind: "write", text: "a".repeat(25) })).toBeNull();
   });
 
   it("kelime Tamam'a kadar değiştirilebilir, Tamam'dan sonra değil; yazmadan Tamam olmaz", () => {
@@ -212,23 +324,23 @@ describe("eşleştirme kuralları", () => {
   });
 });
 
-describe("puanlama", () => {
+describe("puanlama (KN-M1)", () => {
   const base = () => writeAll({ a: "elma", b: "armut", c: "kiraz", d: "üzüm" });
 
-  it("doğru eşleştirme +1, yanlış −1, boş kart 0", () => {
+  it("doğru eşleştirme +1, yanlış 0 (ceza yok), boş kart 0", () => {
     let s = base();
     s = pair(s, "a", "b", "b"); // doğru
-    s = pair(s, "a", "c", "d"); // yanlış
-    // d kartı boş bırakıldı: 0
-    expect(minis(s).a).toBe(0); // +1 −1
+    s = pair(s, "a", "c", "d"); // yanlış: 0
+    expect(minis(s).a).toBe(1);
+    for (const v of Object.values(minis(s))) expect(v).toBeGreaterThanOrEqual(0);
   });
 
   it("yalnızca tek kişi doğru bulduysa kart sahibine +1 bonus", () => {
     let s = base();
     s = pair(s, "a", "b", "b"); // b'nin kartını yalnız a doğru buldu
-    s = pair(s, "c", "b", "d"); // c yanlış
-    s = pair(s, "b", "c", "c"); // b kendi eşleştirmesini doğru yaptı: +1, bonus +1
-    expect(minis(s)).toEqual({ a: 1, b: 2, c: -1 + 1, d: 0 });
+    s = pair(s, "c", "b", "d"); // c yanlış: 0
+    s = pair(s, "b", "c", "c"); // b doğru +1, c'nin kartını yalnız b buldu: c bonus +1
+    expect(minis(s)).toEqual({ a: 1, b: 2, c: 1, d: 0 });
   });
 
   it("birden çok kişi doğru bulursa bonus yok; kimse bulamazsa da yok", () => {
@@ -236,102 +348,83 @@ describe("puanlama", () => {
     s = pair(s, "a", "b", "b");
     s = pair(s, "c", "b", "b");
     s = pair(s, "d", "a", "c"); // a'nın kartını kimse bulamadı
-    s = pair(s, "b", "d", "a"); // b yanlış: −1 (b'nin kartı iki kişi buldu: bonus yok)
-    const m = minis(s);
-    expect(m.a).toBe(1);
-    expect(m.c).toBe(1);
-    expect(m.b).toBe(-1);
-    expect(m.d).toBe(-1);
+    s = pair(s, "b", "d", "a"); // b yanlış: 0
+    expect(minis(s)).toEqual({ a: 1, b: 0, c: 1, d: 0 });
     const rev = kendim.publicView(tick(s, s.matchEndsAt), ctx(s.matchEndsAt)).reveal;
     expect(rev?.cards.find((c) => c.owner === "b")).toMatchObject({ bonus: false });
     expect(rev?.cards.find((c) => c.owner === "a")).toMatchObject({ bonus: false, finders: [] });
   });
 
-  it("bonus: bir doğru + birkaç yanlış eşleştirme yine tek doğru sayılır", () => {
+  it("sessiz oyuncu kuralı yok: hiç eşleme yapmasan da kelimeni tek kişi bulursa bonus alırsın", () => {
     let s = base();
     s = pair(s, "a", "d", "d"); // doğru
     s = pair(s, "b", "d", "a"); // yanlış
     s = pair(s, "c", "d", "a"); // yanlış
-    const m = minis(s);
-    expect(m.d).toBe(0 + 0); // d hiç eşleştirme yapmadı: bonus yok (sessiz oyuncu)
-    expect(m.a).toBe(1);
+    expect(minis(s).d).toBe(1);
+    expect(minis(s).a).toBe(1);
   });
 
-  it("hiç eşleştirme yapmayan oyuncu 0 alır (bonus dahil): eksi de artı da yok", () => {
-    expect(KENDIM_SILENT_GETS_BONUS).toBe(false);
-    let s = base();
-    s = pair(s, "a", "d", "d");
-    expect(minis(s).d).toBe(0);
-    s = pair(s, "d", "a", "a"); // d de oynayınca doğru +1 ve bonus +1 alır
+  it("kelime yazmayan oyuncu eşleyip puan toplar ama bonus alamaz", () => {
+    let s = writeAll({ a: "elma", b: "armut", c: "kiraz" });
+    s = pair(s, "d", "a", "a");
+    s = pair(s, "d", "b", "b");
     expect(minis(s).d).toBe(2);
-    expect(minis(s).a).toBe(2); // d'yi buldu +1, kartını yalnız d buldu: bonus +1
+    expect(kendimCards(s).some((c) => c.owner === "d")).toBe(false);
   });
 
-  it("aynı kelimeyi yazanlar denktir: kelimesi aynı birini seçmek doğrudur", () => {
+  it("aynı kelimeyi yazanlar denktir; kartlar ikiz olarak işaretlenir", () => {
     let s = writeAll({ a: "kedi", b: "kedi", c: "çay", d: "mavi" });
     const dup = kendimCards(s).filter((c) => c.text === "KEDİ");
     const first = dup[0];
     const second = dup[1];
     if (!first || !second) throw new Error("kedi kartları yok");
-    // c, ilk kedi kartını diğer kedi yazarına bağlasa da doğru (kelime ikisini de anlatıyor).
     s = act(s, "c", { kind: "match", card: first.id, target: second.owner }, MATCH_AT);
     s = act(s, "d", { kind: "match", card: second.id, target: second.owner }, MATCH_AT);
     expect(minis(s).c).toBe(1);
     expect(minis(s).d).toBe(1);
+    const rev = pub(s, s.matchEndsAt).reveal;
+    expect(rev?.cards.filter((c) => c.twin).map((c) => c.text)).toEqual(["KEDİ", "KEDİ"]);
+    expect(rev?.cards.find((c) => c.text === "ÇAY")?.twin).toBe(false);
   });
 
-  it("genel skor: en yüksek mini puanlı oyuncu +1, eşitse hepsi +1, en yüksek ≤ 0 ise kimse", () => {
+  it("ödül: en yüksek +2, sonraki farklı toplam +1, diğerleri 0", () => {
+    expect(kendimAwards({ a: 3, b: 2, c: 1, d: 0 })).toEqual({ a: 2, b: 1, c: 0, d: 0 });
+    // Birincide eşitlik: hepsi +2; sonraki farklı toplam +1.
+    expect(kendimAwards({ a: 3, b: 3, c: 1, d: 1 })).toEqual({ a: 2, b: 2, c: 1, d: 1 });
+    // Tanıma puanı 0 olan ödül almaz.
+    expect(kendimAwards({ a: 2, b: 0, c: 0 })).toEqual({ a: 2, b: 0, c: 0 });
+    // Herkes eşit ve > 0: herkes +1; hepsi 0: kimse.
+    expect(kendimAwards({ a: 2, b: 2, c: 2 })).toEqual({ a: 1, b: 1, c: 1 });
+    expect(kendimAwards({ a: 0, b: 0, c: 0 })).toEqual({ a: 0, b: 0, c: 0 });
+  });
+
+  it("result: miniScores tanıma puanı, awards +2/+1/0; kimse bulamadıysa ödül yok", () => {
     let s = base();
     s = pair(s, "a", "b", "b");
     s = pair(s, "a", "c", "c");
-    s = pair(s, "b", "a", "a");
-    s = pair(s, "c", "d", "d");
-    // a: +2, b: +1 (+bonus: b'nin kartını yalnız a buldu) = 2, c: +1 +bonus(c'yi yalnız a buldu)=2, d: 0+...
+    s = pair(s, "c", "b", "b");
+    // a: 2, b: 0 (kartını a ve c buldu: bonus yok), c: 1 + (kartını yalnız a buldu) 1 = 2, d: 0
     const res = kendim.result(s);
-    const top = Math.max(...Object.values(res.miniScores));
-    const winners = Object.keys(res.miniScores).filter((id) => res.miniScores[id] === top);
-    expect(Object.keys(res.awards).sort()).toEqual(winners.sort());
-    for (const id of winners) expect(res.awards[id]).toBe(1);
-    expect(top).toBeGreaterThan(0);
-
-    // Kimse puan almadıysa ödül yok; herkes yanlışsa en yüksek 0.
+    expect(res.miniScores).toEqual({ a: 2, b: 0, c: 2, d: 0 });
+    expect(res.awards).toEqual({ a: 2, b: 0, c: 2, d: 0 });
     let z = base();
     z = pair(z, "a", "b", "c");
     z = pair(z, "b", "a", "c");
-    expect(kendim.result(z).awards).toEqual({});
-    expect(kendim.result(base()).awards).toEqual({});
+    expect(kendim.result(z).awards).toEqual({ a: 0, b: 0, c: 0, d: 0 });
+    expect(kendim.result(base()).awards).toEqual({ a: 0, b: 0, c: 0, d: 0 });
   });
 
-  it("eşitlikte eşit olanların tamamı +1 alır", () => {
-    let s = base();
-    s = pair(s, "a", "b", "b");
-    s = pair(s, "b", "a", "a");
-    s = pair(s, "c", "b", "b");
-    s = pair(s, "c", "a", "a");
-    // a: +1 (b'yi buldu), b: +1; a'nın kartını b ve c, b'nin kartını a ve c buldu: bonus yok. c: +2.
-    expect(minis(s)).toEqual({ a: 1, b: 1, c: 2, d: 0 });
-    expect(kendim.result(s).awards).toEqual({ c: 1 });
-    // eşit zirve
-    let t = base();
-    t = pair(t, "a", "b", "b");
-    t = pair(t, "c", "d", "d");
-    const r = kendim.result(t);
-    expect(r.miniScores.a).toBeGreaterThan(0);
-    expect(Object.keys(r.awards).length).toBeGreaterThanOrEqual(1);
-    for (const id of Object.keys(r.awards))
-      expect(r.miniScores[id]).toBe(Math.max(...Object.values(r.miniScores)));
-  });
-
-  it("açılışta kartlar sahipleri, bulanlar ve eşleştirmeler birlikte açılır", () => {
+  it("açılışta kartlar sahipleri, bulanlar, eşleştirmeler, sıra ve ödüllerle açılır", () => {
     let s = base();
     s = pair(s, "a", "b", "b");
     s = pair(s, "a", "c", "d");
-    s = pair(s, "b", "d", "a"); // b de oynadı (yanlış): −1, bonus +1
+    s = pair(s, "b", "d", "a");
     const rev = pub(s, s.matchEndsAt).reveal;
     expect(rev?.cards.find((c) => c.owner === "b")).toMatchObject({
       text: "ARMUT",
       finders: ["a"],
       bonus: true,
+      twin: false,
     });
     expect(rev?.pairs.a).toEqual(
       expect.arrayContaining([
@@ -339,15 +432,9 @@ describe("puanlama", () => {
         { card: cardOf(s, "c"), target: "d", ok: false },
       ]),
     );
-    expect(rev?.scores.a).toBe(0);
-    expect(rev?.scores.b).toBe(0); // b eşleştirme yapmadı
-  });
-
-  it("awards miniScores'tan türer; skorlar tam sayı", () => {
-    let s = base();
-    s = pair(s, "a", "b", "b");
-    const res = kendim.result(s);
-    for (const v of Object.values(res.awards)) expect(Number.isInteger(v)).toBe(true);
+    expect(rev?.scores).toEqual({ a: 1, b: 1, c: 0, d: 0 });
+    expect(rev?.awards).toEqual({ a: 2, b: 2, c: 0, d: 0 });
+    expect([...(rev?.order ?? [])].sort()).toEqual([0, 1, 2, 3]);
   });
 });
 
@@ -368,7 +455,7 @@ describe("erken bitiş", () => {
     const s = lockAll(written(), T0 + 2_000);
     expect(s.writeEndsAt).toBe(T0 + 3_000);
     expect(s.matchEndsAt).toBe(T0 + 3_000 + KENDIM_MATCH_MS);
-    expect(s.finishAt).toBe(s.matchEndsAt + KENDIM_REVEAL_MS);
+    expect(s.finishAt).toBe(s.matchEndsAt + REVEAL4);
     expect(pub(s, T0 + 2_500).stage).toBe("write");
     expect(pub(s, T0 + 3_000).stage).toBe("match");
   });
@@ -395,7 +482,7 @@ describe("erken bitiş", () => {
     const s0 = written();
     const s = lockAll(s0, MATCH_AT);
     expect(s.matchEndsAt).toBe(MATCH_AT + 1_000);
-    expect(s.finishAt).toBe(MATCH_AT + 1_000 + KENDIM_REVEAL_MS);
+    expect(s.finishAt).toBe(MATCH_AT + 1_000 + REVEAL4);
     expect(pub(s, MATCH_AT + 1_000).stage).toBe("reveal");
   });
 
@@ -424,7 +511,6 @@ describe("gizlilik", () => {
       for (const t of [MATCH_AT, s.matchEndsAt - 1]) {
         const pj = JSON.stringify(pub(s, t));
         expect(pj).not.toContain('"owner"');
-        expect(pj).not.toContain("ELMASIZ");
         for (const id of ALL) {
           const v = priv(s, id, t);
           const j = JSON.stringify(v);
@@ -448,6 +534,21 @@ describe("gizlilik", () => {
     expect(kendim.secrets(tick(s, s.writeEndsAt))).toEqual([]);
   });
 
+  it("KN-U7: eşleştirmede kartlar herkese sahipsiz açık; yazmada yok", () => {
+    const s = writeAll({ a: "elma", b: "armut", c: "kiraz", d: "üzüm" });
+    expect(pub(s, T0 + 2_000).cards).toEqual([]);
+    const p = pub(s, MATCH_AT);
+    expect(p.cards.map((c) => c.text).sort()).toEqual(["ARMUT", "ELMA", "KİRAZ", "ÜZÜM"]);
+    expect(p.cards).toEqual(kendimCards(s).map(({ id, text }) => ({ id, text })));
+    expect(JSON.stringify(p)).not.toContain('"owner"');
+  });
+
+  it("yazma sırasında bitiş anı kaç kişinin yazdığını göstermez", () => {
+    const s0 = start();
+    const s = act(s0, "a", { kind: "write", text: "elma" }, T0 + 1);
+    expect(pub(s, T0 + 2).finishAt).toBe(pub(s0, T0 + 2).finishAt);
+  });
+
   it("izleyici görünümü boştur", () => {
     const s = writeAll({ a: "elma", b: "armut", c: "kiraz", d: "üzüm" });
     expect(priv(s, null, MATCH_AT)).toEqual({ myText: null, locked: false, cards: [], myPairs: {} });
@@ -466,9 +567,14 @@ describe("görünüm zamanlaması", () => {
   });
 
   it("bitişten sonra eylem reddedilir", () => {
-    const s = start();
+    const s = tick(writeAll({ a: "elma", b: "armut", c: "kiraz", d: "üzüm" }), T0 + KENDIM_WRITE_MS);
+    expect(s.finishAt).toBe(s.matchEndsAt + REVEAL4);
     expect(reject(s, "a", { kind: "lock" }, s.finishAt + 5)).toBe("ended");
     expect(kendim.isFinished(s, ctx(s.finishAt - 1))).toBe(false);
     expect(kendim.isFinished(s, ctx(s.finishAt))).toBe(true);
+    // tick beklenmez: bitiş kart sayısından hesaplanır.
+    const raw = writeAll({ a: "elma", b: "armut", c: "kiraz", d: "üzüm" });
+    expect(kendim.isFinished(raw, ctx(raw.matchEndsAt + REVEAL4 - 1))).toBe(false);
+    expect(kendim.isFinished(raw, ctx(raw.matchEndsAt + REVEAL4))).toBe(true);
   });
 });

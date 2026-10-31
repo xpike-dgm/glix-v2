@@ -1,29 +1,33 @@
 /**
- * Yalnız geliştirme önizlemesi: Kendim ekranları (`&n=3..8` oyuncu sayısı).
+ * Yalnız geliştirme önizlemesi: Kendim ekranları (`&n=3..8` oyuncu sayısı). Görünümler gerçek oyun kurallarıyla
+ * (engine `kendim`) üretilir; böylece önizleme ile oyun aynı veriyi gösterir.
  *   ?mock=kendim-briefing        anlatım
- *   ?mock=kendim-write           yazma; yazınca Tamam açılır
- *   ?mock=kendim-write-locked    Tamam denildi
- *   ?mock=kendim-match           eşleştirme (karta dokun, kişiyi seç); `&paired=2` kaç kartın eşi başlangıçta var
- *   ?mock=kendim-match-locked    eşleştirme kilitli
- *   ?mock=kendim-reveal          sonuç (`kendim-reveal-negative`: eksi puan)
+ *   ?mock=kendim-write           yazma (aynaya yaz); `&topic=1` başka konu ("Hayvan olsaydın?")
+ *   ?mock=kendim-write-locked    Tamam denildi (kelime aynaya kazındı)
+ *   ?mock=kendim-match           eşleştirme; `&paired=2` kaç kartın eşi başlangıçta var
+ *   ?mock=kendim-match-locked    eşleştirme kilitli (kartlar soluk, kilit)
+ *   ?mock=kendim-reveal          açılış; `&t=ms` açılışın başından geçen süre (yoksa özet), `&twin=1` ikiz kelime,
+ *                                `kendim-reveal-negative`: senin bütün eşlemelerin yanlış (tanıma puanı 0)
  *   ?mock=kendim-spectator-write | -match | -reveal   katılımcı değilsin
+ *   TV: ?mock=tv-kendim-write | tv-kendim-match | tv-kendim-reveal&t=4000
  */
-import type {
-  GameInfo,
-  KendimPublicView,
-  KendimReveal,
-  KendimView,
-  MatchSnapshot,
-  PlayerInfo,
-  RoomPhase,
-  RoomSnapshot,
+import type { GameInfo, MatchSnapshot, PlayerInfo, RoomPhase, RoomSnapshot } from "@glix/engine";
+import {
+  createRng,
+  isRejected,
+  KENDIM_TOPIC_POOL,
+  KENDIM_WRITE_MS,
+  type KendimState,
+  kendim,
+  kendimCards,
+  kendimMatchMs,
+  kendimRevealMs,
 } from "@glix/engine";
-import { KENDIM_DURATION_MS, KENDIM_MATCH_MS, KENDIM_WRITE_MS, kendim } from "@glix/engine";
 import { useMockSender } from "../net/client.js";
 import { applySnapshot, setState } from "../net/store.js";
 
 const NAMES = ["Cihad", "Elif", "Mert", "Zeynep", "Kaan", "Defne", "Burak", "Ayşe"];
-const WORDS = ["ÇAY", "GÜNEŞ", "KARAKTERLİ", "SAKİN", "FIRTINA", "KEDİ", "ÇİKOLATA", "NEŞE"];
+const WORDS = ["ÇAY", "GÜNEŞ", "KARAKTERLİ", "SAKİN", "FIRTINA", "KEDİ", "ÇİKOLATA", "TATLI-SERT"];
 const SELF = "p0";
 const INFO: GameInfo = {
   id: kendim.id,
@@ -47,103 +51,96 @@ export function startKendimMock(kind: string, params: URLSearchParams): void {
   const participants = players.map((p) => p.id).filter((id) => !(spectator && id === SELF));
   const stage = kind.includes("reveal") ? "reveal" : kind.includes("match") ? "match" : "write";
   const now = Date.now();
+  const matchMs = kendimMatchMs(participants.length);
+  const tRaw = params.get("t");
+  const revealT = tRaw !== null && Number.isFinite(Number(tRaw)) ? Number(tRaw) : kendimRevealMs(n) - 1_500;
   const offset = {
     write: 9_000,
     match: KENDIM_WRITE_MS + 9_000,
-    reveal: KENDIM_WRITE_MS + KENDIM_MATCH_MS + 300,
+    reveal: KENDIM_WRITE_MS + matchMs + revealT,
   };
   const startedAt = now - offset[stage];
-  const writeEndsAt = startedAt + KENDIM_WRITE_MS;
-  const matchEndsAt = writeEndsAt + KENDIM_MATCH_MS;
+  const content =
+    params.get("topic") === "1"
+      ? { [KENDIM_TOPIC_POOL.id]: [{ topic: "Hayvan olsaydın?", hint: "Ben bir…" }] }
+      : undefined;
+  const ctx = (at: number) => ({
+    now: at,
+    rng: createRng(7),
+    connected: participants,
+    ...(content ? { content } : {}),
+  });
+  let state: KendimState = kendim.setup(participants, ctx(startedAt));
+  const apply = (who: string, action: unknown, at: number): boolean => {
+    const parsed = kendim.parseAction(action);
+    if (parsed === null) return false;
+    const r = kendim.reduce(state, who, parsed, ctx(at));
+    if (isRejected(r)) return false;
+    state = r;
+    return true;
+  };
+
+  const twin = params.get("twin") === "1";
+  const wordOf = (id: string): string => {
+    const i = Number(id.slice(1));
+    if (twin && i === 2) return WORDS[1] as string;
+    return WORDS[i % WORDS.length] as string;
+  };
+  const writeAt = startedAt + 1_000;
+  const typed = kind.includes("write-locked") ? "MERAKLI" : null;
+  for (const id of participants) {
+    if (stage === "write" && id === SELF && typed === null) continue;
+    // Yazmada diğerlerinin kelimesi önizlemede de görünmez (görünüm gizler); yine de kart sahibi olsunlar.
+    apply(id, { kind: "write", text: id === SELF && typed ? typed : wordOf(id) }, writeAt);
+  }
+  if (stage === "write" && (kind.includes("locked") || spectator)) {
+    const others = participants.filter((id) => id !== SELF).slice(0, Math.max(1, Math.floor(n / 2) - 1));
+    for (const id of spectator ? others : [SELF, ...others]) apply(id, { kind: "lock" }, writeAt + 10);
+  }
+
+  const matchAt = state.writeEndsAt + 1_000;
+  const cards = () => kendimCards(state);
+  const cardOf = (owner: string) => cards().find((c) => c.owner === owner)?.id ?? -1;
+  if (stage === "match" && !spectator) {
+    const paired = Number(params.get("paired") ?? (kind.includes("locked") ? 2 : 0));
+    const mine = cards().filter((c) => c.owner !== SELF);
+    mine.slice(0, paired).forEach((c, i) => {
+      const wrong = participants.find((id) => id !== SELF && id !== c.owner) ?? c.owner;
+      apply(SELF, { kind: "match", card: c.id, target: i === 1 ? wrong : c.owner }, matchAt);
+    });
+  }
+  if (stage === "match" && (kind.includes("locked") || spectator)) {
+    const others = participants.filter((id) => id !== SELF).slice(0, Math.max(1, Math.floor(n / 2) - 1));
+    for (const id of spectator ? others : [SELF, ...others]) apply(id, { kind: "lock" }, matchAt + 10);
+  }
+  if (stage === "reveal") {
+    const negative = kind.includes("negative");
+    participants.forEach((id, i) => {
+      if (id === SELF) {
+        cards()
+          .filter((c) => c.owner !== SELF)
+          .forEach((c, k) => {
+            const ok = !negative && k % 2 === 0;
+            const wrong = participants.find((x) => x !== SELF && x !== c.owner) ?? c.owner;
+            apply(SELF, { kind: "match", card: c.id, target: ok ? c.owner : wrong }, matchAt);
+          });
+        return;
+      }
+      // Diğerleri: biri doğru, biri yanlış tahmin eder; bazı kartları yalnız bir kişi bulur (bonus).
+      const right = participants[(i + 1) % participants.length] as string;
+      const wrongOwner = participants[(i + 2) % participants.length] as string;
+      if (i % 2 === 0) apply(id, { kind: "match", card: cardOf(right), target: right }, matchAt);
+      const other = participants[(i + 3) % participants.length] as string;
+      if (wrongOwner !== id && other !== id && other !== wrongOwner)
+        apply(id, { kind: "match", card: cardOf(wrongOwner), target: other }, matchAt);
+      if (i % 3 === 1) apply(id, { kind: "match", card: cardOf(SELF), target: SELF }, matchAt);
+    });
+  }
 
   let phase: RoomPhase = "playing";
   let readyIds: string[] = [];
   let phaseEndsAt: number | null = null;
-  let locked = kind.includes("locked");
-  let text: string | null = kind.includes("write-locked") ? "BEN" : null;
-  const wordOf = (id: string): string => WORDS[Number(id.slice(1)) % WORDS.length] as string;
-  // Kart numaraları karışık: sahipler p3,p1,p4,p2,... gibi.
-  const order = participants
-    .filter((id) => id !== "x")
-    .slice()
-    .sort((a, b) => ((Number(a.slice(1)) * 5 + 3) % 11) - ((Number(b.slice(1)) * 5 + 3) % 11));
-  const cards = order.map((owner, id) => ({ id, owner, text: wordOf(owner) }));
-  const myCards = cards.filter((c) => c.owner !== SELF).map(({ id, text: t }) => ({ id, text: t }));
-  const pairedParam = Number(params.get("paired") ?? (kind.includes("locked") ? 2 : 0));
-  const myPairs: Record<string, string> = {};
-  for (const c of cards.filter((x) => x.owner !== SELF).slice(0, pairedParam)) {
-    const wrong = c.owner === "p1" ? "p2" : "p1";
-    myPairs[String(c.id)] = Object.keys(myPairs).length === 1 ? wrong : c.owner;
-  }
   let rev = 1;
-
-  const readyList = (): string[] => {
-    if (stage === "reveal") return [];
-    if (locked || spectator) {
-      const others = participants
-        .filter((id) => id !== SELF)
-        .slice(0, spectator ? 2 : Math.max(1, Math.floor(n / 2) - 1));
-      return spectator ? others : [SELF, ...others];
-    }
-    return [];
-  };
-
-  const reveal = (): KendimReveal => {
-    const negative = kind.includes("negative");
-    const pairs: KendimReveal["pairs"] = {};
-    const scores: Record<string, number> = {};
-    for (const id of participants) pairs[id] = [];
-    for (const c of cards) {
-      if (c.owner === SELF) continue;
-      const ok = !negative && c.id % 2 === 0;
-      const target = ok ? c.owner : c.owner === "p1" ? "p2" : "p1";
-      pairs[SELF]?.push({ card: c.id, target, ok });
-    }
-    cards.forEach((c, i) => {
-      if (c.owner === SELF) return;
-      const other = participants[(i + 2) % participants.length] as string;
-      if (other !== c.owner && other !== SELF && c.id % 3 === 0)
-        pairs[other]?.push({ card: c.id, target: c.owner, ok: true });
-    });
-    for (const id of participants) {
-      scores[id] = (pairs[id] ?? []).reduce((s, p) => s + (p.ok ? 1 : -1), 0);
-    }
-    const revCards = cards.map((c) => {
-      const finders = participants.filter((id) => (pairs[id] ?? []).some((p) => p.card === c.id && p.ok));
-      const bonus = finders.length === 1 && (pairs[c.owner]?.length ?? 0) > 0;
-      if (bonus) scores[c.owner] = (scores[c.owner] ?? 0) + 1;
-      return { id: c.id, text: c.text, owner: c.owner, finders, bonus };
-    });
-    const top = Math.max(...participants.map((id) => scores[id] ?? 0));
-    return {
-      cards: revCards,
-      pairs,
-      scores,
-      winners: top > 0 ? participants.filter((id) => scores[id] === top) : [],
-    };
-  };
-
-  const build = (): { pub: KendimPublicView; priv: KendimView } => ({
-    pub: {
-      players: participants,
-      stage,
-      startedAt,
-      writeEndsAt,
-      matchEndsAt,
-      finishAt: startedAt + KENDIM_DURATION_MS,
-      ready: readyList(),
-      owners: stage === "write" ? [] : participants,
-      reveal: stage === "reveal" ? reveal() : null,
-    },
-    priv: spectator
-      ? { myText: null, locked: false, cards: [], myPairs: {} }
-      : {
-          myText: stage === "write" ? text : null,
-          locked: stage !== "reveal" && locked,
-          cards: stage === "write" ? [] : myCards,
-          myPairs: stage === "match" ? myPairs : {},
-        },
-  });
 
   const snapshot = (): RoomSnapshot => {
     if (kind === "kendim-briefing") {
@@ -151,7 +148,8 @@ export function startKendimMock(kind: string, params: URLSearchParams): void {
       readyIds = participants.slice(1, 3);
       phaseEndsAt = now + 40_000;
     }
-    const { pub, priv } = build();
+    const at = Math.max(Date.now(), now);
+    state = kendim.tick(state, ctx(at));
     const match: MatchSnapshot = {
       round: 0,
       total: 3,
@@ -164,8 +162,8 @@ export function startKendimMock(kind: string, params: URLSearchParams): void {
       continueIds: [],
       phaseStartedAt: startedAt,
       phaseEndsAt,
-      publicView: pub,
-      view: priv,
+      publicView: kendim.publicView(state, ctx(at)),
+      view: kendim.view(state, spectator ? null : SELF, ctx(at)),
       result: null,
     };
     return {
@@ -188,18 +186,10 @@ export function startKendimMock(kind: string, params: URLSearchParams): void {
 
   setState({ conn: "open", everOpen: true, nickname: "Cihad" });
   useMockSender((msg) => {
-    if (msg.type !== "action") return;
-    const p = msg.payload as { kind?: string; card?: number; target?: string | null; text?: string } | null;
-    if (!p || locked) return;
-    if (p.kind === "write" && typeof p.text === "string") text = p.text;
-    else if (p.kind === "lock" && (stage === "match" || text !== null)) locked = true;
-    else if (p.kind === "match" && typeof p.card === "number") {
-      if (p.target === null || p.target === undefined) delete myPairs[String(p.card)];
-      else {
-        for (const [k, v] of Object.entries(myPairs)) if (v === p.target) delete myPairs[k];
-        myPairs[String(p.card)] = p.target;
-      }
-    } else return;
+    if (msg.type !== "action" || spectator) return;
+    // Önizlemede süre akmaz: eylem aşamanın içindeki sabit bir anda uygulanır.
+    const at = stage === "write" ? writeAt + 20 : matchAt + 20;
+    if (!apply(SELF, msg.payload, at)) return;
     applySnapshot(snapshot());
   });
   setState("session", { token: "mock", playerId: SELF, roomCode: "KX7QP" });

@@ -270,3 +270,11 @@ kâr şeridi özet ve yorum için çekilir.
 Ayrıntılar: `docs/oneriler/kendim.md`. Onaylananlar: **KN-M1, KN-M2, KN-M3, KN-M4, KN-U1 … KN-U7.** Konu listesini sahip
 yazar (yönetici panelindeki içerik havuzu); yapay zekâyla üretilmez.
 Onaylanmayanlar: KN-M5 (ayna turu), KN-M6 ("eminim" yıldızı), KN-AI1.
+**Uygulandı (Ekim 2026):** tanıma puanı (yanlış 0, sessiz oyuncu kuralı yok) ve +2 / +1 / 0 sıralama ödülü
+(`kendimAwards`), konu havuzu `kendim/konular` (yerleşik liste `packages/engine/src/games/kendim/topics.ts`; yalnız
+bugünkü konu, listeyi sahip doldurur), boşluksuz tek kelime, 6–8 oyuncuda 40 sn eşleştirme, aynaya yazma, kısa kartlar ve
+neon ip, kilit ve son saniyeler, kart kart açılış ("Seni kim tanıdı?", "TEK BULAN", "İkiz kelime!"), özet, ses seti, TV
+görünümü (`StageView`). Zamanlamalar tek yerde: `apps/client/src/games/kendim/timeline.ts` (kart süresi motorda
+`KENDIM_REVEAL_CARD_MS`). Gereken görseller (ayna çerçevesi, kart arka yüzü): `docs/oneriler/kendim-gorsel.md`; dosya
+yokken CSS karşılığı çizilir. Konu anlatım (Hazırım) ekranında gösterilmez: konu oyun kurulurken çekilir ve kurulum
+anlatımdan sonradır; yazma ekranının başında büyük görünür.

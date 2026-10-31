@@ -1,6 +1,7 @@
 import type { ContentPool } from "../content.js";
 import { CAGRISIM_POOL } from "./cagrisim-agi/pool.js";
 import { KARALAMA_POOL } from "./karalama-defteri/pool.js";
+import { KENDIM_TOPIC_POOL } from "./kendim/pool.js";
 import { LAF_POOL_LIST } from "./laf-sokma/pool.js";
 import { SIZMA_POOL } from "./sizma/pool.js";
 import { SOZLUK_POOL } from "./sozluk-blofu/pool.js";
@@ -17,6 +18,7 @@ export const CONTENT_POOLS: readonly AnyPool[] = [
   KARALAMA_POOL,
   ...LAF_POOL_LIST,
   YAZI_YAZ_TOPIC_POOL,
+  KENDIM_TOPIC_POOL,
 ];
 
 export function poolById(id: string): AnyPool | null {
