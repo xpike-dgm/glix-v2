@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 92,
-    "not": "Süre oyuncu sayısına göre değişmez: 50 sn sahte tanım yazma + 30 sn seçme + 12 sn sonuç = 92 sn. Bağlı herkes tanımını gönderirse yazma, herkes 'Tamam' derse seçme aşaması 1 sn sonra biter (en kısası yaklaşık 1 + 1 + 12 = 14 sn). Anlatım (en çok 40 sn), geri sayım (3 sn) ve sonuç ekranı (en çok 30 sn) dışarıdadır."
+    "not": "Süre oyuncu sayısına göre değişmez: 50 sn sahte tanım yazma + 30 sn seçme + 12 sn sonuç = 92 sn. Bağlı herkes tanımını gönderirse yazma, herkes 'Tamam' derse seçme aşaması 1 sn sonra biter (en kısası yaklaşık 1 + 1 + 12 = 14 sn). Anlatım (en çok 40 sn), geri sayım (3 sn) ve sonuç ekranı (en çok 60 sn) dışarıdadır. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Ekranda az bilinen bir Türkçe kelime görünür. Herkes gizlice o kelimeye inandırıcı bir sahte tanım yazar; gerçek tanım ve sahte tanımlar karıştırılıp kartlar olarak gösterilir. Herkes gerçek olduğunu düşündüğü karta oy verir. Gerçeği bulan +1, sahte tanımı seçilen blöf sahibi her seçim için +1 alır.",
   "akis": [
@@ -32,7 +32,7 @@
       "ad": "Sonuç açılışı",
       "sureSn": 12,
       "kim": "herkes",
-      "aciklama": "Sıralı açılış: önce gerçek anlam, sonra sahte tanımlar az kandırandan çok kandırana doğru açılır; en çok kişiyi kandıran blöf en son açılır. Her kartta sahibi (avatar + takma ad, kendi kartın için 'Sen'), '+n' (kaç kişiyi kandırdı) ve kartı seçenlerin avatarları gösterilir; gerçek kartta 'Gerçek anlam' etiketi ve 'n kişi buldu' / 'Kimse bulamadı' yazar. Üstte kendi puanın ('+n'), 'Gerçeği buldun!' ya da 'Gerçeği bulamadın' ve varsa 'n kişiyi kandırdın'. İzleyici 'Gerçek anlam açıldı' görür. Dizi bitince puan aldıysan eşleşme sesi, almadıysan alçak ses çalar.",
+      "aciklama": "Sıralı açılış: önce gerçek anlam, sonra sahte tanımlar az kandırandan çok kandırana doğru açılır; en çok kişiyi kandıran blöf en son açılır. Her kartta sahibi (avatar + takma ad, kendi kartın için 'Sen'), '+n' (kaç kişiyi kandırdı) ve kartı seçenlerin avatarları gösterilir; gerçek kartta 'Gerçek anlam' etiketi ve 'n kişi buldu' / 'Kimse bulamadı' yazar. Üstte kendi puanın ('+n'), 'Gerçeği buldun!' ya da 'Gerçeği bulamadın' ve varsa 'n kişiyi kandırdın'. İzleyici 'Gerçek anlam açıldı' görür. Dizi bitince puan aldıysan eşleşme sesi, almadıysan alçak ses çalar. Açılış en az 12 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Bu aşamada her şey açıktır: gerçek kart, sahipler ve herkesin seçimi."
     }
   ],
@@ -198,7 +198,7 @@
     },
     {
       "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
-      "deger": "40 sn / 3 sn / 30 sn",
+      "deger": "40 sn / 3 sn / 60 sn",
       "kaynak": "apps/server/src/match.ts:40-42"
     }
   ],

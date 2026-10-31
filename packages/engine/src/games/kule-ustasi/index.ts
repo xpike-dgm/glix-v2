@@ -265,6 +265,11 @@ export const kuleUstasi: GameDefinition<KuleState, KuleAction, KuleView, KulePub
     return { isOut: false, myTurn: away === 0, turnsAway: away };
   },
 
+  /** Sonuç ekranı oyunun bittiği an (yeterli çıkış ya da süre sonu) başlar. */
+  revealAt(state, ctx): number | null {
+    return advance(state, ctx.now).endedAt;
+  },
+
   isFinished(state, ctx): boolean {
     return advance(state, ctx.now).finished;
   },

@@ -574,6 +574,12 @@ export const rusvetDarbe: GameDefinition<RusvetState, RusvetAction, RusvetView, 
     };
   },
 
+  /** Sonuç açılışı darbe aşaması bittiği (ya da atlandığı) an başlar. */
+  revealAt(state, ctx): number | null {
+    const s = advance(state, ctx.now);
+    return s.stage === "reveal" && s.finishAt !== null ? s.finishAt - RUSVET_REVEAL_MS : null;
+  },
+
   isFinished(state, ctx): boolean {
     const s = advance(state, ctx.now);
     return s.finishAt !== null && ctx.now >= s.finishAt;

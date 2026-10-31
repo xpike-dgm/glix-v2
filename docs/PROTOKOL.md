@@ -31,6 +31,7 @@ Sunucu tek otoritedir; istemci yalnız niyet gönderir.
 | `discardCard` | `index` (0–7 ya da `null`) | yalnız `cards` aşaması, yalnız elin doluyken seçilen iyi kart için karar bekleyen oyuncu: elden `index`inci kartı atar, `null` yeni kartı atar. Aksi `card_invalid` |
 | `playCard` | `card`, `target?` (oyuncu kimliği), `gameId?` | yalnız `briefing` aşaması, yalnız katılımcı; kart elde olmalı, oyuncu başına en çok 1, hedef/oyun kartın türüne uymalı (docs/KURALLAR.md K4, K7); geçersizse `card_invalid`. Kabul edilince `match.mine.staged` dolar (yalnız sahibine) |
 | `unplayCard` | — | yalnız `briefing`; oynanan (henüz kesinleşmemiş) kartı ele geri alır; yoksa `card_invalid` |
+| `revealContinue` | `round` | Oyun içi sonuç ekranında "Devam et": yalnız `playing` aşamasında, `match.reveal` doluyken ve `round` geçerli oyunun sırasıysa (değilse `wrong_phase`); `round` 0..63 tam sayı değilse ya da fazladan alan varsa `invalid_message`. İzleyici, katılımcı olmayan ve tekrar onay sessizce yok sayılır; aynı oyuncudan 300 ms içinde ikinci mesaj `rate_limited` (`continue` ile ortak sayaç). Yanıt: `match.reveal.continueIds` güncellenir. Bkz. `docs/ERKEN-BITIS.md` "Oyun içi sonuç ekranı" |
 | `continue` | — | yalnız `results` aşaması (`wrong_phase`); izleyici ve katılımcı olmayan sessizce yok sayılır; aynı oyuncudan 300 ms içinde ikinci mesaj `rate_limited`. Bağlı tüm katılımcılar basınca sonuç ekranı 1 sn sonra biter (`phaseEndsAt` kısalır). Yanıt: `match.continueIds` güncellenir. Bkz. `docs/ERKEN-BITIS.md` |
 | `action` | `seq`, `payload` | yalnız `playing`; `seq` istemci sayacı, `actionAck` ile döner |
 | `returnToLobby` | — | yalnız host, yalnız `final` |
@@ -134,12 +135,16 @@ sunucu günlüğüne yazılır.
 ## Maç akışı (sunucu)
 
 ```
-lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(30 sn; herkes Devam derse erken) → (3., 6. … oyundan sonra, son oyun hariç) cards(15 sn)] → final → (host) lobby
+lobby → [her oyun için: briefing → countdown(3 sn) → playing (+ oyun içi sonuç ekranı ≤60 sn) → results(60 sn; herkes Devam derse erken) → (3., 6. … oyundan sonra, son oyun hariç) cards(15 sn)] → final → (host) lobby
 ```
 
 - **briefing:** Katılımcıların hepsi `ready` gönderince biter. Bağlantısı kopmuş oyuncu beklenmez.
   Güvenlik süresi 40 sn; dolunca otomatik geçilir.
-- **playing:** Oyunun `isFinished` true olunca biter.
+- **playing:** Oyunun `isFinished` true olunca biter. Oyun `revealAt` kancasını tanımlıyorsa (bütün oyunlar) bitiş "Devam et"
+  kuralına bağlıdır: oyunun son açılışı başlayınca (`revealAt` ≤ oyun saati) `match.reveal = {startedAt, endsAt, continueIds}`
+  dolar (`endsAt` = `startedAt` + 60 sn, en geç bitiş); `isFinished` true olduğu an açılış animasyonunun bittiği andır. Oyun,
+  bağlı katılımcıların hepsi `revealContinue` gönderdikten ve animasyon bittikten 1 sn sonra (`CONTINUE_GRACE_MS`) ya da
+  `startedAt` + 60 sn'de (`REVEAL_HOLD_MS`) biter. Oyun durumu, kayıt (`replay`) ve sonuç etkilenmez. Bkz. `docs/ERKEN-BITIS.md`.
 - **results:** `GameResult` gösterilir; `awards` genel skora eklenmiş olarak gelir.
 - **results:** `match.continueIds` "Devam" diyenleri taşır (yalnız kimler). Sıradaki oyun `gameIds[round+1]` ile bellidir (zaten herkese açık). Önceki genel puan, istemcide `player.score − result.awards[id]` ile bulunur (sıra değişimi animasyonu için ek alan yok). Tur özeti satırı istemcide `summarizeRound(gameId, result, players, publicView)` ile (engine, saf) üretilir.
 - **cards:** (kartlar açıksa) her 3. oyunun sonuç ekranından sonra, son oyun hariç. `match.round` az önce biten oyunun sırasıdır; `phaseEndsAt` 15 sn sonrasıdır, bağlı herkes seçince 1 sn sonraya çekilir. Ayrıntı: "Kartlar".
@@ -167,6 +172,10 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing → results(
 ## Kartlar (docs/KURALLAR.md "0. Maç düzeyi kuralları: Kartlar")
 
 - **Faz:** `RoomPhase` = `lobby | briefing | countdown | playing | results | cards | final`. Yeni faz `cards`; sonuç ekranından sonra, sıradaki oyunun `briefing`ine geçmeden önce açılır.
+- **Protokol sürümü 3 → 4 oldu (oyun içi sonuç ekranı, Ekim 2026).** Yeni mesaj `revealContinue {round}` ve
+  `MatchSnapshot.reveal?: {startedAt, endsAt, continueIds} | null`. Gerekçe: oyunlar artık `isFinished`'ten sonra oyuncu onayı
+  ya da 60 sn tavanı bekler; eski istemci "Devam et" düğmesini çizemediği için her oyunda 60 sn bekletilirdi. Sürüm artınca
+  eski istemci "Güncelleme gerekli" ekranını gösterir.
 - **Protokol sürümü 2 → 3 oldu.** Gerekçe: eski (önbellekteki) bir istemci bilinmeyen `cards` aşamasını doğrulamada reddedip bütün anlık görüntüyü düşürür; oyuncu
   kart seçimi sırasında donmuş ekranda kalırdı. Sürüm artınca eski istemci "Güncelleme gerekli" ekranını görür ve yenilenir (diğer eklemeler gibi sessizce yok
   sayılamayacak bir bozulma olduğu için bilinçli artırıldı).

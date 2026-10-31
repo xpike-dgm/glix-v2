@@ -265,6 +265,11 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
     };
   },
 
+  /** Sonuç açılışı oylama süresinin bittiği an başlar. */
+  revealAt(state): number | null {
+    return state.voteEndsAt;
+  },
+
   isFinished(state, ctx): boolean {
     return ctx.now >= state.finishAt;
   },

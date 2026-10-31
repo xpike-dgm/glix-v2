@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 53,
-    "not": "Tur 1 seçimi 20 sn + kısa açılış 5 sn + tur 2 seçimi 20 sn + final açılışı 8 sn = 53 sn. Bir turda bağlı herkes 'Ateşe hazır' derse o turun seçimi son kilitten 1 sn sonra biter (en geç 20. sn'de) ve sonraki aşamalar öne kayar; kısa açılış yine 5 sn, final açılışı yine 8 sn sürer. Oyuncu sayısı süreyi değiştirmez."
+    "not": "Tur 1 seçimi 20 sn + kısa açılış 5 sn + tur 2 seçimi 20 sn + final açılışı 8 sn = 53 sn. Bir turda bağlı herkes 'Ateşe hazır' derse o turun seçimi son kilitten 1 sn sonra biter (en geç 20. sn'de) ve sonraki aşamalar öne kayar; kısa açılış yine 5 sn, final açılışı yine 8 sn sürer. Oyuncu sayısı süreyi değiştirmez. Oyunun kendi final açılışı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra; genel sonuç ekranı en çok 60 sn."
   },
   "ozet": "İki tur oynanır. Her turda herkes ya kendisi dışında bir oyuncuyu gizlice hedef alır ya da 'Siper al' der. Tur bitince seçimler birden açılır: kimse tarafından hedeflenmeyen ve birine (siperdekine de) ateş eden +1, hedeflenen -1, birbirini karşılıklı hedefleyen iki kişi 0, siperdeki 0 alır. Tur 1'in hedefleri tur 2 boyunca herkese açıktır; oyunun puanı iki turun toplamıdır (-2…+2) ve doğrudan genel skora eklenir.",
   "akis": [
@@ -46,14 +46,14 @@
       "ad": "Final açılışı",
       "sureSn": 8,
       "kim": "herkes",
-      "aciklama": "'ATEŞ!' flaşı; halka tam ekrana büyür, 1 sn sessizlik, sonra bütün namlular aynı anda ateş alır (toplu ateş sesi) ve mermiler ağır çekimde (2 sn) iz çizerek hedeflerine gider. 3. sn'de: vurulan geri sarsılır ve '−1' alır (seni vurdularsa ekranında kısa süreli cam çatlağı ve cam kırılma sesi), karşılıklı mermiler ortada çarpışır (kıvılcım, 0), siperdekine giden mermi kalkandan seker (0), vurulmayan atıcı parlar (+1). Puan rozetleri 3,3. sn'de, kendi sonucun başlıkta 3,6. sn'de görünür. 4,3. sn'de kendi ekranında büyük 'Seni vuranlar: …' satırı (siperdeysen 'Kalkanına ateş edenler: …', çarpıştıysan 'Sana ateş edenler: …', kimse yoksa 'Kimse sana ateş etmedi'), 4,9. sn'de 'En çok hedeflenen: X (N kişi)' özeti (eşitlikte 'En çok hedeflenenler: X ve Y (2'şer kişi)'), 5,6. sn'de ad etiketlerindeki puan rozetleri iki turun toplamına döner ve 'Toplam … · Tur 1 … · Tur 2 …' satırı görünür. İzleyici kendi satırı yerine 'Rozetler iki turun toplamını gösterir' görür. Oyuncular eşit aralıklı bir çemberde durur; puan rozeti her oyuncunun ad etiketinin içindedir. Yapay zekâ yorumu açıksa (sunucuda anahtar varsa) açılış sırasında düello spikerinin tek cümlelik esprili yorumu en altta belirir; gelmezse ya da hata olursa hiç görünmez, oyun beklemez.",
+      "aciklama": "'ATEŞ!' flaşı; halka tam ekrana büyür, 1 sn sessizlik, sonra bütün namlular aynı anda ateş alır (toplu ateş sesi) ve mermiler ağır çekimde (2 sn) iz çizerek hedeflerine gider. 3. sn'de: vurulan geri sarsılır ve '−1' alır (seni vurdularsa ekranında kısa süreli cam çatlağı ve cam kırılma sesi), karşılıklı mermiler ortada çarpışır (kıvılcım, 0), siperdekine giden mermi kalkandan seker (0), vurulmayan atıcı parlar (+1). Puan rozetleri 3,3. sn'de, kendi sonucun başlıkta 3,6. sn'de görünür. 4,3. sn'de kendi ekranında büyük 'Seni vuranlar: …' satırı (siperdeysen 'Kalkanına ateş edenler: …', çarpıştıysan 'Sana ateş edenler: …', kimse yoksa 'Kimse sana ateş etmedi'), 4,9. sn'de 'En çok hedeflenen: X (N kişi)' özeti (eşitlikte 'En çok hedeflenenler: X ve Y (2'şer kişi)'), 5,6. sn'de ad etiketlerindeki puan rozetleri iki turun toplamına döner ve 'Toplam … · Tur 1 … · Tur 2 …' satırı görünür. İzleyici kendi satırı yerine 'Rozetler iki turun toplamını gösterir' görür. Oyuncular eşit aralıklı bir çemberde durur; puan rozeti her oyuncunun ad etiketinin içindedir. Yapay zekâ yorumu açıksa (sunucuda anahtar varsa) açılış sırasında düello spikerinin tek cümlelik esprili yorumu en altta belirir; gelmezse ya da hata olursa hiç görünmez, oyun beklemez. Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez. Tur 1'in kısa açılışı düğmesiz, süreyle geçer.",
       "gizli": "Yok; hedefler, siperler ve puanlar herkese açıktır."
     },
     {
       "ad": "Sonuç ekranı",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Mini oyun sonuç/podyum ekranı (genel 'Devam et' kuralıyla kapanır).",
+      "aciklama": "Mini oyun sonuç/podyum ekranı (herkes 'Devam'a basınca 1 sn sonra, aksi halde 60 sn sonra kapanır).",
       "gizli": "Yok."
     }
   ],

@@ -12,6 +12,7 @@ import { Screen } from "../../ui/Screen.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./ittifak.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { type CrewMember, Pazarlik } from "./Pazarlik.js";
 import { Sonuc } from "./Sonuc.js";
 import { parseIttifakView, togglePromise } from "./view.js";
@@ -162,6 +163,7 @@ export default function IttifakScreen(props: GameScreenProps) {
           </Show>
         )}
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

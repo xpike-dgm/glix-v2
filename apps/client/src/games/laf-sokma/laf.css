@@ -1596,3 +1596,11 @@ body .lf-tvfx {
 .lf__form:has(+ .lf__warn) .lf__meta {
   display: none;
 }
+
+/* Final açılışı + ortak "Devam et" şeridi: kısa ekranda kendi "+n" satırın gizlenir (kendi kartın "Sen" ve puanıyla
+   listede); final listesi yer kazanır ve kaydırılabilir kalır. */
+@media (max-height: 720px) {
+  .lf[data-phase="finalReveal"] .col:has(.rdevam) .lf__actions--res {
+    display: none;
+  }
+}

@@ -13,6 +13,7 @@ import { Screen } from "../../ui/Screen.js";
 import type { GameScreenProps } from "../registry.js";
 import "./kara-borsa.css";
 import { CbState } from "../../ui/CbState.js";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { type BorsaScreenView, hintText, parseBorsaView, sortedBids } from "./view.js";
 
 const BOXES = ["kutu-ahsap", "kutu-celik", "kutu-hediye", "kutu-antika"] as const;
@@ -83,6 +84,7 @@ export default function KaraBorsaScreen(props: GameScreenProps) {
           </>
         )}
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

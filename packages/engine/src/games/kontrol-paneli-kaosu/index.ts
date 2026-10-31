@@ -385,6 +385,11 @@ export const kontrolPaneliKaosu: GameDefinition<KontrolState, KontrolAction, Kon
       };
     },
 
+    /** Final açılışı 3. dalganın bittiği an başlar (saat atlamaları ve erken bitişle kayar; `finishAt` ile birlikte). */
+    revealAt(state): number | null {
+      return state.finishAt - KONTROL_TIMELINE.revealMs;
+    },
+
     isFinished(state, ctx): boolean {
       return ctx.now >= state.finishAt;
     },

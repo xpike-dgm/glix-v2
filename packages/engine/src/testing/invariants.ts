@@ -1,4 +1,4 @@
-import { type AnyGame, type GameResult, isRejected } from "../game.js";
+import { type AnyGame, type GameResult, isRejected, REVEAL_HOLD_MS } from "../game.js";
 import { replay } from "../replay.js";
 import { createRng } from "../rng.js";
 import { deepClone, deepEqual } from "./deep.js";
@@ -24,7 +24,8 @@ export type ViolationCode =
   | "nondeterministic"
   | "tick-dependent"
   | "bad-result"
-  | "replay-mismatch";
+  | "replay-mismatch"
+  | "reveal";
 
 export class InvariantViolation extends Error {
   constructor(
@@ -102,11 +103,43 @@ function twice<T>(
   return a;
 }
 
+/**
+ * Sonuç ekranı sözleşmesi (`revealAt`, docs/ERKEN-BITIS.md): saf; açılış başladıktan sonra an kaymaz ve sonuç
+ * değişmez; oyun açılış başlamadan bitmez (sunucu "Devam et"i yalnız açılışta gösterir).
+ */
+function makeRevealChecker(game: AnyGame) {
+  let opened: { at: number; result: GameResult } | null = null;
+  return (info: StepInfo, where: string): void => {
+    if (!game.revealAt) return;
+    const at = twice(`${where} revealAt`, info.now, info.connected, (ctx) =>
+      game.revealAt?.(info.state, ctx),
+    );
+    if (at !== null && at !== undefined && (typeof at !== "number" || !Number.isFinite(at)))
+      throw new InvariantViolation("reveal", `${where}: revealAt sayı ya da null olmalı (${String(at)})`);
+    const reached = typeof at === "number" && at <= info.now;
+    if (reached) {
+      const ticked = game.tick(info.state, fresh(info.now, info.connected));
+      const result = game.result(ticked);
+      if (opened === null) opened = { at, result };
+      else if (at !== opened.at)
+        throw new InvariantViolation("reveal", `${where}: açılış anı kaydı (${opened.at} → ${at})`);
+      else if (!deepEqual(result, opened.result))
+        throw new InvariantViolation("reveal", `${where}: açılış başladıktan sonra sonuç değişti`);
+    } else if (opened !== null) {
+      throw new InvariantViolation("reveal", `${where}: açılış başladıktan sonra revealAt geri döndü`);
+    }
+    if (game.isFinished(info.state, fresh(info.now, info.connected)) && !reached)
+      throw new InvariantViolation("reveal", `${where}: oyun sonuç açılışı başlamadan bitti`);
+  };
+}
+
 /** Her adımda çalışan genel kontroller (b, c, g, h). */
 export function makeStepChecker(game: AnyGame, players: readonly string[]) {
   let snapshot: unknown;
+  const checkReveal = makeRevealChecker(game);
   return (info: StepInfo): void => {
     const where = `${game.id} @${info.label} t=${info.now}`;
+    checkReveal(info, where);
     if (info.prev !== null && !deepEqual(info.prev, snapshot)) {
       throw new InvariantViolation("mutated", `${where}: önceki durum değiştirildi`);
     }
@@ -243,6 +276,14 @@ export function checkGameInvariants(game: AnyGame, bot: GameBot, opts: Invariant
     throw new InvariantViolation(
       "replay-mismatch",
       `${game.id}: replay farklı sonuç verdi: ${JSON.stringify(replayed)} ≠ ${JSON.stringify(primary.result)}`,
+    );
+  }
+  // Sonuç ekranı: sunucu oyunu `isFinished`'ten sonra en çok REVEAL_HOLD_MS açık tutar; geç biten kayıt aynı sonucu verir.
+  const held = replay(game, { ...primary.log, endedAt: primary.log.endedAt + REVEAL_HOLD_MS });
+  if (!deepEqual(held, primary.result)) {
+    throw new InvariantViolation(
+      "reveal",
+      `${game.id}: sonuç ekranında bekletilen kayıt farklı sonuç verdi: ${JSON.stringify(held)} ≠ ${JSON.stringify(primary.result)}`,
     );
   }
   return { primary, players };

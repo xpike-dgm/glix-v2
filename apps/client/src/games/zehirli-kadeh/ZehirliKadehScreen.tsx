@@ -13,6 +13,7 @@ import { SwapHistory } from "./SwapHistory.js";
 import { heartbeatSound, peekSound, swapSound } from "./sounds.js";
 import { Table } from "./Table.js";
 import "./zehirli-kadeh.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import {
   candleLeft,
   isTense,
@@ -255,6 +256,12 @@ export default function ZehirliKadehScreen(props: GameScreenProps) {
           />
         </div>
         <SwapHistory swaps={view()?.pub.swaps ?? []} nameOf={nameOf} />
+        <RevealContinue
+          match={props.match}
+          selfId={props.selfId}
+          now={props.now}
+          spectator={props.spectator}
+        />
       </Screen>
     );
   }

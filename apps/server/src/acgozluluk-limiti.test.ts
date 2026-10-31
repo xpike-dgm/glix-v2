@@ -68,6 +68,8 @@ describe("açgözlülük limiti: oda içinde tam maç", () => {
     // Süre dolduktan sonra seçim reddedilir.
     expect(await choose(d, 1)).toBe(false);
 
+    // Açılış animasyonu (5 sn) kesilmez; herkes "Devam et" dedi (test istemcileri), ardından 1 sn.
+    k.clock.advance(5_000);
     await until(() => a.room.phase === "results", "sonuç");
     expect(a.room.match?.result?.miniScores).toEqual({
       [ids[0] as string]: 3,

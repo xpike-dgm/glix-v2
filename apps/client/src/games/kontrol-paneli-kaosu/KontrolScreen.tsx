@@ -7,6 +7,7 @@ import { Oyun } from "./Oyun.js";
 import { Sonuc } from "./Sonuc.js";
 import { parseKontrolView } from "./view.js";
 import "./kontrol.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 
 export interface Crew {
   id: string;
@@ -84,6 +85,12 @@ export default function KontrolScreen(props: GameScreenProps) {
             </>
           )}
         </Show>
+        <RevealContinue
+          match={props.match}
+          selfId={props.selfId}
+          now={props.now}
+          spectator={props.spectator}
+        />
       </div>
     </section>
   );

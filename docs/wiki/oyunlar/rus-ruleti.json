@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 75,
-    "not": "Sabit süre ve sabit tur sayısı yoktur; oyun, hayatta kalan sayısı başlangıcın yarısına inene kadar sürer. Süre elenme sayısına ve atışların kaç saniyede yapıldığına bağlıdır. Her atış en az 2,5 sn sonuç bekleme + en çok 18 sn karar süresi alır (ilk atışta bekleme yoktur). Bir elenme için ortalama yaklaşık 3,2 atış gerekir (riskten hesaplanan beklenti); 8 oyuncuda 4 elenme gerekir. İnsanlar ~5 sn'de karar verirse 5-8 kişide yaklaşık 1-2 dk; herkes süreyi sonuna kadar beklerse (her atış 20,5 sn) 8 kişide 4-5 dk'ya çıkabilir. 2 kişide ~30 sn. Bu sürelerin çoğu varsayımdır."
+    "not": "Sabit süre ve sabit tur sayısı yoktur; oyun, hayatta kalan sayısı başlangıcın yarısına inene kadar sürer. Süre elenme sayısına ve atışların kaç saniyede yapıldığına bağlıdır. Her atış en az 2,5 sn sonuç bekleme + en çok 18 sn karar süresi alır (ilk atışta bekleme yoktur). Bir elenme için ortalama yaklaşık 3,2 atış gerekir (riskten hesaplanan beklenti); 8 oyuncuda 4 elenme gerekir. İnsanlar ~5 sn'de karar verirse 5-8 kişide yaklaşık 1-2 dk; herkes süreyi sonuna kadar beklerse (her atış 20,5 sn) 8 kişide 4-5 dk'ya çıkabilir. 2 kişide ~30 sn. Bu sürelerin çoğu varsayımdır. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Silah rastgele bir oyuncuya verilir. Silahı tutan, hayatta olan kendisini ya da bir başkasını hedef alıp ateş eder. Patlama riski %16'dan başlar, her güvenli atışta 10 puan artar (en çok %76). Patlarsa hedef elenir, risk %16'ya döner. Hayatta kalan sayısı başlangıcın yarısına ya da altına inince oyun biter; hayatta kalanlar +1, elenenler 0 alır. Elenenler izleyici olur ve her atış öncesi 'Patlar mı?' diye tahmin verip 'Kâhin' rozeti kazanabilir.",
   "akis": [
@@ -46,7 +46,7 @@
       "ad": "Bitiş ve sonuç",
       "sureSn": 2.5,
       "kim": "herkes",
-      "aciklama": "Hayatta kalan sayısı başlangıçtaki oyuncu sayısının yarısına ya da altına düşünce (alive × 2 ≤ başlangıç) oyun biter; son atışın sonucu 2,5 sn gösterilir, sonra oyun kapanır. Hayattakiler 'Hayattasın!' görür; elenenler 'Oyun bitti · Elendin, bu sefer olmadı'. Sonuç ekranının üstünde 'Hayatta kalanlar' (ya da tek kişi kaldıysa 'Tek hayatta kalan') altın halkalı avatarlarla '+1', 'Kâhin' rozeti kazananlar ve elenenler (sönük) gösterilir.",
+      "aciklama": "Hayatta kalan sayısı başlangıçtaki oyuncu sayısının yarısına ya da altına düşünce (alive × 2 ≤ başlangıç) oyun biter; son atışın sonucu gösterilir. Açılış en az 2,5 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez. Hayattakiler 'Hayattasın!' görür; elenenler 'Oyun bitti · Elendin, bu sefer olmadı'. Sonuç ekranının üstünde 'Hayatta kalanlar' (ya da tek kişi kaldıysa 'Tek hayatta kalan') altın halkalı avatarlarla '+1', 'Kâhin' rozeti kazananlar ve elenenler (sönük) gösterilir.",
       "gizli": "Kâhin rozeti yalnız mini oyun sonuç ekranında herkese açık gösterilir."
     }
   ],
@@ -250,7 +250,7 @@
     },
     {
       "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
-      "deger": "40 sn / 3 sn / 30 sn",
+      "deger": "40 sn / 3 sn / 60 sn",
       "kaynak": "apps/server/src/match.ts:40-42"
     }
   ],

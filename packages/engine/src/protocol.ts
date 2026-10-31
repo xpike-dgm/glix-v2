@@ -6,7 +6,7 @@ import type { GameResult } from "./game.js";
 import { isReportReason, type ReportReason, sanitizeReportNote } from "./moderation/report.js";
 import type { SiteNotice } from "./siteNotice.js";
 
-export const PROTOCOL_VERSION = 3;
+export const PROTOCOL_VERSION = 4;
 export const APP_VERSION = "0.1.0";
 
 export const MAX_MESSAGE_LENGTH = 4096;
@@ -27,6 +27,11 @@ export type LobbyEmoji = (typeof LOBBY_EMOJIS)[number];
 export const CONTINUE_MIN_GAP_MS = 300;
 /** Bağlı herkes "Devam" deyince sonuç aşamasının bitmesine kalan süre (ms). */
 export const CONTINUE_GRACE_MS = 1_000;
+/**
+ * Oyun içi sonuç ekranında "Devam et" düğmesi açılış başladıktan bu kadar sonra etkinleşir (ms; yanlışlıkla geçmeyi
+ * önler). Yalnız istemci uygular; sunucu basışı her an sayar ama oyun açılış animasyonu bitmeden bitmez.
+ */
+export const REVEAL_CONTINUE_ARM_MS = 1_500;
 
 /** Aynı oyuncunun iki emoji arasındaki en kısa süre; fazlası sessizce atılır. */
 export const REACTION_MIN_GAP_MS = 700;
@@ -133,6 +138,12 @@ export type ClientMessage =
   | { type: "unplayCard" }
   /** `results` aşamasında "Devam": bağlı tüm oyuncular basınca sonuç ekranı 1 sn sonra biter. */
   | { type: "continue" }
+  /**
+   * Oyun içi sonuç ekranında (`playing` aşaması, `MatchSnapshot.reveal` doluyken) "Devam et". `round`: o anki
+   * `MatchSnapshot.round` (eski oyundan gecikmiş mesaj sayılmaz). Bağlı tüm katılımcılar basınca oyun 1 sn sonra
+   * (açılış animasyonu bitmişse) biter; kimse basmazsa açılış başından en geç 60 sn sonra.
+   */
+  | { type: "revealContinue"; round: number }
   | { type: "action"; seq: number; payload: unknown }
   | { type: "returnToLobby" }
   /** İstemci elindeki snapshot'a yama uygulayamadığında tam snapshot ister. */
@@ -270,6 +281,11 @@ export interface GameInfo {
   randomPool?: false;
 }
 
+export interface MatchReveal {
+  startedAt: number;
+  endsAt: number;
+  continueIds: string[];
+}
 /** Oyun sonu yorumunun en çok uzunluğu (karakter). */
 export const GAME_COMMENT_MAX = 90;
 
@@ -287,6 +303,12 @@ export interface MatchSnapshot {
   readyIds: string[];
   /** results aşamasında "Devam" diyenler (yalnız kimler; herkese açık). */
   continueIds: string[];
+  /**
+   * Oyun içi sonuç ekranı (`playing` aşamasında oyunun son açılışı başladıysa dolu; docs/ERKEN-BITIS.md). `startedAt`:
+   * açılışın başladığı an, `endsAt`: en geç bitiş (sunucu saati), `continueIds`: "Devam et" diyenler (yalnız kimler).
+   * Eski sunucularda alan yoktur.
+   */
+  reveal?: MatchReveal | null;
   phaseStartedAt: number;
   phaseEndsAt: number | null;
   /** Oyunun herkese açık görünümü (playing/results); odadaki herkes için aynı. */
@@ -705,6 +727,16 @@ export function parseClientMessage(raw: string): ClientMessage | null {
         out.gameId = g;
       }
       return out;
+    }
+    case "revealContinue": {
+      if (!hasExactKeys(data, ["type", "round"])) return null;
+      const round = data.round;
+      return typeof round === "number" &&
+        Number.isSafeInteger(round) &&
+        round >= 0 &&
+        round < MAX_SELECTED_GAMES
+        ? { type: "revealContinue", round }
+        : null;
     }
     case "unplayCard": {
       return hasExactKeys(data, ["type"]) ? { type: "unplayCard" } : null;

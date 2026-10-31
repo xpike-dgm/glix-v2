@@ -10,6 +10,24 @@ describe("sunucu mesajı doğrulama", () => {
     expect(m?.type).toBe("room");
     if (m?.type === "room") expect(m.snapshot.match?.gameId).toBe("butona-bas");
   });
+  it("oyun içi sonuç ekranı (match.reveal): geçerliyse okunur, yoksa ya da bozuksa null", () => {
+    const read = (reveal: unknown) => {
+      const base = snapshot("playing");
+      const m = parseServerMessage(
+        wire({ type: "room", snapshot: { ...base, match: { ...base.match, reveal } } }),
+      );
+      if (m?.type !== "room") throw new Error("room kabul edilmedi");
+      return m.snapshot.match?.reveal;
+    };
+    expect(read({ startedAt: 10, endsAt: 60_010, continueIds: ["a"] })).toEqual({
+      startedAt: 10,
+      endsAt: 60_010,
+      continueIds: ["a"],
+    });
+    expect(read(undefined)).toBeNull();
+    expect(read({ startedAt: "x", endsAt: 1, continueIds: [] })).toBeNull();
+    expect(read({ startedAt: 1, endsAt: 2, continueIds: [3] })).toBeNull();
+  });
   it("oyuncu kozmetikleri: katalogdaki kimlikler kalır, bilinmeyenler atılır", () => {
     const snap = snapshot();
     const first = snap.players[0];

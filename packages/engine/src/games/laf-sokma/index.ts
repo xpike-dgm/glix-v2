@@ -496,6 +496,12 @@ export function createLafSokma(): GameDefinition<LafState, LafAction, LafView, L
       };
     },
 
+    /** Sonuç açılışı final cevaplarının açılışıyla başlar. */
+    revealAt(state, ctx): number | null {
+      const s = lafAdvance(state, ctx.now);
+      return s.step === lafLastStep(s.duels.length) ? s.stepStartedAt : null;
+    },
+
     isFinished(state, ctx): boolean {
       return isDone(state, ctx.now);
     },

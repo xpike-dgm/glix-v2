@@ -222,6 +222,20 @@ describe("parseClientMessage: oda mesajları", () => {
       expect(parseClientMessage(j({ type, extra: 1 }))).toBeNull();
     }
   });
+  it("revealContinue yalnız geçerli oyun sırasıyla (0..63 tam sayı) kabul edilir", () => {
+    expect(parseClientMessage(j({ type: "revealContinue", round: 0 }))).toEqual({
+      type: "revealContinue",
+      round: 0,
+    });
+    expect(parseClientMessage(j({ type: "revealContinue", round: 63 }))).toEqual({
+      type: "revealContinue",
+      round: 63,
+    });
+    for (const round of [-1, 64, 0.5, "0", null, true, Number.MAX_SAFE_INTEGER + 2])
+      expect(parseClientMessage(j({ type: "revealContinue", round })), String(round)).toBeNull();
+    expect(parseClientMessage(j({ type: "revealContinue" }))).toBeNull();
+    expect(parseClientMessage(j({ type: "revealContinue", round: 1, extra: 1 }))).toBeNull();
+  });
   it("action seq ve payload doğrular", () => {
     expect(parseClientMessage(j({ type: "action", seq: 0, payload: { kind: "press" } }))).toEqual({
       type: "action",

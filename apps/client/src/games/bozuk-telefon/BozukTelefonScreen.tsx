@@ -3,6 +3,7 @@ import { createVisibleArea } from "../../ui/keyboardArea.js";
 import type { GameScreenProps } from "../registry.js";
 import "../karalama-defteri/karalama.css";
 import "./bozuk-telefon.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Cizme } from "./Cizme.js";
 import { Gosteri } from "./Gosteri.js";
 import { parseBozukView } from "./view.js";
@@ -67,6 +68,12 @@ export default function BozukTelefonScreen(props: GameScreenProps) {
             </Switch>
           )}
         </Show>
+        <RevealContinue
+          match={props.match}
+          selfId={props.selfId}
+          now={props.now}
+          spectator={props.spectator}
+        />
       </div>
     </section>
   );

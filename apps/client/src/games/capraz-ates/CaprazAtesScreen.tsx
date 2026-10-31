@@ -8,6 +8,7 @@ import { PhaseClock } from "../../ui/PhaseClock.js";
 import { Screen } from "../../ui/Screen.js";
 import type { GameScreenProps } from "../registry.js";
 import "./capraz-ates.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Arena } from "./Arena.js";
 import { FireFlash, Glass } from "./Fx.js";
 import { Opening } from "./Opening.js";
@@ -254,6 +255,14 @@ export default function CaprazAtesScreen(props: GameScreenProps) {
           </div>
         )}
       </Show>
+      <div class="cx__devam">
+        <RevealContinue
+          match={props.match}
+          selfId={props.selfId}
+          now={props.now}
+          spectator={props.spectator}
+        />
+      </div>
     </Screen>
   );
 }

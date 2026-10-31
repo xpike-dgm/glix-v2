@@ -1,6 +1,7 @@
 import type { RoomSnapshot } from "@glix/engine";
 import { describe, expect, it } from "vitest";
 import { deliver } from "./broadcast.js";
+import { RESULTS_MS } from "./match.js";
 import type { Connection } from "./runtime.js";
 import {
   Client,
@@ -76,9 +77,9 @@ describe("yama senkronu", () => {
     const [a, b] = (await setupRoom(["A", "B"], ["butona-bas"])) as [Client, Client];
     await startPlaying([a, b]);
     // maçı bitir: 45 sn
-    k.clock.advance(45_000);
+    k.clock.advance(48_000);
     await until(() => a.room.phase === "results" || a.room.phase === "final", "sonuç");
-    k.clock.advance(31_000);
+    k.clock.advance(RESULTS_MS + 1_000);
     await until(() => a.room.phase === "final", "final");
     const mark = a.mark();
     a.send({ type: "returnToLobby" });
@@ -148,6 +149,8 @@ describe("bant genişliği ölçümü", () => {
       await sleep(8);
       k.clock.advance(250);
     }
+    // Oyun 51 sn'de biter; oyun içi sonuç ekranı herkes "Devam et" deyince 1 sn sonra kapanır.
+    k.clock.advance(7_000);
     await until(() => host.room.phase === "results", "sonuç");
     await sync();
     for (const c of cs) expect(c.gaps).toBe(0);

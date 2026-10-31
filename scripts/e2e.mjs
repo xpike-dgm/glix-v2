@@ -119,6 +119,19 @@ function watch(label, page) {
 
 const btn = (page, re) => page.getByRole("button", { name: re });
 
+const devamEt = (page) => page.getByRole("button", { name: "Devam et", exact: true });
+
+/**
+ * Oyun içi sonuç ekranı: oyunun son ekranında "Devam et" düğmesi çıkar (ilk 1,5 sn pasif). Herkes basar, ardından
+ * puan tablosunda "Devam" ile geçilir (her ikisi de en çok 60 sn bekler; testler beklemeden geçer).
+ */
+async function passReveal(pages, timeout = 90_000) {
+  for (const p of pages) await devamEt(p).click({ timeout });
+}
+async function passResults(pages, timeout = 30_000) {
+  for (const p of pages) await p.getByRole("button", { name: "Devam", exact: true }).click({ timeout });
+}
+
 /** Oyuncu koltuğuna 0,7 sn basılı tutar (ev sahibi menüsü). */
 async function longPressSeat(page, name) {
   const seat = page.locator("button.seat:not(.seat--empty)", { hasText: name });
@@ -665,6 +678,22 @@ async function main() {
     await shot(B2, "b-resumed-playing");
     log("B oyuna geri döndü, skor", b2);
 
+    // 9a) Oyun içi sonuç ekranı: "Devam et" bağlı herkes basınca geçilir; biri eksikken oyun ekranı kalır.
+    await devamEt(A).waitFor({ timeout: 70_000 });
+    await shot(A, "13d-oyun-sonu-devam");
+    assert((await TV.locator(".tv__scaled .rdevam .pbtn").count()) === 0, "TV'de Devam et düğmesi olmamalı");
+    await passReveal([A, B2]);
+    await A.getByText("Diğerleri bekleniyor", { exact: false }).waitFor(OPT);
+    await A.locator(".rdevam .tamam__dot[data-on]").nth(1).waitFor(OPT);
+    await sleep(1500);
+    assert((await A.locator(".podium").count()) === 0, "biri eksikken oyun içi sonuç ekranı geçilmemeli");
+    await shot(A, "13e-oyun-sonu-bekleniyor");
+    await passReveal([C]);
+    const revealAt = Date.now();
+    await A.locator(".podium").waitFor({ timeout: 10_000 });
+    assert(Date.now() - revealAt < 6_000, `Devam et sonrası sonuç geç geldi: ${Date.now() - revealAt} ms`);
+    log("oyun içi sonuç ekranı Devam et ile geçildi");
+
     // 9) Sonuç ekranı
     await A.locator(".podium").waitFor({ timeout: 70_000 });
     // Kürsü karakterleri (Pixi) tembel yüklenir; hazır olunca kürsüye data-chars-shown yazılır.
@@ -684,7 +713,7 @@ async function main() {
     await B2.locator(".podium").waitFor(OPT);
     await C.locator(".podium").waitFor(OPT);
 
-    // 9b) Sıradaki kartı + Devam: bağlı herkes basınca sonuç ekranı 7 sn'i beklemeden biter.
+    // 9b) Sıradaki kartı + Devam: bağlı herkes basınca sonuç ekranı 60 sn'yi beklemeden biter.
     await A.getByText("Sıradaki", { exact: true }).waitFor(OPT);
     await A.getByText("Final", { exact: true }).waitFor(OPT);
     for (const p of [A, B2]) await p.getByRole("button", { name: "Devam", exact: true }).click();
@@ -831,7 +860,12 @@ async function main() {
         .first()
         .waitFor({ state: "attached", timeout: 2000 })
         .catch(() => {});
-      await A.locator(".fin__head").waitFor({ timeout: 90_000 });
+      // İzleyici "Devam et" görmez ve beklenmez.
+      await devamEt(A).waitFor({ timeout: 90_000 });
+      assert((await devamEt(F).count()) === 0, "izleyici Devam et görmemeli");
+      await passReveal([A, B2, C]);
+      await passResults([A, B2, C]);
+      await A.locator(".fin__head").waitFor({ timeout: 30_000 });
       await F.locator(".fin__head").waitFor({ timeout: 20_000 });
       assert(!(await btn(F, /^tekrar oyna$/i).count()), "izleyici TEKRAR OYNA görmemeli");
       await F.getByText("Lobiye dönünce oyuncu olursun", { exact: true }).waitFor(OPT);
@@ -1143,7 +1177,9 @@ async function main() {
     for (const p of [A, B2, C]) await p.locator(".brief__name").waitFor(OPT);
     for (const p of [A, B2, C]) await btn(p, /hazırım/i).click();
     await A.locator(".game__num").waitFor(OPT);
-    await A.locator(".fin__head").waitFor({ timeout: 120_000 });
+    await passReveal([A, B2, C]);
+    await passResults([A, B2, C]);
+    await A.locator(".fin__head").waitFor({ timeout: 30_000 });
     await A.locator(".fin [data-chars-shown]").waitFor({ timeout: 30_000 });
     await dismissBadgeCards(A);
     const m2 = await withDb((db) => {

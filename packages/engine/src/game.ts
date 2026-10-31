@@ -124,6 +124,16 @@ export interface GameDefinition<State, Action, View, PublicView = unknown> {
    * `tick`/`isFinished`'i çağırır), bu yüzden kural değiştirmez. Saf olmalı, `ctx.connected`'a bakmamalı.
    */
   nextWake?(state: State, ctx: GameContext): number | null;
+  /**
+   * Oyunun son sonuç açılışı (oyun içi sonuç ekranı; docs/ERKEN-BITIS.md "Oyun içi sonuç ekranı"): açılışın başladığı
+   * (ya da başlayacağı belli olan) an, oyun saatiyle; henüz belli değilse null. Sözleşme: açılış başladıktan sonra
+   * `result` değişmez ve bu an kaymaz; `isFinished`'in true olduğu an açılış animasyonunun bittiği andır. Sunucu,
+   * açılış başlayınca ekranda "Devam et" düğmesini açar ve oyunu `isFinished`'ten sonra da açık tutar: bağlı
+   * katılımcıların hepsi bastığında (`CONTINUE_GRACE_MS` payıyla, animasyon bitmeden değil) ya da açılış başından
+   * `REVEAL_HOLD_MS` sonra biter. Yalnız bitiş zamanlamasını etkiler; kural, puan ve gizlilik değişmez. Saf olmalı,
+   * `ctx.connected`'a bakmamalı. Verilmezse oyun `isFinished` anında biter (eski davranış).
+   */
+  revealAt?(state: State, ctx: GameContext): number | null;
 }
 
 export interface SecretEntry {
@@ -161,6 +171,12 @@ export interface GameLog {
 
 // biome-ignore lint/suspicious/noExplicitAny: kayıt defteri farklı tipte oyunları birlikte tutar.
 export type AnyGame = GameDefinition<any, any, any, any>;
+
+/**
+ * Oyun içi sonuç açılışının en uzun süresi (ms; açılış başından). Bağlı katılımcıların hepsi "Devam et" derse daha
+ * erken biter (bkz. `GameDefinition.revealAt`). Sahip süreyi değiştirmek isterse yalnız bu sabit değişir.
+ */
+export const REVEAL_HOLD_MS = 60_000;
 
 /** Geç gelen eylem payı (ms): `graceMs` alan oyunlarda süre bitişi bu kadar gecikir. */
 export const LATE_ACTION_GRACE_MS = 250;

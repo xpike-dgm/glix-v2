@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 220,
-    "not": "En uzun süre = 60 sn yazma + oyuncu sayısı × (10 sn oylama + 7 sn açılış) + 45 sn final yazma + 20 sn final oylama + 12 sn final açılış = 137 + 17 × oyuncu sayısı (3 oyuncu 188 sn, 5 oyuncu 222 sn, 8 oyuncu 273 sn). Herkes 'Tamam' derse yazma, bağlı herkes oy verirse oylama 1 sn sonra biter; cevapsız düellolarda oylama atlanır ve açılış 2,5 sn sürer."
+    "not": "En uzun süre = 60 sn yazma + oyuncu sayısı × (10 sn oylama + 7 sn açılış) + 45 sn final yazma + 20 sn final oylama + 12 sn final açılış = 137 + 17 × oyuncu sayısı (3 oyuncu 188 sn, 5 oyuncu 222 sn, 8 oyuncu 273 sn). Herkes 'Tamam' derse yazma, bağlı herkes oy verirse oylama 1 sn sonra biter; cevapsız düellolarda oylama atlanır ve açılış 2,5 sn sürer. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Oyuncu sayısı kadar düello vardır; her düelloda iki oyuncu aynı soruya cevap yazar ve herkes iki soru alır. Cevaplar isimsiz kartlar olarak karşı karşıya gösterilir (kırmızı köşe – mavi köşe); cevap sahibi olmayanlar daha komik buldukları kartı seçip 'BU DAHA KOMİK' ile onaylar. Aldığın her oy +1 kahkaha, rakibinin tüm oylarını (en az 2) alırsan 'Laf Ustası' olup +1 kahkaha daha kazanırsın. Son turda herkes aynı finalde yarışır; her oy +1 kahkaha. Genel skora kahkaha sıralaması gider: birinci +2, ikinci +1.",
   "akis": [
@@ -60,7 +60,7 @@
       "ad": "Final açılışı",
       "sureSn": 12,
       "kim": "herkes",
-      "aciklama": "Kartlar en çok oydan en aza dizilir ve alttan üste, yani en az oydan en çoğa tek tek açılır (yazar, oy verenler, '+puan'; davul ve kahkaha). Son açılan kart 'GECENİN EN KOMİĞİ' tacıyla büyür; alkış, fanfar ve konfeti (eşit birinciler tacı paylaşır; kimse oy almadıysa taç yoktur). Zaman çizelgesi tek sabitte (LAF_FINAL_PLAN) ve 12 sn'lik açılışa sığar; ×2 rozeti yoktur. Bu aşama bitince oyun biter.",
+      "aciklama": "Kartlar en çok oydan en aza dizilir ve alttan üste, yani en az oydan en çoğa tek tek açılır (yazar, oy verenler, '+puan'; davul ve kahkaha). Son açılan kart 'GECENİN EN KOMİĞİ' tacıyla büyür; alkış, fanfar ve konfeti (eşit birinciler tacı paylaşır; kimse oy almadıysa taç yoktur). Zaman çizelgesi tek sabitte (LAF_FINAL_PLAN), açılış evresinin başından (revealAt) sayılır ve 12 sn'lik açılışa sığar; ×2 rozeti yoktur. Açılış en az 12 (boş finalde 2,5) sn sürer ve kesilmez; final listesinin altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür; liste kaydırılabilir kalır. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez; TV'de düğme yoktur.",
       "gizli": "Yok."
     },
     {

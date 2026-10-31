@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 69,
-    "not": "Oyuncu sayısına göre değişmez: 30 sn yazma + 30 sn eşleştirme + 9 sn sonuç = 69 sn. Bağlı herkes 'Tamam' derse yazma ve eşleştirme aşamaları 1 sn sonra biter; en kısası yaklaşık 1 + 1 + 9 = 11 sn'ye kadar inebilir. Anlatım (en çok 40 sn), 3 sn geri sayım ve sonuç ekranı (en çok 30 sn) bunun dışındadır."
+    "not": "Oyuncu sayısına göre değişmez: 30 sn yazma + 30 sn eşleştirme + 9 sn sonuç = 69 sn. Bağlı herkes 'Tamam' derse yazma ve eşleştirme aşamaları 1 sn sonra biter; en kısası yaklaşık 1 + 1 + 9 = 11 sn'ye kadar inebilir. Anlatım (en çok 40 sn), 3 sn geri sayım ve sonuç ekranı (en çok 60 sn) bunun dışındadır. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Herkes kendini anlatan tek bir kelime yazar. Kelimeler sahipsiz, karışık kartlara dönüşür; herkes kendi kartı dışındaki kartları oyuncularla eşleştirir. Doğru eşleşme +1, yanlış -1, boş bırakılan kart 0'dır; kelimesini yalnız bir kişinin bulduğu oyuncu +1 bonus alır. Mini oyunda en yüksek (ve 0'dan büyük) puana sahip olan genel skorda +1 kazanır.",
   "akis": [
@@ -32,7 +32,7 @@
       "ad": "Sonuç açılışı",
       "sureSn": 9,
       "kim": "herkes",
-      "aciklama": "Üstte kendi toplamın (+2, −1, 0 gibi) ve hüküm yazısı ('Doğru bildin!', 'N doğru, M yanlış', 'Eşleştirme yapmadın', 'Kelimeni biri buldu'). Altta her kartın kelimesi ve sahibi (kendi eşleştirmen doğru/yanlış işaretli, bonus alan sahipte '+1'), ardından puana göre sıralı oyuncu listesi; kazananlarda '+1' tacı. İzleyici 'Kartlar açıldı' başlığını görür.",
+      "aciklama": "Üstte kendi toplamın (+2, −1, 0 gibi) ve hüküm yazısı ('Doğru bildin!', 'N doğru, M yanlış', 'Eşleştirme yapmadın', 'Kelimeni biri buldu'). Altta her kartın kelimesi ve sahibi (kendi eşleştirmen doğru/yanlış işaretli, bonus alan sahipte '+1'), ardından puana göre sıralı oyuncu listesi; kazananlarda '+1' tacı. İzleyici 'Kartlar açıldı' başlığını görür. Açılış en az 9 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Bu aşamada her şey açıktır. Ses/titreşim yaklaşık 0,9 sn sonra çalar (toplam > 0 ise eşleşme, değilse yalnız efekt)."
     }
   ],
@@ -211,7 +211,7 @@
     },
     {
       "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
-      "deger": "40 sn / 3 sn / 30 sn",
+      "deger": "40 sn / 3 sn / 60 sn",
       "kaynak": "apps/server/src/match.ts:40-42"
     },
     {

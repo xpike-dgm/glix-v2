@@ -8,7 +8,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* Uzun son açılış (altında "Devam et" şeridi) üste taşmasın: sığmazsa sahne kayar. */
+  justify-content: safe center;
+  overflow-y: auto;
   gap: clamp(4px, 1.2dvh, 12px);
   text-align: center;
 }

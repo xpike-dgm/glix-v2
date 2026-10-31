@@ -10,7 +10,7 @@
   },
   "sure": {
     "tahminiSn": 49,
-    "not": "En uzun hali: 1. aşama seçimi 20 sn + sonuç 4 sn + 2. aşama seçimi 20 sn + son sonuç 5 sn = 49 sn. 1. aşamada tek kişiden az kaldıysa (ya da yalnız bir kişi kaldıysa) 2. aşama oynanmaz ve oyun 1. aşama bitiminden 5 sn sonra biter (yaklaşık 25 sn). Herkes Tamam derse seçim aşamaları 1 sn sonra biter. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasında sonuç ekranı (en çok 30 sn) vardır."
+    "not": "En uzun hali: 1. aşama seçimi 20 sn + sonuç 4 sn + 2. aşama seçimi 20 sn + son sonuç 5 sn = 49 sn. 1. aşamada tek kişiden az kaldıysa (ya da yalnız bir kişi kaldıysa) 2. aşama oynanmaz ve oyun 1. aşama bitiminden 5 sn sonra biter (yaklaşık 25 sn). Herkes Tamam derse seçim aşamaları 1 sn sonra biter. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasında sonuç ekranı (en çok 60 sn) vardır. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
   "ozet": "Herkes gizlice bir kare seçer (2-4 oyuncuda 3×3, 5-8 oyuncuda 4×4 ızgara). Aynı kareyi seçenler çakışıp elenir; kareyi tek başına seçen +1 alır ve 2. aşamaya geçer. 2. aşamada yalnız hayatta kalanlar yine gizlice seçer; tek kalan bir +1 daha alır. Bu aşamada gizli bir ödül karesi vardır: onu tek başına seçen ek olarak +2 alır.",
   "akis": [
@@ -53,14 +53,14 @@
       "ad": "Son sonuç",
       "sureSn": 5,
       "kim": "herkes",
-      "aciklama": "2. aşamanın seçimleri açılır; aynı çakışma ve altın sütun animasyonu. Ödül karesi parlama efektiyle gösterilir (yıldız işareti). Tek kalan +1; ödül karesini tek başına bulan Ödül karesi! +3 (aşamada +1 ve ödül +2) ve Tek kaldın +1, ödül karesi +2 notu; ödül karesinde birden çok kişi varsa Ödül karesinde çakışma: ödül yok; başkası bulduysa X ödül karesini buldu: +2. Kişisel toplam: Toplam +N ya da Bu sefer puan yok. 5 sn sonra oyun biter.",
+      "aciklama": "2. aşamanın seçimleri açılır; aynı çakışma ve altın sütun animasyonu. Ödül karesi parlama efektiyle gösterilir (yıldız işareti). Tek kalan +1; ödül karesini tek başına bulan Ödül karesi! +3 (aşamada +1 ve ödül +2) ve Tek kaldın +1, ödül karesi +2 notu; ödül karesinde birden çok kişi varsa Ödül karesinde çakışma: ödül yok; başkası bulduysa X ödül karesini buldu: +2. Kişisel toplam: Toplam +N ya da Bu sefer puan yok. Açılış en az 5 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
       "gizli": "Ödül karesi ve kimin bulduğu açılır."
     },
     {
       "ad": "Sonuç ekranı",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 30 sn sonra kapanır.",
+      "aciklama": "Genel sonuç ekranı. Bağlı bütün katılımcılar Devam deyince 1 sn sonra, yoksa 60 sn sonra kapanır.",
       "gizli": "Yok."
     }
   ],

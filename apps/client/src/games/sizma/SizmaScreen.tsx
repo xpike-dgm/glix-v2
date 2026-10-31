@@ -12,6 +12,7 @@ import type { GameScreenProps } from "../registry.js";
 import { Order, WordGem } from "./Clue.js";
 import { Fark } from "./Fark.js";
 import "./sizma.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Sonuc } from "./Sonuc.js";
 import { type CrewMember, parseSizmaView } from "./view.js";
 
@@ -157,6 +158,7 @@ export default function SizmaScreen(props: GameScreenProps) {
           </Show>
         )}
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

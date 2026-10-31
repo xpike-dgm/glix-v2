@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createAccountRecorder } from "./accountStats.js";
 import { type AccountStore, createAccounts } from "./accountStore.js";
 import { BADGES, badgeViews, randomPoolIds } from "./badges.js";
+import { RESULTS_MS } from "./match.js";
 import { Client, k, loginCookie, press, sync, until, useServer } from "./testkit.js";
 
 /** 2026-10-26 12:00 İstanbul (gece değil). */
@@ -423,7 +424,7 @@ describe("rozet bildirimi (canlı bağlantı)", () => {
     k.clock.advance(startedAt + 51_000 - k.clock.now());
     await until(() => host.room.phase === "results", "results");
     expect(host.of("badgesEarned")).toEqual([]);
-    k.clock.advance(30_100);
+    k.clock.advance(RESULTS_MS + 100);
     await until(() => host.room.phase === "final", "final");
     await until(() => host.of("badgesEarned").length > 0 && ikinci.of("badgesEarned").length > 0, "rozet");
 

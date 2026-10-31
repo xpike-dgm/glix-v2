@@ -990,3 +990,9 @@
   background: rgba(46, 242, 255, 0.55);
   transform: scale(0.6);
 }
+
+/* Oyun bitti, altta "Devam et" şeridi var: artık işe yaramayan saat ve dizi satırı gizlenir, paneller küçülmez. */
+.zgame .col:has(.rdevam) .ztotal,
+.zgame .col:has(.rdevam) .zlen {
+  display: none;
+}

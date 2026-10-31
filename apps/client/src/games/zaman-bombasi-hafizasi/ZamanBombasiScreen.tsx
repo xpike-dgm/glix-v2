@@ -33,6 +33,7 @@ import {
   statusOf,
 } from "./view.js";
 import "./zaman-bombasi.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 
 const CRACKS = [
   "M52 -2 L47 14 L56 24 L45 38 L55 50 L43 63 L52 76 L46 90 L50 102",
@@ -706,6 +707,7 @@ export default function ZamanBombasiScreen(props: GameScreenProps) {
           }}
         </For>
       </footer>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

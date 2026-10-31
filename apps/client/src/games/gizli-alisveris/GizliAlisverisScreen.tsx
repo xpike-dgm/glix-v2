@@ -11,6 +11,7 @@ import { Screen } from "../../ui/Screen.js";
 import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./gizli-alisveris.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { AlisverisSonuc, type SonucEntry } from "./AlisverisSonuc.js";
 import { fly } from "./fly.js";
 import { Alev, Kupon, Poset } from "./Parcalar.js";
@@ -425,6 +426,7 @@ export default function GizliAlisverisScreen(props: GameScreenProps) {
           </Show>
         )}
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

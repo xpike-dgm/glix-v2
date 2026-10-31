@@ -7,6 +7,7 @@ import { Avatar } from "../../ui/Avatar.js";
 import { Screen } from "../../ui/Screen.js";
 import type { GameScreenProps } from "../registry.js";
 import "./kor-kronometre.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Dial } from "./Dial.js";
 import {
   entryOf,
@@ -158,6 +159,7 @@ export default function KorKronometreScreen(props: GameScreenProps) {
           )}
         </Show>
       </Show>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

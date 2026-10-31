@@ -9,6 +9,7 @@ import type { GameScreenProps } from "../registry.js";
 import { Corridor } from "./Corridor.js";
 import { dash, thump } from "./sounds.js";
 import "./son-kisi.css";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { parseSonKisiView, pulseMs } from "./view.js";
 
 export default function SonKisiScreen(props: GameScreenProps) {
@@ -113,6 +114,7 @@ export default function SonKisiScreen(props: GameScreenProps) {
           </button>
         </Show>
       </footer>
+      <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />
     </Screen>
   );
 }

@@ -24,6 +24,12 @@ export class Client {
   bytesIn = 0;
   fullEquivalentBytes = 0;
   closeCode: number | null = null;
+  /**
+   * Oyun içi sonuç ekranı açılınca (`match.reveal`) bu istemci kendiliğinden bir kez "Devam et" der (oyuncunun
+   * hemen basması gibi): mevcut akış testleri sonuç ekranında 60 sn beklemez. Sonuç ekranını sınayan testler kapatır.
+   */
+  autoReveal = true;
+  private revealSent = -1;
   private constructor(readonly ws: WebSocket) {
     ws.on("message", (d) => {
       const text = d.toString();
@@ -42,10 +48,20 @@ export class Client {
           this.fullEquivalentBytes += Buffer.byteLength(JSON.stringify({ type: "room", snapshot: next }));
         }
       }
+      if (msg.type === "room" || msg.type === "patch") this.maybeRevealContinue();
     });
     ws.on("close", (code) => {
       this.closeCode = code;
     });
+  }
+  private maybeRevealContinue(): void {
+    const snap = this.updates.at(-1)?.snapshot;
+    const match = snap?.match;
+    if (!this.autoReveal || !snap || !match?.reveal || snap.phase !== "playing") return;
+    if (!match.participants.includes(snap.selfId) || match.reveal.continueIds.includes(snap.selfId)) return;
+    if (this.revealSent === match.round) return;
+    this.revealSent = match.round;
+    this.send({ type: "revealContinue", round: match.round });
   }
   static async connect(cookie?: string): Promise<Client> {
     const ws = new WebSocket(
