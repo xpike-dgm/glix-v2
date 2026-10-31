@@ -640,9 +640,9 @@ yük doğrusal artmaz.
 
 ## 8. Her rol için gereken model gücü
 
-Ölçüt kaynağı: [Artificial Analysis liderlik tabloları](https://artificialanalysis.ai/leaderboards/models). Tablo
-sık değiştiği için burada model adı ve puan yazılmaz. Model, rolün **güç basamağına** göre seçilir ve her ay tablo
-yeniden açılıp aynı basamaktaki en uygun model kontrol edilir.
+Ölçüt kaynağı: [Artificial Analysis liderlik tabloları](https://artificialanalysis.ai/leaderboards/models). Model,
+rolün **güç basamağına** göre seçilir. Basamakların bugünkü karşılıkları (31 Ekim 2026'da tablodan okunan modeller ve
+puanlar) bu bölümün sonundaki "Güncel model önerileri" kısmındadır; tablo sık değiştiği için her ay yenilenir.
 
 ### Basamaklar
 
@@ -732,3 +732,72 @@ sağlayıcının** modeli denetler. Aynı ailenin iki modeli aynı hatayı yapma
 
 Her ay ilk hafta: tablo açılır, her basamakta daha iyi ya da aynı güçte daha ucuz model çıktıysa rol tablosundaki
 model sütunu (Üretim Merkezi'nde tutulur) güncellenir. Değişiklikten sonra o role 20 satırlık deneme yaptırılır.
+
+### Güncel model önerileri (31 Ekim 2026, Artificial Analysis tablolarından)
+
+Puanlar tablodan okunduğu gibidir. Metin fiyatı, giriş ve çıkış fiyatının 3:1 harmanıdır (1M token başına, yaklaşık).
+Görsel ve ses fiyatları tablodaki fiyattır.
+
+**Metin (Intelligence Index v5.0; en yüksek puan 59,4):**
+
+| Basamak | Model | Sağlayıcı | Endeks | Fiyat ($/1M) | Not |
+|---|---|---|---|---|---|
+| S | Gemini 4 Carbon (High) | Google | 59,4 | ~8 | Tablonun 1.'si |
+| S | Claude Opus 5.5 (Max) | Anthropic | 58,4 | ~8 | 2.; S rollerinde Gemini ile **çift denetim** için ideal ikili |
+| S (alternatif) | GPT-6 Astra (Max) | OpenAI | 56,9 | ~20 | Güçlü ama 2,5 kat pahalı |
+| A | GPT-6.1 Sol (Max) | OpenAI | 54,5 | ~4 | Fiyat/performans çok iyi; S'ye yakın |
+| A | Claude Sonnet 5.5 (Max) | Anthropic | 54,2 | ~4 | Sol ile aynı düzey |
+| A (ucuz) | GPT-6.1 Terra (Max) | OpenAI | 51,0 | ~2 | A basamağının en ucuzu |
+| A (alternatif) | Kimi K3.1 Pro | Kimi | 46,0 | ~4 | |
+| B | Claude Haiku 5.5 (Max) | Anthropic | 36,2 | ~0,2 | Çok ucuz; oyundaki yapay zekâ yorumu da bu aileden |
+| B | DeepSeek V4.1 Flash (Max) | DeepSeek | 32,5 | ~0,5 | Açık ağırlıklı |
+| B | Gemini 3.8 Flash (High) | Google | 30,5 | ~1,5 | |
+
+Önerilen metin kadrosu (4 model, 3 sağlayıcı):
+- **S üretici:** Claude Opus 5.5. **S denetçi:** Gemini 4 Carbon. Çift denetimli rollerde (18, 21, 29, 49) biri
+  üretir, diğeri denetler. Rol 29 ve 30'da ikisi yer değiştirerek de çalışabilir.
+- **A:** GPT-6.1 Sol ya da Claude Sonnet 5.5. Türkçe denemesinde hangisi iyi çıkarsa o seçilir.
+- **B:** Claude Haiku 5.5.
+
+**Görsel üretim (Text-to-Image Arena, Elo):**
+
+| Model | Elo | Fiyat ($/1000 görsel) | Not |
+|---|---|---|---|
+| GPT Image 2.5 Sunburst (max) | 1222 | 210,7 | 1.; ChatGPT'nin görsel tarafı bu aileden |
+| GPT Image 2.5 Flare (max) | 1207 | 210,7 | |
+| GPT Image 2 (high) | 1186 | 211,0 | |
+| Nano Banana 2.1 | 1176 | 33,6 | İlk 5'te, ~6 kat ucuz |
+| MAI-Image-2.6 | 1166 | 38,9 | |
+| Grok Imagine Image 2.0 | 1166 | 60,0 | |
+
+**Görsel düzenleme (Image Editing Arena, referansa sadakat için önemli):** GPT Image 2.5 Sunburst (max) 1199,
+MAI-Image-2.7-Preview 1193 (API yok), GPT Image 2.5 Flare (max) 1182, MAI-Image-2.6 / Krea 3 (Ultra) /
+Nano Banana 2.1 1151.
+
+Görsel önerisi: **ana model ChatGPT (GPT Image 2.5)**, yani bugünkü akış zaten en üst sırada. Çok sayıda görsel
+isteyen rollerde (3, 7, 10) maliyet önemliyse **Nano Banana 2.1** ikinci model olarak denenir. Her iki modelde de
+**gerçek şeffaf PNG** desteği ilk denemede doğrulanır; desteklemiyorsa yeşil zemin + otomatik dekupe kullanılır.
+
+**Seslendirme (Text-to-Speech Arena, sağlayıcı sesleri, Elo):**
+
+| Model | Elo | Fiyat ($/1M karakter) |
+|---|---|---|
+| Eleven v4 Turbo | 1336 | 40 |
+| Eleven v4 | 1334 | 80 |
+| Qwen-Audio-3.1-TTS-Plus | 1305 | 19,3 |
+| Sonic 3.6 | 1296 | 49 |
+| Gemini 3.8 Flash TTS | 1283 | 16,5 |
+
+Spiker (rol 15) önerisi: **Eleven v4 Turbo**. Tablo İngilizce oylarla oluşur; Türkçe telaffuz için ilk üç model
+20 anonsluk denemeyle karşılaştırılır.
+
+**Müzik (Music Arena, enstrümantal, Elo):** Suno v6 1148, Suno v6-mini 1114, Mureka V9.5 1084, Mureka V9 1083,
+Lyria 3 Pro 1080. Müzik (rol 14) önerisi: **Suno v6** (sözsüz). Ticari kullanım lisansı abonelik türüne bağlıdır,
+başlamadan kontrol edilir.
+
+**Ses efektleri (rol 13, 16):** sitede ayrı bir ses efekti tablosu yok. Seslendirmede 1. olan sağlayıcının
+(ElevenLabs) ses efekti aracı ilk aday; 20 efektlik denemeyle karar verilir.
+
+**Video (Text-to-Video Arena, Elo):** Wan 3.0 1175, Utopai X 1166 (API yok), MiniMax H3 (768p) 1161,
+Dreamina Seedance 2.5 1157, FLUX 3 Max 1157. Video (rol 47) önerisi: **Wan 3.0** (dakikası 12 $); ucuz alternatif
+**MiniMax H3** (dakikası 4,8 $).
