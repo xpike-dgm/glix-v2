@@ -36,14 +36,40 @@ function emitAssetManifest(): Plugin {
   };
 }
 
-/** Yönetici sayfası girişi mi (`admin.html` ve `wiki.html` oyun kabuğundan ayrıdır). */
+/**
+ * Kabuk dışı giriş mi: yönetici sayfaları (`admin.html`, `wiki.html`) ve Üretim Merkezi önizleme sayfası
+ * (`onizleme.html`) oyun kabuğundan ayrıdır; hizmet çalışanı onları bilmez.
+ */
 function isAdminEntry(facadeModuleId: string | null, name: string): boolean {
   return (
     name === "admin" ||
     name === "wiki" ||
+    name === "onizleme" ||
     (facadeModuleId?.endsWith("/admin.html") ?? false) ||
-    (facadeModuleId?.endsWith("/wiki.html") ?? false)
+    (facadeModuleId?.endsWith("/wiki.html") ?? false) ||
+    (facadeModuleId?.endsWith("/onizleme.html") ?? false)
   );
+}
+
+/**
+ * Geliştirme sunucusunda önizleme sayfası da yalnız izinli kaynaktan gömülür (canlıda başlığı oyun sunucusu verir:
+ * apps/server/src/static.ts `previewHeaders`).
+ */
+function previewFrameGuard(): Plugin {
+  return {
+    name: "glix-onizleme-cerceve",
+    apply: "serve",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if ((req.url ?? "").split("?")[0] === "/onizleme.html")
+          res.setHeader(
+            "Content-Security-Policy",
+            "frame-ancestors https://uretim.dgmcraft.online http://localhost:* http://127.0.0.1:*",
+          );
+        next();
+      });
+    },
+  };
 }
 
 function collectShellChunks(): Plugin {
@@ -177,6 +203,7 @@ export default defineConfig({
     solid(),
     emitAssetManifest(),
     collectShellChunks(),
+    previewFrameGuard(),
     VitePWA({
       // Kayıt kodu bizde (src/pwa/pwa.ts); manifest public/manifest.webmanifest dosyasında.
       registerType: "prompt",
@@ -204,6 +231,9 @@ export default defineConfig({
           // Oyun ansiklopedisi (wiki.html, assets/wiki-*) de yöneticinin ayrı sayfasıdır.
           "**/assets/wiki-*",
           "wiki.html",
+          // Üretim Merkezi önizleme sayfası (onizleme.html, assets/onizleme-*) oyunun kabuğuna girmez.
+          "**/assets/onizleme/**",
+          "onizleme.html",
           "**/assets/avatars/moods/**",
           "**/assets/mascot/**",
           "**/assets/badges/**",
@@ -228,6 +258,7 @@ export default defineConfig({
           // Yönetici paneli ayrı sayfadır: hizmet çalışanı /admin gezintisini oyun kabuğuyla yanıtlamaz.
           /^\/admin/,
           /^\/wiki/,
+          /^\/onizleme/,
         ],
         // Web bildirimleri: `push` ve `notificationclick` işleyicileri public/sw-push.js içinde; oluşturulan sw.js
         // bunu başta `importScripts` ile yükler. Tarayıcı içe aktarılan betikleri de güncelleme denetimine katar

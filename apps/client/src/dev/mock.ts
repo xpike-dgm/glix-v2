@@ -97,7 +97,12 @@ function mockProfile(empty: boolean): {
   return { kind: "ready", profile };
 }
 
-export function startMock(kind: string, params: URLSearchParams): void {
+export interface MockOptions {
+  /** Oyuncu kimliği -> kuşanılan ek kozmetikler (önizleme sayfası taslak ürünü giydirir). */
+  cosmetics?: Readonly<Record<string, PlayerInfo["cosmetics"]>>;
+}
+
+export function startMock(kind: string, params: URLSearchParams, opts: MockOptions = {}): void {
   const n = Math.min(8, Math.max(1, Number(params.get("n")) || 5));
   let players: PlayerInfo[] = Array.from({ length: n }, (_, i) => ({
     id: `p${i}`,
@@ -164,6 +169,16 @@ export function startMock(kind: string, params: URLSearchParams): void {
       if ((p.id === "p0" || p.id === "p1") && giris)
         return { ...p, cosmetics: { ...p.cosmetics, entry: `giris-${giris}` } };
       return p;
+    });
+  }
+  // Önizleme sayfası (onizleme.html): taslak ürün belirtilen oyunculara kuşanılır.
+  if (opts.cosmetics) {
+    const extra = opts.cosmetics;
+    players = players.map((p) => {
+      const c = extra[p.id];
+      return c
+        ? { ...p, username: p.username ?? p.nickname.toLowerCase(), cosmetics: { ...p.cosmetics, ...c } }
+        : p;
     });
   }
   // `&paket=1`: hesaplı oyuncu üç tepki paketine de sahip (tepki yelpazesinde çıkartma sayfaları).

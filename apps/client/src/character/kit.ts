@@ -3,6 +3,7 @@
  * yüklenip önbelleğe alınır (tarayıcı tarafı, Pixi'siz). Dans dosyaları da kimliğe göre bir kez okunur ve doğrulanır.
  */
 
+import { assetUrl } from "../ui/assetOverride.js";
 import { packAtlas } from "./atlasLayout.js";
 import { type DanceClip, parseDance } from "./dance.js";
 import { Lru } from "./lru.js";
@@ -62,12 +63,12 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     im.decoding = "async";
     im.onload = () => resolve(im);
     im.onerror = () => reject(new Error(`görsel yüklenemedi: ${src}`));
-    im.src = src;
+    im.src = assetUrl(src);
   });
 }
 
 async function fetchJson(url: string): Promise<unknown> {
-  const res = await fetch(url);
+  const res = await fetch(assetUrl(url));
   if (!res.ok) throw new Error(`istek başarısız: ${url}`);
   return res.json();
 }
@@ -248,6 +249,12 @@ export function loadKit(): Promise<CharacterKit> {
 }
 
 const dances = new Map<string, Promise<DanceClip>>();
+
+/** Önizleme sayfası: taslak karakter dosyaları değişince takım ve danslar yeniden okunur. */
+export function resetCharacterCache(): void {
+  kitPromise = null;
+  dances.clear();
+}
 /** Dans dosyasını (kimliğe göre) bir kez okur; kimlik biçimi doğrulanır. */
 export function loadDance(id: string): Promise<DanceClip> {
   let p = dances.get(id);
