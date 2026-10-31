@@ -27,7 +27,16 @@ export function toplamSonuc(satirlar: readonly KontrolSatiri[]): KontrolSonucu {
   return "gecti";
 }
 
-export type Gorunum = "gorsel" | "animasyon" | "ses" | "muzik" | "liste" | "kart" | "wiki" | "rapor" | "metin";
+export type Gorunum =
+  | "gorsel"
+  | "animasyon"
+  | "ses"
+  | "muzik"
+  | "liste"
+  | "kart"
+  | "wiki"
+  | "rapor"
+  | "metin";
 
 export interface GorselMeta {
   tur: "gorsel";
@@ -60,13 +69,22 @@ export interface OgeDosyasi {
   meta: DosyaMeta | null;
 }
 
-export type TeslimTuru = "yeni" | "duzenleme" | "kaldirma-onerisi" | "rapor";
-export const TESLIM_TURLERI: readonly TeslimTuru[] = ["yeni", "duzenleme", "kaldirma-onerisi", "rapor"];
+export type TeslimTuru = "yeni" | "duzenleme" | "kaldirma-onerisi" | "rapor" | "yama";
+/** Bütün bilinen türler; `DESTEKLENEN_TURLER` dışındakiler kibarca reddedilir (yama: ikinci aşama, UM-İ11). */
+export const TESLIM_TURLERI: readonly TeslimTuru[] = [
+  "yeni",
+  "duzenleme",
+  "kaldirma-onerisi",
+  "rapor",
+  "yama",
+];
+export const DESTEKLENEN_TURLER: readonly TeslimTuru[] = ["yeni", "duzenleme", "kaldirma-onerisi", "rapor"];
 export const TESLIM_TURU_ADI: Record<TeslimTuru, string> = {
   yeni: "Yeni",
   duzenleme: "Düzenleme",
   "kaldirma-onerisi": "Kaldırma önerisi",
   rapor: "Rapor",
+  yama: "Kod yaması",
 };
 
 export interface Degisiklik {
@@ -208,7 +226,19 @@ export interface AlanSayfasi {
   isler: IsKaydi[];
   talimat: { surum: number; metin: string; olusturma: number } | null;
   talimatSurumleri: { surum: number; olusturma: number }[];
-  anahtarlar: { id: number; onek: string; olusturma: number; iptal: number | null; sonKullanim: number | null }[];
-  istatistik: { teslim: number; onay: number; ret: number; ortalamaInceleme: number | null; geriDonen: number };
+  anahtarlar: {
+    id: number;
+    onek: string;
+    olusturma: number;
+    iptal: number | null;
+    sonKullanim: number | null;
+  }[];
+  istatistik: {
+    teslim: number;
+    onay: number;
+    ret: number;
+    ortalamaInceleme: number | null;
+    geriDonen: number;
+  };
   kalanlariGoster: boolean;
 }

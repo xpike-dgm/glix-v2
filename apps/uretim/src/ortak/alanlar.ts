@@ -14,6 +14,8 @@ export const ALAN_IDLERI = [
   "icerik",
   "moderasyon",
   "test",
+  "uretim-arayuz",
+  "panel-arayuz",
 ] as const;
 export type AlanId = (typeof ALAN_IDLERI)[number];
 
@@ -43,6 +45,12 @@ export interface AlanTanimi {
   dosyaTurleri: DosyaTuru[];
   /** Onaylananlar yöneticisiz, tek tıkla oyuna aktarılır (UM-İ8). */
   tekTik: boolean;
+  /**
+   * Kod yaması teslim edebilen alanların dosya izin listesi (UM-İ11, ikinci aşama). Boşsa alan yama teslim edemez.
+   * Yama akışı açılana kadar "yama" teslimleri her alanda kibarca reddedilir.
+   */
+  yamaIzinli?: string[];
+  yamaYasak?: string[];
 }
 
 const KATALOG = "packages/engine/src/katalog/";
@@ -115,11 +123,7 @@ export const ALANLAR: readonly AlanTanimi[] = [
     ],
     birTeslimde: "rozet satırı (ad, açıklama, koşul, eşik, seri) + kare şeffaf görsel + rafta önizleme",
     sayilar: ["eşikler (kaç maç, kaç galibiyet…)", "seri basamakları"],
-    sinirlar: [
-      "Kazanılmış rozeti geri almaz.",
-      "Ölçülemeyen koşul yazmaz.",
-      "Utandırıcı rozet yapmaz.",
-    ],
+    sinirlar: ["Kazanılmış rozeti geri almaz.", "Ölçülemeyen koşul yazmaz.", "Utandırıcı rozet yapmaz."],
     onKontrol: [
       "koşul olay listesinde var",
       "eşik pozitif tamsayı",
@@ -147,10 +151,12 @@ export const ALANLAR: readonly AlanTanimi[] = [
       "Kart yüzü görselleri.",
       "Yeni etki gerekiyorsa kural taslağı ve kod isteği.",
     ],
-    birTeslimde:
-      "kart satırı + kart yüzü görseli + etkileşim özeti + (dengede) eski/yeni oranlar ve gerekçe",
+    birTeslimde: "kart satırı + kart yüzü görseli + etkileşim özeti + (dengede) eski/yeni oranlar ve gerekçe",
     sayilar: ["nadirlik ağırlıkları", "kötü kart oranı", "el sınırı", "seçenek sayısı", "kart evresi süresi"],
-    sinirlar: ["Kart kuralını kendisi uygulamaz; yeni etki her zaman kod isteğidir.", "KURALLAR.md ile çelişemez."],
+    sinirlar: [
+      "Kart kuralını kendisi uygulamaz; yeni etki her zaman kod isteğidir.",
+      "KURALLAR.md ile çelişemez.",
+    ],
     onKontrol: [
       "etki var olan etkilerden biri",
       "metin ≤ 90 karakter",
@@ -168,11 +174,19 @@ export const ALANLAR: readonly AlanTanimi[] = [
   {
     id: "ikon",
     ad: "İkon ve Süs",
-    alani: ["arayüz ikonları", "köşe, ayraç, başlık, düğme süsleri", "boş durum çizimleri", "oyun simge kartları"],
+    alani: [
+      "arayüz ikonları",
+      "köşe, ayraç, başlık, düğme süsleri",
+      "boş durum çizimleri",
+      "oyun simge kartları",
+    ],
     yapabildikleri: ["Yeni ikon.", "Set tutarlılık düzeltmesi.", "Sezon süsleri.", "Boş durum çizimleri."],
     birTeslimde: "SVG (tercih) ya da şeffaf PNG + ikon kaydı satırı + açık/koyu tema önizlemesi",
     sayilar: ["ikon çizgi kalınlığı", "köşe yuvarlaklığı (set geneli)"],
-    sinirlar: ["Yerleşimi, düğme boyutlarını, metinleri değiştirmez.", "Renkleri sabit kodlamaz, tema değişkenini kullanır."],
+    sinirlar: [
+      "Yerleşimi, düğme boyutlarını, metinleri değiştirmez.",
+      "Renkleri sabit kodlamaz, tema değişkenini kullanır.",
+    ],
     onKontrol: [
       "SVG'de betik ve dış bağlantı yok",
       "görüntü kutusu kare",
@@ -190,8 +204,16 @@ export const ALANLAR: readonly AlanTanimi[] = [
   {
     id: "efekt",
     ad: "Efekt Dokuları",
-    alani: ["konfeti, kıvılcım, duman, cam kırığı, ışık huzmesi, neon iz, patlama, yıldız tozu", "efekt kaydı parametreleri"],
-    yapabildikleri: ["Yeni efekt dokusu.", "Var olan efektin yeni sürümü.", "Efekt parametre ayarı.", "Oyun başına efekt eşlemesi önerisi."],
+    alani: [
+      "konfeti, kıvılcım, duman, cam kırığı, ışık huzmesi, neon iz, patlama, yıldız tozu",
+      "efekt kaydı parametreleri",
+    ],
+    yapabildikleri: [
+      "Yeni efekt dokusu.",
+      "Var olan efektin yeni sürümü.",
+      "Efekt parametre ayarı.",
+      "Oyun başına efekt eşlemesi önerisi.",
+    ],
     birTeslimde: "doku/sprite PNG + efekt kaydı satırı + canlandırılmış önizleme",
     sayilar: ["parçacık sayısı", "süre", "hız", "renk listesi"],
     sinirlar: [
@@ -210,12 +232,28 @@ export const ALANLAR: readonly AlanTanimi[] = [
   {
     id: "ses",
     ad: "Ses Efektleri",
-    alani: ["oyun ve arayüz sesleri", "oyun başına anlar", "tepki sesleri", "ses olay haritası, düzeyler, varyasyonlar"],
-    yapabildikleri: ["Sentezle çalan anı gerçek sese çevirme.", "Var olan sesin yeni sürümü.", "Düzey dengesi.", "Oyun başına ses kimliği."],
+    alani: [
+      "oyun ve arayüz sesleri",
+      "oyun başına anlar",
+      "tepki sesleri",
+      "ses olay haritası, düzeyler, varyasyonlar",
+    ],
+    yapabildikleri: [
+      "Sentezle çalan anı gerçek sese çevirme.",
+      "Var olan sesin yeni sürümü.",
+      "Düzey dengesi.",
+      "Oyun başına ses kimliği.",
+    ],
     birTeslimde: "ses dosyaları (OGG, mono) + ses olay haritası satırları + an açıklaması",
     sayilar: ["an başına düzey (dB)", "varyasyon sayısı", "gecikme"],
     sinirlar: ["Telifli ses yok.", "Efekt ≤ 2 sn, arayüz sesi ≤ 0,4 sn.", "Spiker sesi bu alanda değil."],
-    onKontrol: ["süre", "algılanan yükseklik (LUFS aralığı)", "baş/son sessizlik kırpılmış", "kırpılma yok", "dosya boyutu"],
+    onKontrol: [
+      "süre",
+      "algılanan yükseklik (LUFS aralığı)",
+      "baş/son sessizlik kırpılmış",
+      "kırpılma yok",
+      "dosya boyutu",
+    ],
     sahibinEkrani: ["an listesi", "eski ve yeni ses yan yana", "oyun önizlemesinde o an"],
     kodIstegi: "haritada olmayan yeni bir an",
     ornekIs: "Kara Borsa'nın bütün anları: tokmak, kapak, lanet dumanı, jeton, zarf.",
@@ -226,12 +264,21 @@ export const ALANLAR: readonly AlanTanimi[] = [
   {
     id: "muzik",
     ad: "Müzik",
-    alani: ["lobi müziği, oyun başına tema", "gerilim, son saniyeler, sonuç ve final müzikleri", "müzik kaydı: döngü noktaları, düzey"],
+    alani: [
+      "lobi müziği, oyun başına tema",
+      "gerilim, son saniyeler, sonuç ve final müzikleri",
+      "müzik kaydı: döngü noktaları, düzey",
+    ],
     yapabildikleri: ["Gerçek müziğe geçiş.", "Oyun başına tema.", "Gerilim katmanı.", "Sezon varyantı."],
     birTeslimde: "OGG + müzik kaydı satırı (döngü başı/sonu, düzey, hangi ekran)",
     sayilar: ["düzey", "döngü noktaları", "geçiş süresi"],
     sinirlar: ["Sözlü müzik yok.", "Telifli müzik yok.", "Müzik ses efektlerinden yüksek olmaz."],
-    onKontrol: ["döngü dikişi (baş/son dalga uyumu)", "algılanan yükseklik", "süre (30–120 sn)", "dosya boyutu"],
+    onKontrol: [
+      "döngü dikişi (baş/son dalga uyumu)",
+      "algılanan yükseklik",
+      "süre (30–120 sn)",
+      "dosya boyutu",
+    ],
     sahibinEkrani: ["döngü 3 kez arka arkaya", "oyun ekranı önizlemesi"],
     kodIstegi: "müziğin oyun anına bağlı değişmesi (yeni tetik)",
     ornekIs: "Lobi müziği + 5 oyunun teması + ortak sonuç müziği.",
@@ -249,10 +296,20 @@ export const ALANLAR: readonly AlanTanimi[] = [
       "Laf Sokma soruları",
       "Yazı Yaz ve Kendim konuları",
     ],
-    yapabildikleri: ["Yeni kayıt ekleme.", "Var olanı düzeltme.", "Kapatma önerisi.", "Tema paketleri.", "Havuz dengesi."],
+    yapabildikleri: [
+      "Yeni kayıt ekleme.",
+      "Var olanı düzeltme.",
+      "Kapatma önerisi.",
+      "Tema paketleri.",
+      "Havuz dengesi.",
+    ],
     birTeslimde: "havuz alanlarına birebir uyan satırlar (ekleme, düzeltme, kapatma) + gerekçe",
     sayilar: ["zorluk etiketleri", "tema etiketleri"],
-    sinirlar: ["Havuz kurallarına uyar.", "Marka, ünlü, siyaset, din, argo, aşağılama yok.", "Yeni havuz açamaz (kod isteği)."],
+    sinirlar: [
+      "Havuz kurallarına uyar.",
+      "Marka, ünlü, siyaset, din, argo, aşağılama yok.",
+      "Yeni havuz açamaz (kod isteği).",
+    ],
     onKontrol: [
       "uzunluk ve biçim",
       "tekrar (havuzdaki kayıtlar + aynı teslim + benzerlik)",
@@ -270,13 +327,30 @@ export const ALANLAR: readonly AlanTanimi[] = [
   {
     id: "moderasyon",
     ad: "Moderasyon ve Wiki",
-    alani: ["yasaklı kelime listesi, yanlış alarm takibi", "wiki: oyun sayfaları, ekran açıklamaları, genel sayfalar"],
-    yapabildikleri: ["Liste ekleme/çıkarma.", "Wiki sayfası yazma ve güncelleme.", "KURALLAR.md ile wiki arasındaki çelişkiyi bildirme."],
+    alani: [
+      "yasaklı kelime listesi, yanlış alarm takibi",
+      "wiki: oyun sayfaları, ekran açıklamaları, genel sayfalar",
+    ],
+    yapabildikleri: [
+      "Liste ekleme/çıkarma.",
+      "Wiki sayfası yazma ve güncelleme.",
+      "KURALLAR.md ile wiki arasındaki çelişkiyi bildirme.",
+    ],
     birTeslimde: "Moderasyon: kalıp + tür + yanlış alarm riski. Wiki: wiki JSON biçiminde sayfa.",
     sayilar: [],
-    sinirlar: ["Oyuncuya ceza vermez.", "Wiki kural icat edemez.", "Çelişki bulursa wiki'yi değil raporu teslim eder."],
-    onKontrol: ["Moderasyon: örnek Türkçe metinde yanlış alarm sayısı", "Wiki: JSON şeması, her ekran girdisinin görseli var"],
-    sahibinEkrani: ["moderasyon tablosu (yanlış alarm riski yüksekler sarı)", "wiki önizlemesi, eski/yeni fark"],
+    sinirlar: [
+      "Oyuncuya ceza vermez.",
+      "Wiki kural icat edemez.",
+      "Çelişki bulursa wiki'yi değil raporu teslim eder.",
+    ],
+    onKontrol: [
+      "Moderasyon: örnek Türkçe metinde yanlış alarm sayısı",
+      "Wiki: JSON şeması, her ekran girdisinin görseli var",
+    ],
+    sahibinEkrani: [
+      "moderasyon tablosu (yanlış alarm riski yüksekler sarı)",
+      "wiki önizlemesi, eski/yeni fark",
+    ],
     kodIstegi: "yeni bir wiki bölüm türü",
     ornekIs: "Rakamla yazılan küfür kalıpları + Kara Borsa ve Sızma wiki sayfalarının güncellenmesi.",
     hedefOnekleri: ["docs/wiki/"],
@@ -287,17 +361,92 @@ export const ALANLAR: readonly AlanTanimi[] = [
     id: "test",
     ad: "Test ve Performans",
     alani: ["bot test senaryoları", "hata ayıklama ve gruplama", "performans takibi"],
-    yapabildikleri: ["Yeni test senaryosu.", "Gece test koşusu.", "Hata kartı.", "Performans eşiği uyarısı.", "Canlıya alma sonrası kontrol."],
+    yapabildikleri: [
+      "Yeni test senaryosu.",
+      "Gece test koşusu.",
+      "Hata kartı.",
+      "Performans eşiği uyarısı.",
+      "Canlıya alma sonrası kontrol.",
+    ],
     birTeslimde: "senaryo dosyaları, rapor, hata kartı (adımlar, sıklık, etkilenen oyun, olası neden, öneri)",
     sayilar: ["eşikler", "test sıklığı", "senaryo kapsamı"],
     sinirlar: ["Kodu düzeltmez.", "Canlıya dokunmaz.", "Yalnız anonim ve toplu veri görür."],
     onKontrol: ["senaryo biçimi geçerli", "var olan oyun kimliği", "oyuncu sayısı oyunun sınırlarında"],
-    sahibinEkrani: ["yeşil/sarı/kırmızı pano", "hata kartları önem sırasıyla", "performans eğilimi", "düzelt düğmesi"],
+    sahibinEkrani: [
+      "yeşil/sarı/kırmızı pano",
+      "hata kartları önem sırasıyla",
+      "performans eğilimi",
+      "düzelt düğmesi",
+    ],
     kodIstegi: "düzeltme isteği",
     ornekIs: "Her gece 30 oyunu 3, 5 ve 8 oyuncuyla oynat; takılan evreleri ve sızıntıları raporla.",
     hedefOnekleri: ["docs/qa/senaryolar/"],
     dosyaTurleri: ["json", "md", "csv"],
     tekTik: false,
+  },
+  {
+    id: "uretim-arayuz",
+    ad: "Üretim Merkezi Arayüzü",
+    alani: [
+      "Üretim Merkezi sitesinin bütün arayüzü: pano, alan sayfaları, inceleme ekranları",
+      "telefonda kaydırma, kısayollar, bildirim metinleri, boş ve hata durumları",
+      "tema, okunurluk, erişilebilirlik",
+    ],
+    yapabildikleri: [
+      "Arayüz önerisi: sorun, öneri, önce/sonra ekran taslağı.",
+      "Kod yaması: yalnız izinli dosyalarda (ikinci aşamada açılacak).",
+      "Kullanım verisinden darboğaz bulma.",
+    ],
+    birTeslimde:
+      "Öneri: madde kodlu belge + ekran taslağı. Yama (ikinci aşama): git diff + açıklama + önce/sonra ekran görüntüleri.",
+    sayilar: [],
+    sinirlar: ["Yeni bağımlılık ekleyemez.", "Güvenlik davranışını değiştiremez.", "Bir seferde tek konu."],
+    onKontrol: [
+      "dosya izin listesi",
+      "yalıtılmış kopyada check, typecheck, test, build",
+      "üç boyutta ekran görüntüsü karşılaştırması",
+    ],
+    sahibinEkrani: ["önce/sonra ekran görüntüleri yan yana", "değişen dosyaların listesi"],
+    kodIstegi: "izinli dosyaların dışında kalan her değişiklik",
+    ornekIs: "Telefonda listelerde toplu onay düğmesi başparmak bölgesine taşınsın.",
+    hedefOnekleri: ["docs/uretim/oneriler/"],
+    dosyaTurleri: ["md", "png", "webp"],
+    tekTik: false,
+    yamaIzinli: ["apps/uretim/web/src/"],
+    yamaYasak: ["apps/uretim/src/", "apps/uretim/package.json", "pnpm-lock.yaml", "deploy/"],
+  },
+  {
+    id: "panel-arayuz",
+    ad: "Yönetim Paneli Arayüzü",
+    alani: [
+      "oyunun yönetim panelinin (/admin) bütün arayüzü",
+      "hesaplar, içerik, havuzlar, moderasyon, ekonomi, istatistik, hatalar, canlı oyun, bakım ekranları",
+    ],
+    yapabildikleri: [
+      "Arayüz önerisi: sorun, öneri, önce/sonra ekran taslağı.",
+      "Kod yaması: yalnız izinli dosyalarda (ikinci aşamada açılacak).",
+    ],
+    birTeslimde:
+      "Öneri: madde kodlu belge + ekran taslağı. Yama (ikinci aşama): git diff + açıklama + önce/sonra ekran görüntüleri.",
+    sayilar: [],
+    sinirlar: [
+      "Panelin yetkisini ya da gördüğü veriyi genişletemez.",
+      "Tehlikeli işlemlerin onay adımlarını kaldıramaz.",
+      "Yeni bağımlılık ekleyemez.",
+    ],
+    onKontrol: [
+      "dosya izin listesi",
+      "yalıtılmış kopyada check, typecheck, test, build",
+      "üç boyutta ekran görüntüsü karşılaştırması",
+    ],
+    sahibinEkrani: ["önce/sonra ekran görüntüleri yan yana", "değişen dosyaların listesi"],
+    kodIstegi: "panelin yeni veri görmesi gerektiren her değişiklik",
+    ornekIs: "Hesaplar ekranında arama, filtre ve toplu işlem tek satıra insin; telefonda kart görünümü.",
+    hedefOnekleri: ["docs/uretim/oneriler/"],
+    dosyaTurleri: ["md", "png", "webp"],
+    tekTik: false,
+    yamaIzinli: ["apps/client/src/admin/"],
+    yamaYasak: ["apps/server/", "packages/", "package.json", "pnpm-lock.yaml"],
   },
 ];
 

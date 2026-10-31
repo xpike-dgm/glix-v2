@@ -37,12 +37,21 @@ export function wavBaslik(buf: Buffer): WavBaslik {
       if (!fmt) throw new WavHatasi("biçim bloğu yok");
       const veriBoyu = Math.min(boy, buf.length - bas);
       const { kanal, ornekleme, bit } = fmt;
-      if (kanal < 1 || kanal > 8 || ornekleme < 8000 || ornekleme > 192_000) throw new WavHatasi("biçim değerleri geçersiz");
+      if (kanal < 1 || kanal > 8 || ornekleme < 8000 || ornekleme > 192_000)
+        throw new WavHatasi("biçim değerleri geçersiz");
       const bicim = fmt.bicim === 3 ? "float" : fmt.bicim === 1 ? "pcm" : null;
       if (!bicim || (bicim === "pcm" && ![8, 16, 24, 32].includes(bit)) || (bicim === "float" && bit !== 32))
         throw new WavHatasi("desteklenmeyen WAV biçimi");
       const kare = (bit / 8) * kanal;
-      return { kanal, ornekleme, bit, bicim, veriBasi: bas, veriBoyu, sure: Math.floor(veriBoyu / kare) / ornekleme };
+      return {
+        kanal,
+        ornekleme,
+        bit,
+        bicim,
+        veriBasi: bas,
+        veriBoyu,
+        sure: Math.floor(veriBoyu / kare) / ornekleme,
+      };
     }
     i = bas + boy + (boy & 1);
   }

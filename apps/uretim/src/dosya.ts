@@ -2,9 +2,10 @@
  * Dosya güvenliği (UM-G5): yalnız izinli türler; tür uzantıdan değil içerikten anlaşılır; görseller yeniden kodlanır
  * (EXIF ve bütün yan bloklar atılır); SVG temizlenir; metinler geçerli UTF-8 olmalı; hiçbir dosya çalıştırılmaz.
  */
+
+import { gorselAc, MedyaHatasi, sesAc } from "./medya.js";
 import { DOSYA_TURLERI, type DosyaTuru } from "./ortak/alanlar.js";
 import type { DosyaMeta } from "./ortak/tipler.js";
-import { gorselAc, MedyaHatasi, sesAc } from "./medya.js";
 import { PngHatasi, pngYaz } from "./png.js";
 import { SvgHatasi, svgTemizle } from "./svg.js";
 import { WavHatasi } from "./wav.js";
@@ -36,8 +37,10 @@ export class DosyaHatasi extends Error {}
 
 /** Dosya adı: yalnız taban ad; küçük harf, rakam, nokta, tire, alt çizgi; uzantı izinli türlerden biri. */
 export function dosyaAdi(ham: unknown): { ad: string; uzanti: DosyaTuru } {
-  if (typeof ham !== "string" || ham.length < 1 || ham.length > 120) throw new DosyaHatasi("Dosya adı geçersiz.");
-  if (/[/\\\0]/.test(ham) || ham.includes("..") || ham.startsWith(".")) throw new DosyaHatasi("Dosya adı geçersiz.");
+  if (typeof ham !== "string" || ham.length < 1 || ham.length > 120)
+    throw new DosyaHatasi("Dosya adı geçersiz.");
+  if (/[/\\\0]/.test(ham) || ham.includes("..") || ham.startsWith("."))
+    throw new DosyaHatasi("Dosya adı geçersiz.");
   const ad = ham
     .normalize("NFD")
     .replace(/\p{M}/gu, "")
@@ -46,7 +49,8 @@ export function dosyaAdi(ham: unknown): { ad: string; uzanti: DosyaTuru } {
     .replace(/[^a-z0-9._-]+/g, "-");
   const m = /^([a-z0-9][a-z0-9._-]*)\.([a-z0-9]+)$/.exec(ad);
   const uz = m?.[2];
-  if (!m || !uz || !(DOSYA_TURLERI as readonly string[]).includes(uz)) throw new DosyaHatasi("Bu dosya türü kabul edilmiyor.");
+  if (!m || !uz || !(DOSYA_TURLERI as readonly string[]).includes(uz))
+    throw new DosyaHatasi("Bu dosya türü kabul edilmiyor.");
   return { ad, uzanti: uz as DosyaTuru };
 }
 
@@ -79,7 +83,8 @@ export function gercekTur(veri: Buffer, uzanti: DosyaTuru): DosyaTuru {
       } catch {
         throw new DosyaHatasi("JSON dosyası okunamadı.");
       }
-    } else if (uzanti === "md" || uzanti === "csv") tur = /^\s*<(svg|\?xml|html|script)/i.test(t) ? null : uzanti;
+    } else if (uzanti === "md" || uzanti === "csv")
+      tur = /^\s*<(svg|\?xml|html|script)/i.test(t) ? null : uzanti;
   }
   if (tur !== uzanti) throw new DosyaHatasi("Dosyanın içeriği uzantısıyla uyuşmuyor.");
   return tur;
@@ -100,7 +105,8 @@ export function dalga(mono: Float32Array): number[] {
   const adim = Math.max(1, Math.floor(mono.length / DALGA_PARCA));
   for (let i = 0; i < DALGA_PARCA && i * adim < mono.length; i++) {
     let t = 0;
-    for (let j = i * adim; j < Math.min(mono.length, (i + 1) * adim); j++) t = Math.max(t, Math.abs(mono[j] ?? 0));
+    for (let j = i * adim; j < Math.min(mono.length, (i + 1) * adim); j++)
+      t = Math.max(t, Math.abs(mono[j] ?? 0));
     out.push(Math.round(t * 1000) / 1000);
   }
   return out;
@@ -128,7 +134,11 @@ export async function dosyaIsle(veri: Buffer, adHam: unknown): Promise<IslenmisD
       const img = await gorselAc(veri, tur);
       const png = pngYaz(img);
       let alfa = false;
-      for (let i = 3; i < img.data.length; i += 4) if ((img.data[i] ?? 255) < 255) { alfa = true; break; }
+      for (let i = 3; i < img.data.length; i += 4)
+        if ((img.data[i] ?? 255) < 255) {
+          alfa = true;
+          break;
+        }
       return {
         ad: tur === "webp" ? ad.replace(/\.webp$/, ".png") : ad,
         tur: "png",
@@ -143,7 +153,13 @@ export async function dosyaIsle(veri: Buffer, adHam: unknown): Promise<IslenmisD
         ad,
         tur,
         veri,
-        meta: { tur: "ses", sure: Math.round(s.sure * 1000) / 1000, kanal: s.kanal, ornekleme: s.ornekleme, dalga: dalga(s.mono) },
+        meta: {
+          tur: "ses",
+          sure: Math.round(s.sure * 1000) / 1000,
+          kanal: s.kanal,
+          ornekleme: s.ornekleme,
+          dalga: dalga(s.mono),
+        },
         notlar: [],
       };
     }
@@ -165,7 +181,8 @@ export async function dosyaIsle(veri: Buffer, adHam: unknown): Promise<IslenmisD
     return { ad, tur, veri, meta: { tur: "metin", satir: metin.split("\n").length }, notlar: [] };
   } catch (err) {
     if (err instanceof DosyaHatasi) throw err;
-    if (err instanceof PngHatasi || err instanceof WavHatasi) throw new DosyaHatasi(`Dosya bozuk: ${err.message}.`);
+    if (err instanceof PngHatasi || err instanceof WavHatasi)
+      throw new DosyaHatasi(`Dosya bozuk: ${err.message}.`);
     if (err instanceof SvgHatasi || err instanceof MedyaHatasi) throw new DosyaHatasi(err.message);
     throw new DosyaHatasi("Dosya işlenemedi.");
   }

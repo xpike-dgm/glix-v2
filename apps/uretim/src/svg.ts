@@ -4,14 +4,41 @@
  * bir SVG'dir; tarayıcıda hiçbir şey çalıştırmaz.
  */
 
-const IZINLI_OGELER = new Set(
-  [
-    "svg", "g", "path", "rect", "circle", "ellipse", "line", "polyline", "polygon", "defs", "lineargradient",
-    "radialgradient", "stop", "clippath", "mask", "use", "symbol", "title", "desc", "pattern", "text", "tspan",
-    "filter", "fegaussianblur", "feoffset", "feblend", "fecolormatrix", "fecomposite", "feflood", "femerge",
-    "femergenode", "femorphology", "fedropshadow",
-  ],
-);
+const IZINLI_OGELER = new Set([
+  "svg",
+  "g",
+  "path",
+  "rect",
+  "circle",
+  "ellipse",
+  "line",
+  "polyline",
+  "polygon",
+  "defs",
+  "lineargradient",
+  "radialgradient",
+  "stop",
+  "clippath",
+  "mask",
+  "use",
+  "symbol",
+  "title",
+  "desc",
+  "pattern",
+  "text",
+  "tspan",
+  "filter",
+  "fegaussianblur",
+  "feoffset",
+  "feblend",
+  "fecolormatrix",
+  "fecomposite",
+  "feflood",
+  "femerge",
+  "femergenode",
+  "femorphology",
+  "fedropshadow",
+]);
 
 const AD = /^[a-zA-Z_][\w:.-]*$/;
 
@@ -35,12 +62,16 @@ function ozellikler(metin: string): { ad: string; deger: string }[] {
   return out;
 }
 
-const kacis = (v: string): string => v.replace(/&(?!(?:#\d+|#x[\da-f]+|[a-z]+);)/gi, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+const kacis = (v: string): string =>
+  v
+    .replace(/&(?!(?:#\d+|#x[\da-f]+|[a-z]+);)/gi, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;");
 
 function guvenliDeger(ad: string, deger: string): boolean {
   const kucuk = ad.toLowerCase();
   if (kucuk.startsWith("on")) return false;
-  const d = deger.replace(/[\s\u0000-\u001f]/g, "").toLowerCase();
+  const d = deger.replace(/[\s\p{Cc}]/gu, "").toLowerCase();
   if (kucuk === "href" || kucuk === "xlink:href") return d.startsWith("#");
   if (d.includes("javascript:") || d.includes("expression(") || d.includes("@import")) return false;
   // url(...) yalnız belge içi başvuru (#kimlik) olabilir.
@@ -61,7 +92,8 @@ export function svgTemizle(girdi: string): SvgSonucu {
   let viewBox: SvgSonucu["viewBox"] = null;
   let genislik: number | null = null;
   let yukseklik: number | null = null;
-  const re = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<(\/?)([^\s/>]+)([^>]*?)(\/?)>|([^<]+)|(<)/g;
+  const re =
+    /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<(\/?)([^\s/>]+)([^>]*?)(\/?)>|([^<]+)|(<)/g;
   for (const m of metin.matchAll(re)) {
     const [tum, kapanis, adHam, govde, kendiKapanan, yazi, tekBuyuktur] = m;
     if (tekBuyuktur) throw new SvgHatasi("SVG bozuk.");
@@ -102,8 +134,12 @@ export function svgTemizle(girdi: string): SvgSonucu {
         continue;
       }
       if (ad === "svg" && viewBox === null && oa === "viewBox") {
-        const s = deger.trim().split(/[\s,]+/).map(Number);
-        if (s.length === 4 && s.every(Number.isFinite)) viewBox = [s[0] ?? 0, s[1] ?? 0, s[2] ?? 0, s[3] ?? 0];
+        const s = deger
+          .trim()
+          .split(/[\s,]+/)
+          .map(Number);
+        if (s.length === 4 && s.every(Number.isFinite))
+          viewBox = [s[0] ?? 0, s[1] ?? 0, s[2] ?? 0, s[3] ?? 0];
       }
       if (ad === "svg" && oa === "width") genislik = Number.parseFloat(deger) || null;
       if (ad === "svg" && oa === "height") yukseklik = Number.parseFloat(deger) || null;

@@ -62,7 +62,11 @@ export function ffmpegVar(): Promise<boolean> {
   return ffmpegDurumu;
 }
 
-async function geciciDosya<T>(veri: Buffer, uzanti: string, fn: (yol: string, klasor: string) => Promise<T>): Promise<T> {
+async function geciciDosya<T>(
+  veri: Buffer,
+  uzanti: string,
+  fn: (yol: string, klasor: string) => Promise<T>,
+): Promise<T> {
   const klasor = await mkdtemp(join(tmpdir(), "uretim-"));
   const yol = join(klasor, `girdi.${uzanti}`);
   try {
@@ -87,7 +91,10 @@ async function probe(yol: string): Promise<{ akislar: ProbeAkis[]; sure: number 
   const r = await calistir("ffprobe", ["-v", "error", "-show_streams", "-show_format", "-of", "json", yol]);
   if (r.kod !== 0) return null;
   try {
-    const j = JSON.parse(r.cikti.toString("utf8")) as { streams?: ProbeAkis[]; format?: { duration?: string } };
+    const j = JSON.parse(r.cikti.toString("utf8")) as {
+      streams?: ProbeAkis[];
+      format?: { duration?: string };
+    };
     const sure = Number(j.format?.duration);
     return { akislar: Array.isArray(j.streams) ? j.streams : [], sure: Number.isFinite(sure) ? sure : null };
   } catch {
@@ -110,7 +117,19 @@ export async function gorselAc(veri: Buffer, tur: "png" | "webp"): Promise<Rgba>
     const w = v?.width ?? 0;
     const h = v?.height ?? 0;
     if (w < 1 || h < 1 || w * h > 4096 * 4096) throw new MedyaHatasi("Görsel açılamadı.");
-    const r = await calistir("ffmpeg", ["-v", "error", "-i", yol, "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgba", "pipe:1"]);
+    const r = await calistir("ffmpeg", [
+      "-v",
+      "error",
+      "-i",
+      yol,
+      "-frames:v",
+      "1",
+      "-f",
+      "rawvideo",
+      "-pix_fmt",
+      "rgba",
+      "pipe:1",
+    ]);
     if (r.kod !== 0 || r.cikti.length !== w * h * 4) throw new MedyaHatasi("Görsel açılamadı.");
     return { w, h, data: new Uint8Array(r.cikti) };
   });
@@ -122,9 +141,31 @@ export async function webpYaz(img: Rgba, kalite = 82): Promise<Buffer> {
   const r = await calistir(
     "ffmpeg",
     [
-      "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", `${img.w}x${img.h}`, "-i", "pipe:0",
-      "-frames:v", "1", "-c:v", "libwebp", "-quality", String(kalite), "-lossless", "0", "-pix_fmt", "yuva420p",
-      "-map_metadata", "-1", "-f", "webp", "pipe:1",
+      "-v",
+      "error",
+      "-f",
+      "rawvideo",
+      "-pix_fmt",
+      "rgba",
+      "-s",
+      `${img.w}x${img.h}`,
+      "-i",
+      "pipe:0",
+      "-frames:v",
+      "1",
+      "-c:v",
+      "libwebp",
+      "-quality",
+      String(kalite),
+      "-lossless",
+      "0",
+      "-pix_fmt",
+      "yuva420p",
+      "-map_metadata",
+      "-1",
+      "-f",
+      "webp",
+      "pipe:1",
     ],
     Buffer.from(img.data.buffer, img.data.byteOffset, img.data.byteLength),
   );
@@ -145,14 +186,32 @@ export interface SesBilgisi {
 export async function sesAc(veri: Buffer, tur: "wav" | "ogg"): Promise<SesBilgisi> {
   if (tur === "wav") {
     const b = wavBaslik(veri);
-    return { sure: b.sure, kanal: b.kanal, ornekleme: b.ornekleme, mono: wavMono(veri, b), monoOrnekleme: b.ornekleme };
+    return {
+      sure: b.sure,
+      kanal: b.kanal,
+      ornekleme: b.ornekleme,
+      mono: wavMono(veri, b),
+      monoOrnekleme: b.ornekleme,
+    };
   }
   if (!(await ffmpegVar())) throw new MedyaHatasi("Bu ses biçimi şu an açılamıyor.");
   return geciciDosya(veri, tur, async (yol) => {
     const p = await probe(yol);
     const a = p?.akislar.find((s) => s.codec_type === "audio");
     if (!a) throw new MedyaHatasi("Ses akışı yok.");
-    const r = await calistir("ffmpeg", ["-v", "error", "-i", yol, "-ac", "1", "-ar", "48000", "-f", "f32le", "pipe:1"]);
+    const r = await calistir("ffmpeg", [
+      "-v",
+      "error",
+      "-i",
+      yol,
+      "-ac",
+      "1",
+      "-ar",
+      "48000",
+      "-f",
+      "f32le",
+      "pipe:1",
+    ]);
     if (r.kod !== 0) throw new MedyaHatasi("Ses açılamadı.");
     const mono = new Float32Array(r.cikti.buffer, r.cikti.byteOffset, Math.floor(r.cikti.length / 4)).slice();
     const ornekleme = Number(a.sample_rate);
@@ -170,7 +229,17 @@ export async function sesAc(veri: Buffer, tur: "wav" | "ogg"): Promise<SesBilgis
 export async function lufsOlc(veri: Buffer, tur: "wav" | "ogg"): Promise<number | null> {
   if (!(await ffmpegVar())) return null;
   return geciciDosya(veri, tur, async (yol) => {
-    const r = await calistir("ffmpeg", ["-hide_banner", "-nostats", "-i", yol, "-af", "ebur128=framelog=quiet", "-f", "null", "-"]);
+    const r = await calistir("ffmpeg", [
+      "-hide_banner",
+      "-nostats",
+      "-i",
+      yol,
+      "-af",
+      "ebur128=framelog=quiet",
+      "-f",
+      "null",
+      "-",
+    ]);
     if (r.kod !== 0) return null;
     const ozet = r.hata.slice(r.hata.lastIndexOf("Summary:"));
     const m = /I:\s+(-?[\d.]+|-inf)\s+LUFS/.exec(ozet);
@@ -186,8 +255,25 @@ export async function opusYaz(veri: Buffer, tur: "wav" | "ogg", hedefLufs: numbe
   return geciciDosya(veri, tur, async (yol, klasor) => {
     const cikis = join(klasor, "cikis.ogg");
     const r = await calistir("ffmpeg", [
-      "-v", "error", "-i", yol, "-ac", "1", "-af", `loudnorm=I=${hedefLufs}:TP=-1.5:LRA=11`, "-ar", "48000",
-      "-c:a", "libopus", "-b:a", "96k", "-map_metadata", "-1", "-f", "ogg", cikis,
+      "-v",
+      "error",
+      "-i",
+      yol,
+      "-ac",
+      "1",
+      "-af",
+      `loudnorm=I=${hedefLufs}:TP=-1.5:LRA=11`,
+      "-ar",
+      "48000",
+      "-c:a",
+      "libopus",
+      "-b:a",
+      "96k",
+      "-map_metadata",
+      "-1",
+      "-f",
+      "ogg",
+      cikis,
     ]);
     if (r.kod !== 0) throw new MedyaHatasi("Ses dönüştürülemedi.");
     return readFile(cikis);

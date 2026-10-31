@@ -34,7 +34,11 @@ const SEMA: readonly string[] = [
   );
   CREATE TABLE anahtar (
     id INTEGER PRIMARY KEY, alan TEXT NOT NULL, ozet TEXT NOT NULL UNIQUE, onek TEXT NOT NULL,
-    olusturma INTEGER NOT NULL, iptal INTEGER, son_kullanim INTEGER
+    olusturma INTEGER NOT NULL, iptal INTEGER, son_kullanim INTEGER, kanal TEXT NOT NULL DEFAULT 'mcp'
+  );
+  CREATE TABLE ssh_anahtar (
+    id INTEGER PRIMARY KEY, alan TEXT NOT NULL, acik TEXT NOT NULL, parmak_izi TEXT NOT NULL, aciklama TEXT NOT NULL,
+    olusturma INTEGER NOT NULL, UNIQUE (alan, parmak_izi)
   );
   CREATE TABLE dosya (
     ozet TEXT PRIMARY KEY, tur TEXT NOT NULL, boyut INTEGER NOT NULL, meta TEXT,

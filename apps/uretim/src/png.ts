@@ -62,7 +62,7 @@ const GECERLI_DERINLIK: Record<number, readonly number[]> = {
 export function pngBaslik(buf: Buffer): PngBaslik {
   const bs = bloklar(buf);
   const ihdr = bs[0];
-  if (!ihdr || ihdr.tur !== "IHDR" || ihdr.veri.length !== 13) throw new PngHatasi("IHDR yok");
+  if (ihdr?.tur !== "IHDR" || ihdr.veri.length !== 13) throw new PngHatasi("IHDR yok");
   const w = ihdr.veri.readUInt32BE(0);
   const h = ihdr.veri.readUInt32BE(4);
   const bitDerinligi = ihdr.veri[8] ?? 0;
@@ -156,7 +156,8 @@ export function pngAc(buf: Buffer): Rgba {
           out[o + 1] = g;
           out[o + 2] = g;
           // Gri tRNS yalnız 8 bitte uygulanır (diğer derinliklerde nadir; opak sayılır).
-          out[o + 3] = trns && trns.length >= 2 && b.bitDerinligi === 8 && (trns.readUInt16BE(0) & 0xff) === g ? 0 : 255;
+          out[o + 3] =
+            trns && trns.length >= 2 && b.bitDerinligi === 8 && (trns.readUInt16BE(0) & 0xff) === g ? 0 : 255;
           break;
         }
         case 2:
@@ -223,5 +224,10 @@ export function pngYaz(img: Rgba): Buffer {
       ham[off + 1 + x] = (v - sol) & 0xff;
     }
   }
-  return Buffer.concat([PNG_IMZA, blok("IHDR", ihdr), blok("IDAT", deflateSync(ham, { level: 6 })), blok("IEND", Buffer.alloc(0))]);
+  return Buffer.concat([
+    PNG_IMZA,
+    blok("IHDR", ihdr),
+    blok("IDAT", deflateSync(ham, { level: 6 })),
+    blok("IEND", Buffer.alloc(0)),
+  ]);
 }

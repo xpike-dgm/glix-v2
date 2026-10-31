@@ -79,11 +79,14 @@ export class Depo {
       dosyalar: string;
     }[];
     for (const o of ogeler) {
-      const eski = (o.durum === "reddedildi" || o.durum === "arsiv" || o.durum === "kaldi") && o.guncelleme < sinir;
+      const eski =
+        (o.durum === "reddedildi" || o.durum === "arsiv" || o.durum === "kaldi") && o.guncelleme < sinir;
       if (eski) continue;
       for (const d of json<OgeDosyasi[]>(o.dosyalar, [])) tut.add(d.ozet);
     }
-    for (const r of this.db.prepare("SELECT ozet FROM yukleme WHERE olusturma >= ?").all(sinir) as { ozet: string }[])
+    for (const r of this.db.prepare("SELECT ozet FROM yukleme WHERE olusturma >= ?").all(sinir) as {
+      ozet: string;
+    }[])
       tut.add(r.ozet);
     const adaylar = this.db.prepare("SELECT ozet FROM dosya WHERE son < ?").all(sinir) as { ozet: string }[];
     let silinen = 0;
