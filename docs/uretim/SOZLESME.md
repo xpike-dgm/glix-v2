@@ -125,3 +125,16 @@ sitenin iç API'sine gider:
   Çıktı JSON'dur.
 - `gelen/` klasörüne bırakılan paket site tarafından alınır, ön kontrolden geçer ve klasörden kaldırılır.
 - Kurulum betikleri `deploy/uretim/ssh/` altında durur. Sunucuya uygulamayı yönetici, sahibin onayıyla yapar.
+
+## 8. Her alan için iki kanal (sahip kararı)
+
+12 alanın hepsinde **MCP ve SSH ikisi birden** açıktır; sahip yapay zekâyı limitlere göre değiştirdikçe uygun kanalı
+kullanır. Alanın sürekliliği sitededir (talimat, zevk profili, geri bildirim, işler), aracın hafızasında değil.
+- **MCP:** alan başına birden çok anahtar (araç başına ayrı); her biri ayrı adlandırılır ve tek tek iptal edilir.
+- **SSH:** alan başına birden çok açık anahtar; her biri adlandırılır ve tek tek kaldırılır.
+- **İş kilidi:** bir işi `is_oku`/`is-oku` ile ilk alan oturum kilitler. Diğer oturumlar "üzerinde çalışılıyor" görür ve
+  sıradakine geçer. Kilit 2 saat hareketsizlikte açılır; sahip elle açabilir. Teslim, kilit sahibinden gelmezse uyarı
+  verir ama kabul edilir.
+- **Araç bilgisi:** her teslimde kanal (mcp/ssh), anahtar adı ve yapay zekânın bildirdiği araç ve model (`arac`,
+  `model` alanları, isteğe bağlı) saklanır. Alan sayfasında araç başına onay oranı gösterilir.
+- **Hazır istem (UM-R1):** her iş için MCP ve SSH kalıbı birlikte üretilir; iş kartında sekmeyle seçilir.
