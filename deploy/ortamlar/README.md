@@ -25,6 +25,7 @@ Her test kabı: 512 MB bellek, 1 çekirdek, salt okunur kök, yetkisiz (`cap_dro
 | `erisim.sh` | Giriş kullanıcıları ve Caddy dosyası (`liste`, `ekle`, `sil`, `cerez-yenile`, `yaz`) |
 | `ortak.sh` | Ortak işlevler (sağlık denetimi, maç sayımı, güvenli sürüm açma: `deploy.sh` ile aynı mantık) |
 | `docker-compose.yml` | İki ortamın ortak compose dosyası (değerler `--env-file` ve betiklerden) |
+| `docker-compose.oyun-alani.yml` | Yalnız test2: Üretim Merkezi ile ortak `glix-oyun-alani` ağı (`ortam_compose` test2'de ekler) |
 | `Caddyfile.ortamlar` | Caddy site bloğu şablonu (taslak; gizli değerler kurulumda doldurulur) |
 
 Sunucuda düzen:
@@ -77,6 +78,28 @@ Canlıda davranış birebir aynıdır (testler: `apps/server/src/ortam.test.ts`)
   tarayıcıda sorunsuz çalışır.
 
 Alternatif (seçilmedi): sunucuda ortam giriş kapısı. Daha çok kod ve canlının sunucusunda ek yol demekti.
+
+## Üretim Merkezi → test2 (Aşama 3 ilk dilim)
+
+Teslimler (içerik havuzu satırları, mağaza ürünleri) ön kontrolden geçince test2'ye kendiliğinden yüklenir; sahip
+test2'de oynayıp bakar, Üretim Merkezi'nde kabul eder. Biçim ve akış: `docs/uretim/SOZLESME.md` bölüm 13.
+
+- **Ağ:** test2 kabı ortak `glix-oyun-alani` Docker ağına da katılır (`docker-compose.oyun-alani.yml`; test girmez).
+  Ağı `kur.sh` kurar (elle: `docker network create glix-oyun-alani`). Site kabı aynı ağa katılır ve test2'ye
+  `http://glix-test2-glix-1:3900` ile gider (Caddy'ye uğramaz).
+- **Anahtar:** test2'nin kendi `GLIX_URETIM_TOKEN`'ı (`.env.test2`, kur.sh üretir). Sitenin `.env`'ine
+  `URETIM_TEST2_TOKEN` adıyla eklenir (değer basılmaz):
+  ```
+  grep -q '^URETIM_TEST2_TOKEN=' /srv/glix/shared/.env || printf 'URETIM_TEST2_TOKEN=%s\n' \
+    "$(grep -m1 '^GLIX_URETIM_TOKEN=' /srv/glix/ortam/gizli/.env.test2 | cut -d= -f2-)" >> /srv/glix/shared/.env
+  ```
+  Site env'leri: `URETIM_TEST2_URL` (varsayılan `http://glix-test2-glix-1:3900`), `URETIM_TEST2_TOKEN`,
+  `URETIM_TEST2_PUBLIC_URL` (varsayılan `https://test2.glix.dgmcraft.online`). Anahtar boşsa bağlantı kapalıdır.
+- **Taslak katmanı:** yalnız test2'de (`GLIX_ORTAM=test2`) mağaza taslak uçları ve `/api/oyun-alani/*` açılır;
+  taslaklar ve görselleri `/srv/glix/ortam/test2/veri/oyun-alani/` altında durur. Gece yenilemesi (`--sifirla`) bu
+  klasörü de siler; katman yeni kimlik alır, site bunu sağlık ucundan görür ve bekleyen taslakları yeniden yükler.
+- **Derin bağlantı:** `https://test2.glix.dgmcraft.online/?ekran=magaza` (girişten sonra mağaza; TASLAK ürünler).
+  Sahte hesap `Zengin` (1.000.000 Glix) taslakları alıp kuşanabilir.
 
 ## Kopyalanan tablolar (içerik)
 
@@ -148,7 +171,8 @@ Betikler güncellenince `kur.sh` yeniden çalıştırılır (değerler korunur, 
 ## Günlük kullanım
 
 - Ana dala giren her şey en geç 10 dakikada test'e çıkar (cron). Elle: `test-cikar.sh main` ya da `test-cikar.sh <sha>`.
-- Oyun alanını hemen test'in sürümüne geçirmek: `test2-yenile.sh`.
+- Oyun alanını hemen test'in sürümüne geçirmek: `test2-yenile.sh` (taslaklar silinir; Üretim Merkezi en geç 5 dakikada
+  yeniden yükler, panoda "Eşitle" ile hemen).
 - Test'in içeriğini canlıdan tazelemek (hesaplar kalır): `icerik-kopyala.sh test`.
 - **Canlıya alma** (yalnız sahip "canlıya al" deyince): `canliya-al.sh`.
   - Canlıda maç ya da oyuncu varsa durur: "Canlıda şu an N maç ve M oyuncu var..." (çıkış kodu 3).

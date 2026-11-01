@@ -1,0 +1,16 @@
+# Yalnız oyun alanı (test2): Üretim Merkezi'nin test2'ye iç ağdan ulaşması için ortak ağ (sözleşme bölüm 13).
+# ortak.sh `ortam_compose` test2'de bu dosyayı ana compose dosyasının üstüne ekler; test (onay ortamı) bu ağa girmez.
+# Ağ bir kez elle ya da kur.sh ile kurulur: docker network create glix-oyun-alani
+# Site kabı (deploy/uretim/docker-compose.yml) aynı ağa katılır ve test2'ye kap adıyla gider:
+#   URETIM_TEST2_URL=http://glix-test2-glix-1:3900
+# (Hizmet adı "glix" bu ağda da geçerlidir ama site canlıya da "glix" adıyla bağlı olduğundan kap adı kullanılır.)
+services:
+  glix:
+    networks:
+      - default
+      - oyun_alani
+
+networks:
+  oyun_alani:
+    external: true
+    name: ${GLIX_OYUN_ALANI_AG:-glix-oyun-alani}

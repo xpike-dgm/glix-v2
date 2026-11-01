@@ -14,6 +14,7 @@ import { olayDinle, yerelOlay } from "../canli.js";
 import { alanRengi, git, hataTost, tost } from "../durum.js";
 import { panoYenile } from "../Kabuk.js";
 import { Simge } from "../simgeler.js";
+import { Test2Seridi } from "../test2.js";
 
 type Basamak = "kabulde" | "yoneticide" | "ana_kodda" | "testte" | "canlida";
 interface Havuz {
@@ -131,8 +132,9 @@ export function Kabul(): JSX.Element {
         <div>
           <h1>Kabul havuzu</h1>
           <p class="soluk">
-            Kabul ettiklerin burada birikir. “Yöneticiye gönder” deyince yönetici paketi test eder ve ana koda
-            ekler; canlıya alma yalnız sen “canlıya al” deyince.
+            Kabul ettiklerin burada birikir ve test2'de yüklü kalır. “Yöneticiye gönder” deyince yönetici
+            paketi test eder ve ana koda ekler; canlıya alma yalnız sen “canlıya al” deyince. İçerikte “Oyuna
+            aktar” satırları doğrudan canlıya gönderir.
           </p>
         </div>
         <Show when={(veri()?.paketlenecek ?? 0) > 0}>
@@ -241,6 +243,7 @@ export function Kabul(): JSX.Element {
                               {goreliZaman(o.karar ?? o.olusturma, Date.now())}
                             </span>
                           </button>
+                          <Test2Seridi oge={o} kucuk degisti={() => yenile()} />
                           <Show when={basamak() === "kabulde" && tekTik(o)}>
                             <button type="button" class="dg dg--k" onClick={() => void aktar(o)}>
                               <Simge ad="simsek" /> Oyuna aktar

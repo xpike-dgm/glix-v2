@@ -1,4 +1,5 @@
 import { createServer, type Server } from "node:http";
+import { join } from "node:path";
 import { APP_VERSION, type CardLog, type GameLog, PROTOCOL_VERSION, parseClientMessage } from "@glix/engine";
 import { type WebSocket, WebSocketServer } from "ws";
 import { createAccountRecorder } from "./accountStats.js";
@@ -42,6 +43,7 @@ import {
   type Ortam,
   ortamSeridi,
 } from "./ortam.js";
+import { OYUN_ALANI_PREFIX, OyunAlaniKatmani, oyunAlaniKlasoru } from "./oyunAlani.js";
 import { handleProfile, PROFILE_PATH } from "./profile.js";
 import { createPushBroadcaster } from "./pushBroadcast.js";
 import { createQuestsApi, QUESTS_PATH } from "./quests.js";
@@ -128,6 +130,11 @@ export interface ServerOptions {
    * yapay zekâ düşük sınırla, yanıtlar `noindex`, `robots.txt` kapalı ve ana sayfada ortam şeridi (bkz. `ortam.ts`).
    */
   ortam?: Ortam;
+  /**
+   * Oyun alanının (test2) taslak katmanı klasörü. Yalnız `ortam: "test2"`de kullanılır; verilmezse hesap
+   * veritabanının yanındaki `oyun-alani/` (bellekteki veritabanında yalnız bellek).
+   */
+  oyunAlaniDir?: string | null;
 }
 
 function resolvePush(opts: ServerOptions): PushGateway {
@@ -295,7 +302,21 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const adminIds: ReadonlySet<number> = opts.adminAccountIds ?? new Set<number>();
   const adminThrottle = new MailThrottle();
   const adminLimits = createAdminLimits(clock);
+  // Oyun alanı taslak katmanı: yalnız test2 (canlıda ve test'te hiç kurulmaz, uçları 404).
+  const oyunAlani =
+    opts.ortam === "test2"
+      ? new OyunAlaniKatmani(
+          opts.oyunAlaniDir !== undefined
+            ? opts.oyunAlaniDir
+            : opts.accountsDb && opts.accountsDb !== ":memory:"
+              ? oyunAlaniKlasoru(opts.accountsDb)
+              : null,
+          join(opts.clientDir, "assets", "shop"),
+        )
+      : null;
+  if (oyunAlani) log.warn("oyun_alani_katmani", { taslak: oyunAlani.liste().length });
   const uretimApi = createUretimApi({
+    oyunAlani,
     token: opts.uretimToken ?? null,
     accounts,
     content: rt.content,
@@ -401,6 +422,10 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     }
     if (path === URETIM_PREFIX || path.startsWith(`${URETIM_PREFIX}/`)) {
       uretimApi(req, res);
+      return;
+    }
+    if (oyunAlani && path.startsWith(`${OYUN_ALANI_PREFIX}/`)) {
+      oyunAlani.handle(req, res);
       return;
     }
     if (path.startsWith(ADMIN_PREFIX)) {
@@ -692,6 +717,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
           ws.close(code, code === 1012 ? "Sunucu yeniden başlıyor" : "Sunucu kapanıyor");
         wss.close();
         healthSampler?.stop();
+        oyunAlani?.kapat();
         // Temiz kapanış kaydı (çökme/zorla durdurmada yazılmaz; panel bunu "kapanış kaydı yok" gösterir).
         if (runId !== null) {
           try {

@@ -9,6 +9,7 @@ import { AlanIsareti, Bos, Halka, Iskelet, IskeletKartlar } from "../bilesenler.
 import { alanBul, alanRengi, git, hataTost, oturum, tost } from "../durum.js";
 import { bekleyenToplam, panoVerisi, panoYenile, vurgu } from "../Kabuk.js";
 import { Simge } from "../simgeler.js";
+import { Test2DurumKarti } from "../test2.js";
 
 export function KucukOnizleme(p: { k: Kucuk | null; ad?: string }): JSX.Element {
   return (
@@ -321,6 +322,10 @@ export function Pano(): JSX.Element {
                     )}
                   </For>
                 </section>
+              </Show>
+
+              <Show when={v().test2}>
+                {(d) => <Test2DurumKarti d={d()} esitlendi={() => void panoYenile()} />}
               </Show>
 
               <Show when={v().havuz.toplam > 0}>

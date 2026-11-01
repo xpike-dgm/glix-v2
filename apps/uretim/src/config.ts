@@ -13,6 +13,14 @@ export interface UretimConfig {
   /** Oyun sunucusunun iç adresi (boşsa oyun uçları kapalı). */
   oyunUrl: string | null;
   oyunToken: string | null;
+  /**
+   * Oyun alanı (test2) sunucusunun iç adresi ve kendi `GLIX_URETIM_TOKEN`'ı (`URETIM_TEST2_URL`,
+   * `URETIM_TEST2_TOKEN`; sözleşme bölüm 13). İkisi de doluysa teslimler test2'ye kendiliğinden yüklenir; boşsa kapalı.
+   */
+  test2Url: string | null;
+  test2Token: string | null;
+  /** Sahibin tarayıcıda açtığı test2 adresi (`URETIM_TEST2_PUBLIC_URL`; sır değil). */
+  test2PublicUrl: string;
   sahipEpostalar: string[];
   resendKey: string | null;
   mailFrom: string | null;
@@ -54,6 +62,12 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): UretimConfig {
     repoDir: bos(env.URETIM_REPO_DIR),
     oyunUrl: bos(env.URETIM_OYUN_URL)?.replace(/\/+$/, "") ?? null,
     oyunToken: bos(env.GLIX_URETIM_TOKEN),
+    test2Url: bos(env.URETIM_TEST2_URL)?.replace(/\/+$/, "") ?? null,
+    test2Token: bos(env.URETIM_TEST2_TOKEN),
+    test2PublicUrl: (bos(env.URETIM_TEST2_PUBLIC_URL) ?? "https://test2.glix.dgmcraft.online").replace(
+      /\/+$/,
+      "",
+    ),
     sahipEpostalar: (env.URETIM_SAHIP_EPOSTA ?? "")
       .split(",")
       .map((e) => e.trim().toLowerCase())

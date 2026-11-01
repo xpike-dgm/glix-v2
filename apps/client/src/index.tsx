@@ -3,6 +3,7 @@ import { App } from "./App.js";
 import { applyHapticsCompensation } from "./fx/haptics.js";
 import { installNoZoom } from "./fx/noZoom.js";
 import { installAudioUnlock } from "./fx/sound.js";
+import { taslaklariYukle } from "./net/oyunAlani.js";
 import { initPush } from "./pwa/push.js";
 import { forceUpdate, initPwa } from "./pwa/pwa.js";
 import { recoverFromStaleChunk } from "./pwa/staleChunk.js";
@@ -43,6 +44,8 @@ window.addEventListener("vite:preloadError", (e) => {
   if (recoverFromStaleChunk(() => void forceUpdate())) e.preventDefault();
 });
 initPush();
+// Yalnız oyun alanı (test2): Üretim Merkezi'nin taslak mağaza ürünleri (canlıda istek atılmaz).
+void taslaklariYukle();
 
 const root = document.getElementById("root");
 if (root)

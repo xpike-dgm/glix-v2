@@ -2,6 +2,7 @@
 import type { AlanId, DosyaTuru } from "./alanlar.js";
 import type { Durum, HazirNotKodu } from "./durum.js";
 import type { FikirAlanlari, UygulanacakFikir } from "./fikir.js";
+import type { Test2Bilgisi, Test2Durum } from "./oyunAlani.js";
 
 export type KontrolSonucu = "gecti" | "uyari" | "kaldi";
 export type SatirSonucu = KontrolSonucu | "atlandi";
@@ -130,6 +131,8 @@ export interface OgeOzeti {
   fikirId: number | null;
   /** Yapılandırılmış fikir alanları (yalnız fikir öğesinde). */
   fikir: FikirAlanlari | null;
+  /** Oyun alanı (test2) durumu; test2'ye gitmeyen öğede yok. */
+  test2?: Test2Bilgisi | null;
 }
 
 /** Köken kaydı (UM-F7). */
@@ -262,6 +265,8 @@ export interface Pano {
   bugun: { gelen: number; onaylanan: number; reddedilen: number; geriDonen: number };
   denetimBekleyen: number;
   ai: { acik: boolean; bugun: number; sinir: number };
+  /** Oyun alanı (test2) bağlantısı: çalışıyor mu, sürüm, son sıfırlama. */
+  test2?: Test2Durum;
 }
 
 export interface PaketKaydi {
@@ -324,6 +329,8 @@ export interface AlanSayfasi {
     karar: number;
     uygun: boolean;
   }[];
+  /** Oyun alanı (test2) bağlantısı; alan test2'ye yükleme yapmıyorsa yok. */
+  test2?: Test2Durum;
 }
 
 export interface ZevkOrnegi {

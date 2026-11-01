@@ -153,5 +153,6 @@ export function kabulHavuzu(m: Merkez): KabulHavuzu {
       .filter((x): x is OgeAyrinti => x !== null);
   }
   const tekTikIdler = basamaklar.kabulde.filter((o) => m.tekTikMi(o)).map((o) => o.id);
-  return { basamaklar, sayilar, paketlenecek: sayilar.kabulde - tekTikIdler.length, tekTikIdler };
+  const disarida = basamaklar.kabulde.filter((o) => !m.paketeGirer(o)).length;
+  return { basamaklar, sayilar, paketlenecek: sayilar.kabulde - disarida, tekTikIdler };
 }

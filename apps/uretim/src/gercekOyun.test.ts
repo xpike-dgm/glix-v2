@@ -9,7 +9,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { OyunIstemcisi } from "./oyun.js";
-import { type Ortam, ortamKur } from "./test/ortam.js";
+import { b64, gorsel, type Ortam, ortamKur } from "./test/ortam.js";
 
 const SUNUCU = resolve(import.meta.dirname, "../../server/dist/index.js");
 const TOKEN = "gercek-sunucu-test-anahtari";
@@ -55,7 +55,8 @@ afterAll(() => {
 describe.skipIf(!VAR)("gerçek oyun sunucusu", () => {
   it("istemci: sağlık, havuzlar, mağaza istatistiği, yanlış anahtar", async () => {
     const o = new OyunIstemcisi(url, TOKEN);
-    expect(await o.saglik()).toEqual({ ok: true, revision: SURUM });
+    // Canlıda katman kimliği yoktur (yalnız oyun alanı, test2).
+    expect(await o.saglik()).toEqual({ ok: true, revision: SURUM, katman: null, taslak: 0 });
     const h = await o.havuzlar();
     expect(h.find((x) => x.id === "sizma/ciftler")?.kayitlar.length).toBeGreaterThan(10);
     const ist = await o.magazaIstatistik();
@@ -154,6 +155,163 @@ describe.skipIf(!VAR)("gerçek oyun sunucusu", () => {
         .run(SURUM.slice(0, 12));
       const { canliKontrol } = await import("./paket.js");
       expect(await canliKontrol(o.u.merkez, o.saat.simdi)).toBe(1);
+    } finally {
+      await o.kapat();
+    }
+  });
+});
+
+/**
+ * Gerçek oyun alanı (test2): `apps/server` derlenmiş hâliyle `GLIX_ORTAM=test2` ve kendi anahtarıyla. Site teslimi
+ * kendiliğinden yükler (mağaza taslak katmanı ve içerik havuzu), ret geri alır; sunucu yeniden başlayınca katman
+ * aynı kalır, veritabanı silinince (gece sıfırlaması) kimlik değişir ve site yeniden yükler.
+ */
+describe.skipIf(!VAR)("gerçek oyun alanı (test2)", () => {
+  const T2_TOKEN = "gercek-test2-anahtari";
+  let t2: ChildProcess | null = null;
+  let t2Url = "";
+  let t2Dir = "";
+  // Yeniden açılışta aynı kapı (site aynı adrese gider).
+  const port = 50000 + Math.floor(Math.random() * 9999);
+  const ac = async (): Promise<void> => {
+    t2Url = `http://127.0.0.1:${port}`;
+    t2 = spawn(process.execPath, [SUNUCU], {
+      env: {
+        PATH: process.env.PATH ?? "",
+        PORT: String(port),
+        HOST: "127.0.0.1",
+        STATS_DB: join(t2Dir, "glix.db"),
+        GLIX_URETIM_TOKEN: T2_TOKEN,
+        GLIX_ORTAM: "test2",
+        GIT_SHA: SURUM,
+      },
+      stdio: "ignore",
+    });
+    for (let i = 0; i < 100; i++) {
+      try {
+        if ((await fetch(`${t2Url}/health`)).ok) return;
+      } catch {
+        // henüz açılmadı
+      }
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    throw new Error("oyun alanı açılmadı");
+  };
+  const kapat = async (): Promise<void> => {
+    const s = t2;
+    t2 = null;
+    if (!s) return;
+    await new Promise<void>((r) => {
+      s.once("exit", () => r());
+      s.kill("SIGINT");
+    });
+  };
+  beforeAll(async () => {
+    if (!VAR) return;
+    t2Dir = mkdtempSync(join(tmpdir(), "uretim-test2-"));
+    await ac();
+  });
+  afterAll(async () => {
+    await kapat();
+    if (t2Dir) rmSync(t2Dir, { recursive: true, force: true });
+  });
+
+  it("mağaza ve içerik teslimi test2'ye gider, ret geri alır; sıfırlamadan sonra yeniden yüklenir", async () => {
+    const o: Ortam = await ortamKur({ test2Url: t2Url, test2Token: T2_TOKEN });
+    try {
+      const c = await o.giris();
+      const km = await o.anahtarUret("magaza", c);
+      const y = await o.arac(km, "dosya_yukle", { ad: "halka.png", icerik_base64: b64(gorsel(384, 384)) });
+      const t = await o.arac(km, "teslim_et", {
+        tur: "yeni",
+        uretimYontemi: "gorsel-model",
+        ogeler: [
+          {
+            ad: "Test2 Halkası",
+            dosyalar: [
+              {
+                dosyaId: y.veri.dosyaId,
+                hedefYol: "apps/client/public/assets/shop/cerceve/test2-halka.webp",
+              },
+            ],
+            satirlar: [
+              {
+                id: "cerceve-test2-halka",
+                type: "cerceve",
+                rarity: "nadir",
+                price: 450,
+                name: "Test2 Halkası",
+                description: "Oyun alanında denenen halka.",
+                satista: true,
+                efekt: {
+                  motor: "doku-katmani",
+                  parametreler: { doku: "cerceve/test2-halka.webp", karisim: "normal", hareket: "yok" },
+                },
+              },
+            ],
+          },
+        ],
+      });
+      const magazaId = (t.veri.ogeler as { ogeId: number; durum: string }[])[0]?.ogeId ?? 0;
+      expect(o.u.merkez.oge(magazaId)?.durum).toBe("bekliyor");
+      await o.u.oyunAlani.bosalt();
+      expect(o.u.merkez.oge(magazaId)?.test2).toMatchObject({ durum: "yuklu", hata: null });
+      const katman = async () =>
+        (await (await fetch(`${t2Url}/api/oyun-alani/magaza`)).json()) as {
+          urunler: { id: string }[];
+          dosyalar: Record<string, string>;
+        };
+      const k1 = await katman();
+      expect(k1.urunler.map((u) => u.id)).toEqual(["cerceve-test2-halka"]);
+      const adres = k1.dosyalar["/assets/shop/cerceve/test2-halka.webp"] ?? "";
+      const img = await fetch(`${t2Url}${adres}`);
+      expect(img.status).toBe(200);
+      expect(img.headers.get("content-type")).toMatch(/^image\/(webp|png)$/);
+
+      // İçerik satırları test2 havuzuna (panel kaydı olarak) gider.
+      const ki = await o.anahtarUret("icerik", c);
+      const ti = await o.arac(ki, "teslim_et", {
+        tur: "yeni",
+        ogeler: [
+          {
+            ad: "Test2 çiftleri",
+            satirlar: [{ havuz: "sizma/ciftler", alanlar: { a: "pergel", b: "cetvel" } }],
+          },
+        ],
+      });
+      const icerikId = (ti.veri.ogeler as { ogeId: number }[])[0]?.ogeId ?? 0;
+      await o.u.oyunAlani.bosalt();
+      const test2Oyun = new OyunIstemcisi(t2Url, T2_TOKEN);
+      const bul = async () =>
+        (await test2Oyun.havuzlar())
+          .find((h) => h.id === "sizma/ciftler")
+          ?.kayitlar.find((x) => x.alanlar.a === "pergel");
+      expect((await bul())?.acik).toBe(true);
+
+      // Ret → test2'den kalkar.
+      await o.api("POST", `/api/oge/${magazaId}/karar`, { karar: "ret", hazir: "tarz" }, c);
+      await o.u.oyunAlani.bosalt();
+      expect((await katman()).urunler).toEqual([]);
+      expect((await fetch(`${t2Url}${adres}`)).status).toBe(404);
+
+      // Gece sıfırlaması: veritabanı ve katman klasörü silinir, sunucu yeniden açılır → site içeriği yeniden yükler.
+      await o.u.oyunAlani.esitle();
+      const once = o.u.merkez.pano(o.saat.simdi, { kullanilan: 0, sinir: 1 }).test2?.katman;
+      await kapat();
+      rmSync(join(t2Dir, "glix.db"), { force: true });
+      rmSync(join(t2Dir, "glix.db-wal"), { force: true });
+      rmSync(join(t2Dir, "glix.db-shm"), { force: true });
+      rmSync(join(t2Dir, "oyun-alani"), { recursive: true, force: true });
+      await ac();
+      expect(await bul()).toBeUndefined();
+      await o.u.oyunAlani.esitle();
+      const sonra = o.u.merkez.pano(o.saat.simdi, { kullanilan: 0, sinir: 1 }).test2;
+      expect(sonra?.katman).not.toBe(once);
+      expect(sonra?.sonSifirlama).not.toBeNull();
+      expect((await bul())?.acik).toBe(true);
+      expect(o.u.merkez.oge(icerikId)?.test2?.durum).toBe("yuklu");
+      // Reddedilen mağaza ürünü geri gelmez.
+      expect((await katman()).urunler).toEqual([]);
     } finally {
       await o.kapat();
     }

@@ -1,4 +1,5 @@
 import { CELEBRATION_SPRITES, cosmeticItem } from "@glix/engine";
+import { assetUrl } from "../ui/assetOverride.js";
 import { reducedMotion } from "./motion.js";
 import { APP_VIEW_ONLY, loadPixi } from "./pixiLoad.js";
 
@@ -274,7 +275,9 @@ const lowEnd = (): boolean =>
   (navigator.hardwareConcurrency ?? 8) <= 4 ||
   ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8) <= 4;
 
-export const spriteUrl = (asset: string, i: number): string => `/assets/shop/zafer/${asset}-${i + 1}.webp`;
+/** Parçacık görseli; oyun alanında (test2) taslak dosya varsa onun adresi (`assetOverride.ts`), yoksa yolun kendisi. */
+export const spriteUrl = (asset: string, i: number): string =>
+  assetUrl(`/assets/shop/zafer/${asset}-${i + 1}.webp`);
 
 export interface CelebrationOptions {
   /** Bitince baştan başlar (mağaza önizlemesi); durdurma işlevi çağrılana dek sürer. */

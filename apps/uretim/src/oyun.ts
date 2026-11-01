@@ -56,8 +56,8 @@ export class OyunIstemcisi {
     return this.url !== null && this.token !== null;
   }
 
-  private async istek(
-    yontem: "GET" | "POST",
+  protected async istek(
+    yontem: "GET" | "POST" | "DELETE",
     yol: string,
     govde?: unknown,
   ): Promise<Record<string, unknown>> {
@@ -80,12 +80,20 @@ export class OyunIstemcisi {
     if (r.status < 200 || r.status >= 300) {
       // Sözleşme bölüm 3: hatalar { ok: false, code, message }.
       let kod = "";
+      let ayrinti: string[] = [];
       try {
         const j = await r.json();
         if (kayit(j) && typeof j.code === "string") kod = j.code;
+        if (kayit(j) && Array.isArray(j.errors)) ayrinti = j.errors.filter(str).slice(0, 8);
       } catch {
         kod = "";
       }
+      if (r.status === 400 && kod === "invalid_item")
+        throw new OyunHatasi(
+          `Oyun alanı ürünü kabul etmedi${ayrinti.length ? `: ${ayrinti.join("; ")}` : "."}`.slice(0, 600),
+        );
+      if (r.status === 409 && kod === "layer_full")
+        throw new OyunHatasi("Oyun alanındaki taslak katmanı dolu.");
       if (r.status === 409 && kod === "already_undone")
         throw new OyunHatasi("Bu aktarım oyunda zaten geri alınmış.");
       if (r.status === 404 && kod === "unknown_pool") throw new OyunHatasi("Oyunda bu havuz yok.");
@@ -212,10 +220,38 @@ export class OyunIstemcisi {
     return { donem: str(j.donem) ? j.donem : "30g", urunler };
   }
 
-  async saglik(): Promise<{ ok: boolean; revision: string | null }> {
+  async saglik(): Promise<{ ok: boolean; revision: string | null; katman: string | null; taslak: number }> {
     const j = await this.istek("GET", "/api/uretim/saglik");
     const rev = str(j.revision) && /^[0-9a-f]{7,40}$/i.test(j.revision) ? j.revision : null;
-    return { ok: j.ok === true, revision: rev };
+    // Yalnız oyun alanı (test2) katman kimliği ve taslak sayısı verir; canlıda ikisi de yoktur.
+    const katman = str(j.katman) && /^[0-9a-f]{16,64}$/.test(j.katman) ? j.katman : null;
+    return { ok: j.ok === true, revision: rev, katman, taslak: sayi(j.taslak) ? j.taslak : 0 };
+  }
+
+  /** Oyun alanı (test2): mağaza taslağı yükler ya da aynı kimlikliyi değiştirir (sözleşme bölüm 13). */
+  async magazaTaslakYukle(
+    urun: Record<string, unknown>,
+    dosyalar: { yol: string; veri: string }[],
+  ): Promise<{ id: string; katman: string | null }> {
+    const j = await this.istek("POST", "/api/uretim/magaza/taslak", { urun, dosyalar });
+    if (j.ok !== true || !str(j.id)) throw new OyunHatasi("Taslak yanıtı bozuk.");
+    return { id: j.id, katman: str(j.katman) ? j.katman : null };
+  }
+
+  /** Oyun alanı (test2): mağaza taslağını kaldırır; zaten yoksa da başarılıdır. */
+  async magazaTaslakSil(id: string): Promise<boolean> {
+    const j = await this.istek("DELETE", `/api/uretim/magaza/taslak/${encodeURIComponent(id)}`);
+    if (j.ok !== true) throw new OyunHatasi("Taslak kaldırılamadı.");
+    return j.silindi === true;
+  }
+
+  /** Oyun alanı (test2): yüklü taslakların kimlikleri. */
+  async magazaTaslaklar(): Promise<{ katman: string | null; idler: string[] }> {
+    const j = await this.istek("GET", "/api/uretim/magaza/taslak");
+    const idler = Array.isArray(j.urunler)
+      ? j.urunler.flatMap((u) => (kayit(u) && str(u.id) ? [u.id] : []))
+      : [];
+    return { katman: str(j.katman) ? j.katman : null, idler };
   }
 }
 

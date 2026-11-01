@@ -12,6 +12,9 @@
  * - Silme yoktur: ekleme ve kapatma; geri alma o aktarımın eklediklerini kaldırır, kapattıklarını açar.
  * - Yazmalar `admin_audit`'e `uretim` işleyicisiyle (hesap kimliği 0) düşer.
  * - Hiçbir yanıtta hesap kimliği, takma ad ya da e-posta yoktur.
+ * - Oyun alanında (`GLIX_ORTAM=test2`, `oyunAlani` verilince) ek olarak mağaza taslak katmanı uçları açılır
+ *   (`GET|POST /api/uretim/magaza/taslak`, `DELETE /api/uretim/magaza/taslak/:id`) ve sağlık yanıtı katman kimliğini
+ *   taşır. Canlıda ve test'te bu uçlar yoktur (404) ve sağlık yanıtı değişmez.
  */
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
@@ -30,6 +33,7 @@ import type { ContentStore } from "./contentStore.js";
 import { splitLine } from "./contentStore.js";
 import { log } from "./log.js";
 import type { BannedWords } from "./moderation.js";
+import { type OyunAlaniKatmani, TASLAK_GOVDE_EN_COK } from "./oyunAlani.js";
 import { TokenBucket } from "./ratelimit.js";
 import { SECURITY_HEADERS } from "./static.js";
 
@@ -56,6 +60,8 @@ export interface UretimEnv {
   banned: BannedWords;
   clock: Clock;
   revision: string;
+  /** Oyun alanı (test2) taslak katmanı; yoksa taslak uçları 404. */
+  oyunAlani?: OyunAlaniKatmani | null;
 }
 
 type Reply = { status: number; body: unknown };
@@ -83,7 +89,7 @@ export function tokenMatches(header: string | undefined, token: string): boolean
   return ok && m !== null;
 }
 
-function readBody(req: IncomingMessage): Promise<unknown> {
+function readBody(req: IncomingMessage, max = URETIM_MAX_BODY): Promise<unknown> {
   return new Promise((resolve) => {
     const chunks: Buffer[] = [];
     let size = 0;
@@ -95,7 +101,7 @@ function readBody(req: IncomingMessage): Promise<unknown> {
     };
     req.on("data", (c: Buffer) => {
       size += c.length;
-      if (size > URETIM_MAX_BODY) {
+      if (size > max) {
         finish(undefined);
         req.destroy();
         return;
@@ -297,6 +303,30 @@ export function createUretimApi(env: UretimEnv): (req: IncomingMessage, res: Ser
     return reply(200, { donem: `${URETIM_STATS_DAYS}g`, urunler });
   }
 
+  const katman = env.oyunAlani ?? null;
+
+  function taslaklar(k: OyunAlaniKatmani): Reply {
+    return reply(200, {
+      katman: k.kimlik,
+      urunler: k
+        .liste()
+        .map((t) => ({ id: t.urun.id, urun: t.satir, dosyalar: Object.keys(t.dosyalar), zaman: t.zaman })),
+    });
+  }
+
+  function taslakEkle(k: OyunAlaniKatmani, data: unknown): Reply {
+    const r = k.ekle(data, env.clock.now());
+    if (!r.ok) return reply(r.status, { ok: false, code: r.code, message: r.message, errors: r.errors });
+    audit("uretim_taslak_ekle", `magaza:${r.id}`);
+    return reply(200, { ok: true, id: r.id, katman: k.kimlik, degisti: r.degisti });
+  }
+
+  function taslakSil(k: OyunAlaniKatmani, id: string): Reply {
+    const silindi = k.sil(id);
+    if (silindi) audit("uretim_taslak_sil", `magaza:${id}`);
+    return reply(200, { ok: true, silindi, katman: k.kimlik });
+  }
+
   async function resolve(req: IncomingMessage): Promise<Reply> {
     if (!token) return NOT_FOUND;
     // Vekilden (Caddy) geçen istek dışarıdandır: uç yokmuş gibi.
@@ -306,17 +336,43 @@ export function createUretimApi(env: UretimEnv): (req: IncomingMessage, res: Ser
     const path = ((req.url ?? "").split("?")[0] ?? "").slice(URETIM_PREFIX.length);
     const method = req.method ?? "GET";
     const parts = path.split("/").filter((p) => p.length > 0);
-    const isWrite = method === "POST";
-    if (method !== "GET" && method !== "POST")
+    const isWrite = method === "POST" || method === "DELETE";
+    // DELETE yalnız oyun alanının taslak ucunda vardır; başka yerde uç yokmuş gibi (canlıda davranış aynı: 404).
+    if (method === "DELETE" && !katman) return NOT_FOUND;
+    if (method !== "GET" && method !== "POST" && method !== "DELETE")
       return fail(405, "method_not_allowed", "Bu istek desteklenmiyor.");
     if (!(isWrite ? writes : reads).take()) return fail(429, "rate_limited", "Çok hızlı; biraz bekle.");
 
     const [a, b, c] = parts;
+    const taslakYolu = katman !== null && a === "magaza" && b === "taslak";
+    if (method === "DELETE") {
+      if (!taslakYolu || parts.length !== 3 || !katman) return NOT_FOUND;
+      let id = "";
+      try {
+        id = decodeURIComponent(c ?? "");
+      } catch {
+        return NOT_FOUND;
+      }
+      return taslakSil(katman, id);
+    }
     if (!isWrite) {
+      if (taslakYolu && parts.length === 2 && katman) return taslaklar(katman);
       if (parts.length === 1 && a === "havuzlar") return pools();
       if (parts.length === 1 && a === "moderasyon") return moderation();
       if (parts.length === 2 && a === "magaza" && b === "istatistik") return shopStats();
-      if (parts.length === 1 && a === "saglik") return reply(200, { ok: true, revision: env.revision });
+      if (parts.length === 1 && a === "saglik")
+        return reply(
+          200,
+          katman
+            ? {
+                ok: true,
+                revision: env.revision,
+                ortam: "test2",
+                katman: katman.kimlik,
+                taslak: katman.liste().length,
+              }
+            : { ok: true, revision: env.revision },
+        );
       return NOT_FOUND;
     }
     if (!req.headers["content-type"]?.toLowerCase().startsWith("application/json"))
@@ -324,6 +380,11 @@ export function createUretimApi(env: UretimEnv): (req: IncomingMessage, res: Ser
     // Havuz kimliği eğik çizgi taşır (`oyun/havuz`): ister kodlanmış (%2F) ister düz yazılsın.
     const last = parts.at(-1);
     const poolPath = a === "havuzlar" && (last === "ekle" || last === "kapat") ? parts.slice(1, -1) : null;
+    if (taslakYolu && parts.length === 2 && katman) {
+      const data = await readBody(req, TASLAK_GOVDE_EN_COK);
+      if (data === undefined) return fail(400, "invalid_input", "Gövde okunamadı (JSON, en çok 18 MB).");
+      return taslakEkle(katman, data);
+    }
     const known =
       (poolPath !== null && poolPath.length >= 1 && poolPath.length <= 2) ||
       (parts.length === 3 && a === "aktarim" && c === "geri-al") ||

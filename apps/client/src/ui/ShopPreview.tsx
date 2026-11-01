@@ -3,7 +3,13 @@ import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { playCelebration } from "../fx/celebration.js";
 import { Avatar } from "./Avatar.js";
 import { COLLAGE_STICKERS } from "./artItems.js";
-import { cardBackSrc, DEFAULT_CARD_BACK_SRC, entryLayers, packStickerSrc } from "./shopArt.js";
+import {
+  cardBackSrc,
+  celebrationSprite,
+  DEFAULT_CARD_BACK_SRC,
+  entryLayers,
+  packStickerSrc,
+} from "./shopArt.js";
 
 /** Kart arkası görseli (480x720, kartın kendi köşe yuvarlaklığıyla); `item` yoksa klasik sırt. */
 export function CardBackArt(props: { item?: CosmeticItem | undefined; size: "tile" | "big" }) {
@@ -28,7 +34,7 @@ export function CelebrationCollage(props: { item: CosmeticItem }) {
       <For each={Array.from({ length: CELEBRATION_SPRITES }, (_, i) => i + 1)}>
         {(n) => (
           <img
-            src={`/assets/shop/zafer/${props.item.asset}-${n}.webp`}
+            src={celebrationSprite(props.item.id, n) ?? `/assets/shop/zafer/${props.item.asset}-${n}.webp`}
             alt=""
             draggable={false}
             style={{ "--n": n }}

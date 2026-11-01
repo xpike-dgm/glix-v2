@@ -41,10 +41,10 @@ done
 # --- Betikler -----------------------------------------------------------------------------------------------------
 if [ "$BETIK_DIZIN" != "$ORTAM_KOK/betik" ]; then
   for f in ortak.sh test-cikar.sh canliya-al.sh icerik-kopyala.sh test2-yenile.sh erisim.sh kur.sh \
-    docker-compose.yml Caddyfile.ortamlar README.md; do
+    docker-compose.yml docker-compose.oyun-alani.yml Caddyfile.ortamlar README.md; do
     install -m 0755 "$BETIK_DIZIN/$f" "$ORTAM_KOK/betik/$f"
   done
-  chmod 0644 "$ORTAM_KOK/betik/"{ortak.sh,docker-compose.yml,Caddyfile.ortamlar,README.md}
+  chmod 0644 "$ORTAM_KOK/betik/"{ortak.sh,docker-compose.yml,docker-compose.oyun-alani.yml,Caddyfile.ortamlar,README.md}
   echo "Betikler kopyalandı: $ORTAM_KOK/betik"
 fi
 B="$ORTAM_KOK/betik"
@@ -77,6 +77,9 @@ for o in test test2; do
 done
 umask 022
 echo "Gizli anahtarlar hazır: $GIZLI/.env.test, $GIZLI/.env.test2 (değerler basılmadı)."
+
+# --- Üretim Merkezi ↔ test2 ağı ------------------------------------------------------------------------------------
+oyun_alani_agi
 
 # --- Erişim -------------------------------------------------------------------------------------------------------
 if [ ! -s "$GIZLI/erisim-kullanicilar" ]; then
@@ -117,4 +120,8 @@ Kurulum tamam. Kalan adımlar (otomatik yapılmadı):
      */10 * * * * root $B/test-cikar.sh main >> $ORTAM_KOK/test/cikar.log 2>&1
      23 4 * * * root $B/test2-yenile.sh >> $ORTAM_KOK/test2/yenile.log 2>&1
 5. Canlıya alma (yalnız sahip "canlıya al" deyince): $B/canliya-al.sh
+6. Üretim Merkezi → test2 (teslimler test2'ye kendiliğinden yüklenir): test2'nin anahtarını sitenin .env'ine
+   yeni adla ekle (değer basılmaz), sonra site kabını yeniden kur (deploy/uretim/README.md bölüm 3):
+     grep -q '^URETIM_TEST2_TOKEN=' /srv/glix/shared/.env || printf 'URETIM_TEST2_TOKEN=%s\n' "\$(grep -m1 '^GLIX_URETIM_TOKEN=' $GIZLI/.env.test2 | cut -d= -f2-)" >> /srv/glix/shared/.env
+   Ortak ağ hazır: $OYUN_ALANI_AG (site kabı bu ağa katılır).
 METIN

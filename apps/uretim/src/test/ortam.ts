@@ -95,6 +95,117 @@ export async function sahteOyun(): Promise<SahteOyun> {
   return o;
 }
 
+/**
+ * Sahte oyun alanı (test2, sözleşme bölüm 13): havuz ekle/kapat/geri al, mağaza taslak katmanı ve katman kimliği
+ * taşıyan sağlık ucu. `sifirla()` gece sıfırlamasını taklit eder (kimlik değişir, yüklenenler gider).
+ */
+export interface SahteOyunAlani {
+  url: string;
+  token: string;
+  katman: string;
+  istekler: { yontem: string; yol: string; govde: unknown }[];
+  /** aktarimId -> eklenen satırlar (geri alınmamış). */
+  aktarimlar: Map<string, unknown[]>;
+  taslaklar: Map<string, { urun: Record<string, unknown>; dosyalar: { yol: string; veri: string }[] }>;
+  /** true iken her istek 503 (ulaşılamayan test2). */
+  kapali: boolean;
+  sifirla(): void;
+  kapat(): Promise<void>;
+}
+
+export const TEST2_TOKEN = "test2-gizli-anahtar";
+
+export async function sahteOyunAlani(): Promise<SahteOyunAlani> {
+  let sayac = 0;
+  const o: SahteOyunAlani = {
+    url: "",
+    token: TEST2_TOKEN,
+    katman: "a1".repeat(12),
+    istekler: [],
+    aktarimlar: new Map(),
+    taslaklar: new Map(),
+    kapali: false,
+    sifirla() {
+      o.katman = (Number.parseInt(o.katman.slice(0, 8), 16) + 1).toString(16).padStart(8, "0").repeat(3);
+      o.aktarimlar.clear();
+      o.taslaklar.clear();
+    },
+    kapat: async () => undefined,
+  };
+  const server: Server = createServer((req, res) => {
+    const parcalar: Buffer[] = [];
+    req.on("data", (d: Buffer) => parcalar.push(d));
+    req.on("end", () => {
+      const yol = req.url ?? "";
+      let govde: unknown = null;
+      try {
+        govde = parcalar.length ? JSON.parse(Buffer.concat(parcalar).toString("utf8")) : null;
+      } catch {
+        govde = null;
+      }
+      o.istekler.push({ yontem: req.method ?? "", yol, govde });
+      const j = (d: number, b: unknown): void => {
+        res.writeHead(d, { "Content-Type": "application/json" });
+        res.end(JSON.stringify(b));
+      };
+      if (o.kapali) return j(503, { ok: false });
+      if (req.headers.authorization !== `Bearer ${o.token}`)
+        return j(401, { ok: false, code: "unauthorized" });
+      if (yol === "/api/uretim/saglik")
+        return j(200, {
+          ok: true,
+          revision: "b".repeat(40),
+          ortam: "test2",
+          katman: o.katman,
+          taslak: o.taslaklar.size,
+        });
+      const ekle = /^\/api\/uretim\/havuzlar\/([^/]+)\/(ekle|kapat)$/.exec(yol);
+      if (ekle && req.method === "POST") {
+        const id = `ak2-${++sayac}`;
+        const g = govde as { satirlar?: unknown[]; anahtarlar?: unknown[] };
+        const liste = ekle[2] === "ekle" ? (g.satirlar ?? []) : (g.anahtarlar ?? []);
+        o.aktarimlar.set(id, liste);
+        return ekle[2] === "ekle"
+          ? j(200, { aktarimId: id, eklenen: liste.length, atlanan: [] })
+          : j(200, { aktarimId: id, kapatilan: liste.length });
+      }
+      const geri = /^\/api\/uretim\/aktarim\/([^/]+)\/geri-al$/.exec(yol);
+      if (geri?.[1]) {
+        if (!o.aktarimlar.has(geri[1])) return j(404, { ok: false, code: "unknown_transfer" });
+        o.aktarimlar.delete(geri[1]);
+        return j(200, { ok: true });
+      }
+      if (yol === "/api/uretim/magaza/taslak" && req.method === "POST") {
+        const g = govde as { urun?: Record<string, unknown>; dosyalar?: { yol: string; veri: string }[] };
+        const id = g.urun?.id;
+        // Oyunun doğrulayıcısını taklit: "unvan-red" kimliği reddedilir (sitenin ön kontrolünden geçen ama oyunun
+        // geçirmediği ürün).
+        if (typeof id !== "string" || id === "unvan-red")
+          return j(400, {
+            ok: false,
+            code: "invalid_item",
+            message: "x",
+            errors: ["asset: zaten kullanılıyor"],
+          });
+        o.taslaklar.set(id, { urun: g.urun ?? {}, dosyalar: g.dosyalar ?? [] });
+        return j(200, { ok: true, id, katman: o.katman, degisti: true });
+      }
+      if (yol === "/api/uretim/magaza/taslak" && req.method === "GET")
+        return j(200, { katman: o.katman, urunler: [...o.taslaklar.keys()].map((id) => ({ id })) });
+      const sil = /^\/api\/uretim\/magaza\/taslak\/([^/]+)$/.exec(yol);
+      if (sil?.[1] && req.method === "DELETE") {
+        const silindi = o.taslaklar.delete(decodeURIComponent(sil[1]));
+        return j(200, { ok: true, silindi, katman: o.katman });
+      }
+      j(404, { ok: false });
+    });
+  });
+  await new Promise<void>((r) => server.listen(0, "127.0.0.1", () => r()));
+  o.url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  o.kapat = () => new Promise<void>((r) => server.close(() => r()));
+  return o;
+}
+
 export interface Ortam {
   u: Uretim;
   url: string;
@@ -102,6 +213,8 @@ export interface Ortam {
   dir: string;
   kodlar: string[];
   oyun: SahteOyun;
+  /** Sahte oyun alanı (yalnız ortam `test2: true` ile). */
+  test2: SahteOyunAlani | null;
   saat: { simdi: number };
   /** Sahip olarak giriş yapar; çerez döner. */
   giris(): Promise<string>;
@@ -136,11 +249,16 @@ export async function ortamKur(
     aiFetch?: AiFetch;
     oyunUrl?: string;
     oyunToken?: string;
+    test2?: boolean;
+    /** Gerçek oyun alanı (derlenmiş sunucu, `GLIX_ORTAM=test2`). */
+    test2Url?: string;
+    test2Token?: string;
   } = {},
 ): Promise<Ortam> {
   girisSayaciniSifirla();
   const dir = mkdtempSync(join(tmpdir(), "uretim-test-"));
   const oyun = await sahteOyun();
+  const test2 = ek.test2 ? await sahteOyunAlani() : null;
   const kodlar: string[] = [];
   const postaci: Postaci = {
     gonder: async (_alici, _konu, metin) => {
@@ -164,6 +282,9 @@ export async function ortamKur(
     gizliAnahtar: ek.gizli ? "test-gizli-anahtar-0123456789" : null,
     sshGunluk: join(dir, "girisler.log"),
     aiKey: ek.aiFetch ? "test-model-anahtari" : null,
+    test2Url: ek.test2Url ?? test2?.url ?? null,
+    test2Token: ek.test2Token ?? test2?.token ?? null,
+    test2PublicUrl: "https://test2.ornek",
   };
   const u = uretimKur(config, {
     postaci,
@@ -215,6 +336,7 @@ export async function ortamKur(
     dir,
     kodlar,
     oyun,
+    test2,
     saat,
     api,
     mcp,
@@ -254,6 +376,7 @@ export async function ortamKur(
     async kapat() {
       await u.kapat();
       await oyun.kapat();
+      await test2?.kapat();
       rmSync(dir, { recursive: true, force: true });
     },
   };

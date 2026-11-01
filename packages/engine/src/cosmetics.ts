@@ -34,9 +34,12 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = SHOP_CATALOG_ITEMS;
 const BY_ID: ReadonlyMap<string, CosmeticItem> = new Map(COSMETIC_ITEMS.map((i) => [i.id, i]));
 
 /**
- * Önizleme katmanı (yalnız istemcinin `onizleme.html` sayfası): Üretim Merkezi'nden gelen taslak ürün satırları
- * kataloğun üstüne bellekte eklenir, böylece oyunun gerçek bileşenleri taslağı çizebilir. Sunucu bunu hiç çağırmaz;
- * satın alma ve kuşanma her zaman katalog dosyasıyla doğrulanır.
+ * Önizleme katmanı: Üretim Merkezi'nden gelen taslak ürün satırları kataloğun üstüne bellekte eklenir, böylece oyunun
+ * gerçek bileşenleri taslağı çizebilir. İki yerde kullanılır:
+ * - istemcinin `onizleme.html` sayfası (yalnız çizim);
+ * - oyun alanı (`GLIX_ORTAM=test2`): sunucu ve istemci taslak katmanını (`oyunAlani.ts`) buraya koyar; taslak ürünler
+ *   sahte hesaplarla satın alınıp kuşanılabilir. Canlıda ve test'te hiç çağrılmaz: katman boştur ve satın alma,
+ *   kuşanma yalnız katalog dosyasıyla doğrulanır.
  */
 let previewItems: ReadonlyMap<string, CosmeticItem> | null = null;
 
@@ -300,7 +303,11 @@ export function parseStickerId(raw: unknown): StickerRef | null {
   if (typeof raw !== "string" || raw.length > 40) return null;
   const m = /^pack:([a-z]+(?:-[a-z]+)*):([1-9])$/.exec(raw);
   if (!m) return null;
-  const item = COSMETIC_ITEMS.find((i) => i.type === "tepki" && i.asset === m[1]);
+  const item =
+    COSMETIC_ITEMS.find((i) => i.type === "tepki" && i.asset === m[1]) ??
+    (previewItems
+      ? [...previewItems.values()].find((i) => i.type === "tepki" && i.asset === m[1])
+      : undefined);
   const n = Number(m[2]);
   return item && n >= 1 && n <= STICKERS_PER_PACK ? { item, n } : null;
 }

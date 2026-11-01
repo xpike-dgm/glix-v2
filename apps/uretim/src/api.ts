@@ -33,6 +33,7 @@ import { IsHatasi, type Merkez } from "./merkez.js";
 import type { OlayYayini } from "./olaylar.js";
 import { ALANLAR, type AlanId, alanTanimi, isAlanId } from "./ortak/alanlar.js";
 import { isDurum, isHazirNot } from "./ortak/durum.js";
+import type { OyunAlani } from "./oyunAlani.js";
 import { canliKontrol, paketler, paketOlustur, paketOyunaEklendi, paketTesteCikti } from "./paket.js";
 import type { SshKanal } from "./sshKanal.js";
 import { teslimAyristir } from "./teslimGirdisi.js";
@@ -48,6 +49,8 @@ export interface ApiOrtami {
   donusturucu: Donusturucu;
   /** Canlı güncelleme akışı (verilmezse uç kapalı). */
   yayin?: OlayYayini;
+  /** Oyun alanı (test2) eşitlemesi (sözleşme bölüm 13); verilmezse test2 uçları 404. */
+  oyunAlani?: OyunAlani;
   surum: string;
   now(): number;
 }
@@ -351,6 +354,24 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
         }
         case "aktar":
           return ok(200, { aktarimlar: await m.aktar(id, kim, now) });
+        case "test2-geri-al":
+        case "test2-yukle": {
+          // Oyun alanı (test2): sahibin elle geri alması ya da yeniden yüklemesi (öğenin kararı değişmez).
+          if (!o.oyunAlani?.acik) return hata(res, 503, "test2", "Oyun alanı bağlantısı ayarlı değil.");
+          const og = m.oge(id);
+          if (!og || !o.oyunAlani.turu(og))
+            return hata(res, 400, "girdi", "Bu teslim oyun alanına gitmiyor.");
+          if (p2 === "test2-geri-al") await o.oyunAlani.geriAl(id);
+          else await o.oyunAlani.yenidenYukle(id);
+          o.denetim.yaz(
+            now,
+            kim,
+            "test2",
+            og.alan,
+            `öğe ${id}: ${p2 === "test2-geri-al" ? "geri alındı" : "yeniden yüklendi"}`,
+          );
+          return ok(200, { oge: m.oge(id) });
+        }
         case "denetim": {
           const b = await govde();
           const not = metin(b.metin ?? "", 0, 1000);
@@ -537,6 +558,11 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
         }
       }
       return ok(200, { sonuc });
+    }
+    if (yol === "test2/esitle") {
+      if (!o.oyunAlani?.acik) return hata(res, 503, "test2", "Oyun alanı bağlantısı ayarlı değil.");
+      await o.oyunAlani.esitle();
+      return ok(200, { test2: o.oyunAlani.durum() });
     }
     if (yol === "paket")
       return ok(200, { paket: await paketOlustur(m, o.config.aktarimDir, o.config.saatDilimi, kim, now) });
