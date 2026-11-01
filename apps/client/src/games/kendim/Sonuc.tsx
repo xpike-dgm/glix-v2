@@ -287,7 +287,7 @@ function Summary(props: SummaryProps) {
     return `${o.right} doğru, ${o.wrong} yanlış`;
   };
   return (
-    <div class="kns" data-n={props.crew.length}>
+    <div class="kns" data-n={props.crew.length} data-scroll>
       <div class="kn__head kn__head--res">
         <Show
           when={props.isPlayer}

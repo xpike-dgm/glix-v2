@@ -128,10 +128,14 @@ button.aitem:active:not(:disabled) {
     0 0 16px rgba(46, 242, 255, 0.5),
     inset 0 0 12px rgba(46, 242, 255, 0.16);
 }
+/* Bütçeyi aşan ürün: tümü %60 saydam olunca ad ve fiyat okunmuyordu; görsel soluk, yazı okunur kalır. */
 .aitem[data-dear="1"] {
-  opacity: 0.6;
   border-style: dashed;
   border-color: rgba(255, 120, 140, 0.45);
+  color: var(--text-dim);
+}
+.aitem[data-dear="1"] .gatag {
+  background: #b9bdd6;
 }
 .aitem[data-dear="1"] .uart {
   filter: grayscale(1) brightness(0.7);
@@ -503,10 +507,16 @@ button.aitem:active:not(:disabled) {
 .gashop[data-closing="1"] .gashutter {
   opacity: 1;
   visibility: visible;
+  /* kepenk bütçenin üstüne iner: altındaki yazı görünmez, dokunuş da geçmez */
+  pointer-events: auto;
   transition:
     transform 600ms cubic-bezier(0.5, 0, 0.2, 1),
     opacity 120ms linear;
-  transform: translateY(-64%);
+  transform: translateY(-72%);
+}
+/* Kepenk ve "Kasa kapanıyor!" bütçenin üstüne iner (yatayda tümüyle): yarım örtülü bütçe yerine kepenk görünür */
+.gashop[data-closing="1"] .abudget__main {
+  visibility: hidden;
 }
 .gaclose,
 .gawhisper {
@@ -523,7 +533,7 @@ button.aitem:active:not(:disabled) {
   transform: translateX(-50%);
 }
 .gaclose {
-  top: 4px;
+  top: -4px;
   color: #fff;
   background: var(--red);
   font-size: var(--fs-18);
@@ -680,16 +690,20 @@ button.aitem:active:not(:disabled) {
     radial-gradient(circle at 50% 35%, hsla(calc(var(--i) * 30deg), 90%, 60%, 0.18), transparent 70%),
     rgba(18, 26, 69, 0.7);
 }
+/* Raf tahtası kutudan 6 px taşar; taşma geometriyle değil gölgeyle verilir (kaydırılabilir taşma oluşmaz). */
 .gaitem::before {
   content: "";
   position: absolute;
-  left: -6px;
-  right: -6px;
+  left: 0;
+  right: 0;
   bottom: -9px;
   height: 5px;
   border-radius: 3px;
-  background: linear-gradient(90deg, rgba(46, 242, 255, 0.35), var(--cyan), rgba(46, 242, 255, 0.35));
-  box-shadow: 0 0 10px rgba(46, 242, 255, 0.55);
+  background: linear-gradient(90deg, rgba(46, 242, 255, 0.55), var(--cyan), rgba(46, 242, 255, 0.55));
+  box-shadow:
+    -6px 0 0 rgba(46, 242, 255, 0.35),
+    6px 0 0 rgba(46, 242, 255, 0.35),
+    0 0 10px rgba(46, 242, 255, 0.55);
   pointer-events: none;
 }
 .gashelf .uart {
@@ -706,8 +720,10 @@ button.aitem:active:not(:disabled) {
   }
 }
 .gaitem .aitem__name {
-  font-size: 11px;
+  font-size: var(--fs-13);
   font-weight: 600;
+  line-height: 1.1;
+  text-align: center;
   color: var(--text-dim);
 }
 .gaitem[data-in="1"] .aitem__name {
@@ -754,8 +770,7 @@ button.aitem:active:not(:disabled) {
   transform-origin: 50% 100%;
 }
 .gatag s {
-  font-size: 11px;
-  opacity: 0.6;
+  font-size: var(--fs-13);
 }
 /* Kuponlu ürün: macenta kesik çerçeve ve kupon etiketi */
 .gaitem[data-coupon="1"] {
@@ -1048,14 +1063,17 @@ button.aitem:active:not(:disabled) {
   padding: 1px 6px 1px 11px;
 }
 .gares .aitem__name {
-  font-size: 11px;
+  font-size: var(--fs-13);
 }
+/* kimsenin almadığı ürün: görsel soluk, ad ve etiket okunur */
 .gares[data-open="1"][data-n="0"] {
-  opacity: 0.55;
   border-style: dashed;
 }
+.gares[data-open="1"][data-n="0"] .uart {
+  opacity: 0.5;
+}
 .gares[data-open="1"][data-n="0"] .gatag {
-  background: #6b7096;
+  background: #b9bdd6;
 }
 .gares[data-open="1"][data-n="1"] {
   border-color: var(--gold);
@@ -1066,8 +1084,24 @@ button.aitem:active:not(:disabled) {
   animation: ga-shine 900ms ease-in-out infinite alternate;
 }
 .gares__solo {
-  font-size: 10px;
-  letter-spacing: 0.01em;
+  font-size: var(--fs-13);
+  letter-spacing: 0;
+  line-height: 1.05;
+}
+/* Dar raf hücresinde (320 px) etiket hücreden geniş kalıp ızgara sütununu büyütüyor, kartın içeriği sağa
+   kayıyordu: hücre genişliğine sabitlenir, "TEK BAŞINA!" gerekirse iki satıra iner. */
+.gares {
+  grid-template-columns: minmax(0, 1fr);
+}
+.gares > * {
+  max-width: 100%;
+}
+.gares__tag:has(.gares__solo, .gares__div) {
+  white-space: normal;
+  flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
+  padding: 2px 5px 2px 10px;
 }
 @keyframes ga-shine {
   to {
@@ -1084,7 +1118,7 @@ button.aitem:active:not(:disabled) {
 }
 .gares__div {
   font-style: normal;
-  color: var(--magenta);
+  color: #7a0a6c; /* altın etiket üstünde macenta 2,1:1 kalıyordu */
 }
 @keyframes ga-crack {
   0% {
@@ -1106,24 +1140,29 @@ button.aitem:active:not(:disabled) {
 
 /* ---- Sonuç: sepetler sondan başa ---- */
 .garow {
-  opacity: 0.4;
+  opacity: 0.66;
   animation: none;
 }
 .garow[data-open="1"] {
   opacity: 1;
   animation: a-row 320ms var(--ease) both;
 }
+/* ad + kupon tek satıra sığmayınca kupon alt satıra iner (kırpılmaz) */
+.garow .arow__name {
+  white-space: normal;
+}
 .garow__coupon {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
+  /* satır içi: dar sütunda kupon adı sözcük sözcük alt satıra iner */
+  display: inline;
   margin-left: 6px;
-  font-size: 11px;
+  font-size: var(--fs-13);
   font-weight: 600;
-  color: var(--magenta);
+  color: #ffa6ee;
 }
 .garow__coupon .gakupon {
   width: 22px;
+  margin-right: 3px;
+  vertical-align: middle;
 }
 .garow__item {
   position: relative;
@@ -1173,27 +1212,28 @@ button.aitem:active:not(:disabled) {
 .garow__stamp {
   flex: none;
   margin-left: auto;
-  padding: 1px 5px;
+  /* eğik damgada yazının kutusu (eksene hizalı) zeminin içinde kalsın: az eğim, bol iç boşluk */
+  padding: 4px 8px;
   border: 2px solid var(--gold);
   border-radius: 6px;
   color: var(--gold);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 10px;
+  font-size: var(--fs-13);
   line-height: 1.15;
   white-space: nowrap;
-  background: rgba(10, 16, 48, 0.85);
-  transform: rotate(-5deg);
+  background: rgba(10, 16, 48, 0.94);
+  transform: rotate(-3deg);
   animation: ga-stamp-row 360ms cubic-bezier(0.3, 1.5, 0.5, 1) both;
 }
 @keyframes ga-stamp-row {
   from {
     opacity: 0;
-    transform: rotate(-5deg) scale(1.8);
+    transform: rotate(-3deg) scale(1.8);
   }
   to {
     opacity: 1;
-    transform: rotate(-5deg) scale(1);
+    transform: rotate(-3deg) scale(1);
   }
 }
 .gaconfetti {
@@ -1264,14 +1304,22 @@ button.aitem:active:not(:disabled) {
   }
   /* Küçük kartta kupon etiketi adı örtmesin: sağ kenara, onay işaretinin altına. */
   .gaitem__coupon {
-    left: auto;
-    right: 1px;
-    bottom: auto;
-    top: 22px;
-    width: 28px;
+    /* alçak kartta rozet nereye konsa ürün adına biniyordu; kupon kesik macenta çerçeve ve üstü çizili
+       fiyatla zaten belli */
+    display: none;
   }
 }
 @media (max-height: 460px) {
+  /* görsel gizliyken alev rozeti ürün adının üstüne biniyordu: ad satırının üstünde kendi satırında durur */
+  .gaheat {
+    position: static;
+    justify-self: center;
+    padding: 0 3px;
+  }
+  .gaheat svg {
+    width: 10px;
+    height: 13px;
+  }
   .gashelf .uart,
   .gares .uart {
     display: none;

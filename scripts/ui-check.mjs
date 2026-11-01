@@ -3228,7 +3228,7 @@ function inPageAudit() {
     const fill = s.webkitTextFillColor || s.color;
     // Yalnız emoji/piktogram (👻, ⭐, 🧭): renkli glif CSS rengini kullanmaz, metin kontrastı ölçüsü anlamsız.
     // Boyut denetimi (yukarıda) yine geçerlidir.
-    if (/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+$/u.test(text)) continue;
+    if (/^(?:\p{Extended_Pictographic}|\uFE0F|\u200D|\s)+$/u.test(text)) continue;
     texts.push({
       d: desc(el),
       fg: fill,

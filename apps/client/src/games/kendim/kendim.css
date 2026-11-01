@@ -350,16 +350,22 @@
 }
 .kn__p-name {
   max-width: 100%;
-  font-size: 11px;
+  font-size: var(--fs-13);
   font-weight: 600;
   line-height: 1.15;
-  color: var(--text-dim);
+  color: #e2e6fa;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .kn__p[data-done="1"] .kn__p-name {
   color: var(--text);
+}
+/* Dar ekranda 6–8 kişilik şeritte ad sığmıyor ("Zey…"): yalnız avatar ve hazır işareti kalır. */
+@media (max-width: 440px) {
+  .kn__crew:is([data-n="6"], [data-n="7"], [data-n="8"]) .kn__p-name {
+    display: none;
+  }
 }
 
 /* Klavye açık: ayna küçülüp yukarı çıkar; yazı ve Tamam klavyenin hemen üstünde */
@@ -533,13 +539,14 @@
   font-weight: 800;
   font-size: clamp(14px, calc(100cqw / (var(--len, 6) * 0.98)), 22px);
   line-height: 1.15;
-  white-space: nowrap;
+  /* en dar kartta (yatay) yine sığmazsa kırpılmak yerine bölünür */
+  overflow-wrap: anywhere;
   text-shadow: 0 0 12px color-mix(in srgb, var(--pc) 60%, transparent);
 }
 /* Uzun kelimeler: daha dar yazı tipiyle tek satırda sığar (kelime bölünmez) */
 .kn__word[data-long="1"] {
   font-family: var(--font-text);
-  font-size: clamp(11px, calc(100cqw / (var(--len, 8) * 0.7)), 20px);
+  font-size: clamp(13px, calc(100cqw / (var(--len, 8) * 0.7)), 20px);
 }
 .kn__slot {
   display: flex;
@@ -573,7 +580,7 @@
   }
 }
 .kn__arrow {
-  color: var(--pc);
+  color: color-mix(in srgb, var(--pc) 65%, #fff);
   font-weight: 800;
 }
 .kn__slot-name {
@@ -656,13 +663,12 @@
 }
 .kn__drop-name {
   max-width: 100%;
-  font-size: 12px;
+  font-size: var(--fs-13);
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.1;
+  text-align: center;
   color: var(--text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 /* Verilmiş kişinin köşesinde küçük ✓ (her zaman görünür) */
 .kn__drops .kn__drop .kn__cb {
@@ -777,9 +783,7 @@
   font-size: var(--fs-13);
   line-height: 16px;
   color: var(--amber);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .kn__clear {
   min-height: 48px;
@@ -917,13 +921,13 @@
   border-radius: 999px;
   background: var(--magenta);
   color: #fff;
-  font-size: 12px;
+  font-size: var(--fs-13);
   font-weight: 800;
   white-space: nowrap;
 }
 .knr__back-word {
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: var(--fs-13);
   font-weight: 800;
   letter-spacing: 0.06em;
   color: #e9dcc0;
@@ -934,10 +938,9 @@
   font-family: var(--font-display);
   font-weight: 800;
   font-size: clamp(16px, 5vw, 22px);
+  line-height: 1.3;
   color: #fff6e4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .knr__guesses {
   flex: none;
@@ -1015,7 +1018,7 @@
   gap: 1px;
 }
 .knr__said {
-  font-size: 11px;
+  font-size: var(--fs-13);
   font-weight: 600;
   color: var(--text-dim);
   white-space: nowrap;
@@ -1070,7 +1073,7 @@
   flex: none;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 12px;
+  font-size: var(--fs-13);
   color: var(--amber);
 }
 .knr__bonus-text {
@@ -1181,7 +1184,7 @@
 }
 .kns__score small {
   margin-top: 2px;
-  font-size: 12px;
+  font-size: var(--fs-13);
   font-weight: 700;
   color: var(--text-dim);
 }
@@ -1271,13 +1274,14 @@
   min-width: 0;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(12px, calc(88cqw / (var(--len, 6) * 0.98)), 17px);
+  font-size: clamp(13px, calc(88cqw / (var(--len, 6) * 0.98)), 17px);
   line-height: 1.15;
-  white-space: nowrap;
+  /* dar kartta kelime kırpılmaz, gerekirse bölünür */
+  overflow-wrap: anywhere;
 }
 .kns__word[data-long="1"] {
   font-family: var(--font-text);
-  font-size: clamp(11px, calc(88cqw / (var(--len, 8) * 0.68)), 16px);
+  font-size: clamp(13px, calc(88cqw / (var(--len, 8) * 0.68)), 16px);
 }
 .kns__bonus {
   flex: none;
@@ -1287,7 +1291,7 @@
   color: var(--amber);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 11px;
+  font-size: var(--fs-13);
 }
 .kns__owner {
   display: flex;
@@ -1297,28 +1301,26 @@
 }
 .kns__oname {
   min-width: 0;
-  font-size: 12px;
+  font-size: var(--fs-13);
   font-weight: 700;
+  line-height: 1.15;
   color: #dfe3fb;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .kns__card[data-me="1"] .kns__oname {
   color: var(--kn-gold);
 }
+/* Kart satırları kırpılmaz ("· Sahib…"): sığmayan parça alt satıra iner. */
 .kns__line {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 3px;
+  column-gap: 3px;
   min-width: 0;
-  font-size: 11px;
+  font-size: var(--fs-13);
   font-weight: 600;
   color: #cdd3f2;
   line-height: 1.2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .kns__line .kns__mark {
   flex: none;
@@ -1331,8 +1333,6 @@
 }
 .kns__dim {
   color: var(--text-dim);
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .kns__rank {
   flex: none;
@@ -1376,7 +1376,7 @@
   color: #2a1606;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 12px;
+  font-size: var(--fs-13);
   box-shadow: 0 0 10px color-mix(in srgb, var(--kn-gold) 55%, transparent);
 }
 .kns__medal[data-v="1"] {
@@ -1396,18 +1396,20 @@
 .kns__pts[data-zero="1"] {
   color: #c9cff0;
 }
-/* 6–8 kişide liste iki sütun: kaydırmadan sığsın */
-.kns[data-n="6"] .kns__rank,
-.kns[data-n="7"] .kns__rank,
-.kns[data-n="8"] .kns__rank {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-flow: column;
-  grid-template-rows: repeat(4, auto);
-  gap: 4px 6px;
-}
-.kns[data-n="6"] .kns__rank {
-  grid-template-rows: repeat(3, auto);
+/* 6–8 kişide liste iki sütun: kaydırmadan sığsın (320 px'te sütunda ad 21 px'e iniyordu: orada tek sütun) */
+@media (min-width: 360px) {
+  .kns[data-n="6"] .kns__rank,
+  .kns[data-n="7"] .kns__rank,
+  .kns[data-n="8"] .kns__rank {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-flow: column;
+    grid-template-rows: repeat(4, auto);
+    gap: 4px 6px;
+  }
+  .kns[data-n="6"] .kns__rank {
+    grid-template-rows: repeat(3, auto);
+  }
 }
 .kns[data-n="6"] .kns__row,
 .kns[data-n="7"] .kns__row,
@@ -1426,9 +1428,6 @@
 @media (max-height: 620px) and (min-width: 300px) and (max-width: 520px) {
   .kn {
     --kn-dav: 30px;
-  }
-  .kn__drop-name {
-    font-size: 11px;
   }
   .knr__stage {
     --knr-oav: 46px;
@@ -1559,9 +1558,6 @@
   }
   .kn__drops {
     --kn-cols: 8;
-  }
-  .kn__drop-name {
-    font-size: 10px;
   }
   .kn__crew {
     padding: 2px 0;
