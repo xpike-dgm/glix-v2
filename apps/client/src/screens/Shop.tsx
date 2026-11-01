@@ -190,6 +190,11 @@ const TYPE_LABEL: Readonly<Record<CosmeticTypeId, string>> = {
 };
 
 /** Mağaza: günün fırsatı (iki büyük karo), alt çizgili sekmeler, iki sütun ürün ızgarası; karta dokununca satın alma sayfası. */
+/** İki liste aynı sırada aynı öğeleri taşıyor mu (`same` ile karşılaştırarak). */
+function sameList<T>(a: readonly T[], b: readonly T[], same: (x: T, y: T) => boolean): boolean {
+  return a.length === b.length && a.every((x, i) => same(x, b[i] as T));
+}
+
 export function Shop() {
   const [tab, setTab] = createSignal<string>("cerceve");
   const section = () => SHOP_TABS.find((t) => t.id === tab())?.section ?? "gorunus";
@@ -213,10 +218,18 @@ export function Shop() {
     if (!state.account) goHome();
   });
 
-  const deals = createMemo(() => {
-    const s = shop();
-    return s ? dealViews(s, now()) : [];
-  });
+  // Saat her saniye ilerler; liste içeriği değişmedikçe aynı dizi döner, kartlar yeniden kurulmaz (animasyonlar başa sarmaz).
+  const deals = createMemo(
+    () => {
+      const s = shop();
+      return s ? dealViews(s, now()) : [];
+    },
+    undefined,
+    {
+      equals: (a, b) =>
+        sameList(a, b, (x, y) => x.item === y.item && x.price === y.price && x.listPrice === y.listPrice),
+    },
+  );
   const left = () => {
     const s = shop();
     const at = now() + (s?.clockOffset ?? 0);
@@ -231,12 +244,20 @@ export function Shop() {
    * Sekmenin ürünleri yuva başına gruplanır; ürünü olmayan yuva hiç görünmez. Yalnız satıştaki ve çıkış günü gelmiş
    * ürünler (MG-3); satıştan kalkan ürün Dolabım'da kalır.
    */
-  const tabGroups = () =>
-    (SHOP_TABS.find((t) => t.id === tab())?.types ?? [])
-      .map((t) => ({ type: t, items: shopItemsOfType(t, at()) }))
-      .filter((g) => g.items.length > 0);
+  const tabGroups = createMemo(
+    () =>
+      (SHOP_TABS.find((t) => t.id === tab())?.types ?? [])
+        .map((t) => ({ type: t, items: shopItemsOfType(t, at()) }))
+        .filter((g) => g.items.length > 0),
+    undefined,
+    {
+      equals: (a, b) => sameList(a, b, (x, y) => x.type === y.type && sameList(x.items, y.items, Object.is)),
+    },
+  );
   /** Koleksiyon şeritleri: aynı koleksiyondan en az iki ürün satıştaysa. */
-  const collections = createMemo(() => shopCollections(at()));
+  const collections = createMemo(() => shopCollections(at()), undefined, {
+    equals: (a, b) => sameList(a, b, (x, y) => x.name === y.name && sameList(x.items, y.items, Object.is)),
+  });
   /** Giysiler sekmesinde yalnız seçili yuva görünür (39 ürünlük tek uzun liste yerine); öteki sekmelerde tümü. */
   const slotChips = () =>
     tab() === "giysi" ? tabGroups().map((g) => ({ id: g.type, label: cosmeticType(g.type).name })) : [];
