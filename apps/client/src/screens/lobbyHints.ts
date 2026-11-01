@@ -91,3 +91,13 @@ export function cardsActive(settings: CardSettings | undefined): boolean {
   const s = settings ?? DEFAULT_CARD_SETTINGS;
   return s.enabled && enabledCards(s).length > 0;
 }
+
+/**
+ * Bot düğmeleri görünür mü: yalnız sunucu izin veriyorsa (`bots`, yalnız test ortamlarında gelir), yalnız ev sahibine,
+ * yalnız lobide. Canlı sunucu alanı hiç göndermez; düğme çıkmaz.
+ */
+export function botControlsVisible(
+  snap: Pick<RoomSnapshot, "bots" | "hostId" | "selfId" | "phase">,
+): boolean {
+  return snap.bots === true && snap.hostId === snap.selfId && snap.phase === "lobby";
+}

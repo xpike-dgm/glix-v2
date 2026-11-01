@@ -1,7 +1,7 @@
 import type { PlayerInfo } from "@glix/engine";
 import { createEffect, createSignal, on, Show } from "solid-js";
 import { hapticTap } from "../fx/haptics.js";
-import { kick, transferHost } from "../net/client.js";
+import { kick, removeBot, transferHost } from "../net/client.js";
 import { friendAction, friendsData, loadFriends } from "../net/friends.js";
 import { openReport } from "../net/reportUi.js";
 import { state, toast } from "../net/store.js";
@@ -30,6 +30,8 @@ export function PlayerMenu(props: {
   host: boolean;
   /** Hedef ev sahibi mi. */
   targetIsHost: boolean;
+  /** Lobide mi (bot yalnız lobide çıkarılır). */
+  canEdit?: boolean;
 }) {
   const [step, setStep] = createSignal<Step>("menu");
   const [profileOpen, setProfileOpen] = createSignal(false);
@@ -106,7 +108,26 @@ export function PlayerMenu(props: {
           </Show>
         }
       >
-        <Show when={step() === "menu"}>
+        <Show when={step() === "menu" && props.target?.bot}>
+          <div class="pmenu">
+            <p class="sheet__text">Bu bir bot: oyunları denemen için kendi kendine oynar.</p>
+            <Show when={props.host && props.canEdit !== false}>
+              <button
+                type="button"
+                class="prow prow--danger"
+                onClick={() => {
+                  const t = props.target;
+                  if (t) removeBot(t.id);
+                  close();
+                }}
+              >
+                <ExitIcon size={22} />
+                <span class="prow__label">Botu çıkar</span>
+              </button>
+            </Show>
+          </div>
+        </Show>
+        <Show when={step() === "menu" && !props.target?.bot}>
           <div class="pmenu">
             <Show when={fstate() === "friend"}>
               <button

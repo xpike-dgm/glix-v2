@@ -10,6 +10,7 @@ import {
   parseStickerId,
   REACTION_MIN_GAP_MS,
 } from "@glix/engine";
+import { handleBotMessage } from "./bots.js";
 import { cardEvent, playContext } from "./cards.js";
 import { openIds } from "./gameSwitches.js";
 import {
@@ -461,6 +462,10 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
         fail(conn, "not_in_room", "Bu oyuncu odada değil.");
         return;
       }
+      if (target.bot) {
+        fail(conn, "not_in_room", "Ev sahipliği bota devredilemez.");
+        return;
+      }
       setHost(room, target);
       rt.broadcaster.markDirty(room);
       return;
@@ -780,6 +785,12 @@ export function handleMessage(rt: Runtime, conn: Connection, msg: ClientMessage)
       rt.stats.perf(match.statsId, msg.gameId, rt.clock.now(), msg);
       return;
     }
+    case "addBot":
+    case "fillBots":
+    case "removeBot":
+    case "clearBots":
+      handleBotMessage(rt, conn, msg);
+      return;
     case "returnToLobby": {
       const room = requireHost(conn);
       if (!room) return;

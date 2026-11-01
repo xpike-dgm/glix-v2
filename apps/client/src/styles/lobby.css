@@ -87,6 +87,69 @@
   }
 }
 
+/* Bot düğmeleri (yalnız test ortamlarında, yalnız ev sahibine). */
+.botbar {
+  margin-top: 12px;
+  padding: 10px 12px 12px;
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 176, 32, 0.45);
+  background: rgba(255, 176, 32, 0.06);
+}
+.botbar__label {
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.botbar__tag,
+.seat__bot {
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: #ffb020;
+  color: #05081a;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+}
+.botbar__row {
+  display: flex;
+  gap: 8px;
+}
+.botbar__btn {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(255, 176, 32, 0.55);
+  color: #ffc857;
+  font-weight: 700;
+  font-size: var(--fs-13);
+  line-height: 1.2;
+  transition: transform 80ms var(--ease);
+}
+.botbar__btn:not(:disabled):active {
+  transform: scale(0.96);
+}
+.botbar__btn:disabled {
+  opacity: 0.4;
+}
+.botbar__btn--danger {
+  border-color: rgba(255, 120, 140, 0.5);
+  color: #ff8fa0;
+}
+.seat__bot {
+  margin-top: 2px;
+}
+
 /* Ayar satırı: tek dokunuşluk kart; ayarlar ekranını açar. */
 .lrow {
   width: 100%;

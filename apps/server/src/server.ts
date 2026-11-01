@@ -229,6 +229,8 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       (accountId, quests, balance) => rt.social.sendTo(accountId, { type: "questsDone", quests, balance }),
     ),
   );
+  // Bot ekleme yalnız test ortamlarında; canlıda istek reddedilir ve arayüz düğmeyi göstermez (bkz. bots.ts).
+  rt.botsEnabled = testOrtam;
   rt.social = createSocial(rt, accounts);
   rt.bannedWords = createBannedWords(accounts);
   rt.content = createContentStore(accounts, rt.bannedWords);

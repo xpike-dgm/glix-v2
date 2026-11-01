@@ -115,6 +115,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
         spectator: p.spectator,
         ...(p.username !== null ? { username: p.username } : {}),
         ...(p.cosmetics ? { cosmetics: p.cosmetics } : {}),
+        ...(p.bot ? { bot: true as const } : {}),
       })),
       gameIds: [...room.gameIds],
       selection: { ...room.selection },
@@ -125,6 +126,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       stageCount: room.stages.size,
       lobbyReady: room.phase === "lobby" ? lobbyReadyIds(room) : [],
       catalog: catalogFor(rt, room),
+      ...(rt.botsEnabled ? { bots: true as const } : {}),
       match: sharedMatch,
     };
   }
@@ -286,7 +288,8 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
       room.flushCancel = null;
     }
     room.lastFlushAt = clock.now();
-    const connected = [...room.players.values()].filter((p) => p.conn !== null);
+    // Botun bağlantısı sunucu içidir: ona görüntü hesaplanmaz (bot kararını kendi görünümünden kendisi okur).
+    const connected = [...room.players.values()].filter((p) => p.conn !== null && !p.bot);
     if (connected.length === 0 && room.stages.size === 0) return;
     const rt = getRuntime();
     // Ortak kısım bir kez hesaplanır ve bir kez farklanır; oyuncu başına yalnız selfId ve match.view eklenir.
@@ -349,7 +352,7 @@ export function createBroadcaster(clock: Clock, getRuntime: () => Runtime): Broa
     flush,
     resync(room, player) {
       const conn = player.conn;
-      if (!conn) return;
+      if (!conn || player.bot) return;
       const rt = getRuntime();
       conn.lastSent = null;
       try {

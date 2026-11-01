@@ -90,6 +90,16 @@ export interface Player {
   push: PushTarget | null;
   /** Son bildirimin sunucu saati (ms); 20 sn sınırı için. */
   lastPushAt: number;
+  /**
+   * Sunucu içindeki sanal oyuncu (yalnız test ortamlarında, bkz. bots.ts). Bağlantısı sunucu içidir (hiçbir şey
+   * göndermez), hesabı ve oturum belirteci yoktur; `stop` zamanlayıcısını iptal eder. İnsan oyuncuda yoktur.
+   */
+  bot?: BotHandle;
+}
+
+/** Botun odadan bağımsız denetimi: oyuncu çıkınca ya da oda kapanınca zamanlayıcı iptal edilir. */
+export interface BotHandle {
+  stop(): void;
 }
 
 export interface Room {
@@ -182,6 +192,8 @@ export interface Runtime {
   aiComment: AiCommenter;
   /** "İlham ver" kısa metin üretimi (aiInspire.ts); anahtar yoksa ve testlerde varsayılan kapalı. */
   aiInspire: AiText;
+  /** Lobide bot eklenebilir mi: yalnız test ortamlarında (`GLIX_ORTAM=test|test2`) true; canlıda daima false. */
+  botsEnabled: boolean;
 }
 
 export function isConnected(player: Player): boolean {
