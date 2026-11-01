@@ -77,3 +77,4 @@ yazılır; görseller hepsi bittikten sonra ChatGPT ile üretilir.
 | Kör Kronometre | uygulandı (canlıda değil) | 9213c21 |
 | Kör Bomba | uygulandı (canlıda değil) | f19eb45 |
 | Rus Ruleti | uygulandı (canlıda değil) | b1f6a47 |
+| Gizli Hırsız | uygulandı (canlıda değil) | f043c0d |
