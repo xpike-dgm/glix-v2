@@ -1,9 +1,8 @@
 # 15 oyun önerisi — sahibin kararları (2026-11-01)
 
 Kaynak: sahibin onay mesajı. Madde ayrıntıları her oyunun kendi öneri dosyasında (`docs/oneriler/<oyun>.md`).
-Uygulama sırası bu listedeki sıradır; oyunlar **tek tek** yapılır. **Yalnız "karar tamam" olan ilk 9 oyun
-(Sözlük Blöfü → Gizli Kareler) uygulanır.** Rüşvet ve Darbe'den Çizgiyi Geçme'ye kadarki 6 oyunun işaretleri taslaktır;
-sahip henüz okumadı, uygulanmaz. Görsel ihtiyaçları `GORSEL-IHTIYACLARI.md`ye
+Uygulama sırası bu listedeki sıradır; oyunlar **tek tek** yapılır. İlk 9 oyun uygulandı. Kalan 6 oyunun kararları sahip tarafından kesinleştirildi (aşağıdaki bölümler son hâl;
+önceki taslak işaretlerinin yerini aldı). Görsel ihtiyaçları `GORSEL-IHTIYACLARI.md`ye
 yazılır; görseller hepsi bittikten sonra ChatGPT ile üretilir.
 
 ## Sözlük Blöfü
@@ -43,29 +42,30 @@ yazılır; görseller hepsi bittikten sonra ChatGPT ile üretilir.
 - evet: GK-M1, GK-M2, GK-U1 … GK-U17
 - hayır: GK-M3, GK-M4, GK-M5, GK-M6, GK-M7, GK-U18, GK-U19, GK-AI1
 
-## Rüşvet ve Darbe (TASLAK — sahip henüz okumadı, uygulanmaz)
-- evet: RD-M1 … RD-M7, RD-U1, RD-U2, RD-U3, RD-U4, RD-U6 … RD-U17
-- hayır: RD-M8, RD-U5, RD-AI1
+## Rüşvet ve Darbe
+- evet: RD-M1, RD-M2, RD-M3, RD-M4, RD-M5, RD-M6, RD-M7, RD-U1, RD-U2, RD-U3, RD-U4, RD-U6, RD-U7, RD-U8, RD-U9, RD-U10, RD-U11, RD-U12, RD-U13, RD-U14, RD-U15
+- hayır: RD-M8, RD-U5, RD-U16, RD-U17, RD-AI1
 
-## İttifak (TASLAK — uygulanmaz)
-- evet: IT-M1 … IT-M5, IT-U1 … IT-U11, IT-U13, IT-U14, IT-U15, IT-U16, IT-AI1
-- hayır: IT-M6, IT-M7, IT-M8, IT-U12, IT-AI2
+## İttifak
+- evet: IT-M1, IT-M2, IT-M3, IT-M4, IT-M5, IT-U1, IT-U2, IT-U4, IT-U5, IT-U6, IT-U7, IT-U8, IT-U9, IT-U10, IT-U11, IT-U13, IT-U14, IT-AI1
+- hayır: IT-M6, IT-M7, IT-M8, IT-U3, IT-U12, IT-U15, IT-U16, IT-AI2
 
-## Son Kişi (TASLAK — uygulanmaz)
-- evet: SK-M1, SK-M2, SK-M3, SK-M4, SK-U1 … SK-U17
-- hayır: SK-M5, SK-M6, SK-M7, SK-AI1
+## Son Kişi
+- evet: SK-M1, SK-M2, SK-M3, SK-M4, SK-U1, SK-U2, SK-U3, SK-U4, SK-U5, SK-U6, SK-U7, SK-U8, SK-U9, SK-U10, SK-U11, SK-U13, SK-U14, SK-U15
+- hayır: SK-M5, SK-M6, SK-M7, SK-U12, SK-U16, SK-U17, SK-AI1
+- not (sahip): "Kimin kaçtığı aşağıda gözüküyor, bu kalksın."
 
-## Açgözlülük Limiti (TASLAK — uygulanmaz)
-- evet: AL-M1, AL-M2, AL-M3, AL-U1 … AL-U16, AL-U19
-- hayır: AL-M4 … AL-M8, AL-U17, AL-U18, AL-AI1
+## Açgözlülük Limiti
+- evet: AL-M1, AL-M2, AL-M3, AL-M4, AL-U1, AL-U2, AL-U3, AL-U4, AL-U5, AL-U6, AL-U7, AL-U8, AL-U9, AL-U10, AL-U11, AL-U12, AL-U13, AL-U14, AL-U15, AL-U16
+- hayır: AL-M5, AL-M6, AL-M7, AL-M8, AL-U17, AL-U18, AL-U19, AL-AI1
 
-## Ortalamanın Yarısı (TASLAK — uygulanmaz)
-- evet: OY-M1, OY-M2, OY-U1 … OY-U16, OY-U18
-- hayır: OY-M3 … OY-M8, OY-U17, OY-AI1
+## Ortalamanın Yarısı
+- evet: OY-M1, OY-M2, OY-U1, OY-U2, OY-U3, OY-U4, OY-U5, OY-U6, OY-U7, OY-U8, OY-U9, OY-U10, OY-U11, OY-U12, OY-U13, OY-U14, OY-U15, OY-U16
+- hayır: OY-M3, OY-M4, OY-M5, OY-M6, OY-M7, OY-M8, OY-U17, OY-U18, OY-AI1
 
-## Çizgiyi Geçme (TASLAK — uygulanmaz)
-- evet: CZ-M1 … CZ-M4, CZ-U1 … CZ-U15, CZ-U17
-- hayır: CZ-M5 … CZ-M8, CZ-U16, CZ-AI1
+## Çizgiyi Geçme
+- evet: CZ-M1, CZ-M3, CZ-M4, CZ-U1, CZ-U2, CZ-U3, CZ-U4, CZ-U5, CZ-U6, CZ-U7, CZ-U8, CZ-U9, CZ-U10, CZ-U11, CZ-U12, CZ-U13, CZ-U14, CZ-U15
+- hayır: CZ-M2, CZ-M5, CZ-M6, CZ-M7, CZ-M8, CZ-U16, CZ-U17, CZ-AI1
 
 ## Uygulama durumu
 | Oyun | Durum | Commit |
