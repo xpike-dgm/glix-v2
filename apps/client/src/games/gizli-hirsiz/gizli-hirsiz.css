@@ -142,7 +142,7 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  width: calc(var(--gh-av) + 24px);
+  width: max(calc(var(--gh-av) + 24px), 66px); /* 320 px'te "Zeynep" 13 px sığmıyordu */
 }
 .ghtable__av {
   position: relative;
@@ -158,7 +158,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: var(--fs-13);
   font-weight: 700;
   color: var(--text-dim);
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
@@ -539,6 +539,10 @@
 }
 .gho__count {
   margin: 0;
+  /* alarmın kırmızı ışığında 3,5:1 kalıyordu: koyu zemin */
+  padding: 0 8px;
+  border-radius: 8px;
+  background: rgba(5, 8, 26, 0.7);
   font-family: var(--font-display);
   font-weight: 800;
   font-size: clamp(18px, 5.6vw, 24px);
@@ -589,7 +593,7 @@
   margin-right: 2px;
 }
 .gho__name {
-  font-size: 12px;
+  font-size: var(--fs-13);
   font-weight: 700;
   max-width: 72px;
   overflow: hidden;
@@ -616,6 +620,7 @@
   padding: 6px 16px;
   border-radius: 12px;
   border: 2.5px solid currentColor;
+  background: rgba(5, 8, 26, 0.85);
   font-family: var(--font-display);
   font-weight: 800;
   font-size: clamp(18px, 6vw, 26px);
@@ -671,7 +676,7 @@
   display: flex;
   justify-content: space-between;
   margin-top: 3px;
-  font-size: 11px;
+  font-size: var(--fs-13);
   color: var(--text-dim);
 }
 .ghstrip__sig {
@@ -1056,10 +1061,17 @@
   .gh__stage .ghtable__seat {
     position: static;
     transform: none;
-    width: calc(var(--gh-av) + 10px);
+    /* sabit genişlikte "Zeynep" 13 px kırpılıyordu: koltuk adı kadar genişler (sığmazsa masa iki satır) */
+    width: auto;
+    min-width: calc(var(--gh-av) + 10px);
+  }
+  .gh__stage .ghtable {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 4px;
   }
   .gh__stage .ghtable__name {
-    font-size: 10px;
+    font-size: var(--fs-13);
   }
   .gh__ring {
     top: calc(50% + 24px);
@@ -1097,7 +1109,7 @@
     --gh-av: 30px;
   }
   .gh__stage .ghtable__name {
-    font-size: 10px;
+    font-size: var(--fs-13);
   }
   .gh__top {
     grid-column: 2;
@@ -1115,6 +1127,21 @@
     height: 64px;
   }
   .ghr__core {
+    display: none;
+  }
+  /* yan sütunda sonuç başlığı + damga + şerit sığmıyor, şerit DEVAM'ın altına iniyordu */
+  .gho {
+    gap: 4px;
+  }
+  .gho__count,
+  .gho__stamp {
+    font-size: 17px;
+  }
+  .gho__stamp {
+    padding: 3px 10px;
+  }
+  /* zaman şeridi DEVAM'ın altında kalıyordu: yatayda düşer (işaret süreleri hırsız kartlarında yazıyor) */
+  .gho .ghstrip {
     display: none;
   }
 }

@@ -3166,9 +3166,34 @@ function inPageAudit() {
     for (const r of own.getClientRects()) if (r.height > 0 && r.bottom > limit) return true;
     for (const d of el.querySelectorAll("*")) {
       const r = d.getBoundingClientRect();
-      if (r.height > 0 && r.bottom > limit && !hiddenBy(d)) return true;
+      // yalnız görünen, yazı taşıyan öğe sayılır (sönmüş şok halkası gibi süsler değil)
+      if (r.height > 0 && r.bottom > limit && !hiddenBy(d) && d.textContent.trim() && opacityOf(d) >= 0.05)
+        return true;
     }
     return false;
+  };
+
+  // Düğmenin dışına bilerek konmuş, ekran okuyucudan gizli süs (ör. kadehin üstündeki "✓ temiz" rozeti): taşma
+  // yalnız ondansa düğmenin yazısı taşmıyordur. Süsler bir an gizlenip yeniden ölçülür.
+  const decorOnly = (el) => {
+    const decor = [...el.querySelectorAll('[aria-hidden="true"]')].filter((d) =>
+      ["absolute", "fixed"].includes(cs(d).position),
+    );
+    if (!decor.length) return false;
+    // Geometriyle bakılır (süsü gizleyip ölçmek animasyonlarını baştan başlatıyordu).
+    const lim = el.getBoundingClientRect().left + el.clientLeft + el.clientWidth + 1;
+    const own = document.createRange();
+    for (const n of el.childNodes) {
+      if (n.nodeType !== 3 || !n.textContent.trim()) continue;
+      own.selectNodeContents(n);
+      if (own.getBoundingClientRect().right > lim) return false;
+    }
+    for (const d of el.querySelectorAll("*")) {
+      if (decor.some((x) => x.contains(d))) continue;
+      const r = d.getBoundingClientRect();
+      if (r.width > 0 && r.right > lim) return false;
+    }
+    return true;
   };
 
   // kırpılan / taşan metin
@@ -3187,7 +3212,8 @@ function inPageAudit() {
       !["auto", "scroll"].includes(s.overflowX) &&
       // Avatar çerçevesi bilerek avatarın kutusundan taşar (resim, %161 boy); taşma metni kırpmaz.
       !el.querySelector(".av__frame-box, .av__entry") &&
-      el.scrollWidth > el.clientWidth + 1
+      el.scrollWidth > el.clientWidth + 1 &&
+      !decorOnly(el)
     )
       issues.push(["clip", `metin kutusundan taşıyor (${el.scrollWidth} > ${el.clientWidth}): ${desc(el)}`]);
     if (

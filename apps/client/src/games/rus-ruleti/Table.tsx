@@ -163,7 +163,9 @@ export function Table(props: Props) {
                   <Show when={hasArt("cam-catlagi")} fallback={<i class="rrt__crack" aria-hidden="true" />}>
                     <img class="rrt__crackimg" src={cxArtSrc("cam-catlagi")} alt="" aria-hidden="true" />
                   </Show>
-                  <span class="rrt__stamp">ELENDİ</span>
+                  <span class="rrt__stamp" aria-hidden="true">
+                    ELENDİ
+                  </span>
                 </Show>
                 <Show when={fx(s.id) === "safe"}>
                   <span class="rrt__ok" aria-hidden="true">

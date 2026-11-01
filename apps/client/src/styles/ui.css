@@ -1072,8 +1072,11 @@
 }
 
 /* Tahmin satırı (Kör Bomba, Rus Ruleti): kompakt iki düğme, ardından "Tahminin alındı" */
+/* Dar yan sütunda (yatay telefon) soru + Evet + Hayır tek satıra sığmayıp ekrandan taşıyordu: düğmeler alt satıra
+   iner. */
 .prd {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   min-height: 48px;
@@ -1082,7 +1085,6 @@
   font-size: var(--fs-13);
   font-weight: 700;
   color: var(--text);
-  white-space: nowrap;
 }
 .prd__btns {
   display: flex;

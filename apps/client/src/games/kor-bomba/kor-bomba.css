@@ -916,10 +916,12 @@ button.kbo__bomb {
 .kbo__trip {
   position: absolute;
   z-index: 9;
-  inset: 0 0 64px;
+  /* alttan 64 px açık kalınca perde kendi koltuğunun ortasından geçiyordu ("Sen" yarım karanlık); Devam et
+     perdenin üstünde */
+  inset: 0;
   display: grid;
   place-items: center;
-  padding: 8px 12px;
+  padding: 8px 12px 72px;
   background: rgba(5, 6, 13, 0.78);
   pointer-events: auto; /* karartma perdesi: altındaki masa dokunulmaz */
 }

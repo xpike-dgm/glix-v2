@@ -319,7 +319,7 @@ export default function SonKisiScreen(props: GameScreenProps) {
 
         <Show when={phase() !== "play" && !inMoment() && lastResult()}>
           {(r) => (
-            <section class="sk__open rise" aria-label="Alarm sonucu">
+            <section class="sk__open rise" data-scroll aria-label="Alarm sonucu">
               <p class="sk__alarmline">{alarmLine(r())}</p>
               <p class="sk__winner">{roundHeadline(r(), nameOf, false)}</p>
               <Timeline

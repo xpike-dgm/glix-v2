@@ -294,6 +294,8 @@
   background: radial-gradient(circle, #fff 0 8%, rgba(255, 213, 107, 0.9) 22%, rgba(255, 194, 59, 0) 70%);
   opacity: 0;
   z-index: 5;
+  /* görünmez parıltı dar ekranda ortadaki kadehlerin üstüne düşüp dokunuşu yutuyordu */
+  pointer-events: none;
 }
 .zkt__clink[data-on="1"] {
   animation: zk-clink 700ms var(--ease) both;
@@ -350,14 +352,15 @@
 }
 .zkt__right {
   position: absolute;
-  right: -7px;
-  top: -5px;
-  width: 18px;
-  height: 18px;
+  right: -8px;
+  top: -6px;
+  /* 13 px işaret 18 px dairede kenara taşıyordu */
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  font-size: 11px;
+  font-size: var(--fs-13);
   font-weight: 800;
   line-height: 1;
   color: #1a1206;
@@ -574,7 +577,7 @@
   padding: 1px 6px;
   border-radius: 999px;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: var(--fs-13);
   font-weight: 800;
   line-height: 16px;
   color: #08210c;
@@ -729,7 +732,7 @@
 .zk__act small {
   font-family: var(--font-text);
   font-weight: 600;
-  font-size: 11px;
+  font-size: var(--fs-13);
   color: var(--text-dim);
 }
 .zk__act--swap {
@@ -931,7 +934,7 @@
 }
 @media (max-width: 380px) {
   .zkt__name {
-    font-size: 11px;
+    font-size: var(--fs-13);
   }
   .zk__act small {
     display: none;
@@ -958,7 +961,7 @@
     min-height: 56px;
   }
   .zk__act {
-    min-height: 46px;
+    min-height: 48px;
   }
 }
 
