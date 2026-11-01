@@ -79,3 +79,4 @@ yazılır; görseller hepsi bittikten sonra ChatGPT ile üretilir.
 | Rus Ruleti | uygulandı (canlıda değil) | b1f6a47 |
 | Gizli Hırsız | uygulandı (canlıda değil) | f043c0d |
 | Gizli Kareler | uygulandı (canlıda değil) | 2709030 |
+| Rüşvet ve Darbe | uygulandı (canlıda değil) | d8905b8 |
