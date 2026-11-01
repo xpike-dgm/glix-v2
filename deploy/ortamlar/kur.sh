@@ -109,7 +109,7 @@ Kurulum tamam. Kalan adımlar (otomatik yapılmadı):
 
 1. DNS: test.glix.dgmcraft.online ve test2.glix.dgmcraft.online için sunucunun IP'sine A (ve varsa AAAA) kaydı.
 2. Caddy: /etc/caddy/Caddyfile sonuna şu satırı ekle, sonra doğrula ve yeniden yükle:
-     import $ORTAM_KOK/caddy/ortamlar.caddy
+     import /etc/caddy/glix-ortamlar/ortamlar.caddy
      caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile && systemctl reload caddy
 3. Giriş: kullanıcı adı "sahip", şifre: cat $GIZLI/sifre-sahip   (davetli eklemek: $B/erisim.sh ekle <ad>)
    Oyunda sahte hesaplar: Zengin, YeniOyuncu, Rozetli — şifre: grep '^GLIX_SAHTE_SIFRE=' $GIZLI/.env.test2

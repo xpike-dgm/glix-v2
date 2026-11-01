@@ -33,7 +33,7 @@ Sunucuda düzen:
 /srv/glix/ortam/
   betik/            bu klasörün kopyası (cron buradan çalışır)
   gizli/            0700: .env.test, .env.test2, erisim-kullanicilar, sifre-<ad>, cerez.test, cerez.test2
-  caddy/            ortamlar.caddy (0640 root:caddy; /etc/caddy/Caddyfile bunu import eder)
+  (Caddy dosyası /etc/caddy/glix-ortamlar/ortamlar.caddy: caddy kullanıcısı /srv/glix altına giremez)
   kaynak/<sha>/     test'e çıkan sürümlerin kaynağı (son 3)
   test/veri/        test veritabanı (uid 1000)
   test2/veri/       oyun alanı veritabanı (uid 1000)
@@ -128,7 +128,7 @@ E-postaları `@oyun-alani.invalid` (hiçbir yere gidemez).
    - `main`'i derleyip test'i açar (ilk derleme birkaç dakika sürer), içeriği canlıdan kopyalar,
    - test2'yi test'in imajıyla sıfırdan kurar.
 3. DNS: `test.glix` ve `test2.glix` için A/AAAA kayıtları.
-4. Caddy: `/etc/caddy/Caddyfile` sonuna `import /srv/glix/ortam/caddy/ortamlar.caddy`, sonra
+4. Caddy: `/etc/caddy/Caddyfile` sonuna `import /etc/caddy/glix-ortamlar/ortamlar.caddy`, sonra
    `caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile && systemctl reload caddy`.
 5. Cron (`/etc/cron.d/glix-ortamlar`):
    ```

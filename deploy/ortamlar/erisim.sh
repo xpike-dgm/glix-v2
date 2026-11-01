@@ -4,7 +4,7 @@
 #   erisim.sh ekle <ad>             kullanıcı ekler; şifre /srv/glix/ortam/gizli/sifre-<ad> dosyasına yazılır (0600)
 #   erisim.sh sil <ad>              kullanıcıyı siler (o kişinin çerezi de geçersiz olsun istersen: cerez-yenile)
 #   erisim.sh cerez-yenile          giriş çerezlerini değiştirir: herkes bir kez yeniden şifre girer
-#   erisim.sh yaz                   /srv/glix/ortam/caddy/ortamlar.caddy dosyasını yeniden üretir
+#   erisim.sh yaz                   /etc/caddy/glix-ortamlar/ortamlar.caddy dosyasını yeniden üretir
 # Her değişiklikten sonra Caddy dosyası yeniden üretilir; /etc/caddy/Caddyfile bu dosyayı içe aktarıyorsa Caddy
 # doğrulanıp yeniden yüklenir. Hiçbir şifre, özet ya da çerez ekrana basılmaz.
 # Ad: küçük harf, rakam ve tire (ör. sahip, ayse, yz-magaza).
@@ -14,7 +14,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/ortak.sh"
 shopt -u patsub_replacement 2>/dev/null || true
 
 KULLANICILAR="$GIZLI/erisim-kullanicilar"
-CADDY_DIZIN="$ORTAM_KOK/caddy"
+# Caddy kullanıcısı /srv/glix altına giremez (0750 root); dosya /etc/caddy altında durur.
+CADDY_DIZIN="${ORTAM_CADDY_DIZIN:-/etc/caddy/glix-ortamlar}"
 CADDY_DOSYA="$CADDY_DIZIN/ortamlar.caddy"
 SABLON="$BETIK_DIZIN/Caddyfile.ortamlar"
 ANA_CADDY=/etc/caddy/Caddyfile
