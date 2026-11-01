@@ -32,6 +32,11 @@ if ! id uretim-site >/dev/null 2>&1; then
 fi
 [ "$(id -u uretim-site)" = "$SITE_UID" ] || { echo "uretim-site kullanıcısı $SITE_UID değil" >&2; exit 1; }
 install -d -m 0755 -o root -g root "$KOK" /etc/ssh/uretim
+# Giriş kabuğu: sshd ForceCommand'ı kullanıcının kabuğuyla (`<kabuk> -c <komut>`) çalıştırır. Ana makinede bu yol
+# nologin'in kopyasıdır (giriş yok); chroot içinde aynı yolda dash durur ve yalnız ForceCommand'ı çalıştırır.
+KABUK=/usr/local/sbin/uretim-kabuk
+install -m 0755 -o root -g root "$(command -v nologin || echo /usr/sbin/nologin)" "$KABUK"
+DASH="$(readlink -f /bin/sh)"
 
 ARAC="$(mktemp)"
 docker cp "$KAP:/app/cli/uretim.js" "$ARAC"
@@ -55,7 +60,7 @@ while read -r alan; do
   [ "$u" -le "$UID_UST" ] || { echo "alan kullanıcıları için uid aralığı doldu" >&2; exit 1; }
   if ! id "$k" >/dev/null 2>&1; then
     if getent passwd "$u" >/dev/null; then echo "uid $u başka bir kullanıcıda" >&2; exit 1; fi
-    useradd -M -d / -s /usr/sbin/nologin -u "$u" -g uretim-alanlari "$k"
+    useradd -M -d / -s "$KABUK" -u "$u" -g uretim-alanlari "$k"
   fi
   ku="$(id -u "$k")"
   if [ "$ku" -lt "$UID_ALT" ] || [ "$ku" -gt "$UID_UST" ]; then
@@ -64,6 +69,7 @@ while read -r alan; do
   fi
   usermod -G "" "$k" # yalnız uretim-alanlari (birincil grup)
   usermod -p '*' "$k" # parola yok (site parola oluşturunca eslestir.sh yazar)
+  usermod -s "$KABUK" "$k"
   c="$KOK/$alan"
   install -d -m 0755 -o root -g root "$c" "$c/bin" "$c/etc" "$c/etc/uretim" "$c/dev" "$c/tmp"
   chmod 1777 "$c/tmp"
@@ -73,6 +79,12 @@ while read -r alan; do
   # Araç `#!/bin/node` ile başlar; chroot içinde gerçek yola bağlanır.
   [ "$NODE" = /bin/node ] || ln -sfn "$NODE" "$c/bin/node"
   kopyala_bagimli "$SFTP" "$c"
+  # Chroot içindeki kabuk (dash) aynı yolda; sftp-server kullanıcıyı chroot'taki passwd'de arar.
+  install -D -m 0755 "$DASH" "$c$KABUK"
+  kopyala_bagimli "$DASH" "$c"
+  printf 'root:x:0:0:root:/:%s\n%s:x:%s:%s::/:%s\n' "$KABUK" "$k" "$ku" "$(getent group uretim-alanlari | cut -d: -f3)" "$KABUK" > "$c/etc/passwd"
+  printf 'root:x:0:\nuretim-alanlari:x:%s:\nuretim-site:x:%s:\n' "$(getent group uretim-alanlari | cut -d: -f3)" "$SITE_GID" > "$c/etc/group"
+  chmod 0644 "$c/etc/passwd" "$c/etc/group"
   install -m 0755 -o root -g root "$ARAC" "$c/bin/uretim"
   printf '{"url":"%s","anahtar":"/etc/uretim/anahtar"}\n' "$SITE_URL" > "$c/etc/uretim/ayar.json"
   chmod 0644 "$c/etc/uretim/ayar.json"
