@@ -31,7 +31,7 @@ import { ONEMLER, type Onem, yapiliRaporMu } from "./ortak/rapor.js";
 export const ONERI_ONBELLEK_MS = 10 * 60_000;
 export const ONERI_EN_AZ = 3;
 export const ONERI_EN_COK = 6;
-const MAX_TOKENS = 900;
+const MAX_TOKENS = 1600;
 /** "Başka öner" zincirinde modele "tekrar etme" diye verilen en çok başlık. */
 const ONCEKI_EN_COK = 24;
 
