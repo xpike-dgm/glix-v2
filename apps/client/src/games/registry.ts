@@ -34,6 +34,11 @@ export interface GameEntry {
   /** Yatay oyunlar: yan şerit (süre çubuğu, puan, avatarlar) için görünümden özet çıkarır. */
   /** Kuralı gereği süresi gizli oyun (Kör Kronometre, Kör Bomba, Son Kişi, Aşırı Yükleme) ya da kendi toplam saatini çizen oyun (Zaman Bombası): kabuk saati çizilmez. */
   noClock?: boolean;
+  /**
+   * İzleyici ekranı dokunulabilir kalır: oyunun izleyiciye yalnız kendi telefonunda kalan, sunucuya hiçbir şey
+   * göndermeyen bir oyunu vardır (ör. Kör Bomba "Kimde patlar?"). Verilmezse izleyici ekranı dokunulmaz (inert).
+   */
+  spectatorTouch?: boolean;
   /** Büyük ekran (TV) için oyuna özel yatay görünüm; yoksa telefon ekranı izleyici kipinde büyütülerek gösterilir. */
   StageView?: Component<GameScreenProps>;
   /**
@@ -59,8 +64,10 @@ const registry: Record<string, GameEntry> = {
   },
   "kor-bomba": {
     noClock: true,
+    spectatorTouch: true,
     Screen: lazy(() => import("./kor-bomba/KorBombaScreen.js")),
     Art: lazy(() => import("./kor-bomba/BriefingArt.js")),
+    StageView: lazy(() => import("./kor-bomba/StageView.js")),
   },
   "asiri-yukleme": {
     noClock: true,

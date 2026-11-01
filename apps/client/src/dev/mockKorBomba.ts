@@ -1,28 +1,35 @@
 /**
- * Yalnız geliştirme önizlemesi (üretim paketine girmez). Kör Bomba ekranları:
+ * Yalnız geliştirme önizlemesi (üretim paketine girmez). Kör Bomba ekranları gerçek motorla çalışır:
  *   ?mock=kor-bomba-briefing   anlatım
- *   ?mock=kor-bomba-holder     bomba sende (siyah çekirdek, PAS VER); koltuğa dokununca pas gider
- *   ?mock=kor-bomba-watch      bomba başkasında (gerçek kalan süre); botlar kendi aralarında pas verir
- *   ?mock=kor-bomba-urgent     son saniyeler
- *   ?mock=kor-bomba-blast      patlama anı
- *   ?mock=kor-bomba-spectator  izleyici
- *   ?mock=kor-bomba-predict    tahmin satırı (Patlar / Patlamaz); bomba başkasında
- *   ?mock=kor-bomba-predicted  tahmin verildi ("Tahminin alındı")
- *   ?mock=kor-bomba-bildi      patlama: "Elif bildi!" ve "Bildin!" bildirimi (sen de bildin)
- *   ?mock=kor-bomba-bilemedin  patlama: tahmin tutmadı ("Bilemedin")
+ *   ?mock=kor-bomba-holder     bomba sende ("BOMBA SENDE — birine dokun"); koltuğa dokununca pas gider
+ *   ?mock=kor-bomba-lock       bomba az önce geldi: "Fitil tutuşuyor…" (BM-M1)
+ *   ?mock=kor-bomba-watch      bomba başkasında; süre yalnız basılı tutunca görünür (BM-U1); botlar pas verir
+ *   ?mock=kor-bomba-urgent     son saniyeler (bakınca kırmızı, titrer)
+ *   ?mock=kor-bomba-predict    "PATLAR!" bahis düğmesi (BM-U4)
+ *   ?mock=kor-bomba-predicted  bahis verildi ("Bahsin: Mert'in eli")
+ *   ?mock=kor-bomba-bildi      patlama: bahsin tuttu, "… bildi!"
+ *   ?mock=kor-bomba-bilemedin  pas oldu, bahsin yandı
+ *   ?mock=kor-bomba-blast      patlama anı (başkasında)
+ *   ?mock=kor-bomba-boom-me    patlama anı (sende): "BOMBA SENDE PATLADI · −1"
+ *   ?mock=kor-bomba-trip       bombanın yolculuğu (BM-U6)
+ *   ?mock=kor-bomba-offline    taşıyıcı koptu bandı (BM-U12)
+ *   ?mock=kor-bomba-spectator  izleyici: "Kimde patlar?" (BM-U10)
  * `&n=8` oyuncu sayısını değiştirir.
  */
-import type {
-  ClientMessage,
-  GameInfo,
-  KorBombaPublicView,
-  KorBombaView,
-  MatchSnapshot,
-  PlayerInfo,
-  RoomPhase,
-  RoomSnapshot,
+import {
+  type ClientMessage,
+  createRng,
+  type GameInfo,
+  isRejected,
+  KOR_BOMBA_LOCK_MS,
+  type KorBombaState,
+  korBomba,
+  type MatchSnapshot,
+  type PlayerInfo,
+  type RoomPhase,
+  type RoomSnapshot,
 } from "@glix/engine";
-import { useMockSender } from "../net/client.js";
+import { mockAck, useMockSender } from "../net/client.js";
 import { applySnapshot, setState } from "../net/store.js";
 
 const NAMES = ["Cihad", "Elif", "Mert", "Zeynep", "Kaan", "Defne", "Burak", "Ayşe"];
@@ -34,93 +41,99 @@ const GAME: GameInfo = {
   maxPlayers: 8,
   orientation: "landscape",
 };
-const BRIEFING = {
-  goal: "Bomba sende patlamasın!",
-  steps: [
-    "Bomba rastgele birinde başlar",
-    "Taşıyan süreyi görmez; kandır ya da ikna et",
-    "Pas ver, süreyi uzat; patlayan −1 alır",
-  ],
-};
 
 export function startKorBombaMock(kind: string, params: URLSearchParams): void {
+  startKorBombaMockAs(kind, params, false);
+}
+
+/** `tv`: sahne (TV) görünümü için izleyici kipinde, aynı motor durumu. */
+export function startKorBombaMockAs(kind: string, params: URLSearchParams, tv: boolean): void {
   const n = Math.min(8, Math.max(2, Number(params.get("n")) || 6));
+  const stage = kind.replace(/^kor-bomba-?/, "") || "watch";
+  const spectating = tv || stage === "spectator";
+  const offlineId = stage === "offline" ? "p2" : stage === "holder" && n > 4 ? "p3" : null;
   const players: PlayerInfo[] = Array.from({ length: n }, (_, i) => ({
     id: `p${i}`,
     nickname: NAMES[i] ?? `Oyuncu${i}`,
     avatar: i,
-    connected: !(kind === "kor-bomba-holder" && i === 3 && n > 4),
+    connected: `p${i}` !== offlineId,
     score: 0,
     spectator: false,
   }));
-  const spectating = kind === "kor-bomba-spectator";
   const participants = players.map((p) => p.id).filter((id) => !(spectating && id === SELF));
-  const startedAt = Date.now() - 6_000;
-  const briefing = kind === "kor-bomba-briefing";
+  const connected = () => players.filter((p) => p.connected && participants.includes(p.id)).map((p) => p.id);
+  const briefing = stage === "briefing";
+  let seed = 7;
+  const ctx = (now = Date.now()) => ({ now, rng: createRng(seed++), connected: connected() });
+
+  const t0 = Date.now() - 22_000;
+  let s: KorBombaState = korBomba.setup(participants, {
+    now: t0,
+    rng: createRng(3),
+    connected: participants,
+  });
+  const step = (who: string, action: Parameters<typeof korBomba.reduce>[2], at: number): boolean => {
+    const r = korBomba.reduce(s, who, action, { now: at, rng: createRng(seed++), connected: participants });
+    if (isRejected(r)) return false;
+    s = r;
+    return true;
+  };
+  // Geçmiş: p4 → p1 → p2 (zincir dolu görünsün).
+  s = { ...s, holder: "p4", explodeAt: t0 + 19_000, fuseMs: 19_000 };
+  step("p4", { kind: "pass", to: "p1" }, t0 + 4_000);
+  step("p1", { kind: "pass", to: "p2" }, t0 + 11_000);
+  const now0 = Date.now();
+  /** Patlama anını kaydırırken fitil hesabı tutarlı kalsın (başlangıç fitili buna göre). */
+  const setExplode = (at: number): void => {
+    const bonuses = s.log.reduce((sum, p) => sum + p.bonusMs, 0);
+    s = { ...s, explodeAt: at, fuseMs: at - s.startedAt - bonuses };
+  };
+  const holderNow = stage === "holder" || stage === "lock" || stage === "boom-me" ? SELF : "p2";
+  if (holderNow === SELF)
+    step("p2", { kind: "pass", to: SELF }, stage === "lock" ? now0 - 200 : now0 - 1_900);
+  const fuseLeft = stage === "urgent" ? 3_600 : stage === "bildi" || stage === "bilemedin" ? 4_200 : 11_800;
+  setExplode(now0 + fuseLeft);
+  if (stage === "predicted" || stage === "bildi" || stage === "bilemedin") {
+    step(SELF, { kind: "bet", turn: s.passes }, now0 - 100);
+    if (stage === "bildi") step("p3", { kind: "bet", turn: s.passes }, now0 - 90);
+    if (stage === "bildi") step("p5", { kind: "bet", turn: s.passes }, now0 - 80);
+  }
+  if (stage === "blast" || stage === "boom-me" || stage === "trip") {
+    setExplode(now0 - (stage === "trip" ? 2_600 : 300));
+    s = korBomba.tick(s, ctx(now0));
+  }
+  if (stage === "bilemedin") {
+    // p2 pası verir: bahis yanar.
+    later(() => {
+      step("p2", { kind: "pass", to: "p4" }, Math.max(Date.now(), s.heldSince + KOR_BOMBA_LOCK_MS));
+      publish();
+    }, 1_600);
+  }
 
   let rev = 1;
-  let holder = kind === "kor-bomba-holder" ? SELF : "p2";
-  if (spectating) holder = "p1";
-  let explodeAt = Date.now() + (kind === "kor-bomba-urgent" ? 3_400 : 11_800);
-  let exploded = kind === "kor-bomba-blast";
-  if (exploded) {
-    holder = "p1";
-    explodeAt = Date.now() - 400;
-  }
-  let passes = 2;
-  const resolving = kind === "kor-bomba-bildi" || kind === "kor-bomba-bilemedin";
-  let myGuess: boolean | null = kind === "kor-bomba-predicted" ? true : null;
-  let lastResult: { turn: number; correct: boolean } | null = null;
-  let correctPredictors: string[] = [];
-  if (resolving) {
-    // Taşıyıcı p1; sen "patlar" ya da "patlamaz" dedin, bomba kısa süre sonra patlar.
-    holder = "p1";
-    explodeAt = Date.now() + 1_800;
-    myGuess = kind === "kor-bomba-bildi";
-  }
-  let lastPass: KorBombaPublicView["lastPass"] = { seq: 2, from: "p4", to: holder };
-  let lastBonusMs: number | null = null;
-  const timers: ReturnType<typeof setTimeout>[] = [];
-
-  const publicView = (): KorBombaPublicView => ({
-    startedAt,
-    holder,
-    passes,
-    lastPass,
-    exploded,
-    explodedAt: exploded ? explodeAt : null,
-    correctPredictors: exploded ? correctPredictors : [],
-  });
-  const view = (): KorBombaView => {
-    if (spectating) return { role: "spectator" };
-    if (holder === SELF && !exploded) return { role: "holder", lastResult };
-    return {
-      role: "watcher",
-      explodeAt,
-      lastBonusMs,
-      prediction: myGuess === null ? null : { turn: passes, explodes: myGuess },
-      lastResult,
-    };
-  };
-
   const phase: RoomPhase = briefing ? "briefing" : "playing";
-  const publish = (): void => {
+  function publish(): void {
     const now = Date.now();
+    s = korBomba.tick(s, ctx(now));
+    const c = ctx(now);
     const match: MatchSnapshot = {
       round: 0,
       total: 3,
       gameId: GAME.id,
       gameName: GAME.name,
-      briefing: BRIEFING,
+      briefing: { goal: korBomba.briefing.goal, steps: [...korBomba.briefing.steps] },
       orientation: "landscape",
       participants,
       readyIds: briefing ? ["p1", "p2"] : [],
       continueIds: [],
-      phaseStartedAt: startedAt,
+      phaseStartedAt: s.startedAt,
       phaseEndsAt: briefing ? now + 40_000 : null,
-      publicView: publicView(),
-      view: view(),
+      publicView: korBomba.publicView(s, c),
+      view: korBomba.view(s, spectating ? null : SELF, c),
       result: null,
+      ...(s.exploded
+        ? { reveal: { startedAt: s.explodeAt, endsAt: s.explodeAt + 60_000, continueIds: ["p1"] } }
+        : {}),
     };
     const snapshot: RoomSnapshot = {
       rev: ++rev,
@@ -139,55 +152,48 @@ export function startKorBombaMock(kind: string, params: URLSearchParams): void {
       match,
     };
     applySnapshot(snapshot);
-  };
+  }
+  function later(fn: () => void, ms: number): void {
+    setTimeout(fn, ms);
+  }
 
-  const doPass = (from: string, to: string): void => {
-    if (exploded || from !== holder || from === to) return;
-    const bonus = 1_000 + Math.floor(Math.random() * 3_001);
-    holder = to;
-    explodeAt += bonus;
-    lastBonusMs = bonus;
-    passes += 1;
-    lastPass = { seq: passes, from, to };
-    publish();
-  };
   const botPass = (): void => {
-    if (exploded) return;
-    if (holder !== SELF) {
-      const targets = players.filter((p) => p.id !== holder && p.connected).map((p) => p.id);
+    if (s.exploded) return;
+    if (s.holder !== SELF) {
+      const targets = connected().filter((id) => id !== s.holder && id !== s.lastPass?.from);
       const to = targets[Math.floor(Math.random() * targets.length)];
-      if (to && Math.random() < 0.6) doPass(holder, to);
+      if (to && Math.random() < 0.6 && step(s.holder, { kind: "pass", to }, Date.now())) publish();
     }
-    timers.push(setTimeout(botPass, 2_200 + Math.random() * 1_500));
+    later(botPass, 2_400 + Math.random() * 1_500);
   };
 
   setState({ conn: "open", everOpen: true, nickname: "Cihad" });
   useMockSender((msg: ClientMessage) => {
     if (msg.type !== "action") return;
-    const p = msg.payload as { kind?: unknown; to?: unknown; explodes?: unknown };
-    if (p.kind === "predict" && typeof p.explodes === "boolean" && myGuess === null && holder !== SELF) {
-      myGuess = p.explodes;
-      publish();
+    const r = korBomba.reduce(s, SELF, msg.payload as Parameters<typeof korBomba.reduce>[2], ctx());
+    if (isRejected(r)) {
+      mockAck(msg.seq, { ok: false, reason: r.rejected });
       return;
     }
-    if (p.kind === "pass" && typeof p.to === "string") doPass(SELF, p.to);
+    s = r;
+    mockAck(msg.seq, { ok: true });
+    publish();
   });
   setState("session", { token: "mock", playerId: SELF, roomCode: "KX7QP" });
   publish();
-  if (kind === "kor-bomba-watch" || kind === "kor-bomba-holder") {
-    timers.push(setTimeout(botPass, 3_000));
-  }
-  // Bomba bir kez daha patlasın diye: süre dolunca patlamayı yayınla.
+  if (stage === "watch" || stage === "holder" || stage === "spectator") later(botPass, 3_000);
+  // Patlama anını yayınla (sunucunun tam zamanlı uyandırması gibi).
   const arm = (): void => {
-    if (exploded) return;
-    if (Date.now() >= explodeAt) {
-      exploded = true;
-      if (myGuess !== null) lastResult = { turn: passes, correct: myGuess };
-      if (kind === "kor-bomba-bildi") correctPredictors = ["p2", SELF];
+    if (s.exploded) return;
+    if (Date.now() >= s.explodeAt) {
       publish();
       return;
     }
-    timers.push(setTimeout(arm, 100));
+    later(arm, 50);
   };
   arm();
+  // Yolculuk ekranı zamanla açılır; ekran saati ilerledikçe yeniden çizilir.
+  setInterval(() => {
+    if (s.exploded) publish();
+  }, 500);
 }

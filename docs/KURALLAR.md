@@ -884,6 +884,34 @@ bomba kimdeyse o oyuncu 0, diğerleri +1 alır.
 - Gizli patlama süresi gizli kalır: tahmin düğmeleri süreye bağlı değildir (kalan süreye göre açılmaz, kapanmaz, değişmez)
   ve tahmin sunucu tarafında süreden bağımsız işlenir. Tahmin, patlama anından sonra kabul edilmez.
 
+**Değişiklik (BM öneri paketi, Kasım 2026, sahip onayı: BM-M1, BM-M2, BM-M3) — yukarıdakilerin önüne geçer:**
+
+- **Fitil tutuşuyor (BM-M1):** Bombayı alan **1,5 sn** pas veremez (oyunun ilk taşıyıcısı dahil; sunucu bu sürede gelen
+  pası reddeder, bomba onda kalır). Kilit süre değildir: fitil işlemeye devam eder, kilitteyken patlarsa bomba onda patlar.
+  Kopan taşıyıcı döndüğünde kilit yeniden başlamaz.
+- **Hemen geri pas yok (BM-M1):** Taşıyıcı, bombayı **az önce kendisine atana** geri atamaz. Yasak yalnız bir el sürer
+  (sonraki elde o kişi yine seçilebilir). Atan dışında bağlı kimse yoksa (2 oyuncu ya da diğerleri kopuk) geri pas serbesttir.
+- **Azalan ek süre ve tavan (BM-M2):** Pasın fitile eklediği süre: **1.–3. pas** rastgele **1–4 sn**, **4.–6. pas** rastgele
+  **0,5–2 sn**, **7. pas ve sonrası 0**. Fitil hiçbir durumda oyunun başından **45 sn**'yi geçemez (ek süre buna göre kırpılır).
+  Eklenen süre yine yalnız süreyi görenlere gider; 0 eklenince kıvılcım çıkmaz.
+- **Tek kurşun (BM-M3):** O9'un el başına "Patlar / Patlamaz" tahmini kalkar. Yerine bombayı taşımayan her katılımcının oyun
+  boyunca **tek bir "PATLAR!" bahsi** vardır. Bahis verildiği andaki taşıyıcının **eline** bağlanır: bomba o elde patlarsa
+  bahisçi **+1** alır; pas olursa bahis **yanar** (0, eksi yok) ve hak geri gelmez. Bahis yalnız **fitilde en az 3 sn varken**
+  kabul edilir; daha geç gelen bahis reddedilir ve **hak yanmaz**. Bahis düğmesi zamana göre açılıp kapanmaz (sınırı yalnız
+  zaten süreyi gören bilir). Bombayı taşırken bahis verilemez; hakkını kullanmamış taşıyıcı pas verdikten sonra kullanabilir.
+  Bahisler gizlidir: kimin bahis yaptığı patlamaya kadar kimseye açılmaz, taşıyıcı hiç görmez; patlamada tutanların adı herkese
+  açılır, yananlarınki açılmaz. Doğru bahis oyun başına en çok +1'dir; taşıyıcı −1 aynen.
+- **Patlama anı (BM-U5):** Sunucu patlamayı fitilin bittiği anda işler ve yayınlar (100 ms'lik adımı beklemez). Puan ve pas
+  kuralı değişmez.
+- **Patlamadan sonra açılan bilgi (BM-U6):** Bombanın yolculuğu (her elin taşıyıcısı ve tuttuğu süre), başlangıç fitili, her
+  pasın eklediği süre ve toplam yalnız patlamadan sonra herkese açılır. Patlamadan önce herkese açık olan yalnız taşıyıcı, pas
+  sayısı ve pas zinciridir (kimden kime).
+- **Anlatım 3. adımı:** "Pas ver, süreyi uzat; patlayan −1. Bir kez 'PATLAR!' de: o elde patlarsa +1".
+- **Değişmeyenler:** 2–8 oyuncu; yatay ekran; bombanın rastgele bağlı oyuncuda başlaması; ilk fitil 15–20 sn; taşıyıcının süreyi
+  hiç görmemesi; diğer katılımcıların gerçek süreyi görmesi; kendine ve kopuk oyuncuya pas yok; patlama anında gelen pasın
+  reddi; patlayan −1, diğerleri 0; izleyici ve TV'de süre ve bahis olmaması; kopuk taşıyıcıda bombanın kalması; patlamadan
+  sonraki 2 sn gösteri; oyunun sonuç ekranının "Devam et" ile geçmesi.
+
 ## 11. Rüşvet ve Darbe — `rusvet-darbe`
 
 **Durum: KİLİTLİ**

@@ -17,6 +17,7 @@
  *   tv-kendim-*               Kendim evreleri (ör. tv-kendim-write, tv-kendim-match, tv-kendim-reveal&t=4000)
  *   tv-cagrisim-*             Çağrışım Ağı evreleri (ör. tv-cagrisim-answer, tv-cagrisim-mini, tv-cagrisim-final&at=3000)
  *   tv-kor-kronometre-*       Kör Kronometre evreleri (ör. tv-kor-kronometre-counting, tv-kor-kronometre-reveal)
+ *   tv-kor-bomba-*            Kör Bomba evreleri (ör. tv-kor-bomba-watch, tv-kor-bomba-blast, tv-kor-bomba-trip)
  *   tv-sozluk-*               Sözlük Blöfü evreleri (ör. tv-sozluk-write, tv-sozluk-pick, tv-sozluk-reveal&at=4000)
  *   tv-sizma-*                Sızma evreleri (ör. tv-sizma-clue, tv-sizma-runoff, tv-sizma-unmask&t=5200)
  */
@@ -58,6 +59,9 @@ export async function startTvMock(mock: string, params: URLSearchParams): Promis
     } else if (kind.startsWith("sozluk-")) {
       const m = await import("./mockSozluk.js");
       m.startSozlukMock(`${kind}-spectator`, params);
+    } else if (kind.startsWith("kor-bomba")) {
+      const m = await import("./mockKorBomba.js");
+      m.startKorBombaMockAs(kind, params, true);
     } else if (kind.startsWith("kor-kronometre")) {
       const m = await import("./mockKronometre.js");
       m.startKronometreMock(kind, params, true);

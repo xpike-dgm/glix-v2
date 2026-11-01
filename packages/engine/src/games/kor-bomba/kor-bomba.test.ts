@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 import { type GameContext, isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
 import { findLeaks } from "../../testing/invariants.js";
-import { KOR_BOMBA_OUTRO_MS, type KorBombaState, korBomba } from "./index.js";
+import {
+  KOR_BOMBA_FUSE_CAP_MS,
+  KOR_BOMBA_LOCK_MS,
+  KOR_BOMBA_OUTRO_MS,
+  type KorBombaState,
+  korBomba,
+} from "./index.js";
 
 const T0 = 1_700_000_000_000;
 const ALL = ["a", "b", "c", "d"];
@@ -13,13 +19,19 @@ const ctx = (now: number, connected: readonly string[] = ALL, seed = 7): GameCon
 });
 const start = (players = ALL, connected: readonly string[] = players, seed = 7): KorBombaState =>
   korBomba.setup(players, ctx(T0, connected, seed));
-/** Sabit durum kurar (rastgelelik olmadan). */
-const fixed = (over: Partial<KorBombaState> = {}): KorBombaState => ({
-  ...start(),
-  holder: "a",
-  explodeAt: T0 + 16_000,
-  ...over,
-});
+/** Sabit durum kurar (rastgelelik olmadan). İlk elin kilidi T0'da açılmış sayılır. */
+const fixed = (over: Partial<KorBombaState> = {}): KorBombaState => {
+  const s: KorBombaState = {
+    ...start(),
+    holder: "a",
+    explodeAt: T0 + 16_000,
+    heldSince: T0 - KOR_BOMBA_LOCK_MS,
+    ...over,
+  };
+  return { ...s, fuseMs: s.explodeAt - T0 };
+};
+/** Kilit bitmiş bir sonraki an. */
+const unlocked = (s: KorBombaState): number => s.heldSince + KOR_BOMBA_LOCK_MS;
 const pass = (s: KorBombaState, from: string, to: string, at: number, connected: readonly string[] = ALL) =>
   korBomba.reduce(s, from, { kind: "pass", to }, ctx(at, connected, 99));
 const ok = (r: ReturnType<typeof pass>): KorBombaState => {
@@ -93,31 +105,107 @@ describe("kor-bomba kuralları", () => {
     expect(Math.max(...bonuses)).toBeGreaterThan(3_800);
   });
 
-  it("sınırsız pas: ardışık onlarca pas kabul edilir ve süre birikir", () => {
-    let s = fixed({ explodeAt: T0 + 400_000 });
-    const base = s.explodeAt;
-    let holder = "a";
-    for (let i = 0; i < 40; i++) {
-      const to = holder === "a" ? "b" : "a";
-      s = ok(korBomba.reduce(s, holder, { kind: "pass", to }, ctx(T0 + 100 + i, ALL, i + 1)));
-      holder = to;
+  it("BM-M2: 1.–3. pas 1–4 sn, 4.–6. pas 0,5–2 sn, 7. ve sonrası 0 ekler", () => {
+    for (let seed = 1; seed <= 60; seed++) {
+      let s = fixed({ explodeAt: T0 + 20_000 });
+      let holder = "a";
+      const order = ["b", "c", "d", "a", "b", "c", "d", "a", "b"];
+      for (const to of order) {
+        const before = s.explodeAt;
+        s = ok(korBomba.reduce(s, holder, { kind: "pass", to }, ctx(unlocked(s), ALL, seed * 31 + s.passes)));
+        const bonus = s.explodeAt - before;
+        expect(s.lastBonusMs).toBe(bonus);
+        if (s.passes <= 3) {
+          expect(bonus).toBeGreaterThanOrEqual(1_000);
+          expect(bonus).toBeLessThanOrEqual(4_000);
+        } else if (s.passes <= 6) {
+          expect(bonus).toBeGreaterThanOrEqual(500);
+          expect(bonus).toBeLessThanOrEqual(2_000);
+        } else expect(bonus).toBe(0);
+        holder = to;
+      }
+      expect(s.passes).toBe(9);
     }
-    expect(s.passes).toBe(40);
-    expect(s.explodeAt - base).toBeGreaterThanOrEqual(40_000);
-    expect(s.explodeAt - base).toBeLessThanOrEqual(160_000);
   });
 
-  it("geri pas serbest: A->B ve hemen B->A", () => {
+  it("BM-M2: fitil oyunun başından 45 sn'yi asla geçmez (ek süre kırpılır)", () => {
+    const s = fixed({ explodeAt: T0 + KOR_BOMBA_FUSE_CAP_MS - 300 });
+    const next = ok(pass(s, "a", "b", T0 + 100));
+    expect(next.explodeAt).toBe(T0 + KOR_BOMBA_FUSE_CAP_MS);
+    expect(next.lastBonusMs).toBe(300);
+    const full = ok(pass(fixed({ explodeAt: T0 + KOR_BOMBA_FUSE_CAP_MS }), "a", "b", T0 + 100));
+    expect(full.lastBonusMs).toBe(0);
+    expect(full.explodeAt).toBe(T0 + KOR_BOMBA_FUSE_CAP_MS);
+  });
+
+  it("BM-M2: en hızlı sıcak patatesle bile oyun 45 sn içinde biter", () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      let s = start(ALL, ALL, seed);
+      let i = 0;
+      while (true) {
+        const t = unlocked(s);
+        if (t >= s.explodeAt) break;
+        const to = ALL.filter((id) => id !== s.holder && id !== s.lastPass?.from)[i % 2] as string;
+        s = ok(korBomba.reduce(s, s.holder, { kind: "pass", to }, ctx(t, ALL, seed + i)));
+        i++;
+      }
+      expect(s.explodeAt - T0).toBeLessThanOrEqual(38_000);
+    }
+  });
+
+  it("BM-M1: bombayı alan 1,5 sn pas veremez (ilk taşıyıcı dahil); fitil işlemeye devam eder", () => {
+    const s0 = start(ALL, ALL, 3);
+    const other = ALL.find((id) => id !== s0.holder) as string;
+    expect(korBomba.reduce(s0, s0.holder, { kind: "pass", to: other }, ctx(T0 + 1_499))).toEqual({
+      rejected: "locked",
+    });
+    const s1 = ok(korBomba.reduce(s0, s0.holder, { kind: "pass", to: other }, ctx(T0 + 1_500)));
+    const third = ALL.find((id) => id !== s1.holder && id !== s0.holder) as string;
+    expect(korBomba.reduce(s1, other, { kind: "pass", to: third }, ctx(T0 + 2_999))).toEqual({
+      rejected: "locked",
+    });
+    expect(ok(korBomba.reduce(s1, other, { kind: "pass", to: third }, ctx(T0 + 3_000))).holder).toBe(third);
+    // Kilitteyken patlarsa bomba onda patlar.
+    const late = { ...s1, explodeAt: T0 + 2_000 };
+    expect(korBomba.result(korBomba.tick(late, ctx(T0 + 2_000))).awards[other]).toBe(-1);
+  });
+
+  it("BM-M1: kilit görünümde herkese açık (alış anı + 1,5 sn); süreyle ilgisi yok", () => {
+    const s = ok(pass(fixed(), "a", "b", T0 + 700));
+    expect(korBomba.publicView(s, ctx(T0 + 800)).lockedUntil).toBe(T0 + 700 + 1_500);
+  });
+
+  it("BM-M1: 3+ bağlıda az önce atana hemen geri pas yok; bir el sonra serbest", () => {
     let s = ok(pass(fixed(), "a", "b", T0 + 100));
-    s = ok(pass(s, "b", "a", T0 + 101));
+    expect(pass(s, "b", "a", unlocked(s))).toEqual({ rejected: "no_return" });
+    s = ok(pass(s, "b", "c", unlocked(s)));
+    // c'ye b attı; c, a'ya verebilir (a artık "az önce atan" değil).
+    s = ok(pass(s, "c", "a", unlocked(s)));
     expect(s.holder).toBe("a");
-    expect(s.passes).toBe(2);
+    expect(s.passes).toBe(3);
+  });
+
+  it("BM-M1: atan dışında bağlı kimse yoksa geri pas serbest; 2 oyuncuda yasak yok", () => {
+    let s = ok(pass(fixed(), "a", "b", T0 + 100));
+    expect(ok(pass(s, "b", "a", unlocked(s), ["a", "b"])).holder).toBe("a");
+    let two = start(["a", "b"], ["a", "b"], 11);
+    const first = two.holder;
+    const other = first === "a" ? "b" : "a";
+    two = ok(korBomba.reduce(two, first, { kind: "pass", to: other }, ctx(unlocked(two), ["a", "b"], 3)));
+    s = ok(korBomba.reduce(two, other, { kind: "pass", to: first }, ctx(unlocked(two), ["a", "b"], 4)));
+    expect(s.holder).toBe(first);
+  });
+
+  it("BM-M1: kilit bitmeden reddedilen pas bombayı yerinde bırakır", () => {
+    const s = ok(pass(fixed(), "a", "b", T0 + 100));
+    expect(pass(s, "b", "c", T0 + 101)).toEqual({ rejected: "locked" });
+    expect(s.holder).toBe("b");
   });
 
   it("yalnız taşıyıcı pas verebilir", () => {
     expect(pass(fixed(), "b", "c", T0 + 100)).toEqual({ rejected: "not_holder" });
     const s = ok(pass(fixed(), "a", "b", T0 + 100));
-    expect(pass(s, "a", "c", T0 + 200)).toEqual({ rejected: "not_holder" });
+    expect(pass(s, "a", "c", unlocked(s))).toEqual({ rejected: "not_holder" });
   });
 
   it("kendine pas verilemez", () => {
@@ -217,7 +305,7 @@ describe("kor-bomba kuralları", () => {
     let s = start(["a", "b"], ["a", "b"], 11);
     const first = s.holder;
     const other = first === "a" ? "b" : "a";
-    s = ok(korBomba.reduce(s, first, { kind: "pass", to: other }, ctx(T0 + 50, ["a", "b"], 3)));
+    s = ok(korBomba.reduce(s, first, { kind: "pass", to: other }, ctx(T0 + 1_500, ["a", "b"], 3)));
     expect(s.holder).toBe(other);
     const r = korBomba.result(korBomba.tick(s, ctx(s.explodeAt)));
     expect(r.awards[other]).toBe(-1);
@@ -233,6 +321,7 @@ describe("kor-bomba kuralları", () => {
 
   it("parseAction yalnız tam biçimi kabul eder", () => {
     expect(korBomba.parseAction({ kind: "pass", to: "b" })).toEqual({ kind: "pass", to: "b" });
+    expect(korBomba.parseAction({ kind: "predict", turn: 0, explodes: true })).toBeNull();
     for (const raw of [
       { kind: "pass" },
       { kind: "pass", to: "" },
@@ -261,8 +350,8 @@ describe("kor-bomba gizlilik", () => {
   it("taşıyıcının görünümünde hiçbir süre alanı yok (yapısal)", () => {
     const withBonus = ok(pass(fixed(), "a", "b", T0 + 10));
     const holderView = korBomba.view(withBonus, "b", ctx(T0 + 20));
-    expect(holderView).toEqual({ role: "holder", lastResult: null });
-    expect(Object.keys(holderView)).toEqual(["role", "lastResult"]);
+    expect(holderView).toEqual({ role: "holder", betUsed: false, lastResult: null });
+    expect(Object.keys(holderView)).toEqual(["role", "betUsed", "lastResult"]);
     const json = JSON.stringify(holderView);
     expect(json).not.toMatch(/explode|bonus|time|remain|left|ms|At/i);
   });
@@ -278,6 +367,33 @@ describe("kor-bomba gizlilik", () => {
     expect(json).not.toContain(String(after.explodeAt));
     expect(json).not.toContain(String(after.lastBonusMs));
     expect(korBomba.publicView(after, ctx(T0 + 20)).explodedAt).toBeNull();
+    expect(korBomba.publicView(after, ctx(T0 + 20)).journey).toBeNull();
+    expect(json).not.toContain("bonus");
+  });
+
+  it("BM-U3: pas zinciri herkese açık, süre taşımaz", () => {
+    let s1 = ok(pass(s, "a", "b", T0 + 10));
+    s1 = ok(pass(s1, "b", "c", unlocked(s1)));
+    const pv = korBomba.publicView(s1, ctx(T0 + 5_000));
+    expect(pv.trail).toEqual(["a", "b", "c"]);
+    expect(korBomba.publicView(s, ctx(T0)).trail).toEqual(["a"]);
+  });
+
+  it("BM-U6: patlamadan sonra yolculuk ve fitil hesabı herkese açılır", () => {
+    let s1 = ok(pass(s, "a", "b", T0 + 1_000));
+    s1 = ok(pass(s1, "b", "c", T0 + 4_000));
+    const boom = korBomba.tick(s1, ctx(s1.explodeAt));
+    const j = korBomba.publicView(boom, ctx(s1.explodeAt)).journey;
+    expect(j).not.toBeNull();
+    expect(j?.fuseMs).toBe(s.fuseMs);
+    expect(j?.bonusesMs).toEqual(s1.log.map((p) => p.bonusMs));
+    expect(j?.totalMs).toBe(s1.explodeAt - T0);
+    expect(j?.totalMs).toBe((j?.fuseMs ?? 0) + (j?.bonusesMs ?? []).reduce((x, y) => x + y, 0));
+    expect(j?.hands).toEqual([
+      { holder: "a", heldMs: 1_000 },
+      { holder: "b", heldMs: 3_000 },
+      { holder: "c", heldMs: s1.explodeAt - (T0 + 4_000) },
+    ]);
   });
 
   it("taşıyıcı olmayan katılımcılar gerçek patlama zamanını ve son eklenen süreyi görür", () => {
@@ -287,7 +403,8 @@ describe("kor-bomba gizlilik", () => {
         role: "watcher",
         explodeAt: after.explodeAt,
         lastBonusMs: after.lastBonusMs,
-        prediction: null,
+        bet: null,
+        betUsed: false,
         lastResult: null,
       });
     }
@@ -313,6 +430,13 @@ describe("kor-bomba gizlilik", () => {
       explodedAt: s.explodeAt,
       holder: "a",
     });
+  });
+
+  it("BM-U5: sunucu patlamaya tam zamanlı uyanır, ardından gösteri bitişine", () => {
+    expect(korBomba.nextWake?.(s, ctx(T0 + 100))).toBe(s.explodeAt);
+    const boom = korBomba.tick(s, ctx(s.explodeAt));
+    expect(korBomba.nextWake?.(boom, ctx(s.explodeAt))).toBe(s.explodeAt + KOR_BOMBA_OUTRO_MS);
+    expect(korBomba.nextWake?.(boom, ctx(s.explodeAt + KOR_BOMBA_OUTRO_MS))).toBeNull();
   });
 
   it("patlamadan sonra taşıyıcı da sonucu (patlama anını) görebilir", () => {

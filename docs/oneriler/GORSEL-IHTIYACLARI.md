@@ -138,3 +138,21 @@ derece rozetleri, metal BAS düğmesi ve kilit plakası CSS/SVG ile çizildi.
   yükselen/alçalan kısa ses) mevcut ses sistemiyle kodla üretildi (`apps/client/src/games/kor-kronometre/sounds.ts`). Ses
   alanı istenirse gerçek kayıtlarla değiştirebilir: hepsi ≤ 0,4 sn (gong ≤ 1,5 sn). **Müzik yok:** sayma sırasında tam
   sessizlik kuraldır (müzik kaydında "Kör Kronometre: yok").
+
+## Kör Bomba
+
+Ortak stil: oyunun mevcut görselleriyle uyumlu (`apps/client/public/assets/props/bomba/*.webp`: kalın konturlu, cel-shaded
+siyah-gümüş bomba gövdesi, camgöbeği neon çekirdek, fitil ve kıvılcım, patlama bulutu; dünya zemini
+`worlds/kor-bomba-*.webp`: karanlık depo/kasa dairesi). Onaylanan paket (BM-U15 ve BM-M5 hayır) yeni görsel dosyası
+gerektirmedi: koltuk simgeleri (fiş, geri ok + çarpı, parmak, bomba rozeti), pas zinciri, fitil çizgisi, şok dalgası,
+patlama damgası, yolculuk şeridi ve ✓ / ✕ işaretleri CSS/SVG ile çizildi.
+
+- **BM-U11 · TV masa zemini** (yeni görsel gerekmedi) — TV görünümü mevcut 16:9 zemini
+  (`apps/client/public/assets/worlds/kor-bomba-landscape.webp`, 1280×720) `cover` ile kullanır, ortası koyu radyal örtüyle
+  karartılır; masa elipsi CSS. İstenirse ileride aynı sahnenin 1920×1080 keskin sürümü üretilebilir; şart değil.
+- **ses** (dosya gerekmedi) — BM-U5 / BM-U13 bomba ses seti mevcut ses sistemiyle kodla üretildi
+  (`apps/client/src/games/kor-bomba/sounds.ts`): taşıyıcıda **sabit** fitil cızırtısı döngüsü (zamanla hızlanmaz, değişmez),
+  pas atma "vuuş", bombayı alma tok "tak" + kıvılcım çıtırtısı, kilit bitiş "çıt", patlama (bas gümbürtü + cam/metal döküntü,
+  ≤ 2 sn), kazanan bahis zili, kısık bahis "çıt". Ses alanı istenirse gerçek kayıtlarla değiştirebilir. Kural: **hiçbir ses
+  süreye bağlı olamaz** (son saniyelerde hızlanan katman, tik ya da uyarı sesi yok; ek süre kıvılcımı sessiz). İsteğe bağlı
+  müzik de temposu sabit olmalı.

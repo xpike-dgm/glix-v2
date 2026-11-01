@@ -2,9 +2,40 @@
 .kbo {
   --seat: clamp(40px, min(15cqh, 9cqw), 64px);
   --bomb: clamp(80px, 27cqh, 132px);
+  --link: clamp(18px, 6cqh, 26px);
+  --trip: clamp(24px, 9cqh, 40px);
   position: absolute;
   inset: 0;
   overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+/* BM-U8: 8 kişide koltuklar 48 px'e iner. */
+.kbo[data-n="8"] {
+  --seat: clamp(36px, min(13cqh, 8cqw), 48px);
+}
+.kbo__world {
+  position: absolute;
+  inset: 0;
+}
+/* BM-U5: kamera patlayan koltuğa yakınlaşır (yavaş), sonra geri döner. */
+.kbo__world[data-zoom="1"] {
+  animation: kbo-zoom 1.4s var(--ease) both;
+}
+@keyframes kbo-zoom {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.14);
+  }
+  70% {
+    transform: scale(1.14);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 /* Alçak sahnede (yatay telefon) bomba küçülür; taşıyıcının adı bombanın altında kalmasın. */
 @container stage (max-height: 420px) {
@@ -42,7 +73,7 @@
 }
 .kbo__cable {
   stroke: rgba(139, 92, 255, 0.55);
-  stroke-width: 2.5;
+  stroke-width: 2;
   stroke-linecap: round;
   transition:
     stroke 200ms,
@@ -51,6 +82,7 @@
 .kbo__cable--holder {
   stroke: rgba(255, 59, 92, 0.75);
 }
+/* BM-U16: yanan kablo yalnız renk değil kalınlık (2 → 5 px) ve ok ucuyla da ayrılır. */
 .kbo__cable--on {
   stroke: var(--amber);
   stroke-width: 5;
@@ -90,6 +122,80 @@ button.kbo__seat {
   cursor: pointer;
   touch-action: manipulation;
 }
+.kbo__av {
+  position: relative;
+  display: inline-flex;
+}
+.kbo__badge {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: calc(var(--seat) * 0.46);
+  height: calc(var(--seat) * 0.46);
+  min-width: 18px;
+  min-height: 18px;
+  border-radius: 50%;
+  background: rgba(5, 8, 26, 0.9);
+  pointer-events: none;
+}
+.kbo__badge .kbo-ico {
+  width: 72%;
+  height: 72%;
+}
+.kbo__badge--bomb {
+  right: -10%;
+  top: -10%;
+  border: 2px solid var(--red);
+}
+.kbo__badge--tap {
+  right: -12%;
+  bottom: -6%;
+  color: var(--lime);
+  border: 2px solid var(--lime);
+}
+.kbo__badge--no,
+.kbo__badge--off {
+  right: -12%;
+  bottom: -6%;
+  color: var(--text-dim, #a9b0d6);
+  border: 1.5px solid rgba(169, 176, 214, 0.6);
+}
+.kbo__badge--win {
+  left: -22%;
+  bottom: -6%;
+  width: auto;
+  height: auto;
+  padding: 1px 8px;
+  border-radius: 99px;
+  border: 2px solid var(--amber);
+  color: var(--amber);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-13);
+  white-space: nowrap;
+}
+/* BM-U2: verilemeyen koltuklar soluk ve küçük; kopuk koltuk gri (BM-U12). */
+.kbo__seat[data-tap="return"] .av,
+.kbo__seat[data-tap="offline"] .av {
+  transform: scale(0.86);
+  opacity: 0.5;
+}
+.kbo__seat[data-off="1"] .av__img {
+  filter: grayscale(1);
+}
+.kbo__seat[data-tap="return"],
+.kbo__seat[data-tap="offline"],
+.kbo__seat[data-tap="locked"] {
+  cursor: default;
+}
+.kbo__seat[data-tap="locked"] .av {
+  opacity: 0.8;
+}
+.kbo__seat[data-pick="1"] .av__disc {
+  border-color: var(--amber);
+  box-shadow: 0 0 18px var(--amber);
+}
 .kbo__name {
   max-width: 96px;
   padding: 1px 9px;
@@ -123,7 +229,7 @@ button.kbo__seat {
   box-shadow: 0 0 30px #fff;
   animation: kbo-flash 520ms var(--ease) both;
 }
-.kbo__seat[data-tap="1"] .av::after {
+.kbo__seat[data-tap="ok"] .av::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -132,10 +238,10 @@ button.kbo__seat {
   pointer-events: none;
   animation: kbo-invite 1.4s ease-in-out infinite;
 }
-.kbo__seat[data-tap="1"]:active .av {
+.kbo__seat[data-tap="ok"]:active .av {
   transform: scale(0.92);
 }
-.kbo__seat[data-tap="1"]:active .av__disc {
+.kbo__seat[data-tap="ok"]:active .av__disc {
   border-color: var(--text);
   box-shadow: 0 0 26px var(--text);
 }
@@ -167,11 +273,23 @@ button.kbo__seat {
   width: var(--bomb);
   height: var(--bomb);
   margin: calc(var(--bomb) / -2) 0 0 calc(var(--bomb) / -2);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
   border-radius: 50%;
   pointer-events: none;
   transition:
     left 380ms var(--ease),
     top 380ms var(--ease);
+}
+/* BM-U1: süreyi gören oyuncu bombaya basılı tutarak bakar. */
+button.kbo__bomb {
+  pointer-events: auto;
+  touch-action: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 .kbo__bomb .bomb {
   animation: kbo-throb 1.3s ease-in-out infinite;
@@ -180,9 +298,28 @@ button.kbo__seat {
 .kbo__bomb[data-skin="glow"] .bomb {
   filter: drop-shadow(0 0 16px rgba(255, 194, 59, 0.6));
 }
-.kbo[data-urgent="1"] .kbo__bomb .bomb {
+/* BM-U1 / BM-U7: son 5 sn kırmızılığı yalnız bakarken; son 3 sn bomba titrer. Taşıyıcınınki hiç değişmez. */
+.kbo[data-level="red"] .kbo__bomb .bomb,
+.kbo[data-level="shake"] .kbo__bomb .bomb {
   filter: drop-shadow(0 0 18px rgba(255, 59, 92, 0.9));
-  animation-duration: 0.55s;
+}
+.kbo[data-level="shake"] .kbo__bomb {
+  animation: kbo-tremble 160ms linear infinite;
+}
+@keyframes kbo-tremble {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  25% {
+    translate: -2px 1px;
+  }
+  50% {
+    translate: 2px -1px;
+  }
+  75% {
+    translate: -1px -2px;
+  }
 }
 .kbo__bomb::after {
   content: "";
@@ -196,25 +333,35 @@ button.kbo__seat {
 .kbo__bomb[data-skin="glow"]::after {
   border-color: var(--amber);
 }
-.kbo[data-urgent="1"] .kbo__bomb::after {
-  animation-duration: 0.55s;
+.kbo[data-level="red"] .kbo__bomb::after,
+.kbo[data-level="shake"] .kbo__bomb::after {
   border-color: var(--red);
 }
+/* BM-U7: bakarken rakam bombanın tamamını kaplar (en az 48 px). */
 .kbo__time {
-  position: relative;
-  padding: 0.12em 0.34em;
-  border-radius: 999px;
-  background: rgba(5, 8, 26, 0.78);
+  position: absolute;
+  inset: -6%;
+  display: grid;
+  place-items: center;
+  grid-auto-flow: column;
+  border-radius: 50%;
+  background: rgba(5, 8, 26, 0.84);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: calc(var(--bomb) * 0.24);
+  font-size: max(48px, calc(var(--bomb) * 0.42));
   line-height: 1;
   color: var(--text);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
-.kbo[data-urgent="1"] .kbo__time {
+.kbo[data-level="red"] .kbo__time,
+.kbo[data-level="shake"] .kbo__time {
   color: #ff9aa8;
+  font-size: max(54px, calc(var(--bomb) * 0.5));
+}
+.kbo__bang {
+  margin-left: 0.04em;
+  color: var(--red);
 }
 @keyframes kbo-throb {
   0%,
@@ -288,28 +435,73 @@ button.kbo__seat {
   }
 }
 
-/* holder: PAS VER */
+/* BM-U2: taşıyıcı bandı — ekranın altında, koltukların yolunun dışında; içinde 1,5 sn'de dolan fitil çizgisi. */
 .kbo__cta {
   position: absolute;
-  z-index: 3;
-  left: 50%;
-  top: 33%;
-  translate: -50% -50%;
+  z-index: 6;
+  left: 8px;
+  bottom: 8px;
+  width: min(250px, 32cqw);
+  padding: 6px 10px 8px;
+  border-radius: 14px;
+  background: rgba(5, 8, 26, 0.9);
+  border: 2.5px solid var(--red);
+  box-shadow: 0 0 22px rgba(255, 59, 92, 0.55);
+  color: var(--text);
+  pointer-events: none;
+  transition:
+    box-shadow 200ms,
+    border-color 200ms;
+}
+.kbo__cta[data-lock="1"] {
+  border-color: rgba(255, 194, 59, 0.75);
+  box-shadow: none;
+}
+.kbo__cta-text {
+  display: block;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(24px, 10cqh, 46px);
-  line-height: 1;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  color: var(--text);
-  text-shadow: 0 0 18px var(--red);
-  pointer-events: none;
-  animation: kbo-throb 1.3s ease-in-out infinite;
+  font-size: 15px;
+  line-height: 1.15;
+}
+.kbo__cta-bar {
+  display: block;
+  height: 5px;
+  margin-top: 6px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+.kbo__cta-fill {
+  display: block;
+  height: 100%;
+  background: var(--amber);
+  transform-origin: left center;
+}
+.kbo__cta:not([data-lock]) .kbo__cta-fill {
+  background: var(--red);
 }
 
 /* patlama */
 .kbo[data-blast="1"] {
   animation: kbo-shake 420ms linear both;
+}
+.kbo__wave {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  animation: kbo-wave 700ms ease-out both;
+}
+@keyframes kbo-wave {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(5);
+    opacity: 0;
+  }
 }
 .kbo__blast {
   position: absolute;
@@ -358,8 +550,10 @@ button.kbo__seat {
   :root:not([data-motion="full"]) .kbo[data-blast="1"],
   :root:not([data-motion="full"]) .kbo__bomb .bomb,
   :root:not([data-motion="full"]) .kbo__bomb::after,
-  :root:not([data-motion="full"]) .kbo__cta,
-  :root:not([data-motion="full"]) .kbo__seat[data-tap="1"] .av::after,
+  :root:not([data-motion="full"]) .kbo__world[data-zoom="1"],
+  :root:not([data-motion="full"]) .kbo[data-level="shake"] .kbo__bomb,
+  :root:not([data-motion="full"]) .kbo__wave,
+  :root:not([data-motion="full"]) .kbo__seat[data-tap="ok"] .av::after,
   :root:not([data-motion="full"]) .kboart__ring,
   :root:not([data-motion="full"]) .kboart__dot {
     animation: none !important;
@@ -367,7 +561,7 @@ button.kbo__seat {
   :root:not([data-motion="full"]) .kbo__bomb {
     transition: none;
   }
-  :root:not([data-motion="full"]) .kbo__seat[data-tap="1"] .av::after {
+  :root:not([data-motion="full"]) .kbo__seat[data-tap="ok"] .av::after {
     opacity: 0;
   }
   :root:not([data-motion="full"]) .kbo__bomb::after {
@@ -379,8 +573,10 @@ button.kbo__seat {
 :root[data-motion="reduce"] .kbo[data-blast="1"],
 :root[data-motion="reduce"] .kbo__bomb .bomb,
 :root[data-motion="reduce"] .kbo__bomb::after,
-:root[data-motion="reduce"] .kbo__cta,
-:root[data-motion="reduce"] .kbo__seat[data-tap="1"] .av::after,
+:root[data-motion="reduce"] .kbo__world[data-zoom="1"],
+:root[data-motion="reduce"] .kbo[data-level="shake"] .kbo__bomb,
+:root[data-motion="reduce"] .kbo__wave,
+:root[data-motion="reduce"] .kbo__seat[data-tap="ok"] .av::after,
 :root[data-motion="reduce"] .kboart__ring,
 :root[data-motion="reduce"] .kboart__dot {
   animation: none !important;
@@ -388,7 +584,7 @@ button.kbo__seat {
 :root[data-motion="reduce"] .kbo__bomb {
   transition: none;
 }
-:root[data-motion="reduce"] .kbo__seat[data-tap="1"] .av::after {
+:root[data-motion="reduce"] .kbo__seat[data-tap="ok"] .av::after {
   opacity: 0;
 }
 :root[data-motion="reduce"] .kbo__bomb::after {
@@ -396,19 +592,419 @@ button.kbo__seat {
 }
 /* biome-ignore-end lint/complexity/noImportantStyles: aralık sonu */
 
-/* O9 tahmin satırı: köşede, koltuklara ve bombaya binmeden; süre hakkında ipucu vermez */
-.kbo__predict {
+/* BM-U4: tek "PATLAR!" bahsi — sol alt köşe, koltukların yolunun dışında; süre hakkında ipucu vermez. */
+.kbo__bet {
   position: absolute;
   z-index: 6;
   left: 8px;
-  bottom: 6px;
+  bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  max-width: min(260px, 34cqw);
 }
+.kbo__betrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.kbo__betq,
+.kbo__betsub {
+  margin: 0;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: rgba(5, 8, 26, 0.78);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.kbo__betsub {
+  font-weight: 600;
+  color: var(--text-dim, #a9b0d6);
+}
+.kbo__bet[data-late="1"] .kbo__betsub {
+  color: #ff9aa8;
+}
+.kbo__betbtn {
+  flex: none;
+  min-width: 112px;
+  min-height: 56px;
+  padding: 0 10px;
+  border-radius: 16px;
+  border: 3px solid var(--red);
+  background: linear-gradient(#ff5470, #c71d3b);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  box-shadow: 0 4px 0 #6d0c1d;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+.kbo__betbtn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #6d0c1d;
+}
+.kbo__bet[data-late="1"] .kbo__betbtn {
+  animation: kbo-nope 360ms linear both;
+}
+@keyframes kbo-nope {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  20% {
+    translate: -6px 0;
+  }
+  40% {
+    translate: 6px 0;
+  }
+  60% {
+    translate: -4px 0;
+  }
+  80% {
+    translate: 4px 0;
+  }
+}
+.kbo__betchip {
+  margin: 0;
+  max-width: min(150px, 22cqw);
+  padding: 5px 12px;
+  border-radius: 12px;
+  background: rgba(5, 8, 26, 0.88);
+  border: 2px solid var(--amber);
+  color: var(--amber);
+  font-weight: 800;
+  font-size: var(--fs-13);
+}
+.kbo__betchip[data-mark="✕"] {
+  border-color: rgba(169, 176, 214, 0.6);
+  color: var(--text-dim, #a9b0d6);
+}
+/* BM-U1: "SÜREYE BAK" — sağ alt köşe; her oyuncuda aynı görünür. */
+.kbo__peek {
+  position: absolute;
+  z-index: 6;
+  right: 8px;
+  bottom: 8px;
+  width: min(96px, 14cqw);
+  min-height: 56px;
+  padding: 0 6px;
+  border-radius: 16px;
+  border: 2px dashed rgba(46, 242, 255, 0.6);
+  background: rgba(5, 8, 26, 0.7);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 12px;
+  touch-action: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.kbo__peek[data-on="1"] {
+  border-style: solid;
+}
+/* BM-U3: el çipi ve pas zinciri — masanın üstünde ortada. */
+.kbo__chain {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  top: 4px;
+  translate: -50% 0;
+  pointer-events: none;
+}
+.kbo-chain {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kbo-chain__chip {
+  padding: 2px 10px;
+  border-radius: 99px;
+  background: rgba(5, 8, 26, 0.85);
+  border: 1.5px solid rgba(46, 242, 255, 0.55);
+  font-size: var(--fs-13);
+  font-weight: 800;
+  white-space: nowrap;
+}
+.kbo-chain__links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.kbo-chain__link {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  animation: kbo-slide 300ms var(--ease) both;
+}
+.kbo-chain__link:not([data-last]) .av {
+  opacity: 0.7;
+}
+.kbo-chain__arrow {
+  font-size: 12px;
+  color: var(--text-dim, #a9b0d6);
+}
+@keyframes kbo-slide {
+  0% {
+    translate: 10px 0;
+    opacity: 0;
+  }
+  100% {
+    translate: 0 0;
+    opacity: 1;
+  }
+}
+/* BM-U12: kopan taşıyıcı bandı. */
+.kbo__band {
+  position: absolute;
+  z-index: 7;
+  translate: -50% calc(-100% - var(--seat) * 0.7);
+  margin: 0;
+  padding: 4px 14px;
+  border-radius: 12px;
+  background: rgba(5, 8, 26, 0.92);
+  border: 2px solid var(--red);
+  font-weight: 800;
+  font-size: var(--fs-13);
+  white-space: nowrap;
+}
+.kbo__back {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(120, 8, 28, 0.86);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(30px, 14cqh, 64px);
+  text-align: center;
+  color: #fff;
+  pointer-events: none;
+}
+/* BM-U14: titreşimsiz telefonda bombayı alınca ekran kenarı bir kez kırmızı parlar. */
+.kbo[data-edge="1"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 19;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 6px var(--red);
+  animation: kbo-edge 600ms ease-out both;
+}
+@keyframes kbo-edge {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.kbo__band[data-below="1"],
+.kbo__boomtag[data-below="1"] {
+  translate: -50% calc(var(--seat) * 0.5 + 26px);
+}
+/* BM-U5: kendi sonucun kendi koltuğunun üstünde. */
+.kbo__note {
+  position: absolute;
+  z-index: 7;
+  translate: -50% calc(-100% - var(--seat) * 0.75);
+  margin: 0;
+  padding: 3px 12px;
+  border-radius: 12px;
+  background: rgba(5, 8, 26, 0.9);
+  border: 2px solid rgba(169, 176, 214, 0.6);
+  font-weight: 800;
+  font-size: var(--fs-13);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.kbo__note[data-good="1"] {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+/* BM-U5: patlayan koltuğun üstünde "ELİF'TE PATLADI! −1". */
+.kbo__boomtag {
+  position: absolute;
+  z-index: 8;
+  translate: -50% calc(-100% - var(--seat) * 0.7);
+  margin: 0;
+  padding: 3px 12px;
+  border-radius: 10px;
+  background: var(--red);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(14px, 4.6cqh, 18px);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: kbo-stamp 380ms var(--ease) both;
+}
+/* BM-U5: taşıyıcının telefonu — beyaz flaş ve tam ekran damga. */
+.kbo__stamp {
+  position: absolute;
+  z-index: 18;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(5, 6, 13, 0.55);
+  pointer-events: none;
+  animation: kbo-white 600ms ease-out both;
+}
+.kbo__stamp span {
+  padding: 8px 22px;
+  border: 5px solid var(--red);
+  border-radius: 14px;
+  rotate: -6deg;
+  color: #fff;
+  background: rgba(199, 29, 59, 0.85);
+  font-family: var(--font-display);
+  font-weight: 800;
+  max-width: 88%;
+  font-size: clamp(20px, 8cqh, 40px);
+  text-align: center;
+  animation: kbo-stamp 420ms 120ms var(--ease) both;
+}
+@keyframes kbo-white {
+  0% {
+    background: #fff;
+  }
+  100% {
+    background: rgba(5, 6, 13, 0.55);
+  }
+}
+@keyframes kbo-stamp {
+  0% {
+    scale: 2;
+    opacity: 0;
+  }
+  100% {
+    scale: 1;
+    opacity: 1;
+  }
+}
+/* BM-U10: izleyici "Kimde patlar?" */
+.kbo__pickhint {
+  position: absolute;
+  z-index: 6;
+  left: 8px;
+  bottom: 8px;
+  max-width: min(260px, 34cqw);
+  white-space: normal;
+  margin: 0;
+  padding: 3px 12px;
+  border-radius: 10px;
+  background: rgba(5, 8, 26, 0.7);
+  color: var(--text-dim, #a9b0d6);
+  font-weight: 700;
+  font-size: var(--fs-13);
+  pointer-events: none;
+}
+.kbo__pickhint--done {
+  color: var(--amber);
+  border: 2px solid var(--amber);
+  bottom: 52px;
+}
+/* BM-U6: bombanın yolculuğu (patlama gösterisinden sonra). */
+.kbo__trip {
+  position: absolute;
+  z-index: 9;
+  inset: 0 0 64px;
+  display: grid;
+  place-items: center;
+  padding: 8px 12px;
+  background: rgba(5, 6, 13, 0.78);
+}
+.kbo-trip {
+  width: 100%;
+  max-width: 760px;
+  text-align: center;
+}
+.kbo-trip__title {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: clamp(16px, 6cqh, 26px);
+}
+.kbo-trip__strip {
+  display: flex;
+  align-items: center;
+  justify-content: safe center;
+  gap: 2px;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  overflow-x: auto;
+}
+.kbo-trip__hand {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+.kbo-trip__arrow {
+  color: var(--text-dim, #a9b0d6);
+}
+.kbo-trip__box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 56px;
+  padding: 4px 6px;
+  border-radius: 10px;
+  background: rgba(27, 49, 133, 0.6);
+  border: 1.5px solid rgba(46, 242, 255, 0.35);
+}
+.kbo-trip__hand[data-boom="1"] .kbo-trip__box {
+  border-color: var(--red);
+  background: rgba(199, 29, 59, 0.45);
+}
+.kbo-trip__who {
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+}
+.kbo-trip__sec {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--amber);
+}
+.kbo-trip__boom {
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+}
+.kbo-trip__fuse {
+  margin: 6px 0 4px;
+  font-size: var(--fs-13);
+  font-variant-numeric: tabular-nums;
+}
+.kbo-trip__facts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px;
+  font-size: var(--fs-13);
+  color: var(--text-dim, #a9b0d6);
+}
+.kbo-trip__facts b {
+  color: var(--text);
+}
+/* BM-U5: "Elif, Mert ve Kaan bildi!" — patlama anında masanın üstünde ortada. */
 .kbo__bildi {
   position: absolute;
-  z-index: 6;
+  z-index: 8;
   left: 8px;
-  bottom: 6px;
-  max-width: min(190px, 30cqw);
+  bottom: 8px;
+  max-width: min(260px, 34cqw);
   margin: 0;
   padding: 4px 12px;
   border-radius: 14px;
@@ -424,11 +1020,240 @@ button.kbo__seat {
 /* Sonuç ekranı "Devam et" şeridi: sahnenin sağ alt köşesi (koltuklar elipste, köşe boş). */
 .kbo__devam {
   position: absolute;
-  z-index: 4;
+  z-index: 10;
   right: 8px;
   bottom: 6px;
   width: min(220px, 34%);
 }
 .kbo__devam:empty {
   display: none;
+}
+
+/* BM-U11: TV görünümü (1600x700 mantıksal kutu). Süre, bahis ve kıvılcım yok; halka zamana göre değişmez. */
+.kbotv {
+  --seat: 120px;
+  --bomb: 150px;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 28px;
+  background: #05070f;
+  color: var(--text);
+}
+.kbotv__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.5;
+}
+.kbotv__scrim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(2, 3, 11, 0.35), rgba(2, 3, 11, 0.9) 75%);
+}
+.kbotv__felt {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 66%;
+  height: 58%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 4px solid var(--cyan);
+  background: radial-gradient(closest-side, #1b3185 0%, #0b1438 88%);
+  box-shadow:
+    0 0 40px rgba(46, 242, 255, 0.4),
+    inset 0 0 50px rgba(46, 242, 255, 0.28);
+}
+.kbotv__cables {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.kbotv__seat {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.kbotv__seat[data-holder="1"] .av__disc {
+  box-shadow: 0 0 34px var(--red);
+}
+.kbotv__seat[data-white="1"] .av__img {
+  filter: brightness(0) invert(1);
+}
+.kbotv__seat[data-off="1"] .av__img {
+  filter: grayscale(1);
+}
+.kbotv__seat .kbo__badge--win {
+  font-size: 26px;
+}
+.kbotv__name {
+  max-width: 220px;
+  padding: 2px 14px;
+  border-radius: 99px;
+  background: rgba(5, 8, 26, 0.82);
+  font-size: 30px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kbotv__bomb,
+.kbotv__blast {
+  position: absolute;
+  z-index: 3;
+  width: var(--bomb);
+  height: var(--bomb);
+  margin: calc(var(--bomb) / -2) 0 0 calc(var(--bomb) / -2);
+  transition:
+    left 480ms var(--ease),
+    top 480ms var(--ease);
+}
+.kbotv__bomb .bomb {
+  animation: kbo-throb 1.3s ease-in-out infinite;
+  filter: drop-shadow(0 0 22px rgba(255, 59, 92, 0.65));
+}
+.kbotv__top {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  top: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.kbotv__chain .kbo-chain__chip {
+  padding: 4px 18px;
+  font-size: 30px;
+}
+.kbotv__chain .kbo-chain__arrow {
+  font-size: 24px;
+}
+.kbotv__who {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 34px;
+  letter-spacing: 0.06em;
+  color: #ff9aa8;
+  text-shadow: 0 0 18px rgba(255, 59, 92, 0.7);
+}
+.kbotv__band {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  bottom: 24px;
+  translate: -50% 0;
+  margin: 0;
+  padding: 6px 22px;
+  border-radius: 16px;
+  background: rgba(5, 8, 26, 0.92);
+  border: 3px solid var(--red);
+  font-size: 30px;
+  font-weight: 800;
+}
+.kbotv[data-fresh="1"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  background: #fff;
+  pointer-events: none;
+  animation: kbotv-flash 700ms ease-out both;
+}
+@keyframes kbotv-flash {
+  0% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.kbotv__boom {
+  position: absolute;
+  z-index: 8;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  background: rgba(5, 6, 13, 0.45);
+}
+.kbotv__boomtag {
+  margin: 0;
+  padding: 10px 34px;
+  border: 6px solid #fff;
+  border-radius: 18px;
+  rotate: -4deg;
+  background: var(--red);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 84px;
+  color: #fff;
+  animation: kbo-stamp 420ms var(--ease) both;
+}
+.kbotv__bildi {
+  margin: 0;
+  padding: 6px 22px;
+  border-radius: 16px;
+  background: rgba(5, 8, 26, 0.9);
+  border: 3px solid var(--amber);
+  color: var(--amber);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 40px;
+}
+.kbotv__trip {
+  position: absolute;
+  z-index: 8;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 30px 40px;
+  background: rgba(5, 6, 13, 0.82);
+}
+.kbotv__journey {
+  max-width: none;
+}
+.kbotv__journey .kbo-trip__title {
+  font-size: 48px;
+  margin-bottom: 18px;
+}
+.kbotv__journey .kbo-trip__box {
+  min-width: 120px;
+  padding: 10px 12px;
+  border-radius: 16px;
+}
+.kbotv__journey .kbo-trip__who,
+.kbotv__journey .kbo-trip__sec {
+  max-width: 150px;
+  font-size: 24px;
+}
+.kbotv__journey .kbo-trip__boom {
+  font-size: 18px;
+}
+.kbotv__journey .kbo-trip__arrow {
+  font-size: 30px;
+}
+.kbotv__journey .kbo-trip__fuse {
+  margin: 20px 0 10px;
+  font-size: 30px;
+}
+.kbotv__journey .kbo-trip__facts {
+  gap: 10px 32px;
+  font-size: 28px;
+}
+:root[data-motion="reduce"] .kbotv__bomb .bomb,
+:root[data-motion="reduce"] .kbotv[data-fresh="1"]::after,
+:root[data-motion="reduce"] .kbo-chain__link {
+  animation: none;
 }

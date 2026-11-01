@@ -34,7 +34,7 @@ describe("kor-bomba tam maç", () => {
     const [x, y] = others as [Client, Client];
 
     // Taşıyıcı süre görmez; diğerleri görür. Gizli değer ağdan taşıyıcıya hiç gitmez.
-    expect(view(holder)).toEqual({ role: "holder", lastResult: null });
+    expect(view(holder)).toEqual({ role: "holder", betUsed: false, lastResult: null });
     const w = view(x);
     if (w.role !== "watcher") throw new Error("izleyici rolü bekleniyordu");
     const explodeAt = w.explodeAt;
@@ -51,11 +51,20 @@ describe("kor-bomba tam maç", () => {
     expect(await send(holder, { kind: "pass", to: first })).toEqual({ ok: false, reason: "self_target" });
     expect(await send(holder, { kind: "pass", to: "yok" })).toEqual({ ok: false, reason: "bad_target" });
 
+    // BM-M1: ilk 1,5 sn fitil tutuşuyor, pas yok.
+    expect(await send(holder, { kind: "pass", to: x.session.playerId })).toEqual({
+      ok: false,
+      reason: "locked",
+    });
+    expect(pub(a).lockedUntil).toBe(startedAt + 1_500);
+    k.clock.advance(startedAt + 1_500 - k.clock.now());
+    await sync();
+
     // Pas: bomba x'e geçer, süre uzar.
     expect((await send(holder, { kind: "pass", to: x.session.playerId })).ok).toBe(true);
     await until(() => pub(a).holder === x.session.playerId, "bomba geçti");
     expect(pub(a).passes).toBe(1);
-    expect(view(x)).toEqual({ role: "holder", lastResult: null });
+    expect(view(x)).toEqual({ role: "holder", betUsed: false, lastResult: null });
     const wasHolder = view(holder);
     if (wasHolder.role !== "watcher") throw new Error("eski taşıyıcı süreyi görmeli");
     expect(wasHolder.explodeAt).toBeGreaterThan(explodeAt);
@@ -63,12 +72,25 @@ describe("kor-bomba tam maç", () => {
     const newExplode = wasHolder.explodeAt;
     expect(JSON.stringify(x.msgs.slice(-2))).not.toContain(String(newExplode));
 
-    // x, y'ye ve y geri x'e pas verir; son taşıyıcı x olsun.
+    // x, y'ye; y hemen x'e geri veremez (BM-M1), holder'a verir; holder x'e verir. Son taşıyıcı x.
+    k.clock.advance(1_500);
+    await sync();
     expect((await send(x, { kind: "pass", to: y.session.playerId })).ok).toBe(true);
     await until(() => pub(a).holder === y.session.playerId, "ikinci pas");
-    expect((await send(y, { kind: "pass", to: x.session.playerId })).ok).toBe(true);
+    k.clock.advance(1_500);
+    await sync();
+    expect(await send(y, { kind: "pass", to: x.session.playerId })).toEqual({
+      ok: false,
+      reason: "no_return",
+    });
+    expect((await send(y, { kind: "pass", to: holder.session.playerId })).ok).toBe(true);
     await until(() => pub(a).passes === 3, "üçüncü pas");
-    const finalExplode = (view(holder) as { explodeAt: number }).explodeAt;
+    k.clock.advance(1_500);
+    await sync();
+    expect((await send(holder, { kind: "pass", to: x.session.playerId })).ok).toBe(true);
+    await until(() => pub(a).passes === 4, "dördüncü pas");
+    expect(pub(a).trail).toEqual([first, x.session.playerId, y.session.playerId, first, x.session.playerId]);
+    const finalExplode = (view(y) as { explodeAt: number }).explodeAt;
 
     // Patlamadan 1 ms önce oyun sürer; patlamada biter ve aynı anki pas reddedilir.
     k.clock.advance(finalExplode - 1 - k.clock.now());
@@ -91,13 +113,16 @@ describe("kor-bomba tam maç", () => {
     expect(result?.awards).toEqual(expected);
     expect(a.room.players.map((p) => p.score)).toEqual(cs.map((c) => expected[c.session.playerId]));
     expect(pub(a)).toMatchObject({ exploded: true, explodedAt: finalExplode, holder: xid });
+    // BM-U6: yolculuk ancak şimdi açık.
+    expect(pub(a).journey?.hands.map((h) => h.holder)).toEqual(pub(a).trail);
+    expect(pub(a).journey?.totalMs).toBe(finalExplode - startedAt);
     // Patlamadan sonra patlama anı herkese açıktır.
     expect(view(x)).toMatchObject({ role: "watcher", explodeAt: finalExplode });
   });
 });
 
-describe("kor-bomba tahmini (O9)", () => {
-  it("tahmin gizli kalır, taşıyıcı göremez; patlamada doğru bilen +1 alır ve adı açılır", async () => {
+describe("kor-bomba bahsi (BM-M3)", () => {
+  it("bahis gizli kalır, taşıyıcı göremez; patlamada tutan +1 alır ve adı açılır", async () => {
     const cs = await setupRoom(["A", "B", "C", "D"]);
     const [a] = cs as [Client, Client, Client, Client];
     a.send({ type: "setGames", gameIds: ["kor-bomba"] });
@@ -110,76 +135,56 @@ describe("kor-bomba tahmini (O9)", () => {
     const turn = pub(a).passes;
     const final = (view(x) as { explodeAt: number }).explodeAt;
 
-    // Taşıyıcı tahmin veremez; yanlış el ve çöp reddedilir.
-    expect(await send(holder, { kind: "predict", turn, explodes: true })).toEqual({
-      ok: false,
-      reason: "holder_cannot_predict",
-    });
-    expect(await send(x, { kind: "predict", turn: turn + 3, explodes: true })).toEqual({
-      ok: false,
-      reason: "stale_turn",
-    });
-    expect(await send(x, { kind: "predict", turn, explodes: "evet" })).toMatchObject({ ok: false });
+    expect(await send(holder, { kind: "bet", turn })).toEqual({ ok: false, reason: "holder_cannot_bet" });
+    expect(await send(x, { kind: "bet", turn: turn + 3 })).toEqual({ ok: false, reason: "stale_turn" });
+    expect(await send(x, { kind: "predict", turn, explodes: true })).toMatchObject({ ok: false });
 
-    // x "patlar", y "patlamaz" der; ikinci tahmin reddedilir.
-    expect(await send(x, { kind: "predict", turn, explodes: true })).toEqual({ ok: true });
-    expect(await send(y, { kind: "predict", turn, explodes: false })).toEqual({ ok: true });
-    expect(await send(x, { kind: "predict", turn, explodes: false })).toEqual({
-      ok: false,
-      reason: "already_predicted",
-    });
-    await until(() => (view(x) as { prediction: unknown }).prediction !== null, "tahmin görünümde");
-    expect(view(x)).toMatchObject({ role: "watcher", prediction: { turn, explodes: true } });
-    expect(view(y)).toMatchObject({ prediction: { turn, explodes: false } });
-    expect(view(z)).toMatchObject({ prediction: null });
+    expect(await send(x, { kind: "bet", turn })).toEqual({ ok: true });
+    expect(await send(x, { kind: "bet", turn })).toEqual({ ok: false, reason: "already_bet" });
+    await until(() => (view(x) as { bet: unknown }).bet !== null, "bahis görünümde");
+    expect(view(x)).toMatchObject({ role: "watcher", bet: { turn }, betUsed: true });
+    expect(view(z)).toMatchObject({ bet: null, betUsed: false });
 
-    // Gizlilik: taşıyıcıya giden hiçbir ileti tahmin içermez; z'ye başkasının tahmini gitmez; publicView temiz.
-    const holderMsgs = JSON.stringify(holder.msgs);
-    expect(holderMsgs).not.toContain('"prediction":{');
-    expect(holderMsgs).not.toContain('correctPredictors":["');
-    expect(JSON.stringify(z.msgs)).not.toContain('"prediction":{');
-    expect(JSON.stringify(y.msgs)).not.toContain('"explodes":true');
+    // Son 3 sn: y'nin bahsi kabul edilmez, hakkı durur.
+    k.clock.advance(final - 2_000 - k.clock.now());
+    await sync();
+    expect(await send(y, { kind: "bet", turn })).toEqual({ ok: false, reason: "too_late" });
+    expect(view(y)).toMatchObject({ betUsed: false });
+
+    // Gizlilik: taşıyıcıya ve diğerlerine giden hiçbir ileti bahis içermez.
+    expect(JSON.stringify(holder.msgs)).not.toContain('"bet":{');
+    expect(JSON.stringify(z.msgs)).not.toContain('"bet":{');
     for (const c of cs) expect(pub(c).correctPredictors).toEqual([]);
 
-    // Patlama: x +1, taşıyıcı -1, y (patlamaz) 0.
     k.clock.advance(final - k.clock.now());
     await until(() => pub(a).exploded, "patlama");
     const xid = x.session.playerId;
     expect(pub(a).correctPredictors).toEqual([xid]);
     expect(view(x)).toMatchObject({ lastResult: { turn, correct: true } });
-    expect(view(y)).toMatchObject({ lastResult: { turn, correct: false } });
-    expect(await send(z, { kind: "predict", turn, explodes: true })).toMatchObject({ ok: false });
     k.clock.advance(2_000);
     await until(() => a.room.phase === "results", "sonuç");
-    const hid = holder.session.playerId;
     const expected = Object.fromEntries(
       cs.map((c) => [c.session.playerId, c === holder ? -1 : c.session.playerId === xid ? 1 : 0]),
     );
     expect(a.room.match?.result?.awards).toEqual(expected);
-    expect(a.room.players.find((p) => p.id === xid)?.score).toBe(1);
-    expect(a.room.players.find((p) => p.id === hid)?.score).toBe(-1);
   });
 
-  it("pasla tahminler çözülür: sahibi kendi sonucunu görür, kimse başkasınınkini görmez", async () => {
+  it("pasla bahis yanar: sahibi kendi sonucunu görür, hak geri gelmez", async () => {
     const cs = await setupRoom(["A", "B", "C"]);
     const [a] = cs as [Client, Client, Client];
     a.send({ type: "setGames", gameIds: ["kor-bomba"] });
     await until(() => a.room.gameIds[0] === "kor-bomba", "oyun seçildi");
-    await startPlaying(cs);
+    const { startedAt } = await startPlaying(cs);
     const byId = new Map(cs.map((c) => [c.session.playerId, c] as const));
     const holder = byId.get(pub(a).holder) as Client;
     const [x, y] = cs.filter((c) => c !== holder) as [Client, Client];
-    expect(await send(x, { kind: "predict", turn: 0, explodes: true })).toEqual({ ok: true });
+    expect(await send(x, { kind: "bet", turn: 0 })).toEqual({ ok: true });
+    k.clock.advance(startedAt + 1_500 - k.clock.now());
+    await sync();
     expect((await send(holder, { kind: "pass", to: y.session.playerId })).ok).toBe(true);
     await until(() => pub(a).passes === 1, "pas");
-    expect(view(x)).toMatchObject({ prediction: null, lastResult: { turn: 0, correct: false } });
-    expect(view(y)).toEqual({ role: "holder", lastResult: null });
-    expect(pub(a).correctPredictors).toEqual([]);
-    // Yeni el: eski tahmin yeni ele sayılmaz; x yeniden tahmin verebilir.
-    expect(await send(x, { kind: "predict", turn: 0, explodes: true })).toEqual({
-      ok: false,
-      reason: "stale_turn",
-    });
-    expect(await send(x, { kind: "predict", turn: 1, explodes: true })).toEqual({ ok: true });
+    expect(view(x)).toMatchObject({ bet: null, betUsed: true, lastResult: { turn: 0, correct: false } });
+    expect(view(y)).toEqual({ role: "holder", betUsed: false, lastResult: null });
+    expect(await send(x, { kind: "bet", turn: 1 })).toEqual({ ok: false, reason: "already_bet" });
   });
 });

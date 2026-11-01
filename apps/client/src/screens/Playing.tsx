@@ -40,6 +40,7 @@ export function Playing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
           round={props.match.round}
           total={props.match.total}
           noClock={e().noClock}
+          spectatorTouch={e().spectatorTouch}
           selfId={props.snap.selfId}
           players={props.snap.players}
           participants={props.match.participants}

@@ -27,6 +27,8 @@ interface Props {
   total: number;
   /** Kuralı gereği süresi gizli oyun: kabuk saati hiç çizilmez. */
   noClock?: boolean | undefined;
+  /** İzleyici ekranı dokunulabilir (yalnız yerel, sunucuya gitmeyen izleyici oyunu olan oyunlar). */
+  spectatorTouch?: boolean | undefined;
   selfId: string;
   players: PlayerInfo[];
   participants: string[];
@@ -187,7 +189,7 @@ export function GameFrame(props: Props) {
               class="gframe__game"
               ref={(el) =>
                 createEffect(() => {
-                  el.inert = props.spectator || needsTurn();
+                  el.inert = (props.spectator && props.spectatorTouch !== true) || needsTurn();
                 })
               }
             >

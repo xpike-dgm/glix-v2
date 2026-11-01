@@ -38,7 +38,8 @@ Her oyun `packages/engine/src/games/<id>/` (types.ts, index.ts, bots.ts, words.t
   rastgele). Pas: yalnız taşıyıcı, kendisi dışında bağlı bir katılımcıya, sınırsız; her pas patlamaya 1–4 sn ekler.
   Taşıyıcı patlama zamanını göremez (secret: `explodeAt`, sahipleri taşıyıcı dışındaki herkes — izleyici dahil herkese
   açık değil, yalnız taşıyıcı dışındaki katılımcıların `view`'ında). Patlamada taşıyıcı −1, diğerleri 0. Patlama ile aynı
-  `now`'da gelen pas reddedilir.
+  `now`'da gelen pas reddedilir. (Güncel kural: KURALLAR §10 BM paketi — 1,5 sn kilit, hemen geri pas yok, azalan ek süre ve
+  45 sn tavan, tek "PATLAR!" bahsi.)
 - **Zaman Bombası Hafızası** (2–8): 4 renk, ilk dizi 2; sıra maç başında karıştırılır ve döngü sabit, elenen atlanır,
   bağlantısı kopan oyuncunun sırası gelince zaman aşımıyla yanlış sayılır. Her sırada önce dizi herkese oynatılır
   (`publicView`, eleman başına 600 ms), sonra aktif oyuncu girer; süre = dizi uzunluğu × 3 sn. Doğru → dizi 1 uzar

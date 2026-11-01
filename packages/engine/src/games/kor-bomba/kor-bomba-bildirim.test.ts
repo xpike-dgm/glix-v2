@@ -11,7 +11,7 @@ describe("sıra bildirimi kancası (notify)", () => {
     const s = korBomba.setup(players, ctx());
     expect(korBomba.notify?.(s, ctx())).toEqual([s.holder]);
     const to = players.find((p) => p !== s.holder) as string;
-    const next = korBomba.reduce(s, s.holder, { kind: "pass", to }, { ...ctx(), now: 2_000 });
+    const next = korBomba.reduce(s, s.holder, { kind: "pass", to }, { ...ctx(), now: 2_500 });
     if ("rejected" in next) throw new Error(next.rejected);
     expect(korBomba.notify?.(next, ctx())).toEqual([to]);
   });
