@@ -187,6 +187,7 @@ export function GameFrame(props: Props) {
             {/* inert: izleyici eylem düğmesine dokunamaz ve klavyeyle odaklanamaz. */}
             <div
               class="gframe__game"
+              data-testid="oyun-alani"
               ref={(el) =>
                 createEffect(() => {
                   el.inert = (props.spectator && props.spectatorTouch !== true) || needsTurn();

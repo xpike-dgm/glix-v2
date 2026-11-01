@@ -87,6 +87,8 @@ export function TvPlaying(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
                         <div class="gframe__body">
                           <div
                             class="gframe__game"
+                            data-testid="tv-oyun"
+                            data-game={props.match.gameId}
                             ref={(el) => {
                               el.inert = true;
                             }}
@@ -102,7 +104,15 @@ export function TvPlaying(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
                 }
               >
                 {(StageView) => (
-                  <div class="tv__bespoke">
+                  <div
+                    class="tv__bespoke"
+                    data-testid="tv-oyun"
+                    data-game={props.match.gameId}
+                    ref={(el) => {
+                      // TV yalnız izler: özel görünümde de dokunuş ve odak kapalı.
+                      el.inert = true;
+                    }}
+                  >
                     <Suspense fallback={<Loading />}>
                       <Dynamic component={StageView()} {...gameProps()} />
                     </Suspense>

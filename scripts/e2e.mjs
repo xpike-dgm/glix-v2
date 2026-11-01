@@ -117,6 +117,14 @@ function watch(label, page) {
   page.on("close", () => pages.delete(page));
 }
 
+/**
+ * Arayüzün test için taşıdığı sabit kimlikler (`data-testid`). Görsel sınıflar (ör. `.bb__num`) oyun arayüzü
+ * değiştikçe değişir; betik yalnız bunlara ve rollere/metinlere bağlanır.
+ */
+const T = (id) => `[data-testid="${id}"]`;
+const MY_SCORE = T("kendi-puan"); // oyuncunun kendi mini oyun puanı (Butona Bas)
+const PRESS = T("bas-butonu"); // Butona Bas'ta oyuncunun basma butonu
+
 const btn = (page, re) => page.getByRole("button", { name: re });
 
 const devamEt = (page) => page.getByRole("button", { name: "Devam et", exact: true });
@@ -268,7 +276,7 @@ async function seatsCount(page) {
 }
 
 async function myScore(page) {
-  return Number((await page.locator(".game__num").innerText()).trim());
+  return Number((await page.locator(MY_SCORE).innerText()).trim());
 }
 
 // Birden çok sayfada aynı ana (duvar saati) basış; ritim penceresi 300 ms olduğundan ms hassasiyeti yeter.
@@ -278,7 +286,7 @@ async function pressAt(targets, at) {
       page.evaluate(
         (t) =>
           new Promise((resolveFn) => {
-            const btnEl = document.querySelector(".arcade__hit");
+            const btnEl = document.querySelector('[data-testid="bas-butonu"]');
             if (!btnEl) throw new Error("buton yok");
             const fire = () => {
               const o = { bubbles: true, pointerType: "touch", isPrimary: true, pointerId: 1 };
@@ -616,7 +624,7 @@ async function main() {
     // 6) Başlat → anlatım
     await btn(A, /^başlat$/i).click();
     // Lobideki "Hazırım" ile karışmasın: önce anlatım ekranı gelsin
-    for (const p of [A, B, C]) await p.locator(".brief__name").waitFor(OPT);
+    for (const p of [A, B, C]) await p.locator(T("anlatim-oyun-adi")).waitFor(OPT);
     for (const p of [A, B, C]) await btn(p, /hazırım/i).waitFor(OPT);
     await shot(A, "08-briefing");
     await TV.locator(".tv__brief").waitFor(OPT);
@@ -626,26 +634,27 @@ async function main() {
     await btn(C, /hazırım/i).click();
     await sleep(1200);
     assert(await btn(A, /hazırım/i).isEnabled(), "A hâlâ anlatımda ve hazır değil olmalı");
-    assert((await A.locator(".game__num").count()) === 0, "A oyuna geçmemeli");
+    assert((await A.locator(MY_SCORE).count()) === 0, "A oyuna geçmemeli");
     await shot(A, "09-briefing-others-ready");
     await btn(A, /hazırım/i).click();
-    await A.locator(".count__num").waitFor(OPT);
+    await A.locator(T("geri-sayim")).waitFor(OPT);
     await shot(A, "10-countdown");
-    await A.locator(".game__num").waitFor(OPT);
-    for (const p of [B, C]) await p.locator(".game__num").waitFor(OPT);
+    await A.locator(MY_SCORE).waitFor(OPT);
+    for (const p of [B, C]) await p.locator(MY_SCORE).waitFor(OPT);
     await shot(A, "11-playing");
-    await TV.locator(".tv__scaled .arcade__hit").waitFor(OPT);
+    const tvGame = TV.locator(`${T("tv-oyun")}[data-game="butona-bas"]`);
+    await tvGame.waitFor(OPT);
     assert(
-      await TV.locator(".tv__scaled .gframe__game").evaluate((el) => el.inert),
+      await tvGame.evaluate((el) => el.inert),
       "TV'deki oyun ekranı etkileşime kapalı (izleyici kipi) olmalı",
     );
     await shot(TV, "tv-04-oynanis");
     log("oyun başladı");
 
     // 7a) Gerçek dokunuş: C butona bir kez gerçekten dokunur (örtü/hedef sorunu varsa tap başarısız olur)
-    await C.locator(".arcade__hit").tap();
+    await C.locator(PRESS).tap();
     await C.waitForFunction(
-      () => Number(document.querySelector(".game__num")?.textContent) === -1,
+      () => Number(document.querySelector('[data-testid="kendi-puan"]')?.textContent) === -1,
       null,
       OPT,
     );
@@ -655,25 +664,32 @@ async function main() {
     const a0 = await myScore(A);
     const b0 = await myScore(B);
     const c0 = await myScore(C);
-    for (let i = 0; i < 6; i++) {
+    // Basışlar 1. turun (15 sn) içinde kalmalı: turlar arasındaki 3 sn'lik arada basış gönderilmez (KURALLAR §6).
+    // Her sayılan basıştan sonra buton 1 sn dolar (BB-M1); basışlar arası ~1,15 sn.
+    for (let i = 0; i < 4; i++) {
       await pressAt([A, B], Date.now() + 250);
       await sleep(900); // bir sonraki turdan ayrı pencere
     }
     await shot(A, "12-playing-after-match");
     // C yalnız, diğerlerinden uzakta
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       await pressAt([C], Date.now() + 100);
       await sleep(1300);
     }
     await sleep(500);
-    await A.waitForFunction((s) => Number(document.querySelector(".game__num")?.textContent) > s, a0, OPT);
+    await A.waitForFunction(
+      (s) => Number(document.querySelector('[data-testid="kendi-puan"]')?.textContent) > s,
+      a0,
+      OPT,
+    );
     const a1 = await myScore(A);
     const b1 = await myScore(B);
     const c1 = await myScore(C);
     log("skorlar", { A: [a0, a1], B: [b0, b1], C: [c0, c1] });
-    assert(a1 > a0, `A skoru artmalı (${a0} → ${a1})`);
-    assert(b1 > b0, `B skoru artmalı (${b0} → ${b1})`);
-    assert(c1 < c0, `C skoru düşmeli (${c0} → ${c1})`);
+    // Eşleşen her pencere +1 (3 kişide kalabalık bonusu yok), tek basış −1 (KURALLAR §6).
+    assert(a1 === a0 + 4, `A skoru 4 eşleşmeyle artmalı (${a0} → ${a1})`);
+    assert(b1 === b0 + 4, `B skoru 4 eşleşmeyle artmalı (${b0} → ${b1})`);
+    assert(c1 === c0 - 2, `C skoru 2 tek basışla düşmeli (${c0} → ${c1})`);
     await shot(C, "13-playing-c-solo");
 
     // 8) B'nin sayfası kapanır, aynı bağlamda yenisi açılır → oyuna otomatik döner
@@ -681,7 +697,7 @@ async function main() {
     const B2 = await ctxB.newPage();
     watch("B2", B2);
     await B2.goto("/");
-    await B2.locator(".game__num").waitFor(OPT);
+    await B2.locator(MY_SCORE).waitFor(OPT);
     assert(!(await btn(B2, /oda kur/i).count()), "B ana sayfaya düşmemeli");
     const b2 = await myScore(B2);
     assert(b2 === b1, `B skoru korunmalı (${b1} → ${b2})`);
@@ -696,45 +712,48 @@ async function main() {
     await A.getByText("Diğerleri bekleniyor", { exact: false }).waitFor(OPT);
     await A.locator(".rdevam .tamam__dot[data-on]").nth(1).waitFor(OPT);
     await sleep(1500);
-    assert((await A.locator(".podium").count()) === 0, "biri eksikken oyun içi sonuç ekranı geçilmemeli");
+    assert(
+      (await A.locator(T("sonuc-kursusu")).count()) === 0,
+      "biri eksikken oyun içi sonuç ekranı geçilmemeli",
+    );
     await shot(A, "13e-oyun-sonu-bekleniyor");
     await passReveal([C]);
     const revealAt = Date.now();
-    await A.locator(".podium").waitFor({ timeout: 10_000 });
+    await A.locator(T("sonuc-kursusu")).waitFor({ timeout: 10_000 });
     assert(Date.now() - revealAt < 6_000, `Devam et sonrası sonuç geç geldi: ${Date.now() - revealAt} ms`);
     log("oyun içi sonuç ekranı Devam et ile geçildi");
 
     // 9) Sonuç ekranı
-    await A.locator(".podium").waitFor({ timeout: 70_000 });
+    await A.locator(T("sonuc-kursusu")).waitFor({ timeout: 70_000 });
     // Kürsü karakterleri (Pixi) tembel yüklenir; hazır olunca kürsüye data-chars-shown yazılır.
-    await A.locator(".podium[data-chars-shown]").waitFor({ timeout: 30_000 });
+    await A.locator(`${T("sonuc-kursusu")}[data-chars-shown]`).waitFor({ timeout: 30_000 });
 
     await sleep(2200); // ödül sayacı bitsin
     await shot(A, "14-results");
     await TV.locator(".tv__podium").waitFor(OPT);
     await TV.getByText("Genel sıralama", { exact: true }).waitFor(OPT);
     await shot(TV, "tv-05-sonuc");
-    const awards = (await A.locator(".podium__badge").allInnerTexts()).map((x) => x.trim()).filter(Boolean);
+    const awards = (await A.locator(T("odul")).allInnerTexts()).map((x) => x.trim()).filter(Boolean);
     log("ödül rozetleri", awards);
     assert(
       awards.length > 0 && awards.every((x) => /^\+[1-9]$/.test(x)),
       `ödül rozetleri beklenmedik: ${awards}`,
     );
-    await B2.locator(".podium").waitFor(OPT);
-    await C.locator(".podium").waitFor(OPT);
+    await B2.locator(T("sonuc-kursusu")).waitFor(OPT);
+    await C.locator(T("sonuc-kursusu")).waitFor(OPT);
 
     // 9b) Sıradaki kartı + Devam: bağlı herkes basınca sonuç ekranı 60 sn'yi beklemeden biter.
     await A.getByText("Sıradaki", { exact: true }).waitFor(OPT);
     await A.getByText("Final", { exact: true }).waitFor(OPT);
     for (const p of [A, B2]) await p.getByRole("button", { name: "Devam", exact: true }).click();
     await A.getByText("Diğerleri bekleniyor", { exact: false }).waitFor(OPT);
-    assert((await A.locator(".fin__head").count()) === 0, "biri eksikken final'e geçilmemeli");
+    assert((await A.locator(T("final-baslik")).count()) === 0, "biri eksikken final'e geçilmemeli");
     await shot(A, "14b-results-devam");
     await C.getByRole("button", { name: "Devam", exact: true }).click();
     const devamAt = Date.now();
 
     // 10) Final (Devam'dan en geç ~1 sn sonra)
-    await A.locator(".fin__head").waitFor({ timeout: 5_000 });
+    await A.locator(T("final-baslik")).waitFor({ timeout: 5_000 });
     assert(Date.now() - devamAt < 4_000, `Devam sonrası final geç geldi: ${Date.now() - devamAt} ms`);
     await sleep(1500);
     await shot(A, "15-final");
@@ -840,10 +859,10 @@ async function main() {
     );
     // Skorlar sıfırlandı: sonraki maçın başında herkes 0
     await btn(A, /^başlat$/i).click();
-    for (const p of [A, B2, C]) await p.locator(".brief__name").waitFor(OPT);
+    for (const p of [A, B2, C]) await p.locator(T("anlatim-oyun-adi")).waitFor(OPT);
     for (const p of [A, B2, C]) await btn(p, /hazırım/i).waitFor(OPT);
     for (const p of [A, B2, C]) await btn(p, /hazırım/i).click();
-    await A.locator(".game__num").waitFor(OPT);
+    await A.locator(MY_SCORE).waitFor(OPT);
     for (const p of [A, B2, C]) assert((await myScore(p)) === 0, "yeni maçta skor 0 olmalı");
     log("lobiye dönüş ve sıfırlanmış skor tamam");
 
@@ -862,7 +881,7 @@ async function main() {
       await btn(F, /^katıl$/i).click();
       await F.getByText("İzliyorsun · sonraki oyunda katılırsın", { exact: true }).waitFor(OPT);
       assert(
-        await F.locator(".gframe__game").evaluate((el) => el.inert),
+        await F.locator(T("oyun-alani")).evaluate((el) => el.inert),
         "izleyicinin oyun alanı etkileşime kapalı olmalı",
       );
       await shot(F, "13b-spectator-watching");
@@ -875,8 +894,8 @@ async function main() {
       assert((await devamEt(F).count()) === 0, "izleyici Devam et görmemeli");
       await passReveal([A, B2, C]);
       await passResults([A, B2, C]);
-      await A.locator(".fin__head").waitFor({ timeout: 30_000 });
-      await F.locator(".fin__head").waitFor({ timeout: 20_000 });
+      await A.locator(T("final-baslik")).waitFor({ timeout: 30_000 });
+      await F.locator(T("final-baslik")).waitFor({ timeout: 20_000 });
       assert(!(await btn(F, /^tekrar oyna$/i).count()), "izleyici TEKRAR OYNA görmemeli");
       await F.getByText("Lobiye dönünce oyuncu olursun", { exact: true }).waitFor(OPT);
       await shot(F, "13c-spectator-final");
@@ -889,8 +908,8 @@ async function main() {
       await shot(F, "13d-spectator-now-player");
       // Sonraki adımlar (sunucu güncellemesi) için yeni bir maç başlatılır.
       await btn(A, /^başlat$/i).click();
-      await A.locator(".brief__name").waitFor(OPT);
-      await F.locator(".brief__name").waitFor(OPT);
+      await A.locator(T("anlatim-oyun-adi")).waitFor(OPT);
+      await F.locator(T("anlatim-oyun-adi")).waitFor(OPT);
       await btn(F, /hazırım/i).waitFor(OPT);
       log("maç sürerken katılım: izleyici etiketi, final, lobide oyuncu olma tamam");
     }
@@ -1184,12 +1203,12 @@ async function main() {
     }));
     await pickOnlyButonaBas(A);
     await btn(A, /^başlat$/i).click();
-    for (const p of [A, B2, C]) await p.locator(".brief__name").waitFor(OPT);
+    for (const p of [A, B2, C]) await p.locator(T("anlatim-oyun-adi")).waitFor(OPT);
     for (const p of [A, B2, C]) await btn(p, /hazırım/i).click();
-    await A.locator(".game__num").waitFor(OPT);
+    await A.locator(MY_SCORE).waitFor(OPT);
     await passReveal([A, B2, C]);
     await passResults([A, B2, C]);
-    await A.locator(".fin__head").waitFor({ timeout: 30_000 });
+    await A.locator(T("final-baslik")).waitFor({ timeout: 30_000 });
     await A.locator(".fin [data-chars-shown]").waitFor({ timeout: 30_000 });
     await dismissBadgeCards(A);
     const m2 = await withDb((db) => {

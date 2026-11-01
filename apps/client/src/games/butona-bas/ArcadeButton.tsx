@@ -37,6 +37,8 @@ interface Props {
   onUp?: () => void;
   /** Klavyeyle basış (Enter/Boşluk); dokunma `onDown` ya da ebeveyn alanı üzerinden gelir. */
   onKey?: () => void;
+  /** Uçtan uca test için sabit kimlik (yalnız oyuncunun basma butonu). */
+  testId?: string | undefined;
 }
 
 /** Arcade butonu: normal ve basılı görsel üst üste; etiket, dolum halkası ve parlama kubbenin üstünde. */
@@ -134,6 +136,7 @@ export function ArcadeButton(props: Props) {
       <button
         type="button"
         class="arcade__hit"
+        data-testid={props.testId}
         aria-label={props.ariaLabel ?? "Bas"}
         disabled={props.disabled}
         onPointerDown={(e) => props.onDown?.(e)}

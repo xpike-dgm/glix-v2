@@ -179,7 +179,7 @@ export function Final(props: { snap: RoomSnapshot }) {
 
       <div class="fin__scroll" data-scroll>
         <div class="fin__a">
-          <div class="fin__head rise" style={{ "--i": 0 }}>
+          <div class="fin__head rise" data-testid="final-baslik" style={{ "--i": 0 }}>
             <p class="overline">{tie() ? "Berabere" : "Kazanan"}</p>
             <h1 class="display fin__name">
               {winners()

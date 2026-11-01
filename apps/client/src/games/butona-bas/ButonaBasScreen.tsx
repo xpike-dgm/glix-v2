@@ -426,7 +426,7 @@ export default function ButonaBasScreen(props: GameScreenProps) {
           >
             <div class="bb__score">
               <span class="overline">Puanın</span>
-              <span class="bb__num" ref={scoreEl}>
+              <span class="bb__num" data-testid="kendi-puan" ref={scoreEl}>
                 {myScore()}
               </span>
               <span class="bb__meta">{meta()}</span>
@@ -500,6 +500,7 @@ export default function ButonaBasScreen(props: GameScreenProps) {
               urgent={urgent() !== null}
               glow={gap()?.step === "tight"}
               onKey={press}
+              testId="bas-butonu"
             />
             <Show when={props.spectator}>
               <span class="bb__watch">İzliyorsun</span>

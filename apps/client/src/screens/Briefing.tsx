@@ -38,7 +38,7 @@ export function Briefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
         <p class="overline rise" style={{ "--i": 0 }}>
           Oyun {match().round + 1} / {match().total}
         </p>
-        <h1 class="display brief__name rise" style={{ "--i": 1 }}>
+        <h1 class="display brief__name rise" data-testid="anlatim-oyun-adi" style={{ "--i": 1 }}>
           {match().gameName}
         </h1>
         <BadCardNotice cards={match().cards} players={snap().players} />

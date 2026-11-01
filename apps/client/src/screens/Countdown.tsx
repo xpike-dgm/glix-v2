@@ -47,7 +47,7 @@ export function Countdown(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
         <div class="count__stage" aria-live="assertive">
           <Show when={n()} keyed>
             {(v) => (
-              <div class="count__num" data-n={v}>
+              <div class="count__num" data-testid="geri-sayim" data-n={v}>
                 <span class="count__wave" />
                 <span class="count__digit">{v}</span>
               </div>

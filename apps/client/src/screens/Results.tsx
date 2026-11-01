@@ -185,7 +185,7 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
       </Show>
 
       <div class="results__body" data-scroll>
-        <div class="podium">
+        <div class="podium" data-testid="sonuc-kursusu">
           <For each={podiumOrder(top())}>
             {(r) => (
               <div
@@ -195,7 +195,7 @@ export function Results(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
                 data-pos={top().indexOf(r)}
                 style={{ "--i": 3 - top().indexOf(r) }}
               >
-                <div class="podium__badge">
+                <div class="podium__badge" data-testid="odul">
                   <Show when={award(r.player.id) > 0}>
                     <CountUp to={award(r.player.id)} delay={700 + r.rank * 160} />
                   </Show>
