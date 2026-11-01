@@ -1,130 +1,156 @@
 /**
- * Yalnız geliştirme önizlemesi (üretim paketine girmez). Çağrışım Ağı ekranları:
- *   ?mock=cagrisim                   cevap aşaması (yazabilirsin; gönderince kilitlenir, süre bitince açılır)
- *   ?mock=cagrisim-locked            cevabın kilitlenmiş
- *   ?mock=cagrisim-spectator         katılımcı değilsin
- *   ?mock=cagrisim-briefing          anlatım ekranı
- *   ?mock=cagrisim-reveal            açılış: sen bir ağdasın (`&n=8` oyuncu sayısı; `&at=ms` açılışın kaçıncı ms'sinde, varsayılan: sıralı açılış bitmiş)
- *   ?mock=cagrisim-reveal-single     açılış: tek kaldın
- *   ?mock=cagrisim-reveal-silent     açılış: yazmadın
- *   ?mock=cagrisim-reveal-spectator  açılış: izleyici
+ * Yalnız geliştirme önizlemesi (üretim paketine girmez). Çağrışım Ağı ekranları (üç kelimelik seri):
+ *   ?mock=cagrisim                 cevap aşaması (`&r=1` ikinci kelime; yazabilirsin, gönderince kilitlenir)
+ *   ?mock=cagrisim-urgent          son 4 sn: kırmızı halka, büyük saniye, boş alan uyarısı
+ *   ?mock=cagrisim-locked          cevabın kilitlenmiş, yörüngede düğümler
+ *   ?mock=cagrisim-spectator       izleyici: "Sen de dene (sayılmaz)"
+ *   ?mock=cagrisim-briefing        anlatım ekranı
+ *   ?mock=cagrisim-mini            kelimeler arası 4 sn'lik mini açılış (`&n=8`)
+ *   ?mock=cagrisim-final           büyük açılış (`&at=ms` açılışın kaçıncı ms'si; varsayılan: liste)
+ *   ?mock=cagrisim-final-single    büyük açılış: son kelimede tek kaldın
+ *   ?mock=cagrisim-final-silent    büyük açılış: son kelimede yazmadın (biri bağlantı koptu)
+ *   ortak: `&stamp=heart` herkes aynı ağ (TEK YÜREK), `&stamp=sheep` biri hariç herkes (KARA KOYUN), `&yorum=1` spiker
+ *   TV: ?mock=tv-cagrisim-answer / tv-cagrisim-mini / tv-cagrisim-final
  */
-import type {
-  CagrisimAgiPublicView,
-  CagrisimAgiView,
-  CagrisimReveal,
-  GameInfo,
-  MatchSnapshot,
-  PlayerInfo,
-  RoomPhase,
-  RoomSnapshot,
+import {
+  CAGRISIM_ANSWER_MS,
+  CAGRISIM_FINAL_MS,
+  CAGRISIM_MINI_MS,
+  type CagrisimAgiPublicView,
+  type CagrisimAgiView,
+  type CagrisimPhase,
+  type CagrisimReveal,
+  type CagrisimRoundResult,
+  cagrisimAwards,
+  type GameInfo,
+  groupAnswers,
+  type MatchSnapshot,
+  type PlayerInfo,
+  type RoomPhase,
+  type RoomSnapshot,
 } from "@glix/engine";
 import { useMockSender } from "../net/client.js";
 import { applySnapshot, setState } from "../net/store.js";
 
-const NAMES = ["Cihad", "Elif", "Mert", "Zeynep", "Kaan", "Defne", "Burak", "Ayşe"];
+const NAMES = ["Cihad", "Elif", "Mert", "Zeynep", "Kaan", "Defne", "Burak", "Ayşegül"];
 const SELF = "p0";
-const WORD = "DENİZ";
+const WORDS = ["KAR", "DENİZ", "VADİ"];
 const CATALOG: GameInfo[] = [
   { id: "cagrisim-agi", name: "Çağrışım Ağı", minPlayers: 2, maxPlayers: 8, orientation: "portrait" },
 ];
 const BRIEFING = {
   goal: "Arkadaşlarınla aynı şeyi düşün!",
   steps: [
-    "Ortadaki kelimeyi oku",
-    "Aklına gelen tek çağrışımı yaz",
-    "Aynısını yazanlar ağ kurar: kaç kişiyseniz o kadar puan",
+    "Ortadaki kelimeyi gör",
+    "Çoğunluk ne yazar? Tek bir cevap yaz",
+    "Aynısını yazanlarla ağ kur: üç kelime, puanlar toplanır",
   ],
 };
 
-/** Oyuncu sırasına göre sabit örnek açılış; eksik oyuncular elenir, tek kalan üye teke düşer. */
-function sampleReveal(ids: string[], mode: string): CagrisimReveal {
-  const plan: { text: string; members: string[] }[] =
-    mode === "single"
-      ? [
-          { text: "mavi", members: ["p3", "p4"] },
-          { text: "tatil", members: ["p1", "p2"] },
-        ]
-      : mode === "silent"
-        ? [
-            { text: "mavi", members: ["p1", "p2", "p3"] },
-            { text: "tatil", members: ["p4", "p5"] },
-          ]
-        : [
-            { text: "mavi", members: ["p0", "p2", "p4"] },
-            { text: "tatil", members: ["p1", "p3"] },
-          ];
-  const loneText = ["ördek", "bilgisayar", "Anadolu"];
-  const groups: CagrisimReveal["groups"] = [];
-  const used = new Set<string>();
-  for (const g of plan) {
-    const members = g.members.filter((id) => ids.includes(id));
-    for (const id of members) used.add(id);
-    if (members.length >= 2) groups.push({ text: g.text, members, points: members.length });
-    else for (const id of members) used.delete(id);
-  }
-  const singles: CagrisimReveal["singles"] = [];
-  const silent: string[] = [];
-  const silentId = mode === "silent" ? SELF : ids[ids.length - 1];
-  for (const id of ids) {
-    if (used.has(id)) continue;
-    if (id === silentId && ids.length > 4) silent.push(id);
-    else singles.push({ playerId: id, text: loneText[singles.length % loneText.length] as string });
-  }
-  groups.sort((a, b) => b.members.length - a.members.length);
-  return { groups, singles, silent };
+/** Kelime başına örnek cevaplar (oyuncu sırasıyla); gerçek gruplama kurallarıyla açılır. */
+function sampleAnswers(ids: string[], round: number, mode: string, stamp: string): Record<string, string> {
+  const sets = [
+    ["kış", "beyaz", "Kış", "kardan adam", "beyaz", "kış", "soğuk", "kayak"],
+    ["mavi", "dalgalar", "Mavi", "dalga", "mavi", "kumsal", "kumsak", "tatil"],
+    ["yeşil", "dağ", "yeşil", "nehir", "dağlar", "ova", "yeşil", "kartal"],
+  ];
+  const set = sets[round] ?? sets[0] ?? [];
+  const out: Record<string, string> = {};
+  ids.forEach((id, i) => {
+    let text = set[i % set.length] as string;
+    if (stamp === "heart") text = i % 2 === 0 ? "Mavi" : "mavi";
+    if (stamp === "sheep") text = i === 1 ? "ördek" : "mavi";
+    if (round === 2 && mode === "single" && id === SELF) text = "uzaylı";
+    if (round === 2 && mode === "silent" && (id === SELF || id === ids[ids.length - 1])) return;
+    out[id] = text;
+  });
+  return out;
 }
 
 export function startCagrisimMock(kind: string, params: URLSearchParams): void {
-  const n = Math.min(8, Math.max(2, Number(params.get("n")) || (kind.includes("reveal") ? 7 : 5)));
+  const tv = kind.startsWith("tv-");
+  const base = kind.replace(/^tv-/, "").replace(/-spectator$/, "");
+  const n = Math.min(8, Math.max(2, Number(params.get("n")) || (base.includes("final") ? 7 : 6)));
+  const silentMode = base.includes("silent");
   const players: PlayerInfo[] = Array.from({ length: n }, (_, i) => ({
     id: `p${i}`,
     nickname: NAMES[i] ?? `Oyuncu${i}`,
     avatar: i,
-    connected: true,
-    score: 0,
+    connected: !(silentMode && i === n - 1),
+    score: [6, 4, 3, 7, 2, 5, 1, 0][i] ?? 0,
     spectator: false,
   }));
-  const watching = kind.includes("spectator");
+  const watching = kind.includes("spectator") || tv;
   const participants = players.map((p) => p.id).filter((id) => !(watching && id === SELF));
+  const stamp = params.get("stamp") ?? "";
+  const mode = base.includes("single") ? "single" : silentMode ? "silent" : "";
   const now = Date.now();
   const timers: ReturnType<typeof setTimeout>[] = [];
 
   let phase: RoomPhase = "playing";
   let readyIds: string[] = [];
   let phaseEndsAt: number | null = null;
-  let startedAt = now - 8_000;
+  let round = Math.min(2, Math.max(0, Number(params.get("r")) || 0));
+  let gamePhase: CagrisimPhase = "answer";
+  let roundStartedAt = now - 8_000;
   let answeredIds: string[] = participants.filter((id) => id === "p1" || id === "p3");
   let myAnswer: string | null = null;
-  let reveal: CagrisimReveal | null = null;
-  let revealed = false;
 
-  if (kind === "cagrisim-briefing") {
+  if (base === "cagrisim-briefing") {
     phase = "briefing";
     readyIds = ["p1"];
     phaseEndsAt = now + 40_000;
-  } else if (kind === "cagrisim-locked") {
+  } else if (base === "cagrisim-urgent") {
+    roundStartedAt = now - CAGRISIM_ANSWER_MS + 4_200;
+  } else if (base === "cagrisim-locked") {
     myAnswer = "mavi";
     answeredIds = participants.filter((id) => id !== "p4");
-  } else if (kind.startsWith("cagrisim-reveal")) {
-    startedAt = now - 30_000 - Number(params.get("at") ?? 4_200);
-    revealed = true;
-    reveal = sampleReveal(
-      participants,
-      kind.includes("single") ? "single" : kind.includes("silent") ? "silent" : "",
-    );
-    answeredIds = participants.filter((id) => !reveal?.silent.includes(id));
+  } else if (base === "cagrisim-mini") {
+    gamePhase = "mini";
+    round = 1;
+    roundStartedAt = now - CAGRISIM_ANSWER_MS - 1_200;
+  } else if (base.startsWith("cagrisim-final")) {
+    gamePhase = "final";
+    round = 2;
+    roundStartedAt = now - CAGRISIM_ANSWER_MS - Number(params.get("at") ?? 7_000);
   }
+  const startedAt = roundStartedAt - round * (CAGRISIM_ANSWER_MS + CAGRISIM_MINI_MS);
 
-  const publicView = (): CagrisimAgiPublicView => ({
-    startedAt,
-    answerEndsAt: startedAt + 30_000,
-    endsAt: startedAt + 36_000,
-    word: WORD,
-    phase: revealed ? "reveal" : "answer",
-    answeredIds,
-    reveal: revealed ? reveal : null,
-  });
+  const results = (): CagrisimRoundResult[] => {
+    const count = gamePhase === "answer" ? round : round + 1;
+    return Array.from({ length: count }, (_, r) => ({
+      word: WORDS[r] ?? "KAR",
+      reveal: groupAnswers(participants, sampleAnswers(participants, r, mode, r === count - 1 ? stamp : "")),
+    }));
+  };
+  const totals = (list: CagrisimRoundResult[]): Record<string, number> => {
+    const t: Record<string, number> = Object.fromEntries(participants.map((id) => [id, 0]));
+    for (const { reveal } of list)
+      for (const g of reveal.groups) for (const id of g.members) t[id] = (t[id] ?? 0) + g.points;
+    return t;
+  };
+
+  const publicView = (): CagrisimAgiPublicView => {
+    const list = results();
+    const t = totals(list);
+    const answerEndsAt = roundStartedAt + CAGRISIM_ANSWER_MS;
+    const current: CagrisimReveal | undefined = list[round]?.reveal;
+    return {
+      startedAt,
+      round,
+      rounds: 3,
+      roundStartedAt,
+      answerEndsAt,
+      revealEndsAt: answerEndsAt + (round === 2 ? CAGRISIM_FINAL_MS : CAGRISIM_MINI_MS),
+      endsAt: answerEndsAt + (2 - round) * (CAGRISIM_ANSWER_MS + CAGRISIM_MINI_MS) + CAGRISIM_FINAL_MS,
+      word: WORDS[round] ?? "KAR",
+      phase: gamePhase,
+      answeredIds: current ? participants.filter((id) => !current.silent.includes(id)) : answeredIds,
+      results: list,
+      totals: t,
+      awards: gamePhase === "final" ? cagrisimAwards(t) : null,
+    };
+  };
   const view = (): CagrisimAgiView => ({ myAnswer: watching ? null : myAnswer });
 
   const match = (): MatchSnapshot => ({
@@ -142,6 +168,18 @@ export function startCagrisimMock(kind: string, params: URLSearchParams): void {
     publicView: phase === "playing" ? publicView() : null,
     view: phase === "playing" ? view() : null,
     result: null,
+    ...(params.get("yorum") === "1" && gamePhase === "final"
+      ? { comment: "KAR deyince herkes kışa koştu, Elif ise ördeği düşündü; kara koyun ama çok sevimli." }
+      : {}),
+    ...(gamePhase === "final"
+      ? {
+          reveal: {
+            startedAt: roundStartedAt + CAGRISIM_ANSWER_MS,
+            endsAt: roundStartedAt + CAGRISIM_ANSWER_MS + 60_000,
+            continueIds: ["p2"],
+          },
+        }
+      : {}),
   });
   let rev = 1;
   const publish = (): void => {
@@ -169,7 +207,7 @@ export function startCagrisimMock(kind: string, params: URLSearchParams): void {
       readyIds = [...participants];
       publish();
     }
-    if (msg.type !== "action" || revealed || myAnswer !== null) return;
+    if (msg.type !== "action" || gamePhase !== "answer" || myAnswer !== null) return;
     const payload = msg.payload as { text?: unknown };
     if (typeof payload?.text !== "string") return;
     myAnswer = payload.text;
@@ -182,21 +220,6 @@ export function startCagrisimMock(kind: string, params: URLSearchParams): void {
       }, 1200),
     );
   });
-
-  // Cevap aşaması süre dolunca örnek açılışa geçer (yalnız geliştirmede, tek akış denemesi için).
-  if (!revealed && kind !== "cagrisim-briefing") {
-    timers.push(
-      setTimeout(
-        () => {
-          revealed = true;
-          const mine = myAnswer?.trim().toLocaleLowerCase("tr");
-          reveal = sampleReveal(participants, mine === undefined ? "silent" : "");
-          publish();
-        },
-        Math.max(1_000, startedAt + 30_000 - Date.now()),
-      ),
-    );
-  }
 
   setState({ conn: "open", everOpen: true, nickname: "Cihad" });
   setState("session", { token: "mock", playerId: SELF, roomCode: "KX7QP" });

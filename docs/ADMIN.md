@@ -133,7 +133,7 @@ Mevcut adlar kendiliğinden değişmez; "Listeye takılan mevcut hesaplar" salt 
 | Kimlik | Oyun | Girdi | Hazır | Asgari |
 |---|---|---|---|---|
 | `sozluk-blofu/kelimeler` | Sözlük Blöfü | kelime (3-16 harf, tek sözcük) + gerçek tanım (6-100 karakter, kelimeyi içermez) | 87 | 10 |
-| `cagrisim-agi/kelimeler` | Çağrışım Ağı | tek kelime (2-16 harf) | 321 | 10 |
+| `cagrisim-agi/kelimeler` | Çağrışım Ağı | tek kelime (2-16 harf) + isteğe bağlı zorluk (kolay/orta/zor; boş = orta). Panelde **Karne** sütunu (CG-M6): kaç oyunda çıktı · ortalama en büyük ağ % · tek kalan %; 8 oyundan sonra kolay / zor / kapatma önerisi rozeti (kendiliğinden uygulanmaz) | 321 (80 kolay, 159 orta, 82 zor) | 10 |
 | `sizma/ciftler` | Sızma | iki farklı kelime (2-16 harf) | 160 | 10 |
 | `karalama-defteri/ciftler` | Karalama Defteri | ana + yakın kelime (3-16 harf, biri ötekini içermez) | 160 | 10 |
 | `laf-sokma/sorular` | Laf Sokma | soru (12-90 karakter, "?" ile biter); tek havuz | 330 | 20 (teknik ihtiyaç 9) |

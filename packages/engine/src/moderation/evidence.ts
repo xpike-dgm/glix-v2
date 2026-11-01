@@ -59,15 +59,18 @@ function yaziYaz(view: Rec, playerId: string): string[] {
 }
 
 function cagrisim(view: Rec, playerId: string): string[] {
-  const reveal = view.reveal;
-  if (!isRec(reveal)) return [];
   const out: string[] = [];
-  for (const g of recs(reveal.groups)) {
-    if (Array.isArray(g.members) && g.members.includes(playerId) && typeof g.text === "string")
-      out.push(g.text);
-  }
-  for (const s of recs(reveal.singles)) {
-    if (s.playerId === playerId && typeof s.text === "string") out.push(s.text);
+  const results = Array.isArray(view.results) ? view.results : [];
+  for (const r of results) {
+    const reveal = isRec(r) ? r.reveal : undefined;
+    if (!isRec(reveal)) continue;
+    for (const g of recs(reveal.groups)) {
+      if (Array.isArray(g.members) && g.members.includes(playerId) && typeof g.text === "string")
+        out.push(g.text);
+    }
+    for (const s of recs(reveal.singles)) {
+      if (s.playerId === playerId && typeof s.text === "string") out.push(s.text);
+    }
   }
   return out;
 }

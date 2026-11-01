@@ -530,6 +530,58 @@ cevapların önüne geçer:**
 **Değişiklik (sahip onayı, Ekim 2026):** Gruplama klavyeden bağımsızdır (kaşık = kasik = KASIK). Bir grupta
 farklı yazılışlar varsa açılışta **Türkçe harf içeren yazılış** (kaşık) gösterilir; eşitlikte ilk cevap veren.
 
+**Değişiklik (CG, Kasım 2026, sahip onayı; `docs/oneriler/cagrisim-agi.md`, `KARARLAR-15-OYUN.md`) — yukarıdaki
+cevapların önüne geçer:**
+
+- **Üç kelimelik seri (CG-M2):** Oyun tek kelime yerine **üç kelime** üst üste oynanır. Her kelimede **20 sn** cevap,
+  ardından **4 sn**'lik mini açılış (yalnız o kelimenin ağları; dokunarak geçilmez); üçüncü kelimeden sonra büyük açılış
+  (en az **8 sn**, "Devam et" ile geçilir). En uzun hâli 76 sn. Erken bitiş her kelimede ayrı çalışır: bağlı herkes
+  gönderince 1 sn sonra o kelimenin açılışı başlar. Her kelimede oyuncu tek cevap yazar, gönderilen cevap kesindir.
+  Yazmayan o kelimede 0 alır; bağlantısı kopan sonraki kelimede dönerse oynamaya devam eder. Ağ puanları üç kelimede
+  toplanır. Üç kelime aynı oyunda birbirinin aynısı olamaz.
+- **Genel skor (CG-M1):** Ağ puanı (ağdaki kişi sayısı) mini oyun puanıdır. Genel skora üç kelimenin **toplam** ağ
+  puanına göre sıralama ödülü gider: en yüksek toplam **+2** (eşitlikte hepsi +2), sonraki farklı toplam **+1**,
+  diğerleri 0. Ağ puanı 0 olan ödül almaz. Herkesin toplamı aynı ve 0'dan büyükse herkes **+1**; hiç ağ yoksa kimse.
+  2 oyuncuda hep eşleşirseniz ikiniz de +1. Kartlarda "birinci" en yüksek, "sonuncu" en düşük toplam ağ puanıdır.
+- **Eşleşme (CG-M3):** Klavye toleransına ek olarak (1) **boşluk ve tire** yok sayılır ("deniz kenarı" =
+  "denizkenarı" = "deniz-kenarı"); (2) sondaki **-lar / -ler** çoğul eki, kalan kök en az 3 harfse yok sayılır
+  ("dalgalar" = "dalga"; "dolar", "kiler" dokunulmaz); (3) **6 harf ve üstü** cevaplarda harf sayısı aynı ve yalnız
+  **bir harf** farklıysa aynı sayılır ("kumsal" = "kumsak"); 5 harf ve altında tam eşleşme gerekir. Gruplama iki
+  adımlıdır: önce (1)–(2) ile kesin gruplar kurulur, sonra tek kalan cevap ya da daha küçük grup, bir harf uzaktaki **en
+  büyük** gruba katılır; zincirleme yoktur. Eşit büyüklükte iki grup bir harf uzaksa birleşir. Anlamca eş cevaplar
+  ("araba" / "otomobil") birleşmez. Ekranda **oyuncunun yazdığı biçim** gösterilir (küçük harfe çevrilmez); grupta
+  birden çok yazılış varsa Türkçe harf içeren, eşitlikte ilk cevap verenin yazılışı. Birleşen farklı yazılışlar ağ
+  kutusunun altında küçük yazıyla görünür: "(dalgalar, dalga)".
+- **Tekrar (CG-M4):** Aynı odada son **60** kelime (yaklaşık 20 oyun) tekrar gelmez. Süzgeç yerleşik havuza da
+  uygulanır; süzülünce kalan kelime havuz alt sınırının (10) altına düşerse süzgeç uygulanmaz. Hafıza yalnız bellektedir,
+  oda kapanınca sıfırlanır.
+- **Zorluk (CG-M5):** Havuzdaki her kelime **kolay** (tek baskın çağrışım), **orta** (iki-üç güçlü çağrışım) ya da
+  **zor** (dağınık) etiketi taşır; etiketsiz kelime orta sayılır. Seri **kolay → orta → zor** sırasıyla çekilir; bir
+  zorlukta kelime kalmazsa komşu zorluktan çekilir. Zorluk yönetici havuz formunda isteğe bağlı açılır listedir.
+- **Kelime karnesi (CG-M6):** Oyun bitince oynanan her kelime için havuz istatistiğine yalnız iki oran yazılır: en büyük
+  ağdaki kişi / cevap veren ve tek kalan / cevap veren (kimse yazmadıysa yazılmaz). Cevap metni, oyuncu adı, oda kodu
+  saklanmaz. Yönetici panelinde kelime başına "kaç oyunda çıktı · ortalama en büyük ağ % · tek kalan %". En az 8 oyundan
+  sonra: ortalama en büyük ağ ≥ %80 → "kolay önerisi"; ≤ %30 ve tek kalan ≥ %60 → "zor önerisi"; hiç ağ kurulmadıysa
+  "kapatma önerisi". Öneriler sahip onayına gider, kendiliğinden uygulanmaz.
+- **Açılış (CG-U5, CG-U6, CG-U7, CG-U8):** Büyük açılışta küre ortada, oyuncular çevresinde halka: herkesin kartı ters
+  belirir, tek kalanlar tek tek söner, ağlar küçükten büyüğe neon çizgilerle küreye bağlanır, en büyük ağ en son
+  ("EN BÜYÜK AĞ"); ardından liste, seri özeti ve toplamlar. Üstte "n kişilik ağ" (ağ puanı) ve genel skor rozeti
+  (+2 / +1). İki özel damga (puan etkisi yok): herkes aynı ağdaysa **TEK YÜREK**; 4+ oyuncuda biri hariç herkes aynı
+  ağdaysa **KARA KOYUN** (dışarıdaki "bu sefer farklı düşündü"). Ağ kutularında kısa isimler; yazmayanlar "Yazmadı" ve
+  "Bağlantı koptu" diye ayrılır.
+- **İzleyici (CG-U12):** İzleyici cevap aşamasında "Sen de dene (sayılmaz)" alanına yazabilir; yazdığı sunucuya gitmez,
+  hazır sayısına girmez, açılışta yalnız kendi ekranında hangi ağa düşeceği gösterilir.
+- **Ağ spikeri (CG-AI2):** Büyük açılışta tek cümlelik yorum (ortak yorum altyapısı): modele kelimeler, ağlar ve tek kalan
+  cevaplar "Oyuncu1…N" adlarıyla gider; saklanmaz, puanı etkilemez, gelmezse hiç görünmez.
+- **Anlatım (CG-U14):** (1) "Ortadaki kelimeyi gör", (2) "Çoğunluk ne yazar? Tek bir cevap yaz", (3) "Aynısını
+  yazanlarla ağ kur: üç kelime, puanlar toplanır"; görselde küçük not: "Cevabını yüksek sesle söyleme! Küçük yazım
+  hataları sayılmaz."
+- Değişmeyenler: 2–8 oyuncu, kelime başına tek cevap ve gönderilen cevabın kesinliği, ağın en az iki kişi olması, ağ
+  puanının ağdaki kişi sayısı olması, tek kalanın ve yazmayanın 0 alması, eksi puan yok, klavyeden bağımsız eşleşme,
+  60 karakter teknik sınır, erken bitiş kuralı, cevapların açılışa kadar gizli kalması. Gönderdikten sonra düzeltme
+  yoktur (CG-M8 onaylanmadı); tema serisi yoktur (CG-M7 onaylanmadı); anlamca eş cevapları yapay zekâ birleştirmez
+  (CG-AI1 onaylanmadı).
+
 ## 6. Butona Bas — `butona-bas`
 
 **Durum: KİLİTLİ**

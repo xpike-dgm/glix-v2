@@ -34,7 +34,8 @@ describe("oyunlarda klavyeden bağımsız eşleşme", () => {
     const r = groupAnswers(["a", "b", "c"], { a: "Kaşık", b: "kasik", c: "çatal" });
     expect(r.groups).toHaveLength(1);
     expect(r.groups[0]?.members).toEqual(["a", "b"]);
-    expect(r.groups[0]?.text).toBe("kaşık");
+    // Oyuncunun yazdığı biçim gösterilir (CG-M3: küçük harfe çevrilmez).
+    expect(r.groups[0]?.text).toBe("Kaşık");
   });
 
   it("Yazı Yaz: KITAP tahmini KİTAP kelimesini bulur", () => {
@@ -125,7 +126,7 @@ describe("İngilizce klavye senaryoları (reduce üzerinden)", () => {
     ]) {
       const r = groupAnswers(["a", "b", "c"], { ...order, c: "bıçak" });
       expect(r.groups).toHaveLength(1);
-      expect(r.groups[0]?.text).toBe("kaşık");
+      expect(r.groups[0]?.text).toBe("KAŞIK");
       expect(r.groups[0]?.points).toBe(2);
       expect(r.singles).toHaveLength(1);
     }

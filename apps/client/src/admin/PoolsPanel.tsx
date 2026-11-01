@@ -28,6 +28,7 @@ import {
   minText,
   POOL_FILTERS,
   pageCount,
+  playCell,
   poolStatus,
   splitPaste,
   valuesProblem,
@@ -569,6 +570,9 @@ export function PoolsPanel(props: { onOtp: () => void }) {
                             <Show when={p().feedback}>
                               <th>Bilinirlik</th>
                             </Show>
+                            <Show when={p().playStats}>
+                              <th>Karne</th>
+                            </Show>
                             <th>Durum</th>
                             <th>İşlemler</th>
                           </tr>
@@ -587,8 +591,11 @@ export function PoolsPanel(props: { onOtp: () => void }) {
                                 <Show when={p().feedback}>
                                   <td data-label="Bilinirlik">{knownCell(e.known).text}</td>
                                 </Show>
+                                <Show when={p().playStats}>
+                                  <td data-label="Karne">{playCell(e.play).text}</td>
+                                </Show>
                                 <td data-label="Durum">
-                                  <For each={badgesOf(e, p().feedback === true)}>
+                                  <For each={badgesOf(e, p().feedback === true, p().playStats === true)}>
                                     {(b) => <span class={`adm-badge adm-badge--${b.tone}`}>{b.label}</span>}
                                   </For>
                                 </td>

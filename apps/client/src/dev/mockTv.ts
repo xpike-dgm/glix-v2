@@ -15,6 +15,7 @@
  *   tv-kule-*                 Kule Ustası evreleri (ör. tv-kule-turn, tv-kule-perfect, tv-kule-miss, tv-kule-end)
  *   tv-yazi-*                 Yazı Yaz evreleri (ör. tv-yazi-write, tv-yazi-talk, tv-yazi-reveal&t=3000)
  *   tv-kendim-*               Kendim evreleri (ör. tv-kendim-write, tv-kendim-match, tv-kendim-reveal&t=4000)
+ *   tv-cagrisim-*             Çağrışım Ağı evreleri (ör. tv-cagrisim-answer, tv-cagrisim-mini, tv-cagrisim-final&at=3000)
  *   tv-sozluk-*               Sözlük Blöfü evreleri (ör. tv-sozluk-write, tv-sozluk-pick, tv-sozluk-reveal&at=4000)
  *   tv-sizma-*                Sızma evreleri (ör. tv-sizma-clue, tv-sizma-runoff, tv-sizma-unmask&t=5200)
  */
@@ -50,6 +51,9 @@ export async function startTvMock(mock: string, params: URLSearchParams): Promis
     } else if (kind.startsWith("kendim-")) {
       const m = await import("./mockKendim.js");
       m.startKendimMock(`${kind}-spectator`, params);
+    } else if (kind.startsWith("cagrisim-")) {
+      const m = await import("./mockCagrisim.js");
+      m.startCagrisimMock(`tv-${kind}`, params);
     } else if (kind.startsWith("sozluk-")) {
       const m = await import("./mockSozluk.js");
       m.startSozlukMock(`${kind}-spectator`, params);

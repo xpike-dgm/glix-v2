@@ -59,15 +59,22 @@ describe("bildirim kanıtı: yalnız herkese açık metin", () => {
     expect(collectPublicTexts("yazi-yaz", { reveal: null }, ["a"])).toEqual({});
   });
 
-  it("cagrisim-agi: grup ve tek cevaplar", () => {
+  it("cagrisim-agi: açılmış kelimelerdeki grup ve tek cevaplar", () => {
+    const reveal = (text: string, single: string) => ({
+      groups: [{ text, members: ["a", "b"], points: 2, variants: [] }],
+      singles: [{ playerId: "c", text: single }],
+      silent: ["d"],
+    });
     const view = {
-      reveal: {
-        groups: [{ text: "DENİZ", members: ["a", "b"], points: 2 }],
-        singles: [{ playerId: "c", text: "ÇÖL" }],
-        silent: ["d"],
-      },
+      results: [
+        { word: "KAR", reveal: reveal("DENİZ", "ÇÖL") },
+        { word: "ARI", reveal: reveal("bal", "uçmak") },
+      ],
     };
-    expect(collectPublicTexts("cagrisim-agi", view, ["a", "c", "d"])).toEqual({ a: ["DENİZ"], c: ["ÇÖL"] });
+    expect(collectPublicTexts("cagrisim-agi", view, ["a", "c", "d"])).toEqual({
+      a: ["DENİZ", "bal"],
+      c: ["ÇÖL", "uçmak"],
+    });
   });
 
   it("kanıtı tanımsız oyunlar (bozuk-telefon, karalama-defteri, diğerleri) hiçbir şey eklemez", () => {

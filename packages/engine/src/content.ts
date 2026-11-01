@@ -56,6 +56,11 @@ export interface ContentPool<E> {
    * ve kaç "biliyordum" geldiğini sayar; panelde gösterir ve fazla bilinen girdinin çekiliş ağırlığını yarıya indirir.
    */
   feedback?: boolean;
+  /**
+   * Kelime karnesi (ör. Çağrışım Ağı, CG-M6): sunucu girdi başına kaç oyunda çıktığını ve iki oranın ortalamasını
+   * (en büyük ağın oranı, tek kalan oranı) tutar; panelde gösterir ve eşiklere göre öneri rozeti koyar. Yalnız sayılar.
+   */
+  playStats?: boolean;
   toFields(entry: E): Record<string, string>;
   /** `ctx.content` / veritabanından gelen ham veriyi alan değerlerine açar; biçim bozuksa null. */
   unpack(raw: unknown): Record<string, string> | null;
@@ -73,6 +78,33 @@ export const FAMILIAR_CLOSE_RATIO = 0.6;
 /** Girdi fazla mı biliniyor (ağırlığı yarıya inecek mi)? */
 export function isFamiliar(shown: number, knew: number): boolean {
   return shown >= FAMILIAR_MIN_SHOWN && knew / shown > FAMILIAR_RATIO;
+}
+
+/** Kelime karnesi (CG-M6): öneri için en az bu kadar oyunda çıkmış olmalı. */
+export const PLAY_MIN_GAMES = 8;
+/** Ortalama en büyük ağ oranı en az buysa "kolay" önerisi. */
+export const PLAY_EASY_TOP = 0.8;
+/** Ortalama en büyük ağ oranı en çok bu ve tek kalan oranı en az `PLAY_HARD_SINGLE` ise "zor" önerisi. */
+export const PLAY_HARD_TOP = 0.3;
+export const PLAY_HARD_SINGLE = 0.6;
+
+/** Karne sayıları: oyun sayısı ve iki oranın ortalaması (0..1). */
+export interface PlayCard {
+  games: number;
+  top: number;
+  single: number;
+}
+
+/**
+ * Karneye göre öneri (sahip onayına gider, kendiliğinden uygulanmaz): en az 8 oyunda hiç ağ kurulmadıysa "kapat",
+ * ortalama en büyük ağ ≥ %80 ise "kolay", ≤ %30 ve tek kalan ≥ %60 ise "zor"; az veride ya da arada null.
+ */
+export function playSuggestion(card: PlayCard | undefined): "kolay" | "zor" | "kapat" | null {
+  if (!card || card.games < PLAY_MIN_GAMES) return null;
+  if (card.top <= 0) return "kapat";
+  if (card.top >= PLAY_EASY_TOP) return "kolay";
+  if (card.top <= PLAY_HARD_TOP && card.single >= PLAY_HARD_SINGLE) return "zor";
+  return null;
 }
 
 /** Havuz tanımı kurucusu: ortak `parseEntry`yi türetir. */

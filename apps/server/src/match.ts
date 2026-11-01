@@ -471,12 +471,19 @@ export function withFamiliarity(
   return out ?? content;
 }
 
-/** Oyun tamamlanınca havuz girdilerinin bilinirlik sayaçları (`GameDefinition.contentFeedback`). Hata maçı bozmaz. */
+/**
+ * Oyun tamamlanınca havuz girdilerinin bilinirlik sayaçları ve kelime karnesi (`GameDefinition.contentFeedback`). Hata
+ * maçı bozmaz.
+ */
 function recordContentFeedback(rt: Runtime, room: Room, game: AnyGame, state: unknown): void {
   if (!game.contentFeedback) return;
   try {
     for (const f of game.contentFeedback(state)) {
-      if (poolById(f.poolId)?.feedback === true) rt.stats.contentSeen(f.poolId, f.key, f.knew);
+      const pool = poolById(f.poolId);
+      if (pool?.feedback === true && f.knew !== undefined) rt.stats.contentSeen(f.poolId, f.key, f.knew);
+      // Kelime karnesi (CG-M6): yalnız iki oran.
+      if (pool?.playStats === true && f.play)
+        rt.stats.contentPlayed(f.poolId, f.key, f.play.top, f.play.single);
     }
   } catch (err) {
     log.warn("content_feedback_failed", { room: room.code, error: String(err) });

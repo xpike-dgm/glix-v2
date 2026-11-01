@@ -10,7 +10,7 @@ import type {
   AdminPoolLineStatus,
   AdminPoolSummary,
 } from "@glix/engine";
-import { FAMILIAR_CLOSE_RATIO, FAMILIAR_MIN_SHOWN, FAMILIAR_RATIO } from "@glix/engine";
+import { FAMILIAR_CLOSE_RATIO, FAMILIAR_MIN_SHOWN, FAMILIAR_RATIO, playSuggestion } from "@glix/engine";
 
 /** Toplu yapıştırmada tek istekteki en çok satır (sunucudaki sınırla aynı). */
 export const BULK_MAX_LINES = 200;
@@ -34,6 +34,8 @@ const charCount = (text: string): number => Array.from(text.replace(/\s+/gu, " "
 /** Tek alan için ön denetim; sorun yoksa null. */
 export function fieldProblem(field: AdminPoolField, value: string): string | null {
   const n = charCount(value);
+  // İsteğe bağlı seçim alanı (en az 0 karakter, ör. Çağrışım Ağı zorluğu): boş bırakılabilir.
+  if (n === 0 && field.options && field.min === 0) return null;
   if (n === 0) return field.options ? `${field.label} seçilmeli.` : `${field.label} boş olamaz.`;
   if (field.options && !field.options.includes(value.trim()))
     return `${field.label} şunlardan biri olmalı: ${field.options.join(", ")}.`;
@@ -93,6 +95,24 @@ export function knownCell(known: { shown: number; knew: number } | undefined): {
   return { text, badge: null };
 }
 
+/**
+ * Kelime karnesi hücresi (CG-M6): "12 oyun · ağ %45 · tek %30". En az 8 oyundan sonra öneri rozeti: "Kolay önerisi",
+ * "Zor önerisi" ya da "Kapatma önerisi" (eşikler motordaki `playSuggestion` ile aynı; kendiliğinden uygulanmaz).
+ */
+export function playCell(card: { games: number; top: number; single: number } | undefined): {
+  text: string;
+  badge: Badge | null;
+} {
+  if (!card || card.games === 0) return { text: "henüz oynanmadı", badge: null };
+  const pct = (v: number): string => `%${Math.round(v * 100)}`;
+  const text = `${card.games} oyun · ağ ${pct(card.top)} · tek ${pct(card.single)}`;
+  const s = playSuggestion(card);
+  if (s === "kapat") return { text, badge: { label: "Kapatma önerisi", tone: "off" } };
+  if (s === "kolay") return { text, badge: { label: "Kolay önerisi", tone: "added" } };
+  if (s === "zor") return { text, badge: { label: "Zor önerisi", tone: "added" } };
+  return { text, badge: null };
+}
+
 export interface Badge {
   label: string;
   tone: "ready" | "added" | "off";
@@ -100,8 +120,9 @@ export interface Badge {
 
 /** Girdinin rozetleri: Hazır / Eklenen, kapalıysa ayrıca Kapalı; bilinirlikli havuzda varsa bilinirlik rozeti. */
 export function badgesOf(
-  e: Pick<AdminPoolEntry, "source" | "disabled" | "known">,
+  e: Pick<AdminPoolEntry, "source" | "disabled" | "known" | "play">,
   feedback = false,
+  playStats = false,
 ): Badge[] {
   const out: Badge[] = [
     e.source === "builtin" ? { label: "Hazır", tone: "ready" } : { label: "Eklenen", tone: "added" },
@@ -109,6 +130,8 @@ export function badgesOf(
   if (e.disabled) out.push({ label: "Kapalı", tone: "off" });
   const known = feedback ? knownCell(e.known).badge : null;
   if (known) out.push(known);
+  const play = playStats ? playCell(e.play).badge : null;
+  if (play) out.push(play);
   return out;
 }
 

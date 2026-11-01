@@ -152,7 +152,17 @@ export interface GameDefinition<State, Action, View, PublicView = unknown> {
    * biliyordum" basanların sayısı; kim bastığı verilmez). Sunucu oyun tamamlanınca girdinin "çıktı" sayacını 1,
    * "biliyordum" sayacını `knew` artırır (`ContentPool.feedback`). Puanı ve sonucu etkilemez. Saf olmalı.
    */
-  contentFeedback?(state: State): readonly { poolId: string; key: string; knew: number }[];
+  contentFeedback?(state: State): readonly {
+    poolId: string;
+    key: string;
+    /** "Biliyordum" sayısı (`ContentPool.feedback` havuzları). */
+    knew?: number;
+    /**
+     * Kelime karnesi (`ContentPool.playStats`, ör. Çağrışım Ağı CG-M6): en büyük ağdaki kişi / cevap veren ve tek kalan
+     * / cevap veren (0..1). Cevap, ad ya da oda verilmez.
+     */
+    play?: { top: number; single: number };
+  }[];
 }
 
 export interface SecretEntry {

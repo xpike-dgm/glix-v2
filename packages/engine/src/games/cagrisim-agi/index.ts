@@ -1,79 +1,143 @@
 import { poolEntries } from "../../content.js";
 import type { GameContext, GameDefinition, Rejected, SecretEntry } from "../../game.js";
-import { rankAwards } from "../scoring.js";
 import { foldKey } from "../text.js";
-import { CAGRISIM_POOL } from "./pool.js";
+import { groupAnswers } from "./grouping.js";
+import { CAGRISIM_POOL, type CagrisimWord, levelOf } from "./pool.js";
 import {
   CAGRISIM_ANSWER_MS,
+  CAGRISIM_CONTENT_MEMORY,
+  CAGRISIM_FINAL_MS,
   CAGRISIM_LOCK_GRACE_MS,
   CAGRISIM_MAX_LENGTH,
-  CAGRISIM_REVEAL_MS,
-  CAGRISIM_TOTAL_MS,
+  CAGRISIM_MINI_MS,
+  CAGRISIM_ROUNDS,
+  CAGRISIM_SERIES,
   type CagrisimAgiAction,
   type CagrisimAgiPublicView,
   type CagrisimAgiView,
-  type CagrisimGroup,
-  type CagrisimReveal,
+  type CagrisimLevel,
+  type CagrisimPhase,
+  type CagrisimRoundResult,
+  cagrisimAwards,
 } from "./types.js";
-import { CAGRISIM_WORDS } from "./words.js";
 
-export { CAGRISIM_POOL } from "./pool.js";
+export {
+  displayAnswer,
+  groupAnswers,
+  matchKey,
+  normalizeAnswer,
+  oneLetterApart,
+} from "./grouping.js";
+export { CAGRISIM_POOL, type CagrisimWord, cagrisimLevel, levelOf } from "./pool.js";
 export * from "./types.js";
-export { CAGRISIM_WORDS } from "./words.js";
+export { CAGRISIM_EASY, CAGRISIM_ENTRIES, CAGRISIM_HARD, CAGRISIM_WORDS } from "./words.js";
+
+export interface CagrisimSeriesWord {
+  text: string;
+  /** Tekrar önleme anahtarı (havuzun `key`'i; CG-M4). */
+  key: string;
+  level: CagrisimLevel;
+}
 
 export interface CagrisimAgiState {
   players: string[];
-  word: string;
+  /** Oyunun (ilk kelimenin) başlangıcı. */
   startedAt: number;
+  /** Kolaydan zora üç kelime (CG-M2, CG-M5). */
+  words: CagrisimSeriesWord[];
+  /** Oynanan kelimenin sırası (0..2). */
+  round: number;
+  roundStartedAt: number;
   answerEndsAt: number;
-  endsAt: number;
-  /** Oyuncu -> gönderdiği cevap (kırpılmış, ham). Yalnız gönderenlerde anahtar vardır. */
-  answers: Record<string, string>;
-  /** Cevap süresi bitti ve cevaplar açıldı (tick ile). */
-  revealed: boolean;
+  phase: CagrisimPhase;
+  /** Kelime başına: oyuncu -> gönderdiği cevap (kırpılmış, ham). Yalnız gönderenlerde anahtar vardır. */
+  answers: Record<string, string>[];
+  /** Kelime başına cevap sırası (eşitlikte gösterilecek yazılış için). */
+  order: string[][];
 }
 
-/** Türkçe küçük harf, baş/son boşluk kırpılır, iç boşluklar teke iner. */
-export function normalizeAnswer(text: string): string {
-  return text.toLocaleLowerCase("tr").trim().replace(/\s+/g, " ");
+const LAST = CAGRISIM_ROUNDS - 1;
+
+/** Bu kelimenin açılışının bitişi: arada 4 sn'lik mini, sonda büyük açılış. */
+function revealEndsAt(s: CagrisimAgiState): number {
+  return s.answerEndsAt + (s.round >= LAST ? CAGRISIM_FINAL_MS : CAGRISIM_MINI_MS);
 }
 
-const TURKISH_LETTERS = /[çğıöşüÇĞİÖŞÜ]/gu;
+/** Oyunun bitişi: kalan kelimeler tam süreyle oynanırsa. Erken bitişle öne gelir. */
+function seriesEndsAt(s: CagrisimAgiState): number {
+  return s.answerEndsAt + (LAST - s.round) * (CAGRISIM_MINI_MS + CAGRISIM_ANSWER_MS) + CAGRISIM_FINAL_MS;
+}
 
 /**
- * Aynı gruptaki yazılışlardan ekranda gösterilecek olan: Türkçe harf (ç ğ ı ö ş ü) içeren yazılış, İngilizce klavyeyle
- * yazılana tercih edilir ("kasik" ile "kaşık" aynı grupta kaşık görünür). Eşitlikte ilk cevap veren kalır (belirleyici).
+ * Zamanla ilerleme: cevap süresi bitince açılış (son kelimede büyük), mini açılış bitince sonraki kelime. Geçiş anları
+ * hesaplanmış zamanlardır (tick gecikse de değişmez); değişiklik yoksa aynı nesne döner.
  */
-function displayVariant(current: string, candidate: string): string {
-  const score = (t: string): number => (t.match(TURKISH_LETTERS) ?? []).length;
-  return score(candidate) > score(current) ? candidate : current;
+function advance(state: CagrisimAgiState, now: number): CagrisimAgiState {
+  let s = state;
+  for (;;) {
+    if (s.phase === "answer" && now >= s.answerEndsAt) {
+      s = { ...s, phase: s.round >= LAST ? "final" : "mini" };
+    } else if (s.phase === "mini" && now >= revealEndsAt(s)) {
+      const roundStartedAt = revealEndsAt(s);
+      s = {
+        ...s,
+        round: s.round + 1,
+        phase: "answer",
+        roundStartedAt,
+        answerEndsAt: roundStartedAt + CAGRISIM_ANSWER_MS,
+        answers: [...s.answers, {}],
+        order: [...s.order, []],
+      };
+    } else return s;
+  }
 }
 
-/** Gruplar (≥2 kişi, büyükten küçüğe), tek kalanlar ve susanlar. Oyuncu sırası belirleyicidir. */
-export function groupAnswers(players: readonly string[], answers: Record<string, string>): CagrisimReveal {
-  const byKey = new Map<string, { text: string; members: string[] }>();
-  const silent: string[] = [];
-  for (const id of players) {
-    const raw = answers[id];
-    if (raw === undefined) {
-      silent.push(id);
-      continue;
+/** Zorluğa göre komşu sırası (CG-M5): o zorlukta kelime kalmadıysa komşusundan çekilir. */
+const NEIGHBORS: Record<CagrisimLevel, readonly CagrisimLevel[]> = {
+  kolay: ["kolay", "orta", "zor"],
+  orta: ["orta", "kolay", "zor"],
+  zor: ["zor", "orta", "kolay"],
+};
+
+/** Üç farklı kelime, kolaydan zora. Havuz tekrar süzgecinden geçmiş olarak gelir (sunucu, CG-M4). */
+function drawSeries(pool: readonly CagrisimWord[], ctx: GameContext): CagrisimSeriesWord[] {
+  const picked: CagrisimSeriesWord[] = [];
+  const free = (e: CagrisimWord): boolean => !picked.some((p) => p.key === CAGRISIM_POOL.key(e));
+  for (const want of CAGRISIM_SERIES) {
+    let cands: CagrisimWord[] = [];
+    for (const level of NEIGHBORS[want]) {
+      cands = pool.filter((e) => levelOf(e) === level && free(e));
+      if (cands.length > 0) break;
     }
-    const key = foldKey(raw);
-    const entry = byKey.get(key);
-    if (entry) {
-      entry.members.push(id);
-      entry.text = displayVariant(entry.text, normalizeAnswer(raw));
-    } else byKey.set(key, { text: normalizeAnswer(raw), members: [id] });
+    if (cands.length === 0) cands = [...pool];
+    const e = cands[ctx.rng.int(cands.length)] as CagrisimWord;
+    picked.push({ text: e.text, key: CAGRISIM_POOL.key(e), level: levelOf(e) });
   }
-  const groups: CagrisimGroup[] = [];
-  const singles: CagrisimReveal["singles"] = [];
-  for (const { text, members } of byKey.values()) {
-    if (members.length >= 2) groups.push({ text, members, points: members.length });
-    else singles.push({ playerId: members[0] as string, text });
+  return picked;
+}
+
+/** Açılmış kelimelerin sonuçları (cevap aşamasındaki kelime hariç). */
+function revealedRounds(s: CagrisimAgiState): CagrisimRoundResult[] {
+  const count = s.phase === "answer" ? s.round : s.round + 1;
+  const out: CagrisimRoundResult[] = [];
+  for (let r = 0; r < count; r++) {
+    out.push({
+      word: s.words[r]?.text ?? "",
+      reveal: groupAnswers(s.players, s.answers[r] ?? {}, s.order[r] ?? []),
+    });
   }
-  groups.sort((a, b) => b.members.length - a.members.length);
-  return { groups, singles, silent };
+  return out;
+}
+
+/** Ağ puanlarının toplamı (oyuncu başına; ağ yoksa 0). */
+function totalsOf(
+  players: readonly string[],
+  results: readonly CagrisimRoundResult[],
+): Record<string, number> {
+  const totals: Record<string, number> = Object.fromEntries(players.map((id) => [id, 0]));
+  for (const { reveal } of results)
+    for (const g of reveal.groups) for (const id of g.members) totals[id] = (totals[id] ?? 0) + g.points;
+  return totals;
 }
 
 function jsonHas(json: string, value: string): boolean {
@@ -93,10 +157,11 @@ export const cagrisimAgi: GameDefinition<
   orientation: "portrait",
   briefing: {
     goal: "Arkadaşlarınla aynı şeyi düşün!",
+    // CG-U14; "Cevabını yüksek sesle söyleme!" notu anlatım görselinde (istemci BriefingArt).
     steps: [
-      "Ortadaki kelimeyi oku",
-      "Aklına gelen tek çağrışımı yaz",
-      "Aynısını yazanlar ağ kurar: kaç kişiyseniz o kadar puan",
+      "Ortadaki kelimeyi gör",
+      "Çoğunluk ne yazar? Tek bir cevap yaz",
+      "Aynısını yazanlarla ağ kur: üç kelime, puanlar toplanır",
     ],
   },
 
@@ -111,75 +176,102 @@ export const cagrisimAgi: GameDefinition<
   },
 
   setup(players: readonly string[], ctx: GameContext): CagrisimAgiState {
-    const pool = poolEntries(CAGRISIM_POOL, ctx.content);
+    const words = drawSeries(poolEntries(CAGRISIM_POOL, ctx.content), ctx);
     return {
       players: [...players],
-      word: pool[ctx.rng.int(pool.length)] as string,
       startedAt: ctx.now,
+      words,
+      round: 0,
+      roundStartedAt: ctx.now,
       answerEndsAt: ctx.now + CAGRISIM_ANSWER_MS,
-      endsAt: ctx.now + CAGRISIM_TOTAL_MS,
-      answers: {},
-      revealed: false,
+      phase: "answer",
+      answers: [{}],
+      order: [[]],
     };
   },
 
   reduce(state, playerId, action, ctx): CagrisimAgiState | Rejected {
     if (!state.players.includes(playerId)) return { rejected: "not_participant" };
-    if (ctx.now >= state.answerEndsAt) return { rejected: "ended" };
-    if (ctx.now < state.startedAt) return { rejected: "not_started" };
-    if (Object.hasOwn(state.answers, playerId)) return { rejected: "already_answered" };
+    const s = advance(state, ctx.now);
+    if (s.phase !== "answer" || ctx.now >= s.answerEndsAt) return { rejected: "ended" };
+    if (ctx.now < s.roundStartedAt) return { rejected: "not_started" };
+    const current = s.answers[s.round] ?? {};
+    if (Object.hasOwn(current, playerId)) return { rejected: "already_answered" };
     const text = action.text.trim();
     if (foldKey(text) === "") return { rejected: "empty" };
     if (text.length > CAGRISIM_MAX_LENGTH) return { rejected: "too_long" };
-    const answers = { ...state.answers, [playerId]: text };
-    const waiting = state.players.some((id) => ctx.connected.includes(id) && !Object.hasOwn(answers, id));
-    if (waiting) return { ...state, answers };
-    // Bağlı herkes cevapladı: cevap aşaması 1 sn sonra biter (cevaplar zaten kesin).
-    const answerEndsAt = Math.min(state.answerEndsAt, ctx.now + CAGRISIM_LOCK_GRACE_MS);
-    return { ...state, answers, answerEndsAt, endsAt: answerEndsAt + CAGRISIM_REVEAL_MS };
+    const mine = { ...current, [playerId]: text };
+    const answers = s.answers.map((a, i) => (i === s.round ? mine : a));
+    const order = s.order.map((o, i) => (i === s.round ? [...o, playerId] : o));
+    const waiting = s.players.some((id) => ctx.connected.includes(id) && !Object.hasOwn(mine, id));
+    if (waiting) return { ...s, answers, order };
+    // Bağlı herkes cevapladı: bu kelimenin cevap aşaması 1 sn sonra biter (cevaplar zaten kesin).
+    const answerEndsAt = Math.min(s.answerEndsAt, ctx.now + CAGRISIM_LOCK_GRACE_MS);
+    return { ...s, answers, order, answerEndsAt };
   },
 
   tick(state, ctx): CagrisimAgiState {
-    if (state.revealed || ctx.now < state.answerEndsAt) return state;
-    return { ...state, revealed: true };
+    return advance(state, ctx.now);
+  },
+
+  nextWake(state, ctx): number | null {
+    const at =
+      state.phase === "answer"
+        ? state.answerEndsAt
+        : state.phase === "mini"
+          ? revealEndsAt(state)
+          : seriesEndsAt(state);
+    return at > ctx.now ? at : null;
   },
 
   publicView(state): CagrisimAgiPublicView {
+    const results = revealedRounds(state);
+    const totals = totalsOf(state.players, results);
     return {
       startedAt: state.startedAt,
+      round: state.round,
+      rounds: CAGRISIM_ROUNDS,
+      roundStartedAt: state.roundStartedAt,
       answerEndsAt: state.answerEndsAt,
-      endsAt: state.endsAt,
-      word: state.word,
-      phase: state.revealed ? "reveal" : "answer",
-      answeredIds: state.players.filter((id) => Object.hasOwn(state.answers, id)),
-      reveal: state.revealed ? groupAnswers(state.players, state.answers) : null,
+      revealEndsAt: revealEndsAt(state),
+      endsAt: seriesEndsAt(state),
+      word: state.words[state.round]?.text ?? "",
+      phase: state.phase,
+      answeredIds: state.players.filter((id) => Object.hasOwn(state.answers[state.round] ?? {}, id)),
+      results,
+      totals,
+      awards: state.phase === "final" ? cagrisimAwards(totals) : null,
     };
   },
 
   view(state, playerId): CagrisimAgiView {
-    const mine = playerId === null ? undefined : state.answers[playerId];
+    const mine = playerId === null ? undefined : state.answers[state.round]?.[playerId];
     return { myAnswer: mine ?? null };
   },
 
-  /** Sonuç açılışı cevap süresinin bittiği an başlar. */
+  /** Büyük açılış üçüncü kelimenin cevap süresinin bittiği an başlar. */
   revealAt(state): number | null {
-    return state.answerEndsAt;
+    return state.round >= LAST ? state.answerEndsAt : null;
   },
 
   isFinished(state, ctx): boolean {
-    return ctx.now >= state.endsAt;
+    return ctx.now >= seriesEndsAt(state);
   },
 
   secrets(state): readonly SecretEntry[] {
-    if (state.revealed) return [];
+    if (state.phase !== "answer") return [];
+    const current = state.answers[state.round] ?? {};
+    // Önceki kelimelerin açılmış cevapları ve kelimeler herkese açıktır: aynı metin bu kelimede yeniden yazıldıysa alt
+    // dizgi denetimi onu ayırt edemez (yapı yine gizlidir: görünümde yalnız bu kelimenin `answeredIds`'i var).
+    const shown = JSON.stringify({ words: state.words.map((w) => w.text), results: revealedRounds(state) });
     const entries: SecretEntry[] = [];
     for (const id of state.players) {
-      const value = state.answers[id];
+      const value = current[id];
       // Çok kısa cevaplar alt dizgi sızıntı denetimine uygun değildir; yapısal testlerle korunur.
-      if (value === undefined || value.length < 3) continue;
+      if (value === undefined || value.length < 3 || jsonHas(shown, value)) continue;
       // Başkasının kendi cevabı, bu cevabı içeriyorsa (aynı ya da daha uzun yazdıysa) onun da görmeye hakkı var.
       const owners = state.players.filter((other) => {
-        const mine = state.answers[other];
+        const mine = current[other];
         return other === id || (mine !== undefined && jsonHas(JSON.stringify({ myAnswer: mine }), value));
       });
       entries.push({ ownerIds: owners, value, label: `${id} cevabı` });
@@ -187,12 +279,41 @@ export const cagrisimAgi: GameDefinition<
     return entries;
   },
 
+  /** Ağ puanları üç kelimede toplanır (mini puan); genel skora sıralama ödülü gider (CG-M1). */
   result(state) {
-    const { groups } = groupAnswers(state.players, state.answers);
-    const miniScores: Record<string, number> = {};
-    for (const id of state.players) miniScores[id] = 0;
-    for (const g of groups) for (const id of g.members) miniScores[id] = g.points;
-    // Genel skora aktarım (sahip kararı): sıralamaya göre +2/+1; grup kuramayan (0 puan) ödül alamaz.
-    return { miniScores, awards: rankAwards(miniScores, { positiveOnly: true }) };
+    const all: CagrisimRoundResult[] = state.answers.map((a, r) => ({
+      word: state.words[r]?.text ?? "",
+      reveal: groupAnswers(state.players, a, state.order[r] ?? []),
+    }));
+    const totals = totalsOf(state.players, all);
+    return { miniScores: { ...totals }, awards: cagrisimAwards(totals) };
+  },
+
+  contentUsed(state) {
+    return state.words.map((w) => ({
+      poolId: CAGRISIM_POOL.id,
+      key: w.key,
+      memory: CAGRISIM_CONTENT_MEMORY,
+    }));
+  },
+
+  /** Kelime karnesi (CG-M6): oynanan her kelime için iki oran; cevap metni, ad ya da oda gitmez. */
+  contentFeedback(state) {
+    const out: { poolId: string; key: string; play: { top: number; single: number } }[] = [];
+    state.answers.forEach((a, r) => {
+      const word = state.words[r];
+      const answered = Object.keys(a).length;
+      if (!word || answered === 0) return;
+      const reveal = groupAnswers(state.players, a, state.order[r] ?? []);
+      out.push({
+        poolId: CAGRISIM_POOL.id,
+        key: word.key,
+        play: {
+          top: (reveal.groups[0]?.members.length ?? 0) / answered,
+          single: reveal.singles.length / answered,
+        },
+      });
+    });
+    return out;
   },
 };

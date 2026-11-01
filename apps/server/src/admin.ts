@@ -1486,6 +1486,11 @@ async function poolEntries(
     const counts = env.stats.contentStats(poolId);
     for (const e of body.entries) e.known = counts.get(e.key) ?? { shown: 0, knew: 0 };
   }
+  // Kelime karnesi (CG-M6): yalnız karneli havuzlarda, girdi başına oyun sayısı ve iki ortalama oran.
+  if (body.pool.playStats) {
+    const cards = env.stats.contentPlayStats(poolId);
+    for (const e of body.entries) e.play = cards.get(e.key) ?? { games: 0, top: 0, single: 0 };
+  }
   send(res, 200, body);
 }
 

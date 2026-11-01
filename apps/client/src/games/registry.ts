@@ -70,6 +70,7 @@ const registry: Record<string, GameEntry> = {
   "cagrisim-agi": {
     Screen: lazy(() => import("./cagrisim-agi/CagrisimAgiScreen.js")),
     Art: lazy(() => import("./cagrisim-agi/BriefingArt.js")),
+    StageView: lazy(() => import("./cagrisim-agi/StageView.js")),
   },
   "cizgiyi-gecme": {
     Screen: lazy(() => import("./cizgiyi-gecme/CizgiyiGecmeScreen.js")),

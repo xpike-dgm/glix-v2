@@ -378,6 +378,8 @@ export interface AdminPoolSummary {
   fields: AdminPoolField[];
   /** Havuzun bilinirlik istatistiği var (girdilerde `known`). */
   feedback?: boolean;
+  /** Havuzun kelime karnesi var (girdilerde `play`; Çağrışım Ağı CG-M6). */
+  playStats?: boolean;
   /** Etkin havuz bundan küçükse yerleşik havuz kullanılır. */
   min: number;
   /** Bir maçın havuzdan çektiği en çok girdi. */
@@ -413,6 +415,8 @@ export interface AdminPoolEntry {
   fields: Record<string, string>;
   /** Bilinirlik (yalnız `feedback` havuzlarında): kaç oyunda çıktı, kaç kişi "biliyordum" dedi. */
   known?: { shown: number; knew: number };
+  /** Kelime karnesi (yalnız `playStats` havuzlarında): oyun sayısı, ortalama en büyük ağ ve tek kalan oranı (0..1). */
+  play?: { games: number; top: number; single: number };
 }
 
 /** `GET /api/admin/pools/entries`. */

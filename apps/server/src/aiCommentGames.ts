@@ -273,7 +273,58 @@ export const karaBorsaPrompt: PromptBuilder = (publicView, nickname) => {
   };
 };
 
+/**
+ * Çağrışım Ağı ağ spikeri (CG-AI2): büyük açılışta üç kelime, ağlar (cevap ve üyeler) ve tek kalan cevaplar; oyuncular
+ * Oyuncu1…N. Yazmayanlar ve toplam ağ puanı da gider. Büyük açılıştan önce (cevaplar açılmadan) kurulmaz.
+ */
+export const cagrisimPrompt: PromptBuilder = (publicView, nickname) => {
+  if (!isRec(publicView) || publicView.phase !== "final" || !Array.isArray(publicView.results)) return null;
+  if (!isRec(publicView.totals)) return null;
+  const ids = Object.keys(publicView.totals);
+  if (ids.length === 0) return null;
+  const alias = new Map(ids.map((id, i) => [id, `Oyuncu${i + 1}`]));
+  const names: Record<string, string> = {};
+  for (const [id, name] of alias) names[name] = promptName(nickname(id) ?? name);
+  const who = (list: unknown): string =>
+    Array.isArray(list)
+      ? list
+          .map((id) => (typeof id === "string" ? alias.get(id) : undefined))
+          .filter((n): n is string => n !== undefined)
+          .join(", ")
+      : "";
+  const lines: string[] = [];
+  for (const raw of publicView.results.slice(0, 3)) {
+    if (!isRec(raw) || !isRec(raw.reveal)) return null;
+    const rev = raw.reveal;
+    const parts: string[] = [];
+    for (const g of Array.isArray(rev.groups) ? rev.groups : []) {
+      if (!isRec(g)) continue;
+      parts.push(`"${promptWord(g.text)}" ağı: ${who(g.members)}`);
+    }
+    for (const one of Array.isArray(rev.singles) ? rev.singles : []) {
+      if (!isRec(one) || typeof one.playerId !== "string") continue;
+      parts.push(`${alias.get(one.playerId) ?? "biri"} tek kaldı ("${promptWord(one.text)}")`);
+    }
+    const silent = who(rev.silent);
+    if (silent !== "") parts.push(`yazmayan: ${silent}`);
+    lines.push(`- ${promptWord(raw.word)}: ${parts.length > 0 ? parts.join("; ") : "kimse yazmadı"}`);
+  }
+  const totals = publicView.totals;
+  const scoreLine = ids
+    .map((id) => `${alias.get(id)} ${typeof totals[id] === "number" ? totals[id] : 0}`)
+    .join(", ");
+  return {
+    system: system(
+      "ağ spikerisin; oyuncular üç kelimeye çoğunluğun yazacağı tek bir çağrışımı yazmaya çalıştı, aynı cevabı " +
+        "yazanlar ağ kurdu (ağdaki herkes kişi sayısı kadar puan alır), tek kalan puan alamaz",
+    ),
+    user: `Oyun: Çağrışım Ağı (üç kelime). Kelimeler:\n${lines.join("\n")}\nToplam ağ puanı: ${scoreLine}`,
+    names,
+  };
+};
+
 const BUILDERS: Record<string, PromptBuilder> = {
+  "cagrisim-agi": cagrisimPrompt,
   "yazi-yaz": yaziPrompt,
   "kontrol-paneli-kaosu": kontrolPrompt,
   "capraz-ates": caprazPrompt,

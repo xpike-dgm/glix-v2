@@ -1,103 +1,157 @@
+import type { CagrisimReveal } from "@glix/engine";
 import { describe, expect, it } from "vitest";
-import { canSubmit, outcomeOf, parseCagrisimView, revealPlan, wordScale } from "./view.js";
+import {
+  canSubmit,
+  chipList,
+  currentReveal,
+  guessGroup,
+  headlineOf,
+  isLongAnswer,
+  lateHint,
+  medalOf,
+  miniLine,
+  outcomeOf,
+  parseCagrisimView,
+  ringPlan,
+  ringState,
+  shortName,
+  stampOf,
+  wordScale,
+} from "./view.js";
 
+const reveal: CagrisimReveal = {
+  groups: [
+    { text: "mavi", members: ["a", "b", "e"], points: 3, variants: [] },
+    { text: "dalga", members: ["f", "g"], points: 2, variants: ["dalgalar", "dalga"] },
+  ],
+  singles: [{ playerId: "c", text: "tuz" }],
+  silent: ["d"],
+};
 const answerPub = {
   startedAt: 100,
-  answerEndsAt: 30_100,
-  endsAt: 36_100,
-  word: "DENİZ",
+  round: 0,
+  rounds: 3,
+  roundStartedAt: 100,
+  answerEndsAt: 20_100,
+  revealEndsAt: 24_100,
+  endsAt: 76_100,
+  word: "KAR",
   phase: "answer",
   answeredIds: ["a"],
-  reveal: null,
+  results: [],
+  totals: { a: 0, b: 0 },
+  awards: null,
 };
-const revealPub = {
+const miniPub = { ...answerPub, phase: "mini", results: [{ word: "KAR", reveal }], totals: { a: 3 } };
+const finalPub = {
   ...answerPub,
-  phase: "reveal",
-  reveal: {
-    groups: [{ text: "mavi", members: ["a", "b"], points: 2 }],
-    singles: [{ playerId: "c", text: "tuz" }],
-    silent: ["d"],
-  },
+  round: 2,
+  phase: "final",
+  results: [
+    { word: "KAR", reveal },
+    { word: "DENİZ", reveal },
+    { word: "VADİ", reveal },
+  ],
+  totals: { a: 9, f: 6 },
+  awards: { a: 2, f: 1 },
 };
-const priv = { myAnswer: null };
 
-describe("Çağrışım Ağı görünümü", () => {
-  it("cevap aşaması görünümünü okur", () => {
+describe("Çağrışım Ağı görünümü (doğrulama)", () => {
+  it("cevap aşamasını okur; izleyicide kişisel görünüm boş olabilir", () => {
     const v = parseCagrisimView(answerPub, { myAnswer: "mavi" });
-    expect(v?.word).toBe("DENİZ");
+    expect(v?.word).toBe("KAR");
     expect(v?.myAnswer).toBe("mavi");
-    expect(v?.reveal).toBeNull();
+    expect(v && currentReveal(v)).toBeNull();
+    expect(parseCagrisimView(answerPub, null)?.myAnswer).toBeNull();
   });
-  it("açılış aşamasını okur ve oyuncunun durumunu bulur", () => {
-    const v = parseCagrisimView(revealPub, priv);
-    const reveal = v?.reveal;
-    if (!reveal) throw new Error("açılış yok");
+  it("mini ve büyük açılışı okur", () => {
+    const m = parseCagrisimView(miniPub, { myAnswer: null });
+    expect(m && currentReveal(m)?.groups[1]?.variants).toEqual(["dalgalar", "dalga"]);
+    const f = parseCagrisimView(finalPub, { myAnswer: null });
+    expect(f?.awards).toEqual({ a: 2, f: 1 });
+  });
+  it("bozuk görünümü reddeder", () => {
+    expect(parseCagrisimView({ ...answerPub, phase: "reveal" }, null)).toBeNull();
+    expect(parseCagrisimView({ ...miniPub, results: [] }, null)).toBeNull();
+    expect(parseCagrisimView({ ...finalPub, awards: null }, null)).toBeNull();
+    expect(parseCagrisimView({ ...answerPub, round: 5 }, null)).toBeNull();
+    expect(parseCagrisimView({ ...answerPub, totals: { a: "x" } }, null)).toBeNull();
+    expect(parseCagrisimView(answerPub, { myAnswer: 4 })).toBeNull();
+  });
+});
+
+describe("Çağrışım Ağı sunum yardımcıları", () => {
+  it("oyuncunun durumu ve başlık (CG-U6)", () => {
     expect(outcomeOf(reveal, "b")).toMatchObject({ kind: "group", index: 0 });
     expect(outcomeOf(reveal, "c")).toEqual({ kind: "single", text: "tuz" });
     expect(outcomeOf(reveal, "d")).toEqual({ kind: "silent" });
     expect(outcomeOf(reveal, "x")).toBeNull();
+    const g = outcomeOf(reveal, "a");
+    if (!g) throw new Error("yok");
+    expect(headlineOf(g).big).toBe("3 kişilik ağ");
+    expect(headlineOf({ kind: "single", text: "tuz" }).big).toBe("Bu sefer tek kaldın");
+    expect(headlineOf({ kind: "silent" }).big).toBe("Yazmadın");
   });
-  it("izleyicide cevap null olabilir", () => {
-    expect(parseCagrisimView(answerPub, priv)?.myAnswer).toBeNull();
+  it("madalya: +2 altın, +1 gümüş", () => {
+    expect(medalOf({ a: 2, b: 1, c: 0 }, "a")).toBe("gold");
+    expect(medalOf({ a: 2, b: 1, c: 0 }, "b")).toBe("silver");
+    expect(medalOf({ a: 2, b: 1, c: 0 }, "c")).toBeNull();
+    expect(medalOf(null, "a")).toBeNull();
   });
-  it("bozuk görünümü reddeder", () => {
-    expect(parseCagrisimView(null, priv)).toBeNull();
-    expect(parseCagrisimView(answerPub, null)).toBeNull();
-    expect(parseCagrisimView(answerPub, { myAnswer: 5 })).toBeNull();
-    expect(parseCagrisimView({ ...answerPub, word: 3 }, priv)).toBeNull();
-    expect(parseCagrisimView({ ...answerPub, phase: "x" }, priv)).toBeNull();
-    expect(parseCagrisimView({ ...answerPub, answeredIds: [1] }, priv)).toBeNull();
-    expect(parseCagrisimView({ ...revealPub, reveal: null }, priv)).toBeNull();
-    expect(parseCagrisimView({ ...revealPub, reveal: { groups: [], singles: [] } }, priv)).toBeNull();
-    expect(
-      parseCagrisimView(
-        {
-          ...revealPub,
-          reveal: { groups: [{ text: "x", members: ["a"], points: 1 }], singles: [], silent: [] },
-        },
-        priv,
-      ),
-    ).toBeNull();
-  });
-  it("cevap aşamasında gelen açılış verisi yok sayılır", () => {
-    expect(parseCagrisimView({ ...answerPub, reveal: revealPub.reveal }, priv)?.reveal).toBeNull();
-  });
-  it("boş ve yalnız boşluk gönderilemez", () => {
-    expect(canSubmit("")).toBe(false);
-    expect(canSubmit("  \t ")).toBe(false);
-    expect(canSubmit(" a ")).toBe(true);
-  });
-  it("uzun kelimeler daha küçük yazılır ve sığar", () => {
-    expect(wordScale("AY")).toBe(22);
-    expect(wordScale("DENİZ")).toBeGreaterThan(wordScale("GÖKKUŞAĞI"));
-    // 12 harflik kelime: genişlik yaklaşık 0,9 em/harf, dairenin %70'ini aşmaz.
-    expect(wordScale("A".repeat(12)) * 12 * 0.9).toBeLessThanOrEqual(70);
-    expect(wordScale("")).toBe(22);
-  });
-  it("sıralı açılış: önce tek kalanlar, sonra kümeler küçükten büyüğe; en büyük en son", () => {
-    const reveal = {
-      groups: [
-        { text: "mavi", members: ["a", "b", "c"], points: 3 },
-        { text: "tatil", members: ["d", "e"], points: 2 },
-        { text: "kum", members: ["f", "g"], points: 2 },
-      ],
-      singles: [{ playerId: "h", text: "ördek" }],
-      silent: [],
-    };
-    const plan = revealPlan(reveal);
-    expect(plan.loneStep).toBe(0);
-    expect(plan.groupStep).toEqual([3, 1, 2]);
-    expect(plan.steps).toBe(4);
-    expect(plan.champion).toBe(0);
-  });
-  it("sıralı açılış: tek kalan yoksa küme 0'dan başlar; küme yoksa yalnız blok", () => {
-    const plan = revealPlan({
-      groups: [{ text: "a", members: ["x", "y"], points: 2 }],
-      singles: [],
-      silent: [],
+  it("damgalar (CG-U7): tek yürek ve kara koyun (4+ oyuncu)", () => {
+    const one = (members: string[], singles: string[] = [], silent: string[] = []): CagrisimReveal => ({
+      groups: [{ text: "mavi", members, points: members.length, variants: [] }],
+      singles: singles.map((playerId) => ({ playerId, text: "ördek" })),
+      silent,
     });
-    expect(plan).toEqual({ groupStep: [0], loneStep: null, steps: 1, champion: 0 });
-    const none = revealPlan({ groups: [], singles: [{ playerId: "x", text: "t" }], silent: ["y"] });
-    expect(none).toEqual({ groupStep: [], loneStep: 0, steps: 1, champion: null });
+    expect(stampOf(one(["a", "b"]))).toEqual({ kind: "heart" });
+    expect(stampOf(one(["a", "b", "c"], ["d"]))).toEqual({ kind: "sheep", playerId: "d" });
+    expect(stampOf(one(["a", "b"], ["c"]))).toBeNull();
+    expect(stampOf(one(["a", "b", "c"], [], ["d"]))).toBeNull();
+    expect(stampOf(reveal)).toBeNull();
+  });
+  it("kısa isim (CG-U8) ve isim çipleri (CG-U4)", () => {
+    expect(shortName("Elif", false)).toBe("Elif");
+    expect(shortName("Ayşegül", false)).toBe("Ayşegül");
+    expect(shortName("Muhammet", false)).toBe("Muhamm…");
+    expect(shortName("Muhammet", true)).toBe("Sen");
+    expect(chipList([1, 2, 3, 4, 5, 6], 4)).toEqual({ shown: [1, 2, 3, 4], more: 2 });
+    expect(miniLine(reveal)).toBe("mavi (3) · dalga (2)");
+    expect(miniLine({ groups: [], singles: [], silent: [] })).toBeNull();
+  });
+  it("uzun cevap uyarısı (CG-U9) ve son 5 sn uyarısı (CG-U15)", () => {
+    expect(isLongAnswer("mavi")).toBe(false);
+    expect(isLongAnswer("denizde yüzen beyaz yelkenli")).toBe(true);
+    expect(isLongAnswer("x".repeat(21))).toBe(true);
+    expect(lateHint("", 4_000, false)).toBe("empty");
+    expect(lateHint("mav", 4_000, false)).toBe("unsent");
+    expect(lateHint("", 6_000, false)).toBeNull();
+    expect(lateHint("", 4_000, true)).toBeNull();
+    expect(lateHint("", 0, false)).toBeNull();
+  });
+  it("küre sayacı (CG-U2): kalan oran, saniye, son 5 sn", () => {
+    expect(ringState(0, 0, 20_000)).toEqual({ left: 1, secs: 20, urgent: false });
+    expect(ringState(16_500, 0, 20_000)).toEqual({ left: 0.175, secs: 4, urgent: true });
+    expect(ringState(21_000, 0, 20_000)).toEqual({ left: 0, secs: 0, urgent: false });
+  });
+  it("izleyici denemesi (CG-U12) aynı eşleşme kurallarıyla ağ bulur", () => {
+    expect(guessGroup(reveal, "MAVİ")?.text).toBe("mavi");
+    expect(guessGroup(reveal, "dalgalar")?.text).toBe("dalga");
+    expect(guessGroup(reveal, "ördek")).toBeNull();
+  });
+  it("ağ halkası sırası (CG-U5): ters kartlar, tek kalanlar, yazmayanlar, ağlar küçükten büyüğe", () => {
+    const plan = ringPlan(reveal);
+    expect(plan.flipAt.c).toBe(1);
+    expect(plan.flipAt.d).toBe(2);
+    expect(plan.groupStep).toEqual([4, 3]);
+    expect(plan.flipAt.a).toBe(4);
+    expect(plan.champion).toBe(0);
+    expect(plan.steps).toBe(5);
+    expect(ringPlan({ groups: [], singles: [], silent: [] })).toMatchObject({ steps: 1, champion: null });
+  });
+  it("gönderilebilirlik ve kelime boyu", () => {
+    expect(canSubmit("  ")).toBe(false);
+    expect(canSubmit(" a ")).toBe(true);
+    expect(wordScale("AY")).toBeGreaterThan(wordScale("GÖKKUŞAĞI"));
   });
 });

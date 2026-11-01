@@ -81,7 +81,10 @@ describe("Üretim Merkezi uçları", () => {
     const def = poolById(CAG);
     expect(cag?.kayitlar.length).toBe(def?.builtin.length);
     expect(cag?.kayitlar.every((e) => e.kaynak === "yerlesik" && e.acik)).toBe(true);
-    expect(cag?.fields).toEqual([{ key: "text", label: "Kelime", hint: "tek sözcük", min: 2, max: 16 }]);
+    expect(cag?.fields).toEqual([
+      { key: "text", label: "Kelime", hint: "tek sözcük", min: 2, max: 16 },
+      { key: "level", label: "Zorluk", hint: "kolay, orta ya da zor (boş: orta)", min: 0, max: 5 },
+    ]);
   });
 
   it("ekle: doğrular, tekrarı ve geçersizi atlar; geri al kaldırır; ikinci geri alma 409; işlem kaydı uretim", async () => {

@@ -379,6 +379,11 @@ Ayrıntı ve kurulum: `docs/ADMIN.md`. `GLIX_ADMIN_ACCOUNT_IDS` boşsa tüm uçl
 - Havuz bilinirliği (Sözlük Blöfü SB-M7, stats göç 6): `content_stats(pool_id, key, shown, knew)` girdi başına iki sayaç
   (kaç oyunda çıktı, kaç "biliyordum" geldi); oyuncu, oda, zaman ya da cevap yok. `GET pools/entries` bilinirlikli
   havuzda (`pool.feedback: true`) her girdiye `known: {shown, knew}` ekler; alan şemasında seçim alanları `options` taşır.
+- Kelime karnesi (Çağrışım Ağı CG-M6, stats göç 7): `content_play(pool_id, key, games, top_sum, single_sum)` girdi başına
+  oyun sayısı ve iki oranın (en büyük ağ / cevap veren, tek kalan / cevap veren) toplamı; oyuncu, oda, zaman ya da cevap
+  yok. `GET pools/entries` karneli havuzda (`pool.playStats: true`) her girdiye `play: {games, top, single}` (ortalama
+  oranlar, 0..1) ekler. En az 0 karakterli seçim alanı (`min: 0`, ör. zorluk) isteğe bağlıdır; toplu eklemede satır
+  sonundaki isteğe bağlı alanlar yazılmayabilir.
 
 ## Oyuncu bildirimi ve yönetici moderasyonu (U16 A4)
 

@@ -654,6 +654,14 @@ function knownCounts(o: Rec): { shown: number; knew: number } {
   return { shown, knew };
 }
 
+function playCard(o: Rec): { games: number; top: number; single: number } {
+  const games = num(o, "games");
+  const top = num(o, "top");
+  const single = num(o, "single");
+  if (games < 0 || top < 0 || top > 1 || single < 0 || single > 1) throw new ParseError("play: geçersiz");
+  return { games, top, single };
+}
+
 function poolSummary(o: Rec): AdminPoolSummary {
   return {
     id: str(o, "id"),
@@ -676,6 +684,7 @@ function poolSummary(o: Rec): AdminPoolSummary {
       8,
     ),
     feedback: o.feedback === true,
+    playStats: o.playStats === true,
     min: num(o, "min"),
     needed: num(o, "needed"),
     builtin: num(o, "builtin"),
@@ -710,6 +719,7 @@ export function parsePoolPage(v: unknown): AdminPoolPage {
           disabled: bool(e, "disabled"),
           fields: fieldValues(e, "fields"),
           ...(e.known === undefined ? {} : { known: knownCounts(rec(e.known)) }),
+          ...(e.play === undefined ? {} : { play: playCard(rec(e.play)) }),
         };
       },
       200,

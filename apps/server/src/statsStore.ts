@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
 import type { DatabaseSync } from "node:sqlite";
-import type { AdminMailKind, PerfMeta, PerfSample } from "@glix/engine";
+import type { AdminMailKind, PerfMeta, PerfSample, PlayCard } from "@glix/engine";
 import { log } from "./log.js";
 import { createStatsReader, type StatsReader } from "./statsAdmin.js";
 import { startWalCheckpointer } from "./walCheckpoint.js";
@@ -8,7 +8,7 @@ import { startWalCheckpointer } from "./walCheckpoint.js";
 /** İstatistik satırları bu süreden sonra silinir (docs/PROTOKOL.md). */
 export const RETENTION_MS = 90 * 24 * 3600 * 1000;
 export const PURGE_EVERY_MS = 24 * 3600 * 1000;
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 export type GameOutcome = "finished" | "aborted" | "failed";
 
@@ -69,6 +69,13 @@ export interface StatsStore {
   contentSeen(poolId: string, key: string, knew: number): void;
   /** Havuzun bilinirlik sayaçları (anahtar -> sayılar); kapalıysa boş. */
   contentStats(poolId: string): ReadonlyMap<string, { shown: number; knew: number }>;
+  /**
+   * Kelime karnesi (CG-M6): girdi bir oyunda oynandı; en büyük ağ oranı ve tek kalan oranı (0..1) toplamlara eklenir.
+   * Yalnız sayılar yazılır.
+   */
+  contentPlayed(poolId: string, key: string, top: number, single: number): void;
+  /** Havuzun karnesi (anahtar -> oyun sayısı ve ortalama oranlar); kapalıysa boş. */
+  contentPlayStats(poolId: string): ReadonlyMap<string, PlayCard>;
   /** Yönetici paneli için salt okunur toplamlar; istatistik kapalıysa null. */
   readonly reader: StatsReader | null;
   /** `now - 90 gün`den eski satırları siler. */
@@ -92,6 +99,8 @@ export const noopStats: StatsStore = {
   mailSent: () => {},
   contentSeen: () => {},
   contentStats: () => new Map(),
+  contentPlayed: () => {},
+  contentPlayStats: () => new Map(),
   reader: null,
   purge: () => {},
   path: null,
@@ -181,6 +190,15 @@ const MIGRATIONS: readonly string[] = [
      key TEXT NOT NULL,
      shown INTEGER NOT NULL DEFAULT 0,
      knew INTEGER NOT NULL DEFAULT 0,
+     PRIMARY KEY (pool_id, key)
+   ) WITHOUT ROWID;`,
+  // Kelime karnesi (Çağrışım Ağı CG-M6): girdi başına oyun sayısı ve iki oranın toplamı. Cevap, oyuncu, oda, zaman yok.
+  `CREATE TABLE content_play (
+     pool_id TEXT NOT NULL,
+     key TEXT NOT NULL,
+     games INTEGER NOT NULL DEFAULT 0,
+     top_sum REAL NOT NULL DEFAULT 0,
+     single_sum REAL NOT NULL DEFAULT 0,
      PRIMARY KEY (pool_id, key)
    ) WITHOUT ROWID;`,
 ];
@@ -289,6 +307,12 @@ export function createStats(path: string | undefined | null): StatsStore {
      ON CONFLICT (pool_id, key) DO UPDATE SET shown = shown + 1, knew = knew + excluded.knew`,
   );
   const selectContent = db.prepare("SELECT key, shown, knew FROM content_stats WHERE pool_id = ?");
+  const upsertPlay = db.prepare(
+    `INSERT INTO content_play (pool_id, key, games, top_sum, single_sum) VALUES (?, ?, 1, ?, ?)
+     ON CONFLICT (pool_id, key) DO UPDATE SET games = games + 1, top_sum = top_sum + excluded.top_sum,
+       single_sum = single_sum + excluded.single_sum`,
+  );
+  const selectPlay = db.prepare("SELECT key, games, top_sum, single_sum FROM content_play WHERE pool_id = ?");
   const reader = createStatsReader(db);
   let closed = false;
   return {
@@ -381,6 +405,30 @@ export function createStats(path: string | undefined | null): StatsStore {
         : guarded("contentStats", new Map(), () => {
             const rows = selectContent.all(poolId) as { key: string; shown: number; knew: number }[];
             return new Map(rows.map((r) => [r.key, { shown: r.shown, knew: r.knew }]));
+          }),
+    contentPlayed: (poolId, key, top, single) => {
+      if (closed) return;
+      const ratio = (v: number): number => (Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0);
+      guarded("contentPlayed", undefined, () => {
+        upsertPlay.run(poolId, key, ratio(top), ratio(single));
+      });
+    },
+    contentPlayStats: (poolId) =>
+      closed
+        ? new Map()
+        : guarded("contentPlayStats", new Map(), () => {
+            const rows = selectPlay.all(poolId) as {
+              key: string;
+              games: number;
+              top_sum: number;
+              single_sum: number;
+            }[];
+            return new Map(
+              rows.map((r) => [
+                r.key,
+                { games: r.games, top: r.top_sum / r.games, single: r.single_sum / r.games },
+              ]),
+            );
           }),
     purge: (now) => {
       if (closed) return;

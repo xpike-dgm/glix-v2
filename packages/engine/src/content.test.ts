@@ -91,7 +91,7 @@ const PROBES: Probe[] = [
   },
   {
     poolId: "cagrisim-agi/kelimeler",
-    picked: (seed, c) => [cagrisimAgi.setup(PLAYERS, ctx(seed, c)).word],
+    picked: (seed, c) => cagrisimAgi.setup(PLAYERS, ctx(seed, c)).words.map((w) => w.text),
   },
   {
     poolId: "sizma/ciftler",

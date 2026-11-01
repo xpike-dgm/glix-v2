@@ -110,7 +110,10 @@ interface PoolState {
   touched: boolean;
 }
 
-/** Satırı alan değerlerine böler: tek alanlıda satırın kendisi, çok alanlıda `;` ya da sekmeyle ayrılmış parçalar. */
+/**
+ * Satırı alan değerlerine böler: tek alanlıda satırın kendisi, çok alanlıda `;` ya da sekmeyle ayrılmış parçalar.
+ * Sondaki isteğe bağlı alanlar yazılmayabilir.
+ */
 export function splitLine(pool: AnyPool, line: string): Record<string, string> | null {
   const keys = pool.fields.map((f) => f.key);
   if (keys.length === 1) return { [keys[0] as string]: line };
@@ -118,7 +121,13 @@ export function splitLine(pool: AnyPool, line: string): Record<string, string> |
   let rest = line;
   for (let i = 0; i < keys.length - 1; i++) {
     const at = rest.search(/[;\t]/);
-    if (at < 0) return null;
+    if (at < 0) {
+      // Sondaki isteğe bağlı alanlar (en az 0 karakter, ör. Çağrışım Ağı zorluğu) yazılmayabilir: boş kalır.
+      if (!pool.fields.slice(i + 1).every((f) => f.min === 0)) return null;
+      out[keys[i] as string] = rest;
+      for (const k of keys.slice(i + 1)) out[k] = "";
+      return out;
+    }
     out[keys[i] as string] = rest.slice(0, at);
     rest = rest.slice(at + 1);
   }
@@ -220,6 +229,7 @@ export function createContentStore(accounts: AccountStore, banned: BannedWords):
         options: f.options ? [...f.options] : null,
       })),
       feedback: pool.feedback === true,
+      playStats: pool.playStats === true,
       min: pool.min,
       needed: pool.needed,
       builtin: pool.builtin.length,

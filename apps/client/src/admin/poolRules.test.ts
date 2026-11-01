@@ -10,6 +10,7 @@ import {
   knownCell,
   minText,
   pageCount,
+  playCell,
   poolStatus,
   splitPaste,
   valuesProblem,
@@ -115,5 +116,35 @@ describe("bilinirlik (SB-M7)", () => {
     expect(fieldProblem(type, "")).toBe("Tür seçilmeli.");
     expect(fieldProblem(type, "edat")).toMatch(/şunlardan biri/);
     expect(fieldProblem(type, "isim")).toBeNull();
+  });
+});
+
+describe("kelime karnesi (CG-M6)", () => {
+  it("az veride yalnız sayılar; 8 oyundan sonra kolay / zor / kapatma önerisi", () => {
+    expect(playCell(undefined).text).toBe("henüz oynanmadı");
+    expect(playCell({ games: 3, top: 0.9, single: 0.1 })).toEqual({
+      text: "3 oyun · ağ %90 · tek %10",
+      badge: null,
+    });
+    expect(playCell({ games: 8, top: 0.85, single: 0.1 }).badge?.label).toBe("Kolay önerisi");
+    expect(playCell({ games: 8, top: 0.25, single: 0.7 }).badge?.label).toBe("Zor önerisi");
+    expect(playCell({ games: 8, top: 0, single: 1 }).badge?.label).toBe("Kapatma önerisi");
+    expect(playCell({ games: 8, top: 0.5, single: 0.3 }).badge).toBeNull();
+    expect(
+      badgesOf({ source: "builtin", disabled: false, play: { games: 9, top: 0, single: 1 } }, false, true),
+    ).toHaveLength(2);
+  });
+  it("isteğe bağlı seçim alanı boş bırakılabilir", () => {
+    const level: AdminPoolField = {
+      ...word,
+      key: "level",
+      label: "Zorluk",
+      min: 0,
+      max: 5,
+      options: ["kolay", "orta", "zor"],
+    };
+    expect(fieldProblem(level, "")).toBeNull();
+    expect(fieldProblem(level, "çok")).toMatch(/şunlardan biri/);
+    expect(fieldProblem(level, "zor")).toBeNull();
   });
 });

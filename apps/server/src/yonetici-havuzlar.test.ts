@@ -34,6 +34,9 @@ const requirePool = (id: string): NonNullable<ReturnType<typeof poolById>> => {
   return p;
 };
 const wordOf = (c: Client): string => (c.room.match?.publicView as { word: string } | undefined)?.word ?? "";
+/** Çağrışım Ağı oyunun üç kelimesi kayıttaki etkin havuzdan gelir; girdi `{ text, level }`. */
+const textsOf = (list: readonly unknown[] | undefined): string[] =>
+  (list ?? []).map((e) => (typeof e === "string" ? e : (e as { text: string }).text));
 const phaseOf = (c: Client): string =>
   (c.room.match?.publicView as { phase: string } | undefined)?.phase ?? "";
 
@@ -114,7 +117,7 @@ describe("A4 havuz uçları: CRUD, doğrulama, tekrar, yasaklı kelime, işlem k
     expect((await add("DENEMELIK")).status).toBe(409);
     expect((await add("denemelık")).status).toBe(409);
     // Yerleşik girdiyle tekrar (D-E-N-İ-Z yerleşikte var).
-    const builtinWord = (requirePool(CAG).builtin[0] as string).toLocaleLowerCase("tr-TR");
+    const builtinWord = (requirePool(CAG).builtin[0] as { text: string }).text.toLocaleLowerCase("tr-TR");
     expect((await add(builtinWord)).status).toBe(409);
     refill();
     expect((await add("iki kelime")).status).toBe(400);
@@ -201,7 +204,13 @@ describe("A4 havuz uçları: CRUD, doğrulama, tekrar, yasaklı kelime, işlem k
     expect(all.body.entries[0]).toMatchObject({ source: "custom", key: "denizli" });
     expect(all.body.pool).toMatchObject({ disabled: 1, custom: 1, active: base });
     expect(
-      (await post("pools/edit", admin, { pool: CAG, key: target.key, fields: { text: "DENİZ" } })).status,
+      (
+        await post("pools/edit", admin, {
+          pool: CAG,
+          key: target.key,
+          fields: { text: "DENİZ", level: "orta" },
+        })
+      ).status,
     ).toBe(409);
     // Eklenen girdiyi düzenle ve sil.
     expect(
@@ -268,6 +277,24 @@ describe("A4 havuz uçları: CRUD, doğrulama, tekrar, yasaklı kelime, işlem k
       "fiil",
       "zarf",
     ]);
+    refill();
+    // Çağrışım Ağı zorluğu (CG-M5): isteğe bağlı ikinci alan; "kelime;zor" ya da yalnız kelime (orta sayılır).
+    const cag = (
+      await post("pools/bulk", admin, { pool: CAG, lines: ["Zorkelim;zor", "Ortakelim", "Hatakelim;çokzor"] })
+    ).body as unknown as AdminPoolBulk;
+    expect(cag.lines.map((l) => l.status)).toEqual(["ok", "ok", "invalid"]);
+    const ce = await get<AdminPoolPage>(`pools/entries?pool=${CAG}&filter=custom&q=kelim`, admin);
+    expect(
+      ce.body.entries.map((x) => x.fields).sort((x, y) => (x.text ?? "").localeCompare(y.text ?? "")),
+    ).toEqual([
+      { text: "ORTAKELİM", level: "" },
+      { text: "ZORKELİM", level: "zor" },
+    ]);
+    // Kelime karnesi sütunu (CG-M6): karneli havuzda her girdide üç sayı (henüz oynanmadıysa 0).
+    expect(ce.body.pool.playStats).toBe(true);
+    expect(ce.body.pool.feedback).toBe(false);
+    expect(ce.body.entries[0]?.play).toEqual({ games: 0, top: 0, single: 0 });
+    expect(ce.body.pool.fields.find((f) => f.key === "level")?.options).toEqual(["kolay", "orta", "zor"]);
     // Sınırlar.
     expect((await post("pools/bulk", admin, { pool: CAG, lines: [] })).status).toBe(400);
     expect(
@@ -327,13 +354,14 @@ describe("etkin havuz kurulumu (depo)", () => {
   it("değişiklik yoksa forGame undefined; kapatılan girdi etkin havuzda yok; ekleneni var", () => {
     const store = make();
     expect(store.forGame("cagrisim-agi")).toBeUndefined();
-    const key = requirePool(CAG).key("DENİZ");
+    const key = requirePool(CAG).key({ text: "DENİZ", level: null });
     expect(store.toggle(CAG, key, true, 1).ok).toBe(true);
     expect(store.add(CAG, { text: "uydurmax" }, 2).ok).toBe(true);
     const set = store.forGame("cagrisim-agi");
     const list = set?.[CAG] ?? [];
-    expect(list).not.toContain("DENİZ");
-    expect(list).toContain("UYDURMAX");
+    const texts = list.map((e) => (e as { text: string }).text);
+    expect(texts).not.toContain("DENİZ");
+    expect(texts).toContain("UYDURMAX");
     expect(list).toHaveLength(poolById(CAG)?.builtin.length ?? 0);
     // Kalıcı: yeni depo aynı veritabanından aynı havuzu kurar.
     expect(make().forGame("cagrisim-agi")?.[CAG]).toEqual(list);
@@ -371,15 +399,19 @@ describe("yeni maçlara uygulanma ve kayıt", () => {
   }
 
   async function finish(host: Client): Promise<void> {
-    k.clock.advance(31_000);
-    await until(() => phaseOf(host) === "reveal", "açılış");
-    k.clock.advance(7_000);
+    // Üç kelime (3 × 20 sn + 2 × 4 sn mini açılış) ve büyük açılış (8 sn).
+    for (let i = 0; i < 4; i++) {
+      k.clock.advance(20_000);
+      await sync();
+    }
+    await until(() => phaseOf(host) === "final", "büyük açılış");
+    k.clock.advance(9_000);
     await until(() => host.room.phase === "results", "sonuç");
   }
 
   it("süren maç etkilenmez; sonraki maç yeni havuzu kullanır; kayıtta etkin havuz bulunur ve sonradan değişse de replay aynı", async () => {
     const first = await playCagrisim();
-    expect(poolById(CAG)?.builtin).toContain(first.word);
+    expect(textsOf(poolById(CAG)?.builtin)).toContain(first.word);
 
     // Maç sürerken havuz değişir: yalnız eklenen girdiler kalsın.
     const pool = poolById(CAG);
@@ -400,7 +432,7 @@ describe("yeni maçlara uygulanma ve kayıt", () => {
     await finish(host);
     const log = k.srv.recentLogs.at(-1);
     if (!log) throw new Error("kayıt yok");
-    expect(log.content?.[CAG]).toEqual(expect.arrayContaining(customs));
+    expect(textsOf(log.content?.[CAG])).toEqual(expect.arrayContaining(customs));
     expect(log.content?.[CAG]).toHaveLength(customs.length);
     const result = host.room.match?.result;
     expect(replay(cagrisimAgi, JSON.parse(JSON.stringify(log)))).toEqual(result);
