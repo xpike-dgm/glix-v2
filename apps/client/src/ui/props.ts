@@ -35,6 +35,7 @@ export type PropPath =
   | `gizli-hirsiz/${HirsizProp}`
   | `rusvet-darbe/${RusvetProp}`
   | `ittifak/${IttifakProp}`
+  | `son-kisi/${SonKisiProp}`
   | `gizli-kareler/${KarelerProp}`
   | `sozluk-blofu/${SozlukProp}`
   | `karalama-defteri/${KaralamaProp}`
@@ -202,6 +203,23 @@ export const ittifakProp = (name: IttifakProp): string | null =>
   ittifakPropExists(name) ? propSrc(`ittifak/${name}`) : null;
 
 /**
+ * Son Kişi görselleri (sahip üretecek; docs/oneriler/GORSEL-IHTIYACLARI.md "Son Kişi"). Koridor zemini mevcut dünya
+ * görselidir (`worlds/son-kisi-*`). Kapı ve kepenk yoksa ekran CSS/SVG karşılığını çizer ve olmayan dosyayı hiç istemez
+ * (404 yok); dosya `son-kisi/<ad>.webp` olarak gelince kod değişmeden kullanılır.
+ */
+export type SonKisiProp = "kapi-kapali" | "kapi-acik" | "kepenk";
+export const SON_KISI_PROPS: readonly SonKisiProp[] = ["kapi-kapali", "kapi-acik", "kepenk"];
+
+export function sonKisiPropExists(name: SonKisiProp): boolean {
+  const built = typeof __SON_KISI_PROPS__ === "undefined" ? undefined : __SON_KISI_PROPS__;
+  return built ? built.includes(name) : false;
+}
+
+/** Var olan Son Kişi görselinin adresi; yoksa null. */
+export const sonKisiProp = (name: SonKisiProp): string | null =>
+  sonKisiPropExists(name) ? propSrc(`son-kisi/${name}`) : null;
+
+/**
  * Gizli Hırsız görselleri (sahip üretecek; docs/oneriler/GORSEL-IHTIYACLARI.md "Gizli Hırsız"). Yoksa ekran mevcut kasa
  * kapısını altın ışık ve CSS paralarla açık gösterir ve olmayan dosyayı hiç istemez (404 yok); dosya
  * `gizli-hirsiz/<ad>.webp` olarak gelince kod değişmeden kullanılır.
@@ -352,7 +370,10 @@ const GAME_PROPS: Record<string, readonly PropPath[]> = {
     ...HIRSIZ_PROPS.filter(hirsizPropExists).map((n): PropPath => `gizli-hirsiz/${n}`),
   ],
   "gizli-kareler": KARELER_PROPS.filter(karelerPropExists).map((n): PropPath => `gizli-kareler/${n}`),
-  "son-kisi": ["genel/kacis-kolu"],
+  "son-kisi": [
+    "genel/kacis-kolu",
+    ...SON_KISI_PROPS.filter(sonKisiPropExists).map((n): PropPath => `son-kisi/${n}`),
+  ],
   ittifak: [
     "genel/el-sikisma",
     ...ITTIFAK_PROPS.filter(ittifakPropExists).map((n): PropPath => `ittifak/${n}`),

@@ -245,6 +245,16 @@ function ittifakPropFiles(): string[] {
     .sort();
 }
 
+/** Son Kişi görsellerinden derlemede var olanlar (kapı, kepenk; yoksa CSS/SVG). */
+function sonKisiPropFiles(): string[] {
+  const dir = fileURLToPath(new URL("./public/assets/props/son-kisi", import.meta.url));
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".webp"))
+    .map((f) => f.slice(0, -".webp".length))
+    .sort();
+}
+
 /** Gizli Hırsız görsellerinden derlemede var olanlar (açık kasa; yoksa kasa kapısı ışıkla açık gösterilir). */
 function hirsizPropFiles(): string[] {
   const dir = fileURLToPath(new URL("./public/assets/props/gizli-hirsiz", import.meta.url));
@@ -296,6 +306,7 @@ export default defineConfig({
     __HIRSIZ_PROPS__: JSON.stringify(hirsizPropFiles()),
     __RUSVET_PROPS__: JSON.stringify(rusvetPropFiles()),
     __ITTIFAK_PROPS__: JSON.stringify(ittifakPropFiles()),
+    __SON_KISI_PROPS__: JSON.stringify(sonKisiPropFiles()),
     __KARELER_PROPS__: JSON.stringify(karelerPropFiles()),
   },
   plugins: [

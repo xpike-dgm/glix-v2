@@ -1432,6 +1432,37 @@ veya geç kalanlar eski akışta -1 alır. Eski faz 24 saniyedir.
     Aynı zaman damgası oluşursa bütün son basanlar +1 alır. Hiç kimse kaçmazsa
     herkes -1 alır. Erken kaçanlar, son kaçan değilse 0 alır.
 
+**Değişiklik (SK öneri paketi, Kasım 2026, sahip onayı: SK-M1…M4) — yukarıdakilerin önüne geçer:**
+
+- **Üç alarm (SK-M2):** Oyun **3 tur**dur. Her turun gizli alarmı turun başından **8–16 sn** sonradır (ms çözünürlükte,
+  uçlar dahil, tohumlu RNG); gerilim eşikleri her tur yeniden çekilir. Turlar arasında **4 sn** kısa açılış vardır (alarm
+  anı, son kaçan, tur puanları, toplam puan şeridi; sonunda "N. ALARM" / "SON ALARM" ve "HAZIR" bandı); turlar arası
+  "Devam et" yoktur. Son turun kapanışı oyunun **son açılışıdır** (6 sn, ardından ortak "Devam et").
+- **Tur başına tek basış:** Her turda herkes **bir kez** KAÇ'a basabilir; ikinci basış yok sayılır. Alarm anı ve sonrası
+  ile tur arasındaki basış reddedilir. Bir turda **bütün katılımcılar** (bağlantıdan bağımsız) kaçarsa tur son kaçıştan
+  **1 sn sonra** kapanır; sonraki turlar öne kayar. Kopan oyuncu döndüğünde süren turda basabilir, yoksa sonraki turda oynar.
+- **Tur puanı (SK-M1, eksi yok):** en son kaçan(lar) **+2**, sondan ikinci kaçan(lar) **+1** (bir sonraki farklı zaman
+  damgası; **yalnız 3+ oyuncuda**), diğer kaçanlar **0**, alarma yakalanan (kopan dahil) **0**. Eşit zaman damgası aynı
+  derece. Kimse kaçmazsa kimse puan almaz; tek kişi kaçtıysa yalnız o +2.
+- **Kıl payı (SK-M4):** Alarmdan önceki **son 1 saniye** içinde (alarma 1 000 ms ya da daha az kala, uç dahil) kaçan herkes
+  o turda **+1 ek** tur puanı alır (derecesinden bağımsız; en çok 2 + 1 = 3). Pencere **özgün** alarm anına göre ölçülür;
+  herkes kaçtığı için tur erken kapansa da geçerlidir.
+- **Genel skor (SK-M2):** Üç turun toplamına göre, oyun sonunda bir kez: en yüksek toplam **+2** (eşitlikte hepsi +2),
+  sonraki farklı toplam **+1**, diğerleri 0; **bütün katılımcıların toplamı eşit ve 0'dan büyükse herkes +1**; toplamı 0
+  olan ödül almaz. Mini oyun puanı üç turun toplamıdır (kartların "birinci/sonuncu" kararı buna göre).
+- **Alarm anı açılır (SK-M3):** Her tur kapanınca o turun alarm anı turun başından ölçülerek açılır: "Alarm 14,3 sn'de
+  çaldı"; herkes erken kaçtıysa özgün an: "Alarm 17,4 sn'de çalacaktı". Kaçış süreleri, yakalananlar ve tur puanları da
+  o an açılır. Alarm anı ve eşikler tur kapanmadan hiçbir görünümde yoktur; mutlak alarm zamanı hiç gösterilmez.
+- **Kim kaçtı gizli (sahip kararı):** Oyun sırasında **kimin kaçtığı gösterilmez** (telefonda, izleyicide ve TV'de alttaki
+  oyuncu şeridi kaldırıldı); yalnız kaç kişinin kaçtığı ("İçeride 3 · Kaçtı 2") ve içeride iki/tek kişi kalınca adsız
+  "SON İKİ!" / "SON KİŞİ!" bandı görünür. Kendi kaçış süren yalnız sende görünür. Kimin ne zaman kaçtığı turun açılışında
+  açılır.
+- **Değişmeyenler:** 2–8 oyuncu; alarmın gizli olması; sayaç olmaması; üç gizli gerilim düzeyi (alarmdan 5–8 / 2,5–4,5 /
+  0,8–2,2 sn önce, turun başından en az 1 sn sonra) ve yalnız düzeyin (0–3) görünmesi; ms çözünürlüklü eşitlikte aynı puan;
+  geç eylem payı yok.
+- **Anlatım:** amaç "Alarm çalmadan kaç, ama herkesten geç!"; 1) "Üç alarm; her biri gizli bir anda çalar" 2) "Her alarmda
+  KAÇ'a bir kez bas" 3) "Son kaçan +2, sondan ikinci +1; eksi yok".
+
 ## 18. Çizgiyi Geçme — `cizgiyi-gecme`
 
 **Durum: KİLİTLİ**

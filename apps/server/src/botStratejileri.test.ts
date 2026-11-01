@@ -199,14 +199,16 @@ describe("zamanlama", () => {
       }
     }
   });
-  it("Son Kişi: botlar başlangıçtan 4–15 sn sonra kaçar", () => {
+  it("Son Kişi: botlar her alarmda turun başından 3–10,5 sn sonra kaçar", () => {
     const { room, view } = playGame("son-kisi");
     const bots = new Set(botsOf(room).map((p) => p.id));
-    const result = (view() as { result: { escapes: { id: string; ms: number }[] } }).result;
-    const mine = result.escapes.filter((e) => bots.has(e.id));
+    const results = (view() as { results: { escapes: { id: string; ms: number }[] }[] }).results;
+    expect(results).toHaveLength(3);
+    const mine = results.flatMap((r) => r.escapes.filter((e) => bots.has(e.id)));
+    expect(mine.length).toBeGreaterThan(0);
     for (const e of mine) {
-      expect(e.ms).toBeGreaterThanOrEqual(4_000);
-      expect(e.ms).toBeLessThanOrEqual(15_200);
+      expect(e.ms).toBeGreaterThanOrEqual(3_000);
+      expect(e.ms).toBeLessThanOrEqual(10_500);
     }
   });
 });

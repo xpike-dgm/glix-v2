@@ -1,12 +1,13 @@
-import { fit, names, rec, type Summarize, strList } from "../summary.js";
+import { fit, list, names, num, rec, type Summarize, str } from "../summary.js";
 
-/** Son Kişi: en son kaçan ve kaçamayanlar. */
+/** Son Kişi: üç alarmın toplamında kazanan(lar); kimse puan alamadıysa "Kimse kurtulamadı". */
 export const summarizeSonKisi: Summarize = (_result, players, publicView) => {
-  const result = rec(rec(publicView).result);
-  if (!Array.isArray(result.last)) return null;
-  const last = strList(result.last);
-  const missed = strList(result.missed);
-  if (last.length === 0) return missed.length > 0 ? "Kimse kaçamadı" : null;
-  const line = `${names(players, last)} en son kaçtı`;
-  return fit(missed.length > 0 ? `${line}, ${missed.length} kişi kaçamadı` : line);
+  const pub = rec(publicView);
+  if (!Array.isArray(pub.final)) return null;
+  const standings = list(pub.final).map(rec);
+  const top = standings.filter((s) => s.rank === 1 && (num(s.total) ?? 0) > 0);
+  const total = num(top[0]?.total);
+  if (top.length === 0 || total === undefined) return "Kimse kurtulamadı";
+  const ids = top.map((s) => str(s.playerId)).filter((id): id is string => id !== undefined);
+  return fit(`${names(players, ids)} ${total} puanla en cesur kaçan`);
 };

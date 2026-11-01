@@ -3,7 +3,7 @@
  * alanlar); alan yoksa ya da tür beklenmedikse ya hiçbir şey yapmaz ya da hata verir (bots.ts güvenle düşer).
  *
  * Değişmekte olan oyunlar (Rüşvet ve Darbe, Açgözlülük Limiti, Ortalamanın Yarısı, Çizgiyi Geçme) burada
- * yok: onlarda bot `BOTS`'u kullanır. Son Kişi yalnız mevcut basit arayüze (`startedAt`, `escaped`, "escape") dayanır.
+ * yok: onlarda bot `BOTS`'u kullanır. Son Kişi yalnız `phase`, `round`, `escaped` ve "escape"e dayanır.
  */
 import { ITTIFAK_BAND_MS, ittifakMaxPromises } from "@glix/engine";
 import { shapeStrokes } from "./cizim.js";
@@ -356,20 +356,22 @@ const korKronometre: PlayStrategy = (c) => {
   return { action: { kind: "press" }, next: 2_000 };
 };
 
-// ——— Son Kişi: makul bir kaçış anı ———
+// ——— Son Kişi: her alarmda makul bir kaçış anı ———
+/** SK-M2: 3 tur. Turun başlangıcı görünümde yok (yalnız `startedAt`); bot turu ilk gördüğü anı başlangıç sayar. */
 const sonKisi: PlayStrategy = (c) => {
   const p = rec(c.pub);
   const v = rec(c.priv);
-  if (v.escaped === true || p.finished === true) return null;
-  const startedAt = num(p.startedAt);
-  if (startedAt === null) return null;
-  let at = num(c.mem.escapeAt);
+  if (p.finished === true) return null;
+  // Tur arasında sık bakar ki yeni turun başını kaçırmasın.
+  if (str(p.phase) !== "play" || v.escaped === true) return { next: 250 };
+  const key = `escape${num(p.round) ?? 0}`;
+  let at = num(c.mem[key]);
   if (at === null) {
-    at = startedAt + between(c, 4_000, 15_000);
-    c.mem.escapeAt = at;
+    at = c.now + between(c, 3_000, 10_000);
+    c.mem[key] = at;
   }
   if (c.now < at) return { next: Math.max(1, at - c.now) };
-  return { action: { kind: "escape" }, next: 2_000 };
+  return { action: { kind: "escape" }, next: 250 };
 };
 
 // ——— Butona Bas: insan hızında basış ———

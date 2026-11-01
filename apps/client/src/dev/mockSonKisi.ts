@@ -1,157 +1,193 @@
 /**
- * Yalnız geliştirme önizlemesi (üretim paketine girmez). Son Kişi ekranları:
+ * Yalnız geliştirme önizlemesi (üretim paketine girmez): Son Kişi ekranları. Görünümler gerçek motordan (setup + sahte
+ * kaçışlar) üretilir; saat, istenen anın "şimdi" olacağı şekilde kaydırılır. `&n=2..8` oyuncu sayısı.
  *   ?mock=sonkisi-briefing      anlatım
- *   ?mock=sonkisi-idle          KAÇ bekliyor (sakin)
- *   ?mock=sonkisi-tense         gerilim 2, iki kişi kaçmış
- *   ?mock=sonkisi-escaped       sen kaçtın, gerilim 3
+ *   ?mock=sonkisi-idle          1. alarm, sakin (KAÇ'a basınca kaçarsın)
+ *   ?mock=sonkisi-tense         2. alarm, gerilim 2, üç kişi kaçmış (yalnız sayı görünür)
+ *   ?mock=sonkisi-last2         içeride iki kişi kaldı, biri sensin (SON İKİ)
+ *   ?mock=sonkisi-last1         içeride yalnız sen kaldın (SON KİŞİ)
+ *   ?mock=sonkisi-escaped       sen kaçtın (kendi süren), gerilim 2
  *   ?mock=sonkisi-spectator     izleyici
- *   ?mock=sonkisi-reveal        tek son kaçan (+1), kaçmayan var
- *   ?mock=sonkisi-reveal-tie    eşit zaman: iki son kaçan
- *   ?mock=sonkisi-reveal-none   kimse kaçmadı
- * `&n=8` oyuncu sayısını değiştirir.
+ *   ?mock=sonkisi-gap           1. alarmdan sonra tur arası (`&yakalan=1`: sen yakalandın)
+ *   ?mock=sonkisi-reveal        son açılış (üçüncü alarm; zaman çizelgesi ve sıralama)
+ *   ?mock=sonkisi-reveal-none   son açılış, kimse kaçmadı
+ *   ?mock=sonkisi-results       genel sonuç ekranı (üstte tek satır)
+ *   ?mock=tv-sonkisi-…          büyük ekran (izleyici kipinde StageView)
  */
-import type {
-  GameInfo,
-  MatchSnapshot,
-  PlayerInfo,
-  RoomPhase,
-  RoomSnapshot,
-  SonKisiPublicView,
-  SonKisiResult,
-  SonKisiTension,
-  SonKisiView,
+import {
+  createRng,
+  type GameInfo,
+  isRejected,
+  type MatchSnapshot,
+  type PlayerInfo,
+  type RoomPhase,
+  type RoomSnapshot,
+  type SonKisiState,
+  sonKisi,
 } from "@glix/engine";
 import { useMockSender } from "../net/client.js";
 import { applySnapshot, setState } from "../net/store.js";
 
 const NAMES = ["Cihad", "Elif", "Mert", "Zeynep", "Kaan", "Defne", "Burak", "Ayşe"];
 const SELF = "p0";
-const GAME: GameInfo = {
-  id: "son-kisi",
-  name: "Son Kişi",
-  minPlayers: 2,
-  maxPlayers: 8,
+const INFO: GameInfo = {
+  id: sonKisi.id,
+  name: sonKisi.name,
+  minPlayers: sonKisi.minPlayers,
+  maxPlayers: sonKisi.maxPlayers,
   orientation: "portrait",
 };
-const BRIEFING = {
-  goal: "Alarm çalmadan kaç, ama herkesten geç!",
-  steps: [
-    "Bitiş zamanı gizli; alarmı bekle",
-    "İstediğin anda bir kez KAÇ'a bas",
-    "Son kaçan +1 alır, hiç kaçmayan −1 alır",
-  ],
-};
 
-export function startSonKisiMock(kind: string, params: URLSearchParams): void {
+/** Tur başına kaçışlar (oyuncu sırası → turun başından ms); alarmdan sonrakiler motorca reddedilir. */
+type Plan = Record<string, number>[];
+
+function plan(kind: string, ids: string[], params: URLSearchParams): Plan {
+  const at = (i: number, base: number) => base + i * 1_150;
+  const all = (skip: (id: string) => boolean, base = 2_000): Record<string, number> =>
+    Object.fromEntries(ids.filter((id) => !skip(id)).map((id, i) => [id, at(i, base)]));
+  if (kind === "reveal-none" || kind === "results-none") return [{}, {}, {}];
+  const caughtMe = params.get("yakalan") === "1";
+  return [
+    all((id) => (caughtMe && id === SELF) || id === ids[ids.length - 1]),
+    all((id) => id === ids[1], 1_500),
+    all((id) => id === ids[2], 3_000),
+  ];
+}
+
+function build(base: number, seed: number, ids: string[], p: Plan, before: number): SonKisiState {
+  let s = sonKisi.setup(ids, { now: base, rng: createRng(seed), connected: ids });
+  for (let i = 0; i < s.rounds.length; i++) {
+    const entries = Object.entries(p[i] ?? {}).sort((a, b) => a[1] - b[1]);
+    for (const [id, ms] of entries) {
+      const r = s.rounds[i];
+      if (!r) continue;
+      const t = r.startAt + ms;
+      if (t >= before || t >= r.endsAt) continue;
+      const out = sonKisi.reduce(s, id, { kind: "escape" }, { now: t, rng: createRng(1), connected: ids });
+      if (!isRejected(out)) s = out;
+    }
+  }
+  return s;
+}
+
+export function startSonKisiMock(mock: string, params: URLSearchParams, tv = false): void {
+  const kind = mock.replace(/^sonkisi-/, "");
   const n = Math.min(8, Math.max(2, Number(params.get("n")) || 5));
   const players: PlayerInfo[] = Array.from({ length: n }, (_, i) => ({
     id: `p${i}`,
     nickname: NAMES[i] ?? `Oyuncu${i}`,
     avatar: i,
     connected: true,
-    score: 0,
+    score: kind.startsWith("results") ? ([3, 2, 0, 1, 0, 2, 1, 0][i] ?? 0) : 0,
     spectator: false,
   }));
-  const spectating = kind === "sonkisi-spectator";
-  const participants = players.map((p) => p.id).filter((id) => !(spectating && id === SELF));
-  const now = Date.now();
-  const briefing = kind === "sonkisi-briefing";
-  const results = kind.startsWith("sonkisi-reveal");
-  const phase: RoomPhase = briefing ? "briefing" : results ? "results" : "playing";
-  const startedAt = results ? now - 16_000 : now - 8_000;
-  const pick = (...ids: string[]) => ids.filter((id) => participants.includes(id));
+  const spectator = tv || kind === "spectator";
+  const ids = players.map((p) => p.id).filter((id) => !(spectator && id === SELF));
+  const seed = Number(params.get("tohum")) || 11;
+  const p = plan(kind, ids, params);
+  const others = ids.filter((id) => id !== SELF);
 
-  let escaped: string[] = [];
-  let tension: SonKisiTension = 0;
-  if (kind === "sonkisi-tense") {
-    escaped = pick("p1", "p3");
-    tension = 2;
-  } else if (kind === "sonkisi-escaped") {
-    escaped = pick("p2", SELF);
-    tension = 3;
-  } else if (kind === "sonkisi-spectator") {
-    escaped = pick("p2");
-    tension = 1;
-  }
-  let selfEscaped = escaped.includes(SELF);
-
-  const result = (): SonKisiResult => {
-    if (kind === "sonkisi-reveal-none") {
-      return {
-        escapes: [],
-        last: [],
-        missed: [...participants],
-        scores: Object.fromEntries(participants.map((id) => [id, -1])),
-      };
-    }
-    const tie = kind === "sonkisi-reveal-tie";
-    const ordered = pick("p2", SELF, "p1", "p3");
-    const lastIds = tie ? ordered.slice(-2) : ordered.slice(-1);
-    const escapes = ordered.map((id, i) => ({
-      id,
-      ms: lastIds.includes(id) ? 14_300 : 3_000 + i * 2_600,
-    }));
-    const missed = participants.filter((id) => !ordered.includes(id));
-    const scores = Object.fromEntries(
-      participants.map((id) => [id, missed.includes(id) ? -1 : lastIds.includes(id) ? 1 : 0]),
-    );
-    return { escapes, last: lastIds, missed, scores };
+  // Oynanan anın planı: hangi tur, turun başından kaç ms, o ana kadar kimler kaçmış.
+  const live = (round: number, ms: number, out: string[]) => {
+    p[round] = Object.fromEntries(out.map((id, i) => [id, 600 + i * 400]));
+    return { round, ms };
   };
+  const probe = build(0, seed, ids, p, Number.POSITIVE_INFINITY);
+  const r = (i: number) => probe.rounds[i] as SonKisiState["rounds"][number];
+  let m = 0;
+  if (kind === "idle" || kind === "briefing") {
+    const x = live(0, 300, []);
+    m = r(x.round).startAt + x.ms;
+  } else if (
+    kind === "tense" ||
+    kind === "spectator" ||
+    (tv && !["gap", "reveal", "reveal-none"].includes(kind))
+  ) {
+    const x = live(1, 0, others.slice(0, Math.min(3, others.length - 1)));
+    const rr = build(0, seed, ids, p, Number.POSITIVE_INFINITY).rounds[1];
+    m = (rr?.thresholds[1] ?? 0) + 200 + x.ms;
+  } else if (kind === "last2" || kind === "last1") {
+    const keep = kind === "last2" ? 1 : 0;
+    live(0, 0, others.slice(0, others.length - keep));
+    m = r(0).startAt + 600 + others.length * 400 + 300;
+  } else if (kind === "escaped") {
+    live(0, 0, [SELF, ...others.slice(0, 1)]);
+    const rr = build(0, seed, ids, p, Number.POSITIVE_INFINITY).rounds[0];
+    m = (rr?.thresholds[1] ?? 0) + 100;
+  } else if (kind === "gap") {
+    m = r(0).endsAt + 50;
+  } else {
+    m = r(2).endsAt + 400;
+  }
+  const base = Date.now() - m;
+  const state = build(base, seed, ids, p, Number.POSITIVE_INFINITY);
+  let escapedSelf = false;
+  let rev = 1;
 
-  const publish = (): void => {
-    const res = results ? result() : null;
-    const publicView: SonKisiPublicView = {
-      startedAt,
-      escaped: res ? res.escapes.map((e) => e.id) : escaped,
-      tension: results ? 3 : tension,
-      finished: results,
-      result: res,
-    };
-    const view: SonKisiView = { escaped: !spectating && selfEscaped };
+  const snapshot = (): RoomSnapshot => {
+    const now = Date.now();
+    const ctx = { now, rng: createRng(1), connected: ids };
+    const pub = sonKisi.publicView(state, ctx);
+    const priv = sonKisi.view(state, spectator ? null : SELF, ctx);
+    const results = kind.startsWith("results");
+    const phase: RoomPhase = kind === "briefing" ? "briefing" : results ? "results" : "playing";
+    const res = sonKisi.result(state);
     const match: MatchSnapshot = {
       round: 0,
       total: 3,
-      gameId: GAME.id,
-      gameName: GAME.name,
-      briefing: BRIEFING,
+      gameId: INFO.id,
+      gameName: INFO.name,
+      briefing: { goal: sonKisi.briefing.goal, steps: [...sonKisi.briefing.steps] },
       orientation: "portrait",
-      participants,
-      readyIds: briefing ? ["p1", "p2"] : [],
+      participants: ids,
+      readyIds: kind === "briefing" ? ids.slice(1, 3) : [],
       continueIds: [],
-      phaseStartedAt: startedAt,
-      phaseEndsAt: briefing ? now + 40_000 : results ? now + 60_000 : null,
-      publicView: briefing ? null : publicView,
-      view: briefing ? null : view,
-      result: res ? { miniScores: res.scores, awards: res.scores } : null,
+      phaseStartedAt: state.startedAt,
+      phaseEndsAt: kind === "briefing" ? now + 40_000 : results ? now + 60_000 : null,
+      publicView: kind === "briefing" ? null : pub,
+      view:
+        kind === "briefing"
+          ? null
+          : escapedSelf && !priv.escaped
+            ? { escaped: true, myMs: now - (state.rounds[pub.round]?.startAt ?? now) }
+            : priv,
+      result: results ? res : null,
     };
-    const snapshot: RoomSnapshot = {
-      rev: Math.floor(Date.now() / 1000) + 1,
-      serverNow: Date.now(),
+    return {
+      rev: ++rev,
+      serverNow: now,
       code: "KX7QP",
       hostId: SELF,
       selfId: SELF,
       phase,
       players,
-      gameIds: [GAME.id],
+      gameIds: [INFO.id],
       selection: { mode: "manual" },
       joinPolicy: "izleyici",
       lobbyReady: [],
       stageCount: 0,
-      catalog: [GAME],
+      catalog: [INFO],
       match,
     };
-    applySnapshot(snapshot);
   };
 
   setState({ conn: "open", everOpen: true, nickname: "Cihad" });
   useMockSender((msg) => {
     if (msg.type !== "action") return;
-    if ((msg.payload as { kind?: unknown }).kind === "escape" && !selfEscaped) {
-      selfEscaped = true;
-      escaped = [...escaped, SELF];
-      publish();
+    if ((msg.payload as { kind?: unknown } | null)?.kind === "escape" && !escapedSelf) {
+      escapedSelf = true;
+      applySnapshot(snapshot());
     }
   });
   setState("session", { token: "mock", playerId: SELF, roomCode: "KX7QP" });
-  publish();
+  applySnapshot(snapshot());
+  // Evre ve gerilim geçişlerinde görünüm yenilensin.
+  let last = sonKisi.tick(state, { now: Date.now(), rng: createRng(1), connected: ids }).stage;
+  setInterval(() => {
+    const s = sonKisi.tick(state, { now: Date.now(), rng: createRng(1), connected: ids }).stage;
+    if (s !== last) {
+      last = s;
+      applySnapshot(snapshot());
+    }
+  }, 100);
 }
