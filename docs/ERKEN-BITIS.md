@@ -30,7 +30,7 @@ yok: **tüm katılımcılar** hamlesini yapmış olmalı (bağlı olmayanı bekl
 yaratmamalı: bitiş yalnız "herkes yaptı" durumunda olur, bu da zaten herkese açık bir bilgi değilse dikkat:
 - Kör Kronometre: her elde herkes bastıysa el 1 sn sonra kapanır (3 el; basış bilgisi el sonunda açılıyor; erken kapanış "herkes bastı"yı açar — kabul). Sonraki eller öne kayar.
 - Gizli Hırsız: herkes bastıysa bitiş (sonuç kesin: herkes −1).
-- Son Kişi: herkes kaçtıysa bitiş (kaçanlar zaten açık). Gizli bitiş zamanı açığa çıkmaz; sonuç ekranında bitiş yok.
+- Son Kişi: her turda (3 alarm) herkes kaçtıysa tur son kaçıştan 1 sn sonra kapanır, sonraki turlar öne kayar (kaçan sayısı zaten açık; kimin kaçtığı oyun sırasında gizli). Tur kapanınca alarm anı (turun başından) açılır: "çaldı" ya da erken kapanışta özgün an "çalacaktı" (SK-M3). Son açılış son tur kapanınca başlar (6 sn).
 - Zehirli Kadeh: herkes takas hakkını kullandıysa bitiş.
 - Rüşvet ve Darbe düello işareti: düellodaki herkes işaret verdiyse açılış hemen başlar.
 
@@ -57,7 +57,7 @@ aşaması ayrıdır ve aşağıdaki "Sonuç ekranı Devam" kuralıyla, 60 sn tav
   açılışın başladığı anı (oyun saati) ya da null döner. Sözleşme: açılış başladıktan sonra bu an kaymaz ve `result` değişmez;
   `isFinished`'in true olduğu an açılış animasyonunun bittiği andır (eskiden oyunun bittiği sabit süre, ör. Gizli Alışveriş
   8 sn, Kontrol Paneli 8 sn, Aşırı Yükleme 5 sn, artık **en az gösterim** süresidir). Açılışı olmayan oyunlarda (Butona Bas,
-  Gizli Hırsız, Son Kişi, Karalama Defteri, Kule Ustası, Zaman Bombası…) `revealAt` oyunun bittiği andır: son ekran düğmeyle kalır.
+  Gizli Hırsız, Karalama Defteri, Kule Ustası, Zaman Bombası…) `revealAt` oyunun bittiği andır: son ekran düğmeyle kalır.
 - Sunucu (`stepMatch`, `match.ts`): açılış başlayınca `MatchSnapshot.reveal = {startedAt, endsAt, continueIds}` yayınlanır
   (`endsAt` = `startedAt` + `REVEAL_HOLD_MS` = 60 sn). Oyun `isFinished` olduktan sonra şu iki koşuldan biri gelince biter:
   bağlı katılımcıların hepsi "Devam et" dedi → `max(herkesin bastığı an, animasyon bitişi) + 1 sn` (`CONTINUE_GRACE_MS`);

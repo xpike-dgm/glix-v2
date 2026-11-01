@@ -15,12 +15,15 @@ Kısa oyun içi açılış penceresi (≤ 7 sn) açılış animasyonu için kull
 - **Kör Kronometre** (2–8, 18 sn): hedef 10,000 sn (oyun başlangıcından, sunucu saati). Tek basış; basmayan 18,000 sn
   kabul. |t−10| en küçük +2, ikinci +1. Eşitlik: aynı dereceyi paylaşanlar aynı ödülü alır, sonraki derece atlanır
   (iki birinci → ikisi +2, kimse +1 almaz). **Ekranda zamana bağlı hiçbir gösterge yok**; halka/nabız zamandan bağımsız.
-- **Son Kişi** (2–8): gizli bitiş 10,000–20,000 ms (rastgele, ms). Tek basış ("kaç"). Bitişten önce basanlar arasında
-  en geç basan(lar) +1 (eşit zaman damgası → hepsi +1); diğer kaçanlar 0; hiç basmayan −1; kimse kaçmazsa herkes −1.
-  Bitiş ve sonrasında gelen basış reddedilir. Gerilim göstergesi: publicView'da yalnız `tension` 0–3
-  = geçilen gizli eşik sayısı. Eşikler `setup`'ta bitişe göre rastgele seçilir ve durumda gizli tutulur: düzey 1 bitişten
-  5–8 sn, düzey 2 2,5–4,5 sn, düzey 3 0,8–2,2 sn önce (her biri başlangıçtan ≥ 1 sn sonra, artan sırada); sabit oran yok,
-  yoksa istemci düzey-1 anından bitişi hesaplardı. Bitiş zamanı ve eşikler hiçbir görünümde yok.
+- **Son Kişi** (2–8; SK öneri paketi): 3 tur. Her turun gizli alarmı turun başından 8,000–16,000 ms (rastgele, ms);
+  tur arası 4 sn, son açılış 6 sn. Tur başına tek basış ("kaç"); alarm anında/sonrasında ve tur arasında basış reddedilir.
+  Tur puanı: en geç kaçan(lar) +2, sondan ikinci (sonraki farklı zaman; 3+ oyuncuda) +1, alarmdan önceki son 1 000 ms'de
+  (uç dahil) kaçan +1 ek; diğerleri ve yakalanan 0 (eksi yok). Genel skor toplamla +2/+1/0 (birincide eşitlik hepsi +2;
+  herkes eşit ve > 0 ise +1; 0 ödülsüz). Herkes kaçarsa tur 1 sn sonra kapanır, sonraki turlar öne kayar. Görünüm:
+  `tension` 0–3 (turun gizli eşikleri: alarmdan 5–8, 2,5–4,5, 0,8–2,2 sn önce, turun başından ≥ 1 sn sonra), `escapedCount`
+  (kimin kaçtığı oyun sırasında yok — sahip kararı), `results` (kapanmış turlar: `alarmMs`, `rang`, kaçışlar, puanlar),
+  `totals`, `final`; kişisel `escaped`, `myMs`. Görünümlerde mutlak zaman yalnız `startedAt`; alarm anları ve eşikler
+  `secrets()`te.
 - **Ortalamaya En Yakın** (3–8, 20 sn): 0–100 tam sayı, değiştirilebilir, gizli. Göndermeyene sunucu 0–100 rastgele tam
   sayı atar (sonuçta normal seçim gibi görünür). Hedef = ortalama / 2 (ondalık). En yakın tek kişiyse +2, sonraki
   derece(ler) +1 (aynı mesafedekilerin hepsi); en yakınlar eşitse hepsi +1 ve ikinci ödül yok.

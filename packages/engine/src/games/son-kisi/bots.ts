@@ -1,9 +1,9 @@
 import type { GameBot } from "../../testing/simulate.js";
-import { SON_KISI_MAX_MS } from "./types.js";
+import { SON_KISI_TOTAL_MS } from "./types.js";
 
-/** Rastgele anlarda KAÇ; tekrar basışlar yok sayılır, bitişten sonrakiler reddedilir. */
+/** Rastgele anlarda KAÇ; tekrar basışlar yok sayılır, tur arası ve bitişten sonrakiler reddedilir. */
 export const sonKisiBot: GameBot = {
-  durationMs: SON_KISI_MAX_MS,
+  durationMs: SON_KISI_TOTAL_MS,
   burstJitterMs: [40, 400, 2_000],
   generate: () => ({ kind: "escape" }),
 };

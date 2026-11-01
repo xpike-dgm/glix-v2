@@ -26,14 +26,16 @@ async function send(c: Client, payload: unknown): Promise<{ ok: boolean; reason?
 
 const pub = (c: Client) => c.room.match?.publicView as SonKisiPublicView;
 const view = (c: Client) => c.room.match?.view as SonKisiView;
+const goTo = (t: number) => k.clock.advance(Math.max(0, t - k.clock.now()));
 
-/** Gizli bitiş bilinmediği için saati küçük adımlarla ilerletir; sonuç aşaması başlayınca durur. */
-async function runToResults(a: Client, startedAt: number): Promise<void> {
-  for (let t = 500; t <= 21_000 && a.room.phase === "playing"; t += 250) {
-    k.clock.advance(Math.max(0, startedAt + t - k.clock.now()));
+/** Alarm bilinmediği için saati küçük adımlarla ilerletir; `stop` sağlanınca durur. */
+async function runUntil(a: Client, stop: () => boolean, limitMs = 80_000): Promise<void> {
+  const from = k.clock.now();
+  while (!stop() && k.clock.now() - from < limitMs) {
+    k.clock.advance(250);
     await sync();
   }
-  await until(() => a.room.phase === "results", "sonuç");
+  await until(stop, "beklenen evre");
 }
 
 async function newMatch(): Promise<{ cs: Client[]; ids: string[]; startedAt: number }> {
@@ -47,84 +49,88 @@ async function newMatch(): Promise<{ cs: Client[]; ids: string[]; startedAt: num
 }
 
 describe("son-kisi tam maç", () => {
-  it("son kaçan(lar) +1, hiç kaçmayan -1; bitiş zamanı ağdan hiç geçmez", async () => {
+  it("üç alarm; kimin kaçtığı oyun sırasında ağdan geçmez; alarm anı ve puanlar tur sonunda açılır", async () => {
     const { cs, ids, startedAt } = await newMatch();
     const [a, b, c, d] = cs as [Client, Client, Client, Client];
-    const goTo = (t: number) => k.clock.advance(Math.max(0, t - k.clock.now()));
+    const [aid, bid, , did] = ids as [string, string, string, string];
 
-    expect(pub(a).tension).toBe(0);
-    expect(pub(a).escaped).toEqual([]);
+    expect(pub(a)).toMatchObject({ round: 0, phase: "play", tension: 0, escapedCount: 0, results: [] });
     expect(await send(a, { kind: "bogus" })).toMatchObject({ ok: false });
 
     goTo(startedAt + 2_000);
     expect((await send(a, { kind: "escape" })).ok).toBe(true);
     expect((await send(a, { kind: "escape" })).ok).toBe(true); // yok sayılır
-    await until(() => pub(b).escaped.length === 1, "ilk kaçış");
-    expect(pub(b).escaped).toEqual([a.session.playerId]);
-    expect(view(a)).toEqual({ escaped: true });
-    expect(view(b)).toEqual({ escaped: false });
+    await until(() => pub(b).escapedCount === 1, "ilk kaçış");
+    expect(view(a)).toEqual({ escaped: true, myMs: 2_000 });
+    expect(view(b)).toEqual({ escaped: false, myMs: null });
 
     // B ve D aynı sunucu milisaniyesinde kaçar: eşit zaman damgası.
     goTo(startedAt + 5_000);
     expect((await send(b, { kind: "escape" })).ok).toBe(true);
     expect((await send(d, { kind: "escape" })).ok).toBe(true);
-    await until(() => pub(c).escaped.length === 3, "üç kaçış");
+    await until(() => pub(c).escapedCount === 3, "üç kaçış");
 
-    // Oyun sürerken hiçbir görünümde süre/bitiş alanı yok; yalnız 0-3 gerilim.
+    // Tur sürerken: kimin kaçtığı, alarm, süre yok; yalnız sayı ve 0-3 gerilim.
     for (const o of cs) {
       expect([0, 1, 2, 3]).toContain(pub(o).tension);
-      expect(pub(o).result).toBeNull();
-      expect(pub(o).finished).toBe(false);
+      expect(pub(o).results).toEqual([]);
+      // `totals` (kapanmış turların toplamı) herkesi listeler; onun dışında hiçbir alanda oyuncu kimliği yok.
       const json = JSON.stringify(
-        o.updates.map((u) => [u.snapshot.match?.publicView, u.snapshot.match?.view]),
+        o.updates.map((u) => ({ ...(u.snapshot.match?.publicView as object | null), totals: null })),
       );
-      expect(json).not.toMatch(/endsAt|remaining|duration|deadline/i);
+      expect(json).not.toMatch(/endsAt|remaining|duration|deadline|alarm/i);
+      expect(json).not.toContain(aid);
     }
 
-    // Oyun gizli bitişte kesin biter; geç basış reddedilir.
-    await runToResults(a, startedAt);
-    expect(await send(c, { kind: "escape" })).toMatchObject({ ok: false });
+    // 1. alarm: tur arası açılışı.
+    await runUntil(a, () => pub(a)?.phase === "gap");
+    expect(await send(c, { kind: "escape" })).toMatchObject({ ok: false, reason: "between_rounds" });
+    const r0 = pub(a).results[0];
+    expect(r0?.alarmMs).toBeGreaterThanOrEqual(8_000);
+    expect(r0?.alarmMs).toBeLessThanOrEqual(16_000);
+    expect(r0?.rang).toBe(true);
+    expect([...(r0?.last ?? [])].sort()).toEqual([bid, did].sort());
+    expect(r0?.second).toEqual([aid]);
+    expect(r0?.points[bid]).toBe(2);
+    expect(r0?.points[aid]).toBe(1);
+    expect(r0?.escapes.map((e) => e.ms)).toEqual([2_000, 5_000, 5_000]);
+    expect(Object.values(r0?.points ?? {}).every((p) => p >= 0)).toBe(true);
 
-    const [aid, bid, cid, did] = ids as [string, string, string, string];
-    const expected = { [aid]: 0, [bid]: 1, [cid]: -1, [did]: 1 };
-    expect(a.room.match?.result?.awards).toEqual(expected);
+    // 2. ve 3. turda kimse kaçmaz; oyun son açılıştan sonra (Devam et ya da süre) biter.
+    await runUntil(a, () => a.room.phase === "results", 120_000);
+    const expected = { [aid]: 1, [bid]: 2, [ids[2] as string]: 0, [did]: 2 };
     expect(a.room.match?.result?.miniScores).toEqual(expected);
-    expect(a.room.players.map((p) => p.score)).toEqual(ids.map((id) => expected[id]));
-    const r = pub(a).result;
-    expect(r?.missed).toEqual([cid]);
-    expect([...(r?.last ?? [])].sort()).toEqual([bid, did].sort());
-    expect(r?.escapes.map((e) => e.ms)).toEqual([2_000, 5_000, 5_000]);
-    // Sonuçta da bitiş zamanı yok.
-    await sync();
-    expect(JSON.stringify(a.room.match)).not.toMatch(/endsAt/);
+    // B ve D birincide eşit: ikisi +2, sonraki A +1, C 0 ödülsüz.
+    expect(a.room.match?.result?.awards).toEqual({ [aid]: 1, [bid]: 2, [ids[2] as string]: 0, [did]: 2 });
+    expect(pub(a).results).toHaveLength(3);
+    expect(JSON.stringify(a.room.match)).not.toMatch(/endsAt|alarmAt/);
   });
 
-  it("kimse kaçmazsa herkes -1 alır", async () => {
-    const { cs, ids, startedAt } = await newMatch();
+  it("kimse kaçmazsa kimse puan almaz (eksi yok)", async () => {
+    const { cs, ids } = await newMatch();
     const a = cs[0] as Client;
-    await runToResults(a, startedAt);
-    expect(a.room.match?.result?.awards).toEqual(Object.fromEntries(ids.map((id) => [id, -1])));
-    expect(a.room.players.map((p) => p.score)).toEqual(ids.map(() => -1));
-    expect(pub(a).result?.last).toEqual([]);
+    await runUntil(a, () => a.room.phase === "results", 120_000);
+    expect(a.room.match?.result?.awards).toEqual(Object.fromEntries(ids.map((id) => [id, 0])));
+    expect(a.room.players.map((p) => p.score)).toEqual(ids.map(() => 0));
   });
 
-  it("gerilim süre ilerledikçe yükselir ve oyun 10-20 sn içinde biter", async () => {
+  it("gerilim tur içinde yükselir; her tur 8-16 sn sürer", async () => {
     const { cs, startedAt } = await newMatch();
     const a = cs[0] as Client;
     let max = 0;
     let endedAt = 0;
-    for (let t = 500; t <= 20_500; t += 500) {
-      k.clock.advance(startedAt + t - k.clock.now());
+    for (let t = 250; t <= 16_500; t += 250) {
+      goTo(startedAt + t);
       await sync();
-      if (a.room.phase !== "playing") {
+      if (pub(a).phase !== "play") {
         endedAt = t;
         break;
       }
       expect(pub(a).tension).toBeGreaterThanOrEqual(max);
       max = pub(a).tension;
     }
-    expect(endedAt).toBeGreaterThanOrEqual(10_000);
-    expect(endedAt).toBeLessThanOrEqual(20_500);
+    expect(endedAt).toBeGreaterThanOrEqual(8_000);
+    expect(endedAt).toBeLessThanOrEqual(16_250);
     expect(max).toBe(3);
   });
 });

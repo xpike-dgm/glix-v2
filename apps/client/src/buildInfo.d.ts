@@ -32,3 +32,5 @@ declare const __CAGRISIM_PROPS__: readonly string[] | undefined;
 declare const __RUSVET_PROPS__: readonly string[] | undefined;
 /** İttifak görsellerinden derlemede var olanlar (`public/assets/props/ittifak/<ad>.webp`, uzantısız). */
 declare const __ITTIFAK_PROPS__: readonly string[] | undefined;
+/** Son Kişi görsellerinden derlemede var olanlar (`public/assets/props/son-kisi/<ad>.webp`, uzantısız). */
+declare const __SON_KISI_PROPS__: readonly string[] | undefined;

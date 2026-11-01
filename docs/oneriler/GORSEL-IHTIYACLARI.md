@@ -369,3 +369,39 @@ istemez; dosya konunca kod değişmeden kullanılır (`__ITTIFAK_PROPS__`, `itti
   (`apps/client/src/games/ittifak/sounds.ts`). Ses alanı isterse gerçek kayıtlarla değiştirebilir. Öneri dosyasındaki
   müzik için dosya gerekir (şu an yok): pazarlık için alçak, mırıltılı, sözsüz "entrika" döngüsü (konuşmayı
   bastırmayacak düzeyde) ve oy okuma için davul rulosu katmanı.
+
+## Son Kişi
+
+Ortak stil: oyunun mevcut görselleriyle uyumlu (`apps/client/public/assets/worlds/son-kisi-*.webp`: karanlık bilim-kurgu
+koridoru, koyu metal duvar panelleri, cam gibi parlak siyah zemin, camgöbeği (#2ef2ff) neon şeritler ve kırmızı (#ff3b5c)
+uyarı ışıkları, koridorun sonunda kırmızı çerçeveli çift kanatlı kapı; `props/genel/kacis-kolu.webp`: kalın hatlı
+çizgi-roman/oyun ikonu stili, neon vurgulu). Yer `apps/client/public/assets/props/son-kisi/<ad>.webp`. Dosya yokken
+ekran CSS/SVG karşılığını çizer ve dosyayı hiç istemez; dosya konunca kod değişmeden kullanılır (`__SON_KISI_PROPS__`,
+`sonKisiProp()` — Sözlük Blöfü düzeni). Yazı YOK. Koridor zemini (telefon 9:16 ve TV 16:9) için yeni dosya gerekmedi:
+mevcut `worlds/son-kisi-portrait.webp` ve `worlds/son-kisi-landscape.webp` tam ekran sahne olarak kullanılıyor (SK-U1,
+SK-U14).
+
+- **SK-U1 · kaçış kapısı, açık** — `apps/client/public/assets/props/son-kisi/kapi-acik.webp` · 3:4 dikey, 480×640 ·
+  şeffaf arka plan · Dünya görselindeki kapının önden, düz bakışlı hâli: kalın kırmızı neon çerçeve, iki kanat yanlara
+  çekilmiş (açık), içeriden beyaz-pembe sıcak ışık taşıyor (dışarısı, kurtuluş), zeminde ışık yansıması. Kenarlar
+  temiz kesik (kod koridorun sonuna, ~150 px genişlikte koyar). · Geçici: CSS kırmızı çerçeve + iç ışık, kenarlarda
+  ince iki kanat.
+- **SK-U1 · kaçış kapısı, kapalı** — `apps/client/public/assets/props/son-kisi/kapi-kapali.webp` · 3:4 dikey, 480×640 ·
+  şeffaf arka plan · Aynı kapı, kanatlar ortada birleşmiş (kapalı), çerçeve ışığı sönük kırmızı, kanatlar koyu metal
+  (camgöbeği ince çizgiler). Kendi kaçışından sonra ve alarmda gösterilir; açık hâliyle birebir aynı kadraj. · Geçici:
+  CSS kanatlar ortaya kayar, ışık söner.
+- **SK-U5 · kepenk** — `apps/client/public/assets/props/son-kisi/kepenk.webp` · 3:4 dikey, 480×640 · şeffaf arka plan ·
+  Kapı açıklığını kapatan endüstriyel metal kepenk (yatay oluklu çelik lameller, gri-mavi, yer yer çizik), alt kenarda
+  sarı-siyah tehlike şeridi, üstte kırmızı alarm lambası yansıması. Alarmda yukarıdan iner (kod kaydırır). · Geçici:
+  CSS gri lameller + sarı alt şerit.
+- **SK-U1 · karakter pozları (karakter alanı işi)** — tam boy karakter bugün mevcut karakter sisteminin dinlenme duruşuyla
+  (`CharacterPoster`, `focus: full`) çiziliyor ve hafif basık/eğik CSS ile "çömelmiş" gösteriliyor; KAÇ'ta CSS ile
+  kapıya kayıp küçülüyor. Karakter alanına iş: rig'e "çömelme/koşmaya hazır" ve "koşu" pozları (dans dosyası gibi
+  tek kare ya da kısa döngü). · Geçici: dinlenme duruşu + CSS.
+- **SK-U4 · tavan lambaları** — yeni dosya gerekmedi: üç lamba CSS ile (mavi → turuncu → kırmızı ışıklı daireler).
+- **ses** (dosya gerekmedi) — SK-U15 sesleri (kendi kaçışın "vuş" + kapı çarpması, uzaktan kapı, kalp atışı (içeridekilerde
+  düzeye göre 70/100/140 dk sürekli), "SON İKİ" / "SON KİŞİ" gongu, alarm sireni, kepenk çarpması, kıl payı "çın", son kişi
+  altın fanfarı, yeni tur "HAZIR" tonu) mevcut ses sistemiyle üretildi (`apps/client/src/games/son-kisi/sounds.ts`); her olay
+  sesi geçişte bir kez çalar. Ses alanı isterse gerçek kayıtlarla değiştirebilir. **Müzik için dosya gerekir (şu an yok):**
+  sözsüz alçak koridor uğultusu (drone) ve gerilim düzeyine (1–3) bağlı eklenen üç katman (SK-U15; müzik alanı için kod
+  isteği: katmanın oyun anına bağlı açılması).

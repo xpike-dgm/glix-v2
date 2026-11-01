@@ -24,6 +24,7 @@
  *   tv-rus-*                  Rus Ruleti evreleri (ör. tv-rus-wait, tv-rus-boom, tv-rus-over)
  *   tv-kareler-*              Gizli Kareler evreleri (ör. tv-kareler-choosing2, tv-kareler-final-bonus&t=4500)
  *   tv-gizli-*                Gizli Hırsız evreleri (ör. tv-gizli-stir, tv-gizli-outro-multi&t=4400)
+ *   tv-sonkisi-*              Son Kişi evreleri (ör. tv-sonkisi-tense, tv-sonkisi-gap, tv-sonkisi-reveal)
  *   tv-sizma-*                Sızma evreleri (ör. tv-sizma-clue, tv-sizma-runoff, tv-sizma-unmask&t=5200)
  */
 import { setState } from "../net/store.js";
@@ -73,6 +74,9 @@ export async function startTvMock(mock: string, params: URLSearchParams): Promis
     } else if (kind.startsWith("gizli-")) {
       const m = await import("./mockGizliHirsiz.js");
       m.startGizliHirsizMockAs(kind, params, true);
+    } else if (kind.startsWith("sonkisi-")) {
+      const m = await import("./mockSonKisi.js");
+      m.startSonKisiMock(kind, params, true);
     } else if (kind.startsWith("ittifak-")) {
       const m = await import("./mockIttifak.js");
       m.startIttifakMockAs(kind, params, true);
