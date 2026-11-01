@@ -3,6 +3,7 @@
  * kod istekleri, onaylananlar havuzu, tek tık aktarım, sürüm ve arşiv. MCP, SSH komut aracı ve sahip arayüzü
  * yalnız bu sınıfı çağırır; alan yetkisi her çağrıda burada denetlenir.
  */
+
 import { randomBytes } from "node:crypto";
 import type { Anahtarlar } from "./anahtar.js";
 import { type Db, islem, json } from "./db.js";
@@ -22,6 +23,7 @@ import {
   hazirNotMetni,
   TALIMAT_ONERI_ESIGI,
 } from "./ortak/durum.js";
+import { gorselAlaniMi, gorselKuraliBolumu } from "./ortak/gorselKurali.js";
 import {
   aslaOtomatik,
   DENETIM_ARALIGI,
@@ -362,6 +364,36 @@ export class Merkez {
           rol: b.rol,
           meta: bilgi.meta,
         });
+      }
+      // Görsel kuralı (sözleşme bölüm 10): yapay zekâ teslimindeki görsellerin üretim yöntemi.
+      if (kaynak !== "elle" && gorselAlaniMi(alan) && kd.some((d) => d.tur === "png" || d.tur === "svg")) {
+        if (g.uretimYontemi === "kod")
+          ek.push(
+            satir(
+              "ortak",
+              "uretim-yontemi",
+              "kaldi",
+              "Bu alanda görseller görsel üretim becerisi ya da aracıyla üretilmeli; kodla (Python/PIL, SVG, canvas) çizilmiş görsel kabul edilmez. Görsel üretemiyorsan yalnız metin önerisi gönder.",
+            ),
+          );
+        else if (g.uretimYontemi === null)
+          ek.push(
+            satir(
+              "ortak",
+              "uretim-yontemi",
+              "uyari",
+              'Teslim görsellerin nasıl üretildiğini bildirmiyor ("uretimYontemi": "gorsel-model" bekleniyor).',
+            ),
+          );
+        else
+          ek.push(
+            satir(
+              "ortak",
+              "uretim-yontemi",
+              "gecti",
+              "Görseller görsel üretim modeliyle üretildi (bildirim).",
+            ),
+          );
       }
       if (satirlar.length > SATIR_SINIRI) {
         ek.push(satir("ortak", "satir", "kaldi", `Bir öğede en çok ${SATIR_SINIRI} satır olabilir.`));
@@ -2041,7 +2073,14 @@ export class Merkez {
   /** Yapay zekânın okuduğu talimat: kayıtlı sürüm + zevk profili. */
   yzTalimati(alan: AlanId, now: number): { surum: number; metin: string } {
     const t = this.talimat(alan, now);
-    return { surum: t.surum, metin: `${t.metin.trimEnd()}\n${this.zevkBolumu(alan)}` };
+    let metin = t.metin.trimEnd();
+    // Görsel kuralı sahibin talimat metninden bağımsız, her zaman başlığın hemen altında.
+    if (gorselAlaniMi(alan)) {
+      const i = metin.indexOf("\n");
+      const bolum = gorselKuraliBolumu(alan);
+      metin = i < 0 ? `${metin}\n\n${bolum}` : `${metin.slice(0, i)}\n\n${bolum}${metin.slice(i)}`;
+    }
+    return { surum: t.surum, metin: `${metin}\n${this.zevkBolumu(alan)}` };
   }
 
   // ---- Köken (UM-F7) --------------------------------------------------------------------------------------

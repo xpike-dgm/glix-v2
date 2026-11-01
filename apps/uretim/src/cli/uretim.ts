@@ -207,6 +207,15 @@ export async function calistirKomut(o: CliOrtami, ham: string): Promise<unknown>
     case "teslim-et": {
       const paket = args[0];
       const girdi = paket ? await paketHazirla(o, paket) : jsonGirdi(o);
+      // `teslim-et <paket> gorsel-model`: görsellerin nasıl üretildiği (teslim.json'daki "uretimYontemi" yerine).
+      const yontem = args[1];
+      if (yontem !== undefined) {
+        if (yontem !== "gorsel-model" && yontem !== "kod")
+          throw new CliHatasi(
+            'Üretim yöntemi "gorsel-model" ya da "kod" olmalı: teslim-et <paket> gorsel-model',
+          );
+        girdi.uretimYontemi = yontem;
+      }
       const r = await arac(o, ad, girdi);
       if (komut === "teslim-et" && paket)
         rmSync(gelenYolu(o.gelen, paket, "paket"), { recursive: true, force: true });

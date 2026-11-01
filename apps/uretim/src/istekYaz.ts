@@ -8,9 +8,16 @@
  * zaman aşımı, günlük istek sınırı, anahtar günlüğe/yanıta gitmez. Modele yalnız sahibin isteği, alan adı ve alanın
  * kuralları gider; oyuncu verisi gitmez.
  */
+
 import type { Db } from "./db.js";
 import { kayit } from "./http.js";
 import { type AlanId, alanTanimi } from "./ortak/alanlar.js";
+import {
+  GORSEL_KURALI_KISA,
+  gorselAlaniMi,
+  gorselKuraliBolumu,
+  gorselKuraliIstemi,
+} from "./ortak/gorselKurali.js";
 import type { IsKaydi } from "./ortak/tipler.js";
 
 export const AI_URL = "https://api.anthropic.com/v1/messages";
@@ -198,44 +205,68 @@ export function donusturucuKur(
     acik: key !== "",
     kullanim: (now) => ({ bugun: sayi(now), sinir }),
     async taslak(g, now) {
-      const yedek = { taslak: kaliptanTaslak(g), kaynak: "kalip" as const };
-      if (!key || sayi(now) >= sinir) return yedek;
-      artir(now);
-      const p = modelIstemi(g);
-      const kontrol = new AbortController();
-      const zaman = setTimeout(() => kontrol.abort(), o.zamanAsimi ?? AI_ZAMAN_ASIMI_MS);
-      try {
-        const r = await doFetch(AI_URL, {
-          method: "POST",
-          headers: {
-            "x-api-key": key,
-            "anthropic-version": AI_API_SURUMU,
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            model: AI_MODEL,
-            max_tokens: MAX_TOKENS,
-            thinking: { type: "disabled" },
-            system: p.system,
-            messages: [{ role: "user", content: p.user }],
-          }),
-          redirect: "manual",
-          signal: kontrol.signal,
-        });
-        if (r.status < 200 || r.status >= 300) {
-          console.error(JSON.stringify({ seviye: "uyari", olay: "istek_model_hata", durum: r.status }));
-          return yedek;
-        }
-        const t = taslakAyristir(yanitMetni(await r.json()));
-        return t ? { taslak: t, kaynak: "model" } : yedek;
-      } catch {
-        // Hata metni anahtar içerebilir: yalnız genel kayıt.
-        console.error(JSON.stringify({ seviye: "uyari", olay: "istek_model_hata" }));
-        return yedek;
-      } finally {
-        clearTimeout(zaman);
-      }
+      const r = await hamTaslak(g, now);
+      // Görsel kuralı model çıktısına ve kalıba kodla eklenir: model çıkaramaz.
+      return { ...r, taslak: gorselKuraliEkle(g.alan, r.taslak) };
     },
+  };
+
+  async function hamTaslak(
+    g: IstekGirdisi,
+    now: number,
+  ): Promise<{ taslak: IsTaslagi; kaynak: "model" | "kalip" }> {
+    const yedek = { taslak: kaliptanTaslak(g), kaynak: "kalip" as const };
+    if (!key || sayi(now) >= sinir) return yedek;
+    artir(now);
+    const p = modelIstemi(g);
+    const kontrol = new AbortController();
+    const zaman = setTimeout(() => kontrol.abort(), o.zamanAsimi ?? AI_ZAMAN_ASIMI_MS);
+    try {
+      const r = await doFetch(AI_URL, {
+        method: "POST",
+        headers: {
+          "x-api-key": key,
+          "anthropic-version": AI_API_SURUMU,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: AI_MODEL,
+          max_tokens: MAX_TOKENS,
+          thinking: { type: "disabled" },
+          system: p.system,
+          messages: [{ role: "user", content: p.user }],
+        }),
+        redirect: "manual",
+        signal: kontrol.signal,
+      });
+      if (r.status < 200 || r.status >= 300) {
+        console.error(JSON.stringify({ seviye: "uyari", olay: "istek_model_hata", durum: r.status }));
+        return yedek;
+      }
+      const t = taslakAyristir(yanitMetni(await r.json()));
+      return t ? { taslak: t, kaynak: "model" } : yedek;
+    } catch {
+      // Hata metni anahtar içerebilir: yalnız genel kayıt.
+      console.error(JSON.stringify({ seviye: "uyari", olay: "istek_model_hata" }));
+      return yedek;
+    } finally {
+      clearTimeout(zaman);
+    }
+  }
+}
+
+/**
+ * Görsel alanlarında iş taslağına sabit kural: açıklamanın başına "GÖRSEL KURALI" bölümü ve kısıtların başına kısa
+ * hatırlatma (kısıtlar en çok 10 madde). Zaten varsa yinelenmez.
+ */
+export function gorselKuraliEkle(alan: AlanId, t: IsTaslagi): IsTaslagi {
+  if (!gorselAlaniMi(alan)) return t;
+  const bolum = gorselKuraliBolumu(alan);
+  const govde = t.aciklama.startsWith(bolum) ? t.aciklama.slice(bolum.length) : t.aciklama;
+  return {
+    ...t,
+    kisitlar: [GORSEL_KURALI_KISA, ...t.kisitlar.filter((k) => k !== GORSEL_KURALI_KISA)].slice(0, 10),
+    aciklama: `${bolum}\n${[...govde.trim()].slice(0, Math.max(0, 2000 - bolum.length - 1)).join("")}`.trim(),
   };
 }
 
@@ -263,10 +294,13 @@ export function istemUret(alan: AlanId, baglanti: "mcp" | "ssh", isler: readonly
       ? `Sırada ${isler.length} iş var: ${isler.slice(0, 8).map(ozet).join("; ")}. Birini bitirince sıradakine geç.`
       : "";
   const devam = 'Bundan sonra yalnız "devam" yazarsam açık işleri sırayla bitir ve geri bildirimleri oku.';
+  // Görsel alanlarında kural ikinci satırda, öne çıkarılmış (istem kodla kurulur; çıkarılamaz).
+  const kural = gorselAlaniMi(alan) ? `ÖNEMLİ — ${gorselKuraliIstemi(alan)}` : "";
   if (baglanti === "ssh") {
     const k = (c: string): string => `ssh {{SSH_KULLANICI}}@{{SSH_ADRES}} ${c}`;
     return [
       `${a.ad} alanındaki işin için Üretim Merkezi'ne SSH ile bağlan.`,
+      kural,
       "Sunucu: {{SSH_ADRES}} · Kullanıcı: {{SSH_KULLANICI}} · Parola: {{SSH_PAROLA}}",
       `Önce \`${k("uretim talimat-oku")}\`, sonra ${ilk ? `\`${k(`uretim is-oku ${ilk.id}`)}\`` : `\`${k("uretim isleri-listele")}\``} ve \`${k("uretim geri-bildirim-oku")}\`.`,
       ilk ? `İş (istek kartından alıntı): ${ozet(ilk)}` : "Açık işleri sırayla bitir.",
@@ -279,6 +313,7 @@ export function istemUret(alan: AlanId, baglanti: "mcp" | "ssh", isler: readonly
   }
   return [
     `${a.ad} alanındaki işin için Üretim Merkezi bağlantını kullan.`,
+    kural,
     "Uç adresi: {{MCP_ADRES}} — bağlantı ayarına şu anahtarı gir (Authorization: Bearer): {{MCP_ANAHTAR}}",
     `Önce talimat_oku, sonra ${ilk ? `is_oku (id: ${ilk.id})` : "isleri_listele"} ve geri_bildirim_oku.`,
     ilk ? `İş (istek kartından alıntı): ${ozet(ilk)}` : "Açık işleri sırayla bitir.",

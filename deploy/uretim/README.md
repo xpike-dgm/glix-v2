@@ -114,10 +114,16 @@ karşılığı) ya da SFTP ile yalnız kendi `gelen/` ve `okunur/` klasörünü 
    satırlarını `/srv/glix/uretim/ssh-gunluk/girisler.log` dosyasına yazar; site bunu salt okunur okur ve alan
    sayfasında son başarılı/başarısız girişleri gösterir (IP'nin son parçası gizlenir).
 
+8. **Görsel referansları (sözleşme bölüm 10):** `ssh/referans.sh` oyunun canlı varlıklarını
+   (`/srv/glix/current/apps/client/public/assets`) her görsel alanın `okunur/referans/<klasör>/` altına salt okunur
+   kopyalar (eşleme `ssh/referanslar.txt`; yalnız webp/png/svg/json, bağ izlenmez). Saatlik ve her canlıya alıştan
+   sonra çalıştır.
+
 Cron örneği (root):
 ```
 * * * * * /srv/glix/current/deploy/uretim/ssh/eslestir.sh
 * * * * * /srv/glix/current/deploy/uretim/ssh/girisler.sh
+17 * * * * /srv/glix/current/deploy/uretim/ssh/referans.sh
 ```
 
 Kullanım (yapay zekâ tarafı; istem bunları kopyalanınca doldurulmuş verir): `ssh uretim-magaza@dgmcraft.online uretim talimat-oku`; paket için
