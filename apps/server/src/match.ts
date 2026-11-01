@@ -1008,6 +1008,26 @@ export function matchViewFor(rt: Runtime, room: Room, playerId: string | null): 
   return guard("view", () => game.view(match.state, who, ctx));
 }
 
+/**
+ * Botun karar girdisi (bots.ts): herkese açık görünüm, YALNIZ botun kendi `view`'ı (`matchViewFor` ile; başka
+ * oyuncunun gizli bilgisi asla) ve bağlı katılımcılar. Yalnız `playing` aşamasında; değilse null.
+ */
+export function botInputs(
+  rt: Runtime,
+  room: Room,
+  playerId: string,
+): { publicView: unknown; privateView: unknown; connected: readonly string[] } | null {
+  const match = room.match;
+  if (!match?.rng || room.phase !== "playing") return null;
+  const game = currentGame(match);
+  const ctx = ctxFor(rt, room, match);
+  return {
+    publicView: guard("publicView", () => game.publicView(match.state, ctx)),
+    privateView: matchViewFor(rt, room, playerId),
+    connected: ctx.connected,
+  };
+}
+
 /** "İlham ver" bu oyuncu için şu an kullanılabilir mi: özellik açık, Bozuk Telefon ilk cümle adımı, katılımcı. */
 function inspireOpen(rt: Runtime, room: Room, match: Match, playerId: string | null): playerId is string {
   if (!rt.aiInspire.enabled || playerId === null || room.phase !== "playing" || !match.rng) return false;

@@ -151,6 +151,15 @@ export type ClientMessage =
   | { type: "inspire"; round: number }
   | { type: "action"; seq: number; payload: unknown }
   | { type: "returnToLobby" }
+  /**
+   * Bot (yalnız test ortamlarında; `RoomSnapshot.bots` doluysa): yalnız host, yalnız lobi. `addBot` bir bot ekler,
+   * `fillBots` odayı botlarla doldurur, `removeBot` adı verilen botu, `clearBots` bütün botları çıkarır. Canlıda
+   * sunucu reddeder (`invalid_message`).
+   */
+  | { type: "addBot" }
+  | { type: "fillBots" }
+  | { type: "removeBot"; playerId: string }
+  | { type: "clearBots" }
   /** İstemci elindeki snapshot'a yama uygulayamadığında tam snapshot ister. */
   | { type: "resync" }
   /** Sayfa gizlendi/göründü (yalnız bildirim açıkken gönderilir). Sunucu yalnız gizli oyunculara bildirim yollar. */
@@ -274,6 +283,8 @@ export interface PlayerInfo {
    * yalnız dolu olanlar; misafirde alan yoktur. İstemci katalogda olmayan kimliği yok sayar (`parseCosmetics`).
    */
   cosmetics?: Cosmetics;
+  /** Sunucu içindeki sanal oyuncu (yalnız test ortamlarında); insan oyuncuda alan yoktur. */
+  bot?: true;
 }
 
 export interface GameInfo {
@@ -380,6 +391,8 @@ export interface RoomSnapshot {
   lobbyReady: string[];
   /** Sunucudaki tüm oyunlar (Oyunlar bölümü için). */
   catalog: GameInfo[];
+  /** Bu sunucuda odaya bot eklenebilir (yalnız test ortamları); canlıda alan yoktur. */
+  bots?: true;
   match: MatchSnapshot | null;
 }
 
@@ -596,6 +609,12 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       if (typeof id !== "string" || id.length === 0 || id.length > 64) return null;
       return { type: "kick", playerId: id };
     }
+    case "removeBot": {
+      if (!hasExactKeys(data, ["type", "playerId"])) return null;
+      const id = data.playerId;
+      if (typeof id !== "string" || id.length === 0 || id.length > 64) return null;
+      return { type: "removeBot", playerId: id };
+    }
     case "setGames": {
       if (!hasExactKeys(data, ["type", "gameIds"])) return null;
       const ids = data.gameIds;
@@ -781,6 +800,9 @@ export function parseClientMessage(raw: string): ClientMessage | null {
     case "startMatch":
     case "ready":
     case "continue":
+    case "addBot":
+    case "fillBots":
+    case "clearBots":
     case "returnToLobby": {
       if (!hasExactKeys(data, ["type"])) return null;
       return { type: data.type };

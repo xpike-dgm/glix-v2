@@ -54,6 +54,10 @@ Canlıda davranış birebir aynıdır (testler: `apps/server/src/ortam.test.ts`)
   yazısı. Sunucu `index.html`'i verirken ekler; istemci kodu değişmedi, canlıda hiçbir şey eklenmez.
 - `/health` yanıtında `ortam` alanı (canlıda yok).
 - test2'de taslak oyunlar açık (`GLIX_TASLAK_OYUNLAR=1`).
+- **Botlar**: lobide ev sahibine "Bot ekle / Odayı doldur / Botları çıkar" düğmeleri; tek botu çıkarmak için bot
+  kartına dokunulur. Botlar sunucu içinde sanal oyunculardır (hesapsız; Glix, rozet ve hesap istatistiği yazılmaz),
+  her oyunun test stratejisiyle (`packages/engine/src/games/bots.ts`) insan benzeri gecikmeyle oynar. Canlıda düğme
+  görünmez, istek `invalid_message` ile reddedilir. Ayrıntı: `apps/server/src/bots.ts`.
 
 ## Erişim
 

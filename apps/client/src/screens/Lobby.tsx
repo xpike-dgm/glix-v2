@@ -13,7 +13,16 @@ import {
 import { createEffect, createSignal, For, on, onCleanup, Show } from "solid-js";
 import { hapticReady, hapticTap } from "../fx/haptics.js";
 import { ready as readySound, tap as tapSound } from "../fx/sound.js";
-import { chooseAvatar, renameSelf, sendReaction, setLobbyReady, startMatch } from "../net/client.js";
+import {
+  addBot,
+  chooseAvatar,
+  clearBots,
+  fillBots,
+  renameSelf,
+  sendReaction,
+  setLobbyReady,
+  startMatch,
+} from "../net/client.js";
 import { inviteLink } from "../net/code.js";
 import { setNickname, state, toast } from "../net/store.js";
 import { Avatar } from "../ui/Avatar.js";
@@ -35,6 +44,7 @@ import { WorldBackdrop } from "../ui/WorldBackdrop.js";
 import { FriendInviteSheet } from "./FriendInviteSheet.js";
 import { GameThumb, LobbySettings } from "./LobbySettings.js";
 import {
+  botControlsVisible,
   cardsActive,
   emptySeats,
   friendsHint,
@@ -118,6 +128,45 @@ function ChosenStrip(props: { ids: string[]; names: string[]; crowded: boolean }
         </ul>
       </section>
     </Show>
+  );
+}
+
+/**
+ * Bot düğmeleri (yalnız test ortamlarında, `snap.bots` doluysa; yalnız ev sahibine). Botlar sunucuda oynar; burada
+ * yalnız ekleme, doldurma ve hepsini çıkarma var (tek botu çıkarmak için bot kartına dokunulur).
+ */
+function BotBar(props: { players: PlayerInfo[] }) {
+  const count = () => props.players.filter((p) => p.bot).length;
+  const full = () => props.players.length >= MAX_PLAYERS;
+  const tap = (fn: () => boolean): void => {
+    tapSound();
+    hapticTap();
+    fn();
+  };
+  return (
+    <section class="botbar rise" aria-label="Botlar">
+      <p class="botbar__label">
+        Botlarla dene <span class="botbar__tag">BOT</span>
+      </p>
+      <div class="botbar__row">
+        <button type="button" class="botbar__btn" disabled={full()} onClick={() => tap(addBot)}>
+          <PlusIcon size={18} />
+          <span>Bot ekle</span>
+        </button>
+        <button type="button" class="botbar__btn" disabled={full()} onClick={() => tap(fillBots)}>
+          <UsersIcon size={18} />
+          <span>Odayı doldur</span>
+        </button>
+        <button
+          type="button"
+          class="botbar__btn botbar__btn--danger"
+          disabled={count() === 0}
+          onClick={() => tap(clearBots)}
+        >
+          <span>Botları çıkar</span>
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -441,6 +490,9 @@ export function Lobby(props: { snap: RoomSnapshot }) {
                         <span class="seat__name">
                           <PlayerName name={player.nickname} cosmetics={player.cosmetics} />
                         </span>
+                        <Show when={player.bot}>
+                          <span class="seat__bot">BOT</span>
+                        </Show>
                         <PlayerTitle cosmetics={player.cosmetics} class="seat__title" />
                       </button>
                     );
@@ -476,6 +528,10 @@ export function Lobby(props: { snap: RoomSnapshot }) {
               <Show when={empty().more > 0}>
                 <p class="seats__more">+{empty().more} yer daha</p>
               </Show>
+            </Show>
+
+            <Show when={botControlsVisible(snap())}>
+              <BotBar players={snap().players} />
             </Show>
 
             <button type="button" class="lrow" onClick={() => setSettingsOpen(true)}>
@@ -614,6 +670,7 @@ export function Lobby(props: { snap: RoomSnapshot }) {
             target={menuTarget()}
             host={isHost()}
             targetIsHost={menuTarget()?.id === snap().hostId}
+            canEdit={snap().phase === "lobby"}
           />
 
           <ReactionLayer />

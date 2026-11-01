@@ -504,6 +504,21 @@ describe("parseClientMessage: kart mesajları", () => {
     ];
     for (const m of bad) expect(parseClientMessage(j(m)), j(m)).toBeNull();
   });
+  it("bot mesajları (test ortamı): tür ve gerekirse oyuncu kimliği; fazlası reddedilir", () => {
+    for (const type of ["addBot", "fillBots", "clearBots"])
+      expect(parseClientMessage(j({ type })), type).toEqual({ type });
+    expect(parseClientMessage(j({ type: "addBot", count: 3 }))).toBeNull();
+    expect(parseClientMessage(j({ type: "removeBot", playerId: "ab12" }))).toEqual({
+      type: "removeBot",
+      playerId: "ab12",
+    });
+    for (const bad of [
+      { type: "removeBot" },
+      { type: "removeBot", playerId: "" },
+      { type: "removeBot", playerId: 5 },
+    ])
+      expect(parseClientMessage(j(bad))).toBeNull();
+  });
   it("unplayCard yalnız tür taşır; ortak 'yalnız tür' mesajları (leaveRoom, resync, pushUnsubscribe) bozulmadı", () => {
     expect(parseClientMessage(j({ type: "unplayCard" }))).toEqual({ type: "unplayCard" });
     expect(parseClientMessage(j({ type: "unplayCard", x: 1 }))).toBeNull();

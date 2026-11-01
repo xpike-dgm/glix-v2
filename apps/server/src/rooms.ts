@@ -67,6 +67,7 @@ export function createRuntime(
     randomInt: pickInt,
     aiComment: disabledAiCommenter,
     aiInspire: disabledAiText,
+    botsEnabled: false,
   };
   return rt;
 }
@@ -206,7 +207,8 @@ export function clearHostGrace(room: Room): void {
 /** Host gittiyse en eski bağlı oyuncuya (yoksa en eski oyuncuya) devreder. */
 export function transferHost(room: Room): void {
   clearHostGrace(room);
-  const players = [...room.players.values()];
+  // Bot hiçbir zaman ev sahibi olmaz: insan kalmadıysa host değişmez (odadaki botlar da çıkarılır, bkz. removePlayer).
+  const players = [...room.players.values()].filter((p) => !p.bot);
   // Önce oyuncular (izleyiciler değil); kimse yoksa en eski bağlı, o da yoksa en eski kişi.
   const playing = players.filter((p) => !p.spectator);
   const next =
@@ -242,6 +244,7 @@ export function isNicknameTaken(room: Room, nickname: string, except?: Player): 
 /** Oyuncuyu odadan çıkarır; bağlantısını odadan ayırır (soket açık kalır). */
 export function removePlayer(rt: Runtime, room: Room, player: Player): void {
   if (!room.players.delete(player.id)) return;
+  player.bot?.stop();
   if (player.graceCancel) {
     player.graceCancel();
     player.graceCancel = null;
@@ -254,6 +257,12 @@ export function removePlayer(rt: Runtime, room: Room, player: Player): void {
     recordPresence(rt, room, player.id, false);
   }
   if (room.hostId === player.id) transferHost(room);
+  // Son insan çıktı: botlar tek başına odayı ayakta tutmaz; hepsi çıkar, oda boş oda gibi silinir.
+  const rest = [...room.players.values()];
+  if (!player.bot && rest.length > 0 && rest.every((p) => p.bot)) {
+    for (const bot of rest) removePlayer(rt, room, bot);
+    return;
+  }
   // Maçta oyuncu kalmadıysa (yalnız izleyiciler varsa) maç biter, izleyiciler oyuncu olarak lobiye döner.
   if (room.phase !== "lobby" && ![...room.players.values()].some((p) => !p.spectator)) clearMatch(rt, room);
   if (room.players.size === 0) scheduleEmptyDelete(rt, room);
@@ -309,6 +318,7 @@ export function deleteRoom(rt: Runtime, room: Room, reason: LeftReason = "closed
     room.deleteCancel = null;
   }
   for (const player of room.players.values()) {
+    player.bot?.stop();
     if (player.graceCancel) player.graceCancel();
     player.graceCancel = null;
     player.push = null;

@@ -566,6 +566,11 @@ export const sendPushSubscribe = (sub: { endpoint: string; p256dh: string; auth:
   rawSend({ type: "pushSubscribe", ...sub });
 export const sendPushUnsubscribe = (): boolean => rawSend({ type: "pushUnsubscribe" });
 export const kick = (playerId: string): boolean => rawSend({ type: "kick", playerId });
+/** Test ortamı botları (yalnız `RoomSnapshot.bots` doluysa; yalnız host, yalnız lobi). */
+export const addBot = (): boolean => rawSend({ type: "addBot" });
+export const fillBots = (): boolean => rawSend({ type: "fillBots" });
+export const removeBot = (playerId: string): boolean => rawSend({ type: "removeBot", playerId });
+export const clearBots = (): boolean => rawSend({ type: "clearBots" });
 /** Oyuncuyu yöneticilere bildirir; sonuç `reportStatus` ile izlenir. Gönderilemezse false. */
 export function sendReport(playerId: string, reason: ReportReason, note: string): boolean {
   beginReport();

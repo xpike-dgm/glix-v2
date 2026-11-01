@@ -108,6 +108,7 @@ function parsePlayer(v: unknown): PlayerInfo | null {
       ? { username: v.username }
       : {}),
     ...(cosmetics ? { cosmetics } : {}),
+    ...(v.bot === true ? { bot: true as const } : {}),
   };
 }
 
@@ -269,6 +270,7 @@ export function parseSnapshot(v: unknown): RoomSnapshot | null {
     stageCount: isNum(v.stageCount) ? Math.max(0, Math.floor(v.stageCount)) : 0,
     lobbyReady: v.lobbyReady,
     catalog,
+    ...(v.bots === true ? { bots: true as const } : {}),
     match,
   };
 }
