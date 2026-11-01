@@ -405,3 +405,22 @@ SK-U14).
   sesi geçişte bir kez çalar. Ses alanı isterse gerçek kayıtlarla değiştirebilir. **Müzik için dosya gerekir (şu an yok):**
   sözsüz alçak koridor uğultusu (drone) ve gerilim düzeyine (1–3) bağlı eklenen üç katman (SK-U15; müzik alanı için kod
   isteği: katmanın oyun anına bağlı açılması).
+
+## Açgözlülük Limiti
+
+Yeni görsel gerekmedi (öneri dosyasının paketi de "yok" der). Mühürlü jeton (AL-U4) mevcut `genel/rusvet-jetonu.webp`
+üstüne CSS kırmızı kesik mühür halkasıyla; sisli limit bandı (AL-M4), kasa defteri (AL-U3), Gözcü anahtar deliği ve buğulu
+cam (AL-U5), "TAŞIRAN" damgası (AL-U6), cam çatlağı ve altın yağmuru (AL-U8), kasa kapısı (AL-U15) ve jeton yığını simgeleri
+(AL-U2) CSS/SVG ile çizildi. TV (AL-U12) mevcut 16:9 zemini (`apps/client/public/assets/worlds/acgozluluk-limiti-landscape.webp`)
+koyu radyal örtüyle kullanır.
+
+- **İsteğe bağlı (öneri dosyası §6) · cam çatlağı, altın yağmuru, kasa kapısı dokuları** (Efekt Dokuları alanı) — bugünkü SVG
+  çizgi (`.tank__crack`), CSS altın daireler (`.tank__rain`) ve CSS çizgili kapı (`.tank__door`) oyunu eksiksiz çiziyor; bu
+  yüzden üretim listesine alınmadı. İstenirse ayrı bir görev olarak açılır.
+- **ses** (dosya gerekmedi; Ses Efektleri alanına iş) — AL-U5 / AL-U6 / AL-U8 / AL-U14 / AL-U15 kasa ses seti mevcut ses
+  sistemiyle kodla üretildi (`apps/client/src/games/acgozluluk-limiti/sounds.ts`, olay adları `acgozluluk.*`): jeton şıngırtısı
+  (sayıya göre 1–6 jeton, sayı büyüdükçe tiz; 0'da yumuşak "tık"), kasa mührü "klonk" (kilit), dişli tiki (son 5 sn, son 2 sn
+  çift), anahtar deliği "çıt" (yalnız Gözcü), kapak açılışı, şerit "tın" (8 yükselen nota), kalp atışı (limite 3 kala), cam
+  çatlaması + gümbürtü (PATLADI'da daha güçlü), altın arpej (AĞZINA KADAR'da uzun yağmur), sönük "hıh" (Bol bol yer var). Ses
+  alanı istenirse gerçek kayıtlarla değiştirebilir: hepsi ≤ 0,5 sn (gümbürtü ≤ 0,8 sn). Müzik: oyuna özel 12 sn'lik gerilim
+  döngüsü isteğe bağlı (yoksa kabuğun ortak gerilim yatağı çalar).

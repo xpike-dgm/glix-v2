@@ -2,10 +2,10 @@
  * Oyun başına oynama stratejileri. Her strateji görünümleri kendi küçük arayüzüyle okur (yalnız ihtiyaç duyduğu
  * alanlar); alan yoksa ya da tür beklenmedikse ya hiçbir şey yapmaz ya da hata verir (bots.ts güvenle düşer).
  *
- * Değişmekte olan oyunlar (Rüşvet ve Darbe, Açgözlülük Limiti, Ortalamanın Yarısı, Çizgiyi Geçme) burada
+ * Değişmekte olan oyunlar (Rüşvet ve Darbe, Ortalamanın Yarısı, Çizgiyi Geçme) burada
  * yok: onlarda bot `BOTS`'u kullanır. Son Kişi yalnız `phase`, `round`, `escaped` ve "escape"e dayanır.
  */
-import { ITTIFAK_BAND_MS, ittifakMaxPromises } from "@glix/engine";
+import { acgozlulukFairShare, ITTIFAK_BAND_MS, ittifakMaxPromises } from "@glix/engine";
 import { shapeStrokes } from "./cizim.js";
 import type { PlayCtx, PlayStep, PlayStrategy } from "./index.js";
 import {
@@ -423,7 +423,27 @@ const ittifakBot: PlayStrategy = (c) => {
   return null;
 };
 
+// ——— Açgözlülük Limiti (AL-M2): her tur biraz düşünür, çoğunlukla adil paya yakın seçer, sonra Tamam ———
+const acgozluluk: PlayStrategy = (c) => {
+  const p = rec(c.pub);
+  const v = rec(c.priv);
+  if (p.reveal !== null || v.locked === true) return null;
+  const round = num(p.round) ?? 1;
+  const max = num(p.maxChoice) ?? 3;
+  if (v.myChoice === null) {
+    const wait = thinking(c, `pick${round}`, 1_500, 6_000);
+    if (wait) return wait;
+    const share = acgozlulukFairShare(max);
+    const roll = c.rng.int(10);
+    // Çoğu zaman adil pay ya da bir altı; bazen bir üstü (açgözlü), nadiren hepsi.
+    const value = roll < 5 ? share : roll < 7 ? share - 1 : roll < 9 ? share + 1 : max;
+    return { action: { kind: "choose", value: Math.max(0, Math.min(max, value)) }, next: 800 };
+  }
+  return thinking(c, `lock${round}`, 1_000, 4_000) ?? { action: { kind: "lock" } };
+};
+
 export const STRATEGIES: Record<string, PlayStrategy> = {
+  "acgozluluk-limiti": acgozluluk,
   ittifak: ittifakBot,
   "sozluk-blofu": sozluk,
   "cagrisim-agi": cagrisim,

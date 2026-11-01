@@ -10,7 +10,11 @@ import { execFileSync } from "node:child_process";
  * kümesine düşer (güvenli taraf).
  */
 export const GAMES = {
-  "acgozluluk-limiti": { prefixes: ["acgozluluk"], mock: "mockAcgozluluk", smoke: "acgozluluk-choosing-5" },
+  "acgozluluk-limiti": {
+    prefixes: ["acgozluluk", "tv-acgozluluk"],
+    mock: "mockAcgozluluk",
+    smoke: "acgozluluk-choosing-5",
+  },
   "asiri-yukleme": { prefixes: ["asiri"], mock: "mockAsiri", smoke: "asiri-playing" },
   "bozuk-telefon": { prefixes: ["bt"], mock: "mockBozuk", smoke: "bt-write" },
   "butona-bas": {

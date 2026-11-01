@@ -5,14 +5,226 @@
 .lim .col {
   gap: 0;
 }
+.lim__body {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.lim__center {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.lim__side,
+.lim__bottom {
+  flex: none;
+}
+.lim__side:empty {
+  display: none;
+}
 
-/* Limit + seçim/toplam */
+/* ---- AL-U3: kasa defteri ---- */
+.ledger {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 4px;
+}
+.ledger__first {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-15);
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+.ledger__row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.ledger__box {
+  min-width: 76px;
+  min-height: 48px;
+  padding: 2px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 194, 59, 0.35);
+  background: linear-gradient(180deg, #1c2350, #10163a);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  touch-action: manipulation;
+}
+.ledger__round {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.ledger__val {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-13);
+}
+.ledger__box[data-state="ok"] {
+  border-color: rgba(182, 255, 59, 0.7);
+}
+.ledger__box[data-state="ok"] .ledger__val {
+  color: var(--lime);
+}
+.ledger__box[data-state="over"] {
+  border-color: rgba(255, 59, 92, 0.75);
+}
+.ledger__box[data-state="over"] .ledger__val {
+  color: #ff7088;
+}
+.ledger__box[data-state="now"] {
+  border-color: var(--gold);
+  animation: ledger-blink 1.4s ease-in-out infinite;
+}
+.ledger__box[data-state="next"] {
+  border-style: dashed;
+  border-color: rgba(142, 151, 199, 0.5);
+  background: var(--bg-0);
+}
+.ledger__box:disabled {
+  cursor: default;
+}
+@keyframes ledger-blink {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(255, 194, 59, 0);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(255, 194, 59, 0.6);
+  }
+}
+.ledger__card {
+  position: absolute;
+  top: calc(100% + 4px);
+  z-index: 20;
+  max-width: min(92vw, 360px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 2px solid var(--gold);
+  background: rgba(8, 12, 36, 0.97);
+  color: var(--text);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  text-align: left;
+}
+.ledger__card-title {
+  font-weight: 700;
+  font-size: var(--fs-13);
+}
+.ledger__card-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: var(--fs-13);
+}
+.ledger__card-item b {
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.ledger--big .ledger__box {
+  min-width: 96px;
+  min-height: 52px;
+}
+.ledger--big .ledger__val {
+  font-size: var(--fs-18);
+}
+
+/* Oyuncular: avatar, mini puan, kilit, Gözcü */
+.limcrew {
+  list-style: none;
+  margin: 4px auto 0;
+  padding: 2px 8px;
+  border-radius: 14px;
+  background: rgba(5, 8, 26, 0.82);
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.limcrew__seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 34px;
+}
+.limcrew__av {
+  position: relative;
+  display: inline-flex;
+}
+/* Kilit ✓ ve Gözcü 👁 rozetleri süstür (yazı değil): sözel bilgi "Gözcü: Mert" bandında. */
+.limcrew__av[data-lock="1"]::after,
+.limcrew__av[data-scout="1"]::before {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 11px;
+  line-height: 1;
+}
+.limcrew__av[data-lock="1"]::after {
+  content: "✓";
+  right: -4px;
+  bottom: -2px;
+  color: #1b2d00;
+  background: var(--lime);
+  font-weight: 900;
+}
+.limcrew__av[data-scout="1"]::before {
+  content: "👁";
+  left: -6px;
+  top: -5px;
+  background: var(--bg-0);
+}
+.limcrew__name {
+  font-size: 13px;
+  max-width: 8ch;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.limcrew__pts {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.limcrew__seat[data-me="1"] .limcrew__pts {
+  color: var(--text);
+}
+.limcrew__seat[data-off="1"] {
+  opacity: 0.5;
+}
+.limcrew__seat[data-off="1"] .limcrew__pts {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.limcrew--names .limcrew__seat {
+  min-width: 56px;
+}
+
+/* ---- Limit + seçim/toplam ---- */
 .lim__stats {
   flex: none;
   display: flex;
   justify-content: center;
-  gap: clamp(24px, 12vw, 56px);
-  margin-top: clamp(6px, 2.4dvh, 20px);
+  gap: clamp(20px, 10vw, 48px);
+  margin-top: clamp(2px, 1dvh, 10px);
 }
 .lim__stat {
   display: flex;
@@ -23,14 +235,23 @@
 .lim__num {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(36px, 11vw, 52px);
+  font-size: clamp(32px, 10vw, 46px);
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
   display: inline-block;
+  white-space: nowrap;
 }
 .lim__num--limit {
   color: var(--gold);
   text-shadow: 0 0 18px rgba(255, 194, 59, 0.55);
+}
+/* AL-M4: sisli limit, bant olarak yazılır */
+.lim__num--limit[data-fog="1"] {
+  color: #ffe2a0;
+  text-shadow:
+    0 0 14px rgba(220, 230, 255, 0.55),
+    0 0 26px rgba(255, 194, 59, 0.35);
+  filter: blur(0.3px);
 }
 .lim__num[data-empty="1"] {
   color: var(--text-dim);
@@ -43,20 +264,79 @@
   color: var(--lime);
 }
 
-/* Hazne sahnesi */
+/* AL-M3 / AL-U5: Gözcü bandı */
+.lim__scout {
+  flex: none;
+  margin: 2px auto 0;
+  padding: 2px 12px;
+  border-radius: 999px;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+  background: var(--bg-0);
+  text-align: center;
+}
+.lim__scout b {
+  color: var(--text);
+}
+.lim__scout--me {
+  color: #1a1200;
+  font-weight: 800;
+  background: linear-gradient(90deg, #ffd56a, var(--gold));
+  box-shadow: 0 0 16px rgba(255, 194, 59, 0.5);
+}
+.lim__scout--glint {
+  animation: scout-glint 1.2s ease-out both;
+}
+@keyframes scout-glint {
+  0% {
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+  30% {
+    box-shadow: 0 0 22px rgba(255, 255, 255, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+/* ---- Hazne sahnesi ---- */
 .lim__stage {
+  position: relative;
   flex: 1 1 0;
   min-height: 0;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  padding: 8px 0 10px;
+  padding: 6px 0 6px;
+}
+.lim__door {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8;
+  margin: 0;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: var(--fs-15);
+  color: #fff;
+  background: #a8102a;
+  box-shadow: 0 0 18px rgba(255, 59, 92, 0.6);
+  white-space: nowrap;
 }
 .tank {
   position: relative;
   height: 100%;
-  max-height: 420px;
   width: min(62vw, 250px);
-  min-height: 96px;
+  min-height: 200px;
+  max-height: 315px; /* AL-U10: seçimde %25 kısa */
+  transition: max-height 300ms var(--ease);
+}
+.tank[data-mode="open"] {
+  max-height: 420px;
+  min-height: 120px;
 }
 .tank__glass {
   position: absolute;
@@ -79,43 +359,113 @@
   pointer-events: none;
 }
 
-/* Limit çizgisi */
-.tank__line {
+/* AL-M4: sisli limit bandı; açılışta çizgiye daralır */
+.tank__fog {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: var(--lim);
-  height: 0;
-  border-top: 3px dashed var(--gold);
-  filter: drop-shadow(0 0 5px rgba(255, 194, 59, 0.7));
   z-index: 3;
+  min-height: 0;
+  border-top: 2px dashed rgba(255, 194, 59, 0.8);
+  border-bottom: 2px dashed rgba(255, 194, 59, 0.8);
+  background:
+    repeating-linear-gradient(100deg, rgba(230, 236, 255, 0.16) 0 14px, rgba(230, 236, 255, 0.05) 14px 30px),
+    linear-gradient(180deg, rgba(255, 214, 120, 0.12), rgba(200, 210, 255, 0.18));
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+}
+.tank__fog--line {
+  border-bottom: 0;
+  border-top: 3px dashed var(--gold);
+  background: none;
+  backdrop-filter: none;
+  filter: drop-shadow(0 0 5px rgba(255, 194, 59, 0.7));
 }
 .tank__tag {
   position: absolute;
   right: 8px;
-  bottom: 5px;
+  top: -12px;
   padding: 2px 8px;
   border-radius: 999px;
   background: var(--bg-0);
+  border: 1px solid rgba(255, 194, 59, 0.6);
   color: var(--gold);
   font-size: var(--fs-13);
   font-weight: 700;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
+.tank__fog--line .tank__tag {
+  top: -24px;
+}
 
-/* Kapalıyken: üstü kapalı jetonlar */
+/* AL-U1: kendi payın ve "herkes senin kadar" çizgisi */
+.tank__own {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--c) 40%, transparent),
+    color-mix(in srgb, var(--c) 18%, transparent)
+  );
+  transition: height 200ms var(--ease);
+}
+.tank__all {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  height: 0;
+  border-top: 3px dashed var(--c);
+  transition: bottom 200ms var(--ease);
+}
+.tank__all[data-fit="over"] {
+  border-top-color: var(--red);
+}
+.tank__all[data-fit="fits"] {
+  border-top-color: var(--lime);
+}
+/* AL-U1 yazısı: düğmelerin üstünde, etiketin yanında */
+.lim__all {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 999px;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  background: var(--bg-0);
+  border: 1px dashed currentColor;
+}
+.lim__all[data-fit="fits"] {
+  color: var(--lime);
+}
+.lim__all[data-fit="maybe"] {
+  color: var(--gold);
+}
+.lim__all[data-fit="over"] {
+  color: #ff7088;
+}
+.lim__assume {
+  flex-basis: 100%;
+  font-size: var(--fs-13);
+  font-style: italic;
+  color: var(--text-dim);
+}
+/* Raftaki kapalı jetonlar (AL-U10: limit bandının hemen altında) */
 .tank__pile {
   position: absolute;
   left: 8px;
   right: 8px;
-  bottom: 8px;
+  z-index: 4;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 6px;
+  gap: 8px 6px;
 }
 .tok {
+  position: relative;
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -124,7 +474,7 @@
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 14px;
-  color: #b4bcea;
+  color: #d4daf7;
   background: radial-gradient(circle at 35% 30%, #2a3270, #121a45 70%);
   border: 2px solid rgba(140, 160, 255, 0.35);
   animation: tok-bob 2.6s ease-in-out infinite;
@@ -147,6 +497,34 @@
   border-color: var(--lime);
   box-shadow: 0 0 12px rgba(182, 255, 59, 0.55);
 }
+/* AL-U13: kopan oyuncunun jetonu gri, "kopuk" */
+.tok--off {
+  color: #6c7290;
+  background: #2a2d3e;
+  border-color: #50546a;
+  box-shadow: none;
+  animation: none;
+  filter: grayscale(1);
+}
+/* Gözcü: jetonun çevresinde altın kesik halka (kim olduğu "Gözcü: Mert" bandında yazar). */
+.tok--scout {
+  outline: 2px dashed var(--gold);
+  outline-offset: 2px;
+}
+.tok--glint {
+  animation: tok-glint 1.2s ease-out both;
+}
+@keyframes tok-glint {
+  0% {
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+  35% {
+    box-shadow: 0 0 22px 6px rgba(255, 255, 255, 0.85);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
 @keyframes tok-bob {
   0%,
   100% {
@@ -157,23 +535,129 @@
   }
 }
 
-/* Açıldığında: herkesin jetonları dolar */
+/* AL-U15: kasa kapısı (süs, yalnız üst %20) */
+.tank__door {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 6;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 2px, transparent 2px 22px),
+    linear-gradient(180deg, #4a5274, #2b3150 80%, #1a1f38);
+  border-bottom: 4px solid #8b93b8;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  transition: height 120ms linear;
+}
+
+/* AL-U5: Gözcü'nün anahtar deliği (yalnız Gözcü'de) */
+.tank__keyhole {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(
+    circle at 50% 45%,
+    transparent 0 26%,
+    rgba(200, 210, 240, 0.72) 30%,
+    rgba(160, 170, 210, 0.86)
+  );
+  backdrop-filter: blur(3px);
+  animation: keyhole-in 360ms var(--ease) both;
+}
+.tank__keyhole-word {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(22px, 7vw, 30px);
+  letter-spacing: 0.04em;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: rgba(5, 8, 26, 0.92);
+}
+.tank__keyhole[data-word="rahat"] .tank__keyhole-word,
+.tank__peek-tag[data-word="rahat"] {
+  color: var(--lime);
+}
+.tank__keyhole[data-word="sinirda"] .tank__keyhole-word,
+.tank__peek-tag[data-word="sinirda"] {
+  color: var(--gold);
+}
+.tank__keyhole[data-word="sinirda"] .tank__keyhole-word {
+  animation: word-wave 0.6s ease-in-out infinite;
+}
+.tank__keyhole[data-word="tasiyor"] .tank__keyhole-word,
+.tank__peek-tag[data-word="tasiyor"] {
+  color: #ff6d84;
+}
+.tank__keyhole[data-word="tasiyor"] .tank__keyhole-word {
+  animation: word-boil 0.25s linear infinite;
+}
+.tank__peek-tag {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  z-index: 9;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  background: var(--bg-0);
+  border: 1px solid currentColor;
+}
+@keyframes keyhole-in {
+  from {
+    opacity: 0;
+    transform: scale(1.15);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes word-wave {
+  50% {
+    transform: translateY(-3px) rotate(-1deg);
+  }
+}
+@keyframes word-boil {
+  25% {
+    transform: translate(1px, -1px);
+  }
+  75% {
+    transform: translate(-1px, 1px);
+  }
+}
+
+/* ---- AL-U6: sıralı dolum ---- */
 .tank__fill {
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column-reverse;
+  z-index: 1;
 }
 .tank__seg {
-  display: block;
-  flex: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
   min-height: 3px;
   background: linear-gradient(180deg, color-mix(in srgb, var(--c), #fff 28%), var(--c));
   box-shadow:
     inset 0 2px 0 rgba(255, 255, 255, 0.35),
     inset 0 -2px 0 rgba(5, 8, 26, 0.55);
   transform-origin: bottom center;
-  animation: seg-in 380ms var(--ease) var(--d) both;
+  opacity: 0;
+  transform: translateY(-120%);
+}
+.tank__seg--in {
+  opacity: 1;
+  transform: none;
+  transition:
+    transform var(--dur, 300ms) cubic-bezier(0.3, 1.3, 0.6, 1),
+    opacity 120ms;
 }
 .tank__seg[data-me="1"] {
   box-shadow:
@@ -181,53 +665,119 @@
     inset 0 -2px 0 rgba(5, 8, 26, 0.55),
     inset 0 0 0 2px rgba(243, 245, 255, 0.85);
 }
-@keyframes seg-in {
-  from {
-    transform: scaleY(0);
-    opacity: 0;
+.tank__seg-tag {
+  margin-top: 1px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--bg-0);
+}
+.tank__seg--spill {
+  animation: seg-spill 420ms ease-out both;
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0 3px, transparent 3px 9px),
+    linear-gradient(180deg, color-mix(in srgb, var(--c), #fff 28%), var(--c));
+}
+@keyframes seg-spill {
+  0%,
+  100% {
+    transform: none;
   }
-  to {
-    transform: scaleY(1);
-    opacity: 1;
+  25% {
+    transform: translateX(-4px) rotate(-1deg);
+  }
+  60% {
+    transform: translateX(3px) rotate(1deg);
   }
 }
+.tank__pas {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  max-width: calc(100% - 12px);
+  z-index: 5;
+  padding: 0 8px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--bg-0);
+}
 
-/* Sonuç: altın ışık */
-.tank[data-verdict="ok"] .tank__glass {
+/* ---- AL-U8: kararlar ---- */
+.tank[data-over="0"] .tank__glass {
   border-color: var(--gold);
   box-shadow:
     0 0 36px rgba(255, 194, 59, 0.6),
     inset 0 0 30px rgba(255, 194, 59, 0.22);
-  transition-delay: var(--vd);
 }
-.tank[data-verdict="ok"] .tank__glow {
+.tank[data-over="0"] .tank__glow {
   background: radial-gradient(ellipse at 50% 100%, rgba(255, 214, 120, 0.55), rgba(255, 194, 59, 0) 70%);
-  animation: glow-in 600ms ease-out var(--vd) both;
+  animation: glow-in 600ms ease-out both;
 }
-/* Sonuç: kırmızı çatlak + sarsıntı */
-.tank[data-verdict="over"] .tank__glass {
+.tank[data-verdict="roomy"] .tank__glass {
+  border-color: #b8913a;
+  box-shadow: 0 0 12px rgba(255, 194, 59, 0.25);
+}
+.tank[data-verdict="roomy"] .tank__glow {
+  opacity: 0.35;
+  animation: none;
+}
+.tank[data-verdict="full"] .tank__glass {
+  box-shadow:
+    0 0 56px rgba(255, 214, 120, 0.9),
+    inset 0 0 40px rgba(255, 214, 120, 0.4);
+}
+.tank[data-over="1"] .tank__glass {
   border-color: var(--red);
   box-shadow:
     0 0 36px rgba(255, 59, 92, 0.6),
     inset 0 0 30px rgba(255, 59, 92, 0.25);
-  transition-delay: var(--vd);
 }
-.tank[data-verdict="over"] .tank__glow {
+.tank[data-over="1"] .tank__glow {
   background: radial-gradient(ellipse at 50% 40%, rgba(255, 59, 92, 0.45), rgba(255, 59, 92, 0) 72%);
-  animation: glow-in 300ms ease-out var(--vd) both;
+  animation: glow-in 300ms ease-out both;
 }
 .tank__crack {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 4;
+  z-index: 7;
   pointer-events: none;
   filter: drop-shadow(0 0 6px rgba(255, 59, 92, 0.9));
 }
 .tank__crack polyline {
   stroke-dasharray: 1;
-  animation: crack-draw 360ms ease-out var(--vd) both;
+  animation: crack-draw 360ms ease-out both;
+}
+.tank__rain {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+}
+.tank__rain i {
+  position: absolute;
+  top: -10%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff3c4, var(--gold) 60%, #b07a10);
+  box-shadow: 0 0 8px rgba(255, 214, 120, 0.9);
+  animation: rain-fall 1.4s cubic-bezier(0.4, 0, 0.9, 0.6) calc(var(--k) * 90ms) infinite;
+}
+@keyframes rain-fall {
+  to {
+    top: 105%;
+    transform: rotate(240deg);
+  }
 }
 @keyframes glow-in {
   from {
@@ -245,10 +795,13 @@
     stroke-dashoffset: 0;
   }
 }
-@media (prefers-reduced-motion: no-preference) {
-  .tank[data-verdict="over"] {
-    animation: tank-shake 520ms ease-out var(--vd) both;
-  }
+.tank[data-over="1"] {
+  animation: tank-shake 520ms ease-out both;
+}
+.tank[data-verdict="boom"] {
+  animation:
+    tank-shake 520ms ease-out both,
+    tank-shake 520ms ease-out 520ms both;
 }
 @keyframes tank-shake {
   0%,
@@ -272,15 +825,21 @@
   }
 }
 
-/* Sayı seçici */
+/* ---- Sayı seçici (AL-U2) ---- */
 .lim__pick {
   flex: none;
   padding-bottom: 4px;
 }
 .lim__hint {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
+  min-height: 1.3em;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px 6px;
   text-align: center;
-  font-size: var(--fs-15);
+  font-size: var(--fs-13);
   color: var(--text-dim);
 }
 .lim-chips {
@@ -289,15 +848,18 @@
   gap: 10px;
 }
 .lim-chip {
+  --hc: hsl(var(--h, 200) 85% 52%);
+  position: relative;
   width: 100%;
-  min-height: 64px;
+  min-height: 58px;
+  padding: 2px 0 12px;
   border-radius: var(--r-btn);
-  border: 2px solid rgba(46, 242, 255, 0.45);
-  background: var(--bg-2);
+  border: 2px solid color-mix(in srgb, var(--hc) 70%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--hc) 22%, #121845), #0e1438);
   color: var(--text);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 28px;
+  font-size: 26px;
   font-variant-numeric: tabular-nums;
   box-shadow: 0 4px 0 #070b22;
   touch-action: manipulation;
@@ -313,27 +875,128 @@
   box-shadow: 0 1px 0 #070b22;
 }
 .lim-chip[aria-pressed="true"] {
-  background: var(--cyan);
+  background: var(--hc);
   color: var(--bg-0);
-  border-color: var(--cyan);
+  border-color: var(--hc);
   box-shadow:
-    0 4px 0 #129aa3,
-    0 0 20px rgba(46, 242, 255, 0.55);
+    0 4px 0 color-mix(in srgb, var(--hc), #000 45%),
+    0 0 20px color-mix(in srgb, var(--hc) 60%, transparent);
 }
 .lim-chip:disabled {
   opacity: 0.55;
 }
+/* AL-U2: seçtiğin sayının karakteri (renk süs; asıl bilgi etiket) */
+.lim__label {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 999px;
+  font-size: var(--fs-13);
+  font-weight: 800;
+  color: var(--bg-0);
+  background: hsl(var(--h, 200) 85% 60%);
+}
+/* Jeton yığını: sayı büyüdükçe büyür (0'da boş) */
+.lim-chip__pile {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  width: calc(var(--k, 0) * 7px + 2px);
+  height: 6px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(90deg, var(--gold) 0 5px, transparent 5px 7px);
+  opacity: 0.85;
+}
 
-/* Sonuç şeridi */
+/* ---- AL-U4: mühürlü jeton ---- */
+.seal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 132px;
+  animation: seal-in 360ms var(--ease) both;
+}
+.seal__coin {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  flex: none;
+}
+.seal__coin img {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 10px rgba(255, 190, 40, 0.6));
+}
+.seal__num {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 40px;
+  color: #fff;
+  text-shadow:
+    0 2px 0 #5a3200,
+    0 0 10px rgba(0, 0, 0, 0.6);
+}
+.seal__ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 4px dashed #ff3b5c;
+  box-shadow: 0 0 12px rgba(255, 59, 92, 0.6);
+  transform: rotate(-12deg);
+}
+.seal__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 200px;
+  font-size: var(--fs-15);
+  color: var(--text-dim);
+}
+.seal__text b {
+  font-family: var(--font-display);
+  font-size: var(--fs-18);
+  color: #ff6d84;
+  letter-spacing: 0.04em;
+}
+@keyframes seal-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- AL-U12: izleyici ---- */
+.lim__watch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.lim__watch-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-18);
+  color: var(--gold);
+}
+
+/* ---- Sonuç ---- */
 .lim__result {
   flex: none;
   width: 100%;
-  container-type: inline-size;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding-bottom: 6px;
-  animation: result-in 320ms var(--ease) var(--vd, 0ms) both;
 }
 .lim__result[data-over="0"] {
   --verdict: var(--gold);
@@ -343,45 +1006,152 @@
 }
 .lim__verdict {
   margin: 0;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(30px, 9vw, 40px);
-  line-height: 1.1;
-  color: var(--verdict);
-  text-shadow: 0 0 22px color-mix(in srgb, var(--verdict) 65%, transparent);
-}
-.lim__points {
-  margin: 4px 0 10px;
-  font-size: var(--fs-18);
-  font-weight: 600;
-  color: var(--text);
-}
-.lim__strip {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-}
-.lim__who {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-}
-.lim__pick-num {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: var(--fs-18);
-  line-height: 1;
-  min-width: 1.4em;
-  text-align: center;
-  background: rgba(5, 8, 26, 0.88);
-  padding: 3px 4px;
-  border-radius: 999px;
+  font-size: clamp(28px, 8.5vw, 38px);
+  line-height: 1.05;
+  color: var(--verdict);
+  text-shadow: 0 0 22px color-mix(in srgb, var(--verdict) 65%, transparent);
+  animation: result-in 320ms var(--ease) both;
 }
-.lim__who[data-me="1"] .av {
-  outline: 2px solid var(--text);
-  outline-offset: 2px;
+.lim__result[data-verdict="roomy"] .lim__verdict {
+  color: #c9a24a;
+  text-shadow: none;
+}
+.lim__result[data-verdict="full"] .lim__verdict,
+.lim__result[data-verdict="boom"] .lim__verdict {
+  font-size: clamp(32px, 10vw, 44px);
+}
+.lim__verdict--wait {
+  color: var(--text-dim);
+  text-shadow: none;
+  font-size: var(--fs-18);
+  animation: none;
+}
+.lim__whatif {
+  margin: 4px 12px 0;
+  min-height: 1.3em;
+  text-align: center;
+  font-size: var(--fs-15);
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0;
+  transition: opacity 300ms;
+}
+.lim__whatif[data-on="1"] {
+  opacity: 1;
+}
+.lim__points {
+  margin: 2px 0 6px;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+/* AL-U9: isimli, sıralı şerit */
+.limstrip {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  border-radius: 14px;
+  background: rgba(5, 8, 26, 0.82);
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr));
+  gap: 6px 4px;
+}
+.limstrip__who {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+}
+.limstrip__av {
+  position: relative;
+  display: inline-flex;
+}
+.limstrip__name {
+  max-width: 100%;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.limstrip__who[data-me="1"] .limstrip__name {
+  font-weight: 800;
+  color: var(--text);
+}
+.limstrip__num {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.limstrip__coin {
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff3c4, var(--gold) 60%, #b07a10);
+}
+.limstrip__none {
+  font-family: var(--font-body, inherit);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.limstrip__sum {
+  font-size: 13px;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.limstrip__who[data-off="1"] {
+  opacity: 0.55;
+  filter: grayscale(0.8);
+}
+.limstrip__stamp {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-14deg);
+  padding: 0 3px;
+  border: 2px solid #ff3b5c;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #ff7088;
+  background: var(--bg-0);
+  animation: stamp-in 260ms cubic-bezier(0.2, 1.6, 0.5, 1) both;
+}
+.limstrip__award {
+  position: absolute;
+  right: -8px;
+  top: -6px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #1a1200;
+  background: var(--gold);
+}
+.limstrip__award[data-a="1"] {
+  background: #c9d2ff;
+}
+@keyframes stamp-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-14deg) scale(2.4);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-14deg) scale(1);
+  }
 }
 @keyframes result-in {
   from {
@@ -394,75 +1164,393 @@
   }
 }
 
-@media (max-height: 700px) and (orientation: portrait) {
-  .lim__stats {
-    margin-top: 2px;
-  }
-  .lim__num {
-    font-size: 34px;
-  }
-  .lim-chip {
-    font-size: 24px;
-  }
-  .lim__hint {
-    margin-bottom: 6px;
-    font-size: var(--fs-13);
-  }
-  .lim__points {
-    margin-bottom: 6px;
-    font-size: var(--fs-15);
-  }
-  .lim__verdict {
-    font-size: 28px;
+/* Hareket azaltma: kapı, sarsıntı, yağmur ve sallanma kapanır (AL-U6 / AL-U15) */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .lim .tank,
+  :root:not([data-motion="full"]) .lim .tok,
+  :root:not([data-motion="full"]) .lim .tank__seg--spill,
+  :root:not([data-motion="full"]) .lim .tank__keyhole-word {
+    animation: none;
   }
 }
-@media (orientation: landscape) and (max-height: 520px) {
-  .lim .col {
-    display: grid;
-    grid-template-columns: 128px minmax(0, 1fr);
-    grid-template-rows: auto auto 1fr auto;
-    column-gap: 16px;
+:root[data-motion="reduce"] .tank,
+:root[data-motion="reduce"] .tok,
+:root[data-motion="reduce"] .tank__seg--spill,
+:root[data-motion="reduce"] .tank__keyhole-word {
+  animation: none;
+}
+:root[data-motion="reduce"] .tank__seg--in {
+  transition: none;
+}
+
+/* Çok kısa ekran (320×568): hazne kısalır, Gözcü bandı ve ipucu sıkışır. */
+@media (max-height: 600px) and (orientation: portrait) {
+  .tank,
+  .tank[data-mode="open"] {
+    min-height: 110px;
   }
-  .lim__devam {
-    grid-column: 2;
-    grid-row: 4;
+  /* Açılışta mini puanlar şeritte (Σ): üstteki oyuncu satırı ve puan satırı yer açar. */
+  .lim__body[data-mode="open"] .limcrew,
+  .lim__body[data-mode="open"] .lim__points {
+    display: none;
   }
-  .lim .game__top {
-    grid-column: 1 / -1;
+  .lim__body[data-mode="open"] .limstrip__av {
+    zoom: 0.6;
+  }
+  .lim__body[data-mode="open"] .lim__verdict {
+    font-size: 24px;
+  }
+  /* Kısa haznede şerit adları sığmaz: adlar alttaki şeritte. */
+  .tank__seg-tag {
+    display: none;
+  }
+  /* Seçimde limit bandı haznenin etiketinde, kendi sayın etikette ve jetonunda: üst satır gizlenir. */
+  .lim__body[data-mode="closed"] .lim__stats {
+    display: none;
+  }
+  .lim__scout {
+    margin-top: 0;
+    padding: 0 10px;
+  }
+}
+
+/* Küçük ekran (360×640): hazne en az 200 px, düğmeler en az 56 px; defter kasaları 28 px */
+@media (max-height: 700px) and (orientation: portrait) {
+  .lim__num {
+    font-size: 26px;
   }
   .lim__stats {
-    grid-column: 2;
-    grid-row: 2;
-    margin: 0;
-    gap: 12px;
+    margin-top: 0;
   }
-  .lim__stat {
-    min-width: 70px;
+  .lim__hint {
+    margin-bottom: 4px;
   }
-  /* Çık düğmesi sol üstte durur; hazne onun altından başlar. */
+  .lim__assume {
+    display: none;
+  }
+  .lim .limcrew {
+    flex-wrap: nowrap;
+    gap: 2px;
+  }
+  .lim .limcrew__seat {
+    min-width: 0;
+    flex: 0 1 34px;
+  }
+  .lim .limcrew__av {
+    zoom: 0.8;
+  }
   .lim__stage {
-    grid-column: 1;
-    grid-row: 2 / 4;
-    padding-top: 48px;
+    padding: 2px 0;
   }
-  .tank {
-    width: 100%;
+  .lim .limstrip {
+    gap: 2px;
   }
-  .lim__pick,
-  .lim__result {
-    grid-column: 2;
-    grid-row: 3;
-    align-self: center;
+  .lim .limstrip__av {
+    zoom: 0.72;
   }
-  .lim__num {
-    font-size: 32px;
+  .lim .limstrip__num {
+    font-size: 18px;
+  }
+  .lim__whatif {
+    font-size: var(--fs-13);
   }
   .lim-chip {
     min-height: 56px;
+    font-size: 22px;
   }
-  .lim__hint {
+  .lim-chips {
+    gap: 8px;
+  }
+  .limcrew {
+    margin-top: 2px;
+  }
+  .ledger__box {
+    min-width: 64px;
+    padding: 0 6px;
+  }
+  .lim__verdict {
+    font-size: 26px;
+  }
+  .seal {
+    min-height: 104px;
+  }
+  .seal__coin {
+    width: 76px;
+    height: 76px;
+  }
+}
+
+/* AL-U11: yatay ekran, üç sütun (defter ve oyuncular | hazne | düğmeler) */
+@media (orientation: landscape) and (max-height: 520px) {
+  .lim__body {
+    display: grid;
+    grid-template-columns: minmax(0, 0.55fr) minmax(0, 0.8fr) minmax(0, 1.6fr);
+    grid-template-rows: minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: stretch;
+  }
+  .lim__side {
+    align-self: center;
+    max-height: 100%;
+    overflow-y: auto;
+  }
+  .lim__body[data-spectator="1"] {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  }
+  .lim__body[data-spectator="1"] .lim__side {
     display: none;
   }
+  .lim__watch {
+    gap: 4px;
+  }
+  .lim__watch .ledger--big .ledger__box {
+    min-width: 76px;
+    min-height: 48px;
+  }
+  .lim__watch .limcrew {
+    flex-wrap: wrap;
+  }
+  .lim__side .ledger__row {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .lim__side .ledger__box {
+    min-width: 64px;
+  }
+  .lim__center {
+    min-height: 0;
+  }
+  .lim__stats {
+    gap: 12px;
+    margin: 0;
+  }
+  .lim__stat {
+    min-width: 64px;
+  }
+  .lim__num {
+    font-size: 26px;
+  }
+  .tank,
+  .tank[data-mode="open"] {
+    max-height: none;
+    min-height: 0;
+    width: min(100%, 200px);
+  }
+  .lim__body {
+    min-height: 0;
+    height: 100%;
+  }
+  .lim__bottom {
+    align-self: center;
+    min-width: 0;
+  }
+  .lim-chip {
+    min-height: 52px;
+    font-size: 22px;
+  }
+  .lim-chips {
+    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+    gap: 8px;
+  }
+  .lim .limstrip {
+    grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
+  }
+  .lim .limstrip__av {
+    zoom: 0.6;
+  }
+  .lim__verdict {
+    font-size: 24px;
+  }
+  .lim__whatif {
+    font-size: var(--fs-13);
+  }
+  .lim__body[data-mode="open"] .lim__side .limcrew,
+  .lim__body[data-mode="open"] .lim__points {
+    display: none;
+  }
+  .lim__body[data-mode="open"] .lim__bottom {
+    max-height: 100%;
+    overflow: auto;
+  }
+}
+
+/* ---- AL-U12: TV ---- */
+.limtv {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 300px 1fr 360px;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 32px;
+  padding: 40px 48px;
+  box-sizing: border-box;
+  overflow: hidden;
+  color: var(--text);
+  --gold: #ffc23b;
+}
+.limtv__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+.limtv__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(5, 8, 26, 0.55), rgba(5, 8, 26, 0.9));
+}
+.limtv > :not(.limtv__bg, .limtv__scrim) {
+  position: relative;
+  z-index: 1;
+}
+.limtv__left .limcrew {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 10px;
+}
+.limtv__left .limcrew__seat {
+  flex-direction: row;
+  gap: 14px;
+}
+.limtv__left .limcrew__name {
+  font-size: 26px;
+  max-width: 9ch;
+  flex: 1;
+}
+.limtv__left .limcrew__pts {
+  font-size: 28px;
+}
+.limtv__left .limcrew__lock,
+.limtv__left .limcrew__eye {
+  font-size: 22px;
+}
+.limtv__center {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  min-height: 0;
+}
+.tank--tv,
+.tank--tv[data-mode="open"] {
+  width: 420px;
+  max-height: none;
+}
+.limtv[data-mode="open"] .limtv__center {
+  align-items: flex-start;
+}
+.limtv[data-mode="open"] .tank--tv {
+  height: 52%;
+}
+.tank--tv .tok {
+  width: 56px;
+  height: 56px;
+  font-size: 26px;
+}
+.tank--tv .tank__tag {
+  font-size: 24px;
+  top: -20px;
+}
+.tank--tv .tank__seg-tag {
+  font-size: 20px;
+}
+.tank--tv .tank__pas {
+  font-size: 20px;
+}
+.limtv__right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+.limtv__round {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 34px;
+}
+.limtv__limit,
+.limtv__total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.limtv__limit b,
+.limtv__total b {
+  font-family: var(--font-display);
+  font-size: 84px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.limtv__total[data-over="1"] b {
+  color: var(--red);
+}
+.limtv__total[data-over="0"] b {
+  color: var(--lime);
+}
+.limtv__status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 28px;
+}
+.limtv .ledger__box {
+  min-width: 100px;
+  min-height: 60px;
+}
+.limtv .ledger__val {
+  font-size: 22px;
+}
+.limtv .ledger__round {
+  font-size: 16px;
+}
+.limtv > .limtv__result {
+  position: absolute;
+  left: 380px;
+  right: 440px;
+  bottom: 28px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.limtv__verdict {
+  margin: 0;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 64px;
+  color: var(--gold);
+  text-shadow: 0 0 30px rgba(255, 194, 59, 0.7);
+}
+.limtv__result[data-over="1"] .limtv__verdict {
+  color: var(--red);
+  text-shadow: 0 0 30px rgba(255, 59, 92, 0.7);
+}
+.limtv__whatif {
+  margin: 0;
+  font-size: 28px;
+}
+.limstrip--tv .limstrip__name {
+  font-size: 22px;
+}
+.limstrip--tv .limstrip__num {
+  font-size: 34px;
+}
+.limstrip--tv .limstrip__sum {
+  font-size: 18px;
+}
+.limstrip--tv .limstrip__stamp {
+  font-size: 18px;
+  border-width: 3px;
 }
 
 /* Anlatım görseli */

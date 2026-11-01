@@ -182,6 +182,25 @@ describe("zamanlama", () => {
   afterEach(() => {
     botTrace.hook = null;
   });
+  it("Açgözlülük Limiti: botlar üç turun hepsinde 0..N arası seçer", () => {
+    const { room, view } = playGame("acgozluluk-limiti");
+    const bots = botsOf(room).map((p) => p.id);
+    const pv = view() as {
+      maxChoice: number;
+      history: { reveal: { choices: Record<string, number>; missing: string[] } }[];
+      reveal: { choices: Record<string, number>; missing: string[] } | null;
+    };
+    const rounds = [...pv.history.map((h) => h.reveal), ...(pv.reveal ? [pv.reveal] : [])];
+    expect(rounds).toHaveLength(3);
+    for (const r of rounds) {
+      for (const id of bots) {
+        expect(r.missing).not.toContain(id);
+        expect(r.choices[id] ?? -1).toBeGreaterThanOrEqual(0);
+        expect(r.choices[id] ?? 99).toBeLessThanOrEqual(pv.maxChoice);
+      }
+    }
+  });
+
   it("Kör Kronometre: botlar her elde hedefe 0,3–1,5 sn uzaklıkta basar", () => {
     const { room, view } = playGame("kor-kronometre");
     const bots = new Set(botsOf(room).map((p) => p.id));

@@ -20,6 +20,7 @@
  *   tv-kor-bomba-*            Kör Bomba evreleri (ör. tv-kor-bomba-watch, tv-kor-bomba-blast, tv-kor-bomba-trip)
  *   tv-sozluk-*               Sözlük Blöfü evreleri (ör. tv-sozluk-write, tv-sozluk-pick, tv-sozluk-reveal&at=4000)
  *   tv-rusvet-*               Rüşvet ve Darbe evreleri (ör. tv-rusvet-vote, tv-rusvet-duel&open=1, tv-rusvet-reveal)
+ *   tv-acgozluluk-*           Açgözlülük Limiti evreleri (ör. tv-acgozluluk-choosing, tv-acgozluluk-reveal-over&at=2500)
  *   tv-ittifak-*              İttifak evreleri (ör. tv-ittifak-talk, tv-ittifak-vote, tv-ittifak-reveal&t=2000)
  *   tv-rus-*                  Rus Ruleti evreleri (ör. tv-rus-wait, tv-rus-boom, tv-rus-over)
  *   tv-kareler-*              Gizli Kareler evreleri (ör. tv-kareler-choosing2, tv-kareler-final-bonus&t=4500)
@@ -77,6 +78,9 @@ export async function startTvMock(mock: string, params: URLSearchParams): Promis
     } else if (kind.startsWith("sonkisi-")) {
       const m = await import("./mockSonKisi.js");
       m.startSonKisiMock(kind, params, true);
+    } else if (kind.startsWith("acgozluluk-")) {
+      const m = await import("./mockAcgozluluk.js");
+      m.startAcgozlulukMock(kind, params, true);
     } else if (kind.startsWith("ittifak-")) {
       const m = await import("./mockIttifak.js");
       m.startIttifakMockAs(kind, params, true);

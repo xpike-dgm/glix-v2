@@ -1,5 +1,6 @@
 import type { MatchSnapshot, PlayerInfo } from "@glix/engine";
 import { type Component, lazy } from "solid-js";
+import { acgozlulukBriefing } from "./acgozluluk-limiti/briefing.js";
 import { karelerBriefing } from "./gizli-kareler/briefing.js";
 import { hudOf } from "./yatay-masa/hud.js";
 
@@ -60,6 +61,9 @@ const registry: Record<string, GameEntry> = {
   "acgozluluk-limiti": {
     Screen: lazy(() => import("./acgozluluk-limiti/AcgozlulukLimitiScreen.js")),
     Art: lazy(() => import("./acgozluluk-limiti/BriefingArt.js")),
+    StageView: lazy(() => import("./acgozluluk-limiti/StageView.js")),
+    tvOwnBoard: true,
+    briefingSteps: acgozlulukBriefing,
   },
   "butona-bas": {
     Screen: lazy(() => import("./butona-bas/ButonaBasScreen.js")),

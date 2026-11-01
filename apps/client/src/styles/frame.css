@@ -908,3 +908,18 @@
     letter-spacing: -0.04em;
   }
 }
+
+/* Açgözlülük Limiti (AL-U11): yatayda sol şeritte oyun adı kelime ortasından bölünmez; en az 13 px'e küçülür,
+   "Açgözlülük Limiti" iki satıra yalnız boşluktan iner. */
+@media (max-height: 500px) and (orientation: landscape) and (min-width: 560px) {
+  .gframe[data-game="acgozluluk-limiti"][data-o="portrait"] .gbar {
+    width: 92px;
+  }
+  .gframe[data-game="acgozluluk-limiti"][data-o="portrait"] .gbar__name {
+    overflow-wrap: normal;
+    word-break: keep-all;
+    hyphens: none;
+    font-size: 13px;
+    letter-spacing: -0.03em;
+  }
+}

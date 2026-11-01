@@ -17,6 +17,9 @@ Her oyun `packages/engine/src/games/<id>/` (types.ts, index.ts, bots.ts, words.t
 - **Açgözlülük Limiti** (3–8, 20 sn): seçim 0..oyuncu sayısı, değiştirilebilir (son seçim geçerli), gönderilmezse 0.
   Limit tablosu 3→6, 4→11, 5→17, 6→24, 7→33, 8→43. Seçimler süre bitene kadar gizli (secrets: her oyuncunun seçimi,
   sahibi kendisi). Toplam ≤ limit → herkes seçtiği kadar; aşarsa herkes 0.
+  **Güncel (AL öneri paketi):** 3 tur (12 sn seçim, 5 sn ara / 7 sn son açılış), sisli limit bandı (gerçek limit her tur
+  bandın içinden, açılana kadar gizli), Gözcü (7. sn'de yalnız kendisine RAHAT/SINIRDA/TAŞIYOR), genel skor mini puan
+  toplamından +2/+1/0. Ayrıntı: `docs/KURALLAR.md` §12.
 - **Çapraz Ateş** (3–8, 25 sn): tek hedef, değiştirilebilir (son seçim), kendine yok. Hedefler süre sonunda açılır.
   Hedeflenen −1 (kaç kişi hedeflese de bir kez); karşılıklı hedefleşen iki taraf 0 (hedeflenme cezası dahil, ikisine de
   uygulanmaz); hedeflenmeyen ve karşılıklı olmayan bir hedefe ateş eden +1. Hem ateş edip hem (karşılıklı olmayan biçimde)
