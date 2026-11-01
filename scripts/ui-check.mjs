@@ -3213,6 +3213,9 @@ function inPageAudit() {
     const fontSize = parseFloat(s.fontSize);
     if (fontSize < 12.99) issues.push(["font", `yazı çok küçük (${fontSize}px): ${desc(el)}`]);
     const fill = s.webkitTextFillColor || s.color;
+    // Yalnız emoji/piktogram (👻, ⭐, 🧭): renkli glif CSS rengini kullanmaz, metin kontrastı ölçüsü anlamsız.
+    // Boyut denetimi (yukarıda) yine geçerlidir.
+    if (/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+$/u.test(text)) continue;
     texts.push({
       d: desc(el),
       fg: fill,
@@ -3381,6 +3384,8 @@ async function checkOneInner(page, st, scr, [w, h]) {
   const failures = [];
   st.errors.length = 0;
   try {
+    // Önceki boyutun ölçümünde saat durdurulmuş olabilir (aşağıda): yükleme ve beklemeler için yeniden akar.
+    if (USE_CLOCK) await page.clock.resume();
     await page.setViewportSize({ width: w, height: h });
     await page.goto(`${URL_BASE}/?${scr.q}`, { waitUntil: "load" });
     // Uygulamanın hazır işareti (yalnız geliştirmede; App.tsx devReady), yazı tipleri, ağ.
@@ -3425,6 +3430,10 @@ async function checkOneInner(page, st, scr, [w, h]) {
       )
       .catch(() => {});
     await scrollQuiet(page);
+    // Sahte saat kurulduktan sonra gerçek zamanla da akar: ekran görüntüsü ile kontrast ölçümü arasında (yükte
+    // saniyeler) bir zamanlayıcı ekranı değiştirebiliyordu (özet tablosu belirir, damga iner…) ve ölçüm görüntüye
+    // uymuyordu. Ölçüm boyunca saat durur; zamanlayıcı ve rAF ancak açıkça ilerletilince çalışır.
+    if (USE_CLOCK) await pauseClock(page);
     // Ölçüm animasyon ortasına denk gelmesin: sonlu animasyonlar bitiş karesine, sonsuzlar durdurulur.
     // (Aksi halde kontrast, rozetin belirme ya da basış parlamasının o anki karesine bağlı kalır.)
     await page.evaluate(() => {
@@ -3488,6 +3497,19 @@ async function checkOneInner(page, st, scr, [w, h]) {
   }
   for (const e of st.errors) failures.push(`[console] ${e.slice(0, 200)}`);
   return failures;
+}
+
+/** Sahte saati şimdiki anın hemen ötesinde durdurur (okuma ile istek arasında saat akarsa biraz ileriden dener). */
+async function pauseClock(page) {
+  for (let pay = 20; ; pay *= 4) {
+    const now = await page.evaluate(() => Date.now());
+    try {
+      await page.clock.pauseAt(now + pay);
+      return;
+    } catch (e) {
+      if (pay > 2000) throw e;
+    }
+  }
 }
 
 /** Takılan bir denetim bütün koşuyu kilitlemesin: süre aşımı hata sayılır, bağlam yenilenir. */

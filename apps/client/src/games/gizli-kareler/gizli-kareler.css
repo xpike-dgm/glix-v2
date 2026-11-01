@@ -99,6 +99,7 @@
   gap: 8px;
   margin: 6px 0 2px;
   padding: 8px 12px;
+  min-height: 48px;
   max-width: 100%;
   border-radius: 14px;
   border: 1.5px solid rgba(255, 194, 59, 0.55);
@@ -124,7 +125,7 @@
 }
 .kcompass__hint {
   margin-left: auto;
-  font-size: var(--fs-12, 12px);
+  font-size: var(--fs-13);
   color: var(--text-dim);
   white-space: nowrap;
 }
@@ -226,10 +227,11 @@ button.kcell:disabled {
   left: 5px;
   bottom: 3px;
   font-style: normal;
-  font-size: 11px;
+  font-size: var(--fs-13);
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: rgba(195, 202, 240, 0.4);
+  /* 11 px / %40 saydam okunmuyordu (2,8:1) */
+  color: #f1f3ff;
   pointer-events: none;
 }
 /*
@@ -349,7 +351,8 @@ button.kcell:disabled {
   align-items: center;
   gap: 6px;
   margin-top: 4px;
-  padding: 6px 12px;
+  padding: 6px 14px;
+  min-height: 48px;
   border-radius: 999px;
   border: 1px solid rgba(140, 160, 255, 0.3);
   background: rgba(18, 26, 69, 0.7);
@@ -667,6 +670,22 @@ button.kcell:disabled {
 .kcell--res[data-state="clash"] {
   --as: max(28px, calc(44cqw));
 }
+/* Dar kare (~50 px): avatarlar ve ad sığmıyordu. Avatarlar tek sırada üst üste biner, ad ve koordinat düşer
+   (adlar özet tablosunda ve dokun-gör kartında). */
+@container (max-width: 60px) {
+  .kcell--res .kcell__who {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    gap: 0;
+  }
+  .kcell--res .kwho:not(:first-child) {
+    margin-left: -24px;
+  }
+  .kcell--res .kwho__name,
+  .kcell--res[data-has="1"] .kcell__name {
+    display: none;
+  }
+}
 .kwho--more {
   display: grid;
   place-items: center;
@@ -674,18 +693,23 @@ button.kcell:disabled {
   height: 28px;
   border-radius: 50%;
   background: rgba(5, 8, 26, 0.88);
-  font-size: 12px;
+  color: #fff;
+  font-size: var(--fs-13);
   font-weight: 800;
 }
 .kwho__name {
   margin-top: 1px;
   max-width: 100%;
-  font-size: 11px;
+  font-size: var(--fs-13);
   font-weight: 700;
   line-height: 1;
   color: #fff;
   text-shadow: 0 1px 3px #000;
   white-space: nowrap;
+  /* avatarın parlak yerine biner: koyu zemin */
+  padding: 0 3px;
+  border-radius: 4px;
+  background: rgba(5, 8, 26, 0.94);
 }
 .kcell--res[data-state="solo"] {
   --as: 46cqw;
@@ -772,7 +796,7 @@ button.kcell:disabled {
 }
 .kghost__mark {
   font-style: normal;
-  font-size: 12px;
+  font-size: var(--fs-13);
 }
 
 /* Tek kalan: altın sütun yükselir */
@@ -815,10 +839,25 @@ button.kcell:disabled {
   background: rgba(5, 8, 26, 0.88);
   white-space: nowrap;
 }
+/* Dar karede "+1 +2" sağdan kırpılıyordu: rozet kare boyunca ortalanır. */
+@container (max-width: 64px) {
+  .kcell__pts {
+    left: 1px;
+    right: 1px;
+    padding: 0 2px;
+    text-align: center;
+    white-space: normal;
+    line-height: 1.05;
+  }
+}
 
 /* GK-U7: ödül karesi anı */
 .kres[data-beam="1"] .kcell--res {
   filter: brightness(0.45);
+}
+/* Işık ödül karesindeyken karartılan karelerde yazı okunmaz kalıyordu: yalnız avatarlar kalır. */
+.kres[data-beam="1"] .kcell--res:not([data-bonus]) :is(.kwho__name, .kcell__name, .kwho--more) {
+  visibility: hidden;
 }
 .kbeam {
   position: absolute;
@@ -1047,8 +1086,8 @@ button.kcell:disabled {
 }
 .kozet thead th {
   height: 20px;
-  font-size: 11px;
-  letter-spacing: 0.06em;
+  font-size: var(--fs-13);
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-dim);
 }
@@ -1077,7 +1116,7 @@ button.kcell:disabled {
 }
 .kozet td[data-k="clash"],
 .kozet td[data-k="haunted"] {
-  color: var(--red);
+  color: #ff9aaa; /* --red satır zemininde 4,3:1 */
 }
 .kozet td[data-k="ghost"] {
   color: var(--ghost);
@@ -1144,12 +1183,74 @@ button.kcell:disabled {
   .kres__head {
     min-height: 0;
   }
-  .kres[data-summary="1"] .kstage {
-    flex: 0.55 1 0;
-  }
   .kozet th,
   .kozet td {
     height: 26px;
+  }
+  /* Sonuç: ızgara + sandık + pusulalar + tablo sığmıyordu (kareler 26–40 px'e iniyor, tablo hazır şeridine
+     biniyordu). Izgara dokunulabilir boyda kalır, sonuç alanı kaydırılır. */
+  .kres {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .kk .kres .kstage {
+    flex: none;
+    height: min(calc(100vw - 24px), calc(var(--n, 4) * 56px + 30px));
+    min-height: 0;
+  }
+}
+
+/* Dikey: sonuç alanı kaydırılabilir, ızgara kalabalık özet tablosunun altında 33 px'e ezilmez. */
+@media (orientation: portrait) {
+  .kk .kres {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .kk .kres .kstage {
+    min-height: min(calc(100vw - 24px), calc(var(--n, 4) * 54px + 30px));
+  }
+}
+
+/* En küçük dikey ekran (320×568): 2. aşamada pusula ve rakip satırları ızgarayı 31 px'e indiriyordu. Başlık
+   bloğu sıkışır, kareler >= 48 px kalır. */
+@media (max-height: 600px) and (orientation: portrait) {
+  .khero {
+    margin-top: 0;
+  }
+  .khero__stage {
+    display: none;
+  }
+  .khero__title {
+    font-size: 22px;
+  }
+  .khero__sub {
+    font-size: var(--fs-13);
+    min-height: 0;
+  }
+  /* rakip satırları varken (2. aşama) alt yazı yerine onlar kalır; ayrıntı brifingde ve pusulada */
+  .khero:has(.krivals) .khero__sub {
+    display: none;
+  }
+  .kk {
+    --gap: 5px;
+  }
+  .keye {
+    margin-top: 0;
+  }
+  /* hazır sayısı kalır, avatar şeridi düşer */
+  .kk .tamam__dots {
+    display: none;
+  }
+  .kcompass {
+    margin: 4px 0 0;
+    padding: 4px 10px;
+    font-size: var(--fs-13);
+  }
+  .kcompass__hint {
+    display: none;
+  }
+  .kcompass__ico {
+    font-size: 16px;
   }
 }
 
@@ -1195,14 +1296,33 @@ button.kcell:disabled {
   .kres > :not(.kstage) {
     grid-column: 2;
   }
+  /* İçerik boyu altına inmesin: 0 iken satır 25 px'e çöküyor, başlık "Sandık kırıldı" ile üst üste biniyordu. */
   .kres__head {
-    min-height: 0;
+    min-height: auto;
+  }
+  /* özet tablosu DEVAM'ın altına iniyordu: başlık küçülür, satırlar sıkışır, gerekirse alan kaydırılır */
+  .kres[data-summary="1"] {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .kres[data-summary="1"] .kres__val {
+    font-size: 18px;
+  }
+  .kres[data-summary="1"] .kozet th,
+  .kres[data-summary="1"] .kozet td {
+    height: 24px;
+    padding: 0 4px;
   }
   .kres__val {
     font-size: 22px;
   }
   .khero__title {
     font-size: 22px;
+  }
+  /* yan sütun ~230 px: tek satır başlık ve rakip satırı sığmıyordu */
+  .ksec[data-role="spectator"] .khero__title,
+  .krivals__row {
+    white-space: normal;
   }
   .kk {
     --gap: 6px;

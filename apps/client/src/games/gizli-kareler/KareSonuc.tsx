@@ -237,6 +237,8 @@ export function KareSonuc(props: Props) {
       data-tv={props.tv ? "1" : undefined}
       data-beam={beamOn() ? "1" : undefined}
       data-summary={summaryOn() ? "1" : undefined}
+      data-scroll
+      style={{ "--n": size() }}
     >
       <div class="kres__head" role="status" aria-live="polite">
         <span class="overline">{props.final ? "2. aşama sonucu" : "1. aşama sonucu"}</span>

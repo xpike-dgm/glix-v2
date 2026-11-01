@@ -364,7 +364,13 @@ export function stageHead(i: HeadInput): { text: string; kind: string } {
       if (i.walkover) return { text: "Rakipsiz · +1 +1", kind: "gold" };
       return { text: "Tek kaldın · +1", kind: "gold" };
     case "clash": {
-      const who = i.mates.length > 0 ? ` · ${i.mates.join(", ")}` : "";
+      // Üçten fazla rakipte adlar başlığı 4–5 satıra taşırıyordu: sayı yazılır (adlar tabloda ve karede).
+      const who =
+        i.mates.length > 2
+          ? ` · ${i.mates.length} kişiyle`
+          : i.mates.length > 0
+            ? ` · ${i.mates.join(", ")}`
+            : "";
       return i.final
         ? { text: `2. aşamada çakıştın${who}`, kind: "calm" }
         : { text: `${where}çakıştın${who}`, kind: "clash" };

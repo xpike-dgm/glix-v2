@@ -251,6 +251,9 @@ describe("Gizli Kareler görünümü", () => {
     expect(stageHead(base0).text).toBe("Tek kaldın · +1");
     expect(stageHead({ ...base0, final: true, wonBonus: true }).text).toBe("Ödül karesi! +1 +2");
     expect(stageHead({ ...base0, status: "clash", mates: ["Elif"] }).text).toBe("B3'te çakıştın · Elif");
+    expect(stageHead({ ...base0, status: "clash", mates: ["Elif", "Mert", "Kaan"] }).text).toBe(
+      "B3'te çakıştın · 3 kişiyle",
+    );
     // 2. aşamada çakışan sakin bir başlık görür (kırmızı "Elendin" değil).
     const c2 = stageHead({ ...base0, final: true, status: "clash", mates: ["Elif"] });
     expect(c2).toEqual({ text: "2. aşamada çakıştın · Elif", kind: "calm" });
