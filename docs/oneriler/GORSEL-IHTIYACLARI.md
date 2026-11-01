@@ -271,3 +271,59 @@ ekran CSS sandığı çizer ve dosyayı hiç istemez.
   çakışmanda 300 ms, ödülü bulunca uzun-kısa-uzun; son 5 sn herkese aynı kısa titreşim. **Kural (ses haritasına):** kare
   seçme sesi kareye göre DEĞİŞMEZ (yan koltuğa seçimi duyururdu). Gerçek kayıt istenirse olay adları `gizli-kareler.<an>`.
   Müzik (sakin gizemli seçim teması, 2. aşamada bir katman, son 5 sn tempo) ses ekibine iştir; şimdilik yok.
+
+## Rüşvet ve Darbe
+
+Ortak stil: oyunun mevcut görselleriyle uyumlu (`apps/client/public/assets/worlds/rusvet-darbe-*.webp`: karanlık gotik
+saray salonu, kırmızı sancaklar, kırmızı kadife taht, mum ışığı, parlak siyah mermer; `props/genel/taht.webp` ve
+`props/genel/rusvet-jetonu.webp`: altın + neon kırmızı/macenta vurgulu, kalın hatlı çizgi-roman/oyun ikonu stili). Yer
+`apps/client/public/assets/props/rusvet-darbe/<ad>.webp`. Dosya yokken ekran SVG/CSS karşılığını çizer ve dosyayı hiç
+istemez; dosya konunca kod değişmeden kullanılır (`__RUSVET_PROPS__`, `rusvetProp()` — Sözlük Blöfü düzeni). Yazı YOK
+(metinleri kod yazar). Hepsi koyu zeminde okunacak: dış hatta ince koyu kontur + hafif altın parıltı.
+
+- **RD-U1 · oy sandığı** — `apps/client/public/assets/props/rusvet-darbe/sandik.webp` · 1:1, 256×256 · şeffaf arka plan ·
+  Önden üç çeyrek açıyla küçük, tok bir oy sandığı: koyu bordo-kahve cilalı ahşap, altın köşe kaplamaları ve altın
+  kenar, kapağın ortasında oy yarığı, yarıktan yarısı görünen krem renk katlanmış oy pusulası; ön yüzde kabartma altın
+  taç amblemi. 22–44 px'te de sandık olarak okunmalı (sade siluet). · Geçici: SVG sandık (bordo gövde, altın kenar,
+  yarıktan çıkan pusula).
+- **RD-U1 · mühür** — `apps/client/public/assets/props/rusvet-darbe/muhur.webp` · 1:1, 256×256 · şeffaf arka plan ·
+  Portrenin köşesine basılan balmumu mühür: dalgalı kenarlı altın-amber (#d9a21b → #ffc23b) balmumu, ortasında kabartma
+  taç amblemi, hafif parlak yansıma; düz önden, hafif −8° eğik. 24–50 px'te okunur. · Geçici: SVG dişli altın mühür +
+  taç.
+- **RD-U2 · büyük taş-kâğıt-makas el seti** — `apps/client/public/assets/props/rusvet-darbe/el-tas.webp`,
+  `el-kagit.webp`, `el-makas.webp` · her biri 1:1, 384×384 · şeffaf arka plan · Üç işaret birbirinden yalnız
+  şekliyle de ayrılmalı (renk körlüğü): **taş** gri-taş renkli (#9aa1b8, koyu kontur #3b4058) kalın, yumru, yuvarlak
+  sıkılı yumruk; **kâğıt** beyaz-krem (#f7f8ff) dümdüz açık el, parmaklar bitişik ve yukarı, avuç önde; **makas** kırmızı
+  (#ff4f64) iki parmak V işareti, diğerleri kıvrık. Kalın kontur, büyük ve sade; 40 px'te de ayırt edilmeli. Mevcut
+  `genel/el-*.webp` küçükte okunmuyor (üçü de mor yumruk gibi). · Geçici: SVG simgeler (gri taş, beyaz kâğıt yaprağı,
+  kırmızı makas).
+- **RD-U3 · jeton kesesi** — `apps/client/public/assets/props/rusvet-darbe/kese.webp` · 1:1, 256×256 · şeffaf arka plan
+  · Ağzı altın iple büzülmüş, şişkin kadife kese (koyu bordo #7a1530), ağzından iki-üç altın rüşvet jetonu taşıyor
+  (`genel/rusvet-jetonu` ile aynı jeton tasarımı); hafif altın parıltı. · Geçici: SVG bordo kese + altın ip + jeton.
+- **RD-U3 · 1 ve 2 jetonluk yığın** — `apps/client/public/assets/props/rusvet-darbe/yigin-1.webp`, `yigin-2.webp` ·
+  2:1 yatay, 256×128 · şeffaf arka plan · Portrenin altında duracak, yandan hafif üstten görülen yığın: 1 jeton (tek,
+  hafif eğik yatan jeton) ve 2 jeton (üst üste kaymış iki jeton); jeton tasarımı `genel/rusvet-jetonu` ile aynı, altın,
+  gölgesi alta düşen. 24 px yükseklikte okunur. · Geçici: rusvet-jetonu görselinden CSS ile üst üste dizilmiş küçük
+  jetonlar (rastgele gidenler gri/gümüş filtreyle).
+- **RD-U6 · darbe yumruğu** — `apps/client/public/assets/props/rusvet-darbe/yumruk.webp` · 1:1, 256×256 · şeffaf arka
+  plan · DARBE düğmesindeki havaya kalkmış, önden görülen sıkılı yumruk; canlı kırmızı (#ff4f64), koyu bordo kontur,
+  bileğinde kısa hareket çizgileri; 30 px'te okunur. · Geçici: SVG kırmızı yumruk.
+- **RD-U7 / RD-U9 · taç** — `apps/client/public/assets/props/rusvet-darbe/tac.webp` · 5:4, 320×256 · şeffaf arka plan ·
+  Başkanın tacı: beş sivri uçlu altın taç (#ffc23b, koyu altın kontur), ortada kırmızı yakut, yanlarda camgöbeği
+  taşlar, alt bant kalın; hafif önden. Taç inişi ve düşüşü kodla canlandırılır (tek kare yeterli). · Geçici: SVG taç.
+- **RD-U9 · devrilmiş taht** — `apps/client/public/assets/props/rusvet-darbe/taht-devrik.webp` · 1:1, 320×320 · şeffaf
+  arka plan · `genel/taht.webp` ile aynı taht, yana devrilmiş (yaklaşık 70°), bir ayağı kırık, kadife minder kaymış,
+  çevresinde küçük toz/kıymık; darbe tutunca mevcut tahtın yerine gösterilir. · Geçici: mevcut taht CSS ile döndürülerek
+  devrilir, taç düşer.
+- **RD-U15 · anlatım 4 karesi** — `apps/client/public/assets/props/rusvet-darbe/anlatim-1.webp` … `anlatim-4.webp` · her
+  biri 2:1 yatay, 520×260 · şeffaf arka plan · 4 sn'lik döngünün kareleri (her biri 1 sn): (1) iki mühürlü oy pusulası
+  sandığa düşüyor; (2) taht yükseliyor, tahtta bir oyuncu silueti; (3) tahttan iki yana altın jetonlar uçuyor; (4) taç
+  tahttakinin başından düşüp yuvarlanıyor. Karakterler genel avatar stilinde (neon yüz maskeli siluet), arka plan yok.
+  · Geçici: CSS/SVG sahneler (mühürler + sandık, taht + avatar, avatarlar arası uçan jetonlar, düşen taç).
+- **RD-U13 · TV arka planı** — yeni dosya gerekmedi: mevcut `worlds/rusvet-darbe-landscape.webp` (16:9 saray salonu)
+  TV görünümünde kullanılıyor.
+- **ses** (dosya gerekmedi) — RD-U14 sesleri (mühür "tok"u, kâğıt hışırtısı, TAŞ-KÂĞIT-MAKAS üç vuruş, kart dönüşü,
+  "ELENDİ" düşüşü, jeton şıngırtısı 3 varyasyon, taç fanfarı, darbe davulu + taht devrilmesi, "bastırıldı" borusu, vaat
+  çanı / cam çatlaması) mevcut ses sistemiyle üretildi (`apps/client/src/games/rusvet-darbe/sounds.ts`). Ses alanı
+  isterse gerçek kayıtlarla değiştirebilir; ayrıca öneri dosyasındaki saray müziği (ağır, yaylı) ve 10 sn'lik darbe
+  gerilim katmanı için dosya gerekir (şu an yok).

@@ -1,35 +1,39 @@
 import { SIGNS, type Sign } from "@glix/engine";
 import { createEffect, createSignal, For, onCleanup, Show, untrack } from "solid-js";
-import { hapticMatch, hapticTap, hapticTick } from "../../fx/haptics.js";
-import { fail, tap, tick, unlockAudio } from "../../fx/sound.js";
+import { hapticLong, hapticMatch, hapticTap, hapticTick } from "../../fx/haptics.js";
+import { fail, tap, unlockAudio } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
-import { CbState } from "../../ui/CbState.js";
-import { SignIcon } from "./SignIcon.js";
-import { handOutcome, type RusvetScreenView, SIGN_LABEL } from "./view.js";
+import { Dice, SignArt } from "./Art.js";
+import type { CrewMember } from "./Seats.js";
+import { cardFlip, knockedOut, rhythm } from "./sounds.js";
+import { handOutcome, handStrip, type RusvetScreenView, replayReason, SIGN_LABEL } from "./view.js";
 
-export interface CrewMember {
-  id: string;
-  nickname: string;
-  avatar: number;
-  connected: boolean;
-}
+export type { CrewMember } from "./Seats.js";
 
 interface Props {
   view: RusvetScreenView;
   crew: CrewMember[];
   selfId: string;
   spectator: boolean;
+  now: () => number;
   onSign: (sign: Sign) => void;
 }
 
-/** Darbe düellosu: adaylar karşı karşıya, işaretler kapalı kartlarda; süre bitince aynı anda açılır. */
+const BEATS = ["TAŞ", "KÂĞIT", "MAKAS!"] as const;
+
+/**
+ * Darbe düellosu (RD-U2, RD-U8): adaylar büyük ve karşılıklı, kartları portre genişliğinde; işaret düğmeleri renk ve
+ * şekille ayrışır. Son 3 sn'de "TAŞ · KÂĞIT · MAKAS!" ritmi; açılışta kazanan işaret kaybedeni ezer, kaybedene
+ * "ELENDİ" damgası; sonuçsuz elde neden yazılır ve kartlar sallanır; 6. elden sonra kura görünür.
+ */
 export function Duello(props: Props) {
   const duel = () => props.view.duel;
   const cand = () => {
     const d = duel();
     return d ? d.candidates.flatMap((id) => props.crew.filter((m) => m.id === id)) : [];
   };
+  const nameOf = (id: string) => props.crew.find((m) => m.id === id)?.nickname ?? "Oyuncu";
   const isCandidate = () => !props.spectator && (duel()?.candidates.includes(props.selfId) ?? false);
   const shown = () => duel()?.signs ?? null;
   const outcome = () => {
@@ -46,13 +50,11 @@ export function Duello(props: Props) {
     const confirmed = props.view.mySign;
     if (untrack(pending) !== null && confirmed === untrack(pending)) setPending(null);
   });
-  // Yeni el: yerel seçim sıfırlanır.
   createEffect(() => {
     void duel()?.hand;
     untrack(() => setPending(null));
   });
   const choose = (s: Sign): void => {
-    // İşaret tek seferliktir: ilk seçim kesindir.
     if (!isCandidate() || shown() !== null || mine() !== null) return;
     unlockAudio();
     tap();
@@ -68,28 +70,57 @@ export function Duello(props: Props) {
     props.onSign(s);
   };
 
-  // Açılışta ses.
+  // RD-U8: son 3 sn ritmi (her saniyede bir vuruş).
+  const beat = (): number => {
+    const d = duel();
+    if (!d || d.signs !== null) return -1;
+    const left = d.signEndsAt - props.now();
+    if (left > 3_000 || left <= 0) return -1;
+    return Math.min(2, Math.floor((3_000 - left) / 1_000));
+  };
+  let lastBeat = -1;
+  createEffect(() => {
+    const b = beat();
+    if (b === lastBeat) return;
+    lastBeat = b;
+    if (b >= 0)
+      untrack(() => {
+        rhythm(b === 2);
+        hapticTick();
+      });
+  });
+
+  // Açılışta ses ve titreşim.
   let announced = -1;
   createEffect(() => {
     const d = duel();
     if (!d || d.signs === null || announced === d.hand) return;
     announced = d.hand;
     untrack(() => {
-      tick();
-      hapticTick();
+      cardFlip();
       const o = outcome();
-      if (o && !o.replay && isCandidate() && o.advance.includes(props.selfId)) hapticMatch();
+      if (!o || o.replay || !isCandidate()) return;
+      if (o.advance.includes(props.selfId)) hapticMatch();
+      else {
+        knockedOut();
+        hapticLong();
+      }
     });
   });
 
-  const last = () => {
-    const h = duel()?.history ?? [];
-    return h.length > 0 ? h[h.length - 1] : null;
-  };
   const statusOf = (id: string): "win" | "out" | undefined => {
     const o = outcome();
     if (!o || o.replay) return undefined;
     return o.advance.includes(id) ? "win" : "out";
+  };
+  const strip = () => handStrip(duel()?.history ?? [], nameOf).slice(-1);
+  const title = () => {
+    const o = outcome();
+    const b = beat();
+    if (b >= 0) return BEATS.slice(0, b + 1).join(" · ");
+    if (shown() === null) return isCandidate() ? "İşaretini seç" : "Kim kazanır?";
+    if (o?.replay) return replayReason(o);
+    return "İşaretler açıldı";
   };
 
   return (
@@ -98,18 +129,20 @@ export function Duello(props: Props) {
         <>
           <div class="rd__head">
             <span class="overline">Darbe düellosu · {d().hand}. el</span>
-            <span class="rd__title">
-              {shown() === null
-                ? isCandidate()
-                  ? "İşaretini seç"
-                  : "İşaretler seçiliyor"
-                : outcome()?.replay
-                  ? "Sonuç yok, yeniden"
-                  : "İşaretler açıldı"}
+            <span class="rd__title" data-beat={beat() >= 0 ? "1" : undefined}>
+              {title()}
             </span>
+            <Show when={strip().length > 0}>
+              <span class="rd__strip">{strip().join(" · ")}</span>
+            </Show>
           </div>
 
-          <div class="rd__duel" data-n={cand().length}>
+          <div
+            class="rd__duel"
+            data-n={cand().length}
+            data-open={shown() ? "1" : undefined}
+            data-replay={outcome()?.replay ? "1" : undefined}
+          >
             <For each={cand()}>
               {(m, i) => (
                 <div
@@ -125,61 +158,92 @@ export function Duello(props: Props) {
                     ready={shown() === null && props.view.ready.includes(m.id)}
                   />
                   <span class="rd__name">{m.nickname}</span>
-                  <Show when={statusOf(m.id) === "win" || statusOf(m.id) === "out"}>
-                    <CbState kind={statusOf(m.id) === "win" ? "ok" : "bad"} size={16} />
-                  </Show>
                   <span class="rd__card" data-open={shown() ? "1" : undefined}>
                     <span class="rd__card-back">?</span>
                     <span class="rd__card-front">
-                      <Show when={shown()?.[m.id]}>{(s) => <SignIcon sign={s()} size="62%" />}</Show>
+                      <Show when={shown()?.[m.id]}>
+                        {(s) => (
+                          <>
+                            <SignArt sign={s()} size="70%" />
+                            <span class="rd__card-label">{SIGN_LABEL[s()]}</span>
+                          </>
+                        )}
+                      </Show>
                     </span>
                   </span>
+                  <Show when={statusOf(m.id) === "out"}>
+                    <span class="rd__stamp rd__stamp--out">ELENDİ</span>
+                  </Show>
                 </div>
               )}
             </For>
           </div>
 
-          <Show when={last()?.replay && shown() === null}>
-            <p class="rd__hint rd__hint--replay" role="status">
-              Önceki elde sonuç çıkmadı
-            </p>
+          <Show when={d().lottery}>
+            {(id) => (
+              <p class="rd__lottery" role="status">
+                <span class="rd__lottery-die">
+                  <Dice size="26px" />
+                </span>
+                Kura ile: {nameOf(id())}
+              </p>
+            )}
           </Show>
 
           <Show
             when={isCandidate()}
             fallback={
-              <p class="rd__hint" role="status">
-                {shown() === null
-                  ? `${props.view.ready.length}/${d().candidates.length} hazır`
-                  : props.spectator
-                    ? "Düello bitince başkan belli olur"
-                    : "Eşit kalan adaylar düello yapıyor"}
+              <p class="rd__hint" role="status" data-again={outcome()?.replay ? "1" : undefined}>
+                {outcome()?.replay && !d().lottery
+                  ? "Yeniden!"
+                  : shown() === null
+                    ? `${props.view.ready.length}/${d().candidates.length} aday hazır`
+                    : props.spectator
+                      ? "Düello bitince başkan belli olur"
+                      : "Eşit kalan adaylar düello yapıyor"}
               </p>
             }
           >
-            <div class="rd__signs">
+            <div class="rd__signs" data-chosen={mine() ? "1" : undefined}>
               <For each={SIGNS}>
                 {(s) => (
                   <button
                     type="button"
-                    class="rd__sign"
+                    class="rd__sign rd__sign--hand"
+                    data-sign={s}
                     data-on={mine() === s ? "1" : undefined}
+                    data-off={mine() !== null && mine() !== s ? "1" : undefined}
                     disabled={shown() !== null || mine() !== null}
                     aria-pressed={mine() === s}
                     onClick={() => choose(s)}
                   >
-                    <SignIcon sign={s} size={34} />
+                    <SignArt sign={s} size="40px" />
                     <span>{SIGN_LABEL[s]}</span>
+                    <Show when={mine() === s}>
+                      <span class="rd__lock" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                          <rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor" />
+                          <path
+                            d="M5 7V5a3 3 0 0 1 6 0v2"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            fill="none"
+                          />
+                        </svg>
+                      </span>
+                    </Show>
                   </button>
                 )}
               </For>
             </div>
-            <p class="rd__hint" role="status">
-              {shown() !== null
-                ? "Kartlar açıldı"
-                : mine() === null
-                  ? "İşaretin tek seferlik: dokununca kesinleşir"
-                  : `Diğerleri bekleniyor · ${props.view.ready.length}/${d().candidates.length} hazır`}
+            <p class="rd__hint" role="status" data-again={outcome()?.replay ? "1" : undefined}>
+              {outcome()?.replay && !d().lottery
+                ? "Yeniden!"
+                : shown() !== null
+                  ? "Kartlar açıldı"
+                  : mine() === null
+                    ? "İşaretin tek seferlik: dokununca kesinleşir"
+                    : `Diğerleri bekleniyor · ${props.view.ready.length}/${d().candidates.length} hazır`}
             </p>
           </Show>
         </>

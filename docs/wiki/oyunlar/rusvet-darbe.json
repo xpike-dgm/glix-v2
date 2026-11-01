@@ -1,24 +1,32 @@
 {
   "id": "rusvet-darbe",
   "ad": "Rüşvet ve Darbe",
-  "slogan": "Gizli oyla başkanı seç, aldığı oy kadar jeton dağıtsın; jeton alamayanlar darbe yapabilir.",
+  "slogan": "Gizli oyla başkanı seç, aldığı oy kadar jeton dağıtsın; vaadini tutmazsa jeton alamayanlar tahtını devirir.",
   "kategori": "Sosyal",
-  "etiketler": ["gizli oylama", "başkanlık", "taş-kağıt-makas düellosu", "pazarlık", "darbe oylaması"],
+  "etiketler": [
+    "gizli oylama",
+    "başkanlık",
+    "seçim vaadi",
+    "ikinci oylama",
+    "taş-kâğıt-makas düellosu",
+    "pazarlık",
+    "darbe oylaması"
+  ],
   "oyuncu": {
     "min": 3,
     "max": 8
   },
   "sure": {
-    "tahminiSn": 63,
-    "not": "Tipik akış: seçim 20 sn + dağıtım 25 sn + darbe oylaması 10 sn + sonuç 8 sn = 63 sn. Oylar eşitse düello eklenir (her el 8 sn işaret + 2,5 sn açılış, en çok 6 el). Herkes Tamam, Bitti ya da işaret verince aşamalar erken biter. En uzun olası toplam süre 126 sn'dir. Kopuk oyuncular beklenmez. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasında sonuç ekranı (en çok 60 sn) vardır. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
+    "tahminiSn": 68,
+    "not": "Tipik akış (3–5 oyuncu): seçim 20 sn + taç anı 1,5 sn + dağıtım 25 sn + darbe oylaması 10 sn + açılış 11 sn ≈ 68 sn; 6–8 oyuncuda seçim 30 sn. 4+ aday eşitse 12 sn ikinci oylama, yine eşitse ya da 2–3 aday eşitse düello eklenir (her el 8 sn işaret + 2,5 sn açılış, en çok 6 el). Herkes Tamam, Bitti ya da işaret verince aşamalar erken biter. En uzun olası toplam süre 30 + 12 + 63 + 1,5 + 25 + 10 + 11 = 152,5 sn'dir. Kopuk oyuncular beklenmez. Önünde anlatım (en çok 40 sn) ve 3 sn geri sayım vardır. Oyunun kendi açılışı 'Devam et' ile geçilir: bağlı herkes basınca (en az 11 sn sonra) 1 sn sonra, en geç 60 sn sonra."
   },
-  "ozet": "Herkes kendisi dışında birine gizlice başkanlık oyu verir. En çok oyu alan başkan olur, başkan olurken aldığı oy kadar jeton dağıtma hakkı kazanır (kişi başı en çok 2 jeton, kendine yok) ve +1 alır. Oylar eşitse eşit kalan adaylar gizli taş-kağıt-makas düellosuyla başkanı belirler. Dağıtımdan sonra başkan dışında hiç jeton almamış herkes gizli bir darbe oylaması yapar; hak sahiplerinin kesin çoğunluğu Darbe derse başkanın +1'i iptal olur. Jetonlar sahiplerinin puanıdır.",
+  "ozet": "Herkes kendisi dışında birine gizlice başkanlık oyu verir; isterse portresine herkese açık, puansız bir vaat asar (Oy verene jeton / Herkese jeton). En çok oyu alan başkan olur ve aldığı oy kadar jeton dağıtır (kişi başı en çok 2, kendine yok). 4+ aday eşitse önce ikinci oylama, sonra gerekirse gizli taş-kâğıt-makas düellosu başkanı belirler. Başkan dağıtırken kendisine kimin oy verdiğini (yalnız kendisi) görür. Dağıtımdan sonra jeton almamış herkes gizli darbe oylaması yapar; kesin çoğunluk Darbe derse başkanın +2'si silinir. Jetonlar sahiplerinin puanıdır; açılışta başkanın vaadi TUTTU/BOZDU damgası alır.",
   "akis": [
     {
       "ad": "Anlatım",
       "sureSn": 40,
       "kim": "herkes",
-      "aciklama": "Amaç: Başkan ol, jetonları dağıt! Üç madde: Gizli oyunu ver, başkanlığı almaya çalış; Başkan, aldığı oy kadar jetonu başkalarına dağıtır; Başkan +1, jetonlar puan olur; jeton almayanlar darbe yapabilir. Bağlı bütün katılımcılar hazır olunca ya da 40 sn dolunca biter. Kart bu ekranda oynanır.",
+      "aciklama": "Amaç: Başkan ol, jetonları dağıt! Üç madde: Gizli oy ver: en çok oy alan başkan olur; Başkan, aldığı oy kadar jeton dağıtır (kişiye en çok 2); Jeton alamayanlar darbe yaparsa başkanın puanı gider. Görsel 4 karelik döngü: mühürler sandığa → taht yükselir → jetonlar uçar → taç düşer. Bağlı bütün katılımcılar hazır olunca ya da 40 sn dolunca biter. Kart bu ekranda oynanır.",
       "gizli": "Yok."
     },
     {
@@ -32,36 +40,43 @@
       "ad": "Başkanlık seçimi",
       "sureSn": 20,
       "kim": "herkes (katılımcılar oy verir)",
-      "aciklama": "Başlık Başkanlık seçimi / Kimi seçiyorsun?. Katılımcıların avatarları bir oyuncu seçicide durur; kendin dışında bir oyuncuya dokunarak oy verirsin (kendin ve bağlantısı kopmuş oyuncular seçilemez). Seçilen kişi başlıkta adıyla görünür. Oy süre bitene ya da Tamam'a basana kadar değiştirilebilir. Tamam düğmesi bir oyuncu seçilmeden pasiftir. Tamam'a basınca oy kilitlenir, Gönderildi durumu ve k/n hazır sayacı görünür. Bağlı bütün katılımcılar Tamam deyince seçim 1 sn sonra biter. Süre bitince oy vermeyenin oyu kendisi dışındaki rastgele birine gider.",
-      "gizli": "Kim kime oy verdi, kaç oy aldığı seçim bitene kadar gizlidir. Herkese açık olan yalnız kimin Tamam dediğidir (avatar noktası). Kişi yalnız kendi oyunu görür (myVote). İzleyici Gizli seçim / Herkes oy veriyor ve hazır sayacını görür."
+      "aciklama": "3–5 oyuncuda 20 sn, 6–8 oyuncuda 30 sn. Üstte küçük oy sandığı, başlık Başkanlık seçimi / Kimi seçiyorsun?, altında 'En çok oy alan başkan olur ve aldığı oy kadar jeton dağıtır'. Portreler ortalanmış satırlarda (5 kişide 3+2, 8 kişide 3+3+2). Bir portreye dokununca o portreye altın mühür basılır (tok ses, kısa titreşim), seçili portre büyür, diğerleri hafif söner; başlık 'Oyun mühürlendi' olur ve seçtiğin ad yalnız küçük yazıyla görünür (göz atma koruması). Oy Tamam'a kadar değiştirilebilir. Tamam diyenler alttaki avatar şeridinde görünür. Kendi portrenin altında 'Vaadim' düğmesi iki seçenekli alt sayfa açar (Oy verene jeton / Herkese jeton / Vaadi indir); asılı vaatler herkesin portresinin altında bant olarak görünür. Bağlantısı kopan oyuncunun portresinde 'bağlantı yok' ve 'oyu rastgele gidecek'. Bağlı herkes Tamam deyince 1 sn sonra biter. Süre bitince oy vermeyenin oyu kendisi dışındaki rastgele birine gider.",
+      "gizli": "Kim kime oy verdi, kaç oy aldığı seçim bitene kadar gizlidir. Herkese açık olan kimin Tamam dediği ve asılı vaatlerdir. Kişi yalnız kendi oyunu görür (myVote). İzleyici 'Mühürleyenler: k/n' görür."
+    },
+    {
+      "ad": "İkinci oylama (yalnız 4+ aday eşitse)",
+      "sureSn": 12,
+      "kim": "herkes oy verir; yalnız eşit adaylara",
+      "aciklama": "Başlık İkinci oylama / EŞİTLİK! N aday; yalnız adayların büyük portreleri (ilk tur oy sayıları gösterilmez). Herkes adaylardan birine oy verir (aday kendine veremez), Tamam'a kadar değiştirebilir. Oy vermeyenin oyu sayılmaz. Bağlı herkes Tamam deyince 1 sn sonra biter. En çok oyu alan başkan olur; yine eşitlik varsa kalanlarla düello, kimse oy vermediyse bütün adaylarla düello.",
+      "gizli": "İkinci oylamadaki oylar açılışta açılır; aşama sürerken yalnız kimin Tamam dediği görünür."
     },
     {
       "ad": "Darbe düellosu (yalnız eşitlikte)",
       "sureSn": 10.5,
       "kim": "yalnız eşit kalan adaylar işaret verir; diğerleri izler",
-      "aciklama": "En çok oyu paylaşan oyuncular (2 ile 8 kişi) aday olur. Her elde 8 sn gizli işaret süresi vardır: Taş, Kağıt ya da Makas düğmelerinden biri seçilir; işaret tek seferliktir, dokununca kesinleşir. Adaylar yan yana kapalı kartlarla (?) durur, işaretini verenin yanında hazır noktası yanar. Bağlı bütün adaylar işaret verince kartlar hemen açılır, aksi halde süre bitince açılır; işaret vermeyene rastgele işaret atanır. Kartlar açıldıktan sonra 2,5 sn sonuç gösterilir: devam edenler yeşil onay, elenenler kırmızı işaret alır; sonuç yoksa Sonuç yok, yeniden yazar ve bir sonraki elde Önceki elde sonuç çıkmadı notu görünür. Tek aday kalınca ya da 6. elden sonra başkan belli olur. Başlık Darbe düellosu · N. el.",
+      "aciklama": "2 aday karşılıklı ve büyük (120 px), 3–4 aday 96 px, 5–8 aday iki satırda (en az 48 px). Her adayın kartı portresiyle aynı genişlikte ve 1,4 kat yükseklikte. İşaret düğmeleri renk ve şekille ayrışır: Taş gri yuvarlak, Kâğıt beyaz yaprak, Makas kırmızı V; seçilen kilit simgesiyle kalır, diğerleri söner; işaret tek seferliktir. Başlık altında el şeridi (1. el · sonuç yok (üç işaret) · 2. el · Elif ve Mert devam). Son 3 sn'de 'TAŞ · KÂĞIT · MAKAS!' ritmi (üç vuruş). Kartlar aynı anda döner; kazanan kart parlar, kaybedene 'ELENDİ' damgası (uzun titreşim). Sonuçsuz elde başlık nedeni yazar ('Üç işaret de çıktı' / 'Herkes TAŞ dedi'), kartlar sallanır, 'Yeniden!'. 6. elden sonra 'Kura ile: Mert' ve dönen zar. Aday olmayanlar 'Kim kazanır?' ve hazır sayısını görür.",
       "gizli": "İşaretler kartlar açılana kadar hiçbir görünümde yoktur; herkese yalnız kimlerin işaret verdiği (hazır noktası) görünür. Aday olmayanlar İşaretler seçiliyor ve k/n hazır görür. Başkan ve bütçe düello bitene kadar açılmaz."
     },
     {
       "ad": "Jeton dağıtımı",
-      "sureSn": 25,
+      "sureSn": 26.5,
       "kim": "başkan dağıtır; diğerleri izler",
-      "aciklama": "Başkanın koltuğu (taht) sahneye gelir. Başkan Sen başkansın / N jeton kaldı başlığını görür; oyuncu seçicide bir oyuncuya her dokunuşta jeton sayısı bir artar (kişi başı en çok 2; 2 olan bir kişiye dokununca 0'a döner; kalan jeton yoksa da 0'a döner). Bağlantısı kopuk bir oyuncuya yeni jeton eklenemez. Kendine jeton verilemez. Bitti düğmesi hiç jeton verilmediyse pasiftir; Bitti'ye basınca dağıtım kesinleşir ve 1 sn sonra biter. Dağıtılmayan jetonlar süre bitince başkan dışındakilere kişi başı 2 sınırıyla rastgele dağıtılır. Diğer oyuncular başkanın koltuğunu, adını ve N jeton bütçesini görür; yazı Jetonlar dağıtılıyor / Kime kaç jeton gideceği gizli. Başkan Bitti deyince Başkan dağıtımı bitirdi yazar.",
-      "gizli": "Dağılım yalnız başkanın ekranında görünür (myTokens). Diğerleri bu aşamada kime kaç jeton gittiğini bilmez."
+      "aciklama": "Önce 1,5 sn 'Başkan seçildi' anı: herkeste 'BAŞKAN: ELİF · 3 JETON' bandı; başkanın ekranında taç iner, uzun çift titreşim ve fanfar. 25 sn'lik dağıtım bu anın bitiminden sayılır. Başkan: üstte jeton kesesi ve bütçe kadar jeton (verilenler sönük), 'N jeton kaldı', defter satırı 'Sana oy verenler 3 oy · Elif, Mert' (zarla düşenler ayrı); oy verenlerin portresinde mühür, zarla düşenlerde zar. Portreye dokununca +1 jeton (jeton şıngırtısı), portrenin altında altın yığın ve '−' düğmesi (bir jeton geri alır; 2→0 döngüsü yok). Bitti hiç jeton verilmeden pasif ('En az 1 jeton ver'). Son 5 sn'de kalan jeton varsa kırmızı 'Dağıtmadığın N jeton rastgele gidecek!'. Diğerleri: tahtta taçlı başkan ve önünde bütçe kadar jeton; altta 'Senin oyun: Elif' (rastgele düştüyse 'Oyun rastgele Elif'e gitti') ve başkanın vaadi; Bitti deyince jetonlar keseye girer, 'Dağıtım bitti · Sonuç darbeden sonra'. Başkan kopuksa herkes 'Başkanın bağlantısı koptu · jetonlar seçmenlerine gidecek' görür. Dağıtılmayan jetonlar süre bitince rastgele gider (başkan kopuk ve Bitti dememişse önce seçmenlerine birer birer).",
+      "gizli": "Dağılım yalnız başkanın ekranında görünür (myTokens); defter (kim oy verdi) yalnız başkanın view'ındadır (ledger). Diğerleri kime kaç jeton gittiğini bilmez."
     },
     {
       "ad": "Darbe oylaması",
       "sureSn": 10,
       "kim": "yalnız jeton almamış, başkan olmayan oyuncular oy verir; hepsi bakar",
-      "aciklama": "Jeton dağılımı herkese açılır (avatarların üstünde jeton sayısı). Oy hakkı olanlar Darbe olsun mu? sorusuna Darbe ya da Darbe yok düğmelerinden birini seçer; oy gizli ve tek seferliktir; seçince Oyun gizli kaldı yazar. Oy hakkı olmayanlar ve izleyiciler Jetonlar açıldı / Darbe oylaması sürüyor / Jeton almayanlar karar veriyor · k/n oy verdi görür. Bağlı bütün hak sahipleri oy verince aşama 1 sn sonra biter. Oy vermeyen Darbe yok sayılır. Hak sahibi yoksa (herkes jeton aldıysa) bu aşama atlanır.",
+      "aciklama": "Üstte tahttaki taçlı başkan, altında jeton alanlar altın yığınla; hak sahipleri ayrı sırada kırmızı çerçevede. Başlık hak sahibine 'Karar senin' (tek hak sahibiyse 'Tek karar veren sensin'), diğerlerine 'Karar onlarda', izleyiciye 'Karar verenler: …'. Kural satırı 'Çoğunluk Darbe derse Elif'in +2'si gider'. DARBE kırmızı ve yumruklu, DARBE YOK gri ve sakin; basınca seçilen kalır, diğeri kaybolur; 'Oyun gizli · k/n karar verdi'. Bağlı bütün hak sahipleri oy verince 1 sn sonra biter. Oy vermeyen Darbe yok sayılır. Hak sahibi yoksa aşama atlanır.",
       "gizli": "Kim ne oy verdi hiçbir zaman açılmaz; yalnız kimlerin oy verdiği ve sonuçta Darbe: x/y sayısı açılır."
     },
     {
       "ad": "Sonuç açılışı",
-      "sureSn": 8,
+      "sureSn": 11,
       "kim": "herkes",
-      "aciklama": "Dairesel yerleşimde oyuncular: önce herkesin oy verdiği kişiye ışın akışı (kim kime oy verdi artık açık), 1,1 sn'de oy sayıları (N oy), 3,3 sn'den itibaren jetonlar başkana doğru geri uçar (jeton sahiplerinden başkana akış), 4,7 sn'de puan çipleri (+puan) çıkar. Üstte kişisel sonuç (+puan; Başkan oldun / Darbe oldu, +1 gitti / 1 jeton aldın / N jeton aldın / Jeton gelmedi) ve Başkan: ad. Darbe oylaması yapıldıysa Darbe: x/y · Başkanın +1'i iptal oldu ya da Darbe tutmadı. Alt yazı Puanlar genel skora eklenir. Açılış en az 8 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
-      "gizli": "Bütün başkanlık oyları (kim kime) ve jeton dağılımı açılır. Darbe oyları ise yalnız sayı olarak açılır."
+      "aciklama": "Sahne sahne (en az 11 sn): 0–2,5 sn oylar sandıktan çıkar, seçmenden adaya oklu ipler akar (rastgele atanan oylar kesikli ve zarlı), oy sayısı rozetleri sona kadar kalır; 2,5 sn başkan büyük tahta yükselir; 3,5 sn jetonlar tahttan alıcılara uçup portrenin altına yığılır (rastgele gidenler gümüş); 6 sn darbe kutuları tek tek dolar, tutarsa taht devrilir ve taç düşer ('DARBE!'), tutmazsa 'Darbe bastırıldı'; 8,5 sn başkanın vaadi 'TUTTU ✓' / 'BOZDU ✗' (Bitti denmediyse 'süre doldu'); 9,5 sn puan çipleri, kendi hikâyen ('+2 · Elif'e oy verdin, sana 2 jeton verdi' / 'eli boş döndün' / '3 oyla başkan · darbe 1/4 · +2' / 'Tahtın devrildi · +0') ve 'Karşılığını aldı' / 'Nankörlük!' etiketleri. Altta rastgele özeti (zarla oy verenler, rastgele giden jetonlar). Yatay ekranda halka solda, başlık sağda. 'Devam et' kuralı aynen.",
+      "gizli": "Bütün başkanlık oyları (kim kime; rastgele olanlar işaretli), ikinci oylama oyları ve jeton dağılımı açılır. Darbe oyları yalnız sayı olarak açılır."
     },
     {
       "ad": "Sonuç ekranı",
@@ -73,44 +88,40 @@
   ],
   "kurallar": [
     "3 ile 8 oyuncu katılır (2 oyuncuyla oynanmaz).",
-    "Başkanlık seçimi 20 saniyedir. Her oyuncu kendisi dışında bir katılımcıya tek oy verir. Kendine oy verilemez (self_target); katılımcı olmayan hedef geçersizdir (unknown_target); bağlantısı kopuk bir oyuncuya oy verilemez (target_offline).",
-    "Oy süre bitene kadar değiştirilebilir: son verilen oy geçerlidir; aynı oyu tekrar vermek durumu değiştirmez. Tamam (lock) ile oy kesinleşir; oy vermeden kilitlenemez (nothing_to_lock). Kilitlendikten sonra oy değiştirilemez (locked).",
-    "Seçim erken bitiş: bağlı bütün katılımcılar Tamam derse seçim son kilitten 1 sn sonra kapanır; kapanış penceresinde yeni oy ya da kilit reddedilir (closed). Bağlantısı kopan oyuncu beklenmez. Hiçbir katılımcı bağlı değilse erken bitiş olmaz.",
-    "Süre bitince oy vermeyen (ya da geçersiz oy veren) her oyuncunun oyu, kendisi dışındaki katılımcılardan (bağlantı durumuna bakılmaz) tohumlu rastgelelikle seçilen birine gider. Böylece her oyuncu tam bir oy kullanmış olur.",
-    "En çok oyu alan oyuncu başkan olur; bütçe, başkanın aldığı oy sayısıdır (en çok oy sayısı). Tek lider varsa dağıtım hemen başlar.",
-    "En çok oyu birden çok oyuncu paylaşıyorsa yalnız onlar aday olur ve darbe düellosu başlar. Başkan ve bütçe düello bitene kadar açılmaz. Bütçe yine en çok oy sayısıdır.",
-    "Düelloda her el 8 sn sürer. Adaylar Taş, Kağıt ya da Makas'tan birini gizlice seçer. İşaret tek seferliktir: ilk işaret kesindir, değiştirilemez (locked). Aday olmayan işaret veremez (not_candidate).",
-    "Bağlı bütün adaylar işaret verirse el hemen açılır (işaret süresi o ana çekilir). Kopuk aday beklenmez. Süre bitiminde işaret vermemiş adaya tohumlu rastgele bir işaret atanır.",
-    "Taş makası, makas kağıdı, kağıt taşı yener. Bir elde tam iki farklı işaret varsa kazanan işareti verenlerin hepsi bir sonraki ele geçer (az kişili işaret de kazanabilir). Tek bir işaret ya da üç işaretin de bulunduğu el yok sayılır (herkes devam eder) ve el aynı adaylarla tekrarlanır.",
-    "Kartlar açıldıktan sonra 2,5 sn sonuç gösterilir; sonra yeni el (kalan adaylarla) ya da başkan belli olur. Tek aday kalınca o başkan olur ve dağıtım başlar.",
-    "En çok 6 el oynanır. 6. elin sonunda hâlâ birden çok aday kalırsa kalanlar arasından tohumlu rastgelelikle başkan seçilir (güvenlik sınırı).",
-    "Dağıtım 25 saniyedir ve yalnız başkan yapabilir (not_president). Başkan jetonları kendisi dışındaki katılımcılara dağıtır; bir kişiye en çok 2 jeton verilebilir; toplam dağıtılan bütçeyi aşamaz (over_budget); kendine verilemez (self_target).",
-    "Başkan dağıtımı süre bitene kadar değiştirebilir; her gönderim önceki dağılımın yerine geçer. Bağlantısı kopuk bir oyuncuya yeni jeton eklenemez (target_offline) ama mevcut jeton azaltılabilir. Dağıtım gizlidir.",
-    "Başkan Bitti (lock) derse dağıtım kesinleşir ve 1 sn sonra biter. Hiç jeton dağıtılmamışsa Bitti kabul edilmez (nothing_to_lock). Bittiden sonra dağıtım değişmez (locked).",
-    "Süre bitince dağıtılmayan jetonlar, kişi başı 2 sınırına uyarak, başkan dışındaki katılımcılara tohumlu rastgelelikle dağıtılır (başkana verilmez; bağlantı durumuna bakılmaz). Başkanın yaptığı kısmi dağıtım korunur.",
-    "Dağıtım bitince jeton dağılımı herkese açılır ve darbe oylaması başlar. Oy hakkı olanlar: başkan olmayan ve hiç jeton almamış (0 jeton) her oyuncu (bağlantısı kopuk olanlar da hak sahibidir).",
-    "Darbe oylaması 10 saniyedir. Hak sahibi Darbe ya da Darbe yok oyu verir; oy gizli ve tek seferliktir (locked). Hak sahibi olmayan oy veremez (not_eligible). Oy vermeyen Darbe yok sayılır.",
-    "Darbe oylamasında bağlı bütün hak sahipleri oy verirse aşama 1 sn sonra biter; kopuk hak sahibi beklenmez.",
-    "Hak sahibi yoksa (herkes en az 1 jeton aldıysa) darbe aşaması atlanır.",
-    "Darbe, hak sahiplerinin kesin çoğunluğu (yarıdan fazlası; oy vermeyen ve kopuk olanlar paydaya dahil) Darbe derse tutar: Darbe sayısı × 2 > hak sahibi sayısı. Eşitlik çoğunluk değildir (örn. 2 hak sahibinden 1 Darbe: tutmaz; 1 hak sahibinden 1 Darbe: tutar).",
-    "Darbe tutarsa başkanın bu oyundaki kendi +1'i iptal olur. Dağıtılan jetonlar etkilenmez ve başkan başkanlığı kaybetmez.",
-    "Sonuçta puan: başkan +1 (darbe tutmadıysa), her oyuncu aldığı jeton sayısı kadar puan alır. Başkan jeton alamaz. Toplam dağıtılan puan: bütçe + 1 (darbe olursa bütçe).",
-    "Oylar, jeton dağılımı ve düello işaretleri süre bittikten sonra sonuç açılışında herkese açılır; darbe oyları ise hiçbir zaman açılmaz (yalnız sayı).",
-    "Bu oyunda geç gelen eylem payı yoktur; sonuç aşamasında (8 sn) gelen eylem reddedilir (ended).",
+    "Başkanlık seçimi 3–5 oyuncuda 20, 6–8 oyuncuda 30 saniyedir. Her oyuncu kendisi dışında bir katılımcıya tek oy verir. Kendine oy verilemez (self_target); katılımcı olmayan hedef geçersizdir (unknown_target); bağlantısı kopuk bir oyuncuya oy verilemez (target_offline).",
+    "Oy süre bitene kadar değiştirilebilir; Tamam (lock) ile kesinleşir; oy vermeden kilitlenemez (nothing_to_lock); kilitten sonra değişmez (locked).",
+    "Seçim süresince herkes kendi vaadini asabilir, değiştirebilir ya da indirebilir (pledge: voters / all / null). Vaatler herkese açıktır; Tamam vaadi kilitlemez, seçim bitince kilitlenir (wrong_phase). Başkan belli olunca yalnız başkanın vaadi görünür. Vaadin puanı yoktur.",
+    "Seçim erken bitiş: bağlı bütün katılımcılar Tamam derse seçim son kilitten 1 sn sonra kapanır; kapanış penceresinde yeni oy, vaat ya da kilit reddedilir (closed). Kopuk oyuncu beklenmez.",
+    "Süre bitince oy vermeyen (ya da geçersiz oy veren) her oyuncunun oyu, kendisi dışındaki katılımcılardan tohumlu rastgelelikle seçilen birine gider; bu oylar açılışta 'rastgele' işaretlidir.",
+    "En çok oyu alan oyuncu başkan olur; bütçe başkanın ilk turda aldığı oy sayısıdır.",
+    "En çok oyu 4 ya da daha çok oyuncu paylaşıyorsa 12 sn ikinci oylama yapılır: herkes yalnız eşit adaylardan birine oy verir (not_candidate; aday kendine veremez: self_target; bağlı adaya: target_offline). Oy vermeyenin oyu sayılmaz. Bağlı herkes Tamam derse 1 sn sonra biter. En çok oyu alan başkan olur; yine eşitlik varsa kalan adaylarla, kimse oy vermediyse bütün adaylarla düello. 2–3 aday eşitse doğrudan düello.",
+    "Düelloda her el 8 sn sürer; adaylar Taş, Kâğıt ya da Makas'tan birini gizlice seçer. İşaret tek seferliktir (locked); aday olmayan işaret veremez (not_candidate). Bağlı bütün adaylar işaret verirse el hemen açılır; işaret vermeyene tohumlu rastgele işaret atanır.",
+    "Taş makası, makas kâğıdı, kâğıt taşı yener. Elde tam iki farklı işaret varsa kazanan işareti verenler devam eder; tek ya da üç işaret varsa el tekrarlanır. Kartlar açıldıktan sonra 2,5 sn sonuç gösterilir. En çok 6 el; sonra kalanlar arasından kura (kura sonucu son elin kartları açılınca görünür).",
+    "Başkan belli olunca 1,5 sn 'Başkan seçildi' anı oynar; 25 sn'lik dağıtım bu anın bitiminden sayılır.",
+    "Dağıtımı yalnız başkan yapar (not_president): kendisi dışındakilere, kişi başı en çok 2, toplam bütçeyi aşmadan (over_budget), kendine değil (self_target). Dağıtım süre bitene kadar değiştirilebilir ve gizlidir; kopuk oyuncuya yeni jeton eklenemez (target_offline).",
+    "Dağıtım ve darbe aşamasında başkan, ilk tur oylarından kendisine kimin kendi eliyle oy verdiğini ve kimin oyunun rastgele düştüğünü görür (yalnız kendi view'ında).",
+    "Başkan Bitti derse dağıtım kesinleşir ve 1 sn sonra biter; hiç jeton yoksa Bitti kabul edilmez (nothing_to_lock).",
+    "Süre bitince dağıtılmayan jetonlar kişi başı 2 sınırıyla başkan dışındakilere tohumlu rastgelelikle gider. Başkan o anda bağlı değilse ve Bitti dememişse kalan jetonlar önce ona kendi eliyle oy verenlere sırayla birer birer gider, artarsa rastgele. Kendiliğinden giden jetonlar açılışta 'rastgele' işaretlidir.",
+    "Dağıtım bitince dağılım herkese açılır ve 10 sn darbe oylaması başlar. Hak sahipleri: başkan olmayan ve hiç jeton almamış herkes. Oy gizli ve tek seferliktir; oy vermeyen Darbe yok sayılır; bağlı hak sahiplerinin hepsi oy verirse 1 sn sonra biter; hak sahibi yoksa aşama atlanır.",
+    "Darbe, hak sahiplerinin kesin çoğunluğu Darbe derse tutar (Darbe × 2 > hak sahibi; kopuk olanlar paydaya dahil). Tutarsa başkanın +2'sinin tamamı silinir; jetonlar etkilenmez.",
+    "Puan: başkan +2 (darbe tutmadıysa), her oyuncu aldığı jeton kadar. Kimse +2'den fazla almaz, eksi yok. Toplam = bütçe + 2 (darbe olursa bütçe).",
+    "Açılışta başkanın vaadi son dağılımla karşılaştırılır: 'Oy verene jeton' başkana kendi eliyle oy veren herkes ≥ 1 jeton aldıysa, 'Herkese jeton' jeton alan farklı kişi sayısı en küçük(bütçe, oyuncu − 1) ise TUTTU; değilse BOZDU. Puanı yoktur.",
+    "Oylar, ikinci oylama oyları, jeton dağılımı ve düello işaretleri açılışta herkese açılır; darbe oyları hiçbir zaman açılmaz (yalnız sayı).",
+    "Bu oyunda geç gelen eylem payı yoktur; açılış aşamasında (11 sn) gelen eylem reddedilir (ended).",
     "Mini oyun puanı doğrudan genel skora gider (awards = miniScores)."
   ],
   "puanlama": {
-    "ozet": "Başkan +1 (darbe tutmazsa), her oyuncu başkanın verdiği her jeton için +1 alır. Puanlar eksiye düşmez. Toplam puan = başkanın oy sayısı (bütçe) + 1.",
+    "ozet": "Başkan +2 (darbe tutmazsa), her oyuncu başkanın verdiği her jeton için +1 alır. Kimse +2'den fazla almaz; eksi yok. Toplam puan = başkanın oy sayısı (bütçe) + 2.",
     "kalemler": [
       {
         "olay": "Başkan olmak (darbe tutmadı)",
-        "puan": "+1",
+        "puan": "+2",
         "not": "Yalnız başkana; jeton alamaz."
       },
       {
         "olay": "Başkan olmak (darbe tuttu)",
         "puan": "0",
-        "not": "Hak sahiplerinin kesin çoğunluğu Darbe dedi; başkanlık kalır ama +1 iptal."
+        "not": "Hak sahiplerinin kesin çoğunluğu Darbe dedi; başkanlık kalır ama +2'nin tamamı iptal."
       },
       {
         "olay": "Başkandan jeton almak",
@@ -123,13 +134,13 @@
         "not": "Darbe oylama hakkı kazanır."
       }
     ],
-    "ornek": "5 oyuncu: Ali, Bora, Cem, Deniz, Ece. Oylar: Ali→Cem, Bora→Cem, Cem→Deniz, Deniz→Cem, Ece→Ali. Cem 3 oyla başkan olur, bütçe 3. Cem Ali'ye 2, Bora'ya 1 jeton verir. Jeton almayanlar (Deniz, Ece) darbe oyu verebilir (2 hak sahibi): ikisi Darbe derse Cem'in +1'i iptal olur. Darbe olmazsa: Cem +1, Ali +2, Bora +1, Deniz 0, Ece 0 (toplam bütçe+1 = 4). Darbe olursa: Cem 0, Ali +2, Bora +1, Deniz 0, Ece 0.",
-    "beraberlik": "Başkanlık oylarında eşitlik taş-kağıt-makas düellosuyla çözülür (en çok 6 el, sonra rastgele). Puanlamada beraberlik kuralı yoktur; mini oyun sıralamasında eşit puanlılar sırayı paylaşır."
+    "ornek": "5 oyuncu: Ali, Bora, Cem, Deniz, Ece. Oylar: Ali→Cem, Bora→Cem, Cem→Deniz, Deniz→Cem, Ece→Ali. Cem 3 oyla başkan olur, bütçe 3; defterinde Ali, Bora ve Deniz görünür. Cem Ali'ye 2, Bora'ya 1 jeton verir. Jeton almayanlar (Deniz, Ece) darbe oyu verebilir: ikisi Darbe derse Cem'in +2'si iptal olur. Darbe olmazsa: Cem +2, Ali +2, Bora +1, Deniz 0, Ece 0 (toplam bütçe+2 = 5). Darbe olursa: Cem 0, Ali +2, Bora +1. Cem 'Oy verene jeton' vaadi astıysa Deniz jeton almadığı için BOZDU damgası çıkar.",
+    "beraberlik": "Başkanlık oylarında 4+ adaylı eşitlik önce ikinci oylamayla, kalan eşitlik taş-kâğıt-makas düellosuyla çözülür (en çok 6 el, sonra kura). Puanlamada beraberlik kuralı yoktur."
   },
   "ozelDurumlar": [
     {
       "baslik": "Bağlantısı kopan oyuncu",
-      "aciklama": "Katılımcı olarak kalır. Seçimde oy vermediyse oyu rastgele atanır; ona oy verilemez (kopukken seçilemez) ama önceden verilmiş ya da rastgele atanmış oy ona gidebilir ve kopuk oyuncu başkan olabilir. Kopuk başkan dağıtım yapamaz; süre bitince tüm bütçe rastgele dağıtılır ve başkan +1 alır. Kopuk oyuncu jeton alabilir (rastgele dağıtımda). Kopuk hak sahibi darbe oylamasında beklenmez ama paydaya dahildir. Kopuk düello adayı beklenmez; işareti rastgele atanır."
+      "aciklama": "Katılımcı olarak kalır; portresinde 'bağlantı yok'. Seçimde oy vermediyse oyu rastgele atanır ('oyu rastgele gidecek'); ona oy verilemez ama rastgele atanmış oy ona gidebilir ve başkan olabilir. Başkan dağıtım bittiğinde kopuksa ve Bitti dememişse kalan jetonlar önce ona kendi eliyle oy verenlere birer birer, sonra rastgele gider (herkes 'Başkanın bağlantısı koptu · jetonlar seçmenlerine gidecek' görür); bağlıyken süre dolarsa tamamen rastgele. Kopuk hak sahibi darbe oylamasında beklenmez ama paydaya dahildir. Kopuk düello adayı beklenmez; işareti rastgele atanır."
     },
     {
       "baslik": "Herkes erken hazırsa",
@@ -137,11 +148,11 @@
     },
     {
       "baslik": "3 oyuncu",
-      "aciklama": "Her oyuncu 2 kişiden birine oy verir. Başkan 2 oyla seçilirse bütçe 2, ve 2 jeton iki kişiye 1'er ya da birine 2 verilebilir. Üçlü eşitlikte (hepsi 1 oy) üç kişi düello yapar; bütçe 1'dir. Başkan 1 jetonu birine verirse diğeri 0 jeton alır ve darbe hak sahibi olur (tek hak sahibi: oyu çoğunluktur)."
+      "aciklama": "Her oyuncu 2 kişiden birine oy verir. Başkan 2 oyla seçilirse bütçe 2: 1-1 verirse sonuç 2/1/1 (başkan +2), 2-0 verirse jeton alamayan tek hak sahibi başkanın +2'sini tek başına silebilir. Üçlü eşitlikte (hepsi 1 oy) doğrudan üçlü düello (ikinci oylama yok); bütçe 1."
     },
     {
       "baslik": "8 oyuncu",
-      "aciklama": "Bütçe en çok 7 olabilir (7 kişi aynı kişiye oy verirse). 8 kişilik tam eşitlikte (herkes 1 oy alır) sekiz aday düello yapar; elde tam iki farklı işaret varsa kazanan işaretin sahipleri devam eder."
+      "aciklama": "Seçim 30 sn. Bütçe en çok 7. 4+ kişilik eşitlikte önce ikinci oylama (12 sn); yine eşitse kalanlar düello yapar."
     },
     {
       "baslik": "Düelloda üç ya da dört aday",
@@ -162,12 +173,16 @@
     {
       "baslik": "Sonuç aşamasında eylem",
       "aciklama": "Sonuç açılışı başladıktan sonra gelen her eylem reddedilir (ended); sonuç değişmez."
+    },
+    {
+      "baslik": "Seçim vaadi",
+      "aciklama": "Vaat puan ya da ceza getirmez ve diğer kuralları değiştirmez; yalnız başkanın vaadi açılışta TUTTU/BOZDU damgası alır. Başkan seçilmeyenlerin vaatleri başkan belli olunca görünmez olur."
     }
   ],
   "kartlar": [
     {
       "kart": "Kendine Güven",
-      "etki": "Birinci olmak için mini oyun puanı en yüksek olmalıdır. Bu oyunda en yüksek puanlı genelde en çok jeton alan (ya da +1 ile başkan) olur; birden çok oyuncu aynı puandaysa hepsi birincidir."
+      "etki": "Birinci olmak için mini oyun puanı en yüksek olmalıdır. Bu oyunda en yüksek puanlı genelde en çok jeton alan (ya da +2 ile başkan) olur; birden çok oyuncu aynı puandaysa hepsi birincidir."
     },
     {
       "kart": "Sigorta",
@@ -187,7 +202,7 @@
     },
     {
       "kart": "Çift Puan / Altın Dokunuş",
-      "etki": "Jetonların ve başkan +1'inin üstüne uygulanır: 2 jeton alan Çift Puan ile 4, Altın Dokunuş ile 6 olur. Darbe tutup +1 iptal olduysa başkanın puanı 0'dır ve çarpanlar etkisizdir."
+      "etki": "Jetonların ve başkan +2'sinin üstüne uygulanır: 2 jeton alan Çift Puan ile 4, Altın Dokunuş ile 6 olur. Darbe tutup +2 iptal olduysa başkanın puanı 0'dır ve çarpanlar etkisizdir."
     },
     {
       "kart": "Ters Köşe",
@@ -201,123 +216,123 @@
   "sabitler": [
     {
       "ad": "Başkanlık seçimi süresi",
-      "deger": "20 000 ms",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:3"
+      "deger": "20 000 ms (3–5 oyuncu) / 30 000 ms (6–8 oyuncu)",
+      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:4"
     },
     {
       "ad": "Herkes Tamam/Bitti deyince kalan süre",
       "deger": "1 000 ms",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:5"
+      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:13"
     },
     {
       "ad": "Düello işaret süresi (el başına)",
       "deger": "8 000 ms",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:7"
+      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:19"
     },
     {
       "ad": "İşaret açılış sonucu gösterimi",
       "deger": "2 500 ms",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:9"
+      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:21"
     },
     {
       "ad": "Dağıtım süresi",
-      "deger": "25 000 ms",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:11"
+      "deger": "25 000 ms (\"Başkan seçildi\" anından sonra)",
+      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:25"
     },
     {
       "ad": "Darbe oylaması süresi",
       "deger": "10 000 ms",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:13"
+      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:27"
     },
     {
       "ad": "Sonuç açılış süresi (oyunun sonu)",
-      "deger": "8 000 ms",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:15"
+      "deger": "11 000 ms",
+      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:29"
     },
     {
       "ad": "Kişi başı en çok jeton",
       "deger": "2",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:17"
+      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:31"
     },
     {
       "ad": "En çok düello eli",
-      "deger": "6 (sonra rastgele başkan)",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:19"
+      "deger": "6 (sonra kura)",
+      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:35"
     },
     {
       "ad": "En uzun olası toplam süre",
-      "deger": "20 + 6×(8+2,5) + 25 + 10 + 8 = 126 sn",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:21"
+      "deger": "30 + 12 + 6×(8+2,5) + 1,5 + 25 + 10 + 11 = 152,5 sn",
+      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:37"
     },
     {
       "ad": "Başkanlık bütçesi",
-      "deger": "en çok oy sayısı",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:196"
+      "deger": "ilk tur en çok oy sayısı",
+      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:292"
     },
     {
       "ad": "Darbe tutma koşulu",
       "deger": "Darbe sayısı × 2 > hak sahibi sayısı",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:79"
+      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:106"
     },
     {
       "ad": "Darbe hak sahibi",
       "deger": "başkan olmayan ve 0 jeton alan oyuncular",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:248"
+      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:360"
     },
     {
       "ad": "Başkan puanı (darbe tutmadıysa)",
-      "deger": "+1",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:282"
+      "deger": "+2",
+      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:33"
     },
     {
       "ad": "Seçim erken bitişi",
       "deger": "voteEndsAt = min(voteEndsAt, şimdi + 1 000 ms)",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:453"
+      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:629"
     },
     {
       "ad": "Düello erken açılış",
       "deger": "handSignEnd = min(işaret bitişi, şimdi)",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:485"
+      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:686"
     },
     {
       "ad": "Darbe erken bitişi (bağlı hak sahipleri)",
       "deger": "coupEndsAt = min(coupEndsAt, şimdi + 1 000 ms)",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:435"
+      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:611"
     },
     {
       "ad": "Dağıtım Bitti erken bitişi",
       "deger": "giveEndsAt = min(giveEndsAt, şimdi + 1 000 ms)",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:460"
+      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:651"
     },
     {
       "ad": "Dağıtım reddi nedenleri",
       "deger": "not_president, locked, self_target, unknown_target, target_offline, over_budget",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:489"
+      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:689"
     },
     {
       "ad": "Oy reddi nedenleri",
-      "deger": "wrong_phase, locked, closed, self_target, unknown_target, target_offline",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:466"
+      "deger": "wrong_phase, locked, closed, self_target, unknown_target, target_offline; ikinci oylamada not_candidate",
+      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:656"
     },
     {
       "ad": "Oyuncu sınırları",
       "deger": "3 - 8, dikey",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:336"
+      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:483"
     },
     {
       "ad": "Geç gelen eylem payı",
       "deger": "yok (graceMs tanımlı değil)",
-      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:333"
+      "kaynak": "packages/engine/src/games/rusvet-darbe/index.ts:483"
     },
     {
       "ad": "Sonuç ekranı zaman çizelgesi",
-      "deger": "oy ışınları 90 ms arayla; oy sayıları 1 100 ms; jeton uçuşu 3 300 ms (700 ms sürer); puanlar 4 700 ms",
-      "kaynak": "apps/client/src/games/rusvet-darbe/Sonuc.tsx:11"
+      "deger": "oylar 0 ms (180 ms arayla, oy sayıları 1 800 ms), taht 2 500 ms, jetonlar 3 500 ms (160 ms arayla, 650 ms uçuş), darbe 6 000 ms, vaat 8 500 ms, puanlar 9 500 ms",
+      "kaynak": "apps/client/src/games/rusvet-darbe/view.ts"
     },
     {
       "ad": "Dağıtım/işaret iyimser seçimin geri alınma zaman aşımı",
       "deger": "1 600 ms",
-      "kaynak": "apps/client/src/games/rusvet-darbe/Duello.tsx:67"
+      "kaynak": "apps/client/src/games/rusvet-darbe/Duello.tsx:64"
     },
     {
       "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
@@ -328,40 +343,63 @@
       "ad": "Devam ile kapanma gecikmesi",
       "deger": "1 000 ms",
       "kaynak": "packages/engine/src/protocol.ts:29"
+    },
+    {
+      "ad": "İkinci oylama eşiği ve süresi",
+      "deger": "4+ eşit aday; 12 000 ms",
+      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:15"
+    },
+    {
+      "ad": "\"Başkan seçildi\" anı",
+      "deger": "1 500 ms",
+      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:23"
+    },
+    {
+      "ad": "Kalabalık seçim eşiği",
+      "deger": "6 oyuncudan itibaren 30 sn",
+      "kaynak": "packages/engine/src/games/rusvet-darbe/types.ts:8"
     }
   ],
   "strateji": [
-    "Başkan olmanın değeri bütçeden gelir: ne kadar çok oy alırsan o kadar çok jeton dağıtırsın. Yine de başkan yalnız +1 alır; asıl kazanç jetonla ittifak kurmaktır.",
-    "Jeton vaadini önceden sözlü pazarlıkla konuş: Sana oy verene 2 jeton gibi. Oylar gizli olduğundan söz verip tutmamak mümkündür.",
-    "Düelloya girince rastgele bir işaret seç; sürekli taş gibi sabit işaret seçersen rakipler tahmin eder. İşaret tek seferliktir, dokunmadan önce karar ver.",
-    "Başkansan jeton almayanlara dikkat et: onlar darbe hakkı kazanır. Herkese en az 1 jeton vermek darbe aşamasını tamamen kaldırır ve +1'ini garanti eder, ama bütçe tüm oyuncuları (başkan dışı) kapsamıyorsa bu mümkün olmaz.",
-    "Jeton alamadıysan Darbe demek sana puan kazandırmaz, ama başkanın +1'ini silebilir. Hak sahiplerinin kesin çoğunluğu gerekir; oy vermeyenler ve kopuk olanlar da paydaya dahildir.",
-    "Dağıtımı geç bırakma: süre bitince kalan jetonlar rastgele dağıtılır ve istediğin kişi jeton alamayabilir. Hepsini dağıtıp Bitti'ye basmak aşamayı 1 sn sonra bitirir."
+    "Başkan olmak artık en değerli koltuk: darbe olmazsa +2. Ama jeton alamayanlar darbe hakkı kazanır; jetonu yaymak +2'yi korur.",
+    "Vaat as ve pazarlığı onun üstünden yap: 'Oy verene jeton' diyen başkan, defterinde kimin gerçekten oy verdiğini görür; 'ben sana verdim' yalanı başkana karşı işlemez. Vaadini bozarsan açılışta BOZDU damgası herkesin önünde çıkar.",
+    "Başkan değilsen 'Senin oyun: Elif' satırı pazarlıkta kanıtın; oyun zarla düştüyse ekranında bu yazar.",
+    "Düelloya girince rastgele işaret seç; işaret tek seferliktir. 4+ adaylı eşitlikte önce ikinci oylama olur: kalabalık masada kimi destekleyeceğini konuş.",
+    "Jeton alamadıysan Darbe demek başkanın +2'sini silebilir; vaadini tuttu mu diye bak. Kesin çoğunluk gerekir.",
+    "Dağıtımı geç bırakma: son 5 sn'de dağıtılmayan jetonlar rastgele gider ve vaadini bozabilir. Bitti'ye basmak aşamayı 1 sn sonra bitirir."
   ],
-  "tv": "Bu oyunun özel bir TV (sahne) görünümü yoktur; büyük ekranda telefon ekranı izleyici kipinde büyütülerek gösterilir. TV'de oylama sırasında hazır sayacı, düelloda adaylar ve hazır noktaları, dağıtımda başkanın tahtı ve bütçe, darbe oylamasında jeton dağılımı ve oy veren sayısı, sonuçta oy ışınları, oy sayıları, jetonlar ve puanlar görünür. Oylar, işaretler ve dağıtım gizli aşamalarda TV'de de görünmez.",
+  "tv": "Bu oyunun özel TV (sahne) görünümü vardır (StageView, kabuğun oyuncu paneli yerine kendi sütunu): saray salonu arka planı; solda oyuncu sütunu (ad, genel skor, durum: mühürledi / aday / başkan / jeton aldı / hak sahibi); ortada aşamanın sahnesi: seçimde büyük sandık ve mühürleyenlerin avatarları, ikinci oylama ve düelloda dev adaylar ve kartlar (kura dahil), dağıtımda tahtın önündeki jetonlar ve taç anı, darbede taht ve karar verenler, açılış tam ekran. Oylar, işaretler, dağılım ve defter sonuca kadar TV'de yoktur.",
   "ekranlar": [
     {
       "mock": "rusvet-briefing",
       "name": "rusvet-briefing",
       "q": "mock=rusvet-briefing",
       "baslik": "Anlatım",
-      "aciklama": "Başkan ol, jetonları dağıt! ve üç madde.",
+      "aciklama": "Başkan ol, jetonları dağıt! ve yeni üç madde.",
       "dosya": "rusvet-briefing"
     },
     {
       "mock": "rusvet-vote",
       "name": "rusvet-vote-5",
-      "q": "mock=rusvet-vote&n=5",
+      "q": "mock=rusvet-vote&n=5&chosen=1",
       "baslik": "Başkanlık seçimi",
-      "aciklama": "Kimi seçiyorsun? Oyuncu seçici, Tamam düğmesi ve hazır noktaları.",
+      "aciklama": "Sandık, mühürlü portre, 'Oyun mühürlendi', asılı vaatler ve kendi 'Vaadim' düğmesi; Tamam diyenler alt şeritte.",
       "dosya": "rusvet-vote-n-5"
+    },
+    {
+      "mock": "rusvet-runoff",
+      "name": "rusvet-runoff-6",
+      "q": "mock=rusvet-runoff&n=6",
+      "baslik": "İkinci oylama",
+      "aciklama": "EŞİTLİK! N aday: yalnız eşit adaylar; vermeyenin oyu sayılmaz.",
+      "dosya": "rusvet-runoff-n-6"
     },
     {
       "mock": "rusvet-duel",
       "name": "rusvet-duel-3",
       "q": "mock=rusvet-duel&n=5&c=3",
       "baslik": "Darbe düellosu",
-      "aciklama": "3 aday kapalı kartlarla; Taş, Kağıt, Makas düğmeleri; işaret tek seferlik.",
+      "aciklama": "Büyük adaylar ve kartlar; renk ve şekille ayrışan Taş, Kâğıt, Makas düğmeleri.",
       "dosya": "rusvet-duel-n-5-c-3"
     },
     {
@@ -369,23 +407,39 @@
       "name": "rusvet-duel-open",
       "q": "mock=rusvet-duel&n=6&c=4&open=1",
       "baslik": "Düello açılışı",
-      "aciklama": "4 adayın kartları açıldı; devam edenler onay, elenenler kırmızı işaret.",
+      "aciklama": "Kartlar açıldı; kazanan parlar, kaybedene ELENDİ damgası.",
       "dosya": "rusvet-duel-n-6-c-4-open-1"
+    },
+    {
+      "mock": "rusvet-crown",
+      "name": "rusvet-crown",
+      "q": "mock=rusvet-crown&n=5&me=president",
+      "baslik": "Başkan seçildi",
+      "aciklama": "1,5 sn'lik taç anı: BAŞKAN: AD · N JETON.",
+      "dosya": "rusvet-crown"
     },
     {
       "mock": "rusvet-give",
       "name": "rusvet-give-5",
-      "q": "mock=rusvet-give&n=5&budget=3",
+      "q": "mock=rusvet-give&n=5&budget=3&random=1",
       "baslik": "Jeton dağıtımı (başkan)",
-      "aciklama": "Sen başkansın / N jeton kaldı; oyuncu seçicide dokununca jeton artar (kişi başı en çok 2); Bitti düğmesi.",
+      "aciklama": "Jeton kesesi, 'N jeton kaldı', defter (sana oy verenler, zarla düşen), mühürlü portreler, jeton yığını ve '−' düğmesi.",
       "dosya": "rusvet-give-n-5-budget-3"
+    },
+    {
+      "mock": "rusvet-give-wait",
+      "name": "rusvet-give-wait-5",
+      "q": "mock=rusvet-give-wait&n=5",
+      "baslik": "Tahtın önü (bekleyenler)",
+      "aciklama": "Tahtta taçlı başkan ve önünde jetonlar; 'Senin oyun' ve başkanın vaadi.",
+      "dosya": "rusvet-give-wait-n-5"
     },
     {
       "mock": "rusvet-coup",
       "name": "rusvet-coup-5",
       "q": "mock=rusvet-coup&n=5",
       "baslik": "Darbe oylaması",
-      "aciklama": "Jeton dağılımı açık; Darbe olsun mu? Darbe / Darbe yok düğmeleri.",
+      "aciklama": "Karar senin: taçlı başkan, jeton alanlar, kırmızı çerçeveli hak sahipleri; DARBE / DARBE YOK.",
       "dosya": "rusvet-coup-n-5"
     },
     {
@@ -393,32 +447,37 @@
       "name": "rusvet-coup-wait-5",
       "q": "mock=rusvet-coup-wait&n=5",
       "baslik": "Darbe oylaması (hak yok)",
-      "aciklama": "Jeton almış oyuncu görünümü: Darbe oylaması sürüyor ve k/n oy verdi.",
+      "aciklama": "Karar onlarda: oylar gizli, k/n karar verdi.",
       "dosya": "rusvet-coup-wait-n-5"
     },
     {
       "mock": "rusvet-reveal",
       "name": "rusvet-reveal-5",
-      "q": "mock=rusvet-reveal&n=5",
-      "baslik": "Sonuç açılışı",
-      "aciklama": "Oy ışınları, oy sayıları, jetonların uçuşu ve puan çipleri; alt yazı Puanlar genel skora eklenir.",
+      "q": "mock=rusvet-reveal&n=5&pledge=kept",
+      "baslik": "Açılış sonu",
+      "aciklama": "Oklu oylar, oy sayıları, jeton yığınları, puanlar, kendi hikâyen, 'Karşılığını aldı' etiketleri, darbe ve vaat satırları.",
       "dosya": "rusvet-reveal-n-5"
     },
     {
       "mock": "rusvet-reveal",
       "name": "rusvet-reveal-coup-hit-5",
-      "q": "mock=rusvet-reveal&n=5&coup=hit",
-      "baslik": "Darbe tuttu",
-      "aciklama": "Darbe: x/y · Başkanın +1'i iptal oldu; başkanın puanı 0.",
+      "q": "mock=rusvet-reveal&n=5&coup=hit&me=president&t=6800",
+      "baslik": "Darbe anı",
+      "aciklama": "Darbe tuttu: taht devrilir, taç düşer, DARBE! damgası; vaat damgası.",
       "dosya": "rusvet-reveal-n-5-coup-hit"
+    },
+    {
+      "mock": "tv-rusvet-duel",
+      "name": "tv-rusvet-duel",
+      "q": "mock=tv-rusvet-duel&n=6&c=3&open=1",
+      "baslik": "TV görünümü",
+      "aciklama": "Saray salonu, solda oyuncu sütunu (genel skor, durum), ortada dev düello kartları.",
+      "dosya": "rusvet-tv"
     }
   ],
   "bilinenSorunlar": [
-    "types.ts açıklamasında vote ve sign eylemleri 'el bitene kadar değiştirilebilir' diye yazar; kodda oy değiştirilebilir (Tamam'a kadar) ama düello işareti tek seferliktir (ilk işaret kesin, locked). KURALLAR.md O3 notu da düello işaretini tek seferlik sayar; kod doğrudur, types.ts yorumu eskidir.",
     "KURALLAR.md §11 cevap 9 'oy vermek zorunlu, vermeyenin oyu rastgele birine gider' der; kod bu rastgele kişiyi kendisi dışındaki herkesten seçer, bağlantısı kopuk olanlar dahil (oy verilirken kopuk hedef seçilemese de rastgele atamada seçilebilir).",
-    "KURALLAR.md §11 cevap 11 yalnız 2-3 aday için kural anlatır; kod 2 ile 8 aday için aynı genel kuralı uygular (tam iki farklı işaret varsa kazanan işaretin sahipleri devam eder).",
     "Darbe hak sahibi sayısı (paydası) bağlantısı kopuk oyuncuları da içerir: kopuk hak sahipleri oy veremez ama Darbe tutması için gereken çoğunluk sayısını yükseltir. KURALLAR.md yalnız 'erken bitişte kopuk beklenmez' der; çoğunluk hesabında kopuk olanların nasıl sayıldığı yazılı değildir.",
-    "Sonuç ekranı kendi puanını '+0' diye yazar (Sonuc.tsx, +{mine()}); başkan darbe yüzünden 0 aldığında Darbe oldu, +1 gitti notu görünür.",
     "Düello işareti ve darbe oyunda yalnız bağlı oyuncuları bekleyen erken bitiş, 2026-10-29 tarihli \"PROPOSAL\" başlıklı commit (fb1d7f5) ile ana dala girmiştir; docs/ONERI-KURAL.md hâlâ \"sahip onayı bekliyor, birleştirilmeyecek\" diyen bir başlık taşır, oysa KURALLAR.md bu kuralı sahip onayı olarak yazar. Kod bu kuralı uygular."
   ],
   "sonDegisiklikler": [
@@ -428,7 +487,8 @@
     "2026-10-26: Taht, jeton ve el görselleri eklendi (istemci).",
     "2026-10-27: O3 darbe oylaması eklendi (jeton almayanlar 10 sn Darbe / Darbe yok oyu, kesin çoğunlukla başkanın +1'i iptal); O4/O10/O11 ekranları; tur özeti; renk körlüğü modu ekranları; sahne (TV) rolü.",
     "2026-10-28: Lobi ton özelliği kaldırıldı.",
-    "2026-10-29: Darbe oyu ve düello işaretinde yalnız bağlı oyuncuların beklendiği ortak everyoneReady yardımcısı (öneri kuralı)."
+    "2026-10-29: Darbe oyu ve düello işaretinde yalnız bağlı oyuncuların beklendiği ortak everyoneReady yardımcısı (öneri kuralı).",
+    "2026-11-01: Öneri paketi (RD-M1…M7; RD-U1…U4, U6…U15): başkanın defteri, başkan +2, seçim vaadi ve TUTTU/BOZDU, 4+ adayda ikinci oylama, rastgele oy/jeton işaretleri, kopan başkanın jetonları seçmenlerine, 6–8 oyuncuda 30 sn seçim; sandık ve mühürlü seçim ekranı, büyük düello ve ritim, jeton kesesi ve '−' düğmesi, tahtın önü, darbe ekranı, taç anı, sahne sahne 11 sn açılış, kendi hikâyen ve 'Nankörlük!' etiketleri, küçük/yatay ekran, izleyici ve kopan oyuncu, TV görünümü, saray ses ve titreşim seti, yeni anlatım."
   ],
   "kaynaklar": [
     "packages/engine/src/games/rusvet-darbe/index.ts",
@@ -446,6 +506,11 @@
     "apps/client/src/games/rusvet-darbe/Sonuc.tsx",
     "apps/client/src/games/rusvet-darbe/view.ts",
     "apps/server/src/rusvet-darbe.test.ts",
-    "scripts/ui-check.mjs"
+    "scripts/ui-check.mjs",
+    "apps/client/src/games/rusvet-darbe/Secim.tsx",
+    "apps/client/src/games/rusvet-darbe/Seats.tsx",
+    "apps/client/src/games/rusvet-darbe/StageView.tsx",
+    "apps/client/src/games/rusvet-darbe/sounds.ts",
+    "apps/client/src/dev/mockRusvet.ts"
   ]
 }

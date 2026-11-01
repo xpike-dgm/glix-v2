@@ -14,6 +14,7 @@ async function send(c: Client, payload: unknown): Promise<boolean> {
 interface Pub {
   phase: string;
   president: string | null;
+  pledges: Record<string, string>;
   budget: number | null;
   duel: null | { hand: number; candidates: string[]; signs: Record<string, string> | null };
   coup: null | { tokens: Record<string, number>; eligible: string[] };
@@ -28,6 +29,7 @@ interface Priv {
   myVote: string | null;
   mySign: string | null;
   myTokens: { to: string; n: number }[] | null;
+  ledger: { voters: string[]; random: string[] } | null;
   myCoup: boolean | null;
   canCoup: boolean;
 }
@@ -62,6 +64,11 @@ describe("rüşvet ve darbe: oda içinde tam maç", () => {
     expect(await send(a, { kind: "sign", sign: "tas" })).toBe(false); // oy aşamasında işaret yok
     await sync();
     expect(cs.map((x) => priv(x)?.myVote)).toEqual([ids[1], ids[2], ids[3], ids[0]]);
+    // RD-M3: vaat herkese açık.
+    expect(await send(b, { kind: "pledge", pledge: "voters" })).toBe(true);
+    expect(await send(b, { kind: "pledge", pledge: "hepsi" })).toBe(false);
+    await sync();
+    expect(pub(c).pledges).toEqual({ [ids[1]]: "voters" });
     for (const x of cs) {
       const raw = JSON.stringify(x.room.match);
       expect(raw).not.toContain('"votes"');
@@ -70,6 +77,11 @@ describe("rüşvet ve darbe: oda içinde tam maç", () => {
     }
 
     k.clock.advance(20_100);
+    // Dörtlü eşitlik (RD-M4): önce 12 sn ikinci oylama; kimse oy vermezse dört adayla düello.
+    await until(() => pub().phase === "runoff", "ikinci oylama");
+    expect(pub().budget).toBeNull();
+    expect(await send(a, { kind: "vote", target: ids[0] })).toBe(false); // kendine yok
+    k.clock.advance(12_000);
     await until(() => pub().phase === "duel", "düello");
     expect(pub().duel?.candidates).toEqual(ids);
     expect(pub().budget).toBeNull();
@@ -117,12 +129,16 @@ describe("rüşvet ve darbe: oda içinde tam maç", () => {
     expect(await send(a, { kind: "give", tokens: [{ to: ids[1], n: 1 }] })).toBe(true); // değiştirilebilir
     await sync();
     expect(priv(a)?.myTokens).toEqual([{ to: ids[1], n: 1 }]);
+    // RD-M1: defter yalnız başkanda (ilk turda a'ya d oy verdi).
+    expect(priv(a)?.ledger).toEqual({ voters: [ids[3]], random: [] });
     for (const x of [b, c, d]) {
+      expect(priv(x)?.ledger).toBeNull();
       expect(priv(x)?.myTokens).toBeNull();
       expect(JSON.stringify(x.room.match)).not.toContain('"tokens"');
     }
 
-    k.clock.advance(25_000);
+    // "Başkan seçildi" anı (1,5 sn) + 25 sn dağıtım.
+    k.clock.advance(26_500);
     await until(() => pub().phase === "coup", "darbe oylaması");
     // Dağılım açıldı; jeton almayan c ve d (başkan a ve alıcı b hariç) oy hakkına sahip.
     expect(pub().coup?.tokens[ids[1]]).toBe(1);
@@ -150,9 +166,9 @@ describe("rüşvet ve darbe: oda içinde tam maç", () => {
     expect(pub().reveal?.tokens[ids[1]]).toBe(1);
     expect(pub().reveal?.coup).toEqual({ eligible: [ids[2], ids[3]], yes: 2, success: true });
 
-    k.clock.advance(8_000);
+    k.clock.advance(11_000);
     await until(() => a.room.phase === "results", "sonuç");
-    // Darbe başarılı: başkanın +1'i iptal; jeton etkilenmez.
+    // Darbe başarılı: başkanın +2'si iptal; jeton etkilenmez.
     const awards = { [ids[0]]: 0, [ids[1]]: 1, [ids[2]]: 0, [ids[3]]: 0 };
     expect(a.room.match?.result?.awards).toEqual(awards);
     expect(a.room.match?.result?.miniScores).toEqual(awards);

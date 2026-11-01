@@ -225,6 +225,16 @@ function ruletPropFiles(): string[] {
     .sort();
 }
 
+/** Rüşvet ve Darbe görsellerinden derlemede var olanlar (yoksa ekran CSS/SVG karşılığını çizer). */
+function rusvetPropFiles(): string[] {
+  const dir = fileURLToPath(new URL("./public/assets/props/rusvet-darbe", import.meta.url));
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".webp"))
+    .map((f) => f.slice(0, -".webp".length))
+    .sort();
+}
+
 /** Gizli Hırsız görsellerinden derlemede var olanlar (açık kasa; yoksa kasa kapısı ışıkla açık gösterilir). */
 function hirsizPropFiles(): string[] {
   const dir = fileURLToPath(new URL("./public/assets/props/gizli-hirsiz", import.meta.url));
@@ -274,6 +284,7 @@ export default defineConfig({
     __KRONOMETRE_PROPS__: JSON.stringify(kronometrePropFiles()),
     __RULET_PROPS__: JSON.stringify(ruletPropFiles()),
     __HIRSIZ_PROPS__: JSON.stringify(hirsizPropFiles()),
+    __RUSVET_PROPS__: JSON.stringify(rusvetPropFiles()),
     __KARELER_PROPS__: JSON.stringify(karelerPropFiles()),
   },
   plugins: [

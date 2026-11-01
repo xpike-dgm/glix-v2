@@ -5,6 +5,7 @@ interface PubLike {
   phase?: string;
   budget?: number | null;
   president?: string | null;
+  runoff?: { candidates?: string[] } | null;
 }
 
 /** Aşamaya uygun eylem üretir; ara sıra geçersiz hedef (kendine, bilinmeyen) ya da sınır aşan dağıtım dener. */
@@ -21,6 +22,15 @@ export const rusvetDarbeBot: GameBot = {
       return { kind: "sign", sign: SIGNS[rng.int(SIGNS.length)] };
     }
     if (pub.phase === "coup") return { kind: "coup", yes: rng.int(2) === 0 };
+    if (pub.phase === "runoff") {
+      const cands = (pub.runoff?.candidates ?? []).filter((id) => id !== playerId);
+      if (roll < 5) return { kind: "vote", target: playerId };
+      return { kind: "vote", target: cands[rng.int(Math.max(1, cands.length))] ?? "ghost" };
+    }
+    if (pub.phase === "vote" && roll >= 88) {
+      const pledges = [null, "voters", "all", "hepsi"] as const;
+      return { kind: "pledge", pledge: pledges[rng.int(pledges.length)] };
+    }
     if (pub.phase === "give") {
       if (roll < 8) return { kind: "give", tokens: [{ to: playerId, n: 1 }] };
       if (roll < 14) return { kind: "give", tokens: others.map((to) => ({ to, n: 2 })).slice(0, 8) };
