@@ -84,3 +84,4 @@ yazılır; görseller hepsi bittikten sonra ChatGPT ile üretilir.
 | Son Kişi | uygulandı (canlıda değil) | 8ede845 |
 | Açgözlülük Limiti | uygulandı (canlıda değil) | 87603c6 |
 | Ortalamanın Yarısı | uygulandı (canlıda değil) | 93ebbea |
+| Çizgiyi Geçme | uygulandı (canlıda değil) | 6c92740 |
