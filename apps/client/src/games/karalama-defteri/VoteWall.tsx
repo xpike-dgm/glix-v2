@@ -206,6 +206,7 @@ export function VoteWall(props: Props) {
       />
       <div
         class="kd__wall"
+        data-scroll
         ref={wall}
         style={{
           "--cols": layout().cols,
@@ -222,6 +223,7 @@ export function VoteWall(props: Props) {
               data-veiled={unveiled(i()) ? undefined : "1"}
               data-away={p.connected ? undefined : "1"}
               data-narrow={layout().colw < 130 ? "1" : undefined}
+              data-tight={layout().colw < 84 ? "1" : undefined}
               data-last={!landscape() && n() % 2 === 1 && n() > 3 && i() === n() - 1 ? "1" : undefined}
             >
               <button
@@ -259,7 +261,7 @@ export function VoteWall(props: Props) {
                 <span class="kd__namebox">
                   <span class="kd__name">{wallName(p.nickname)}</span>
                   <Show when={!p.connected}>
-                    <span class="kd__away">bağlantı koptu</span>
+                    <span class="kd__away">{layout().colw < 160 ? "koptu" : "bağlantı koptu"}</span>
                   </Show>
                 </span>
                 <Show when={picked() === p.id}>

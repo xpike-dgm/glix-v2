@@ -431,6 +431,10 @@
   color: #fff;
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
   font-variant-numeric: tabular-nums;
+  /* Bombanın parlak yansımaları ve kıvılcımı rakamın arkasına düşer: koyu sayaç plakası okunurluğu korur. */
+  padding: 2px 5px;
+  border-radius: 8px;
+  background: rgba(6, 9, 34, 0.86);
 }
 .zhub__num[data-rush="1"] {
   color: #ffb3c1;

@@ -704,6 +704,14 @@
   .kd__rtext .kd__rlabel {
     display: none;
   }
+  /* Tahmin satırı aynı sıraya sıkışınca ad "M…"ye, kelime "arm/ut"a bölünüyordu: kendi satırına iner. */
+  .kd__reveal {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+  .kd__rguess {
+    flex-basis: 100%;
+  }
 }
 
 /* Renk körlüğü dostu mod: kalem renkleri desen ve şekil taşır (renk adı düğmenin etiketinde de var). */
@@ -724,7 +732,7 @@
   gap: 10px;
 }
 .kdbar {
-  min-height: 44px;
+  min-height: 48px;
   min-width: 168px;
   padding: 4px 16px;
   display: grid;
@@ -777,7 +785,8 @@
   animation: screen-in var(--t-fast) var(--ease) both;
 }
 .kdcard__card {
-  width: min(78vw, 320px);
+  /* alçak yatayda kart + "Sonra bakarım" ekrana sığsın */
+  width: min(78vw, 320px, (100dvh - 110px) * 0.75);
   aspect-ratio: 3 / 4;
   padding: 0;
   border: 0;
@@ -861,7 +870,7 @@
   font-size: 36px;
 }
 .kdcard__skip {
-  min-height: 44px;
+  min-height: 48px;
   padding: 0 18px;
   border-radius: 999px;
   color: var(--text-dim);
@@ -963,36 +972,7 @@
   color: var(--red);
 }
 
-/* ---- KD-U8 küçük ekranda araçlar tek satır (kalınlık tek düğmede döner) ---- */
-.kd__sizecycle {
-  display: none;
-}
-@media (max-width: 380px) and (max-height: 700px) and (orientation: portrait) {
-  .kd__tools[data-ergo="1"] {
-    grid-template-columns: repeat(10, minmax(0, 1fr));
-    gap: 1px;
-    margin: 0 -14px 2px;
-  }
-  .kd__tools[data-ergo="1"] .kd__tool {
-    min-width: 0;
-    height: 46px;
-    border-radius: 10px;
-  }
-  .kd__tools[data-ergo="1"] .kd__size:not(.kd__sizecycle) {
-    display: none;
-  }
-  .kd__tools[data-ergo="1"] .kd__sizecycle {
-    display: grid;
-  }
-  .kd__tools[data-ergo="1"] .kd__swatch i {
-    width: 24px;
-    height: 24px;
-  }
-  .kd__tools[data-ergo="1"] svg {
-    width: 22px;
-    height: 22px;
-  }
-}
+/* ---- KD-U8 küçük ekranda araçlar tek satır: DrawBoard orada sıkı çubuğu (.kd__dock) kullanır ---- */
 
 /* ---- KD-U3 sergiye asıldı ---- */
 .kd__hang {
@@ -1076,6 +1056,8 @@
 .kd__wall {
   overflow-y: auto;
   overscroll-behavior: contain;
+  /* taşan duvarda ortalama ilk satırı kaydırma alanının üstüne (erişilemez) itiyordu */
+  align-content: safe center;
 }
 .kd__card[data-last="1"] {
   grid-column: 1 / -1;
@@ -1104,7 +1086,7 @@
   line-height: 1.15;
 }
 .kd__away {
-  font-size: 11px;
+  font-size: var(--fs-13);
   font-weight: 700;
   color: var(--amber);
   white-space: nowrap;
@@ -1115,9 +1097,11 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  width: 64px;
+  width: 72px;
   padding: 0;
-  font-size: 10px;
+  font-size: var(--fs-13);
+  line-height: 1.1;
+  text-align: center;
   font-weight: 700;
   color: var(--text-dim);
 }
@@ -1167,6 +1151,7 @@
   color: var(--text-dim);
 }
 .kd__navbtn {
+  flex: none; /* dar ekranda yazı sıkıştırıp 45 px'e indiriyordu */
   font-size: 28px;
   font-weight: 700;
 }
@@ -1248,6 +1233,12 @@
   border-color: var(--red);
   box-shadow: 0 0 22px rgba(255, 59, 92, 0.55);
 }
+.kdop__maskbox {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
 .kdop__mask {
   position: absolute;
   left: 15%;
@@ -1288,7 +1279,8 @@
   place-items: center;
   border-radius: 999px;
   background: var(--magenta, #ff2bd6);
-  color: #fff;
+  /* beyaz yazı pembe üstünde 3,2:1 kalıyordu; koyu yazı >= 4,5:1 */
+  color: #14031c;
   font-weight: 800;
   font-size: var(--fs-15);
   box-shadow: 0 0 12px rgba(255, 43, 214, 0.6);
@@ -1307,6 +1299,10 @@
   font-size: var(--fs-13);
   font-weight: 700;
   white-space: nowrap;
+}
+/* Dar sütunda (yatay, 7–8 oyuncu) avatar adı taşırıyordu: yalnız ad kalır. */
+.kdop__card[data-tight="1"] .kdop__name .av {
+  display: none;
 }
 .kdop__near {
   font-size: var(--fs-13);
@@ -1406,7 +1402,11 @@
   top: 50%;
   translate: -50% -50%;
   pointer-events: none;
-  animation: kdop-stamp 380ms cubic-bezier(0.2, 1.6, 0.4, 1) both;
+  /* Damga iner, bir süre durur ve söner: duvarın ortasındaki adları ve "Onun:" satırını kalıcı örtmesin
+     (sonuç başlıkta kalır). */
+  animation:
+    kdop-stamp 380ms cubic-bezier(0.2, 1.6, 0.4, 1) both,
+    kdop-stamp-out 500ms ease-in 2200ms forwards;
 }
 .kdop__stamp b {
   display: block;
@@ -1474,6 +1474,12 @@
   from {
     transform: scale(2.4);
     opacity: 0;
+  }
+}
+@keyframes kdop-stamp-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
   }
 }
 .kdop__last {
@@ -1688,7 +1694,8 @@
   text-align: center;
   font-size: var(--fs-13);
   font-weight: 700;
-  color: var(--red);
+  /* --red bu zeminde 4,4:1 kalıyordu */
+  color: #ff7a90;
 }
 .kd__rguess[data-ok="1"] {
   color: var(--lime);
@@ -1729,6 +1736,15 @@
 }
 .kd__card[data-narrow="1"] .kd__name {
   font-size: var(--fs-13);
+}
+/* Yatay 7–8 oyuncu: sütun ~60 px; avatar adı "M…"ye kesiyordu. Avatarsız, ortalı ad okunur kalır. */
+.kd__card[data-tight="1"] .kd__bar {
+  justify-content: center;
+  padding: 0 3px;
+  text-align: center;
+}
+.kd__card[data-tight="1"] .kd__bar .av {
+  display: none;
 }
 .kd__away {
   overflow: hidden;

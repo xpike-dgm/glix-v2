@@ -40,10 +40,13 @@ interface Props {
 function MaskArt() {
   const src = sizmaArt("maske");
   return (
-    <span class="kdop__mask" aria-hidden="true">
-      <Show when={src} fallback={<Mask size="100%" />}>
-        {(s) => <img src={s()} alt="" draggable={false} />}
-      </Show>
+    // Düşen maske kendi kırpma kutusunda kalır: çerçevenin kaydırılabilir taşmasını büyütmez.
+    <span class="kdop__maskbox" aria-hidden="true">
+      <span class="kdop__mask">
+        <Show when={src} fallback={<Mask size="100%" />}>
+          {(s) => <img src={s()} alt="" draggable={false} />}
+        </Show>
+      </span>
     </span>
   );
 }
@@ -201,6 +204,7 @@ export function Acilis(props: Props) {
               <div
                 class="kdop__card"
                 data-out={isOut() && masked() ? "1" : undefined}
+                data-tight={layout().colw < 90 ? "1" : undefined}
                 ref={(el) => {
                   cards.set(id, el);
                 }}

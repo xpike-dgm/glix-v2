@@ -14,6 +14,7 @@ import { serverNow, toast } from "../../net/store.js";
 import { CbMarker } from "../../ui/CbMarker.js";
 import type { AckLike } from "../../ui/optimistic.js";
 import { TamamBar } from "../../ui/TamamBar.js";
+import { createMediaQuery } from "../../ui/viewport.js";
 import {
   CLASSIC_PENS,
   MIN_STEP,
@@ -70,7 +71,7 @@ export interface DrawBoardProps {
   /**
    * Karalama ergonomisi (KD-U2, KD-U8): tuvalin altında mürekkep çubuğu (kalan nokta kotası), ikinci parmak yeni
    * çizgi başlatmaz, geri al basılı tutunca art arda geri alır, temizle onayı görünür balonla sorulur; küçük ekranda
-   * araçlar tek satırda birleşir (kalınlık tek düğmede döner, temizle balonla).
+   * araçlar tek satırda birleşir (sıkı çubuk: renk ve kalınlık açılır panelden; her düğme >= 48 px).
    */
   ergonomic?: boolean;
   /** Tahtanın üstüne binen öğeler (köşe sayacı, not). */
@@ -482,12 +483,12 @@ export function DrawBoard(props: DrawBoardProps) {
     tap();
     hapticTap();
   };
-  /** Küçük ekranda tek düğme: kalınlık sırayla döner. */
-  const cycleSize = (): void => {
-    const list = sizes();
-    const i = list.indexOf(size());
-    chooseSize(list[(i + 1) % list.length] ?? 2);
-  };
+  /**
+   * KD-U8 küçük dikey ekranda araçlar tek satır: on düğme yan yana 48 px'e sığmaz, bu yüzden orada sıkı çubuk
+   * (renk ve kalınlık açılır panelden) kullanılır; her düğme >= 48 px kalır.
+   */
+  const narrow = createMediaQuery("(max-width: 380px) and (max-height: 700px) and (orientation: portrait)");
+  const compact = (): boolean => props.compact === true || (props.ergonomic === true && narrow());
   const togglePanel = (which: "color" | "size"): void => {
     if (locked()) return;
     unlockAudio();
@@ -569,14 +570,13 @@ export function DrawBoard(props: DrawBoardProps) {
       </Show>
       <div class="kd__side">
         <Show
-          when={props.compact}
+          when={compact()}
           fallback={
             <div
               class="kd__tools"
               role="toolbar"
               aria-label="Kalem araçları"
               data-frozen={locked() ? "1" : undefined}
-              data-ergo={props.ergonomic ? "1" : undefined}
             >
               <For each={pens()}>{(i) => <Swatch index={i} onPick={() => choosePen(i)} />}</For>
               <button
@@ -605,17 +605,6 @@ export function DrawBoard(props: DrawBoardProps) {
                   </button>
                 )}
               </For>
-              <Show when={props.ergonomic}>
-                <button
-                  type="button"
-                  class="kd__tool kd__size kd__sizecycle"
-                  aria-label={`Kalınlık ${size()}, değiştirmek için dokun`}
-                  disabled={locked()}
-                  onClick={cycleSize}
-                >
-                  <i style={{ width: dot(size()), height: dot(size()) }} />
-                </button>
-              </Show>
               <button
                 type="button"
                 class="kd__tool"
@@ -711,7 +700,11 @@ export function DrawBoard(props: DrawBoardProps) {
                 class="kd__tool"
                 aria-label="Geri al"
                 disabled={count() === 0 || locked()}
-                onClick={undo}
+                onClick={undoClick}
+                onPointerDown={startUndoHold}
+                onPointerUp={stopUndoHold}
+                onPointerLeave={stopUndoHold}
+                onPointerCancel={stopUndoHold}
               >
                 <UndoIcon />
               </button>

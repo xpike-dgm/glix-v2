@@ -11,6 +11,7 @@
 //   pnpm ui:check:degisen [taban]    DEĞİŞEN (--degisen [taban]): `git diff taban...HEAD` + commitlenmemiş
 //                                    değişiklikleri ekran süzgeçlerine çevirir, yalnız onları HIZLI boyutlarda koşar.
 //                                    Taban varsayılanı origin/main ya da main. `--tum-boyut` beş boyutu geri getirir.
+// Parça virgülle birden çok olabilir (`zaman-,kd-vote`): adında herhangi birini içeren ekranlar koşar.
 // Ek bayraklar: `--liste` (koşmadan seçilen denetimleri yazar), `--ornek N` (her N'inci ekran, tüm boyutlarıyla; ölçüm için).
 // Ortam: UI_WORKERS (varsayılan min(4, çekirdek)), UI_CLOCK=0 (sahte saat yerine gerçek bekleme).
 // Hız: aynı ekranın boyutları tek bağlam/sayfada koşar (yeniden yükleme ile); sabit bekleme yerine uygulamanın
@@ -1354,6 +1355,9 @@ const SCREENS = [
         await p.mouse.move(...at(0.2 + i * 0.026, 0.7 - Math.sin(i / 3.5) * 0.3 - i * 0.008));
       }
       await p.mouse.up();
+      // Küçük dikey ekranda araçlar sıkı çubuktadır: renk önce panelden açılır.
+      const pick = p.locator(".kd__dock .kd__pick").first();
+      if (await pick.count()) await pick.click();
       await p.locator(".kd__swatch").nth(1).click();
       await p.mouse.move(...at(0.2, 0.3));
       await p.mouse.down();
@@ -3579,7 +3583,7 @@ async function main() {
   for (const scr of SCREENS) {
     if (DEGISEN) {
       if (!filters?.some((f) => matchScreen(scr.name, f))) continue;
-    } else if (ONLY && !scr.name.includes(ONLY)) continue;
+    } else if (ONLY && !ONLY.split(",").some((o) => o && scr.name.includes(o))) continue;
     for (const size of sizesFor(scr)) jobs.push({ scr, size });
   }
   if (STRIDE > 1) jobs = jobs.filter((j) => SCREENS.indexOf(j.scr) % STRIDE === 0);
@@ -3630,6 +3634,8 @@ async function main() {
           console.log(
             `${failures.length ? "✗" : "✓"} ${tag}${failures.length ? ` (${failures.length})` : ""}`,
           );
+          // Ayrıntı hemen yazılsın: yarıda kalan uzun koşuda da neyin kaldığı günlükten okunabilsin.
+          for (const f of [...new Set(failures)]) console.log(`    ${f}`);
         });
       }
       await w.ctx.close();
