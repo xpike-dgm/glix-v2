@@ -923,3 +923,18 @@
     letter-spacing: -0.03em;
   }
 }
+
+/* Ortalamanın Yarısı (OY-U12): yatayda sol şeritte oyun adı kelime ortasından bölünmez ("Ortalamaya / En Yakın"); şerit sığacak kadar genişler. */
+@media (max-height: 500px) and (orientation: landscape) and (min-width: 560px) {
+  .gframe[data-game="ortalamanin-yarisi"][data-o="portrait"] .gbar {
+    width: 96px;
+    padding-right: 0;
+    padding-left: max(2px, var(--safe-left));
+  }
+  .gframe[data-game="ortalamanin-yarisi"][data-o="portrait"] .gbar__name {
+    overflow-wrap: normal;
+    word-break: keep-all;
+    font-size: 13px;
+    letter-spacing: -0.03em;
+  }
+}

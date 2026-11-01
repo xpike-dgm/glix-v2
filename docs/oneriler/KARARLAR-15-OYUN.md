@@ -83,3 +83,4 @@ yazılır; görseller hepsi bittikten sonra ChatGPT ile üretilir.
 | İttifak | uygulandı (canlıda değil) | 800cb31 |
 | Son Kişi | uygulandı (canlıda değil) | 8ede845 |
 | Açgözlülük Limiti | uygulandı (canlıda değil) | 87603c6 |
+| Ortalamanın Yarısı | uygulandı (canlıda değil) | 93ebbea |
