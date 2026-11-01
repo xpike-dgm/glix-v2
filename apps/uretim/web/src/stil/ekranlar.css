@@ -2144,3 +2144,35 @@ select.girdi {
     animation: none;
   }
 }
+/* "Ne iş vereyim?" önerileri */
+.iste__fikir-ver {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+}
+.is-onerileri {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border: 1px solid var(--cizgi);
+  border-radius: var(--r-3);
+  background: var(--bg-ince);
+}
+.is-onerileri .fikir-izgara {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+}
+.is-onerileri > .dg {
+  align-self: flex-start;
+}
+.is-onerisi__dugme {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+}
+.is-onerisi__kullan {
+  color: var(--vurgu);
+  font-weight: 600;
+}

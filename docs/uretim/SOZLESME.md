@@ -456,3 +456,31 @@ madde kodu, uzunluk ve sır denetiminden geçmezse sabit kalıp kullanılır. Do
 `havuzda` öğe olarak düşer (`fikir_id` = kart; kart aşaması "kabul edildi"); yeniden hazırlanırsa eski taslak
 arşive gider. "Yöneticiye gönder" paketinde `dosyalar/docs/oneriler/…md` olarak yer alır. Sahip "ekle" deyince
 yönetici yeni oyunu test2'de taslak oyun (`docs/TASLAK-OYUNLAR.md`), sistemi özellik olarak uygular.
+
+## 16. "Ne iş vereyim?" iş önerileri
+
+Sahip "İş iste" formunda istek kutusunun üstündeki **Ne iş vereyim?** düğmesiyle seçili alan için 5–6 iş önerisi
+alır (`apps/uretim/src/isOnerisi.ts`, arayüz `web/src/ekran/IsOnerileri.tsx`). Karta dokununca istek metni kutuya
+yazılır (düzenlenebilir); öneride onaylı fikir kimlikleri varsa "Onaylanan fikirleri uygula" o fikirlerle işaretlenir.
+
+| Uç | Ne yapar |
+|---|---|
+| `POST /api/alan/:alan/is-onerisi { yeni?: boolean }` | Yalnız sahip oturumu (+ CSRF). Yanıt `{ oneriler: [{ baslik, metin, neden, fikirler: [id] }], kaynak: "model" \| "sabit", onbellek }` |
+
+- **Model:** istek → iş dönüştürücüsüyle aynı model ve güvenceler (`Donusturucu.metin`): aynı günlük sınır
+  (`ai_kullanim:<gün>` sayacı ortak), zaman aşımı, düşünme kapalı, yalnız `end_turn`.
+- **Modele giden bağlam (yalnız bunlar):** alanın adı, sahip oldukları, yapabildikleri, sınırları ve örnek işi; alandaki
+  son 20 işin başlığı ve durumu; onaylanmış, uygulanmamış fikirler (kimlik, başlık, özet; ≤ 12); oyun adları; alanın son
+  yapılandırılmış raporundaki kritik/yüksek/orta bulguların başlığı, önemi, oyunu (≤ 8; kanıt ve adımlar gitmez); bu
+  alana bekleyen istek kartlarının "ne" metni (≤ 5); "başka öner"de az önce gösterilen başlıklar. Serbest metinler
+  `isMetniTemizle` (sır kalıbı → `[gizli]`, ayraçlar, satır sonları) ve e-posta maskesinden geçer. Oyuncu verisi
+  (satış istatistiği, moderasyon kalıpları, hesaplar), iş açıklamaları, anahtar ve parolalar gönderilmez.
+- **Doğrulama:** tek JSON nesnesi; `baslik` 3–60, `metin` 10–300, `neden` 3–160 karakter, kontrol karakteri yok
+  (fazlası kırpılmaz, öneri düşer); `{{`/`}}` yer tutucu ya da `http(s)://` taşıyan öneri düşer; sır biçimi
+  (`gizliVarMi`) bütün çıktıyı reddeder; bilinmeyen fikir kimlikleri atılır. Son işlerle, az önce gösterilenlerle ya
+  da birbiriyle başlıkça çakışan öneriler elenir. 3'ten az öneri kalırsa sabit havuza düşülür.
+- **Sabit havuz:** model yok, hata, sınır dolu ya da çıktı geçmezse alan başına elle yazılmış 5 öneri (son işlerle
+  çakışanlar elenir; onaylı fikir varsa başa kodla "Onaylanan fikirleri uygula" önerisi); yanıtta `kaynak: "sabit"`,
+  arayüzde küçük nazik not.
+- **Önbellek:** bellekte, alan başına; aynı bağlam için 10 dakika aynı yanıt (`onbellek: true`). `yeni: true`
+  ("Başka öner") önbelleği atlar ve az önce gösterilen başlıkları (≤ 24) modele "bunları tekrar etme" diye verir.

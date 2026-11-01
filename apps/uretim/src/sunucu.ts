@@ -13,6 +13,7 @@ import { Depo } from "./depo.js";
 import { Giris, type Postaci, resendPostaci } from "./giris.js";
 import { Kasa } from "./gizli.js";
 import { GUVENLIK_BASLIKLARI, gonder, sayfaCsp } from "./http.js";
+import { isOnericiKur } from "./isOnerisi.js";
 import { type AiFetch, donusturucuKur } from "./istekYaz.js";
 import { Depoayna, Katalog } from "./katalog.js";
 import { Kosular } from "./kosu.js";
@@ -111,6 +112,7 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
     ...(b.aiFetch ? { fetch: b.aiFetch } : {}),
     gunluk: config.aiGunluk,
   });
+  const isOnerici = isOnericiKur(merkez, donusturucu);
   const postaci =
     b.postaci !== undefined
       ? b.postaci
@@ -186,6 +188,7 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
           bildirim,
           ssh,
           donusturucu,
+          isOnerici,
           yayin,
           oyunAlani,
           surum,

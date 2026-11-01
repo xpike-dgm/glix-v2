@@ -274,6 +274,8 @@ ekran CSS sandığı çizer ve dosyayı hiç istemez.
 
 ## Rüşvet ve Darbe
 
+**Durum: üretildi ve eklendi (OYUN-GELISTIRME-7, 2026-11-02).**
+
 Ortak stil: oyunun mevcut görselleriyle uyumlu (`apps/client/public/assets/worlds/rusvet-darbe-*.webp`: karanlık gotik
 saray salonu, kırmızı sancaklar, kırmızı kadife taht, mum ışığı, parlak siyah mermer; `props/genel/taht.webp` ve
 `props/genel/rusvet-jetonu.webp`: altın + neon kırmızı/macenta vurgulu, kalın hatlı çizgi-roman/oyun ikonu stili). Yer
@@ -330,6 +332,8 @@ istemez; dosya konunca kod değişmeden kullanılır (`__RUSVET_PROPS__`, `rusve
 
 ## İttifak
 
+**Durum: üretildi ve eklendi (OYUN-GELISTIRME-7, 2026-11-02).**
+
 Ortak stil: oyunun mevcut görselleriyle uyumlu (`apps/client/public/assets/worlds/ittifak-*.webp`: karanlık gotik
 müzakere salonu, siyah mermer zemin, mor kadife yüksek sırtlı sandalyeler, altın kenarlı yuvarlak siyah mermer masa, mum
 ışığı, mor vitray; `props/genel/el-sikisma.webp`: kalın hatlı çizgi-roman/oyun ikonu stili, neon vurgulu). Yer
@@ -371,6 +375,8 @@ istemez; dosya konunca kod değişmeden kullanılır (`__ITTIFAK_PROPS__`, `itti
   bastırmayacak düzeyde) ve oy okuma için davul rulosu katmanı.
 
 ## Son Kişi
+
+**Durum: üretildi ve eklendi (OYUN-GELISTIRME-7, 2026-11-02).**
 
 Ortak stil: oyunun mevcut görselleriyle uyumlu (`apps/client/public/assets/worlds/son-kisi-*.webp`: karanlık bilim-kurgu
 koridoru, koyu metal duvar panelleri, cam gibi parlak siyah zemin, camgöbeği (#2ef2ff) neon şeritler ve kırmızı (#ff3b5c)
