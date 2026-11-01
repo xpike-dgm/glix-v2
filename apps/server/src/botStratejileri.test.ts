@@ -202,6 +202,24 @@ describe("zamanlama", () => {
     }
   });
 
+  it("Çizgiyi Geçme: botlar iki turun ikisinde de kendisi seçer, sayılar 0–100", () => {
+    const { room, view } = playGame("cizgiyi-gecme");
+    const bots = botsOf(room).map((p) => p.id);
+    const pv = view() as {
+      history: { choices: Record<string, number | null> }[];
+      reveal: { choices: Record<string, number | null> } | null;
+    };
+    const rounds = [...pv.history, ...(pv.reveal ? [pv.reveal] : [])];
+    expect(rounds).toHaveLength(2);
+    for (const r of rounds) {
+      for (const id of bots) {
+        const v = r.choices[id];
+        expect(v === null || v === undefined ? -1 : v).toBeGreaterThanOrEqual(0);
+        expect(v ?? 101).toBeLessThanOrEqual(100);
+      }
+    }
+  });
+
   it("Kör Kronometre: botlar her elde hedefe 0,3–1,5 sn uzaklıkta basar", () => {
     const { room, view } = playGame("kor-kronometre");
     const bots = new Set(botsOf(room).map((p) => p.id));

@@ -28,6 +28,7 @@
  *   tv-sonkisi-*              Son Kişi evreleri (ör. tv-sonkisi-tense, tv-sonkisi-gap, tv-sonkisi-reveal)
  *   tv-ortalama-*             Ortalamaya En Yakın evreleri (ör. tv-ortalama-card, tv-ortalama-choosing&tur=2,
  *                             tv-ortalama-reveal&tur=3&t=6000)
+ *   tv-cizgi-*                Çizgiyi Geçme evreleri (ör. tv-cizgi-radar, tv-cizgi-reveal&at=2000, tv-cizgi-final)
  *   tv-sizma-*                Sızma evreleri (ör. tv-sizma-clue, tv-sizma-runoff, tv-sizma-unmask&t=5200)
  */
 import { setState } from "../net/store.js";
@@ -83,6 +84,9 @@ export async function startTvMock(mock: string, params: URLSearchParams): Promis
     } else if (kind.startsWith("sonkisi-")) {
       const m = await import("./mockSonKisi.js");
       m.startSonKisiMock(kind, params, true);
+    } else if (kind.startsWith("cizgi-")) {
+      const m = await import("./mockCizgi.js");
+      m.startCizgiMock(kind, params, true);
     } else if (kind.startsWith("acgozluluk-")) {
       const m = await import("./mockAcgozluluk.js");
       m.startAcgozlulukMock(kind, params, true);

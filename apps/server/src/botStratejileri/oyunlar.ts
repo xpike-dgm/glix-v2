@@ -2,11 +2,18 @@
  * Oyun başına oynama stratejileri. Her strateji görünümleri kendi küçük arayüzüyle okur (yalnız ihtiyaç duyduğu
  * alanlar); alan yoksa ya da tür beklenmedikse ya hiçbir şey yapmaz ya da hata verir (bots.ts güvenle düşer).
  *
- * Bot stratejisi olmayan oyunlarda (ör. Rüşvet ve Darbe, Çizgiyi Geçme) bot `BOTS`'u kullanır. Son Kişi yalnız
+ * Bot stratejisi olmayan oyunlarda (ör. Rüşvet ve Darbe) bot `BOTS`'u kullanır. Çizgiyi Geçme yalnız `round`,
+ * `reveal`, `radar.zones`, `zoneWidth`, `myChoice`, `locked` alanlarına dayanır. Son Kişi yalnız
  * `phase`, `round`, `escaped` ve "escape"e dayanır. Ortalamanın Yarısı yalnız `round`, `reveal`, `roundStartedAt`,
  * `endsAt`, `multiplier`, `previous[].target`, `myChoice`, `locked` alanlarına dayanır.
  */
-import { acgozlulukFairShare, ITTIFAK_BAND_MS, ittifakMaxPromises } from "@glix/engine";
+import {
+  acgozlulukFairShare,
+  cizgiZone,
+  cizgiZoneRange,
+  ITTIFAK_BAND_MS,
+  ittifakMaxPromises,
+} from "@glix/engine";
 import { shapeStrokes } from "./cizim.js";
 import type { PlayCtx, PlayStep, PlayStrategy } from "./index.js";
 import {
@@ -472,8 +479,42 @@ const acgozluluk: PlayStrategy = (c) => {
   return thinking(c, `lock${round}`, 1_000, 4_000) ?? { action: { kind: "lock" } };
 };
 
+// ——— Çizgiyi Geçme (CZ-M1, CZ-M3): her tur kendisi seçer; radar kendi platformunu yakarsa çoğu zaman bir platform
+// aşağı kaçar; sonra Tamam ———
+const cizgi: PlayStrategy = (c) => {
+  const p = rec(c.pub);
+  const v = rec(c.priv);
+  if (p.reveal !== null || v.locked === true) return null;
+  const round = num(p.round) ?? 1;
+  const width = num(p.zoneWidth) ?? 10;
+  const mine = num(v.myChoice);
+  if (mine === null) {
+    const wait = thinking(c, `pick${round}`, 2_000, 9_000);
+    if (wait) return wait;
+    const roll = c.rng.int(10);
+    // Çoğunlukla yüksek ama kalabalık tepeden biraz aşağı; bazen Zirve, bazen düşük.
+    const value = roll === 0 ? 100 : roll < 3 ? between(c, 5, 49) : between(c, 50, 97);
+    return { action: { kind: "choose", value }, next: 800 };
+  }
+  const radar = p.radar === null || p.radar === undefined ? null : rec(p.radar);
+  if (radar !== null && c.mem[`fled${round}`] !== true) {
+    c.mem[`fled${round}`] = true;
+    const zones = Array.isArray(radar.zones) ? radar.zones : [];
+    const zone = cizgiZone(mine, width);
+    if (zones.includes(zone) && c.rng.int(3) !== 0) {
+      const below = Math.max(0, zone - 1);
+      const { from, to } = cizgiZoneRange(below, width);
+      return { action: { kind: "choose", value: between(c, from, to) }, next: 900 };
+    }
+  }
+  // Radardan önce kilitlemek risklidir: bot çoğu zaman radarı bekler.
+  if (radar === null && p.radarAt !== null && c.rng.int(4) !== 0) return { next: 1_000 };
+  return thinking(c, `lock${round}`, 1_000, 4_000) ?? { action: { kind: "lock" } };
+};
+
 export const STRATEGIES: Record<string, PlayStrategy> = {
   "acgozluluk-limiti": acgozluluk,
+  "cizgiyi-gecme": cizgi,
   ittifak: ittifakBot,
   "sozluk-blofu": sozluk,
   "cagrisim-agi": cagrisim,

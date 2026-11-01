@@ -9,16 +9,16 @@
     "max": 8
   },
   "sure": {
-    "tahminiSn": 37,
-    "not": "Oyun aşaması en çok 37 sn sürer: 30 sn seçim + 7 sn sonuç animasyonu. Bağlı herkes seçimini kilitlerse (Tamam) seçim aşaması 1 sn sonra biter ve 7 sn'lik sonuç animasyonu buna göre öne gelir. Süre oyuncu sayısına göre değişmez; değişen tek şey bölge genişliğidir. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 60 sn) gelir. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
+    "tahminiSn": 72,
+    "not": "Oyun aşaması en çok 72 sn sürer: 2 tur × 30 sn seçim + 5 sn ara açılış + 7 sn son açılış. Erken bitiş tur başınadır: bağlı herkes Tamam derse o turun seçimi 1 sn sonra biter ve sonraki tur o kadar öne gelir. Süre oyuncu sayısına göre değişmez. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı gelir. Oyunun kendi son açılışı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
-  "ozet": "Herkes gizlice 0 ile 100 arasında tam sayı seçer. 0-100 yolu oyuncu sayısına göre belirlenen genişlikte platformlara (bölgelere) ayrılır. Aynı platforma düşen herkes sönüp pasif kalır (ceza yok, puan yok). Tek kalanlar arasında en yüksek sayıyı seçen +2, ikinci yüksek +1 alır. Yüksek sayı çekicidir ama herkes yükseğe çıkmak istediği için çarpışma riski de oradadır.",
+  "ozet": "İki tur oynanır. Her tur herkes gizlice 0 ile 100 arasında tam sayı seçer. 0-99 yolu oyuncu sayısına göre belirlenen genişlikte platformlara ayrılır; 100 her zaman tek başına 'Zirve' platformudur. Aynı platforma düşen herkes çarpışıp pasif kalır (ceza yok). Tek kalanlar arasında en yüksek sayı +2, ikinci +1 tur puanı alır. Turun 15. saniyesinde 'kalabalık radarı' o an 2+ pin bulunan platformları herkese 🔥 ile gösterir (2 kişide yok). Oyun sonunda iki turun toplamına göre genel skor: tek lider +2, sonraki +1 (liderler eşitse hepsi +1).",
   "akis": [
     {
       "ad": "Anlatım",
       "sureSn": 40,
       "kim": "herkes",
-      "aciklama": "Tam ekran anlatım: 'En yükseğe çık ama kimseyle aynı platformda kalma!' ve üç madde (gizlice 0-100 arası bir sayı seç; aynı bölgeye düşen elenir, bölge genişliği oyuncu sayısına göre değişir; tek kalanların en yükseği +2, ikincisi +1 alır). Bağlı herkes hazır olunca ya da 40 sn dolunca biter. Maç kartları burada oynanır."
+      "aciklama": "Tam ekran anlatım, masanın platformlarıyla: 'İki tur: gizlice 0 ile 100 arasında bir sayı seç. 5 kişisiniz: her platform 7 sayı (0–6, 7–13 … 91–97, 98–99, 100 Zirve).' / 'Biriyle aynı platforma düşersen ikiniz de çarpışır, puan yok. Örnek: 95 ve 94 → çarpıştı. Turun ortasında radar kalabalık platformları yakar.' (2 kişide radar cümlesi yok) / 'Tek kalanların en yükseği +2, ikincisi +1; tek kalıp üçüncü olan 0. İki turun toplamı kazanır.'"
     },
     {
       "ad": "Geri sayım",
@@ -27,65 +27,63 @@
       "aciklama": "3 sn geri sayım, oynanan kartlar açıklanır."
     },
     {
-      "ad": "Seçim",
+      "ad": "Tur 1 ve Tur 2: seçim",
       "sureSn": 30,
       "kim": "herkes (izleyici hariç)",
-      "aciklama": "Üstte süre çubuğu. Ortada büyük 'Gizli pinin' sayısı ('?' iken seçim yapılmamıştır) ve altında 'Seçmezsen pasif kalırsın' / 'X–Y platformundasın' / kilitlenince 'X–Y platformunda kesinleştin' yazısı; üstteki küçük yazıda 'Gizli pinin · platform genişliği N'. Altta platform kulesi: her bölge bir satır (üstte en yüksek bölge), bölge aralığı yazılı (örn. '40–49'), seçtiğin sayıya karşılık gelen satır vurgulu ve pin avatarın o platformun üzerinde yükselir. Sayı seçici: geniş kaydırma çubuğu (sürükle) ve −10 / −1 / +1 / +10 düğmeleri (basılı tutunca 0,38 sn sonra her 75 ms'de tekrar). Seçim süre bitene ya da 'Tamam'a kadar sınırsız değiştirilebilir. 'Tamam' seçimi kilitler; bağlı herkes Tamam derse seçim 1 sn sonra biter. İzleyici '?' ve 'Herkes gizlice seçiyor · Sonuç süre bitince açılır' yazısını ve kaç kişinin Tamam dediğini görür.",
-      "gizli": "Hiçbir seçim ve hiçbir çarpışma sonuç açılana kadar kimseye gösterilmez; kendi sayını yalnız sen görürsün. Kimlerin 'Tamam' dediği herkese açıktır. Bölge genişliği (oyuncu sayısına göre) herkese açık kural bilgisidir."
+      "aciklama": "Üstte süre çubuğu, 'Tur 1/2' rozeti ve 'N kişisiniz: platformlar geniş/orta/dar' notu (2. turda kendi toplamın Σ). Büyük sayı ve altında 'X–Y platformundasın · her platform N sayı' (Zirvede 'Zirvedesin · 100 tek başına'). Ortada kule: kulenin kendisi kaydırıcıdır; dokunduğun yüksekliğe pin çıkar, sürüklerken büyüteç bulunduğun platformu ve bir altını/üstünü gösterir, platform sınırında kısa titreşim ve 'tık', Zirve'de çan. Başlangıç çapası yoktur (seçim yokken 'Dokun ve tırman'). 5+ kişide kule onluk kuşaklara ayrılır ('90'lar'), kendi platformunun etiketi tam yazılır. Altta −10/−1/+1/+10 ince ayar düğmeleri ve Tamam. Tamam'dan sonra pin bayrak diker: 'Kilitlendin · 72', radara kadar 'Radar N sn sonra…', radar çıkınca 'Senin platformun: sakin ✓' ya da '🔥 kalabalık — artık kaçamazsın!'. Son 5 sn kule nabız atar, tik hızlanır, seçmemiş oyuncunun telefonu her saniye titrer ('Seçmezsen pasif kalırsın!'). Turun 15. saniyesinde radar: kule kararır, aşağıdan yukarı tarama geçer, 2+ pin bulunan platformlar 🔥 ve turuncu nabızla tur sonuna kadar kalır; üstte 'RADAR: 2 platform kalabalık!' ya da 'RADAR: kimse yan yana değil'; kendi platformun yanıyorsa 'Burada yalnız değilsin!'. İzleyici tam kuleyi, radarı ve kilitleyenleri avatarlarla görür.",
+      "gizli": "Seçimler tur açılana kadar kimseye gösterilmez; radar yalnız yanan platform numaralarını taşır (kim, kaç kişi yok)."
     },
     {
-      "ad": "Sonuç animasyonu",
-      "sureSn": 7,
+      "ad": "Tur açılışı",
+      "sureSn": 5,
       "kim": "herkes",
-      "aciklama": "Süre dolunca (ya da erken bitişte 1 sn sonra) seçimler herkese açılır. Animasyon zaman çizelgesi: 0-1,7 sn 'Pinler iniyor ?'; 1,7 sn'de pinler platformlarına iner, aynı platformdakiler söner ('Aynı platformdakiler - Söndü!') ya da çarpışma yoksa 'Platformlar - Temiz!'; 3,2 sn'de 'En yüksek tek kalan' (ad); 4,4 sn'de oyuncuya kendi sonucu: '+2' / '+1' ya da 'Bu sefer - puan yok'. Seçmeyenler altta 'Seçmedi' şeridinde gösterilir. Çarpışanlar ✗ işaretiyle, birinci ★ ve +2 ile, ikinci +1 ile görünür. Ardından genel sonuç ekranı gelir. Açılış en az 7 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
-      "gizli": "Artık tüm seçimler, bölgeler, durumlar ve puanlar herkese açıktır."
+      "aciklama": "1. turdan sonra 5 sn, 2. turdan sonra 7 sn. Boş platformlar dahil tam kule; pinler en düşükten en yükseğe tek tek tırmanır (sayı sayaç gibi akar; eşit sayılar aynı anda), dolu platforma oturan pinle çarpışır (kıvılcım, 'ÇARPIŞTI' damgası, çapraz çizgili kırmızı çip, ad okunur kalır). Son pinden sonra en yüksek tek kalan fırlar (+2), ikinci +1; tek kalıp puan alamayan yeşil çerçeveli 'tek kaldı'. Başlık: kendi sonucun ('+2 BİRİNCİ' / '+2 ZİRVEDEN!' / '+1 İKİNCİ' / 'TEK KALDIN' / 'ÇARPIŞTIN' / 'SEÇMEDİN') ve masanın özeti ('3 çarpışan · 2 tek kalan · en yüksek tek: Cihad 72'); ardından 'ne olurdu?' satırı ('Bir platform aşağıda (84–90) tek kalırdın: +2.' gibi; izleyici/TV: 'En yüksek boş platform: 91–97.'). Seçmeyenler kulenin dibinde gri 'pasif' satırında. Ara turda '2. tur N sn sonra'; son turda iki turun tablosu (tur puanları, Σ, genel +2/+1) ve ortak 'Devam et'. Hareket azaltmada tırmanma, tarama, sarsıntı ve fırlatma yok.",
+      "gizli": "Açılan turun tüm seçimleri, durumları ve tur puanları herkese açıktır."
     }
   ],
   "kurallar": [
-    "2-8 oyuncu katılır (dikey oyun).",
-    "Seçim aralığı 0 ile 100 arasında TAM SAYIDIR (uçlar dahil); ondalık, aralık dışı ya da sayı olmayan değer ağdan gelirse reddedilir.",
-    "Bölge genişliği oyuncu sayısına göre belirlenir: 2 oyuncu → 25, 3 → 14, 4 → 10, 5 → 7, 6 → 6, 7 → 5, 8 → 4. Bölge numarası = ⌊sayı ÷ genişlik⌋. Bölgenin aralığı genişliğin katlarıdır ve 100 ile sınırlıdır. Genişlik 25, 10, 5 ya da 4 iken (100'ün böleni olduğundan) 100 tek başına bir bölgedir ('100'); genişlik 14, 7 ya da 6 iken 100 son bölgenin içinde kalır (örn. 98-100).",
-    "Platform (bölge) sayısı = ⌊100 ÷ genişlik⌋ + 1: 2 oyuncuda 5, 3'te 8, 4'te 11, 5'te 15, 6'da 17, 7'de 21, 8'de 26 platform. Bölge genişliği, bir oyuncunun başkasıyla aynı bölgeye düşme olasılığını (seçimler düzgün dağılırsa) oyuncu sayısından bağımsız olarak yaklaşık %25'te tutmak için seçilmiştir (testte her sayı için %24,5-%26,4).",
-    "Seçim aşaması 30 sn sürer. Seçim süre bitene kadar istenildiği kadar değiştirilebilir; son seçim geçerlidir (çarpışmadan kaçmak için). Aynı değeri tekrar göndermek durumu değiştirmez.",
-    "Hiç seçim yapmayan oyuncu (boş ya da geç seçim) pasiftir: bölge değerlendirmesine girmez, puan almaz, ceza almaz ve 0 seçmiş gibi sayılmaz (0-9 bölgesindeki bir başkasıyla çarpışmaz).",
-    "'Tamam' (kilit): önce bir seçim yapılmış olmalı (seçimsiz Tamam 'nothing_to_lock' ile reddedilir). Tamam'dan sonra seçim değiştirilemez ve ikinci kilit reddedilir ('locked'). Bağlı herkes Tamam derse seçim aşaması 1 sn sonra biter; bu 1 sn'de de kilitsiz bağlı oyuncu kalmadığı için yeni eylem gelmez.",
-    "Süre dolduğu anda (ya da sonrasında) gelen seçim/kilit reddedilir ('ended'); süre bitmeden bir ms önceki seçim kabul edilir. Geç seçim yapmamış sayılır.",
-    "Süre dolunca değerlendirme: bir bölgede 2 veya daha çok oyuncu varsa o bölgedeki herkes 'çarpıştı' (pasif, 0 puan, ceza yok). Bir bölgede tek kalan oyuncu 'tek kalan'dır.",
-    "Tek kalanlar arasında en yüksek sayıyı seçen +2, ikinci en yüksek sayıyı seçen +1 alır. Tek kalanlar farklı bölgelerde olduğundan sayıları da farklıdır; eşitlik oluşamaz (aynı sayı = aynı bölge = çarpışma). Tek kalan sayısı 1 ise yalnız +2 verilir; 2 ve üstündeyse üçüncü ve sonrası 0 alır ('güvende ama puansız').",
-    "Kimse tek kalmazsa (herkes çarpıştı ya da hiç kimse seçmedi) kimse puan almaz.",
-    "Puanlar doğrudan genel skora eklenir; negatif puan yoktur."
+    "2-8 oyuncu katılır (dikey oyun). Oyun 2 turdur; seçim her turun başında boşalır.",
+    "Seçim aralığı 0 ile 100 arasında TAM SAYIDIR (uçlar dahil); ondalık, aralık dışı ya da sayı olmayan değer reddedilir.",
+    "Bölge genişliği oyuncu sayısına göre: 2 → 25, 3 → 14, 4 → 10, 5 → 7, 6 → 6, 7 → 5, 8 → 4. 100 her zaman tek sayılık 'Zirve' platformudur; diğer sayılarda bölge = ⌊sayı ÷ genişlik⌋. 0-99'un son platformu kısa kalabilir (3 ve 5 kişide 98-99, 6 kişide 96-99).",
+    "Platform sayısı (Zirve dahil): 2 oyuncuda 5, 3'te 9, 4'te 11, 5'te 16, 6'da 18, 7'de 21, 8'de 26. Düzgün dağılımda çarpışma olasılığı her oyuncu sayısında yaklaşık %25'tir (testte %24,5-%26,7).",
+    "Her turun seçimi 30 sn sürer; tur bitene kadar istenildiği kadar değiştirilebilir. 1. turdan sonra 5 sn ara açılış, 2. turdan sonra 7 sn son açılış.",
+    "Tur içinde seçim yapmayan o turda pasiftir: bölge değerlendirmesine girmez, puan almaz, 0 seçmiş sayılmaz.",
+    "'Tamam' (kilit): önce seçim yapılmış olmalı. Tamam'dan sonra o turda seçim değiştirilemez. Bağlı herkes Tamam derse o turun seçimi 1 sn sonra biter, sonraki tur o kadar öne gelir. Kilit her tur sıfırlanır.",
+    "Kalabalık radarı: her turun 15. saniyesinde o ana kadar gönderilmiş seçimlerde (kilitli ya da değil) 2+ pin bulunan platformlar herkese gösterilir; kim ve kaç kişi gösterilmez, fotoğraf güncellenmez. Herkes radar anından önce kilitlerse o tur radar çıkmaz. 2 kişide radar yoktur.",
+    "Tur sonunda: bir bölgede 2 veya daha çok oyuncu varsa hepsi 'çarpıştı' (pasif, 0, ceza yok). Tek kalanların en yükseği +2, ikincisi +1 tur puanı alır; üçüncü ve sonrası 0. Eşitlik oluşamaz.",
+    "Genel skor oyun sonunda bir kez, iki turun toplamına göre (rankAwards, yalnız toplamı 0'dan büyükler): tek lider +2, sonraki toplamı paylaşanların hepsi +1; liderler eşitse hepsi +1 ve ikinci ödül yok. Eksi puan yoktur."
   ],
   "puanlama": {
-    "ozet": "Tek kalanlar arasında en yüksek seçim +2, ikincisi +1; aynı bölgedekiler ve seçmeyenler 0 (pasif). Ceza yoktur.",
+    "ozet": "Her tur: tek kalanların en yükseği +2, ikincisi +1 tur puanı. Oyun sonu: iki turun toplamına göre tek lider +2, sonraki +1 (liderler eşitse hepsi +1). Ceza yok.",
     "kalemler": [
       {
-        "olay": "Tek kalanlar içinde en yüksek sayı",
-        "puan": "+2",
-        "not": "Tek kalan yalnız bir kişiyse yine +2."
+        "olay": "Turda tek kalanlar içinde en yüksek sayı",
+        "puan": "+2 tur puanı",
+        "not": "Zirvede (100) tek kalan her zaman bu."
       },
       {
-        "olay": "Tek kalanlar içinde ikinci en yüksek sayı",
-        "puan": "+1",
-        "not": "Ancak en az 2 tek kalan varsa."
+        "olay": "Turda tek kalanlar içinde ikinci",
+        "puan": "+1 tur puanı",
+        "not": "En az 2 tek kalan varsa."
       },
       {
-        "olay": "Tek kaldı ama ilk iki değil",
+        "olay": "Tek kaldı ama ilk iki değil / çarpıştı / seçmedi",
         "puan": "0",
-        "not": "Durum 'güvende' (safe)."
+        "not": "Ceza yok."
       },
       {
-        "olay": "Aynı bölgede başka oyuncu var",
-        "puan": "0",
-        "not": "Çarpıştı, pasif; ceza yok."
+        "olay": "Oyun sonu: iki turun toplamında tek lider",
+        "puan": "+2 genel",
+        "not": "Liderler eşitse hepsi +1."
       },
       {
-        "olay": "Seçim yapmadı",
-        "puan": "0",
-        "not": "Pasif; değerlendirmeye girmez."
+        "olay": "Oyun sonu: liderden sonraki toplam",
+        "puan": "+1 genel",
+        "not": "Bu toplamı paylaşan herkes."
       }
     ],
-    "ornek": "5 oyuncu (bölge genişliği 7): A 92, B 95, C 80, D 41, E 60. Bölgeler: 92 ve 95 → ⌊92/7⌋=13 ve ⌊95/7⌋=13 → aynı bölge (91-97): A ve B çarpıştı, 0. C 80 → bölge 11 (77-83), D 41 → bölge 5 (35-41), E 60 → bölge 8 (56-62): hepsi tek. Tek kalanlar: C 80, E 60, D 41 → C +2, E +1, D 0. Sonuç: C +2, E +1, A/B/D 0. İkinci örnek: 2 oyuncu (genişlik 25): A 90 (bölge 3: 75-99), B 80 (bölge 3) → çarpıştı, ikisi 0. A 90, B 70 (bölge 2: 50-74) → A +2, B +1.",
-    "beraberlik": "Eşitlik oluşmaz: aynı sayıyı seçenler zaten aynı bölgededir ve çarpışıp pasif olur. Tek kalanların bölgeleri farklı olduğu için sayıları da farklıdır, sıralama kesindir."
+    "ornek": "4 oyuncu (genişlik 10). 1. tur: A 45, B 41 (40-49, çarpıştı), C 72 (+2), D seçmedi. 2. tur: A 90 (+2), B 60 (+1), C 31 ve D 35 (30-39, çarpıştı). Toplam: A 2, B 1, C 2, D 0 → A ve C eşit lider: ikisi de +1, B ve D 0. 2 kişide: 1. tur A +2, B +1; 2. tur B +2, A +1 → 3-3 → ikisi de +1.",
+    "beraberlik": "Tur içinde eşitlik oluşmaz (aynı platform = çarpışma). Toplamda liderler eşitse hepsi +1 alır, ikinci ödül verilmez."
   },
   "ozelDurumlar": [
     {
@@ -102,7 +100,7 @@
     },
     {
       "baslik": "Herkes erken bitirirse",
-      "aciklama": "Bağlı herkes Tamam deyince seçim şimdiden 1 sn sonra biter; sonuç animasyonu (7 sn) bu andan başlar, oyun toplam bu kadar erken sona erer. Sonuç değişmez. Erken bitiş yalnız bir Tamam eylemi anında denetlenir; son bekleyen bağlı oyuncunun kopması kendiliğinden erken bitirmez."
+      "aciklama": "Bağlı herkes Tamam deyince o turun seçimi 1 sn sonra biter; açılış bu andan başlar ve sonraki tur o kadar öne gelir. Radar henüz çıkmadıysa o tur çıkmaz."
     },
     {
       "baslik": "Kimse seçmezse / tek kişi seçerse",
@@ -110,17 +108,17 @@
     },
     {
       "baslik": "2 vs 8 oyuncu",
-      "aciklama": "2 oyuncuda 5 platform vardır (0-24, 25-49, 50-74, 75-99, 100): çarpışma ihtimali düşük, 100 tek başına bir platformdur. 8 oyuncuda genişlik 4 olduğu için 26 platform vardır; kule 'yoğun' çizilir (11'den çok platformda satırların bir kısmı sönük), sonuçta boş platformlar gizlenir."
+      "aciklama": "2 oyuncuda 5 platform vardır (0-24, 25-49, 50-74, 75-99, Zirve) ve radar yoktur. 8 oyuncuda 26 platform vardır; seçim kulesi onluk kuşaklara ayrılır ('90'lar'), sonuçta boş platformlar dahil tam kule çizilir ve dolu platformlar büyür."
     },
     {
       "baslik": "Gizlilik",
-      "aciklama": "secrets() boştur (değerler kısa sayılar); testler süre dolmadan ortak görünümün yalnız zaman alanlarını ve kilitleyenleri taşıdığını, kişisel görünümün yalnız sahibinin seçimini içerdiğini doğrular."
+      "aciklama": "secrets() boştur (değerler kısa sayılar); testler tur açılmadan ortak görünümün seçim/durum taşımadığını, radarın yalnız platform numaraları taşıdığını, kişisel görünümün yalnız sahibinin o turdaki seçimini içerdiğini doğrular."
     }
   ],
   "kartlar": [
     {
       "kart": "Genel hesap",
-      "etki": "Bu oyunda mini oyun puanı = ham genel puan ve yalnız 0, +1, +2 değerlerini alır. 'Birinci' +2 alan tek kalan (yoksa herkes 0 ise herkes birinci), 'sonuncu' en düşük puanlı oyunculardır (genellikle puansız herkes; yalnız 2 oyuncuda ve +2/+1 çıkarsa +1 alan 'sonuncu' sayılır)."
+      "etki": "Bu oyunda mini oyun puanı = iki turun tur puanı toplamı (0-4); genel puan bundan +2 / +1 / 0 olarak hesaplanır. Kartların 'birinci/sonuncu' kararı mini puan toplamına göredir."
     },
     {
       "kart": "Kendine Güven",
@@ -174,17 +172,17 @@
   "sabitler": [
     {
       "ad": "Seçim süresi",
-      "deger": "30 000 ms",
+      "deger": "30 000 ms (her tur, 2 tur)",
       "kaynak": "packages/engine/src/games/cizgiyi-gecme/types.ts:4"
     },
     {
-      "ad": "Sonuç animasyonu süresi (en az gösterim; ardından 'Devam et', en çok 60 sn)",
-      "deger": "7 000 ms",
+      "ad": "Ara açılış / son açılış",
+      "deger": "5 000 / 7 000 ms",
       "kaynak": "packages/engine/src/games/cizgiyi-gecme/types.ts:6"
     },
     {
       "ad": "Toplam oyun süresi",
-      "deger": "37 000 ms",
+      "deger": "72 000 ms",
       "kaynak": "packages/engine/src/games/cizgiyi-gecme/types.ts:7"
     },
     {
@@ -204,7 +202,7 @@
     },
     {
       "ad": "Puanlar",
-      "deger": "en yüksek tek kalan +2, ikinci +1, diğerleri 0",
+      "deger": "tur: +2 / +1 / 0; oyun sonu (toplam): +2 / +1 / 0, liderler eşitse hepsi +1",
       "kaynak": "packages/engine/src/games/cizgiyi-gecme/index.ts:60-68"
     },
     {
@@ -213,122 +211,97 @@
       "kaynak": "packages/engine/src/games/cizgiyi-gecme/index.ts:76-77"
     },
     {
-      "ad": "Sayı seçici: ince ayar adımları / basılı tutma gecikmesi / tekrar aralığı",
-      "deger": "-10, -1, +1, +10 / 380 ms / 75 ms",
-      "kaynak": "apps/client/src/ui/NumberPicker.tsx:23-25"
-    },
-    {
-      "ad": "Seçim gönderim aralığı (sürükleme)",
-      "deger": "140 ms",
-      "kaynak": "apps/client/src/ui/numberPicker.ts:28"
-    },
-    {
-      "ad": "Sonuç zaman çizelgesi (çarpışma / yükselme / son)",
-      "deger": "1 700 / 3 200 / 4 400 ms",
-      "kaynak": "apps/client/src/games/cizgiyi-gecme/Sonuc.tsx:28-30"
+      "ad": "Açılış zaman çizelgesi (pin başı / tırmanış)",
+      "deger": "son tur 350 / 500 ms, ara tur 250 / 380 ms, ilk pin 300 ms'de",
+      "kaynak": "apps/client/src/games/cizgiyi-gecme/view.ts (climbPlan)"
     },
     {
       "ad": "Yoğun kule eşiği",
-      "deger": "11'den çok platform (genişlik < 10)",
+      "deger": "11'den çok platform (5+ oyuncu): onluk kuşaklar",
       "kaynak": "apps/client/src/games/cizgiyi-gecme/view.ts:122-124"
     },
     {
       "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
       "deger": "40 000 / 3 000 / 30 000 ms",
       "kaynak": "apps/server/src/match.ts:40-42"
+    },
+    {
+      "ad": "Kalabalık radarı anı",
+      "deger": "turun başından 15 000 ms (3+ oyuncu)",
+      "kaynak": "packages/engine/src/games/cizgiyi-gecme/types.ts (CIZGI_RADAR_MS)"
     }
   ],
   "strateji": [
-    "Herkes yüksek sayıya yöneldiği için 90-99 aralığı en çok çarpışan aralıktır; ortalarda ve alışılmadık sayıları seç ya da tersine kalabalığın altına düş.",
-    "2, 4, 7 ve 8 oyuncuda 100 tek sayılık bir platformdur: 100'ü seçersen yalnız bir başkası da 100 seçerse çarpışırsın. 3, 5 ve 6 oyuncuda 100 son platformun içindedir (98-100 ya da 96-100), orada 97, 98, 99 seçenle çarpışabilirsin.",
-    "Çarpışma yalnız aynı BÖLGEDE olur: sayının rakibinle aynı olması gerekmez. Bölge genişliği küçüldükçe (8 oyuncu → 4) platformlar dar olur ve rakibin sayısıyla arana birkaç sayı girmesi seni kurtarmaz; aynı bölgeye düşmemek için bölge sınırlarına bak.",
-    "Seçimini değiştirebilirsin ama başkaları görünmez; yine de herkesin o 'doğal' sayıyı (50, 77, 99, 100) seçeceğini varsay, bunlardan kaçın.",
-    "İkinci olmak da değerlidir (+1): en yüksekten çok çarpışmayan bir orta sayı bile puan getirir. Hiç puan alamamaktan iyisi, güvenli ve makul yüksekliktir.",
-    "Seçmemek puan getirmez ama ceza da getirmez; süre bitmeden mutlaka bir sayı seç ve gerekirse Tamam ile kilitle ki yanlışlıkla sürüklemeyle değişmesin."
+    "1. tur keşiftir: masanın eğilimini gör (kim tepeye gidiyor, kim ortada); 2. turda insanları oku.",
+    "Radar 🔥 yaktıysa ve kilitlemediysen kaçabilirsin; ama herkes kaçınca yeni kalabalıklar oluşur.",
+    "Erken kilit radara karşı savunmasız bırakır: radardan önce kilitlersen kaçamazsın.",
+    "Zirve (100) tek sayılıktır: tek kalırsan +2 kesin, ama herkesin aklındaki ilk sayıdır.",
+    "İkinci olmak da puandır (+1); iki turun toplamı önemli."
   ],
-  "tv": "Çizgiyi Geçme'nin TV'ye özel sahnesi yoktur: TV görünümü oyun içi ekranın izleyici kipinde büyütülmüş hâlidir. Seçim sırasında '?' ve 'Herkes gizlice seçiyor · platform genişliği N', kule ve Tamam diyenlerin sayacı; sonuçta platform kulesinde oyuncu avatarları, aynı platformda çarpışanların söndüğü animasyon, '+2/+1' rozetleri ve 'Seçmedi' şeridi görünür. Seçimler sonuç açılana kadar TV'de de yoktur.",
+  "tv": "Çizgiyi Geçme'nin TV sahnesi vardır (StageView): ortada ekran boyu kule, solda oyuncu sütunu (avatar, ad, kilit, iki turun toplamı, sonda genel +2/+1), sağda büyük süre, 'Tur 1/2', 'her platform N sayı · 100 Zirve' ve radar. Açılış biraz yavaş oynar, çarpışmada ekran kısa sarsılır (hareket azaltmada yok). Seçimler açılana kadar TV'de yoktur; radar herkese açık bilgi olduğu için görünür.",
   "ekranlar": [
     {
       "mock": "cizgi-briefing",
       "name": "cizgi-briefing",
       "q": "mock=cizgi-briefing",
       "baslik": "Anlatım",
-      "aciklama": "Oyun öncesi anlatım: pin kulesi çizimi, amaç ve üç madde.",
+      "aciklama": "Masanın platformlarıyla anlatım.",
       "dosya": "cizgi-briefing"
     },
     {
       "mock": "cizgi-choosing",
-      "name": "cizgi-choosing-2",
-      "q": "mock=cizgi-choosing&n=2&chosen=0",
-      "baslik": "Seçim (2 oyuncu, genişlik 25)",
-      "aciklama": "5 platformlu kule (0-24 … 100), 2 oyuncuda en geniş bölgeler; henüz seçim yok.",
-      "dosya": "cizgi-choosing-n-2-chosen-0"
-    },
-    {
-      "mock": "cizgi-choosing",
       "name": "cizgi-choosing-8",
-      "q": "mock=cizgi-choosing&n=8",
-      "baslik": "Seçim (8 oyuncu, genişlik 4)",
-      "aciklama": "26 platformlu yoğun kule; sayı seçici ve Tamam.",
-      "dosya": "cizgi-choosing-n-8"
+      "q": "mock=cizgi-choosing&n=8&chosen=0",
+      "baslik": "Seçim (8 oyuncu)",
+      "aciklama": "Onluk kuşaklı 26 platformlu kule, 'Dokun ve tırman'.",
+      "dosya": "cizgi-choosing-n-8-chosen-0"
     },
     {
       "mock": "cizgi-locked",
       "name": "cizgi-locked-5",
       "q": "mock=cizgi-locked&n=5",
-      "baslik": "Seçim kilitlendi",
-      "aciklama": "'X–Y platformunda kesinleştin', Tamam sonrası değiştirilemez, diğerleri bekleniyor.",
+      "baslik": "Kilit ve radar bekleyişi",
+      "aciklama": "Bayrak, 'Kilitlendin · 72', 'Radar N sn sonra…'.",
       "dosya": "cizgi-locked-n-5"
     },
     {
-      "mock": "cizgi-reveal",
-      "name": "cizgi-reveal-mid",
-      "q": "mock=cizgi-reveal&n=5",
-      "baslik": "Sonuç: orta an",
-      "aciklama": "Animasyonun 2,6. saniyesi: pinler indi, aynı platformdakiler söndü.",
-      "dosya": "cizgi-reveal-n-5"
+      "mock": "cizgi-radar",
+      "name": "cizgi-radar-6",
+      "q": "mock=cizgi-radar&n=6",
+      "baslik": "Radar",
+      "aciklama": "Yanan platform 🔥 ve 'RADAR: 1 platform kalabalık!'.",
+      "dosya": "cizgi-radar-n-6"
     },
     {
       "mock": "cizgi-reveal",
       "name": "cizgi-reveal-5",
       "q": "mock=cizgi-reveal&n=5",
-      "baslik": "Sonuç: son durum (5 oyuncu)",
-      "aciklama": "Kulede seçimler, ★ en yüksek tek kalan +2, ikinci +1, çarpışanlar ✗.",
+      "baslik": "Ara açılış",
+      "aciklama": "Tam kule, adlı çipler, ÇARPIŞTI, başlık ve 'ne olurdu?'.",
       "dosya": "cizgi-reveal-n-5"
     },
     {
-      "mock": "cizgi-reveal-crowd",
-      "name": "cizgi-reveal-crowd-8",
-      "q": "mock=cizgi-reveal-crowd&n=8",
-      "baslik": "Sonuç: kalabalık (8 oyuncu)",
-      "aciklama": "Çoğu oyuncu aynı platformlarda çarpışır; az kişi tek kalır.",
-      "dosya": "cizgi-reveal-crowd-n-8"
-    },
-    {
-      "mock": "cizgi-reveal-passive",
-      "name": "cizgi-reveal-passive-6",
-      "q": "mock=cizgi-reveal-passive&n=6",
-      "baslik": "Sonuç: seçmeyenler",
-      "aciklama": "'Seçmedi' şeridinde pasif oyuncular.",
-      "dosya": "cizgi-reveal-passive-n-6"
+      "mock": "cizgi-final",
+      "name": "cizgi-final-6",
+      "q": "mock=cizgi-final&n=6",
+      "baslik": "Son açılış",
+      "aciklama": "İki turun tablosu ve genel puanlar.",
+      "dosya": "cizgi-final-n-6"
     },
     {
       "mock": "cizgi-spectator",
       "name": "cizgi-spectator",
       "q": "mock=cizgi-spectator&n=5",
       "baslik": "İzleyici",
-      "aciklama": "'?' ve 'Herkes gizlice seçiyor'; sayı seçici yok, Tamam sayacı görünür.",
+      "aciklama": "Tam kule, radar ve kilitleyenler.",
       "dosya": "cizgi-spectator-n-5"
     }
   ],
   "bilinenSorunlar": [
-    "KURALLAR.md §18 ana metni (eski) onluk bölgeler ve '100 tek elemanlı son bölge' der; O12 bloğu bölge genişliğini oyuncu sayısına bağlar ve 'sayı aralığı 0-100 aynı kalır, 100 son bölgeye düşer' der. Kodda bölge = ⌊sayı ÷ genişlik⌋ olduğundan 100, genişlik 25/10/5/4 iken tek başına bir bölgedir (2, 4, 7 ve 8 oyuncuda); yalnız 3 (14), 5 (7) ve 6 (6) oyuncuda 100 daha geniş son bölgeye düşer.",
-    "KURALLAR.md sonuç animasyon süresinden söz etmez; kodda seçim bittikten sonra 7 sn'lik sonuç animasyonu vardır ve oyun bu süre dolunca biter.",
-    "Erken bitiş (herkes Tamam deyince 1 sn) KURALLAR §18'de yoktur; kod ekledi. Erken bitiş yalnız Tamam eylemi anında denetlenir (son bekleyen bağlı oyuncu kopsa tetiklenmez).",
-    "Sayı seçici dokunulmadıysa ekran '?' gösterir ve sunucuya hiçbir seçim gitmez (pin soluk/boş çizilir); oyuncu hiçbir şeye dokunmazsa pasif kalır. Çubukta dokunulan yer değeri belirler; henüz değer yokken −10/−1/+1/+10 düğmeleri 50'den başlar (örn. +1 → 51).",
-    "'Tek kalan sayısı 1 ise yalnız +2' ve 'ikinci için en az 2 tek kalan gerekir' KURALLAR'da açık yazmaz; kodda alone listesi 0, 1 ya da 2+ elemanlı olabilir."
+    "Erken bitiş yalnız Tamam eylemi anında denetlenir (son bekleyen bağlı oyuncu kopsa tetiklenmez)."
   ],
   "sonDegisiklikler": [
+    "2026-11-01: CZ öneri paketi (sahip onayı): iki tur ve toplamdan genel skor (CZ-M1), kalabalık radarı (CZ-M3), 100 her zaman Zirve (CZ-M4); dokunulan kule, kuşaklar, kilit/radar bekleyişi, tırmanan açılış, tam kule, 'ne olurdu?', yatay düzen, TV sahnesi, ses seti, masaya özel anlatım (CZ-U1…U15).",
     "2026-10-29: Oyun ekranları: tutarlı durum, tek satır başlık, okunur sonuçlar.",
     "2026-10-27: Renk körlüğü modu: kazanan yıldızı ★ ve çarpışma işaretleri.",
     "2026-10-27: O12 (sahip onayı): bölge genişliği oyuncu sayısına göre (2→25 … 8→4); motor, istemci ekranları, mock ve ui-check girdileri.",
@@ -347,11 +320,10 @@
     "packages/engine/src/games/cizgiyi-gecme/cizgiyi-gecme.test.ts",
     "docs/KURALLAR.md#18-çizgiyi-geçme (O12 değişiklik bloğu dahil)",
     "apps/client/src/games/cizgiyi-gecme/ (CizgiyiGecmeScreen.tsx, Sonuc.tsx, view.ts)",
-    "apps/client/src/ui/NumberPicker.tsx",
-    "apps/client/src/ui/numberPicker.ts",
     "apps/client/src/ui/TamamBar.tsx",
     "apps/server/src/match.ts",
     "apps/server/src/cizgiyi-gecme.test.ts",
-    "scripts/ui-check.mjs"
+    "scripts/ui-check.mjs",
+    "apps/client/src/games/cizgiyi-gecme/ (Tower.tsx, StageView.tsx, cues.ts, sounds.ts, briefing.ts)"
   ]
 }
