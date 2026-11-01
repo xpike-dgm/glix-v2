@@ -51,6 +51,8 @@ ses ve havuz kontrolleri bağımsız çalışır.
 | `GET /api/uretim/magaza/taslak` | **Yalnız test2.** Taslak katmanındaki mağaza ürünleri (bölüm 13) | `{ katman, urunler: [{ id, urun, dosyalar: [yol], zaman }] }` |
 | `POST /api/uretim/magaza/taslak` | **Yalnız test2.** Taslak ürün yükler ya da aynı kimlikliyi değiştirir | `{ ok, id, katman, degisti }` |
 | `DELETE /api/uretim/magaza/taslak/:id` | **Yalnız test2.** Taslağı kaldırır (yoksa da başarılı) | `{ ok, silindi, katman }` |
+| `GET`/`POST /api/uretim/kosu`, `GET /api/uretim/kosu/:id`, `POST …/kosu/:id/iptal` | **Yalnız test2.** Bot koşuları (bölüm 14) | `{ suren, son }` / `{ ok, kosu }` / `{ kosu }` |
+| `GET`/`POST /api/uretim/oda`, `GET /api/uretim/oda/:kod`, `POST …/oda/:kod/kapat` | **Yalnız test2.** Yalnız-bot oyun alanı odaları (bölüm 14) | `{ odalar }` / `{ ok, oda }` / `{ oda }` / `{ ok }` |
 
 Kurallar:
 - Bir istekte en çok 500 satır.
@@ -341,3 +343,69 @@ içerik satırları dahil — tek pakette:
   `havuzSatirlari`. Yönetici satırları yerleşik havuza ya da (sahip isterse) bölüm 3 `ekle` ile canlıya ekler.
 - Yönetici: yamayı `magaza.json`'a uygular, görselleri hedef yollara koyar, `pnpm check/typecheck/test/build`, ana
   dala birleştirir, `POST /api/paket/:id/oyuna-eklendi { revizyon }` → test'e çıkınca `/testte`.
+
+## 14. Bot koşuları ve oyun alanı araçları (aşama 3 ikinci dilim; UM-O4, UM-F1)
+
+Hepsi yalnız `GLIX_ORTAM=test2`'de ve test2'nin kendi `GLIX_URETIM_TOKEN`'ıyla çalışır; canlıda ve test'te bütün
+`kosu` ve `oda` uçları 404 (testli). Oyun kuralına ve ekranlarına dokunulmadı.
+
+**Yalnız-bot odası** (`apps/server/src/botKosusu.ts`): sunucu odayı kurar (`room.botOdasi`), botları ekler (ilki host;
+insan gerekmez), oyunu elle seçer, kart aşamasını kapatır ve maçı başlatır. Botlar insanla aynı yoldan (`handleMessage`)
+oynar. Oda yönetici oda listesinde görünmez; son insan çıkınca botları silme kuralı bu odalarda uygulanmaz (izleyici
+kodla girip çıkabilir). Bot stratejisi: `oyna` (insan gibi, `botStratejileri/`) ya da `rastgele` (motorun test botu,
+kural zorlar).
+
+**Sınırlar:** aynı anda tek koşu (409 `run_active`); aynı anda en çok 4 yalnız-bot odası ve 24 bot (koşu + araç
+odaları; 429 `limit`; test2 512 MB içinde); koşuda en çok 2 paralel oda; istek: en çok 12 oyun, 4 oyuncu sayısı
+(2–8), oyun×oyuncu başına 1–10 maç, toplam ≤ 60 maç, süre sınırı 1–120 dk (varsayılan 30). Maç 15 dk'yı ya da aynı
+aşamada 8 dk'yı aşarsa "takıldı" sayılır ve oda kapanır.
+
+**Koşu isteği** `POST /api/uretim/kosu`: `{ oyunlar: [id], oyuncular?: [3,5,8], mac?: 1, strateji?: "oyna"|"rastgele",
+sureDk?: 30 }`. Oyuncu verilmezse oyuna uygun sayı; oyuna uymayan birleşim atlanır (`atlananlar`).
+
+**Koşu sonucu** (`kosu`): `{ id, istek, durum: suruyor|bitti|iptal|zaman_asimi, baslama, bitis, maclar: [{ oyun,
+oyuncu, durum: bitti|takildi|coktu|iptal|bekliyor, sureMs, skorlar (büyükten küçüğe), takildigiAsama?, hata?, oda }],
+ornekler: [{ t, tickP95, bellekMb, oda }] (10 sn'de bir, ≤ 200), eylemler: { <oyun>: { n, p50, p95, max, red: {
+<neden>: n } } } (bot eyleminin sunucuda işlenme süresi, ms), oyunHatalari: [{ oyun, fn, mesaj }] (abortMatch),
+atlananlar, tickP95Son }`. Sunucu son 10 koşuyu bellekte tutar; kalıcı kayıt sitededir.
+
+**Oda** `POST /api/uretim/oda` `{ oyun, bot?, strateji? }` → `{ kod, oyun, durum, asama, oyuncular: [{ ad, skor }],
+baslama, sureMs, hata, olaylar: [{ t, tur: asama|oyun|hata|red|bilgi, metin }] }`; `GET …/oda/:kod` son 200 olay.
+Biten oda 15 dk açık kalır, sonra kendiliğinden kapanır.
+
+**Site** (`apps/uretim/src/kosu.ts`, `kosuRaporu.ts`):
+- Koşu kaydı (`kosu` tablosu): başlatan (`sahip`, `yz:test:<anahtar>`, `plan`), durum, sonuç. Site dakikada bir süreni
+  izler; bitince sonucu rapor panosu biçimine (bölüm 12) çevirir ve **Test alanına `tur: "rapor"` teslim** eder
+  (`arac: "Bot koşusu"`, kaynak MCP). test2 koşuyu tanımazsa (yeniden başladı) koşu `hata` olur.
+- Rapor: özet kutucukları (maç, biten, takılan, çöken, tick p95, eylem p95, bot eylemi, reddedilen, bellek, süre),
+  seriler (tick p95 ve bellek zamanla, eşikli; oyuna göre süre ve eylem p95), tablolar (oyuna göre, skor dağılımı,
+  maçlar), **kendiliğinden bulgular**: takılan maç (yüksek; oyun+oyuncu+aşama başına, sıklıkla), çöken oyun (kritik),
+  tick p95 > 50 ms (orta), bellek > 420 MB (yüksek), eylem p95 > 30 ms (orta), reddedilen eylem > %25 (düşük), hep
+  berabere biten oyun (≥ 3 maç; düşük, denge sinyali), süre sınırı (orta), atlanan birleşimler (düşük).
+- **Dönemli koşu:** Test alanı → Koşular → "Dönemli koşu" (6/12/24 saatte bir, oyunlar ve ayarlar); ayar `kosuPlani`.
+  Site zamanlayıcısı süren koşu yoksa başlatır; deneme anı yazılır (test2'ye ulaşılamazsa her dakika denenmez).
+- Sahip uçları: `GET /api/kosu` (geçmiş, plan), `POST /api/kosu` (başlat), `POST /api/kosu/:id/iptal`,
+  `POST /api/kosu/plan`, `GET /api/oyunlar` (form). `GET /api/raporlar` koşu raporuna `kosu: { id, istek, ozet }` ekler
+  (kartta "Bot koşusu").
+
+**Yapay zekâ araçları** (MCP; SSH karşılığı `uretim <komut>`):
+| MCP | SSH | Kim |
+|---|---|---|
+| `test_kosusu_baslat` | `test-kosusu-baslat < json` | yalnız Test alanı |
+| `test_kosusu_durum` `{ id? }` | `test-kosusu-durum [id]` | yalnız Test alanı |
+| `test_kosusu_iptal` `{ id }` | `test-kosusu-iptal <id>` | yalnız Test alanı |
+| `oyun_alani_oda_ac` `{ oyun, bot?, strateji? }` | `oyun-alani-oda-ac <oyun> [bot] [oyna\|rastgele]` | her alan (alan başına en çok 2 açık oda) |
+| `oyun_alani_durum` / `oyun_alani_kayit` `{ kod }` | `oyun-alani-durum <kod>` / `oyun-alani-kayit <kod>` | yalnız odayı açan alan |
+| `oyun_alani_kapat` `{ kod }` | `oyun-alani-kapat <kod>` | yalnız odayı açan alan |
+
+Test alanında koşu araçları `tools/list`'te görünür, başka alanda görünmez ve çağrılamaz. Talimatın "Teslim paketi"
+bölümüne her alanda oyun alanı araçları satırı, Test alanında koşu satırı (`TEST_SINIRI`) kodla eklenir; Test alanının
+kopyalanan isteminde koşu satırı vardır.
+
+**Ekran görüntüsü (`oyun_alani_ekran`) — yapılmadı, öneri:** ölçüm (headless Chromium 1194, telefon boyutu, test2
+oyun sayfası): kurulu boyut ~320 MB (yalnız headless kabuk; tam Chromium ~600 MB), bir sayfada bellek payı (PSS) en
+çok ~320 MB, ilk ekran ~3,3 sn; ayrıca `playwright-core` (8,6 MB) çalışma bağımlılığı olurdu. Site kabının sınırı
+768 MB ve imajı küçük tutuluyor: siteye konmadı. **Öneri:** ayrı, isteğe bağlı bir "ekran" kabı (resmî Playwright
+imajı ya da Node + Chromium; 768 MB–1 GB sınır, ağ yalnız `glix-oyun-alani`), site istek gelince `docker compose run
+--rm` ile ya da sürekli açık tek işçi olarak çalıştırır; çıktı PNG doğrudan depoya. Karar sahibin (bellek ve imaj
+maliyeti).

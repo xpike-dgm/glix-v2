@@ -281,6 +281,105 @@ export const ARACLAR: readonly AracTanimi[] = [
   },
 ];
 
+/** Oyun alanı araçları (UM-O4): her alan; odalar yalnız botlarla, test2'de (sözleşme bölüm 14). */
+const kodSemasi = {
+  type: "object",
+  required: ["kod"],
+  properties: { kod: { type: "string", description: "oyun_alani_oda_ac'ın döndürdüğü oda kodu" } },
+  additionalProperties: false,
+};
+export const OYUN_ALANI_ARACLARI: readonly AracTanimi[] = [
+  {
+    name: "oyun_alani_oda_ac",
+    title: "Oyun alanında oda aç",
+    description:
+      "test2'de yalnız botlarla bir maç açar (senin taslakların test2'de zaten yüklü). Dönen kodla durumunu izle; izlemek için sahip test2'de ?oda=<kod> ile girebilir. Alan başına en çok 2 açık oda.",
+    inputSchema: {
+      type: "object",
+      required: ["oyun"],
+      properties: {
+        oyun: { type: "string", description: "oyun kimliği, ör. butona-bas" },
+        bot: { type: "integer", minimum: 2, maximum: 8, description: "bot sayısı (oyunun sınırları içinde)" },
+        strateji: {
+          type: "string",
+          enum: ["oyna", "rastgele"],
+          description: "oyna: insan gibi; rastgele: kural zorlar",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "oyun_alani_durum",
+    title: "Oyun alanı odasının durumu",
+    description: "Odanın aşaması, oyuncular, skorlar, hata ve son 30 olay.",
+    inputSchema: kodSemasi,
+  },
+  {
+    name: "oyun_alani_kayit",
+    title: "Oyun alanı odasının kaydı",
+    description: "Odanın bütün olay ve hata kaydı (en çok 200 olay).",
+    inputSchema: kodSemasi,
+  },
+  {
+    name: "oyun_alani_kapat",
+    title: "Oyun alanı odasını kapat",
+    description: "Odayı kapatır (botlar durur).",
+    inputSchema: kodSemasi,
+  },
+];
+
+/** Yalnız Test ve Performans alanı: test2'de bot koşusu. */
+export const KOSU_ARACLARI: readonly AracTanimi[] = [
+  {
+    name: "test_kosusu_baslat",
+    title: "Bot koşusu başlat",
+    description:
+      "test2'de yalnız botlarla koşu: oyunlar × oyuncu sayıları × maç sayısı kadar tek oyunluk maç. Bitince sonuç rapor olarak kendiliğinden teslim edilir (bulgular dahil). Aynı anda tek koşu.",
+    inputSchema: {
+      type: "object",
+      required: ["oyunlar"],
+      properties: {
+        oyunlar: { type: "array", items: { type: "string" }, maxItems: 12 },
+        oyuncular: { type: "array", items: { type: "integer", minimum: 2, maximum: 8 }, maxItems: 4 },
+        mac: { type: "integer", minimum: 1, maximum: 10, description: "oyun ve oyuncu sayısı başına maç" },
+        strateji: { type: "string", enum: ["oyna", "rastgele"] },
+        sureDk: { type: "integer", minimum: 1, maximum: 120 },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "test_kosusu_durum",
+    title: "Bot koşularının durumu",
+    description:
+      "Süren ve son koşular (id verilirse o koşu). Biten koşunun raporu teslim olarak yazılır (ogeId).",
+    inputSchema: {
+      type: "object",
+      properties: { id: { type: "integer" } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "test_kosusu_iptal",
+    title: "Bot koşusunu iptal et",
+    description: "Süren koşuyu durdurur; o ana kadarki sonuç rapor olarak yazılır.",
+    inputSchema: {
+      type: "object",
+      required: ["id"],
+      properties: { id: { type: "integer" } },
+      additionalProperties: false,
+    },
+  },
+];
+
+/** Anahtarın alanına göre görünen araçlar. */
+export const alanAraclari = (alan: string): readonly AracTanimi[] => [
+  ...ARACLAR,
+  ...OYUN_ALANI_ARACLARI,
+  ...(alan === "test" ? KOSU_ARACLARI : []),
+];
+
 export class AracHatasi extends Error {}
 
 const BASE64 = /^[A-Za-z0-9+/]*={0,2}$/;
@@ -378,6 +477,36 @@ export async function aracCalistir(
       if (!baslik || !gerekce || !etki || ornek === null)
         throw new AracHatasi("baslik, gerekce ve etki gerekli.");
       return m.kodIstegiAc(alan, { baslik, gerekce, ornek, etki }, kim, now);
+    }
+    case "oyun_alani_oda_ac":
+    case "oyun_alani_durum":
+    case "oyun_alani_kayit":
+    case "oyun_alani_kapat": {
+      const ks = m.kosular;
+      if (!ks?.acik) throw new AracHatasi("Oyun alanı (test2) bağlantısı ayarlı değil.");
+      if (ad === "oyun_alani_oda_ac") return ks.odaAc(alan, args);
+      if (ad === "oyun_alani_kapat") return ks.odaKapat(alan, args);
+      return ks.odaDurum(alan, args, ad === "oyun_alani_kayit" ? 200 : 30);
+    }
+    case "test_kosusu_baslat":
+    case "test_kosusu_durum":
+    case "test_kosusu_iptal": {
+      if (alan !== "test") throw new AracHatasi("Bu araç yalnız Test ve Performans alanında.");
+      const ks = m.kosular;
+      if (!ks?.acik) throw new AracHatasi("Oyun alanı (test2) bağlantısı ayarlı değil.");
+      if (ad === "test_kosusu_baslat") return { kosu: await ks.baslat(args, kim) };
+      const id = args.id === undefined ? null : tamsayi(args.id, 1, 1e12);
+      if (ad === "test_kosusu_iptal") {
+        if (!id) throw new AracHatasi("id gerekli.");
+        return { kosu: await ks.iptal(id, kim) };
+      }
+      await ks.esitle();
+      if (id) {
+        const k = ks.kayit(id);
+        if (!k) throw new AracHatasi("Koşu bulunamadı.");
+        return { kosu: k };
+      }
+      return { kosular: ks.liste(10) };
     }
     default:
       throw new AracHatasi("Bilinmeyen araç.");
@@ -489,7 +618,7 @@ export async function mcpIstek(req: IncomingMessage, res: ServerResponse, o: Mcp
     case "ping":
       return ok({});
     case "tools/list":
-      return ok({ tools: ARACLAR });
+      return ok({ tools: alanAraclari(k.alan) });
     case "tools/call": {
       const ad = r.params.name;
       const args = r.params.arguments === undefined ? {} : r.params.arguments;
@@ -523,7 +652,7 @@ export async function mcpIstek(req: IncomingMessage, res: ServerResponse, o: Mcp
           return ok({ content: [{ type: "text", text: mesaj }], isError: true });
         }
       }
-      if (typeof ad !== "string" || !ARACLAR.some((x) => x.name === ad) || !kayit(args)) {
+      if (typeof ad !== "string" || !alanAraclari(k.alan).some((x) => x.name === ad) || !kayit(args)) {
         gonder(res, 200, rpcHata(r.id, -32602, "Araç adı ya da argümanlar geçersiz."));
         return;
       }

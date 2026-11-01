@@ -14,6 +14,7 @@ import type { Katalog } from "./katalog.js";
 import type { KontrolDosyasi } from "./kontrol/baglam.js";
 import { satir } from "./kontrol/baglam.js";
 import { onKontrol } from "./kontrol/index.js";
+import type { Kosular } from "./kosu.js";
 import { sesSuresiSiniri } from "./medya.js";
 import { ALAN_IDLERI, type AlanId, alanTanimi, isAlanId, talimatTaslagi } from "./ortak/alanlar.js";
 import {
@@ -33,7 +34,7 @@ import {
   GUVEN_PENCERE,
   VARSAYILAN_SINIR,
 } from "./ortak/guven.js";
-import { OYUN_ALANI_SATIRI, oyunAlaniAlaniMi } from "./ortak/oyunAlani.js";
+import { OYUN_ALANI_ARAC_SATIRI, OYUN_ALANI_SATIRI, oyunAlaniAlaniMi } from "./ortak/oyunAlani.js";
 import { FIKIR_RAPOR_BOLUMU, PAKET_SATIRI, PAKET_SINIRLARI, TEST_SINIRI } from "./ortak/paketBicimi.js";
 import { yapiliRaporMu } from "./ortak/rapor.js";
 import type {
@@ -235,6 +236,8 @@ export class Merkez {
    * test2 durumunu taşır. Bağlı değilse (test2 ayarlı değil) hiçbir şey olmaz.
    */
   oyunAlani: OyunAlaniBagi | null = null;
+  /** test2 bot koşuları ve oyun alanı odaları (`kosu.ts`; sözleşme bölüm 14); sunucu kurulurken bağlanır. */
+  kosular: Kosular | null = null;
 
   constructor(
     readonly db: Db,
@@ -2255,6 +2258,7 @@ export class Merkez {
     metin += `\n\n## Teslim paketi\n- ${PAKET_SATIRI}\n- ${PAKET_SINIRLARI}\n- MCP'de aynı biçim: \`paket_bicimi\` aracı; dosyalar önce \`dosya_yukle\` ile, sonra \`dosyaId\`.\n`;
     if (alan === "test") metin += `- **${TEST_SINIRI}**\n`;
     if (oyunAlaniAlaniMi(alan)) metin += `- **${OYUN_ALANI_SATIRI}**\n`;
+    metin += `- ${OYUN_ALANI_ARAC_SATIRI}\n`;
     metin += `\n${FIKIR_RAPOR_BOLUMU}`;
     return { surum: t.surum, metin: `${metin}\n${this.zevkBolumu(alan)}` };
   }

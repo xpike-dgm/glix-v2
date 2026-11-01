@@ -36,6 +36,16 @@ export interface Kalip {
 
 export class OyunHatasi extends Error {}
 
+/** İletisi olduğu gibi gösterilen hata kodları (bot koşusu ve oyun alanı odası). */
+const KOSU_KODLARI = new Set([
+  "run_active",
+  "limit",
+  "unknown_game",
+  "invalid_input",
+  "unknown_run",
+  "unknown_room",
+]);
+
 export const SATIR_SINIRI = 500;
 
 const str = (v: unknown): v is string => typeof v === "string";
@@ -80,11 +90,13 @@ export class OyunIstemcisi {
     if (r.status < 200 || r.status >= 300) {
       // Sözleşme bölüm 3: hatalar { ok: false, code, message }.
       let kod = "";
+      let sunucuMesaji = "";
       let ayrinti: string[] = [];
       try {
         const j = await r.json();
         if (kayit(j) && typeof j.code === "string") kod = j.code;
         if (kayit(j) && Array.isArray(j.errors)) ayrinti = j.errors.filter(str).slice(0, 8);
+        if (kayit(j) && str(j.message)) sunucuMesaji = j.message.slice(0, 300);
       } catch {
         kod = "";
       }
@@ -94,6 +106,8 @@ export class OyunIstemcisi {
         );
       if (r.status === 409 && kod === "layer_full")
         throw new OyunHatasi("Oyun alanındaki taslak katmanı dolu.");
+      // Bot koşusu ve oyun alanı odası: sunucunun Türkçe iletisi olduğu gibi gösterilir (sözleşme bölüm 14).
+      if (KOSU_KODLARI.has(kod) && sunucuMesaji) throw new OyunHatasi(sunucuMesaji);
       if (r.status === 409 && kod === "already_undone")
         throw new OyunHatasi("Bu aktarım oyunda zaten geri alınmış.");
       if (r.status === 404 && kod === "unknown_pool") throw new OyunHatasi("Oyunda bu havuz yok.");
@@ -243,6 +257,42 @@ export class OyunIstemcisi {
     const j = await this.istek("DELETE", `/api/uretim/magaza/taslak/${encodeURIComponent(id)}`);
     if (j.ok !== true) throw new OyunHatasi("Taslak kaldırılamadı.");
     return j.silindi === true;
+  }
+
+  /** Oyun alanı (test2): bot koşusu başlatır (bölüm 14). */
+  async kosuBaslat(istek: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const j = await this.istek("POST", "/api/uretim/kosu", istek);
+    if (!kayit(j.kosu) || !str(j.kosu.id)) throw new OyunHatasi("Koşu yanıtı bozuk.");
+    return j.kosu;
+  }
+
+  /** Koşunun durumu ve (bittiyse) sonucu. */
+  async kosu(id: string): Promise<Record<string, unknown>> {
+    const j = await this.istek("GET", `/api/uretim/kosu/${encodeURIComponent(id)}`);
+    if (!kayit(j.kosu)) throw new OyunHatasi("Koşu yanıtı bozuk.");
+    return j.kosu;
+  }
+
+  async kosuIptal(id: string): Promise<Record<string, unknown>> {
+    const j = await this.istek("POST", `/api/uretim/kosu/${encodeURIComponent(id)}/iptal`, {});
+    return kayit(j.kosu) ? j.kosu : {};
+  }
+
+  /** Oyun alanı odası (UM-O4): yalnız botlarla bir maç açar. */
+  async odaAc(g: { oyun: string; bot?: number; strateji?: string }): Promise<Record<string, unknown>> {
+    const j = await this.istek("POST", "/api/uretim/oda", g);
+    if (!kayit(j.oda) || !str(j.oda.kod)) throw new OyunHatasi("Oda yanıtı bozuk.");
+    return j.oda;
+  }
+
+  async oda(kod: string): Promise<Record<string, unknown>> {
+    const j = await this.istek("GET", `/api/uretim/oda/${encodeURIComponent(kod)}`);
+    if (!kayit(j.oda)) throw new OyunHatasi("Oda yanıtı bozuk.");
+    return j.oda;
+  }
+
+  async odaKapat(kod: string): Promise<void> {
+    await this.istek("POST", `/api/uretim/oda/${encodeURIComponent(kod)}/kapat`, {});
   }
 
   /** Oyun alanı (test2): yüklü taslakların kimlikleri. */

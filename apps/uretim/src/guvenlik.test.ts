@@ -154,6 +154,11 @@ describe("teslim anahtarı ve MCP ucu (UM-G2)", () => {
       "teslim_et",
       "istek_karti_ac",
       "kod_istegi_ac",
+      // Oyun alanı araçları her alanda (bölüm 14); bot koşusu araçları yalnız Test alanında.
+      "oyun_alani_oda_ac",
+      "oyun_alani_durum",
+      "oyun_alani_kayit",
+      "oyun_alani_kapat",
     ]);
     const bildirim = await fetch(`${o.url}/mcp`, {
       method: "POST",

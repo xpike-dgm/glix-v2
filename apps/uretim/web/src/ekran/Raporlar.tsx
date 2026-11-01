@@ -7,21 +7,47 @@ import { createMemo, createResource, createSignal, For, type JSX, onCleanup, Sho
 import { yapiliRaporMu } from "../../../src/ortak/rapor.js";
 import type { OgeAyrinti } from "../../../src/ortak/tipler.js";
 import { al } from "../api.js";
-import { tarihSaat } from "../bicim.js";
+import { sure, tarihSaat } from "../bicim.js";
 import { AlanIsareti, Bos, IskeletKartlar } from "../bilesenler.js";
 import { olayDinle } from "../canli.js";
 import { alanBul, git, sorgu } from "../durum.js";
 import { RaporSahne } from "../onizleme/Sahneler.js";
+import { Simge } from "../simgeler.js";
+
+/** Bot koşusundan gelen raporun koşu ayrıntısı (api `raporlar`; sözleşme bölüm 14). */
+interface KosuBilgisi {
+  id: number;
+  istek: { oyunlar: string[]; oyuncular: number[]; mac: number };
+  ozet: { mac: number; biten: number; takilan: number; coken: number; sureMs: number | null } | null;
+}
+type RaporOgesi = OgeAyrinti & { kosu?: KosuBilgisi };
+
+/** Rapor kartında "Bot koşusu" şeridi: oyunlar, maçlar, süre. */
+function KosuSeridi(p: { k: KosuBilgisi }): JSX.Element {
+  return (
+    <span class="kosu-seridi">
+      <span class="etiket etiket--vurgu">
+        <Simge ad="oynat" /> Bot koşusu
+      </span>
+      <span class="cok-soluk kucuk">
+        {p.k.istek.oyunlar.length} oyun · {p.k.ozet?.mac ?? 0} maç
+        {p.k.ozet?.takilan ? ` · ${p.k.ozet.takilan} takıldı` : ""}
+        {p.k.ozet?.coken ? ` · ${p.k.ozet.coken} çöktü` : ""}
+        {p.k.ozet?.sureMs ? ` · ${sure(p.k.ozet.sureMs)}` : ""}
+      </span>
+    </span>
+  );
+}
 
 export function Raporlar(): JSX.Element {
-  const [veri, { refetch }] = createResource(() => al<{ raporlar: OgeAyrinti[] }>("raporlar"));
+  const [veri, { refetch }] = createResource(() => al<{ raporlar: RaporOgesi[] }>("raporlar"));
   onCleanup(olayDinle(["teslim", "karar"], () => void refetch()));
   const [alan, setAlan] = createSignal<string | null>(sorgu().get("alan"));
   const [seciliId, setSeciliId] = createSignal<number | null>(Number(sorgu().get("rapor")) || null);
-  const tum = (): OgeAyrinti[] => veri()?.raporlar ?? [];
+  const tum = (): RaporOgesi[] => veri()?.raporlar ?? [];
   const alanlar = createMemo(() => [...new Set(tum().map((r) => r.alan))]);
   const liste = createMemo(() => tum().filter((r) => !alan() || r.alan === alan()));
-  const rapor = (): OgeAyrinti | undefined => liste().find((r) => r.id === seciliId()) ?? liste()[0];
+  const rapor = (): RaporOgesi | undefined => liste().find((r) => r.id === seciliId()) ?? liste()[0];
   const sec = (id: number): void => {
     setSeciliId(id);
     git(`/raporlar?rapor=${id}${alan() ? `&alan=${alan()}` : ""}`, true);
@@ -77,13 +103,29 @@ export function Raporlar(): JSX.Element {
                         <span class="cok-soluk">· metin</span>
                       </Show>
                     </span>
+                    <Show when={r.kosu}>{(k) => <KosuSeridi k={k()} />}</Show>
                   </button>
                 )}
               </For>
             </aside>
             <section class="kart kart--ic rapor-alani">
               <Show when={rapor()} keyed>
-                {(r) => <RaporSahne oge={r} gecmis={tum()} />}
+                {(r) => (
+                  <>
+                    <Show when={r.kosu}>
+                      {(k) => (
+                        <div class="kosu-ayrinti">
+                          <KosuSeridi k={k()} />
+                          <span class="cok-soluk kucuk">
+                            Oyunlar: {k().istek.oyunlar.join(", ")} · oyuncu{" "}
+                            {k().istek.oyuncular.join("/") || "oyuna göre"} · {k().istek.mac} maç/birleşim
+                          </span>
+                        </div>
+                      )}
+                    </Show>
+                    <RaporSahne oge={r} gecmis={tum()} />
+                  </>
+                )}
               </Show>
             </section>
           </div>

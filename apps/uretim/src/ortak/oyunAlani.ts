@@ -12,6 +12,10 @@ export const oyunAlaniAlaniMi = (alan: AlanId): boolean => OYUN_ALANI_ALANLARI.i
 export const OYUN_ALANI_SATIRI =
   "Teslimin test2'ye (oyun alanı: test2.glix.dgmcraft.online) kendiliğinden yüklenir; sahip orada dener.";
 
+/** Talimatta her alana kodla eklenen satır: oyun alanı araçları (UM-O4, sözleşme bölüm 14). */
+export const OYUN_ALANI_ARAC_SATIRI =
+  "Oyun alanı araçları: oyun_alani_oda_ac (oyun, bot) ile test2'de yalnız botlarla bir maç aç (taslakların orada yüklü), oyun_alani_durum ve oyun_alani_kayit ile aşamayı, olayları ve hataları izle, oyun_alani_kapat ile kapat (SSH: uretim oyun-alani-oda-ac <oyun> [bot], oyun-alani-durum <kod>, oyun-alani-kayit <kod>, oyun-alani-kapat <kod>). Ekran görüntüsü aracı henüz yok.";
+
 /** Öğenin test2 durumu. `bekliyor`: yüklenecek (bağlantı yok ya da sıradaki eşitleme). */
 export type Test2Durumu = "yuklu" | "hata" | "geri_alindi" | "bekliyor";
 

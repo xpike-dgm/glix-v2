@@ -169,6 +169,7 @@ export function abortMatch(rt: Runtime, room: Room, err: unknown): void {
     fn: fault.fn,
     message: scrubText(cause instanceof Error ? cause.message : String(cause)),
   });
+  rt.botOdalari?.get(room.code)?.oyunCoktu(fault.fn, cause instanceof Error ? cause.message : String(cause));
   for (const player of room.players.values()) {
     player.conn?.send(errorMessage("game_failed"));
   }

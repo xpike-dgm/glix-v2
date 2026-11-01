@@ -125,6 +125,10 @@ class Bot implements BotHandle {
     private readonly rt: Runtime,
     readonly player: Player,
     private readonly conn: Connection,
+    /** "rastgele": oynama stratejisi yerine motorun test botu (yalnız bot koşusu seçer). */
+    private readonly strateji: BotStrateji = "oyna",
+    /** Bot koşusunun ölçümü: her eylemin işlenme süresi ve yanıtı (yalnız yalnız-bot odalarında). */
+    private readonly olcum: ((e: BotOlcumu) => void) | null = null,
   ) {}
 
   stop(): void {
@@ -218,8 +222,8 @@ class Bot implements BotHandle {
     let payload: unknown;
     let next = delay;
     const play = PLAY_STRATEGIES[gameId];
-    let useFuzz = play === undefined;
-    if (play) {
+    let useFuzz = play === undefined || this.strateji === "rastgele";
+    if (play && !useFuzz) {
       try {
         const step = play({
           rng: this.rng,
@@ -256,7 +260,9 @@ class Bot implements BotHandle {
     if (!isPresentable(payload)) return next;
     this.seq += 1;
     this.lastAck = null;
+    const t0 = performance.now();
     this.send({ type: "action", seq: this.seq, payload });
+    this.olcum?.({ gameId, ms: performance.now() - t0, ack: this.lastAck });
     botTrace.hook?.({ gameId, botId: me.id, payload, ack: this.lastAck });
     return next;
   }
@@ -275,6 +281,23 @@ class Bot implements BotHandle {
   }
 }
 
+/** Bot davranışı: "oyna" insan gibi oynar (botStratejileri/), "rastgele" motorun test botunu kullanır (fuzz). */
+export type BotStrateji = "oyna" | "rastgele";
+
+/** Bot koşusunun eylem ölçümü. */
+export interface BotOlcumu {
+  gameId: string;
+  /** Sunucunun eylemi işleme süresi (ms). */
+  ms: number;
+  ack: { ok: boolean; reason?: string } | null;
+}
+
+export interface BotSecenekleri {
+  /** Yalnız-bot odası (`room.botOdasi`): insan host olmadan ilk bot odaya girer. */
+  strateji?: BotStrateji;
+  olcum?: (e: BotOlcumu) => void;
+}
+
 export function isBot(player: Player): boolean {
   return player.bot !== undefined;
 }
@@ -286,9 +309,10 @@ function botName(room: Room): string {
 }
 
 /** Odaya bir bot ekler; kapalıysa, oda lobide değilse ya da doluysa null. */
-export function addBot(rt: Runtime, room: Room): Player | null {
+export function addBot(rt: Runtime, room: Room, secenek: BotSecenekleri = {}): Player | null {
   if (!rt.botsEnabled || room.phase !== "lobby" || room.players.size >= MAX_PLAYERS) return null;
-  if (room.players.size === 0) return null;
+  // Boş odaya yalnız yalnız-bot odasında (oyun alanı koşusu) bot girer; lobide insan host gerekir.
+  if (room.players.size === 0 && !room.botOdasi) return null;
   let bot: Bot | null = null;
   const conn = botConnection((msg) => {
     if (msg.type === "actionAck" && bot)
@@ -297,7 +321,7 @@ export function addBot(rt: Runtime, room: Room): Player | null {
   const player = addPlayer(rt, room, botName(room), conn);
   // Botun oturumu yoktur: belirteçle hiçbir bağlantı onun yerine geçemez.
   rt.tokens.delete(player.token);
-  bot = new Bot(rt, player, conn);
+  bot = new Bot(rt, player, conn, secenek.strateji ?? "oyna", room.botOdasi ? (secenek.olcum ?? null) : null);
   player.bot = bot;
   bot.schedule(600 + randomInt(900));
   rt.broadcaster.markDirty(room);

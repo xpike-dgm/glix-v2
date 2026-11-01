@@ -15,6 +15,7 @@ import { Kasa } from "./gizli.js";
 import { GUVENLIK_BASLIKLARI, gonder, sayfaCsp } from "./http.js";
 import { type AiFetch, donusturucuKur } from "./istekYaz.js";
 import { Depoayna, Katalog } from "./katalog.js";
+import { Kosular } from "./kosu.js";
 import { mcpIstek } from "./mcp.js";
 import { Merkez } from "./merkez.js";
 import { eylemdenOlay, OlayYayini } from "./olaylar.js";
@@ -103,6 +104,9 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
   oyunAlani.depoOku = (ozet) => depo.oku(ozet);
   oyunAlani.degisti = (alan) => yayin.yay("aktarim", alan);
   merkez.oyunAlani = oyunAlani;
+  // Test alanının bot koşuları ve bütün alanların oyun alanı odaları (aynı test2 bağlantısı; sözleşme bölüm 14).
+  const kosular = new Kosular(db, test2, merkez, now);
+  merkez.kosular = kosular;
   const donusturucu = donusturucuKur(db, config.aiKey, {
     ...(b.aiFetch ? { fetch: b.aiFetch } : {}),
     gunluk: config.aiGunluk,
@@ -273,6 +277,16 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
         const t2 = guvenli("oyun_alani", () => oyunAlani.esitle());
         t2();
         zamanlayicilar.push(setInterval(t2, 5 * 60_000));
+        // Bot koşuları: süreni izle (bitince rapor teslimi), dönemli planı başlat.
+        zamanlayicilar.push(
+          setInterval(
+            guvenli("kosu", async () => {
+              await kosular.esitle();
+              await kosular.planDenetle();
+            }),
+            60_000,
+          ),
+        );
       }
     },
     async kapat() {

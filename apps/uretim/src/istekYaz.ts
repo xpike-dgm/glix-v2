@@ -20,7 +20,7 @@ import {
   gorselKuraliIstemi,
 } from "./ortak/gorselKurali.js";
 import { OYUN_ALANI_SATIRI, oyunAlaniAlaniMi } from "./ortak/oyunAlani.js";
-import { PAKET_SATIRI } from "./ortak/paketBicimi.js";
+import { PAKET_SATIRI, TEST_SINIRI } from "./ortak/paketBicimi.js";
 import type { IsKaydi } from "./ortak/tipler.js";
 
 export const AI_URL = "https://api.anthropic.com/v1/messages";
@@ -353,7 +353,7 @@ export function istemUret(alan: AlanId, baglanti: "mcp" | "ssh", isler: readonly
       : "";
   const devam = 'Bundan sonra yalnız "devam" yazarsam açık işleri sırayla bitir ve geri bildirimleri oku.';
   // Oyun alanı (test2) satırı: içerik ve mağazada sabit, kodla eklenir (sözleşme bölüm 13).
-  const test2 = oyunAlaniAlaniMi(alan) ? OYUN_ALANI_SATIRI : "";
+  const test2 = oyunAlaniAlaniMi(alan) ? OYUN_ALANI_SATIRI : alan === "test" ? TEST_SINIRI : "";
   // Görsel alanlarında kural ikinci satırda, öne çıkarılmış (istem kodla kurulur; çıkarılamaz).
   const kural = gorselAlaniMi(alan) ? `ÖNEMLİ — ${gorselKuraliIstemi(alan)}` : "";
   if (baglanti === "ssh") {

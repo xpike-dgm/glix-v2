@@ -259,7 +259,7 @@ export function removePlayer(rt: Runtime, room: Room, player: Player): void {
   if (room.hostId === player.id) transferHost(room);
   // Son insan çıktı: botlar tek başına odayı ayakta tutmaz; hepsi çıkar, oda boş oda gibi silinir.
   const rest = [...room.players.values()];
-  if (!player.bot && rest.length > 0 && rest.every((p) => p.bot)) {
+  if (!player.bot && !room.botOdasi && rest.length > 0 && rest.every((p) => p.bot)) {
     for (const bot of rest) removePlayer(rt, room, bot);
     return;
   }

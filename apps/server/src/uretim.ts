@@ -28,6 +28,7 @@ import {
   splitEquipped,
 } from "@glix/engine";
 import type { AccountStore, UretimTransferKind, UretimTransferRow } from "./accountStore.js";
+import type { BotKosucusu, IstekSonucu } from "./botKosusu.js";
 import type { Clock } from "./clock.js";
 import type { ContentStore } from "./contentStore.js";
 import { splitLine } from "./contentStore.js";
@@ -62,6 +63,8 @@ export interface UretimEnv {
   revision: string;
   /** Oyun alanı (test2) taslak katmanı; yoksa taslak uçları 404. */
   oyunAlani?: OyunAlaniKatmani | null;
+  /** Oyun alanı (test2) bot koşuları ve yalnız-bot odaları; yoksa `kosu` ve `oda` uçları 404. */
+  botKosucusu?: BotKosucusu | null;
 }
 
 type Reply = { status: number; body: unknown };
@@ -304,6 +307,9 @@ export function createUretimApi(env: UretimEnv): (req: IncomingMessage, res: Ser
   }
 
   const katman = env.oyunAlani ?? null;
+  const kosucu = env.botKosucusu ?? null;
+  const istekYaniti = <T>(r: IstekSonucu<T>, ok: (d: T) => Reply): Reply =>
+    r.ok ? ok(r.deger) : fail(r.status, r.code, r.message);
 
   function taslaklar(k: OyunAlaniKatmani): Reply {
     return reply(200, {
@@ -345,6 +351,46 @@ export function createUretimApi(env: UretimEnv): (req: IncomingMessage, res: Ser
 
     const [a, b, c] = parts;
     const taslakYolu = katman !== null && a === "magaza" && b === "taslak";
+    // Bot koşuları ve oyun alanı odaları (yalnız test2): GET/POST.
+    if (kosucu && (a === "kosu" || a === "oda") && method !== "DELETE") {
+      const id = b ?? "";
+      if (a === "kosu") {
+        if (!isWrite && parts.length === 1) return reply(200, kosucu.kosular());
+        if (!isWrite && parts.length === 2) {
+          const k = kosucu.kosu(id);
+          return k ? reply(200, { kosu: k }) : fail(404, "unknown_run", "Koşu bulunamadı.");
+        }
+        if (isWrite && parts.length === 1) {
+          const data = await readBody(req);
+          if (data === undefined) return fail(400, "invalid_input", "Gövde okunamadı.");
+          const r = istekYaniti(kosucu.baslat(data), (k) => reply(200, { ok: true, kosu: k }));
+          if (r.status === 200) audit("uretim_kosu", `basladi`);
+          return r;
+        }
+        if (isWrite && parts.length === 3 && c === "iptal") {
+          await readBody(req);
+          if (!kosucu.iptal(id)) return fail(404, "unknown_run", "Süren koşu bulunamadı.");
+          audit("uretim_kosu", `iptal ${id}`);
+          return reply(200, { ok: true, kosu: kosucu.kosu(id) });
+        }
+        return NOT_FOUND;
+      }
+      if (!isWrite && parts.length === 1) return reply(200, { odalar: kosucu.odaListesi() });
+      if (!isWrite && parts.length === 2) {
+        const o = kosucu.oda(id, 200);
+        return o ? reply(200, { oda: o }) : fail(404, "unknown_room", "Oda bulunamadı.");
+      }
+      if (isWrite && parts.length === 1) {
+        const data = await readBody(req);
+        if (data === undefined) return fail(400, "invalid_input", "Gövde okunamadı.");
+        return istekYaniti(kosucu.odaAc(data), (o) => reply(200, { ok: true, oda: o }));
+      }
+      if (isWrite && parts.length === 3 && c === "kapat") {
+        await readBody(req);
+        return kosucu.odaKapat(id) ? reply(200, { ok: true }) : fail(404, "unknown_room", "Oda bulunamadı.");
+      }
+      return NOT_FOUND;
+    }
     if (method === "DELETE") {
       if (!taslakYolu || parts.length !== 3 || !katman) return NOT_FOUND;
       let id = "";

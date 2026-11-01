@@ -4,6 +4,7 @@
  */
 
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { GAMES } from "@glix/engine";
 import type { Anahtarlar } from "./anahtar.js";
 import type { Bildirim } from "./bildirim.js";
 import { aboneAyristir, ayarAyristir } from "./bildirim.js";
@@ -244,6 +245,21 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
         }
         case "kabul":
           return ok(200, kabulHavuzu(m));
+        case "oyunlar":
+          // Koşu formu: oyunun adı ve oyuncu sınırları (motorun kaydından).
+          return ok(200, {
+            oyunlar: Object.values(GAMES)
+              .map((g) => ({ id: g.id, ad: g.name, min: g.minPlayers, max: g.maxPlayers }))
+              .sort((a, b) => a.ad.localeCompare(b.ad, "tr")),
+          });
+        case "kosu":
+          // Test alanı: bot koşuları (geçmiş), dönemli plan ve test2 bağlantısı (sözleşme bölüm 14).
+          if (m.kosular?.acik) await m.kosular.esitle();
+          return ok(200, {
+            acik: m.kosular?.acik ?? false,
+            kosular: m.kosular?.liste(20) ?? [],
+            plan: m.kosular?.plan() ?? null,
+          });
         case "ara":
           return ok(200, ara(m, url.searchParams.get("q") ?? ""));
         case "canlidakiler": {
@@ -559,6 +575,16 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
       }
       return ok(200, { sonuc });
     }
+    if (yol === "kosu" || yol === "kosu/plan" || (p0 === "kosu" && p2 === "iptal")) {
+      const ks = m.kosular;
+      if (!ks?.acik) return hata(res, 503, "test2", "Oyun alanı (test2) bağlantısı ayarlı değil.");
+      const b = await govde();
+      if (yol === "kosu") return ok(200, { kosu: await ks.baslat(b, kim) });
+      if (yol === "kosu/plan") return ok(200, { plan: ks.planYaz(b, kim) });
+      const id = idParam(p1 ?? "");
+      if (!id) return hata(res, 404, "yok", "Koşu bulunamadı.");
+      return ok(200, { kosu: await ks.iptal(id, kim) });
+    }
     if (yol === "test2/esitle") {
       if (!o.oyunAlani?.acik) return hata(res, 503, "test2", "Oyun alanı bağlantısı ayarlı değil.");
       await o.oyunAlani.esitle();
@@ -847,7 +873,14 @@ function raporlar(m: Merkez, alan: AlanId | null): unknown[] {
           )
           .all()
   ) as { id: number }[];
-  return r.map((x) => m.oge(x.id)).filter((x) => x !== null);
+  // Bot koşusundan gelen rapor: kartta "Bot koşusu" ve koşu ayrıntısı (oyunlar, maç, süre).
+  return r
+    .map((x) => m.oge(x.id))
+    .filter((x) => x !== null)
+    .map((o) => {
+      const k = m.kosular?.ogeninKosusu(o.id) ?? null;
+      return k ? { ...o, kosu: { id: k.id, istek: k.istek, ozet: k.ozet, baslatan: k.baslatan } } : o;
+    });
 }
 
 /** Kimlik listesi (en çok 200): yoksa boş, bozuksa null. */

@@ -151,6 +151,17 @@ const SEMA: readonly string[] = [
     hata TEXT, elle INTEGER NOT NULL DEFAULT 0, guncelleme INTEGER NOT NULL
   );
   `,
+  // Aşama 3 ikinci dilim: test2 bot koşuları ve yapay zekânın açtığı oyun alanı odaları (sözleşme bölüm 14).
+  `
+  CREATE TABLE kosu (
+    id INTEGER PRIMARY KEY, oyun_id TEXT NOT NULL, istek TEXT NOT NULL, baslatan TEXT NOT NULL, durum TEXT NOT NULL,
+    baslama INTEGER NOT NULL, bitis INTEGER, sonuc TEXT, oge_id INTEGER, hata TEXT
+  );
+  CREATE INDEX kosu_baslama ON kosu(baslama);
+  CREATE TABLE oyun_alani_oda (
+    kod TEXT PRIMARY KEY, alan TEXT NOT NULL, oyun TEXT NOT NULL, olusturma INTEGER NOT NULL, kapandi INTEGER
+  );
+  `,
 ];
 
 export type Db = DatabaseSync;

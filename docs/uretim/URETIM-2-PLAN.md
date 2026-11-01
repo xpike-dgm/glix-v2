@@ -73,8 +73,18 @@ test eder, ana koda birleştirir → test.glix'e çıkar → sahip "canlıya al"
   taslak). İstemde ve talimatta sabit satır "Teslimin test2'ye kendiliğinden yüklenir; sahip orada dener."
 - **Kabul → yönetici:** "Yöneticiye gönder" paketi içerik satırlarını da taşır (`icerik.json`); mağaza için yama +
   WebP + hedef yollar (bölüm 5 ve 13).
-- **Sonraki dilim:** oda başına katman (UM-O3), `oyun_alani_*` araçları (UM-O4), yapay zekânın kendi ekran
-  görüntüleri, diğer alanlar.
+- **Sonraki dilim:** oda başına katman (UM-O3), yapay zekânın kendi ekran görüntüleri, diğer alanlar.
+
+### Aşama 3 ikinci dilim — durum: **kodda hazır** (ayrıntı: `SOZLESME.md` bölüm 14)
+- **Test ve Performans bot koşuları:** test2'de yalnız-bot odaları (yalnız `GLIX_ORTAM=test2`, test2 anahtarıyla);
+  oyunlar × oyuncu sayıları × maç, strateji, süre sınırı, iptal, aynı anda tek koşu, oda/bot sınırı. Ölçüm: biten /
+  takılan / çöken maç, oyun hataları, tick p95 ve bellek serisi, eylem işleme süresi ve reddedilenler, oyun başına
+  süre, skor dağılımı. Bitince rapor panosu biçiminde kendiliğinden teslim; bulgular kendiliğinden.
+- **Dönemli koşu** (6/12/24 saat) Test alanı sayfasında; site zamanlayıcısı başlatır.
+- **Oyun alanı araçları (UM-O4):** `oyun_alani_oda_ac`, `oyun_alani_durum`, `oyun_alani_kayit`, `oyun_alani_kapat`
+  (MCP + SSH), her alan.
+- **Arayüz:** Test alanında "Koşular" sekmesi (başlat formu, geçmiş, dönemli koşu); raporlar kartında "Bot koşusu".
+- **Açık:** `oyun_alani_ekran` yapılmadı (ölçüm ve öneri bölüm 14: ayrı "ekran" kabı); oda başına taslak katmanı.
 
 ## Aşama 4 — "Ekle" komutu (yönetici)
 Sahip "kabul havuzundakileri ekle" deyince yönetici: paketi okur → kendi dalında uygular (kod, veri, görsel) → dört

@@ -11,6 +11,7 @@ import { type AiFetch, createAiCommenter, createAiText } from "./aiComment.js";
 import { INSPIRE_PER_MINUTE, INSPIRE_TIMEOUT_MS } from "./aiInspire.js";
 import { AUTH_PREFIX, accountFromCookie, handleAuth, hashToken, readSessionToken } from "./auth.js";
 import { createBackupService } from "./backup.js";
+import { BotKosucusu } from "./botKosusu.js";
 import { CLIENT_ERROR_PATH, handleClientError } from "./clientError.js";
 import { resolveClientIp } from "./clientIp.js";
 import { type Clock, systemClock } from "./clock.js";
@@ -315,8 +316,11 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         )
       : null;
   if (oyunAlani) log.warn("oyun_alani_katmani", { taslak: oyunAlani.liste().length });
+  // Bot koşuları ve yalnız-bot odaları: yalnız test2 (botKosusu.ts); canlıda ve test'te hiç kurulmaz.
+  const botKosucusu = opts.ortam === "test2" ? new BotKosucusu(rt) : null;
   const uretimApi = createUretimApi({
     oyunAlani,
+    botKosucusu,
     token: opts.uretimToken ?? null,
     accounts,
     content: rt.content,
@@ -712,6 +716,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         cancelPurge();
         finishDrain();
         // 1012: oyuncular "oda kapandı" görmez; istemci resume dener ve güncelleme mesajını gösterir.
+        botKosucusu?.kapat();
         disposeRuntime(rt, code !== 1012);
         for (const ws of sockets)
           ws.close(code, code === 1012 ? "Sunucu yeniden başlıyor" : "Sunucu kapanıyor");

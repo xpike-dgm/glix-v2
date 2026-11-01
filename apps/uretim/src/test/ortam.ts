@@ -109,11 +109,69 @@ export interface SahteOyunAlani {
   taslaklar: Map<string, { urun: Record<string, unknown>; dosyalar: { yol: string; veri: string }[] }>;
   /** true iken her istek 503 (ulaşılamayan test2). */
   kapali: boolean;
+  /** Bot koşuları (sözleşme bölüm 14): kimlik -> sunucunun koşu yanıtı. */
+  kosular: Map<string, Record<string, unknown>>;
+  /** Oyun alanı odaları: kod -> durum. */
+  odalar: Map<string, Record<string, unknown>>;
+  /** Süren koşuyu verilen sonuçla bitirir (varsayılan: örnek sonuç). */
+  kosuBitir(id: string, sonuc?: Record<string, unknown>): void;
   sifirla(): void;
   kapat(): Promise<void>;
 }
 
 export const TEST2_TOKEN = "test2-gizli-anahtar";
+
+/** Oyun sunucusunun koşu sonucu biçiminde örnek (botKosusu.ts `KosuSonucu`): biten, takılan ve çöken maçlarla. */
+export function ornekKosuSonucu(id: string): Record<string, unknown> {
+  return {
+    id,
+    durum: "bitti",
+    istek: {
+      oyunlar: ["butona-bas", "kor-kronometre"],
+      oyuncular: [3],
+      mac: 2,
+      strateji: "oyna",
+      sureDk: 30,
+    },
+    baslama: Date.parse("2026-10-31T10:00:00Z"),
+    bitis: Date.parse("2026-10-31T10:12:00Z"),
+    maclar: [
+      { oyun: "butona-bas", oyuncu: 3, durum: "bitti", sureMs: 95_000, skorlar: [7, 5, 2], oda: "AB12" },
+      { oyun: "butona-bas", oyuncu: 3, durum: "bitti", sureMs: 101_000, skorlar: [6, 6, 1], oda: "AB13" },
+      {
+        oyun: "kor-kronometre",
+        oyuncu: 3,
+        durum: "takildi",
+        sureMs: 480_000,
+        skorlar: [],
+        takildigiAsama: "results",
+        hata: '"results" aşamasında 8 dk ilerleme yok',
+        oda: "AB14",
+      },
+      {
+        oyun: "kor-kronometre",
+        oyuncu: 3,
+        durum: "coktu",
+        sureMs: 30_000,
+        skorlar: [],
+        hata: "tick: boom",
+        oda: "AB15",
+      },
+    ],
+    ornekler: [
+      { t: 0, tickP95: 2.1, bellekMb: 180, oda: 2 },
+      { t: 10_000, tickP95: 64, bellekMb: 190, oda: 2 },
+      { t: 20_000, tickP95: 3.4, bellekMb: 195, oda: 1 },
+    ],
+    eylemler: {
+      "butona-bas": { n: 120, p50: 0.4, p95: 1.2, max: 3, red: { too_fast: 40 } },
+      "kor-kronometre": { n: 30, p50: 0.3, p95: 0.9, max: 2, red: {} },
+    },
+    oyunHatalari: [{ oyun: "kor-kronometre", fn: "tick", mesaj: "boom" }],
+    atlananlar: [],
+    tickP95Son: 3.4,
+  };
+}
 
 export async function sahteOyunAlani(): Promise<SahteOyunAlani> {
   let sayac = 0;
@@ -125,6 +183,13 @@ export async function sahteOyunAlani(): Promise<SahteOyunAlani> {
     aktarimlar: new Map(),
     taslaklar: new Map(),
     kapali: false,
+    kosular: new Map(),
+    odalar: new Map(),
+    kosuBitir(id, sonuc) {
+      const k = o.kosular.get(id);
+      if (k)
+        o.kosular.set(id, { ...k, ...(sonuc ?? ornekKosuSonucu(id)), id, durum: sonuc?.durum ?? "bitti" });
+    },
     sifirla() {
       o.katman = (Number.parseInt(o.katman.slice(0, 8), 16) + 1).toString(16).padStart(8, "0").repeat(3);
       o.aktarimlar.clear();
@@ -192,6 +257,60 @@ export async function sahteOyunAlani(): Promise<SahteOyunAlani> {
       }
       if (yol === "/api/uretim/magaza/taslak" && req.method === "GET")
         return j(200, { katman: o.katman, urunler: [...o.taslaklar.keys()].map((id) => ({ id })) });
+      // Bot koşusu ve oyun alanı odası (bölüm 14).
+      const kosuY = /^\/api\/uretim\/kosu(?:\/([^/]+))?(?:\/(iptal))?$/.exec(yol);
+      if (kosuY) {
+        const [, id, iptal] = kosuY;
+        if (!id && req.method === "POST") {
+          if ([...o.kosular.values()].some((k) => k.durum === "suruyor"))
+            return j(409, {
+              ok: false,
+              code: "run_active",
+              message: "Bir koşu zaten sürüyor; bitmesini bekle ya da iptal et.",
+            });
+          const yeni = {
+            id: `k${++sayac}`,
+            durum: "suruyor",
+            istek: govde,
+            maclar: [],
+            baslama: 1,
+            bitis: null,
+          };
+          o.kosular.set(yeni.id, yeni);
+          return j(200, { ok: true, kosu: yeni });
+        }
+        const k = id ? o.kosular.get(id) : undefined;
+        if (!k) return j(404, { ok: false, code: "unknown_run", message: "Koşu bulunamadı." });
+        if (iptal) {
+          o.kosuBitir(k.id as string, { ...ornekKosuSonucu(k.id as string), durum: "iptal" });
+          return j(200, { ok: true, kosu: o.kosular.get(k.id as string) });
+        }
+        return j(200, { kosu: k });
+      }
+      const odaY = /^\/api\/uretim\/oda(?:\/([^/]+))?(?:\/(kapat))?$/.exec(yol);
+      if (odaY) {
+        const [, kod, kapat] = odaY;
+        if (!kod && req.method === "POST") {
+          const g = govde as { oyun?: string; bot?: number };
+          const yeni = {
+            kod: `ODA${++sayac}`,
+            oyun: g.oyun,
+            durum: "oynaniyor",
+            asama: "playing",
+            oyuncular: Array.from({ length: g.bot ?? 3 }, (_, i) => ({ ad: `Bot ${i + 1}`, skor: 0 })),
+            olaylar: Array.from({ length: 40 }, (_, i) => ({ t: i, tur: "asama", metin: `olay ${i}` })),
+          };
+          o.odalar.set(yeni.kod, yeni);
+          return j(200, { ok: true, oda: yeni });
+        }
+        const d = kod ? o.odalar.get(kod) : undefined;
+        if (!d) return j(404, { ok: false, code: "unknown_room", message: "Oda bulunamadı." });
+        if (kapat) {
+          o.odalar.delete(kod as string);
+          return j(200, { ok: true });
+        }
+        return j(200, { oda: d });
+      }
       const sil = /^\/api\/uretim\/magaza\/taslak\/([^/]+)$/.exec(yol);
       if (sil?.[1] && req.method === "DELETE") {
         const silindi = o.taslaklar.delete(decodeURIComponent(sil[1]));

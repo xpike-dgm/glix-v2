@@ -140,6 +140,11 @@ export interface Room {
    * aynı girdi kısa sürede tekrar gelmesin (`GameDefinition.contentUsed`). Yalnız bellekte.
    */
   recentContent?: Map<string, string[]>;
+  /**
+   * Yalnız botlardan oluşan oda (oyun alanı, `GLIX_ORTAM=test2`; bkz. botKosusu.ts): koşu ya da oyun alanı odası
+   * kimliği. İnsan yoktur; son insan çıkınca botları silme kuralı uygulanmaz, yönetici oda listesinde görünmez.
+   */
+  botOdasi?: string;
 }
 
 export interface Runtime {
@@ -194,6 +199,11 @@ export interface Runtime {
   aiInspire: AiText;
   /** Lobide bot eklenebilir mi: yalnız test ortamlarında (`GLIX_ORTAM=test|test2`) true; canlıda daima false. */
   botsEnabled: boolean;
+  /**
+   * Yalnız botlardan oluşan odaların gözlemcileri (oda kodu -> gözlemci; yalnız test2, bkz. botKosusu.ts). Oyun
+   * çökünce `abortMatch` buraya da haber verir. Canlıda ve test'te yoktur.
+   */
+  botOdalari?: Map<string, { oyunCoktu(fn: string, mesaj: string): void }>;
 }
 
 export function isConnected(player: Player): boolean {

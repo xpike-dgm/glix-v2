@@ -24,6 +24,13 @@ export const ALT_KOMUTLAR: Readonly<Record<string, string>> = {
   "kod-istegi-ac": "kod_istegi_ac",
   "ornek-paket": "paket_bicimi",
   "paket-bicimi": "paket_bicimi",
+  "oyun-alani-oda-ac": "oyun_alani_oda_ac",
+  "oyun-alani-durum": "oyun_alani_durum",
+  "oyun-alani-kayit": "oyun_alani_kayit",
+  "oyun-alani-kapat": "oyun_alani_kapat",
+  "test-kosusu-baslat": "test_kosusu_baslat",
+  "test-kosusu-durum": "test_kosusu_durum",
+  "test-kosusu-iptal": "test_kosusu_iptal",
   yardim: "",
 };
 
@@ -34,6 +41,10 @@ export const YARDIM = [
   "  ornek-paket (ya da paket-bicimi): alanına uygun doldurulmuş teslim.json örneği ve alan açıklamaları",
   "  dosya-yukle <paket>/<dosya> | on-kontrol <paket> [gorsel-model] | teslim-et <paket> [gorsel-model]",
   "  istek-karti-ac < json | kod-istegi-ac < json | yardim",
+  "Oyun alanı (test2, yalnız botlarla): oyun-alani-oda-ac <oyun> [bot] [oyna|rastgele] | oyun-alani-durum <kod>",
+  "  oyun-alani-kayit <kod> | oyun-alani-kapat <kod>",
+  "Test alanı: test-kosusu-baslat < json ({ oyunlar, oyuncular, mac, strateji, sureDk }) | test-kosusu-durum [id]",
+  "  test-kosusu-iptal <id>",
   "Teslim paketi: SFTP ile gelen/<paket>/ klasörüne dosyalarını ve KÖKTE teslim.json'u koy (paket.json değil).",
   "  teslim.json: { tur, isId, arac, model, uretimYontemi, ogeler: [{ ad, aciklama, gerekce,",
   "  dosyalar: [{ dosya, hedefYol, rol }], satirlar }] }. Örnek: uretim ornek-paket",
@@ -67,7 +78,7 @@ export function komutAyristir(ham: string): { komut: string; args: string[] } {
       `Bilinmeyen komut. Kullanılabilir: ${Object.keys(ALT_KOMUTLAR).join(", ")}. Ayrıntı: uretim yardim`,
     );
   if (
-    args.length > 2 ||
+    args.length > 3 ||
     args.some((a) => !/^[A-Za-z0-9._/-]{1,200}$/.test(a) || a.includes("..") || a.startsWith("/"))
   )
     throw new CliHatasi("Argüman geçersiz.");
@@ -187,6 +198,31 @@ export async function calistirKomut(o: CliOrtami, ham: string): Promise<unknown>
       if (!b.length || b.length > EN_COK_GIRDI)
         throw new CliHatasi("Dosya içeriği standart girdiden gelmeli.");
       return arac(o, ad, { ad: a, icerik_base64: b.toString("base64") });
+    }
+    case "oyun-alani-oda-ac": {
+      const [oyun, bot, strateji] = [args[0], args[1], args[2]];
+      if (!oyun || !/^[a-z0-9-]{2,60}$/.test(oyun) || (bot !== undefined && !/^\d{1,2}$/.test(bot)))
+        throw new CliHatasi("Kullanım: oyun-alani-oda-ac <oyun> [bot sayısı] [oyna|rastgele]");
+      return arac(o, ad, {
+        oyun,
+        ...(bot !== undefined ? { bot: Number(bot) } : {}),
+        ...(strateji === "rastgele" ? { strateji } : {}),
+      });
+    }
+    case "oyun-alani-durum":
+    case "oyun-alani-kayit":
+    case "oyun-alani-kapat": {
+      if (!args[0] || !/^[A-Za-z0-9]{3,12}$/.test(args[0]))
+        throw new CliHatasi(`Kullanım: ${komut} <oda kodu>`);
+      return arac(o, ad, { kod: args[0] });
+    }
+    case "test-kosusu-durum":
+    case "test-kosusu-iptal": {
+      if (args[0] !== undefined && !/^\d{1,12}$/.test(args[0]))
+        throw new CliHatasi(`Kullanım: ${komut} <koşu kimliği>`);
+      if (komut === "test-kosusu-iptal" && !args[0])
+        throw new CliHatasi("Kullanım: test-kosusu-iptal <koşu kimliği>");
+      return arac(o, ad, args[0] ? { id: Number(args[0]) } : {});
     }
     case "on-kontrol":
     case "teslim-et": {

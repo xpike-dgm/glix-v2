@@ -21,7 +21,7 @@ export const PAKET_SATIRI =
 
 /** Test alanında ikinci aşamaya kalanlar (talimatta ve paket biçiminde açıkça yazılır). */
 export const TEST_SINIRI =
-  "Test koşusu başlatma ve zamanlayıcı (ör. 12 saatte bir koşu) henüz yok; yalnız senaryo/rapor teslim edersin.";
+  "Bot koşusu: test_kosusu_baslat ile test2'de yalnız botlarla koşu başlat (oyunlar, oyuncular ör. [3,5,8], mac, strateji oyna|rastgele); bitince sonuç rapor olarak kendiliğinden teslim edilir (bulgular dahil). test_kosusu_durum ile izle, test_kosusu_iptal ile durdur (SSH: uretim test-kosusu-baslat < json, test-kosusu-durum, test-kosusu-iptal). Aynı anda tek koşu; dönemli koşuyu sahip ayarlar.";
 
 /** Talimatın sonundaki sabit bölüm: fikir ve rapor teslim biçimi (sahibin metninden bağımsız, kodla eklenir). */
 export const FIKIR_RAPOR_BOLUMU = `## Fikir ve rapor biçimi

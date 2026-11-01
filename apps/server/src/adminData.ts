@@ -87,6 +87,8 @@ export function buildLive(ctx: LiveContext): AdminLive {
   let stages = 0;
   const rows: AdminRoomRow[] = [];
   for (const room of rt.rooms.values()) {
+    // Oyun alanının yalnız-bot odaları (koşu, yapay zekâ odası) oda listesinde görünmez.
+    if (room.botOdasi) continue;
     stages += room.stages.size;
     let players = 0;
     let connected = 0;

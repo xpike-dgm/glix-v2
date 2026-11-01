@@ -18,11 +18,12 @@ import {
 import { olayDinle } from "../canli.js";
 import { alanRengi, git, hataTost, oturum, sorgu, tost } from "../durum.js";
 import { panoYenile } from "../Kabuk.js";
+import { KosuPaneli } from "../kosular.js";
 import { Simge, type SimgeAdi } from "../simgeler.js";
 import { Test2DurumKarti, Test2Seridi } from "../test2.js";
 import { IstemKutusu, istemiKopyala, panoyaKopyala } from "./Iste.js";
 
-type Sekme = "bekleyen" | "isler" | "talimat" | "zevk" | "baglanti" | "ayarlar";
+type Sekme = "bekleyen" | "isler" | "kosular" | "talimat" | "zevk" | "baglanti" | "ayarlar";
 interface SshKaydi {
   id: number;
   parmakIzi: string;
@@ -1115,8 +1116,9 @@ function Ayarlar(p: { s: Sayfa; yenile: () => void }): JSX.Element {
 export function Alan(p: { alan: AlanId }): JSX.Element {
   const ilk = sorgu().get("sekme");
   const [sekme, setSekme] = createSignal<Sekme>(
-    (["bekleyen", "isler", "talimat", "zevk", "baglanti", "ayarlar"] as const).find((x) => x === ilk) ??
-      "bekleyen",
+    (["bekleyen", "isler", "kosular", "talimat", "zevk", "baglanti", "ayarlar"] as const).find(
+      (x) => x === ilk,
+    ) ?? "bekleyen",
   );
   const [veri, { refetch }] = createResource(
     () => p.alan,
@@ -1189,6 +1191,8 @@ export function Alan(p: { alan: AlanId }): JSX.Element {
         secenekler={[
           { id: "bekleyen", ad: "Bekleyenler", sayi: veri()?.bekleyenler.length ?? 0 },
           { id: "isler", ad: "İşler", sayi: veri()?.isler.length ?? 0 },
+          // Test alanı: test2 bot koşuları (sözleşme bölüm 14).
+          ...(p.alan === "test" ? [{ id: "kosular" as const, ad: "Koşular" }] : []),
           { id: "talimat", ad: "Talimat" },
           { id: "zevk", ad: "Zevk" },
           { id: "baglanti", ad: "Bağlantı" },
@@ -1211,6 +1215,9 @@ export function Alan(p: { alan: AlanId }): JSX.Element {
               </Match>
               <Match when={sekme() === "isler"}>
                 <Isler s={v()} yenile={yenile} />
+              </Match>
+              <Match when={sekme() === "kosular" && p.alan === "test"}>
+                <KosuPaneli />
               </Match>
               <Match when={sekme() === "talimat"}>
                 <Talimat s={v()} yenile={yenile} />
