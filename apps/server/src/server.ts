@@ -33,6 +33,15 @@ import { runTick, TICK_MS } from "./match.js";
 import { errorMessage } from "./messages.js";
 import { TICK_BUCKETS_MS } from "./metrics.js";
 import { type BannedWords, createBannedWords, createReportDesk } from "./moderation.js";
+import {
+  isTestOrtam,
+  ORTAM_AI_PER_DAY,
+  ORTAM_AI_PER_MINUTE,
+  ORTAM_ROBOTS,
+  ORTAM_ROBOTS_HEADER,
+  type Ortam,
+  ortamSeridi,
+} from "./ortam.js";
 import { handleProfile, PROFILE_PATH } from "./profile.js";
 import { createPushBroadcaster } from "./pushBroadcast.js";
 import { createQuestsApi, QUESTS_PATH } from "./quests.js";
@@ -114,9 +123,16 @@ export interface ServerOptions {
   aiKey?: string | null;
   /** Yorum servisine giden istek (testlerde sahte); varsayılan: yerleşik `fetch`. */
   aiFetch?: AiFetch;
+  /**
+   * Çalışma ortamı (`GLIX_ORTAM`); verilmezse canlı ve davranış değişmez. test/test2'de e-posta ve bildirim kapalı,
+   * yapay zekâ düşük sınırla, yanıtlar `noindex`, `robots.txt` kapalı ve ana sayfada ortam şeridi (bkz. `ortam.ts`).
+   */
+  ortam?: Ortam;
 }
 
 function resolvePush(opts: ServerOptions): PushGateway {
+  // Test ortamlarında hiçbir bildirim gönderilmez (hazır gönderici ya da anahtar verilse bile).
+  if (isTestOrtam(opts.ortam)) return disabledPush;
   if (opts.push) return opts.push;
   if (!opts.vapid) return disabledPush;
   try {
@@ -171,14 +187,19 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   stats.purge(clock.now());
   const accounts = createAccounts(opts.accountsDb || ":memory:");
   accounts.purge(clock.now());
-  const google = opts.google ? createGoogleAuth(opts.google) : null;
-  const mail: MailService | null = opts.mail
+  const testOrtam = isTestOrtam(opts.ortam);
+  // Test ortamlarında dışarıya e-posta ve Google girişi yoktur (ayar verilse bile).
+  const google = opts.google && !testOrtam ? createGoogleAuth(opts.google) : null;
+  const mailConfig = testOrtam ? null : (opts.mail ?? null);
+  const mail: MailService | null = mailConfig
     ? {
-        mailer: createMailer(opts.mail, opts.mailFetch, (kind, ok) => stats.mailSent(clock.now(), kind, ok)),
-        publicUrl: opts.mail.publicUrl,
+        mailer: createMailer(mailConfig, opts.mailFetch, (kind, ok) => stats.mailSent(clock.now(), kind, ok)),
+        publicUrl: mailConfig.publicUrl,
         throttle: new MailThrottle(),
       }
     : null;
+  if (testOrtam) log.warn("ortam_test", { ortam: opts.ortam ?? "canli" });
+  const serit = ortamSeridi(opts.ortam);
   let cancelPurge: () => void = () => {};
   const schedulePurge = (): void => {
     cancelPurge = clock.setTimeout(() => {
@@ -215,6 +236,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   rt.aiComment = createAiCommenter({
     apiKey: opts.aiKey ?? null,
     clock,
+    ...(testOrtam ? { perMinute: ORTAM_AI_PER_MINUTE, perDay: ORTAM_AI_PER_DAY } : {}),
     isBanned: (text) => rt.bannedWords.matches(text),
     ...(opts.aiFetch ? { fetch: opts.aiFetch } : {}),
   });
@@ -222,7 +244,8 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     apiKey: opts.aiKey ?? null,
     clock,
     timeoutMs: INSPIRE_TIMEOUT_MS,
-    perMinute: INSPIRE_PER_MINUTE,
+    perMinute: testOrtam ? ORTAM_AI_PER_MINUTE : INSPIRE_PER_MINUTE,
+    ...(testOrtam ? { perDay: ORTAM_AI_PER_DAY } : {}),
     ...(opts.aiFetch ? { fetch: opts.aiFetch } : {}),
   });
   const friendsApi = createFriendsApi({
@@ -339,6 +362,15 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
 
   const server = createServer((req, res) => {
     const path = (req.url ?? "/").split("?")[0] ?? "/";
+    if (testOrtam) {
+      // Test ortamları arama motorlarına kapalıdır: her yanıtta başlık, robots.txt her yolu kapatır.
+      res.setHeader("X-Robots-Tag", ORTAM_ROBOTS_HEADER);
+      if (path === "/robots.txt" && (req.method === "GET" || req.method === "HEAD")) {
+        res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache" });
+        res.end(req.method === "HEAD" ? undefined : ORTAM_ROBOTS);
+        return;
+      }
+    }
     if (path === "/health") {
       const detail = (req.url ?? "").includes("detail=1");
       res.writeHead(rt.draining ? 503 : 200, {
@@ -359,6 +391,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
           tickMsP95: Math.round(rt.metrics.tickMsP95() * 100) / 100,
           bytesOutPerSec: Math.round(rt.metrics.bytesOutPerSec(clock.now())),
           memoryRssMb: Math.round(process.memoryUsage().rss / 1048576),
+          ...(testOrtam ? { ortam: opts.ortam } : {}),
           ...(detail ? { tickHistogram: { edgesMs: TICK_BUCKETS_MS, ...rt.metrics.tickHistogram() } } : {}),
         }),
       );
@@ -464,6 +497,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     serveStatic(req, res, opts.clientDir, {
       adminEnabled: adminIds.size > 0,
       previewAncestors: opts.previewAncestors ?? DEV_PREVIEW_ANCESTORS,
+      ...(serit ? { serit } : {}),
     }).catch((err: unknown) => {
       log.error("static_failed", { error: String(err) });
       if (!res.headersSent) res.writeHead(500);

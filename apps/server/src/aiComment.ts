@@ -17,6 +17,7 @@ export const AI_COMMENT_TIMEOUT_MS = 2_500;
 /** Sunucu genelinde bir dakikada en çok bu kadar istek. */
 export const AI_COMMENT_PER_MINUTE = 20;
 const MINUTE_MS = 60_000;
+const DAY_MS = 24 * 60 * MINUTE_MS;
 const MAX_TOKENS = 120;
 
 /** Yerleşik `fetch`in burada kullanılan kısmı (testlerde sahte verilir). */
@@ -62,6 +63,8 @@ export interface AiCommenterOptions {
   fetch?: AiFetch;
   timeoutMs?: number;
   perMinute?: number;
+  /** 24 saatlik pencerede en çok istek (test ortamları); verilmezse günlük sınır yok. */
+  perDay?: number;
 }
 
 /**
@@ -125,6 +128,8 @@ export interface AiTextOptions {
   fetch?: AiFetch;
   timeoutMs?: number;
   perMinute?: number;
+  /** 24 saatlik pencerede en çok istek (test ortamları); verilmezse günlük sınır yok. */
+  perDay?: number;
 }
 
 export interface AiTextRequest<T> {
@@ -154,12 +159,23 @@ export function createAiText(opts: AiTextOptions): AiText {
   const doFetch: AiFetch = opts.fetch ?? (fetch as unknown as AiFetch);
   const timeoutMs = opts.timeoutMs ?? AI_COMMENT_TIMEOUT_MS;
   const perMinute = opts.perMinute ?? AI_COMMENT_PER_MINUTE;
+  const perDay = opts.perDay ?? null;
   const sent: number[] = [];
+  let dayStart = 0;
+  let dayCount = 0;
 
   const allow = (): boolean => {
     const now = opts.clock.now();
     while (sent.length > 0 && (sent[0] as number) <= now - MINUTE_MS) sent.shift();
     if (sent.length >= perMinute) return false;
+    if (perDay !== null) {
+      if (now - dayStart >= DAY_MS) {
+        dayStart = now;
+        dayCount = 0;
+      }
+      if (dayCount >= perDay) return false;
+      dayCount += 1;
+    }
     sent.push(now);
     return true;
   };

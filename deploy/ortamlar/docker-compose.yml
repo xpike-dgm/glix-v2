@@ -1,0 +1,50 @@
+# Test ortamları (UM-O1 test, UM-O2 test2): canlıyla aynı imaj biçimi, ayrı proje, ayrı kap, ayrı veri, ayrı anahtar.
+# Elle değil betiklerle çalıştırılır (ortak.sh `ortam_compose`):
+#   ORTAM_IMAJ=glix-v2:test ORTAM_PORT=3901 ORTAM_VERI=/srv/glix/ortam/test/veri \
+#     docker compose -f docker-compose.yml -p glix-test --env-file /srv/glix/ortam/gizli/.env.test up -d --no-build
+# Derleme bölümü yoktur: imaj test-cikar.sh ile derlenir, canlıya aynı imaj taşınır (canliya-al.sh).
+# `--env-file` yalnız aşağıdaki ${...} değerlerini doldurur; dosyanın tamamı kaba aktarılmaz.
+services:
+  glix:
+    image: ${ORTAM_IMAJ:?ORTAM_IMAJ gerekli}
+    ports:
+      - "127.0.0.1:${ORTAM_PORT:?ORTAM_PORT gerekli}:3900"
+    environment:
+      # test | test2: e-posta, web bildirimi ve Google girişi kapalı; yapay zekâ düşük sınırla; noindex; ekranda şerit.
+      GLIX_ORTAM: ${GLIX_ORTAM:?GLIX_ORTAM gerekli}
+      ALLOWED_ORIGINS: ${GLIX_ALLOWED_ORIGINS:?GLIX_ALLOWED_ORIGINS gerekli}
+      GLIX_PUBLIC_URL: ${GLIX_PUBLIC_URL:-}
+      DRAIN_TIMEOUT_MS: "60000"
+      TRUST_PROXY: "1"
+      STATS_DB: /data/glix.db
+      # Yönetici paneli girişi e-posta kodu ister; test ortamlarında e-posta kapalı olduğundan şimdilik boş kalır.
+      GLIX_ADMIN_ACCOUNT_IDS: ${GLIX_ADMIN_ACCOUNT_IDS:-}
+      # Ortamın KENDİ model anahtarı (canlınınki kullanılmaz). Boşsa yorum ve ilham kapalı.
+      GLIX_AI_KEY: ${GLIX_AI_KEY:-}
+      # Ortamın kendi Üretim Merkezi anahtarı (kur.sh üretir; Aşama 3 oyun alanı araçları için).
+      GLIX_URETIM_TOKEN: ${GLIX_URETIM_TOKEN:-}
+      # Taslak oyunlar (test2'de açık: onay bekleyen oyunlar lobide elle seçilebilir).
+      GLIX_TASLAK_OYUNLAR: ${GLIX_TASLAK_OYUNLAR:-}
+    labels:
+      glix.ortam: ${GLIX_ORTAM}
+    volumes:
+      # Kap içindeki `node` kullanıcısı (uid 1000) yazar; kur.sh sahipliği verir.
+      - ${ORTAM_VERI:?ORTAM_VERI gerekli}:/data
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 256
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 2m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"

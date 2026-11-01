@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { GOOGLE_CALLBACK_PATH, type GoogleConfig } from "./google.js";
 import type { MailConfig } from "./mail.js";
+import { isTestOrtam, type Ortam, parseOrtam } from "./ortam.js";
 import { DEV_PREVIEW_ANCESTORS, PROD_PREVIEW_ANCESTOR } from "./static.js";
 import type { VapidConfig } from "./webpush.js";
 
@@ -42,6 +43,11 @@ export interface Config {
   uretimToken: string | null;
   /** `onizleme.html`'i gömebilen kaynaklar (CSP frame-ancestors). */
   previewAncestors: readonly string[];
+  /**
+   * Çalışma ortamı (`GLIX_ORTAM`; boş = canlı). test/test2'de e-posta, web bildirimi ve Google girişi ayar verilse bile kapalıdır
+   * (bkz. `ortam.ts`).
+   */
+  ortam: Ortam;
 }
 
 export interface ServerLimits {
@@ -145,7 +151,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   if (!Number.isFinite(drainTimeoutMs) || drainTimeoutMs < 0) throw new Error("DRAIN_TIMEOUT_MS geçersiz");
   const statsDb = env.STATS_DB || (env.NODE_ENV === "production" ? "/data/glix.db" : null);
   const trust = (env.TRUST_PROXY ?? "").toLowerCase();
+  const ortam = parseOrtam(env.GLIX_ORTAM);
+  // Test ortamlarında dışarıya e-posta, bildirim ve Google girişi gitmez: anahtar yanlışlıkla verilse de okunmaz.
+  const disariKapali = isTestOrtam(ortam);
   return {
+    ortam,
     limits: {
       maxSockets: positiveInt(env, "MAX_SOCKETS", DEFAULT_LIMITS.maxSockets),
       maxSocketsPerIp: positiveInt(env, "MAX_SOCKETS_PER_IP", DEFAULT_LIMITS.maxSocketsPerIp),
@@ -161,9 +171,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     wikiDir: env.WIKI_DIR || resolve(fileURLToPath(new URL("../../../docs/wiki", import.meta.url))),
     allowedOrigins,
     revision: env.GIT_SHA || env.REVISION || "dev",
-    vapid: loadVapid(env),
-    google: loadGoogle(env),
-    mail: loadMail(env),
+    vapid: disariKapali ? null : loadVapid(env),
+    google: disariKapali ? null : loadGoogle(env),
+    mail: disariKapali ? null : loadMail(env),
     adminAccountIds: loadAdminIds(env),
     draftGames: env.GLIX_TASLAK_OYUNLAR === "1",
     aiKey: env.GLIX_AI_KEY?.trim() || null,

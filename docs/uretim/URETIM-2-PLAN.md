@@ -46,6 +46,9 @@ test eder, ana koda birleştirir → test.glix'e çıkar → sahip "canlıya al"
 - test: ana daldaki son derleme. test2: test'teki imaj + her gece içerik canlıdan yeniden kopyalanır, odalar/sahte
   hesaplar sıfırlanır, sahte hesaplar (zengin, yeni, tüm rozetler) yeniden üretilir.
 - Canlıya alma betiği: aktif maç varsa durur; test'teki imajın aynısını taşır.
+- **Hazırlandı (sunucuya kurulmadı):** `deploy/ortamlar/` (kurulum, test'e çıkarma, canlıya alma, gece yenileme,
+  içerik kopyalama, erişim; adımlar `deploy/ortamlar/README.md`) ve sunucuda `GLIX_ORTAM=canli|test|test2` bayrağı
+  (`apps/server/src/ortam.ts`). Erişim: Caddy `basic_auth` + giriş çerezi; yapay zekâlar için ayrı kullanıcı.
 
 ## Aşama 3 — Taslak katmanı ve oyun alanı araçları (UM-O3, UM-O4, UM-F1)
 - Veriyle yönetilen alanlarda (önce içerik havuzları ve mağaza, sonra diğerleri ALT-4…12 ile) teslimler test2'ye

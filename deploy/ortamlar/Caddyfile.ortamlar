@@ -1,0 +1,42 @@
+# Test ortamlarının site bloğu (TASLAK ŞABLON). Var olan glix.dgmcraft.online ve uretim.dgmcraft.online bloklarına
+# dokunulmaz. kur.sh / erisim.sh bu bloğu iki kez doldurur (test.glix → 127.0.0.1:3901, test2.glix → 127.0.0.1:3902)
+# ve gizli değerli sonucu /srv/glix/ortam/caddy/ortamlar.caddy olarak yazar (0640 root:caddy).
+# /etc/caddy/Caddyfile'a yalnız şu satır eklenir:
+#   import /srv/glix/ortam/caddy/ortamlar.caddy
+#
+# Erişim (UM-O7): yalnız sahip ve davetliler.
+# - İlk girişte tarayıcı kullanıcı adı ve şifre sorar (basic_auth; dosyada yalnız bcrypt özeti durur).
+# - Doğru girişten sonra 30 günlük, HttpOnly bir giriş çerezi verilir. Sonraki istekler (oyunun WebSocket bağlantısı
+#   dahil) bu çerezle geçer: bazı tarayıcılar (iOS Safari) WebSocket isteğine şifreyi kendiliğinden eklemez.
+# - Çerez değeri ortam başına 64 haneli rastgele bir sırdır; `route` sırası sayesinde şifre doğrulanmadan hiçbir
+#   yanıtta verilmez. Çerezi geçersiz kılmak: `erisim.sh cerez-yenile` (herkes yeniden şifre girer).
+# - Yapay zekâ anahtarları (Aşama 3): her yapay zekâya `erisim.sh ekle yz-<alan>` ile ayrı kullanıcı açılır; araçlar
+#   `Authorization: Basic ...` başlığıyla girer, kullanıcı silinince erişim biter. Aynı makinedeki Üretim Merkezi
+#   Caddy'ye hiç uğramadan 127.0.0.1:3901/3902'ye bağlanabilir.
+
+__ALAN__ {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Robots-Tag "noindex, nofollow"
+	}
+	# Sağlık ucu ve Üretim Merkezi uçları dışarıya kapalı (canlıdaki gibi).
+	@saglik path /health
+	@uretim path /api/uretim /api/uretim/*
+	# Arama motorları şifre sormadan robots.txt'yi okuyabilsin (her yolu kapatır).
+	@robots path /robots.txt
+	@cerezsiz not header_regexp Cookie glix_ortam_giris=__CEREZ__
+	# `route`: yönergeler yazıldığı sırayla çalışır; şifre doğrulanmadan çerez verilmez.
+	route {
+		respond @saglik 404
+		respond @uretim 404
+		respond @robots "User-agent: *
+Disallow: /
+" 200
+		__BASIC_AUTH__ @cerezsiz {
+__KULLANICILAR__
+		}
+		header @cerezsiz +Set-Cookie "glix_ortam_giris=__CEREZ__; Path=/; Max-Age=2592000; Secure; HttpOnly; SameSite=Lax"
+		reverse_proxy 127.0.0.1:__PORT__
+	}
+}

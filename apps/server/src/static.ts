@@ -1,7 +1,8 @@
 import { createReadStream } from "node:fs";
-import { stat } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { extname, join, normalize, resolve, sep } from "node:path";
+import { seritEkle } from "./ortam.js";
 
 const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -87,6 +88,8 @@ export interface StaticOptions {
   adminEnabled?: boolean;
   /** `onizleme.html`'i gömebilen kaynaklar; verilmezse yalnız Üretim Merkezi. */
   previewAncestors?: readonly string[];
+  /** Test ortamlarında ana sayfaya (`index.html`) eklenen ortam şeridi HTML'i; canlıda verilmez. */
+  serit?: string;
 }
 
 /** `/admin` (ve sonundaki eğik çizgi) yönetici sayfasıdır; geri kalan `/admin/...` yolları yoktur. */
@@ -178,6 +181,13 @@ export async function serveStatic(
   if (servedPath === PREVIEW_PAGE) {
     delete headers["X-Frame-Options"];
     Object.assign(headers, previewHeaders(options.previewAncestors ?? [PROD_PREVIEW_ANCESTOR]));
+  }
+  if (options.serit && file === join(root, "index.html")) {
+    const body = Buffer.from(seritEkle(await readFile(file, "utf8"), options.serit), "utf8");
+    headers["Content-Length"] = body.length;
+    res.writeHead(200, headers);
+    res.end(req.method === "HEAD" ? undefined : body);
+    return;
   }
   res.writeHead(200, headers);
   if (req.method === "HEAD") {
