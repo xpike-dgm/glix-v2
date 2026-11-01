@@ -585,8 +585,10 @@
   animation: sb-in 360ms var(--ease) both;
 }
 .sbpage[data-art="1"] {
+  /* Görselin süslü kenarı ve sağdaki deri sırt için iç boşluk. */
+  padding: 24px 32px 22px 28px;
   background:
-    var(--sb-page) center / cover no-repeat,
+    var(--sb-page) center / 100% 100% no-repeat,
     #ead8b0;
 }
 .sbpage__tab {
@@ -1069,6 +1071,7 @@
   color: var(--lime);
 }
 .sbseal img {
+  position: relative;
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -1076,6 +1079,42 @@
 .sbseal[data-small="1"] {
   width: 22px;
   height: 22px;
+}
+.sbseal[data-art="1"] {
+  position: relative;
+}
+/* Mührün içi koyu: yazı ve kitap mürekkep sıçramasının üstünde okunur (iç halka r≈92/256). */
+.sbseal__disc {
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  background: rgba(8, 12, 30, 0.78);
+}
+.sbseal__label {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+.sbseal__label text {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 25px;
+  letter-spacing: 1px;
+  fill: var(--lime);
+  stroke: #0d1400;
+  stroke-width: 5px;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
+/* Görsel mühür: yazı mührün içinde olduğundan mühür büyür. */
+.sbres__stamp[data-art="1"] {
+  bottom: 2px;
+  right: 6px;
+}
+.sbres__stamp[data-art="1"] .sbseal {
+  width: 108px;
+  height: 108px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
 }
 .sbres__stamp {
   position: absolute;
@@ -1116,8 +1155,21 @@
   animation: sb-ink 1.4s ease-out both;
 }
 .sbres__ink[data-art="1"] {
-  background: var(--sb-ink) center / cover no-repeat;
+  background: var(--sb-ink) right center / cover no-repeat;
   mix-blend-mode: screen;
+  opacity: 0.5;
+  animation-name: sb-ink-art;
+}
+/* Görsel çok doygun: yazı okunsun diye yarı saydam kalır. */
+@keyframes sb-ink-art {
+  from {
+    opacity: 0;
+    clip-path: circle(0 at 85% 30%);
+  }
+  to {
+    opacity: 0.5;
+    clip-path: circle(140% at 85% 30%);
+  }
 }
 @keyframes sb-ink {
   from {
@@ -1226,6 +1278,9 @@
   margin-top: 2px;
   padding: 8px 10px;
   gap: 4px;
+}
+.sb[data-tight="1"] .sbpage[data-art="1"] {
+  padding: 14px 26px 12px 22px;
 }
 .sb[data-tight="1"] .sbpage__tpl,
 .sb[data-tight="1"] .sbpage__tab,

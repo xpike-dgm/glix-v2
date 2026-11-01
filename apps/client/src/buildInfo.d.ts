@@ -26,3 +26,5 @@ declare const __RULET_PROPS__: readonly string[] | undefined;
 declare const __HIRSIZ_PROPS__: readonly string[] | undefined;
 /** Gizli Kareler görsellerinden derlemede var olanlar (`public/assets/props/gizli-kareler/<ad>.webp`, uzantısız). */
 declare const __KARELER_PROPS__: readonly string[] | undefined;
+/** Çağrışım Ağı görsellerinden derlemede var olanlar (`public/assets/props/cagrisim-agi/<ad>.webp`, uzantısız). */
+declare const __CAGRISIM_PROPS__: readonly string[] | undefined;

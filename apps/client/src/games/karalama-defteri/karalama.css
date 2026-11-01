@@ -1064,8 +1064,6 @@
   color: var(--text-dim);
   white-space: nowrap;
 }
-
-/* ---- KD-U4/U6/U9/U12 sergi duvarı ---- */
 .kd__vote {
   flex: 1;
   min-height: 0;
@@ -1129,6 +1127,37 @@
   border: 1px solid var(--line);
   overflow: hidden;
 }
+/* KD-U3 ahşap çerçeve görseli: çizim çerçevenin açıklığına oturur (ölçüler görsele göre: açıklık x 72–452, y 92–452 / 512). */
+.kd__hangframe[data-art="1"] {
+  padding: 17.6% 13.3% 11.3% 15.6%;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+.kd__hangframe[data-art="1"] .kd__thumb {
+  border-radius: 0;
+}
+.kd__hangcell .kd__hangframe[data-art="1"] .kd__veil {
+  inset: 18% 11.7% 11.7% 14.1%;
+  border-radius: 0;
+}
+.kd__hangart {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55));
+}
+.kd__hangcell[data-me="1"] .kd__hangframe[data-art="1"] {
+  box-shadow: none;
+}
+.kd__hangcell[data-me="1"] .kd__hangart {
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 4px var(--lime));
+}
+
+/* ---- KD-U4/U6/U9/U12 sergi duvarı ---- */
 .kd__zoomnav {
   display: flex;
   align-items: center;
@@ -1311,7 +1340,46 @@
     opacity: 0.35;
   }
 }
+/* Işık izinin ucu (görsel): soldan sağa incelen kuyruk, parlak baş sağda; yolu çizgiyle aynı zamanlamada izler. */
+.kdop__comet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 104px;
+  height: 26px;
+  offset-anchor: 88% 50%;
+  offset-rotate: auto;
+  offset-distance: 0%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: kdop-comet 1400ms var(--ease) both;
+}
+@keyframes kdop-comet {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  70% {
+    offset-distance: 100%;
+    opacity: 1;
+  }
+  to {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+.kdop[data-tv="1"] .kdop__comet {
+  width: 168px;
+  height: 42px;
+}
 @media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .kdop__comet {
+    display: none;
+  }
   :root:not([data-motion="full"]) .kdop__trail {
     animation: none;
     stroke-dashoffset: 0;
@@ -1320,6 +1388,9 @@
     animation: none;
     opacity: 0;
   }
+}
+:root[data-motion="reduce"] .kdop__comet {
+  display: none;
 }
 :root[data-motion="reduce"] .kdop__trail {
   animation: none;
@@ -1355,6 +1426,49 @@
 }
 .kdop__stamp img {
   width: min(70vw, 280px);
+}
+/* Görsel damga (KD-U5): yazısız eğik çerçeve; yazı çerçevenin iç alanına aynı eğimle oturur (ölçüler görsele göre). */
+.kdop__stamp[data-art="1"] {
+  container-type: inline-size;
+  width: min(78vw, 320px);
+}
+.kdop__stamp[data-art="1"] img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.kdop__stamptext {
+  position: absolute;
+  left: 49.6%;
+  top: 50.8%;
+  width: 80cqw;
+  height: 19cqw;
+  translate: -50% -50%;
+  rotate: -9.4deg;
+  display: grid;
+  place-items: center;
+  border-radius: 1.5cqw;
+  background: rgba(6, 10, 32, 0.86);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 8.6cqw;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  color: var(--lime);
+  -webkit-text-stroke: 0.5cqw #0b0f1c;
+  paint-order: stroke fill;
+  text-shadow: 0 0 2.5cqw rgba(182, 255, 59, 0.45);
+}
+.kdop__stamp[data-caught="0"] .kdop__stamptext {
+  left: 44.4%;
+  top: 51.4%;
+  width: 66cqw;
+  rotate: -6.5deg;
+  font-size: 7.8cqw;
+  color: var(--amber);
+  text-shadow: 0 0 2.5cqw rgba(255, 194, 59, 0.45);
 }
 @keyframes kdop-stamp {
   from {
@@ -1542,6 +1656,9 @@
 }
 .kdop[data-tv="1"] .kdop__stamp b {
   font-size: 96px;
+}
+.kdop[data-tv="1"] .kdop__stamp[data-art="1"] {
+  width: min(56vw, 760px);
 }
 .kdop[data-tv="1"] .kdop__ring {
   width: 120px;
