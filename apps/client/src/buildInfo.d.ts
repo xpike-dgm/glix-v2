@@ -30,3 +30,5 @@ declare const __KARELER_PROPS__: readonly string[] | undefined;
 declare const __CAGRISIM_PROPS__: readonly string[] | undefined;
 /** Rüşvet ve Darbe görsellerinden derlemede var olanlar (`public/assets/props/rusvet-darbe/<ad>.webp`, uzantısız). */
 declare const __RUSVET_PROPS__: readonly string[] | undefined;
+/** İttifak görsellerinden derlemede var olanlar (`public/assets/props/ittifak/<ad>.webp`, uzantısız). */
+declare const __ITTIFAK_PROPS__: readonly string[] | undefined;

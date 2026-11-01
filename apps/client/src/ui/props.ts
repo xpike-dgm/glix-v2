@@ -34,6 +34,7 @@ export type PropPath =
   | `rus-ruleti/${"tabanca" | "tambur" | RuletProp}`
   | `gizli-hirsiz/${HirsizProp}`
   | `rusvet-darbe/${RusvetProp}`
+  | `ittifak/${IttifakProp}`
   | `gizli-kareler/${KarelerProp}`
   | `sozluk-blofu/${SozlukProp}`
   | `karalama-defteri/${KaralamaProp}`
@@ -177,6 +178,28 @@ export function rusvetPropExists(name: RusvetProp): boolean {
 /** Var olan Rüşvet ve Darbe görselinin adresi; yoksa null. */
 export const rusvetProp = (name: RusvetProp): string | null =>
   rusvetPropExists(name) ? propSrc(`rusvet-darbe/${name}`) : null;
+
+/**
+ * İttifak görselleri (sahip üretecek; docs/oneriler/GORSEL-IHTIYACLARI.md "İttifak"). Yoksa ekran CSS/SVG karşılığını
+ * çizer ve olmayan dosyayı hiç istemez (404 yok); dosya `ittifak/<ad>.webp` olarak gelince kod değişmeden kullanılır.
+ */
+export type IttifakProp = "masa" | "masa-genis" | "muhur" | "muhur-kirik" | "ittifak-rozet";
+export const ITTIFAK_PROPS: readonly IttifakProp[] = [
+  "masa",
+  "masa-genis",
+  "muhur",
+  "muhur-kirik",
+  "ittifak-rozet",
+];
+
+export function ittifakPropExists(name: IttifakProp): boolean {
+  const built = typeof __ITTIFAK_PROPS__ === "undefined" ? undefined : __ITTIFAK_PROPS__;
+  return built ? built.includes(name) : false;
+}
+
+/** Var olan İttifak görselinin adresi; yoksa null. */
+export const ittifakProp = (name: IttifakProp): string | null =>
+  ittifakPropExists(name) ? propSrc(`ittifak/${name}`) : null;
 
 /**
  * Gizli Hırsız görselleri (sahip üretecek; docs/oneriler/GORSEL-IHTIYACLARI.md "Gizli Hırsız"). Yoksa ekran mevcut kasa
@@ -330,7 +353,10 @@ const GAME_PROPS: Record<string, readonly PropPath[]> = {
   ],
   "gizli-kareler": KARELER_PROPS.filter(karelerPropExists).map((n): PropPath => `gizli-kareler/${n}`),
   "son-kisi": ["genel/kacis-kolu"],
-  ittifak: ["genel/el-sikisma"],
+  ittifak: [
+    "genel/el-sikisma",
+    ...ITTIFAK_PROPS.filter(ittifakPropExists).map((n): PropPath => `ittifak/${n}`),
+  ],
   "capraz-ates": ["genel/nisangah"],
   "yazi-yaz": YAZI_YAZ_PROPS.filter(yaziYazPropExists).map((n): PropPath => `yazi-yaz/${n}`),
   "sozluk-blofu": SOZLUK_PROPS.filter(sozlukPropExists).map((n): PropPath => `sozluk-blofu/${n}`),

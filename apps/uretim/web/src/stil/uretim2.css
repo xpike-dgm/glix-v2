@@ -1043,3 +1043,216 @@ fieldset.cipler {
   gap: 4px;
   margin-bottom: 12px;
 }
+
+/* ---- Oyun Tasarımı: kart türleri, künye, ayrıntı sayfası, sürüm farkı (bölüm 15) ------------------------- */
+.tasarim-rozet {
+  --tr: var(--vurgu);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--r-tam);
+  font-size: var(--fs-12);
+  font-weight: 650;
+  color: var(--tr);
+  background: color-mix(in srgb, var(--tr) 16%, transparent);
+}
+.tasarim-rozet[data-tasarim="yeni-oyun"],
+.cip[data-tasarim="yeni-oyun"][aria-pressed="true"] {
+  --tr: #e0739b;
+}
+.tasarim-rozet[data-tasarim="sistem"],
+.cip[data-tasarim="sistem"][aria-pressed="true"] {
+  --tr: #6aa8ff;
+}
+.tasarim-rozet[data-tasarim="oyuna-ek"],
+.cip[data-tasarim="oyuna-ek"][aria-pressed="true"] {
+  --tr: #e2b04a;
+}
+.fikir-karti[data-tasarim] {
+  border-top: 3px solid color-mix(in srgb, var(--alan-renk) 70%, transparent);
+}
+.fikir-karti[data-tasarim="yeni-oyun"] {
+  border-top-color: #e0739b;
+}
+.fikir-karti[data-tasarim="sistem"] {
+  border-top-color: #6aa8ff;
+}
+.fikir-karti[data-tasarim="oyuna-ek"] {
+  border-top-color: #e2b04a;
+}
+.tasarim-kunye {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: var(--fs-12);
+  color: var(--metin-2);
+}
+.tasarim-kunye > span + span::before {
+  content: "·";
+  margin-right: 10px;
+  opacity: 0.6;
+}
+.fikir-karti__kaynak {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-12);
+  color: var(--metin-2);
+}
+.fikir-tasarim-turleri {
+  margin-bottom: 6px;
+}
+.tasarim-duzen {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 10px;
+}
+.tasarim-fark {
+  grid-column: 1 / -1;
+}
+@media (max-width: 860px) {
+  .tasarim-duzen {
+    grid-template-columns: 1fr;
+  }
+}
+.tasarim-icerik__baslik {
+  margin: 4px 0 0;
+}
+.tasarim-alanlar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 6px 0 0;
+}
+.tasarim-alan dt {
+  font-size: var(--fs-12);
+  font-weight: 650;
+  color: var(--metin-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.tasarim-alan dd {
+  margin: 4px 0 0;
+  white-space: pre-line;
+  line-height: 1.5;
+}
+.surum-listesi,
+.tasarim-notlar,
+.tasarim-isler {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.surum-listesi__oge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px;
+  border-radius: var(--r-2);
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  color: inherit;
+}
+.surum-listesi__oge[aria-pressed="true"] {
+  border-color: var(--vurgu);
+  background: var(--vurgu-zayif);
+}
+.tasarim-notlar li {
+  padding: 8px 10px;
+  border-radius: var(--r-2);
+  background: var(--bg-ince);
+}
+.tasarim-notlar li[data-tur="elestiri"] {
+  border-left: 3px solid #6aa8ff;
+}
+.tasarim-notlar .metin-govde {
+  white-space: pre-line;
+  margin: 6px 0 4px;
+}
+.tasarim-isler li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tasarim-oneri {
+  padding-top: 8px;
+  border-top: 1px solid var(--cizgi);
+}
+.surum-farki__bas {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.surum-farki__satir {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--cizgi);
+  white-space: pre-line;
+  font-size: var(--fs-13, 13px);
+}
+.surum-farki__satir--baslik {
+  font-weight: 650;
+  color: var(--metin-2);
+}
+.surum-farki__ad {
+  color: var(--metin-2);
+}
+.surum-farki__satir--degisti .surum-farki__eski {
+  background: color-mix(in srgb, var(--kaldi) 12%, transparent);
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+.surum-farki__satir--degisti .surum-farki__yeni {
+  background: color-mix(in srgb, var(--gecti) 14%, transparent);
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+.surum-farki__satir:not(.surum-farki__satir--degisti) .surum-farki__eski {
+  opacity: 0.6;
+}
+@media (max-width: 640px) {
+  .surum-farki__satir {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+.coklu-yz {
+  border: 1px solid var(--cizgi);
+  border-radius: var(--r-2);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.coklu-yz legend {
+  padding: 0 4px;
+}
+.coklu-is {
+  padding-top: 10px;
+  border-top: 1px solid var(--cizgi);
+}
+.surum-farki__tablo {
+  width: 100%;
+  border-collapse: collapse;
+}
+.surum-farki__tablo th,
+.surum-farki__tablo td {
+  text-align: left;
+  vertical-align: top;
+  font-weight: inherit;
+}

@@ -26,6 +26,9 @@ export const LISTE_KLASORLERI = [
   "apps/client/public/assets/karakter/",
   "docs/wiki/",
 ];
+/** Oyun kuralları (kanonik) ve oyun ansiklopedisi: Oyun Tasarımı alanının bağlamı. */
+export const KURALLAR_YOLU = "docs/KURALLAR.md";
+export const WIKI_OYUNLAR = "docs/wiki/oyunlar/";
 /** Karakter iskeleti (`glix-parts-1`). */
 export const RIG_YOLU = "apps/client/public/assets/karakter/rig.json";
 const EN_COK_DOSYA = 2 * 1024 * 1024;
@@ -118,6 +121,14 @@ export class Katalog {
     // Karakter iskeleti: dans ve giysi doğrulayıcıları bunu ister.
     const rig = await this.ayna.oku(rev, RIG_YOLU);
     if (rig !== null) yaz(RIG_YOLU, rig);
+    // Oyun Tasarımı (bölüm 15): oyun kuralları ve oyun ansiklopedisi (oyun_katalogu_oku).
+    const kurallar = await this.ayna.oku(rev, KURALLAR_YOLU);
+    if (kurallar !== null) yaz(KURALLAR_YOLU, kurallar);
+    for (const yol of await this.ayna.listele(rev, WIKI_OYUNLAR)) {
+      if (!yol.endsWith(".json")) continue;
+      const icerik = await this.ayna.oku(rev, yol);
+      if (icerik !== null) yaz(yol, icerik);
+    }
     for (const k of LISTE_KLASORLERI) yaz(`liste:${k}`, JSON.stringify(await this.ayna.listele(rev, k)));
     return n;
   }

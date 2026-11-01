@@ -10,6 +10,8 @@
  *   (reddedilen: reddedildi; düzeltme istenen: fikir)
  */
 
+import type { TasarimFikri } from "./tasarim.js";
+
 export const ETKILER = ["dusuk", "orta", "yuksek"] as const;
 export type Etki = (typeof ETKILER)[number];
 export const ZAHMETLER = ["kucuk", "orta", "buyuk"] as const;
@@ -27,6 +29,8 @@ export interface FikirAlanlari {
   kategori: string;
   etki: Etki;
   zahmet: Zahmet;
+  /** Oyun Tasarımı kartı (yeni oyun / sistem / oyuna ek; `tasarim.ts`). */
+  tasarim?: TasarimFikri;
 }
 
 export const FIKIR_ASAMALARI = [
@@ -73,6 +77,11 @@ export interface FikirKarti extends Partial<FikirAlanlari> {
   uygulamaOge: number | null;
   /** Küçük önizleme görselinin öğe dosya özeti (varsa). */
   onizleme: string | null;
+  /** Kartı yazan yapay zekâ (anahtar adı, bildirilen araç ve model). */
+  kaynak?: { ad: string; arac: string | null; model: string | null; kanal: string };
+  /** Kartın sürümü (Geliştir ile artar) ve eleştiri sayısı (Oyun Tasarımı). */
+  surum?: number;
+  elestiri?: number;
 }
 
 /** Yapay zekâya iş ayrıntısında giden fikir (is_oku). */

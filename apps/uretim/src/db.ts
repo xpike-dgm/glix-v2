@@ -162,6 +162,14 @@ const SEMA: readonly string[] = [
     kod TEXT PRIMARY KEY, alan TEXT NOT NULL, oyun TEXT NOT NULL, olusturma INTEGER NOT NULL, kapandi INTEGER
   );
   `,
+  // 13. alan Oyun Tasarımı (sözleşme bölüm 15): belirli bir anahtara yönelik iş (geliştir, eleştiri, çoklu yapay
+  // zekâ), iş türü ve aynı istekten açılan işlerin grubu.
+  `
+  ALTER TABLE isler ADD COLUMN hedef_anahtar INTEGER;
+  ALTER TABLE isler ADD COLUMN is_turu TEXT;
+  ALTER TABLE isler ADD COLUMN grup TEXT;
+  CREATE INDEX isler_ilgili ON isler(ilgili_oge);
+  `,
 ];
 
 export type Db = DatabaseSync;

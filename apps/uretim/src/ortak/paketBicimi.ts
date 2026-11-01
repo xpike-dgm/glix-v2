@@ -7,6 +7,7 @@
 import { type AlanId, alanTanimi } from "./alanlar.js";
 import { gorselAlaniMi } from "./gorselKurali.js";
 import { ORNEK_RAPOR } from "./rapor.js";
+import { ORNEK_TASARIM } from "./tasarimOrnek.js";
 
 export const TESLIM_DOSYASI = "teslim.json";
 
@@ -149,6 +150,8 @@ function ornek(alan: AlanId): Record<string, unknown> {
           },
         ],
       };
+    case "oyun-tasarim":
+      return { ...temel, tur: "fikir", ogeler: [...ORNEK_TASARIM] };
     case "uretim-arayuz":
     case "panel-arayuz":
       return {
@@ -192,6 +195,12 @@ export function paketBicimi(alan: AlanId): PaketBicimi {
   if (gorselAlaniMi(alan))
     ozel.push('uretimYontemi: "gorsel-model" (görseller görsel üretim becerisiyle; "kod" reddedilir).');
   if (alan === "icerik") ozel.push("Bu alan dosya teslim etmez; yalnız satirlar.");
+  if (alan === "oyun-tasarim")
+    ozel.push(
+      'Bu alan yalnız fikir kartı teslim eder (tur "fikir", dosya yok); her öğede tasarim nesnesi zorunlu.',
+      "tasarim.tur: yeni-oyun (oyuncu, sureDk, oyunTuru, kurallar, eglence, ekranlar, tv, puanlama, riskler, fark, benzerOyunlar) ya da sistem / oyuna-ek (kapsam, nasil, ornekAn, eglence, etkilesim, denge, uygulama).",
+      "Önce oyun_katalogu_oku (SSH: uretim oyun-katalogu-oku [oyun]): oyunlar, kart sistemi, mevcut fikirler.",
+    );
   return {
     alan,
     dosyaAdi: TESLIM_DOSYASI,

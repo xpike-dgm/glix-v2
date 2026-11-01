@@ -10,3 +10,4 @@ moderasyon
 test
 uretim-arayuz
 panel-arayuz
+oyun-tasarim

@@ -12,6 +12,9 @@ import type { OgeAyrinti, OgeDosyasi } from "./ortak/tipler.js";
 
 interface FikirSatiri {
   id: number;
+  teslim_id: number;
+  anahtar: string;
+  surum: number;
   alan: string;
   ad: string;
   aciklama: string;
@@ -26,12 +29,12 @@ export function fikirPanosu(m: Merkez, alan: AlanId | null): FikirKarti[] {
   const satirlar = (alan
     ? m.db
         .prepare(
-          "SELECT id, alan, ad, aciklama, gerekce, durum, fikir, dosyalar, olusturma FROM oge WHERE tur = 'fikir' AND alan = ? AND durum NOT IN ('kaldi','arsiv') ORDER BY id DESC LIMIT 500",
+          "SELECT id, teslim_id, anahtar, surum, alan, ad, aciklama, gerekce, durum, fikir, dosyalar, olusturma FROM oge WHERE tur = 'fikir' AND alan = ? AND durum NOT IN ('kaldi','arsiv') ORDER BY id DESC LIMIT 500",
         )
         .all(alan)
     : m.db
         .prepare(
-          "SELECT id, alan, ad, aciklama, gerekce, durum, fikir, dosyalar, olusturma FROM oge WHERE tur = 'fikir' AND durum NOT IN ('kaldi','arsiv') ORDER BY id DESC LIMIT 500",
+          "SELECT id, teslim_id, anahtar, surum, alan, ad, aciklama, gerekce, durum, fikir, dosyalar, olusturma FROM oge WHERE tur = 'fikir' AND durum NOT IN ('kaldi','arsiv') ORDER BY id DESC LIMIT 500",
         )
         .all()) as unknown as FikirSatiri[];
   const isSorgu = m.db.prepare(
@@ -43,27 +46,52 @@ export function fikirPanosu(m: Merkez, alan: AlanId | null): FikirKarti[] {
   const notSorgu = m.db.prepare(
     "SELECT metin FROM notlar WHERE oge_id = ? AND tur = 'yorum' ORDER BY id DESC",
   );
-  return satirlar.map((r) => {
-    const f = json<FikirAlanlari | null>(r.fikir, null);
-    const isler = (isSorgu.all(r.id) as { id: number }[]).map((x) => x.id);
-    const u = uygSorgu.get(r.id) as { id: number; durum: string } | undefined;
-    const onizleme = json<OgeDosyasi[]>(r.dosyalar, []).find((d) => d.tur === "png")?.ozet ?? null;
-    return {
-      id: r.id,
-      alan: r.alan,
-      baslik: r.ad,
-      aciklama: r.aciklama,
-      gerekce: r.gerekce,
-      ...(f ?? {}),
-      yapili: f !== null,
-      asama: fikirAsamasi(r.durum, isler.length > 0, u?.durum ?? null),
-      olusturma: r.olusturma,
-      notlar: (notSorgu.all(r.id) as { metin: string }[]).map((n) => n.metin),
-      isler,
-      uygulamaOge: u?.id ?? null,
-      onizleme,
-    };
-  });
+  // Aynı kartın sürümleri (Geliştir): panoda yalnız en yeni sürüm görünür.
+  const enYeni = new Map<string, number>();
+  for (const r of satirlar) {
+    const a = `${r.alan}|${r.anahtar}`;
+    if ((enYeni.get(a) ?? 0) < r.surum) enYeni.set(a, r.surum);
+  }
+  const teslimSorgu = m.db.prepare("SELECT anahtar_ad, kanal, arac, model FROM teslim WHERE id = ?");
+  const elestiriSorgu = m.db.prepare(
+    "SELECT COUNT(*) AS n FROM notlar n JOIN oge o ON o.id = n.oge_id WHERE n.tur = 'elestiri' AND o.alan = ? AND o.anahtar = ?",
+  );
+  return satirlar
+    .filter((r) => enYeni.get(`${r.alan}|${r.anahtar}`) === r.surum)
+    .map((r) => {
+      const f = json<FikirAlanlari | null>(r.fikir, null);
+      const isler = (isSorgu.all(r.id) as { id: number }[]).map((x) => x.id);
+      const u = uygSorgu.get(r.id) as { id: number; durum: string } | undefined;
+      const onizleme = json<OgeDosyasi[]>(r.dosyalar, []).find((d) => d.tur === "png")?.ozet ?? null;
+      return {
+        id: r.id,
+        alan: r.alan,
+        baslik: r.ad,
+        aciklama: r.aciklama,
+        gerekce: r.gerekce,
+        ...(f ?? {}),
+        yapili: f !== null,
+        asama: fikirAsamasi(r.durum, isler.length > 0, u?.durum ?? null),
+        olusturma: r.olusturma,
+        notlar: (notSorgu.all(r.id) as { metin: string }[]).map((n) => n.metin),
+        isler,
+        uygulamaOge: u?.id ?? null,
+        onizleme,
+        kaynak: kaynakSatiri(teslimSorgu.get(r.teslim_id)),
+        surum: r.surum,
+        elestiri: Number((elestiriSorgu.get(r.alan, r.anahtar) as { n: number }).n),
+      };
+    });
+}
+
+function kaynakSatiri(v: unknown): NonNullable<FikirKarti["kaynak"]> {
+  const t = v as { anahtar_ad: string; kanal: string; arac: string | null; model: string | null } | undefined;
+  return {
+    ad: t?.anahtar_ad || (t?.kanal === "ssh" ? "SSH kanalı" : t?.kanal === "elle" ? "Elle" : "Yapay zekâ"),
+    arac: t?.arac ?? null,
+    model: t?.model ?? null,
+    kanal: t?.kanal ?? "elle",
+  };
 }
 
 /** İş isterken seçilen fikirler: bu alanda ve onaylı olmalı. */

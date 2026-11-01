@@ -1365,6 +1365,39 @@ oylamadır.
 - Puanlama değişmez: alınan her oy genel skora +1.
 - Tutorial adımı 3: "İstersen gizlice söz işareti koy; sonuç ekranında kimin sözünü tuttuğunu gör."
 
+**Değişiklik (IT öneri paketi, Kasım 2026, sahip onayı: IT-M1…IT-M5, IT-U5, IT-U6, IT-U8) — yukarıdakilerin önüne geçer:**
+
+- **Puan (IT-M1):** Alınan oy oyun içi puandır. Genel skora **en çok oy alan(lar) +2, sonraki farklı oy sayısı +1,
+  diğerleri 0** gider. Birincide eşitlik varsa hepsi +2. **Herkesin oyu eşitse herkes +1.** 0 oy alan hiçbir zaman ödül
+  almaz. Örnekler: 3 kişi 2-1-0 → +2/+1/0; 1-1-1 → herkes +1; 8 kişi 3-2-1-1-1-0-0-0 → +2/+1/0…; 5 kişi 2-2-1-0-0 →
+  +2/+2/+1/0/0. Maç kartlarında "birinci" en çok oy alanlar, "sonuncu" en az oy alanlardır (genel hesap). Eksi yok.
+- **Kopan oyuncu (IT-M2):** Oyun başında katılımcı olan herkes, bağlantısı kopmuş olsa da oylanabilir. Kopan oyuncu oy
+  veremez; oyu süre dolunca rastgele atanır. Erken bitişlerde kopan oyuncu beklenmez (eskisi gibi).
+- **Rastgele oy görünür (IT-M3):** Oy vermediği için sunucuca atanan oy açılışta 🎲 ve kesikli okla gösterilir; söz
+  denetimi bu oyu yine sayar (O4), ama bu oyuncuya "Hain" etiketi verilmez ("Oy vermedi" yazılır). Hangi oyların zarla
+  atandığı yalnız açılışta herkese açıktır.
+- **Pazarlık süresi (IT-M4):** 3–4 oyuncuda **45 sn**, 5–6 oyuncuda **60 sn**, 7–8 oyuncuda **75 sn**. Oylama 15 sn
+  kalır. "Oylamaya geç" erken çıkışı aynen (bağlı herkes derse 1 sn sonra).
+- **Söz sınırı (IT-M5):** En çok söz işareti **3–4 oyuncuda 1, 5–8 oyuncuda 2**. Sınır doluysa yeni söz reddedilir; önce
+  mevcut söz kaldırılır.
+- **Geçiş bandı (IT-U8):** Pazarlık bitince 1 sn "PAZARLIK BİTTİ · OYLAR GİZLİ" bandı oynar; **15 sn'lik oylama bandın
+  ardından** sayılır.
+- **Açılış (IT-U5, IT-U6):** Oylar tek tek okunur (önce en az oy alanlara gidenler, en son liderlere gidenler); en az
+  gösterim **3 + 0,9 × oyuncu sayısı sn** (3 kişide 5,7, 8 kişide 10,2 sn), sonra "Devam et" (en çok 60 sn). Her kartta
+  söz denetimi: söz verdiği kişiye oy veren için "SÖZ TUTULDU ✓", söz verip başkasına oy veren için "İHANET!" ve ihanete
+  uğrayanın kısa şaşkın tepkisi (madde 13), zarla atanan oyda "zar attı". Son tabloda karşılıklı oy veren ikililer
+  **İTTİFAK** olarak gösterilir (zarla atanan oy sayılmaz) ve söz verenlere tek etiket verilir: **Sözünün eri**
+  (verdiği bütün sözleri tuttu), **Çifte oyun** (iki söz verdi, birini tuttu), **Hain** (söz verdiği kimseye oy
+  vermedi), oy vermeyende **Oy vermedi**. Etiketler ve ittifaklar puansızdır.
+- **En uzun süre:** 75 + 1 + 15 + 10,2 = **101,2 sn** (8 oyuncu).
+- **Değişmeyenler:** 3–8 oyuncu; uygulamada teklif/anlaşma nesnesi olmaması; sözlerin yalnız sözü verene görünmesi
+  (alıcı dahil, sayısı bile) ve sonuçta açılması; sözün puansız ve bağlamaz olması; tek gizli oy, kendine oy yok; oylama
+  15 sn ve Tamam; vermeyenin oyunun rastgele atanması; erken bitişler; eksi puan olmaması; oylar açılana kadar kimsenin
+  sayı görmemesi. Madde 13'teki süs neon bağlar ve konuşma balonları kaldırıldı (IT-U1): pazarlıkta yalnız gerçek bilgi
+  (kendi sözlerin, hazır olanlar) çizilir.
+- **Anlatım:** amaç "En çok oyu topla: birinci +2, ikinci +1!"; 1. adımdaki "60 saniye" ifadesi "Süre boyunca" oldu
+  (sayaç gerçek süreyi gösterir).
+
 ## 17. Son Kişi — `son-kisi`
 
 **Durum: KİLİTLİ**

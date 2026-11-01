@@ -170,7 +170,7 @@ export interface OgeAyrinti extends OgeOzeti {
 export interface NotKaydi {
   id: number;
   ogeId: number | null;
-  tur: "ret" | "duzeltme" | "yorum" | "otomatik";
+  tur: "ret" | "duzeltme" | "yorum" | "otomatik" | "elestiri";
   hazir: HazirNotKodu | null;
   metin: string;
   olusturma: number;
@@ -204,6 +204,14 @@ export interface IsKaydi {
   teslimEdildi: number | null;
   /** İş kilidi (sözleşme bölüm 8): ham değer; 2 saat hareketsizlikte geçersiz sayılır. */
   kilit: { ad: string; zaman: number } | null;
+  /** Oyun Tasarımı (bölüm 15): "gelistir" (sahibin notuyla yeni sürüm), "eleştiri" ya da sıradan iş (null). */
+  isTuru: "gelistir" | "elestiri" | null;
+  /** Yalnız bu anahtar görür ve alır (geliştir: kartın sahibi; eleştiri ve çoklu yapay zekâ: seçilen). */
+  hedefAnahtar: { id: number; ad: string } | null;
+  /** İşin ilgili kartı (geliştirilecek ya da eleştirilecek). */
+  ilgiliOge: number | null;
+  /** "Aynı isteği şu yapay zekâlara da ver" ile birlikte açılan işlerin grubu. */
+  grup: string | null;
 }
 
 export interface IstekKarti {

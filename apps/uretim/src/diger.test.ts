@@ -14,8 +14,8 @@ import { hedefYolUygun, teslimAyristir } from "./teslimGirdisi.js";
 import { eskiYedekleriSil, yedekAl } from "./yedek.js";
 
 describe("alanlar ve talimat taslakları", () => {
-  it("12 alan; her alanın taslağı ön kontrol satırlarını içerir", () => {
-    expect(ALAN_IDLERI).toHaveLength(12);
+  it("13 alan (13. Oyun Tasarımı); her alanın taslağı ön kontrol satırlarını içerir", () => {
+    expect(ALAN_IDLERI).toHaveLength(13);
     for (const a of ALANLAR) {
       const t = talimatTaslagi(a.id);
       expect(t).toContain(`# ${a.ad} alanı`);

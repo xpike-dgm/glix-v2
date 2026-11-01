@@ -1,9 +1,9 @@
 import type { GameBot } from "../../testing/simulate.js";
-import { ITTIFAK_DURATION_MS } from "./types.js";
+import { ITTIFAK_MAX_DURATION_MS } from "./types.js";
 
-/** Çoğunlukla bağlı başka bir oyuncuya oy verir; ara sıra kendine ya da bilinmeyen birine oy dener (reddedilir). */
+/** Çoğunlukla başka bir oyuncuya oy verir; ara sıra kendine ya da bilinmeyen birine oy dener (reddedilir). */
 export const ittifakBot: GameBot = {
-  durationMs: ITTIFAK_DURATION_MS,
+  durationMs: ITTIFAK_MAX_DURATION_MS,
   burstJitterMs: [100, 1_000, 4_000],
   generate: (rng, playerId, _pub, _priv, connected) => {
     const roll = rng.int(100);

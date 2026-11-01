@@ -1,6 +1,6 @@
-# GLIX yapay zekâ ekibi: 12 alan yöneticisi
+# GLIX yapay zekâ ekibi: 13 alan yöneticisi
 
-GLIX'te sahip, her biri bir alanın tam sahibi olan 12 yapay zekâyla sürekli üretim yapar. Hiçbiri koda girmez.
+GLIX'te sahip, her biri bir alanın tam sahibi olan 13 yapay zekâyla sürekli üretim yapar. Hiçbiri koda girmez.
 Her yapay zekâ kendi alanındaki her şeyi uçtan uca yönetir:
 - yeni şey üretir;
 - var olanı düzenler, dengeler ya da emekliye ayırmayı önerir;
@@ -103,7 +103,7 @@ Yasaklar (hepsinde): gerçek marka, gerçek kişi, telifli karakter ya da müzik
 
 ---
 
-## 4. Alan yöneticileri (12)
+## 4. Alan yöneticileri (13)
 
 Her alanda aynı başlıklar:
 - **Alanı:** neyin sahibi;
@@ -428,10 +428,36 @@ Her alanda aynı başlıklar:
 - **Girdi:** panelin bütün ekranlarının güncel görüntüleri (gerçek veri yerine örnek veriyle), sahibin notları.
 - **Örnek iş:** "Hesaplar ekranında arama, filtre ve toplu işlem tek satıra insin; telefonda kart görünümü."
 
-**Not (12 alanın içinde bir istisna):** Bu iki alan, kod yaması teslim edebilen tek alanlardır. Arayüz kodu veriyle
+**Not (alanların içinde bir istisna):** Bu iki alan, kod yaması teslim edebilen tek alanlardır. Arayüz kodu veriyle
 yönetilemez. Bu yüzden yamalar dar bir dosya izin listesiyle sınırlanır, otomatik testten geçer, sahip ekran
 görüntüleriyle onaylar ve yönetici her yamayı okuyup birleştirir. Yapay zekâ depoya doğrudan yazamaz, dal açamaz,
 birleştiremez.
+
+### 4.13 Oyun Tasarımı yapay zekâsı (13. alan; sahip kararı Kasım 2026)
+
+- **Alanı:** yeni mini oyun fikirleri; oyunlar arası sistem ve mekanik fikirleri (kart sistemi gibi: maç
+  değiştiricileri, olaylar, kombo/seri ödülleri, takım modu, izleyici rolü); var olan bir oyunu daha eğlenceli yapan
+  ekler ("Bu oyuna şu eklense").
+- **Amaç:** sahip farklı yapay zekâlarla (Claude, GPT, Gemini…) yeni oyunları ve mekanikleri tartışır; aynı istek
+  birkaç yapay zekâya birden verilir, fikirler panoda yan yana karşılaştırılır.
+- **Teslim:** yalnız fikir kartı (`tur: "fikir"` + `tasarim` nesnesi); dosya ve kod yok. Yeni oyun kartı: ad, tek
+  cümle, oyuncu sayısı, süre, tür, adım adım kurallar, eğlencenin kaynağı, telefon ekranları, TV/izleyici, puanlama,
+  riskler/kötüye kullanım, benzer GLIX oyunlarından farkı. Sistem kartı: kapsam (tüm / bazı / tek oyun), nasıl çalışır,
+  örnek maç anı, eğlenceye etkisi, kartlar/puan/Glix/rozetle etkileşimi, denge riskleri, uygulama zahmeti.
+- **Girdi:** `oyun_katalogu_oku`: oyun listesi (ansiklopedi), değişmeyen çerçeve ve kart sistemi
+  (`docs/KURALLAR.md`), bir oyunun kilitli kuralları, alanın mevcut fikirleri (tekrar etmesin diye).
+- **Tartışma turları:** sahip karta not yazıp **Geliştir** der → aynı yapay zekâya notla ve önceki sürümle iş; dönen
+  sürüm aynı kartta yeni sürüm olur (geçmiş ve yan yana fark). **Başka bir yapay zekâya eleştirt** → seçilen anahtara
+  eleştiri işi; eleştiri (`elestiri_yaz`) kartın altına not olarak düşer.
+- **Onaydan sonra:** onaylanan kart için **Öneri dosyası hazırla**: `docs/oneriler/*.md` biçiminde (M mekanik, U
+  arayüz, Y yapay zekâ maddeleri) taslak; yardımcı model (Haiku) yazar, olmazsa sabit kalıp. Kabul havuzuna düşer,
+  "Yöneticiye gönder" ile yöneticiye gider; sahip "ekle" deyince yönetici test2'de taslak oyun ya da sistem özelliği
+  yapar.
+- **Sınırlar:** kod yazmaz, dosya teslim etmez; var olanı tekrar etmez; telefonda 2–8 kişi, kısa; kumar, gerçek para,
+  kişisel veri, zorbalığa açık mekanik yok; kilitli kuralları bozmayı önerirken gerekçesini yazar.
+- **Örnek iş:** "Telefonda 4–8 kişilik, 3 dakikalık, blöf ağırlıklı 10 yeni oyun fikri; 5 tane de kartlar gibi
+  oyunlar arası sistem fikri."
+- Ayrıntı: `SOZLESME.md` bölüm 15.
 
 ---
 

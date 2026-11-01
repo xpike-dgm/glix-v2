@@ -3,11 +3,13 @@
  * SSH komut aracı ve elle yükleme aynı biçimi kullanır. Ağdan gelen her alan burada denetlenir; bilinmeyen anahtar
  * reddedilir.
  */
+import { GAMES } from "@glix/engine";
 import { kayit, metin, tamsayi } from "./http.js";
 import type { AlanTanimi } from "./ortak/alanlar.js";
 import { type FikirAlanlari, fikirAlanlari } from "./ortak/fikir.js";
 import { URETIM_YONTEMLERI, type UretimYontemi } from "./ortak/gorselKurali.js";
 import { raporDogrula, yapiliRaporMu } from "./ortak/rapor.js";
+import { tasarimDogrula } from "./ortak/tasarim.js";
 import { DESTEKLENEN_TURLER, type Degisiklik, TESLIM_TURLERI, type TeslimTuru } from "./ortak/tipler.js";
 
 export const EN_COK_OGE = 50;
@@ -71,6 +73,7 @@ const OGE_ANAHTARLARI = new Set([
   "etki",
   "zahmet",
   "fikirId",
+  "tasarim",
 ]);
 
 export const ONIZLEME_EKRANLARI = [
@@ -207,6 +210,17 @@ function ogeAyristir(
         `${yer}: ozet, kategori, etki ve zahmet yalnız fikir teslimlerinde (tur: "fikir") yazılır.`,
       );
     else fikir = fikirAlanlari(v, yer, hatalar);
+  }
+  // Oyun Tasarımı kartı: yalnız yapılandırılmış fikirde (sözleşme bölüm 15).
+  if (v.tasarim !== undefined) {
+    if (tur !== "fikir" || !fikir)
+      hatalar.push(
+        `${yer}: "tasarim" yalnız fikir teslimlerinde, ozet/kategori/etki/zahmet ile birlikte yazılır.`,
+      );
+    else {
+      const t = tasarimDogrula(v.tasarim, yer, hatalar, (id) => GAMES[id] !== undefined);
+      if (t) fikir = { ...fikir, tasarim: t };
+    }
   }
   const fikirId = v.fikirId === undefined || v.fikirId === null ? null : tamsayi(v.fikirId, 1, 1e12);
   if (v.fikirId !== undefined && v.fikirId !== null && fikirId === null)

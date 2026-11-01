@@ -249,6 +249,23 @@ export function Iste(): JSX.Element {
   const [kaynak, setKaynak] = createSignal<"model" | "kalip">("kalip");
   const [bekle, setBekle] = createSignal(false);
   const [is, setIs] = createSignal<IsKaydi | null>(null);
+  /** "Aynı isteği şu yapay zekâlara da ver" (bölüm 15): seçilen anahtarlar; her birine ayrı iş. */
+  const [hedefler, setHedefler] = createSignal<ReadonlySet<number>>(new Set());
+  const [cokluIsler, setCokluIsler] = createSignal<IsKaydi[]>([]);
+  const etkinAnahtarlar = (): { id: number; ad: string; kanal: string }[] =>
+    (ayar()?.anahtarlar ?? [])
+      .filter((k) => k.iptal === null)
+      .map((k) => ({
+        id: k.id,
+        ad: k.ad || (k.kanal === "ssh" ? "SSH kanalı" : `Anahtar ${k.id}`),
+        kanal: k.kanal,
+      }));
+  const hedefDegistir = (id: number): void => {
+    const s = new Set(hedefler());
+    if (s.has(id)) s.delete(id);
+    else s.add(id);
+    setHedefler(s);
+  };
   const [uygulamaNotu, setUygulamaNotu] = createSignal<string | null>(null);
 
   const cevir = async (): Promise<void> => {
@@ -276,14 +293,16 @@ export function Iste(): JSX.Element {
     if (!t) return;
     setBekle(true);
     try {
-      const r = await gonder<{ is: IsKaydi }>(`alan/${alan()}/is`, {
+      const r = await gonder<{ is: IsKaydi; isler?: IsKaydi[] }>(`alan/${alan()}/is`, {
         ...t,
         sonTarih: sonTarih() || null,
         fikirTuru: fikir(),
         ornek: "",
         ...(fikirIdler().length ? { fikirler: fikirIdler() } : {}),
+        ...(hedefler().size ? { hedefler: [...hedefler()] } : {}),
       });
       setIs(r.is);
+      setCokluIsler(r.isler ?? []);
       const i = await al<{ uygulama: string }>(`alan/${alan()}/istem?is=${r.is.id}`);
       setUygulamaNotu(i.uygulama);
       setAdim(3);
@@ -314,6 +333,8 @@ export function Iste(): JSX.Element {
     setMetin("");
     setTaslak(null);
     setIs(null);
+    setCokluIsler([]);
+    setHedefler(new Set<number>());
   };
   const bekleyenIs = (): number => ayar()?.isler.filter((x) => x.durum === "acik").length ?? 0;
 
@@ -589,6 +610,32 @@ export function Iste(): JSX.Element {
             setListe={(l) => guncelle({ kabul: l })}
             yer="ör. fiyatlar aralıkta"
           />
+          <Show when={etkinAnahtarlar().length > 1}>
+            <fieldset class="coklu-yz">
+              <legend>
+                <strong>Aynı isteği şu yapay zekâlara da ver</strong>
+                <span class="cok-soluk kucuk">
+                  {" "}
+                  Seçtiğin her yapay zekâya ayrı iş açılır; fikirleri panoda yan yana, hangi yapay zekâdan
+                  geldiğiyle görünür. Seçmezsen iş alanın bütün yapay zekâlarına açıktır.
+                </span>
+              </legend>
+              <div class="cipler">
+                <For each={etkinAnahtarlar()}>
+                  {(k) => (
+                    <button
+                      type="button"
+                      class="cip"
+                      aria-pressed={hedefler().has(k.id)}
+                      onClick={() => hedefDegistir(k.id)}
+                    >
+                      <Simge ad={k.kanal === "ssh" ? "terminal" : "baglanti"} boyut={14} /> {k.ad}
+                    </button>
+                  )}
+                </For>
+              </div>
+            </fieldset>
+          </Show>
           <div class="sabit-eylem satir">
             <button type="button" class="dg dg--b" onClick={() => setAdim(1)}>
               <Simge ad="onceki" /> Geri
@@ -599,7 +646,7 @@ export function Iste(): JSX.Element {
               disabled={t().baslik.trim().length < 3 || bekle()}
               onClick={() => void ac()}
             >
-              {bekle() ? "Açılıyor…" : "İşi aç"}
+              {bekle() ? "Açılıyor…" : hedefler().size > 1 ? `${hedefler().size} iş aç` : "İşi aç"}
             </button>
           </div>
         </div>
@@ -621,7 +668,21 @@ export function Iste(): JSX.Element {
                 </p>
               </div>
             </div>
-            <IstemKutusu alan={alan()} isId={i().id} ilkBaglanti={baglanti()} />
+            <Show
+              when={cokluIsler().length > 1}
+              fallback={<IstemKutusu alan={alan()} isId={i().id} ilkBaglanti={baglanti()} />}
+            >
+              <For each={cokluIsler()}>
+                {(c) => (
+                  <section class="yigin coklu-is">
+                    <strong>
+                      #{c.id} · {c.hedefAnahtar?.ad ?? "yapay zekâ"} için
+                    </strong>
+                    <IstemKutusu alan={alan()} isId={c.id} ilkBaglanti={baglanti()} />
+                  </section>
+                )}
+              </For>
+            </Show>
             <label class="alan-giris">
               <span>Bu alanı hangi uygulamada kullanıyorsun?</span>
               <input
