@@ -39,7 +39,9 @@ tasarladığı alanlar birlikte kilitlenir; kodlama bu kural seti üzerinden yap
   kimse yoksa erken bitiş olmaz. Gönderim geri alınamıyorsa ya da kilitleme düğmesi varsa "gönderdi" = kilitledi. Erken
   bitiş aşamanın yalnız süresini kısaltır; puanlamayı ve gizli bilginin ne zaman açıldığını değiştirmez. **Zamanlama oyunları
   ve bekleme/blöf stratejisi olan aşamalar kapsam dışıdır** (Butona Bas, Kör Kronometre süresi, Kule Ustası, Aşırı Yükleme,
-  Kör Bomba, Zaman Bombası Hafızası, Rus Ruleti). Oyun bazlı döküm: `docs/ONERI-KURAL.md`.
+  Kör Bomba, Zaman Bombası Hafızası, Rus Ruleti). Oyun bazlı döküm: `docs/ONERI-KURAL.md`. Kör Kronometre'nin kendi erken
+  kapanışı bu genel kuralın dışındadır ve §9'da tanımlıdır (her elde **bütün** katılımcılar —bağlantıdan bağımsız— basınca el
+  1 sn sonra kapanır).
 - **Geç gelen eylem payı (KİLİTLİ, sahip onayı):** Süre dolmadan gönderilip ağ gecikmesiyle sunucuya en fazla **250 ms** geç ulaşan eylem kabul edilir; süreye bağlı bitiş (faz geçişi, sonuç, gizli bilginin açılması) bu kadar gecikir, ekrandaki sayaç özgün bitişi gösterir. Pay yeni bir süre değildir: sunucu oyun saatini 250 ms geriden verir (`GameDefinition.graceMs`, oyun `setup` gerçek anda çalışır). **Yalnız Zehirli Kadeh, Yazı Yaz ve Sözlük Blöfü'nde** geçerlidir; zamanlama/tepki oyunları (Son Kişi, Butona Bas, Kör Kronometre, Kule Ustası, Aşırı Yükleme, Kör Bomba, Zaman Bombası Hafızası, Rus Ruleti ve diğerleri) kapsam dışıdır ve bitişten 1 ms sonraki eylemi eskisi gibi reddeder.
 - **Yazılı cevap eşleşmesi genel kuralı (sahip onayı):** Oyuncuların yazdığı kelime/cevabın **eşleşip eşleşmediğine** bakılan her
   yerde karşılaştırma klavyeden bağımsızdır: büyük/küçük harf, ç/c, ğ/g, ı/İ/i/I, ö/o, ş/s, ü/u ve noktalama farkı yok
@@ -784,6 +786,44 @@ en yakın oyuncu +1 alır; tek faz 18 saniyedir.
   kabul edilir" kuralı kalkar). Ödüller yalnız basanlar arasında dağıtılır: en yakın +2, ikinci en yakın +1.
   Tek kişi bastıysa yalnız o +2 alır; kimse basmadıysa kimse puan almaz.
 - Tutorial adımı 2: "İçinden hedef süreyi say."
+
+**Değişiklik (KR öneri paketi, Kasım 2026, sahip onayı: KR-M1…M5) — yukarıdakilerin önüne geçer:**
+
+- **Üç el (KR-M3):** Oyun **3 el**dir. Her elin hedefi 7–13 arası rastgele tam saniyedir ve **eller arasında tekrar etmez**
+  (tohumlu RNG). Her elde herkes **bir kez** basar.
+- **"Hazır ol – BAŞLA!" (KR-M2):** Her el önce **"Hazır ol"** ile başlar (1. elde **3 sn**, 2. ve 3. elde **2 sn**): hedef dev
+  rakamla görünür, basış kapalıdır; bu sırada basmak hiçbir şey yapmaz ve hak yakmaz. Ardından bütün telefonlarda aynı anda
+  (sunucu saatine göre) **"BAŞLA!"** flaşı, tek gong ve titreşim. **Sayma ve basış anı "BAŞLA!" anından ölçülür.** Elin
+  basış süresi "BAŞLA!"dan **hedef + 8 sn**dir.
+- **Dokunma anı (KR-M1):** İstemci basışla birlikte dokunma anını (sunucu saatine göre, ping ortancasıyla düzeltilmiş)
+  gönderir. Sunucu bu anı, kendi aldığı andan **en çok 400 ms** eskiyse kabul eder; daha eskiyse ya da bildirilmemişse kendi
+  aldığı anı kullanır; gelecekten gelen an sunucunun aldığı ana çekilir; "BAŞLA!"dan önceki an reddedilir (hak yanmaz).
+  **Süre sınırı değişmez:** basış sunucuya elin basış süresi bitmeden ulaşmalıdır; bitişten sonra gelen basış eskisi gibi
+  reddedilir (geç eylem payı yok). Bir el kapanmadan o elin hiçbir basışı kimseye açılmaz.
+- **Erken kapanış (el başına):** Bir elde **bütün katılımcılar** (bağlantıdan bağımsız) basarsa el, son basışın sunucuya
+  ulaştığı andan **1 sn sonra** kapanır; sonraki eller buna göre öne kayar.
+- **El arası:** Her el kapanınca **3 sn** kısa açılış (kendi sonucun, elin kazananı, 2. elden itibaren kendi eğilimin),
+  ardından sıradaki elin "Hazır ol"u. Son elin kapanışı oyunun **son açılışıdır** (6 sn, ardından ortak "Devam et").
+- **El puanı:** Her elde en yakın basan **2**, ikinci en yakın **1**, diğerleri 0 el puanı alır; eşit uzaklık aynı derece,
+  sonraki derece atlanır; basmayan sıralanmaz ve puan almaz.
+- **Tam isabet (KR-M5):** Hedefe **0,05 sn (50 ms) ya da daha yakın** basan, o elde derecesinden bağımsız **+1 ek el puanı**
+  alır ("TAM İSABET!"); bir elde birden çok kişi alabilir. Ölçüm dokunma anıyladır; 50 ms dahildir.
+- **Genel skor (KR-M3):** 3 elin el puanları toplamına göre, oyun sonunda bir kez: birinci **+2**, sonraki **+1**, diğerleri 0.
+  **Toplamı 0 olan ödül almaz.** Eşitlik: toplam eşitse **daha çok elde basan** önde; o da eşitse **bastığı ellerdeki
+  ortalama uzaklığı küçük** olan önde; o da eşitse aynı derece. Birincide eşitlikte hepsi +2, sonraki grup +1; **bütün
+  katılımcılar** eşit ve toplam > 0 ise herkes +1. Mini oyun puanı toplam el puanıdır. Kartların "birinci/sonuncu" kararı
+  toplam el puanına göredir (genel kart kuralı, K6: eşit toplam aynı derece; ikinci ve üçüncü eşitlik bozucuları kartlara
+  uygulanmaz).
+- **Kopan oyuncu:** Koptuğu elde basmamışsa o elde sıralanmaz; döndüğünde süren elde yine basabilir ya da sonraki elde oynar.
+- **Kadran (KR-M4):** Kadranın nabzı düzensizdir (her vuruş arası 0,6–2,2 sn, her telefonda ayrı rastgele; yalnız görsel,
+  ses ve titreşim yok); hareket azaltmada hiç yoktur. Sayarken müzik, ortam sesi ve tik yoktur (her ritimli ses metronomdur).
+- **Değişmeyenler:** 2–8 oyuncu; hedef 7–13 arası tam saniye ve herkese açık; gerçek sayaç tamamen gizli; elde tek basış;
+  basış süresi hedef + 8 sn; herkes basınca 1 sn sonra kapanış; basmayan sıralanmaz ve puan almaz; eşit uzaklıkta aynı
+  derece; süre dolmadan kimin bastığının kimseye (izleyici ve TV dahil) gösterilmemesi; bitişten sonra gelen basışın reddi;
+  eksi puan yok; sonuç ekranı "Devam et" ile geçer.
+- **Anlatım (KR-U15):** 1) "Sayaç görünmez; hedef yazılı (7–13 sn)" 2) "'BAŞLA!' ile içinden say, tek kez bas" 3) "3 el: her
+  elde en yakın 2, ikinci 1 puan". İpucu: "Sesli saymak serbest — yanlış sayıp arkadaşlarını şaşırtmak da."
+- **İzleyici (KR-U9):** İzleyici puansız deneyebilir ("Sen de dene"); basışı yalnız kendi telefonunda ölçülür, sunucuya gitmez.
 
 ## 10. Kör Bomba — `kor-bomba`
 

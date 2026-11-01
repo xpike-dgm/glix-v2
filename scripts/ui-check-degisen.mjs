@@ -30,7 +30,11 @@ export const GAMES = {
   kendim: { prefixes: ["kendim"], mock: "mockKendim", smoke: "kendim-write" },
   "kontrol-paneli-kaosu": { prefixes: ["kontrol"], mock: "mockKontrol", smoke: "kontrol-play-4" },
   "kor-bomba": { prefixes: ["kor-bomba"], mock: "mockKorBomba", smoke: "kor-bomba-holder" },
-  "kor-kronometre": { prefixes: ["kronometre"], mock: "mockKronometre", smoke: "kronometre-counting" },
+  "kor-kronometre": {
+    prefixes: ["kronometre", "tv-kronometre"],
+    mock: "mockKronometre",
+    smoke: "kronometre-counting",
+  },
   "kule-ustasi": { prefixes: ["kule"], mock: "mockKule", smoke: "kule-turn" },
   "laf-sokma": { prefixes: ["laf"], mock: "mockLaf", smoke: "laf-write-5" },
   "ortak-nokta": { prefixes: ["ortak-nokta"], mock: "mockTaslak", smoke: "ortak-nokta-choosing-5" },

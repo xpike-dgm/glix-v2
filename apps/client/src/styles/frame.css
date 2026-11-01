@@ -892,3 +892,19 @@
 .gframe[data-game="butona-bas"] .mpath {
   display: none;
 }
+
+/* Kör Kronometre (KR-U8): yatayda sol şeritte oyun adı tek satır (hece bölünmez); şerit adı sığacak kadar genişler. */
+@media (max-height: 500px) and (orientation: landscape) and (min-width: 560px) {
+  .gframe[data-game="kor-kronometre"][data-o="portrait"] .gbar {
+    width: 100px;
+    padding-right: 0;
+    padding-left: max(2px, var(--safe-left));
+  }
+  .gframe[data-game="kor-kronometre"][data-o="portrait"] .gbar__name {
+    white-space: nowrap;
+    overflow: visible;
+    overflow-wrap: normal;
+    font-size: 13px;
+    letter-spacing: -0.04em;
+  }
+}

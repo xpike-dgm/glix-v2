@@ -113,3 +113,28 @@ dolum halkası, eşleşme çizgileri, taç ve ✓ / ✕ işaretleri CSS/SVG ile 
   ve BB-U6 son 3 saniye tıkları (son saniyede çift tık) mevcut ses sistemiyle kodla üretildi
   (`apps/client/src/games/butona-bas/sounds.ts`). Ses alanı istenirse gerçek kayıtlarla değiştirebilir: hepsi ≤ 0,4 sn
   (gong ve fanfar ≤ 2 sn); yalnız kendi basışına ve sonucuna çalar.
+
+## Kör Kronometre
+
+Ortak stil: oyunun mevcut görselleriyle uyumlu (`apps/client/public/assets/props/genel/kronometre.webp`: kalın siyah
+konturlu, cel-shaded gümüş cep kronometresi, camgöbeği–macenta neon kenar ışığı, koyu lacivert cam; dünya zemini
+`worlds/kor-kronometre-*.webp`: karanlık saat kulesi). Dosya `apps/client/public/assets/props/kor-kronometre/<ad>.webp`
+olarak konunca kod değişmeden kullanılır (derlemede `__KRONOMETRE_PROPS__` listesi, `kronometreProp()` — Sözlük Blöfü
+düzeni); yokken ekran CSS karşılığını çizer ve dosyayı hiç istemez. Zaman çizgisi, ibre, hedef çizgisi, ★ ● ○ işaretleri,
+derece rozetleri, metal BAS düğmesi ve kilit plakası CSS/SVG ile çizildi.
+
+- **KR-U2 · taçı basılı, camı donmuş kronometre** — `apps/client/public/assets/props/kor-kronometre/kronometre-donmus.webp` ·
+  1:1, 384×384 (mevcut `genel/kronometre` ile **aynı kadraj, aynı ölçek ve konum**: üst üste konunca kenarlar örtüşmeli) ·
+  şeffaf arka plan · Aynı gümüş cep kronometresi; tepedeki taç (kurma düğmesi) gövdeye **gömülmüş** (kısa görünür, altında
+  gölge), iki yan düğme aynı; camın üstüne kenarlardan merkeze doğru yayılan **buz/kırağı dokusu** (beyaz–açık mavi
+  #d8f4ff kristal dallar, kenarda yoğun, ortası yarı saydam ki koyu cam hâlâ seçilsin); neon kenar ışığı sönükleşmiş, buz
+  mavisine dönmüş; yazı ve rakam YOK. · Geçici: aynı görsel `saturate/brightness` filtresi, taçın üstüne koyu degrade
+  (`.kro-dial__crown`), camın üstüne konik + radyal CSS kırağı (`.kro-dial__frost`).
+- **KR-U10 · TV zemini** (yeni görsel gerekmedi) — TV görünümü mevcut 16:9 zemini
+  (`apps/client/public/assets/worlds/kor-kronometre-landscape.webp`, 1280×720) `cover` ile kullanır, ortası koyu radyal
+  örtüyle karartılır (sayarken daha da kararır). İstenirse ileride aynı sahnenin 1920×1080 keskin sürümü üretilebilir.
+- **ses** (dosya gerekmedi) — KR-M2 / KR-U5 / KR-U12 kronometre ses seti (BAŞLA derin gong, basış "klik" 2 varyasyon, ibre
+  "vızz", avatar düşüşünde "tik" (oyuncu başına perde), hedef "ding", +2 zafer notası, TAM İSABET cam çanı, puan
+  yükselen/alçalan kısa ses) mevcut ses sistemiyle kodla üretildi (`apps/client/src/games/kor-kronometre/sounds.ts`). Ses
+  alanı istenirse gerçek kayıtlarla değiştirebilir: hepsi ≤ 0,4 sn (gong ≤ 1,5 sn). **Müzik yok:** sayma sırasında tam
+  sessizlik kuraldır (müzik kaydında "Kör Kronometre: yok").

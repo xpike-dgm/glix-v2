@@ -34,6 +34,7 @@ export type PropPath =
   | `rus-ruleti/${"tabanca" | "tambur"}`
   | `sozluk-blofu/${SozlukProp}`
   | `karalama-defteri/${KaralamaProp}`
+  | `kor-kronometre/${KronometreProp}`
   | `yazi-yaz/${YaziYazProp}`
   | `zehirli-kadeh/${"efekt-temiz" | "efekt-zehir" | "masa" | "mum" | `kadeh-${string}`}`;
 
@@ -90,6 +91,23 @@ export function karalamaPropExists(name: KaralamaProp): boolean {
 /** Var olan Karalama Defteri görselinin adresi; yoksa null. */
 export const karalamaProp = (name: KaralamaProp): string | null =>
   karalamaPropExists(name) ? propSrc(`karalama-defteri/${name}`) : null;
+
+/**
+ * Kör Kronometre görselleri (sahip üretecek; docs/oneriler/GORSEL-IHTIYACLARI.md "Kör Kronometre"). Yoksa ekran CSS
+ * karşılığını çizer ve olmayan dosyayı hiç istemez (404 yok); dosya `kor-kronometre/<ad>.webp` olarak gelince
+ * kendiliğinden kullanılır.
+ */
+export type KronometreProp = "kronometre-donmus";
+export const KRONOMETRE_PROPS: readonly KronometreProp[] = ["kronometre-donmus"];
+
+export function kronometrePropExists(name: KronometreProp): boolean {
+  const built = typeof __KRONOMETRE_PROPS__ === "undefined" ? undefined : __KRONOMETRE_PROPS__;
+  return built ? built.includes(name) : false;
+}
+
+/** Var olan Kör Kronometre görselinin adresi; yoksa null. */
+export const kronometreProp = (name: KronometreProp): string | null =>
+  kronometrePropExists(name) ? propSrc(`kor-kronometre/${name}`) : null;
 
 /**
  * Gizli Alışveriş ürün kimliği (motor havuzu sırası, 0..19) -> dosya adı. Son 8 ürünün görseli henüz yoksa ekran
@@ -174,7 +192,10 @@ const GAME_PROPS: Record<string, readonly PropPath[]> = {
   "butona-bas": ["genel/arcade-dugme", "genel/arcade-dugme-basili"],
   "rusvet-darbe": ["genel/taht", "genel/rusvet-jetonu", "genel/el-tas", "genel/el-kagit", "genel/el-makas"],
   "asiri-yukleme": ["genel/enerji-cekirdegi", "genel/enerji-cekirdegi-asiri"],
-  "kor-kronometre": ["genel/kronometre"],
+  "kor-kronometre": [
+    "genel/kronometre",
+    ...KRONOMETRE_PROPS.filter(kronometrePropExists).map((n): PropPath => `kor-kronometre/${n}`),
+  ],
   "gizli-hirsiz": ["genel/kasa-kapisi"],
   "son-kisi": ["genel/kacis-kolu"],
   ittifak: ["genel/el-sikisma"],

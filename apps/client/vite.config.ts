@@ -195,6 +195,16 @@ function karalamaPropFiles(): string[] {
     .sort();
 }
 
+/** Kör Kronometre görsellerinden derlemede var olanlar (donmuş kronometre; yoksa CSS). */
+function kronometrePropFiles(): string[] {
+  const dir = fileURLToPath(new URL("./public/assets/props/kor-kronometre", import.meta.url));
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".webp"))
+    .map((f) => f.slice(0, -".webp".length))
+    .sort();
+}
+
 /**
  * Sızma görsellerinden gerçekten var olanlar (`public/assets/props/sizma/*.webp`, uzantısız ad). Ekran yalnız
  * bunları ister; olmayanın yerine kendi SVG maskesini çizer (404 yok). Tarifler: docs/oneriler/sizma-gorsel.md.
@@ -220,6 +230,7 @@ export default defineConfig({
     __SIZMA_PROPS__: JSON.stringify(sizmaPropFiles()),
     __SOZLUK_PROPS__: JSON.stringify(sozlukPropFiles()),
     __KARALAMA_PROPS__: JSON.stringify(karalamaPropFiles()),
+    __KRONOMETRE_PROPS__: JSON.stringify(kronometrePropFiles()),
   },
   plugins: [
     solid(),

@@ -1,11 +1,11 @@
 import "./kor-kronometre.css";
 import { Dial } from "./Dial.js";
 
-/** Anlatım görseli: rakamsız, nabız atan karanlık kronometre kadranı. */
+/** Anlatım görseli: rakamsız karanlık kronometre; nabzı düzensiz atar (KR-M4). */
 export default function BriefingArt() {
   return (
     <div class="kroart">
-      <Dial />
+      <Dial pulse />
     </div>
   );
 }

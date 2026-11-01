@@ -71,6 +71,8 @@ const registry: Record<string, GameEntry> = {
     noClock: true,
     Screen: lazy(() => import("./kor-kronometre/KorKronometreScreen.js")),
     Art: lazy(() => import("./kor-kronometre/BriefingArt.js")),
+    Try: lazy(() => import("./kor-kronometre/Trial.js")),
+    StageView: lazy(() => import("./kor-kronometre/StageView.js")),
   },
   "cagrisim-agi": {
     Screen: lazy(() => import("./cagrisim-agi/CagrisimAgiScreen.js")),

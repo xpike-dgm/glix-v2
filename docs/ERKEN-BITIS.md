@@ -28,7 +28,7 @@ bağlı tüm katılımcıların girdisi kesinleştiyse aşama beklemeden biter.*
 Sonuç artık değişemiyorsa (her katılımcı tek hakkını kullandıysa) aşama `ctx.now + 1000`'de biter. Bağlantı koşulu
 yok: **tüm katılımcılar** hamlesini yapmış olmalı (bağlı olmayanı beklemek yerine süre dolar). Bilgi sızıntısı
 yaratmamalı: bitiş yalnız "herkes yaptı" durumunda olur, bu da zaten herkese açık bir bilgi değilse dikkat:
-- Kör Kronometre: herkes bastıysa bitiş (basış bilgisi zaten sonda açılıyor; erken bitiş "herkes bastı"yı açar — kabul).
+- Kör Kronometre: her elde herkes bastıysa el 1 sn sonra kapanır (3 el; basış bilgisi el sonunda açılıyor; erken kapanış "herkes bastı"yı açar — kabul). Sonraki eller öne kayar.
 - Gizli Hırsız: herkes bastıysa bitiş (sonuç kesin: herkes −1).
 - Son Kişi: herkes kaçtıysa bitiş (kaçanlar zaten açık). Gizli bitiş zamanı açığa çıkmaz; sonuç ekranında bitiş yok.
 - Zehirli Kadeh: herkes takas hakkını kullandıysa bitiş.

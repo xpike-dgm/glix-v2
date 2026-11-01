@@ -120,21 +120,30 @@ describe("maç sürerken katılım: izleyici", () => {
     expect(a.room.match?.participants).toHaveLength(3);
   });
 
-  it("izleyici erken bitişi engellemez: katılımcıların hepsi bastığında oyun hemen biter", async () => {
+  it("izleyici erken bitişi engellemez: katılımcıların hepsi bastığında her el hemen kapanır", async () => {
     const cs = await setupRoom(["A", "B"], ["kor-kronometre"]);
     const [a, b] = cs as [Client, Client];
     const { startedAt } = await startPlaying(cs);
     const c = await join(a.session.roomCode, "Can");
     await until(() => self(c)?.spectator === true, "izleyici");
-    k.clock.advance(startedAt + 5_000 - k.clock.now());
-    expect((await ack(a, { kind: "press" }, 1)).ok).toBe(true);
-    expect((await ack(b, { kind: "press" }, 2)).ok).toBe(true);
-    // Basış 1 sn sonra kapanır; açılış animasyonu (6 sn) kesilmez, herkes "Devam et" dedi: 1 sn sonra biter.
-    k.clock.advance(1_500 + 6_000);
+    type Pub = { played: { goAt: number; endsAt: number; reveal: unknown }[]; revealEndsAt: number | null };
+    const pub = () => a.room.match?.publicView as Pub;
+    let n = 0;
+    for (const i of [0, 1, 2]) {
+      await until(() => (pub().played.length ?? 0) > i, "el");
+      const h = pub().played[i] as Pub["played"][number];
+      k.clock.advance(h.goAt + 5_000 - k.clock.now());
+      expect((await ack(a, { kind: "press" }, ++n)).ok).toBe(true);
+      expect((await ack(b, { kind: "press" }, ++n)).ok).toBe(true);
+      // Herkes bastı: el 1 sn sonra kapanır.
+      k.clock.advance(1_000);
+      await until(() => pub().played[i]?.reveal != null, "el kapandı");
+    }
+    k.clock.advance(Math.max(0, (pub().revealEndsAt ?? 0) - k.clock.now()) + 100);
     await until(() => a.room.match?.publicView !== null && a.room.phase !== "playing", "erken bitiş");
     expect(a.room.phase).toBe("results");
-    // Süre 18 sn; izleyici beklenseydi oyun ancak o zaman biterdi.
-    expect(k.clock.now() - startedAt).toBeLessThan(18_000);
+    // En uzun süre ~82 sn; izleyici beklenseydi her el tam süre (≥ 15 sn) sürerdi.
+    expect(k.clock.now() - startedAt).toBeLessThan(45_000);
   });
 
   it("kopup kendi oturumuyla dönen oyuncu etkilenmez: Kapalı olsa da yerine döner", async () => {

@@ -18,3 +18,5 @@ declare const __SIZMA_PROPS__: readonly string[] | undefined;
 declare const __SOZLUK_PROPS__: readonly string[] | undefined;
 /** Karalama Defteri görsellerinden derlemede var olanlar (`public/assets/props/karalama-defteri/<ad>.webp`, uzantısız). */
 declare const __KARALAMA_PROPS__: readonly string[] | undefined;
+/** Kör Kronometre görsellerinden derlemede var olanlar (`public/assets/props/kor-kronometre/<ad>.webp`, uzantısız). */
+declare const __KRONOMETRE_PROPS__: readonly string[] | undefined;

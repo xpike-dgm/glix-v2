@@ -70,7 +70,15 @@ describe("geç gelen eylem payı (250 ms)", () => {
     const cs = await setupRoom(["A", "B"], ["kor-kronometre"]);
     const [a, b] = cs as [Client, Client];
     await startPlaying(cs);
-    const endsAt = ((a.room.match?.publicView ?? { endsAt: 0 }) as { endsAt: number }).endsAt;
+    // Kör Kronometre 3 el: son elin kapanışı (oyunun basış bitişi) son el başlayınca görünür.
+    type Pub = { endsAt: number | null; played: { endsAt: number }[] };
+    const pub = () => (a.room.match?.publicView ?? { endsAt: null, played: [] }) as Pub;
+    for (let i = 0; i < 3 && pub().endsAt === null; i++) {
+      const last = pub().played[pub().played.length - 1];
+      k.clock.advance(Math.max(0, (last?.endsAt ?? 0) - k.clock.now()));
+      await until(() => pub().played.length > i + 1 || pub().endsAt !== null, "sıradaki el");
+    }
+    const endsAt = pub().endsAt ?? 0;
     k.clock.advance(endsAt + 1 - k.clock.now());
     expect(await send(b, { kind: "press" })).toEqual({ ok: false, reason: "ended" });
   });

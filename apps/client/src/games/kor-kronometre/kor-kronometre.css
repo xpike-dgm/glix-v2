@@ -3,23 +3,159 @@
   gap: 0;
 }
 
-/* Kadran sahnesi */
-.kro__stage {
+/* KR-U1 karanlık oda: sayarken arka plan kararır; dişli/yörünge çizimleri neredeyse kaybolur, kadran ve hedef parlar. */
+.kro__room {
   position: relative;
   flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.kro__room::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: #02030b;
+  opacity: 0;
+  transition: opacity 600ms var(--ease);
+}
+.kro__room[data-dark="1"]::before {
+  opacity: 0.6;
+}
+.kro__room > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Üst: el noktaları ve hedef (iki satır: büyük "11", altında küçük "SANİYE"). */
+.kro__top {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+}
+.kro__hand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.kro__pip {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-dim);
+}
+.kro__pip[data-on="1"] {
+  background: var(--cyan);
+  border-color: var(--cyan);
+}
+.kro__pip[data-done="1"] {
+  background: var(--text-dim);
+}
+.kro__handText {
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.kro__target {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  color: var(--cyan);
+  text-shadow: 0 0 16px rgba(46, 242, 255, 0.45);
+}
+.kro__targetNum {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(40px, 13vw, 60px);
+  font-variant-numeric: tabular-nums;
+}
+.kro__targetUnit {
+  margin-top: 2px;
+  font-size: var(--fs-13);
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  color: var(--text-dim);
+  text-shadow: none;
+}
+
+/* Kadran sahnesi: dikeyde ortaya yakın; boşluk kadranla düğme arasında eşit dağılır. */
+.kro__stage {
+  position: relative;
+  flex: 1.5 1 0;
   min-height: 0;
   display: grid;
   place-items: center;
 }
-.kro__flash {
+.kro__ready,
+.kro__go {
   position: absolute;
-  inset: 0;
-  opacity: 0;
+  left: 50%;
+  bottom: 4%;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
   pointer-events: none;
-  background: radial-gradient(closest-side, rgba(182, 255, 59, 0.5), transparent);
 }
+.kro__ready {
+  font-size: var(--fs-18);
+  color: var(--text-dim);
+}
+.kro__go {
+  font-size: clamp(30px, 10vw, 44px);
+  color: #fff;
+  text-shadow: 0 0 22px rgba(255, 255, 255, 0.9);
+  animation: kro-go 900ms var(--ease) both;
+}
+@keyframes kro-go {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(1.4);
+  }
+  20% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.kro__flash {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: #fff;
+  opacity: 0;
+  animation: kro-flash 500ms ease-out both;
+}
+@keyframes kro-flash {
+  from {
+    opacity: var(--peak, 0.75);
+  }
+  to {
+    opacity: 0;
+  }
+}
+.kro__room[data-go="1"] .kro-dial__img {
+  filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 26px rgba(255, 255, 255, 0.8));
+}
+
 .kro-dial {
-  --size: min(78vw, 40dvh, 340px);
+  --size: min(70vw, 36dvh, 320px);
   position: relative;
   width: var(--size);
   height: var(--size);
@@ -43,21 +179,11 @@
   margin: -3% 0 0 -3%;
   border-radius: 50%;
   background: var(--cyan);
+  opacity: 0.55;
+  transform: scale(0.8);
   filter: drop-shadow(0 0 7px var(--cyan));
-  animation: kro-core 2.4s ease-in-out infinite;
 }
-@keyframes kro-core {
-  0%,
-  100% {
-    transform: scale(0.8);
-    opacity: 0.7;
-  }
-  50% {
-    transform: scale(1.5);
-    opacity: 1;
-  }
-}
-/* Nabız: zamandan bağımsız, sabit döngü. */
+/* KR-M4: tek halka, düzensiz vuruşlar JS ile (Dial.tsx); burada yalnız görünüm. */
 .kro-dial__pulse {
   position: absolute;
   left: 29%;
@@ -67,99 +193,349 @@
   border-radius: 50%;
   border: 2px solid var(--cyan);
   opacity: 0;
-  animation: kro-pulse 2.4s var(--ease) infinite;
 }
-.kro-dial__pulse--b {
-  animation-delay: 1.2s;
+.kro-dial[data-ready="1"] .kro-dial__core,
+.kro-dial[data-ready="1"] .kro-dial__pulse {
+  display: none;
 }
-@keyframes kro-pulse {
-  0% {
-    transform: scale(0.35);
-    opacity: 0.75;
-  }
-  100% {
-    transform: scale(1.18);
+/* KR-U3: "Hazır ol"da hedef rakamı kadranın içinde dev. */
+.kro-dial__digit {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  width: 60%;
+  height: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  clip-path: inset(0);
+}
+.kro-dial__num {
+  grid-area: 1 / 1;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: calc(var(--size) * 0.3);
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 0 18px rgba(46, 242, 255, 0.85);
+  font-variant-numeric: tabular-nums;
+}
+.kro-dial__num[data-in="1"] {
+  animation: kro-num-in 520ms var(--ease) both;
+}
+.kro-dial__num--out {
+  animation: kro-num-out 520ms var(--ease) both;
+}
+@keyframes kro-num-in {
+  from {
     opacity: 0;
+    transform: translateY(70%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
+@keyframes kro-num-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-70%);
+  }
+}
+/* KR-U2: kilitlendi: taç gömülür, cam kırağıyla donar (görsel gelene kadar CSS). */
 .kro-dial[data-locked="1"] .kro-dial__img {
-  filter: drop-shadow(0 0 22px rgba(182, 255, 59, 0.6));
+  filter: drop-shadow(0 0 14px rgba(190, 235, 255, 0.55)) saturate(0.55) brightness(0.92);
+}
+.kro-dial[data-locked="1"][data-art="1"] .kro-dial__img {
+  filter: drop-shadow(0 0 14px rgba(190, 235, 255, 0.55));
 }
 .kro-dial[data-locked="1"] .kro-dial__core {
-  background: var(--lime);
-  filter: drop-shadow(0 0 8px var(--lime));
-  animation: none;
-  transform: scale(1.5);
+  background: #d8f4ff;
+  filter: drop-shadow(0 0 6px #d8f4ff);
+  opacity: 0.9;
+  transform: scale(1.2);
 }
 .kro-dial[data-locked="1"] .kro-dial__pulse {
-  animation: none;
-  opacity: 0;
+  display: none;
+}
+.kro-dial__crown {
+  position: absolute;
+  left: 38%;
+  top: 2%;
+  width: 24%;
+  height: 16%;
+  border-radius: 40% 40% 20% 20%;
+  background: linear-gradient(180deg, #05081a 0%, rgba(5, 8, 26, 0.75) 55%, transparent 100%);
+  animation: kro-crown 160ms var(--ease) both;
+}
+@keyframes kro-crown {
+  from {
+    opacity: 0;
+    transform: translateY(-25%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.kro-dial__frost {
+  position: absolute;
+  left: 21%;
+  top: 27%;
+  width: 58%;
+  height: 58%;
+  border-radius: 50%;
+  background:
+    repeating-conic-gradient(from 12deg, rgba(255, 255, 255, 0.18) 0deg 3deg, transparent 3deg 17deg),
+    radial-gradient(closest-side, rgba(216, 244, 255, 0.05) 30%, rgba(216, 244, 255, 0.55) 100%);
+  mix-blend-mode: screen;
+  animation: kro-frost 420ms var(--ease) both;
+}
+@keyframes kro-frost {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .kro__hint {
-  flex: none;
-  margin: 8px 0 14px;
+  flex: 1 1 0;
+  min-height: 46px;
+  margin: 4px 0 12px;
   text-align: center;
+}
+.kro__hintMain {
+  margin: 0;
   font-size: var(--fs-18);
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.kro__hintSub {
+  margin: 4px 0 0;
+  font-size: var(--fs-13);
   color: var(--text-dim);
 }
 
-/* Ana eylem: başparmak bölgesinde dev tuş */
-.kro__press {
+/* KR-U2: metal kronometre düğmesi; basma alanı yalnız düğme (KR-U8). */
+.kro-btn {
   flex: none;
   width: 100%;
-  min-height: 84px;
-  margin-bottom: 4px;
+  min-height: 96px;
+  margin-bottom: 6px;
+  padding: 6px;
   border: 0;
-  border-radius: var(--r-btn);
-  background: var(--cyan);
-  color: #05081a;
-  box-shadow: 0 5px 0 #0c9aa6;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #f2f5fa 0%, #9aa3b5 48%, #5c6476 52%, #c9d0dc 100%);
+  box-shadow:
+    0 6px 0 #2a3040,
+    0 10px 26px rgba(0, 0, 0, 0.5);
+  color: #0a0e1e;
   transform: translateY(0);
   transition:
     transform 70ms var(--ease),
     box-shadow 70ms var(--ease),
-    background 160ms var(--ease);
+    opacity 160ms var(--ease);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  user-select: none;
 }
-.kro__press:active,
-.kro__press[data-done="1"] {
-  transform: translateY(4px) scale(0.985);
-  box-shadow: 0 1px 0 #0c9aa6;
+.kro-btn__face {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 100%;
+  min-height: 84px;
+  border-radius: 22px;
+  background: radial-gradient(ellipse at 50% 30%, #fbfcff 0%, #c4cad6 60%, #8b93a5 100%);
+  box-shadow:
+    inset 0 -3px 6px rgba(0, 0, 0, 0.3),
+    inset 0 2px 3px rgba(255, 255, 255, 0.9);
 }
-.kro__press[data-done="1"] {
-  background: var(--lime);
-  box-shadow: 0 1px 0 #5c8a12;
-}
-.kro__press:disabled:not([data-done="1"]) {
-  opacity: 0.5;
-}
-.kro__press-label {
+.kro-btn__label {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 28px;
-  letter-spacing: 0.08em;
+  font-size: 32px;
+  letter-spacing: 0.12em;
+}
+.kro-btn[data-state="live"]:active,
+.kro-btn[data-state="try"]:active {
+  transform: translateY(5px);
+  box-shadow: 0 1px 0 #2a3040;
+}
+.kro-btn[data-state="wait"] {
+  background: linear-gradient(180deg, #8d94a3 0%, #5b6272 48%, #3d4352 52%, #6f7686 100%);
+  box-shadow: 0 6px 0 #1c2130;
+  color: #0a0e1e;
+}
+.kro-btn[data-state="wait"] .kro-btn__face {
+  background: radial-gradient(ellipse at 50% 30%, #b9bfcb 0%, #8e95a4 60%, #6b7282 100%);
+}
+.kro-btn[data-state="wait"] .kro-btn__label {
+  font-size: 22px;
+  letter-spacing: 0.04em;
+}
+/* Gömülü, soluk plaka: yeniden basılabilir görünmez. */
+.kro-btn[data-state="locked"],
+.kro-btn[data-state="tried"] {
+  transform: translateY(5px);
+  background: linear-gradient(180deg, #3a4152, #262c3a);
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.6);
+  color: #b9c2d6;
+}
+.kro-btn[data-state="locked"] .kro-btn__face,
+.kro-btn[data-state="tried"] .kro-btn__face {
+  background: linear-gradient(180deg, #2c3241, #222735);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+.kro-btn[data-state="locked"] .kro-btn__label,
+.kro-btn[data-state="tried"] .kro-btn__label {
+  font-size: 22px;
+  letter-spacing: 0.14em;
+}
+.kro-btn[data-state="try"] .kro-btn__face {
+  background: radial-gradient(ellipse at 50% 30%, #d9dee8 0%, #a9b0be 60%, #858c9c 100%);
+}
+.kro-btn[data-state="try"] .kro-btn__label {
+  font-size: 22px;
+  letter-spacing: 0.04em;
 }
 
-/* Sonuç */
-.kro__result {
+/* KR-M3 şerit: avatarlar ve toplam el puanları; kopan gri. */
+.kro-strip {
+  flex: none;
+  list-style: none;
+  margin: 6px 0 4px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 10px;
+}
+.kro-strip__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 34px;
+}
+.kro-strip__cell[data-off="1"] {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+.kro-strip__av {
+  position: relative;
+}
+.kro-strip__gain {
+  position: absolute;
+  right: -10px;
+  top: -8px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--lime);
+  color: #05081a;
+  font-size: 13px;
+  font-weight: 800;
+}
+.kro-strip__pts {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-13);
+  font-variant-numeric: tabular-nums;
+}
+.kro-strip__cell[data-me="1"] .kro-strip__pts {
+  color: var(--cyan);
+}
+
+/* KR-U7 el arası. */
+.kro-gap {
   flex: 1 1 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
 }
-.kro__head {
+.kro-gap__big {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(32px, 11vw, 48px);
+  line-height: 1.1;
+  color: var(--text);
+}
+.kro-gap[data-tone="win"] .kro-gap__big {
+  color: var(--lime);
+}
+.kro-gap[data-tone="bull"] .kro-gap__big {
+  color: #fff;
+  text-shadow: 0 0 22px rgba(216, 244, 255, 0.9);
+}
+.kro-gap__pts {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.kro-gap__win {
+  margin: 8px 0 0;
+  font-size: var(--fs-18);
+  font-weight: 700;
+}
+.kro-gap__trend {
+  margin: 0;
+  max-width: 30ch;
+  font-size: var(--fs-15);
+  color: var(--cyan);
+}
+.kro-gap__next {
+  margin: 10px 0 0;
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+
+.kro__band {
+  position: absolute;
+  left: 50%;
+  top: 16%;
+  z-index: 4;
+  transform: translateX(-50%);
+  max-width: 92%;
+  padding: 10px 16px;
+  border-radius: var(--r-sm);
+  background: rgba(5, 8, 26, 0.9);
+  box-shadow: inset 0 0 0 1.5px rgba(46, 242, 255, 0.5);
+  text-align: center;
+  font-weight: 700;
+  animation: rise var(--t-slow) var(--ease) both;
+}
+
+/* Son açılış (KR-U5, KR-U6). */
+.kro-final {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  /* "Devam et" şeridi listenin üstüne binmesin. */
+  padding-bottom: 68px;
+}
+.kro-final__head {
   flex: none;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: clamp(2px, 1.6dvh, 14px);
+  margin-top: clamp(4px, 1.6dvh, 14px);
   gap: 2px;
 }
-.kro__verdict {
+.kro-final__verdict {
   margin: 0;
   font-family: var(--font-display);
   font-weight: 800;
@@ -168,117 +544,291 @@
   white-space: nowrap;
   color: var(--text);
 }
-.kro__verdict[data-win="1"] {
+.kro-final__verdict[data-win="1"] {
   color: var(--lime);
   text-shadow: 0 0 18px rgba(182, 255, 59, 0.5);
 }
-.kro__sub {
+.kro-final__sub {
   margin: 0;
   font-size: var(--fs-15);
   color: var(--text-dim);
   font-variant-numeric: tabular-nums;
 }
-.kro__rows {
+
+/* Zaman çizgisi: hedef beyaz kesik çizgi (KR-U16), ibre, işaretler ★ ● ○. */
+.kro-track {
+  flex: none;
+  position: relative;
+  /* İki sıra avatar (biri yarım boy yukarıda) çizginin üstüne sığar. */
+  margin: calc(var(--av) * 1.65 + 16px) 10px 24px;
+}
+.kro-track__line {
+  position: relative;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+}
+.kro-track__trail {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 2px;
+  background: rgba(46, 242, 255, 0.35);
+}
+.kro-track__target {
+  position: absolute;
+  top: -16px;
+  bottom: -16px;
+  width: 0;
+  border-left: 2px dashed #fff;
+}
+.kro-track__target[data-hit="1"] {
+  filter: drop-shadow(0 0 6px #fff);
+}
+.kro-track__tlabel {
+  position: absolute;
+  bottom: -18px;
+  left: 0;
+  transform: translateX(-50%);
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+}
+.kro-track__needle {
+  position: absolute;
+  top: -22px;
+  bottom: -10px;
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--amber);
+  box-shadow: 0 0 12px var(--amber);
+}
+.kro-track__pin {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  width: 0;
+  height: 0;
+}
+.kro-track__mark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  font-style: normal;
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px;
+  border-radius: 6px;
+  background: #05081a;
+  color: var(--cyan);
+  visibility: hidden;
+}
+.kro-track__pin[data-mark="star"] .kro-track__mark {
+  font-size: 20px;
+  color: var(--lime);
+}
+.kro-track__pin[data-mark="dot"] .kro-track__mark {
+  font-size: 17px;
+  color: #ffd27a;
+}
+.kro-track__rank {
+  position: absolute;
+  left: 100%;
+  top: -6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+}
+.kro-track__av {
+  position: absolute;
+  left: 0;
+  bottom: 10px;
+  transform: translate(-50%, -60%);
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    transform 260ms var(--ease),
+    opacity 200ms var(--ease);
+}
+.kro-track__pin[data-lift="1"] .kro-track__av {
+  bottom: calc(10px + var(--av) * 0.55);
+}
+.kro-track__pin[data-down="1"] .kro-track__av {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.kro-track__pin[data-down="1"] .kro-track__mark {
+  visibility: visible;
+}
+.kro-track__pin[data-me="1"] .kro-track__av {
+  filter: drop-shadow(0 0 6px var(--cyan));
+}
+.kro-track__pin--trial .kro-track__mark {
+  color: var(--text-dim);
+}
+
+/* KR-U6 satırları. */
+.kro-rows {
   flex: 1 1 0;
   min-height: 0;
+  overflow-y: auto;
   list-style: none;
-  margin: clamp(8px, 2dvh, 18px) 0 4px;
+  margin: 4px 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
-.kro__row {
-  flex: 1 1 0;
-  min-height: 0;
-  max-height: 54px;
+.kro-row {
+  flex: none;
+  min-height: 46px;
   display: grid;
-  grid-template-columns: 36px 1fr 64px 34px;
+  grid-template-columns: 34px minmax(0, 1fr) auto 24px 44px;
   align-items: center;
-  gap: 10px;
-  padding: 0 4px;
+  gap: 8px;
+  padding: 2px 6px;
   border-radius: var(--r-sm);
 }
-.kro__row[data-me="1"] {
+.kro-row[data-hidden="1"] {
+  visibility: hidden;
+}
+.kro-row[data-me="1"] {
   background: rgba(46, 242, 255, 0.09);
   box-shadow: inset 0 0 0 1.5px rgba(46, 242, 255, 0.45);
 }
-.kro__row[data-pts="2"] {
+.kro-row[data-award="2"] {
   background: rgba(182, 255, 59, 0.1);
 }
-.kro__track {
+.kro-row[data-missed="1"] {
+  opacity: 0.6;
+}
+.kro-row__avwrap {
   position: relative;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--line);
+  display: grid;
 }
-.kro__target {
+.kro-row__rank {
   position: absolute;
-  top: -7px;
-  bottom: -7px;
-  width: 2px;
-  margin-left: -1px;
-  background: var(--amber);
-  border-radius: 1px;
-}
-.kro__dot {
-  position: absolute;
-  top: 50%;
-  width: 16px;
-  height: 16px;
-  margin: -8px 0 0 -8px;
+  left: -8px;
+  top: -6px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  box-shadow: 0 0 0 2px #05081a;
   border-radius: 50%;
-  background: var(--cyan);
-  box-shadow: 0 0 10px var(--cyan);
-}
-.kro__row[data-pts="2"] .kro__dot {
-  background: var(--lime);
-  box-shadow: 0 0 10px var(--lime);
-}
-.kro__row[data-pts="1"] .kro__dot {
-  background: var(--amber);
-  box-shadow: 0 0 10px var(--amber);
-}
-.kro__time[data-missed="1"] {
-  font-size: var(--fs-13);
-  font-weight: 500;
-  color: var(--text-dim);
-}
-.kro__row:has(.kro__time[data-missed="1"]) {
-  opacity: 0.7;
-}
-.kro__target-label {
-  flex: none;
-  margin: clamp(4px, 1.4dvh, 12px) 0 0;
-  text-align: center;
-  font-family: var(--font-display);
+  font-size: 13px;
   font-weight: 800;
-  font-size: clamp(22px, 7vw, 30px);
-  line-height: 1.15;
-  color: var(--cyan);
-  text-shadow: 0 0 16px rgba(46, 242, 255, 0.45);
+  background: #232a40;
+  z-index: 1;
 }
-.kro__time {
-  text-align: right;
-  font-size: var(--fs-15);
-  font-weight: 600;
+.kro-row__rank[data-r="1"] {
+  background: #ffd23b;
+  color: #2a1d00;
+}
+.kro-row__rank[data-r="2"] {
+  background: #d4dae6;
+  color: #1a1f2c;
+}
+.kro-row__who {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.kro-row__name {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+.kro-row__sub {
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-dim);
   font-variant-numeric: tabular-nums;
 }
-.kro__pts {
+.kro-row__at {
+  color: var(--text-dim);
+}
+.kro-row__stamp {
+  flex: none;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: #05081a;
+  background: #d8f4ff;
+}
+.kro-row__hands {
+  display: flex;
+  gap: 3px;
+}
+.kro-row__hp {
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 800;
+  background: #161c2e;
+  color: #b8c0d4;
+}
+.kro-row__hp[data-p="2"],
+.kro-row__hp[data-p="3"] {
+  color: var(--lime);
+}
+.kro-row__hp[data-p="1"] {
+  color: #ffd27a;
+}
+.kro-row__total {
+  text-align: right;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.kro-row__award {
+  text-align: right;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: var(--fs-15);
-  text-align: right;
   color: var(--text-dim);
 }
-.kro__pts[data-pts="2"] {
+.kro-row__award[data-pts="2"] {
   color: var(--lime);
 }
-.kro__pts[data-pts="1"] {
-  color: var(--amber);
+.kro-row__award[data-pts="1"] {
+  color: #ffd27a;
+}
+.kro-row--trial {
+  opacity: 0.55;
+  grid-template-columns: minmax(0, 1fr);
+}
+/* KR-U17 büyük yazı: ad ve fark büyür, an gizlenir. */
+:root[data-text="large"] .kro-row__name {
+  font-size: var(--fs-18);
+}
+:root[data-text="large"] .kro-row__sub {
+  font-size: var(--fs-15);
+}
+:root[data-text="large"] .kro-row__at {
+  display: none;
 }
 
-/* Anlatım görseli */
+/* Anlatım görseli ve deneme (KR-U14). */
 .kroart {
   width: 150px;
   height: 150px;
@@ -288,27 +838,340 @@
 .kroart .kro-dial {
   --size: 140px;
 }
+.krotry {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+.krotry__row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+.krotry__dial .kro-dial {
+  --size: 52px;
+}
+.krotry__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.krotry__title {
+  font-weight: 800;
+}
+.krotry__out {
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.krotry__btn {
+  min-width: 96px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--r-btn);
+  background: linear-gradient(180deg, #f2f5fa, #9aa3b5);
+  color: #0a0e1e;
+  font-weight: 800;
+  touch-action: manipulation;
+}
+.krotry__btn[data-live="1"] {
+  background: var(--cyan);
+}
+.krotry__tip {
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+  text-align: center;
+}
 
-/* Alçak yatay ekran: başlık solda, satırlar sağda tam boy (altta sonuç ekranının "Devam et" şeridi kalır). */
+/* KR-U8 küçük ekran: hedef ile noktalar arasında boşluk, kadran %10 küçük, BAS 88 px'ten küçük değil; satırlar sığar. */
+@media (max-height: 700px) {
+  .kro-dial {
+    --size: min(63vw, 32dvh, 288px);
+  }
+  .kro__top {
+    margin-top: 12px;
+    gap: 4px;
+  }
+  .kro__targetNum {
+    font-size: clamp(34px, 11vw, 48px);
+  }
+  .kro-btn {
+    min-height: 88px;
+  }
+  .kro-btn__face {
+    min-height: 76px;
+  }
+  .kro-row {
+    min-height: 40px;
+  }
+  .kro-track {
+    margin-top: calc(var(--av) * 1.65 + 10px);
+    margin-bottom: 12px;
+  }
+}
+
+/* KR-U8 yatay: solda kadran, sağda hedef ve altında BAS; sonuç başlığı solda, satırlar sağda. */
 @media (orientation: landscape) and (max-height: 520px) {
-  .kro__result {
+  .kro__room[data-phase="ready"],
+  .kro__room[data-phase="count"] {
     display: grid;
-    grid-template-columns: minmax(150px, 32%) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
     column-gap: 16px;
   }
-  .kro__head {
+  .kro__room[data-phase="ready"] .kro__stage,
+  .kro__room[data-phase="count"] .kro__stage {
+    grid-column: 1;
+    grid-row: 1 / 4;
+  }
+  .kro__room[data-phase="ready"] .kro__top,
+  .kro__room[data-phase="count"] .kro__top {
+    grid-column: 2;
+    grid-row: 1;
+    margin-top: 12px;
+  }
+  .kro__room[data-phase="ready"] .kro__hint,
+  .kro__room[data-phase="count"] .kro__hint {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+  }
+  .kro__room[data-phase="ready"] .kro-btn,
+  .kro__room[data-phase="count"] .kro-btn {
+    grid-column: 2;
+    grid-row: 3;
+  }
+  .kro__room[data-phase="ready"] .kro-strip {
+    display: none;
+  }
+  .kro-dial {
+    --size: min(42vw, 78dvh, 300px);
+  }
+  .kro-final {
+    display: grid;
+    grid-template-columns: minmax(150px, 32%) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+    column-gap: 16px;
+    padding-bottom: 60px;
+  }
+  .kro-final__head {
+    grid-column: 1;
+    grid-row: 1 / 3;
     justify-content: center;
     margin-top: 0;
   }
-  .kro__verdict {
+  .kro-final__verdict {
     white-space: normal;
     text-align: center;
   }
-  .kro__rows {
-    margin: 4px 0;
-    gap: 4px;
+  .kro-final .kro-track {
+    grid-column: 2;
+    grid-row: 1;
+    margin-top: calc(var(--av) + 8px);
+    margin-bottom: 14px;
   }
-  .kro__row .av {
-    --s: 28px !important;
+  /* Kısa ekranda avatarlar tek sıra (yarım boy yukarı kaldırma yok). */
+  .kro-final .kro-track__pin[data-lift="1"] .kro-track__av {
+    bottom: 10px;
+  }
+  .kro-final .kro-rows {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+
+/* KR-U10 büyük ekran (TV). */
+.krotv {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 28px;
+  background: #05070f;
+  color: var(--text);
+}
+.krotv__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+}
+.krotv__scrim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 42%, rgba(2, 3, 11, 0.4), rgba(2, 3, 11, 0.92) 70%);
+  transition: background 600ms var(--ease);
+}
+.krotv[data-phase="count"] .krotv__scrim {
+  background: rgba(2, 3, 11, 0.86);
+}
+.krotv__top {
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  top: 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--text-dim);
+  z-index: 2;
+}
+.krotv__target b {
+  font-family: var(--font-display);
+  font-size: 56px;
+  color: var(--cyan);
+  text-shadow: 0 0 20px rgba(46, 242, 255, 0.5);
+}
+.krotv__dial {
+  position: absolute;
+  left: 50%;
+  top: 70px;
+  transform: translateX(-50%);
+}
+.krotv__dial .kro-dial {
+  --size: 400px;
+}
+.krotv__ready {
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  transform: translateX(-50%);
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.krotv__crew {
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  bottom: 22px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+}
+.krotv__seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.krotv__seat[data-off="1"] {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+.krotv__av {
+  position: relative;
+}
+.krotv__q {
+  position: absolute;
+  right: -6px;
+  top: -6px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1a2034;
+  box-shadow: inset 0 0 0 2px var(--text-dim);
+  font-size: 22px;
+  color: var(--text-dim);
+}
+.krotv__name {
+  font-size: 22px;
+  font-weight: 700;
+}
+.krotv__pts {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--cyan);
+}
+.krotv__gap,
+.krotv__final {
+  position: absolute;
+  left: 60px;
+  right: 60px;
+  top: 90px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+}
+.krotv__win {
+  margin: 10px 0 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 56px;
+  font-weight: 800;
+}
+.krotv__next {
+  margin: auto 0 10px;
+  text-align: center;
+  font-size: 28px;
+  color: var(--text-dim);
+}
+.kro-track[data-tv="1"] .kro-track__line {
+  height: 8px;
+}
+.kro-track[data-tv="1"] .kro-track__tlabel {
+  bottom: -40px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: #05081a;
+  font-size: 28px;
+}
+.kro-track[data-tv="1"] .kro-track__mark {
+  padding: 9px;
+  font-size: 30px;
+}
+.kro-track[data-tv="1"] .kro-track__pin[data-mark="star"] .kro-track__mark {
+  font-size: 38px;
+}
+.kro-rows[data-tv="1"] {
+  gap: 8px;
+}
+.kro-rows[data-tv="1"] .kro-row {
+  min-height: 70px;
+  grid-template-columns: 64px minmax(0, 1fr) auto 50px 120px;
+  gap: 16px;
+}
+.kro-rows[data-tv="1"] .kro-row__name {
+  font-size: 30px;
+}
+.kro-rows[data-tv="1"] .kro-row__sub {
+  font-size: 20px;
+}
+.kro-rows[data-tv="1"] .kro-row__rank {
+  width: 34px;
+  height: 34px;
+  font-size: 20px;
+}
+.kro-rows[data-tv="1"] .kro-row__hp {
+  min-width: 32px;
+  height: 32px;
+  font-size: 18px;
+}
+.kro-rows[data-tv="1"] .kro-row__total,
+.kro-rows[data-tv="1"] .kro-row__award {
+  font-size: 30px;
+}
+
+/* KR-U8 dar telefon: el puanı çipleri gizlenir (toplam ve ödül kalır), ad sığar. */
+@media (max-width: 359px) {
+  .kro-row {
+    grid-template-columns: 34px minmax(0, 1fr) 22px 40px;
+  }
+  .kro-row__hands {
+    display: none;
   }
 }
