@@ -3,6 +3,7 @@ import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-j
 import { hapticPress } from "../../fx/haptics.js";
 import { toast } from "../../net/store.js";
 import { Avatar } from "../../ui/Avatar.js";
+import { karalamaProp } from "../../ui/props.js";
 import { DrawBoard } from "./DrawBoard.js";
 import { DrawingCanvas } from "./DrawingCanvas.js";
 import { Header } from "./Header.js";
@@ -114,6 +115,8 @@ export function HangWait(props: Props) {
     return { strokes, key: `${strokes.length}:${last?.length ?? 0}:${last?.[2] ?? 0}` };
   });
   onMount(() => sfx.pin());
+  /** KD-U3 ahşap çerçeve görseli; yoksa CSS degrade kenarlık. */
+  const frame = karalamaProp("cerceve");
   const done = () => props.view.drawDoneIds.length;
   return (
     <>
@@ -129,9 +132,12 @@ export function HangWait(props: Props) {
                 data-me={me() ? "1" : undefined}
                 data-ready={ready() ? "1" : undefined}
               >
-                <div class="kd__hangframe">
+                <div class="kd__hangframe" data-art={frame ? "1" : undefined}>
                   <Show when={me()} fallback={<span class="kd__veil" aria-hidden="true" />}>
                     <DrawingCanvas strokes={mine().strokes} version={mine().key} />
+                  </Show>
+                  <Show when={frame}>
+                    {(src) => <img class="kd__hangart" src={src()} alt="" draggable={false} />}
                   </Show>
                 </div>
                 <span class="kd__hangname">

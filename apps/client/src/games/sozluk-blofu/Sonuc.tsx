@@ -1,6 +1,16 @@
 // biome-ignore-all lint/a11y/noSvgWithoutTitle: simgeler dekoratif (aria-hidden)
 import { SOZLUK_KNEW_DELAY_MS } from "@glix/engine";
-import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  createUniqueId,
+  For,
+  on,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 import { hapticMatch, hapticSolo, hapticTap } from "../../fx/haptics.js";
 import { reducedMotion } from "../../fx/motion.js";
 import { match as matchSound, solo as soloSound, unlockAudio } from "../../fx/sound.js";
@@ -37,10 +47,16 @@ interface Props {
 const MOMENT_TEXT = { sozluk: "SÖZLÜK KAZANDI", usta: "BLÖF USTASI", herkes: "HERKES BİLDİ" } as const;
 
 /** Mühür simgesi (SB-U5): görsel yoksa SVG halka; renk körü için gerçek kartta yeşilin yanında da durur (SB-U18). */
-function Seal(props: { small?: boolean }) {
+function Seal(props: { small?: boolean; label?: string }) {
   const img = sozlukProp("muhur");
+  const arcId = `sbseal-arc-${createUniqueId()}`;
   return (
-    <span class="sbseal" data-small={props.small ? "1" : undefined} aria-hidden="true">
+    <span
+      class="sbseal"
+      data-small={props.small ? "1" : undefined}
+      data-art={img ? "1" : undefined}
+      aria-hidden="true"
+    >
       <Show
         when={img}
         fallback={
@@ -65,7 +81,27 @@ function Seal(props: { small?: boolean }) {
           </svg>
         }
       >
-        {(src) => <img src={src()} alt="" />}
+        {(src) => (
+          <>
+            <Show when={props.label}>
+              <i class="sbseal__disc" />
+            </Show>
+            <img src={src()} alt="" />
+            <Show when={props.label}>
+              {(label) => (
+                <svg class="sbseal__label" viewBox="0 0 256 256" width="100%" height="100%">
+                  {/* Görselde yazı yok: kitabın altında, iç halkaya koşut kavisli yazı (merkez 128,129). */}
+                  <path id={arcId} d="M44 129a84 84 0 0 0 168 0" fill="none" />
+                  <text text-anchor="middle" textLength="178" lengthAdjust="spacing">
+                    <textPath href={`#${arcId}`} startOffset="50%">
+                      {label()}
+                    </textPath>
+                  </text>
+                </svg>
+              )}
+            </Show>
+          </>
+        )}
       </Show>
     </span>
   );
@@ -179,6 +215,8 @@ export function Sonuc(props: Props) {
     c.real ? t() >= plan().stampAt : t() >= (plan().flipAt[c.id] ?? 0);
   const summary = () => t() >= plan().summaryAt;
   const ink = sozlukProp("murekkep");
+  /** Mühür görseli yazısızdır: "SÖZLÜKTE" kodla mührün içine yazılır; görsel yoksa SVG halka ve altında yazı. */
+  const seal = sozlukProp("muhur") !== null;
 
   return (
     <Show when={reveal()}>
@@ -277,9 +315,13 @@ export function Sonuc(props: Props) {
                 </div>
                 <p class="sbres__text">{c.text}</p>
                 <Show when={c.real && open() && !done()}>
-                  <span class="sbres__stamp" aria-hidden="true">
-                    <Seal />
-                    <b>SÖZLÜKTE</b>
+                  <span class="sbres__stamp" data-art={seal ? "1" : undefined} aria-hidden="true">
+                    <Show when={seal} fallback={<Seal />}>
+                      <Seal label="SÖZLÜKTE" />
+                    </Show>
+                    <Show when={!seal}>
+                      <b>SÖZLÜKTE</b>
+                    </Show>
                   </span>
                   <i
                     class="sbres__ink"

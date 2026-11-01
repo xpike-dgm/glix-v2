@@ -48,13 +48,21 @@ function MaskArt() {
   );
 }
 
-/** Damga: görsel varsa o, yoksa CSS damgası. */
+/**
+ * Damga: görsel varsa yazısız eğik çerçeve görseli ve yazı kodla çerçevenin içinde (aynı eğimle), yoksa CSS damgası.
+ */
 function Stamp(props: { caught: boolean }) {
   const src = () => karalamaProp(props.caught ? "damga-yakalandi" : "damga-kurtuldu");
+  const text = () => (props.caught ? "YAKALANDI!" : "KURTULDU!");
   return (
-    <span class="kdop__stamp" data-caught={props.caught ? "1" : "0"}>
-      <Show when={src()} fallback={<b>{props.caught ? "YAKALANDI!" : "KURTULDU!"}</b>}>
-        {(s) => <img src={s()} alt={props.caught ? "Yakalandı" : "Kurtuldu"} draggable={false} />}
+    <span class="kdop__stamp" data-caught={props.caught ? "1" : "0"} data-art={src() ? "1" : undefined}>
+      <Show when={src()} fallback={<b>{text()}</b>}>
+        {(s) => (
+          <>
+            <span class="kdop__stamptext">{text()}</span>
+            <img src={s()} alt="" draggable={false} />
+          </>
+        )}
       </Show>
     </span>
   );
@@ -241,6 +249,30 @@ export function Acilis(props: Props) {
             )}
           </For>
         </svg>
+        {/* Işık izinin ucu (KD-U5): görsel varsa yol boyunca kıvrılarak uçar; hareket azaltmada yalnız çizgi kalır. */}
+        <Show when={trail && props.phase === "unmask" && !reducedMotion() ? trail : null}>
+          {(src) => (
+            <For each={flights()}>
+              {(f) => (
+                <Show when={path(f.from, f.to)}>
+                  {(d) => (
+                    <img
+                      class="kdop__comet"
+                      src={src()}
+                      alt=""
+                      draggable={false}
+                      aria-hidden="true"
+                      style={{
+                        "offset-path": `path("${d()}")`,
+                        "animation-delay": `${f.i * VOTE_STEP_MS}ms`,
+                      }}
+                    />
+                  )}
+                </Show>
+              )}
+            </For>
+          )}
+        </Show>
         <Show when={props.phase === "unmask" && stamped()}>
           <Stamp caught={r().caught} />
         </Show>

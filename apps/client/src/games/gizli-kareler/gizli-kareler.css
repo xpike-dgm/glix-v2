@@ -907,6 +907,15 @@ button.kcell:disabled {
 .kchest[data-o="none"] .kchest__css {
   filter: brightness(0.7);
 }
+/* Sandık görseli: kırıkta gri ve ortadan yarık, kimse bulamayınca sönük (kapalı↔açık aynı kadraj ve hizada). */
+.kchest[data-o="clash"] .kchest__img,
+.kchest[data-o="haunted"] .kchest__img {
+  filter: grayscale(0.85) brightness(0.85);
+  clip-path: polygon(0 0, 46% 0, 54% 40%, 44% 100%, 0 100%, 0 0, 100% 0, 100% 100%, 56% 100%, 64% 46%, 52% 0);
+}
+.kchest[data-o="none"] .kchest__img {
+  filter: brightness(0.7);
+}
 .kchest[data-o="win"] .kchest__css {
   background: linear-gradient(180deg, #ffe08a 0 30%, #8a5413 30% 36%, #e0a32a 36%);
 }

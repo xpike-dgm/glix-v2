@@ -185,6 +185,16 @@ function sozlukPropFiles(): string[] {
     .sort();
 }
 
+/** Çağrışım Ağı görsellerinden derlemede var olanlar (düğüm parıltısı, patlama, koyun; yoksa CSS/SVG). */
+function cagrisimPropFiles(): string[] {
+  const dir = fileURLToPath(new URL("./public/assets/props/cagrisim-agi", import.meta.url));
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".webp"))
+    .map((f) => f.slice(0, -".webp".length))
+    .sort();
+}
+
 /** Karalama Defteri görsellerinden derlemede var olanlar (kart arkası, ışık izi, damgalar, çerçeve; yoksa CSS/SVG). */
 function karalamaPropFiles(): string[] {
   const dir = fileURLToPath(new URL("./public/assets/props/karalama-defteri", import.meta.url));
@@ -260,6 +270,7 @@ export default defineConfig({
     __SIZMA_PROPS__: JSON.stringify(sizmaPropFiles()),
     __SOZLUK_PROPS__: JSON.stringify(sozlukPropFiles()),
     __KARALAMA_PROPS__: JSON.stringify(karalamaPropFiles()),
+    __CAGRISIM_PROPS__: JSON.stringify(cagrisimPropFiles()),
     __KRONOMETRE_PROPS__: JSON.stringify(kronometrePropFiles()),
     __RULET_PROPS__: JSON.stringify(ruletPropFiles()),
     __HIRSIZ_PROPS__: JSON.stringify(hirsizPropFiles()),

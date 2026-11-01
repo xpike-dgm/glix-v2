@@ -36,6 +36,7 @@ export type PropPath =
   | `gizli-kareler/${KarelerProp}`
   | `sozluk-blofu/${SozlukProp}`
   | `karalama-defteri/${KaralamaProp}`
+  | `cagrisim-agi/${CagrisimProp}`
   | `kor-kronometre/${KronometreProp}`
   | `yazi-yaz/${YaziYazProp}`
   | `zehirli-kadeh/${"efekt-temiz" | "efekt-zehir" | "masa" | "mum" | `kadeh-${string}`}`;
@@ -71,6 +72,23 @@ export function sozlukPropExists(name: SozlukProp): boolean {
 /** Var olan Sözlük Blöfü görselinin adresi; yoksa null. */
 export const sozlukProp = (name: SozlukProp): string | null =>
   sozlukPropExists(name) ? propSrc(`sozluk-blofu/${name}`) : null;
+
+/**
+ * Çağrışım Ağı görselleri (sahip üretecek; docs/oneriler/GORSEL-IHTIYACLARI.md "Çağrışım Ağı"). Yoksa ekran CSS/SVG
+ * karşılığını çizer ve olmayan dosyayı hiç istemez (404 yok); dosya `cagrisim-agi/<ad>.webp` olarak gelince kod
+ * değişmeden kullanılır.
+ */
+export type CagrisimProp = "dugum" | "patlama" | "koyun";
+export const CAGRISIM_PROPS: readonly CagrisimProp[] = ["dugum", "patlama", "koyun"];
+
+export function cagrisimPropExists(name: CagrisimProp): boolean {
+  const built = typeof __CAGRISIM_PROPS__ === "undefined" ? undefined : __CAGRISIM_PROPS__;
+  return built ? built.includes(name) : false;
+}
+
+/** Var olan Çağrışım Ağı görselinin adresi; yoksa null. */
+export const cagrisimProp = (name: CagrisimProp): string | null =>
+  cagrisimPropExists(name) ? propSrc(`cagrisim-agi/${name}`) : null;
 
 /**
  * Karalama Defteri görselleri (sahip üretecek; docs/oneriler/GORSEL-IHTIYACLARI.md "Karalama Defteri"). Yoksa ekran

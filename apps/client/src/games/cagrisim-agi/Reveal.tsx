@@ -5,6 +5,7 @@ import { reducedMotion } from "../../fx/motion.js";
 import { createSequence } from "../../fx/sequence.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { CbMarker } from "../../ui/CbMarker.js";
+import { cagrisimProp } from "../../ui/props.js";
 import { Hub } from "./Hub.js";
 import { burstSound, fizzSound, flipTick, linkSound } from "./sounds.js";
 import { chipList, ringPlan, ringPoint, type Stamp, shortName } from "./view.js";
@@ -20,9 +21,13 @@ export const GROUP_COLORS = [
 ];
 export const groupColor = (i: number): string => GROUP_COLORS[i % GROUP_COLORS.length] ?? "var(--cyan)";
 
-/** Küçük koyun simgesi (CG-U7). Görsel gelene kadar SVG; puan etkisi yok. */
+/** Küçük koyun simgesi (CG-U7): görsel varsa o, yoksa SVG; puan etkisi yok. */
 export function SheepIcon(props: { size?: number }) {
   const s = () => props.size ?? 22;
+  const img = cagrisimProp("koyun");
+  if (img) {
+    return <img class="cgsheep cgsheep--art" src={img} width={s()} height={s()} alt="" draggable={false} />;
+  }
   return (
     <svg class="cgsheep" width={s()} height={s()} viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="9" cy="11" r="4.2" fill="currentColor" />
@@ -281,6 +286,8 @@ export function NetworkRing(props: {
     }),
   );
 
+  const glow = cagrisimProp("dugum");
+  const burst = cagrisimProp("patlama");
   return (
     <div
       class="cgring"
@@ -319,6 +326,22 @@ export function NetworkRing(props: {
           const node = () => nodeOf(i());
           return (
             <Show when={!heart()}>
+              <Show when={glow}>
+                {(src) => (
+                  <i
+                    class="cgring__glow"
+                    style={{
+                      "--gc": groupColor(i()),
+                      "--cg-glow": `url(${src()})`,
+                      left: `${node().x}%`,
+                      top: `${node().y}%`,
+                    }}
+                    data-on={shown(plan().groupStep[i()] ?? 0) ? "1" : undefined}
+                    data-champ={plan().champion === i() ? "1" : undefined}
+                    aria-hidden="true"
+                  />
+                )}
+              </Show>
               <div
                 class="cgring__node"
                 style={{ "--gc": groupColor(i()), left: `${node().x}%`, top: `${node().y}%` }}
@@ -379,7 +402,12 @@ export function NetworkRing(props: {
         </p>
       </Show>
       <Show when={plan().champion !== null && shown(plan().steps - 1) && !reducedMotion()}>
-        <i class="cgring__burst" aria-hidden="true" />
+        <i
+          class="cgring__burst"
+          data-art={burst ? "1" : undefined}
+          style={burst ? { "--cg-burst": `url(${burst})` } : undefined}
+          aria-hidden="true"
+        />
       </Show>
     </div>
   );
