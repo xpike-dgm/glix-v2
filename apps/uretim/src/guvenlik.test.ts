@@ -203,7 +203,7 @@ describe("teslim anahtarı ve MCP ucu (UM-G2)", () => {
       "INSERT INTO yukleme (id, alan, anahtar_id, ozet, ad, olusturma) VALUES (?, 'rozet', ?, ?, 'x.png', ?)",
     );
     for (let i = 0; i < 500; i++)
-      ins.run(`yk${String(i).padStart(20, "0")}`, id, "0".repeat(64), o.saat.simdi);
+      ins.run(`yk${String(i).padStart(20, "0")}`, id, String(i).padStart(64, "0"), o.saat.simdi);
     const r = await o.arac(k, "dosya_yukle", { ad: "a.png", icerik_base64: b64(gorsel(128, 128)) });
     expect(r.hata).toBe(true);
     expect(String(r.veri.mesaj)).toMatch(/500/);
