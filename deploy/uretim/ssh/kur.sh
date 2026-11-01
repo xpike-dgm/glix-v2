@@ -38,7 +38,11 @@ docker cp "$KAP:/app/cli/uretim.js" "$ARAC"
 
 kopyala_bagimli() { # $1 ikili, $2 chroot
   install -D -m 0755 "$1" "$2$1"
-  ldd "$1" 2>/dev/null | grep -oE '/[^ ]+' | while read -r lib; do [ -f "$lib" ] && install -D -m 0644 "$lib" "$2$lib"; done
+  # Kitaplıklar 0644; dinamik yükleyici (ld-linux) çalıştırılabilir olmalı, yoksa chroot'ta node açılmaz.
+  ldd "$1" 2>/dev/null | grep -oE '/[^ ]+' | while read -r lib; do
+    [ -f "$lib" ] || continue
+    case "$lib" in */ld-linux*) install -D -m 0755 "$lib" "$2$lib" ;; *) install -D -m 0644 "$lib" "$2$lib" ;; esac
+  done
 }
 
 : > /etc/ssh/sshd_config.d/uretim-chroot.conf.inc
