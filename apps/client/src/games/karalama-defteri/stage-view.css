@@ -124,3 +124,46 @@
   font-size: 28px;
   color: var(--text-dim);
 }
+
+/* KD-U10: her avatarda hareketli kalem; bitiren kalemi bırakır */
+.kdtv__avatar {
+  position: relative;
+  display: inline-block;
+}
+.kdtv__pen {
+  position: absolute;
+  right: -18px;
+  bottom: -6px;
+  width: 64px;
+  height: 64px;
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 8px rgba(46, 242, 255, 0.7));
+  animation: kdtv-pen 900ms ease-in-out infinite alternate;
+}
+.kdtv__who[data-done="1"] .kdtv__pen {
+  animation: none;
+  rotate: 80deg;
+  translate: 8px 18px;
+  opacity: 0.55;
+  stroke: var(--lime);
+}
+@keyframes kdtv-pen {
+  from {
+    transform: translate(-6px, 0) rotate(-6deg);
+  }
+  to {
+    transform: translate(6px, -6px) rotate(8deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .kdtv__pen {
+    animation: none;
+  }
+}
+:root[data-motion="reduce"] .kdtv__pen {
+  animation: none;
+}

@@ -3,6 +3,9 @@
  *   ?mock=karalama-briefing | karalama-draw | karalama-draw-near | karalama-draw-ink | karalama-draw-spectator
  *   ?mock=karalama-draw-locked | karalama-vote-locked (Bitti / Tamam sonrası bekleme)
  *   ?mock=karalama-vote | karalama-vote-voted | karalama-vote-spectator | karalama-results | karalama-results-escaped
+ *   ?mock=karalama-unmask | karalama-unmask-escaped (açılış: ışık izleri, maske, damga; KD-U5)
+ *   ?mock=karalama-guess | karalama-guess-near (son şans: diğerleri / bilgisiz; KD-U7)
+ *   ?mock=karalama-done | karalama-done-guessed | karalama-done-escaped (kart döner, puan şeridi)
  * `&n=8` oyuncu sayısını değiştirir. Çizim tahtasına gerçekten çizilebilir; oylar yerelde tutulur.
  */
 import {
@@ -168,6 +171,17 @@ export function startKaralamaMock(kind: string, params: URLSearchParams): void {
   const isVote = kind.includes("vote");
   const isResults = kind.includes("results");
   const escaped = kind.includes("escaped");
+  const stage = kind.includes("unmask")
+    ? "unmask"
+    : kind.includes("done") || isResults
+      ? "done"
+      : kind.includes("guess")
+        ? "guess"
+        : isVote
+          ? "vote"
+          : "draw";
+  const opened = stage === "unmask" || stage === "guess" || stage === "done";
+  const guessed = kind.includes("guessed");
   const mainWord = "elma";
   const nearWord = "armut";
 
@@ -188,6 +202,7 @@ export function startKaralamaMock(kind: string, params: URLSearchParams): void {
   const drawings = (): Record<string, KaralamaStroke[]> =>
     Object.fromEntries(participants.map((id, i) => [id, sketch(Number(id.slice(1)) + i)]));
 
+  const openedAt = stage === "unmask" ? now + 300 : stage === "guess" ? now - 5_000 : now - 20_000;
   const reveal = (): KaralamaReveal => {
     const votes: Record<string, string> = {};
     const others = participants.filter((id) => id !== outsider);
@@ -200,15 +215,40 @@ export function startKaralamaMock(kind: string, params: URLSearchParams): void {
     votes[outsider] = others[0] ?? SELF;
     const tally: Record<string, number> = Object.fromEntries(participants.map((id) => [id, 0]));
     for (const t of Object.values(votes)) tally[t] = (tally[t] ?? 0) + 1;
-    return { outsider, mainWord, nearWord, votes, tally, caught: !escaped };
+    const outVotes = tally[outsider] ?? 0;
+    const caught = outVotes > 0 && participants.every((id) => id === outsider || (tally[id] ?? 0) < outVotes);
+    const rightVoters = participants.filter((id) => id !== outsider && votes[id] === outsider);
+    const scores = Object.fromEntries(
+      participants.map((id) => [
+        id,
+        id === outsider ? (caught ? 0 : 1) + (guessed ? 1 : 0) : rightVoters.includes(id) ? 1 : 0,
+      ]),
+    );
+    const guessOpensAt = openedAt + 5_000;
+    const guessEndsAt = stage === "done" ? guessOpensAt + 4_000 : guessOpensAt + 12_000;
+    return {
+      outsider,
+      nearWord,
+      votes,
+      tally,
+      caught,
+      rightVoters,
+      openedAt,
+      guessOpensAt,
+      guessEndsAt,
+      finishAt: guessEndsAt + 3_000,
+      guessSent: stage === "done",
+      final: stage === "done" ? { mainWord, guess: guessed ? "Elma" : "kiraz", guessed, scores } : null,
+    };
   };
 
   const publicView = (): KaralamaPublicView => ({
-    phase: isResults ? "done" : isVote ? "vote" : "draw",
-    drawEndsAt: isVote || isResults ? now - 3_000 : drawEndsAt,
-    voteEndsAt: isResults ? now - 1_000 : voteEndsAt,
+    phase: stage,
+    drawEndsAt: stage !== "draw" ? now - 3_000 : drawEndsAt,
+    voteEndsAt: opened ? openedAt : voteEndsAt,
+    voteMs: n >= 7 ? 50_000 : n >= 5 ? 40_000 : 30_000,
     players: participants,
-    drawings: isVote || isResults ? drawings() : null,
+    drawings: stage !== "draw" ? drawings() : null,
     voted: voted.filter((id) => participants.includes(id)),
     drawDoneIds: [
       ...(drawDone && !spectator ? [SELF] : []),
@@ -218,12 +258,18 @@ export function startKaralamaMock(kind: string, params: URLSearchParams): void {
       ...(locked && !spectator ? [SELF] : []),
       ...(isVote && (lockedKind || spectator) ? others().filter((_, i) => i % 2 === 1) : []),
     ],
-    reveal: isResults ? reveal() : null,
+    reveal: opened ? reveal() : null,
   });
   const view = (): KaralamaView => ({
-    word: spectator ? null : outsider === SELF ? nearWord : mainWord,
+    word: spectator
+      ? null
+      : outsider === SELF
+        ? nearWord
+        : stage === "unmask" || stage === "guess"
+          ? null
+          : mainWord,
     near: !spectator && outsider === SELF,
-    strokes: isVote || isResults ? {} : { ...strokes },
+    strokes: stage !== "draw" ? {} : { ...strokes },
     pointsLeft: 6000,
     myVote,
     drawDone: !spectator && drawDone,
@@ -231,9 +277,7 @@ export function startKaralamaMock(kind: string, params: URLSearchParams): void {
   });
 
   const publish = (): void => {
-    const miniScores = Object.fromEntries(
-      participants.map((id) => [id, escaped ? (id === outsider ? 1 : 0) : id === outsider ? 0 : 1]),
-    );
+    const miniScores = reveal().final?.scores ?? {};
     const snapshot: RoomSnapshot = {
       rev: Math.floor(Date.now() / 1000),
       serverNow: Date.now(),

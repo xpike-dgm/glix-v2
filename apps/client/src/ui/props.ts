@@ -33,6 +33,7 @@ export type PropPath =
       | "not-kagidi"}`
   | `rus-ruleti/${"tabanca" | "tambur"}`
   | `sozluk-blofu/${SozlukProp}`
+  | `karalama-defteri/${KaralamaProp}`
   | `yazi-yaz/${YaziYazProp}`
   | `zehirli-kadeh/${"efekt-temiz" | "efekt-zehir" | "masa" | "mum" | `kadeh-${string}`}`;
 
@@ -67,6 +68,28 @@ export function sozlukPropExists(name: SozlukProp): boolean {
 /** Var olan Sözlük Blöfü görselinin adresi; yoksa null. */
 export const sozlukProp = (name: SozlukProp): string | null =>
   sozlukPropExists(name) ? propSrc(`sozluk-blofu/${name}`) : null;
+
+/**
+ * Karalama Defteri görselleri (sahip üretecek; docs/oneriler/GORSEL-IHTIYACLARI.md "Karalama Defteri"). Yoksa ekran
+ * CSS/SVG karşılığını çizer ve olmayan dosyayı hiç istemez (404 yok); dosya konunca kod değişmeden kullanılır.
+ */
+export type KaralamaProp = "kart-arka" | "isik-izi" | "damga-yakalandi" | "damga-kurtuldu" | "cerceve";
+export const KARALAMA_PROPS: readonly KaralamaProp[] = [
+  "kart-arka",
+  "isik-izi",
+  "damga-yakalandi",
+  "damga-kurtuldu",
+  "cerceve",
+];
+
+export function karalamaPropExists(name: KaralamaProp): boolean {
+  const built = typeof __KARALAMA_PROPS__ === "undefined" ? undefined : __KARALAMA_PROPS__;
+  return built ? built.includes(name) : false;
+}
+
+/** Var olan Karalama Defteri görselinin adresi; yoksa null. */
+export const karalamaProp = (name: KaralamaProp): string | null =>
+  karalamaPropExists(name) ? propSrc(`karalama-defteri/${name}`) : null;
 
 /**
  * Gizli Alışveriş ürün kimliği (motor havuzu sırası, 0..19) -> dosya adı. Son 8 ürünün görseli henüz yoksa ekran
@@ -158,6 +181,7 @@ const GAME_PROPS: Record<string, readonly PropPath[]> = {
   "capraz-ates": ["genel/nisangah"],
   "yazi-yaz": YAZI_YAZ_PROPS.filter(yaziYazPropExists).map((n): PropPath => `yazi-yaz/${n}`),
   "sozluk-blofu": SOZLUK_PROPS.filter(sozlukPropExists).map((n): PropPath => `sozluk-blofu/${n}`),
+  "karalama-defteri": KARALAMA_PROPS.filter(karalamaPropExists).map((n): PropPath => `karalama-defteri/${n}`),
   "acgozluluk-limiti": ["genel/rusvet-jetonu"],
   "zehirli-kadeh": [
     "zehirli-kadeh/efekt-temiz",

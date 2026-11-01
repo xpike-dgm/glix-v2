@@ -135,7 +135,7 @@ Mevcut adlar kendiliğinden değişmez; "Listeye takılan mevcut hesaplar" salt 
 | `sozluk-blofu/kelimeler` | Sözlük Blöfü | kelime (3-16 harf, tek sözcük) + gerçek tanım (6-100 karakter, kelimeyi içermez) | 87 | 10 |
 | `cagrisim-agi/kelimeler` | Çağrışım Ağı | tek kelime (2-16 harf) + isteğe bağlı zorluk (kolay/orta/zor; boş = orta). Panelde **Karne** sütunu (CG-M6): kaç oyunda çıktı · ortalama en büyük ağ % · tek kalan %; 8 oyundan sonra kolay / zor / kapatma önerisi rozeti (kendiliğinden uygulanmaz) | 321 (80 kolay, 159 orta, 82 zor) | 10 |
 | `sizma/ciftler` | Sızma | iki farklı kelime (2-16 harf) | 160 | 10 |
-| `karalama-defteri/ciftler` | Karalama Defteri | ana + yakın kelime (3-16 harf, biri ötekini içermez) | 160 | 10 |
+| `karalama-defteri/ciftler` | Karalama Defteri | Kelime 1 + Kelime 2 (3-16 harf, biri ötekini içermez; oyunda yön rastgele, KD-M4) + isteğe bağlı yakınlık (çok yakın/yakın/uzak; boş = yakın, uzak hiç çekilmez, KD-M6) + isteğe bağlı yön (rastgele/sabit; boş = rastgele). Panelde **Karne** sütunu (KD-M8): kaç oyunda çıktı · yakalanma % · tahmin %; 8 oyundan sonra "uzak önerisi" (yakalanma ≥ %85) / "çok yakın önerisi" (≤ %15) rozeti (kendiliğinden uygulanmaz) | 160 (35 çok yakın, 120 yakın, 5 uzak) | 10 |
 | `laf-sokma/sorular` | Laf Sokma | soru (12-90 karakter, "?" ile biter); tek havuz | 330 | 20 (teknik ihtiyaç 9) |
 
 Not: ton özelliği kaldırıldığında eski `laf-sokma/aile`, `/arkadas`, `/ofis` havuzlarının yönetici değişiklikleri (kapatılan hazır sorular, eklenen sorular) bir veritabanı göçüyle `laf-sokma/sorular` havuzuna taşındı; aynı anahtar çakışırsa en eski kayıt kalır.

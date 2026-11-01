@@ -101,15 +101,42 @@ describe("karalama-defteri sunucu entegrasyonu", () => {
     expect(pub(a).reveal).toBeNull();
     expect(mine(voters[0] as Client).myVote).toBe(outsiderId);
 
-    // Oylama bitince sonuç: bilgisiz yakalandı, diğerleri +1.
-    k.clock.advance(20_000);
+    // Herkes oy verdi (KD-M7 sahip notu): oylama en geç 3 sn sonra biter; açılışta bilgisiz ve onun kelimesi açılır,
+    // ana kelime son şans bitene kadar hiçbir ekranda yok.
+    const mainWord = mine(voters[0] as Client).word as string;
+    k.clock.advance(3_000);
+    await until(() => pub(a).phase === "unmask", "açılış");
+    expect(pub(a).reveal?.outsider).toBe(outsiderId);
+    expect(pub(a).reveal?.caught).toBe(true);
+    expect(pub(a).reveal?.final).toBeNull();
+    for (const x of cs) expect(JSON.stringify(x.room.match)).not.toContain(`"${mainWord}"`);
+    expect(await send(outsiderClient, { kind: "guess", text: mainWord })).toEqual({
+      ok: false,
+      reason: "not_guess",
+    });
+    // Son şans (KD-M1): bilgisiz ana kelimeyi bilir, +1.
+    k.clock.advance(5_000);
+    await until(() => pub(a).phase === "guess", "son şans");
+    expect(await send(a === outsiderClient ? b : a, { kind: "guess", text: mainWord })).toEqual({
+      ok: false,
+      reason: "not_outsider",
+    });
+    expect(await send(outsiderClient, { kind: "guess", text: mainWord.toLocaleUpperCase("tr-TR") })).toEqual({
+      ok: true,
+    });
+    k.clock.advance(1_000);
+    await until(() => pub(a).phase === "done", "bitti");
+    k.clock.advance(3_000);
     await until(() => a.room.phase === "results", "sonuç");
     const reveal = pub(a).reveal;
     expect(reveal?.outsider).toBe(outsiderId);
     expect(reveal?.caught).toBe(true);
     expect(reveal?.tally[outsiderId]).toBe(2);
+    expect(reveal?.final?.mainWord).toBe(mainWord);
+    expect(reveal?.final?.guessed).toBe(true);
+    // KD-M2: bilgisize oy verenler +1; bilgisiz yakalandı (0) ama kelimeyi bildi (+1).
     const expected: Record<string, number> = {};
-    for (const id of ids) expected[id] = id === outsiderId ? 0 : 1;
+    for (const id of ids) expected[id] = 1;
     expect(a.room.match?.result?.awards).toEqual(expected);
     for (const x of cs) {
       const me = x.room.players.find((p) => p.id === x.session.playerId);
@@ -122,7 +149,10 @@ describe("karalama-defteri sunucu entegrasyonu", () => {
   it("kimse oy vermezse bilgisiz +1 alır", async () => {
     const cs = await startKaralama(["A", "B", "C"]);
     const outsiderId = (cs.find((x) => mine(x).near) as Client).session.playerId;
-    k.clock.advance(95_000);
+    for (const ms of [75_000, 30_000, 5_000, 12_000, 3_000]) {
+      k.clock.advance(ms);
+      await sync();
+    }
     await until(() => (cs[0] as Client).room.phase === "results", "sonuç");
     const expected: Record<string, number> = {};
     for (const x of cs) expected[x.session.playerId] = x.session.playerId === outsiderId ? 1 : 0;
@@ -135,17 +165,14 @@ describe("karalama-defteri sunucu entegrasyonu", () => {
     }
   });
 
-  it("bağlantısı kopan oyuncuya oy verilemez", async () => {
+  it("KD-M3: bağlantısı kopan oyuncuya da oy verilebilir", async () => {
     const cs = await startKaralama(["A", "B", "C"]);
     const [a, b, c] = cs as [Client, Client, Client];
     k.clock.advance(75_000);
     await until(() => pub(a).phase === "vote", "oylama");
     c.ws.terminate();
     await until(() => a.room.players[2]?.connected === false, "kopma");
-    expect(await send(a, { kind: "vote", target: c.session.playerId })).toEqual({
-      ok: false,
-      reason: "not_connected",
-    });
+    expect(await send(a, { kind: "vote", target: c.session.playerId })).toEqual({ ok: true });
     expect(await send(a, { kind: "vote", target: b.session.playerId })).toEqual({ ok: true });
   });
 });

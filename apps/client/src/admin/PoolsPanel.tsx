@@ -592,10 +592,17 @@ export function PoolsPanel(props: { onOtp: () => void }) {
                                   <td data-label="Bilinirlik">{knownCell(e.known).text}</td>
                                 </Show>
                                 <Show when={p().playStats}>
-                                  <td data-label="Karne">{playCell(e.play).text}</td>
+                                  <td data-label="Karne">{playCell(e.play, p().playKind ?? "ag").text}</td>
                                 </Show>
                                 <td data-label="Durum">
-                                  <For each={badgesOf(e, p().feedback === true, p().playStats === true)}>
+                                  <For
+                                    each={badgesOf(
+                                      e,
+                                      p().feedback === true,
+                                      p().playStats === true,
+                                      p().playKind ?? "ag",
+                                    )}
+                                  >
                                     {(b) => <span class={`adm-badge adm-badge--${b.tone}`}>{b.label}</span>}
                                   </For>
                                 </td>

@@ -421,23 +421,36 @@ export function withoutRecent(
   if (gameId !== undefined) {
     for (const pool of CONTENT_POOLS) {
       if (pool.gameId !== gameId || pool.id in base) continue;
-      if ((recent.get(pool.id)?.length ?? 0) > 0) base[pool.id] = pool.builtin;
+      const relatedUsed = pool.related ? (recent.get(pool.related.id)?.length ?? 0) : 0;
+      if ((recent.get(pool.id)?.length ?? 0) > 0 || relatedUsed > 0) base[pool.id] = pool.builtin;
     }
   }
   if (Object.keys(base).length === 0) return content;
   const out: Record<string, readonly unknown[]> = {};
   for (const [poolId, list] of Object.entries(base)) {
     const pool = poolById(poolId);
-    const used = recent.get(poolId);
-    if (!pool || !used || used.length === 0) {
+    const used = recent.get(poolId) ?? [];
+    const related = pool?.related;
+    const relatedUsed = related ? (recent.get(related.id) ?? []) : [];
+    if (!pool || (used.length === 0 && relatedUsed.length === 0)) {
       out[poolId] = list;
       continue;
     }
+    const enough = Math.max(1, pool.min);
     const kept = list.filter((raw) => {
       const entry = parseEntry(pool, raw);
       return entry === null || !used.includes(pool.key(entry));
     });
-    out[poolId] = kept.length >= Math.max(1, pool.min) ? kept : list;
+    const first = kept.length >= enough ? kept : list;
+    // Ek hafıza (ör. Karalama Defteri KD-M5): son oyunlarda geçen kelimeyi içeren girdi de atlanır; havuz alt sınırın
+    // altına düşerse bu ek kural uygulanmaz.
+    if (related && relatedUsed.length > 0) {
+      const strict = first.filter((raw) => {
+        const entry = parseEntry(pool, raw);
+        return entry === null || !related.keys(entry).some((k) => relatedUsed.includes(k));
+      });
+      out[poolId] = strict.length >= enough ? strict : first;
+    } else out[poolId] = first;
   }
   return out;
 }

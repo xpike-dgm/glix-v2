@@ -1,7 +1,7 @@
 {
   "id": "karalama-defteri",
   "ad": "Karalama Defteri",
-  "slogan": "Herkes aynı kelimeyi çizer, biri yalnızca yakın kelimeyi bilir; çizimlere bakıp kelimeyi bilmeyeni bul!",
+  "slogan": "Herkes aynı kelimeyi çizer, biri yalnızca yakın kelimeyi bilir; çizimlere bakıp kelimeyi bilmeyeni bul, bilgisizsen sonunda ortak kelimeyi tahmin et!",
   "kategori": "Çizim",
   "etiketler": ["çizim", "gizli rol", "oylama", "sosyal çıkarım"],
   "oyuncu": {
@@ -9,16 +9,16 @@
     "max": 8
   },
   "sure": {
-    "tahminiSn": 95,
-    "not": "Oyun aşaması en çok 95 sn sürer: 75 sn çizim + 20 sn oylama (süreler oyuncu sayısına göre değişmez). Bağlı herkes çizimde 'Bitti', oylamada 'Tamam' derse her aşama son basıştan 1 sn sonra biter; yani erken bitişle tur çok daha kısa sürebilir. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı (en çok 60 sn; herkes Devam derse 1 sn) gelir. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
+    "tahminiSn": 145,
+    "not": "Oyun aşaması en çok 145 sn sürer: 75 sn çizim + oylama (3–4 oyuncuda 30 sn, 5–6 oyuncuda 40 sn, 7–8 oyuncuda 50 sn; KD-M7) + 5 sn açılış + 12 sn son şans (KD-M1) + 3 sn son açılış. Erken bitiş ön tercihtir: bağlı herkes 'Bitti' derse oylama 1 sn sonra başlar; oylamada bağlı herkes oyunu verince oylama en geç 3 sn, herkes 'Tamam' derse 1 sn sonra biter; bilgisiz tahminini gönderince kelimeler 1 sn sonra açılır. Pratikte 70–100 sn. Önüne anlatım (en çok 40 sn) ve 3 sn geri sayım, arkasına sonuç ekranı gelir. Son açılışın altında 'Devam et' çıkar: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra geçilir."
   },
-  "ozet": "Oyuncuların hepsi aynı gizli kelimeyi görür, yalnızca rastgele seçilen bir oyuncu (bilgisiz) ona çok benzeyen yakın bir kelime görür. Herkes 75 sn boyunca kelimesini kendi telefonunda çizer; çizimler oylamada hep birlikte duvara asılır ve 20 sn içinde herkes kelimeyi bilmediğini düşündüğü kişiye oy verir. Bilgisiz tek başına en çok oyu alırsa yakalanmıştır ve diğer herkes +1 alır; aksi halde bilgisiz +1 alır.",
+  "ozet": "Oyuncuların hepsi aynı gizli kelimeyi görür, yalnızca rastgele seçilen bir oyuncu (bilgisiz) ona çok benzeyen yakın bir kelime görür; çiftin yönü rastgeledir. Kelime basılı tutulan ters bir defter kartında görünür. Herkes 75 sn boyunca kelimesini çizer (harf ve yazı yasak); çizimler oylamada sergi duvarında açılır ve herkes kelimeyi bilmediğini düşündüğü kişiye oy verir. Açılışta oylar ışık izleriyle uçar, bilgisizin maskesi düşer. Bilgisize oy veren her oyuncu +1; bilgisiz tek başına en çok oyu almadıysa kurtulur ve +1; ardından bilgisiz 12 sn içinde ana kelimeyi tahmin eder, bilirse +1.",
   "akis": [
     {
       "ad": "Anlatım",
       "sureSn": 40,
       "kim": "herkes",
-      "aciklama": "Tam ekran anlatım: 'Çizimlere bakıp kelimeyi bilmeyeni bul!' amacı ve üç madde (çoğunluk aynı kelimeyi görür biri yakın kelimeyi; kelimeni çiz süre bitene kadar düzenle; çizimler açılınca kelimeyi bilmeyene oy ver). Bağlı herkes hazır olunca ya da 40 sn dolunca biter. Maç kartları bu ekranda oynanır.",
+      "aciklama": "Tam ekran anlatım: 'Çizimlere bakıp kelimeyi bilmeyeni bul!' amacı ve üç madde (çoğunluk aynı kelimeyi, biri yakın kelimeyi görür; kelimene basılı tutarak bak — kelimeni çiz, harf ve yazı yasak — bilgisize oy ver: doğru oy +1, bilgisizsen saklan ve sonunda ortak kelimeyi tahmin et). Görselde iki elma, bir armut karalaması ve armuda uzanan ışık izi; altında 'Harf ve yazı yok, yalnız çizim'. Bağlı herkes hazır olunca ya da 40 sn dolunca biter.",
       "gizli": "Kelimeler henüz dağıtılmamıştır (oyun kurulumu geri sayımdan sonra yapılır)."
     },
     {
@@ -31,29 +31,44 @@
       "ad": "Çizim",
       "sureSn": 75,
       "kim": "herkes (izleyici hariç)",
-      "aciklama": "Katılımcının ekranında üstte kelime (büyük harf) ve süre çubuğu, ortada kare koyu çizim tahtası, altta 6 renk + silgi + 3 kalınlık + geri al + temizle araçları ve 'Bitti' düğmesi bulunur. Çizim süre bitene kadar düzenlenebilir (geri al, temizle, yeni darbe). 'Bitti' çizimi kilitler. Bağlı herkes 'Bitti' derse oylama 1 sn sonra başlar. İzleyici bu aşamada 'Arkadaşların çiziyor' başlığı, avatarlar ve kaç kişinin bitirdiği sayacını görür; kimsenin çizimini görmez.",
-      "gizli": "Bilgisiz oyuncu yakın kelimeyi ve ilk 7 sn 'yakın sinyal' etiketini yalnız kendi ekranında görür; diğerleri ana kelimeyi görür. Herkes yalnız kendi darbelerini görür; çizimler oylama başlayana kadar kimseye (izleyici ve TV dahil) açılmaz. Çizimi 'Bitti' ile kilitleyenlerin kimler olduğu herkese açıktır."
+      "aciklama": "Önce tam ekran ters defter kartı: 'Kelimeni görmek için basılı tut · ekranını sakla'. Basılı tutunca kart döner ve kelime görünür; bırakınca kart küçülüp üst şeritte 'Kelimeni gör' çubuğuna döner (kelime yalnız basılı tutunca görünür). Ortada kare koyu çizim tahtası: sağ üst köşede kalan saniye (son 10 sn amber, son 5 sn kırmızı), ilk 3 sn 'Yazı yok, yalnız çizim' notu; altında mürekkep çubuğu (kalan nokta kotası, %20 kalınca amber, bitince 'Mürekkep bitti · geri al ya da sil'); 6 renk + silgi + 3 kalınlık + geri al (basılı tutunca art arda) + temizle (iki adımlı, 'Emin misin? Tekrar dokun') ve 'Bitti'. İkinci parmak yeni çizgi başlatmaz; 360×640'ta araçlar tek satırda birleşir. Kart açılmadan çizime başlanabilir ama ilk dokunuşta kısa titreşimle 'Önce kelimene bak' uyarısı çıkar. 'Bitti' deyince çizim çerçeveye girip sergiye asılır: diğerlerinin çerçeveleri örtülü durur, bitirenlerin örtüsü kapanır, altta 'Sergiye asıldı · 3/5'. Bağlı herkes 'Bitti' derse oylama 1 sn sonra başlar.",
+      "gizli": "Bilgisiz yakın kelimeyi ve 'yakın sinyal' etiketini yalnız kart ya da çubuk basılı tutulurken görür; iki rolde kartın arka yüzü, boyutu ve animasyonu aynıdır. Herkes yalnız kendi darbelerini görür; çizimler oylama başlayana kadar kimseye (izleyici ve TV dahil) açılmaz. 'Bitti' diyenlerin kim olduğu açıktır."
     },
     {
       "ad": "Oylama",
-      "sureSn": 20,
+      "sureSn": 50,
       "kim": "herkes",
-      "aciklama": "Üstte 'Kelimeyi bilmeyen kim?' başlığı ve (kendi kelimen) bilgisi, ortada herkesin çizimini taşıyan sergi duvarı (çizim kutuları oyuncu sayısına göre en büyük çıkacak ızgarada dizilir; her çizim yaklaşık 1,5 sn'de baştan çizilerek oynar), her çizimin altında oyuncunun adı/avatar ve oy çubuğu. Çizime dokunmak büyütür (tekrar izle, 'OY VER'); alttaki isim çubuğuna dokunmak oy verir. Alt şeritte 'Tamam' düğmesi ve kaç kişinin kilitlediği görünür. Oy verdikten sonra değiştirilebilir; 'Tamam' oyu kesinleştirir. Bağlı herkes 'Tamam' derse oylama 1 sn sonra biter.",
-      "gizli": "Kimin kime oy verdiği oyun bitene kadar kimseye gösterilmez; yalnız 'oy verenler' (kimin oy verdiği) ve 'Tamam diyenler' bilinir. Kendi oyunu yalnız sen görürsün. Bilgisiz kimliği hâlâ saklıdır."
+      "aciklama": "Süre oyuncu sayısına göre: 3–4 oyuncuda 30 sn, 5–6'da 40 sn, 7–8'de 50 sn. Üstte 'Kelimeyi bilmeyen kim?' ve 'Kelimeni gör' çubuğu; sağda 'Senin çizimin' küçük resmi (kendi çizimin duvarda değil). Sergi duvarında diğer çizimler büyük: 3–4 oyuncuda tek satır, 5–6'da 2 sütun, 7–8'de 2 × 4 (son satır ortalı); 360×640'ta duvar kaydırılır. Örtüler soldan sağa 0,3 sn arayla kalkar, her çizim baştan çizilerek oynar; Tamam ilk 3 sn pasiftir. İsimler hep görünür (en çok 7 harf). Kopan oyuncunun kartında 'bağlantı koptu' yazar ve ona da oy verilebilir. Çizime dokununca büyür: sağa-sola kaydırarak sonraki/önceki çizim, 'BU KİŞİ' ile oy. Oy verince raptiye sesi. Bağlı herkes oyunu verince oylama en geç 3 sn sonra biter ('Herkes oy verdi · sergi kapanıyor'); herkes 'Tamam' derse 1 sn sonra. Yatayda duvar 2 satır, yönlendirme ve Tamam sağ sütunda.",
+      "gizli": "Kimin kime oy verdiği açılışa kadar gizlidir; yalnız oy verenler ve 'Tamam' diyenler bilinir. Kendi oyunu yalnız sen görürsün. Bilgisiz kimliği hâlâ saklıdır."
     },
     {
-      "ad": "Açılış (sonuç)",
-      "sureSn": 30,
+      "ad": "Açılış",
+      "sureSn": 5,
       "kim": "herkes",
-      "aciklama": "Oylama süresi biter bitmez oyun biter ve sonuç ekranının üstüne açılış girer: bilgisiz oyuncunun maskesi düşer ('Kelimeyi bilmeyen' + ad), 'Yakalandı!' ya da 'Kurtuldu!' rozeti, iki kelime ('Ortak' ve 'Yakın') yan yana gösterilir. Sonuç ekranı en çok 60 sn kalır (herkes Devam derse 1 sn sonra geçer); sıradaki aşama (kart seçimi ya da yeni oyun/final) ondan sonra gelir. Son ekran oyun bitince kalır; altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca 1 sn sonra, basmayan olursa en geç 60 sn sonra genel sonuç ekranına geçilir. Kopan oyuncu ve izleyiciler beklenmez.",
-      "gizli": "Artık hiçbir bilgi gizli değildir: oylar, oy sayımı, bilgisiz ve kelimeler herkese açıktır."
+      "aciklama": "Oylama bitince telefonda ve TV'de sergi duvarı üstünde: her oy, oy verenin çiziminden seçtiği çizime kıvrılan ışık iziyle 0,25 sn arayla uçar, çizimlerin köşesinde oy sayacı büyür; kısa davul, bilgisizin çiziminde maske düşer (Sızma'nın maskesi), altında 'Onun: armut'; 'YAKALANDI!' ya da 'KURTULDU!' damgası. Hareket azaltmada ışık izleri düz çizgi.",
+      "gizli": "Ana kelime bu aşamada hiçbir ekranda yoktur (çoğunluğun telefonunda da); yalnız bilgisizin kelimesi açılır."
+    },
+    {
+      "ad": "Son şans",
+      "sureSn": 12,
+      "kim": "bilgisiz yazar, diğerleri izler",
+      "aciklama": "Bilgisiz 12 sn içinde ana kelimeyi yazar: duvar küçülür, altta 'Ortak kelime neydi?', kırmızı geri sayım halkası ve Gönder (tek tahmin, kesin). Diğerleri bilgisizin büyük avatarını, '… kelimeyi tahmin ediyor…' yazısını ve aynı geri sayımı görür. Tahmin gelince 1 sn sonra kelimeler açılır. Bilgisiz bağlı değilse son şans atlanır; son şans sırasında koparsa 1 sn sonra biter.",
+      "gizli": "Bilgisizin yazarken yazdıkları gösterilmez, gönderdiği tahmin son açılışa kadar gizlidir; ana kelime hâlâ hiçbir ekranda yoktur."
+    },
+    {
+      "ad": "Son açılış",
+      "sureSn": 3,
+      "kim": "herkes",
+      "aciklama": "Kart döner: bilgisizin tahmini ('elma ✓' ya da üstü çizili 'kiraz ✗'; doğruysa zil ve 'BİLDİ!'), 'Ortak: elma · Onun: armut' ve puan şeridi ('Doğru oy: Cihad, Zeynep +1 · Mert kurtuldu +1 · Mert kelimeyi bildi +1'). Altında 'Devam et' çıkar; bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra genel sonuç ekranına geçilir. Genel sonuç ekranının üstündeki küçük kart özet olarak kalır (iki kelime ve tahmin)."
     }
   ],
   "kurallar": [
     "3 ile 8 oyuncu katılır (dikey/portre oyun). 2 kişiyle oynanmaz; 3 oyuncuda 2 kişi ana kelimeyi bilir, 1 kişi bilgisizdir.",
     "Oyun kurulurken katılımcılar arasından sunucunun rastgelesiyle tam olarak 1 bilgisiz oyuncu seçilir (oyuncu sayısı kaç olursa olsun tek bilgisiz). Seçim herkese eşit olasılıklıdır; bilgisiz kimliği oyun bitene kadar hiçbir ortak görünümde ya da başkasının görünümünde yer almaz.",
-    "Havuzdan rastgele bir kelime çifti çekilir: 'ana kelime' (örn. elma) bilgisiz olmayan herkese, 'yakın kelime' (örn. armut) bilgisiz oyuncuya gösterilir. Yerleşik havuz 165 çiftten oluşur; yönetici panelinden havuz düzenlenebilir (havuz en az 10 çift ister; kelimeler 3-16 karakter olmalı). Oynanabilir çift: iki kelime de en az 3 karakter ve biri ötekinin içinde geçmez.",
-    "Bilgisiz oyuncunun ekranında yakın kelimenin yanında sarı bir 'yakın sinyal' etiketi görünür ve yaklaşık 7 sn sonra söner. Etiket yalnız kendi ekranındadır; ana kelimeyi bilenlerde etiket yoktur.",
+    "Havuzdan bir kelime çifti çekilir (Kelime 1 / Kelime 2). Yön rastgeledir (KD-M4): %50 ihtimalle Kelime 1 çoğunluğun (ana kelime), Kelime 2 bilgisizin (yakın kelime), %50 tersi; havuzda 'Yön: sabit' işaretli çiftte Kelime 1 hep çoğunluğundur. Yerleşik havuzda 160 oynanabilir çift vardır; yönetici panelinden havuz düzenlenebilir (en az 10 çift, kelimeler 3-16 harf, biri ötekinin içinde geçmez).",
+    "Bilgisiz bilgisiz olduğunu bilir: kelimesinin üstünde sarı 'yakın sinyal' etiketi görünür; ama kelime ve etiket yalnız kart ya da 'Kelimeni gör' çubuğu basılı tutulurken görünür (KD-U1). Yan bakan biri kelimeyi ya da sinyali okuyamaz.",
+    "Yakınlık (KD-M6): her çift 'çok yakın', 'yakın' ya da 'uzak' etiketi taşır (etiketsiz = yakın). 3–5 oyuncuda yalnız yakın, 6–8 oyuncuda %50 yakın / %50 çok yakın çift çekilir; uzak çift hiç çekilmez; uygun etiketli çift kalmazsa etiket şartı düşer. Tekrar (KD-M5): aynı odada son 50 oyunun çifti ve son 10 oyunda geçen kelimelerden birini içeren çift gelmez (kelime kuralı havuzu 10'un altına düşürürse uygulanmaz).",
+    "Yazı yasağı (KD-U14): çizime harf ve yazı yazılmaz; sistem denetlemez, puanı değiştirmez.",
     "Çizim aşaması 75 sn sürer. Herkes kendi telefonunda tek bir çizim yapar; çizim süre bitene (ya da 'Bitti'ye) kadar sınırsız düzenlenebilir: yeni darbe eklenir, son darbe geri alınır ya da tüm çizim temizlenir.",
     "Araçlar: 6 renk (beyaz, pembe, sarı, yeşil, mavi, turuncu), silgi, 3 kalınlık (ince/orta/kalın), geri al, temizle. Temizle tuşu yanlışlıkla silmeyi önlemek için iki dokunuş ister (ilk dokunuş 'Silmek için tekrar dokun' durumuna geçer, 2,2 sn içinde ikinci dokunuş silinir).",
     "Kalem/parmak ayrımı: kalemle çizim başladıysa avuç içi (dokunma) yok sayılır; çok geniş temas (genişlik ve yükseklik 70 pikselden büyük) avuç sayılıp yok sayılır. Safari kenar geri kaydırması tahtada engellenir.",
@@ -61,56 +76,56 @@
     "İstemci uzun çizgileri (sadeleştirmeden sonra 120 noktayı aşarsa) otomatik olarak birkaç darbeye böler (parçalar bir noktayı paylaşır). Parmak 3 ızgara biriminden az hareket ettiyse nokta eklenmez; noktalar 1,6 birim sapma ile sadeleştirilir. Çok uzun bir çizgi çizerken 600 noktada ara gönderim yapılır.",
     "Geri al: yalnız son darbeyi siler; çizim boşsa reddedilir. Temizle: çizim boşsa reddedilir. Darbe numarası hiç azalmaz (geri alınan darbenin numarası yeniden kullanılmaz). Silgi de bir darbedir (renk dizini 6) ve darbe/nokta kotasına sayılır.",
     "Çizim aşamasında başkasının çizimi hiçbir yerde yoktur (ortak görünümde 'drawings' null'dır); kendi darbelerin yalnız sana gider. Sunucu kendi darbelerini istemciye geri yollar; yerel çizim doğru kabul edilir, 2 sn sessizlikten sonra sunucuyla uzlaşılır.",
-    "'Bitti' (çizim kilidi): çizimde en az 1 darbe olması gerekir (boş çizimle Bitti reddedilir: 'nothing_to_lock'). Bitti'den sonra o oyuncu çizemez, geri alamaz, temizleyemez ('locked'). Bağlı olan herkes Bitti dediğinde çizim aşaması şimdiki andan 1 sn sonra biter; oylama süresi (20 sn) kısalmaz, yani oylama 'yeni çizim bitişi + 20 sn' olur.",
+    "'Bitti' (çizim kilidi): çizimde en az 1 darbe olması gerekir (boş çizimle Bitti reddedilir: 'nothing_to_lock'). Bitti'den sonra o oyuncu çizemez, geri alamaz, temizleyemez ('locked'). Bağlı olan herkes Bitti dediğinde çizim aşaması şimdiki andan 1 sn sonra biter; oylama süresi (30/40/50 sn) kısalmaz, yani oylama 'yeni çizim bitişi + oylama süresi' olur.",
     "Çizim süresi dolduğunda ('Bitti' demeyenin de) çizimi olduğu gibi kalır ve oylamada açılır. Hiç darbesi olmayan oyuncunun duvarda boş bir çerçevesi olur.",
     "Oylama aşaması başlayınca tüm çizimler herkese (izleyiciler ve TV dahil) açılır. Her çizim, çizim sırasıyla yaklaşık 1,5 sn içinde kendini baştan çizerek oynatılır; çerçeveye dokununca büyür ve yeniden izlenir (TV'de de aynı).",
-    "Oy kuralları: herkesin 1 oyu vardır; kendine oy veremezsin ('self_vote'); hedef katılımcı olmalı ve o an bağlı olmalıdır (kopuk oyuncuya oy reddedilir: 'not_connected'); bilgisiz oyuncu da başkasına oy verir. Oylama bitene ya da 'Tamam'a kadar oy değiştirilebilir (son oy geçerli); aynı oyu tekrar vermek durumu değiştirmez. Çizim aşamasında oy reddedilir ('wrong_phase').",
+    "Oy kuralları: herkesin 1 oyu vardır; kendine oy veremezsin ('self_vote'); hedef katılımcı olmalıdır. Bağlantısı kopuk oyuncuya da oy verilebilir (KD-M3). Oy, Tamam'a kadar değiştirilebilir. Bağlantısı kopuk oyuncu oy veremez.",
     "'Tamam' (oy kilidi): önce bir oy verilmiş olmalı (oysuz Tamam reddedilir: 'nothing_to_lock'). Tamam'dan sonra oy değiştirilemez ('locked'). Bağlı herkes Tamam deyince oylama 1 sn sonra biter.",
     "Oy vermeyen oyuncunun oyu yoktur; eksik oy rastgele doldurulmaz ve sonucu etkilemez (İttifak'tan farklı olarak).",
-    "Yakalanma: bilgisiz oyuncu en az 1 oy almış VE diğer her oyuncudan kesinlikle daha çok oy almışsa 'yakalandı'. Eşitlikte (bilgisiz ile başka biri aynı en yüksek oyda) ya da başka biri daha çok oy aldıysa ya da hiç oy yoksa bilgisiz 'kurtuldu'. Oy sayımında geçersiz oylar (kendine veren, katılımcı olmayan) sayılmaz; oyu veren sonradan koptuysa oyu yine sayılır.",
-    "Oyun yalnız oylama süresi (ya da erken bitiş) dolunca biter; oylama bittiğinde sonuç hesaplanır ve oyun sona erer. Süre dolduktan sonra gelen çizim/oy eylemleri (tick gelmeden bile) reddedilir ('ended').",
-    "Sonuçta herkese iki kelime, bilgisiz oyuncu, kimin kime oy verdiği ve her oyuncunun aldığı oy sayısı açılır."
+    "Yakalanma: bilgisiz en az 1 oy almış VE diğer her oyuncudan kesinlikle daha çok oy almışsa 'yakalandı'; eşitlik ya da hiç oy 'kurtuldu'. Puan (KD-M2): bilgisize oy veren her oyuncu +1 (yakalansa da yakalanmasa da); bilgisiz kurtulduysa +1; son şansta ana kelimeyi bildiyse +1. Yanlış oy ve oy vermemek 0, eksi yok.",
+    "Oylama süresi (ya da erken bitiş) dolunca açılış (5 sn), ardından bilgisizin son şansı (12 sn; KD-M1) ve son açılış (3 sn) gelir; oyun ondan sonra biter. Son şans: tek tahmin, Gönder kesin; klavyeden bağımsız eşleşme, ana kelime 6+ harfliyse tek harf farkı kabul; bilgisizin kendi kelimesi doğru sayılmaz.",
+    "Açılışta bilgisiz, onun kelimesi, kimin kime oy verdiği ve oy sayıları açılır; ana kelime ve bilgisizin tahmini yalnız son şans bittikten sonra açılır."
   ],
   "puanlama": {
-    "ozet": "Tek turluk, 0/1 puanlı oyun. Bilgisiz yakalanırsa bilgisiz dışındaki herkes +1; yakalanamazsa yalnız bilgisiz +1. Mini oyun puanı doğrudan genel skora eklenir (awards = miniScores).",
+    "ozet": "Tek turluk oyun, puanlar doğrudan genel skora gider (KD-M2, KD-M1): bilgisize oy veren her oyuncu +1; bilgisiz kurtulursa +1, son şansta ana kelimeyi bilirse +1 (bilgisiz en çok +2). Eksi yok.",
     "kalemler": [
       {
-        "olay": "Bilgisiz oyuncu tek başına en çok oyu aldı (yakalandı)",
-        "puan": "bilgisiz dışındaki herkes +1",
-        "not": "Bilgisiz 0 alır. Oyunu doğru bilen herkes oy verdi mi vermedi mi fark etmez; oy vermeyen de +1 alır."
+        "olay": "Bilgisize oy verdin",
+        "puan": "+1",
+        "not": "Bilgisiz yakalansa da kurtulsa da. Yanlış kişiye oy ya da oy vermemek 0."
       },
       {
         "olay": "Bilgisiz yakalanmadı (kurtuldu)",
         "puan": "bilgisiz +1",
-        "not": "Diğer herkes 0 alır."
+        "not": "Tek başına en çok oyu almadıysa: eşitlik ya da hiç oy dahil."
       },
       {
-        "olay": "Bilgisiz ile başka biri aynı en yüksek oyu aldı",
-        "puan": "bilgisiz kurtulmuş sayılır: bilgisiz +1",
-        "not": "KURALLAR §15: eşitlik bilgisizin lehine."
+        "olay": "Bilgisiz yakalandı",
+        "puan": "bilgisiz 0",
+        "not": "Son şans yine oynanır."
       },
       {
-        "olay": "Hiç oy kullanılmadı / bilgisiz hiç oy almadı",
+        "olay": "Bilgisiz son şansta ana kelimeyi bildi",
         "puan": "bilgisiz +1",
-        "not": "Kimse puan kaybetmez; negatif puan yoktur."
+        "not": "Klavyeden bağımsız; 6+ harfli kelimede tek harf farkı kabul. Kendi kelimesini yazması sayılmaz."
       },
       {
-        "olay": "Oy vermemek",
-        "puan": "0",
-        "not": "Ceza yok; ancak yakalanma sonucuna katkı vermemiş olursun."
+        "olay": "Kopan bilgisiz",
+        "puan": "son şans yok (0)",
+        "not": "Kopuk bilgisize oy verilebildiği için uygulamadan çıkarak kurtulamaz."
       }
     ],
-    "ornek": "5 oyuncu: A, B, C, D, E; bilgisiz C. Oylar: A→C, B→C, C→D, D→C, E→A. Sayım: C 3, D 1, A 1 → C tek başına en çok oyu aldı: yakalandı. A, B, D, E +1, C 0. Başka tur: aynı oyuncular, oylar A→D, B→D, D→C, E→C, C→D. Sayım: D 3, C 2 → D daha çok oy aldı: C kurtuldu, C +1, diğerleri 0. Eşitlik örneği: A→C, B→D, D→C, E→D, C→B: C 2, D 2, B 1 → eşit: C kurtuldu, C +1.",
-    "beraberlik": "Bilgisiz ile başka bir oyuncu en yüksek oyda eşitse bilgisiz kurtulmuş sayılır (yalnız bilgisiz +1). İki ya da daha çok masum oyuncu aynı en yüksek oyu alsa ve bilgisiz bunun altındaysa bilgisiz yine kurtulur (tek başına en çok oyu almadı)."
+    "ornek": "5 oyuncu: A, B, C, D, E; bilgisiz C. Oylar: A→C, B→C, C→D, D→C, E→A. Sayım: C 3, D 1, A 1: C yakalandı. Doğru oy verenler A, B, D +1; E 0. C son şansta ana kelimeyi bildi: +1. Genel skora: A +1, B +1, C +1, D +1, E 0.",
+    "beraberlik": "Bilgisiz ile başka bir oyuncu en yüksek oyda eşitse bilgisiz kurtulmuş sayılır (+1); bilgisize oy verenler yine +1 alır. Örn. 3 kişi: A bilgisize, B diğer kişiye oy verirse eşitlik: bilgisiz +1, A +1."
   },
   "ozelDurumlar": [
     {
       "baslik": "Bağlantısı kopan oyuncu",
-      "aciklama": "Oyuncu katılımcı olarak kalır ve puanlanır (kopuk bilgisiz oyuncu da bilgisizdir). Kopukken yeni oy ya da çizim gönderemez; ama kopmadan önce verdiği oy ve çizdiği darbeler geçerli kalır ve sayılır. Kopuk bir oyuncuya oy verilemez ('not_connected'); daha önce ona verilmiş oy ise geçerli kalır. 'Bitti' ve 'Tamam' erken bitiş denetimi yalnız bağlı oyunculara bakar: kopuk oyuncu beklenmez. 120 sn içinde dönmezse oyuncu odadan çıkarılır. Dönen oyuncu kendi çizimini ve oyunu sunucudan geri alır."
+      "aciklama": "Oyuncu katılımcı olarak kalır ve puanlanır. Kopukken çizemez ve oy veremez; kopmadan önce verdiği oy ve darbeleri geçerlidir. Kopuk oyuncuya oy verilebilir (KD-M3); kartında 'bağlantı koptu' yazar. Erken bitiş yalnız bağlı oyunculara bakar; son eksik oyuncu koparsa da denetlenir."
     },
     {
       "baslik": "Bilgisiz oyuncu kopar",
-      "aciklama": "Kopuk bilgisize oy verilemez. Diğer oyuncular oyunu yine başka birine verebilir; hiç oy almayan ya da başkasından az oy alan bilgisiz kurtulmuş sayılır ve +1 alır; yani kopuk bilgisiz dolaylı olarak korunur."
+      "aciklama": "Kopuk bilgisize oy verilebilir; uygulamadan çıkarak kurtulamaz. Oylama bittiğinde bağlı değilse son şans hiç açılmaz; son şans sürerken koparsa son şans 1 sn sonra biter (tahmin 0). Oyun beklemez."
     },
     {
       "baslik": "İzleyici / geç katılan",
@@ -118,15 +133,15 @@
     },
     {
       "baslik": "Herkes erken bitirirse",
-      "aciklama": "Çizimde bağlı herkes 'Bitti' derse oylama son basıştan 1 sn sonra başlar (oylama süresi 20 sn aynen korunur). Oylamada bağlı herkes 'Tamam' derse oyun 1 sn sonra biter. Erken bitiş yalnız bir eylem geldiği anda denetlenir: son bekleyen oyuncu 'Bitti/Tamam' demeden bağlantısını kaybederse oyun zamanlayıcıya kalır (denetim yeni bir kilit geldiğinde yapılır)."
+      "aciklama": "Çizimde bağlı herkes 'Bitti' derse oylama 1 sn sonra başlar (oylama süresi korunur). Oylamada bağlı herkes oyunu verince oylama en geç 3 sn sonra (arada oy değiştirilebilir), herkes 'Tamam' derse 1 sn sonra biter. Denetim eylemde ve bağlantı değişiminde yapılır. Bilgisiz tahminini gönderince kelimeler 1 sn sonra açılır."
     },
     {
       "baslik": "Süre bitişi ve geç eylem",
-      "aciklama": "Bu oyunda 'geç gelen eylem payı' (graceMs) yoktur: süre dolduğu anda (ctx.now >= bitiş) gelen çizim darbesi, geri al, temizle, oy ya da Tamam reddedilir. Çizim son milisaniyede kabul edilir, 75. saniyede reddedilir. Oylama aşamasının ilk anında (75. sn) oy kabul edilir. Çizim sırasında oy gelirse ('wrong_phase') reddedilir."
+      "aciklama": "'Geç gelen eylem payı' (graceMs) yoktur: süre dolduğu anda gelen darbe, geri al, temizle, oy ya da Tamam reddedilir. Son şans dışında tahmin reddedilir ('not_guess'); bilgisiz olmayan tahmin edemez ('not_outsider'); ikinci tahmin reddedilir ('locked')."
     },
     {
       "baslik": "2 vs 8 oyuncu",
-      "aciklama": "3 oyuncuda yalnız iki kişi oy verebilir ve her oyuncu için oy hedefi 2 kişi olur; bilgisiz yakalamak için bir oy bile yeter (tek oyla en çoksa yakalanır). 8 oyuncuda duvar 8 çizimi küçük hücrelerde gösterir (dar hücrede isim kısalır), en kötü durumda ortak görünüm 600 KB altındadır."
+      "aciklama": "3 oyuncuda oylama 30 sn, duvar tek satır (kendi çizimin hariç 2 çizim); bilgisizi yakalamak için tek oy yeter. 8 oyuncuda oylama 50 sn, duvar 2 × 4 (7 çizim, son satır ortalı), isimler hep görünür; 6–8 oyuncuda çiftlerin yarısı 'çok yakın' seçilir."
     },
     {
       "baslik": "Çizim boş",
@@ -144,7 +159,7 @@
   "kartlar": [
     {
       "kart": "Genel hesap",
-      "etki": "Bu oyunda mini oyun puanı = genel skor puanı ve yalnız 0 ya da 1'dir. Kartlar bu ham puanları KURALLAR K6 sırasıyla değiştirir. 'Birinci' en yüksek mini puanı alanlar, 'sonuncu' en düşük puanı alanlardır: yakalandıysa birinciler bilgisiz dışındaki herkes, tek sonuncu bilgisiz; kurtulduysa tek birinci bilgisiz, sonuncular diğer herkes."
+      "etki": "Bu oyunda mini oyun puanı = genel skor puanıdır (0, 1 ya da bilgisizde 2). Kartlar bu ham puanları KURALLAR K6 sırasıyla değiştirir. 'Birinci' bu oyunda en çok puan alan(lar), 'sonuncu' 0 alanlardır (herkes eşitse kimse sonuncu değildir)."
     },
     {
       "kart": "Kendine Güven",
@@ -215,13 +230,13 @@
     },
     {
       "ad": "Oylama süresi",
-      "deger": "20 000 ms",
-      "kaynak": "packages/engine/src/games/karalama-defteri/types.ts:16"
+      "deger": "30 000 / 40 000 / 50 000 ms (3–4 / 5–6 / 7–8 oyuncu)",
+      "kaynak": "packages/engine/src/games/karalama-defteri/types.ts (karalamaVoteMs)"
     },
     {
       "ad": "Toplam oyun süresi (bot ve üst sınır)",
-      "deger": "95 000 ms",
-      "kaynak": "packages/engine/src/games/karalama-defteri/types.ts:17"
+      "deger": "145 000 ms",
+      "kaynak": "packages/engine/src/games/karalama-defteri/types.ts (KARALAMA_DURATION_MS)"
     },
     {
       "ad": "Son kilitten sonra aşamanın bitmesine kalan süre",
@@ -322,17 +337,51 @@
       "ad": "Puanlama fonksiyonu",
       "deger": "karalamaScores",
       "kaynak": "packages/engine/src/games/karalama-defteri/index.ts:74-92"
+    },
+    {
+      "ad": "Herkes oy verince oylamanın en geç bitişi",
+      "deger": "3 000 ms",
+      "kaynak": "packages/engine/src/games/karalama-defteri/types.ts"
+    },
+    {
+      "ad": "Açılış (oylar, maske, damga)",
+      "deger": "5 000 ms",
+      "kaynak": "packages/engine/src/games/karalama-defteri/types.ts"
+    },
+    {
+      "ad": "Son şans",
+      "deger": "12 000 ms",
+      "kaynak": "packages/engine/src/games/karalama-defteri/types.ts"
+    },
+    {
+      "ad": "Son açılış",
+      "deger": "3 000 ms",
+      "kaynak": "packages/engine/src/games/karalama-defteri/types.ts"
+    },
+    {
+      "ad": "Tahminin en çok uzunluğu",
+      "deger": "24 karakter",
+      "kaynak": "packages/engine/src/games/karalama-defteri/types.ts"
+    },
+    {
+      "ad": "Yazım hatası toleransı",
+      "deger": "6+ harfli kelimede tek harf farkı",
+      "kaynak": "packages/engine/src/games/karalama-defteri/types.ts"
+    },
+    {
+      "ad": "Çift hafızası / kelime hafızası",
+      "deger": "50 oyun / 10 oyun (20 kelime)",
+      "kaynak": "packages/engine/src/games/karalama-defteri/types.ts"
     }
   ],
   "strateji": [
-    "Masumsan çizimin tanınır olsun ama kelimeyi tamamen ele vermesin: bilgisiz yakın kelimesinin ayrıntılarını çizecektir; ana kelimeye özgü bir ayrıntı (örneğin elmada sap) onu ele verir.",
-    "Bilgisizsen çizim sırasında başkalarının çizimini göremezsin; bu yüzden ana kelimenin de yakın kelimenin de ortak özelliklerini (şekil, renk, genel görünüm) çiz, belirgin ayrıntıdan kaçın.",
-    "Çok erken 'Bitti' demek bilgisizi ele verebilir ya da bilgisiz arkadaşını kaçırtabilir; yine de herkes bitirirse oylamaya 1 sn sonra geçilir.",
-    "Oylamada 'kendi kelimen' yazısına bak ve çizimleri karşılaştır; çizimi boş ya da çok genel olan kişi şüphelidir.",
-    "Oyların bölünmesi bilgisizi kurtarır: eşitlikte bilgisiz kazanır. Masumlar olarak oyları tek şüpheli üzerinde toplamaya çalış (sesli konuşarak).",
-    "Bilgisizsen oyunu bilinçli kullan: kendine oy veremezsin ama verdiğin oy başka birinin sayısını artırıp bilgisizle eşitleyerek seni kurtarabilir (eşitlikte bilgisiz kurtulur)."
+    "Çoğunluktaysan kelimeni ne çok açık (bilgisiz anlar ve son şansta bilir) ne çok kapalı (sen şüpheli olursun) çiz.",
+    "Bilgisizsen genel hatlarla çiz; ayrıntı seni ele verir. Oylamada çizimleri dikkatle oku: son şansta ortak kelimeyi tahmin edeceksin.",
+    "Bilgisizi doğru gören her oyuncu +1 alır; çoğunluk yanılsa bile doğru oyun boşa gitmez.",
+    "Yatırım: duvarı büyütüp kaydırarak bütün çizimlere bak; acele etme, Tamam ilk 3 sn zaten pasif.",
+    "Yazı yazma: kural dışıdır ve masada hemen anlaşılır."
   ],
-  "tv": "Karalama Defteri'nin TV'ye özel yatay sahne görünümü vardır (StageView). Çizim aşamasında 'Çiziyorlar…' başlığı, kalan süre ve kaç kişinin bitirdiği ('N / M bitirdi'), büyük avatarlar (bitirenlerde hazır işareti) ve 'Çizimler oylamada hep birlikte açılacak.' ipucu görünür; kimsenin çizimi gösterilmez. Oylamada 'Kelimeyi bilmeyen kim?' başlığı, kalan süre ve 'N / M oy' sayacı, herkesin çizimi dev bir sergi duvarında (çizimler kendini baştan çizer), oy verenlerde tik. Sonuçta başlık 'Yakalandı!' ya da 'Kurtuldu!' olur, her çizimin altında 'N oy' ve bilgisizde 'Bilgisiz' etiketi ile alt satırda 'Ortak kelime X · bilgisizin kelimesi Y' yazar. TV yalnız ortak görünümü kullanır: oy hedefleri ve kelimeler bitişe kadar hiçbir zaman gösterilmez.",
+  "tv": "Karalama Defteri'nin TV'ye özel sahne görünümü vardır (StageView). Çizim aşamasında 'Çiziyorlar…' başlığı, kalan süre ve kaç kişinin bitirdiği, büyük avatarlar ve her avatarda hareketli kalem (bitiren kalemi bırakır). Oylamada herkesin çizimi dev duvarda baştan çizilerek oynar, oy verenlerde işaret ve kalan süre. Oylama bitince açılış tam ekran: ışık izleri büyük duvarda, oy sayaçları, maske, 'Onun: …' ve damga; son şansta ortada bilgisizin avatarı ve geri sayım; son açılışta tahmin, iki kelime ve puan şeridi. TV hiçbir aşamada kelimeleri, bilgisizi ya da çizimleri oylamadan önce göstermez.",
   "ekranlar": [
     {
       "mock": "karalama-briefing",
@@ -346,24 +395,32 @@
       "mock": "karalama-draw",
       "name": "kd-draw",
       "q": "mock=karalama-draw",
-      "baslik": "Çizim tahtası (masum)",
-      "aciklama": "Üstte ana kelime ve süre çubuğu, ortada çizim tahtası, altta 6 renk, silgi, 3 kalınlık, geri al, temizle ve Bitti düğmesi.",
+      "baslik": "Gizli kelime kartı",
+      "aciklama": "Çizim başında tam ekran ters defter kartı: basılı tutunca kelime görünür (iki rolde aynı kart).",
       "dosya": "karalama-draw"
     },
     {
       "mock": "karalama-draw-near",
       "name": "kd-draw-near",
       "q": "mock=karalama-draw-near",
-      "baslik": "Çizim tahtası (bilgisiz)",
-      "aciklama": "Bilgisiz oyuncunun ekranı: yakın kelime ve sarı 'yakın sinyal' etiketi.",
+      "baslik": "Kart (bilgisiz)",
+      "aciklama": "Bilgisizin kartı kapalıyken aynı görünür; açılınca kelimenin üstünde sarı 'yakın sinyal'.",
       "dosya": "karalama-draw-near"
+    },
+    {
+      "mock": "karalama-draw-ink",
+      "name": "kd-draw-ink",
+      "q": "mock=karalama-draw-ink",
+      "baslik": "Çizim tahtası",
+      "aciklama": "Köşede kalan saniye, ilk 3 sn 'Yazı yok, yalnız çizim', altta mürekkep çubuğu, araçlar ve Bitti.",
+      "dosya": "karalama-draw-ink"
     },
     {
       "mock": "karalama-draw-locked",
       "name": "kd-draw-locked",
       "q": "mock=karalama-draw-locked",
-      "baslik": "Çizim kilitlendi",
-      "aciklama": "Bitti dedikten sonra: araçlar pasif, 'Hazırsın' durumu ve diğerleri bekleniyor sayacı.",
+      "baslik": "Sergiye asıldı",
+      "aciklama": "Bitti sonrası: kendi çizimin çerçevede, diğerleri örtülü; 'Sergiye asıldı · n/m'.",
       "dosya": "karalama-draw-locked"
     },
     {
@@ -379,7 +436,7 @@
       "name": "kd-vote-5",
       "q": "mock=karalama-vote",
       "baslik": "Oylama duvarı",
-      "aciklama": "Herkesin çizimi sergi duvarında; her çizimin altında oy çubuğu; 'Bir çizime dokun, kelimeyi bilmeyene oy ver.' ipucu ve Tamam düğmesi.",
+      "aciklama": "Kendi çizimin başlığın yanında küçük; diğer çizimler isimleriyle büyük duvarda, 'Kelimeni gör' çubuğu, Tamam.",
       "dosya": "karalama-vote"
     },
     {
@@ -391,11 +448,51 @@
       "dosya": "karalama-vote-voted"
     },
     {
+      "mock": "karalama-unmask",
+      "name": "kd-unmask",
+      "q": "mock=karalama-unmask&n=5",
+      "baslik": "Açılış",
+      "aciklama": "Oylar ışık izleriyle çizimlere uçar, sayaçlar büyür, bilgisizin maskesi düşer, 'Onun: armut' ve YAKALANDI damgası.",
+      "dosya": "karalama-unmask-n-5"
+    },
+    {
+      "mock": "karalama-guess-near",
+      "name": "kd-guess-near",
+      "q": "mock=karalama-guess-near&n=5",
+      "baslik": "Son şans (bilgisiz)",
+      "aciklama": "'Ortak kelime neydi?', 12 sn kırmızı halka, yazı alanı ve Gönder.",
+      "dosya": "karalama-guess-near-n-5"
+    },
+    {
+      "mock": "karalama-guess",
+      "name": "kd-guess",
+      "q": "mock=karalama-guess&n=5",
+      "baslik": "Son şans (diğerleri)",
+      "aciklama": "Bilgisizin avatarı, '… kelimeyi tahmin ediyor…' ve geri sayım.",
+      "dosya": "karalama-guess-n-5"
+    },
+    {
+      "mock": "karalama-done-guessed",
+      "name": "kd-done-guessed-5",
+      "q": "mock=karalama-done-guessed&n=5",
+      "baslik": "Son açılış (bildi)",
+      "aciklama": "Kart döner: 'Elma ✓', iki kelime ve puan şeridi.",
+      "dosya": "karalama-done-guessed-n-5"
+    },
+    {
+      "mock": "karalama-done-escaped",
+      "name": "kd-done-escaped-8",
+      "q": "mock=karalama-done-escaped&n=8",
+      "baslik": "Son açılış (kurtuldu, 8 kişi)",
+      "aciklama": "Yanlış tahmin üstü çizili, 'kurtuldu +1' şeridi.",
+      "dosya": "karalama-done-escaped-n-8"
+    },
+    {
       "mock": "karalama-results",
       "name": "kd-results-caught",
       "q": "mock=karalama-results&n=5",
       "baslik": "Sonuç: yakalandı",
-      "aciklama": "Bilgisizin maskesi düştü, 'Yakalandı!' rozeti, ortak ve yakın kelime ve oy sayıları.",
+      "aciklama": "Genel sonuç ekranının üstünde özet kart: bilgisiz, Ortak / Onun kelimeleri ve tahmini.",
       "dosya": "karalama-results-n-5"
     },
     {
@@ -414,18 +511,33 @@
       "aciklama": "Büyük ekranda dev sergi duvarı, oy sayacı ve süre.",
       "tv": true,
       "dosya": "tv-karalama-vote-n-6"
+    },
+    {
+      "mock": "tv-karalama-unmask",
+      "name": "tv-karalama-acilis",
+      "q": "mock=tv-karalama-unmask&n=6",
+      "baslik": "TV açılış",
+      "aciklama": "Açılış büyük ekranda: ışık izleri, oy sayaçları, maske ve damga.",
+      "dosya": "tv-karalama-unmask-n-6"
+    },
+    {
+      "mock": "tv-karalama-guess",
+      "name": "tv-karalama-sonsans",
+      "q": "mock=tv-karalama-guess&n=6",
+      "baslik": "TV son şans",
+      "aciklama": "Ortada bilgisizin avatarı ve geri sayım.",
+      "dosya": "tv-karalama-guess-n-6"
     }
   ],
   "bilinenSorunlar": [
     "KURALLAR.md §15 'Bitti' (çizim) ve 'Tamam' (oy) kilitlerini anlatmaz; kod bunları ekledi (erken bitiş, 1 sn pay). Kuralda yalnız 'süre dolana kadar düzenle' yazar.",
     "KURALLAR.md eksik oyu 'kura ile doldurulmaz' diye anlatır ve kod da böyledir; ancak İttifak'ta eksik oy rastgele doldurulur — iki oyun arasındaki bu fark bilinçlidir.",
-    "KURALLAR.md §15 (madde 15) 'yakın sinyal' etiketini 'kısa süreli' diye anlatır; kodda süre yalnız istemcide sabittir (7 sn), sunucuda yoktur.",
-    "Erken bitiş denetimi yalnız Bitti/Tamam eylemi geldiğinde yapılır; son bekleyen oyuncu bağlantısını kaybederse (eylem gelmeden) oyun zamanlayıcıya kalır ve erken bitmez.",
-    "Oy hedefi bağlı olmalı kuralı nedeniyle kopuk bilgisize oy verilemez; bu, kopuk bilgisizi dolaylı yoldan korur (KURALLAR'da yazmaz).",
-    "'Yakın sinyal' etiketi yalnız istemcide 7 sn sonra gizlenir; sunucu görünümünde 'near' bayrağı oyun boyunca true kalır (kelime ekranda durur, etiket kaybolur).",
-    "Sunucu çizimleri darbe sırasıyla saklar; geri alınan darbelerin numarası yeniden kullanılmaz ama toplam eylem kotası (1000) geri alma ve temizlemeyle bile tükenir."
+    "Sunucu çizimleri darbe sırasıyla saklar; geri alınan darbelerin numarası yeniden kullanılmaz ama toplam eylem kotası (1000) geri alma ve temizlemeyle bile tükenir.",
+    "İçerik alanı işi bekliyor: oynanamayan 5 çift (güneş/ay, çadır/ev, at/eşek, ok/yay, saz/ud) yeniden yazılmadı; yakınlık etiketleri ilk tahmindir (35 çok yakın, 5 uzak), KD-M8 karnesiyle düzeltilecek; hedef 300 çift.",
+    "Görseller (defter kartı arkası, ışık izi, damgalar, ahşap çerçeve) sahip üretene kadar CSS/SVG ile çizilir."
   ],
   "sonDegisiklikler": [
+    "2026-11-01: Onaylanan öneri paketi (KD-M1…M8; KD-U1…U10, U12, U13, U14): son şans, doğru oy +1, kopana oy, rastgele yön, oda içi tekrar önleme, yakınlık etiketi, oyuncu sayısına göre 30/40/50 sn oylama ve 'herkes oy verince 3 sn', çift karnesi; gizli kelime kartı, süre/mürekkep, sergiye asılma, yeni sergi duvarı, açılış (ışık izleri, maske, damga), son şans ekranı, ergonomi, yatay düzen, TV açılışı, kopan oyuncu etiketi, defter ses seti, anlatım.",
     "2026-10-27: Yönetici içerik havuzları (A4 bölüm 2): kelime çiftleri panelden görüntülenip düzenlenebilir hale geldi.",
     "2026-10-27: Renk körlüğü modu: karalama paleti için paylaşılan işaretler eklendi.",
     "2026-10-27: TV (sahne) istemcisi: Karalama Defteri'ne özel büyük ekran görünümü (StageView) eklendi.",
@@ -448,6 +560,7 @@
     "apps/client/src/ui/TamamBar.tsx",
     "apps/server/src/match.ts",
     "apps/server/src/karalama-defteri.test.ts",
-    "scripts/ui-check.mjs"
+    "scripts/ui-check.mjs",
+    "docs/oneriler/karalama-defteri.md"
   ]
 }

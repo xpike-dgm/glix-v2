@@ -384,6 +384,16 @@ Ayrıntı ve kurulum: `docs/ADMIN.md`. `GLIX_ADMIN_ACCOUNT_IDS` boşsa tüm uçl
   yok. `GET pools/entries` karneli havuzda (`pool.playStats: true`) her girdiye `play: {games, top, single}` (ortalama
   oranlar, 0..1) ekler. En az 0 karakterli seçim alanı (`min: 0`, ör. zorluk) isteğe bağlıdır; toplu eklemede satır
   sonundaki isteğe bağlı alanlar yazılmayabilir.
+- Çift karnesi (Karalama Defteri KD-M8): aynı `content_play` tablosu (yeni göç yok); `top_sum` = bilgisizin yakalandığı
+  oyun sayısı, `single_sum` = ana kelimeyi bildiği oyun sayısı. Havuz özetinde `playKind: "cift"` (varsayılan / yok =
+  Çağrışım Ağı "ag"); panel etiketleri ve öneri eşikleri buna göre seçilir.
+- Ek tekrar hafızası (Karalama Defteri KD-M5): `ContentPool.related` olan havuzda oyun `contentUsed` ile ayrıca
+  `related.id` altında kelime anahtarları bildirir (`karalama-defteri/kelimeler`, son 20 kelime = 10 oyun); sunucu
+  süzgeci (`withoutRecent`) bu kelimelerden birini içeren girdiyi de atlar, havuz `min`'in altına düşerse bu ek adımı
+  uygulamaz.
+- Karalama Defteri eylemi `{ kind: "guess", text }` (yalnız bilgisiz, yalnız son şans aşamasında; tek tahmin). Aşamalar
+  `draw | vote | unmask | guess | done`; `publicView.voteMs` oylama süresi; `reveal` oylama bitince dolar, ana kelime
+  ve tahmin yalnız `reveal.final`'da (yalnız `done`).
 
 ## Oyuncu bildirimi ve yönetici moderasyonu (U16 A4)
 

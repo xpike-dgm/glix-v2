@@ -61,6 +61,17 @@ export interface ContentPool<E> {
    * (en büyük ağın oranı, tek kalan oranı) tutar; panelde gösterir ve eşiklere göre öneri rozeti koyar. Yalnız sayılar.
    */
   playStats?: boolean;
+  /**
+   * Karnenin anlamı: "ag" (varsayılan; Çağrışım Ağı: en büyük ağ / tek kalan oranı) ya da "cift" (Karalama Defteri
+   * KD-M8: `top` = bilgisiz yakalandı, `single` = bilgisiz ana kelimeyi bildi). Panel etiketleri ve öneri buna göre.
+   */
+  playKind?: "ag" | "cift";
+  /**
+   * Tekrar önlemenin ek hafızası (ör. Karalama Defteri KD-M5): oyun `contentUsed` ile `id` altında kelime anahtarları
+   * da bildirir; anahtarlarından biri bu hafızada olan girdi de atlanır. Süzülünce havuz `min`'in altına düşerse bu ek
+   * kural uygulanmaz.
+   */
+  related?: { id: string; keys(entry: E): readonly string[] };
   toFields(entry: E): Record<string, string>;
   /** `ctx.content` / veritabanından gelen ham veriyi alan değerlerine açar; biçim bozuksa null. */
   unpack(raw: unknown): Record<string, string> | null;
@@ -104,6 +115,22 @@ export function playSuggestion(card: PlayCard | undefined): "kolay" | "zor" | "k
   if (card.top <= 0) return "kapat";
   if (card.top >= PLAY_EASY_TOP) return "kolay";
   if (card.top <= PLAY_HARD_TOP && card.single >= PLAY_HARD_SINGLE) return "zor";
+  return null;
+}
+
+/** Çift karnesi (KD-M8): yakalanma oranı en az buysa "uzak" önerisi. */
+export const PAIR_FAR_CAUGHT = 0.85;
+/** Çift karnesi (KD-M8): yakalanma oranı en çok buysa "çok yakın" önerisi. */
+export const PAIR_CLOSE_CAUGHT = 0.15;
+
+/**
+ * Çift karnesine göre yakınlık önerisi (KD-M8; sahip onayına gider, kendiliğinden uygulanmaz): en az 8 oyundan sonra
+ * yakalanma ≥ %85 → "uzak", ≤ %15 → "çok yakın"; az veride ya da arada null. `card.top` yakalanma oranıdır.
+ */
+export function pairSuggestion(card: PlayCard | undefined): "uzak" | "çok yakın" | null {
+  if (!card || card.games < PLAY_MIN_GAMES) return null;
+  if (card.top >= PAIR_FAR_CAUGHT) return "uzak";
+  if (card.top <= PAIR_CLOSE_CAUGHT) return "çok yakın";
   return null;
 }
 

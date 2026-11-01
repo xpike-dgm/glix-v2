@@ -148,3 +148,23 @@ describe("kelime karnesi (CG-M6)", () => {
     expect(fieldProblem(level, "zor")).toBeNull();
   });
 });
+
+describe("çift karnesi (KD-M8)", () => {
+  it("yakalanma ve tahmin oranı; 8 oyundan sonra uzak / çok yakın önerisi", () => {
+    expect(playCell({ games: 4, top: 0.75, single: 0.25 }, "cift")).toEqual({
+      text: "4 oyun · yakalanma %75 · tahmin %25",
+      badge: null,
+    });
+    expect(playCell({ games: 8, top: 0.9, single: 0 }, "cift").badge?.label).toBe("Uzak önerisi");
+    expect(playCell({ games: 8, top: 0.1, single: 0 }, "cift").badge?.label).toBe("Çok yakın önerisi");
+    expect(playCell({ games: 8, top: 0.5, single: 0 }, "cift").badge).toBeNull();
+    expect(
+      badgesOf(
+        { source: "builtin", disabled: false, play: { games: 9, top: 1, single: 0 } },
+        false,
+        true,
+        "cift",
+      ).map((b) => b.label),
+    ).toEqual(["Hazır", "Uzak önerisi"]);
+  });
+});

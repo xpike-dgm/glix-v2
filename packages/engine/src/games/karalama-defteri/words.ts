@@ -1,4 +1,7 @@
-/** Karalama Defteri kelime çiftleri: `main` çoğunluğa, `near` bilgisiz oyuncuya verilir. İkisi de çizilebilir ve birbirine yakın. */
+/**
+ * Karalama Defteri kelime çiftleri ("Kelime 1" / "Kelime 2"). Yön rastgeledir (KD-M4): çoğunluk hangisini görür, oyun
+ * başında yazı-tura ile belli olur. İkisi de çizilebilir ve birbirine yakın.
+ */
 export interface DrawingPair {
   main: string;
   near: string;
@@ -171,3 +174,51 @@ export const DRAWING_PAIRS: readonly DrawingPair[] = [
   { main: "kuğu", near: "ördek" },
   { main: "paraşüt", near: "balon" },
 ];
+
+/**
+ * İlk yakınlık etiketleri (KD-M6; İçerik alanı sonradan düzeltir, KD-M8 karnesi yol gösterir). Listede olmayan çift
+ * "yakın" sayılır. "Çok yakın": çizimle neredeyse ayırt edilemez (6–8 oyunculu masaya); "uzak": ilk çizgide belli
+ * olur, hiç çekilmez (İçerik alanı yeniden eşler ya da kapatır). Anahtar: "kelime1/kelime2".
+ */
+export const PAIR_CLOSENESS: Readonly<Record<string, "çok yakın" | "uzak">> = {
+  "kiraz/vişne": "çok yakın",
+  "portakal/mandalina": "çok yakın",
+  "kurabiye/bisküvi": "çok yakın",
+  "sosis/sucuk": "çok yakın",
+  "çita/leopar": "çok yakın",
+  "pasta/kek": "çok yakın",
+  "kazak/hırka": "çok yakın",
+  "koltuk/kanepe": "çok yakın",
+  "otobüs/minibüs": "çok yakın",
+  "tren/metro": "çok yakın",
+  "bardak/fincan": "çok yakın",
+  "katır/eşek": "çok yakın",
+  "istiridye/midye": "çok yakın",
+  "börek/poğaça": "çok yakın",
+  "kayısı/şeftali": "çok yakın",
+  "kartal/şahin": "çok yakın",
+  "flüt/klarnet": "çok yakın",
+  "monitör/televizyon": "çok yakın",
+  "tenis/badminton": "çok yakın",
+  "basketbol/voleybol": "çok yakın",
+  "maymun/goril": "çok yakın",
+  "ördek/kaz": "çok yakın",
+  "gazete/dergi": "çok yakın",
+  "buz/dolu": "çok yakın",
+  "pide/lahmacun": "çok yakın",
+  "bal/reçel": "çok yakın",
+  "tabak/kase": "çok yakın",
+  "masa/sehpa": "çok yakın",
+  "dolap/komodin": "çok yakın",
+  "halı/kilim": "çok yakın",
+  "horoz/tavuk": "çok yakın",
+  "dağ/tepe": "çok yakın",
+  "kutu/sandık": "çok yakın",
+  "tencere/tava": "çok yakın",
+  "hamburger/sandviç": "çok yakın",
+  "nehir/yol": "uzak",
+  "okul/hastane": "uzak",
+  "yumurta/ampul": "uzak",
+  "kaya/patates": "uzak",
+  "kalp/yıldız": "uzak",
+};

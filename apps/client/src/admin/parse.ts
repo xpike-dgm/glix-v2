@@ -685,6 +685,7 @@ function poolSummary(o: Rec): AdminPoolSummary {
     ),
     feedback: o.feedback === true,
     playStats: o.playStats === true,
+    ...(o.playKind === "cift" || o.playKind === "ag" ? { playKind: o.playKind } : {}),
     min: num(o, "min"),
     needed: num(o, "needed"),
     builtin: num(o, "builtin"),

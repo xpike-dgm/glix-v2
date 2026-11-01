@@ -1332,7 +1332,7 @@ const SCREENS = [
   { name: "kd-draw-ink", q: "mock=karalama-draw-ink" },
   {
     name: "kd-draw-pointer",
-    q: "mock=karalama-draw",
+    q: "mock=karalama-draw-ink",
     act: async (p) => {
       const box = await p.locator(".kd__live").boundingBox();
       if (!box) throw new Error("tahta yok");
@@ -1381,6 +1381,12 @@ const SCREENS = [
   },
   { name: "kd-results-caught", q: "mock=karalama-results&n=5", settle: 2400 },
   { name: "kd-results-escaped-8", q: "mock=karalama-results-escaped&n=8", settle: 2400 },
+  { name: "kd-unmask", q: "mock=karalama-unmask&n=5", settle: 4200 },
+  { name: "kd-unmask-escaped-8", q: "mock=karalama-unmask-escaped&n=8", settle: 4200 },
+  { name: "kd-guess", q: "mock=karalama-guess&n=5", settle: 1200 },
+  { name: "kd-guess-near", q: "mock=karalama-guess-near&n=5", settle: 1200 },
+  { name: "kd-done", q: "mock=karalama-done&n=5", settle: 1600 },
+  { name: "kd-done-guessed-8", q: "mock=karalama-done-guessed&n=8", settle: 1600 },
   { name: "bt-briefing", q: "mock=bozuk-briefing" },
   { name: "bt-write", q: "mock=bozuk-write" },
   {
@@ -2777,6 +2783,8 @@ const SCREENS = [
   { name: "tv-karalama-cizim", q: "mock=tv-karalama-draw&n=6", sizes: TV, settle: 1400 },
   { name: "tv-karalama-oylama", q: "mock=tv-karalama-vote&n=6", sizes: TV, settle: 2600 },
   { name: "tv-karalama-sonuc", q: "mock=tv-karalama-results&n=6", sizes: TV, settle: 2600 },
+  { name: "tv-karalama-acilis", q: "mock=tv-karalama-unmask&n=6", sizes: TV, settle: 4200 },
+  { name: "tv-karalama-sonsans", q: "mock=tv-karalama-guess&n=6", sizes: TV, settle: 1200 },
   { name: "tv-bozuk-cizim", q: "mock=tv-bozuk-draw&n=6", sizes: TV, settle: 1400 },
   { name: "tv-bozuk-gosteri", q: "mock=tv-bozuk-show&n=6&shown=3", sizes: TV, settle: 2600 },
   { name: "tv-bozuk-oylama", q: "mock=tv-bozuk-vote&n=8", sizes: TV, settle: 2600 },
@@ -2805,7 +2813,7 @@ const SCREENS = [
   { name: "kontrol-reveal-wrong-renk-korlugu", q: "mock=kontrol-reveal-wrong&n=4&cb=1", settle: 2500 },
   { name: "zehirli-play-renk-korlugu", q: "mock=zehirli-play&n=5&cb=1" },
   { name: "zehirli-reveal-renk-korlugu", q: "mock=zehirli-reveal&n=6&poison=1&cb=1&t=20000", settle: 2400 },
-  { name: "kd-draw-renk-korlugu", q: "mock=karalama-draw&cb=1" },
+  { name: "kd-draw-renk-korlugu", q: "mock=karalama-draw-ink&cb=1" },
   { name: "kareler-reveal-renk-korlugu", q: "mock=kareler-reveal&n=5&cb=1", settle: 3200 },
   { name: "kareler-final-renk-korlugu", q: "mock=kareler-final&n=5&cb=1", settle: 3200 },
   { name: "ortalama-reveal-renk-korlugu", q: "mock=ortalama-reveal&n=5&cb=1", settle: 6000 },

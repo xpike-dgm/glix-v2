@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { parseKaralamaPrivateView, parseKaralamaPublicView, parseKaralamaView, parseStroke } from "./view.js";
+import {
+  parseKaralamaPrivateView,
+  parseKaralamaPublicView,
+  parseKaralamaView,
+  parseStroke,
+  scoreStrip,
+  wallColumns,
+  wallName,
+} from "./view.js";
 
 const pub = {
   phase: "vote",
   drawEndsAt: 100,
   voteEndsAt: 200,
+  voteMs: 30_000,
   players: ["a", "b"],
   drawings: { a: [[0, 2, 0, 0, 10, 10]], b: [] },
   voted: ["a"],
@@ -56,15 +65,48 @@ describe("Karalama Defteri görünümü", () => {
   it("sonuç açılışını okur", () => {
     const reveal = {
       outsider: "b",
-      mainWord: "elma",
       nearWord: "armut",
       votes: { a: "b" },
       tally: { a: 0, b: 1 },
       caught: true,
+      rightVoters: ["a"],
+      openedAt: 200,
+      guessOpensAt: 5_200,
+      guessEndsAt: 17_200,
+      finishAt: 20_200,
+      guessSent: false,
+      final: null,
     };
-    expect(parseKaralamaPublicView({ ...pub, phase: "done", reveal })?.reveal).toEqual(reveal);
+    expect(parseKaralamaPublicView({ ...pub, phase: "unmask", reveal })?.reveal).toEqual(reveal);
+    const final = { mainWord: "elma", guess: "kiraz", guessed: false, scores: { a: 1, b: 0 } };
+    expect(
+      parseKaralamaPublicView({ ...pub, phase: "done", reveal: { ...reveal, final } })?.reveal?.final,
+    ).toEqual(final);
+    for (const p of ["unmask", "guess", "done"])
+      expect(parseKaralamaPublicView({ ...pub, phase: p })).not.toBeNull();
     expect(parseKaralamaPublicView({ ...pub, reveal: { ...reveal, caught: "evet" } })).toBeNull();
     expect(parseKaralamaPublicView({ ...pub, reveal: { ...reveal, votes: { a: 1 } } })).toBeNull();
+    expect(parseKaralamaPublicView({ ...pub, reveal: { ...reveal, guessEndsAt: "x" } })).toBeNull();
+    expect(
+      parseKaralamaPublicView({ ...pub, reveal: { ...reveal, final: { ...final, guess: 1 } } }),
+    ).toBeNull();
+    expect(parseKaralamaPublicView({ ...pub, voteMs: undefined })).toBeNull();
+  });
+
+  it("puan şeridi, isim kısaltma ve duvar düzeni (KD-U4, KD-U5)", () => {
+    const names: Record<string, string> = { a: "Cihad", b: "Zeynep", c: "Mert" };
+    const nameOf = (id: string) => names[id] ?? "?";
+    const base = { rightVoters: ["a", "b"], caught: false, outsider: "c", final: null };
+    expect(scoreStrip(base, nameOf)).toEqual(["Doğru oy: Cihad, Zeynep +1", "Mert kurtuldu +1"]);
+    const final = { mainWord: "elma", guess: "elma", guessed: true, scores: {} };
+    expect(scoreStrip({ ...base, rightVoters: [], caught: true, final }, nameOf)).toEqual([
+      "Kimse doğru oy vermedi",
+      "Mert kelimeyi bildi +1",
+    ]);
+    expect(wallName("Ayşegül")).toBe("Ayşegül");
+    expect(wallName("Abdurrahman")).toBe("Abdurr…");
+    expect([2, 3, 4, 5, 6, 7].map((n) => wallColumns(n, false))).toEqual([2, 3, 2, 2, 2, 2]);
+    expect(wallColumns(7, true)).toBe(4);
   });
 
   it("bozuk görünümü reddeder", () => {

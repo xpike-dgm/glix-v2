@@ -65,8 +65,18 @@ export interface DrawBoardProps {
   compact?: boolean;
   /** Tahtanın ekran kenarından içeride kalma payı (px); verilmezse 8. */
   inset?: number;
-  /** Çizim olayları (ses/titreşim için): darbe başladı, sürüyor, bitti. */
-  onInk?: (kind: "start" | "move" | "end") => void;
+  /** Çizim olayları (ses/titreşim için): darbe başladı, sürüyor, bitti; `erase` silgiyle mi. */
+  onInk?: (kind: "start" | "move" | "end", erase: boolean) => void;
+  /**
+   * Karalama ergonomisi (KD-U2, KD-U8): tuvalin altında mürekkep çubuğu (kalan nokta kotası), ikinci parmak yeni
+   * çizgi başlatmaz, geri al basılı tutunca art arda geri alır, temizle onayı görünür balonla sorulur; küçük ekranda
+   * araçlar tek satırda birleşir (kalınlık tek düğmede döner, temizle balonla).
+   */
+  ergonomic?: boolean;
+  /** Tahtanın üstüne binen öğeler (köşe sayacı, not). */
+  overlay?: JSX.Element;
+  /** Araç olayları (ses için). */
+  onTool?: (kind: "undo" | "clear" | "lock") => void;
 }
 
 const EraserIcon = () => (
@@ -132,6 +142,8 @@ export function DrawBoard(props: DrawBoardProps) {
   const pens = (): readonly number[] => props.pens ?? CLASSIC_PENS;
   const sizes = (): readonly DrawSize[] => props.sizes ?? CLASSIC_SIZES;
   const [count, setCount] = createSignal(0);
+  /** Kullanılan nokta (mürekkep çubuğu için; sinyal). */
+  const [used, setUsed] = createSignal(0);
   const [confirmClear, setConfirmClear] = createSignal(false);
   const [box, setBox] = createSignal(0);
 
@@ -203,6 +215,7 @@ export function DrawBoard(props: DrawBoardProps) {
     local = [...server];
     localPoints = local.reduce((n, s) => n + (s.length - 2) / 2, 0);
     setCount(local.length);
+    setUsed(localPoints);
     repaint();
   };
   createEffect(() => {
@@ -223,6 +236,7 @@ export function DrawBoard(props: DrawBoardProps) {
     if (locked() || over() || count() === 0) return false;
     setSentLock(true);
     hapticReady();
+    props.onTool?.("lock");
     const ack = sendActionAck({ kind: "lock" });
     void ack.then((a) => {
       if (!a.ok && a.reason !== "timeout") setSentLock(false);
@@ -255,6 +269,7 @@ export function DrawBoard(props: DrawBoardProps) {
       }
     }
     setCount(local.length);
+    setUsed(localPoints);
     if (erase && final) repaint();
     if (!final) return;
     clearLive();
@@ -262,6 +277,8 @@ export function DrawBoard(props: DrawBoardProps) {
   };
 
   // --- işaretçi ---
+  /** Ekrana değen dokunuşlar (ikinci parmak koruması, KD-U8). */
+  const touches = new Set<number>();
   let activeId = -1;
   let cur: number[] = [];
   let rect: DOMRect | null = null;
@@ -331,6 +348,9 @@ export function DrawBoard(props: DrawBoardProps) {
   };
 
   const onDown = (e: PointerEvent): void => {
+    if (e.pointerType === "touch") touches.add(e.pointerId);
+    // İkinci parmak (avuç, başparmak) yeni çizgi başlatmaz.
+    if (props.ergonomic && e.pointerType === "touch" && touches.size > 1) return;
     if (activeId !== -1 || !accepts(e)) return;
     e.preventDefault();
     unlockAudio();
@@ -343,7 +363,7 @@ export function DrawBoard(props: DrawBoardProps) {
     if (cur.length === 0) return;
     setPanel(null);
     hapticTick();
-    props.onInk?.("start");
+    props.onInk?.("start", pen() === ERASER);
     schedule();
   };
   const onMove = (e: PointerEvent): void => {
@@ -351,7 +371,7 @@ export function DrawBoard(props: DrawBoardProps) {
     e.preventDefault();
     const list = typeof e.getCoalescedEvents === "function" ? e.getCoalescedEvents() : [];
     for (const ev of list.length > 0 ? list : [e]) addPoint(ev.clientX, ev.clientY);
-    props.onInk?.("move");
+    props.onInk?.("move", pen() === ERASER);
     if (cur.length / 2 >= FLUSH_AT) {
       const lastTwo = cur.slice(-2);
       commitPoints(cur, false);
@@ -361,6 +381,7 @@ export function DrawBoard(props: DrawBoardProps) {
     schedule();
   };
   const onUp = (e: PointerEvent): void => {
+    touches.delete(e.pointerId);
     if (e.pointerId !== activeId) return;
     if (e.type === "pointerup") addPoint(e.clientX, e.clientY);
     activeId = -1;
@@ -371,7 +392,7 @@ export function DrawBoard(props: DrawBoardProps) {
     const pts = cur;
     cur = [];
     painted = 0;
-    props.onInk?.("end");
+    props.onInk?.("end", pen() === ERASER);
     if (pts.length >= 2 && e.type === "pointerup") commitPoints(pts, true);
     else clearLive();
   };
@@ -383,12 +404,45 @@ export function DrawBoard(props: DrawBoardProps) {
     localPoints -= (last.length - 2) / 2;
     lastSentAt = serverNow();
     setCount(local.length);
+    setUsed(localPoints);
     repaint();
-    tap();
+    if (props.onTool) props.onTool("undo");
+    else tap();
     hapticTap();
     sendAction({ kind: "undo" });
     scheduleReconcile();
   };
+  // Geri al basılı tutulunca art arda (0,15 sn arayla; KD-U8).
+  let undoHold: ReturnType<typeof setTimeout> | undefined;
+  /** Basılı tutma art arda geri aldıysa bırakınca gelen tıklama bir kez daha geri almasın. */
+  let undoHeld = false;
+  const undoClick = (): void => {
+    if (undoHeld) {
+      undoHeld = false;
+      return;
+    }
+    undo();
+  };
+  const stopUndoHold = (): void => {
+    clearTimeout(undoHold);
+    undoHold = undefined;
+  };
+  const startUndoHold = (): void => {
+    if (!props.ergonomic) return;
+    stopUndoHold();
+    undoHeld = false;
+    const again = (): void => {
+      if (local.length === 0 || over() || locked()) {
+        stopUndoHold();
+        return;
+      }
+      undoHeld = true;
+      undo();
+      undoHold = setTimeout(again, 150);
+    };
+    undoHold = setTimeout(again, 450);
+  };
+  onCleanup(stopUndoHold);
   const clearAll = (): void => {
     if (local.length === 0 || over() || locked()) return;
     if (!confirmClear()) {
@@ -404,9 +458,11 @@ export function DrawBoard(props: DrawBoardProps) {
     localPoints = 0;
     lastSentAt = serverNow();
     setCount(0);
+    setUsed(0);
     repaint();
     hapticReady();
-    tick();
+    if (props.onTool) props.onTool("clear");
+    else tick();
     sendAction({ kind: "clear" });
     scheduleReconcile();
   };
@@ -425,6 +481,12 @@ export function DrawBoard(props: DrawBoardProps) {
     setPanel(null);
     tap();
     hapticTap();
+  };
+  /** Küçük ekranda tek düğme: kalınlık sırayla döner. */
+  const cycleSize = (): void => {
+    const list = sizes();
+    const i = list.indexOf(size());
+    chooseSize(list[(i + 1) % list.length] ?? 2);
   };
   const togglePanel = (which: "color" | "size"): void => {
     if (locked()) return;
@@ -472,6 +534,7 @@ export function DrawBoard(props: DrawBoardProps) {
           style={{ "--pen": penColor(), width: `${box()}px`, height: `${box()}px` }}
         >
           <canvas class="kd__ink" ref={base} />
+          {props.overlay}
           <canvas
             class="kd__ink kd__live"
             ref={live}
@@ -484,6 +547,26 @@ export function DrawBoard(props: DrawBoardProps) {
           />
         </div>
       </div>
+      <Show when={props.ergonomic}>
+        <div class="kd__inkbar" data-low={1 - used() / maxPoints() <= 0.2 ? "1" : undefined}>
+          <meter
+            class="kd__inkmeter"
+            aria-label="Kalan mürekkep"
+            min={0}
+            max={100}
+            value={Math.round(100 * Math.max(0, 1 - used() / maxPoints()))}
+          />
+          <i style={{ width: `${Math.max(0, 100 * (1 - used() / maxPoints()))}%` }} />
+          <Show when={used() >= maxPoints() - 2}>
+            <span>Mürekkep bitti · geri al ya da sil</span>
+          </Show>
+        </div>
+        <Show when={confirmClear()}>
+          <p class="kd__confirm" role="status">
+            Emin misin? Tekrar dokun
+          </p>
+        </Show>
+      </Show>
       <div class="kd__side">
         <Show
           when={props.compact}
@@ -493,6 +576,7 @@ export function DrawBoard(props: DrawBoardProps) {
               role="toolbar"
               aria-label="Kalem araçları"
               data-frozen={locked() ? "1" : undefined}
+              data-ergo={props.ergonomic ? "1" : undefined}
             >
               <For each={pens()}>{(i) => <Swatch index={i} onPick={() => choosePen(i)} />}</For>
               <button
@@ -521,12 +605,27 @@ export function DrawBoard(props: DrawBoardProps) {
                   </button>
                 )}
               </For>
+              <Show when={props.ergonomic}>
+                <button
+                  type="button"
+                  class="kd__tool kd__size kd__sizecycle"
+                  aria-label={`Kalınlık ${size()}, değiştirmek için dokun`}
+                  disabled={locked()}
+                  onClick={cycleSize}
+                >
+                  <i style={{ width: dot(size()), height: dot(size()) }} />
+                </button>
+              </Show>
               <button
                 type="button"
                 class="kd__tool"
                 aria-label="Geri al"
                 disabled={count() === 0 || locked()}
-                onClick={undo}
+                onClick={undoClick}
+                onPointerDown={startUndoHold}
+                onPointerUp={stopUndoHold}
+                onPointerLeave={stopUndoHold}
+                onPointerCancel={stopUndoHold}
               >
                 <UndoIcon />
               </button>

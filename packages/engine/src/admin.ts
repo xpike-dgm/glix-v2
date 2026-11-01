@@ -380,6 +380,8 @@ export interface AdminPoolSummary {
   feedback?: boolean;
   /** Havuzun kelime karnesi var (girdilerde `play`; Çağrışım Ağı CG-M6). */
   playStats?: boolean;
+  /** Karnenin anlamı: "ag" (Çağrışım Ağı) ya da "cift" (Karalama Defteri KD-M8: yakalanma ve tahmin oranı). */
+  playKind?: "ag" | "cift";
   /** Etkin havuz bundan küçükse yerleşik havuz kullanılır. */
   min: number;
   /** Bir maçın havuzdan çektiği en çok girdi. */

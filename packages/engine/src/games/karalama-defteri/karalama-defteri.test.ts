@@ -6,11 +6,14 @@ import { karalamaDefteri as game, KARALAMA_PAIRS, type KaralamaState, karalamaSc
 import {
   KARALAMA_DRAW_MS,
   KARALAMA_DURATION_MS,
+  KARALAMA_FINAL_MS,
+  KARALAMA_GUESS_MS,
   KARALAMA_MAX_DRAW_ACTIONS,
   KARALAMA_MAX_STROKES,
   KARALAMA_MAX_TOTAL_POINTS,
-  KARALAMA_VOTE_MS,
+  KARALAMA_UNMASK_MS,
   type KaralamaAction,
+  karalamaVoteMs,
 } from "./types.js";
 import { DRAWING_PAIRS } from "./words.js";
 
@@ -22,12 +25,16 @@ const ctx = (at: number, connected: readonly string[] = PLAYERS) => ({
   connected,
 });
 const VOTE_AT = KARALAMA_DRAW_MS + 1_000;
-const END_AT = KARALAMA_DURATION_MS;
+/** 4 oyuncuda oylama 30 sn (KD-M7). */
+const VOTE_MS = karalamaVoteMs(PLAYERS.length);
+const VOTE_END_AT = KARALAMA_DRAW_MS + VOTE_MS;
+/** Oylama + açılış + son şans + son açılış. */
+const END_AT = VOTE_END_AT + KARALAMA_UNMASK_MS + KARALAMA_GUESS_MS + KARALAMA_FINAL_MS;
 
 /** Bilgisiz oyuncusu "c" ve kelime çifti belli bir oyun. */
 function start(players: string[] = PLAYERS, outsider = "c"): KaralamaState {
   const s = game.setup(players, ctx(0));
-  return { ...s, outsider, mainWord: "elma", nearWord: "armut" };
+  return { ...s, outsider, mainWord: "elma", nearWord: "armut", pairKey: "armut|elma" };
 }
 
 function act(
@@ -64,14 +71,14 @@ const scoresOf = (votes: Record<string, string>, players = PLAYERS, outsider = "
   game.result(end({ ...start(players, outsider), votes })).awards;
 
 describe("karalama-defteri kurulum", () => {
-  it("3-8 oyuncu, çizim 75 sn + oylama 20 sn", () => {
+  it("3-8 oyuncu, çizim 75 sn + oylama (4 oyuncuda 30 sn)", () => {
     expect(game.minPlayers).toBe(3);
     expect(game.maxPlayers).toBe(8);
     const s = game.setup(PLAYERS, ctx(0));
     expect(s.drawEndsAt).toBe(T0 + 75_000);
-    expect(s.voteEndsAt).toBe(T0 + 95_000);
+    expect(s.voteEndsAt).toBe(T0 + 105_000);
+    expect(s.voteMs).toBe(30_000);
     expect(KARALAMA_DRAW_MS).toBe(75_000);
-    expect(KARALAMA_VOTE_MS).toBe(20_000);
   });
 
   it("tam olarak bir bilgisiz oyuncu, katılımcılardan rastgele seçilir", () => {
@@ -91,7 +98,13 @@ describe("karalama-defteri kurulum", () => {
     const rngCtx = () => ({ now: T0, rng: createRng(77), connected: PLAYERS });
     const a = game.setup(PLAYERS, rngCtx());
     expect(game.setup(PLAYERS, rngCtx())).toEqual(a);
-    expect(KARALAMA_PAIRS.some((p) => p.main === a.mainWord && p.near === a.nearWord)).toBe(true);
+    expect(
+      KARALAMA_PAIRS.some(
+        (p) =>
+          (p.main === a.mainWord && p.near === a.nearWord) ||
+          (p.main === a.nearWord && p.near === a.mainWord),
+      ),
+    ).toBe(true);
   });
 
   it("farklı tohumlarda farklı çiftler çıkar", () => {
@@ -356,8 +369,8 @@ describe("karalama-defteri oylama aşaması", () => {
     }
   });
 
-  it("hedef bağlı olmalı: kopuk oyuncuya oy reddedilir, bağlıya kabul", () => {
-    expect(reasonOf(start(), "a", vote("d"), VOTE_AT, ["a", "b", "c"])).toBe("not_connected");
+  it("KD-M3: bağlantısı kopuk oyuncuya da oy verilebilir", () => {
+    expect(isRejected(game.reduce(start(), "a", vote("d"), ctx(VOTE_AT, ["a", "b", "c"])))).toBe(false);
     expect(isRejected(game.reduce(start(), "a", vote("b"), ctx(VOTE_AT, ["a", "b", "c"])))).toBe(false);
   });
 
@@ -381,42 +394,43 @@ describe("karalama-defteri oylama aşaması", () => {
 
   it("oylama bitiminden sonra (tick gelmeden de) oy ve çizim reddedilir", () => {
     const s = start();
-    expect(reasonOf(s, "a", vote("b"), END_AT)).toBe("ended");
+    expect(reasonOf(s, "a", vote("b"), VOTE_END_AT)).toBe("ended");
     expect(reasonOf(s, "a", vote("b"), END_AT + 5_000)).toBe("ended");
-    expect(reasonOf(s, "a", stroke(), END_AT)).toBe("ended");
-    expect(reasonOf(end(s), "a", vote("b"), END_AT - 1)).toBe("ended");
+    expect(reasonOf(s, "a", stroke(), VOTE_END_AT)).toBe("ended");
+    expect(reasonOf(end(s), "a", vote("b"), VOTE_END_AT - 1)).toBe("ended");
   });
 
   it("son milisaniyede verilen oy sayılır", () => {
-    const s = act(start(), "a", vote("c"), END_AT - 1);
+    const s = act(start(), "a", vote("c"), VOTE_END_AT - 1);
     expect(game.result(end(s)).awards.a).toBe(1);
     expect(s.votes.a).toBe("c");
   });
 
-  it("oyun yalnız oylama bitince biter", () => {
+  it("oyun oylama, açılış ve son şans bitince biter", () => {
     const s = start();
     expect(game.isFinished(s, ctx(KARALAMA_DRAW_MS))).toBe(false);
+    expect(game.isFinished(s, ctx(VOTE_END_AT))).toBe(false);
     expect(game.isFinished(s, ctx(END_AT - 1))).toBe(false);
     expect(game.isFinished(s, ctx(END_AT))).toBe(true);
   });
 });
 
 describe("karalama-defteri puanlama", () => {
-  it("bilgisiz tek başına en çok oyu alırsa diğer herkes +1, bilgisiz 0", () => {
-    expect(scoresOf({ a: "c", b: "c", d: "a" })).toEqual({ a: 1, b: 1, c: 0, d: 1 });
+  it("KD-M2: bilgisiz tek başına en çok oyu alırsa yalnız ona oy verenler +1, bilgisiz 0", () => {
+    expect(scoresOf({ a: "c", b: "c", d: "a" })).toEqual({ a: 1, b: 1, c: 0, d: 0 });
   });
 
   it("tek oyla bile tek başına en çoksa yakalanır", () => {
-    expect(scoresOf({ a: "c" })).toEqual({ a: 1, b: 1, c: 0, d: 1 });
+    expect(scoresOf({ a: "c" })).toEqual({ a: 1, b: 0, c: 0, d: 0 });
   });
 
-  it("eşitlikte (bilgisiz + başka oyuncu) bilgisiz kurtulur: yalnız bilgisiz +1", () => {
-    expect(scoresOf({ a: "c", b: "d" })).toEqual({ a: 0, b: 0, c: 1, d: 0 });
-    expect(scoresOf({ a: "c", b: "c", d: "a", c: "a" })).toEqual({ a: 0, b: 0, c: 1, d: 0 });
+  it("eşitlikte (bilgisiz + başka oyuncu) bilgisiz kurtulur +1; ona oy veren yine +1", () => {
+    expect(scoresOf({ a: "c", b: "d" })).toEqual({ a: 1, b: 0, c: 1, d: 0 });
+    expect(scoresOf({ a: "c", b: "c", d: "a", c: "a" })).toEqual({ a: 1, b: 1, c: 1, d: 0 });
   });
 
-  it("başkası daha çok oy alırsa bilgisiz +1", () => {
-    expect(scoresOf({ a: "b", c: "b", d: "b", b: "c" })).toEqual({ a: 0, b: 0, c: 1, d: 0 });
+  it("başkası daha çok oy alırsa bilgisiz +1; bilgisize oy veren azınlık +1", () => {
+    expect(scoresOf({ a: "b", c: "b", d: "b", b: "c" })).toEqual({ a: 0, b: 1, c: 1, d: 0 });
   });
 
   it("hiç oy yoksa herkes eşit sayılır: bilgisiz +1", () => {
@@ -426,22 +440,25 @@ describe("karalama-defteri puanlama", () => {
   it("oy vermeyenler sayılmaz, eksik oy kura ile doldurulmaz", () => {
     const s = act(start(), "a", vote("c"), VOTE_AT);
     expect(Object.keys(s.votes)).toEqual(["a"]);
-    expect(game.result(end(s)).awards).toEqual({ a: 1, b: 1, c: 0, d: 1 });
+    expect(game.result(end(s)).awards).toEqual({ a: 1, b: 0, c: 0, d: 0 });
   });
 
   it("bilgisiz yakalansa bile bilgisizin kendi oyu sonucu değiştirmez", () => {
-    expect(scoresOf({ a: "c", c: "a" })).toEqual({ a: 0, b: 0, c: 1, d: 0 });
-    expect(scoresOf({ a: "c", b: "c", c: "d" })).toEqual({ a: 1, b: 1, c: 0, d: 1 });
+    expect(scoresOf({ a: "c", c: "a" })).toEqual({ a: 1, b: 0, c: 1, d: 0 });
+    expect(scoresOf({ a: "c", b: "c", c: "d" })).toEqual({ a: 1, b: 1, c: 0, d: 0 });
   });
 
   it("bağlantısı kopan oyuncu da puanlanır (katılımcı kalır)", () => {
     const s = act(start(), "a", vote("c"), VOTE_AT, ["a", "b", "c"]);
     const r = game.result(end(s));
-    expect(r.awards.d).toBe(1);
+    expect(r.awards.d).toBe(0);
+    expect(Object.keys(r.awards)).toContain("d");
   });
 
-  it("bağlantısı kopan bilgisiz oyuncuya oy verilemez; oy hakkı olanlar başkasına verir", () => {
-    expect(reasonOf(start(), "a", vote("c"), VOTE_AT, ["a", "b", "d"])).toBe("not_connected");
+  it("KD-M3: bağlantısı kopan bilgisize oy verilebilir; uygulamadan çıkarak kurtulamaz", () => {
+    let s = act(start(), "a", vote("c"), VOTE_AT, ["a", "b", "d"]);
+    s = act(s, "b", vote("c"), VOTE_AT, ["a", "b", "d"]);
+    expect(game.result(end(s)).awards).toEqual({ a: 1, b: 1, c: 0, d: 0 });
   });
 
   it("awards = miniScores, her katılımcı için tam sayı", () => {
@@ -459,10 +476,12 @@ describe("karalama-defteri puanlama", () => {
   it("3 ve 8 oyuncuyla puanlama", () => {
     const three = ["a", "b", "c"];
     expect(scoresOf({ a: "c", b: "c" }, three)).toEqual({ a: 1, b: 1, c: 0 });
+    // 3 kişi: biri bilgisize, öteki diğer kişiye: eşitlik, bilgisiz kurtulur, doğru oy veren +1.
+    expect(scoresOf({ a: "c", b: "a" }, three)).toEqual({ a: 1, b: 0, c: 1 });
     const eight = ["a", "b", "c", "d", "e", "f", "g", "h"];
     expect(scoresOf({ a: "c", b: "c", d: "e", f: "e" }, eight)).toEqual({
-      a: 0,
-      b: 0,
+      a: 1,
+      b: 1,
       c: 1,
       d: 0,
       e: 0,
@@ -481,7 +500,7 @@ describe("karalama-defteri zaman ve açılış", () => {
     expect(game.tick(s, ctx(KARALAMA_DRAW_MS - 1))).toBe(s);
     const v = voting(s);
     expect(v.stage).toBe("vote");
-    expect(game.tick(v, ctx(END_AT - 1))).toBe(v);
+    expect(game.tick(v, ctx(VOTE_END_AT - 1))).toBe(v);
   });
 
   it("tick bitiş anında açar ve tekrarında aynı nesneyi döner", () => {
@@ -490,32 +509,43 @@ describe("karalama-defteri zaman ve açılış", () => {
     expect(game.tick(done, ctx(END_AT + 1))).toBe(done);
   });
 
-  it("aşamalar: çizim -> oylama -> bitti", () => {
+  it("aşamalar: çizim -> oylama -> açılış -> son şans -> bitti", () => {
     const s = start();
+    const phaseAt = (at: number) => game.publicView(game.tick(s, ctx(at)), ctx(at)).phase;
     expect(game.publicView(s, ctx(0)).phase).toBe("draw");
-    expect(game.publicView(s, ctx(KARALAMA_DRAW_MS - 1)).phase).toBe("draw");
-    expect(game.publicView(game.tick(s, ctx(KARALAMA_DRAW_MS)), ctx(KARALAMA_DRAW_MS)).phase).toBe("vote");
-    expect(game.publicView(game.tick(s, ctx(END_AT - 1)), ctx(END_AT - 1)).phase).toBe("vote");
+    expect(phaseAt(KARALAMA_DRAW_MS - 1)).toBe("draw");
+    expect(phaseAt(KARALAMA_DRAW_MS)).toBe("vote");
+    expect(phaseAt(VOTE_END_AT - 1)).toBe("vote");
+    expect(phaseAt(VOTE_END_AT)).toBe("unmask");
+    expect(phaseAt(VOTE_END_AT + KARALAMA_UNMASK_MS)).toBe("guess");
+    expect(phaseAt(VOTE_END_AT + KARALAMA_UNMASK_MS + KARALAMA_GUESS_MS)).toBe("done");
     expect(game.publicView(end(s), ctx(END_AT)).phase).toBe("done");
   });
 
-  it("sonuçta bilgisiz oyuncu ve iki kelime açılır, oylar ve sayım görünür", () => {
+  it("sonuçta bilgisiz, iki kelime, oylar, sayım, doğru oy verenler ve puanlar açılır", () => {
     const s = end({ ...start(), votes: { a: "c", b: "c", d: "a" } });
     const reveal = game.publicView(s, ctx(END_AT)).reveal;
+    const opened = T0 + VOTE_END_AT;
     expect(reveal).toEqual({
       outsider: "c",
-      mainWord: "elma",
       nearWord: "armut",
       votes: { a: "c", b: "c", d: "a" },
       tally: { a: 1, b: 0, c: 2, d: 0 },
       caught: true,
+      rightVoters: ["a", "b"],
+      openedAt: opened,
+      guessOpensAt: opened + KARALAMA_UNMASK_MS,
+      guessEndsAt: opened + KARALAMA_UNMASK_MS + KARALAMA_GUESS_MS,
+      finishAt: T0 + END_AT,
+      guessSent: false,
+      final: { mainWord: "elma", guess: null, guessed: false, scores: { a: 1, b: 1, c: 0, d: 0 } },
     });
   });
 
   it("oylama sürerken açılış yok", () => {
     const s = act(start(), "a", vote("c"), VOTE_AT);
     expect(game.publicView(s, ctx(VOTE_AT)).reveal).toBeNull();
-    expect(game.publicView(s, ctx(END_AT - 1)).reveal).toBeNull();
+    expect(game.publicView(s, ctx(VOTE_END_AT - 1)).reveal).toBeNull();
   });
 
   it("açılıştan sonra gizli bilgi kalmaz", () => {
@@ -525,7 +555,7 @@ describe("karalama-defteri zaman ve açılış", () => {
   it("izleyici sonuçta da kelimeyi kendi görünümünde görmez ama publicView'dan öğrenir", () => {
     const v = game.view(end(start()), null, ctx(END_AT));
     expect(v.word).toBeNull();
-    expect(game.publicView(end(start()), ctx(END_AT)).reveal?.mainWord).toBe("elma");
+    expect(game.publicView(end(start()), ctx(END_AT)).reveal?.final?.mainWord).toBe("elma");
   });
 });
 
@@ -563,7 +593,7 @@ describe("karalama-defteri gizlilik", () => {
     // Aynı kelimeler, farklı bilgisiz oyuncu: herkese açık görünüm özdeş.
     const withC = start(PLAYERS, "c");
     const withD = start(PLAYERS, "d");
-    for (const at of [0, 30_000, VOTE_AT, END_AT - 1]) {
+    for (const at of [0, 30_000, VOTE_AT, VOTE_END_AT - 1]) {
       expect(game.publicView(withC, ctx(at))).toEqual(game.publicView(withD, ctx(at)));
       // Bilgisiz olmayan oyuncuların özel görünümü iki durumda da aynı.
       for (const id of ["a", "b"])
@@ -617,6 +647,7 @@ describe("karalama-defteri gizlilik", () => {
       "players",
       "reveal",
       "voteEndsAt",
+      "voteMs",
       "voted",
     ]);
     for (const id of ["a", "b", "d"]) expect(game.view(s, id, ctx(0)).near).toBe(false);
@@ -678,8 +709,10 @@ describe("karalama-defteri botu ve simülasyon", () => {
       // Botlar bazen kilitler: oyun süre dolmadan erken bitebilir, ama hiçbir zaman toplam süreyi aşmaz.
       expect(out.endedAt - T0).toBeGreaterThan(0);
       expect(out.endedAt - T0).toBeLessThanOrEqual(KARALAMA_DURATION_MS + 3_000);
+      // Kişi başı en çok +1, bilgisiz en çok +2 (KD-M2, KD-M1); eksi yok.
+      for (const v of Object.values(out.result.awards)) expect(v === 0 || v === 1 || v === 2).toBe(true);
       const total = Object.values(out.result.awards).reduce((a, b) => a + b, 0);
-      expect(total === 1 || total === 3).toBe(true); // bilgisiz +1 ya da diğer 3 oyuncu +1
+      expect(total).toBeLessThanOrEqual(players.length + 1);
     }
     expect(accepted).toBeGreaterThan(50);
     expect(kinds.has("stroke")).toBe(true);
@@ -699,23 +732,36 @@ describe("karalama-defteri erken bitiş", () => {
     let s = drawAll(start());
     for (const [i, id] of PLAYERS.entries()) s = act(s, id, lock, 2_000 + i * 100);
     expect(s.drawEndsAt).toBe(T0 + 3_300);
-    expect(s.voteEndsAt - s.drawEndsAt).toBe(KARALAMA_VOTE_MS);
+    expect(s.voteEndsAt - s.drawEndsAt).toBe(VOTE_MS);
     expect(game.tick(s, ctx(3_299)).stage).toBe("draw");
     expect(game.tick(s, ctx(3_300)).stage).toBe("vote");
     expect(game.publicView(game.tick(s, ctx(3_300)), ctx(3_300)).drawings).not.toBeNull();
   });
 
-  it("(a) herkes oylamada 'Tamam' deyince oyun 1 sn sonra biter", () => {
+  it("(a) herkes oylamada 'Tamam' deyince oylama 1 sn sonra biter, açılış başlar", () => {
     let s = drawAll(start());
     s = game.tick(s, ctx(KARALAMA_DRAW_MS));
     for (const id of PLAYERS) s = act(s, id, vote("a" === id ? "b" : "a"), VOTE_AT);
-    for (const id of PLAYERS) s = act(s, id, lock, VOTE_AT + 2_000);
-    expect(s.voteEndsAt).toBe(T0 + VOTE_AT + 3_000);
-    expect(game.isFinished(s, ctx(VOTE_AT + 2_999))).toBe(false);
-    expect(game.isFinished(s, ctx(VOTE_AT + 3_000))).toBe(true);
-    const done = game.tick(s, ctx(VOTE_AT + 3_000));
-    expect(done.stage).toBe("done");
-    expect(game.publicView(done, ctx(VOTE_AT + 3_000)).reveal).not.toBeNull();
+    for (const id of PLAYERS) s = act(s, id, lock, VOTE_AT + 1_000);
+    expect(s.voteEndsAt).toBe(T0 + VOTE_AT + 2_000);
+    expect(game.tick(s, ctx(VOTE_AT + 1_999)).stage).toBe("vote");
+    const open = game.tick(s, ctx(VOTE_AT + 2_000));
+    expect(open.stage).toBe("unmask");
+    expect(game.publicView(open, ctx(VOTE_AT + 2_000)).reveal).not.toBeNull();
+    expect(game.isFinished(open, ctx(VOTE_AT + 2_000))).toBe(false);
+  });
+
+  it("KD-M7 (sahip notu): bağlı herkes oy verince oylama en geç 3 sn sonra biter", () => {
+    let s = drawAll(start());
+    s = game.tick(s, ctx(KARALAMA_DRAW_MS));
+    for (const id of ["a", "b", "c"]) s = act(s, id, vote(id === "a" ? "b" : "a"), VOTE_AT);
+    expect(s.voteEndsAt).toBe(T0 + VOTE_END_AT);
+    s = act(s, "d", vote("a"), VOTE_AT + 500);
+    expect(s.voteEndsAt).toBe(T0 + VOTE_AT + 3_500);
+    // Arada oy değiştirilebilir; süre yeniden uzamaz.
+    s = act(s, "d", vote("c"), VOTE_AT + 1_000);
+    expect(s.voteEndsAt).toBe(T0 + VOTE_AT + 3_500);
+    expect(game.tick(s, ctx(VOTE_AT + 3_500)).stage).toBe("unmask");
   });
 
   it("(b) bir kişi eksikken bitmez", () => {
@@ -723,10 +769,10 @@ describe("karalama-defteri erken bitiş", () => {
     for (const id of ["a", "b", "c"]) s = act(s, id, lock, 2_000);
     expect(s.drawEndsAt).toBe(T0 + KARALAMA_DRAW_MS);
     s = game.tick(s, ctx(KARALAMA_DRAW_MS));
-    for (const id of PLAYERS) s = act(s, id, vote("a" === id ? "b" : "a"), VOTE_AT);
+    for (const id of ["a", "b", "c"]) s = act(s, id, vote("a" === id ? "b" : "a"), VOTE_AT);
     for (const id of ["a", "b", "c"]) s = act(s, id, lock, VOTE_AT + 1_000);
-    expect(s.voteEndsAt).toBe(T0 + END_AT);
-    expect(game.isFinished(s, ctx(VOTE_AT + 5_000))).toBe(false);
+    expect(s.voteEndsAt).toBe(T0 + VOTE_END_AT);
+    expect(game.tick(s, ctx(VOTE_AT + 5_000)).stage).toBe("vote");
   });
 
   it("(c) bağlantısı kopan oyuncu beklenmez (çizim ve oylama)", () => {

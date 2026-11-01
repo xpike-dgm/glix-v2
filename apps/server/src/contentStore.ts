@@ -230,6 +230,7 @@ export function createContentStore(accounts: AccountStore, banned: BannedWords):
       })),
       feedback: pool.feedback === true,
       playStats: pool.playStats === true,
+      ...(pool.playKind ? { playKind: pool.playKind } : {}),
       min: pool.min,
       needed: pool.needed,
       builtin: pool.builtin.length,

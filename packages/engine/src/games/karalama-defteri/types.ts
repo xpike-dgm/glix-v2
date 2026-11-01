@@ -13,8 +13,48 @@ import {
 } from "../drawing.js";
 
 export const KARALAMA_DRAW_MS = 75_000;
-export const KARALAMA_VOTE_MS = 20_000;
-export const KARALAMA_DURATION_MS = KARALAMA_DRAW_MS + KARALAMA_VOTE_MS;
+/**
+ * Oylama süresi oyuncu sayısına göre (KD-M7; sahip notu: öneridekinden belirgin uzun, erken bitiş ön tercih):
+ * 3–4 oyuncu 30 sn, 5–6 oyuncu 40 sn, 7–8 oyuncu 50 sn.
+ */
+export const KARALAMA_VOTE_MS_SMALL = 30_000;
+export const KARALAMA_VOTE_MS_MID = 40_000;
+export const KARALAMA_VOTE_MS_LARGE = 50_000;
+/** Oyuncu sayısına göre oylama süresi (KD-M7). */
+export function karalamaVoteMs(players: number): number {
+  return players >= 7 ? KARALAMA_VOTE_MS_LARGE : players >= 5 ? KARALAMA_VOTE_MS_MID : KARALAMA_VOTE_MS_SMALL;
+}
+/** En kısa oylama (3–4 oyuncu); geriye dönük ad. */
+export const KARALAMA_VOTE_MS = KARALAMA_VOTE_MS_SMALL;
+/**
+ * Bağlı herkes oyunu verdi (KD-M7, sahip notu "herkes oy verince geçmek ön tercih"): oylama en geç bu kadar sonra
+ * biter; arada oy değiştirilebilir. Herkes "Tamam" derse 1 sn (`KARALAMA_LOCK_GRACE_MS`).
+ */
+export const KARALAMA_ALL_VOTED_MS = 3_000;
+/** Açılış (KD-U5): oylar uçar, maske düşer, damga vurulur; sonra son şans başlar. */
+export const KARALAMA_UNMASK_MS = 5_000;
+/** Bilgisizin son şansı (KD-M1): ana kelimeyi tahmin etme süresi. */
+export const KARALAMA_GUESS_MS = 12_000;
+/** Son şanstan sonra kartın dönmesi ve puan şeridi (KD-U5, KD-U7). */
+export const KARALAMA_FINAL_MS = 3_000;
+/** Tahminin en çok uzunluğu (karakter). */
+export const KARALAMA_GUESS_MAX = 24;
+/** Yazım hatası toleransı (Yazı Yaz YY-M7 ile aynı): bu kadar ve daha uzun kelimede tek harf farkı doğru sayılır. */
+export const KARALAMA_TYPO_MIN_LETTERS = 6;
+/** Aynı odada çift tekrarı (KD-M5): son 50 oyunun çifti gelmez. */
+export const KARALAMA_PAIR_MEMORY = 50;
+/** Aynı odada kelime tekrarı (KD-M5): son 10 oyunun kelimelerinden birini içeren çift gelmez (oyun başına 2 kelime). */
+export const KARALAMA_WORD_MEMORY = 20;
+/** En uzun oyun: 75 + 50 + 5 + 12 + 3 = 145 sn. */
+export const KARALAMA_DURATION_MS =
+  KARALAMA_DRAW_MS + KARALAMA_VOTE_MS_LARGE + KARALAMA_UNMASK_MS + KARALAMA_GUESS_MS + KARALAMA_FINAL_MS;
+
+/** Çiftin yakınlığı (KD-M6): etiketsiz çift "yakın" sayılır; "uzak" çift çekilmez. */
+export const KARALAMA_CLOSENESS = ["çok yakın", "yakın", "uzak"] as const;
+export type KaralamaCloseness = (typeof KARALAMA_CLOSENESS)[number];
+/** Çift yönü (KD-M4): "rastgele" (varsayılan) ya da "sabit" (Kelime 1 hep çoğunluğun). */
+export const KARALAMA_DIRECTIONS = ["rastgele", "sabit"] as const;
+export type KaralamaDirection = (typeof KARALAMA_DIRECTIONS)[number];
 
 /** Çizim tuvali ortak modülden gelir (games/drawing.ts); Karalama'nın adları geriye dönük uyumlu kalır. */
 export const KARALAMA_GRID = DRAW_GRID;
@@ -40,7 +80,9 @@ export type KaralamaAction =
   | { kind: "clear" }
   | { kind: "vote"; target: string }
   /** Çizimde "Bitti", oylamada "Tamam": o aşamadaki seçim kesinleşir (en az bir darbe / bir oy gerekir). */
-  | { kind: "lock" };
+  | { kind: "lock" }
+  /** Son şans (KD-M1): yalnız bilgisiz, tek tahmin, kesin. */
+  | { kind: "guess"; text: string };
 
 /** Son kilitten sonra aşamanın bitmesine kalan süre (ms). */
 export const KARALAMA_LOCK_GRACE_MS = 1_000;
@@ -51,11 +93,27 @@ export const KARALAMA_LOCK_GRACE_MS = 1_000;
  */
 export type KaralamaStroke = DrawStroke;
 
-export type KaralamaPhase = "draw" | "vote" | "done";
+/**
+ * Aşamalar: çizim, oylama, açılış (oylar uçar, bilgisiz açılır), son şans (bilgisiz ana kelimeyi tahmin eder) ve
+ * bitti (ana kelime, tahmin ve puanlar açılır).
+ */
+export type KaralamaPhase = "draw" | "vote" | "unmask" | "guess" | "done";
 
+/** Son şanstan sonra açılanlar (yalnız "done"). */
+export interface KaralamaFinal {
+  mainWord: string;
+  /** Bilgisizin gönderdiği tahmin (yazdığı biçimde); tahmin yoksa null. */
+  guess: string | null;
+  /** Tahmin ana kelimeyle eşleşti mi. */
+  guessed: boolean;
+  /** Bu oyunun puanları (genel skora doğrudan gider). */
+  scores: Record<string, number>;
+}
+
+/** Oylama bittikten sonra herkese açılanlar (ana kelime son şans bitene kadar gizli kalır). */
 export interface KaralamaReveal {
   outsider: string;
-  mainWord: string;
+  /** Bilgisizin kelimesi ("Onun"). */
   nearWord: string;
   /** Oy veren -> hedef. */
   votes: Record<string, string>;
@@ -63,6 +121,19 @@ export interface KaralamaReveal {
   tally: Record<string, number>;
   /** Bilgisiz oyuncu tek başına en çok oyu aldı mı. */
   caught: boolean;
+  /** Bilgisize oy veren (+1 alan) oyuncular, katılım sırasıyla. */
+  rightVoters: string[];
+  /** Açılışın başladığı an (oylama bitişi). */
+  openedAt: number;
+  /** Son şansın penceresi; bilgisiz bağlı değilse ikisi eşit (son şans yok). */
+  guessOpensAt: number;
+  guessEndsAt: number;
+  /** Oyunun bittiği an. */
+  finishAt: number;
+  /** Bilgisiz tahminini gönderdi mi (ne yazdığı "done"a kadar gizli). */
+  guessSent: boolean;
+  /** Yalnız "done": ana kelime, tahmin ve puanlar. */
+  final: KaralamaFinal | null;
 }
 
 /** Herkese açık görünüm (oda başına bir kez hesaplanır). */
@@ -70,6 +141,8 @@ export interface KaralamaPublicView {
   phase: KaralamaPhase;
   drawEndsAt: number;
   voteEndsAt: number;
+  /** Bu oyunun oylama süresi (KD-M7; oyuncu sayısına göre). */
+  voteMs: number;
   /** Katılımcılar, katılım sırasıyla. */
   players: string[];
   /** Çizimler yalnız oylamada ve sonuçta açılır; çizim süresince null. */
@@ -86,7 +159,7 @@ export interface KaralamaPublicView {
 
 /** Kişiye özel görünüm. */
 export interface KaralamaView {
-  /** Kendi kelimen; izleyicide null. */
+  /** Kendi kelimen; izleyicide null. Açılış ve son şans sürerken ana kelime hiçbir ekranda olmaz (null). */
   word: string | null;
   /** Kelime "yakın sinyal" kelimesi mi (yalnız bilgisiz oyuncuda true). */
   near: boolean;

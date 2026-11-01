@@ -21,6 +21,15 @@ describe("karalama-defteri tur özeti", () => {
     expect(line).toBe("Mert bilgisizdi, kimse anlamadı");
     expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
   });
+  it("son şansta kelimeyi bildiyse söyler (KD-M1)", () => {
+    const final = { mainWord: "elma", guess: "elma", guessed: true, scores: {} };
+    expect(
+      summarizeKaralamaDefteri(result, players, { reveal: { outsider: "c", caught: true, final } }),
+    ).toBe("Mert yakalandı ama kelimeyi bildi");
+    expect(
+      summarizeKaralamaDefteri(result, players, { reveal: { outsider: "c", caught: false, final } }),
+    ).toBe("Mert kurtuldu, kelimeyi de bildi");
+  });
   it("veri yoksa ya da eksikse cümle kurmaz (3)", () => {
     expect(summarizeKaralamaDefteri(result, players, { reveal: null })).toBeNull();
   });

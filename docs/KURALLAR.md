@@ -1049,6 +1049,55 @@ Eski fazlar 26 saniye çizim ve 20 saniye oylamadır.
     ve sonucu değiştirmez. En yüksek oyda bilgisiz oyuncu ile başka oyuncu eşitse
     bilgisiz oyuncu kurtulmuş sayılır.
 
+**Değişiklik (KD, Kasım 2026, sahip onayı; `docs/oneriler/karalama-defteri.md`, `KARARLAR-15-OYUN.md`) — yukarıdaki
+cevapların önüne geçer:**
+
+- **Puan (KD-M2):** Bilgisize **oy veren her oyuncu +1** (bilgisiz yakalansa da yakalanmasa da). Bilgisiz **tek başına
+  en çok oyu almadıysa** (eşitlik ya da hiç oy) kurtulur ve **+1** alır. Yanlış oy ve oy vermemek 0; eksi yok. Puanlar
+  doğrudan genel skora gider; bir oyuncu en çok +1, bilgisiz en çok +2 alır. "Yakalandı / Kurtuldu" tanımı aynıdır.
+  Maç kartlarında "birinci" bu oyunda en çok puan alan(lar), "sonuncu" 0 alanlardır.
+- **Son şans (KD-M1):** Oylama bitince açılış başlar (oylar uçar, bilgisiz ve onun kelimesi açılır, damga; 5 sn), sonra
+  bilgisiz **12 sn** içinde **ana kelimeyi yazarak** tahmin eder; yakalansa da kurtulsa da. Doğruysa **+1**. Tek tahmin,
+  Gönder kesindir; gönderince 1 sn sonra kelimeler açılır. Eşleşme klavyeden bağımsızdır; ana kelime 6+ harfliyse harf
+  sayısı aynı ve tek harf farklı yazım da doğru sayılır (Yazı Yaz YY-M7 ile aynı). Bilgisizin kendi kelimesi hiçbir
+  zaman doğru sayılmaz. Son şans sırasında bilgisiz bütün çizimleri görür; ipucu ve harf sayısı verilmez. Açılış ve son
+  şans boyunca **ana kelime hiçbir ekranda yoktur** (çoğunluğun telefonunda da); son şans bitince açılır. Bilgisiz
+  oylama bittiğinde bağlı değilse son şans hiç açılmaz, son şans sürerken koparsa 1 sn sonra biter (tahmin 0); oyun
+  beklemez. Diğerleri "… kelimeyi tahmin ediyor" ve geri sayım görür; bilgisizin yazarken yazdıkları gösterilmez.
+- **Kopan oyuncu (KD-M3):** Oylamada bağlantısı kopuk oyuncunun çizimine de oy verilebilir (kartında "bağlantı koptu");
+  kopuk oyuncu oy veremez ve beklenmez.
+- **Çift yönü (KD-M4):** Havuz alanları "Kelime 1 / Kelime 2" adını alır. Çift çekilince yön **%50** ihtimalle döner:
+  bazen Kelime 1 çoğunluğun, bazen bilgisizin. Havuzda "Yön: sabit" işaretli çiftte Kelime 1 hep çoğunluğundur.
+- **Tekrar (KD-M5):** Aynı odada son **50** oyunda çıkan çift tekrar gelmez; ayrıca son **10** oyunda çıkmış çiftlerin
+  kelimelerinden birini içeren çift de gelmez (ör. ördek/kaz'dan sonra kuğu/ördek). Süzgeç yerleşik havuza da uygulanır;
+  kelime kuralı havuzu alt sınırın (10) altına düşürürse yalnız çift kuralı uygulanır. Hafıza yalnız bellektedir.
+- **Yakınlık (KD-M6):** Her çift **çok yakın / yakın / uzak** etiketi taşır (etiketsiz = yakın). 3–5 oyuncuda yalnız
+  yakın, 6–8 oyuncuda %50 yakın / %50 çok yakın çift çekilir; **uzak** çift hiç çekilmez. Uygun etiketli çift kalmazsa
+  etiket şartı düşer.
+- **Oylama süresi (KD-M7; sahip notu: süreler daha uzun, erken bitiş ön tercih):** 3–4 oyuncuda **30 sn**, 5–6
+  oyuncuda **40 sn**, 7–8 oyuncuda **50 sn**. Bağlı herkes **oyunu verince** oylama en geç **3 sn** sonra biter (arada oy
+  değiştirilebilir); bağlı herkes Tamam derse 1 sn sonra. En uzun oyun 75 + 50 + 5 + 12 + 3 = 145 sn.
+- **Çift karnesi (KD-M8):** Oyun bitince çift için yalnız iki sayı havuz istatistiğine yazılır: bilgisiz yakalandı mı,
+  ana kelimeyi bildi mi. Çizim, ad, oda saklanmaz. Panelde çift başına "kaç oyun · yakalanma % · tahmin %"; en az 8
+  oyundan sonra yakalanma ≥ %85 → "uzak önerisi", ≤ %15 → "çok yakın önerisi" (sahip onayına gider, kendiliğinden
+  uygulanmaz).
+- **Yazı yasağı (KD-U14):** Çizime harf ve yazı yazılmaz. Sistem denetlemez; anlatımda ve çizimin ilk 3 sn'sinde tuvalde
+  "Yazı yok, yalnız çizim" notu durur. Kural ihlali puanı değiştirmez.
+- **Ekran (KD-U1…U10, U12, U13):** Kelime çizim başında tam ekran ters defter kartında, **basılı tutunca** görünür
+  (iki rolde kart aynı; bilgisizde "yakın sinyal" yalnız kart açıkken); sonra "Kelimeni gör" çubuğu. Tuvalde kalan
+  saniye ve mürekkep çubuğu. "Bitti" deyince çizim sergiye asılır, diğerlerinin çerçeveleri örtülü bekler. Oylamada
+  kendi çizimin duvarda değil, başlığın yanında küçük; isimler hep görünür; örtüler soldan sağa 0,3 sn arayla kalkar,
+  Tamam ilk 3 sn pasif; büyütmede kaydırarak gezilir ve "BU KİŞİ" ile oy verilir. Açılışta oylar ışık izleriyle
+  çizimlere uçar, bilgisizin çiziminde maske düşer, "Onun: armut", YAKALANDI / KURTULDU damgası; son şanstan sonra kart
+  döner ve puan şeridi ("Doğru oy: … +1 · … kurtuldu +1 · … kelimeyi bildi +1"). TV aynı açılışı tam ekran gösterir;
+  kelimeleri, bilgisizi ve çizimleri oylamadan önce göstermez.
+- Değişmeyenler: 3–8 oyuncu, rastgele tek bilgisiz, bilgisizin yakın kelimeyi ve "yakın sinyal"i görmesi (bilgisiz
+  bilgisiz olduğunu bilir; KD-M9 onaylanmadı), 75 sn çizim, 6 renk + silgi + 3 kalınlık, süre bitene kadar düzenleme,
+  çizimlerin oylamada aynı anda açılması, kişi başı tek oy, kendine oy yok, eksik oyların kura ile doldurulmaması,
+  eşitlikte bilgisizin kurtulması, eksi puan yok, puanların doğrudan genel skora gitmesi, "Bitti" erken bitişi. İzleyici
+  tahmini (KD-U11), rol ipucu satırı (KD-U15) ve KD-U16 erişilebilirlik paketi onaylanmadı; yapay zekâ özellikleri
+  (KD-AI1–AI3) yok.
+
 ## 16. İttifak — `ittifak`
 
 **Durum: KİLİTLİ**

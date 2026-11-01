@@ -60,3 +60,41 @@ CSS/SVG karşılığını çizer; dosyalar gelince ekrana bağlanması küçük 
   çıtırtılı patlama, kelime geçişinde küre sönüp yanma) mevcut ses sistemiyle üretildi
   (`apps/client/src/games/cagrisim-agi/sounds.ts`). İstenirse Ses alanı gerçek kayıtlarla değiştirebilir (elektrik ve
   neon kimliği).
+
+## Karalama Defteri
+
+Ortak stil: oyunun mevcut görselleriyle uyumlu (`apps/client/public/assets/worlds/karalama-defteri-*.webp`: gece
+atölyesi; koyu lacivert masa, sarı masa lambası, kalemlikler, sarmaşık; çizimler koyu tahtada kalın neon kalem: camgöbeği
+#2ef2ff, macenta #ff2bd6, amber #ffc23b, lime #b6ff3b). Yer `apps/client/public/assets/props/karalama-defteri/<ad>.webp`.
+Dosya yokken ekran CSS/SVG karşılığını çizer ve dosyayı hiç istemez; dosya konunca kod değişmeden kullanılır
+(`__KARALAMA_PROPS__`, `karalamaProp()` — Sözlük Blöfü düzeni).
+
+- **KD-U1 · defter sayfası kart arkası** — `apps/client/public/assets/props/karalama-defteri/kart-arka.webp` · 3:4,
+  768×1024 · şeffaf DEĞİL (köşeleri kod yuvarlar) · Gizli kelime kartının arka yüzü: hafif sararmış, çizgili okul
+  defteri sayfası; solda kırmızı kenar çizgisi, üstte spiral delikleri, köşede küçük kurşun kalem karalaması ve bir
+  kahve lekesi; sayfanın ortası sade kalmalı (üstüne "Kelimeni görmek için basılı tut" yazısı kodla yazılır). Gece
+  atölyesi ışığında hafif sıcak ton. Yazı YOK. İki rolde aynı görsel kullanılır. · Geçici: CSS çizgili kâğıt
+  (`.kdcard__back`; repeating-linear-gradient + kırmızı kenar çizgisi).
+- **KD-U5 · ışık izi parçacığı** — `apps/client/public/assets/props/karalama-defteri/isik-izi.webp` · 4:1, 512×128 ·
+  şeffaf · Oy verenin çiziminden seçtiği çizime kıvrılan ışık izinin ucu/dokusu: soldan sağa incelen camgöbeği neon
+  kuyruk, uçta beyaza yakın parlak çekirdek ve 3–4 minik kıvılcım; koyu zeminde `screen` ile parlayacak. Yazı YOK. ·
+  Geçici: SVG yol (`.kdop__trail`, camgöbeği çizgi + drop-shadow, stroke-dash animasyonu). Not: dosya geldiğinde yol
+  boyunca doku olarak bağlanması küçük bir kod işidir (şu an yalnız varlığı işaretlenir).
+- **KD-U5 · "YAKALANDI!" damgası** — `apps/client/public/assets/props/karalama-defteri/damga-yakalandi.webp` · 2:1,
+  1024×512 · şeffaf · Sergi duvarına vurulan lastik damga: kalın çerçeveli, hafif eğik (−10°), mürekkebi yer yer
+  atlamış "YAKALANDI!" yazısı, lime (#b6ff3b) mürekkep; kenarlarda mürekkep sıçraması. · Geçici: CSS damga
+  (`.kdop__stamp b`, lime kenarlıklı eğik yazı).
+- **KD-U5 · "KURTULDU!" damgası** — `apps/client/public/assets/props/karalama-defteri/damga-kurtuldu.webp` · 2:1,
+  1024×512 · şeffaf · Aynı damga, amber (#ffc23b) mürekkep, "KURTULDU!" ve yanında küçük kaçan ayak izleri. · Geçici:
+  CSS damga (amber).
+- **KD-U3 · ahşap çerçeve** — `apps/client/public/assets/props/karalama-defteri/cerceve.webp` · 1:1, 512×512 · şeffaf
+  ortası (çizim içinden görünür) · Sergi duvarına asılan ince ceviz ahşap çerçeve, üstte küçük pirinç askı halkası,
+  köşelerde hafif aşınma. · Geçici: CSS degrade kenarlık (`.kd__hangframe`) ve çizgili örtü (`.kd__veil`). Not: bu
+  dosya geldiğinde çerçeveye bağlanması küçük bir kod işidir.
+- **maske** (yeni görsel gerekmedi) — KD-U5 maske düşüşü Sızma'nın maske görselini kullanır
+  (`apps/client/public/assets/props/sizma/maske.webp`; yoksa Sızma'nın SVG maskesi).
+- **ses** (dosya gerekmedi) — KD-U5, KD-U7 ve KD-U13 sesleri (kalem cızırtısı yalnız çizende, silgi sürtme, geri al
+  "fıs", temizle kâğıt buruşturma, Bitti defter kapanma + "tık", oy raptiye "çıt", Tamam çerçeve vuruşu, açılışta oy
+  "vınn", davul, maske kırılma, damga, son şans saat tiki, doğruysa zil, yanlışsa "bzzt") mevcut ses sistemiyle üretildi
+  (`apps/client/src/games/karalama-defteri/sounds.ts`). İstenirse Ses alanı gerçek kayıtlarla değiştirebilir (kâğıt,
+  kurşun kalem, ahşap kimliği).

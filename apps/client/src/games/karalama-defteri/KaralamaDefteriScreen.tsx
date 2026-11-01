@@ -6,10 +6,11 @@ import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./karalama.css";
 import { RevealContinue } from "../../ui/RevealContinue.js";
-import { DrawBoard } from "./DrawBoard.js";
+import { Acilis } from "./Acilis.js";
+import { DrawPhase } from "./DrawPhase.js";
 import { Header } from "./Header.js";
 import { VoteWall } from "./VoteWall.js";
-import { parseKaralamaView } from "./view.js";
+import { isRevealPhase, parseKaralamaView } from "./view.js";
 
 export default function KaralamaDefteriScreen(props: GameScreenProps) {
   const view = createMemo(() => parseKaralamaView(props.match.publicView, props.match.view));
@@ -28,15 +29,7 @@ export default function KaralamaDefteriScreen(props: GameScreenProps) {
         {(v) => (
           <Switch>
             <Match when={phase() === "draw" && !props.spectator}>
-              <DrawBoard
-                strokes={v().strokes}
-                endsAt={v().drawEndsAt}
-                done={v().drawDone}
-                readyCount={v().drawDoneIds.length}
-                total={v().players.length}
-                header={<Header view={v()} now={props.now} />}
-                now={props.now}
-              />
+              <DrawPhase view={v()} players={props.players} selfId={props.selfId} now={props.now} />
             </Match>
             <Match when={phase() === "draw"}>
               <Header view={v()} now={props.now} title="Arkadaşların çiziyor" />
@@ -65,6 +58,21 @@ export default function KaralamaDefteriScreen(props: GameScreenProps) {
                   onLock={() => undefined}
                 />
               </div>
+            </Match>
+            <Match when={isRevealPhase(v().phase) ? v().reveal : null}>
+              {(r) => (
+                <Acilis
+                  phase={v().phase as "unmask" | "guess" | "done"}
+                  reveal={r()}
+                  players={v().players}
+                  drawings={v().drawings}
+                  crew={crew()}
+                  selfId={props.selfId}
+                  me={!props.spectator && r().outsider === props.selfId}
+                  myWord={v().near ? v().word : null}
+                  now={props.now}
+                />
+              )}
             </Match>
             <Match when={true}>
               <VoteWall

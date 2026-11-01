@@ -10,7 +10,13 @@ import type {
   AdminPoolLineStatus,
   AdminPoolSummary,
 } from "@glix/engine";
-import { FAMILIAR_CLOSE_RATIO, FAMILIAR_MIN_SHOWN, FAMILIAR_RATIO, playSuggestion } from "@glix/engine";
+import {
+  FAMILIAR_CLOSE_RATIO,
+  FAMILIAR_MIN_SHOWN,
+  FAMILIAR_RATIO,
+  pairSuggestion,
+  playSuggestion,
+} from "@glix/engine";
 
 /** Toplu yapıştırmada tek istekteki en çok satır (sunucudaki sınırla aynı). */
 export const BULK_MAX_LINES = 200;
@@ -99,12 +105,23 @@ export function knownCell(known: { shown: number; knew: number } | undefined): {
  * Kelime karnesi hücresi (CG-M6): "12 oyun · ağ %45 · tek %30". En az 8 oyundan sonra öneri rozeti: "Kolay önerisi",
  * "Zor önerisi" ya da "Kapatma önerisi" (eşikler motordaki `playSuggestion` ile aynı; kendiliğinden uygulanmaz).
  */
-export function playCell(card: { games: number; top: number; single: number } | undefined): {
+export function playCell(
+  card: { games: number; top: number; single: number } | undefined,
+  kind: "ag" | "cift" = "ag",
+): {
   text: string;
   badge: Badge | null;
 } {
   if (!card || card.games === 0) return { text: "henüz oynanmadı", badge: null };
   const pct = (v: number): string => `%${Math.round(v * 100)}`;
+  if (kind === "cift") {
+    // Çift karnesi (KD-M8): "12 oyun · yakalanma %75 · tahmin %20"; öneri eşikleri motordaki `pairSuggestion`.
+    const text = `${card.games} oyun · yakalanma ${pct(card.top)} · tahmin ${pct(card.single)}`;
+    const p = pairSuggestion(card);
+    if (p === "uzak") return { text, badge: { label: "Uzak önerisi", tone: "off" } };
+    if (p === "çok yakın") return { text, badge: { label: "Çok yakın önerisi", tone: "added" } };
+    return { text, badge: null };
+  }
   const text = `${card.games} oyun · ağ ${pct(card.top)} · tek ${pct(card.single)}`;
   const s = playSuggestion(card);
   if (s === "kapat") return { text, badge: { label: "Kapatma önerisi", tone: "off" } };
@@ -123,6 +140,7 @@ export function badgesOf(
   e: Pick<AdminPoolEntry, "source" | "disabled" | "known" | "play">,
   feedback = false,
   playStats = false,
+  playKind: "ag" | "cift" = "ag",
 ): Badge[] {
   const out: Badge[] = [
     e.source === "builtin" ? { label: "Hazır", tone: "ready" } : { label: "Eklenen", tone: "added" },
@@ -130,7 +148,7 @@ export function badgesOf(
   if (e.disabled) out.push({ label: "Kapalı", tone: "off" });
   const known = feedback ? knownCell(e.known).badge : null;
   if (known) out.push(known);
-  const play = playStats ? playCell(e.play).badge : null;
+  const play = playStats ? playCell(e.play, playKind).badge : null;
   if (play) out.push(play);
   return out;
 }

@@ -45,13 +45,20 @@ export default function Reveal(props: GameScreenProps) {
           <div class="kd__rwords">
             <span class="kd__rword kd__rword--main">
               <em>Ortak</em>
-              {r().mainWord}
+              {r().final?.mainWord ?? "?"}
             </span>
             <span class="kd__rword kd__rword--near">
-              <em>Yakın</em>
+              <em>Onun</em>
               {r().nearWord}
             </span>
           </div>
+          <Show when={r().final?.guess}>
+            {(g) => (
+              <p class="kd__rguess" data-ok={r().final?.guessed ? "1" : "0"}>
+                Tahmini: {g()} {r().final?.guessed ? "✓ bildi" : "✗"}
+              </p>
+            )}
+          </Show>
           <span class="sr-only">{votes()} oy aldı</span>
         </section>
       )}
