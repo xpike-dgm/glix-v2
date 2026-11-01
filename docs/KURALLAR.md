@@ -1166,6 +1166,35 @@ faz 18 saniyelik tek kare seçimidir.
   oyuncu seçtiyse **kimse ödül almaz** (çakışanlar zaten elenir). Kimse seçmediyse ödül verilmez.
 - 2. aşamanın sonucu açılırken ödül karesi parlama efektiyle gösterilir. 2. aşama hiç oynanmazsa (bkz. özel durumlar) ödül karesi yoktur.
 
+**Değişiklik (GK öneri paketi, Kasım 2026, sahip onayı: GK-M1, GK-M2, GK-U5, GK-U6, GK-U7) — yukarıdakilerin önüne geçer:**
+
+- **Hayaletler (GK-M2):** 1. aşamada tek kalamayanlar (çakışan ya da seçmeyen) 2. aşamada **hayalet** olur ve onlar da
+  gizlice bir kare seçebilir (isteğe bağlı; seçmeyen hayaletin etkisi yoktur). Bir yarışan **bir hayaletle aynı kareye**
+  düşerse "hayalete çarptı" sayılır: **2. aşama +1'ini ve ödülü alamaz** (1. aşama puanı kalır). Hayaletler puan almaz;
+  hayaletler arası aynı kare önemsizdir. Hayalet ödül karesinde tek başına dursa da ödül kimseye gitmez; ödül karesinde
+  bir yarışanla dursa yarışan ödülü kaybeder. Hayalet seçimleri 2. aşama bitene kadar hiçbir yere gitmez; açılışta
+  gösterilir.
+- **Rakipsiz durum (GK-M2):** 1. aşamadan tek kişi kaldıysa ve 1. aşama kapandığı anda en az bir **bağlı** hayalet varsa
+  2. aşama oynanır (otomatik +1 yok; tek kalırsa +1 ve ödül şansı). Bağlı hayalet yoksa eski rakipsiz kural (+1, oyun
+  biter) geçerlidir. Bu karar 1. aşama kapandığı anda verilir; sonradan kopan ya da dönen değiştirmez.
+- **Erken bitiş:** 2. aşamada bağlı yarışanların **ve** bağlı hayaletlerin hepsi "Tamam" dediyse 1 sn sonra biter
+  ("Tamam" seçim ister; "Pas" yoktur, GK-M5 reddedildi).
+- **Pusula (GK-M1):** 2. aşama başlarken (bantla birlikte) her yarışan **yalnız kendine** görünen, ödül karesi hakkında
+  **her zaman doğru** bir ipucu alır: "X. satırda değil", "Y sütununda değil", "köşede" / "köşede değil"; 4×4'te ayrıca
+  "kenarda" / "içeride" (iç 4 kare) ve "üst / alt / sol / sağ yarıda". Her ipucu karelerin en az dörtte birini eler ve en
+  az 3 kareye izin verir (3×3'te "kenarda/içeride" ve yarılar verilmez). İpuçları sunucuda tohumlu dağıtılır, mümkün
+  olduğunca farklıdır (yetmezse tekrar eder). Hayaletlere, izleyiciye ve TV'ye ipucu gitmez; rakipsiz bitişte ipucu
+  yoktur. 2. aşamanın açılışında herkesin pusulası herkese açılır.
+- **Süreler (GK-U5, GK-U6, GK-U7):** 1. aşama sonrası ara 4 → **6 sn** (5 sn açılış + 1 sn "2. AŞAMA" bandı); 2. aşamanın
+  20 sn'si bandın bitişiyle başlar. Son açılış (en az gösterim) 5 → **8 sn** (kareler, ödül karesi anı, pusulalar, özet).
+- **Değişmeyenler:** 2–8 oyuncu; 3×3 / 4×4 kuralı; tek kare; 20 sn'lik iki aşama; seçimlerin aşama bitene kadar gizli
+  olması; aynı karede çakışanların elenmesi; tek kalana her aşamada +1; ödül karesinin tohumlu, gizli ve yalnız
+  2. aşamada olması, tek başına bulana +2, çakışmada kimseye; genel skora doğrudan aktarım; eksi puan yok. Reddedilenler:
+  daralan alan (GK-M3), açık bayrak (GK-M4), "Pas" (GK-M5), +2/+1/0 sıralama (GK-M6), rakipsiz şans atışı (GK-M7).
+- **Anlatım:** amaç "Kimseyle çakışmayan karede tek başına kal!" · "Gizlice bir kare seç (bu oyunda 3×3 / 4×4). Seçmezsen
+  pasif kalırsın." · "Aynı kareyi seçenler elenir; tek kalanlar +1 alır ve 2. aşamaya geçer. Elenenler hayalet olur." ·
+  "2. aşamada tek kalan yine +1; gizli ödül karesi +2. Pusulan ödül karesini gösterir."
+
 ## 15. Karalama Defteri — `karalama-defteri`
 
 **Durum: KİLİTLİ**

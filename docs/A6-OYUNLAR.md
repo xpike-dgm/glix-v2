@@ -52,9 +52,14 @@ Kısa oyun içi açılış penceresi (≤ 7 sn) açılış animasyonu için kull
   herkese açık (kim kiminle takas etti); kadeh içeriği değil. Sonda temiz kadeh +1.
 - **Gizli Kareler** (2–8): 2–4 oyuncu 3×3, 5–8 oyuncu 4×4. İki aşama, her biri 20 sn; seçim süre bitene kadar
   değiştirilebilir ve gizli. Aşama sonunda: tek kalan hücredekiler +1 ve devam; çakışanlar elenir; seçim yapmayan
-  pasif → puan almaz ve ikinci aşamaya geçmez. Aşamalar arasında 4 sn açılış penceresi. 1. aşamada herkes aynı
-  kareyi seçtiyse ya da hiç canlı kalmadıysa oyun biter; tek canlı kalırsa o kişi ikinci aşamayı rakipsiz
-  sayılır (+1) ve oyun biter. 2. aşamada yalnız hayatta kalanlar seçer; diğerleri izler.
+  pasif → puan almaz ve ikinci aşamaya geçmez. Aşamalar arasında 6 sn (5 sn açılış + 1 sn "2. AŞAMA" bandı). 1. aşamada
+  herkes aynı kareyi seçtiyse ya da hiç canlı kalmadıysa oyun biter. 1. aşamada tek kalamayanlar (çakışan / pasif)
+  2. aşamada **hayalettir** (GK-M2): gizlice kare tutar; tek kalan yarışanın karesinde hayalet varsa `haunted` (2. aşama
+  +1'i ve ödül yok); hayalet puan almaz. Tek canlı kalırsa ve 1. aşama kapanırken bağlı bir hayalet varsa 2. aşama
+  oynanır; yoksa rakipsiz (+1) ve oyun biter (`ghostLive` 1. aşama kapanırken donar; `online` `onPresence` ile yazılır).
+  2. aşamada her yarışana yalnız kendi `view`ında ödül karesi için doğru bir **pusula** ipucu (GK-M1; bant anından
+  2. aşama sonuna kadar); ipuçları `stage2Reveal.compass` ile açılışta herkese açılır. Erken bitiş 2. aşamada bağlı
+  yarışanlar ve bağlı hayaletlerin hepsi Tamam deyince. Son açılış en az 8 sn.
 - **İttifak** (3–8): 60 sn sözlü pazarlık (uygulamada eylem yok; portreler ve süre), sonra 15 sn gizli oylama.
   Kendine oy yok; oy süre bitene kadar değiştirilebilir. Oy vermeyenin oyu kendisi dışındaki rastgele bir
   katılımcıya gider. Alınan her oy +1 genel puan. Oylar ve sayılar sonuç açılana kadar gizli; sonuçta oy akışı

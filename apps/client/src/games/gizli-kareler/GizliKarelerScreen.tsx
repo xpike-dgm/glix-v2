@@ -1,144 +1,29 @@
-import { createMemo, createSignal, For, Match, onCleanup, Show, Switch } from "solid-js";
-import { hapticTap } from "../../fx/haptics.js";
-import { tap } from "../../fx/sound.js";
-import { sendActionAck } from "../../net/client.js";
-import { Avatar } from "../../ui/Avatar.js";
-import { createChoiceSync } from "../../ui/numberPicker.js";
+import { createEffect, createMemo, createSignal, Match, on, onCleanup, Show, Switch } from "solid-js";
+import { hapticTick } from "../../fx/haptics.js";
+import { state } from "../../net/store.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";
-import { pressable } from "../../ui/press.js";
+import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Screen } from "../../ui/Screen.js";
-import { TamamBar } from "../../ui/TamamBar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./gizli-kareler.css";
-import { RevealContinue } from "../../ui/RevealContinue.js";
 import { KareSonuc, type SonucEntry } from "./KareSonuc.js";
-import { cellName, type KarelerScreenView, parseKarelerView, screenPhase } from "./view.js";
+import { Secim, type SecimRole } from "./Secim.js";
+import { bandWhoosh, lastTick } from "./sounds.js";
+import { type KarelerScreenView, parseKarelerView, screenPhase } from "./view.js";
 
-interface SecimProps {
-  v: KarelerScreenView;
-  stage: 1 | 2;
-  /** Bu aşamada seçebilir mi (katılımcı ve hayatta). */
-  canPick: boolean;
-  entries: SonucEntry[];
-  selfId: string;
-  spectator: boolean;
-  now: () => number;
-}
-
-/** Seçim ızgarası. Aşama başına yeni örnek oluşur; yerel seçim aşamalar arasında taşınmaz. */
-function Secim(props: SecimProps) {
-  const cells = () => Array.from({ length: props.v.size * props.v.size }, (_, i) => i);
-  const endsAt = () => (props.stage === 1 ? props.v.endsAt : (props.v.stage2?.endsAt ?? props.v.endsAt));
-  const closed = () => !props.canPick || props.v.locked || props.now() >= endsAt();
-  const total = () => (props.stage === 1 ? props.entries.length : (props.v.stage2?.players.length ?? 0));
-  const me = () => props.entries.find((e) => e.id === props.selfId);
-  const sync = createChoiceSync({
-    serverValue: () => props.v.myChoice,
-    send: (cell) => sendActionAck({ kind: "pick", cell }),
-    closed,
-  });
-  const mine = (): number | null => (props.canPick ? (sync.value() ?? props.v.myChoice) : null);
-  const racers = () => {
-    const ids = props.v.stage2?.players ?? [];
-    return props.entries.filter((e) => ids.includes(e.id));
-  };
-
-  const title = (): string => {
-    if (props.spectator) return "Herkes gizlice seçiyor";
-    if (!props.canPick) return "Elendin";
-    return mine() === null ? "Bir kare seç" : "Karen hazır";
-  };
-  const sub = (): string => {
-    if (props.spectator) return "Sonuç süre bitince açılır";
-    if (!props.canPick) return "Kalanlar 2. aşamada yarışıyor";
-    if (props.v.locked) return "Seçimin kesinleşti";
-    if (props.stage === 2) return "Gizli ödül karesi var: tek başına basarsan +2";
-    return mine() === null ? "Seçmezsen pasif kalırsın" : "Tamam'a basana kadar değiştirebilirsin";
-  };
-
-  return (
-    <>
-      <div class="khero">
-        <Show when={!props.canPick && !props.spectator}>
-          <span class="khero__out">
-            <Avatar index={me()?.avatar ?? 0} size="clamp(40px, 7dvh, 56px)" mood="out" />
-          </span>
-        </Show>
-        <p class="overline">{props.stage}. aşama / 2</p>
-        <h2 class="khero__title" data-set={mine() === null ? undefined : "1"}>
-          {title()}
-        </h2>
-        <p class="khero__sub">{sub()}</p>
-      </div>
-
-      <div class="kstage">
-        <div class="kgrid" style={{ "--n": props.v.size }} data-off={props.canPick ? undefined : "1"}>
-          <For each={cells()}>
-            {(cell) => {
-              const press = pressable(() => {
-                if (closed()) return;
-                hapticTap();
-                tap();
-                sync.set(cell, true);
-              });
-              return (
-                <button
-                  type="button"
-                  class="kcell"
-                  data-on={mine() === cell ? "1" : undefined}
-                  style={{ "--i": cell }}
-                  disabled={!props.canPick || props.v.locked}
-                  aria-label={cellName(cell, props.v.size)}
-                  aria-pressed={mine() === cell}
-                  onPointerDown={press.onPointerDown}
-                  onClick={press.onClick}
-                >
-                  <Show when={mine() === cell} fallback={<i class="kcell__core" />}>
-                    <span class="kcell__me">
-                      <Avatar index={me()?.avatar ?? 0} size="var(--as)" />
-                    </span>
-                  </Show>
-                </button>
-              );
-            }}
-          </For>
-        </div>
-      </div>
-
-      <Show when={props.canPick || props.spectator}>
-        <TamamBar
-          locked={props.v.locked}
-          ready={props.v.ready.length}
-          readyIds={props.v.ready}
-          total={total()}
-          disabled={mine() === null}
-          spectator={props.spectator}
-          onLock={() => sendActionAck({ kind: "lock" })}
-        />
-      </Show>
-
-      <Show when={props.stage === 2 && !props.canPick && racers().length > 0}>
-        <div class="kpassive">
-          <span class="kpassive__label">Yarışanlar</span>
-          <For each={racers()}>
-            {(e) => (
-              <span class="kpassive__who">
-                <Avatar index={e.avatar} size="clamp(22px, 3.6dvh, 28px)" connected={e.connected} />
-              </span>
-            )}
-          </For>
-        </div>
-      </Show>
-    </>
-  );
-}
+/** GK-U15: dönen oyuncuya bant süresi. */
+const BACK_MS = 1_600;
 
 export default function GizliKarelerScreen(props: GameScreenProps) {
   const view = createMemo(() => parseKarelerView(props.match.publicView, props.match.view));
-  // Sunucu saati reaktif değildir; aşama geçişleri (2. aşamanın başlaması) için yerel bir saat.
+  // Sunucu saati reaktif değildir; aşama geçişleri ve açılış zamanlaması için yerel bir saat.
   const [clock, setClock] = createSignal(props.now());
-  const timer = setInterval(() => setClock(props.now()), 200);
-  onCleanup(() => clearInterval(timer));
+  const timer = setInterval(() => setClock(props.now()), 100);
+  const timers = new Set<ReturnType<typeof setTimeout>>();
+  onCleanup(() => {
+    clearInterval(timer);
+    for (const t of timers) clearTimeout(t);
+  });
   const entries = createMemo<SonucEntry[]>(() =>
     props.match.participants.map((id) => {
       const p = props.players.find((x) => x.id === id);
@@ -155,12 +40,35 @@ export default function GizliKarelerScreen(props: GameScreenProps) {
     return v ? screenPhase(v, clock()) : null;
   });
   const spectator = () => props.spectator === true;
-  const survivor = (v: KarelerScreenView): boolean => v.stage1?.status[props.selfId] === "solo";
+  const role2 = (v: KarelerScreenView): SecimRole => {
+    if (spectator()) return "spectator";
+    if (v.stage2?.players.includes(props.selfId)) return "racer";
+    if (v.stage2?.ghosts.includes(props.selfId)) return "ghost";
+    return "out";
+  };
+
+  /** Seçim aşamasının bitişi (son 5 sn ve dönüş bandı için). */
+  const chooseEnd = (): number | null => {
+    const v = view();
+    if (!v) return null;
+    if (phase() === "choose1") return v.endsAt;
+    if (phase() === "choose2") return v.stage2?.endsAt ?? null;
+    return null;
+  };
+  const secsLeft = () => {
+    const end = chooseEnd();
+    return end === null ? null : Math.max(0, Math.ceil((end - clock()) / 1000));
+  };
+  const urgent = () => {
+    const s = secsLeft();
+    return s !== null && s > 0 && s <= 5;
+  };
 
   /** Üstteki süre çubuğunun aralığı: seçim süresi ya da açılış penceresi. */
   const bar = (v: KarelerScreenView): { from: number; to: number } => {
     switch (phase()) {
       case "reveal1":
+      case "band":
         return { from: v.endsAt, to: v.stage2?.startsAt ?? v.finishesAt ?? v.endsAt };
       case "choose2":
         return { from: v.stage2?.startsAt ?? v.endsAt, to: v.stage2?.endsAt ?? v.endsAt };
@@ -169,6 +77,44 @@ export default function GizliKarelerScreen(props: GameScreenProps) {
       default:
         return { from: v.startedAt, to: v.endsAt };
     }
+  };
+
+  // GK-U10: son 5 sn herkese aynı tik ve kısa titreşim (seçip seçmediğin yan koltuğa sızmasın).
+  createEffect(
+    on(secsLeft, (s, prev) => {
+      if (s === null || prev === undefined || prev === null || s === prev || s > 5 || s === 0) return;
+      lastTick();
+      if (!spectator()) hapticTick();
+    }),
+  );
+  // GK-U5: bant sesi.
+  createEffect(
+    on(phase, (p, prev) => {
+      if (p === "band" && prev === "reveal1") bandWhoosh();
+    }),
+  );
+
+  // GK-U15: bağlantı dönünce kısa bant: "Döndün · 2. aşama · 9 sn".
+  const [back, setBack] = createSignal(false);
+  createEffect(
+    on(
+      () => state.conn,
+      (conn, prev) => {
+        if (conn !== "open" || prev === undefined || prev === "open") return;
+        setBack(true);
+        const t = setTimeout(() => {
+          timers.delete(t);
+          setBack(false);
+        }, BACK_MS);
+        timers.add(t);
+      },
+      { defer: true },
+    ),
+  );
+  const backText = (): string | null => {
+    const s = secsLeft();
+    if (!back() || s === null) return null;
+    return `Döndün · ${phase() === "choose2" ? "2" : "1"}. aşama · ${s} sn`;
   };
 
   return (
@@ -190,60 +136,62 @@ export default function GizliKarelerScreen(props: GameScreenProps) {
               <Secim
                 v={v()}
                 stage={1}
-                canPick={!spectator()}
+                who={spectator() ? "spectator" : "player"}
+                entries={entries()}
+                selfId={props.selfId}
+                now={clock}
+                band={false}
+                urgent={urgent()}
+              />
+            </Match>
+            <Match when={phase() === "reveal1"}>
+              <KareSonuc
+                v={v()}
+                final={false}
                 entries={entries()}
                 selfId={props.selfId}
                 spectator={spectator()}
-                now={props.now}
+                now={clock}
               />
             </Match>
-            <Match when={phase() === "reveal1" && v().stage1}>
-              {(r) => (
-                <KareSonuc
-                  reveal={r()}
-                  size={v().size}
-                  anchor={v().endsAt}
-                  final={false}
-                  continues={v().stage2 !== null}
-                  walkover={v().walkover}
-                  total={v().points?.[props.selfId] ?? 0}
-                  entries={entries()}
-                  selfId={props.selfId}
-                  spectator={spectator()}
-                  now={props.now}
-                />
-              )}
-            </Match>
-            <Match when={phase() === "choose2"}>
+            <Match when={phase() === "band" || phase() === "choose2"}>
               <Secim
                 v={v()}
                 stage={2}
-                canPick={!spectator() && survivor(v())}
+                who={role2(v())}
+                entries={entries()}
+                selfId={props.selfId}
+                now={clock}
+                band={phase() === "band"}
+                urgent={urgent()}
+              />
+            </Match>
+            <Match when={phase() === "reveal2"}>
+              <KareSonuc
+                v={v()}
+                final={true}
                 entries={entries()}
                 selfId={props.selfId}
                 spectator={spectator()}
-                now={props.now}
+                now={clock}
               />
             </Match>
-            <Match when={phase() === "reveal2" && v().stage2Reveal}>
-              {(r) => (
-                <KareSonuc
-                  reveal={r()}
-                  size={v().size}
-                  anchor={v().stage2?.endsAt ?? v().endsAt}
-                  final={true}
-                  continues={false}
-                  walkover={null}
-                  bonus={v().bonus}
-                  total={v().points?.[props.selfId] ?? 0}
-                  entries={entries()}
-                  selfId={props.selfId}
-                  spectator={spectator()}
-                  now={props.now}
-                />
-              )}
-            </Match>
           </Switch>
+        )}
+      </Show>
+
+      <Show when={phase() === "band"}>
+        <div class="kband" role="status">
+          <i class="kband__sweep" aria-hidden="true" />
+          <b class="kband__title">2. AŞAMA</b>
+          <span class="kband__sub">Gizli bir ödül karesi saklandı</span>
+        </div>
+      </Show>
+      <Show when={backText()}>
+        {(t) => (
+          <p class="kback" role="status">
+            {t()}
+          </p>
         )}
       </Show>
       <RevealContinue match={props.match} selfId={props.selfId} now={props.now} spectator={props.spectator} />

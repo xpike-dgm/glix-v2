@@ -151,3 +151,7 @@ export const hapticAlarm = (): void => vibrate([90, 50, 90, 50, 160]);
 export const hapticHold = (): void => vibrate([70, 50, 25, 50, 70]);
 /** Rus Ruleti (RR-U16): seni vurdular: tek uzun titreşim. */
 export const hapticShot = (): void => vibrate(400);
+/** Uzun tek titreşim (Gizli Kareler: kendi çakışman, 300 ms). */
+export const hapticLong = (): void => vibrate(300);
+/** Uzun-kısa-uzun (Gizli Kareler: ödül karesini buldun). */
+export const hapticJackpot = (): void => vibrate([260, 70, 60, 70, 260]);

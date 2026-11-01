@@ -20,6 +20,7 @@
  *   tv-kor-bomba-*            Kör Bomba evreleri (ör. tv-kor-bomba-watch, tv-kor-bomba-blast, tv-kor-bomba-trip)
  *   tv-sozluk-*               Sözlük Blöfü evreleri (ör. tv-sozluk-write, tv-sozluk-pick, tv-sozluk-reveal&at=4000)
  *   tv-rus-*                  Rus Ruleti evreleri (ör. tv-rus-wait, tv-rus-boom, tv-rus-over)
+ *   tv-kareler-*              Gizli Kareler evreleri (ör. tv-kareler-choosing2, tv-kareler-final-bonus&t=4500)
  *   tv-gizli-*                Gizli Hırsız evreleri (ör. tv-gizli-stir, tv-gizli-outro-multi&t=4400)
  *   tv-sizma-*                Sızma evreleri (ör. tv-sizma-clue, tv-sizma-runoff, tv-sizma-unmask&t=5200)
  */
@@ -64,6 +65,9 @@ export async function startTvMock(mock: string, params: URLSearchParams): Promis
     } else if (kind.startsWith("kor-bomba")) {
       const m = await import("./mockKorBomba.js");
       m.startKorBombaMockAs(kind, params, true);
+    } else if (kind.startsWith("kareler-")) {
+      const m = await import("./mockKareler.js");
+      m.startKarelerMockAs(kind, params, true);
     } else if (kind.startsWith("gizli-")) {
       const m = await import("./mockGizliHirsiz.js");
       m.startGizliHirsizMockAs(kind, params, true);

@@ -17,6 +17,8 @@ export const KEYS = {
   textSize: "glix.textSize",
   colorBlind: "glix.colorBlind",
   dataSaver: "glix.dataSaver",
+  /** Gizli seçimli oyunlarda kendi seçimin her zaman belirgin görünsün (Gizli Kareler GK-U2). */
+  showPick: "glix.showPick",
   telemetry: "glix.telemetry",
   wifiOnly: "glix.wifiOnly",
   /** Web bildirimleri açık ("1") ya da kapalı; yalnız oyuncu Ayarlar'dan açınca "1" olur. */

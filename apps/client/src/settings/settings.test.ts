@@ -149,3 +149,14 @@ describe("parseFlag / parseChoice", () => {
     expect(s.parseChoice("x", s.TEXT_CHOICES, "normal")).toBe("normal");
   });
 });
+
+describe("seçimimi her zaman göster (GK-U2)", () => {
+  it("varsayılan kapalı (gözetleme koruması açık); açılınca saklanır", async () => {
+    const a = await fresh();
+    expect(a.showPick()).toBe(false);
+    a.setShowPick(true);
+    expect(a.storage.data.get("glix.showPick")).toBe("1");
+    const b = await fresh(Object.fromEntries(a.storage.data));
+    expect(b.showPick()).toBe(true);
+  });
+});

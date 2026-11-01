@@ -213,3 +213,33 @@ listesi, `hirsizProp()` — Sözlük Blöfü düzeni); yokken ekran mevcut görs
   şıkırtısı, alarmda siren + kelepçe şakırtısı, boş kasada alçak "rüzgâr". **Kural (ses haritasına):** karar anında (ÇAL /
   ÇALMA) hiç ses yoktur; titreşim kadran tıkırtısıyla aynıdır. Gerçek kayıt istenirse olay adları `gizli-hirsiz.<an>`.
   Müzik (alçak döngüsel "soygun" teması, son 5 sn tempo katmanı) ses ekibine iştir; şimdilik yok.
+
+## Gizli Kareler
+
+Ortak stil: oyunun mevcut görselleriyle uyumlu (dünya zemini `worlds/gizli-kareler-*.webp`: mor-camgöbeği neon ışıklı gotik
+salon; anlatım `briefing/gizli-kareler-1..3.webp`; ızgara koyu lacivert #121a45 kareler, mor enerji çekirdekleri #8b5cff,
+altın #ffc23b vurgu; kalın konturlu cel-shaded çizim). Dosya `apps/client/public/assets/props/gizli-kareler/<ad>.webp` olarak
+konunca kod değişmeden kullanılır (derlemede `__KARELER_PROPS__` listesi, `karelerProp()` — Sözlük Blöfü düzeni); yokken
+ekran CSS sandığı çizer ve dosyayı hiç istemez.
+
+- **GK-U7 · ödül sandığı, kapalı** — `apps/client/public/assets/props/gizli-kareler/sandik-kapali.webp` · 1:1, 256×256 ·
+  şeffaf arka plan · Küçük, tıknaz bir hazine sandığı, tam karşıdan hafif yukarıdan; koyu ceviz ahşap, kalın altın (#ffc23b)
+  köşe bantları ve ortada altın kilit levhası; kapağın aralığından hafif mor neon ışık sızar (#8b5cff) ki oyunun enerji
+  çekirdekleriyle bağ kursun; kalın kontur; sandık kadrajın ~%80'i, ortalanmış; yazı YOK. Ödül karesinde (≈70 px telefonda,
+  ≈170 px TV'de) karenin ortasında gösterilir; "kimse bulamadı" ve "kırıldı" (çakışma / hayalet) sonuçlarında da bu dosya
+  kullanılır (kırık hâli CSS ile gri ve yarık). 70 px'te "sandık" okunmalı. · Geçici: CSS sandık (altın-kahve gradyan,
+  ortada 24 px ⭐).
+- **GK-U7 · ödül sandığı, açık** — `apps/client/public/assets/props/gizli-kareler/sandik-acik.webp` · 1:1, 256×256 · şeffaf
+  arka plan · Aynı sandık, aynı açı; kapak arkaya ~100° açılmış; içinden yükselen sıcak altın ışık (#ffd23f), taşan altın
+  paralar ve ortada parlayan tek büyük altın yıldız (⭐ biçimli, oyunun ödül simgesi); kalın kontur; yazı YOK. Ödül karesini
+  tek başına bulan olduğunda gösterilir. · Geçici: açık tonlu CSS sandık + ⭐ + CSS konfeti.
+- **GK-M2 · hayalet örtüsü, GK-U5 bant ışığı, GK-U7 ışık huzmesi, altın sütun, konfeti, pusula kartı, "bağlantı yok"
+  simgesi** (yeni görsel gerekmedi) — CSS/SVG ve emoji (👻, 🧭) ile çizildi; hareket azaltmada animasyonsuz.
+- **GK-U14 · TV zemini** (yeni görsel gerekmedi) — kabuğun mevcut `worlds/gizli-kareler-landscape.webp` zemini.
+- **ses** (dosya gerekmedi; istenirse gerçek kayıtlarla değiştirilir) — GK-U16 seti mevcut ses sistemiyle kodla üretildi
+  (`apps/client/src/games/gizli-kareler/sounds.ts`): tek tip kare seçme tıkı, kilit "klak", kare dönüşü tıkırtısı, tek
+  kalan için yükselen altın nota, çakışma "bzzt" + cam kırılması, hayalet uğultusu, "2. AŞAMA" bandı süpürmesi, ışık
+  huzmesi süpürmesi, sandık açılışı / kırılması / kapanması, son 5 sn tik. Titreşim: seçimde 10 ms (her kare aynı), kendi
+  çakışmanda 300 ms, ödülü bulunca uzun-kısa-uzun; son 5 sn herkese aynı kısa titreşim. **Kural (ses haritasına):** kare
+  seçme sesi kareye göre DEĞİŞMEZ (yan koltuğa seçimi duyururdu). Gerçek kayıt istenirse olay adları `gizli-kareler.<an>`.
+  Müzik (sakin gizemli seçim teması, 2. aşamada bir katman, son 5 sn tempo) ses ekibine iştir; şimdilik yok.

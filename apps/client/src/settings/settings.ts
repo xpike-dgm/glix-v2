@@ -33,11 +33,12 @@ const [textSize, setTextSizeSignal] = createSignal<TextSize>(
 );
 const [colorBlind, setColorBlindSignal] = createSignal(parseFlag(readStored(KEYS.colorBlind), false));
 const [dataSaver, setDataSaverSignal] = createSignal(parseFlag(readStored(KEYS.dataSaver), false));
+const [showPick, setShowPickSignal] = createSignal(parseFlag(readStored(KEYS.showPick), false));
 const [wifiOnly, setWifiOnlySignal] = createSignal(parseFlag(readStored(KEYS.wifiOnly), true));
 const [notifyOn, setNotifyOnSignal] = createSignal(parseFlag(readStored(KEYS.notify), false));
 const [telemetry, setTelemetrySignal] = createSignal(parseFlag(readStored(KEYS.telemetry), true));
 
-export { colorBlind, dataSaver, haptics, motion, notifyOn, telemetry, textSize, wifiOnly };
+export { colorBlind, dataSaver, haptics, motion, notifyOn, showPick, telemetry, textSize, wifiOnly };
 
 /** Kök öğeye yazılan özellikler: CSS yalnız bunlara bakar. */
 export function applyRootSettings(
@@ -70,6 +71,11 @@ export function setColorBlind(on: boolean): void {
   setColorBlindSignal(on);
   writeStored(KEYS.colorBlind, on ? "1" : "0");
   applyRootSettings();
+}
+/** Gizli seçim gözetleme koruması kapalı: seçtiğin kare her zaman belirgin (GK-U2). */
+export function setShowPick(on: boolean): void {
+  setShowPickSignal(on);
+  writeStored(KEYS.showPick, on ? "1" : "0");
 }
 export function setDataSaver(on: boolean): void {
   setDataSaverSignal(on);

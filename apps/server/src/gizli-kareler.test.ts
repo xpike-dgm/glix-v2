@@ -18,8 +18,9 @@ interface Reveal {
 interface Pub {
   size: number;
   stage1: null | Reveal;
-  stage2: null | { players: string[] };
-  stage2Reveal: null | Reveal;
+  stage2: null | { players: string[]; ghosts: string[] };
+  stage2Reveal: null | (Reveal & { ghosts: Record<string, number | null>; compass: Record<string, unknown> });
+  walkover: string | null;
   points: null | Record<string, number>;
   bonus: null | { cell: number; winner: string | null };
 }
@@ -69,15 +70,23 @@ describe("gizli kareler: oda içinde tam maç", () => {
       [ids[3]]: "solo",
     });
     expect(pub().stage2?.players).toEqual([ids[2], ids[3]]);
-    expect(await pick(a, 4)).toBe(false); // elendi / aşama kapalı
+    expect(pub().stage2?.ghosts).toEqual([ids[0], ids[1]]);
+    expect(await pick(a, 4)).toBe(false); // aşama arası kapalı
 
-    k.clock.advance(4_000);
+    k.clock.advance(6_000);
     await sleep(60);
-    expect(await pick(a, 4)).toBe(false); // elenen oyuncu seçemez
+    // Pusula yalnız yarışanın kendi görünümünde (GK-M1); hayalet ve ortak görünümde yok.
+    const compass = (x: Client) => (x.room.match?.view as { compass?: unknown } | undefined)?.compass;
+    await until(() => compass(c) != null, "pusula");
+    expect(compass(d)).not.toBeNull();
+    expect(compass(a)).toBeNull();
+    expect(JSON.stringify(pub())).not.toContain("compass");
+    expect(await pick(a, 4)).toBe(true); // hayalet de kare tutar (GK-M2)
     expect(await pick(c, 6)).toBe(true);
     expect(await pick(d, 6)).toBe(true); // c ile çakışır
     await sleep(20);
     expect(pub().stage2Reveal).toBeNull();
+    expect(JSON.stringify(pub())).not.toContain('"ghosts":{');
     // Ödül karesi 2. aşama sonucuna kadar kimseye bildirilmez (ortak ve özel görünümlerde yok).
     for (const x of cs) {
       expect((x.room.match?.publicView as Pub | undefined)?.bonus).toBeNull();
@@ -87,13 +96,15 @@ describe("gizli kareler: oda içinde tam maç", () => {
     k.clock.advance(20_000);
     await until(() => pub().stage2Reveal !== null, "2. aşama açıldı");
     expect(pub().stage2Reveal?.status).toEqual({ [ids[2]]: "clash", [ids[3]]: "clash" });
+    expect(pub().stage2Reveal?.ghosts).toEqual({ [ids[0]]: 4, [ids[1]]: null });
+    expect(Object.keys(pub().stage2Reveal?.compass ?? {}).sort()).toEqual([ids[2], ids[3]].sort());
     // Sonuçla birlikte ödül karesi açılır; iki oyuncu çakıştığı için ödülü kimse almaz.
     const bonus = pub().bonus as NonNullable<Pub["bonus"]>;
     expect(bonus.cell).toBeGreaterThanOrEqual(0);
     expect(bonus.cell).toBeLessThan(9);
     expect(bonus.winner).toBeNull();
 
-    k.clock.advance(5_000);
+    k.clock.advance(8_000);
     await until(() => a.room.phase === "results", "sonuç");
     const awards = { [ids[0]]: 0, [ids[1]]: 0, [ids[2]]: 1, [ids[3]]: 1 };
     expect(a.room.match?.result?.awards).toEqual(awards);
@@ -102,7 +113,7 @@ describe("gizli kareler: oda içinde tam maç", () => {
     expect(b.room.phase).toBe("results");
   });
 
-  it("1. aşamada tek kalan rakipsiz sayılır: +2 ve oyun erken biter", async () => {
+  it("1. aşamada tek kalan, bağlı hayalet varsa 2. aşamayı hayaletlere karşı oynar", async () => {
     const cs = await setupRoom(["A", "B", "C", "D", "E"]);
     const [a, b, c, d, e] = cs as [Client, Client, Client, Client, Client];
     await startGame(cs);
@@ -115,10 +126,39 @@ describe("gizli kareler: oda içinde tam maç", () => {
     // e seçmez
     k.clock.advance(20_100);
     await until(() => pub().stage1 !== null, "açıldı");
-    expect(pub().stage2).toBeNull();
-    k.clock.advance(5_000);
+    expect(pub().walkover).toBeNull();
+    expect(pub().stage2?.players).toEqual([a.session.playerId]);
+    expect(pub().stage2?.ghosts).toHaveLength(4);
+    k.clock.advance(6_000);
+    await sleep(60);
+    expect(await pick(e, 0)).toBe(true);
+    expect(await pick(a, 0)).toBe(true); // hayalete çarpar
+    k.clock.advance(20_000);
+    await until(() => pub().stage2Reveal !== null, "2. aşama açıldı");
+    expect(pub().stage2Reveal?.status).toEqual({ [a.session.playerId]: "haunted" });
+    k.clock.advance(8_000);
     await until(() => a.room.phase === "results", "sonuç");
-    expect(a.room.players.map((p) => p.score)).toEqual([2, 0, 0, 0, 0]);
+    expect(a.room.players.map((p) => p.score)).toEqual([1, 0, 0, 0, 0]);
     expect(e.room.phase).toBe("results");
+  });
+
+  it("1. aşamada tek kalan, hayaletlerin hepsi koptuysa rakipsiz sayılır: +2 ve oyun erken biter", async () => {
+    const cs = await setupRoom(["A", "B", "C"]);
+    const [a, b, c] = cs as [Client, Client, Client];
+    await startGame(cs);
+    const pub = () => a.room.match?.publicView as Pub;
+    expect(await pick(a, 4)).toBe(true);
+    expect(await pick(b, 3)).toBe(true);
+    expect(await pick(c, 3)).toBe(true);
+    b.ws.terminate();
+    c.ws.terminate();
+    await until(() => a.room.players.every((p) => p.id === a.session.playerId || !p.connected), "koptular");
+    k.clock.advance(20_100);
+    await until(() => pub().stage1 !== null, "açıldı");
+    expect(pub().stage2).toBeNull();
+    expect(pub().walkover).toBe(a.session.playerId);
+    k.clock.advance(8_000);
+    await until(() => a.room.phase === "results", "sonuç");
+    expect(a.room.players.map((p) => p.score)).toEqual([2, 0, 0]);
   });
 });

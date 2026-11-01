@@ -89,6 +89,7 @@ const SHARED_ALLOWED = new Set<string>([
   "pbtn__label", // birincil düğme yazısı
   "tamam", // TAMAM çubuğu
   "tamam__count", // TAMAM sayacı
+  "tamam__dots", // TAMAM hazır şeridi (Gizli Kareler küçük ekranda düğmenin üstüne alır, GK-U12)
   // frame.css dikey ekranda bu iki oyunun kendi üst şeridini yeniden ayarlar.
   "kb__top", // kara-borsa
   "kd__top", // karalama-defteri (bozuk-telefon da kullanır)

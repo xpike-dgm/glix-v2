@@ -33,6 +33,7 @@ export type PropPath =
       | "not-kagidi"}`
   | `rus-ruleti/${"tabanca" | "tambur" | RuletProp}`
   | `gizli-hirsiz/${HirsizProp}`
+  | `gizli-kareler/${KarelerProp}`
   | `sozluk-blofu/${SozlukProp}`
   | `karalama-defteri/${KaralamaProp}`
   | `kor-kronometre/${KronometreProp}`
@@ -126,6 +127,23 @@ export function hirsizPropExists(name: HirsizProp): boolean {
 /** Var olan Gizli Hırsız görselinin adresi; yoksa null. */
 export const hirsizProp = (name: HirsizProp): string | null =>
   hirsizPropExists(name) ? propSrc(`gizli-hirsiz/${name}`) : null;
+
+/**
+ * Gizli Kareler görselleri (sahip üretecek; docs/oneriler/GORSEL-IHTIYACLARI.md "Gizli Kareler"). Yoksa ödül karesi
+ * CSS sandık ve ⭐ ile çizilir ve olmayan dosya hiç istenmez (404 yok); dosya `gizli-kareler/<ad>.webp` olarak gelince
+ * kod değişmeden kullanılır.
+ */
+export type KarelerProp = "sandik-kapali" | "sandik-acik";
+export const KARELER_PROPS: readonly KarelerProp[] = ["sandik-kapali", "sandik-acik"];
+
+export function karelerPropExists(name: KarelerProp): boolean {
+  const built = typeof __KARELER_PROPS__ === "undefined" ? undefined : __KARELER_PROPS__;
+  return built ? built.includes(name) : false;
+}
+
+/** Var olan Gizli Kareler görselinin adresi; yoksa null. */
+export const karelerProp = (name: KarelerProp): string | null =>
+  karelerPropExists(name) ? propSrc(`gizli-kareler/${name}`) : null;
 
 /**
  * Kör Kronometre görselleri (sahip üretecek; docs/oneriler/GORSEL-IHTIYACLARI.md "Kör Kronometre"). Yoksa ekran CSS
@@ -239,6 +257,7 @@ const GAME_PROPS: Record<string, readonly PropPath[]> = {
     "genel/kasa-kapisi",
     ...HIRSIZ_PROPS.filter(hirsizPropExists).map((n): PropPath => `gizli-hirsiz/${n}`),
   ],
+  "gizli-kareler": KARELER_PROPS.filter(karelerPropExists).map((n): PropPath => `gizli-kareler/${n}`),
   "son-kisi": ["genel/kacis-kolu"],
   ittifak: ["genel/el-sikisma"],
   "capraz-ates": ["genel/nisangah"],

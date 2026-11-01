@@ -24,3 +24,5 @@ declare const __KRONOMETRE_PROPS__: readonly string[] | undefined;
 declare const __RULET_PROPS__: readonly string[] | undefined;
 /** Gizli Hırsız görsellerinden derlemede var olanlar (`public/assets/props/gizli-hirsiz/<ad>.webp`, uzantısız). */
 declare const __HIRSIZ_PROPS__: readonly string[] | undefined;
+/** Gizli Kareler görsellerinden derlemede var olanlar (`public/assets/props/gizli-kareler/<ad>.webp`, uzantısız). */
+declare const __KARELER_PROPS__: readonly string[] | undefined;

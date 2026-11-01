@@ -25,6 +25,11 @@ export function Briefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
   const art = () => gameEntry(match().gameId)?.Art;
   const trial = () => (participant() ? gameEntry(match().gameId)?.Try : undefined);
   const [panel, setPanel] = createSignal(0);
+  const steps = () => {
+    const fix = gameEntry(match().gameId)?.briefingSteps;
+    const raw = match().briefing.steps;
+    return fix ? fix(raw, match().participants.length) : raw;
+  };
 
   return (
     <>
@@ -72,7 +77,7 @@ export function Briefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
               {match().briefing.goal}
             </p>
             <ol class="steps">
-              <For each={match().briefing.steps}>
+              <For each={steps()}>
                 {(step, i) => (
                   <li class="rise" style={{ "--i": 4 + i() }} data-on={panel() === i() ? "1" : undefined}>
                     <b class="steps__n">{i() + 1}</b>

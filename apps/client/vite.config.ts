@@ -225,6 +225,16 @@ function hirsizPropFiles(): string[] {
     .sort();
 }
 
+/** Gizli Kareler görsellerinden derlemede var olanlar (ödül sandığı; yoksa CSS sandık ve ⭐ çizilir). */
+function karelerPropFiles(): string[] {
+  const dir = fileURLToPath(new URL("./public/assets/props/gizli-kareler", import.meta.url));
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".webp"))
+    .map((f) => f.slice(0, -".webp".length))
+    .sort();
+}
+
 /**
  * Sızma görsellerinden gerçekten var olanlar (`public/assets/props/sizma/*.webp`, uzantısız ad). Ekran yalnız
  * bunları ister; olmayanın yerine kendi SVG maskesini çizer (404 yok). Tarifler: docs/oneriler/sizma-gorsel.md.
@@ -253,6 +263,7 @@ export default defineConfig({
     __KRONOMETRE_PROPS__: JSON.stringify(kronometrePropFiles()),
     __RULET_PROPS__: JSON.stringify(ruletPropFiles()),
     __HIRSIZ_PROPS__: JSON.stringify(hirsizPropFiles()),
+    __KARELER_PROPS__: JSON.stringify(karelerPropFiles()),
   },
   plugins: [
     solid(),

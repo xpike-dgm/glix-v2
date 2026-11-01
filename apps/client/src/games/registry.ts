@@ -1,5 +1,6 @@
 import type { MatchSnapshot, PlayerInfo } from "@glix/engine";
 import { type Component, lazy } from "solid-js";
+import { karelerBriefing } from "./gizli-kareler/briefing.js";
 import { hudOf } from "./yatay-masa/hud.js";
 
 export interface GameScreenProps {
@@ -47,6 +48,11 @@ export interface GameEntry {
    */
   tvOwnBoard?: boolean;
   hud?: (match: MatchSnapshot, selfId: string) => HudInfo | null;
+  /**
+   * Anlatım maddelerini oyuncu sayısına göre kesinleştirir (ör. Gizli Kareler "bu oyunda 4×4"); anlatım kurulumdan
+   * önce gösterildiği için katılımcı sayısından hesaplanır. Verilmezse maddeler olduğu gibi gösterilir.
+   */
+  briefingSteps?: (steps: readonly string[], players: number) => readonly string[];
 }
 
 /** Yeni oyun: buraya gameId ile bir giriş eklemek yeterli. */
@@ -97,6 +103,8 @@ const registry: Record<string, GameEntry> = {
   "gizli-kareler": {
     Screen: lazy(() => import("./gizli-kareler/GizliKarelerScreen.js")),
     Art: lazy(() => import("./gizli-kareler/BriefingArt.js")),
+    StageView: lazy(() => import("./gizli-kareler/StageView.js")),
+    briefingSteps: karelerBriefing,
   },
   "ortalamanin-yarisi": {
     Screen: lazy(() => import("./ortalamanin-yarisi/OrtalamaninYarisiScreen.js")),

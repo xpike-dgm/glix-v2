@@ -39,9 +39,11 @@ import {
   setDataSaver,
   setHaptics,
   setMotion,
+  setShowPick,
   setTelemetry,
   setTextSize,
   setWifiOnly,
+  showPick,
   TEXT_CHOICES,
   type TextSize,
   telemetry,
@@ -471,6 +473,12 @@ export function Settings() {
                 hint="Renklere şekil, desen ve yazı ekler"
                 on={colorBlind()}
                 onChange={setColorBlind}
+              />
+              <Toggle
+                label="Seçimimi her zaman göster"
+                hint="Gizli seçimli oyunlarda seçtiğin kare yan koltuktan da görünür"
+                on={showPick()}
+                onChange={setShowPick}
               />
             </Group>
 
