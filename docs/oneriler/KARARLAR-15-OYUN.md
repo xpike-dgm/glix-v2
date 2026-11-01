@@ -71,3 +71,4 @@ yazılır; görseller hepsi bittikten sonra ChatGPT ile üretilir.
 | Oyun | Durum | Commit |
 |---|---|---|
 | Sözlük Blöfü | uygulandı (canlıda değil) | 4cf6334 |
+| Çağrışım Ağı | uygulandı (canlıda değil) | d10b550 |
