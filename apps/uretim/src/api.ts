@@ -30,6 +30,7 @@ import {
   tamsayi,
   tarih,
 } from "./http.js";
+import type { IsOnerici } from "./isOnerisi.js";
 import { type Donusturucu, istemDoldur, istemUret } from "./istekYaz.js";
 import { IsHatasi, type Merkez } from "./merkez.js";
 import type { OlayYayini } from "./olaylar.js";
@@ -50,6 +51,8 @@ export interface ApiOrtami {
   bildirim: Bildirim;
   ssh: SshKanal;
   donusturucu: Donusturucu;
+  /** "Ne iş vereyim?" önerileri (aynı model ve günlük sınır, önbellekli). */
+  isOnerici: IsOnerici;
   /** Canlı güncelleme akışı (verilmezse uç kapalı). */
   yayin?: OlayYayini;
   /** Oyun alanı (test2) eşitlemesi (sözleşme bölüm 13); verilmezse test2 uçları 404. */
@@ -472,6 +475,13 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
       const p = teslimAyristir(girdi, alanTanimi(alan));
       if (!p.ok) return hata(res, 400, "girdi", p.hatalar.join(" "));
       return ok(200, await m.teslimEt(alan, "elle", null, p.deger, false, now, kim));
+    }
+    if (p0 === "alan" && isAlanId(p1) && p2 === "is-onerisi" && p3 === undefined) {
+      // "Ne iş vereyim?": alan için 5–6 iş önerisi; `yeni: true` ("başka öner") önbelleği atlar.
+      const b = await govde();
+      if (b.yeni !== undefined && typeof b.yeni !== "boolean")
+        return hata(res, 400, "girdi", "İstek geçersiz.");
+      return ok(200, await o.isOnerici.oner(p1, b.yeni === true, now));
     }
     if (p0 === "alan" && isAlanId(p1)) return await alanYaz(res, o, p1, parca.slice(2), govde, kim, now);
     if (p0 === "is" && p1 && p2 === "varyant-sec") {

@@ -13,6 +13,7 @@ import { olayDinle } from "../canli.js";
 import { alanRengi, git, hataTost, sorgu, titret, tost } from "../durum.js";
 import { panoYenile } from "../Kabuk.js";
 import { Simge } from "../simgeler.js";
+import { IsOnerileri, type IsOnerisi } from "./IsOnerileri.js";
 
 interface Taslak {
   baslik: string;
@@ -236,6 +237,19 @@ export function Iste(): JSX.Element {
       : fikirIdler().length
         ? `Onaylanan ${fikirIdler().length} fikri uygula.`
         : metin();
+  const [oneriAcik, setOneriAcik] = createSignal(false);
+  let metinKutusu: HTMLTextAreaElement | undefined;
+  /** "Ne iş vereyim?" kartı: metin istek kutusuna, ilgili onaylı fikirler "onaylananları uygula"ya. */
+  const oneriSec = (o: IsOnerisi): void => {
+    setMetin(o.metin);
+    if (o.fikirler.length) {
+      setUygula(true);
+      setFikir(false);
+      setSeciliFikirler(new Set(o.fikirler));
+    }
+    metinKutusu?.focus({ preventScroll: true });
+    tost(o.fikirler.length ? "Öneri yazıldı; ilgili fikirler seçildi" : "Öneri istek kutusuna yazıldı");
+  };
   const [sonTarih, setSonTarih] = createSignal("");
   const [ayar, { refetch: ayarYenile }] = createResource(alan, (a) => al<AlanSayfasi>(`alan/${a}`));
   onCleanup(
@@ -382,9 +396,24 @@ export function Iste(): JSX.Element {
               </For>
             </div>
           </div>
-          <label class="alan-giris">
-            <span>Ne istiyorsun?</span>
+          <div class="alan-giris">
+            <div class="satir satir--ara">
+              <label for="iste-metin">Ne istiyorsun?</label>
+              <button
+                type="button"
+                class="baglanti-dugme iste__fikir-ver"
+                aria-expanded={oneriAcik()}
+                onClick={() => setOneriAcik(!oneriAcik())}
+              >
+                <Simge ad="pirilti" boyut={16} /> Ne iş vereyim?
+              </button>
+            </div>
+            <Show when={oneriAcik() ? alan() : null} keyed>
+              {(a) => <IsOnerileri alan={a} sec={oneriSec} kapat={() => setOneriAcik(false)} />}
+            </Show>
             <textarea
+              id="iste-metin"
+              ref={metinKutusu}
               class="girdi iste__metin"
               rows="5"
               value={metin()}
@@ -395,7 +424,7 @@ export function Iste(): JSX.Element {
                 e.key === "Enter" && (e.metaKey || e.ctrlKey) && metin().trim().length >= 5 && void cevir()
               }
             />
-          </label>
+          </div>
           <div class="iki-sutun">
             <div class="alan-giris">
               <span>Yapay zekâ nasıl bağlanıyor?</span>
