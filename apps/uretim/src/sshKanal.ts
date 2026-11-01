@@ -385,15 +385,19 @@ export class SshKanal {
     await chmod(isleniyor, 0o700);
     const ara = join(isleniyor, `${paket}.${randomBytes(6).toString("hex")}`);
     await rename(yol, ara);
+    // Paket yalnız teslim gerçekten kaydedilince silinir; hata (sınır, doğrulama) olursa yerine döner.
+    let teslimEdildi = false;
     try {
       const st2 = await lstat(ara);
       if (st2.isSymbolicLink() || !st2.isDirectory())
         throw new IsHatasi(400, "Paket düz bir klasör olmalı (bağlantı kabul edilmez).");
       const icerik = await this.paketOku(ara);
       if (uretimYontemi !== undefined) icerik.teslimJson.uretimYontemi = uretimYontemi;
-      return await this.paketCalistir(alan, icerik, islem === "on_kontrol", anahtar, now);
+      const sonuc = await this.paketCalistir(alan, icerik, islem === "on_kontrol", anahtar, now);
+      teslimEdildi = islem === "teslim" && typeof sonuc === "object" && sonuc !== null && "teslimId" in sonuc;
+      return sonuc;
     } finally {
-      if (islem === "teslim") await rm(ara, { recursive: true, force: true });
+      if (teslimEdildi) await rm(ara, { recursive: true, force: true });
       else
         await rename(ara, yol).catch(async () => {
           // Yapay zekâ aynı adla yeni klasör açtıysa eskisi yan ada konur.

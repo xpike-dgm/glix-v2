@@ -86,6 +86,20 @@ describe("ssh_paket", () => {
     expect(t.ogeler.every((x) => x.durum === "bekliyor")).toBe(true);
   });
 
+  it("teslim günlük sınıra takılırsa paket silinmez, yerinde kalır", async () => {
+    const c = await o.giris();
+    const { anahtar, gelen } = await o.sshKanali("test", c);
+    senaryoPaketi(gelen, "qa3", 10);
+    const id = (o.u.anahtarlar.liste("test")[0]?.id ?? 0) as number;
+    const ins = o.u.merkez.db.prepare(
+      "INSERT INTO yukleme (id, alan, anahtar_id, ozet, ad, olusturma) VALUES (?, 'test', ?, ?, 'x.json', ?)",
+    );
+    for (let i = 0; i < 500; i++)
+      ins.run(`yk${String(i).padStart(20, "0")}`, id, `f${String(i).padStart(63, "0")}`, o.saat.simdi);
+    await expect(calistirKomut(cli(anahtar, gelen), "teslim-et qa3")).rejects.toThrow(/500/);
+    expect(existsSync(join(gelen, "qa3/senaryo-9.json"))).toBe(true);
+  });
+
   it("sınırlar: en çok 200 dosya; talimat sınırları yazar", async () => {
     const c = await o.giris();
     const { anahtar, gelen } = await o.sshKanali("test", c);
