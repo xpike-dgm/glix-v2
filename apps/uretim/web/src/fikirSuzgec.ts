@@ -1,5 +1,6 @@
 /** Fikir panosunun süzgeç ve sıralaması (saf; testli). */
 import type { Etki, FikirAsamasi, FikirKarti, Zahmet } from "../../src/ortak/fikir.js";
+import { type TasarimTuru, tasarimSatirlari } from "../../src/ortak/tasarim.js";
 
 export type Siralama = "yeni" | "etki" | "kolay";
 const ETKI_PUAN: Record<Etki, number> = { dusuk: 1, orta: 2, yuksek: 3 };
@@ -15,6 +16,8 @@ export function fikirSuz(
     zahmet: Zahmet | null;
     asama: FikirAsamasi | "acik" | null;
     siralama: Siralama;
+    /** Oyun Tasarımı kartının türü (yeni oyun / sistem / oyuna ek); null hepsi. */
+    tasarim?: TasarimTuru | null;
   },
 ): FikirKarti[] {
   const q = s.ara.trim().toLocaleLowerCase("tr-TR");
@@ -25,8 +28,15 @@ export function fikirSuz(
       (!s.etki || f.etki === s.etki) &&
       (!s.zahmet || f.zahmet === s.zahmet) &&
       (!s.asama || (s.asama === "acik" ? f.asama !== "reddedildi" : f.asama === s.asama)) &&
+      (!s.tasarim || f.tasarim?.tur === s.tasarim) &&
       (!q ||
-        `${f.baslik} ${f.ozet ?? ""} ${f.aciklama} ${f.kategori ?? ""}`
+        `${f.baslik} ${f.ozet ?? ""} ${f.aciklama} ${f.kategori ?? ""} ${f.kaynak?.ad ?? ""} ${
+          f.tasarim
+            ? tasarimSatirlari(f.tasarim)
+                .map((x) => x.deger)
+                .join(" ")
+            : ""
+        }`
           .toLocaleLowerCase("tr-TR")
           .includes(q)),
   );

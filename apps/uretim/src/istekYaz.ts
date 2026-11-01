@@ -21,6 +21,7 @@ import {
 } from "./ortak/gorselKurali.js";
 import { OYUN_ALANI_SATIRI, oyunAlaniAlaniMi } from "./ortak/oyunAlani.js";
 import { PAKET_SATIRI, TEST_SINIRI } from "./ortak/paketBicimi.js";
+import { TASARIM_ISTEM_SATIRI } from "./ortak/tasarim.js";
 import type { IsKaydi } from "./ortak/tipler.js";
 
 export const AI_URL = "https://api.anthropic.com/v1/messages";
@@ -185,6 +186,11 @@ export interface Donusturucu {
   readonly acik: boolean;
   kullanim(now: number): { bugun: number; sinir: number };
   taslak(g: IstekGirdisi, now: number): Promise<{ taslak: IsTaslagi; kaynak: "model" | "kalip" }>;
+  /**
+   * Serbest metin (ör. öneri dosyası taslağı, bölüm 15): aynı model, aynı günlük sınır ve güvenceler. Model yoksa,
+   * sınır dolduysa ya da yanıt bozuksa null (çağıran sabit kalıba düşer).
+   */
+  metin(p: { system: string; user: string; enCokToken: number }, now: number): Promise<string | null>;
 }
 
 const gunAnahtari = (now: number): string => `ai_kullanim:${new Date(now).toISOString().slice(0, 10)}`;
@@ -218,6 +224,7 @@ export function donusturucuKur(
       // Görsel kuralı, teslim biçimi ve uygulanacak fikirler model çıktısına ve kalıba kodla eklenir: model çıkaramaz.
       return { ...r, taslak: fikirBolumuEkle(g, bicimKuraliEkle(g, gorselKuraliEkle(g.alan, r.taslak))) };
     },
+    metin: (p, now) => modelMetni(p.system, p.user, p.enCokToken, now),
   };
 
   async function hamTaslak(
@@ -225,9 +232,20 @@ export function donusturucuKur(
     now: number,
   ): Promise<{ taslak: IsTaslagi; kaynak: "model" | "kalip" }> {
     const yedek = { taslak: kaliptanTaslak(g), kaynak: "kalip" as const };
-    if (!key || sayi(now) >= sinir) return yedek;
-    artir(now);
     const p = modelIstemi(g);
+    const t = taslakAyristir(await modelMetni(p.system, p.user, MAX_TOKENS, now));
+    return t ? { taslak: t, kaynak: "model" } : yedek;
+  }
+
+  async function modelMetni(
+    system: string,
+    user: string,
+    enCokToken: number,
+    now: number,
+  ): Promise<string | null> {
+    if (!key || sayi(now) >= sinir) return null;
+    artir(now);
+    const p = { system, user };
     const kontrol = new AbortController();
     const zaman = setTimeout(() => kontrol.abort(), o.zamanAsimi ?? AI_ZAMAN_ASIMI_MS);
     try {
@@ -240,7 +258,7 @@ export function donusturucuKur(
         },
         body: JSON.stringify({
           model: AI_MODEL,
-          max_tokens: MAX_TOKENS,
+          max_tokens: enCokToken,
           thinking: { type: "disabled" },
           system: p.system,
           messages: [{ role: "user", content: p.user }],
@@ -250,14 +268,13 @@ export function donusturucuKur(
       });
       if (r.status < 200 || r.status >= 300) {
         console.error(JSON.stringify({ seviye: "uyari", olay: "istek_model_hata", durum: r.status }));
-        return yedek;
+        return null;
       }
-      const t = taslakAyristir(yanitMetni(await r.json()));
-      return t ? { taslak: t, kaynak: "model" } : yedek;
+      return yanitMetni(await r.json());
     } catch {
       // Hata metni anahtar içerebilir: yalnız genel kayıt.
       console.error(JSON.stringify({ seviye: "uyari", olay: "istek_model_hata" }));
-      return yedek;
+      return null;
     } finally {
       clearTimeout(zaman);
     }
@@ -353,7 +370,13 @@ export function istemUret(alan: AlanId, baglanti: "mcp" | "ssh", isler: readonly
       : "";
   const devam = 'Bundan sonra yalnız "devam" yazarsam açık işleri sırayla bitir ve geri bildirimleri oku.';
   // Oyun alanı (test2) satırı: içerik ve mağazada sabit, kodla eklenir (sözleşme bölüm 13).
-  const test2 = oyunAlaniAlaniMi(alan) ? OYUN_ALANI_SATIRI : alan === "test" ? TEST_SINIRI : "";
+  const test2 = oyunAlaniAlaniMi(alan)
+    ? OYUN_ALANI_SATIRI
+    : alan === "test"
+      ? TEST_SINIRI
+      : alan === "oyun-tasarim"
+        ? TASARIM_ISTEM_SATIRI
+        : "";
   // Görsel alanlarında kural ikinci satırda, öne çıkarılmış (istem kodla kurulur; çıkarılamaz).
   const kural = gorselAlaniMi(alan) ? `ÖNEMLİ — ${gorselKuraliIstemi(alan)}` : "";
   if (baglanti === "ssh") {

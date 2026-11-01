@@ -18,6 +18,7 @@ import {
   ZAHMETLER,
   type Zahmet,
 } from "../../../src/ortak/fikir.js";
+import { TASARIM_TURLERI, TASARIM_TURU_ADI, type TasarimTuru } from "../../../src/ortak/tasarim.js";
 import { al, dosyaUrl, gonder } from "../api.js";
 import { goreliZaman } from "../bicim.js";
 import { AlanIsareti, AltSayfa, Bos, IskeletKartlar } from "../bilesenler.js";
@@ -26,6 +27,7 @@ import { alanBul, alanRengi, git, hataTost, sorgu, titret, tost } from "../durum
 import { fikirSuz, type Siralama } from "../fikirSuzgec.js";
 import { yazmaAlaniMi } from "../Kabuk.js";
 import { Simge } from "../simgeler.js";
+import { TasarimKunyesi, TasarimRozeti } from "./TasarimAyrinti.js";
 
 const ASAMA_SINIF: Partial<Record<FikirAsamasi, string>> = {
   onaylandi: "etiket--vurgu",
@@ -66,6 +68,7 @@ function FikirKartiGorunumu(p: {
     <article
       class="fikir-karti"
       classList={{ "fikir-karti--secili": p.secili, "fikir-karti--red": p.f.asama === "reddedildi" }}
+      data-tasarim={p.f.tasarim?.tur}
       style={{ "--alan-renk": alanRengi(p.f.alan) }}
       data-fikir={p.f.id}
     >
@@ -95,8 +98,10 @@ function FikirKartiGorunumu(p: {
             <span class="fikir-karti__kategori">{p.f.kategori}</span>
           </Show>
         </span>
+        <Show when={p.f.tasarim}>{(t) => <TasarimRozeti t={t()} />}</Show>
         <strong class="fikir-karti__baslik">{p.f.baslik}</strong>
         <span class="fikir-karti__ozet">{p.f.ozet ?? p.f.aciklama}</span>
+        <Show when={p.f.tasarim}>{(t) => <TasarimKunyesi t={t()} />}</Show>
         <Show when={p.f.onizleme}>
           {(o) => (
             <img
@@ -120,7 +125,21 @@ function FikirKartiGorunumu(p: {
               <Simge ad="sohbet" boyut={14} /> {p.f.notlar.length}
             </span>
           </Show>
+          <Show when={p.f.elestiri}>
+            <span class="fikir-karti__not" title="Eleştiri">
+              <Simge ad="kalkan" boyut={14} /> {p.f.elestiri}
+            </span>
+          </Show>
         </span>
+        <Show when={p.f.tasarim && p.f.kaynak}>
+          <span class="fikir-karti__kaynak">
+            <Simge ad="pirilti" boyut={12} /> {p.f.kaynak?.ad}
+            {p.f.kaynak?.model ? ` · ${p.f.kaynak.model}` : ""}
+            <Show when={(p.f.surum ?? 1) > 1}>
+              <span class="etiket">sürüm {p.f.surum}</span>
+            </Show>
+          </span>
+        </Show>
         <span class="fikir-karti__asama">
           <span class={`etiket ${ASAMA_SINIF[p.f.asama] ?? ""}`}>{FIKIR_ASAMA_ADI[p.f.asama]}</span>
           <Show when={p.f.asama !== "reddedildi"}>
@@ -147,6 +166,11 @@ export function Fikirler(): JSX.Element {
     (sorgu().get("asama") as FikirAsamasi | null) ?? "acik",
   );
   const [siralama, setSiralama] = createSignal<Siralama>("yeni");
+  const [tasarim, setTasarim] = createSignal<TasarimTuru | null>(null);
+  const tasarimVar = (): boolean => tum().some((f) => f.tasarim);
+  const tasarimSayisi = (t: TasarimTuru): number =>
+    tum().filter((f) => (!alan() || f.alan === alan()) && f.tasarim?.tur === t && f.asama !== "reddedildi")
+      .length;
   /** Telefonda süzgeç seçimleri bir dokunuşla açılır (ızgara hemen görünsün). */
   const [suzgecAcik, setSuzgecAcik] = createSignal(false);
   const etkinSuzgec = (): number =>
@@ -178,6 +202,7 @@ export function Fikirler(): JSX.Element {
       zahmet: zahmet(),
       asama: asama(),
       siralama: siralama(),
+      tasarim: tasarim(),
     }),
   );
   const asamaSayisi = (a: FikirAsamasi | "acik"): number =>
@@ -356,6 +381,27 @@ export function Fikirler(): JSX.Element {
         </select>
       </search>
 
+      <Show when={tasarimVar()}>
+        <fieldset class="cipler fikir-tasarim-turleri" aria-label="Fikir türü">
+          <button type="button" class="cip" aria-pressed={!tasarim()} onClick={() => setTasarim(null)}>
+            Hepsi
+          </button>
+          <For each={TASARIM_TURLERI}>
+            {(t) => (
+              <button
+                type="button"
+                class="cip"
+                data-tasarim={t}
+                aria-pressed={tasarim() === t}
+                onClick={() => setTasarim(tasarim() === t ? null : t)}
+              >
+                {TASARIM_TURU_ADI[t]} <span class="cok-soluk">{tasarimSayisi(t)}</span>
+              </button>
+            )}
+          </For>
+        </fieldset>
+      </Show>
+
       <fieldset class="cipler fikir-asamalar" aria-label="Aşama">
         <For each={["acik", ...FIKIR_YOLU, "reddedildi"] as const}>
           {(a) => (
@@ -421,7 +467,7 @@ export function Fikirler(): JSX.Element {
                   secimModu={secili().size > 0}
                   alanGoster={!alan()}
                   sec={(e) => sec(f, e)}
-                  ac={() => setAyrinti(f.id)}
+                  ac={() => (f.tasarim ? git(`/fikir/${f.id}`) : setAyrinti(f.id))}
                 />
               )}
             </For>

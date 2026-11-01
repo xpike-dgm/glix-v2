@@ -1,5 +1,5 @@
 /**
- * On alan (docs/uretim/YAPAY-ZEKA-EKIBI.md bölüm 4). Hem sunucu hem arayüz kullanır; Node'a bağımlı değildir.
+ * Alanlar (docs/uretim/YAPAY-ZEKA-EKIBI.md bölüm 4; 13. alan Oyun Tasarımı). Hem sunucu hem arayüz kullanır; Node'a bağımlı değildir.
  * Her alanın başlangıç talimatı bu tanımdan üretilir (`talimatTaslagi`), sonra sitede sürümlü olarak düzenlenir.
  */
 
@@ -16,6 +16,7 @@ export const ALAN_IDLERI = [
   "test",
   "uretim-arayuz",
   "panel-arayuz",
+  "oyun-tasarim",
 ] as const;
 export type AlanId = (typeof ALAN_IDLERI)[number];
 
@@ -447,6 +448,47 @@ export const ALANLAR: readonly AlanTanimi[] = [
     tekTik: false,
     yamaIzinli: ["apps/client/src/admin/"],
     yamaYasak: ["apps/server/", "packages/", "package.json", "pnpm-lock.yaml"],
+  },
+  {
+    id: "oyun-tasarim",
+    ad: "Oyun Tasarımı",
+    alani: [
+      "yeni mini oyun fikirleri (kurallar, ekranlar, puanlama, riskler)",
+      "oyunlar arası sistem ve mekanik fikirleri (kartlar gibi: maç değiştiricileri, olaylar, seri ödülleri, takım modu, izleyici rolü)",
+      'var olan bir oyunu daha eğlenceli yapan ekler ("Bu oyuna şu eklense")',
+    ],
+    yapabildikleri: [
+      "Yeni oyun kartı: oyuncu sayısı, süre, tür, adım adım kurallar, eğlencenin kaynağı, telefon ekranları, TV, puanlama, riskler, benzer oyunlardan farkı.",
+      "Sistem kartı: kapsam, nasıl çalışır, örnek maç anı, eğlenceye etkisi, kartlar/puan/Glix/rozetle etkileşimi, denge riskleri, uygulama zahmeti.",
+      "Sahibin notuyla kartını geliştirme (aynı kartta yeni sürüm).",
+      "Başka bir yapay zekânın kartını eleştirme (güçlü/zayıf yanlar, öneriler).",
+    ],
+    birTeslimde: 'yalnız fikir kartları (tur "fikir", her öğede tasarim nesnesi); dosya ve kod yok',
+    sayilar: ["oyuncu sayısı (2–8)", "süre (dakika)"],
+    sinirlar: [
+      "Kod yazmaz, dosya teslim etmez; yalnız fikir kartı.",
+      "Var olan oyunu ya da fikri tekrar etmez (oyun_katalogu_oku → mevcut fikirler).",
+      "Telefonda oynanır, 2–8 kişi, kısa (mini oyun); TV/izleyici görünümü düşünülür.",
+      "Kumar, gerçek para, kişisel veri, kırıcı içerik ya da zorbalığa açık mekanik önermez; kötüye kullanım riskini yazar.",
+      "Kilitli kuralları (docs/KURALLAR.md, kart sistemi) bozmayı önerirken gerekçesini açıkça yazar.",
+    ],
+    onKontrol: [
+      "her öğe yapılandırılmış fikir + tasarim nesnesi (yeni-oyun, sistem ya da oyuna-ek)",
+      "zorunlu alanlar dolu ve sınırlarda (oyuncu 2–8, süre, adım sayıları)",
+      "anılan oyun kimlikleri GLIX'te var",
+      "dosya yok",
+    ],
+    sahibinEkrani: [
+      "fikir panosunda yeni oyun / sistem / oyuna ek kartları, hangi yapay zekâdan geldiği",
+      "kart ayrıntısı: bütün içerik, sürüm geçmişi ve fark, eleştiriler",
+      "Geliştir, başka yapay zekâya eleştirt, öneri dosyası hazırla",
+    ],
+    kodIstegi: "Onaylanan fikir öneri dosyasıyla yöneticiye gider; uygulama yöneticinin işidir",
+    ornekIs:
+      "Telefonda 4–8 kişilik, 3 dakikalık, blöf ağırlıklı 10 yeni oyun fikri; 5 tane de kartlar gibi oyunlar arası sistem fikri.",
+    hedefOnekleri: ["docs/oneriler/"],
+    dosyaTurleri: [],
+    tekTik: false,
   },
 ];
 

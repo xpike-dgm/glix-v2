@@ -147,6 +147,10 @@ describe("istem", () => {
       basladi: null,
       teslimEdildi: null,
       kilit: null,
+      isTuru: null,
+      hedefAnahtar: null,
+      ilgiliOge: null,
+      grup: null,
     }) as IsKaydi;
 
   it("MCP ve SSH kalıpları; birden çok iş kapsanır; sır yok", () => {

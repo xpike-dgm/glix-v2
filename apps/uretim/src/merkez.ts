@@ -37,6 +37,7 @@ import {
 import { OYUN_ALANI_ARAC_SATIRI, OYUN_ALANI_SATIRI, oyunAlaniAlaniMi } from "./ortak/oyunAlani.js";
 import { FIKIR_RAPOR_BOLUMU, PAKET_SATIRI, PAKET_SINIRLARI, TEST_SINIRI } from "./ortak/paketBicimi.js";
 import { yapiliRaporMu } from "./ortak/rapor.js";
+import { TASARIM_BOLUMU, TASARIM_TURU_ADI } from "./ortak/tasarim.js";
 import type {
   AktarimKaydi,
   AlanKarti,
@@ -474,7 +475,38 @@ export class Merkez {
         if (!p || p.alan !== alan)
           ek.push(satir("ortak", "onceki", "kaldi", "Önceki öğe bu alanda bulunamadı."));
       }
-      const girdi = { ...o, satirlar };
+      // Oyun Tasarımı (bölüm 15): yalnız yapılandırılmış fikir kartı, dosyasız.
+      if (alan === "oyun-tasarim") {
+        if (g.tur !== "fikir")
+          ek.push(
+            satir("alan", "tasarim", "kaldi", 'Oyun Tasarımı yalnız fikir kartı teslim eder (tur "fikir").'),
+          );
+        else if (!o.fikir?.tasarim)
+          ek.push(
+            satir(
+              "alan",
+              "tasarim",
+              "kaldi",
+              "Her öğede ozet, kategori, etki, zahmet ve tasarim nesnesi gerekli (yeni-oyun, sistem ya da oyuna-ek). Biçim: paket_bicimi.",
+            ),
+          );
+        else
+          ek.push(
+            satir("alan", "tasarim", "gecti", `${TASARIM_TURU_ADI[o.fikir.tasarim.tur]} kartı biçimi uygun.`),
+          );
+        if (o.dosyalar.length)
+          ek.push(satir("alan", "tasarim", "kaldi", "Bu alan dosya teslim etmez; kart yalnız metindir."));
+      }
+      // Geliştir işi: önceki sürüm yazılmadıysa işin kartı (aynı kartta yeni sürüm).
+      const gelistirilen =
+        g.isId !== null && o.oncekiOge === null
+          ? ((
+              this.db
+                .prepare("SELECT ilgili_oge FROM isler WHERE id = ? AND is_turu = 'gelistir'")
+                .get(g.isId) as { ilgili_oge: number | null } | undefined
+            )?.ilgili_oge ?? null)
+          : null;
+      const girdi = { ...o, satirlar, oncekiOge: o.oncekiOge ?? gelistirilen };
       const rapor = await onKontrol(
         {
           alan: t,
@@ -1076,7 +1108,19 @@ export class Merkez {
         r.kilit_zaman === undefined
           ? null
           : { ad: String(r.kilit_ad ?? ""), zaman: Number(r.kilit_zaman) },
+      isTuru: r.is_turu === "gelistir" || r.is_turu === "elestiri" ? r.is_turu : null,
+      hedefAnahtar: this.anahtarAdi(r.hedef_anahtar),
+      ilgiliOge: r.ilgili_oge === null || r.ilgili_oge === undefined ? null : Number(r.ilgili_oge),
+      grup: typeof r.grup === "string" ? r.grup : null,
     };
+  }
+
+  private anahtarAdi(id: unknown): { id: number; ad: string } | null {
+    if (id === null || id === undefined) return null;
+    const r = this.db.prepare("SELECT id, ad, kanal FROM anahtar WHERE id = ?").get(Number(id)) as
+      | { id: number; ad: string; kanal: string }
+      | undefined;
+    return r ? { id: r.id, ad: r.ad || (r.kanal === "ssh" ? "SSH kanalı" : `Anahtar ${r.id}`) } : null;
   }
 
   /** İşin uygulayacağı fikirler (is_oku ve istem bunları gösterir). */
@@ -1139,6 +1183,11 @@ export class Merkez {
       ozet?: string;
       /** "Onaylananları uygula": bu işin uygulayacağı onaylı fikirler. */
       fikirler?: number[];
+      /** Yalnız bu anahtara (bölüm 15): geliştir, eleştiri, çoklu yapay zekâ. */
+      hedefAnahtar?: number | null;
+      isTuru?: "gelistir" | "elestiri" | null;
+      ilgiliOge?: number | null;
+      grup?: string | null;
     } = {},
   ): IsKaydi {
     const fikirler = [...new Set(secenek.fikirler ?? [])];
@@ -1177,12 +1226,25 @@ export class Merkez {
           secenek.fikirTuru ? 1 : 0,
         ).lastInsertRowid,
     );
+    if (secenek.hedefAnahtar !== undefined && secenek.hedefAnahtar !== null) {
+      const k = this.db.prepare("SELECT alan, iptal FROM anahtar WHERE id = ?").get(secenek.hedefAnahtar) as
+        | { alan: string; iptal: number | null }
+        | undefined;
+      if (!k || k.alan !== alan || k.iptal !== null)
+        throw new IsHatasi(400, "Seçilen yapay zekâ bu alanın etkin bir anahtarı değil.");
+    }
     this.db
-      .prepare("UPDATE isler SET kisitlar = ?, kabul = ?, ozet = ? WHERE id = ?")
+      .prepare(
+        "UPDATE isler SET kisitlar = ?, kabul = ?, ozet = ?, hedef_anahtar = ?, is_turu = ?, ilgili_oge = ?, grup = ? WHERE id = ?",
+      )
       .run(
         JSON.stringify(secenek.kisitlar ?? []),
         JSON.stringify(secenek.kabul ?? []),
         secenek.ozet ?? "",
+        secenek.hedefAnahtar ?? null,
+        secenek.isTuru ?? null,
+        secenek.ilgiliOge ?? null,
+        secenek.grup ?? null,
         id,
       );
     for (const f of fikirler)
@@ -1850,13 +1912,16 @@ export class Merkez {
     anahtarId: number,
     now: number,
   ): { isler: (Omit<IsKaydi, "alan" | "kilit"> & { kilit: string | null })[]; siradaki: number | null } {
-    const l = this.isler(alan, ["acik"]).map(({ alan: _a, kilit: _k, ...i }) => {
-      const k = this.kilit(i.id, now);
-      return {
-        ...i,
-        kilit: k ? (k.anahtarId === anahtarId ? "sende" : `üzerinde çalışılıyor (${k.ad})`) : null,
-      };
-    });
+    // Belirli bir anahtara yönelik işler (bölüm 15) yalnız o anahtara görünür.
+    const l = this.isler(alan, ["acik"])
+      .filter((i) => i.hedefAnahtar === null || i.hedefAnahtar.id === anahtarId)
+      .map(({ alan: _a, kilit: _k, ...i }) => {
+        const k = this.kilit(i.id, now);
+        return {
+          ...i,
+          kilit: k ? (k.anahtarId === anahtarId ? "sende" : `üzerinde çalışılıyor (${k.ad})`) : null,
+        };
+      });
     return { isler: l, siradaki: l.find((i) => i.kilit === null || i.kilit === "sende")?.id ?? null };
   }
 
@@ -2260,6 +2325,7 @@ export class Merkez {
     if (oyunAlaniAlaniMi(alan)) metin += `- **${OYUN_ALANI_SATIRI}**\n`;
     metin += `- ${OYUN_ALANI_ARAC_SATIRI}\n`;
     metin += `\n${FIKIR_RAPOR_BOLUMU}`;
+    if (alan === "oyun-tasarim") metin += `\n${TASARIM_BOLUMU}`;
     return { surum: t.surum, metin: `${metin}\n${this.zevkBolumu(alan)}` };
   }
 

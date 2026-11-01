@@ -31,6 +31,8 @@ export const ALT_KOMUTLAR: Readonly<Record<string, string>> = {
   "test-kosusu-baslat": "test_kosusu_baslat",
   "test-kosusu-durum": "test_kosusu_durum",
   "test-kosusu-iptal": "test_kosusu_iptal",
+  "oyun-katalogu-oku": "oyun_katalogu_oku",
+  "elestiri-yaz": "elestiri_yaz",
   yardim: "",
 };
 
@@ -45,6 +47,7 @@ export const YARDIM = [
   "  oyun-alani-kayit <kod> | oyun-alani-kapat <kod>",
   "Test alanı: test-kosusu-baslat < json ({ oyunlar, oyuncular, mac, strateji, sureDk }) | test-kosusu-durum [id]",
   "  test-kosusu-iptal <id>",
+  "Oyun Tasarımı: oyun-katalogu-oku [oyun] | elestiri-yaz < json ({ isId, metin, guclu, zayif, oneriler })",
   "Teslim paketi: SFTP ile gelen/<paket>/ klasörüne dosyalarını ve KÖKTE teslim.json'u koy (paket.json değil).",
   "  teslim.json: { tur, isId, arac, model, uretimYontemi, ogeler: [{ ad, aciklama, gerekce,",
   "  dosyalar: [{ dosya, hedefYol, rol }], satirlar }] }. Örnek: uretim ornek-paket",
@@ -215,6 +218,11 @@ export async function calistirKomut(o: CliOrtami, ham: string): Promise<unknown>
       if (!args[0] || !/^[A-Za-z0-9]{3,12}$/.test(args[0]))
         throw new CliHatasi(`Kullanım: ${komut} <oda kodu>`);
       return arac(o, ad, { kod: args[0] });
+    }
+    case "oyun-katalogu-oku": {
+      if (args[0] !== undefined && !/^[a-z0-9-]{2,60}$/.test(args[0]))
+        throw new CliHatasi("Kullanım: oyun-katalogu-oku [oyun]");
+      return arac(o, ad, args[0] ? { oyun: args[0] } : {});
     }
     case "test-kosusu-durum":
     case "test-kosusu-iptal": {

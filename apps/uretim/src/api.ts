@@ -9,6 +9,7 @@ import type { Anahtarlar } from "./anahtar.js";
 import type { Bildirim } from "./bildirim.js";
 import { aboneAyristir, ayarAyristir } from "./bildirim.js";
 import type { UretimConfig } from "./config.js";
+import { islem } from "./db.js";
 import type { Denetim } from "./denetim.js";
 import { BOYUT_SINIRI, MIME } from "./dosya.js";
 import { fikirPanosu, kabulHavuzu, secilenFikirler } from "./fikirPanosu.js";
@@ -37,6 +38,7 @@ import { isDurum, isHazirNot } from "./ortak/durum.js";
 import type { OyunAlani } from "./oyunAlani.js";
 import { canliKontrol, paketler, paketOlustur, paketOyunaEklendi, paketTesteCikti } from "./paket.js";
 import type { SshKanal } from "./sshKanal.js";
+import { cokluIsGrubu, elestirt, gelistir, kartAyrintisi, oneriDosyasiHazirla } from "./tasarimIsleri.js";
 import { teslimAyristir } from "./teslimGirdisi.js";
 
 export interface ApiOrtami {
@@ -307,6 +309,11 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
       }
       if (p0 === "alan" && isAlanId(p1) && p2 === "zevk")
         return ok(200, { ornekler: m.zevkGalerisi(p1), talimatEki: m.zevkBolumu(p1) });
+      if (p0 === "fikir" && p1 && p2 === undefined) {
+        const id = idParam(p1);
+        const d = id ? kartAyrintisi(m, id) : null;
+        return d ? ok(200, d) : hata(res, 404, "yok", "Fikir kartı bulunamadı.");
+      }
       if (p0 === "is" && p1 && (p2 === "fikirler" || p2 === "varyantlar")) {
         const id = idParam(p1);
         if (!id) return hata(res, 404, "yok", "İş bulunamadı.");
@@ -550,6 +557,21 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
       return ok(200, { istek: k });
     }
     // Fikir panosu: çoklu seçimle toplu onay/ret (her fikir ayrı karar; bekleyen olmayan atlanır).
+    if (p0 === "fikir" && p1 && (p2 === "gelistir" || p2 === "elestirt" || p2 === "oneri-dosyasi")) {
+      // Oyun Tasarımı kartı (bölüm 15): geliştir, eleştirt, öneri dosyası.
+      const id = idParam(p1);
+      if (!id) return hata(res, 404, "yok", "Fikir kartı bulunamadı.");
+      const b = await govde();
+      if (p2 === "gelistir")
+        return ok(200, { is: gelistir(m, id, typeof b.not === "string" ? b.not : "", kim, now) });
+      if (p2 === "elestirt") {
+        const a = tamsayi(b.anahtarId, 1, 1e12);
+        if (!a) return hata(res, 400, "girdi", "Eleştirecek yapay zekâyı seç.");
+        return ok(200, { is: elestirt(m, id, a, kim, now) });
+      }
+      const r = await oneriDosyasiHazirla(m, o.donusturucu, id, kim, now);
+      return ok(200, { ogeId: r.ogeId, yol: r.yol, kaynak: r.kaynak });
+    }
     if (yol === "fikir/toplu") {
       const b = await govde();
       const idler = idListesi(b.idler);
@@ -687,16 +709,25 @@ async function alanYaz(
       return hata(res, 400, "girdi", "Kısıt ve kabul ölçütleri en çok 10 kısa madde olabilir.");
     const fikirIdler = idListesi(g.fikirler);
     if (fikirIdler === null) return hata(res, 400, "girdi", "Fikir seçimi geçersiz.");
-    return ok({
-      is: m.isEkle(alan, { baslik, aciklama, adet, sonTarih, ornek }, "sahip", "acik", kim, now, null, {
+    // "Aynı isteği şu yapay zekâlara da ver" (bölüm 15): her seçilen anahtara ayrı iş, ortak grup.
+    const hedefler = idListesi(g.hedefler);
+    if (hedefler === null || hedefler.length > 6)
+      return hata(res, 400, "girdi", "En çok 6 yapay zekâ seçilebilir.");
+    const grup = hedefler.length > 1 ? cokluIsGrubu() : null;
+    const ac = (hedef: number | null): unknown =>
+      m.isEkle(alan, { baslik, aciklama, adet, sonTarih, ornek }, "sahip", "acik", kim, now, null, {
         varyant,
         fikirTuru: g.fikirTuru === true,
         kisitlar,
         kabul,
         ozet,
         fikirler: fikirIdler,
-      }),
-    });
+        hedefAnahtar: hedef,
+        grup,
+      });
+    if (!hedefler.length) return ok({ is: ac(null) });
+    const isler = islem(m.db, () => hedefler.map((h) => ac(h)));
+    return ok({ is: isler[0], isler });
   }
   if (a === "is-sira") {
     const g = await govde();

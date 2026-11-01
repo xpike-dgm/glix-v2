@@ -409,3 +409,50 @@ oyun sayfası): kurulu boyut ~320 MB (yalnız headless kabuk; tam Chromium ~600 
 imajı ya da Node + Chromium; 768 MB–1 GB sınır, ağ yalnız `glix-oyun-alani`), site istek gelince `docker compose run
 --rm` ile ya da sürekli açık tek işçi olarak çalıştırır; çıktı PNG doğrudan depoya. Karar sahibin (bellek ve imaj
 maliyeti).
+
+## 15. Oyun Tasarımı alanı (13. alan)
+
+Sahip farklı yapay zekâlarla yeni mini oyun fikirlerini ve mini oyunları daha eğlenceli yapacak sistemleri (kart
+sistemi gibi) tartışır. Alan kimliği `oyun-tasarim`; MCP anahtarı, SSH kanalı ve parolası öteki alanlarla aynı altyapı
+(`deploy/uretim/ssh/alanlar.txt`, kurulum `deploy/uretim/README.md` madde 9). Teslim yalnız fikir kartıdır: dosya ve
+kod yoktur (`dosyaTurleri` boş; ön kontrol dosyayı ve tasarımsız kartı "kaldı" yapar).
+
+**Kart biçimi** (`apps/uretim/src/ortak/tasarim.ts`; örnekler `ortak/tasarimOrnek.ts`, `paket_bicimi`): fikir öğesi
+(`ad`, `ozet` tek cümle, `kategori`, `etki`, `zahmet`, `gerekce`) + `tasarim`:
+- `{ tur: "yeni-oyun", oyuncu: { enAz, enCok } (2–8), sureDk (0,5–15), oyunTuru: [tepki|blof|cizim|yazi|strateji|bilgi|
+  hafiza|sans|ortak|parti] (1–3), kurallar: [3–15 adım], eglence, ekranlar: [1–10], tv, puanlama, riskler, fark,
+  benzerOyunlar: [oyun kimliği ≤ 5] }`;
+- `{ tur: "sistem" | "oyuna-ek", kapsam: { tur: "tum"|"bazi"|"tek", oyunlar }, nasil: [2–12 adım], ornekAn, eglence,
+  etkilesim (kartlar, puan, Glix, rozet), denge, uygulama }`; `oyuna-ek` kapsamı tek oyundur.
+- Anılan oyun kimlikleri motorun kaydında olmalı; bilinmeyen alan reddedilir. Kart `oge.fikir` içinde saklanır (şema
+  değişmedi). Pano kartı `kaynak` (anahtar adı, bildirilen araç ve model), `surum`, `elestiri` sayısı taşır; aynı
+  kartın eski sürümleri panoda görünmez.
+
+**Araçlar** (yalnız bu alanın anahtarlarıyla; SSH karşılıkları `uretim oyun-katalogu-oku [oyun]`,
+`uretim elestiri-yaz < json`):
+- `oyun_katalogu_oku {}` → `{ oyunlar: [{ id, ad, slogan, kategori, etiketler, oyuncu, tahminiSn }], cerceve,
+  kartSistemi, puanVeGlix, mevcutFikirler: [{ id, ad, tur, ozet, durum }] }`; `{ oyun }` → `{ kurallar, ansiklopedi }`.
+  Kaynak: depo aynasından saatlik eşitlenen `docs/KURALLAR.md` ve `docs/wiki/oyunlar/*.json` (`katalog` tablosu).
+  `katalog_oku` bu alanda aynı genel görünümü verir.
+- `elestiri_yaz { isId, metin (20–3000), guclu?, zayif?, oneriler? }`: yalnız kendisine verilen eleştiri işinde.
+- Talimatın sonunda "Oyun tasarımı kartı (zorunlu biçim)" bölümü ve kopyalanan istemde sabit satır kodla eklenir.
+
+**Belirli bir yapay zekâya iş** (`isler.hedef_anahtar`, `is_turu`, `ilgili_oge`, `grup`): hedefli iş yalnız o
+anahtarın `isleri_listele` listesinde görünür; başka anahtarın `is_oku`su reddedilir. Geliştir/eleştiri işinin
+`is_oku`su `kart` (son sürüm, alanlar, notlar) taşır.
+
+**Sahip uçları:**
+| Uç | Ne yapar |
+|---|---|
+| `GET /api/fikir/:id` | Kart ayrıntısı: `surumler` (en yeni üstte; her biri `fikir`, `kaynak`), `notlar` (yorum, eleştiri, ret), bağlı `isler`, eleştirebilecek `anahtarlar`, `oneri` dosyası, `asama` |
+| `POST /api/fikir/:id/gelistir { not }` | Not karta yazılır; kartı yazan anahtara `gelistir` işi (önceki sürüm + not). Teslimde `oncekiOge` yazılmazsa işin kartı kullanılır: aynı kartta yeni sürüm, eski `bekliyor` sürüm arşive |
+| `POST /api/fikir/:id/elestirt { anahtarId }` | Seçilen (kartı yazmayan, etkin) anahtara `elestiri` işi; sonuç `notlar.tur = "elestiri"`, iş tamam |
+| `POST /api/alan/:alan/is { …, hedefler: [anahtarId] }` | "Aynı isteği şu yapay zekâlara da ver": anahtar başına ayrı iş (en çok 6), ortak `grup`; yanıt `isler` |
+| `POST /api/fikir/:id/oneri-dosyasi` | Onaylı kart → `docs/oneriler/tasarim-<ad>-<id>.md` taslağı |
+
+**Öneri dosyası:** biçim `docs/oneriler/*.md` (onay belgesi; madde kodları önek + M/U/Y, "önerilen paket").
+Yardımcı model (`URETIM_AI_KEY`, aynı günlük sınır) kalıbı kartın verisiyle doldurur; yanıt başlık, `<önek>-M1`
+madde kodu, uzunluk ve sır denetiminden geçmezse sabit kalıp kullanılır. Dosya depoya konur ve kabul havuzuna
+`havuzda` öğe olarak düşer (`fikir_id` = kart; kart aşaması "kabul edildi"); yeniden hazırlanırsa eski taslak
+arşive gider. "Yöneticiye gönder" paketinde `dosyalar/docs/oneriler/…md` olarak yer alır. Sahip "ekle" deyince
+yönetici yeni oyunu test2'de taslak oyun (`docs/TASLAK-OYUNLAR.md`), sistemi özellik olarak uygular.

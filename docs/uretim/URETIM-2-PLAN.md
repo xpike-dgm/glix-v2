@@ -86,6 +86,15 @@ test eder, ana koda birleştirir → test.glix'e çıkar → sahip "canlıya al"
 - **Arayüz:** Test alanında "Koşular" sekmesi (başlat formu, geçmiş, dönemli koşu); raporlar kartında "Bot koşusu".
 - **Açık:** `oyun_alani_ekran` yapılmadı (ölçüm ve öneri bölüm 14: ayrı "ekran" kabı); oda başına taslak katmanı.
 
+## 13. alan: Oyun Tasarımı — durum: **kodda hazır, VDS'te SSH kullanıcısı kurulacak** (`SOZLESME.md` bölüm 15)
+- Yapılandırılmış fikir kartı: yeni oyun / sistem / mevcut oyuna ek; panoda kendi kart tasarımları ve süzgeçleri,
+  hangi yapay zekâ ve modelden geldiği; kart ayrıntı sayfası.
+- `oyun_katalogu_oku` (oyunlar, kurallar, kart sistemi, mevcut fikirler).
+- Tartışma: **Geliştir** (aynı yapay zekâya notla iş → aynı kartta yeni sürüm, sürüm geçmişi ve yan yana fark),
+  **Başka bir yapay zekâya eleştirt** (seçilen anahtara iş → eleştiri karta not), İş iste'de **aynı isteği şu yapay
+  zekâlara da ver** (anahtar başına ayrı iş, ortak grup).
+- Onaylı kart: **Öneri dosyası hazırla** (docs/oneriler biçimi; model + sabit kalıp) → kabul havuzu → yöneticiye.
+
 ## Aşama 4 — "Ekle" komutu (yönetici)
 Sahip "kabul havuzundakileri ekle" deyince yönetici: paketi okur → kendi dalında uygular (kod, veri, görsel) → dört
 denetim + ilgili oyun testleri → ana dala birleştirir → test'e çıkar → sahibe "test'te, bakabilirsin" der. Canlıya

@@ -122,6 +122,14 @@ karşılığı) ya da SFTP ile yalnız kendi `gelen/` ve `okunur/` klasörünü 
    satırlarını `/srv/glix/uretim/ssh-gunluk/girisler.log` dosyasına yazar; site bunu salt okunur okur ve alan
    sayfasında son başarılı/başarısız girişleri gösterir (IP'nin son parçası gizlenir).
 
+9. **13. alan Oyun Tasarımı (`oyun-tasarim`, sözleşme bölüm 15):** `ssh/alanlar.txt`'e eklendi. Sunucuda bir kez:
+   güncel `deploy/uretim/ssh/` klasörüyle `kur.sh`'ı yeniden çalıştır (yeni `uretim-oyun-tasarim` kullanıcısı, uid
+   3920–3959 aralığından, chroot `/srv/glix/uretim/ssh/oyun-tasarim/{gelen,okunur}`, sshd `Match Group` bloğu
+   değişmez), `sshd -t && systemctl reload ssh`. Sonra sitede alanın sayfasından SSH parolasını oluştur (eslestir.sh
+   dakikada bir uygular) ve MCP anahtarlarını üret (yapay zekâ başına bir anahtar: ör. "Claude", "GPT", "Gemini").
+   Görsel referansı yok (`referanslar.txt` değişmedi). Site imajının yeniden derlenmesi yeterli; yeni ortam değişkeni
+   yok (öneri dosyası yardımcı modeli mevcut `URETIM_AI_KEY`'i kullanır).
+
 8. **Görsel referansları (sözleşme bölüm 10):** `ssh/referans.sh` oyunun canlı varlıklarını
    (`/srv/glix/current/apps/client/public/assets`) her görsel alanın `okunur/referans/<klasör>/` altına salt okunur
    kopyalar (eşleme `ssh/referanslar.txt`; yalnız webp/png/svg/json, bağ izlenmez). Saatlik ve her canlıya alıştan

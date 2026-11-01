@@ -14,6 +14,7 @@ import { Iste } from "./ekran/Iste.js";
 import { Kabul } from "./ekran/Kabul.js";
 import { Pano } from "./ekran/Pano.js";
 import { Raporlar } from "./ekran/Raporlar.js";
+import { TasarimAyrinti } from "./ekran/TasarimAyrinti.js";
 import { Yukle } from "./ekran/Yukle.js";
 import { canliBagla, Kabuk } from "./Kabuk.js";
 
@@ -44,6 +45,7 @@ export function App(): JSX.Element {
         "/arsiv": "Arşiv",
         "/raporlar": "Raporlar",
         "/fikirler": "Fikirler",
+        ...(/^\/fikir\/\d+$/.test(y) ? { [y]: "Fikir kartı" } : {}),
         "/kabul": "Kabul havuzu",
         "/ayarlar": "Ayarlar",
       }[y] ?? "Üretim Merkezi"
@@ -75,6 +77,9 @@ export function App(): JSX.Element {
                     </Match>
                     <Match when={yolAdi() === "/fikirler"}>
                       <Fikirler />
+                    </Match>
+                    <Match when={/^\/fikir\/\d+$/.test(yolAdi())}>
+                      <TasarimAyrinti />
                     </Match>
                     <Match when={yolAdi() === "/kabul"}>
                       <Kabul />

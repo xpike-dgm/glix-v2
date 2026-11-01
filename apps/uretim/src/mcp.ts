@@ -12,6 +12,7 @@ import { alanTanimi, isAlanId } from "./ortak/alanlar.js";
 import { gorselAlaniMi, gorselKuraliMaddeleri } from "./ortak/gorselKurali.js";
 import { paketBicimi } from "./ortak/paketBicimi.js";
 import type { SshKanal } from "./sshKanal.js";
+import { elestiriYaz, oyunKatalogu, tasarimKarti } from "./tasarimIsleri.js";
 import { teslimAyristir } from "./teslimGirdisi.js";
 
 export const MCP_SURUMLERI = ["2025-06-18", "2025-03-26", "2024-11-05"] as const;
@@ -373,11 +374,45 @@ export const KOSU_ARACLARI: readonly AracTanimi[] = [
   },
 ];
 
+/** Oyun Tasarımı alanı (bölüm 15): oyun bağlamı ve eleştiri. */
+export const TASARIM_ARACLARI: readonly AracTanimi[] = [
+  {
+    name: "oyun_katalogu_oku",
+    title: "Oyun kataloğunu oku",
+    description:
+      "GLIX oyunları (ad, slogan, tür, oyuncu, süre), değişmeyen çerçeve, kart sistemi, puan/Glix ve bu alanın mevcut fikirleri (tekrar etme). oyun verilirse o oyunun kilitli kuralları ve ansiklopedi sayfası.",
+    inputSchema: {
+      type: "object",
+      properties: { oyun: { type: "string", description: "oyun kimliği, ör. butona-bas" } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "elestiri_yaz",
+    title: "Eleştiri yaz",
+    description:
+      "Eleştiri işinin sonucu: başka bir yapay zekânın kartını eleştir. Kartın altına not olarak düşer, iş tamamlanır.",
+    inputSchema: {
+      type: "object",
+      required: ["isId", "metin"],
+      properties: {
+        isId: { type: "integer" },
+        metin: { type: "string", minLength: 20, maxLength: 3000, description: "genel değerlendirme" },
+        guclu: { type: "array", items: { type: "string" }, maxItems: 8 },
+        zayif: { type: "array", items: { type: "string" }, maxItems: 8 },
+        oneriler: { type: "array", items: { type: "string" }, maxItems: 8 },
+      },
+      additionalProperties: false,
+    },
+  },
+];
+
 /** Anahtarın alanına göre görünen araçlar. */
 export const alanAraclari = (alan: string): readonly AracTanimi[] => [
   ...ARACLAR,
   ...OYUN_ALANI_ARACLARI,
   ...(alan === "test" ? KOSU_ARACLARI : []),
+  ...(alan === "oyun-tasarim" ? TASARIM_ARACLARI : []),
 ];
 
 export class AracHatasi extends Error {}
@@ -407,6 +442,8 @@ export async function aracCalistir(
       const id = tamsayi(args.id, 1, 1e12);
       const is = id ? m.is(id, alan) : null;
       if (!is) throw new AracHatasi("Bu iş bulunamadı.");
+      if (is.hedefAnahtar && is.hedefAnahtar.id !== k.id)
+        throw new AracHatasi("Bu iş başka bir yapay zekâya verildi; isleri_listele ile kendi işlerine bak.");
       if (!m.isKilitle(is.id, k.id, k.ad, now)) {
         const kl = m.kilit(is.id, now);
         const siradaki = m.yzIsListesi(alan, k.id, now).siradaki;
@@ -419,6 +456,11 @@ export async function aracCalistir(
         };
       }
       m.isBasladi(is.id, now);
+      // Geliştir / eleştiri işi: ilgili kartın bütün içeriği, sürümü ve notları (bölüm 15).
+      if (is.isTuru && is.ilgiliOge) {
+        const kart = tasarimKarti(m, is.ilgiliOge);
+        return { ...is, uzerindeCalisiliyor: false, kart };
+      }
       // Görsel alanlarında kural her iş ayrıntısının başında (iş metninden bağımsız, çıkarılamaz).
       return gorselAlaniMi(alan)
         ? { gorselKurali: gorselKuraliMaddeleri(alan), ...is, uzerindeCalisiliyor: false }
@@ -427,7 +469,7 @@ export async function aracCalistir(
     case "paket_bicimi":
       return paketBicimi(alan);
     case "katalog_oku":
-      return m.katalog.alanKatalogu(alan, now);
+      return alan === "oyun-tasarim" ? oyunKatalogu(m, alan) : m.katalog.alanKatalogu(alan, now);
     case "geri_bildirim_oku": {
       const s = args.sinir === undefined ? 50 : tamsayi(args.sinir, 1, 200);
       if (s === null) throw new AracHatasi("sinir 1–200 olmalı.");
@@ -478,6 +520,12 @@ export async function aracCalistir(
         throw new AracHatasi("baslik, gerekce ve etki gerekli.");
       return m.kodIstegiAc(alan, { baslik, gerekce, ornek, etki }, kim, now);
     }
+    case "oyun_katalogu_oku":
+      if (alan !== "oyun-tasarim") throw new AracHatasi("Bu araç yalnız Oyun Tasarımı alanında.");
+      return oyunKatalogu(m, alan, args.oyun);
+    case "elestiri_yaz":
+      if (alan !== "oyun-tasarim") throw new AracHatasi("Bu araç yalnız Oyun Tasarımı alanında.");
+      return elestiriYaz(m, k, args, now);
     case "oyun_alani_oda_ac":
     case "oyun_alani_durum":
     case "oyun_alani_kayit":
