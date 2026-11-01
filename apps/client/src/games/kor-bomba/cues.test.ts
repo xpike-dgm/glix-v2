@@ -3,6 +3,10 @@ import { describe, expect, it } from "vitest";
 import { betWonCue, blastCue } from "./cues.js";
 import { parseKorBombaView } from "./view.js";
 
+interface Raw {
+  pub: Record<string, unknown>;
+  priv: Record<string, unknown>;
+}
 const pub = {
   startedAt: 1000,
   holder: "a",
@@ -11,7 +15,7 @@ const pub = {
   trail: ["c", "b", "a"],
   lockedUntil: 4_000,
   exploded: false,
-  explodedAt: null,
+  explodedAt: null as number | null,
   correctPredictors: [],
   journey: null,
 };
@@ -26,7 +30,7 @@ const watcher = (lastResult: { turn: number; correct: boolean } | null) => ({
 
 describe("Kör Bomba sesleri", () => {
   it("tutan bahis zili ve patlama her olay için bir kez (aynı durum 12 kez gelse de)", () => {
-    const [raw, setRaw] = createSignal({ pub, priv: watcher(null) });
+    const [raw, setRaw] = createSignal<Raw>({ pub, priv: watcher(null) });
     const bells: number[] = [];
     const booms: boolean[] = [];
     const dispose = createRoot((d) => {
@@ -52,7 +56,7 @@ describe("Kör Bomba sesleri", () => {
 
   it("ekran patlamış ya da bahis sonucuyla açılırsa sessizdir", () => {
     const blown = { ...pub, exploded: true, explodedAt: 9_000 };
-    const [raw, setRaw] = createSignal({ pub: blown, priv: watcher({ turn: 2, correct: true }) });
+    const [raw, setRaw] = createSignal<Raw>({ pub: blown, priv: watcher({ turn: 2, correct: true }) });
     let sounds = 0;
     const dispose = createRoot((d) => {
       const view = createMemo(() => parseKorBombaView(raw().pub, raw().priv));
