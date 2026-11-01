@@ -3,6 +3,7 @@
  * 48 px siluet okunurluğu, sprite ızgarası. Analiz saf JS'tir (RGBA üzerinde); kaynak PNG depoda zaten yeniden
  * kodlanmış hâldedir.
  */
+import { gorselAlaniMi } from "../ortak/gorselKurali.js";
 import { pngAc, type Rgba } from "../png.js";
 import { type KontrolBaglami, type KontrolDosyasi, type Satir, satir } from "./baglam.js";
 
@@ -307,11 +308,54 @@ export function gorselKontrol(img: Rgba, profil: GorselProfili | null, dosya: st
   return s;
 }
 
+/** Kod çizimi belirtisinin uygulandığı en az görünür piksel (küçük görselden sonuç çıkmaz). */
+export const KOD_CIZIMI_EN_AZ_PIKSEL = 4096;
+
+/**
+ * "Kodla çizilmiş olabilir" belirtisi (yalnız uyarı, sözleşme bölüm 10). Görsel üretim modelinin çıktısında
+ * binlerce farklı renk ve gürültü olur; Python/PIL, SVG ya da canvas ile çizilmiş düz şekillerde renk sayısı çok azdır
+ * ve PNG neredeyse hiç yer tutmaz. Ölçüler: görünür piksellerdeki farklı RGBA sayısı ve (sitenin yeniden kodladığı)
+ * PNG'nin görünür piksel başına bayt sayısı. Eşikler oyundaki 500+ gerçek görselde denendi (en düşük: 159 renk,
+ * piksel başına 0,44 bayt); kodla çizilmiş örnek çerçevelerde 18–185 renk, ~0,09 bayt.
+ */
+export function kodCizimiBelirtisi(
+  img: Rgba,
+  pngBayt: number,
+): { renk: number; baytPiksel: number; supheli: boolean } | null {
+  const renkler = new Set<number>();
+  let gorunur = 0;
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const a = d[i + 3] ?? 0;
+    if (a === 0) continue;
+    gorunur += 1;
+    if (renkler.size <= 4096)
+      renkler.add((((d[i] ?? 0) << 24) | ((d[i + 1] ?? 0) << 16) | ((d[i + 2] ?? 0) << 8) | a) >>> 0);
+  }
+  if (gorunur < KOD_CIZIMI_EN_AZ_PIKSEL) return null;
+  const renk = renkler.size;
+  const baytPiksel = pngBayt / gorunur;
+  return { renk, baytPiksel, supheli: renk < 64 || baytPiksel < 0.25 || (renk < 1000 && baytPiksel < 0.5) };
+}
+
 export function gorselKontrolleri(b: KontrolBaglami): Satir[] {
   const out: Satir[] = [];
   for (const d of b.dosyalar) {
     if (d.tur !== "png") continue;
-    out.push(...gorselKontrol(acik(d), profilBul(d.hedefYol), d.ad));
+    const img = acik(d);
+    out.push(...gorselKontrol(img, profilBul(d.hedefYol), d.ad));
+    if (!gorselAlaniMi(b.alan.id)) continue;
+    const k = kodCizimiBelirtisi(img, d.veri.length);
+    if (k?.supheli)
+      out.push(
+        satir(
+          "gorsel",
+          "kod-cizimi",
+          "uyari",
+          `Kodla çizilmiş olabilir: çok az renk (${k.renk}${k.renk > 4096 ? "+" : ""}) ve çok küçük dosya (piksel başına ${k.baytPiksel.toFixed(2)} bayt). Oyundaki görseller görsel üretim modeliyle üretildi; düz, simetrik çokgenler tarza uymaz.`,
+          { dosya: d.ad },
+        ),
+      );
   }
   return out;
 }

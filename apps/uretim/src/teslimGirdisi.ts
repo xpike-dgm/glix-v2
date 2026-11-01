@@ -5,6 +5,7 @@
  */
 import { kayit, metin, tamsayi } from "./http.js";
 import type { AlanTanimi } from "./ortak/alanlar.js";
+import { URETIM_YONTEMLERI, type UretimYontemi } from "./ortak/gorselKurali.js";
 import { DESTEKLENEN_TURLER, type Degisiklik, TESLIM_TURLERI, type TeslimTuru } from "./ortak/tipler.js";
 
 export const EN_COK_OGE = 50;
@@ -40,6 +41,8 @@ export interface TeslimGirdisi {
   /** Yapay zekânın bildirdiği araç ve model (isteğe bağlı, sözleşme bölüm 8). */
   arac: string | null;
   model: string | null;
+  /** Görseller nasıl üretildi (sözleşme bölüm 10): görsel alanlarında "kod" reddedilir, yoksa uyarı. */
+  uretimYontemi: UretimYontemi | null;
 }
 
 export type Ayrisma<T> = { ok: true; deger: T } | { ok: false; hatalar: string[] };
@@ -200,7 +203,7 @@ export function teslimAyristir(v: unknown, alan: AlanTanimi): Ayrisma<TeslimGird
   const hatalar: string[] = [];
   if (!kayit(v)) return { ok: false, hatalar: ["Teslim bir nesne olmalı."] };
   for (const k of Object.keys(v))
-    if (!["isId", "tur", "aciklama", "ogeler", "arac", "model"].includes(k))
+    if (!["isId", "tur", "aciklama", "ogeler", "arac", "model", "uretimYontemi"].includes(k))
       hatalar.push(`Bilinmeyen alan "${k.slice(0, 30)}".`);
   const tur = v.tur;
   if (typeof tur !== "string" || !(TESLIM_TURLERI as readonly string[]).includes(tur))
@@ -228,8 +231,18 @@ export function teslimAyristir(v: unknown, alan: AlanTanimi): Ayrisma<TeslimGird
   const model = v.model === undefined ? null : metin(v.model, 1, 80);
   if (v.arac !== undefined && arac === null) hatalar.push('"arac" 1–60 karakter.');
   if (v.model !== undefined && model === null) hatalar.push('"model" 1–80 karakter.');
-  if (hatalar.length) return { ok: false, hatalar: hatalar.slice(0, 30) };
-  return { ok: true, deger: { isId, tur: tur as TeslimTuru, aciklama: aciklama ?? "", ogeler, arac, model } };
+  const uretimYontemi =
+    v.uretimYontemi === undefined || v.uretimYontemi === null
+      ? null
+      : (URETIM_YONTEMLERI as readonly unknown[]).includes(v.uretimYontemi)
+        ? (v.uretimYontemi as UretimYontemi)
+        : undefined;
+  if (uretimYontemi === undefined) hatalar.push('"uretimYontemi" "gorsel-model" ya da "kod" olmalı.');
+  if (hatalar.length || uretimYontemi === undefined) return { ok: false, hatalar: hatalar.slice(0, 30) };
+  return {
+    ok: true,
+    deger: { isId, tur: tur as TeslimTuru, aciklama: aciklama ?? "", ogeler, arac, model, uretimYontemi },
+  };
 }
 
 /** Sürüm gruplaması için öğe anahtarı: ad (küçük harf, boşluksuz). */

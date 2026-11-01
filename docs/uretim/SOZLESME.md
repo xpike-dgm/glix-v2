@@ -169,3 +169,27 @@ kullanır. Alanın sürekliliği sitededir (talimat, zevk profili, geri bildirim
   panoya giden metinde açıktır. MCP seçildiğinde istem uç adresini ve "bağlantı ayarına şu anahtarı gir" bilgisini
   içerir; anahtar da modele gitmez, kopyalarken eklenir.
 - Kopyalama olayı (kim, ne zaman, hangi alan) denetim kaydına yazılır; parola ve anahtar kayda yazılmaz.
+
+## 10. Görsel kuralı (sahip kararı)
+
+Görsel üreten alanlarda (Mağaza, Rozet, Maç Kartları, İkon ve Süs, Efekt Dokuları) görseller bir **görsel üretim
+becerisi ya da aracıyla** üretilir (ör. Codex'in imagegen becerisi, ChatGPT görsel oluşturma). Oyundaki mevcut
+görseller böyle üretildi; kalite çıtası onlardır.
+
+- **Yasak:** Python/PIL, SVG, canvas ya da benzeri kodla görsel çizmek. Beceri ortamda yoksa yapay zekâ görsel teslim
+  etmez, bunu açıkça yazar (yalnız "görsel üretilemedi" notlu metin önerisi gönderir ya da durur).
+- **Kural metni sabittir:** talimatın başlığının hemen altına, kopyalanan istemin ikinci satırına, istek → iş
+  taslağının (model ya da kalıp) açıklamasının başına ve kısıtlarına, `is_oku` çıktısına (`gorselKurali`) site kodla
+  ekler; model ya da talimat düzenlemesi çıkaramaz (`apps/uretim/src/ortak/gorselKurali.ts`).
+- **Bildirim:** teslim `uretimYontemi: "gorsel-model" | "kod"` alanını taşır (SSH: `uretim teslim-et <paket>
+  gorsel-model` ya da `teslim.json`). Görsel içeren yapay zekâ tesliminde `"kod"` ön kontrolde **kalır**; alan yoksa
+  **uyarı** verilir. Sahibin elle yüklemesi bu denetimin dışındadır.
+- **Belirti (yalnız uyarı):** "kodla çizilmiş olabilir": görünür piksellerde 64'ten az farklı renk, ya da piksel
+  başına 0,25 bayttan küçük PNG, ya da 1000'den az renk ile 0,5 bayttan küçük PNG (en az 4096 görünür piksel).
+  Eşikler oyundaki bütün gerçek görsellerde yanlış alarm vermeyecek biçimde seçildi ve testle denetlenir.
+- **Referanslar:** her görsel alanın chroot'unda `okunur/referans/<klasör>/` oyunun canlı varlıklarının salt okunur
+  kopyasıdır (`deploy/uretim/ssh/referans.sh`, eşleme `referanslar.txt`; kaynak
+  `/srv/glix/current/apps/client/public/assets`). Mağaza: `shop`, `karakter`; Rozet: `badges`; Maç Kartları:
+  `cards`; İkon ve Süs: `props`, `avatars`, `mascot`, `brand`; Efekt Dokuları: `fx`, `props`, `worlds`. İstem ve
+  talimat bu klasörü gösterir; yapay zekâ üretmeden önce bakar.
+

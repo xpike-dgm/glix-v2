@@ -44,6 +44,11 @@ sahibin onayına sunar.
    yapay zekâ (10) yalnız anonim ve toplu veri görür.
 10. **Tarz birliği.** Görsel üreten bütün yapay zekâlar aynı stil önekini (`docs/GORSEL-URETIM.md`) ve renk paletini
     kullanır. Ses üretenler aynı ses kimliğine (bölüm 4.6–4.7) uyar.
+11. **Görseller görsel üretim modeliyle.** Görsel üreten yapay zekâ görselleri görsel üretim becerisi ya da aracıyla
+    üretir (ör. Codex'in imagegen becerisi, ChatGPT görsel oluşturma). Python/PIL, SVG, canvas gibi kodla çizmek
+    yasaktır; beceri ortamda yoksa görsel teslim etmez ve bunu söyler. Önce `okunur/referans/` altındaki oyundaki
+    mevcut görsellere bakar; kalite çıtası onlardır. Teslimde `uretimYontemi: "gorsel-model"` yazar ("kod" kalır).
+    Ayrıntı: `SOZLESME.md` bölüm 10.
 
 ---
 
@@ -80,7 +85,8 @@ sonra ALT-4, 5, 10, 11, 12, en son 6 ve 7.
 Her teslim bir klasördür: `<alan>/<tarih>-<kısa-ad>/`. İçinde:
 
 - **`teslim.json`:** alan, iş kimliği, tür (`yeni` / `düzenleme` / `kaldırma-önerisi` / `rapor` / `kod-isteği` /
-  `istek-kartı`), öğeler. Her öğede ad, açıklama, gerekçe ve dosya listesi bulunur.
+  `istek-kartı`), öğeler. Her öğede ad, açıklama, gerekçe ve dosya listesi bulunur. Görsel içeren teslimde
+  `uretimYontemi: "gorsel-model"` (bölüm 1, ilke 11).
 - **Varlıklar:** görsel (şeffaf PNG), animasyon (kare kare PNG ya da efekt tarifi JSON'u), ses (WAV/OGG), SVG.
 - **Katalog satırı:** alanın katalog biçiminde (bölüm 2) eklenecek ya da değişecek satırlar.
 - **Önizleme notu:** sitenin bu öğeyi nasıl göstereceği; örneğin "mağaza kartı + kuşanılmış avatar" ya da

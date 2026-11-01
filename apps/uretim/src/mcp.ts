@@ -9,6 +9,7 @@ import type { AnahtarKimligi, Anahtarlar } from "./anahtar.js";
 import { GovdeHatasi, gonder, govdeOku, icAgIstegi, kayit, metin, tamsayi, tarih } from "./http.js";
 import { IsHatasi, type Merkez } from "./merkez.js";
 import { alanTanimi, isAlanId } from "./ortak/alanlar.js";
+import { gorselAlaniMi, gorselKuraliMaddeleri } from "./ortak/gorselKurali.js";
 import { teslimAyristir } from "./teslimGirdisi.js";
 
 export const MCP_SURUMLERI = ["2025-06-18", "2025-03-26", "2024-11-05"] as const;
@@ -30,6 +31,12 @@ const teslimSemasi = {
     isId: { type: "integer", description: "Bağlı iş (isleri_listele)" },
     arac: { type: "string", maxLength: 60, description: "Kullandığın araç (ör. ChatGPT, OpenCode)" },
     model: { type: "string", maxLength: 80, description: "Kullandığın model" },
+    uretimYontemi: {
+      type: "string",
+      enum: ["gorsel-model", "kod"],
+      description:
+        'Görselleri nasıl ürettin: "gorsel-model" (görsel üretim becerisi/aracı). Görsel alanlarında "kod" (PIL, SVG, canvas ile çizim) reddedilir.',
+    },
     tur: {
       type: "string",
       enum: ["yeni", "duzenleme", "kaldirma-onerisi", "rapor", "fikir"],
@@ -220,7 +227,10 @@ export async function aracCalistir(
         };
       }
       m.isBasladi(is.id, now);
-      return { ...is, uzerindeCalisiliyor: false };
+      // Görsel alanlarında kural her iş ayrıntısının başında (iş metninden bağımsız, çıkarılamaz).
+      return gorselAlaniMi(alan)
+        ? { gorselKurali: gorselKuraliMaddeleri(alan), ...is, uzerindeCalisiliyor: false }
+        : { ...is, uzerindeCalisiliyor: false };
     }
     case "katalog_oku":
       return m.katalog.alanKatalogu(alan, now);
