@@ -53,6 +53,10 @@
 .ppick__cell[data-off="1"] {
   opacity: 0.42;
 }
+/* seçilebilen kopuk oyuncu (ör. İttifak oyu): adı okunur kalsın */
+.ppick__cell[data-off="1"]:not(:disabled) {
+  opacity: 0.75;
+}
 .ppick__cell[data-idle="1"]:not([data-picked="1"]) {
   opacity: 0.8;
 }

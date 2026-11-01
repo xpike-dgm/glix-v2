@@ -1048,8 +1048,10 @@
   margin: 0;
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 56px;
+  /* 320 px sütunda 56 px "Zeynep'in elinde · %26" taşıyordu */
+  font-size: 48px;
   line-height: 1.1;
+  overflow-wrap: anywhere;
 }
 .rrtv__head[data-tone="boom"] {
   color: var(--red);

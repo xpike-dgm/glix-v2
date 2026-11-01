@@ -13,12 +13,13 @@
 //                                    Taban varsayılanı origin/main ya da main. `--tum-boyut` beş boyutu geri getirir.
 // Parça virgülle birden çok olabilir (`zaman-,kd-vote`): adında herhangi birini içeren ekranlar koşar.
 // Ek bayraklar: `--liste` (koşmadan seçilen denetimleri yazar), `--ornek N` (her N'inci ekran, tüm boyutlarıyla; ölçüm için).
-// Ortam: UI_WORKERS (varsayılan min(4, çekirdek)), UI_CLOCK=0 (sahte saat yerine gerçek bekleme).
+// Ortam: UI_WORKERS (varsayılan min(4, çekirdek)), UI_CLOCK=0 (sahte saat yerine gerçek bekleme),
+// UI_KONTRAST=1 (kontrastın ölçüldüğü yazısız kareyi de yazar).
 // Hız: aynı ekranın boyutları tek bağlam/sayfada koşar (yeniden yükleme ile); sabit bekleme yerine uygulamanın
 // `data-ready` işareti + yazı tipleri + görseller + ağ sessizliği beklenir; `settle` süreleri sahte saatle
 // (zamanlayıcı/rAF ileri sarılır) gerçek beklemeden geçilir.
 import { spawn } from "node:child_process";
-import { appendFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { createServer } from "node:net";
 import { cpus } from "node:os";
@@ -3156,6 +3157,20 @@ function inPageAudit() {
     if (!inView(r)) issues.push(["overflow", `avatar ekran dışında: ${desc(el)}`]);
   }
 
+  // scrollHeight, flex/ızgara kapsayıcının alt iç boşluğunu da taşma sayar (içerik sınırda bitse bile): gerçekten
+  // alttan kesilen bir alt öğe var mı diye bakılır.
+  const cutBelow = (el) => {
+    const limit = el.getBoundingClientRect().top + el.clientTop + el.clientHeight + 1;
+    const own = document.createRange();
+    own.selectNodeContents(el);
+    for (const r of own.getClientRects()) if (r.height > 0 && r.bottom > limit) return true;
+    for (const d of el.querySelectorAll("*")) {
+      const r = d.getBoundingClientRect();
+      if (r.height > 0 && r.bottom > limit && !hiddenBy(d)) return true;
+    }
+    return false;
+  };
+
   // kırpılan / taşan metin
   for (const el of document.querySelectorAll("*")) {
     if (el.closest(".sr-only") || el.closest("svg") || el.classList.contains("stage")) continue;
@@ -3179,7 +3194,8 @@ function inPageAudit() {
       clips &&
       el.textContent.trim() &&
       !el.hasAttribute("data-scroll") &&
-      el.scrollHeight > el.clientHeight + 1
+      el.scrollHeight > el.clientHeight + 1 &&
+      cutBelow(el)
     )
       issues.push([
         "clip",
@@ -3507,7 +3523,10 @@ async function checkOneInner(page, st, scr, [w, h]) {
       }
     });
     await paintFrames(page);
-    const png = (await page.screenshot()).toString("base64");
+    const shot = await page.screenshot();
+    // UI_KONTRAST=1: kontrastın ölçüldüğü (yazısız) kare de yazılır; kontrast hatasını ayıklamak için.
+    if (ENV.UI_KONTRAST) writeFileSync(join(OUT, `${scr.name}-${w}x${h}-kontrast.png`), shot);
+    const png = shot.toString("base64");
     const ratios = await page.evaluate(
       `(${inPageContrast.toString()})(${JSON.stringify({ png, texts, dpr: 1 })})`,
     );

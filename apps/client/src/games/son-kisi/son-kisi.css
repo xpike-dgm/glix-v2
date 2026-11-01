@@ -557,11 +557,11 @@
 .sktl__ghost {
   display: grid;
   justify-items: center;
-  font-size: 10px;
+  font-size: var(--fs-13);
 }
 .sktl__ghost i {
   font-style: normal;
-  max-width: 54px;
+  max-width: 72px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -595,7 +595,7 @@
   position: absolute;
   bottom: -2px;
   left: 10px;
-  font-size: 11px;
+  font-size: var(--fs-13);
   color: var(--text-dim);
 }
 .sktl__alarm {

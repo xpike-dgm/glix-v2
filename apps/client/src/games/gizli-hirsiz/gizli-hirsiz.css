@@ -597,8 +597,8 @@
   white-space: nowrap;
 }
 .gho__sec {
-  font-size: 11px;
-  color: var(--text-dim);
+  font-size: var(--fs-13);
+  color: #e0e4fa;
 }
 .gho__pts {
   font-family: var(--font-display);

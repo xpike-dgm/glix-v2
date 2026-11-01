@@ -1400,6 +1400,9 @@
   }
   .ca:not([data-tv="1"]):not([data-kb="1"]) .ca__crew {
     display: flex;
+    /* yan sütun ~280 px: 8 avatar tek sırada ekrandan taşıyordu */
+    flex-wrap: wrap;
+    gap: 4px 8px;
   }
   .ca:not([data-tv="1"]):not([data-kb="1"]) .cgans__goal {
     display: block;
@@ -1470,4 +1473,13 @@
 }
 .ca[data-tv="1"] .cgprog {
   font-size: 18px;
+}
+
+/* Klavye açık, çok alçak ekran (320x280, 360x300): yan sütunda hedef yazısı ve hazır şeridi ekranın üstüne
+   taşıyordu; yalnız kelime ve yazma alanı kalır. */
+@media (max-height: 320px) {
+  .ca:not([data-tv="1"]):not([data-kb="1"]) .ca__crew,
+  .ca:not([data-tv="1"]):not([data-kb="1"]) .cgans__goal {
+    display: none;
+  }
 }

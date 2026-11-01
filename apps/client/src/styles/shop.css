@@ -614,7 +614,8 @@
   font-size: var(--fs-13);
   font-weight: 600;
   line-height: 1.2;
-  color: var(--text-dim);
+  /* --text-dim parlak önizlemeli karolarda (Neon Izgara) 3,9:1 kalıyordu */
+  color: #d3d8f4;
 }
 .locker-tile[data-on="1"] .locker-tile__name {
   color: var(--text);

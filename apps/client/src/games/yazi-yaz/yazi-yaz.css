@@ -696,10 +696,12 @@
   box-shadow: none;
 }
 .yytc__label {
+  /* üst rulonun gölgesine değmesin (kontrast 4,2:1 / TV'de 1,5:1 ölçülüyordu) */
+  margin-top: 6px;
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.24em;
-  color: #4a3d22;
+  color: #3a2f18;
 }
 .yytc__topic {
   max-width: 100%;
@@ -1390,6 +1392,15 @@
   .yyrc {
     max-height: 30dvh;
   }
+  /* 320x568'de rol kartı (görsel + rol + açıklama) kartın boyunu aşıp alttan kırpılıyordu */
+  .yyrc__face {
+    gap: 4px;
+    padding: 8px 10px;
+  }
+  .yyrc__front .yyrc__img,
+  .yyrc__front .yyrc__svg {
+    max-height: 38%;
+  }
   .yy__head--res {
     min-height: 56px;
   }
@@ -1626,6 +1637,10 @@
 }
 .yytvb .yytc__label {
   font-size: 16px;
+}
+/* TV'de kart görseli büyüdükçe üst rulo da kalınlaşıyor: "KONU" rulonun altına iner */
+.yytvb .yytc__paper {
+  padding-top: 30px;
 }
 .yytvb .yytc__topic {
   font-size: 46px;

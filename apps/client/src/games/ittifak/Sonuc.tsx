@@ -387,7 +387,8 @@ export function Sonuc(props: Props) {
                     <span
                       class="it__ally-at"
                       style={{
-                        left: `${((p()?.x ?? 0) + (q()?.x ?? 0)) / 2}%`,
+                        // Kenardaki iki koltuğun ortası rozetin yarısını ekran dışına itiyordu: kenardan pay bırakılır.
+                        left: `clamp(48px, ${((p()?.x ?? 0) + (q()?.x ?? 0)) / 2}%, calc(100% - 48px))`,
                         top: `${((p()?.y ?? 0) + (q()?.y ?? 0)) / 2}%`,
                       }}
                     >

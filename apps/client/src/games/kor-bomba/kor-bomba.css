@@ -111,7 +111,8 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 0;
+  /* avatarın sağ köşesine taşan rozet (dokun, kopuk…) koltuğun kutusunda kalsın */
+  padding: 0 calc(var(--seat) * 0.14);
   border: 0;
   background: none;
   color: inherit;
@@ -209,7 +210,7 @@ button.kbo__seat {
   white-space: nowrap;
 }
 .kbo__seat:has(.av__self) .kbo__name {
-  margin-top: 8px;
+  margin-top: 14px; /* 8 px'te "Sen" etiketi adın üstüne biniyordu */
 }
 .kbo__seat .av {
   transition: transform 140ms var(--ease);
@@ -615,7 +616,7 @@ button.kbo__bomb {
   padding: 1px 6px;
   border-radius: 8px;
   background: rgba(5, 8, 26, 0.78);
-  font-size: 12px;
+  font-size: var(--fs-13);
   font-weight: 700;
   line-height: 1.25;
 }
@@ -697,7 +698,7 @@ button.kbo__bomb {
   color: var(--text);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 12px;
+  font-size: var(--fs-13);
   touch-action: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -746,7 +747,7 @@ button.kbo__bomb {
   opacity: 0.7;
 }
 .kbo-chain__arrow {
-  font-size: 12px;
+  font-size: var(--fs-13);
   color: var(--text-dim, #a9b0d6);
 }
 @keyframes kbo-slide {
@@ -836,7 +837,7 @@ button.kbo__bomb {
   margin: 0;
   padding: 3px 12px;
   border-radius: 10px;
-  background: var(--red);
+  background: #c81d3e; /* --red üstünde beyaz 3,5:1 kalıyordu */
   color: #fff;
   font-family: var(--font-display);
   font-weight: 800;
@@ -853,7 +854,8 @@ button.kbo__bomb {
   display: grid;
   place-items: center;
   background: rgba(5, 6, 13, 0.55);
-  pointer-events: none;
+  /* karartma bir perde: altındaki masa bu anda dokunulmaz (Devam et perdenin üstünde, aşağıda) */
+  pointer-events: auto;
   animation: kbo-white 600ms ease-out both;
 }
 .kbo__stamp span {
@@ -919,6 +921,7 @@ button.kbo__bomb {
   place-items: center;
   padding: 8px 12px;
   background: rgba(5, 6, 13, 0.78);
+  pointer-events: auto; /* karartma perdesi: altındaki masa dokunulmaz */
 }
 .kbo-trip {
   width: 100%;
@@ -969,16 +972,16 @@ button.kbo__bomb {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: var(--fs-13);
   font-weight: 700;
 }
 .kbo-trip__sec {
-  font-size: 12px;
+  font-size: var(--fs-13);
   font-variant-numeric: tabular-nums;
   color: var(--amber);
 }
 .kbo-trip__boom {
-  font-size: 10px;
+  font-size: var(--fs-13);
   font-weight: 800;
   color: #fff;
 }
@@ -1020,7 +1023,7 @@ button.kbo__bomb {
 /* Sonuç ekranı "Devam et" şeridi: sahnenin sağ alt köşesi (koltuklar elipste, köşe boş). */
 .kbo__devam {
   position: absolute;
-  z-index: 10;
+  z-index: 19; /* patlama perdesinin (18) üstünde: karartılmasın */
   right: 8px;
   bottom: 6px;
   width: min(220px, 34%);
