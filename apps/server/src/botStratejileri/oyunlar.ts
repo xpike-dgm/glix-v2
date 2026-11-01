@@ -2,8 +2,9 @@
  * Oyun başına oynama stratejileri. Her strateji görünümleri kendi küçük arayüzüyle okur (yalnız ihtiyaç duyduğu
  * alanlar); alan yoksa ya da tür beklenmedikse ya hiçbir şey yapmaz ya da hata verir (bots.ts güvenle düşer).
  *
- * Değişmekte olan oyunlar (Rüşvet ve Darbe, Açgözlülük Limiti, Ortalamanın Yarısı, Çizgiyi Geçme) burada
- * yok: onlarda bot `BOTS`'u kullanır. Son Kişi yalnız `phase`, `round`, `escaped` ve "escape"e dayanır.
+ * Değişmekte olan oyunlar (Rüşvet ve Darbe, Açgözlülük Limiti, Çizgiyi Geçme) burada yok: onlarda bot `BOTS`'u
+ * kullanır. Son Kişi yalnız `phase`, `round`, `escaped` ve "escape"e dayanır. Ortalamanın Yarısı yalnız `round`,
+ * `reveal`, `roundStartedAt`, `endsAt`, `multiplier`, `previous[].target`, `myChoice`, `locked` alanlarına dayanır.
  */
 import { ITTIFAK_BAND_MS, ittifakMaxPromises } from "@glix/engine";
 import { shapeStrokes } from "./cizim.js";
@@ -374,6 +375,35 @@ const sonKisi: PlayStrategy = (c) => {
   return { action: { kind: "escape" }, next: 250 };
 };
 
+// ——— Ortalamanın Yarısı: hedefin biraz altında, kalabalıktan kaçan bir sayı, sonra Tamam ———
+/**
+ * OY-M1/M2 ile: seçmeyen puan alamadığı için bot her tur mutlaka seçer (sürenin ilk yarısında); kalabalık yanacağı
+ * için tek bir "doğru" sayıya yığılmaz, her bot kendi sapmasını çeker. 1. turda 10–40; sonraki turlarda geçen turun
+ * hedefi × bu turun çarpanı civarı (±6). Seçtikten sonra 1–3 sn içinde kilitler.
+ */
+const ortalama: PlayStrategy = (c) => {
+  const p = rec(c.pub);
+  const v = rec(c.priv);
+  if (p.reveal !== null || v.locked === true) return { next: 400 };
+  const startAt = num(p.roundStartedAt);
+  const endsAt = num(p.endsAt);
+  if (startAt === null || endsAt === null) return null;
+  if (c.now < startAt) return { next: startAt - c.now + 30 };
+  if (c.now >= endsAt) return { next: 400 };
+  const round = num(p.round) ?? 1;
+  if (v.myChoice === null) {
+    const wait = thinking(c, `pick${round}`, 1_500, 4_500);
+    if (wait) return wait;
+    const prev = (Array.isArray(p.previous) ? p.previous : []).map(rec);
+    const last = num(prev[prev.length - 1]?.target);
+    const m = rec(p.multiplier);
+    const ratio = (num(m.num) ?? 1) / (num(m.den) ?? 2);
+    const guess = last === null ? between(c, 10, 40) : Math.round(last * ratio) + between(c, -6, 6);
+    return { action: { kind: "choose", value: Math.min(100, Math.max(0, guess)) }, next: 600 };
+  }
+  return thinking(c, `lock${round}`, 1_000, 3_000) ?? { action: { kind: "lock" }, next: 400 };
+};
+
 // ——— Butona Bas: insan hızında basış ———
 const butonaBas: PlayStrategy = (c) => {
   const p = rec(c.pub);
@@ -436,4 +466,5 @@ export const STRATEGIES: Record<string, PlayStrategy> = {
   "kor-kronometre": korKronometre,
   "son-kisi": sonKisi,
   "butona-bas": butonaBas,
+  "ortalamanin-yarisi": ortalama,
 };

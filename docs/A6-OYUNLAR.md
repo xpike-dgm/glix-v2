@@ -24,9 +24,11 @@ Kısa oyun içi açılış penceresi (≤ 7 sn) açılış animasyonu için kull
   (kimin kaçtığı oyun sırasında yok — sahip kararı), `results` (kapanmış turlar: `alarmMs`, `rang`, kaçışlar, puanlar),
   `totals`, `final`; kişisel `escaped`, `myMs`. Görünümlerde mutlak zaman yalnız `startedAt`; alarm anları ve eşikler
   `secrets()`te.
-- **Ortalamaya En Yakın** (3–8, 20 sn): 0–100 tam sayı, değiştirilebilir, gizli. Göndermeyene sunucu 0–100 rastgele tam
-  sayı atar (sonuçta normal seçim gibi görünür). Hedef = ortalama / 2 (ondalık). En yakın tek kişiyse +2, sonraki
-  derece(ler) +1 (aynı mesafedekilerin hepsi); en yakınlar eşitse hepsi +1 ve ikinci ödül yok.
+- **Ortalamaya En Yakın** (3–8, 3 tur × (0,9 sn kart + 10 sn seçim), ara açılış 5 sn, son açılış 7 sn): 0–100 tam sayı,
+  değiştirilebilir, gizli. Hedef = ortalama × ½, ⅔, ¾ (ondalık). Göndermeyene sunucu 0–100 rastgele tam sayı atar; ortalamaya
+  girer, `random` ile işaretlenir ve puan almaz (OY-M2). Aynı sayıyı 3+ oyuncu seçerse o sayı yanar (`burned`; rastgeleler
+  sayılmaz), puan almaz ama ortalamaya girer (OY-M1). Puan uygun oyuncular arasında: en yakın tek kişiyse +2, sonraki
+  derece(ler) +1; en yakınlar eşitse hepsi +1. Genel skor sonda toplamdan +2/+1 (en yüksek toplam 0 ise kimseye).
 - **Çizgiyi Geçme** (2–8, 30 sn): 0–100 tam sayı, değiştirilebilir, gizli. Bölgeler 0–9, 10–19, …, 90–99, 100.
   Aynı bölgede ≥2 kişi → hepsi pasif (0). Seçmeyen pasif. Tek kalanlar sayıya göre: en yüksek +2, ikinci +1.
 - **Aşırı Yükleme** (2–8): ortak bar 100; her tık +1; toplam ve tıklama sayıları gizli. Bar 100'e ulaşınca

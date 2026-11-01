@@ -109,6 +109,8 @@ const registry: Record<string, GameEntry> = {
   "ortalamanin-yarisi": {
     Screen: lazy(() => import("./ortalamanin-yarisi/OrtalamaninYarisiScreen.js")),
     Art: lazy(() => import("./ortalamanin-yarisi/BriefingArt.js")),
+    StageView: lazy(() => import("./ortalamanin-yarisi/StageView.js")),
+    tvOwnBoard: true,
   },
   "zaman-bombasi-hafizasi": {
     noClock: true,
