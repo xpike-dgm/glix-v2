@@ -1016,7 +1016,7 @@ export function botInputs(
   rt: Runtime,
   room: Room,
   playerId: string,
-): { publicView: unknown; privateView: unknown; connected: readonly string[] } | null {
+): { publicView: unknown; privateView: unknown; connected: readonly string[]; now: number } | null {
   const match = room.match;
   if (!match?.rng || room.phase !== "playing") return null;
   const game = currentGame(match);
@@ -1025,6 +1025,7 @@ export function botInputs(
     publicView: guard("publicView", () => game.publicView(match.state, ctx)),
     privateView: matchViewFor(rt, room, playerId),
     connected: ctx.connected,
+    now: ctx.now,
   };
 }
 

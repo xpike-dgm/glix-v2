@@ -7,7 +7,8 @@
  *
  * Her botun tek bir zamanlayıcısı vardır: insan benzeri bir gecikmeyle uyanır, odanın aşamasına bakar, gerekiyorsa
  * bir şey yapar ve kendini yeniden kurar. Lobide "Hazırım", anlatımda "Hazırım", sonuç ekranlarında "Devam", kart
- * seçiminde rastgele bir kart; oyunda o oyunun test botu (`BOTS`, packages/engine/src/games/bots.ts) bir eylem üretir.
+ * seçiminde rastgele bir kart; oyunda önce o oyunun OYNAMA stratejisi (botStratejileri/: temiz Türkçe metin, hedefe yakın
+ * zamanlama, karışık oylar, basit çizimler), yoksa motorun test botu (`BOTS`, packages/engine/src/games/bots.ts).
  * Botun kararı yalnız herkese açık görünüme ve KENDİ `view(durum, botId)` görünümüne dayanır (bkz. `botInputs`).
  * Strateji yoksa ya da hata verirse bot o adımı pas geçer; oyun süresi dolunca kendiliğinden ilerler.
  *
@@ -15,8 +16,17 @@
  * iptal edilir. Botun hesabı yoktur (`accountId` null): hesap istatistiği, Glix, rozet ve görev yazılmaz.
  */
 import { randomInt } from "node:crypto";
-import { type ClientMessage, createRng, GAMES, MAX_PLAYERS, type Rng, TASLAK_BOTLAR } from "@glix/engine";
+import {
+  type ClientMessage,
+  createRng,
+  GAMES,
+  MAX_PLAYERS,
+  type Rng,
+  type ServerMessage,
+  TASLAK_BOTLAR,
+} from "@glix/engine";
 import { BOTS } from "@glix/engine/testing";
+import { isPresentable, PLAY_STRATEGIES, TEXT_GAMES } from "./botStratejileri/index.js";
 import type { Cancel } from "./clock.js";
 import { handleMessage } from "./handlers.js";
 import { log } from "./log.js";
@@ -74,9 +84,9 @@ export const BOT_ACTION_DELAY: Readonly<Record<string, Range>> = {
 };
 
 /** Sunucu içi bağlantı: hiçbir şey göndermez, kapanmaz; yalnız `handleMessage`'ın beklediği biçimi taşır. */
-function botConnection(): Connection {
+function botConnection(onSend: (msg: ServerMessage) => void): Connection {
   return {
-    send() {},
+    send: onSend,
     sendRaw() {},
     lastSent: null,
     sentVer: -1,
@@ -90,11 +100,26 @@ function botConnection(): Connection {
   };
 }
 
+/** Bir bot eylemi ve sunucunun yanıtı (yalnız testlerde izlenir). */
+export interface BotTraceEvent {
+  gameId: string;
+  botId: string;
+  payload: unknown;
+  ack: { ok: boolean; reason?: string } | null;
+}
+
+/** Testlerin bot eylemlerini izlemesi için kanca (üretimde null). */
+export const botTrace: { hook: ((e: BotTraceEvent) => void) | null } = { hook: null };
+
 class Bot implements BotHandle {
   private cancel: Cancel | null = null;
   private stopped = false;
   private seq = 0;
   private readonly rng: Rng = createRng(randomInt(0, 2 ** 31));
+  private memKey = "";
+  private mem: Record<string, unknown> = {};
+  /** Son eylemin yanıtı (yalnız iz için). */
+  lastAck: { ok: boolean; reason?: string } | null = null;
 
   constructor(
     private readonly rt: Runtime,
@@ -182,23 +207,58 @@ class Bot implements BotHandle {
     }
     const gameId = match.games[match.index]?.id ?? "";
     const delay = this.between(BOT_ACTION_DELAY[gameId] ?? DEFAULT);
-    // Taslak oyunların (test2'de açık) botları ayrı kayıttadır.
-    const strategy = BOTS[gameId] ?? TASLAK_BOTLAR[gameId];
     const inputs = botInputs(this.rt, room, me.id);
-    if (!strategy || !inputs) return delay;
-    let payload: unknown;
-    try {
-      payload = strategy.generate(this.rng, me.id, inputs.publicView, inputs.privateView, inputs.connected);
-      // Ağdan gelmiş gibi: düz JSON kopyası (paylaşılan nesne, `undefined` alan kalmaz).
-      payload = payload === undefined ? undefined : JSON.parse(JSON.stringify(payload));
-    } catch (err) {
-      log.warn("bot_strategy_failed", { roomCode: room.code, gameId, error: String(err) });
-      return delay;
+    if (!inputs) return delay;
+    // Oyun değişince botun oyun belleği sıfırlanır.
+    const memKey = `${match.index}:${gameId}`;
+    if (this.memKey !== memKey) {
+      this.memKey = memKey;
+      this.mem = {};
     }
-    if (payload === undefined) return delay;
+    let payload: unknown;
+    let next = delay;
+    const play = PLAY_STRATEGIES[gameId];
+    let useFuzz = play === undefined;
+    if (play) {
+      try {
+        const step = play({
+          rng: this.rng,
+          me: me.id,
+          pub: inputs.publicView,
+          priv: inputs.privateView,
+          connected: inputs.connected,
+          now: inputs.now,
+          mem: this.mem,
+        });
+        payload = step?.action;
+        if (step?.next !== undefined && Number.isFinite(step.next)) next = Math.max(50, step.next);
+      } catch (err) {
+        log.warn("bot_play_failed", { roomCode: room.code, gameId, error: String(err) });
+        // Yazı oyununda test botunun bilerek bozuk metni ekrana çıkmasın: pas. Ötekilerde test botuna düşülür.
+        useFuzz = !TEXT_GAMES.has(gameId);
+      }
+    }
+    if (useFuzz) {
+      // Oynama stratejisi olmayan oyun: motorun test botu (taslak oyunlarınki ayrı kayıtta).
+      const fuzz = BOTS[gameId] ?? TASLAK_BOTLAR[gameId];
+      if (!fuzz) return delay;
+      try {
+        payload = fuzz.generate(this.rng, me.id, inputs.publicView, inputs.privateView, inputs.connected);
+      } catch (err) {
+        log.warn("bot_strategy_failed", { roomCode: room.code, gameId, error: String(err) });
+        return delay;
+      }
+    }
+    if (payload === undefined) return next;
+    // Ağdan gelmiş gibi: düz JSON kopyası (paylaşılan nesne, `undefined` alan kalmaz).
+    payload = JSON.parse(JSON.stringify(payload));
+    // Son kapı: oyuncuya gösterilecek metin temiz değilse hiç gönderilmez.
+    if (!isPresentable(payload)) return next;
     this.seq += 1;
+    this.lastAck = null;
     this.send({ type: "action", seq: this.seq, payload });
-    return delay;
+    botTrace.hook?.({ gameId, botId: me.id, payload, ack: this.lastAck });
+    return next;
   }
 
   /** Kart seçimi: alınmamış bir seçenek; el doluyken gelen kart için yeni kartı bırakır. */
@@ -229,11 +289,15 @@ function botName(room: Room): string {
 export function addBot(rt: Runtime, room: Room): Player | null {
   if (!rt.botsEnabled || room.phase !== "lobby" || room.players.size >= MAX_PLAYERS) return null;
   if (room.players.size === 0) return null;
-  const conn = botConnection();
+  let bot: Bot | null = null;
+  const conn = botConnection((msg) => {
+    if (msg.type === "actionAck" && bot)
+      bot.lastAck = msg.ok ? { ok: true } : { ok: false, reason: msg.reason ?? "" };
+  });
   const player = addPlayer(rt, room, botName(room), conn);
   // Botun oturumu yoktur: belirteçle hiçbir bağlantı onun yerine geçemez.
   rt.tokens.delete(player.token);
-  const bot = new Bot(rt, player, conn);
+  bot = new Bot(rt, player, conn);
   player.bot = bot;
   bot.schedule(600 + randomInt(900));
   rt.broadcaster.markDirty(room);
