@@ -38,6 +38,10 @@ Kısa oyun içi açılış penceresi (≤ 7 sn) açılış animasyonu için kull
   risk %16, silah hayatta kalan rastgele birine. Bitiş: hayatta kalan ≤ başlangıç/2. Süre dolarsa sahip dışındaki
   rastgele hayatta oyuncuya otomatik atış (tek hayatta kalan sahipse kendine). Her atıştan sonra 2,5 sn açılış
   penceresi (sonuç animasyonu); sonraki 18 sn pencere bitince başlar. Hayatta kalanlar +1.
+  RR öneri paketi (Kasım 2026): hemen geri ateş yok (`no_return_fire`, 3+ hayattayken tek karar), patlamada elenen 4 sn
+  içinde silahı verir (`pass`, seçmezse rastgele), kopan oyuncu elle hedeflenebilir ve kopan sahibin süresi 6 sn
+  (`onPresence`), bekleme 3,5 sn (patlamada son sözle 7,5 sn), ilk karar 18,8 sn, oyun içi açılış en az 6 sn. Ayrıntı:
+  KURALLAR §7.
 - **Zehirli Kadeh** (2–8): zehirli kadeh sayısı 2–3 → 1, 4–5 → 2, 6–8 → 3; rastgele dağıtılır, **kimse göremez**
   (sahibi dahil) — yalnız sonuçta açılır. Her oyuncu bir kez takas **başlatabilir** (hedef olmak hak harcamaz);
   hedef başka bir bağlı katılımcı. Takas anında uygulanır, süreye +5 sn ekler (başlangıç 20 sn). Takas olayları

@@ -2,12 +2,19 @@ import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import { createRng } from "../../rng.js";
 import {
   RUS_RULETI_DECISION_MS,
+  RUS_RULETI_FIRST_BAND_MS,
   RUS_RULETI_KAHIN_MIN_CORRECT,
+  RUS_RULETI_LAST_WORD_AFTER_MS,
+  RUS_RULETI_LAST_WORD_MS,
   RUS_RULETI_MAX_RISK,
+  RUS_RULETI_OFFLINE_DECISION_MS,
   RUS_RULETI_OPEN_MS,
+  RUS_RULETI_OUTRO_MS,
   RUS_RULETI_RISK_STEP,
   RUS_RULETI_START_RISK,
   type RusRuletiAction,
+  type RusRuletiHandoff,
+  type RusRuletiLastWord,
   type RusRuletiPredictionResult,
   type RusRuletiPublicView,
   type RusRuletiResult,
@@ -31,7 +38,19 @@ export interface RusRuletiState {
   risk: number;
   shots: number;
   last: RusRuletiShot | null;
+  /** RR-U3: bütün atışlar (herkese açık). */
+  history: RusRuletiShot[];
+  /** RR-M3: bekleyen son söz. */
+  lastWord: RusRuletiLastWord | null;
+  /** RR-M3: son patlamadan sonra silahın kime geçtiği (yeni atışta silinir). */
+  handoff: RusRuletiHandoff | null;
+  /**
+   * RR-M4: bağlantısı kopuk katılımcılar. Yalnız `setup` ve `onPresence` (bağlantı kaydı) yazar; böylece `tick`
+   * `ctx.connected`'a bakmadan kopan sahibin kısa karar süresini uygular ve kayıttan tekrar oynatma birebir kalır.
+   */
+  offline: string[];
   openAt: number;
+  /** Karar bitişi; son söz sürerken, son söz süre dolunca biterse geçerli olacak bitiş. */
   deadline: number;
   over: boolean;
   /** GİZLİ (O9): sıradaki atış için elenenlerin tahmini (oyuncu → patlar mı). Yalnız sahibinin `view`ına girer. */
@@ -42,26 +61,33 @@ export interface RusRuletiState {
   yes: Record<string, number>;
   /** GİZLİ (O9): son çözülen tahminin sonucu; yalnız sahibine gider. */
   results: Record<string, RusRuletiPredictionResult>;
+  /** GİZLİ (RR-U13): oyuncu başına çözülen tahmin sayısı ve bunların tutanı; yalnız sahibine gider. */
+  made: Record<string, number>;
+  hits: Record<string, number>;
 }
 
 /** Atış sonucuna göre tahminleri çözer (saf): doğru sayaçlarını ve sahiplerinin sonucunu günceller. */
 function resolvePredictions(
   state: RusRuletiState,
   exploded: boolean,
-): Pick<RusRuletiState, "predictions" | "correct" | "yes" | "results"> {
+): Pick<RusRuletiState, "predictions" | "correct" | "yes" | "results" | "made" | "hits"> {
   const correct = { ...state.correct };
   const yes = { ...state.yes };
   const results = { ...state.results };
+  const made = { ...state.made };
+  const hits = { ...state.hits };
   for (const [id, guess] of Object.entries(state.predictions)) {
     const hit = guess === exploded;
     results[id] = { turn: state.shots, correct: hit };
+    made[id] = (made[id] ?? 0) + 1;
+    if (hit) hits[id] = (hits[id] ?? 0) + 1;
     // Kâhin yalnız patlamayı bilenleri sayar: "Hayır" çoğu atışta zaten doğrudur.
     if (guess) {
       yes[id] = (yes[id] ?? 0) + 1;
       if (exploded) correct[id] = (correct[id] ?? 0) + 1;
     }
   }
-  return { predictions: {}, correct, yes, results };
+  return { predictions: {}, correct, yes, results, made, hits };
 }
 
 /**
@@ -83,12 +109,58 @@ function shotRng(seed: number, no: number, salt = 0) {
   return rng;
 }
 
-/** Oyun bitişi: son atıştan sonra sonuç animasyonu için açılış süresi kadar beklenir. */
-const outroEnd = (state: RusRuletiState): number => (state.last?.at ?? state.startedAt) + RUS_RULETI_OPEN_MS;
+/** RR-U8: oyun bitişi: son atıştan sonra oyun içi açılış en az bu kadar gösterilir. */
+const outroEnd = (state: RusRuletiState): number => (state.last?.at ?? state.startedAt) + RUS_RULETI_OUTRO_MS;
 
 /** Yarı eşiği: hayatta kalan sayısı başlangıcın yarısına veya altına düşünce biter. */
 export function rusRuletiShouldEnd(startCount: number, aliveCount: number): boolean {
   return aliveCount * 2 <= startCount;
+}
+
+/** RR-U2: oyunun bitmesi için gereken elenme sayısı (2→1, 3/4→2, 5/6→3, 7/8→4). */
+export function rusRuletiNeededOuts(startCount: number): number {
+  return startCount - Math.floor(startCount / 2);
+}
+
+/** RR-M4: sahibin karar süresi; bağlantısı kopuksa kısa. */
+const decisionMs = (state: Pick<RusRuletiState, "offline">, holder: string): number =>
+  state.offline.includes(holder) ? RUS_RULETI_OFFLINE_DECISION_MS : RUS_RULETI_DECISION_MS;
+
+/**
+ * RR-M1: hemen geri ateş yok. Son atış boş geçip silahı başkasından şimdiki sahibe getirdiyse, sahip bu kararında ona
+ * sıkanı hedefleyemez. Yalnız en az 3 kişi hayattayken; patlamadan ve kendine sıkmadan sonra yasak yoktur.
+ */
+export function rusRuletiNoReturn(
+  state: Pick<RusRuletiState, "last" | "alive" | "holder" | "over" | "lastWord">,
+): string | null {
+  const l = state.last;
+  if (state.over || state.lastWord || !l || l.exploded || l.shooter === l.target) return null;
+  if (l.target !== state.holder || state.alive.length < 3 || !state.alive.includes(l.shooter)) return null;
+  return l.shooter;
+}
+
+/** Son sözü bitirir: silah `to`'ya geçer, karar penceresi `at`'te açılır. */
+function settleLastWord(
+  state: RusRuletiState,
+  from: string,
+  to: string,
+  chosen: boolean,
+  at: number,
+): RusRuletiState {
+  return {
+    ...state,
+    holder: to,
+    lastWord: null,
+    handoff: { from, to, chosen },
+    openAt: at,
+    deadline: at + decisionMs(state, to),
+  };
+}
+
+/** Son söz seçilmeden bitince (süre ya da kopma) silah hayatta kalanlardan rastgele birine gider (atışa bağlı tohum). */
+function randomHeir(state: RusRuletiState): string {
+  const pick = shotRng(state.seed, state.shots, 0x2c1b3c6d);
+  return state.alive[pick.int(state.alive.length)] ?? state.holder;
 }
 
 /**
@@ -109,8 +181,8 @@ function fire(state: RusRuletiState, target: string, auto: boolean, at: number):
     at,
   };
   const openAt = at + RUS_RULETI_OPEN_MS;
-  const deadline = openAt + RUS_RULETI_DECISION_MS;
   const resolved = resolvePredictions(state, exploded);
+  const history = [...state.history, last];
   if (!exploded) {
     return {
       ...state,
@@ -119,39 +191,62 @@ function fire(state: RusRuletiState, target: string, auto: boolean, at: number):
       risk: Math.min(RUS_RULETI_MAX_RISK, state.risk + RUS_RULETI_RISK_STEP),
       shots: seq,
       last,
+      history,
+      handoff: null,
       openAt,
-      deadline,
+      deadline: openAt + decisionMs(state, target),
     };
   }
   const alive = state.alive.filter((id) => id !== target);
   const eliminated = [...state.eliminated, target];
   const over = rusRuletiShouldEnd(state.players.length, alive.length);
-  const holder = over ? state.holder : (alive[rng.int(alive.length)] ?? state.holder);
-  return {
+  const next: RusRuletiState = {
     ...state,
     ...resolved,
     alive,
     eliminated,
-    holder,
     risk: RUS_RULETI_START_RISK,
     shots: seq,
     last,
+    history,
+    handoff: null,
+    lastWord: null,
     openAt,
-    deadline,
+    deadline: openAt + RUS_RULETI_DECISION_MS,
     over,
+  };
+  if (over) return next;
+  // RR-M3: bağlantısı kopuk elenen son söz söyleyemez; silah hemen rastgele birine gider (eski kural).
+  if (state.offline.includes(target)) return settleLastWord(next, target, randomHeir(next), false, openAt);
+  const endsAt = openAt + RUS_RULETI_LAST_WORD_MS;
+  return {
+    ...next,
+    lastWord: { from: target, opensAt: openAt, endsAt },
+    openAt: endsAt,
+    deadline: endsAt + RUS_RULETI_DECISION_MS,
   };
 }
 
 /**
- * Süresi dolan kararlar için sunucu atışı: sahip dışındaki rastgele bir hayatta oyuncu (yoksa sahibin kendisi).
- * Atış zamanı gerçek bitiş anıdır (tick geç kalsa da sonuç aynıdır). `connected`'a bakmaz.
+ * Süresi dolan son sözler ve kararlar. Karar için sunucu atışı: sahip dışındaki (ve RR-M1 yasaklısı dışındaki)
+ * rastgele bir hayatta oyuncu (yoksa sahibin kendisi). Atış zamanı gerçek bitiş anıdır (tick geç kalsa da sonuç
+ * aynıdır). `connected`'a bakmaz.
  */
 function catchUp(state: RusRuletiState, now: number): RusRuletiState {
   let s = state;
-  while (!s.over && now >= s.deadline) {
+  while (!s.over) {
+    if (s.lastWord) {
+      if (now < s.lastWord.endsAt) break;
+      s = settleLastWord(s, s.lastWord.from, randomHeir(s), false, s.lastWord.endsAt);
+      continue;
+    }
+    if (now < s.deadline) break;
+    const banned = rusRuletiNoReturn(s);
     const others = s.alive.filter((id) => id !== s.holder);
+    const allowed = others.filter((id) => id !== banned);
+    const pool = allowed.length > 0 ? allowed : others;
     const pick = shotRng(s.seed, s.shots, 0x5bd1e995); // hedef seçimi atışın zarından ayrı bir akış kullanır
-    const target = others.length > 0 ? (others[pick.int(others.length)] ?? s.holder) : s.holder;
+    const target = pool.length > 0 ? (pool[pick.int(pool.length)] ?? s.holder) : s.holder;
     s = fire(s, target, true, s.deadline);
   }
   return s;
@@ -175,9 +270,9 @@ export const rusRuleti: GameDefinition<RusRuletiState, RusRuletiAction, RusRulet
     briefing: {
       goal: "Silah patlamadan hayatta kal!",
       steps: [
-        "Silah sende mi? Kendini ya da birini seç",
-        "Her güvenli atışta patlama riski yükselir",
-        "Patlayan elenir; sonda hayatta kalanlar +1 alır",
+        "Silah sendeyse birini ya da kendini seç; boş geçerse silah ona geçer",
+        "Risk %16'dan başlar, her boş atışta 10 artar; patlayınca sıfırlanır",
+        "Yarınız elenince biter: hayatta kalanlar +1",
       ],
     },
 
@@ -189,6 +284,12 @@ export const rusRuleti: GameDefinition<RusRuletiState, RusRuletiAction, RusRulet
         if (Object.keys(rec).length !== 3 || typeof explodes !== "boolean") return null;
         if (typeof turn !== "number" || !Number.isInteger(turn) || turn < 0 || turn > 100_000) return null;
         return { kind: "predict", turn, explodes };
+      }
+      if (rec.kind === "pass") {
+        const to = rec.to;
+        if (Object.keys(rec).length !== 2 || typeof to !== "string" || to.length === 0 || to.length > 64)
+          return null;
+        return { kind: "pass", to };
       }
       if (Object.keys(rec).length !== 2 || rec.kind !== "shoot") return null;
       const target = rec.target;
@@ -211,13 +312,20 @@ export const rusRuleti: GameDefinition<RusRuletiState, RusRuletiAction, RusRulet
         risk: RUS_RULETI_START_RISK,
         shots: 0,
         last: null,
+        history: [],
+        lastWord: null,
+        handoff: null,
+        offline: players.filter((id) => !ctx.connected.includes(id)),
         openAt: ctx.now,
-        deadline: ctx.now + RUS_RULETI_DECISION_MS,
+        // RR-U9: ilk kararda önceden bekleme olmadığı için "SİLAH SENDE!" bandı kadar uzun açılır.
+        deadline: ctx.now + RUS_RULETI_FIRST_BAND_MS + RUS_RULETI_DECISION_MS,
         over: false,
         predictions: {},
         correct: {},
         yes: {},
         results: {},
+        made: {},
+        hits: {},
       };
     },
 
@@ -227,25 +335,62 @@ export const rusRuleti: GameDefinition<RusRuletiState, RusRuletiAction, RusRulet
       const s = catchUp(state, ctx.now);
       if (s.over) return { rejected: "ended" };
       if (ctx.now < s.startedAt) return { rejected: "not_started" };
+      if (action.kind === "pass") {
+        // RR-M3: yalnız son sözü bekleyen elenen, sonuç beklemesi bittikten sonra.
+        const lw = s.lastWord;
+        if (!lw || lw.from !== playerId) return { rejected: "not_last_word" };
+        if (ctx.now < lw.opensAt) return { rejected: "not_open" };
+        if (!s.alive.includes(action.to)) return { rejected: "bad_target" };
+        return settleLastWord(s, lw.from, action.to, true, ctx.now + RUS_RULETI_LAST_WORD_AFTER_MS);
+      }
       if (action.kind === "predict") {
         // O9: yalnız elenenler; atış sonucu önceden belirsiz olduğundan zamana bağlı sınır yoktur.
         if (s.alive.includes(playerId)) return { rejected: "alive_cannot_predict" };
+        // RR-M3: az önce elenenin tahmini son sözünden sonra başlar.
+        if (s.lastWord?.from === playerId) return { rejected: "last_word" };
         if (action.turn !== s.shots) return { rejected: "stale_turn" };
         if (playerId in s.predictions) return { rejected: "already_predicted" };
         return { ...s, predictions: { ...s.predictions, [playerId]: action.explodes } };
       }
       if (!s.alive.includes(playerId)) return { rejected: "eliminated" };
+      if (s.lastWord) return { rejected: "last_word" };
       if (ctx.now < s.openAt) return { rejected: "not_open" };
       if (playerId !== s.holder) return { rejected: "not_holder" };
       if (!s.alive.includes(action.target)) return { rejected: "bad_target" };
-      if (action.target !== playerId && !ctx.connected.includes(action.target)) {
-        return { rejected: "target_offline" };
-      }
+      // RR-M4: bağlantısı kopan hayattaki oyuncu da elle hedeflenebilir.
+      if (action.target === rusRuletiNoReturn(s)) return { rejected: "no_return_fire" };
       return fire(s, action.target, false, ctx.now);
     },
 
     tick(state, ctx): RusRuletiState {
       return catchUp(state, ctx.now);
+    },
+
+    /**
+     * RR-M4 / RR-M3: kopan sahibin karar süresi 6 sn'ye iner (pencere açıksa kalan süre, en çok 6 sn); dönen kalan süreyle
+     * oynar. Son sözünü bekleyen elenen koparsa silah hemen rastgele birine gider.
+     */
+    onPresence(state, ctx): RusRuletiState {
+      const offline = state.players.filter((id) => !ctx.connected.includes(id));
+      if (offline.length === state.offline.length && offline.every((id) => state.offline.includes(id)))
+        return state;
+      const s: RusRuletiState = { ...state, offline };
+      if (s.over) return s;
+      if (s.lastWord) {
+        if (!offline.includes(s.lastWord.from)) return s;
+        return settleLastWord(
+          s,
+          s.lastWord.from,
+          randomHeir(s),
+          false,
+          Math.max(ctx.now, s.lastWord.opensAt),
+        );
+      }
+      if (offline.includes(s.holder) && !state.offline.includes(s.holder)) {
+        const cap = Math.max(ctx.now, s.openAt) + RUS_RULETI_OFFLINE_DECISION_MS;
+        if (cap < s.deadline) return { ...s, deadline: cap };
+      }
+      return s;
     },
 
     publicView(state): RusRuletiPublicView {
@@ -258,6 +403,10 @@ export const rusRuleti: GameDefinition<RusRuletiState, RusRuletiAction, RusRulet
         risk: state.risk,
         shots: state.shots,
         last: state.last ? { ...state.last } : null,
+        history: state.history.map((h) => ({ ...h })),
+        noReturn: rusRuletiNoReturn(state),
+        lastWord: state.lastWord && !state.over ? { ...state.lastWord } : null,
+        handoff: state.handoff ? { ...state.handoff } : null,
         openAt: state.openAt,
         deadline: state.over ? null : state.deadline,
         over: state.over,
@@ -274,6 +423,12 @@ export const rusRuleti: GameDefinition<RusRuletiState, RusRuletiAction, RusRulet
         turn: state.shots,
         prediction: guess === undefined ? null : guess,
         lastResult: state.results[playerId] ?? null,
+        tally: {
+          made: state.made[playerId] ?? 0,
+          hit: state.hits[playerId] ?? 0,
+          yes: state.yes[playerId] ?? 0,
+          yesHit: state.correct[playerId] ?? 0,
+        },
       };
     },
 

@@ -4,13 +4,22 @@ import { match as matchSound, solo as soloSound } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
 import type { GameScreenProps } from "../registry.js";
 import "./rus-ruleti.css";
-import { parseRusRuletiPublicView } from "./view.js";
+import { outEntries, parseRusRuletiPublicView, shortName } from "./view.js";
 
-/** Sonuç ekranının üstüne giren kısa açılış: hayatta kalanlar altın halkayla +1, elenenler sönük. */
+/**
+ * Sonuç ekranının üstüne giren kısa açılış: hayatta kalanlar altın halkayla, adlarıyla +1; Kâhin rozetleri; elenenler
+ * adlarıyla ve elenme sırasıyla, kimin vurduğu ve atışın riskiyle (RR-U8).
+ */
 export default function Reveal(props: GameScreenProps) {
-  const result = createMemo(() => parseRusRuletiPublicView(props.match.publicView)?.result ?? null);
+  const pub = createMemo(() => parseRusRuletiPublicView(props.match.publicView));
+  const result = () => pub()?.result ?? null;
   const person = (id: string) => props.players.find((p) => p.id === id);
+  const name = (id: string): string => (id === props.selfId ? "Sen" : (person(id)?.nickname ?? "Oyuncu"));
   const mineAlive = () => result()?.survivors.includes(props.selfId) ?? false;
+  const outs = () => {
+    const p = pub();
+    return p?.result ? outEntries(p.result.eliminated, p.history) : [];
+  };
   onMount(() => {
     if (!result() || props.spectator) return;
     if (mineAlive()) {
@@ -30,13 +39,14 @@ export default function Reveal(props: GameScreenProps) {
             <For each={r().survivors}>
               {(id) => (
                 <li class="rrr__card">
-                  <Show when={person(id)}>
-                    {(p) => (
-                      <Avatar index={p().avatar} size={44} connected={p().connected} ring="var(--amber)" />
-                    )}
-                  </Show>
+                  <Avatar
+                    index={person(id)?.avatar ?? 0}
+                    size={44}
+                    connected={person(id)?.connected ?? true}
+                    ring="var(--amber)"
+                  />
+                  <span class="rrr__name">{shortName(name(id))}</span>
                   <span class="rrr__pts">+1</span>
-                  <span class="sr-only">{person(id)?.nickname}</span>
                 </li>
               )}
             </For>
@@ -46,28 +56,32 @@ export default function Reveal(props: GameScreenProps) {
               <For each={r().kahinler}>
                 {(id) => (
                   <li class="rrr__kahin">
-                    <Show when={person(id)}>
-                      {(p) => <Avatar index={p().avatar} size={30} mood="out" connected={p().connected} />}
-                    </Show>
-                    <span class="rrr__rozet">{person(id)?.nickname} · Kâhin</span>
-                    <span class="sr-only">{person(id)?.nickname} Kâhin rozeti kazandı</span>
+                    <Avatar index={person(id)?.avatar ?? 0} size={30} mood="out" />
+                    <span class="rrr__rozet">{name(id)} · Kâhin</span>
                   </li>
                 )}
               </For>
             </ul>
           </Show>
-          <ul class="rrr__row rrr__row--out">
-            <For each={r().eliminated}>
-              {(id) => (
+          <ol class="rrr__outs" aria-label="Elenenler">
+            <For each={outs()}>
+              {(o) => (
                 <li class="rrr__gone">
-                  <Show when={person(id)}>
-                    {(p) => <Avatar index={p().avatar} size={30} mood="out" connected={p().connected} />}
+                  <span class="rrr__no">{o.order}.</span>
+                  <Avatar index={person(o.id)?.avatar ?? 0} size={24} mood="out" />
+                  <span class="rrr__goname">{shortName(name(o.id))}</span>
+                  <Show when={o.shooter}>
+                    {(by) => (
+                      <span class="rrr__by">
+                        {o.self ? "kendine" : `← ${shortName(name(by()))}`}
+                        {o.risk === null ? "" : ` · %${o.risk}`}
+                      </span>
+                    )}
                   </Show>
-                  <span class="sr-only">{person(id)?.nickname} elendi</span>
                 </li>
               )}
             </For>
-          </ul>
+          </ol>
         </section>
       )}
     </Show>

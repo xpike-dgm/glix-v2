@@ -1,15 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { type GameContext, isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
-import { type RusRuletiState, rusRuleti, rusRuletiShouldEnd } from "./index.js";
+import {
+  type RusRuletiState,
+  rusRuleti,
+  rusRuletiNeededOuts,
+  rusRuletiNoReturn,
+  rusRuletiShouldEnd,
+} from "./index.js";
 import {
   RUS_RULETI_DECISION_MS,
+  RUS_RULETI_FIRST_BAND_MS,
+  RUS_RULETI_LAST_WORD_AFTER_MS,
+  RUS_RULETI_LAST_WORD_MS,
   RUS_RULETI_MAX_RISK,
+  RUS_RULETI_OFFLINE_DECISION_MS,
   RUS_RULETI_OPEN_MS,
+  RUS_RULETI_OUTRO_MS,
   RUS_RULETI_START_RISK,
 } from "./types.js";
 
 const T0 = 1_000_000;
+/** İlk kararın bitişi (RR-U9: 0,8 sn bant + 18 sn). */
+const FIRST = T0 + 18_800;
 const IDS = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const ctx = (now: number, connected: readonly string[] = IDS, seed = 1): GameContext => ({
   now,
@@ -48,7 +61,12 @@ function ok(r: RusRuletiState | { rejected: string }): RusRuletiState {
   return r;
 }
 const reason = (r: unknown): string => (isRejected(r) ? r.rejected : "kabul");
-const other = (s: RusRuletiState, not: string): string => s.alive.find((x) => x !== not) as string;
+/** Sahip dışındaki ilk hayatta oyuncu; RR-M1 yasaklısı (az önce sahibe sıkan) atlanır. */
+const other = (s: RusRuletiState, not: string): string =>
+  (s.alive.find((x) => x !== not && x !== rusRuletiNoReturn(s)) ?? s.alive.find((x) => x !== not)) as string;
+/** RR-M3: bekleyen son söz varsa süresini doldurur (silah rastgele birine geçer). */
+const settle = (s: RusRuletiState): RusRuletiState =>
+  s.lastWord ? rusRuleti.tick(s, ctx(s.lastWord.endsAt)) : s;
 
 describe("rus-ruleti: kurulum", () => {
   it("2-8 oyuncu", () => {
@@ -56,14 +74,15 @@ describe("rus-ruleti: kurulum", () => {
     expect(rusRuleti.maxPlayers).toBe(8);
   });
 
-  it("herkes hayatta, risk %16, ilk karar penceresi hemen açık ve 18 sn", () => {
+  it("herkes hayatta, risk %16, ilk karar penceresi hemen açık ve 18,8 sn (RR-U9 bandı)", () => {
     const s = start(5);
     expect(s.alive).toEqual(ids(5));
     expect(s.eliminated).toEqual([]);
     expect(s.risk).toBe(16);
     expect(RUS_RULETI_START_RISK).toBe(16);
     expect(s.openAt).toBe(T0);
-    expect(s.deadline).toBe(T0 + 18_000);
+    expect(RUS_RULETI_FIRST_BAND_MS).toBe(800);
+    expect(s.deadline).toBe(T0 + 18_800);
     expect(rusRuleti.isFinished(s, ctx(T0))).toBe(false);
   });
 
@@ -106,11 +125,13 @@ describe("rus-ruleti: ateş etme kuralları", () => {
     expect(next.last).toMatchObject({ seq: 1, shooter: s.holder, target, exploded: false, risk: 0 });
   });
 
-  it("bağlı olmayan başka oyuncu hedeflenemez", () => {
+  it("RR-M4: bağlantısı kopan hayattaki oyuncu da elle hedeflenebilir", () => {
     const s = start(4, { risk: SAFE });
     const target = other(s, s.holder);
     const online = ids(4).filter((x) => x !== target);
-    expect(reason(shoot(s, s.holder, target, T0 + 1000, online))).toBe("target_offline");
+    const next = ok(shoot(s, s.holder, target, T0 + 1000, online));
+    expect(next.last).toMatchObject({ target, exploded: false });
+    expect(next.holder).toBe(target);
   });
 
   it("katılımcı olmayan ya da bilinmeyen hedef reddedilir", () => {
@@ -127,10 +148,10 @@ describe("rus-ruleti: ateş etme kuralları", () => {
   it("elenmiş oyuncu ne ateş eder ne hedeflenir", () => {
     let s = start(6, { risk: BOOM });
     const victim = other(s, s.holder);
-    s = ok(shoot(s, s.holder, victim, T0 + 1000));
+    s = settle(ok(shoot(s, s.holder, victim, T0 + 1000)));
     expect(s.alive).not.toContain(victim);
-    expect(reason(shoot(s, victim, s.holder, T0 + 4000))).toBe("eliminated");
-    expect(reason(shoot(s, s.holder, victim, T0 + 4000))).toBe("bad_target");
+    expect(reason(shoot(s, victim, s.holder, s.openAt))).toBe("eliminated");
+    expect(reason(shoot(s, s.holder, victim, s.openAt))).toBe("bad_target");
   });
 });
 
@@ -194,7 +215,7 @@ describe("rus-ruleti: patlama", () => {
     for (let seed = 0; seed < 300; seed++) {
       const s = start(8, { risk: BOOM, seed });
       const victim = other(s, s.holder);
-      const next = ok(shoot(s, s.holder, victim, T0 + 10));
+      const next = settle(ok(shoot(s, s.holder, victim, T0 + 10)));
       expect(next.alive).toEqual(s.alive.filter((x) => x !== victim));
       expect(next.eliminated).toEqual([victim]);
       expect(next.alive).toContain(next.holder);
@@ -206,7 +227,7 @@ describe("rus-ruleti: patlama", () => {
 
   it("kendini vuran patlarsa kendisi elenir ve silah başkasına geçer", () => {
     const s = start(5, { risk: BOOM });
-    const next = ok(shoot(s, s.holder, s.holder, T0 + 10));
+    const next = settle(ok(shoot(s, s.holder, s.holder, T0 + 10)));
     expect(next.alive).not.toContain(s.holder);
     expect(next.eliminated).toEqual([s.holder]);
     expect(next.holder).not.toBe(s.holder);
@@ -216,7 +237,7 @@ describe("rus-ruleti: patlama", () => {
   it("birden çok elenme sırayla kaydedilir", () => {
     let s = start(8, { risk: BOOM });
     const v1 = other(s, s.holder);
-    s = ok(shoot(s, s.holder, v1, T0 + 10));
+    s = settle(ok(shoot(s, s.holder, v1, T0 + 10)));
     s = { ...s, risk: BOOM };
     const v2 = other(s, s.holder);
     s = ok(shoot(s, s.holder, v2, s.openAt));
@@ -252,7 +273,7 @@ describe("rus-ruleti: bitiş", () => {
     let now = T0 + 10;
     for (let i = 0; i < booms; i++) {
       expect(s.over).toBe(false);
-      s = ok(shoot({ ...s, risk: BOOM }, s.holder, other(s, s.holder), now));
+      s = settle(ok(shoot({ ...s, risk: BOOM }, s.holder, other(s, s.holder), now)));
       now = s.openAt;
     }
     expect(s.over).toBe(true);
@@ -277,8 +298,11 @@ describe("rus-ruleti: bitiş", () => {
     const holder = s.holder;
     expect(s.over).toBe(true);
     expect(reason(shoot(s, holder, holder, T0 + 10_000))).toBe("ended");
-    expect(rusRuleti.isFinished(s, ctx(T0 + 100 + RUS_RULETI_OPEN_MS - 1))).toBe(false);
-    expect(rusRuleti.isFinished(s, ctx(T0 + 100 + RUS_RULETI_OPEN_MS))).toBe(true);
+    // RR-U8: oyun içi son açılış en az 6 sn gösterilir.
+    expect(RUS_RULETI_OUTRO_MS).toBe(6_000);
+    expect(s.lastWord).toBeNull();
+    expect(rusRuleti.isFinished(s, ctx(T0 + 100 + RUS_RULETI_OUTRO_MS - 1))).toBe(false);
+    expect(rusRuleti.isFinished(s, ctx(T0 + 100 + RUS_RULETI_OUTRO_MS))).toBe(true);
   });
 
   it("oyun bitmeden isFinished false", () => {
@@ -289,7 +313,7 @@ describe("rus-ruleti: bitiş", () => {
   it("puan: hayatta kalan +1, elenen 0; genel skor aynı", () => {
     let s = start(4, { risk: BOOM });
     const v1 = other(s, s.holder);
-    s = ok(shoot(s, s.holder, v1, T0 + 10));
+    s = settle(ok(shoot(s, s.holder, v1, T0 + 10)));
     s = { ...s, risk: BOOM };
     const v2 = other(s, s.holder);
     s = ok(shoot(s, s.holder, v2, s.openAt));
@@ -307,30 +331,30 @@ describe("rus-ruleti: bitiş", () => {
 });
 
 describe("rus-ruleti: karar süresi ve açılış penceresi", () => {
-  it("her atıştan sonra 2,5 sn eylem kabul edilmez; pencere bitince 18 sn başlar", () => {
-    expect(RUS_RULETI_OPEN_MS).toBe(2_500);
+  it("RR-U5: her atıştan sonra 3,5 sn eylem kabul edilmez; pencere bitince 18 sn başlar", () => {
+    expect(RUS_RULETI_OPEN_MS).toBe(3_500);
     expect(RUS_RULETI_DECISION_MS).toBe(18_000);
     const s0 = start(4, { risk: SAFE });
     const s1 = ok(shoot(s0, s0.holder, other(s0, s0.holder), T0 + 4_000));
-    expect(s1.openAt).toBe(T0 + 6_500);
-    expect(s1.deadline).toBe(T0 + 6_500 + 18_000);
-    expect(reason(shoot(s1, s1.holder, s1.holder, T0 + 6_499))).toBe("not_open");
-    expect(reason(shoot(s1, s1.holder, s1.holder, T0 + 6_500))).toBe("kabul");
+    expect(s1.openAt).toBe(T0 + 7_500);
+    expect(s1.deadline).toBe(T0 + 7_500 + 18_000);
+    expect(reason(shoot(s1, s1.holder, s1.holder, T0 + 7_499))).toBe("not_open");
+    expect(reason(shoot(s1, s1.holder, s1.holder, T0 + 7_500))).toBe("kabul");
   });
 
   it("süre dolmadan önceki son ms'de eylem kabul edilir, bitiş anında otomatik atış önce işlenir", () => {
     const s = start(4, { risk: SAFE });
     const t = other(s, s.holder);
-    expect(reason(shoot(s, s.holder, t, T0 + 17_999))).toBe("kabul");
+    expect(reason(shoot(s, s.holder, t, FIRST - 1))).toBe("kabul");
     // Tam bitiş anında sunucu atışı önce uygulanır; eski sahibin eylemi geçersiz kalır.
-    expect(reason(shoot(s, s.holder, t, T0 + 18_000))).not.toBe("kabul");
+    expect(reason(shoot(s, s.holder, t, FIRST))).not.toBe("kabul");
   });
 
   it("süre dolunca sahip dışındaki rastgele bir hayatta oyuncuya otomatik ateş edilir", () => {
     const targets = new Set<string>();
     for (let seed = 0; seed < 300; seed++) {
       const s = start(5, { risk: SAFE, seed });
-      const next = rusRuleti.tick(s, ctx(T0 + 18_000));
+      const next = rusRuleti.tick(s, ctx(FIRST));
       expect(next.last).toMatchObject({ auto: true, shooter: s.holder, seq: 1 });
       expect(next.last?.target).not.toBe(s.holder);
       expect(s.alive).toContain(next.last?.target);
@@ -342,7 +366,7 @@ describe("rus-ruleti: karar süresi ve açılış penceresi", () => {
 
   it("otomatik ateşte patlama olursa hedef elenir ve risk sıfırlanır", () => {
     const s = start(5, { risk: BOOM });
-    const next = rusRuleti.tick(s, ctx(T0 + 18_000));
+    const next = rusRuleti.tick(s, ctx(FIRST));
     expect(next.eliminated).toEqual([next.last?.target]);
     expect(next.risk).toBe(16);
     expect(next.last?.exploded).toBe(true);
@@ -350,16 +374,16 @@ describe("rus-ruleti: karar süresi ve açılış penceresi", () => {
 
   it("otomatik atışın zamanı gerçek bitiş anıdır; sonraki pencere ondan kurulur (geç tick sonucu değiştirmez)", () => {
     const s = start(4, { risk: SAFE });
-    const next = rusRuleti.tick(s, ctx(T0 + 18_400));
-    expect(next.last?.at).toBe(T0 + 18_000);
-    expect(next.openAt).toBe(T0 + 20_500);
-    expect(next.deadline).toBe(T0 + 38_500);
+    const next = rusRuleti.tick(s, ctx(FIRST + 400));
+    expect(next.last?.at).toBe(FIRST);
+    expect(next.openAt).toBe(FIRST + 3_500);
+    expect(next.deadline).toBe(FIRST + 3_500 + 18_000);
   });
 
   it("tick bağlı listesine bakmaz (otomatik atış dahil)", () => {
     const s = start(4, { risk: SAFE });
     expect(() => rusRuleti.tick(s, noConnected(T0 + 5_000))).not.toThrow();
-    const next = rusRuleti.tick(s, noConnected(T0 + 18_000));
+    const next = rusRuleti.tick(s, noConnected(FIRST));
     expect(next.shots).toBe(1);
   });
 
@@ -368,7 +392,7 @@ describe("rus-ruleti: karar süresi ve açılış penceresi", () => {
     const next = rusRuleti.tick(
       s,
       ctx(
-        T0 + 18_000,
+        FIRST,
         ids(4).filter((x) => x !== s.holder),
       ),
     );
@@ -387,14 +411,14 @@ describe("rus-ruleti: karar süresi ve açılış penceresi", () => {
 
   it("tek hayatta kalan sahipse kendine ateş edilir (savunma)", () => {
     const s = start(4, { alive: ["a"], holder: "a", eliminated: ["b", "c", "d"], risk: SAFE });
-    const next = rusRuleti.tick(s, ctx(T0 + 18_000));
+    const next = rusRuleti.tick(s, ctx(FIRST));
     expect(next.last?.target).toBe("a");
     expect(next.holder).toBe("a");
   });
 
   it("değişiklik yoksa tick aynı nesneyi döner", () => {
     const s = start(4);
-    expect(rusRuleti.tick(s, ctx(T0 + 17_999))).toBe(s);
+    expect(rusRuleti.tick(s, ctx(FIRST - 1))).toBe(s);
     const d0 = start(2, { risk: BOOM });
     const done = ok(shoot(d0, d0.holder, other(d0, d0.holder), T0 + 5));
     expect(rusRuleti.tick(done, ctx(T0 + 900_000))).toBe(done);
@@ -490,6 +514,7 @@ describe("rus-ruleti: görünümler", () => {
       turn: 0,
       prediction: null,
       lastResult: null,
+      tally: { made: 0, hit: 0, yes: 0, yesHit: 0 },
     });
     expect(rusRuleti.view(s, null, ctx(T0))).toEqual({ role: "spectator" });
     expect(rusRuleti.view(s, "zz", ctx(T0))).toEqual({ role: "spectator" });
@@ -508,6 +533,7 @@ describe("rus-ruleti: görünümler", () => {
 describe("rus-ruleti: eylem doğrulama", () => {
   it("geçerli eylemi okur, bozukları reddeder", () => {
     expect(rusRuleti.parseAction({ kind: "shoot", target: "a" })).toEqual({ kind: "shoot", target: "a" });
+    expect(rusRuleti.parseAction({ kind: "pass", to: "b" })).toEqual({ kind: "pass", to: "b" });
     for (const bad of [
       { kind: "shoot" },
       { kind: "shoot", target: "" },
@@ -515,6 +541,10 @@ describe("rus-ruleti: eylem doğrulama", () => {
       { kind: "shoot", target: "a", extra: 1 },
       { kind: "shoot", target: "x".repeat(65) },
       { kind: "fire", target: "a" },
+      { kind: "pass" },
+      { kind: "pass", to: "" },
+      { kind: "pass", to: 1 },
+      { kind: "pass", to: "b", extra: 1 },
       [],
       null,
       "shoot",
@@ -525,5 +555,233 @@ describe("rus-ruleti: eylem doğrulama", () => {
 
   it("briefing kısa: en çok 3 madde", () => {
     expect(rusRuleti.briefing.steps.length).toBeLessThanOrEqual(3);
+  });
+});
+
+describe("rus-ruleti: hemen geri ateş yok (RR-M1)", () => {
+  /** b'nin a'ya sıkıp boş geçtiği 4 kişilik durum: silah a'da. */
+  const afterShot = (n = 4): RusRuletiState => {
+    const s0 = start(n, { risk: SAFE, holder: "b" });
+    return ok(shoot(s0, "b", "a", T0 + 10));
+  };
+
+  it("silahı sana getiren boş atışın sahibini ilk kararında hedefleyemezsin", () => {
+    const s = afterShot();
+    expect(s.holder).toBe("a");
+    expect(rusRuletiNoReturn(s)).toBe("b");
+    expect(reason(shoot(s, "a", "b", s.openAt))).toBe("no_return_fire");
+    expect(rusRuleti.publicView(s, ctx(s.openAt)).noReturn).toBe("b");
+    // Başkası ve kendisi serbest.
+    expect(reason(shoot(s, "a", "c", s.openAt))).toBe("kabul");
+    expect(reason(shoot(s, "a", "a", s.openAt))).toBe("kabul");
+  });
+
+  it("yasak yalnız bir kararı kapsar: kendine sıktıktan sonra yine hedefleyebilirsin", () => {
+    const s = ok(shoot({ ...afterShot(), risk: SAFE }, "a", "a", afterShot().openAt));
+    expect(s.holder).toBe("a");
+    expect(rusRuletiNoReturn(s)).toBeNull();
+    expect(reason(shoot(s, "a", "b", s.openAt))).toBe("kabul");
+  });
+
+  it("kendine sıkıp boş geçen sahip yasak doğurmaz; patlamadan sonra da yasak yok", () => {
+    const s0 = start(4, { risk: SAFE, holder: "b" });
+    const self = ok(shoot(s0, "b", "b", T0 + 10));
+    expect(rusRuletiNoReturn(self)).toBeNull();
+    const boom = settle(ok(shoot({ ...afterShot(), risk: BOOM }, "a", "c", afterShot().openAt)));
+    expect(rusRuletiNoReturn(boom)).toBeNull();
+    expect(rusRuleti.publicView(boom, ctx(boom.openAt)).noReturn).toBeNull();
+  });
+
+  it("2 kişi hayattayken yasak yoktur", () => {
+    const s0 = start(2, { risk: SAFE, holder: "b" });
+    const s = ok(shoot(s0, "b", "a", T0 + 10));
+    expect(rusRuletiNoReturn(s)).toBeNull();
+    expect(reason(shoot(s, "a", "b", s.openAt))).toBe("kabul");
+    // 4 kişiden 2'si elenmiş olsa bile (yarı eşiğinde oyun biter; savunma): yalnız hayattakiler sayılır.
+    const t0 = start(5, { risk: SAFE, holder: "b", alive: ["a", "b"], eliminated: ["c", "d", "e"] });
+    expect(rusRuletiNoReturn(ok(shoot(t0, "b", "a", T0 + 10)))).toBeNull();
+  });
+
+  it("süre dolunca otomatik atış yasaklı kişiyi seçmez", () => {
+    for (let seed = 0; seed < 200; seed++) {
+      const s = { ...afterShot(3), seed };
+      const next = rusRuleti.tick(s, ctx(s.deadline));
+      expect(next.last).toMatchObject({ auto: true, shooter: "a" });
+      expect(next.last?.target).toBe("c");
+    }
+  });
+});
+
+describe("rus-ruleti: son söz (RR-M3)", () => {
+  const boomed = (n = 5): RusRuletiState => {
+    const s0 = start(n, { risk: BOOM, holder: "a" });
+    return ok(shoot(s0, "a", "b", T0 + 10));
+  };
+
+  it("patlamayla elenen 4 sn içinde silahı kime vereceğini seçer; 0,5 sn sonra karar açılır", () => {
+    const s = boomed();
+    expect(RUS_RULETI_LAST_WORD_MS).toBe(4_000);
+    expect(s.lastWord).toEqual({ from: "b", opensAt: T0 + 10 + 3_500, endsAt: T0 + 10 + 7_500 });
+    expect(rusRuleti.publicView(s, ctx(T0 + 20)).lastWord).toEqual(s.lastWord);
+    // Sonuç gösterilirken seçim yok; seçim açılınca yalnız elenen seçer.
+    expect(reason(rusRuleti.reduce(s, "b", { kind: "pass", to: "d" }, ctx(T0 + 3_000)))).toBe("not_open");
+    expect(reason(rusRuleti.reduce(s, "c", { kind: "pass", to: "d" }, ctx(T0 + 4_000)))).toBe(
+      "not_last_word",
+    );
+    expect(reason(rusRuleti.reduce(s, "b", { kind: "pass", to: "b" }, ctx(T0 + 4_000)))).toBe("bad_target");
+    // Bu sürede kimse ateş edemez.
+    expect(reason(shoot(s, "a", "c", T0 + 4_000))).toBe("last_word");
+    const t = ok(rusRuleti.reduce(s, "b", { kind: "pass", to: "d" }, ctx(T0 + 5_000)));
+    expect(t.holder).toBe("d");
+    expect(t.lastWord).toBeNull();
+    expect(t.handoff).toEqual({ from: "b", to: "d", chosen: true });
+    expect(t.openAt).toBe(T0 + 5_000 + RUS_RULETI_LAST_WORD_AFTER_MS);
+    expect(t.deadline).toBe(t.openAt + 18_000);
+    expect(reason(rusRuleti.reduce(t, "b", { kind: "pass", to: "a" }, ctx(T0 + 5_100)))).toBe(
+      "not_last_word",
+    );
+    // Onu vuran da seçilebilir.
+    const back = ok(rusRuleti.reduce(s, "b", { kind: "pass", to: "a" }, ctx(T0 + 5_000)));
+    expect(back.holder).toBe("a");
+  });
+
+  it("seçmezse süre dolunca silah hayatta kalanlardan rastgele birine gider", () => {
+    const owners = new Set<string>();
+    for (let seed = 0; seed < 200; seed++) {
+      const s = { ...boomed(), seed };
+      const lw = s.lastWord;
+      if (!lw) throw new Error("son söz yok");
+      expect(rusRuleti.tick(s, ctx(lw.endsAt - 1)).lastWord).not.toBeNull();
+      const t = rusRuleti.tick(s, ctx(lw.endsAt));
+      expect(t.lastWord).toBeNull();
+      expect(t.alive).toContain(t.holder);
+      expect(t.handoff).toEqual({ from: "b", to: t.holder, chosen: false });
+      expect(t.openAt).toBe(lw.endsAt);
+      expect(t.deadline).toBe(lw.endsAt + 18_000);
+      owners.add(t.holder);
+    }
+    expect(owners.size).toBe(4);
+  });
+
+  it("kendini vurup elenen de son sözünü söyler", () => {
+    const s0 = start(5, { risk: BOOM, holder: "a" });
+    const s = ok(shoot(s0, "a", "a", T0 + 10));
+    expect(s.lastWord?.from).toBe("a");
+    const t = ok(rusRuleti.reduce(s, "a", { kind: "pass", to: "c" }, ctx(T0 + 4_000)));
+    expect(t.holder).toBe("c");
+  });
+
+  it("oyunu bitiren patlamada son söz yoktur", () => {
+    const s0 = start(2, { risk: BOOM, holder: "a" });
+    const s = ok(shoot(s0, "a", "b", T0 + 10));
+    expect(s.over).toBe(true);
+    expect(s.lastWord).toBeNull();
+    expect(reason(rusRuleti.reduce(s, "b", { kind: "pass", to: "a" }, ctx(T0 + 4_000)))).toBe("ended");
+  });
+
+  it("elenenin tahmini son sözünden sonra başlar; diğer elenenler tahmin verebilir", () => {
+    const s0 = start(6, { risk: BOOM, holder: "a", alive: ["a", "b", "c", "d", "e"], eliminated: ["f"] });
+    const s = ok(shoot(s0, "a", "b", T0 + 10));
+    const pred = (who: string, st: RusRuletiState, now: number) =>
+      rusRuleti.reduce(st, who, { kind: "predict", turn: st.shots, explodes: true }, ctx(now));
+    expect(reason(pred("b", s, T0 + 4_000))).toBe("last_word");
+    expect(reason(pred("f", s, T0 + 4_000))).toBe("kabul");
+    const t = ok(rusRuleti.reduce(s, "b", { kind: "pass", to: "c" }, ctx(T0 + 4_000)));
+    expect(reason(pred("b", t, T0 + 4_100))).toBe("kabul");
+  });
+
+  it("bağlantısı kopuk elenen son söz söyleyemez: silah hemen rastgele birine gider", () => {
+    const s0 = start(5, { risk: BOOM, holder: "a", offline: ["b"] });
+    const s = ok(shoot(s0, "a", "b", T0 + 10, ["a", "c", "d", "e"]));
+    expect(s.lastWord).toBeNull();
+    expect(s.handoff).toMatchObject({ from: "b", chosen: false });
+    expect(s.openAt).toBe(T0 + 10 + RUS_RULETI_OPEN_MS);
+    expect(s.alive).toContain(s.holder);
+  });
+
+  it("son sözünü beklerken kopan elenenin silahı hemen rastgele birine gider", () => {
+    const s = boomed();
+    const off = ["a", "c", "d", "e"];
+    const t = rusRuleti.onPresence?.(s, ctx(T0 + 5_000, off)) as RusRuletiState;
+    expect(t.lastWord).toBeNull();
+    expect(t.handoff).toMatchObject({ from: "b", chosen: false });
+    expect(t.openAt).toBe(T0 + 5_000);
+    // Sonuç gösterilirken koptuysa pencere sonuç beklemesinden sonra açılır.
+    const u = rusRuleti.onPresence?.(s, ctx(T0 + 1_000, off)) as RusRuletiState;
+    expect(u.openAt).toBe(T0 + 10 + RUS_RULETI_OPEN_MS);
+  });
+
+  it("bekleme: patlamada 3,5 sn sonuç + 4 sn son söz = 7,5 sn; boş atışta 3,5 sn", () => {
+    const s = boomed();
+    expect(s.openAt - (s.last?.at ?? 0)).toBe(7_500);
+    const c0 = start(5, { risk: SAFE, holder: "a" });
+    const c = ok(shoot(c0, "a", "b", T0 + 10));
+    expect(c.openAt - (c.last?.at ?? 0)).toBe(3_500);
+  });
+});
+
+describe("rus-ruleti: kopan oyuncu (RR-M4)", () => {
+  it("silah kopan birindeyse karar süresi 6 sn", () => {
+    expect(RUS_RULETI_OFFLINE_DECISION_MS).toBe(6_000);
+    const s0 = start(4, { risk: SAFE, holder: "a", offline: ["b"] });
+    const s = ok(shoot(s0, "a", "b", T0 + 10, ["a", "c", "d"]));
+    expect(s.holder).toBe("b");
+    expect(s.deadline).toBe(s.openAt + 6_000);
+  });
+
+  it("karar sırasında kopan sahibin süresi 6 sn'ye iner; döndüğünde kalan süreyle oynar", () => {
+    const s = start(4, { holder: "a" });
+    const off = rusRuleti.onPresence?.(s, ctx(T0 + 2_000, ["b", "c", "d"])) as RusRuletiState;
+    expect(off.offline).toEqual(["a"]);
+    expect(off.deadline).toBe(T0 + 8_000);
+    const back = rusRuleti.onPresence?.(off, ctx(T0 + 3_000, ids(4))) as RusRuletiState;
+    expect(back.offline).toEqual([]);
+    expect(back.deadline).toBe(T0 + 8_000);
+    expect(reason(shoot(back, "a", "b", T0 + 7_999))).toBe("kabul");
+    // Süre zaten 6 sn'den kısaysa uzatılmaz.
+    const late = rusRuleti.onPresence?.(s, ctx(FIRST - 1_000, ["b", "c", "d"])) as RusRuletiState;
+    expect(late.deadline).toBe(FIRST);
+    // Sonuç gösterilirken koparsa 6 sn pencere açılınca başlar.
+    const c = ok(shoot({ ...s, risk: SAFE }, "a", "b", T0 + 10));
+    const cOff = rusRuleti.onPresence?.(c, ctx(T0 + 100, ["a", "c", "d"])) as RusRuletiState;
+    expect(cOff.deadline).toBe(c.openAt + 6_000);
+  });
+
+  it("bağlantı değişmediyse aynı nesne döner; ilk sahip yine bağlılardan seçilir", () => {
+    const s = start(4);
+    expect(rusRuleti.onPresence?.(s, ctx(T0 + 5, ids(4)))).toBe(s);
+    const t = rusRuleti.setup(ids(4), ctx(T0, ["c"], 5));
+    expect(t.holder).toBe("c");
+    expect(t.offline).toEqual(["a", "b", "d"]);
+  });
+
+  it("tick bağlı listesine bakmaz: kopan sahibin kısa süresi durumdan okunur", () => {
+    const s0 = start(4, { risk: SAFE, holder: "a", offline: ["b"] });
+    const s = ok(shoot(s0, "a", "b", T0 + 10, ["a", "c", "d"]));
+    const next = rusRuleti.tick(s, noConnected(s.openAt + 6_000));
+    expect(next.last).toMatchObject({ auto: true, shooter: "b" });
+  });
+});
+
+describe("rus-ruleti: atış geçmişi ve bitiş sayacı (RR-U3, RR-U2)", () => {
+  it("bütün atışlar sırayla ortak görünümde (otomatik dahil)", () => {
+    let s = start(5, { risk: SAFE, holder: "a" });
+    s = ok(shoot(s, "a", "c", T0 + 10));
+    s = rusRuleti.tick(s, ctx(s.deadline));
+    const v = rusRuleti.publicView(s, ctx(s.openAt));
+    expect(v.history.map((h) => [h.seq, h.shooter, h.target, h.auto])).toEqual([
+      [1, "a", "c", false],
+      [2, "c", v.history[1]?.target, true],
+    ]);
+    expect(v.history[1]?.target).not.toBe("a");
+    expect(JSON.stringify(v)).not.toContain(String(s.seed));
+  });
+
+  it("gereken elenme sayısı: 2→1, 3/4→2, 5/6→3, 7/8→4", () => {
+    expect([2, 3, 4, 5, 6, 7, 8].map(rusRuletiNeededOuts)).toEqual([1, 2, 2, 3, 3, 4, 4]);
+    for (let n = 2; n <= 8; n++) {
+      expect(rusRuletiShouldEnd(n, n - rusRuletiNeededOuts(n))).toBe(true);
+      expect(rusRuletiShouldEnd(n, n - rusRuletiNeededOuts(n) + 1)).toBe(false);
+    }
   });
 });

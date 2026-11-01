@@ -147,3 +147,7 @@ export const hapticCatch = (): void => vibrate([40, 50, 40]);
 /** Cihazda titreşim arayüzü var mı (yoksa ekran kenarı parlar; BM-U14). */
 export const canVibrate = (): boolean => hasVibrateApi();
 export const hapticAlarm = (): void => vibrate([90, 50, 90, 50, 160]);
+/** Rus Ruleti (RR-U16): silah sana geçti: uzun-kısa-uzun. */
+export const hapticHold = (): void => vibrate([70, 50, 25, 50, 70]);
+/** Rus Ruleti (RR-U16): seni vurdular: tek uzun titreşim. */
+export const hapticShot = (): void => vibrate(400);

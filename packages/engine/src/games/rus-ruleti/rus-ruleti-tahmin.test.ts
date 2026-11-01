@@ -3,7 +3,7 @@ import { type GameContext, isRejected } from "../../game.js";
 import { createRng } from "../../rng.js";
 import { checkGameInvariants, findLeaks } from "../../testing/invariants.js";
 import { rusRuletiBot } from "./bots.js";
-import { type RusRuletiAction, type RusRuletiState, rusRuleti } from "./index.js";
+import { type RusRuletiAction, type RusRuletiState, rusRuleti, rusRuletiNoReturn } from "./index.js";
 
 /** O9 — Rus Ruleti elenen izleyici tahmini ve "Kâhin" rozeti. */
 const T0 = 1_000_000;
@@ -41,10 +41,13 @@ function playShots(s0: RusRuletiState, plan: { guessA?: boolean; guessB?: boolea
     s = { ...s, risk: step.boom ? BOOM : SAFE };
     if (step.guessA !== undefined) s = okState(act(s, "a", predict(s.shots, step.guessA), t));
     if (step.guessB !== undefined) s = okState(act(s, "b", predict(s.shots, step.guessB), t));
-    const target = s.alive.find((id) => id !== s.holder) ?? s.holder;
+    const banned = rusRuletiNoReturn(s);
+    const target = s.alive.find((id) => id !== s.holder && id !== banned) ?? s.holder;
     t += 100;
     s = shoot(s, target, t);
     t = s.openAt + 10;
+    // RR-M3: son söz süresi dolsun; silah rastgele birine geçer.
+    s = rusRuleti.tick(s, ctx(t));
     s = { ...s, openAt: t - 5 };
     if (s.over) break;
   }
@@ -92,7 +95,10 @@ describe("rus-ruleti tahmini: uygunluk", () => {
     );
     expect(s.eliminated).toContain("d");
     expect(s.over).toBe(false);
-    expect(typeof act(s, "d", predict(1, true), T0 + 20)).toBe("object");
+    // RR-M3: yeni elenenin tahmini son sözünden sonra başlar.
+    expect(act(s, "d", predict(1, true), T0 + 20)).toBe("last_word");
+    const passed = okState(act(s, "d", { kind: "pass", to: "e" }, T0 + 4_000));
+    expect(typeof act(passed, "d", predict(1, true), T0 + 4_100)).toBe("object");
     const over = { ...s, over: true };
     expect(act(over, "a", predict(1, true), T0 + 30)).toBe("ended");
   });
@@ -237,12 +243,14 @@ describe("rus-ruleti tahmini: gizlilik", () => {
       turn: 0,
       prediction: true,
       lastResult: null,
+      tally: { made: 0, hit: 0, yes: 0, yesHit: 0 },
     });
     expect(rusRuleti.view(s, "b", ctx(T0 + 20))).toEqual({
       role: "out",
       turn: 0,
       prediction: false,
       lastResult: null,
+      tally: { made: 0, hit: 0, yes: 0, yesHit: 0 },
     });
   });
 
@@ -270,6 +278,20 @@ describe("rus-ruleti tahmini: gizlilik", () => {
     expect(rusRuleti.view(s, "a", ctx(s.openAt))).toMatchObject({ lastResult: { turn: 0, correct: boom } });
     expect(rusRuleti.view(s, "b", ctx(s.openAt))).toMatchObject({ lastResult: { turn: 0, correct: !boom } });
     expect(rusRuleti.view(s, "c", ctx(s.openAt))).toEqual(rusRuleti.view(base(), "c", ctx(s.openAt)));
+  });
+
+  it("RR-U13: karne yalnız sahibinin görünümünde; Evet'ler ayrı sayılır", () => {
+    let s = okState(act(base({ risk: SAFE }), "a", predict(0, true), T0 + 10));
+    s = okState(act(s, "b", predict(0, false), T0 + 11));
+    s = shoot(s, "d", T0 + 20);
+    expect(rusRuleti.view(s, "a", ctx(s.openAt))).toMatchObject({
+      tally: { made: 1, hit: 0, yes: 1, yesHit: 0 },
+    });
+    expect(rusRuleti.view(s, "b", ctx(s.openAt))).toMatchObject({
+      tally: { made: 1, hit: 1, yes: 0, yesHit: 0 },
+    });
+    expect(JSON.stringify(rusRuleti.publicView(s, ctx(s.openAt)))).not.toMatch(/tally|made|yesHit/);
+    expect(rusRuleti.view(s, "c", ctx(s.openAt))).toEqual({ role: "alive" });
   });
 
   it("rozet bitişte herkese açık, öncesinde asla", () => {

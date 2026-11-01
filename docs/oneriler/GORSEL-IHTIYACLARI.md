@@ -156,3 +156,30 @@ patlama damgası, yolculuk şeridi ve ✓ / ✕ işaretleri CSS/SVG ile çizildi
   ≤ 2 sn), kazanan bahis zili, kısık bahis "çıt". Ses alanı istenirse gerçek kayıtlarla değiştirebilir. Kural: **hiçbir ses
   süreye bağlı olamaz** (son saniyelerde hızlanan katman, tik ya da uyarı sesi yok; ek süre kıvılcımı sessiz). İsteğe bağlı
   müzik de temposu sabit olmalı.
+
+## Rus Ruleti
+
+Ortak stil: oyunun mevcut görselleriyle uyumlu (`apps/client/public/assets/props/rus-ruleti/tabanca.webp` ve `tambur.webp`:
+kalın konturlu, cel-shaded gümüş-siyah oyuncak tabanca, camgöbeği #2ef2ff ve macenta #ff2bd6 neon şeritler; dünya zemini
+`worlds/rus-ruleti-*.webp`: kırmızı-mor gotik yeraltı kumarhanesi, tek lamba altında yuvarlak masa). Dosya
+`apps/client/public/assets/props/rus-ruleti/<ad>.webp` olarak konunca kod değişmeden kullanılır (derlemede `__RULET_PROPS__`
+listesi, `ruletProp()` — Sözlük Blöfü düzeni); yokken ekran mevcut görseli kullanır ve dosyayı hiç istemez.
+
+- **RR-U1 · üstten görünen neon tabanca** — `apps/client/public/assets/props/rus-ruleti/tabanca-ust.webp` · 1:1, 512×512 ·
+  şeffaf arka plan · Mevcut `rus-ruleti/tabanca` ile aynı tabanca, bu kez **tam üstten (kuş bakışı)** görünür: namlu
+  **tam yukarı** bakar (kod görseli namlu yukarıdayken 0° kabul edip hedefe döndürür), kabza aşağıda, tambur ortada daire
+  olarak seçilir; aynı gümüş-siyah gövde, camgöbeği ve macenta neon şeritler, kalın kontur, hafif alt gölge (masaya yatmış
+  gibi); kadrajın ortasında, kenarlarda ~%8 boşluk; yazı YOK. Masa ortasında ~100 px (TV'de ~170 px) gösterilir, 64 px'te
+  de okunmalı. · Geçici: mevcut yandan tabanca (`tabanca.webp`) hedefe göre döndürülür (sağa bakarken aynalanır).
+- **RR-U6 · namlu ateşi ve cam çatlağı** (yeni görsel gerekmedi) — Çapraz Ateş için üretilmiş
+  `props/capraz-ates/namlu-atesi.webp` ve `props/capraz-ates/cam-catlagi.webp` kullanılır; kırmızı flaş, "ELENDİ" damgası,
+  ✓ / ✕ işaretleri, kurukafa sayacı, kilit ve fiş simgeleri CSS/SVG ile çizildi.
+- **RR-U18 · anlatım döngüsü** (yeni görsel gerekmedi) — %16 → %26 → %36 → BAM döngüsü CSS ile çizildi; mevcut anlatım
+  görselleri (`briefing/rus-ruleti-*.webp`) aynen.
+- **RR-U14 · TV zemini** (yeni görsel gerekmedi) — mevcut `worlds/rus-ruleti-landscape.webp` `cover` ile, ortası koyu radyal
+  örtüyle.
+- **ses** (dosya gerekmedi) — RR-U16 seti mevcut ses sistemiyle kodla üretildi (`apps/client/src/games/rus-ruleti/sounds.ts`):
+  horoz çekme (silah sana geçince), tambur dönüşü (1,2 sn, yavaşlayan tıkırtı), kalp atışı (risk ≥ %56'da sert), kuru klik,
+  derin BAM + cam çatlağı kuyruğu, el değiştirme "şak", son söz alçak notası, açılışta tok "bitti" vuruşu; son 5 sn tiki
+  kabuk saatinden gelir. Ses alanı istenirse gerçek kayıtlarla değiştirebilir (olay adları `rus-ruleti.<an>`). ⭐ yıldız
+  çınlaması RR-M2 reddedildiği için yok.

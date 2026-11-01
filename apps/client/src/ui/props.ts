@@ -31,7 +31,7 @@ export type PropPath =
       | "kivilcim"
       | "bomba-govde"
       | "not-kagidi"}`
-  | `rus-ruleti/${"tabanca" | "tambur"}`
+  | `rus-ruleti/${"tabanca" | "tambur" | RuletProp}`
   | `sozluk-blofu/${SozlukProp}`
   | `karalama-defteri/${KaralamaProp}`
   | `kor-kronometre/${KronometreProp}`
@@ -91,6 +91,23 @@ export function karalamaPropExists(name: KaralamaProp): boolean {
 /** Var olan Karalama Defteri görselinin adresi; yoksa null. */
 export const karalamaProp = (name: KaralamaProp): string | null =>
   karalamaPropExists(name) ? propSrc(`karalama-defteri/${name}`) : null;
+
+/**
+ * Rus Ruleti görselleri (sahip üretecek; docs/oneriler/GORSEL-IHTIYACLARI.md "Rus Ruleti"). Yoksa ekran mevcut yandan
+ * tabancayı döndürerek kullanır ve olmayan dosyayı hiç istemez (404 yok); dosya `rus-ruleti/<ad>.webp` olarak gelince
+ * kod değişmeden kullanılır.
+ */
+export type RuletProp = "tabanca-ust";
+export const RULET_PROPS: readonly RuletProp[] = ["tabanca-ust"];
+
+export function ruletPropExists(name: RuletProp): boolean {
+  const built = typeof __RULET_PROPS__ === "undefined" ? undefined : __RULET_PROPS__;
+  return built ? built.includes(name) : false;
+}
+
+/** Var olan Rus Ruleti görselinin adresi; yoksa null. */
+export const ruletProp = (name: RuletProp): string | null =>
+  ruletPropExists(name) ? propSrc(`rus-ruleti/${name}`) : null;
 
 /**
  * Kör Kronometre görselleri (sahip üretecek; docs/oneriler/GORSEL-IHTIYACLARI.md "Kör Kronometre"). Yoksa ekran CSS
@@ -177,7 +194,11 @@ const GAME_PROPS: Record<string, readonly PropPath[]> = {
   "kara-borsa": KARA_BORSA_PROP_FILES.filter(karaBorsaPropExists).map((f): PropPath => `kara-borsa/${f}`),
   "kor-bomba": BOMBA,
   "zaman-bombasi-hafizasi": BOMBA,
-  "rus-ruleti": ["rus-ruleti/tabanca", "rus-ruleti/tambur"],
+  "rus-ruleti": [
+    "rus-ruleti/tabanca",
+    "rus-ruleti/tambur",
+    ...RULET_PROPS.filter(ruletPropExists).map((n): PropPath => `rus-ruleti/${n}`),
+  ],
   "kontrol-paneli-kaosu": [
     "kontrol-paneli-kaosu/kablo-kirmizi",
     "kontrol-paneli-kaosu/kablo-mavi",

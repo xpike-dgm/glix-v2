@@ -10,7 +10,13 @@ describe("rus-ruleti tahmin görünümü", () => {
         prediction: false,
         lastResult: { turn: 2, correct: true },
       }),
-    ).toEqual({ role: "out", turn: 3, prediction: false, lastResult: { turn: 2, correct: true } });
+    ).toEqual({
+      role: "out",
+      turn: 3,
+      prediction: false,
+      lastResult: { turn: 2, correct: true },
+      tally: { made: 0, hit: 0, yes: 0, yesHit: 0 },
+    });
     expect(parseRusRuletiPrivateView({ role: "out", turn: 3, prediction: "x", lastResult: null })).toBeNull();
     expect(parseRusRuletiPrivateView({ role: "out", prediction: null, lastResult: null })).toBeNull();
     expect(parseRusRuletiPrivateView({ role: "alive" })).toEqual({ role: "alive" });

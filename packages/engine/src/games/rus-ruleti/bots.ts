@@ -1,5 +1,10 @@
 import type { ActionGenerator, GameBot } from "../../testing/simulate.js";
-import { RUS_RULETI_DECISION_MS, RUS_RULETI_OPEN_MS, type RusRuletiPublicView } from "./types.js";
+import {
+  RUS_RULETI_DECISION_MS,
+  RUS_RULETI_LAST_WORD_MS,
+  RUS_RULETI_OPEN_MS,
+  type RusRuletiPublicView,
+} from "./types.js";
 
 const isRec = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
@@ -12,6 +17,10 @@ const generate: ActionGenerator = (rng, playerId, publicView, _privateView, conn
   const pub = isRec(publicView) ? (publicView as unknown as Partial<RusRuletiPublicView>) : {};
   const alive = Array.isArray(pub.alive) ? pub.alive.filter((x): x is string => typeof x === "string") : [];
   const roll = rng.next();
+  // RR-M3: son sözünü bekleyen elenen çoğunlukla silahı birine verir (bazen bekler, süre dolunca rastgele).
+  if (isRec(pub.lastWord) && pub.lastWord.from === playerId && alive.length > 0 && roll > 0.2) {
+    return { kind: "pass", to: alive[rng.int(alive.length)] };
+  }
   // Elenenler (hayatta olmayanlar) tahmin dener; hayattakilerin tahmini reddedilir.
   if (!alive.includes(playerId) && alive.length > 0 && roll > 0.3) {
     return {
@@ -28,11 +37,11 @@ const generate: ActionGenerator = (rng, playerId, publicView, _privateView, conn
 };
 
 /**
- * Üst sınır: en kötü durumda her atış tam süreyle (20,5 sn) çözülür. 8 oyuncu 4 patlama ister;
+ * Üst sınır: en kötü durumda her atış tam süreyle (21,5 sn; patlamada son sözle 25,5 sn) çözülür. 8 oyuncu 4 patlama ister;
  * riskin %76'da kalması bile birkaç atışta patlama getirir, bu pay bunu fazlasıyla karşılar.
  */
 export const rusRuletiBot: GameBot = {
-  durationMs: 40 * (RUS_RULETI_DECISION_MS + RUS_RULETI_OPEN_MS),
+  durationMs: 40 * (RUS_RULETI_DECISION_MS + RUS_RULETI_OPEN_MS + RUS_RULETI_LAST_WORD_MS),
   burstJitterMs: [40, 400, 2_000],
   generate,
 };

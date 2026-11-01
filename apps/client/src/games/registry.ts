@@ -135,6 +135,7 @@ const registry: Record<string, GameEntry> = {
     Screen: lazy(() => import("./rus-ruleti/RusRuletiScreen.js")),
     Art: lazy(() => import("./rus-ruleti/BriefingArt.js")),
     Reveal: lazy(() => import("./rus-ruleti/Reveal.js")),
+    StageView: lazy(() => import("./rus-ruleti/StageView.js")),
   },
   "zehirli-kadeh": {
     Screen: lazy(() => import("./zehirli-kadeh/ZehirliKadehScreen.js")),

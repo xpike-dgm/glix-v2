@@ -19,6 +19,7 @@
  *   tv-kor-kronometre-*       Kör Kronometre evreleri (ör. tv-kor-kronometre-counting, tv-kor-kronometre-reveal)
  *   tv-kor-bomba-*            Kör Bomba evreleri (ör. tv-kor-bomba-watch, tv-kor-bomba-blast, tv-kor-bomba-trip)
  *   tv-sozluk-*               Sözlük Blöfü evreleri (ör. tv-sozluk-write, tv-sozluk-pick, tv-sozluk-reveal&at=4000)
+ *   tv-rus-*                  Rus Ruleti evreleri (ör. tv-rus-wait, tv-rus-boom, tv-rus-over)
  *   tv-sizma-*                Sızma evreleri (ör. tv-sizma-clue, tv-sizma-runoff, tv-sizma-unmask&t=5200)
  */
 import { setState } from "../net/store.js";
@@ -62,6 +63,9 @@ export async function startTvMock(mock: string, params: URLSearchParams): Promis
     } else if (kind.startsWith("kor-bomba")) {
       const m = await import("./mockKorBomba.js");
       m.startKorBombaMockAs(kind, params, true);
+    } else if (kind.startsWith("rus-")) {
+      const m = await import("./mockRusRuleti.js");
+      m.startRusRuletiMockAs(kind, params, true);
     } else if (kind.startsWith("kor-kronometre")) {
       const m = await import("./mockKronometre.js");
       m.startKronometreMock(kind, params, true);

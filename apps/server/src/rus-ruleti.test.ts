@@ -38,7 +38,8 @@ describe("rus-ruleti tam maç", () => {
     // Başlangıç: herkes hayatta, risk %16, tek bir sahip.
     expect(pub(a)).toMatchObject({ risk: 16, shots: 0, over: false, last: null });
     expect(pub(a).alive).toEqual(ids);
-    expect(pub(a).deadline).toBe(startedAt + 18_000);
+    // RR-U9: ilk karar "SİLAH SENDE!" bandı kadar (0,8 sn) uzun.
+    expect(pub(a).deadline).toBe(startedAt + 18_800);
     const first = pub(a).holder;
     expect(ids).toContain(first);
     expect(view(byId.get(first) as Client)).toEqual({ role: "alive" });
@@ -56,8 +57,14 @@ describe("rus-ruleti tam maç", () => {
     for (let guard = 0; guard < 80 && a.room.phase === "playing"; guard++) {
       const p = pub(a);
       if (p.over) {
-        k.clock.advance(2_600);
+        k.clock.advance(6_100);
         await sync();
+        continue;
+      }
+      if (p.lastWord) {
+        // RR-M3: son söz süresi dolsun (silah rastgele birine geçer).
+        goTo(p.lastWord.endsAt);
+        await until(() => pub(a).lastWord === null || a.room.phase !== "playing", "son söz bitti");
         continue;
       }
       const cur = byId.get(p.holder) as Client;
@@ -74,7 +81,7 @@ describe("rus-ruleti tam maç", () => {
           timeouts++;
         }
       } else {
-        const targets = p.alive.filter((id) => id !== p.holder);
+        const targets = p.alive.filter((id) => id !== p.holder && id !== p.noReturn);
         const target = guard % 2 === 0 ? (targets[0] as string) : p.holder;
         expect(await send(cur, { kind: "shoot", target })).toEqual({ ok: true });
         manual++;
@@ -82,7 +89,7 @@ describe("rus-ruleti tam maç", () => {
         const next = pub(a);
         await until(() => pub(a).shots === before + 1, "atış yayınlandı");
         expect(pub(a).last).toMatchObject({ shooter: p.holder, target, auto: false });
-        if (!next.over && !pub(a).over) {
+        if (!next.over && !pub(a).over && !pub(a).lastWord) {
           const newHolder = byId.get(pub(a).holder) as Client;
           expect(await send(newHolder, { kind: "shoot", target: pub(a).holder })).toEqual({
             ok: false,
@@ -115,6 +122,7 @@ describe("rus-ruleti tam maç", () => {
         turn: end.shots,
         prediction: null,
         lastResult: null,
+        tally: { made: 0, hit: 0, yes: 0, yesHit: 0 },
       });
     for (const id of end.alive) expect(view(byId.get(id) as Client)).toEqual({ role: "alive" });
   });
@@ -150,12 +158,18 @@ describe("rus-ruleti tahmini (O9)", () => {
       const p = pub(a);
       goTo(Math.max(k.clock.now(), p.openAt));
       await sync();
-      const target = p.alive.find((id) => id !== p.holder) as string;
+      const target = p.alive.find((id) => id !== p.holder && id !== p.noReturn) as string;
       await send(byId.get(p.holder) as Client, { kind: "shoot", target });
       await until(() => pub(a).shots > p.shots, "atış");
     }
     expect(pub(a).eliminated.length).toBeGreaterThan(0);
     expect(pub(a).over).toBe(false);
+    // RR-M3: elenenin tahmini son sözünden sonra başlar.
+    const lw = pub(a).lastWord;
+    if (lw) {
+      goTo(lw.endsAt);
+      await until(() => pub(a).lastWord === null, "son söz bitti");
+    }
 
     const out = byId.get(pub(a).eliminated[0] as string) as Client;
     const aliveOne = byId.get(pub(a).alive[0] as string) as Client;
@@ -188,12 +202,22 @@ describe("rus-ruleti tahmini (O9)", () => {
 
     // Oyun bitene kadar oyna; rozet yalnız bitişte ortak görünümde.
     for (let guard = 0; guard < 200 && a.room.phase === "playing" && !pub(a).over; guard++) {
-      const p = pub(a);
+      let p = pub(a);
+      if (p.lastWord) {
+        goTo(p.lastWord.endsAt);
+        await until(() => pub(a).lastWord === null, "son söz bitti");
+        p = pub(a);
+      }
       goTo(Math.max(k.clock.now(), p.openAt));
       await sync();
-      const target = p.alive.find((id) => id !== p.holder) ?? p.holder;
+      const target = p.alive.find((id) => id !== p.holder && id !== p.noReturn) ?? p.holder;
       await send(byId.get(p.holder) as Client, { kind: "shoot", target });
       await until(() => pub(a).shots > p.shots || pub(a).over, "atış");
+    }
+    // RR-U8: oyun içi açılış en az 6 sn.
+    for (let i = 0; i < 20 && a.room.phase === "playing"; i++) {
+      k.clock.advance(6_100);
+      await sync();
     }
     await until(() => a.room.phase === "results", "sonuç");
     expect(Array.isArray(pub(a).result?.kahinler)).toBe(true);
@@ -205,3 +229,44 @@ describe("rus-ruleti tahmini (O9)", () => {
 });
 
 const c0 = (c: Client): string => c.session.playerId;
+
+describe("rus-ruleti son söz ve geri ateş (RR-M1, RR-M3)", () => {
+  it("geri ateş reddedilir; elenen silahı protokolle seçtiği kişiye verir", async () => {
+    const { cs } = await newMatch(["A", "B", "C", "D", "E", "F"]);
+    const [a] = cs as [Client, ...Client[]];
+    const byId = new Map(cs.map((c) => [c.session.playerId, c] as const));
+    let sawBan = false;
+    let passed = false;
+    for (let guard = 0; guard < 200 && !passed && !pub(a).over; guard++) {
+      const p = pub(a);
+      if (p.lastWord) {
+        const from = byId.get(p.lastWord.from) as Client;
+        goTo(p.lastWord.opensAt);
+        await sync();
+        const to = p.alive.find((id) => id !== p.holder) as string;
+        expect(await send(from, { kind: "pass", to })).toEqual({ ok: true });
+        await until(() => pub(a).lastWord === null, "son söz");
+        expect(pub(a).holder).toBe(to);
+        expect(pub(a).handoff).toEqual({ from: p.lastWord.from, to, chosen: true });
+        passed = true;
+        break;
+      }
+      goTo(Math.max(k.clock.now(), p.openAt));
+      await sync();
+      const holder = byId.get(p.holder) as Client;
+      if (p.noReturn) {
+        expect(await send(holder, { kind: "shoot", target: p.noReturn })).toEqual({
+          ok: false,
+          reason: "no_return_fire",
+        });
+        sawBan = true;
+      }
+      const target = p.alive.find((id) => id !== p.holder && id !== p.noReturn) as string;
+      expect(await send(holder, { kind: "shoot", target })).toEqual({ ok: true });
+      await until(() => pub(a).shots > p.shots, "atış");
+      expect(pub(a).history).toHaveLength(pub(a).shots);
+    }
+    expect(passed).toBe(true);
+    expect(sawBan).toBe(true);
+  });
+});

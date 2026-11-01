@@ -699,6 +699,34 @@ cevapların önüne geçer:**
   "Bildin!" / "Bilemedin" görür); başkalarına ve herkese açık görünüme geçmez. Tahmin atışın sonucunu etkilemez.
 - Genel skor değişmez: hayatta kalanlar +1, elenenler 0.
 
+**Değişiklik (RR öneri paketi, Kasım 2026, sahip onayı: RR-M1, RR-M3, RR-M4, RR-U5, RR-U8, RR-U9) — yukarıdakilerin önüne geçer:**
+
+- **Hemen geri ateş yok (RR-M1):** Boş geçen bir atışla silah başkasından sana geldiyse, **bu ilk kararında** sana
+  sıkanı hedefleyemezsin (sunucu reddeder; ekranda kilit ve "Az önce sana sıktı"). Yasak yalnız **en az 3 kişi
+  hayattayken** geçerlidir ve yalnız bir karar sürer; kendine sıkmak her zaman serbesttir. Kendine sıkıp boş geçen sahip ve
+  patlamadan sonra silahı alan için yasak yoktur. Süre dolunca otomatik atış da yasaklı kişiyi seçmez.
+- **Son söz (RR-M3):** Patlamayla elenen (kendini vurup elenen dahil), oyun bitmiyorsa sonuç gösteriminden sonra **4 sn**
+  içinde silahı hayatta olan herhangi birine verir (onu vuran dahil); seçince karar penceresi 0,5 sn sonra açılır. Seçmezse
+  ya da bağlantısı kopuksa (ya da bu sürede koparsa) silah eskisi gibi **rastgele** bir hayatta oyuncuya gider. Son söz
+  sürerken kimse ateş edemez; az önce elenenin "Patlar mı?" tahmini son sözünden sonra başlar (diğer elenenler verebilir).
+  Seçim seçilene kadar yalnız elenenin ekranındadır; sonra herkes "Elif silahı Mert'e verdi" görür. Oyunu bitiren
+  patlamada son söz yoktur.
+- **Kopan oyuncu (RR-M4):** Bağlantısı kopan hayattaki oyuncu **elle de hedeflenebilir** (eski "bağlı olmalı" şartı
+  kalktı). Silah bağlantısı kopuk birindeyse karar süresi **6 sn**'dir (karar sırasında koparsa kalan süre en çok 6 sn'ye
+  iner); dönen oyuncu kalan süreyle karar verir. İlk silah sahibi yine bağlı oyuncular arasından seçilir.
+- **Bekleme süreleri (RR-U5, RR-U9, RR-U8):** Her atıştan sonra eylem kabul edilmeyen bekleme **3,5 sn**'dir (1,2 sn tambur
+  dönüşü + 2,3 sn sonuç; sonuç atış anında sunucuda belirlenir, ekran yalnız gösterimi geciktirir). Patlamada son sözle
+  birlikte en çok 3,5 + 4 = **7,5 sn**. Oyunun ilk kararı "SİLAH SENDE!" bandı kadar uzun açılır (**18,8 sn**). Oyunu
+  bitiren atıştan sonra oyun içi açılış en az **6 sn** gösterilir; "Devam et" kuralı değişmez.
+- **Herkese açık bilgi:** Bütün atışların geçmişi (ateşleyen, hedef, risk, sonuç, otomatik mi), yasaklı hedef, bekleyen son
+  söz ve silahın son sözle kime verildiği herkese açıktır; zar tohumu hiçbir yerde yoktur. Elenenin tahmin karnesi
+  (kaç tahmin, kaçı tuttu, "Evet"lerin kaçı tuttu) yalnız kendisine gider.
+- **Değişmeyenler:** 2–8 oyuncu; risk %16 başlangıç, +10 artış, %76 tavan, patlamada %16; yalnız sahibin ateş etmesi;
+  18 sn karar süresi; süre dolunca sahip dışındaki rastgele birine otomatik atış; yarı eşiğinde bitiş; erken bitiş
+  olmaması; O9 tahmin kuralları ve Kâhin eşiği; puan: hayatta kalan +1, elenen 0 (eksi yok).
+- **Anlatım:** "Silah sendeyse birini ya da kendini seç; boş geçerse silah ona geçer" · "Risk %16'dan başlar, her boş
+  atışta 10 artar; patlayınca sıfırlanır" · "Yarınız elenince biter: hayatta kalanlar +1".
+
 ---
 
 # B. Toplu formdan kilitlenen oyunlar

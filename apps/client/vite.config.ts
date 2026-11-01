@@ -205,6 +205,16 @@ function kronometrePropFiles(): string[] {
     .sort();
 }
 
+/** Rus Ruleti görsellerinden derlemede var olanlar (üstten tabanca; yoksa yandan tabanca döndürülür). */
+function ruletPropFiles(): string[] {
+  const dir = fileURLToPath(new URL("./public/assets/props/rus-ruleti", import.meta.url));
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".webp"))
+    .map((f) => f.slice(0, -".webp".length))
+    .sort();
+}
+
 /**
  * Sızma görsellerinden gerçekten var olanlar (`public/assets/props/sizma/*.webp`, uzantısız ad). Ekran yalnız
  * bunları ister; olmayanın yerine kendi SVG maskesini çizer (404 yok). Tarifler: docs/oneriler/sizma-gorsel.md.
@@ -231,6 +241,7 @@ export default defineConfig({
     __SOZLUK_PROPS__: JSON.stringify(sozlukPropFiles()),
     __KARALAMA_PROPS__: JSON.stringify(karalamaPropFiles()),
     __KRONOMETRE_PROPS__: JSON.stringify(kronometrePropFiles()),
+    __RULET_PROPS__: JSON.stringify(ruletPropFiles()),
   },
   plugins: [
     solid(),
