@@ -308,7 +308,17 @@ async function main() {
   assert(existsSync(join(CLIENT_DIR, "index.html")), "istemci derlenmemiş: önce `pnpm build`");
   assert(existsSync(join(ROOT, "apps/server/dist/index.js")), "sunucu derlenmemiş: önce `pnpm build`");
 
-  const mockHits = grepDist(CLIENT_DIR, "mock");
+  // Üretim Merkezi önizleme sayfası (`onizleme.html` + `assets/onizleme/`) ayrı derlenir ve ekranları örnek durumla
+  // çizmek için bilerek mock içerir; oyunun kendi paketi ona bağlanmaz (aşağıda denetlenir).
+  const onizleme = (p) => /[\\/]assets[\\/]onizleme[\\/]|[\\/]onizleme\.html$/.test(p);
+  const mockHits = grepDist(CLIENT_DIR, "mock").filter((p) => !onizleme(p));
+  const onizlemeBagi = grepDist(CLIENT_DIR, "assets/onizleme/").filter(
+    (p) => !onizleme(p) && !/sw\.js$|workbox/.test(p),
+  );
+  assert(
+    onizlemeBagi.length === 0,
+    `oyun paketi önizleme parçalarına bağlanıyor: ${onizlemeBagi.join(", ")}`,
+  );
   assert(mockHits.length === 0, `üretim derlemesinde "mock" geçiyor: ${mockHits.join(", ")}`);
   log('dist içinde "mock" yok');
 
