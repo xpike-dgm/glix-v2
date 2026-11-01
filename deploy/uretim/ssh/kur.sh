@@ -61,6 +61,7 @@ while read -r alan; do
   if ! id "$k" >/dev/null 2>&1; then
     if getent passwd "$u" >/dev/null; then echo "uid $u başka bir kullanıcıda" >&2; exit 1; fi
     useradd -M -d / -s "$KABUK" -u "$u" -g uretim-alanlari "$k"
+    usermod -p '*' "$k" # yeni kullanıcı parolasız başlar (site parola oluşturunca eslestir.sh yazar)
   fi
   ku="$(id -u "$k")"
   if [ "$ku" -lt "$UID_ALT" ] || [ "$ku" -gt "$UID_UST" ]; then
@@ -68,7 +69,7 @@ while read -r alan; do
     exit 1
   fi
   usermod -G "" "$k" # yalnız uretim-alanlari (birincil grup)
-  usermod -p '*' "$k" # parola yok (site parola oluşturunca eslestir.sh yazar)
+  # Var olan parolaya dokunulmaz: kurulum yeniden çalıştırılınca bağlı yapay zekâlar dışarıda kalmasın.
   usermod -s "$KABUK" "$k"
   c="$KOK/$alan"
   install -d -m 0755 -o root -g root "$c" "$c/bin" "$c/etc" "$c/etc/uretim" "$c/dev" "$c/tmp"
