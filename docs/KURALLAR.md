@@ -1098,6 +1098,42 @@ puan alır; limit aşılırsa eski akışta puan çıkmaz. Eski faz 18 saniyedir
     diğerine sızmaz. Limit tablosu ilk sürümde sabit tutulur ve maç içinde
     değişmez.
 
+**Değişiklik (AL öneri paketi, Kasım 2026, sahip onayı: AL-M1…M4) — yukarıdakilerin önüne geçer:**
+
+- **Üç tur (AL-M2):** Oyun **3 tur**dur. Her tur aynı aralıkla (0…oyuncu sayısı) oynanır; seçim her turun başında boşalır,
+  seçmeyen o turda 0 sayılır. Süreler: seçim **12 sn** (her tur), turlar arasında açılış **5 sn**, son açılış **7 sn**, ardından
+  ortak "Devam et". Toplam en çok 3×12 + 2×5 + 7 = **53 sn**. **Erken bitiş tur başına:** bağlı herkes Tamam derse o turun seçimi
+  son Tamam'dan 1 sn sonra kapanır, sonraki turlar o kadar öne çekilir. Kopan oyuncu beklenmez; kopukken geçen turlarda 0
+  sayılır (koptuğu turda önceden seçtiyse seçimi geçerlidir), döndüğünde süren turdan devam eder.
+- **Sisli limit (AL-M4):** Limit herkese tam sayı değil **bant** olarak gösterilir; bant tablodaki değerin çevresindedir:
+  3–4 oyuncuda ±1, 5–6 oyuncuda ±2, 7–8 oyuncuda ±3 (3→5–7, 4→10–12, 5→15–19, 6→22–26, 7→30–36, 8→40–46). Her turun
+  **gerçek limiti** maç başında sunucu rastgeleliğiyle bandın içinden (uçlar dahil, eşit olasılıkla) ayrı çekilir; hiçbir zaman
+  1…N² dışına çıkmaz. Gerçek limit tur açılana kadar kimsenin görünümünde yoktur; açılışta bant 0,6 sn'de gerçek limit
+  çizgisine daralır. Taşma kuralı gerçek limite göredir (toplam ≤ limit sığar).
+- **Tur puanı:** Taşmayan turda herkes seçtiği sayı kadar **mini puan** alır; taşan turda herkes o turdan 0. Eksi puan yok
+  (eski "en yüksek seçen −1" taslağı uygulanmaz). **Mini puan = üç turun toplamı.**
+- **Genel skor (AL-M1):** Seçilen sayı artık doğrudan genel skora gitmez. Oyun sonunda bir kez, mini puan toplamına göre ortak
+  sıralama kuralı (`rankAwards`, yalnız mini puanı 0'dan büyükler): tek lider **+2**, sonraki puanı paylaşanların hepsi **+1**;
+  **lider eşitse liderlerin hepsi +1**, ikinci ödül verilmez. Mini puanı 0 olan ödül almaz; herkes 0 ise kimse almaz.
+  Kartların "birinci/sonuncu" kararı mini puan toplamına göredir.
+- **Gözcü (AL-M3):** Her turda bir oyuncu **Gözcü**dür. Sıra maç başında sunucu rastgeleliğiyle karıştırılan oyuncu listesinden
+  gelir; 3 turda 3 farklı kişi (3 oyuncuda herkes bir kez). Tur başladığında bağlantısı kopuk olan Gözcü seçilmez, sıradaki
+  bağlı oyuncuya geçer. Gözcü'nün **kim olduğu herkese açıktır**. Turun **7. saniyesinde** yalnız Gözcü'nün ekranında haznenin o
+  anki durumu tek kelimeyle belirir: o ana kadar **gönderilmiş seçimlerin** toplamı (seçmeyen 0) gerçek limitin %70'i ya da
+  altıysa **RAHAT**, %70'ten büyük ve limit ya da altıysa **SINIRDA**, limitin üstündeyse **TAŞIYOR**. Kimin ne seçtiği ya da sayı
+  gösterilmez. Kelime o anın fotoğrafıdır, tur sonuna kadar kalır ama güncellenmez. 7. saniye gelmeden bağlı herkes kilitlerse
+  Gözcü kilit anında bakar. Kelime yalnız Gözcü'nün kişisel görünümündedir; diğer oyuncular, izleyici ve TV yalnız "Gözcü
+  baktı" anını görür. Gözcü kelimeyi masaya doğru da söyleyebilir, yalan da.
+- **Açılış:** Seçimler aynı anda açılır; jetonlar küçükten büyüğe (eşitlerde katılım sırası) tek tek düşer. "Taşıran" damgası
+  yalnız gösteridir (ceza yok): dolum sırasında toplamı limitin üstüne çıkaran ilk şerit, ondan sonrakiler ve o şeritle aynı
+  sayıyı seçen herkes.
+- **Değişmeyenler:** 3–8 oyuncu; 0…N aralığı; limit tablosu (bandın ortası) ve herkesin aynı bandı görmesi; seçimin gizli olması
+  ve tur sonunda aynı anda açılması; seçmeyenin 0 sayılması; taşmada herkesin o turdan 0 alması; eksi puan olmaması; kilit ve
+  erken bitiş kuralı (son kilitten 1 sn sonra); kopan oyuncunun beklenmemesi.
+- **Anlatım (AL-U16):** 1) "3 tur: gizlice 0 ile 5 arasında bir sayı seç. Seçmezsen 0 sayılır." 2) "Toplam 15–19 arası gizli
+  limiti geçmesin: herkes 3 derse 15, sığar. Gözcü hazneye bir kez bakar." 3) "Taşarsa o tur kimse puan almaz; taşmazsa en çok
+  koyan kazanır." Sayılar masanın oyuncu sayısından üretilir (örnek her zaman sığan sayıdır: ⌊bant altı ÷ N⌋).
+
 ## 13. Ortalamaya En Yakın — `ortalamanin-yarisi`
 
 **Durum: KİLİTLİ**

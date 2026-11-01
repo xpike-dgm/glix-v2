@@ -17,7 +17,7 @@ bağlı tüm katılımcıların girdisi kesinleştiyse aşama beklemeden biter.*
   İstemci portrelerde "hazır" işareti gösterir. Kendi view'ında `locked: boolean`.
 - İstemci: birincil eylemin yanında/altında büyük "Tamam" düğmesi (≥ 64 px), seçim yokken pasif; kilitlenince seçim
   arayüzü donar ve "Diğerleri bekleniyor" + hazır sayacı ("3/5 hazır") görünür.
-- Uygulanır: Açgözlülük Limiti, Çapraz Ateş, Çağrışım Ağı (cevaplar), Karalama Defteri (çizim "Bitti", oylama),
+- Uygulanır: Açgözlülük Limiti (tur başına; sonraki turlar öne çekilir), Çapraz Ateş, Çağrışım Ağı (cevaplar), Karalama Defteri (çizim "Bitti", oylama),
   Ortalamaya En Yakın, Çizgiyi Geçme, Gizli Kareler (her aşamada yalnız o aşamada oynayanlar), Gizli Alışveriş,
   İttifak (oylama), Rüşvet ve Darbe (başkan oyu; düelloda işaret = tek seferlik, aşağıya bakın; dağıtım: yalnız başkan
   "Bitti" der).

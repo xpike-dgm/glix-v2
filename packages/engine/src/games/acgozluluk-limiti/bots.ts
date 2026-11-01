@@ -1,19 +1,17 @@
 import type { ActionGenerator, GameBot } from "../../testing/simulate.js";
 import { ACGOZLULUK_CHOOSE_MS, ACGOZLULUK_DURATION_MS } from "./types.js";
 
-const maxOf = (pub: unknown): number => {
-  const m = (pub as { maxChoice?: unknown } | null)?.maxChoice;
-  return typeof m === "number" && Number.isFinite(m) ? m : 3;
-};
-const limitOf = (pub: unknown): number => {
-  const m = (pub as { limit?: unknown } | null)?.limit;
-  return typeof m === "number" && Number.isFinite(m) ? m : 6;
-};
+const rec = (pub: unknown): Record<string, unknown> =>
+  typeof pub === "object" && pub !== null ? (pub as Record<string, unknown>) : {};
+const numOr = (v: unknown, d: number): number => (typeof v === "number" && Number.isFinite(v) ? v : d);
 
-/** Çoğunlukla adil paya yakın, bazen açgözlü (üst sınır), bazen 0, nadiren aralık dışı sayı seçer. */
+/** Çoğunlukla adil paya yakın, bazen açgözlü (üst sınır), bazen 0, nadiren aralık dışı sayı seçer; arada kilitler. */
 const generate: ActionGenerator = (rng, _playerId, publicView) => {
-  const max = maxOf(publicView);
-  const share = limitOf(publicView) / Math.max(1, max);
+  const pub = rec(publicView);
+  const max = numOr(pub.maxChoice, 3);
+  const band = rec(pub.band);
+  const mid = (numOr(band.low, 6) + numOr(band.high, 6)) / 2;
+  const share = mid / Math.max(1, max);
   if (rng.int(12) === 0) return { kind: "lock" };
   const roll = rng.int(10);
   let value: number;
@@ -26,7 +24,7 @@ const generate: ActionGenerator = (rng, _playerId, publicView) => {
 };
 
 export const acgozlulukLimitiBot: GameBot = {
-  // Oyun, seçim süresi + sonuç süresi kadar sürer.
+  // Oyun 3 tur sürer (seçim + açılışlar).
   durationMs: ACGOZLULUK_DURATION_MS,
   burstJitterMs: [60, 300, Math.round(ACGOZLULUK_CHOOSE_MS / 10)],
   generate,
