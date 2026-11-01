@@ -70,3 +70,4 @@ yazılır; görseller hepsi bittikten sonra ChatGPT ile üretilir.
 ## Uygulama durumu
 | Oyun | Durum | Commit |
 |---|---|---|
+| Sözlük Blöfü | uygulandı (canlıda değil) | 4cf6334 |
