@@ -6,8 +6,12 @@ hedef seçen eylemlerde hedef bağlı katılımcı). Puanlar aksi yazmıyorsa do
 Kısa oyun içi açılış penceresi (≤ 7 sn) açılış animasyonu için kullanılabilir; kural süresi ve puan değişmez.
 
 ## Grup 1 — zamanlama ve sayı
-- **Gizli Hırsız** (2–8, 30 sn): tek basış; ilk geçerli basış kaydedilir, ikinci yok sayılır. Basışlar sona kadar
-  gizli (kimin bastığı da). Tek basan +1; ≥2 basan her biri −1; basmayan 0.
+- **Gizli Hırsız** (2–8, 30 sn): herkes bir kez ÇAL ya da ÇALMA der (GH-M1); ilk karar kaydedilir, sonrakiler yok
+  sayılır. Kararlar sona kadar gizli (kimin çaldığı da); herkese açık yalnız `decided` (kimlerin karar verdiği). Bağlı
+  herkes karar verince 1 sn sonra biter (kopan beklenmez; `onPresence` de denetler). 3+ oyuncuda 15. saniyede ortak işaret
+  `signal`: o ana kadar ≥1 ÇAL → "stir", yoksa "quiet"; sonra değişmez, 2 oyuncuda ve 15. sn'den önce herkes karar
+  verdiyse yok (GH-M2). Açılışta `reveal.pressedAt` (başlangıçtan ms) açılır; oyun içi açılış 4,5 sn (GH-U5). Tek çalan +1;
+  ≥2 çalan her biri −1; çalmayan 0.
 - **Kör Kronometre** (2–8, 18 sn): hedef 10,000 sn (oyun başlangıcından, sunucu saati). Tek basış; basmayan 18,000 sn
   kabul. |t−10| en küçük +2, ikinci +1. Eşitlik: aynı dereceyi paylaşanlar aynı ödülü alır, sonraki derece atlanır
   (iki birinci → ikisi +2, kimse +1 almaz). **Ekranda zamana bağlı hiçbir gösterge yok**; halka/nabız zamandan bağımsız.

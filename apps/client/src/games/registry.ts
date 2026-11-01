@@ -124,6 +124,7 @@ const registry: Record<string, GameEntry> = {
     Screen: lazy(() => import("./gizli-hirsiz/GizliHirsizScreen.js")),
     Art: lazy(() => import("./gizli-hirsiz/BriefingArt.js")),
     Reveal: lazy(() => import("./gizli-hirsiz/Reveal.js")),
+    StageView: lazy(() => import("./gizli-hirsiz/StageView.js")),
   },
   "son-kisi": {
     noClock: true,

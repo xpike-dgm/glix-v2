@@ -22,3 +22,5 @@ declare const __KARALAMA_PROPS__: readonly string[] | undefined;
 declare const __KRONOMETRE_PROPS__: readonly string[] | undefined;
 /** Rus Ruleti görsellerinden derlemede var olanlar (`public/assets/props/rus-ruleti/<ad>.webp`, uzantısız). */
 declare const __RULET_PROPS__: readonly string[] | undefined;
+/** Gizli Hırsız görsellerinden derlemede var olanlar (`public/assets/props/gizli-hirsiz/<ad>.webp`, uzantısız). */
+declare const __HIRSIZ_PROPS__: readonly string[] | undefined;

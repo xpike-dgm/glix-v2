@@ -1608,6 +1608,8 @@ const SCREENS = [
   { name: "kronometre-reveal-izleyici", q: "mock=kor-kronometre-reveal&n=5&izle=1", settle: 1800 },
   { name: "tv-kor-bomba", q: "mock=tv-kor-bomba-watch&n=8", sizes: TV, settle: 800 },
   { name: "tv-rus-ruleti", q: "mock=tv-rus-wait&n=8", sizes: TV, settle: 800 },
+  { name: "tv-gizli-hirsiz", q: "mock=tv-gizli-stir&n=8", sizes: TV, settle: 800 },
+  { name: "tv-gizli-hirsiz-acilis", q: "mock=tv-gizli-outro-multi&n=8", sizes: TV, settle: 600 },
   { name: "tv-rus-ruleti-son", q: "mock=tv-rus-over&n=6", sizes: TV, settle: 4000 },
   { name: "tv-kor-bomba-yolculuk", q: "mock=tv-kor-bomba-trip&n=6", sizes: TV, settle: 1500 },
   { name: "tv-kronometre-sayma", q: "mock=tv-kor-kronometre-counting&n=8", sizes: TV, settle: 800 },
@@ -2407,10 +2409,31 @@ const SCREENS = [
   {
     name: "gizli-tap",
     q: "mock=gizli-idle",
-    act: async (p) => p.locator(".gh__btn").click(),
+    act: async (p) => p.locator(".gh__btn--steal").click(),
     settle: 700,
   },
+  {
+    name: "gizli-peek",
+    q: "mock=gizli-pressed",
+    act: async (p) => {
+      const b = await p.locator(".gh__eye").boundingBox();
+      if (!b) return;
+      await p.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+      await p.mouse.down();
+    },
+    settle: 400,
+  },
+  { name: "gizli-stir", q: "mock=gizli-stir&n=5" },
+  { name: "gizli-quiet", q: "mock=gizli-quiet&n=3" },
+  { name: "gizli-listen", q: "mock=gizli-listen&n=6", settle: 200 },
+  { name: "gizli-urgent", q: "mock=gizli-urgent&n=8" },
+  { name: "gizli-offline", q: "mock=gizli-offline&n=4" },
+  { name: "gizli-2-oyuncu", q: "mock=gizli-idle&n=2" },
   { name: "gizli-spectator", q: "mock=gizli-spectator" },
+  { name: "gizli-outro-solo", q: "mock=gizli-outro-solo&n=5", settle: 600 },
+  { name: "gizli-outro-multi", q: "mock=gizli-outro-multi&n=8", settle: 600 },
+  { name: "gizli-outro-none", q: "mock=gizli-outro-none&n=3", settle: 600 },
+  { name: "gizli-outro-sayac", q: "mock=gizli-outro-multi&n=6&t=1500", settle: 100 },
   { name: "gizli-reveal-solo", q: "mock=gizli-reveal-solo&n=5", settle: 2400 },
   { name: "gizli-reveal-multi", q: "mock=gizli-reveal-multi&n=8", settle: 2400 },
   { name: "gizli-reveal-none", q: "mock=gizli-reveal-none&n=3", settle: 2400 },

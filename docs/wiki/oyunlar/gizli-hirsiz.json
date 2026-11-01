@@ -1,18 +1,18 @@
 {
   "id": "gizli-hirsiz",
   "ad": "Gizli Hırsız",
-  "slogan": "Kasayı yalnız bir kişi soyabilir: herkes aynı anda ÇAL derse hepsi yanar.",
+  "slogan": "Kasayı yalnız bir kişi soyabilir: herkes ÇAL ya da ÇALMA der, iki kişi çalarsa ikisi de yanar.",
   "kategori": "Blöf",
-  "etiketler": ["eşzamanlı", "gizli hamle", "tek basış", "risk"],
+  "etiketler": ["eşzamanlı", "gizli hamle", "tek karar", "risk", "blöf"],
   "oyuncu": {
     "min": 2,
     "max": 8
   },
   "sure": {
     "tahminiSn": 30,
-    "not": "Oyun aşaması en çok 30 sn sürer. Bütün katılımcılar basarsa son basıştan 1 sn sonra erken biter. Oyuncu sayısı süreyi değiştirmez. Önüne anlatım (en çok 40 sn), 3 sn geri sayım, arkasına sonuç ekranı (en çok 60 sn) gelir. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
+    "not": "Oyun aşaması en çok 30 sn sürer. Bağlı bütün katılımcılar karar verince (ÇAL ya da ÇALMA) son karardan 1 sn sonra erken biter; kopan oyuncu beklenmez. Arkasından oyun içi kasa açılışı en az 4,5 sn gösterilir. Önüne anlatım (en çok 40 sn), 3 sn geri sayım, arkasına genel sonuç ekranı gelir. Oyun içi açılış 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra (açılış bitmeden değil), en geç 60 sn sonra."
   },
-  "ozet": "Herkesin ekranında tek bir ÇAL düğmesi vardır. Her oyuncu 30 saniye içinde yalnız bir kez basabilir ya da hiç basmayabilir. Kimin bastığı süre bitene kadar kimseye gösterilmez. Sonunda tam bir kişi basmışsa o kişi +1 alır; iki ya da daha çok kişi basmışsa basanların her biri −1 alır; basmayanlar her zaman 0 alır.",
+  "ozet": "Herkesin ekranında iki eş görünümlü düğme vardır: ÇALMA ve ÇAL. Her oyuncu 30 saniye içinde birine yalnız bir kez basar; karar geri alınmaz, hiç karar vermeyen ÇALMA sayılır. Kimin ne seçtiği süre bitene kadar kimseye gösterilmez; herkes yalnız kimlerin karar verdiğini görür. 3 ve daha çok oyuncuda 15. saniyede kasa ortak bir işaret verir: 'Kasada kıpırtı var!' (o ana kadar biri ÇAL dedi) ya da 'Kasa sessiz'. Sonunda tam bir kişi çalmışsa o kişi +1 alır; iki ya da daha çok kişi çalmışsa çalanların her biri −1 alır; çalmayanlar her zaman 0 alır.",
   "akis": [
     {
       "ad": "Anlatım",
@@ -29,18 +29,25 @@
       "gizli": "Ayna ve Koruma kartları gizli kalır."
     },
     {
-      "ad": "Çalma aşaması",
+      "ad": "Karar aşaması",
       "sureSn": 30,
-      "kim": "herkes (katılımcılar basar, izleyici yalnız bakar)",
-      "aciklama": "Tek aşama. Ekranda karanlık bir güvenlik çekirdeği (halkalar ve kasa kapısı), üstte süre çubuğu, altta ÇAL düğmesi vardır. Başlık Doğru anı bekle, alt yazı Yalnız bir kez basabilirsin. Basınca düğme BASTIN olur ve kilitlenir, çekirdekte yalnız basanın kendi ekranında sessiz bir parmak izi belirir, başlık Parmak izin kayıtta olur, alt yazı Sonucu sonda göreceksin. Ekranda basış sesi (kısık tık) ve hafif titreşim yalnız basanın telefonunda olur. Süre dolunca ya da herkes bastıktan 1 sn sonra aşama biter.",
-      "gizli": "Oyuncu yalnız kendi basıp basmadığını bilir (kişisel görünüm pressed). Başkalarının bastığına dair hiçbir ipucu gönderilmez: ne kimlik, ne sayı, ne zaman damgası, ne sıra. İzleyici hiçbir şey görmez (pressed hep false)."
+      "kim": "herkes (katılımcılar karar verir, izleyici yalnız bakar)",
+      "aciklama": "Tek aşama. Ortada karanlık güvenlik çekirdeği (halkalar ve kasa kapısı), çevresinde yarım daire biçiminde bütün katılımcıların avatarları ve kısa adları (kendin en altta 'Sen'; kopanlar gri; 360×640'ta tek satır), üstte süre çubuğu, altta iki eş görünümlü düğme: solda ÇALMA, sağda ÇAL (ikisi de koyu, yalnız kenar ışığı farklı). Başlık 'Çal ya da bekle', alt yazı 3+ oyuncuda 'Erken çalan kasaya ilk el koyar', 2 oyuncuda 'Kimin çaldığı süre bitince belli olur'. Düğme parmak kalkınca tetiklenir. Karar verince ikisinde de aynı görünüm: başlık 'Kararın kayıtlı', düğmelerin yerinde koyu 'Kararın kayıtlı' şeridi; şeridin sağındaki göz simgesi basılı tutulunca 'Seçimin: ÇAL/ÇALMA' yazar ve ÇAL dediysen kasada parmak izi görünür, bırakınca gizlenir. Karar anında ses yok; titreşim kadranla aynı. Kasadaki şifre kadranı herkes için her zaman parmakla çevrilebilir (tıkırdar, hafif titrer; hiçbir şey göndermez). Karar verenlerin avatarında küçük kilit belirir (ne seçtiği değil). 15. saniyede (3+ oyuncu) kasa 0,6 sn 'dinlenir' (stetoskop dalgası), sonra başlığın altında oyun sonuna kadar 'Kasa sessiz' (yeşil, sakin nota) ya da 'Kasada kıpırtı var!' (amber, kalp çarpıntısı) kalır. Son 5 sn'de lazerler hızlanır, kasa halkası kırmızı nabız atar, herkesin telefonu saniyede bir kısa titrer. Oyun boyu alçak alarm uğultusu ve lazer vızıltısı. Bağlantısı dönen oyuncu 1 sn 'Döndün · N sn kaldı' bandı görür.",
+      "gizli": "Oyuncu yalnız kendi kararını bilir (kişisel görünüm choice: steal / pass / null). Herkese açık görünümde yalnız karar verenlerin listesi (decided, oyuncu sırasıyla), işaret anı (signalAt) ve 15. saniyeden sonra işaret (signal: quiet / stir) vardır; ne seçildiği, kaç kişinin çaldığı, zaman damgası ya da sıra gönderilmez. İzleyici choice: null görür."
     },
     {
-      "ad": "Kasa açılışı (sonuç üstü)",
+      "ad": "Kasa açılışı (oyun içi)",
+      "sureSn": 4.5,
+      "kim": "herkes",
+      "aciklama": "Süre bitince (ya da erken bitişte) oyun ekranında: 0 sn lazerler söner, ekran kararır, 'SÜRE DOLDU'; başlık 'Süre doldu! Kasa açılıyor…'. 0,6 sn kasa kolu döner. 1,2 sn 'Kasada 0 · 1 · 2 … parmak izi' sayacı (her rakamda tık). 2,0 sn hırsızlar ÇAL sırasıyla tek tek adı ve ÇAL saniyesiyle gelir (5 kişiye kadar 0,4 sn, daha kalabalıkta 0,25 sn arayla); 15. saniyeden önce çalanların yanında kıpırtı simgesi. Sonra damga: tek hırsızda altın ışık, altın yağmuru, 'SOYULDU! Mert +1'; çoklu ÇAL'da kırmızı siren, kelepçe ve 'ALARM! −1'; kimse çalmadıysa toz bulutu ve 'Kasa sağlam kaldı'. Altında 0–30 sn zaman şeridi (hırsızlar ÇAL saniyesinde; işaret varsa 15. saniyede kesik çizgi). Altında 'Devam et' çıkar (ilk 1,5 sn pasif). Açılış en az 4,5 sn gösterilir; bağlı herkes Devam deyince 1 sn sonra, en geç 60 sn sonra genel sonuca geçilir. Ekran okuyucu canlı bölgeden 'Kasada 2 parmak izi. Mert, Elif. ALARM! −1' duyar.",
+      "gizli": "Bu anda çalanlar, ÇAL anları (pressedAt) ve puanlar herkese açılır; ÇALMA kararları hiçbir yerde gösterilmez."
+    },
+    {
+      "ad": "Kasa şeridi (genel sonuç üstü)",
       "sureSn": 0.52,
       "kim": "herkes",
-      "aciklama": "Sonuç ekranının üstüne giren kısa açılış: çekirdek kapağı açılır. Tek basış yeşil ışık, yüksek iki nota ve eşleşme titreşimiyle Kasa soyuldu! başlığıyla gösterilir; çoklu basış kırmızı alarm, siren sesi ve Alarm! Birden çok hırsız başlığıyla; kimse basmadıysa alçak boş ses ve Kimse çalmadı başlığıyla. Hırsızların avatarları sırayla +1 (tek hırsız, yeşil halka) ya da −1 (çok hırsız, kırmızı halka) rozetiyle listelenir. Kapak açılış animasyonu yaklaşık 520 ms sürer; açılış sonuç ekranının üstünde kalır. Son ekran oyun bitince kalır; altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca 1 sn sonra, basmayan olursa en geç 60 sn sonra genel sonuç ekranına geçilir. Kopan oyuncu ve izleyiciler beklenmez.",
-      "gizli": "Bu anda kimlerin bastığı herkese açılır."
+      "aciklama": "Genel sonuç ekranının üstündeki küçük şerit: küçük kasa, tek satırlık başlık ('Kasa soyuldu!', 'ALARM! 3 hırsız' ya da 'Kimse çalmadı'), alt satır ('Tek hırsız +1', 'Çalmayan kazanır', 'Kasa sağlam kaldı') ve hırsızların avatarları, adları ve +1/−1. Ses ve titreşim oyun içi açılışta çaldığı için burada tekrar çalmaz.",
+      "gizli": "Yok."
     },
     {
       "ad": "Sonuç ekranı",
@@ -51,82 +58,83 @@
     }
   ],
   "kurallar": [
-    "2 ile 8 oyuncu katılır. Tek bir aşama vardır ve en çok 30 saniye sürer; kimse kısaltmazsa süre dolduğu anda biter.",
-    "Her katılımcının ekranında tek bir düğme vardır: ÇAL. Başka seçenek, hedef, miktar ya da zamanlama puanı yoktur.",
-    "Her oyuncu en çok bir kez basabilir. Sunucu oyuncunun ilk geçerli basışını zaman damgasıyla kaydeder. Aynı oyuncunun sonraki basışları yok sayılır; bu bir hata olarak da dönmez (başarılı onay verilir), böylece gizlilik için cevap hep aynıdır.",
-    "Bir oyuncu hiç basmayabilir; basmamak serbesttir ve puanı 0 bırakır. Süre dolunca ya da bir şey yapmayınca puan değişmez.",
-    "Tam olarak 1 oyuncu basmışsa o oyuncu +1 alır.",
-    "2 ya da daha çok oyuncu basmışsa basanların her biri −1 alır. Herkes basarsa herkes −1 alır.",
-    "Kimse basmamışsa herkes 0 alır.",
-    "Basmayanlar hiçbir durumda puan almaz ve kaybetmez (0).",
-    "Basış zamanı puanı etkilemez: ilk basan ile son basan arasında fark yoktur. Süre dolmadan önceki son milisaniyedeki basış da geçerlidir.",
-    "Katılımcı olmayan (izleyici ya da başka odanın) kimse basamaz; basış reddedilir (not_participant).",
-    "Süre dolduğu anda (ya da dolduktan sonra) gelen basış reddedilir (ended). Bu oyunda geç gelen eylem payı yoktur: bitişten 1 ms sonra gelen basış kabul edilmez.",
-    "Erken bitiş: oyunun bütün katılımcıları basarsa, son basıştan 1 saniye sonra aşama biter (sonuç zaten kesindir: herkes −1). Bu denetim bağlantı durumuna bakmaz: bağlantısı kopuk bir oyuncu basmadıkça erken bitiş olmaz. Herkes bastıktan sonra gelen yeni basış kabul edilmez.",
-    "Süre dolana kadar kimin bastığı hiçbir görünümde yer almaz. Sonuç (kimler bastı, sonuç türü, puanlar) yalnız aşama bittiğinde herkese açık görünümle verilir.",
-    "Mini oyun puanı doğrudan genel skora aktarılır: puanlar ile genel skora giden ödüller aynıdır (kartlar yoksa +1, −1 ya da 0 olduğu gibi eklenir).",
-    "Yanlış hamle diye bir şey yoktur; geçerli tek eylem ÇAL basışıdır. Başka biçimde gelen veri (başka alan ya da başka tür) geçersiz sayılır ve reddedilir."
+    "2 ile 8 oyuncu katılır. Tek bir aşama vardır ve en çok 30 saniye sürer.",
+    "Her katılımcının ekranında iki düğme vardır: ÇALMA ve ÇAL. Başka seçenek, hedef ya da miktar yoktur.",
+    "Her oyuncu bir kez karar verir. Sunucu ilk kararı kaydeder (ÇAL ise zaman damgasıyla). Aynı oyuncunun sonraki eylemleri (aynı ya da öbür düğme) yok sayılır; hata olarak da dönmez (başarılı onay verilir), böylece gizlilik için cevap hep aynıdır. Karar geri alınmaz.",
+    "ÇALMA ile hiç karar vermemek puanca aynıdır: 0. Hiç karar vermeyen ÇALMA sayılır.",
+    "Tam olarak 1 oyuncu ÇAL dediyse o oyuncu +1 alır.",
+    "2 ya da daha çok oyuncu ÇAL dediyse çalanların her biri −1 alır.",
+    "Kimse çalmadıysa herkes 0 alır. Çalmayanlar hiçbir durumda puan almaz ve kaybetmez (0).",
+    "Puan yalnız kaç kişinin çaldığına bağlıdır; ÇAL zamanı puanı doğrudan etkilemez. Zaman yalnız 15. saniyedeki ortak işareti belirler.",
+    "Kasada kıpırtı: 3 ve daha çok oyuncuda oyunun 15. saniyesinde herkese aynı işaret verilir: o ana kadar en az bir kişi ÇAL dediyse 'Kasada kıpırtı var!', demediyse 'Kasa sessiz'. Sayı ve kimlik yoktur. İşaret yalnız 15. saniyedeki durumu söyler, sonra değişmez; ÇALMA kararları etkilemez. 2 oyuncuda işaret yoktur. Bağlı herkes 15. saniyeden önce karar verdiyse oyun erken biter ve işaret verilmez.",
+    "Katılımcı olmayan (izleyici ya da başka odanın) kimse karar veremez (not_participant).",
+    "Süre dolduğu anda (ya da dolduktan sonra) gelen karar reddedilir (ended). Bu oyunda geç gelen eylem payı yoktur.",
+    "Erken bitiş: bağlı bütün katılımcılar karar verince aşama 1 saniye sonra biter. Bağlantısı kopuk oyuncu beklenmez; son eksik oyuncu koparsa da 1 sn sonra biter.",
+    "Süre dolana kadar kimin ne seçtiği hiçbir görünümde yer almaz; herkes yalnız kimlerin karar verdiğini görür. Sonuç (çalanlar, ÇAL anları, sonuç türü, puanlar) yalnız aşama bittiğinde herkese açık görünümle verilir.",
+    "Süre bitince oyun içi kasa açılışı en az 4,5 sn gösterilir; 'Devam et' kuralı ortak kuraldır.",
+    "Mini oyun puanı doğrudan genel skora aktarılır (kartlar yoksa +1, −1 ya da 0 olduğu gibi eklenir).",
+    "Geçerli eylemler yalnız {kind:'steal'} (ÇAL) ve {kind:'pass'} (ÇALMA) biçimindedir; başka biçimde gelen veri geçersiz sayılır ve reddedilir."
   ],
   "puanlama": {
-    "ozet": "Puan yalnız kaç kişinin bastığına bağlıdır: tek basan +1, birden çok basan her biri −1, basmayan 0. Basış sırası ve zamanı önemsizdir.",
+    "ozet": "Puan yalnız kaç kişinin ÇAL dediğine bağlıdır: tek çalan +1, birden çok çalan her biri −1, çalmayan (ÇALMA ya da kararsız) 0. ÇAL zamanı puanı etkilemez; yalnız 15. saniyedeki ortak işareti belirler.",
     "kalemler": [
       {
-        "olay": "Tek başına basmak",
+        "olay": "Tek başına ÇAL demek",
         "puan": "+1",
         "not": "Yalnız o oyuncuya; diğerleri 0."
       },
       {
-        "olay": "Başkalarıyla birlikte basmak (2 ya da daha çok kişi)",
+        "olay": "Başkalarıyla birlikte ÇAL demek (2 ya da daha çok kişi)",
         "puan": "−1",
-        "not": "Basanların her birine ayrı ayrı."
+        "not": "Çalanların her birine ayrı ayrı."
       },
       {
-        "olay": "Herkesin basması",
+        "olay": "Herkesin ÇAL demesi",
         "puan": "−1",
-        "not": "Herkes basanların içindedir; herkes −1 alır, oyun erken biter."
+        "not": "Herkes çalanların içindedir; herkes −1 alır, oyun erken biter."
       },
       {
-        "olay": "Hiç basmamak",
+        "olay": "ÇALMA ya da hiç karar vermemek",
         "puan": "0",
-        "not": "Başka kimse bassa da basmasa da 0."
+        "not": "Başka kimse çalsa da çalmasa da 0."
       },
       {
-        "olay": "Kimsenin basmaması",
+        "olay": "Kimsenin çalmaması",
         "puan": "0",
         "not": "Herkes 0 alır."
       }
     ],
-    "ornek": "4 oyuncu: Ali, Bora, Cem, Deniz. Bora 5. saniyede, Deniz 22. saniyede basar; Ali ve Cem basmaz. İki kişi bastığı için Bora −1, Deniz −1, Ali 0, Cem 0. Başka bir tur: yalnız Cem basarsa Cem +1, diğerleri 0. Üçüncü tur: kimse basmazsa herkes 0.",
-    "beraberlik": "Beraberlik kuralı yoktur; oyun yalnız puan ekler. Mini oyun sıralamasında en yüksek puan birinci, en düşük sonuncudur; puanı eşit olanlar sırayı paylaşır. Bu yüzden kimse basmazsa herkes eşit (hepsi birinci, kimse sonuncu); iki kişi basarsa basmayanlar birinci, basanlar sonuncu olur."
+    "ornek": "4 oyuncu: Ali, Bora, Cem, Deniz. Bora 5. saniyede ÇAL der; 15. saniyede herkes 'Kasada kıpırtı var!' görür. Deniz 22. saniyede ÇAL, Ali ÇALMA der; Cem karar vermez. İki kişi çaldığı için Bora −1, Deniz −1, Ali 0, Cem 0. Başka bir tur: yalnız Cem çalarsa Cem +1, diğerleri 0. Üçüncü tur: herkes ÇALMA derse herkes 0 ve oyun son karardan 1 sn sonra biter.",
+    "beraberlik": "Beraberlik kuralı yoktur; oyun yalnız puan ekler. Mini oyun sıralamasında en yüksek puan birinci, en düşük sonuncudur; puanı eşit olanlar sırayı paylaşır. Bu yüzden kimse çalmazsa herkes eşit (hepsi birinci, kimse sonuncu); iki kişi çalarsa çalmayanlar birinci, çalanlar sonuncu olur."
   },
   "ozelDurumlar": [
     {
       "baslik": "Bağlantısı kopan oyuncu",
-      "aciklama": "Oyuncu katılımcı olmaya devam eder. Kopmadan önce bastıysa basışı geçerlidir ve sayılır. Kopukken basamaz ama oyunun puanı hesabında yine yer alır. Sonuç, bağlı listesine bakılmadan hesaplanır. Geri dönen oyuncu kendi basış durumunu (pressed) yeniden alır; basmışsa düğme BASTIN kilitli görünür."
+      "aciklama": "Oyuncu katılımcı olmaya devam eder; avatarı masada gri görünür. Kopmadan önce karar verdiyse kararı geçerlidir. Erken bitiş onu beklemez. Geri dönen oyuncu kararını verdiyse 'Kararın kayıtlı' ekranına, vermediyse kalan süreyle karar ekranına döner ve 1 sn 'Döndün · N sn kaldı' bandı görür."
     },
     {
-      "baslik": "Erken bitişte kopuk oyuncu",
-      "aciklama": "Herkes bastı kontrolü bağlantıya bakmaz. Genel erken bitiş kuralındaki (yalnız bağlı olanlar sayılır) davranıştan farklı olarak, bağlantısı kopuk ve basmamış bir oyuncu varsa oyun 30 saniyeyi bekler."
+      "baslik": "Kıpırtı işaretinin anlamı",
+      "aciklama": "İşaret yalnız 'o ana kadar en az bir ÇAL var mı' bilgisidir. Karar verenler listesi herkese açık olduğundan, 15. saniyeden önce yalnız bir kişi karar vermişse ve işaret 'kıpırtı' ise o kişinin çaldığı anlaşılır; 'sessiz' ise o ana kadar karar verenlerin hepsinin ÇALMA dediği anlaşılır. Bu, onaylı kuralın (GH-M1 + GH-M2) doğal sonucudur; masa blöfünün parçasıdır."
     },
     {
       "baslik": "Çift dokunma ve ağ gecikmesi",
-      "aciklama": "İstemci ilk dokunuşta eylemi bir kez gönderir ve düğmeyi hemen kilitler (sunucu onayını beklemeden). Sunucu da ikinci basışı yok sayar. Süre bitişine çok yakın basış, sunucuya bitişten sonra ulaşırsa reddedilir; ekranda BASTIN görünse bile sonuçta sayılmayabilir."
+      "aciklama": "İstemci ilk dokunuşta eylemi bir kez gönderir ve düğmeleri hemen kilitler (sunucu onayını beklemeden). Sunucu da ikinci kararı yok sayar. Süre bitişine çok yakın karar, sunucuya bitişten sonra ulaşırsa reddedilir; sonuçta ÇALMA sayılır."
     },
     {
       "baslik": "İzleyici ve geç katılan",
-      "aciklama": "Maç sürerken giren izleyici düğmeyi görmez. Başlık Kasayı izliyorsun, alt yazı Kimin bastığı sonda belli olur. Puan almaz, sonuç açılışını herkes gibi görür."
+      "aciklama": "İzleyici düğmeleri görmez. Başlık 'Kasayı izliyorsun · Kim çalacak?', alt yazı '4/6 karar verdi'; masayı, karar kilitlerini ve işareti görür. Puan almaz, açılışı herkes gibi görür."
     },
     {
       "baslik": "2 ve 8 oyuncu",
-      "aciklama": "2 oyuncuda ikisi de basarsa ikisi de −1, biri basarsa +1 olur. 8 oyuncuda kural aynıdır; çoklu basış riski doğal olarak artar. Süre ve kural oyuncu sayısına göre değişmez."
+      "aciklama": "2 oyuncuda 15. saniye işareti yoktur (kıpırtı, basmayanın karşısındakinin çaldığını kesinleştirirdi). 8 oyuncuda kural aynıdır; masa avatarları küçülür, açılışta hırsızlar daha sık aralıkla gelir."
     },
     {
-      "baslik": "Kimse basmazsa",
-      "aciklama": "Herkes 0 alır, sonuç açılışı Kimse çalmadı başlığıyla boş kasa sesi çalar. Süre 30 saniyeyi tam doldurur."
+      "baslik": "Kimse çalmazsa",
+      "aciklama": "Herkes 0 alır; açılış toz bulutu ve 'Kasa sağlam kaldı' damgasıyla biter."
     },
     {
-      "baslik": "Sonuç ekranından erken çıkma",
-      "aciklama": "Sonuç ekranı bağlı bütün katılımcılar Devam'a basınca 1 sn sonra, aksi halde 60 sn sonra kapanır."
+      "baslik": "Oyalama kadranı",
+      "aciklama": "Kasa kadranı yalnız o telefonda döner; sunucuya hiçbir şey göndermez, sonucu etkilemez. Amaç telefonla oynamanın ele vermemesi ve ölü sürenin dolmasıdır."
     }
   ],
   "kartlar": [
@@ -167,148 +175,191 @@
     {
       "ad": "Oyun süresi (tek aşama)",
       "deger": "30 000 ms",
-      "kaynak": "packages/engine/src/games/gizli-hirsiz/types.ts:3"
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/types.ts"
     },
     {
-      "ad": "Herkes bastıktan sonra kalan süre",
+      "ad": "Bağlı herkes karar verdikten sonra kalan süre",
       "deger": "1 000 ms",
-      "kaynak": "packages/engine/src/games/gizli-hirsiz/types.ts:6"
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/types.ts"
+    },
+    {
+      "ad": "Kıpırtı işareti anı",
+      "deger": "15 000 ms (başlangıçtan)",
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/types.ts"
+    },
+    {
+      "ad": "İşaret için en az oyuncu",
+      "deger": "3",
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/types.ts"
+    },
+    {
+      "ad": "Oyun içi açılış (en az gösterim)",
+      "deger": "4 500 ms",
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/types.ts"
     },
     {
       "ad": "Tek hırsız puanı",
       "deger": "+1",
-      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts:27"
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts (gizliHirsizScores)"
     },
     {
       "ad": "Çoklu hırsız puanı (her biri)",
       "deger": "−1",
-      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts:27"
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts (gizliHirsizScores)"
     },
     {
-      "ad": "Basmayanın puanı",
+      "ad": "Çalmayanın puanı",
       "deger": "0",
-      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts:29"
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts (gizliHirsizScores)"
     },
     {
       "ad": "Oyuncu sınırları",
       "deger": "2 - 8",
-      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts:50"
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts"
     },
     {
-      "ad": "Süre bitişi / bitişten sonraki basış",
+      "ad": "Süre bitişi / bitişten sonraki karar",
       "deger": "ctx.now >= endsAt ise reddedilir (ended)",
-      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts:80"
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts (reduce)"
     },
     {
-      "ad": "Erken bitiş (bütün katılımcılar bastı)",
+      "ad": "Erken bitiş (bağlı herkes karar verdi)",
       "deger": "endsAt = min(endsAt, şimdi + 1 000 ms)",
-      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts:86"
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts (closeIfReady)"
     },
     {
       "ad": "Geç gelen eylem payı",
       "deger": "yok (graceMs tanımlı değil)",
-      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts:42"
+      "kaynak": "packages/engine/src/games/gizli-hirsiz/index.ts"
     },
     {
       "ad": "Anlatım zaman aşımı",
       "deger": "40 000 ms",
-      "kaynak": "apps/server/src/match.ts:40"
+      "kaynak": "apps/server/src/match.ts"
     },
     {
       "ad": "Geri sayım",
       "deger": "3 000 ms",
-      "kaynak": "apps/server/src/match.ts:41"
-    },
-    {
-      "ad": "Sonuç ekranı",
-      "deger": "30 000 ms",
-      "kaynak": "apps/server/src/match.ts:42"
+      "kaynak": "apps/server/src/match.ts"
     },
     {
       "ad": "Devam ile kapanma gecikmesi",
       "deger": "1 000 ms",
-      "kaynak": "packages/engine/src/protocol.ts:29"
+      "kaynak": "packages/engine/src/protocol.ts"
     }
   ],
   "strateji": [
-    "Hiç basmamak güvenli ama puansızdır; yarışta geriden gelen oyuncunun risk alması gerekir.",
-    "Kaç kişinin bastığını bilemezsin; oda ne kadar kalabalıksa tek başına basma ihtimali o kadar düşer. 2-3 kişilik odada basmak çok daha mantıklıdır.",
-    "Basış zamanı önemsiz olduğu için 'erken mi geç mi' diye kasılma; tek önemli karar basıp basmamaktır.",
-    "Rakiplerin geçmiş turlardaki alışkanlıklarını izle: hep basan ya da hiç basmayan oyuncuları tanırsan çoklu basış olasılığını tahmin edersin.",
-    "Skor tablosunda öndeysen basmayarak −1 riskini sıfırlarsın; gerideysen +1 için kumar oynamak isteyebilirsin.",
-    "Kart oynayabiliyorsan Kalkan ya da Çift Puan gibi kartlar riski dengeler: Kalkan çoklu basışta −1'i 0 yapar."
+    "ÇALMA güvenli ama puansızdır; yarışta geriden gelen oyuncunun risk alması gerekir.",
+    "Erken çalan kasaya ilk el koyar: 15. saniyedeki 'kıpırtı' işaretini o yaratır ve diğerlerini caydırabilir. Bekleyen ise işareti görerek karar verir ama başkalarıyla aynı anda saldırma riski artar.",
+    "'Kasa sessiz' görünce herkes atılmak isteyebilir; kalabalıkta bu en sık alarm sebebidir.",
+    "Karar verenlerin listesi herkese açıktır: 15. saniyeden önce kimlerin karar verdiğine bakıp işaretle birlikte tahmin yürütebilirsin; karar zamanın da blöfün parçasıdır.",
+    "Kadranı çevirmek ve iki düğmeden birine dokunmak dışarıdan aynı görünür; telefonla oynamak seni ele vermez.",
+    "Skor tablosunda öndeysen ÇALMA ile −1 riskini sıfırlarsın; gerideysen +1 için kumar oynamak isteyebilirsin.",
+    "Kart oynayabiliyorsan Kalkan ya da Çift Puan gibi kartlar riski dengeler: Kalkan çoklu ÇAL'da −1'i 0 yapar."
   ],
-  "tv": "Bu oyunun özel bir TV (sahne) görünümü yoktur; büyük ekranda telefon ekranı izleyici kipinde büyütülerek gösterilir. TV'de ÇAL düğmesi bulunmaz, süre çubuğu ve çekirdek görünür, kimin bastığı süre bitene kadar gösterilmez. Sonuç açılışında hırsızların avatarları ve +1 / −1 rozetleri herkesle birlikte TV'de de görünür.",
+  "tv": "Özel TV (sahne) görünümü vardır: solda büyük başlık ('Kim çalacak?'), büyük kalan saniye, 'N/M karar verdi' ve işaret; ortada büyük kasa ve lazerler, çevresinde oyuncular (ad ve karar kilidi; kimin ne seçtiği yok); sağda genel skor paneli. Süre bitince açılış (parmak izi sayacı, hırsızlar, damga) ve zaman şeridi büyük gösterilir. Yalnız herkese açık görünümü kullanır.",
   "ekranlar": [
     {
       "mock": "gizli-briefing",
       "q": "mock=gizli-briefing",
       "baslik": "Anlatım",
-      "aciklama": "Oyun öncesi anlatım: Kasayı yalnız bir kişi soyabilir! ve üç madde (doğru anı bekle, kimin bastığı belli olmaz, tek hırsız +1 / çok hırsız −1).",
+      "aciklama": "Kasayı yalnız bir kişi soyabilir! ve üç madde: çal ya da çalma, 15. saniye kıpırtı, tek hırsız +1 / çok hırsız −1.",
       "name": "gizli-briefing",
       "dosya": "gizli-briefing"
     },
     {
       "mock": "gizli-idle",
       "q": "mock=gizli-idle",
-      "baslik": "ÇAL bekliyor",
-      "aciklama": "Karanlık güvenlik çekirdeği, üstte süre çubuğu, Doğru anı bekle başlığı ve altta ÇAL düğmesi.",
+      "baslik": "Karar bekliyor",
+      "aciklama": "Kasa çevresinde masa, karar verenlerde kilit; altta ÇALMA ve ÇAL.",
       "name": "gizli-idle",
       "dosya": "gizli-idle"
     },
     {
-      "mock": "gizli-idle",
-      "q": "mock=gizli-idle",
-      "baslik": "Basış anı",
-      "aciklama": "ÇAL'a dokunulduktan sonra: çekirdekte dalga efekti, düğme kilitleniyor.",
-      "name": "gizli-tap",
-      "dosya": "gizli-idle"
+      "mock": "gizli-stir",
+      "q": "mock=gizli-stir&n=5",
+      "baslik": "Kasada kıpırtı",
+      "aciklama": "15. saniyeden sonra başlığın altında 'Kasada kıpırtı var!'.",
+      "name": "gizli-stir",
+      "dosya": "gizli-stir-n-5"
     },
     {
       "mock": "gizli-pressed",
       "q": "mock=gizli-pressed",
-      "baslik": "Bastın",
-      "aciklama": "Parmak izi çekirdekte belirir, düğme BASTIN, Parmak izin kayıtta / Sonucu sonda göreceksin.",
+      "baslik": "Kararın kayıtlı",
+      "aciklama": "ÇAL da ÇALMA da aynı görünür: koyu 'Kararın kayıtlı' şeridi ve göz simgesi.",
       "name": "gizli-pressed",
       "dosya": "gizli-pressed"
+    },
+    {
+      "mock": "gizli-pressed",
+      "q": "mock=gizli-pressed",
+      "baslik": "Seçimine bak",
+      "aciklama": "Göz basılı tutulunca 'Seçimin: ÇAL' ve kasada parmak izi.",
+      "name": "gizli-peek",
+      "dosya": "gizli-peek"
     },
     {
       "mock": "gizli-spectator",
       "q": "mock=gizli-spectator",
       "baslik": "İzleyici",
-      "aciklama": "Düğme yok; Kasayı izliyorsun / Kimin bastığı sonda belli olur.",
+      "aciklama": "Düğme yok; 'Kasayı izliyorsun · Kim çalacak?' ve 'N/M karar verdi'.",
       "name": "gizli-spectator",
       "dosya": "gizli-spectator"
     },
     {
+      "mock": "gizli-outro-solo",
+      "q": "mock=gizli-outro-solo&n=5",
+      "baslik": "Açılış: tek hırsız",
+      "aciklama": "Altın ışık, 'SOYULDU! Mert +1', zaman şeridi.",
+      "name": "gizli-outro-solo",
+      "dosya": "gizli-outro-solo-n-5"
+    },
+    {
+      "mock": "gizli-outro-multi",
+      "q": "mock=gizli-outro-multi&n=6",
+      "baslik": "Açılış: alarm",
+      "aciklama": "'Kasada 3 parmak izi', hırsızlar ÇAL saniyeleriyle, kelepçe, 'ALARM! −1', zaman şeridinde 15. saniye işareti.",
+      "name": "gizli-outro-multi",
+      "dosya": "gizli-outro-multi-n-6"
+    },
+    {
       "mock": "gizli-reveal-solo",
       "q": "mock=gizli-reveal-solo&n=5",
-      "baslik": "Tek hırsız",
-      "aciklama": "Kasa açılır, yeşil ışık, Kasa soyuldu! ve tek hırsızın avatarı +1 ile.",
+      "baslik": "Genel şerit: tek hırsız",
+      "aciklama": "Kasa soyuldu!, hırsızın adı ve +1.",
       "name": "gizli-reveal-solo",
       "dosya": "gizli-reveal-solo-n-5"
     },
     {
       "mock": "gizli-reveal-multi",
       "q": "mock=gizli-reveal-multi&n=8",
-      "baslik": "Çok hırsız",
-      "aciklama": "Kırmızı alarm, Alarm! Birden çok hırsız ve basanların avatarları −1 ile.",
+      "baslik": "Genel şerit: çok hırsız",
+      "aciklama": "'ALARM! 3 hırsız' tek satır, 'Çalmayan kazanır', adlar ve −1.",
       "name": "gizli-reveal-multi",
       "dosya": "gizli-reveal-multi-n-8"
     },
     {
       "mock": "gizli-reveal-none",
       "q": "mock=gizli-reveal-none&n=3",
-      "baslik": "Kimse çalmadı",
-      "aciklama": "Boş kasa, Kimse çalmadı; kimse puan almaz.",
+      "baslik": "Genel şerit: kimse çalmadı",
+      "aciklama": "Kimse çalmadı, Kasa sağlam kaldı.",
       "name": "gizli-reveal-none",
       "dosya": "gizli-reveal-none-n-3"
+    },
+    {
+      "mock": "tv-gizli-stir",
+      "q": "mock=tv-gizli-stir&n=8",
+      "baslik": "TV",
+      "aciklama": "Büyük kasa, oyuncular, kalan saniye, karar sayısı ve işaret.",
+      "name": "gizli-tv",
+      "dosya": "gizli-tv"
     }
   ],
   "bilinenSorunlar": [
-    "Erken bitişte (herkes bastı) oyunun bitiş zamanı (endsAt) herkese açık görünümde 'son basıştan 1 sn sonra' olarak güncellenir; süre çubuğu bu anda sıçrar. Bu, süre dolmadan 'herkes bastı' bilgisinin çubuktan anlaşılmasına izin verebilir; ancak kimin bastığı sızmaz (gizlilik testleri yalnız kimlik/sıra/zaman damgası sızıntısına bakar).",
-    "KURALLAR.md genel erken bitiş kuralı (yalnız bağlı katılımcılar sayılır) zamanlama/bekleme oyunlarını kapsam dışı bırakır; Gizli Hırsız yine de kodda bağlantıya bakmayan (tüm katılımcılar bastı) bir erken bitişe sahiptir. docs/ERKEN-BITIS.md Tür 2 ve docs/ONERI-KURAL.md bunu bilinçli bir seçim olarak yazar (kopuk oyuncu geri dönüp basabilir).",
-    "KURALLAR.md §8 madde 15 'Süre dolduğunda kimse basmadıysa bütün oyuncular 0 alır' der; kod uyumludur. Aynı bölüm 'beraberlik olayı yok' der ama mini oyun sıralaması ve kartlar için eşit puanlar sırayı paylaşır (özellikle kimse basmazsa herkes birincidir).",
+    "Erken bitişte (bağlı herkes karar verdi) bitiş zamanı herkese açık görünümde 'son karardan 1 sn sonra' olarak güncellenir; süre çubuğu sıçrar. Bu artık yalnız 'herkes karar verdi' der; kimin ne seçtiği sızmaz.",
+    "Karar verenler listesi ile 15. saniye işareti birlikte okunabilir: 15. saniyeden önce tek kişi karar verdiyse 'kıpırtı' o kişinin çaldığını, 'sessiz' erken karar verenlerin ÇALMA dediğini gösterir. Onaylı kuralların (GH-M1, GH-M2) doğal sonucudur.",
+    "Açık kasa görseli (GH-U5) henüz yok: tek hırsız açılışında kapalı kasa kapısı altın ışıkla gösterilir (docs/oneriler/GORSEL-IHTIYACLARI.md).",
     "Oyun, Bot yok kuralına rağmen testler için bir simülasyon botu (bots.ts) içerir; bu yalnız test/yük aracıdır, oyunda bot oynamaz."
   ],
   "sonDegisiklikler": [
@@ -317,7 +368,8 @@
     "2026-10-26: Kasa kapısı, kaçış kolu, el sıkışma ve nişangâh görselleri eklendi (istemci).",
     "2026-10-27: Tüm oyunlar için tur özeti (summary) ve kayıt defteri eklendi; sonuç ekranında Devam ile erken geçiş geldi.",
     "2026-10-27: Oyun ekranı kabuk saatine, Status bileşenine ve hazır noktalarına taşındı; TV (sahne) rolü eklendi.",
-    "2026-10-28: Lobi ton (aile/arkadaş/ofis) özelliği kaldırıldı."
+    "2026-10-28: Lobi ton (aile/arkadaş/ofis) özelliği kaldırıldı.",
+    "2026-11-01: Öneri paketi (GH-M1, GH-M2; GH-U1…U9, U11…U16): ÇAL/ÇALMA iki düğme, bağlı herkes karar verince erken bitiş, 15. saniye kıpırtı işareti, kasa çevresinde masa, oyalama kadranı, gizli kayıt şeridi, oyun içi açılış ve zaman şeridi, son 5 sn gerilimi, adlı genel şerit, yatay/küçük ekran düzeni, izleyici ve TV görünümü, ele vermeyen ses seti, yeni anlatım."
   ],
   "kaynaklar": [
     "packages/engine/src/games/gizli-hirsiz/index.ts",
@@ -326,6 +378,8 @@
     "packages/engine/src/games/gizli-hirsiz/summary.ts",
     "docs/KURALLAR.md#8-gizli-hırsız",
     "apps/client/src/games/gizli-hirsiz/GizliHirsizScreen.tsx",
+    "apps/client/src/games/gizli-hirsiz/Outro.tsx",
+    "apps/client/src/games/gizli-hirsiz/StageView.tsx",
     "apps/client/src/games/gizli-hirsiz/Reveal.tsx",
     "apps/client/src/games/gizli-hirsiz/view.ts",
     "apps/server/src/gizli-hirsiz.test.ts",

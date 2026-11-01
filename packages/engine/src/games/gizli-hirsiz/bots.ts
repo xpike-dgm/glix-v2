@@ -1,9 +1,9 @@
 import type { GameBot } from "../../testing/simulate.js";
-import { GIZLI_HIRSIZ_DURATION_MS } from "./types.js";
+import { GIZLI_HIRSIZ_TOTAL_MS } from "./types.js";
 
-/** Çoğu zaman geçerli ÇAL; bazen tekrar basış (yok sayılır). */
+/** Kimi ÇAL, kimi ÇALMA der; tekrar kararlar yok sayılır. */
 export const gizliHirsizBot: GameBot = {
-  durationMs: GIZLI_HIRSIZ_DURATION_MS,
+  durationMs: GIZLI_HIRSIZ_TOTAL_MS,
   burstJitterMs: [40, 400, 2_000],
-  generate: () => ({ kind: "steal" }),
+  generate: (rng) => ({ kind: rng.int(3) === 0 ? "steal" : "pass" }),
 };

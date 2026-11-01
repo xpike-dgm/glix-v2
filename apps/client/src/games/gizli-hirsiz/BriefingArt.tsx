@@ -1,17 +1,39 @@
 import "./gizli-hirsiz.css";
 
-/** Anlatım görseli: karanlık güvenlik çekirdeği ve üzerinde beliren parmak izi. */
+function Print(props: { x: number; y: number; color: string }) {
+  return (
+    <g fill="none" stroke={props.color} stroke-width="1.8" stroke-linecap="round">
+      <ellipse cx={props.x} cy={props.y} rx="2.6" ry="3.6" />
+      <ellipse cx={props.x} cy={props.y} rx="5.6" ry="7.2" />
+      <ellipse cx={props.x} cy={props.y} rx="8.6" ry="10.8" />
+    </g>
+  );
+}
+
+/**
+ * GH-U16: iki kareli anlatım döngüsü: tek parmak izi → yeşil kasa (+1); iki parmak izi → kırmızı alarm (−1).
+ * Hareket azaltmada iki kare yan yana durur.
+ */
 export default function BriefingArt() {
   return (
-    <svg class="ghart" viewBox="0 0 120 120" aria-hidden="true" role="presentation">
-      <title>Kasa</title>
-      <circle cx="60" cy="60" r="54" fill="none" stroke="#2ef2ff" stroke-width="2" opacity="0.35" />
-      <circle cx="60" cy="60" r="42" fill="none" stroke="#8b5cff" stroke-width="2" opacity="0.5" />
-      <circle cx="60" cy="60" r="30" fill="#05081a" stroke="#2ef2ff" stroke-width="3" />
-      <g class="ghart__print" fill="none" stroke="#2ef2ff" stroke-width="2.4" stroke-linecap="round">
-        <path d="M48 66c0-8 5-14 12-14s12 6 12 14" />
-        <path d="M53 68c0-5 3-9 7-9s7 4 7 9" />
-        <path d="M58 70c0-2 1-3 2-3s2 1 2 3" />
+    <svg class="ghart" viewBox="0 0 240 120" aria-hidden="true" role="presentation">
+      <title>Tek hırsız kazanır, çok hırsız yanar</title>
+      <g class="ghart__frame ghart__frame--solo">
+        <circle cx="60" cy="56" r="44" fill="#05081a" stroke="#b6ff3b" stroke-width="3" />
+        <circle cx="60" cy="56" r="34" fill="none" stroke="#b6ff3b" stroke-width="1.5" opacity="0.4" />
+        <Print x={60} y={54} color="#b6ff3b" />
+        <text x="60" y="114" text-anchor="middle" class="ghart__label" fill="#b6ff3b">
+          ✓ +1
+        </text>
+      </g>
+      <g class="ghart__frame ghart__frame--multi">
+        <circle cx="180" cy="56" r="44" fill="#1a0510" stroke="#ff3b5c" stroke-width="3" />
+        <circle cx="180" cy="56" r="34" fill="none" stroke="#ff3b5c" stroke-width="1.5" opacity="0.4" />
+        <Print x={168} y={54} color="#ff3b5c" />
+        <Print x={192} y={58} color="#ff3b5c" />
+        <text x="180" y="114" text-anchor="middle" class="ghart__label" fill="#ff3b5c">
+          ✕ −1
+        </text>
       </g>
     </svg>
   );

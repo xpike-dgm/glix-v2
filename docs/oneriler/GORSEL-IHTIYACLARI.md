@@ -183,3 +183,33 @@ listesi, `ruletProp()` — Sözlük Blöfü düzeni); yokken ekran mevcut görse
   derin BAM + cam çatlağı kuyruğu, el değiştirme "şak", son söz alçak notası, açılışta tok "bitti" vuruşu; son 5 sn tiki
   kabuk saatinden gelir. Ses alanı istenirse gerçek kayıtlarla değiştirebilir (olay adları `rus-ruleti.<an>`). ⭐ yıldız
   çınlaması RR-M2 reddedildiği için yok.
+
+## Gizli Hırsız
+
+Ortak stil: oyunun mevcut görselleriyle uyumlu (`apps/client/public/assets/props/genel/kasa-kapisi.webp`: kalın konturlu,
+cel-shaded gümüş-siyah yuvarlak kasa kapısı, solda menteşeler, ortada tekerlek kol, camgöbeği #2ef2ff ve macenta #ff2bd6 neon
+şeritler; dünya zemini `worlds/gizli-hirsiz-*.webp`: kırmızı lazerli karanlık kasa koridoru). Dosya
+`apps/client/public/assets/props/gizli-hirsiz/<ad>.webp` olarak konunca kod değişmeden kullanılır (derlemede `__HIRSIZ_PROPS__`
+listesi, `hirsizProp()` — Sözlük Blöfü düzeni); yokken ekran mevcut görseli kullanır ve dosyayı hiç istemez.
+
+- **GH-U5 · açık kasa (içi altın/para dolu)** — `apps/client/public/assets/props/gizli-hirsiz/kasa-acik.webp` · 1:1,
+  512×512 · şeffaf arka plan · Mevcut `genel/kasa-kapisi` ile **aynı kasa**, aynı açıdan (tam karşıdan) ama kapı **sola doğru
+  ~110° açılmış** (menteşeler solda kalır, kapının iç yüzü kalın gümüş kenarla görünür); açıklıktan içeride istiflenmiş altın
+  külçeler, taşan altın paralar ve birkaç yeşil-neon banknot destesi, içeriden sıcak altın ışık (#ffd23f) dışarı vurur; neon
+  şeritler aynı renklerde, kalın kontur; kasa gövdesi kadrajın ~%85'i, ortalanmış; yazı YOK. Tek hırsız açılışında çekirdeğin
+  içinde ~280 px (TV'de ~380 px), genel sonuç şeridinde 60 px gösterilir; 60 px'te de "açık, içi altın" okunmalı. · Geçici:
+  kapalı kasa kapısı altın ışık (sepya + parlaklık + altın gölge) ve CSS altın yağmuru ile "açılmış" gösterilir.
+- **GH-U16 · anlatım döngüsü** (isteğe bağlı; yeni görsel gerekmedi) — "tek parmak izi → yeşil kasa (+1)" ve "iki parmak izi
+  → kırmızı alarm (−1)" iki karesi SVG ile çizildi (`BriefingArt`). Mevcut anlatım görselleri (`briefing/gizli-hirsiz-1..3.webp`)
+  aynen; istenirse ileride 3. görsel "iki hırsız aynı anda basıyor, kırmızı alarm, kelepçe" sahnesiyle değiştirilebilir
+  (aynı ölçü ve stil, `briefing/gizli-hirsiz-3.webp`).
+- **GH-U5 · kelepçe, kıpırtı, kilit, göz simgeleri; altın yağmuru, siren ışığı, toz bulutu, stetoskop dalgası, lazerler**
+  (yeni görsel gerekmedi) — CSS/SVG ile çizildi; hareket azaltmada sabit renk.
+- **GH-U13 · TV zemini** (yeni görsel gerekmedi) — mevcut `worlds/gizli-hirsiz-landscape.webp` `cover` ile.
+- **ses** (dosya gerekmedi; istenirse gerçek kayıtlarla değiştirilir) — GH-U15 seti mevcut ses sistemiyle kodla üretildi
+  (`apps/client/src/games/gizli-hirsiz/sounds.ts`): oyun boyu alçak alarm uğultusu + lazer vızıltısı (son 5 sn hızlanır),
+  kadran tıkırtısı (çok kısık), son 5 sn alçak tik, işaret anında stetoskop "dinleme", "Kasa sessiz" sakin nota, "Kasada
+  kıpırtı var!" kalp çarpıntısı, açılışta kasa mekanizması, parmak izi sayacının her rakamında tık, soygunda nota + para
+  şıkırtısı, alarmda siren + kelepçe şakırtısı, boş kasada alçak "rüzgâr". **Kural (ses haritasına):** karar anında (ÇAL /
+  ÇALMA) hiç ses yoktur; titreşim kadran tıkırtısıyla aynıdır. Gerçek kayıt istenirse olay adları `gizli-hirsiz.<an>`.
+  Müzik (alçak döngüsel "soygun" teması, son 5 sn tempo katmanı) ses ekibine iştir; şimdilik yok.

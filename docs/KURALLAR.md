@@ -771,6 +771,34 @@ yapanlar ceza alır. Eski faz 15 saniyelik tek hamle aşamasıdır.
     sonucu tur bitene kadar hiçbir oyuncuya açılmaz. Süre dolduğunda kimse
     basmadıysa bütün oyuncular 0 alır.
 
+**Değişiklik (GH öneri paketi, Kasım 2026, sahip onayı: GH-M1, GH-M2, GH-U5, GH-U7, GH-U15) — yukarıdakilerin önüne geçer:**
+
+- **Herkes karar verir: ÇAL ya da ÇALMA (GH-M1):** Ekranda iki eş görünümlü düğme vardır (solda ÇALMA, sağda ÇAL).
+  Her katılımcı birine **bir kez** basar; karar geri alınmaz (sonraki eylemler hata vermeden yok sayılır). Puan değişmez:
+  ÇALMA = eski "basmadı" (0); hiç karar vermeyen de ÇALMA sayılır. Düğme parmak kalkınca tetiklenir; ekranı kaydıran
+  dokunuş hamle sayılmaz.
+- **Erken bitiş (GH-M1):** **Bağlı bütün katılımcılar** karar verince (ÇAL ya da ÇALMA) aşama 1 sn sonra biter; kopan
+  oyuncu beklenmez (son eksik oyuncu koparsa da 1 sn sonra biter). Eski "bütün katılımcılar bastı (bağlantıya bakmadan)"
+  erken bitişinin yerine geçer.
+- **Herkese açık bilgi (GH-M1):** Yalnız **kimlerin karar verdiği** (ne seçtiği değil) herkese açıktır. ÇAL/ÇALMA ayrımı,
+  sayı ve zaman damgası süre bitene kadar hiçbir görünüme gitmez; oyuncu yalnız kendi kararını görür.
+- **Kasada kıpırtı (GH-M2):** **3 ve daha çok** oyuncuda, oyunun **15. saniyesinde** herkese aynı ortak işaret verilir:
+  o ana kadar en az bir kişi ÇAL dediyse **"Kasada kıpırtı var!"**, demediyse **"Kasa sessiz"**. Sayı ve kimlik yoktur.
+  İşaret yalnız 15. saniyedeki durumu söyler ve oyun sonuna kadar öyle kalır; ÇALMA kararları etkilemez. **2 oyuncuda
+  işaret yoktur** (kimliği ele verirdi). Bağlı herkes 15. saniyeden önce karar verdiyse oyun erken biter ve işaret verilmez.
+- **Açılış (GH-U5):** Süre bitince (ya da erken bitişte) oyun ekranında kasa açılır: önce parmak izi sayısı, sonra
+  hırsızlar ÇAL sırasıyla adları ve ÇAL saniyeleriyle, sonra damga; altında 0–30 sn zaman şeridi (GH-U6). Bu anda çalanlar,
+  ÇAL anları ve 15. saniyeden önce çalanların "kıpırtı" simgesi herkese açılır; ÇALMA kararları hiç gösterilmez. Açılış en
+  az **4,5 sn** gösterilir; "Devam et" kuralı değişmez.
+- **Ses ve titreşim (GH-U7, GH-U15):** Karar anında ses yoktur; titreşim herkesin çevirebildiği oyalama kadranının
+  tıkırtısıyla aynıdır. Son 5 sn'de herkesin telefonu (karar vermiş olsun olmasın) saniyede bir kısa titrer.
+- **Değişmeyenler:** 2–8 oyuncu; 30 sn; oyuncu başına tek, geri alınmaz karar; kimin çaldığının süre bitene kadar hiçbir
+  yere gitmemesi; tek hırsız +1, çoklu ÇAL'da her hırsıza −1, çalmayana 0, kimse çalmazsa herkese 0; genel skora doğrudan
+  aktarım; geç gelen eylem payı yok. Reddedilenler: geç ganimet (GH-M3), gizli bekçi (GH-M4), yemin (GH-M5), üç soygun
+  (GH-M6), eksisiz puanlama (GH-M7), 20 sn (GH-M8).
+- **Anlatım:** "Çal ya da çalma: bir kez karar ver, geri alamazsın" · "15. saniyede kasa kıpırtıyı ele verir: erken çalan
+  önce davranır" · "Tek hırsız +1, iki ve daha çok hırsız −1".
+
 ## 9. Kör Kronometre — `kor-kronometre`
 
 **Durum: KİLİTLİ**
