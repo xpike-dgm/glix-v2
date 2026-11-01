@@ -75,3 +75,4 @@ yazılır; görseller hepsi bittikten sonra ChatGPT ile üretilir.
 | Karalama Defteri | uygulandı (canlıda değil) | 15f59b5 |
 | Butona Bas | uygulandı (canlıda değil) | 8a729dd |
 | Kör Kronometre | uygulandı (canlıda değil) | 9213c21 |
+| Kör Bomba | uygulandı (canlıda değil) | f19eb45 |
