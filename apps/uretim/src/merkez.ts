@@ -13,6 +13,7 @@ import type { Katalog } from "./katalog.js";
 import type { KontrolDosyasi } from "./kontrol/baglam.js";
 import { satir } from "./kontrol/baglam.js";
 import { onKontrol } from "./kontrol/index.js";
+import { sesSuresiSiniri } from "./medya.js";
 import { ALAN_IDLERI, type AlanId, alanTanimi, isAlanId, talimatTaslagi } from "./ortak/alanlar.js";
 import {
   type Durum,
@@ -239,7 +240,7 @@ export class Merkez {
     const t = alanTanimi(alan);
     let d: Awaited<ReturnType<typeof dosyaIsle>>;
     try {
-      d = await dosyaIsle(veri, adHam);
+      d = await dosyaIsle(veri, adHam, sesSuresiSiniri(alan));
     } catch (err) {
       throw new IsHatasi(400, err instanceof DosyaHatasi ? err.message : "Dosya işlenemedi.");
     }

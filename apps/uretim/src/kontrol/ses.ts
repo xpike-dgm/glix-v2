@@ -2,7 +2,7 @@
  * Ses kontrolleri (UM-K3): süre, kanal, örnekleme, LUFS (ffmpeg ebur128), kırpılma, baş/son sessizlik, müzikte döngü
  * dikişi. Örnek analizi saf JS'tir; OGG açmak ve LUFS ölçmek ffmpeg ister, yoksa o satırlar "atlandı" olur.
  */
-import { ffmpegVar, lufsOlc, MedyaHatasi, type SesBilgisi, sesAc } from "../medya.js";
+import { ffmpegVar, lufsOlc, MedyaHatasi, type SesBilgisi, sesAc, sesSuresiSiniri } from "../medya.js";
 import { type KontrolBaglami, type Satir, satir } from "./baglam.js";
 
 export interface SesProfili {
@@ -162,9 +162,11 @@ export async function sesKontrolleri(b: KontrolBaglami): Promise<Satir[]> {
       continue;
     }
     try {
-      const bilgi = await sesAc(d.veri, d.tur);
-      const lufs = arac ? await lufsOlc(d.veri, d.tur) : "yok";
-      out.push(...sesSatirlari(bilgi, lufs, sesProfili(b.alan.id, d.hedefYol, d.rol), d.ad));
+      const profil = sesProfili(b.alan.id, d.hedefYol, d.rol);
+      const sinir = sesSuresiSiniri(b.alan.id);
+      const bilgi = await sesAc(d.veri, d.tur, sinir);
+      const lufs = arac ? await lufsOlc(d.veri, d.tur, sinir) : "yok";
+      out.push(...sesSatirlari(bilgi, lufs, profil, d.ad));
     } catch (err) {
       out.push(
         satir("ses", "ac", "kaldi", err instanceof MedyaHatasi ? err.message : "Ses dosyası açılamadı.", {

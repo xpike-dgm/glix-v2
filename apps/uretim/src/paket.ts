@@ -8,7 +8,7 @@ import { mkdir, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
 import { islem, json } from "./db.js";
 import { DUSUK_ALFA } from "./kontrol/gorsel.js";
-import { ffmpegVar, opusYaz, webpYaz } from "./medya.js";
+import { ffmpegVar, opusYaz, sesSuresiSiniri, webpYaz } from "./medya.js";
 import { IsHatasi, type Merkez } from "./merkez.js";
 import { type AlanId, alanTanimi, isAlanId } from "./ortak/alanlar.js";
 import type { Degisiklik, OgeDosyasi, PaketKaydi, TeslimTuru } from "./ortak/tipler.js";
@@ -122,7 +122,7 @@ export async function paketOlustur(
           for (let i = 3; i < img.data.length; i += 4) if ((img.data[i] ?? 0) < DUSUK_ALFA) img.data[i] = 0;
           cikti = await webpYaz(img, 82);
         } else if (d.tur === "wav" || d.tur === "ogg")
-          cikti = await opusYaz(veri, d.tur, alan === "muzik" ? -20 : -16);
+          cikti = await opusYaz(veri, d.tur, alan === "muzik" ? -20 : -16, sesSuresiSiniri(alan));
         else if (d.tur === "svg") cikti = Buffer.from(svgTemizle(veri.toString("utf8")).temiz, "utf8");
         else cikti = veri;
         const yol = paketYolu(dosyalarKok, d.hedefYol);

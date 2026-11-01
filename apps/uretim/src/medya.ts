@@ -11,7 +11,19 @@ import { PngHatasi, pngAc, pngBaslik, type Rgba } from "./png.js";
 import { wavBaslik, wavMono } from "./wav.js";
 
 const ZAMAN_ASIMI_MS = 120_000;
-const EN_COK_CIKTI = 512 * 1024 * 1024;
+/** Çıktı sınırı verilmeyen komutlar için (git, sürüm sorguları): küçük tutulur. */
+const VARSAYILAN_CIKTI = 16 * 1024 * 1024;
+/** Çözülmüş ses örnekleme hızı (tek kanal, 32 bit kayan nokta). */
+const COZME_ORNEKLEME = 48_000;
+/** Hiçbir alanda bundan uzun ses kabul edilmez (müzik 120 sn + pay). */
+export const EN_UZUN_SES_SN = 125;
+const EN_COK_KANAL = 8;
+const EN_COK_ORNEKLEME = 192_000;
+
+/** Alanın kabul ettiği en uzun ses (pay dahil): müzik 120 + 5 sn, diğerleri (efekt ≤ 2 sn) 3 sn. */
+export function sesSuresiSiniri(alan: string): number {
+  return alan === "muzik" ? EN_UZUN_SES_SN : 3;
+}
 
 export interface KomutSonucu {
   kod: number | null;
@@ -19,7 +31,36 @@ export interface KomutSonucu {
   hata: string;
 }
 
-export function calistir(komut: string, args: readonly string[], girdi?: Buffer): Promise<KomutSonucu> {
+/**
+ * Medya işleri (ffmpeg/ffprobe) aynı anda yalnız bir tane çalışır: büyük bir dosya ile aynı anda gelen başka işler
+ * belleği katlamasın. Diğer komutlar (git) kuyruğa girmez.
+ */
+let medyaKuyrugu: Promise<unknown> = Promise.resolve();
+const MEDYA_KOMUTLARI = new Set(["ffmpeg", "ffprobe"]);
+
+export function calistir(
+  komut: string,
+  args: readonly string[],
+  girdi?: Buffer,
+  enCokCikti = VARSAYILAN_CIKTI,
+): Promise<KomutSonucu> {
+  if (!MEDYA_KOMUTLARI.has(komut)) return calistirHemen(komut, args, girdi, enCokCikti);
+  const is = medyaKuyrugu.then(() => calistirHemen(komut, args, girdi, enCokCikti));
+  medyaKuyrugu = is.catch(() => undefined);
+  return is;
+}
+
+/** Şu an çalışan ya da sırada bekleyen medya işi var mı (testler için). */
+export function medyaKuyruguBos(): Promise<unknown> {
+  return medyaKuyrugu;
+}
+
+function calistirHemen(
+  komut: string,
+  args: readonly string[],
+  girdi: Buffer | undefined,
+  enCokCikti: number,
+): Promise<KomutSonucu> {
   return new Promise((resolve) => {
     let child: ReturnType<typeof spawn>;
     try {
@@ -31,11 +72,15 @@ export function calistir(komut: string, args: readonly string[], girdi?: Buffer)
     const parcalar: Buffer[] = [];
     let boy = 0;
     let hata = "";
+    let asildi = false;
     const zaman = setTimeout(() => child.kill("SIGKILL"), ZAMAN_ASIMI_MS);
     child.stdout?.on("data", (d: Buffer) => {
       boy += d.length;
-      if (boy > EN_COK_CIKTI) child.kill("SIGKILL");
-      else parcalar.push(d);
+      if (boy > enCokCikti) {
+        if (!asildi) child.kill("SIGKILL");
+        asildi = true;
+        parcalar.length = 0;
+      } else parcalar.push(d);
     });
     child.stderr?.on("data", (d: Buffer) => {
       if (hata.length < 200_000) hata += d.toString("utf8");
@@ -43,7 +88,12 @@ export function calistir(komut: string, args: readonly string[], girdi?: Buffer)
     child.on("error", () => undefined);
     child.on("close", (kod) => {
       clearTimeout(zaman);
-      resolve({ kod, cikti: Buffer.concat(parcalar), hata });
+      // Sınır aşıldıysa çıktı yarım: başarısız sayılır.
+      resolve(
+        asildi
+          ? { kod: null, cikti: Buffer.alloc(0), hata: "çıktı sınırı aşıldı" }
+          : { kod, cikti: Buffer.concat(parcalar, boy), hata },
+      );
     });
     child.stdin?.on("error", () => undefined);
     if (girdi) child.stdin?.end(girdi);
@@ -88,7 +138,12 @@ interface ProbeAkis {
 }
 
 async function probe(yol: string): Promise<{ akislar: ProbeAkis[]; sure: number | null } | null> {
-  const r = await calistir("ffprobe", ["-v", "error", "-show_streams", "-show_format", "-of", "json", yol]);
+  const r = await calistir(
+    "ffprobe",
+    ["-v", "error", "-show_streams", "-show_format", "-of", "json", yol],
+    undefined,
+    1024 * 1024,
+  );
   if (r.kod !== 0) return null;
   try {
     const j = JSON.parse(r.cikti.toString("utf8")) as {
@@ -117,21 +172,14 @@ export async function gorselAc(veri: Buffer, tur: "png" | "webp"): Promise<Rgba>
     const w = v?.width ?? 0;
     const h = v?.height ?? 0;
     if (w < 1 || h < 1 || w * h > 4096 * 4096) throw new MedyaHatasi("Görsel açılamadı.");
-    const r = await calistir("ffmpeg", [
-      "-v",
-      "error",
-      "-i",
-      yol,
-      "-frames:v",
-      "1",
-      "-f",
-      "rawvideo",
-      "-pix_fmt",
-      "rgba",
-      "pipe:1",
-    ]);
+    const r = await calistir(
+      "ffmpeg",
+      ["-v", "error", "-i", yol, "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgba", "pipe:1"],
+      undefined,
+      w * h * 4,
+    );
     if (r.kod !== 0 || r.cikti.length !== w * h * 4) throw new MedyaHatasi("Görsel açılamadı.");
-    return { w, h, data: new Uint8Array(r.cikti) };
+    return { w, h, data: new Uint8Array(r.cikti.buffer, r.cikti.byteOffset, r.cikti.byteLength) };
   });
 }
 
@@ -168,6 +216,8 @@ export async function webpYaz(img: Rgba, kalite = 82): Promise<Buffer> {
       "pipe:1",
     ],
     Buffer.from(img.data.buffer, img.data.byteOffset, img.data.byteLength),
+    // WebP çıktısı ham pikselden büyük olamaz.
+    img.w * img.h * 4 + 1024 * 1024,
   );
   if (r.kod !== 0 || r.cikti.length < 12) throw new MedyaHatasi("WebP yazılamadı.");
   return r.cikti;
@@ -182,10 +232,37 @@ export interface SesBilgisi {
   monoOrnekleme: number;
 }
 
-/** WAV saf JS; OGG ffmpeg ile açılır. */
-export async function sesAc(veri: Buffer, tur: "wav" | "ogg"): Promise<SesBilgisi> {
+/**
+ * Sesin süre, kanal ve örnekleme bilgisini ffprobe ile okur; sınırı aşanı ffmpeg'i çalıştırmadan reddeder. ffprobe'un
+ * süresine güvenilmez: çözme de `-t` ile kesilir ve çıktı süre × örnekleme × 4 bayt (+ pay) ile sınırlanır.
+ */
+async function sesOnBilgi(
+  yol: string,
+  enCokSure: number,
+): Promise<{ sure: number; kanal: number; ornekleme: number }> {
+  const p = await probe(yol);
+  const a = p?.akislar.find((s) => s.codec_type === "audio");
+  if (!p || !a) throw new MedyaHatasi("Ses akışı yok.");
+  const sure = Math.max(p.sure ?? 0, Number(a.duration) || 0);
+  const kanal = a.channels ?? 0;
+  const ornekleme = Number(a.sample_rate);
+  if (!(sure > 0)) throw new MedyaHatasi("Ses süresi okunamadı.");
+  if (sure > enCokSure) throw new MedyaHatasi(`Ses çok uzun: en çok ${enCokSure} sn olabilir.`);
+  if (kanal < 1 || kanal > EN_COK_KANAL) throw new MedyaHatasi("Ses kanal sayısı desteklenmiyor.");
+  if (!Number.isFinite(ornekleme) || ornekleme < 1 || ornekleme > EN_COK_ORNEKLEME)
+    throw new MedyaHatasi("Ses örnekleme hızı desteklenmiyor.");
+  return { sure, kanal, ornekleme };
+}
+
+/** WAV saf JS; OGG ffmpeg ile açılır. `enCokSure` (sn) aşan ses reddedilir. */
+export async function sesAc(
+  veri: Buffer,
+  tur: "wav" | "ogg",
+  enCokSure = EN_UZUN_SES_SN,
+): Promise<SesBilgisi> {
   if (tur === "wav") {
     const b = wavBaslik(veri);
+    if (b.sure > enCokSure) throw new MedyaHatasi(`Ses çok uzun: en çok ${enCokSure} sn olabilir.`);
     return {
       sure: b.sure,
       kanal: b.kanal,
@@ -196,44 +273,61 @@ export async function sesAc(veri: Buffer, tur: "wav" | "ogg"): Promise<SesBilgis
   }
   if (!(await ffmpegVar())) throw new MedyaHatasi("Bu ses biçimi şu an açılamıyor.");
   return geciciDosya(veri, tur, async (yol) => {
-    const p = await probe(yol);
-    const a = p?.akislar.find((s) => s.codec_type === "audio");
-    if (!a) throw new MedyaHatasi("Ses akışı yok.");
-    const r = await calistir("ffmpeg", [
-      "-v",
-      "error",
-      "-i",
-      yol,
-      "-ac",
-      "1",
-      "-ar",
-      "48000",
-      "-f",
-      "f32le",
-      "pipe:1",
-    ]);
+    const on = await sesOnBilgi(yol, enCokSure);
+    const sinir = Math.ceil(enCokSure * COZME_ORNEKLEME) * 4 + 64 * 1024;
+    const r = await calistir(
+      "ffmpeg",
+      [
+        "-v",
+        "error",
+        "-i",
+        yol,
+        "-t",
+        String(enCokSure),
+        "-ac",
+        "1",
+        "-ar",
+        String(COZME_ORNEKLEME),
+        "-f",
+        "f32le",
+        "pipe:1",
+      ],
+      undefined,
+      sinir,
+    );
     if (r.kod !== 0) throw new MedyaHatasi("Ses açılamadı.");
-    const mono = new Float32Array(r.cikti.buffer, r.cikti.byteOffset, Math.floor(r.cikti.length / 4)).slice();
-    const ornekleme = Number(a.sample_rate);
+    const n = Math.floor(r.cikti.length / 4);
+    // Hizalıysa kopyasız görünüm; değilse tek kopya.
+    const mono =
+      r.cikti.byteOffset % 4 === 0
+        ? new Float32Array(r.cikti.buffer, r.cikti.byteOffset, n)
+        : new Float32Array(r.cikti.buffer.slice(r.cikti.byteOffset, r.cikti.byteOffset + n * 4));
     return {
-      sure: p?.sure ?? mono.length / 48000,
-      kanal: a.channels ?? 1,
-      ornekleme: Number.isFinite(ornekleme) ? ornekleme : 48000,
+      sure: Math.min(on.sure, enCokSure),
+      kanal: on.kanal,
+      ornekleme: on.ornekleme,
       mono,
-      monoOrnekleme: 48000,
+      monoOrnekleme: COZME_ORNEKLEME,
     };
   });
 }
 
 /** Bütünleşik algılanan yükseklik (LUFS), ffmpeg `ebur128`. Araç yoksa null. */
-export async function lufsOlc(veri: Buffer, tur: "wav" | "ogg"): Promise<number | null> {
+export async function lufsOlc(
+  veri: Buffer,
+  tur: "wav" | "ogg",
+  enCokSure = EN_UZUN_SES_SN,
+): Promise<number | null> {
   if (!(await ffmpegVar())) return null;
   return geciciDosya(veri, tur, async (yol) => {
+    await sesOnBilgi(yol, enCokSure);
     const r = await calistir("ffmpeg", [
       "-hide_banner",
       "-nostats",
       "-i",
       yol,
+      "-t",
+      String(enCokSure),
       "-af",
       "ebur128=framelog=quiet",
       "-f",
@@ -250,15 +344,23 @@ export async function lufsOlc(veri: Buffer, tur: "wav" | "ogg"): Promise<number 
 }
 
 /** OGG Opus, tek kanal, hedef LUFS'a normalize (UM-İ7). */
-export async function opusYaz(veri: Buffer, tur: "wav" | "ogg", hedefLufs: number): Promise<Buffer> {
+export async function opusYaz(
+  veri: Buffer,
+  tur: "wav" | "ogg",
+  hedefLufs: number,
+  enCokSure = EN_UZUN_SES_SN,
+): Promise<Buffer> {
   if (!(await ffmpegVar())) throw new MedyaHatasi("Dönüştürme aracı yok.");
   return geciciDosya(veri, tur, async (yol, klasor) => {
     const cikis = join(klasor, "cikis.ogg");
+    await sesOnBilgi(yol, enCokSure);
     const r = await calistir("ffmpeg", [
       "-v",
       "error",
       "-i",
       yol,
+      "-t",
+      String(enCokSure),
       "-ac",
       "1",
       "-af",

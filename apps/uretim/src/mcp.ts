@@ -6,7 +6,7 @@
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { AnahtarKimligi, Anahtarlar } from "./anahtar.js";
-import { GovdeHatasi, gonder, govdeOku, kayit, metin, tamsayi, tarih } from "./http.js";
+import { GovdeHatasi, gonder, govdeOku, icAgIstegi, kayit, metin, tamsayi, tarih } from "./http.js";
 import { IsHatasi, type Merkez } from "./merkez.js";
 import { alanTanimi, isAlanId } from "./ortak/alanlar.js";
 import { teslimAyristir } from "./teslimGirdisi.js";
@@ -322,7 +322,9 @@ export async function mcpIstek(req: IncomingMessage, res: ServerResponse, o: Mcp
   const yetki = req.headers.authorization ?? "";
   const bearer = /^Bearer\s+(\S+)$/.exec(yetki)?.[1] ?? null;
   const now = o.now();
-  const k = o.anahtarlar.dogrula(bearer, now);
+  const ham = o.anahtarlar.dogrula(bearer, now);
+  // SSH kanal anahtarı yalnız sunucunun içinden (chroot'taki araç) kullanılır; herkese açık adreste geçmez.
+  const k = ham && (ham.kanal !== "ssh" || icAgIstegi(req)) ? ham : null;
   if (!k) {
     gonder(res, 401, rpcHata(null, -32001, "Anahtar geçersiz ya da iptal edilmiş."), {
       "WWW-Authenticate": 'Bearer realm="uretim"',

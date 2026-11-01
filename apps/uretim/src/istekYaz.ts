@@ -101,6 +101,29 @@ export function gizliVarMi(t: string): boolean {
   );
 }
 
+/** Gerçek sır kalıpları (anahtar, belirteç, özel anahtar, adreste kimlik). "password" gibi sıradan sözcükler değil. */
+const GERCEK_SIR =
+  /um_[a-z-]+_[A-Za-z0-9_-]{20,}|sk-ant-[A-Za-z0-9_-]*|Bearer\s+\S{16,}|-----BEGIN[^-]*-----|\$6\$[./A-Za-z0-9]{1,16}\$[./A-Za-z0-9]{20,}|https?:\/\/[^\s/@]*@/gi;
+
+/**
+ * İstemdeki iş metni (başlık/özet): sahibin ya da yapay zekânın yazdığı serbest metindir, güvenilmez.
+ * - `{` `}` ayraçlara çevrilir: metin `{{SSH_PAROLA}}` gibi bir yer tutucu taşıyıp kopyalama anında sır içeren cümle
+ *   üretemez (yer tutucu enjeksiyonu).
+ * - Satır sonları tek boşluk olur (istemin yapısını bozamaz), uzunluk sınırlıdır.
+ * - Gerçek sır kalıpları "[gizli]" ile değiştirilir; hata verilmez.
+ */
+export function isMetniTemizle(t: string): string {
+  return [
+    ...t
+      .replace(GERCEK_SIR, "[gizli]")
+      .replace(/[{}]/g, (c) => (c === "{" ? "(" : ")"))
+      .replace(/[\s\p{Cc}]+/gu, " ")
+      .trim(),
+  ]
+    .slice(0, 160)
+    .join("");
+}
+
 /** Model yoksa: sabit kalıp. İlk cümle başlık, sayı adet, kabul ölçütleri alanın ön kontrol satırları. */
 export function kaliptanTaslak(g: IstekGirdisi): IsTaslagi {
   const metin = g.metin.replace(/\s+/g, " ").trim();
@@ -233,7 +256,8 @@ export type YerTutucu = (typeof YER_TUTUCULAR)[number];
 export function istemUret(alan: AlanId, baglanti: "mcp" | "ssh", isler: readonly IsKaydi[]): string {
   const a = alanTanimi(alan);
   const ilk = isler[0];
-  const ozet = (i: IsKaydi): string => `#${i.id} ${i.ozet || i.baslik}`;
+  // İş metni istemde ayrı ve alıntılı durur: talimat değil, sahibin isteğinin özetidir.
+  const ozet = (i: IsKaydi): string => `#${i.id} «${isMetniTemizle(i.ozet || i.baslik)}»`;
   const sira =
     isler.length > 1
       ? `Sırada ${isler.length} iş var: ${isler.slice(0, 8).map(ozet).join("; ")}. Birini bitirince sıradakine geç.`
@@ -245,7 +269,7 @@ export function istemUret(alan: AlanId, baglanti: "mcp" | "ssh", isler: readonly
       `${a.ad} alanındaki işin için Üretim Merkezi'ne SSH ile bağlan.`,
       "Sunucu: {{SSH_ADRES}} · Kullanıcı: {{SSH_KULLANICI}} · Parola: {{SSH_PAROLA}}",
       `Önce \`${k("uretim talimat-oku")}\`, sonra ${ilk ? `\`${k(`uretim is-oku ${ilk.id}`)}\`` : `\`${k("uretim isleri-listele")}\``} ve \`${k("uretim geri-bildirim-oku")}\`.`,
-      ilk ? `İş: ${ozet(ilk)}.` : "Açık işleri sırayla bitir.",
+      ilk ? `İş (istek kartından alıntı): ${ozet(ilk)}` : "Açık işleri sırayla bitir.",
       "Dosyalarını SFTP ile gelen/<paket>/ klasörüne koy; `uretim on-kontrol <paket>` ile denetle, geçince `uretim teslim-et <paket>`.",
       sira,
       devam,
@@ -257,7 +281,7 @@ export function istemUret(alan: AlanId, baglanti: "mcp" | "ssh", isler: readonly
     `${a.ad} alanındaki işin için Üretim Merkezi bağlantını kullan.`,
     "Uç adresi: {{MCP_ADRES}} — bağlantı ayarına şu anahtarı gir (Authorization: Bearer): {{MCP_ANAHTAR}}",
     `Önce talimat_oku, sonra ${ilk ? `is_oku (id: ${ilk.id})` : "isleri_listele"} ve geri_bildirim_oku.`,
-    ilk ? `İş: ${ozet(ilk)}.` : "Açık işleri sırayla bitir.",
+    ilk ? `İş (istek kartından alıntı): ${ozet(ilk)}` : "Açık işleri sırayla bitir.",
     "Dosyaları dosya_yukle ile yükle; on_kontrol ile denetle, geçince teslim_et.",
     sira,
     devam,

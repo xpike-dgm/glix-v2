@@ -5,7 +5,13 @@
 set -euo pipefail
 BURASI="$(cd "$(dirname "$0")" && pwd)"
 KOK="${URETIM_SSH_KOK:-/srv/glix/uretim/ssh}"
+# Site kabının uid/gid'i (Dockerfile `uretim` kullanıcısı): ana makinede kullanılmayan, sabit bir numara. Burada
+# `uretim-site` adıyla ayrılır ki ana makinede başka bir kullanıcı bu numarayı almasın.
 SITE_GID="${URETIM_SITE_GID:-3910}"
+SITE_UID="${URETIM_SITE_UID:-3910}"
+# Alan kullanıcılarına ayrılmış uid aralığı (eslestir.sh yalnız bu aralıktaki kullanıcılara parola yazar).
+UID_ALT="${URETIM_UID_ALT:-3920}"
+UID_UST="${URETIM_UID_UST:-3959}"
 KAP="${URETIM_KAP:-uretim-uretim-1}"
 SITE_URL="${URETIM_IC_URL:-http://127.0.0.1:3910/mcp}"
 SFTP="$(for p in /usr/lib/openssh/sftp-server /usr/libexec/openssh/sftp-server /usr/lib/ssh/sftp-server; do [ -x "$p" ] && echo "$p" && break; done)"
@@ -16,6 +22,15 @@ NODE="$(command -v node || true)"
 
 getent group uretim-alanlari >/dev/null || groupadd uretim-alanlari
 getent group uretim-site >/dev/null || groupadd -g "$SITE_GID" uretim-site
+[ "$(getent group uretim-site | cut -d: -f3)" = "$SITE_GID" ] || { echo "uretim-site grubu $SITE_GID değil" >&2; exit 1; }
+if ! id uretim-site >/dev/null 2>&1; then
+  if getent passwd "$SITE_UID" >/dev/null; then
+    echo "uid $SITE_UID ana makinede başka bir kullanıcıda; URETIM_SITE_UID ile kullanılmayan bir numara seç" >&2
+    exit 1
+  fi
+  useradd -r -M -d /nonexistent -s /usr/sbin/nologin -u "$SITE_UID" -g uretim-site uretim-site
+fi
+[ "$(id -u uretim-site)" = "$SITE_UID" ] || { echo "uretim-site kullanıcısı $SITE_UID değil" >&2; exit 1; }
 install -d -m 0755 -o root -g root "$KOK" /etc/ssh/uretim
 
 ARAC="$(mktemp)"
@@ -27,11 +42,24 @@ kopyala_bagimli() { # $1 ikili, $2 chroot
 }
 
 : > /etc/ssh/sshd_config.d/uretim-chroot.conf.inc
+sira=0
 while read -r alan; do
   [ -n "$alan" ] || continue
   k="uretim-$alan"
-  id "$k" >/dev/null 2>&1 || useradd -M -d / -s /usr/sbin/nologin -g uretim-alanlari "$k"
-  usermod -p '*' "$k" # şifre yok
+  u=$((UID_ALT + sira))
+  sira=$((sira + 1))
+  [ "$u" -le "$UID_UST" ] || { echo "alan kullanıcıları için uid aralığı doldu" >&2; exit 1; }
+  if ! id "$k" >/dev/null 2>&1; then
+    if getent passwd "$u" >/dev/null; then echo "uid $u başka bir kullanıcıda" >&2; exit 1; fi
+    useradd -M -d / -s /usr/sbin/nologin -u "$u" -g uretim-alanlari "$k"
+  fi
+  ku="$(id -u "$k")"
+  if [ "$ku" -lt "$UID_ALT" ] || [ "$ku" -gt "$UID_UST" ]; then
+    echo "$k uid $ku ayrılmış aralıkta ($UID_ALT–$UID_UST) değil; kullanıcıyı elle düzelt" >&2
+    exit 1
+  fi
+  usermod -G "" "$k" # yalnız uretim-alanlari (birincil grup)
+  usermod -p '*' "$k" # parola yok (site parola oluşturunca eslestir.sh yazar)
   c="$KOK/$alan"
   install -d -m 0755 -o root -g root "$c" "$c/bin" "$c/etc" "$c/etc/uretim" "$c/dev" "$c/tmp"
   chmod 1777 "$c/tmp"

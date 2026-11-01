@@ -153,6 +153,35 @@ export function guvenliIstek(req: IncomingMessage, trustProxy: boolean): boolean
   return (Array.isArray(p) ? p.join(",") : (p ?? "")).split(",").at(-1)?.trim() === "https";
 }
 
+/** Ters vekilin eklediği başlıklar: biri varsa istek dışarıdan (Caddy üzerinden) gelmiştir. */
+const VEKIL_BASLIKLARI = [
+  "x-forwarded-for",
+  "x-forwarded-host",
+  "x-forwarded-proto",
+  "x-real-ip",
+  "forwarded",
+  "via",
+];
+
+/** Soket adresi yerel ya da özel ağ (Docker köprüsü) mi. */
+export function icAdres(adres: string): boolean {
+  const a = adres.replace(/^::ffff:/i, "");
+  if (a === "::1" || /^127\./.test(a)) return true;
+  if (/^10\./.test(a) || /^192\.168\./.test(a)) return true;
+  const m = /^172\.(\d{1,3})\./.exec(a);
+  if (m && Number(m[1]) >= 16 && Number(m[1]) <= 31) return true;
+  return /^f[cd][0-9a-f]{2}:/i.test(a);
+}
+
+/**
+ * İç ağ isteği: ters vekil başlığı yok ve soket yerel/özel ağdan. Herkese açık adres her zaman Caddy'den geçer ve
+ * Caddy `X-Forwarded-For` ekler; bu yüzden dışarıdan gelen istek bu denetimi geçemez.
+ */
+export function icAgIstegi(req: IncomingMessage): boolean {
+  if (VEKIL_BASLIKLARI.some((b) => req.headers[b] !== undefined)) return false;
+  return icAdres(req.socket.remoteAddress ?? "");
+}
+
 /** İstemci IP'si (Caddy arkasında X-Forwarded-For'un son girdisi). */
 export function istemciIp(req: IncomingMessage, trustProxy: boolean): string {
   const ham = req.socket.remoteAddress ?? "";

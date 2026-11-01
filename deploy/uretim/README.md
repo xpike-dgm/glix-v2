@@ -18,14 +18,21 @@ onayıyla yapar. Oyunun kendi blokları ve kabı değişmez.
 ## 2. Klasörler (sunucuda, root)
 
 ```
+# Kabın uid/gid'i 3910: ana makinede kullanılmayan sabit bir numara. Önce boş olduğunu doğrula (çıktı boş olmalı):
+getent passwd 3910; getent group 3910
+groupadd -g 3910 uretim-site
+useradd -r -M -d /nonexistent -s /usr/sbin/nologin -u 3910 -g uretim-site uretim-site
 install -d -m 0755 -o root -g root /srv/glix/uretim
-install -d -m 0750 -o 1000 -g 1000 /srv/glix/uretim/veri /srv/glix/uretim/depo /srv/glix/uretim/aktarim /srv/glix/uretim/ssh-yetki
-install -d -m 0750 -o 1000 -g 1000 /srv/glix/yedek/uretim
+install -d -m 0750 -o 3910 -g 3910 /srv/glix/uretim/veri /srv/glix/uretim/depo /srv/glix/uretim/aktarim /srv/glix/uretim/ssh-yetki
+install -d -m 0750 -o 3910 -g 3910 /srv/glix/yedek/uretim
 install -d -m 0755 -o root -g root /srv/glix/uretim/ssh-gunluk
 ```
 
-`/srv/glix/uretim` ve `/srv/glix/uretim/ssh` root'a ait kalmalı (SSH chroot şartı). `1000`, kap içindeki `node`
-kullanıcısıdır. Katalog aynası `/srv/glix/repo.git` salt okunur bağlanır (oyunun `deploy.sh`'ı zaten günceller).
+`/srv/glix/uretim` ve `/srv/glix/uretim/ssh` root'a ait kalmalı (SSH chroot şartı). `3910`, kap içindeki `uretim`
+kullanıcısıdır (Dockerfile); ana makinede `uretim-site` adıyla ayrılır ki gerçek bir kullanıcıyla çakışmasın (eskiden
+kap `node` = 1000 idi; bu çoğu sunucuda ilk gerçek kullanıcının numarasıdır). Eski kurulumdan geçerken:
+`chown -R 3910:3910 /srv/glix/uretim/{veri,depo,aktarim,ssh-yetki} /srv/glix/yedek/uretim`. Alan kullanıcıları
+(`uretim-<alan>`) ayrı bir aralıktadır: uid 3920–3959 (`kur.sh` atar; `eslestir.sh` aralık dışındakine parola yazmaz). Katalog aynası `/srv/glix/repo.git` salt okunur bağlanır (oyunun `deploy.sh`'ı zaten günceller).
 
 ## 3. Ortam değişkenleri (`/srv/glix/shared/.env`)
 
@@ -80,18 +87,22 @@ karşılığı) ya da SFTP ile yalnız kendi `gelen/` ve `okunur/` klasörünü 
 
 1. Sunucuda `node` ve `openssh` kurulu olmalı (node chroot'a kopyalanır).
 2. `deploy/uretim/ssh/kur.sh` (root): `uretim-alanlari` ve `uretim-site` gruplarını, `uretim-<alan>` kullanıcılarını
-   (şifresiz, kabuksuz), `/srv/glix/uretim/ssh/<alan>/` chroot'larını ve `/etc/ssh/sshd_config.d/uretim.conf`
+   (şifresiz, kabuksuz, uid 3920–3959, yalnız `uretim-alanlari` grubunda), `/srv/glix/uretim/ssh/<alan>/` chroot'larını ve `/etc/ssh/sshd_config.d/uretim.conf`
    ayarını kurar, `sshd -t` ile denetler. Sonra `systemctl reload ssh`.
 3. `deploy/uretim/ssh/eslestir.sh` her dakika cron ile çalışır: sahip sitede alana SSH açık anahtarı ekleyince site
    `ssh-yetki/<alan>.authorized_keys` (her satır `restrict` önekli) ve `ssh-yetki/<alan>.anahtar` dosyalarını yazar;
    betik bunları `/etc/ssh/uretim/` ve chroot'taki `etc/uretim/anahtar` (0400) yerine koyar. Biçime uymayan satır varsa
-   dosya hiç uygulanmaz.
+   dosya hiç uygulanmaz. Betik site kabının yazabildiği bu klasördeki hiçbir dosyaya güvenmez: sembolik/sert bağ, düz
+   olmayan dosya, sahibi 3910 olmayan ya da izni geniş dosya okunmaz; okuma bağ takip etmeden, boyut sınırlı ve
+   root'a özel geçici klasöre yapılır, doğrulanan kopya hedefe atomik olarak konur.
 4. Ana `sshd_config` dosyasında `Include /etc/ssh/sshd_config.d/*.conf` satırı olmalı (Ubuntu'da varsayılan).
 5. **Parola (sözleşme bölüm 9):** `uretim.conf` parolayı yalnız `Match Group uretim-alanlari` bloğunda açar
    (`PasswordAuthentication yes`, `KbdInteractiveAuthentication no`, `MaxAuthTries 3`); sunucunun genel ayarı
    değişmez, anahtarla giriş de açık kalır. Sahip sitede parolayı oluşturunca/yenileyince site yalnız SHA-512 crypt
-   özetini `ssh-yetki/<alan>.parola` dosyasına yazar; `eslestir.sh` bunu `chpasswd -e` ile **yalnız** `uretim-<alan>`
-   kullanıcısına uygular. Açık parola diske hiç yazılmaz; sitede yalnız özeti ve `URETIM_GIZLI_ANAHTAR` ile şifreli
+   özetini (tek satır `$6$…`, kullanıcı adı yok) `ssh-yetki/<alan>.parola` dosyasına yazar; `eslestir.sh` kullanıcı
+   adını kendisi kurar ve özeti `chpasswd -e` ile **yalnız** `uretim-<alan>` kullanıcısına uygular. Parola her
+   yenilendiğinde alanın SSH kanal anahtarı da yenilenir; kanal anahtarı yalnız iç ağdan (sunucunun kendisi, Docker
+   ağı; `X-Forwarded-For` taşımayan istek) kabul edilir, herkese açık `/mcp` adresinde çalışmaz. Açık parola diske hiç yazılmaz; sitede yalnız özeti ve `URETIM_GIZLI_ANAHTAR` ile şifreli
    kaydı durur (kopyalama anında çözülür, kopyalama denetim kaydına sırsız yazılır).
 6. **Kaba kuvvet önlemi (5 başarısız denemede 15 dk engel):** sunucudaki sürüme göre biri seçilir.
    - **fail2ban (önerilen, her sürümde):** `ssh/fail2ban/uretim-sshd.filter.conf` → `/etc/fail2ban/filter.d/uretim-sshd.conf`,

@@ -8,8 +8,10 @@
  * - `okunur/` altına talimat, işler, geri bildirim ve katalog kopyası yazılır.
  * Bağlantı (sembolik/sert) ve klasör dışına çıkan her dosya reddedilir.
  */
-import { createHash } from "node:crypto";
-import { chmod, lstat, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+
+import { createHash, randomBytes } from "node:crypto";
+import { constants } from "node:fs";
+import { chmod, lstat, mkdir, open, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import type { Anahtarlar } from "./anahtar.js";
 import type { Db } from "./db.js";
@@ -138,12 +140,12 @@ export class SshKanal {
       )
       .run(alan, ozet(p), this.kasa.sifrele(p), now, gun);
     await mkdir(this.ayar.yetkiDir, { recursive: true });
-    await atomikYaz(
-      join(this.ayar.yetkiDir, `${alan}.parola`),
-      `uretim-${alan}:${sha512Crypt(p, cryptTuzu())}\n`,
-      0o600,
-    );
-    this.denetim.yaz(now, kim, "ssh_anahtari_eklendi", alan, "SSH parolası yenilendi");
+    // Yalnız özet: kullanıcı adını eşitleme betiği kendisi kurar (dosyadan asla almaz).
+    await atomikYaz(join(this.ayar.yetkiDir, `${alan}.parola`), `${sha512Crypt(p, cryptTuzu())}\n`, 0o600);
+    // Parola yenilenince kanal anahtarı da yenilenir: eski parolayla okunmuş anahtar artık çalışmaz.
+    await rm(join(this.ayar.yetkiDir, `${alan}.anahtar`), { force: true });
+    await this.yetkiYaz(alan, now, kim);
+    this.denetim.yaz(now, kim, "ssh_anahtari_eklendi", alan, "SSH parolası ve kanal anahtarı yenilendi");
   }
 
   parolaYenilemeAyarla(alan: AlanId, gun: number | null, kim: string, now: number): void {
@@ -275,14 +277,16 @@ export class SshKanal {
       .all(alan) as { id: number; acik: string }[];
     const yetkili = join(dir, `${alan}.authorized_keys`);
     const kanal = join(dir, `${alan}.anahtar`);
-    if (!anahtarlar.length) {
-      await rm(yetkili, { force: true });
+    if (anahtarlar.length) {
+      const satirlar = anahtarlar.map((k) => `restrict ${k.acik} uretim-${alan}-${k.id}`);
+      await atomikYaz(yetkili, `${satirlar.join("\n")}\n`, 0o644);
+    } else await rm(yetkili, { force: true });
+    // Kanal anahtarı, alana anahtarla ya da parolayla giriş varsa durur.
+    if (!anahtarlar.length && !this.parolaDurumu(alan).var) {
       await rm(kanal, { force: true });
       this.anahtarlar.sshIptal(alan, now);
       return;
     }
-    const satirlar = anahtarlar.map((k) => `restrict ${k.acik} uretim-${alan}-${k.id}`);
-    await atomikYaz(yetkili, `${satirlar.join("\n")}\n`, 0o644);
     let var_ = true;
     try {
       await lstat(kanal);
@@ -333,11 +337,21 @@ export class SshKanal {
         if (!st?.isDirectory()) continue;
         const tamam = await lstat(join(yol, "TAMAM")).catch(() => null);
         if (!tamam?.isFile()) continue;
-        const sonuc = await this.paketIsle(alan, yol, now).catch((err: unknown) => ({
+        // Paket önce yapay zekânın giremediği, sitenin kendi klasörüne taşınır; işlem orada yapılır (yarış yok).
+        const isleniyor = join(kok, "okunur", ISLENIYOR);
+        await mkdir(isleniyor, { recursive: true, mode: 0o700 });
+        await chmod(isleniyor, 0o700);
+        const ara = join(isleniyor, `${ad}.${randomBytes(6).toString("hex")}`);
+        try {
+          await rename(yol, ara);
+        } catch {
+          continue;
+        }
+        const sonuc = await this.paketIsle(alan, ara, now).catch((err: unknown) => ({
           hatalar: [err instanceof IsHatasi ? err.message : "Paket işlenemedi."],
         }));
         await this.okunurYaz(alan, `sonuclar/${ad}.json`, JSON.stringify(sonuc, null, 2));
-        await rm(yol, { recursive: true, force: true });
+        await rm(ara, { recursive: true, force: true });
         n += 1;
       }
     }
@@ -347,26 +361,27 @@ export class SshKanal {
   /** Paket klasörünü okur: yalnız düz dosyalar, bağlantı yok, alt klasör yok, boyut sınırlı. */
   async paketIsle(alan: AlanId, yol: string, now: number): Promise<unknown> {
     const kok = this.alanKoku(alan);
-    if (!kok || !resolve(yol).startsWith(join(kok, "gelen") + sep))
+    if (!kok || !resolve(yol).startsWith(join(kok, "okunur", ISLENIYOR) + sep))
       throw new IsHatasi(400, "Paket yolu geçersiz.");
+    const kst = await lstat(yol);
+    if (!kst.isDirectory()) throw new IsHatasi(400, "Paket yolu geçersiz.");
     const adlar = await readdir(yol);
     if (adlar.length > EN_COK_PAKET_DOSYASI + 2) throw new IsHatasi(400, "Pakette çok fazla dosya var.");
     const dosyalar = new Map<string, Buffer>();
     let toplam = 0;
     let teslimJson: unknown = null;
     for (const ad of adlar) {
-      const p = join(yol, ad);
-      const st = await lstat(p);
-      if (st.isSymbolicLink() || !st.isFile() || st.nlink > 1)
+      if (ad !== "TAMAM" && !DOSYA_ADI.test(ad))
+        throw new IsHatasi(400, `Dosya adı geçersiz: "${ad.slice(0, 60)}".`);
+      const veri = await duzDosyaOku(join(yol, ad), EN_COK_PAKET_BOYUTU - toplam);
+      if (veri === null)
         throw new IsHatasi(
           400,
-          `"${ad.slice(0, 60)}" düz bir dosya değil (bağlantı ve klasör kabul edilmez).`,
+          `"${ad.slice(0, 60)}" düz bir dosya değil (bağlantı, aygıt ve klasör kabul edilmez).`,
         );
+      if (veri === "buyuk") throw new IsHatasi(413, "Paket çok büyük.");
       if (ad === "TAMAM") continue;
-      if (!DOSYA_ADI.test(ad)) throw new IsHatasi(400, `Dosya adı geçersiz: "${ad.slice(0, 60)}".`);
-      toplam += st.size;
-      if (toplam > EN_COK_PAKET_BOYUTU) throw new IsHatasi(413, "Paket çok büyük.");
-      const veri = await readFile(p);
+      toplam += veri.length;
       if (ad === "teslim.json") {
         try {
           teslimJson = JSON.parse(veri.toString("utf8"));
@@ -456,6 +471,37 @@ export class SshKanal {
         // Katalog alınamazsa eski kopya kalır.
       }
     }
+  }
+}
+
+/** İşlenen paketlerin taşındığı, yalnız sitenin girebildiği klasör (`okunur/` altında, 0700). */
+const ISLENIYOR = ".isleniyor";
+
+/**
+ * Bağ takip etmeden açar (O_NOFOLLOW, aygıt/FIFO için O_NONBLOCK), açık tanıtıcıdan doğrular (yalnız düz dosya, tek
+ * sert bağ) ve en çok `enCok` bayt okur. Düz dosya değilse null, sınırı aşarsa "buyuk".
+ */
+export async function duzDosyaOku(yol: string, enCok: number): Promise<Buffer | null | "buyuk"> {
+  let fd: Awaited<ReturnType<typeof open>>;
+  try {
+    fd = await open(yol, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+  } catch {
+    return null;
+  }
+  try {
+    const st = await fd.stat();
+    if (!st.isFile() || st.nlink !== 1) return null;
+    if (st.size > enCok) return "buyuk";
+    const buf = Buffer.alloc(st.size);
+    let n = 0;
+    while (n < st.size) {
+      const { bytesRead } = await fd.read(buf, n, st.size - n, n);
+      if (bytesRead === 0) break;
+      n += bytesRead;
+    }
+    return buf.subarray(0, n);
+  } finally {
+    await fd.close();
   }
 }
 

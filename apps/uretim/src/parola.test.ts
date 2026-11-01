@@ -52,7 +52,7 @@ describe("SSH parolası ve istem", () => {
     const dosya = join(o.dir, "ssh-yetki/magaza.parola");
     expect(statSync(dosya).mode & 0o777).toBe(0o600);
     const satir = readFileSync(dosya, "utf8").trim();
-    const m = /^uretim-magaza:(\$6\$([./A-Za-z0-9]{16})\$[./A-Za-z0-9]{86})$/.exec(satir);
+    const m = /^(\$6\$([./A-Za-z0-9]{16})\$[./A-Za-z0-9]{86})$/.exec(satir);
     expect(m).not.toBeNull();
     expect(sha512Crypt(parola, m?.[2] ?? "")).toBe(m?.[1]);
     expect(readFileSync(dosya, "utf8")).not.toContain(parola);

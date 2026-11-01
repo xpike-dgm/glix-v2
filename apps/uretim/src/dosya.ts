@@ -3,7 +3,7 @@
  * (EXIF ve bütün yan bloklar atılır); SVG temizlenir; metinler geçerli UTF-8 olmalı; hiçbir dosya çalıştırılmaz.
  */
 
-import { gorselAc, MedyaHatasi, sesAc } from "./medya.js";
+import { EN_UZUN_SES_SN, gorselAc, MedyaHatasi, sesAc } from "./medya.js";
 import { DOSYA_TURLERI, type DosyaTuru } from "./ortak/alanlar.js";
 import type { DosyaMeta } from "./ortak/tipler.js";
 import { PngHatasi, pngYaz } from "./png.js";
@@ -124,7 +124,11 @@ export interface IslenmisDosya {
  * Gelen dosyayı doğrular ve güvenli biçime getirir. Görseller RGBA'dan yeniden PNG yazılır (WebP de PNG olur).
  * Saklanan bayt, sonradan bütün kontrollerin ve paketin kaynağıdır.
  */
-export async function dosyaIsle(veri: Buffer, adHam: unknown): Promise<IslenmisDosya & { ad: string }> {
+export async function dosyaIsle(
+  veri: Buffer,
+  adHam: unknown,
+  enCokSesSuresi = EN_UZUN_SES_SN,
+): Promise<IslenmisDosya & { ad: string }> {
   const { ad, uzanti } = dosyaAdi(adHam);
   if (veri.length === 0) throw new DosyaHatasi("Dosya boş.");
   if (veri.length > BOYUT_SINIRI[sinif(uzanti)]) throw new DosyaHatasi("Dosya boyutu sınırı aşıyor.");
@@ -148,7 +152,7 @@ export async function dosyaIsle(veri: Buffer, adHam: unknown): Promise<IslenmisD
       };
     }
     if (tur === "wav" || tur === "ogg") {
-      const s = await sesAc(veri, tur);
+      const s = await sesAc(veri, tur, enCokSesSuresi);
       return {
         ad,
         tur,

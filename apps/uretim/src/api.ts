@@ -26,7 +26,7 @@ import {
   tamsayi,
   tarih,
 } from "./http.js";
-import { type Donusturucu, gizliVarMi, istemDoldur, istemUret } from "./istekYaz.js";
+import { type Donusturucu, istemDoldur, istemUret } from "./istekYaz.js";
 import { IsHatasi, type Merkez } from "./merkez.js";
 import { ALANLAR, type AlanId, alanTanimi, isAlanId } from "./ortak/alanlar.js";
 import { isDurum, isHazirNot } from "./ortak/durum.js";
@@ -49,14 +49,27 @@ export interface ApiOrtami {
 
 const JSON_SINIRI = 1024 * 1024;
 
-/** IP başına giriş denemesi sınırı (bellekte): dakikada 10. */
+/**
+ * IP başına giriş denemesi sınırı (bellekte, kısa pencere): dakikada 10. Sayaç dolunca hepsi silinmez (saldırgan çok
+ * IP ile sayaçları sıfırlayamasın): en uzun süredir dokunulmayan IP düşer. Kalıcı sınırlar (kod sayısı, deneme)
+ * veritabanındadır.
+ */
 const girisSayaci = new Map<string, number[]>();
-function girisIzni(ip: string, now: number): boolean {
+export const GIRIS_SAYACI_SINIRI = 5000;
+export function girisIzni(ip: string, now: number): boolean {
   const p = (girisSayaci.get(ip) ?? []).filter((t) => now - t < 60_000);
-  if (p.length >= 10) return false;
+  girisSayaci.delete(ip);
+  if (p.length >= 10) {
+    girisSayaci.set(ip, p);
+    return false;
+  }
   p.push(now);
   girisSayaci.set(ip, p);
-  if (girisSayaci.size > 5000) girisSayaci.clear();
+  while (girisSayaci.size > GIRIS_SAYACI_SINIRI) {
+    const en = girisSayaci.keys().next().value;
+    if (en === undefined) break;
+    girisSayaci.delete(en);
+  }
   return true;
 }
 
@@ -240,7 +253,6 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
         const b = url.searchParams.get("baglanti") === "ssh" ? "ssh" : "mcp";
         const isId = idParam(url.searchParams.get("is"));
         const { mcp, ssh } = istemSablonlari(m, p1, isId);
-        if (gizliVarMi(mcp) || gizliVarMi(ssh)) return hata(res, 500, "istem", "İstem hazırlanamadı.");
         // Ekranda sırlar •••• görünür; açık hâli yalnız "Kopyala"da (POST istem-kopyala).
         const gorunum = (t: string): string =>
           istemDoldur(t, {

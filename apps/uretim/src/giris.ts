@@ -14,6 +14,7 @@ export const KOD_GUNLUK = 10;
 export const OTURUM_GUVENILIR_MS = 30 * 24 * 3600 * 1000;
 export const OTURUM_KISA_MS = 12 * 3600 * 1000;
 export const OTURUM_CEREZI = "uretim_oturum";
+const GUN_MS = 24 * 3600 * 1000;
 
 export interface Postaci {
   gonder(alici: string, konu: string, metin: string, html: string): Promise<boolean>;
@@ -76,8 +77,6 @@ export type DogrulaSonucu =
   | { ok: false; neden: "hatali" | "kilitli" | "suresi_doldu" };
 
 export class Giris {
-  private readonly istekler = new Map<string, number[]>();
-
   constructor(
     private readonly db: Db,
     private readonly denetim: Denetim,
@@ -92,11 +91,12 @@ export class Giris {
   async kodIste(eposta: string, now: number): Promise<KodSonucu> {
     if (!this.izinliMi(eposta)) return "izinsiz";
     if (!this.postaci) return "posta_yok";
-    const gecmis = (this.istekler.get(eposta) ?? []).filter((t) => now - t < 24 * 3600 * 1000);
-    const son = gecmis.at(-1);
-    if ((son !== undefined && now - son < KOD_ARALIGI_MS) || gecmis.length >= KOD_GUNLUK) return "erken";
-    gecmis.push(now);
-    this.istekler.set(eposta, gecmis);
+    // Sınırlar veritabanında: süreç yeniden başlasa da günlük kod sayısı ve aralık korunur.
+    const r = this.db
+      .prepare("SELECT COUNT(*) AS n, MAX(zaman) AS son FROM giris_istegi WHERE eposta = ? AND zaman > ?")
+      .get(eposta, now - GUN_MS) as { n: number; son: number | null };
+    if ((r.son !== null && now - r.son < KOD_ARALIGI_MS) || r.n >= KOD_GUNLUK) return "erken";
+    this.db.prepare("INSERT INTO giris_istegi (eposta, zaman) VALUES (?, ?)").run(eposta, now);
     const kod = String(randomInt(0, 1_000_000)).padStart(6, "0");
     const e = kodEpostasi(kod);
     if (!(await this.postaci.gonder(eposta, e.konu, e.metin, e.html))) {
@@ -156,6 +156,7 @@ export class Giris {
   temizle(now: number): void {
     this.db.prepare("DELETE FROM oturum WHERE bitis < ?").run(now);
     this.db.prepare("DELETE FROM giris_kodu WHERE bitis < ?").run(now);
+    this.db.prepare("DELETE FROM giris_istegi WHERE zaman < ?").run(now - GUN_MS);
   }
 }
 

@@ -41,7 +41,8 @@ services:
       - /srv/glix/uretim/ssh-gunluk:/ssh-gunluk:ro
       - /srv/glix/repo.git:/repo.git:ro
       - /srv/glix/yedek/uretim:/yedek
-    # SSH gelen/okunur klasörlerine yazabilmek için (ssh/kur.sh `uretim-site` grubunu oluşturur).
+    # Kap uid/gid 3910 (Dockerfile). SSH gelen/okunur klasörlerine yazabilmek için `uretim-site` grubu (kur.sh).
+    user: "3910:3910"
     group_add:
       - ${URETIM_SITE_GID:-3910}
     mem_limit: 768m

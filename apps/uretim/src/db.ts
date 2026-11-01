@@ -128,6 +128,11 @@ const SEMA: readonly string[] = [
     yol TEXT PRIMARY KEY, icerik TEXT NOT NULL, revizyon TEXT NOT NULL, zaman INTEGER NOT NULL
   );
   `,
+  // Giriş kodu istekleri kalıcı: yeniden başlatma günlük kod sınırını sıfırlamaz.
+  `
+  CREATE TABLE giris_istegi (id INTEGER PRIMARY KEY, eposta TEXT NOT NULL, zaman INTEGER NOT NULL);
+  CREATE INDEX giris_istegi_eposta ON giris_istegi(eposta, zaman);
+  `,
 ];
 
 export type Db = DatabaseSync;
