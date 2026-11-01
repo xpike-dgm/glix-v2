@@ -74,3 +74,4 @@ yazılır; görseller hepsi bittikten sonra ChatGPT ile üretilir.
 | Çağrışım Ağı | uygulandı (canlıda değil) | d10b550 |
 | Karalama Defteri | uygulandı (canlıda değil) | 15f59b5 |
 | Butona Bas | uygulandı (canlıda değil) | 8a729dd |
+| Kör Kronometre | uygulandı (canlıda değil) | 9213c21 |
