@@ -121,6 +121,28 @@ describe("UM-F2 fikir turu", () => {
 });
 
 describe("UM-F5 sel önleme ve kullanım sayacı", () => {
+  it("kuyruk boşken tavandan büyük tek paket kabul edilir; sonraki paket reddedilir", async () => {
+    const c = await o.giris();
+    const k = await o.anahtarUret("icerik", c);
+    await o.api(
+      "POST",
+      "/api/alan/icerik/sinirlar",
+      { bekleyenTavan: 2, gunlukKota: 100, haftalikUst: null },
+      c,
+    );
+    const buyuk = await o.arac(k, "teslim_et", {
+      tur: "yeni",
+      ogeler: ["a", "b", "c"].map((h) => ({ ad: `Büyük ${h}`, satirlar: satirlar(1, `b${h}`) })),
+    });
+    expect(buyuk.hata).toBe(false);
+    const sonraki = await o.arac(k, "teslim_et", {
+      tur: "yeni",
+      ogeler: [{ ad: "Sonraki", satirlar: satirlar(1, "sn") }],
+    });
+    expect(sonraki.hata).toBe(true);
+    expect(String(sonraki.veri.mesaj)).toMatch(/Kuyruk dolu/);
+  });
+
   it("kuyruk tavanı dolunca teslim reddedilir; sahip tavanı ayarlar", async () => {
     const c = await o.giris();
     const k = await o.anahtarUret("icerik", c);

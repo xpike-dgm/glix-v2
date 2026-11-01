@@ -2114,7 +2114,9 @@ export class Merkez {
         }
       ).n,
     );
-    if (bekleyen + yeni > s.bekleyenTavan && yeni > 0)
+    // Kuyruk boşken tek bir büyük paket (ör. "40 fikir ver") kabul edilir; sınır, sahip incelemeden üst üste
+    // teslim birikmesini önler.
+    if (yeni > 0 && bekleyen > 0 && bekleyen + yeni > s.bekleyenTavan)
       throw new IsHatasi(
         429,
         `Kuyruk dolu (${bekleyen}/${s.bekleyenTavan}). Sahip incelemeyi bitirene kadar yeni teslim alınmıyor; bu sırada iş önerisi açabilir ya da alanını inceleyebilirsin.`,
