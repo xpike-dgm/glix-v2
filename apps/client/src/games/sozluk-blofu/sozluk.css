@@ -267,7 +267,7 @@
   color: var(--bg-0);
 }
 .sbcard[data-own="1"] .sbcard__no {
-  background: #5a6396;
+  background: #434b80;
   color: var(--text);
 }
 .sbcard__body {
@@ -428,7 +428,7 @@
 }
 .sbres__found {
   margin-left: auto;
-  white-space: nowrap;
+  text-align: right;
   font-size: var(--fs-15);
   font-weight: 600;
   color: var(--lime);
@@ -622,10 +622,11 @@
   display: none;
 }
 .sbpage__tpl[data-dim="1"] {
-  opacity: 0.55;
+  opacity: 0.8; /* 0,55'te çip yazısı 3,5:1 kalıyordu */
 }
 .sbpage__chip {
   flex: none;
+  min-height: 48px;
   padding: 6px 12px;
   border-radius: 999px;
   border: 1.5px solid rgba(90, 55, 15, 0.45);
@@ -698,22 +699,22 @@
 .sbpage__prev small {
   display: block;
   font-family: var(--font-text);
-  font-size: 12px;
+  font-size: var(--fs-13);
   font-weight: 700;
-  color: rgba(43, 29, 12, 0.6);
+  color: var(--ink);
 }
 .sbpage__prev[data-empty="1"] {
-  color: rgba(43, 29, 12, 0.4);
+  color: rgba(43, 29, 12, 0.8);
 }
 .sbpage .sb__count {
-  color: rgba(43, 29, 12, 0.6);
+  color: var(--ink); /* 0,6 kâğıtta 3,5:1 kalıyordu */
 }
 .sbpage .sb__count[data-near="1"] {
   color: #b35a00;
   font-weight: 700;
 }
 .sbpage .sb__err {
-  color: #b0122e;
+  color: #8f0f25;
 }
 .sbpage .sb__err:empty {
   display: none;
@@ -751,7 +752,8 @@
 .sbdeck__mine {
   display: block;
   position: absolute;
-  inset: 0;
+  /* eğik destenin kayan kartları düğmenin kutusunda kalsın (sağ/alt taşma düğme yazısını taşmış gösteriyordu) */
+  inset: 0 14px 14px 0;
   border-radius: 12px;
   transform: translate(calc(var(--i) * 3px), calc(var(--i) * -3px)) rotate(calc(var(--i) * 1.2deg - 3deg));
 }
@@ -837,9 +839,6 @@
   background: rgba(46, 242, 255, 0.06);
   font-size: var(--fs-13);
   line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .sbown b {
   color: var(--cyan);
@@ -865,8 +864,8 @@
   gap: 2px;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 10px;
-  letter-spacing: 0.06em;
+  font-size: var(--fs-13);
+  letter-spacing: 0.02em;
   color: var(--lime);
 }
 .sbchosen {
@@ -874,10 +873,8 @@
   margin: 0 0 4px;
   padding: 0 6px;
   font-size: var(--fs-13);
+  line-height: 1.3;
   color: var(--lime);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 /* Küçük ekran (360×640) ve yatay: sıkışık kart listesi (SB-U10). */
 @media (max-height: 680px) {
@@ -1010,16 +1007,17 @@
   }
 }
 .sbres__top .sbcard__no {
-  width: 24px;
-  height: 24px;
-  font-size: 12px;
+  width: 28px;
+  height: 28px;
+  line-height: 1;
+  font-size: var(--fs-13);
 }
 .sbres__who--hidden {
   color: var(--text-dim);
 }
 .sbres__off {
   margin-left: 6px;
-  font-size: 11px;
+  font-size: var(--fs-13);
   font-weight: 600;
   color: var(--text-dim);
 }
@@ -1050,7 +1048,7 @@
 }
 .sbchip__name small {
   display: block;
-  font-size: 10px;
+  font-size: var(--fs-13);
   font-weight: 600;
   color: var(--text-dim);
 }
@@ -1133,8 +1131,8 @@
 .sbres__stamp b {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 12px;
-  letter-spacing: 0.12em;
+  font-size: var(--fs-13);
+  letter-spacing: 0.08em;
 }
 @keyframes sb-stamp {
   from {
@@ -1248,6 +1246,7 @@
   gap: 8px;
   margin: 0 0 4px;
   padding: 6px 12px;
+  min-height: 48px;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -1267,7 +1266,7 @@
   place-items: center;
   border-radius: 4px;
   border: 1.5px solid currentColor;
-  font-size: 12px;
+  font-size: var(--fs-13);
 }
 .sbknew[aria-pressed="true"] {
   color: var(--cyan);
@@ -1279,8 +1278,9 @@
   padding: 8px 10px;
   gap: 4px;
 }
+/* süslü kenar görselinde yazı kenar süsünün üstüne biniyordu ("ŞAKUL", "0/100"): iç boşluk görsele göre */
 .sb[data-tight="1"] .sbpage[data-art="1"] {
-  padding: 14px 26px 12px 22px;
+  padding: 32px 40px 16px 44px;
 }
 .sb[data-tight="1"] .sbpage__tpl,
 .sb[data-tight="1"] .sbpage__tab,

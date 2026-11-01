@@ -170,7 +170,7 @@ export function Write(props: Props) {
                 {[...props.view.word][0] ?? ""}
               </span>
               <Term word={props.view.word} type={props.view.wordType} secs={secs()} />
-              <div class="sbpage__tpl" data-dim={count() > 0 ? "1" : undefined}>
+              <div class="sbpage__tpl" data-scroll data-dim={count() > 0 ? "1" : undefined}>
                 <For each={templatesFor(props.view.wordType)}>
                   {(t, i) => (
                     <button
@@ -213,7 +213,7 @@ export function Write(props: Props) {
               </label>
               <div class="sbpage__meta">
                 <span class="sbpage__prev" data-empty={preview() === "" ? "1" : undefined}>
-                  <small>Kartta böyle görünecek:</small> {preview() || "…"}
+                  <small>Kartta böyle görünecek:</small> {preview()}
                 </span>
                 <span class="sb__count" data-near={count() >= 90 ? "1" : undefined}>
                   {count()}/{MAX_LENGTH}

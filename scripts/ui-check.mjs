@@ -2294,7 +2294,7 @@ const SCREENS = [
     q: "mock=sozluk-write&n=5",
     act: async (p) =>
       p
-        .locator(".sb__field")
+        .locator(".sbpage__field")
         .fill("Eski zamanlarda köylerde kullanılan, ağzı geniş, iki kulplu büyük bir toprak çömlek türü"),
   },
   {
@@ -2305,14 +2305,15 @@ const SCREENS = [
       [360, 300],
       [320, 280],
     ],
-    act: async (p) => p.locator(".sb__field").fill("eski bir kayık türü"),
+    // SB paketinde alan sayfa görünümüne geçti (.sbpage__field)
+    act: async (p) => p.locator(".sbpage__field").fill("eski bir kayık türü"),
   },
   {
     name: "sozluk-write-same-as-real",
     q: "mock=sozluk-write&n=5",
     settle: 800,
     act: async (p) => {
-      await p.locator(".sb__field").fill("gerçek anlam");
+      await p.locator(".sbpage__field").fill("gerçek anlam");
       await p.getByRole("button", { name: "Gönder" }).click();
     },
   },
@@ -2321,7 +2322,7 @@ const SCREENS = [
     q: "mock=sozluk-write&n=5",
     settle: 800,
     act: async (p) => {
-      await p.locator(".sb__field").fill("denizcilerin taktığı kalın bir atkı");
+      await p.locator(".sbpage__field").fill("denizcilerin taktığı kalın bir atkı");
       await p.getByRole("button", { name: "Gönder" }).click();
     },
   },
@@ -3111,6 +3112,7 @@ function inPageAudit() {
     if (sc) {
       const sr = rectOf(sc);
       if (r.bottom < sr.top || r.top > sr.bottom) continue; // kaydırılarak görünür olur
+      if (r.right < sr.left || r.left > sr.right) continue; // yana kaydırılarak görünür olur
     }
     if (!topmost(el, r) || underFloater(el, r)) continue; // üstünü başka bir katman örtüyor
     // kaydırma alanında yalnız görünen kısım sayılır
@@ -3209,10 +3211,20 @@ function inPageAudit() {
     if (sc) {
       const sr = rectOf(sc);
       if (r.bottom <= sr.top + 1 || r.top >= sr.bottom - 1) continue;
-      if (r.left < -0.5 || r.right > vw + 0.5)
+      // Yana kaydırılan şerit (çip/kart dizisi): şeridin dışındaki metin kaydırılarak görünür; yalnız şeridin kendisi
+      // ekrandan taşarsa hatadır.
+      const xs = sc.scrollWidth > sc.clientWidth + 1 && ["auto", "scroll"].includes(cs(sc).overflowX);
+      if (xs) {
+        if (sr.left < -0.5 || sr.right > vw + 0.5)
+          issues.push(["overflow", `yana kaydırılan alan ekrandan taşıyor: ${desc(sc)}`]);
+        if (r.left < sr.left - 1 || r.right > sr.right + 1) continue;
+      } else if (r.left < -0.5 || r.right > vw + 0.5)
         issues.push(["overflow", `kaydırılan metin yatayda taşıyor: ${desc(el)}`]);
       // Kaydırma alanının kenarında yarım kalan metin: kutusunun dışı başka öğeyle örtülüdür, kontrast ölçülemez.
       if (r.top < sr.top - 1 || r.bottom > sr.bottom + 1) continue;
+      // Kenarı maskeyle solan kaydırma alanı ("daha var" ipucu): solma şeridindeki metin kaydırınca netleşir.
+      const mask = cs(sc).maskImage || cs(sc).webkitMaskImage;
+      if (mask && mask !== "none" && r.bottom > sr.bottom - 24) continue;
     } else if (!inView(r)) {
       if (!topmost(el, r, true)) continue;
       issues.push([
