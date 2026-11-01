@@ -81,3 +81,4 @@ yazılır; görseller hepsi bittikten sonra ChatGPT ile üretilir.
 | Gizli Kareler | uygulandı (canlıda değil) | 2709030 |
 | Rüşvet ve Darbe | uygulandı (canlıda değil) | d8905b8 |
 | İttifak | uygulandı (canlıda değil) | 800cb31 |
+| Son Kişi | uygulandı (canlıda değil) | 8ede845 |
