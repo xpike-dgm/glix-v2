@@ -327,3 +327,45 @@ istemez; dosya konunca kod değişmeden kullanılır (`__RUSVET_PROPS__`, `rusve
   çanı / cam çatlaması) mevcut ses sistemiyle üretildi (`apps/client/src/games/rusvet-darbe/sounds.ts`). Ses alanı
   isterse gerçek kayıtlarla değiştirebilir; ayrıca öneri dosyasındaki saray müziği (ağır, yaylı) ve 10 sn'lik darbe
   gerilim katmanı için dosya gerekir (şu an yok).
+
+## İttifak
+
+Ortak stil: oyunun mevcut görselleriyle uyumlu (`apps/client/public/assets/worlds/ittifak-*.webp`: karanlık gotik
+müzakere salonu, siyah mermer zemin, mor kadife yüksek sırtlı sandalyeler, altın kenarlı yuvarlak siyah mermer masa, mum
+ışığı, mor vitray; `props/genel/el-sikisma.webp`: kalın hatlı çizgi-roman/oyun ikonu stili, neon vurgulu). Yer
+`apps/client/public/assets/props/ittifak/<ad>.webp`. Dosya yokken ekran CSS/SVG karşılığını çizer ve dosyayı hiç
+istemez; dosya konunca kod değişmeden kullanılır (`__ITTIFAK_PROPS__`, `ittifakProp()` — Sözlük Blöfü düzeni). Yazı YOK
+(metinleri kod yazar). Hepsi koyu zeminde okunacak.
+
+- **IT-U1 · müzakere masası (üstten)** — `apps/client/public/assets/props/ittifak/masa.webp` · 1:1, 768×768 · şeffaf
+  arka plan · Tam üstten (kuşbakışı) görülen yuvarlak masa: dünya görselindeki masanın aynısı — parlak siyah mermer
+  yüzey, ince mor damarlar, kalın altın kenar halkası, kenarda dört eşit aralıklı küçük altın süs (elmas/sivri kemer
+  motifi), yüzeyde mum ışığının iki-üç sıcak yansıması. Ortası sade ve koyu kalmalı (üstüne büyük beyaz sayaç yazılır),
+  masanın dış çapı karenin ~%96'sı. Sandalye ya da insan YOK (portreler kodla çevresine dizilir). Son 10 sn'de kod
+  kenara kırmızı ışık ekler; görselde kırmızı olmasın. · Geçici: CSS daire (koyu ahşap halkalar, altın kenar, iç gölge).
+- **IT-U13 · müzakere masası, geniş (TV)** — `apps/client/public/assets/props/ittifak/masa-genis.webp` · 16:9,
+  1280×720 · şeffaf arka plan · Aynı masa, TV oylama sahnesi için yatay oval (elips) hâli; üstten hafif eğik (yaklaşık
+  70°) bakış; çevresinde boş alan (mühürleyen portreler üstüne dizilir). · Geçici: CSS elips (aynı ahşap/altın).
+- **IT-U2 · balmumu söz mührü** — `apps/client/public/assets/props/ittifak/muhur.webp` · 1:1, 256×256 · şeffaf arka
+  plan · Portrenin köşesine basılan koyu kırmızı balmumu mühür (#b0182f → #d42a42): dalgalı, akmış kenarlı, ortasında
+  kabartma iki el sıkışma (ya da tek onay işareti) amblemi, sol üstte küçük parlak yansıma; hafif −8° eğik, düz önden.
+  28 px'te de mühür olarak okunmalı (sade siluet, kalın koyu kontur). · Geçici: SVG dişli kırmızı mühür + krem onay
+  işareti.
+- **IT-U2 / IT-U6 · kırık mühür** — `apps/client/public/assets/props/ittifak/muhur-kirik.webp` · 1:1, 256×256 · şeffaf
+  arka plan · Aynı mühür ortasından çapraz kırılmış: iki parça hafifçe ayrık ve kaymış, kırık yüzeyler daha açık
+  kırmızı, birkaç küçük balmumu kırıntısı. Sözü geri alınca düşen mühür, açılıştaki "İHANET!" damgası ve kendi
+  hikâyende bozulan sözün yanında (16–28 px) kullanılır. · Geçici: SVG iki parça.
+- **IT-U6 · İTTİFAK rozeti** — `apps/client/public/assets/props/ittifak/ittifak-rozet.webp` · 5:2 yatay, 320×128 ·
+  şeffaf arka plan · Karşılıklı oy veren iki portrenin ortasına konan küçük altın plaka/şerit rozet: parlak altın
+  (#ffd977 → #c98d14), koyu altın kontur, sol ve sağ uçta küçük el sıkışma motifi; ortası düz ve boş (üstüne kod
+  "İTTİFAK" yazar, koyu kahve). 64 px genişlikte plaka olarak okunmalı. · Geçici: CSS altın plaka ve "İTTİFAK" yazısı.
+- **Şaşkın yüz (KURALLAR §16 madde 13, IT-U5)** — yeni dosya gerekmedi: avatar sisteminde ifade yok; ihanete uğrayan
+  portrenin üstünde CSS "!" balonu (beyaz daire, kırmızı ünlem) çıkıyor. İstenirse ileride avatar ifade setine
+  "şaşkın" eklenebilir.
+- **IT-U13 · TV arka planı** — yeni dosya gerekmedi: mevcut `worlds/ittifak-landscape.webp` TV görünümünde kullanılıyor.
+- **ses** (dosya gerekmedi) — IT-U14 sesleri (mühür basma "tak", mühür kırma "çıt", son 10 sn tik, pazarlık bitişi
+  gongu, oy kartı hışırtısı 3 varyasyon, hedef sayacı "tık", SÖZ TUTULDU çanı, İHANET cam çatlaması + kısa org akoru,
+  İTTİFAK kristal çınlaması, kendi adın okununca "ding") mevcut ses sistemiyle üretildi
+  (`apps/client/src/games/ittifak/sounds.ts`). Ses alanı isterse gerçek kayıtlarla değiştirebilir. Öneri dosyasındaki
+  müzik için dosya gerekir (şu an yok): pazarlık için alçak, mırıltılı, sözsüz "entrika" döngüsü (konuşmayı
+  bastırmayacak düzeyde) ve oy okuma için davul rulosu katmanı.

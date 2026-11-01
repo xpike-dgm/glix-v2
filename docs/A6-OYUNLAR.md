@@ -60,10 +60,13 @@ Kısa oyun içi açılış penceresi (≤ 7 sn) açılış animasyonu için kull
   2. aşamada her yarışana yalnız kendi `view`ında ödül karesi için doğru bir **pusula** ipucu (GK-M1; bant anından
   2. aşama sonuna kadar); ipuçları `stage2Reveal.compass` ile açılışta herkese açılır. Erken bitiş 2. aşamada bağlı
   yarışanlar ve bağlı hayaletlerin hepsi Tamam deyince. Son açılış en az 8 sn.
-- **İttifak** (3–8): 60 sn sözlü pazarlık (uygulamada eylem yok; portreler ve süre), sonra 15 sn gizli oylama.
-  Kendine oy yok; oy süre bitene kadar değiştirilebilir. Oy vermeyenin oyu kendisi dışındaki rastgele bir
-  katılımcıya gider. Alınan her oy +1 genel puan. Oylar ve sayılar sonuç açılana kadar gizli; sonuçta oy akışı
-  (kim kime) herkese açılır.
+- **İttifak** (3–8): sözlü pazarlık 3–4 oyuncuda 45 sn, 5–6'da 60 sn, 7–8'de 75 sn (uygulamada yalnız gizli söz
+  işareti: 3–4 oyuncuda en çok 1, 5–8'de en çok 2; yalnız sözü veren görür), 1 sn "PAZARLIK BİTTİ" bandı, sonra 15 sn
+  gizli oylama. Kendine oy yok; kopan katılımcıya da oy verilebilir; oy süre bitene kadar değiştirilebilir. Oy
+  vermeyenin oyu kendisi dışındaki rastgele bir katılımcıya gider ve açılışta zarla işaretlenir (`random`). Oyun içi
+  puan = alınan oy; genel skora en çok oy +2, ikinci +1 (birincide eşitlik hepsi +2; herkes eşitse herkes +1; 0 oy
+  ödülsüz; `awards`). Oylar sonuç açılana kadar gizli; açılışta oylar tek tek okunur (en az 3 + 0,9 × oyuncu sn),
+  sözler ✓/✗, İTTİFAK ikilileri ve "Sözünün eri / Çifte oyun / Hain" etiketleri gösterilir.
 - **Rüşvet ve Darbe** (3–8): gizli başkanlık oyu, 3–5 oyuncuda 20 sn, 6–8 oyuncuda 30 sn (kendine yok,
   değiştirilebilir; vermeyenin oyu rastgele başka birine). Seçim süresince herkes portresine isteğe bağlı, herkese açık,
   puansız bir vaat asar ("Oy verene jeton" / "Herkese jeton"). En çok oy alan başkan. 4+ aday eşitse önce 12 sn ikinci

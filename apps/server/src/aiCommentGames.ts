@@ -5,7 +5,7 @@
  * E-posta, hesap ya da oyuncu kimliği gitmez.
  * Bir oyun buraya eklenmediyse o oyunda yorum yoktur. Sonuç henüz açılmadıysa kurucu null döner.
  */
-import { BORSA_START_COINS, GAME_COMMENT_MAX } from "@glix/engine";
+import { BORSA_START_COINS, GAME_COMMENT_MAX, ittifakAlliances, ittifakLabel } from "@glix/engine";
 import type { AiPrompt } from "./aiComment.js";
 
 /** Oyuncunun oyundaki takma adı (kimlik -> ad); bilinmiyorsa null. */
@@ -367,7 +367,74 @@ export const butonaPrompt: PromptBuilder = (publicView, nickname) => {
   };
 };
 
+const ITTIFAK_LABEL: Record<string, string> = {
+  eri: "sözünün eri",
+  cifte: "çifte oyun",
+  hain: "hain",
+  zar: "oy vermedi",
+};
+
+/**
+ * İttifak ihanet muhabiri (IT-AI1): oylar açılınca kim kime oy verdi (zarla atananlar işaretli), kim kime söz verdi ve
+ * tuttu mu, karşılıklı oy veren ittifak ikilileri, alınan oy ve genel skora giden ödül; oyuncular Oyuncu1…N.
+ */
+export const ittifakPrompt: PromptBuilder = (publicView, nickname) => {
+  if (!isRec(publicView) || !isRec(publicView.reveal) || !Array.isArray(publicView.players)) return null;
+  const rev = publicView.reveal;
+  if (!isRec(rev.votes) || !isRec(rev.scores)) return null;
+  const players = publicView.players;
+  if (players.length === 0 || !players.every((id): id is string => typeof id === "string")) return null;
+  const alias = new Map(players.map((id, i) => [id, `Oyuncu${i + 1}`]));
+  const names: Record<string, string> = {};
+  for (const [id, name] of alias) names[name] = promptName(nickname(id) ?? name);
+  const votes: Record<string, string> = {};
+  for (const [from, to] of Object.entries(rev.votes)) if (typeof to === "string") votes[from] = to;
+  const random = Array.isArray(rev.random)
+    ? rev.random.filter((x): x is string => typeof x === "string")
+    : [];
+  const scores = rev.scores;
+  const awards = isRec(rev.awards) ? rev.awards : {};
+  const promises = isRec(rev.promises) ? rev.promises : {};
+  const lines = players.map((id) => {
+    const to = alias.get(votes[id] ?? "");
+    const vote = to
+      ? random.includes(id)
+        ? `oy vermedi, oyu zarla ${to} kişisine gitti`
+        : `${to} kişisine oy verdi`
+      : "oy vermedi";
+    const list = Array.isArray(promises[id]) ? promises[id] : [];
+    const parsed = list
+      .filter((p): p is Rec => isRec(p) && typeof p.to === "string" && typeof p.kept === "boolean")
+      .map((p) => ({ to: p.to as string, kept: p.kept as boolean }));
+    const words = parsed
+      .map((p) => `${alias.get(p.to) ?? "biri"} (${p.kept ? "tuttu" : "bozdu"})`)
+      .join(", ");
+    const label = ittifakLabel(parsed, random.includes(id));
+    const got = typeof scores[id] === "number" ? scores[id] : 0;
+    const award = typeof awards[id] === "number" ? awards[id] : 0;
+    return (
+      `- ${alias.get(id)}: ${vote}` +
+      (words !== "" ? `; söz verdi: ${words}${label ? ` [${ITTIFAK_LABEL[label]}]` : ""}` : "; söz vermedi") +
+      `; ${got} oy aldı, ödül +${award}`
+    );
+  });
+  const pairs = ittifakAlliances(players, votes, random).map(
+    ([a, b]) => `${alias.get(a)} ile ${alias.get(b)}`,
+  );
+  return {
+    system: system(
+      "ihanet muhabirisin; oyuncular sesli pazarlık yaptı, gizlice söz işareti koydu (puansız), sonra tek gizli oy " +
+        "verdi (en çok oy alan +2, ikinci +1); karşılıklı oy verenler ittifak kurdu",
+    ),
+    user:
+      `Oyun: İttifak (pazarlık ve gizli oy). Oylar ve sözler:\n${lines.join("\n")}\n` +
+      `İttifaklar: ${pairs.length > 0 ? pairs.join(", ") : "yok"}`,
+    names,
+  };
+};
+
 const BUILDERS: Record<string, PromptBuilder> = {
+  ittifak: ittifakPrompt,
   "butona-bas": butonaPrompt,
   "cagrisim-agi": cagrisimPrompt,
   "yazi-yaz": yaziPrompt,

@@ -442,6 +442,48 @@ describe("oyun sonu yorumu: Butona Bas özeti (BB-AI1)", () => {
   });
 });
 
+describe("oyun sonu yorumu: İttifak ihanet muhabiri (IT-AI1)", () => {
+  const view = {
+    players: ["id-1", "id-2", "id-3", "id-4"],
+    phase: "reveal",
+    reveal: {
+      votes: { "id-1": "id-2", "id-2": "id-1", "id-3": "id-1", "id-4": "id-3" },
+      scores: { "id-1": 2, "id-2": 1, "id-3": 1, "id-4": 0 },
+      awards: { "id-1": 2, "id-2": 1, "id-3": 1, "id-4": 0 },
+      random: ["id-4"],
+      promises: {
+        "id-1": [{ to: "id-2", kept: true }],
+        "id-3": [{ to: "id-2", kept: false }],
+        "id-4": [{ to: "id-1", kept: false }],
+      },
+    },
+  };
+  const names: Record<string, string> = { "id-1": "Mert", "id-2": "Elif", "id-3": "Kaan", "id-4": "Zeynep" };
+
+  it("oylar (zar işaretli), sözler, etiketler, ittifaklar ve ödüller; yer tutucu adlar", () => {
+    const p = commentPrompt("ittifak", view, (id) => names[id] ?? null);
+    const user = p?.user ?? "";
+    expect(user).toContain("İttifak");
+    expect(user).toContain(
+      "- Oyuncu1: Oyuncu2 kişisine oy verdi; söz verdi: Oyuncu2 (tuttu) [sözünün eri]; 2 oy aldı, ödül +2",
+    );
+    expect(user).toContain("- Oyuncu3: Oyuncu1 kişisine oy verdi; söz verdi: Oyuncu2 (bozdu) [hain]");
+    expect(user).toContain(
+      "- Oyuncu4: oy vermedi, oyu zarla Oyuncu3 kişisine gitti; söz verdi: Oyuncu1 (bozdu) [oy vermedi]",
+    );
+    expect(user).toContain("İttifaklar: Oyuncu1 ile Oyuncu2");
+    for (const n of ["Mert", "Elif", "Kaan", "Zeynep", "id-1", "id-4"]) expect(user).not.toContain(n);
+    expect(p?.names).toEqual({ Oyuncu1: "Mert", Oyuncu2: "Elif", Oyuncu3: "Kaan", Oyuncu4: "Zeynep" });
+    expect(p?.system).toMatch(/ihanet muhabiri/);
+  });
+
+  it("oylar açılmadan ya da bozuk görünümde özet yok", () => {
+    expect(commentPrompt("ittifak", { ...view, phase: "vote", reveal: null }, () => "x")).toBeNull();
+    expect(commentPrompt("ittifak", { ...view, players: [1] }, () => "x")).toBeNull();
+    expect(commentPrompt("ittifak", null, () => "x")).toBeNull();
+  });
+});
+
 describe("oyun sonu yorumu: canlı yanıt biçimi ve adlar", () => {
   const raw = (body: unknown) => vi.fn<AiFetch>(async () => ({ status: 200, json: async () => body }));
 

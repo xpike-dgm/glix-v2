@@ -1,18 +1,19 @@
 import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import { derivedRng, drawSeed } from "../seeded.js";
 import {
-  ITTIFAK_DURATION_MS,
+  ITTIFAK_BAND_MS,
   ITTIFAK_LOCK_GRACE_MS,
-  ITTIFAK_MAX_PROMISES,
-  ITTIFAK_REVEAL_MS,
-  ITTIFAK_TALK_MS,
   ITTIFAK_VOTE_MS,
   type IttifakAction,
+  type IttifakLabel,
   type IttifakPhase,
   type IttifakPromise,
   type IttifakPublicView,
   type IttifakReveal,
   type IttifakView,
+  ittifakMaxPromises,
+  ittifakRevealMs,
+  ittifakTalkMs,
 } from "./types.js";
 
 export * from "./types.js";
@@ -35,7 +36,7 @@ export interface IttifakState {
   voteClosing: boolean;
   /** Oyuncu -> söz işaretleri (gizli; sonuç açılana kadar yalnız sahibinin görünümünde). */
   promises: Record<string, string[]>;
-  /** Oyuncu -> son verilen oy (gizli; oylama bitene kadar yalnız sahibinin görünümünde). */
+  /** Oyuncu -> son verilen oy (gizli; oylama bitene kadar yalnız sahibinin görünümünde). Kopan oyuncuya da verilebilir. */
   votes: Record<string, string>;
   /** Oylama bitince tick/eylem tarafından bir kez kurulur: eksik oylar tamamlanmış hâli. */
   finalVotes: Record<string, string> | null;
@@ -47,6 +48,16 @@ function voteOf(votes: Record<string, string>, id: string): string | null {
   return Object.hasOwn(votes, id) ? (votes[id] ?? null) : null;
 }
 
+const validVote = (players: readonly string[], votes: Record<string, string>, id: string): boolean => {
+  const v = voteOf(votes, id);
+  return v !== null && v !== id && players.includes(v);
+};
+
+/** Oy vermediği için oyu zarla atanacak (ya da atanmış) oyuncular, katılım sırasıyla (IT-M3). */
+export function ittifakRandomVoters(players: readonly string[], votes: Record<string, string>): string[] {
+  return players.filter((id) => !validVote(players, votes, id));
+}
+
 /** Eksik oyları, kendisi dışındaki rastgele bir katılımcıyla tamamlar (tohumdan, belirli). */
 export function ittifakFillVotes(
   players: readonly string[],
@@ -56,7 +67,7 @@ export function ittifakFillVotes(
   const out: Record<string, string> = {};
   for (const id of players) {
     const v = voteOf(votes, id);
-    if (v !== null && v !== id && players.includes(v)) {
+    if (v !== null && validVote(players, votes, id)) {
       out[id] = v;
       continue;
     }
@@ -70,10 +81,66 @@ export function ittifakFillVotes(
 const promisesOf = (promises: Record<string, string[]>, id: string): string[] =>
   Object.hasOwn(promises, id) ? (promises[id] ?? []) : [];
 
+/**
+ * Genel skora giden ödül (IT-M1): en çok oy alan(lar) +2, sonraki farklı oy sayısı +1, diğerleri 0. Herkesin oyu
+ * eşitse herkes +1. 0 oy alan hiçbir zaman ödül almaz.
+ */
+export function ittifakAwards(scores: Record<string, number>): Record<string, number> {
+  const awards: Record<string, number> = {};
+  const entries = Object.entries(scores);
+  for (const [id] of entries) awards[id] = 0;
+  const positive = entries.filter(([, n]) => n > 0);
+  if (positive.length === 0) return awards;
+  const top = Math.max(...positive.map(([, n]) => n));
+  if (entries.every(([, n]) => n === top)) {
+    for (const [id] of entries) awards[id] = 1;
+    return awards;
+  }
+  const below = positive.filter(([, n]) => n < top).map(([, n]) => n);
+  const next = below.length > 0 ? Math.max(...below) : null;
+  for (const [id, n] of positive) {
+    if (n === top) awards[id] = 2;
+    else if (n === next) awards[id] = 1;
+  }
+  return awards;
+}
+
+/** Karşılıklı oy veren ikililer (IT-U6 "İTTİFAK"); zarla atanan oy ittifak sayılmaz. Katılım sırasıyla. */
+export function ittifakAlliances(
+  players: readonly string[],
+  votes: Record<string, string>,
+  random: readonly string[] = [],
+): [string, string][] {
+  const out: [string, string][] = [];
+  for (const [i, a] of players.entries()) {
+    const b = voteOf(votes, a);
+    if (b === null || random.includes(a) || random.includes(b)) continue;
+    if (players.indexOf(b) > i && voteOf(votes, b) === a) out.push([a, b]);
+  }
+  return out;
+}
+
+/** Söz verenin sonuç etiketi (IT-U6); söz vermediyse null. */
+export function ittifakLabel(
+  promises: readonly IttifakPromise[] | undefined,
+  random: boolean,
+): IttifakLabel | null {
+  if (!promises || promises.length === 0) return null;
+  const kept = promises.filter((p) => p.kept).length;
+  if (kept === promises.length) return "eri";
+  if (kept > 0) return "cifte";
+  return random ? "zar" : "hain";
+}
+
+/**
+ * Sonuç: oylar, alınan oy, ödül, zarla atananlar ve sözler. `random` verilmezse (yalnız doldurulmuş oylar elde
+ * olduğunda) boş sayılır.
+ */
 export function ittifakReveal(
   players: readonly string[],
   votes: Record<string, string>,
   promises: Record<string, string[]> = {},
+  random: readonly string[] = [],
 ): IttifakReveal {
   const scores: Record<string, number> = {};
   for (const id of players) scores[id] = 0;
@@ -86,7 +153,13 @@ export function ittifakReveal(
     const list = promisesOf(promises, from);
     if (list.length > 0) kept[from] = list.map((to) => ({ to, kept: voteOf(votes, from) === to }));
   }
-  return { votes: { ...votes }, scores, promises: kept };
+  return {
+    votes: { ...votes },
+    scores,
+    awards: ittifakAwards(scores),
+    random: players.filter((id) => random.includes(id)),
+    promises: kept,
+  };
 }
 
 /** Zamana göre ilerletir; saftır. Değişiklik yoksa aynı nesne döner. */
@@ -111,9 +184,9 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
   maxPlayers: 8,
   orientation: "portrait",
   briefing: {
-    goal: "Arkadaşlarından oy topla, her oy bir puan!",
+    goal: "En çok oyu topla: birinci +2, ikinci +1!",
     steps: [
-      "60 saniye oy iste, vaatte bulun; istersen gizlice söz işareti koy",
+      "Süre boyunca oy iste, vaatte bulun; istersen gizlice söz işareti koy",
       "Tek gizli oyun var, kendine veremezsin",
       "Kim sözünü tuttu? Sonuç ekranında gör",
     ],
@@ -138,13 +211,15 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
   },
 
   setup(players: readonly string[], ctx: GameContext): IttifakState {
+    const talkEndsAt = ctx.now + ittifakTalkMs(players.length);
+    const voteEndsAt = talkEndsAt + ITTIFAK_BAND_MS + ITTIFAK_VOTE_MS;
     return {
       players: [...players],
       seed: drawSeed(ctx.rng),
       startedAt: ctx.now,
-      talkEndsAt: ctx.now + ITTIFAK_TALK_MS,
-      voteEndsAt: ctx.now + ITTIFAK_TALK_MS + ITTIFAK_VOTE_MS,
-      finishAt: ctx.now + ITTIFAK_DURATION_MS,
+      talkEndsAt,
+      voteEndsAt,
+      finishAt: voteEndsAt + ittifakRevealMs(players.length),
       skipped: [],
       promises: {},
       talkClosing: false,
@@ -174,7 +249,7 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
           promises: { ...state.promises, [playerId]: mine.filter((id) => id !== action.target) },
         };
       }
-      if (mine.length >= ITTIFAK_MAX_PROMISES) return { rejected: "too_many_promises" };
+      if (mine.length >= ittifakMaxPromises(state.players.length)) return { rejected: "too_many_promises" };
       return { ...state, promises: { ...state.promises, [playerId]: [...mine, action.target] } };
     }
     if (action.kind === "skip") {
@@ -184,16 +259,16 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
       const skipped = [...state.skipped, playerId];
       const active = state.players.filter((id) => ctx.connected.includes(id));
       if (active.length === 0 || !active.every((id) => skipped.includes(id))) return { ...state, skipped };
-      // Konuşma kısalır; oylama süresi aynı kalır.
+      // Konuşma kısalır; geçiş bandı ve oylama süresi aynı kalır.
       const talkEndsAt = Math.min(state.talkEndsAt, ctx.now + ITTIFAK_LOCK_GRACE_MS);
-      const voteEndsAt = talkEndsAt + ITTIFAK_VOTE_MS;
+      const voteEndsAt = talkEndsAt + ITTIFAK_BAND_MS + ITTIFAK_VOTE_MS;
       return {
         ...state,
         skipped,
         talkClosing: true,
         talkEndsAt,
         voteEndsAt,
-        finishAt: voteEndsAt + ITTIFAK_REVEAL_MS,
+        finishAt: voteEndsAt + ittifakRevealMs(state.players.length),
       };
     }
     if (ctx.now < state.talkEndsAt) return { rejected: "not_voting_yet" };
@@ -211,12 +286,11 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
         locked,
         voteClosing: true,
         voteEndsAt,
-        finishAt: voteEndsAt + ITTIFAK_REVEAL_MS,
+        finishAt: voteEndsAt + ittifakRevealMs(state.players.length),
       };
     }
     if (action.target === playerId) return { rejected: "self_target" };
     if (!state.players.includes(action.target)) return { rejected: "unknown_target" };
-    if (!ctx.connected.includes(action.target)) return { rejected: "target_offline" };
     const s = advance(state, ctx.now);
     if (voteOf(s.votes, playerId) === action.target) return s;
     return { ...s, votes: { ...s.votes, [playerId]: action.target } };
@@ -240,7 +314,7 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
       ready: phase === "talk" ? [...state.skipped] : phase === "vote" ? [...state.locked] : [],
       reveal:
         phase === "reveal" && s.finalVotes !== null
-          ? ittifakReveal(s.players, s.finalVotes, s.promises)
+          ? ittifakReveal(s.players, s.finalVotes, s.promises, ittifakRandomVoters(s.players, s.votes))
           : null,
     };
   },
@@ -282,7 +356,7 @@ export const ittifak: GameDefinition<IttifakState, IttifakAction, IttifakView, I
 
   result(state) {
     const final = state.finalVotes ?? ittifakFillVotes(state.players, state.seed, state.votes);
-    const { scores } = ittifakReveal(state.players, final, state.promises);
-    return { miniScores: { ...scores }, awards: { ...scores } };
+    const { scores, awards } = ittifakReveal(state.players, final, state.promises);
+    return { miniScores: { ...scores }, awards };
   },
 };
