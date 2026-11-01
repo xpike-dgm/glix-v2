@@ -155,6 +155,8 @@ const registry: Record<string, GameEntry> = {
   ittifak: {
     Screen: lazy(() => import("./ittifak/IttifakScreen.js")),
     Art: lazy(() => import("./ittifak/BriefingArt.js")),
+    StageView: lazy(() => import("./ittifak/StageView.js")),
+    tvOwnBoard: true,
   },
   sizma: {
     Screen: lazy(() => import("./sizma/SizmaScreen.js")),

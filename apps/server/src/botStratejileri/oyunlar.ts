@@ -2,9 +2,10 @@
  * Oyun başına oynama stratejileri. Her strateji görünümleri kendi küçük arayüzüyle okur (yalnız ihtiyaç duyduğu
  * alanlar); alan yoksa ya da tür beklenmedikse ya hiçbir şey yapmaz ya da hata verir (bots.ts güvenle düşer).
  *
- * Değişmekte olan oyunlar (Rüşvet ve Darbe, İttifak, Açgözlülük Limiti, Ortalamanın Yarısı, Çizgiyi Geçme) burada
+ * Değişmekte olan oyunlar (Rüşvet ve Darbe, Açgözlülük Limiti, Ortalamanın Yarısı, Çizgiyi Geçme) burada
  * yok: onlarda bot `BOTS`'u kullanır. Son Kişi yalnız mevcut basit arayüze (`startedAt`, `escaped`, "escape") dayanır.
  */
+import { ITTIFAK_BAND_MS, ittifakMaxPromises } from "@glix/engine";
 import { shapeStrokes } from "./cizim.js";
 import type { PlayCtx, PlayStep, PlayStrategy } from "./index.js";
 import {
@@ -381,7 +382,47 @@ const butonaBas: PlayStrategy = (c) => {
   return { action: { kind: "press" }, next: between(c, 1_500, 4_000) };
 };
 
+// ——— İttifak: pazarlıkta çoğu zaman bir söz işareti, oylamada çoğunlukla sözünü tutar, sonra Tamam ———
+const ittifakBot: PlayStrategy = (c) => {
+  const p = rec(c.pub);
+  const v = rec(c.priv);
+  const phase = str(p.phase);
+  const players = strs(p.players);
+  if (phase === "talk") {
+    const mine = strs(v.myPromises);
+    if (c.mem.promised !== true) {
+      const wait = thinking(c, "promise", 3_000, 15_000);
+      if (wait) return wait;
+      c.mem.promised = true;
+      // IT-M5: sınır oyuncu sayısına göre (3–4 kişide 1); bot çoğu zaman yalnız bir söz verir.
+      if (mine.length < ittifakMaxPromises(players.length) && c.rng.int(4) !== 0) {
+        const target = someoneElse(c, players);
+        if (target !== null) return { action: { kind: "promise", target, on: true }, next: 1_000 };
+      }
+    }
+    if (v.locked === true) return null;
+    return thinking(c, "skip", 20_000, 40_000) ?? { action: { kind: "skip" } };
+  }
+  if (phase === "vote") {
+    if (v.locked === true) return null;
+    const opens = (num(p.talkEndsAt) ?? 0) + ITTIFAK_BAND_MS;
+    if (c.now < opens) return { next: opens - c.now + 50 };
+    if (v.myVote === null) {
+      const wait = thinking(c, "vote", 2_000, 8_000);
+      if (wait) return wait;
+      const promised = strs(v.myPromises).filter((id) => players.includes(id) && id !== c.me);
+      // Çoğu zaman sözünü tutar; bazen ihanet eder.
+      const target =
+        promised.length > 0 && c.rng.int(10) < 7 ? pick(c.rng, promised) : someoneElse(c, players);
+      return target === null ? null : { action: { kind: "vote", target } };
+    }
+    return thinking(c, "lock", 1_000, 3_000) ?? { action: { kind: "lock" } };
+  }
+  return null;
+};
+
 export const STRATEGIES: Record<string, PlayStrategy> = {
+  ittifak: ittifakBot,
   "sozluk-blofu": sozluk,
   "cagrisim-agi": cagrisim,
   "yazi-yaz": yaziYaz,

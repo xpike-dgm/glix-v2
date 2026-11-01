@@ -21,4 +21,10 @@ describe("ittifak tur özeti", () => {
     expect(line).toBe("Elif ve Can 2 oyla oyları paylaştı");
     expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
   });
+  it("özet genel skor ödülünü (+2/+1) değil alınan oyu anlatır (IT-M1)", () => {
+    const line = summarizeIttifak(result, players, {
+      reveal: { votes: {}, scores: { a: 4, b: 1, c: 0 }, awards: { a: 2, b: 1, c: 0 }, random: [] },
+    });
+    expect(line).toBe("Elif 4 oyla en çok seçilen oldu");
+  });
 });
