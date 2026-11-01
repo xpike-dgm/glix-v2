@@ -424,3 +424,19 @@ koyu radyal örtüyle kullanır.
   çatlaması + gümbürtü (PATLADI'da daha güçlü), altın arpej (AĞZINA KADAR'da uzun yağmur), sönük "hıh" (Bol bol yer var). Ses
   alanı istenirse gerçek kayıtlarla değiştirebilir: hepsi ≤ 0,5 sn (gümbürtü ≤ 0,8 sn). Müzik: oyuna özel 12 sn'lik gerilim
   döngüsü isteğe bağlı (yoksa kabuğun ortak gerilim yatağı çalar).
+
+## Ortalamanın Yarısı
+
+Bu paket için **yeni görsel dosyası gerekmedi** (öneri dosyası §6 ve §7: "🎨 yok"). Terazi kolu, kesir çubuğu, altın hedef
+ışını, ipler, kalabalık "YANDI" kıvılcımı, 🎲 rozeti, "EN YAKIN / 2. YAKIN / EŞİT" rozetleri ve tur kutuları (●● / ● /
+🔥 / 🎲) CSS/SVG ve metinle çiziliyor (`apps/client/src/games/ortalamanin-yarisi/ortalamanin-yarisi.css`). İsteğe bağlı
+süs (Efekt Dokuları / Arayüz İkon alanı, öncelik düşük): yanma kıvılcımı dokusu ve altın ışın parıltısı; gelirse
+`apps/client/public/assets/props/ortalama/<ad>.webp` yolu önerilir, bugün CSS karşılığı yeterli.
+
+- **ses** (dosya gerekmedi) — OY-U3/U4/U5/U6/U15 sesleri mevcut ses sistemiyle kodla üretildi
+  (`apps/client/src/games/ortalamanin-yarisi/sounds.ts`, `ortalama.*` seti): yükselen sürükleme tikleri (her 5'te bir),
+  kilit "klik-mühür", tur kartı "vınn", açılışta kapsül "pop"ları (oyuncu sırasına göre 8 perde), rastgele sayıda zar
+  "tıkır", terazi gıcırtısı + denge "tak", hedef ışını lazer "fiuuu", ip sönüşü "fıs", en yakında zil, eşitlikte iki notalı
+  akor, yanmada "cız", finalde +2 için fanfar (ortak `fanfare`). Son 3 sn tiki ortak kabuk saatinden gelir. Her ses olay /
+  evre geçişinde bir kez çalar (`cues.ts`, `fx/cue.ts`). Ses alanı isterse gerçek kayıtlarla değiştirebilir; dosya gelirse
+  önerilen yer `apps/client/public/assets/sfx/ortalama/<olay>.webm` (kısa, < 1 sn, normalize; kapsül pop için 8 varyasyon).

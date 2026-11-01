@@ -1,7 +1,8 @@
 /**
  * Oda botlarının oynama stratejileri (botStratejileri/): metinler oyunların doğrulamasından ve denetimden geçer, görünmez
  * karakter taşımaz; bütün oyunlarda (hareketsiz insan + 3 bot) botların gönderdiği her metin temizdir ve yazı oyunlarında
- * en az bir metin kabul edilir. Zamanlama: Kör Kronometre hedefe yakın basar, Son Kişi makul anda kaçar.
+ * en az bir metin kabul edilir. Zamanlama: Kör Kronometre hedefe yakın basar, Son Kişi makul anda kaçar. Ortalamanın
+ * Yarısı'nda botlar her tur kendisi seçer (rastgele sayıya düşmez, OY-M2).
  */
 import {
   CAGRISIM_WORDS,
@@ -215,6 +216,23 @@ describe("zamanlama", () => {
         expect(e.distance).not.toBeNull();
         expect(e.distance ?? 0).toBeGreaterThanOrEqual(250);
         expect(e.distance ?? 0).toBeLessThanOrEqual(1_600);
+      }
+    }
+  });
+  it("Ortalamanın Yarısı: botlar her tur kendisi seçer (rastgele sayıya düşmez), sayılar 0–100", () => {
+    const { room, view } = playGame("ortalamanin-yarisi");
+    const bots = new Set(botsOf(room).map((p) => p.id));
+    const pub = view() as {
+      previous: { choices: Record<string, number>; random: string[] }[];
+      reveal: { choices: Record<string, number>; random: string[] } | null;
+    };
+    const rounds = [...pub.previous, ...(pub.reveal ? [pub.reveal] : [])];
+    expect(rounds).toHaveLength(3);
+    for (const r of rounds) {
+      for (const id of bots) {
+        expect(r.random).not.toContain(id);
+        const v = r.choices[id] ?? -1;
+        expect(v >= 0 && v <= 100).toBe(true);
       }
     }
   });

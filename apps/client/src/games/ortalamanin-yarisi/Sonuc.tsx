@@ -1,28 +1,37 @@
-import { type OrtalamaReveal, ortalamaMultiplier } from "@glix/engine";
-import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
-import { hapticMatch, hapticResult, hapticSolo, hapticTick } from "../../fx/haptics.js";
+import { type OrtalamaReveal, type OrtalamaRoundSummary, ortalamaMultiplier } from "@glix/engine";
+import { createMemo, createSignal, For, Show } from "solid-js";
+import { hapticCrowd, hapticLong, hapticMatch, hapticResult, hapticSolo } from "../../fx/haptics.js";
 import { reducedMotion } from "../../fx/motion.js";
-import { fanfare, go, match as matchSound, solo as soloSound, tick } from "../../fx/sound.js";
+import { fanfare, match as matchSound, solo as soloSound } from "../../fx/sound.js";
 import { Avatar } from "../../ui/Avatar.js";
 import { look } from "../../ui/avatars.js";
 import { CbMarker } from "../../ui/CbMarker.js";
-import { CbState } from "../../ui/CbState.js";
+import { ortalamaRevealCues } from "./cues.js";
+import { DiceIcon, type Entry, RoundsTable } from "./parts.js";
+import { balance, bell, dice, fizz, laser, pop, sizzle, tieChord } from "./sounds.js";
 import {
   assignLanes,
+  BADGE_TEXT,
+  badgeOf,
   formatNumber,
-  linePercent,
   multiplierLabel,
+  multiplierWord,
   pointsOf,
+  poppedCount,
+  type RevealStage,
+  revealStage,
+  revealTimeline,
+  roadX,
+  ropesOut,
   targetName,
   tierOf,
+  whatIf,
+  whatIfText,
+  winningRangeText,
+  ZOOM_STACK,
 } from "./view.js";
 
-export interface SonucEntry {
-  id: string;
-  avatar: number;
-  nickname: string;
-  connected: boolean;
-}
+export type SonucEntry = Entry;
 
 interface Props {
   reveal: OrtalamaReveal;
@@ -34,232 +43,323 @@ interface Props {
   totals: Record<string, number>;
   /** Yalnız son turda: genel skora eklenecek puanlar (3 turun toplamından, bir kez). */
   final: Record<string, number> | null;
-  /** Seçim süresinin bitişi: sonuç animasyonu buradan başlar. */
+  /** Önceki turların açılmış özetleri (üç turun tablosu için). */
+  previous: readonly OrtalamaRoundSummary[];
+  /** Seçim süresinin bitişi: açılış buradan sayılır. */
   endsAt: number;
+  /** Bu turun sonuç ekranının bitişi (ara turda özet son 1 sn'de çıkar). */
+  revealEndsAt: number;
   entries: SonucEntry[];
   selfId: string;
   spectator: boolean;
+  /** Büyük ekran: ses ve titreşim yok. */
+  tv?: boolean;
   now: () => number;
 }
 
-/** Zaman çizelgesi (ms): sayılar açılır → ortalama çizgisi → hedef ışını → kapsüller hedefe bağlanır → puan. */
-export const T_MEAN = 1000;
-export const T_TARGET = 2100;
-export const T_LINK = 3100;
-export const LINK_STEP = 320;
+/** Ara tur özetinin (OY-U10) görüneceği süre: sonuç ekranının son 1 sn'si. */
+export const SUMMARY_LEAD_MS = 1_000;
+/** Yol şeridinin yüksekliği (px): istifteki her nokta bir şerit. */
+const LANE_MIN_GAP = 7;
 
-const LANE_H = 22;
-
-/** Sonraki turun çarpanı (½ → ⅔ → ¾). */
-function nextMultiplier(round: number): { num: number; den: number } {
-  return ortalamaMultiplier(round);
-}
-
+/**
+ * Tur sonucu (OY-U5 … U11): sayılar yola düşer → terazi dengelenir (ortalama) → altın ışın kesir kadar kayar (hedef)
+ * → ipler uzaktan yakına söner → liste (en yakın üstte, rozetler), puan ve "ne olurdu?" satırı → son turda üç turun
+ * tablosu. Ekran geç açılırsa açılış kaldığı yerden sürer (zaman çizelgesi saatten türetilir).
+ */
 export function Sonuc(props: Props) {
   const r = () => props.reveal;
   const byId = createMemo(() => new Map(props.entries.map((e) => [e.id, e])));
+  const nameOf = (id: string) => (id === props.selfId ? "Sen" : (byId().get(id)?.nickname ?? "Oyuncu"));
+  /** Düşüş sırası katılım sırasıdır (yakınlık sırası ele vermesin); liste en son yakınlığa göre gelir. */
+  const ids = createMemo(() => props.entries.map((e) => e.id).filter((id) => id in r().choices));
   const order = createMemo(() => r().order.filter((id) => byId().has(id)));
-  const lanes = createMemo(() =>
+  const reduced = reducedMotion();
+  const tl = revealTimeline(ids().length, reduced);
+  const isLast = () => props.round >= props.rounds;
+  const elapsed = () => props.now() - props.endsAt;
+  const stage = createMemo<RevealStage>(() => revealStage(elapsed(), tl, isLast()));
+  const popped = createMemo(() => poppedCount(elapsed(), tl, ids().length));
+  const out = createMemo(() => ropesOut(elapsed(), tl, ids().length));
+  /** Söndürme sırası: en uzaktan en yakına. */
+  const farRank = createMemo(() => new Map([...order()].reverse().map((id, i) => [id, i])));
+
+  const baseLanes = createMemo(() =>
     assignLanes(
-      order().map((id) => r().choices[id] ?? 0),
-      7,
+      ids().map((id) => roadX(r().choices[id] ?? 0, r().target, false) * 100),
+      LANE_MIN_GAP,
     ),
   );
+  const stack = () => Math.max(1, ...baseLanes().map((l) => l + 1));
+  // OY-U11: istif 4'ü geçerse puan aşamasından sonra yol hedef çevresine yakınlaşır.
+  const zoom = () => stage() >= 4 && stack() > ZOOM_STACK && !props.tv;
+  const lanes = createMemo(() =>
+    zoom()
+      ? assignLanes(
+          ids().map((id) => roadX(r().choices[id] ?? 0, r().target, true) * 100),
+          LANE_MIN_GAP,
+        )
+      : baseLanes(),
+  );
   const laneCount = () => Math.max(1, ...lanes().map((l) => l + 1));
+  const xOf = (v: number) => roadX(v, r().target, zoom());
+
   const myPoints = () => pointsOf(r(), props.selfId);
-  const isLast = () => props.round >= props.rounds;
+  const myBadge = () => badgeOf(r(), props.selfId);
   const myTotal = () => props.totals[props.selfId] ?? 0;
   const myFinal = () => props.final?.[props.selfId] ?? 0;
-  const tFinal = () => T_LINK + order().length * LINK_STEP + 150;
+  const played = createMemo(() => [...props.previous, { ...r() }]);
+  const [showList, setShowList] = createSignal(false);
 
-  // Animasyon, seçim süresi bittiği andan sayılır (geç açılan ekran kaldığı yerden devam eder).
-  const skew = Math.max(0, Math.min(6000, props.now() - props.endsAt));
-  const reduced = reducedMotion();
-  const stageAt = (ms: number): number => (ms <= T_MEAN ? 0 : ms <= T_TARGET ? 1 : ms <= tFinal() ? 2 : 3);
-  const [stage, setStage] = createSignal(reduced ? 3 : stageAt(skew));
+  if (!props.tv) {
+    ortalamaRevealCues(() => ({ round: props.round, stage: stage(), popped: popped(), ropesOut: out() }), {
+      pop: (i) => {
+        const id = ids()[i];
+        if (id && r().random.includes(id)) dice();
+        else pop(i);
+      },
+      rope: () => fizz(),
+      stage: (s) => {
+        if (s === 1) {
+          balance();
+          if (r().burned.length > 0) sizzle();
+        } else if (s === 2) laser();
+        else if (s === 4) {
+          if (props.spectator) return;
+          const b = myBadge();
+          if (b === "best") {
+            bell();
+            hapticCrowd();
+          } else if (b === "tie") {
+            tieChord();
+            hapticMatch();
+          } else if (b === "second") {
+            matchSound();
+            hapticMatch();
+          } else if (b === "burned") {
+            sizzle();
+            hapticLong();
+          } else {
+            soloSound();
+            hapticSolo();
+          }
+        } else if (s === 5 && !props.spectator) {
+          if (myFinal() >= 2) {
+            fanfare();
+            hapticResult();
+          } else if (myFinal() === 1) matchSound();
+        }
+      },
+    });
+  }
 
-  onMount(() => {
-    if (reduced) return;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const at = (ms: number, fn: () => void): void => {
-      if (ms > skew) timers.push(setTimeout(fn, ms - skew));
-    };
-    at(T_MEAN, () => {
-      setStage(1);
-      tick();
-      hapticTick();
-    });
-    at(T_TARGET, () => {
-      setStage(2);
-      go();
-    });
-    at(tFinal(), () => {
-      setStage(3);
-      if (props.spectator) return;
-      const pts = myPoints();
-      if (pts >= 2) {
-        fanfare();
-        hapticResult();
-      } else if (pts === 1) {
-        matchSound();
-        hapticMatch();
-      } else {
-        soloSound();
-        hapticSolo();
-      }
-    });
-    onCleanup(() => {
-      for (const t of timers) clearTimeout(t);
-    });
-  });
-
-  // Son turun sonunda başlık, genel skora eklenen puanı gösterir; önceki turlarda yalnız tur puanı.
-  const headPoints = () => (isLast() ? myFinal() : myPoints());
-  const headLabel = () =>
-    stage() === 0
-      ? `Tur ${props.round}/${props.rounds} · sayılar açılıyor`
-      : stage() === 1
-        ? "Ortalama"
-        : stage() === 2 || props.spectator
-          ? `Hedef · ${targetName(props.multiplier)}`
-          : isLast()
-            ? headPoints() > 0
-              ? "Genel skora eklenen"
-              : "Genel skor"
-            : myPoints() > 0
-              ? "Tur puanın"
-              : "Bu sefer";
-  const headValue = () =>
-    stage() === 0
-      ? "?"
-      : stage() === 1
-        ? formatNumber(r().mean)
-        : stage() === 2 || props.spectator
-          ? formatNumber(r().target)
-          : headPoints() > 0
-            ? `+${headPoints()}`
-            : "puan yok";
-  const headSub = () =>
-    stage() < 3 || props.spectator
-      ? ""
-      : isLast()
-        ? `3 turun toplamı: ${myTotal()} puan`
-        : `Toplam: ${myTotal()} puan`;
+  const headLabel = () => {
+    const s = stage();
+    if (s === 0) return `Tur ${props.round}/${props.rounds} · sayılar açılıyor`;
+    if (s === 1) return "Denge noktası · ortalama";
+    if (s === 2 || s === 3) return `× ${multiplierLabel(props.multiplier)} → hedef`;
+    if (s === 5) return "GENEL SKOR";
+    if (props.spectator) return `Hedef · ${targetName(props.multiplier)}`;
+    return myPoints() > 0 ? "Tur puanın" : "Bu sefer";
+  };
+  const headValue = () => {
+    const s = stage();
+    if (s === 0) return "?";
+    if (s === 1) return formatNumber(r().mean);
+    if (s === 2 || s === 3 || (s === 4 && props.spectator)) return formatNumber(r().target);
+    const pts = s === 5 ? myFinal() : myPoints();
+    if (s === 5 && props.spectator) return "";
+    return pts > 0 ? `+${pts}` : "puan yok";
+  };
+  const headPts = () => (stage() === 5 ? myFinal() : myPoints());
+  const headSub = () => {
+    const s = stage();
+    if (s < 4) return "";
+    if (s === 5) return props.spectator ? "" : `${props.rounds} turun toplamı: ${myTotal()} puan`;
+    return props.spectator ? "" : `Toplam: ${myTotal()} puan`;
+  };
+  const whatLine = () => {
+    if (stage() < 4) return "";
+    if (props.spectator) return winningRangeText(r());
+    const w = whatIf(r(), props.selfId, props.multiplier);
+    return w ? whatIfText(w, nameOf) : "";
+  };
+  const summaryOn = () => !isLast() && props.now() >= props.revealEndsAt - SUMMARY_LEAD_MS;
+  const nextM = () => ortalamaMultiplier(props.round);
 
   return (
     <div
       class="ort-res"
-      style={{
-        "--skew": `${skew}ms`,
-        "--mean": linePercent(r().mean) / 100,
-        "--target": linePercent(r().target) / 100,
-      }}
       data-stage={stage()}
+      data-zoom={zoom() ? "1" : undefined}
+      data-table={stage() === 5 && !showList() ? "1" : undefined}
+      data-reduced={reduced ? "1" : undefined}
     >
       <div class="ort-res__head" role="status" aria-live="polite">
         <span class="overline">{headLabel()}</span>
-        <span
-          class="ort-res__val"
-          data-k={stage() === 3 && !props.spectator ? "pts" : "n"}
-          data-pts={headPoints()}
-        >
-          {headValue()}
-        </span>
+        <Show when={headValue()}>
+          <span
+            class="ort-res__val"
+            data-k={stage() >= 4 && !(props.spectator && stage() === 4) ? "pts" : "n"}
+            data-pts={headPts()}
+          >
+            {headValue()}
+          </span>
+        </Show>
         <Show when={headSub()}>
           <span class="ort-res__sub">{headSub()}</span>
         </Show>
+        <Show when={whatLine() && stage() === 4}>
+          <span class="ort-res__what">{whatLine()}</span>
+        </Show>
       </div>
 
-      <div class="sc" style={{ "--lanes": laneCount() }} aria-hidden="true">
-        <div class="sc__field" style={{ height: `${laneCount() * LANE_H + 10}px` }}>
-          <i class="sc__mean" style={{ "--x": linePercent(r().mean) / 100 }} />
-          <i class="sc__beam" style={{ "--x": linePercent(r().target) / 100 }} />
-          <For each={order()}>
-            {(id, i) => {
-              const x = () => linePercent(r().choices[id] ?? 0) / 100;
-              const t = () => linePercent(r().target) / 100;
-              const e = () => byId().get(id);
-              return (
-                <>
-                  <i
-                    class="sc__link"
-                    data-tier={tierOf(r(), id)}
-                    data-dir={x() <= t() ? "r" : "l"}
-                    style={{
-                      "--from": Math.min(x(), t()),
-                      "--w": Math.abs(x() - t()),
-                      "--y": `${(lanes()[i()] ?? 0) * LANE_H + 5}px`,
-                      "--d": `${T_LINK + i() * LINK_STEP}ms`,
-                    }}
-                  />
-                  <i
-                    class="sc__dot"
-                    data-tier={tierOf(r(), id)}
-                    data-me={id === props.selfId ? "1" : undefined}
-                    style={{
-                      "--x": x(),
-                      "--y": `${(lanes()[i()] ?? 0) * LANE_H + 5}px`,
-                      "--c": look(e()?.avatar ?? 0).color,
-                      "--d": `${(i() * 60) % 400}ms`,
-                    }}
-                  >
-                    <CbMarker index={e()?.avatar ?? 0} size={12} class="sc__cb" />
-                    <Show when={tierOf(r(), id) === "gold"}>
-                      <CbState kind="star" size={11} class="sc__cbstar" />
-                    </Show>
+      <Show
+        when={stage() === 5 && !showList()}
+        fallback={
+          <>
+            <div class="sc" aria-hidden="true">
+              <div class="sc__field" style={{ "--lanes": laneCount() }}>
+                <div class="sc__beamwrap">
+                  <i class="sc__mean" style={{ "--x": xOf(r().mean) }}>
+                    <span>denge noktası {formatNumber(r().mean)}</span>
                   </i>
-                </>
-              );
-            }}
-          </For>
-        </div>
-        <div class="sc__scale">
-          <span>0</span>
-          <span class="sc__legend">
-            <span class="sc__key sc__key--mean">ortalama {formatNumber(r().mean)}</span>
-            <span class="sc__key sc__key--target">
-              hedef {multiplierLabel(props.multiplier)} · {formatNumber(r().target)}
-            </span>
-          </span>
-          <span>100</span>
-        </div>
-      </div>
+                  <i
+                    class="sc__beam"
+                    style={{ "--x": stage() >= 2 ? xOf(r().target) : xOf(r().mean) }}
+                    data-slid={stage() >= 2 ? "1" : undefined}
+                  >
+                    <span>
+                      × {multiplierLabel(props.multiplier)} → {formatNumber(r().target)}
+                    </span>
+                  </i>
+                </div>
+                <For each={ids()}>
+                  {(id, i) => {
+                    const v = () => r().choices[id] ?? 0;
+                    const x = () => xOf(v());
+                    const t = () => xOf(r().target);
+                    const e = () => byId().get(id);
+                    const tier = () => tierOf(r(), id);
+                    const lane = () => lanes()[i()] ?? 0;
+                    return (
+                      <>
+                        <i
+                          class="sc__link"
+                          data-tier={tier()}
+                          data-dir={x() <= t() ? "r" : "l"}
+                          data-out={(farRank().get(id) ?? 0) < out() && tier() === "none" ? "1" : undefined}
+                          style={{
+                            "--from": Math.min(x(), t()),
+                            "--w": Math.abs(x() - t()),
+                            "--li": lane(),
+                          }}
+                        />
+                        <i
+                          class="sc__dot"
+                          data-tier={stage() >= 3 ? tier() : undefined}
+                          data-me={id === props.selfId ? "1" : undefined}
+                          data-shown={i() < popped() ? "1" : undefined}
+                          data-burned={r().burned.includes(id) && stage() >= 1 ? "1" : undefined}
+                          data-random={r().random.includes(id) ? "1" : undefined}
+                          style={{ "--x": x(), "--li": lane(), "--c": look(e()?.avatar ?? 0).color }}
+                        >
+                          <Avatar index={e()?.avatar ?? 0} size={22} />
+                          <CbMarker index={e()?.avatar ?? 0} size={10} class="sc__cb" />
+                          <Show when={r().random.includes(id)}>
+                            <DiceIcon size={14} class="sc__dice" />
+                          </Show>
+                        </i>
+                      </>
+                    );
+                  }}
+                </For>
+                <Show when={r().burned.length > 0 && stage() >= 1}>
+                  <For each={[...new Set(r().burned.map((id) => r().choices[id] ?? 0))]}>
+                    {(v) => (
+                      <b class="sc__burn" style={{ "--x": xOf(v) }}>
+                        YANDI
+                      </b>
+                    )}
+                  </For>
+                </Show>
+              </div>
+              <div class="sc__scale">
+                <span>0</span>
+                <Show when={zoom()} fallback={<span>50</span>}>
+                  <span class="sc__zoomed">büyütüldü</span>
+                </Show>
+                <span>100</span>
+              </div>
+            </div>
 
-      <ol class="rrows">
-        <For each={order()}>
-          {(id, i) => {
-            const e = () => byId().get(id);
-            const pts = () => r().points[id] ?? 0;
-            return (
-              <li
-                class="rrow"
-                data-tier={tierOf(r(), id)}
-                data-me={id === props.selfId ? "1" : undefined}
-                style={{
-                  "--c": look(e()?.avatar ?? 0).color,
-                  "--d": `${T_LINK + i() * LINK_STEP}ms`,
-                  "--o": `${(i() * 60) % 400}ms`,
+            <ol class="rrows" data-n={order().length} data-scroll>
+              <For each={order()}>
+                {(id, i) => {
+                  const e = () => byId().get(id);
+                  const pts = () => r().points[id] ?? 0;
+                  const badge = () => badgeOf(r(), id);
+                  return (
+                    <li
+                      class="rrow"
+                      data-tier={tierOf(r(), id)}
+                      data-badge={badge() ?? undefined}
+                      data-me={id === props.selfId ? "1" : undefined}
+                      style={{ "--c": look(e()?.avatar ?? 0).color, "--o": `${i() * 60}ms` }}
+                    >
+                      <Avatar
+                        index={e()?.avatar ?? 0}
+                        size="clamp(24px, 4dvh, 30px)"
+                        connected={e()?.connected ?? true}
+                      />
+                      <span class="rrow__name">{nameOf(id)}</span>
+                      <span class="rrow__badge">
+                        <Show when={badge()}>{(b) => BADGE_TEXT[b()]}</Show>
+                      </span>
+                      <span class="rrow__num">
+                        {r().random.includes(id) ? "🎲" : ""}
+                        {r().choices[id]}
+                      </span>
+                      <span class="rrow__dist">±{formatNumber(r().distances[id] ?? 0)}</span>
+                      <span class="rrow__pts" data-on={pts() > 0 ? "1" : undefined}>
+                        <Show when={pts() > 0}>+{pts()}</Show>
+                      </span>
+                    </li>
+                  );
                 }}
-              >
-                <span class="rrow__rank">{r().ranks[id]}</span>
-                <Avatar
-                  index={e()?.avatar ?? 0}
-                  size="clamp(26px, 4.4dvh, 30px)"
-                  connected={e()?.connected ?? true}
-                />
-                <span class="rrow__name">{id === props.selfId ? "Sen" : (e()?.nickname ?? "Oyuncu")}</span>
-                <span class="rrow__num">{r().choices[id]}</span>
-                <span class="rrow__dist">±{formatNumber(r().distances[id] ?? 0)}</span>
-                <span class="rrow__pts" data-on={pts() > 0 ? "1" : undefined}>
-                  <Show when={pts() > 0}>+{pts()}</Show>
-                </span>
-              </li>
-            );
-          }}
-        </For>
-      </ol>
-      <Show when={!isLast()}>
-        <p class="ort-res__next">Sonraki tur: hedef {targetName(nextMultiplier(props.round))}</p>
+              </For>
+            </ol>
+          </>
+        }
+      >
+        <RoundsTable
+          entries={props.entries}
+          selfId={props.selfId}
+          played={played()}
+          rounds={props.rounds}
+          final={props.final}
+          tv={props.tv === true}
+        />
+      </Show>
+      <Show when={stage() === 5}>
+        <button type="button" class="ort-res__toggle" onClick={() => setShowList((v) => !v)}>
+          {showList() ? "Üç turun tablosu" : `${props.round}. tur`}
+        </button>
+      </Show>
+      <Show when={summaryOn()}>
+        <div class="ort-res__sum" role="status">
+          <span>
+            Bu turun hedefi <b>{formatNumber(r().target)}</b>
+            <Show when={!props.spectator && props.selfId in r().choices}>
+              {" "}
+              · Sen <b>{r().choices[props.selfId]}</b>
+              {myPoints() > 0 ? ` (+${myPoints()})` : ""} · Toplamın <b>{myTotal()}</b>
+            </Show>
+          </span>
+          <span class="ort-res__next">
+            Sonraki: <b>{multiplierLabel(nextM())}</b> · {multiplierWord(nextM())}
+          </span>
+        </div>
       </Show>
     </div>
   );

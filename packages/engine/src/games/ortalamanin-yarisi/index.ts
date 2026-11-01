@@ -2,6 +2,8 @@ import type { GameContext, GameDefinition, Rejected } from "../../game.js";
 import { rankAwards } from "../scoring.js";
 import {
   ORTALAMA_CHOOSE_MS,
+  ORTALAMA_CROWD,
+  ORTALAMA_INTRO_MS,
   ORTALAMA_LOCK_GRACE_MS,
   ORTALAMA_MAX,
   ORTALAMA_MIN,
@@ -20,7 +22,10 @@ export * from "./types.js";
 
 /** Bir turun durumu. Erken bitişte `endsAt`/`revealEndsAt` öne çekilir ve sonraki turlar aynı kadar kayar. */
 export interface OrtalamaRoundState {
+  /** Tur kartının açıldığı an (OY-U3). */
   startAt: number;
+  /** Seçimin başladığı an: kart yerleşince (`startAt` + `ORTALAMA_INTRO_MS`). */
+  chooseAt: number;
   endsAt: number;
   revealEndsAt: number;
   /** Yalnız seçim gönderenler; son seçim geçerlidir. */
@@ -54,36 +59,57 @@ function finalChoices(state: OrtalamaState, round: OrtalamaRoundState): Record<s
 }
 
 /**
- * Bir turun puanlaması. Hedef = ortalama × çarpan (½, ⅔, ¾). Uzaklıklar tam sayı aritmetiğiyle karşılaştırılır
- * (|den·n·seçim − num·toplam| ∝ |seçim − hedef|), böylece ondalık hata eşitliği bozmaz.
- * En yakın tek kişiyse +2, sonraki derece(ler) +1; en yakınlar eşitse hepsi +1, ikinci ödül yok.
+ * Bir turun puanlaması (saf; istemci "ne olurdu?" satırı da bunu kullanır, OY-U7). `players` katılım sırasıdır (eşit
+ * uzaklıklar bu sırayla dizilir). Hedef = ortalama × çarpan (½, ⅔, ¾). Uzaklıklar tam sayı aritmetiğiyle
+ * karşılaştırılır (|den·n·seçim − num·toplam| ∝ |seçim − hedef|), böylece ondalık hata eşitliği bozmaz.
+ *
+ * - OY-M2: `random` (sunucunun atadığı sayılar) ortalamaya girer ama sahibi puan almaz.
+ * - OY-M1: aynı sayıyı seçen (rastgele olmayan) oyuncu sayısı `ORTALAMA_CROWD` ya da daha çoksa o sayı yanar; yananlar
+ *   puan almaz, sayıları ortalamaya girer. Rastgele sayılar kalabalık sayımına girmez.
+ * - Puan, yalnız uygun oyuncular arasında: en yakın tek kişiyse +2, sonraki derece(ler) +1; en yakınlar eşitse hepsi +1,
+ *   ikinci ödül yok. Uygun kimse yoksa o tur kimse puan almaz.
  */
-export function ortalamaSettle(state: OrtalamaState, roundIndex = 0): OrtalamaReveal {
-  const round = state.rounds[roundIndex];
-  const choices = round ? finalChoices(state, round) : {};
-  const { num, den } = ortalamaMultiplier(roundIndex);
-  const n = state.players.length;
-  const sum = state.players.reduce((a, id) => a + (choices[id] ?? 0), 0);
-  const key = (id: string): number => Math.abs(den * n * (choices[id] ?? 0) - num * sum);
-  const order = [...state.players].sort((a, b) => key(a) - key(b));
+export function ortalamaScore(
+  players: readonly string[],
+  choices: Readonly<Record<string, number>>,
+  random: readonly string[],
+  multiplier: { num: number; den: number },
+): OrtalamaReveal {
+  const { num, den } = multiplier;
+  const n = players.length;
+  const value = (id: string): number => choices[id] ?? ORTALAMA_MIN;
+  const sum = players.reduce((a, id) => a + value(id), 0);
+  const key = (id: string): number => Math.abs(den * n * value(id) - num * sum);
+  const isRandom = new Set(random.filter((id) => players.includes(id)));
+  const crowd = new Map<number, number>();
+  for (const id of players) {
+    if (isRandom.has(id)) continue;
+    crowd.set(value(id), (crowd.get(value(id)) ?? 0) + 1);
+  }
+  const burnedSet = new Set(
+    players.filter((id) => !isRandom.has(id) && (crowd.get(value(id)) ?? 0) >= ORTALAMA_CROWD),
+  );
+  const order = [...players].sort((a, b) => key(a) - key(b));
+  const target = n > 0 ? (num * sum) / (den * n) : 0;
   const ranks: Record<string, number> = {};
   const points: Record<string, number> = {};
   const distances: Record<string, number> = {};
-  const target = n > 0 ? (num * sum) / (den * n) : 0;
-  let rank = 0;
-  let prev: number | null = null;
+  const out: Record<string, number> = {};
+  for (const id of players) out[id] = value(id);
   const groups: string[][] = [];
+  let prev: number | null = null;
   for (const id of order) {
+    distances[id] = Math.abs(value(id) - target);
+    points[id] = 0;
+    ranks[id] = 0;
+    if (isRandom.has(id) || burnedSet.has(id)) continue;
     const k = key(id);
     if (prev === null || k !== prev) {
-      rank = groups.length + 1;
       groups.push([]);
       prev = k;
     }
     groups[groups.length - 1]?.push(id);
-    ranks[id] = rank;
-    distances[id] = Math.abs((choices[id] ?? 0) - target);
-    points[id] = 0;
+    ranks[id] = groups.length;
   }
   const first = groups[0] ?? [];
   if (first.length === 1) {
@@ -92,7 +118,25 @@ export function ortalamaSettle(state: OrtalamaState, roundIndex = 0): OrtalamaRe
   } else {
     for (const id of first) points[id] = 1;
   }
-  return { choices, mean: n > 0 ? sum / n : 0, target, distances, order, ranks, points };
+  return {
+    choices: out,
+    random: players.filter((id) => isRandom.has(id)),
+    burned: players.filter((id) => burnedSet.has(id)),
+    mean: n > 0 ? sum / n : 0,
+    target,
+    distances,
+    order,
+    ranks,
+    points,
+  };
+}
+
+/** Bir turun sonucu: seçim göndermeyenlere atanan sayılar `random` olarak işaretlenir (OY-M2). */
+export function ortalamaSettle(state: OrtalamaState, roundIndex = 0): OrtalamaReveal {
+  const round = state.rounds[roundIndex];
+  const choices = round ? finalChoices(state, round) : {};
+  const random = round ? state.players.filter((id) => round.choices[id] === undefined) : [];
+  return ortalamaScore(state.players, choices, random, ortalamaMultiplier(roundIndex));
 }
 
 /** Mini puan toplamı: ilk `count` turun tur puanları. */
@@ -108,10 +152,12 @@ function totalsOf(state: OrtalamaState, count: number): Record<string, number> {
 
 /**
  * Genel skor, oyun sonunda bir kez: 3 turun mini toplamına göre en yüksek +2, ikinci +1; en yüksek eşitse
- * paylaşanların hepsi +1 (+2 yok). Bu oyunda negatif kural yoktur.
+ * paylaşanların hepsi +1 (+2 yok). Bu oyunda negatif kural yoktur. OY-M1 ile her turda herkes yanabildiği için
+ * en yüksek toplam 0 olabilir: o zaman kimse genel puan almaz (puansız oyuncu "lider" sayılmaz).
  */
 export function ortalamaAwards(totals: Record<string, number>): Record<string, number> {
-  const awards = rankAwards(totals);
+  const top = Math.max(0, ...Object.values(totals));
+  const awards = top > 0 ? rankAwards(totals) : {};
   const out: Record<string, number> = {};
   for (const id of Object.keys(totals)) out[id] = awards[id] ?? 0;
   return out;
@@ -128,8 +174,9 @@ function gameEndsAt(state: OrtalamaState): number {
   return state.rounds[state.rounds.length - 1]?.revealEndsAt ?? state.startedAt;
 }
 
-function roundLength(round: number): { choose: number; reveal: number } {
+function roundLength(round: number): { intro: number; choose: number; reveal: number } {
   return {
+    intro: ORTALAMA_INTRO_MS,
     choose: ORTALAMA_CHOOSE_MS,
     reveal: round === ORTALAMA_ROUNDS - 1 ? ORTALAMA_REVEAL_MS : ORTALAMA_ROUND_REVEAL_MS,
   };
@@ -146,12 +193,13 @@ export const ortalamaninYarisi: GameDefinition<
   minPlayers: 3,
   maxPlayers: 8,
   orientation: "portrait",
+  // OY-U16: örnek hesaplı üç madde (madde başına en çok iki satır).
   briefing: {
     goal: "Ortalamanın katını tahmin et: 3 tur, her turda hedef değişir!",
     steps: [
-      "Her tur gizlice 0 ile 100 arasında bir sayı seç",
-      "Hedef sırayla ortalamanın ½'si, ⅔'si, ¾'ü olur",
-      "Hedefe yakınlık puanları toplanır; toplamı en yüksek +2, ikinci +1",
+      "Gizlice 0–100 yaz. Ortalamayı değil, kesrini (½ ⅔ ¾) tahmin et.",
+      "Örnek: 10·20·30·40·50 → ort. 30 → yarısı 15. 10 ve 20 eşit: ikisi +1.",
+      "En yakın +2, ikinci +1. Aynı sayıyı 3 kişi yazarsa sayı yanar.",
     ],
   },
 
@@ -173,15 +221,17 @@ export const ortalamaninYarisi: GameDefinition<
       const len = roundLength(r);
       const fallback: Record<string, number> = {};
       for (const id of players) fallback[id] = ctx.rng.int(ORTALAMA_MAX - ORTALAMA_MIN + 1) + ORTALAMA_MIN;
+      const chooseAt = at + len.intro;
       rounds.push({
         startAt: at,
-        endsAt: at + len.choose,
-        revealEndsAt: at + len.choose + len.reveal,
+        chooseAt,
+        endsAt: chooseAt + len.choose,
+        revealEndsAt: chooseAt + len.choose + len.reveal,
         choices: {},
         locked: [],
         fallback,
       });
-      at += len.choose + len.reveal;
+      at = chooseAt + len.choose + len.reveal;
     }
     return { players: [...players], startedAt: ctx.now, rounds, revealed: 0, shown: 0 };
   },
@@ -192,6 +242,8 @@ export const ortalamaninYarisi: GameDefinition<
     const index = currentRound(state, ctx.now);
     const round = state.rounds[index];
     if (!round || ctx.now >= gameEndsAt(state)) return { rejected: "ended" };
+    // Tur kartı sırasında (OY-U3) seçim alınmaz: seçim süresi kart yerleşince başlar.
+    if (ctx.now < round.chooseAt) return { rejected: "not_started" };
     // Sonuç gösterilirken (seçim süresi bitti, sonraki tur henüz başlamadı) seçim alınmaz.
     if (ctx.now >= round.endsAt) return { rejected: "ended" };
     if (round.locked.includes(playerId)) return { rejected: "locked" };
@@ -204,6 +256,7 @@ export const ortalamaninYarisi: GameDefinition<
             ? {
                 ...r,
                 startAt: r.startAt + shift,
+                chooseAt: r.chooseAt + shift,
                 endsAt: r.endsAt + shift,
                 revealEndsAt: r.revealEndsAt + shift,
               }
@@ -245,13 +298,14 @@ export const ortalamaninYarisi: GameDefinition<
     // Açılmış önceki turlar: gösterilen turdan önceki hepsi (süreleri dolmuştur).
     const previous: OrtalamaRoundSummary[] = [];
     for (let r = 0; r < index; r++) {
-      const { mean, target } = ortalamaSettle(state, r);
-      previous.push({ mean, target, multiplier: ortalamaMultiplier(r) });
+      const { mean, target, choices, points, random, burned } = ortalamaSettle(state, r);
+      previous.push({ mean, target, multiplier: ortalamaMultiplier(r), choices, points, random, burned });
     }
     const totals = totalsOf(state, open ? index + 1 : index);
     return {
       startedAt: state.startedAt,
-      roundStartedAt: round.startAt,
+      introAt: round.startAt,
+      roundStartedAt: round.chooseAt,
       endsAt: round.endsAt,
       revealEndsAt: round.revealEndsAt,
       round: index + 1,

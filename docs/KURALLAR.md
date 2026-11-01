@@ -1189,6 +1189,35 @@ arayüz/kodda en yakın +2, ikinci en yakın +1 alır. Eski faz 18 saniyedir.
 - Tutorial adım 2: "Hedef her tur değişir: ortalamanın yarısı, üçte ikisi, dörtte üçü." Adım 3: "Turlardaki puanlar
   toplanır; toplamı en yüksek +2, ikinci +1 alır."
 
+**Değişiklik (OY öneri paketi, Kasım 2026, sahip onayı: OY-M1, OY-M2, OY-U3, OY-U16) — yukarıdakilerin önüne geçer:**
+
+- **Kalabalık yanar (OY-M1):** Bir turda **aynı sayıyı 3 ya da daha fazla oyuncu** seçmişse o sayı **yanar**: o oyuncular
+  bu turdan puan almaz. Eşik her oyuncu sayısında 3'tür; iki kişinin aynı sayısı yanmaz. Yanan sayılar ortalama ve hedef
+  hesabına **yine girer**. Sunucunun atadığı rastgele sayılar kalabalık sayımına **girmez**. Tur puanı yanmayanlar (ve
+  rastgele olmayanlar) arasında mevcut kuralla dağıtılır: en yakın tek ise +2, sonraki derece +1; en yakınlar eşitse
+  hepsi +1. Herkes yandıysa o tur kimse puan almaz.
+- **Rastgele atanan sayı puan almaz (OY-M2):** Süre bitene kadar hiç seçim göndermeyen oyuncuya sunucu yine 0–100 arası
+  rastgele bir sayı atar ve bu sayı ortalamaya girer; ama **sahibi o turdan puan alamaz**. Puan dağıtımında bu oyuncu
+  yokmuş gibi derece kurulur. Seçip Tamam demeyenin seçimi geçerlidir (rastgele sayılmaz). Sonuçta sayı **🎲 "rastgele"**
+  etiketiyle gösterilir (13. maddedeki "normal seçim gibi gösterilir" ifadesinin yerine). Yanan sayı **"YANDI"** etiketiyle
+  sönük gösterilir.
+- **Genel skorda sıfır toplam:** Bu iki kural yüzünden üç turun sonunda **en yüksek toplam 0** olabilir (ör. herkes her tur
+  aynı sayıyı yazdı ya da kimse seçmedi). O durumda kimse genel skor almaz (0 toplam "lider" sayılmaz). Diğer bütün
+  durumlarda genel skor dönüşümü aynen geçerlidir.
+- **Tur kartı (OY-U3):** Her turun başında **0,9 sn**'lik tur kartı gösterilir ("TUR 2 / 3", kesir kadar dolan çubuk,
+  "Hedef: ortalamanın üçte ikisi", "ortalama 30 olursa hedef 20"). Kart seçim süresinden yemez: **10 sn'lik seçim süresi
+  kart bitince başlar**; kart sırasında seçim ve kilit alınmaz. Oyunun tam süresi 3 × (0,9 + 10) + 2 × 5 + 7 = **49,7 sn**.
+  Erken bitişte sonraki turların kartı da aynı kadar öne kayar.
+- **Açılmış turların sonucu herkese açıktır:** 2. turdan itibaren seçim ekranında önceki turun ortalaması ve hedefinin
+  yanında, o turda kimin hangi sayıyı seçtiği (rastgele / yandı işaretiyle) ve tur puanları da görünür (yeni gizli bilgi
+  yoktur; bunlar o turun açılışında zaten herkese gösterilmişti). Süren turun seçimleri tur açılana kadar gizlidir.
+- Tutorial (OY-U16, madde başına en çok iki satır): 1) "Gizlice 0–100 yaz. Ortalamayı değil, kesrini (½ ⅔ ¾) tahmin
+  et." 2) "Örnek: 10·20·30·40·50 → ort. 30 → yarısı 15. 10 ve 20 eşit: ikisi +1." 3) "En yakın +2, ikinci +1. Aynı sayıyı 3
+  kişi yazarsa sayı yanar." (Amaç satırı: "Ortalamanın katını tahmin et: 3 tur, her turda hedef değişir!")
+- Değişmeyenler: 3–8 oyuncu; 3 tur; 0–100 tam sayı; çarpanlar ½, ⅔, ¾; 10 sn seçim, 5 sn ara ve 7 sn son açılış;
+  seçimlerin tur sonuna kadar gizli olması; tur puanı (tek en yakın +2, ikinci +1; eşit en yakınlar +1); genel skorun yalnız
+  sonda toplamdan +2 / +1 verilmesi; eksi puan olmaması; kilit ve tur başına erken bitiş; kopan oyuncunun beklenmemesi.
+
 ## 14. Gizli Kareler — `gizli-kareler`
 
 **Durum: KİLİTLİ**
