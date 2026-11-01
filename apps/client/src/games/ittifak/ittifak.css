@@ -574,14 +574,22 @@
   box-shadow: 0 0 12px rgba(255, 194, 59, 0.6);
 }
 .it__ally-badge[data-img="1"] {
-  background: center / 100% 100% no-repeat;
+  /* Görsel 5:2; altın şerit ortada ince bir bant, uçlarda süs var: yazı bandın içinde ve süslerin arasında kalsın. */
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
   border: 0;
   box-shadow: none;
-  padding: 4px 14px;
+  line-height: 1;
+  padding: 14px 46px;
+  color: #1a0d00;
 }
 .it__res[data-tv="1"] .it__ally-badge {
   font-size: 20px;
   padding: 4px 14px;
+}
+.it__res[data-tv="1"] .it__ally-badge[data-img="1"] {
+  padding: 22px 68px;
 }
 .it__node[data-reading="1"] .av {
   outline: 3px solid var(--it-gold);
@@ -1227,4 +1235,17 @@
 }
 .ittv__reveal .it__hint {
   font-size: 20px;
+}
+/* Görselli rozette yazının altına açık altın zemin: plakanın gölgeli/oyma kısımları yazıyı karartmasın. */
+.it__ally-badge[data-img="1"] .it__ally-text {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(255, 236, 170, 0.92), rgba(246, 200, 90, 0.92));
+}
+/* Yatay telefonda masa sık: süslü uçlar yan koltuğun oy çipine binmesin. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .it__ally-badge[data-img="1"] {
+    padding: 9px 30px;
+  }
 }

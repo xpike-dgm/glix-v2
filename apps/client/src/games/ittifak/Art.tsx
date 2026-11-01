@@ -79,7 +79,8 @@ export function AllianceBadge() {
       data-img={src() ? "1" : undefined}
       style={src() ? { "background-image": `url(${src()})` } : undefined}
     >
-      İTTİFAK
+      {/* Yazı ayrı kutuda: görselde altın bant yalnız ortada, yazı da yalnız o bandın üstünde durur. */}
+      <span class="it__ally-text">İTTİFAK</span>
     </span>
   );
 }
