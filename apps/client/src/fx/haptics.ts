@@ -153,5 +153,7 @@ export const hapticHold = (): void => vibrate([70, 50, 25, 50, 70]);
 export const hapticShot = (): void => vibrate(400);
 /** Uzun tek titreşim (Gizli Kareler: kendi çakışman, 300 ms). */
 export const hapticLong = (): void => vibrate(300);
+/** Rüşvet ve Darbe: başkan seçildi (uzun çift titreşim, RD-U7). */
+export const hapticCrown = (): void => vibrate([180, 90, 180]);
 /** Uzun-kısa-uzun (Gizli Kareler: ödül karesini buldun). */
 export const hapticJackpot = (): void => vibrate([260, 70, 60, 70, 260]);

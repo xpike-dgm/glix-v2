@@ -33,6 +33,7 @@ export type PropPath =
       | "not-kagidi"}`
   | `rus-ruleti/${"tabanca" | "tambur" | RuletProp}`
   | `gizli-hirsiz/${HirsizProp}`
+  | `rusvet-darbe/${RusvetProp}`
   | `gizli-kareler/${KarelerProp}`
   | `sozluk-blofu/${SozlukProp}`
   | `karalama-defteri/${KaralamaProp}`
@@ -128,6 +129,54 @@ export function ruletPropExists(name: RuletProp): boolean {
 /** Var olan Rus Ruleti görselinin adresi; yoksa null. */
 export const ruletProp = (name: RuletProp): string | null =>
   ruletPropExists(name) ? propSrc(`rus-ruleti/${name}`) : null;
+
+/**
+ * Rüşvet ve Darbe görselleri (sahip üretecek; docs/oneriler/GORSEL-IHTIYACLARI.md "Rüşvet ve Darbe"). Yoksa ekran
+ * CSS/SVG karşılığını çizer ve olmayan dosyayı hiç istemez (404 yok); dosya `rusvet-darbe/<ad>.webp` olarak gelince
+ * kod değişmeden kullanılır.
+ */
+export type RusvetProp =
+  | "sandik"
+  | "muhur"
+  | "el-tas"
+  | "el-kagit"
+  | "el-makas"
+  | "kese"
+  | "yigin-1"
+  | "yigin-2"
+  | "yumruk"
+  | "tac"
+  | "taht-devrik"
+  | "anlatim-1"
+  | "anlatim-2"
+  | "anlatim-3"
+  | "anlatim-4";
+export const RUSVET_PROPS: readonly RusvetProp[] = [
+  "sandik",
+  "muhur",
+  "el-tas",
+  "el-kagit",
+  "el-makas",
+  "kese",
+  "yigin-1",
+  "yigin-2",
+  "yumruk",
+  "tac",
+  "taht-devrik",
+  "anlatim-1",
+  "anlatim-2",
+  "anlatim-3",
+  "anlatim-4",
+];
+
+export function rusvetPropExists(name: RusvetProp): boolean {
+  const built = typeof __RUSVET_PROPS__ === "undefined" ? undefined : __RUSVET_PROPS__;
+  return built ? built.includes(name) : false;
+}
+
+/** Var olan Rüşvet ve Darbe görselinin adresi; yoksa null. */
+export const rusvetProp = (name: RusvetProp): string | null =>
+  rusvetPropExists(name) ? propSrc(`rusvet-darbe/${name}`) : null;
 
 /**
  * Gizli Hırsız görselleri (sahip üretecek; docs/oneriler/GORSEL-IHTIYACLARI.md "Gizli Hırsız"). Yoksa ekran mevcut kasa
@@ -265,7 +314,11 @@ const GAME_PROPS: Record<string, readonly PropPath[]> = {
     "kontrol-paneli-kaosu/not-kagidi",
   ],
   "butona-bas": ["genel/arcade-dugme", "genel/arcade-dugme-basili"],
-  "rusvet-darbe": ["genel/taht", "genel/rusvet-jetonu", "genel/el-tas", "genel/el-kagit", "genel/el-makas"],
+  "rusvet-darbe": [
+    "genel/taht",
+    "genel/rusvet-jetonu",
+    ...RUSVET_PROPS.filter(rusvetPropExists).map((n): PropPath => `rusvet-darbe/${n}`),
+  ],
   "asiri-yukleme": ["genel/enerji-cekirdegi", "genel/enerji-cekirdegi-asiri"],
   "kor-kronometre": [
     "genel/kronometre",

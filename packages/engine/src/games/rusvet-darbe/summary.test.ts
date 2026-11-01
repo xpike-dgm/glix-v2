@@ -21,6 +21,14 @@ describe("rusvet-darbe tur özeti", () => {
     expect(line).toBe("Can başkan oldu");
     expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
   });
+  it("darbe tuttuysa tahtın devrildiğini söyler (RD-M2)", () => {
+    const line = summarizeRusvetDarbe(result, players, {
+      president: "b",
+      reveal: { counts: { b: 3 }, coup: { eligible: ["c"], yes: 1, success: true } },
+    });
+    expect(line).toBe("Can başkan oldu, tahtı devrildi");
+    expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
+  });
   it("veri yoksa ya da eksikse cümle kurmaz (3)", () => {
     expect(summarizeRusvetDarbe(result, players, { president: null })).toBeNull();
   });

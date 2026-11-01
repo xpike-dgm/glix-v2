@@ -64,14 +64,19 @@ Kısa oyun içi açılış penceresi (≤ 7 sn) açılış animasyonu için kull
   Kendine oy yok; oy süre bitene kadar değiştirilebilir. Oy vermeyenin oyu kendisi dışındaki rastgele bir
   katılımcıya gider. Alınan her oy +1 genel puan. Oylar ve sayılar sonuç açılana kadar gizli; sonuçta oy akışı
   (kim kime) herkese açılır.
-- **Rüşvet ve Darbe** (3–8): 20 sn gizli başkanlık oyu (kendine yok, değiştirilebilir; vermeyenin oyu rastgele
-  başka birine). En çok oy alan başkan. Eşitlikte darbe düellosu: eşit adaylar 8 sn içinde gizli taş/kağıt/makas
-  seçer (seçmeyene rastgele), aynı anda açılır, 2,5 sn açılış penceresi. Elde tam iki farklı işaret varsa kazanan
-  işareti verenler devam eder; tek işaret ya da üç işaret varsa el tekrarlanır. Tek aday kalınca başkan. 6 elden
-  sonra hâlâ eşitse sunucu kalanlar arasından rastgele başkan seçer (güvenlik sınırı). Başkan oy sayısı kadar
-  jetonu 25 sn içinde kendisi dışındakilere dağıtır (kişi başı en çok 2; dağıtım süre içinde değiştirilebilir ve
-  gizli). Dağıtılmayan jetonlar sonda sınıra uyularak rastgele dağıtılır. Başkan +1, jetonlar doğrudan genel puan.
-  Seçim sonucu (başkan + aldığı oy sayısı) seçim bitince açılır; oy akışı ve dağıtım sonda.
+- **Rüşvet ve Darbe** (3–8): gizli başkanlık oyu, 3–5 oyuncuda 20 sn, 6–8 oyuncuda 30 sn (kendine yok,
+  değiştirilebilir; vermeyenin oyu rastgele başka birine). Seçim süresince herkes portresine isteğe bağlı, herkese açık,
+  puansız bir vaat asar ("Oy verene jeton" / "Herkese jeton"). En çok oy alan başkan. 4+ aday eşitse önce 12 sn ikinci
+  oylama (yalnız adaylara; vermeyenin oyu sayılmaz); yine eşitlik ya da 2–3 aday eşitse darbe düellosu: eşit adaylar 8 sn
+  içinde gizli taş/kâğıt/makas seçer (seçmeyene rastgele), aynı anda açılır, 2,5 sn açılış penceresi. Elde tam iki
+  farklı işaret varsa kazanan işareti verenler devam eder; tek işaret ya da üç işaret varsa el tekrarlanır. Tek aday
+  kalınca başkan; 6 elden sonra hâlâ eşitse kalanlar arasından kura. Başkan belli olunca 1,5 sn taç anı; ardından başkan
+  oy sayısı kadar jetonu 25 sn içinde kendisi dışındakilere dağıtır (kişi başı en çok 2; dağıtım süre içinde
+  değiştirilebilir ve gizli). Başkan dağıtımda kendisine kimin oy verdiğini (yalnız kendisi) görür. Dağıtılmayan jetonlar
+  sonda sınıra uyularak rastgele dağıtılır; başkan kopuksa önce seçmenlerine birer birer. Jeton almayanlar 10 sn gizli
+  darbe oylaması yapar; kesin çoğunluk Darbe derse başkanın puanı silinir. Başkan +2 (darbe tutmazsa), jetonlar doğrudan
+  genel puan. Açılış en az 11 sn: oklu oy akışı (rastgele oylar kesikli), taht, jetonlar (rastgele olanlar gümüş), darbe,
+  başkanın vaadi TUTTU/BOZDU, puanlar.
 - **Gizli Alışveriş** (3–8): 60 kredi, 12 sabit ürün (sıra maç başına karışır), 30 sn. Sepet sunucuda canlı tutulur
   (her ekleme/çıkarma bir eylem; bütçeyi aşan ya da aynı ürünü ikinci kez ekleyen eylem reddedilir); süre
   bittiğindeki sepet geçerlidir, boş sepet 0. Ürün değeri = fiyat / alıcı sayısı; sepet değeri toplam

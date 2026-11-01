@@ -169,6 +169,8 @@ const registry: Record<string, GameEntry> = {
   "rusvet-darbe": {
     Screen: lazy(() => import("./rusvet-darbe/RusvetDarbeScreen.js")),
     Art: lazy(() => import("./rusvet-darbe/BriefingArt.js")),
+    StageView: lazy(() => import("./rusvet-darbe/StageView.js")),
+    tvOwnBoard: true,
   },
   "kontrol-paneli-kaosu": {
     // Ortak bomba saatini oyun kendisi çizer (cezalarla atlar); kabuk saati çizilmez.

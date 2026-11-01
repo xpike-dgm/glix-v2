@@ -1,35 +1,50 @@
 /**
- * Yalnız geliştirme önizlemesi: Rüşvet ve Darbe ekranları (`&n=3..8` oyuncu sayısı).
+ * Yalnız geliştirme önizlemesi (üretim paketine girmez). Rüşvet ve Darbe ekranları gerçek motorla çalışır
+ * (`&n=3..8` oyuncu sayısı, varsayılan 5; sen p0 "Cihad"):
  *   ?mock=rusvet-briefing        anlatım
- *   ?mock=rusvet-vote            başkanlık oyu (`&chosen=1` seçili başlar)
- *   ?mock=rusvet-vote-locked     başkanlık oyu kilitli, diğerleri bekleniyor
- *   ?mock=rusvet-duel-locked     düello: işaretini verdin, diğerleri bekleniyor
- *   ?mock=rusvet-give-locked     başkansın, "Bitti" dedin
- *   ?mock=rusvet-duel            düello, sen adaysın (`&c=2..8` aday sayısı, `&open=1` işaretler açık, `&replay=1` önceki el yok sayıldı)
+ *   ?mock=rusvet-vote            başkanlık seçimi; vaatler asılı, iki kişi mühürledi (`&chosen=1` seçimin p1)
+ *   ?mock=rusvet-vote-locked     seçim: oyunu mühürledin ve Tamam dedin
+ *   ?mock=rusvet-vote-offline    seçim: bir oyuncunun bağlantısı yok ("oyu rastgele gidecek")
+ *   ?mock=rusvet-runoff          kalabalık eşitlik: ikinci oylama (n ≥ 4)
+ *   ?mock=rusvet-duel            düello, sen adaysın (`&c=2..8` aday, `&open=1` işaretler açık, `&replay=1` önceki el
+ *                                sonuçsuz, `&beat=1` son 3 sn ritmi, `&lottery=1` 6. elden sonra kura)
  *   ?mock=rusvet-duel-out        düello, aday değilsin
- *   ?mock=rusvet-give            sen başkansın, jeton dağıt (`&budget=4`)
- *   ?mock=rusvet-give-wait       başkan başkası, jeton dağıtıyor
- *   ?mock=rusvet-reveal          sonuç: oy akışı, jetonlar, puanlar (`&me=president` ile başkan sensin;
- *                                `&coup=hit|miss` darbe sonucu: tuttu / tutmadı)
- *   ?mock=rusvet-coup            darbe oylaması, jeton almadın, oy hakkın var
- *   ?mock=rusvet-coup-locked     darbe oylaması, oyunu verdin (`&vote=no` Darbe yok)
- *   ?mock=rusvet-coup-wait       darbe oylaması, jeton aldın: "Darbe oylaması sürüyor"
- *   ?mock=rusvet-spectator-vote | -duel | -give | -reveal   katılımcı değilsin
+ *   ?mock=rusvet-duel-locked     düello: işaretini verdin
+ *   ?mock=rusvet-crown           "Başkan seçildi" anı (`&me=president` başkan sensin)
+ *   ?mock=rusvet-give            sen başkansın, defterin açık (`&budget=2..7`, `&random=1` bir oy zarla düştü)
+ *   ?mock=rusvet-give-urgent     sen başkansın, son 5 sn, dağıtmadığın jeton var
+ *   ?mock=rusvet-give-locked     sen başkansın, "Bitti" dedin
+ *   ?mock=rusvet-give-wait       başkan başkası: tahtın önü, "Senin oyun", vaadi
+ *   ?mock=rusvet-give-done       başkan başkası ve "Bitti" dedi
+ *   ?mock=rusvet-give-offline    başkanın bağlantısı koptu
+ *   ?mock=rusvet-coup            darbe: jeton almadın, karar senin
+ *   ?mock=rusvet-coup-locked     darbe: kararını verdin (`&vote=no` Darbe yok)
+ *   ?mock=rusvet-coup-wait       darbe: jeton aldın, karar onlarda
+ *   ?mock=rusvet-reveal          açılış (`&t=` açılış başından ms, varsayılan 10500; `&coup=hit|miss`,
+ *                                `&me=president`, `&pledge=kept|broke`, `&random=1`)
+ *   ?mock=rusvet-spectator-<evre>  katılımcı değilsin (ör. rusvet-spectator-vote, rusvet-spectator-coup)
+ * TV: `?mock=tv-rusvet-<evre>` aynı durumu sahne görünümünde açar (izleyici kipinde).
  */
-import type {
-  Allocation,
-  DuelHand,
-  GameInfo,
-  MatchSnapshot,
-  PlayerInfo,
-  RoomPhase,
-  RoomSnapshot,
-  RusvetPublicView,
-  RusvetView,
-  Sign,
+import {
+  type ClientMessage,
+  createRng,
+  type GameInfo,
+  isRejected,
+  type MatchSnapshot,
+  type PlayerInfo,
+  type RoomPhase,
+  type RoomSnapshot,
+  RUSVET_CROWN_MS,
+  RUSVET_GIVE_MS,
+  RUSVET_RUNOFF_MS,
+  RUSVET_SIGN_MS,
+  RUSVET_SIGN_REVEAL_MS,
+  type RusvetAction,
+  type RusvetState,
+  rusvetDarbe,
+  rusvetVoteMs,
 } from "@glix/engine";
-import { RUSVET_COUP_MS, RUSVET_GIVE_MS, RUSVET_SIGN_MS, RUSVET_VOTE_MS, rusvetDarbe } from "@glix/engine";
-import { useMockSender } from "../net/client.js";
+import { mockAck, useMockSender } from "../net/client.js";
 import { applySnapshot, setState } from "../net/store.js";
 
 const NAMES = ["Cihad", "Elif", "Mert", "Zeynep", "Kaan", "Defne", "Burak", "Ayşe"];
@@ -41,275 +56,210 @@ const INFO: GameInfo = {
   maxPlayers: rusvetDarbe.maxPlayers,
   orientation: "portrait",
 };
-const SIGNS: Sign[] = ["tas", "makas", "kagit", "tas", "makas", "kagit", "tas", "makas"];
 
 export function startRusvetMock(kind: string, params: URLSearchParams): void {
+  startRusvetMockAs(kind, params, false);
+}
+
+/** `tv`: sahne (TV) görünümü için izleyici kipinde, aynı motor durumu. */
+export function startRusvetMockAs(kind: string, params: URLSearchParams, onTv: boolean): void {
   const n = Math.min(8, Math.max(3, Number(params.get("n")) || 5));
+  const spectating = onTv || kind.includes("spectator");
+  const stage = kind.replace(/^rusvet-/, "").replace(/^spectator-?/, "") || "vote";
+  const offlineId = stage === "vote-offline" ? "p3" : stage === "give-offline" ? "p1" : null;
   const players: PlayerInfo[] = Array.from({ length: n }, (_, i) => ({
     id: `p${i}`,
     nickname: NAMES[i] ?? `Oyuncu${i}`,
     avatar: i,
-    connected: true,
-    score: 0,
+    connected: `p${i}` !== offlineId,
+    score: [3, 5, 2, 4, 1, 6, 0, 2][i] ?? 0,
     spectator: false,
   }));
-  const spectator = kind.includes("spectator");
-  const participants = players.map((p) => p.id).filter((id) => !(spectator && id === SELF));
-  const now = Date.now();
-  const phase = kind.includes("reveal")
-    ? "reveal"
-    : kind.includes("coup")
-      ? "coup"
-      : kind.includes("give")
-        ? "give"
-        : kind.includes("duel")
-          ? "duel"
-          : "vote";
-  const selfPresident = kind === "rusvet-give" || params.get("me") === "president";
-  const president = selfPresident ? SELF : "p1";
-  const budget = Math.min(2 * (n - 1), Math.max(1, Number(params.get("budget")) || 3));
-  const cCount = Math.min(n, Math.max(2, Number(params.get("c")) || 3));
-  const candidates = participants.slice(0, cCount);
-  const meOut = kind.includes("duel-out");
-  const duelCandidates = meOut ? participants.slice(1, 1 + cCount) : candidates;
-  const open = params.get("open") === "1";
-  const replayHand = params.get("replay") === "1";
+  const P = players.map((p) => p.id).filter((id) => !(spectating && id === SELF));
+  const connectedNow = () => players.filter((p) => p.connected && P.includes(p.id)).map((p) => p.id);
+  const ctx = (now: number, connected: readonly string[] = P) => ({ now, rng: createRng(11), connected });
+  const me = spectating ? null : SELF;
+  const VOTE = rusvetVoteMs(P.length);
 
-  let phaseStartedAt = now - 3_000;
-  let phaseEndsAt = now + 17_000;
-  if (phase === "duel") [phaseStartedAt, phaseEndsAt] = [now - 3_000, now + RUSVET_SIGN_MS - 3_000];
-  if (phase === "give") [phaseStartedAt, phaseEndsAt] = [now - 4_000, now + RUSVET_GIVE_MS - 4_000];
-  if (phase === "coup") [phaseStartedAt, phaseEndsAt] = [now - 3_000, now + RUSVET_COUP_MS - 3_000];
-  if (phase === "reveal") [phaseStartedAt, phaseEndsAt] = [now - 300, now + 7_700];
-  if (phase === "vote") [phaseStartedAt, phaseEndsAt] = [now - 4_000, now + RUSVET_VOTE_MS - 4_000];
-  if (open) [phaseStartedAt, phaseEndsAt] = [now - 400, now + 2_100];
-
-  let phaseNow: RoomPhase = "playing";
-  let readyIds: string[] = [];
-  let phaseEndsMatch: number | null = null;
-  let myVote: string | null =
-    phase === "vote" && params.get("chosen") !== null ? `p${Number(params.get("chosen"))}` : null;
-  let mySign: Sign | null = kind === "rusvet-duel-locked" ? "tas" : null;
-  let myTokens: Allocation[] =
-    kind === "rusvet-give-locked"
-      ? [
-          { to: "p1", n: 1 },
-          { to: "p2", n: 2 },
-        ]
-      : [];
-  if (kind === "rusvet-vote-locked") myVote = "p1";
-  let myLocked = kind.endsWith("-locked");
-  let rev = 1;
-  const coupMode = params.get("coup");
-  let myCoup: boolean | null = kind === "rusvet-coup-locked" ? params.get("vote") !== "no" : null;
-
-  const signMap = (ids: string[]): Record<string, Sign> => {
-    const out: Record<string, Sign> = {};
-    ids.forEach((id, i) => {
-      out[id] = SIGNS[i % SIGNS.length] as Sign;
-    });
-    return out;
+  /** Sanal zaman (oyun başından ms) üzerinde durum kurar; sonra gerçek saate kaydırılır. */
+  const T0 = 1_000_000;
+  let s: RusvetState = rusvetDarbe.setup(P, ctx(T0));
+  const act = (who: string | null, a: RusvetAction, at: number, connected: readonly string[] = P): void => {
+    if (who === null || !P.includes(who)) return;
+    const r = rusvetDarbe.reduce(s, who, a, ctx(T0 + at, connected));
+    if (!isRejected(r)) s = r;
   };
-  const oldHand: DuelHand = {
-    candidates: duelCandidates,
-    signs: Object.fromEntries(duelCandidates.map((id) => [id, "tas" as Sign])),
-    advance: duelCandidates,
-    replay: true,
+  const tick = (at: number): void => {
+    s = rusvetDarbe.tick(s, ctx(T0 + at));
+  };
+  const other = (k: number): string => P.filter((id) => id !== SELF)[k % Math.max(1, P.length - 1)] ?? SELF;
+
+  /** Başkan `pres` tek başına `budget` oy alır (geri kalanlar dağınık). */
+  const elect = (pres: string, budget: number, random: boolean): void => {
+    const voters = P.filter((id) => id !== pres);
+    const b = Math.min(voters.length, Math.max(2, budget));
+    // Zarla düşecek oy: tercihen başkana oy vermeyen fazla seçmenden (başkan tek lider kalsın).
+    const silent = random ? (voters[b] ?? (b >= 4 ? voters[b - 1] : undefined)) : undefined;
+    for (const [i, id] of voters.entries()) {
+      if (id === silent) continue;
+      // Fazla seçmenler başkan dışındakilere dağılır (en çok 1–2 oy): başkan tek lider kalır.
+      const target = i < b ? pres : (voters[(i + 1) % voters.length] as string);
+      act(id, { kind: "vote", target: target === id ? pres : target }, 1_000 + i * 300);
+    }
+    // Başkan, fazla seçmenlerin hiç oy vermediği birine verir: başkan tek lider kalır (zar düşse de).
+    act(pres, { kind: "vote", target: voters[1] ?? voters[0] ?? pres }, 1_500);
+  };
+  const pledges = (): void => {
+    act(other(0), { kind: "pledge", pledge: "voters" }, 600);
+    act(other(1), { kind: "pledge", pledge: "all" }, 700);
+    if (P.length > 4) act(other(3), { kind: "pledge", pledge: "voters" }, 800);
   };
 
-  const votes = (): Record<string, string> => {
-    // Başkana çoğu oy gider; her dördüncü oyuncu başka birine verir; başkan kendisi dışında birine oy verir.
-    const out: Record<string, string> = {};
-    const other = participants.find((id) => id !== president && id !== "p2") ?? "p0";
-    participants.forEach((id, i) => {
-      if (id === president) out[id] = other;
-      else if (i % 4 === 3) out[id] = id === other ? president : other;
-      else out[id] = president;
-    });
-    return out;
-  };
-  const counts = (): Record<string, number> => {
-    const out: Record<string, number> = {};
-    for (const id of participants) out[id] = 0;
-    for (const to of Object.values(votes())) out[to] = (out[to] ?? 0) + 1;
-    return out;
-  };
-  const givenTokens = (): Record<string, number> => {
-    const out: Record<string, number> = {};
-    for (const id of participants) out[id] = 0;
-    const others = participants.filter((id) => id !== president);
-    let left = counts()[president] ?? budget;
-    for (let i = 0; left > 0 && i < others.length * 2; i++) {
-      const id = others[i % others.length] as string;
-      if ((out[id] ?? 0) < 2) {
-        out[id] = (out[id] ?? 0) + 1;
-        left--;
+  let vt = 4_000;
+  const budget = Number(params.get("budget")) || 3;
+  const presIsMe = params.get("me") === "president" && me !== null;
+  if (stage === "briefing") {
+    vt = 0;
+  } else if (stage.startsWith("vote")) {
+    pledges();
+    act(other(0), { kind: "vote", target: other(1) }, 1_200);
+    act(other(0), { kind: "lock" }, 1_300);
+    act(other(1), { kind: "vote", target: other(0) }, 1_800);
+    act(other(1), { kind: "lock" }, 1_900);
+    if (params.get("chosen") === "1" || stage === "vote-locked")
+      act(me, { kind: "vote", target: other(0) }, 2_500);
+    if (stage === "vote-locked") act(me, { kind: "lock" }, 2_600);
+    vt = 6_000;
+  } else if (stage === "runoff" || stage.startsWith("duel")) {
+    // Halka: herkes bir oy alır -> n'li eşitlik (n ≥ 4 ise ikinci oylama).
+    for (const [i, id] of P.entries())
+      act(id, { kind: "vote", target: P[(i + 1) % P.length] as string }, 1_000);
+    if (stage === "runoff") {
+      tick(VOTE);
+      act(other(2), { kind: "vote", target: other(0) }, VOTE + 1_000);
+      act(other(2), { kind: "lock" }, VOTE + 1_100);
+      vt = VOTE + 3_000;
+    } else {
+      let at = VOTE;
+      const c = Math.min(P.length, Math.max(2, Number(params.get("c")) || 3));
+      if (P.length >= 4) {
+        tick(VOTE);
+        const out = stage === "duel-out";
+        const cands = (out ? P.filter((id) => id !== SELF) : P).slice(0, c);
+        if (cands.length < P.length) {
+          // İkinci oylamada her adaya birer oy: kalanlar düelloya girer.
+          const voters = P.filter((id) => !cands.includes(id) || cands.length > 1);
+          cands.forEach((cand, i) => {
+            const v = voters.find((x) => x !== cand && !Object.hasOwn(s.runoffVotes, x)) ?? voters[i];
+            if (v) act(v, { kind: "vote", target: cand }, VOTE + 500);
+          });
+        }
+        at = VOTE + RUSVET_RUNOFF_MS;
+      }
+      tick(at);
+      const cands = s.candidates;
+      if (params.get("replay") === "1" || params.get("lottery") === "1") {
+        const hands = params.get("lottery") === "1" ? 6 : 1;
+        for (let h = 0; h < hands; h++) {
+          for (const id of cands) act(id, { kind: "sign", sign: "tas" }, at + 100);
+          if (h < hands - 1 || params.get("lottery") !== "1") {
+            at += 100 + RUSVET_SIGN_REVEAL_MS;
+            tick(at);
+          }
+        }
+      }
+      if (params.get("open") === "1") {
+        const signs = ["tas", "makas", "makas", "tas", "makas", "makas", "tas", "makas"] as const;
+        for (const [i, id] of cands.entries()) act(id, { kind: "sign", sign: signs[i] ?? "tas" }, at + 200);
+        vt = at + 250;
+      } else if (params.get("lottery") === "1") {
+        vt = at + 300;
+      } else {
+        for (const id of cands.filter((x) => x !== SELF).slice(0, 1))
+          act(id, { kind: "sign", sign: "kagit" }, at + 1_000);
+        if (stage === "duel-locked") act(me, { kind: "sign", sign: "makas" }, at + 1_500);
+        vt = params.get("beat") === "1" ? at + RUSVET_SIGN_MS - 1_500 : at + 3_000;
       }
     }
-    return out;
-  };
-
-  /** Darbe aşaması jeton dağılımı: `waits` jeton alır, geri kalanlar (hak sahibi) 0. */
-  const coupTokens = (): Record<string, number> => {
-    const out: Record<string, number> = {};
-    for (const id of participants) out[id] = 0;
-    const others = participants.filter((id) => id !== president);
-    const order =
-      kind === "rusvet-coup-wait"
-        ? [SELF, ...others.filter((id) => id !== SELF)]
-        : others.filter((id) => id !== SELF);
-    let left = Math.min(
-      counts()[president] ?? budget,
-      order.length > 1 ? order.length - 1 : 1,
-      2 * order.length,
-    );
-    for (let i = 0; left > 0 && i < order.length; i++) {
-      out[order[i] as string] = 1;
-      left--;
-    }
-    return out;
-  };
-  const coupEligible = (tk: Record<string, number>): string[] =>
-    participants.filter((id) => id !== president && (tk[id] ?? 0) === 0);
-
-  /** Hazır olanlar (mock): kilitli ekranda sen ve birkaç kişi; izleyici ekranında birkaç kişi. */
-  const readyList = (): string[] => {
-    if (phase === "coup") {
-      const el = coupEligible(coupTokens());
-      const others = el.filter((id) => id !== SELF).slice(0, Math.max(0, Math.floor(el.length / 2)));
-      return myCoup !== null && el.includes(SELF) ? [SELF, ...others] : others;
-    }
-    if (phase === "give") return myLocked && selfPresident ? [SELF] : [];
-    const pool = phase === "duel" ? duelCandidates : participants;
-    if (spectator) return pool.slice(1, 3);
-    const others = pool.filter((id) => id !== SELF).slice(0, Math.max(0, Math.floor(pool.length / 2) - 1));
-    if (phase === "duel")
-      return myLocked || mySign !== null ? [SELF, ...others].filter((id) => pool.includes(id)) : others;
-    return myLocked ? [SELF, ...others] : [];
-  };
-  const build = (): { pub: RusvetPublicView; priv: RusvetView } => {
-    const ready = phase === "reveal" ? [] : readyList();
-    const base = {
-      players: participants,
-      startedAt: now - 30_000,
-      phaseStartedAt,
-      phaseEndsAt,
-      ready,
-    };
-    if (phase === "vote") {
-      return {
-        pub: { ...base, phase, president: null, budget: null, duel: null, coup: null, reveal: null },
-        priv: {
-          myVote: spectator ? null : myVote,
-          mySign: null,
-          myTokens: null,
-          myCoup: null,
-          canCoup: false,
-          locked: !spectator && myLocked,
-        },
-      };
-    }
-    if (phase === "duel") {
-      return {
-        pub: {
-          ...base,
-          phase,
-          president: null,
-          budget: null,
-          coup: null,
-          reveal: null,
-          duel: {
-            hand: replayHand || open ? 2 : 1,
-            candidates: duelCandidates,
-            signStartedAt: phaseStartedAt,
-            signEndsAt: phaseEndsAt,
-            revealEndsAt: phaseEndsAt + 2_500,
-            signs: open ? signMap(duelCandidates) : null,
-            history: replayHand ? [oldHand] : [],
-          },
-        },
-        priv: {
-          myVote: null,
-          mySign: spectator || meOut ? null : mySign,
-          myTokens: null,
-          myCoup: null,
-          canCoup: false,
-          locked: !spectator && !meOut && mySign !== null,
-        },
-      };
-    }
-    if (phase === "give") {
-      return {
-        pub: { ...base, phase, president, budget, duel: null, coup: null, reveal: null },
-        priv: {
-          myVote: null,
-          mySign: null,
-          myTokens: selfPresident && !spectator ? myTokens : null,
-          myCoup: null,
-          canCoup: false,
-          locked: selfPresident && !spectator && myLocked,
-        },
-      };
-    }
-    if (phase === "coup") {
-      const tk = coupTokens();
-      const el = coupEligible(tk);
-      return {
-        pub: {
-          ...base,
-          phase,
+  } else {
+    const pres =
+      presIsMe || stage === "give" || stage.startsWith("give-u") || stage.startsWith("give-l") ? SELF : "p1";
+    const president = P.includes(pres) ? pres : (P[0] as string);
+    act(president, { kind: "pledge", pledge: params.get("pledge") === "broke" ? "voters" : "all" }, 500);
+    elect(president, budget, params.get("random") === "1");
+    tick(VOTE);
+    const crownEnd = VOTE + RUSVET_CROWN_MS;
+    const others = P.filter((id) => id !== president);
+    if (stage === "crown") {
+      vt = VOTE + 600;
+    } else if (stage.startsWith("give")) {
+      if (stage !== "give") {
+        act(
           president,
-          budget: counts()[president] ?? budget,
-          duel: null,
-          coup: { tokens: tk, eligible: el },
-          reveal: null,
-        },
-        priv: {
-          myVote: null,
-          mySign: null,
-          myTokens: null,
-          myCoup: spectator ? null : myCoup,
-          canCoup: !spectator && el.includes(SELF),
-          locked: false,
-        },
-      };
+          { kind: "give", tokens: [{ to: others[1] ?? others[0] ?? "", n: 1 }] },
+          crownEnd + 2_000,
+        );
+      }
+      if (stage === "give-locked" || stage === "give-done")
+        act(president, { kind: "lock" }, crownEnd + 3_000);
+      if (stage === "give-offline")
+        s = rusvetDarbe.onPresence?.(s, ctx(T0 + crownEnd + 2_500, connectedNow())) ?? s;
+      vt =
+        stage === "give-urgent"
+          ? crownEnd + RUSVET_GIVE_MS - 3_500
+          : stage === "give-locked" || stage === "give-done"
+            ? crownEnd + 3_400
+            : crownEnd + 4_000;
+    } else {
+      // Darbe ve açılış: SELF jeton almaz (coup-wait'te alır).
+      const selfGets = stage === "coup-wait";
+      const plan: { to: string; n: number }[] = [];
+      let left = s.budget;
+      const receivers =
+        params.get("pledge") === "kept"
+          ? others
+          : others
+              .filter((id) => (selfGets ? true : id !== SELF))
+              .slice(0, Math.max(1, Math.ceil(others.length / 2)));
+      for (const to of receivers) {
+        if (left <= 0) break;
+        const k = Math.min(left, params.get("pledge") === "kept" ? 1 : 2);
+        plan.push({ to, n: k });
+        left -= k;
+      }
+      act(president, { kind: "give", tokens: plan }, crownEnd + 2_000);
+      act(president, { kind: "lock" }, crownEnd + 2_000);
+      const coupAt = crownEnd + 3_000;
+      tick(coupAt);
+      const hit = params.get("coup") === "hit";
+      if (stage === "coup-locked") act(me, { kind: "coup", yes: params.get("vote") !== "no" }, coupAt + 800);
+      if (stage.startsWith("coup")) {
+        // Biri oy verir (son hak sahibi değilse: aşama bitip açılışa geçmesin).
+        const open = s.coupEligible.filter((id) => !Object.hasOwn(s.coupVotes, id));
+        const voter = open.find((id) => id !== SELF);
+        if (voter && open.length > 1) act(voter, { kind: "coup", yes: true }, coupAt + 1_200);
+        vt = coupAt + 2_500;
+      } else {
+        for (const id of s.coupEligible) act(id, { kind: "coup", yes: hit }, coupAt + 1_000);
+        tick(coupAt + 2_000);
+        tick(coupAt + 10_000);
+        const start = s.finishAt === null ? coupAt + 2_000 : s.finishAt - 11_000 - T0;
+        vt = start + (Number(params.get("t")) || 10_500);
+      }
     }
-    const tokens = coupMode !== null ? coupTokens() : givenTokens();
-    const eligible = coupMode !== null ? coupEligible(tokens) : [];
-    const hit = coupMode === "hit";
-    const scores: Record<string, number> = { ...tokens };
-    if (!hit) scores[president] = (scores[president] ?? 0) + 1;
-    return {
-      pub: {
-        ...base,
-        phase: "reveal",
-        president,
-        budget: counts()[president] ?? budget,
-        duel: null,
-        coup: null,
-        reveal: {
-          votes: votes(),
-          counts: counts(),
-          tokens,
-          scores,
-          duelHands: [],
-          coup:
-            eligible.length > 0
-              ? { eligible, yes: hit ? eligible.length : Math.floor(eligible.length / 2), success: hit }
-              : null,
-        },
-      },
-      priv: { myVote: null, mySign: null, myTokens: null, myCoup: null, canCoup: false, locked: false },
-    };
-  };
+  }
 
-  const snapshot = (): RoomSnapshot => {
-    if (kind === "rusvet-briefing") {
-      phaseNow = "briefing";
-      readyIds = participants.slice(1, 3);
-      phaseEndsMatch = now + 40_000;
-    }
-    const { pub, priv } = build();
+  // Sanal zamanı gerçek saate kaydır: şu an = sanal vt.
+  const shift = Date.now() - (T0 + vt);
+  const real = (x: number) => x + shift;
+  const briefing = stage === "briefing";
+  let rev = 1;
+  function publish(): void {
+    const now = Date.now();
+    const cx = ctx(now - shift, connectedNow());
+    const ended = rusvetDarbe.isFinished(s, cx);
+    const pub = briefing ? null : shiftTimes(rusvetDarbe.publicView(s, cx), shift);
+    const revealAt = rusvetDarbe.revealAt?.(s, cx) ?? null;
     const match: MatchSnapshot = {
       round: 0,
       total: 3,
@@ -317,22 +267,26 @@ export function startRusvetMock(kind: string, params: URLSearchParams): void {
       gameName: INFO.name,
       briefing: { goal: rusvetDarbe.briefing.goal, steps: [...rusvetDarbe.briefing.steps] },
       orientation: "portrait",
-      participants,
-      readyIds,
+      participants: P,
+      readyIds: briefing ? ["p1", "p2"] : [],
       continueIds: [],
-      phaseStartedAt,
-      phaseEndsAt: phaseEndsMatch,
+      phaseStartedAt: real(s.startedAt),
+      phaseEndsAt: briefing ? now + 40_000 : null,
       publicView: pub,
-      view: priv,
-      result: null,
+      view: briefing ? null : rusvetDarbe.view(s, me, cx),
+      result: ended ? rusvetDarbe.result(s) : null,
+      ...(revealAt !== null
+        ? { reveal: { startedAt: real(revealAt), endsAt: real(revealAt) + 60_000, continueIds: ["p1"] } }
+        : {}),
     };
-    return {
+    const phase: RoomPhase = briefing ? "briefing" : "playing";
+    const snapshot: RoomSnapshot = {
       rev: ++rev,
-      serverNow: Date.now(),
+      serverNow: now,
       code: "KX7QP",
       hostId: SELF,
       selfId: SELF,
-      phase: phaseNow,
+      phase,
       players,
       gameIds: [INFO.id],
       selection: { mode: "manual" },
@@ -342,34 +296,49 @@ export function startRusvetMock(kind: string, params: URLSearchParams): void {
       catalog: [INFO],
       match,
     };
-  };
+    applySnapshot(snapshot);
+  }
 
   setState({ conn: "open", everOpen: true, nickname: "Cihad" });
-  useMockSender((msg) => {
+  useMockSender((msg: ClientMessage) => {
     if (msg.type !== "action") return;
-    const p = msg.payload as {
-      kind?: string;
-      target?: string;
-      sign?: Sign;
-      tokens?: Allocation[];
-      yes?: boolean;
-    } | null;
-    if (p?.kind === "coup" && typeof p.yes === "boolean") {
-      if (phase !== "coup" || myCoup !== null) return;
-      myCoup = p.yes;
-    } else if (p?.kind === "lock") {
-      if (phase === "vote" && myVote === null) return;
-      if (phase === "give" && myTokens.length === 0) return;
-      myLocked = true;
-    } else if (myLocked && phase !== "duel") return;
-    else if (p?.kind === "vote" && typeof p.target === "string") myVote = p.target;
-    else if (p?.kind === "sign" && p.sign) {
-      if (mySign !== null) return;
-      mySign = p.sign;
-    } else if (p?.kind === "give" && Array.isArray(p.tokens)) myTokens = p.tokens;
-    else return;
-    applySnapshot(snapshot());
+    const action = rusvetDarbe.parseAction(msg.payload);
+    if (!action || me === null) {
+      mockAck(msg.seq, { ok: false, reason: "bad_action" });
+      return;
+    }
+    const r = rusvetDarbe.reduce(s, me, action, ctx(Date.now() - shift, connectedNow()));
+    if (isRejected(r)) {
+      mockAck(msg.seq, { ok: false, reason: r.rejected });
+      return;
+    }
+    s = r;
+    mockAck(msg.seq, { ok: true });
+    publish();
   });
   setState("session", { token: "mock", playerId: SELF, roomCode: "KX7QP" });
-  applySnapshot(snapshot());
+  publish();
+  setInterval(publish, 250);
+}
+
+/** Görünümdeki mutlak zamanları gerçek saate kaydırır (sanal saatle kurulan durum). */
+function shiftTimes<T>(v: T, shift: number): T {
+  const keys = new Set([
+    "startedAt",
+    "phaseStartedAt",
+    "phaseEndsAt",
+    "endsAt",
+    "signStartedAt",
+    "signEndsAt",
+    "revealEndsAt",
+  ]);
+  const walk = (x: unknown): unknown => {
+    if (Array.isArray(x)) return x.map(walk);
+    if (typeof x !== "object" || x === null) return x;
+    const out: Record<string, unknown> = {};
+    for (const [k, val] of Object.entries(x))
+      out[k] = keys.has(k) && typeof val === "number" ? val + shift : walk(val);
+    return out;
+  };
+  return walk(v) as T;
 }

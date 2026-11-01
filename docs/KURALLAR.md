@@ -1020,6 +1020,43 @@ puan dağıtımıdır.
   "Darbe oylaması sürüyor" görür.
 - Tutorial adımı 3: "Süre bitince başkan +1 alır (darbe olmazsa), jetonlar sahiplerine yansır. Jeton alamayanlar darbe yapabilir."
 
+**Değişiklik (RD öneri paketi, Kasım 2026, sahip onayı: RD-M1…RD-M7, RD-U7, RD-U9) — yukarıdakilerin önüne geçer:**
+
+- **Seçim süresi (RD-M7):** 3–5 oyuncuda **20 sn**, 6–8 oyuncuda **30 sn**. Herkes Tamam derse yine 1 sn sonra biter.
+- **Seçim vaadi (RD-M3):** Seçim süresince her oyuncu kendi portresine isterse tek bir hazır vaat asar, değiştirir ya da
+  indirir: **"Oy verene jeton"** (bana kendi eliyle oy veren herkese en az 1 jeton) ya da **"Herkese jeton"** (jetonu
+  olabildiğince çok kişiye yayarım). Vaatler herkese açıktır; Tamam vaadi kilitlemez, seçim bitince kilitlenir. Başkan
+  belli olunca yalnız başkanın vaadi görünür. Vaadin puanı ya da cezası yoktur; açılışta başkanın vaadi **son dağılımla**
+  (süre dolunca rastgele tamamlananlar dahil) karşılaştırılır: "Oy verene jeton" başkana kendi eliyle oy veren herkes en az
+  1 jeton aldıysa **TUTTU**, "Herkese jeton" jeton alan farklı kişi sayısı en küçük(bütçe, oyuncu − 1) ise **TUTTU**; aksi
+  hâlde **BOZDU**. Başkan Bitti demediyse damganın yanında "süre doldu" notu çıkar.
+- **Kalabalık eşitlikte ikinci oylama (RD-M4):** **4 ya da daha çok aday** eşit kalırsa önce **12 sn** ikinci oylama yapılır:
+  herkes yalnız eşit adaylardan birine oy verir (aday kendine veremez; bağlı adaya; Tamam'a kadar değiştirilebilir). Oy
+  vermeyenin oyu **sayılmaz** (rastgele atanmaz). Bağlı herkes Tamam derse 1 sn sonra biter. En çok oyu alan başkan olur;
+  yine eşitlik varsa kalan adaylarla taş-kâğıt-makas düellosu yapılır; kimse oy vermezse bütün adaylarla düello. 2–3 aday
+  eşitse doğrudan düello (eskisi gibi). Bütçe değişmez (ilk tur oy sayısı). İkinci oylamanın oyları açılışta açılır.
+- **"Başkan seçildi" anı (RD-U7):** Başkan belli olunca 1,5 sn "BAŞKAN: ELİF · 3 JETON" anı oynar; **25 sn'lik dağıtım
+  süresi bu anın bitiminden sayılır** (süreden yemez).
+- **Başkanın defteri (RD-M1):** Dağıtım ve darbe aşamasında **yalnız başkan** kendi ekranında ilk tur oylarından kendisine
+  kimin kendi eliyle oy verdiğini ve kimin oyunun rastgele düştüğünü görür. Diğer oyuncular ve izleyici görmez; oylar
+  açılışta eskisi gibi herkese açılır.
+- **Kopan başkan (RD-M6):** Başkan dağıtım sona erdiğinde bağlı değilse ve Bitti dememişse, kalan jetonlar önce ona
+  **kendi eliyle oy verenlere** sırayla birer birer (kişi başı 2 sınırıyla), artarsa diğerlerine rastgele gider. Başkan
+  bağlıysa eski kural (tamamen rastgele) aynen geçerlidir.
+- **Puan (RD-M2):** Başkan, darbe tutmazsa **+2** alır (eskiden +1); darbe tutarsa başkanın ödülünün **tamamı** silinir
+  (0). Aldığın her jeton +1 aynen. Puanlar doğrudan genel skora gider; kimse +2'den fazla almaz, eksi yok. Dağılan toplam
+  puan = bütçe + 2 (darbe yoksa).
+- **Açılış (RD-U9, RD-M5):** Oyun içi açılış en az **11 sn** sürer ("Devam et" kuralı aynen). Oy vermediği için oyu
+  rastgele atananlar ve süre dolduğu (ya da başkan koptuğu) için kendiliğinden giden jetonlar açılışta işaretlenir
+  (kesikli ok + zar; gümüş jeton); bu bilgi yalnız açılışta herkese açıktır.
+- **En uzun süre:** 30 + 12 + 6 × 10,5 + 1,5 + 25 + 10 + 11 = **152,5 sn**.
+- **Değişmeyenler:** 3–8 oyuncu, kendine oy yok, bağlı oyuncuya oy, vermeyenin ilk tur oyu rastgele, bütçe = alınan oy,
+  kişi başı en çok 2 jeton ve kendine yok, dağıtım 25 sn ve Bitti, bağlı başkanda dağıtılmayanın rastgele gitmesi,
+  taş-kâğıt-makas kuralı (iki işaret / tek-üç işarette tekrar, en çok 6 el, sonra kura), darbe oylaması (yalnız 0
+  jetonlular, 10 sn, gizli, tek seferlik, kesin çoğunluk, oylar hiç açılmaz), erken bitişler, eksi puan olmaması.
+- **Anlatım:** "Gizli oy ver: en çok oy alan başkan olur" · "Başkan, aldığı oy kadar jeton dağıtır (kişiye en çok 2)" ·
+  "Jeton alamayanlar darbe yaparsa başkanın puanı gider".
+
 ## 12. Açgözlülük Limiti — `acgozluluk-limiti`
 
 **Durum: KİLİTLİ**
