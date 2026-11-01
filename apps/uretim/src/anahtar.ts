@@ -107,10 +107,13 @@ export class Anahtarlar {
     return true;
   }
 
-  /** Son 24 saatte bu anahtarla yüklenen dosya sayısı sınırın altında mı. */
+  /**
+   * Son 24 saatte bu anahtarla yüklenen farklı dosya (içerik özeti) sayısı sınırın altında mı. Aynı içeriğin yeniden
+   * yüklenmesi (ön kontrol, tekrar deneme) sayılmaz.
+   */
   dosyaIzni(id: number, now: number): boolean {
     const r = this.db
-      .prepare("SELECT COUNT(*) AS n FROM yukleme WHERE anahtar_id = ? AND olusturma > ?")
+      .prepare("SELECT COUNT(DISTINCT ozet) AS n FROM yukleme WHERE anahtar_id = ? AND olusturma > ?")
       .get(id, now - 24 * 3600 * 1000) as { n: number };
     return Number(r.n) < GUNLUK_DOSYA;
   }

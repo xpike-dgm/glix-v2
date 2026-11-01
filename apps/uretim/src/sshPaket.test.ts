@@ -75,6 +75,17 @@ describe("ssh_paket", () => {
     expect(o.u.merkez.bekleyenler("test")).toHaveLength(4);
   });
 
+  it("aynı paketin tekrar ön kontrolü günlük dosya sınırını tüketmez", async () => {
+    const c = await o.giris();
+    const { anahtar, gelen } = await o.sshKanali("test", c);
+    senaryoPaketi(gelen, "qa3", 150);
+    const ortam = cli(anahtar, gelen);
+    // 4 × 150 = 600 yükleme, ama yalnız 150 farklı içerik: sınır (500) dolmaz, teslim geçer.
+    for (let i = 0; i < 4; i++) await calistirKomut(ortam, "on-kontrol qa3");
+    const t = (await calistirKomut(ortam, "teslim-et qa3")) as { ogeler: { durum: string }[] };
+    expect(t.ogeler.every((x) => x.durum === "bekliyor")).toBe(true);
+  });
+
   it("sınırlar: en çok 200 dosya; talimat sınırları yazar", async () => {
     const c = await o.giris();
     const { anahtar, gelen } = await o.sshKanali("test", c);
