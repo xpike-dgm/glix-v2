@@ -17,6 +17,7 @@ import { type AiFetch, donusturucuKur } from "./istekYaz.js";
 import { Depoayna, Katalog } from "./katalog.js";
 import { mcpIstek } from "./mcp.js";
 import { Merkez } from "./merkez.js";
+import { eylemdenOlay, OlayYayini } from "./olaylar.js";
 import { type OyunFetch, OyunIstemcisi } from "./oyun.js";
 import { canliKontrol } from "./paket.js";
 import { SshKanal } from "./sshKanal.js";
@@ -53,6 +54,7 @@ export interface Uretim {
   ssh: SshKanal;
   bildirim: Bildirim;
   katalog: Katalog;
+  yayin: OlayYayini;
   /** Zamanlanmış işleri başlatır (eşitleme, temizlik, yedek, bildirim, gelen klasörü). */
   zamanlayicilariBaslat(): void;
   kapat(): Promise<void>;
@@ -76,9 +78,20 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
     }
   }
   const bildirim = new Bildirim(db, push, config.saatDilimi);
+  // Giriş nesnesi aşağıda kurulur; akışın oturum denetimi ona geç bağlanır.
+  let oturumGecerli: (belirtec: string) => boolean = () => false;
+  const yayin = new OlayYayini((b) => oturumGecerli(b));
+  denetim.dinle((eylem, hedef, ayrinti) => {
+    const t = eylemdenOlay(eylem, ayrinti);
+    if (t) yayin.yay(t, hedef);
+  });
   const merkez = new Merkez(db, depo, denetim, katalog, oyun, anahtarlar, {
-    kirmizi: (m) => void bildirim.kirmizi(m, now()),
+    kirmizi: (m) => {
+      yayin.yay("uyari");
+      void bildirim.kirmizi(m, now());
+    },
     bilgi: (m, url) => void bildirim.bilgi(m, url, now()),
+    degisti: (tur, alan) => yayin.yay(tur, alan),
   });
   const donusturucu = donusturucuKur(db, config.aiKey, {
     ...(b.aiFetch ? { fetch: b.aiFetch } : {}),
@@ -91,6 +104,7 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
         ? resendPostaci(config.resendKey, config.mailFrom)
         : null;
   const giris = new Giris(db, denetim, config.sahipEpostalar, postaci);
+  oturumGecerli = (b) => giris.oturum(b, now()) !== null;
   const ssh = new SshKanal(
     db,
     denetim,
@@ -158,6 +172,7 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
           bildirim,
           ssh,
           donusturucu,
+          yayin,
           surum,
           now,
         });
@@ -187,6 +202,7 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
     ssh,
     bildirim,
     katalog,
+    yayin,
     zamanlayicilariBaslat() {
       const esitle = guvenli("esitleme", () => katalog.esitle(now()));
       esitle();
@@ -243,6 +259,7 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
     },
     async kapat() {
       for (const z of zamanlayicilar) clearInterval(z);
+      yayin.kapat();
       await new Promise<void>((r) => server.close(() => r()));
       server.closeAllConnections();
       db.close();

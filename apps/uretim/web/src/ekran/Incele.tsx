@@ -23,6 +23,7 @@ import { TESLIM_TURU_ADI } from "../../../src/ortak/tipler.js";
 import { al, gonder } from "../api.js";
 import { boyut, goreliZaman, tarihSaat } from "../bicim.js";
 import { AlanIsareti, AltSayfa, Bos, DurumEtiketi, Iskelet, Sekmeler, SonucEtiketi } from "../bilesenler.js";
+import { olayDinle, yerelOlay } from "../canli.js";
 import {
   alanBul,
   git,
@@ -36,7 +37,7 @@ import {
   yolAdi,
 } from "../durum.js";
 import { jestIpucu, jestKarari } from "../jest.js";
-import { panoYenile, yazmaAlaniMi } from "../Kabuk.js";
+import { panoBekleyenDegistir, panoYenile, yazmaAlaniMi } from "../Kabuk.js";
 import { OyunOnizleme, varsayilanEkran } from "../onizleme/OyunOnizleme.js";
 import {
   AnimasyonSahne,
@@ -440,7 +441,7 @@ export function Incele(): JSX.Element {
     { initialValue: [] },
   );
   // `null` kaynakta tetiklenmez; bu yüzden ayrıca bir kez yüklenir.
-  const [kuyrukTum, { mutate: kuyrukTumMutate }] = createResource(async () =>
+  const [kuyrukTum, { mutate: kuyrukTumMutate, refetch: kuyrukTumYenile }] = createResource(async () =>
     alanSuzgeci() ? [] : (await al<{ ogeler: OgeOzeti[] }>("kuyruk")).ogeler,
   );
   const liste = (): OgeOzeti[] => (alanSuzgeci() ? kuyruk() : (kuyrukTum() ?? []));
@@ -451,7 +452,17 @@ export function Incele(): JSX.Element {
       setBaslangicToplam(liste().length);
   });
   const etkinId = (): number | null => istenenId() ?? liste()[0]?.id ?? null;
-  const [ayrinti, { mutate: ayrintiDegistir }] = createResource(etkinId, (id) => al<Ayrinti>(`oge/${id}`));
+  const [ayrinti, { mutate: ayrintiDegistir, refetch: ayrintiYenile }] = createResource(etkinId, (id) =>
+    al<Ayrinti>(`oge/${id}`),
+  );
+  // Canlı: başka sekme/cihazdaki karar ya da yeni teslim kuyruğu ve açık öğeyi günceller (sayfa yenilemeden).
+  onCleanup(
+    olayDinle(["teslim", "karar", "geri_al", "aktarim"], (olay) => {
+      if (alanSuzgeci()) void kuyrukYenile();
+      else void kuyrukTumYenile();
+      if (olay.tur !== "teslim" && !mesgul() && cikis() === null) void ayrintiYenile();
+    }),
+  );
   const [kardesler] = createResource(
     () => (ayrinti()?.oge.gorunum === "fikir" && ayrinti()?.oge.isId ? ayrinti()?.oge.isId : null),
     async (isId) => {
@@ -520,6 +531,9 @@ export function Incele(): JSX.Element {
 
   const kararSonrasi = (o: OgeAyrinti, karar: Karar): void => {
     const sonraki = sonrakiId();
+    // İyimser: pano sayaçları ve diğer ekranlar hemen; sunucu olayı ardından düzeltir.
+    panoBekleyenDegistir(o.alan, -1);
+    yerelOlay("karar", o.alan);
     titret(karar === "onay" ? 14 : 22);
     setCikis(karar);
     setTimeout(() => {
@@ -543,6 +557,7 @@ export function Incele(): JSX.Element {
         f: () => {
           void gonder(`oge/${o.id}/geri-al`)
             .then(() => {
+              panoBekleyenDegistir(o.alan, 1);
               setBitenler((b) => Math.max(0, b - 1));
               if (!alanSuzgeci()) kuyrukTumDegistir([{ ...o, durum: "bekliyor" }, ...(kuyrukTum() ?? [])]);
               else void kuyrukYenile();

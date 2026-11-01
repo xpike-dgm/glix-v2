@@ -31,13 +31,29 @@ export type DenetimEylemi =
   | "ayar"
   | "istem_kopyalandi";
 
+export type DenetimDinleyici = (eylem: DenetimEylemi, hedef: string, ayrinti: string) => void;
+
 export class Denetim {
+  private readonly dinleyiciler: DenetimDinleyici[] = [];
+
   constructor(private readonly db: Db) {}
+
+  /** Her kayıttan sonra çağrılır (canlı güncelleme olayları). */
+  dinle(f: DenetimDinleyici): void {
+    this.dinleyiciler.push(f);
+  }
 
   yaz(now: number, kim: string, eylem: DenetimEylemi, hedef = "", ayrinti = ""): void {
     this.db
       .prepare("INSERT INTO denetim (zaman, kim, eylem, hedef, ayrinti) VALUES (?, ?, ?, ?, ?)")
       .run(now, kim.slice(0, 120), eylem, hedef.slice(0, 200), ayrinti.slice(0, 500));
+    for (const f of this.dinleyiciler) {
+      try {
+        f(eylem, hedef, ayrinti);
+      } catch {
+        // Dinleyici hatası kaydı bozmaz.
+      }
+    }
   }
 
   sayfa(

@@ -1,5 +1,5 @@
 /** Alan sayfası (UM-U2): bekleyenler, işler, talimat, zevk profili, bağlantı (MCP/SSH), ayarlar ve istatistik. */
-import { createResource, createSignal, For, type JSX, Match, Show, Switch } from "solid-js";
+import { createResource, createSignal, For, type JSX, Match, onCleanup, Show, Switch } from "solid-js";
 import { type AlanId, alanTanimi } from "../../../src/ortak/alanlar.js";
 import type { AlanSayfasi, Gorunum, IsKaydi, TeslimTuru, ZevkOrnegi } from "../../../src/ortak/tipler.js";
 import { TESLIM_TURU_ADI } from "../../../src/ortak/tipler.js";
@@ -14,6 +14,7 @@ import {
   SonucEtiketi,
   TarihSecici,
 } from "../bilesenler.js";
+import { olayDinle } from "../canli.js";
 import { alanRengi, git, hataTost, oturum, sorgu, tost } from "../durum.js";
 import { panoYenile } from "../Kabuk.js";
 import { Simge, type SimgeAdi } from "../simgeler.js";
@@ -1122,6 +1123,12 @@ export function Alan(p: { alan: AlanId }): JSX.Element {
     void refetch();
     void panoYenile();
   };
+  // Canlı: bu alandaki her değişiklik (teslim, karar, iş, kilit, ayar) sayfayı yenilemeden günceller.
+  onCleanup(
+    olayDinle(null, (olay) => {
+      if (olay.alan === null || olay.alan === p.alan) void refetch();
+    }),
+  );
   const t = (): ReturnType<typeof alanTanimi> => alanTanimi(p.alan);
   return (
     <div class="sayfa" style={{ "--alan-renk": alanRengi(p.alan) }}>

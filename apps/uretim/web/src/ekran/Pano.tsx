@@ -7,7 +7,7 @@ import { dosyaUrl, gonder } from "../api.js";
 import { boyut, goreliZaman, gunBasligi, istanbulSaati, selam } from "../bicim.js";
 import { AlanIsareti, Bos, Halka, Iskelet, IskeletKartlar } from "../bilesenler.js";
 import { alanBul, alanRengi, git, hataTost, oturum, tost } from "../durum.js";
-import { bekleyenToplam, panoVerisi, panoYenile } from "../Kabuk.js";
+import { bekleyenToplam, panoVerisi, panoYenile, vurgu } from "../Kabuk.js";
 import { Simge } from "../simgeler.js";
 
 export function KucukOnizleme(p: { k: Kucuk | null; ad?: string }): JSX.Element {
@@ -72,6 +72,8 @@ function AlanKartiGorunumu(p: { k: AlanKarti; simdi: number }): JSX.Element {
   return (
     <a
       class="kart alan-karti"
+      classList={{ "alan-karti--yeni": vurgu().has(p.k.alan) }}
+      data-alan={p.k.alan}
       href={`/alan/${p.k.alan}`}
       style={{ "--alan-renk": alanRengi(p.k.alan) }}
       onClick={(e) => {
@@ -82,7 +84,9 @@ function AlanKartiGorunumu(p: { k: AlanKarti; simdi: number }): JSX.Element {
       <div class="alan-karti__bas">
         <AlanIsareti alan={p.k.alan} />
         <Show when={p.k.bekleyen > 0} fallback={<span class="cok-soluk kucuk">Bekleyen yok</span>}>
-          <span class="sayac">{p.k.bekleyen}</span>
+          <span class="sayac" classList={{ vurgu: vurgu().has(p.k.alan) }}>
+            {p.k.bekleyen}
+          </span>
         </Show>
       </div>
       <Show

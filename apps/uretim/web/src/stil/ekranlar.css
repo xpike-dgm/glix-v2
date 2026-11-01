@@ -2120,3 +2120,27 @@ select.girdi {
 .giris-listesi li:first-child {
   border-top: 0;
 }
+
+/* Canlı güncelleme: yeni teslim gelince kısa, sakin vurgu (hareket azaltmada yok). */
+@keyframes yeni-teslim {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--vurgu) 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--vurgu) 0%, transparent);
+  }
+}
+.alan-karti--yeni,
+.sayac.vurgu,
+.kenar__sayi.vurgu,
+.alt-gezinme__sayi.vurgu {
+  animation: yeni-teslim 1.2s ease-out 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .alan-karti--yeni,
+  .sayac.vurgu,
+  .kenar__sayi.vurgu,
+  .alt-gezinme__sayi.vurgu {
+    animation: none;
+  }
+}

@@ -2,11 +2,12 @@
  * İsteğini yaz (UM-R1, R2): düz cümle → yapılandırılmış iş taslağı (sahip düzeltir) → iş açılır → istem tek dokunuşla
  * kopyalanır. İstem yalnız iş numarası ve kısa özet taşır; anahtar ya da sır içermez.
  */
-import { createResource, createSignal, For, type JSX, Show } from "solid-js";
+import { createResource, createSignal, For, type JSX, onCleanup, Show } from "solid-js";
 import { ALANLAR, type AlanId, alanTanimi } from "../../../src/ortak/alanlar.js";
 import type { AlanSayfasi, IsKaydi } from "../../../src/ortak/tipler.js";
 import { al, gonder } from "../api.js";
 import { AlanIsareti, TarihSecici } from "../bilesenler.js";
+import { olayDinle } from "../canli.js";
 import { alanRengi, git, hataTost, sorgu, titret, tost } from "../durum.js";
 import { panoYenile } from "../Kabuk.js";
 import { Simge } from "../simgeler.js";
@@ -206,6 +207,11 @@ export function Iste(): JSX.Element {
   const [fikir, setFikir] = createSignal(false);
   const [sonTarih, setSonTarih] = createSignal("");
   const [ayar, { refetch: ayarYenile }] = createResource(alan, (a) => al<AlanSayfasi>(`alan/${a}`));
+  onCleanup(
+    olayDinle(["is", "kilit", "ayar", "istek_karti"], (olay) => {
+      if (olay.alan === null || olay.alan === alan()) void ayarYenile();
+    }),
+  );
   const [baglantiSecimi, setBaglantiSecimi] = createSignal<"mcp" | "ssh" | null>(null);
   const baglanti = (): "mcp" | "ssh" => baglantiSecimi() ?? ayar()?.uygulama.baglanti ?? "mcp";
   const [taslak, setTaslak] = createSignal<Taslak | null>(null);

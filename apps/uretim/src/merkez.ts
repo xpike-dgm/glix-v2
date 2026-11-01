@@ -73,6 +73,8 @@ export interface Olaylar {
   kirmizi(metin: string): void;
   /** Sıradan bilgi bildirimi (iş açıldı, iş bekliyor). */
   bilgi?(metin: string, url: string): void;
+  /** Denetim kaydına düşmeyen durum değişiklikleri (iş başladı, kilit alındı): canlı güncelleme. */
+  degisti?(tur: "is" | "kilit", alan: string): void;
 }
 
 interface OgeSatiri {
@@ -1597,7 +1599,11 @@ export class Merkez {
 
   /** Yapay zekâ işi ilk kez okudu (UM-R2 "başladı"). */
   isBasladi(id: number, now: number): void {
-    this.db.prepare("UPDATE isler SET basladi = COALESCE(basladi, ?) WHERE id = ?").run(now, id);
+    const r = this.db.prepare("UPDATE isler SET basladi = ? WHERE id = ? AND basladi IS NULL").run(now, id);
+    if (r.changes > 0) {
+      const is = this.is(id);
+      if (is) this.olaylar.degisti?.("is", is.alan);
+    }
   }
 
   // ---- İş kilidi (sözleşme bölüm 8) ----------------------------------------------------------------------
@@ -1621,6 +1627,10 @@ export class Merkez {
     this.db
       .prepare("UPDATE isler SET kilit_anahtar = ?, kilit_ad = ?, kilit_zaman = ? WHERE id = ?")
       .run(anahtarId, ad, now, id);
+    if (!k) {
+      const is = this.is(id);
+      if (is) this.olaylar.degisti?.("kilit", is.alan);
+    }
     return true;
   }
 

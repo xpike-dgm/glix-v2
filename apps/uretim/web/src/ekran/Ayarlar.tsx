@@ -1,9 +1,10 @@
 /** Ayarlar: görünüm (tema, yazı boyutu), bildirimler (UM-U7), paketler, kod istekleri, denetim kaydı, oturum. */
-import { createResource, createSignal, For, type JSX, Show } from "solid-js";
+import { createResource, createSignal, For, type JSX, onCleanup, Show } from "solid-js";
 import type { KodIstegi, PaketKaydi } from "../../../src/ortak/tipler.js";
 import { al, gonder } from "../api.js";
 import { tarihSaat } from "../bicim.js";
 import { AlanIsareti, AltSayfa, Bos, Sekmeler } from "../bilesenler.js";
+import { olayDinle } from "../canli.js";
 import {
   hataTost,
   oturum,
@@ -152,6 +153,7 @@ function Bildirimler(): JSX.Element {
 
 function Paketler(): JSX.Element {
   const [veri, { refetch }] = createResource(() => al<{ paketler: PaketKaydi[] }>("paketler"));
+  onCleanup(olayDinle(["paket", "aktarim", "karar", "geri_al"], () => void refetch()));
   const [isaret, setIsaret] = createSignal<PaketKaydi | null>(null);
   const [rev, setRev] = createSignal("");
   const hazirla = async (): Promise<void> => {
@@ -260,6 +262,7 @@ function Paketler(): JSX.Element {
 
 function KodIstekleri(): JSX.Element {
   const [veri, { refetch }] = createResource(() => al<{ istekler: KodIstegi[] }>("kod-istekleri"));
+  onCleanup(olayDinle(["kod_istegi"], () => void refetch()));
   const durum = async (k: KodIstegi, d: "onaylandi" | "reddedildi" | "yapildi"): Promise<void> => {
     try {
       await gonder(`kod-istegi/${k.id}/durum`, { durum: d });

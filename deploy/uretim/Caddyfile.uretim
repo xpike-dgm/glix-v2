@@ -1,6 +1,8 @@
 # Üretim Merkezi site bloğu (TASLAK). Var olan glix.dgmcraft.online bloğuna dokunulmaz.
 uretim.dgmcraft.online {
-	encode zstd gzip
+	# Canlı güncelleme akışı (SSE, /api/olaylar) sıkıştırılmaz ve tamponlanmaz.
+	@sikistir not path /api/olaylar
+	encode @sikistir zstd gzip
 	header {
 		Strict-Transport-Security "max-age=31536000"
 		X-Robots-Tag "noindex, nofollow"
@@ -12,5 +14,7 @@ uretim.dgmcraft.online {
 	request_body {
 		max_size 45MB
 	}
-	reverse_proxy 127.0.0.1:3910
+	reverse_proxy 127.0.0.1:3910 {
+		flush_interval -1
+	}
 }

@@ -13,7 +13,7 @@ import { Iste } from "./ekran/Iste.js";
 import { Pano } from "./ekran/Pano.js";
 import { Raporlar } from "./ekran/Raporlar.js";
 import { Yukle } from "./ekran/Yukle.js";
-import { Kabuk } from "./Kabuk.js";
+import { canliBagla, Kabuk } from "./Kabuk.js";
 
 function Yukleniyor(): JSX.Element {
   return (
@@ -24,6 +24,7 @@ function Yukleniyor(): JSX.Element {
 }
 
 export function App(): JSX.Element {
+  canliBagla();
   onMount(() => {
     oturumKapaninca(() => setOturum((o) => (o ? { ...o, giris: false } : o)));
     void oturumYukle();

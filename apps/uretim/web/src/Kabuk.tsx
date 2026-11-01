@@ -1,9 +1,21 @@
 /** Uygulama kabuğu: kenar çubuğu (geniş ekran), üst çubuk + alt gezinme (telefon), komut paleti, kısayol listesi. */
-import { createMemo, createResource, createSignal, For, type JSX, onCleanup, onMount, Show } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  For,
+  type JSX,
+  on,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 import { ALANLAR } from "../../src/ortak/alanlar.js";
 import type { Pano } from "../../src/ortak/tipler.js";
 import { al, gonder } from "./api.js";
 import { AltSayfa } from "./bilesenler.js";
+import { canliBaslat, canliDurdur, olayDinle } from "./canli.js";
 import {
   alanRengi,
   git,
@@ -19,11 +31,66 @@ import {
 } from "./durum.js";
 import { Simge, type SimgeAdi } from "./simgeler.js";
 
-export const [panoVerisi, { refetch: panoYenile }] = createResource(
+export const [panoVerisi, { refetch: panoYenile, mutate: panoDegistir }] = createResource(
   () => (oturum()?.giris ? true : null),
   async () => al<Pano>("pano").catch(() => undefined),
 );
 export const bekleyenToplam = (): number => panoVerisi()?.alanlar.reduce((t, a) => t + a.bekleyen, 0) ?? 0;
+
+/**
+ * İyimser güncelleme: kararı verilen (ya da geri alınan) öğe için pano sayaçlarını hemen değiştirir. Sunucu olayı
+ * ardından gelir ve gerçek değerlerle düzeltir.
+ */
+export function panoBekleyenDegistir(alan: string, fark: number): void {
+  const p = panoVerisi();
+  if (!p) return;
+  panoDegistir({
+    ...p,
+    alanlar: p.alanlar.map((a) => (a.alan === alan ? { ...a, bekleyen: Math.max(0, a.bekleyen + fark) } : a)),
+  });
+}
+
+/** Yeni teslim vurgusu: hangi alanlar (ve genel sayaç) kısa süre vurgulanır. */
+export const [vurgu, setVurgu] = createSignal<ReadonlySet<string>>(new Set());
+export const VURGU_MS = 2400;
+
+export const sayfaBasligi = (n: number): string =>
+  n > 0 ? `(${n > 99 ? "99+" : n}) Üretim Merkezi` : "Üretim Merkezi";
+
+/**
+ * Canlı güncellemeyi uygulama köküne bağlar: oturum açıkken olay akışı, her olayda pano tazelenir, sayfa başlığı
+ * bekleyen sayısını gösterir, bekleyen artınca ilgili alan kısa süre vurgulanır.
+ */
+export function canliBagla(): void {
+  createEffect(
+    on(
+      () => oturum()?.giris === true,
+      (acik) => (acik ? canliBaslat() : canliDurdur()),
+    ),
+  );
+  const birak = olayDinle(null, () => void panoYenile());
+  onCleanup(() => {
+    birak();
+    canliDurdur();
+  });
+  createEffect(() => {
+    document.title = sayfaBasligi(bekleyenToplam());
+  });
+  let zaman: ReturnType<typeof setTimeout> | undefined;
+  createEffect(
+    on(
+      () => panoVerisi()?.alanlar.map((a) => [a.alan, a.bekleyen] as const),
+      (yeni, eski) => {
+        if (!yeni || !eski) return;
+        const artan = yeni.filter(([a, n]) => n > (eski.find(([b]) => b === a)?.[1] ?? 0)).map(([a]) => a);
+        if (!artan.length) return;
+        setVurgu(new Set([...artan, "toplam"]));
+        clearTimeout(zaman);
+        zaman = setTimeout(() => setVurgu(new Set<string>()), VURGU_MS);
+      },
+    ),
+  );
+}
 
 const GEZINME: { yol: string; ad: string; simge: SimgeAdi }[] = [
   { yol: "/", ad: "Pano", simge: "pano" },
@@ -97,7 +164,9 @@ export function Kabuk(p: { children: JSX.Element; baslik?: string }): JSX.Elemen
                 <Simge ad={g.simge} boyut={18} />
                 <span class="esnek">{g.ad}</span>
                 <Show when={g.yol === "/incele" && bekleyenToplam() > 0}>
-                  <span class="sayac">{bekleyenToplam()}</span>
+                  <span class="sayac" classList={{ vurgu: vurgu().has("toplam") }}>
+                    {bekleyenToplam()}
+                  </span>
                 </Show>
               </a>
             )}
@@ -121,7 +190,9 @@ export function Kabuk(p: { children: JSX.Element; baslik?: string }): JSX.Elemen
                   <span class="nokta" style={{ "--alan-renk": alanRengi(a.id) }} />
                   <span class="esnek tasma">{a.ad}</span>
                   <Show when={(kart()?.bekleyen ?? 0) > 0}>
-                    <span class="kenar__sayi">{kart()?.bekleyen}</span>
+                    <span class="kenar__sayi" classList={{ vurgu: vurgu().has(a.id) }}>
+                      {kart()?.bekleyen}
+                    </span>
                   </Show>
                 </a>
               );
@@ -169,7 +240,9 @@ export function Kabuk(p: { children: JSX.Element; baslik?: string }): JSX.Elemen
                 <span class="alt-gezinme__simge">
                   <Simge ad={g.simge} boyut={22} />
                   <Show when={g.yol === "/incele" && bekleyenToplam() > 0}>
-                    <span class="alt-gezinme__sayi">{bekleyenToplam() > 99 ? "99+" : bekleyenToplam()}</span>
+                    <span class="alt-gezinme__sayi" classList={{ vurgu: vurgu().has("toplam") }}>
+                      {bekleyenToplam() > 99 ? "99+" : bekleyenToplam()}
+                    </span>
                   </Show>
                 </span>
                 <span>{g.ad}</span>

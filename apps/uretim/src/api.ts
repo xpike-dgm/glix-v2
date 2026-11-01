@@ -28,6 +28,7 @@ import {
 } from "./http.js";
 import { type Donusturucu, istemDoldur, istemUret } from "./istekYaz.js";
 import { IsHatasi, type Merkez } from "./merkez.js";
+import type { OlayYayini } from "./olaylar.js";
 import { ALANLAR, type AlanId, alanTanimi, isAlanId } from "./ortak/alanlar.js";
 import { isDurum, isHazirNot } from "./ortak/durum.js";
 import { canliKontrol, paketler, paketOlustur, paketOyunaEklendi } from "./paket.js";
@@ -43,6 +44,8 @@ export interface ApiOrtami {
   bildirim: Bildirim;
   ssh: SshKanal;
   donusturucu: Donusturucu;
+  /** Canlı güncelleme akışı (verilmezse uç kapalı). */
+  yayin?: OlayYayini;
   surum: string;
   now(): number;
 }
@@ -159,6 +162,8 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
 
     if (!eposta) return hata(res, 401, "giris", "Oturumun kapandı. Yeniden giriş yap.");
     const kim = eposta;
+    // Canlı güncelleme akışı (Server-Sent Events): yanıt açık kalır.
+    if (yol === "olaylar" && !yaz && o.yayin && belirtec) return o.yayin.abone(req, res, belirtec);
     const m = o.merkez;
 
     // Dosya yükleme (elle, ham gövde): /api/yukle?alan=...&ad=...
