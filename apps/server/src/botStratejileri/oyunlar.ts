@@ -2,10 +2,18 @@
  * Oyun başına oynama stratejileri. Her strateji görünümleri kendi küçük arayüzüyle okur (yalnız ihtiyaç duyduğu
  * alanlar); alan yoksa ya da tür beklenmedikse ya hiçbir şey yapmaz ya da hata verir (bots.ts güvenle düşer).
  *
- * Değişmekte olan oyunlar (Rüşvet ve Darbe, Ortalamanın Yarısı, Çizgiyi Geçme) burada
- * yok: onlarda bot `BOTS`'u kullanır. Son Kişi yalnız `phase`, `round`, `escaped` ve "escape"e dayanır.
+ * Bot stratejisi olmayan oyunlarda (ör. Rüşvet ve Darbe) bot `BOTS`'u kullanır. Çizgiyi Geçme yalnız `round`,
+ * `reveal`, `radar.zones`, `zoneWidth`, `myChoice`, `locked` alanlarına dayanır. Son Kişi yalnız
+ * `phase`, `round`, `escaped` ve "escape"e dayanır. Ortalamanın Yarısı yalnız `round`, `reveal`, `roundStartedAt`,
+ * `endsAt`, `multiplier`, `previous[].target`, `myChoice`, `locked` alanlarına dayanır.
  */
-import { acgozlulukFairShare, ITTIFAK_BAND_MS, ittifakMaxPromises } from "@glix/engine";
+import {
+  acgozlulukFairShare,
+  cizgiZone,
+  cizgiZoneRange,
+  ITTIFAK_BAND_MS,
+  ittifakMaxPromises,
+} from "@glix/engine";
 import { shapeStrokes } from "./cizim.js";
 import type { PlayCtx, PlayStep, PlayStrategy } from "./index.js";
 import {
@@ -374,6 +382,35 @@ const sonKisi: PlayStrategy = (c) => {
   return { action: { kind: "escape" }, next: 250 };
 };
 
+// ——— Ortalamanın Yarısı: hedefin biraz altında, kalabalıktan kaçan bir sayı, sonra Tamam ———
+/**
+ * OY-M1/M2 ile: seçmeyen puan alamadığı için bot her tur mutlaka seçer (sürenin ilk yarısında); kalabalık yanacağı
+ * için tek bir "doğru" sayıya yığılmaz, her bot kendi sapmasını çeker. 1. turda 10–40; sonraki turlarda geçen turun
+ * hedefi × bu turun çarpanı civarı (±6). Seçtikten sonra 1–3 sn içinde kilitler.
+ */
+const ortalama: PlayStrategy = (c) => {
+  const p = rec(c.pub);
+  const v = rec(c.priv);
+  if (p.reveal !== null || v.locked === true) return { next: 400 };
+  const startAt = num(p.roundStartedAt);
+  const endsAt = num(p.endsAt);
+  if (startAt === null || endsAt === null) return null;
+  if (c.now < startAt) return { next: startAt - c.now + 30 };
+  if (c.now >= endsAt) return { next: 400 };
+  const round = num(p.round) ?? 1;
+  if (v.myChoice === null) {
+    const wait = thinking(c, `pick${round}`, 1_500, 4_500);
+    if (wait) return wait;
+    const prev = (Array.isArray(p.previous) ? p.previous : []).map(rec);
+    const last = num(prev[prev.length - 1]?.target);
+    const m = rec(p.multiplier);
+    const ratio = (num(m.num) ?? 1) / (num(m.den) ?? 2);
+    const guess = last === null ? between(c, 10, 40) : Math.round(last * ratio) + between(c, -6, 6);
+    return { action: { kind: "choose", value: Math.min(100, Math.max(0, guess)) }, next: 600 };
+  }
+  return thinking(c, `lock${round}`, 1_000, 3_000) ?? { action: { kind: "lock" }, next: 400 };
+};
+
 // ——— Butona Bas: insan hızında basış ———
 const butonaBas: PlayStrategy = (c) => {
   const p = rec(c.pub);
@@ -442,8 +479,42 @@ const acgozluluk: PlayStrategy = (c) => {
   return thinking(c, `lock${round}`, 1_000, 4_000) ?? { action: { kind: "lock" } };
 };
 
+// ——— Çizgiyi Geçme (CZ-M1, CZ-M3): her tur kendisi seçer; radar kendi platformunu yakarsa çoğu zaman bir platform
+// aşağı kaçar; sonra Tamam ———
+const cizgi: PlayStrategy = (c) => {
+  const p = rec(c.pub);
+  const v = rec(c.priv);
+  if (p.reveal !== null || v.locked === true) return null;
+  const round = num(p.round) ?? 1;
+  const width = num(p.zoneWidth) ?? 10;
+  const mine = num(v.myChoice);
+  if (mine === null) {
+    const wait = thinking(c, `pick${round}`, 2_000, 9_000);
+    if (wait) return wait;
+    const roll = c.rng.int(10);
+    // Çoğunlukla yüksek ama kalabalık tepeden biraz aşağı; bazen Zirve, bazen düşük.
+    const value = roll === 0 ? 100 : roll < 3 ? between(c, 5, 49) : between(c, 50, 97);
+    return { action: { kind: "choose", value }, next: 800 };
+  }
+  const radar = p.radar === null || p.radar === undefined ? null : rec(p.radar);
+  if (radar !== null && c.mem[`fled${round}`] !== true) {
+    c.mem[`fled${round}`] = true;
+    const zones = Array.isArray(radar.zones) ? radar.zones : [];
+    const zone = cizgiZone(mine, width);
+    if (zones.includes(zone) && c.rng.int(3) !== 0) {
+      const below = Math.max(0, zone - 1);
+      const { from, to } = cizgiZoneRange(below, width);
+      return { action: { kind: "choose", value: between(c, from, to) }, next: 900 };
+    }
+  }
+  // Radardan önce kilitlemek risklidir: bot çoğu zaman radarı bekler.
+  if (radar === null && p.radarAt !== null && c.rng.int(4) !== 0) return { next: 1_000 };
+  return thinking(c, `lock${round}`, 1_000, 4_000) ?? { action: { kind: "lock" } };
+};
+
 export const STRATEGIES: Record<string, PlayStrategy> = {
   "acgozluluk-limiti": acgozluluk,
+  "cizgiyi-gecme": cizgi,
   ittifak: ittifakBot,
   "sozluk-blofu": sozluk,
   "cagrisim-agi": cagrisim,
@@ -456,4 +527,5 @@ export const STRATEGIES: Record<string, PlayStrategy> = {
   "kor-kronometre": korKronometre,
   "son-kisi": sonKisi,
   "butona-bas": butonaBas,
+  "ortalamanin-yarisi": ortalama,
 };

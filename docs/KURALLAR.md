@@ -1189,6 +1189,35 @@ arayüz/kodda en yakın +2, ikinci en yakın +1 alır. Eski faz 18 saniyedir.
 - Tutorial adım 2: "Hedef her tur değişir: ortalamanın yarısı, üçte ikisi, dörtte üçü." Adım 3: "Turlardaki puanlar
   toplanır; toplamı en yüksek +2, ikinci +1 alır."
 
+**Değişiklik (OY öneri paketi, Kasım 2026, sahip onayı: OY-M1, OY-M2, OY-U3, OY-U16) — yukarıdakilerin önüne geçer:**
+
+- **Kalabalık yanar (OY-M1):** Bir turda **aynı sayıyı 3 ya da daha fazla oyuncu** seçmişse o sayı **yanar**: o oyuncular
+  bu turdan puan almaz. Eşik her oyuncu sayısında 3'tür; iki kişinin aynı sayısı yanmaz. Yanan sayılar ortalama ve hedef
+  hesabına **yine girer**. Sunucunun atadığı rastgele sayılar kalabalık sayımına **girmez**. Tur puanı yanmayanlar (ve
+  rastgele olmayanlar) arasında mevcut kuralla dağıtılır: en yakın tek ise +2, sonraki derece +1; en yakınlar eşitse
+  hepsi +1. Herkes yandıysa o tur kimse puan almaz.
+- **Rastgele atanan sayı puan almaz (OY-M2):** Süre bitene kadar hiç seçim göndermeyen oyuncuya sunucu yine 0–100 arası
+  rastgele bir sayı atar ve bu sayı ortalamaya girer; ama **sahibi o turdan puan alamaz**. Puan dağıtımında bu oyuncu
+  yokmuş gibi derece kurulur. Seçip Tamam demeyenin seçimi geçerlidir (rastgele sayılmaz). Sonuçta sayı **🎲 "rastgele"**
+  etiketiyle gösterilir (13. maddedeki "normal seçim gibi gösterilir" ifadesinin yerine). Yanan sayı **"YANDI"** etiketiyle
+  sönük gösterilir.
+- **Genel skorda sıfır toplam:** Bu iki kural yüzünden üç turun sonunda **en yüksek toplam 0** olabilir (ör. herkes her tur
+  aynı sayıyı yazdı ya da kimse seçmedi). O durumda kimse genel skor almaz (0 toplam "lider" sayılmaz). Diğer bütün
+  durumlarda genel skor dönüşümü aynen geçerlidir.
+- **Tur kartı (OY-U3):** Her turun başında **0,9 sn**'lik tur kartı gösterilir ("TUR 2 / 3", kesir kadar dolan çubuk,
+  "Hedef: ortalamanın üçte ikisi", "ortalama 30 olursa hedef 20"). Kart seçim süresinden yemez: **10 sn'lik seçim süresi
+  kart bitince başlar**; kart sırasında seçim ve kilit alınmaz. Oyunun tam süresi 3 × (0,9 + 10) + 2 × 5 + 7 = **49,7 sn**.
+  Erken bitişte sonraki turların kartı da aynı kadar öne kayar.
+- **Açılmış turların sonucu herkese açıktır:** 2. turdan itibaren seçim ekranında önceki turun ortalaması ve hedefinin
+  yanında, o turda kimin hangi sayıyı seçtiği (rastgele / yandı işaretiyle) ve tur puanları da görünür (yeni gizli bilgi
+  yoktur; bunlar o turun açılışında zaten herkese gösterilmişti). Süren turun seçimleri tur açılana kadar gizlidir.
+- Tutorial (OY-U16, madde başına en çok iki satır): 1) "Gizlice 0–100 yaz. Ortalamayı değil, kesrini (½ ⅔ ¾) tahmin
+  et." 2) "Örnek: 10·20·30·40·50 → ort. 30 → yarısı 15. 10 ve 20 eşit: ikisi +1." 3) "En yakın +2, ikinci +1. Aynı sayıyı 3
+  kişi yazarsa sayı yanar." (Amaç satırı: "Ortalamanın katını tahmin et: 3 tur, her turda hedef değişir!")
+- Değişmeyenler: 3–8 oyuncu; 3 tur; 0–100 tam sayı; çarpanlar ½, ⅔, ¾; 10 sn seçim, 5 sn ara ve 7 sn son açılış;
+  seçimlerin tur sonuna kadar gizli olması; tur puanı (tek en yakın +2, ikinci +1; eşit en yakınlar +1); genel skorun yalnız
+  sonda toplamdan +2 / +1 verilmesi; eksi puan olmaması; kilit ve tur başına erken bitiş; kopan oyuncunun beklenmemesi.
+
 ## 14. Gizli Kareler — `gizli-kareler`
 
 **Durum: KİLİTLİ**
@@ -1547,6 +1576,40 @@ en yüksek seçim +2, sonraki +1 alır. Eski faz 22 saniyedir.
   Tek turlu oyundur, genel skora aktarım değişmez (puanlar doğrudan genel skora eklenir).
 - Ekranda bölgeler oyuncu sayısına göre çizilir ve bölge aralığı yazılır; tutorial adım 2: "Aynı bölgeye düşme; bölge
   genişliği oyuncu sayısına göre değişir."
+
+**Değişiklik (CZ öneri paketi, Kasım 2026, sahip onayı: CZ-M1, CZ-M3, CZ-M4) — yukarıdakilerin önüne geçer:**
+
+- **İki tur (CZ-M1):** Oyun **2 tur**dur (keşif ve final). Her tur aynı platform düzeniyle oynanır; seçim her turun başında
+  boşalır, seçmeyen o turda pasiftir. Süreler: seçim **30 sn** (her tur; CZ-M2 "15 sn" önerisi onaylanmadı), 1. turdan sonra
+  **5 sn** ara açılış, 2. turdan sonra **7 sn** son açılış ve ortak "Devam et". Toplam en çok 30 + 5 + 30 + 7 = **72 sn**.
+  **Erken bitiş tur başına:** bağlı herkes Tamam derse o turun seçimi son Tamam'dan 1 sn sonra kapanır, sonraki tur o kadar
+  öne çekilir. Kilit tur başına sıfırlanır. Kopan oyuncu beklenmez.
+- **Tur puanı:** Her turda tek kalanların en yükseği **+2**, ikincisi **+1** tur puanı alır; aynı platformdakiler ve
+  seçmeyenler 0 (ceza yok). **Mini puan = iki turun toplamı.**
+- **Genel skor:** Puan artık doğrudan genel skora gitmez. Oyun sonunda bir kez, iki turun toplamına göre ortak sıralama kuralı
+  (`rankAwards`, yalnız toplamı 0'dan büyükler): tek lider **+2**, sonraki toplamı paylaşanların hepsi **+1**; **liderler
+  eşitse hepsi +1**, ikinci ödül verilmez. Eksi puan yok. Örnek (2 kişi): 1. tur A +2, B +1; 2. tur B +2, A +1 → 3–3 → ikisi
+  de +1.
+- **Kalabalık radarı (CZ-M3):** Her turun **15. saniyesinde** (turun ortası) o ana kadar **gönderilmiş** seçimlere (kilitli ya
+  da değil; seçmemiş oyuncu girmez) göre **2 ya da daha fazla pin bulunan platformlar** herkesin ekranında 🔥 ile yanar. Kimin
+  orada olduğu ve kaç kişi olduğu yazmaz; herkese aynı bilgi gider (ortak görünümde yalnız yanan platform numaraları). Radar o
+  anın fotoğrafıdır, güncellenmez; kilitlemeyen herkes seçimini değiştirebilir, kilitleyen artık kaçamaz. Herkes radar anından
+  önce kilitlerse o tur radar çıkmaz. **2 kişide radar yoktur.**
+- **Zirve (CZ-M4):** **100 her oyuncu sayısında ayrı, tek sayılık "Zirve" platformudur.** Bölge: değer 100 ise Zirve,
+  değilse `⌊değer ÷ genişlik⌋`. Altındaki platformlar tablodaki genişlikle; 0–99'un son platformu kısa kalabilir (3 ve 5
+  kişide 98–99, 6 kişide 96–99). 2, 4, 7, 8 kişide değişiklik yoktur. Düzgün dağılımda çarpışma olasılığı yine her oyuncu
+  sayısında ~%25'tir (3 → %25,2, 5 → %24,5, 6 → %25,9). Zirvede tek kalan zaten en yüksek tek kalan olduğu için tur puanı
+  +2'dir; ayrıca ödül yok.
+- **Değişmeyenler:** 2–8 oyuncu; 0–100 tam sayı; oyuncu sayısına göre platform genişliği (25, 14, 10, 7, 6, 5, 4); aynı
+  platformdakilerin pasif kalması; seçmeyenin pasif olması; tek kalanların en yükseği +2, ikincisi +1 (tur içinde); seçimlerin
+  tur sonuna kadar gizli olması; kilit ve erken bitiş (son kilitten 1 sn sonra); eksi puan olmaması.
+- **Anlatım (CZ-U15):** 1) "İki tur: gizlice 0 ile 100 arasında bir sayı seç. 5 kişisiniz: her platform 7 sayı (0–6, 7–13 …
+  91–97, 98–99, 100 Zirve)." 2) "Biriyle aynı platforma düşersen ikiniz de çarpışır, puan yok. Örnek: 95 ve 94 → çarpıştı.
+  Turun ortasında radar kalabalık platformları yakar." 3) "Tek kalanların en yükseği +2, ikincisi +1; tek kalıp üçüncü olan 0.
+  İki turun toplamı kazanır." Sayılar masanın oyuncu sayısından üretilir; örnek çift o masada gerçekten aynı platformdadır
+  (95 ile 94 aynı platformda değilse 95'in platformunun son iki sayısı); 2 kişide radar cümlesi yoktur.
+- **Reddedilenler:** CZ-M2 (15 sn), CZ-M5 (gizli çizgi), CZ-M6 (erken bayrak), CZ-M7 (çarpışana eksi), CZ-M8 (üçüncüye +1),
+  CZ-U16 (ad/tema), CZ-U17 (erişilebilirlik paketi), CZ-AI1 (yarış spikeri).
 
 ## 19. Gizli Alışveriş — `gizli-alisveris`
 

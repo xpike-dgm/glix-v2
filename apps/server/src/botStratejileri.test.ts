@@ -1,7 +1,8 @@
 /**
  * Oda botlarının oynama stratejileri (botStratejileri/): metinler oyunların doğrulamasından ve denetimden geçer, görünmez
  * karakter taşımaz; bütün oyunlarda (hareketsiz insan + 3 bot) botların gönderdiği her metin temizdir ve yazı oyunlarında
- * en az bir metin kabul edilir. Zamanlama: Kör Kronometre hedefe yakın basar, Son Kişi makul anda kaçar.
+ * en az bir metin kabul edilir. Zamanlama: Kör Kronometre hedefe yakın basar, Son Kişi makul anda kaçar. Ortalamanın
+ * Yarısı'nda botlar her tur kendisi seçer (rastgele sayıya düşmez, OY-M2).
  */
 import {
   CAGRISIM_WORDS,
@@ -201,6 +202,24 @@ describe("zamanlama", () => {
     }
   });
 
+  it("Çizgiyi Geçme: botlar iki turun ikisinde de kendisi seçer, sayılar 0–100", () => {
+    const { room, view } = playGame("cizgiyi-gecme");
+    const bots = botsOf(room).map((p) => p.id);
+    const pv = view() as {
+      history: { choices: Record<string, number | null> }[];
+      reveal: { choices: Record<string, number | null> } | null;
+    };
+    const rounds = [...pv.history, ...(pv.reveal ? [pv.reveal] : [])];
+    expect(rounds).toHaveLength(2);
+    for (const r of rounds) {
+      for (const id of bots) {
+        const v = r.choices[id];
+        expect(v === null || v === undefined ? -1 : v).toBeGreaterThanOrEqual(0);
+        expect(v ?? 101).toBeLessThanOrEqual(100);
+      }
+    }
+  });
+
   it("Kör Kronometre: botlar her elde hedefe 0,3–1,5 sn uzaklıkta basar", () => {
     const { room, view } = playGame("kor-kronometre");
     const bots = new Set(botsOf(room).map((p) => p.id));
@@ -215,6 +234,23 @@ describe("zamanlama", () => {
         expect(e.distance).not.toBeNull();
         expect(e.distance ?? 0).toBeGreaterThanOrEqual(250);
         expect(e.distance ?? 0).toBeLessThanOrEqual(1_600);
+      }
+    }
+  });
+  it("Ortalamanın Yarısı: botlar her tur kendisi seçer (rastgele sayıya düşmez), sayılar 0–100", () => {
+    const { room, view } = playGame("ortalamanin-yarisi");
+    const bots = new Set(botsOf(room).map((p) => p.id));
+    const pub = view() as {
+      previous: { choices: Record<string, number>; random: string[] }[];
+      reveal: { choices: Record<string, number>; random: string[] } | null;
+    };
+    const rounds = [...pub.previous, ...(pub.reveal ? [pub.reveal] : [])];
+    expect(rounds).toHaveLength(3);
+    for (const r of rounds) {
+      for (const id of bots) {
+        expect(r.random).not.toContain(id);
+        const v = r.choices[id] ?? -1;
+        expect(v >= 0 && v <= 100).toBe(true);
       }
     }
   });

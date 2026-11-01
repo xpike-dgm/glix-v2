@@ -1,7 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { createRng, ORTALAMA_INTRO_MS, type Rng } from "@glix/engine";
+import { beforeEach, describe, expect, it } from "vitest";
 import { type Client, k, setupRoom, sleep, sync, until, useServer } from "./testkit.js";
 
-useServer();
+/** Oyun tohumu sabit (`rt.randomInt` üzerinden): göndermeyene atanan sayılar her çalıştırmada aynıdır. */
+const SEED = 1;
+let seeded: Rng = createRng(SEED);
+beforeEach(() => {
+  seeded = createRng(SEED);
+});
+useServer({ randomInt: (max) => seeded.int(max) });
 
 let seq = 2000;
 async function choose(c: Client, value: number): Promise<boolean> {
@@ -13,6 +20,8 @@ async function choose(c: Client, value: number): Promise<boolean> {
 
 interface Reveal {
   choices: Record<string, number>;
+  random: string[];
+  burned: string[];
   mean: number;
   target: number;
   order: string[];
@@ -39,6 +48,9 @@ async function startGame(cs: Client[]): Promise<void> {
   await until(() => host.room.phase === "countdown", "countdown");
   k.clock.advance(3000);
   await until(() => host.room.phase === "playing", "playing");
+  // Tur kartı (OY-U3): seçim kart yerleşince başlar.
+  k.clock.advance(ORTALAMA_INTRO_MS);
+  await sync();
 }
 
 describe("ortalamaya en yakın: oda içinde tam maç (3 tur)", () => {
@@ -83,6 +95,9 @@ describe("ortalamaya en yakın: oda içinde tam maç (3 tur)", () => {
     expect([r1.choices[ids[0]], r1.choices[ids[1]], r1.choices[ids[2]]]).toEqual([20, 22, 60]);
     const dv = r1.choices[ids[3]] as number;
     expect(Number.isInteger(dv) && dv >= 0 && dv <= 100).toBe(true);
+    // OY-M2: atanan sayı işaretlidir ve puan almaz.
+    expect(r1.random).toEqual([ids[3]]);
+    expect(r1.points[ids[3]]).toBe(0);
     const sum = 20 + 22 + 60 + dv;
     expect(r1.mean).toBeCloseTo(sum / 4, 10);
     expect(r1.target).toBeCloseTo(sum / 8, 10);
@@ -94,6 +109,9 @@ describe("ortalamaya en yakın: oda içinde tam maç (3 tur)", () => {
     // Tur 2: önceki ortalama ve hedef görünür, çarpan ⅔.
     k.clock.advance(5_000);
     await until(() => pub().round === 2, "2. tur");
+    expect(await choose(a, 30)).toBe(false); // tur kartı sırasında seçim yok
+    k.clock.advance(ORTALAMA_INTRO_MS);
+    await sync();
     expect(pub()).toMatchObject({ reveal: null, multiplier: { num: 2, den: 3 } });
     expect(pub().previous).toHaveLength(1);
     expect(pub().previous[0]?.mean).toBeCloseTo(r1.mean, 10);
@@ -110,6 +128,8 @@ describe("ortalamaya en yakın: oda içinde tam maç (3 tur)", () => {
     // Tur 3: ¾; son sonuç genel skoru getirir.
     k.clock.advance(5_000);
     await until(() => pub().round === 3, "3. tur");
+    k.clock.advance(ORTALAMA_INTRO_MS);
+    await sync();
     expect(pub().multiplier).toEqual({ num: 3, den: 4 });
     expect(pub().previous).toHaveLength(2);
     for (const [i, x] of [a, b, c, d].entries())
@@ -136,22 +156,42 @@ describe("ortalamaya en yakın: oda içinde tam maç (3 tur)", () => {
     expect(b.room.phase).toBe("results");
   });
 
-  it("herkes aynı sayıyı seçerse her tur eşit; toplamda eşitlik: liderlerin hepsi +1", async () => {
+  it("OY-M1: herkes her tur aynı sayıyı seçerse o sayı yanar; kimse puan almaz, genel skor da yok", async () => {
     const cs = await setupRoom(["A", "B", "C"]);
     await startGame(cs);
     const a = cs[0] as Client;
+    const pub = () => a.room.match?.publicView as Pub;
     for (let round = 0; round < 3; round++) {
       for (const c of cs) expect(await choose(c, 40)).toBe(true);
       k.clock.advance(10_100);
-      await sync();
+      await until(() => pub().reveal !== null, `${round + 1}. tur açıldı`);
+      expect(pub().reveal?.burned).toHaveLength(3);
       k.clock.advance(round < 2 ? 5_000 : 7_000);
       await sync();
+      if (round < 2) {
+        k.clock.advance(ORTALAMA_INTRO_MS);
+        await sync();
+      }
     }
     await until(() => a.room.phase === "results", "sonuç");
-    // Her turda üçü de eşit en yakın: +1 x 3 tur = 3'er; toplam eşit -> hepsi +1.
-    expect(Object.values(a.room.match?.result?.miniScores ?? {})).toEqual([3, 3, 3]);
-    expect(Object.values(a.room.match?.result?.awards ?? {})).toEqual([1, 1, 1]);
-    expect(a.room.players.map((p) => p.score)).toEqual([1, 1, 1]);
+    expect(Object.values(a.room.match?.result?.miniScores ?? {})).toEqual([0, 0, 0]);
+    expect(Object.values(a.room.match?.result?.awards ?? {})).toEqual([0, 0, 0]);
+    expect(a.room.players.map((p) => p.score)).toEqual([0, 0, 0]);
+  });
+
+  it("OY-M1: iki kişinin aynı sayısı yanmaz; 3+ kişinin sayısı yanar ve puan yanmayana gider", async () => {
+    const cs = await setupRoom(["A", "B", "C", "D"]);
+    await startGame(cs);
+    const [a, b, c, d] = cs as [Client, Client, Client, Client];
+    const ids = cs.map((x) => x.session.playerId) as [string, string, string, string];
+    const pub = () => a.room.match?.publicView as Pub;
+    for (const x of [a, b, c]) expect(await choose(x, 0)).toBe(true);
+    expect(await choose(d, 3)).toBe(true);
+    k.clock.advance(10_100);
+    await until(() => pub().reveal !== null, "açıldı");
+    const r = pub().reveal as Reveal;
+    expect(r.burned).toEqual([ids[0], ids[1], ids[2]]);
+    expect(r.points).toEqual({ [ids[0]]: 0, [ids[1]]: 0, [ids[2]]: 0, [ids[3]]: 2 });
   });
 
   it("bağlı herkes kilitleyince o tur erken biter ve sonraki tur erken başlar", async () => {

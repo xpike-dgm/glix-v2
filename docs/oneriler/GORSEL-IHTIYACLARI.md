@@ -424,3 +424,37 @@ koyu radyal örtüyle kullanır.
   çatlaması + gümbürtü (PATLADI'da daha güçlü), altın arpej (AĞZINA KADAR'da uzun yağmur), sönük "hıh" (Bol bol yer var). Ses
   alanı istenirse gerçek kayıtlarla değiştirebilir: hepsi ≤ 0,5 sn (gümbürtü ≤ 0,8 sn). Müzik: oyuna özel 12 sn'lik gerilim
   döngüsü isteğe bağlı (yoksa kabuğun ortak gerilim yatağı çalar).
+
+## Ortalamanın Yarısı
+
+Bu paket için **yeni görsel dosyası gerekmedi** (öneri dosyası §6 ve §7: "🎨 yok"). Terazi kolu, kesir çubuğu, altın hedef
+ışını, ipler, kalabalık "YANDI" kıvılcımı, 🎲 rozeti, "EN YAKIN / 2. YAKIN / EŞİT" rozetleri ve tur kutuları (●● / ● /
+🔥 / 🎲) CSS/SVG ve metinle çiziliyor (`apps/client/src/games/ortalamanin-yarisi/ortalamanin-yarisi.css`). İsteğe bağlı
+süs (Efekt Dokuları / Arayüz İkon alanı, öncelik düşük): yanma kıvılcımı dokusu ve altın ışın parıltısı; gelirse
+`apps/client/public/assets/props/ortalama/<ad>.webp` yolu önerilir, bugün CSS karşılığı yeterli.
+
+- **ses** (dosya gerekmedi) — OY-U3/U4/U5/U6/U15 sesleri mevcut ses sistemiyle kodla üretildi
+  (`apps/client/src/games/ortalamanin-yarisi/sounds.ts`, `ortalama.*` seti): yükselen sürükleme tikleri (her 5'te bir),
+  kilit "klik-mühür", tur kartı "vınn", açılışta kapsül "pop"ları (oyuncu sırasına göre 8 perde), rastgele sayıda zar
+  "tıkır", terazi gıcırtısı + denge "tak", hedef ışını lazer "fiuuu", ip sönüşü "fıs", en yakında zil, eşitlikte iki notalı
+  akor, yanmada "cız", finalde +2 için fanfar (ortak `fanfare`). Son 3 sn tiki ortak kabuk saatinden gelir. Her ses olay /
+  evre geçişinde bir kez çalar (`cues.ts`, `fx/cue.ts`). Ses alanı isterse gerçek kayıtlarla değiştirebilir; dosya gelirse
+  önerilen yer `apps/client/public/assets/sfx/ortalama/<olay>.webm` (kısa, < 1 sn, normalize; kapsül pop için 8 varyasyon).
+
+## Çizgiyi Geçme
+
+Bu paket için **yeni görsel dosyası gerekmedi** (öneri dosyası §7: "🎨 yok"). Onluk kuşaklı kule, taçlı Zirve platformu
+(damalı bitiş deseni), büyüteç, kilit bayrağı (🔒), radar taraması ve 🔥 kalabalık işareti, "ÇARPIŞTI" damgası, çapraz
+çizgili çarpışma çipleri ve fırlatma CSS/SVG ve metinle çiziliyor (`apps/client/src/games/cizgiyi-gecme/cizgiyi-gecme.css`,
+`Tower.tsx`). İsteğe bağlı süs (Efekt Dokuları / Arayüz İkon alanı, öncelik düşük; öneri dosyası §6): çarpışma kıvılcımı,
+radar tarama ışığı, fırlatma izi, bayrak, 🔥 kalabalık işareti ve Zirve tacı. Gelirse
+`apps/client/public/assets/props/cizgi/<ad>.webp` yolu önerilir (şeffaf, kare, 128×128; tarama ışığı yatay 512×64), stil:
+oyunun mevcut neon çizgisi (camgöbeği / altın / kırmızı, koyu lacivert zemin). Bugünkü CSS/emoji karşılığı yeterli.
+
+- **ses** (dosya gerekmedi) — CZ-U5/U6/U14 sesleri mevcut ses sistemiyle kodla üretildi
+  (`apps/client/src/games/cizgiyi-gecme/sounds.ts`, `cizgi.*` seti): yüksekliğe göre tizleşen sürükleme tonu, platform
+  sınırı "tık" (+8 ms titreşim), Zirve çanı (güçlü titreşim), kilitte bayrak "fırt", son 5 sn tiki (seçmemiş oyuncunun
+  telefonu her saniye titrer), radar sonarı "biip" (kendi platformu yanana iki kısa titreşim), tırmanan pinde yükselen
+  "vııı", oturma "tak", çarpışmada elektrik "bzzt", birinci fırlarken roket "fşşuu", +1 jeton; +2'de ortak fanfar. Her
+  olay sesi geçişte bir kez çalar (`cues.ts`, `fx/cue.ts`). Ses alanı isterse gerçek kayıtlarla değiştirebilir; dosya
+  gelirse önerilen yer `apps/client/public/assets/sfx/cizgi/<olay>.webm` (kısa, < 1 sn, normalize).

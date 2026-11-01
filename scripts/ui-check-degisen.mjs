@@ -24,7 +24,7 @@ export const GAMES = {
   },
   "cagrisim-agi": { prefixes: ["cagrisim"], mock: "mockCagrisim", smoke: "cagrisim-answer" },
   "capraz-ates": { prefixes: ["capraz"], mock: "mockCapraz", smoke: "capraz-pick" },
-  "cizgiyi-gecme": { prefixes: ["cizgi"], mock: "mockCizgi", smoke: "cizgi-choosing-5" },
+  "cizgiyi-gecme": { prefixes: ["cizgi", "tv-cizgi"], mock: "mockCizgi", smoke: "cizgi-choosing-5" },
   "gizli-alisveris": { prefixes: ["alisveris"], mock: "mockAlisveris", smoke: "alisveris-shop-3" },
   "gizli-hirsiz": { prefixes: ["gizli"], mock: "mockGizliHirsiz", smoke: "gizli-idle" },
   "gizli-kareler": { prefixes: ["kareler"], mock: "mockKareler", smoke: "kareler-choosing-3" },

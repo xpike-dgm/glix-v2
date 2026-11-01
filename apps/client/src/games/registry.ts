@@ -1,6 +1,7 @@
 import type { MatchSnapshot, PlayerInfo } from "@glix/engine";
 import { type Component, lazy } from "solid-js";
 import { acgozlulukBriefing } from "./acgozluluk-limiti/briefing.js";
+import { cizgiBriefing } from "./cizgiyi-gecme/briefing.js";
 import { karelerBriefing } from "./gizli-kareler/briefing.js";
 import { hudOf } from "./yatay-masa/hud.js";
 
@@ -99,6 +100,9 @@ const registry: Record<string, GameEntry> = {
   "cizgiyi-gecme": {
     Screen: lazy(() => import("./cizgiyi-gecme/CizgiyiGecmeScreen.js")),
     Art: lazy(() => import("./cizgiyi-gecme/BriefingArt.js")),
+    StageView: lazy(() => import("./cizgiyi-gecme/StageView.js")),
+    tvOwnBoard: true,
+    briefingSteps: cizgiBriefing,
   },
   "gizli-alisveris": {
     Screen: lazy(() => import("./gizli-alisveris/GizliAlisverisScreen.js")),
@@ -113,6 +117,8 @@ const registry: Record<string, GameEntry> = {
   "ortalamanin-yarisi": {
     Screen: lazy(() => import("./ortalamanin-yarisi/OrtalamaninYarisiScreen.js")),
     Art: lazy(() => import("./ortalamanin-yarisi/BriefingArt.js")),
+    StageView: lazy(() => import("./ortalamanin-yarisi/StageView.js")),
+    tvOwnBoard: true,
   },
   "zaman-bombasi-hafizasi": {
     noClock: true,
