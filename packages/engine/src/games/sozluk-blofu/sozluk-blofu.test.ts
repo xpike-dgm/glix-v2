@@ -67,7 +67,8 @@ const realOf = (s: S): string => {
 };
 const pickCard = (s: S, id: string, card: string, at = PICK_AT, connected?: readonly string[]) =>
   ok(s, id, { kind: "pick", card }, at, connected);
-const finalAwards = (s: S) => sozlukBlofu.result(tick(s, PICK_END + 1)).awards;
+/** Blöf puanı (mini puan; genel skor ödülü ayrı: SB-M1). */
+const finalAwards = (s: S) => sozlukBlofu.result(tick(s, PICK_END + 1)).miniScores;
 
 describe("sözlük blöfü meta ve havuz", () => {
   it("3-8 oyuncu, dikey, açılış en çok 3 madde ve teknik kelime yok", () => {
@@ -322,7 +323,7 @@ describe("kart seçme (30 sn)", () => {
     let s = written(P);
     s = pickCard(s, "a", realOf(s));
     const done = tick(s, PICK_END + 1, ["b"]);
-    expect(sozlukBlofu.result(done).awards.a).toBe(1);
+    expect(sozlukBlofu.result(done).miniScores.a).toBe(1);
   });
 
   it("parseAction yalnız tam biçimi kabul eder", () => {
@@ -402,11 +403,12 @@ describe("sözlük blöfü puanlama", () => {
     }
   });
 
-  it("awards = miniScores (ayrı bonus yok) ve sonuç tick'ten bağımsız", () => {
+  it("genel skora sıralama ödülü gider (SB-M1) ve sonuç tick'ten bağımsız", () => {
     let s = written(P);
     s = pickCard(s, "a", realOf(s));
     const r = sozlukBlofu.result(s);
-    expect(r.awards).toEqual(r.miniScores);
+    expect(r.miniScores).toEqual({ a: 1, b: 0, c: 0, d: 0 });
+    expect(r.awards).toEqual({ a: 2, b: 0, c: 0, d: 0 });
     expect(sozlukBlofu.result(tick(s, PICK_END + 1))).toEqual(r);
     expect(sozlukScores(s)).toEqual(r.miniScores);
   });
@@ -448,6 +450,7 @@ describe("sözlük blöfü sonuç açılışı", () => {
     const idle = start();
     expect(sozlukBlofu.isFinished(idle, ctx(T0 + SOZLUK_DURATION_MS - 1))).toBe(false);
     expect(sozlukBlofu.isFinished(idle, ctx(T0 + SOZLUK_DURATION_MS))).toBe(true);
+    expect(sozlukBlofu.result(idle).miniScores).toEqual({ a: 0, b: 0, c: 0 });
     expect(sozlukBlofu.result(idle).awards).toEqual({ a: 0, b: 0, c: 0 });
   });
 });
@@ -485,6 +488,7 @@ describe("sözlük blöfü gizlilik (kart numarası ve oyuncu kimliği kısa; ya
           "reveal",
           "startedAt",
           "word",
+          "wordType",
           "writeEndsAt",
         ].sort(),
       );
@@ -501,11 +505,23 @@ describe("sözlük blöfü gizlilik (kart numarası ve oyuncu kimliği kısa; ya
 
   it("view yalnız kendi tanımını, kartını ve seçimini verir; başkasının kartı/seçimi görünmez", () => {
     for (const who of players) {
-      expect(Object.keys(priv(A, who, PICK_AT)).sort()).toEqual(["locked", "myBluff", "myCard", "myPick"]);
+      expect(Object.keys(priv(A, who, PICK_AT)).sort()).toEqual([
+        "locked",
+        "myBluff",
+        "myCard",
+        "myKnew",
+        "myPick",
+      ]);
     }
     expect(priv(A, "pa1", PICK_AT).myCard).toBe(cardOf(A, "pa1"));
     expect(priv(A, "pb2", PICK_AT).myCard).toBe(cardOf(A, "pb2"));
-    expect(priv(A, null, PICK_AT)).toEqual({ myBluff: null, myCard: null, myPick: null, locked: false });
+    expect(priv(A, null, PICK_AT)).toEqual({
+      myBluff: null,
+      myCard: null,
+      myPick: null,
+      locked: false,
+      myKnew: false,
+    });
     expect(priv(A, "ghost", PICK_AT).myCard).toBeNull();
   });
 
@@ -619,7 +635,7 @@ describe("sözlük blöfü erken bitiş", () => {
       expect(pub(s, PICK_AT + 3_000).reveal?.scores).toEqual({ a: 3, b: 0, c: 0 });
       expect(sozlukBlofu.isFinished(s, ctx(PICK_AT + 3_000 + SOZLUK_REVEAL_MS - 1, P))).toBe(false);
       expect(sozlukBlofu.isFinished(s, ctx(PICK_AT + 3_000 + SOZLUK_REVEAL_MS, P))).toBe(true);
-      expect(sozlukBlofu.result(s).awards).toEqual({ a: 3, b: 0, c: 0 });
+      expect(sozlukBlofu.result(s).miniScores).toEqual({ a: 3, b: 0, c: 0 });
     });
 
     it("(b) bir kişi eksikken bitmez; seçimsiz kilitlenemez", () => {

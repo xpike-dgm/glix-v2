@@ -7,6 +7,7 @@ import {
   emptyValues,
   entryText,
   fieldProblem,
+  knownCell,
   minText,
   pageCount,
   poolStatus,
@@ -87,5 +88,32 @@ describe("rozetler ve durum", () => {
     expect(pageCount(0, 25)).toBe(1);
     expect(pageCount(26, 25)).toBe(2);
     expect(entryText({ text: "kalem", definition: "yazı aracı" }, [word, def])).toBe("kalem · yazı aracı");
+  });
+});
+
+describe("bilinirlik (SB-M7)", () => {
+  it("az veride yalnız oran; %40 üstü ağırlık yarıda, %60 üstü kapatma önerisi", () => {
+    expect(knownCell(undefined).text).toBe("henüz oynanmadı");
+    expect(knownCell({ shown: 4, knew: 4 })).toEqual({ text: "%100 · 4 oyun", badge: null });
+    expect(knownCell({ shown: 10, knew: 4 }).badge).toBeNull();
+    expect(knownCell({ shown: 10, knew: 5 }).badge?.label).toBe("Ağırlık yarıda");
+    expect(knownCell({ shown: 10, knew: 7 }).badge?.label).toBe("Kapatma önerisi");
+    expect(
+      badgesOf({ source: "builtin", disabled: false, known: { shown: 20, knew: 15 } }, true),
+    ).toHaveLength(2);
+    expect(badgesOf({ source: "builtin", disabled: false, known: { shown: 20, knew: 15 } })).toHaveLength(1);
+  });
+  it("seçim alanı yalnız seçeneklerden birini kabul eder", () => {
+    const type: AdminPoolField = {
+      ...word,
+      key: "type",
+      label: "Tür",
+      min: 4,
+      max: 5,
+      options: ["isim", "sıfat"],
+    };
+    expect(fieldProblem(type, "")).toBe("Tür seçilmeli.");
+    expect(fieldProblem(type, "edat")).toMatch(/şunlardan biri/);
+    expect(fieldProblem(type, "isim")).toBeNull();
   });
 });

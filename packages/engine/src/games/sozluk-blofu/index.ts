@@ -7,9 +7,11 @@ import {
   type SecretEntry,
 } from "../../game.js";
 import { derivedRng, drawSeed } from "../seeded.js";
-import { SOZLUK_POOL, type SozlukEntry } from "./pool.js";
+import { SOZLUK_POOL, type SozlukEntry, type SozlukWordType } from "./pool.js";
 import { bluffDisplayForm, charCount, compareKey } from "./text.js";
 import {
+  SOZLUK_CONTENT_MEMORY,
+  SOZLUK_KNEW_DELAY_MS,
   SOZLUK_LOCK_GRACE_MS,
   SOZLUK_MAX_LENGTH,
   SOZLUK_MAX_RAW_LENGTH,
@@ -22,10 +24,20 @@ import {
   type SozlukPublicView,
   type SozlukReveal,
   type SozlukView,
+  sozlukAwards,
 } from "./types.js";
 import { SOZLUK_ENTRIES } from "./words.js";
 
-export { SOZLUK_POOL, type SozlukEntry } from "./pool.js";
+export {
+  SOZLUK_DEFINITION_MAX,
+  SOZLUK_POOL,
+  SOZLUK_WORD_TYPES,
+  type SozlukEntry,
+  type SozlukWordType,
+  sozlukDefinitionProblem,
+  sozlukWordType,
+} from "./pool.js";
+export { bluffDisplayForm } from "./text.js";
 export * from "./types.js";
 export { SOZLUK_ENTRIES } from "./words.js";
 
@@ -35,6 +47,10 @@ export interface SozlukState {
   seed: number;
   startedAt: number;
   word: string;
+  /** Kelimenin türü (SB-M3); havuzda yoksa null. */
+  wordType: SozlukWordType | null;
+  /** Tekrar önleme anahtarı (havuzun `key`'i; SB-M2). */
+  entryKey: string;
   /** Gerçek tanım (gizli: seçme aşamasına kadar hiçbir görünümde yok). */
   definition: string;
   writeEndsAt: number;
@@ -47,6 +63,8 @@ export interface SozlukState {
   pickClosing: boolean;
   /** Oyuncu -> son seçilen kart. */
   picks: Record<string, string>;
+  /** Açılışta "Bu kelimeyi biliyordum" diyenler (SB-M7); hiçbir görünüme liste olarak girmez. */
+  knew: string[];
   /** Yalnız sunucunun yayın tetiklemesi içindir: tick aşama geçişlerinde durumu bir kez değiştirir. */
   stage: SozlukPhase;
 }
@@ -96,7 +114,8 @@ function reveal(state: SozlukState): SozlukReveal {
     if (c.author === null) realCard = c.id;
     else authors[c.id] = c.author;
   }
-  return { realCard, authors, picks: { ...state.picks }, scores: sozlukScores(state) };
+  const scores = sozlukScores(state);
+  return { realCard, authors, picks: { ...state.picks }, scores, awards: sozlukAwards(scores) };
 }
 
 function stageAt(state: SozlukState, now: number): SozlukPhase {
@@ -118,9 +137,9 @@ export const sozlukBlofu: GameDefinition<SozlukState, SozlukAction, SozlukView, 
   briefing: {
     goal: "Garip kelimenin gerçek anlamını bul, arkadaşlarını kandır!",
     steps: [
-      "Kelimeye inandırıcı sahte bir anlam yaz",
-      "Karışık anlamlardan gerçeğini seç",
-      "Seni seçen her arkadaşın bir puan kazandırır",
+      "Garip kelimeye inandırıcı sahte bir anlam yaz",
+      "Karışık anlamlardan gerçeğini seç: bulursan +1",
+      "Senin blöfünü seçen her kişi +1 kazandırır; en çok puanlayan +2",
     ],
   },
 
@@ -128,6 +147,10 @@ export const sozlukBlofu: GameDefinition<SozlukState, SozlukAction, SozlukView, 
     if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
     const r = raw as Record<string, unknown>;
     if (r.kind === "lock") return Object.keys(r).length === 1 ? { kind: "lock" } : null;
+    if (r.kind === "knew") {
+      if (Object.keys(r).length !== 2 || typeof r.on !== "boolean") return null;
+      return { kind: "knew", on: r.on };
+    }
     if (r.kind === "bluff") {
       if (Object.keys(r).length !== 2) return null;
       const text = r.text;
@@ -153,6 +176,8 @@ export const sozlukBlofu: GameDefinition<SozlukState, SozlukAction, SozlukView, 
       seed: drawSeed(ctx.rng),
       startedAt: ctx.now,
       word: entry.word.toLocaleUpperCase("tr-TR"),
+      wordType: entry.type ?? null,
+      entryKey: SOZLUK_POOL.key(entry),
       definition: entry.definition,
       writeEndsAt,
       pickEndsAt,
@@ -161,6 +186,7 @@ export const sozlukBlofu: GameDefinition<SozlukState, SozlukAction, SozlukView, 
       locked: [],
       pickClosing: false,
       picks: {},
+      knew: [],
       stage: "write",
     };
   },
@@ -168,6 +194,16 @@ export const sozlukBlofu: GameDefinition<SozlukState, SozlukAction, SozlukView, 
   reduce(state, playerId, action, ctx): SozlukState | Rejected {
     if (!state.players.includes(playerId)) return { rejected: "not_participant" };
     if (ctx.now < state.startedAt) return { rejected: "not_started" };
+    if (action.kind === "knew") {
+      // Açılış başladıktan 1,5 sn sonra; oyuncu başına bir kez sayılır, geri alınabilir. Puanı etkilemez.
+      if (ctx.now < state.pickEndsAt + SOZLUK_KNEW_DELAY_MS) return { rejected: "not_yet" };
+      const already = state.knew.includes(playerId);
+      if (already === action.on) return state;
+      return {
+        ...state,
+        knew: action.on ? [...state.knew, playerId] : state.knew.filter((id) => id !== playerId),
+      };
+    }
     if (ctx.now >= state.pickEndsAt) return { rejected: "ended" };
     const everyoneIn = (done: (id: string) => boolean): boolean => {
       const active = state.players.filter((id) => ctx.connected.includes(id));
@@ -221,6 +257,7 @@ export const sozlukBlofu: GameDefinition<SozlukState, SozlukAction, SozlukView, 
       players: [...state.players],
       phase,
       word: state.word,
+      wordType: state.wordType,
       startedAt: state.startedAt,
       writeEndsAt: state.writeEndsAt,
       pickEndsAt: state.pickEndsAt,
@@ -238,7 +275,7 @@ export const sozlukBlofu: GameDefinition<SozlukState, SozlukAction, SozlukView, 
 
   view(state, playerId): SozlukView {
     if (playerId === null || !state.players.includes(playerId)) {
-      return { myBluff: null, myCard: null, myPick: null, locked: false };
+      return { myBluff: null, myCard: null, myPick: null, locked: false, myKnew: false };
     }
     const phase = state.stage;
     const cards = phase === "write" ? [] : sozlukCards(state);
@@ -248,6 +285,7 @@ export const sozlukBlofu: GameDefinition<SozlukState, SozlukAction, SozlukView, 
       myPick: has(state.picks, playerId) ? (state.picks[playerId] ?? null) : null,
       locked:
         phase === "write" ? has(state.bluffs, playerId) : phase === "pick" && state.locked.includes(playerId),
+      myKnew: state.knew.includes(playerId),
     };
   },
 
@@ -280,8 +318,17 @@ export const sozlukBlofu: GameDefinition<SozlukState, SozlukAction, SozlukView, 
     return entries;
   },
 
+  /** Blöf puanı mini puandır; genel skora sıralama ödülü gider (SB-M1). */
   result(state) {
     const scores = sozlukScores(state);
-    return { miniScores: { ...scores }, awards: { ...scores } };
+    return { miniScores: { ...scores }, awards: sozlukAwards(scores) };
+  },
+
+  contentUsed(state) {
+    return [{ poolId: SOZLUK_POOL.id, key: state.entryKey, memory: SOZLUK_CONTENT_MEMORY }];
+  },
+
+  contentFeedback(state) {
+    return [{ poolId: SOZLUK_POOL.id, key: state.entryKey, knew: state.knew.length }];
   },
 };

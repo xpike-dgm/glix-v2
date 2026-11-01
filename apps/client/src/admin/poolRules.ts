@@ -10,6 +10,7 @@ import type {
   AdminPoolLineStatus,
   AdminPoolSummary,
 } from "@glix/engine";
+import { FAMILIAR_CLOSE_RATIO, FAMILIAR_MIN_SHOWN, FAMILIAR_RATIO } from "@glix/engine";
 
 /** Toplu yapıştırmada tek istekteki en çok satır (sunucudaki sınırla aynı). */
 export const BULK_MAX_LINES = 200;
@@ -33,7 +34,9 @@ const charCount = (text: string): number => Array.from(text.replace(/\s+/gu, " "
 /** Tek alan için ön denetim; sorun yoksa null. */
 export function fieldProblem(field: AdminPoolField, value: string): string | null {
   const n = charCount(value);
-  if (n === 0) return `${field.label} boş olamaz.`;
+  if (n === 0) return field.options ? `${field.label} seçilmeli.` : `${field.label} boş olamaz.`;
+  if (field.options && !field.options.includes(value.trim()))
+    return `${field.label} şunlardan biri olmalı: ${field.options.join(", ")}.`;
   if (/[<>]/.test(value)) return `${field.label} "<" ve ">" içeremez.`;
   if (n < field.min) return `${field.label} en az ${field.min} karakter olmalı.`;
   if (n > field.max) return `${field.label} en çok ${field.max} karakter olabilir (${n}).`;
@@ -73,17 +76,39 @@ export function bulkHint(fields: readonly AdminPoolField[]): string {
   return `Her satıra bir girdi yaz, alanları noktalı virgülle ayır: ${names}.`;
 }
 
+/**
+ * Bilinirlik hücresi (SB-M7): "%45 · 12 oyun". En az 10 oyunda çıkmadıysa yalnız oyun sayısı; %40'ı aşan "ağırlık
+ * yarıda", %60'ı aşan "kapatma önerisi" diye işaretlenir (eşikler motordaki `isFamiliar` ile aynı).
+ */
+export function knownCell(known: { shown: number; knew: number } | undefined): {
+  text: string;
+  badge: Badge | null;
+} {
+  if (!known || known.shown === 0) return { text: "henüz oynanmadı", badge: null };
+  const ratio = known.knew / known.shown;
+  const text = `%${Math.round(ratio * 100)} · ${known.shown} oyun`;
+  if (known.shown < FAMILIAR_MIN_SHOWN) return { text, badge: null };
+  if (ratio > FAMILIAR_CLOSE_RATIO) return { text, badge: { label: "Kapatma önerisi", tone: "off" } };
+  if (ratio > FAMILIAR_RATIO) return { text, badge: { label: "Ağırlık yarıda", tone: "added" } };
+  return { text, badge: null };
+}
+
 export interface Badge {
   label: string;
   tone: "ready" | "added" | "off";
 }
 
-/** Girdinin rozetleri: Hazır / Eklenen, kapalıysa ayrıca Kapalı. */
-export function badgesOf(e: Pick<AdminPoolEntry, "source" | "disabled">): Badge[] {
+/** Girdinin rozetleri: Hazır / Eklenen, kapalıysa ayrıca Kapalı; bilinirlikli havuzda varsa bilinirlik rozeti. */
+export function badgesOf(
+  e: Pick<AdminPoolEntry, "source" | "disabled" | "known">,
+  feedback = false,
+): Badge[] {
   const out: Badge[] = [
     e.source === "builtin" ? { label: "Hazır", tone: "ready" } : { label: "Eklenen", tone: "added" },
   ];
   if (e.disabled) out.push({ label: "Kapalı", tone: "off" });
+  const known = feedback ? knownCell(e.known).badge : null;
+  if (known) out.push(known);
   return out;
 }
 

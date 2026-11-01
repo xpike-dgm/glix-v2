@@ -217,7 +217,9 @@ export function createContentStore(accounts: AccountStore, banned: BannedWords):
         min: f.min,
         max: f.max,
         long: f.long === true,
+        options: f.options ? [...f.options] : null,
       })),
+      feedback: pool.feedback === true,
       min: pool.min,
       needed: pool.needed,
       builtin: pool.builtin.length,
@@ -254,6 +256,9 @@ export function createContentStore(accounts: AccountStore, banned: BannedWords):
   ): { ok: true; entry: unknown; key: string } | PoolFail {
     const parsed = pool.fromFields(values);
     if (!parsed.ok) return { ok: false, code: "invalid", message: parsed.error };
+    // Yeni ve düzenlenen girdilere ek kural (eski kayıtlar yüklenirken uygulanmaz).
+    const problem = pool.strict?.(parsed.entry) ?? null;
+    if (problem !== null) return { ok: false, code: "invalid", message: problem };
     const fields = pool.toFields(parsed.entry);
     for (const text of Object.values(fields)) {
       if (banned.matches(text))

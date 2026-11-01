@@ -12,33 +12,33 @@
     "tahminiSn": 92,
     "not": "Süre oyuncu sayısına göre değişmez: 50 sn sahte tanım yazma + 30 sn seçme + 12 sn sonuç = 92 sn. Bağlı herkes tanımını gönderirse yazma, herkes 'Tamam' derse seçme aşaması 1 sn sonra biter (en kısası yaklaşık 1 + 1 + 12 = 14 sn). Anlatım (en çok 40 sn), geri sayım (3 sn) ve sonuç ekranı (en çok 60 sn) dışarıdadır. Oyunun kendi sonuç ekranı 'Devam et' ile geçilir: bağlı herkes basınca 1 sn sonra, en geç 60 sn sonra."
   },
-  "ozet": "Ekranda az bilinen bir Türkçe kelime görünür. Herkes gizlice o kelimeye inandırıcı bir sahte tanım yazar; gerçek tanım ve sahte tanımlar karıştırılıp kartlar olarak gösterilir. Herkes gerçek olduğunu düşündüğü karta oy verir. Gerçeği bulan +1, sahte tanımı seçilen blöf sahibi her seçim için +1 alır.",
+  "ozet": "Ekranda az bilinen bir Türkçe kelime ve türü (isim, sıfat…) görünür. Herkes gizlice o kelimeye inandırıcı bir sahte tanım yazar; gerçek tanım ve sahte tanımlar karıştırılıp numaralı kartlar olarak gösterilir. Herkes gerçek olduğunu düşündüğü karta oy verir. Gerçeği bulan +1, sahte tanımı seçilen blöf sahibi her seçim için +1 blöf puanı alır; genel skora sıralama ödülü (+2 / +1 / 0) gider.",
   "akis": [
     {
       "ad": "Sahte tanım yazma",
       "sureSn": 50,
       "kim": "herkes",
-      "aciklama": "Üstte 'Bu kelimenin anlamı ne?' ve kelime (büyük harf, sözlük maddesi plakasında), altında 'Gerçek gibi görünen sahte bir anlam yaz' ipucu, çok satırlı yazı alanı, 'n/100' sayacı ve 'Gönder' düğmesi. Gönder aynı zamanda 'Tamam'dır: tanım tek seferliktir ve değiştirilemez. Gönderince alan 'Tanımın kilitlendi' kartına döner (tanım gösterilir, 'Diğerleri bekleniyor · n/m hazır'). Altta portre şeridi; tanımını gönderenin portresinde hazır işareti çıkar. Sunucu reddederse alan geri açılır ve kısa hata gösterilir ('Bu zaten gerçek anlam! Kendi cümleni yaz.', 'Biraz kısalt, en çok 100 karakter.', 'Süre doldu.').",
+      "aciklama": "Açık bir sözlük sayfası: üstte 'Bu kelimenin anlamı ne?', kelime plakası (büyük harf), altında küçük italik tür satırı (isim/sıfat/fiil/zarf) ve plakanın sağ üstünde kalan saniye (son 10 sn amber, son 5 sn kırmızı). Altında yatay kaydırılan 6 tanım kalıbı ('bir tür …', '… için kullanılan' …; türe göre değişir; dokununca alana eklenir, imleç boşluğa konur), sözlük satırı gibi yazı alanı ('ŞAKUL isim — …'), 'Kartta böyle görünecek:' önizlemesi (ilk harf küçük, sondaki nokta yok), 'n/100' sayacı (90'dan sonra amber) ve 'Gönder'. Gönder aynı zamanda 'Tamam'dır: tanım tek seferliktir. Gönderince tanım kart olarak desteye iner ('Sözlüğe işleniyor'): destede gönderilen kart sayısı kadar ters kart birikir, kendi tanımın 2 sn okunur sonra ters döner (basılı tutunca yeniden görünür), altında 'n/m tanım geldi'; herkes gönderince deste karılır. Yazarken taslak cihazda geçici saklanır (sayfa yenilenirse geri gelir; gönderince ve oyun bitince silinir). Klavye açıkken yalnız madde başı, alan ve Gönder kalır. Sunucu reddederse alan geri açılır ve kısa hata gösterilir.",
       "gizli": "Gerçek tanım hiçbir oyuncuya ve izleyiciye gösterilmez. Sahte tanımlar yalnız sahibinde durur."
     },
     {
       "ad": "Tanım seçme",
       "sureSn": 30,
       "kim": "herkes",
-      "aciklama": "'Gerçek anlam hangisi?' başlığı, küçük kelime plakası ve numaralı (1, 2, 3…) karıştırılmış kartlar: gerçek tanım ve gönderilen bütün sahte tanımlar aynı biçimde, sahipsiz. Kendi yazdığın kartta 'Senin yazdığın' etiketi vardır ve seçilemez. Bir karta dokununca seçilir (tik işareti); seçim Tamam'a kadar değiştirilebilir. Seçim yapılmadan Tamam olmaz. Yazmadan seçmeye geçerken kısa bir başlama sesi/titreşimi vardır.",
+      "aciklama": "'Gerçek anlam hangisi?' başlığı, küçük kelime plakası ve tür. Kendi kartın listeden çıkar ve başlığın altında 'Senin blöfün (3): …' şeridine döner; numaralar herkes için aynı ortak sıradan gelir (senin listende bir numara atlanır). Bir karta dokununca seçilir (tik ve 'SEÇİLDİ' yazısı, kâğıt sesi); seçim Tamam'a kadar değiştirilebilir; Tamam çubuğunun üstünde 'Seçimin: 4 · …' özeti. Liste sonunda Tamam çubuğu kadar boşluk vardır. Küçük ekranda kartlar sıkışık, yatayda iki sütundur. Yazmadan seçmeye geçerken deste karıştırma sesi ve titreşim.",
       "gizli": "Gerçek kartın hangisi olduğu ve kartların sahipleri sonuç açılana kadar kimseye (kendi kartın hariç) söylenmez. Kimin Tamam dediği herkese açıktır; kimin neyi seçtiği kapalıdır."
     },
     {
       "ad": "Sonuç açılışı",
       "sureSn": 12,
       "kim": "herkes",
-      "aciklama": "Sıralı açılış: önce gerçek anlam, sonra sahte tanımlar az kandırandan çok kandırana doğru açılır; en çok kişiyi kandıran blöf en son açılır. Her kartta sahibi (avatar + takma ad, kendi kartın için 'Sen'), '+n' (kaç kişiyi kandırdı) ve kartı seçenlerin avatarları gösterilir; gerçek kartta 'Gerçek anlam' etiketi ve 'n kişi buldu' / 'Kimse bulamadı' yazar. Üstte kendi puanın ('+n'), 'Gerçeği buldun!' ya da 'Gerçeği bulamadın' ve varsa 'n kişiyi kandırdın'. İzleyici 'Gerçek anlam açıldı' görür. Dizi bitince puan aldıysan eşleşme sesi, almadıysan alçak ses çalar. Açılış en az 12 sn sürer ve kesilmez; ekranın altında 'Devam et' düğmesi çıkar (ilk 1,5 sn pasif), kimin bastığı avatarlarla görünür. Bağlı bütün katılımcılar basınca oyun (açılış bittiyse) 1 sn sonra biter; basmayan olursa açılış başından en geç 60 sn sonra biter. Kopan oyuncu ve izleyiciler beklenmez.",
+      "aciklama": "Mühürlü açılış: kartlar seçme ekranındaki numaralarıyla durur; sahte kartlar azdan çoğa kandırana doğru 1 sn arayla çevrilir (sahibi ve '+n' görünür, seçenlerin isim çipleri 'Kandırdığı: Mert, Ayşe' karta uçar; kimse seçmediyse kart soluklaşır), sonra kalan kart titrer, 'Gerçek anlam…' ve davul, gerçek kart 'SÖZLÜKTE' mührüyle damgalanır, mürekkep yayılır ('Bulanlar: …'). Ardından tek özel damga (SÖZLÜK KAZANDI > BLÖF USTASI > HERKES BİLDİ) ve kartlar son sıraya (gerçek üstte, sonra çok kandırandan aza) kayar. Seçtiğin kartta 'Senin seçimin' şeridi (gerçekse yeşil ✓, sahteyse amber 'Kandırıldın · Elif'in blöfü'). Üstte 'Gerçeği buldun +1 · 2 kişiyi kandırdın +2', altında 'blöf puanı 3' ve dizi bitince '+2 genel' rozeti. Kopan oyuncunun çipi soluk ve 'bağlantı koptu'. Altta 'Bu kelimeyi önceden biliyordum' düğmesi (1,5 sn sonra etkin, geri alınabilir, puana etkisi yok, anonim). Hareket azaltmada çevirme ve uçuş yoktur, kartlar 0,6 sn arayla belirir. Ekran okuyucuya açılış özeti okunur. Açılış en az 12 sn sürer; 'Devam et' kuralı aynıdır.",
       "gizli": "Bu aşamada her şey açıktır: gerçek kart, sahipler ve herkesin seçimi."
     }
   ],
   "kurallar": [
     "En az 3, en çok 8 oyuncu. Rol yoktur; herkes aynı işi yapar.",
-    "Her maçta 87 yerleşik girdiden (yönetici paneliyle değiştirilebilir havuz) rastgele bir kelime ve gerçek tanımı seçilir; kelime Türkçe büyük harfle gösterilir.",
+    "Her maçta 87 yerleşik girdiden (yönetici paneliyle değiştirilebilir havuz: kelime + tür + gerçek tanım) bir kelime seçilir; kelime Türkçe büyük harfle, türü altında küçük italik gösterilir. Aynı odada son 40 Sözlük Blöfü oyununda çıkan kelime gelmez (havuz yetmezse süzgeç uygulanmaz). En az 10 oyunda çıkmış ve 'biliyordum' oranı %40'ı aşan kelimenin çekiliş ağırlığı yarıdır.",
     "Her oyuncu bir sahte tanım yazar; yazmak zorunludur ama zorlayıcı bir ceza yoktur (yazmayanın kartı olmaz, o oyuncu yine seçim yapabilir).",
     "Tanım serbest metindir, temizlendikten sonra en çok 100 Unicode karakter olabilir; ağ koruması olarak ham metin 400 karakteri geçemez (aşarsa eylem reddedilir). Boş tanım reddedilir.",
     "Sunucu tanımı temizler: her tür boşluk tek aralığa iner, uçlar kırpılır, görünmez/denetim karakterleri atılır. Kartta görünen biçim 'sözlük gibi'dir: sondaki nokta ve üç nokta atılır, ilk harf (kısaltma değilse, yani ikinci harf büyük değilse) küçülür; böylece 'Cümle gibi' yazan kendini ele vermez.",
@@ -51,10 +51,12 @@
     "Bağlı bütün katılımcılar 'Tamam' derse seçme 1 sn sonra biter.",
     "Gerçek tanımı seçen +1 alır. Sahte bir kartı seçen kişi puan almaz (0); kartın sahibi her seçim için ayrı ayrı +1 alır. Kendi kartını seçmek zaten mümkün değildir.",
     "Yanlış seçim 0 puandır; eksi puan yoktur. Seçmeyen oyuncu da 0 alır, kimseye ceza yazılmaz.",
-    "Mini oyun puanı genel skora aynen eklenir (awards = miniScores); ayrı beraberlik ya da final bonusu yoktur."
+    "Blöf puanı mini oyun puanıdır. Genel skora sıralama ödülü gider (SB-M1): en yüksek blöf puanı +2 (eşitse hepsi +2), sonraki farklı toplam +1, diğerleri 0; 0 puanlı ödül almaz; herkes eşit ve pozitifse herkes +1, hepsi 0 ise kimse.",
+    "Gerçek tanımlar tek cümle ve en çok 70 karakterdir; noktalı virgül, parantez ve 'ör.' içermez (yönetici panelinde yeni ve düzenlenen girdilere uygulanır).",
+    "Açılışta 'Bu kelimeyi önceden biliyordum' düğmesi puanı etkilemez; anonim sayılır ve yalnız havuz istatistiğine (kaç oyunda çıktı, kaç kişi biliyordu) işlenir."
   ],
   "puanlama": {
-    "ozet": "Gerçeği bulmak +1; sahte tanımını seçen her kişi başına +1. Eksi puan yok.",
+    "ozet": "Blöf puanı: gerçeği bulmak +1; sahte tanımını seçen her kişi başına +1 (eksi yok). Genel skora sıralama: en yüksek +2, sonraki +1, diğerleri 0.",
     "kalemler": [
       {
         "olay": "Gerçek tanımı seçmek",
@@ -70,15 +72,20 @@
         "olay": "Yanlış seçim / seçmemek",
         "puan": "0",
         "not": "Eksi puan yoktur."
+      },
+      {
+        "olay": "Genel skor (oyun sonu)",
+        "puan": "+2 / +1 / 0",
+        "not": "En yüksek blöf puanı +2 (eşitlikte hepsi), sonraki farklı toplam +1; 0 puanlı ödül almaz; herkes eşit ve pozitifse herkes +1."
       }
     ],
-    "ornek": "5 oyuncu (A-E), kelime ŞAKUL. A, B, C, D, E birer sahte tanım yazdı. Seçimler: A gerçeği seçer (+1 A). B, A'nın blöfünü seçer (+1 A). C, A'nın blöfünü seçer (+1 A). D gerçeği seçer (+1 D). E, B'nin blöfünü seçer (+1 B). Sonuç: A 3, B 1, C 0, D 1, E 0. A hem gerçeği buldu hem iki kişiyi kandırdı.",
-    "beraberlik": "Ayrı bir beraberlik kuralı yoktur. Puanlar doğrudan genel skora eklenir; sonuç ekranında 'en çok kandıran blöf' en son açılır ama ek puan vermez."
+    "ornek": "5 oyuncu (A-E), kelime ŞAKUL. A, B, C, D, E birer sahte tanım yazdı. Seçimler: A gerçeği seçer (+1 A). B, A'nın blöfünü seçer (+1 A). C, A'nın blöfünü seçer (+1 A). D gerçeği seçer (+1 D). E, B'nin blöfünü seçer (+1 B). Sonuç: A 3, B 1, C 0, D 1, E 0. A hem gerçeği buldu hem iki kişiyi kandırdı. Genel skor: A +2, B ve D +1, C ve E 0.",
+    "beraberlik": "Birincilikte eşitlikte eşit olanların hepsi +2, sonraki farklı toplam +1 alır; herkesin blöf puanı aynı ve 0'dan büyükse herkes +1. Özel damgalar (Blöf Ustası, Sözlük kazandı, Herkes bildi) puan vermez."
   },
   "ozelDurumlar": [
     {
       "baslik": "Bağlantısı kopan oyuncu",
-      "aciklama": "Katılımcı olmaya devam eder (oda 120 sn bekler). 'Tanım gönderdi' ve 'Tamam' sayımında bağlı olmayan beklenmez, ancak bu değerlendirme yalnız bir oyuncu eylem yaptığında yapılır. Kopmadan önce yazdığı tanım kart olarak kalır ve seçilebilir."
+      "aciklama": "Katılımcı olmaya devam eder (oda 120 sn bekler). 'Tanım gönderdi' ve 'Tamam' sayımında bağlı olmayan beklenmez, ancak bu değerlendirme yalnız bir oyuncu eylem yaptığında yapılır. Kopmadan önce yazdığı tanım kart olarak kalır ve seçilebilir. Açılışta kopan oyuncunun isim çipi soluk ve 'bağlantı koptu' etiketlidir; seçme sırasında kopanın seçimi geçerlidir ('seçimini yaptı')."
     },
     {
       "baslik": "Tanım yazmayan oyuncu",
@@ -102,7 +109,7 @@
     },
     {
       "baslik": "İzleyici",
-      "aciklama": "İzleyici tanım yazamaz, seçemez; yazmada 'Arkadaşların yazıyor' ve 'Tanımlar karışınca görünür · n/m hazır', seçmede 'Gizli seçim' ve kartları (sahipsiz), sonuçta 'Gerçek anlam açıldı' ve sıralı açılışı görür. Puan almaz."
+      "aciklama": "İzleyici tanım yazamaz, seçemez; yazmada 'Arkadaşların yazıyor', plaka ve 'Tanımlar karışınca görünür · n/m hazır', seçmede 'Gizli seçim' ve kartları (sahipsiz), sonuçta mühürlü açılışı görür. 'Senin seçimin' şeridi ve 'biliyordum' düğmesi yoktur. Puan almaz."
     },
     {
       "baslik": "Geç katılan",
@@ -116,7 +123,7 @@
   "kartlar": [
     {
       "kart": "Genel hesap",
-      "etki": "Bu oyunda miniScores = awards: oyuncu başına 0 ile n arasındaki puan (n = oyuncu sayısı; gerçeği bulup herkesi kandıran en çok n alır). Kartlar 'birinci/sonuncu' için bu puanlara bakar; herkes eşitse (ör. herkes 0) herkes birincidir, kimse sonuncu değildir."
+      "etki": "Kartlar mini puana (blöf puanı) bakar: oyuncu başına 0 ile n arası. 'Birinci' en yüksek, 'sonuncu' en düşük blöf puanıdır; herkes eşitse herkes birincidir, kimse sonuncu değildir. Ham genel skor ödülü +2 / +1 / 0'dır."
     },
     {
       "kart": "Kalkan",
@@ -177,18 +184,18 @@
       "kaynak": "packages/engine/src/game.ts:166 (sozluk-blofu/index.ts:113)"
     },
     {
-      "ad": "Puan: gerçeği bulan / blöfü seçilen (seçim başına)",
+      "ad": "Blöf puanı: gerçeği bulan / blöfü seçilen (seçim başına)",
       "deger": "+1 / +1",
       "kaynak": "packages/engine/src/games/sozluk-blofu/index.ts:77-89"
     },
     {
       "ad": "Kelime havuzu",
-      "deger": "87 yerleşik girdi; en az 10 etkin girdi gerekir (yönetici değiştirebilir)",
+      "deger": "87 yerleşik girdi (kelime + tür + gerçek tanım); en az 10 etkin girdi gerekir; aynı odada son 40 kelime tekrar etmez",
       "kaynak": "packages/engine/src/games/sozluk-blofu/words.ts, pool.ts:20"
     },
     {
       "ad": "Havuz girdi sınırları",
-      "deger": "kelime 3-16, tanım 6-100 karakter",
+      "deger": "kelime 3-16; tür isim/sıfat/fiil/zarf; gerçek tanım 6-70 karakter, tek cümle (; ( ) ve ör. yok)",
       "kaynak": "packages/engine/src/games/sozluk-blofu/pool.ts:10-18"
     },
     {
@@ -200,17 +207,27 @@
       "ad": "Anlatım zaman aşımı / geri sayım / sonuç ekranı",
       "deger": "40 sn / 3 sn / 60 sn",
       "kaynak": "apps/server/src/match.ts:40-42"
+    },
+    {
+      "ad": "Genel skor ödülü",
+      "deger": "+2 / +1 / 0 (sıralama)",
+      "kaynak": "packages/engine/src/games/sozluk-blofu/types.ts (sozlukAwards)"
+    },
+    {
+      "ad": "'Biliyordum' düğmesi gecikmesi / bilinirlik eşikleri",
+      "deger": "1,5 sn / en az 10 oyun, %40 ağırlık yarıda, %60 kapatma önerisi",
+      "kaynak": "packages/engine/src/games/sozluk-blofu/types.ts, packages/engine/src/content.ts"
     }
   ],
   "strateji": [
-    "Gerçek sözlük tanımları kısa, küçük harfle başlar ve noktasız biter; sunucu senin yazdığını da bu biçime çevirir, o yüzden üslupla kandıramazsın, içerikle kandır.",
+    "Kelimenin türüne bak: sıfatsa '… olan' gibi, isimse 'bir tür …' gibi yaz; gerçek tanımlar kısa, tek cümle, küçük harfle başlar ve noktasız biter; sunucu senin yazdığını da bu biçime çevirir, o yüzden üslupla değil içerikle kandır.",
     "Çok komik ya da abartılı tanım yazma; gerçeğe benzeyen, 'sözlük ağzıyla' kısa bir tanım daha çok seçilir.",
     "Kelimenin köküne ya da yan anlamına bakıp ona uygun bir şey yaz; bilinen bir eşyayı ya da mesleği anlatan tanım güvenilir görünür.",
     "Seçerken kartların uzunluğuna ve üsluba bak: çoğu insan gerçeğin çok sade, sıradan bir cümle olacağını düşünür; bunu kullan.",
     "Gerçek tanımı yazamazsın (reddedilir), ama ona çok yakın bir şey yazmak riskli ve etkilidir.",
     "Bir blöf ne kadar çok seçilirse sahibi o kadar kazanır; en iyi senaryo hem gerçeği bulmak hem de başkalarını kandırmaktır."
   ],
-  "tv": "TV/sahne ekranı bu oyun için özel görünüm kullanmaz: oyun ekranı izleyici kipinde, dokunmaya kapalı büyütülmüş bir dikey çerçevede gösterilir. Yazma aşamasında kelime plakası, 'Arkadaşların yazıyor' ve hazır sayacı; seçme aşamasında karıştırılmış kartların tamamı (sahipsiz) ve 'Gizli seçim'; sonuçta gerçek anlam, her kartın sahibi, seçenlerin avatarları ve +puanlar sıralı açılışla görünür. Sağda oyuncular ve bu oyundaki puanları bulunur.",
+  "tv": "TV/sahne ekranı özel görünüm kullanır (SB-U12): yazmada ortada büyük kelime plakası, tür ve kalan saniye; çevresinde oyuncuların tüy kalemleri, gönderenin kalemi mühürlenir ('4/6 tanım geldi'). Seçmede bütün kartlar iki sütunda büyük numaralarla (masa birlikte okur), Tamam diyenlerin avatarları köşede. Açılış tüm ekranda, kartlar iki sütunda. TV hiçbir aşamada kişisel bilgi taşımaz: 'Senin yazdığın', kart sahibi ya da kimin neyi seçtiği açılıştan önce görünmez. Sağda oyuncular ve genel skor bulunur.",
   "ekranlar": [
     {
       "mock": "sozluk-briefing",
@@ -279,11 +296,12 @@
   "bilinenSorunlar": [
     "KURALLAR.md 'sahte tanım yazmak zorunludur' der; kodda zorunluluğu denetleyen bir ceza ya da engel yoktur: yazmayan oyuncu oyundan düşmez, yalnızca kartı olmaz.",
     "KURALLAR.md 'Tanımlar serbest metindir' der; kod ek olarak sondaki noktayı atar ve ilk harfi küçültür (kartta 'sözlük gibi' görünsün diye). Oyuncunun yazdığı biçim kartta aynen görünmez.",
-    "KURALLAR.md 'Ayrı final/beraberlik bonusu tanımlanmadı' der; kod da bonus vermez. 'En çok kandıran blöf' yalnızca açılışta en sona bırakılır, puan vermez.",
     "İki oyuncu birbirinin aynısı sahte tanım yazabilir; sunucu yalnız gerçek tanımla çakışmayı engeller.",
-    "Erken bitiş değerlendirmesi yalnız bir oyuncu eylem yaptığında yapılır (ctx.connected yalnız reduce'ta okunur); son eksik oyuncu bağlantısını yitirirse aşama kendiliğinden erken bitmez."
+    "Erken bitiş değerlendirmesi yalnız bir oyuncu eylem yaptığında yapılır (ctx.connected yalnız reduce'ta okunur); son eksik oyuncu bağlantısını yitirirse aşama kendiliğinden erken bitmez.",
+    "Görseller (sözlük sayfası dokusu, SÖZLÜKTE mührü, mürekkep, altın tüy kalem) henüz üretilmedi; ekran CSS/SVG karşılıklarını kullanır (docs/oneriler/GORSEL-IHTIYACLARI.md)."
   ],
   "sonDegisiklikler": [
+    "2026-11-01: Öneri paketi (sahip onayı): genel skora +2/+1/0 sıralama, aynı odada son 40 kelime tekrar etmez, kelime türü, gerçek tanım biçim kuralı (tek cümle, en çok 70 karakter), 'Bu kelimeyi biliyordum' ve bilinirlik istatistiği; sözlük sayfası, tanım kalıpları, deste bekleme, kendi kartın kenarda, mühürlü açılış, isim çipleri, özel damgalar, iki satırlı puan başlığı, taslak saklama, TV görünümü, ses seti, anlatım ve erişilebilirlik.",
     "2026-10-29: Oyun ekranları arayüz düzeltmeleri: tek satır oyun adı, sakin 'Tanımın kilitlendi' durumu, tek hazır şeridi, tutarlı düğmeler.",
     "2026-10-29: Oyun ekranları: tutarlı durum, tek satır başlık, okunur sonuçlar.",
     "2026-10-29: Geç gelen eylem payı: Sözlük Blöfü dahil 3 oyunda oyun saati 250 ms geriden verilir.",

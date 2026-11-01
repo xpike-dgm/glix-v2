@@ -18,6 +18,8 @@ export interface PoolField {
   max: number;
   /** Uzun metin alanı (çok satırlı kutu). */
   long?: boolean;
+  /** Seçim alanı: yalnız bu değerlerden biri (yönetici formunda açılır liste). */
+  options?: readonly string[];
 }
 
 export type FieldValues = Readonly<Record<string, string>>;
@@ -44,11 +46,33 @@ export interface ContentPool<E> {
   builtin: readonly E[];
   /** Ham alan değerlerini temizler ve doğrular; sorun varsa Türkçe hata. */
   fromFields(values: FieldValues): PoolParse<E>;
+  /**
+   * İsteğe bağlı ek kural: yalnız yönetici panelinden yeni eklenen ya da düzenlenen girdilere uygulanır (eski kayıtlar
+   * bozulmasın diye `fromFields`'e girmez). Sorun varsa Türkçe hata, yoksa null.
+   */
+  strict?(entry: E): string | null;
+  /**
+   * Bilinirlik istatistiği (ör. Sözlük Blöfü "Bu kelimeyi biliyordum", SB-M7): sunucu girdi başına kaç oyunda çıktığını
+   * ve kaç "biliyordum" geldiğini sayar; panelde gösterir ve fazla bilinen girdinin çekiliş ağırlığını yarıya indirir.
+   */
+  feedback?: boolean;
   toFields(entry: E): Record<string, string>;
   /** `ctx.content` / veritabanından gelen ham veriyi alan değerlerine açar; biçim bozuksa null. */
   unpack(raw: unknown): Record<string, string> | null;
   /** Tekrar denetimi anahtarı (büyük/küçük harf ve aksan duyarsız). */
   key(entry: E): string;
+}
+
+/** Bilinirlik: en az bu kadar oyunda çıkmış girdi değerlendirilir. */
+export const FAMILIAR_MIN_SHOWN = 10;
+/** Bilinirlik oranı bunu aşarsa girdinin çekiliş ağırlığı yarıya iner. */
+export const FAMILIAR_RATIO = 0.4;
+/** Bilinirlik oranı bunu aşarsa panel girdiyi kapatma önerisi olarak işaretler. */
+export const FAMILIAR_CLOSE_RATIO = 0.6;
+
+/** Girdi fazla mı biliniyor (ağırlığı yarıya inecek mi)? */
+export function isFamiliar(shown: number, knew: number): boolean {
+  return shown >= FAMILIAR_MIN_SHOWN && knew / shown > FAMILIAR_RATIO;
 }
 
 /** Havuz tanımı kurucusu: ortak `parseEntry`yi türetir. */

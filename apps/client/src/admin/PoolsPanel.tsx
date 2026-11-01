@@ -23,6 +23,7 @@ import {
   bulkHint,
   emptyValues,
   entryText,
+  knownCell,
   LINE_STATUS_LABELS,
   minText,
   POOL_FILTERS,
@@ -404,7 +405,7 @@ export function PoolsPanel(props: { onOtp: () => void }) {
                     <div class="adm-fieldrow">
                       <label for={`adm-pf-${f.key}`}>{f.label}</label>
                       <Show
-                        when={f.long}
+                        when={f.long || f.options}
                         fallback={
                           <input
                             id={`adm-pf-${f.key}`}
@@ -416,13 +417,30 @@ export function PoolsPanel(props: { onOtp: () => void }) {
                           />
                         }
                       >
-                        <textarea
-                          id={`adm-pf-${f.key}`}
-                          class="adm-field adm-textarea"
-                          placeholder={f.hint}
-                          value={values()[f.key] ?? ""}
-                          onInput={(e) => setValues({ ...values(), [f.key]: e.currentTarget.value })}
-                        />
+                        <Show
+                          when={f.options}
+                          fallback={
+                            <textarea
+                              id={`adm-pf-${f.key}`}
+                              class="adm-field adm-textarea"
+                              placeholder={f.hint}
+                              value={values()[f.key] ?? ""}
+                              onInput={(e) => setValues({ ...values(), [f.key]: e.currentTarget.value })}
+                            />
+                          }
+                        >
+                          {(opts) => (
+                            <select
+                              id={`adm-pf-${f.key}`}
+                              class="adm-field"
+                              value={values()[f.key] ?? ""}
+                              onChange={(e) => setValues({ ...values(), [f.key]: e.currentTarget.value })}
+                            >
+                              <option value="">Seç…</option>
+                              <For each={opts()}>{(o) => <option value={o}>{o}</option>}</For>
+                            </select>
+                          )}
+                        </Show>
                       </Show>
                     </div>
                   )}
@@ -548,6 +566,9 @@ export function PoolsPanel(props: { onOtp: () => void }) {
                         <thead>
                           <tr>
                             <For each={p().fields}>{(f) => <th>{f.label}</th>}</For>
+                            <Show when={p().feedback}>
+                              <th>Bilinirlik</th>
+                            </Show>
                             <th>Durum</th>
                             <th>İşlemler</th>
                           </tr>
@@ -563,8 +584,11 @@ export function PoolsPanel(props: { onOtp: () => void }) {
                                     </td>
                                   )}
                                 </For>
+                                <Show when={p().feedback}>
+                                  <td data-label="Bilinirlik">{knownCell(e.known).text}</td>
+                                </Show>
                                 <td data-label="Durum">
-                                  <For each={badgesOf(e)}>
+                                  <For each={badgesOf(e, p().feedback === true)}>
                                     {(b) => <span class={`adm-badge adm-badge--${b.tone}`}>{b.label}</span>}
                                   </For>
                                 </td>

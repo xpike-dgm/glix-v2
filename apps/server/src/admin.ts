@@ -1481,6 +1481,11 @@ async function poolEntries(
   if (!env.limits.search(adminId)) return fail(res, 429, "rate_limited", "Biraz bekleyip tekrar dene.");
   const body = env.content.page(poolId, text, filter as AdminPoolFilter, page);
   if (!body) return fail(res, 404, "not_found", "Havuz bulunamadı.");
+  // Bilinirlik (SB-M7): yalnız sayaçlı havuzlarda, girdi başına iki sayı.
+  if (body.pool.feedback) {
+    const counts = env.stats.contentStats(poolId);
+    for (const e of body.entries) e.known = counts.get(e.key) ?? { shown: 0, knew: 0 };
+  }
   send(res, 200, body);
 }
 

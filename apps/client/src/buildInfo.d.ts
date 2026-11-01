@@ -14,3 +14,5 @@ declare const __YAZI_YAZ_PROPS__: readonly string[] | undefined;
 declare const __KENDIM_PROPS__: readonly string[] | undefined;
 /** Sızma görsellerinden derlemede var olanlar (`public/assets/props/sizma/<ad>.webp`, uzantısız). */
 declare const __SIZMA_PROPS__: readonly string[] | undefined;
+/** Sözlük Blöfü görsellerinden derlemede var olanlar (`public/assets/props/sozluk-blofu/<ad>.webp`, uzantısız). */
+declare const __SOZLUK_PROPS__: readonly string[] | undefined;

@@ -1,12 +1,14 @@
 import { createEffect, createMemo, type JSX, on, Show } from "solid-js";
 import { hapticGo } from "../../fx/haptics.js";
-import { go } from "../../fx/sound.js";
 import { PhaseClock } from "../../ui/PhaseClock.js";
 import type { GameScreenProps } from "../registry.js";
 import { Pick } from "./Pick.js";
 import "./sozluk.css";
 import { RevealContinue } from "../../ui/RevealContinue.js";
+import { clearDrafts } from "./draft.js";
 import { Sonuc } from "./Sonuc.js";
+import { shuffleSound } from "./sounds.js";
+import { TvBoard } from "./TvBoard.js";
 import { type CrewMember, parseSozlukView } from "./view.js";
 import { createVisibleArea } from "./visibleArea.js";
 import { Write } from "./Write.js";
@@ -14,7 +16,8 @@ import { Write } from "./Write.js";
 /** Ekran klavyesi açıkken görünen alan bu yüksekliğin altına inerse düzen sıkışık kipine geçer. */
 const TIGHT_HEIGHT = 440;
 
-export default function SozlukBlofuScreen(props: GameScreenProps) {
+/** `tv`: büyük ekran (StageView, SB-U12) yerleşimi; kişisel bilgi hiç yoktur. */
+export default function SozlukBlofuScreen(props: GameScreenProps & { tv?: boolean }) {
   const view = createMemo(() => parseSozlukView(props.match.publicView, props.match.view));
   const crew = createMemo<CrewMember[]>(() =>
     props.match.participants.flatMap((id) => {
@@ -23,23 +26,32 @@ export default function SozlukBlofuScreen(props: GameScreenProps) {
     }),
   );
   const spectator = () => props.spectator === true;
+  const tv = () => props.tv === true;
   const phase = () => view()?.phase ?? "write";
   const area = createVisibleArea();
-  const tight = () => area().height < TIGHT_HEIGHT;
+  const tight = () => !tv() && area().height < TIGHT_HEIGHT;
   const areaStyle = (): JSX.CSSProperties | undefined => {
     const a = area();
-    return a.keyboard ? { top: `${a.top}px`, bottom: "auto", height: `${a.height}px` } : undefined;
+    return !tv() && a.keyboard ? { top: `${a.top}px`, bottom: "auto", height: `${a.height}px` } : undefined;
   };
 
-  // Yazmadan seçmeye geçişte kısa "başla" tepkisi.
+  // Yazmadan seçmeye geçişte deste karıştırma sesi; taslak silinir (SB-U11).
   createEffect(
     on(phase, (now, before) => {
+      if (now !== "write") clearDrafts();
       if (before === "write" && now === "pick") {
-        go();
+        shuffleSound();
         hapticGo();
       }
     }),
   );
+
+  // Ekran okuyucuya aşama değişiminde tek cümle (SB-U18).
+  const announce = () => {
+    const v = view();
+    if (v?.phase !== "pick") return "";
+    return `Seçim başladı, ${v.cards?.length ?? 0} kart`;
+  };
 
   const bar = () => {
     const v = view();
@@ -50,7 +62,12 @@ export default function SozlukBlofuScreen(props: GameScreenProps) {
   };
 
   return (
-    <section class="screen game sb" data-tight={tight() ? "1" : undefined} style={areaStyle()}>
+    <section
+      class="screen game sb"
+      data-tight={tight() ? "1" : undefined}
+      data-tv={tv() ? "1" : undefined}
+      style={areaStyle()}
+    >
       <div class="col">
         <Show when={bar()}>
           {(b) => <PhaseClock startedAt={b().from} endsAt={b().to} urgency={b().urgency} />}
@@ -68,24 +85,38 @@ export default function SozlukBlofuScreen(props: GameScreenProps) {
             <Show
               when={v().reveal}
               fallback={
-                <Show
-                  when={v().phase === "pick"}
-                  fallback={<Write view={v()} crew={crew()} spectator={spectator()} />}
-                >
-                  <Pick view={v()} crew={crew()} spectator={spectator()} />
+                <Show when={!tv()} fallback={<TvBoard view={v()} crew={crew()} now={props.now} />}>
+                  <Show
+                    when={v().phase === "pick"}
+                    fallback={<Write view={v()} crew={crew()} spectator={spectator()} now={props.now} />}
+                  >
+                    <Pick view={v()} crew={crew()} spectator={spectator()} />
+                  </Show>
                 </Show>
               }
             >
-              <Sonuc view={v()} crew={crew()} selfId={props.selfId} spectator={spectator()} />
+              <Sonuc
+                view={v()}
+                crew={crew()}
+                selfId={props.selfId}
+                spectator={spectator()}
+                now={props.now}
+                tv={tv()}
+              />
             </Show>
           )}
         </Show>
-        <RevealContinue
-          match={props.match}
-          selfId={props.selfId}
-          now={props.now}
-          spectator={props.spectator}
-        />
+        <p class="sr-only" aria-live="polite">
+          {announce()}
+        </p>
+        <Show when={!tv()}>
+          <RevealContinue
+            match={props.match}
+            selfId={props.selfId}
+            now={props.now}
+            spectator={props.spectator}
+          />
+        </Show>
       </div>
     </section>
   );

@@ -175,6 +175,16 @@ function yaziYazPropFiles(): string[] {
     .sort();
 }
 
+/** Sözlük Blöfü görsellerinden derlemede var olanlar (sayfa dokusu, mühür, mürekkep, tüy kalem; yoksa CSS/SVG). */
+function sozlukPropFiles(): string[] {
+  const dir = fileURLToPath(new URL("./public/assets/props/sozluk-blofu", import.meta.url));
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".webp"))
+    .map((f) => f.slice(0, -".webp".length))
+    .sort();
+}
+
 /**
  * Sızma görsellerinden gerçekten var olanlar (`public/assets/props/sizma/*.webp`, uzantısız ad). Ekran yalnız
  * bunları ister; olmayanın yerine kendi SVG maskesini çizer (404 yok). Tarifler: docs/oneriler/sizma-gorsel.md.
@@ -198,6 +208,7 @@ export default defineConfig({
     __KENDIM_PROPS__: JSON.stringify(kendimPropFiles()),
     __ZB_BOMBA_GORSEL__: JSON.stringify(ZB_BOMBA_GORSEL),
     __SIZMA_PROPS__: JSON.stringify(sizmaPropFiles()),
+    __SOZLUK_PROPS__: JSON.stringify(sozlukPropFiles()),
   },
   plugins: [
     solid(),

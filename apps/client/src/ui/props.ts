@@ -32,6 +32,7 @@ export type PropPath =
       | "bomba-govde"
       | "not-kagidi"}`
   | `rus-ruleti/${"tabanca" | "tambur"}`
+  | `sozluk-blofu/${SozlukProp}`
   | `yazi-yaz/${YaziYazProp}`
   | `zehirli-kadeh/${"efekt-temiz" | "efekt-zehir" | "masa" | "mum" | `kadeh-${string}`}`;
 
@@ -50,6 +51,22 @@ export function yaziYazPropExists(name: YaziYazProp): boolean {
 /** Var olan Yazı Yaz görselinin adresi; yoksa null. */
 export const yaziYazProp = (name: YaziYazProp): string | null =>
   yaziYazPropExists(name) ? propSrc(`yazi-yaz/${name}`) : null;
+
+/**
+ * Sözlük Blöfü görselleri (sahip üretecek; docs/oneriler/GORSEL-IHTIYACLARI.md "Sözlük Blöfü"). Yoksa ekran CSS/SVG
+ * karşılığını çizer ve olmayan dosyayı hiç istemez (404 yok).
+ */
+export type SozlukProp = "sayfa" | "muhur" | "murekkep" | "tuy-kalem";
+export const SOZLUK_PROPS: readonly SozlukProp[] = ["sayfa", "muhur", "murekkep", "tuy-kalem"];
+
+export function sozlukPropExists(name: SozlukProp): boolean {
+  const built = typeof __SOZLUK_PROPS__ === "undefined" ? undefined : __SOZLUK_PROPS__;
+  return built ? built.includes(name) : false;
+}
+
+/** Var olan Sözlük Blöfü görselinin adresi; yoksa null. */
+export const sozlukProp = (name: SozlukProp): string | null =>
+  sozlukPropExists(name) ? propSrc(`sozluk-blofu/${name}`) : null;
 
 /**
  * Gizli Alışveriş ürün kimliği (motor havuzu sırası, 0..19) -> dosya adı. Son 8 ürünün görseli henüz yoksa ekran
@@ -140,6 +157,7 @@ const GAME_PROPS: Record<string, readonly PropPath[]> = {
   ittifak: ["genel/el-sikisma"],
   "capraz-ates": ["genel/nisangah"],
   "yazi-yaz": YAZI_YAZ_PROPS.filter(yaziYazPropExists).map((n): PropPath => `yazi-yaz/${n}`),
+  "sozluk-blofu": SOZLUK_PROPS.filter(sozlukPropExists).map((n): PropPath => `sozluk-blofu/${n}`),
   "acgozluluk-limiti": ["genel/rusvet-jetonu"],
   "zehirli-kadeh": [
     "zehirli-kadeh/efekt-temiz",

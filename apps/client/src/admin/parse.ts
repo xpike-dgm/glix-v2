@@ -647,6 +647,13 @@ function fieldValues(o: Rec, k: string): Record<string, string> {
   return out;
 }
 
+function knownCounts(o: Rec): { shown: number; knew: number } {
+  const shown = num(o, "shown");
+  const knew = num(o, "knew");
+  if (shown < 0 || knew < 0) throw new ParseError("known: geçersiz");
+  return { shown, knew };
+}
+
 function poolSummary(o: Rec): AdminPoolSummary {
   return {
     id: str(o, "id"),
@@ -664,9 +671,11 @@ function poolSummary(o: Rec): AdminPoolSummary {
         min: num(f, "min"),
         max: num(f, "max"),
         long: bool(f, "long"),
+        options: f.options === undefined || f.options === null ? null : strList(f, "options").slice(0, 20),
       }),
       8,
     ),
+    feedback: o.feedback === true,
     min: num(o, "min"),
     needed: num(o, "needed"),
     builtin: num(o, "builtin"),
@@ -700,6 +709,7 @@ export function parsePoolPage(v: unknown): AdminPoolPage {
           source,
           disabled: bool(e, "disabled"),
           fields: fieldValues(e, "fields"),
+          ...(e.known === undefined ? {} : { known: knownCounts(rec(e.known)) }),
         };
       },
       200,

@@ -8,7 +8,7 @@ import { startWalCheckpointer } from "./walCheckpoint.js";
 /** İstatistik satırları bu süreden sonra silinir (docs/PROTOKOL.md). */
 export const RETENTION_MS = 90 * 24 * 3600 * 1000;
 export const PURGE_EVERY_MS = 24 * 3600 * 1000;
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 export type GameOutcome = "finished" | "aborted" | "failed";
 
@@ -62,6 +62,13 @@ export interface StatsStore {
   gameFailure(now: number, rec: GameFailureRecord): void;
   /** E-posta gönderim denemesini gün/tür başına sayar (adres tutulmaz); `ok` = servis kabul etti. */
   mailSent(now: number, kind: AdminMailKind, ok: boolean): void;
+  /**
+   * Havuz girdisinin bilinirlik sayacı (SB-M7): girdi bir oyunda çıktı (`shown` +1) ve `knew` kişi "biliyordum" dedi.
+   * Yalnız iki sayı yazılır; oyuncu, oda ya da cevap tutulmaz.
+   */
+  contentSeen(poolId: string, key: string, knew: number): void;
+  /** Havuzun bilinirlik sayaçları (anahtar -> sayılar); kapalıysa boş. */
+  contentStats(poolId: string): ReadonlyMap<string, { shown: number; knew: number }>;
   /** Yönetici paneli için salt okunur toplamlar; istatistik kapalıysa null. */
   readonly reader: StatsReader | null;
   /** `now - 90 gün`den eski satırları siler. */
@@ -83,6 +90,8 @@ export const noopStats: StatsStore = {
   clientError: () => {},
   gameFailure: () => {},
   mailSent: () => {},
+  contentSeen: () => {},
+  contentStats: () => new Map(),
   reader: null,
   purge: () => {},
   path: null,
@@ -165,6 +174,14 @@ const MIGRATIONS: readonly string[] = [
      ok INTEGER NOT NULL DEFAULT 0,
      failed INTEGER NOT NULL DEFAULT 0,
      PRIMARY KEY (day, kind)
+   ) WITHOUT ROWID;`,
+  // Havuz bilinirliği (SB-M7): girdi başına iki sayaç. Oyuncu, oda, zaman ya da cevap yok; tarihsiz toplam.
+  `CREATE TABLE content_stats (
+     pool_id TEXT NOT NULL,
+     key TEXT NOT NULL,
+     shown INTEGER NOT NULL DEFAULT 0,
+     knew INTEGER NOT NULL DEFAULT 0,
+     PRIMARY KEY (pool_id, key)
    ) WITHOUT ROWID;`,
 ];
 
@@ -267,6 +284,11 @@ export function createStats(path: string | undefined | null): StatsStore {
     `INSERT INTO mail_stats (day, kind, ok, failed) VALUES (?, ?, ?, ?)
      ON CONFLICT (day, kind) DO UPDATE SET ok = ok + excluded.ok, failed = failed + excluded.failed`,
   );
+  const upsertContent = db.prepare(
+    `INSERT INTO content_stats (pool_id, key, shown, knew) VALUES (?, ?, 1, ?)
+     ON CONFLICT (pool_id, key) DO UPDATE SET shown = shown + 1, knew = knew + excluded.knew`,
+  );
+  const selectContent = db.prepare("SELECT key, shown, knew FROM content_stats WHERE pool_id = ?");
   const reader = createStatsReader(db);
   let closed = false;
   return {
@@ -347,6 +369,19 @@ export function createStats(path: string | undefined | null): StatsStore {
         upsertMail.run(Math.floor(now / DAY_MS) * DAY_MS, kind, ok ? 1 : 0, ok ? 0 : 1);
       });
     },
+    contentSeen: (poolId, key, knew) => {
+      if (closed) return;
+      guarded("contentSeen", undefined, () => {
+        upsertContent.run(poolId, key, Math.max(0, Math.floor(knew)));
+      });
+    },
+    contentStats: (poolId) =>
+      closed
+        ? new Map()
+        : guarded("contentStats", new Map(), () => {
+            const rows = selectContent.all(poolId) as { key: string; shown: number; knew: number }[];
+            return new Map(rows.map((r) => [r.key, { shown: r.shown, knew: r.knew }]));
+          }),
     purge: (now) => {
       if (closed) return;
       guarded("purge", undefined, () => {

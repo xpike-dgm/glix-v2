@@ -7,6 +7,8 @@
  *   ?mock=sozluk-pick-locked       seçme: sen "Tamam" dedin
  *   ?mock=sozluk-reveal            kartlar açıldı (`&me=none` hiç puan almadın; `&at=ms` açılışın kaçıncı ms'sinde: sıralı açılışın ortası/sonu)
  *   ?mock=sozluk-spectator-write | -pick | -reveal   katılımcı değilsin
+ *   ?mock=tv-sozluk-write | tv-sozluk-pick | tv-sozluk-reveal   büyük ekran (TV, SB-U12)
+ *   `&nobody=1` açılışta gerçeği kimse bulamadı ("SÖZLÜK KAZANDI"); `&off=1` bir oyuncunun bağlantısı koptu
  */
 import type { GameInfo, MatchSnapshot, PlayerInfo, RoomPhase, RoomSnapshot } from "@glix/engine";
 import {
@@ -17,6 +19,7 @@ import {
   type SozlukPublicView,
   type SozlukReveal,
   type SozlukView,
+  sozlukAwards,
   sozlukBlofu,
 } from "@glix/engine";
 import { mockAck, useMockSender } from "../net/client.js";
@@ -49,7 +52,7 @@ export function startSozlukMock(kind: string, params: URLSearchParams): void {
     id: `p${i}`,
     nickname: NAMES[i] ?? `Oyuncu${i}`,
     avatar: i,
-    connected: true,
+    connected: !(params.get("off") === "1" && i === 2),
     score: 0,
     spectator: false,
   }));
@@ -57,7 +60,7 @@ export function startSozlukMock(kind: string, params: URLSearchParams): void {
   const participants = players.map((p) => p.id).filter((id) => !(spectator && id === SELF));
   const now = Date.now();
   // Açılışın kaçıncı ms'sindeyiz; varsayılan: sıralı açılış bitmiş.
-  const revealAt = Number(params.get("at") ?? 8_000);
+  const revealAt = Number(params.get("at") ?? 14_000);
   const stage = kind.includes("reveal") ? "reveal" : kind.includes("pick") ? "pick" : "write";
   const startedAt =
     stage === "write"
@@ -101,6 +104,7 @@ export function startSozlukMock(kind: string, params: URLSearchParams): void {
       ? (pickable[Number(chosenParam ?? 1) % pickable.length]?.id ?? null)
       : null;
   let myLocked = kind.includes("locked");
+  let myKnew = false;
   let myBluff: string | null = kind === "sozluk-write-locked" ? "bir tür eski kayık" : null;
 
   const readyList = (): string[] => {
@@ -127,6 +131,8 @@ export function startSozlukMock(kind: string, params: URLSearchParams): void {
       if (id === "p1") target = { id: realCard, text: "" };
       if (id === SELF) target = { id: realCard, text: "" };
       if (noneForMe && target.id === myCard) target = { id: realCard, text: "" };
+      if (params.get("nobody") === "1" && target.id === realCard)
+        target = cards.find((c) => c.id !== realCard && authors[c.id] !== id) ?? target;
       out[id] = target.id;
     });
     return out;
@@ -143,7 +149,7 @@ export function startSozlukMock(kind: string, params: URLSearchParams): void {
         if (owner) scores[owner] = (scores[owner] ?? 0) + 1;
       }
     }
-    return { realCard, authors, picks: p, scores };
+    return { realCard, authors, picks: p, scores, awards: sozlukAwards(scores) };
   };
   void cardOfAuthor;
 
@@ -152,6 +158,7 @@ export function startSozlukMock(kind: string, params: URLSearchParams): void {
       players: participants,
       phase: stage,
       word: WORD,
+      wordType: "isim",
       startedAt,
       writeEndsAt,
       pickEndsAt,
@@ -165,6 +172,7 @@ export function startSozlukMock(kind: string, params: URLSearchParams): void {
       myCard: spectator || stage === "write" ? null : myCard,
       myPick: spectator ? null : stage === "reveal" ? (picks()[SELF] ?? null) : myPick,
       locked: !spectator && stage !== "reveal" && (stage === "write" ? myBluff !== null : myLocked),
+      myKnew,
     },
   });
 
@@ -213,7 +221,13 @@ export function startSozlukMock(kind: string, params: URLSearchParams): void {
   setState({ conn: "open", everOpen: true, nickname: "Cihad" });
   useMockSender((msg) => {
     if (msg.type !== "action") return;
-    const payload = msg.payload as { kind?: string; text?: string; card?: string } | null;
+    const payload = msg.payload as { kind?: string; text?: string; card?: string; on?: boolean } | null;
+    if (payload?.kind === "knew" && typeof payload.on === "boolean") {
+      myKnew = payload.on;
+      mockAck(msg.seq, { ok: true });
+      applySnapshot(snapshot());
+      return;
+    }
     if (payload?.kind === "bluff" && typeof payload.text === "string") {
       const same =
         payload.text

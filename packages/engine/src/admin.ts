@@ -365,6 +365,8 @@ export interface AdminPoolField {
   min: number;
   max: number;
   long: boolean;
+  /** Seçim alanı: yalnız bu değerler (açılır liste); serbest metinde null. */
+  options?: string[] | null;
 }
 
 export interface AdminPoolSummary {
@@ -374,6 +376,8 @@ export interface AdminPoolSummary {
   label: string;
   hint: string;
   fields: AdminPoolField[];
+  /** Havuzun bilinirlik istatistiği var (girdilerde `known`). */
+  feedback?: boolean;
   /** Etkin havuz bundan küçükse yerleşik havuz kullanılır. */
   min: number;
   /** Bir maçın havuzdan çektiği en çok girdi. */
@@ -407,6 +411,8 @@ export interface AdminPoolEntry {
   /** Yalnız yerleşik girdiler kapatılabilir. */
   disabled: boolean;
   fields: Record<string, string>;
+  /** Bilinirlik (yalnız `feedback` havuzlarında): kaç oyunda çıktı, kaç kişi "biliyordum" dedi. */
+  known?: { shown: number; knew: number };
 }
 
 /** `GET /api/admin/pools/entries`. */

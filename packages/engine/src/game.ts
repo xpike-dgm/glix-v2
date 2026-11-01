@@ -147,6 +147,12 @@ export interface GameDefinition<State, Action, View, PublicView = unknown> {
    * havuz yetmezse çıkarmaz. Verilen havuz kayda yazıldığı için `replay` aynı kalır. Saf olmalı.
    */
   contentUsed?(state: State): readonly { poolId: string; key: string; memory: number }[];
+  /**
+   * İsteğe bağlı: oyun sonunda havuz girdisi başına anonim bilinirlik sayısı (ör. Sözlük Blöfü "Bu kelimeyi
+   * biliyordum" basanların sayısı; kim bastığı verilmez). Sunucu oyun tamamlanınca girdinin "çıktı" sayacını 1,
+   * "biliyordum" sayacını `knew` artırır (`ContentPool.feedback`). Puanı ve sonucu etkilemez. Saf olmalı.
+   */
+  contentFeedback?(state: State): readonly { poolId: string; key: string; knew: number }[];
 }
 
 export interface SecretEntry {

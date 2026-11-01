@@ -1,4 +1,4 @@
-import { SOZLUK_ENTRIES } from "@glix/engine";
+import { SOZLUK_ENTRIES, sozlukAwards } from "@glix/engine";
 import { describe, expect, it } from "vitest";
 import { type Client, k, setupRoom, sleep, sync, until, useServer } from "./testkit.js";
 
@@ -129,9 +129,11 @@ describe("sozluk-blofu: oda içinde tam maç", () => {
 
     k.clock.advance(12_000);
     await until(() => a.room.phase === "results", "sonuç");
-    expect(a.room.match?.result?.awards).toEqual(expected);
+    // Genel skora blöf puanı değil sıralama ödülü gider (SB-M1).
+    const awards = sozlukAwards(expected);
+    expect(a.room.match?.result?.awards).toEqual(awards);
     expect(a.room.match?.result?.miniScores).toEqual(expected);
-    expect(a.room.players.map((p) => p.score)).toEqual(ids.map((id) => expected[id]));
+    expect(a.room.players.map((p) => p.score)).toEqual(ids.map((id) => awards[id]));
     expect(d.room.players.map((p) => p.score)).toEqual(a.room.players.map((p) => p.score));
   });
 
@@ -156,7 +158,7 @@ describe("sozluk-blofu: oda içinde tam maç", () => {
     await until(() => pubOf(a).reveal !== null, "seçme erken bitti");
     k.clock.advance(12_000);
     await until(() => a.room.phase === "results", "sonuç");
-    const total = Object.values(a.room.match?.result?.awards ?? {}).reduce((x, y) => x + y, 0);
+    const total = Object.values(a.room.match?.result?.miniScores ?? {}).reduce((x, y) => x + y, 0);
     expect(total).toBe(3); // her seçim tam bir puan
   });
 });

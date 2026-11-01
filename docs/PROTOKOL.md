@@ -376,6 +376,9 @@ Ayrıntı ve kurulum: `docs/ADMIN.md`. `GLIX_ADMIN_ACCOUNT_IDS` boşsa tüm uçl
   count, first_seen, last_seen)` gün başına gruplu; mesaj 200 karaktere kısaltılır, adres sorgusu/parçası, e-posta, IP ve uzun
   belirteçler atılır; `frame` yığının tepe karesi (taban dosya adı); ham kullanıcı aracısı saklanmaz; günde en çok 3000 satır.
   Çöken oyunlar: `game_failures(id, game_id, fn, message, at)` (maç kaydı yazılmaz). İkisi de 90 gün saklanır (stats göç 4).
+- Havuz bilinirliği (Sözlük Blöfü SB-M7, stats göç 6): `content_stats(pool_id, key, shown, knew)` girdi başına iki sayaç
+  (kaç oyunda çıktı, kaç "biliyordum" geldi); oyuncu, oda, zaman ya da cevap yok. `GET pools/entries` bilinirlikli
+  havuzda (`pool.feedback: true`) her girdiye `known: {shown, knew}` ekler; alan şemasında seçim alanları `options` taşır.
 
 ## Oyuncu bildirimi ve yönetici moderasyonu (U16 A4)
 

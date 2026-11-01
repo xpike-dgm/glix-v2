@@ -16,6 +16,7 @@ import {
   gameClock,
   INSPIRE_MAX_REQUESTS,
   type InspireMine,
+  isFamiliar,
   isRejected,
   type MatchSnapshot,
   parseEntry,
@@ -441,6 +442,47 @@ export function withoutRecent(
   return out;
 }
 
+/**
+ * Bilinirlik ağırlığı (SB-M7, `ContentPool.feedback`): en az 10 oyunda çıkmış ve "biliyordum" oranı %40'ı aşan girdinin
+ * çekiliş ağırlığı yarıya iner. Oyun düz rastgele çektiği için diğer girdiler listede iki kez yer alır (eşdeğer ağırlık);
+ * fazla bilinen yoksa liste değişmez. Verilen havuz kayda yazıldığı için `replay` aynı kalır.
+ */
+export function withFamiliarity(
+  content: ContentSet | undefined,
+  gameId: string,
+  stats: (poolId: string) => ReadonlyMap<string, { shown: number; knew: number }>,
+): ContentSet | undefined {
+  let out: Record<string, readonly unknown[]> | undefined;
+  for (const pool of CONTENT_POOLS) {
+    if (pool.gameId !== gameId || pool.feedback !== true) continue;
+    const counts = stats(pool.id);
+    if (counts.size === 0) continue;
+    const list = content?.[pool.id] ?? pool.builtin;
+    const familiar = (raw: unknown): boolean => {
+      const entry = parseEntry(pool, raw);
+      const c = entry === null ? undefined : counts.get(pool.key(entry));
+      return c !== undefined && isFamiliar(c.shown, c.knew);
+    };
+    if (!list.some(familiar)) continue;
+    const weighted = list.flatMap((raw) => (familiar(raw) ? [raw] : [raw, raw]));
+    out ??= { ...(content ?? {}) };
+    out[pool.id] = weighted;
+  }
+  return out ?? content;
+}
+
+/** Oyun tamamlanınca havuz girdilerinin bilinirlik sayaçları (`GameDefinition.contentFeedback`). Hata maçı bozmaz. */
+function recordContentFeedback(rt: Runtime, room: Room, game: AnyGame, state: unknown): void {
+  if (!game.contentFeedback) return;
+  try {
+    for (const f of game.contentFeedback(state)) {
+      if (poolById(f.poolId)?.feedback === true) rt.stats.contentSeen(f.poolId, f.key, f.knew);
+    }
+  } catch (err) {
+    log.warn("content_feedback_failed", { room: room.code, error: String(err) });
+  }
+}
+
 export function rememberContent(room: Room, game: AnyGame, state: unknown): void {
   if (!game.contentUsed) return;
   const used = guard("contentUsed", () => game.contentUsed?.(state) ?? []);
@@ -480,7 +522,11 @@ function startPlaying(rt: Runtime, room: Room, match: Match): void {
   match.rng = createRng(seed);
   const rng = match.rng;
   // Havuz değişiklikleri yalnız bu andan sonra başlayan oyunlara uygulanır; etkin havuz kayda da yazılır (replay birebir).
-  const content = withoutRecent(room, rt.content.forGame(game.id), game.id);
+  const content = withFamiliarity(
+    withoutRecent(room, rt.content.forGame(game.id), game.id),
+    game.id,
+    (poolId) => rt.stats.contentStats(poolId),
+  );
   match.recorder = new GameRecorder(game.id, seed, match.participants, now, content);
   // Briefing sırasında kopanlar başlangıçta bağlı değildir.
   const connected = connectedParticipants(room, match);
@@ -509,6 +555,7 @@ function finishGame(rt: Runtime, room: Room, match: Match): void {
   // Kartlar: oyunun ham puanları kart etkileriyle nihai genel skor puanlarına çevrilir (docs/KURALLAR.md K6).
   const result = resolveGameCards(rt, room, match, baseResult);
   archiveLog(rt, match);
+  recordContentFeedback(rt, room, currentGame(match), match.state);
   if (match.gameStartedAt !== null) {
     rt.stats.gamePlayed(match.statsId, {
       gameId: currentGame(match).id,

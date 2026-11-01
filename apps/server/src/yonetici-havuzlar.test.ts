@@ -142,10 +142,16 @@ describe("A4 havuz uçları: CRUD, doğrulama, tekrar, yasaklı kelime, işlem k
 
   it("yapılı girdiler: Sözlük Blöfü tanımı kelimeyi içeremez; Sızma çiftinde iki kelime farklı ve sıra duyarsız tekrar", async () => {
     const admin = await adminLogin();
-    const soz = (word: string, definition: string) =>
-      post("pools/add", admin, { pool: SOZ, fields: { word, definition } });
+    const soz = (word: string, definition: string, type = "isim") =>
+      post("pools/add", admin, { pool: SOZ, fields: { word, type, definition } });
     expect((await soz("Zırzop", "zırzop demek bir şeydir")).status).toBe(400);
     expect((await soz("Zırzop", "kısa")).status).toBe(400);
+    // Tür zorunlu ve dört seçenekten biri (SB-M3); gerçek tanım tek cümle, en çok 70 karakter (SB-M6).
+    expect((await soz("Zırzop", "deneme amaçlı bir tanım metni", "")).status).toBe(400);
+    expect((await soz("Zırzop", "deneme amaçlı bir tanım metni", "edat")).status).toBe(400);
+    expect((await soz("Zırzop", "deneme amaçlı; ikinci anlam")).status).toBe(400);
+    expect((await soz("Zırzop", "deneme (ayraçlı) tanım")).status).toBe(400);
+    expect((await soz("Zırzop", `uzun ${"a".repeat(70)}`)).status).toBe(400);
     expect((await soz("Zırzop", "deneme amaçlı bir tanım metni")).status).toBe(200);
     expect((await soz("ZIRZOP", "başka bir deneme tanımı olur")).status).toBe(409);
     refill();
@@ -237,17 +243,31 @@ describe("A4 havuz uçları: CRUD, doğrulama, tekrar, yasaklı kelime, işlem k
     expect(saved.added).toBe(2);
     expect(saved.pool.custom).toBe(2);
     refill();
-    // Çok alanlı satır: ; ile ayrılır; sözlük tanımı içinde ; kalabilir.
+    // Çok alanlı satır: ; ile ayrılır (kelime; tür; tanım). Gerçek tanımda ; olamaz (SB-M6).
     const soz = (
       await post("pools/bulk", admin, {
         pool: SOZ,
-        lines: ["Kalemkar;boyalı bir şey; ince işli", "yalnızkelime"],
+        lines: ["Kalemkar;isim;boyalı ve ince işli bir şey", "yalnızkelime", "Kalemtıraş;isim;boyalı; ince"],
       })
     ).body as unknown as AdminPoolBulk;
     expect(soz.added).toBe(1);
     expect(soz.lines[1]?.status).toBe("invalid");
+    expect(soz.lines[2]?.status).toBe("invalid");
     const e = await get<AdminPoolPage>(`pools/entries?pool=${SOZ}&filter=custom`, admin);
-    expect(e.body.entries[0]?.fields).toEqual({ word: "KALEMKAR", definition: "boyalı bir şey; ince işli" });
+    expect(e.body.entries[0]?.fields).toEqual({
+      word: "KALEMKAR",
+      type: "isim",
+      definition: "boyalı ve ince işli bir şey",
+    });
+    // Bilinirlik sütunu (SB-M7): sayaçlı havuzda her girdide iki sayı (henüz oynanmadıysa 0).
+    expect(e.body.pool.feedback).toBe(true);
+    expect(e.body.entries[0]?.known).toEqual({ shown: 0, knew: 0 });
+    expect(e.body.pool.fields.find((f) => f.key === "type")?.options).toEqual([
+      "isim",
+      "sıfat",
+      "fiil",
+      "zarf",
+    ]);
     // Sınırlar.
     expect((await post("pools/bulk", admin, { pool: CAG, lines: [] })).status).toBe(400);
     expect(

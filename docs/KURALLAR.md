@@ -467,6 +467,39 @@ Oyuncunun genel skoru bu sonuçlarla artar; hesap istatistiğindeki maç puanı 
   Görsel: Ortada dönen sözlük küresi, çevresinde mühürlü tanım kartları ve
   seçilen kartın arkasından çıkan mavi/amber mürekkep efekti.
 
+**Değişiklik (SB, Kasım 2026, sahip onayı; `docs/oneriler/sozluk-blofu.md`, `KARARLAR-15-OYUN.md`) — yukarıdaki
+cevapların önüne geçer:**
+
+- **Puan (SB-M1):** Oyun içinde **blöf puanı** bugünkü gibi toplanır (gerçeği bulmak +1, blöfünü seçen her kişi +1;
+  eksi yok); bu mini oyun puanıdır. Genel skora blöf puanı değil **sıralama ödülü** gider: en yüksek blöf puanı **+2**
+  (birincide eşitlikte hepsi +2), sonraki farklı toplam **+1**, diğerleri 0. Blöf puanı 0 olan ödül almaz; herkesin
+  toplamı aynı ve 0'dan büyükse herkes +1, hepsi 0 ise kimse. Kartlarda "birinci" en yüksek, "sonuncu" en düşük blöf
+  puanıdır (herkes eşitse kimse sonuncu değildir).
+- **Tekrar (SB-M2):** Aynı odada son **40** Sözlük Blöfü oyununda çıkan kelime tekrar gelmez. Süzgeç yerleşik havuza da
+  uygulanır; süzülünce kalan girdi havuzun alt sınırının (10) altına düşerse süzgeç uygulanmaz. Hafıza yalnız bellektedir,
+  oda kapanınca sıfırlanır.
+- **Tür (SB-M3):** Kelimenin altında sözlükteki gibi küçük italik tür satırı görünür: **isim**, **sıfat**, **fiil** ya
+  da **zarf** (yazma, seçme, açılış ve TV). Tür havuzda zorunlu alandır (yönetici formunda açılır liste); türü girilmemiş
+  eski girdide satır görünmez.
+- **Gerçek tanım biçimi (SB-M6):** Gerçek tanımlar tek cümle, en çok **70** karakterdir; noktalı virgül, parantez ve
+  "ör." içermez, ikinci anlam eklenmez. Yönetici panelinde yeni eklenen ve düzenlenen girdilere uygulanır; kurala uymayan
+  yerleşik tanımlar anlamı korunarak sadeleştirildi. Oyuncunun blöfünde bu kısıtlar yoktur (100 karakter aynen).
+- **"Bu kelimeyi önceden biliyordum" (SB-M7):** Açılış ekranında, açılışın ilk 1,5 sn'sinden sonra etkin bir düğme.
+  Oyuncu başına bir kez sayılır, geri alınabilir; **puana etkisi yoktur**. Kim bastığı kimseye gösterilmez ve saklanmaz;
+  havuz istatistiğine kelime başına yalnız iki sayı yazılır (kaç oyunda çıktı, kaç "biliyordum" geldi). Yönetici
+  panelinde kelime başına **bilinirlik %** görünür. En az 10 oyunda çıkmış ve oranı %40'ı aşan kelimenin çekiliş
+  ağırlığı yarıya iner; %60'ı aşan panelde "kapatma önerisi" olarak işaretlenir.
+- **Açılış (SB-U5):** Önce sahte kartlar azdan çoğa kandırana doğru tek tek açılır, en son "Gerçek anlam…" ve gerçek
+  kart mühürlenir ("SÖZLÜKTE"); ardından tek bir özel damga: gerçeği kimse bulamadıysa **SÖZLÜK KAZANDI**, tek bir en
+  çok kandıran varsa **BLÖF USTASI**, seçen herkes gerçeği bulduysa **HERKES BİLDİ** (öncelik bu sırada). Damgalar puan
+  vermez. Açılış en az 12 sn'ye sığar.
+- **Anlatım (SB-U16):** (1) "Garip kelimeye inandırıcı sahte bir anlam yaz", (2) "Karışık anlamlardan gerçeğini seç:
+  bulursan +1", (3) "Senin blöfünü seçen her kişi +1 kazandırır; en çok puanlayan +2".
+- Değişmeyenler: 3–8 oyuncu, tek kelime, 50 sn yazma + 30 sn seçme + en az 12 sn açılış, 100 karakter sınırı, tek
+  seferlik gönderim, kendi kartını seçememe, gerçeğin birebir aynısının reddi, puan kalemleri, eksi puan yok, kart
+  sırasının herkes için aynı olması, 250 ms geç eylem payı, erken bitiş kuralları. İki oyuncunun aynı blöfü yine iki
+  ayrı kart olur (SB-M4 onaylanmadı); küçük masada yem kart yoktur (SB-M5 onaylanmadı).
+
 ## 5. Çağrışım Ağı — `cagrisim-agi`
 
 **Durum: KİLİTLİ**
