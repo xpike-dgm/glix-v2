@@ -882,3 +882,13 @@
     display: none;
   }
 }
+
+/* Butona Bas (BB-U1): tur oyunun içindeki tek rozettedir; maç sırası "Oyun 1/3" diye yazılır, ortadaki maç noktaları
+   gizlenir (üç ayrı "1/3" karışmasın). */
+.gframe[data-game="butona-bas"] .gbar__round::before,
+.gframe[data-game="butona-bas"] .rail__round::before {
+  content: "Oyun ";
+}
+.gframe[data-game="butona-bas"] .mpath {
+  display: none;
+}

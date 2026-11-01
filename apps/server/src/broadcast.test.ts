@@ -131,7 +131,7 @@ describe("yayın: gereksiz mesaj ve yama zinciri", () => {
     expect(c.raw.length).toBe(c0[2]);
     const staleRev = b.view.snapshot?.rev ?? 0;
     // pencere kapanır: herkesin skor görünümü değişir
-    t.clock.advance(400);
+    t.clock.advance(600);
     runTick(t.rt);
     t.rt.broadcaster.flush(t.room);
     expect(b.raw.length).toBe((c0[1] ?? 0) + 1);
@@ -236,7 +236,7 @@ describe("yayın: publicView oda başına bir kez", () => {
     applyAction(t.rt, t.room, "p1", { kind: "press" });
     t.rt.broadcaster.flush(t.room);
     const before = t.conns.map((c) => c.raw.length);
-    t.clock.advance(400);
+    t.clock.advance(600);
     runTick(t.rt);
     t.rt.broadcaster.flush(t.room);
     t.conns.forEach((c, i) => {

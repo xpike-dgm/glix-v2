@@ -171,6 +171,116 @@
   }
 }
 
+/* Butona Bas (BB-U1): pencere halkası; kalınlık tura göre (Geniş / Dar / İğne ucu). */
+.arcade__ring {
+  position: absolute;
+  inset: -6%;
+  border-radius: 50%;
+  border: calc(var(--size) * 0.04) solid rgba(46, 242, 255, 0.55);
+  box-shadow:
+    0 0 18px rgba(46, 242, 255, 0.45),
+    inset 0 0 14px rgba(46, 242, 255, 0.35);
+  pointer-events: none;
+  animation: arcade-lights 2.4s ease-in-out infinite;
+}
+.arcade[data-ring="1"] .arcade__ring {
+  border-width: calc(var(--size) * 0.022);
+  border-color: rgba(255, 194, 59, 0.6);
+  box-shadow: 0 0 16px rgba(255, 194, 59, 0.4);
+}
+.arcade[data-ring="2"] .arcade__ring {
+  border-width: max(2px, calc(var(--size) * 0.008));
+  border-color: rgba(255, 43, 214, 0.75);
+  box-shadow: 0 0 14px rgba(255, 43, 214, 0.5);
+}
+/* BB-U6: son 3 saniye: ışıklar hızlanır. */
+.arcade[data-urgent="1"] .arcade__ring {
+  animation-duration: 0.5s;
+}
+@keyframes arcade-lights {
+  50% {
+    opacity: 0.55;
+  }
+}
+/* BB-U17: hareket azaltmada dalga yerine kapağın kenarında sabit ince çerçeve (pencere süresince). */
+.arcade__wave--still,
+.arcade__waves .arcade__wave--still {
+  display: block;
+  inset: 8%;
+  border-width: 3px;
+  animation: none;
+  opacity: 0.9;
+  transform: none;
+}
+/* BB-U3: dolum halkası (1 sn): kapak soluk, "DOLUYOR". */
+.arcade__fill {
+  position: absolute;
+  left: 14%;
+  top: 2%;
+  width: 72%;
+  height: 64%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(rgba(255, 255, 255, 0.95) calc(var(--fill, 0) * 1turn), transparent 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+  animation: arcade-fill 1s linear forwards;
+}
+@property --fill {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+@keyframes arcade-fill {
+  from {
+    --fill: 0;
+  }
+  to {
+    --fill: 1;
+  }
+}
+.arcade[data-filling="1"] .arcade__img {
+  filter: saturate(0.6) brightness(0.78);
+}
+.arcade[data-filling="1"] .arcade__label {
+  font-size: calc(var(--size) * 0.07);
+  background: rgba(20, 24, 50, 0.85);
+}
+.arcade__ready {
+  position: absolute;
+  left: 14%;
+  top: 2%;
+  width: 72%;
+  height: 64%;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  opacity: 0;
+  pointer-events: none;
+  animation: arcade-ready 420ms ease-out;
+}
+@keyframes arcade-ready {
+  0% {
+    opacity: 1;
+    transform: scale(0.96);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+}
+/* BB-U5: aranın sonunda buton yeniden parlar. */
+.arcade[data-glow="1"] {
+  filter: drop-shadow(0 0 18px rgba(255, 59, 92, 0.65));
+}
+/* BB-U10: izleyicide soluk, basılmaz. */
+.arcade--watch .arcade__img {
+  filter: saturate(0.4) brightness(0.6);
+}
+/* BB-U14: titreşimi olmayan telefonda kapak bir kademe daha gömülür. */
+:root[data-haptics="none"] .arcade[data-pressed="1"] .arcade__cap {
+  transform: translateY(calc(var(--size) * 0.0675));
+}
+
 .bbart {
   display: flex;
   flex-direction: column;
@@ -202,7 +312,7 @@
   }
 }
 
-/* ---- Butona Bas ekranı ---- */
+/* ---- Oyun üst şeridi (ortak) ---- */
 .game__top {
   position: relative;
   flex: none;
@@ -213,63 +323,6 @@
   right: -10px;
   top: 12px;
   z-index: 2;
-}
-.game__score {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: clamp(10px, 7dvh, 72px);
-}
-.game__num {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(48px, 17vw, var(--fs-72));
-  line-height: 1.05;
-  display: inline-block;
-}
-.game__stage {
-  --btn: min(88vw, 50dvh, 400px);
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  place-items: center;
-  /* Buton alt-orta (başparmak) bölgesine kayar. */
-  padding-top: clamp(0px, 7dvh, 72px);
-}
-.game__rings {
-  grid-area: 1 / 1;
-  position: relative;
-  width: var(--btn);
-  height: var(--btn);
-  pointer-events: none;
-}
-.game__rings i {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  border-radius: 50%;
-  border: 2px solid var(--cyan);
-  transform: translate(-50%, -50%);
-}
-.game__rings i:nth-child(1) {
-  width: 122%;
-  height: 122%;
-  opacity: 0.16;
-}
-.game__rings i:nth-child(2) {
-  width: 146%;
-  height: 146%;
-  opacity: 0.1;
-}
-.game__rings i:nth-child(3) {
-  width: 174%;
-  height: 174%;
-  opacity: 0.05;
-}
-.game__stage .arcade {
-  grid-area: 1 / 1;
 }
 .floats {
   grid-area: 1 / 1;
@@ -291,6 +344,10 @@
   color: var(--lime);
   text-shadow: 0 0 24px rgba(182, 255, 59, 0.8);
 }
+.float--crowd {
+  color: var(--amber);
+  text-shadow: 0 0 24px rgba(255, 194, 59, 0.85);
+}
 .float--solo {
   color: var(--red);
   text-shadow: 0 0 24px rgba(255, 59, 92, 0.8);
@@ -309,64 +366,6 @@
     transform: translateY(-110px) scale(1);
   }
 }
-.game__strip {
-  flex: none;
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 0 2px;
-}
-.gs {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-}
-.gs__score {
-  font-size: var(--fs-13);
-  font-weight: 700;
-  color: #c9cff0;
-  line-height: 1;
-  /* Koyu zemin: basış parlaması arkaya düşse de kontrast korunur. */
-  background: rgba(5, 8, 26, 0.88);
-  padding: 2px 6px;
-  border-radius: 999px;
-}
-.gs[data-me="1"] .gs__score {
-  color: var(--text);
-}
-.gs[data-me="1"] .av {
-  outline: 2px solid var(--text);
-  outline-offset: 2px;
-  border-radius: 50%;
-}
-@media (max-height: 700px) and (orientation: portrait) {
-  .game__score {
-    margin-top: 8px;
-  }
-  .game__stage {
-    padding-top: 0;
-  }
-}
-@media (orientation: landscape) and (max-height: 520px) {
-  .game__stage {
-    --btn: min(88vw, 44dvh, 380px);
-    padding-top: 0;
-  }
-  .game__rings {
-    display: none;
-  }
-  .arcade {
-    --size: var(--arcade-size, min(88vw, 44dvh, 380px));
-  }
-  .game__num {
-    font-size: 44px;
-  }
-  .game__score {
-    margin-top: 4px;
-  }
-}
-
 @container (max-height: 190px) {
   .bbart__crew {
     display: none;
@@ -381,65 +380,9 @@
   }
 }
 
-/* ---- Butona Bas: tur etiketi ve pencere daralıyor uyarısı ---- */
-.game__round {
-  flex: none;
-  display: flex;
-  justify-content: center;
-  align-items: baseline;
-  gap: 8px;
-  margin-top: 6px;
-  font-size: var(--fs-13);
-  font-weight: 700;
-  color: #c9cff0;
-  text-align: center;
-}
-.game__roundNo {
-  font-family: var(--font-display);
-  font-weight: 800;
-  color: var(--text);
-}
-.game__round[data-tight="1"] .game__roundWin {
-  color: var(--amber);
-}
-.game__gap {
-  grid-area: 1 / 1;
-  position: relative;
-  z-index: 2;
-  display: grid;
-  gap: 4px;
-  justify-items: center;
-  padding: 14px 20px;
-  border-radius: 18px;
-  background: rgba(5, 8, 26, 0.9);
-  border: 2px solid var(--amber);
-  text-align: center;
-  animation: gap-in 260ms var(--ease) both;
-}
-.game__gapTitle {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(20px, 6.4vw, 30px);
-  color: var(--amber);
-  line-height: 1.1;
-}
-.game__gapWin {
-  font-size: var(--fs-15);
-  font-weight: 700;
-  color: var(--text);
-}
-@keyframes gap-in {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .game__gap {
-    animation: none;
-  }
+/* BB-U16: renk körü modunda yüzen puan yazısı kalınlaşır (işaret ✓ / ✕ her zaman yazının içindedir). */
+:root[data-cb="1"] .float {
+  font-weight: 900;
+  -webkit-text-stroke: 2px #05081a;
+  paint-order: stroke fill;
 }

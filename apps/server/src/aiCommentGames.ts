@@ -323,7 +323,52 @@ export const cagrisimPrompt: PromptBuilder = (publicView, nickname) => {
   };
 };
 
+/**
+ * Butona Bas uyum spikeri (BB-AI1): oyun bitince her oyuncunun toplamı ve tur puanları, tek kaldığı pencere sayısı
+ * ve en çok birlikte basan ikililer; oyuncular Oyuncu1…N. Yalnız sayılar gider. Oyun bitmeden kurulmaz.
+ */
+export const butonaPrompt: PromptBuilder = (publicView, nickname) => {
+  if (!isRec(publicView) || publicView.phase !== "over" || !isRec(publicView.final)) return null;
+  if (!isRec(publicView.scores) || !Array.isArray(publicView.final.pairs)) return null;
+  const ids = Object.keys(publicView.scores);
+  if (ids.length === 0) return null;
+  const alias = new Map(ids.map((id, i) => [id, `Oyuncu${i + 1}`]));
+  const names: Record<string, string> = {};
+  for (const [id, name] of alias) names[name] = promptName(nickname(id) ?? name);
+  const scores = publicView.scores;
+  const rounds = isRec(publicView.roundScores) ? publicView.roundScores : {};
+  const solos = isRec(publicView.final.solos) ? publicView.final.solos : {};
+  const num = (v: unknown): number => (typeof v === "number" && Number.isFinite(v) ? v : 0);
+  const lines = ids.map((id) => {
+    const r = rounds[id];
+    const parts = Array.isArray(r) ? r.slice(0, 3).map((x, i) => `tur ${i + 1}: ${signed(num(x))}`) : [];
+    return (
+      `- ${alias.get(id)}: toplam ${signed(num(scores[id]))}` +
+      (parts.length > 0 ? ` (${parts.join(", ")})` : "") +
+      `; ${num(solos[id])} kez tek bastı`
+    );
+  });
+  const pairs: string[] = [];
+  for (const raw of publicView.final.pairs.slice(0, 3)) {
+    if (!isRec(raw) || typeof raw.a !== "string" || typeof raw.b !== "string") continue;
+    const a = alias.get(raw.a);
+    const b = alias.get(raw.b);
+    if (a && b && num(raw.count) > 0) pairs.push(`- ${a} ile ${b}: ${num(raw.count)} ortak pencere`);
+  }
+  return {
+    system: system(
+      "uyum spikerisin; oyuncular üç turda büyük bir butona aynı anda basmaya çalıştı (birlikte basanlar +1, " +
+        "masanın yarısından fazlası birlikte basarsa +2, tek kalan −1)",
+    ),
+    user:
+      `Oyun: Butona Bas (birlikte basma, üç tur). Oyuncular:\n${lines.join("\n")}\n` +
+      `En çok birlikte basanlar:\n${pairs.length > 0 ? pairs.join("\n") : "- kimse birlikte basamadı"}`,
+    names,
+  };
+};
+
 const BUILDERS: Record<string, PromptBuilder> = {
+  "butona-bas": butonaPrompt,
   "cagrisim-agi": cagrisimPrompt,
   "yazi-yaz": yaziPrompt,
   "kontrol-paneli-kaosu": kontrolPrompt,

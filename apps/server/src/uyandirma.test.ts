@@ -125,15 +125,14 @@ describe("Tam zamanlı uyandırma", () => {
     const { startedAt } = await startPlaying(cs);
     await press(cs[0] as (typeof cs)[number]);
     const room = roomOf(host.session.roomCode);
-    const state = () => room.match?.state as { scores: Record<string, number>; pending: object };
+    const state = () => room.match?.state as { scores: Record<string, number>; presses: unknown[] };
     const closes = room.wakeAt as number;
     expect(closes).toBeGreaterThan(k.clock.now());
-    expect(closes).toBeLessThanOrEqual(startedAt + 300 + 10_000);
-    // Tek eşzamanlı ilerleme: kapanış anında puanlanır, sonraki vade (tur sonu) için yeni uyandırma kurulur.
-    const bos = Object.keys(state().pending).length;
-    expect(bos).toBeGreaterThan(0);
+    expect(closes).toBeLessThanOrEqual(startedAt + 300 + 250 + 10_000);
+    // Tek eşzamanlı ilerleme: puanlanma anında (kapanış + 250 ms) puanlanır, sonraki vade (tur sonu) için yeni uyandırma kurulur.
+    expect(state().presses.length).toBeGreaterThan(0);
     k.clock.advance(closes - k.clock.now());
-    expect(Object.keys(state().pending)).toHaveLength(0);
+    expect(state().presses).toHaveLength(0);
     expect(Object.values(state().scores).sort()).toEqual([-1, 0]);
     expect(room.wakeAt).not.toBeNull();
     expect(room.wakeAt as number).toBeGreaterThan(closes);

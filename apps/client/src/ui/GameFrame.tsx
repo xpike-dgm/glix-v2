@@ -143,6 +143,7 @@ export function GameFrame(props: Props) {
       <div
         class="gframe"
         data-o={props.orientation}
+        data-game={props.gameId}
         data-spectator={props.spectator ? "1" : undefined}
         data-turn={needsTurn() ? "1" : undefined}
       >

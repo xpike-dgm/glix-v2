@@ -23,6 +23,7 @@ export function Briefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
   const strip = () => snap().players.filter((p) => match().participants.includes(p.id));
   const isReady = (id: string): boolean => match().readyIds.includes(id) || (id === snap().selfId && sent());
   const art = () => gameEntry(match().gameId)?.Art;
+  const trial = () => (participant() ? gameEntry(match().gameId)?.Try : undefined);
   const [panel, setPanel] = createSignal(0);
 
   return (
@@ -56,6 +57,15 @@ export function Briefing(props: { snap: RoomSnapshot; match: MatchSnapshot }) {
               )}
             />
           </div>
+          <Show when={trial()}>
+            {(t) => (
+              <div class="brief__try rise" style={{ "--i": 3 }}>
+                <Suspense>
+                  <Dynamic component={t()} />
+                </Suspense>
+              </div>
+            )}
+          </Show>
 
           <div class="brief__text">
             <p class="brief__goal rise" style={{ "--i": 3 }}>

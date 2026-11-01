@@ -145,6 +145,11 @@ lobby → [her oyun için: briefing → countdown(3 sn) → playing (+ oyun içi
   dolar (`endsAt` = `startedAt` + 60 sn, en geç bitiş); `isFinished` true olduğu an açılış animasyonunun bittiği andır. Oyun,
   bağlı katılımcıların hepsi `revealContinue` gönderdikten ve animasyon bittikten 1 sn sonra (`CONTINUE_GRACE_MS`) ya da
   `startedAt` + 60 sn'de (`REVEAL_HOLD_MS`) biter. Oyun durumu, kayıt (`replay`) ve sonuç etkilenmez. Bkz. `docs/ERKEN-BITIS.md`.
+- **Zamanlama oyunlarında dokunma anı:** bazı oyunların `action.payload`'ı istemcinin dokunma anını (sunucu saatine göre,
+  ping ortancasıyla düzeltilmiş) taşır; sunucu bu anı yalnız bir sınır içinde eskiyse kabul eder, yoksa kendi aldığı anı
+  kullanır. Kule Ustası `{kind:"drop", at}` (en çok 400 ms); Butona Bas `{kind:"press", at?}` (isteğe bağlı, en çok
+  250 ms, tur başından önce olamaz; pencereler kapanıştan 250 ms sonra puanlanır, BB-M4). Bu, ölçümü düzeltir; süreyi
+  uzatmaz (turun bitişinden sonra gelen eylem yine reddedilir).
 - **results:** `GameResult` gösterilir; `awards` genel skora eklenmiş olarak gelir.
 - **results:** `match.continueIds` "Devam" diyenleri taşır (yalnız kimler). Sıradaki oyun `gameIds[round+1]` ile bellidir (zaten herkese açık). Önceki genel puan, istemcide `player.score − result.awards[id]` ile bulunur (sıra değişimi animasyonu için ek alan yok). Tur özeti satırı istemcide `summarizeRound(gameId, result, players, publicView)` ile (engine, saf) üretilir.
 - **cards:** (kartlar açıksa) her 3. oyunun sonuç ekranından sonra, son oyun hariç. `match.round` az önce biten oyunun sırasıdır; `phaseEndsAt` 15 sn sonrasıdır, bağlı herkes seçince 1 sn sonraya çekilir. Ayrıntı: "Kartlar".

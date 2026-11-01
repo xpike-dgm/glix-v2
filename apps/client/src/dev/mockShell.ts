@@ -87,12 +87,30 @@ export function startShellMock(kind: string, params: URLSearchParams): void {
         windowMs: 300,
         phaseEndsAt: t0 + 15_000,
         scores,
+        roundScores: Object.fromEntries(Object.entries(scores).map(([id, v]) => [id, [v, 0, 0]])),
         recent: [
-          { round: 0, index: 40, pressers: ["p1", "p2"], outcome: "match" },
-          { round: 0, index: 41, pressers: ["p3"], outcome: "solo" },
+          {
+            round: 0,
+            index: 40,
+            pressers: ["p1", "p2"],
+            outcome: "match",
+            points: 1,
+            crowd: null,
+            settledAt: now - 900,
+          },
+          {
+            round: 0,
+            index: 41,
+            pressers: ["p3"],
+            outcome: "solo",
+            points: -1,
+            crowd: null,
+            settledAt: now - 400,
+          },
         ],
+        final: null,
       };
-      const mine: ButonaBasView = { myScore: null, pressedThisWindow: false };
+      const mine: ButonaBasView = { myScore: null, pressedThisWindow: false, readyAt: null };
       publicView = pub;
       view = mine;
       break;

@@ -17,3 +17,10 @@ describe("butona-bas tur özeti", () => {
     expect(Array.from(line ?? "").length).toBeLessThanOrEqual(SUMMARY_MAX_LENGTH);
   });
 });
+
+describe("butona-bas tur özeti (BB-M5)", () => {
+  it("kimse 0'ın üstüne çıkamadıysa yıldız yok", () => {
+    const flat = { miniScores: { a: 0, b: -1, c: 0 }, awards: {} };
+    expect(summarizeButonaBas(flat, players, undefined)).toBe("Bu turda kimse eşleşme yakalayamadı");
+  });
+});

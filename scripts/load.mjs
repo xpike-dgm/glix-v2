@@ -43,8 +43,7 @@ if (!existsSync(ENGINE) || !existsSync(TESTING)) {
   console.error("packages/engine/dist bulunamadı. Önce `pnpm build` çalıştırın.");
   process.exit(2);
 }
-const { applyMerge, BUTONA_BAS_ROUND_MS, butonaBasRoundOffset, butonaBasWindowMs, createRng, GAMES } =
-  await import(pathToFileURL(ENGINE).href);
+const { applyMerge, createRng, GAMES } = await import(pathToFileURL(ENGINE).href);
 const { BOTS } = await import(pathToFileURL(TESTING).href);
 
 // ---- Ayarlar ---------------------------------------------------------------------------------
@@ -664,7 +663,7 @@ class Room {
     this.pending = { from, t0, seen: new Set(), game: from.snap?.match?.gameId };
   }
 
-  // Butona Bas pencere sonucu gecikmesi: pencerenin kapandığı an (sunucu saati: startedAt + tur ofseti + pencere) ile
+  // Butona Bas pencere sonucu gecikmesi: pencerenin puanlandığı an (sunucu saati: `settledAt`, kapanış + 250 ms) ile
   // sonucun (`recent` girdisi) odadaki ilk anlık görüntüde göründüğü an arasındaki fark. Bir basışın kendisi herkese açık
   // görünümü değiştirmez; görünür değişiklik pencere kapanınca gelir, bu yüzden doğru ölçüt budur. Sunucu saati ile bu
   // sürecin saati aynı makinede (ya da NTP'li) olmalıdır; ±birkaç ms'den büyük sapma sonucu bozar.
@@ -677,11 +676,8 @@ class Room {
       const key = `${view.startedAt}:${w.round}:${w.index}`;
       if (this.seenWindows.has(key)) continue;
       this.seenWindows.add(key);
-      const closesAt =
-        view.startedAt +
-        butonaBasRoundOffset(w.round) +
-        Math.min((w.index + 1) * butonaBasWindowMs(w.round), BUTONA_BAS_ROUND_MS);
-      const lag = receivedAt - closesAt;
+      if (typeof w.settledAt !== "number") continue;
+      const lag = receivedAt - w.settledAt;
       // Oda ilk kez ortaya çıkan eski girdileri (yeniden bağlanma, geç katılım) sayma.
       if (lag >= -50 && lag < 3000) lat.windowResult.push(Math.max(0, lag));
     }

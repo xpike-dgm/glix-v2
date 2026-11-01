@@ -757,6 +757,13 @@
   justify-content: center;
   padding: 8px 0;
 }
+/* Oyuna özel küçük deneme (ör. Butona Bas deneme butonu), anlatım görselinin altında. */
+.brief__try {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  padding: 2px 0 6px;
+}
 .brief__goal {
   text-align: center;
   font-size: var(--fs-18);
@@ -1263,6 +1270,10 @@
     flex: 0 0 36%;
     height: 100%;
     padding: 4px 0;
+  }
+  /* Kısa yatay ekranda oyuna özel deneme yer bulamaz: gizlenir (anlatım metni öncelikli). */
+  .brief__try {
+    display: none;
   }
   .brief__text .steps {
     margin-top: 6px;

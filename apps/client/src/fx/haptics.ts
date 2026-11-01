@@ -133,6 +133,8 @@ export const hapticReady = (): void => vibrate([12, 30, 24]);
 export const hapticTick = (): void => vibrate(6);
 export const hapticGo = (): void => vibrate(32);
 export const hapticMatch = (): void => vibrate([14, 40, 14]);
+/** Kalabalık eşleşme (Butona Bas): üçlü vuruş. */
+export const hapticCrowd = (): void => vibrate([14, 40, 14, 40, 14]);
 export const hapticSolo = (): void => vibrate(45);
 export const hapticResult = (): void => vibrate([10, 50, 10, 50, 22]);
 export const hapticFinal = (): void => vibrate([20, 60, 20, 60, 20, 60, 70]);

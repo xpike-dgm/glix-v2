@@ -419,31 +419,35 @@ describe("maç akışı", () => {
       reason: "invalid_action",
     });
 
-    // Pencere 0: ikisi de bas -> +1 +1
+    // Pencere A20: ikisi de bas -> +1 +1 (kayan pencere: ilk basandan sonra 300 ms)
     at(20);
     await press(a);
     at(250);
     await press(b);
-    // Aynı pencerede tekrar basış sayılmaz
+    // Dolum (1 sn) bitmeden tekrar basış sayılmaz
     at(280);
     await press(a);
-    // Pencere 1 (300-599): yalnız A -> -1
-    at(310);
+    // Yalnız A -> -1
+    at(1_100);
     await press(a);
-    // Pencere 2 (600-899): sınırın iki yanı: A 899, B 900 -> ayrı pencereler, ikisi de tek: -1, -1
-    at(899);
+    // 310 ms arayla iki basış: ayrı pencereler, ikisi de tek: -1, -1
+    at(2_500);
     await press(a);
-    at(900);
+    at(2_810);
     await press(b);
-    at(1500);
+    // Yine birlikte: +1 +1
+    at(4_000);
+    await press(a);
+    await press(b);
+    at(5_000);
     await sync();
     let v = a.room.match?.publicView as { scores: Record<string, number>; recent: unknown[] };
     const aView = a.room.match?.view as { myScore: number };
-    expect(v.scores).toEqual({ [a.session.playerId]: -1, [b.session.playerId]: 0 });
-    expect(aView.myScore).toBe(-1);
-    expect(v.recent).toHaveLength(4);
+    expect(v.scores).toEqual({ [a.session.playerId]: 0, [b.session.playerId]: 1 });
+    expect(aView.myScore).toBe(0);
+    expect(v.recent).toHaveLength(5);
     const bView = b.room.match?.view as { myScore: number };
-    expect(bView.myScore).toBe(0);
+    expect(bView.myScore).toBe(1);
 
     // Bitişte basış reddedilir.
     at(50_900);
@@ -456,13 +460,13 @@ describe("maç akışı", () => {
 
     await until(() => a.room.phase === "results");
     const result = a.room.match?.result;
-    expect(result?.miniScores).toEqual({ [a.session.playerId]: -1, [b.session.playerId]: 0 });
-    // B tek lider +2, A ikinci +1
-    expect(result?.awards).toEqual({ [b.session.playerId]: 2, [a.session.playerId]: 1 });
-    expect(a.room.players.map((p) => p.score)).toEqual([1, 2]);
+    expect(result?.miniScores).toEqual({ [a.session.playerId]: 0, [b.session.playerId]: 1 });
+    // B tek lider +2; A'nın toplamı 0: ödül yok (BB-M5)
+    expect(result?.awards).toEqual({ [b.session.playerId]: 2 });
+    expect(a.room.players.map((p) => p.score)).toEqual([0, 2]);
     expect(b.room.match?.phaseEndsAt).toBe((b.room.match?.phaseStartedAt ?? 0) + RESULTS_MS);
     v = a.room.match?.publicView as typeof v;
-    expect(v.scores[b.session.playerId]).toBe(0);
+    expect(v.scores[b.session.playerId]).toBe(1);
 
     // Sonuç ekranı 60 sn sürer, sonra final.
     k.clock.advance(RESULTS_MS - 200);
@@ -471,7 +475,7 @@ describe("maç akışı", () => {
     k.clock.advance(400);
     await until(() => a.room.phase === "final");
     expect(a.room.match?.result).not.toBeNull();
-    expect(a.room.players.map((p) => p.score)).toEqual([1, 2]);
+    expect(a.room.players.map((p) => p.score)).toEqual([0, 2]);
 
     // Final'de oyun eylemi reddedilir; yalnız host lobiye döndürür.
     b.send({ type: "returnToLobby" });
@@ -494,7 +498,8 @@ describe("maç akışı", () => {
     // Oyun (51 sn) 121 sn içinde biter; oyun içi sonuç ekranı (herkes Devam et dedi: 1 sn) ve puan tablosu (60 sn) kalır.
     k.clock.advance(RESULTS_MS + 2_000);
     await until(() => a.room.phase === "final");
-    expect(a.room.players.map((p) => p.score)).toEqual([1, 1]);
+    // Kimse basmadı: herkesin toplamı 0, genel skor ödülü yok (BB-M5).
+    expect(a.room.players.map((p) => p.score)).toEqual([0, 0]);
     a.send({ type: "returnToLobby" });
     await until(() => a.room.phase === "lobby");
     expect(a.room.players.map((p) => p.nickname)).toEqual(["A", "B"]);

@@ -1080,6 +1080,17 @@ const SCREENS = [
   { name: "playing-tur2", q: "mock=playing&tur=2" },
   { name: "playing-tur3", q: "mock=playing&tur=3", settle: 600 },
   { name: "playing-ara", q: "mock=playing&ara=1" },
+  // Butona Bas öneri paketi (BB-U1 … BB-U17): 8 kişilik iki sıralı şerit, tur arası özet (tur puanları, daralıyor),
+  // son 3 saniye ("SON ŞANS!"), kalabalık eşleşme satırı, son açılış (uyum haritası) ve büyük ekran.
+  { name: "playing-n8", q: "mock=playing&n=8" },
+  { name: "playing-ara-puanlar", q: "mock=playing&ara=1&adim=gains&n=8" },
+  { name: "playing-ara-daraliyor", q: "mock=playing&ara=1&adim=tight" },
+  { name: "playing-son-sans", q: "mock=playing&son=1&n=6" },
+  { name: "playing-eslesme-kalabalik", q: "mock=playing&eslesme=crowd&n=6", settle: 700 },
+  { name: "playing-bitti-n8", q: "mock=playing&bitti=1&n=8&sonuc=1" },
+  { name: "tv-butona-oyun", q: "mock=tv-playing&n=8", sizes: TV, settle: 1200 },
+  { name: "tv-butona-ara", q: "mock=tv-playing&n=6&ara=1", sizes: TV, settle: 800 },
+  { name: "tv-butona-bitti", q: "mock=tv-playing&n=8&bitti=1", sizes: TV, settle: 1200 },
   // Çağrışım Ağı: klavye açıkken görünen alan küçülür (390x520, 360x300).
   { name: "cagrisim-briefing", q: "mock=cagrisim-briefing" },
   { name: "cagrisim-answer", q: "mock=cagrisim" },

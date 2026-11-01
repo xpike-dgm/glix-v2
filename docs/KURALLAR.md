@@ -622,6 +622,36 @@ cevapların önüne geçer:**
   böylece 3 tur genel skoru şişirmez.
 - Tutorial adım 3: "3 tur oynanır; pencere 300, 200, 120 ms diye daralır."
 
+**Değişiklik (BB öneri paketi, Kasım 2026, sahip onayı: BB-M1…M5) — yukarıdakilerin önüne geçer:**
+
+- **Dolum (BB-M1):** Sayılan her basıştan sonra buton **1 saniye dolar**; bu sürede gelen basış sunucuda **sessizce yok
+  sayılır** (ceza yok, pencere açmaz). Bekleme yalnız sayılan basıştan başlar ve dokunma anlarına göre ölçülür; ara 3 sn
+  olduğundan her tur "dolu" başlar. Bir turda en çok 15, oyunda en çok 45 sayılan basış. Aynı pencerede tekrar basış bu
+  yüzden zaten sayılmaz.
+- **Kayan pencere (BB-M3):** Pencereler turun başından sabit dilimlerle sayılmaz. Bir basış geldiğinde bir pencere açılır
+  ve turun pencere süresi kadar (300 / 200 / 120 ms) açık kalır; bu sürede basan herkes o pencereye girer. Pencere
+  kapanınca sonraki basış yeni pencere açar; aynı anda iki pencere açık olmaz, zincir uzamaz (süre ilk basıştan ölçülür).
+  Pencere tur bitişini geçemez. Açılış anı penceredeki ilk basışın (dokunma) anıdır.
+- **Dokunma anı (BB-M4):** İstemci basışla birlikte dokunma anını (sunucu saatine göre) gönderir. Sunucu bu anı, turun
+  içindeyse ve kendi aldığı andan **en çok 250 ms** eskiyse kabul eder; yoksa (eski, turdan önce ya da gelecekten) kendi
+  aldığı anı kullanır. Pencereler dokunma anlarına göre kurulur; geç ulaşan ama daha erken dokunulmuş basış pencerenin
+  açılışını öne çeker. Hileye karşı her pencere kapanıştan **250 ms sonra** (en geç tur sonunda) puanlanır ve yayınlanır.
+  Turun bitişinden sonra gelen basış eskisi gibi reddedilir (geç eylem payı yok; yalnız ölçüm düzelir).
+- **Kalabalık bonusu (BB-M2):** Bir pencerede basanların sayısı, pencereyi açan basış anındaki bağlı katılımcı sayısının
+  **yarısından fazlaysa** basanların her biri +1 yerine **+2** alır ("KALABALIK!"; bağlı herkes bastıysa "TAM EKİP!", yine
+  +2). Yalnız **4 ve üstü bağlı katılımcıda** geçerlidir (eşik: 4 kişide 3, 5'te 3, 6'da 4, 7'de 4, 8'de 5); 2–3 kişide
+  eşleşme hep +1. Kopan oyuncu eşiği zorlaştırmaz. Tek basış −1, normal eşleşme +1 aynen kalır.
+- **Genel skor (BB-M5):** Ödül yalnız toplamı **0'dan büyük** olanlara verilir: tek lider (> 0) +2, sıradaki farklı toplam
+  (> 0) +1; liderler eşitse (> 0) hepsi +1, +2 verilmez. Herkesin toplamı ≤ 0 ise kimse ödül almaz. Kartlar değişmez.
+- **Değişmeyenler:** 2–8 oyuncu; 3 tur × 15 sn, 3 sn ara (51 sn); pencere süreleri 300 / 200 / 120 ms; eşleşme +1, tek
+  basış −1, kimse basmazsa değişmez; genel skor oyun sonunda bir kez; gizli bilgi yok; sonuç ekranı "Devam et" ile geçer.
+- **Anlatım (BB-U15):** 1) "Birlikte bas: aynı anda basanlar +1, tek kalan −1" 2) "Bastıktan sonra buton 1 sn dolar; yüksek
+  sesle '3, 2, 1, BAS!' deyin" 3) "3 tur: pencere her turda daralır (300, 200, 120 ms)". Oyun ekranında ms yazılmaz;
+  pencere "Geniş / Dar / İğne ucu" ve butonun çevresindeki halkanın kalınlığıyla anlatılır.
+- **Son açılış (BB-U7, BB-AI1):** Oyun bitince herkese açık sonuca her ikilinin ortak pencere sayısı ve oyuncu başına tek
+  basış sayısı eklenir ("En uyumlu ikili", "Yalnız kurt"); ortak yapay zekâ yorum altyapısı tek cümlelik "uyum spikeri"
+  yorumu ekleyebilir (modele yalnız Oyuncu1…N ve sayılar gider; puana karışmaz, hata olursa görünmez).
+
 ## 7. Rus Ruleti — `rus-ruleti`
 
 **Durum: KİLİTLİ**

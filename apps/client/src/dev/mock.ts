@@ -19,6 +19,7 @@ import {
   type ButonaBasPublicView,
   type ButonaBasView,
   type ButonaBasWindowResult,
+  butonaBas,
 } from "@glix/engine";
 import { roundClockAt } from "../games/butona-bas/view.js";
 import { setExportBusy, setGooglePending } from "../net/account.js";
@@ -254,14 +255,7 @@ export function startMock(kind: string, params: URLSearchParams, opts: MockOptio
           total: 3,
           gameId: "butona-bas",
           gameName: "Butona Bas",
-          briefing: {
-            goal: "Aynı anda büyük kırmızı butona basarak eşleşme yakala.",
-            steps: [
-              "Büyük kırmızı butonu hazırla.",
-              "Aynı kısa zamanda arkadaşlarınla bas.",
-              "Grup basışı puan verir, tek basış geri teper.",
-            ],
-          },
+          briefing: { goal: butonaBas.briefing.goal, steps: [...butonaBas.briefing.steps] },
           orientation: "portrait",
           participants: players.filter((p) => !p.spectator).map((p) => p.id),
           readyIds,
@@ -271,6 +265,10 @@ export function startMock(kind: string, params: URLSearchParams, opts: MockOptio
           publicView,
           view,
           result,
+          // `&bitti=1`: son açılışta spiker cümlesi (BB-AI1).
+          ...(params.get("bitti") === "1"
+            ? { comment: "Elif ile Cihad yedi kez aynı anda bastı; Kaan ise masanın yalnız kurdu oldu." }
+            : {}),
           // `&kart=1`: oyun başında açıklanmış kartlar (oyun içi "oynanan kartlar" rozeti).
           ...(params.get("kart") === "1"
             ? {
@@ -316,9 +314,24 @@ export function startMock(kind: string, params: URLSearchParams, opts: MockOptio
     applySnapshot(snapshot);
   };
 
-  // `&tur=2|3`: o turun ortasında başlar; `&ara=1`: 1. tur sonrası "Pencere daralıyor" arası (hep aynı karede kalır).
+  // `&tur=2|3`: o turun ortasında başlar; `&ara=1`: 1. tur sonrası ara (hep aynı karede kalır; `&adim=gains|tight`
+  // aranın 2. ya da 3. bölümü). `&son=1`: 3. turun son 3 saniyesi ("SON ŞANS!"). `&bitti=1`: son açılış (uyum haritası;
+  // `&at=ms` açılış başından geçen süre). `&eslesme=match|crowd|solo`: senin de içinde olduğun pencere sonucu.
   const turParam = Number(params.get("tur")) || 1;
   const frozenGap = params.get("ara") === "1";
+  const gapAt = params.get("adim") === "tight" ? 2_500 : params.get("adim") === "gains" ? 1_600 : 300;
+  const lastChance = params.get("son") === "1";
+  const over = params.get("bitti") === "1";
+  const overAt = Number(params.get("at") ?? 6_000) || 0;
+  const mine = params.get("eslesme");
+  const frozenAt = frozenGap
+    ? 15_000 + gapAt
+    : lastChance
+      ? 36_000 + 12_600
+      : over
+        ? BUTONA_BAS_DURATION_MS + overAt
+        : null;
+  let roundScores: Record<string, number[]> = {};
   const buildPublicView = (): ButonaBasPublicView => {
     const endsAt = playStart + BUTONA_BAS_DURATION_MS;
     const c = roundClockAt(playStart, endsAt, Date.now());
@@ -331,48 +344,98 @@ export function startMock(kind: string, params: URLSearchParams, opts: MockOptio
       windowMs: c.windowMs,
       phaseEndsAt: c.phaseEndsAt,
       scores: { ...mini },
+      roundScores: Object.fromEntries(Object.entries(roundScores).map(([id, l]) => [id, [...l]])),
       recent: windows.slice(-8),
+      final:
+        c.phase === "over"
+          ? {
+              pairs: [
+                { a: "p1", b: SELF, count: 7 },
+                { a: "p1", b: "p2", count: 5 },
+                { a: "p2", b: "p3", count: 3 },
+              ],
+              solos: { p4: 5, p3: 2, p0: 1 },
+            }
+          : null,
     };
   };
-  const buildView = (): ButonaBasView => ({ myScore: mini[SELF] ?? 0, pressedThisWindow: false });
+  const buildView = (): ButonaBasView => ({
+    myScore: mini[SELF] ?? 0,
+    pressedThisWindow: false,
+    readyAt: null,
+  });
 
-  const addWindow = (pressers: string[]): void => {
+  const addWindow = (pressers: string[], crowd: "crowd" | "full" | null = null): void => {
     const outcome: "match" | "solo" = pressers.length >= 2 ? "match" : "solo";
-    windows = [...windows, { round: 0, index: windowIndex++, pressers, outcome }].slice(-8);
-    for (const id of pressers) mini[id] = (mini[id] ?? 0) + (outcome === "match" ? 1 : -1);
+    const points = outcome === "solo" ? -1 : crowd ? 2 : 1;
+    const c = roundClockAt(playStart, playStart + BUTONA_BAS_DURATION_MS, Date.now());
+    const round = Math.min(2, Math.max(0, c.phase === "gap" ? c.round - 1 : c.round));
+    windows = [
+      ...windows,
+      { round, index: windowIndex++, pressers, outcome, points, crowd, settledAt: Date.now() },
+    ].slice(-8);
+    for (const id of pressers) {
+      mini[id] = (mini[id] ?? 0) + points;
+      const rs = roundScores[id] ?? [0, 0, 0];
+      rs[round] = (rs[round] ?? 0) + points;
+      roundScores[id] = rs;
+    }
     publicView = buildPublicView();
     view = buildView();
     publish();
   };
 
   const botWindow = (): void => {
-    if (phase !== "playing") return;
-    const bots = players.filter((p) => p.id !== SELF).map((p) => p.id);
+    if (phase !== "playing" || frozenAt !== null) return;
+    const bots = players.filter((p) => p.id !== SELF && !p.spectator).map((p) => p.id);
     const k = Math.random() < 0.7 ? 2 + Math.floor(Math.random() * 2) : 1;
     const picked = [...bots].sort(() => Math.random() - 0.5).slice(0, Math.min(k, bots.length));
     addWindow(picked);
     later(botWindow, 800 + Math.random() * 700);
   };
+  const myWindow = (): void => {
+    if (phase !== "playing") return;
+    const others = players.filter((p) => p.id !== SELF && !p.spectator).map((p) => p.id);
+    if (mine === "solo") addWindow([SELF]);
+    else if (mine === "crowd")
+      addWindow([SELF, ...others.slice(0, Math.max(2, Math.ceil(others.length / 2)))], "crowd");
+    else addWindow([SELF, others[0] ?? "p1"]);
+    later(myWindow, 2_000);
+  };
 
   const toPlaying = (): void => {
     phase = "playing";
-    // Varsayılan: 1. turun 5. saniyesi; `&tur=2|3` ilgili turun 5. saniyesi; `&ara=1` aranın başı.
-    const into = frozenGap ? 16_000 : (Math.min(3, Math.max(1, turParam)) - 1) * 18_000 + 5_000;
+    // Varsayılan: 1. turun 5. saniyesi; `&tur=2|3` ilgili turun 5. saniyesi; dondurulmuş anlar yukarıda.
+    const into = frozenAt ?? (Math.min(3, Math.max(1, turParam)) - 1) * 18_000 + 5_000;
     playStart = Date.now() - into;
     phaseStartedAt = playStart;
     phaseEndsAt = null;
-    mini = { p0: 4, p1: 5, p2: 3, p3: 1, p4: 0 };
+    mini = { p0: 4, p1: 5, p2: 3, p3: 1, p4: 0, p5: -1, p6: 2, p7: 0 };
+    roundScores = {
+      p0: [2, 1, 1],
+      p1: [3, 0, 2],
+      p2: [1, 2, 0],
+      p3: [0, 1, 0],
+      p4: [-1, 1, 0],
+      p5: [-1, 0, 0],
+      p6: [1, 1, 0],
+      p7: [0, 0, 0],
+    };
+    const ids = new Set(players.filter((p) => !p.spectator).map((p) => p.id));
+    mini = Object.fromEntries(Object.entries(mini).filter(([id]) => ids.has(id)));
+    roundScores = Object.fromEntries(Object.entries(roundScores).filter(([id]) => ids.has(id)));
     windows = [];
     windowIndex = 0;
     publicView = buildPublicView();
     view = buildView();
     publish();
-    later(botWindow, 400);
-    if (frozenGap) {
-      // Denetim sırasında ara ekranı kaybolmasın: başlangıç anı her 250 ms'de aranın başına çekilir.
+    if (frozenAt === null) later(botWindow, 400);
+    if (mine) later(myWindow, 500);
+    if (frozenAt !== null) {
+      // Denetim sırasında an kaybolmasın: başlangıç anı her 250 ms'de aynı ana çekilir.
       const hold = (): void => {
         if (phase !== "playing") return;
-        playStart = Date.now() - 16_000;
+        playStart = Date.now() - frozenAt;
         phaseStartedAt = playStart;
         publicView = buildPublicView();
         publish();

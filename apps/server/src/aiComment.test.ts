@@ -402,6 +402,46 @@ describe("oyun sonu yorumu: Kara Borsa özeti", () => {
   });
 });
 
+describe("oyun sonu yorumu: Butona Bas özeti (BB-AI1)", () => {
+  const view = {
+    phase: "over",
+    scores: { "id-1": 7, "id-2": 5, "id-3": -2 },
+    roundScores: { "id-1": [3, 2, 2], "id-2": [2, 2, 1], "id-3": [0, -1, -1] },
+    final: {
+      pairs: [
+        { a: "id-1", b: "id-2", count: 6 },
+        { a: "id-1", b: "id-3", count: 1 },
+      ],
+      solos: { "id-3": 4 },
+    },
+  };
+  const names: Record<string, string> = { "id-1": "Mert", "id-2": "Elif", "id-3": "Kaan" };
+
+  it("toplamlar, tur puanları, tek basışlar ve ikililer; yer tutucu adlar, kimlik ve ad yok", () => {
+    const p = commentPrompt("butona-bas", view, (id) => names[id] ?? null);
+    const user = p?.user ?? "";
+    expect(user).toContain("Butona Bas");
+    expect(user).toContain("- Oyuncu1: toplam +7 (tur 1: +3, tur 2: +2, tur 3: +2); 0 kez tek bastı");
+    expect(user).toContain("- Oyuncu3: toplam -2 (tur 1: 0, tur 2: -1, tur 3: -1); 4 kez tek bastı");
+    expect(user).toContain("- Oyuncu1 ile Oyuncu2: 6 ortak pencere");
+    for (const n of ["Mert", "Elif", "Kaan", "id-1", "id-2", "id-3"]) expect(user).not.toContain(n);
+    expect(p?.names).toEqual({ Oyuncu1: "Mert", Oyuncu2: "Elif", Oyuncu3: "Kaan" });
+    expect(p?.system).toMatch(/uyum spikeri/);
+  });
+
+  it("oyun bitmeden ya da bozuk görünümde özet yok", () => {
+    expect(commentPrompt("butona-bas", { ...view, phase: "play", final: null }, () => "x")).toBeNull();
+    expect(commentPrompt("butona-bas", { ...view, final: null }, () => "x")).toBeNull();
+    expect(commentPrompt("butona-bas", { ...view, scores: {} }, () => "x")).toBeNull();
+    expect(commentPrompt("butona-bas", null, () => "x")).toBeNull();
+  });
+
+  it("kimse birlikte basamadıysa bunu söyler", () => {
+    const p = commentPrompt("butona-bas", { ...view, final: { pairs: [], solos: {} } }, () => null);
+    expect(p?.user).toContain("- kimse birlikte basamadı");
+  });
+});
+
 describe("oyun sonu yorumu: canlı yanıt biçimi ve adlar", () => {
   const raw = (body: unknown) => vi.fn<AiFetch>(async () => ({ status: 200, json: async () => body }));
 

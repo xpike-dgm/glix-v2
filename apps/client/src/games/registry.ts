@@ -27,6 +27,8 @@ export interface GameEntry {
   Screen: Component<GameScreenProps>;
   /** Anlatım ekranındaki küçük canlı görsel. */
   Art: Component;
+  /** Anlatım görselinin altında oyuna özel küçük deneme (ör. deneme butonu); sunucuya bir şey göndermez. */
+  Try?: Component;
   /** Sonuç ekranının üstüne giren oyuna özel kısa açılış (ör. bilgisiz oyuncunun maskesi düşer). */
   Reveal?: Component<GameScreenProps>;
   /** Yatay oyunlar: yan şerit (süre çubuğu, puan, avatarlar) için görünümden özet çıkarır. */
@@ -51,6 +53,9 @@ const registry: Record<string, GameEntry> = {
   "butona-bas": {
     Screen: lazy(() => import("./butona-bas/ButonaBasScreen.js")),
     Art: lazy(() => import("./butona-bas/BriefingArt.js")),
+    Try: lazy(() => import("./butona-bas/Trial.js")),
+    StageView: lazy(() => import("./butona-bas/StageView.js")),
+    tvOwnBoard: true,
   },
   "kor-bomba": {
     noClock: true,

@@ -98,3 +98,18 @@ Dosya yokken ekran CSS/SVG karşılığını çizer ve dosyayı hiç istemez; do
   "vınn", davul, maske kırılma, damga, son şans saat tiki, doğruysa zil, yanlışsa "bzzt") mevcut ses sistemiyle üretildi
   (`apps/client/src/games/karalama-defteri/sounds.ts`). İstenirse Ses alanı gerçek kayıtlarla değiştirebilir (kâğıt,
   kurşun kalem, ahşap kimliği).
+
+## Butona Bas
+
+Ortak stil: oyunun mevcut görselleriyle uyumlu (`apps/client/public/assets/worlds/butona-bas-*.webp`: karanlık neon arcade
+salonu, kırmızı-camgöbeği ışıklı oyun makineleri, ıslak yansımalı zemin; buton `genel/arcade-dugme*.webp`). Halkalar,
+dolum halkası, eşleşme çizgileri, taç ve ✓ / ✕ işaretleri CSS/SVG ile çizildi; yeni görsel dosyası istenmez.
+
+- **BB-U11 · TV arcade salonu zemini** (yeni görsel gerekmedi) — TV görünümü mevcut 16:9 manzara zeminini
+  (`apps/client/public/assets/worlds/butona-bas-landscape.webp`, 1280×720) `cover` ile kullanır, ortası koyu radyal örtüyle
+  karartılır. İstenirse ileride aynı sahnenin 1920×1080 keskin sürümü üretilebilir; şart değil.
+- **ses** (dosya gerekmedi) — BB-U13 arcade ses seti (basış "KLAK" 3 varyasyon, eşleşmede kişi sayısıyla kalabalıklaşan
+  akor, KALABALIK "tezahürat" vuruşu, tek basış "bzzzt", dolum bitti "çıt", tur başı gong, ara "vuuş", oyun sonu fanfar)
+  ve BB-U6 son 3 saniye tıkları (son saniyede çift tık) mevcut ses sistemiyle kodla üretildi
+  (`apps/client/src/games/butona-bas/sounds.ts`). Ses alanı istenirse gerçek kayıtlarla değiştirebilir: hepsi ≤ 0,4 sn
+  (gong ve fanfar ≤ 2 sn); yalnız kendi basışına ve sonucuna çalar.
