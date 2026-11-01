@@ -12,6 +12,7 @@ import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Screen } from "../../ui/Screen.js";
 import { Status } from "../../ui/Status.js";
 import type { GameScreenProps } from "../registry.js";
+import { cockCue, holdBandOn } from "./cues.js";
 import { Outro, OutsMeter, ShotStrip } from "./parts.js";
 import { bang, click, cock, finale, heart, lastWordNote, lock, spin, swap } from "./sounds.js";
 import { type SeatMode, Table } from "./Table.js";
@@ -32,8 +33,6 @@ import {
 
 /** Gönderilen atış sunucudan onay görmezse yerel "gönderildi" durumu bu kadar sonra düşer. */
 const PENDING_MS = 1800;
-/** RR-U9: "SİLAH SENDE!" bandı (karar penceresinden önceki beklemenin son 0,8 sn'si). */
-const BAND_MS = 800;
 /** RR-U15: dönen oyuncuya bant süresi. */
 const BACK_MS = 1_500;
 
@@ -173,17 +172,12 @@ export default function RusRuletiScreen(props: GameScreenProps) {
   const band = () => {
     const p = pub();
     if (!p || !iHold()) return false;
-    const now = clock();
-    if (p.shots === 0 && !p.handoff) return now < p.startedAt + BAND_MS;
-    return now >= p.openAt - BAND_MS && now < p.openAt;
+    return holdBandOn(p, clock());
   };
-  createEffect(
-    on(band, (on) => {
-      if (!on) return;
-      cock();
-      hapticHold();
-    }),
-  );
+  cockCue(band, () => {
+    cock();
+    hapticHold();
+  });
   // Son 5 sn: sahibin telefonu her saniye kısa titrer (tik sesi kabuk saatinden gelir).
   const secsLeft = () => {
     const p = pub();

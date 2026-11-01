@@ -19,6 +19,7 @@ import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Screen } from "../../ui/Screen.js";
 import type { GameScreenProps } from "../registry.js";
 import { ArcadeButton, type ArcadeFx } from "./ArcadeButton.js";
+import { butonaBasCues } from "./cues.js";
 import { FinalReveal, GapSummary, RoundBadge } from "./parts.js";
 import {
   buzzSound,
@@ -226,34 +227,31 @@ export default function ButonaBasScreen(props: GameScreenProps) {
   });
 
   // Evre geçişleri: tur başı gong, ara "vuuş" ve ekran okuyucu satırı, oyun sonu fanfar.
-  createEffect(
-    on(
-      () => `${phase()}:${round()}`,
-      (_key, prev) => {
-        const v = untrack(view);
-        if (!v) return;
-        const p = phase();
-        if (p === "play" && (prev !== undefined || props.now() - (clock()?.phaseStartsAt ?? 0) < 1_500)) {
-          if (!props.spectator) gongSound();
-        } else if (p === "gap" && prev !== undefined) {
-          if (!props.spectator) whooshSound();
-          const rank = props.spectator ? null : rankOf(v.scores, props.selfId).rank;
-          setLive(roundEndLine(round(), props.spectator ? null : myScore(), rank));
-        } else if (p === "over" && prev !== undefined) {
-          if (!props.spectator) endFanfare();
-          const ranked = [...revealOrder(v.scores, order())].reverse();
-          setLive(
-            `Oyun bitti. ${ranked
-              .map(
-                (id, i) =>
-                  `${ordinal(i + 1)} ${playerOf(id)?.nickname ?? "Oyuncu"}, ${v.scores[id] ?? 0} puan`,
-              )
-              .join("; ")}.`,
-          );
-        }
-      },
-    ),
-  );
+  butonaBasCues(clock, props.now, {
+    play: () => {
+      if (!props.spectator) gongSound();
+    },
+    gap: (c) => {
+      const v = view();
+      if (!v) return;
+      if (!props.spectator) whooshSound();
+      const rank = props.spectator ? null : rankOf(v.scores, props.selfId).rank;
+      setLive(roundEndLine(c.round, props.spectator ? null : myScore(), rank));
+    },
+    over: () => {
+      const v = view();
+      if (!v) return;
+      if (!props.spectator) endFanfare();
+      const ranked = [...revealOrder(v.scores, order())].reverse();
+      setLive(
+        `Oyun bitti. ${ranked
+          .map(
+            (id, i) => `${ordinal(i + 1)} ${playerOf(id)?.nickname ?? "Oyuncu"}, ${v.scores[id] ?? 0} puan`,
+          )
+          .join("; ")}.`,
+      );
+    },
+  });
 
   // BB-U6: son 3 saniyede her saniye tık (son saniyede iki tık).
   createEffect(

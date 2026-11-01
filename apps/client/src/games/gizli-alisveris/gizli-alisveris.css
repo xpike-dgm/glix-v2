@@ -667,6 +667,9 @@ button.aitem:active:not(:disabled) {
 .gashelf {
   row-gap: 14px;
   padding: 2px 4px 8px;
+  /* Satır içeriğinden (görsel + ad + fiyat) kısa olamaz: kısa ekranda kart taşıp fiyatı alt satırın altına
+     sokmaz, raf kayar. Kapsayıcı sorgusu olan tarayıcıda aşağıda görsel karta göre küçülür. */
+  grid-auto-rows: minmax(min-content, 1fr);
 }
 .gaitem {
   grid-template-rows: 1fr auto auto;
@@ -1356,4 +1359,32 @@ button.aitem:active:not(:disabled) {
   line-height: 1;
   color: #fff;
   text-shadow: 0 0 6px hsl(var(--h, 190deg), 95%, 60%);
+}
+
+/*
+ * Fiyat her ekran yüksekliğinde tam görünür: kart satırın verdiği yüksekliği alır (iPhone Safari'de araç
+ * çubukları görünür alanı ~660 px'e indirir; 4 raf satırı ~72 px kalır). Görsel, kartta ad ve fiyattan arta kalan
+ * yüksekliğe sığacak kadar küçülür; ad ve fiyat hiçbir zaman kartın dışına taşmaz.
+ */
+@supports (container-type: size) {
+  .ashelf.gashelf {
+    grid-auto-rows: minmax(54px, 1fr);
+  }
+  .gaitem {
+    container-type: size;
+  }
+  /* Alçak ekran kurallarındaki sabit boyutun (34 px) da yerine geçer. */
+  .ashelf.gashelf .gaitem .uart {
+    --u: clamp(0px, min(19vw, 100cqh - 40px), 90px);
+  }
+  /* Kısa kartta kupon etiketi adı örtmesin: sağ kenara, onay işaretinin altına (alçak telefon kuralıyla aynı). */
+  @container (max-height: 110px) {
+    .gaitem__coupon {
+      left: auto;
+      right: 1px;
+      bottom: auto;
+      top: 22px;
+      width: 28px;
+    }
+  }
 }

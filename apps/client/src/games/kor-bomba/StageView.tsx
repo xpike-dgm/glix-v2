@@ -4,6 +4,7 @@ import { Avatar } from "../../ui/Avatar.js";
 import { BlastArt, BombArt } from "../../ui/BombArt.js";
 import { worldAllowed, worldSrc } from "../../ui/world.js";
 import type { GameScreenProps } from "../registry.js";
+import { blastCue } from "./cues.js";
 import { BombBadge, PlugIcon } from "./icons.js";
 import { bildiFor, HandChain, JourneyPanel } from "./parts.js";
 import { boom } from "./sounds.js";
@@ -36,16 +37,11 @@ export default function KorBombaStageView(props: GameScreenProps) {
     return at !== null && at !== undefined && props.now() >= at + TRIP_DELAY_MS ? v?.pub.journey : null;
   };
   const [fresh, setFresh] = createSignal(false);
-  let first = true;
-  createEffect(
-    on(exploded, (now) => {
-      const initial = first;
-      first = false;
-      if (!now || initial) return;
-      setFresh(true);
-      boom();
-    }),
-  );
+  blastCue(exploded, (now, live) => {
+    if (!now || !live) return;
+    setFresh(true);
+    boom();
+  });
   const bg = worldAllowed() ? worldSrc("kor-bomba", "landscape") : null;
 
   return (

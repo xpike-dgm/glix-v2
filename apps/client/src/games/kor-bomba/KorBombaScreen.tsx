@@ -19,6 +19,7 @@ import { createOptimistic } from "../../ui/optimistic.js";
 import { pressable } from "../../ui/press.js";
 import { RevealContinue } from "../../ui/RevealContinue.js";
 import type { GameScreenProps } from "../registry.js";
+import { betWonCue, blastCue } from "./cues.js";
 import { BombBadge, NoReturnIcon, PlugIcon, TapIcon } from "./icons.js";
 import { bildiFor, HandChain, JourneyPanel } from "./parts.js";
 import { bell, betClick, boom, catchSound, createFuseHiss, tak, unlockClick, whoosh } from "./sounds.js";
@@ -191,30 +192,12 @@ export default function KorBombaScreen(props: GameScreenProps) {
   // BM-U5: kendi sonucun kendi koltuğunun üstünde (bildirim üst koltuğa binmez).
   const [note, setNote] = createSignal<Note | null>(null);
   let noteN = 0;
-  let seenResult: number | null | undefined;
-  createEffect(
-    on(
-      () => {
-        const v = view();
-        const r = v ? myResult(v) : null;
-        return r ? `${r.turn}:${r.correct}` : null;
-      },
-      (key) => {
-        const v = untrack(view);
-        const r = v ? myResult(v) : null;
-        if (seenResult === undefined) {
-          seenResult = key === null ? null : 1;
-          return;
-        }
-        // Pasla yanan bahis sessizce çipe döner (BM-U4); yalnız tutan bahis koltuğun üstünde duyurulur.
-        if (!r || key === null || !r.correct) return;
-        const id = ++noteN;
-        setNote({ id, text: r.correct ? "Bildin! +1" : "Bahsin yandı", good: r.correct });
-        if (r.correct) bell();
-        later(() => setNote((x) => (x?.id === id ? null : x)), 2_400);
-      },
-    ),
-  );
+  betWonCue(view, () => {
+    const id = ++noteN;
+    setNote({ id, text: "Bildin! +1", good: true });
+    bell();
+    later(() => setNote((x) => (x?.id === id ? null : x)), 2_400);
+  });
 
   const [blast, setBlast] = createSignal(false);
   const [lit, setLit] = createSignal<string | null>(null);
@@ -292,24 +275,19 @@ export default function KorBombaScreen(props: GameScreenProps) {
   });
 
   // Patlama. Ekran patlamış açılırsa yalnız son hâl gösterilir.
-  let firstBlast = true;
-  createEffect(
-    on(exploded, (now) => {
-      const initial = firstBlast;
-      firstBlast = false;
-      if (!now) {
-        setBlast(false);
-        return;
-      }
-      setBlast(true);
-      setPeekHeld(false);
-      if (initial) return;
-      boom();
-      // BM-U14: taşıyıcıya uzun alarm, diğerlerine tek kısa.
-      if (untrack(() => view()?.pub.holder) === props.selfId && !props.spectator) hapticAlarm();
-      else hapticSingle();
-    }),
-  );
+  blastCue(exploded, (now, live) => {
+    if (!now) {
+      setBlast(false);
+      return;
+    }
+    setBlast(true);
+    setPeekHeld(false);
+    if (!live) return;
+    boom();
+    // BM-U14: taşıyıcıya uzun alarm, diğerlerine tek kısa.
+    if (view()?.pub.holder === props.selfId && !props.spectator) hapticAlarm();
+    else hapticSingle();
+  });
   const blastedId = () => view()?.pub.holder ?? "";
   const mineBlast = () => blast() && blastedId() === props.selfId && !props.spectator;
   const blastSpot = () => bombSpot(seatOf(blastedId()), count());

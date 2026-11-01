@@ -9,6 +9,7 @@ import { serverNow, state } from "../../net/store.js";
 import { RevealContinue } from "../../ui/RevealContinue.js";
 import { Screen } from "../../ui/Screen.js";
 import type { GameScreenProps } from "../registry.js";
+import { korKronometreCues } from "./cues.js";
 import { Dial } from "./Dial.js";
 import { FinalRows, PressButton, type PressState, Strip, Track } from "./parts.js";
 import {
@@ -127,28 +128,18 @@ export default function KorKronometreScreen(props: GameScreenProps) {
   );
 
   // KR-M2 / KR-U3 / KR-U13: "BAŞLA!" — her telefonda kendi saat farkıyla aynı anda: flaş, gong, 32 ms titreşim.
-  createEffect(
-    on(
-      () => `${phase()}:${handNo()}`,
-      (_key, prev) => {
-        const c = untrack(clock);
-        if (!c) return;
-        if (c.phase === "ready") {
-          setLive(`Hazır ol, hedef ${targetSeconds(c.current.targetMs)} saniye`);
-        } else if (c.phase === "count") {
-          const fresh = prev !== undefined || untrack(props.now) - c.phaseStartsAt < 800;
-          if (!fresh) return;
-          setFlash(++n);
-          unlockAudio();
-          gongSound();
-          hapticGo();
-          setLive("Başla");
-          // Sayarken ekran okuyucu hiçbir şey okumaz (KR-U17).
-          later(() => setLive(""), 1_200);
-        }
-      },
-    ),
-  );
+  korKronometreCues(clock, props.now, {
+    ready: (c) => setLive(`Hazır ol, hedef ${targetSeconds(c.current.targetMs)} saniye`),
+    go: () => {
+      setFlash(++n);
+      unlockAudio();
+      gongSound();
+      hapticGo();
+      setLive("Başla");
+      // Sayarken ekran okuyucu hiçbir şey okumaz (KR-U17).
+      later(() => setLive(""), 1_200);
+    },
+  });
 
   // El açılışı (KR-U7): kendi sonucun için ses ve titreşim; ekran okuyucu satırı.
   const announced = new Set<number>();
