@@ -1,7 +1,9 @@
 # 15 oyun önerisi — sahibin kararları (2026-11-01)
 
 Kaynak: sahibin onay mesajı. Madde ayrıntıları her oyunun kendi öneri dosyasında (`docs/oneriler/<oyun>.md`).
-Uygulama sırası bu listedeki sıradır; oyunlar **tek tek** yapılır. Görsel ihtiyaçları `GORSEL-IHTIYACLARI.md`ye
+Uygulama sırası bu listedeki sıradır; oyunlar **tek tek** yapılır. **Yalnız "karar tamam" olan ilk 9 oyun
+(Sözlük Blöfü → Gizli Kareler) uygulanır.** Rüşvet ve Darbe'den Çizgiyi Geçme'ye kadarki 6 oyunun işaretleri taslaktır;
+sahip henüz okumadı, uygulanmaz. Görsel ihtiyaçları `GORSEL-IHTIYACLARI.md`ye
 yazılır; görseller hepsi bittikten sonra ChatGPT ile üretilir.
 
 ## Sözlük Blöfü
@@ -41,27 +43,27 @@ yazılır; görseller hepsi bittikten sonra ChatGPT ile üretilir.
 - evet: GK-M1, GK-M2, GK-U1 … GK-U17
 - hayır: GK-M3, GK-M4, GK-M5, GK-M6, GK-M7, GK-U18, GK-U19, GK-AI1
 
-## Rüşvet ve Darbe
+## Rüşvet ve Darbe (TASLAK — sahip henüz okumadı, uygulanmaz)
 - evet: RD-M1 … RD-M7, RD-U1, RD-U2, RD-U3, RD-U4, RD-U6 … RD-U17
 - hayır: RD-M8, RD-U5, RD-AI1
 
-## İttifak
+## İttifak (TASLAK — uygulanmaz)
 - evet: IT-M1 … IT-M5, IT-U1 … IT-U11, IT-U13, IT-U14, IT-U15, IT-U16, IT-AI1
 - hayır: IT-M6, IT-M7, IT-M8, IT-U12, IT-AI2
 
-## Son Kişi
+## Son Kişi (TASLAK — uygulanmaz)
 - evet: SK-M1, SK-M2, SK-M3, SK-M4, SK-U1 … SK-U17
 - hayır: SK-M5, SK-M6, SK-M7, SK-AI1
 
-## Açgözlülük Limiti
+## Açgözlülük Limiti (TASLAK — uygulanmaz)
 - evet: AL-M1, AL-M2, AL-M3, AL-U1 … AL-U16, AL-U19
 - hayır: AL-M4 … AL-M8, AL-U17, AL-U18, AL-AI1
 
-## Ortalamanın Yarısı
+## Ortalamanın Yarısı (TASLAK — uygulanmaz)
 - evet: OY-M1, OY-M2, OY-U1 … OY-U16, OY-U18
 - hayır: OY-M3 … OY-M8, OY-U17, OY-AI1
 
-## Çizgiyi Geçme
+## Çizgiyi Geçme (TASLAK — uygulanmaz)
 - evet: CZ-M1 … CZ-M4, CZ-U1 … CZ-U15, CZ-U17
 - hayır: CZ-M5 … CZ-M8, CZ-U16, CZ-AI1
 
