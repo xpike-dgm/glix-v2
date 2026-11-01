@@ -146,6 +146,7 @@ describe("teslim anahtarı ve MCP ucu (UM-G2)", () => {
       "talimat_oku",
       "isleri_listele",
       "is_oku",
+      "paket_bicimi",
       "katalog_oku",
       "geri_bildirim_oku",
       "dosya_yukle",

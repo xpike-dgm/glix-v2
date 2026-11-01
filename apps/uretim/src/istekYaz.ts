@@ -18,6 +18,7 @@ import {
   gorselKuraliBolumu,
   gorselKuraliIstemi,
 } from "./ortak/gorselKurali.js";
+import { PAKET_SATIRI } from "./ortak/paketBicimi.js";
 import type { IsKaydi } from "./ortak/tipler.js";
 
 export const AI_URL = "https://api.anthropic.com/v1/messages";
@@ -305,6 +306,7 @@ export function istemUret(alan: AlanId, baglanti: "mcp" | "ssh", isler: readonly
       `Önce \`${k("uretim talimat-oku")}\`, sonra ${ilk ? `\`${k(`uretim is-oku ${ilk.id}`)}\`` : `\`${k("uretim isleri-listele")}\``} ve \`${k("uretim geri-bildirim-oku")}\`.`,
       ilk ? `İş (istek kartından alıntı): ${ozet(ilk)}` : "Açık işleri sırayla bitir.",
       "Dosyalarını SFTP ile gelen/<paket>/ klasörüne koy; `uretim on-kontrol <paket>` ile denetle, geçince `uretim teslim-et <paket>`.",
+      PAKET_SATIRI,
       sira,
       devam,
     ]
@@ -317,7 +319,7 @@ export function istemUret(alan: AlanId, baglanti: "mcp" | "ssh", isler: readonly
     "Uç adresi: {{MCP_ADRES}} — bağlantı ayarına şu anahtarı gir (Authorization: Bearer): {{MCP_ANAHTAR}}",
     `Önce talimat_oku, sonra ${ilk ? `is_oku (id: ${ilk.id})` : "isleri_listele"} ve geri_bildirim_oku.`,
     ilk ? `İş (istek kartından alıntı): ${ozet(ilk)}` : "Açık işleri sırayla bitir.",
-    "Dosyaları dosya_yukle ile yükle; on_kontrol ile denetle, geçince teslim_et.",
+    "Dosyaları dosya_yukle ile yükle; on_kontrol ile denetle, geçince teslim_et. Teslim biçimi için önce paket_bicimi.",
     sira,
     devam,
   ]

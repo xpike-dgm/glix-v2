@@ -390,7 +390,13 @@ export class SshKanal {
         }
       } else dosyalar.set(ad, veri);
     }
-    if (!kayit(teslimJson)) throw new IsHatasi(400, "Pakette teslim.json yok.");
+    if (!kayit(teslimJson)) {
+      const baska = [...dosyalar.keys()].find((x) => x.endsWith(".json"));
+      throw new IsHatasi(
+        400,
+        `Pakette teslim.json yok${baska ? ` (${baska.slice(0, 60)} değil)` : ""}. Biçim için: uretim ornek-paket`,
+      );
+    }
     const anahtarId = this.sshAnahtarId(alan);
     // Dosya adlarını yükleyip dosya kimliklerine çevir.
     const kimlikler = new Map<string, string>();

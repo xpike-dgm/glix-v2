@@ -8,7 +8,7 @@
  * Bu dosya bilerek bağımsızdır (yalnız Node'un yerleşik modülleri): chroot'a tek başına kopyalanır.
  */
 import { spawn } from "node:child_process";
-import { lstatSync, readFileSync, realpathSync, rmSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
 
 export const ALT_KOMUTLAR: Readonly<Record<string, string>> = {
@@ -22,7 +22,22 @@ export const ALT_KOMUTLAR: Readonly<Record<string, string>> = {
   "teslim-et": "teslim_et",
   "istek-karti-ac": "istek_karti_ac",
   "kod-istegi-ac": "kod_istegi_ac",
+  "ornek-paket": "paket_bicimi",
+  "paket-bicimi": "paket_bicimi",
+  yardim: "",
 };
+
+/** `uretim yardim`: komutlar ve teslim paketinin biçimi (yerel; siteye gitmez). */
+export const YARDIM = [
+  "Komutlar:",
+  "  talimat-oku | isleri-listele | is-oku <id> | katalog-oku | geri-bildirim-oku [sınır]",
+  "  ornek-paket (ya da paket-bicimi): alanına uygun doldurulmuş teslim.json örneği ve alan açıklamaları",
+  "  dosya-yukle <paket>/<dosya> | on-kontrol <paket> [gorsel-model] | teslim-et <paket> [gorsel-model]",
+  "  istek-karti-ac < json | kod-istegi-ac < json | yardim",
+  "Teslim paketi: SFTP ile gelen/<paket>/ klasörüne dosyalarını ve KÖKTE teslim.json'u koy (paket.json değil).",
+  "  teslim.json: { tur, isId, arac, model, uretimYontemi, ogeler: [{ ad, aciklama, gerekce,",
+  "  dosyalar: [{ dosya, hedefYol, rol }], satirlar }] }. Örnek: uretim ornek-paket",
+].join("\n");
 
 const PAKET = /^[a-z0-9][a-z0-9._-]{0,80}$/;
 const DOSYA = /^[a-z0-9][a-z0-9._-]{0,119}$/;
@@ -48,7 +63,9 @@ export function komutAyristir(ham: string): { komut: string; args: string[] } {
   if (parca[0] === "uretim") parca.shift();
   const [komut, ...args] = parca;
   if (!komut || !(komut in ALT_KOMUTLAR))
-    throw new CliHatasi(`Bilinmeyen komut. Kullanılabilir: ${Object.keys(ALT_KOMUTLAR).join(", ")}.`);
+    throw new CliHatasi(
+      `Bilinmeyen komut. Kullanılabilir: ${Object.keys(ALT_KOMUTLAR).join(", ")}. Ayrıntı: uretim yardim`,
+    );
   if (
     args.length > 2 ||
     args.some((a) => !/^[A-Za-z0-9._/-]{1,200}$/.test(a) || a.includes("..") || a.startsWith("/"))
@@ -66,7 +83,7 @@ export function gelenYolu(gelen: string, gorece: string, tur: "paket" | "dosya")
     tur === "dosya" &&
     (parcalar.length !== 2 || !PAKET.test(parcalar[0] ?? "") || !DOSYA.test(parcalar[1] ?? ""))
   )
-    throw new CliHatasi("Dosya yolu <paket>/<dosya> olmalı.");
+    throw new CliHatasi("Dosya yolu <paket>/<dosya> olmalı (dosya adı: küçük harf, rakam, . _ -).");
   const kok = realpathSync(gelen);
   const p = resolve(kok, gorece);
   if (!p.startsWith(kok + sep)) throw new CliHatasi("Yol gelen klasörünün dışında.");
@@ -74,7 +91,10 @@ export function gelenYolu(gelen: string, gorece: string, tur: "paket" | "dosya")
   try {
     st = lstatSync(p);
   } catch {
-    throw new CliHatasi(tur === "paket" ? "Paket bulunamadı." : "Dosya bulunamadı.");
+    // Yalnız ad (yol yok): yapay zekâ neyin eksik olduğunu görsün.
+    throw new CliHatasi(
+      tur === "paket" ? `Paket bulunamadı: ${gorece}.` : `Pakette dosya bulunamadı: ${parcalar[1] ?? ""}.`,
+    );
   }
   if (st.isSymbolicLink()) throw new CliHatasi("Bağlantı (symlink) kabul edilmez.");
   if (tur === "paket" ? !st.isDirectory() : !st.isFile() || st.nlink > 1)
@@ -140,6 +160,17 @@ function jsonGirdi(o: CliOrtami): Record<string, unknown> {
 async function paketHazirla(o: CliOrtami, paket: string): Promise<Record<string, unknown>> {
   const kok = gelenYolu(o.gelen, paket, "paket");
   const tj = join(kok, "teslim.json");
+  if (!existsSync(tj)) {
+    let baska = "";
+    try {
+      baska = readdirSync(kok).find((x) => x.endsWith(".json") && DOSYA.test(x)) ?? "";
+    } catch {
+      baska = "";
+    }
+    throw new CliHatasi(
+      `Pakette teslim.json yok${baska ? ` (${baska} değil)` : ""}. Biçim için: uretim ornek-paket`,
+    );
+  }
   gelenYolu(o.gelen, `${paket}/teslim.json`, "dosya");
   let teslim: unknown;
   try {
@@ -180,6 +211,11 @@ export async function calistirKomut(o: CliOrtami, ham: string): Promise<unknown>
   const { komut, args } = komutAyristir(ham);
   const ad = ALT_KOMUTLAR[komut] ?? "";
   switch (komut) {
+    case "yardim":
+      return { yardim: YARDIM };
+    case "ornek-paket":
+    case "paket-bicimi":
+      return arac(o, ad, {});
     case "talimat-oku":
     case "isleri-listele":
     case "katalog-oku":
@@ -281,6 +317,11 @@ async function ana(): Promise<void> {
     fetchImpl: fetch,
   };
   try {
+    // Yardım yereldir: bağlantı kurulmadan da okunur, düz metin basılır.
+    if (/^\s*(uretim\s+)?yardim\s*$/.test(ham)) {
+      process.stdout.write(`${YARDIM}\n`);
+      return;
+    }
     if (!url || !anahtar)
       throw new CliHatasi("Bu bağlantı henüz kurulmadı; sahibinden alana SSH anahtarı eklemesini iste.");
     const sonuc = await calistirKomut(o, ham);

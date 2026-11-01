@@ -193,3 +193,19 @@ görseller böyle üretildi; kalite çıtası onlardır.
   `cards`; İkon ve Süs: `props`, `avatars`, `mascot`, `brand`; Efekt Dokuları: `fx`, `props`, `worlds`. İstem ve
   talimat bu klasörü gösterir; yapay zekâ üretmeden önce bakar.
 
+
+## 11. Teslim paketi biçimi (SSH ve MCP)
+
+- SSH: `gelen/<paket>/` klasörüne dosyalar ve **kökte `teslim.json`** (başka ad kabul edilmez). Biçim:
+  `{ tur, isId?, arac?, model?, uretimYontemi?, ogeler: [{ ad, aciklama?, gerekce?, dosyalar?: [{ dosya, hedefYol?,
+  rol? }], satirlar?, onizleme?, rapor? }] }`; `dosya` paketteki dosya adıdır. MCP'de aynı biçim; dosyalar önce
+  `dosya_yukle` ile yüklenir ve `dosya` yerine dönen `dosyaId` yazılır.
+- Alana uygun doldurulmuş örnek: SSH `uretim ornek-paket` (eşi `paket-bicimi`), MCP `paket_bicimi`
+  (`apps/uretim/src/ortak/paketBicimi.ts`). Test → senaryo/rapor, Mağaza → ürün satırı + görsel, İçerik → satırlar.
+  `uretim yardim` komutları ve teslim.json'u tek ekranda özetler.
+- `teslim.json` yoksa hata bunu adıyla söyler (ör. "Pakette teslim.json yok (paket.json değil). Biçim için: uretim
+  ornek-paket"); eksik dosya yalnız adıyla bildirilir, yol gösterilmez.
+- Kopyalanan SSH isteminde ve talimatın sonundaki "Teslim paketi" bölümünde bu kural site kodundan eklenir; model ya
+  da talimat düzenlemesi çıkaramaz.
+- Test alanı: test koşusu başlatma ve zamanlayıcı (ör. 12 saatte bir) **henüz yok** (ikinci aşama); alan yalnız
+  senaryo ve rapor teslim eder. Talimat ve paket biçimi bunu açıkça yazar.

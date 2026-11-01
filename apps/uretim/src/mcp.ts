@@ -10,6 +10,7 @@ import { GovdeHatasi, gonder, govdeOku, icAgIstegi, kayit, metin, tamsayi, tarih
 import { IsHatasi, type Merkez } from "./merkez.js";
 import { alanTanimi, isAlanId } from "./ortak/alanlar.js";
 import { gorselAlaniMi, gorselKuraliMaddeleri } from "./ortak/gorselKurali.js";
+import { paketBicimi } from "./ortak/paketBicimi.js";
 import { teslimAyristir } from "./teslimGirdisi.js";
 
 export const MCP_SURUMLERI = ["2025-06-18", "2025-03-26", "2024-11-05"] as const;
@@ -108,6 +109,13 @@ export const ARACLAR: readonly AracTanimi[] = [
       properties: { id: { type: "integer" } },
       additionalProperties: false,
     },
+  },
+  {
+    name: "paket_bicimi",
+    title: "Teslim paketi biçimi",
+    description:
+      "Alanına uygun doldurulmuş teslim örneği (teslim.json) ve alan açıklamaları. SSH'ta `dosya` (paketteki ad), MCP'de dosya_yukle'den dönen `dosyaId` yazılır.",
+    inputSchema: bos,
   },
   {
     name: "katalog_oku",
@@ -232,6 +240,8 @@ export async function aracCalistir(
         ? { gorselKurali: gorselKuraliMaddeleri(alan), ...is, uzerindeCalisiliyor: false }
         : { ...is, uzerindeCalisiliyor: false };
     }
+    case "paket_bicimi":
+      return paketBicimi(alan);
     case "katalog_oku":
       return m.katalog.alanKatalogu(alan, now);
     case "geri_bildirim_oku": {
