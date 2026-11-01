@@ -40,6 +40,8 @@ export function eylemdenOlay(eylem: DenetimEylemi, ayrinti = ""): OlayTuru | nul
     case "teslim":
     case "elle_teslim":
       return "teslim";
+    case "yorum":
+      return "karar";
     case "onay":
     case "ret":
     case "duzeltme":

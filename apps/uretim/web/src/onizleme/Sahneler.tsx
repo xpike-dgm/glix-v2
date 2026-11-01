@@ -13,13 +13,15 @@ import {
   Switch,
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
+import { ETKI_ADI, ZAHMET_ADI } from "../../../src/ortak/fikir.js";
 import type { KontrolSatiri, OgeAyrinti, OgeDosyasi } from "../../../src/ortak/tipler.js";
-import { dosyaUrl, gonder } from "../api.js";
+import { al, dosyaUrl, gonder } from "../api.js";
 import { saniye } from "../bicim.js";
 import { Bos, Iskelet } from "../bilesenler.js";
 import { git, hataTost, tost, yazTercih } from "../durum.js";
 import { alanFarklari, degerMetni, kelimeFarki } from "../fark.js";
 import { Simge } from "../simgeler.js";
+import { RaporPanosu, raporOku } from "./RaporPanosu.js";
 
 export type Zemin = "koyu" | "acik" | "dama";
 const zeminOku = (): Zemin => {
@@ -799,7 +801,20 @@ export function Kivilcim(p: { degerler: number[]; esik?: number | undefined }): 
   );
 }
 
-export function RaporSahne(p: { oge: OgeAyrinti }): JSX.Element {
+/** Rapor: yapılandırılmışsa grafikli pano (önceki raporlarla), değilse eski basit görünüm. */
+export function RaporSahne(p: { oge: OgeAyrinti; gecmis?: OgeAyrinti[] }): JSX.Element {
+  const [gecmis] = createResource(
+    () => (p.gecmis || !raporOku(p.oge) ? null : p.oge.alan),
+    (a) => al<{ raporlar: OgeAyrinti[] }>(`raporlar?alan=${a}`).then((x) => x.raporlar),
+  );
+  return (
+    <Show when={raporOku(p.oge)} fallback={<EskiRaporSahne oge={p.oge} />}>
+      <RaporPanosu oge={p.oge} gecmis={p.gecmis ?? gecmis()} />
+    </Show>
+  );
+}
+
+function EskiRaporSahne(p: { oge: OgeAyrinti }): JSX.Element {
   const r = (): Rapor => (p.oge.rapor && typeof p.oge.rapor === "object" ? (p.oge.rapor as Rapor) : {});
   const duzelt = async (baslik: string): Promise<void> => {
     try {
@@ -899,6 +914,50 @@ export function RaporSahne(p: { oge: OgeAyrinti }): JSX.Element {
 }
 
 export function FikirSahne(p: { oge: OgeAyrinti; kardesler: OgeAyrinti[] }): JSX.Element {
+  return (
+    <Show when={p.oge.fikir} fallback={<EskiFikirSahne oge={p.oge} kardesler={p.kardesler} />}>
+      {(f) => (
+        <div class="sahne sahne--fikir">
+          <article class="fikir fikir--secili fikir--yapili">
+            <div class="fikir__rozetler">
+              <span class="etiket">{f().kategori}</span>
+              <span class={`etiket fikir-etki--${f().etki}`}>{ETKI_ADI[f().etki]}</span>
+              <span class={`etiket fikir-zahmet--${f().zahmet}`}>{ZAHMET_ADI[f().zahmet]}</span>
+            </div>
+            <h2>{p.oge.ad}</h2>
+            <p class="fikir__ozet">{f().ozet}</p>
+            <Show when={p.oge.aciklama}>
+              <p class="metin-govde">{p.oge.aciklama}</p>
+            </Show>
+            <Show when={p.oge.gerekce}>
+              <div class="fikir__alan">
+                <span class="cok-soluk kucuk">Neden</span>
+                <p>{p.oge.gerekce}</p>
+              </div>
+            </Show>
+            <Show when={p.oge.dosyalar.find((d) => d.tur === "png")}>
+              {(d) => (
+                <img class="fikir__onizleme" src={dosyaUrl(p.oge.id, d().ozet)} alt="" loading="lazy" />
+              )}
+            </Show>
+            <a
+              class="dg dg--k"
+              href={`/fikirler?alan=${p.oge.alan}`}
+              onClick={(e) => {
+                e.preventDefault();
+                git(`/fikirler?alan=${p.oge.alan}`);
+              }}
+            >
+              <Simge ad="liste" /> Fikir panosunda gör
+            </a>
+          </article>
+        </div>
+      )}
+    </Show>
+  );
+}
+
+function EskiFikirSahne(p: { oge: OgeAyrinti; kardesler: OgeAyrinti[] }): JSX.Element {
   return (
     <div class="sahne sahne--fikir">
       <div class="fikirler">

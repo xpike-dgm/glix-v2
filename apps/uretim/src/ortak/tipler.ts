@@ -1,6 +1,7 @@
 /** Sunucu ile arayüzün paylaştığı veri biçimleri (yalnız tipler ve küçük yardımcılar). */
 import type { AlanId, DosyaTuru } from "./alanlar.js";
 import type { Durum, HazirNotKodu } from "./durum.js";
+import type { FikirAlanlari, UygulanacakFikir } from "./fikir.js";
 
 export type KontrolSonucu = "gecti" | "uyari" | "kaldi";
 export type SatirSonucu = KontrolSonucu | "atlandi";
@@ -125,6 +126,10 @@ export interface OgeOzeti {
   denetim: boolean;
   /** Seçenek turunun işi (UM-F2). */
   varyantIs: number | null;
+  /** Bu öğenin uyguladığı fikir (fikir panosu). */
+  fikirId: number | null;
+  /** Yapılandırılmış fikir alanları (yalnız fikir öğesinde). */
+  fikir: FikirAlanlari | null;
 }
 
 /** Köken kaydı (UM-F7). */
@@ -185,6 +190,8 @@ export interface IsKaydi {
   /** Fikir turu: önce metinle 2–3 fikir, sahip birini seçince tek üretim. */
   fikirTuru: boolean;
   secilenFikir: { ogeId: number; ad: string; aciklama: string; gorunus: string; not: string } | null;
+  /** "Onaylananları uygula": işin uygulayacağı fikirler. */
+  fikirler: UygulanacakFikir[];
   kisitlar: string[];
   kabul: string[];
   /** İstemde görünen kısa özet (UM-R1). */
@@ -263,7 +270,7 @@ export interface PaketKaydi {
   olusturma: number;
   ogeSayisi: number;
   revizyon: string | null;
-  durum: "hazir" | "oyuna_eklendi" | "canlida";
+  durum: "hazir" | "oyuna_eklendi" | "testte" | "canlida";
 }
 
 export interface AktarimKaydi {

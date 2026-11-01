@@ -26,6 +26,76 @@ export interface AracTanimi {
 }
 
 const bos = { type: "object", properties: {}, additionalProperties: false };
+const raporSemasi = {
+  type: "object",
+  description: "Rapor panosu. Biri gerekli: ozet, seriler, tablolar, bulgular.",
+  properties: {
+    baslik: { type: "string", maxLength: 120 },
+    donem: { type: "string", maxLength: 60 },
+    ozet: {
+      type: "array",
+      maxItems: 12,
+      description: "Özet kutucukları",
+      items: {
+        type: "object",
+        required: ["ad", "deger"],
+        properties: {
+          ad: { type: "string", maxLength: 40 },
+          deger: { type: "number" },
+          birim: { type: "string", maxLength: 12 },
+          onceki: { type: "number" },
+          iyi: { type: "string", enum: ["yukari", "asagi"] },
+        },
+      },
+    },
+    seriler: {
+      type: "array",
+      maxItems: 12,
+      items: {
+        type: "object",
+        required: ["ad", "tur", "etiketler", "degerler"],
+        properties: {
+          ad: { type: "string", maxLength: 60 },
+          tur: { type: "string", enum: ["cizgi", "cubuk"] },
+          birim: { type: "string", maxLength: 12 },
+          etiketler: { type: "array", items: { type: "string" }, maxItems: 200 },
+          degerler: { type: "array", items: { type: "number" }, maxItems: 200 },
+          esik: { type: "number" },
+        },
+      },
+    },
+    tablolar: {
+      type: "array",
+      maxItems: 8,
+      items: {
+        type: "object",
+        required: ["ad", "sutunlar", "satirlar"],
+        properties: {
+          ad: { type: "string", maxLength: 60 },
+          sutunlar: { type: "array", items: { type: "string" }, maxItems: 12 },
+          satirlar: { type: "array", maxItems: 200, items: { type: "array" } },
+        },
+      },
+    },
+    bulgular: {
+      type: "array",
+      maxItems: 100,
+      items: {
+        type: "object",
+        required: ["baslik", "onem"],
+        properties: {
+          baslik: { type: "string", maxLength: 140 },
+          onem: { type: "string", enum: ["kritik", "yuksek", "orta", "dusuk"] },
+          oyun: { type: "string", maxLength: 60 },
+          adimlar: { type: "array", items: { type: "string" }, maxItems: 20 },
+          kanit: { type: "string", maxLength: 2000 },
+          oneri: { type: "string", maxLength: 600 },
+          siklik: { type: "number" },
+        },
+      },
+    },
+  },
+};
 const teslimSemasi = {
   type: "object",
   required: ["tur", "ogeler"],
@@ -42,7 +112,8 @@ const teslimSemasi = {
     tur: {
       type: "string",
       enum: ["yeni", "duzenleme", "kaldirma-onerisi", "rapor", "fikir"],
-      description: "fikir: yalnız metin (ad, aciklama, gorunus, gerekce); fikir turu açık işlerde önce bu",
+      description:
+        'fikir: fikir panosu (her öğede ad, ozet, kategori, etki, zahmet, gerekce; dosya isteğe bağlı küçük önizleme). rapor: öğede yapılandırılmış "rapor" nesnesi (ozet, seriler, tablolar, bulgular). Örnek: paket_bicimi',
     },
     aciklama: { type: "string", maxLength: 1000 },
     ogeler: {
@@ -79,8 +150,21 @@ const teslimSemasi = {
           kaldirilacaklar: { type: "array", items: { type: "string" } },
           onizleme: { type: "object", properties: { ekran: { type: "string" }, not: { type: "string" } } },
           oncekiOge: { type: "integer", description: "Düzeltilen öğenin kimliği" },
-          rapor: { type: "object" },
+          rapor: raporSemasi,
           gorunus: { type: "string", maxLength: 600, description: "Fikirde: nasıl görünecek, renk, hareket" },
+          ozet: { type: "string", maxLength: 160, description: "Fikirde: tek cümle özet" },
+          kategori: {
+            type: "string",
+            maxLength: 30,
+            description: "Fikirde: kategori (ör. Koleksiyon, Ses, Oynanış)",
+          },
+          etki: { type: "string", enum: ["dusuk", "orta", "yuksek"], description: "Fikirde: beklenen etki" },
+          zahmet: { type: "string", enum: ["kucuk", "orta", "buyuk"], description: "Fikirde: iş büyüklüğü" },
+          fikirId: {
+            type: "integer",
+            description:
+              "Onaylananları uygula işinde: bu öğenin uyguladığı fikrin kimliği (is_oku → fikirler)",
+          },
         },
       },
     },

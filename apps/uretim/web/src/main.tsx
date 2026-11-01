@@ -3,6 +3,7 @@ import "./stil/belirtecler.css";
 import "./stil/temel.css";
 import "./stil/bilesenler.css";
 import "./stil/ekranlar.css";
+import "./stil/uretim2.css";
 import { App } from "./App.js";
 import { tercihleriUygula } from "./durum.js";
 

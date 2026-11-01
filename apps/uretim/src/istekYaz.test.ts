@@ -140,6 +140,7 @@ describe("istem", () => {
       varyant: null,
       fikirTuru: false,
       secilenFikir: null,
+      fikirler: [],
       kisitlar: [],
       kabul: [],
       ozet,

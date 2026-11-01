@@ -5,7 +5,9 @@
  */
 import { kayit, metin, tamsayi } from "./http.js";
 import type { AlanTanimi } from "./ortak/alanlar.js";
+import { type FikirAlanlari, fikirAlanlari } from "./ortak/fikir.js";
 import { URETIM_YONTEMLERI, type UretimYontemi } from "./ortak/gorselKurali.js";
+import { raporDogrula, yapiliRaporMu } from "./ortak/rapor.js";
 import { DESTEKLENEN_TURLER, type Degisiklik, TESLIM_TURLERI, type TeslimTuru } from "./ortak/tipler.js";
 
 export const EN_COK_OGE = 50;
@@ -31,6 +33,10 @@ export interface OgeGirdisi {
   rapor: unknown;
   /** Fikir teslimi: nasıl görünecek, renk, hareket. */
   gorunus: string;
+  /** Yapılandırılmış fikir (fikir panosu); eski düz metin fikirde null. */
+  fikir: FikirAlanlari | null;
+  /** Bu öğe hangi onaylı fikri uyguluyor ("Onaylananları uygula" işi). */
+  fikirId: number | null;
 }
 
 export interface TeslimGirdisi {
@@ -60,6 +66,11 @@ const OGE_ANAHTARLARI = new Set([
   "oncekiOge",
   "rapor",
   "gorunus",
+  "ozet",
+  "kategori",
+  "etki",
+  "zahmet",
+  "fikirId",
 ]);
 
 export const ONIZLEME_EKRANLARI = [
@@ -90,7 +101,13 @@ const json = (v: unknown): number => {
   }
 };
 
-function ogeAyristir(v: unknown, sira: number, alan: AlanTanimi, hatalar: string[]): OgeGirdisi | null {
+function ogeAyristir(
+  v: unknown,
+  sira: number,
+  alan: AlanTanimi,
+  hatalar: string[],
+  tur: string,
+): OgeGirdisi | null {
   const yer = `${sira + 1}. öğe`;
   if (!kayit(v)) {
     hatalar.push(`${yer}: nesne olmalı.`);
@@ -178,8 +195,22 @@ function ogeAyristir(v: unknown, sira: number, alan: AlanTanimi, hatalar: string
   }
   const oncekiOge = v.oncekiOge === undefined ? null : tamsayi(v.oncekiOge, 1, 1e12);
   if (v.oncekiOge !== undefined && oncekiOge === null) hatalar.push(`${yer}: "oncekiOge" geçersiz.`);
-  const rapor = v.rapor === undefined ? null : v.rapor;
+  let rapor: unknown = v.rapor === undefined ? null : v.rapor;
   if (json(rapor) > 1_000_000) hatalar.push(`${yer}: rapor çok büyük.`);
+  // Yapılandırılmış rapor (ozet/seriler/tablolar/bulgular) sıkı doğrulanır; eski biçim olduğu gibi kalır.
+  else if (yapiliRaporMu(rapor)) rapor = raporDogrula(rapor, yer, hatalar);
+  // Fikir alanları yalnız fikir teslimlerinde; biri varsa hepsi zorunlu.
+  let fikir: FikirAlanlari | null = null;
+  if (["ozet", "kategori", "etki", "zahmet"].some((k) => v[k] !== undefined)) {
+    if (tur !== "fikir")
+      hatalar.push(
+        `${yer}: ozet, kategori, etki ve zahmet yalnız fikir teslimlerinde (tur: "fikir") yazılır.`,
+      );
+    else fikir = fikirAlanlari(v, yer, hatalar);
+  }
+  const fikirId = v.fikirId === undefined || v.fikirId === null ? null : tamsayi(v.fikirId, 1, 1e12);
+  if (v.fikirId !== undefined && v.fikirId !== null && fikirId === null)
+    hatalar.push(`${yer}: "fikirId" geçersiz.`);
 
   const gorunus = v.gorunus === undefined ? "" : metin(v.gorunus, 0, 600);
   if (gorunus === null) hatalar.push(`${yer}: "gorunus" en çok 600 karakter.`);
@@ -196,6 +227,8 @@ function ogeAyristir(v: unknown, sira: number, alan: AlanTanimi, hatalar: string
     oncekiOge,
     rapor,
     gorunus,
+    fikir,
+    fikirId,
   };
 }
 
@@ -224,7 +257,7 @@ export function teslimAyristir(v: unknown, alan: AlanTanimi): Ayrisma<TeslimGird
     return { ok: false, hatalar: [...hatalar, `"ogeler" 1–${EN_COK_OGE} öğelik liste olmalı.`] };
   const ogeler: OgeGirdisi[] = [];
   v.ogeler.forEach((o, i) => {
-    const x = ogeAyristir(o, i, alan, hatalar);
+    const x = ogeAyristir(o, i, alan, hatalar, tur);
     if (x) ogeler.push(x);
   });
   const arac = v.arac === undefined ? null : metin(v.arac, 1, 60);

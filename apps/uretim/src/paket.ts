@@ -224,10 +224,21 @@ export function paketOyunaEklendi(m: Merkez, id: number, revizyon: string, kim: 
   m.denetim.yaz(now, kim, "paket_oyuna_eklendi", String(id), revizyon);
 }
 
+/** Ana koda eklenen paket test ortamına çıktı (kabul havuzunda "test'te"; öğeler "ana kodda" kalır). */
+export function paketTesteCikti(m: Merkez, id: number, kim: string, now: number): void {
+  const p = m.db.prepare("SELECT durum FROM paket WHERE id = ?").get(id) as { durum: string } | undefined;
+  if (!p) throw new IsHatasi(404, "Paket bulunamadı.");
+  if (p.durum !== "oyuna_eklendi") throw new IsHatasi(409, "Paket önce ana koda eklenmiş olmalı.");
+  m.db.prepare("UPDATE paket SET durum = 'testte' WHERE id = ?").run(id);
+  m.denetim.yaz(now, kim, "paket_oyuna_eklendi", String(id), "test ortamına çıktı");
+}
+
 /** Canlıdaki sürüm paketin revizyonunu içeriyorsa öğeler "canlıda" olur. İşaretlenen paket sayısı. */
 export async function canliKontrol(m: Merkez, now: number): Promise<number> {
   if (!m.oyun.acik) return 0;
-  const bekleyen = paketler(m).filter((p) => p.durum === "oyuna_eklendi" && p.revizyon);
+  const bekleyen = paketler(m).filter(
+    (p) => (p.durum === "oyuna_eklendi" || p.durum === "testte") && p.revizyon,
+  );
   if (!bekleyen.length) return 0;
   let canli: string | null;
   try {

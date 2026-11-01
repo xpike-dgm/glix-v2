@@ -2,6 +2,7 @@
  * Sahip arayüzünün uçları (`/api/...`). Okuma GET, yazma POST. Her yazma isteği: geçerli oturum çerezi + CSRF
  * denetimi (Origin + `X-Uretim: 1`). Bütün girdiler doğrulanır; hatalar kısa ve Türkçe.
  */
+
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Anahtarlar } from "./anahtar.js";
 import type { Bildirim } from "./bildirim.js";
@@ -9,6 +10,7 @@ import { aboneAyristir, ayarAyristir } from "./bildirim.js";
 import type { UretimConfig } from "./config.js";
 import type { Denetim } from "./denetim.js";
 import { BOYUT_SINIRI, MIME } from "./dosya.js";
+import { fikirPanosu, kabulHavuzu, secilenFikirler } from "./fikirPanosu.js";
 import { type Giris, OTURUM_CEREZI, oturumCerezi } from "./giris.js";
 import {
   cerezOku,
@@ -31,7 +33,7 @@ import { IsHatasi, type Merkez } from "./merkez.js";
 import type { OlayYayini } from "./olaylar.js";
 import { ALANLAR, type AlanId, alanTanimi, isAlanId } from "./ortak/alanlar.js";
 import { isDurum, isHazirNot } from "./ortak/durum.js";
-import { canliKontrol, paketler, paketOlustur, paketOyunaEklendi } from "./paket.js";
+import { canliKontrol, paketler, paketOlustur, paketOyunaEklendi, paketTesteCikti } from "./paket.js";
 import type { SshKanal } from "./sshKanal.js";
 import { teslimAyristir } from "./teslimGirdisi.js";
 
@@ -229,8 +231,16 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
           return ok(200, { kayitlar: o.denetim.sayfa(idParam(url.searchParams.get("onceki")), 100) });
         case "bildirim/ayar":
           return ok(200, { ayar: o.bildirim.ayar(), acik: o.bildirim.acik, abone: o.bildirim.aboneSayisi() });
-        case "raporlar":
-          return ok(200, { raporlar: raporlar(m) });
+        case "raporlar": {
+          const alan = url.searchParams.get("alan");
+          return ok(200, { raporlar: raporlar(m, isAlanId(alan) ? alan : null) });
+        }
+        case "fikirler": {
+          const alan = url.searchParams.get("alan");
+          return ok(200, { fikirler: fikirPanosu(m, isAlanId(alan) ? alan : null) });
+        }
+        case "kabul":
+          return ok(200, kabulHavuzu(m));
         case "ara":
           return ok(200, ara(m, url.searchParams.get("q") ?? ""));
         case "canlidakiler": {
@@ -325,6 +335,13 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
         }
         case "geri-al":
           return ok(200, { oge: m.kararGeriAl(id, kim, now) });
+        case "not": {
+          const b = await govde();
+          const not = metin(b.metin, 2, 600);
+          if (!not) return hata(res, 400, "girdi", "Not 2–600 karakter olmalı.");
+          m.yorumEkle(id, not, kim, now);
+          return ok(200, { ok: true });
+        }
         case "benzer": {
           const b = await govde();
           const adet = tamsayi(b.adet, 1, 50);
@@ -385,10 +402,20 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
         (b.sonTarih && !sonTarih)
       )
         return hata(res, 400, "girdi", "İsteğini birkaç kelimeyle yaz ve alanı seç.");
+      const fikirIdler = idListesi(b.fikirler);
+      if (fikirIdler === null) return hata(res, 400, "girdi", "Fikir seçimi geçersiz.");
+      const fikirler = secilenFikirler(m, b.alan, fikirIdler);
       return ok(
         200,
         await o.donusturucu.taslak(
-          { metin: metinH, alan: b.alan, baglanti: b.baglanti, fikirTuru: b.fikirTuru === true, sonTarih },
+          {
+            metin: metinH,
+            alan: b.alan,
+            baglanti: b.baglanti,
+            fikirTuru: b.fikirTuru === true,
+            sonTarih,
+            ...(fikirler.length ? { fikirler } : {}),
+          },
           now,
         ),
       );
@@ -485,6 +512,32 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
       m.kodIstegiDurum(k.id, "onaylandi", kim, now);
       return ok(200, { istek: k });
     }
+    // Fikir panosu: çoklu seçimle toplu onay/ret (her fikir ayrı karar; bekleyen olmayan atlanır).
+    if (yol === "fikir/toplu") {
+      const b = await govde();
+      const idler = idListesi(b.idler);
+      const k = b.karar;
+      if (!idler?.length || (k !== "onay" && k !== "ret"))
+        return hata(res, 400, "girdi", "Fikir seçimi ve karar (onay ya da ret) gerekli.");
+      const not = b.metin === undefined ? "" : metin(b.metin, 0, 600);
+      if (not === null) return hata(res, 400, "girdi", "Not en çok 600 karakter.");
+      if (k === "ret" && (not ?? "").length < 2) return hata(res, 400, "girdi", "Ret için kısa bir not yaz.");
+      const sonuc: { id: number; ok: boolean; mesaj?: string }[] = [];
+      for (const id of idler) {
+        const r = m.oge(id);
+        if (!r || r.tur !== "fikir") {
+          sonuc.push({ id, ok: false, mesaj: "Fikir bulunamadı." });
+          continue;
+        }
+        try {
+          m.karar(id, k, { hazir: null, metin: not ?? "", satirlar: null }, kim, now);
+          sonuc.push({ id, ok: true });
+        } catch (e) {
+          sonuc.push({ id, ok: false, mesaj: e instanceof IsHatasi ? e.message : "Karar verilemedi." });
+        }
+      }
+      return ok(200, { sonuc });
+    }
     if (yol === "paket")
       return ok(200, { paket: await paketOlustur(m, o.config.aktarimDir, o.config.saatDilimi, kim, now) });
     if (p0 === "paket" && p1 && p2 === "oyuna-eklendi") {
@@ -493,6 +546,12 @@ export async function apiIstek(req: IncomingMessage, res: ServerResponse, o: Api
       if (!id || typeof b.revizyon !== "string") return hata(res, 400, "girdi", "Sürüm kimliğini yaz.");
       paketOyunaEklendi(m, id, b.revizyon.trim(), kim, now);
       await canliKontrol(m, now);
+      return ok(200, { ok: true });
+    }
+    if (p0 === "paket" && p1 && p2 === "testte") {
+      const id = idParam(p1);
+      if (!id) return hata(res, 404, "yok", "Paket bulunamadı.");
+      paketTesteCikti(m, id, kim, now);
       return ok(200, { ok: true });
     }
     if (p0 === "aktarim" && p1 && p2 === "geri-al") {
@@ -574,6 +633,8 @@ async function alanYaz(
     const ozet = g.ozet === undefined ? "" : metin(g.ozet, 0, 140);
     if (!kisitlar || !kabul || ozet === null)
       return hata(res, 400, "girdi", "Kısıt ve kabul ölçütleri en çok 10 kısa madde olabilir.");
+    const fikirIdler = idListesi(g.fikirler);
+    if (fikirIdler === null) return hata(res, 400, "girdi", "Fikir seçimi geçersiz.");
     return ok({
       is: m.isEkle(alan, { baslik, aciklama, adet, sonTarih, ornek }, "sahip", "acik", kim, now, null, {
         varyant,
@@ -581,6 +642,7 @@ async function alanYaz(
         kisitlar,
         kabul,
         ozet,
+        fikirler: fikirIdler,
       }),
     });
   }
@@ -744,13 +806,29 @@ async function dosyaGonder(res: ServerResponse, m: Merkez, ogeId: number, ozet: 
   res.end(veri);
 }
 
-function raporlar(m: Merkez): unknown[] {
-  const r = m.db
-    .prepare(
-      "SELECT id FROM oge WHERE alan = 'test' AND gorunum = 'rapor' AND durum != 'kaldi' ORDER BY id DESC LIMIT 30",
-    )
-    .all() as { id: number }[];
+/** Raporlar (en yeni üstte): bütün alanlar ya da bir alan; pano önceki raporla karşılaştırır. */
+function raporlar(m: Merkez, alan: AlanId | null): unknown[] {
+  const r = (
+    alan
+      ? m.db
+          .prepare(
+            "SELECT id FROM oge WHERE alan = ? AND gorunum = 'rapor' AND durum NOT IN ('kaldi','arsiv') ORDER BY id DESC LIMIT 60",
+          )
+          .all(alan)
+      : m.db
+          .prepare(
+            "SELECT id FROM oge WHERE gorunum = 'rapor' AND durum NOT IN ('kaldi','arsiv') ORDER BY id DESC LIMIT 60",
+          )
+          .all()
+  ) as { id: number }[];
   return r.map((x) => m.oge(x.id)).filter((x) => x !== null);
+}
+
+/** Kimlik listesi (en çok 200): yoksa boş, bozuksa null. */
+function idListesi(v: unknown): number[] | null {
+  if (v === undefined || v === null) return [];
+  if (!Array.isArray(v) || v.length > 200 || !v.every((x) => tamsayi(x, 1, 1e12) !== null)) return null;
+  return [...new Set(v as number[])];
 }
 
 function ara(m: Merkez, q: string): unknown {

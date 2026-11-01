@@ -7,9 +7,11 @@ import { alanBul, oturum, oturumYukle, setOturum, yolAdi } from "./durum.js";
 import { Alan } from "./ekran/Alan.js";
 import { Arsiv } from "./ekran/Arsiv.js";
 import { Ayarlar } from "./ekran/Ayarlar.js";
+import { Fikirler } from "./ekran/Fikirler.js";
 import { Giris } from "./ekran/Giris.js";
 import { Incele } from "./ekran/Incele.js";
 import { Iste } from "./ekran/Iste.js";
+import { Kabul } from "./ekran/Kabul.js";
 import { Pano } from "./ekran/Pano.js";
 import { Raporlar } from "./ekran/Raporlar.js";
 import { Yukle } from "./ekran/Yukle.js";
@@ -41,6 +43,8 @@ export function App(): JSX.Element {
         "/yukle": "Elle yükle",
         "/arsiv": "Arşiv",
         "/raporlar": "Raporlar",
+        "/fikirler": "Fikirler",
+        "/kabul": "Kabul havuzu",
         "/ayarlar": "Ayarlar",
       }[y] ?? "Üretim Merkezi"
     );
@@ -68,6 +72,12 @@ export function App(): JSX.Element {
                     </Match>
                     <Match when={yolAdi() === "/raporlar"}>
                       <Raporlar />
+                    </Match>
+                    <Match when={yolAdi() === "/fikirler"}>
+                      <Fikirler />
+                    </Match>
+                    <Match when={yolAdi() === "/kabul"}>
+                      <Kabul />
                     </Match>
                     <Match when={yolAdi() === "/ayarlar"}>
                       <Ayarlar />

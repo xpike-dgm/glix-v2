@@ -216,3 +216,37 @@ görseller böyle üretildi; kalite çıtası onlardır.
   Dosyalar günlük dosya sınırına (500) sayılır; istek sınırına (60/dk) paket bir istek sayılır.
 - **Paket sınırları:** en çok 200 dosya (teslim.json ve TAMAM hariç), toplam 45 MB; tek dosya 20 MB görsel / 30 MB
   ses / 2 MB metin; öğe başına en çok 40 dosya, teslim başına en çok 50 öğe. Talimat ve `ornek-paket` bunu yazar.
+
+## 12. Üretim Merkezi 2, aşama 1: fikir panosu, uygulama işi, rapor panosu, kabul havuzu
+
+Plan: `docs/uretim/URETIM-2-PLAN.md`. Biçim `apps/uretim/src/ortak/fikir.ts`, `rapor.ts`; örnekler `paket_bicimi` →
+`ornekler`. Talimatın sonundaki "Fikir ve rapor biçimi" bölümü ve istemdeki biçim satırı site kodundan eklenir.
+
+- **Fikir teslimi** (`tur: "fikir"`): her öğe `ad` (başlık), `ozet` (tek cümle, ≤ 160), `kategori` (≤ 30), `etki`
+  (`dusuk|orta|yuksek`), `zahmet` (`kucuk|orta|buyuk`), `gerekce`; isteğe bağlı tek küçük önizleme görseli. Bu
+  alanlardan biri yazılırsa hepsi zorunludur; yalnız fikir teslimlerinde geçerlidir. Eski düz metin fikir (ad +
+  aciklama) yine kabul edilir, basit kart olarak görünür (ön kontrolde uyarı).
+- **Fikir aşaması** kayıtlardan türetilir (elle tutulmaz): `fikir → onaylandi → uygulaniyor → teslim_edildi →
+  kabul_edildi → ana_kodda → canlida` (`reddedildi` ayrı). Onay/ret fikir panosunda tek tek ya da toplu
+  (`POST /api/fikir/toplu`, ret notlu); karta not `POST /api/oge/:id/not`. "Fikir turu" (2–3 fikirden birini seçme)
+  yalnız o seçenekle açılan işte geçerlidir; fikir panosu işlerinde ("30 fikir ver") sınır yoktur ve bir fikrin
+  onayı kardeşlerini arşive atmaz.
+- **"Onaylananları uygula"**: iş isterken onaylı fikirler seçilir (`fikirler: [id]`; yalnız aynı alanın `onaylandi`
+  fikirleri). İş taslağının açıklamasına "Uygulanacak fikirler" (başlık + özet + sahip notu), kısıtlarına fikirId
+  kuralı kodla eklenir; kopyalanan istem fikirleri kimlikleriyle gösterir; `is_oku` → `fikirler: [{ fikirId, baslik,
+  ozet, kategori, etki, zahmet, not }]`. Teslimin her öğesi `fikirId` taşır (onaylı değilse ön kontrolde kalır, işin
+  fikri değilse uyarı). Teslim kabul edilince fikir kendiliğinden ilerler.
+- **Rapor teslimi** (`tur: "rapor"`): öğede `rapor` nesnesi: `ozet` kutucukları ({ ad, deger, birim, onceki, iyi:
+  yukari|asagi }, ≤ 12), `seriler` ({ ad, tur: cizgi|cubuk, etiketler, degerler (aynı uzunlukta, ≤ 200), birim,
+  esik }, ≤ 12), `tablolar` ({ ad, sutunlar (≤ 12), satirlar (≤ 200) }, ≤ 8), `bulgular` ({ baslik, onem:
+  kritik|yuksek|orta|dusuk, oyun, adimlar, kanit, oneri, siklik }, ≤ 100). Biri varsa sıkı doğrulanır; yoksa eski
+  rapor olduğu gibi kalır (basit kart). Site panoda SVG grafiklerle gösterir, aynı alanın önceki raporuyla
+  karşılaştırır (kutucuk farkı, önceki seri, yeni/çözülen bulgular) ve raporlar boyunca gidişatı çizer; bulgu tek
+  tıkla iş olur. `GET /api/raporlar?alan=` bütün alanlar.
+- **Kabul**: incelemede teslimler için "Kabul et" (fikirlerde "Onayla"). **Kabul havuzu** (`GET /api/kabul`):
+  `kabulde → yöneticide → ana kodda → test'te → canlıda` (öğe durumları `havuzda`, `pakette`, `oyuna_eklendi` +
+  paket `testte`, `canlida`). "Yöneticiye gönder" = entegrasyon paketi (bölüm 5); tek tık alanlar "Oyuna aktar"
+  (geri alınabilir, bölüm 3). Paket ana koda eklenince sürümü yazılır (`POST /api/paket/:id/oyuna-eklendi`), test
+  ortamına çıkınca `POST /api/paket/:id/testte`; canlı sürüm o sürümü içerince öğeler kendiliğinden canlıda olur.
+- Yeni ekranlar (`/fikirler`, `/raporlar`, `/kabul`, alan sayfasındaki "Onaylanan fikirler" şeridi, İş iste'deki
+  "Onaylanan fikirleri uygula") canlı güncellenir (`/api/olaylar`).

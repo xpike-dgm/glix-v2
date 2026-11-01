@@ -23,6 +23,7 @@ import {
   hazirNotMetni,
   TALIMAT_ONERI_ESIGI,
 } from "./ortak/durum.js";
+import type { FikirAlanlari, UygulanacakFikir } from "./ortak/fikir.js";
 import { gorselAlaniMi, gorselKuraliBolumu } from "./ortak/gorselKurali.js";
 import {
   aslaOtomatik,
@@ -32,7 +33,8 @@ import {
   GUVEN_PENCERE,
   VARSAYILAN_SINIR,
 } from "./ortak/guven.js";
-import { PAKET_SATIRI, PAKET_SINIRLARI, TEST_SINIRI } from "./ortak/paketBicimi.js";
+import { FIKIR_RAPOR_BOLUMU, PAKET_SATIRI, PAKET_SINIRLARI, TEST_SINIRI } from "./ortak/paketBicimi.js";
+import { yapiliRaporMu } from "./ortak/rapor.js";
 import type {
   AktarimKaydi,
   AlanKarti,
@@ -82,6 +84,8 @@ export interface Olaylar {
 
 interface OgeSatiri {
   gorunus: string;
+  fikir: string | null;
+  fikir_id: number | null;
   talimat_surum: number | null;
   onaylayan: string | null;
   otomatik: number;
@@ -137,6 +141,8 @@ function ozetle(r: OgeSatiri): OgeOzeti {
     otomatik: r.otomatik === 1,
     denetim: r.denetim === 1,
     varyantIs: r.varyant_is,
+    fikirId: r.fikir_id ?? null,
+    fikir: json<FikirAlanlari | null>(r.fikir ?? null, null),
   };
 }
 
@@ -396,6 +402,57 @@ export class Merkez {
             ),
           );
       }
+      // "Onaylananları uygula": öğenin uyguladığı fikir bu alanda onaylı bir fikir olmalı.
+      if (o.fikirId !== null) {
+        const f = this.db.prepare("SELECT alan, tur, durum FROM oge WHERE id = ?").get(o.fikirId) as
+          | { alan: string; tur: string; durum: string }
+          | undefined;
+        if (!f || f.alan !== alan || f.tur !== "fikir")
+          ek.push(satir("ortak", "fikir", "kaldi", `Fikir #${o.fikirId} bu alanda bulunamadı.`));
+        else if (["bekliyor", "reddedildi", "arsiv", "kaldi", "duzeltme_istendi"].includes(f.durum))
+          ek.push(
+            satir(
+              "ortak",
+              "fikir",
+              "kaldi",
+              `Fikir #${o.fikirId} onaylanmamış; yalnız onaylı fikir uygulanır.`,
+            ),
+          );
+        else if (
+          g.isId !== null &&
+          !this.db.prepare("SELECT 1 FROM is_fikir WHERE is_id = ? AND fikir_id = ?").get(g.isId, o.fikirId)
+        )
+          ek.push(
+            satir("ortak", "fikir", "uyari", `Fikir #${o.fikirId} bu işin uygulanacak fikirlerinden değil.`),
+          );
+        else ek.push(satir("ortak", "fikir", "gecti", `Fikir #${o.fikirId} uygulanıyor.`));
+      } else if (g.tur !== "fikir" && g.tur !== "rapor" && g.isId !== null && this.isFikirleri(g.isId).length)
+        ek.push(
+          satir(
+            "ortak",
+            "fikir",
+            "uyari",
+            "Bu iş onaylanan fikirleri uyguluyor; her öğede hangi fikri uyguladığını fikirId ile yaz.",
+          ),
+        );
+      if (g.tur === "fikir" && !o.fikir)
+        ek.push(
+          satir(
+            "ortak",
+            "fikir-bicimi",
+            "uyari",
+            "Fikir düz metin: ozet, kategori, etki ve zahmet yazılırsa fikir panosunda süzülüp sıralanabilir.",
+          ),
+        );
+      if (g.tur === "rapor" && o.rapor !== null && !yapiliRaporMu(o.rapor))
+        ek.push(
+          satir(
+            "ortak",
+            "rapor-bicimi",
+            "uyari",
+            "Rapor eski biçimde: ozet, seriler, tablolar ve bulgular yazılırsa grafikli panoda görünür.",
+          ),
+        );
       if (satirlar.length > SATIR_SINIRI) {
         ek.push(satir("ortak", "satir", "kaldi", `Bir öğede en çok ${SATIR_SINIRI} satır olabilir.`));
         satirlar = satirlar.slice(0, SATIR_SINIRI);
@@ -488,8 +545,8 @@ export class Merkez {
           .prepare(
             `INSERT INTO oge (teslim_id, alan, is_id, tur, ad, anahtar, aciklama, gerekce, durum, gorunum, surum, onceki_id, kaynak,
              dosyalar, satirlar, degisiklikler, kaldirilacaklar, onizleme, rapor, kontrol, sonuc, olusturma, guncelleme,
-             talimat_surum, varyant_is, gorunus)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             talimat_surum, varyant_is, gorunus, fikir, fikir_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           )
           .run(
             teslimId,
@@ -518,6 +575,8 @@ export class Merkez {
             talimatSurum,
             isVaryant && isVaryant > 1 ? g.isId : null,
             s.girdi.gorunus,
+            s.girdi.fikir ? JSON.stringify(s.girdi.fikir) : null,
+            s.girdi.fikirId,
           );
         const ogeId = Number(r.lastInsertRowid);
         if (son === "kaldi") {
@@ -606,6 +665,14 @@ export class Merkez {
       vals.push(ek.paket);
     }
     this.db.prepare(`UPDATE oge SET ${sets.join(", ")} WHERE id = ?`).run(...vals, id);
+  }
+
+  /** Sahibin öğeye notu ("şöyle olsun"): yapay zekânın geri bildirimine ve fikrin uygulama işine düşer. */
+  yorumEkle(id: number, metin: string, kim: string, now: number): void {
+    const r = this.ogeSatiri(id);
+    if (!r) throw new IsHatasi(404, "Teslim bulunamadı.");
+    this.notEkle(r.alan as AlanId, id, "yorum", null, metin, now);
+    this.denetim.yaz(now, kim, "yorum", r.alan, `öğe ${id}`);
   }
 
   private notEkle(
@@ -783,10 +850,11 @@ export class Merkez {
         this.durumYaz(id, "onaylandi", now, { karar: now });
         this.db.prepare("UPDATE oge SET onaylayan = ? WHERE id = ?").run(kim, id);
         this.zevkEkle(alan, id, r.ad, "onay", metin, now);
+        // Seçim yalnız "fikir turu" işinde (2–3 fikirden biri); fikir panosu işlerinde her fikir ayrı onaylanır.
         if (r.is_id !== null)
           this.db
             .prepare(
-              "UPDATE isler SET secilen_fikir = ?, secim_notu = ? WHERE id = ? AND secilen_fikir IS NULL",
+              "UPDATE isler SET secilen_fikir = ?, secim_notu = ? WHERE id = ? AND secilen_fikir IS NULL AND fikir_turu = 1",
             )
             .run(id, not.metin, r.is_id);
       } else if (karar === "onay") {
@@ -971,6 +1039,7 @@ export class Merkez {
       varyant: r.varyant === null || r.varyant === undefined ? null : Number(r.varyant),
       fikirTuru: Number(r.fikir_turu) === 1,
       secilenFikir: this.secilenFikir(r),
+      fikirler: this.isFikirleri(Number(r.id)),
       kisitlar: json<string[]>(typeof r.kisitlar === "string" ? r.kisitlar : null, []),
       kabul: json<string[]>(typeof r.kabul === "string" ? r.kabul : null, []),
       ozet: typeof r.ozet === "string" ? r.ozet : "",
@@ -985,6 +1054,33 @@ export class Merkez {
           ? null
           : { ad: String(r.kilit_ad ?? ""), zaman: Number(r.kilit_zaman) },
     };
+  }
+
+  /** İşin uygulayacağı fikirler (is_oku ve istem bunları gösterir). */
+  isFikirleri(isId: number): UygulanacakFikir[] {
+    const r = this.db
+      .prepare(
+        "SELECT o.id, o.ad, o.aciklama, o.fikir FROM is_fikir f JOIN oge o ON o.id = f.fikir_id WHERE f.is_id = ? ORDER BY o.id",
+      )
+      .all(isId) as { id: number; ad: string; aciklama: string; fikir: string | null }[];
+    return r.map((x) => {
+      const f = json<FikirAlanlari | null>(x.fikir, null);
+      const notlar = this.db
+        .prepare("SELECT metin FROM notlar WHERE oge_id = ? AND tur = 'yorum' ORDER BY id")
+        .all(x.id) as { metin: string }[];
+      return {
+        fikirId: x.id,
+        baslik: x.ad,
+        ozet: f?.ozet ?? x.aciklama.slice(0, 300),
+        kategori: f?.kategori ?? "",
+        etki: f?.etki ?? "",
+        zahmet: f?.zahmet ?? "",
+        not: notlar
+          .map((n) => n.metin)
+          .join(" · ")
+          .slice(0, 600),
+      };
+    });
   }
 
   isler(alan: AlanId, durumlar: IsKaydi["durum"][] = ["oneri", "acik"]): IsKaydi[] {
@@ -1018,8 +1114,18 @@ export class Merkez {
       kisitlar?: string[];
       kabul?: string[];
       ozet?: string;
+      /** "Onaylananları uygula": bu işin uygulayacağı onaylı fikirler. */
+      fikirler?: number[];
     } = {},
   ): IsKaydi {
+    const fikirler = [...new Set(secenek.fikirler ?? [])];
+    for (const f of fikirler) {
+      const r = this.db.prepare("SELECT alan, tur, durum FROM oge WHERE id = ?").get(f) as
+        | { alan: string; tur: string; durum: string }
+        | undefined;
+      if (!r || r.alan !== alan || r.tur !== "fikir" || r.durum !== "onaylandi")
+        throw new IsHatasi(400, `Fikir #${f} bu alanda onaylı bir fikir değil.`);
+    }
     const sira = Number(
       (
         this.db.prepare("SELECT COALESCE(MAX(sira), 0) + 1 AS s FROM isler WHERE alan = ?").get(alan) as {
@@ -1056,7 +1162,15 @@ export class Merkez {
         secenek.ozet ?? "",
         id,
       );
-    this.denetim.yaz(now, kim, "is", alan, `iş ${id} açıldı`);
+    for (const f of fikirler)
+      this.db.prepare("INSERT OR IGNORE INTO is_fikir (is_id, fikir_id) VALUES (?, ?)").run(id, f);
+    this.denetim.yaz(
+      now,
+      kim,
+      "is",
+      alan,
+      `iş ${id} açıldı${fikirler.length ? ` (${fikirler.length} fikir)` : ""}`,
+    );
     if (durum === "acik")
       this.olaylar.bilgi?.(
         `${alanTanimi(alan).ad}: yeni iş açıldı — istemi kopyala`,
@@ -1785,6 +1899,8 @@ export class Merkez {
       .prepare("SELECT fikir_turu, secilen_fikir, varyant FROM isler WHERE id = ?")
       .get(g.isId) as { fikir_turu: number; secilen_fikir: number | null; varyant: number | null };
     if (g.tur === "fikir") {
+      // Fikir turu (2–3 fikirden biri seçilir) kuralları; fikir panosu işlerinde ("30 fikir ver") sınır yok.
+      if (is.fikir_turu !== 1) return;
       if (g.ogeler.length > 3) throw new IsHatasi(400, "Fikir turunda en çok 3 kısa fikir teslim edilir.");
       if (is.secilen_fikir !== null)
         throw new IsHatasi(409, "Bu işin fikri seçildi; artık yalnız seçilen fikri üret.");
@@ -1806,7 +1922,8 @@ export class Merkez {
           .get(g.isId) as { n: number }
       ).n,
     );
-    if (yapilan >= (is.varyant ?? 1))
+    // "Onaylananları uygula" işinde her fikir ayrı teslim edilebilir.
+    if (yapilan >= Math.max(is.varyant ?? 1, this.isFikirleri(g.isId).length))
       throw new IsHatasi(
         409,
         "Bu iş için teslim zaten yapıldı. Düzeltme gönderiyorsan her öğede oncekiOge yaz; yeni bir şey üretmek için iş önerisi aç.",
@@ -1843,7 +1960,18 @@ export class Merkez {
         `Seçilen fikir: ${r.ad}.${not ? ` Değiştir: ${not}` : ""} Yalnız bunu bir kez üret.`,
         now,
       );
-      if (r.is_id !== null) {
+      // Yalnız "fikir turu" işinde (2–3 fikirden biri): seçim işe bağlanır, diğerleri arşive. Fikir panosu
+      // işlerinde ("30 fikir ver") her fikir ayrı karar alır; kardeşlerine dokunulmaz.
+      const fikirTuru =
+        r.is_id !== null &&
+        Number(
+          (
+            this.db.prepare("SELECT fikir_turu FROM isler WHERE id = ?").get(r.is_id) as
+              | { fikir_turu: number }
+              | undefined
+          )?.fikir_turu,
+        ) === 1;
+      if (r.is_id !== null && fikirTuru) {
         this.db
           .prepare("UPDATE isler SET secilen_fikir = ?, secim_notu = ? WHERE id = ?")
           .run(ogeId, not, r.is_id);
@@ -2084,6 +2212,7 @@ export class Merkez {
     // Teslim paketi (SSH) ve alanın şimdilik yapamadıkları: sahibin talimat metninden bağımsız, her zaman sonda.
     metin += `\n\n## Teslim paketi\n- ${PAKET_SATIRI}\n- ${PAKET_SINIRLARI}\n- MCP'de aynı biçim: \`paket_bicimi\` aracı; dosyalar önce \`dosya_yukle\` ile, sonra \`dosyaId\`.\n`;
     if (alan === "test") metin += `- **${TEST_SINIRI}**\n`;
+    metin += `\n${FIKIR_RAPOR_BOLUMU}`;
     return { surum: t.surum, metin: `${metin}\n${this.zevkBolumu(alan)}` };
   }
 

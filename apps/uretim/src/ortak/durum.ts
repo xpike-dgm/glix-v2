@@ -3,6 +3,7 @@
  *
  * gelen → on_kontrolde → bekliyor → onaylandi | reddedildi | duzeltme_istendi
  * onaylandi → havuzda → pakette → oyuna_eklendi → canlida
+ *   (Üretim Merkezi 2 adları: kabulde → yöneticide → ana kodda → [paket test'te] → canlıda; kabul havuzu sayfası)
  * Ön kontrolde "kaldı" alan öğe `kaldi` olur: sahibe gitmez, yapay zekâya döner.
  * Tek tık alanlarda (içerik havuzu, moderasyon) havuzdaki öğe aktarımla doğrudan `canlida` olur; geri alınınca `havuzda`.
  * Yeni sürümü gelen eski öğe `arsiv` olur (onaylanmış öğe ise onaylı kalır, yan yana gösterilir).
@@ -35,9 +36,9 @@ export const DURUM_ADI: Record<Durum, string> = {
   onaylandi: "Onaylandı",
   reddedildi: "Reddedildi",
   duzeltme_istendi: "Düzeltme istendi",
-  havuzda: "Onaylananlarda",
-  pakette: "Pakete alındı",
-  oyuna_eklendi: "Oyuna eklendi",
+  havuzda: "Kabulde",
+  pakette: "Yöneticide",
+  oyuna_eklendi: "Ana kodda",
   canlida: "Canlıda",
   arsiv: "Arşivde",
 };
