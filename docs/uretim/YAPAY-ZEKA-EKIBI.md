@@ -49,6 +49,12 @@ sahibin onayına sunar.
     yasaktır; beceri ortamda yoksa görsel teslim etmez ve bunu söyler. Önce `okunur/referans/` altındaki oyundaki
     mevcut görsellere bakar; kalite çıtası onlardır. Teslimde `uretimYontemi: "gorsel-model"` yazar ("kod" kalır).
     Ayrıntı: `SOZLESME.md` bölüm 10.
+12. **Fikirler panoya, raporlar panoya.** Fikir istenince her fikir ayrı öğe: `ozet`, `kategori`, `etki`, `zahmet`,
+    `gerekce` (`tur: "fikir"`). Sahip panoda süzer, onaylar, not yazar. "Onaylananları uygula" işinde `is_oku`
+    fikirleri verir; her teslim öğesine uyguladığın fikrin `fikirId`sini yaz. Raporlar (`tur: "rapor"`) metin değil
+    yapılandırılmış nesnedir: özet kutucukları, seriler, tablolar, bulgular; site grafikli panoda önceki raporla
+    karşılaştırarak gösterir. Kabul edilen teslim "Kabul havuzu"na düşer; sahip "Yöneticiye gönder" der. Ayrıntı:
+    `SOZLESME.md` bölüm 12.
 
 ---
 

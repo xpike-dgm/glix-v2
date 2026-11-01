@@ -19,7 +19,12 @@ export function ortakKontroller(b: KontrolBaglami, varOlanYollar: ReadonlySet<st
     oge.rapor === null &&
     !oge.degisiklikler.length &&
     !oge.kaldirilacaklar.length;
-  if (tur === "fikir") {
+  if (tur === "fikir" && oge.fikir) {
+    // Yapılandırılmış fikir (fikir panosu): tek cümle özet yeter; isteğe bağlı tek küçük önizleme görseli.
+    if (oge.satirlar.length) s.push(satir("ortak", "fikir", "kaldi", "Fikir teslimine satır eklenmez."));
+    if (oge.dosyalar.length > 1)
+      s.push(satir("ortak", "fikir", "kaldi", "Fikirde en çok bir küçük önizleme görseli olur."));
+  } else if (tur === "fikir") {
     if ([...oge.aciklama].length < 10)
       s.push(
         satir(

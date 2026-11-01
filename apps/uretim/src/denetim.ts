@@ -29,7 +29,8 @@ export type DenetimEylemi =
   | "istek_karti"
   | "kod_istegi"
   | "ayar"
-  | "istem_kopyalandi";
+  | "istem_kopyalandi"
+  | "yorum";
 
 export type DenetimDinleyici = (eylem: DenetimEylemi, hedef: string, ayrinti: string) => void;
 

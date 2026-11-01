@@ -1,6 +1,7 @@
 /** Alan sayfası (UM-U2): bekleyenler, işler, talimat, zevk profili, bağlantı (MCP/SSH), ayarlar ve istatistik. */
 import { createResource, createSignal, For, type JSX, Match, onCleanup, Show, Switch } from "solid-js";
 import { type AlanId, alanTanimi } from "../../../src/ortak/alanlar.js";
+import { FIKIR_ASAMA_ADI, type FikirKarti } from "../../../src/ortak/fikir.js";
 import type { AlanSayfasi, Gorunum, IsKaydi, TeslimTuru, ZevkOrnegi } from "../../../src/ortak/tipler.js";
 import { TESLIM_TURU_ADI } from "../../../src/ortak/tipler.js";
 import { al, dosyaUrl, gonder } from "../api.js";
@@ -1174,6 +1175,7 @@ export function Alan(p: { alan: AlanId }): JSX.Element {
           )}
         </Show>
       </header>
+      <OnayliFikirSeridi alan={p.alan} />
       <Sekmeler<Sekme>
         etiket="Alan bölümleri"
         secili={sekme()}
@@ -1224,5 +1226,77 @@ export function Alan(p: { alan: AlanId }): JSX.Element {
         </Show>
       </div>
     </div>
+  );
+}
+
+/**
+ * Alan sayfasında "Onaylanan fikirler" şeridi: onaylanmış (henüz uygulanmamış) ve yolda olan fikirler; tek dokunuşla
+ * "Uygula işi" açılır. Fikir yoksa görünmez.
+ */
+function OnayliFikirSeridi(p: { alan: AlanId }): JSX.Element {
+  const [veri, { refetch }] = createResource(
+    () => p.alan,
+    (a) => al<{ fikirler: FikirKarti[] }>(`fikirler?alan=${a}`).then((r) => r.fikirler),
+  );
+  onCleanup(olayDinle(["karar", "teslim", "is", "geri_al", "paket"], () => void refetch()));
+  const onayli = (): FikirKarti[] => (veri() ?? []).filter((f) => f.asama === "onaylandi");
+  const yolda = (): FikirKarti[] =>
+    (veri() ?? []).filter((f) => ["uygulaniyor", "teslim_edildi", "kabul_edildi"].includes(f.asama));
+  const bekleyen = (): number => (veri() ?? []).filter((f) => f.asama === "fikir").length;
+  return (
+    <Show when={onayli().length || yolda().length || bekleyen()}>
+      <section class="kart fikir-seridi" aria-label="Onaylanan fikirler">
+        <div class="fikir-seridi__bas">
+          <Simge ad="pirilti" />
+          <strong>Onaylanan fikirler</strong>
+          <span class="cok-soluk kucuk">
+            {onayli().length} uygulanmayı bekliyor · {yolda().length} yolda
+            <Show when={bekleyen()}> · {bekleyen()} karar bekliyor</Show>
+          </span>
+          <span class="esnek" />
+          <a
+            class="dg dg--hayalet dg--k"
+            href={`/fikirler?alan=${p.alan}`}
+            onClick={(e) => {
+              e.preventDefault();
+              git(`/fikirler?alan=${p.alan}`);
+            }}
+          >
+            Panoyu aç
+          </a>
+          <Show when={onayli().length}>
+            <button
+              type="button"
+              class="dg dg--birincil dg--k"
+              onClick={() =>
+                git(
+                  `/iste?alan=${p.alan}&fikirler=${onayli()
+                    .map((f) => f.id)
+                    .join(",")}`,
+                )
+              }
+            >
+              <Simge ad="simsek" /> Uygula işi ({onayli().length})
+            </button>
+          </Show>
+        </div>
+        <Show when={onayli().length || yolda().length}>
+          <ul class="fikir-seridi__liste">
+            <For each={[...onayli(), ...yolda()].slice(0, 12)}>
+              {(f) => (
+                <li class="fikir-seridi__oge">
+                  <span class="tasma">{f.baslik}</span>
+                  <span
+                    class={`etiket ${f.asama === "onaylandi" ? "etiket--vurgu" : f.asama === "kabul_edildi" ? "etiket--gecti" : "etiket--uyari"}`}
+                  >
+                    {FIKIR_ASAMA_ADI[f.asama]}
+                  </span>
+                </li>
+              )}
+            </For>
+          </ul>
+        </Show>
+      </section>
+    </Show>
   );
 }

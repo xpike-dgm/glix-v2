@@ -6,6 +6,7 @@
  */
 import { type AlanId, alanTanimi } from "./alanlar.js";
 import { gorselAlaniMi } from "./gorselKurali.js";
+import { ORNEK_RAPOR } from "./rapor.js";
 
 export const TESLIM_DOSYASI = "teslim.json";
 
@@ -22,6 +23,20 @@ export const PAKET_SATIRI =
 export const TEST_SINIRI =
   "Test koşusu başlatma ve zamanlayıcı (ör. 12 saatte bir koşu) henüz yok; yalnız senaryo/rapor teslim edersin.";
 
+/** Talimatın sonundaki sabit bölüm: fikir ve rapor teslim biçimi (sahibin metninden bağımsız, kodla eklenir). */
+export const FIKIR_RAPOR_BOLUMU = `## Fikir ve rapor biçimi
+- **Fikir** (\`tur: "fikir"\`): her öğe bir fikir; \`ad\` (başlık), \`ozet\` (tek cümle), \`kategori\`, \`etki\`
+  (dusuk/orta/yuksek), \`zahmet\` (kucuk/orta/buyuk), \`gerekce\`; isteğe bağlı küçük önizleme görseli. Sahip
+  fikirleri panoda süzer, onaylar ya da not yazar.
+- **Onaylananları uygula**: \`is_oku\` işin \`fikirler\` listesini (fikirId, baslik, ozet, not) verir; teslimde her
+  öğede uyguladığın fikrin \`fikirId\`sini yaz. Teslim kabul edilince fikir kendiliğinden ilerler.
+- **Rapor** (\`tur: "rapor"\`): öğede \`rapor\` nesnesi: \`ozet\` kutucukları ({ ad, deger, birim, onceki, iyi }),
+  \`seriler\` ({ ad, tur: cizgi|cubuk, etiketler, degerler, esik }), \`tablolar\` ({ ad, sutunlar, satirlar }),
+  \`bulgular\` ({ baslik, onem: kritik|yuksek|orta|dusuk, oyun, adimlar, kanit, oneri }). Sahip grafikli panoda
+  görür, önceki raporla karşılaştırır, bulgudan iş açar.
+- Örnekler: \`paket_bicimi\` (SSH: \`uretim ornek-paket\`) → \`ornekler.fikir\`, \`ornekler.rapor\`.
+`;
+
 export interface PaketBicimi {
   alan: AlanId;
   dosyaAdi: typeof TESLIM_DOSYASI;
@@ -29,10 +44,15 @@ export interface PaketBicimi {
   teslimJson: Record<string, unknown>;
   alanlar: string[];
   adimlar: string[];
+  /** Fikir ve rapor teslimi örnekleri (her alanda aynı biçim). */
+  ornekler: { fikir: Record<string, unknown>; rapor: Record<string, unknown> };
 }
 
 const ORTAK_ALANLAR = [
-  'tur: "yeni" | "duzenleme" | "kaldirma-onerisi" | "rapor" | "fikir" (zorunlu).',
+  'tur: "yeni" | "duzenleme" | "kaldirma-onerisi" | "rapor" | "fikir" (zorunlu). Fikir ve rapor örnekleri: ornekler.',
+  "Fikir öğesi: ad, ozet, kategori, etki (dusuk/orta/yuksek), zahmet (kucuk/orta/buyuk), gerekce.",
+  "Rapor öğesi: rapor { ozet, seriler, tablolar, bulgular } (ornekler.rapor).",
+  "Onaylananları uygula işinde her öğeye fikirId (is-oku → fikirler).",
   "isId: bağlı iş kimliği (isleri-listele); işsiz teslimde yazma.",
   "arac / model: kullandığın araç ve model (isteğe bağlı, ör. Codex).",
   "ogeler: 1–50 öğe. Her öğede ad (zorunlu, ≤ 60), aciklama (≤ 500), gerekce (≤ 1000).",
@@ -177,6 +197,31 @@ export function paketBicimi(alan: AlanId): PaketBicimi {
     dosyaAdi: TESLIM_DOSYASI,
     teslimJson: ornek(alan),
     alanlar: [...ORTAK_ALANLAR, PAKET_SINIRLARI, ...ozel],
+    ornekler: {
+      fikir: {
+        tur: "fikir",
+        isId: 12,
+        ogeler: [
+          {
+            ad: "Okul koleksiyonu",
+            ozet: "Teneffüs temalı 4 parçalık kozmetik seti.",
+            kategori: "Koleksiyon",
+            etki: "yuksek",
+            zahmet: "orta",
+            gerekce: "Eylül döneminde okul teması en çok aranan tema.",
+          },
+          {
+            ad: "Rozet sesi",
+            ozet: "Rozet kazanınca kısa bir zil.",
+            kategori: "Ses",
+            etki: "orta",
+            zahmet: "kucuk",
+            gerekce: "Kazanım anı sessiz kalıyor.",
+          },
+        ],
+      },
+      rapor: { tur: "rapor", ogeler: [{ ad: "Gece testi — 1 Kasım", rapor: ORNEK_RAPOR }] },
+    },
     adimlar: [
       "SFTP ile gelen/<paket>/ klasörü aç (paket adı: küçük harf, rakam, . _ -).",
       "Dosyalarını ve kökte teslim.json'u koy (dosya adları teslim.json'daki `dosya` ile aynı).",

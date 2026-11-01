@@ -133,6 +133,16 @@ const SEMA: readonly string[] = [
   CREATE TABLE giris_istegi (id INTEGER PRIMARY KEY, eposta TEXT NOT NULL, zaman INTEGER NOT NULL);
   CREATE INDEX giris_istegi_eposta ON giris_istegi(eposta, zaman);
   `,
+  // Üretim Merkezi 2: yapılandırılmış fikir, fikri uygulayan öğe ve "onaylananları uygula" işi.
+  `
+  ALTER TABLE oge ADD COLUMN fikir TEXT;
+  ALTER TABLE oge ADD COLUMN fikir_id INTEGER;
+  CREATE INDEX oge_fikir_id ON oge(fikir_id);
+  CREATE TABLE is_fikir (
+    is_id INTEGER NOT NULL, fikir_id INTEGER NOT NULL, PRIMARY KEY (is_id, fikir_id)
+  );
+  CREATE INDEX is_fikir_fikir ON is_fikir(fikir_id);
+  `,
 ];
 
 export type Db = DatabaseSync;

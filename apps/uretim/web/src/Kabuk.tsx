@@ -96,11 +96,16 @@ const GEZINME: { yol: string; ad: string; simge: SimgeAdi }[] = [
   { yol: "/", ad: "Pano", simge: "pano" },
   { yol: "/incele", ad: "İnceleme", simge: "incele" },
   { yol: "/iste", ad: "İş iste", simge: "arti" },
+  { yol: "/fikirler", ad: "Fikirler", simge: "pirilti" },
+  { yol: "/kabul", ad: "Kabul havuzu", simge: "paket" },
   { yol: "/yukle", ad: "Yükle", simge: "yukle" },
   { yol: "/arsiv", ad: "Arşiv", simge: "arsiv" },
   { yol: "/raporlar", ad: "Raporlar", simge: "rapor" },
   { yol: "/ayarlar", ad: "Ayarlar", simge: "ayar" },
 ];
+
+/** Telefonda alt çubukta görünenler; diğerleri üst çubuktaki menüde. */
+const ALT_GEZINME = ["/", "/incele", "/iste", "/fikirler", "/kabul"];
 
 const etkin = (y: string): boolean => (y === "/" ? yolAdi() === "/" : yolAdi().startsWith(y));
 export const yazmaAlaniMi = (e: EventTarget | null): boolean =>
@@ -108,6 +113,7 @@ export const yazmaAlaniMi = (e: EventTarget | null): boolean =>
 export const macMi = (): boolean => /Mac|iPhone|iPad/.test(navigator.platform);
 
 export function Kabuk(p: { children: JSX.Element; baslik?: string }): JSX.Element {
+  const [menuAcik, setMenuAcik] = createSignal(false);
   const tus = (e: KeyboardEvent): void => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
       e.preventDefault();
@@ -220,12 +226,20 @@ export function Kabuk(p: { children: JSX.Element; baslik?: string }): JSX.Elemen
           <button type="button" class="dg-simge" onClick={() => setPaletAcik(true)} aria-label="Ara">
             <Simge ad="ara" />
           </button>
+          <button
+            type="button"
+            class="dg-simge"
+            onClick={() => setMenuAcik(true)}
+            aria-label="Diğer sayfalar"
+          >
+            <Simge ad="menu" />
+          </button>
         </header>
         <main class="icerik" id="icerik">
           {p.children}
         </main>
         <nav class="alt-gezinme" aria-label="Alt gezinme">
-          <For each={GEZINME.filter((g) => g.yol !== "/raporlar" && g.yol !== "/yukle")}>
+          <For each={GEZINME.filter((g) => ALT_GEZINME.includes(g.yol))}>
             {(g) => (
               <a
                 href={g.yol}
@@ -245,12 +259,35 @@ export function Kabuk(p: { children: JSX.Element; baslik?: string }): JSX.Elemen
                     </span>
                   </Show>
                 </span>
-                <span>{g.ad}</span>
+                <span>{g.yol === "/kabul" ? "Kabul" : g.ad}</span>
               </a>
             )}
           </For>
         </nav>
       </div>
+      <Show when={menuAcik()}>
+        <AltSayfa baslik="Diğer sayfalar" kapat={() => setMenuAcik(false)}>
+          <nav class="menu-listesi" aria-label="Diğer sayfalar">
+            <For each={GEZINME.filter((g) => !ALT_GEZINME.includes(g.yol))}>
+              {(g) => (
+                <a
+                  href={g.yol}
+                  class="kenar__baglanti"
+                  aria-current={etkin(g.yol) ? "page" : undefined}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setMenuAcik(false);
+                    git(g.yol);
+                  }}
+                >
+                  <Simge ad={g.simge} boyut={18} />
+                  <span class="esnek">{g.ad}</span>
+                </a>
+              )}
+            </For>
+          </nav>
+        </AltSayfa>
+      </Show>
       <Show when={paletAcik()}>
         <KomutPaleti />
       </Show>

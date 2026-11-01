@@ -550,7 +550,14 @@ export function Incele(): JSX.Element {
       }
       void panoYenile();
     }, 200);
-    const ad = karar === "onay" ? "Onaylandı" : karar === "ret" ? "Reddedildi" : "Düzeltme istendi";
+    const ad =
+      karar === "onay"
+        ? o.gorunum === "fikir"
+          ? "Onaylandı"
+          : "Kabul edildi"
+        : karar === "ret"
+          ? "Reddedildi"
+          : "Düzeltme istendi";
     tost(`${ad}: ${o.ad}`, {
       eylem: {
         ad: "Geri al",
@@ -600,7 +607,8 @@ export function Incele(): JSX.Element {
     }
     if (o.durum !== "bekliyor") return void tost("Bu teslim için karar verilmiş.");
     if (karar !== "onay" && !hazir && metin.trim().length < 2) return void setKararSayfa(karar);
-    if (karar === "onay" && o.gorunum === "fikir") return void setFikirSayfa(true);
+    // Fikir turu (2–3 fikirden biri seçilir) seçim sayfası; fikir panosu fikirleri (yapılandırılmış) doğrudan onaylanır.
+    if (karar === "onay" && o.gorunum === "fikir" && !o.fikir) return void setFikirSayfa(true);
     if (karar === "onay" && o.gorunum === "liste" && secili().size === 0)
       return void tost("Onaylanacak satır seçmedin.", { hata: true });
     setMesgul(true);
@@ -812,7 +820,9 @@ export function Incele(): JSX.Element {
                           boyut={28}
                         />
                         {ipucu().karar === "onay"
-                          ? "Onayla"
+                          ? ayrinti()?.oge.gorunum === "fikir"
+                            ? "Onayla"
+                            : "Kabul et"
                           : ipucu().karar === "ret"
                             ? "Reddet"
                             : "Düzeltme"}
@@ -984,11 +994,13 @@ export function Incele(): JSX.Element {
                     <Simge ad="onay" />
                     <span>
                       {ayrinti()?.oge.gorunum === "fikir"
-                        ? "Bu fikri seç"
+                        ? ayrinti()?.oge.fikir
+                          ? "Onayla"
+                          : "Bu fikri seç"
                         : ayrinti()?.oge.gorunum === "liste" &&
                             secili().size < (ayrinti()?.oge.satirlar.length ?? 0)
-                          ? `${secili().size} satırı onayla`
-                          : "Onayla"}
+                          ? `${secili().size} satırı kabul et`
+                          : "Kabul et"}
                     </span>
                     <span class="kisayol">O</span>
                   </button>

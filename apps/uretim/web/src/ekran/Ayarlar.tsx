@@ -180,14 +180,17 @@ function Paketler(): JSX.Element {
     }
   };
   const DURUM: Record<PaketKaydi["durum"], string> = {
-    hazir: "Yöneticiye hazır",
-    oyuna_eklendi: "Oyuna eklendi",
+    hazir: "Yöneticide",
+    oyuna_eklendi: "Ana kodda",
+    testte: "Test'te",
     canlida: "Canlıda",
   };
   return (
     <div class="yigin">
       <div class="satir satir--ara">
-        <p class="soluk">Onaylananlar pakete alınır; yönetici paketi koda ekleyip test eder.</p>
+        <p class="soluk">
+          Kabul edilenler pakete alınır; yönetici paketi test edip ana koda ekler. Ayrıntı: Kabul havuzu.
+        </p>
         <button type="button" class="dg dg--birincil" onClick={() => void hazirla()}>
           <Simge ad="paket" /> Paket hazırla
         </button>

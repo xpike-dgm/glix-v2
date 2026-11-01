@@ -329,7 +329,17 @@ export function Pano(): JSX.Element {
                     <Simge ad="paket" />
                   </div>
                   <div class="esnek">
-                    <h2>Onaylananlar havuzu: {v().havuz.toplam} öğe</h2>
+                    <h2>
+                      <a
+                        href="/kabul"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          git("/kabul");
+                        }}
+                      >
+                        Kabul havuzu: {v().havuz.toplam} öğe
+                      </a>
+                    </h2>
                     <p class="soluk kucuk">
                       <Show when={v().havuz.paketlenecek > 0}>
                         {v().havuz.paketlenecek} öğe yöneticiye gönderilmeye hazır.{" "}

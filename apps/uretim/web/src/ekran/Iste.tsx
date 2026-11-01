@@ -2,8 +2,10 @@
  * İsteğini yaz (UM-R1, R2): düz cümle → yapılandırılmış iş taslağı (sahip düzeltir) → iş açılır → istem tek dokunuşla
  * kopyalanır. İstem yalnız iş numarası ve kısa özet taşır; anahtar ya da sır içermez.
  */
+
 import { createResource, createSignal, For, type JSX, onCleanup, Show } from "solid-js";
 import { ALANLAR, type AlanId, alanTanimi } from "../../../src/ortak/alanlar.js";
+import { ETKI_ADI, type FikirKarti } from "../../../src/ortak/fikir.js";
 import type { AlanSayfasi, IsKaydi } from "../../../src/ortak/tipler.js";
 import { al, gonder } from "../api.js";
 import { AlanIsareti, TarihSecici } from "../bilesenler.js";
@@ -203,8 +205,37 @@ export function Iste(): JSX.Element {
   const ilkAlan = ALANLAR.find((a) => a.id === sorgu().get("alan"))?.id ?? "magaza";
   const [adim, setAdim] = createSignal<1 | 2 | 3>(1);
   const [alan, setAlan] = createSignal<AlanId>(ilkAlan);
-  const [metin, setMetin] = createSignal("");
+  const [metin, setMetin] = createSignal(sorgu().get("metin") ?? "");
   const [fikir, setFikir] = createSignal(false);
+  // "Onaylanan fikirleri uygula": fikir panosundan ?fikirler=1,2 ile gelinebilir.
+  const ilkFikirler = (sorgu().get("fikirler") ?? "")
+    .split(",")
+    .map(Number)
+    .filter((x) => Number.isInteger(x) && x > 0);
+  const [uygula, setUygula] = createSignal(ilkFikirler.length > 0);
+  const [seciliFikirler, setSeciliFikirler] = createSignal<ReadonlySet<number>>(new Set(ilkFikirler));
+  const [onayliFikirler, { refetch: fikirYenile }] = createResource(
+    () => (uygula() ? alan() : null),
+    (a) =>
+      al<{ fikirler: FikirKarti[] }>(`fikirler?alan=${a}`).then((r) =>
+        r.fikirler.filter((f) => f.asama === "onaylandi"),
+      ),
+  );
+  onCleanup(olayDinle(["karar", "is"], () => void fikirYenile()));
+  const fikirIdler = (): number[] =>
+    uygula() ? (onayliFikirler() ?? []).filter((f) => seciliFikirler().has(f.id)).map((f) => f.id) : [];
+  const fikirSecDegistir = (id: number): void => {
+    const s = new Set(seciliFikirler());
+    if (s.has(id)) s.delete(id);
+    else s.add(id);
+    setSeciliFikirler(s);
+  };
+  const istekMetni = (): string =>
+    metin().trim().length >= 5
+      ? metin()
+      : fikirIdler().length
+        ? `Onaylanan ${fikirIdler().length} fikri uygula.`
+        : metin();
   const [sonTarih, setSonTarih] = createSignal("");
   const [ayar, { refetch: ayarYenile }] = createResource(alan, (a) => al<AlanSayfasi>(`alan/${a}`));
   onCleanup(
@@ -224,11 +255,12 @@ export function Iste(): JSX.Element {
     setBekle(true);
     try {
       const r = await gonder<{ taslak: Taslak; kaynak: "model" | "kalip" }>("istek-yaz", {
-        metin: metin(),
+        metin: istekMetni(),
         alan: alan(),
         baglanti: baglanti(),
         fikirTuru: fikir(),
         sonTarih: sonTarih() || null,
+        ...(fikirIdler().length ? { fikirler: fikirIdler() } : {}),
       });
       setTaslak(r.taslak);
       setKaynak(r.kaynak);
@@ -249,6 +281,7 @@ export function Iste(): JSX.Element {
         sonTarih: sonTarih() || null,
         fikirTuru: fikir(),
         ornek: "",
+        ...(fikirIdler().length ? { fikirler: fikirIdler() } : {}),
       });
       setIs(r.is);
       const i = await al<{ uygulama: string }>(`alan/${alan()}/istem?is=${r.is.id}`);
@@ -317,6 +350,7 @@ export function Iste(): JSX.Element {
                     class="cip"
                     aria-pressed={alan() === a.id}
                     onClick={() => {
+                      if (a.id !== alan()) setSeciliFikirler(new Set<number>());
                       setAlan(a.id);
                       setBaglantiSecimi(null);
                     }}
@@ -372,6 +406,94 @@ export function Iste(): JSX.Element {
           </div>
           <label class="anahtarli-satir">
             <span class="esnek">
+              <strong>Onaylanan fikirleri uygula</strong>
+              <span class="cok-soluk kucuk">
+                Fikir panosunda onayladığın fikirlerden seç; yapay zekâ işte bunları görür ve her teslimde
+                hangi fikri uyguladığını yazar. Kabul edince fikir kendiliğinden ilerler.
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              class="anahtar-dugme"
+              checked={uygula()}
+              onChange={(e) => {
+                setUygula(e.currentTarget.checked);
+                if (e.currentTarget.checked) setFikir(false);
+              }}
+            />
+          </label>
+          <Show when={uygula()}>
+            <div class="uygula-fikirler">
+              <Show
+                when={(onayliFikirler() ?? []).length}
+                fallback={
+                  <p class="kucuk soluk">
+                    {onayliFikirler.loading
+                      ? "Fikirler yükleniyor…"
+                      : "Bu alanda onaylanmış, uygulanmamış fikir yok. "}
+                    <Show when={!onayliFikirler.loading}>
+                      <a
+                        href={`/fikirler?alan=${alan()}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          git(`/fikirler?alan=${alan()}`);
+                        }}
+                      >
+                        Fikir panosuna git
+                      </a>
+                    </Show>
+                  </p>
+                }
+              >
+                <div class="satir satir--ara">
+                  <span class="kucuk soluk">
+                    {fikirIdler().length} / {(onayliFikirler() ?? []).length} fikir seçili
+                  </span>
+                  <button
+                    type="button"
+                    class="baglanti-dugme"
+                    onClick={() =>
+                      setSeciliFikirler(
+                        fikirIdler().length === (onayliFikirler() ?? []).length
+                          ? new Set<number>()
+                          : new Set((onayliFikirler() ?? []).map((f) => f.id)),
+                      )
+                    }
+                  >
+                    {fikirIdler().length === (onayliFikirler() ?? []).length ? "Hiçbiri" : "Hepsi"}
+                  </button>
+                </div>
+                <ul class="uygula-liste">
+                  <For each={onayliFikirler()}>
+                    {(f) => (
+                      <li>
+                        <label class="uygula-oge">
+                          <input
+                            type="checkbox"
+                            class="onay-kutusu"
+                            checked={seciliFikirler().has(f.id)}
+                            onChange={() => fikirSecDegistir(f.id)}
+                          />
+                          <span class="esnek">
+                            <strong>{f.baslik}</strong>
+                            <span class="kucuk soluk">{f.ozet ?? f.aciklama}</span>
+                            <Show when={f.notlar[0]}>
+                              <span class="kucuk">Notun: {f.notlar[0]}</span>
+                            </Show>
+                          </span>
+                          <Show when={f.etki}>
+                            {(e) => <span class={`olcek olcek--etki-${e()}`}>{ETKI_ADI[e()]}</span>}
+                          </Show>
+                        </label>
+                      </li>
+                    )}
+                  </For>
+                </ul>
+              </Show>
+            </div>
+          </Show>
+          <label class="anahtarli-satir">
+            <span class="esnek">
               <strong>Önce fikir sor</strong>
               <span class="cok-soluk kucuk">
                 Yapay zekâ önce yalnız metinle 2–3 kısa fikir getirir; sen seçince bir kez üretir. Görsel ve
@@ -389,7 +511,7 @@ export function Iste(): JSX.Element {
             <button
               type="button"
               class="dg dg--birincil dg--b dg--tam"
-              disabled={metin().trim().length < 5 || bekle()}
+              disabled={istekMetni().trim().length < 5 || bekle()}
               onClick={() => void cevir()}
             >
               {bekle() ? "Hazırlanıyor…" : "İşe çevir"}
