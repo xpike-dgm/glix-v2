@@ -1,4 +1,3 @@
-import { randomInt } from "node:crypto";
 import {
   type AnyGame,
   type CardRecorder,
@@ -536,7 +535,8 @@ function notifyTurns(rt: Runtime, room: Room, match: Match): void {
 
 function startPlaying(rt: Runtime, room: Room, match: Match): void {
   const now = rt.clock.now();
-  const seed = randomInt(0, 2 ** 32);
+  // Oyun tohumu çalışma zamanının rastgele kaynağından (üretimde crypto; testlerde sabitlenebilir, kart tohumu gibi).
+  const seed = rt.randomInt(2 ** 32);
   const game = currentGame(match);
   match.gameStartedAt = now;
   match.rng = createRng(seed);

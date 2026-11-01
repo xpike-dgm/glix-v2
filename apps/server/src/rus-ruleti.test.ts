@@ -1,8 +1,18 @@
-import type { RusRuletiPublicView, RusRuletiView } from "@glix/engine";
-import { describe, expect, it } from "vitest";
+import { createRng, type Rng, type RusRuletiPublicView, type RusRuletiView } from "@glix/engine";
+import { beforeEach, describe, expect, it } from "vitest";
 import { type Client, k, setupRoom, sleep, startPlaying, sync, until, useServer } from "./testkit.js";
 
-useServer();
+/**
+ * Oyun tohumu sabit (`rt.randomInt` üzerinden; üretimde crypto). Tamburun hangi atışta patlayacağı tohumdan gelir:
+ * tohum rastgeleyken "geri ateş" testi, ilk atış patladığında (~%16; 32 tohumdan 5'i) geri ateş durumunu hiç görmeden
+ * son söze geçip `sawBan` false ile düşüyordu. Bu tohumda ilk atış patlamaz; her test aynı tohum dizisiyle başlar.
+ */
+const SEED = 1;
+let seeded: Rng = createRng(SEED);
+beforeEach(() => {
+  seeded = createRng(SEED);
+});
+useServer({ randomInt: (max) => seeded.int(max) });
 
 let seq = 6000;
 async function send(c: Client, payload: unknown): Promise<{ ok: boolean; reason?: string }> {
