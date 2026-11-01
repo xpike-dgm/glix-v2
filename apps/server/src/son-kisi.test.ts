@@ -1,8 +1,18 @@
-import type { SonKisiPublicView, SonKisiView } from "@glix/engine";
-import { describe, expect, it } from "vitest";
+import { createRng, type Rng, type SonKisiPublicView, type SonKisiView } from "@glix/engine";
+import { beforeEach, describe, expect, it } from "vitest";
 import { type Client, k, setupRoom, sleep, startPlaying, sync, until, useServer } from "./testkit.js";
 
-useServer();
+/**
+ * Oyun tohumu sabit (`rt.randomInt` üzerinden; üretimde crypto). Gizli bitiş anı tohumdan gelir; rastgele tohumda
+ * bitiş 20 sn sınırına çok yakın düştüğünde "10-20 sn içinde biter" testi ara sıra düşüyordu. Her test aynı tohum
+ * dizisiyle başlar (rus-ruleti.test.ts ile aynı yöntem).
+ */
+const SEED = 1;
+let seeded: Rng = createRng(SEED);
+beforeEach(() => {
+  seeded = createRng(SEED);
+});
+useServer({ randomInt: (max) => seeded.int(max) });
 
 let seq = 3000;
 async function send(c: Client, payload: unknown): Promise<{ ok: boolean; reason?: string }> {
