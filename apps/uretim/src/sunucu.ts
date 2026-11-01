@@ -160,7 +160,7 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
     const yol = (req.url ?? "/").split("?")[0] ?? "/";
     const is = async (): Promise<void> => {
       if (yol === "/mcp")
-        return mcpIstek(req, res, { merkez, anahtarlar, publicUrl: config.publicUrl, surum, now });
+        return mcpIstek(req, res, { merkez, anahtarlar, ssh, publicUrl: config.publicUrl, surum, now });
       if (yol === "/saglik") return gonder(res, 200, { ok: true, surum });
       if (yol.startsWith("/api/"))
         return apiIstek(req, res, {

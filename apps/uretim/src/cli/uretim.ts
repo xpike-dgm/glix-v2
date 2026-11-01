@@ -156,57 +156,6 @@ function jsonGirdi(o: CliOrtami): Record<string, unknown> {
   }
 }
 
-/** `gelen/<paket>/` → dosyaları yükle, teslim.json'daki `dosya` adlarını dosyaId'ye çevir. */
-async function paketHazirla(o: CliOrtami, paket: string): Promise<Record<string, unknown>> {
-  const kok = gelenYolu(o.gelen, paket, "paket");
-  const tj = join(kok, "teslim.json");
-  if (!existsSync(tj)) {
-    let baska = "";
-    try {
-      baska = readdirSync(kok).find((x) => x.endsWith(".json") && DOSYA.test(x)) ?? "";
-    } catch {
-      baska = "";
-    }
-    throw new CliHatasi(
-      `Pakette teslim.json yok${baska ? ` (${baska} değil)` : ""}. Biçim için: uretim ornek-paket`,
-    );
-  }
-  gelenYolu(o.gelen, `${paket}/teslim.json`, "dosya");
-  let teslim: unknown;
-  try {
-    teslim = JSON.parse(readFileSync(tj, "utf8"));
-  } catch {
-    throw new CliHatasi("teslim.json okunamadı.");
-  }
-  if (typeof teslim !== "object" || teslim === null || Array.isArray(teslim))
-    throw new CliHatasi("teslim.json nesne olmalı.");
-  const t = teslim as Record<string, unknown>;
-  const yuklenen = new Map<string, string>();
-  for (const oge of Array.isArray(t.ogeler) ? t.ogeler : []) {
-    if (typeof oge !== "object" || oge === null || !Array.isArray((oge as { dosyalar?: unknown }).dosyalar))
-      continue;
-    const dl = (oge as { dosyalar: unknown[] }).dosyalar;
-    for (let i = 0; i < dl.length; i++) {
-      const d = dl[i];
-      if (typeof d !== "object" || d === null || typeof (d as { dosya?: unknown }).dosya !== "string")
-        continue;
-      const ad = (d as { dosya: string }).dosya;
-      let id = yuklenen.get(ad);
-      if (!id) {
-        const yol = gelenYolu(o.gelen, `${paket}/${ad}`, "dosya");
-        const r = await arac(o, "dosya_yukle", { ad, icerik_base64: readFileSync(yol).toString("base64") });
-        const dosyaId = (r as { dosyaId?: unknown }).dosyaId;
-        if (typeof dosyaId !== "string") throw new CliHatasi("Dosya yüklenemedi.");
-        id = dosyaId;
-        yuklenen.set(ad, id);
-      }
-      const { dosya: _x, ...kalan } = d as Record<string, unknown>;
-      dl[i] = { ...kalan, dosyaId: id };
-    }
-  }
-  return t;
-}
-
 export async function calistirKomut(o: CliOrtami, ham: string): Promise<unknown> {
   const { komut, args } = komutAyristir(ham);
   const ad = ALT_KOMUTLAR[komut] ?? "";
@@ -242,20 +191,24 @@ export async function calistirKomut(o: CliOrtami, ham: string): Promise<unknown>
     case "on-kontrol":
     case "teslim-et": {
       const paket = args[0];
-      const girdi = paket ? await paketHazirla(o, paket) : jsonGirdi(o);
       // `teslim-et <paket> gorsel-model`: görsellerin nasıl üretildiği (teslim.json'daki "uretimYontemi" yerine).
       const yontem = args[1];
-      if (yontem !== undefined) {
-        if (yontem !== "gorsel-model" && yontem !== "kod")
-          throw new CliHatasi(
-            'Üretim yöntemi "gorsel-model" ya da "kod" olmalı: teslim-et <paket> gorsel-model',
-          );
-        girdi.uretimYontemi = yontem;
+      if (yontem !== undefined && yontem !== "gorsel-model" && yontem !== "kod")
+        throw new CliHatasi(
+          'Üretim yöntemi "gorsel-model" ya da "kod" olmalı: teslim-et <paket> gorsel-model',
+        );
+      if (paket) {
+        // Tek istek: paketi site gelen/ klasöründen kendisi okur (dosya sayısı istek sınırına takılmaz).
+        gelenYolu(o.gelen, paket, "paket");
+        return arac(o, "ssh_paket", {
+          paket,
+          islem: komut === "teslim-et" ? "teslim" : "on_kontrol",
+          ...(yontem ? { uretimYontemi: yontem } : {}),
+        });
       }
-      const r = await arac(o, ad, girdi);
-      if (komut === "teslim-et" && paket)
-        rmSync(gelenYolu(o.gelen, paket, "paket"), { recursive: true, force: true });
-      return r;
+      const girdi = jsonGirdi(o);
+      if (yontem) girdi.uretimYontemi = yontem;
+      return arac(o, ad, girdi);
     }
     default:
       return arac(o, ad, jsonGirdi(o));

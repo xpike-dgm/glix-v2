@@ -21,12 +21,13 @@ import { cryptTuzu, Kasa, parolaUret, sha512Crypt } from "./gizli.js";
 import { kayit } from "./http.js";
 import { IsHatasi, type Merkez } from "./merkez.js";
 import { ALAN_IDLERI, type AlanId, alanTanimi } from "./ortak/alanlar.js";
+import { EN_COK_PAKET_DOSYASI, EN_COK_PAKET_MB } from "./ortak/paketBicimi.js";
 import { teslimAyristir } from "./teslimGirdisi.js";
 
 export const PAKET_ADI = /^[a-z0-9][a-z0-9._-]{0,80}$/;
 const DOSYA_ADI = /^[a-z0-9][a-z0-9._-]{0,119}$/;
-const EN_COK_PAKET_DOSYASI = 41;
-const EN_COK_PAKET_BOYUTU = 200 * 1024 * 1024;
+/** Paket sınırları (ortak/paketBicimi.ts; talimat ve ornek-paket aynı sayıları yazar). */
+const EN_COK_PAKET_BOYUTU = EN_COK_PAKET_MB * 1024 * 1024;
 const ANAHTAR_TURLERI = [
   "ssh-ed25519",
   "ecdsa-sha2-nistp256",
@@ -358,15 +359,59 @@ export class SshKanal {
     return n;
   }
 
-  /** Paket klasörünü okur: yalnız düz dosyalar, bağlantı yok, alt klasör yok, boyut sınırlı. */
-  async paketIsle(alan: AlanId, yol: string, now: number): Promise<unknown> {
+  /**
+   * SSH komut aracının tek isteği (`ssh_paket`): `gelen/<paket>/` klasörünü site kendisi okur; dosyalar tek tek
+   * yüklenmez (60 istek/dk sınırına takılmaz). Paket önce yapay zekânın giremediği klasöre taşınır (yarış ve bağ
+   * yok), işlenir; ön kontrolde yerine geri konur, teslimde silinir. Alan her zaman anahtardan gelir.
+   */
+  async sshPaket(
+    alan: AlanId,
+    paket: string,
+    islem: "on_kontrol" | "teslim",
+    uretimYontemi: unknown,
+    anahtar: { id: number; ad: string },
+    now: number,
+  ): Promise<unknown> {
     const kok = this.alanKoku(alan);
-    if (!kok || !resolve(yol).startsWith(join(kok, "okunur", ISLENIYOR) + sep))
-      throw new IsHatasi(400, "Paket yolu geçersiz.");
-    const kst = await lstat(yol);
-    if (!kst.isDirectory()) throw new IsHatasi(400, "Paket yolu geçersiz.");
+    if (!kok) throw new IsHatasi(503, "SSH kanalı bu sunucuda açık değil.");
+    if (!PAKET_ADI.test(paket)) throw new IsHatasi(400, "Paket adı geçersiz.");
+    const yol = join(kok, "gelen", paket);
+    const st = await lstat(yol).catch(() => null);
+    if (!st) throw new IsHatasi(404, `Paket bulunamadı: ${paket}.`);
+    if (st.isSymbolicLink() || !st.isDirectory())
+      throw new IsHatasi(400, "Paket düz bir klasör olmalı (bağlantı kabul edilmez).");
+    const isleniyor = join(kok, "okunur", ISLENIYOR);
+    await mkdir(isleniyor, { recursive: true, mode: 0o700 });
+    await chmod(isleniyor, 0o700);
+    const ara = join(isleniyor, `${paket}.${randomBytes(6).toString("hex")}`);
+    await rename(yol, ara);
+    try {
+      const st2 = await lstat(ara);
+      if (st2.isSymbolicLink() || !st2.isDirectory())
+        throw new IsHatasi(400, "Paket düz bir klasör olmalı (bağlantı kabul edilmez).");
+      const icerik = await this.paketOku(ara);
+      if (uretimYontemi !== undefined) icerik.teslimJson.uretimYontemi = uretimYontemi;
+      return await this.paketCalistir(alan, icerik, islem === "on_kontrol", anahtar, now);
+    } finally {
+      if (islem === "teslim") await rm(ara, { recursive: true, force: true });
+      else
+        await rename(ara, yol).catch(async () => {
+          // Yapay zekâ aynı adla yeni klasör açtıysa eskisi yan ada konur.
+          await rename(ara, `${yol}.kontrol-${randomBytes(3).toString("hex")}`).catch(() =>
+            rm(ara, { recursive: true, force: true }),
+          );
+        });
+    }
+  }
+
+  /** Paket klasörünü okur: yalnız düz dosyalar, bağlantı yok, alt klasör yok, sayı ve boyut sınırlı. */
+  private async paketOku(
+    yol: string,
+  ): Promise<{ teslimJson: Record<string, unknown>; dosyalar: Map<string, Buffer> }> {
     const adlar = await readdir(yol);
-    if (adlar.length > EN_COK_PAKET_DOSYASI + 2) throw new IsHatasi(400, "Pakette çok fazla dosya var.");
+    const sayi = adlar.filter((x) => x !== "TAMAM" && x !== "teslim.json").length;
+    if (sayi > EN_COK_PAKET_DOSYASI)
+      throw new IsHatasi(400, `Pakette en çok ${EN_COK_PAKET_DOSYASI} dosya olabilir (gelen ${sayi}).`);
     const dosyalar = new Map<string, Buffer>();
     let toplam = 0;
     let teslimJson: unknown = null;
@@ -379,14 +424,15 @@ export class SshKanal {
           400,
           `"${ad.slice(0, 60)}" düz bir dosya değil (bağlantı, aygıt ve klasör kabul edilmez).`,
         );
-      if (veri === "buyuk") throw new IsHatasi(413, "Paket çok büyük.");
+      if (veri === "buyuk")
+        throw new IsHatasi(413, `Paket çok büyük (toplam en çok ${EN_COK_PAKET_BOYUTU / 1024 / 1024} MB).`);
       if (ad === "TAMAM") continue;
       toplam += veri.length;
       if (ad === "teslim.json") {
         try {
           teslimJson = JSON.parse(veri.toString("utf8"));
         } catch {
-          throw new IsHatasi(400, "teslim.json okunamadı.");
+          throw new IsHatasi(400, "teslim.json okunamadı (geçerli JSON değil).");
         }
       } else dosyalar.set(ad, veri);
     }
@@ -397,34 +443,53 @@ export class SshKanal {
         `Pakette teslim.json yok${baska ? ` (${baska.slice(0, 60)} değil)` : ""}. Biçim için: uretim ornek-paket`,
       );
     }
-    const anahtarId = this.sshAnahtarId(alan);
-    // Dosya adlarını yükleyip dosya kimliklerine çevir.
-    const kimlikler = new Map<string, string>();
+    return { teslimJson, dosyalar };
+  }
+
+  /** Paketteki `dosya` adlarını yükleyip kimliğe çevirir, ön kontrol ya da teslim yapar. */
+  private async paketCalistir(
+    alan: AlanId,
+    p0: { teslimJson: Record<string, unknown>; dosyalar: Map<string, Buffer> },
+    kuru: boolean,
+    anahtar: { id: number; ad: string } | null,
+    now: number,
+  ): Promise<unknown> {
+    const { teslimJson, dosyalar } = p0;
+    const anahtarId = anahtar?.id ?? this.sshAnahtarId(alan);
+    // Önce bütün adlar denetlenir (eksik dosya varsa hiçbiri yüklenmez, günlük sınır boşa harcanmaz).
     const ogeler = Array.isArray(teslimJson.ogeler) ? teslimJson.ogeler : [];
+    for (const o of ogeler)
+      if (kayit(o) && Array.isArray(o.dosyalar))
+        for (const d of o.dosyalar)
+          if (kayit(d) && typeof d.dosya === "string" && !dosyalar.has(d.dosya))
+            throw new IsHatasi(400, `Pakette dosya bulunamadı: ${d.dosya.slice(0, 120)}.`);
+    const kimlikler = new Map<string, string>();
     for (const o of ogeler) {
       if (!kayit(o) || !Array.isArray(o.dosyalar)) continue;
-      o.dosyalar = await Promise.all(
-        o.dosyalar.map(async (d: unknown) => {
-          if (!kayit(d) || typeof d.dosya !== "string") return d;
-          const veri = dosyalar.get(d.dosya);
-          if (!veri) throw new IsHatasi(400, `teslim.json'daki "${d.dosya.slice(0, 60)}" pakette yok.`);
-          let id = kimlikler.get(d.dosya);
-          if (!id) {
-            if (anahtarId !== null && !this.anahtarlar.dosyaIzni(anahtarId, now))
-              throw new IsHatasi(429, "Günlük dosya sınırı doldu.");
-            id = (await this.merkez.yukle(alan, anahtarId, d.dosya, veri, now)).dosyaId;
-            kimlikler.set(d.dosya, id);
-          }
-          const { dosya: _d, ...kalan } = d;
-          return { ...kalan, dosyaId: id };
-        }),
-      );
+      const yeni: unknown[] = [];
+      for (const d of o.dosyalar as unknown[]) {
+        if (!kayit(d) || typeof d.dosya !== "string") {
+          yeni.push(d);
+          continue;
+        }
+        const veri = dosyalar.get(d.dosya) as Buffer;
+        let id = kimlikler.get(d.dosya);
+        if (!id) {
+          if (anahtarId !== null && !this.anahtarlar.dosyaIzni(anahtarId, now))
+            throw new IsHatasi(429, "Günlük dosya sınırı (500) doldu; yarın yeniden dene.");
+          id = (await this.merkez.yukle(alan, anahtarId, d.dosya, veri, now)).dosyaId;
+          kimlikler.set(d.dosya, id);
+        }
+        const { dosya: _d, ...kalan } = d;
+        yeni.push({ ...kalan, dosyaId: id });
+      }
+      o.dosyalar = yeni;
     }
     const p = teslimAyristir(teslimJson, alanTanimi(alan));
     if (!p.ok) return { sonuc: "kaldi", hatalar: p.hatalar };
-    const r = await this.merkez.teslimEt(alan, "mcp", anahtarId, p.deger, false, now, `yz:${alan}:ssh`, {
+    const r = await this.merkez.teslimEt(alan, "mcp", anahtarId, p.deger, kuru, now, `yz:${alan}:ssh`, {
       kanal: "ssh",
-      ad: "SSH (gelen klasörü)",
+      ad: anahtar?.ad ?? "SSH (gelen klasörü)",
     });
     return {
       teslimId: r.teslimId,
@@ -436,6 +501,16 @@ export class SshKanal {
         satirlar: o.satirlar.filter((s) => s.sonuc !== "gecti"),
       })),
     };
+  }
+
+  /** `TAMAM` ile bırakılan paket (taşınmış kopyası): okunur ve teslim edilir. */
+  async paketIsle(alan: AlanId, yol: string, now: number): Promise<unknown> {
+    const kok = this.alanKoku(alan);
+    if (!kok || !resolve(yol).startsWith(join(kok, "okunur", ISLENIYOR) + sep))
+      throw new IsHatasi(400, "Paket yolu geçersiz.");
+    const kst = await lstat(yol);
+    if (!kst.isDirectory()) throw new IsHatasi(400, "Paket yolu geçersiz.");
+    return this.paketCalistir(alan, await this.paketOku(yol), false, null, now);
   }
 
   private async okunurYaz(alan: AlanId, gorece: string, icerik: string): Promise<void> {

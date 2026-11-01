@@ -32,7 +32,7 @@ import {
   GUVEN_PENCERE,
   VARSAYILAN_SINIR,
 } from "./ortak/guven.js";
-import { PAKET_SATIRI, TEST_SINIRI } from "./ortak/paketBicimi.js";
+import { PAKET_SATIRI, PAKET_SINIRLARI, TEST_SINIRI } from "./ortak/paketBicimi.js";
 import type {
   AktarimKaydi,
   AlanKarti,
@@ -2082,7 +2082,7 @@ export class Merkez {
       metin = i < 0 ? `${metin}\n\n${bolum}` : `${metin.slice(0, i)}\n\n${bolum}${metin.slice(i)}`;
     }
     // Teslim paketi (SSH) ve alanın şimdilik yapamadıkları: sahibin talimat metninden bağımsız, her zaman sonda.
-    metin += `\n\n## Teslim paketi\n- ${PAKET_SATIRI}\n- MCP'de aynı biçim: \`paket_bicimi\` aracı; dosyalar önce \`dosya_yukle\` ile, sonra \`dosyaId\`.\n`;
+    metin += `\n\n## Teslim paketi\n- ${PAKET_SATIRI}\n- ${PAKET_SINIRLARI}\n- MCP'de aynı biçim: \`paket_bicimi\` aracı; dosyalar önce \`dosya_yukle\` ile, sonra \`dosyaId\`.\n`;
     if (alan === "test") metin += `- **${TEST_SINIRI}**\n`;
     return { surum: t.surum, metin: `${metin}\n${this.zevkBolumu(alan)}` };
   }

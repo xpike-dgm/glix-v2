@@ -176,7 +176,7 @@ describe("uretim komut aracı", () => {
       c,
     );
     const isId = (is.json.is as { id: number }).id;
-    const g = join(o.dir, "cli-gelen2");
+    const { anahtar: sR, gelen: g } = await o.sshKanali("rozet", c);
     mkdirSync(join(g, "seri"), { recursive: true });
     const t = (await calistirKomut(cli(kR, g), "talimat-oku")) as { alan: string };
     expect(t.alan).toBe("rozet");
@@ -197,10 +197,12 @@ describe("uretim komut aracı", () => {
         ],
       }),
     );
-    const on = (await calistirKomut(cli(kR, g), "on-kontrol seri")) as { ogeler: { sonuc: string }[] };
+    // Paket komutları SSH kanal anahtarıyla tek istekte (site gelen/'i kendisi okur); MCP anahtarı reddedilir.
+    await expect(calistirKomut(cli(kR, g), "on-kontrol seri")).rejects.toThrow(/geçersiz/);
+    const on = (await calistirKomut(cli(sR, g), "on-kontrol seri")) as { ogeler: { sonuc: string }[] };
     expect(on.ogeler[0]?.sonuc).not.toBe("kaldi");
     expect(existsSync(join(g, "seri"))).toBe(true);
-    const ts = (await calistirKomut(cli(kR, g), "teslim-et seri")) as { ogeler: { durum: string }[] };
+    const ts = (await calistirKomut(cli(sR, g), "teslim-et seri")) as { ogeler: { durum: string }[] };
     expect(ts.ogeler[0]?.durum).toBe("bekliyor");
     expect(existsSync(join(g, "seri"))).toBe(false);
     const y = (await calistirKomut(cli(kR, g, '{"esik":3}'), "dosya-yukle kayit.json")) as { tur: string };

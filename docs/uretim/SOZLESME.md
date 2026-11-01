@@ -209,3 +209,10 @@ görseller böyle üretildi; kalite çıtası onlardır.
   da talimat düzenlemesi çıkaramaz.
 - Test alanı: test koşusu başlatma ve zamanlayıcı (ör. 12 saatte bir) **henüz yok** (ikinci aşama); alan yalnız
   senaryo ve rapor teslim eder. Talimat ve paket biçimi bunu açıkça yazar.
+- **Tek istek:** `uretim on-kontrol <paket>` ve `uretim teslim-et <paket>` paketi tek istekle gönderir (iç araç
+  `ssh_paket`, yalnız SSH kanal anahtarıyla, listede görünmez). Site `gelen/<paket>/`i kendisi okur: paket önce
+  yapay zekânın giremediği klasöre taşınır, yalnız düz dosyalar okunur (bağlantı, alt klasör, aygıt yok); ön
+  kontrolden sonra yerine konur, teslimde silinir. Alan anahtardan gelir; paket adı `^[a-z0-9][a-z0-9._-]{0,80}$`.
+  Dosyalar günlük dosya sınırına (500) sayılır; istek sınırına (60/dk) paket bir istek sayılır.
+- **Paket sınırları:** en çok 200 dosya (teslim.json ve TAMAM hariç), toplam 45 MB; tek dosya 20 MB görsel / 30 MB
+  ses / 2 MB metin; öğe başına en çok 40 dosya, teslim başına en çok 50 öğe. Talimat ve `ornek-paket` bunu yazar.

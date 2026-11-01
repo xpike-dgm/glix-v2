@@ -24,6 +24,14 @@ afterEach(async () => {
   rmSync(gelen, { recursive: true, force: true });
 });
 
+/** SSH kanal anahtarı ve alanın gerçek gelen/ klasörü (paket komutları site tarafında okunur). */
+const sshKur = async (alan: Parameters<Ortam["sshKanali"]>[0]): Promise<string> => {
+  const c = await o.giris();
+  const s = await o.sshKanali(alan, c);
+  gelen = s.gelen;
+  return s.anahtar;
+};
+
 const cli = (anahtar: string): CliOrtami => ({
   url: `${o.url}/mcp`,
   anahtar,
@@ -64,8 +72,7 @@ describe("örnek paket", () => {
   });
 
   it("örnekteki gibi kurulan test paketi SSH'tan ön kontrolü geçer", async () => {
-    const c = await o.giris();
-    const k = await o.anahtarUret("test", c);
+    const k = await sshKur("test");
     const p = paketBicimi("test").teslimJson;
     const { isId: _i, ...isSiz } = p;
     mkdirSync(join(gelen, "qa3"));
@@ -86,8 +93,7 @@ describe("örnek paket", () => {
 
 describe("paket hataları açık", () => {
   it("teslim.json yoksa (paket.json varsa) adıyla söylenir ve örnek komutu gösterilir", async () => {
-    const c = await o.giris();
-    const k = await o.anahtarUret("test", c);
+    const k = await sshKur("test");
     mkdirSync(join(gelen, "qa3"));
     writeFileSync(join(gelen, "qa3/paket.json"), JSON.stringify({ isId: 1, paket: "qa3", dosyalar: [] }));
     await expect(calistirKomut(cli(k), "on-kontrol qa3")).rejects.toThrow(
@@ -96,8 +102,7 @@ describe("paket hataları açık", () => {
   });
 
   it("eksik dosya yalnız adıyla söylenir (yol sızmaz)", async () => {
-    const c = await o.giris();
-    const k = await o.anahtarUret("rozet", c);
+    const k = await sshKur("rozet");
     mkdirSync(join(gelen, "p1"));
     writeFileSync(
       join(gelen, "p1/teslim.json"),

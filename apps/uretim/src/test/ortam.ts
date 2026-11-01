@@ -2,7 +2,7 @@
  * Test ortamı: geçici klasörler, sahte e-posta, sözleşmeye (SOZLESME.md bölüm 3) uyan sahte oyun sunucusu ve
  * küçük bir MCP istemcisi. Gerçek HTTP ve gerçek SQLite kullanılır.
  */
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
@@ -123,6 +123,8 @@ export interface Ortam {
     args?: Record<string, unknown>,
   ): Promise<{ hata: boolean; veri: Record<string, unknown> }>;
   anahtarUret(alan: AlanId, cerez: string): Promise<string>;
+  /** SSH kanalı (ortam `ssh: true` ile): alana açık anahtar ekler; kanal anahtarı ve alanın gelen/ klasörü. */
+  sshKanali(alan: AlanId, cerez: string): Promise<{ anahtar: string; gelen: string }>;
   kapat(): Promise<void>;
 }
 
@@ -236,6 +238,18 @@ export async function ortamKur(
     async anahtarUret(alan, cerez) {
       const r = await api("POST", `/api/alan/${alan}/anahtar`, { ad: "Test aracı" }, cerez);
       return String(r.json.anahtar);
+    },
+    async sshKanali(alan, cerez) {
+      await api(
+        "POST",
+        `/api/alan/${alan}/ssh`,
+        { acik: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHk2Vn2u0pJkJm4n0yQ2kQe7mS3c4Rr0bJ7Zq3c9yR1a test" },
+        cerez,
+      );
+      const gelen = join(dir, `ssh/${alan}/gelen`);
+      mkdirSync(gelen, { recursive: true });
+      mkdirSync(join(dir, `ssh/${alan}/okunur`), { recursive: true });
+      return { anahtar: readFileSync(join(dir, `ssh-yetki/${alan}.anahtar`), "utf8").trim(), gelen };
     },
     async kapat() {
       await u.kapat();

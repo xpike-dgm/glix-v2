@@ -11,6 +11,7 @@ import { IsHatasi, type Merkez } from "./merkez.js";
 import { alanTanimi, isAlanId } from "./ortak/alanlar.js";
 import { gorselAlaniMi, gorselKuraliMaddeleri } from "./ortak/gorselKurali.js";
 import { paketBicimi } from "./ortak/paketBicimi.js";
+import type { SshKanal } from "./sshKanal.js";
 import { teslimAyristir } from "./teslimGirdisi.js";
 
 export const MCP_SURUMLERI = ["2025-06-18", "2025-03-26", "2024-11-05"] as const;
@@ -320,9 +321,13 @@ function rpcAyristir(v: unknown): RpcIstegi | null {
   return { id: id as RpcIstegi["id"], method: v.method, params };
 }
 
+export const SSH_PAKET_ARACI = "ssh_paket";
+
 export interface McpOrtami {
   merkez: Merkez;
   anahtarlar: Anahtarlar;
+  /** SSH kanalı (yalnız `ssh_paket` iç aracı için). */
+  ssh?: SshKanal;
   publicUrl: string;
   surum: string;
   now(): number;
@@ -404,6 +409,36 @@ export async function mcpIstek(req: IncomingMessage, res: ServerResponse, o: Mcp
     case "tools/call": {
       const ad = r.params.name;
       const args = r.params.arguments === undefined ? {} : r.params.arguments;
+      // İç araç: yalnız SSH kanal anahtarı (chroot'taki `uretim` aracı); listede görünmez. Paketi site kendisi okur,
+      // böylece yüzlerce dosyalı paket tek istek sayılır.
+      if (ad === SSH_PAKET_ARACI && kayit(args)) {
+        if (k.kanal !== "ssh" || !o.ssh) {
+          gonder(res, 200, rpcHata(r.id, -32602, "Araç adı ya da argümanlar geçersiz."));
+          return;
+        }
+        const paket = typeof args.paket === "string" ? args.paket : "";
+        const islem = args.islem === "teslim" ? "teslim" : args.islem === "on_kontrol" ? "on_kontrol" : null;
+        try {
+          if (!islem) throw new AracHatasi('islem "on_kontrol" ya da "teslim" olmalı.');
+          const sonuc = await o.ssh.sshPaket(
+            k.alan,
+            paket,
+            islem,
+            args.uretimYontemi,
+            { id: k.id, ad: k.ad },
+            now,
+          );
+          return ok({
+            content: [{ type: "text", text: JSON.stringify(sonuc) }],
+            structuredContent: kayit(sonuc) ? sonuc : { sonuc },
+            isError: false,
+          });
+        } catch (err) {
+          const mesaj =
+            err instanceof AracHatasi || err instanceof IsHatasi ? err.message : "Paket işlenemedi.";
+          return ok({ content: [{ type: "text", text: mesaj }], isError: true });
+        }
+      }
       if (typeof ad !== "string" || !ARACLAR.some((x) => x.name === ad) || !kayit(args)) {
         gonder(res, 200, rpcHata(r.id, -32602, "Araç adı ya da argümanlar geçersiz."));
         return;

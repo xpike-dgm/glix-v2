@@ -9,6 +9,11 @@ import { gorselAlaniMi } from "./gorselKurali.js";
 
 export const TESLIM_DOSYASI = "teslim.json";
 
+/** Bir pakette en çok dosya (teslim.json ve TAMAM hariç) ve toplam boyut. */
+export const EN_COK_PAKET_DOSYASI = 200;
+export const EN_COK_PAKET_MB = 45;
+export const PAKET_SINIRLARI = `Paket sınırları: en çok ${EN_COK_PAKET_DOSYASI} dosya, toplam ${EN_COK_PAKET_MB} MB; öğe başına en çok 40 dosya (fazlasını birkaç öğeye böl), teslimde en çok 50 öğe; tek dosya en çok 20 MB (görsel) / 30 MB (ses) / 2 MB (metin); günde en çok 500 dosya. Alt klasör ve bağlantı (symlink) yok. on-kontrol ve teslim-et paketi tek istekte işler.`;
+
 /** SSH isteminde ve talimatta kodla eklenen satır (model çıkaramaz). */
 export const PAKET_SATIRI =
   "Paketin kökünde teslim.json olmalı (paket.json ya da başka ad değil); biçim için önce `uretim ornek-paket` çalıştır.";
@@ -171,7 +176,7 @@ export function paketBicimi(alan: AlanId): PaketBicimi {
     alan,
     dosyaAdi: TESLIM_DOSYASI,
     teslimJson: ornek(alan),
-    alanlar: [...ORTAK_ALANLAR, ...ozel],
+    alanlar: [...ORTAK_ALANLAR, PAKET_SINIRLARI, ...ozel],
     adimlar: [
       "SFTP ile gelen/<paket>/ klasörü aç (paket adı: küçük harf, rakam, . _ -).",
       "Dosyalarını ve kökte teslim.json'u koy (dosya adları teslim.json'daki `dosya` ile aynı).",
