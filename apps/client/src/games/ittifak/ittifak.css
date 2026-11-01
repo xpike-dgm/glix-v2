@@ -1069,6 +1069,16 @@
   .it .col {
     max-width: none;
   }
+  /* Sonuçta 7–8 kişilik halka ~300 px karede oy çipleri ve etiketler birbirine biniyordu: halka sütunun tüm
+     genişliğini kullanır (yatay elips). */
+  .it__res .it__arena[data-crowd="1"] {
+    width: 100cqw;
+    height: 100cqh;
+    aspect-ratio: auto;
+  }
+  .it__res:has(.it__arena[data-crowd="1"]) {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  }
   .it__body,
   .it__res {
     display: grid;
@@ -1246,9 +1256,12 @@
   border-radius: 3px;
   background: linear-gradient(180deg, rgba(255, 236, 170, 0.92), rgba(246, 200, 90, 0.92));
 }
-/* Yatay telefonda masa sık: süslü uçlar yan koltuğun oy çipine binmesin. */
-@media (orientation: landscape) and (max-height: 500px) {
-  .it__ally-badge[data-img="1"] {
-    padding: 9px 30px;
+/* Telefonda (dikey de) masa sık: süslü uçlar yan koltuğun oy çipine/adına binmesin, kenarda ekrandan taşmasın. */
+.it__res:not([data-tv="1"]) .it__ally-badge[data-img="1"] {
+  padding: 9px 30px;
+}
+@media (max-width: 380px), (orientation: landscape) and (max-height: 500px) {
+  .it__res:not([data-tv="1"]) .it__ally-badge[data-img="1"] {
+    padding: 7px 22px;
   }
 }

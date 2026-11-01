@@ -10,6 +10,7 @@ import type { CrewMember } from "./Pazarlik.js";
 import { allianceChime, betrayal, cardRustle, counterTick, ding, keptBell } from "./sounds.js";
 import {
   alliancesOf,
+  allyBadgeSpot,
   arrowPath,
   awardText,
   CARD_LEAD_MS,
@@ -382,14 +383,15 @@ export function Sonuc(props: Props) {
               {([a, b]) => {
                 const p = () => at(a)?.pos;
                 const q = () => at(b)?.pos;
+                const spot = () => allyBadgeSpot(p() ?? { x: 50, y: 50 }, q() ?? { x: 50, y: 50 });
                 return (
                   <Show when={p() && q()}>
                     <span
                       class="it__ally-at"
                       style={{
                         // Kenardaki iki koltuğun ortası rozetin yarısını ekran dışına itiyordu: kenardan pay bırakılır.
-                        left: `clamp(48px, ${((p()?.x ?? 0) + (q()?.x ?? 0)) / 2}%, calc(100% - 48px))`,
-                        top: `${((p()?.y ?? 0) + (q()?.y ?? 0)) / 2}%`,
+                        left: `clamp(64px, ${spot().x}%, calc(100% - 64px))`,
+                        top: `${spot().y}%`,
                       }}
                     >
                       <AllianceBadge />

@@ -312,3 +312,21 @@ export function genitive(name: string): string {
   const endsVowel = "aıeioöuü".includes(lower.slice(-1));
   return `${name}'${endsVowel ? "n" : ""}${harmony}n`;
 }
+
+/**
+ * İttifak rozetinin yeri (arena yüzdesi): iki koltuğun ortası, masanın merkezine doğru kaydırılır. Kenardaki iki
+ * koltuk (ör. sağda alt alta) için orta nokta tam üstteki koltuğun ad/etiket satırına düşüyordu.
+ */
+export function allyBadgeSpot(
+  a: { x: number; y: number },
+  b: { x: number; y: number },
+): { x: number; y: number } {
+  const mx = (a.x + b.x) / 2;
+  const my = (a.y + b.y) / 2;
+  const dx = 50 - mx;
+  const dy = 50 - my;
+  const len = Math.hypot(dx, dy);
+  if (len < 0.001) return { x: mx, y: my };
+  const shift = Math.min(len, 24);
+  return { x: mx + (dx / len) * shift, y: my + (dy / len) * shift };
+}

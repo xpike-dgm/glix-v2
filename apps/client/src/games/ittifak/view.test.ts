@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  allyBadgeSpot,
   arrowPath,
   awardText,
   CARD_LEAD_MS,
@@ -213,5 +214,14 @@ describe("İttifak görünümü", () => {
     const p = ringPosition(0, 4);
     expect(Math.round(p.x)).toBe(50);
     expect(p.y).toBeLessThan(50);
+  });
+});
+
+describe("allyBadgeSpot", () => {
+  it("orta noktayı masanın merkezine doğru kaydırır, merkezi aşmaz", () => {
+    const s = allyBadgeSpot({ x: 90, y: 40 }, { x: 90, y: 60 });
+    expect(s.y).toBeCloseTo(50);
+    expect(s.x).toBeCloseTo(66);
+    expect(allyBadgeSpot({ x: 45, y: 50 }, { x: 55, y: 50 })).toEqual({ x: 50, y: 50 });
   });
 });
