@@ -47,7 +47,10 @@ ses ve havuz kontrolleri bağımsız çalışır.
 | `GET /api/uretim/moderasyon` | Yasaklı kelime listesi | `{ kaliplar: [{ kalip, tur, kaynak }] }` |
 | `POST /api/uretim/moderasyon/ekle` | Kalıp ekler | `{ aktarimId, eklenen, atlanan }` |
 | `GET /api/uretim/magaza/istatistik` | Son 30 gün, ürün başına toplu sayılar (anonim) | `{ donem: "30g", urunler: [{ id, satis, kusanan, firsatSatis }] }` |
-| `GET /api/uretim/saglik` | Sürüm (`revision`) ve canlılık | `{ ok, revision }` |
+| `GET /api/uretim/saglik` | Sürüm (`revision`) ve canlılık; oyun alanında (test2) ek olarak katman kimliği | `{ ok, revision }` — test2: `{ ok, revision, ortam: "test2", katman, taslak }` |
+| `GET /api/uretim/magaza/taslak` | **Yalnız test2.** Taslak katmanındaki mağaza ürünleri (bölüm 13) | `{ katman, urunler: [{ id, urun, dosyalar: [yol], zaman }] }` |
+| `POST /api/uretim/magaza/taslak` | **Yalnız test2.** Taslak ürün yükler ya da aynı kimlikliyi değiştirir | `{ ok, id, katman, degisti }` |
+| `DELETE /api/uretim/magaza/taslak/:id` | **Yalnız test2.** Taslağı kaldırır (yoksa da başarılı) | `{ ok, silindi, katman }` |
 
 Kurallar:
 - Bir istekte en çok 500 satır.
@@ -64,6 +67,8 @@ Kurallar:
 - `magaza/istatistik`: `kusanan` şu an kuşanan hesap sayısıdır (30 günle sınırlı değildir); armağanlar satış sayılmaz.
 - Hatalar `{ ok: false, code, message }`: 401 anahtar yanlış/eksik, 404 uç ya da havuz yok (anahtar boşsa her şey),
   409 aktarım zaten geri alındı, 413 satır sınırı, 415 gövde JSON değil, 429 hız sınırı.
+- Taslak uçları (`magaza/taslak`) canlıda ve test'te yoktur: üçü de 404 (DELETE dahil); sağlık yanıtı orada
+  değişmeden `{ ok, revision }` kalır. Ayrıntı ve gövde biçimi bölüm 13.
 
 ## 4. Önizleme sayfası (UM-U4, MG-6)
 
@@ -92,7 +97,10 @@ Kurallar:
 - Site, onaylananları `/srv/glix/uretim/aktarim/<YYYYMMDD-HHMM>/` altına yazar. Geliştirmede yol
   `URETIM_AKTARIM_DIR` ortam değişkeninden okunur.
 - İçerik:
-  - `ozet.json`: `{ olusturma, ogeler: [{ alan, teslimId, tur, ad, hedefYollar: [...], katalogSatirlari: [...] }] }`
+  - `ozet.json`: `{ olusturma, ogeler: [{ alan, alanAdi, teslimId, ogeId, tur, ad, hedefYollar: [...], katalogSatirlari: [...], havuzSatirlari? }] }`
+    (`havuzSatirlari` yalnız içerik öğesinde: `{ "<havuz>": [satır] }`).
+  - `icerik.json` (yalnız içerik öğesi varsa): `{ havuzlar: [{ havuz, ekle: [{ <alan>: <değer> }], kapat: [anahtar] }] }`
+    — `ekle` satırları bölüm 3'teki `havuzlar/:poolId/ekle` gövdesiyle, `kapat` anahtarları `kapat` gövdesiyle aynı.
   - `dosyalar/`: oyunun deposundaki yollarla birebir aynı düzen. Örnekler:
     - `apps/client/public/assets/shop/cerceve/<ad>.webp`
     - `packages/engine/src/katalog/magaza.json.yama`
@@ -108,7 +116,7 @@ Kurallar:
 | Değişken | Nerede | Anlamı |
 |---|---|---|
 | `GLIX_URETIM_TOKEN` | oyun ve site | Bölüm 3'teki uçların anahtarı (boşsa uçlar kapalı) |
-| `URETIM_OYUN_URL` | site | Oyun sunucusunun iç adresi (ör. `http://glix:3900`) |
+| `URETIM_OYUN_URL` | site | Oyun sunucusunun iç adresi (compose varsayılanı `http://glix-glix-1:3900`: site test2'nin ağına da katıldığı için hizmet adı `glix` iki ağda birden geçer, kap adı kullanılır) |
 | `URETIM_DB` | site | Sitenin SQLite dosyası |
 | `URETIM_DEPO_DIR` | site | İçerik adresli dosya deposu |
 | `URETIM_AKTARIM_DIR` | site | Entegrasyon paketleri |
@@ -116,6 +124,9 @@ Kurallar:
 | `URETIM_SAHIP_EPOSTA` | site | Girişe izinli e-postalar (virgülle) |
 | `GLIX_RESEND_API_KEY`, `GLIX_MAIL_FROM` | site | Giriş kodu e-postası (oyunla aynı servis) |
 | `URETIM_PUBLIC_URL` | site | `https://uretim.dgmcraft.online` |
+| `URETIM_TEST2_URL` | site | Oyun alanının (test2) iç adresi (compose varsayılanı `http://glix-test2-glix-1:3900`, ortak ağ `glix-oyun-alani`); boşsa test2 bağlantısı kapalı (bölüm 13) |
+| `URETIM_TEST2_TOKEN` | site | test2'nin **kendi** `GLIX_URETIM_TOKEN`'ı (`/srv/glix/ortam/gizli/.env.test2`); canlınınkinden ayrı |
+| `URETIM_TEST2_PUBLIC_URL` | site | Sahibin açtığı adres (`https://test2.glix.dgmcraft.online`; "test2'de aç" bağlantıları) |
 | `URETIM_AI_KEY` | site | İstek → iş/istem dönüştürücü (UM-R1) için model anahtarı; boşsa sabit kalıp kullanılır. **Sahip kararı:** oyunun mevcut anahtarı (`GLIX_AI_KEY`, `/srv/glix/shared/.env`) kullanılır; compose'da `URETIM_AI_KEY: ${GLIX_AI_KEY:-}` olarak aynı dosyadan okunur, değeri hiçbir yere kopyalanmaz |
 
 ## 7. Yapay zekâ bağlantı kanalları (ek karar)
@@ -250,3 +261,83 @@ Plan: `docs/uretim/URETIM-2-PLAN.md`. Biçim `apps/uretim/src/ortak/fikir.ts`, `
   ortamına çıkınca `POST /api/paket/:id/testte`; canlı sürüm o sürümü içerince öğeler kendiliğinden canlıda olur.
 - Yeni ekranlar (`/fikirler`, `/raporlar`, `/kabul`, alan sayfasındaki "Onaylanan fikirler" şeridi, İş iste'deki
   "Onaylanan fikirleri uygula") canlı güncellenir (`/api/olaylar`).
+
+## 13. Oyun alanı (test2) bağlantısı ve taslak katmanı (Üretim Merkezi 2, aşama 3 ilk dilim)
+
+Sahip kararı: yapay zekâların uyguladığı yer test alanıdır. Teslim test2'de canlı görünür; sahip orada oynayıp bakar,
+Üretim Merkezi'nde kabul eder; kabul edilen kabul havuzuna düşer, canlıya **yalnız** yönetici "ekle" ile (paket,
+bölüm 5) gider. Plan: `docs/uretim/URETIM-2-PLAN.md` Aşama 3.
+
+**Akış:** `teslim → ön kontrol geçti (bekliyor) → test2'ye kendiliğinden yüklenir → sahip test2'de dener → kabul →
+kabul havuzu (test2'de yüklü kalır) → "Yöneticiye gönder" (paket) → yönetici test eder, ana koda ekler`. Ret →
+test2'den geri alınır.
+
+**Bağlantı.** Site test2'ye canlıyla aynı yoldan, iç Docker ağından gider: test2 kabı ortak `glix-oyun-alani` ağına
+katılır (`deploy/ortamlar/docker-compose.oyun-alani.yml`, yalnız test2), site kabı da (`deploy/uretim/
+docker-compose.yml`). Adres `URETIM_TEST2_URL=http://glix-test2-glix-1:3900`, anahtar test2'nin kendi
+`GLIX_URETIM_TOKEN`'ı (`URETIM_TEST2_TOKEN`). Uçlar bölüm 3'teki uçların aynısıdır (aynı kurallar: Bearer, vekilden
+gelen istek 404, dakikada 30 yazma). Canlı bağlantısı (`URETIM_OYUN_URL`) ve "Oyuna aktar" akışı değişmedi.
+
+**Hangi teslimler gider** (bugün; diğer alanlar ALT-4…12 ile):
+- İçerik havuzu (`icerik`): satır teslimi (`yeni`/`duzenleme` → `havuzlar/:id/ekle`; `kaldirma-onerisi` →
+  `havuzlar/:id/kapat`). Geri alma `aktarim/:id/geri-al`.
+- Mağaza (`magaza`): `tur: "yeni"` ve katalog satırı olan öğe → her satır için `POST /api/uretim/magaza/taslak`.
+  Görseller öğenin `apps/client/public/assets/shop/...` hedef yollu dosyalarından, ürünün kullandıkları seçilir; PNG
+  paketteki gibi WebP'ye çevrilir (kalite 82, alfa < 24 → 0; dönüştürücü yoksa PNG gider). Geri alma
+  `DELETE magaza/taslak/:id`.
+
+**Öğe durumuna göre** (site, `apps/uretim/src/oyunAlani.ts`):
+- `bekliyor`, `duzeltme_istendi`, `onaylandi`, `havuzda` (kabulde), `pakette` (yöneticide): test2'de yüklü olmalı.
+- `reddedildi`, `arsiv` (yeni sürüm geldi), `kaldi`: test2'den geri alınır.
+- `oyuna_eklendi`, `canlida`: dokunulmaz (ana koda girdi; gece yenilemesinde test2 kodu zaten taşır).
+- Sahip teslim kartından "test2'den geri al" diyebilir (karar değişmez, kendiliğinden yeniden yüklenmez) ve "yeniden
+  yükle" ile geri getirir (`POST /api/oge/:id/test2-geri-al`, `/test2-yukle`; elle eşitleme `POST /api/test2/esitle`).
+- Öğenin test2 durumu `test2: { durum: yuklu|bekliyor|hata|geri_alindi, ozet, hata, zaman, baglanti }` olarak öğe,
+  kuyruk, arşiv ve kabul yanıtlarında; pano ve içerik/mağaza alan sayfasında `test2: { ayarli, calisiyor, revision,
+  katman, sonDenetim, sonSifirlama, taslak, yuklu, hata, baglanti, sorun }`.
+
+**Gece sıfırlaması (UM-O2 "taslaklar kaybolmaz").** test2 her gece sıfırlanır (`test2-yenile.sh` → `ortamYenile
+--sifirla`): veritabanı ve taslak katmanı klasörü (`<veri>/oyun-alani/`) silinir, katmanın kimliği yenilenir. Site 5
+dakikada bir `saglik`'e bakar; `katman` değiştiyse son sıfırlamayı yazar ve yüklü olması gereken öğeleri yeniden
+yükler (turda en çok 12; hız sınırına takılan sonraki turda). Yükleyemediği öğe `hata` olur ve her turda yeniden denenir.
+
+**Taslak katmanı (oyun sunucusu, `apps/server/src/oyunAlani.ts`, yalnız `GLIX_ORTAM=test2`).**
+- `POST /api/uretim/magaza/taslak` gövdesi (en çok 18 MB):
+  ```
+  { "urun": <magaza.json ürün satırı (bölüm 2)>,
+    "dosyalar": [ { "yol": "cerceve/neon-gece.webp", "veri": "<base64>" } ] }
+  ```
+  `yol` `/assets/shop/` altında göreli (`apps/client/public/assets/shop/` önekiyle de yazılabilir), `.webp` adlı;
+  `veri` WebP ya da PNG (imza denetlenir), tek dosya ≤ 4 MB, ürün başına ≤ 12 MB, en çok 12 dosya.
+- Doğrulama: `validateShopItem` (katalog + diğer taslaklarla kimlik/ad tekrarı), efekt tarifi, tür yalnız
+  `DRAFT_SHOP_TYPES` (`unvan`, `ad-efekti`, `cerceve`, `kart-arkasi`, `zafer`, `tepki`, `giris`; dans ve giysiler
+  karakter varlığı gerektirir), aynı türde katalogdaki bir `asset` adı kullanılamaz (görseller birbirini ezmesin),
+  ürünün kullandığı her görsel (`cosmeticAssetFiles` + efekt dokuları) ya gönderilir ya oyunda vardır, kullanmadığı
+  görsel gönderilemez. Hata: 400 `{ ok: false, code: "invalid_item", message, errors: [...] }`; katman dolu (100
+  ürün) 409 `layer_full`.
+- Taslaklar motorun önizleme katmanına (`setPreviewItems`) konur: sunucu satın almayı ve kuşanmayı bu katmanla
+  doğrular (sahte hesaplar, ör. `Zengin`, alıp kuşanabilir). Katman diskte durur (yeniden başlatmada kalır).
+- Genel uçlar (yalnız test2; Caddy giriş korumasının arkasında, anahtar gerekmez):
+  `GET /api/oyun-alani/magaza` → `{ ok, urunler: [satır], dosyalar: { "/assets/shop/<yol>": "/api/oyun-alani/dosya/<sha256>.<webp|png>" } }`,
+  `GET /api/oyun-alani/dosya/<ad>` (yalnız katmanda kullanılan dosyalar; içerik özetli ad, değişmez önbellek).
+- İstemci (`apps/client/src/net/oyunAlani.ts`) yalnız sayfada `data-glix-ortam="test2"` şeridi varken (sunucu
+  test2'de ekler) katmanı okur: ürünleri önizleme katmanına, görsel adreslerini `assetOverride` tablosuna koyar;
+  mağaza taslakları **TASLAK** etiketiyle gösterir. Canlıda ve test'te hiçbir istek atılmaz, davranış birebir aynıdır.
+- Derin bağlantı (yalnız test2): `https://test2.glix.dgmcraft.online/?ekran=magaza` girişten sonra mağazayı açar.
+  İçerik için oyuna özel derin bağlantı yok; "test2'de aç" ana sayfayı açar.
+- Bu dilimde katman test2'nin tamamında ortaktır (UM-O3'teki oda başına katman ve `oyun_alani_*` araçları sonraki
+  dilim).
+
+**Yapay zekâ istemi:** içerik ve mağaza alanında kopyalanan istemde (MCP ve SSH) ve talimatın "Teslim paketi"
+bölümünde sabit satır: "Teslimin test2'ye (oyun alanı: test2.glix.dgmcraft.online) kendiliğinden yüklenir; sahip
+orada dener." (`apps/uretim/src/ortak/oyunAlani.ts`, kodla eklenir.)
+
+**Yöneticinin "ekle" paketi** (bölüm 5, `POST /api/paket` = "Yöneticiye gönder"): kabul havuzundaki öğeler —
+içerik satırları dahil — tek pakette:
+- Mağaza: `dosyalar/packages/engine/src/katalog/magaza.json.yama` (`{ ekle: [ürün satırı], degistir, satistanKaldir }`)
+  + `dosyalar/apps/client/public/assets/shop/<klasör>/<ad>.webp` (WebP, kalite 82) + `ozet.json` içinde öğe başına
+  `hedefYollar` (deposundaki yollar) ve `katalogSatirlari`.
+- İçerik: kökte `icerik.json` (havuz başına `ekle` satırları ve `kapat` anahtarları) + `ozet.json` içinde
+  `havuzSatirlari`. Yönetici satırları yerleşik havuza ya da (sahip isterse) bölüm 3 `ekle` ile canlıya ekler.
+- Yönetici: yamayı `magaza.json`'a uygular, görselleri hedef yollara koyar, `pnpm check/typecheck/test/build`, ana
+  dala birleştirir, `POST /api/paket/:id/oyuna-eklendi { revizyon }` → test'e çıkınca `/testte`.

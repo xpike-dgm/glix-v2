@@ -16,6 +16,7 @@ import { consumeGoogleReturn, consumeMailReturn, refreshAccount } from "./net/ac
 import { startNet } from "./net/client.js";
 import { normalizeCode } from "./net/code.js";
 import { collectRounds } from "./net/matchHistory.js";
+import { oyunAlaniMi } from "./net/oyunAlani.js";
 import { ownCosmetics } from "./net/shop.js";
 import { setState, state } from "./net/store.js";
 import { PackScreen } from "./pwa/PackScreen.js";
@@ -226,7 +227,12 @@ export function App() {
     watchNetwork();
     consumeGoogleReturn();
     consumeMailReturn();
-    void refreshAccount();
+    // Oyun alanı (test2) derin bağlantısı `?ekran=magaza`: Üretim Merkezi'nin "test2'de aç" bağlantısı mağazayı açar
+    // (hesap yüklenince; mağaza hesapsız açılmaz). Canlıda ve test'te bu parametre okunmaz.
+    const magazaAc = oyunAlaniMi() && params.get("ekran") === "magaza";
+    void refreshAccount().then(() => {
+      if (magazaAc && state.account && state.nav === "home" && !state.snapshot) setState({ nav: "shop" });
+    });
     void initContentPack({ guest: code !== "" });
     onCleanup(startNet());
   });

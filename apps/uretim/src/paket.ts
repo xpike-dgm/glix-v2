@@ -86,7 +86,7 @@ export async function paketOlustur(
   ).filter(
     (o) =>
       isAlanId(o.alan) &&
-      !m.tekTikMi({
+      m.paketeGirer({
         alan: o.alan,
         dosyalar: json<unknown[]>(o.dosyalar, []),
         satirlar: json<unknown[]>(o.satirlar, []),
@@ -109,6 +109,8 @@ export async function paketOlustur(
   await mkdir(dosyalarKok, { recursive: true });
   const yamalar = new Map<string, Yama>();
   const ozetOgeler: unknown[] = [];
+  /** İçerik havuzu satırları (havuz -> ekle/kapat); paketin kökünde `icerik.json`. */
+  const icerik = new Map<string, { ekle: Record<string, string>[]; kapat: string[] }>();
   try {
     for (const o of adaylar) {
       const alan = o.alan as AlanId;
@@ -145,6 +147,20 @@ export async function paketOlustur(
           if (!hedefYollar.includes(yamaYolu)) hedefYollar.push(yamaYolu);
         }
       }
+      const havuzSatirlari: Record<string, unknown[]> = {};
+      if (alan === "icerik")
+        for (const s of satirlar) {
+          if (!s || typeof s !== "object") continue;
+          const r = s as { havuz?: unknown; alanlar?: unknown; anahtar?: unknown };
+          if (typeof r.havuz !== "string") continue;
+          const h = icerik.get(r.havuz) ?? { ekle: [], kapat: [] };
+          if (o.tur === "kaldirma-onerisi") {
+            if (typeof r.anahtar === "string") h.kapat.push(r.anahtar);
+          } else if (r.alanlar && typeof r.alanlar === "object")
+            h.ekle.push(r.alanlar as Record<string, string>);
+          icerik.set(r.havuz, h);
+          havuzSatirlari[r.havuz] = [...(havuzSatirlari[r.havuz] ?? []), s];
+        }
       ozetOgeler.push({
         alan,
         alanAdi: alanTanimi(alan).ad,
@@ -154,6 +170,7 @@ export async function paketOlustur(
         ad: o.ad,
         hedefYollar,
         katalogSatirlari: satirlar,
+        ...(alan === "icerik" ? { havuzSatirlari } : {}),
       });
     }
     for (const [yol, y] of yamalar) {
@@ -161,6 +178,15 @@ export async function paketOlustur(
       await mkdir(dirname(p), { recursive: true });
       await writeFile(p, `${JSON.stringify(y, null, 2)}\n`);
     }
+    if (icerik.size > 0)
+      await writeFile(
+        join(gecici, "icerik.json"),
+        `${JSON.stringify(
+          { havuzlar: [...icerik].map(([havuz, h]) => ({ havuz, ekle: h.ekle, kapat: h.kapat })) },
+          null,
+          2,
+        )}\n`,
+      );
     await writeFile(
       join(gecici, "ozet.json"),
       `${JSON.stringify({ olusturma: new Date(now).toISOString(), ogeler: ozetOgeler }, null, 2)}\n`,

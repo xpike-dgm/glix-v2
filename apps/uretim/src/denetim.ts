@@ -22,6 +22,7 @@ export type DenetimEylemi =
   | "duzeltme"
   | "aktarim"
   | "aktarim_geri_al"
+  | "test2"
   | "paket"
   | "paket_oyuna_eklendi"
   | "is"

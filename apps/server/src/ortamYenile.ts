@@ -24,6 +24,7 @@ import {
   type IcerikPaketi,
   type IcerikSatiri,
 } from "./ortamIcerikDisa.js";
+import { oyunAlaniKlasoru } from "./oyunAlani.js";
 import { createStats, loadSqlite } from "./statsStore.js";
 
 /** Paketteki bir tablonun en çok satır sayısı (bozuk ya da şişmiş paket reddedilir). */
@@ -103,9 +104,14 @@ export function icerikIceAktar(path: string, paket: IcerikPaketi): Record<string
   return sayilar;
 }
 
-/** Veritabanı dosyasını ve WAL eklerini siler (oyun alanının gece sıfırlaması). */
+/**
+ * Veritabanı dosyasını, WAL eklerini ve oyun alanının taslak katmanını (`oyun-alani/`, bkz. `oyunAlani.ts`) siler
+ * (oyun alanının gece sıfırlaması). Katman klasörü yeniden kurulunca yeni bir kimlik alır; Üretim Merkezi bundan
+ * sıfırlandığını anlar ve bekleyen taslakları yeniden yükler.
+ */
 export function veritabaniniSil(path: string): void {
   for (const p of [path, `${path}-wal`, `${path}-shm`]) rmSync(p, { force: true });
+  rmSync(oyunAlaniKlasoru(path), { recursive: true, force: true });
 }
 
 export type SahteHesapTuru = "zengin" | "yeni" | "rozetli";

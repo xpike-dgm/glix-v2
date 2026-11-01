@@ -33,6 +33,7 @@ import {
   GUVEN_PENCERE,
   VARSAYILAN_SINIR,
 } from "./ortak/guven.js";
+import { OYUN_ALANI_SATIRI, oyunAlaniAlaniMi } from "./ortak/oyunAlani.js";
 import { FIKIR_RAPOR_BOLUMU, PAKET_SATIRI, PAKET_SINIRLARI, TEST_SINIRI } from "./ortak/paketBicimi.js";
 import { yapiliRaporMu } from "./ortak/rapor.js";
 import type {
@@ -57,6 +58,7 @@ import type {
   ZevkOrnegi,
 } from "./ortak/tipler.js";
 import { OyunHatasi, type OyunIstemcisi, SATIR_SINIRI } from "./oyun.js";
+import type { OyunAlaniBagi } from "./oyunAlani.js";
 import { type OgeGirdisi, ogeAnahtari, type TeslimGirdisi } from "./teslimGirdisi.js";
 
 const GUN = 24 * 3600 * 1000;
@@ -228,6 +230,11 @@ interface SonKarar {
 
 export class Merkez {
   private readonly sonKararlar = new Map<number, SonKarar>();
+  /**
+   * Oyun alanı (test2) bağı (`oyunAlani.ts`; sözleşme bölüm 13): öğe durumu değişince haber verilir, öğe ve pano
+   * test2 durumunu taşır. Bağlı değilse (test2 ayarlı değil) hiçbir şey olmaz.
+   */
+  oyunAlani: OyunAlaniBagi | null = null;
 
   constructor(
     readonly db: Db,
@@ -622,6 +629,9 @@ export class Merkez {
       }
       return { teslimId, ogeler };
     });
+    // Ön kontrolden geçen içerik ve mağaza öğeleri test2'ye kendiliğinden yüklenir (işlem bittikten sonra).
+    for (const o of out.ogeler)
+      if (o.ogeId !== null && o.durum !== null) this.oyunAlani?.durumDegisti(o.ogeId, o.durum);
     this.denetim.yaz(
       now,
       kim,
@@ -665,6 +675,7 @@ export class Merkez {
       vals.push(ek.paket);
     }
     this.db.prepare(`UPDATE oge SET ${sets.join(", ")} WHERE id = ?`).run(...vals, id);
+    this.oyunAlani?.durumDegisti(id, durum);
   }
 
   /** Sahibin öğeye notu ("şöyle olsun"): yapay zekânın geri bildirimine ve fikrin uygulama işine düşer. */
@@ -739,7 +750,14 @@ export class Merkez {
       notlar,
       surumler,
       koken: this.koken(r),
+      test2: this.oyunAlani?.bilgi(r.id, r.alan as AlanId) ?? null,
     };
+  }
+
+  /** Öğe özetine test2 durumunu ekler (bağ yoksa olduğu gibi). */
+  private test2li(o: OgeOzeti): OgeOzeti {
+    const t = this.oyunAlani?.bilgi(o.id, o.alan) ?? null;
+    return t ? { ...o, test2: t } : o;
   }
 
   private koken(r: OgeSatiri): Koken {
@@ -780,7 +798,7 @@ export class Merkez {
       : this.db
           .prepare(`SELECT * FROM oge WHERE (durum IN ${durumlar}${denetim}) ORDER BY olusturma, id`)
           .all()) as unknown as OgeSatiri[];
-    return r.map(ozetle);
+    return r.map((x) => this.test2li(ozetle(x)));
   }
 
   arsiv(q: {
@@ -823,7 +841,7 @@ export class Merkez {
       this.db
         .prepare(`SELECT * FROM oge ${where} ORDER BY id DESC LIMIT 50 OFFSET ?`)
         .all(...deger, sayfa * 50) as unknown as OgeSatiri[]
-    ).map(ozetle);
+    ).map((x) => this.test2li(ozetle(x)));
     return { ogeler, toplam };
   }
 
@@ -918,6 +936,8 @@ export class Merkez {
         .run(id);
     });
     this.sonKararlar.delete(id);
+    // Ret geri alındıysa öğe yeniden bekliyor: test2'ye yeniden yüklenir.
+    this.oyunAlani?.durumDegisti(id, k.eski);
     this.denetim.yaz(now, kim, "onay", r.alan, `öğe ${id} kararı geri alındı`);
     const son = this.ogeSatiri(id);
     if (!son) throw new IsHatasi(500, "Teslim okunamadı.");
@@ -1380,6 +1400,14 @@ export class Merkez {
     return alanTanimi(o.alan).tekTik && o.satirlar.length > 0 && o.dosyalar.length === 0;
   }
 
+  /**
+   * Öğe "Yöneticiye gönder" paketine girer mi (UM-İ7): tek tık olmayan her şey ve içerik havuzu satırları (varsayılan
+   * yol test2 → kabul → yönetici "ekle"; içerikte "Oyuna aktar" da kabul havuzunda durdukça açık kalır).
+   */
+  paketeGirer(o: { alan: AlanId; dosyalar: unknown[]; satirlar: unknown[] }): boolean {
+    return !this.tekTikMi(o) || o.alan === "icerik";
+  }
+
   async aktar(ogeId: number, kim: string, now: number): Promise<AktarimKaydi[]> {
     const o = this.oge(ogeId);
     if (!o) throw new IsHatasi(404, "Teslim bulunamadı.");
@@ -1587,7 +1615,19 @@ export class Merkez {
       istekKartlari: this.istekKartlari("bekliyor"),
       kodIstekleri: this.kodIstekleri("bekliyor"),
       talimatOnerileri: oneriler,
-      havuz: { toplam: tekTik.length, tekTik: tt, paketlenecek: tekTik.length - tt },
+      havuz: {
+        toplam: tekTik.length,
+        tekTik: tt,
+        paketlenecek: tekTik.filter(
+          (o) =>
+            isAlanId(o.alan) &&
+            this.paketeGirer({
+              alan: o.alan,
+              dosyalar: json<unknown[]>(o.dosyalar, []),
+              satirlar: json<unknown[]>(o.satirlar, []),
+            }),
+        ).length,
+      },
       geriDonen24s: this.geriDonenSay(now - GUN),
       kota,
       bugun: this.bugun(now),
@@ -1595,6 +1635,7 @@ export class Merkez {
       denetimBekleyen: Number(
         (this.db.prepare("SELECT COUNT(*) AS n FROM oge WHERE denetim = 1").get() as { n: number }).n,
       ),
+      ...(this.oyunAlani ? { test2: this.oyunAlani.durum() } : {}),
     };
   }
 
@@ -1741,6 +1782,7 @@ export class Merkez {
           uygun: !engel && st.uygun,
         };
       }),
+      ...(this.oyunAlani && oyunAlaniAlaniMi(alan) ? { test2: this.oyunAlani.durum() } : {}),
     };
   }
 
@@ -2212,6 +2254,7 @@ export class Merkez {
     // Teslim paketi (SSH) ve alanın şimdilik yapamadıkları: sahibin talimat metninden bağımsız, her zaman sonda.
     metin += `\n\n## Teslim paketi\n- ${PAKET_SATIRI}\n- ${PAKET_SINIRLARI}\n- MCP'de aynı biçim: \`paket_bicimi\` aracı; dosyalar önce \`dosya_yukle\` ile, sonra \`dosyaId\`.\n`;
     if (alan === "test") metin += `- **${TEST_SINIRI}**\n`;
+    if (oyunAlaniAlaniMi(alan)) metin += `- **${OYUN_ALANI_SATIRI}**\n`;
     metin += `\n${FIKIR_RAPOR_BOLUMU}`;
     return { surum: t.surum, metin: `${metin}\n${this.zevkBolumu(alan)}` };
   }

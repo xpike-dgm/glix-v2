@@ -53,6 +53,7 @@ import {
   zeminDondur,
 } from "../onizleme/Sahneler.js";
 import { Simge, type SimgeAdi } from "../simgeler.js";
+import { Test2Seridi } from "../test2.js";
 
 interface Ayrinti {
   oge: OgeAyrinti;
@@ -911,6 +912,12 @@ export function Incele(): JSX.Element {
               >
                 {(a) => (
                   <>
+                    {/* Oyun alanı (test2): her panelde görünür; teslim kendiliğinden yüklendi, sahip orada dener. */}
+                    <Show when={a().oge.test2}>
+                      <div class="odak__test2">
+                        <Test2Seridi oge={a().oge} degisti={() => void ayrintiYenile()} />
+                      </div>
+                    </Show>
                     <Sekmeler<Panel>
                       etiket="Ayrıntılar"
                       secili={panel()}

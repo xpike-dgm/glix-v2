@@ -253,6 +253,31 @@
   color: #ffd777;
 }
 
+/* Oyun alanı (test2) taslak ürünü: köşede "TASLAK" etiketi (canlıda hiç çizilmez). */
+.shop-card[data-taslak] {
+  position: relative;
+}
+.shop-taslak {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 6px;
+  font-size: var(--fs-13);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1.4;
+  background: #7c5cff;
+  color: #ffffff;
+}
+.shop-card .shop-taslak {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+}
+.shop-sheet__meta .shop-taslak {
+  margin-left: 6px;
+}
+
 /* Fiyat hapı ve durum hapı */
 .shop-price,
 .shop-state {

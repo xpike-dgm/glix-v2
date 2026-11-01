@@ -19,6 +19,7 @@ import {
   gorselKuraliBolumu,
   gorselKuraliIstemi,
 } from "./ortak/gorselKurali.js";
+import { OYUN_ALANI_SATIRI, oyunAlaniAlaniMi } from "./ortak/oyunAlani.js";
 import { PAKET_SATIRI } from "./ortak/paketBicimi.js";
 import type { IsKaydi } from "./ortak/tipler.js";
 
@@ -351,6 +352,8 @@ export function istemUret(alan: AlanId, baglanti: "mcp" | "ssh", isler: readonly
       ? `Sırada ${isler.length} iş var: ${isler.slice(0, 8).map(ozet).join("; ")}. Birini bitirince sıradakine geç.`
       : "";
   const devam = 'Bundan sonra yalnız "devam" yazarsam açık işleri sırayla bitir ve geri bildirimleri oku.';
+  // Oyun alanı (test2) satırı: içerik ve mağazada sabit, kodla eklenir (sözleşme bölüm 13).
+  const test2 = oyunAlaniAlaniMi(alan) ? OYUN_ALANI_SATIRI : "";
   // Görsel alanlarında kural ikinci satırda, öne çıkarılmış (istem kodla kurulur; çıkarılamaz).
   const kural = gorselAlaniMi(alan) ? `ÖNEMLİ — ${gorselKuraliIstemi(alan)}` : "";
   if (baglanti === "ssh") {
@@ -365,6 +368,7 @@ export function istemUret(alan: AlanId, baglanti: "mcp" | "ssh", isler: readonly
       bicimSatiri,
       "Dosyalarını SFTP ile gelen/<paket>/ klasörüne koy; `uretim on-kontrol <paket>` ile denetle, geçince `uretim teslim-et <paket>`.",
       PAKET_SATIRI,
+      test2,
       sira,
       devam,
     ]
@@ -380,6 +384,7 @@ export function istemUret(alan: AlanId, baglanti: "mcp" | "ssh", isler: readonly
     fikirSatiri,
     bicimSatiri,
     "Dosyaları dosya_yukle ile yükle; on_kontrol ile denetle, geçince teslim_et. Teslim biçimi için önce paket_bicimi.",
+    test2,
     sira,
     devam,
   ]

@@ -54,6 +54,7 @@ export function eylemdenOlay(eylem: DenetimEylemi, ayrinti = ""): OlayTuru | nul
       return "kod_istegi";
     case "aktarim":
     case "aktarim_geri_al":
+    case "test2":
       return "aktarim";
     case "paket":
     case "paket_oyuna_eklendi":

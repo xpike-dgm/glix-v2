@@ -59,6 +59,23 @@ test eder, ana koda birleştirir → test.glix'e çıkar → sahip "canlıya al"
 - Test ve Performans alanı için: test2'de bot koşusu başlatma ve sonuçları rapor panosuna yazma (12 saatlik
   zamanlayıcı dahil).
 
+### Aşama 3 ilk dilim — durum: **kodda hazır, sunucuya kurulmadı** (ayrıntı: `SOZLESME.md` bölüm 13)
+- **Site → test2 bağlantısı:** `URETIM_TEST2_URL`/`URETIM_TEST2_TOKEN` (test2'nin kendi anahtarı); ortak
+  `glix-oyun-alani` Docker ağı. Canlıya giden "Oyuna aktar" değişmedi; varsayılan yol test2.
+- **İçerik havuzu:** ön kontrolden geçen teslim test2 havuzuna kendiliğinden eklenir; kartta "test2'de yüklü · geri
+  al"; ret geri alır; kabul kabul havuzunda kalır (canlıya gitmez); gece sıfırlaması katman kimliğinden algılanır,
+  bekleyen/kabuldeki/yöneticideki öğeler yeniden yüklenir.
+- **Mağaza:** test2'de çalışma anında taslak katalog katmanı (`/api/uretim/magaza/taslak`, yalnız `GLIX_ORTAM=test2`;
+  canlı ve test'te 404). Taslak ürün test2 mağazasında **TASLAK** etiketiyle görünür, sahte hesaplarla alınıp
+  kuşanılır; görselleri sunucunun veri klasöründen gelir. Dans ve giysi taslakları henüz yok (karakter varlığı).
+- **Arayüz:** teslim kartında, incelemede ve kabul havuzunda test2 şeridi + "test2'de aç" (mağaza:
+  `?ekran=magaza`); pano ve içerik/mağaza alan sayfasında test2 durumu (çalışıyor mu, sürüm, son sıfırlama, yüklü,
+  taslak). İstemde ve talimatta sabit satır "Teslimin test2'ye kendiliğinden yüklenir; sahip orada dener."
+- **Kabul → yönetici:** "Yöneticiye gönder" paketi içerik satırlarını da taşır (`icerik.json`); mağaza için yama +
+  WebP + hedef yollar (bölüm 5 ve 13).
+- **Sonraki dilim:** oda başına katman (UM-O3), `oyun_alani_*` araçları (UM-O4), yapay zekânın kendi ekran
+  görüntüleri, diğer alanlar.
+
 ## Aşama 4 — "Ekle" komutu (yönetici)
 Sahip "kabul havuzundakileri ekle" deyince yönetici: paketi okur → kendi dalında uygular (kod, veri, görsel) → dört
 denetim + ilgili oyun testleri → ana dala birleştirir → test'e çıkar → sahibe "test'te, bakabilirsin" der. Canlıya

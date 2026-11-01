@@ -11,6 +11,9 @@ MIRROR="$BASE/repo.git"
 REPO_URL="${GLIX_REPO_URL:-https://github.com/xpike-dgm/glix-v2}"
 BETIK_DIZIN="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ORTAM_COMPOSE="$BETIK_DIZIN/docker-compose.yml"
+# Yalnız test2: Üretim Merkezi'nin iç ağdan ulaştığı ortak ağ (docker-compose.oyun-alani.yml).
+ORTAM_COMPOSE_OYUN_ALANI="$BETIK_DIZIN/docker-compose.oyun-alani.yml"
+OYUN_ALANI_AG=glix-oyun-alani
 IMAJ_ADI=glix-v2
 CANLI_PORT=3900
 CANLI_KAP=glix-glix-1
@@ -73,11 +76,21 @@ canli_anahtar_denetle() {
   done
 }
 
+# Üretim Merkezi ↔ test2 ağı yoksa kurar (tekrar çalıştırılabilir).
+oyun_alani_agi() {
+  docker network inspect "$OYUN_ALANI_AG" >/dev/null 2>&1 || docker network create "$OYUN_ALANI_AG" >/dev/null
+}
+
 ortam_compose() {
   [ -f "$ORTAM_ENV" ] || hata "$ORTAM_ENV yok; önce kur.sh çalıştır."
   canli_anahtar_denetle "$ORTAM_ENV"
+  local ek=()
+  if [ "$ORTAM" = test2 ]; then
+    oyun_alani_agi
+    ek=(-f "$ORTAM_COMPOSE_OYUN_ALANI")
+  fi
   ORTAM_IMAJ="$ORTAM_IMAJ" ORTAM_PORT="$ORTAM_PORT" ORTAM_VERI="$ORTAM_VERI" \
-    docker compose -f "$ORTAM_COMPOSE" -p "$ORTAM_PROJE" --env-file "$ORTAM_ENV" "$@"
+    docker compose -f "$ORTAM_COMPOSE" "${ek[@]}" -p "$ORTAM_PROJE" --env-file "$ORTAM_ENV" "$@"
 }
 
 # .env dosyasından tek değer (dosya `source` edilmez: elle eklenen değerlerde kabuk karakterleri olabilir).

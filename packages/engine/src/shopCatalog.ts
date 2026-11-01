@@ -198,6 +198,21 @@ export function validateShopCatalog(json: unknown): ShopCheck {
   return { ok: errors.length === 0, errors };
 }
 
+/**
+ * Oyun alanında (test2) taslak olarak yüklenebilen türler: görünümü yalnız görsel dosyalarından ve efekt tarifinden
+ * oluşanlar. Dans ve giysiler karakter varlığı (dans dosyası, `rig.json` katmanı) gerektirir; onlar taslak katmanına
+ * henüz girmez (kod isteği ile).
+ */
+export const DRAFT_SHOP_TYPES: readonly CosmeticTypeId[] = [
+  "unvan",
+  "ad-efekti",
+  "cerceve",
+  "kart-arkasi",
+  "zafer",
+  "tepki",
+  "giris",
+];
+
 /** Doğrulanmış satırı ürüne çevirir (alanlar kopyalanır; dondurulmaz). */
 function toItem(row: Record<string, unknown>): CosmeticItem {
   const it: CosmeticItem = {

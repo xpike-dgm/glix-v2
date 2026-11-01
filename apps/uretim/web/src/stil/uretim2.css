@@ -929,3 +929,69 @@ fieldset.cipler {
     display: none;
   }
 }
+
+/* ---- Oyun alanı (test2): teslim şeridi ve durum kartı --------------------------------------------------- */
+.test2-serit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--r-2);
+  background: var(--bg-ince);
+}
+.test2-serit[data-kucuk] {
+  padding: 4px 6px;
+  margin-top: 4px;
+  background: transparent;
+}
+.test2-serit[data-durum="yuklu"]:not([data-kucuk]) {
+  background: var(--gecti-zayif);
+}
+.test2-serit[data-durum="hata"]:not([data-kucuk]) {
+  background: var(--kaldi-zayif);
+}
+.test2-serit__hata {
+  color: var(--kaldi);
+}
+.test2-ac {
+  text-decoration: none;
+}
+.test2-kart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.test2-kart__bas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.test2-kart__nokta {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--metin-2);
+}
+.test2-kart[data-calisiyor="1"] .test2-kart__nokta {
+  background: var(--gecti);
+  box-shadow: 0 0 0 4px var(--gecti-zayif);
+}
+.test2-kart__bilgi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+.test2-kart__bilgi dt {
+  font-size: var(--fs-12);
+  color: var(--metin-2);
+}
+.test2-kart__bilgi dd {
+  margin: 0;
+  font-weight: 600;
+}
+.odak__test2 {
+  padding: 10px 16px 0;
+}

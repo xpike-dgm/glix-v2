@@ -143,6 +143,14 @@ const SEMA: readonly string[] = [
   );
   CREATE INDEX is_fikir_fikir ON is_fikir(fikir_id);
   `,
+  // Üretim Merkezi 2, aşama 3: oyun alanına (test2) yüklenen teslimler (sözleşme bölüm 13).
+  `
+  CREATE TABLE oyun_alani (
+    oge_id INTEGER PRIMARY KEY, tur TEXT NOT NULL, durum TEXT NOT NULL, katman TEXT,
+    aktarimlar TEXT NOT NULL DEFAULT '[]', taslaklar TEXT NOT NULL DEFAULT '[]', ozet TEXT NOT NULL DEFAULT '',
+    hata TEXT, elle INTEGER NOT NULL DEFAULT 0, guncelleme INTEGER NOT NULL
+  );
+  `,
 ];
 
 export type Db = DatabaseSync;

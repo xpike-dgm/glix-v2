@@ -1,4 +1,5 @@
-# Üretim Merkezi. Oyundan ayrı kap, aynı Docker ağı (oyun sunucusuna http://glix:3900 ile iç ağdan gider).
+# Üretim Merkezi. Oyundan ayrı kap, aynı Docker ağı (oyun sunucusuna http://glix-glix-1:3900 ile iç ağdan gider;
+# oyun alanına (test2) ortak glix-oyun-alani ağından http://glix-test2-glix-1:3900 ile).
 # Çalıştırma (kökten): docker compose --env-file /srv/glix/shared/.env -f deploy/uretim/docker-compose.yml -p uretim up -d --build
 # `--env-file` yalnız aşağıdaki ${...} değerlerini doldurur; dosyanın tamamı kaba aktarılmaz.
 services:
@@ -14,7 +15,14 @@ services:
     environment:
       URETIM_PUBLIC_URL: ${URETIM_PUBLIC_URL:-https://uretim.dgmcraft.online}
       URETIM_ONIZLEME_URL: ${URETIM_ONIZLEME_URL:-https://glix.dgmcraft.online/onizleme.html}
-      URETIM_OYUN_URL: ${URETIM_OYUN_URL:-http://glix:3900}
+      # Canlıya kap adıyla gidilir: site test2'nin ağına da katıldığı için hizmet adı "glix" iki ağda birden geçer.
+      URETIM_OYUN_URL: ${URETIM_OYUN_URL:-http://glix-glix-1:3900}
+      # Oyun alanı (test2; sözleşme bölüm 13): teslimler buraya kendiliğinden yüklenir. Anahtar test2'nin kendi
+      # GLIX_URETIM_TOKEN'ıdır (/srv/glix/ortam/gizli/.env.test2), .env'e URETIM_TEST2_TOKEN adıyla eklenir.
+      # Boşsa test2 bağlantısı kapalı (teslimler yalnız sitede durur).
+      URETIM_TEST2_URL: ${URETIM_TEST2_URL:-http://glix-test2-glix-1:3900}
+      URETIM_TEST2_TOKEN: ${URETIM_TEST2_TOKEN:-}
+      URETIM_TEST2_PUBLIC_URL: ${URETIM_TEST2_PUBLIC_URL:-https://test2.glix.dgmcraft.online}
       # Oyunla aynı anahtar (bölüm 3 uçları). Boşsa tek tık aktarım ve canlı havuz kapalı.
       GLIX_URETIM_TOKEN: ${GLIX_URETIM_TOKEN:-}
       URETIM_SAHIP_EPOSTA: ${URETIM_SAHIP_EPOSTA:-}
@@ -60,6 +68,7 @@ services:
     stop_grace_period: 30s
     networks:
       - glix
+      - oyun_alani
     logging:
       driver: json-file
       options:
@@ -71,3 +80,7 @@ networks:
     external: true
     # Oyun `-p glix` projesiyle çalışır; varsayılan ağı glix_default'tur.
     name: ${GLIX_AG:-glix_default}
+  # Oyun alanı (test2) ile ortak ağ: deploy/ortamlar/kur.sh kurar (elle: docker network create glix-oyun-alani).
+  oyun_alani:
+    external: true
+    name: ${GLIX_OYUN_ALANI_AG:-glix-oyun-alani}

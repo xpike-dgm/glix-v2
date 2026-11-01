@@ -13,6 +13,7 @@ import {
 } from "@glix/engine";
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { balanceText } from "../net/glixRules.js";
+import { katmanSurumu, taslaklariYukle, taslakMi, taslakOnce } from "../net/oyunAlani.js";
 import { buyItem, equipItem, loadShop, ownCosmetics, shop, shopError, shopLoad } from "../net/shop.js";
 import {
   buyText,
@@ -99,6 +100,7 @@ export function Card(props: {
       data-r={props.item.rarity}
       data-status={status()}
       data-type={props.item.type}
+      data-taslak={taslakMi(props.item.id) ? "1" : undefined}
       style={{ "--box": `url(${boxSrc(props.item.rarity)})` }}
       aria-label={`${props.item.name}, ${RARITY_LABEL[props.item.rarity]}, ${
         status() === "buy"
@@ -155,6 +157,10 @@ export function Card(props: {
         <span class="shop-card__name">{props.item.name}</span>
       </Show>
       <RarityChip rarity={props.item.rarity} />
+      {/* Oyun alanı (test2): Üretim Merkezi'nden gelen, henüz oyuna girmemiş ürün. Canlıda hiç görünmez. */}
+      <Show when={taslakMi(props.item.id)}>
+        <span class="shop-taslak">TASLAK</span>
+      </Show>
       <span class="shop-card__foot">
         {status() === "buy" ? (
           <Price price={price()} list={props.deal ? props.deal.listPrice : undefined} />
@@ -210,6 +216,7 @@ export function Shop() {
 
   onMount(() => {
     void loadShop();
+    void taslaklariYukle();
     const t = setInterval(() => setNow(Date.now()), 1000);
     onCleanup(() => clearInterval(t));
   });
@@ -245,19 +252,29 @@ export function Shop() {
    * ürünler (MG-3); satıştan kalkan ürün Dolabım'da kalır.
    */
   const tabGroups = createMemo(
-    () =>
-      (SHOP_TABS.find((t) => t.id === tab())?.types ?? [])
-        .map((t) => ({ type: t, items: shopItemsOfType(t, at()) }))
-        .filter((g) => g.items.length > 0),
+    () => {
+      // Oyun alanında taslak katmanı yenilenince liste yeniden hesaplanır (canlıda sayaç hiç değişmez).
+      katmanSurumu();
+      return (SHOP_TABS.find((t) => t.id === tab())?.types ?? [])
+        .map((t) => ({ type: t, items: taslakOnce(shopItemsOfType(t, at())) }))
+        .filter((g) => g.items.length > 0);
+    },
     undefined,
     {
       equals: (a, b) => sameList(a, b, (x, y) => x.type === y.type && sameList(x.items, y.items, Object.is)),
     },
   );
   /** Koleksiyon şeritleri: aynı koleksiyondan en az iki ürün satıştaysa. */
-  const collections = createMemo(() => shopCollections(at()), undefined, {
-    equals: (a, b) => sameList(a, b, (x, y) => x.name === y.name && sameList(x.items, y.items, Object.is)),
-  });
+  const collections = createMemo(
+    () => {
+      katmanSurumu();
+      return shopCollections(at());
+    },
+    undefined,
+    {
+      equals: (a, b) => sameList(a, b, (x, y) => x.name === y.name && sameList(x.items, y.items, Object.is)),
+    },
+  );
   /** Giysiler sekmesinde yalnız seçili yuva görünür (39 ürünlük tek uzun liste yerine); öteki sekmelerde tümü. */
   const slotChips = () =>
     tab() === "giysi" ? tabGroups().map((g) => ({ id: g.type, label: cosmeticType(g.type).name })) : [];
@@ -473,6 +490,9 @@ export function Shop() {
                     <p class="shop-sheet__meta">
                       <RarityChip rarity={item().rarity} />
                       <span class="shop-sheet__type">{TYPE_LABEL[item().type]}</span>
+                      <Show when={taslakMi(item().id)}>
+                        <span class="shop-taslak">TASLAK</span>
+                      </Show>
                     </p>
                     <div
                       class="shop-sheet__stage"

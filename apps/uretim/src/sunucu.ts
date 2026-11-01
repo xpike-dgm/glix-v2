@@ -19,6 +19,7 @@ import { mcpIstek } from "./mcp.js";
 import { Merkez } from "./merkez.js";
 import { eylemdenOlay, OlayYayini } from "./olaylar.js";
 import { type OyunFetch, OyunIstemcisi } from "./oyun.js";
+import { OyunAlani } from "./oyunAlani.js";
 import { canliKontrol } from "./paket.js";
 import { SshKanal } from "./sshKanal.js";
 import { createWebPush, disabledPush, type PushGateway } from "./webpush.js";
@@ -39,6 +40,8 @@ const TURLER: Record<string, string> = {
 export interface Bagimliliklar {
   postaci?: Postaci | null;
   oyunFetch?: OyunFetch;
+  /** Oyun alanına (test2) giden istek (testlerde sahte); varsayılan `oyunFetch` ya da `fetch`. */
+  test2Fetch?: OyunFetch;
   push?: PushGateway;
   now?: () => number;
   sshYetkiDir?: string | null;
@@ -55,6 +58,7 @@ export interface Uretim {
   bildirim: Bildirim;
   katalog: Katalog;
   yayin: OlayYayini;
+  oyunAlani: OyunAlani;
   /** Zamanlanmış işleri başlatır (eşitleme, temizlik, yedek, bildirim, gelen klasörü). */
   zamanlayicilariBaslat(): void;
   kapat(): Promise<void>;
@@ -93,6 +97,12 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
     bilgi: (m, url) => void bildirim.bilgi(m, url, now()),
     degisti: (tur, alan) => yayin.yay(tur, alan),
   });
+  // Oyun alanı (test2): canlı istemcisinden ayrı adres ve ayrı anahtar (sözleşme bölüm 13).
+  const test2 = new OyunIstemcisi(config.test2Url, config.test2Token, b.test2Fetch ?? b.oyunFetch);
+  const oyunAlani = new OyunAlani(db, test2, (id) => merkez.oge(id), config.test2PublicUrl, now);
+  oyunAlani.depoOku = (ozet) => depo.oku(ozet);
+  oyunAlani.degisti = (alan) => yayin.yay("aktarim", alan);
+  merkez.oyunAlani = oyunAlani;
   const donusturucu = donusturucuKur(db, config.aiKey, {
     ...(b.aiFetch ? { fetch: b.aiFetch } : {}),
     gunluk: config.aiGunluk,
@@ -173,6 +183,7 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
           ssh,
           donusturucu,
           yayin,
+          oyunAlani,
           surum,
           now,
         });
@@ -203,6 +214,7 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
     bildirim,
     katalog,
     yayin,
+    oyunAlani,
     zamanlayicilariBaslat() {
       const esitle = guvenli("esitleme", () => katalog.esitle(now()));
       esitle();
@@ -256,10 +268,17 @@ export function uretimKur(config: UretimConfig, b: Bagimliliklar = {}): Uretim {
           5 * 60_000,
         ),
       );
+      // Oyun alanı (test2): sağlık, gece sıfırlaması algılama ve bekleyen yüklemeler (5 dakikada bir).
+      if (oyunAlani.acik) {
+        const t2 = guvenli("oyun_alani", () => oyunAlani.esitle());
+        t2();
+        zamanlayicilar.push(setInterval(t2, 5 * 60_000));
+      }
     },
     async kapat() {
       for (const z of zamanlayicilar) clearInterval(z);
       yayin.kapat();
+      await oyunAlani.bosalt();
       await new Promise<void>((r) => server.close(() => r()));
       server.closeAllConnections();
       db.close();

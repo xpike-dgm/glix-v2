@@ -50,11 +50,19 @@ değerler kaba girer.
 | `URETIM_SSH_SUNUCU` | İstemlerde görünen SSH adresi (varsayılan `dgmcraft.online`). Sır değildir. |
 | `URETIM_SITE_GID` | `ssh/kur.sh`'ın oluşturduğu `uretim-site` grubunun numarası (varsayılan 3910). |
 | `GLIX_AG` | Oyunun Docker ağı (varsayılan `glix_default`, oyun `-p glix` ile çalışıyor). |
+| `URETIM_TEST2_TOKEN` | Oyun alanının (test2) **kendi** `GLIX_URETIM_TOKEN`'ı (`/srv/glix/ortam/gizli/.env.test2`); bu dosyaya yeni adla eklenir, canlının anahtarı kullanılmaz. Boşsa teslimler test2'ye yüklenmez. Ekleme komutu: `deploy/ortamlar/README.md` "Üretim Merkezi → test2". |
+| `URETIM_TEST2_URL` | test2'nin iç adresi (varsayılan `http://glix-test2-glix-1:3900`, ortak `glix-oyun-alani` ağı). |
+| `URETIM_TEST2_PUBLIC_URL` | "test2'de aç" bağlantıları (varsayılan `https://test2.glix.dgmcraft.online`). |
+| `GLIX_OYUN_ALANI_AG` | Site ile test2'nin ortak ağı (varsayılan `glix-oyun-alani`; `deploy/ortamlar/kur.sh` kurar). |
 
 Varsayılanlar: `URETIM_PUBLIC_URL=https://uretim.dgmcraft.online`, `URETIM_ONIZLEME_URL=https://glix.dgmcraft.online/onizleme.html`,
-`URETIM_OYUN_URL=http://glix:3900`, kota 20 GB (`URETIM_KOTA_GB`), model günlük sınırı 200 (`URETIM_AI_GUNLUK`).
+`URETIM_OYUN_URL=http://glix-glix-1:3900` (kap adı: site test2'nin ağına da katıldığı için hizmet adı `glix` iki
+ağda birden geçer; `.env`'de eski `http://glix:3900` yazılıysa kaldır ya da kap adına çevir), kota 20 GB (`URETIM_KOTA_GB`), model günlük sınırı 200 (`URETIM_AI_GUNLUK`).
 
 ## 4. Kap
+
+Önce ortak ağ (test2 kurulmamış olsa da gerekir; compose dış ağı bulamazsa açılmaz):
+`docker network inspect glix-oyun-alani >/dev/null 2>&1 || docker network create glix-oyun-alani`.
 
 ```
 cd /srv/glix/current
