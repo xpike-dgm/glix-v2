@@ -803,6 +803,17 @@
 }
 
 /* ---- TV (sahne) varken telefon rozeti ---- */
+/* Rozet tur sayacının yanında durur: alt alta üç satır başlığı 55 px'e çıkarıp 48 px şeridi ve süre çubuğunu
+   kaydırıyordu. */
+.gbar__title:has(> .tvbadge) {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 6px;
+}
+.gbar__title:has(> .tvbadge) > .gbar__name {
+  flex-basis: 100%;
+}
 .tvbadge {
   flex: none;
   pointer-events: none;

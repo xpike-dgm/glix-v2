@@ -716,6 +716,11 @@
   pointer-events: none;
   animation: sk-pop 220ms var(--ease) both;
 }
+/* "N. ALARM" bandı sonuç yazılarının ortasına iniyordu; bant varken sonuç geri çekilir (yarım örtülü yazı kalmaz). */
+.sk__root:has(.sk__band) .sk__open > * {
+  opacity: 0.12;
+  transition: opacity 200ms;
+}
 .sk__band[data-ready="1"] {
   background: linear-gradient(
     90deg,

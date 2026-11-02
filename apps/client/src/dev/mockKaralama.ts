@@ -276,10 +276,13 @@ export function startKaralamaMock(kind: string, params: URLSearchParams): void {
     locked: !spectator && locked,
   });
 
+  // Saniye tabanlı rev aynı saniyedeki ikinci yayını eski sayıp yok saydırıyordu (örn. "İlham" yanıtı 700 ms
+  // sonra gelince takılı kalıyordu); öbür sahte ekranlar gibi artan sayaç.
+  let rev = 0;
   const publish = (): void => {
     const miniScores = reveal().final?.scores ?? {};
     const snapshot: RoomSnapshot = {
-      rev: Math.floor(Date.now() / 1000),
+      rev: ++rev,
       serverNow: Date.now(),
       code: "KX7QP",
       hostId: SELF,

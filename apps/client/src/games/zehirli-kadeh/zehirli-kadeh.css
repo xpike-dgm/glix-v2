@@ -338,7 +338,9 @@
   align-items: center;
   gap: 2px;
   pointer-events: none;
-  z-index: 1;
+  /* dar masada kadehin kapağı koltuktaki ⇄/✓ rozetinin üstüne biniyordu; koltuk dokunuş almaz, kadehler
+     dokunulur kalır */
+  z-index: 3;
 }
 .zkt__seat[data-side="head"] {
   flex-direction: row;

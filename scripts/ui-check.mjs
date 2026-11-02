@@ -3190,8 +3190,16 @@ function inPageAudit() {
       own.selectNodeContents(n);
       if (own.getBoundingClientRect().right > lim) return false;
     }
+    // Kendi içinde kırpılan alt öğe (ör. avatar diskindeki büyük resim) scrollWidth'e katkı vermez.
+    const clipped = (d) => {
+      for (let a = d.parentElement; a && a !== el; a = a.parentElement) {
+        const o = cs(a);
+        if (["hidden", "clip"].includes(o.overflowX)) return true;
+      }
+      return false;
+    };
     for (const d of el.querySelectorAll("*")) {
-      if (decor.some((x) => x.contains(d))) continue;
+      if (decor.some((x) => x.contains(d)) || clipped(d)) continue;
       const r = d.getBoundingClientRect();
       if (r.width > 0 && r.right > lim) return false;
     }

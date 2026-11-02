@@ -706,8 +706,8 @@ button.kcell:disabled {
   color: #fff;
   text-shadow: 0 1px 3px #000;
   white-space: nowrap;
-  /* avatarın parlak yerine biner: koyu zemin */
-  padding: 0 3px;
+  /* avatarın parlak yerine biner: koyu zemin (dikey pay: line-height 1'de harf kutusu zeminden taşıyordu) */
+  padding: 2px 3px;
   border-radius: 4px;
   background: rgba(5, 8, 26, 0.94);
 }

@@ -167,11 +167,14 @@ export function startBorsaMock(kind: string, params: URLSearchParams): void {
     params.get("yorum") === "1"
       ? "Elif son kutuya 61 jeton bayıldı ama sandıktan altın çıktı; Mert ise lanetli kutuyla hâlâ barışamadı."
       : undefined;
+  // Saniye tabanlı rev aynı saniyedeki ikinci yayını eski sayıp yok saydırıyordu (örn. "İlham" yanıtı 700 ms
+  // sonra gelince takılı kalıyordu); öbür sahte ekranlar gibi artan sayaç.
+  let rev = 0;
   const publish = (): void => {
     const pv = publicView();
     const finalReveal = kind === "kara-reveal-final";
     const snapshot: RoomSnapshot = {
-      rev: Math.floor(Date.now() / 1000),
+      rev: ++rev,
       serverNow: Date.now(),
       code: "KX7QP",
       hostId: SELF,
