@@ -243,7 +243,8 @@
   filter: saturate(0.6) brightness(0.78);
 }
 .arcade[data-filling="1"] .arcade__label {
-  font-size: calc(var(--size) * 0.07);
+  /* küçük düğmede (320 px) 10,7 px'e iniyordu */
+  font-size: max(13px, calc(var(--size) * 0.07));
   background: rgba(20, 24, 50, 0.85);
 }
 .arcade__ready {

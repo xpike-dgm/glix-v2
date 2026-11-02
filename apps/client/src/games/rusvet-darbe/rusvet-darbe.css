@@ -1596,8 +1596,14 @@
   gap: 8px;
   font-size: 26px;
 }
-.rdtv__cand[data-out="1"] {
+/* Elenen aday sönük kalır ama "ELENDİ" damgası sönükleşmez ve TV'den okunur (yarı saydam 13 px idi). */
+.rdtv__cand[data-out="1"] > :not(.rd__stamp) {
   opacity: 0.5;
+}
+.rdtv__cand .rd__stamp--out {
+  top: 0;
+  font-size: 22px;
+  z-index: 2;
 }
 .rdtv__card {
   width: 150px;

@@ -952,7 +952,8 @@ button.aitem:active:not(:disabled) {
 }
 .gapack__bag {
   position: relative;
-  width: clamp(140px, 44vw, 210px);
+  /* yatayda 44vw poşet ekrana sığmıyor, "Sepetin kesinleşti" damgası "Hazırsın"ın üstüne itiliyordu */
+  width: clamp(96px, min(44vw, 34dvh), 210px);
   aspect-ratio: 40 / 44;
   animation: ga-pack 520ms var(--ease) both;
 }

@@ -86,7 +86,9 @@ const QUICK_SIZES = [PORTRAIT[0], LANDSCAPE[1]];
 
 /** Ekranın koşacağı boyutlar; hızlı kipte QUICK_SIZES ile kesişim (boşsa listenin ilki). */
 function sizesFor(scr) {
-  const base = scr.sizes ?? ALL;
+  // Renk körlüğü varyantı aynı ekranın üstüne yalnız desen/işaret ekler; yerleşimi asıl ekran beş boyutta zaten
+  // denetlenir. Varyant uç boyutlarda (en dar dikey, en alçak yatay) koşar: ölçüm aynı, tekrar azalır.
+  const base = scr.sizes ?? (scr.name.endsWith("-renk-korlugu") ? QUICK_SIZES : ALL);
   if (!QUICK) return base;
   const inter = base.filter(([w, h]) => QUICK_SIZES.some(([qw, qh]) => qw === w && qh === h));
   return inter.length ? inter : [base[0]];
@@ -3609,6 +3611,12 @@ async function checkGroup(worker, browser, scr, sizes, onDone) {
     if (failures.some((f) => f.startsWith("[hata]"))) {
       // hata sonrası sayfa/fare durumu belirsiz: bağlamı at, sonraki boyut temiz bağlamla koşsun
       await worker.ctx.close().catch(() => {});
+      // Tarayıcı çöktüyse grup burada biter; işçi yeni tarayıcıyla sonraki gruba geçer (bu grubun kalan
+      // boyutları hata sayılır, sessizce atlanmaz).
+      if (!browser.isConnected()) {
+        for (const rest of sizes.slice(sizes.indexOf(size) + 1)) onDone(rest, ["[hata] tarayıcı kapandı"], 0);
+        return;
+      }
       worker.ctx = await newContext(browser);
       cur = await newPage(worker.ctx);
     }
@@ -3694,10 +3702,12 @@ async function main() {
   process.on("exit", stop);
   let browser;
   try {
-    browser = await chromium.launch({
-      executablePath: chromiumPath(),
-      args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"],
-    });
+    const launch = () =>
+      chromium.launch({
+        executablePath: chromiumPath(),
+        args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"],
+      });
+    browser = await launch();
     // ısınma: bağımlılıklar paketlensin, ilk sayfa yenilenmesin
     const warm = await browser.newPage();
     await warm.goto(`${URL_BASE}/?mock=home`, { waitUntil: "networkidle" });
@@ -3715,11 +3725,24 @@ async function main() {
     let next = 0;
     let busyMs = 0;
     const tStart = Date.now();
+    // Tam koşuda (~5800 denetim) tek tarayıcı ve işçi başına tek bağlam kaynak biriktirip sonunda
+    // ERR_INSUFFICIENT_RESOURCES ile çöküyordu (kalan bütün denetimler "hata" oluyordu). Her işçinin kendi
+    // tarayıcısı olur, RECYCLE ekran grubunda bir ya da çökünce yenilenir. Ölçüm değişmez.
+    const RECYCLE = 120;
     const worker = async () => {
-      const w = { ctx: await newContext(browser) };
+      let own = await launch();
+      const w = { ctx: await newContext(own) };
+      let done = 0;
       while (next < groups.length) {
+        if (done >= RECYCLE || !own.isConnected()) {
+          await own.close().catch(() => {});
+          own = await launch();
+          w.ctx = await newContext(own);
+          done = 0;
+        }
+        done++;
         const { scr, sizes } = groups[next++];
-        await checkGroup(w, browser, scr, sizes, (size, failures, ms) => {
+        await checkGroup(w, own, scr, sizes, (size, failures, ms) => {
           results.push({ scr, size, failures });
           busyMs += ms;
           const tag = `${scr.name} ${size[0]}x${size[1]}`;
@@ -3730,7 +3753,7 @@ async function main() {
           for (const f of [...new Set(failures)]) console.log(`    ${f}`);
         });
       }
-      await w.ctx.close();
+      await own.close().catch(() => {});
     };
     await Promise.all(Array.from({ length: WORKERS }, worker));
 

@@ -219,7 +219,7 @@ export function AlisverisSonuc(props: Props) {
           </div>
         }
       >
-        <ol class="arank">
+        <ol class="arank" data-scroll>
           <For each={desc()}>
             {(id, i) => {
               const e = () => byId().get(id);
